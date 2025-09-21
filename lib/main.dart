@@ -1,3 +1,4 @@
+import "package:whatifapp/history/history_page.dart";
 import 'package:flutter/material.dart';
 import 'models/history_entry.dart';
 import 'utils/storage.dart';
@@ -98,6 +99,15 @@ class _HomePageState extends State<HomePage> {
     return ChoiceChip(
       selected: selected,
       label: Row(mainAxisSize: MainAxisSize.min, children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HistoryPage()),
+                );
+              },
+              child: const Text("Cronologia"),
+            ),
         Icon(icon, size: 18),
         const SizedBox(width: 6),
         Text(label),
@@ -171,6 +181,15 @@ class _HomePageState extends State<HomePage> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HistoryPage()),
+                );
+              },
+              child: const Text("Cronologia"),
+            ),
           Center(
             child: Text(
               'What?f',
@@ -186,6 +205,15 @@ class _HomePageState extends State<HomePage> {
             spacing: 8,
             runSpacing: 8,
             children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HistoryPage()),
+                );
+              },
+              child: const Text("Cronologia"),
+            ),
               _scenarioChip(ScenarioType.slidingDoors, 'Sliding Doors', Icons.door_front_door),
               _scenarioChip(ScenarioType.whatTheF, 'What the F.?', Icons.bolt),
             ],
@@ -194,6 +222,15 @@ class _HomePageState extends State<HomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HistoryPage()),
+                );
+              },
+              child: const Text("Cronologia"),
+            ),
               const Text('Passato'),
               Switch(
                 value: _isFuture,
