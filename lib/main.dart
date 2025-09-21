@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'models/history_entry.dart';
 import 'utils/storage.dart';
 import 'history/history_page.dart';
+import 'history/history_store.dart';
+import 'history/history_page.dart';
+
 
 void main() => runApp(const WhatifApp());
 
@@ -107,6 +110,15 @@ class _HomePageState extends State<HomePage> {
   Future<void> _openDoor() async {
     FocusScope.of(context).unfocus();
     final q = _controller.text.trim();
+  final entry = HistoryEntry(
+    id: DateTime.now().millisecondsSinceEpoch.toString(),
+    question: q,
+    scenario: _scenario == ScenarioType.slidingDoors ? 'slidingDoors' : 'whatTheF',
+    side: _isFuture ? 'future' : 'past',
+    createdAt: DateTime.now().toIso8601String(),
+  );
+
+  HistoryStore.instance.add(entry);
     if (q.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Scrivi una domanda prima di aprire la porta.')),
