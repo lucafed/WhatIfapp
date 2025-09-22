@@ -1,0 +1,1 @@
+{"inputs":["/workspaces/WhatIfapp/web/*/index.html","/workspaces/WhatIfapp/web/flutter_bootstrap.js","/home/codespace/flutter/bin/cache/engine.stamp"],"outputs":["/workspaces/WhatIfapp/build/web/*/index.html","/workspaces/WhatIfapp/build/web/flutter_bootstrap.js"],"buildKey":"[{\"compileTarget\":\"dart2js\",\"renderer\":\"canvaskit\",\"mainJsPath\":\"main.dart.js\"},{}]"}
