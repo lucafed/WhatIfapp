@@ -14,7 +14,7 @@ class ProbabilityMeter extends StatelessWidget {
         const SizedBox(height: 6),
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: LinearProgressIndicator(minHeight: 12, value: v),
+          child: LinearProgressIndicator(minHeight: 12, value: v?.toDouble()?.toDouble()?.toDouble()),
         ),
         const SizedBox(height: 4),
         Text("${(v*100).toStringAsFixed(0)}%"),

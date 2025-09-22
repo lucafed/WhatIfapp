@@ -1,0 +1,244 @@
+[  +45 ms] Unable to locate an Android SDK.
+[   +8 ms] executing: uname -m
+[   +4 ms] Exit code 0 from: uname -m
+[        ] x86_64
+[  +15 ms] Artifact Instance of 'MaterialFonts' is not required, skipping update.
+[        ] Artifact Instance of 'GradleWrapper' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
+[        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterSdk' is not required, skipping update.
+[        ] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FontSubsetArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'PubDependencies' is not required, skipping update.
+[  +16 ms] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterEngineStamp' is not required, skipping update.
+[        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
+[   +2 ms] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[  +54 ms] Artifact Instance of 'MaterialFonts' is not required, skipping update.
+[        ] Artifact Instance of 'GradleWrapper' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[   +2 ms] Artifact Instance of 'FlutterEngineStamp' is not required, skipping update.
+[   +3 ms] Artifact Instance of 'FlutterSdk' is not required, skipping update.
+[        ] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FontSubsetArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'PubDependencies' is not required, skipping update.
+[  +16 ms] executing: [/workspaces/WhatIfapp/] /home/codespace/flutter/bin/cache/dart-sdk/bin/dart pub --suppress-analytics --directory . get --example
+Resolving dependencies...
+Downloading packages...
+  characters 1.4.0 (1.4.1 available)
+  flutter_lints 2.0.3 (6.0.0 available)
+  go_router 6.5.9 (16.2.2 available)
+  lints 2.1.1 (6.0.0 available)
+  material_color_utilities 0.11.1 (0.13.0 available)
+  meta 1.16.0 (1.17.0 available)
+  test_api 0.7.6 (0.7.7 available)
+Got dependencies!
+7 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+[ +915 ms] Found plugin shared_preferences at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences-2.5.3/
+[   +4 ms] Found plugin shared_preferences_windows at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_windows-2.4.1/
+[  +12 ms] Found plugin path_provider_windows at /home/codespace/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
+[   +9 ms] Found plugin shared_preferences_web at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_web-2.4.3/
+[   +4 ms] Found plugin shared_preferences_linux at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_linux-2.4.1/
+[   +3 ms] Found plugin path_provider_linux at /home/codespace/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
+[   +6 ms] Found plugin shared_preferences_foundation at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_foundation-2.5.4/
+[   +3 ms] Found plugin shared_preferences_android at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_android-2.4.12/
+[  +12 ms] Found plugin path_provider at /home/codespace/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[   +2 ms] Found plugin path_provider_foundation at /home/codespace/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.2/
+[   +2 ms] Found plugin path_provider_android at /home/codespace/.pub-cache/hosted/pub.dev/path_provider_android-2.2.18/
+[  +73 ms] Found plugin shared_preferences at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences-2.5.3/
+[   +1 ms] Found plugin shared_preferences_windows at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_windows-2.4.1/
+[  +12 ms] Found plugin path_provider_windows at /home/codespace/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
+[  +11 ms] Found plugin shared_preferences_web at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_web-2.4.3/
+[   +3 ms] Found plugin shared_preferences_linux at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_linux-2.4.1/
+[   +1 ms] Found plugin path_provider_linux at /home/codespace/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
+[   +4 ms] Found plugin shared_preferences_foundation at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_foundation-2.5.4/
+[   +2 ms] Found plugin shared_preferences_android at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_android-2.4.12/
+[  +17 ms] Found plugin path_provider at /home/codespace/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[   +1 ms] Found plugin path_provider_foundation at /home/codespace/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.2/
+[   +2 ms] Found plugin path_provider_android at /home/codespace/.pub-cache/hosted/pub.dev/path_provider_android-2.2.18/
+[  +22 ms] Skipping generating web_plugin_registrant.dart because it is up-to-date.
+[  +34 ms] Found plugin shared_preferences at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences-2.5.3/
+[   +1 ms] Found plugin shared_preferences_windows at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_windows-2.4.1/
+[   +4 ms] Found plugin path_provider_windows at /home/codespace/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
+[   +3 ms] Found plugin shared_preferences_web at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_web-2.4.3/
+[   +2 ms] Found plugin shared_preferences_linux at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_linux-2.4.1/
+[   +1 ms] Found plugin path_provider_linux at /home/codespace/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
+[   +1 ms] Found plugin shared_preferences_foundation at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_foundation-2.5.4/
+[   +1 ms] Found plugin shared_preferences_android at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_android-2.4.12/
+[   +5 ms] Found plugin path_provider at /home/codespace/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[   +1 ms] Found plugin path_provider_foundation at /home/codespace/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.2/
+[   +1 ms] Found plugin path_provider_android at /home/codespace/.pub-cache/hosted/pub.dev/path_provider_android-2.2.18/
+[   +9 ms] Generating /workspaces/WhatIfapp/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+[   +4 ms] Skipping generating GeneratedPluginRegistrant.java because it is up-to-date.
+[   +1 ms] Skipping generating generated_plugin_registrant.h because it is up-to-date.
+[   +2 ms] Skipping generating generated_plugin_registrant.cc because it is up-to-date.
+[   +1 ms] Skipping generating generated_plugins.cmake because it is up-to-date.
+[   +1 ms] Skipping generating generated_plugin_registrant.h because it is up-to-date.
+[        ] Skipping generating generated_plugin_registrant.cc because it is up-to-date.
+[        ] Skipping generating generated_plugins.cmake because it is up-to-date.
+[   +3 ms] Skipping generating GeneratedPluginRegistrant.h because it is up-to-date.
+[   +1 ms] Skipping generating GeneratedPluginRegistrant.m because it is up-to-date.
+[   +1 ms] Skipping generating GeneratedPluginRegistrant.swift because it is up-to-date.
+[  +40 ms] Found plugin shared_preferences at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences-2.5.3/
+[   +1 ms] Found plugin shared_preferences_windows at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_windows-2.4.1/
+[   +3 ms] Found plugin path_provider_windows at /home/codespace/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
+[   +8 ms] Found plugin shared_preferences_web at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_web-2.4.3/
+[   +2 ms] Found plugin shared_preferences_linux at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_linux-2.4.1/
+[        ] Found plugin path_provider_linux at /home/codespace/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
+[   +2 ms] Found plugin shared_preferences_foundation at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_foundation-2.5.4/
+[        ] Found plugin shared_preferences_android at /home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_android-2.4.12/
+[   +5 ms] Found plugin path_provider at /home/codespace/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[   +1 ms] Found plugin path_provider_foundation at /home/codespace/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.2/
+[   +1 ms] Found plugin path_provider_android at /home/codespace/.pub-cache/hosted/pub.dev/path_provider_android-2.2.18/
+[   +3 ms] generated_plugin_registrant.dart not found. Skipping.
+[   +1 ms] Compiling lib/main.dart for the Web...
+[   +5 ms] Initializing file store
+[   +5 ms] Done initializing file store
+[  +34 ms] Skipping target: web_entrypoint
+[   +1 ms] invalidated build due to missing files: /workspaces/WhatIfapp/web/*/index.html, /workspaces/WhatIfapp/web/flutter_bootstrap.js
+[        ] Skipping target: gen_localizations
+[   +1 ms] web_templated_files: Starting due to {InvalidatedReasonKind.outputMissing: The following outputs were missing: /workspaces/WhatIfapp/build/web/*/index.html, InvalidatedReasonKind.inputMissing: The following inputs were missing: /workspaces/WhatIfapp/web/*/index.html,/workspaces/WhatIfapp/web/flutter_bootstrap.js}
+[   +1 ms] web_static_assets: Starting due to {InvalidatedReasonKind.outputMissing: The following outputs were missing: /workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/flutter.js,/workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/canvaskit/skwasm.js,/workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/canvaskit/canvaskit.wasm,/workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/canvaskit/canvaskit.js,/workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/canvaskit/canvaskit.js.symbols,/workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/canvaskit/chromium/canvaskit.wasm,/workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/canvaskit/chromium/canvaskit.js,/workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/canvaskit/chromium/canvaskit.js.symbols,/workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/canvaskit/skwasm_heavy.wasm,/workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/canvaskit/skwasm_heavy.js.symbols,/workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/canvaskit/skwasm.wasm,/workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/canvaskit/skwasm.js.symbols,/workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/canvaskit/skwasm_heavy.js}
+[  +29 ms] web_static_assets: Complete
+[ +318 ms] dart2js: Starting due to {InvalidatedReasonKind.buildKeyChanged: The target build key changed., InvalidatedReasonKind.outputSetAddition: The following outputs were added to the output set: /workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/main.dart.js}
+[   +6 ms] executing: /home/codespace/flutter/bin/cache/dart-sdk/bin/dart compile js --platform-binaries=/home/codespace/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DFLUTTER_VERSION=3.35.4 -DFLUTTER_CHANNEL=stable -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=d693b4b9db -DFLUTTER_ENGINE_REVISION=c298091351 -DFLUTTER_DART_VERSION=3.9.2 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/c29809135135e262a912cf583b2c90deb9ded610/ --native-null-assertions --no-source-maps -O4 --minify -o /workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/app.dill --packages=/workspaces/WhatIfapp/.dart_tool/package_config.json --cfe-only /workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/main.dart
+[  +36 ms] web_templated_files: Complete
+[   +3 ms] dart2wasm: Starting due to {}
+[   +6 ms] executing: /home/codespace/flutter/bin/cache/dart-sdk/bin/dart compile wasm --packages=/workspaces/WhatIfapp/.dart_tool/package_config.json --extra-compiler-option=--platform=/home/codespace/flutter/bin/cache/flutter_web_sdk/kernel/dart2wasm_platform.dill -Ddart.vm.profile=false -Ddart.vm.product=true --extra-compiler-option=--delete-tostring-package-uri=dart:ui --extra-compiler-option=--delete-tostring-package-uri=package:flutter --extra-compiler-option=--import-shared-memory --extra-compiler-option=--shared-memory-max-pages=32768 -DFLUTTER_VERSION=3.35.4 -DFLUTTER_CHANNEL=stable -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=d693b4b9db -DFLUTTER_ENGINE_REVISION=c298091351 -DFLUTTER_DART_VERSION=3.9.2 -DFLUTTER_WEB_USE_SKIA=false -DFLUTTER_WEB_USE_SKWASM=true -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/c29809135135e262a912cf583b2c90deb9ded610/ --extra-compiler-option=--depfile=/workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/dart2wasm.d -O2 --strip-wasm --no-source-maps --minify --extra-compiler-option=--dry-run -o /workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/main.dart.wasm /workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/main.dart
+[+14801 ms] Found incompatibilities with WebAssembly.
+
+            package:whatifapp/ui/widgets/share_buttons.dart 2:1 - dart:html unsupported (0)
+[   +1 ms] Wasm dry run findings:
+[   +1 ms] Found incompatibilities with WebAssembly.
+
+           package:whatifapp/ui/widgets/share_buttons.dart 2:1 - dart:html unsupported (0)
+
+[        ] Consider addressing these issues to enable wasm builds. See docs for more info: https://docs.flutter.dev/platform-integration/web/wasm
+
+[        ] Use --no-wasm-dry-run to disable these warnings.
+[        ] dart2wasm: Complete
+[+1386 ms] lib/ui/widgets/probability_meter.dart:17:64:
+           Error: The argument type 'num' can't be assigned to the parameter type 'double?'.
+                     child: LinearProgressIndicator(minHeight: 12, value: v),
+                                                                          ^
+           Error: Compilation failed.
+[   +2 ms] Persisting file store
+[   +8 ms] Done persisting file store
+[   +2 ms] Target dart2js failed: ProcessException: Process exited abnormally with exit code 1:
+           lib/ui/widgets/probability_meter.dart:17:64:
+           Error: The argument type 'num' can't be assigned to the parameter type 'double?'.
+                     child: LinearProgressIndicator(minHeight: 12, value: v),
+                                                                          ^
+           Error: Compilation failed.
+             Command: /home/codespace/flutter/bin/cache/dart-sdk/bin/dart compile js --platform-binaries=/home/codespace/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DFLUTTER_VERSION=3.35.4 -DFLUTTER_CHANNEL=stable -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=d693b4b9db -DFLUTTER_ENGINE_REVISION=c298091351 -DFLUTTER_DART_VERSION=3.9.2 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/c29809135135e262a912cf583b2c90deb9ded610/ --native-null-assertions --no-source-maps -O4 --minify -o /workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/app.dill --packages=/workspaces/WhatIfapp/.dart_tool/package_config.json --cfe-only /workspaces/WhatIfapp/.dart_tool/flutter_build/2648db509294a830c7cba781fce2823c/main.dart
+           #0      RunResult.throwException (package:flutter_tools/src/base/process.dart:118:5)
+           #1      _DefaultProcessUtils.run (package:flutter_tools/src/base/process.dart:344:19)
+           <asynchronous suspension>
+           #2      Dart2JSTarget.build (package:flutter_tools/src/build_system/targets/web.dart:204:5)
+           <asynchronous suspension>
+           #3      _BuildInstance._invokeInternal (package:flutter_tools/src/build_system/build_system.dart:873:9)
+           <asynchronous suspension>
+           #4      Future.wait.<anonymous closure> (dart:async/future.dart:525:21)
+           <asynchronous suspension>
+           #5      _BuildInstance.invokeTarget (package:flutter_tools/src/build_system/build_system.dart:811:32)
+           <asynchronous suspension>
+           #6      Future.wait.<anonymous closure> (dart:async/future.dart:525:21)
+           <asynchronous suspension>
+           #7      _BuildInstance.invokeTarget (package:flutter_tools/src/build_system/build_system.dart:811:32)
+           <asynchronous suspension>
+           #8      FlutterBuildSystem.build (package:flutter_tools/src/build_system/build_system.dart:631:16)
+           <asynchronous suspension>
+           #9      WebBuilder.buildWeb (package:flutter_tools/src/web/compile.dart:90:34)
+           <asynchronous suspension>
+           #10     BuildWebCommand.runCommand (package:flutter_tools/src/commands/build_web.dart:282:5)
+           <asynchronous suspension>
+           #11     FlutterCommand.run.<anonymous closure> (package:flutter_tools/src/runner/flutter_command.dart:1581:27)
+           <asynchronous suspension>
+           #12     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+           <asynchronous suspension>
+           #13     CommandRunner.runCommand (package:args/command_runner.dart:212:13)
+           <asynchronous suspension>
+           #14     FlutterCommandRunner.runCommand.<anonymous closure> (package:flutter_tools/src/runner/flutter_command_runner.dart:503:9)
+           <asynchronous suspension>
+           #15     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+           <asynchronous suspension>
+           #16     FlutterCommandRunner.runCommand (package:flutter_tools/src/runner/flutter_command_runner.dart:438:5)
+           <asynchronous suspension>
+           #17     run.<anonymous closure>.<anonymous closure> (package:flutter_tools/runner.dart:98:11)
+           <asynchronous suspension>
+           #18     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+           <asynchronous suspension>
+           #19     main (package:flutter_tools/executable.dart:101:3)
+           <asynchronous suspension>
+
+[   +2 ms] Compiling lib/main.dart for the Web... (completed in 16.7s)
+[        ] "flutter web" took 18,050ms.
+[   +8 ms] Error: Failed to compile application for the Web.
+[        ] 
+           #0      throwToolExit (package:flutter_tools/src/base/common.dart:34:3)
+           #1      WebBuilder.buildWeb (package:flutter_tools/src/web/compile.dart:132:7)
+           <asynchronous suspension>
+           #2      BuildWebCommand.runCommand (package:flutter_tools/src/commands/build_web.dart:282:5)
+           <asynchronous suspension>
+           #3      FlutterCommand.run.<anonymous closure> (package:flutter_tools/src/runner/flutter_command.dart:1581:27)
+           <asynchronous suspension>
+           #4      AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+           <asynchronous suspension>
+           #5      CommandRunner.runCommand (package:args/command_runner.dart:212:13)
+           <asynchronous suspension>
+           #6      FlutterCommandRunner.runCommand.<anonymous closure> (package:flutter_tools/src/runner/flutter_command_runner.dart:503:9)
+           <asynchronous suspension>
+           #7      AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+           <asynchronous suspension>
+           #8      FlutterCommandRunner.runCommand (package:flutter_tools/src/runner/flutter_command_runner.dart:438:5)
+           <asynchronous suspension>
+           #9      run.<anonymous closure>.<anonymous closure> (package:flutter_tools/runner.dart:98:11)
+           <asynchronous suspension>
+           #10     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+           <asynchronous suspension>
+           #11     main (package:flutter_tools/executable.dart:101:3)
+           <asynchronous suspension>
+
+
+[        ] Running 1 shutdown hook
+[        ] Shutdown hooks complete
+[        ] exiting with code 1
