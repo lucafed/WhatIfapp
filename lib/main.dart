@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'ui/pages/home_page.dart';
+import 'theme.dart';
+import 'ui/pages/_exports.dart';
 
-void main() => runApp(const WhatIfApp());
+void main() {
+  runApp(const WhatIfApp());
+}
 
 class WhatIfApp extends StatelessWidget {
   const WhatIfApp({super.key});
@@ -10,13 +13,15 @@ class WhatIfApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'What?f',
+      theme: AppTheme.dark(),
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00BFA6), brightness: Brightness.dark),
-        useMaterial3: true,
-      ),
-      home: const HomePage(),
+      initialRoute: '/onboarding',
+      routes: {
+        '/onboarding': (_) => const OnboardingPage(),
+        '/home': (_) => const HomePage(),
+        '/results': (_) => const ResultsPage(),
+        '/history': (_) => const HistoryPage(),
+      },
     );
   }
 }

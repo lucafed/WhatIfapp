@@ -3,52 +3,71 @@ import 'dart:convert';
 class HistoryEntry {
   final String id;
   final String question;
-  final String scenario; // "slidingDoors" | "whatTheF"
-  final String side;     // "future" | "past"
-  final String createdAt;
-  final bool favorite;
+  final String side; // 'past' | 'future'
+  final String scenario; // 'slidingDoors' | 'whatTheF'
+  final String createdAt; // ISO
+  // risultati
+  final String answerReal;
+  final int probReal; // 0..100
+  final String answerWtf;
+  final int probWtf; // 0..100
+  final bool liked;
 
   const HistoryEntry({
     required this.id,
     required this.question,
-    required this.scenario,
     required this.side,
+    required this.scenario,
     required this.createdAt,
-    this.favorite = false,
+    required this.answerReal,
+    required this.probReal,
+    required this.answerWtf,
+    required this.probWtf,
+    this.liked = false,
   });
 
-  HistoryEntry copyWith({bool? favorite}) => HistoryEntry(
+  HistoryEntry copyWith({bool? liked}) => HistoryEntry(
         id: id,
         question: question,
-        scenario: scenario,
         side: side,
+        scenario: scenario,
         createdAt: createdAt,
-        favorite: favorite ?? this.favorite,
+        answerReal: answerReal,
+        probReal: probReal,
+        answerWtf: answerWtf,
+        probWtf: probWtf,
+        liked: liked ?? this.liked,
       );
 
-  Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toMap() => {
         'id': id,
         'question': question,
-        'scenario': scenario,
         'side': side,
+        'scenario': scenario,
         'createdAt': createdAt,
-        'favorite': favorite,
+        'answerReal': answerReal,
+        'probReal': probReal,
+        'answerWtf': answerWtf,
+        'probWtf': probWtf,
+        'liked': liked,
       };
 
-  static HistoryEntry fromJson(Map<String, dynamic> m) => HistoryEntry(
-        id: m['id'] as String,
-        question: m['question'] as String,
-        scenario: m['scenario'] as String,
-        side: (m['side'] ?? m['timeSide'] ?? 'future') as String,
-        createdAt: m['createdAt'] as String,
-        favorite: (m['favorite'] as bool?) ?? false,
+  static HistoryEntry fromMap(Map<String, dynamic> m) => HistoryEntry(
+        id: m['id'],
+        question: m['question'],
+        side: m['side'],
+        scenario: m['scenario'],
+        createdAt: m['createdAt'],
+        answerReal: m['answerReal'],
+        probReal: (m['probReal'] ?? 0) as int,
+        answerWtf: m['answerWtf'],
+        probWtf: (m['probWtf'] ?? 0) as int,
+        liked: (m['liked'] ?? false) as bool,
       );
 
-  static String encodeList(List<HistoryEntry> items) =>
-      jsonEncode(items.map((e) => e.toJson()).toList());
+  String toJson() => jsonEncode(toMap());
+  static HistoryEntry fromJson(String s) => fromMap(jsonDecode(s));
 
-  static List<HistoryEntry> decodeList(String s) {
-    final raw = jsonDecode(s) as List;
-    return raw.map((e) => HistoryEntry.fromJson(e as Map<String, dynamic>)).toList();
-  }
+  @override
+  String toString() => 'HistoryEntry($question • $side/$scenario)';
 }

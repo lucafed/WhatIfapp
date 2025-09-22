@@ -1,118 +1,102 @@
 import 'package:flutter/material.dart';
-import '../../models/result_entry.dart';
-import '../../services/ai.dart';
-import '../../services/share.dart';
-import '../../services/tts.dart';
-import '../../theme.dart';
+import '../../models/history_entry.dart';
+import '../../services/storage.dart';
+import 'package:flutter/services.dart';
 
-class ResultsPage extends StatefulWidget {
-  final String question;
-  final bool isFuture;
-  const ResultsPage({super.key, required this.question, required this.isFuture});
-
-  @override
-  State<ResultsPage> createState() => _ResultsPageState();
-}
-
-class _ResultsPageState extends State<ResultsPage> {
-  final AiClient _ai = const LocalMockAiClient();
-  late Future<List<ResultEntry>> _future;
-
-  @override
-  void initState() {
-    super.initState();
-    _future = _ai.generate(question: widget.question, isFuture: widget.isFuture);
-  }
-
-  @override
-  void dispose() {
-    TtsService.stop();
-    super.dispose();
-  }
+class ResultsPage extends StatelessWidget {
+  const ResultsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final HistoryEntry entry = ModalRoute.of(context)!.settings.arguments as HistoryEntry;
+
+    Widget card(String title, String text, int prob, {IconData icon = Icons.auto_awesome}) {
+      return Card(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                Icon(icon),
+                const SizedBox(width: 8),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Spacer(),
+                Text('$prob%', style: const TextStyle(fontWeight: FontWeight.bold)),
+              ]),
+              const SizedBox(height: 8),
+              Text(text),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () async {
+                    final s = '$title ($prob%)\n\n$text';
+                    await Clipboard.setData(ClipboardData(text: s));
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Copiato negli appunti')),
+                    );
+                  },
+                  icon: const Icon(Icons.share),
+                  label: const Text('Condividi'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('Risultati')),
-      backgroundColor: scheme.background,
-      body: FutureBuilder<List<ResultEntry>>(
-        future: _future,
-        builder: (context, snap) {
-          if (!snap.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final results = snap.data!;
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: results.length,
-            separatorBuilder: (_, __)=>const SizedBox(height: 12),
-            itemBuilder: (_, i) => _ResultCard(
-              entry: results[i],
-              onShare: () => ShareService.shareText(results[i].text),
-              onTts: () => TtsService.speak(results[i].text),
-              onToggle: () => setState(()=> results[i].expanded = !results[i].expanded),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _ResultCard extends StatelessWidget {
-  final ResultEntry entry;
-  final VoidCallback onShare, onTts, onToggle;
-  const _ResultCard({required this.entry, required this.onShare, required this.onTts, required this.onToggle});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final title = entry.scenario == 'slidingDoors' ? 'Sliding Doors' : 'What the F?!';
-    final color = entry.scenario == 'slidingDoors' ? AppTheme.turquoise : AppTheme.neonPink;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(.3)),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
-          Row(children: [
-            Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color)),
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(999),
-                color: color.withOpacity(.15),
-                border: Border.all(color: color.withOpacity(.4)),
-              ),
-              child: Text('${entry.probability}%', style: TextStyle(fontWeight: FontWeight.w700, color: color)),
-            ),
+          Text('Domanda: “${entry.question}”', style: const TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Wrap(spacing: 8, children: [
+            Chip(label: Text('Scenario: ${entry.scenario == 'slidingDoors' ? 'Sliding Doors' : 'What the F?!'}')),
+            Chip(label: Text('Lato: ${entry.side == 'future' ? 'Futuro' : 'Passato'}')),
           ]),
-          const SizedBox(height: 10),
-          Text(
-            entry.expanded ? entry.text : _truncate(entry.text),
-            style: const TextStyle(height: 1.25),
-          ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
+          card('Realistico', entry.answerReal, entry.probReal, icon: Icons.bolt),
+          card('What the F?!', entry.answerWtf, entry.probWtf, icon: Icons.psychology),
+          const SizedBox(height: 8),
           Row(
             children: [
-              TextButton(onPressed: onToggle, child: Text(entry.expanded ? 'Vedi meno' : 'Vedi di più')),
-              const Spacer(),
-              IconButton(onPressed: onShare, icon: const Icon(Icons.ios_share)),
-              IconButton(onPressed: onTts,   icon: const Icon(Icons.volume_up)),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.of(context).pushReplacementNamed('/home'),
+                  icon: const Icon(Icons.fiber_new),
+                  label: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Text('Nuova domanda'),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    await Storage.updateLiked(entry.id, !entry.liked);
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(entry.liked ? 'Rimosso dai preferiti' : 'Messo tra i preferiti')),
+                    );
+                  },
+                  icon: Icon(entry.liked ? Icons.favorite : Icons.favorite_border),
+                  label: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Text('Mi piace'),
+                  ),
+                ),
+              ),
             ],
           ),
         ],
       ),
     );
   }
-
-  static String _truncate(String s, {int max=180}) =>
-      s.length <= max ? s : s.substring(0, max).trimRight() + '…';
 }
