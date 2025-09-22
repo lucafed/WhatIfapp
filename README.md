@@ -1,3 +1,5 @@
+[![Deploy Web to GitHub Pages](https://github.com/lucafed/WhatIfapp/actions/workflows/deploy.yml/badge.svg)](https://github.com/lucafed/WhatIfapp/actions/workflows/deploy.yml)
+
 ![Deploy Web to GitHub Pages](https://github.com/lucafed/WhatIfapp/actions/workflows/deploy.yml/badge.svg)
 
 # whatifapp
