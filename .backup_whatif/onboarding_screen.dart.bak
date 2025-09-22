@@ -1,0 +1,201 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:whatifapp/main.dart' show HomePage;
+
+class OnboardingScreen extends StatefulWidget {
+  const OnboardingScreen({super.key});
+  @override
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
+}
+
+class _OnboardingScreenState extends State<OnboardingScreen> {
+  final _controller = PageController();
+  int _index = 0;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _goHome() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const HomePage()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dots = List.generate(2, (i) {
+      final active = i == _index;
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        height: 6,
+        width: active ? 18 : 6,
+        decoration: BoxDecoration(
+          color: active ? const Color(0xFF2BF6E7) : Colors.white24,
+          borderRadius: BorderRadius.circular(6),
+        ),
+      );
+    });
+
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF07161A), Color(0xFF0B1B1E)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: PageView(
+                  controller: _controller,
+                  onPageChanged: (i) => setState(() => _index = i),
+                  children: const [
+                    _DoorPage(),
+                    _BarPage(),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20, top: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: dots,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+        child: Row(
+          children: [
+            if (_index == 1)
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _goHome,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2BF6E7),
+                    foregroundColor: const Color(0xFF0B1B1E),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'Inizia',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _controller.animateToPage(
+                    1,
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeOut,
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFF2BF6E7), width: 1.5),
+                    foregroundColor: const Color(0xFF2BF6E7),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'Avanti',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DoorPage extends StatelessWidget {
+  const _DoorPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 8),
+          Expanded(
+            child: Center(
+              child: SvgPicture.asset(
+                'assets/whatif_door.svg',
+                width: 300,
+                height: 300,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Ogni giorno scegliamo il nostro destino.\nE se avessimo aperto un’altra porta?',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Color(0xFFE7FBF9),
+              fontSize: 18,
+              height: 1.35,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 28),
+        ],
+      ),
+    );
+  }
+}
+
+class _BarPage extends StatelessWidget {
+  const _BarPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 8),
+          Expanded(
+            child: Center(
+              child: SvgPicture.asset(
+                'assets/whataf_bar.svg',
+                width: 300,
+                height: 300,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'What a F…\nLa porta del bar è aperta: curiosità, risate e un pizzico di follia.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Color(0xFFE7FBF9),
+              fontSize: 18,
+              height: 1.35,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 28),
+        ],
+      ),
+    );
+  }
+}

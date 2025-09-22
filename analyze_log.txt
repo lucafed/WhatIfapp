@@ -1,0 +1,44 @@
+Analyzing WhatIfapp...                                          
+
+  error • The getter 'favorite' isn't defined for the type 'HistoryEntry' • lib/history/history_page.dart:38:32 • undefined_getter
+  error • The method 'copyWith' isn't defined for the type 'HistoryEntry' • lib/history/history_store.dart:45:27 • undefined_method
+  error • The getter 'favorite' isn't defined for the type 'HistoryEntry' • lib/history/history_store.dart:45:57 • undefined_getter
+warning • Unused import: 'ui/pages/onboarding_page.dart' • lib/main.dart:2:8 • unused_import
+warning • Unused import: 'ui/pages/home_page.dart' • lib/main.dart:5:8 • unused_import
+   info • Use 'const' with the constructor to improve performance • lib/main.dart:20:13 • prefer_const_constructors
+  error • The named parameter 'answerReal' is required, but there's no corresponding argument • lib/services/ai.dart:57:10 • missing_required_argument
+  error • The named parameter 'answerWtf' is required, but there's no corresponding argument • lib/services/ai.dart:57:10 • missing_required_argument
+  error • The named parameter 'probabilityReal' is required, but there's no corresponding argument • lib/services/ai.dart:57:10 • missing_required_argument
+  error • The named parameter 'probabilityWtf' is required, but there's no corresponding argument • lib/services/ai.dart:57:10 • missing_required_argument
+  error • The named parameter 'answer' isn't defined • lib/services/ai.dart:62:5 • undefined_named_parameter
+  error • The named parameter 'probability' isn't defined • lib/services/ai.dart:63:5 • undefined_named_parameter
+   info • 'dart:html' is deprecated and shouldn't be used. Use package:web and dart:js_interop instead • lib/services/share.dart:1:1 • deprecated_member_use
+   info • Don't use web-only libraries outside Flutter web plugins • lib/services/share.dart:1:1 • avoid_web_libraries_in_flutter
+  error • The argument type 'Map<String, dynamic>' can't be assigned to the parameter type 'String'.  • lib/services/storage.dart:15:20 • argument_type_not_assignable
+  error • A value of type 'List<dynamic>' can't be returned from the method 'getHistory' because it has a return type of 'Future<List<HistoryEntry>>' • lib/services/storage.dart:22:12 • return_of_invalid_type
+  error • The argument type 'HistoryEntry Function(Map<String, dynamic>)' can't be assigned to the parameter type 'dynamic Function(String)'.  • lib/services/storage.dart:22:21 • argument_type_not_assignable
+  error • The argument type 'String' can't be assigned to the parameter type 'Map<String, dynamic>'.  • lib/services/storage.dart:47:39 • argument_type_not_assignable
+  error • The argument type 'List<Map<String, dynamic>>' can't be assigned to the parameter type 'List<String>'.  • lib/services/storage.dart:53:42 • argument_type_not_assignable
+   info • 'dart:html' is deprecated and shouldn't be used. Use package:web and dart:js_interop instead • lib/services/tts.dart:1:1 • deprecated_member_use
+   info • Don't use web-only libraries outside Flutter web plugins • lib/services/tts.dart:1:1 • avoid_web_libraries_in_flutter
+warning • The library 'package:whatifapp/main.dart' doesn't export a member with the shown name 'HomePage' • lib/ui/pages/onboarding_screen.dart:3:31 • undefined_shown_name
+  error • The name 'HomePage' isn't a class • lib/ui/pages/onboarding_screen.dart:19:47 • creation_with_non_type
+   info • Use 'const' for final variables initialized to a constant value • lib/ui/pages/onboarding_screen.dart:25:5 • prefer_const_declarations
+   info • Use 'const' for final variables initialized to a constant value • lib/ui/pages/onboarding_screen.dart:26:5 • prefer_const_declarations
+   info • Use 'const' for final variables initialized to a constant value • lib/ui/pages/onboarding_screen.dart:27:5 • prefer_const_declarations
+   info • Use 'const' with the constructor to improve performance • lib/ui/pages/result_page.dart:11:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/ui/pages/result_page.dart:11:27 • prefer_const_constructors
+warning • The receiver can't be null, so the null-aware operator '?.' is unnecessary • lib/ui/widgets/probability_meter.dart:17:65 • invalid_null_aware_operator
+warning • The receiver can't be 'null' because of short-circuiting, so the null-aware operator '?.' can't be used • lib/ui/widgets/probability_meter.dart:17:77 • invalid_null_aware_operator
+warning • The receiver can't be 'null' because of short-circuiting, so the null-aware operator '?.' can't be used • lib/ui/widgets/probability_meter.dart:17:89 • invalid_null_aware_operator
+   info • 'dart:html' is deprecated and shouldn't be used. Use package:web and dart:js_interop instead • lib/ui/widgets/share_buttons.dart:2:1 • deprecated_member_use
+   info • Don't use web-only libraries outside Flutter web plugins • lib/ui/widgets/share_buttons.dart:2:1 • avoid_web_libraries_in_flutter
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/ui/widgets/sliding_door.dart:23:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/ui/widgets/sliding_door.dart:30:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/ui/widgets/sliding_door.dart:37:40 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/ui/widgets/sliding_door.dart:38:62 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/ui/widgets/wtf_portal.dart:42:77 • deprecated_member_use
+warning • The library 'package:whatifapp/main.dart' doesn't export a member with the shown name 'HomePage' • lib/utils/launch_gate.dart:4:43 • undefined_shown_name
+  error • The name 'HomePage' isn't a class • lib/utils/launch_gate.dart:26:36 • creation_with_non_type
+  error • The name 'MyApp' isn't a class • test/widget_test.dart:16:35 • creation_with_non_type
+
