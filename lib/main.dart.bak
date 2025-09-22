@@ -1,0 +1,47 @@
+cat > lib/main.dart <<'DART'
+import 'package:flutter/material.dart';
+
+// Tema e pagine
+import 'ui/app_theme.dart';
+import 'pages/onboarding_page.dart';
+import 'pages/home_page.dart';
+import 'pages/results_page.dart';
+import 'history/history_page.dart';
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+    runApp(const WhatIfApp());
+    }
+
+    class WhatIfApp extends StatelessWidget {
+      const WhatIfApp({super.key});
+
+        @override
+          Widget build(BuildContext context) {
+              return MaterialApp(
+                    title: 'What?f',
+                          debugShowCheckedModeBanner: false,
+                                theme: AppTheme.dark(),
+                                      home: const OnboardingPage(),
+                                            routes: {
+                                                    '/home': (_) => const HomePage(),
+                                                            '/history': (_) => const HistoryPage(),
+                                                                  },
+                                                                        onGenerateRoute: (settings) {
+                                                                                if (settings.name == '/results') {
+                                                                                          final args = settings.arguments is Map ? (settings.arguments as Map) : const {};
+                                                                                                    return MaterialPageRoute(
+                                                                                                                builder: (_) => ResultsPage(
+                                                                                                                              question: (args['question'] ?? '') as String,
+                                                                                                                                            scenario: (args['scenario'] ?? 'slidingDoors') as String,
+                                                                                                                                                          side: (args['side'] ?? 'future') as String,
+                                                                                                                                                                      ),
+                                                                                                                                                                                  settings: settings,
+                                                                                                                                                                                            );
+                                                                                                                                                                                                    }
+                                                                                                                                                                                                            return null;
+                                                                                                                                                                                                                  },
+                                                                                                                                                                                                                      );
+                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                        DART
