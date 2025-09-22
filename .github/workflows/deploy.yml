@@ -5,13 +5,15 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+# Permessi NECESSARI per deploy-pages@v4
 permissions:
-  contents: write  # necessario per push su gh-pages
+  contents: read
   pages: write
+  id-token: write
 
 concurrency:
   group: "pages"
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -24,15 +26,13 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          cache: true
 
-      - name: Flutter pub get
-        run: flutter pub get
+      - name: Flutter pub get + build web
+        run: |
+          flutter pub get
+          flutter build web --release --base-href "/WhatIfapp/"
 
-      - name: Build Flutter Web
-        run: flutter build web --release --base-href "/WhatIfapp/"
-
-      - name: Upload artifact
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: build/web
@@ -42,6 +42,8 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages (gh-pages branch)
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
