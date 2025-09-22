@@ -1,3 +1,5 @@
+![Deploy Web to GitHub Pages](https://github.com/lucafed/WhatIfapp/actions/workflows/deploy.yml/badge.svg)
+
 # whatifapp
 
 A new Flutter project.
