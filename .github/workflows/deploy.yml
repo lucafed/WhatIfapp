@@ -1,14 +1,20 @@
-name: Deploy Flutter Web to GH Pages
+name: Deploy Web to GitHub Pages
 
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: write  # necessario per push su gh-pages
+  pages: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
-  build-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -18,20 +24,24 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          cache: true
 
-      - name: Flutter version
-        run: flutter --version
-
-      - name: Install deps
+      - name: Flutter pub get
         run: flutter pub get
 
-      - name: Build web (base-href for Pages)
+      - name: Build Flutter Web
         run: flutter build web --release --base-href "/WhatIfapp/"
 
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: build/web
-          force_orphan: true
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - name: Deploy to GitHub Pages (gh-pages branch)
+        uses: actions/deploy-pages@v4
