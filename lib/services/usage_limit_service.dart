@@ -1,42 +1,27 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UsageLimitService {
+  static const _kDayKey = 'whatif_day';
   static const _kCountKey = 'whatif_count';
-  static const _kDateKey  = 'whatif_date';
-  static const int dailyLimit = 3;
+  static const freeDaily = 3;
+
+  static Future<(int used, int left)> status() async {
+    final sp = await SharedPreferences.getInstance();
+    final today = DateTime.now().toIso8601String().substring(0,10);
+    final day = sp.getString(_kDayKey);
+    int count = sp.getInt(_kCountKey) ?? 0;
+    if (day != today) { count = 0; await sp.setString(_kDayKey, today); await sp.setInt(_kCountKey, count); }
+    return (count, (freeDaily - count).clamp(0, freeDaily));
+    }
 
   static Future<bool> canAsk() async {
-    final sp = await SharedPreferences.getInstance();
-    final today = DateTime.now().toIso8601String().substring(0,10);
-    final last = sp.getString(_kDateKey);
-    if (last != today) {
-      await sp.setString(_kDateKey, today);
-      await sp.setInt(_kCountKey, 0);
-    }
-    final count = sp.getInt(_kCountKey) ?? 0;
-    return count < dailyLimit;
-  }
-
-  static Future<int> remaining() async {
-    final sp = await SharedPreferences.getInstance();
-    final today = DateTime.now().toIso8601String().substring(0,10);
-    final last = sp.getString(_kDateKey);
-    if (last != today) {
-      return dailyLimit;
-    }
-    final count = sp.getInt(_kCountKey) ?? 0;
-    return (dailyLimit - count).clamp(0, dailyLimit);
+    final s = await status();
+    return s.$1 < freeDaily;
   }
 
   static Future<void> increment() async {
     final sp = await SharedPreferences.getInstance();
-    final today = DateTime.now().toIso8601String().substring(0,10);
-    final last = sp.getString(_kDateKey);
-    if (last != today) {
-      await sp.setString(_kDateKey, today);
-      await sp.setInt(_kCountKey, 0);
-    }
-    final count = sp.getInt(_kCountKey) ?? 0;
-    await sp.setInt(_kCountKey, count + 1);
+    final s = await status();
+    await sp.setInt(_kCountKey, s.$1 + 1);
   }
 }

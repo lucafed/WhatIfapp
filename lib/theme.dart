@@ -3,17 +3,15 @@ import 'package:flutter/material.dart';
 class AppTheme {
   static ThemeData dark() {
     final scheme = ColorScheme.fromSeed(
-      seedColor: Colors.teal,
+      seedColor: const Color(0xFF00D1D1),
       brightness: Brightness.dark,
     );
     return ThemeData(
-      useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: const Color(0xFF0E0F10),
-      snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
-      appBarTheme: const AppBarTheme(centerTitle: false),
-      inputDecorationTheme: const InputDecorationTheme(
-        border: OutlineInputBorder(),
+      scaffoldBackgroundColor: const Color(0xFF0B0F10),
+      useMaterial3: true,
+      textTheme: const TextTheme(
+        headlineMedium: TextStyle(fontWeight: FontWeight.w700),
       ),
     );
   }

@@ -1,62 +1,66 @@
-import 'dart:math';
-import '../models/result_entry.dart';
+import '../models/history_entry.dart';
 
-/// Interfaccia: in futuro puoi collegare OpenAI qui.
-abstract class AiClient {
-  Future<List<ResultEntry>> generate({
+enum ScenarioType { slidingDoors, whatTheF }
+
+class AIResult {
+  final String realisticAnswer;
+  final int realisticProbability;
+  final String funAnswer;
+  final int funProbability;
+  AIResult({
+    required this.realisticAnswer,
+    required this.realisticProbability,
+    required this.funAnswer,
+    required this.funProbability,
+  });
+}
+
+/// Interfaccia per poter poi sostituire lo stub con un provider HTTP reale
+abstract class AIProvider {
+  Future<AIResult> generate({
     required String question,
     required bool isFuture,
   });
 }
 
-/// Implementazione mock locale: genera due scenari coerenti + %.
-class LocalMockAiClient implements AiClient {
-  const LocalMockAiClient();
-
-  int _seededProbability(String input, bool isFuture) {
-    final s = '${input.toLowerCase()}|$isFuture';
-    final hash = s.codeUnits.fold<int>(0, (a, c) => (a * 31 + c) & 0x7fffffff);
-    return 5 + (hash % 91); // 5..95
-  }
-
-  String _realistic(String q, bool isFuture, int p) {
-    final dir = isFuture ? 'futuro' : 'passato';
-    return 'Scenario realistico ($dir): $q\n'
-           'Probabilità stimata: $p%.\n'
-           'Motivo: segnali e precedenti plausibili in questa direzione.';
-  }
-
-  String _wtf(String q, bool isFuture, int p) {
-    const alibi = [
-      "la convergenza dei pianeti",
-      "un glitch nella matrice",
-      "il gatto di Schrödinger col Wi-Fi",
-      "una farfalla che sbatte le ali a Rimini",
-    ];
-    final pick = alibi[Random(q.hashCode).nextInt(alibi.length)];
-    return 'What the F?!: $q\n'
-           'Probabilità assurda ma possibile: $p%.\n'
-           'Motivo ironico: $pick oggi è in vena.';
-  }
-
+/// Implementazione STUB (locale, zero costi)
+class StubAIProvider implements AIProvider {
   @override
-  Future<List<ResultEntry>> generate({
-    required String question,
-    required bool isFuture,
-  }) async {
-    final p1 = _seededProbability(question, isFuture);
-    final p2 = (100 - p1) - (p1 % 7);
-    return [
-      ResultEntry(
-        scenario: 'slidingDoors',
-        text: _realistic(question, isFuture, p1.clamp(5, 95)),
-        probability: p1.clamp(5, 95),
-      ),
-      ResultEntry(
-        scenario: 'whatTheF',
-        text: _wtf(question, isFuture, (p2.abs()).clamp(5, 95)),
-        probability: (p2.abs()).clamp(5, 95),
-      ),
-    ];
+  Future<AIResult> generate({required String question, required bool isFuture}) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    final polarity = isFuture ? 'nel futuro' : 'nel passato';
+    final pReal = (question.hashCode.abs() % 60) + 20; // 20..79
+    final pFun  = 100 - (pReal ~/ 2);                  // giusto per variare
+
+    return AIResult(
+      realisticAnswer:
+          "Scenario realistico: se cambi qualcosa $polarity di \"$question\", "
+          "l'effetto a catena rimane circoscritto. Probabile esito positivo se agisci con metodo.",
+      realisticProbability: pReal,
+      funAnswer:
+          "Scenario WTF?!: apri la porta e trovi un piccione che ti consegna una laurea honoris causa. "
+          "Poi tutto esplode di colori e capisci che era un sogno… o forse no 🤯",
+      funProbability: pFun,
+    );
   }
+}
+
+// Helper per creare una HistoryEntry a partire dal risultato AI
+HistoryEntry makeEntry({
+  required String question,
+  required bool isFuture,
+  required ScenarioType scenario,
+  required String answer,
+  required int probability,
+}) {
+  final id = DateTime.now().millisecondsSinceEpoch.toString();
+  return HistoryEntry(
+    id: id,
+    question: question,
+    scenario: scenario == ScenarioType.slidingDoors ? 'slidingDoors' : 'whatTheF',
+    side: isFuture ? 'future' : 'past',
+    answer: answer,
+    probability: probability,
+    createdAt: DateTime.now().toIso8601String(),
+  );
 }

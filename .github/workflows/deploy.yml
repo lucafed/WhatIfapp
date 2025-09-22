@@ -5,7 +5,6 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-# Permessi NECESSARI per deploy-pages@v4
 permissions:
   contents: read
   pages: write
@@ -19,21 +18,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      # Installa Flutter stable
+      - uses: subosito/flutter-action@v2
         with:
           channel: stable
 
-      - name: Flutter pub get + build web
-        run: |
-          flutter pub get
-          flutter build web --release --base-href "/WhatIfapp/"
+      - run: flutter --version
+      - run: flutter pub get
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      # Build web con base-href corretto
+      - run: flutter build web --release --base-href "/WhatIfapp/"
+
+      # Carica l'artefatto della build per Pages
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: build/web
 
@@ -44,6 +43,5 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
+      - id: deployment
         uses: actions/deploy-pages@v4
