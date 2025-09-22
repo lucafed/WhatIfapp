@@ -38,12 +38,6 @@
       "languageVersion": "3.4"
     },
     {
-      "name": "crypto",
-      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/crypto-3.0.6",
-      "packageUri": "lib/",
-      "languageVersion": "3.4"
-    },
-    {
       "name": "cupertino_icons",
       "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/cupertino_icons-1.0.8",
       "packageUri": "lib/",
@@ -75,9 +69,9 @@
     },
     {
       "name": "flutter_lints",
-      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/flutter_lints-2.0.3",
+      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/flutter_lints-3.0.2",
       "packageUri": "lib/",
-      "languageVersion": "2.19"
+      "languageVersion": "3.1"
     },
     {
       "name": "flutter_svg",
@@ -102,12 +96,6 @@
       "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/go_router-6.5.9",
       "packageUri": "lib/",
       "languageVersion": "2.18"
-    },
-    {
-      "name": "google_fonts",
-      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/google_fonts-6.3.1",
-      "packageUri": "lib/",
-      "languageVersion": "3.7"
     },
     {
       "name": "http",
@@ -141,7 +129,7 @@
     },
     {
       "name": "lints",
-      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/lints-2.1.1",
+      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/lints-3.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.0"
     },
@@ -186,24 +174,6 @@
       "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/path_parsing-1.1.0",
       "packageUri": "lib/",
       "languageVersion": "3.3"
-    },
-    {
-      "name": "path_provider",
-      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/path_provider-2.1.5",
-      "packageUri": "lib/",
-      "languageVersion": "3.4"
-    },
-    {
-      "name": "path_provider_android",
-      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/path_provider_android-2.2.18",
-      "packageUri": "lib/",
-      "languageVersion": "3.7"
-    },
-    {
-      "name": "path_provider_foundation",
-      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.2",
-      "packageUri": "lib/",
-      "languageVersion": "3.7"
     },
     {
       "name": "path_provider_linux",
@@ -255,7 +225,7 @@
     },
     {
       "name": "shared_preferences_android",
-      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_android-2.4.12",
+      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/shared_preferences_android-2.4.13",
       "packageUri": "lib/",
       "languageVersion": "3.7"
     },
