@@ -1,7 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
-  <rect width="400" height="400" fill="#0B1B1E"/>
-  <text x="20" y="80" font-size="48" fill="#2BF6E7" font-weight="bold">What?f</text>
-  <rect x="120" y="120" width="160" height="220" fill="#0E2C30" stroke="#2BF6E7" stroke-width="4"/>
-  <rect x="140" y="140" width="120" height="180" fill="#2BF6E7" opacity="0.3"/>
-  <circle cx="150" cy="230" r="6" fill="#2BF6E7"/>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00D1FF"/>
+      <stop offset="100%" stop-color="#7AF5FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="32" fill="#0B0E13"/>
+  <rect x="156" y="64" width="200" height="384" rx="8" fill="url(#g)" opacity="0.18"/>
+  <rect x="176" y="84" width="160" height="344" rx="6" fill="#12151C" stroke="#00D1FF" stroke-opacity=".45"/>
+  <circle cx="316" cy="256" r="8" fill="#00D1FF"/>
 </svg>

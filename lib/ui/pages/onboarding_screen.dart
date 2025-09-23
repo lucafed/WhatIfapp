@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:whatifapp/ui/pages/home_page.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -10,106 +9,128 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  final PageController _controller = PageController();
-  int _index = 0;
+  final _controller = PageController();
+  int _page = 0;
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _goHome() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomePage()),
-    );
-  }
-
-  Widget _page({required String asset, required String title, required String subtitle, required String btnText}) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 12),
             Expanded(
-              child: Center(
-                child: SvgPicture.asset(
-                  asset,
-                  width: 320,
-                  height: 320,
-                  semanticsLabel: title,
+              child: PageView(
+                controller: _controller,
+                onPageChanged: (i) => setState(() => _page = i),
+                children: const [
+                  _OnbPage(
+                    title: 'What?f',
+                    subtitle:
+                        'Ogni giorno scegliamo il nostro destino...\nSe avessimo aperto un’altra porta?',
+                    svgPath: 'assets/whatif_door.svg',
+                  ),
+                  _OnbPage(
+                    title: 'Le scelte ci definiscono',
+                    subtitle:
+                        'What?f ti mostra come sarebbe andata se fossi entrato in un bar diverso.',
+                    svgPath: 'assets/whatif_bar.svg',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                2,
+                (i) => Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _page == i ? Colors.white : Colors.white24,
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(title, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 8),
-            Text(subtitle, style: const TextStyle(fontSize: 14, color: Colors.white70), textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage())),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
-                backgroundColor: const Color(0xFF22E1E7),
-                foregroundColor: Colors.black,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () =>
+                      Navigator.pushReplacementNamed(context, '/home'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: const Color(0xFF00D1FF),
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'Inizia',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
+                ),
               ),
-              child: Text(btnText, style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
-            const SizedBox(height: 8),
           ],
         ),
       ),
     );
   }
+}
+
+class _OnbPage extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String svgPath;
+
+  const _OnbPage({
+    required this.title,
+    required this.subtitle,
+    required this.svgPath,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final pages = <Widget>[
-      _page(
-        asset: 'assets/whatif_door.svg',
-        title: 'What?f',
-        subtitle: 'Se avessimo aperto un\'altra porta? Scopri le possibilità.',
-        btnText: 'Inizia',
-      ),
-      _page(
-        asset: 'assets/whataf_bar.svg',
-        title: 'What a F…',
-        subtitle: 'E se tutto fosse successo in un bar? Un tocco di follia e ironia.',
-        btnText: 'Inizia',
-      ),
-    ];
-
-    return Scaffold(
-      backgroundColor: const Color(0xFF071015),
-      body: Column(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+      child: Column(
         children: [
-          Expanded(
-            child: PageView.builder(
-              controller: _controller,
-              itemCount: pages.length,
-              onPageChanged: (i) => setState(() => _index = i),
-              itemBuilder: (_, i) => pages[i],
+          const Spacer(),
+          SvgPicture.asset(
+            svgPath,
+            height: 220,
+            fit: BoxFit.contain,
+            placeholderBuilder: (_) => const SizedBox(
+              height: 220,
+              child: Center(child: CircularProgressIndicator()),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 18.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(pages.length, (i) {
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  margin: const EdgeInsets.symmetric(horizontal: 6),
-                  width: _index == i ? 24 : 10,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: _index == i ? const Color(0xFF22E1E7) : Colors.white24,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                );
-              }),
+          const SizedBox(height: 32),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 34,
+              fontWeight: FontWeight.w800,
             ),
-          )
+          ),
+          const SizedBox(height: 12),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 18,
+              color: Colors.white70,
+              height: 1.4,
+            ),
+          ),
+          const Spacer(),
         ],
       ),
     );

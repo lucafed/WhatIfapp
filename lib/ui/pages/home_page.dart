@@ -6,59 +6,29 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final doors = <_Door>[
-      _Door('Bar Jazz', const Color(0xFF00E5FF)),
-      _Door('Caffè Letterario', const Color(0xFF00FFA3)),
-      _Door('Osteria', const Color(0xFFFFE066)),
-      _Door('Speakeasy', const Color(0xFFFF7A7A)),
-      _Door('Rooftop', const Color(0xFFB388FF)),
-      _Door('Vineria', const Color(0xFF70E000)),
-    ];
-
     return Scaffold(
-      backgroundColor: const Color(0xFF0E1116),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.black,
         elevation: 0,
-        centerTitle: false,
-        titleSpacing: 16,
         title: Row(
           children: [
-            SvgPicture.asset(
-              'assets/whatif_logo.svg',
-              height: 28,
-            ),
+            SvgPicture.asset('assets/whatif_bar.svg', height: 20),
             const SizedBox(width: 12),
-            const Text(
-              'Scegli una “porta”',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
+            const Text('What?f'),
           ],
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        padding: const EdgeInsets.all(16),
         child: GridView.builder(
-          itemCount: doors.length,
+          itemCount: 6,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            mainAxisSpacing: 14,
-            crossAxisSpacing: 14,
-            childAspectRatio: .85,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: .9,
           ),
-          itemBuilder: (context, i) {
-            final d = doors[i];
-            return _DoorCard(
-              label: d.label,
-              color: d.color,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => _DoorDetailPage(door: d)),
-                );
-              },
-            );
-          },
+          itemBuilder: (context, index) => _DoorCard(index: index),
         ),
       ),
     );
@@ -66,98 +36,36 @@ class HomePage extends StatelessWidget {
 }
 
 class _DoorCard extends StatelessWidget {
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-  const _DoorCard({required this.label, required this.color, required this.onTap});
+  final int index;
+  const _DoorCard({required this.index});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(18),
-      onTap: onTap,
+      onTap: () => Navigator.pushNamed(context, '/detail', arguments: index),
+      borderRadius: BorderRadius.circular(16),
       child: Ink(
         decoration: BoxDecoration(
-          color: const Color(0xFF151A21),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.white.withOpacity(.06)),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF101318), Color(0xFF0B0E13)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white10),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
+        child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                child: Center(
-                  child: SvgPicture.asset(
-                    'assets/whatif_door.svg',
-                    width: 86,
-                    colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-                  ),
-                ),
-              ),
+              const Icon(Icons.door_front_door, size: 52, color: Colors.white70),
               const SizedBox(height: 10),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white.withOpacity(.95),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Entra',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(.6),
-                  fontSize: 12,
-                ),
-              ),
+              Text('Porta #${index + 1}',
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
             ],
           ),
         ),
       ),
     );
   }
-}
-
-class _DoorDetailPage extends StatelessWidget {
-  final _Door door;
-  const _DoorDetailPage({required this.door, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0E1116),
-      appBar: AppBar(
-        title: Text(door.label),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(
-              'assets/whatif_door.svg',
-              width: 140,
-              colorFilter: ColorFilter.mode(door.color, BlendMode.srcIn),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              'Dettagli porta “${door.label}”\n(placeholder – qui inseriremo i contenuti della checklist).',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white.withOpacity(.9)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Door {
-  final String label;
-  final Color color;
-  const _Door(this.label, this.color);
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'ui/pages/onboarding_screen.dart';
+import 'ui/pages/home_page.dart';
+import 'ui/pages/detail_page.dart';
 
 void main() {
   runApp(const WhatIfApp());
@@ -10,18 +12,24 @@ class WhatIfApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'What?f',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        scaffoldBackgroundColor: const Color(0xFF0A0F14),
-        primaryColor: const Color(0xFF00E0FF),
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.white, fontSize: 18),
-          bodyMedium: TextStyle(color: Color(0xFFA0B2BA), fontSize: 16),
-        ),
+    final dark = ThemeData(
+      brightness: Brightness.dark,
+      useMaterial3: true,
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF00D1FF),
+        secondary: Color(0xFF00D1FF),
       ),
-      home: const OnboardingScreen(),
+    );
+
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'What?f',
+      theme: dark,
+      routes: {
+        '/': (_) => const OnboardingScreen(),
+        '/home': (_) => const HomePage(),
+        '/detail': (_) => const DetailPage(),
+      },
     );
   }
 }
