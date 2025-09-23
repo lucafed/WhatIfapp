@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#0B1B1E"/>
+  <text x="20" y="80" font-size="48" fill="#2BF6E7" font-weight="bold">What?f</text>
+  <rect x="120" y="120" width="160" height="220" fill="#0E2C30" stroke="#2BF6E7" stroke-width="4"/>
+  <rect x="140" y="140" width="120" height="180" fill="#2BF6E7" opacity="0.3"/>
+  <circle cx="150" cy="230" r="6" fill="#2BF6E7"/>
+</svg>

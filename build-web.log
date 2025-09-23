@@ -1,30 +1,8 @@
-Unhandled exception:
-Error on line 17, column 3: Duplicate mapping key.
-   ╷
-17 │   shared_preferences: ^2.5.3
-   │   ^^^^^^^^^^^^^^^^^^
-   ╵
-#0      Loader._loadMapping (package:yaml/src/loader.dart:165:9)
-#1      Loader._loadNode (package:yaml/src/loader.dart:88:35)
-#2      Loader._loadMapping (package:yaml/src/loader.dart:163:19)
-#3      Loader._loadNode (package:yaml/src/loader.dart:88:35)
-#4      Loader._loadDocument (package:yaml/src/loader.dart:68:20)
-#5      Loader.load (package:yaml/src/loader.dart:60:20)
-#6      loadYamlDocument (package:yaml/yaml.dart:69:25)
-#7      loadYamlNode (package:yaml/yaml.dart:54:5)
-#8      loadYaml (package:yaml/yaml.dart:41:5)
-#9      FlutterManifest.createFromString (package:flutter_tools/src/flutter_manifest.dart:45:28)
-#10     FlutterManifest.createFromPath (package:flutter_tools/src/flutter_manifest.dart:39:28)
-#11     runInContext.<anonymous closure> (package:flutter_tools/src/context_runner.dart:225:44)
-#12     AppContext._generateIfNecessary.<anonymous closure> (package:flutter_tools/src/base/context.dart:108:42)
-#13     _LinkedHashMapMixin.putIfAbsent (dart:_compact_hash:674:23)
-#14     AppContext._generateIfNecessary (package:flutter_tools/src/base/context.dart:95:20)
-#15     AppContext.get (package:flutter_tools/src/base/context.dart:125:32)
-#16     featureFlags (package:flutter_tools/src/features.dart:13:42)
-#17     run.<anonymous closure> (package:flutter_tools/runner.dart:49:40)
-#18     runInContext.runnerWrapper (package:flutter_tools/src/context_runner.dart:77:18)
-<asynchronous suspension>
-#19     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
-<asynchronous suspension>
-#20     main (package:flutter_tools/executable.dart:101:3)
-<asynchronous suspension>
+Compiling lib/main.dart for the Web...                          
+Wasm dry run succeeded. Consider building and testing your application with the `--wasm` flag. See docs for more info: https://docs.flutter.dev/platform-integration/web/wasm
+Use --no-wasm-dry-run to disable these warnings.
+Error: unable to find directory entry in pubspec.yaml: /workspaces/WhatIfapp/assets/images/
+Font asset "CupertinoIcons.ttf" was tree-shaken, reducing it from 257628 to 1472 bytes (99.4% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Font asset "MaterialIcons-Regular.otf" was tree-shaken, reducing it from 1645184 to 7736 bytes (99.5% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Compiling lib/main.dart for the Web...                             44.6s
+✓ Built build/web
