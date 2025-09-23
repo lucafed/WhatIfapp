@@ -31,6 +31,12 @@
 
   <title>whatifapp</title>
   <link rel="manifest" href="manifest.json">
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => { regs.forEach(r => r.unregister()); });
+  if (window.caches) { caches.keys().then(keys => keys.forEach(k => caches.delete(k))); }
+}
+</script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
