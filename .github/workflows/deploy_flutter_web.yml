@@ -1,0 +1,63 @@
+name: Build & Deploy Flutter Web to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # ricava il nome del repo (serve per il base-href di GitHub Pages)
+      REPO_NAME: ${{ github.event.repository.name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Fetch dependencies
+        run: flutter pub get
+
+      # build web (con base-href impostato alla sottocartella del repo Pages)
+      - name: Build Flutter Web
+        run: flutter build web --release --pwa-strategy=none --base-href "/${{ env.REPO_NAME }}/"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: web-dist
+
+      # pubblica su branch gh-pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: web-dist
+          publish_branch: gh-pages
+          force_orphan: true
