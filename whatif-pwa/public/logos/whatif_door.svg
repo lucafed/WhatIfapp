@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0" stop-color="#00e0ff"/>
+      <stop offset="1" stop-color="#1affd5"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="#08141a"/>
+  <g transform="translate(120,70)">
+    <rect x="0" y="0" width="360" height="460" rx="14" fill="#0f232b" stroke="url(#g)" stroke-width="6"/>
+    <rect x="60" y="60" width="220" height="320" rx="6" fill="#0a1a20" stroke="#00e0ff" stroke-width="4"/>
+    <circle cx="265" cy="220" r="8" fill="#1affd5"/>
+  </g>
+  <text x="520" y="180" fill="url(#g)" font-size="96" font-family="Arial Black, Arial, sans-serif">What?f</text>
+  <text x="520" y="260" fill="#91a3ad" font-size="32" font-family="Arial, sans-serif">Choose your way</text>
+</svg>

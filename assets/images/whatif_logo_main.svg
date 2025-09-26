@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 2000">
+  <defs>
+    <linearGradient id="g" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#00E0FF"/>
+      <stop offset="100%" stop-color="#00B5CC"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="2000" fill="#0A0F14"/>
+  <!-- Logo wordmark -->
+  <text x="600" y="360" text-anchor="middle" font-size="160" font-family="Poppins, Arial, sans-serif" fill="url(#g)" font-weight="900">What?f</text>
+  <!-- Porta -->
+  <g transform="translate(350,520)">
+    <rect x="0" y="0" width="500" height="920" rx="24" fill="#0E2C30" stroke="#00E0FF" stroke-width="10"/>
+    <rect x="40" y="40" width="420" height="840" rx="18" fill="#00E0FF" opacity="0.18"/>
+    <circle cx="60" cy="460" r="12" fill="#00E0FF"/>
+  </g>
+</svg>

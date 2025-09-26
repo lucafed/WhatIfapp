@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920">
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="100%" height="100%" fill="#0b1220"/>
+  <!-- scritta -->
+  <g filter="url(#glow)" font-family="Poppins, Arial, sans-serif" font-weight="800">
+    <text x="80" y="260" font-size="150" fill="#ff41e1">What</text>
+    <text x="520" y="260" font-size="150" fill="#ff41e1"> the</text>
+
+    <text x="80" y="430" font-size="210" fill="#ff6a00">F</text>
+    <text x="250" y="430" font-size="210" fill="#ffd23f">?</text>
+    <text x="360" y="430" font-size="210" fill="#ff41e1">!</text>
+  </g>
+
+  <!-- boccale -->
+  <g transform="translate(650,530)" filter="url(#glow)" stroke-width="12" stroke="#25a9ff" fill="none">
+    <rect x="0" y="0" width="280" height="260" rx="24" ry="24"/>
+    <path d="M260,40 h60 a40,40 0 0 1 0,80 h-60" stroke="#25a9ff"/>
+    <rect x="30" y="60" width="220" height="160" rx="12" ry="12" stroke="#25a9ff"/>
+    <path d="M30,60 c40,-50 180,-50 220,0" stroke="#25a9ff"/>
+    <rect x="60" y="90" width="20" height="110" fill="#ffd23f" stroke="#ffd23f"/>
+    <rect x="110" y="90" width="20" height="110" fill="#ffd23f" stroke="#ffd23f"/>
+    <rect x="160" y="90" width="20" height="110" fill="#ffd23f" stroke="#ffd23f"/>
+    <rect x="210" y="90" width="20" height="110" fill="#ffd23f" stroke="#ffd23f"/>
+  </g>
+</svg>

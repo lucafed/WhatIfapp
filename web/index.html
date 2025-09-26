@@ -1,44 +1,68 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="it">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="$FLUTTER_BASE_HREF">
-
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
-
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="whatifapp">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>whatifapp</title>
-  <link rel="manifest" href="manifest.json">
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => { regs.forEach(r => r.unregister()); });
-  if (window.caches) { caches.keys().then(keys => keys.forEach(k => caches.delete(k))); }
-}
-</script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>What?f – Onboarding</title>
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <script src="flutter_bootstrap.js" async></script>
+  <main class="container">
+    <section id="slides" class="slides">
+      <article class="slide" aria-label="Scelta porta">
+        <div class="logo-wrap">
+          <img src="../assets/logos/whatif_door.svg" alt="Logo porta" onerror="fallback(this,`What?f`)">
+        </div>
+        <h1>Benvenuto su <span class="brand">What?f</span></h1>
+        <p class="lead">Le scelte ci definiscono.</p>
+        <p class="sublead">What?f ti mostra “come sarebbe andata” o “come potrebbe andare”.</p>
+        <button class="cta" data-next>CHOOSE YOUR WAY</button>
+      </article>
+
+      <article class="slide" aria-label="Scelta bar">
+        <div class="logo-wrap">
+          <img src="../assets/logos/whatif_bar.svg" alt="Logo bar" onerror="fallback(this,`What the F?!`)">
+        </div>
+        <p class="lead center">… or choose your bar!</p>
+        <h2 class="neon">What the F?!</h2>
+        <p class="sublead center">CHOOSE YOUR WAY</p>
+        <button class="cta" data-start>Start</button>
+      </article>
+    </section>
+
+    <nav class="dots" aria-label="indicatori">
+      <button class="dot" aria-label="slide 1" data-dot="0" aria-current="true"></button>
+      <button class="dot" aria-label="slide 2" data-dot="1"></button>
+    </nav>
+  </main>
+
+  <script>
+    // Fallback testo se l immagine non carica
+    function fallback(img, text){
+      const box = document.createElement("div");
+      box.className = "fallback";
+      box.textContent = text;
+      img.replaceWith(box);
+    }
+
+    const slides = [...document.querySelectorAll(".slide")];
+    const dots   = [...document.querySelectorAll(".dot")];
+    let idx = 0;
+
+    function show(i){
+      idx = (i+slides.length)%slides.length;
+      slides.forEach((s,k)=> s.style.transform = `translateX(${100*(k-idx)}%)`);
+      dots.forEach((d,k)=> d.setAttribute("aria-current", k===idx ? "true":"false"));
+    }
+
+    dots.forEach(d => d.addEventListener("click", ()=> show(+d.dataset.dot)));
+    document.querySelector("[data-next]")?.addEventListener("click", ()=> show(idx+1));
+    document.querySelector("[data-start]")?.addEventListener("click", ()=>{
+      alert("🎉 App pronta! (Qui collegherai la home vera)");
+    });
+
+    // Layout iniziale
+    slides.forEach((s,k)=> s.style.transform = `translateX(${100*k}%)`);
+  </script>
 </body>
 </html>

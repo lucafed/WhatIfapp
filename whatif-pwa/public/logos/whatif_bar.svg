@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600">
+  <rect width="100%" height="100%" fill="#0a0d14"/>
+  <g transform="translate(110,60)" fill="none" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="0" y="0" width="360" height="460" rx="14" stroke="#2a2f3a"/>
+    <g transform="translate(80,120)" stroke="#ff7a3a">
+      <path d="M0 0h140v160a24 24 0 0 1-24 24H24A24 24 0 0 1 0 160z"/>
+      <path d="M140 40h40a32 32 0 0 1 0 64h-40z" stroke="#ffd34d"/>
+      <path d="M20 32h60M20 66h60M20 100h60" stroke="#ffd34d"/>
+    </g>
+  </g>
+  <text x="520" y="180" fill="#ff62f6" font-size="84" font-family="Arial Black, Arial, sans-serif">What the</text>
+  <text x="520" y="260" fill="#ffd34d" font-size="100" font-family="Arial Black, Arial, sans-serif">F?!</text>
+  <text x="520" y="330" fill="#00e0ff" font-size="32" font-family="Arial, sans-serif">Choose your bar!</text>
+</svg>

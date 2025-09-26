@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920">
+  <rect width="1080" height="1920" fill="#141C22"/>
+  <rect x="200" y="700" width="680" height="500" rx="40" fill="#00B5CC" stroke="#1AFFD5" stroke-width="12"/>
+  <text x="540" y="1000" font-size="120" text-anchor="middle" fill="#FFFFFF" font-family="Arial">BAR</text>
+  <text x="540" y="1150" font-size="40" text-anchor="middle" fill="#A0B2BA">choose your way</text>
+</svg>

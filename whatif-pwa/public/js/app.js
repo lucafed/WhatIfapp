@@ -1,0 +1,1 @@
+console.log("WhatIfApp pronto!");

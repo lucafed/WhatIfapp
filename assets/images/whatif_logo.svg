@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#34f7e9" stop-opacity="1"/>
+      <stop offset="60%" stop-color="#00e0d1" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#00e0d1" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="100%" height="100%" fill="#0b1220"/>
+  <!-- scritta What?f -->
+  <g filter="url(#glow)">
+    <text x="80" y="260" font-family="Poppins, Arial, sans-serif" font-size="180" font-weight="700" fill="#2ef2e2" letter-spacing="2">What?t</text>
+    <text x="625" y="260" font-family="Poppins, Arial, sans-serif" font-size="180" font-weight="700" fill="#2ef2e2">f</text>
+    <circle cx="470" cy="210" r="22" fill="#2ef2e2"/>
+  </g>
+
+  <!-- porta luminosa -->
+  <g transform="translate(210,380)" filter="url(#glow)">
+    <rect x="0" y="0" rx="28" ry="28" width="420" height="560" fill="none" stroke="#2ef2e2" stroke-width="12"/>
+    <rect x="60" y="60" rx="18" ry="18" width="300" height="440" fill="url(#g)" stroke="#2ef2e2" stroke-width="8"/>
+    <circle cx="320" cy="300" r="10" fill="#2ef2e2"/>
+  </g>
+</svg>

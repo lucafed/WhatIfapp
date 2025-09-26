@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920">
+  <rect width="1080" height="1920" fill="#0A0F14"/>
+  <rect x="340" y="360" width="400" height="1200" rx="20" fill="#00E0FF" stroke="#1AFFD5" stroke-width="12"/>
+  <circle cx="690" cy="960" r="25" fill="#FFFFFF"/>
+  <text x="540" y="200" font-size="80" text-anchor="middle" fill="#FFFFFF" font-family="Arial">What?f</text>
+</svg>

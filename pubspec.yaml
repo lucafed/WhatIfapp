@@ -26,7 +26,40 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  assets:
+assets:
+    - assets/images/whataf_logo_bar.svg
+    - assets/images/whatif_logo_main.svg
+    - assets/logos/
     - assets/images/
     - assets/icons/
     - assets/
+  assets:
+    - assets/images/whataf_logo_bar.svg
+    - assets/images/whatif_logo_main.svg
+    - assets/
+    - assets/svg/
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/whataf_logo_bar.svg
+    - assets/images/whatif_logo_main.svg
+    - assets/whatif_door.png
+    - assets/whatif_bar.png
+
+flutter:
+  assets:
+    - assets/images/whatif_door.svg
+    - assets/images/whatif_bar.svg
+    - assets/logos/whatif_door.svg
+    - assets/logos/whatif_bar.svg
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logos/whatif_icon_door.svg
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logos/whatif_icon_beer.svg
