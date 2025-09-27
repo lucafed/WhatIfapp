@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>What?f – Impostazioni</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="screen screen--form">
+  <header class="topbar">
+    <a href="second.html" class="back">‹</a>
+    <div class="topbar__title">Imposta la simulazione</div>
+  </header>
+
+  <main class="form-wrap">
+    <!-- 1) Tempo -->
+    <section class="card">
+      <h3>Tempo</h3>
+      <div class="segmented" id="timeSegment">
+        <button type="button" data-time="past" class="is-active">Passato</button>
+        <button type="button" data-time="future">Futuro</button>
+      </div>
+    </section>
+
+    <!-- 2) Scenario -->
+    <section class="card">
+      <h3>Scenario</h3>
+      <div class="chips" id="scenarioChips">
+        <button type="button" data-scen="sliding" class="chip is-active">Sliding Doors</button>
+        <button type="button" data-scen="whataf" class="chip">What the F?!</button>
+      </div>
+    </section>
+
+    <!-- 3) Domande suggerite (cambiano con passato/futuro) -->
+    <section class="card">
+      <h3>Domande rapide</h3>
+      <div id="suggestions" class="suggestions"></div>
+    </section>
+
+    <!-- 4) Profilo mirato (per personalizzare) -->
+    <section class="card">
+      <h3>Per personalizzare la risposta</h3>
+      <div class="grid">
+        <label>Nome (opzionale)
+          <input id="name" type="text" placeholder="Es. Luca" />
+        </label>
+        <label>Età
+          <select id="age">
+            <option value="18-24">18–24</option>
+            <option value="25-34">25–34</option>
+            <option value="35-44" selected>35–44</option>
+            <option value="45-54">45–54</option>
+            <option value="55+">55+</option>
+          </select>
+        </label>
+        <label>Genere / pronomi
+          <select id="gender">
+            <option value="lui">lui</option>
+            <option value="lei">lei</option>
+            <option value="neutro" selected>neutro</option>
+          </select>
+        </label>
+        <label>Città / Luogo
+          <input id="city" type="text" placeholder="Es. Milano" />
+        </label>
+        <label>Ambito principale
+          <select id="domain">
+            <option>lavoro</option>
+            <option>amore</option>
+            <option>famiglia</option>
+            <option>amicizie</option>
+            <option>finanze</option>
+            <option>salute</option>
+            <option selected>altro</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="mt">
+        Contesto (opzionale)
+        <textarea id="context" rows="3" placeholder="Dettagli utili per contestualizzare la risposta…"></textarea>
+      </label>
+    </section>
+
+    <!-- 5) Domanda What?f -->
+    <section class="card">
+      <h3>La tua domanda</h3>
+      <div class="whatif">
+        <span class="prefix">What?f</span>
+        <input id="question" type="text" placeholder="…non avessi lasciato quel lavoro nel 2022?" />
+      </div>
+    </section>
+
+    <!-- 6) CTA -->
+    <div class="actions">
+      <button class="cta cta--door" id="goBtn" type="button">Apri la porta
+        <span class="door" aria-hidden="true">🚪</span>
+      </button>
+    </div>
+  </main>
+
+  <script src="main.js"></script>
+</body>
+</html>
