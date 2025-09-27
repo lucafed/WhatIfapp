@@ -1,44 +1,32 @@
-<!doctype html>
-<html lang="it">
+<!doctype html><html lang="it">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>What?f – Benvenuto</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>What?f — Benvenuto</title>
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
-  <main class="screen" id="p1">
-    <div class="bg-cover" style="background-image:url('assets/whatif_logo.png'); background-position:center; background-size:cover;"></div>
-    <div class="bg-overlay"></div>
+  <section class="screen">
+    <!-- sfondo con logo porta -->
+    <div class="bg-cover"></div>
+    <div class="bg-image" style="background-image:url('assets/whatif_logo.png');"></div>
 
-    <div>
-      <div class="kicker accent-turquoise">Benvenuto su</div>
-      <h1 class="h1 accent-turquoise">What?f</h1>
-      <p class="sub">Le scelte ci definiscono</p>
-      <p class="sub" style="margin-top:4px;">What?f ti mostra <em>come sarebbe andata</em> o <em>come potrebbe andare</em>.</p>
-
-      <a class="btn" href="second.html" aria-label="Vai alla schermata successiva">Choose your way</a>
+    <div class="wrap">
+      <h3>Benvenuto su</h3>
+      <h1>What?f</h1>
+      <h2>Le scelte ci definiscono</h2>
+      <p class="lead">What?f ti mostra <em>come sarebbe andata</em> o <em>come potrebbe andare</em>.</p>
+      <a class="btn" href="second.html">Choose your way</a>
     </div>
 
-    <div class="swipe-hint" aria-hidden="true">
-      <div class="dots"><span class="dot active"></span><span class="dot"></span><span class="dot"></span></div>
-      <span>Swipe →</span>
-    </div>
-  </main>
+    <div class="dots"><span class="dot active"></span><span class="dot"></span><span class="dot"></span></div>
+    <div class="swipe-hint">Swipe →</div>
+  </section>
 
   <script>
-    // Swipe: sinistra => second.html
-    (function(){
-      let x0=null; const TH=35;
-      const el=document.getElementById('p1');
-      el.addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
-      el.addEventListener('touchend',e=>{
-        if(x0==null) return;
-        const dx=e.changedTouches[0].clientX-x0;
-        if(dx<-TH) location.href='second.html';
-        x0=null;
-      },{passive:true});
-    })();
+    // swipe a destra
+    let x0=null; addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+    addEventListener('touchend',e=>{ if(x0==null) return; const dx=e.changedTouches[0].clientX-x0;
+      if(dx<-50) location.href='second.html'; x0=null; },{passive:true});
   </script>
-</body>
-</html>
+</body></html>
+
