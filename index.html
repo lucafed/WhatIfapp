@@ -3,23 +3,144 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f — Benvenuto</title>
+  <title>What?f — Onboarding + Domande</title>
   <link rel="preload" as="image" href="assets/whatif_logo.png">
+  <link rel="preload" as="image" href="assets/whataf_logo.png">
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body class="page first">
-  <!-- Sfondo = assets/whatif_logo.png -->
-  <div class="bg"></div>
+<body>
 
-  <!-- Testi in sovraimpressione -->
-  <main class="overlay">
-    <h1 class="title">Benvenuto su What?f</h1>
-    <h2 class="subtitle">Le scelte ci definiscono</h2>
-    <p class="tagline">What?f ti mostra “come sarebbe andata” o “come potrebbe andare”.</p>
+  <!-- DOTS / hint swipe -->
+  <div class="swipe-hint" aria-hidden="true">
+    <span class="dot" data-dot="0"></span>
+    <span class="dot" data-dot="1"></span>
+    <span class="dot" data-dot="2"></span>
+  </div>
 
-    <!-- Se vuoi andare subito alla pagina 2, tieni questo pulsante.
-         Se preferisci solo la schermata statica, eliminalo. -->
-    <button class="cta" onclick="location.href='second.html'">Avanti</button>
-  </main>
+  <!-- Schermata 1: Logo What?f -->
+  <section class="screen first" data-screen="0">
+    <div class="bg" style="background-image:
+      linear-gradient(180deg, rgba(10,15,20,0.25) 0%, rgba(10,15,20,0.55) 100%),
+      url('assets/whatif_logo.png');"></div>
+
+    <main class="overlay">
+      <h1 class="title">Benvenuto su What?f</h1>
+      <h2 class="subtitle">Le scelte ci definiscono</h2>
+      <p class="tagline">What?f ti mostra “come sarebbe andata” o “come potrebbe andare”.</p>
+      <button class="cta" data-next>Avanti</button>
+    </main>
+  </section>
+
+  <!-- Schermata 2: Logo What a F?! -->
+  <section class="screen second" data-screen="1" hidden>
+    <div class="bg" style="background-image:
+      linear-gradient(180deg, rgba(5,8,12,.25) 0%, rgba(5,8,12,.65) 100%),
+      url('assets/whataf_logo.png');"></div>
+
+    <main class="overlay">
+      <!-- Solo bottone Start, niente frasi sotto -->
+      <button class="cta" data-next>Start</button>
+    </main>
+  </section>
+
+  <!-- Schermata 3: Domande -->
+  <section class="screen third" data-screen="2" hidden>
+    <header class="topbar">
+      <div class="brand">What?f</div>
+    </header>
+
+    <main class="container">
+      <form id="whatif-form" class="panel">
+        <h2 class="panel-title">Imposta la simulazione</h2>
+
+        <!-- Tempo -->
+        <div class="group">
+          <label class="group-label">Tempo</label>
+          <div class="chips">
+            <label class="chip">
+              <input type="radio" name="tense" value="past" checked>
+              <span>Passato</span>
+            </label>
+            <label class="chip">
+              <input type="radio" name="tense" value="future">
+              <span>Futuro</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Scenario -->
+        <div class="group">
+          <label class="group-label">Scenario</label>
+          <div class="chips">
+            <label class="chip">
+              <input type="radio" name="mode" value="sliding" checked>
+              <span>Sliding Doors</span>
+            </label>
+            <label class="chip">
+              <input type="radio" name="mode" value="whataf">
+              <span>What the F?!</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Domanda principale -->
+        <div class="group">
+          <label class="group-label">La tua domanda</label>
+          <div class="input">
+            <span class="prefix">What?f</span>
+            <input type="text" name="question" placeholder="…avessi preso quell’altro lavoro?" />
+          </div>
+          <div class="quick">
+            <button type="button" class="ghost" onclick="document.querySelector('input[name=question]').value='What?f cambiassi città?';">cambiassi città?</button>
+            <button type="button" class="ghost" onclick="document.querySelector('input[name=question]').value='What?f tornassi a studiare?';">tornassi a studiare?</button>
+            <button type="button" class="ghost" onclick="document.querySelector('input[name=question]').value='What?f aprissi un bar?';">aprissi un bar?</button>
+          </div>
+        </div>
+
+        <!-- Profilo breve -->
+        <div class="group two">
+          <label>Età
+            <input type="number" name="age" min="12" max="99" placeholder="es. 28" />
+          </label>
+          <label>Relazione
+            <select name="love">
+              <option value="">—</option>
+              <option value="single">Single</option>
+              <option value="in_love">In coppia</option>
+              <option value="complicated">Complicato</option>
+            </select>
+          </label>
+        </div>
+
+        <!-- Interessi -->
+        <div class="group">
+          <label class="group-label">Interessi</label>
+          <div class="chips wrap">
+            <label class="chip small"><input type="checkbox" name="tags" value="music"><span>Musica</span></label>
+            <label class="chip small"><input type="checkbox" name="tags" value="travel"><span>Viaggi</span></label>
+            <label class="chip small"><input type="checkbox" name="tags" value="fitness"><span>Fitness</span></label>
+            <label class="chip small"><input type="checkbox" name="tags" value="tech"><span>Tech</span></label>
+            <label class="chip small"><input type="checkbox" name="tags" value="art"><span>Arte</span></label>
+            <label class="chip small"><input type="checkbox" name="tags" value="food"><span>Cibo</span></label>
+          </div>
+        </div>
+
+        <!-- Dettagli opzionali -->
+        <div class="group">
+          <label class="group-label">Dettagli opzionali (per risposte più personali)</label>
+          <textarea name="notes" rows="4" class="textarea" placeholder="Aggiungi contesto, obiettivi, vincoli, paure o dettagli che contano…"></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="primary" type="submit">Apri la porta</button>
+        </div>
+      </form>
+
+      <section id="result" class="result"></section>
+    </main>
+  </section>
+
+  <script src="app.js"></script>
 </body>
 </html>
+
