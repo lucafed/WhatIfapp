@@ -1,21 +1,44 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>What?f – Choose your way</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="style.css"/>
 </head>
-<body class="screen screen--bar">
-  <div class="bg bg--cover" style="--bg:url('assets/whataf_logo.png')"></div>
-  <div class="bg bg--overlay bg--overlay-strong"></div>
+<body>
+  <main class="screen" id="p2">
+    <div class="bg-cover" style="background-image:url('assets/whataf_logo.png'); background-position:center; background-size:cover;"></div>
+    <div class="bg-overlay"></div>
 
-  <main class="container container--center">
-    <div class="brand brand--alt">What a F?!</div>
-    <!-- NIENTE frase sotto (come richiesto) -->
-    <a class="cta cta--solid" href="third.html" aria-label="Scegli la tua via">
-      Choose your way →
-    </a>
+    <div>
+      <div class="kicker accent-warm">Choose your way</div>
+      <h1 class="h1 accent-blue">Sliding Doors <span class="accent-warm">&</span> What the F?!</h1>
+      <p class="sub">Scorri a destra o premi per continuare.</p>
+
+      <a class="btn" href="third.html" aria-label="Vai alla schermata successiva">Start</a>
+    </div>
+
+    <div class="swipe-hint" aria-hidden="true">
+      <div class="dots"><span class="dot"></span><span class="dot active"></span><span class="dot"></span></div>
+      <span>← Swipe • Swipe →</span>
+    </div>
   </main>
+
+  <script>
+    // Swipe: destra => index.html, sinistra => third.html
+    (function(){
+      let x0=null; const TH=35;
+      const el=document.getElementById('p2');
+      el.addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+      el.addEventListener('touchend',e=>{
+        if(x0==null) return;
+        const dx=e.changedTouches[0].clientX-x0;
+        if(dx>TH) location.href='index.html';
+        if(dx<-TH) location.href='third.html';
+        x0=null;
+      },{passive:true});
+    })();
+  </script>
 </body>
 </html>
