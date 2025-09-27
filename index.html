@@ -1,32 +1,44 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>What?f – Benvenuto</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="style.css"/>
 </head>
-<body class="screen screen--welcome">
-  <div class="bg bg--cover" style="--bg:url('assets/whatif_logo.png')"></div>
-  <div class="bg bg--overlay"></div>
+<body>
+  <main class="screen" id="p1">
+    <div class="bg-cover" style="background-image:url('assets/whatif_logo.png'); background-position:center; background-size:cover;"></div>
+    <div class="bg-overlay"></div>
 
-  <main class="container container--center">
-    <h1 class="eyebrow">Benvenuto su</h1>
-    <div class="brand">What?f</div>
+    <div>
+      <div class="kicker accent-turquoise">Benvenuto su</div>
+      <h1 class="h1 accent-turquoise">What?f</h1>
+      <p class="sub">Le scelte ci definiscono</p>
+      <p class="sub" style="margin-top:4px;">What?f ti mostra <em>come sarebbe andata</em> o <em>come potrebbe andare</em>.</p>
 
-    <div class="hero-copy">
-      <h2 class="lede">Le scelte ci definiscono.</h2>
-      <p class="sublede">
-        What?f ti mostra “come sarebbe andata” o “come potrebbe andare”.
-      </p>
+      <a class="btn" href="second.html" aria-label="Vai alla schermata successiva">Choose your way</a>
     </div>
 
-    <a class="cta cta--ghost" href="second.html" aria-label="Vai alla schermata successiva">
-      Continua <span class="chev">›</span>
-    </a>
+    <div class="swipe-hint" aria-hidden="true">
+      <div class="dots"><span class="dot active"></span><span class="dot"></span><span class="dot"></span></div>
+      <span>Swipe →</span>
+    </div>
   </main>
 
-  <script src="main.js"></script>
+  <script>
+    // Swipe: sinistra => second.html
+    (function(){
+      let x0=null; const TH=35;
+      const el=document.getElementById('p1');
+      el.addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+      el.addEventListener('touchend',e=>{
+        if(x0==null) return;
+        const dx=e.changedTouches[0].clientX-x0;
+        if(dx<-TH) location.href='second.html';
+        x0=null;
+      },{passive:true});
+    })();
+  </script>
 </body>
 </html>
-
