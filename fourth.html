@@ -1,31 +1,139 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>What?f – Risultato</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="style.css"/>
 </head>
-<body class="screen screen--result">
-  <header class="topbar">
-    <a href="third.html" class="back">‹</a>
-    <div class="topbar__title">Risultato</div>
-  </header>
+<body>
+  <main class="screen" id="p4">
+    <div class="bg-cover" style="background-image:linear-gradient(120deg,#04131a, #0A0F14 60%)"></div>
+    <div class="bg-overlay" style="background:radial-gradient(60% 50% at 50% 30%, rgba(0,224,255,.10), transparent 60%), linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,.85))"></div>
 
-  <main class="result-wrap">
-    <div class="result-meta">
-      <div id="badgeScenario" class="badge"></div>
-      <div id="badgeTime" class="badge badge--ghost"></div>
-      <div id="prob" class="prob"></div>
+    <div style="width:min(960px,92vw);text-align:left">
+      <div class="kicker accent-turquoise">Simulazione</div>
+      <h1 class="h1" id="title">Risultato</h1>
+
+      <div id="badges" style="margin-top:8px"></div>
+
+      <div class="card" id="answer"></div>
+
+      <div class="actions">
+        <a class="btn" href="third.html">Nuova domanda</a>
+        <a class="btn btn-ghost" href="second.html">← Torna alle porte</a>
+      </div>
     </div>
 
-    <article id="answer" class="answer"></article>
-
-    <div class="actions">
-      <a class="cta cta--ghost" href="third.html">Nuova domanda</a>
+    <div class="swipe-hint" aria-hidden="true">
+      <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <span>← Swipe</span>
     </div>
   </main>
 
-  <script src="main.js"></script>
+  <script>
+    function pickProb(tempo, scn){
+      // Probabilità "credibile" per Sliding, più giocosa per What a F?!
+      const base = scn==='sliding' ? 55 : 40;
+      const variance = scn==='sliding' ? 25 : 35;
+      const t = tempo==='future' ? 5 : 0;
+      const p = Math.max(5, Math.min(95, base + t + Math.round((Math.random()*2-1)*variance)));
+      return p;
+    }
+
+    function renderAnswer() {
+      const q = new URLSearchParams(location.search);
+      const tempo = q.get('tempo')||'past';
+      const scn = q.get('scn')||'sliding';
+      const age = q.get('age')||'';
+      const gender = q.get('gender')||'';
+      const locationTxt = q.get('location')||'';
+      const topic = q.get('topic')||'generale';
+      const question = q.get('question')||'';
+      const extra = q.get('extra')||'';
+
+      const title = document.getElementById('title');
+      title.innerHTML = (scn==='sliding' ? 'Sliding Doors' : 'What the F?!') + ' · ' + (tempo==='past'?'Passato':'Futuro');
+
+      // Badges + probability
+      const prob = pickProb(tempo, scn);
+      const b = document.getElementById('badges');
+      b.innerHTML = `
+        <span class="badge ${scn==='sliding'?'real':'fun'}">${scn==='sliding'?'Realistico':'Ironico'}</span>
+        <span class="badge" style="background:#123743;color:#9deaff">Probabilità: ${prob}%</span>
+      `;
+
+      // Build a contextual long answer (client-side mock)
+      const you = [];
+      if(age) you.push(`${age} anni`);
+      if(gender) you.push(gender);
+      if(locationTxt) you.push(`da ${locationTxt}`);
+      const youStr = you.length ? you.join(', ') : 'profilo non specificato';
+
+      const timeLine = tempo==='past'
+        ? 'Se avessi davvero spinto quella porta allora'
+        : 'Se deciderai di aprire quella porta adesso';
+
+      const toneOpen = scn==='sliding'
+        ? `In uno scenario plausibile e coerente`
+        : `Con una dose sana di follia (ma più vera di quanto sembri)`;
+
+      const topicLine = topic && topic!=='generale'
+        ? `— il tema centrale qui è **${topic}** —`
+        : `— contesto generale —`;
+
+      const spice = scn==='whataf'
+        ? `Tra una scelta azzardata e un colpo di fortuna, ti ritrovi a sorridere di quanto l’universo ami le coincidenze.`
+        : `Passi misurati, piccole decisioni quotidiane, e il quadro inizia a cambiare con una logica sorprendente.`;
+
+      const endLine = tempo==='future'
+        ? `Il futuro non è garantito, ma ogni gesto oggi inclina l’ago.`
+        : `Il passato non si riscrive, ma può insegnare la direzione da prendere.`;
+
+      const qLine = question ? `**Domanda:** ${question}` : `**Domanda:** (non specificata)`;
+      const extraLine = extra ? `\n**Dettagli aggiuntivi:** ${extra}\n` : '';
+
+      const paragraph = `
+${qLine}
+${extraLine}
+${timeLine}, ${toneOpen} per un* ${youStr} ${topicLine}
+
+• All’inizio senti una lieve frizione: cambiare traiettoria non è immediato, ma i primi segnali ti dicono che la direzione è quella giusta.
+• Arrivano due opportunità “ponte”. Non sono perfette, ma ti permettono di testare la nuova strada senza bruciare i ponti.
+• Una persona chiave entra in scena: non fa magie, però ti apre gli occhi su un dettaglio che non vedevi.
+• Metti ordine nelle priorità: una decisione a settimana, concreta e misurabile, con una scadenza che rispetti.
+• Ti sorprende un momento di lucidità: capisci che stavi sottovalutando una tua qualità (e la metti a leva).
+• ${spice}
+• Dopo alcune settimane, il tuo quotidiano ha un ritmo diverso: il contesto si riallinea, e le energie rispondono.
+
+**Cosa aspettarti nei prossimi passi**
+1) Un piccolo “sì” ti farà guadagnare tempo o margine.  
+2) Un “no” protettivo ti eviterà complicazioni inutili.  
+3) Un gesto creativo darà un segnale forte alla tua rete.  
+
+**Perché ${prob}%?**  
+Gli elementi che hai indicato pesano davvero: profilo, contesto e tempistiche. Non è destino: è direzione.
+
+_${endLine}_
+      `.trim();
+
+      document.getElementById('answer').innerHTML = paragraph;
+    }
+
+    renderAnswer();
+
+    // Swipe: destra => third.html
+    (function(){
+      let x0=null; const TH=35;
+      const el=document.getElementById('p4');
+      el.addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+      el.addEventListener('touchend',e=>{
+        if(x0==null) return;
+        const dx=e.changedTouches[0].clientX-x0;
+        if(dx>TH) location.href='third.html';
+        x0=null;
+      },{passive:true});
+    })();
+  </script>
 </body>
 </html>
