@@ -1,104 +1,136 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>What?f – Impostazioni</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>What?f – Domande</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
-<body class="screen screen--form">
-  <header class="topbar">
-    <a href="second.html" class="back">‹</a>
-    <div class="topbar__title">Imposta la simulazione</div>
-  </header>
+<body>
+  <main class="screen" id="p3">
+    <div class="bg-cover" style="background-image:linear-gradient(120deg,#07131a, #0A0F14 60%)"></div>
+    <div class="bg-overlay" style="background:radial-gradient(60% 50% at 50% 30%, rgba(0,224,255,.10), transparent 60%), linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,.85))"></div>
 
-  <main class="form-wrap">
-    <!-- 1) Tempo -->
-    <section class="card">
-      <h3>Tempo</h3>
-      <div class="segmented" id="timeSegment">
-        <button type="button" data-time="past" class="is-active">Passato</button>
-        <button type="button" data-time="future">Futuro</button>
+    <div style="width:min(960px,92vw);text-align:left">
+      <div class="kicker accent-turquoise">Imposta la simulazione</div>
+      <h1 class="h1">Passato o Futuro, <span class="accent-lime">scegli la porta</span></h1>
+
+      <div class="form">
+        <!-- Tempo -->
+        <div class="label">Tempo</div>
+        <div class="toggle" id="tempo">
+          <div class="chip active" data-v="past">Passato</div>
+          <div class="chip" data-v="future">Futuro</div>
+        </div>
+
+        <!-- Scenario -->
+        <div class="label" style="margin-top:12px">Scenario</div>
+        <div class="toggle" id="scenario">
+          <div class="chip active" data-v="sliding">Sliding Doors (realistico)</div>
+          <div class="chip" data-v="whataf">What the F?! (ironico)</div>
+        </div>
+
+        <!-- Domande mirate -->
+        <div class="row" style="margin-top:14px">
+          <div>
+            <div class="label">Età</div>
+            <input class="input" id="age" type="number" min="8" max="99" placeholder="es. 29"/>
+          </div>
+          <div>
+            <div class="label">Genere</div>
+            <select class="input" id="gender">
+              <option value="">Preferisco non dirlo</option>
+              <option value="donna">Donna</option>
+              <option value="uomo">Uomo</option>
+              <option value="non-binario">Non binario</option>
+              <option value="altro">Altro</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <div>
+            <div class="label">Luogo (città/paese)</div>
+            <input class="input" id="location" placeholder="es. Milano, IT"/>
+          </div>
+          <div>
+            <div class="label">Ambito (lavoro, amore, studio, altro)</div>
+            <select class="input" id="topic">
+              <option value="generale">Generale</option>
+              <option value="lavoro">Lavoro</option>
+              <option value="amore">Amore</option>
+              <option value="studio">Studio</option>
+              <option value="famiglia">Famiglia</option>
+              <option value="salute">Salute</option>
+              <option value="altro">Altro</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="label">Domanda (inizia con “What?f …”)</div>
+          <input class="input" id="question" placeholder="What?f avessi accettato quel lavoro a Londra?"/>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="label">Dettagli opzionali (aiuta a personalizzare)</div>
+          <textarea id="extra" placeholder="Aggiungi dettagli utili, es: settore, relazione, tempistiche, preferenze…"></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn" id="openDoor" aria-label="Apri la porta">🔓 Apri la porta</button>
+          <a class="btn btn-ghost" href="second.html">← Indietro</a>
+        </div>
       </div>
-    </section>
+    </div>
 
-    <!-- 2) Scenario -->
-    <section class="card">
-      <h3>Scenario</h3>
-      <div class="chips" id="scenarioChips">
-        <button type="button" data-scen="sliding" class="chip is-active">Sliding Doors</button>
-        <button type="button" data-scen="whataf" class="chip">What the F?!</button>
-      </div>
-    </section>
-
-    <!-- 3) Domande suggerite (cambiano con passato/futuro) -->
-    <section class="card">
-      <h3>Domande rapide</h3>
-      <div id="suggestions" class="suggestions"></div>
-    </section>
-
-    <!-- 4) Profilo mirato (per personalizzare) -->
-    <section class="card">
-      <h3>Per personalizzare la risposta</h3>
-      <div class="grid">
-        <label>Nome (opzionale)
-          <input id="name" type="text" placeholder="Es. Luca" />
-        </label>
-        <label>Età
-          <select id="age">
-            <option value="18-24">18–24</option>
-            <option value="25-34">25–34</option>
-            <option value="35-44" selected>35–44</option>
-            <option value="45-54">45–54</option>
-            <option value="55+">55+</option>
-          </select>
-        </label>
-        <label>Genere / pronomi
-          <select id="gender">
-            <option value="lui">lui</option>
-            <option value="lei">lei</option>
-            <option value="neutro" selected>neutro</option>
-          </select>
-        </label>
-        <label>Città / Luogo
-          <input id="city" type="text" placeholder="Es. Milano" />
-        </label>
-        <label>Ambito principale
-          <select id="domain">
-            <option>lavoro</option>
-            <option>amore</option>
-            <option>famiglia</option>
-            <option>amicizie</option>
-            <option>finanze</option>
-            <option>salute</option>
-            <option selected>altro</option>
-          </select>
-        </label>
-      </div>
-
-      <label class="mt">
-        Contesto (opzionale)
-        <textarea id="context" rows="3" placeholder="Dettagli utili per contestualizzare la risposta…"></textarea>
-      </label>
-    </section>
-
-    <!-- 5) Domanda What?f -->
-    <section class="card">
-      <h3>La tua domanda</h3>
-      <div class="whatif">
-        <span class="prefix">What?f</span>
-        <input id="question" type="text" placeholder="…non avessi lasciato quel lavoro nel 2022?" />
-      </div>
-    </section>
-
-    <!-- 6) CTA -->
-    <div class="actions">
-      <button class="cta cta--door" id="goBtn" type="button">Apri la porta
-        <span class="door" aria-hidden="true">🚪</span>
-      </button>
+    <div class="swipe-hint" aria-hidden="true">
+      <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot active"></span></div>
+      <span>← Swipe</span>
     </div>
   </main>
 
-  <script src="main.js"></script>
+  <script>
+    // Toggle helpers
+    function setupToggle(id){
+      const box=document.getElementById(id);
+      box.addEventListener('click',e=>{
+        const chip=e.target.closest('.chip'); if(!chip) return;
+        [...box.querySelectorAll('.chip')].forEach(c=>c.classList.remove('active'));
+        chip.classList.add('active');
+      });
+    }
+    setupToggle('tempo'); setupToggle('scenario');
+
+    // Button to 4th page
+    document.getElementById('openDoor').addEventListener('click', ()=>{
+      const tempo = document.querySelector('#tempo .chip.active').dataset.v;
+      const scn = document.querySelector('#scenario .chip.active').dataset.v;
+      const age = document.getElementById('age').value.trim();
+      const gender = document.getElementById('gender').value.trim();
+      const location = document.getElementById('location').value.trim();
+      const topic = document.getElementById('topic').value.trim();
+      const question = document.getElementById('question').value.trim();
+      const extra = document.getElementById('extra').value.trim();
+
+      const params = new URLSearchParams({
+        tempo, scn, age, gender, location, topic, question, extra
+      });
+      location.href = 'fourth.html?' + params.toString();
+    });
+
+    // Swipe: destra => second.html
+    (function(){
+      let x0=null; const TH=35;
+      const el=document.getElementById('p3');
+      el.addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+      el.addEventListener('touchend',e=>{
+        if(x0==null) return;
+        const dx=e.changedTouches[0].clientX-x0;
+        if(dx>TH) location.href='second.html';
+        x0=null;
+      },{passive:true});
+    })();
+  </script>
 </body>
 </html>
