@@ -1,38 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="/WhatIfapp/">
-
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
-
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="whatifapp">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>whatifapp</title>
-  <link rel="manifest" href="manifest.json">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>What?f</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <script src="flutter_bootstrap.js" async></script>
+  <main id="app">
+
+    <!-- SCHERMATA 1: Welcome -->
+    <section class="screen screen-1 active" data-screen="1">
+      <div class="content center">
+        <h1 class="eyebrow">Benvenuto su</h1>
+        <img class="logo" src="assets/whatif_logo.png" alt="What?f" />
+        <h2 class="headline">Le scelte ci definiscono</h2>
+        <p class="sub">What?f ti mostra “come sarebbe andata” o “come potrebbe andare”.</p>
+      </div>
+      <div class="bottom">
+        <div class="dots"><span class="dot active"></span><span class="dot"></span><span class="dot"></span></div>
+        <button class="btn primary" data-next>Choose your way</button>
+        <div class="hint">Scorri →</div>
+      </div>
+    </section>
+
+    <!-- SCHERMATA 2: What a F?! -->
+    <section class="screen screen-2" data-screen="2">
+      <div class="content center">
+        <img class="logo big" src="assets/whataf_logo.png" alt="What a F?!" />
+      </div>
+      <div class="bottom">
+        <div class="dots"><span class="dot"></span><span class="dot active"></span><span class="dot"></span></div>
+        <button class="btn light" data-next>Start</button>
+        <div class="hint">Scorri →</div>
+      </div>
+    </section>
+
+    <!-- SCHERMATA 3: Domanda -->
+    <section class="screen screen-3" data-screen="3">
+      <header class="topbar">
+        <div class="segmented" id="timeToggle">
+          <button data-time="past" class="active">Passato</button>
+          <button data-time="future">Futuro</button>
+        </div>
+        <div class="segmented" id="scenarioToggle">
+          <button data-scenario="sliding" class="active">Sliding Doors</button>
+          <button data-scenario="wtf">What the F?!</button>
+        </div>
+      </header>
+
+      <div class="content form-area">
+        <label class="label">La tua domanda</label>
+        <div class="input-row">
+          <span class="prefix">What?f</span>
+          <input id="questionInput" type="text" placeholder="…se oggi mollassi tutto per inseguire un sogno?" />
+        </div>
+
+        <div class="quick-qs">
+          <label class="label">Domande rapide</label>
+          <div class="chips" id="quickChips">
+            <button class="chip" data-q="…se accettassi quel lavoro all’estero?">Lavoro estero</button>
+            <button class="chip" data-q="…se tornassi con la mia ex?">Ex</button>
+            <button class="chip" data-q="…se aprissi un bar?">Aprire un bar</button>
+            <button class="chip" data-q="…se cambiassi città?">Nuova città</button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="goBtn">Apri la porta</button>
+        </div>
+
+        <div id="result" class="result hidden">
+          <div class="result-head">
+            <h3 class="result-title">Risultato</h3>
+            <span class="badge" id="probBadge">—%</span>
+          </div>
+          <p id="resultText"></p>
+        </div>
+      </div>
+
+      <div class="bottom">
+        <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot active"></span></div>
+      </div>
+    </section>
+
+  </main>
+  <script src="app.js"></script>
 </body>
 </html>
