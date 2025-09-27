@@ -1,139 +1,58 @@
-<!doctype html>
-<html lang="it">
+<!doctype html><html lang="it">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>What?f – Risultato</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>What?f — Risultato</title>
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
-  <main class="screen" id="p4">
-    <div class="bg-cover" style="background-image:linear-gradient(120deg,#04131a, #0A0F14 60%)"></div>
-    <div class="bg-overlay" style="background:radial-gradient(60% 50% at 50% 30%, rgba(0,224,255,.10), transparent 60%), linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,.85))"></div>
-
-    <div style="width:min(960px,92vw);text-align:left">
-      <div class="kicker accent-turquoise">Simulazione</div>
-      <h1 class="h1" id="title">Risultato</h1>
-
-      <div id="badges" style="margin-top:8px"></div>
-
-      <div class="card" id="answer"></div>
-
-      <div class="actions">
-        <a class="btn" href="third.html">Nuova domanda</a>
-        <a class="btn btn-ghost" href="second.html">← Torna alle porte</a>
+  <section class="screen">
+    <div class="bg-cover"></div>
+    <div class="wrap">
+      <h2>Scenario</h2>
+      <h1 id="title">Risultato</h1>
+      <div id="answerBox" class="answer">Carico…</div>
+      <p class="small" style="margin-top:12px">Demo locale · Quando vuoi colleghiamo una AI per generare il testo dinamico.</p>
+      <div style="margin-top:14px; display:flex; gap:10px; justify-content:center">
+        <a class="btn" href="third.html">← Modifica</a>
+        <a class="btn" href="index.html">Torna all’inizio</a>
       </div>
     </div>
 
-    <div class="swipe-hint" aria-hidden="true">
-      <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-      <span>← Swipe</span>
-    </div>
-  </main>
+    <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot active"></span></div>
+    <div class="swipe-hint">← Swipe</div>
+  </section>
 
   <script>
-    function pickProb(tempo, scn){
-      // Probabilità "credibile" per Sliding, più giocosa per What a F?!
-      const base = scn==='sliding' ? 55 : 40;
-      const variance = scn==='sliding' ? 25 : 35;
-      const t = tempo==='future' ? 5 : 0;
-      const p = Math.max(5, Math.min(95, base + t + Math.round((Math.random()*2-1)*variance)));
-      return p;
-    }
-
-    function renderAnswer() {
-      const q = new URLSearchParams(location.search);
-      const tempo = q.get('tempo')||'past';
-      const scn = q.get('scn')||'sliding';
-      const age = q.get('age')||'';
-      const gender = q.get('gender')||'';
-      const locationTxt = q.get('location')||'';
-      const topic = q.get('topic')||'generale';
-      const question = q.get('question')||'';
-      const extra = q.get('extra')||'';
-
-      const title = document.getElementById('title');
-      title.innerHTML = (scn==='sliding' ? 'Sliding Doors' : 'What the F?!') + ' · ' + (tempo==='past'?'Passato':'Futuro');
-
-      // Badges + probability
-      const prob = pickProb(tempo, scn);
-      const b = document.getElementById('badges');
-      b.innerHTML = `
-        <span class="badge ${scn==='sliding'?'real':'fun'}">${scn==='sliding'?'Realistico':'Ironico'}</span>
-        <span class="badge" style="background:#123743;color:#9deaff">Probabilità: ${prob}%</span>
-      `;
-
-      // Build a contextual long answer (client-side mock)
-      const you = [];
-      if(age) you.push(`${age} anni`);
-      if(gender) you.push(gender);
-      if(locationTxt) you.push(`da ${locationTxt}`);
-      const youStr = you.length ? you.join(', ') : 'profilo non specificato';
-
-      const timeLine = tempo==='past'
-        ? 'Se avessi davvero spinto quella porta allora'
-        : 'Se deciderai di aprire quella porta adesso';
-
-      const toneOpen = scn==='sliding'
-        ? `In uno scenario plausibile e coerente`
-        : `Con una dose sana di follia (ma più vera di quanto sembri)`;
-
-      const topicLine = topic && topic!=='generale'
-        ? `— il tema centrale qui è **${topic}** —`
-        : `— contesto generale —`;
-
-      const spice = scn==='whataf'
-        ? `Tra una scelta azzardata e un colpo di fortuna, ti ritrovi a sorridere di quanto l’universo ami le coincidenze.`
-        : `Passi misurati, piccole decisioni quotidiane, e il quadro inizia a cambiare con una logica sorprendente.`;
-
-      const endLine = tempo==='future'
-        ? `Il futuro non è garantito, ma ogni gesto oggi inclina l’ago.`
-        : `Il passato non si riscrive, ma può insegnare la direzione da prendere.`;
-
-      const qLine = question ? `**Domanda:** ${question}` : `**Domanda:** (non specificata)`;
-      const extraLine = extra ? `\n**Dettagli aggiuntivi:** ${extra}\n` : '';
-
-      const paragraph = `
-${qLine}
-${extraLine}
-${timeLine}, ${toneOpen} per un* ${youStr} ${topicLine}
-
-• All’inizio senti una lieve frizione: cambiare traiettoria non è immediato, ma i primi segnali ti dicono che la direzione è quella giusta.
-• Arrivano due opportunità “ponte”. Non sono perfette, ma ti permettono di testare la nuova strada senza bruciare i ponti.
-• Una persona chiave entra in scena: non fa magie, però ti apre gli occhi su un dettaglio che non vedevi.
-• Metti ordine nelle priorità: una decisione a settimana, concreta e misurabile, con una scadenza che rispetti.
-• Ti sorprende un momento di lucidità: capisci che stavi sottovalutando una tua qualità (e la metti a leva).
-• ${spice}
-• Dopo alcune settimane, il tuo quotidiano ha un ritmo diverso: il contesto si riallinea, e le energie rispondono.
-
-**Cosa aspettarti nei prossimi passi**
-1) Un piccolo “sì” ti farà guadagnare tempo o margine.  
-2) Un “no” protettivo ti eviterà complicazioni inutili.  
-3) Un gesto creativo darà un segnale forte alla tua rete.  
-
-**Perché ${prob}%?**  
-Gli elementi che hai indicato pesano davvero: profilo, contesto e tempistiche. Non è destino: è direzione.
-
-_${endLine}_
-      `.trim();
-
-      document.getElementById('answer').innerHTML = paragraph;
-    }
-
-    renderAnswer();
-
-    // Swipe: destra => third.html
     (function(){
-      let x0=null; const TH=35;
-      const el=document.getElementById('p4');
-      el.addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
-      el.addEventListener('touchend',e=>{
-        if(x0==null) return;
-        const dx=e.changedTouches[0].clientX-x0;
-        if(dx>TH) location.href='third.html';
-        x0=null;
-      },{passive:true});
+      const box=document.getElementById('answerBox');
+      const t=document.getElementById('title');
+      const raw=localStorage.getItem('whatif:last');
+      if(!raw){ box.textContent='Nessun dato: torna indietro e compila la simulazione.'; return; }
+      const d=JSON.parse(raw);
+
+      const tono = d.scenario==='wtf' ? 'ironico e sopra le righe' : 'realistico e motivato';
+      const quando = d.tempo==='passato' ? 'se allora avessi scelto diversamente' : 'se farai davvero questo passo';
+      t.textContent = d.scenario==='wtf' ? 'What the F?!' : 'Sliding Doors';
+
+      const extra = d.extra ? `\n\nNota personale: ${d.extra}` : '';
+      const base =
+`${d.prompt ? 'Domanda: '+d.prompt+'\n\n' : ''}Scenario (${tono}): ${quando} a ${d.luogo||'[luogo non indicato]'}.
+Età: ${d.eta||'n.d.'}, Genere: ${d.genere||'n.d.'}.
+Lavoro: ${d.lavoro||'n.d.'}, Amore: ${d.amore||'n.d.'}.
+Interessi chiave: ${d.interessi && d.interessi.length ? d.interessi.join(', ') : 'n.d.'}.
+
+${d.scenario==='wtf'
+? `È probabile che ti ritroverai in un’avventura improbabile ma memorabile: nuove amicizie inaspettate, un colpo di scena che ti costringerà a uscire dalla comfort zone e una storia da raccontare. Tra risate e imprevisti, scoprirai un tratto di te che tenevi nascosto e lo userai per svoltare. Probabilità (scherzosa): 64% 🍀`
+: `In modo coerente con il tuo profilo, potresti ottenere un risultato progressivo: i primi 2–3 mesi di assestamento, poi un’accelerazione grazie a competenze e network. Rischi: organizzativi ed emotivi; opportunità: crescita concreta e relazioni solide. Probabilità (realistica): 62% ✅`}
+${extra}`;
+
+      // 10–12 righe circa
+      box.textContent = base;
     })();
+
+    // swipe indietro
+    let x0=null; addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+    addEventListener('touchend',e=>{ if(x0==null) return; const dx=e.changedTouches[0].clientX-x0;
+      if(dx>50) location.href='third.html'; x0=null; },{passive:true});
   </script>
-</body>
-</html>
+</body></html>
