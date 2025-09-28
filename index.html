@@ -2,30 +2,52 @@
 <html lang="it">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>What?f — Benvenuto</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="fullscreen" aria-label="Benvenuto">
-    <div class="bg-cover" style="background-image:url('assets/whatif_logo.png');"></div>
+    <div class="bg-cover bg-contain" style="background-image:url('assets/whatif_logo.png');"></div>
     <div class="bg-tint"></div>
 
-    <div class="content">
-      <div class="badge">Benvenuto su <span class="brand">&nbsp;What?f</span></div>
+    <div class="content" style="padding-bottom:76px">
+      <div class="glass" style="display:inline-block">
+        <div class="badge">Benvenuto su <span class="brand">&nbsp;What?f</span></div>
+        <h1 class="title-xl" style="margin-top:10px;">Le scelte ci definiscono.</h1>
+        <p class="subtitle">What?f ti mostra “come sarebbe andata” o “come potrebbe andare”.</p>
+      </div>
 
-      <h1 class="title-xl" style="margin-top:10px;">Le scelte ci definiscono.</h1>
-      <p class="subtitle">What?f ti mostra “come sarebbe andata” o “come potrebbe andare”.</p>
-
-      <div class="cta-row">
+      <div class="cta-row" style="margin-top:16px">
         <a class="btn btn-primary" href="second.html" aria-label="Vai avanti">Choose your way</a>
         <a class="btn btn-ghost" href="third.html" aria-label="Salta all’impostazione">Salta</a>
       </div>
     </div>
 
-    <a class="swipe-indicator" href="second.html">
-      scorri <span class="chev">⌄</span>
-    </a>
+    <div class="swipe-indicator">scorri <span class="chev">⌄</span></div>
   </div>
+
+  <!-- Swipe robusto: pointer/touch -->
+  <script>
+  (function(){
+    let sx=0, sy=0, ex=0, ey=0, active=false, min=48;
+    const onStart = e=>{
+      const t = (e.changedTouches? e.changedTouches[0] : e);
+      sx=t.clientX; sy=t.clientY; active=true;
+    };
+    const onEnd = e=>{
+      if(!active) return; active=false;
+      const t=(e.changedTouches? e.changedTouches[0] : e);
+      ex=t.clientX; ey=t.clientY;
+      const dx=ex-sx, dy=ey-sy;
+      if(Math.abs(dx)<Math.abs(dy) || Math.abs(dx)<min) return;
+      if(dx<0) location.href='second.html';
+    };
+    window.addEventListener('pointerdown',onStart,{passive:true});
+    window.addEventListener('pointerup',onEnd,{passive:true});
+    window.addEventListener('touchstart',onStart,{passive:true});
+    window.addEventListener('touchend',onEnd,{passive:true});
+  })();
+  </script>
 </body>
 </html>
