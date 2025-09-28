@@ -4,176 +4,202 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>What?f — Impostazioni</title>
-  <link rel="stylesheet" href="./style.css?v=4" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <meta name="theme-color" content="#0A0F14" />
-  <script defer src="./pwa-register.js"></script>
+  <link rel="stylesheet" href="./style.css?v=5" />
+  <style>
+    /* fallback/integrazioni (non tocca il tuo style.css se presente) */
+    :root{
+      --bg:#0b0f12;--panel:#12171b;--muted:#9fb1bd;--text:#e9fbff;--brand:#20e3d6;--brand2:#14b8ff;
+    }
+    body{background:linear-gradient(180deg,#0b0f12,#0e1418);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;margin:0}
+    .container{max-width:980px;margin:32px auto;padding:16px}
+    h1{font-size:clamp(26px,4.5vw,40px);margin:8px 0 6px}
+    .eyebrow{letter-spacing:.12em;color:var(--muted);font-weight:600;font-size:.9rem}
+    .lead{color:#cfe7ee;margin:.5rem 0 1.5rem}
+    .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:16px;margin:14px 0;backdrop-filter: blur(6px)}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .col{flex:1 1 260px}
+    label.block{display:block;font-weight:700;margin-bottom:.5rem}
+    .segmented{display:flex;gap:10px;background:#0f1519;border:1px solid rgba(255,255,255,.06);padding:8px;border-radius:999px}
+    .segmented .opt{flex:1 1 auto;padding:10px 14px;border-radius:999px;text-align:center;cursor:pointer;border:1px solid transparent;user-select:none}
+    .segmented .opt.active{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#001417}
+    .segmented input{display:none}
+    input[type="text"], select, textarea{
+      width:100%;padding:12px 14px;border-radius:12px;background:#0f1519;border:1px solid rgba(255,255,255,.08);color:var(--text)
+    }
+    textarea{min-height:90px;resize:vertical}
+    .muted{color:var(--muted)}
+    .btn{appearance:none;border:0;border-radius:14px;padding:12px 16px;font-weight:700;cursor:pointer}
+    .btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#001417}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.14);color:var(--text)}
+    .btn-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .right{margin-left:auto}
+    .hidden{display:none}
+    .counter{font-size:.95rem}
+    a{color:var(--brand2);text-decoration:none}
+  </style>
 </head>
-<body class="page settings">
-  <header class="page-header">
-    <h1><span class="eyebrow">Passato o futuro?</span> Scopri il tuo <span class="brand-accent">What?f</span>!</h1>
-    <p class="page-sub">Un paio di scelte rapide e poi ti faccio 3 domande mirate per risponderti meglio.</p>
-  </header>
+<body>
+  <div class="container">
+    <div class="eyebrow">PASSATO O FUTURO?</div>
+    <h1>Scopri il tuo <span style="color:var(--brand)">What?f!</span></h1>
+    <p class="lead">Un paio di scelte rapide e poi ti faccio <strong>3 domande mirate</strong> per risponderti meglio.</p>
 
-  <main class="container">
-    <!-- TIME -->
-    <section class="card">
-      <h2 class="card-title">Tempo</h2>
-      <div class="segmented" role="radiogroup" aria-label="Tempo">
-        <input type="radio" id="t-past"   name="time" value="past"   checked>
-        <label for="t-past">Passato</label>
-        <input type="radio" id="t-future" name="time" value="future">
-        <label for="t-future">Futuro</label>
+    <!-- TEMPO -->
+    <div class="card">
+      <label class="block">Tempo</label>
+      <div class="segmented" id="seg-tempo">
+        <label class="opt active"><input type="radio" name="tempo" value="passato" checked>Passato</label>
+        <label class="opt"><input type="radio" name="tempo" value="futuro">Futuro</label>
       </div>
-      <p class="hint">Esplora un “e se…” nel passato o nel futuro.</p>
-    </section>
+      <p class="muted">Esplora un “e se…” nel passato o nel futuro.</p>
+    </div>
 
     <!-- SCENARIO -->
-    <section class="card">
-      <h2 class="card-title">Scenario</h2>
-      <div class="segmented" role="radiogroup" aria-label="Scenario">
-        <input type="radio" id="s-slide" name="scenario" value="sliding" checked>
-        <label for="s-slide">Sliding Doors</label>
-        <input type="radio" id="s-wtf"   name="scenario" value="wtf">
-        <label for="s-wtf">What the F?!</label>
+    <div class="card">
+      <label class="block">Scenario</label>
+      <div class="segmented" id="seg-scenario">
+        <label class="opt active"><input type="radio" name="scenario" value="sliding" checked>Sliding Doors</label>
+        <label class="opt"><input type="radio" name="scenario" value="wtf">What the F?!</label>
       </div>
-      <p class="hint">Realistico (Sliding) oppure ironico (What a F?!).</p>
-    </section>
+      <p class="muted">Realistico (Sliding) oppure ironico (What the F?!).</p>
+    </div>
 
-    <!-- PROMPT BASE -->
-    <section class="card">
-      <h2 class="card-title">La tua domanda</h2>
-      <div class="wf-input">
-        <span class="prefix">What?f</span>
-        <input id="prompt" type="text" inputmode="text" autocomplete="off"
-               placeholder="…se avessi accettato quel trasferimento?">
-      </div>
-
-      <div class="grid">
-        <input id="place" class="input" type="text" placeholder="Dove (città/luogo)?" autocomplete="off">
-        <select id="when" class="input">
-          <option value="" selected>Quando?</option>
-          <option value="oggi">Oggi</option>
-          <option value="tra 6 mesi">Tra 6 mesi</option>
-          <option value="tra 1 anno">Tra 1 anno</option>
-          <option value="3 anni">Tra 3 anni</option>
-          <option value="5 anni">Tra 5 anni</option>
-        </select>
+    <!-- DOMANDA BASE -->
+    <div class="card">
+      <label class="block">La tua domanda</label>
+      <div class="row">
+        <div class="col">
+          <input data-question type="text" placeholder="What?f …se avessi accettato quel trasferimento?" />
+        </div>
+        <div class="col">
+          <input data-city type="text" placeholder="Dove (città/luogo)?" />
+        </div>
+        <div class="col" style="max-width:240px">
+          <select data-when>
+            <option value="">Quando?</option>
+            <option value="oggi">Oggi</option>
+            <option value="1 mese">Tra 1 mese</option>
+            <option value="6 mesi">Tra 6 mesi</option>
+            <option value="1 anno">Tra 1 anno</option>
+          </select>
+        </div>
       </div>
 
-      <div class="quota-row">
-        <span id="quota">3</span> simulazioni rimaste oggi
-        <button id="btn-ask" class="btn primary right">Avanti (3 domande)</button>
+      <div class="btn-row" style="margin-top:10px">
+        <span class="muted counter"><span data-daily-left>3</span> simulazioni rimaste oggi</span>
+        <button class="btn primary right" data-next>Avanti (3 domande)</button>
       </div>
-    </section>
+    </div>
 
-    <!-- FOLLOW-UP DINAMICI -->
-    <section id="followups" class="card hidden" aria-live="polite">
-      <h2 class="card-title">Per capirti meglio</h2>
-      <p class="hint">Rispondi a queste 3 domande rapide (massimo una riga ciascuna).</p>
-
-      <input id="q1" class="input" placeholder="…" maxlength="120">
-      <input id="q2" class="input" placeholder="…" maxlength="120">
-      <input id="q3" class="input" placeholder="…" maxlength="120">
-
-      <textarea id="notes" class="input" rows="3"
-        placeholder="Dettagli opzionali utili (età, vincoli, preferenze)…"></textarea>
-
-      <div class="actions">
-        <a href="second.html" class="btn ghost">Indietro</a>
-        <button id="open" class="btn primary">Apri la porta</button>
+    <!-- DOMANDE MIRATE (mostrate dopo Avanti) -->
+    <div class="card hidden" data-qa-wrap>
+      <label class="block">Per capirti meglio</label>
+      <div class="row">
+        <div class="col"><input data-qa1 type="text" placeholder="…" /></div>
+        <div class="col"><input data-qa2 type="text" placeholder="…" /></div>
+        <div class="col"><input data-qa3 type="text" placeholder="…" /></div>
       </div>
-    </section>
-  </main>
-
-  <footer class="mini-foot">
-    <a href="index.html" class="ghost">Home</a>
-    <span>•</span>
-    <a href="second.html" class="ghost">Choose your way</a>
-  </footer>
+      <div style="margin-top:10px">
+        <textarea data-details placeholder="Dettagli opzionali utili (età, vincoli, interessi, esempi)…"></textarea>
+      </div>
+      <div class="btn-row" style="margin-top:12px">
+        <a class="btn ghost" href="./second.html">Indietro</a>
+        <button class="btn primary right" data-open>Apri la porta</button>
+      </div>
+    </div>
+  </div>
 
   <script>
-  // --- util
-  const $ = (sel) => document.querySelector(sel);
-  const byId = (id) => document.getElementById(id);
-
-  // dis-select esclusivi sono gestiti nativamente dai radio;
-  // styles li rendono “pillole” (segmented).
-
-  // quota demo (persistenza semplice)
-  const quotaEl = byId('quota');
-  const quota = Number(localStorage.getItem('wf_quota') || '3');
-  quotaEl.textContent = quota;
-
-  function setQuestions() {
-    const time = document.querySelector('input[name="time"]:checked').value;
-    const scenario = document.querySelector('input[name="scenario"]:checked').value;
-    const prompt = byId('prompt').value.trim();
-    const place  = byId('place').value.trim();
-    const when   = byId('when').value;
-
-    // Heuristica per follow-up
-    const q = [];
-    if (time === 'past') {
-      q.push(`Qual era il contesto o vincolo principale quando è successo?`);
-      q.push(`Cosa sarebbe cambiato subito ${place ? 'a ' + place : ''}${when ? ' ' + when : ''}?`);
-      q.push(`Qual è l’obiettivo che speravi di ottenere con quella scelta?`);
-    } else {
-      q.push(`Qual è il risultato minimo che consideri un successo?`);
-      q.push(`Quali risorse/limiti hai oggi (tempo, soldi, rete)?`);
-      q.push(`Cosa ti preoccupa di più nel fare questo passo${place ? ' a ' + place : ''}?`);
+    /* --------- DAILY LIMIT (fix NaN) ---------- */
+    const DAILY_KEY='wf_daily_left', DAILY_RESET_KEY='wf_daily_reset';
+    function initDaily() {
+      const today = new Date().toDateString();
+      const last = localStorage.getItem(DAILY_RESET_KEY);
+      if (last !== today) {
+        localStorage.setItem(DAILY_RESET_KEY, today);
+        localStorage.setItem(DAILY_KEY, '3');
+      }
+      const left = parseInt(localStorage.getItem(DAILY_KEY)||'3',10);
+      const span = document.querySelector('[data-daily-left]');
+      if (span) span.textContent = left;
     }
-    if (scenario === 'wtf') {
-      q[1] = `Qual è la cosa più improbabile/divertente che immagini possa succedere?`;
+    initDaily();
+
+    /* --------- segmented toggle esclusivo ---------- */
+    function wireSegmented(id) {
+      const seg = document.getElementById(id);
+      if (!seg) return;
+      seg.querySelectorAll('.opt').forEach(opt=>{
+        opt.addEventListener('click',()=>{
+          seg.querySelectorAll('.opt').forEach(o=>o.classList.remove('active'));
+          opt.classList.add('active');
+          const radio = opt.querySelector('input[type="radio"]');
+          if (radio) radio.checked = true;
+          if (id==='seg-tempo') fillSuggested(); // aggiorna placeholders
+        });
+      });
     }
-    if (!prompt) q[0] = `Completa la frase: What?f… (scrivi in 5–10 parole).`;
+    wireSegmented('seg-tempo');
+    wireSegmented('seg-scenario');
 
-    byId('q1').placeholder = q[0];
-    byId('q2').placeholder = q[1];
-    byId('q3').placeholder = q[2];
-  }
-
-  // mostra follow-up
-  byId('btn-ask').addEventListener('click', () => {
-    if (!byId('prompt').value.trim()) {
-      byId('prompt').focus();
-      byId('prompt').classList.add('invalid');
-      setTimeout(()=>byId('prompt').classList.remove('invalid'), 900);
-      return;
+    /* --------- domande mirate dinamiche ---------- */
+    const qWrap = document.querySelector('[data-qa-wrap]');
+    const q1 = document.querySelector('[data-qa1]');
+    const q2 = document.querySelector('[data-qa2]');
+    const q3 = document.querySelector('[data-qa3]');
+    function tempoVal(){
+      const chk = document.querySelector('input[name="tempo"]:checked');
+      return (chk && chk.value) || 'passato';
     }
-    setQuestions();
-    $('#followups').classList.remove('hidden');
-    window.scrollTo({ top: $('#followups').offsetTop - 8, behavior: 'smooth' });
-  });
-
-  // CTA → quarta pagina
-  byId('open').addEventListener('click', () => {
-    if (Number(quotaEl.textContent) <= 0) {
-      alert('Limite giornaliero raggiunto. Riprova domani 🤝');
-      return;
+    function scenarioVal(){
+      const chk = document.querySelector('input[name="scenario"]:checked');
+      return (chk && chk.value) || 'sliding';
     }
-    const data = {
-      time: document.querySelector('input[name="time"]:checked').value,
-      scenario: document.querySelector('input[name="scenario"]:checked').value,
-      prompt: byId('prompt').value.trim(),
-      place:  byId('place').value.trim(),
-      when:   byId('when').value,
-      q1: byId('q1').value.trim(),
-      q2: byId('q2').value.trim(),
-      q3: byId('q3').value.trim(),
-      notes: byId('notes').value.trim()
-    };
-    // quota –
-    const left = Math.max(0, Number(quotaEl.textContent) - 1);
-    localStorage.setItem('wf_quota', String(left));
+    function fillSuggested() {
+      if (tempoVal()==='passato'){
+        q1.placeholder='Quale scelta precisa vuoi rimettere in discussione?';
+        q2.placeholder='Qual era il contesto (lavoro, relazioni, città)?';
+        q3.placeholder='Cosa speravi di ottenere allora?';
+      } else {
+        q1.placeholder='Quale decisione stai valutando concretamente?';
+        q2.placeholder='Quali vincoli/risorse (tempo, budget, competenze)?';
+        q3.placeholder='Che obiettivo desideri in 6–12 mesi?';
+      }
+    }
+    fillSuggested();
 
-    const qs = new URLSearchParams(data).toString();
-    location.href = `fourth.html?${qs}`;
-  });
+    document.querySelector('[data-next]')?.addEventListener('click', (e)=>{
+      e.preventDefault();
+      qWrap.classList.remove('hidden');
+      qWrap.scrollIntoView({behavior:'smooth', block:'start'});
+    });
 
-  // aggiorna placeholders live se cambiano radio/select
-  document.querySelectorAll('input[name="time"], input[name="scenario"], #place, #when')
-    .forEach(el => el.addEventListener('change', setQuestions));
+    /* --------- Apri la porta -> salva + vai a fourth ---------- */
+    const questionInput = document.querySelector('[data-question]');
+    const cityInput = document.querySelector('[data-city]');
+    const whenSelect = document.querySelector('[data-when]');
+    const details = document.querySelector('[data-details]');
+
+    document.querySelector('[data-open]')?.addEventListener('click',(e)=>{
+      e.preventDefault();
+      const payload = {
+        tempo: tempoVal(),                // passato | futuro
+        scenario: scenarioVal(),          // sliding | wtf
+        question: (questionInput?.value||'').trim(),
+        where: (cityInput?.value||'').trim(),
+        when: whenSelect?.value || '',
+        a1: (q1?.value||'').trim(),
+        a2: (q2?.value||'').trim(),
+        a3: (q3?.value||'').trim(),
+        extra: (details?.value||'').trim()
+      };
+      // salva e scala contatore
+      sessionStorage.setItem('wf_payload', JSON.stringify(payload));
+      const left = Math.max(0,(parseInt(localStorage.getItem(DAILY_KEY)||'3',10)-1));
+      localStorage.setItem(DAILY_KEY,String(left));
+      // vai al risultato
+      window.location.href='./fourth.html';
+    });
   </script>
 </body>
 </html>
