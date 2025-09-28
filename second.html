@@ -1,42 +1,30 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>What?f — Choose your way</title>
-  <meta property="og:title" content="What the F?! — scegli il tuo stile" />
-  <meta property="og:description" content="Sliding Doors realistico o What the F?! ironico. Scegli la tua porta." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://lucafed.github.io/WhatIfapp/second.html" />
-  <meta property="og:image" content="https://lucafed.github.io/WhatIfapp/assets/whataf_logo.png" />
-  <link rel="icon" href="assets/whataf_logo.png" />
-  <link rel="stylesheet" href="style.css?v=8" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>What?f — What the F?!</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="page hero-page" data-bg="assets/whataf_logo.png" data-prev="index.html" data-next="third.html">
-  <div class="hero-overlay"></div>
+<body>
+  <div class="fullscreen" aria-label="Seconda schermata">
+    <div class="bg-cover" style="background-image:url('assets/whataf_logo.png'); filter:saturate(1.08) contrast(1.02);"></div>
+    <div class="bg-tint"></div>
 
-  <header class="hero-head">
-    <p class="eyebrow">…or choose your bar!</p>
-    <h1 class="brand brand-alt">What the F?!</h1>
-    <h2 class="subtitle">CHOOSE YOUR WAY</h2>
-  </header>
+    <div class="content">
+      <div class="badge">Modalità <span class="brand">&nbsp;What the F?!</span></div>
+      <h1 class="title-xl" style="margin-top:10px;">Choose your way</h1>
 
-  <main class="hero-body">
-    <a class="btn cta pulse" href="third.html">Choose your way</a>
-    <div class="dots"><span class="dot"></span><span class="dot active"></span><span class="dot"></span></div>
-    <p class="swipe-hint">← Swipe • Swipe →</p>
-  </main>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="third.html" aria-label="Vai alla simulazione">Inizia</a>
+        <a class="btn btn-ghost" href="index.html" aria-label="Torna indietro">Indietro</a>
+      </div>
+    </div>
 
-  <script>
-    (function(){document.body.style.setProperty("--hero-bg",`url('${document.body.dataset.bg}')`);})();
-    (function(){let sx=null,sy=null,p=document.body.dataset.prev,n=document.body.dataset.next,t=50;
-      function st(e){const a=e.touches?e.touches[0]:e;sx=a.clientX;sy=a.clientY}
-      function mv(e){if(sx===null)return;const a=e.touches?e.touches[0]:e,dx=a.clientX-sx,dy=a.clientY-sy;
-        if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>t){if(dx<0&&n)location.href=n;if(dx>0&&p)location.href=p;sx=sy=null}}
-      function en(){sx=sy=null}
-      addEventListener("touchstart",st,{passive:true});addEventListener("touchmove",mv,{passive:true});addEventListener("touchend",en);
-      addEventListener("mousedown",st);addEventListener("mousemove",mv);addEventListener("mouseup",en);
-    })();
-  </script>
+    <a class="swipe-indicator" href="third.html">
+      scorri <span class="chev">⌄</span>
+    </a>
+  </div>
 </body>
 </html>
+
