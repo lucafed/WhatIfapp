@@ -1,31 +1,24 @@
-<!doctype html><html lang="it">
+<!doctype html>
+<html lang="it">
 <head>
-  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>What?f — Choose your way</title>
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="./style.css?v=3">
 </head>
-<body>
-  <section class="screen">
-    <!-- sfondo con logo neon bar -->
-    <div class="bg-cover"></div>
-    <div class="bg-image" style="background-image:url('assets/whataf_logo.png');"></div>
-
-    <div class="wrap">
-      <h2>…or choose your bar!</h2>
-      <h1>What the F?!</h1>
+<body class="home home-2">
+  <section class="hero">
+    <div class="hero-overlay">
+      <p class="eyebrow">…or choose your bar!</p>
+      <h1 class="brand brand-alt">What the F?!</h1>
       <p class="lead">CHOOSE YOUR WAY</p>
-      <a class="btn" href="third.html">Choose your way</a>
+
+      <a class="cta" href="./third.html" aria-label="Inizia la simulazione">
+        Choose your way
+      </a>
+
+      <div class="swipe-hint">← Swipe • Swipe →</div>
     </div>
-
-    <div class="dots"><span class="dot"></span><span class="dot active"></span><span class="dot"></span></div>
-    <div class="swipe-hint">← Swipe • Swipe →</div>
   </section>
-
-  <script>
-    // swipe sinistra/destra
-    let x0=null; addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
-    addEventListener('touchend',e=>{ if(x0==null) return; const dx=e.changedTouches[0].clientX-x0;
-      if(dx>50) location.href='index.html'; if(dx<-50) location.href='third.html'; x0=null; },{passive:true});
-  </script>
-</body></html>
-
+</body>
+</html>
