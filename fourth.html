@@ -1,91 +1,132 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>What?f — Risultato</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="./style.css?v=5" />
+  <style>
+    :root{
+      --bg:#0b0f12;--panel:#12171b;--muted:#9fb1bd;--text:#e9fbff;--brand:#20e3d6;--brand2:#14b8ff;
+    }
+    body{background:linear-gradient(180deg,#0b0f12,#0e1418);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;margin:0}
+    .container{max-width:900px;margin:28px auto;padding:16px}
+    h1{font-size:clamp(26px,4.5vw,40px);margin:.2rem 0 1rem}
+    .eyebrow{letter-spacing:.12em;color:var(--muted);font-weight:600;font-size:.9rem}
+    .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:18px;margin:12px 0;backdrop-filter:blur(6px)}
+    .btn{appearance:none;border:0;border-radius:14px;padding:10px 14px;font-weight:700;cursor:pointer}
+    .btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#001417}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.14);color:var(--text)}
+    .btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .muted{color:var(--muted)}
+    a{color:var(--brand2);text-decoration:none}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04)}
+    .heart{filter:grayscale(1) brightness(.9);opacity:.8}
+    .heart.on{filter:none;opacity:1}
+  </style>
 </head>
 <body>
-  <div class="fullscreen" style="justify-content:flex-start">
-    <div class="content" style="padding-top:22px;padding-bottom:90px">
-      <div class="badge">Ecco il tuo <span class="brand">What?f</span></div>
+  <div class="container">
+    <div class="eyebrow">Ecco il tuo <a href="./index.html" style="color:var(--brand)">What?f</a></div>
+    <h1 data-head>Risultato</h1>
 
-      <div id="answerCard" class="card" style="margin-top:12px">
-        <h3 id="headline"></h3>
-        <p id="answer" style="margin-top:8px;line-height:1.55"></p>
+    <div class="card" data-out>
+      <p class="muted">Sto preparando lo scenario…</p>
+    </div>
 
-        <div class="footer-actions">
-          <div class="toggle-group">
-            <button id="likeBtn" class="btn btn-ghost">❤️ Mi piace</button>
-            <button id="shareBtn" class="btn btn-ghost">↗ Condividi</button>
-          </div>
-          <div class="small" id="prob">Probabilità: —</div>
-        </div>
-      </div>
-
-      <div class="cta-row" style="margin-top:10px">
-        <a class="btn btn-primary" href="third.html">Nuova domanda</a>
-        <a class="btn btn-ghost" href="index.html">Home</a>
-      </div>
+    <div class="btn-row" style="margin-top:8px">
+      <button class="pill" id="likeBtn" title="Mi piace">
+        <svg class="heart" width="18" height="18" viewBox="0 0 24 24" fill="#ff6ea0"><path d="M12 21s-6.716-4.536-9.428-7.248C.9 12.08.9 9.28 2.572 7.607c1.671-1.671 4.382-1.671 6.053 0L12 8.981l3.375-3.374c1.671-1.671 4.382-1.671 6.053 0 1.672 1.672 1.672 4.473 0 6.145C18.716 16.464 12 21 12 21z"/></svg>
+        <span>Mi piace</span>
+      </button>
+      <button class="btn ghost" id="shareBtn">Condividi</button>
+      <span class="muted" id="prob"></span>
+      <span class="right"></span>
+      <a class="btn ghost" href="./third.html">Nuova domanda</a>
+      <a class="btn primary" href="./index.html">Home</a>
     </div>
   </div>
 
-<script>
-function rnd(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
-function sentenceCase(s){return s? s[0].toUpperCase()+s.slice(1) : '';}
+  <script>
+    /* --------- recupero dati --------- */
+    function getData(){
+      try{ return JSON.parse(sessionStorage.getItem('wf_payload')||'{}'); }
+      catch{ return {}; }
+    }
+    const data = getData();
+    const headEl = document.querySelector('[data-head]');
+    const out = document.querySelector('[data-out]');
+    const probEl = document.getElementById('prob');
 
-function buildAnswer(d){
-  const who = d.f1||d.who||'le persone chiave';
-  const risk = d.f2||'i rischi principali';
-  const res = d.f3||'le risorse a disposizione';
-  const where = d.place?` a ${d.place}`:'';
-  const when = d.when?` (${d.when})`:'';
-  const tone = d.scenSel==='wtf' ? 'leggero' : 'realistico';
+    function scoreProbability(d){
+      // micro-stima fittizia per demo
+      let base = (d.scenario==='sliding'? 0.6 : 0.5);
+      const richness = [d.question,d.where,d.when,d.a1,d.a2,d.a3,d.extra].filter(Boolean).length;
+      base += Math.min(richness*0.04, 0.25);
+      return Math.round(base*100);
+    }
 
-  const open = d.timeSel==='past'
-    ? `Se ${d.question}${where}${when}, oggi vedresti gli effetti in modo ${tone}.`
-    : `Se ${d.question}${where}${when}, i prossimi passi avrebbero un impatto ${tone}.`;
+    function render(){
+      if (!data || !data.question){
+        headEl.textContent='Nessun dato';
+        out.innerHTML='<p>Torna indietro e compila la simulazione.</p>';
+        return;
+      }
+      const isPast = data.tempo==='passato';
+      const isWtf  = data.scenario==='wtf';
 
-  const middle = d.scenSel==='sliding'
-    ? `Considerando ${who}, ${risk} e ${res}, lo scenario evolverebbe con segnali chiari già a breve.`
-    : `Tra imprevisti creativi e coraggio, ${who} e ${res} renderebbero la storia memorabile, mentre ${risk} aggiungerebbero pepe alla trama.`;
+      headEl.textContent = (isWtf? 'What a F?!' : 'Sliding Doors') + ' · ' + (isPast? 'Passato':'Futuro');
 
-  const detail = d.extra ? `Dettagli utili notati: ${d.extra}.` : '';
+      const parts = [];
 
-  return [open, middle, detail].filter(Boolean).join(' ');
-}
+      // Incipit
+      if (isPast){
+        parts.push(`Se ${data.question}${data.where?` a ${data.where}`:''}, oggi potresti ritrovarti su un percorso parallelo: familiare, ma con sfumature diverse.`);
+      } else {
+        parts.push(`Se decidi: ${data.question}${data.where?` a ${data.where}`:''}, entro ${data.when||'pochi mesi'} potresti aprire una fase nuova e più allineata a ciò che desideri.`);
+      }
 
-function probFor(d){
-  let p = rnd(58,82);
-  if(d.scenSel==='wtf') p = rnd(44,71);
-  return p+'%';
-}
+      // Personalizzazione sintetica
+      if (data.a1) parts.push(`Punto chiave: ${data.a1}.`);
+      if (data.a2) parts.push(`Vincoli/risorse: ${data.a2}.`);
+      if (data.a3) parts.push(`Obiettivo a breve: ${data.a3}.`);
+      if (data.extra) parts.push(`Nota utile: ${data.extra}.`);
 
-const saved = JSON.parse(localStorage.getItem('wf_last')||'{}');
-if(!saved.timeSel){ document.getElementById('answer').textContent='Nessun dato. Torna indietro.'; }
-else{
-  document.getElementById('headline').textContent =
-    (saved.scenSel==='sliding'?'Sliding Doors':'What a F?!') + ' · ' +
-    (saved.timeSel==='past'?'Passato':'Futuro');
-  document.getElementById('answer').textContent = buildAnswer(saved);
-  document.getElementById('prob').textContent = 'Probabilità: '+probFor(saved);
-}
+      // Tono scenario
+      if (isWtf){
+        parts.push(`Twist ironico ma plausibile: un imprevisto “assurdo” ti spinge proprio nella direzione giusta. (Sì, capita davvero più spesso di quanto sembri).`);
+      } else {
+        parts.push(`Scenario realistico: con passi piccoli e costanti, le probabilità migliorano sensibilmente nelle prossime settimane.`);
+      }
 
-document.getElementById('likeBtn').addEventListener('click',()=>{
-  const liked=JSON.parse(localStorage.getItem('wf_likes')||'[]');
-  liked.push({t:Date.now(),q:saved.question||''});
-  localStorage.setItem('wf_likes',JSON.stringify(liked));
-  alert('Aggiunto ai preferiti ❤️');
-});
+      // Azione
+      parts.push(`Prossimo passo: dedica 30 minuti entro 48 ore per definire 3 micro-azioni concrete.`);
 
-document.getElementById('shareBtn').addEventListener('click',async()=>{
-  const text = `What?f — ${document.getElementById('headline').textContent}\n\n${document.getElementById('answer').textContent}\n`;
-  try{
-    if(navigator.share){ await navigator.share({title:'What?f',text}); }
-    else{ await navigator.clipboard.writeText(text); alert('Testo copiato. Incollalo dove vuoi!'); }
-  }catch{}
-});
-</script>
+      out.innerHTML = parts.map(p=>`<p>${p}</p>`).join('');
+      const p = scoreProbability(data);
+      probEl.textContent = `Probabilità: ${p}%`;
+    }
+    render();
+
+    /* --------- like --------- */
+    const likeBtn=document.getElementById('likeBtn');
+    likeBtn?.addEventListener('click',()=>{
+      const h=likeBtn.querySelector('.heart');
+      h.classList.toggle('on');
+    });
+
+    /* --------- share (Web Share API fallback) --------- */
+    document.getElementById('shareBtn')?.addEventListener('click', async ()=>{
+      const title='Il mio What?f';
+      const text = document.querySelector('[data-out]').innerText.slice(0,220)+'…';
+      const url = location.href;
+      if (navigator.share){
+        try{ await navigator.share({title,text,url}); }catch(e){}
+      } else {
+        await navigator.clipboard.writeText(`${title}\n\n${text}\n\n${url}`);
+        alert('Link copiato negli appunti!');
+      }
+    });
+  </script>
 </body>
 </html>
