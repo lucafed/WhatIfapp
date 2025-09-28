@@ -1,98 +1,104 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>What?f — Risultato</title>
-  <link rel="stylesheet" href="style.css?v=8" />
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="page result-page" data-prev="third.html">
-  <main class="result-wrap">
-    <header>
-      <h1>Scenario · <span id="badge"></span></h1>
-    </header>
+<body>
+  <div class="fullscreen" style="justify-content:flex-start">
+    <div class="content" style="padding-top:28px">
+      <div class="badge">Ecco il tuo <span class="brand">What?f</span></div>
 
-    <article id="result" class="card prose">
-      <p>Sto preparando il tuo scenario…</p>
-    </article>
+      <div id="answerCard" class="card" style="margin-top:14px">
+        <h3 id="headline"></h3>
+        <p id="answer" style="margin-top:8px; line-height:1.5"></p>
 
-    <div class="actions">
-      <button class="btn" id="likeBtn">❤️ Mi piace <span id="likes">0</span></button>
-      <button class="btn cta" id="shareBtn">Condividi</button>
-      <a class="btn" href="index.html">Torna all’inizio</a>
+        <div class="footer-actions">
+          <div class="toggle-group">
+            <button id="likeBtn" class="btn btn-ghost" aria-label="Metti like">❤️ Mi piace</button>
+            <button id="shareBtn" class="btn btn-ghost" aria-label="Condividi">↗ Condividi</button>
+          </div>
+          <div class="small" id="prob">Probabilità: —</div>
+        </div>
+      </div>
+
+      <div class="cta-row" style="margin-top:12px">
+        <a class="btn btn-primary" href="third.html">Nuova domanda</a>
+        <a class="btn btn-ghost" href="index.html">Home</a>
+      </div>
     </div>
+  </div>
 
-    <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot active"></span></div>
-  </main>
+<script>
+function rnd(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
-  <script>
-    // leggi parametri
-    const q = new URLSearchParams(location.search);
-    const tempo = q.get("tempo") || "passato";
-    const scenario = q.get("scenario") || "sliding";
-    const eta = q.get("eta")||"";
-    const genere = q.get("genere")||"";
-    const luogo = q.get("luogo")||"";
-    const lavoro = q.get("lavoro")||"";
-    const interessi = (q.get("interessi")||"").split(",").map(s=>s.trim()).filter(Boolean);
-    const prompt = q.get("prompt")||"";
+function buildAnswer(data){
+  const {timeSel, scenSel, question, extra='', clarify=[]} = data;
+  const details = [...clarify, extra].filter(Boolean).join('; ');
+  const base = timeSel==='past'
+    ? `Se ${question}, il tuo percorso avrebbe cambiato ritmo.`
+    : `Se ${question}, i prossimi mesi prenderebbero una piega chiara.`;
 
-    // badge
-    const badge = document.getElementById("badge");
-    badge.textContent = scenario==="sliding" ? "Sliding Doors" : "What the F?!";
+  const toneSliding = [
+    `Le tue scelte precedenti indicano buona probabilità di riuscita.`,
+    `Il contesto personale suggerisce un'evoluzione coerente.`,
+    `Piccoli passaggi pratici consoliderebbero il risultato.`,
+    `Le competenze che possiedi riducono l’incertezza.`,
+    `Saresti in grado di adattarti con tempi realistici.`
+  ];
+  const toneWtf = [
+    `Preparati a un twist degno di un film indie.`,
+    `Potresti sorridere di quanto tutto appaia improbabile… ma funzioni.`,
+    `Tra coincidenze e coraggio, finiresti con una storia epica da bar.`,
+    `L’energia ti spingerebbe oltre la comfort zone.`,
+    `Paradossalmente, il caos ti farebbe chiarezza.`
+  ];
 
-    // mock generazione testo (10+ righe)
-    const lines=[];
-    lines.push(`Partendo da ${luogo || "dove sei"} e considerando ${eta?("la tua età di "+eta):"il tuo profilo"}, costruiamo uno scenario in chiave ${scenario==="sliding"?"realistica":"ironica"}.`);
-    if(lavoro) lines.push(`Nel lavoro/studio (“${lavoro}”), le scelte pesano: piccole deviazioni generano traiettorie nuove.`);
-    if(interessi.length) lines.push(`I tuoi interessi (${interessi.join(", ")}) colorano le opzioni sul tavolo.`);
-    if(prompt) lines.push(`Domanda guida: “${prompt}”.`);
-    lines.push(tempo==="passato"
-      ? "Guardiamo indietro: se avessi scelto diversamente, oggi avresti relazioni e routine mutate nei dettagli — ma riconoscibili."
-      : "Proiettiamoci avanti: la mappa che segue è probabilistica, non deterministica; serve per orientarti, non per vincolarti.");
-    lines.push("Scenario:");
-    for(let i=0;i<6;i++){
-      lines.push(`• Step ${i+1}: un evento plausibile (contatto, opportunità, micro-successo) sblocca il passo successivo.`);
+  const lines = (scenSel==='sliding'? toneSliding: toneWtf);
+  const chosen = lines.sort(()=>Math.random()-0.5).slice(0,3); // 3 righe circa
+  const more = details ? `\n\nDettagli utili considerati: ${details}.` : '';
+  return base + ' ' + chosen.join(' ') + more;
+}
+
+function probFor(data){
+  let p = rnd(58,82);
+  if(data.scenSel==='wtf') p = rnd(44,71);
+  return p + '%';
+}
+
+const saved = JSON.parse(localStorage.getItem('wf_last') || '{}');
+if(!saved.timeSel){ document.getElementById('answer').textContent='Nessun dato. Torna indietro.'; }
+else{
+  document.getElementById('headline').textContent =
+    (saved.scenSel==='sliding' ? 'Sliding Doors' : 'What a F?!') +
+    ' · ' + (saved.timeSel==='past' ? 'Passato' : 'Futuro');
+
+  document.getElementById('answer').textContent = buildAnswer(saved);
+  document.getElementById('prob').textContent = 'Probabilità: ' + probFor(saved);
+}
+
+document.getElementById('likeBtn').addEventListener('click', ()=>{
+  const liked = JSON.parse(localStorage.getItem('wf_likes')||'[]');
+  liked.push(Date.now());
+  localStorage.setItem('wf_likes', JSON.stringify(liked));
+  alert('Aggiunto ai preferiti ❤️');
+});
+
+document.getElementById('shareBtn').addEventListener('click', async ()=>{
+  const text = `What?f — ${document.getElementById('headline').textContent}\n\n${document.getElementById('answer').textContent}\n`;
+  try{
+    if(navigator.share){
+      await navigator.share({title:'What?f', text});
+    }else{
+      await navigator.clipboard.writeText(text);
+      alert('Testo copiato. Incollalo dove vuoi!');
     }
-    lines.push(scenario==="sliding"
-      ? "Probabilità complessiva: 62% (stima qualitativa, coerente con il tuo profilo)."
-      : "Possibilità fuori scala: 137% 😉 (prendila con ironia, ma resta coerente con chi sei).");
-    lines.push("Conclusione: scegli la prossima azione piccola che puoi fare entro 24 ore. È così che le porte si aprono.");
-
-    document.getElementById("result").innerHTML = `<p>${lines.join("</p><p>")}</p>`;
-
-    // Like (locale)
-    const likeKey="wf_likes_total";
-    const likesEl=document.getElementById("likes");
-    likesEl.textContent = Number(localStorage.getItem(likeKey)||0);
-    document.getElementById("likeBtn").onclick = ()=>{
-      const n=Number(localStorage.getItem(likeKey)||0)+1;
-      localStorage.setItem(likeKey,n);
-      likesEl.textContent=n;
-    };
-
-    // Share
-    document.getElementById("shareBtn").onclick = async ()=>{
-      const title="Il mio What?f";
-      const text=`${badge.textContent} · ${tempo} · ${luogo || "ovunque"}`;
-      const url=location.href;
-      if(navigator.share){
-        try{ await navigator.share({title,text,url}); }catch(e){}
-      }else{
-        prompt("Copia questo link:", url);
-      }
-    };
-
-    // swipe indietro
-    (function(){let sx=null,sy=null,p=document.body.dataset.prev,t=60;
-      function st(e){const a=e.touches?e.touches[0]:e;sx=a.clientX;sy=a.clientY}
-      function mv(e){if(sx===null)return;const a=e.touches?e.touches[0]:e,dx=a.clientX-sx,dy=a.clientY-sy;
-        if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>t){ if(dx>0&&p)location.href=p; sx=sy=null;}}
-      function en(){sx=sy=null}
-      addEventListener("touchstart",st,{passive:true});addEventListener("touchmove",mv,{passive:true});addEventListener("touchend",en);
-      addEventListener("mousedown",st);addEventListener("mousemove",mv);addEventListener("mouseup",en);
-    })();
-  </script>
+  }catch{}
+});
+</script>
 </body>
 </html>
+
 
