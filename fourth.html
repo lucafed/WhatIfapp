@@ -2,29 +2,29 @@
 <html lang="it">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>What?f — Risultato</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="fullscreen" style="justify-content:flex-start">
-    <div class="content" style="padding-top:28px">
+    <div class="content" style="padding-top:22px;padding-bottom:90px">
       <div class="badge">Ecco il tuo <span class="brand">What?f</span></div>
 
-      <div id="answerCard" class="card" style="margin-top:14px">
+      <div id="answerCard" class="card" style="margin-top:12px">
         <h3 id="headline"></h3>
-        <p id="answer" style="margin-top:8px; line-height:1.5"></p>
+        <p id="answer" style="margin-top:8px;line-height:1.55"></p>
 
         <div class="footer-actions">
           <div class="toggle-group">
-            <button id="likeBtn" class="btn btn-ghost" aria-label="Metti like">❤️ Mi piace</button>
-            <button id="shareBtn" class="btn btn-ghost" aria-label="Condividi">↗ Condividi</button>
+            <button id="likeBtn" class="btn btn-ghost">❤️ Mi piace</button>
+            <button id="shareBtn" class="btn btn-ghost">↗ Condividi</button>
           </div>
           <div class="small" id="prob">Probabilità: —</div>
         </div>
       </div>
 
-      <div class="cta-row" style="margin-top:12px">
+      <div class="cta-row" style="margin-top:10px">
         <a class="btn btn-primary" href="third.html">Nuova domanda</a>
         <a class="btn btn-ghost" href="index.html">Home</a>
       </div>
@@ -32,73 +32,60 @@
   </div>
 
 <script>
-function rnd(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function rnd(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function sentenceCase(s){return s? s[0].toUpperCase()+s.slice(1) : '';}
 
-function buildAnswer(data){
-  const {timeSel, scenSel, question, extra='', clarify=[]} = data;
-  const details = [...clarify, extra].filter(Boolean).join('; ');
-  const base = timeSel==='past'
-    ? `Se ${question}, il tuo percorso avrebbe cambiato ritmo.`
-    : `Se ${question}, i prossimi mesi prenderebbero una piega chiara.`;
+function buildAnswer(d){
+  const who = d.f1||d.who||'le persone chiave';
+  const risk = d.f2||'i rischi principali';
+  const res = d.f3||'le risorse a disposizione';
+  const where = d.place?` a ${d.place}`:'';
+  const when = d.when?` (${d.when})`:'';
+  const tone = d.scenSel==='wtf' ? 'leggero' : 'realistico';
 
-  const toneSliding = [
-    `Le tue scelte precedenti indicano buona probabilità di riuscita.`,
-    `Il contesto personale suggerisce un'evoluzione coerente.`,
-    `Piccoli passaggi pratici consoliderebbero il risultato.`,
-    `Le competenze che possiedi riducono l’incertezza.`,
-    `Saresti in grado di adattarti con tempi realistici.`
-  ];
-  const toneWtf = [
-    `Preparati a un twist degno di un film indie.`,
-    `Potresti sorridere di quanto tutto appaia improbabile… ma funzioni.`,
-    `Tra coincidenze e coraggio, finiresti con una storia epica da bar.`,
-    `L’energia ti spingerebbe oltre la comfort zone.`,
-    `Paradossalmente, il caos ti farebbe chiarezza.`
-  ];
+  const open = d.timeSel==='past'
+    ? `Se ${d.question}${where}${when}, oggi vedresti gli effetti in modo ${tone}.`
+    : `Se ${d.question}${where}${when}, i prossimi passi avrebbero un impatto ${tone}.`;
 
-  const lines = (scenSel==='sliding'? toneSliding: toneWtf);
-  const chosen = lines.sort(()=>Math.random()-0.5).slice(0,3); // 3 righe circa
-  const more = details ? `\n\nDettagli utili considerati: ${details}.` : '';
-  return base + ' ' + chosen.join(' ') + more;
+  const middle = d.scenSel==='sliding'
+    ? `Considerando ${who}, ${risk} e ${res}, lo scenario evolverebbe con segnali chiari già a breve.`
+    : `Tra imprevisti creativi e coraggio, ${who} e ${res} renderebbero la storia memorabile, mentre ${risk} aggiungerebbero pepe alla trama.`;
+
+  const detail = d.extra ? `Dettagli utili notati: ${d.extra}.` : '';
+
+  return [open, middle, detail].filter(Boolean).join(' ');
 }
 
-function probFor(data){
+function probFor(d){
   let p = rnd(58,82);
-  if(data.scenSel==='wtf') p = rnd(44,71);
-  return p + '%';
+  if(d.scenSel==='wtf') p = rnd(44,71);
+  return p+'%';
 }
 
-const saved = JSON.parse(localStorage.getItem('wf_last') || '{}');
+const saved = JSON.parse(localStorage.getItem('wf_last')||'{}');
 if(!saved.timeSel){ document.getElementById('answer').textContent='Nessun dato. Torna indietro.'; }
 else{
   document.getElementById('headline').textContent =
-    (saved.scenSel==='sliding' ? 'Sliding Doors' : 'What a F?!') +
-    ' · ' + (saved.timeSel==='past' ? 'Passato' : 'Futuro');
-
+    (saved.scenSel==='sliding'?'Sliding Doors':'What a F?!') + ' · ' +
+    (saved.timeSel==='past'?'Passato':'Futuro');
   document.getElementById('answer').textContent = buildAnswer(saved);
-  document.getElementById('prob').textContent = 'Probabilità: ' + probFor(saved);
+  document.getElementById('prob').textContent = 'Probabilità: '+probFor(saved);
 }
 
-document.getElementById('likeBtn').addEventListener('click', ()=>{
-  const liked = JSON.parse(localStorage.getItem('wf_likes')||'[]');
-  liked.push(Date.now());
-  localStorage.setItem('wf_likes', JSON.stringify(liked));
+document.getElementById('likeBtn').addEventListener('click',()=>{
+  const liked=JSON.parse(localStorage.getItem('wf_likes')||'[]');
+  liked.push({t:Date.now(),q:saved.question||''});
+  localStorage.setItem('wf_likes',JSON.stringify(liked));
   alert('Aggiunto ai preferiti ❤️');
 });
 
-document.getElementById('shareBtn').addEventListener('click', async ()=>{
+document.getElementById('shareBtn').addEventListener('click',async()=>{
   const text = `What?f — ${document.getElementById('headline').textContent}\n\n${document.getElementById('answer').textContent}\n`;
   try{
-    if(navigator.share){
-      await navigator.share({title:'What?f', text});
-    }else{
-      await navigator.clipboard.writeText(text);
-      alert('Testo copiato. Incollalo dove vuoi!');
-    }
+    if(navigator.share){ await navigator.share({title:'What?f',text}); }
+    else{ await navigator.clipboard.writeText(text); alert('Testo copiato. Incollalo dove vuoi!'); }
   }catch{}
 });
 </script>
 </body>
 </html>
-
-
