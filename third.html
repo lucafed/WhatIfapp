@@ -1,85 +1,157 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>What?f — Domande</title>
-  <link rel="stylesheet" href="style.css?v=8" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>What?f — Impostazioni</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="page form-page" data-prev="second.html" data-next="fourth.html">
-  <header class="form-head">
-    <h1>Passato o Futuro, scopri il tuo <span class="wf">What?f</span>!</h1>
-  </header>
+<body>
+  <div class="fullscreen" style="justify-content:flex-start">
+    <div class="content" style="padding-top:28px">
+      <div class="badge">Passato o futuro, scopri il tuo <span class="brand">What?f</span>!</div>
 
-  <main class="form-body">
-    <form id="wfForm" class="card">
-      <fieldset>
-        <legend>Tempo</legend>
-        <label class="chip"><input type="radio" name="tempo" value="passato" checked> Passato</label>
-        <label class="chip"><input type="radio" name="tempo" value="futuro"> Futuro</label>
-      </fieldset>
+      <div class="grid" style="margin-top:14px">
+        <div class="card">
+          <h3>Tempo</h3>
+          <div id="timeGroup" class="toggle-group" role="group" aria-label="Seleziona tempo">
+            <div class="toggle" data-val="past">Passato</div>
+            <div class="toggle" data-val="future">Futuro</div>
+          </div>
+          <p class="helper">Scegli se esplorare il passato o guardare avanti.</p>
+        </div>
 
-      <fieldset>
-        <legend>Scenario</legend>
-        <label class="chip"><input type="radio" name="scenario" value="sliding" checked> Sliding Doors (realistico)</label>
-        <label class="chip"><input type="radio" name="scenario" value="whataf"> What the F?! (ironico)</label>
-      </fieldset>
+        <div class="card">
+          <h3>Scenario</h3>
+          <div id="scenarioGroup" class="toggle-group" role="group" aria-label="Seleziona scenario">
+            <div class="toggle" data-val="sliding">Sliding Doors</div>
+            <div class="toggle" data-val="wtf">What a F?!</div>
+          </div>
+          <p class="helper">Realistico (Sliding Doors) oppure ironico (What a F?!).</p>
+        </div>
 
-      <div class="grid">
-        <label>Età <input type="number" name="eta" placeholder="es. 29" min="10" max="100"></label>
-        <label>Genere
-          <select name="genere">
-            <option value="">Preferisco non dirlo</option>
-            <option>Donna</option><option>Uomo</option><option>Altro</option>
-          </select>
-        </label>
+        <div class="card">
+          <h3>La tua domanda</h3>
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px">
+            <span class="brand" style="font-weight:900">What?f</span>
+            <input id="question" class="input" placeholder="…non avessi lasciato quel lavoro?" />
+          </div>
+          <textarea id="extra" placeholder="Dettagli opzionali per una risposta più personale (luogo, età, contesto)…"></textarea>
+          <p class="helper">Suggerimenti extra dopo “Apri la porta”.</p>
+          <div class="footer-actions">
+            <span class="small" id="quotaInfo">3 simulazioni/giorno</span>
+            <button id="openBtn" class="btn btn-green">Apri la porta 🚪</button>
+          </div>
+        </div>
+
+        <div id="clarify" class="card" style="display:none">
+          <h3>Un attimo ✋ Ci dai 10 secondi per essere super precisi?</h3>
+          <p class="helper" id="clarifyLead">Scegli 2–3 aspetti oppure salta.</p>
+          <div id="chips" class="toggle-group" style="margin-top:8px"></div>
+          <div class="cta-row" style="margin-top:12px">
+            <button id="clarifySkip" class="btn btn-ghost">Salta</button>
+            <button id="clarifyOk" class="btn btn-primary">Fatto</button>
+          </div>
+        </div>
+
+        <div class="footer-actions">
+          <a class="btn btn-ghost" href="second.html">Indietro</a>
+          <a class="btn btn-ghost" href="index.html">Home</a>
+        </div>
       </div>
+    </div>
+  </div>
 
-      <div class="grid">
-        <label>Luogo <input type="text" name="luogo" placeholder="città / area"></label>
-        <label>Lavoro/studi <input type="text" name="lavoro" placeholder="ruolo o ambito"></label>
-      </div>
+<script>
+function makeExclusive(groupEl){
+  groupEl.addEventListener('click', (e)=>{
+    const t = e.target.closest('.toggle'); if(!t) return;
+    [...groupEl.querySelectorAll('.toggle')].forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+  });
+}
+const timeGroup = document.getElementById('timeGroup');
+const scenarioGroup = document.getElementById('scenarioGroup');
+makeExclusive(timeGroup); makeExclusive(scenarioGroup);
 
-      <label>Interessi (virgole)
-        <input type="text" name="interessi" placeholder="musica, corsa, fotografia">
-      </label>
+const quotaKey = 'wf_quota';
+function getQuota(){
+  const s = localStorage.getItem(quotaKey);
+  const today = new Date().toISOString().slice(0,10);
+  if(!s) return {day:today, used:0};
+  try{
+    const v = JSON.parse(s);
+    if(v.day!==today) return {day:today, used:0};
+    return v;
+  }catch{ return {day:today, used:0}; }
+}
+function setQuota(q){ localStorage.setItem(quotaKey, JSON.stringify(q)); }
+function refreshQuotaUI(){
+  const q = getQuota();
+  document.getElementById('quotaInfo').textContent = `${3-q.used} simulazioni rimaste oggi`;
+}
+refreshQuotaUI();
 
-      <label>La tua domanda (facoltativa)
-        <textarea name="prompt" rows="3" placeholder="What?f… se oggi mollassi tutto per inseguire un sogno?"></textarea>
-      </label>
+const clarifyBlock = document.getElementById('clarify');
+const chips = document.getElementById('chips');
+const clarifyLead = document.getElementById('clarifyLead');
 
-      <div class="actions">
-        <button type="button" class="btn" id="backBtn">← Indietro</button>
-        <button type="submit" class="btn cta">Apri la porta 🚪</button>
-      </div>
-    </form>
+function buildChips(mode){
+  chips.innerHTML='';
+  const past = [
+    'Dove è successo?', 'Chi era coinvolto?', 'Perché non lo hai fatto?',
+    'Quanto tempo fa?', 'Cosa ti frenava?'
+  ];
+  const future = [
+    'Dove vorresti farlo?', 'Quando potresti iniziare?', 'Chi ti aiuterebbe?',
+    'Quanto tempo ti daresti?', 'Cosa temi di più?'
+  ];
+  (mode==='past'? past: future).forEach(label=>{
+    const d = document.createElement('div');
+    d.className='toggle'; d.textContent=label; d.dataset.val = label;
+    d.addEventListener('click', ()=> d.classList.toggle('active'));
+    chips.appendChild(d);
+  });
+}
 
-    <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot active"></span></div>
-  </main>
+document.getElementById('openBtn').addEventListener('click', ()=>{
+  const q = getQuota();
+  if(q.used>=3){ alert('Hai raggiunto il limite giornaliero (3). Torna domani!'); return; }
 
-  <script>
-    // swipe (sincronizzato con prev/next)
-    (function(){let sx=null,sy=null,p=document.body.dataset.prev,n=document.body.dataset.next,t=60;
-      function st(e){const a=e.touches?e.touches[0]:e;sx=a.clientX;sy=a.clientY}
-      function mv(e){if(sx===null)return;const a=e.touches?e.touches[0]:e,dx=a.clientX-sx,dy=a.clientY-sy;
-        if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>t){if(dx>0&&p)location.href=p;sx=sy=null}}
-      function en(){sx=sy=null}
-      addEventListener("touchstart",st,{passive:true});addEventListener("touchmove",mv,{passive:true});addEventListener("touchend",en);
-      addEventListener("mousedown",st);addEventListener("mousemove",mv);addEventListener("mouseup",en);
-    })();
+  const timeSel = timeGroup.querySelector('.toggle.active')?.dataset.val;
+  const scenSel = scenarioGroup.querySelector('.toggle.active')?.dataset.val;
+  const question = document.getElementById('question').value.trim();
+  const extra = document.getElementById('extra').value.trim();
 
-    // back
-    document.getElementById("backBtn").onclick = ()=> history.back();
+  if(!timeSel || !scenSel){ alert('Seleziona tempo e scenario.'); return; }
+  if(question.length<6){ alert('Scrivi una domanda un filo più chiara 😉'); return; }
 
-    // submit -> fourth.html con querystring
-    document.getElementById("wfForm").addEventListener("submit", e=>{
-      e.preventDefault();
-      const fd=new FormData(e.target);
-      const obj=Object.fromEntries(fd.entries());
-      const qs=new URLSearchParams(obj).toString();
-      location.href = "fourth.html?"+qs;
-    });
-  </script>
+  clarifyBlock.style.display='block';
+  clarifyLead.textContent = timeSel==='past'
+    ? 'Per il passato ci aiuta capire il contesto 👇'
+    : 'Per il futuro ci aiuta capire le intenzioni 👇';
+  buildChips(timeSel);
+
+  localStorage.setItem('wf_pending', JSON.stringify({timeSel, scenSel, question, extra}));
+});
+
+document.getElementById('clarifySkip').addEventListener('click', ()=> goNext([]));
+document.getElementById('clarifyOk').addEventListener('click', ()=>{
+  const chosen = [...chips.querySelectorAll('.toggle.active')].map(x=>x.dataset.val);
+  goNext(chosen);
+});
+
+function goNext(chosen){
+  const pending = JSON.parse(localStorage.getItem('wf_pending')||'{}');
+  pending.clarify = chosen;
+  localStorage.setItem('wf_last', JSON.stringify(pending));
+  localStorage.removeItem('wf_pending');
+
+  const q = getQuota(); q.used++; setQuota(q);
+  refreshQuotaUI();
+
+  location.href = 'fourth.html';
+}
+</script>
 </body>
 </html>
-
