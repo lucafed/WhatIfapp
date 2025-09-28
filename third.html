@@ -1,205 +1,229 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>What?f — Impostazioni</title>
-  <link rel="stylesheet" href="./style.css?v=5" />
-  <style>
-    /* fallback/integrazioni (non tocca il tuo style.css se presente) */
-    :root{
-      --bg:#0b0f12;--panel:#12171b;--muted:#9fb1bd;--text:#e9fbff;--brand:#20e3d6;--brand2:#14b8ff;
-    }
-    body{background:linear-gradient(180deg,#0b0f12,#0e1418);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;margin:0}
-    .container{max-width:980px;margin:32px auto;padding:16px}
-    h1{font-size:clamp(26px,4.5vw,40px);margin:8px 0 6px}
-    .eyebrow{letter-spacing:.12em;color:var(--muted);font-weight:600;font-size:.9rem}
-    .lead{color:#cfe7ee;margin:.5rem 0 1.5rem}
-    .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:16px;margin:14px 0;backdrop-filter: blur(6px)}
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-    .col{flex:1 1 260px}
-    label.block{display:block;font-weight:700;margin-bottom:.5rem}
-    .segmented{display:flex;gap:10px;background:#0f1519;border:1px solid rgba(255,255,255,.06);padding:8px;border-radius:999px}
-    .segmented .opt{flex:1 1 auto;padding:10px 14px;border-radius:999px;text-align:center;cursor:pointer;border:1px solid transparent;user-select:none}
-    .segmented .opt.active{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#001417}
-    .segmented input{display:none}
-    input[type="text"], select, textarea{
-      width:100%;padding:12px 14px;border-radius:12px;background:#0f1519;border:1px solid rgba(255,255,255,.08);color:var(--text)
-    }
-    textarea{min-height:90px;resize:vertical}
-    .muted{color:var(--muted)}
-    .btn{appearance:none;border:0;border-radius:14px;padding:12px 16px;font-weight:700;cursor:pointer}
-    .btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#001417}
-    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.14);color:var(--text)}
-    .btn-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .right{margin-left:auto}
-    .hidden{display:none}
-    .counter{font-size:.95rem}
-    a{color:var(--brand2);text-decoration:none}
-  </style>
+  <link rel="stylesheet" href="./style.css"/>
 </head>
-<body>
-  <div class="container">
-    <div class="eyebrow">PASSATO O FUTURO?</div>
-    <h1>Scopri il tuo <span style="color:var(--brand)">What?f!</span></h1>
-    <p class="lead">Un paio di scelte rapide e poi ti faccio <strong>3 domande mirate</strong> per risponderti meglio.</p>
+<body class="form-page">
+  <main class="container">
+    <header class="page-lead">
+      <p class="eyebrow">PASSATO O FUTURO?</p>
+      <h1>Scopri il tuo <span class="brand-inline">What?!f</span></h1>
+      <p class="sub">Un paio di scelte rapide e poi ti faccio 3 domande mirate per risponderti meglio.</p>
+    </header>
 
-    <!-- TEMPO -->
-    <div class="card">
-      <label class="block">Tempo</label>
-      <div class="segmented" id="seg-tempo">
-        <label class="opt active"><input type="radio" name="tempo" value="passato" checked>Passato</label>
-        <label class="opt"><input type="radio" name="tempo" value="futuro">Futuro</label>
+    <!-- Tempo -->
+    <section class="card">
+      <h2>Tempo</h2>
+      <div class="segmented" role="group" aria-label="tempo">
+        <button class="seg-btn active" data-name="time" data-value="past">Passato</button>
+        <button class="seg-btn" data-name="time" data-value="future">Futuro</button>
       </div>
-      <p class="muted">Esplora un “e se…” nel passato o nel futuro.</p>
-    </div>
+      <p class="help">Esplora un “e se…” nel passato o nel futuro.</p>
+    </section>
 
-    <!-- SCENARIO -->
-    <div class="card">
-      <label class="block">Scenario</label>
-      <div class="segmented" id="seg-scenario">
-        <label class="opt active"><input type="radio" name="scenario" value="sliding" checked>Sliding Doors</label>
-        <label class="opt"><input type="radio" name="scenario" value="wtf">What the F?!</label>
+    <!-- Scenario -->
+    <section class="card">
+      <h2>Scenario</h2>
+      <div class="segmented" role="group" aria-label="scenario">
+        <button class="seg-btn active" data-name="scenario" data-value="sliding">Sliding Doors</button>
+        <button class="seg-btn" data-name="scenario" data-value="wtf">What the F?!</button>
       </div>
-      <p class="muted">Realistico (Sliding) oppure ironico (What the F?!).</p>
-    </div>
+      <p class="help">Realistico (Sliding) oppure ironico (What the F?!).</p>
+    </section>
 
-    <!-- DOMANDA BASE -->
-    <div class="card">
-      <label class="block">La tua domanda</label>
-      <div class="row">
-        <div class="col">
-          <input data-question type="text" placeholder="What?f …se avessi accettato quel trasferimento?" />
-        </div>
-        <div class="col">
-          <input data-city type="text" placeholder="Dove (città/luogo)?" />
-        </div>
-        <div class="col" style="max-width:240px">
-          <select data-when>
-            <option value="">Quando?</option>
-            <option value="oggi">Oggi</option>
-            <option value="1 mese">Tra 1 mese</option>
-            <option value="6 mesi">Tra 6 mesi</option>
-            <option value="1 anno">Tra 1 anno</option>
-          </select>
-        </div>
+    <!-- Domanda base -->
+    <section class="card">
+      <h2>La tua domanda</h2>
+      <div class="inline-inputs">
+        <span class="prefix">What?f</span>
+        <input id="q" class="input" placeholder="…se avessi accettato quel trasferimento?" />
       </div>
 
-      <div class="btn-row" style="margin-top:10px">
-        <span class="muted counter"><span data-daily-left>3</span> simulazioni rimaste oggi</span>
-        <button class="btn primary right" data-next>Avanti (3 domande)</button>
+      <div class="inline-inputs">
+        <input id="place" class="input" placeholder="Dove (città/luogo)?" />
+        <select id="when" class="input">
+          <option value="oggi">Quando?</option>
+          <option value="ieri">Ieri</option>
+          <option value="questanno">Quest’anno</option>
+          <option value="tra6mesi">Tra 6 mesi</option>
+          <option value="tra1anno">Tra 1 anno</option>
+        </select>
       </div>
-    </div>
 
-    <!-- DOMANDE MIRATE (mostrate dopo Avanti) -->
-    <div class="card hidden" data-qa-wrap>
-      <label class="block">Per capirti meglio</label>
-      <div class="row">
-        <div class="col"><input data-qa1 type="text" placeholder="…" /></div>
-        <div class="col"><input data-qa2 type="text" placeholder="…" /></div>
-        <div class="col"><input data-qa3 type="text" placeholder="…" /></div>
+      <div class="row space-between">
+        <small><span id="quota">3</span> simulazioni rimaste oggi</small>
+        <button id="start-qa" class="btn ghost" data-next>Avanti (3 domande)</button>
       </div>
-      <div style="margin-top:10px">
-        <textarea data-details placeholder="Dettagli opzionali utili (età, vincoli, interessi, esempi)…"></textarea>
+    </section>
+
+    <!-- Domande mirate (mostrate dopo Avanti) -->
+    <section id="qa-box" class="card hidden">
+      <h2>Per capirti meglio</h2>
+      <p class="help">Rispondi a queste 3 domande rapide.</p>
+      <div id="qa-list" class="qa-list"></div>
+
+      <textarea id="extra" class="textarea" rows="3" placeholder="Dettagli opzionali utili (età, vincoli, preferenze)…"></textarea>
+
+      <div class="row gap">
+        <a href="./second.html" class="btn text">Indietro</a>
+        <button id="open" class="btn primary">Apri la porta 🔓</button>
       </div>
-      <div class="btn-row" style="margin-top:12px">
-        <a class="btn ghost" href="./second.html">Indietro</a>
-        <button class="btn primary right" data-open>Apri la porta</button>
-      </div>
-    </div>
-  </div>
+    </section>
+
+    <footer class="footer-links">
+      <a href="./index.html">Home</a> ·
+      <a href="./second.html">Choose your way</a>
+    </footer>
+  </main>
 
   <script>
-    /* --------- DAILY LIMIT (fix NaN) ---------- */
-    const DAILY_KEY='wf_daily_left', DAILY_RESET_KEY='wf_daily_reset';
-    function initDaily() {
-      const today = new Date().toDateString();
-      const last = localStorage.getItem(DAILY_RESET_KEY);
-      if (last !== today) {
-        localStorage.setItem(DAILY_RESET_KEY, today);
-        localStorage.setItem(DAILY_KEY, '3');
-      }
-      const left = parseInt(localStorage.getItem(DAILY_KEY)||'3',10);
-      const span = document.querySelector('[data-daily-left]');
-      if (span) span.textContent = left;
-    }
-    initDaily();
-
-    /* --------- segmented toggle esclusivo ---------- */
-    function wireSegmented(id) {
-      const seg = document.getElementById(id);
-      if (!seg) return;
-      seg.querySelectorAll('.opt').forEach(opt=>{
-        opt.addEventListener('click',()=>{
-          seg.querySelectorAll('.opt').forEach(o=>o.classList.remove('active'));
-          opt.classList.add('active');
-          const radio = opt.querySelector('input[type="radio"]');
-          if (radio) radio.checked = true;
-          if (id==='seg-tempo') fillSuggested(); // aggiorna placeholders
-        });
-      });
-    }
-    wireSegmented('seg-tempo');
-    wireSegmented('seg-scenario');
-
-    /* --------- domande mirate dinamiche ---------- */
-    const qWrap = document.querySelector('[data-qa-wrap]');
-    const q1 = document.querySelector('[data-qa1]');
-    const q2 = document.querySelector('[data-qa2]');
-    const q3 = document.querySelector('[data-qa3]');
-    function tempoVal(){
-      const chk = document.querySelector('input[name="tempo"]:checked');
-      return (chk && chk.value) || 'passato';
-    }
-    function scenarioVal(){
-      const chk = document.querySelector('input[name="scenario"]:checked');
-      return (chk && chk.value) || 'sliding';
-    }
-    function fillSuggested() {
-      if (tempoVal()==='passato'){
-        q1.placeholder='Quale scelta precisa vuoi rimettere in discussione?';
-        q2.placeholder='Qual era il contesto (lavoro, relazioni, città)?';
-        q3.placeholder='Cosa speravi di ottenere allora?';
-      } else {
-        q1.placeholder='Quale decisione stai valutando concretamente?';
-        q2.placeholder='Quali vincoli/risorse (tempo, budget, competenze)?';
-        q3.placeholder='Che obiettivo desideri in 6–12 mesi?';
-      }
-    }
-    fillSuggested();
-
-    document.querySelector('[data-next]')?.addEventListener('click', (e)=>{
-      e.preventDefault();
-      qWrap.classList.remove('hidden');
-      qWrap.scrollIntoView({behavior:'smooth', block:'start'});
+  // ------ segmented toggle (radio like) ------
+  document.querySelectorAll('.segmented').forEach(seg=>{
+    seg.addEventListener('click', (e)=>{
+      const b = e.target.closest('.seg-btn'); if(!b) return;
+      seg.querySelectorAll('.seg-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
     });
+  });
 
-    /* --------- Apri la porta -> salva + vai a fourth ---------- */
-    const questionInput = document.querySelector('[data-question]');
-    const cityInput = document.querySelector('[data-city]');
-    const whenSelect = document.querySelector('[data-when]');
-    const details = document.querySelector('[data-details]');
+  const state = {
+    time: 'past',
+    scenario: 'sliding',
+    q: '',
+    place: '',
+    when: 'oggi',
+    answers: [],
+    extra: ''
+  };
 
-    document.querySelector('[data-open]')?.addEventListener('click',(e)=>{
-      e.preventDefault();
-      const payload = {
-        tempo: tempoVal(),                // passato | futuro
-        scenario: scenarioVal(),          // sliding | wtf
-        question: (questionInput?.value||'').trim(),
-        where: (cityInput?.value||'').trim(),
-        when: whenSelect?.value || '',
-        a1: (q1?.value||'').trim(),
-        a2: (q2?.value||'').trim(),
-        a3: (q3?.value||'').trim(),
-        extra: (details?.value||'').trim()
-      };
-      // salva e scala contatore
-      sessionStorage.setItem('wf_payload', JSON.stringify(payload));
-      const left = Math.max(0,(parseInt(localStorage.getItem(DAILY_KEY)||'3',10)-1));
-      localStorage.setItem(DAILY_KEY,String(left));
-      // vai al risultato
-      window.location.href='./fourth.html';
+  function readSeg(name){
+    const b = document.querySelector(`.seg-btn.active[data-name="${name}"]`);
+    return b ? b.dataset.value : '';
+  }
+
+  const quotaEl = document.getElementById('quota');
+  let quota = 3;
+
+  const qEl = document.getElementById('q');
+  const placeEl = document.getElementById('place');
+  const whenEl = document.getElementById('when');
+  const qaBox = document.getElementById('qa-box');
+  const qaList = document.getElementById('qa-list');
+  const startBtn = document.getElementById('start-qa');
+  const openBtn = document.getElementById('open');
+  const extraEl = document.getElementById('extra');
+
+  function setQuota(n){ quota = Math.max(0,n); quotaEl.textContent = quota; }
+
+  // Generatore domande mirate in base al contesto
+  function buildQA(){
+    const time = state.time;
+    const scenario = state.scenario;
+
+    const pool = [];
+    // domande comuni
+    pool.push('Qual è l’obiettivo principale che vorresti ottenere?');
+    pool.push('Quali vincoli o limiti dovrei considerare (tempo, soldi, famiglia)?');
+
+    if(time==='past'){
+      pool.push('Quale fattore avrebbe potuto cambiare di più l’esito?');
+    } else {
+      pool.push('Quale risultato considereresti un successo tra 6-12 mesi?');
+    }
+
+    if(scenario==='sliding'){
+      pool.push('Che esperienza o risorsa già possiedi che può aiutare?');
+    } else {
+      pool.push('Hai voglia di un pizzico di follia o preferisci restare credibile?');
+    }
+
+    // prendi le prime 3 uniche
+    const seen=new Set(); const pick=[];
+    for(const q of pool){
+      if(pick.length===3) break;
+      if(!seen.has(q)){ seen.add(q); pick.push(q); }
+    }
+
+    qaList.innerHTML = '';
+    pick.forEach((txt,i)=>{
+      const inp = document.createElement('input');
+      inp.className='input';
+      inp.placeholder='…';
+      inp.dataset.idx=i;
+      const lbl = document.createElement('label');
+      lbl.className='qa-item';
+      lbl.innerHTML = `<span class="q">${txt}</span>`;
+      lbl.appendChild(inp);
+      qaList.appendChild(lbl);
     });
+  }
+
+  startBtn.addEventListener('click', ()=>{
+    state.time = readSeg('time');
+    state.scenario = readSeg('scenario');
+    state.q = qEl.value.trim();
+    state.place = placeEl.value.trim();
+    state.when = whenEl.value;
+
+    if(!state.q){
+      qEl.focus();
+      qEl.classList.add('shake');
+      setTimeout(()=>qEl.classList.remove('shake'),400);
+      return;
+    }
+    buildQA();
+    qaBox.classList.remove('hidden');
+    setQuota(quota-1);
+    // scroll
+    qaBox.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+
+  openBtn.addEventListener('click', ()=>{
+    // raccogli risposte
+    const ans=[];
+    qaList.querySelectorAll('input').forEach(inp=>ans.push(inp.value.trim()));
+    state.answers = ans;
+    state.extra = extraEl.value.trim();
+
+    // build query
+    const params = new URLSearchParams({
+      time: state.time,
+      scenario: state.scenario,
+      prompt: `whatif ${state.q}`,
+      place: state.place || '',
+      when: state.when || '',
+      a0: ans[0]||'',
+      a1: ans[1]||'',
+      a2: ans[2]||'',
+      extra: state.extra||''
+    });
+    location.href = './fourth.html?'+params.toString();
+  });
+
+  // ---- Swipe universale ----
+  (function enableSwipe(){
+    let x0=0,t0=0; const TH=50, TS=500;
+    function getNextHref(){
+      const exp=document.querySelector('[data-next]');
+      if(exp&&exp.getAttribute('href')) return exp.getAttribute('href');
+      const guess=document.querySelector('.btn.primary, a[href*="fourth"]');
+      return guess && guess.getAttribute('href');
+    }
+    addEventListener('touchstart',e=>{x0=e.changedTouches[0].clientX;t0=Date.now()},{passive:true});
+    addEventListener('touchend',e=>{
+      const dx=e.changedTouches[0].clientX-x0, dt=Date.now()-t0;
+      if(dt<TS && Math.abs(dx)>TH){
+        if(dx>0) history.back();
+        else{
+          const href=getNextHref();
+          if(href) location.href=href;
+        }
+      }
+    },{passive:true});
+  })();
   </script>
 </body>
 </html>
