@@ -1,176 +1,179 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>What?f — Impostazioni</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="./style.css?v=4" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#0A0F14" />
+  <script defer src="./pwa-register.js"></script>
 </head>
-<body>
-  <div class="fullscreen" style="justify-content:flex-start">
-    <div class="content" style="padding-top:22px;padding-bottom:90px">
-      <div class="badge">Passato o futuro? Scopri il tuo <span class="brand">What?f</span>!</div>
+<body class="page settings">
+  <header class="page-header">
+    <h1><span class="eyebrow">Passato o futuro?</span> Scopri il tuo <span class="brand-accent">What?f</span>!</h1>
+    <p class="page-sub">Un paio di scelte rapide e poi ti faccio 3 domande mirate per risponderti meglio.</p>
+  </header>
 
-      <div class="grid" style="margin-top:12px">
-        <div class="card">
-          <h3>Tempo</h3>
-          <div id="timeGroup" class="toggle-group" role="group">
-            <div class="toggle" data-val="past">Passato</div>
-            <div class="toggle" data-val="future">Futuro</div>
-          </div>
-          <p class="helper">Esplora un “e se…” nel passato o nel futuro.</p>
-        </div>
-
-        <div class="card">
-          <h3>Scenario</h3>
-          <div id="scenarioGroup" class="toggle-group" role="group">
-            <div class="toggle" data-val="sliding">Sliding Doors</div>
-            <div class="toggle" data-val="wtf">What a F?!</div>
-          </div>
-          <p class="helper">Realistico (Sliding) oppure ironico (What a F?!).</p>
-        </div>
-
-        <div class="card" id="step1">
-          <h3>La tua domanda</h3>
-          <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px">
-            <span class="brand" style="font-weight:900">What?f</span>
-            <input id="question" class="input" placeholder="…avessi accettato quel trasferimento?" />
-          </div>
-
-          <div class="row">
-            <input id="place" class="input" placeholder="Dove (città/luogo)?" />
-            <select id="when" class="input" aria-label="Quando">
-              <option value="">Quando?</option>
-            </select>
-          </div>
-
-          <div class="footer-actions">
-            <span class="small" id="quotaInfo">3 simulazioni/giorno</span>
-            <button id="nextBtn" class="btn btn-blue">Avanti (3 domande)</button>
-          </div>
-        </div>
-
-        <div class="card hidden" id="step2">
-          <h3>Per capirti meglio</h3>
-          <p class="helper" id="hint">Rispondi a queste 3 domande rapide.</p>
-          <div class="grid">
-            <input id="f1" class="input" placeholder="…" />
-            <input id="f2" class="input" placeholder="…" />
-            <input id="f3" class="input" placeholder="…" />
-          </div>
-
-          <textarea id="extra" placeholder="Dettagli opzionali utili (età, vincoli, risorse)…"></textarea>
-
-          <div class="footer-actions">
-            <a class="btn btn-ghost" href="second.html">Indietro</a>
-            <button id="openBtn" class="btn btn-green">Apri la porta 🚪</button>
-          </div>
-        </div>
+  <main class="container">
+    <!-- TIME -->
+    <section class="card">
+      <h2 class="card-title">Tempo</h2>
+      <div class="segmented" role="radiogroup" aria-label="Tempo">
+        <input type="radio" id="t-past"   name="time" value="past"   checked>
+        <label for="t-past">Passato</label>
+        <input type="radio" id="t-future" name="time" value="future">
+        <label for="t-future">Futuro</label>
       </div>
-    </div>
-  </div>
+      <p class="hint">Esplora un “e se…” nel passato o nel futuro.</p>
+    </section>
 
-<script>
-/* esclusività toggle */
-function makeExclusive(groupEl){
-  groupEl.addEventListener('click',e=>{
-    const t=e.target.closest('.toggle'); if(!t) return;
-    [...groupEl.querySelectorAll('.toggle')].forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    if(groupEl.id==='timeGroup') fillWhen(t.dataset.val);
-  });
-}
-const timeGroup=document.getElementById('timeGroup');
-const scenarioGroup=document.getElementById('scenarioGroup');
-makeExclusive(timeGroup); makeExclusive(scenarioGroup);
+    <!-- SCENARIO -->
+    <section class="card">
+      <h2 class="card-title">Scenario</h2>
+      <div class="segmented" role="radiogroup" aria-label="Scenario">
+        <input type="radio" id="s-slide" name="scenario" value="sliding" checked>
+        <label for="s-slide">Sliding Doors</label>
+        <input type="radio" id="s-wtf"   name="scenario" value="wtf">
+        <label for="s-wtf">What the F?!</label>
+      </div>
+      <p class="hint">Realistico (Sliding) oppure ironico (What a F?!).</p>
+    </section>
 
-/* quando dinamico */
-const whenSel=document.getElementById('when');
-function fillWhen(mode){
-  const past=['1-3 anni fa','3-5 anni fa','5-10 anni fa','>10 anni fa'];
-  const future=['entro 3 mesi','entro 6 mesi','entro 1 anno','>1 anno'];
-  const list=mode==='past'?past:future;
-  whenSel.innerHTML='<option value="">Quando?</option>'+list.map(v=>`<option>${v}</option>`).join('');
-}
+    <!-- PROMPT BASE -->
+    <section class="card">
+      <h2 class="card-title">La tua domanda</h2>
+      <div class="wf-input">
+        <span class="prefix">What?f</span>
+        <input id="prompt" type="text" inputmode="text" autocomplete="off"
+               placeholder="…se avessi accettato quel trasferimento?">
+      </div>
 
-/* quota */
-const qKey='wf_quota';
-function getQuota(){const s=localStorage.getItem(qKey), today=new Date().toISOString().slice(0,10);
-  if(!s) return {day:today,used:0};
-  try{const v=JSON.parse(s); return v.day===today?v:{day:today,used:0};}catch{return{day:today,used:0};}
-}
-function setQuota(v){localStorage.setItem(qKey,JSON.stringify(v))}
-function refreshQuotaUI(){const v=getQuota(); document.getElementById('quotaInfo').textContent=`${3-v.used} simulazioni rimaste oggi`}
-refreshQuotaUI();
+      <div class="grid">
+        <input id="place" class="input" type="text" placeholder="Dove (città/luogo)?" autocomplete="off">
+        <select id="when" class="input">
+          <option value="" selected>Quando?</option>
+          <option value="oggi">Oggi</option>
+          <option value="tra 6 mesi">Tra 6 mesi</option>
+          <option value="tra 1 anno">Tra 1 anno</option>
+          <option value="3 anni">Tra 3 anni</option>
+          <option value="5 anni">Tra 5 anni</option>
+        </select>
+      </div>
 
-/* step 1 -> step 2 con 3 domande mirate */
-function suggestFollowups(timeSel, scenSel, qText){
-  const isPast=timeSel==='past', isWtf=scenSel==='wtf';
-  let base1=isPast?'Quale alternativa concreta stavi davvero valutando?':'Qual è il risultato minimo che considereresti un successo?';
-  let base2=isPast?'Cosa ti ha fermato allora (tempo, soldi, famiglia)?':'Quale rischio ti preoccupa di più (tempo, soldi, reputazione)?';
-  let base3=isPast?'Chi avrebbe influenzato di più l’esito?':'Quali risorse hai già (contatti, esperienza, budget)?';
-  if(isWtf){ // tono più leggero
-    base2 = isPast?'Cosa sarebbe potuto andare “storto ma divertente”?':'Cosa potrebbe sorprendere in modo positivo?';
+      <div class="quota-row">
+        <span id="quota">3</span> simulazioni rimaste oggi
+        <button id="btn-ask" class="btn primary right">Avanti (3 domande)</button>
+      </div>
+    </section>
+
+    <!-- FOLLOW-UP DINAMICI -->
+    <section id="followups" class="card hidden" aria-live="polite">
+      <h2 class="card-title">Per capirti meglio</h2>
+      <p class="hint">Rispondi a queste 3 domande rapide (massimo una riga ciascuna).</p>
+
+      <input id="q1" class="input" placeholder="…" maxlength="120">
+      <input id="q2" class="input" placeholder="…" maxlength="120">
+      <input id="q3" class="input" placeholder="…" maxlength="120">
+
+      <textarea id="notes" class="input" rows="3"
+        placeholder="Dettagli opzionali utili (età, vincoli, preferenze)…"></textarea>
+
+      <div class="actions">
+        <a href="second.html" class="btn ghost">Indietro</a>
+        <button id="open" class="btn primary">Apri la porta</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mini-foot">
+    <a href="index.html" class="ghost">Home</a>
+    <span>•</span>
+    <a href="second.html" class="ghost">Choose your way</a>
+  </footer>
+
+  <script>
+  // --- util
+  const $ = (sel) => document.querySelector(sel);
+  const byId = (id) => document.getElementById(id);
+
+  // dis-select esclusivi sono gestiti nativamente dai radio;
+  // styles li rendono “pillole” (segmented).
+
+  // quota demo (persistenza semplice)
+  const quotaEl = byId('quota');
+  const quota = Number(localStorage.getItem('wf_quota') || '3');
+  quotaEl.textContent = quota;
+
+  function setQuestions() {
+    const time = document.querySelector('input[name="time"]:checked').value;
+    const scenario = document.querySelector('input[name="scenario"]:checked').value;
+    const prompt = byId('prompt').value.trim();
+    const place  = byId('place').value.trim();
+    const when   = byId('when').value;
+
+    // Heuristica per follow-up
+    const q = [];
+    if (time === 'past') {
+      q.push(`Qual era il contesto o vincolo principale quando è successo?`);
+      q.push(`Cosa sarebbe cambiato subito ${place ? 'a ' + place : ''}${when ? ' ' + when : ''}?`);
+      q.push(`Qual è l’obiettivo che speravi di ottenere con quella scelta?`);
+    } else {
+      q.push(`Qual è il risultato minimo che consideri un successo?`);
+      q.push(`Quali risorse/limiti hai oggi (tempo, soldi, rete)?`);
+      q.push(`Cosa ti preoccupa di più nel fare questo passo${place ? ' a ' + place : ''}?`);
+    }
+    if (scenario === 'wtf') {
+      q[1] = `Qual è la cosa più improbabile/divertente che immagini possa succedere?`;
+    }
+    if (!prompt) q[0] = `Completa la frase: What?f… (scrivi in 5–10 parole).`;
+
+    byId('q1').placeholder = q[0];
+    byId('q2').placeholder = q[1];
+    byId('q3').placeholder = q[2];
   }
-  // leggermente adattate alla domanda
-  const kw = (qText||'').toLowerCase();
-  if(kw.includes('lavor')||kw.includes('azienda')) base1 = isPast?'Che ruolo/azienda avevi in mente?':'In che settore vorresti entrare davvero?';
-  if(kw.includes('trasfer')||kw.includes('città')) base3 = isPast?'Con chi ti saresti trasferito?':'In quale quartiere/area ti immagini?';
-  return [base1,base2,base3];
-}
 
-const step1=document.getElementById('step1');
-const step2=document.getElementById('step2');
-document.getElementById('nextBtn').addEventListener('click',()=>{
-  const timeSel=timeGroup.querySelector('.toggle.active')?.dataset.val;
-  const scenSel=scenarioGroup.querySelector('.toggle.active')?.dataset.val;
-  const question=document.getElementById('question').value.trim();
-  if(!timeSel||!scenSel){alert('Seleziona tempo e scenario.');return;}
-  if(question.length<6){alert('Scrivi una domanda un filo più chiara 😉');return;}
-  // genera followups
-  const [a,b,c]=suggestFollowups(timeSel,scenSel,question);
-  document.getElementById('f1').placeholder=a;
-  document.getElementById('f2').placeholder=b;
-  document.getElementById('f3').placeholder=c;
-  step1.classList.add('hidden');
-  step2.classList.remove('hidden');
-  window.scrollTo({top:0,behavior:'smooth'});
-});
+  // mostra follow-up
+  byId('btn-ask').addEventListener('click', () => {
+    if (!byId('prompt').value.trim()) {
+      byId('prompt').focus();
+      byId('prompt').classList.add('invalid');
+      setTimeout(()=>byId('prompt').classList.remove('invalid'), 900);
+      return;
+    }
+    setQuestions();
+    $('#followups').classList.remove('hidden');
+    window.scrollTo({ top: $('#followups').offsetTop - 8, behavior: 'smooth' });
+  });
 
-/* apri porta -> salva e vai al risultato */
-document.getElementById('openBtn').addEventListener('click',()=>{
-  const v=getQuota(); if(v.used>=3){alert('Limite giornaliero raggiunto (3).');return;}
-  const data={
-    timeSel: timeGroup.querySelector('.toggle.active')?.dataset.val,
-    scenSel: scenarioGroup.querySelector('.toggle.active')?.dataset.val,
-    question: document.getElementById('question').value.trim(),
-    place: document.getElementById('place').value.trim(),
-    when: document.getElementById('when').value,
-    f1: document.getElementById('f1').value.trim(),
-    f2: document.getElementById('f2').value.trim(),
-    f3: document.getElementById('f3').value.trim(),
-    extra: document.getElementById('extra').value.trim(),
-  };
-  localStorage.setItem('wf_last', JSON.stringify(data));
-  v.used++; setQuota(v); refreshQuotaUI();
-  location.href='fourth.html';
-});
+  // CTA → quarta pagina
+  byId('open').addEventListener('click', () => {
+    if (Number(quotaEl.textContent) <= 0) {
+      alert('Limite giornaliero raggiunto. Riprova domani 🤝');
+      return;
+    }
+    const data = {
+      time: document.querySelector('input[name="time"]:checked').value,
+      scenario: document.querySelector('input[name="scenario"]:checked').value,
+      prompt: byId('prompt').value.trim(),
+      place:  byId('place').value.trim(),
+      when:   byId('when').value,
+      q1: byId('q1').value.trim(),
+      q2: byId('q2').value.trim(),
+      q3: byId('q3').value.trim(),
+      notes: byId('notes').value.trim()
+    };
+    // quota –
+    const left = Math.max(0, Number(quotaEl.textContent) - 1);
+    localStorage.setItem('wf_quota', String(left));
 
-/* swipe indietro */
-(function(){
-  let sx=0, sy=0, ex=0, ey=0, active=false, min=48;
-  const start=e=>{const t=(e.changedTouches?e.changedTouches[0]:e); sx=t.clientX; sy=t.clientY; active=true;};
-  const end=e=>{
-    if(!active) return; active=false;
-    const t=(e.changedTouches?e.changedTouches[0]:e); ex=t.clientX; ey=t.clientY;
-    const dx=ex-sx, dy=ey-sy; if(Math.abs(dx)<Math.abs(dy) || Math.abs(dx)<min) return;
-    if(dx>0) location.href='second.html';
-  };
-  addEventListener('pointerdown',start,{passive:true});
-  addEventListener('pointerup',end,{passive:true});
-  addEventListener('touchstart',start,{passive:true});
-  addEventListener('touchend',end,{passive:true});
-})();
-</script>
+    const qs = new URLSearchParams(data).toString();
+    location.href = `fourth.html?${qs}`;
+  });
+
+  // aggiorna placeholders live se cambiano radio/select
+  document.querySelectorAll('input[name="time"], input[name="scenario"], #place, #when')
+    .forEach(el => el.addEventListener('change', setQuestions));
+  </script>
 </body>
 </html>
