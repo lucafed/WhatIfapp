@@ -1,32 +1,25 @@
-<!doctype html><html lang="it">
+<!doctype html>
+<html lang="it">
 <head>
-  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>What?f — Benvenuto</title>
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="./style.css?v=3">
 </head>
-<body>
-  <section class="screen">
-    <!-- sfondo con logo porta -->
-    <div class="bg-cover"></div>
-    <div class="bg-image" style="background-image:url('assets/whatif_logo.png');"></div>
-
-    <div class="wrap">
-      <h3>Benvenuto su</h3>
-      <h1>What?f</h1>
-      <h2>Le scelte ci definiscono</h2>
+<body class="home home-1">
+  <section class="hero">
+    <div class="hero-overlay">
+      <p class="eyebrow">Benvenuto su</p>
+      <h1 class="brand">What?f</h1>
+      <h2 class="subtitle">Le scelte ci definiscono</h2>
       <p class="lead">What?f ti mostra <em>come sarebbe andata</em> o <em>come potrebbe andare</em>.</p>
-      <a class="btn" href="second.html">Choose your way</a>
+
+      <a class="cta" href="./second.html" aria-label="Vai alla scelta modalità">
+        Choose your way
+      </a>
+
+      <div class="swipe-hint">Swipe →</div>
     </div>
-
-    <div class="dots"><span class="dot active"></span><span class="dot"></span><span class="dot"></span></div>
-    <div class="swipe-hint">Swipe →</div>
   </section>
-
-  <script>
-    // swipe a destra
-    let x0=null; addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
-    addEventListener('touchend',e=>{ if(x0==null) return; const dx=e.changedTouches[0].clientX-x0;
-      if(dx<-50) location.href='second.html'; x0=null; },{passive:true});
-  </script>
-</body></html>
-
+</body>
+</html>
