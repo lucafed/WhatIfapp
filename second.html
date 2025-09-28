@@ -1,50 +1,45 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>What?f — Choose your way</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
-<body class="page"
-      style="--bg-url: url('assets/whataf_logo.png');">
+<body class="home">
+  <section class="hero hero--whataf">
+    <div class="hero-overlay">
+      <p class="eyebrow">…or choose your bar!</p>
+      <h1 class="brand brand-alt">What the F?!</h1>
+      <h2 class="headline">CHOOSE YOUR WAY</h2>
 
-  <!-- SOLO titolo corto, senza testo descrittivo sotto -->
-  <header class="overlay">
-    <h1 class="headline">Choose your way</h1>
-  </header>
+      <a href="./third.html" class="btn primary" data-next>Choose your way</a>
+      <p class="hint">← Swipe • Swipe →</p>
+    </div>
+  </section>
 
-  <footer class="footer-cta">
-    <a class="btn-primary" href="third.html" aria-label="Entra nella simulazione">
-      Start
-    </a>
-    <div class="swipe-hint" aria-hidden="true">⇠ swipe</div>
-  </footer>
-
+  <!-- Swipe universale -->
   <script>
-    // Swipe sinistra -> vai a third.html
-    (function () {
-      let startX = null, startY = null;
-      const minDx = 50;
-      document.addEventListener('touchstart', (e) => {
-        const t = e.changedTouches[0];
-        startX = t.clientX; startY = t.clientY;
-      }, {passive: true});
-      document.addEventListener('touchend', (e) => {
-        if (startX === null) return;
-        const t = e.changedTouches[0];
-        const dx = t.clientX - startX;
-        const dy = Math.abs(t.clientY - startY);
-        if (dx < -minDx && dy < 60) window.location.href = 'third.html';
-        startX = startY = null;
-      }, {passive: true});
-
-      // Click ovunque porta avanti
-      document.addEventListener('click', (e) => {
-        const isButton = e.target.closest('.btn-primary');
-        if (!isButton) window.location.href = 'third.html';
-      });
-    })();
+  (function enableSwipe(){
+    let x0=0,t0=0; const TH=50, TS=500;
+    function getNextHref(){
+      const exp=document.querySelector('[data-next]');
+      if(exp&&exp.getAttribute('href')) return exp.getAttribute('href');
+      const guess=document.querySelector('.btn.primary, a[href*="third"], a[href*="fourth"], a[href*="index"]');
+      return guess && guess.getAttribute('href');
+    }
+    addEventListener('touchstart',e=>{x0=e.changedTouches[0].clientX;t0=Date.now()},{passive:true});
+    addEventListener('touchend',e=>{
+      const dx=e.changedTouches[0].clientX-x0, dt=Date.now()-t0;
+      if(dt<TS && Math.abs(dx)>TH){
+        if(dx>0) history.back();
+        else{
+          const href=getNextHref();
+          if(href) location.href=href;
+        }
+      }
+    },{passive:true});
+  })();
   </script>
 </body>
 </html>
