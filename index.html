@@ -1,54 +1,31 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>What?f — Benvenuto</title>
-  <meta property="og:title" content="What?f — Le scelte ci definiscono" />
-  <meta property="og:description" content="Scopri come sarebbe andata o come potrebbe andare. Scegli la tua porta." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://lucafed.github.io/WhatIfapp/" />
-  <meta property="og:image" content="https://lucafed.github.io/WhatIfapp/assets/whatif_logo.png" />
-  <link rel="icon" href="assets/whatif_logo.png" />
-  <link rel="stylesheet" href="style.css?v=8" />
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="page hero-page" data-bg="assets/whatif_logo.png" data-prev="" data-next="second.html">
-  <div class="hero-overlay"></div>
+<body>
+  <div class="fullscreen" aria-label="Benvenuto">
+    <div class="bg-cover" style="background-image:url('assets/whatif_logo.png');"></div>
+    <div class="bg-tint"></div>
 
-  <header class="hero-head">
-    <p class="eyebrow">BENVENUTO SU</p>
-    <h1 class="brand">What?<span>f</span></h1>
-    <h2 class="subtitle">Le scelte ci definiscono</h2>
-  </header>
+    <div class="content">
+      <div class="badge">Benvenuto su <span class="brand">&nbsp;What?f</span></div>
 
-  <main class="hero-body">
-    <p class="lead">What?f ti mostra <em>come sarebbe andata</em> o <em>come potrebbe andare</em>.</p>
-    <a class="btn cta pulse" href="second.html">Choose your way</a>
+      <h1 class="title-xl" style="margin-top:10px;">Le scelte ci definiscono.</h1>
+      <p class="subtitle">What?f ti mostra “come sarebbe andata” o “come potrebbe andare”.</p>
 
-    <div class="dots"><span class="dot active"></span><span class="dot"></span><span class="dot"></span></div>
-    <p class="swipe-hint">Swipe →</p>
-  </main>
-
-  <div class="onboard" id="onboard" hidden>
-    <div class="card">
-      <h3>Tip veloce</h3>
-      <p>Scorri a destra per continuare o tocca <strong>Choose your way</strong>.</p>
-      <button class="btn" id="dismissOnboard">Ok, chiaro</button>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="second.html" aria-label="Vai avanti">Choose your way</a>
+        <a class="btn btn-ghost" href="third.html" aria-label="Salta all’impostazione">Salta</a>
+      </div>
     </div>
-  </div>
 
-  <script>
-    (function(){document.body.style.setProperty("--hero-bg",`url('${document.body.dataset.bg}')`);})();
-    (function(){let sx=null,sy=null,p=document.body.dataset.prev,n=document.body.dataset.next,t=50;
-      function st(e){const a=e.touches?e.touches[0]:e;sx=a.clientX;sy=a.clientY}
-      function mv(e){if(sx===null)return;const a=e.touches?e.touches[0]:e,dx=a.clientX-sx,dy=a.clientY-sy;
-        if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>t){if(dx<0&&n)location.href=n;if(dx>0&&p)location.href=p;sx=sy=null}}
-      function en(){sx=sy=null}
-      addEventListener("touchstart",st,{passive:true});addEventListener("touchmove",mv,{passive:true});addEventListener("touchend",en);
-      addEventListener("mousedown",st);addEventListener("mousemove",mv);addEventListener("mouseup",en);
-    })();
-    (function(){try{if(!localStorage.getItem("wf_onboard")){const o=document.getElementById("onboard");o.hidden=false;
-      document.getElementById("dismissOnboard").onclick=()=>{o.hidden=true;localStorage.setItem("wf_onboard","1")}}}catch(e){}})();
-  </script>
+    <a class="swipe-indicator" href="second.html">
+      scorri <span class="chev">⌄</span>
+    </a>
+  </div>
 </body>
 </html>
