@@ -1,132 +1,130 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>What?f — Risultato</title>
-  <link rel="stylesheet" href="./style.css?v=5" />
-  <style>
-    :root{
-      --bg:#0b0f12;--panel:#12171b;--muted:#9fb1bd;--text:#e9fbff;--brand:#20e3d6;--brand2:#14b8ff;
-    }
-    body{background:linear-gradient(180deg,#0b0f12,#0e1418);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;margin:0}
-    .container{max-width:900px;margin:28px auto;padding:16px}
-    h1{font-size:clamp(26px,4.5vw,40px);margin:.2rem 0 1rem}
-    .eyebrow{letter-spacing:.12em;color:var(--muted);font-weight:600;font-size:.9rem}
-    .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:18px;margin:12px 0;backdrop-filter:blur(6px)}
-    .btn{appearance:none;border:0;border-radius:14px;padding:10px 14px;font-weight:700;cursor:pointer}
-    .btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#001417}
-    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.14);color:var(--text)}
-    .btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .muted{color:var(--muted)}
-    a{color:var(--brand2);text-decoration:none}
-    .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04)}
-    .heart{filter:grayscale(1) brightness(.9);opacity:.8}
-    .heart.on{filter:none;opacity:1}
-  </style>
+  <link rel="stylesheet" href="./style.css"/>
 </head>
-<body>
-  <div class="container">
-    <div class="eyebrow">Ecco il tuo <a href="./index.html" style="color:var(--brand)">What?f</a></div>
-    <h1 data-head>Risultato</h1>
+<body class="result-page">
+  <main class="container container--narrow">
+    <header class="page-lead">
+      <p class="eyebrow">Scenario</p>
+      <h1 id="title">Risultato</h1>
+    </header>
 
-    <div class="card" data-out>
-      <p class="muted">Sto preparando lo scenario…</p>
+    <article id="answer" class="card prose"></article>
+
+    <div class="row gap">
+      <button id="likeBtn" class="btn ghost">♡ Mi piace</button>
+      <button id="shareBtn" class="btn ghost">Condividi</button>
     </div>
 
-    <div class="btn-row" style="margin-top:8px">
-      <button class="pill" id="likeBtn" title="Mi piace">
-        <svg class="heart" width="18" height="18" viewBox="0 0 24 24" fill="#ff6ea0"><path d="M12 21s-6.716-4.536-9.428-7.248C.9 12.08.9 9.28 2.572 7.607c1.671-1.671 4.382-1.671 6.053 0L12 8.981l3.375-3.374c1.671-1.671 4.382-1.671 6.053 0 1.672 1.672 1.672 4.473 0 6.145C18.716 16.464 12 21 12 21z"/></svg>
-        <span>Mi piace</span>
-      </button>
-      <button class="btn ghost" id="shareBtn">Condividi</button>
-      <span class="muted" id="prob"></span>
-      <span class="right"></span>
-      <a class="btn ghost" href="./third.html">Nuova domanda</a>
-      <a class="btn primary" href="./index.html">Home</a>
+    <div class="row gap top">
+      <a href="./third.html" class="btn text">↩︎ Modifica</a>
+      <a href="./index.html" class="btn primary" data-next>Nuova domanda</a>
     </div>
-  </div>
+  </main>
 
   <script>
-    /* --------- recupero dati --------- */
-    function getData(){
-      try{ return JSON.parse(sessionStorage.getItem('wf_payload')||'{}'); }
-      catch{ return {}; }
+  // Utilità
+  const qs = new URLSearchParams(location.search);
+  const time = qs.get('time')||'past';
+  const scenario = qs.get('scenario')||'sliding';
+  const prompt = (qs.get('prompt')||'').replace(/^whatif\s*/i,'');
+  const place = qs.get('place')||'';
+  const when = qs.get('when')||'';
+  const a = [qs.get('a0')||'', qs.get('a1')||'', qs.get('a2')||''];
+  const extra = qs.get('extra')||'';
+
+  // Rendering titolo
+  const scenarioLabel = scenario==='sliding' ? 'Sliding Doors' : 'What a F?!';
+  const titleEl = document.getElementById('title');
+  titleEl.textContent = `${scenarioLabel} · ${time==='past'?'Passato':'Futuro'}`;
+
+  // Risposta “smart” locale (stub)
+  function buildAnswer(){
+    const bullets = [];
+
+    // 3–6 righe sintetiche ma chiare
+    if(time==='past'){
+      bullets.push(`Se ${prompt}, oggi avresti un percorso che riflette quella scelta${place?` a ${place}`:''}.`);
+      bullets.push(`Gli elementi chiave: ${a.filter(Boolean).join('; ') || 'motivazione, tempismo e rete di contatti'}.`);
+      bullets.push(`Impatti a breve: maggiore consapevolezza e alcuni cambiamenti pratici ${when?`(a partire da ${when})`:''}.`);
+    } else {
+      bullets.push(`Se decidi per ${prompt}${place?` a ${place}`:''}, i prossimi passi sarebbero concreti e misurabili.`);
+      bullets.push(`Focus: ${a.filter(Boolean).join('; ') || 'strategie, risorse e milestone'}.`);
+      bullets.push(`Tra 6–12 mesi potresti vedere effetti tangibili${when?` entro ${when}`:''}.`);
     }
-    const data = getData();
-    const headEl = document.querySelector('[data-head]');
-    const out = document.querySelector('[data-out]');
-    const probEl = document.getElementById('prob');
 
-    function scoreProbability(d){
-      // micro-stima fittizia per demo
-      let base = (d.scenario==='sliding'? 0.6 : 0.5);
-      const richness = [d.question,d.where,d.when,d.a1,d.a2,d.a3,d.extra].filter(Boolean).length;
-      base += Math.min(richness*0.04, 0.25);
-      return Math.round(base*100);
+    if(scenario==='wtf'){
+      bullets.push(`Twist: un evento improbabile ma plausibile aggiunge colore alla storia.`);
+    } else {
+      bullets.push(`Piano sobrio: mantieni gli impegni e verifica i progressi ogni 4–6 settimane.`);
     }
 
-    function render(){
-      if (!data || !data.question){
-        headEl.textContent='Nessun dato';
-        out.innerHTML='<p>Torna indietro e compila la simulazione.</p>';
-        return;
-      }
-      const isPast = data.tempo==='passato';
-      const isWtf  = data.scenario==='wtf';
-
-      headEl.textContent = (isWtf? 'What a F?!' : 'Sliding Doors') + ' · ' + (isPast? 'Passato':'Futuro');
-
-      const parts = [];
-
-      // Incipit
-      if (isPast){
-        parts.push(`Se ${data.question}${data.where?` a ${data.where}`:''}, oggi potresti ritrovarti su un percorso parallelo: familiare, ma con sfumature diverse.`);
-      } else {
-        parts.push(`Se decidi: ${data.question}${data.where?` a ${data.where}`:''}, entro ${data.when||'pochi mesi'} potresti aprire una fase nuova e più allineata a ciò che desideri.`);
-      }
-
-      // Personalizzazione sintetica
-      if (data.a1) parts.push(`Punto chiave: ${data.a1}.`);
-      if (data.a2) parts.push(`Vincoli/risorse: ${data.a2}.`);
-      if (data.a3) parts.push(`Obiettivo a breve: ${data.a3}.`);
-      if (data.extra) parts.push(`Nota utile: ${data.extra}.`);
-
-      // Tono scenario
-      if (isWtf){
-        parts.push(`Twist ironico ma plausibile: un imprevisto “assurdo” ti spinge proprio nella direzione giusta. (Sì, capita davvero più spesso di quanto sembri).`);
-      } else {
-        parts.push(`Scenario realistico: con passi piccoli e costanti, le probabilità migliorano sensibilmente nelle prossime settimane.`);
-      }
-
-      // Azione
-      parts.push(`Prossimo passo: dedica 30 minuti entro 48 ore per definire 3 micro-azioni concrete.`);
-
-      out.innerHTML = parts.map(p=>`<p>${p}</p>`).join('');
-      const p = scoreProbability(data);
-      probEl.textContent = `Probabilità: ${p}%`;
+    if(extra){
+      bullets.push(`Note personali considerate: ${extra.slice(0,140)}${extra.length>140?'…':''}`);
     }
-    render();
 
-    /* --------- like --------- */
-    const likeBtn=document.getElementById('likeBtn');
-    likeBtn?.addEventListener('click',()=>{
-      const h=likeBtn.querySelector('.heart');
-      h.classList.toggle('on');
-    });
+    const p = document.createElement('div');
+    p.innerHTML = `<p><strong>${scenarioLabel}</strong> — ${time==='past'?'retrospettiva':'proiezione breve'}.</p>` +
+      '<ul>'+bullets.map(b=>`<li>${b}</li>`).join('')+'</ul>' +
+      `<p class="muted">Questa è una demo locale. Con l’IA attiva, il testo diventa più lungo e su misura.</p>`;
+    return p;
+  }
 
-    /* --------- share (Web Share API fallback) --------- */
-    document.getElementById('shareBtn')?.addEventListener('click', async ()=>{
-      const title='Il mio What?f';
-      const text = document.querySelector('[data-out]').innerText.slice(0,220)+'…';
-      const url = location.href;
-      if (navigator.share){
-        try{ await navigator.share({title,text,url}); }catch(e){}
-      } else {
-        await navigator.clipboard.writeText(`${title}\n\n${text}\n\n${url}`);
-        alert('Link copiato negli appunti!');
+  document.getElementById('answer').appendChild(buildAnswer());
+
+  // Like (locale)
+  const likeBtn = document.getElementById('likeBtn');
+  let liked=false;
+  likeBtn.addEventListener('click', ()=>{
+    liked = !liked;
+    likeBtn.textContent = liked ? '♥︎ Ti piace' : '♡ Mi piace';
+    likeBtn.classList.toggle('liked', liked);
+  });
+
+  // Share
+  const shareBtn = document.getElementById('shareBtn');
+  shareBtn.addEventListener('click', async ()=>{
+    const shareData = {
+      title: 'What?f — il mio scenario',
+      text: `${scenarioLabel} • ${prompt}`.trim(),
+      url: location.href
+    };
+    try{
+      if(navigator.share){
+        await navigator.share(shareData);
+      }else{
+        await navigator.clipboard.writeText(location.href);
+        shareBtn.textContent = 'Link copiato ✔︎';
+        setTimeout(()=>shareBtn.textContent='Condividi',1500);
       }
-    });
+    }catch(e){}
+  });
+
+  // Swipe universale
+  (function enableSwipe(){
+    let x0=0,t0=0; const TH=50, TS=500;
+    function getNextHref(){
+      const exp=document.querySelector('[data-next]');
+      if(exp&&exp.getAttribute('href')) return exp.getAttribute('href');
+      const guess=document.querySelector('.btn.primary, a[href*="index"]');
+      return guess && guess.getAttribute('href');
+    }
+    addEventListener('touchstart',e=>{x0=e.changedTouches[0].clientX;t0=Date.now()},{passive:true});
+    addEventListener('touchend',e=>{
+      const dx=e.changedTouches[0].clientX-x0, dt=Date.now()-t0;
+      if(dt<TS && Math.abs(dx)>TH){
+        if(dx>0) history.back();
+        else{
+          const href=getNextHref();
+          if(href) location.href=href;
+        }
+      }
+    },{passive:true});
+  })();
   </script>
 </body>
 </html>
