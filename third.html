@@ -1,127 +1,134 @@
-<!doctype html><html lang="it">
+<!doctype html>
+<html lang="it">
 <head>
-  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>What?f — Domande</title>
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="./style.css?v=3">
 </head>
-<body>
-  <section class="screen">
-    <div class="bg-cover"></div>
-    <div class="wrap">
-      <h2>Imposta la simulazione</h2>
-      <h1>Passato o Futuro, scegli la porta</h1>
+<body class="questions">
+  <main class="container">
+    <h1 class="page-title">
+      Passato o Futuro, <span class="accent">scopri il tuo What?f</span>!
+    </h1>
 
-      <form class="form" onsubmit="return false">
-        <!-- Tempo -->
-        <div class="group">
-          <div class="label">Tempo</div>
-          <div class="row">
-            <label class="badge"><input type="radio" name="tempo" value="passato" checked>Passato</label>
-            <label class="badge"><input type="radio" name="tempo" value="futuro">Futuro</label>
-          </div>
-        </div>
+    <!-- Tempo -->
+    <fieldset class="group">
+      <legend>Tempo</legend>
 
-        <!-- Scenario -->
-        <div class="group">
-          <div class="label">Scenario</div>
-          <div class="row">
-            <label class="badge"><input type="radio" name="scen" value="sd" checked>Sliding Doors (realistico)</label>
-            <label class="badge"><input type="radio" name="scen" value="wtf">What the F?! (ironico)</label>
-          </div>
-        </div>
+      <input type="radio" id="tempo-passato" name="tempo" value="passato" checked>
+      <label class="pill" for="tempo-passato">Passato</label>
 
-        <!-- Profilo minimo -->
-        <div class="group row">
-          <div>
-            <div class="label">Età</div>
-            <input id="eta" type="number" min="12" max="99" placeholder="es. 29">
-          </div>
-          <div>
-            <div class="label">Genere</div>
-            <select id="genere">
-              <option>Preferisco non dirlo</option><option>Donna</option><option>Uomo</option><option>Non binario</option>
-            </select>
-          </div>
-          <div>
-            <div class="label">Luogo</div>
-            <input id="luogo" type="text" placeholder="città / area">
-          </div>
-        </div>
+      <input type="radio" id="tempo-futuro" name="tempo" value="futuro">
+      <label class="pill" for="tempo-futuro">Futuro</label>
+    </fieldset>
 
-        <div class="group row">
-          <div>
-            <div class="label">Lavoro</div>
-            <input id="lavoro" type="text" placeholder="impiego / settore">
-          </div>
-          <div>
-            <div class="label">Amore</div>
-            <input id="amore" type="text" placeholder="single, relazione, ecc.">
-          </div>
-        </div>
+    <!-- Scenario -->
+    <fieldset class="group">
+      <legend>Scenario</legend>
 
-        <!-- Interessi -->
-        <div class="group">
-          <div class="label">Interessi</div>
-          <div class="badges" id="interessiBox">
-            <!-- toggles -->
-            <label class="badge"><input type="checkbox" name="interessi" value="viaggi">Viaggi</label>
-            <label class="badge"><input type="checkbox" name="interessi" value="startup">Startup</label>
-            <label class="badge"><input type="checkbox" name="interessi" value="arte">Arte</label>
-            <label class="badge"><input type="checkbox" name="interessi" value="sport">Sport</label>
-            <label class="badge"><input type="checkbox" name="interessi" value="cucina">Cucina</label>
-          </div>
-        </div>
+      <input type="radio" id="scen-sd" name="scenario" value="sliding" checked>
+      <label class="pill" for="scen-sd">Sliding Doors (realistico)</label>
 
-        <!-- Prompt principale -->
-        <div class="group">
-          <div class="label">La tua domanda</div>
-          <input id="prompt" type="text" placeholder="What?f … se oggi mollassi tutto per inseguire un sogno?">
-        </div>
+      <input type="radio" id="scen-wtf" name="scenario" value="wtf">
+      <label class="pill" for="scen-wtf">What the F?! (ironico)</label>
+    </fieldset>
 
-        <!-- Extra opzionale -->
-        <div class="group">
-          <div class="label">Dettagli extra (opzionale)</div>
-          <textarea id="extra" rows="3" placeholder="Aggiungi contesto per rendere la risposta super personale…"></textarea>
-        </div>
+    <!-- Profilo mirato -->
+    <section class="grid">
+      <div class="field">
+        <label for="eta">Età</label>
+        <input id="eta" type="number" min="12" max="100" placeholder="es. 29">
+      </div>
 
-        <div style="display:flex; gap:12px; justify-content:center; margin-top:12px">
-          <button id="askBtn" class="btn" type="button" title="Apri la porta">🚪 Apri la porta</button>
-        </div>
-      </form>
+      <div class="field">
+        <label for="genere">Genere</label>
+        <select id="genere">
+          <option>Preferisco non dirlo</option>
+          <option>Donna</option>
+          <option>Uomo</option>
+          <option>Non binario</option>
+          <option>Altro</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="luogo">Luogo</label>
+        <input id="luogo" type="text" placeholder="città / area">
+      </div>
+
+      <div class="field">
+        <label for="lavoro">Lavoro/Studio</label>
+        <input id="lavoro" type="text" placeholder="ruolo o settore">
+      </div>
+    </section>
+
+    <!-- Prompt -->
+    <div class="field wide">
+      <label for="whatif">La tua domanda</label>
+      <input id="whatif" type="text" placeholder='What?f … se oggi mollassi tutto per inseguire un sogno?'>
     </div>
 
-    <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot active"></span></div>
-    <div class="swipe-hint">← Swipe • Risposta →</div>
-  </section>
+    <!-- Dettagli opzionali -->
+    <div class="field wide">
+      <label for="extra">Dettagli opzionali (per rendere la risposta più personale)</label>
+      <textarea id="extra" rows="4" placeholder="Es. convivo / ho figli / amo viaggiare / cerco stabilità / budget limitato…"></textarea>
+    </div>
+
+    <!-- Scorciatoie suggerite: cambiano col tempo scelto -->
+    <div class="chips" id="suggestions">
+      <!-- riempite via JS al cambio Passato/Futuro -->
+    </div>
+
+    <!-- CTA -->
+    <a class="cta open-door" href="./fourth.html" id="go">
+      <span class="door-emoji">🚪</span> Apri la porta
+    </a>
+  </main>
 
   <script>
-    // badge attivi
-    document.querySelectorAll('.badge input').forEach(inp=>{
-      inp.addEventListener('change',()=>inp.closest('.badge').classList.toggle('active', inp.checked || inp.type==='radio' && inp.checked));
-      inp.closest('.badge').classList.toggle('active', inp.checked);
-    });
+    // Suggerimenti mirati
+    const sugg = {
+      passato: ["Non aver accettato quel lavoro", "Restare con l’ex", "Partire per l’estero", "Iscrivermi all’università"],
+      futuro:  ["Cambiare città", "Aprire un bar", "Lasciare il lavoro", "Tornare a studiare"]
+    };
 
-    // salva e vai alla 4ª
-    document.getElementById('askBtn').addEventListener('click',()=>{
-      const payload={
-        tempo: document.querySelector('input[name="tempo"]:checked')?.value||'passato',
-        scenario: document.querySelector('input[name="scen"]:checked')?.value||'sd',
-        eta: document.getElementById('eta').value.trim(),
-        genere: document.getElementById('genere').value,
-        luogo: document.getElementById('luogo').value.trim(),
-        lavoro: document.getElementById('lavoro').value.trim(),
-        amore: document.getElementById('amore').value.trim(),
-        interessi: [...document.querySelectorAll('input[name="interessi"]:checked')].map(i=>i.value),
-        prompt: document.getElementById('prompt').value.trim(),
-        extra: document.getElementById('extra').value.trim(),
-      };
-      localStorage.setItem('whatif:last', JSON.stringify(payload));
-      location.href='fourth.html';
-    });
+    const suggestionsEl = document.getElementById('suggestions');
+    const tempoRadios = document.querySelectorAll('input[name="tempo"]');
+    const whatifInput = document.getElementById('whatif');
 
-    // swipe
-    let x0=null; addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
-    addEventListener('touchend',e=>{ if(x0==null) return; const dx=e.changedTouches[0].clientX-x0;
-      if(dx>50) location.href='second.html'; if(dx<-50) location.href='fourth.html'; x0=null; },{passive:true});
+    function renderSuggestions() {
+      const mode = document.getElementById('tempo-futuro').checked ? 'futuro' : 'passato';
+      suggestionsEl.innerHTML = '';
+      sugg[mode].forEach(label => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip';
+        b.textContent = label;
+        b.addEventListener('click', () => {
+          const base = document.getElementById('tempo-futuro').checked ? 'What?f se' : 'What?f se';
+          whatifInput.value = `${base} ${label.toLowerCase()}?`;
+        });
+        suggestionsEl.appendChild(b);
+      });
+    }
+    tempoRadios.forEach(r => r.addEventListener('change', renderSuggestions));
+    renderSuggestions();
+
+    // Costruiamo querystring per la quarta pagina (demo locale)
+    document.getElementById('go').addEventListener('click', (e) => {
+      const qs = new URLSearchParams({
+        tempo: document.querySelector('input[name="tempo"]:checked').value,
+        scenario: document.querySelector('input[name="scenario"]:checked').value,
+        eta: document.getElementById('eta').value || '',
+        genere: document.getElementById('genere').value || '',
+        luogo: document.getElementById('luogo').value || '',
+        lavoro: document.getElementById('lavoro').value || '',
+        whatif: whatifInput.value || '',
+        extra: document.getElementById('extra').value || ''
+      }).toString();
+      e.currentTarget.href = `./fourth.html?${qs}`;
+    });
   </script>
-</body></html>
+</body>
+</html>
