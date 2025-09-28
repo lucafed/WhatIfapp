@@ -1,49 +1,50 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>What?f — What the F?!</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f — Choose your way</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-  <div class="fullscreen" aria-label="Seconda schermata">
-    <div class="bg-cover bg-contain" style="background-image:url('assets/whataf_logo.png');"></div>
-    <div class="bg-tint"></div>
+<body class="page"
+      style="--bg-url: url('assets/whataf_logo.png');">
 
-    <div class="content" style="padding-bottom:76px">
-      <div class="glass" style="display:inline-block">
-        <div class="badge">Modalità <span class="brand">&nbsp;What the F?!</span></div>
-        <h1 class="title-xl" style="margin-top:10px;">Choose your way</h1>
-      </div>
+  <!-- SOLO titolo corto, senza testo descrittivo sotto -->
+  <header class="overlay">
+    <h1 class="headline">Choose your way</h1>
+  </header>
 
-      <div class="cta-row" style="margin-top:16px">
-        <a class="btn btn-primary" href="third.html">Inizia</a>
-        <a class="btn btn-ghost" href="index.html">Indietro</a>
-      </div>
-    </div>
-
-    <div class="swipe-indicator">scorri <span class="chev">⌄</span></div>
-  </div>
+  <footer class="footer-cta">
+    <a class="btn-primary" href="third.html" aria-label="Entra nella simulazione">
+      Start
+    </a>
+    <div class="swipe-hint" aria-hidden="true">⇠ swipe</div>
+  </footer>
 
   <script>
-  (function(){
-    let sx=0, sy=0, ex=0, ey=0, active=false, min=48;
-    const start=e=>{const t=(e.changedTouches?e.changedTouches[0]:e); sx=t.clientX; sy=t.clientY; active=true;};
-    const end=e=>{
-      if(!active) return; active=false;
-      const t=(e.changedTouches?e.changedTouches[0]:e); ex=t.clientX; ey=t.clientY;
-      const dx=ex-sx, dy=ey-sy; if(Math.abs(dx)<Math.abs(dy) || Math.abs(dx)<min) return;
-      if(dx<0) location.href='third.html';
-      if(dx>0) location.href='index.html';
-    };
-    addEventListener('pointerdown',start,{passive:true});
-    addEventListener('pointerup',end,{passive:true});
-    addEventListener('touchstart',start,{passive:true});
-    addEventListener('touchend',end,{passive:true});
-  })();
+    // Swipe sinistra -> vai a third.html
+    (function () {
+      let startX = null, startY = null;
+      const minDx = 50;
+      document.addEventListener('touchstart', (e) => {
+        const t = e.changedTouches[0];
+        startX = t.clientX; startY = t.clientY;
+      }, {passive: true});
+      document.addEventListener('touchend', (e) => {
+        if (startX === null) return;
+        const t = e.changedTouches[0];
+        const dx = t.clientX - startX;
+        const dy = Math.abs(t.clientY - startY);
+        if (dx < -minDx && dy < 60) window.location.href = 'third.html';
+        startX = startY = null;
+      }, {passive: true});
+
+      // Click ovunque porta avanti
+      document.addEventListener('click', (e) => {
+        const isButton = e.target.closest('.btn-primary');
+        if (!isButton) window.location.href = 'third.html';
+      });
+    })();
   </script>
 </body>
 </html>
-
-
