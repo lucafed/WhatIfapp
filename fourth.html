@@ -1,58 +1,98 @@
-<!doctype html><html lang="it">
+<!doctype html>
+<html lang="it">
 <head>
-  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>What?f — Risultato</title>
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8" />
 </head>
-<body>
-  <section class="screen">
-    <div class="bg-cover"></div>
-    <div class="wrap">
-      <h2>Scenario</h2>
-      <h1 id="title">Risultato</h1>
-      <div id="answerBox" class="answer">Carico…</div>
-      <p class="small" style="margin-top:12px">Demo locale · Quando vuoi colleghiamo una AI per generare il testo dinamico.</p>
-      <div style="margin-top:14px; display:flex; gap:10px; justify-content:center">
-        <a class="btn" href="third.html">← Modifica</a>
-        <a class="btn" href="index.html">Torna all’inizio</a>
-      </div>
+<body class="page result-page" data-prev="third.html">
+  <main class="result-wrap">
+    <header>
+      <h1>Scenario · <span id="badge"></span></h1>
+    </header>
+
+    <article id="result" class="card prose">
+      <p>Sto preparando il tuo scenario…</p>
+    </article>
+
+    <div class="actions">
+      <button class="btn" id="likeBtn">❤️ Mi piace <span id="likes">0</span></button>
+      <button class="btn cta" id="shareBtn">Condividi</button>
+      <a class="btn" href="index.html">Torna all’inizio</a>
     </div>
 
     <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot active"></span></div>
-    <div class="swipe-hint">← Swipe</div>
-  </section>
+  </main>
 
   <script>
-    (function(){
-      const box=document.getElementById('answerBox');
-      const t=document.getElementById('title');
-      const raw=localStorage.getItem('whatif:last');
-      if(!raw){ box.textContent='Nessun dato: torna indietro e compila la simulazione.'; return; }
-      const d=JSON.parse(raw);
+    // leggi parametri
+    const q = new URLSearchParams(location.search);
+    const tempo = q.get("tempo") || "passato";
+    const scenario = q.get("scenario") || "sliding";
+    const eta = q.get("eta")||"";
+    const genere = q.get("genere")||"";
+    const luogo = q.get("luogo")||"";
+    const lavoro = q.get("lavoro")||"";
+    const interessi = (q.get("interessi")||"").split(",").map(s=>s.trim()).filter(Boolean);
+    const prompt = q.get("prompt")||"";
 
-      const tono = d.scenario==='wtf' ? 'ironico e sopra le righe' : 'realistico e motivato';
-      const quando = d.tempo==='passato' ? 'se allora avessi scelto diversamente' : 'se farai davvero questo passo';
-      t.textContent = d.scenario==='wtf' ? 'What the F?!' : 'Sliding Doors';
+    // badge
+    const badge = document.getElementById("badge");
+    badge.textContent = scenario==="sliding" ? "Sliding Doors" : "What the F?!";
 
-      const extra = d.extra ? `\n\nNota personale: ${d.extra}` : '';
-      const base =
-`${d.prompt ? 'Domanda: '+d.prompt+'\n\n' : ''}Scenario (${tono}): ${quando} a ${d.luogo||'[luogo non indicato]'}.
-Età: ${d.eta||'n.d.'}, Genere: ${d.genere||'n.d.'}.
-Lavoro: ${d.lavoro||'n.d.'}, Amore: ${d.amore||'n.d.'}.
-Interessi chiave: ${d.interessi && d.interessi.length ? d.interessi.join(', ') : 'n.d.'}.
+    // mock generazione testo (10+ righe)
+    const lines=[];
+    lines.push(`Partendo da ${luogo || "dove sei"} e considerando ${eta?("la tua età di "+eta):"il tuo profilo"}, costruiamo uno scenario in chiave ${scenario==="sliding"?"realistica":"ironica"}.`);
+    if(lavoro) lines.push(`Nel lavoro/studio (“${lavoro}”), le scelte pesano: piccole deviazioni generano traiettorie nuove.`);
+    if(interessi.length) lines.push(`I tuoi interessi (${interessi.join(", ")}) colorano le opzioni sul tavolo.`);
+    if(prompt) lines.push(`Domanda guida: “${prompt}”.`);
+    lines.push(tempo==="passato"
+      ? "Guardiamo indietro: se avessi scelto diversamente, oggi avresti relazioni e routine mutate nei dettagli — ma riconoscibili."
+      : "Proiettiamoci avanti: la mappa che segue è probabilistica, non deterministica; serve per orientarti, non per vincolarti.");
+    lines.push("Scenario:");
+    for(let i=0;i<6;i++){
+      lines.push(`• Step ${i+1}: un evento plausibile (contatto, opportunità, micro-successo) sblocca il passo successivo.`);
+    }
+    lines.push(scenario==="sliding"
+      ? "Probabilità complessiva: 62% (stima qualitativa, coerente con il tuo profilo)."
+      : "Possibilità fuori scala: 137% 😉 (prendila con ironia, ma resta coerente con chi sei).");
+    lines.push("Conclusione: scegli la prossima azione piccola che puoi fare entro 24 ore. È così che le porte si aprono.");
 
-${d.scenario==='wtf'
-? `È probabile che ti ritroverai in un’avventura improbabile ma memorabile: nuove amicizie inaspettate, un colpo di scena che ti costringerà a uscire dalla comfort zone e una storia da raccontare. Tra risate e imprevisti, scoprirai un tratto di te che tenevi nascosto e lo userai per svoltare. Probabilità (scherzosa): 64% 🍀`
-: `In modo coerente con il tuo profilo, potresti ottenere un risultato progressivo: i primi 2–3 mesi di assestamento, poi un’accelerazione grazie a competenze e network. Rischi: organizzativi ed emotivi; opportunità: crescita concreta e relazioni solide. Probabilità (realistica): 62% ✅`}
-${extra}`;
+    document.getElementById("result").innerHTML = `<p>${lines.join("</p><p>")}</p>`;
 
-      // 10–12 righe circa
-      box.textContent = base;
-    })();
+    // Like (locale)
+    const likeKey="wf_likes_total";
+    const likesEl=document.getElementById("likes");
+    likesEl.textContent = Number(localStorage.getItem(likeKey)||0);
+    document.getElementById("likeBtn").onclick = ()=>{
+      const n=Number(localStorage.getItem(likeKey)||0)+1;
+      localStorage.setItem(likeKey,n);
+      likesEl.textContent=n;
+    };
+
+    // Share
+    document.getElementById("shareBtn").onclick = async ()=>{
+      const title="Il mio What?f";
+      const text=`${badge.textContent} · ${tempo} · ${luogo || "ovunque"}`;
+      const url=location.href;
+      if(navigator.share){
+        try{ await navigator.share({title,text,url}); }catch(e){}
+      }else{
+        prompt("Copia questo link:", url);
+      }
+    };
 
     // swipe indietro
-    let x0=null; addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
-    addEventListener('touchend',e=>{ if(x0==null) return; const dx=e.changedTouches[0].clientX-x0;
-      if(dx>50) location.href='third.html'; x0=null; },{passive:true});
+    (function(){let sx=null,sy=null,p=document.body.dataset.prev,t=60;
+      function st(e){const a=e.touches?e.touches[0]:e;sx=a.clientX;sy=a.clientY}
+      function mv(e){if(sx===null)return;const a=e.touches?e.touches[0]:e,dx=a.clientX-sx,dy=a.clientY-sy;
+        if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>t){ if(dx>0&&p)location.href=p; sx=sy=null;}}
+      function en(){sx=sy=null}
+      addEventListener("touchstart",st,{passive:true});addEventListener("touchmove",mv,{passive:true});addEventListener("touchend",en);
+      addEventListener("mousedown",st);addEventListener("mousemove",mv);addEventListener("mouseup",en);
+    })();
   </script>
-</body></html>
+</body>
+</html>
+
