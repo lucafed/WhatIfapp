@@ -4,21 +4,39 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>What?f — Choose your way</title>
-  <link rel="stylesheet" href="./style.css?v=3">
+  <meta property="og:title" content="What the F?! — scegli il tuo stile" />
+  <meta property="og:description" content="Sliding Doors realistico o What the F?! ironico. Scegli la tua porta." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://lucafed.github.io/WhatIfapp/second.html" />
+  <meta property="og:image" content="https://lucafed.github.io/WhatIfapp/assets/whataf_logo.png" />
+  <link rel="icon" href="assets/whataf_logo.png" />
+  <link rel="stylesheet" href="style.css?v=8" />
 </head>
-<body class="home home-2">
-  <section class="hero">
-    <div class="hero-overlay">
-      <p class="eyebrow">…or choose your bar!</p>
-      <h1 class="brand brand-alt">What the F?!</h1>
-      <p class="lead">CHOOSE YOUR WAY</p>
+<body class="page hero-page" data-bg="assets/whataf_logo.png" data-prev="index.html" data-next="third.html">
+  <div class="hero-overlay"></div>
 
-      <a class="cta" href="./third.html" aria-label="Inizia la simulazione">
-        Choose your way
-      </a>
+  <header class="hero-head">
+    <p class="eyebrow">…or choose your bar!</p>
+    <h1 class="brand brand-alt">What the F?!</h1>
+    <h2 class="subtitle">CHOOSE YOUR WAY</h2>
+  </header>
 
-      <div class="swipe-hint">← Swipe • Swipe →</div>
-    </div>
-  </section>
+  <main class="hero-body">
+    <a class="btn cta pulse" href="third.html">Choose your way</a>
+    <div class="dots"><span class="dot"></span><span class="dot active"></span><span class="dot"></span></div>
+    <p class="swipe-hint">← Swipe • Swipe →</p>
+  </main>
+
+  <script>
+    (function(){document.body.style.setProperty("--hero-bg",`url('${document.body.dataset.bg}')`);})();
+    (function(){let sx=null,sy=null,p=document.body.dataset.prev,n=document.body.dataset.next,t=50;
+      function st(e){const a=e.touches?e.touches[0]:e;sx=a.clientX;sy=a.clientY}
+      function mv(e){if(sx===null)return;const a=e.touches?e.touches[0]:e,dx=a.clientX-sx,dy=a.clientY-sy;
+        if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>t){if(dx<0&&n)location.href=n;if(dx>0&&p)location.href=p;sx=sy=null}}
+      function en(){sx=sy=null}
+      addEventListener("touchstart",st,{passive:true});addEventListener("touchmove",mv,{passive:true});addEventListener("touchend",en);
+      addEventListener("mousedown",st);addEventListener("mousemove",mv);addEventListener("mouseup",en);
+    })();
+  </script>
 </body>
 </html>
