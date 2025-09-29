@@ -1,0 +1,12 @@
+[build]
+  publish = "."            # cartella con index.html (aggiusta se diverso)
+  functions = "netlify/functions"
+
+# CORS permissivo per la function (puoi stringere dopo)
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "*"
+    Access-Control-Allow-Methods = "POST, OPTIONS"
+
