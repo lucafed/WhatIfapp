@@ -1,172 +1,207 @@
 // netlify/functions/ask.js
-// Node 18+ (default su Netlify). Niente dipendenze esterne.
+// Node 18+ (default Netlify). Nessuna dipendenza esterna.
 
-const ALLOW_DEV = ["http://localhost:8888", "http://127.0.0.1:8888"];
-const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
-// Scegli un modello economico ma bravo per testo
-const MODEL = "gpt-4o-mini"; // puoi cambiare in gpt-4o, o gpt-3.5-turbo se serve
+// === CONFIG ===
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini"; // ok anche gpt-4o-mini
+const ALLOWED_ORIGIN = "*"; // se vuoi restringere: "https://TUO-DOMINIO.netlify.app"
 
-// -------- CORS helpers --------
-const getAllowedOrigin = (origin) => {
-  const corsEnv = process.env.CORS_ORIGIN || "";
-  const allow = corsEnv
-    .split(",")
-    .map(s => s.trim())
-    .filter(Boolean);
-  return (origin && (allow.includes(origin) || ALLOW_DEV.includes(origin)))
-    ? origin
-    : (allow[0] || "*"); // fallback permissivo, ma meglio settare CORS_ORIGIN
-};
-
-const corsHeaders = (origin) => ({
-  "Access-Control-Allow-Origin": getAllowedOrigin(origin),
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  "Access-Control-Max-Age": "86400",
-  "Content-Type": "application/json; charset=utf-8",
-});
-
-// -------- Prompt helpers --------
-const systemPrompt = `
-Sei "What?f", un generatore di scenari sintetici in ITALIANO.
-Scrivi in modo chiaro, naturale e concreto. Evita elenchi infiniti.
-
-Hai due modalità:
-
-1) followups  -> restituisci JSON con 2-3 domande mirate per capire meglio.
-   Formato ESATTO:
-   { "followups": ["domanda 1", "domanda 2", "domanda 3"] }
-
-2) final -> restituisci una risposta breve ma densa (6-10 frasi),
-   con un piccolo titolo e una stima di probabilità.
-   Formato ESATTO:
-   {
-     "title": "titolo breve",
-     "answer": "testo multi-frase compatto",
-     "probability": "70%"
-   }
-
-Se alcuni dati sono assenti, fai assunzioni ragionevoli ma dichiarale.
-NON aggiungere campi extra nel JSON e non usare code-fences.
-`;
-
-const buildUserSummary = (payload) => {
-  const {
-    time,        // "past" | "future"
-    scenario,    // "sliding" | "wtf"
-    prompt,      // domanda What?f dell'utente
-    place,       // luogo (opzionale)
-    when,        // quando (opzionale)
-    answers,     // array di risposte rapide (opzionale)
-    extra,       // testo libero extra (opzionale)
-  } = payload || {};
-
-  return [
-    `Tempo: ${time || "non specificato"}.`,
-    `Scenario: ${scenario || "non specificato"}.`,
-    `Domanda utente: ${prompt || "—"}.`,
-    place ? `Luogo: ${place}.` : null,
-    when ? `Quando: ${when}.` : null,
-    Array.isArray(answers) && answers.length ? `Risposte rapide: ${answers.join(" | ")}.` : null,
-    extra ? `Dettagli extra: ${extra}.` : null,
-  ].filter(Boolean).join(" ");
-};
-
-// -------- Netlify Function --------
-export default async (req, context) => {
-  const headers = corsHeaders(req.headers.get("origin"));
-
-  // Preflight
-  if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers });
+// === HANDLER ===
+export async function handler(event) {
+  // CORS preflight
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 200, headers: corsHeaders(), body: "" };
+  }
+  if (event.httpMethod !== "POST") {
+    return err(405, "Method not allowed");
+  }
+  if (!OPENAI_API_KEY) {
+    return err(500, "Missing OPENAI_API_KEY in environment");
   }
 
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method Not Allowed" }), {
-      status: 405,
-      headers,
-    });
+  let body;
+  try {
+    body = JSON.parse(event.body || "{}");
+  } catch {
+    return err(400, "Invalid JSON body");
+  }
+
+  const { step, mode, user = {}, question, answers = [] } = body;
+  if (!step) return err(400, "Missing field: step");
+  if (!question || typeof question !== "string") {
+    return err(400, "Missing or invalid field: question");
   }
 
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: "OPENAI_API_KEY mancante su Netlify" }), {
-        status: 500,
-        headers,
-      });
+    if (step === "followups") {
+      const prompt = buildFollowupsPrompt(question);
+      const text = await callOpenAI(prompt);
+      // robustezza: prova a estrarre JSON, altrimenti fallback
+      let followups = [];
+      try {
+        const parsed = JSON.parse(safeJsonFromText(text));
+        followups = Array.isArray(parsed) ? parsed : parsed.followups || [];
+      } catch {
+        followups = fallbackFollowups(text);
+      }
+      followups = (followups || [])
+        .map((s) => String(s).trim())
+        .filter(Boolean)
+        .slice(0, 3);
+      if (!followups.length) followups = defaultFollowups();
+
+      return ok({ followups });
     }
 
-    const body = await req.json().catch(() => ({}));
-    const stage = (body.stage || "final").toLowerCase(); // "followups" | "final"
-    const summary = buildUserSummary(body);
+    if (step === "final") {
+      if (!mode || !["sliding", "wtf"].includes(mode)) {
+        return err(400, 'Missing/invalid field: mode ("sliding" | "wtf")');
+      }
+      const prompt = buildFinalPrompt({ mode, user, question, answers });
+      const text = await callOpenAI(prompt);
+      let payload = {};
+      try {
+        payload = JSON.parse(safeJsonFromText(text));
+      } catch {
+        payload = {};
+      }
 
-    const userMsg = stage === "followups"
-      ? `Dati utente: ${summary}\n\nGenera SOLO il JSON followups con 2-3 domande super mirate.`
-      : `Dati utente: ${summary}\n\nGenera SOLO il JSON finale (title, answer, probability).`;
+      const answer =
+        String(payload.answer || "").trim() ||
+        fallbackAnswer({ mode, user, question, answers });
+      const score = clamp(Number(payload.score || 0) || estimateScore(answers), 0, 100);
+      const reason =
+        String(payload.reason || "").trim() ||
+        "Stima basata sulle informazioni fornite (orizzonte, priorità, vincoli).";
 
-    const resp = await fetch(OPENAI_URL, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        temperature: stage === "followups" ? 0.3 : 0.7,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userMsg },
-        ],
-      }),
-    });
-
-    if (!resp.ok) {
-      const text = await resp.text();
-      return new Response(JSON.stringify({ error: "OpenAI error", detail: text }), {
-        status: 502,
-        headers,
-      });
+      return ok({ answer, score, reason });
     }
 
-    const data = await resp.json();
-    const content = data.choices?.[0]?.message?.content?.trim() || "";
-
-    // Proviamo a fare parse del JSON che abbiamo chiesto al modello
-    let json;
-    try {
-      json = JSON.parse(content);
-    } catch {
-      // fallback: prova a estrarre JSON tra graffe
-      const match = content.match(/\{[\s\S]*\}/);
-      json = match ? JSON.parse(match[0]) : null;
-    }
-
-    if (!json) {
-      return new Response(JSON.stringify({ error: "Risposta AI non in JSON", raw: content }), {
-        status: 500,
-        headers,
-      });
-    }
-
-    // Normalizza il payload per il frontend
-    if (stage === "followups") {
-      const followups = Array.isArray(json.followups) ? json.followups.slice(0, 3) : [];
-      return new Response(JSON.stringify({ ok: true, stage, followups }), {
-        status: 200,
-        headers,
-      });
-    } else {
-      const { title = "Scenario", answer = "", probability = "—" } = json;
-      return new Response(JSON.stringify({ ok: true, stage, title, answer, probability }), {
-        status: 200,
-        headers,
-      });
-    }
-  } catch (err) {
-    return new Response(JSON.stringify({ error: "Server error", detail: String(err) }), {
-      status: 500,
-      headers,
-    });
+    return err(400, 'Unsupported step (use "followups" or "final")');
+  } catch (e) {
+    console.error(e);
+    return err(500, "Internal error");
   }
-};
+}
+
+// === PROMPTS ===
+function buildFollowupsPrompt(question) {
+  return [
+    {
+      role: "system",
+      content:
+        "Sei un assistente. Genera 2–3 domande di chiarimento, concise e pratiche, in italiano. Rispondi STRICT JSON.",
+    },
+    {
+      role: "user",
+      content:
+        `Domanda utente: "${question}". ` +
+        `Formato obbligatorio: {"followups": ["domanda1","domanda2","domanda3"]} (max 3, frasi brevi).`,
+    },
+  ];
+}
+
+function buildFinalPrompt({ mode, user, question, answers }) {
+  const style =
+    mode === "wtf"
+      ? "tono ironico/divertente con un tocco psichedelico ma chiaro"
+      : "tono realistico, pratico e concreto";
+  const persona = [
+    user?.gender ? `genere: ${user.gender}` : null,
+    user?.age ? `età: ${user.age}` : null,
+    user?.location ? `luogo: ${user.location}` : null,
+    user?.time ? `tempo: ${user.time}` : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  return [
+    { role: "system", content: "Sei un assistente che scrive risposte brevi e utili in italiano. Rispondi STRICT JSON." },
+    {
+      role: "user",
+      content:
+        `Profilo utente: { ${persona || "n/d"} }\n` +
+        `Domanda: "${question}"\n` +
+        `Follow-up e risposte: ${JSON.stringify(answers)}\n\n` +
+        `Scrivi una risposta di 5–7 frasi, ${style}. ` +
+        `Includi una percentuale di confidenza (0–100) e spiegala brevemente.\n\n` +
+        `Formato STRICT JSON:\n` +
+        `{"answer":"testo","score":70,"reason":"breve motivazione"}`,
+    },
+  ];
+}
+
+// === OPENAI CALL ===
+async function callOpenAI(messages) {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: OPENAI_MODEL,
+      messages,
+      temperature: 0.7,
+    }),
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(() => "");
+    throw new Error(`OpenAI HTTP ${res.status}: ${t}`);
+  }
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content || "";
+}
+
+// === UTIL ===
+function ok(data) {
+  return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ ok: true, ...data }) };
+}
+function err(status, message) {
+  return { statusCode: status, headers: corsHeaders(), body: JSON.stringify({ ok: false, error: message }) };
+}
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+    "Access-Control-Allow-Methods": "POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Content-Type": "application/json; charset=utf-8",
+  };
+}
+function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+function estimateScore(answers = []) {
+  // stima semplice: più risposte => score maggiore
+  const base = 55 + Math.min(answers.filter(Boolean).length, 3) * 10;
+  return clamp(base, 30, 90);
+}
+function fallbackFollowups(text) {
+  // estrai righe con punto interrogativo
+  const lines = String(text).split(/\n+/).map((s) => s.trim()).filter((s) => s.endsWith("?"));
+  return lines.slice(0, 3);
+}
+function defaultFollowups() {
+  return [
+    "Qual è l'orizzonte temporale (3, 6 o 12 mesi)?",
+    "Qual è la priorità principale (tempo, budget, rischio)?",
+    "Quale vincolo o risorsa incide di più?",
+  ];
+}
+function fallbackAnswer({ mode, user, question }) {
+  const tone =
+    mode === "wtf"
+      ? "In un corridoio di possibilità, scegli la porta luminosa: piccoli esperimenti e umorismo ti faranno strada."
+      : "Valuta rischi e impatto, fai un test rapido a basso costo e decidi con evidenze.";
+  const who = [user?.gender, user?.age ? `${user.age} anni` : null, user?.location]
+    .filter(Boolean)
+    .join(", ");
+  return (
+    `Per ${who || "te"}, riguardo a «${question}»: ` +
+    `inquadra obiettivo e vincoli, raccogli 2–3 segnali concreti, decidi in step. ` +
+    tone
+  );
+}
+function safeJsonFromText(text) {
+  // prova a isolare il primo blocco JSON
+  const m = String(text).match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+  return m ? m[0] : text;
+}
