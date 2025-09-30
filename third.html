@@ -1,242 +1,46 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>What?f — Impostazioni</title>
-  <link rel="stylesheet" href="./style.css">
-  <style>
-    :root{--tq:#21d4c8;--bg:#0a0f14;--panel:#121a21;--muted:#8aa1b4;}
-    body{margin:0;background:var(--bg);color:#eaf3fb;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
-    .wrap{max-width:980px;margin:0 auto;padding:20px}
-    .heroTitle{font-weight:700;font-size:clamp(20px,3vw,28px);letter-spacing:.02em;color:#d7e6f3}
-    .brand{color:var(--tq);font-weight:800}
-    .sub{color:var(--muted);margin:.25rem 0 1rem}
-    .card{background:var(--panel);border:1px solid #17222b;border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 6px 22px rgba(0,0,0,.25)}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .btnToggle{flex:1 1 180px;border:1px solid #20303c;background:#0f161d;color:#cfe6f9;border-radius:999px;padding:12px 16px;font-weight:700}
-    .btnToggle.active{background:linear-gradient(90deg,#22d3ee,#34d399);color:#05212a;border-color:transparent}
-    label{display:block;color:#cde1f1;margin:.5rem 0 .25rem}
-    input[type=text],textarea,select{width:100%;background:#0f161d;color:#eaf4ff;border:1px solid #233445;border-radius:12px;padding:12px}
-    .muted{color:var(--muted);font-size:.95rem}
-    .bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px}
-    .btn{background:linear-gradient(90deg,#22d3ee,#34d399);color:#05212a;border:0;border-radius:16px;padding:14px 18px;font-weight:800}
-    .btn[disabled]{opacity:.6;filter:grayscale(.3)}
-    .link{color:#9bd9ff}
-    .chip{display:inline-flex;align-items:center;gap:8px;border-radius:999px;background:#0f161d;border:1px solid #20303c;color:#cfe6f9;padding:8px 12px}
-    .follow{margin-top:8px}
-    .q{margin:.5rem 0 .25rem;color:#d7e6f3}
-    .err{color:#ffb4c0}
-    .center{display:flex;justify-content:center;align-items:center;min-height:140px}
-    .spinner{width:32px;height:32px;border:3px solid #1c2a33;border-top-color:#22d3ee;border-radius:50%;animation:spin 1s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>What?f – Domande</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
-<body>
-  <div class="wrap">
-    <h1 class="heroTitle">
-      <span class="muted">PASSATO o FUTURO?</span> Scopri il tuo <span class="brand">What?f!</span>
-    </h1>
-    <p class="sub">Un paio di scelte rapide… poi ti faccio <strong>3 domande mirate</strong> per risponderti meglio.</p>
+<body class="page third">
+  <div class="container">
+    <h1>Passato o Futuro?<br><span class="highlight">Scopri il tuo What?f</span></h1>
 
-    <!-- Tempo -->
-    <section class="card" aria-labelledby="tempo">
-      <h2 id="tempo">Tempo</h2>
-      <div class="row" id="timeRow">
-        <button class="btnToggle active" data-val="past">Passato</button>
-        <button class="btnToggle" data-val="future">Futuro</button>
-      </div>
-      <p class="muted">Esplora un “e se…” nel passato o nel futuro.</p>
-    </section>
+    <!-- Solo dati base + domanda -->
+    <form id="questionForm">
+      <label for="name">Il tuo nome (facoltativo)</label>
+      <input id="name" type="text" placeholder="Scrivi qui..."/>
 
-    <!-- Scenario -->
-    <section class="card" aria-labelledby="scenario">
-      <h2 id="scenario">Scenario</h2>
-      <div class="row" id="scenarioRow">
-        <button class="btnToggle active" data-val="sliding">Sliding Doors</button>
-        <button class="btnToggle" data-val="wtf">What the F?!</button>
-      </div>
-      <p class="muted">Realistico (Sliding) oppure ironico (What a F?!).</p>
-    </section>
-
-    <!-- Domanda base -->
-    <section class="card" aria-labelledby="domanda">
-      <h2 id="domanda">La tua domanda</h2>
-      <div class="row">
-        <div class="chip">What?f</div>
-        <input id="prompt" type="text" inputmode="text" placeholder="…se avessi accettato quel trasferimento?" autocomplete="off">
-      </div>
-
-      <label for="place">Dove</label>
-      <input id="place" type="text" placeholder="città / luogo?">
-
-      <label for="when">Quando?</label>
-      <select id="when">
-        <option value="" selected>Seleziona…</option>
-        <option value="oggi">Oggi</option>
-        <option value="entro-3-mesi">Entro 3 mesi</option>
-        <option value="entro-1-anno">Entro 1 anno</option>
-        <option value="qualche-anno">Tra qualche anno</option>
+      <label for="gender">Genere (obbligatorio)</label>
+      <select id="gender" required>
+        <option value="">Seleziona…</option>
+        <option>Donna</option>
+        <option>Uomo</option>
+        <option>Non specificato</option>
       </select>
 
-      <div class="bar">
-        <span class="muted" id="quotaInfo"><span id="quota">∞</span> simulazioni rimaste oggi</span>
-        <button id="nextBtn" class="btn">Avanti (3 domande)</button>
-      </div>
-      <div class="muted" style="margin-top:8px">
-        <a class="link" href="./index.html">Home</a> ·
-        <a class="link" href="./second.html">Choose your way</a>
-      </div>
-    </section>
+      <label for="location">Dove ti trovi? (facoltativo)</label>
+      <input id="location" type="text" placeholder="Es. Roma, Milano…"/>
 
-    <!-- Sezione follow-up (compare dopo Avanti) -->
-    <section id="followups" class="card follow" hidden>
-      <h2>Per capirti meglio</h2>
-      <p class="muted">Rispondi rapidamente alle prossime <strong>3</strong> domande.</p>
-      <div id="followContainer"></div>
-      <div class="bar">
-        <button id="prevFU" class="btn" style="background:#0f161d;color:#cfe6f9;border:1px solid #20303c">Indietro</button>
-        <button id="nextFU" class="btn">Avanti</button>
-      </div>
-      <p id="fuErr" class="err" hidden>Rispondi prima alla domanda.</p>
-    </section>
+      <label for="time">Vuoi esplorare (facoltativo)</label>
+      <select id="time">
+        <option value="">—</option>
+        <option value="passato">Il passato</option>
+        <option value="futuro">Il futuro</option>
+      </select>
 
-    <!-- Stato invio -->
-    <section id="sending" class="card center" hidden>
-      <div class="spinner" aria-label="Caricamento"></div>
-    </section>
+      <label for="mainQuestion">La tua domanda What?f… (obbligatorio)</label>
+      <textarea id="mainQuestion" placeholder="Esempio: e se avessi accettato quel trasferimento?" required></textarea>
 
-    <!-- Errori -->
-    <p id="fatal" class="err" hidden></p>
+      <button type="submit" class="door-btn">Apri la porta</button>
+    </form>
   </div>
 
-  <script>
-    // ---------- Toggle helpers ----------
-    function setupToggle(rowId, defaultVal){
-      const row = document.getElementById(rowId);
-      let value = defaultVal;
-      row.addEventListener('click', (e)=>{
-        const b = e.target.closest('.btnToggle'); if(!b) return;
-        row.querySelectorAll('.btnToggle').forEach(x=>x.classList.remove('active'));
-        b.classList.add('active'); value = b.dataset.val;
-      });
-      return ()=> value;
-    }
-    const getTime = setupToggle('timeRow', 'past');
-    const getScenario = setupToggle('scenarioRow', 'sliding');
-
-    // ---------- Follow-up engine ----------
-    const followups = [];
-    let fuIndex = 0;
-    const answers = [];
-
-    function buildFollowups({time,scenario,prompt,place,when}){
-      const arr = [];
-      // 1) contesto personale
-      arr.push("Qual è l'obiettivo principale legato a questo 'e se…' (carriera, relazioni, qualità di vita, altro)?");
-      // 2) vincoli / risorse
-      arr.push("Hai vincoli o risorse importanti da considerare (budget, famiglia, tempo, competenze)?");
-      // 3) chiarimento legato alla scelta
-      if (scenario==='wtf') {
-        arr.push("Preferisci una risposta più ironica o comunque plausibile ma esagerata?");
-      } else {
-        arr.push(`Dammi un dettaglio in più su “${prompt||'la tua idea'}” per renderla realistica (${time==='past'?'retrospettiva':'previsione'}).`);
-      }
-      return arr;
-    }
-
-    function renderFU(){
-      const cont = document.getElementById('followContainer');
-      cont.innerHTML = '';
-      const q = document.createElement('div');
-      q.className = 'q';
-      q.textContent = `Domanda ${fuIndex+1} di 3`;
-      const p = document.createElement('p');
-      p.textContent = followups[fuIndex];
-      const input = document.createElement('textarea');
-      input.rows = 3;
-      input.placeholder = 'Scrivi qui una risposta breve…';
-      input.value = answers[fuIndex] || '';
-      input.id = 'fuInput';
-      cont.append(q,p,input);
-      document.getElementById('prevFU').disabled = fuIndex===0;
-      document.getElementById('nextFU').textContent = fuIndex===2 ? 'Chiedi alla IA' : 'Avanti';
-    }
-
-    // ---------- Navigation between sections ----------
-    const nextBtn = document.getElementById('nextBtn');
-    const fuSec = document.getElementById('followups');
-    const sendingSec = document.getElementById('sending');
-    const fuErr = document.getElementById('fuErr');
-    const fatal = document.getElementById('fatal');
-
-    nextBtn.addEventListener('click', ()=>{
-      fatal.hidden = true;
-      const data = collectForm();
-      const basicOk = data.prompt.trim().length>=6;
-      if(!basicOk){ alert('Scrivi una domanda un po’ più chiara.'); return; }
-      // prepara followups
-      followups.splice(0,followups.length, ...buildFollowups(data));
-      fuIndex = 0; answers.length = 0;
-      renderFU();
-      fuSec.hidden = false;
-      window.scrollTo({top:fuSec.offsetTop-12, behavior:'smooth'});
-    });
-
-    document.getElementById('prevFU').addEventListener('click', ()=>{
-      const val = document.getElementById('fuInput').value.trim();
-      if(val) answers[fuIndex] = val;
-      fuIndex = Math.max(0, fuIndex-1);
-      renderFU();
-      fuErr.hidden = true;
-    });
-
-    document.getElementById('nextFU').addEventListener('click', async ()=>{
-      const val = document.getElementById('fuInput').value.trim();
-      if(!val){ fuErr.hidden=false; return; }
-      fuErr.hidden = true;
-      answers[fuIndex] = val;
-      if(fuIndex<2){ fuIndex++; renderFU(); return; }
-
-      // invio alla function
-      sendingSec.hidden = false;
-      fuSec.hidden = true;
-
-      const payload = {...collectForm(), clarifications: answers};
-      try{
-        const res = await fetch('/.netlify/functions/ask', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(payload)
-        });
-        if(!res.ok){
-          const t = await res.text();
-          throw new Error('Errore remoto: '+t);
-        }
-        const data = await res.json();
-        // salva in sessione e vai alla pagina di esito
-        sessionStorage.setItem('lastResult', JSON.stringify({
-          input: payload,
-          output: data
-        }));
-        window.location.href = './fourth.html';
-      }catch(err){
-        sendingSec.hidden = true;
-        fuSec.hidden = false;
-        fatal.textContent = 'Ops, qualcosa è andato storto: '+ err.message;
-        fatal.hidden = false;
-      }
-    });
-
-    function collectForm(){
-      return {
-        time: getTime(),            // 'past' | 'future'
-        scenario: getScenario(),    // 'sliding' | 'wtf'
-        prompt: (document.getElementById('prompt').value||'').trim(),
-        place: (document.getElementById('place').value||'').trim(),
-        when: (document.getElementById('when').value||'').trim()
-      };
-    }
-  </script>
+  <!-- client -->
+  <script src="ask.js?v=4"></script>
 </body>
 </html>
