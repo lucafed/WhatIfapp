@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>What?f - Risultato</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f – Risultato</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body class="page fourth">
-
   <div class="container">
     <h1>✨ Il tuo What?f ✨</h1>
 
-    <!-- Qui appaiono le domande aggiuntive della AI -->
+    <div id="scenarioBadge" class="badge"></div>
+
+    <!-- Domande follow-up -->
     <div id="followUp" class="followup-section"></div>
 
     <!-- Risposta finale -->
     <div id="aiResponse" class="response-box">
-      <p>Sto preparando la tua risposta...</p>
+      <p>Sto preparando la tua risposta…</p>
     </div>
 
-    <!-- Pulsanti -->
     <div class="actions">
       <button onclick="location.href='third.html'">🔙 Torna indietro</button>
       <button onclick="location.href='index.html'">🏠 Home</button>
@@ -28,63 +28,91 @@
   </div>
 
   <script>
-  async function callAI(step, payload) {
-    try {
-      const res = await fetch("/.netlify/functions/ask", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ step, ...payload })
+    window.addEventListener('DOMContentLoaded', init);
+
+    async function init(){
+      const base = JSON.parse(sessionStorage.getItem('whatf_base_v1') || 'null');
+
+      // se manca la base, crea un payload minimo per non bloccare il test
+      const payload = base || {
+        mode: 'sliding',
+        question: 'What?f se cambio lavoro?',
+        user: { name:'', gender:'uomo', location:'Roma', time:'futuro' }
+      };
+
+      // badge scenario
+      document.getElementById('scenarioBadge').textContent =
+        payload.mode === 'wtf' ? '🌈 Modalità: What the F?!' : '🚪 Modalità: Sliding Doors';
+
+      // 1) chiedi follow-up alla function
+      const fu = await callAI('followups', payload);
+      if(!fu) return; // errore già mostrato
+
+      const questions = (fu.followups || []).slice(0,3);
+      if (!questions.length){
+        document.getElementById('followUp').innerHTML = '<p>Non riesco a generare domande. Riprova.</p>';
+        return;
+      }
+
+      const fuHtml = questions.map((q,i)=>(
+        `<label class="card">${q}<br><input id="fu${i}" type="text" placeholder="Rispondi…"></label>`
+      )).join('') + `<button id="finalBtn" class="door-btn" style="margin-top:1rem">Chiedi alla IA</button>`;
+
+      document.getElementById('followUp').innerHTML = fuHtml;
+
+      // 2) al click genera risposta finale
+      document.getElementById('finalBtn').addEventListener('click', async ()=>{
+        const answers = questions.map((q,i)=>({ q, a: document.getElementById('fu'+i).value.trim() }));
+        const finalRes = await callAI('final', { ...payload, answers });
+        if(finalRes){
+          const html = `
+            <p>${escapeHtml(finalRes.answer || '')}</p>
+            <p><b>Confidenza:</b> ${Number(finalRes.score ?? 0)}%</p>
+            ${finalRes.reason ? `<small>Perché: ${escapeHtml(finalRes.reason)}</small>` : ''}
+          `;
+          document.getElementById('aiResponse').innerHTML = html;
+        }
       });
 
-      const data = await res.json();
+      // share
+      document.getElementById('shareBtn').addEventListener('click', async ()=>{
+        const text = document.getElementById('aiResponse').innerText || 'What?f';
+        try{
+          if(navigator.share){ await navigator.share({ title:'Il mio What?f', text }); }
+          else{
+            await navigator.clipboard.writeText(text);
+            alert('Testo copiato! Incollalo dove vuoi 🚀');
+          }
+        }catch{}
+      });
+    }
 
-      if(!res.ok || !data.ok){
-        // Mostra errore reale a schermo
-        document.getElementById("aiResponse").innerHTML = 
-          "<b>Errore AI ("+step+"):</b><br>"+(data.error || res.status+" "+res.statusText);
+    async function callAI(step, payload){
+      try{
+        const res = await fetch('/.netlify/functions/ask', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ step, ...payload })
+        });
+
+        const data = await res.json().catch(()=> ({}));
+
+        if(!res.ok || !data.ok){
+          const msg = (data && data.error) || (res.status+' '+res.statusText);
+          document.getElementById('aiResponse').innerHTML =
+            `<b>Errore AI (${step}):</b><br>${escapeHtml(String(msg))}`;
+          console.error('[ASK]', step, res.status, data);
+          return null;
+        }
+        return data;
+      }catch(err){
+        document.getElementById('aiResponse').innerHTML = `<b>Catch error:</b><br>${escapeHtml(err.message)}`;
+        console.error(err);
         return null;
       }
-
-      return data;
-    } catch(err){
-      document.getElementById("aiResponse").innerHTML = 
-        "<b>Catch error:</b><br>"+err.message;
-      return null;
     }
-  }
 
-  // Recupera i dati salvati in sessione
-  const last = JSON.parse(sessionStorage.getItem("lastRun") || "{}");
-  if(last.input){
-    // Chiede prima follow-up
-    callAI("followups", last.input).then(data => {
-      if(data && data.questions){
-        document.getElementById("followUp").innerHTML = data.questions
-          .map(q => `<label>${q}<br><input type="text"></label>`)
-          .join("<br>");
-      }
-    });
-
-    // Poi risposta finale
-    callAI("final", last.input).then(data => {
-      if(data && data.output){
-        document.getElementById("aiResponse").innerHTML = 
-          "<p>"+data.output+"</p>";
-      }
-    });
-  }
-
-  // Pulsante Condividi
-  document.getElementById("shareBtn").addEventListener("click", async () => {
-    const text = document.getElementById("aiResponse").innerText;
-    if(navigator.share){
-      await navigator.share({ title: "Il mio What?f", text });
-    } else {
-      await navigator.clipboard.writeText(text);
-      alert("Testo copiato! Incollalo dove vuoi 🚀");
-    }
-  });
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
   </script>
-
 </body>
 </html>
