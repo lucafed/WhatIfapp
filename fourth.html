@@ -1,130 +1,102 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>What?f — Risultato</title>
-  <link rel="stylesheet" href="./style.css"/>
+  <link rel="stylesheet" href="./style.css">
+  <style>
+    :root{--tq:#21d4c8;--bg:#0a0f14;--panel:#121a21;--muted:#8aa1b4;}
+    body{margin:0;background:var(--bg);color:#eaf3fb;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+    .wrap{max-width:980px;margin:0 auto;padding:22px}
+    .title{font-weight:900;font-size:clamp(24px,4.2vw,40px)}
+    .k{color:var(--tq)}
+    .card{background:var(--panel);border:1px solid #17222b;border-radius:16px;padding:18px;margin:14px 0;box-shadow:0 6px 22px rgba(0,0,0,.25)}
+    .muted{color:var(--muted)}
+    .btn{background:linear-gradient(90deg,#22d3ee,#34d399);color:#05212a;border:0;border-radius:16px;padding:12px 16px;font-weight:800}
+    .ghost{background:#0f161d;color:#cfe6f9;border:1px solid #20303c}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .like{display:inline-flex;align-items:center;gap:8px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    .prob{color:#a5f3fc}
+  </style>
 </head>
-<body class="result-page">
-  <main class="container container--narrow">
-    <header class="page-lead">
-      <p class="eyebrow">Scenario</p>
-      <h1 id="title">Risultato</h1>
-    </header>
+<body>
+  <div class="wrap">
+    <p class="muted"><a class="muted" href="./third.html">« Torna indietro</a></p>
+    <h1 id="tit" class="title">Risultato</h1>
 
-    <article id="answer" class="card prose"></article>
+    <section id="out" class="card">
+      <p class="muted">Carico il tuo What?f…</p>
+    </section>
 
-    <div class="row gap">
-      <button id="likeBtn" class="btn ghost">♡ Mi piace</button>
-      <button id="shareBtn" class="btn ghost">Condividi</button>
-    </div>
+    <section class="card">
+      <div class="row">
+        <button id="likeBtn" class="btn like" title="Mi piace">
+          ❤️ <span id="likeCount">0</span>
+        </button>
+        <button id="shareBtn" class="btn">Condividi</button>
+        <a href="./third.html" class="btn ghost">Nuova domanda</a>
+        <a href="./index.html" class="btn ghost">Home</a>
+      </div>
+    </section>
 
-    <div class="row gap top">
-      <a href="./third.html" class="btn text">↩︎ Modifica</a>
-      <a href="./index.html" class="btn primary" data-next>Nuova domanda</a>
-    </div>
-  </main>
+    <p class="muted mono" id="meta"></p>
+  </div>
 
   <script>
-  // Utilità
-  const qs = new URLSearchParams(location.search);
-  const time = qs.get('time')||'past';
-  const scenario = qs.get('scenario')||'sliding';
-  const prompt = (qs.get('prompt')||'').replace(/^whatif\s*/i,'');
-  const place = qs.get('place')||'';
-  const when = qs.get('when')||'';
-  const a = [qs.get('a0')||'', qs.get('a1')||'', qs.get('a2')||''];
-  const extra = qs.get('extra')||'';
+    // Recupera il risultato dalla sessione
+    const raw = sessionStorage.getItem('lastResult');
+    const container = document.getElementById('out');
+    const title = document.getElementById('tit');
+    const meta = document.getElementById('meta');
 
-  // Rendering titolo
-  const scenarioLabel = scenario==='sliding' ? 'Sliding Doors' : 'What a F?!';
-  const titleEl = document.getElementById('title');
-  titleEl.textContent = `${scenarioLabel} · ${time==='past'?'Passato':'Futuro'}`;
-
-  // Risposta “smart” locale (stub)
-  function buildAnswer(){
-    const bullets = [];
-
-    // 3–6 righe sintetiche ma chiare
-    if(time==='past'){
-      bullets.push(`Se ${prompt}, oggi avresti un percorso che riflette quella scelta${place?` a ${place}`:''}.`);
-      bullets.push(`Gli elementi chiave: ${a.filter(Boolean).join('; ') || 'motivazione, tempismo e rete di contatti'}.`);
-      bullets.push(`Impatti a breve: maggiore consapevolezza e alcuni cambiamenti pratici ${when?`(a partire da ${when})`:''}.`);
+    if(!raw){
+      container.innerHTML = '<p>Nessun dato: torna indietro e compila la simulazione.</p>';
     } else {
-      bullets.push(`Se decidi per ${prompt}${place?` a ${place}`:''}, i prossimi passi sarebbero concreti e misurabili.`);
-      bullets.push(`Focus: ${a.filter(Boolean).join('; ') || 'strategie, risorse e milestone'}.`);
-      bullets.push(`Tra 6–12 mesi potresti vedere effetti tangibili${when?` entro ${when}`:''}.`);
+      const {input, output} = JSON.parse(raw);
+
+      // Titolo scenico
+      const niceScenario = input.scenario==='wtf' ? 'What a F?!' : 'Sliding Doors';
+      const niceTime = input.time==='past' ? 'Passato' : 'Futuro';
+      title.innerHTML = `<span class="k">${niceScenario}</span> · ${niceTime}`;
+
+      // Testo risposta
+      const text = (output && (output.answer || output.text || output.message)) || 'Nessuna risposta.';
+      // Probabilità opzionale
+      const prob = output && (output.probability || output.prob || output.score);
+
+      container.innerHTML = `
+        <h2 class="k">What?f</h2>
+        <p style="white-space:pre-wrap; line-height:1.6">${text}</p>
+        ${prob ? `<p class="prob">Probabilità stimata: <strong>${Math.round(prob*100)||prob}%</strong></p>`:''}
+      `;
+
+      meta.textContent = `Domanda: "${input.prompt}" · Luogo: ${input.place||'—'} · Quando: ${input.when||'—'}`;
     }
 
-    if(scenario==='wtf'){
-      bullets.push(`Twist: un evento improbabile ma plausibile aggiunge colore alla storia.`);
-    } else {
-      bullets.push(`Piano sobrio: mantieni gli impegni e verifica i progressi ogni 4–6 settimane.`);
-    }
+    // Like locale
+    const likeBtn = document.getElementById('likeBtn');
+    const likeCount = document.getElementById('likeCount');
+    const LIKE_KEY = 'wf_likes';
+    let likes = Number(localStorage.getItem(LIKE_KEY) || '0');
+    likeCount.textContent = likes;
+    likeBtn.addEventListener('click', ()=>{
+      likes++; localStorage.setItem(LIKE_KEY, String(likes));
+      likeCount.textContent = likes;
+      likeBtn.animate([{transform:'scale(1)'},{transform:'scale(1.12)'},{transform:'scale(1)'}], {duration:220});
+    });
 
-    if(extra){
-      bullets.push(`Note personali considerate: ${extra.slice(0,140)}${extra.length>140?'…':''}`);
-    }
-
-    const p = document.createElement('div');
-    p.innerHTML = `<p><strong>${scenarioLabel}</strong> — ${time==='past'?'retrospettiva':'proiezione breve'}.</p>` +
-      '<ul>'+bullets.map(b=>`<li>${b}</li>`).join('')+'</ul>' +
-      `<p class="muted">Questa è una demo locale. Con l’IA attiva, il testo diventa più lungo e su misura.</p>`;
-    return p;
-  }
-
-  document.getElementById('answer').appendChild(buildAnswer());
-
-  // Like (locale)
-  const likeBtn = document.getElementById('likeBtn');
-  let liked=false;
-  likeBtn.addEventListener('click', ()=>{
-    liked = !liked;
-    likeBtn.textContent = liked ? '♥︎ Ti piace' : '♡ Mi piace';
-    likeBtn.classList.toggle('liked', liked);
-  });
-
-  // Share
-  const shareBtn = document.getElementById('shareBtn');
-  shareBtn.addEventListener('click', async ()=>{
-    const shareData = {
-      title: 'What?f — il mio scenario',
-      text: `${scenarioLabel} • ${prompt}`.trim(),
-      url: location.href
-    };
-    try{
+    // Condivisione
+    document.getElementById('shareBtn').addEventListener('click', async ()=>{
+      const shareText = `${title.textContent}\n\n${container.innerText.slice(0,220)}…\n\nProva anche tu: ${location.origin}${location.pathname.replace('fourth.html','')}`;
       if(navigator.share){
-        await navigator.share(shareData);
-      }else{
-        await navigator.clipboard.writeText(location.href);
-        shareBtn.textContent = 'Link copiato ✔︎';
-        setTimeout(()=>shareBtn.textContent='Condividi',1500);
+        try{ await navigator.share({title:'Il mio What?f', text:shareText}); } catch(e){}
+      } else {
+        await navigator.clipboard.writeText(shareText);
+        alert('Testo copiato! Incollalo dove vuoi 🤝');
       }
-    }catch(e){}
-  });
-
-  // Swipe universale
-  (function enableSwipe(){
-    let x0=0,t0=0; const TH=50, TS=500;
-    function getNextHref(){
-      const exp=document.querySelector('[data-next]');
-      if(exp&&exp.getAttribute('href')) return exp.getAttribute('href');
-      const guess=document.querySelector('.btn.primary, a[href*="index"]');
-      return guess && guess.getAttribute('href');
-    }
-    addEventListener('touchstart',e=>{x0=e.changedTouches[0].clientX;t0=Date.now()},{passive:true});
-    addEventListener('touchend',e=>{
-      const dx=e.changedTouches[0].clientX-x0, dt=Date.now()-t0;
-      if(dt<TS && Math.abs(dx)>TH){
-        if(dx>0) history.back();
-        else{
-          const href=getNextHref();
-          if(href) location.href=href;
-        }
-      }
-    },{passive:true});
-  })();
+    });
   </script>
 </body>
 </html>
