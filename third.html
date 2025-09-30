@@ -2,43 +2,82 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f – Domande</title>
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body class="page third">
   <div class="container">
-    <h1>Passato o Futuro?<br><span class="highlight">Scopri il tuo What?f</span></h1>
+    <h1>Passato o Futuro? <br><span class="highlight">Scopri il tuo What?f</span></h1>
 
-    <form id="questionForm">
+    <!-- Scelta scenario -->
+    <fieldset class="card" style="margin-bottom:1rem">
+      <legend>Scenario</legend>
+      <label style="display:inline-flex;gap:.5rem;margin-right:1rem">
+        <input type="radio" name="mode" value="sliding" checked />
+        🚪 Sliding Doors (realistico)
+      </label>
+      <label style="display:inline-flex;gap:.5rem">
+        <input type="radio" name="mode" value="wtf" />
+        🌈 What the F?! (ironico)
+      </label>
+    </fieldset>
+
+    <form id="questionForm" class="card">
       <label for="name">Il tuo nome (facoltativo)</label>
-      <input id="name" type="text" placeholder="Scrivi qui..."/>
+      <input id="name" type="text" placeholder="Scrivi qui…" />
 
       <label for="gender">Genere (obbligatorio)</label>
       <select id="gender" required>
         <option value="">Seleziona…</option>
-        <option>Donna</option>
-        <option>Uomo</option>
-        <option>Non specificato</option>
+        <option value="uomo">Uomo</option>
+        <option value="donna">Donna</option>
+        <option value="altro">Altro</option>
+        <option value="preferisco-non-dirlo">Preferisco non dirlo</option>
       </select>
 
       <label for="location">Dove ti trovi? (facoltativo)</label>
-      <input id="location" type="text" placeholder="Es. Roma, Milano…"/>
+      <input id="location" type="text" placeholder="Es. Roma, Milano…" />
 
-      <label for="time">Vuoi esplorare (facoltativo)</label>
-      <select id="time">
-        <option value="">—</option>
-        <option value="passato">Il passato</option>
+      <label for="time">Vuoi esplorare (obbligatorio)</label>
+      <select id="time" required>
         <option value="futuro">Il futuro</option>
+        <option value="passato">Il passato</option>
       </select>
 
-      <label for="mainQuestion">La tua domanda What?f… (obbligatorio)</label>
-      <textarea id="mainQuestion" placeholder="Esempio: e se avessi accettato quel trasferimento?" required></textarea>
+      <label for="mainQuestion">La tua domanda What?f (obbligatorio)</label>
+      <textarea id="mainQuestion" placeholder="Es: What?f se mi trasferisco a Londra?" required></textarea>
 
       <button type="submit" class="door-btn">Apri la porta</button>
     </form>
   </div>
 
-  <script src="ask.js?v=7"></script>
+  <script>
+    // salva base payload in sessione e naviga alla pagina 4
+    document.getElementById('questionForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const mode = [...document.querySelectorAll('input[name="mode"]')].find(r => r.checked)?.value || 'sliding';
+
+      const payload = {
+        mode,
+        question: document.getElementById('mainQuestion').value.trim(),
+        user: {
+          name: document.getElementById('name').value.trim(),
+          gender: document.getElementById('gender').value,
+          location: document.getElementById('location').value.trim(),
+          time: document.getElementById('time').value
+        }
+      };
+
+      if (!payload.question || !payload.user.gender || !payload.user.time) {
+        alert('Compila i campi obbligatori.');
+        return;
+      }
+
+      sessionStorage.setItem('whatf_base_v1', JSON.stringify(payload));
+      location.href = 'fourth.html';
+    });
+  </script>
 </body>
 </html>
