@@ -1,118 +1,173 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>What?f – Risultato</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body class="page fourth">
   <div class="container">
     <h1>✨ Il tuo What?f ✨</h1>
+    <div id="modeBadge" class="badge">Modalità: –</div>
 
-    <div id="scenarioBadge" class="badge"></div>
-
-    <!-- Domande follow-up -->
-    <div id="followUp" class="followup-section"></div>
-
-    <!-- Risposta finale -->
-    <div id="aiResponse" class="response-box">
-      <p>Sto preparando la tua risposta…</p>
+    <!-- follow-up dinamici -->
+    <div id="followUp" class="followup-section" hidden>
+      <h3 style="margin-top:0">Per capirti meglio</h3>
+      <form id="fuForm"></form>
+      <div class="actions">
+        <button id="sendFu">Invia risposte</button>
+      </div>
     </div>
 
+    <!-- risposta finale -->
+    <div id="aiResponse" class="response-box" style="margin-top:14px">
+      Sto preparando la tua risposta…
+    </div>
+
+    <!-- reazioni -->
+    <div class="reactions">
+      <button id="likeBtn">👍 <span class="count" id="likeCount">0</span></button>
+      <button id="dislikeBtn">👎 <span class="count" id="dislikeCount">0</span></button>
+    </div>
+
+    <!-- azioni -->
     <div class="actions">
-      <button onclick="location.href='third.html'">🔙 Torna indietro</button>
+      <button onclick="history.back()">🔙 Torna indietro</button>
       <button onclick="location.href='index.html'">🏠 Home</button>
       <button id="shareBtn">📤 Condividi</button>
     </div>
   </div>
 
   <script>
-    window.addEventListener('DOMContentLoaded', init);
+  const ASK_URL = '/.netlify/functions/ask';
+  const input = JSON.parse(sessionStorage.getItem('whatf_input_v2')||'null');
+  const modeBadge = document.getElementById('modeBadge');
+  const fuBox = document.getElementById('followUp');
+  const fuForm = document.getElementById('fuForm');
+  const aiBox = document.getElementById('aiResponse');
+  const sendFuBtn = document.getElementById('sendFu');
+  const likeBtn = document.getElementById('likeBtn');
+  const dislikeBtn = document.getElementById('dislikeBtn');
+  const likeCount = document.getElementById('likeCount');
+  const dislikeCount = document.getElementById('dislikeCount');
 
-    async function init(){
-      const base = JSON.parse(sessionStorage.getItem('whatf_base_v1') || 'null');
+  const esc = s => (s||'').replace(/[&<>"]/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m]));
+  function showError(where, msg){ aiBox.innerHTML = `<b>Errore AI (${where}):</b><br><code style="white-space:pre-wrap">${esc(msg)}</code>`; }
 
-      // se manca la base, crea un payload minimo per non bloccare il test
-      const payload = base || {
-        mode: 'sliding',
-        question: 'What?f se cambio lavoro?',
-        user: { name:'', gender:'uomo', location:'Roma', time:'futuro' }
-      };
+  if(!input){ aiBox.textContent = 'Sessione vuota. Torna indietro.'; }
+  else {
+    modeBadge.textContent = 'Modalità: ' + (input.mode==='wtf' ? 'What the F?!' : 'Sliding Doors');
+    getFollowups();
+  }
 
-      // badge scenario
-      document.getElementById('scenarioBadge').textContent =
-        payload.mode === 'wtf' ? '🌈 Modalità: What the F?!' : '🚪 Modalità: Sliding Doors';
-
-      // 1) chiedi follow-up alla function
-      const fu = await callAI('followups', payload);
-      if(!fu) return; // errore già mostrato
-
-      const questions = (fu.followups || []).slice(0,3);
-      if (!questions.length){
-        document.getElementById('followUp').innerHTML = '<p>Non riesco a generare domande. Riprova.</p>';
-        return;
-      }
-
-      const fuHtml = questions.map((q,i)=>(
-        `<label class="card">${q}<br><input id="fu${i}" type="text" placeholder="Rispondi…"></label>`
-      )).join('') + `<button id="finalBtn" class="door-btn" style="margin-top:1rem">Chiedi alla IA</button>`;
-
-      document.getElementById('followUp').innerHTML = fuHtml;
-
-      // 2) al click genera risposta finale
-      document.getElementById('finalBtn').addEventListener('click', async ()=>{
-        const answers = questions.map((q,i)=>({ q, a: document.getElementById('fu'+i).value.trim() }));
-        const finalRes = await callAI('final', { ...payload, answers });
-        if(finalRes){
-          const html = `
-            <p>${escapeHtml(finalRes.answer || '')}</p>
-            <p><b>Confidenza:</b> ${Number(finalRes.score ?? 0)}%</p>
-            ${finalRes.reason ? `<small>Perché: ${escapeHtml(finalRes.reason)}</small>` : ''}
-          `;
-          document.getElementById('aiResponse').innerHTML = html;
-        }
+  // 1) Follow-up
+  async function getFollowups(){
+    aiBox.textContent = 'Sto preparando le domande di chiarimento…';
+    try{
+      const res = await fetch(ASK_URL, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ step:'followups', input })
       });
+      const data = await res.json();
+      if(!res.ok) throw new Error(data.error || res.statusText);
+      renderFollowups(data.followups || []);
+    }catch(err){ showError('followups', err.message); }
+  }
 
-      // share
-      document.getElementById('shareBtn').addEventListener('click', async ()=>{
-        const text = document.getElementById('aiResponse').innerText || 'What?f';
-        try{
-          if(navigator.share){ await navigator.share({ title:'Il mio What?f', text }); }
-          else{
-            await navigator.clipboard.writeText(text);
-            alert('Testo copiato! Incollalo dove vuoi 🚀');
-          }
-        }catch{}
-      });
+  function renderFollowups(list){
+    if(!list.length){
+      aiBox.textContent = 'Nessuna domanda aggiuntiva. Genero la risposta…';
+      return getFinal({});
     }
+    fuForm.innerHTML = '';
+    list.slice(0,3).forEach((q,i)=>{
+      const id = 'fu'+i;
+      fuForm.insertAdjacentHTML('beforeend', `
+        <label for="${id}">${esc(q)}</label>
+        <input id="${id}" placeholder="Rispondi brevemente"/>
+      `);
+    });
+    fuBox.hidden = false;
+    aiBox.textContent = 'Rispondi rapidamente (3 domande).';
+  }
 
-    async function callAI(step, payload){
+  // 2) final
+  sendFuBtn.addEventListener('click', ()=>{
+    const answers = [];
+    fuForm.querySelectorAll('input').forEach((el,i)=> answers.push({ qIndex:i, a: el.value.trim() }));
+    getFinal({ answers });
+  });
+
+  async function getFinal(extra){
+    fuBox.hidden = true;
+    aiBox.textContent = 'Sto preparando la tua risposta…';
+    try{
+      const res = await fetch(ASK_URL, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ step:'final', input, extra })
+      });
+      const data = await res.json();
+      if(!res.ok) throw new Error(data.error || res.statusText);
+
+      const score = data.score!=null ? Math.round(data.score*100) : null;
+      aiBox.innerHTML =
+        `<div style="font-size:18px;margin-bottom:8px">${esc(data.answer||'Nessuna risposta.')}</div>` +
+        (score!=null ? `<div class="badge">Confidenza ${score}%</div>` : '');
+
+      // storico + init likes per questa risposta (chiave = hash semplice)
+      const key = getAnswerKey(data.answer);
+      initReactions(key);
       try{
-        const res = await fetch('/.netlify/functions/ask', {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({ step, ...payload })
-        });
+        const k='whatf_history_v2';
+        const arr = JSON.parse(localStorage.getItem(k)||'[]');
+        arr.unshift({ ts:Date.now(), input, answer:data.answer, score:data.score, key });
+        localStorage.setItem(k, JSON.stringify(arr.slice(0,50)));
+      }catch(_){}
+    }catch(err){ showError('final', err.message); }
+  }
 
-        const data = await res.json().catch(()=> ({}));
+  // --- Like/Dislike locali ---
+  function getAnswerKey(txt){ return 'ans_'+btoa(unescape(encodeURIComponent((txt||'').slice(0,120)))); }
+  function initReactions(key){
+    likeBtn.dataset.key = key; dislikeBtn.dataset.key = key;
+    const k = 'whatf_react_'+key;
+    const s = JSON.parse(localStorage.getItem(k)||'{"like":0,"dislike":0}');
+    likeCount.textContent = s.like; dislikeCount.textContent = s.dislike;
+  }
+  function updateReaction(key, type){
+    const k = 'whatf_react_'+key;
+    const s = JSON.parse(localStorage.getItem(k)||'{"like":0,"dislike":0}');
+    s[type] = (s[type]||0)+1;
+    localStorage.setItem(k, JSON.stringify(s));
+    likeCount.textContent = s.like; dislikeCount.textContent = s.dislike;
+  }
+  likeBtn.addEventListener('click', ()=>{ const key=likeBtn.dataset.key; if(key) updateReaction(key,'like'); });
+  dislikeBtn.addEventListener('click', ()=>{ const key=dislikeBtn.dataset.key; if(key) updateReaction(key,'dislike'); });
 
-        if(!res.ok || !data.ok){
-          const msg = (data && data.error) || (res.status+' '+res.statusText);
-          document.getElementById('aiResponse').innerHTML =
-            `<b>Errore AI (${step}):</b><br>${escapeHtml(String(msg))}`;
-          console.error('[ASK]', step, res.status, data);
-          return null;
-        }
-        return data;
-      }catch(err){
-        document.getElementById('aiResponse').innerHTML = `<b>Catch error:</b><br>${escapeHtml(err.message)}`;
-        console.error(err);
-        return null;
-      }
-    }
-
-    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  // --- Condivisione ---
+  document.getElementById('shareBtn').addEventListener('click', async ()=>{
+    const txt = aiBox.innerText.trim();
+    const text = `Il mio What?f (${input.mode==='wtf'?'What the F?!':'Sliding Doors'}):\n\n${txt}\n\n#whatf`;
+    const url = location.href;
+    if (navigator.share){ try{ await navigator.share({ title:'What?f', text, url }); return; }catch(_){ } }
+    const encodedText = encodeURIComponent(text);
+    const encodedUrl = encodeURIComponent(url);
+    const links = [
+      [`https://wa.me/?text=${encodedText}`, 'WhatsApp'],
+      [`https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`, 'Telegram'],
+      [`https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`, 'X/Twitter'],
+      [`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, 'Facebook'],
+      [`mailto:?subject=Il mio What?f&body=${encodedText}`, 'Email']
+    ];
+    let html = '<div class="card"><b>Condividi:</b><br>';
+    links.forEach(([href,label])=>{ html += `<a href="${href}" target="_blank" style="margin-right:10px">${label}</a>`; });
+    html += '</div>';
+    aiBox.insertAdjacentHTML('beforeend', html);
+    try{ await navigator.clipboard.writeText(text+'\n'+url); alert('Testo copiato!'); }catch(_){}
+  });
   </script>
 </body>
 </html>
