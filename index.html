@@ -4,23 +4,94 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>What?f - Home</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #0A0F14;
+      color: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+
+    .hero-img {
+      width: 250px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin: 0;
+    }
+
+    h2 {
+      font-size: 1.5em;
+      color: #00E0FF;
+      margin: 10px 0;
+    }
+
+    p {
+      font-size: 1.1em;
+      color: #A0B2BA;
+      margin-bottom: 20px;
+    }
+
+    .swipe {
+      margin: 15px 0;
+      font-size: 1em;
+      color: #A0B2BA;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 15px 30px;
+      background-color: #00E0FF;
+      color: #000;
+      font-weight: bold;
+      text-decoration: none;
+      border-radius: 25px;
+      transition: 0.3s;
+    }
+
+    .btn:hover {
+      background-color: #00B5CC;
+    }
+
+    footer {
+      position: absolute;
+      bottom: 15px;
+      font-size: 0.8em;
+      color: #A0B2BA;
+    }
+
+    footer a {
+      color: #00E0FF;
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <div class="hero">
-      <img src="/home-hero.png" alt="Porta luminosa What?f" class="hero-img" />
-      <h1>BENVENTUO SU <br><span>What?f</span></h1>
-      <p>Le porte che non hai aperto e quelle che aprirai.</p>
-    </div>
+  <!-- Immagine della porta -->
+  <img src="/home-hero.png" alt="Porta luminosa What?f" class="hero-img">
 
-    <div class="swipe">⬅️ SWIPE ➡️</div>
+  <!-- Titoli -->
+  <h1>BENVENUTO SU</h1>
+  <h2>What?f</h2>
+  <p>Le porte che non hai aperto e quelle che aprirai.</p>
 
-    <a href="second.html" class="btn">CHOOSE YOUR WAY</a>
-  </div>
+  <!-- Swipe -->
+  <div class="swipe">⬅️ SWIPE ➡️</div>
 
+  <!-- Pulsante -->
+  <a href="second.html" class="btn">CHOOSE YOUR WAY</a>
+
+  <!-- Footer -->
   <footer>
-    <p>© 2025 What?f · <a href="#">Privacy</a> · <a href="#">Termini</a></p>
+    © 2025 What?f · <a href="#">Privacy</a> · <a href="#">Termini</a>
   </footer>
 </body>
 </html>
