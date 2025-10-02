@@ -1,66 +1,64 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>What?f - Home</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background-color: #0A0F14;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      flex-direction: column;
-    }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1418" />
+  <title>What?f – Home</title>
+  <meta name="description" content="Scopri il tuo What?f. Le porte che non hai aperto e quelle che aprirai." />
 
-    .hero {
-      width: 100%;
-      height: 100%;
-      background: url('/home-hero.png') no-repeat center center;
-      background-size: contain;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 1;
-    }
+  <!-- Icone PWA / Favicon (opzionali se già presenti) -->
+  <link rel="icon" href="/favicon.png" sizes="any" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
 
-    .button-container {
-      position: absolute;
-      bottom: 50px;
-      display: flex;
-      justify-content: center;
-      width: 100%;
-      z-index: 2;
-    }
-
-    .cta-button {
-      background-color: #00E0FF;
-      color: #000;
-      padding: 15px 40px;
-      font-size: 18px;
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: transform 0.2s ease;
-    }
-
-    .cta-button:hover {
-      transform: scale(1.05);
-    }
-  </style>
+  <!-- Stili globali -->
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <div class="hero"></div>
-  <div class="button-container">
-    <button class="cta-button" onclick="location.href='second.html'">
-      CHOOSE YOUR WAY
-    </button>
+  <div class="wrapper">
+
+    <!-- HERO -->
+    <main class="container">
+      <section class="hero" aria-label="Benvenuto su What?f">
+        <div class="hero-inner">
+
+          <!-- Titoli -->
+          <div></div> <!-- spacer top -->
+          <div class="center" style="text-align:center">
+            <p class="kicker">Benvenuto su</p>
+            <h1>What?f</h1>
+            <p class="subtitle">Le porte che non hai aperto e quelle che aprirai.</p>
+          </div>
+
+          <!-- Swipe hint -->
+          <div class="swipe-hint mt-16" aria-hidden="true">
+            <span>Swipe</span>
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span>→</span>
+          </div>
+
+          <!-- CTA -->
+          <a class="btn mt-24" href="/second.html" aria-label="Vai alla scelta">
+            CHOOSE YOUR WAY
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="page-footer">
+      <div class="container">
+        © <span id="y"></span> What?f ·
+        <a href="/privacy.html">Privacy</a> ·
+        <a href="/terms.html">Termini</a>
+      </div>
+    </footer>
+
   </div>
+
+  <script>
+    // anno footer
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
-
