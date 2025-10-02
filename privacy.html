@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f – Privacy</title>
+  <meta name="theme-color" content="#0A0F14" />
+  <style>
+    :root { --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA; --accent:#00E0FF; }
+    *{ box-sizing:border-box } html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    a{color:var(--accent);text-decoration:none}
+    header,main,footer{max-width:900px;margin:0 auto;padding:20px}
+    header h1{margin:18px 0 6px}
+    .tag{display:inline-block;background:#07242b;color:#8de9f6;border:1px solid #114652;padding:2px 8px;border-radius:999px;font-size:12px}
+    section{background:#0d141a;border:1px solid #132029;border-radius:14px;padding:18px;margin:14px 0}
+    h2{margin:0 0 8px;font-size:20px}
+    p,li{color:#d7e1e6;line-height:1.55}
+    ul{margin:8px 0 0 18px}
+    footer{color:var(--muted);text-align:center;padding-bottom:28px}
+    .back{display:inline-block;margin-top:10px}
+  </style>
+</head>
+<body>
+  <header>
+    <span class="tag">Ultimo aggiornamento: 2 ottobre 2025</span>
+    <h1>Informativa Privacy</h1>
+    <p class="back"><a href="./index.html">← Torna alla Home</a></p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Chi siamo</h2>
+      <p>What?f è un progetto sperimentale che fornisce contenuti generati dall’IA. Per contatti o richieste privacy scrivi a
+        <a href="mailto:info@whatifapp.example">info@whatifapp.example</a> (sostituisci con il tuo indirizzo).</p>
+    </section>
+
+    <section>
+      <h2>Dati trattati</h2>
+      <ul>
+        <li><strong>Dati che inserisci volontariamente</strong>: le domande/testi che scrivi nelle schermate.</li>
+        <li><strong>Dati tecnici minimi</strong>: log anonimi necessari al funzionamento dell’app (es. errori).</li>
+        <li><strong>Cookie</strong>: usiamo solo quelli tecnici/essenziali. Nessun tracciamento pubblicitario.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Finalità e base giuridica</h2>
+      <p>Le informazioni sono usate per erogare le funzionalità dell’app e migliorarne affidabilità e sicurezza. Base giuridica: esecuzione del servizio richiesto e legittimo interesse a mantenere l’app sicura.</p>
+    </section>
+
+    <section>
+      <h2>Conservazione</h2>
+      <p>I contenuti inseriti possono essere conservati per il tempo strettamente necessario a fornire la risposta e manutenere il servizio. Su richiesta, puoi chiederne la cancellazione.</p>
+    </section>
+
+    <section>
+      <h2>Condivisione</h2>
+      <p>Non vendiamo né affittiamo i tuoi dati. Possiamo usare fornitori (es. hosting) che trattano dati per nostro conto, con adeguate garanzie di sicurezza.</p>
+    </section>
+
+    <section>
+      <h2>Diritti</h2>
+      <p>Hai diritto di accesso, rettifica, cancellazione, limitazione, opposizione e portabilità (artt. 15–22 GDPR). Scrivi a
+        <a href="mailto:info@whatifapp.example">info@whatifapp.example</a> per esercitarli.</p>
+    </section>
+
+    <section>
+      <h2>Trasferimenti extra-UE</h2>
+      <p>Se usiamo servizi con server fuori dallo SEE, adottiamo misure adeguate (es. Clausole Contrattuali Standard).</p>
+    </section>
+
+    <section>
+      <h2>Sicurezza</h2>
+      <p>Adottiamo misure tecniche e organizzative per proteggere i dati da accessi non autorizzati, perdita o divulgazione.</p>
+    </section>
+
+    <section>
+      <h2>Modifiche all’informativa</h2>
+      <p>Potremmo aggiornare questa pagina. Ti invitiamo a consultarla periodicamente.</p>
+    </section>
+  </main>
+
+  <footer>
+    © 2025 What?f · <a href="./privacy.html">Privacy</a> · <a href="./terms.html">Termini</a>
+  </footer>
+
+  <script>
+    // disattiva eventuali vecchi service worker per evitare cache “appiccicose”
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations?.().then(r => r.forEach(x=>x.unregister())).catch(()=>{});
+      if (window.caches?.keys) { caches.keys().then(keys => keys.forEach(k => caches.delete(k))); }
+    }
+  </script>
+</body>
+</html>
