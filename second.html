@@ -1,136 +1,26 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f – Step 2</title>
-<meta name="theme-color" content="#0A0F14">
-<link rel="preload" as="image" href="/second-hero.png">
-
-<style>
-  :root{
-    --bg:#0A0F14; --fg:#E6EEF2; --muted:#A0B2BA;
-    --accent:#00E0FF; --accent-dark:#00B5CC;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{
-    min-height:100%; display:flex; flex-direction:column; align-items:center;
-    padding:18px 18px 100px; gap:10px;
-  }
-
-  /* HERO grande e centrale */
-  .hero-wrap{
-    width:100%; max-width:860px; display:flex; justify-content:center; align-items:center;
-    margin-top:6px;
-  }
-  .hero{
-    width:min(95vw, 820px); height:auto; display:block;
-    filter:drop-shadow(0 16px 36px rgba(0,0,0,.45));
-    border-radius:12px;
-  }
-  .fallback{display:none;color:var(--muted);margin-top:6px}
-
-  h1{
-    margin:10px 0 0; text-align:center; line-height:1.1;
-    font-size:clamp(26px,5.6vw,44px);
-  }
-  h1 .accent{ color:var(--accent);
-    text-shadow:0 0 8px rgba(0,224,255,.7), 0 0 16px rgba(0,224,255,.35);
-  }
-
-  /* Sottotitolo forte */
-  .subtitle{
-    max-width:900px; margin:8px auto 0; text-align:center;
-    font-size:clamp(16px,3.6vw,22px); line-height:1.35; color:#CFE7EE;
-  }
-  .subtitle strong{
-    color:var(--accent); font-weight:800;
-    text-shadow:0 0 8px rgba(0,224,255,.45);
-  }
-
-  /* CTA */
-  .cta-wrap{ width:100%; max-width:860px; display:flex; justify-content:center; margin-top:14px; }
-  .btn{
-    display:inline-block; min-width:min(92vw,700px); text-align:center;
-    padding:18px 22px; border-radius:28px; font-weight:900; letter-spacing:.5px;
-    color:#002129; background:linear-gradient(180deg,var(--accent) 0%, var(--accent-dark) 100%);
-    text-decoration:none; border:1px solid rgba(0,0,0,.18);
-    box-shadow:0 10px 30px rgba(0,224,255,.35), 0 2px 10px rgba(0,224,255,.28);
-  }
-  .btn:active{transform:translateY(1px)}
-
-  .swipe-hint{margin-top:6px;font-size:13px;color:var(--muted);opacity:.9}
-  .swipe-hint .arrow{display:inline-block;transform:translateY(2px);opacity:.85}
-
-  footer{position:fixed;left:0;right:0;bottom:10px;text-align:center;color:#9FB2BA;font-size:12px}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What?f – Step 2</title>
+  <link rel="preload" as="image" href="/second-hero.png">
+  <link rel="stylesheet" href="./style.css">
 </head>
-<body>
-  <main>
-    <div class="hero-wrap">
-      <img id="hero" class="hero" alt="What the F — Your Crazy Reality" loading="eager" decoding="async">
-    </div>
-    <div id="fallback" class="fallback">Caricamento immagine…</div>
+<body data-prev="./index.html" data-next="./third.html">
+  <main class="fade-in">
+    <div class="container">
+      <div class="hero"><img src="/second-hero.png" alt="What the F – your crazy reality"></div>
 
-    <h1>Scopri il tuo <span class="accent">What?f</span></h1>
-
-    <!-- Sottotitolo più “clou” -->
-    <p class="subtitle">
-      Ogni scelta apre una porta. <strong>E se ne avessi scelto un’altra?</strong>
-      Entra e guarda dove ti porta il tuo <strong>What?f</strong>.
-    </p>
-
-    <div class="cta-wrap">
-      <a id="start" class="btn" href="third.html" aria-label="Vai allo step 3">INIZIA</a>
-    </div>
-
-    <div class="swipe-hint">
-      Swipe <span class="arrow">←</span> per tornare, <span class="arrow">→</span> o <span class="arrow">↑</span> per continuare
+      <div class="stack">
+        <h1>Scopri il tuo <span class="glow">What?f</span></h1>
+        <h3><strong>Ogni scelta cambia la storia:</strong> prova il “se…” che non hai vissuto.</h3>
+        <a class="btn" href="./third.html">INIZIA</a>
+      </div>
     </div>
   </main>
 
   <footer>© 2025 What?f</footer>
-
-<script>
-  // carica immagine grande in modo robusto
-  (async function(){
-    const img = document.getElementById('hero');
-    const fb  = document.getElementById('fallback');
-    const tries = ['/second-hero.png','/public/second-hero.png','/assets/second-hero.png'];
-    for (const u of tries){
-      try{
-        const r = await fetch(u,{cache:'no-store'});
-        if (r.ok){ img.src = u + '?v=' + Date.now(); fb.style.display='none'; return; }
-      }catch(e){}
-    }
-    fb.textContent='Immagine non trovata.'; fb.style.display='block';
-  })();
-
-  // click CTA
-  document.getElementById('start').addEventListener('click', function(e){
-    e.preventDefault();
-    window.location.href = this.getAttribute('href');
-  });
-
-  // swipe: ← back | → o ↑ avanti
-  (function(){
-    let sx=0, sy=0, t=0;
-    const TH=40;
-    window.addEventListener('touchstart', (e)=>{
-      const p=e.touches[0]; sx=p.clientX; sy=p.clientY; t=Date.now();
-    }, {passive:true});
-    window.addEventListener('touchend', (e)=>{
-      const dt=Date.now()-t;
-      const p=e.changedTouches[0];
-      const dx=p.clientX-sx, dy=p.clientY-sy;
-      if (dt<800){
-        if (dx<-TH) window.location.href='index.html';           // swipe ←
-        else if (dx>TH || dy<-TH) window.location.href='third.html'; // → o ↑
-      }
-    }, {passive:true});
-  })();
-</script>
+  <script src="./main.js"></script>
 </body>
 </html>
