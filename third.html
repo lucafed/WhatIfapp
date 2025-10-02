@@ -1,82 +1,88 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>What?f – Domande</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f – Ora tocca a te</title>
+  <meta name="theme-color" content="#0A0F14" />
+  <link rel="preload" as="image" href="/third-hero.png" />
+  <style>
+    :root { --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA;
+            --accent:#00E0FF; --accent-dark:#00B5CC; }
+    *{ box-sizing:border-box }
+    html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
+    main{ min-height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding:20px; gap:14px; transition: opacity .45s ease, transform .45s ease; }
+    .fade-in{ opacity:0; transform:translateY(15px); animation:fadeIn 1.2s ease forwards }
+    .delay1{ animation-delay:.2s } .delay2{ animation-delay:.5s } .delay3{ animation-delay:.9s }
+    @keyframes fadeIn{ to{ opacity:1; transform:translateY(0) } }
+    .leaving main{ opacity:0; transform:translateY(10px); pointer-events:none }
+
+    .hero-img{ width:min(92vw,560px); height:auto; display:block; margin:0 auto 8px;
+      filter:drop-shadow(0 10px 28px rgba(0,0,0,.45)) }
+    .hero-fallback{ color:var(--muted); font-size:14px; display:none; margin-top:-6px }
+
+    h1{ margin:.25rem 0 0; font-size:clamp(28px,5.5vw,44px); line-height:1.1 }
+    p.lead{ color:var(--muted); margin:.25rem 0 0; font-size:clamp(16px,3.5vw,18px) }
+
+    .btn{ display:inline-block; text-decoration:none; background:var(--accent-dark);
+      color:#001f26; font-weight:700; padding:14px 22px; border-radius:28px;
+      box-shadow:0 0 12px rgba(0,181,204,.6), 0 0 24px rgba(0,181,204,.3);
+      transition:.2s }
+    .btn:hover{ filter:brightness(1.15) }
+    .btn:active{ transform:translateY(1px) }
+
+    .link-back{ position:fixed; top:12px; left:14px; color:var(--muted); text-decoration:none; font-weight:600 }
+    footer{ position:fixed; bottom:10px; left:0; right:0; text-align:center; color:var(--muted); font-size:12px }
+    footer a{ color:var(--accent); text-decoration:none }
+  </style>
 </head>
-<body class="page third">
-  <div class="container">
-    <h1>Passato o Futuro?<br><span class="highlight">Scopri il tuo What?f</span></h1>
+<body>
+  <a class="link-back" href="second.html" aria-label="Torna indietro">← Indietro</a>
 
-    <!-- Scelta scenario -->
-    <div class="card" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <span class="badge">Scenario</span>
-      <label style="display:inline-flex;gap:8px;align-items:center">
-        <input type="radio" name="mode" value="sliding" checked/> 🚪 Sliding Doors (realistico)
-      </label>
-      <label style="display:inline-flex;gap:8px;align-items:center">
-        <input type="radio" name="mode" value="wtf"/> 🌈 What the F?! (ironico)
-      </label>
-    </div>
+  <main>
+    <img id="hero" class="hero-img fade-in delay1" alt="Terza schermata What?f" loading="eager" decoding="async" />
+    <div id="heroFallback" class="hero-fallback">Caricamento immagine…</div>
 
-    <!-- Porta grande -->
-    <div class="door-wrap"><div id="door" class="door" aria-hidden="true"></div></div>
+    <h1 class="fade-in delay2">Ora tocca a te</h1>
+    <p class="lead fade-in delay2">Scegli, esplora, scopri come potrebbe andare.</p>
 
-    <!-- Dati base + domanda -->
-    <form id="questionForm" class="card">
-      <label for="name">Il tuo nome (facoltativo)</label>
-      <input id="name" placeholder="Es. Sara"/>
+    <!-- porta alla pagina successiva della flow (nel tuo repo è fourth.html) -->
+    <a href="fourth.html" id="cta" class="btn fade-in delay3">LET’S START</a>
+  </main>
 
-      <label for="gender">Genere (obbligatorio)</label>
-      <select id="gender" required>
-        <option value="">Seleziona…</option>
-        <option>uomo</option><option>donna</option><option>altro</option>
-      </select>
-
-      <label for="location">Dove ti trovi? (facoltativo)</label>
-      <input id="location" placeholder="Es. Roma/Milano"/>
-
-      <label for="explore">Vuoi esplorare (obbligatorio)</label>
-      <select id="explore" required>
-        <option value="">Seleziona…</option>
-        <option value="passato">il passato</option>
-        <option value="futuro">il futuro</option>
-      </select>
-
-      <label for="mainQuestion">La tua domanda What?f (obbligatorio)</label>
-      <textarea id="mainQuestion" required placeholder="Es. E se avessi accettato quel lavoro a Londra?"></textarea>
-
-      <button type="submit" class="door-btn">
-        <img src="assets/logo-whatif-28.png" alt="What?f"/> Apri la porta
-      </button>
-    </form>
-  </div>
+  <footer>© 2025 What?f · <a href="#">Privacy</a> · <a href="#">Termini</a></footer>
 
   <script>
-  const door = document.getElementById('door');
-  const form = document.getElementById('questionForm');
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations?.().then(rs => rs.forEach(r=>r.unregister())).catch(()=>{});
+      caches?.keys?.().then(keys => keys.forEach(k => caches.delete(k)));
+    }
+  </script>
 
-  form.addEventListener('submit', (e)=>{
-    e.preventDefault();
+  <script>
+    (async () => {
+      const hero = document.getElementById('hero');
+      const fb   = document.getElementById('heroFallback');
+      const tries = ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
+      for (const u of tries) {
+        try {
+          const r = await fetch(u, { cache:'no-store' });
+          if (r.ok) { hero.src = u + '?v=' + Date.now(); fb.style.display='none'; return; }
+        } catch {}
+      }
+      fb.textContent = 'Immagine non trovata.'; fb.style.display='block';
+    })();
+  </script>
 
-    const mode = document.querySelector('input[name="mode"]:checked').value;
-    const payload = {
-      mode,                                 // 'sliding' | 'wtf'
-      name: document.getElementById('name').value.trim(),
-      gender: document.getElementById('gender').value,
-      location: document.getElementById('location').value.trim(),
-      explore: document.getElementById('explore').value,
-      question: document.getElementById('mainQuestion').value.trim(),
-      time: new Date().toISOString()
-    };
-    if(!payload.gender || !payload.explore || !payload.question){ return; }
-
-    sessionStorage.setItem('whatf_input_v2', JSON.stringify(payload));
-    door.classList.add('open');
-    setTimeout(()=> location.href = 'fourth.html', 750);
-  });
+  <script>
+    const CTA = document.getElementById('cta');
+    CTA.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.body.classList.add('leaving');
+      setTimeout(()=>{ window.location.href = CTA.getAttribute('href'); }, 470);
+    });
   </script>
 </body>
 </html>
