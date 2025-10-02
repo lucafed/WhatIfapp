@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>What?f - Home</title>
   <style>
     body {
@@ -11,7 +11,6 @@
       background-color: #0A0F14;
       color: #FFFFFF;
       text-align: center;
-      overflow-x: hidden;
     }
     .container {
       display: flex;
@@ -22,18 +21,15 @@
       padding: 20px;
     }
     .hero-img {
-      display:block;
-      width:min(900px, 92vw);
-      max-width:92vw;
-      height:auto;
-      margin: 0 auto 24px auto;
-      border-radius:16px;
-      box-shadow: 0 10px 40px rgba(0,0,0,.35);
+      width: min(90%, 900px);
+      height: auto;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.4);
     }
     h1 {
       font-size: 1.8rem;
       margin: 10px 0;
-      color: #ffffff;
     }
     h1 span {
       color: #00E0FF;
@@ -68,8 +64,8 @@
 </head>
 <body>
   <div class="container">
-    <!-- 🔥 Immagine principale -->
-    <img id="hero-img" src="/home-hero.png?v=6" alt="Porta luminosa What?f" class="hero-img">
+    <!-- Immagine corretta -->
+    <img src="/home-hero.png" alt="Porta luminosa What?f" class="hero-img">
 
     <!-- Titolo -->
     <h1>BENVENUTO SU <span>What?f</span></h1>
@@ -83,7 +79,7 @@
   </footer>
 
   <script>
-    // Gestione swipe
+    // Swipe
     let startX = 0;
     document.addEventListener("touchstart", e => {
       startX = e.touches[0].clientX;
@@ -91,11 +87,7 @@
     document.addEventListener("touchend", e => {
       let endX = e.changedTouches[0].clientX;
       if (startX - endX > 50) {
-        // swipe sinistra -> vai avanti
         window.location.href = "/seconda.html";
-      } else if (endX - startX > 50) {
-        // swipe destra -> vai indietro
-        window.location.href = "/"; 
       }
     });
   </script>
