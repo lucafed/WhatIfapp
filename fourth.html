@@ -1,130 +1,64 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f – Parlami di te</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>What?f – Step 4</title>
 <meta name="theme-color" content="#0A0F14">
 <style>
-  :root{--bg:#0A0F14;--fg:#E6EEF2;--muted:#9FB1BA;--accent:#00E0FF;--accent2:#00B5CC}
+  :root{--bg:#0A0F14;--fg:#E6EEF2;--muted:#A0B2BA;--accent:#00E0FF;--accent2:#00B5CC}
   *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
     font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;padding:18px 16px 80px}
-  .wrap{width:min(860px,92vw)}
-  h1{margin:6px 0 8px;text-align:center;font-size:clamp(26px,5.6vw,42px)}
-  .group{margin:14px 0}
-  .label{display:block;margin:0 0 8px;font-weight:800}
-  .chips{display:flex;flex-wrap:wrap;gap:10px}
-  .chip{padding:10px 14px;border-radius:20px;background:#0f1a22;color:#cfe6ec;border:1px solid #153241;cursor:pointer;user-select:none}
-  .chip.active{background:linear-gradient(180deg,var(--accent) 0%,var(--accent2) 100%);color:#02242C;border-color:transparent}
-  .input,.textarea{width:100%;padding:12px 14px;background:#0f1a22;color:#eaf2f5;border:1px solid #153241;border-radius:12px}
-  .textarea{min-height:110px;resize:vertical}
-  .actions{display:flex;justify-content:center;margin-top:14px}
-  .btn{display:inline-block;text-decoration:none;font-weight:900;background:linear-gradient(180deg,var(--accent) 0%,var(--accent2) 100%);color:#02242C;border-radius:26px;padding:14px 20px;min-width:220px}
-  .hint{font-size:12px;color:#A0B2BA;margin-top:6px;text-align:center}
-  footer{position:fixed;left:0;right:0;bottom:10px;text-align:center;color:#A0B2BA;font-size:12px}
+  main{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;padding:18px 16px 84px}
+  .hero{width:min(92vw,780px);border-radius:18px;overflow:hidden;box-shadow:0 14px 36px rgba(0,0,0,.5)}
+  .hero img{display:block;width:100%;height:auto}
+  .fb{display:none;color:var(--muted);font-size:14px}
+  h2{margin:6px 0 0;text-align:center;font-size:clamp(24px,5.6vw,38px)}
+  .copy{max-width:820px;text-align:center;color:#C7DCE3;font-size:clamp(15px,3.8vw,19px)}
+  .btn{display:inline-block;text-decoration:none;font-weight:800;letter-spacing:.3px;
+      background:linear-gradient(180deg,var(--accent) 0%,var(--accent2) 100%);color:#02242C;border:0;border-radius:22px;
+      padding:12px 22px;min-width:220px;box-shadow:0 10px 28px rgba(0,181,204,.45)}
+  footer{position:fixed;left:0;right:0;bottom:10px;text-align:center;color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
   <main>
-    <div class="wrap">
-      <h1>Parlami di te</h1>
-
-      <div class="group">
-        <span class="label">Sesso</span>
-        <div class="chips" id="sex">
-          <span class="chip">Femmina</span>
-          <span class="chip active">Maschio</span>
-          <span class="chip">Altro</span>
-          <span class="chip">Preferisco non dirlo</span>
-        </div>
-      </div>
-
-      <div class="group">
-        <span class="label">In quale fase ti trovi?</span>
-        <div class="chips" id="phase">
-          <span class="chip">Studio</span>
-          <span class="chip active">Carriera</span>
-          <span class="chip">Relazioni</span>
-        </div>
-      </div>
-
-      <div class="group">
-        <span class="label">Cosa ti interessa esplorare?</span>
-        <div class="chips" id="topic">
-          <span class="chip active">Passato</span>
-          <span class="chip">Futuro</span>
-          <!-- rimosse “Whatif/What the F” qui -->
-        </div>
-      </div>
-
-      <div class="group">
-        <span class="label">Stile della risposta</span>
-        <div class="chips" id="tone">
-          <span class="chip active" data-style="whatif">Whatif</span>
-          <span class="chip" data-style="wtf">What the F</span>
-          <!-- senza “standard/ironico” -->
-        </div>
-      </div>
-
-      <div class="group">
-        <span class="label">Da dove vieni?</span>
-        <input class="input" id="city" placeholder="Es. L'Aquila">
-      </div>
-
-      <div class="group">
-        <span class="label">Vuoi aggiungere qualcosa? <small style="color:#A0B2BA">(opzionale)</small></span>
-        <input class="input" id="alias" placeholder="Come vuoi che ti chiami?">
-      </div>
-
-      <div class="group">
-        <span class="label">Note <small style="color:#A0B2BA">(opzionale)</small></span>
-        <textarea class="textarea" id="notes" placeholder="Obiettivi, contesto, limiti di tempo…"></textarea>
-      </div>
-
-      <div class="actions"><a id="send" class="btn" href="#">INVIA</a></div>
-      <div class="hint">Swipe ← per tornare alla pagina precedente</div>
+    <div class="hero">
+      <img id="hero" alt="Step 4" loading="eager" decoding="async"/>
     </div>
+    <div id="fb" class="fb">Immagine non trovata.</div>
+
+    <h2>Pronto a scegliere?</h2>
+    <div class="copy">Un ultimo sguardo prima di entrare nel tuo scenario.</div>
+
+    <a id="cta" class="btn" href="./fifth.html">CONTINUA</a>
+    <div style="font-size:12px;color:var(--muted)">Swipe ← per tornare, → o ↑ per continuare</div>
   </main>
   <footer>© 2025 What?f</footer>
 
-<script>
-  // Toggle chip singola selezione per gruppo
-  document.querySelectorAll('.chips').forEach(group=>{
-    group.addEventListener('click',e=>{
-      const c=e.target.closest('.chip'); if(!c) return;
-      [...group.children].forEach(x=>x.classList.remove('active'));
-      c.classList.add('active');
-    });
-  });
+  <script>
+    (async function(){
+      const img=document.getElementById('hero'), fb=document.getElementById('fb');
+      const tries=['/fourth-hero.png','/public/fourth-hero.png','/assets/fourth-hero.png','fourth-hero.png'];
+      for(const u of tries){try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){img.src=u+'?v='+Date.now(); fb.style.display='none'; return;}}catch(e){}}
+      fb.style.display='block';
+    })();
+  </script>
 
-  // Swipe: solo indietro da qui (finché non colleghiamo la pagina risultato)
-  (function(){
-    const PREV='third.html';
-    let sx=0, sy=0, t=0; const TH=50;
-    addEventListener('touchstart',e=>{const p=e.touches[0]; sx=p.clientX; sy=p.clientY; t=Date.now();},{passive:true});
-    addEventListener('touchend',e=>{
-      const p=e.changedTouches[0], dx=p.clientX-sx, dy=p.clientY-sy, dt=Date.now()-t;
-      if(dt<800 && dx>TH) location.href=PREV; // → torna indietro
-    },{passive:true});
-  })();
-
-  // (facoltativo) salva le scelte — utile per la pagina risultato in futuro
-  document.getElementById('send').addEventListener('click',e=>{
-    e.preventDefault();
-    const pick = (id)=>[...document.querySelectorAll('#'+id+' .chip')].find(x=>x.classList.contains('active'))?.textContent.trim()||null;
-    const data={
-      sesso: pick('sex'),
-      fase: pick('phase'),
-      interesse: pick('topic'),
-      tono: document.querySelector('#tone .chip.active')?.dataset.style || 'whatif',
-      citta: document.getElementById('city').value.trim(),
-      alias: document.getElementById('alias').value.trim(),
-      note:  document.getElementById('notes').value.trim()
-    };
-    localStorage.setItem('whatif_user_profile', JSON.stringify(data));
-    alert('Perfetto! Dati salvati. (Quando sei pronto, colleghiamo la pagina di risultato con la vera AI)');
-  });
-</script>
+  <script>
+    (function(){
+      const NEXT='fifth.html', PREV='third.html';
+      let sx=0,sy=0,t=0; const TH=50;
+      addEventListener('touchstart',e=>{const p=e.touches[0]; sx=p.clientX; sy=p.clientY; t=Date.now();},{passive:true});
+      addEventListener('touchend',e=>{
+        const p=e.changedTouches[0], dx=p.clientX-sx, dy=p.clientY-sy, dt=Date.now()-t;
+        if(dt<800){
+          if(dx<-TH || -dy>TH) location.href=NEXT;
+          if(dx>TH  || dy>TH)  location.href=PREV;
+        }
+      },{passive:true});
+      document.getElementById('cta').addEventListener('click',e=>{e.preventDefault();location.href=NEXT;});
+    })();
+  </script>
 </body>
 </html>
