@@ -1,53 +1,66 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>What?f – Step 2</title>
 <meta name="theme-color" content="#0A0F14">
 <style>
   :root{--bg:#0A0F14;--fg:#E6EEF2;--muted:#A0B2BA;--accent:#00E0FF;--accent2:#00B5CC}
   *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
     font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:12px;padding:16px 16px 90px}
-  .hero{width:min(96vw,880px);border-radius:18px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.5);margin-top:4px}
+  main{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;padding:18px 16px 84px}
+  .hero{width:min(92vw,720px);border-radius:18px;overflow:hidden;box-shadow:0 14px 36px rgba(0,0,0,.5)}
   .hero img{display:block;width:100%;height:auto}
-  h1{margin:12px 0 0;text-align:center;font-size:clamp(26px,5.8vw,46px)}
-  h1 .glow{color:var(--accent);text-shadow:0 0 8px rgba(0,224,255,.7),0 0 16px rgba(0,224,255,.4)}
-  .subtitle{max-width:900px;margin:2px auto 0;text-align:center;font-size:clamp(16px,3.8vw,22px);line-height:1.35;color:#CFE7EE}
-  .subtitle strong{color:var(--accent);text-shadow:0 0 8px rgba(0,224,255,.45)}
-  .btn{display:inline-block;text-decoration:none;font-weight:900;letter-spacing:.4px;
-    background:linear-gradient(180deg,var(--accent) 0%,var(--accent2) 100%);color:#02242C;border-radius:26px;padding:16px 22px;min-width:min(92vw,720px);box-shadow:0 10px 30px rgba(0,181,204,.45);margin-top:12px}
-  .btn:active{transform:translateY(1px)}
-  .hint{font-size:12px;color:var(--muted);opacity:.9;margin-top:6px}
+  .fb{display:none;color:var(--muted);font-size:14px}
+  h2{margin:6px 0 0;text-align:center;font-size:clamp(24px,5.2vw,38px)}
+  .sub{max-width:800px;text-align:center;color:#bfefff;font-size:clamp(16px,3.8vw,22px);line-height:1.35;margin-top:2px}
+  .copy{max-width:800px;text-align:center;color:var(--muted);font-size:clamp(14px,3.6vw,18px)}
+  .btn{display:inline-block;text-decoration:none;font-weight:800;letter-spacing:.3px;
+      background:linear-gradient(180deg,var(--accent) 0%,var(--accent2) 100%);color:#02242C;border:0;border-radius:22px;
+      padding:12px 22px;min-width:220px;box-shadow:0 10px 28px rgba(0,181,204,.45)}
   footer{position:fixed;left:0;right:0;bottom:10px;text-align:center;color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
   <main>
-    <div class="hero"><img src="/second-hero.png" alt="What the F – your crazy reality"></div>
-    <h1>Scopri il tuo <span class="glow">What?f</span></h1>
-    <p class="subtitle">Ogni scelta apre una porta. <strong>E se ne avessi scelta un’altra?</strong> Entra e guarda dove ti porta il tuo <strong>What?f</strong>.</p>
-    <a id="go" class="btn" href="./third.html">INIZIA</a>
-    <div class="hint">Swipe ← per tornare, → o ↑ per continuare</div>
+    <div class="hero">
+      <img id="hero" alt="What the F – cover" loading="eager" decoding="async"/>
+    </div>
+    <div id="fb" class="fb">Immagine non trovata.</div>
+
+    <h2>Scopri il tuo <span style="color:#00E0FF;text-shadow:0 0 10px rgba(0,224,255,.6)">What?f</span></h2>
+    <div class="sub">Le scelte ti definiscono. Cosa sarebbe successo se…?</div>
+    <div class="copy">Sfoglia possibilità. Cambia prospettiva. Gioca con gli scenari.</div>
+
+    <a id="cta" class="btn" href="./third.html">INIZIA</a>
+    <div style="font-size:12px;color:var(--muted)">Swipe ← per tornare, → o ↑ per continuare</div>
   </main>
   <footer>© 2025 What?f</footer>
 
-<script>
-  // Swipe: ← back, →/↑ avanti
-  (function(){
-    const PREV='index.html', NEXT='third.html';
-    let sx=0, sy=0, t=0; const TH=50;
-    addEventListener('touchstart',e=>{const p=e.touches[0]; sx=p.clientX; sy=p.clientY; t=Date.now();},{passive:true});
-    addEventListener('touchend',e=>{
-      const p=e.changedTouches[0], dx=p.clientX-sx, dy=p.clientY-sy, dt=Date.now()-t;
-      if(dt<800){
-        if(dx<-TH || -dy>TH) location.href=NEXT;
-        else if(dx>TH) location.href=PREV;
-      }
-    },{passive:true});
-    document.getElementById('go').addEventListener('click',e=>{e.preventDefault();location.href=NEXT;});
-  })();
-</script>
+  <script>
+    (async function(){
+      const img=document.getElementById('hero'), fb=document.getElementById('fb');
+      const tries=['/second-hero.png','/public/second-hero.png','/assets/second-hero.png','second-hero.png'];
+      for(const u of tries){try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){img.src=u+'?v='+Date.now(); fb.style.display='none'; return;}}catch(e){}}
+      fb.style.display='block';
+    })();
+  </script>
+
+  <script>
+    (function(){
+      const NEXT='third.html', PREV='index.html';
+      let sx=0,sy=0,t=0; const TH=50;
+      addEventListener('touchstart',e=>{const p=e.touches[0]; sx=p.clientX; sy=p.clientY; t=Date.now();},{passive:true});
+      addEventListener('touchend',e=>{
+        const p=e.changedTouches[0], dx=p.clientX-sx, dy=p.clientY-sy, dt=Date.now()-t;
+        if(dt<800){
+          if(dx<-TH || -dy>TH) location.href=NEXT;     // → o ↑
+          if(dx>TH  || dy>TH)  location.href=PREV;     // ← o ↓
+        }
+      },{passive:true});
+      document.getElementById('cta').addEventListener('click',e=>{e.preventDefault();location.href=NEXT;});
+    })();
+  </script>
 </body>
 </html>
