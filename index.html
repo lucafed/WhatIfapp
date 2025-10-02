@@ -6,17 +6,19 @@
   <title>What?f – Home</title>
   <meta name="theme-color" content="#0A0F14">
 
-  <!-- (Facoltativo) Se usi un CSS esterno, lascialo collegato -->
-  <!-- <link rel="stylesheet" href="style.css" /> -->
+  <!-- Preload immagine principale -->
+  <link rel="preload" as="image" href="/home-hero.png" />
 
   <style>
-    /* Stili minimi per rendere la pagina autonoma */
     :root { --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA; --accent:#00E0FF; }
-    *{ box-sizing: border-box }
+    *{ box-sizing:border-box }
     html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
-    main{ min-height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px }
-    .hero-img{ width:min(92vw,560px); height:auto; display:block; margin:0 auto 16px; filter:drop-shadow(0 10px 28px rgba(0,0,0,.45)) }
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
+    main{ min-height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding:20px; gap:10px }
+    .hero-img{ width:min(92vw,560px); height:auto; display:block; margin:0 auto 8px;
+      filter:drop-shadow(0 10px 28px rgba(0,0,0,.45)) }
+    .hero-fallback{ color:var(--muted); font-size:14px; display:none; margin-top:-6px }
     h1{ margin:.25rem 0 0; font-size:clamp(28px,5.5vw,44px); line-height:1.1 }
     .subtitle{ margin:.25rem 0 1rem; color:var(--muted); font-size:clamp(14px,3.2vw,18px) }
     .swipe{ margin:.5rem 0 1rem; color:var(--muted); font-weight:600 }
@@ -29,8 +31,9 @@
 </head>
 <body>
   <main>
-    <!-- L'immagine viene da /public/home-hero.png -->
-    <img src="/home-hero.png" alt="Porta luminosa What?f" class="hero-img" loading="eager" decoding="async" />
+    <!-- L’immagine verrà impostata via JS, così possiamo gestire fallback/cache -->
+    <img id="hero" class="hero-img" alt="Porta luminosa What?f" loading="eager" decoding="async" />
+    <div id="heroFallback" class="hero-fallback">Caricamento immagine…</div>
 
     <h1>BENVENUTO SU <span style="color:var(--accent)">What?f</span></h1>
     <p class="subtitle">Le porte che non hai aperto e quelle che aprirai.</p>
@@ -42,27 +45,53 @@
 
   <footer>© 2025 What?f · <a href="#">Privacy</a> · <a href="#">Termini</a></footer>
 
-  <!-- Disattiva vecchi Service Worker (es. Flutter) e pulisce cache -->
+  <!-- Spegni vecchi service worker e pulisci cache (evita asset fantasma) -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations?.().then(regs => regs.forEach(r => r.unregister())).catch(()=>{});
+      navigator.serviceWorker.getRegistrations?.().then(r => r.forEach(x=>x.unregister())).catch(()=>{});
       if (window.caches?.keys) { caches.keys().then(keys => keys.forEach(k => caches.delete(k))); }
     }
   </script>
 
-  <!-- Swipe sinistra = vai a second.html | Freccia destra (desktop) = avanti -->
+  <!-- Caricamento robusto dell'immagine + swipe avanti -->
   <script>
+    (async function loadHero(){
+      const hero = document.getElementById('hero');
+      const fb = document.getElementById('heroFallback');
+
+      const tries = [
+        '/home-hero.png',           // Vercel: /public → /
+        '/public/home-hero.png',    // fallback
+        '/assets/home-hero.png'     // fallback ulteriore
+      ];
+
+      for (const u of tries) {
+        try {
+          const r = await fetch(u, { cache:'no-store' });
+          if (r.ok) {
+            hero.src = u + '?v=' + Date.now(); // cache-buster
+            fb.style.display = 'none';
+            return;
+          }
+        } catch(e) {}
+      }
+      // se siamo qui, non l'abbiamo trovata
+      fb.textContent = 'Immagine non trovata. Verifica il percorso e il nome file.';
+      fb.style.display = 'block';
+    })();
+
+    // Swipe: dalla home andiamo solo AVANTI (sinistra → seconda pagina)
     (function(){
-      const next = () => location.href = 'second.html';
+      const goNext = () => location.href = 'second.html';
       let x0=0, y0=0, t0=0;
       addEventListener('touchstart', e => {
         const t = e.changedTouches[0]; x0=t.clientX; y0=t.clientY; t0=Date.now();
       }, {passive:true});
       addEventListener('touchend', e => {
         const t = e.changedTouches[0], dx=t.clientX-x0, dy=Math.abs(t.clientY-y0), dt=Date.now()-t0;
-        if (dx < -60 && dy < 50 && dt < 700) next(); // swipe a sinistra
+        if (dx < -60 && dy < 50 && dt < 700) goNext(); // swipe a sinistra = avanti
       });
-      addEventListener('keydown', e => { if (e.key === 'ArrowRight') next(); });
+      addEventListener('keydown', e => { if (e.key === 'ArrowRight') goNext(); });
     })();
   </script>
 </body>
