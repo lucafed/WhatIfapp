@@ -1,82 +1,89 @@
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background-color: #0A0F14;
-  color: #FFFFFF;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+:root{
+  --bg:#0A0F14; --panel:#0E141A; --muted:#9FB1BA; --text:#EAF2F5;
+  --accent:#00E0FF; --accent-2:#00B5CC; --shadow:rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font:400 16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+}
+main{
+  min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+  padding:18px 16px 120px; /* spazio sotto per bottone+footer */
+}
+.container{
+  width:min(980px,92vw); margin:0 auto;
+  display:flex; flex-direction:column; align-items:center; gap:18px;
 }
 
-.container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
+/* hero / immagini */
+.hero{
+  width:min(980px,92vw);
+  border-radius:18px; overflow:hidden;
+  box-shadow:0 14px 36px var(--shadow);
+  background:#081017;
+}
+.hero img{display:block; width:100%; height:auto}
+
+/* titoli & sottotitoli */
+h1,h2,h3{margin:0; text-align:center}
+h1{font-size:clamp(28px,6vw,42px)}
+h2{font-size:clamp(22px,5vw,32px)}
+h3{font-size:clamp(18px,4vw,22px); color:var(--muted)}
+.glow{
+  color:var(--accent);
+  text-shadow:0 0 10px rgba(0,224,255,.8), 0 0 24px rgba(0,224,255,.5);
 }
 
-.hero {
-  margin-bottom: 20px;
+/* bottone principale */
+.btn{
+  display:inline-block; text-decoration:none; font-weight:800; letter-spacing:.2px;
+  background:linear-gradient(180deg,var(--accent) 0%, var(--accent-2) 100%);
+  color:#02242C; border:0; border-radius:26px;
+  padding:12px 22px; min-width:220px; text-align:center; box-shadow:0 10px 28px rgba(0,181,204,.45);
+  transition:transform .12s ease, filter .2s ease;
+}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:translateY(1px)}
+/* home: un filo più compatto */
+#cta{font-size:15px; padding:12px 20px; min-width:200px; border-radius:24px}
+
+/* barra disclaimer */
+.disclaimer{
+  margin-top:10px; color:var(--muted); font-size:13px; text-align:center;
+}
+.disclaimer a{color:var(--accent); text-decoration:none}
+.disclaimer a:hover{text-decoration:underline}
+
+/* footer */
+footer{
+  position:fixed; left:0; right:0; bottom:8px;
+  text-align:center; color:var(--muted); font-size:12px;
 }
 
-.hero-img {
-  width: 80%;
-  max-width: 350px;
-  height: auto;
-  margin: 0 auto 20px;
-  display: block;
-}
+/* layout second/third più compatti in basso */
+.stack{display:flex; flex-direction:column; align-items:center; gap:10px}
 
-h1 {
-  font-size: 1.8rem;
-  font-weight: bold;
-  margin: 10px 0;
-  color: #00E0FF;
-}
+/* swipe hint opzionale */
+.hint{margin-top:-6px; font-size:13px; color:var(--muted)}
 
-h1 span {
-  font-size: 2.2rem;
-  color: #1AFFD5;
-}
+/* transizioni pagina */
+.fade-in{opacity:0; transform:translateY(12px); animation:fade .7s ease forwards}
+@keyframes fade{to{opacity:1; transform:none}}
+.leaving main{opacity:0; transform:translateY(8px); transition:.35s ease}
 
-p {
-  font-size: 1rem;
-  color: #A0B2BA;
-  margin-bottom: 20px;
+/* form (ask.html) */
+.form{width:min(820px,92vw); margin:0 auto}
+.group{margin:14px 0}
+.label{display:block; font-weight:700; margin:0 0 8px}
+.chips{display:flex; gap:10px; flex-wrap:wrap}
+.chip{
+  padding:10px 14px; border-radius:20px; background:#0f1a22; color:#cfe6ec;
+  border:1px solid #153241; cursor:pointer; user-select:none
 }
-
-.swipe {
-  font-size: 1rem;
-  margin: 15px 0;
-  color: #A0B2BA;
+.chip.active{background:var(--accent); color:#02242C; border-color:transparent}
+.input, .textarea{
+  width:100%; padding:12px 14px; background:#0f1a22; color:#eaf2f5; border:1px solid #153241; border-radius:12px;
 }
-
-.btn {
-  display: inline-block;
-  padding: 15px 25px;
-  font-size: 1rem;
-  font-weight: bold;
-  color: #000;
-  background: #00E0FF;
-  border-radius: 30px;
-  text-decoration: none;
-  transition: background 0.3s;
-}
-
-.btn:hover {
-  background: #1AFFD5;
-}
-
-footer {
-  padding: 10px;
-  font-size: 0.8rem;
-  color: #A0B2BA;
-}
-
-footer a {
-  color: #00E0FF;
-  text-decoration: none;
-}
+.textarea{min-height:110px; resize:vertical}
