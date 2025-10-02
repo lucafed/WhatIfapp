@@ -4,57 +4,70 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>What?f - Home</title>
+  <link rel="stylesheet" href="style.css">
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       background-color: #0A0F14;
-      color: #FFFFFF;
+      color: #fff;
       text-align: center;
     }
+
     .container {
       display: flex;
       flex-direction: column;
-      align-items: center;
       justify-content: center;
-      min-height: 100vh;
+      align-items: center;
+      height: 100vh;
       padding: 20px;
     }
+
     .hero-img {
-      width: min(90%, 900px);
-      height: auto;
+      max-width: 320px;
+      width: 80%;
       margin-bottom: 20px;
       border-radius: 12px;
-      box-shadow: 0 10px 40px rgba(0,0,0,.4);
+      box-shadow: 0 0 20px rgba(0, 224, 255, 0.4);
     }
+
     h1 {
       font-size: 1.8rem;
-      margin: 10px 0;
+      margin-bottom: 20px;
     }
+
     h1 span {
       color: #00E0FF;
+      text-shadow: 0 0 8px #00E0FF;
     }
+
     .btn {
-      background-color: #00B5CC;
-      color: white;
-      border: none;
-      padding: 14px 28px;
+      display: inline-block;
+      padding: 14px 30px;
       margin-top: 20px;
-      border-radius: 30px;
       font-size: 1.1rem;
+      font-weight: bold;
+      color: #fff;
+      background: #00B5CC;
+      border: none;
+      border-radius: 30px;
       cursor: pointer;
-      box-shadow: 0 0 15px rgba(0,224,255,0.5);
+      text-decoration: none;
+      box-shadow: 0 0 15px rgba(0, 224, 255, 0.5);
       transition: all 0.3s ease;
     }
+
     .btn:hover {
-      background-color: #00E0FF;
-      box-shadow: 0 0 25px rgba(0,224,255,0.8);
+      background: #00E0FF;
+      box-shadow: 0 0 20px rgba(0, 224, 255, 0.8);
     }
+
     footer {
-      margin-top: 40px;
+      margin-top: 30px;
       font-size: 0.8rem;
       color: #A0B2BA;
     }
+
     footer a {
       color: #00E0FF;
       text-decoration: none;
@@ -64,14 +77,12 @@
 </head>
 <body>
   <div class="container">
-    <!-- Immagine corretta -->
+    <!-- ✅ immagine presa da public/ -->
     <img src="/home-hero.png" alt="Porta luminosa What?f" class="hero-img">
 
-    <!-- Titolo -->
     <h1>BENVENUTO SU <span>What?f</span></h1>
 
-    <!-- Pulsante -->
-    <button class="btn">CHOOSE YOUR WAY</button>
+    <a href="second.html" class="btn">CHOOSE YOUR WAY</a>
   </div>
 
   <footer>
@@ -79,16 +90,12 @@
   </footer>
 
   <script>
-    // Swipe
+    // ✅ Swipe avanti/indietro
     let startX = 0;
-    document.addEventListener("touchstart", e => {
-      startX = e.touches[0].clientX;
-    });
+    document.addEventListener("touchstart", e => startX = e.touches[0].clientX);
     document.addEventListener("touchend", e => {
       let endX = e.changedTouches[0].clientX;
-      if (startX - endX > 50) {
-        window.location.href = "/seconda.html";
-      }
+      if (startX - endX > 50) window.location.href = "second.html";   // swipe left
     });
   </script>
 </body>
