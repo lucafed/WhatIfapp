@@ -1,97 +1,215 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>What?f – Home</title>
   <meta name="theme-color" content="#0A0F14">
-  <link rel="preload" as="image" href="/home-hero.png" />
+  <link rel="preload" as="image" href="/home-hero.png">
+
   <style>
-    :root{--bg:#0A0F14;--fg:#E6EEF2;--muted:#A0B2BA;--accent:#00E0FF;--accent2:#00B5CC}
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-      gap:16px;padding:20px 18px 96px}
-    .hero{width:min(92vw,720px);border-radius:18px;overflow:hidden;box-shadow:0 14px 36px rgba(0,0,0,.5)}
-    .hero img{display:block;width:100%;height:auto}
-    .hero-fb{font-size:14px;color:var(--muted);text-align:center;display:none}
-    h1{margin:6px 0 0;text-align:center;font-size:clamp(26px,5.4vw,44px)}
-    h1 .glow{color:var(--accent);text-shadow:0 0 8px rgba(0,224,255,.7),0 0 16px rgba(0,224,255,.4)}
-    .btn{display:inline-block;text-decoration:none;font-weight:800;letter-spacing:.3px;
-      background:linear-gradient(180deg,var(--accent) 0%,var(--accent2) 100%);color:#02242C;border:0;border-radius:22px;
-      padding:12px 20px;min-width:230px;box-shadow:0 10px 28px rgba(0,181,204,.45)}
-    .btn:active{transform:translateY(1px)}
-    .hint{font-size:12px;color:var(--muted);opacity:.9}
-    .disclaimer{font-size:12px;color:var(--muted);text-align:center}
-    .disclaimer a{color:var(--accent);text-decoration:none}
-    footer{position:fixed;left:0;right:0;bottom:10px;text-align:center;color:var(--muted);font-size:12px}
+    :root{
+      --bg:#0A0F14; --fg:#E6EEF2; --muted:#A0B2BA;
+      --accent:#00E0FF; --accent2:#00B5CC; --ink:#02242C;
+      --panel: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.10));
+      --shadow: 0 16px 44px rgba(0,0,0,.48)
+    }
+    /* Tema chiaro (switchabile) */
+    :root[data-theme="light"]{
+      --bg:#F4FAFC; --fg:#132229; --muted:#516771;
+      --accent:#00B5CC; --accent2:#0097AD; --ink:#00181F;
+      --panel: linear-gradient(180deg, rgba(0,0,0,.03), rgba(0,0,0,.06));
+      --shadow: 0 16px 44px rgba(0,0,0,.10)
+    }
+
+    *{ box-sizing:border-box }
+    html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
+
+    /* Layout full-screen senza buchi */
+    .page{
+      min-height:100svh;
+      display:grid;
+      grid-template-rows: auto 1fr auto auto; /* header / contenuto / disclaimer / footer */
+      align-items:center;
+      justify-items:center;
+      gap:14px;
+      padding:18px 16px 14px;
+    }
+    .header{
+      width:100%; max-width:1100px;
+      display:flex; align-items:center; justify-content:flex-end;
+    }
+    .theme-toggle{
+      cursor:pointer; user-select:none; font-size:14px; color:var(--muted);
+      padding:8px 12px; border-radius:999px; background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+    }
+    :root[data-theme="light"] .theme-toggle{ background:rgba(0,0,0,.04); border-color:rgba(0,0,0,.06) }
+    .theme-toggle b{ color:var(--accent) }
+
+    /* Contenuto centrale: hero + titolo + CTA centrati e “elastici” */
+    .center{
+      width:100%; max-width:1100px;
+      display:grid;
+      grid-template-rows: auto auto auto;
+      justify-items:center;
+      gap:16px;
+      align-content:center;
+    }
+
+    .hero{
+      width:min(96vw, 1020px);
+      border-radius:22px; overflow:hidden;
+      background:var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .hero img{ display:block; width:100%; height:auto }
+    .hero-fb{ font-size:14px; color:var(--muted); text-align:center; display:none; }
+
+    h1{
+      margin:0; text-align:center; line-height:1.06;
+      font-size: clamp(28px, 6.2vw, 52px);
+    }
+    h1 .glow{
+      color:var(--accent);
+      text-shadow: 0 0 10px rgba(0,224,255,.7), 0 0 22px rgba(0,224,255,.45);
+    }
+
+    .btn{
+      display:inline-block; text-decoration:none; text-align:center;
+      font-weight:900; letter-spacing:.35px;
+      color:var(--ink); border:0; border-radius:26px;
+      padding:13px 22px; min-width:min(88vw, 320px);
+      background: linear-gradient(180deg, var(--accent) 0%, var(--accent2) 100%);
+      box-shadow: 0 12px 30px rgba(0,181,204,.45), 0 2px 10px rgba(0,181,204,.35);
+      transition: transform .12s ease, filter .25s ease;
+    }
+    .btn:active{ transform: translateY(1px) }
+
+    /* Disclaimer sotto il contenuto, ma sopra il footer */
+    .disclaimer{
+      font-size:13px; color:var(--muted); text-align:center; padding:2px 0 6px;
+    }
+    .disclaimer a{ color:var(--accent); text-decoration:none }
+
+    footer{
+      width:100%; text-align:center; color:var(--muted); font-size:12px;
+    }
+
+    /* Tip swipe discreto */
+    .swipe-tip{ font-size:12px; color:var(--muted); text-align:center }
   </style>
 </head>
 <body>
-  <main>
-    <div class="hero">
-      <img id="hero" alt="Scopri il tuo What?f" loading="eager" decoding="async" />
+  <div class="page">
+    <!-- Header con toggle tema (vale per tutta l’app) -->
+    <div class="header">
+      <div id="themeBtn" class="theme-toggle">Tema: <b id="themeLabel">Chiaro</b></div>
     </div>
-    <div id="heroFallback" class="hero-fb">Caricamento immagine…</div>
 
-    <h1>BENVENUTO SU <span class="glow">What?f</span></h1>
+    <!-- Centro: hero + titolo + CTA in colonna, centrati -->
+    <div class="center">
+      <div class="hero">
+        <img id="hero" alt="Scopri il tuo What?f" loading="eager" decoding="async">
+      </div>
+      <div id="heroFallback" class="hero-fb">Caricamento immagine…</div>
 
-    <a id="cta" class="btn" href="./second.html">CHOOSE YOUR WAY</a>
-    <div class="hint">Swipe ↑ o → per continuare</div>
+      <h1>BENVENUTO SU <span class="glow">What?f</span></h1>
 
-    <p class="disclaimer">
-      Continuando accetti la nostra <a href="./privacy.html">Privacy Policy</a>
-      e i <a href="./terms.html">Termini d’uso</a>.
-    </p>
-  </main>
-  <footer>© 2025 What?f</footer>
+      <a id="cta" class="btn" href="./second.html">CHOOSE YOUR WAY</a>
+      <div class="swipe-tip">Swipe ↑ o → per continuare</div>
+    </div>
 
-  <!-- Pulisce eventuali vecchi SW/cache -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations?.().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
-      if (window.caches?.keys) caches.keys().then(ks=>ks.forEach(k=>caches.delete(k)));
-    }
-  </script>
+    <!-- Disclaimer (se già hai Privacy/Terms funzionanti lascialo così) -->
+    <div class="disclaimer">
+      Continuando accetti la nostra <a href="./privacy.html">Privacy Policy</a> e i <a href="./terms.html">Termini d’uso</a>.
+    </div>
 
-  <!-- Caricamento robusto immagine (metodo “che funzionava”) -->
+    <footer>© 2025 What?f</footer>
+  </div>
+
+  <!-- 1) Loader immagine ROBUSTO (stesso metodo che ti funziona) -->
   <script>
     (async function loadHero(){
       const img = document.getElementById('hero');
       const fb  = document.getElementById('heroFallback');
       const tries = [
-        '/home-hero.png',          // public/
-        '/public/home-hero.png',   // fallback
-        '/assets/home-hero.png',   // eventuale vecchio percorso
-        'home-hero.png'            // root (se mai)
+        '/home-hero.png',         // public/
+        '/public/home-hero.png',  // fallback
+        '/assets/home-hero.png',  // eventuale cartella storica
+        'home-hero.png'           // root
       ];
       for (const u of tries) {
         try {
           const r = await fetch(u, { cache:'no-store' });
           if (r.ok) {
-            img.src = u + '?v=' + Date.now();   // cache-busting
+            img.src = u + '?v=' + Date.now();  // cache-busting
             fb.style.display = 'none';
             return;
           }
-        } catch(e){}
+        } catch(e) {}
       }
       fb.textContent = 'Immagine non trovata.';
       fb.style.display = 'block';
     })();
   </script>
 
-  <!-- Swipe avanti dalla home -->
+  <!-- 2) Toggle tema CHIARO/SCURO (persistente su tutta l’app) -->
   <script>
     (function(){
-      const NEXT='second.html';
-      let sx=0, sy=0, t=0; const TH=50;
-      addEventListener('touchstart',e=>{const p=e.touches[0]; sx=p.clientX; sy=p.clientY; t=Date.now();},{passive:true});
-      addEventListener('touchend',e=>{
-        const p=e.changedTouches[0], dx=p.clientX-sx, dy=p.clientY-sy, dt=Date.now()-t;
-        if(dt<800 && (dx<-TH || -dy>TH)) location.href=NEXT;
-      },{passive:true});
-      document.getElementById('cta').addEventListener('click',e=>{e.preventDefault();location.href=NEXT;});
+      const KEY='whatif-theme';
+      // ripristina tema salvato
+      const saved = localStorage.getItem(KEY);
+      if (saved) document.documentElement.setAttribute('data-theme', saved);
+
+      function setLabel(){
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        document.getElementById('themeLabel').textContent = isLight ? 'Scuro' : 'Chiaro';
+      }
+      function toggle(){
+        const cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        const next = (cur === 'light') ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem(KEY, next);
+        setLabel();
+      }
+      document.getElementById('themeBtn').addEventListener('click', toggle);
+      setLabel();
+    })();
+  </script>
+
+  <!-- 3) Swipe meno sensibile (soglia alta + tempo max) -->
+  <script>
+    (function(){
+      const NEXT='./second.html';
+      let sx=0, sy=0, t0=0;
+      const THRESHOLD=90;   // piu “pesante”: devi davvero voler fare swipe
+      const MAXTIME=900;    // deve essere un gesto rapido
+
+      addEventListener('touchstart', e=>{
+        const p=e.touches[0]; sx=p.clientX; sy=p.clientY; t0=Date.now();
+      }, {passive:true});
+
+      addEventListener('touchend', e=>{
+        const p=e.changedTouches[0];
+        const dx=p.clientX - sx, dy=p.clientY - sy, dt=Date.now() - t0;
+        if (dt>MAXTIME) return;
+        const adx=Math.abs(dx), ady=Math.abs(dy);
+
+        // privilegia lo swipe più deciso e sopra soglia
+        if (adx>ady && adx>THRESHOLD) {
+          if (dx<0) location.href=NEXT; // → (verso sinistra) va avanti
+        } else if (ady>adx && ady>THRESHOLD) {
+          if (dy<0) location.href=NEXT; // ↑ va avanti
+        }
+      }, {passive:true});
+
+      // click sul bottone
+      document.getElementById('cta').addEventListener('click', (e)=>{
+        e.preventDefault();
+        location.href = NEXT;
+      });
     })();
   </script>
 </body>
