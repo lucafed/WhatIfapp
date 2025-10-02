@@ -4,85 +4,65 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f – Home</title>
+  <meta name="theme-color" content="#0A0F14">
 
-  <!-- Se hai già style.css lascialo così -->
-  <link rel="stylesheet" href="style.css" />
+  <!-- (Facoltativo) Se usi un CSS esterno, lascialo collegato -->
+  <!-- <link rel="stylesheet" href="style.css" /> -->
 
-  <!-- Solo micro-fix per l’immagine: non tocca il resto dello stile -->
   <style>
-    .hero-img{
-      max-width: 680px; width: min(88vw, 680px); height: auto;
-      display:block; margin: 0 auto 1rem auto; filter: drop-shadow(0 8px 24px rgba(0,0,0,.35));
-    }
-    .swipe-row{ display:flex; align-items:center; gap:.5rem; justify-content:center; margin:.75rem 0 1.25rem }
-    .swipe-dot{ width:8px; height:8px; border-radius:999px; background:#4fd1d9; opacity:.4 }
-    .swipe-dot.active{ opacity:1 }
-    .hidden{ display:none !important }
+    /* Stili minimi per rendere la pagina autonoma */
+    :root { --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA; --accent:#00E0FF; }
+    *{ box-sizing: border-box }
+    html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
+    main{ min-height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px }
+    .hero-img{ width:min(92vw,560px); height:auto; display:block; margin:0 auto 16px; filter:drop-shadow(0 10px 28px rgba(0,0,0,.45)) }
+    h1{ margin:.25rem 0 0; font-size:clamp(28px,5.5vw,44px); line-height:1.1 }
+    .subtitle{ margin:.25rem 0 1rem; color:var(--muted); font-size:clamp(14px,3.2vw,18px) }
+    .swipe{ margin:.5rem 0 1rem; color:var(--muted); font-weight:600 }
+    .btn{ display:inline-block; text-decoration:none; background:var(--accent); color:#001f26;
+      font-weight:800; padding:14px 22px; border-radius:28px; box-shadow:0 10px 28px rgba(0,224,255,.25) }
+    .btn:active{ transform:translateY(1px) }
+    footer{ position:fixed; bottom:10px; left:0; right:0; text-align:center; color:var(--muted); font-size:12px }
+    footer a{ color:var(--accent); text-decoration:none }
   </style>
 </head>
 <body>
+  <main>
+    <!-- L'immagine viene da /public/home-hero.png -->
+    <img src="/home-hero.png" alt="Porta luminosa What?f" class="hero-img" loading="eager" decoding="async" />
 
-  <main class="container">
-    <!-- HERO IMAGE -->
-    <!-- Percorso assoluto: il file è in /public/home-hero.png e sarà servito come /home-hero.png -->
-    <img
-      src="/home-hero.png"
-      alt="Porta luminosa What?f"
-      class="hero-img"
-      loading="eager"
-      decoding="async"
-      onerror="this.classList.add('hidden')" />
-
-    <!-- Titoli -->
-    <h1 class="title">BENVENUTO SU<br><span class="brand">What?f</span></h1>
+    <h1>BENVENUTO SU <span style="color:var(--accent)">What?f</span></h1>
     <p class="subtitle">Le porte che non hai aperto e quelle che aprirai.</p>
 
-    <!-- Swipe indicatori -->
-    <div class="swipe-row" aria-hidden="true">
-      <span class="swipe-dot active"></span>
-      <span class="swipe-dot"></span>
-      <span class="swipe-dot"></span>
-      <span aria-label="Swipe" style="margin-left:.25rem">SWIPE ➡️</span>
-    </div>
+    <div class="swipe" aria-hidden="true">⬅️ SWIPE per continuare ➡️</div>
 
-    <!-- CTA -->
-    <p style="text-align:center;margin:0">
-      <a href="second.html" class="btn btn-primary" style="text-decoration:none">CHOOSE YOUR WAY</a>
-    </p>
+    <a href="second.html" class="btn">CHOOSE YOUR WAY</a>
   </main>
 
-  <footer class="footer">
-    <small>© 2025 What?f · <a href="privacy.html">Privacy</a> · <a href="terms.html">Termini</a></small>
-  </footer>
+  <footer>© 2025 What?f · <a href="#">Privacy</a> · <a href="#">Termini</a></footer>
 
-  <noscript>Per un'esperienza completa attiva JavaScript.</noscript>
-
+  <!-- Disattiva vecchi Service Worker (es. Flutter) e pulisce cache -->
   <script>
-    // --- Swipe: vai a second.html se l’utente scorre verso destra ---
-    (function () {
-      const goNext = () => { window.location.href = 'second.html'; };
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations?.().then(regs => regs.forEach(r => r.unregister())).catch(()=>{});
+      if (window.caches?.keys) { caches.keys().then(keys => keys.forEach(k => caches.delete(k))); }
+    }
+  </script>
 
-      // Touch (mobile)
-      let startX = null, startY = null, t0 = 0;
-      const onTouchStart = (e) => {
-        const t = e.changedTouches[0];
-        startX = t.clientX; startY = t.clientY; t0 = Date.now();
-      };
-      const onTouchEnd = (e) => {
-        const t = e.changedTouches[0];
-        const dx = t.clientX - startX;
-        const dy = Math.abs(t.clientY - startY);
-        const dt = Date.now() - t0;
-        // swipe orizzontale deciso, non troppo lento, poco verticale
-        if (dx > 60 && dy < 50 && dt < 700) goNext();
-      };
-      document.addEventListener('touchstart', onTouchStart, {passive:true});
-      document.addEventListener('touchend', onTouchEnd, {passive:true});
-
-      // Tastiera freccia destra
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowRight') goNext();
+  <!-- Swipe sinistra = vai a second.html | Freccia destra (desktop) = avanti -->
+  <script>
+    (function(){
+      const next = () => location.href = 'second.html';
+      let x0=0, y0=0, t0=0;
+      addEventListener('touchstart', e => {
+        const t = e.changedTouches[0]; x0=t.clientX; y0=t.clientY; t0=Date.now();
+      }, {passive:true});
+      addEventListener('touchend', e => {
+        const t = e.changedTouches[0], dx=t.clientX-x0, dy=Math.abs(t.clientY-y0), dt=Date.now()-t0;
+        if (dx < -60 && dy < 50 && dt < 700) next(); // swipe a sinistra
       });
+      addEventListener('keydown', e => { if (e.key === 'ArrowRight') next(); });
     })();
   </script>
 </body>
