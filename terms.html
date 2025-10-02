@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f – Termini d’uso</title>
+  <meta name="theme-color" content="#0A0F14" />
+  <style>
+    :root { --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA; --accent:#00E0FF; }
+    *{ box-sizing:border-box } html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    a{color:var(--accent);text-decoration:none}
+    header,main,footer{max-width:900px;margin:0 auto;padding:20px}
+    header h1{margin:18px 0 6px}
+    .tag{display:inline-block;background:#07242b;color:#8de9f6;border:1px solid #114652;padding:2px 8px;border-radius:999px;font-size:12px}
+    section{background:#0d141a;border:1px solid #132029;border-radius:14px;padding:18px;margin:14px 0}
+    h2{margin:0 0 8px;font-size:20px}
+    p,li{color:#d7e1e6;line-height:1.55}
+    ul{margin:8px 0 0 18px}
+    footer{color:var(--muted);text-align:center;padding-bottom:28px}
+    .back{display:inline-block;margin-top:10px}
+  </style>
+</head>
+<body>
+  <header>
+    <span class="tag">Ultimo aggiornamento: 2 ottobre 2025</span>
+    <h1>Termini di Servizio</h1>
+    <p class="back"><a href="./index.html">← Torna alla Home</a></p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Uso del servizio</h2>
+      <ul>
+        <li>Usa l’app in modo lecito, senza violare diritti di terzi.</li>
+        <li>Non caricare contenuti illegali, offensivi, discriminatori o che contengano dati sensibili di terzi senza consenso.</li>
+        <li>Possiamo sospendere l’accesso in caso di abusi o rischi per la sicurezza.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Contenuti generati dall’IA</h2>
+      <p>Le risposte sono prodotte da sistemi di intelligenza artificiale e possono essere inaccurate o incomplete. Non costituiscono consulenza professionale (medica, legale, finanziaria, ecc.). Usa sempre il tuo giudizio.</p>
+    </section>
+
+    <section>
+      <h2>Proprietà intellettuale</h2>
+      <p>Interfaccia, testi, elementi grafici e marchi di What?f sono protetti dalle leggi vigenti. I contenuti inseriti da te restano tuoi; ci concedi una licenza limitata per erogare il servizio.</p>
+    </section>
+
+    <section>
+      <h2>Limitazione di responsabilità</h2>
+      <p>Il servizio è fornito “così com’è”. Nei limiti di legge, decliniamo responsabilità per danni indiretti o consequenziali derivanti dall’uso o dall’impossibilità d’uso dell’app.</p>
+    </section>
+
+    <section>
+      <h2>Privacy</h2>
+      <p>Il trattamento dei dati è descritto nella <a href="./privacy.html">Privacy Policy</a>.</p>
+    </section>
+
+    <section>
+      <h2>Modifiche</h2>
+      <p>Possiamo aggiornare questi Termini. L’uso continuato del servizio dopo le modifiche implica l’accettazione dei nuovi termini.</p>
+    </section>
+
+    <section>
+      <h2>Legge applicabile e contatti</h2>
+      <p>Questi Termini sono regolati dalla legge italiana. Per contatti: <a href="mailto:info@whatifapp.example">info@whatifapp.example</a> (sostituisci con il tuo indirizzo).</p>
+    </section>
+  </main>
+
+  <footer>
+    © 2025 What?f · <a href="./privacy.html">Privacy</a> · <a href="./terms.html">Termini</a>
+  </footer>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations?.().then(r => r.forEach(x=>x.unregister())).catch(()=>{});
+      if (window.caches?.keys) { caches.keys().then(keys => keys.forEach(k => caches.delete(k))); }
+    }
+  </script>
+</body>
+</html>
