@@ -6,148 +6,120 @@
   <title>What?f - Home</title>
   <style>
     body {
-      margin: 0;
       font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
       background-color: #0A0F14;
       color: #fff;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      overflow: hidden;
     }
-
-    .slider {
-      display: flex;
-      width: 300%;
-      height: 100%;
-      transition: transform 0.5s ease;
-    }
-
-    .slide {
-      flex: 0 0 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+    .container {
       text-align: center;
+      max-width: 400px;
       padding: 20px;
     }
-
-    .slide img {
-      max-width: 250px;
+    img {
+      max-width: 100%;
+      height: auto;
       margin-bottom: 20px;
     }
-
     h1 {
       color: #00E0FF;
     }
-
-    p {
-      color: #A0B2BA;
-      margin-bottom: 20px;
-    }
-
-    .btn {
+    .button {
+      display: inline-block;
       background-color: #00E0FF;
       color: #000;
       font-weight: bold;
       padding: 15px 25px;
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
       margin-top: 20px;
+      border-radius: 30px;
+      text-decoration: none;
     }
-
-    .controls {
-      position: absolute;
-      bottom: 80px;
-      display: flex;
-      justify-content: center;
-      width: 100%;
-      gap: 15px;
-      font-size: 18px;
-    }
-
-    footer {
-      position: absolute;
-      bottom: 10px;
-      font-size: 12px;
+    .swipe {
+      margin-top: 20px;
+      font-size: 14px;
       color: #A0B2BA;
     }
-
-    footer a {
-      color: #00E0FF;
-      text-decoration: none;
-      margin: 0 5px;
+    footer {
+      margin-top: 30px;
+      font-size: 12px;
+      color: #A0B2BA;
     }
   </style>
 </head>
 <body>
-  <div class="slider" id="slider">
-    <!-- Slide 1 -->
+  <div class="container">
+    <!-- Pagina 1 -->
     <div class="slide">
-      <img src="home-hero.png" alt="Porta luminosa What?f">
-      <h1>BENVENUTO SU<br><span style="color:#00E0FF;">What?f</span></h1>
+      <img src="/home-hero.png" alt="Porta luminosa What?f">
+      <h1>BENVENUTO SU<br>What?f</h1>
       <p>Le porte che non hai aperto e quelle che aprirai.</p>
-      <button class="btn" onclick="nextSlide()">CHOOSE YOUR WAY</button>
+      <div class="swipe">⬅️ SWIPE ➡️</div>
+      <a href="#" class="button">CHOOSE YOUR WAY</a>
     </div>
 
-    <!-- Slide 2 -->
-    <div class="slide">
-      <img src="second-hero.png" alt="Seconda schermata">
-      <h1>Scopri il tuo <span style="color:#00E0FF;">What?f</span></h1>
-      <p>Le scelte ci definiscono. Cosa sarebbe successo se…?</p>
-      <button class="btn" onclick="nextSlide()">INIZIA</button>
+    <!-- Pagina 2 -->
+    <div class="slide" style="display:none;">
+      <img src="/second-hero.png" alt="Seconda schermata">
+      <h1>Scopri il tuo What?f</h1>
+      <p>Le scelte ci definiscono. Cosa sarebbe successo se...?</p>
+      <a href="#" class="button">INIZIA</a>
+      <div class="swipe">⬅️ SWIPE ➡️</div>
     </div>
 
-    <!-- Slide 3 -->
-    <div class="slide">
-      <img src="third-hero.png" alt="Terza schermata">
-      <h1>Scegli come vivere <span style="color:#00E0FF;">What?f</span></h1>
-      <p>Modalità normale o ironica? Tocca per decidere.</p>
-      <button class="btn">ENTRA</button>
+    <!-- Pagina 3 -->
+    <div class="slide" style="display:none;">
+      <img src="/third-hero.png" alt="Terza schermata">
+      <h1>Il tuo viaggio</h1>
+      <p>Passato, futuro o... What the F?</p>
+      <a href="#" class="button">CONTINUA</a>
+      <div class="swipe">⬅️ SWIPE ➡️</div>
     </div>
+
+    <footer>
+      © 2025 What?f · <a href="#" style="color:#00E0FF;">Privacy</a> · <a href="#" style="color:#00E0FF;">Termini</a>
+    </footer>
   </div>
-
-  <!-- Controlli swipe -->
-  <div class="controls">
-    <span onclick="prevSlide()">⬅️ SWIPE ➡️</span>
-  </div>
-
-  <footer>
-    © 2025 What?f · <a href="#">Privacy</a> · <a href="#">Termini</a>
-  </footer>
 
   <script>
-    let currentSlide = 0;
-    const slider = document.getElementById('slider');
-    const totalSlides = document.querySelectorAll('.slide').length;
+    const slides = document.querySelectorAll(".slide");
+    let current = 0;
 
     function showSlide(index) {
-      if (index >= totalSlides) currentSlide = 0;
-      else if (index < 0) currentSlide = totalSlides - 1;
-      else currentSlide = index;
-
-      slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+      slides.forEach((s, i) => s.style.display = i === index ? "block" : "none");
     }
 
-    function nextSlide() {
-      showSlide(currentSlide + 1);
-    }
-
-    function prevSlide() {
-      showSlide(currentSlide - 1);
-    }
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowRight") {
+        current = (current + 1) % slides.length;
+        showSlide(current);
+      }
+      if (e.key === "ArrowLeft") {
+        current = (current - 1 + slides.length) % slides.length;
+        showSlide(current);
+      }
+    });
 
     // Swipe touch per mobile
     let startX = 0;
-    slider.addEventListener("touchstart", e => startX = e.touches[0].clientX);
-    slider.addEventListener("touchend", e => {
+    document.addEventListener("touchstart", e => startX = e.touches[0].clientX);
+    document.addEventListener("touchend", e => {
       let endX = e.changedTouches[0].clientX;
-      if (startX - endX > 50) nextSlide();
-      else if (endX - startX > 50) prevSlide();
+      if (startX - endX > 50) { // swipe left
+        current = (current + 1) % slides.length;
+        showSlide(current);
+      }
+      if (endX - startX > 50) { // swipe right
+        current = (current - 1 + slides.length) % slides.length;
+        showSlide(current);
+      }
     });
+
+    showSlide(current);
   </script>
 </body>
 </html>
