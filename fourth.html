@@ -1,173 +1,214 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>What?f – Risultato</title>
-  <link rel="stylesheet" href="style.css"/>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What?f – Parlami di te</title>
+<meta name="theme-color" content="#0A0F14">
+<style>
+  :root{--bg:#0A0F14;--card:#0F1620;--fg:#fff;--muted:#A0B2BA;--accent:#00E0FF;--accent2:#00B5CC;--chip:#0c131b;--chipOn:#07242a}
+  *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{min-height:100svh;display:flex;flex-direction:column;gap:14px;padding:18px;max-width:980px;margin:0 auto}
+  h1{font-size:clamp(22px,4.8vw,32px);margin:6px 0 2px}
+  p.sub{color:var(--muted);margin:0 0 8px}
+  .card{background:var(--card);border-radius:18px;padding:16px 14px;margin-top:6px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
+  .row{display:flex;flex-wrap:wrap;gap:10px}
+  .group{margin:10px 0 4px}
+  .label{font-weight:700;margin:0 0 10px;color:#cfe7ef}
+  .chip{border:1px solid rgba(0,224,255,.25);background:var(--chip);color:#cfe7ef;border-radius:999px;padding:10px 14px;font-weight:600;cursor:pointer}
+  .chip[aria-pressed="true"]{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#001c22;border-color:transparent;box-shadow:0 0 0 1px rgba(0,224,255,.35) inset}
+  .chip-toggle{background:var(--chip);border:1px solid rgba(0,224,255,.25);border-radius:12px;display:flex;gap:8px;padding:6px}
+  .chip-toggle button{flex:1;min-width:120px;border-radius:8px;padding:10px 12px;font-weight:800;color:#9dc8cf;background:transparent;border:0}
+  .chip-toggle button.active{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#001c22;box-shadow:0 0 0 1px rgba(0,224,255,.35) inset}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width:720px){.two{grid-template-columns:1fr}}
+  input[type="text"], textarea{width:100%;background:#0b1219;color:var(--fg);border:1px solid rgba(0,224,255,.25);border-radius:12px;padding:12px 14px;font-size:15px}
+  textarea{min-height:90px;resize:vertical}
+  .actions{display:flex;justify-content:center;margin:8px 0 4px}
+  .btn{display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#001c22;font-weight:800;padding:14px 22px;border-radius:28px;min-width:min(88vw,520px);letter-spacing:.3px;text-decoration:none;text-align:center}
+  footer{color:#7f97a1;text-align:center;font-size:12px;margin:12px 0}
+  a{color:var(--accent);text-decoration:none}
+</style>
 </head>
-<body class="page fourth">
-  <div class="container">
-    <h1>✨ Il tuo What?f ✨</h1>
-    <div id="modeBadge" class="badge">Modalità: –</div>
+<body>
+<main>
+  <header>
+    <h1>Parlami di te</h1>
+    <p class="sub">Così ti risponderò in modo più preciso e personale.</p>
+  </header>
 
-    <!-- follow-up dinamici -->
-    <div id="followUp" class="followup-section" hidden>
-      <h3 style="margin-top:0">Per capirti meglio</h3>
-      <form id="fuForm"></form>
-      <div class="actions">
-        <button id="sendFu">Invia risposte</button>
+  <section class="card">
+    <div class="group">
+      <div class="label">Chi sei?</div>
+      <div class="row" data-key="chi">
+        <button class="chip" type="button">Studente</button>
+        <button class="chip" type="button">Lavoratore</button>
+        <button class="chip" type="button">Creativo</button>
+        <button class="chip" type="button">Altro</button>
       </div>
     </div>
 
-    <!-- risposta finale -->
-    <div id="aiResponse" class="response-box" style="margin-top:14px">
-      Sto preparando la tua risposta…
+    <div class="group two">
+      <div>
+        <div class="label">Età</div>
+        <div class="row" data-key="eta">
+          <button class="chip" type="button">&lt;18</button>
+          <button class="chip" type="button">18–25</button>
+          <button class="chip" type="button">26–35</button>
+          <button class="chip" type="button">36–50</button>
+          <button class="chip" type="button">&gt;50</button>
+        </div>
+      </div>
+      <div>
+        <div class="label">Sesso</div>
+        <div class="row" data-key="sesso">
+          <button class="chip" type="button">Femmina</button>
+          <button class="chip" type="button">Maschio</button>
+          <button class="chip" type="button">Altro</button>
+          <button class="chip" type="button">Preferisco non dirlo</button>
+        </div>
+      </div>
     </div>
 
-    <!-- reazioni -->
-    <div class="reactions">
-      <button id="likeBtn">👍 <span class="count" id="likeCount">0</span></button>
-      <button id="dislikeBtn">👎 <span class="count" id="dislikeCount">0</span></button>
+    <div class="group">
+      <div class="label">In quale fase ti trovi?</div>
+      <div class="row" data-key="fase">
+        <button class="chip" type="button">Studio</button>
+        <button class="chip" type="button">Carriera</button>
+        <button class="chip" type="button">Relazioni</button>
+      </div>
     </div>
 
-    <!-- azioni -->
+    <div class="group">
+      <div class="label">Cosa ti interessa esplorare?</div>
+      <div class="row" data-key="interessi">
+        <button class="chip" type="button">Passato</button>
+        <button class="chip" type="button">Futuro</button>
+        <button class="chip" type="button">What if</button>
+        <button class="chip" type="button">What the f</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="label">Stile della risposta</div>
+      <div class="chip-toggle" id="toneToggle" role="tablist" aria-label="Stile risposta">
+        <button type="button" data-tone="whatif" class="active" role="tab" aria-selected="true">Whatif (standard)</button>
+        <button type="button" data-tone="wtf" role="tab" aria-selected="false">What the F (ironico)</button>
+      </div>
+    </div>
+
+    <div class="group two">
+      <div>
+        <div class="label">Da dove vieni?</div>
+        <input type="text" id="citta" placeholder="Città / Paese" autocomplete="on">
+      </div>
+      <div>
+        <div class="label">Vuoi aggiungere qualcosa?</div>
+        <input type="text" id="alias" placeholder="(Opzionale) Come vuoi che ti chiami?">
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="label">Note (opzionale)</div>
+      <textarea id="note" placeholder="Obiettivi, contesto, limiti di tempo…"></textarea>
+    </div>
+
     <div class="actions">
-      <button onclick="history.back()">🔙 Torna indietro</button>
-      <button onclick="location.href='index.html'">🏠 Home</button>
-      <button id="shareBtn">📤 Condividi</button>
+      <a class="btn" href="fifth.html" id="go">CONTINUA</a>
     </div>
-  </div>
+  </section>
 
-  <script>
-  const ASK_URL = '/.netlify/functions/ask';
-  const input = JSON.parse(sessionStorage.getItem('whatf_input_v2')||'null');
-  const modeBadge = document.getElementById('modeBadge');
-  const fuBox = document.getElementById('followUp');
-  const fuForm = document.getElementById('fuForm');
-  const aiBox = document.getElementById('aiResponse');
-  const sendFuBtn = document.getElementById('sendFu');
-  const likeBtn = document.getElementById('likeBtn');
-  const dislikeBtn = document.getElementById('dislikeBtn');
-  const likeCount = document.getElementById('likeCount');
-  const dislikeCount = document.getElementById('dislikeCount');
+  <footer>© 2025 What?f · <a href="#">Privacy</a> · <a href="#">Termini</a></footer>
+</main>
 
-  const esc = s => (s||'').replace(/[&<>"]/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m]));
-  function showError(where, msg){ aiBox.innerHTML = `<b>Errore AI (${where}):</b><br><code style="white-space:pre-wrap">${esc(msg)}</code>`; }
-
-  if(!input){ aiBox.textContent = 'Sessione vuota. Torna indietro.'; }
-  else {
-    modeBadge.textContent = 'Modalità: ' + (input.mode==='wtf' ? 'What the F?!' : 'Sliding Doors');
-    getFollowups();
-  }
-
-  // 1) Follow-up
-  async function getFollowups(){
-    aiBox.textContent = 'Sto preparando le domande di chiarimento…';
-    try{
-      const res = await fetch(ASK_URL, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ step:'followups', input })
+<script>
+  // gestione chip (singola selezione per gruppi specifici, multipla per interessi)
+  function setupChips(){
+    document.querySelectorAll('.row').forEach(row=>{
+      const key=row.dataset.key;
+      const isMulti = key==='interessi';
+      row.addEventListener('click', (e)=>{
+        const b=e.target.closest('.chip'); if(!b) return;
+        if(isMulti){
+          b.setAttribute('aria-pressed', b.getAttribute('aria-pressed')==='true' ? 'false':'true');
+        }else{
+          row.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed','false'));
+          b.setAttribute('aria-pressed','true');
+        }
+        saveDraft();
       });
-      const data = await res.json();
-      if(!res.ok) throw new Error(data.error || res.statusText);
-      renderFollowups(data.followups || []);
-    }catch(err){ showError('followups', err.message); }
-  }
-
-  function renderFollowups(list){
-    if(!list.length){
-      aiBox.textContent = 'Nessuna domanda aggiuntiva. Genero la risposta…';
-      return getFinal({});
-    }
-    fuForm.innerHTML = '';
-    list.slice(0,3).forEach((q,i)=>{
-      const id = 'fu'+i;
-      fuForm.insertAdjacentHTML('beforeend', `
-        <label for="${id}">${esc(q)}</label>
-        <input id="${id}" placeholder="Rispondi brevemente"/>
-      `);
     });
-    fuBox.hidden = false;
-    aiBox.textContent = 'Rispondi rapidamente (3 domande).';
   }
 
-  // 2) final
-  sendFuBtn.addEventListener('click', ()=>{
-    const answers = [];
-    fuForm.querySelectorAll('input').forEach((el,i)=> answers.push({ qIndex:i, a: el.value.trim() }));
-    getFinal({ answers });
+  // toggle tono
+  const toggle = document.getElementById('toneToggle');
+  toggle.addEventListener('click', (e)=>{
+    const b=e.target.closest('button'); if(!b) return;
+    toggle.querySelectorAll('button').forEach(x=>{x.classList.remove('active');x.setAttribute('aria-selected','false');});
+    b.classList.add('active'); b.setAttribute('aria-selected','true');
+    saveDraft();
   });
 
-  async function getFinal(extra){
-    fuBox.hidden = true;
-    aiBox.textContent = 'Sto preparando la tua risposta…';
+  function collectData(){
+    const data={};
+    document.querySelectorAll('.row').forEach(row=>{
+      const key=row.dataset.key;
+      const selected=[...row.querySelectorAll('.chip[aria-pressed="true"]')].map(b=>b.textContent.trim());
+      data[key]= selected.length ? (key==='interessi'? selected : selected[0]) : null;
+    });
+    data.tone = toggle.querySelector('.active')?.dataset.tone || 'whatif';
+    data.citta = document.getElementById('citta').value.trim();
+    data.alias = document.getElementById('alias').value.trim();
+    data.note  = document.getElementById('note').value.trim();
+    return data;
+  }
+
+  function saveDraft(){
+    localStorage.setItem('whatif_user_profile', JSON.stringify(collectData()));
+  }
+
+  function restore(){
+    const raw=localStorage.getItem('whatif_user_profile'); if(!raw) return;
     try{
-      const res = await fetch(ASK_URL, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ step:'final', input, extra })
+      const data=JSON.parse(raw)||{};
+      // chip
+      document.querySelectorAll('.row').forEach(row=>{
+        const key=row.dataset.key, val=data[key];
+        if(!val) return;
+        const values = Array.isArray(val)? val : [val];
+        row.querySelectorAll('.chip').forEach(b=>{
+          const on = values.includes(b.textContent.trim());
+          b.setAttribute('aria-pressed', on?'true':'false');
+        });
       });
-      const data = await res.json();
-      if(!res.ok) throw new Error(data.error || res.statusText);
-
-      const score = data.score!=null ? Math.round(data.score*100) : null;
-      aiBox.innerHTML =
-        `<div style="font-size:18px;margin-bottom:8px">${esc(data.answer||'Nessuna risposta.')}</div>` +
-        (score!=null ? `<div class="badge">Confidenza ${score}%</div>` : '');
-
-      // storico + init likes per questa risposta (chiave = hash semplice)
-      const key = getAnswerKey(data.answer);
-      initReactions(key);
-      try{
-        const k='whatf_history_v2';
-        const arr = JSON.parse(localStorage.getItem(k)||'[]');
-        arr.unshift({ ts:Date.now(), input, answer:data.answer, score:data.score, key });
-        localStorage.setItem(k, JSON.stringify(arr.slice(0,50)));
-      }catch(_){}
-    }catch(err){ showError('final', err.message); }
+      // tone
+      if(data.tone){
+        toggle.querySelectorAll('button').forEach(x=>{
+          const on = x.dataset.tone===data.tone;
+          x.classList.toggle('active', on);
+          x.setAttribute('aria-selected', on?'true':'false');
+        });
+      }
+      // text
+      if(data.citta) document.getElementById('citta').value=data.citta;
+      if(data.alias) document.getElementById('alias').value=data.alias;
+      if(data.note)  document.getElementById('note').value=data.note;
+    }catch(e){}
   }
 
-  // --- Like/Dislike locali ---
-  function getAnswerKey(txt){ return 'ans_'+btoa(unescape(encodeURIComponent((txt||'').slice(0,120)))); }
-  function initReactions(key){
-    likeBtn.dataset.key = key; dislikeBtn.dataset.key = key;
-    const k = 'whatf_react_'+key;
-    const s = JSON.parse(localStorage.getItem(k)||'{"like":0,"dislike":0}');
-    likeCount.textContent = s.like; dislikeCount.textContent = s.dislike;
-  }
-  function updateReaction(key, type){
-    const k = 'whatf_react_'+key;
-    const s = JSON.parse(localStorage.getItem(k)||'{"like":0,"dislike":0}');
-    s[type] = (s[type]||0)+1;
-    localStorage.setItem(k, JSON.stringify(s));
-    likeCount.textContent = s.like; dislikeCount.textContent = s.dislike;
-  }
-  likeBtn.addEventListener('click', ()=>{ const key=likeBtn.dataset.key; if(key) updateReaction(key,'like'); });
-  dislikeBtn.addEventListener('click', ()=>{ const key=dislikeBtn.dataset.key; if(key) updateReaction(key,'dislike'); });
-
-  // --- Condivisione ---
-  document.getElementById('shareBtn').addEventListener('click', async ()=>{
-    const txt = aiBox.innerText.trim();
-    const text = `Il mio What?f (${input.mode==='wtf'?'What the F?!':'Sliding Doors'}):\n\n${txt}\n\n#whatf`;
-    const url = location.href;
-    if (navigator.share){ try{ await navigator.share({ title:'What?f', text, url }); return; }catch(_){ } }
-    const encodedText = encodeURIComponent(text);
-    const encodedUrl = encodeURIComponent(url);
-    const links = [
-      [`https://wa.me/?text=${encodedText}`, 'WhatsApp'],
-      [`https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`, 'Telegram'],
-      [`https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`, 'X/Twitter'],
-      [`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, 'Facebook'],
-      [`mailto:?subject=Il mio What?f&body=${encodedText}`, 'Email']
-    ];
-    let html = '<div class="card"><b>Condividi:</b><br>';
-    links.forEach(([href,label])=>{ html += `<a href="${href}" target="_blank" style="margin-right:10px">${label}</a>`; });
-    html += '</div>';
-    aiBox.insertAdjacentHTML('beforeend', html);
-    try{ await navigator.clipboard.writeText(text+'\n'+url); alert('Testo copiato!'); }catch(_){}
+  document.getElementById('go').addEventListener('click', (e)=>{
+    // obblighiamo almeno uno tra "interessi" o "fase"
+    const d=collectData();
+    if(!d.fase && !(Array.isArray(d.interessi) && d.interessi.length)){
+      e.preventDefault();
+      alert('Scegli almeno una voce tra “Fase” o “Interessi”.');
+      return;
+    }
+    saveDraft();
   });
-  </script>
+
+  // init
+  setupChips(); restore();
+</script>
 </body>
 </html>
