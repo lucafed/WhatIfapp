@@ -1,97 +1,100 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>What?f - Home</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f – Home</title>
+
+  <!-- Se hai già style.css lascialo così -->
+  <link rel="stylesheet" href="style.css" />
+
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #0A0F14;
-      color: #FFFFFF;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      text-align: center;
-    }
-
-    .hero-img {
-      width: 250px;
-      margin-bottom: 20px;
-    }
-
-    h1 {
-      font-size: 2em;
-      margin: 0;
-    }
-
-    h2 {
-      font-size: 1.5em;
-      color: #00E0FF;
-      margin: 10px 0;
-    }
-
-    p {
-      font-size: 1.1em;
-      color: #A0B2BA;
-      margin-bottom: 20px;
-    }
-
-    .swipe {
-      margin: 15px 0;
-      font-size: 1em;
-      color: #A0B2BA;
-    }
-
-    .btn {
-      display: inline-block;
-      padding: 15px 30px;
-      background-color: #00E0FF;
-      color: #000;
-      font-weight: bold;
-      text-decoration: none;
-      border-radius: 25px;
-      transition: 0.3s;
-    }
-
-    .btn:hover {
-      background-color: #00B5CC;
-    }
-
-    footer {
-      position: absolute;
-      bottom: 15px;
-      font-size: 0.8em;
-      color: #A0B2BA;
-    }
-
-    footer a {
-      color: #00E0FF;
-      text-decoration: none;
-    }
+    /* Ritocchi minimi per garantire che tutto si veda anche senza style.css */
+    :root { --c-bg:#0e151a; --c-fg:#d9f0f5; --c-accent:#22d3ee; --c-sub:#9cc7d1; }
+    body{margin:0;background:var(--c-bg);color:var(--c-fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial}
+    .wrap{max-width:840px;margin:0 auto;padding:32px 16px;min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+    h1{font-size:clamp(34px,6vw,56px);line-height:1.05;margin:8px 0 6px}
+    .brand{color:var(--c-accent)}
+    .subtitle{color:var(--c-sub);max-width:32ch;margin:8px auto 12px;font-size:clamp(16px,3.2vw,20px)}
+    .hero-img{width:min(90vw,560px);height:auto;display:block;margin:8px auto 6px;filter:drop-shadow(0 10px 30px rgba(0,0,0,.45))}
+    .swipe{display:inline-flex;gap:.5rem;align-items:center;opacity:.85;color:var(--c-sub);margin:10px 0 18px;font-weight:600;letter-spacing:.02em}
+    .btn{display:inline-block;background:var(--c-accent);color:#04212a;text-decoration:none;font-weight:800;
+         padding:18px 26px;border-radius:36px;box-shadow:0 10px 28px rgba(34,211,238,.25)}
+    .btn:active{transform:translateY(1px)}
+    .dots{display:inline-flex;gap:6px;margin-left:.4rem}
+    .dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.18)}
+    .dot.active{background:var(--c-accent)}
+    footer{margin-top:28px;opacity:.7;font-size:14px}
+    a.legal{color:var(--c-sub);text-decoration:none;margin:0 .5rem}
   </style>
 </head>
 <body>
-  <!-- Immagine della porta -->
-  <img src="/home-hero.png" alt="Porta luminosa What?f" class="hero-img">
+  <main class="wrap" id="page">
+    <!-- HERO -->
+    <img src="home-hero.png" alt="Porta luminosa What?f" class="hero-img" loading="eager" decoding="async" />
 
-  <!-- Titoli -->
-  <h1>BENVENUTO SU</h1>
-  <h2>What?f</h2>
-  <p>Le porte che non hai aperto e quelle che aprirai.</p>
+    <h2 class="subtitle">BENVENUTO SU</h2>
+    <h1> <span class="brand">What?f</span> </h1>
+    <p class="subtitle">Le porte che non hai aperto e quelle che aprirai.</p>
 
-  <!-- Swipe -->
-  <div class="swipe">⬅️ SWIPE ➡️</div>
+    <!-- Swipe hint -->
+    <div class="swipe" aria-hidden="true">
+      ⬅️ SWIPE ➡️
+      <span class="dots" role="presentation">
+        <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
+      </span>
+    </div>
 
-  <!-- Pulsante -->
-  <a href="second.html" class="btn">CHOOSE YOUR WAY</a>
+    <!-- CTA -->
+    <a href="second.html" class="btn" id="cta">CHOOSE YOUR WAY</a>
 
-  <!-- Footer -->
-  <footer>
-    © 2025 What?f · <a href="#">Privacy</a> · <a href="#">Termini</a>
-  </footer>
+    <footer>
+      <span>© 2025 What?f</span>
+      <a class="legal" href="#">Privacy</a>·
+      <a class="legal" href="#">Termini</a>
+    </footer>
+  </main>
+
+  <script>
+    // ------- Swipe to navigate -> second.html -------
+    (function () {
+      const goNext = () => window.location.href = "second.html";
+
+      // Supporto touch/pointer
+      let startX = 0, startY = 0, isTouch = false;
+      const THRESHOLD = 48; // px
+
+      const onStart = (x, y) => { startX = x; startY = y; isTouch = true; };
+      const onEnd = (x, y) => {
+        if (!isTouch) return;
+        const dx = x - startX, dy = y - startY;
+        // swipe orizzontale deciso
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > THRESHOLD) {
+          if (dx < 0) goNext(); // swipe a sinistra => vai avanti
+        }
+        isTouch = false;
+      };
+
+      // Touch
+      document.addEventListener("touchstart", e => {
+        const t = e.changedTouches[0];
+        onStart(t.clientX, t.clientY);
+      }, {passive:true});
+
+      document.addEventListener("touchend", e => {
+        const t = e.changedTouches[0];
+        onEnd(t.clientX, t.clientY);
+      });
+
+      // Pointer (alcuni Android invianno pointer invece di touch)
+      document.addEventListener("pointerdown", e => onStart(e.clientX, e.clientY));
+      document.addEventListener("pointerup",   e => onEnd(e.clientX, e.clientY));
+
+      // Tastiera (desktop): freccia destra = avanti
+      document.addEventListener("keydown", e => {
+        if (e.key === "ArrowRight") goNext();
+      });
+    })();
+  </script>
 </body>
 </html>
