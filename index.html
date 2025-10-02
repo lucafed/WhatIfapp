@@ -1,29 +1,56 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>What?f – Home</title>
-  <meta name="theme-color" content="#0A0F14">
-  <link rel="preload" as="image" href="/home-hero.png">
-  <link rel="stylesheet" href="./style.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What?f – Home</title>
+<meta name="theme-color" content="#0A0F14">
+<style>
+  :root{--bg:#0A0F14;--fg:#E6EEF2;--muted:#A0B2BA;--accent:#00E0FF;--accent2:#00B5CC}
+  *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:16px;padding:20px 18px 96px}
+  .hero{width:min(92vw,720px);border-radius:18px;overflow:hidden;box-shadow:0 14px 36px rgba(0,0,0,.5)}
+  .hero img{display:block;width:100%;height:auto}
+  h1{margin:6px 0 0;text-align:center;font-size:clamp(26px,5.4vw,44px)}
+  h1 .glow{color:var(--accent);text-shadow:0 0 8px rgba(0,224,255,.7),0 0 16px rgba(0,224,255,.4)}
+  .btn{display:inline-block;text-decoration:none;font-weight:800;letter-spacing:.3px;
+    background:linear-gradient(180deg,var(--accent) 0%,var(--accent2) 100%);color:#02242C;border:0;border-radius:24px;
+    padding:12px 20px;min-width:200px;box-shadow:0 10px 28px rgba(0,181,204,.45)}
+  .btn:active{transform:translateY(1px)}
+  .disclaimer{font-size:12px;color:var(--muted);text-align:center}
+  .disclaimer a{color:var(--accent);text-decoration:none}
+  .hint{font-size:12px;color:var(--muted);opacity:.9}
+  footer{position:fixed;left:0;right:0;bottom:10px;text-align:center;color:var(--muted);font-size:12px}
+</style>
 </head>
-<body data-next="./second.html">
-  <main class="fade-in">
-    <div class="container">
-      <div class="hero"><img src="/home-hero.png" alt="Scopri il tuo What?f"></div>
-      <h1>BENVENUTO SU <span class="glow">What?f</span></h1>
+<body>
+  <main>
+    <div class="hero"><img src="/home-hero.png" alt="Scopri il tuo What?f"></div>
+    <h1>BENVENUTO SU <span class="glow">What?f</span></h1>
 
-      <a id="cta" class="btn" href="./second.html">CHOOSE YOUR WAY</a>
+    <a id="cta" class="btn" href="./second.html">CHOOSE YOUR WAY</a>
+    <div class="hint">Swipe ↑ o → per continuare</div>
 
-      <p class="disclaimer">
-        Continuando accetti la nostra <a href="./privacy.html" data-nav>Privacy Policy</a>
-        e i <a href="./terms.html" data-nav>Termini d’uso</a>.
-      </p>
-    </div>
+    <p class="disclaimer">
+      Continuando accetti la nostra <a href="./privacy.html">Privacy Policy</a>
+      e i <a href="./terms.html">Termini d’uso</a>.
+    </p>
   </main>
-
   <footer>© 2025 What?f</footer>
-  <script src="./main.js"></script>
+
+<script>
+  // Swipe: solo avanti dalla home
+  (function(){
+    const NEXT='second.html';
+    let sx=0, sy=0, t=0; const TH=50;
+    window.addEventListener('touchstart',e=>{const p=e.touches[0]; sx=p.clientX; sy=p.clientY; t=Date.now();},{passive:true});
+    window.addEventListener('touchend',e=>{
+      const p=e.changedTouches[0], dx=p.clientX-sx, dy=p.clientY-sy, dt=Date.now()-t;
+      if(dt<800 && (dx<-TH || -dy>TH)) location.href=NEXT;
+    },{passive:true});
+    document.getElementById('cta').addEventListener('click',e=>{e.preventDefault();location.href=NEXT;});
+  })();
+</script>
 </body>
 </html>
