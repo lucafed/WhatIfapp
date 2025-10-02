@@ -2,108 +2,186 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>What?f – Home</title>
-  <meta name="theme-color" content="#0A0F14">
 
-  <link rel="preload" as="image" href="/home-hero.png" />
+  <!-- Se hai già style.css va bene lasciarlo; gli stili sotto rifiniscono solo la home -->
+  <link rel="stylesheet" href="/style.css" />
 
   <style>
-    :root { --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA;
-            --accent:#00E0FF; --accent-dark:#00B5CC; }
-    *{ box-sizing:border-box }
-    html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
-    main{ min-height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;
-      text-align:center; padding:20px; gap:14px; transition: opacity .45s ease, transform .45s ease; }
-
-    /* Entrata */
-    .fade-in { opacity:0; transform: translateY(15px); animation: fadeIn 1.2s ease forwards; }
-    .delay1{ animation-delay: .2s } .delay2{ animation-delay: .5s } .delay3{ animation-delay: .9s }
-    @keyframes fadeIn { to { opacity:1; transform: translateY(0) } }
-
-    /* Uscita */
-    .leaving main{ opacity:0; transform: translateY(10px); pointer-events:none }
-
-    .hero-img{ width:min(92vw,560px); height:auto; display:block; margin:0 auto 8px;
-      filter:drop-shadow(0 10px 28px rgba(0,0,0,.45)) }
-    .hero-fallback{ color:var(--muted); font-size:14px; display:none; margin-top:-6px }
-    
-    h1{ margin:.25rem 0 0; font-size:clamp(28px,5.5vw,44px); line-height:1.1 }
-    h1 span{
-      color:var(--accent);
-      text-shadow: 0 0 8px rgba(0,224,255,.7), 0 0 16px rgba(0,224,255,.4);
-      animation: glow 2.5s infinite;
+    :root {
+      --bg: #0b1418;
+      --text: #e6f7ff;
+      --accent: #00a8bc;     /* colore bottone */
+      --accent-2: #00c7db;   /* hover */
     }
-    @keyframes glow {
-      0% { text-shadow: 0 0 6px rgba(0,224,255,.6), 0 0 12px rgba(0,224,255,.3) }
-      50%{ text-shadow: 0 0 14px rgba(0,224,255,1), 0 0 28px rgba(0,224,255,.6) }
-      100%{ text-shadow: 0 0 6px rgba(0,224,255,.6), 0 0 12px rgba(0,224,255,.3) }
+    html,body{
+      height:100%;
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+                   Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+    }
+    .wrap{
+      min-height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px 16px 56px;
+      box-sizing:border-box;
+    }
+    .card{
+      width:min(920px, 95vw);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:28px;
+      padding:24px 20px 32px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.45);
+      text-align:center;
+    }
+    .hero{
+      display:block;
+      width:min(760px, 88vw);
+      max-width:100%;
+      margin:0 auto 16px;
+      border-radius:16px;
+      user-select:none;
+      -webkit-user-drag:none;
+      pointer-events:none;
+      opacity:0;
+      transform:translateY(4px);
+      transition:opacity .35s ease, transform .35s ease;
+    }
+    .hero.loaded{ opacity:1; transform:none; }
+
+    .brand{
+      font-size: clamp(26px, 5.3vw, 42px);
+      margin:4px 0 18px;
+      letter-spacing:.4px;
+      font-weight:800;
     }
 
-    .btn{ display:inline-block; text-decoration:none; background:var(--accent-dark);
-      color:#001f26; font-weight:700; padding:14px 22px; border-radius:28px;
-      box-shadow:0 0 12px rgba(0,181,204,.6), 0 0 24px rgba(0,181,204,.3);
-      animation: pulse 2s infinite; transition:.2s }
-    .btn:hover{ filter:brightness(1.15) }
-    .btn:active{ transform:translateY(1px) }
-    @keyframes pulse {
-      0% { box-shadow:0 0 10px rgba(0,181,204,.5), 0 0 20px rgba(0,181,204,.2) }
-      50%{ box-shadow:0 0 18px rgba(0,224,255,.9), 0 0 36px rgba(0,224,255,.4) }
-      100%{ box-shadow:0 0 10px rgba(0,181,204,.5), 0 0 20px rgba(0,181,204,.2) }
+    .btn{
+      display:inline-block;
+      text-decoration:none;
+      background:var(--accent);
+      color:#fff;
+      font-weight:800;
+      letter-spacing:.6px;
+      padding:16px 26px;
+      border-radius:28px;
+      box-shadow:0 0 12px rgba(0,168,188,.45), 0 0 24px rgba(0,168,188,.22);
+      transition:.2s transform ease, .2s background ease, .2s box-shadow ease;
     }
+    .btn:focus-visible{ outline: 3px solid rgba(0,168,188,.55); outline-offset:3px; }
+    .btn:hover{ background:var(--accent-2); transform: translateY(-1px); }
+    .btn:active{ transform: translateY(0); }
 
-    footer{ position:fixed; bottom:10px; left:0; right:0; text-align:center; color:var(--muted); font-size:12px }
-    footer a{ color:var(--accent); text-decoration:none }
+    .hint{
+      margin: 12px 0 22px;
+      opacity:.9;
+      font-weight:700;
+      letter-spacing:.5px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+      font-size:clamp(14px, 2.8vw, 16px);
+    }
+    .dot{width:8px;height:8px;border-radius:50%;background:#3c4b52;box-shadow:0 0 0 2px rgba(255,255,255,.06) inset;}
+    .arrow{font-size:18px;filter: drop-shadow(0 2px 6px rgba(0,0,0,.4));}
+    footer{
+      position:fixed; left:0; right:0; bottom:8px;
+      text-align:center; font-size:13px; opacity:.75;
+    }
+    footer a{ color:#8fefff; text-decoration:none; }
+    footer a:hover{ text-decoration:underline; }
   </style>
 </head>
 <body>
-  <main>
-    <img id="hero" class="hero-img fade-in delay1" alt="Porta luminosa What?f" loading="eager" decoding="async" />
-    <div id="heroFallback" class="hero-fallback">Caricamento immagine…</div>
 
-    <h1 class="fade-in delay2">BENVENUTO SU <span>What?f</span></h1>
+  <main class="wrap" id="swipe-area" aria-label="Schermata Home, scorri a sinistra per continuare">
+    <section class="card">
+      <!-- Immagine hero dalla cartella /public -->
+      <img
+        id="hero"
+        class="hero"
+        src="/home-hero.png"
+        alt="Porta luminosa What?f" 
+        width="1200" height="900"
+        decoding="async" loading="eager"
+        />
 
-    <a href="second.html" id="cta" class="btn fade-in delay3">CHOOSE YOUR WAY</a>
+      <h1 class="brand" aria-label="Benvenuto su What if">BENVENUTO SU <span style="color:#3fe3ff;text-shadow:0 0 24px rgba(63,227,255,.35)">What?f</span></h1>
+
+      <!-- Hint swipe -->
+      <div class="hint" id="hint">
+        <span class="arrow">⬅️</span>
+        <span>SWIPE per continuare</span>
+        <span class="arrow">➡️</span>
+      </div>
+
+      <!-- Pulsante accessibile -->
+      <a id="cta" class="btn" href="/second.html" aria-label="Vai alla schermata successiva">CHOOSE YOUR WAY</a>
+    </section>
   </main>
 
-  <footer>© 2025 What?f · <a href="#">Privacy</a> · <a href="#">Termini</a></footer>
+  <footer>
+    © 2025 What?f · <a href="/privacy.html">Privacy</a> · <a href="/termini.html">Termini</a>
+  </footer>
 
-  <!-- Disattiva vecchi Service Worker + pulizia cache -->
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations?.().then(r => r.forEach(x=>x.unregister())).catch(()=>{});
-      if (window.caches?.keys) { caches.keys().then(keys => keys.forEach(k => caches.delete(k))); }
-    }
-  </script>
+    // Fade-in dell’immagine quando è pronta
+    const hero = document.getElementById('hero');
+    if (hero.complete) hero.classList.add('loaded');
+    else hero.addEventListener('load', () => hero.classList.add('loaded'));
 
-  <!-- Caricamento robusto immagine -->
-  <script>
-    (async function loadHero(){
-      const hero = document.getElementById('hero');
-      const fb = document.getElementById('heroFallback');
-      const tries = ['/home-hero.png','/public/home-hero.png','/assets/home-hero.png'];
-      for (const u of tries) {
-        try {
-          const r = await fetch(u, { cache:'no-store' });
-          if (r.ok) { hero.src = u + '?v=' + Date.now(); fb.style.display = 'none'; return; }
-        } catch(e) {}
-      }
-      fb.textContent = 'Immagine non trovata.'; fb.style.display = 'block';
+    // Navigazione
+    const goNext = () => { window.location.href = '/second.html'; };
+
+    // Click sul bottone
+    document.getElementById('cta').addEventListener('click', (e) => {
+      // Lascia il link “normale” funzionare; se vuoi forzare via JS:
+      // e.preventDefault(); goNext();
+    });
+
+    // Swipe semplice (mobile)
+    (function enableSwipe(){
+      const area = document.getElementById('swipe-area');
+      let startX = 0, startY = 0, endX = 0, endY = 0;
+      const THRESH_X = 60;  // quanto scorrere in px per considerarlo swipe
+      const LIMIT_Y  = 80;  // tolleranza verticale
+
+      area.addEventListener('touchstart', (e) => {
+        const t = e.changedTouches[0];
+        startX = endX = t.clientX;
+        startY = endY = t.clientY;
+      }, {passive:true});
+
+      area.addEventListener('touchmove', (e) => {
+        const t = e.changedTouches[0];
+        endX = t.clientX; endY = t.clientY;
+      }, {passive:true});
+
+      area.addEventListener('touchend', () => {
+        const dx = endX - startX;
+        const dy = Math.abs(endY - startY);
+        // swipe sinistra => vai avanti (dx < -THRESH_X)
+        if (dx < -THRESH_X && dy < LIMIT_Y) goNext();
+        // (opzionale) swipe destra: niente/torna indietro
+        // if (dx > THRESH_X && dy < LIMIT_Y) window.history.back();
+      }, {passive:true});
     })();
-  </script>
 
-  <!-- Fade-out/slide prima di navigare -->
-  <script>
-    (function(){
-      const CTA = document.getElementById('cta');
-      CTA.addEventListener('click', function(ev){
-        ev.preventDefault();
-        document.body.classList.add('leaving');
-        // attende la transizione (coerente con main{transition: .45s})
-        setTimeout(()=>{ window.location.href = CTA.getAttribute('href'); }, 470);
-      });
-    })();
+    // Tastiera (freccia destra = avanti)
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') goNext();
+      // if (e.key === 'ArrowLeft') history.back();
+    });
+
+    // Evita che lo swipe “rimbalzi” su scroll verticale leggero
+    // (non blocchiamo lo scroll normale: solo un tocco brevissimo orizzontale)
   </script>
 </body>
 </html>
