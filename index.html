@@ -29,17 +29,16 @@
       padding:18px 20px; text-align:center;
     }
 
-    /* Toggle tema: fisso in alto a destra, sempre visibile */
+    /* Toggle tema ben visibile */
     .theme-toggle{
-      position:fixed; top:10px; right:12px; z-index:20;
+      position:fixed; top:14px; right:14px; z-index:100;
       cursor:pointer; user-select:none;
-      padding:8px 12px; border-radius:999px; background:var(--card);
-      backdrop-filter: blur(6px);
-      font-size:14px; color:var(--muted); display:flex; gap:8px; align-items:center;
+      padding:8px 14px; border-radius:24px;
+      background:var(--accent); color:var(--ink);
+      font-size:14px; font-weight:600;
+      box-shadow:0 0 12px rgba(0,0,0,.4);
     }
-    .theme-toggle b{color:var(--fg)}
 
-    /* Blocco centrale ben centrato e con spaziatura ancora più precisa */
     .center{
       width:100%; max-width:720px; margin: 6px auto 0;
       display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -48,9 +47,17 @@
     .hero{
       width:min(94vw,680px); margin:0 auto; border-radius:22px;
       overflow:hidden; background:var(--card);
-      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+      box-shadow: 0 18px 40px rgba(0,0,0,.35)
     }
     .hero img{width:100%; height:auto; display:block}
+
+    .subtitle{
+      margin-top:14px;
+      font-size:clamp(16px,4vw,20px);
+      color:var(--fg);
+      text-align:center;
+      max-width:85%;
+    }
 
     h1{
       margin: 22px 0 0;
@@ -79,10 +86,7 @@
 </head>
 <body>
   <!-- Toggle tema -->
-  <div id="themeBtn" class="theme-toggle" title="Cambia tema">
-    <span id="themeIcon">☀️</span>
-    Tema: <b id="themeLabel">Chiaro</b>
-  </div>
+  <div id="themeBtn" class="theme-toggle">🌙 Tema</div>
 
   <div class="page">
     <div class="center">
@@ -91,7 +95,10 @@
         <img id="hero" alt="Scopri il tuo What?f" loading="eager" decoding="async">
       </div>
 
-      <!-- titolo sotto l’immagine, ben centrato -->
+      <!-- sottotitolo centrato meglio -->
+      <div class="subtitle">Le porte che non hai aperto e quelle che aprirai.</div>
+
+      <!-- titolo -->
       <h1>BENVENUTO SU <span>What?f</span></h1>
 
       <!-- bottone -->
@@ -108,7 +115,7 @@
     <footer>© 2025 What?f</footer>
   </div>
 
-  <!-- loader immagine robusto -->
+  <!-- loader immagine -->
   <script>
     (async function loadHero(){
       const img = document.getElementById('hero');
@@ -122,45 +129,35 @@
     })();
   </script>
 
-  <!-- toggle tema persistente -->
+  <!-- toggle tema -->
   <script>
     (function(){
       const KEY='whatif-theme';
       const root=document.documentElement;
       const btn=document.getElementById('themeBtn');
-      const label=document.getElementById('themeLabel');
-      const icon=document.getElementById('themeIcon');
 
       function apply(t){
         root.setAttribute('data-theme', t);
         localStorage.setItem(KEY, t);
-        const light = (t==='light');
-        label.textContent = light ? 'Scuro' : 'Chiaro';
-        icon.textContent  = light ? '🌙' : '☀️';
-        // aggiorna theme-color del browser
-        const meta=document.querySelector('meta[name="theme-color"]');
-        if(meta) meta.setAttribute('content', getComputedStyle(root).getPropertyValue('--bg').trim());
+        btn.textContent = t==='light' ? '🌙 Tema' : '☀️ Tema';
       }
 
-      // inizializza
       const saved = localStorage.getItem(KEY) || 'dark';
       apply(saved);
 
-      // click
       btn.addEventListener('click', ()=>{
-        const cur = root.getAttribute('data-theme')==='light' ? 'light' : 'dark';
-        apply(cur==='light' ? 'dark' : 'light');
+        const cur=root.getAttribute('data-theme')==='light'?'light':'dark';
+        apply(cur==='light'?'dark':'light');
       });
     })();
   </script>
 
-  <!-- swipe con soglia più “morbida” ma non accidentale -->
+  <!-- swipe -->
   <script>
     (function(){
       const NEXT='./second.html';
       let sx=0, sy=0, t0=0;
-      const TH=90;      // distanza minima
-      const MAXT=900;   // tempo max gesto
+      const TH=90; const MAXT=900;
 
       addEventListener('touchstart',e=>{
         const p=e.touches[0]; sx=p.clientX; sy=p.clientY; t0=Date.now();
@@ -174,9 +171,9 @@
         if(dt>MAXT) return;
 
         if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){
-          if(dx<0) location.href=NEXT;      // swipe → (da destra verso sinistra)
+          if(dx<0) location.href=NEXT;
         } else if(Math.abs(dy)>TH){
-          if(dy<0) location.href=NEXT;      // swipe ↑
+          if(dy<0) location.href=NEXT;
         }
       },{passive:true});
 
