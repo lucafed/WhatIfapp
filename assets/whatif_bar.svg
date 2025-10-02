@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
-  <rect width="100%" height="100%" fill="#0A0F14"/>
-  <text x="40" y="120" font-size="70" fill="#FF3CF7" font-family="Poppins,Arial" font-weight="800">What the</text>
-  <text x="40" y="220" font-size="130" fill="#FF6B6B" font-weight="800">F?!</text>
-  <rect x="300" y="280" width="200" height="120" rx="20" ry="20" fill="none" stroke="#31D2FF" stroke-width="10"/>
-</svg>
