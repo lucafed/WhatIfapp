@@ -1,186 +1,131 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f – Home</title>
   <meta name="theme-color" content="#0A0F14">
-  <link rel="preload" as="image" href="/home-hero.png"/>
+  <link rel="preload" as="image" href="/home-hero.png" />
 
   <style>
-    :root{
-      --bg:#0A0F14; --fg:#E6EEF2; --muted:#A0B2BA;
-      --accent:#00E0FF; --accent2:#00B5CC; --ink:#02242C;
-      --card: rgba(255,255,255,.06);
+    :root {
+      --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA;
+      --accent:#00E0FF; --accent-dark:#00B5CC; --ink:#001f26;
     }
-    :root[data-theme="light"]{
-      --bg:#F4FAFC; --fg:#132229; --muted:#516771;
-      --accent:#00B5CC; --accent2:#0097AD; --ink:#00181F;
-      --card: rgba(0,0,0,.06);
+    [data-theme="light"] {
+      --bg:#fdfdfd; --fg:#111; --muted:#444;
+      --accent:#00B5CC; --accent-dark:#008da0; --ink:#fff;
     }
 
-    *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%;background:var(--bg);color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    *{ box-sizing:border-box; margin:0; padding:0 }
+    body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      display:flex; flex-direction:column; align-items:center; }
 
-    .page{
-      min-height:100vh; display:flex; flex-direction:column;
-      justify-content:space-between; align-items:center;
-      padding:18px 20px; text-align:center;
+    main{
+      flex:1; display:flex; flex-direction:column;
+      align-items:center; justify-content:flex-start;
+      text-align:center; padding:30px 20px; gap:16px;
+      width:100%; max-width:600px;
     }
 
-    /* Toggle tema ben visibile */
     .theme-toggle{
-      position:fixed; top:14px; right:14px; z-index:100;
+      position:fixed; top:70px; right:20px;
       cursor:pointer; user-select:none;
-      padding:8px 14px; border-radius:24px;
+      padding:8px 14px; border-radius:22px;
       background:var(--accent); color:var(--ink);
       font-size:14px; font-weight:600;
-      box-shadow:0 0 12px rgba(0,0,0,.4);
+      box-shadow:0 0 10px rgba(0,0,0,.4);
+      z-index:100;
     }
 
-    .center{
-      width:100%; max-width:720px; margin: 6px auto 0;
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
+    .hero-img{ width:min(92vw,420px); height:auto; display:block;
+      margin:0 auto 12px; filter:drop-shadow(0 10px 28px rgba(0,0,0,.45)) }
+
+    h1{ margin:.5rem 0 0; font-size:clamp(28px,5.5vw,40px); line-height:1.2 }
+    h1 span{
+      color:var(--accent);
+      text-shadow: 0 0 8px rgba(0,224,255,.7), 0 0 16px rgba(0,224,255,.4);
+      animation: glow 2.5s infinite;
+    }
+    @keyframes glow {
+      0% { text-shadow: 0 0 6px rgba(0,224,255,.6), 0 0 12px rgba(0,224,255,.3) }
+      50%{ text-shadow: 0 0 14px rgba(0,224,255,1), 0 0 28px rgba(0,224,255,.6) }
+      100%{ text-shadow: 0 0 6px rgba(0,224,255,.6), 0 0 12px rgba(0,224,255,.3) }
     }
 
-    .hero{
-      width:min(94vw,680px); margin:0 auto; border-radius:22px;
-      overflow:hidden; background:var(--card);
-      box-shadow: 0 18px 40px rgba(0,0,0,.35)
+    p.subtitle{
+      font-size:18px; color:var(--muted); max-width:80%;
+      margin:10px auto 0; line-height:1.4;
     }
-    .hero img{width:100%; height:auto; display:block}
-
-    .subtitle{
-      margin-top:14px;
-      font-size:clamp(16px,4vw,20px);
-      color:var(--fg);
-      text-align:center;
-      max-width:85%;
-    }
-
-    h1{
-      margin: 22px 0 0;
-      font-size:clamp(28px,6.2vw,46px);
-      line-height:1.12;
-    }
-    h1 span{ color:var(--accent); text-shadow:0 0 8px rgba(0,224,255,.6) }
 
     .btn{
-      margin-top: 18px;
-      display:inline-block; text-decoration:none;
-      background:linear-gradient(180deg,var(--accent),var(--accent2));
-      color:var(--ink); font-weight:800; letter-spacing:.5px;
-      padding:14px 22px; border-radius:28px; min-width:240px;
-      box-shadow:0 0 16px rgba(0,181,204,.4)
+      display:inline-block; text-decoration:none; background:var(--accent-dark);
+      color:var(--ink); font-weight:700; padding:14px 22px; border-radius:28px;
+      margin-top:14px;
+      box-shadow:0 0 12px rgba(0,181,204,.6), 0 0 24px rgba(0,181,204,.3);
+      animation: pulse 2s infinite; transition:.2s
     }
-    .btn:active{transform:translateY(1px)}
+    .btn:hover{ filter:brightness(1.15) }
+    .btn:active{ transform:translateY(1px) }
+    @keyframes pulse {
+      0% { box-shadow:0 0 10px rgba(0,181,204,.5), 0 0 20px rgba(0,181,204,.2) }
+      50%{ box-shadow:0 0 18px rgba(0,224,255,.9), 0 0 36px rgba(0,224,255,.4) }
+      100%{ box-shadow:0 0 10px rgba(0,181,204,.5), 0 0 20px rgba(0,181,204,.2) }
+    }
 
-    .swipe-tip{margin-top:14px; font-size:13px; color:var(--muted)}
-
-    .disclaimer{font-size:13px; color:var(--muted); margin:16px 0}
-    .disclaimer a{color:var(--accent); text-decoration:none}
-
-    footer{font-size:12px; color:var(--muted); margin-top:2px}
+    footer{ padding:14px; text-align:center; font-size:12px; color:var(--muted); }
+    footer a{ color:var(--accent); text-decoration:none }
   </style>
 </head>
 <body>
-  <!-- Toggle tema -->
-  <div id="themeBtn" class="theme-toggle">🌙 Tema</div>
+  <div class="theme-toggle" id="themeToggle">☀️/🌙</div>
 
-  <div class="page">
-    <div class="center">
-      <!-- immagine -->
-      <div class="hero">
-        <img id="hero" alt="Scopri il tuo What?f" loading="eager" decoding="async">
-      </div>
+  <main>
+    <img id="hero" class="hero-img" alt="Scopri il tuo What?f" loading="eager" decoding="async" />
+    <p class="subtitle">Le porte che non hai aperto e quelle che aprirai.</p>
+    <h1>BENVENUTO SU <span>What?f</span></h1>
+    <a href="second.html" class="btn">CHOOSE YOUR WAY</a>
+    <p style="font-size:13px; color:var(--muted)">Swipe ↑ o → per continuare</p>
+  </main>
 
-      <!-- sottotitolo centrato meglio -->
-      <div class="subtitle">Le porte che non hai aperto e quelle che aprirai.</div>
+  <footer>
+    Continuando accetti la nostra <a href="privacy.html">Privacy Policy</a> e i <a href="terms.html">Termini d’uso</a>.<br>
+    © 2025 What?f
+  </footer>
 
-      <!-- titolo -->
-      <h1>BENVENUTO SU <span>What?f</span></h1>
-
-      <!-- bottone -->
-      <a id="cta" class="btn" href="./second.html">CHOOSE YOUR WAY</a>
-
-      <!-- suggerimento swipe -->
-      <div class="swipe-tip">Swipe ↑ o → per continuare</div>
-    </div>
-
-    <div class="disclaimer">
-      Continuando accetti la nostra <a href="./privacy.html">Privacy Policy</a> e i <a href="./terms.html">Termini d’uso</a>.
-    </div>
-
-    <footer>© 2025 What?f</footer>
-  </div>
-
-  <!-- loader immagine -->
   <script>
+    // Immagine robusta
     (async function loadHero(){
-      const img = document.getElementById('hero');
-      const tries = ['/home-hero.png','/public/home-hero.png','/assets/home-hero.png'];
+      const hero=document.getElementById('hero');
+      const tries=['/home-hero.png','/public/home-hero.png','/assets/home-hero.png'];
       for(const u of tries){
-        try{
-          const r = await fetch(u,{cache:'no-store'});
-          if(r.ok){ img.src = u + '?v=' + Date.now(); return; }
+        try{ const r=await fetch(u,{cache:'no-store'}); 
+          if(r.ok){ hero.src=u+'?v='+Date.now(); return; }
         }catch(e){}
       }
     })();
-  </script>
 
-  <!-- toggle tema -->
-  <script>
-    (function(){
-      const KEY='whatif-theme';
-      const root=document.documentElement;
-      const btn=document.getElementById('themeBtn');
+    // Tema persistente
+    const body=document.body;
+    const toggle=document.getElementById('themeToggle');
+    function setTheme(t){ body.setAttribute('data-theme',t); localStorage.setItem('theme',t); }
+    const saved=localStorage.getItem('theme')||'dark';
+    setTheme(saved);
+    toggle.addEventListener('click',()=>{ setTheme(body.getAttribute('data-theme')==='dark'?'light':'dark'); });
 
-      function apply(t){
-        root.setAttribute('data-theme', t);
-        localStorage.setItem(KEY, t);
-        btn.textContent = t==='light' ? '🌙 Tema' : '☀️ Tema';
+    // Swipe navigation
+    let startX=0,startY=0;
+    document.addEventListener("touchstart",e=>{
+      startX=e.touches[0].clientX; startY=e.touches[0].clientY;
+    });
+    document.addEventListener("touchend",e=>{
+      let dx=e.changedTouches[0].clientX-startX;
+      let dy=e.changedTouches[0].clientY-startY;
+      if(Math.abs(dx)>50 || Math.abs(dy)>50){
+        if(dx<-50 || dy<-50) window.location.href="second.html";
       }
-
-      const saved = localStorage.getItem(KEY) || 'dark';
-      apply(saved);
-
-      btn.addEventListener('click', ()=>{
-        const cur=root.getAttribute('data-theme')==='light'?'light':'dark';
-        apply(cur==='light'?'dark':'light');
-      });
-    })();
-  </script>
-
-  <!-- swipe -->
-  <script>
-    (function(){
-      const NEXT='./second.html';
-      let sx=0, sy=0, t0=0;
-      const TH=90; const MAXT=900;
-
-      addEventListener('touchstart',e=>{
-        const p=e.touches[0]; sx=p.clientX; sy=p.clientY; t0=Date.now();
-      },{passive:true});
-
-      addEventListener('touchend',e=>{
-        const p=e.changedTouches[0];
-        const dx=p.clientX - sx;
-        const dy=p.clientY - sy;
-        const dt=Date.now() - t0;
-        if(dt>MAXT) return;
-
-        if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){
-          if(dx<0) location.href=NEXT;
-        } else if(Math.abs(dy)>TH){
-          if(dy<0) location.href=NEXT;
-        }
-      },{passive:true});
-
-      document.getElementById('cta').addEventListener('click', (e)=>{
-        e.preventDefault(); location.href=NEXT;
-      });
-    })();
+    });
   </script>
 </body>
 </html>
