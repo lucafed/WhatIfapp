@@ -30,13 +30,12 @@
     }
 
     .theme-toggle{
-      position:fixed; top:70px; right:20px;
+      margin:8px 0;
       cursor:pointer; user-select:none;
-      padding:8px 14px; border-radius:22px;
+      padding:6px 14px; border-radius:20px;
       background:var(--accent); color:var(--ink);
       font-size:14px; font-weight:600;
       box-shadow:0 0 10px rgba(0,0,0,.4);
-      z-index:100;
     }
 
     .hero-img{ width:min(92vw,420px); height:auto; display:block;
@@ -79,14 +78,12 @@
   </style>
 </head>
 <body>
-  <div class="theme-toggle" id="themeToggle">☀️/🌙</div>
-
   <main>
     <img id="hero" class="hero-img" alt="Scopri il tuo What?f" loading="eager" decoding="async" />
+    <div class="theme-toggle" id="themeToggle">☀️ / 🌙</div>
     <p class="subtitle">Le porte che non hai aperto e quelle che aprirai.</p>
     <h1>BENVENUTO SU <span>What?f</span></h1>
     <a href="second.html" class="btn">CHOOSE YOUR WAY</a>
-    <p style="font-size:13px; color:var(--muted)">Swipe ↑ o → per continuare</p>
   </main>
 
   <footer>
