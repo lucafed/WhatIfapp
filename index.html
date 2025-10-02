@@ -2,63 +2,101 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1418" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f – Home</title>
-  <meta name="description" content="Scopri il tuo What?f. Le porte che non hai aperto e quelle che aprirai." />
-
-  <!-- Icone PWA / Favicon (opzionali se già presenti) -->
-  <link rel="icon" href="/favicon.png" sizes="any" />
-  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-
-  <!-- Stili globali -->
-  <link rel="stylesheet" href="/style.css" />
+  <meta name="color-scheme" content="dark light">
+  <link rel="icon" href="/favicon.png">
+  <style>
+    :root{
+      --bg:#0f1a1d;
+      --card:#0e2227;
+      --text:#d7f7f6;
+      --muted:#8bbfc0;
+      --accent:#1fe3e0;
+      --accent-ink:#042b31;
+    }
+    html,body{height:100%}
+    body{
+      margin:0;background:radial-gradient(1200px 800px at 50% -200px,#122127 0%,#0e1b20 40%,var(--bg) 100%) fixed;
+      color:var(--text);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .wrap{width:min(680px,92vw)}
+    .card{
+      background:linear-gradient(180deg,#0f242a 0%, #0c1e23 100%);
+      border-radius:28px;padding:28px 22px 36px;box-shadow:0 25px 70px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.03);
+      text-align:center
+    }
+    h1{margin:6px 0 10px;font-size:44px;letter-spacing:.5px;line-height:1.05}
+    h1 .brand{display:block;font-size:56px;font-weight:800;letter-spacing:1px}
+    p.sub{margin:0 auto 10px;color:var(--muted);max-width:32ch}
+    /* PORTA */
+    .hero-door{
+      width:min(260px,70vw);display:block;margin:8px auto 6px;
+      filter: drop-shadow(0 18px 26px rgba(0,0,0,.45));
+      user-select:none;pointer-events:none;
+    }
+    /* SWIPE */
+    .swipe{display:flex;gap:8px;align-items:center;justify-content:center;margin:4px 0 18px;color:var(--muted);font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+    .dot{width:8px;height:8px;border-radius:50%;background:#2b555a}
+    .dot.on{background:var(--accent)}
+    .arrow{font-size:18px;transform:translateY(-1px)}
+    /* CTA */
+    .cta{
+      -webkit-tap-highlight-color:transparent;
+      display:inline-block;border:none;border-radius:999px;padding:18px 26px;font-weight:800;
+      background:linear-gradient(180deg,#3df0ee 0%, #17c9c7 100%); color:#002022; letter-spacing:.02em;
+      box-shadow:0 12px 30px rgba(31,227,224,.25), 0 0 0 1px rgba(0,0,0,.35) inset; cursor:pointer;
+    }
+    .cta:active{transform:translateY(1px)}
+    footer{margin-top:26px;color:#7aa;opacity:.9;font-size:14px}
+    footer a{color:inherit;text-decoration:none}
+    @media (max-width:430px){
+      h1{font-size:36px}
+      h1 .brand{font-size:46px}
+      .cta{width:100%}
+    }
+  </style>
 </head>
 <body>
-  <div class="wrapper">
+  <main class="wrap">
+    <section class="card" aria-labelledby="t">
+      <h1 id="t">BENVENUTO SU <span class="brand">What?f</span></h1>
+      <p class="sub">Le porte che non hai aperto e quelle che aprirai.</p>
 
-    <!-- HERO -->
-    <main class="container">
-      <section class="hero" aria-label="Benvenuto su What?f">
-        <div class="hero-inner">
+      <!-- Immagine della porta -->
+      <img class="hero-door" src="/home-hero.png" alt="Porta luminosa What?f" width="640" height="640" loading="eager" />
 
-          <!-- Titoli -->
-          <div></div> <!-- spacer top -->
-          <div class="center" style="text-align:center">
-            <p class="kicker">Benvenuto su</p>
-            <h1>What?f</h1>
-            <p class="subtitle">Le porte che non hai aperto e quelle che aprirai.</p>
-          </div>
-
-          <!-- Swipe hint -->
-          <div class="swipe-hint mt-16" aria-hidden="true">
-            <span>Swipe</span>
-            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-            <span>→</span>
-          </div>
-
-          <!-- CTA -->
-          <a class="btn mt-24" href="/second.html" aria-label="Vai alla scelta">
-            CHOOSE YOUR WAY
-          </a>
-        </div>
-      </section>
-    </main>
-
-    <!-- FOOTER -->
-    <footer class="page-footer">
-      <div class="container">
-        © <span id="y"></span> What?f ·
-        <a href="/privacy.html">Privacy</a> ·
-        <a href="/terms.html">Termini</a>
+      <!-- Swipe -->
+      <div class="swipe" aria-hidden="true">
+        <span>SWIPE</span>
+        <span class="dot on"></span><span class="dot"></span><span class="dot"></span>
+        <span class="arrow">→</span>
       </div>
-    </footer>
 
-  </div>
+      <!-- CTA -->
+      <button id="go" class="cta" type="button">CHOOSE YOUR WAY</button>
+
+      <footer>
+        © 2025 What?f · <a href="#">Privacy</a> · <a href="#">Termini</a>
+      </footer>
+    </section>
+  </main>
 
   <script>
-    // anno footer
-    document.getElementById('y').textContent = new Date().getFullYear();
+    // Naviga alla seconda pagina
+    document.getElementById('go').addEventListener('click', () => {
+      window.location.href = '/second.html';
+    });
+
+    // Mini animazione “swipe” dei pallini
+    const dots = document.querySelectorAll('.dot');
+    let i = 0;
+    setInterval(() => {
+      dots.forEach(d=>d.classList.remove('on'));
+      dots[i % dots.length].classList.add('on');
+      i++;
+    }, 1400);
   </script>
 </body>
 </html>
