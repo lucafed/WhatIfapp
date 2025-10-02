@@ -1,109 +1,131 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – Home</title>
-  <meta name="theme-color" content="#0A0F14">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What?f – Home</title>
+<meta name="theme-color" content="#0A0F14">
+<link rel="preload" as="image" href="/home-hero.png">
 
-  <link rel="preload" as="image" href="/home-hero.png" />
+<style>
+  :root{
+    --bg:#0A0F14; --fg:#E6EEF2; --muted:#A0B2BA;
+    --accent:#00E0FF; --accent-dark:#00B5CC;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{min-height:100%;display:flex;flex-direction:column;align-items:center;
+    justify-content:flex-start;gap:16px;padding:20px 18px 96px}
 
-  <style>
-    :root {
-      --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA;
-      --accent:#00E0FF; --accent-dark:#00B5CC;
-    }
-    *{ box-sizing:border-box }
-    html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
-    main{ min-height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;
-      text-align:center; padding:20px; gap:14px; transition: opacity .45s ease, transform .45s ease; }
+  /* immagine */
+  .hero-img{width:min(92vw,720px);height:auto;display:block;margin:8px auto 0;
+    filter:drop-shadow(0 10px 28px rgba(0,0,0,.45))}
+  .hero-fallback{display:none;color:var(--muted);margin-top:6px}
 
-    /* Entrata */
-    .fade-in { opacity:0; transform: translateY(15px); animation: fadeIn 1.2s ease forwards; }
-    .delay1{ animation-delay: .2s } .delay2{ animation-delay: .5s } .delay3{ animation-delay: .9s }
-    @keyframes fadeIn { to { opacity:1; transform: translateY(0) } }
+  h1{margin:8px 0 0;font-size:clamp(26px,5.2vw,44px);line-height:1.1;text-align:center}
+  h1 span{color:var(--accent);
+    text-shadow:0 0 8px rgba(0,224,255,.7),0 0 16px rgba(0,224,255,.4)}
 
-    /* Uscita */
-    .leaving main{ opacity:0; transform: translateY(10px); pointer-events:none }
+  /* CTA visibile, contrasto alto */
+  .cta-wrap{width:100%;max-width:780px;margin-top:8px;display:flex;justify-content:center}
+  .btn{
+    display:inline-block; min-width:min(92vw,640px); text-align:center;
+    padding:18px 22px; border-radius:28px; font-weight:800; letter-spacing:.5px;
+    color:#002129; text-decoration:none; user-select:none;
+    background:linear-gradient(180deg,var(--accent) 0%, var(--accent-dark) 100%);
+    box-shadow:0 8px 28px rgba(0,224,255,.35), 0 2px 8px rgba(0,224,255,.3);
+    border:1px solid rgba(0,0,0,.18);
+  }
+  .btn:active{transform:translateY(1px)}
 
-    .hero-img{ width:min(92vw,560px); height:auto; display:block; margin:0 auto 8px;
-      filter:drop-shadow(0 10px 28px rgba(0,0,0,.45)) }
-    .hero-fallback{ color:var(--muted); font-size:14px; display:none; margin-top:-6px }
-    
-    h1{ margin:.25rem 0 0; font-size:clamp(28px,5.5vw,44px); line-height:1.1 }
-    h1 span{
-      color:var(--accent);
-      text-shadow: 0 0 8px rgba(0,224,255,.7), 0 0 16px rgba(0,224,255,.4);
-      animation: glow 2.5s infinite;
-    }
-    @keyframes glow {
-      0% { text-shadow: 0 0 6px rgba(0,224,255,.6), 0 0 12px rgba(0,224,255,.3) }
-      50%{ text-shadow: 0 0 14px rgba(0,224,255,1), 0 0 28px rgba(0,224,255,.6) }
-      100%{ text-shadow: 0 0 6px rgba(0,224,255,.6), 0 0 12px rgba(0,224,255,.3) }
-    }
+  /* disclaimer: sempre visibili e non coperti */
+  .legal{width:100%;max-width:820px;margin:14px auto 0;text-align:center;
+    font-size:14px;color:var(--muted)}
+  .legal a{color:var(--accent);text-decoration:none}
 
-    .btn{ display:inline-block; text-decoration:none;
-      background:var(--accent); /* Colore reso più chiaro per visibilità */
-      color:#001f26; font-weight:700; padding:16px 28px; border-radius:28px;
-      box-shadow:0 0 14px rgba(0,224,255,.7), 0 0 28px rgba(0,224,255,.4);
-      animation: pulse 2s infinite; transition:.2s; font-size:18px }
-    .btn:hover{ filter:brightness(1.15) }
-    .btn:active{ transform:translateY(1px) }
-    @keyframes pulse {
-      0% { box-shadow:0 0 10px rgba(0,181,204,.5), 0 0 20px rgba(0,181,204,.2) }
-      50%{ box-shadow:0 0 20px rgba(0,224,255,.9), 0 0 40px rgba(0,224,255,.5) }
-      100%{ box-shadow:0 0 10px rgba(0,181,204,.5), 0 0 20px rgba(0,181,204,.2) }
-    }
+  footer{position:fixed;left:0;right:0;bottom:10px;text-align:center;
+    color:var(--muted);font-size:12px}
 
-    footer{ position:fixed; bottom:10px; left:0; right:0; text-align:center; color:var(--muted); font-size:12px }
-  </style>
+  /* hint swipe */
+  .swipe-hint{margin-top:6px;font-size:13px;color:var(--muted);opacity:.85}
+  .swipe-hint .arrow{display:inline-block;transform:translateY(2px);opacity:.8}
+</style>
 </head>
 <body>
   <main>
-    <img id="hero" class="hero-img fade-in delay1" alt="Porta luminosa What?f" loading="eager" decoding="async" />
+    <img id="hero" class="hero-img" alt="Scopri il tuo What?f – porta luminosa" loading="eager" decoding="async">
     <div id="heroFallback" class="hero-fallback">Caricamento immagine…</div>
 
-    <h1 class="fade-in delay2">BENVENUTO SU <span>What?f</span></h1>
+    <h1>BENVENUTO SU <span>What?f</span></h1>
 
-    <a href="second.html" id="cta" class="btn fade-in delay3">CHOOSE YOUR WAY</a>
+    <!-- CTA ben visibile e sopra i disclaimer -->
+    <div class="cta-wrap">
+      <a id="cta" class="btn" href="second.html" aria-label="Vai alla seconda schermata">
+        CHOOSE YOUR WAY
+      </a>
+    </div>
 
-    <!-- Disclaimer breve -->
-    <p class="fade-in delay3" style="font-size:12px; color:#A0B2BA; margin-top:8px;">
-      Continuando accetti la nostra 
-      <a href="privacy.html" style="color:#00E0FF;">Privacy Policy</a> e i 
-      <a href="terms.html" style="color:#00E0FF;">Termini d’Uso</a>.
-    </p>
+    <!-- Hint swipe -->
+    <div class="swipe-hint">Swipe <span class="arrow">↑</span> o <span class="arrow">→</span> per continuare</div>
+
+    <!-- Disclaimer -->
+    <div class="legal">
+      Continuando accetti la nostra
+      <a href="privacy.html">Privacy Policy</a> e i
+      <a href="terms.html">Termini d’Uso</a>.
+    </div>
   </main>
 
   <footer>© 2025 What?f</footer>
 
-  <!-- Caricamento immagine -->
-  <script>
-    (async function loadHero(){
-      const hero = document.getElementById('hero');
-      const fb = document.getElementById('heroFallback');
-      const tries = ['/home-hero.png','/public/home-hero.png','/assets/home-hero.png'];
-      for (const u of tries) {
-        try {
-          const r = await fetch(u, { cache:'no-store' });
-          if (r.ok) { hero.src = u + '?v=' + Date.now(); fb.style.display = 'none'; return; }
-        } catch(e) {}
-      }
-      fb.textContent = 'Immagine non trovata.'; fb.style.display = 'block';
-    })();
-  </script>
+<script>
+  // stop service worker vecchi & cache
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations?.().then(r => r.forEach(x=>x.unregister())).catch(()=>{});
+    caches?.keys?.().then(keys => keys.forEach(k => caches.delete(k)));
+  }
 
-  <!-- Fade-out animato -->
-  <script>
-    (function(){
-      const CTA = document.getElementById('cta');
-      CTA.addEventListener('click', function(ev){
-        ev.preventDefault();
-        document.body.classList.add('leaving');
-        setTimeout(()=>{ window.location.href = CTA.getAttribute('href'); }, 470);
-      });
-    })();
-  </script>
+  // carica immagine in modo robusto
+  (async function(){
+    const hero = document.getElementById('hero');
+    const fb   = document.getElementById('heroFallback');
+    const tries = ['/home-hero.png','/public/home-hero.png','/assets/home-hero.png'];
+    for (const u of tries){
+      try{
+        const r = await fetch(u,{cache:'no-store'});
+        if (r.ok){ hero.src = u + '?v=' + Date.now(); fb.style.display='none'; return; }
+      }catch(e){}
+    }
+    fb.textContent='Immagine non trovata.'; fb.style.display='block';
+  })();
+
+  // animazione/ritardo per click CTA (gradevole, ma veloce)
+  (function(){
+    const link = document.getElementById('cta');
+    link.addEventListener('click', (ev)=>{
+      ev.preventDefault();
+      window.location.href = link.getAttribute('href');
+    });
+  })();
+
+  // Swipe up o right -> second.html
+  (function(){
+    let sx=0, sy=0, t=0;
+    const TH=40; // soglia in px
+    window.addEventListener('touchstart', (e)=>{
+      const p = e.touches[0]; sx=p.clientX; sy=p.clientY; t=Date.now();
+    }, {passive:true});
+    window.addEventListener('touchend', (e)=>{
+      const dt = Date.now()-t;
+      const p  = e.changedTouches[0];
+      const dx = p.clientX - sx;
+      const dy = p.clientY - sy;
+      if (dt<800 && (dy<-TH || dx>TH)) {
+        window.location.href = 'second.html';
+      }
+    }, {passive:true});
+  })();
+</script>
 </body>
 </html>
