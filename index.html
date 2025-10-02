@@ -5,16 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>What?f – Home</title>
   <meta name="theme-color" content="#0A0F14">
-  <link rel="preload" as="image" href="/home-hero.png">
+  <link rel="preload" as="image" href="/home-hero.png"/>
 
   <style>
-    :root {
+    :root{
       --bg:#0A0F14; --fg:#E6EEF2; --muted:#A0B2BA;
       --accent:#00E0FF; --accent2:#00B5CC; --ink:#02242C;
+      --card: rgba(255,255,255,.06);
     }
     :root[data-theme="light"]{
       --bg:#F4FAFC; --fg:#132229; --muted:#516771;
       --accent:#00B5CC; --accent2:#0097AD; --ink:#00181F;
+      --card: rgba(0,0,0,.06);
     }
 
     *{box-sizing:border-box;margin:0;padding:0}
@@ -22,49 +24,80 @@
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
 
     .page{
-      min-height:100vh;display:flex;flex-direction:column;
-      justify-content:space-between;align-items:center;
-      padding:20px;text-align:center;
+      min-height:100vh; display:flex; flex-direction:column;
+      justify-content:space-between; align-items:center;
+      padding:18px 20px; text-align:center;
     }
 
-    .header{width:100%;display:flex;justify-content:flex-end}
+    /* Toggle tema: fisso in alto a destra, sempre visibile */
     .theme-toggle{
-      cursor:pointer;padding:6px 12px;border-radius:20px;
-      background:rgba(255,255,255,.08);font-size:14px;color:var(--muted);
+      position:fixed; top:10px; right:12px; z-index:20;
+      cursor:pointer; user-select:none;
+      padding:8px 12px; border-radius:999px; background:var(--card);
+      backdrop-filter: blur(6px);
+      font-size:14px; color:var(--muted); display:flex; gap:8px; align-items:center;
+    }
+    .theme-toggle b{color:var(--fg)}
+
+    /* Blocco centrale ben centrato e con spaziatura ancora più precisa */
+    .center{
+      width:100%; max-width:720px; margin: 6px auto 0;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
     }
 
-    .hero{width:min(92vw,600px)}
-    .hero img{width:100%;height:auto;display:block}
+    .hero{
+      width:min(94vw,680px); margin:0 auto; border-radius:22px;
+      overflow:hidden; background:var(--card);
+      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+    }
+    .hero img{width:100%; height:auto; display:block}
 
-    h1{margin-top:24px;font-size:clamp(28px,6vw,46px)}
-    h1 span{color:var(--accent);text-shadow:0 0 8px rgba(0,224,255,.6)}
+    h1{
+      margin: 22px 0 0;
+      font-size:clamp(28px,6.2vw,46px);
+      line-height:1.12;
+    }
+    h1 span{ color:var(--accent); text-shadow:0 0 8px rgba(0,224,255,.6) }
 
-    .btn{margin-top:24px;display:inline-block;text-decoration:none;
+    .btn{
+      margin-top: 18px;
+      display:inline-block; text-decoration:none;
       background:linear-gradient(180deg,var(--accent),var(--accent2));
-      color:var(--ink);font-weight:700;padding:14px 22px;border-radius:28px;
-      min-width:220px;box-shadow:0 0 16px rgba(0,181,204,.4)}
+      color:var(--ink); font-weight:800; letter-spacing:.5px;
+      padding:14px 22px; border-radius:28px; min-width:240px;
+      box-shadow:0 0 16px rgba(0,181,204,.4)
+    }
     .btn:active{transform:translateY(1px)}
 
-    .swipe-tip{margin-top:16px;font-size:13px;color:var(--muted)}
+    .swipe-tip{margin-top:14px; font-size:13px; color:var(--muted)}
 
-    .disclaimer{font-size:13px;color:var(--muted);margin:16px 0}
-    .disclaimer a{color:var(--accent);text-decoration:none}
+    .disclaimer{font-size:13px; color:var(--muted); margin:16px 0}
+    .disclaimer a{color:var(--accent); text-decoration:none}
 
-    footer{font-size:12px;color:var(--muted)}
+    footer{font-size:12px; color:var(--muted); margin-top:2px}
   </style>
 </head>
 <body>
-  <div class="page">
-    <div class="header">
-      <div id="themeBtn" class="theme-toggle">Tema: <b id="themeLabel">Chiaro</b></div>
-    </div>
+  <!-- Toggle tema -->
+  <div id="themeBtn" class="theme-toggle" title="Cambia tema">
+    <span id="themeIcon">☀️</span>
+    Tema: <b id="themeLabel">Chiaro</b>
+  </div>
 
+  <div class="page">
     <div class="center">
+      <!-- immagine -->
       <div class="hero">
         <img id="hero" alt="Scopri il tuo What?f" loading="eager" decoding="async">
       </div>
+
+      <!-- titolo sotto l’immagine, ben centrato -->
       <h1>BENVENUTO SU <span>What?f</span></h1>
+
+      <!-- bottone -->
       <a id="cta" class="btn" href="./second.html">CHOOSE YOUR WAY</a>
+
+      <!-- suggerimento swipe -->
       <div class="swipe-tip">Swipe ↑ o → per continuare</div>
     </div>
 
@@ -75,57 +108,81 @@
     <footer>© 2025 What?f</footer>
   </div>
 
-  <!-- Caricamento immagine robusto -->
+  <!-- loader immagine robusto -->
   <script>
     (async function loadHero(){
-      const img=document.getElementById('hero');
-      const tries=['/home-hero.png','/public/home-hero.png','/assets/home-hero.png'];
+      const img = document.getElementById('hero');
+      const tries = ['/home-hero.png','/public/home-hero.png','/assets/home-hero.png'];
       for(const u of tries){
         try{
-          const r=await fetch(u,{cache:'no-store'});
-          if(r.ok){img.src=u+'?v='+Date.now();return;}
+          const r = await fetch(u,{cache:'no-store'});
+          if(r.ok){ img.src = u + '?v=' + Date.now(); return; }
         }catch(e){}
       }
     })();
   </script>
 
-  <!-- Toggle tema -->
+  <!-- toggle tema persistente -->
   <script>
     (function(){
       const KEY='whatif-theme';
-      const saved=localStorage.getItem(KEY);
-      if(saved){document.documentElement.setAttribute('data-theme',saved);}
-      function setLabel(){
-        const isLight=document.documentElement.getAttribute('data-theme')==='light';
-        document.getElementById('themeLabel').textContent=isLight?'Scuro':'Chiaro';
+      const root=document.documentElement;
+      const btn=document.getElementById('themeBtn');
+      const label=document.getElementById('themeLabel');
+      const icon=document.getElementById('themeIcon');
+
+      function apply(t){
+        root.setAttribute('data-theme', t);
+        localStorage.setItem(KEY, t);
+        const light = (t==='light');
+        label.textContent = light ? 'Scuro' : 'Chiaro';
+        icon.textContent  = light ? '🌙' : '☀️';
+        // aggiorna theme-color del browser
+        const meta=document.querySelector('meta[name="theme-color"]');
+        if(meta) meta.setAttribute('content', getComputedStyle(root).getPropertyValue('--bg').trim());
       }
-      function toggle(){
-        const cur=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';
-        const next=(cur==='light')?'dark':'light';
-        document.documentElement.setAttribute('data-theme',next);
-        localStorage.setItem(KEY,next);setLabel();
-      }
-      document.getElementById('themeBtn').addEventListener('click',toggle);
-      setLabel();
+
+      // inizializza
+      const saved = localStorage.getItem(KEY) || 'dark';
+      apply(saved);
+
+      // click
+      btn.addEventListener('click', ()=>{
+        const cur = root.getAttribute('data-theme')==='light' ? 'light' : 'dark';
+        apply(cur==='light' ? 'dark' : 'light');
+      });
     })();
   </script>
 
-  <!-- Swipe con soglia -->
+  <!-- swipe con soglia più “morbida” ma non accidentale -->
   <script>
     (function(){
       const NEXT='./second.html';
-      let sx=0,sy=0,t0=0;const TH=80,MAXT=900;
+      let sx=0, sy=0, t0=0;
+      const TH=90;      // distanza minima
+      const MAXT=900;   // tempo max gesto
+
       addEventListener('touchstart',e=>{
-        const p=e.touches[0];sx=p.clientX;sy=p.clientY;t0=Date.now();
+        const p=e.touches[0]; sx=p.clientX; sy=p.clientY; t0=Date.now();
       },{passive:true});
+
       addEventListener('touchend',e=>{
         const p=e.changedTouches[0];
-        const dx=p.clientX-sx,dy=p.clientY-sy,dt=Date.now()-t0;
-        if(dt>MAXT)return;
-        if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>TH){if(dx<0)location.href=NEXT;}
-        else if(Math.abs(dy)>TH){if(dy<0)location.href=NEXT;}
+        const dx=p.clientX - sx;
+        const dy=p.clientY - sy;
+        const dt=Date.now() - t0;
+        if(dt>MAXT) return;
+
+        if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){
+          if(dx<0) location.href=NEXT;      // swipe → (da destra verso sinistra)
+        } else if(Math.abs(dy)>TH){
+          if(dy<0) location.href=NEXT;      // swipe ↑
+        }
       },{passive:true});
-      document.getElementById('cta').addEventListener('click',e=>{e.preventDefault();location.href=NEXT;});
+
+      document.getElementById('cta').addEventListener('click', (e)=>{
+        e.preventDefault(); location.href=NEXT;
+      });
     })();
   </script>
 </body>
