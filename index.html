@@ -1,109 +1,59 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – Home</title>
-  <meta name="theme-color" content="#0A0F14">
-
-  <link rel="preload" as="image" href="/home-hero.png" />
-
-  <style>
-    :root { --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA;
-            --accent:#00E0FF; --accent-dark:#00B5CC; }
-    *{ box-sizing:border-box }
-    html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
-    main{ min-height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;
-      text-align:center; padding:20px; gap:14px; transition: opacity .45s ease, transform .45s ease; }
-
-    /* Entrata */
-    .fade-in { opacity:0; transform: translateY(15px); animation: fadeIn 1.2s ease forwards; }
-    .delay1{ animation-delay: .2s } .delay2{ animation-delay: .5s } .delay3{ animation-delay: .9s }
-    @keyframes fadeIn { to { opacity:1; transform: translateY(0) } }
-
-    /* Uscita */
-    .leaving main{ opacity:0; transform: translateY(10px); pointer-events:none }
-
-    .hero-img{ width:min(92vw,560px); height:auto; display:block; margin:0 auto 8px;
-      filter:drop-shadow(0 10px 28px rgba(0,0,0,.45)) }
-    .hero-fallback{ color:var(--muted); font-size:14px; display:none; margin-top:-6px }
-    
-    h1{ margin:.25rem 0 0; font-size:clamp(28px,5.5vw,44px); line-height:1.1 }
-    h1 span{
-      color:var(--accent);
-      text-shadow: 0 0 8px rgba(0,224,255,.7), 0 0 16px rgba(0,224,255,.4);
-      animation: glow 2.5s infinite;
-    }
-    @keyframes glow {
-      0% { text-shadow: 0 0 6px rgba(0,224,255,.6), 0 0 12px rgba(0,224,255,.3) }
-      50%{ text-shadow: 0 0 14px rgba(0,224,255,1), 0 0 28px rgba(0,224,255,.6) }
-      100%{ text-shadow: 0 0 6px rgba(0,224,255,.6), 0 0 12px rgba(0,224,255,.3) }
-    }
-
-    .btn{ display:inline-block; text-decoration:none; background:var(--accent-dark);
-      color:#001f26; font-weight:700; padding:14px 22px; border-radius:28px;
-      box-shadow:0 0 12px rgba(0,181,204,.6), 0 0 24px rgba(0,181,204,.3);
-      animation: pulse 2s infinite; transition:.2s }
-    .btn:hover{ filter:brightness(1.15) }
-    .btn:active{ transform:translateY(1px) }
-    @keyframes pulse {
-      0% { box-shadow:0 0 10px rgba(0,181,204,.5), 0 0 20px rgba(0,181,204,.2) }
-      50%{ box-shadow:0 0 18px rgba(0,224,255,.9), 0 0 36px rgba(0,224,255,.4) }
-      100%{ box-shadow:0 0 10px rgba(0,181,204,.5), 0 0 20px rgba(0,181,204,.2) }
-    }
-
-    footer{ position:fixed; bottom:10px; left:0; right:0; text-align:center; color:var(--muted); font-size:12px }
-    footer a{ color:var(--accent); text-decoration:none }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What?f – Home</title>
+<meta name="theme-color" content="#0A0F14">
+<link rel="preload" as="image" href="/home-hero.png" />
+<style>
+  :root{--bg:#0A0F14;--fg:#fff;--muted:#A0B2BA;--accent:#00E0FF;--accent-dark:#00B5CC}
+  *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{min-height:100svh;display:flex;flex-direction:column;justify-content:space-between;align-items:center;gap:10px;text-align:center;padding:16px 18px calc(18px + env(safe-area-inset-bottom))}
+  .top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+  .hero-img{max-width:min(92vw,560px);max-height:55svh;width:auto;height:auto;display:block;filter:drop-shadow(0 10px 28px rgba(0,0,0,.45))}
+  .hero-fallback{color:var(--muted);font-size:14px;display:none;margin-top:-6px}
+  h1{margin:.25rem 0 0;font-size:clamp(26px,5.5vw,44px);line-height:1.1}
+  h1 span{color:var(--accent);text-shadow:0 0 8px rgba(0,224,255,.7),0 0 16px rgba(0,224,255,.4);animation:glow 2.5s infinite}
+  @keyframes glow{0%{text-shadow:0 0 6px rgba(0,224,255,.6),0 0 12px rgba(0,224,255,.3)}50%{text-shadow:0 0 14px rgba(0,224,255,1),0 0 28px rgba(0,224,255,.6)}100%{text-shadow:0 0 6px rgba(0,224,255,.6),0 0 12px rgba(0,224,255,.3)}}
+  .bottom{width:100%;display:flex;flex-direction:column;align-items:center;gap:12px;padding-bottom:env(safe-area-inset-bottom)}
+  .btn{display:inline-block;text-decoration:none;background:linear-gradient(180deg,#00e0ff,#00b5cc);color:#001c22;font-weight:800;padding:15px 22px;border-radius:28px;min-width:min(88vw,520px);letter-spacing:.3px;
+       box-shadow:0 6px 20px rgba(0,224,255,.25),0 0 0 1px rgba(0,224,255,.35) inset,0 0 25px rgba(0,224,255,.35);
+       transition:filter .2s,transform .15s}
+  .btn:hover{filter:brightness(1.12)} .btn:active{transform:translateY(1px)}
+  .fade-in{opacity:0;transform:translateY(15px);animation:fadeIn 1.2s ease forwards}
+  .delay1{animation-delay:.15s}.delay2{animation-delay:.35s}.delay3{animation-delay:.6s}
+  @keyframes fadeIn{to{opacity:1;transform:translateY(0)}}
+  .leaving main{opacity:0;transform:translateY(10px);pointer-events:none;transition:.45s}
+  footer{position:fixed;bottom:10px;left:0;right:0;text-align:center;color:var(--muted);font-size:12px}
+  footer a{color:var(--accent);text-decoration:none}
+</style>
 </head>
 <body>
   <main>
-    <img id="hero" class="hero-img fade-in delay1" alt="Porta luminosa What?f" loading="eager" decoding="async" />
-    <div id="heroFallback" class="hero-fallback">Caricamento immagine…</div>
-
-    <h1 class="fade-in delay2">BENVENUTO SU <span>What?f</span></h1>
-
-    <a href="second.html" id="cta" class="btn fade-in delay3">CHOOSE YOUR WAY</a>
+    <div class="top">
+      <img id="hero" class="hero-img fade-in delay1" alt="Porta luminosa What?f" loading="eager" decoding="async" />
+      <div id="heroFallback" class="hero-fallback">Caricamento immagine…</div>
+      <h1 class="fade-in delay2">BENVENUTO SU <span>What?f</span></h1>
+    </div>
+    <div class="bottom">
+      <a href="second.html" id="cta" class="btn fade-in delay3">CHOOSE YOUR WAY</a>
+    </div>
   </main>
-
   <footer>© 2025 What?f · <a href="#">Privacy</a> · <a href="#">Termini</a></footer>
-
-  <!-- Disattiva vecchi Service Worker + pulizia cache -->
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations?.().then(r => r.forEach(x=>x.unregister())).catch(()=>{});
-      if (window.caches?.keys) { caches.keys().then(keys => keys.forEach(k => caches.delete(k))); }
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistrations?.().then(r=>r.forEach(x=>x.unregister())).catch(()=>{});
+      if(window.caches?.keys){caches.keys().then(k=>k.forEach(caches.delete))}
     }
-  </script>
-
-  <!-- Caricamento robusto immagine -->
-  <script>
-    (async function loadHero(){
-      const hero = document.getElementById('hero');
-      const fb = document.getElementById('heroFallback');
-      const tries = ['/home-hero.png','/public/home-hero.png','/assets/home-hero.png'];
-      for (const u of tries) {
-        try {
-          const r = await fetch(u, { cache:'no-store' });
-          if (r.ok) { hero.src = u + '?v=' + Date.now(); fb.style.display = 'none'; return; }
-        } catch(e) {}
+    (async function(){
+      const hero=document.getElementById('hero'), fb=document.getElementById('heroFallback');
+      for(const u of ['/home-hero.png','/public/home-hero.png','/assets/home-hero.png']){
+        try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){hero.src=u+'?v='+Date.now(); fb.style.display='none'; return;}}catch(e){}
       }
-      fb.textContent = 'Immagine non trovata.'; fb.style.display = 'block';
+      fb.textContent='Immagine non trovata.'; fb.style.display='block';
     })();
-  </script>
-
-  <!-- Fade-out/slide prima di navigare -->
-  <script>
-    (function(){
-      const CTA = document.getElementById('cta');
-      CTA.addEventListener('click', function(ev){
-        ev.preventDefault();
-        document.body.classList.add('leaving');
-        // attende la transizione (coerente con main{transition: .45s})
-        setTimeout(()=>{ window.location.href = CTA.getAttribute('href'); }, 470);
-      });
-    })();
+    const CTA=document.getElementById('cta'); CTA.addEventListener('click',e=>{e.preventDefault();document.body.classList.add('leaving');setTimeout(()=>location.href=CTA.href,470);});
   </script>
 </body>
 </html>
