@@ -1,37 +1,130 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>What?f – Scegli lo stile</title>
-  <link rel="stylesheet" href="./style.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What?f – Parlami di te</title>
+<meta name="theme-color" content="#0A0F14">
+<style>
+  :root{--bg:#0A0F14;--fg:#E6EEF2;--muted:#9FB1BA;--accent:#00E0FF;--accent2:#00B5CC}
+  *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;padding:18px 16px 80px}
+  .wrap{width:min(860px,92vw)}
+  h1{margin:6px 0 8px;text-align:center;font-size:clamp(26px,5.6vw,42px)}
+  .group{margin:14px 0}
+  .label{display:block;margin:0 0 8px;font-weight:800}
+  .chips{display:flex;flex-wrap:wrap;gap:10px}
+  .chip{padding:10px 14px;border-radius:20px;background:#0f1a22;color:#cfe6ec;border:1px solid #153241;cursor:pointer;user-select:none}
+  .chip.active{background:linear-gradient(180deg,var(--accent) 0%,var(--accent2) 100%);color:#02242C;border-color:transparent}
+  .input,.textarea{width:100%;padding:12px 14px;background:#0f1a22;color:#eaf2f5;border:1px solid #153241;border-radius:12px}
+  .textarea{min-height:110px;resize:vertical}
+  .actions{display:flex;justify-content:center;margin-top:14px}
+  .btn{display:inline-block;text-decoration:none;font-weight:900;background:linear-gradient(180deg,var(--accent) 0%,var(--accent2) 100%);color:#02242C;border-radius:26px;padding:14px 20px;min-width:220px}
+  .hint{font-size:12px;color:#A0B2BA;margin-top:6px;text-align:center}
+  footer{position:fixed;left:0;right:0;bottom:10px;text-align:center;color:#A0B2BA;font-size:12px}
+</style>
 </head>
-<body data-prev="./third.html" data-next="./ask.html">
-  <main class="fade-in">
-    <div class="container">
-      <h1>Scegli lo stile della risposta</h1>
-      <h3>Preferisci una visione <b>narrativa</b> o una <b>ironica</b> e dissacrante?</h3>
+<body>
+  <main>
+    <div class="wrap">
+      <h1>Parlami di te</h1>
 
-      <div class="chips" id="styleChoice" style="margin-top:8px">
-        <span class="chip active" data-style="whatif">Whatif</span>
-        <span class="chip" data-style="wtf">What the F</span>
+      <div class="group">
+        <span class="label">Sesso</span>
+        <div class="chips" id="sex">
+          <span class="chip">Femmina</span>
+          <span class="chip active">Maschio</span>
+          <span class="chip">Altro</span>
+          <span class="chip">Preferisco non dirlo</span>
+        </div>
       </div>
 
-      <a class="btn" id="goForm" href="./ask.html">VAI AVANTI</a>
-      <p class="hint">Suggerimento: swipe ← o → per cambiare schermata</p>
+      <div class="group">
+        <span class="label">In quale fase ti trovi?</span>
+        <div class="chips" id="phase">
+          <span class="chip">Studio</span>
+          <span class="chip active">Carriera</span>
+          <span class="chip">Relazioni</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <span class="label">Cosa ti interessa esplorare?</span>
+        <div class="chips" id="topic">
+          <span class="chip active">Passato</span>
+          <span class="chip">Futuro</span>
+          <!-- rimosse “Whatif/What the F” qui -->
+        </div>
+      </div>
+
+      <div class="group">
+        <span class="label">Stile della risposta</span>
+        <div class="chips" id="tone">
+          <span class="chip active" data-style="whatif">Whatif</span>
+          <span class="chip" data-style="wtf">What the F</span>
+          <!-- senza “standard/ironico” -->
+        </div>
+      </div>
+
+      <div class="group">
+        <span class="label">Da dove vieni?</span>
+        <input class="input" id="city" placeholder="Es. L'Aquila">
+      </div>
+
+      <div class="group">
+        <span class="label">Vuoi aggiungere qualcosa? <small style="color:#A0B2BA">(opzionale)</small></span>
+        <input class="input" id="alias" placeholder="Come vuoi che ti chiami?">
+      </div>
+
+      <div class="group">
+        <span class="label">Note <small style="color:#A0B2BA">(opzionale)</small></span>
+        <textarea class="textarea" id="notes" placeholder="Obiettivi, contesto, limiti di tempo…"></textarea>
+      </div>
+
+      <div class="actions"><a id="send" class="btn" href="#">INVIA</a></div>
+      <div class="hint">Swipe ← per tornare alla pagina precedente</div>
     </div>
   </main>
-
   <footer>© 2025 What?f</footer>
-  <script src="./main.js"></script>
-  <script>
-    // memorizza scelta in sessionStorage
-    const chips = document.querySelectorAll('#styleChoice .chip');
-    chips.forEach(c => c.addEventListener('click', ()=>{
-      chips.forEach(x=>x.classList.remove('active'));
+
+<script>
+  // Toggle chip singola selezione per gruppo
+  document.querySelectorAll('.chips').forEach(group=>{
+    group.addEventListener('click',e=>{
+      const c=e.target.closest('.chip'); if(!c) return;
+      [...group.children].forEach(x=>x.classList.remove('active'));
       c.classList.add('active');
-      sessionStorage.setItem('reply_style', c.dataset.style);
-    }));
-  </script>
+    });
+  });
+
+  // Swipe: solo indietro da qui (finché non colleghiamo la pagina risultato)
+  (function(){
+    const PREV='third.html';
+    let sx=0, sy=0, t=0; const TH=50;
+    addEventListener('touchstart',e=>{const p=e.touches[0]; sx=p.clientX; sy=p.clientY; t=Date.now();},{passive:true});
+    addEventListener('touchend',e=>{
+      const p=e.changedTouches[0], dx=p.clientX-sx, dy=p.clientY-sy, dt=Date.now()-t;
+      if(dt<800 && dx>TH) location.href=PREV; // → torna indietro
+    },{passive:true});
+  })();
+
+  // (facoltativo) salva le scelte — utile per la pagina risultato in futuro
+  document.getElementById('send').addEventListener('click',e=>{
+    e.preventDefault();
+    const pick = (id)=>[...document.querySelectorAll('#'+id+' .chip')].find(x=>x.classList.contains('active'))?.textContent.trim()||null;
+    const data={
+      sesso: pick('sex'),
+      fase: pick('phase'),
+      interesse: pick('topic'),
+      tono: document.querySelector('#tone .chip.active')?.dataset.style || 'whatif',
+      citta: document.getElementById('city').value.trim(),
+      alias: document.getElementById('alias').value.trim(),
+      note:  document.getElementById('notes').value.trim()
+    };
+    localStorage.setItem('whatif_user_profile', JSON.stringify(data));
+    alert('Perfetto! Dati salvati. (Quando sei pronto, colleghiamo la pagina di risultato con la vera AI)');
+  });
+</script>
 </body>
 </html>
