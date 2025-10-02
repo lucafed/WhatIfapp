@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What?f – La tua domanda</title>
+<meta name="theme-color" content="#0A0F14">
+<style>
+  :root{--bg:#0A0F14;--card:#0F1620;--fg:#fff;--muted:#A0B2BA;--accent:#00E0FF;--accent2:#00B5CC}
+  *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{min-height:100svh;display:flex;flex-direction:column;gap:12px;padding:18px;max-width:900px;margin:0 auto}
+  header h1{font-size:clamp(22px,5vw,32px);margin:4px 0}
+  .hint{color:var(--muted);margin:0}
+  .badge{display:inline-flex;align-items:center;gap:8px;background:#0c1821;border:1px solid rgba(0,224,255,.25);border-radius:999px;padding:6px 10px;font-weight:700;color:#9fd3db}
+  .badge .dot{width:10px;height:10px;border-radius:999px;background:var(--accent)}
+  .card{background:var(--card);border-radius:18px;padding:16px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
+  textarea{width:100%;min-height:110px;background:#0b1219;color:var(--fg);border:1px solid rgba(0,224,255,.25);border-radius:12px;padding:12px 14px;font-size:16px;resize:vertical}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+  .btn{display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#001c22;font-weight:800;padding:12px 20px;border-radius:28px;min-width:180px;text-align:center;text-decoration:none}
+  .ghost{background:#101a24;border:1px solid rgba(0,224,255,.25);color:#b5d7de}
+  .answer{white-space:pre-wrap;line-height:1.4;margin-top:12px}
+  footer{color:#7f97a1;text-align:center;font-size:12px;margin:12px 0}
+  a{color:var(--accent);text-decoration:none}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>La tua domanda</h1>
+    <p class="hint">Scrivi qui sotto. Userò lo stile: <span id="toneBadge" class="badge"><span class="dot"></span><span id="toneText">Whatif</span></span></p>
+  </header>
+
+  <section class="card">
+    <textarea id="q" placeholder="Scrivi la tua domanda qui…"></textarea>
+    <div class="actions">
+      <button class="btn" id="send">INVIA</button>
+      <button class="btn ghost" id="new">NUOVA DOMANDA</button>
+    </div>
+    <div id="result" class="answer" hidden></div>
+  </section>
+
+  <footer>© 2025 What?f · <a href="#">Privacy</a> · <a href="#">Termini</a></footer>
+</main>
+
+<script>
+  // recupero profilo
+  let profile={};
+  try{profile = JSON.parse(localStorage.getItem('whatif_user_profile')||'{}')||{};}catch(e){}
+  const tone = profile.tone || 'whatif';
+  document.getElementById('toneText').textContent = (tone==='wtf'?'What the F (ironico)':'Whatif (standard)');
+
+  // mini-mock di risposta locale
+  function reply(text){
+    const name = profile.alias || 'Amico';
+    const where = profile.citta ? ` di ${profile.citta}` : '';
+    const fase = profile.fase ? `, in fase “${profile.fase}”` : '';
+    const pref = Array.isArray(profile.interessi)&&profile.interessi.length? `; interessi: ${profile.interessi.join(', ')}`:'';
+
+    if(tone==='wtf'){
+      return `Okay ${name}${where}${fase}${pref}.\n\nDomanda: “${text}”.\n\nRisposta (modalità *What the F*):\n— Facile: apri quella porta, poi fai due passi e non inciampare nell’universo parallelo. Se va male, dai la colpa al gatto quantistico. Se va bene, era tutto merito tuo (ovvio). 😉`;
+    }else{
+      return `Ciao ${name}${where}${fase}${pref}.\n\nDomanda: “${text}”.\n\nRisposta (modalità *Whatif*):\n— Considera il primo passo concreto che riduce l’incertezza. Definisci un piccolo esperimento a basso rischio, osserva i risultati e iteri. Ogni scelta apre una porta: l’importante è farne una con intenzione.`;
+    }
+  }
+
+  const q=document.getElementById('q'), out=document.getElementById('result');
+  document.getElementById('send').addEventListener('click', ()=>{
+    const text=q.value.trim();
+    if(!text){ q.focus(); return; }
+    out.textContent = reply(text);
+    out.hidden = false;
+    // potresti qui loggare l'interazione in future (analytics/backend)
+  });
+  document.getElementById('new').addEventListener('click', ()=>{
+    q.value=''; q.focus(); out.hidden=true; out.textContent='';
+  });
+</script>
+</body>
+</html>
