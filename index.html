@@ -3,100 +3,94 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>What?f - Home</title>
+  <title>What?f – Home</title>
   <link rel="stylesheet" href="style.css">
   <style>
     body {
       margin: 0;
+      padding: 0;
       font-family: Arial, sans-serif;
       background-color: #0A0F14;
-      color: #fff;
+      color: white;
       text-align: center;
+      overflow-x: hidden;
     }
-
     .container {
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      padding: 20px;
     }
-
-    .hero-img {
-      max-width: 320px;
-      width: 80%;
-      margin-bottom: 20px;
+    .hero img {
+      max-width: 90%;
+      height: auto;
       border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0, 224, 255, 0.4);
-    }
-
-    h1 {
-      font-size: 1.8rem;
       margin-bottom: 20px;
     }
-
+    h1 {
+      font-size: 1.8em;
+      margin: 10px 0;
+    }
     h1 span {
       color: #00E0FF;
       text-shadow: 0 0 8px #00E0FF;
     }
-
     .btn {
       display: inline-block;
+      background-color: #00B5CC;
+      color: white;
       padding: 14px 30px;
       margin-top: 20px;
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: #fff;
-      background: #00B5CC;
-      border: none;
       border-radius: 30px;
-      cursor: pointer;
+      font-size: 1.1em;
       text-decoration: none;
-      box-shadow: 0 0 15px rgba(0, 224, 255, 0.5);
-      transition: all 0.3s ease;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      box-shadow: 0 0 15px rgba(0,224,255,0.6);
     }
-
     .btn:hover {
-      background: #00E0FF;
-      box-shadow: 0 0 20px rgba(0, 224, 255, 0.8);
+      background-color: #00E0FF;
+      transform: scale(1.05);
     }
-
     footer {
-      margin-top: 30px;
-      font-size: 0.8rem;
+      position: absolute;
+      bottom: 15px;
+      width: 100%;
+      font-size: 0.9em;
       color: #A0B2BA;
     }
-
     footer a {
       color: #00E0FF;
       text-decoration: none;
-      margin: 0 5px;
+      margin: 0 8px;
+    }
+    /* Swipe indicator */
+    .swipe {
+      position: absolute;
+      bottom: 70px;
+      font-size: 0.9em;
+      color: #A0B2BA;
+      animation: swipe 1.5s infinite;
+    }
+    @keyframes swipe {
+      0% { opacity: 0; transform: translateY(0); }
+      50% { opacity: 1; transform: translateY(-8px); }
+      100% { opacity: 0; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- ✅ immagine presa da public/ -->
-    <img src="/home-hero.png" alt="Porta luminosa What?f" class="hero-img">
-
+    <div class="hero">
+      <img src="/home-hero.png" alt="Porta luminosa What?f">
+    </div>
     <h1>BENVENUTO SU <span>What?f</span></h1>
-
     <a href="second.html" class="btn">CHOOSE YOUR WAY</a>
+    <div class="swipe">⬆️ Swipe up</div>
   </div>
 
   <footer>
     © 2025 What?f · <a href="#">Privacy</a> · <a href="#">Termini</a>
   </footer>
-
-  <script>
-    // ✅ Swipe avanti/indietro
-    let startX = 0;
-    document.addEventListener("touchstart", e => startX = e.touches[0].clientX);
-    document.addEventListener("touchend", e => {
-      let endX = e.changedTouches[0].clientX;
-      if (startX - endX > 50) window.location.href = "second.html";   // swipe left
-    });
-  </script>
 </body>
 </html>
