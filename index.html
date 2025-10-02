@@ -1,125 +1,89 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>What?f - Home</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f – Home</title>
+
+  <!-- Se hai già style.css lascialo così -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Solo micro-fix per l’immagine: non tocca il resto dello stile -->
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #0A0F14;
-      color: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+    .hero-img{
+      max-width: 680px; width: min(88vw, 680px); height: auto;
+      display:block; margin: 0 auto 1rem auto; filter: drop-shadow(0 8px 24px rgba(0,0,0,.35));
     }
-    .container {
-      text-align: center;
-      max-width: 400px;
-      padding: 20px;
-    }
-    img {
-      max-width: 100%;
-      height: auto;
-      margin-bottom: 20px;
-    }
-    h1 {
-      color: #00E0FF;
-    }
-    .button {
-      display: inline-block;
-      background-color: #00E0FF;
-      color: #000;
-      font-weight: bold;
-      padding: 15px 25px;
-      margin-top: 20px;
-      border-radius: 30px;
-      text-decoration: none;
-    }
-    .swipe {
-      margin-top: 20px;
-      font-size: 14px;
-      color: #A0B2BA;
-    }
-    footer {
-      margin-top: 30px;
-      font-size: 12px;
-      color: #A0B2BA;
-    }
+    .swipe-row{ display:flex; align-items:center; gap:.5rem; justify-content:center; margin:.75rem 0 1.25rem }
+    .swipe-dot{ width:8px; height:8px; border-radius:999px; background:#4fd1d9; opacity:.4 }
+    .swipe-dot.active{ opacity:1 }
+    .hidden{ display:none !important }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Pagina 1 -->
-    <div class="slide">
-      <img src="/home-hero.png" alt="Porta luminosa What?f">
-      <h1>BENVENUTO SU<br>What?f</h1>
-      <p>Le porte che non hai aperto e quelle che aprirai.</p>
-      <div class="swipe">⬅️ SWIPE ➡️</div>
-      <a href="#" class="button">CHOOSE YOUR WAY</a>
+
+  <main class="container">
+    <!-- HERO IMAGE -->
+    <!-- Percorso assoluto: il file è in /public/home-hero.png e sarà servito come /home-hero.png -->
+    <img
+      src="/home-hero.png"
+      alt="Porta luminosa What?f"
+      class="hero-img"
+      loading="eager"
+      decoding="async"
+      onerror="this.classList.add('hidden')" />
+
+    <!-- Titoli -->
+    <h1 class="title">BENVENUTO SU<br><span class="brand">What?f</span></h1>
+    <p class="subtitle">Le porte che non hai aperto e quelle che aprirai.</p>
+
+    <!-- Swipe indicatori -->
+    <div class="swipe-row" aria-hidden="true">
+      <span class="swipe-dot active"></span>
+      <span class="swipe-dot"></span>
+      <span class="swipe-dot"></span>
+      <span aria-label="Swipe" style="margin-left:.25rem">SWIPE ➡️</span>
     </div>
 
-    <!-- Pagina 2 -->
-    <div class="slide" style="display:none;">
-      <img src="/second-hero.png" alt="Seconda schermata">
-      <h1>Scopri il tuo What?f</h1>
-      <p>Le scelte ci definiscono. Cosa sarebbe successo se...?</p>
-      <a href="#" class="button">INIZIA</a>
-      <div class="swipe">⬅️ SWIPE ➡️</div>
-    </div>
+    <!-- CTA -->
+    <p style="text-align:center;margin:0">
+      <a href="second.html" class="btn btn-primary" style="text-decoration:none">CHOOSE YOUR WAY</a>
+    </p>
+  </main>
 
-    <!-- Pagina 3 -->
-    <div class="slide" style="display:none;">
-      <img src="/third-hero.png" alt="Terza schermata">
-      <h1>Il tuo viaggio</h1>
-      <p>Passato, futuro o... What the F?</p>
-      <a href="#" class="button">CONTINUA</a>
-      <div class="swipe">⬅️ SWIPE ➡️</div>
-    </div>
+  <footer class="footer">
+    <small>© 2025 What?f · <a href="privacy.html">Privacy</a> · <a href="terms.html">Termini</a></small>
+  </footer>
 
-    <footer>
-      © 2025 What?f · <a href="#" style="color:#00E0FF;">Privacy</a> · <a href="#" style="color:#00E0FF;">Termini</a>
-    </footer>
-  </div>
+  <noscript>Per un'esperienza completa attiva JavaScript.</noscript>
 
   <script>
-    const slides = document.querySelectorAll(".slide");
-    let current = 0;
+    // --- Swipe: vai a second.html se l’utente scorre verso destra ---
+    (function () {
+      const goNext = () => { window.location.href = 'second.html'; };
 
-    function showSlide(index) {
-      slides.forEach((s, i) => s.style.display = i === index ? "block" : "none");
-    }
+      // Touch (mobile)
+      let startX = null, startY = null, t0 = 0;
+      const onTouchStart = (e) => {
+        const t = e.changedTouches[0];
+        startX = t.clientX; startY = t.clientY; t0 = Date.now();
+      };
+      const onTouchEnd = (e) => {
+        const t = e.changedTouches[0];
+        const dx = t.clientX - startX;
+        const dy = Math.abs(t.clientY - startY);
+        const dt = Date.now() - t0;
+        // swipe orizzontale deciso, non troppo lento, poco verticale
+        if (dx > 60 && dy < 50 && dt < 700) goNext();
+      };
+      document.addEventListener('touchstart', onTouchStart, {passive:true});
+      document.addEventListener('touchend', onTouchEnd, {passive:true});
 
-    document.addEventListener("keydown", e => {
-      if (e.key === "ArrowRight") {
-        current = (current + 1) % slides.length;
-        showSlide(current);
-      }
-      if (e.key === "ArrowLeft") {
-        current = (current - 1 + slides.length) % slides.length;
-        showSlide(current);
-      }
-    });
-
-    // Swipe touch per mobile
-    let startX = 0;
-    document.addEventListener("touchstart", e => startX = e.touches[0].clientX);
-    document.addEventListener("touchend", e => {
-      let endX = e.changedTouches[0].clientX;
-      if (startX - endX > 50) { // swipe left
-        current = (current + 1) % slides.length;
-        showSlide(current);
-      }
-      if (endX - startX > 50) { // swipe right
-        current = (current - 1 + slides.length) % slides.length;
-        showSlide(current);
-      }
-    });
-
-    showSlide(current);
+      // Tastiera freccia destra
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') goNext();
+      });
+    })();
   </script>
 </body>
 </html>
