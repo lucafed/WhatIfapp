@@ -5,15 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>What?f – Home</title>
 
-  <!-- Se hai già style.css va bene lasciarlo; gli stili sotto rifiniscono solo la home -->
-  <link rel="stylesheet" href="/style.css" />
-
   <style>
     :root {
       --bg: #0b1418;
       --text: #e6f7ff;
-      --accent: #00a8bc;     /* colore bottone */
-      --accent-2: #00c7db;   /* hover */
+      --accent: #00a8bc;
+      --accent-2: #00c7db;
     }
     html,body{
       height:100%;
@@ -49,11 +46,7 @@
       user-select:none;
       -webkit-user-drag:none;
       pointer-events:none;
-      opacity:0;
-      transform:translateY(4px);
-      transition:opacity .35s ease, transform .35s ease;
     }
-    .hero.loaded{ opacity:1; transform:none; }
 
     .brand{
       font-size: clamp(26px, 5.3vw, 42px);
@@ -78,19 +71,6 @@
     .btn:hover{ background:var(--accent-2); transform: translateY(-1px); }
     .btn:active{ transform: translateY(0); }
 
-    .hint{
-      margin: 12px 0 22px;
-      opacity:.9;
-      font-weight:700;
-      letter-spacing:.5px;
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:center;
-      font-size:clamp(14px, 2.8vw, 16px);
-    }
-    .dot{width:8px;height:8px;border-radius:50%;background:#3c4b52;box-shadow:0 0 0 2px rgba(255,255,255,.06) inset;}
-    .arrow{font-size:18px;filter: drop-shadow(0 2px 6px rgba(0,0,0,.4));}
     footer{
       position:fixed; left:0; right:0; bottom:8px;
       text-align:center; font-size:13px; opacity:.75;
@@ -101,29 +81,21 @@
 </head>
 <body>
 
-  <main class="wrap" id="swipe-area" aria-label="Schermata Home, scorri a sinistra per continuare">
+  <main class="wrap" id="swipe-area">
     <section class="card">
       <!-- Immagine hero dalla cartella /public -->
       <img
         id="hero"
         class="hero"
         src="/home-hero.png"
-        alt="Porta luminosa What?f" 
+        alt="Porta luminosa What?f"
         width="1200" height="900"
-        decoding="async" loading="eager"
         />
 
-      <h1 class="brand" aria-label="Benvenuto su What if">BENVENUTO SU <span style="color:#3fe3ff;text-shadow:0 0 24px rgba(63,227,255,.35)">What?f</span></h1>
+      <h1 class="brand">BENVENUTO SU <span style="color:#3fe3ff;text-shadow:0 0 24px rgba(63,227,255,.35)">What?f</span></h1>
 
-      <!-- Hint swipe -->
-      <div class="hint" id="hint">
-        <span class="arrow">⬅️</span>
-        <span>SWIPE per continuare</span>
-        <span class="arrow">➡️</span>
-      </div>
-
-      <!-- Pulsante accessibile -->
-      <a id="cta" class="btn" href="/second.html" aria-label="Vai alla schermata successiva">CHOOSE YOUR WAY</a>
+      <!-- Pulsante -->
+      <a id="cta" class="btn" href="/second.html">CHOOSE YOUR WAY</a>
     </section>
   </main>
 
@@ -132,26 +104,19 @@
   </footer>
 
   <script>
-    // Fade-in dell’immagine quando è pronta
-    const hero = document.getElementById('hero');
-    if (hero.complete) hero.classList.add('loaded');
-    else hero.addEventListener('load', () => hero.classList.add('loaded'));
-
-    // Navigazione
     const goNext = () => { window.location.href = '/second.html'; };
 
     // Click sul bottone
     document.getElementById('cta').addEventListener('click', (e) => {
-      // Lascia il link “normale” funzionare; se vuoi forzare via JS:
-      // e.preventDefault(); goNext();
+      // link già funziona normalmente
     });
 
-    // Swipe semplice (mobile)
+    // Swipe semplice
     (function enableSwipe(){
       const area = document.getElementById('swipe-area');
       let startX = 0, startY = 0, endX = 0, endY = 0;
-      const THRESH_X = 60;  // quanto scorrere in px per considerarlo swipe
-      const LIMIT_Y  = 80;  // tolleranza verticale
+      const THRESH_X = 60;  
+      const LIMIT_Y  = 80;  
 
       area.addEventListener('touchstart', (e) => {
         const t = e.changedTouches[0];
@@ -167,21 +132,14 @@
       area.addEventListener('touchend', () => {
         const dx = endX - startX;
         const dy = Math.abs(endY - startY);
-        // swipe sinistra => vai avanti (dx < -THRESH_X)
         if (dx < -THRESH_X && dy < LIMIT_Y) goNext();
-        // (opzionale) swipe destra: niente/torna indietro
-        // if (dx > THRESH_X && dy < LIMIT_Y) window.history.back();
       }, {passive:true});
     })();
 
-    // Tastiera (freccia destra = avanti)
+    // Tastiera
     window.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight') goNext();
-      // if (e.key === 'ArrowLeft') history.back();
     });
-
-    // Evita che lo swipe “rimbalzi” su scroll verticale leggero
-    // (non blocchiamo lo scroll normale: solo un tocco brevissimo orizzontale)
   </script>
 </body>
 </html>
