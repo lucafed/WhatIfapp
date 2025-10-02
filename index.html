@@ -1,100 +1,153 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – Home</title>
-
-  <!-- Se hai già style.css lascialo così -->
-  <link rel="stylesheet" href="style.css" />
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What?f - Home</title>
   <style>
-    /* Ritocchi minimi per garantire che tutto si veda anche senza style.css */
-    :root { --c-bg:#0e151a; --c-fg:#d9f0f5; --c-accent:#22d3ee; --c-sub:#9cc7d1; }
-    body{margin:0;background:var(--c-bg);color:var(--c-fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial}
-    .wrap{max-width:840px;margin:0 auto;padding:32px 16px;min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
-    h1{font-size:clamp(34px,6vw,56px);line-height:1.05;margin:8px 0 6px}
-    .brand{color:var(--c-accent)}
-    .subtitle{color:var(--c-sub);max-width:32ch;margin:8px auto 12px;font-size:clamp(16px,3.2vw,20px)}
-    .hero-img{width:min(90vw,560px);height:auto;display:block;margin:8px auto 6px;filter:drop-shadow(0 10px 30px rgba(0,0,0,.45))}
-    .swipe{display:inline-flex;gap:.5rem;align-items:center;opacity:.85;color:var(--c-sub);margin:10px 0 18px;font-weight:600;letter-spacing:.02em}
-    .btn{display:inline-block;background:var(--c-accent);color:#04212a;text-decoration:none;font-weight:800;
-         padding:18px 26px;border-radius:36px;box-shadow:0 10px 28px rgba(34,211,238,.25)}
-    .btn:active{transform:translateY(1px)}
-    .dots{display:inline-flex;gap:6px;margin-left:.4rem}
-    .dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.18)}
-    .dot.active{background:var(--c-accent)}
-    footer{margin-top:28px;opacity:.7;font-size:14px}
-    a.legal{color:var(--c-sub);text-decoration:none;margin:0 .5rem}
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #0A0F14;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .slider {
+      display: flex;
+      width: 300%;
+      height: 100%;
+      transition: transform 0.5s ease;
+    }
+
+    .slide {
+      flex: 0 0 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .slide img {
+      max-width: 250px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      color: #00E0FF;
+    }
+
+    p {
+      color: #A0B2BA;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      background-color: #00E0FF;
+      color: #000;
+      font-weight: bold;
+      padding: 15px 25px;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    .controls {
+      position: absolute;
+      bottom: 80px;
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      gap: 15px;
+      font-size: 18px;
+    }
+
+    footer {
+      position: absolute;
+      bottom: 10px;
+      font-size: 12px;
+      color: #A0B2BA;
+    }
+
+    footer a {
+      color: #00E0FF;
+      text-decoration: none;
+      margin: 0 5px;
+    }
   </style>
 </head>
 <body>
-  <main class="wrap" id="page">
-    <!-- HERO -->
-    <img src="home-hero.png" alt="Porta luminosa What?f" class="hero-img" loading="eager" decoding="async" />
-
-    <h2 class="subtitle">BENVENUTO SU</h2>
-    <h1> <span class="brand">What?f</span> </h1>
-    <p class="subtitle">Le porte che non hai aperto e quelle che aprirai.</p>
-
-    <!-- Swipe hint -->
-    <div class="swipe" aria-hidden="true">
-      ⬅️ SWIPE ➡️
-      <span class="dots" role="presentation">
-        <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
-      </span>
+  <div class="slider" id="slider">
+    <!-- Slide 1 -->
+    <div class="slide">
+      <img src="home-hero.png" alt="Porta luminosa What?f">
+      <h1>BENVENUTO SU<br><span style="color:#00E0FF;">What?f</span></h1>
+      <p>Le porte che non hai aperto e quelle che aprirai.</p>
+      <button class="btn" onclick="nextSlide()">CHOOSE YOUR WAY</button>
     </div>
 
-    <!-- CTA -->
-    <a href="second.html" class="btn" id="cta">CHOOSE YOUR WAY</a>
+    <!-- Slide 2 -->
+    <div class="slide">
+      <img src="second-hero.png" alt="Seconda schermata">
+      <h1>Scopri il tuo <span style="color:#00E0FF;">What?f</span></h1>
+      <p>Le scelte ci definiscono. Cosa sarebbe successo se…?</p>
+      <button class="btn" onclick="nextSlide()">INIZIA</button>
+    </div>
 
-    <footer>
-      <span>© 2025 What?f</span>
-      <a class="legal" href="#">Privacy</a>·
-      <a class="legal" href="#">Termini</a>
-    </footer>
-  </main>
+    <!-- Slide 3 -->
+    <div class="slide">
+      <img src="third-hero.png" alt="Terza schermata">
+      <h1>Scegli come vivere <span style="color:#00E0FF;">What?f</span></h1>
+      <p>Modalità normale o ironica? Tocca per decidere.</p>
+      <button class="btn">ENTRA</button>
+    </div>
+  </div>
+
+  <!-- Controlli swipe -->
+  <div class="controls">
+    <span onclick="prevSlide()">⬅️ SWIPE ➡️</span>
+  </div>
+
+  <footer>
+    © 2025 What?f · <a href="#">Privacy</a> · <a href="#">Termini</a>
+  </footer>
 
   <script>
-    // ------- Swipe to navigate -> second.html -------
-    (function () {
-      const goNext = () => window.location.href = "second.html";
+    let currentSlide = 0;
+    const slider = document.getElementById('slider');
+    const totalSlides = document.querySelectorAll('.slide').length;
 
-      // Supporto touch/pointer
-      let startX = 0, startY = 0, isTouch = false;
-      const THRESHOLD = 48; // px
+    function showSlide(index) {
+      if (index >= totalSlides) currentSlide = 0;
+      else if (index < 0) currentSlide = totalSlides - 1;
+      else currentSlide = index;
 
-      const onStart = (x, y) => { startX = x; startY = y; isTouch = true; };
-      const onEnd = (x, y) => {
-        if (!isTouch) return;
-        const dx = x - startX, dy = y - startY;
-        // swipe orizzontale deciso
-        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > THRESHOLD) {
-          if (dx < 0) goNext(); // swipe a sinistra => vai avanti
-        }
-        isTouch = false;
-      };
+      slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+    }
 
-      // Touch
-      document.addEventListener("touchstart", e => {
-        const t = e.changedTouches[0];
-        onStart(t.clientX, t.clientY);
-      }, {passive:true});
+    function nextSlide() {
+      showSlide(currentSlide + 1);
+    }
 
-      document.addEventListener("touchend", e => {
-        const t = e.changedTouches[0];
-        onEnd(t.clientX, t.clientY);
-      });
+    function prevSlide() {
+      showSlide(currentSlide - 1);
+    }
 
-      // Pointer (alcuni Android invianno pointer invece di touch)
-      document.addEventListener("pointerdown", e => onStart(e.clientX, e.clientY));
-      document.addEventListener("pointerup",   e => onEnd(e.clientX, e.clientY));
-
-      // Tastiera (desktop): freccia destra = avanti
-      document.addEventListener("keydown", e => {
-        if (e.key === "ArrowRight") goNext();
-      });
-    })();
+    // Swipe touch per mobile
+    let startX = 0;
+    slider.addEventListener("touchstart", e => startX = e.touches[0].clientX);
+    slider.addEventListener("touchend", e => {
+      let endX = e.changedTouches[0].clientX;
+      if (startX - endX > 50) nextSlide();
+      else if (endX - startX > 50) prevSlide();
+    });
   </script>
 </body>
 </html>
