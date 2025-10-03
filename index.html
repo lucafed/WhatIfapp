@@ -10,8 +10,9 @@
 :root{--bg:#0A0F14;--fg:#e9f2f5;--muted:#9fb3bd;--c1:#FFD166;--c2:#06D6A0;--accent:#00E0FF}
 *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
 main{min-height:100%;display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:flex-start;padding:18px}
-.hero-wrap{width:min(100%,760px);border-radius:28px;background:rgba(255,255,255,.03);box-shadow:0 20px 60px rgba(0,0,0,.45);padding:10px 12px}
-img.hero{display:block;width:100%;height:auto;border-radius:22px;filter:drop-shadow(0 18px 36px rgba(0,0,0,.45))}
+.hero-wrap{width:min(100%,760px);border-radius:28px;background:rgba(255,255,255,.03);box-shadow:0 20px 60px rgba(0,0,0,.45);padding:10px 12px;overflow:hidden}
+img.hero{display:block;width:100%;height:min(70vh,760px);border-radius:22px;filter:drop-shadow(0 18px 36px rgba(0,0,0,.45));
+  object-fit:cover; object-position:center 36%;} /* <-- taglia la parte alta con il testo */
 h1{margin:14px 0 0;font-size:clamp(26px,6.2vw,40px);text-align:center}
 .sub{max-width:880px;margin:8px auto 0;line-height:1.45;text-align:center;color:var(--muted);font-size:clamp(14px,3.4vw,18px)}
 .btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:12px 0 6px}
@@ -30,7 +31,6 @@ a{color:var(--accent);text-decoration:none}
 <body>
   <main id="page">
     <div class="hero-wrap fade">
-      <!-- Niente titoli sopra: rimane solo l'immagine -->
       <img id="hero" class="hero" alt="Due porte: What?f e What the F"/>
     </div>
 
@@ -51,7 +51,6 @@ a{color:var(--accent);text-decoration:none}
   </main>
 
 <script>
-/* immagine robusta */
 (async function loadHero(){
   const img = document.getElementById('hero');
   const tries = ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
@@ -62,7 +61,6 @@ a{color:var(--accent);text-decoration:none}
   img.alt = 'Immagine non trovata';
 })();
 
-/* swipe su document (non blocca i click) */
 (function(){
   let sx=0, sy=0, dx=0, dy=0, active=false; const TH=55;
   document.addEventListener('touchstart',e=>{active=true;const t=e.touches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
@@ -73,11 +71,10 @@ a{color:var(--accent);text-decoration:none}
   },{passive:true});
 })();
 
-/* salva scelta porta per colorare bottoni dopo */
 document.querySelectorAll('[data-mode]').forEach(el=>{
   el.addEventListener('click', (ev)=>{
     ev.preventDefault();
-    localStorage.setItem('mode', el.dataset.mode);   // "whatif" | "wtf"
+    localStorage.setItem('mode', el.dataset.mode);
     window.location.href = el.getAttribute('href');
   });
 });
