@@ -1,64 +1,297 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>What?f – Step 4</title>
-<meta name="theme-color" content="#0A0F14">
-<style>
-  :root{--bg:#0A0F14;--fg:#E6EEF2;--muted:#A0B2BA;--accent:#00E0FF;--accent2:#00B5CC}
-  *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;padding:18px 16px 84px}
-  .hero{width:min(92vw,780px);border-radius:18px;overflow:hidden;box-shadow:0 14px 36px rgba(0,0,0,.5)}
-  .hero img{display:block;width:100%;height:auto}
-  .fb{display:none;color:var(--muted);font-size:14px}
-  h2{margin:6px 0 0;text-align:center;font-size:clamp(24px,5.6vw,38px)}
-  .copy{max-width:820px;text-align:center;color:#C7DCE3;font-size:clamp(15px,3.8vw,19px)}
-  .btn{display:inline-block;text-decoration:none;font-weight:800;letter-spacing:.3px;
-      background:linear-gradient(180deg,var(--accent) 0%,var(--accent2) 100%);color:#02242C;border:0;border-radius:22px;
-      padding:12px 22px;min-width:220px;box-shadow:0 10px 28px rgba(0,181,204,.45)}
-  footer{position:fixed;left:0;right:0;bottom:10px;text-align:center;color:var(--muted);font-size:12px}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f – Risultato</title>
+  <meta name="theme-color" content="#0A0F14" />
+  <style>
+    :root{
+      --bg:#0A0F14; --fg:#EAF4F7; --muted:#9FB1B8;
+      --accent:#00E0FF; --accent-2:#00B5CC; --ink:#001f26;
+      --surface:#141C22; --surface-2:#0F161C; --ok:#1AFFD5;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0; height:100%; background:var(--bg); color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    a{color:var(--accent); text-decoration:none}
+
+    main{
+      min-height:100dvh; display:flex; flex-direction:column; gap:16px;
+      padding:18px; max-width:940px; margin:0 auto;
+    }
+
+    header h1{margin:4px 0 2px; font-size:clamp(20px,5vw,28px)}
+    .modes{
+      display:flex; gap:10px; flex-wrap:wrap; margin-top:4px
+    }
+    .chip{
+      padding:8px 12px; border-radius:999px; cursor:pointer;
+      border:1px solid rgba(255,255,255,.15); background:var(--surface-2); color:var(--fg);
+      font-weight:700; font-size:14px; letter-spacing:.2px;
+    }
+    .chip.active{border-color:var(--accent); box-shadow:0 0 0 2px rgba(0,224,255,.18) inset}
+
+    .card{
+      background:var(--surface); border:1px solid rgba(255,255,255,.08);
+      border-radius:14px; padding:14px;
+    }
+
+    /* Follow-up Q&A */
+    .followup h2{margin:0 0 10px; font-size:18px; color:#CDE7EE}
+    .qa{display:grid; gap:10px}
+    .q{background:var(--surface-2); border:1px solid rgba(255,255,255,.06);
+       border-radius:10px; padding:10px; font-size:14px}
+    .q strong{color:var(--accent)}
+    .a{display:flex; gap:8px}
+    .a input{flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.1);
+      background:#0E141A; color:var(--fg)}
+    .a button{padding:10px 14px; border-radius:10px; border:0; cursor:pointer;
+      background:var(--accent-2); color:var(--ink); font-weight:800}
+
+    /* Risultato */
+    .result h2{margin:0 0 10px; font-size:18px; color:#CDE7EE}
+    .output{white-space:pre-wrap; font-size:16px; line-height:1.5}
+    .prob{margin-top:8px; font-size:14px; color:var(--muted)}
+    .bar{height:8px; border-radius:10px; background:#0E141A; overflow:hidden; margin-top:6px}
+    .bar > span{display:block; height:100%; background:linear-gradient(90deg, var(--ok), var(--accent)); width:0%}
+
+    /* Azioni */
+    .actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px}
+    .btn{padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.1);
+      background:var(--surface-2); color:var(--fg); cursor:pointer; font-weight:700}
+    .btn.primary{background:var(--accent-2); color:var(--ink); border-color:transparent}
+
+    /* Footer nav hint invisibile (manteniamo aria) */
+    .hint{position:absolute; left:-9999px}
+
+    /* Swipe area (tutta la pagina) */
+    body{touch-action:pan-y}
+  </style>
 </head>
 <body>
-  <main>
-    <div class="hero">
-      <img id="hero" alt="Step 4" loading="eager" decoding="async"/>
-    </div>
-    <div id="fb" class="fb">Immagine non trovata.</div>
+  <main id="page">
+    <header>
+      <h1>✨ Il tuo What?f</h1>
+      <div class="modes" id="modes">
+        <button class="chip" data-mode="realistic">🚪 Sliding Doors</button>
+        <button class="chip" data-mode="ironic">🌈 What the F?!</button>
+      </div>
+    </header>
 
-    <h2>Pronto a scegliere?</h2>
-    <div class="copy">Un ultimo sguardo prima di entrare nel tuo scenario.</div>
+    <!-- Follow-up Q&A -->
+    <section class="card followup" id="followup">
+      <h2>Domande per capire meglio</h2>
+      <div class="qa" id="qa">
+        <!-- Le 3 domande arrivano qui una alla volta -->
+      </div>
+    </section>
 
-    <a id="cta" class="btn" href="./fifth.html">CONTINUA</a>
-    <div style="font-size:12px;color:var(--muted)">Swipe ← per tornare, → o ↑ per continuare</div>
+    <!-- Risultato -->
+    <section class="card result" id="result" style="display:none">
+      <h2>Risposta</h2>
+      <div class="output" id="aiText">Sto preparando la tua risposta…</div>
+      <div class="prob" id="probText"></div>
+      <div class="bar"><span id="probBar"></span></div>
+
+      <div class="actions">
+        <button class="btn" id="likeBtn">👍 Like</button>
+        <button class="btn" id="dislikeBtn">👎 Dislike</button>
+        <button class="btn primary" id="shareBtn">📤 Condividi</button>
+        <button class="btn" id="againBtn">🔁 Fai un’altra domanda</button>
+        <button class="btn" id="homeBtn">🏠 Home</button>
+      </div>
+    </section>
+
+    <p class="hint" aria-hidden="true">Swipe destra per Home, sinistra per nuova domanda</p>
   </main>
-  <footer>© 2025 What?f</footer>
 
   <script>
-    (async function(){
-      const img=document.getElementById('hero'), fb=document.getElementById('fb');
-      const tries=['/fourth-hero.png','/public/fourth-hero.png','/assets/fourth-hero.png','fourth-hero.png'];
-      for(const u of tries){try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){img.src=u+'?v='+Date.now(); fb.style.display='none'; return;}}catch(e){}}
-      fb.style.display='block';
-    })();
-  </script>
+    /* ========= Modalità (chip) ========= */
+    const modesWrap = document.getElementById('modes');
+    let mode = sessionStorage.getItem('whatif_mode') || 'realistic';
+    function paintMode(){
+      [...modesWrap.querySelectorAll('.chip')].forEach(c=>{
+        c.classList.toggle('active', c.dataset.mode===mode);
+      });
+      sessionStorage.setItem('whatif_mode', mode);
+    }
+    modesWrap.addEventListener('click', (e)=>{
+      const b = e.target.closest('.chip'); if(!b) return;
+      mode = b.dataset.mode; paintMode();
+    });
+    paintMode();
 
-  <script>
+    /* ========= Swipe L/R ========= */
     (function(){
-      const NEXT='fifth.html', PREV='third.html';
-      let sx=0,sy=0,t=0; const TH=50;
-      addEventListener('touchstart',e=>{const p=e.touches[0]; sx=p.clientX; sy=p.clientY; t=Date.now();},{passive:true});
-      addEventListener('touchend',e=>{
-        const p=e.changedTouches[0], dx=p.clientX-sx, dy=p.clientY-sy, dt=Date.now()-t;
-        if(dt<800){
-          if(dx<-TH || -dy>TH) location.href=NEXT;
-          if(dx>TH  || dy>TH)  location.href=PREV;
+      let x0=null,y0=null,locked=false;
+      const TH=45; // sensibilità
+      function start(e){ const t=e.changedTouches?e.changedTouches[0]:e; x0=t.clientX; y0=t.clientY; locked=true; }
+      function move(e){
+        if(!locked) return;
+        const t=e.changedTouches?e.changedTouches[0]:e;
+        const dx=t.clientX-x0, dy=Math.abs(t.clientY-y0);
+        if(Math.abs(dx)>TH && dy<60){
+          locked=false;
+          if(dx>0) window.location.href='index.html';       // ← destra: Home
+          else      window.location.href='ask.html';        // → sinistra: nuova domanda
         }
-      },{passive:true});
-      document.getElementById('cta').addEventListener('click',e=>{e.preventDefault();location.href=NEXT;});
+      }
+      function end(){ locked=false; }
+      const el=document.getElementById('page');
+      el.addEventListener('touchstart',start,{passive:true});
+      el.addEventListener('touchmove',move,{passive:true});
+      el.addEventListener('touchend',end,{passive:true});
+      el.addEventListener('mousedown',start);
+      el.addEventListener('mousemove',move);
+      el.addEventListener('mouseup',end);
     })();
+
+    /* ========= Follow-up & risposta =========
+       Flusso:
+       1) recupera la domanda iniziale (da sessionStorage o chiedi all’utente)
+       2) chiede 3 follow-up (via ask.js se presente, altrimenti mock)
+       3) genera la risposta finale + percentuale
+    ========================================= */
+    const qaBox = document.getElementById('qa');
+    const followupSec = document.getElementById('followup');
+    const resultSec = document.getElementById('result');
+    const aiText = document.getElementById('aiText');
+    const probText = document.getElementById('probText');
+    const probBar = document.getElementById('probBar');
+
+    const question = sessionStorage.getItem('whatif_question') || '';
+
+    async function askFollowups(userQuestion, mode){
+      if (window.WhatIfAI?.askFollowups) {
+        // usa la tua implementazione se esiste in ask.js
+        return await window.WhatIfAI.askFollowups(userQuestion, mode);
+      }
+      // MOCK di emergenza
+      return [
+        'In una frase: qual è la scelta esatta che stai valutando?',
+        'Qual è il contesto principale (lavoro, relazioni, studio, denaro)?',
+        'Qual è il fattore più importante per te (sicurezza, crescita, libertà, divertimento)?'
+      ];
+    }
+
+    async function getFinalAnswer(payload){
+      if (window.WhatIfAI?.finalAnswer) {
+        return await window.WhatIfAI.finalAnswer(payload);
+      }
+      // MOCK di emergenza: finge una risposta AI
+      const pct = Math.floor(55 + Math.random()*35);
+      return {
+        text: (mode==='ironic')
+          ? `Se apri la porta giusta trovi una versione di te con occhiali da sole e unicorni manager: sorprendentemente funziona. Se non la apri... ti ritrovi a fare la fila al CAF interdimensionale.`
+          : `Dato ciò che hai raccontato, aprire quella porta ti porterebbe un miglioramento concreto su ${payload.context||'più aspetti'}. Resta qualche incognita, ma i segnali sono favorevoli.`,
+        probability: pct,
+        reason: `Valutazione basata su obiettivi dichiarati e contesto.`,
+      };
+    }
+
+    // Render Q step-by-step
+    async function runFlow(){
+      const baseQ = question || prompt('Scrivi la tua domanda What?f');
+      const fups = await askFollowups(baseQ, mode);
+
+      const answers = {};
+      for (let i=0;i<Math.min(3,fups.length);i++){
+        const q = document.createElement('div');
+        q.className='q';
+        q.innerHTML = `<strong>Domanda ${i+1}:</strong> ${fups[i]}`;
+        const a = document.createElement('div');
+        a.className='a';
+        const input = document.createElement('input');
+        input.placeholder = 'Rispondi qui...';
+        const btn = document.createElement('button');
+        btn.textContent = (i<2) ? 'Avanti' : 'Genera';
+        a.appendChild(input); a.appendChild(btn);
+        qaBox.appendChild(q); qaBox.appendChild(a);
+        input.focus();
+
+        await new Promise(res=>{
+          btn.addEventListener('click', ()=>{
+            const v = (input.value||'').trim();
+            answers['q'+(i+1)] = v;
+            res();
+          });
+          input.addEventListener('keydown', (ev)=>{
+            if(ev.key==='Enter'){ btn.click(); }
+          });
+        });
+      }
+
+      // Chiedi risposta finale
+      const payload = {
+        userQuestion: baseQ,
+        mode, answers,
+        context: answers.q2 || ''
+      };
+      followupSec.style.opacity = .6;
+
+      const out = await getFinalAnswer(payload);
+
+      aiText.textContent = out.text;
+      probText.textContent = `Probabilità: ${out.probability}% — ${out.reason || ''}`;
+      probBar.style.width = `${out.probability}%`;
+
+      resultSec.style.display='block';
+      followupSec.style.opacity = 1;
+
+      // salva ultimo esito per share/like
+      sessionStorage.setItem('whatif_last', JSON.stringify({
+        mode, question: baseQ, answers, text: out.text, probability: out.probability
+      }));
+    }
+
+    runFlow();
+
+    /* ========= Like / Dislike ========= */
+    const likeBtn = document.getElementById('likeBtn');
+    const dislikeBtn = document.getElementById('dislikeBtn');
+    function keyFor(item){ return 'wf_like_'+btoa((item.question||'')+(item.text||'')) }
+    function mark(btn,on){ btn.style.background = on ? '#163b3f' : 'var(--surface-2)'; }
+    function refreshReactions(){
+      try{
+        const data = JSON.parse(sessionStorage.getItem('whatif_last')||'{}');
+        const k = keyFor(data);
+        const v = localStorage.getItem(k);
+        mark(likeBtn, v==='like'); mark(dislikeBtn, v==='dislike');
+      }catch(_){}
+    }
+    likeBtn.onclick = ()=>{ try{
+      const data=JSON.parse(sessionStorage.getItem('whatif_last')||'{}');
+      localStorage.setItem(keyFor(data),'like'); refreshReactions();
+    }catch(_){}}; 
+    dislikeBtn.onclick = ()=>{ try{
+      const data=JSON.parse(sessionStorage.getItem('whatif_last')||'{}');
+      localStorage.setItem(keyFor(data),'dislike'); refreshReactions();
+    }catch(_){}};
+    refreshReactions();
+
+    /* ========= Condividi ========= */
+    document.getElementById('shareBtn').addEventListener('click', async ()=>{
+      const data = JSON.parse(sessionStorage.getItem('whatif_last')||'{}');
+      const text = `What?f – Modalità: ${mode==='ironic'?'What the F?!':'Sliding Doors'}\nDomanda: ${data.question}\nRisposta: ${data.text}\nProbabilità: ${data.probability}%`;
+      if (navigator.share) {
+        try{ await navigator.share({ title:'What?f', text }); }catch(_){}
+      } else {
+        try{
+          await navigator.clipboard.writeText(text);
+          alert('Testo copiato negli appunti. Incollalo dove vuoi 👍');
+        }catch(_){
+          prompt('Copia e condividi:', text);
+        }
+      }
+    });
+
+    /* ========= Nav buttons ========= */
+    document.getElementById('againBtn').onclick = ()=>location.href='ask.html';
+    document.getElementById('homeBtn').onclick = ()=>location.href='index.html';
   </script>
+
+  <!-- Se esiste, usa la tua integrazione -->
+  <script src="ask.js"></script>
 </body>
 </html>
