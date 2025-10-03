@@ -13,7 +13,8 @@ main{min-height:100%;max-width:960px;margin:0 auto;padding:18px 16px 26px;displa
 .header{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:12px}
 h1{margin:0;font-size:clamp(28px,6.4vw,44px);letter-spacing:.02em;text-align:center}
 h1 span{color:var(--accent)}
-.hero{width:min(220px,40vw);height:auto;filter:drop-shadow(0 14px 28px rgba(0,0,0,.45))}
+.hero{width:min(220px,40vw);height:130px;filter:drop-shadow(0 14px 28px rgba(0,0,0,.45));
+  object-fit:cover; object-position:center 55%; border-radius:18px;} /* <-- taglia la parte con il testo */
 .grid{display:grid;gap:14px}
 .section{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:14px;box-shadow:0 14px 36px rgba(0,0,0,.35)}
 .section h3{margin:0 0 10px;font-size:clamp(16px,4.2vw,20px);letter-spacing:.01em}
@@ -41,6 +42,16 @@ footer{margin-top:12px;text-align:center;color:var(--muted);font-size:12px}
         <button class="tag">Studente</button>
         <button class="tag">Lavoratore</button>
         <button class="tag">Creativo</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Sesso</h3>
+      <div class="opts" id="sex">
+        <button class="tag">Femmina</button>
+        <button class="tag">Maschio</button>
+        <button class="tag">Altro</button>
+        <button class="tag">Preferisco non dirlo</button>
       </div>
     </div>
 
@@ -89,7 +100,6 @@ footer{margin-top:12px;text-align:center;color:var(--muted);font-size:12px}
 </main>
 
 <script>
-/* immagine con più fallback */
 (async function loadHero(){
   const img=document.getElementById('hero');
   const tries=[
@@ -100,7 +110,6 @@ footer{margin-top:12px;text-align:center;color:var(--muted);font-size:12px}
   img.alt='Immagine non trovata';
 })();
 
-/* attiva singola scelta per gruppo */
 document.querySelectorAll('.opts').forEach(group=>{
   group.addEventListener('click',e=>{
     const el=e.target.closest('.tag'); if(!el) return;
@@ -109,7 +118,6 @@ document.querySelectorAll('.opts').forEach(group=>{
   });
 });
 
-/* colora bottone in base alla porta scelta */
 (function(){
   const m=localStorage.getItem('mode');
   const btn=document.getElementById('go');
@@ -117,10 +125,8 @@ document.querySelectorAll('.opts').forEach(group=>{
   if(m==='wtf'){ btn.style.background='#06D6A0'; btn.style.color='#001b13'; }
 })();
 
-/* continua → quinta */
 document.getElementById('go').addEventListener('click',()=>{ window.location.href='fifth.html'; });
 
-/* swipe su document (non blocca tap) */
 (function(){
   let sx=0, sy=0, dx=0, dy=0, on=false; const TH=55;
   document.addEventListener('touchstart',e=>{on=true;const t=e.touches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
