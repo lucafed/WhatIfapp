@@ -12,12 +12,11 @@
 main{min-height:100%;max-width:860px;margin:0 auto;padding:22px 16px 28px;display:flex;flex-direction:column;align-items:center}
 .hero{width:min(220px,40vw);height:auto;filter:drop-shadow(0 14px 28px rgba(0,0,0,.45));margin-bottom:10px}
 h1{margin:0 0 10px;font-size:clamp(26px,6vw,40px);text-align:center;letter-spacing:.02em}
-.input{width:100%;padding:16px;border:0;border-radius:14px;background:rgba(255,255,255,.06);color:var(--fg);font-size:16px}
+.input{width:100%;padding:16px;border:1px solid rgba(255,255,255,.15);border-radius:14px;background:rgba(255,255,255,.06);color:var(--fg);font-size:16px}
 .btn{margin-top:12px;appearance:none;border:0;border-radius:999px;padding:14px 26px;font-weight:800;letter-spacing:.02em;color:#001a20;background:var(--accent);box-shadow:0 10px 26px rgba(0,224,255,.35)}
 .answer{margin-top:14px;width:100%;background:rgba(255,255,255,.04);border-radius:14px;padding:14px;line-height:1.45;color:var(--fg)}
 .link{margin-top:10px;color:var(--accent);text-decoration:none}
 .note{color:var(--muted);font-size:12px;text-align:center;margin-top:4px}
-.touchlayer{position:fixed;inset:0}
 </style>
 </head>
 <body>
@@ -33,13 +32,12 @@ h1{margin:0 0 10px;font-size:clamp(26px,6vw,40px);text-align:center;letter-spaci
 
   <p class="note">Swipe ◀︎ / ▶︎ per navigare</p>
 </main>
-<div class="touchlayer" id="touch"></div>
 
 <script>
 /* immagine robusta */
 (async function loadHero(){
   const img=document.getElementById('hero');
-  const tries=['/ask-hero.png','/public/ask-hero.png','/assets/ask-hero.png'];
+  const tries=['/ask-hero.png','/public/ask-hero.png','/assets/ask-hero.png','/third-hero.png','/public/third-hero.png'];
   for(const u of tries){ try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ img.src=u+'?v='+Date.now(); return; } }catch(e){} }
   img.alt='Immagine non trovata';
 })();
@@ -52,7 +50,7 @@ h1{margin:0 0 10px;font-size:clamp(26px,6vw,40px);text-align:center;letter-spaci
   if(m==='wtf'){ btn.style.background='#06D6A0'; btn.style.color='#001b13'; }
 })();
 
-/* finta risposta (placeholder: qui collegherai la tua API) */
+/* demo risposta */
 document.getElementById('send').addEventListener('click',()=>{
   const q=document.getElementById('q').value.trim();
   const box=document.getElementById('ans');
@@ -65,15 +63,15 @@ document.getElementById('newq').addEventListener('click',e=>{
   e.preventDefault(); document.getElementById('q').value=''; document.getElementById('ans').style.display='none'; e.target.style.display='none';
 });
 
-/* swipe */
+/* swipe su document */
 (function(){
-  const L=document.getElementById('touch'); let sx=0,sy=0,dx=0,dy=0,is=false; const TH=55;
-  L.addEventListener('touchstart',e=>{is=true;const t=e.touches[0];sx=t.clientX;sy=t.clientY;});
-  L.addEventListener('touchmove',e=>{if(!is)return;const t=e.touches[0];dx=t.clientX-sx;dy=t.clientY-sy;});
-  L.addEventListener('touchend',()=>{if(!is)return;is=false;
-    if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>TH){ if(dx>0){window.location.href='fourth.html';}}
+  let sx=0, sy=0, dx=0, dy=0, on=false; const TH=55;
+  document.addEventListener('touchstart',e=>{on=true;const t=e.touches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
+  document.addEventListener('touchmove', e=>{ if(!on) return; const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy; },{passive:true});
+  document.addEventListener('touchend', ()=>{ if(!on) return; on=false;
+    if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>TH){ if(dx>0){window.location.href='fourth.html';} }
     sx=sy=dx=dy=0;
-  });
+  },{passive:true});
 })();
 </script>
 </body>
