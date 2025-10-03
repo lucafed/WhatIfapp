@@ -4,163 +4,61 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f – Home</title>
-  <meta name="theme-color" content="#0A0F14" />
-
-  <!-- Preload dell'immagine principale -->
-  <link rel="preload" as="image" href="/third-hero.png" />
+  <meta name="theme-color" content="#0A0F14">
 
   <style>
-    :root{
-      --bg:#0A0F14; --fg:#EAF4F7; --muted:#9FB1B8;
-      --accent:#00E0FF; --accent-2:#00B5CC; --ink:#001f26;
+    :root {
+      --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA;
+      --accent:#00E0FF; --accent-dark:#00B5CC;
     }
-    *{ box-sizing:border-box }
-    html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
+    *{ box-sizing:border-box; margin:0; padding:0 }
+    html,body{ height:100%; background:var(--bg); color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
-    a{ color:var(--accent); text-decoration:none }
-    main{
-      min-height:100dvh; display:flex; flex-direction:column; align-items:center;
-      justify-content:flex-start; padding:22px 18px 18px; gap:16px; text-align:center;
-    }
+    main{ min-height:100%; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; text-align:center; gap:16px; padding:20px }
 
-    /* blocco contenuto centrale */
-    .wrap{ width:min(950px, 92vw); margin:0 auto }
+    .hero-img{ width:min(92vw,520px); height:auto; display:block; margin:0 auto;
+      filter:drop-shadow(0 8px 20px rgba(0,0,0,.45)) }
 
-    h1{
-      margin:0 0 8px; font-size:clamp(26px,4.8vw,44px); line-height:1.15;
-      letter-spacing:.2px;
-    }
-    .kicker{
-      font-weight:700;
-      color:var(--accent);
-      text-shadow:0 0 10px rgba(0,224,255,.55), 0 0 24px rgba(0,224,255,.28);
-    }
+    h1{ font-size:clamp(26px,5vw,40px); color:var(--accent); margin-bottom:10px;
+        text-shadow:0 0 12px rgba(0,224,255,.5); }
 
-    .hero{
-      width:100%; border-radius:22px; display:block; height:auto; margin:6px auto 12px;
-      filter: drop-shadow(0 16px 40px rgba(0,0,0,.55));
-    }
-    .hero-fallback{ color:var(--muted); font-size:14px; margin-top:-6px; display:none }
+    p.desc{ font-size:clamp(15px,4vw,18px); max-width:600px; line-height:1.4; color:var(--muted); }
 
-    .lead{
-      margin:0 auto 8px; color:#CDE7EE;
-      font-size:clamp(16px,2.9vw,20px); line-height:1.45;
-      max-width:46rem;
-    }
-
-    .btn{
-      display:inline-block; margin-top:8px;
-      background:var(--accent-2); color:var(--ink); font-weight:800;
-      padding:16px 26px; border-radius:32px; letter-spacing:.3px;
-      box-shadow:0 0 14px rgba(0,181,204,.55), 0 0 36px rgba(0,181,204,.25);
-      transition:transform .15s ease, filter .15s ease;
-    }
+    .btn{ display:inline-block; margin-top:14px; text-decoration:none;
+      background:var(--accent-dark); color:#001f26; font-weight:700;
+      padding:14px 22px; border-radius:28px; font-size:16px;
+      box-shadow:0 0 12px rgba(0,181,204,.6), 0 0 24px rgba(0,181,204,.3);
+      transition:.2s }
+    .btn:hover{ filter:brightness(1.15) }
     .btn:active{ transform:translateY(1px) }
-    .btn:hover{ filter:brightness(1.1) }
-
-    .disclaimer{
-      margin-top:12px; color:var(--muted); font-size:13px;
-    }
-
-    footer{
-      width:100%; text-align:center; color:var(--muted); font-size:12px;
-      padding:18px 0 12px;
-    }
-
-    /* Entrata dolce */
-    .fade{ opacity:0; transform:translateY(14px); animation:fadeIn .9s ease forwards }
-    .d1{ animation-delay:.1s } .d2{ animation-delay:.25s } .d3{ animation-delay:.45s }
-    @keyframes fadeIn{ to{ opacity:1; transform:translateY(0) } }
-
-    /* Spaziature globali: alzo tutto un filo per lasciare spazio al footer */
-    .top-gap{ margin-top:clamp(10px, 2vh, 22px) }
   </style>
 </head>
 <body>
   <main>
-    <div class="wrap top-gap">
-      <h1 class="fade d1"><span class="kicker">Scopri il tuo What?f</span></h1>
+    <h1>Scopri il tuo What?f</h1>
 
-      <img id="hero" class="hero fade d2" alt="Due porte illuminate: scegli la tua strada" loading="eager" decoding="async" />
-      <div id="heroFallback" class="hero-fallback">Caricamento immagine…</div>
+    <img id="hero" class="hero-img" src="third-hero.png" alt="Porte luminose What?f" loading="eager" decoding="async" />
 
-      <p class="lead fade d3">
-        Entra in un viaggio tra <strong>passato</strong> e <strong>futuro</strong>:
-        fai la tua domanda e scopri cosa sarebbe successo se avessi fatto un’altra scelta.
-        E immagina cosa potrebbe accadere se sceglierai quella porta. Lascia che l’AI
-        ti sorprenda con nuove prospettive.
-      </p>
+    <p class="desc">
+      Immagina di tornare indietro o guardare avanti.  
+      Cosa sarebbe successo se avessi fatto un’altra scelta?  
+      Cosa potrebbe accadere se aprirai una porta diversa?
+    </p>
 
-      <a id="cta" href="ask.html" class="btn fade d3">CHOOSE YOUR WAY</a>
-
-      <p class="disclaimer fade d3">
-        Continuando accetti la nostra
-        <a href="privacy.html">Privacy Policy</a> e i
-        <a href="terms.html">Termini d’uso</a>.
-      </p>
-    </div>
+    <a href="fourth.html" class="btn">CHOOSE YOUR WAY</a>
   </main>
 
-  <footer>© 2025 What?f</footer>
-
-  <!-- Loader immagine robusto con cache-busting -->
+  <!-- Swipe destra/sinistra -->
   <script>
-    (async function loadHero(){
-      const hero = document.getElementById('hero');
-      const fb   = document.getElementById('heroFallback');
-      const tries = ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
-      for (const u of tries) {
-        try{
-          const r = await fetch(u, {cache:'no-store'});
-          if (r.ok) {
-            hero.src = u + '?v=' + Date.now(); // bust cache SW/CDN
-            fb.style.display = 'none';
-            return;
-          }
-        }catch(e){}
-      }
-      fb.textContent = 'Immagine non trovata.';
-      fb.style.display = 'block';
-    })();
-  </script>
-
-  <!-- Swipe L/R: destra = avanti a ask.html, sinistra = indietro se possibile -->
-  <script>
-    (function () {
-      let x0=null, y0=null, locked=false;
-      const THRESH = 40; // più “leggero” ma evita tocchi accidentali
-      const main = document.querySelector('main');
-      const goNext = () => window.location.href = 'ask.html';
-      const goBack = () => { if (history.length > 1) history.back(); };
-
-      function onStart(e){
-        const t = e.changedTouches ? e.changedTouches[0] : e;
-        x0 = t.clientX; y0 = t.clientY; locked = true;
-      }
-      function onMove(e){
-        if(!locked) return;
-        const t = e.changedTouches ? e.changedTouches[0] : e;
-        const dx = t.clientX - x0, dy = Math.abs(t.clientY - y0);
-        if (Math.abs(dx) > THRESH && dy < 60) {
-          locked = false;
-          if (dx > 0) goBack(); else goNext();
-        }
-      }
-      function onEnd(){ locked=false; }
-
-      main.addEventListener('touchstart', onStart, {passive:true});
-      main.addEventListener('touchmove',  onMove,  {passive:true});
-      main.addEventListener('touchend',   onEnd,   {passive:true});
-      // supporto anche mouse (desktop)
-      main.addEventListener('mousedown', onStart);
-      main.addEventListener('mousemove', onMove);
-      main.addEventListener('mouseup',   onEnd);
-
-      // Click sul CTA con piccola transizione (facoltativo)
-      const CTA = document.getElementById('cta');
-      CTA.addEventListener('click', (e)=>{
-        e.preventDefault();
-        goNext();
+    (function(){
+      let startX=0;
+      document.addEventListener('touchstart', e=>{
+        startX=e.touches[0].clientX;
+      });
+      document.addEventListener('touchend', e=>{
+        let dx=e.changedTouches[0].clientX-startX;
+        if(dx<-50){ window.location.href="fourth.html"; } // swipe sinistra → avanti
       });
     })();
   </script>
