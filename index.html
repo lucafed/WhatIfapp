@@ -5,22 +5,21 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>What?f – Home</title>
   <meta name="theme-color" content="#0A0F14" />
-
-  <!-- Preload dell'immagine corretta (DUE porte) -->
   <link rel="preload" as="image" href="/third-hero.png" />
-
   <style>
     :root{
       --bg:#0A0F14; --fg:#ffffff; --mut:#A0B2BA;
       --accent:#00E0FF; --accent-dark:#00B5CC;
       --yellow:#FFC146; --teal:#00D5E6;
+      --chip:#24303a; --chipOn:#00E0FF;
     }
-    *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     main{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
       gap:12px; padding:16px 14px 20px; max-width:900px; margin:0 auto;}
 
-    /* Immagine (due porte) – compatta per vedere TUTTO senza scroll */
+    /* Immagine (due porte) – compatta per vedere tutto senza scroll */
     .hero-wrap{width:100%;display:flex;justify-content:center;}
     .hero-img{
       width:min(92vw,680px); height:auto;
@@ -31,7 +30,6 @@
     }
     .hero-fallback{color:var(--mut); font-size:14px; margin-top:-2px}
 
-    /* Testi vicini */
     h1{margin:2px 0 0; font-size:clamp(24px,5vw,34px); line-height:1.15; text-align:center;}
     h1 .brand{ color:var(--accent); text-shadow:0 0 8px rgba(0,224,255,.6),0 0 16px rgba(0,224,255,.35); }
     .kicker{ margin-top:2px; font-weight:800; letter-spacing:.5px;
@@ -41,7 +39,7 @@
       font-size:clamp(14px,3.5vw,18px); line-height:1.45; max-width:800px;
     }
 
-    /* Bottoni sotto, compatti */
+    /* Bottoni Passato / Futuro */
     .cta-row{ margin-top:10px; display:flex; gap:12px; width:100%; justify-content:center; flex-wrap:wrap; }
     .btn{
       appearance:none; border:0; border-radius:28px; padding:12px 20px;
@@ -53,9 +51,18 @@
     .btn-yellow{ background:linear-gradient(180deg,var(--yellow),#F2B94E); color:#201400; }
     .btn-teal  { background:linear-gradient(180deg,var(--teal),#00B5CC);  color:#001A1D; }
 
+    /* Toggle stile (What?f / What the F) */
+    .style-toggle{ display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; justify-content:center }
+    .chip{
+      background:var(--chip); color:#cfe6ec; border:1px solid rgba(255,255,255,.12);
+      padding:10px 14px; border-radius:999px; cursor:pointer; font-weight:700; font-size:14px;
+      transition:filter .15s ease, transform .1s ease;
+    }
+    .chip:active{ transform:translateY(1px) }
+    .chip.active{ outline:2px solid var(--chipOn); color:#001a20; background:rgba(0,224,255,.25) }
+
     footer{ margin-top:10px; text-align:center; color:var(--mut); font-size:12px; }
 
-    /* Entrata leggera */
     .fade-in { opacity:0; transform:translateY(10px); animation:fin .55s ease forwards }
     .d1{animation-delay:.05s} .d2{animation-delay:.12s} .d3{animation-delay:.18s}
     @keyframes fin { to{opacity:1; transform:none} }
@@ -66,7 +73,7 @@
   <main>
     <!-- IMMAGINE (due porte) -->
     <div class="hero-wrap fade-in d1">
-      <img id="hero" class="hero-img" alt="Due porte: gialla (What?f) e turchese (What the F)" loading="eager" decoding="async" />
+      <img id="hero" class="hero-img" alt="Due porte: gialla (Passato) e turchese (Futuro)" loading="eager" decoding="async" />
     </div>
     <div id="heroFallback" class="hero-fallback" style="display:none;"></div>
 
@@ -79,10 +86,16 @@
       <b>What the F?! ti farà vivere</b> visioni ironiche, creative e imprevedibili.
     </p>
 
-    <!-- Pulsanti (solo link, niente roba strana) -->
+    <!-- Scelta TEMPO -->
     <div class="cta-row fade-in d3">
-      <a class="btn btn-yellow" href="fourth.html?time=passato">Passato</a>
-      <a class="btn btn-teal"   href="fourth.html?time=futuro">Futuro</a>
+      <a class="btn btn-yellow" href="#" id="btnPassato">Passato</a>
+      <a class="btn btn-teal"   href="#" id="btnFuturo">Futuro</a>
+    </div>
+
+    <!-- Scelta STILE -->
+    <div class="style-toggle fade-in d3" role="group" aria-label="Stile della risposta">
+      <button class="chip active" id="chipWhatif" data-style="whatif">What?f (realistico)</button>
+      <button class="chip"        id="chipWtf"    data-style="wtf">What the F?! (ironico)</button>
     </div>
 
     <footer>© 2025 What?f</footer>
@@ -94,11 +107,7 @@
       const hero = document.getElementById('hero');
       const fb   = document.getElementById('heroFallback');
       fb.style.display = 'block';
-      const tries = [
-        '/third-hero.png',          // root
-        '/public/third-hero.png',   // public
-        '/assets/third-hero.png'    // assets
-      ];
+      const tries = ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
       for (const u of tries) {
         try {
           const r = await fetch(u, { cache:'no-store' });
@@ -106,6 +115,40 @@
         } catch(e){}
       }
       fb.textContent = 'Immagine non trovata.';
+    })();
+
+    // Gestione toggle stile
+    let style = localStorage.getItem('style') || 'whatif';
+    function setStyle(newStyle){
+      style = newStyle;
+      localStorage.setItem('style', style);
+      document.getElementById('chipWhatif').classList.toggle('active', style==='whatif');
+      document.getElementById('chipWtf').classList.toggle('active', style==='wtf');
+    }
+    setStyle(style);
+    document.getElementById('chipWhatif').addEventListener('click', ()=>setStyle('whatif'));
+    document.getElementById('chipWtf').addEventListener('click',    ()=>setStyle('wtf'));
+
+    // Click sui bottoni Passato/Futuro → vai a fourth.html con query time+style
+    function go(time){
+      try{ localStorage.setItem('time', time); }catch(_){}
+      const qs = new URLSearchParams({ time, style }).toString();
+      location.href = 'fourth.html?' + qs;
+    }
+    document.getElementById('btnPassato').addEventListener('click', (e)=>{ e.preventDefault(); go('passato'); });
+    document.getElementById('btnFuturo').addEventListener('click',  (e)=>{ e.preventDefault(); go('futuro');  });
+
+    // Swipe: sinistra → avanti con default (passato + stile attuale)
+    (function(){
+      let sx=0, sy=0, dx=0, dy=0, on=false; const TH=55;
+      document.addEventListener('touchstart',e=>{on=true;const t=e.touches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
+      document.addEventListener('touchmove', e=>{ if(!on) return; const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy; },{passive:true});
+      document.addEventListener('touchend', ()=>{ if(!on) return; on=false;
+        if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){
+          if(dx<0){ go('passato'); } // default: passato, mantiene style selezionato
+        }
+        sx=sy=dx=dy=0;
+      },{passive:true});
     })();
   </script>
 </body>
