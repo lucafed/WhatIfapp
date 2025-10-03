@@ -1,155 +1,63 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>What?f – La tua domanda</title>
-  <meta name="theme-color" content="#0A0F14" />
-  <link rel="preload" as="image" href="/ask-hero.png" />
+  <link rel="stylesheet" href="style.css">
   <style>
-    :root{
-      --bg:#0A0F14; --fg:#E9F1F5; --mut:#A0B2BA;
-      --cyan:#00E0FF; --cyan-dark:#00B5CC;
-      --card:#0F151B; --card-2:#111A21;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:16px;
-      padding:24px 18px 30px;max-width:820px;margin:0 auto}
-
-    .hero{width:min(70vw,240px);height:auto;opacity:.95;filter:drop-shadow(0 12px 28px rgba(0,0,0,.45));margin:8px auto 2px}
-    h1{font-size:clamp(26px,6vw,42px);letter-spacing:.5px;text-align:center;margin:2px 0 2px}
-    h1::after{content:"";display:block;width:62px;height:3px;background:linear-gradient(90deg,var(--cyan),transparent);
-      margin:10px auto 0;border-radius:2px;opacity:.85}
-
-    .input-wrap{width:100%;max-width:760px;background:linear-gradient(180deg,var(--card),var(--card-2));
-      border:1px solid rgba(255,255,255,.06); border-radius:14px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
-    .row{display:flex;gap:10px;align-items:center}
-    input[type="text"]{
-      flex:1; background:rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.08);
-      color:var(--fg); border-radius:12px; padding:14px 14px; font-size:16px; outline:none
-    }
-    input::placeholder{color:#7f96a3}
-    .btn{
-      appearance:none;border:0;cursor:pointer;padding:14px 18px;border-radius:12px;font-weight:800;
-      color:#062025;background:linear-gradient(180deg,var(--cyan),var(--cyan-dark));
-      box-shadow:0 0 14px rgba(0,181,204,.45),0 0 30px rgba(0,181,204,.22)
-    }
-    .btn:active{transform:translateY(1px)}
-
-    .answer{
-      margin-top:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
-      border-radius:12px;padding:14px 16px;color:var(--fg)
-    }
-    .muted{color:var(--mut)}
-    .link{margin-top:14px;text-align:center}
-    .link a{color:var(--cyan);text-decoration:none;font-weight:700}
-
-    footer{margin-top:auto;color:var(--mut);font-size:12px;text-align:center;opacity:.9}
-    .fade{opacity:.5}
-
-    .leaving{opacity:.15;transform:translateX(10px);transition:.25s ease}
+    body{margin:0;font-family:Arial,sans-serif;background:#0A0F14;color:#fff;text-align:center;}
+    h1{font-size:2rem;margin:20px 0;}
+    .hero{max-width:120px;margin:10px auto;display:block;}
+    input{width:80%;padding:10px;border-radius:10px;border:none;margin:10px auto;}
+    .btn{padding:12px 20px;border-radius:30px;font-weight:bold;border:none;cursor:pointer;}
+    .btn-primary{background:linear-gradient(180deg,#00E0FF,#00B5CC);color:#062025;}
+    .response{margin:20px auto;padding:15px;background:#141C22;border-radius:10px;max-width:80%;}
+    .new-q{margin-top:15px;display:block;color:#00E0FF;text-decoration:none;}
   </style>
 </head>
 <body>
-  <main>
-    <img id="hero" class="hero" alt="Icona porta What?f" loading="eager" decoding="async" />
-
-    <h1>LA TUA DOMANDA</h1>
-
-    <div class="input-wrap">
-      <div class="row">
-        <input id="q" type="text" placeholder="Scrivi la tua domanda qui…" autocomplete="off" />
-        <button id="send" class="btn">INVIA</button>
-      </div>
-
-      <div id="answer" class="answer muted">Questa è la risposta alla tua domanda 🙂</div>
-
-      <div class="link"><a id="again" href="#">Nuova domanda</a></div>
-    </div>
-
-    <footer>© 2025 What?f</footer>
-  </main>
+  <img src="ask-hero.png" alt="Ask Hero" class="hero">
+  <h1>LA TUA DOMANDA</h1>
+  <input type="text" id="question" placeholder="Scrivi la tua domanda qui...">
+  <button id="send" class="btn btn-primary">INVIA</button>
+  <div id="answer" class="response" style="display:none;"></div>
+  <a href="#" id="newQ" class="new-q" style="display:none;">Nuova domanda</a>
 
   <script>
-    // 1) Carica icona in modo robusto (come sulle altre pagine)
-    (async function loadHero(){
-      const img=document.getElementById('hero');
-      const tries=['/ask-hero.png','/home-hero.png','/third-hero.png','/public/ask-hero.png'];
-      for (const u of tries){
-        try{
-          const r=await fetch(u,{cache:'no-store'});
-          if(r.ok){ img.src=u+'?v='+Date.now(); return; }
-        }catch(e){}
-      }
-    })();
+    const params = new URLSearchParams(location.search);
+    const mode = params.get("mode") || localStorage.getItem("whatif_style") || "whatif";
 
-    // 2) Logica semplice di risposta (no backend): stile in base alla scelta salvata
-    const qEl = document.getElementById('q');
-    const ans = document.getElementById('answer');
-    const send = document.getElementById('send');
-    const again = document.getElementById('again');
-
-    function formatReply(q, mode){
-      if(!q) return "Scrivi la tua domanda e prova di nuovo 🙂";
-      const base = q.trim().replace(/\?*$/,'?');
-      if(mode==='wtf'){
-        return `🔸 *What the F* take:\n${base}\n\nOnestamente? Potrebbe andare in modi assurdi: uno spettacolo, un caos… o entrambi 😅.\nVuoi il lato safe? Proviamo con What?f.`;
-      }else{
-        return `🔹 *What?f* take:\n${base}\n\nEcco uno scenario plausibile passo-passo e cosa potresti imparare lungo il percorso. Vuoi un’alternativa più ironica? Prova “What the F”.`;
-      }
-    }
-
-    function getMode(){
-      try{
-        const url = new URL(location.href);
-        const pMode = url.searchParams.get('mode');
-        if(pMode) return pMode;
-        const saved = localStorage.getItem('whatif_style');
-        return saved || 'whatif';
-      }catch(_){ return 'whatif'; }
-    }
-
-    function setLoading(on){
-      send.disabled = on;
-      send.classList.toggle('fade', on);
-      ans.textContent = on ? 'Elaborazione…' : ans.textContent;
-      ans.classList.remove('muted');
-    }
-
-    send.addEventListener('click', async ()=>{
-      const q = qEl.value.trim();
-      if(!q){ qEl.focus(); return; }
-      setLoading(true);
-      // finto “latency” per UX
-      await new Promise(r=>setTimeout(r,450));
-      ans.textContent = formatReply(q, getMode());
-      setLoading(false);
+    document.getElementById("send").addEventListener("click", ()=>{
+      const q = document.getElementById("question").value.trim();
+      if(!q) return;
+      const answerBox = document.getElementById("answer");
+      answerBox.style.display="block";
+      answerBox.innerText = mode==="wtf"
+        ? "😲 WHAT THE F style: risposta inaspettata alla tua domanda!"
+        : "🤔 What?f style: ecco cosa potrebbe accadere...";
+      document.getElementById("newQ").style.display="block";
     });
 
-    again.addEventListener('click', (e)=>{
+    document.getElementById("newQ").addEventListener("click", e=>{
       e.preventDefault();
-      qEl.value = '';
-      qEl.focus();
-      ans.textContent = 'Questa è la risposta alla tua domanda 🙂';
-      ans.classList.add('muted');
+      document.getElementById("question").value="";
+      document.getElementById("answer").style.display="none";
+      document.getElementById("newQ").style.display="none";
     });
 
-    // 3) Swipe: destra = torna alla pagina precedente (fourth.html)
-    let sx=null, sy=null;
-    addEventListener('touchstart',e=>{
-      const t=e.changedTouches[0]; sx=t.clientX; sy=t.clientY;
-    },{passive:true});
-    addEventListener('touchend',e=>{
-      if(sx===null) return;
-      const t=e.changedTouches[0], dx=t.clientX-sx, dy=Math.abs(t.clientY-sy);
-      sx=null; sy=null;
-      if(Math.abs(dx)>60 && dy<70 && dx>0){
-        document.body.classList.add('leaving');
-        setTimeout(()=>location.href='fourth.html',200);
+    // Swipe (indietro torna alla quarta)
+    let startX=0, startY=0;
+    document.addEventListener("touchstart",e=>{
+      startX=e.touches[0].clientX; startY=e.touches[0].clientY;
+    });
+    document.addEventListener("touchend",e=>{
+      let dx=e.changedTouches[0].clientX-startX;
+      let dy=e.changedTouches[0].clientY-startY;
+      if(Math.abs(dx)>60 && Math.abs(dy)<70){
+        if(dx>0){ location.href="fourth.html?mode="+mode; }
       }
-    },{passive:true});
+    });
   </script>
 </body>
 </html>
