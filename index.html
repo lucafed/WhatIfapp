@@ -7,43 +7,49 @@
   <meta name="theme-color" content="#0A0F14" />
   <link rel="preload" as="image" href="/third-hero.png" />
   <style>
-    :root{ --bg:#0A0F14; --fg:#E9F1F5; --mut:#A0B2BA; --acc:#00E0FF; --acc2:#00B5CC }
+    :root{
+      --bg:#0A0F14; --fg:#E9F1F5; --mut:#A0B2BA;
+      --cyan:#00E0FF; --cyan-dark:#00B5CC;
+      --orange:#FFB74D; --orange-dark:#F89A22;
+    }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:18px;padding:18px 18px 28px}
 
+    /* HERO */
     .hero-wrap{position:relative;width:100%;max-width:780px;margin-top:6px}
     .hero-img{width:100%;height:auto;display:block;border-radius:22px;
       filter:drop-shadow(0 16px 38px rgba(0,0,0,.5))}
     .hero-overlay{position:absolute;inset:0;display:flex;flex-direction:column;
       align-items:center;justify-content:flex-start;pointer-events:none}
     .ov-cta{
-      margin-top: clamp(24px, 9vw, 60px);   /* distanza dal bordo alto */
-      font-size: clamp(20px, 6.8vw, 42px);
-      font-weight: 900; letter-spacing:.8px;
-      color: var(--acc);
-      text-shadow: 0 0 10px rgba(0,224,255,.7), 0 0 24px rgba(0,224,255,.35);
+      margin-top:clamp(22px,9vw,58px);
+      font-size:clamp(20px,6.6vw,40px);
+      font-weight:900;letter-spacing:.8px;color:var(--cyan);
+      text-shadow:0 0 10px rgba(0,224,255,.7),0 0 24px rgba(0,224,255,.35)
     }
 
     .title{margin:2px 0 0;font-size:clamp(26px,5.6vw,40px);line-height:1.12;text-align:center}
-    .title span{color:var(--acc);text-shadow:0 0 10px rgba(0,224,255,.6),0 0 22px rgba(0,224,255,.35)}
+    .title span{color:var(--cyan);text-shadow:0 0 10px rgba(0,224,255,.6),0 0 22px rgba(0,224,255,.35)}
     .desc{max-width:780px;text-align:center;color:var(--mut);
       font-size:clamp(15px,3.8vw,18px);line-height:1.45;margin-top:2px}
 
-    .modes{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
-    .chip{padding:10px 14px;border-radius:16px;border:1px solid #2A3C44;
-      background:#0F151B;cursor:pointer;user-select:none;color:var(--fg);font-weight:600}
-    .chip.active{border-color:var(--acc);background:rgba(0,224,255,.12);
-      box-shadow:0 0 0 2px rgba(0,224,255,.15) inset}
+    /* BOTTONI PORTE */
+    .doors{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+    .btn{
+      appearance:none;border:0;cursor:pointer;
+      padding:14px 18px;border-radius:28px;font-weight:800;letter-spacing:.2px;
+      color:#062025; text-decoration:none; display:inline-flex; align-items:center; gap:8px
+    }
+    .btn.orange{background:linear-gradient(180deg,var(--orange),var(--orange-dark));
+      box-shadow:0 0 14px rgba(248,154,34,.35),0 0 30px rgba(248,154,34,.18)}
+    .btn.cyan{background:linear-gradient(180deg,var(--cyan),var(--cyan-dark));
+      box-shadow:0 0 14px rgba(0,181,204,.45),0 0 30px rgba(0,181,204,.22)}
+    .btn:active{transform:translateY(1px)}
 
-    .btn{display:inline-block;background:var(--acc2);color:#00242B;font-weight:800;letter-spacing:.3px;
-      padding:16px 24px;border-radius:28px;margin-top:6px;
-      box-shadow:0 0 14px rgba(0,181,204,.6),0 0 30px rgba(0,181,204,.25);
-      text-decoration:none}
-
-    .legal{margin-top:8px;font-size:12px;color:var(--mut);text-align:center}
-    .legal a{color:var(--acc);text-decoration:none}
+    .legal{margin-top:10px;font-size:12px;color:var(--mut);text-align:center}
+    .legal a{color:var(--cyan);text-decoration:none}
     footer{margin-top:auto;text-align:center;color:var(--mut);font-size:12px;opacity:.9}
 
     .leaving main{opacity:.15;transform:translateX(-10px);transition:.28s ease}
@@ -54,7 +60,7 @@
     <div class="hero-wrap">
       <img id="hero" class="hero-img" alt="Due porte illuminate - What?f" loading="eager" decoding="async" />
       <div class="hero-overlay">
-        <!-- SOLO questa scritta rimane sull'immagine -->
+        <!-- SOLO questo titolo rimane sull'immagine -->
         <div class="ov-cta">CHOOSE YOUR WAY</div>
       </div>
     </div>
@@ -67,13 +73,11 @@
       se scegli una porta invece dell’altra.
     </p>
 
-    <!-- Modalità: fa capire che esiste anche "What the F" -->
-    <div class="modes" id="modes">
-      <div class="chip active" data-mode="standard">Whatif</div>
-      <div class="chip" data-mode="wtf">What the F (ironico)</div>
+    <!-- Bottoni coi colori delle porte -->
+    <div class="doors">
+      <a class="btn orange" id="btnPast" href="fourth.html?way=past">Porta arancione · Passato</a>
+      <a class="btn cyan" id="btnFuture" href="fourth.html?way=future">Porta azzurra · Futuro</a>
     </div>
-
-    <a id="cta" class="btn" href="fourth.html">CHOOSE YOUR WAY</a>
 
     <div class="legal">
       Continuando accetti la nostra <a href="privacy.html">Privacy Policy</a> e i <a href="terms.html">Termini d’uso</a>.
@@ -83,29 +87,22 @@
   </main>
 
   <script>
-    // --- 1) robust image loader (stesso metodo che ti funziona) ---
+    // 1) Caricamento robusto immagine (stesso metodo che ti funziona)
     (async function loadHero(){
       const img = document.getElementById('hero');
       const tries = ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
       for (const u of tries){
-        try{
-          const r = await fetch(u,{cache:'no-store'});
-          if(r.ok){ img.src = u + '?v=' + Date.now(); return; }
-        }catch(e){}
+        try{ const r = await fetch(u,{cache:'no-store'}); if(r.ok){ img.src = u + '?v=' + Date.now(); return; } }
+        catch(e){}
       }
     })();
 
-    // --- 2) selezione modalità (spiega anche la presenza di "What the F") ---
-    const chips = document.querySelectorAll('.chip');
-    function setMode(m){
-      try{ localStorage.setItem('whatif_mode', m); }catch(e){}
-      chips.forEach(c=>c.classList.toggle('active', c.dataset.mode===m));
-    }
-    chips.forEach(c=>c.addEventListener('click',()=>setMode(c.dataset.mode)));
-    // ripristina se già scelto
-    setMode(localStorage.getItem('whatif_mode') || 'standard');
+    // 2) Salva la scelta (per usarla nelle pagine successive)
+    const saveWay = (w)=>{ try{ localStorage.setItem('whatif_way', w); }catch(e){} };
+    document.getElementById('btnPast').addEventListener('click', ()=>saveWay('past'));
+    document.getElementById('btnFuture').addEventListener('click', ()=>saveWay('future'));
 
-    // --- 3) swipe: dx = avanti (alla quarta), sx = niente ---
+    // 3) Swipe: sinistra -> avanti (va alla quarta, default “future” se non clicchi)
     let tsX=null, tsY=null;
     window.addEventListener('touchstart',e=>{ const t=e.changedTouches[0]; tsX=t.clientX; tsY=t.clientY;},{passive:true});
     window.addEventListener('touchend',e=>{
@@ -113,9 +110,10 @@
       const t=e.changedTouches[0], dx=t.clientX-tsX, dy=Math.abs(t.clientY-tsY);
       tsX=null; tsY=null;
       if(Math.abs(dx)>60 && dy<70){
-        if(dx<0){ // swipe left -> avanti
+        if(dx<0){
+          saveWay('future');
           document.body.classList.add('leaving');
-          setTimeout(()=>location.href=document.getElementById('cta').href,220);
+          setTimeout(()=>location.href='fourth.html?way=future',220);
         }
       }
     },{passive:true});
