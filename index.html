@@ -4,206 +4,172 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f – Home</title>
-  <meta name="theme-color" content="#0A0F14" />
+  <meta name="theme-color" content="#0A0F14">
+
   <link rel="preload" as="image" href="/third-hero.png" />
+
   <style>
     :root{
-      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A3B6BF;
-      --accent:#00E0FF; --accent-dark:#00B5CC; --ok:#13d8a6; --warn:#ffaa00;
-      --btn-disabled:#29404a;
+      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
+      --accent:#00E0FF; --accent-dark:#00B5CC;
+      --yellow:#f7b23b; --teal:#00d0e6;
+      --chip:#17212a; --chip-sel:#00E0FF; --chip-text:#002329;
     }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{min-height:100%;display:flex;flex-direction:column;align-items:center;
-      gap:18px;padding:18px 16px 22px}
+    main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;
+      padding:14px 14px 26px}
 
-    .hero{width:min(100%,840px);background:linear-gradient(180deg,#0B1219,#0c141b);
-      border-radius:28px;padding:14px 14px 18px;box-shadow:0 10px 32px rgba(0,0,0,.35)}
-    .hero img{width:100%;height:auto;display:block;border-radius:22px;filter:drop-shadow(0 14px 36px rgba(0,0,0,.45))}
-    .h1{width:min(100%,860px);margin:0 auto;color:var(--accent);
-      text-align:center;font-weight:800;font-size:clamp(22px,4.8vw,30px);letter-spacing:.5px}
+    .hero{width:min(100%,980px);background:#0c141b;border-radius:22px;padding:12px 12px 16px;
+      box-shadow:0 10px 28px rgba(0,0,0,.35)}
+    .hero img{width:100%;height:auto;border-radius:16px;display:block;
+      filter:drop-shadow(0 10px 28px rgba(0,0,0,.42))}
 
-    .sub{width:min(100%,860px);margin-top:4px;text-align:center;color:var(--muted);
-      font-size:clamp(14px,3.8vw,18px);line-height:1.45}
+    h1{margin:4px 0 0;text-align:center;width:min(100%,980px);
+      font-size:clamp(26px,6vw,40px);letter-spacing:.4px}
+    h1 span{color:var(--accent)}
+    h2{margin:2px 0 0;text-align:center;width:min(100%,980px);
+      font-size:clamp(18px,4.5vw,24px);color:var(--accent)}
 
-    .group{width:min(100%,860px);background:var(--card);border-radius:18px;
-      padding:14px 12px 12px;box-shadow:0 8px 24px rgba(0,0,0,.28)}
-    .group h3{margin:4px 8px 10px;font-size:18px;letter-spacing:.3px;color:#d7e8ec}
-    .choices{display:flex;gap:10px;flex-wrap:wrap;padding:6px 8px}
-    .chip{appearance:none;border:none;background:#17212a;color:#cfe6eb;
-      padding:12px 16px;border-radius:16px;font-weight:700;cursor:pointer;
-      transition:transform .08s ease, box-shadow .18s ease, background .18s ease}
+    .lead{width:min(100%,980px);text-align:center;color:#d7e8ec;
+      margin-top:-2px;font-size:clamp(14px,4vw,18px);line-height:1.45}
+
+    .group{width:min(100%,980px);display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+    .chip{appearance:none;border:none;background:var(--chip);color:#cfe6eb;
+      padding:12px 16px;border-radius:16px;font-weight:800;cursor:pointer;
+      transition:transform .06s ease, box-shadow .18s ease, background .18s ease}
     .chip:active{transform:translateY(1px)}
-    .chip.selected{background:linear-gradient(180deg,#00b9d1,#00E0FF);
-      color:#002329; box-shadow:0 0 12px rgba(0,224,255,.35)}
+    .chip.selected{background:linear-gradient(180deg,#00bcd4,#00E0FF);color:var(--chip-text);
+      box-shadow:0 0 12px rgba(0,224,255,.35)}
+    .chip.yellow.selected{background:linear-gradient(180deg,#ffcd66,#f7b23b);color:#3a2a00}
+    .chip.teal.selected{background:linear-gradient(180deg,#18e1ff,#00c0d8);color:#002329}
 
-    .cta-wrap{width:min(100%,860px);display:flex;justify-content:center}
-    .cta{display:inline-block;min-width:220px;text-align:center;
-      background:linear-gradient(180deg,var(--accent),var(--accent-dark));
-      color:#002329;font-weight:900;border:none;border-radius:28px;padding:14px 22px;
-      box-shadow:0 0 14px rgba(0,181,204,.5),0 0 32px rgba(0,181,204,.25);
+    .badge{margin-top:-2px;width:min(100%,980px);display:flex;justify-content:center}
+    .badge span{background:#0f1820;border:1px solid #1d2b34;color:var(--muted);
+      padding:8px 12px;border-radius:999px;font-size:13px}
+
+    .cta{margin-top:4px;display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent-dark));
+      color:#002329;font-weight:900;border:none;border-radius:24px;padding:12px 18px;min-width:210px;
+      box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25);
       cursor:pointer;transition:filter .16s ease, transform .08s ease}
     .cta:active{transform:translateY(1px)}
-    .cta[disabled]{background:var(--btn-disabled);color:#7fa1aa;cursor:not-allowed;
-      box-shadow:none}
+    .cta[disabled]{background:#29404a;color:#7fa1aa;cursor:not-allowed;box-shadow:none}
+    .cta-wrap{width:min(100%,980px);display:flex;justify-content:center}
 
-    .disclaimer{width:min(100%,860px);text-align:center;color:var(--muted);
-      font-size:13px}
-    .disclaimer a{color:var(--accent);text-decoration:none}
-
-    /* swipe hint (invisibile, serve solo per area touch ampia) */
-    .swipeArea{position:fixed;inset:0;z-index:1}
-
-    /* piccoli ritocchi di spaziature iniziali */
-    .top-pad{padding-top:8px}
+    footer{width:min(100%,980px);text-align:center;color:var(--muted);font-size:12px;margin-top:2px}
+    footer a{color:var(--accent);text-decoration:none}
   </style>
 </head>
 <body>
-  <div class="swipeArea" aria-hidden="true"></div>
+  <main>
+    <h1>Scopri il tuo <span>What?f</span></h1>
 
-  <main class="top-pad">
-    <h1 class="h1">Scopri il tuo <span style="color:var(--accent)">What?f</span></h1>
-
-    <section class="hero">
-      <img id="hero" src="" alt="Due porte illuminate: scegli la tua via" loading="eager" decoding="async">
-    </section>
-
-    <section class="group">
-      <h3>Scegli il periodo</h3>
-      <div class="choices" id="choices-periodo">
-        <button class="chip" data-value="past">Passato</button>
-        <button class="chip" data-value="future">Futuro</button>
-      </div>
-    </section>
-
-    <section class="group">
-      <h3>Scegli lo stile</h3>
-      <div class="choices" id="choices-stile">
-        <button class="chip" data-value="whatif">What if (plausibile)</button>
-        <button class="chip" data-value="wtf">What the F (ironico)</button>
-      </div>
-    </section>
-
-    <p class="sub">
-      Immagina la scelta che non hai fatto… o quella che potresti fare domani.<br>
-      What?f ti mostra “cosa sarebbe potuto accadere” e “cosa potrebbe accadere”.
-    </p>
-
-    <div class="cta-wrap">
-      <button id="nextBtn" class="cta" disabled>AVANTI</button>
+    <div class="hero">
+      <img id="hero" alt="Due porte illuminate: scegli la tua via" loading="eager" decoding="async" />
     </div>
 
-    <p class="disclaimer">Continuando accetti la nostra
-      <a href="privacy.html">Privacy Policy</a> e i
-      <a href="terms.html">Termini d’uso</a>.
+    <h2>CHOOSE YOUR WAY</h2>
+
+    <p class="lead">
+      Immagina la scelta che non hai fatto… e quella che potresti fare domani.
+      What?f ti mostra “cosa sarebbe potuto accadere” e “cosa potrebbe accadere”
+      se scegli una porta invece dell’altra.
     </p>
 
-    <p class="disclaimer">© 2025 What?f</p>
+    <!-- Scelta 1: periodo -->
+    <div class="group" id="periodGroup" aria-label="Periodo">
+      <button class="chip" data-key="periodo" data-val="past">Passato</button>
+      <button class="chip" data-key="periodo" data-val="future">Futuro</button>
+    </div>
+
+    <!-- Scelta 2: stile -->
+    <div class="group" id="styleGroup" aria-label="Stile">
+      <button class="chip yellow" data-key="stile" data-val="whatif">What if</button>
+      <button class="chip teal" data-key="stile" data-val="wtf">What the F</button>
+    </div>
+
+    <!-- micro-badge riepilogo -->
+    <div class="badge" id="badge" style="display:none">
+      <span id="badgeText">Selezionato:</span>
+    </div>
+
+    <div class="cta-wrap">
+      <button id="go" class="cta" disabled>AVANTI</button>
+    </div>
+
+    <footer>
+      Continuando accetti la nostra <a href="privacy.html">Privacy Policy</a> e i
+      <a href="terms.html">Termini d’uso</a>.<br/>© 2025 What?f
+    </footer>
   </main>
 
-  <!-- kill vecchi SW + pulizia cache (come da tuo setup) -->
+  <!-- immagine: metodo robusto -->
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations?.().then(r => r.forEach(x=>x.unregister())).catch(()=>{});
-      if (window.caches?.keys) { caches.keys().then(keys => keys.forEach(k => caches.delete(k))); }
-    }
+    (async function loadHero(){
+      const hero=document.getElementById('hero');
+      const tries=['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
+      for(const u of tries){
+        try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ hero.src=u+'?v='+Date.now(); return; } }
+        catch(e){}
+      }
+      hero.alt='Immagine non trovata';
+    })();
   </script>
 
-  <!-- immagine robusta + logica selezioni + swipe/avanti -->
+  <!-- logica selezioni + CTA gated + micro-badge -->
   <script>
-    // --- immagine con fallback e cache-buster ---
-    (async function loadHero(){
-      const hero = document.getElementById('hero');
-      const tries = ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
-      for (const u of tries) {
-        try {
-          const r = await fetch(u, {cache:'no-store'});
-          if (r.ok) { hero.src = u + '?v=' + Date.now(); return; }
-        } catch(e){}
+    const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}'); // {periodo, stile}
+    const groups = [document.getElementById('periodGroup'), document.getElementById('styleGroup')];
+    const badge = document.getElementById('badge');
+    const badgeText = document.getElementById('badgeText');
+    const go = document.getElementById('go');
+
+    function updateBadge(){
+      const a = state.periodo === 'past' ? 'Passato' :
+                state.periodo === 'future' ? 'Futuro' : null;
+      const b = state.stile === 'whatif' ? 'What if' :
+                state.stile === 'wtf'    ? 'What the F' : null;
+      if(a || b){
+        badge.style.display='flex';
+        badgeText.textContent = 'Selezionato: ' + [a,b].filter(Boolean).join(' • ');
+      }else{
+        badge.style.display='none';
       }
-    })();
-
-    // --- selezioni obbligatorie ---
-    const state = { periodo:null, stile:null };
-    const btnNext = document.getElementById('nextBtn');
-
-    function updateNext() {
-      const ok = !!(state.periodo && state.stile);
-      btnNext.disabled = !ok;
-      return ok;
     }
 
-    function wireGroup(containerId, key) {
-      const el = document.getElementById(containerId);
-      el.addEventListener('click', (ev)=>{
-        const b = ev.target.closest('.chip');
-        if (!b) return;
-        // togli selezione agli altri
-        el.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
-        // seleziona questo
+    function checkReady(){
+      const ok = !!state.periodo && !!state.stile;
+      go.disabled = !ok;
+    }
+
+    function wireGroup(g){
+      g.addEventListener('click', (e)=>{
+        const b=e.target.closest('.chip'); if(!b) return;
+        const key=b.dataset.key;
+        g.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
         b.classList.add('selected');
-        state[key] = b.dataset.value;
-        updateNext();
+        state[key]=b.dataset.val;
+        localStorage.setItem('whatif_prefs', JSON.stringify(state));
+        updateBadge(); checkReady();
       });
     }
 
-    wireGroup('choices-periodo', 'periodo');
-    wireGroup('choices-stile', 'stile');
+    groups.forEach(wireGroup);
 
-    function persistAndGo() {
-      if (!updateNext()) {
-        btnNext.blur();
-        btnNext.animate([{transform:'translateY(0)'},{transform:'translateY(2px)'},{transform:'translateY(0)'}],{duration:180});
-        return;
-      }
-      localStorage.setItem('whatif_prefs', JSON.stringify(state));
-      window.location.href = 'fourth.html';
+    // ripristino selezioni salvate
+    if(state.periodo){
+      const btn=document.querySelector(`#periodGroup .chip[data-val="${state.periodo}"]`); btn?.classList.add('selected');
     }
+    if(state.stile){
+      const btn=document.querySelector(`#styleGroup .chip[data-val="${state.stile}"]`); btn?.classList.add('selected');
+    }
+    updateBadge(); checkReady();
 
-    btnNext.addEventListener('click', persistAndGo);
-
-    // --- swipe destra/sinistra per avanzare solo se selezionato ---
-    (function enableSwipe(){
-      const area = document.querySelector('.swipeArea');
-      let sx=0, sy=0, dx=0, dy=0, start=false;
-      const TH=45; // soglia
-      area.addEventListener('touchstart', e=>{
-        const t=e.touches[0]; sx=t.clientX; sy=t.clientY; start=true;
-      }, {passive:true});
-      area.addEventListener('touchmove', e=>{
-        if(!start) return;
-        const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy;
-      }, {passive:true});
-      area.addEventListener('touchend', ()=>{
-        if(!start) return; start=false;
-        if (Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH) {
-          // destra→sinistra o sinistra→destra: trattiamoli uguale = avanti
-          persistAndGo();
-        }
-        sx=sy=dx=dy=0;
-      });
-    })();
-
-    // ripristino selezioni se l’utente torna indietro
-    (function restore(){
-      try{
-        const saved = JSON.parse(localStorage.getItem('whatif_prefs')||'null');
-        if(saved){
-          state.periodo = saved.periodo||null;
-          state.stile   = saved.stile||null;
-          if(state.periodo){
-            const c = document.querySelector(`#choices-periodo .chip[data-value="${state.periodo}"]`);
-            c?.classList.add('selected');
-          }
-          if(state.stile){
-            const c = document.querySelector(`#choices-stile .chip[data-value="${state.stile}"]`);
-            c?.classList.add('selected');
-          }
-          updateNext();
-        }
-      }catch(_){}
-    })();
+    go.addEventListener('click', ()=>{
+      if(go.disabled) return;
+      window.location.href='fourth.html';
+    });
   </script>
 </body>
 </html>
