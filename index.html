@@ -17,9 +17,8 @@
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     main{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-      gap:12px; padding:16px 14px 20px; max-width:900px; margin:0 auto;}
+      gap:12px; padding:16px 14px 60px; max-width:900px; margin:0 auto;}
 
-    /* Immagine (due porte) – compatta per vedere tutto senza scroll */
     .hero-wrap{width:100%;display:flex;justify-content:center;}
     .hero-img{
       width:min(92vw,680px); height:auto;
@@ -34,34 +33,28 @@
     h1 .brand{ color:var(--accent); text-shadow:0 0 8px rgba(0,224,255,.6),0 0 16px rgba(0,224,255,.35); }
     .kicker{ margin-top:2px; font-weight:800; letter-spacing:.5px;
       font-size:clamp(16px,3.8vw,22px); color:var(--accent-dark); text-align:center; }
-    .lead{
-      margin:6px 0 0; text-align:center; color:var(--mut);
-      font-size:clamp(14px,3.5vw,18px); line-height:1.45; max-width:800px;
-    }
+    .lead{ margin:6px 0 0; text-align:center; color:var(--mut);
+      font-size:clamp(14px,3.5vw,18px); line-height:1.45; max-width:800px; }
 
-    /* Bottoni Passato / Futuro */
     .cta-row{ margin-top:10px; display:flex; gap:12px; width:100%; justify-content:center; flex-wrap:wrap; }
-    .btn{
-      appearance:none; border:0; border-radius:28px; padding:12px 20px;
+    .btn{ appearance:none; border:0; border-radius:28px; padding:12px 20px;
       font-weight:800; font-size:16px; cursor:pointer; text-decoration:none;
       transition:transform .15s ease, filter .15s ease; color:#001f26;
-      min-width:min(46%, 260px); box-shadow:0 0 14px rgba(0,0,0,.25);
-    }
+      min-width:min(46%, 260px); box-shadow:0 0 14px rgba(0,0,0,.25);}
     .btn:active{transform:translateY(1px)}
     .btn-yellow{ background:linear-gradient(180deg,var(--yellow),#F2B94E); color:#201400; }
     .btn-teal  { background:linear-gradient(180deg,var(--teal),#00B5CC);  color:#001A1D; }
 
-    /* Toggle stile (What?f / What the F) */
     .style-toggle{ display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; justify-content:center }
-    .chip{
-      background:var(--chip); color:#cfe6ec; border:1px solid rgba(255,255,255,.12);
+    .chip{ background:var(--chip); color:#cfe6ec; border:1px solid rgba(255,255,255,.12);
       padding:10px 14px; border-radius:999px; cursor:pointer; font-weight:700; font-size:14px;
-      transition:filter .15s ease, transform .1s ease;
-    }
+      transition:filter .15s ease, transform .1s ease;}
     .chip:active{ transform:translateY(1px) }
     .chip.active{ outline:2px solid var(--chipOn); color:#001a20; background:rgba(0,224,255,.25) }
 
-    footer{ margin-top:10px; text-align:center; color:var(--mut); font-size:12px; }
+    footer{ position:fixed; bottom:8px; left:0; right:0; text-align:center; 
+      color:var(--mut); font-size:12px; }
+    footer a{ color:var(--accent); text-decoration:none; margin:0 6px; }
 
     .fade-in { opacity:0; transform:translateY(10px); animation:fin .55s ease forwards }
     .d1{animation-delay:.05s} .d2{animation-delay:.12s} .d3{animation-delay:.18s}
@@ -71,13 +64,11 @@
 </head>
 <body>
   <main>
-    <!-- IMMAGINE (due porte) -->
     <div class="hero-wrap fade-in d1">
       <img id="hero" class="hero-img" alt="Due porte: gialla (Passato) e turchese (Futuro)" loading="eager" decoding="async" />
     </div>
     <div id="heroFallback" class="hero-fallback" style="display:none;"></div>
 
-    <!-- Testi -->
     <h1 class="fade-in d2">Scopri il tuo <span class="brand">What?f</span></h1>
     <div class="kicker fade-in d2">CHOOSE YOUR WAY</div>
     <p class="lead fade-in d3">
@@ -86,22 +77,23 @@
       <b>What the F?! ti farà vivere</b> visioni ironiche, creative e imprevedibili.
     </p>
 
-    <!-- Scelta TEMPO -->
     <div class="cta-row fade-in d3">
       <a class="btn btn-yellow" href="#" id="btnPassato">Passato</a>
       <a class="btn btn-teal"   href="#" id="btnFuturo">Futuro</a>
     </div>
 
-    <!-- Scelta STILE -->
-    <div class="style-toggle fade-in d3" role="group" aria-label="Stile della risposta">
+    <div class="style-toggle fade-in d3">
       <button class="chip active" id="chipWhatif" data-style="whatif">What?f (realistico)</button>
       <button class="chip"        id="chipWtf"    data-style="wtf">What the F?! (ironico)</button>
     </div>
-
-    <footer>© 2025 What?f</footer>
   </main>
 
-  <!-- Loader ROBUSTO immagine (sempre quello che funziona) -->
+  <footer>
+    © 2025 What?f · 
+    <a href="privacy.html">Privacy</a> · 
+    <a href="terms.html">Termini</a>
+  </footer>
+
   <script>
     (async function loadHero(){
       const hero = document.getElementById('hero');
@@ -117,7 +109,6 @@
       fb.textContent = 'Immagine non trovata.';
     })();
 
-    // Gestione toggle stile
     let style = localStorage.getItem('style') || 'whatif';
     function setStyle(newStyle){
       style = newStyle;
@@ -129,7 +120,6 @@
     document.getElementById('chipWhatif').addEventListener('click', ()=>setStyle('whatif'));
     document.getElementById('chipWtf').addEventListener('click',    ()=>setStyle('wtf'));
 
-    // Click sui bottoni Passato/Futuro → vai a fourth.html con query time+style
     function go(time){
       try{ localStorage.setItem('time', time); }catch(_){}
       const qs = new URLSearchParams({ time, style }).toString();
@@ -138,14 +128,13 @@
     document.getElementById('btnPassato').addEventListener('click', (e)=>{ e.preventDefault(); go('passato'); });
     document.getElementById('btnFuturo').addEventListener('click',  (e)=>{ e.preventDefault(); go('futuro');  });
 
-    // Swipe: sinistra → avanti con default (passato + stile attuale)
     (function(){
       let sx=0, sy=0, dx=0, dy=0, on=false; const TH=55;
       document.addEventListener('touchstart',e=>{on=true;const t=e.touches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
       document.addEventListener('touchmove', e=>{ if(!on) return; const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy; },{passive:true});
       document.addEventListener('touchend', ()=>{ if(!on) return; on=false;
         if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){
-          if(dx<0){ go('passato'); } // default: passato, mantiene style selezionato
+          if(dx<0){ go('passato'); }
         }
         sx=sy=dx=dy=0;
       },{passive:true});
