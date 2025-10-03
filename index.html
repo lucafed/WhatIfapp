@@ -1,96 +1,139 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>What?f – Home</title>
+  <meta name="theme-color" content="#0A0F14" />
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #0A0F14;
-      color: #FFFFFF;
-      text-align: center;
+    :root{
+      --bg:#0A0F14; --fg:#FFFFFF; --mut:#A0B2BA;
+      --accent:#00E0FF; --yellow:#FFD166; --mint:#1AFFD5;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+
+    main{min-height:100%;display:flex;flex-direction:column;align-items:center;
+      padding:12px 16px 20px;gap:10px}
+
+    /* Titolo sopra immagine */
+    h1{
+      margin:6px 0 6px;
+      font-size:clamp(24px,6vw,36px);
+      line-height:1.1; text-align:center;
+    }
+    h1 span{ color:var(--accent); }
+
+    /* Card immagine */
+    .hero-wrap{
+      width:min(100%,760px);
+      background:rgba(255,255,255,.04);
+      border-radius:20px;
+      box-shadow:0 18px 50px rgba(0,0,0,.45);
+      padding:8px;                 /* avvicina immagine ai bordi */
+    }
+    .hero-img{
+      display:block; width:100%; height:auto; border-radius:14px;
+      filter:drop-shadow(0 10px 24px rgba(0,0,0,.45));
+      /* nessun object-position: usiamo l'immagine pulita che hai caricato */
     }
 
-    .hero-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 10px 15px;
+    /* Sottotitolo subito sotto immagine */
+    .kicker{
+      margin:8px 0 0;
+      font-weight:800; letter-spacing:.4px;
+      color:var(--accent); text-align:center;
+      font-size:clamp(16px,4.5vw,22px);
     }
 
-    .hero-section h1 {
-      font-size: 1.8rem;
-      margin: 10px 0;
+    /* Descrizione compatta */
+    .desc{
+      margin:6px 0 4px;
+      color:var(--mut);
+      text-align:center;
+      font-size:clamp(14px,3.6vw,18px);
+      line-height:1.35;
+      max-width:820px;
     }
 
-    .hero-section h1 span {
-      color: #00E0FF;
+    /* Bottoni vicini al testo */
+    .buttons{
+      display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
+      margin:6px 0 0;
+    }
+    .btn{
+      appearance:none; border:0; cursor:pointer;
+      padding:12px 20px; border-radius:24px; font-weight:800;
+      letter-spacing:.2px; color:#091013; text-decoration:none;
+      transition:transform .15s ease, filter .15s ease;
+      box-shadow:0 10px 24px rgba(0,0,0,.35);
+    }
+    .btn:active{ transform:translateY(1px) }
+    .btn-yellow{ background:linear-gradient(180deg,var(--yellow),#F2B94E); color:#201400; }
+    .btn-mint{   background:linear-gradient(180deg,var(--mint),#00B5CC);  color:#001A1D; }
+
+    /* Nota */
+    .note{
+      margin:6px 0 0; color:var(--mut); font-size:12px; text-align:center;
     }
 
-    .hero-section img {
-      width: 100%;
-      max-width: 400px;
-      height: auto;
-      margin: 5px 0;
-      border-radius: 10px;
-    }
-
-    .hero-section p {
-      font-size: 1rem;
-      line-height: 1.4;
-      margin: 10px 0;
-      max-width: 500px;
-    }
-
-    .buttons {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin-top: 10px;
-    }
-
-    .btn-yellow, .btn-green {
-      padding: 12px 22px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 25px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: transform 0.2s ease;
-    }
-
-    .btn-yellow {
-      background-color: #FFD93D;
-      color: #000;
-    }
-
-    .btn-green {
-      background-color: #1AFFD5;
-      color: #000;
-    }
-
-    .btn-yellow:hover, .btn-green:hover {
-      transform: scale(1.05);
-    }
+    footer{ margin-top:auto; color:var(--mut); font-size:12px; text-align:center; }
   </style>
 </head>
 <body>
-
-  <div class="hero-section">
+  <main id="page">
+    <!-- Titolo sopra -->
     <h1>Scopri il tuo <span>What?f</span></h1>
-    <img src="third-hero.png" alt="Porte">
-    <p>
-      Immagina la scelta che non hai fatto… e quella che potresti fare domani.  
-      What?f ti mostra “cosa sarebbe potuto accadere” e “cosa potrebbe accadere” se scegli una porta invece dell’altra.
+
+    <!-- Immagine (DEVE stare in /public) -->
+    <div class="hero-wrap">
+      <img src="third-hero.png" alt="Due porte What?f" class="hero-img" />
+    </div>
+
+    <!-- Sottotitolo sotto -->
+    <div class="kicker">CHOOSE YOUR WAY</div>
+
+    <!-- Descrizione compatta (vicina all'immagine) -->
+    <p class="desc">
+      Immagina la scelta che non hai fatto… e quella che potresti fare domani.
+      What?f ti mostra “cosa sarebbe potuto accadere” e “cosa potrebbe accadere”
+      se scegli una porta invece dell’altra.
     </p>
 
+    <!-- Bottoni (stile porte). Salviamo la modalità e andiamo avanti -->
     <div class="buttons">
-      <button class="btn-yellow">What?f</button>
-      <button class="btn-green">What the F</button>
+      <a href="fourth.html" class="btn btn-yellow" id="btnWhatIf" data-mode="whatif">What?f</a>
+      <a href="fourth.html" class="btn btn-mint"   id="btnWtf"    data-mode="wtf">What the F</a>
     </div>
-  </div>
 
+    <p class="note">Swipe ◀︎ / ▶︎ per navigare</p>
+
+    <footer>© 2025 What?f · <a href="privacy.html">Privacy</a> · <a href="terms.html">Termini</a></footer>
+  </main>
+
+  <script>
+    // Salva la modalità scelta e prosegui
+    document.querySelectorAll('[data-mode]').forEach(el=>{
+      el.addEventListener('click', (e)=>{
+        e.preventDefault();
+        try{ localStorage.setItem('mode', el.dataset.mode); }catch(_){}
+        location.href = el.getAttribute('href');
+      });
+    });
+
+    // Swipe: sinistra → avanti (alla quarta), destra → nulla dalla home
+    (function(){
+      let sx=0, sy=0, dx=0, dy=0, on=false; const TH=55;
+      document.addEventListener('touchstart',e=>{on=true;const t=e.touches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
+      document.addEventListener('touchmove', e=>{ if(!on) return; const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy; },{passive:true});
+      document.addEventListener('touchend', ()=>{ if(!on) return; on=false;
+        if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){
+          if(dx<0){ location.href='fourth.html'; }
+        }
+        sx=sy=dx=dy=0;
+      },{passive:true});
+    })();
+  </script>
 </body>
 </html>
