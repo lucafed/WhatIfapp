@@ -45,12 +45,10 @@
     .cta:active{transform:translateY(1px)}
     .cta[disabled]{background:var(--btn-disabled);color:#7fa1aa;cursor:not-allowed;box-shadow:none}
 
-    .swipeArea{position:fixed;inset:0;z-index:1}
     .hint{width:min(100%,860px);text-align:center;color:var(--muted);font-size:12px}
   </style>
 </head>
 <body>
-  <div class="swipeArea" aria-hidden="true"></div>
   <main>
     <div class="hero"><img id="hero" alt="Mini anteprima due porte" loading="eager" decoding="async"></div>
     <h1>PARLAMI DI <span>TE</span></h1>
@@ -127,8 +125,9 @@
       }
     })();
 
-    // stato & ripristino preferenze dalla home
+    // lettura preferenze dalla home (se servono)
     const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}'); // {periodo, stile}
+
     // stato utente
     const user = JSON.parse(localStorage.getItem('whatif_user')||'{}');
     const requiredKeys = ['who','gender','age','phase','time']; // campi minimi
@@ -149,7 +148,7 @@
     ['who','gender','age','phase','time'].forEach(k=>markSelected(k,k));
 
     // se dalla home era stato scelto periodo, pre-seleziona
-    if (prefs.periodo) {
+    if (prefs.periodo && !user.time) {
       const pre = document.querySelector(`#time .chip[data-val="${prefs.periodo}"]`);
       pre?.click();
     }
@@ -175,22 +174,21 @@
         nextBtn.animate([{transform:'translateY(0)'},{transform:'translateY(2px)'},{transform:'translateY(0)'}],{duration:180});
         return;
       }
-      window.location.href='ask.html';
+      window.location.href='fifth.html';
     }
     nextBtn.addEventListener('click', goNext);
 
-    // swipe (← back, → next)
+    // swipe: ← back · → next (listener sul document, non overlay che blocca i tap)
     (function(){
-      const area=document.querySelector('.swipeArea');
       let sx=0, sy=0, dx=0, dy=0, start=false, TH=45;
-      area.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;start=true;},{passive:true});
-      area.addEventListener('touchmove',e=>{if(!start)return;const t=e.touches[0];dx=t.clientX-sx;dy=t.clientY-sy;},{passive:true});
-      area.addEventListener('touchend',()=>{if(!start)return;start=false;
+      document.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;start=true;},{passive:true});
+      document.addEventListener('touchmove',e=>{if(!start)return;const t=e.touches[0];dx=t.clientX-sx;dy=t.clientY-sy;},{passive:true});
+      document.addEventListener('touchend',()=>{if(!start)return;start=false;
         if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){
           if(dx>0){ history.back(); } else { goNext(); }
         }
         sx=sy=dx=dy=0;
-      });
+      },{passive:true});
     })();
   </script>
 </body>
