@@ -9,8 +9,8 @@
   <style>
     :root{
       --bg:#0A0F14; --fg:#E9F1F5; --mut:#A0B2BA;
-      --cyan:#00E0FF; --cyan-dark:#00B5CC;
-      --orange:#FFB74D; --orange-dark:#F89A22;
+      --cyan:#00E0FF; --cyan-dark:#00B5CC;   /* porta azzurra */
+      --orange:#FFB74D; --orange-dark:#F89A22; /* porta arancione */
     }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
@@ -21,31 +21,24 @@
     .hero-wrap{position:relative;width:100%;max-width:780px;margin-top:6px}
     .hero-img{width:100%;height:auto;display:block;border-radius:22px;
       filter:drop-shadow(0 16px 38px rgba(0,0,0,.5))}
-    .hero-overlay{position:absolute;inset:0;display:flex;flex-direction:column;
-      align-items:center;justify-content:flex-start;pointer-events:none}
-    .ov-cta{
-      margin-top:clamp(22px,9vw,58px);
-      font-size:clamp(20px,6.6vw,40px);
-      font-weight:900;letter-spacing:.8px;color:var(--cyan);
-      text-shadow:0 0 10px rgba(0,224,255,.7),0 0 24px rgba(0,224,255,.35)
-    }
+    /* niente overlay testo */
 
-    .title{margin:2px 0 0;font-size:clamp(26px,5.6vw,40px);line-height:1.12;text-align:center}
+    .title{margin:6px 0 0;font-size:clamp(26px,5.6vw,40px);line-height:1.12;text-align:center}
     .title span{color:var(--cyan);text-shadow:0 0 10px rgba(0,224,255,.6),0 0 22px rgba(0,224,255,.35)}
     .desc{max-width:780px;text-align:center;color:var(--mut);
       font-size:clamp(15px,3.8vw,18px);line-height:1.45;margin-top:2px}
 
-    /* BOTTONI PORTE */
+    /* Bottoni scelta stile (colori = porte) */
     .doors{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:6px}
     .btn{
       appearance:none;border:0;cursor:pointer;
       padding:14px 18px;border-radius:28px;font-weight:800;letter-spacing:.2px;
-      color:#062025; text-decoration:none; display:inline-flex; align-items:center; gap:8px
+      color:#062025;text-decoration:none;display:inline-flex;align-items:center;gap:8px
     }
-    .btn.orange{background:linear-gradient(180deg,var(--orange),var(--orange-dark));
-      box-shadow:0 0 14px rgba(248,154,34,.35),0 0 30px rgba(248,154,34,.18)}
     .btn.cyan{background:linear-gradient(180deg,var(--cyan),var(--cyan-dark));
       box-shadow:0 0 14px rgba(0,181,204,.45),0 0 30px rgba(0,181,204,.22)}
+    .btn.orange{background:linear-gradient(180deg,var(--orange),var(--orange-dark));
+      box-shadow:0 0 14px rgba(248,154,34,.35),0 0 30px rgba(248,154,34,.18)}
     .btn:active{transform:translateY(1px)}
 
     .legal{margin-top:10px;font-size:12px;color:var(--mut);text-align:center}
@@ -59,10 +52,6 @@
   <main>
     <div class="hero-wrap">
       <img id="hero" class="hero-img" alt="Due porte illuminate - What?f" loading="eager" decoding="async" />
-      <div class="hero-overlay">
-        <!-- SOLO questo titolo rimane sull'immagine -->
-        <div class="ov-cta">CHOOSE YOUR WAY</div>
-      </div>
     </div>
 
     <h1 class="title">Scopri il tuo <span>What?f</span></h1>
@@ -73,10 +62,10 @@
       se scegli una porta invece dell’altra.
     </p>
 
-    <!-- Bottoni coi colori delle porte -->
+    <!-- Bottoni: solo What?f e What the F (ironico) -->
     <div class="doors">
-      <a class="btn orange" id="btnPast" href="fourth.html?way=past">Porta arancione · Passato</a>
-      <a class="btn cyan" id="btnFuture" href="fourth.html?way=future">Porta azzurra · Futuro</a>
+      <a class="btn cyan"   id="btnWhatIf" href="fourth.html?mode=whatif">What?f</a>
+      <a class="btn orange" id="btnWtf"    href="fourth.html?mode=wtf">What the F</a>
     </div>
 
     <div class="legal">
@@ -87,34 +76,34 @@
   </main>
 
   <script>
-    // 1) Caricamento robusto immagine (stesso metodo che ti funziona)
+    // 1) Caricamento robusto immagine (stesso metodo che già ti funziona)
     (async function loadHero(){
       const img = document.getElementById('hero');
       const tries = ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
       for (const u of tries){
-        try{ const r = await fetch(u,{cache:'no-store'}); if(r.ok){ img.src = u + '?v=' + Date.now(); return; } }
-        catch(e){}
+        try{
+          const r = await fetch(u,{cache:'no-store'});
+          if(r.ok){ img.src = u + '?v=' + Date.now(); return; }
+        }catch(e){}
       }
     })();
 
-    // 2) Salva la scelta (per usarla nelle pagine successive)
-    const saveWay = (w)=>{ try{ localStorage.setItem('whatif_way', w); }catch(e){} };
-    document.getElementById('btnPast').addEventListener('click', ()=>saveWay('past'));
-    document.getElementById('btnFuture').addEventListener('click', ()=>saveWay('future'));
+    // 2) Salvo la scelta di stile per usarla dopo
+    const saveStyle = (s)=>{ try{ localStorage.setItem('whatif_style', s); }catch(e){} };
+    document.getElementById('btnWhatIf').addEventListener('click', ()=>saveStyle('whatif'));
+    document.getElementById('btnWtf').addEventListener('click', ()=>saveStyle('wtf'));
 
-    // 3) Swipe: sinistra -> avanti (va alla quarta, default “future” se non clicchi)
-    let tsX=null, tsY=null;
-    window.addEventListener('touchstart',e=>{ const t=e.changedTouches[0]; tsX=t.clientX; tsY=t.clientY;},{passive:true});
-    window.addEventListener('touchend',e=>{
-      if(tsX===null) return;
-      const t=e.changedTouches[0], dx=t.clientX-tsX, dy=Math.abs(t.clientY-tsY);
-      tsX=null; tsY=null;
-      if(Math.abs(dx)>60 && dy<70){
-        if(dx<0){
-          saveWay('future');
-          document.body.classList.add('leaving');
-          setTimeout(()=>location.href='fourth.html?way=future',220);
-        }
+    // 3) Swipe sinistra -> avanti (di default stile whatif se non clicchi)
+    let sx=null, sy=null;
+    addEventListener('touchstart',e=>{ const t=e.changedTouches[0]; sx=t.clientX; sy=t.clientY; },{passive:true});
+    addEventListener('touchend',e=>{
+      if(sx===null) return;
+      const t=e.changedTouches[0], dx=t.clientX-sx, dy=Math.abs(t.clientY-sy);
+      sx=null; sy=null;
+      if(Math.abs(dx)>60 && dy<70 && dx<0){
+        saveStyle('whatif');
+        document.body.classList.add('leaving');
+        setTimeout(()=>location.href='fourth.html?mode=whatif',220);
       }
     },{passive:true});
   </script>
