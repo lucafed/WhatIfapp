@@ -10,12 +10,14 @@
 :root{--bg:#0A0F14;--fg:#e9f2f5;--muted:#9fb3bd;--c1:#FFD166;--c2:#06D6A0;--accent:#00E0FF}
 *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
 main{min-height:100%;display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:flex-start;padding:18px}
+h1{margin:6px 0 4px;font-size:clamp(26px,6.2vw,40px);text-align:center}
+h1 span{color:var(--accent)}
 .hero-wrap{width:min(100%,760px);border-radius:28px;background:rgba(255,255,255,.03);box-shadow:0 20px 60px rgba(0,0,0,.45);padding:10px 12px;overflow:hidden}
 img.hero{display:block;width:100%;height:min(70vh,760px);border-radius:22px;filter:drop-shadow(0 18px 36px rgba(0,0,0,.45));
-  object-fit:cover; object-position:center 36%;} /* <-- taglia la parte alta con il testo */
-h1{margin:14px 0 0;font-size:clamp(26px,6.2vw,40px);text-align:center}
+  object-fit:cover; object-position:center 70%;} /* spinta più in GIÙ, via il testo in alto */
+.h2{margin:8px 0 0;font-size:clamp(18px,4.8vw,26px);font-weight:800;letter-spacing:.04em;color:var(--accent);text-align:center}
 .sub{max-width:880px;margin:8px auto 0;line-height:1.45;text-align:center;color:var(--muted);font-size:clamp(14px,3.4vw,18px)}
-.btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:12px 0 6px}
+.btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:10px 0 6px}
 .btn{appearance:none;border:0;border-radius:999px;padding:14px 22px;font-weight:800;letter-spacing:.02em;color:#011015;background:#0c3942;cursor:pointer;transition:.2s;box-shadow:0 10px 26px rgba(0,0,0,.35)}
 .btn:active{transform:translateY(1px)}
 .btn-yellow{background:var(--c1);color:#1b1200}
@@ -24,17 +26,20 @@ h1{margin:14px 0 0;font-size:clamp(26px,6.2vw,40px);text-align:center}
 footer{margin:12px 0 8px;color:var(--muted);font-size:12px;text-align:center}
 a{color:var(--accent);text-decoration:none}
 .fade{opacity:0;transform:translateY(10px);animation:fade .8s ease forwards}
-.fade.d2{animation-delay:.15s}.fade.d3{animation-delay:.3s}
+.fade.d2{animation-delay:.12s}.fade.d3{animation-delay:.24s}
 @keyframes fade{to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
   <main id="page">
-    <div class="hero-wrap fade">
+    <h1 class="fade">Scopri il tuo <span>What?f</span></h1>
+
+    <div class="hero-wrap fade d2">
       <img id="hero" class="hero" alt="Due porte: What?f e What the F"/>
     </div>
 
-    <h1 class="fade d2">Scopri il tuo <span style="color:var(--accent)">What?f</span></h1>
+    <div class="h2 fade d3">CHOOSE YOUR WAY</div>
+
     <p class="sub fade d3">
       Immagina la scelta che non hai fatto… e quella che potresti fare domani.
       What?f ti mostra “cosa sarebbe potuto accadere” e “cosa potrebbe accadere”
@@ -61,6 +66,7 @@ a{color:var(--accent);text-decoration:none}
   img.alt = 'Immagine non trovata';
 })();
 
+// swipe: destra/sinistra
 (function(){
   let sx=0, sy=0, dx=0, dy=0, active=false; const TH=55;
   document.addEventListener('touchstart',e=>{active=true;const t=e.touches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
@@ -71,6 +77,7 @@ a{color:var(--accent);text-decoration:none}
   },{passive:true});
 })();
 
+// passa la “modalità” scelta
 document.querySelectorAll('[data-mode]').forEach(el=>{
   el.addEventListener('click', (ev)=>{
     ev.preventDefault();
