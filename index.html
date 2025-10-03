@@ -2,142 +2,93 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f – Home</title>
-  <meta name="theme-color" content="#0A0F14" />
+  <meta name="theme-color" content="#0A0F14">
+
+  <!-- Precarica l'immagine corretta (due porte) -->
   <link rel="preload" as="image" href="/third-hero.png" />
+
   <style>
-    :root{
-      --bg:#0A0F14; --fg:#ffffff; --mut:#A0B2BA;
-      --accent:#00E0FF; --accent-dark:#00B5CC;
-      --yellow:#FFC146; --teal:#00D5E6;
-      --chip:#24303a; --chipOn:#00E0FF;
+    :root { --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA; --accent:#00E0FF; --accent-dark:#00B5CC; }
+    *{ box-sizing:border-box; }
+    html,body{
+      height:100%; margin:0; background:var(--bg); color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-      gap:12px; padding:16px 14px 60px; max-width:900px; margin:0 auto;}
+    main{
+      min-height:100%; display:flex; flex-direction:column; align-items:center;
+      /* testi più vicini = meno padding e gap */
+      justify-content:flex-start; padding:12px 16px 56px; gap:10px;
+    }
 
-    .hero-wrap{width:100%;display:flex;justify-content:center;}
+    /* Contenitore immagine */
+    .hero-container{
+      position:relative; width:min(94vw,640px); margin:0 auto;
+      /* spinge l’immagine leggermente più su nella pagina */
+      margin-top:4px;
+    }
     .hero-img{
-      width:min(92vw,680px); height:auto;
-      max-height:clamp(280px,42vh,420px);
-      object-fit:cover; border-radius:22px;
-      display:block; filter:drop-shadow(0 10px 28px rgba(0,0,0,.45));
-      margin-top:6px;
+      width:100%; height:auto; display:block;
+      border-radius:20px; filter:drop-shadow(0 10px 28px rgba(0,0,0,.45));
     }
-    .hero-fallback{color:var(--mut); font-size:14px; margin-top:-2px}
 
-    h1{margin:2px 0 0; font-size:clamp(24px,5vw,34px); line-height:1.15; text-align:center;}
-    h1 .brand{ color:var(--accent); text-shadow:0 0 8px rgba(0,224,255,.6),0 0 16px rgba(0,224,255,.35); }
-    .kicker{ margin-top:2px; font-weight:800; letter-spacing:.5px;
-      font-size:clamp(16px,3.8vw,22px); color:var(--accent-dark); text-align:center; }
-    .lead{ margin:6px 0 0; text-align:center; color:var(--mut);
-      font-size:clamp(14px,3.5vw,18px); line-height:1.45; max-width:800px; }
+    /* Bottone dentro l’immagine, più in alto (tirato su) */
+    .overlay-btn{
+      position:absolute; left:50%; transform:translateX(-50%);
+      bottom:9%; /* prima 5%: ora più su */
+      background:var(--accent-dark); color:#001f26; font-weight:800;
+      padding:12px 20px; border-radius:24px; text-decoration:none;
+      box-shadow:0 0 12px rgba(0,181,204,.6), 0 0 24px rgba(0,181,204,.3);
+      font-size:18px; white-space:nowrap;
+    }
+    .overlay-btn:active{ transform:translate(-50%,1px) }
 
-    .cta-row{ margin-top:10px; display:flex; gap:12px; width:100%; justify-content:center; flex-wrap:wrap; }
-    .btn{ appearance:none; border:0; border-radius:28px; padding:12px 20px;
-      font-weight:800; font-size:16px; cursor:pointer; text-decoration:none;
-      transition:transform .15s ease, filter .15s ease; color:#001f26;
-      min-width:min(46%, 260px); box-shadow:0 0 14px rgba(0,0,0,.25);}
-    .btn:active{transform:translateY(1px)}
-    .btn-yellow{ background:linear-gradient(180deg,var(--yellow),#F2B94E); color:#201400; }
-    .btn-teal  { background:linear-gradient(180deg,var(--teal),#00B5CC);  color:#001A1D; }
+    /* Titolo più vicino all’immagine */
+    h1{
+      margin:6px 0 0; font-size:clamp(26px,5vw,36px); line-height:1.12; text-align:center;
+    }
+    h1 span{
+      color:var(--accent);
+      text-shadow:0 0 8px rgba(0,224,255,.7), 0 0 16px rgba(0,224,255,.4);
+    }
 
-    .style-toggle{ display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; justify-content:center }
-    .chip{ background:var(--chip); color:#cfe6ec; border:1px solid rgba(255,255,255,.12);
-      padding:10px 14px; border-radius:999px; cursor:pointer; font-weight:700; font-size:14px;
-      transition:filter .15s ease, transform .1s ease;}
-    .chip:active{ transform:translateY(1px) }
-    .chip.active{ outline:2px solid var(--chipOn); color:#001a20; background:rgba(0,224,255,.25) }
-
-    footer{ position:fixed; bottom:8px; left:0; right:0; text-align:center; 
-      color:var(--mut); font-size:12px; }
-    footer a{ color:var(--accent); text-decoration:none; margin:0 6px; }
-
-    .fade-in { opacity:0; transform:translateY(10px); animation:fin .55s ease forwards }
-    .d1{animation-delay:.05s} .d2{animation-delay:.12s} .d3{animation-delay:.18s}
-    @keyframes fin { to{opacity:1; transform:none} }
-    @supports (height:100svh){ main{min-height:100svh} }
+    /* Footer (disclaimer) fisso in basso */
+    footer{
+      position:fixed; left:0; right:0; bottom:8px;
+      text-align:center; color:var(--muted); font-size:12px;
+      padding:0 10px;
+    }
+    footer a{ color:var(--accent); text-decoration:none; margin:0 6px }
   </style>
 </head>
 <body>
   <main>
-    <div class="hero-wrap fade-in d1">
-      <img id="hero" class="hero-img" alt="Due porte: gialla (Passato) e turchese (Futuro)" loading="eager" decoding="async" />
-    </div>
-    <div id="heroFallback" class="hero-fallback" style="display:none;"></div>
-
-    <h1 class="fade-in d2">Scopri il tuo <span class="brand">What?f</span></h1>
-    <div class="kicker fade-in d2">CHOOSE YOUR WAY</div>
-    <p class="lead fade-in d3">
-      Scegli se guardare al <b>passato</b> o al <b>futuro</b> e lascia che la tua domanda apra nuove possibilità.<br><br>
-      <b>What?f ti farà esplorare</b> scenari realistici e riflessivi, basati su scelte plausibili.<br>
-      <b>What the F?! ti farà vivere</b> visioni ironiche, creative e imprevedibili.
-    </p>
-
-    <div class="cta-row fade-in d3">
-      <a class="btn btn-yellow" href="#" id="btnPassato">Passato</a>
-      <a class="btn btn-teal"   href="#" id="btnFuturo">Futuro</a>
+    <div class="hero-container">
+      <img id="hero" class="hero-img" alt="Porte What?f" loading="eager" decoding="async" />
+      <!-- bottone dentro l’immagine, centrato in basso (più in alto di prima) -->
+      <a href="fourth.html" class="overlay-btn">CHOOSE YOUR WAY</a>
     </div>
 
-    <div class="style-toggle fade-in d3">
-      <button class="chip active" id="chipWhatif" data-style="whatif">What?f (realistico)</button>
-      <button class="chip"        id="chipWtf"    data-style="wtf">What the F?! (ironico)</button>
-    </div>
+    <h1>Scopri il tuo <span>What?f</span></h1>
   </main>
 
   <footer>
-    © 2025 What?f · 
-    <a href="privacy.html">Privacy</a> · 
-    <a href="terms.html">Termini</a>
+    © 2025 What?f · <a href="privacy.html">Privacy</a> · <a href="terms.html">Termini</a>
   </footer>
 
+  <!-- Loader immagine: metodo che funziona (fallback + cache-busting) -->
   <script>
     (async function loadHero(){
       const hero = document.getElementById('hero');
-      const fb   = document.getElementById('heroFallback');
-      fb.style.display = 'block';
       const tries = ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
       for (const u of tries) {
         try {
           const r = await fetch(u, { cache:'no-store' });
-          if (r.ok) { hero.src = u + '?v=' + Date.now(); fb.style.display = 'none'; return; }
+          if (r.ok) { hero.src = u + '?v=' + Date.now(); return; }
         } catch(e){}
       }
-      fb.textContent = 'Immagine non trovata.';
-    })();
-
-    let style = localStorage.getItem('style') || 'whatif';
-    function setStyle(newStyle){
-      style = newStyle;
-      localStorage.setItem('style', style);
-      document.getElementById('chipWhatif').classList.toggle('active', style==='whatif');
-      document.getElementById('chipWtf').classList.toggle('active', style==='wtf');
-    }
-    setStyle(style);
-    document.getElementById('chipWhatif').addEventListener('click', ()=>setStyle('whatif'));
-    document.getElementById('chipWtf').addEventListener('click',    ()=>setStyle('wtf'));
-
-    function go(time){
-      try{ localStorage.setItem('time', time); }catch(_){}
-      const qs = new URLSearchParams({ time, style }).toString();
-      location.href = 'fourth.html?' + qs;
-    }
-    document.getElementById('btnPassato').addEventListener('click', (e)=>{ e.preventDefault(); go('passato'); });
-    document.getElementById('btnFuturo').addEventListener('click',  (e)=>{ e.preventDefault(); go('futuro');  });
-
-    (function(){
-      let sx=0, sy=0, dx=0, dy=0, on=false; const TH=55;
-      document.addEventListener('touchstart',e=>{on=true;const t=e.touches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
-      document.addEventListener('touchmove', e=>{ if(!on) return; const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy; },{passive:true});
-      document.addEventListener('touchend', ()=>{ if(!on) return; on=false;
-        if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){
-          if(dx<0){ go('passato'); }
-        }
-        sx=sy=dx=dy=0;
-      },{passive:true});
+      hero.alt = "Immagine non trovata";
     })();
   </script>
 </body>
