@@ -1,90 +1,96 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>What?f – Home</title>
-<meta name="theme-color" content="#0A0F14"/>
-<link rel="preload" as="image" href="/third-hero.png"/>
-<style>
-:root{--bg:#0A0F14;--fg:#e9f2f5;--muted:#9fb3bd;--c1:#FFD166;--c2:#06D6A0;--accent:#00E0FF}
-*{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
-main{min-height:100%;display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:flex-start;padding:18px}
-h1{margin:6px 0 4px;font-size:clamp(26px,6.2vw,40px);text-align:center}
-h1 span{color:var(--accent)}
-.hero-wrap{width:min(100%,760px);border-radius:28px;background:rgba(255,255,255,.03);box-shadow:0 20px 60px rgba(0,0,0,.45);padding:10px 12px;overflow:hidden}
-img.hero{display:block;width:100%;height:min(70vh,760px);border-radius:22px;filter:drop-shadow(0 18px 36px rgba(0,0,0,.45));
-  object-fit:cover; object-position:center 70%;} /* spinta più in GIÙ, via il testo in alto */
-.h2{margin:8px 0 0;font-size:clamp(18px,4.8vw,26px);font-weight:800;letter-spacing:.04em;color:var(--accent);text-align:center}
-.sub{max-width:880px;margin:8px auto 0;line-height:1.45;text-align:center;color:var(--muted);font-size:clamp(14px,3.4vw,18px)}
-.btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:10px 0 6px}
-.btn{appearance:none;border:0;border-radius:999px;padding:14px 22px;font-weight:800;letter-spacing:.02em;color:#011015;background:#0c3942;cursor:pointer;transition:.2s;box-shadow:0 10px 26px rgba(0,0,0,.35)}
-.btn:active{transform:translateY(1px)}
-.btn-yellow{background:var(--c1);color:#1b1200}
-.btn-cyan{background:var(--c2);color:#001b13}
-.note{margin-top:2px;color:var(--muted);font-size:12px;text-align:center}
-footer{margin:12px 0 8px;color:var(--muted);font-size:12px;text-align:center}
-a{color:var(--accent);text-decoration:none}
-.fade{opacity:0;transform:translateY(10px);animation:fade .8s ease forwards}
-.fade.d2{animation-delay:.12s}.fade.d3{animation-delay:.24s}
-@keyframes fade{to{opacity:1;transform:none}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What?f – Home</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #0A0F14;
+      color: #FFFFFF;
+      text-align: center;
+    }
+
+    .hero-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 15px;
+    }
+
+    .hero-section h1 {
+      font-size: 1.8rem;
+      margin: 10px 0;
+    }
+
+    .hero-section h1 span {
+      color: #00E0FF;
+    }
+
+    .hero-section img {
+      width: 100%;
+      max-width: 400px;
+      height: auto;
+      margin: 5px 0;
+      border-radius: 10px;
+    }
+
+    .hero-section p {
+      font-size: 1rem;
+      line-height: 1.4;
+      margin: 10px 0;
+      max-width: 500px;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .btn-yellow, .btn-green {
+      padding: 12px 22px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 25px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .btn-yellow {
+      background-color: #FFD93D;
+      color: #000;
+    }
+
+    .btn-green {
+      background-color: #1AFFD5;
+      color: #000;
+    }
+
+    .btn-yellow:hover, .btn-green:hover {
+      transform: scale(1.05);
+    }
+  </style>
 </head>
 <body>
-  <main id="page">
-    <h1 class="fade">Scopri il tuo <span>What?f</span></h1>
 
-    <div class="hero-wrap fade d2">
-      <img id="hero" class="hero" alt="Due porte: What?f e What the F"/>
-    </div>
-
-    <div class="h2 fade d3">CHOOSE YOUR WAY</div>
-
-    <p class="sub fade d3">
-      Immagina la scelta che non hai fatto… e quella che potresti fare domani.
-      What?f ti mostra “cosa sarebbe potuto accadere” e “cosa potrebbe accadere”
-      se scegli una porta invece dell’altra.
+  <div class="hero-section">
+    <h1>Scopri il tuo <span>What?f</span></h1>
+    <img src="third-hero.png" alt="Porte">
+    <p>
+      Immagina la scelta che non hai fatto… e quella che potresti fare domani.  
+      What?f ti mostra “cosa sarebbe potuto accadere” e “cosa potrebbe accadere” se scegli una porta invece dell’altra.
     </p>
 
-    <div class="btn-row fade d3">
-      <a class="btn btn-yellow" href="fourth.html" data-mode="whatif">What?f</a>
-      <a class="btn btn-cyan" href="fourth.html" data-mode="wtf">What the F</a>
+    <div class="buttons">
+      <button class="btn-yellow">What?f</button>
+      <button class="btn-green">What the F</button>
     </div>
+  </div>
 
-    <p class="note fade d3">Swipe ◀︎ / ▶︎ per navigare</p>
-    <footer>© 2025 What?f · <a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Termini d’uso</a></footer>
-  </main>
-
-<script>
-(async function loadHero(){
-  const img = document.getElementById('hero');
-  const tries = ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
-  for (const u of tries){
-    try{ const r = await fetch(u,{cache:'no-store'}); if(r.ok){ img.src = u + '?v=' + Date.now(); return; } }
-    catch(e){}
-  }
-  img.alt = 'Immagine non trovata';
-})();
-
-// swipe: destra/sinistra
-(function(){
-  let sx=0, sy=0, dx=0, dy=0, active=false; const TH=55;
-  document.addEventListener('touchstart',e=>{active=true;const t=e.touches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
-  document.addEventListener('touchmove', e=>{ if(!active) return; const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy; },{passive:true});
-  document.addEventListener('touchend', ()=>{ if(!active) return; active=false;
-    if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){ if(dx<0){ window.location.href='fourth.html'; } }
-    sx=sy=dx=dy=0;
-  },{passive:true});
-})();
-
-// passa la “modalità” scelta
-document.querySelectorAll('[data-mode]').forEach(el=>{
-  el.addEventListener('click', (ev)=>{
-    ev.preventDefault();
-    localStorage.setItem('mode', el.dataset.mode);
-    window.location.href = el.getAttribute('href');
-  });
-});
-</script>
 </body>
 </html>
