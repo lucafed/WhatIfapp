@@ -1,111 +1,65 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>What?f – Home</title>
-  <meta name="theme-color" content="#0A0F14" />
-  <link rel="preload" as="image" href="/third-hero.png" />
+  <link rel="stylesheet" href="style.css">
   <style>
-    :root{
-      --bg:#0A0F14; --fg:#E9F1F5; --mut:#A0B2BA;
-      --cyan:#00E0FF; --cyan-dark:#00B5CC;   /* porta azzurra */
-      --orange:#FFB74D; --orange-dark:#F89A22; /* porta arancione */
+    body {
+      margin:0;
+      font-family: Arial, sans-serif;
+      background:#0A0F14;
+      color:#fff;
+      text-align:center;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:18px;padding:18px 18px 28px}
-
-    /* HERO */
-    .hero-wrap{position:relative;width:100%;max-width:780px;margin-top:6px}
-    .hero-img{width:100%;height:auto;display:block;border-radius:22px;
-      filter:drop-shadow(0 16px 38px rgba(0,0,0,.5))}
-    /* niente overlay testo */
-
-    .title{margin:6px 0 0;font-size:clamp(26px,5.6vw,40px);line-height:1.12;text-align:center}
-    .title span{color:var(--cyan);text-shadow:0 0 10px rgba(0,224,255,.6),0 0 22px rgba(0,224,255,.35)}
-    .desc{max-width:780px;text-align:center;color:var(--mut);
-      font-size:clamp(15px,3.8vw,18px);line-height:1.45;margin-top:2px}
-
-    /* Bottoni scelta stile (colori = porte) */
-    .doors{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:6px}
-    .btn{
-      appearance:none;border:0;cursor:pointer;
-      padding:14px 18px;border-radius:28px;font-weight:800;letter-spacing:.2px;
-      color:#062025;text-decoration:none;display:inline-flex;align-items:center;gap:8px
+    .hero {
+      max-width:100%;
+      height:auto;
+      margin:20px auto;
+      display:block;
     }
-    .btn.cyan{background:linear-gradient(180deg,var(--cyan),var(--cyan-dark));
-      box-shadow:0 0 14px rgba(0,181,204,.45),0 0 30px rgba(0,181,204,.22)}
-    .btn.orange{background:linear-gradient(180deg,var(--orange),var(--orange-dark));
-      box-shadow:0 0 14px rgba(248,154,34,.35),0 0 30px rgba(248,154,34,.18)}
-    .btn:active{transform:translateY(1px)}
-
-    .legal{margin-top:10px;font-size:12px;color:var(--mut);text-align:center}
-    .legal a{color:var(--cyan);text-decoration:none}
-    footer{margin-top:auto;text-align:center;color:var(--mut);font-size:12px;opacity:.9}
-
-    .leaving main{opacity:.15;transform:translateX(-10px);transition:.28s ease}
+    h1 {font-size:2rem;margin:20px 0 10px;}
+    .subtitle {font-size:1.1rem; margin-bottom:20px;}
+    .choice {display:flex;justify-content:center;gap:20px;margin-top:20px;}
+    .btn {
+      padding:15px 25px;
+      border-radius:30px;
+      font-weight:bold;
+      text-decoration:none;
+      font-size:1rem;
+      display:inline-block;
+      transition:transform 0.2s;
+    }
+    .btn:hover {transform:scale(1.05);}
+    .btn-cyan   {background:linear-gradient(180deg,#00E0FF,#00B5CC); color:#062025;}
+    .btn-orange {background:linear-gradient(180deg,#FFB347,#FF8C00); color:#2b1800;}
   </style>
 </head>
 <body>
-  <main>
-    <div class="hero-wrap">
-      <img id="hero" class="hero-img" alt="Due porte illuminate - What?f" loading="eager" decoding="async" />
-    </div>
+  <img src="third-hero.png" alt="Porte Whatif" class="hero">
+  <h1>Scopri il tuo <span style="color:#00E0FF">What?f</span></h1>
+  <p class="subtitle">Immagina la scelta che non hai fatto… e quella che potresti fare domani.<br>
+    What?f ti mostra “cosa sarebbe potuto accadere” e “cosa potrebbe accadere” se scegli una porta invece dell’altra.</p>
 
-    <h1 class="title">Scopri il tuo <span>What?f</span></h1>
-
-    <p class="desc">
-      Immagina la scelta che non hai fatto… e quella che potresti fare domani.
-      What?f ti mostra “cosa sarebbe potuto accadere” e “cosa potrebbe accadere”
-      se scegli una porta invece dell’altra.
-    </p>
-
-    <!-- Bottoni: solo What?f e What the F (ironico) -->
-    <div class="doors">
-      <a class="btn cyan"   id="btnWhatIf" href="fourth.html?mode=whatif">What?f</a>
-      <a class="btn orange" id="btnWtf"    href="fourth.html?mode=wtf">What the F</a>
-    </div>
-
-    <div class="legal">
-      Continuando accetti la nostra <a href="privacy.html">Privacy Policy</a> e i <a href="terms.html">Termini d’uso</a>.
-    </div>
-
-    <footer>© 2025 What?f</footer>
-  </main>
+  <div class="choice">
+    <a href="fourth.html?mode=whatif" class="btn btn-cyan">WHAT?F</a>
+    <a href="fourth.html?mode=wtf" class="btn btn-orange">WHAT THE F</a>
+  </div>
 
   <script>
-    // 1) Caricamento robusto immagine (stesso metodo che già ti funziona)
-    (async function loadHero(){
-      const img = document.getElementById('hero');
-      const tries = ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
-      for (const u of tries){
-        try{
-          const r = await fetch(u,{cache:'no-store'});
-          if(r.ok){ img.src = u + '?v=' + Date.now(); return; }
-        }catch(e){}
+    // Swipe avanti/indietro
+    let startX=0, startY=0;
+    document.addEventListener("touchstart",e=>{
+      startX=e.touches[0].clientX; startY=e.touches[0].clientY;
+    });
+    document.addEventListener("touchend",e=>{
+      let dx=e.changedTouches[0].clientX-startX;
+      let dy=e.changedTouches[0].clientY-startY;
+      if(Math.abs(dx)>60 && Math.abs(dy)<70){
+        if(dx<0){ location.href="fourth.html?mode=whatif"; }
       }
-    })();
-
-    // 2) Salvo la scelta di stile per usarla dopo
-    const saveStyle = (s)=>{ try{ localStorage.setItem('whatif_style', s); }catch(e){} };
-    document.getElementById('btnWhatIf').addEventListener('click', ()=>saveStyle('whatif'));
-    document.getElementById('btnWtf').addEventListener('click', ()=>saveStyle('wtf'));
-
-    // 3) Swipe sinistra -> avanti (di default stile whatif se non clicchi)
-    let sx=null, sy=null;
-    addEventListener('touchstart',e=>{ const t=e.changedTouches[0]; sx=t.clientX; sy=t.clientY; },{passive:true});
-    addEventListener('touchend',e=>{
-      if(sx===null) return;
-      const t=e.changedTouches[0], dx=t.clientX-sx, dy=Math.abs(t.clientY-sy);
-      sx=null; sy=null;
-      if(Math.abs(dx)>60 && dy<70 && dx<0){
-        saveStyle('whatif');
-        document.body.classList.add('leaving');
-        setTimeout(()=>location.href='fourth.html?mode=whatif',220);
-      }
-    },{passive:true});
+    });
   </script>
 </body>
 </html>
