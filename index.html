@@ -11,35 +11,59 @@
     [data-theme="light"]{--bg:#f7f7f7;--fg:#111;--muted:#444;--accent:#00B5CC;--accent-dark:#008fa3}
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;padding:60px 20px 20px;gap:20px}
+
+    main{
+      min-height:100%;
+      display:flex; flex-direction:column; align-items:center; text-align:center;
+      justify-content:flex-start;
+      padding:60px 20px 20px; gap:20px;
+    }
+
     .hero-img{width:min(90vw,520px);height:auto;margin-top:10px;display:block;filter:drop-shadow(0 10px 28px rgba(0,0,0,.45))}
     .hero-fallback{color:var(--muted);font-size:14px;margin-top:8px}
-    .theme-toggle{position:fixed;top:16px;right:16px;background:rgba(0,0,0,.6);border:1px solid var(--accent);color:#fff;padding:10px;border-radius:50%;cursor:pointer;font-size:18px;z-index:9999}
+
+    .theme-toggle{
+      position:fixed; top:16px; right:16px;
+      background:rgba(0,0,0,.6); border:1px solid var(--accent); color:#fff;
+      padding:10px; border-radius:50%; cursor:pointer; font-size:18px; z-index:9999
+    }
     [data-theme="light"] .theme-toggle{background:rgba(255,255,255,.85);color:#111}
+
     h1{margin-top:40px;font-size:clamp(28px,6vw,44px);line-height:1.2}
     h1 span{color:var(--accent);text-shadow:0 0 8px rgba(0,224,255,.7),0 0 16px rgba(0,224,255,.4)}
     p.subtitle{margin-top:12px;font-size:16px;color:var(--muted)}
-    .btn{display:inline-block;text-decoration:none;background:var(--accent-dark);color:#001f26;font-weight:700;padding:14px 26px;border-radius:28px;margin-top:24px;box-shadow:0 0 12px rgba(0,181,204,.6),0 0 24px rgba(0,181,204,.3)}
+
+    .btn{
+      display:inline-block; text-decoration:none; background:var(--accent-dark); color:#001f26;
+      font-weight:700; padding:14px 26px; border-radius:28px; margin-top:24px;
+      box-shadow:0 0 12px rgba(0,181,204,.6),0 0 24px rgba(0,181,204,.3)
+    }
+
     footer{position:fixed;bottom:10px;left:0;right:0;text-align:center;color:var(--muted);font-size:12px}
     footer a{color:var(--accent);text-decoration:none}
+
+    /* piccolo tip swipe (facoltativo) */
+    .swipe-tip{font-size:12px;color:var(--muted)}
   </style>
 </head>
 <body>
   <button id="themeToggle" class="theme-toggle" aria-label="Cambia tema">☀️</button>
 
-  <main>
+  <main id="swipeArea">
     <img id="hero" class="hero-img" alt="Porta luminosa What?f" loading="eager" decoding="async" />
     <div id="heroFallback" class="hero-fallback">Caricamento immagine…</div>
 
     <h1>BENVENUTO SU <span>What?f</span></h1>
     <p class="subtitle">Le porte che non hai aperto e quelle che aprirai</p>
-    <a href="second.html" class="btn">CHOOSE YOUR WAY</a>
+
+    <a href="second.html" class="btn" id="cta">CHOOSE YOUR WAY</a>
+    <div class="swipe-tip">Swipe ↑ o → per continuare</div>
   </main>
 
   <footer>© 2025 What?f · <a href="privacy.html">Privacy</a> · <a href="terms.html">Termini</a></footer>
 
   <script>
-    // Caricamento robusto immagine (più percorsi)
+    // Caricamento robusto immagine (multi-percorso)
     (async function loadHero(){
       const hero=document.getElementById('hero');
       const fb=document.getElementById('heroFallback');
@@ -53,10 +77,43 @@
     })();
 
     // Tema persistente
-    const btn=document.getElementById('themeToggle');const root=document.documentElement;
-    function apply(t){if(t==='light'){root.setAttribute('data-theme','light');btn.textContent='🌙'} else {root.removeAttribute('data-theme');btn.textContent='☀️'}}
-    apply(localStorage.getItem('theme'));
-    btn.addEventListener('click',()=>{const cur=root.getAttribute('data-theme')==='light'?'light':'dark';const next=cur==='light'?'dark':'light';localStorage.setItem('theme',next);apply(next);});
+    (function(){
+      const btn=document.getElementById('themeToggle');const root=document.documentElement;
+      function apply(t){ if(t==='light'){root.setAttribute('data-theme','light');btn.textContent='🌙'} else {root.removeAttribute('data-theme');btn.textContent='☀️'} }
+      apply(localStorage.getItem('theme'));
+      btn.addEventListener('click',()=>{const cur=root.getAttribute('data-theme')==='light'?'light':'dark';const next=cur==='light'?'dark':'light';localStorage.setItem('theme',next);apply(next);});
+    })();
+
+    // SWIPE (home -> second.html) con soglia comoda
+    (function(){
+      const NEXT='second.html';
+      const area=document.getElementById('swipeArea');
+      let sx=0, sy=0, t0=0;
+      const TH=80;      // distanza minima in px
+      const MAXT=900;   // durata massima gesto
+
+      area.addEventListener('touchstart',e=>{
+        const p=e.touches[0]; sx=p.clientX; sy=p.clientY; t0=Date.now();
+      },{passive:true});
+
+      area.addEventListener('touchend',e=>{
+        const p=e.changedTouches[0];
+        const dx=p.clientX - sx, dy=p.clientY - sy, dt=Date.now()-t0;
+        if(dt>MAXT) return;
+        const adx=Math.abs(dx), ady=Math.abs(dy);
+
+        if(adx>ady && adx>TH) {            // swipe orizzontale
+          if(dx<0) location.href=NEXT;     // → (da destra verso sinistra)
+        } else if(ady>TH) {                // swipe verticale
+          if(dy<0) location.href=NEXT;     // ↑
+        }
+      },{passive:true});
+
+      // anche click sul bottone
+      document.getElementById('cta').addEventListener('click', (e)=>{
+        e.preventDefault(); location.href=NEXT;
+      });
+    })();
   </script>
 </body>
 </html>
