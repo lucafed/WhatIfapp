@@ -31,15 +31,17 @@
       background:rgba(255,255,255,.04);
       border-radius:20px;
       box-shadow:0 18px 50px rgba(0,0,0,.45);
-      padding:8px;                 /* avvicina immagine ai bordi */
+      padding:8px;
+      overflow:hidden;
+      text-align:center;
     }
     .hero-img{
       display:block; width:100%; height:auto; border-radius:14px;
       filter:drop-shadow(0 10px 24px rgba(0,0,0,.45));
-      /* nessun object-position: usiamo l'immagine pulita che hai caricato */
     }
+    .hero-fallback{ font-size:14px; color:var(--mut); margin:6px 0 0; }
 
-    /* Sottotitolo subito sotto immagine */
+    /* Sottotitolo sotto immagine */
     .kicker{
       margin:8px 0 0;
       font-weight:800; letter-spacing:.4px;
@@ -73,11 +75,7 @@
     .btn-yellow{ background:linear-gradient(180deg,var(--yellow),#F2B94E); color:#201400; }
     .btn-mint{   background:linear-gradient(180deg,var(--mint),#00B5CC);  color:#001A1D; }
 
-    /* Nota */
-    .note{
-      margin:6px 0 0; color:var(--mut); font-size:12px; text-align:center;
-    }
-
+    .note{ margin:6px 0 0; color:var(--mut); font-size:12px; text-align:center; }
     footer{ margin-top:auto; color:var(--mut); font-size:12px; text-align:center; }
   </style>
 </head>
@@ -86,9 +84,10 @@
     <!-- Titolo sopra -->
     <h1>Scopri il tuo <span>What?f</span></h1>
 
-    <!-- Immagine (DEVE stare in /public) -->
+    <!-- Immagine: src impostato dallo script con fallback multipli -->
     <div class="hero-wrap">
-      <img src="third-hero.png" alt="Due porte What?f" class="hero-img" />
+      <img id="hero" class="hero-img" alt="Due porte What?f" loading="eager" decoding="async" />
+      <div id="heroFallback" class="hero-fallback" style="display:none;">Caricamento immagine…</div>
     </div>
 
     <!-- Sottotitolo sotto -->
@@ -113,7 +112,30 @@
   </main>
 
   <script>
-    // Salva la modalità scelta e prosegui
+    // === Loader robusto immagine (sempre lo stesso metodo che funziona) ===
+    (async function loadHero(){
+      const img = document.getElementById('hero');
+      const fb  = document.getElementById('heroFallback');
+      fb.style.display = 'block';
+      const tries = [
+        '/third-hero.png',
+        '/public/third-hero.png',
+        '/assets/third-hero.png'
+      ];
+      for (const u of tries){
+        try{
+          const r = await fetch(u,{cache:'no-store'});
+          if(r.ok){
+            img.src = u + '?v=' + Date.now(); // cache-busting
+            fb.style.display = 'none';
+            return;
+          }
+        }catch(e){}
+      }
+      fb.textContent = 'Immagine non trovata.';
+    })();
+
+    // === Salva la modalità scelta e prosegui ===
     document.querySelectorAll('[data-mode]').forEach(el=>{
       el.addEventListener('click', (e)=>{
         e.preventDefault();
@@ -122,7 +144,7 @@
       });
     });
 
-    // Swipe: sinistra → avanti (alla quarta), destra → nulla dalla home
+    // === Swipe: sinistra → avanti (alla quarta) ===
     (function(){
       let sx=0, sy=0, dx=0, dy=0, on=false; const TH=55;
       document.addEventListener('touchstart',e=>{on=true;const t=e.touches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
