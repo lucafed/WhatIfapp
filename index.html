@@ -1,160 +1,146 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f – Home</title>
-  <meta name="theme-color" content="#0A0F14" />
+  <meta name="theme-color" content="#0A0F14">
+
+  <!-- Preload dell'immagine (stesso nome/posizioni di prima) -->
+  <link rel="preload" as="image" href="/third-hero.png" />
+
   <style>
     :root{
-      --bg:#0A0F14; --fg:#FFFFFF; --mut:#A0B2BA;
-      --accent:#00E0FF; --yellow:#FFD166; --mint:#1AFFD5;
+      --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA;
+      --accent:#00E0FF; --accent-dark:#00B5CC;
+      --yellow:#FFC146; --teal:#00D5E6;
     }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-
-    main{min-height:100%;display:flex;flex-direction:column;align-items:center;
-      padding:12px 16px 20px;gap:10px}
-
-    /* Titolo sopra immagine */
-    h1{
-      margin:6px 0 6px;
-      font-size:clamp(24px,6vw,36px);
-      line-height:1.1; text-align:center;
+    main{
+      min-height:100%;
+      display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+      gap:12px; /* più compatto */
+      padding:16px 14px 20px;
+      max-width:900px; margin:0 auto;
     }
-    h1 span{ color:var(--accent); }
 
-    /* Card immagine */
+    /* Immagine più compatta: entra con testo e bottoni nello stesso viewport */
     .hero-wrap{
-      width:min(100%,760px);
-      background:rgba(255,255,255,.04);
-      border-radius:20px;
-      box-shadow:0 18px 50px rgba(0,0,0,.45);
-      padding:8px;
-      overflow:hidden;
-      text-align:center;
+      width:100%;
+      display:flex; justify-content:center;
     }
     .hero-img{
-      display:block; width:100%; height:auto; border-radius:14px;
-      filter:drop-shadow(0 10px 24px rgba(0,0,0,.45));
+      width:min(92vw,680px);
+      height:auto;
+      max-height:clamp(280px, 42vh, 420px);   /* <= il trucco per non farla “mangiare” lo schermo */
+      object-fit:cover; border-radius:22px;
+      display:block;
+      filter:drop-shadow(0 10px 28px rgba(0,0,0,.45));
+      margin-top:6px;
     }
-    .hero-fallback{ font-size:14px; color:var(--mut); margin:6px 0 0; }
+    .hero-fallback{color:var(--muted); font-size:14px; margin-top:-2px}
 
-    /* Sottotitolo sotto immagine */
+    h1{
+      margin:2px 0 0;    /* vicino all’immagine */
+      font-size:clamp(22px,4.8vw,34px);
+      line-height:1.15; text-align:center;
+    }
+    h1 .brand{
+      color:var(--accent);
+      text-shadow:0 0 8px rgba(0,224,255,.6),0 0 16px rgba(0,224,255,.35);
+    }
+
     .kicker{
-      margin:8px 0 0;
-      font-weight:800; letter-spacing:.4px;
-      color:var(--accent); text-align:center;
-      font-size:clamp(16px,4.5vw,22px);
+      margin-top:2px;            /* subito sotto il titolo */
+      font-weight:800; letter-spacing:.5px;
+      font-size:clamp(16px,3.8vw,22px);
+      color:var(--accent-dark); text-align:center;
     }
 
-    /* Descrizione compatta */
-    .desc{
-      margin:6px 0 4px;
-      color:var(--mut);
-      text-align:center;
-      font-size:clamp(14px,3.6vw,18px);
-      line-height:1.35;
-      max-width:820px;
+    .lead{
+      margin:6px 0 0;            /* vicino al kicker */
+      text-align:center; color:var(--muted);
+      font-size:clamp(14px,3.5vw,18px);
+      line-height:1.45;
+      max-width:800px;
     }
 
-    /* Bottoni vicini al testo */
-    .buttons{
-      display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
-      margin:6px 0 0;
+    .cta-row{
+      margin-top:10px;           /* i bottoni sono sempre visibili subito */
+      display:flex; gap:12px; width:100%;
+      justify-content:center; flex-wrap:wrap;
     }
     .btn{
-      appearance:none; border:0; cursor:pointer;
-      padding:12px 20px; border-radius:24px; font-weight:800;
-      letter-spacing:.2px; color:#091013; text-decoration:none;
-      transition:transform .15s ease, filter .15s ease;
-      box-shadow:0 10px 24px rgba(0,0,0,.35);
+      appearance:none; border:0; border-radius:28px;
+      padding:14px 22px; font-weight:800; font-size:16px;
+      cursor:pointer; transition:transform .15s ease, filter .15s ease;
+      color:#001f26;
+      min-width:min(46%, 260px);
+      box-shadow:0 0 14px rgba(0,0,0,.25);
     }
-    .btn:active{ transform:translateY(1px) }
-    .btn-yellow{ background:linear-gradient(180deg,var(--yellow),#F2B94E); color:#201400; }
-    .btn-mint{   background:linear-gradient(180deg,var(--mint),#00B5CC);  color:#001A1D; }
+    .btn:active{transform:translateY(1px)}
+    .btn-yellow{ background:var(--yellow) }
+    .btn-teal  { background:var(--teal)   }
 
-    .note{ margin:6px 0 0; color:var(--mut); font-size:12px; text-align:center; }
-    footer{ margin-top:auto; color:var(--mut); font-size:12px; text-align:center; }
+    footer{
+      margin-top:10px; text-align:center; color:var(--muted);
+      font-size:12px;
+    }
+
+    /* Piccola animazione in ingresso per dare “vita”, ma breve */
+    .fade-in { opacity:0; transform:translateY(10px); animation:fin .55s ease forwards }
+    .d1{animation-delay:.05s} .d2{animation-delay:.12s} .d3{animation-delay:.18s}
+    @keyframes fin { to{opacity:1; transform:none} }
+
+    /* Evita che la tastiera mobile spinga tutto: spazio min ma non fisso */
+    @supports (height: 100svh){
+      main{min-height:100svh}
+    }
   </style>
 </head>
 <body>
-  <main id="page">
-    <!-- Titolo sopra -->
-    <h1>Scopri il tuo <span>What?f</span></h1>
-
-    <!-- Immagine: src impostato dallo script con fallback multipli -->
-    <div class="hero-wrap">
-      <img id="hero" class="hero-img" alt="Due porte What?f" loading="eager" decoding="async" />
-      <div id="heroFallback" class="hero-fallback" style="display:none;">Caricamento immagine…</div>
+  <main>
+    <!-- Immagine -->
+    <div class="hero-wrap fade-in d1">
+      <img id="hero" class="hero-img" alt="Due porte: gialla (What?f) e turchese (What the F)" loading="eager" decoding="async" />
     </div>
+    <div id="heroFallback" class="hero-fallback"></div>
 
-    <!-- Sottotitolo sotto -->
-    <div class="kicker">CHOOSE YOUR WAY</div>
+    <!-- Titolo + kicker subito visibili -->
+    <h1 class="fade-in d2">Scopri il tuo <span class="brand">What?f</span></h1>
+    <div class="kicker fade-in d2">CHOOSE YOUR WAY</div>
 
-    <!-- Descrizione compatta (vicina all'immagine) -->
-    <p class="desc">
+    <!-- Testo compatto -->
+    <p class="lead fade-in d3">
       Immagina la scelta che non hai fatto… e quella che potresti fare domani.
       What?f ti mostra “cosa sarebbe potuto accadere” e “cosa potrebbe accadere”
       se scegli una porta invece dell’altra.
     </p>
 
-    <!-- Bottoni (stile porte). Salviamo la modalità e andiamo avanti -->
-    <div class="buttons">
-      <a href="fourth.html" class="btn btn-yellow" id="btnWhatIf" data-mode="whatif">What?f</a>
-      <a href="fourth.html" class="btn btn-mint"   id="btnWtf"    data-mode="wtf">What the F</a>
+    <!-- Bottoni sempre a vista -->
+    <div class="cta-row fade-in d3">
+      <a class="btn btn-yellow" href="fourth.html?mode=whatif" aria-label="Vai alla modalità What if">What?f</a>
+      <a class="btn btn-teal"   href="fourth.html?mode=wtf"    aria-label="Vai alla modalità What the F">What the F</a>
     </div>
 
-    <p class="note">Swipe ◀︎ / ▶︎ per navigare</p>
-
-    <footer>© 2025 What?f · <a href="privacy.html">Privacy</a> · <a href="terms.html">Termini</a></footer>
+    <footer>© 2025 What?f</footer>
   </main>
 
+  <!-- Loader robusto immagine: stesso metodo di sempre -->
   <script>
-    // === Loader robusto immagine (sempre lo stesso metodo che funziona) ===
     (async function loadHero(){
-      const img = document.getElementById('hero');
-      const fb  = document.getElementById('heroFallback');
-      fb.style.display = 'block';
-      const tries = [
-        '/third-hero.png',
-        '/public/third-hero.png',
-        '/assets/third-hero.png'
-      ];
-      for (const u of tries){
-        try{
-          const r = await fetch(u,{cache:'no-store'});
-          if(r.ok){
-            img.src = u + '?v=' + Date.now(); // cache-busting
-            fb.style.display = 'none';
-            return;
-          }
-        }catch(e){}
+      const hero = document.getElementById('hero');
+      const fb = document.getElementById('heroFallback');
+      const tries = ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
+      for (const u of tries) {
+        try {
+          const r = await fetch(u, {cache:'no-store'});
+          if (r.ok) { hero.src = u + '?v=' + Date.now(); fb.textContent = ''; return; }
+        } catch(e){}
       }
       fb.textContent = 'Immagine non trovata.';
-    })();
-
-    // === Salva la modalità scelta e prosegui ===
-    document.querySelectorAll('[data-mode]').forEach(el=>{
-      el.addEventListener('click', (e)=>{
-        e.preventDefault();
-        try{ localStorage.setItem('mode', el.dataset.mode); }catch(_){}
-        location.href = el.getAttribute('href');
-      });
-    });
-
-    // === Swipe: sinistra → avanti (alla quarta) ===
-    (function(){
-      let sx=0, sy=0, dx=0, dy=0, on=false; const TH=55;
-      document.addEventListener('touchstart',e=>{on=true;const t=e.touches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
-      document.addEventListener('touchmove', e=>{ if(!on) return; const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy; },{passive:true});
-      document.addEventListener('touchend', ()=>{ if(!on) return; on=false;
-        if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){
-          if(dx<0){ location.href='fourth.html'; }
-        }
-        sx=sy=dx=dy=0;
-      },{passive:true});
     })();
   </script>
 </body>
