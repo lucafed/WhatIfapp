@@ -4,61 +4,121 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f – Home</title>
-  <meta name="theme-color" content="#0A0F14">
+  <meta name="theme-color" content="#0A0F14" />
+
+  <!-- (facoltativo) Preload del nome più probabile -->
+  <link rel="preload" as="image" href="/third-hero.png" />
 
   <style>
-    :root {
+    :root{
       --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA;
-      --accent:#00E0FF; --accent-dark:#00B5CC;
+      --accent:#00E0FF; --accent-dark:#00B5CC; --ink:#001f26;
     }
-    *{ box-sizing:border-box; margin:0; padding:0 }
-    html,body{ height:100%; background:var(--bg); color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
-    main{ min-height:100%; display:flex; flex-direction:column;
-      align-items:center; justify-content:center; text-align:center; gap:16px; padding:20px }
+    *{ box-sizing:border-box }
+    html,body{
+      height:100%; margin:0; background:var(--bg); color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    main{
+      min-height:100dvh; display:flex; flex-direction:column; align-items:center;
+      justify-content:center; text-align:center; padding:22px 18px; gap:16px;
+    }
 
-    .hero-img{ width:min(92vw,520px); height:auto; display:block; margin:0 auto;
-      filter:drop-shadow(0 8px 20px rgba(0,0,0,.45)) }
+    h1{
+      margin:0 0 6px; font-size:clamp(26px,5.5vw,42px); line-height:1.15;
+      color:var(--accent); text-shadow:0 0 10px rgba(0,224,255,.4);
+    }
 
-    h1{ font-size:clamp(26px,5vw,40px); color:var(--accent); margin-bottom:10px;
-        text-shadow:0 0 12px rgba(0,224,255,.5); }
+    .hero{
+      width:min(94vw, 620px); height:auto; display:block; margin:8px auto 10px;
+      border-radius:18px; filter: drop-shadow(0 16px 40px rgba(0,0,0,.55));
+    }
+    .hero-fallback{ color:var(--muted); font-size:14px; display:none; }
 
-    p.desc{ font-size:clamp(15px,4vw,18px); max-width:600px; line-height:1.4; color:var(--muted); }
+    .desc{
+      margin:0 auto 6px; max-width:760px;
+      font-size:clamp(15px,3.6vw,19px); line-height:1.5; color:var(--muted);
+    }
 
-    .btn{ display:inline-block; margin-top:14px; text-decoration:none;
-      background:var(--accent-dark); color:#001f26; font-weight:700;
-      padding:14px 22px; border-radius:28px; font-size:16px;
-      box-shadow:0 0 12px rgba(0,181,204,.6), 0 0 24px rgba(0,181,204,.3);
-      transition:.2s }
-    .btn:hover{ filter:brightness(1.15) }
+    .btn{
+      display:inline-block; margin-top:8px; text-decoration:none;
+      background:var(--accent-dark); color:var(--ink); font-weight:800;
+      padding:14px 26px; border-radius:28px; letter-spacing:.3px;
+      box-shadow:0 0 14px rgba(0,181,204,.55), 0 0 36px rgba(0,181,204,.25);
+      transition:transform .15s ease, filter .15s ease;
+    }
+    .btn:hover{ filter:brightness(1.1) }
     .btn:active{ transform:translateY(1px) }
   </style>
 </head>
 <body>
-  <main>
+  <main id="swipeArea">
     <h1>Scopri il tuo What?f</h1>
 
-    <img id="hero" class="hero-img" src="third-hero.png" alt="Porte luminose What?f" loading="eager" decoding="async" />
+    <!-- Immagine con loader robusto -->
+    <img id="hero" class="hero" alt="Due porte luminose: scegli il tuo What?f" loading="eager" decoding="async" />
+    <div id="heroFallback" class="hero-fallback">Caricamento immagine…</div>
 
     <p class="desc">
-      Immagina di tornare indietro o guardare avanti.  
-      Cosa sarebbe successo se avessi fatto un’altra scelta?  
+      Immagina di tornare indietro o guardare avanti.<br>
+      Cosa sarebbe successo se avessi fatto un’altra scelta?<br>
       Cosa potrebbe accadere se aprirai una porta diversa?
     </p>
 
-    <a href="fourth.html" class="btn">CHOOSE YOUR WAY</a>
+    <a href="ask.html" id="cta" class="btn">CHOOSE YOUR WAY</a>
   </main>
 
-  <!-- Swipe destra/sinistra -->
   <script>
+    /* ===== Immagine con fallback multipli (stesso metodo che funziona) ===== */
+    (async function loadHero(){
+      const hero = document.getElementById('hero');
+      const fb   = document.getElementById('heroFallback');
+      const tries = [
+        '/third-hero.png',
+        '/public/third-hero.png',
+        '/assets/third-hero.png'
+      ];
+      for (const u of tries) {
+        try {
+          const r = await fetch(u, { cache:'no-store' });
+          if (r.ok) {
+            hero.src = u + '?v=' + Date.now(); // bust cache/sw
+            fb.style.display = 'none';
+            return;
+          }
+        } catch(e) {}
+      }
+      fb.textContent = 'Immagine non trovata.'; fb.style.display = 'block';
+    })();
+
+    /* ===== Swipe: sinistra => avanti (ask.html), destra => indietro ===== */
     (function(){
-      let startX=0;
-      document.addEventListener('touchstart', e=>{
-        startX=e.touches[0].clientX;
-      });
-      document.addEventListener('touchend', e=>{
-        let dx=e.changedTouches[0].clientX-startX;
-        if(dx<-50){ window.location.href="fourth.html"; } // swipe sinistra → avanti
+      const area = document.getElementById('swipeArea');
+      let x0=null, y0=null, locked=false;
+      const TH = 45; // soglia px
+      function start(e){ const t=e.changedTouches?e.changedTouches[0]:e; x0=t.clientX; y0=t.clientY; locked=true; }
+      function move(e){
+        if(!locked) return;
+        const t=e.changedTouches?e.changedTouches[0]:e;
+        const dx=t.clientX-x0, dy=Math.abs(t.clientY-y0);
+        if(Math.abs(dx)>TH && dy<60){
+          locked=false;
+          if(dx<0) window.location.href='ask.html'; // → (swipe sinistra) avanti
+          else if (history.length>1) history.back(); // ← (swipe destra) indietro se possibile
+        }
+      }
+      function end(){ locked=false; }
+      area.addEventListener('touchstart',start,{passive:true});
+      area.addEventListener('touchmove', move,{passive:true});
+      area.addEventListener('touchend',  end, {passive:true});
+      // anche mouse support
+      area.addEventListener('mousedown', start);
+      area.addEventListener('mousemove', move);
+      area.addEventListener('mouseup',   end);
+
+      // click CTA
+      document.getElementById('cta').addEventListener('click', (e)=>{
+        e.preventDefault(); window.location.href='ask.html';
       });
     })();
   </script>
