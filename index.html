@@ -5,25 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>What?f – Home</title>
 <meta name="theme-color" content="#0A0F14"/>
-
-<!-- Preload immagine principale -->
 <link rel="preload" as="image" href="/third-hero.png"/>
-
 <style>
-:root{--bg:#0A0F14;--fg:#e9f2f5;--muted:#9fb3bd;--c1:#FFD166;--c2:#06D6A0;--accent:#00E0FF;}
+:root{--bg:#0A0F14;--fg:#e9f2f5;--muted:#9fb3bd;--c1:#FFD166;--c2:#06D6A0;--accent:#00E0FF}
 *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
 main{min-height:100%;display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:flex-start;padding:18px}
-.hero-wrap{width:min(100%,760px);border-radius:28px;background:rgba(255,255,255,.03);
-  box-shadow:0 20px 60px rgba(0,0,0,.45); padding:22px 18px 8px}
-h2{margin:0 0 10px 0;letter-spacing:.02em;font-size:clamp(18px,3.8vw,26px);text-align:center;
-  color:var(--accent);text-shadow:0 0 12px rgba(0,224,255,.45)}
+.hero-wrap{width:min(100%,760px);border-radius:28px;background:rgba(255,255,255,.03);box-shadow:0 20px 60px rgba(0,0,0,.45);padding:10px 12px}
 img.hero{display:block;width:100%;height:auto;border-radius:22px;filter:drop-shadow(0 18px 36px rgba(0,0,0,.45))}
 h1{margin:14px 0 0;font-size:clamp(26px,6.2vw,40px);text-align:center}
-.sub{max-width:880px;margin:8px auto 0;line-height:1.45;text-align:center;color:var(--muted);
-  font-size:clamp(14px,3.4vw,18px)}
-.btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:14px 0 6px}
-.btn{appearance:none;border:0;border-radius:999px;padding:14px 22px;font-weight:800;letter-spacing:.02em;
-  color:#011015;background:#0c3942;cursor:pointer;transition:.2s;box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.sub{max-width:880px;margin:8px auto 0;line-height:1.45;text-align:center;color:var(--muted);font-size:clamp(14px,3.4vw,18px)}
+.btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:12px 0 6px}
+.btn{appearance:none;border:0;border-radius:999px;padding:14px 22px;font-weight:800;letter-spacing:.02em;color:#011015;background:#0c3942;cursor:pointer;transition:.2s;box-shadow:0 10px 26px rgba(0,0,0,.35)}
 .btn:active{transform:translateY(1px)}
 .btn-yellow{background:var(--c1);color:#1b1200}
 .btn-cyan{background:var(--c2);color:#001b13}
@@ -33,14 +25,12 @@ a{color:var(--accent);text-decoration:none}
 .fade{opacity:0;transform:translateY(10px);animation:fade .8s ease forwards}
 .fade.d2{animation-delay:.15s}.fade.d3{animation-delay:.3s}
 @keyframes fade{to{opacity:1;transform:none}}
-/* swipe hint (invisibile, ma area cattura gesture) */
-.touchlayer{position:fixed;inset:0}
 </style>
 </head>
 <body>
   <main id="page">
     <div class="hero-wrap fade">
-      <h2>CHOOSE YOUR WAY</h2>
+      <!-- Niente titoli sopra: rimane solo l'immagine -->
       <img id="hero" class="hero" alt="Due porte: What?f e What the F"/>
     </div>
 
@@ -60,41 +50,30 @@ a{color:var(--accent);text-decoration:none}
     <footer>© 2025 What?f · <a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Termini d’uso</a></footer>
   </main>
 
-  <!-- touch layer -->
-  <div class="touchlayer" id="touch"></div>
-
 <script>
-/* --- loader robusto immagine (come quello che funzionava) --- */
+/* immagine robusta */
 (async function loadHero(){
   const img = document.getElementById('hero');
   const tries = ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
   for (const u of tries){
-    try{
-      const r = await fetch(u,{cache:'no-store'});
-      if(r.ok){ img.src = u + '?v=' + Date.now(); return; }
-    }catch(e){}
+    try{ const r = await fetch(u,{cache:'no-store'}); if(r.ok){ img.src = u + '?v=' + Date.now(); return; } }
+    catch(e){}
   }
   img.alt = 'Immagine non trovata';
 })();
 
-/* --- swipe destra/sinistra con soglia media --- */
+/* swipe su document (non blocca i click) */
 (function(){
-  const L = document.getElementById('touch');
-  let sx=0, sy=0, dx=0, dy=0, isTouch=false;
-  const TH = 55; // soglia pixel
-  L.addEventListener('touchstart', e=>{isTouch=true; const t=e.touches[0]; sx=t.clientX; sy=t.clientY;});
-  L.addEventListener('touchmove',  e=>{ if(!isTouch) return; const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy;});
-  L.addEventListener('touchend',   ()=>{
-    if(!isTouch) return; isTouch=false;
-    if(Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > TH){
-      if(dx<0){ window.location.href='fourth.html'; } // → vai avanti
-      // (a sinistra dalla home non andiamo indietro)
-    }
+  let sx=0, sy=0, dx=0, dy=0, active=false; const TH=55;
+  document.addEventListener('touchstart',e=>{active=true;const t=e.touches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
+  document.addEventListener('touchmove', e=>{ if(!active) return; const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy; },{passive:true});
+  document.addEventListener('touchend', ()=>{ if(!active) return; active=false;
+    if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){ if(dx<0){ window.location.href='fourth.html'; } }
     sx=sy=dx=dy=0;
-  });
+  },{passive:true});
 })();
 
-/* --- salva la scelta della porta per colorare i bottoni nella pagina dopo --- */
+/* salva scelta porta per colorare bottoni dopo */
 document.querySelectorAll('[data-mode]').forEach(el=>{
   el.addEventListener('click', (ev)=>{
     ev.preventDefault();
