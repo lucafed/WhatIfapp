@@ -1,297 +1,134 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – Risultato</title>
-  <meta name="theme-color" content="#0A0F14" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>What?f – Parlami di te</title>
+  <meta name="theme-color" content="#0A0F14"/>
+  <link rel="preload" as="image" href="/door-head.png"/>
   <style>
-    :root{
-      --bg:#0A0F14; --fg:#EAF4F7; --muted:#9FB1B8;
-      --accent:#00E0FF; --accent-2:#00B5CC; --ink:#001f26;
-      --surface:#141C22; --surface-2:#0F161C; --ok:#1AFFD5;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0; height:100%; background:var(--bg); color:var(--fg);
+    :root{ --bg:#0A0F14; --fg:#E9F1F5; --mut:#9FB0B8; --acc:#00E0FF; --acc2:#00B5CC; --chip:#0F151B; --chipbd:#24454F }
+    *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    a{color:var(--accent); text-decoration:none}
+    header{padding:22px 18px 6px;text-align:center}
+    header h1{margin:0 0 10px;font-size:clamp(26px,6vw,42px);letter-spacing:.5px}
+    .head-img{width:min(110px,28vw);height:auto;display:block;margin:0 auto 6px;opacity:.95;filter:drop-shadow(0 8px 16px rgba(0,0,0,.5))}
+    main{max-width:900px;margin:0 auto;padding:8px 18px 24px}
+    h2.sec{font-size:clamp(16px,4.4vw,22px);margin:18px 2px 10px}
+    .row{display:flex;flex-wrap:wrap;gap:12px}
+    .chip{padding:12px 16px;border-radius:14px;background:var(--chip);border:1px solid var(--chipbd);
+      cursor:pointer;user-select:none;transition:.15s}
+    .chip.active{background:rgba(0,224,255,.12);border-color:var(--acc); box-shadow:0 0 0 2px rgba(0,224,255,.15) inset}
+    .input{width:100%;padding:14px 16px;border-radius:14px;border:1px solid #24333A;background:#0E151B;color:var(--fg)}
+    .btn{display:block;width:100%;margin-top:16px;background:var(--acc2);color:#00242B;border:0;border-radius:22px;
+      padding:16px 22px;font-weight:800}
+    .hint{color:var(--mut);font-size:13px;margin-top:8px}
+    footer{margin-top:22px;text-align:center;color:var(--mut);font-size:12px}
 
-    main{
-      min-height:100dvh; display:flex; flex-direction:column; gap:16px;
-      padding:18px; max-width:940px; margin:0 auto;
-    }
-
-    header h1{margin:4px 0 2px; font-size:clamp(20px,5vw,28px)}
-    .modes{
-      display:flex; gap:10px; flex-wrap:wrap; margin-top:4px
-    }
-    .chip{
-      padding:8px 12px; border-radius:999px; cursor:pointer;
-      border:1px solid rgba(255,255,255,.15); background:var(--surface-2); color:var(--fg);
-      font-weight:700; font-size:14px; letter-spacing:.2px;
-    }
-    .chip.active{border-color:var(--accent); box-shadow:0 0 0 2px rgba(0,224,255,.18) inset}
-
-    .card{
-      background:var(--surface); border:1px solid rgba(255,255,255,.08);
-      border-radius:14px; padding:14px;
-    }
-
-    /* Follow-up Q&A */
-    .followup h2{margin:0 0 10px; font-size:18px; color:#CDE7EE}
-    .qa{display:grid; gap:10px}
-    .q{background:var(--surface-2); border:1px solid rgba(255,255,255,.06);
-       border-radius:10px; padding:10px; font-size:14px}
-    .q strong{color:var(--accent)}
-    .a{display:flex; gap:8px}
-    .a input{flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.1);
-      background:#0E141A; color:var(--fg)}
-    .a button{padding:10px 14px; border-radius:10px; border:0; cursor:pointer;
-      background:var(--accent-2); color:var(--ink); font-weight:800}
-
-    /* Risultato */
-    .result h2{margin:0 0 10px; font-size:18px; color:#CDE7EE}
-    .output{white-space:pre-wrap; font-size:16px; line-height:1.5}
-    .prob{margin-top:8px; font-size:14px; color:var(--muted)}
-    .bar{height:8px; border-radius:10px; background:#0E141A; overflow:hidden; margin-top:6px}
-    .bar > span{display:block; height:100%; background:linear-gradient(90deg, var(--ok), var(--accent)); width:0%}
-
-    /* Azioni */
-    .actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px}
-    .btn{padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.1);
-      background:var(--surface-2); color:var(--fg); cursor:pointer; font-weight:700}
-    .btn.primary{background:var(--accent-2); color:var(--ink); border-color:transparent}
-
-    /* Footer nav hint invisibile (manteniamo aria) */
-    .hint{position:absolute; left:-9999px}
-
-    /* Swipe area (tutta la pagina) */
-    body{touch-action:pan-y}
+    /* leaving anim */
+    .leaving main{opacity:.2;transform:translateX(-12px);transition:.26s ease}
   </style>
 </head>
 <body>
-  <main id="page">
-    <header>
-      <h1>✨ Il tuo What?f</h1>
-      <div class="modes" id="modes">
-        <button class="chip" data-mode="realistic">🚪 Sliding Doors</button>
-        <button class="chip" data-mode="ironic">🌈 What the F?!</button>
-      </div>
-    </header>
+  <header>
+    <img id="headImg" class="head-img" alt="Porta What?f" />
+    <h1>PARLAMI DI TE</h1>
+  </header>
 
-    <!-- Follow-up Q&A -->
-    <section class="card followup" id="followup">
-      <h2>Domande per capire meglio</h2>
-      <div class="qa" id="qa">
-        <!-- Le 3 domande arrivano qui una alla volta -->
-      </div>
-    </section>
+  <main>
+    <h2 class="sec">Chi sei?</h2>
+    <div class="row" data-group="persona">
+      <div class="chip">Studente</div>
+      <div class="chip">Lavoratore</div>
+      <div class="chip">Creativo</div>
+    </div>
 
-    <!-- Risultato -->
-    <section class="card result" id="result" style="display:none">
-      <h2>Risposta</h2>
-      <div class="output" id="aiText">Sto preparando la tua risposta…</div>
-      <div class="prob" id="probText"></div>
-      <div class="bar"><span id="probBar"></span></div>
+    <h2 class="sec">Età</h2>
+    <div class="row" data-group="eta">
+      <div class="chip">&lt;18</div>
+      <div class="chip">18–25</div>
+      <div class="chip">26–35</div>
+      <div class="chip">36–50</div>
+      <div class="chip">50+</div>
+    </div>
 
-      <div class="actions">
-        <button class="btn" id="likeBtn">👍 Like</button>
-        <button class="btn" id="dislikeBtn">👎 Dislike</button>
-        <button class="btn primary" id="shareBtn">📤 Condividi</button>
-        <button class="btn" id="againBtn">🔁 Fai un’altra domanda</button>
-        <button class="btn" id="homeBtn">🏠 Home</button>
-      </div>
-    </section>
+    <h2 class="sec">In quale fase ti trovi?</h2>
+    <div class="row" data-group="fase">
+      <div class="chip">Studio</div>
+      <div class="chip">Carriera</div>
+      <div class="chip">Relazioni</div>
+    </div>
 
-    <p class="hint" aria-hidden="true">Swipe destra per Home, sinistra per nuova domanda</p>
+    <h2 class="sec">Cosa ti interessa esplorare?</h2>
+    <div class="row" data-group="explore">
+      <div class="chip">Passato</div>
+      <div class="chip">Futuro</div>
+      <div class="chip">What the f</div>
+    </div>
+
+    <h2 class="sec">Da dove vieni?</h2>
+    <input id="from" class="input" placeholder="La tua città…" />
+
+    <h2 class="sec">Vuoi raccontarci qualcosa di più su di te?</h2>
+    <div class="hint">(Opzionale – aiuta l’AI a darti risposte più accurate)</div>
+    <textarea id="notes" class="input" rows="4" placeholder="Obiettivi, contesto, limiti di tempo…"></textarea>
+
+    <button id="go" class="btn">CONTINUA</button>
+
+    <footer>© 2025 What?f</footer>
   </main>
 
   <script>
-    /* ========= Modalità (chip) ========= */
-    const modesWrap = document.getElementById('modes');
-    let mode = sessionStorage.getItem('whatif_mode') || 'realistic';
-    function paintMode(){
-      [...modesWrap.querySelectorAll('.chip')].forEach(c=>{
-        c.classList.toggle('active', c.dataset.mode===mode);
-      });
-      sessionStorage.setItem('whatif_mode', mode);
-    }
-    modesWrap.addEventListener('click', (e)=>{
-      const b = e.target.closest('.chip'); if(!b) return;
-      mode = b.dataset.mode; paintMode();
-    });
-    paintMode();
-
-    /* ========= Swipe L/R ========= */
-    (function(){
-      let x0=null,y0=null,locked=false;
-      const TH=45; // sensibilità
-      function start(e){ const t=e.changedTouches?e.changedTouches[0]:e; x0=t.clientX; y0=t.clientY; locked=true; }
-      function move(e){
-        if(!locked) return;
-        const t=e.changedTouches?e.changedTouches[0]:e;
-        const dx=t.clientX-x0, dy=Math.abs(t.clientY-y0);
-        if(Math.abs(dx)>TH && dy<60){
-          locked=false;
-          if(dx>0) window.location.href='index.html';       // ← destra: Home
-          else      window.location.href='ask.html';        // → sinistra: nuova domanda
-        }
+    // immagine piccola in header
+    (async function loadHead(){
+      const img = document.getElementById('headImg');
+      const tries = ['/door-head.png','/public/door-head.png','/third-hero.png','/public/third-hero.png'];
+      for (const u of tries){
+        try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ img.src=u+'?v='+Date.now(); return; } }catch(e){}
       }
-      function end(){ locked=false; }
-      const el=document.getElementById('page');
-      el.addEventListener('touchstart',start,{passive:true});
-      el.addEventListener('touchmove',move,{passive:true});
-      el.addEventListener('touchend',end,{passive:true});
-      el.addEventListener('mousedown',start);
-      el.addEventListener('mousemove',move);
-      el.addEventListener('mouseup',end);
     })();
 
-    /* ========= Follow-up & risposta =========
-       Flusso:
-       1) recupera la domanda iniziale (da sessionStorage o chiedi all’utente)
-       2) chiede 3 follow-up (via ask.js se presente, altrimenti mock)
-       3) genera la risposta finale + percentuale
-    ========================================= */
-    const qaBox = document.getElementById('qa');
-    const followupSec = document.getElementById('followup');
-    const resultSec = document.getElementById('result');
-    const aiText = document.getElementById('aiText');
-    const probText = document.getElementById('probText');
-    const probBar = document.getElementById('probBar');
-
-    const question = sessionStorage.getItem('whatif_question') || '';
-
-    async function askFollowups(userQuestion, mode){
-      if (window.WhatIfAI?.askFollowups) {
-        // usa la tua implementazione se esiste in ask.js
-        return await window.WhatIfAI.askFollowups(userQuestion, mode);
-      }
-      // MOCK di emergenza
-      return [
-        'In una frase: qual è la scelta esatta che stai valutando?',
-        'Qual è il contesto principale (lavoro, relazioni, studio, denaro)?',
-        'Qual è il fattore più importante per te (sicurezza, crescita, libertà, divertimento)?'
-      ];
-    }
-
-    async function getFinalAnswer(payload){
-      if (window.WhatIfAI?.finalAnswer) {
-        return await window.WhatIfAI.finalAnswer(payload);
-      }
-      // MOCK di emergenza: finge una risposta AI
-      const pct = Math.floor(55 + Math.random()*35);
-      return {
-        text: (mode==='ironic')
-          ? `Se apri la porta giusta trovi una versione di te con occhiali da sole e unicorni manager: sorprendentemente funziona. Se non la apri... ti ritrovi a fare la fila al CAF interdimensionale.`
-          : `Dato ciò che hai raccontato, aprire quella porta ti porterebbe un miglioramento concreto su ${payload.context||'più aspetti'}. Resta qualche incognita, ma i segnali sono favorevoli.`,
-        probability: pct,
-        reason: `Valutazione basata su obiettivi dichiarati e contesto.`,
-      };
-    }
-
-    // Render Q step-by-step
-    async function runFlow(){
-      const baseQ = question || prompt('Scrivi la tua domanda What?f');
-      const fups = await askFollowups(baseQ, mode);
-
-      const answers = {};
-      for (let i=0;i<Math.min(3,fups.length);i++){
-        const q = document.createElement('div');
-        q.className='q';
-        q.innerHTML = `<strong>Domanda ${i+1}:</strong> ${fups[i]}`;
-        const a = document.createElement('div');
-        a.className='a';
-        const input = document.createElement('input');
-        input.placeholder = 'Rispondi qui...';
-        const btn = document.createElement('button');
-        btn.textContent = (i<2) ? 'Avanti' : 'Genera';
-        a.appendChild(input); a.appendChild(btn);
-        qaBox.appendChild(q); qaBox.appendChild(a);
-        input.focus();
-
-        await new Promise(res=>{
-          btn.addEventListener('click', ()=>{
-            const v = (input.value||'').trim();
-            answers['q'+(i+1)] = v;
-            res();
-          });
-          input.addEventListener('keydown', (ev)=>{
-            if(ev.key==='Enter'){ btn.click(); }
-          });
-        });
-      }
-
-      // Chiedi risposta finale
-      const payload = {
-        userQuestion: baseQ,
-        mode, answers,
-        context: answers.q2 || ''
-      };
-      followupSec.style.opacity = .6;
-
-      const out = await getFinalAnswer(payload);
-
-      aiText.textContent = out.text;
-      probText.textContent = `Probabilità: ${out.probability}% — ${out.reason || ''}`;
-      probBar.style.width = `${out.probability}%`;
-
-      resultSec.style.display='block';
-      followupSec.style.opacity = 1;
-
-      // salva ultimo esito per share/like
-      sessionStorage.setItem('whatif_last', JSON.stringify({
-        mode, question: baseQ, answers, text: out.text, probability: out.probability
-      }));
-    }
-
-    runFlow();
-
-    /* ========= Like / Dislike ========= */
-    const likeBtn = document.getElementById('likeBtn');
-    const dislikeBtn = document.getElementById('dislikeBtn');
-    function keyFor(item){ return 'wf_like_'+btoa((item.question||'')+(item.text||'')) }
-    function mark(btn,on){ btn.style.background = on ? '#163b3f' : 'var(--surface-2)'; }
-    function refreshReactions(){
-      try{
-        const data = JSON.parse(sessionStorage.getItem('whatif_last')||'{}');
-        const k = keyFor(data);
-        const v = localStorage.getItem(k);
-        mark(likeBtn, v==='like'); mark(dislikeBtn, v==='dislike');
-      }catch(_){}
-    }
-    likeBtn.onclick = ()=>{ try{
-      const data=JSON.parse(sessionStorage.getItem('whatif_last')||'{}');
-      localStorage.setItem(keyFor(data),'like'); refreshReactions();
-    }catch(_){}}; 
-    dislikeBtn.onclick = ()=>{ try{
-      const data=JSON.parse(sessionStorage.getItem('whatif_last')||'{}');
-      localStorage.setItem(keyFor(data),'dislike'); refreshReactions();
-    }catch(_){}};
-    refreshReactions();
-
-    /* ========= Condividi ========= */
-    document.getElementById('shareBtn').addEventListener('click', async ()=>{
-      const data = JSON.parse(sessionStorage.getItem('whatif_last')||'{}');
-      const text = `What?f – Modalità: ${mode==='ironic'?'What the F?!':'Sliding Doors'}\nDomanda: ${data.question}\nRisposta: ${data.text}\nProbabilità: ${data.probability}%`;
-      if (navigator.share) {
-        try{ await navigator.share({ title:'What?f', text }); }catch(_){}
-      } else {
-        try{
-          await navigator.clipboard.writeText(text);
-          alert('Testo copiato negli appunti. Incollalo dove vuoi 👍');
-        }catch(_){
-          prompt('Copia e condividi:', text);
-        }
-      }
+    // chip: selezione singola per riga
+    document.querySelectorAll('[data-group]').forEach(row=>{
+      row.addEventListener('click',e=>{
+        const c=e.target.closest('.chip'); if(!c) return;
+        row.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+        c.classList.add('active');
+      });
     });
 
-    /* ========= Nav buttons ========= */
-    document.getElementById('againBtn').onclick = ()=>location.href='ask.html';
-    document.getElementById('homeBtn').onclick = ()=>location.href='index.html';
-  </script>
+    // CONTINUA -> salva scelte minime e vai avanti (pagina domande/AI)
+    document.getElementById('go').addEventListener('click', ()=>{
+      // opzionale: raccolta dati semplicissima
+      const data={};
+      document.querySelectorAll('[data-group]').forEach(row=>{
+        const lab = row.getAttribute('data-group');
+        const act = row.querySelector('.chip.active');
+        if(act) data[lab]=act.textContent.trim();
+      });
+      data.from = document.getElementById('from').value.trim();
+      data.notes = document.getElementById('notes').value.trim();
+      try{ localStorage.setItem('whatif_user', JSON.stringify(data)); }catch(e){}
+      document.body.classList.add('leaving');
+      setTimeout(()=>{ location.href='ask.html'; }, 220);
+    });
 
-  <!-- Se esiste, usa la tua integrazione -->
-  <script src="ask.js"></script>
+    // SWIPE: sx ← torna alla Home, dx → CONTINUA
+    let sx=null, sy=null;
+    window.addEventListener('touchstart',e=>{ const t=e.changedTouches[0]; sx=t.clientX; sy=t.clientY;},{passive:true});
+    window.addEventListener('touchend',e=>{
+      if(sx===null) return;
+      const t=e.changedTouches[0], dx=t.clientX-sx, dy=Math.abs(t.clientY-sy);
+      sx=null; sy=null;
+      if(Math.abs(dx)>60 && dy<70){
+        if(dx>0){ // right -> back
+          document.body.classList.add('leaving');
+          setTimeout(()=>{ location.href='index.html'; }, 200);
+        }else{ // left -> continue
+          document.getElementById('go').click();
+        }
+      }
+    },{passive:true});
+  </script>
 </body>
 </html>
