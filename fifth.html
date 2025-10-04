@@ -28,22 +28,26 @@
     .card h3{margin:4px 8px 10px;font-size:18px;color:#d7e8ec}
 
     .qbox{background:#0f1820;border:1px solid #1b2a33;color:#e6f2f5;border-radius:14px;padding:14px;font-size:16px}
-    .input, .ta{width:100%;padding:12px 14px;border-radius:14px;border:1px solid #20313a;background:#0c141b;color:var(--fg);outline:none}
-    .ta{min-height:100px;resize:vertical}
 
+    .input{width:100%;padding:12px 14px;border-radius:14px;border:1px solid #20313a;background:#0c141b;color:var(--fg);outline:none}
     .row{display:flex;gap:10px;flex-wrap:wrap}
-    .row>*{flex:1 1 240px}
+    .row>*{flex:1 1 260px}
 
-    .cta-wrap{width:min(100%,860px);display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
     .cta{display:inline-block;min-width:180px;text-align:center;background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329;font-weight:900;border:none;border-radius:28px;padding:12px 18px;box-shadow:0 0 14px rgba(0,181,204,.5),0 0 32px rgba(0,181,204,.25);cursor:pointer;transition:filter .16s ease, transform .08s ease}
     .cta:active{transform:translateY(1px)} .cta[disabled]{background:var(--btn-disabled);color:#7fa1aa;cursor:not-allowed;box-shadow:none}
+    .center{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 
     .answer{width:min(100%,860px);background:#0f1820;border:1px solid #1b2a33;border-radius:16px;padding:14px;display:none}
     .prob{color:#9fe6ff;font-weight:800;margin-bottom:4px}
-    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-    .like,.share{appearance:none;border:1px solid #22414d;background:#10232b;color:#cfe6ec;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700}
-    .like.active{background:#103a2b;border-color:#1aa37a}
+    .more{margin-top:10px;text-align:center}
+    .more button{background:transparent;border:1px solid #22414d;color:#cfe6ec;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:800}
     .error{color:var(--error);text-align:center}
+
+    /* piccolo paywall demo */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:18px}
+    .modal > div{background:#0e171f;border:1px solid #22323b;border-radius:16px;max-width:520px;width:100%;padding:16px}
+    .modal h4{margin:0 0 8px}
+    .modal p{color:#cfe0e6}
   </style>
 </head>
 <body>
@@ -61,132 +65,171 @@
     <div id="meta" class="meta"></div>
     <h1>RISULTATO</h1>
 
-    <!-- STEP 1: domanda (sola lettura) -->
-    <section class="card" id="step1">
+    <!-- DOMANDA (sola lettura) + follow-up -->
+    <section class="card" id="step">
       <h3>La tua domanda:</h3>
-      <div id="qShown" class="qbox"></div>
-      <div class="cta-wrap" style="margin-top:10px">
-        <button id="askBtn" class="cta">Chiedi alla AI</button>
-      </div>
-      <p id="err1" class="error" style="display:none"></p>
-    </section>
+      <div id="qShown" class="qbox" style="margin-bottom:10px"></div>
 
-    <!-- STEP 2: follow-up -->
-    <section class="card" id="step2" style="display:none">
-      <h3>Solo un attimo… chiarisci meglio</h3>
-      <div id="followups" class="row"></div>
-      <div class="cta-wrap" style="margin-top:10px">
+      <div id="fuWrap" class="row" style="display:none"></div>
+      <div id="fuActions" class="center" style="display:none;margin-top:10px">
         <button id="genBtn" class="cta">Genera la risposta</button>
       </div>
-      <p id="err2" class="error" style="display:none"></p>
+
+      <div id="loading" class="center" style="margin-top:6px">Sto preparando due domande per capirci meglio…</div>
+      <p id="err" class="error" style="display:none"></p>
     </section>
 
     <!-- RISPOSTA -->
     <section id="answerBox" class="answer">
       <div class="prob" id="prob"></div>
-      <div id="resp"></div>
-      <div class="actions">
-        <button id="likeUp" class="like">👍 Like</button>
-        <button id="likeDown" class="like">👎 Dislike</button>
-        <button id="shareBtn" class="share">📤 Condividi</button>
+      <div id="respPreview"></div>
+      <div id="more" class="more" style="display:none">
+        <button id="unlockBtn">Leggi di più (€1,99)</button>
       </div>
+      <div id="respFull" style="display:none;margin-top:8px"></div>
     </section>
   </main>
 
+  <!-- Paywall demo -->
+  <div id="paywall" class="modal" role="dialog" aria-modal="true">
+    <div>
+      <h4>Sblocca la risposta completa</h4>
+      <p>Questa è una demo: nessun pagamento reale. Cliccando “Sblocca ora” salveremo un flag sul tuo dispositivo e potrai leggere sempre tutto.</p>
+      <div class="center" style="margin-top:10px">
+        <button id="closePay" class="cta" style="background:#223642;color:#cfe6ec">Annulla</button>
+        <button id="doUnlock" class="cta">Sblocca ora</button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    // immagine robusta
     (async function(){
       const hero=document.getElementById('hero');
       const tries=['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
       for(const u of tries){ try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){hero.src=u+'?v='+Date.now(); return;} }catch(e){} }
     })();
-  </script>
 
-  <script>
     // breadcrumb
     const meta = document.getElementById('meta');
     const mapPeriodo = { past:'Passato', future:'Futuro' };
     const mapStile   = { whatif:'What if (plausibile)', wtf:'What the F (ironico)' };
     meta.textContent = `${prefs.periodo?mapPeriodo[prefs.periodo]:'—'} • ${prefs.stile?mapStile[prefs.stile]:'—'}`;
 
-    // domanda in sola lettura
+    // mostra domanda
     const qShown = document.getElementById('qShown');
     qShown.textContent = qSaved.question;
 
-    const step1 = document.getElementById('step1');
-    const step2 = document.getElementById('step2');
-    const fuWrap = document.getElementById('followups');
-    const askBtn = document.getElementById('askBtn');
+    // elementi
+    const fuWrap = document.getElementById('fuWrap');
+    const fuActions = document.getElementById('fuActions');
     const genBtn = document.getElementById('genBtn');
-    const err1=document.getElementById('err1'), err2=document.getElementById('err2');
-    const answerBox=document.getElementById('answerBox'), probEl=document.getElementById('prob'), respEl=document.getElementById('resp');
+    const loading = document.getElementById('loading');
+    const err = document.getElementById('err');
+    const answerBox=document.getElementById('answerBox');
+    const probEl=document.getElementById('prob');
+    const respPreview=document.getElementById('respPreview');
+    const respFull=document.getElementById('respFull');
+    const moreBox=document.getElementById('more');
+    const unlockBtn=document.getElementById('unlockBtn');
+    const paywall=document.getElementById('paywall');
+    const doUnlock=document.getElementById('doUnlock');
+    const closePay=document.getElementById('closePay');
 
-    const USE_API = true; // usa API se presente; altrimenti mock
+    const USE_API = true; // usa API se disponibile
 
-    askBtn.addEventListener('click', getFollowups);
-    async function getFollowups(){
-      err1.style.display='none';
+    // 1) all'arrivo → genera SUBITO i 2 follow-up
+    (async function getFollowups(){
+      err.style.display='none';
+      fuWrap.innerHTML='';
+      loading.style.display='flex';
+      let data;
       try{
-        let data;
         if(USE_API){
           const r = await fetch('/api/ask', {
             method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ mode:'followups', prefs, user, question: qShown.textContent })
+            body: JSON.stringify({ mode:'followups', prefs, user, question: qShown.textContent, count:2 })
           });
-          if(r.ok){ data = await r.json(); } else throw new Error('API non disponibile');
+          if(r.ok){ data = await r.json(); }
         }
-        if(!data || !Array.isArray(data.followups)){
-          data = { followups: mockFollowups(qShown.textContent, prefs) };
-        }
-        fuWrap.innerHTML='';
-        data.followups.slice(0,3).forEach((text,i)=>{
-          const id='fu'+i;
-          const div=document.createElement('div');
-          div.innerHTML=`<label for="${id}" style="display:block;margin:2px 0 4px;color:#cfe6ec">${text}</label>
-                         <input id="${id}" class="input" placeholder="Rispondi qui..." />`;
-          fuWrap.appendChild(div);
-        });
-        step1.style.display='none';
-        step2.style.display='block';
-      }catch(e){
-        err1.textContent='Impossibile generare le domande. Riprova.';
-        err1.style.display='block';
+      }catch(_){}
+      if(!data || !Array.isArray(data.followups)){
+        data = { followups: mockFollowups(qShown.textContent, prefs).slice(0,2) };
       }
-    }
+      data.followups.forEach((text,i)=>{
+        const id='fu'+i;
+        const div=document.createElement('div');
+        div.innerHTML=`<label for="${id}" style="display:block;margin:2px 0 4px;color:#cfe6ec">${text}</label>
+                       <input id="${id}" class="input" placeholder="Rispondi qui…" />`;
+        fuWrap.appendChild(div);
+      });
+      loading.style.display='none';
+      fuWrap.style.display='flex';
+      fuActions.style.display='flex';
+    })();
 
+    // 2) genera la risposta
     genBtn.addEventListener('click', async ()=>{
       const answers = [...fuWrap.querySelectorAll('input')].map(i=>i.value.trim());
       await generateFinal(answers);
     });
 
     async function generateFinal(fuAnswers){
-      err2.style.display='none';
+      err.style.display='none';
+      loading.textContent='Sto preparando una risposta personale…';
+      loading.style.display='flex';
+      let data;
       try{
-        let data;
         if(USE_API){
           const r = await fetch('/api/ask', {
             method:'POST', headers:{'Content-Type':'application/json'},
             body: JSON.stringify({ mode:'final', prefs, user, question:qShown.textContent, followupAnswers: fuAnswers })
           });
-          if(r.ok){ data = await r.json(); } else throw new Error('API non disponibile');
+          if(r.ok){ data = await r.json(); }
         }
-        if(!data || typeof data.answer!=='string'){
-          const mock = mockAnswer(qShown.textContent, prefs, fuAnswers);
-          data = { answer: mock.text, probability: mock.p };
-        }
-        const p = (typeof data.probability==='number') ? Math.max(0, Math.min(100, Math.round(data.probability))) : null;
-        probEl.textContent = p!==null ? `Probabilità: ${p}%` : '';
-        respEl.innerHTML = (data.answer||'').replace(/\n/g,'<br>');
-        answerBox.style.display='block';
-        window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
-      }catch(e){
-        err2.textContent='Non sono riuscito a generare la risposta. Riprova.';
-        err2.style.display='block';
+      }catch(_){}
+      if(!data || typeof data.answer!=='string'){
+        const mock = mockAnswer(qShown.textContent, prefs, fuAnswers);
+        data = { answer: mock.text, probability: mock.p };
       }
+      loading.style.display='none';
+
+      const p = (typeof data.probability==='number') ? Math.max(0, Math.min(100, Math.round(data.probability))) : null;
+      probEl.textContent = p!==null ? `Probabilità: ${p}%` : '';
+
+      // anteprima + “leggi di più”
+      const parts = splitPreview(data.answer, 120); // ~120 parole
+      respPreview.innerHTML = parts.preview.replace(/\n/g,'<br>');
+      respFull.innerHTML = parts.rest.replace(/\n/g,'<br>');
+      answerBox.style.display='block';
+
+      if(parts.rest.trim()){
+        moreBox.style.display='block';
+        if(localStorage.getItem('whatif_pro')==='1'){
+          // già sbloccato
+          moreBox.style.display='none';
+          respFull.style.display='block';
+        }
+      }else{
+        moreBox.style.display='none';
+      }
+      window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
     }
 
+    // paywall demo
+    unlockBtn.addEventListener('click', ()=>{ paywall.style.display='flex'; });
+    closePay.addEventListener('click', ()=>{ paywall.style.display='none'; });
+    doUnlock.addEventListener('click', ()=>{
+      localStorage.setItem('whatif_pro','1');
+      paywall.style.display='none';
+      moreBox.style.display='none';
+      respFull.style.display='block';
+    });
+
+    // helpers mock
     function mockFollowups(q, prefs){
       const base = [];
-      if((prefs.periodo||'')==='past'){ base.push('Qual era l’alternativa concreta a cui stavi pensando?'); }
+      if((prefs.periodo||'')==='past'){ base.push('Qual era l’alternativa concreta che avresti potuto scegliere?'); }
       else{ base.push('Qual è la tua opzione principale per i prossimi mesi?'); }
       base.push('Quale vincolo o paura pesa di più su questa scelta?');
       base.push('Quale risultato considereresti un successo tra 6–12 mesi?');
@@ -196,21 +239,16 @@
       const style = (prefs.stile==='wtf')?'ironica e creativa':'plausibile e realistica';
       const time  = (prefs.periodo==='past')?'sarebbe potuto accadere':'potrebbe accadere';
       const p = 55 + Math.floor(Math.random()*21) - 10; // 45–65
-      const text = `In modo ${style}, ecco cosa ${time}: partendo da "${q}", emerge che ${fu[0]||'l’intento principale è chiaro'}, con il limite di ${fu[1]||'tempo/risorse'} e un successo atteso come ${fu[2]||'stabilità e crescita personale'}. I passi immediati: definisci un micro-obiettivo settimanale, chiedi un parere esterno e misura un indicatore per 30 giorni. Poi rivaluta la direzione.`;
+      const text = `In modo ${style}, ecco cosa ${time}: partendo da "${q}", emerge che ${fu[0]||'l’intento principale è chiaro'}, con il limite di ${fu[1]||'tempo/risorse'} e un successo atteso come ${fu[2]||'stabilità e crescita personale'}. I passi immediati: definisci un micro-obiettivo settimanale, chiedi un parere esterno e misura un indicatore per 30 giorni. Poi rivaluta la direzione. Questa proiezione non è una sentenza, ma una bussola: più chiarisci i vincoli, più la traiettoria diventa nitida.`;
       return { text, p };
     }
-
-    document.getElementById('likeUp').addEventListener('click', ()=>{ likeToggle('up'); });
-    document.getElementById('likeDown').addEventListener('click', ()=>{ likeToggle('down'); });
-    function likeToggle(which){
-      const up=document.getElementById('likeUp'), down=document.getElementById('likeDown');
-      if(which==='up'){ up.classList.toggle('active'); down.classList.remove('active'); }
-      else{ down.classList.toggle('active'); up.classList.remove('active'); }
+    function splitPreview(text, words=120){
+      const arr = text.split(/\s+/);
+      if(arr.length<=words){ return { preview:text, rest:'' }; }
+      const preview = arr.slice(0,words).join(' ') + '…';
+      const rest    = arr.slice(words).join(' ');
+      return { preview, rest };
     }
-    document.getElementById('shareBtn').addEventListener('click', async ()=>{
-      const text = `${respEl.textContent}\n\n${probEl.textContent} · #WhatIf`;
-      try{ if(navigator.share){ await navigator.share({ text }); } else { await navigator.clipboard.writeText(text); alert('Copiato negli appunti!'); } }catch(_){}
-    });
   </script>
 </body>
 </html>
