@@ -7,66 +7,130 @@
   <meta name="theme-color" content="#0A0F14" />
   <link rel="preload" as="image" href="/third-hero.png" />
   <style>
-    :root{ --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA; --accent:#00E0FF; --accent-dark:#00B5CC; }
-    *{ box-sizing:border-box } html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
-    main{ min-height:100%; display:flex; flex-direction:column; gap:14px; padding:14px 14px 22px; position:relative }
-    .back{position:fixed;left:12px;top:12px;z-index:10}
-    .back a{display:inline-block;background:#0f1820;border:1px solid #20313a;color:#cfe6eb;padding:8px 12px;border-radius:12px;text-decoration:none;font-weight:700}
-    .hero{ width:min(100%,980px); margin:0 auto; background:#0c141b; border-radius:22px; padding:12px; box-shadow:0 10px 28px rgba(0,0,0,.35) }
-    .hero img{ width:100%; height:auto; border-radius:16px; display:block; filter:drop-shadow(0 10px 28px rgba(0,0,0,.42)) }
-    .breadcrumbs{ width:min(100%,980px); margin:2px auto 0; text-align:center; color:var(--muted); font-size:14px } .breadcrumbs b{ color:var(--accent) }
-    h1{ width:min(100%,980px); margin:8px auto 0; font-size:clamp(26px,6vw,40px); text-align:center }
-    .card{ width:min(100%,980px); margin:0 auto; background:var(--card); border-radius:18px; padding:16px; box-shadow:0 10px 24px rgba(0,0,0,.25) }
-    .label{ font-size:18px; font-weight:700; margin:2px 0 8px }
-    textarea{ width:100%; min-height:120px; border:1px solid #20303b; background:#0f1820; color:#cfe6eb; border-radius:14px; padding:14px 16px; font-size:16px; outline:none }
-    textarea:focus{ border-color:#28515e }
-    .hint{ width:min(100%,980px); margin:6px auto 0; text-align:center; color:var(--muted); font-size:12px }
-    .submit-wrap{ display:flex; justify-content:center; margin-top:14px }
-    .btn{ display:inline-block; border:none; border-radius:28px; padding:14px 22px; min-width:220px; background:linear-gradient(180deg,var(--accent),var(--accent-dark)); color:#002329; font-weight:900; box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25); cursor:pointer; transition:filter .16s ease, transform .08s ease }
-    .btn:active{ transform:translateY(1px) } .btn[disabled]{ background:#29404a; color:#7fa1aa; cursor:not-allowed; box-shadow:none }
+    :root{
+      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
+      --accent:#00E0FF; --accent-dark:#00B5CC; --danger:#ff5c7a;
+    }
+    *{ box-sizing:border-box }
+    html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
+               font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
+    main{ min-height:100%; display:flex; flex-direction:column; gap:18px;
+          align-items:center; padding:18px 14px 26px }
+
+    /* back */
+    .back{ position:fixed; left:12px; top:12px; z-index:10 }
+    .back a{ display:inline-block; background:#0f1820; border:1px solid #20313a; color:#cfe6eb;
+             padding:8px 12px; border-radius:12px; text-decoration:none; font-weight:700 }
+
+    /* hero */
+    .hero{ width:min(100%,860px); margin-top:6px; background:#0c141b; border-radius:22px;
+           padding:10px 10px 14px; box-shadow:0 10px 28px rgba(0,0,0,.32) }
+    .hero img{ width:100%; height:auto; border-radius:16px; display:block;
+               filter:drop-shadow(0 12px 28px rgba(0,0,0,.4)) }
+
+    .meta{ width:min(100%,860px); text-align:center; color:var(--muted);
+           font-size:13px; margin-top:-6px }
+
+    h1{ width:min(100%,860px); text-align:center; margin:2px auto 0;
+        font-size:clamp(26px,6vw,40px); letter-spacing:.5px }
+
+    .card{ width:min(100%,860px); background:var(--card); border-radius:18px;
+           padding:14px 12px 12px; box-shadow:0 8px 24px rgba(0,0,0,.28) }
+    .card h3{ margin:4px 8px 10px; font-size:18px; color:#d7e8ec }
+
+    .input{ width:100%; min-height:120px; resize:vertical; padding:12px 14px;
+            border-radius:14px; border:1px solid #20313a; background:#0c141b;
+            color:var(--fg); outline:none; font-size:16px }
+    .hint{ color:var(--muted); font-size:13px; margin:8px 4px 0 }
+
+    .cta{ display:inline-block; min-width:180px; text-align:center;
+          background:linear-gradient(180deg,var(--accent),var(--accent-dark));
+          color:#002329; font-weight:900; border:none; border-radius:28px;
+          padding:12px 18px; margin-top:12px;
+          box-shadow:0 0 14px rgba(0,181,204,.5),0 0 32px rgba(0,181,204,.25);
+          cursor:pointer; transition:filter .16s ease, transform .08s ease }
+    .cta:active{ transform:translateY(1px) }
+    .cta[disabled]{ background:#29404a; color:#7fa1aa; cursor:not-allowed; box-shadow:none }
+
+    .error{ color:var(--danger); margin:8px 4px 0; display:none }
+
+    footer{ width:min(100%,860px); color:var(--muted); font-size:12px; text-align:center }
+    footer a{ color:var(--accent); text-decoration:none }
   </style>
 </head>
 <body>
   <script>
+    // se mancano le preferenze torna alla home
     const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-    const prof  = JSON.parse(localStorage.getItem('whatif_user')||'{}');
-    if(!prefs.periodo || !prefs.stile) location.href='index.html';
+    if(!prefs.periodo || !prefs.stile){ location.href='index.html'; }
   </script>
-  <main>
-    <div class="back"><a href="second.html">← Indietro</a></div>
 
-    <div class="hero"><img id="hero" alt="Due porte illuminate" loading="eager" decoding="async" /></div>
-    <div class="breadcrumbs" id="crumbs"></div>
+  <main>
+    <div class="back"><a href="index.html">← Indietro</a></div>
+
+    <div class="hero">
+      <img id="hero" alt="Due porte illuminate: scegli la tua via" loading="eager" decoding="async" />
+    </div>
+
+    <div id="meta" class="meta"></div>
     <h1>LA TUA DOMANDA</h1>
 
-    <form id="questionForm" class="card" novalidate>
-      <div class="label">Scrivi la tua domanda What?f…</div>
-      <textarea id="questionInput" placeholder="Es. Se nel 2021 avessi cambiato lavoro? / Se tra 6 mesi mi trasferissi a Milano?"></textarea>
-      <div class="submit-wrap"><button id="nextBtn" class="btn" type="submit" disabled>Continua</button></div>
-    </form>
+    <section class="card">
+      <h3>Scrivi la tua domanda What?f…</h3>
+      <textarea id="q" class="input" placeholder="Es.: Se avessi accettato quel lavoro? / Se tra 6 mesi cambio città?"></textarea>
+      <p id="err" class="error">Scrivi qualcosa prima di continuare.</p>
+      <div style="display:flex; justify-content:center">
+        <button id="next" class="cta">Scopri</button>
+      </div>
+      <p class="hint">Suggerimento: una frase semplice funziona meglio. Puoi aggiungere dettagli in seguito.</p>
+    </section>
+
+    <footer>© 2025 What?f</footer>
   </main>
 
+  <!-- immagine robusta come nelle altre pagine -->
   <script>
     (async function loadHero(){
       const hero=document.getElementById('hero');
       const tries=['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
-      for(const u of tries){ try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ hero.src=u+'?v='+Date.now(); return; } }catch(e){} }
+      for(const u of tries){
+        try{
+          const r=await fetch(u,{cache:'no-store'});
+          if(r.ok){ hero.src=u+'?v='+Date.now(); return; }
+        }catch(e){}
+      }
       hero.alt='Immagine non trovata';
     })();
   </script>
-  <script>
-    const prefs2 = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-    const mapPeriodo = { past:'Passato', future:'Futuro' };
-    const mapStile   = { whatif:'What if (plausibile)', wtf:'What the F (ironico)' };
-    document.getElementById('crumbs').innerHTML = `${prefs2.periodo?mapPeriodo[prefs2.periodo]:'—'} · <b>${prefs2.stile?mapStile[prefs2.stile]:'—'}</b>`;
 
-    const form=document.getElementById('questionForm'), input=document.getElementById('questionInput'), next=document.getElementById('nextBtn');
-    input.addEventListener('input', ()=>{ next.disabled = input.value.trim().length < 6; });
-    form.addEventListener('submit', e=>{
-      e.preventDefault();
-      const question=(input.value||'').trim(); if(question.length<6) return;
-      localStorage.setItem('whatif_question', JSON.stringify({ question, ts:Date.now() }));
+  <!-- meta + salvataggio domanda + navigazione -->
+  <script>
+    const mapPeriodo={past:'Passato', future:'Futuro'};
+    const mapStile={whatif:'What if (plausibile)', wtf:'What the F (ironico)'};
+    document.getElementById('meta').textContent =
+      `${mapPeriodo[prefs.periodo]} • ${mapStile[prefs.stile]}`;
+
+    const qEl = document.getElementById('q');
+    const err = document.getElementById('err');
+    const next= document.getElementById('next');
+
+    // ripristina bozza se presente
+    const qSaved = JSON.parse(localStorage.getItem('whatif_question')||'null');
+    if(qSaved && qSaved.question){ qEl.value = qSaved.question; }
+
+    function proceed(){
+      const val=(qEl.value||'').trim();
+      if(!val){ err.style.display='block'; qEl.focus(); return; }
+      err.style.display='none';
+      localStorage.setItem('whatif_question', JSON.stringify({
+        question: val, ts: Date.now()
+      }));
       location.href='fifth.html';
+    }
+
+    next.addEventListener('click', proceed);
+    qEl.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter' && (e.metaKey||e.ctrlKey)){ proceed(); }
     });
   </script>
 </body>
