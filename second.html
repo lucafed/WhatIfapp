@@ -10,180 +10,182 @@
     :root{
       --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
       --accent:#00E0FF; --accent-dark:#00B5CC;
-      --chip:#17212a; --chip-sel:#0fd1d1; --chip-text:#002329;
+      --chip:#17212a; --chip-text:#cfe6eb; --chip-on:#002329;
     }
-    *{ box-sizing:border-box }
-    html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
-    main{ min-height:100%; display:flex; flex-direction:column; gap:14px; padding:14px 14px 24px }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    main{min-height:100%;max-width:980px;margin:0 auto;padding:16px 14px 28px}
 
-    .hero{ width:min(100%,980px); margin:0 auto; background:#0c141b; border-radius:22px; padding:12px;
-      box-shadow:0 10px 28px rgba(0,0,0,.35) }
-    .hero img{ width:100%; height:auto; border-radius:16px; display:block;
-      filter:drop-shadow(0 10px 28px rgba(0,0,0,.42)) }
+    .hero{display:flex;justify-content:center;margin:6px 0 10px}
+    .hero img{width:min(70%,520px);height:auto;border-radius:18px;
+      filter:drop-shadow(0 10px 26px rgba(0,0,0,.45))}
 
-    h1{ width:min(100%,980px); margin:8px auto 0; font-size:clamp(26px,6vw,40px); text-align:center }
-    .sec{ width:min(100%,980px); margin:0 auto; background:var(--card); border-radius:18px;
-      padding:16px; box-shadow:0 10px 24px rgba(0,0,0,.25) }
-    .sec h2{ margin:0 0 10px; font-size:20px }
+    h1{margin:6px 0 14px; text-align:center; font-size:clamp(26px,6.2vw,44px)}
+    h1 span{color:var(--accent)}
 
-    .chips{ display:flex; flex-wrap:wrap; gap:10px }
-    .chip{ appearance:none; border:none; background:var(--chip); color:#cfe6eb;
-      padding:12px 16px; border-radius:16px; font-weight:800; cursor:pointer }
-    .chip.selected{ background:linear-gradient(180deg,#18e1ff,#00c0d8); color:var(--chip-text) }
+    .card{background:var(--card); border-radius:18px; padding:16px; margin:12px 0}
+    .card h2{margin:0 0 10px; font-size:clamp(18px,4.5vw,22px)}
+    .group{display:flex; flex-wrap:wrap; gap:10px}
+    .chip{appearance:none;border:none;background:var(--chip); color:var(--chip-text);
+      padding:12px 16px; border-radius:16px; font-weight:700; cursor:pointer;
+      transition:transform .06s ease, box-shadow .16s ease, background .16s ease}
+    .chip:active{transform:translateY(1px)}
+    .chip.selected{background:linear-gradient(180deg,#00bcd4,#00E0FF); color:var(--chip-on);
+      box-shadow:0 0 12px rgba(0,224,255,.35)}
 
-    .input{ width:100%; border:1px solid #20303b; background:#0f1820; color:#cfe6eb;
-      border-radius:14px; padding:12px 14px; font-size:16px; outline:none }
-    .input:focus{ border-color:#28515e }
+    .input{width:100%; background:#0f1820; border:1px solid #20303a; color:var(--fg);
+      padding:12px 14px; border-radius:12px; font-size:16px}
+    .hint{color:var(--muted); font-size:13px; margin-top:8px}
 
-    .row{ display:flex; gap:10px; flex-wrap:wrap }
-    .row > *{ flex:1 1 240px }
+    .cta-wrap{display:flex; justify-content:center; margin-top:16px}
+    .cta{display:inline-block; background:linear-gradient(180deg,var(--accent),var(--accent-dark));
+      color:#002329; font-weight:900; border:none; border-radius:24px; padding:12px 20px;
+      min-width:220px; box-shadow:0 0 14px rgba(0,181,204,.5), 0 0 30px rgba(0,181,204,.25);
+      cursor:pointer; transition:filter .16s ease, transform .08s ease}
+    .cta:active{transform:translateY(1px)}
 
-    .submit-wrap{ display:flex; justify-content:center; margin-top:10px }
-    .btn{ display:inline-block; border:none; border-radius:28px; padding:14px 22px; min-width:220px;
-      background:linear-gradient(180deg,var(--accent),var(--accent-dark)); color:#002329; font-weight:900;
-      box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25); cursor:pointer;
-      transition:filter .16s ease, transform .08s ease }
-    .btn:active{ transform:translateY(1px) }
-
-    .hint{ width:min(100%,980px); margin:4px auto 0; text-align:center; color:var(--muted); font-size:12px }
-    .toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:12px; font-size:12px; color:var(--muted) }
+    footer{color:var(--muted); font-size:12px; text-align:center; margin-top:12px}
+    footer a{color:var(--accent); text-decoration:none}
   </style>
 </head>
 <body>
   <main>
-    <!-- HERO -->
     <div class="hero">
-      <img id="hero" alt="Due porte illuminate" loading="eager" decoding="async" />
+      <img id="heroMini" alt="Porte What?f" loading="eager" decoding="async" />
     </div>
 
-    <h1>PARLAMI DI <span style="color:var(--accent)">TE</span></h1>
+    <h1>PARLAMI DI <span>TE</span></h1>
 
-    <!-- Chi sei -->
-    <section class="sec">
+    <section class="card">
       <h2>Chi sei?</h2>
-      <div class="chips" id="who">
-        <button class="chip" data-key="who" data-val="studente">Studente</button>
-        <button class="chip" data-key="who" data-val="lavoratore">Lavoratore</button>
-        <button class="chip" data-key="who" data-val="creativo">Creativo</button>
+      <div class="group" data-key="ruolo">
+        <button class="chip">Studente</button>
+        <button class="chip">Lavoratore</button>
+        <button class="chip">Creativo</button>
       </div>
     </section>
 
-    <!-- Sesso -->
-    <section class="sec">
+    <section class="card">
       <h2>Sesso</h2>
-      <div class="chips" id="gender">
-        <button class="chip" data-key="gender" data-val="femmina">Femmina</button>
-        <button class="chip" data-key="gender" data-val="maschio">Maschio</button>
-        <button class="chip" data-key="gender" data-val="altro">Altro</button>
-        <button class="chip" data-key="gender" data-val="nd">Preferisco non dirlo</button>
+      <div class="group" data-key="sesso">
+        <button class="chip">Femmina</button>
+        <button class="chip">Maschio</button>
+        <button class="chip">Altro</button>
+        <button class="chip">Preferisco non dirlo</button>
       </div>
     </section>
 
-    <!-- Età -->
-    <section class="sec">
+    <section class="card">
       <h2>Età</h2>
-      <div class="chips" id="age">
-        <button class="chip" data-key="age" data-val="<18">&lt;18</button>
-        <button class="chip" data-key="age" data-val="18-25">18–25</button>
-        <button class="chip" data-key="age" data-val="26-35">26–35</button>
-        <button class="chip" data-key="age" data-val=">35">&gt;35</button>
+      <div class="group" data-key="eta">
+        <button class="chip">&lt;18</button>
+        <button class="chip">18–25</button>
+        <button class="chip">26–35</button>
+        <button class="chip">&gt;35</button>
       </div>
     </section>
 
-    <!-- Fase -->
-    <section class="sec">
+    <section class="card">
       <h2>In quale fase ti trovi?</h2>
-      <div class="chips" id="phase">
-        <button class="chip" data-key="phase" data-val="studio">Studio</button>
-        <button class="chip" data-key="phase" data-val="carriera">Carriera</button>
-        <button class="chip" data-key="phase" data-val="relazioni">Relazioni</button>
+      <div class="group" data-key="fase">
+        <button class="chip">Studio</button>
+        <button class="chip">Carriera</button>
+        <button class="chip">Relazioni</button>
       </div>
     </section>
 
-    <!-- Provenienza + Note -->
-    <section class="sec">
-      <div class="row">
-        <div>
-          <h2>Da dove vieni?</h2>
-          <input id="city" class="input" placeholder="Città / Paese" />
-        </div>
-        <div>
-          <h2>Note (opzionale)</h2>
-          <input id="notes" class="input" placeholder="Obiettivi, contesto, limiti di tempo…" />
-        </div>
-      </div>
-
-      <div class="submit-wrap">
-        <button id="go" class="btn">Continua</button>
-      </div>
+    <section class="card">
+      <h2>Da dove vieni?</h2>
+      <input class="input" id="citta" placeholder="Città / Paese" />
+      <p class="hint">Facoltativo – ci aiuta a dare contesto alle risposte.</p>
     </section>
 
-    <div class="hint">Swipe ← per tornare · Swipe → per continuare</div>
+    <section class="card">
+      <h2>Vuoi raccontarci qualcosa di più su di te?</h2>
+      <textarea class="input" id="note" rows="4"
+        placeholder="Obiettivi, contesto, limiti di tempo… (opzionale)"></textarea>
+    </section>
+
+    <div class="cta-wrap">
+      <button id="go" class="cta">Continua</button>
+    </div>
+
+    <footer>
+      Swipe ← per tornare · Swipe → per avanzare (se possibile)<br/>
+      © 2025 What?f
+    </footer>
   </main>
 
-  <!-- Immagine: metodo robusto -->
+  <!-- immagine: metodo robusto identico alla home -->
   <script>
     (async function loadHero(){
-      const hero=document.getElementById('hero');
-      const tries=['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
+      const img = document.getElementById('heroMini');
+      const tries = ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
       for(const u of tries){
-        try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ hero.src=u+'?v='+Date.now(); return; } }
+        try{ const r = await fetch(u, {cache:'no-store'}); if(r.ok){ img.src = u + '?v=' + Date.now(); return; } }
         catch(e){}
       }
-      hero.alt='Immagine non trovata';
+      img.alt = 'Immagine non trovata';
     })();
   </script>
 
-  <!-- Logica: chip, salvataggi, swipe, continua -->
+  <!-- logica selezioni + storage + navigazione -->
   <script>
-    const storeKey='whatif_profile';
-    const prof = JSON.parse(localStorage.getItem(storeKey) || '{}'); // {who,gender,age,phase,city,notes}
+    const storeKey = 'whatif_user';
+    const user = JSON.parse(localStorage.getItem(storeKey) || '{}'); // {ruolo,sesso,eta,fase,citta,note}
 
-    function wireChips(containerId){
-      const el=document.getElementById(containerId);
-      el.addEventListener('click', (e)=>{
-        const b=e.target.closest('.chip'); if(!b) return;
-        el.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+    // ripristina chip selezionati se presenti
+    document.querySelectorAll('.group').forEach(g=>{
+      const key = g.dataset.key;
+      if(user[key]){
+        [...g.querySelectorAll('.chip')].forEach(b=>{
+          if(b.textContent.trim()===user[key]) b.classList.add('selected');
+        });
+      }
+      g.addEventListener('click', (e)=>{
+        const b = e.target.closest('.chip'); if(!b) return;
+        g.querySelectorAll('.chip').forEach(x=>x.classList.remove('selected'));
         b.classList.add('selected');
-        prof[b.dataset.key]=b.dataset.val;
-        localStorage.setItem(storeKey, JSON.stringify(prof));
+        user[key] = b.textContent.trim();
+        localStorage.setItem(storeKey, JSON.stringify(user));
       });
-    }
-    ['who','gender','age','phase'].forEach(wireChips);
-
-    // ripristino selezioni
-    for (const [k,v] of Object.entries(prof)){
-      const btn=document.querySelector(`.chip[data-key="${k}"][data-val="${v}"]`);
-      if(btn) btn.classList.add('selected');
-    }
-    // input liberi
-    const city=document.getElementById('city');
-    const notes=document.getElementById('notes');
-    if(prof.city) city.value=prof.city;
-    if(prof.notes) notes.value=prof.notes;
-    city.addEventListener('input',()=>{ prof.city=city.value; localStorage.setItem(storeKey, JSON.stringify(prof)); });
-    notes.addEventListener('input',()=>{ prof.notes=notes.value; localStorage.setItem(storeKey, JSON.stringify(prof)); });
-
-    // Continua
-    document.getElementById('go').addEventListener('click', ()=>{
-      // opzionale: richiedi almeno uno dei campi base
-      localStorage.setItem(storeKey, JSON.stringify(prof));
-      location.href='fourth.html';
     });
 
-    // Swipe L/R
+    // input testo
+    const citta = document.getElementById('citta');
+    const note  = document.getElementById('note');
+    if(user.citta) citta.value = user.citta;
+    if(user.note)  note.value  = user.note;
+    [citta,note].forEach(el=>{
+      el.addEventListener('input', ()=>{
+        user[el.id] = el.value;
+        localStorage.setItem(storeKey, JSON.stringify(user));
+      });
+    });
+
+    // bottone continua
+    document.getElementById('go').addEventListener('click', ()=>{
+      // (opzionale) puoi imporre campi minimi qui
+      location.href = 'fourth.html';
+    });
+
+    // swipe: sinistra = home, destra = avanti
     (function(){
       let sx=0, sy=0, dx=0, dy=0, start=false, TH=55;
-      document.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;start=true;},{passive:true});
-      document.addEventListener('touchmove',e=>{ if(!start) return; const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy; },{passive:true});
-      document.addEventListener('touchend',()=>{
+      document.addEventListener('touchstart', e=>{
+        const t=e.touches[0]; sx=t.clientX; sy=t.clientY; start=true;
+      }, {passive:true});
+      document.addEventListener('touchmove', e=>{
+        if(!start) return; const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy;
+      }, {passive:true});
+      document.addEventListener('touchend', ()=>{
         if(!start) return; start=false;
         if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){
-          if(dx>0){ location.href='fourth.html'; } else { history.back(); }
+          if(dx>0){ location.href='index.html'; } else { location.href='fourth.html'; }
         }
         sx=sy=dx=dy=0;
-      },{passive:true});
+      }, {passive:true});
     })();
   </script>
 </body>
