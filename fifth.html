@@ -5,162 +5,81 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f – Risultato</title>
   <meta name="theme-color" content="#0A0F14" />
-  <link rel="preload" as="image" href="/third-hero.png" />
+  <meta http-equiv="Cache-Control" content="no-store, max-age=0, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <style>
-    :root{
-      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
-      --accent:#00E0FF; --accent-dark:#00B5CC; --danger:#ff5c7a;
-    }
-    *{ box-sizing:border-box }
-    html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
-               font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
-    main{ min-height:100%; display:flex; flex-direction:column; gap:14px;
-          align-items:center; padding:14px 14px 26px }
-
-    /* top bar */
-    .top{ width:min(100%,860px); display:flex; align-items:center; gap:10px; }
-    .back a{ display:inline-block; background:#0f1820; border:1px solid #20313a; color:#cfe6eb;
-             padding:8px 12px; border-radius:12px; text-decoration:none; font-weight:700; }
-    .thumb{ margin-left:auto; width:96px; height:64px; border-radius:10px; background:#0c141b;
-            display:flex; align-items:center; justify-content:center; overflow:hidden;
-            box-shadow:0 6px 18px rgba(0,0,0,.28) }
-    .thumb img{ width:100%; height:auto; display:block }
-
-    .meta{ width:min(100%,860px); text-align:center; color:var(--muted); font-size:13px; }
-
-    h1{ width:min(100%,860px); text-align:center; margin:0 auto 2px;
-        font-size:clamp(26px,6vw,40px) }
-
-    .card{ width:min(100%,860px); background:var(--card); border-radius:18px;
-           padding:14px; box-shadow:0 8px 24px rgba(0,0,0,.28) }
-
-    .answer{ white-space:pre-wrap; line-height:1.55; font-size:16px }
-    .loading{ color:var(--muted); font-style:italic; }
-    .error{ color:var(--danger); }
-
-    .actions{ width:min(100%,860px); display:flex; gap:10px; justify-content:center; }
-    .btn{ display:inline-block; background:#0f1820; border:1px solid #20313a; color:#cfe6eb;
-          padding:10px 14px; border-radius:999px; text-decoration:none; font-weight:800; }
-    .btn.primary{ background:linear-gradient(180deg,var(--accent),var(--accent-dark)); color:#002329;
-                  border:none; box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25) }
-
-    footer{ width:min(100%,860px); color:var(--muted); font-size:12px; text-align:center; margin-top:6px }
-    footer a{ color:var(--accent); text-decoration:none }
+    :root{--bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent-dark:#00B5CC}
+    *{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    main{max-width:920px;margin:0 auto;padding:14px}
+    .top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+    .back{background:#0f1820;border:1px solid #22313a;color:#cfe6eb;border-radius:12px;padding:8px 12px;cursor:pointer}
+    .thumb{width:86px;height:86px;border-radius:14px;overflow:hidden;background:#0c141b;display:flex;align-items:center;justify-content:center}
+    .thumb img{max-width:100%;height:auto;display:block}
+    .subtitle{color:#8fb8c3;margin:4px 0 10px}
+    h1{margin:6px 0 12px;font-size:clamp(26px,5.5vw,36px)}
+    .card{background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px;line-height:1.55}
+    .cta{display:inline-block;margin-top:8px;background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329;
+      font-weight:900;border:none;border-radius:24px;padding:10px 16px;min-width:160px;box-shadow:0 0 14px rgba(0,181,204,.5)}
   </style>
 </head>
 <body>
-  <script>
-    // Verifica dati minimi
-    const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}'); // {periodo,stile}
-    const qObj  = JSON.parse(localStorage.getItem('whatif_question')||'null'); // {question}
-    if(!prefs.periodo || !prefs.stile || !qObj || !qObj.question){
-      location.href='index.html';
-    }
-  </script>
-
   <main>
     <div class="top">
-      <div class="back"><a href="fourth.html">← Indietro</a></div>
-      <div class="thumb"><img id="hero" alt="Miniatura What?f" loading="eager" decoding="async" /></div>
+      <button id="backBtn" class="back">← Indietro</button>
+      <div class="thumb"><img id="hero" alt="Porte" loading="eager" decoding="async" /></div>
     </div>
 
-    <div id="meta" class="meta"></div>
-    <h1>RISPOSTA</h1>
+    <div class="subtitle" id="sub"></div>
+    <h1>Risultato</h1>
 
-    <section class="card">
-      <div id="answer" class="answer loading">Sto pensando…</div>
-    </section>
+    <div id="answer" class="card">Sto pensando…</div>
 
-    <div class="actions">
-      <a class="btn" href="fourth.html">Nuova domanda</a>
-      <a class="btn primary" href="index.html">Home</a>
+    <div class="card" style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="cta" id="like">👍 Like</button>
+      <button class="cta" id="dislike">👎 Dislike</button>
+      <button class="cta" id="share">📤 Condividi</button>
     </div>
-
-    <footer>© 2025 What?f</footer>
   </main>
 
-  <!-- thumbnail robusta -->
   <script>
-    (async function loadThumb(){
-      const img=document.getElementById('hero');
+    // immagine
+    (async function(){
+      const el=document.getElementById('hero');
       const tries=['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
-      for(const u of tries){
-        try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ img.src=u+'?v='+Date.now(); return; } }
-        catch(e){}
-      }
-      img.alt='Immagine non trovata';
+      for(const u of tries){ try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ el.src=u+'?v='+Date.now(); return; } }catch{} }
+      el.alt='Immagine non trovata';
     })();
-  </script>
 
-  <!-- meta + chiamata API -->
-  <script>
-    const mapPeriodo={past:'Passato', future:'Futuro'};
-    const mapStile={whatif:'What if (plausibile)', wtf:'What the F (ironico)'};
-    document.getElementById('meta').textContent =
-      `${mapPeriodo[prefs.periodo]} • ${mapStile[prefs.stile]}`;
+    // dati
+    const payload = JSON.parse(sessionStorage.getItem('ask_payload')||'{}');
+    const prefs = payload.prefs || JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+    document.getElementById('sub').textContent =
+      (prefs.periodo==='past'?'Passato':'Futuro')+' • '+
+      (prefs.stile==='whatif'?'What if (plausibile)':'What the F (ironico)');
 
-    const answerEl = document.getElementById('answer');
-
-    // Helper per typing effect semplice
-    function typeWrite(target, text, speed=12){
-      target.classList.remove('loading','error');
-      target.textContent='';
-      let i=0;
-      const t=setInterval(()=>{
-        target.textContent += text.charAt(i++);
-        if(i>=text.length) clearInterval(t);
-      }, speed);
-    }
-
+    // chiamata API (fallback demo se non disponibile)
     async function ask(){
-      const question = qObj.question;
-
-      // Costruisco il prompt di sistema in base alle scelte
-      const tone = prefs.stile==='wtf'
-        ? 'tono ironico, creativo, sorprendente; resta comunque chiaro e leggibile.'
-        : 'tono realistico, riflessivo e plausibile; suggerisci scenari concreti e verosimili.';
-      const timeframe = prefs.periodo==='past'
-        ? 'Rispondi come analisi controfattuale: cosa sarebbe potuto accadere.'
-        : 'Rispondi come previsione ipotetica: cosa potrebbe accadere.';
-      const system = `Sei What?f. ${timeframe} Usa un linguaggio in italiano, ${tone} Dividi in 2-4 punti chiari quando utile. Evita premesse inutili.`;
-
+      const a = document.getElementById('answer');
       try{
-        // Mostra un piccolo loader animato
-        let dots=0;
-        const loader=setInterval(()=>{
-          dots=(dots+1)%4;
-          answerEl.textContent='Sto pensando' + '.'.repeat(dots);
-        }, 350);
-
-        const res = await fetch('/api/ask', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({
-            system, prompt: question,
-            meta:{periodo:prefs.periodo, stile:prefs.stile}
-          })
-        });
-
-        clearInterval(loader);
-
-        if(!res.ok){
-          const txt = await res.text().catch(()=> '');
-          throw new Error(txt || ('HTTP '+res.status));
-        }
-        const data = await res.json();
-        const text = (data && (data.answer || data.text || data.result)) || 'Nessuna risposta ricevuta.';
-        typeWrite(answerEl, text);
-      }catch(err){
-        answerEl.classList.add('error');
-        answerEl.classList.remove('loading');
-        answerEl.textContent =
-          'Non riesco a ottenere la risposta al momento. ' +
-          'Verifica la route /api/ask e la chiave del provider, poi riprova.';
-        console.error(err);
+        const r = await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(payload)});
+        if(!r.ok) throw new Error('no api');
+        const data = await r.json();
+        a.textContent = (data.answer || '').trim() || 'Nessuna risposta.';
+      }catch(e){
+        a.innerHTML = `
+          <b>Anteprima demo</b><br/>
+          In base alla tua domanda: “${(payload.question||'…') }” e alle scelte effettuate,
+          ecco uno scenario sintetico. Attiva la tua API per ottenere una risposta generata dall’AI.`;
       }
     }
-
     ask();
+
+    // back esplicito
+    document.getElementById('backBtn').addEventListener('click',()=>{ location.href='/fourth.html'; });
+
+    window.addEventListener('pageshow',e=>{ if(e.persisted) location.reload(); });
   </script>
 </body>
 </html>
