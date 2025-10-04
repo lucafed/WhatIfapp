@@ -3,115 +3,187 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – Step 2</title>
-  <meta name="theme-color" content="#0A0F14">
+  <title>What?f – Parlami di te</title>
+  <meta name="theme-color" content="#0A0F14" />
+  <link rel="preload" as="image" href="/third-hero.png" />
   <style>
-    :root{--bg:#0A0F14;--fg:#fff;--muted:#A0B2BA;--accent:#00E0FF;--accent-dark:#00B5CC}
-    [data-theme="light"]{--bg:#f7f7f7;--fg:#111;--muted:#444;--accent:#00B5CC;--accent-dark:#008fa3}
-    *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-
-    main{
-      min-height:100%;
-      display:flex; flex-direction:column; align-items:center; text-align:center;
-      justify-content:flex-start;
-      padding:48px 20px 24px; gap:14px;
+    :root{
+      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
+      --accent:#00E0FF; --accent-dark:#00B5CC;
+      --chip:#17212a; --chip-sel:#0fd1d1; --chip-text:#002329;
     }
+    *{ box-sizing:border-box }
+    html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
+    main{ min-height:100%; display:flex; flex-direction:column; gap:14px; padding:14px 14px 24px }
 
-    .hero-img{
-      width:min(82vw,400px); height:auto; margin-top:6px; display:block;
-      filter:drop-shadow(0 10px 20px rgba(0,0,0,.45))
-    }
-    .hero-fallback{color:var(--muted);font-size:14px;margin-top:6px}
+    .hero{ width:min(100%,980px); margin:0 auto; background:#0c141b; border-radius:22px; padding:12px;
+      box-shadow:0 10px 28px rgba(0,0,0,.35) }
+    .hero img{ width:100%; height:auto; border-radius:16px; display:block;
+      filter:drop-shadow(0 10px 28px rgba(0,0,0,.42)) }
 
-    .theme-toggle{
-      position:fixed; top:16px; right:16px;
-      background:rgba(0,0,0,.6); border:1px solid var(--accent); color:#fff;
-      padding:10px; border-radius:50%; cursor:pointer; font-size:18px; z-index:9999
-    }
-    [data-theme="light"] .theme-toggle{background:rgba(255,255,255,.85);color:#111}
+    h1{ width:min(100%,980px); margin:8px auto 0; font-size:clamp(26px,6vw,40px); text-align:center }
+    .sec{ width:min(100%,980px); margin:0 auto; background:var(--card); border-radius:18px;
+      padding:16px; box-shadow:0 10px 24px rgba(0,0,0,.25) }
+    .sec h2{ margin:0 0 10px; font-size:20px }
 
-    h2{margin-top:10px;font-size:clamp(22px,5.2vw,36px);line-height:1.2}
-    p.subtitle{font-size:16px;color:var(--muted);margin-top:6px}
+    .chips{ display:flex; flex-wrap:wrap; gap:10px }
+    .chip{ appearance:none; border:none; background:var(--chip); color:#cfe6eb;
+      padding:12px 16px; border-radius:16px; font-weight:800; cursor:pointer }
+    .chip.selected{ background:linear-gradient(180deg,#18e1ff,#00c0d8); color:var(--chip-text) }
 
-    .btn{
-      display:inline-block; text-decoration:none; background:var(--accent-dark); color:#001f26;
-      font-weight:700; padding:14px 26px; border-radius:28px; margin-top:18px;
-      box-shadow:0 0 12px rgba(0,181,204,.6),0 0 24px rgba(0,181,204,.3)
-    }
+    .input{ width:100%; border:1px solid #20303b; background:#0f1820; color:#cfe6eb;
+      border-radius:14px; padding:12px 14px; font-size:16px; outline:none }
+    .input:focus{ border-color:#28515e }
 
-    footer{position:fixed;bottom:10px;left:0;right:0;text-align:center;color:var(--muted);font-size:12px}
-    footer a{color:var(--accent);text-decoration:none}
+    .row{ display:flex; gap:10px; flex-wrap:wrap }
+    .row > *{ flex:1 1 240px }
 
-    .swipe-tip{font-size:12px;color:var(--muted);margin-top:6px}
+    .submit-wrap{ display:flex; justify-content:center; margin-top:10px }
+    .btn{ display:inline-block; border:none; border-radius:28px; padding:14px 22px; min-width:220px;
+      background:linear-gradient(180deg,var(--accent),var(--accent-dark)); color:#002329; font-weight:900;
+      box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25); cursor:pointer;
+      transition:filter .16s ease, transform .08s ease }
+    .btn:active{ transform:translateY(1px) }
+
+    .hint{ width:min(100%,980px); margin:4px auto 0; text-align:center; color:var(--muted); font-size:12px }
+    .toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:12px; font-size:12px; color:var(--muted) }
   </style>
 </head>
 <body>
-  <button id="themeToggle" class="theme-toggle" aria-label="Cambia tema">☀️</button>
+  <main>
+    <!-- HERO -->
+    <div class="hero">
+      <img id="hero" alt="Due porte illuminate" loading="eager" decoding="async" />
+    </div>
 
-  <main id="swipeArea">
-    <img id="hero" class="hero-img" alt="Seconda immagine" loading="eager" decoding="async" />
-    <div id="heroFallback" class="hero-fallback">Caricamento immagine…</div>
+    <h1>PARLAMI DI <span style="color:var(--accent)">TE</span></h1>
 
-    <h2>IL VIAGGIO INIZIA QUI</h2>
-    <p class="subtitle">Scegli come vuoi esplorare il tuo futuro</p>
+    <!-- Chi sei -->
+    <section class="sec">
+      <h2>Chi sei?</h2>
+      <div class="chips" id="who">
+        <button class="chip" data-key="who" data-val="studente">Studente</button>
+        <button class="chip" data-key="who" data-val="lavoratore">Lavoratore</button>
+        <button class="chip" data-key="who" data-val="creativo">Creativo</button>
+      </div>
+    </section>
 
-    <a href="third.html" class="btn" id="nextBtn">AVANTI</a>
-    <div class="swipe-tip">Swipe ← per tornare · Swipe ↑ o → per andare avanti</div>
+    <!-- Sesso -->
+    <section class="sec">
+      <h2>Sesso</h2>
+      <div class="chips" id="gender">
+        <button class="chip" data-key="gender" data-val="femmina">Femmina</button>
+        <button class="chip" data-key="gender" data-val="maschio">Maschio</button>
+        <button class="chip" data-key="gender" data-val="altro">Altro</button>
+        <button class="chip" data-key="gender" data-val="nd">Preferisco non dirlo</button>
+      </div>
+    </section>
+
+    <!-- Età -->
+    <section class="sec">
+      <h2>Età</h2>
+      <div class="chips" id="age">
+        <button class="chip" data-key="age" data-val="<18">&lt;18</button>
+        <button class="chip" data-key="age" data-val="18-25">18–25</button>
+        <button class="chip" data-key="age" data-val="26-35">26–35</button>
+        <button class="chip" data-key="age" data-val=">35">&gt;35</button>
+      </div>
+    </section>
+
+    <!-- Fase -->
+    <section class="sec">
+      <h2>In quale fase ti trovi?</h2>
+      <div class="chips" id="phase">
+        <button class="chip" data-key="phase" data-val="studio">Studio</button>
+        <button class="chip" data-key="phase" data-val="carriera">Carriera</button>
+        <button class="chip" data-key="phase" data-val="relazioni">Relazioni</button>
+      </div>
+    </section>
+
+    <!-- Provenienza + Note -->
+    <section class="sec">
+      <div class="row">
+        <div>
+          <h2>Da dove vieni?</h2>
+          <input id="city" class="input" placeholder="Città / Paese" />
+        </div>
+        <div>
+          <h2>Note (opzionale)</h2>
+          <input id="notes" class="input" placeholder="Obiettivi, contesto, limiti di tempo…" />
+        </div>
+      </div>
+
+      <div class="submit-wrap">
+        <button id="go" class="btn">Continua</button>
+      </div>
+    </section>
+
+    <div class="hint">Swipe ← per tornare · Swipe → per continuare</div>
   </main>
 
-  <footer>© 2025 What?f · <a href="privacy.html">Privacy</a> · <a href="terms.html">Termini</a></footer>
-
+  <!-- Immagine: metodo robusto -->
   <script>
-    // Caricamento robusto immagine (multi-percorso)
     (async function loadHero(){
       const hero=document.getElementById('hero');
-      const fb=document.getElementById('heroFallback');
-      const tries=['/second-hero.png','/public/second-hero.png','/assets/second-hero.png'];
+      const tries=['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
       for(const u of tries){
-        try{const r=await fetch(u,{cache:'no-store'});
-          if(r.ok){hero.src=u+'?v='+Date.now();fb.style.display='none';return;}
-        }catch(e){}
+        try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ hero.src=u+'?v='+Date.now(); return; } }
+        catch(e){}
       }
-      fb.textContent='Immagine non trovata.';fb.style.display='block';
+      hero.alt='Immagine non trovata';
     })();
+  </script>
 
-    // Tema persistente (uguale alla home)
+  <!-- Logica: chip, salvataggi, swipe, continua -->
+  <script>
+    const storeKey='whatif_profile';
+    const prof = JSON.parse(localStorage.getItem(storeKey) || '{}'); // {who,gender,age,phase,city,notes}
+
+    function wireChips(containerId){
+      const el=document.getElementById(containerId);
+      el.addEventListener('click', (e)=>{
+        const b=e.target.closest('.chip'); if(!b) return;
+        el.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+        b.classList.add('selected');
+        prof[b.dataset.key]=b.dataset.val;
+        localStorage.setItem(storeKey, JSON.stringify(prof));
+      });
+    }
+    ['who','gender','age','phase'].forEach(wireChips);
+
+    // ripristino selezioni
+    for (const [k,v] of Object.entries(prof)){
+      const btn=document.querySelector(`.chip[data-key="${k}"][data-val="${v}"]`);
+      if(btn) btn.classList.add('selected');
+    }
+    // input liberi
+    const city=document.getElementById('city');
+    const notes=document.getElementById('notes');
+    if(prof.city) city.value=prof.city;
+    if(prof.notes) notes.value=prof.notes;
+    city.addEventListener('input',()=>{ prof.city=city.value; localStorage.setItem(storeKey, JSON.stringify(prof)); });
+    notes.addEventListener('input',()=>{ prof.notes=notes.value; localStorage.setItem(storeKey, JSON.stringify(prof)); });
+
+    // Continua
+    document.getElementById('go').addEventListener('click', ()=>{
+      // opzionale: richiedi almeno uno dei campi base
+      localStorage.setItem(storeKey, JSON.stringify(prof));
+      location.href='fourth.html';
+    });
+
+    // Swipe L/R
     (function(){
-      const btn=document.getElementById('themeToggle');const root=document.documentElement;
-      function apply(t){ if(t==='light'){root.setAttribute('data-theme','light');btn.textContent='🌙'} else {root.removeAttribute('data-theme');btn.textContent='☀️'} }
-      apply(localStorage.getItem('theme'));
-      btn.addEventListener('click',()=>{const cur=root.getAttribute('data-theme')==='light'?'light':'dark';const next=cur==='light'?'dark':'light';localStorage.setItem('theme',next);apply(next);});
-    })();
-
-    // Swipe (← indietro, →/↑ avanti)
-    (function(){
-      const PREV='index.html';
-      const NEXT='third.html';
-      const area=document.getElementById('swipeArea');
-      let sx=0, sy=0, t0=0;
-      const TH=80;      // distanza minima
-      const MAXT=900;   // durata massima gesto
-
-      area.addEventListener('touchstart',e=>{
-        const p=e.touches[0]; sx=p.clientX; sy=p.clientY; t0=Date.now();
-      },{passive:true});
-
-      area.addEventListener('touchend',e=>{
-        const p=e.changedTouches[0];
-        const dx=p.clientX - sx, dy=p.clientY - sy, dt=Date.now()-t0;
-        if(dt>MAXT) return;
-        const adx=Math.abs(dx), ady=Math.abs(dy);
-
-        if(adx>ady && adx>TH) {
-          if(dx>0) location.href=PREV;   // ← ritorna
-          else     location.href=NEXT;   // → avanti
-        } else if(ady>TH) {
-          if(dy<0) location.href=NEXT;   // ↑ avanti
+      let sx=0, sy=0, dx=0, dy=0, start=false, TH=55;
+      document.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;start=true;},{passive:true});
+      document.addEventListener('touchmove',e=>{ if(!start) return; const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy; },{passive:true});
+      document.addEventListener('touchend',()=>{
+        if(!start) return; start=false;
+        if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){
+          if(dx>0){ location.href='fourth.html'; } else { history.back(); }
         }
+        sx=sy=dx=dy=0;
       },{passive:true});
-
-      document.getElementById('nextBtn').addEventListener('click',(e)=>{e.preventDefault();location.href=NEXT;});
     })();
   </script>
 </body>
