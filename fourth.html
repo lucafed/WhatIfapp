@@ -3,189 +3,213 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – Parlami di te</title>
+  <title>What?f – La tua domanda</title>
   <meta name="theme-color" content="#0A0F14" />
   <link rel="preload" as="image" href="/third-hero.png" />
   <style>
     :root{
-      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A3B6BF;
-      --accent:#00E0FF; --accent-dark:#00B5CC; --ok:#13d8a6; --btn-disabled:#29404a;
+      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
+      --accent:#00E0FF; --accent-dark:#00B5CC;
+      --chip:#17212a; --ok:#0fd17b; --err:#ff6363;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{min-height:100%;display:flex;flex-direction:column;gap:18px;padding:18px 16px 22px;align-items:center}
+    *{ box-sizing:border-box }
+    html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
+    main{ min-height:100%; display:flex; flex-direction:column; gap:14px; padding:14px 14px 22px }
 
-    .hero{width:min(100%,860px);margin-top:6px;background:#0c141b;border-radius:22px;padding:10px 10px 14px;
-      box-shadow:0 10px 28px rgba(0,0,0,.32)}
-    .hero img{width:100%;height:auto;border-radius:16px;display:block;filter:drop-shadow(0 12px 28px rgba(0,0,0,.4))}
+    /* Hero */
+    .hero{ width:min(100%,980px); margin:0 auto; background:#0c141b; border-radius:22px; padding:12px;
+      box-shadow:0 10px 28px rgba(0,0,0,.35) }
+    .hero img{ width:100%; height:auto; border-radius:16px; display:block;
+      filter:drop-shadow(0 10px 28px rgba(0,0,0,.42)) }
 
-    h1{width:min(100%,860px);text-align:center;margin:2px auto 0;font-size:clamp(26px,6vw,40px);letter-spacing:.5px}
-    h1 span{color:var(--accent)}
+    /* Riepilogo scelta */
+    .breadcrumbs{ width:min(100%,980px); margin:2px auto 0; text-align:center; color:var(--muted);
+      font-size:14px }
+    .breadcrumbs b{ color:var(--accent) }
 
-    .section{width:min(100%,860px);background:var(--card);border-radius:18px;
-      padding:14px 12px 12px;box-shadow:0 8px 24px rgba(0,0,0,.28)}
-    .section h3{margin:4px 8px 10px;font-size:18px;color:#d7e8ec}
-    .choices{display:flex;flex-wrap:wrap;gap:10px;padding:6px 8px}
-    .chip{appearance:none;border:none;background:#17212a;color:#cfe6eb;
-      padding:12px 16px;border-radius:16px;font-weight:700;cursor:pointer;
-      transition:transform .08s ease, box-shadow .18s ease, background .18s ease}
-    .chip:active{transform:translateY(1px)}
-    .chip.selected{background:linear-gradient(180deg,#00b9d1,#00E0FF);color:#002329;
-      box-shadow:0 0 12px rgba(0,224,255,.35)}
-    .input{width:100%;padding:12px 14px;border-radius:14px;border:1px solid #20313a;background:#0c141b;color:var(--fg);
-      outline:none}
+    h1{ width:min(100%,980px); margin:8px auto 0; font-size:clamp(26px,6vw,40px); text-align:center }
 
-    .cta-wrap{width:min(100%,860px);display:flex;justify-content:center}
-    .cta{display:inline-block;min-width:220px;text-align:center;
-      background:linear-gradient(180deg,var(--accent),var(--accent-dark));
-      color:#002329;font-weight:900;border:none;border-radius:28px;padding:14px 22px;
-      box-shadow:0 0 14px rgba(0,181,204,.5),0 0 32px rgba(0,181,204,.25);
-      cursor:pointer;transition:filter .16s ease, transform .08s ease}
-    .cta:active{transform:translateY(1px)}
-    .cta[disabled]{background:var(--btn-disabled);color:#7fa1aa;cursor:not-allowed;box-shadow:none}
+    /* Card form */
+    .card{ width:min(100%,980px); margin:0 auto; background:var(--card); border-radius:18px; padding:16px;
+      box-shadow:0 10px 24px rgba(0,0,0,.25) }
+    .label{ font-size:18px; font-weight:700; margin:2px 0 8px; }
+    textarea{ width:100%; min-height:120px; border:1px solid #20303b; background:#0f1820; color:#cfe6eb;
+      border-radius:14px; padding:14px 16px; font-size:16px; outline:none }
+    textarea:focus{ border-color:#28515e }
 
-    .hint{width:min(100%,860px);text-align:center;color:var(--muted);font-size:12px}
+    .submit-wrap{ display:flex; justify-content:center; margin-top:14px }
+    .btn{ display:inline-block; border:none; border-radius:28px; padding:14px 22px; min-width:220px;
+      background:linear-gradient(180deg,var(--accent),var(--accent-dark)); color:#002329; font-weight:900;
+      box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25); cursor:pointer;
+      transition:filter .16s ease, transform .08s ease }
+    .btn:active{ transform:translateY(1px) }
+    .btn[disabled]{ background:#29404a; color:#7fa1aa; cursor:not-allowed; box-shadow:none }
+
+    /* Output risposta */
+    .out{ width:min(100%,980px); margin:4px auto 0; background:#0f1820; color:#cfe6eb;
+      border-radius:14px; padding:14px 16px; box-shadow:0 10px 24px rgba(0,0,0,.25); white-space:pre-wrap }
+    .out.ok{ border:1px solid #164b36; }
+    .out.err{ border:1px solid #4b1616; color:#ffc6c6 }
+
+    /* Azioni */
+    .actions{ width:min(100%,980px); margin:6px auto 0; display:flex; justify-content:center; gap:10px; flex-wrap:wrap }
+    .chip{ background:var(--chip); color:#cfe6eb; border:none; border-radius:999px; padding:10px 14px; font-weight:700; cursor:pointer }
+    .hint{ width:min(100%,980px); margin:4px auto 0; text-align:center; color:var(--muted); font-size:12px }
+
+    /* Swipe toast (discreto) */
+    .toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:12px; font-size:12px; color:var(--muted) }
   </style>
 </head>
 <body>
   <main>
-    <div class="hero"><img id="hero" alt="Mini anteprima due porte" loading="eager" decoding="async"></div>
-    <h1>PARLAMI DI <span>TE</span></h1>
-
-    <section class="section">
-      <h3>Chi sei?</h3>
-      <div class="choices" id="who">
-        <button class="chip" data-key="who" data-val="studente">Studente</button>
-        <button class="chip" data-key="who" data-val="lavoratore">Lavoratore</button>
-        <button class="chip" data-key="who" data-val="creativo">Creativo</button>
-      </div>
-    </section>
-
-    <section class="section">
-      <h3>Sesso</h3>
-      <div class="choices" id="gender">
-        <button class="chip" data-key="gender" data-val="femmina">Femmina</button>
-        <button class="chip" data-key="gender" data-val="maschio">Maschio</button>
-        <button class="chip" data-key="gender" data-val="altro">Altro</button>
-        <button class="chip" data-key="gender" data-val="nd">Preferisco non dirlo</button>
-      </div>
-    </section>
-
-    <section class="section">
-      <h3>Età</h3>
-      <div class="choices" id="age">
-        <button class="chip" data-key="age" data-val="<18">&lt;18</button>
-        <button class="chip" data-key="age" data-val="18-25">18–25</button>
-        <button class="chip" data-key="age" data-val="26-35">26–35</button>
-        <button class="chip" data-key="age" data-val=">35">&gt;35</button>
-      </div>
-    </section>
-
-    <section class="section">
-      <h3>In quale fase ti trovi?</h3>
-      <div class="choices" id="phase">
-        <button class="chip" data-key="phase" data-val="studio">Studio</button>
-        <button class="chip" data-key="phase" data-val="carriera">Carriera</button>
-        <button class="chip" data-key="phase" data-val="relazioni">Relazioni</button>
-      </div>
-    </section>
-
-    <section class="section">
-      <h3>Cosa ti interessa esplorare?</h3>
-      <div class="choices" id="time">
-        <button class="chip" data-key="time" data-val="past">Passato</button>
-        <button class="chip" data-key="time" data-val="future">Futuro</button>
-      </div>
-    </section>
-
-    <section class="section">
-      <h3>Da dove vieni?</h3>
-      <input id="city" class="input" placeholder="Città / Paese" />
-    </section>
-
-    <section class="section">
-      <h3>Qualcosa in più su di te? (opzionale)</h3>
-      <textarea id="notes" class="input" rows="3" placeholder="Obiettivi, contesto, limiti di tempo…"></textarea>
-    </section>
-
-    <div class="cta-wrap">
-      <button id="nextBtn" class="cta" disabled>CONTINUA</button>
+    <!-- HERO -->
+    <div class="hero">
+      <img id="hero" alt="Due porte illuminate" loading="eager" decoding="async" />
     </div>
-    <p class="hint">Swipe → per andare avanti · Swipe ← per tornare indietro</p>
+
+    <!-- RIEPILOGO SCELTA -->
+    <div class="breadcrumbs" id="crumbs"> </div>
+
+    <h1>LA TUA DOMANDA</h1>
+
+    <!-- FORM -->
+    <form id="questionForm" class="card" novalidate>
+      <div class="label">Scrivi la tua domanda What?f…</div>
+      <textarea id="questionInput" placeholder="Es. Se fossi rimasto a L’Aquila?"></textarea>
+      <div class="submit-wrap">
+        <button id="submitBtn" class="btn" type="submit">Continua</button>
+      </div>
+    </form>
+
+    <!-- RISPOSTA -->
+    <div id="aiResponse" class="out" style="display:none;"></div>
+
+    <!-- AZIONI -->
+    <div class="actions">
+      <button class="chip" id="likeBtn">👍 Like</button>
+      <button class="chip" id="dislikeBtn">👎 Dislike</button>
+      <button class="chip" id="shareBtn">📤 Condividi</button>
+    </div>
+
+    <div class="hint">Swipe ← per tornare · Swipe → per avanzare (se possibile)</div>
   </main>
 
+  <!-- Immagine: metodo robusto -->
   <script>
-    // immagine (metodo consolidato)
-    (async function(){
-      const hero=document.getElementById('hero');
-      const tries=['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
+    (async function loadHero(){
+      const hero = document.getElementById('hero');
+      const tries = ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
       for(const u of tries){
-        try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){hero.src=u+'?v='+Date.now();return;}}catch(e){}
+        try{
+          const r = await fetch(u,{cache:'no-store'});
+          if(r.ok){ hero.src = u + '?v=' + Date.now(); return; }
+        }catch(e){}
       }
+      hero.alt = 'Immagine non trovata';
     })();
+  </script>
 
-    // lettura preferenze dalla home (se servono)
-    const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}'); // {periodo, stile}
+  <!-- Logica: prefs, submit a /api/ask, swipe, azioni -->
+  <script>
+    // --- Prefs dal localStorage per breadcrumb e payload ---
+    const prefs = JSON.parse(localStorage.getItem('whatif_prefs') || '{}'); // { periodo: 'past'|'future', stile: 'whatif'|'wtf' }
+    const mapPeriodo = { past:'Passato', future:'Futuro' };
+    const mapStile   = { whatif:'What if (plausibile)', wtf:'What the F (ironico)' };
+    document.getElementById('crumbs').innerHTML =
+      `${prefs.periodo ? mapPeriodo[prefs.periodo] : '—'} · <b>${prefs.stile ? mapStile[prefs.stile] : '—'}</b>`;
 
-    // stato utente
-    const user = JSON.parse(localStorage.getItem('whatif_user')||'{}');
-    const requiredKeys = ['who','gender','age','phase','time']; // campi minimi
+    const form   = document.getElementById('questionForm');
+    const input  = document.getElementById('questionInput');
+    const out    = document.getElementById('aiResponse');
+    const submit = document.getElementById('submitBtn');
 
-    function markSelected(containerId, key){
-      const el=document.getElementById(containerId);
-      el.addEventListener('click', (e)=>{
-        const b=e.target.closest('.chip'); if(!b) return;
-        el.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
-        b.classList.add('selected'); user[key]=b.dataset.val; saveAndCheck();
-      });
-      // restore
-      if(user[key]){
-        const c=el.querySelector(`.chip[data-val="${CSS.escape(user[key])}"]`);
-        c?.classList.add('selected');
+    function showOut(text, ok=true){
+      out.style.display='block';
+      out.classList.remove('ok','err');
+      out.classList.add(ok ? 'ok' : 'err');
+      out.textContent = text;
+    }
+
+    // --- Submit a /api/ask ---
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const question = (input.value || '').trim();
+      if(!question){ input.focus(); return; }
+
+      submit.disabled = true;
+      showOut('🤖 Sto pensando…', true);
+
+      try{
+        const res = await fetch('/api/ask', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({
+            question,
+            mode: prefs.stile || 'whatif',
+            user: { periodo: prefs.periodo || null }
+          })
+        });
+
+        const raw = await res.text();
+        let data; try{ data = JSON.parse(raw) } catch{ data = { reply: raw } }
+
+        if(!res.ok){
+          showOut(`⚠️ Errore ${res.status}: ${data.error || raw}`, false);
+        }else{
+          showOut(data.reply || 'Nessuna risposta ricevuta.', true);
+        }
+      }catch(err){
+        showOut('⚠️ Errore di rete nel contattare la AI.', false);
+      }finally{
+        submit.disabled = false;
       }
+    });
+
+    // --- Azioni: like/dislike/share (locali) ---
+    document.getElementById('likeBtn').addEventListener('click', ()=>toast('Grazie per il feedback! 👍'));
+    document.getElementById('dislikeBtn').addEventListener('click', ()=>toast('Ricevuto. Miglioreremo! 👀'));
+    document.getElementById('shareBtn').addEventListener('click', async ()=>{
+      const text = out.textContent?.trim() || '';
+      try{
+        if(navigator.share){
+          await navigator.share({ title:'What?f', text, url: location.href });
+        }else{
+          await navigator.clipboard.writeText(text || location.href);
+          toast('Copiato! 📋');
+        }
+      }catch(_){}
+    });
+
+    function toast(msg){
+      const t = document.createElement('div');
+      t.className='toast';
+      t.textContent=msg;
+      document.body.appendChild(t);
+      setTimeout(()=>{ t.remove() }, 1600);
     }
-    ['who','gender','age','phase','time'].forEach(k=>markSelected(k,k));
 
-    // se dalla home era stato scelto periodo, pre-seleziona
-    if (prefs.periodo && !user.time) {
-      const pre = document.querySelector(`#time .chip[data-val="${prefs.periodo}"]`);
-      pre?.click();
-    }
-
-    const city=document.getElementById('city');
-    const notes=document.getElementById('notes');
-    city.value=user.city||''; notes.value=user.notes||'';
-    city.addEventListener('input', saveAndCheck);
-    notes.addEventListener('input', saveAndCheck);
-
-    const nextBtn=document.getElementById('nextBtn');
-    function saveAndCheck(){
-      user.city=city.value.trim(); user.notes=notes.value.trim();
-      localStorage.setItem('whatif_user', JSON.stringify(user));
-      const ok = requiredKeys.every(k=>!!user[k]);
-      nextBtn.disabled=!ok;
-      return ok;
-    }
-    saveAndCheck();
-
-    function goNext(){
-      if(!saveAndCheck()){
-        nextBtn.animate([{transform:'translateY(0)'},{transform:'translateY(2px)'},{transform:'translateY(0)'}],{duration:180});
-        return;
-      }
-      window.location.href='fifth.html';
-    }
-    nextBtn.addEventListener('click', goNext);
-
-    // swipe: ← back · → next (listener sul document, non overlay che blocca i tap)
+    // --- Swipe: ← back · → submit (se presente testo) ---
     (function(){
-      let sx=0, sy=0, dx=0, dy=0, start=false, TH=45;
-      document.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;start=true;},{passive:true});
-      document.addEventListener('touchmove',e=>{if(!start)return;const t=e.touches[0];dx=t.clientX-sx;dy=t.clientY-sy;},{passive:true});
-      document.addEventListener('touchend',()=>{if(!start)return;start=false;
+      let sx=0, sy=0, dx=0, dy=0, start=false, TH=55;
+      document.addEventListener('touchstart',e=>{
+        const t=e.touches[0]; sx=t.clientX; sy=t.clientY; start=true;
+      },{passive:true});
+      document.addEventListener('touchmove',e=>{
+        if(!start) return; const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy;
+      },{passive:true});
+      document.addEventListener('touchend',()=>{
+        if(!start) return; start=false;
         if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){
-          if(dx>0){ history.back(); } else { goNext(); }
+          if(dx>0){ // swipe right
+            if((input.value||'').trim()){
+              form.requestSubmit(); // invia solo se c’è una domanda
+            } else {
+              toast('Scrivi una domanda per continuare →');
+            }
+          }else{ // swipe left
+            history.back();
+          }
         }
         sx=sy=dx=dy=0;
       },{passive:true});
