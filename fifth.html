@@ -1,85 +1,54 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – Risultato</title>
-  <meta name="theme-color" content="#0A0F14" />
-  <meta http-equiv="Cache-Control" content="no-store, max-age=0, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-  <style>
-    :root{--bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent-dark:#00B5CC}
-    *{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{max-width:920px;margin:0 auto;padding:14px}
-    .top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-    .back{background:#0f1820;border:1px solid #22313a;color:#cfe6eb;border-radius:12px;padding:8px 12px;cursor:pointer}
-    .thumb{width:86px;height:86px;border-radius:14px;overflow:hidden;background:#0c141b;display:flex;align-items:center;justify-content:center}
-    .thumb img{max-width:100%;height:auto;display:block}
-    .subtitle{color:#8fb8c3;margin:4px 0 10px}
-    h1{margin:6px 0 12px;font-size:clamp(26px,5.5vw,36px)}
-    .card{background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px;line-height:1.55}
-    .cta{display:inline-block;margin-top:8px;background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329;
-      font-weight:900;border:none;border-radius:24px;padding:10px 16px;min-width:160px;box-shadow:0 0 14px rgba(0,181,204,.5)}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>What?f — Risultato</title>
+<meta name="theme-color" content="#0A0F14"/>
+<style>
+  :root{--bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent2:#00B5CC}
+  *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{max-width:860px;margin:0 auto;padding:16px 14px 28px}
+  .top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .thumb{width:84px;height:auto;border-radius:10px;filter:drop-shadow(0 6px 18px rgba(0,0,0,.45))}
+  .back{appearance:none;border:0;background:#0f1820;color:#d8ebef;border-radius:12px;padding:8px 12px;cursor:pointer}
+  h1{margin:6px 0 10px;font-size:clamp(26px,6vw,40px)}
+  .card{background:var(--card);border-radius:16px;padding:16px;margin:12px 0}
+  .muted{color:var(--muted);font-size:14px}
+  .cta{display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#00262f;font-weight:900;border:none;border-radius:24px;padding:10px 16px}
+</style>
 </head>
 <body>
-  <main>
-    <div class="top">
-      <button id="backBtn" class="back">← Indietro</button>
-      <div class="thumb"><img id="hero" alt="Porte" loading="eager" decoding="async" /></div>
-    </div>
+<main>
+  <div class="top">
+    <button class="back" onclick="history.back()">← Indietro</button>
+    <img id="thumb" class="thumb" alt="Miniatura What?f"/>
+    <div class="muted" id="meta"></div>
+  </div>
 
-    <div class="subtitle" id="sub"></div>
-    <h1>Risultato</h1>
+  <h1>Risultato</h1>
 
-    <div id="answer" class="card">Sto pensando…</div>
+  <article id="answer" class="card">Sto preparando la tua risposta…</article>
 
-    <div class="card" style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="cta" id="like">👍 Like</button>
-      <button class="cta" id="dislike">👎 Dislike</button>
-      <button class="cta" id="share">📤 Condividi</button>
-    </div>
-  </main>
+  <p class="muted">Vuoi una versione estesa e personalizzata (più dettagli, piani d’azione, alternative)? <a href="#" class="cta">Sblocca “Leggi di più”</a></p>
+</main>
 
-  <script>
-    // immagine
-    (async function(){
-      const el=document.getElementById('hero');
-      const tries=['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
-      for(const u of tries){ try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ el.src=u+'?v='+Date.now(); return; } }catch{} }
-      el.alt='Immagine non trovata';
-    })();
-
-    // dati
-    const payload = JSON.parse(sessionStorage.getItem('ask_payload')||'{}');
-    const prefs = payload.prefs || JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-    document.getElementById('sub').textContent =
-      (prefs.periodo==='past'?'Passato':'Futuro')+' • '+
-      (prefs.stile==='whatif'?'What if (plausibile)':'What the F (ironico)');
-
-    // chiamata API (fallback demo se non disponibile)
-    async function ask(){
-      const a = document.getElementById('answer');
-      try{
-        const r = await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify(payload)});
-        if(!r.ok) throw new Error('no api');
-        const data = await r.json();
-        a.textContent = (data.answer || '').trim() || 'Nessuna risposta.';
-      }catch(e){
-        a.innerHTML = `
-          <b>Anteprima demo</b><br/>
-          In base alla tua domanda: “${(payload.question||'…') }” e alle scelte effettuate,
-          ecco uno scenario sintetico. Attiva la tua API per ottenere una risposta generata dall’AI.`;
-      }
+<script>
+  (async function(){
+    const el=document.getElementById('thumb');
+    for (const u of ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png']){
+      try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){el.src=u+'?v='+Date.now(); return;}}catch(_){}
     }
-    ask();
+    el.alt='Immagine non trovata';
+  })();
 
-    // back esplicito
-    document.getElementById('backBtn').addEventListener('click',()=>{ location.href='/fourth.html'; });
-
-    window.addEventListener('pageshow',e=>{ if(e.persisted) location.reload(); });
-  </script>
+  const saved = JSON.parse(localStorage.getItem('whatif_answer')||'null');
+  if(saved){
+    document.getElementById('meta').textContent = saved.meta || '';
+    document.getElementById('answer').textContent = saved.answer || '—';
+  }else{
+    document.getElementById('answer').textContent = 'Nessun risultato disponibile.';
+  }
+</script>
 </body>
 </html>
