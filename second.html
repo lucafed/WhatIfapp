@@ -1,110 +1,145 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – Parlami di te</title>
-  <meta name="theme-color" content="#0A0F14" />
-  <meta http-equiv="Cache-Control" content="no-store, max-age=0, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-  <style>
-    :root{--bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent-dark:#00B5CC}
-    *{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{max-width:920px;margin:0 auto;padding:14px}
-    .top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-    .back{background:#0f1820;border:1px solid #22313a;color:#cfe6eb;border-radius:12px;padding:8px 12px;cursor:pointer}
-    .thumb{width:86px;height:86px;border-radius:14px;overflow:hidden;background:#0c141b;display:flex;align-items:center;justify-content:center}
-    .thumb img{max-width:100%;height:auto;display:block}
-    h1{margin:6px 0 12px;font-size:clamp(28px,6vw,42px);letter-spacing:.5px}
-    .card{background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px}
-    .row{display:flex;flex-wrap:wrap;gap:10px}
-    .chip{background:#17212a;color:#cfe6eb;border:none;border-radius:16px;padding:12px 16px;font-weight:700;cursor:pointer}
-    .chip.selected{background:linear-gradient(180deg,#00bcd4,#00E0FF);color:#002329}
-    .cta{display:block;margin:10px auto 0;background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329;
-      font-weight:900;border:none;border-radius:24px;padding:12px 18px;min-width:210px;box-shadow:0 0 14px rgba(0,181,204,.5)}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>What?f – Parlami di te</title>
+<meta name="theme-color" content="#0A0F14"/>
+<link rel="preload" as="image" href="/third-hero.png"/>
+<style>
+  :root{--bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent2:#00B5CC}
+  *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{max-width:940px;margin:0 auto;padding:16px 14px 28px}
+  .top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .back{appearance:none;border:0;background:#0f1820;color:#d8ebef;border-radius:12px;padding:8px 12px;cursor:pointer}
+  .banner{background:#0c141b;border-radius:16px;padding:10px;margin:8px 0 16px}
+  .banner img{width:100%;height:auto;display:block;border-radius:12px;filter:drop-shadow(0 6px 18px rgba(0,0,0,.45))}
+  h1{margin:6px 0 14px;font-size:clamp(26px,6vw,40px)}
+  .section{background:var(--card);border-radius:16px;padding:14px;margin:12px 0}
+  .section h2{margin:0 0 10px;font-size:clamp(18px,4.5vw,22px)}
+  .group{display:flex;flex-wrap:wrap;gap:10px}
+  .chip{appearance:none;border:1px solid #1d2b34;background:#0f1820;color:#d8ebef;border-radius:999px;padding:10px 14px;cursor:pointer;font-weight:600}
+  .chip.selected{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#00262f;border-color:transparent;box-shadow:0 0 12px rgba(0,224,255,.30)}
+  .cta-wrap{display:flex;justify-content:center;margin-top:10px}
+  .cta{display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#00262f;font-weight:900;border:none;border-radius:24px;padding:12px 18px;min-width:210px;box-shadow:0 0 14px rgba(0,181,204,.45),0 0 30px rgba(0,181,204,.25);cursor:pointer}
+  .cta[disabled]{opacity:.55;cursor:not-allowed;box-shadow:none}
+  .muted{color:var(--muted);font-size:13px}
+  .err{color:#ff7e7e;font-size:13px;margin-top:8px;display:none}
+</style>
 </head>
 <body>
-  <main>
-    <div class="top">
-      <button id="backBtn" class="back">← Indietro</button>
-      <div class="thumb"><img id="hero" alt="Porte" loading="eager" decoding="async" /></div>
+<main>
+  <div class="top">
+    <button class="back" onclick="history.back()">← Indietro</button>
+  </div>
+
+  <div class="banner">
+    <img id="heroMini" alt="What?f — due porte, scegli la tua via"/>
+  </div>
+
+  <h1><span class="muted">Parlami di</span> <strong>TE</strong></h1>
+
+  <section class="section">
+    <h2>Chi sei?</h2>
+    <div class="group" id="g-who" data-key="who" data-required>
+      <button class="chip" data-val="studente">Studente</button>
+      <button class="chip" data-val="lavoratore">Lavoratore</button>
+      <button class="chip" data-val="creativo">Creativo</button>
     </div>
+  </section>
 
-    <h1><span style="color:var(--accent)">Parlami</span> di te</h1>
-
-    <div class="card">
-      <h3>Chi sei?</h3>
-      <div class="row" id="who">
-        <button class="chip" data-k="who" data-v="studente">Studente</button>
-        <button class="chip" data-k="who" data-v="lavoratore">Lavoratore</button>
-        <button class="chip" data-k="who" data-v="creativo">Creativo</button>
-      </div>
+  <section class="section">
+    <h2>Sesso</h2>
+    <div class="group" id="g-sex" data-key="sex" data-required>
+      <button class="chip" data-val="femmina">Femmina</button>
+      <button class="chip" data-val="maschio">Maschio</button>
+      <button class="chip" data-val="altro">Altro</button>
+      <button class="chip" data-val="nd">Preferisco non dirlo</button>
     </div>
+  </section>
 
-    <div class="card">
-      <h3>Sesso</h3>
-      <div class="row" id="sex">
-        <button class="chip" data-k="sex" data-v="femmina">Femmina</button>
-        <button class="chip" data-k="sex" data-v="maschio">Maschio</button>
-        <button class="chip" data-k="sex" data-v="altro">Altro</button>
-        <button class="chip" data-k="sex" data-v="nd">Preferisco non dirlo</button>
-      </div>
+  <section class="section">
+    <h2>Età</h2>
+    <div class="group" id="g-age" data-key="age" data-required>
+      <button class="chip" data-val="<18">&lt;18</button>
+      <button class="chip" data-val="18-25">18–25</button>
+      <button class="chip" data-val="26-35">26–35</button>
+      <button class="chip" data-val=">35">&gt;35</button>
     </div>
+  </section>
 
-    <div class="card">
-      <h3>Età</h3>
-      <div class="row" id="age">
-        <button class="chip" data-k="age" data-v="<18">&lt;18</button>
-        <button class="chip" data-k="age" data-v="18-25">18–25</button>
-        <button class="chip" data-k="age" data-v="26-35">26–35</button>
-        <button class="chip" data-k="age" data-v=">35">&gt;35</button>
-      </div>
+  <section class="section">
+    <h2>In quale fase ti trovi?</h2>
+    <div class="group" id="g-phase" data-key="phase" data-required>
+      <button class="chip" data-val="studio">Studio</button>
+      <button class="chip" data-val="carriera">Carriera</button>
+      <button class="chip" data-val="relazioni">Relazioni</button>
     </div>
+  </section>
 
-    <div class="card">
-      <h3>In quale fase ti trovi?</h3>
-      <div class="row" id="phase">
-        <button class="chip" data-k="phase" data-v="studio">Studio</button>
-        <button class="chip" data-k="phase" data-v="carriera">Carriera</button>
-        <button class="chip" data-k="phase" data-v="relazioni">Relazioni</button>
-      </div>
-    </div>
+  <p id="msg" class="err">Seleziona almeno un’opzione in ogni sezione per continuare.</p>
 
-    <button id="next" class="cta">Continua</button>
-  </main>
+  <div class="cta-wrap">
+    <button id="go" class="cta" disabled>Continua</button>
+  </div>
 
-  <script>
-    // immagine piccola
-    (async function(){
-      const el=document.getElementById('hero');
-      const tries=['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
-      for(const u of tries){ try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ el.src=u+'?v='+Date.now(); return; } }catch{} }
-      el.alt='Immagine non trovata';
-    })();
+  <p class="muted" style="text-align:center;margin-top:12px">I dati servono solo a personalizzare la risposta dell’AI.</p>
+</main>
 
-    // chips -> salva in localStorage
-    function wire(id){
-      const g=document.getElementById(id);
-      g.addEventListener('click',e=>{
-        const b=e.target.closest('.chip'); if(!b) return;
-        g.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
-        b.classList.add('selected');
-        const st=JSON.parse(localStorage.getItem('profile')||'{}');
-        st[b.dataset.k]=b.dataset.v;
-        localStorage.setItem('profile',JSON.stringify(st));
-      });
+<script>
+  // Immagine: metodo robusto (stesso di sempre)
+  (async function(){
+    const el=document.getElementById('heroMini');
+    for (const u of ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png']){
+      try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){el.src=u+'?v='+Date.now(); return;}}catch(_){}
     }
-    ['who','sex','age','phase'].forEach(wire);
+    el.alt='Immagine non trovata';
+  })();
 
-    // back esplicito
-    document.getElementById('backBtn').addEventListener('click',()=>{ location.href='/index.html'; });
+  // Stato profilo
+  const state = JSON.parse(localStorage.getItem('whatif_profile')||'{}');
+  const groups = Array.from(document.querySelectorAll('.group[data-required]'));
+  const go = document.getElementById('go');
+  const msg = document.getElementById('msg');
 
-    document.getElementById('next').addEventListener('click',()=>{ location.href='/fourth.html'; });
+  function markSelected(g, val){
+    g.querySelectorAll('.chip').forEach(c=>c.classList.toggle('selected', c.dataset.val===val));
+  }
 
-    // anti-bfcache
-    window.addEventListener('pageshow',e=>{ if(e.persisted) location.reload(); });
-  </script>
+  function restore(){
+    groups.forEach(g=>{
+      const key=g.dataset.key;
+      const val=state[key];
+      if(val){ markSelected(g,val); }
+    });
+    checkReady();
+  }
+
+  function checkReady(){
+    const ok = groups.every(g=> !!state[g.dataset.key]);
+    go.disabled = !ok;
+    msg.style.display = ok ? 'none' : 'block';
+  }
+
+  groups.forEach(g=>{
+    g.addEventListener('click', e=>{
+      const b=e.target.closest('.chip'); if(!b) return;
+      const key=g.dataset.key, val=b.dataset.val;
+      state[key]=val;
+      localStorage.setItem('whatif_profile', JSON.stringify(state));
+      markSelected(g,val);
+      checkReady();
+    });
+  });
+
+  go.addEventListener('click', ()=>{
+    // doppio check: se manca qualcosa, non si va avanti
+    if(go.disabled){ msg.style.display='block'; return; }
+    // avanti alla pagina della domanda
+    location.href='fourth.html';
+  });
+
+  restore();
+</script>
 </body>
 </html>
