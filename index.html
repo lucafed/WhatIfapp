@@ -10,48 +10,27 @@
     :root{
       --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
       --accent:#00E0FF; --accent-dark:#00B5CC;
-      --yellow:#f7b23b; --teal:#00d0e6;
-      --chip:#17212a; --chip-text:#002329;
+      --yellow:#f7b23b; --teal:#00d0e6; --chip:#17212a; --chip-text:#002329;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;
-      padding:14px 14px 26px; text-align:center;}
-
-    .hero{width:min(100%,980px);background:#0c141b;border-radius:22px;padding:12px 12px 16px;
-      box-shadow:0 10px 28px rgba(0,0,0,.35)}
-    .hero img{width:100%;height:auto;border-radius:16px;display:block;
-      filter:drop-shadow(0 10px 28px rgba(0,0,0,.42))}
-
+    *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:14px 14px 26px;text-align:center}
+    .hero{width:min(100%,980px);background:#0c141b;border-radius:22px;padding:12px 12px 16px;box-shadow:0 10px 28px rgba(0,0,0,.35)}
+    .hero img{width:100%;height:auto;border-radius:16px;display:block;filter:drop-shadow(0 10px 28px rgba(0,0,0,.42))}
     h1{margin:4px 0 0;width:min(100%,980px);font-size:clamp(26px,6vw,40px)}
     h1 span{color:var(--accent)}
     h2{margin:2px 0 0;width:min(100%,980px);font-size:clamp(18px,4.5vw,24px);color:var(--accent)}
-
-    .lead{width:min(100%,980px);color:#d7e8ec;margin-top:-2px;
-      font-size:clamp(14px,4vw,18px);line-height:1.45}
+    .lead{width:min(100%,980px);color:#d7e8ec;margin-top:-2px;font-size:clamp(14px,4vw,18px);line-height:1.45}
     .group{width:min(100%,980px);display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
-    .chip{appearance:none;border:none;background:var(--chip);color:#cfe6eb;
-      padding:12px 16px;border-radius:16px;font-weight:800;cursor:pointer;
-      transition:transform .06s ease, box-shadow .18s ease, background .18s ease}
+    .chip{appearance:none;border:none;background:var(--chip);color:#cfe6eb;padding:12px 16px;border-radius:16px;font-weight:800;cursor:pointer;transition:transform .06s ease, box-shadow .18s ease, background .18s ease}
     .chip:active{transform:translateY(1px)}
-    .chip.selected{background:linear-gradient(180deg,#00bcd4,#00E0FF);color:var(--chip-text);
-      box-shadow:0 0 12px rgba(0,224,255,.35)}
+    .chip.selected{background:linear-gradient(180deg,#00bcd4,#00E0FF);color:var(--chip-text);box-shadow:0 0 12px rgba(0,224,255,.35)}
     .chip.yellow.selected{background:linear-gradient(180deg,#ffcd66,#f7b23b);color:#3a2a00}
     .chip.teal.selected{background:linear-gradient(180deg,#18e1ff,#00c0d8);color:#002329}
-
     .badge{margin-top:-2px;width:min(100%,980px);display:flex;justify-content:center}
-    .badge span{background:#0f1820;border:1px solid #1d2b34;color:var(--muted);
-      padding:8px 12px;border-radius:999px;font-size:13px}
-
-    .cta{margin-top:4px;display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent-dark));
-      color:#002329;font-weight:900;border:none;border-radius:24px;padding:12px 18px;min-width:210px;
-      box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25);
-      cursor:pointer;transition:filter .16s ease, transform .08s ease}
-    .cta:active{transform:translateY(1px)}
-    .cta[disabled]{background:#29404a;color:#7fa1aa;cursor:not-allowed;box-shadow:none}
+    .badge span{background:#0f1820;border:1px solid #1d2b34;color:var(--muted);padding:8px 12px;border-radius:999px;font-size:13px}
+    .cta{margin-top:4px;display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329;font-weight:900;border:none;border-radius:24px;padding:12px 18px;min-width:210px;box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25);cursor:pointer;transition:filter .16s ease, transform .08s ease}
+    .cta:active{transform:translateY(1px)} .cta[disabled]{background:#29404a;color:#7fa1aa;cursor:not-allowed;box-shadow:none}
     .cta-wrap{width:min(100%,980px);display:flex;justify-content:center}
-
     footer{width:min(100%,980px);color:var(--muted);font-size:12px;margin-top:2px}
     footer a{color:var(--accent);text-decoration:none}
   </style>
@@ -59,115 +38,55 @@
 <body>
   <main>
     <h1>Scopri il tuo <span>What?f</span></h1>
-
-    <div class="hero">
-      <img id="hero" alt="Due porte illuminate: scegli la tua via" loading="eager" decoding="async" />
-    </div>
-
+    <div class="hero"><img id="hero" alt="Due porte illuminate: scegli la tua via" loading="eager" decoding="async" /></div>
     <h2>CHOOSE YOUR WAY</h2>
-
     <p class="lead">
       Scegli se guardare al <strong>passato</strong> o al <strong>futuro</strong> e lascia che la tua domanda apra nuove possibilità.<br><br>
       <strong style="color:#00E0FF">What?f</strong> ti farà esplorare scenari realistici e riflessivi, basati su scelte plausibili.<br>
       <strong style="color:#00E0FF">What the F?!</strong> ti farà vivere visioni ironiche, creative e imprevedibili.
     </p>
-
-    <!-- Scelta 1: periodo -->
     <div class="group" id="periodGroup" aria-label="Periodo">
       <button class="chip" data-key="periodo" data-val="past">Passato</button>
       <button class="chip" data-key="periodo" data-val="future">Futuro</button>
     </div>
-
-    <!-- Scelta 2: stile -->
     <div class="group" id="styleGroup" aria-label="Stile">
       <button class="chip yellow" data-key="stile" data-val="whatif">What if</button>
       <button class="chip teal" data-key="stile" data-val="wtf">What the F</button>
     </div>
-
-    <!-- micro-badge riepilogo -->
-    <div class="badge" id="badge" style="display:none">
-      <span id="badgeText">Selezionato:</span>
-    </div>
-
-    <div class="cta-wrap">
-      <button id="go" class="cta" disabled>AVANTI</button>
-    </div>
-
-    <footer>
-      Continuando accetti la nostra <a href="privacy.html">Privacy Policy</a> e i
-      <a href="terms.html">Termini d’uso</a>.<br/>© 2025 What?f
-    </footer>
+    <div class="badge" id="badge" style="display:none"><span id="badgeText">Selezionato:</span></div>
+    <div class="cta-wrap"><button id="go" class="cta" disabled>AVANTI</button></div>
+    <footer>Continuando accetti la nostra <a href="privacy.html">Privacy Policy</a> e i <a href="terms.html">Termini d’uso</a>.<br/>© 2025 What?f</footer>
   </main>
 
-  <!-- immagine: metodo robusto -->
   <script>
     (async function loadHero(){
       const hero=document.getElementById('hero');
       const tries=['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
-      for(const u of tries){
-        try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ hero.src=u+'?v='+Date.now(); return; } }
-        catch(e){}
-      }
+      for(const u of tries){ try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){hero.src=u+'?v='+Date.now(); return;} }catch(e){} }
       hero.alt='Immagine non trovata';
     })();
   </script>
-
-  <!-- logica selezioni + CTA gated + badge + swipe -->
   <script>
-    const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}'); 
-    const groups = [document.getElementById('periodGroup'), document.getElementById('styleGroup')];
-    const badge = document.getElementById('badge');
-    const badgeText = document.getElementById('badgeText');
-    const go = document.getElementById('go');
-
+    const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+    const badge = document.getElementById('badge'); const badgeText = document.getElementById('badgeText'); const go = document.getElementById('go');
     function updateBadge(){
-      const a = state.periodo === 'past' ? 'Passato' :
-                state.periodo === 'future' ? 'Futuro' : null;
-      const b = state.stile === 'whatif' ? 'What if' :
-                state.stile === 'wtf'    ? 'What the F' : null;
-      if(a || b){
-        badge.style.display='flex';
-        badgeText.textContent = 'Selezionato: ' + [a,b].filter(Boolean).join(' • ');
-      }else{
-        badge.style.display='none';
-      }
+      const a = state.periodo==='past'?'Passato':state.periodo==='future'?'Futuro':null;
+      const b = state.stile==='whatif'?'What if':state.stile==='wtf'?'What the F':null;
+      if(a||b){ badge.style.display='flex'; badgeText.textContent='Selezionato: '+[a,b].filter(Boolean).join(' • ');} else { badge.style.display='none';}
     }
     function checkReady(){ go.disabled = !(state.periodo && state.stile); }
-
-    function wireGroup(g){
-      g.addEventListener('click', (e)=>{
-        const b=e.target.closest('.chip'); if(!b) return;
-        const key=b.dataset.key;
-        g.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
-        b.classList.add('selected');
-        state[key]=b.dataset.val;
-        localStorage.setItem('whatif_prefs', JSON.stringify(state));
-        updateBadge(); checkReady();
-      });
-    }
-    groups.forEach(wireGroup);
-
-    if(state.periodo){
-      document.querySelector(`#periodGroup .chip[data-val="${state.periodo}"]`)?.classList.add('selected');
-    }
-    if(state.stile){
-      document.querySelector(`#styleGroup .chip[data-val="${state.stile}"]`)?.classList.add('selected');
-    }
+    function wire(id){ const g=document.getElementById(id); g.addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b)return; const key=b.dataset.key; g.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected')); b.classList.add('selected'); state[key]=b.dataset.val; localStorage.setItem('whatif_prefs',JSON.stringify(state)); updateBadge(); checkReady();});}
+    wire('periodGroup'); wire('styleGroup');
+    if(state.periodo) document.querySelector(`#periodGroup .chip[data-val="${state.periodo}"]`)?.classList.add('selected');
+    if(state.stile) document.querySelector(`#styleGroup .chip[data-val="${state.stile}"]`)?.classList.add('selected');
     updateBadge(); checkReady();
-
-    go.addEventListener('click', ()=>{ if(go.disabled) return; location.href='fourth.html'; });
-
-    (function(){
-      let sx=0, sy=0, dx=0, dy=0, start=false, TH=55;
+    go.addEventListener('click', ()=>{ if(!go.disabled) location.href='second.html'; });
+    (function(){ let sx=0,sy=0,dx=0,dy=0,start=false,TH=55;
       document.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;start=true;},{passive:true});
-      document.addEventListener('touchmove', e=>{ if(!start) return; const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy; },{passive:true});
-      document.addEventListener('touchend', ()=>{
-        if(!start) return; start=false;
-        if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){
-          if(!go.disabled) location.href='fourth.html';
-        }
-        sx=sy=dx=dy=0;
-      },{passive:true});
+      document.addEventListener('touchmove',e=>{if(!start)return;const t=e.touches[0];dx=t.clientX-sx;dy=t.clientY-sy;},{passive:true});
+      document.addEventListener('touchend',()=>{ if(!start)return; start=false;
+        if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){ if(!go.disabled) location.href='second.html'; }
+        sx=sy=dx=dy=0; },{passive:true});
     })();
   </script>
 </body>
