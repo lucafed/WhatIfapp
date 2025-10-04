@@ -5,75 +5,102 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f – La tua domanda</title>
   <meta name="theme-color" content="#0A0F14" />
+  <meta http-equiv="Cache-Control" content="no-store, max-age=0, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <style>
-    :root{
-      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
-      --accent:#00E0FF; --accent-dark:#00B5CC;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{display:flex;flex-direction:column;align-items:center;gap:14px;
-      padding:14px;text-align:center;}
-
-    .top{width:min(100%,860px);display:flex;align-items:center;gap:10px;justify-content:space-between}
-    .thumb{width:96px;height:64px;border-radius:10px;background:#0c141b;
-      display:flex;align-items:center;justify-content:center;overflow:hidden;
-      box-shadow:0 6px 18px rgba(0,0,0,.28)}
-    .thumb img{width:100%;height:auto;display:block}
-    .back a{display:inline-block;background:#0f1820;border:1px solid #20313a;color:#cfe6eb;
-      padding:8px 12px;border-radius:12px;text-decoration:none;font-weight:700;}
-
-    h1{margin:4px 0;font-size:clamp(26px,6vw,40px)}
-    .card{background:var(--card);padding:14px;border-radius:18px;
-      box-shadow:0 8px 24px rgba(0,0,0,.28);width:min(100%,860px);}
-    textarea{width:100%;min-height:100px;border:none;border-radius:14px;
-      padding:10px;background:#17212a;color:#E6F2F5;font-size:16px;resize:none;}
-    button{background:linear-gradient(180deg,var(--accent),var(--accent-dark));
-      color:#002329;font-weight:900;border:none;border-radius:24px;padding:12px 18px;
-      box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25);
-      cursor:pointer;margin-top:10px;}
-    button:active{transform:translateY(1px)}
+    :root{--bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent-dark:#00B5CC}
+    *{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    main{max-width:920px;margin:0 auto;padding:14px}
+    .top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+    .back{background:#0f1820;border:1px solid #22313a;color:#cfe6eb;border-radius:12px;padding:8px 12px;cursor:pointer}
+    .thumb{width:86px;height:86px;border-radius:14px;overflow:hidden;background:#0c141b;display:flex;align-items:center;justify-content:center}
+    .thumb img{max-width:100%;height:auto;display:block}
+    .subtitle{color:#8fb8c3;margin:4px 0 10px}
+    h1{margin:6px 0 12px;font-size:clamp(28px,6vw,42px);letter-spacing:.5px}
+    .card{background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px}
+    textarea,input{width:100%;background:#0f1820;color:#e6f2f5;border:1px solid #22313a;border-radius:12px;padding:12px;font-size:16px}
+    .row{display:flex;flex-wrap:wrap;gap:10px}
+    .chip{background:#17212a;color:#cfe6eb;border:none;border-radius:16px;padding:10px 14px;font-weight:700;cursor:pointer}
+    .chip.selected{background:linear-gradient(180deg,#00bcd4,#00E0FF);color:#002329}
+    .cta{display:block;margin:10px auto 0;background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329;
+      font-weight:900;border:none;border-radius:24px;padding:12px 18px;min-width:210px;box-shadow:0 0 14px rgba(0,181,204,.5)}
   </style>
 </head>
 <body>
   <main>
     <div class="top">
-      <div class="back"><a href="parlami.html">← Indietro</a></div>
-      <div class="thumb"><img id="hero" alt="Miniatura What?f" loading="eager" decoding="async" /></div>
+      <button id="backBtn" class="back">← Indietro</button>
+      <div class="thumb"><img id="hero" alt="Porte" loading="eager" decoding="async" /></div>
     </div>
 
+    <div class="subtitle" id="sub"></div>
     <h1>La tua domanda</h1>
 
     <div class="card">
       <label for="q">Scrivi la tua domanda What?f…</label>
-      <textarea id="q" placeholder="E se fossi rimasto all’Aquila?"></textarea>
-      <button id="next">Scopri</button>
+      <textarea id="q" rows="3" placeholder="Esempio: Se avessi accettato quel lavoro a Milano?"></textarea>
     </div>
+
+    <div class="card">
+      <h3>Per essere più precisi…</h3>
+      <div class="row" id="tone">
+        <button class="chip" data-v="neutro">Tono neutro</button>
+        <button class="chip" data-v="motivante">Motivante</button>
+        <button class="chip" data-v="realista">Realista</button>
+        <button class="chip" data-v="ironico">Ironico</button>
+      </div>
+      <div style="margin-top:10px;display:grid;gap:8px">
+        <input id="goal" placeholder="Obiettivo principale (opzionale)" />
+        <input id="limit" placeholder="Vincoli/tempi/budget (opzionale)" />
+      </div>
+    </div>
+
+    <button id="go" class="cta">Scopri</button>
   </main>
 
-  <!-- Immagine -->
   <script>
-    (async function loadThumb(){
-      const img=document.getElementById('hero');
+    // immagine
+    (async function(){
+      const el=document.getElementById('hero');
       const tries=['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
-      for(const u of tries){
-        try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ img.src=u+'?v='+Date.now(); return; } }
-        catch(e){}
-      }
-      img.alt='Immagine non trovata';
+      for(const u of tries){ try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ el.src=u+'?v='+Date.now(); return; } }catch{} }
+      el.alt='Immagine non trovata';
     })();
-  </script>
 
-  <script>
-    const next=document.getElementById('next');
-    const q=document.getElementById('q');
-    next.onclick=()=>{
-      const val=q.value.trim();
-      if(!val){alert('Scrivi una domanda prima di continuare.');return;}
-      localStorage.setItem('whatif_question',JSON.stringify({question:val}));
-      location.href='fifth.html';
-    };
+    // subtitle da scelte home
+    const prefs=JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+    const sub=document.getElementById('sub');
+    sub.textContent = (prefs.periodo==='past'?'Passato':'Futuro')+' • '+
+                      (prefs.stile==='whatif'?'What if (plausibile)':'What the F (ironico)');
+
+    // tone chips
+    (function(){
+      const g=document.getElementById('tone');
+      g.addEventListener('click',e=>{
+        const b=e.target.closest('.chip'); if(!b) return;
+        g.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+        b.classList.add('selected');
+      });
+    })();
+
+    // back esplicito
+    document.getElementById('backBtn').addEventListener('click',()=>{ location.href='/second.html'; });
+
+    // vai al risultato
+    document.getElementById('go').addEventListener('click',()=>{
+      const data={
+        question: document.getElementById('q').value.trim(),
+        tone: document.querySelector('#tone .chip.selected')?.dataset.v || 'neutro',
+        goal: document.getElementById('goal').value.trim(),
+        limit: document.getElementById('limit').value.trim(),
+        prefs
+      };
+      sessionStorage.setItem('ask_payload', JSON.stringify(data));
+      location.href='/fifth.html';
+    });
+
+    window.addEventListener('pageshow',e=>{ if(e.persisted) location.reload(); });
   </script>
 </body>
 </html>
