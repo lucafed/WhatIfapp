@@ -7,134 +7,71 @@
   <meta name="theme-color" content="#0A0F14" />
   <link rel="preload" as="image" href="/third-hero.png" />
   <style>
-    :root{
-      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
-      --accent:#00E0FF; --accent-dark:#00B5CC;
-    }
-    *{ box-sizing:border-box }
-    html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
+    :root{ --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA; --accent:#00E0FF; --accent-dark:#00B5CC; }
+    *{ box-sizing:border-box } html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
     main{ min-height:100%; display:flex; flex-direction:column; gap:14px; padding:14px 14px 22px }
-
-    /* Hero */
-    .hero{ width:min(100%,980px); margin:0 auto; background:#0c141b; border-radius:22px; padding:12px;
-      box-shadow:0 10px 28px rgba(0,0,0,.35) }
-    .hero img{ width:100%; height:auto; border-radius:16px; display:block;
-      filter:drop-shadow(0 10px 28px rgba(0,0,0,.42)) }
-
-    /* Riepilogo scelta */
-    .breadcrumbs{ width:min(100%,980px); margin:2px auto 0; text-align:center; color:var(--muted);
-      font-size:14px }
-    .breadcrumbs b{ color:var(--accent) }
-
+    .hero{ width:min(100%,980px); margin:0 auto; background:#0c141b; border-radius:22px; padding:12px; box-shadow:0 10px 28px rgba(0,0,0,.35) }
+    .hero img{ width:100%; height:auto; border-radius:16px; display:block; filter:drop-shadow(0 10px 28px rgba(0,0,0,.42)) }
+    .breadcrumbs{ width:min(100%,980px); margin:2px auto 0; text-align:center; color:var(--muted); font-size:14px } .breadcrumbs b{ color:var(--accent) }
     h1{ width:min(100%,980px); margin:8px auto 0; font-size:clamp(26px,6vw,40px); text-align:center }
-
-    /* Card form */
-    .card{ width:min(100%,980px); margin:0 auto; background:var(--card); border-radius:18px; padding:16px;
-      box-shadow:0 10px 24px rgba(0,0,0,.25) }
+    .card{ width:min(100%,980px); margin:0 auto; background:var(--card); border-radius:18px; padding:16px; box-shadow:0 10px 24px rgba(0,0,0,.25) }
     .label{ font-size:18px; font-weight:700; margin:2px 0 8px }
-    textarea{ width:100%; min-height:120px; border:1px solid #20303b; background:#0f1820; color:#cfe6eb;
-      border-radius:14px; padding:14px 16px; font-size:16px; outline:none }
+    textarea{ width:100%; min-height:120px; border:1px solid #20303b; background:#0f1820; color:#cfe6eb; border-radius:14px; padding:14px 16px; font-size:16px; outline:none }
     textarea:focus{ border-color:#28515e }
-
     .hint{ width:min(100%,980px); margin:6px auto 0; text-align:center; color:var(--muted); font-size:12px }
-
     .submit-wrap{ display:flex; justify-content:center; margin-top:14px }
-    .btn{ display:inline-block; border:none; border-radius:28px; padding:14px 22px; min-width:220px;
-      background:linear-gradient(180deg,var(--accent),var(--accent-dark)); color:#002329; font-weight:900;
-      box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25); cursor:pointer;
-      transition:filter .16s ease, transform .08s ease }
-    .btn:active{ transform:translateY(1px) }
-    .btn[disabled]{ background:#29404a; color:#7fa1aa; cursor:not-allowed; box-shadow:none }
+    .btn{ display:inline-block; border:none; border-radius:28px; padding:14px 22px; min-width:220px; background:linear-gradient(180deg,var(--accent),var(--accent-dark)); color:#002329; font-weight:900; box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25); cursor:pointer; transition:filter .16s ease, transform .08s ease }
+    .btn:active{ transform:translateY(1px) } .btn[disabled]{ background:#29404a; color:#7fa1aa; cursor:not-allowed; box-shadow:none }
   </style>
 </head>
 <body>
+  <script>
+    const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+    const prof  = JSON.parse(localStorage.getItem('whatif_user')||'{}');
+    if(!prefs.periodo || !prefs.stile) location.href='index.html';
+  </script>
   <main>
-    <!-- HERO -->
-    <div class="hero">
-      <img id="hero" alt="Due porte illuminate" loading="eager" decoding="async" />
-    </div>
-
-    <!-- RIEPILOGO SCELTE (da home) -->
+    <div class="hero"><img id="hero" alt="Due porte illuminate" loading="eager" decoding="async" /></div>
     <div class="breadcrumbs" id="crumbs"></div>
-
     <h1>LA TUA DOMANDA</h1>
 
-    <!-- FORM (solo salvataggio e avanti) -->
     <form id="questionForm" class="card" novalidate>
       <div class="label">Scrivi la tua domanda What?f…</div>
       <textarea id="questionInput" placeholder="Es. Se nel 2021 avessi cambiato lavoro? / Se tra 6 mesi mi trasferissi a Milano?"></textarea>
-
-      <div class="submit-wrap">
-        <button id="nextBtn" class="btn" type="submit" disabled>Continua</button>
-      </div>
+      <div class="submit-wrap"><button id="nextBtn" class="btn" type="submit" disabled>Continua</button></div>
       <p class="hint">Swipe ← per tornare · Swipe → per continuare</p>
     </form>
   </main>
 
-  <!-- Immagine: metodo robusto -->
   <script>
     (async function loadHero(){
-      const hero = document.getElementById('hero');
-      const tries = ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
-      for(const u of tries){
-        try{
-          const r = await fetch(u,{cache:'no-store'});
-          if(r.ok){ hero.src = u + '?v=' + Date.now(); return; }
-        }catch(e){}
-      }
-      hero.alt = 'Immagine non trovata';
+      const hero=document.getElementById('hero');
+      const tries=['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
+      for(const u of tries){ try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ hero.src=u+'?v='+Date.now(); return; } }catch(e){} }
+      hero.alt='Immagine non trovata';
     })();
   </script>
-
-  <!-- Logica: prefs, abilitazione bottone, salvataggio e swipe -->
   <script>
-    // Riepilogo scelte
-    const prefs = JSON.parse(localStorage.getItem('whatif_prefs') || '{}'); // { periodo: 'past'|'future', stile: 'whatif'|'wtf' }
+    const prefs2 = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
     const mapPeriodo = { past:'Passato', future:'Futuro' };
     const mapStile   = { whatif:'What if (plausibile)', wtf:'What the F (ironico)' };
-    document.getElementById('crumbs').innerHTML =
-      `${prefs.periodo ? mapPeriodo[prefs.periodo] : '—'} · <b>${prefs.stile ? mapStile[prefs.stile] : '—'}</b>`;
+    document.getElementById('crumbs').innerHTML = `${prefs2.periodo?mapPeriodo[prefs2.periodo]:'—'} · <b>${prefs2.stile?mapStile[prefs2.stile]:'—'}</b>`;
 
-    // Elementi
-    const form   = document.getElementById('questionForm');
-    const input  = document.getElementById('questionInput');
-    const next   = document.getElementById('nextBtn');
-
-    // Abilita il bottone quando c'è testo
-    input.addEventListener('input', ()=>{
-      next.disabled = input.value.trim().length < 6;
-    });
-
-    // Salva domanda e vai alla quinta
-    form.addEventListener('submit', (e)=>{
+    const form=document.getElementById('questionForm'), input=document.getElementById('questionInput'), next=document.getElementById('nextBtn');
+    input.addEventListener('input', ()=>{ next.disabled = input.value.trim().length < 6; });
+    form.addEventListener('submit', e=>{
       e.preventDefault();
-      const question = (input.value || '').trim();
-      if (question.length < 6) return;
-      localStorage.setItem('whatif_question', JSON.stringify({ question, ts: Date.now() }));
-      location.href = 'fifth.html';
+      const question=(input.value||'').trim(); if(question.length<6) return;
+      localStorage.setItem('whatif_question', JSON.stringify({ question, ts:Date.now() }));
+      location.href='fifth.html';
     });
 
-    // Swipe: sinistra = indietro (second.html), destra = avanti (se testo valido)
-    (function(){
-      let sx=0, sy=0, dx=0, dy=0, start=false, TH=55;
-      document.addEventListener('touchstart',e=>{
-        const t=e.touches[0]; sx=t.clientX; sy=t.clientY; start=true;
-      },{passive:true});
-      document.addEventListener('touchmove',e=>{
-        if(!start) return; const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy;
-      },{passive:true});
-      document.addEventListener('touchend',()=>{
-        if(!start) return; start=false;
-        if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){
-          if(dx>0){ // swipe right = avanti
-            if ((input.value||'').trim().length >= 6) form.requestSubmit();
-          }else{    // swipe left = indietro
-            location.href = 'second.html';
-          }
-        }
-        sx=sy=dx=dy=0;
-      },{passive:true});
+    (function(){ let sx=0,sy=0,dx=0,dy=0,start=false,TH=55;
+      document.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;start=true;},{passive:true});
+      document.addEventListener('touchmove',e=>{if(!start)return;const t=e.touches[0];dx=t.clientX-sx;dy=t.clientY-sy;},{passive:true});
+      document.addEventListener('touchend',()=>{ if(!start)return; start=false;
+        if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){ if(dx>0){ if((input.value||'').trim().length>=6) form.requestSubmit(); } else { location.href='second.html'; } }
+        sx=sy=dx=dy=0; },{passive:true});
     })();
   </script>
 </body>
