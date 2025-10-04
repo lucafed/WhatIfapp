@@ -7,21 +7,46 @@
 <meta name="theme-color" content="#0A0F14"/>
 <link rel="preload" as="image" href="/third-hero.png"/>
 <style>
-  :root{--bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent2:#00B5CC}
-  *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:940px;margin:0 auto;padding:16px 14px 28px}
+  :root{
+    --bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;
+    --accent:#00E0FF;--accent2:#00B5CC
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{max-width:940px;margin:0 auto;padding:16px 14px 28px;position:relative;}
+
+  /* immagine piccola in alto a destra */
+  .hero-mini{
+    position:absolute;
+    top:10px;
+    right:10px;
+    width:90px;
+    height:auto;
+    border-radius:10px;
+    opacity:0.9;
+    box-shadow:0 0 10px rgba(0,0,0,.45);
+  }
+
   .top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-  .back{appearance:none;border:0;background:#0f1820;color:#d8ebef;border-radius:12px;padding:8px 12px;cursor:pointer}
-  .banner{background:#0c141b;border-radius:16px;padding:10px;margin:8px 0 16px}
-  .banner img{width:100%;height:auto;display:block;border-radius:12px;filter:drop-shadow(0 6px 18px rgba(0,0,0,.45))}
-  h1{margin:6px 0 14px;font-size:clamp(26px,6vw,40px)}
+  .back{appearance:none;border:0;background:#0f1820;color:#d8ebef;
+    border-radius:12px;padding:8px 12px;cursor:pointer}
+
+  h1{margin:40px 0 14px;font-size:clamp(26px,6vw,40px)}
   .section{background:var(--card);border-radius:16px;padding:14px;margin:12px 0}
   .section h2{margin:0 0 10px;font-size:clamp(18px,4.5vw,22px)}
   .group{display:flex;flex-wrap:wrap;gap:10px}
-  .chip{appearance:none;border:1px solid #1d2b34;background:#0f1820;color:#d8ebef;border-radius:999px;padding:10px 14px;cursor:pointer;font-weight:600}
-  .chip.selected{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#00262f;border-color:transparent;box-shadow:0 0 12px rgba(0,224,255,.30)}
+  .chip{appearance:none;border:1px solid #1d2b34;background:#0f1820;color:#d8ebef;
+    border-radius:999px;padding:10px 14px;cursor:pointer;font-weight:600}
+  .chip.selected{background:linear-gradient(180deg,var(--accent),var(--accent2));
+    color:#00262f;border-color:transparent;box-shadow:0 0 12px rgba(0,224,255,.30)}
+
   .cta-wrap{display:flex;justify-content:center;margin-top:10px}
-  .cta{display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#00262f;font-weight:900;border:none;border-radius:24px;padding:12px 18px;min-width:210px;box-shadow:0 0 14px rgba(0,181,204,.45),0 0 30px rgba(0,181,204,.25);cursor:pointer}
+  .cta{display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent2));
+    color:#00262f;font-weight:900;border:none;border-radius:24px;
+    padding:12px 18px;min-width:210px;
+    box-shadow:0 0 14px rgba(0,181,204,.45),0 0 30px rgba(0,181,204,.25);
+    cursor:pointer}
   .cta[disabled]{opacity:.55;cursor:not-allowed;box-shadow:none}
   .muted{color:var(--muted);font-size:13px}
   .err{color:#ff7e7e;font-size:13px;margin-top:8px;display:none}
@@ -29,13 +54,8 @@
 </head>
 <body>
 <main>
-  <div class="top">
-    <button class="back" onclick="history.back()">← Indietro</button>
-  </div>
-
-  <div class="banner">
-    <img id="heroMini" alt="What?f — due porte, scegli la tua via"/>
-  </div>
+  <button class="back" onclick="history.back()">← Indietro</button>
+  <img id="heroMini" class="hero-mini" alt="What?f — due porte"/>
 
   <h1><span class="muted">Parlami di</span> <strong>TE</strong></h1>
 
@@ -83,62 +103,38 @@
     <button id="go" class="cta" disabled>Continua</button>
   </div>
 
-  <p class="muted" style="text-align:center;margin-top:12px">I dati servono solo a personalizzare la risposta dell’AI.</p>
+  <p class="muted" style="text-align:center;margin-top:12px">
+    I dati servono solo a personalizzare la risposta dell’AI.
+  </p>
 </main>
 
 <script>
-  // Immagine: metodo robusto (stesso di sempre)
+  // immagine piccola
   (async function(){
     const el=document.getElementById('heroMini');
     for (const u of ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png']){
-      try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){el.src=u+'?v='+Date.now(); return;}}catch(_){}
+      try{const r=await fetch(u,{cache:'no-store'});if(r.ok){el.src=u+'?v='+Date.now();return;}}catch(_){}
     }
     el.alt='Immagine non trovata';
   })();
 
-  // Stato profilo
-  const state = JSON.parse(localStorage.getItem('whatif_profile')||'{}');
-  const groups = Array.from(document.querySelectorAll('.group[data-required]'));
-  const go = document.getElementById('go');
-  const msg = document.getElementById('msg');
+  const state=JSON.parse(localStorage.getItem('whatif_profile')||'{}');
+  const groups=Array.from(document.querySelectorAll('.group[data-required]'));
+  const go=document.getElementById('go'),msg=document.getElementById('msg');
 
-  function markSelected(g, val){
-    g.querySelectorAll('.chip').forEach(c=>c.classList.toggle('selected', c.dataset.val===val));
-  }
-
-  function restore(){
-    groups.forEach(g=>{
-      const key=g.dataset.key;
-      const val=state[key];
-      if(val){ markSelected(g,val); }
-    });
-    checkReady();
-  }
-
-  function checkReady(){
-    const ok = groups.every(g=> !!state[g.dataset.key]);
-    go.disabled = !ok;
-    msg.style.display = ok ? 'none' : 'block';
-  }
+  function markSelected(g,val){g.querySelectorAll('.chip').forEach(c=>c.classList.toggle('selected',c.dataset.val===val));}
+  function restore(){groups.forEach(g=>{const key=g.dataset.key,val=state[key];if(val)markSelected(g,val);});checkReady();}
+  function checkReady(){const ok=groups.every(g=>!!state[g.dataset.key]);go.disabled=!ok;msg.style.display=ok?'none':'block';}
 
   groups.forEach(g=>{
-    g.addEventListener('click', e=>{
-      const b=e.target.closest('.chip'); if(!b) return;
-      const key=g.dataset.key, val=b.dataset.val;
-      state[key]=val;
-      localStorage.setItem('whatif_profile', JSON.stringify(state));
-      markSelected(g,val);
-      checkReady();
+    g.addEventListener('click',e=>{
+      const b=e.target.closest('.chip');if(!b)return;
+      const key=g.dataset.key,val=b.dataset.val;
+      state[key]=val;localStorage.setItem('whatif_profile',JSON.stringify(state));
+      markSelected(g,val);checkReady();
     });
   });
-
-  go.addEventListener('click', ()=>{
-    // doppio check: se manca qualcosa, non si va avanti
-    if(go.disabled){ msg.style.display='block'; return; }
-    // avanti alla pagina della domanda
-    location.href='fourth.html';
-  });
-
+  go.addEventListener('click',()=>{if(go.disabled){msg.style.display='block';return;}location.href='fourth.html';});
   restore();
 </script>
 </body>
