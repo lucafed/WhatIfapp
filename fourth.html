@@ -9,7 +9,9 @@
   <style>
     :root{ --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA; --accent:#00E0FF; --accent-dark:#00B5CC; }
     *{ box-sizing:border-box } html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
-    main{ min-height:100%; display:flex; flex-direction:column; gap:14px; padding:14px 14px 22px }
+    main{ min-height:100%; display:flex; flex-direction:column; gap:14px; padding:14px 14px 22px; position:relative }
+    .back{position:fixed;left:12px;top:12px;z-index:10}
+    .back a{display:inline-block;background:#0f1820;border:1px solid #20313a;color:#cfe6eb;padding:8px 12px;border-radius:12px;text-decoration:none;font-weight:700}
     .hero{ width:min(100%,980px); margin:0 auto; background:#0c141b; border-radius:22px; padding:12px; box-shadow:0 10px 28px rgba(0,0,0,.35) }
     .hero img{ width:100%; height:auto; border-radius:16px; display:block; filter:drop-shadow(0 10px 28px rgba(0,0,0,.42)) }
     .breadcrumbs{ width:min(100%,980px); margin:2px auto 0; text-align:center; color:var(--muted); font-size:14px } .breadcrumbs b{ color:var(--accent) }
@@ -31,6 +33,8 @@
     if(!prefs.periodo || !prefs.stile) location.href='index.html';
   </script>
   <main>
+    <div class="back"><a href="second.html">← Indietro</a></div>
+
     <div class="hero"><img id="hero" alt="Due porte illuminate" loading="eager" decoding="async" /></div>
     <div class="breadcrumbs" id="crumbs"></div>
     <h1>LA TUA DOMANDA</h1>
@@ -39,7 +43,6 @@
       <div class="label">Scrivi la tua domanda What?f…</div>
       <textarea id="questionInput" placeholder="Es. Se nel 2021 avessi cambiato lavoro? / Se tra 6 mesi mi trasferissi a Milano?"></textarea>
       <div class="submit-wrap"><button id="nextBtn" class="btn" type="submit" disabled>Continua</button></div>
-      <p class="hint">Swipe ← per tornare · Swipe → per continuare</p>
     </form>
   </main>
 
@@ -65,14 +68,6 @@
       localStorage.setItem('whatif_question', JSON.stringify({ question, ts:Date.now() }));
       location.href='fifth.html';
     });
-
-    (function(){ let sx=0,sy=0,dx=0,dy=0,start=false,TH=55;
-      document.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;start=true;},{passive:true});
-      document.addEventListener('touchmove',e=>{if(!start)return;const t=e.touches[0];dx=t.clientX-sx;dy=t.clientY-sy;},{passive:true});
-      document.addEventListener('touchend',()=>{ if(!start)return; start=false;
-        if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){ if(dx>0){ if((input.value||'').trim().length>=6) form.requestSubmit(); } else { location.href='second.html'; } }
-        sx=sy=dx=dy=0; },{passive:true});
-    })();
   </script>
 </body>
 </html>
