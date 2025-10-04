@@ -5,122 +5,106 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f – Parlami di te</title>
   <meta name="theme-color" content="#0A0F14" />
+  <meta http-equiv="Cache-Control" content="no-store, max-age=0, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <style>
-    :root{
-      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
-      --accent:#00E0FF; --accent-dark:#00B5CC;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{display:flex;flex-direction:column;align-items:center;gap:14px;
-      padding:14px 14px 28px;text-align:center;}
-
-    .top{width:min(100%,860px);display:flex;align-items:center;gap:10px;justify-content:space-between}
-    .thumb{width:96px;height:64px;border-radius:10px;background:#0c141b;
-      display:flex;align-items:center;justify-content:center;overflow:hidden;
-      box-shadow:0 6px 18px rgba(0,0,0,.28)}
-    .thumb img{width:100%;height:auto;display:block}
-    .back a{display:inline-block;background:#0f1820;border:1px solid #20313a;color:#cfe6eb;
-      padding:8px 12px;border-radius:12px;text-decoration:none;font-weight:700;}
-
-    h1{margin:4px 0;font-size:clamp(26px,6vw,40px)}
-    h1 span{color:var(--accent)}
-
-    .card{background:var(--card);padding:14px;border-radius:18px;
-      box-shadow:0 8px 24px rgba(0,0,0,.28);width:min(100%,860px);}
-    .group{margin-bottom:12px;text-align:left;}
-    .group h2{font-size:18px;color:var(--accent);margin:0 0 8px;}
-    .options{display:flex;flex-wrap:wrap;gap:8px;}
-    button{background:#17212a;color:#cfe6eb;padding:10px 14px;
-      border:none;border-radius:14px;cursor:pointer;font-weight:700;}
-    button.selected{background:linear-gradient(180deg,#00bcd4,#00E0FF);color:#002329;
-      box-shadow:0 0 12px rgba(0,224,255,.35);}
-    .cta{margin-top:10px;background:linear-gradient(180deg,var(--accent),var(--accent-dark));
-      color:#002329;font-weight:900;border:none;border-radius:24px;padding:12px 20px;
-      box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25);
-      cursor:pointer;transition:filter .16s ease, transform .08s ease;}
-    .cta:active{transform:translateY(1px)}
+    :root{--bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent-dark:#00B5CC}
+    *{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    main{max-width:920px;margin:0 auto;padding:14px}
+    .top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+    .back{background:#0f1820;border:1px solid #22313a;color:#cfe6eb;border-radius:12px;padding:8px 12px;cursor:pointer}
+    .thumb{width:86px;height:86px;border-radius:14px;overflow:hidden;background:#0c141b;display:flex;align-items:center;justify-content:center}
+    .thumb img{max-width:100%;height:auto;display:block}
+    h1{margin:6px 0 12px;font-size:clamp(28px,6vw,42px);letter-spacing:.5px}
+    .card{background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px}
+    .row{display:flex;flex-wrap:wrap;gap:10px}
+    .chip{background:#17212a;color:#cfe6eb;border:none;border-radius:16px;padding:12px 16px;font-weight:700;cursor:pointer}
+    .chip.selected{background:linear-gradient(180deg,#00bcd4,#00E0FF);color:#002329}
+    .cta{display:block;margin:10px auto 0;background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329;
+      font-weight:900;border:none;border-radius:24px;padding:12px 18px;min-width:210px;box-shadow:0 0 14px rgba(0,181,204,.5)}
   </style>
 </head>
 <body>
   <main>
     <div class="top">
-      <div class="back"><a href="index.html">← Indietro</a></div>
-      <div class="thumb"><img id="hero" alt="Miniatura What?f" loading="eager" decoding="async" /></div>
+      <button id="backBtn" class="back">← Indietro</button>
+      <div class="thumb"><img id="hero" alt="Porte" loading="eager" decoding="async" /></div>
     </div>
 
-    <h1>Parlami di <span>te</span></h1>
+    <h1><span style="color:var(--accent)">Parlami</span> di te</h1>
 
     <div class="card">
-      <div class="group">
-        <h2>Chi sei?</h2>
-        <div class="options" id="who">
-          <button>Studente</button>
-          <button>Lavoratore</button>
-          <button>Creativo</button>
-        </div>
+      <h3>Chi sei?</h3>
+      <div class="row" id="who">
+        <button class="chip" data-k="who" data-v="studente">Studente</button>
+        <button class="chip" data-k="who" data-v="lavoratore">Lavoratore</button>
+        <button class="chip" data-k="who" data-v="creativo">Creativo</button>
       </div>
-
-      <div class="group">
-        <h2>Sesso</h2>
-        <div class="options" id="sex">
-          <button>Femmina</button>
-          <button>Maschio</button>
-          <button>Altro</button>
-          <button>Preferisco non dirlo</button>
-        </div>
-      </div>
-
-      <div class="group">
-        <h2>Età</h2>
-        <div class="options" id="age">
-          <button>&lt;18</button>
-          <button>18–25</button>
-          <button>26–35</button>
-          <button>&gt;35</button>
-        </div>
-      </div>
-
-      <div class="group">
-        <h2>In quale fase ti trovi?</h2>
-        <div class="options" id="phase">
-          <button>Studio</button>
-          <button>Carriera</button>
-          <button>Relazioni</button>
-        </div>
-      </div>
-
-      <button class="cta" id="next">Continua</button>
     </div>
+
+    <div class="card">
+      <h3>Sesso</h3>
+      <div class="row" id="sex">
+        <button class="chip" data-k="sex" data-v="femmina">Femmina</button>
+        <button class="chip" data-k="sex" data-v="maschio">Maschio</button>
+        <button class="chip" data-k="sex" data-v="altro">Altro</button>
+        <button class="chip" data-k="sex" data-v="nd">Preferisco non dirlo</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Età</h3>
+      <div class="row" id="age">
+        <button class="chip" data-k="age" data-v="<18">&lt;18</button>
+        <button class="chip" data-k="age" data-v="18-25">18–25</button>
+        <button class="chip" data-k="age" data-v="26-35">26–35</button>
+        <button class="chip" data-k="age" data-v=">35">&gt;35</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>In quale fase ti trovi?</h3>
+      <div class="row" id="phase">
+        <button class="chip" data-k="phase" data-v="studio">Studio</button>
+        <button class="chip" data-k="phase" data-v="carriera">Carriera</button>
+        <button class="chip" data-k="phase" data-v="relazioni">Relazioni</button>
+      </div>
+    </div>
+
+    <button id="next" class="cta">Continua</button>
   </main>
 
-  <!-- Immagine caricata robustamente -->
   <script>
-    (async function loadThumb(){
-      const img=document.getElementById('hero');
+    // immagine piccola
+    (async function(){
+      const el=document.getElementById('hero');
       const tries=['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
-      for(const u of tries){
-        try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ img.src=u+'?v='+Date.now(); return; } }
-        catch(e){}
-      }
-      img.alt='Immagine non trovata';
+      for(const u of tries){ try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ el.src=u+'?v='+Date.now(); return; } }catch{} }
+      el.alt='Immagine non trovata';
     })();
-  </script>
 
-  <!-- Salvataggio risposte -->
-  <script>
-    const answers={};
-    document.querySelectorAll('.options').forEach(grp=>{
-      grp.addEventListener('click',e=>{
-        const b=e.target.closest('button'); if(!b) return;
-        grp.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));
+    // chips -> salva in localStorage
+    function wire(id){
+      const g=document.getElementById(id);
+      g.addEventListener('click',e=>{
+        const b=e.target.closest('.chip'); if(!b) return;
+        g.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
         b.classList.add('selected');
-        answers[grp.id]=b.textContent.trim();
-        localStorage.setItem('whatif_user',JSON.stringify(answers));
+        const st=JSON.parse(localStorage.getItem('profile')||'{}');
+        st[b.dataset.k]=b.dataset.v;
+        localStorage.setItem('profile',JSON.stringify(st));
       });
-    });
-    document.getElementById('next').onclick=()=>location.href='fourth.html';
+    }
+    ['who','sex','age','phase'].forEach(wire);
+
+    // back esplicito
+    document.getElementById('backBtn').addEventListener('click',()=>{ location.href='/index.html'; });
+
+    document.getElementById('next').addEventListener('click',()=>{ location.href='/fourth.html'; });
+
+    // anti-bfcache
+    window.addEventListener('pageshow',e=>{ if(e.persisted) location.reload(); });
   </script>
 </body>
 </html>
