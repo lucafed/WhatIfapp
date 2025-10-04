@@ -3,71 +3,52 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – La tua domanda</title>
+  <title>What?f – Risultato</title>
   <meta name="theme-color" content="#0A0F14" />
   <link rel="preload" as="image" href="/third-hero.png" />
   <style>
-    :root{
-      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A3B6BF;
-      --accent:#00E0FF; --accent-dark:#00B5CC; --ok:#13d8a6; --btn-disabled:#29404a;
-      --error:#ff5c7a;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    :root{ --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A3B6BF; --accent:#00E0FF; --accent-dark:#00B5CC; --ok:#13d8a6; --btn-disabled:#29404a; --error:#ff5c7a; }
+    *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     main{min-height:100%;display:flex;flex-direction:column;gap:18px;padding:18px 16px 22px;align-items:center}
-
-    .hero{width:min(100%,860px);margin-top:6px;background:#0c141b;border-radius:22px;padding:10px 10px 14px;
-      box-shadow:0 10px 28px rgba(0,0,0,.32)}
+    .hero{width:min(100%,860px);margin-top:6px;background:#0c141b;border-radius:22px;padding:10px 10px 14px;box-shadow:0 10px 28px rgba(0,0,0,.32)}
     .hero img{width:100%;height:auto;border-radius:16px;display:block;filter:drop-shadow(0 12px 28px rgba(0,0,0,.4))}
     .meta{width:min(100%,860px);text-align:center;color:var(--muted);font-size:13px;margin-top:-6px}
-
     h1{width:min(100%,860px);text-align:center;margin:2px auto 0;font-size:clamp(26px,6vw,40px);letter-spacing:.5px}
-
-    .card{width:min(100%,860px);background:var(--card);border-radius:18px;
-      padding:14px 12px 12px;box-shadow:0 8px 24px rgba(0,0,0,.28)}
+    .card{width:min(100%,860px);background:var(--card);border-radius:18px;padding:14px 12px 12px;box-shadow:0 8px 24px rgba(0,0,0,.28)}
     .card h3{margin:4px 8px 10px;font-size:18px;color:#d7e8ec}
-
-    .input, .ta{width:100%;padding:12px 14px;border-radius:14px;border:1px solid #20313a;background:#0c141b;color:var(--fg);
-      outline:none}
+    .input, .ta{width:100%;padding:12px 14px;border-radius:14px;border:1px solid #20313a;background:#0c141b;color:var(--fg);outline:none}
     .ta{min-height:100px;resize:vertical}
-
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-    .row > *{flex:1 1 240px}
-
+    .row{display:flex;gap:10px;flex-wrap:wrap} .row>*{flex:1 1 240px}
     .cta-wrap{width:min(100%,860px);display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
-    .cta{display:inline-block;min-width:180px;text-align:center;
-      background:linear-gradient(180deg,var(--accent),var(--accent-dark));
-      color:#002329;font-weight:900;border:none;border-radius:28px;padding:12px 18px;
-      box-shadow:0 0 14px rgba(0,181,204,.5),0 0 32px rgba(0,181,204,.25);
-      cursor:pointer;transition:filter .16s ease, transform .08s ease}
-    .cta:active{transform:translateY(1px)}
-    .cta[disabled]{background:var(--btn-disabled);color:#7fa1aa;cursor:not-allowed;box-shadow:none}
-
+    .cta{display:inline-block;min-width:180px;text-align:center;background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329;font-weight:900;border:none;border-radius:28px;padding:12px 18px;box-shadow:0 0 14px rgba(0,181,204,.5),0 0 32px rgba(0,181,204,.25);cursor:pointer;transition:filter .16s ease, transform .08s ease}
+    .cta:active{transform:translateY(1px)} .cta[disabled]{background:var(--btn-disabled);color:#7fa1aa;cursor:not-allowed;box-shadow:none}
     .answer{width:min(100%,860px);background:#0f1820;border:1px solid #1b2a33;border-radius:16px;padding:14px;display:none}
     .prob{color:#9fe6ff;font-weight:800;margin-bottom:4px}
     .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-    .like, .share{appearance:none;border:1px solid #22414d;background:#10232b;color:#cfe6ec;
-      padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700}
+    .like,.share{appearance:none;border:1px solid #22414d;background:#10232b;color:#cfe6ec;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700}
     .like.active{background:#103a2b;border-color:#1aa37a}
     .error{color:var(--error);text-align:center}
-
     .hint{width:min(100%,860px);text-align:center;color:var(--muted);font-size:12px;margin-top:-6px}
   </style>
 </head>
 <body>
+  <script>
+    const qSaved = JSON.parse(localStorage.getItem('whatif_question')||'null');
+    const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+    const user  = JSON.parse(localStorage.getItem('whatif_user')||'{}');
+    if(!qSaved || !qSaved.question){ location.href='fourth.html'; }
+  </script>
   <main>
-    <!-- Immagine + meta (mostra selezioni fatte) -->
     <div class="hero"><img id="hero" alt="Mini anteprima due porte" loading="eager" decoding="async"></div>
     <div id="meta" class="meta"></div>
-    <h1>LA TUA DOMANDA</h1>
+    <h1>RISULTATO</h1>
 
-    <!-- Step 1: domanda principale -->
+    <!-- Step 1: domanda principale (mostrata) -->
     <section class="card" id="step1">
-      <h3>Scrivi la tua domanda What?f…</h3>
-      <textarea id="q" class="ta" placeholder="Es. Se nel 2021 avessi lasciato quel lavoro… / Se tra 6 mesi mi trasferissi a Milano…"></textarea>
+      <h3>La tua domanda:</h3>
+      <div class="ta" id="qShown" style="min-height:auto"></div>
       <div class="cta-wrap" style="margin-top:10px">
-        <button id="askBtn" class="cta" disabled>Continua</button>
+        <button id="askBtn" class="cta">Chiedi alla AI</button>
       </div>
       <p class="hint">Swipe → per continuare · Swipe ← per tornare</p>
       <p id="err1" class="error" style="display:none"></p>
@@ -99,89 +80,56 @@
   </main>
 
   <script>
-    // --- immagine (metodo consolidato) ---
     (async function(){
       const hero=document.getElementById('hero');
       const tries=['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
-      for(const u of tries){
-        try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){hero.src=u+'?v='+Date.now();return;}}catch(e){}
-      }
+      for(const u of tries){ try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){hero.src=u+'?v='+Date.now(); return;} }catch(e){} }
     })();
-
-    // --- preferenze e profilo raccolti prima ---
-    const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');  // {periodo:'past|future', stile:'whatif|wtf'}
-    const user  = JSON.parse(localStorage.getItem('whatif_user')||'{}');   // chi sei, sesso, età, ecc.
-
-    // meta riga (così vedi subito cosa stai inviando alla AI)
+  </script>
+  <script>
     const meta = document.getElementById('meta');
-    if (prefs.periodo || prefs.stile) {
-      meta.textContent = `${prefs.periodo==='past'?'Passato':'Futuro'} • ${prefs.stile==='wtf'?'What the F (ironico)':'What if (plausibile)'}`;
-    }
+    const mapPeriodo = { past:'Passato', future:'Futuro' };
+    const mapStile   = { whatif:'What if (plausibile)', wtf:'What the F (ironico)' };
+    meta.textContent = `${prefs.periodo?mapPeriodo[prefs.periodo]:'—'} • ${prefs.stile?mapStile[prefs.stile]:'—'}`;
 
-    // --- DOM refs ---
-    const q     = document.getElementById('q');
-    const askBtn= document.getElementById('askBtn');
-    const err1  = document.getElementById('err1');
-    const step1 = document.getElementById('step1');
+    const qShown = document.getElementById('qShown'); qShown.textContent = JSON.parse(localStorage.getItem('whatif_question')).question;
 
-    const step2 = document.getElementById('step2');
-    const fuWrap= document.getElementById('followups');
-    const genBtn= document.getElementById('genBtn');
-    const err2  = document.getElementById('err2');
+    const step1 = document.getElementById('step1'), step2 = document.getElementById('step2'), fuWrap = document.getElementById('followups');
+    const askBtn = document.getElementById('askBtn'), genBtn = document.getElementById('genBtn'), err1=document.getElementById('err1'), err2=document.getElementById('err2');
+    const answerBox=document.getElementById('answerBox'), probEl=document.getElementById('prob'), respEl=document.getElementById('resp');
 
-    const answerBox = document.getElementById('answerBox');
-    const probEl    = document.getElementById('prob');
-    const respEl    = document.getElementById('resp');
+    const USE_API = true; // tenterà l'API; se fallisce, passa al mock
 
-    // enable/disable
-    q.addEventListener('input', ()=>{ askBtn.disabled = q.value.trim().length < 6; });
-
-    // --- step 1: chiedi follow-up ---
     askBtn.addEventListener('click', getFollowups);
     async function getFollowups(){
       err1.style.display='none';
-      const question = q.value.trim();
-      if (question.length < 6) { err1.textContent='Scrivi una domanda più chiara.'; err1.style.display='block'; return; }
-
       try{
-        const res = await fetch('/api/ask', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({
-            mode:'followups',
-            prefs, user, question
-          })
-        });
-        if(!res.ok){ throw new Error('Errore di rete'); }
-        const data = await res.json();
-        // atteso: { followups: ["", "", ""] }
-        fuWrap.innerHTML = '';
-        (data.followups||[]).slice(0,3).forEach((text,i)=>{
-          const id = 'fu'+i;
-          const div = document.createElement('div');
-          div.innerHTML = `
-            <label for="${id}" style="display:block;margin:2px 0 4px;color:#cfe6ec">${text}</label>
-            <input id="${id}" class="input" placeholder="Rispondi qui..." />
-          `;
+        let data;
+        if(USE_API){
+          const r = await fetch('/api/ask', { method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ mode:'followups', prefs, user, question: qShown.textContent }) });
+          if(r.ok){ data = await r.json(); }
+          else throw new Error('API non disponibile');
+        }
+        if(!data || !Array.isArray(data.followups)){
+          // Fallback mock
+          data = { followups: mockFollowups(qShown.textContent, prefs) };
+        }
+        fuWrap.innerHTML='';
+        data.followups.slice(0,3).forEach((text,i)=>{
+          const id='fu'+i;
+          const div=document.createElement('div');
+          div.innerHTML=`<label for="${id}" style="display:block;margin:2px 0 4px;color:#cfe6ec">${text}</label>
+                         <input id="${id}" class="input" placeholder="Rispondi qui..." />`;
           fuWrap.appendChild(div);
         });
-
-        if ((data.followups||[]).length === 0) {
-          // se il modello non ha domande, salta direttamente allo step finale
-          return generateFinal([]);
-        }
-
-        step1.style.display='none';
-        step2.style.display='block';
-        genBtn.focus();
+        step1.style.display='none'; step2.style.display='block';
       }catch(e){
-        err1.textContent='Non riesco a generare le domande. Riprova.';
-        err1.style.display='block';
+        err1.textContent='Impossibile generare le domande. Riprova.'; err1.style.display='block';
       }
     }
 
-    // --- step 2: invia risposte follow-up e genera finale ---
-    genBtn.addEventListener('click', async ()=> {
+    genBtn.addEventListener('click', async ()=>{
       const answers = [...fuWrap.querySelectorAll('input')].map(i=>i.value.trim());
       await generateFinal(answers);
     });
@@ -189,64 +137,67 @@
     async function generateFinal(fuAnswers){
       err2.style.display='none';
       try{
-        const res = await fetch('/api/ask', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({
-            mode:'final',
-            prefs, user,
-            question: q.value.trim(),
-            followupAnswers: fuAnswers
-          })
-        });
-        if(!res.ok){ throw new Error('Errore di rete'); }
-        const data = await res.json();
-        // atteso: { answer: "...", probability: 68 }
+        let data;
+        if(USE_API){
+          const r = await fetch('/api/ask', { method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ mode:'final', prefs, user, question:qShown.textContent, followupAnswers: fuAnswers }) });
+          if(r.ok){ data = await r.json(); }
+          else throw new Error('API non disponibile');
+        }
+        if(!data || typeof data.answer!=='string'){
+          // Fallback mock
+          const mock = mockAnswer(qShown.textContent, prefs, fuAnswers);
+          data = { answer: mock.text, probability: mock.p };
+        }
         const p = (typeof data.probability==='number') ? Math.max(0, Math.min(100, Math.round(data.probability))) : null;
         probEl.textContent = p!==null ? `Probabilità: ${p}%` : '';
         respEl.innerHTML = (data.answer||'').replace(/\n/g,'<br>');
         answerBox.style.display='block';
         window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
       }catch(e){
-        err2.textContent='Non sono riuscito a generare la risposta. Riprova.';
-        err2.style.display='block';
+        err2.textContent='Non sono riuscito a generare la risposta. Riprova.'; err2.style.display='block';
       }
     }
 
-    // --- like / dislike (locale) ---
-    const likeUp = document.getElementById('likeUp');
-    const likeDown = document.getElementById('likeDown');
-    likeUp.addEventListener('click', ()=>{ likeUp.classList.toggle('active'); likeDown.classList.remove('active'); });
-    likeDown.addEventListener('click', ()=>{ likeDown.classList.toggle('active'); likeUp.classList.remove('active'); });
+    function mockFollowups(q, prefs){
+      const base = [];
+      if((prefs.periodo||'')==='past'){ base.push('Qual era l’alternativa concreta a cui stavi pensando?'); }
+      else{ base.push('Qual è la tua opzione principale per i prossimi mesi?'); }
+      base.push('Quale vincolo o paura pesa di più su questa scelta?');
+      base.push('Quale risultato considereresti un successo tra 6–12 mesi?');
+      return base;
+    }
+    function mockAnswer(q, prefs, fu){
+      const style = (prefs.stile==='wtf')?'ironica e creativa':'plausibile e realistica';
+      const time  = (prefs.periodo==='past')?'sarebbe potuto accadere':'potrebbe accadere';
+      const p = 55 + Math.floor(Math.random()*21) - 10; // 45–65
+      const text = `In modo ${style}, ecco cosa ${time}: partendo da "${q}", emerge che ${fu[0]||'l’intento principale è chiaro'}, con il limite di ${fu[1]||'tempo/risorse'} e un successo atteso come ${fu[2]||'stabilità e crescita personale'}. I passi immediati: definisci un micro-obiettivo settimanale, chiedi un parere esterno e misura un indicatore (tempo, denaro, soddisfazione) per 30 giorni. Poi rivaluta la direzione.`;
+      return { text, p };
+    }
 
-    // --- share (Web Share API con fallback) ---
+    document.getElementById('likeUp').addEventListener('click', ()=>{ likeToggle('up'); });
+    document.getElementById('likeDown').addEventListener('click', ()=>{ likeToggle('down'); });
+    function likeToggle(which){
+      const up=document.getElementById('likeUp'), down=document.getElementById('likeDown');
+      if(which==='up'){ up.classList.toggle('active'); down.classList.remove('active'); }
+      else{ down.classList.toggle('active'); up.classList.remove('active'); }
+    }
     document.getElementById('shareBtn').addEventListener('click', async ()=>{
       const text = `${respEl.textContent}\n\n${probEl.textContent} · #WhatIf`;
-      if (navigator.share) {
-        try{ await navigator.share({ text }); } catch(e){}
-      } else {
-        try{
-          await navigator.clipboard.writeText(text);
-          alert('Copiato negli appunti! Incolla dove vuoi 😉');
-        }catch(e){ alert('Condivisione non supportata sul tuo dispositivo.'); }
-      }
+      try{ if(navigator.share){ await navigator.share({ text }); } else { await navigator.clipboard.writeText(text); alert('Copiato negli appunti!'); } }catch(_){}
     });
 
-    // --- swipe: ← back . → avanti (step1->followups / step2->finale se valido) ---
-    (function(){
-      let sx=0, sy=0, dx=0, dy=0, start=false, TH=45;
+    (function(){ let sx=0,sy=0,dx=0,dy=0,start=false,TH=45;
       document.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;start=true;},{passive:true});
       document.addEventListener('touchmove',e=>{if(!start)return;const t=e.touches[0];dx=t.clientX-sx;dy=t.clientY-sy;},{passive:true});
-      document.addEventListener('touchend',async ()=>{if(!start)return;start=false;
-        if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){
-          if(dx>0){ history.back(); }
-          else {
-            if (step1.style.display!=='none') { if (!askBtn.disabled) await getFollowups(); }
-            else if (step2.style.display!=='none') { genBtn.click(); }
-          }
-        }
-        sx=sy=dx=dy=0;
-      },{passive:true});
+      document.addEventListener('touchend',async ()=>{ if(!start)return; start=false;
+        if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){ if(dx>0){ // right → avanti
+            if(step1.style.display!=='none'){ await getFollowups(); }
+            else if(step2.style.display!=='none'){ document.getElementById('genBtn').click(); }
+          } else { // left ← indietro
+            location.href='fourth.html';
+          } }
+        sx=sy=dx=dy=0; },{passive:true});
     })();
   </script>
 </body>
