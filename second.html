@@ -7,91 +7,59 @@
   <meta name="theme-color" content="#0A0F14" />
   <link rel="preload" as="image" href="/third-hero.png" />
   <style>
-    :root{
-      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
-      --accent:#00E0FF; --accent-dark:#00B5CC;
-      --chip:#17212a; --chip-text:#cfe6eb; --chip-on:#002329;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    :root{ --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA; --accent:#00E0FF; --accent-dark:#00B5CC; --chip:#17212a; --chip-text:#cfe6eb; --chip-on:#002329; }
+    *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     main{min-height:100%;max-width:980px;margin:0 auto;padding:16px 14px 28px}
-
     .hero{display:flex;justify-content:center;margin:6px 0 10px}
-    .hero img{width:min(70%,520px);height:auto;border-radius:18px;
-      filter:drop-shadow(0 10px 26px rgba(0,0,0,.45))}
-
-    h1{margin:6px 0 14px; text-align:center; font-size:clamp(26px,6.2vw,44px)}
-    h1 span{color:var(--accent)}
-
-    .card{background:var(--card); border-radius:18px; padding:16px; margin:12px 0}
-    .card h2{margin:0 0 10px; font-size:clamp(18px,4.5vw,22px)}
-    .group{display:flex; flex-wrap:wrap; gap:10px}
-    .chip{appearance:none;border:none;background:var(--chip); color:var(--chip-text);
-      padding:12px 16px; border-radius:16px; font-weight:700; cursor:pointer;
-      transition:transform .06s ease, box-shadow .16s ease, background .16s ease}
-    .chip:active{transform:translateY(1px)}
-    .chip.selected{background:linear-gradient(180deg,#00bcd4,#00E0FF); color:var(--chip-on);
-      box-shadow:0 0 12px rgba(0,224,255,.35)}
-
-    .input{width:100%; background:#0f1820; border:1px solid #20303a; color:var(--fg);
-      padding:12px 14px; border-radius:12px; font-size:16px}
-    .hint{color:var(--muted); font-size:13px; margin-top:8px}
-
-    .cta-wrap{display:flex; justify-content:center; margin-top:16px}
-    .cta{display:inline-block; background:linear-gradient(180deg,var(--accent),var(--accent-dark));
-      color:#002329; font-weight:900; border:none; border-radius:24px; padding:12px 20px;
-      min-width:220px; box-shadow:0 0 14px rgba(0,181,204,.5), 0 0 30px rgba(0,181,204,.25);
-      cursor:pointer; transition:filter .16s ease, transform .08s ease}
+    .hero img{width:min(70%,520px);height:auto;border-radius:18px;filter:drop-shadow(0 10px 26px rgba(0,0,0,.45))}
+    h1{margin:6px 0 14px;text-align:center;font-size:clamp(26px,6.2vw,44px)} h1 span{color:var(--accent)}
+    .card{background:var(--card);border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+    .card h2{margin:0 0 10px;font-size:clamp(18px,4.5vw,22px)}
+    .group{display:flex;flex-wrap:wrap;gap:10px}
+    .chip{appearance:none;border:none;background:var(--chip);color:var(--chip-text);padding:12px 16px;border-radius:16px;font-weight:700;cursor:pointer;transition:transform .06s ease, box-shadow .16s ease, background .16s ease}
+    .chip:active{transform:translateY(1px)} .chip.selected{background:linear-gradient(180deg,#18e1ff,#00c0d8);color:var(--chip-on);box-shadow:0 0 12px rgba(0,224,255,.35)}
+    .input{width:100%;background:#0f1820;border:1px solid #20303a;color:var(--fg);padding:12px 14px;border-radius:12px;font-size:16px}
+    .hint{color:var(--muted);font-size:13px;margin-top:8px}
+    .cta-wrap{display:flex;justify-content:center;margin-top:16px}
+    .cta{display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329;font-weight:900;border:none;border-radius:24px;padding:12px 20px;min-width:220px;box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25);cursor:pointer;transition:filter .16s ease, transform .08s ease}
     .cta:active{transform:translateY(1px)}
-
-    footer{color:var(--muted); font-size:12px; text-align:center; margin-top:12px}
-    footer a{color:var(--accent); text-decoration:none}
+    footer{color:var(--muted);font-size:12px;text-align:center;margin-top:12px}
   </style>
 </head>
 <body>
+  <script>
+    const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+    if(!prefs.periodo || !prefs.stile) location.href='index.html';
+  </script>
   <main>
-    <div class="hero">
-      <img id="heroMini" alt="Porte What?f" loading="eager" decoding="async" />
-    </div>
-
+    <div class="hero"><img id="heroMini" alt="Porte What?f" loading="eager" decoding="async" /></div>
     <h1>PARLAMI DI <span>TE</span></h1>
 
     <section class="card">
       <h2>Chi sei?</h2>
       <div class="group" data-key="ruolo">
-        <button class="chip">Studente</button>
-        <button class="chip">Lavoratore</button>
-        <button class="chip">Creativo</button>
+        <button class="chip">Studente</button><button class="chip">Lavoratore</button><button class="chip">Creativo</button>
       </div>
     </section>
 
     <section class="card">
       <h2>Sesso</h2>
       <div class="group" data-key="sesso">
-        <button class="chip">Femmina</button>
-        <button class="chip">Maschio</button>
-        <button class="chip">Altro</button>
-        <button class="chip">Preferisco non dirlo</button>
+        <button class="chip">Femmina</button><button class="chip">Maschio</button><button class="chip">Altro</button><button class="chip">Preferisco non dirlo</button>
       </div>
     </section>
 
     <section class="card">
       <h2>Età</h2>
       <div class="group" data-key="eta">
-        <button class="chip">&lt;18</button>
-        <button class="chip">18–25</button>
-        <button class="chip">26–35</button>
-        <button class="chip">&gt;35</button>
+        <button class="chip">&lt;18</button><button class="chip">18–25</button><button class="chip">26–35</button><button class="chip">&gt;35</button>
       </div>
     </section>
 
     <section class="card">
       <h2>In quale fase ti trovi?</h2>
       <div class="group" data-key="fase">
-        <button class="chip">Studio</button>
-        <button class="chip">Carriera</button>
-        <button class="chip">Relazioni</button>
+        <button class="chip">Studio</button><button class="chip">Carriera</button><button class="chip">Relazioni</button>
       </div>
     </section>
 
@@ -102,90 +70,41 @@
     </section>
 
     <section class="card">
-      <h2>Vuoi raccontarci qualcosa di più su di te?</h2>
-      <textarea class="input" id="note" rows="4"
-        placeholder="Obiettivi, contesto, limiti di tempo… (opzionale)"></textarea>
+      <h2>Vuoi raccontarci qualcosa di più?</h2>
+      <textarea class="input" id="note" rows="4" placeholder="Obiettivi, contesto, limiti di tempo… (opzionale)"></textarea>
     </section>
 
-    <div class="cta-wrap">
-      <button id="go" class="cta">Continua</button>
-    </div>
-
-    <footer>
-      Swipe ← per tornare · Swipe → per avanzare (se possibile)<br/>
-      © 2025 What?f
-    </footer>
+    <div class="cta-wrap"><button id="go" class="cta">Continua</button></div>
+    <footer>Swipe ← per tornare · Swipe → per continuare</footer>
   </main>
 
-  <!-- immagine: metodo robusto identico alla home -->
   <script>
     (async function loadHero(){
-      const img = document.getElementById('heroMini');
-      const tries = ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
-      for(const u of tries){
-        try{ const r = await fetch(u, {cache:'no-store'}); if(r.ok){ img.src = u + '?v=' + Date.now(); return; } }
-        catch(e){}
-      }
-      img.alt = 'Immagine non trovata';
+      const img=document.getElementById('heroMini');
+      const tries=['/third-hero.png','/public/third-hero.png','/assets/third-hero.png'];
+      for(const u of tries){ try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ img.src=u+'?v='+Date.now(); return; } }catch(e){} }
+      img.alt='Immagine non trovata';
     })();
   </script>
-
-  <!-- logica selezioni + storage + navigazione -->
   <script>
-    const storeKey = 'whatif_user';
-    const user = JSON.parse(localStorage.getItem(storeKey) || '{}'); // {ruolo,sesso,eta,fase,citta,note}
-
-    // ripristina chip selezionati se presenti
+    const storeKey='whatif_user';
+    const user = JSON.parse(localStorage.getItem(storeKey)||'{}'); // {ruolo,sesso,eta,fase,citta,note}
     document.querySelectorAll('.group').forEach(g=>{
-      const key = g.dataset.key;
-      if(user[key]){
-        [...g.querySelectorAll('.chip')].forEach(b=>{
-          if(b.textContent.trim()===user[key]) b.classList.add('selected');
-        });
-      }
-      g.addEventListener('click', (e)=>{
-        const b = e.target.closest('.chip'); if(!b) return;
-        g.querySelectorAll('.chip').forEach(x=>x.classList.remove('selected'));
-        b.classList.add('selected');
-        user[key] = b.textContent.trim();
-        localStorage.setItem(storeKey, JSON.stringify(user));
-      });
+      const key=g.dataset.key;
+      if(user[key]){ [...g.querySelectorAll('.chip')].forEach(b=>{ if(b.textContent.trim()===user[key]) b.classList.add('selected'); }); }
+      g.addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b)return; g.querySelectorAll('.chip').forEach(x=>x.classList.remove('selected')); b.classList.add('selected'); user[key]=b.textContent.trim(); localStorage.setItem(storeKey,JSON.stringify(user));});
     });
+    const citta=document.getElementById('citta'), note=document.getElementById('note');
+    if(user.citta) citta.value=user.citta; if(user.note) note.value=user.note;
+    [citta,note].forEach(el=>{ el.addEventListener('input',()=>{ user[el.id]=el.value; localStorage.setItem(storeKey,JSON.stringify(user)); }); });
+    document.getElementById('go').addEventListener('click',()=>{ location.href='fourth.html'; });
 
-    // input testo
-    const citta = document.getElementById('citta');
-    const note  = document.getElementById('note');
-    if(user.citta) citta.value = user.citta;
-    if(user.note)  note.value  = user.note;
-    [citta,note].forEach(el=>{
-      el.addEventListener('input', ()=>{
-        user[el.id] = el.value;
-        localStorage.setItem(storeKey, JSON.stringify(user));
-      });
-    });
-
-    // bottone continua
-    document.getElementById('go').addEventListener('click', ()=>{
-      // (opzionale) puoi imporre campi minimi qui
-      location.href = 'fourth.html';
-    });
-
-    // swipe: sinistra = home, destra = avanti
-    (function(){
-      let sx=0, sy=0, dx=0, dy=0, start=false, TH=55;
-      document.addEventListener('touchstart', e=>{
-        const t=e.touches[0]; sx=t.clientX; sy=t.clientY; start=true;
-      }, {passive:true});
-      document.addEventListener('touchmove', e=>{
-        if(!start) return; const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy;
-      }, {passive:true});
-      document.addEventListener('touchend', ()=>{
-        if(!start) return; start=false;
-        if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){
-          if(dx>0){ location.href='index.html'; } else { location.href='fourth.html'; }
-        }
-        sx=sy=dx=dy=0;
-      }, {passive:true});
+    (function(){ let sx=0,sy=0,dx=0,dy=0,start=false,TH=55;
+      document.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;start=true;},{passive:true});
+      document.addEventListener('touchmove',e=>{if(!start)return;const t=e.touches[0];dx=t.clientX-sx;dy=t.clientY-sy;},{passive:true});
+      document.addEventListener('touchend',()=>{ if(!start)return; start=false;
+        if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){ if(dx>0){ location.href='fourth.html'; } else { location.href='index.html'; } }
+        sx=sy=dx=dy=0; },{passive:true});
     })();
   </script>
 </body>
