@@ -8,22 +8,36 @@
   <link rel="preload" as="image" href="/third-hero.png" />
   <style>
     :root{ --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A3B6BF; --accent:#00E0FF; --accent-dark:#00B5CC; --btn-disabled:#29404a; --error:#ff5c7a; }
-    *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     main{min-height:100%;display:flex;flex-direction:column;gap:18px;padding:18px 16px 22px;align-items:center;position:relative}
+
+    /* Indietro */
     .back{position:fixed;left:12px;top:12px;z-index:10}
-    .back a{display:inline-block;background:#0f1820;border:1px solid #20313a;color:#cfe6eb;padding:8px 12px;border-radius:12px;text-decoration:none;font-weight:700}
+    .back a{display:inline-block;background:#0f1820;border:1px solid #20313a;color:#cfe6eb;
+      padding:8px 12px;border-radius:12px;text-decoration:none;font-weight:700}
+
+    /* Hero */
     .hero{width:min(100%,860px);margin-top:6px;background:#0c141b;border-radius:22px;padding:10px 10px 14px;box-shadow:0 10px 28px rgba(0,0,0,.32)}
     .hero img{width:100%;height:auto;border-radius:16px;display:block;filter:drop-shadow(0 12px 28px rgba(0,0,0,.4))}
+
     .meta{width:min(100%,860px);text-align:center;color:var(--muted);font-size:13px;margin-top:-6px}
     h1{width:min(100%,860px);text-align:center;margin:2px auto 0;font-size:clamp(26px,6vw,40px);letter-spacing:.5px}
+
     .card{width:min(100%,860px);background:var(--card);border-radius:18px;padding:14px 12px 12px;box-shadow:0 8px 24px rgba(0,0,0,.28)}
     .card h3{margin:4px 8px 10px;font-size:18px;color:#d7e8ec}
+
+    .qbox{background:#0f1820;border:1px solid #1b2a33;color:#e6f2f5;border-radius:14px;padding:14px;font-size:16px}
     .input, .ta{width:100%;padding:12px 14px;border-radius:14px;border:1px solid #20313a;background:#0c141b;color:var(--fg);outline:none}
     .ta{min-height:100px;resize:vertical}
-    .row{display:flex;gap:10px;flex-wrap:wrap} .row>*{flex:1 1 240px}
+
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .row>*{flex:1 1 240px}
+
     .cta-wrap{width:min(100%,860px);display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
     .cta{display:inline-block;min-width:180px;text-align:center;background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329;font-weight:900;border:none;border-radius:28px;padding:12px 18px;box-shadow:0 0 14px rgba(0,181,204,.5),0 0 32px rgba(0,181,204,.25);cursor:pointer;transition:filter .16s ease, transform .08s ease}
     .cta:active{transform:translateY(1px)} .cta[disabled]{background:var(--btn-disabled);color:#7fa1aa;cursor:not-allowed;box-shadow:none}
+
     .answer{width:min(100%,860px);background:#0f1820;border:1px solid #1b2a33;border-radius:16px;padding:14px;display:none}
     .prob{color:#9fe6ff;font-weight:800;margin-bottom:4px}
     .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
@@ -35,10 +49,11 @@
 <body>
   <script>
     const qSaved = JSON.parse(localStorage.getItem('whatif_question')||'null');
-    const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-    const user  = JSON.parse(localStorage.getItem('whatif_user')||'{}');
+    const prefs  = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+    const user   = JSON.parse(localStorage.getItem('whatif_user')||'{}');
     if(!qSaved || !qSaved.question){ location.href='fourth.html'; }
   </script>
+
   <main>
     <div class="back"><a href="fourth.html">← Indietro</a></div>
 
@@ -46,17 +61,17 @@
     <div id="meta" class="meta"></div>
     <h1>RISULTATO</h1>
 
-    <!-- Step 1 -->
+    <!-- STEP 1: domanda (sola lettura) -->
     <section class="card" id="step1">
       <h3>La tua domanda:</h3>
-      <div class="ta" id="qShown" style="min-height:auto"></div>
+      <div id="qShown" class="qbox"></div>
       <div class="cta-wrap" style="margin-top:10px">
         <button id="askBtn" class="cta">Chiedi alla AI</button>
       </div>
       <p id="err1" class="error" style="display:none"></p>
     </section>
 
-    <!-- Step 2 -->
+    <!-- STEP 2: follow-up -->
     <section class="card" id="step2" style="display:none">
       <h3>Solo un attimo… chiarisci meglio</h3>
       <div id="followups" class="row"></div>
@@ -66,7 +81,7 @@
       <p id="err2" class="error" style="display:none"></p>
     </section>
 
-    <!-- Risposta -->
+    <!-- RISPOSTA -->
     <section id="answerBox" class="answer">
       <div class="prob" id="prob"></div>
       <div id="resp"></div>
@@ -85,19 +100,27 @@
       for(const u of tries){ try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){hero.src=u+'?v='+Date.now(); return;} }catch(e){} }
     })();
   </script>
+
   <script>
+    // breadcrumb
     const meta = document.getElementById('meta');
     const mapPeriodo = { past:'Passato', future:'Futuro' };
     const mapStile   = { whatif:'What if (plausibile)', wtf:'What the F (ironico)' };
     meta.textContent = `${prefs.periodo?mapPeriodo[prefs.periodo]:'—'} • ${prefs.stile?mapStile[prefs.stile]:'—'}`;
 
-    const qShown = document.getElementById('qShown'); qShown.textContent = qSaved.question;
+    // domanda in sola lettura
+    const qShown = document.getElementById('qShown');
+    qShown.textContent = qSaved.question;
 
-    const step1 = document.getElementById('step1'), step2 = document.getElementById('step2'), fuWrap = document.getElementById('followups');
-    const askBtn = document.getElementById('askBtn'), genBtn = document.getElementById('genBtn'), err1=document.getElementById('err1'), err2=document.getElementById('err2');
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const fuWrap = document.getElementById('followups');
+    const askBtn = document.getElementById('askBtn');
+    const genBtn = document.getElementById('genBtn');
+    const err1=document.getElementById('err1'), err2=document.getElementById('err2');
     const answerBox=document.getElementById('answerBox'), probEl=document.getElementById('prob'), respEl=document.getElementById('resp');
 
-    const USE_API = true; // prova l'API; se manca la chiave passa al mock
+    const USE_API = true; // usa API se presente; altrimenti mock
 
     askBtn.addEventListener('click', getFollowups);
     async function getFollowups(){
@@ -105,10 +128,11 @@
       try{
         let data;
         if(USE_API){
-          const r = await fetch('/api/ask', { method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ mode:'followups', prefs, user, question: qShown.textContent }) });
-          if(r.ok){ data = await r.json(); }
-          else throw new Error('API non disponibile');
+          const r = await fetch('/api/ask', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ mode:'followups', prefs, user, question: qShown.textContent })
+          });
+          if(r.ok){ data = await r.json(); } else throw new Error('API non disponibile');
         }
         if(!data || !Array.isArray(data.followups)){
           data = { followups: mockFollowups(qShown.textContent, prefs) };
@@ -121,9 +145,11 @@
                          <input id="${id}" class="input" placeholder="Rispondi qui..." />`;
           fuWrap.appendChild(div);
         });
-        step1.style.display='none'; step2.style.display='block';
+        step1.style.display='none';
+        step2.style.display='block';
       }catch(e){
-        err1.textContent='Impossibile generare le domande. Riprova.'; err1.style.display='block';
+        err1.textContent='Impossibile generare le domande. Riprova.';
+        err1.style.display='block';
       }
     }
 
@@ -137,10 +163,11 @@
       try{
         let data;
         if(USE_API){
-          const r = await fetch('/api/ask', { method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ mode:'final', prefs, user, question:qShown.textContent, followupAnswers: fuAnswers }) });
-          if(r.ok){ data = await r.json(); }
-          else throw new Error('API non disponibile');
+          const r = await fetch('/api/ask', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ mode:'final', prefs, user, question:qShown.textContent, followupAnswers: fuAnswers })
+          });
+          if(r.ok){ data = await r.json(); } else throw new Error('API non disponibile');
         }
         if(!data || typeof data.answer!=='string'){
           const mock = mockAnswer(qShown.textContent, prefs, fuAnswers);
@@ -152,7 +179,8 @@
         answerBox.style.display='block';
         window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
       }catch(e){
-        err2.textContent='Non sono riuscito a generare la risposta. Riprova.'; err2.style.display='block';
+        err2.textContent='Non sono riuscito a generare la risposta. Riprova.';
+        err2.style.display='block';
       }
     }
 
