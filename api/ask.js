@@ -1,79 +1,68 @@
-export default async function handler(req, res) {
-  try {
-    if (req.method === 'GET') {
-      return res.status(200).json({ ok: true, hint: 'POST /api/ask con {mode, question, prefs, user, followupAnswers}' });
-    }
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+// /api/ask.js
+export const config = { runtime: 'edge' };
 
-    const { mode, prefs, user, question, followupAnswers } = req.body || {};
-    if (!mode || !question) return res.status(400).json({ error: 'Bad request' });
+function json(status, obj){ return new Response(JSON.stringify(obj), { status, headers: { 'content-type':'application/json' } }); }
 
-    const apiKey = process.env.OPENAI_API_KEY;
+const QUICK_TONE = ['Breve', 'Dettagliata', 'Pratica'];
+const QUICK_SCOPE = ['Solo vita personale', 'Solo lavoro/studio', 'Entrambe'];
+const QUICK_HORIZON = ['1-3 mesi', '6-12 mesi', '2-3 anni'];
 
-    // --- Fallback MOCK se manca la chiave ---
-    if (!apiKey) {
-      if (mode === 'followups') {
-        return res.status(200).json({
-          followups: mockFollowups(question, prefs),
-          mock: true
-        });
-      }
-      if (mode === 'final') {
-        const m = mockAnswer(question, prefs, followupAnswers || []);
-        return res.status(200).json({ answer: m.text, probability: m.p, mock: true });
-      }
-      return res.status(400).json({ error: 'Unknown mode' });
-    }
+export default async function handler(req) {
+  if (req.method !== 'POST') return json(405,{error:'Method not allowed'});
+  let body = {};
+  try { body = await req.json(); } catch { return json(400,{error:'Bad JSON'}); }
 
-    // --- Prompt & chiamata OpenAI (GPT-3.5-turbo) ---
-    const style = prefs?.stile === 'wtf' ? 'ironico/creativo' : 'plausibile/riflessivo';
-    const time  = prefs?.periodo === 'past' ? 'passato' : 'futuro';
-    const system = `Sei What?f, un assistente che risponde in modo ${style}. Se si esplora il passato, spiega cosa SAREBBE potuto accadere; se il futuro, cosa POTREBBE accadere. Sii concreto, personale, 5–7 righe.`;
+  const { action, sessionId, question, turn, transcript, period, mode } = body || {};
 
-    if (mode === 'followups') {
-      const userMsg = `Domanda: "${question}"\nProfilo: ${JSON.stringify(user||{})}\nPeriodo: ${time}. Stile: ${style}.\nGenera 2-3 domande di follow-up brevi.\nRispondi SOLO JSON: {"followups":["...","...","..."]}`;
-      const data = await openai(system, userMsg, apiKey);
-      let out={}; try{ out = JSON.parse(data) }catch{ out={ followups: [] } }
-      return res.status(200).json({ followups: out.followups || [] });
+  // ── 1) avvio chiarimento ──────────────────────────────────────────────────────
+  if (action === 'clarify_start') {
+    // prima domanda adattata in modo semplice al testo
+    const q = (question||'').toLowerCase();
+    let prompt = '';
+    let quick = null;
+
+    if (q.includes('lavor') || q.includes('carriera')) {
+      prompt = 'Per orientarmi meglio: quale settore/ruolo ti interessa di più e con che orizzonte temporale?';
+      quick = ['Settore attuale','Cambio settore','Manageriale','Autonomo/freelance'];
+    } else if (q.includes('relaz') || q.includes('amore')) {
+      prompt = 'Vuoi un taglio più riflessivo o pratico? Preferisci concentrarti sui prossimi mesi o su un quadro più ampio?';
+      quick = ['Riflessivo, prossimi mesi','Pratico, prossimi mesi','Riflessivo, lungo termine','Pratico, lungo termine'];
+    } else {
+      prompt = 'Ti va di dirmi se vuoi una risposta breve/pratica o più articolata e con alternative?';
+      quick = QUICK_TONE;
     }
 
-    if (mode === 'final') {
-      const userMsg = `Domanda: "${question}"\nFollow-up: ${JSON.stringify(followupAnswers||[])}\nProfilo: ${JSON.stringify(user||{})}\nPeriodo: ${time}. Stile: ${style}.\nRispondi SOLO JSON: {"answer":"testo","probability":0-100}`;
-      const data = await openai(system, userMsg, apiKey);
-      let out={}; try{ out = JSON.parse(data) }catch{ out={ answer:"", probability:null } }
-      return res.status(200).json({ answer: out.answer || "", probability: out.probability });
-    }
-
-    return res.status(400).json({ error: 'Unknown mode' });
-  } catch (e) {
-    console.error(e);
-    return res.status(500).json({ error: 'Server error' });
+    return json(200,{ prompt, quick });
   }
-}
 
-async function openai(system, userMsg, apiKey){
-  const r = await fetch("https://api.openai.com/v1/chat/completions", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json", "Authorization":`Bearer ${apiKey}` },
-    body: JSON.stringify({ model:"gpt-3.5-turbo", temperature:0.8, messages:[ {role:"system",content:system}, {role:"user",content:userMsg} ] })
-  });
-  const j = await r.json();
-  return j?.choices?.[0]?.message?.content || "{}";
-}
+  // ── 2) turni successivi di chiarimento ───────────────────────────────────────
+  if (action === 'clarify_next') {
+    const t = Number(turn||1);
 
-// --- Mock helpers ---
-function mockFollowups(q, prefs){
-  const arr=[];
-  if((prefs?.periodo||'')==='past'){ arr.push('Qual era l’alternativa concreta che avevi in mente?'); }
-  else { arr.push('Qual è il primo passo realistico che potresti fare?'); }
-  arr.push('Quale ostacolo principale senti in questo scenario?');
-  arr.push('Che risultato considereresti un successo entro 6–12 mesi?');
-  return arr;
-}
-function mockAnswer(q, prefs, fu){
-  const style = (prefs?.stile==='wtf')?'ironica e creativa':'plausibile e realistica';
-  const time  = (prefs?.periodo==='past')?'sarebbe potuto accadere':'potrebbe accadere';
-  const p = 55 + Math.floor(Math.random()*21) - 10; // 45–65
-  const text = `In modo ${style}, ecco cosa ${time}: partendo da "${q}", emerge che ${fu?.[0]||'l’intento è chiaro'}, con il limite di ${fu?.[1]||'tempo/risorse'} e un successo come ${fu?.[2]||'stabilità e crescita'}. Prova 30 giorni con un micro-obiettivo misurabile, feedback esterno e check settimanale; poi rivaluta la direzione.`;
-  return { text, p };
+    // dopo 2 chiarimenti → fine con risposta sintetica
+    if (t >= 2) {
+      const baseQ = (transcript?.find(x=>x.role==='user')?.content)||'la tua domanda';
+      const pLabel = period==='past' ? 'ipotizzando come sarebbe potuto andare' : 'ipotizzando cosa potrebbe accadere';
+      const style = mode==='wtf'
+        ? 'Ton0 creativo/ironico, con un twist inaspettato ma coerente.'
+        : 'Tono realistico, concreto e plausibile.';
+      const answer =
+        `Ecco una possibile traiettoria ${pLabel} partendo da “${baseQ}”. `
+        + (mode==='wtf'
+            ? 'Immagina una sequenza di eventi improbabili ma non impossibili che ti spingono fuori rotta — e proprio lì trovi uno spunto inatteso.'
+            : 'Scandisco i passaggi in obiettivi, scelte e rischi: breve, medio e lungo termine, con esempi pratici e trade-off chiari.');
+
+      return json(200,{ done:true, answer });
+    }
+
+    // domanda 2 di chiarimento (con quick)
+    if (t === 1) {
+      return json(200,{ done:false, prompt:'Inquadriamo il contesto: preferisci concentrarti su vita personale, lavoro/studio o entrambi?', quick: QUICK_SCOPE });
+    }
+
+    // fallback
+    return json(200,{ done:false, prompt:'Ultimo dettaglio: su quale orizzonte temporale vuoi che mi concentri?', quick: QUICK_HORIZON });
+  }
+
+  return json(400,{error:'Unknown action'});
 }
