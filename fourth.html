@@ -10,7 +10,6 @@
     :root{
       --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
       --accent:#00E0FF; --accent-dark:#00B5CC;
-      --chip:#17212a; --ok:#0fd17b; --err:#ff6363;
     }
     *{ box-sizing:border-box }
     html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
@@ -33,10 +32,12 @@
     /* Card form */
     .card{ width:min(100%,980px); margin:0 auto; background:var(--card); border-radius:18px; padding:16px;
       box-shadow:0 10px 24px rgba(0,0,0,.25) }
-    .label{ font-size:18px; font-weight:700; margin:2px 0 8px; }
+    .label{ font-size:18px; font-weight:700; margin:2px 0 8px }
     textarea{ width:100%; min-height:120px; border:1px solid #20303b; background:#0f1820; color:#cfe6eb;
       border-radius:14px; padding:14px 16px; font-size:16px; outline:none }
     textarea:focus{ border-color:#28515e }
+
+    .hint{ width:min(100%,980px); margin:6px auto 0; text-align:center; color:var(--muted); font-size:12px }
 
     .submit-wrap{ display:flex; justify-content:center; margin-top:14px }
     .btn{ display:inline-block; border:none; border-radius:28px; padding:14px 22px; min-width:220px;
@@ -45,20 +46,6 @@
       transition:filter .16s ease, transform .08s ease }
     .btn:active{ transform:translateY(1px) }
     .btn[disabled]{ background:#29404a; color:#7fa1aa; cursor:not-allowed; box-shadow:none }
-
-    /* Output risposta */
-    .out{ width:min(100%,980px); margin:4px auto 0; background:#0f1820; color:#cfe6eb;
-      border-radius:14px; padding:14px 16px; box-shadow:0 10px 24px rgba(0,0,0,.25); white-space:pre-wrap }
-    .out.ok{ border:1px solid #164b36; }
-    .out.err{ border:1px solid #4b1616; color:#ffc6c6 }
-
-    /* Azioni */
-    .actions{ width:min(100%,980px); margin:6px auto 0; display:flex; justify-content:center; gap:10px; flex-wrap:wrap }
-    .chip{ background:var(--chip); color:#cfe6eb; border:none; border-radius:999px; padding:10px 14px; font-weight:700; cursor:pointer }
-    .hint{ width:min(100%,980px); margin:4px auto 0; text-align:center; color:var(--muted); font-size:12px }
-
-    /* Swipe toast (discreto) */
-    .toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:12px; font-size:12px; color:var(--muted) }
   </style>
 </head>
 <body>
@@ -68,31 +55,21 @@
       <img id="hero" alt="Due porte illuminate" loading="eager" decoding="async" />
     </div>
 
-    <!-- RIEPILOGO SCELTA -->
-    <div class="breadcrumbs" id="crumbs"> </div>
+    <!-- RIEPILOGO SCELTE (da home) -->
+    <div class="breadcrumbs" id="crumbs"></div>
 
     <h1>LA TUA DOMANDA</h1>
 
-    <!-- FORM -->
+    <!-- FORM (solo salvataggio e avanti) -->
     <form id="questionForm" class="card" novalidate>
       <div class="label">Scrivi la tua domanda What?f…</div>
-      <textarea id="questionInput" placeholder="Es. Se fossi rimasto a L’Aquila?"></textarea>
+      <textarea id="questionInput" placeholder="Es. Se nel 2021 avessi cambiato lavoro? / Se tra 6 mesi mi trasferissi a Milano?"></textarea>
+
       <div class="submit-wrap">
-        <button id="submitBtn" class="btn" type="submit">Continua</button>
+        <button id="nextBtn" class="btn" type="submit" disabled>Continua</button>
       </div>
+      <p class="hint">Swipe ← per tornare · Swipe → per continuare</p>
     </form>
-
-    <!-- RISPOSTA -->
-    <div id="aiResponse" class="out" style="display:none;"></div>
-
-    <!-- AZIONI -->
-    <div class="actions">
-      <button class="chip" id="likeBtn">👍 Like</button>
-      <button class="chip" id="dislikeBtn">👎 Dislike</button>
-      <button class="chip" id="shareBtn">📤 Condividi</button>
-    </div>
-
-    <div class="hint">Swipe ← per tornare · Swipe → per avanzare (se possibile)</div>
   </main>
 
   <!-- Immagine: metodo robusto -->
@@ -110,86 +87,35 @@
     })();
   </script>
 
-  <!-- Logica: prefs, submit a /api/ask, swipe, azioni -->
+  <!-- Logica: prefs, abilitazione bottone, salvataggio e swipe -->
   <script>
-    // --- Prefs dal localStorage per breadcrumb e payload ---
+    // Riepilogo scelte
     const prefs = JSON.parse(localStorage.getItem('whatif_prefs') || '{}'); // { periodo: 'past'|'future', stile: 'whatif'|'wtf' }
     const mapPeriodo = { past:'Passato', future:'Futuro' };
     const mapStile   = { whatif:'What if (plausibile)', wtf:'What the F (ironico)' };
     document.getElementById('crumbs').innerHTML =
       `${prefs.periodo ? mapPeriodo[prefs.periodo] : '—'} · <b>${prefs.stile ? mapStile[prefs.stile] : '—'}</b>`;
 
+    // Elementi
     const form   = document.getElementById('questionForm');
     const input  = document.getElementById('questionInput');
-    const out    = document.getElementById('aiResponse');
-    const submit = document.getElementById('submitBtn');
+    const next   = document.getElementById('nextBtn');
 
-    function showOut(text, ok=true){
-      out.style.display='block';
-      out.classList.remove('ok','err');
-      out.classList.add(ok ? 'ok' : 'err');
-      out.textContent = text;
-    }
+    // Abilita il bottone quando c'è testo
+    input.addEventListener('input', ()=>{
+      next.disabled = input.value.trim().length < 6;
+    });
 
-    // --- Submit a /api/ask ---
-    form.addEventListener('submit', async (e)=>{
+    // Salva domanda e vai alla quinta
+    form.addEventListener('submit', (e)=>{
       e.preventDefault();
       const question = (input.value || '').trim();
-      if(!question){ input.focus(); return; }
-
-      submit.disabled = true;
-      showOut('🤖 Sto pensando…', true);
-
-      try{
-        const res = await fetch('/api/ask', {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({
-            question,
-            mode: prefs.stile || 'whatif',
-            user: { periodo: prefs.periodo || null }
-          })
-        });
-
-        const raw = await res.text();
-        let data; try{ data = JSON.parse(raw) } catch{ data = { reply: raw } }
-
-        if(!res.ok){
-          showOut(`⚠️ Errore ${res.status}: ${data.error || raw}`, false);
-        }else{
-          showOut(data.reply || 'Nessuna risposta ricevuta.', true);
-        }
-      }catch(err){
-        showOut('⚠️ Errore di rete nel contattare la AI.', false);
-      }finally{
-        submit.disabled = false;
-      }
+      if (question.length < 6) return;
+      localStorage.setItem('whatif_question', JSON.stringify({ question, ts: Date.now() }));
+      location.href = 'fifth.html';
     });
 
-    // --- Azioni: like/dislike/share (locali) ---
-    document.getElementById('likeBtn').addEventListener('click', ()=>toast('Grazie per il feedback! 👍'));
-    document.getElementById('dislikeBtn').addEventListener('click', ()=>toast('Ricevuto. Miglioreremo! 👀'));
-    document.getElementById('shareBtn').addEventListener('click', async ()=>{
-      const text = out.textContent?.trim() || '';
-      try{
-        if(navigator.share){
-          await navigator.share({ title:'What?f', text, url: location.href });
-        }else{
-          await navigator.clipboard.writeText(text || location.href);
-          toast('Copiato! 📋');
-        }
-      }catch(_){}
-    });
-
-    function toast(msg){
-      const t = document.createElement('div');
-      t.className='toast';
-      t.textContent=msg;
-      document.body.appendChild(t);
-      setTimeout(()=>{ t.remove() }, 1600);
-    }
-
-    // --- Swipe: ← back · → submit (se presente testo) ---
+    // Swipe: sinistra = indietro (second.html), destra = avanti (se testo valido)
     (function(){
       let sx=0, sy=0, dx=0, dy=0, start=false, TH=55;
       document.addEventListener('touchstart',e=>{
@@ -201,14 +127,10 @@
       document.addEventListener('touchend',()=>{
         if(!start) return; start=false;
         if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>TH){
-          if(dx>0){ // swipe right
-            if((input.value||'').trim()){
-              form.requestSubmit(); // invia solo se c’è una domanda
-            } else {
-              toast('Scrivi una domanda per continuare →');
-            }
-          }else{ // swipe left
-            history.back();
+          if(dx>0){ // swipe right = avanti
+            if ((input.value||'').trim().length >= 6) form.requestSubmit();
+          }else{    // swipe left = indietro
+            location.href = 'second.html';
           }
         }
         sx=sy=dx=dy=0;
