@@ -3,14 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f — Home</title>
+  <title>What?f – Home</title>
   <meta name="theme-color" content="#0A0F14" />
   <link rel="preload" as="image" href="/home-hero.png" />
   <style>
     :root{
       --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
-      --accent:#00E0FF; --accent2:#00B5CC;
-      --chip:#17212a; --chipSelStart:#00E0FF; --chipSelEnd:#00B5CC; --chipText:#002329;
+      --accent:#00E0FF; --accent-dark:#00B5CC;
+      --yellow:#f7b23b; --teal:#00d0e6;
+      --chip:#17212a; --chip-text:#002329;
     }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
@@ -18,101 +19,118 @@
     main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;
       padding:14px 14px 26px; text-align:center;}
 
-    /* hero */
+    .topbar{width:min(100%,980px);display:flex;justify-content:flex-end}
+    .langbtn{background:#0f1820;border:1px solid #1d2b34;color:var(--muted);
+      padding:8px 12px;border-radius:999px;font-size:14px;cursor:pointer}
+
     .hero{width:min(100%,980px);background:#0c141b;border-radius:22px;padding:12px 12px 16px;
       box-shadow:0 10px 28px rgba(0,0,0,.35)}
     .hero img{width:100%;height:auto;border-radius:16px;display:block;
       filter:drop-shadow(0 10px 28px rgba(0,0,0,.42))}
 
-    h1{margin:6px 0 0;width:min(100%,980px);font-size:clamp(26px,6vw,40px);color:#E6F2F5}
-    .lead{width:min(100%,980px);color:#d7e8ec;margin-top:2px;
-      font-size:clamp(14px,4vw,18px);line-height:1.5}
+    h1{margin:4px 0 0;width:min(100%,980px);font-size:clamp(26px,6vw,40px)}
+    h1 span{color:var(--accent)}
+    .lead{width:min(100%,980px);color:#d7e8ec;margin-top:-2px;
+      font-size:clamp(14px,4vw,18px);line-height:1.45}
 
     .group{width:min(100%,980px);display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
     .chip{appearance:none;border:none;background:var(--chip);color:#cfe6eb;
       padding:12px 16px;border-radius:16px;font-weight:800;cursor:pointer;
       transition:transform .06s ease, box-shadow .18s ease, background .18s ease}
     .chip:active{transform:translateY(1px)}
-    .chip.selected{background:linear-gradient(180deg,var(--chipSelStart),var(--chipSelEnd));color:var(--chipText);
+    .chip.selected{background:linear-gradient(180deg,#00bcd4,#00E0FF);color:var(--chip-text);
       box-shadow:0 0 12px rgba(0,224,255,.35)}
+    .chip.yellow.selected{background:linear-gradient(180deg,#ffcd66,#f7b23b);color:#3a2a00}
+    .chip.teal.selected{background:linear-gradient(180deg,#18e1ff,#00c0d8);color:#002329}
 
     .badge{margin-top:-2px;width:min(100%,980px);display:flex;justify-content:center}
     .badge span{background:#0f1820;border:1px solid #1d2b34;color:var(--muted);
       padding:8px 12px;border-radius:999px;font-size:13px}
 
-    .cta-wrap{width:min(100%,980px);display:flex;flex-direction:column;align-items:center;gap:8px}
-    .cta{margin-top:4px;display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent2));
+    .cta{margin-top:4px;display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent-dark));
       color:#002329;font-weight:900;border:none;border-radius:24px;padding:12px 18px;min-width:210px;
       box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25);
       cursor:pointer;transition:filter .16s ease, transform .08s ease}
     .cta:active{transform:translateY(1px)}
     .cta[disabled]{background:#29404a;color:#7fa1aa;cursor:not-allowed;box-shadow:none}
+    .cta-wrap{width:min(100%,980px);display:flex;justify-content:center}
 
-    .langSel{background:#0f1820;color:#cfe6eb;border:1px solid #1d2b34;border-radius:10px;padding:6px 8px}
-
-    footer{width:min(100%,980px);color:var(--muted);font-size:12px;margin-top:8px}
+    footer{width:min(100%,980px);color:var(--muted);font-size:12px;margin-top:2px}
     footer a{color:var(--accent);text-decoration:none}
-  </style>
 
-  <!-- i18n globale -->
-  <script src="/i18n.js"></script>
+    /* Modal lingua */
+    .modal[hidden]{display:none}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);
+      display:flex;align-items:center;justify-content:center;z-index:50}
+    .modal-card{background:#0f1820;border:1px solid #1d2b34;border-radius:18px;
+      width:min(92%,520px);padding:20px;text-align:center}
+    .modal-card h2{margin:6px 0 4px;font-size:clamp(20px,5.5vw,28px)}
+    .modal-card p{margin:0 0 12px;color:var(--muted)}
+    .row{display:flex;gap:10px;justify-content:center}
+  </style>
 </head>
 <body>
-  <!-- Gate lingua al primo avvio -->
-  <div id="langGate" style="position:fixed;inset:0;background:rgba(10,15,20,.92);display:none;z-index:9999;align-items:center;justify-content:center;padding:24px">
-    <div style="max-width:520px;width:100%;background:#121820;border-radius:18px;padding:20px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.35)">
-      <h2 data-i18n="choose_lang_title">Scegli la lingua</h2>
-      <p style="color:#A0B2BA;margin-top:6px" data-i18n="choose_lang_sub">Potrai cambiarla in ogni momento.</p>
-      <div style="display:flex;gap:12px;justify-content:center;margin-top:14px">
-        <button id="pickIT" style="padding:12px 16px;border-radius:14px;border:0;background:#0f1820;color:#cfe6eb;cursor:pointer" data-i18n="lang_it">Italiano</button>
-        <button id="pickEN" style="padding:12px 16px;border-radius:14px;border:0;background:linear-gradient(180deg,#00E0FF,#00B5CC);color:#002329;font-weight:900;cursor:pointer" data-i18n="lang_en">English</button>
-      </div>
-    </div>
-  </div>
-
   <main>
-    <div class="hero">
-      <img id="hero" alt="What?f — Choose your way" loading="eager" decoding="async" />
+    <div class="topbar">
+      <button id="changeLang" class="langbtn">🌐 <span data-i18n="change_lang"></span></button>
     </div>
 
-    <h1 data-i18n="home_headline">Scopri il tuo What?f</h1>
+    <h1><span data-i18n="home_title_prefix"></span> <span style="color:var(--accent)">What?f</span></h1>
+
+    <div class="hero">
+      <img id="hero" alt="Choose your way – due porte" loading="eager" decoding="async" />
+    </div>
+
     <p class="lead" data-i18n="home_lead">
-      Immagina la scelta che non hai fatto… e quella che potresti fare domani. What?f ti mostra “cosa sarebbe potuto accadere” e “cosa potrebbe accadere” se scegli una porta invece dell’altra.
+      <!-- i18n -->
     </p>
 
     <!-- Scelta 1: periodo -->
     <div class="group" id="periodGroup" aria-label="Periodo">
-      <button class="chip" data-key="periodo" data-val="past"   data-i18n="past">Passato</button>
-      <button class="chip" data-key="periodo" data-val="future" data-i18n="future">Futuro</button>
+      <button class="chip" data-key="periodo" data-val="past"   data-i18n="opt_past"></button>
+      <button class="chip" data-key="periodo" data-val="future" data-i18n="opt_future"></button>
     </div>
 
     <!-- Scelta 2: stile -->
     <div class="group" id="styleGroup" aria-label="Stile">
-      <button class="chip" data-key="stile" data-val="whatif" data-i18n="whatif">What if</button>
-      <button class="chip" data-key="stile" data-val="wtf"    data-i18n="wtf">What the F</button>
+      <button class="chip yellow" data-key="stile" data-val="whatif" data-i18n="opt_whatif"></button>
+      <button class="chip teal"   data-key="stile" data-val="wtf"    data-i18n="opt_wtf"></button>
     </div>
 
     <!-- micro-badge riepilogo -->
     <div class="badge" id="badge" style="display:none">
-      <span id="badgeText"><span data-i18n="selected">Selezionato:</span> —</span>
+      <span id="badgeText">—</span>
     </div>
 
     <div class="cta-wrap">
-      <button id="go" class="cta" disabled data-i18n="next">AVANTI</button>
-
-      <!-- piccolo selettore lingua sempre disponibile -->
-      <select id="langSel" class="langSel" aria-label="Language">
-        <option value="it">IT</option>
-        <option value="en">EN</option>
-      </select>
+      <button id="go" class="cta" disabled data-i18n="cta_next"></button>
     </div>
 
     <footer>
-      © 2025 What?f · <a href="privacy.html" data-i18n="policy">Privacy Policy</a> · <a href="terms.html" data-i18n="terms">Termini d’uso</a>
+      <span data-i18n="disclaimer_short"></span>
+      <a href="privacy.html" data-i18n="privacy"></a>
+      <span> · </span>
+      <a href="terms.html" data-i18n="terms"></a>.
+      <br/>© 2025 What?f
     </footer>
   </main>
 
-  <!-- Caricamento robusto immagine hero -->
+  <!-- MODAL LINGUA -->
+  <div id="langModal" class="modal" hidden>
+    <div class="modal-card">
+      <h2 data-i18n="choose_lang_title"></h2>
+      <p  data-i18n="choose_lang_sub"></p>
+      <div class="row">
+        <button id="btnLangIt" class="chip"  data-i18n="lang_it"></button>
+        <button id="btnLangEn" class="chip selected" data-i18n="lang_en"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- i18n runtime (già presente in /public/i18n.js) -->
+  <script src="/i18n.js" defer></script>
+
+  <!-- immagine: metodo robusto -->
   <script>
     (async function loadHero(){
       const hero=document.getElementById('hero');
@@ -125,47 +143,44 @@
     })();
   </script>
 
-  <!-- Logica lingua: gate iniziale + selettore persistente -->
+  <!-- logica selezioni + CTA gated + badge + lingua -->
   <script>
-    (function initI18N(){
-      if(!localStorage.getItem("whatif_lang")){
-        document.getElementById('langGate').style.display='flex';
-      }
-      I18N.apply();
-      const hideGate=()=>{ document.getElementById('langGate').style.display='none'; };
+    // === i18n boot ===
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.I18N?.apply) I18N.apply();
 
-      document.getElementById('pickIT').onclick = ()=>{ I18N.setLang('it'); hideGate(); updateBadge(); };
-      document.getElementById('pickEN').onclick = ()=>{ I18N.setLang('en'); hideGate(); updateBadge(); };
+      const modal = document.getElementById('langModal');
+      const change = document.getElementById('changeLang');
+      const it = document.getElementById('btnLangIt');
+      const en = document.getElementById('btnLangEn');
 
-      const sel=document.getElementById('langSel');
-      sel.value=localStorage.getItem('whatif_lang')||'it';
-      sel.addEventListener('change',e=>{ I18N.setLang(e.target.value); updateBadge(); });
-    })();
-  </script>
+      if (!localStorage.getItem('whatif_lang')) modal.hidden = false;
 
-  <!-- Logica selezioni + CTA gated -->
-  <script>
+      change?.addEventListener('click', ()=> modal.hidden = false);
+      it?.addEventListener('click', ()=>{ I18N.setLang('it'); modal.hidden = true; });
+      en?.addEventListener('click', ()=>{ I18N.setLang('en'); modal.hidden = true; });
+    });
+
+    // === selezioni ===
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}'); // {periodo, stile}
     const groups = [document.getElementById('periodGroup'), document.getElementById('styleGroup')];
-    const badge = document.getElementById('badge');
+    const badge  = document.getElementById('badge');
     const badgeText = document.getElementById('badgeText');
     const go = document.getElementById('go');
 
-    function t(key){ return I18N.t(key); }
+    function t(key, fallback=''){
+      // piccola helper per leggere da I18N se disponibile
+      try { return I18N.t(key) || fallback } catch { return fallback }
+    }
 
     function updateBadge(){
-      const a = state.periodo === 'past' ? t('past') :
-                state.periodo === 'future' ? t('future') : null;
-      const b = state.stile === 'whatif' ? t('whatif') :
-                state.stile === 'wtf'    ? t('wtf') : null;
+      const a = state.periodo === 'past'   ? t('opt_past','Passato') :
+                state.periodo === 'future' ? t('opt_future','Futuro') : null;
+      const b = state.stile   === 'whatif' ? t('opt_whatif','What if') :
+                state.stile   === 'wtf'    ? t('opt_wtf','What the F') : null;
       if(a || b){
         badge.style.display='flex';
-        // ricostruisce il testo con la lingua corrente
-        const selLab = t('selected');
-        const parts = [];
-        if(a) parts.push(a);
-        if(b) parts.push(b);
-        badgeText.innerHTML = `<span data-i18n="selected">${selLab}</span> ${parts.join(' • ')}`;
+        badgeText.textContent = t('selected','Selezionato: ') + [a,b].filter(Boolean).join(' • ');
       }else{
         badge.style.display='none';
       }
