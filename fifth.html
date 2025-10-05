@@ -1,54 +1,56 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>What?f — Risultato</title>
-<meta name="theme-color" content="#0A0F14"/>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>What?f — Risultato</title><meta name="theme-color" content="#0A0F14"/>
 <style>
   :root{--bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent2:#00B5CC}
   *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:860px;margin:0 auto;padding:16px 14px 28px}
-  .top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-  .thumb{width:84px;height:auto;border-radius:10px;filter:drop-shadow(0 6px 18px rgba(0,0,0,.45))}
+  main{max-width:860px;margin:0 auto;padding:12px 14px 28px}
+  .topbar{width:100%;display:flex;align-items:center;justify-content:center;padding:8px 0 4px}
+  .mini-logo{width:72px;height:auto;border-radius:10px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));opacity:.95}
+  @media (min-width:768px){ .mini-logo{ width:84px } }
+  .rowtop{display:flex;align-items:center;gap:10px;margin-top:6px;margin-bottom:8px}
   .back{appearance:none;border:0;background:#0f1820;color:#d8ebef;border-radius:12px;padding:8px 12px;cursor:pointer}
-  h1{margin:6px 0 10px;font-size:clamp(26px,6vw,40px)}
+  .meta{color:var(--muted);font-size:13px}
+  h1{margin:8px 0 10px;font-size:clamp(26px,6vw,40px)}
   .card{background:var(--card);border-radius:16px;padding:16px;margin:12px 0}
   .muted{color:var(--muted);font-size:14px}
-  .cta{display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#00262f;font-weight:900;border:none;border-radius:24px;padding:10px 16px}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{appearance:none;border:0;border-radius:20px;padding:10px 14px;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#00262f;font-weight:800;cursor:pointer}
 </style>
 </head>
 <body>
 <main>
-  <div class="top">
-    <button class="back" onclick="history.back()">← Indietro</button>
-    <img id="thumb" class="thumb" alt="Miniatura What?f"/>
-    <div class="muted" id="meta"></div>
+  <div class="topbar"><img id="miniLogo" class="mini-logo" alt="What?f" loading="eager" decoding="async"></div>
+  <div class="rowtop">
+    <button class="back" onclick="location.href='fourth.html'">← Indietro</button>
+    <div class="meta" id="meta"></div>
   </div>
 
   <h1>Risultato</h1>
-
   <article id="answer" class="card">Sto preparando la tua risposta…</article>
 
-  <p class="muted">Vuoi una versione estesa e personalizzata (più dettagli, piani d’azione, alternative)? <a href="#" class="cta">Sblocca “Leggi di più”</a></p>
+  <div class="actions">
+    <button class="btn" id="share">Condividi</button>
+    <button class="btn" onclick="location.href='index.html'">Home</button>
+  </div>
+
+  <p class="muted">Vuoi la versione estesa con piani d’azione e alternative? (in arrivo)</p>
 </main>
 
 <script>
-  (async function(){
-    const el=document.getElementById('thumb');
-    for (const u of ['/third-hero.png','/public/third-hero.png','/assets/third-hero.png']){
-      try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){el.src=u+'?v='+Date.now(); return;}}catch(_){}
-    }
-    el.alt='Immagine non trovata';
-  })();
-
+  (async function(){ const el=document.getElementById('miniLogo'); for (const u of ['/home-hero.png','/public/home-hero.png','/assets/home-hero.png']){ try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){ el.src=u+'?v='+Date.now(); return; }}catch(_){}} el.alt='Immagine non trovata';})();
   const saved = JSON.parse(localStorage.getItem('whatif_answer')||'null');
-  if(saved){
-    document.getElementById('meta').textContent = saved.meta || '';
-    document.getElementById('answer').textContent = saved.answer || '—';
-  }else{
-    document.getElementById('answer').textContent = 'Nessun risultato disponibile.';
-  }
+  if(saved){ document.getElementById('meta').textContent = saved.meta||''; document.getElementById('answer').textContent = saved.answer||'—'; }
+  else { document.getElementById('answer').textContent='Nessun risultato disponibile.'; }
+
+  // Share API (fallback: copia testo)
+  document.getElementById('share').addEventListener('click', async ()=>{
+    const text = `What?f — ${saved?.question||''}\n\n${saved?.answer||''}`;
+    if(navigator.share){ try{ await navigator.share({ text }); }catch(_){} }
+    else { try{ await navigator.clipboard.writeText(text); alert('Copiato negli appunti!'); }catch(_){ alert('Condivisione non disponibile.'); } }
+  });
 </script>
 </body>
 </html>
