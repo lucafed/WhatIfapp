@@ -1,169 +1,141 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>What?f — Parlami di te</title>
-<meta name="theme-color" content="#0A0F14"/>
+<meta name="theme-color" content="#0A0F14" />
 <style>
-:root{--bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent2:#00B5CC}
-*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+:root{
+  --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
+  --accent:#00E0FF; --accent2:#00B5CC;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
 main{max-width:980px;margin:0 auto;min-height:100%;padding:18px 16px 28px}
-.topbar{display:flex;gap:10px;align-items:center;margin-bottom:14px}
-.back{appearance:none;border:0;border-radius:14px;background:#0f1820;color:#d3e6ea;padding:10px 14px;font-weight:700;cursor:pointer}
-h1{margin:6px 0 10px;font-size:clamp(30px,6vw,44px)}
-h1 .hl{color:var(--accent)}
-.lead{color:#d7e8ec;line-height:1.55;font-size:clamp(14px,4vw,18px);margin:0 0 14px}
-.section{background:var(--card);border-radius:18px;padding:16px;margin:0 0 14px;box-shadow:0 10px 28px rgba(0,0,0,.28)}
-.section h2{margin:0 0 10px;font-size:18px}
-.group{display:flex;flex-wrap:wrap;gap:10px}
-.chip{appearance:none;border:0;background:#172129;color:#cfe6eb;padding:12px 16px;border-radius:16px;font-weight:800;cursor:pointer}
-.chip.selected{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#002329;box-shadow:0 0 12px rgba(0,181,204,.35)}
-.input{width:100%;background:#0b1218;color:#cfe6eb;border:1px solid #20303a;border-radius:14px;padding:12px 14px;font-size:16px}
-.actions{display:flex;gap:12px;justify-content:center;margin-top:14px}
-.btn{appearance:none;border:0;border-radius:24px;padding:12px 18px;font-weight:900;cursor:pointer}
-.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#002329;min-width:210px}
-.primary[disabled]{background:#2a3d47;color:#86a2ab;cursor:not-allowed;box-shadow:none}
-.req{color:#86a2ab;font-size:13px;margin-top:6px}
+
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.back{appearance:none;border:0;border-radius:14px;background:#0f1820;color:#d3e6ea;
+  padding:10px 14px;font-weight:700;cursor:pointer}
+h1{margin:6px 0 8px;font-size:clamp(30px,6vw,44px);color:var(--accent)}
+.desc{color:var(--muted);line-height:1.5;margin-bottom:22px}
+
+.section{background:var(--card);border-radius:18px;padding:16px;margin-bottom:16px;
+  box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.section h2{font-size:18px;margin:0 0 8px;color:var(--fg)}
+.opts{display:flex;flex-wrap:wrap;gap:10px}
+.opt{flex:1 1 30%;min-width:90px;text-align:center;background:#0f1820;color:var(--fg);
+  border-radius:20px;padding:10px 14px;cursor:pointer;border:1px solid #1d2b34;
+  transition:.25s}
+.opt.active{background:linear-gradient(180deg,var(--accent),var(--accent2));
+  color:#002329;font-weight:700;box-shadow:0 0 14px rgba(0,181,204,.4)}
+.note{font-size:13px;color:var(--muted);margin-top:6px}
+
+input,textarea{width:100%;background:#0c141b;border:1px solid #1d2b34;color:var(--fg);
+  border-radius:14px;padding:10px 14px;font-size:16px}
+textarea{min-height:120px;resize:vertical}
+
+.cta{display:flex;justify-content:center;margin-top:22px}
+.btn{appearance:none;border:0;border-radius:24px;padding:12px 18px;min-width:210px;
+  background:linear-gradient(180deg,var(--accent),var(--accent2));color:#002329;font-weight:900;
+  box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25);cursor:pointer}
 </style>
 </head>
 <body>
 <main>
   <div class="topbar">
-    <button class="back" onclick="location.href='index.html'">← Indietro</button>
+    <button class="back" id="backBtn">← Indietro</button>
   </div>
 
-  <h1><span class="hl">Parlami</span> di te</h1>
-  <p class="lead">
+  <h1>Parlami di te</h1>
+  <p class="desc">
     Raccontami brevemente chi sei, cosa stai vivendo o cosa ti spinge a usare What?f.
-    Questo aiuterà l’intelligenza artificiale a comprenderti meglio e
-    risponderti in modo più personale.
+    Questo aiuterà l’intelligenza artificiale a comprenderti meglio e risponderti in modo più personale.
   </p>
 
   <div class="section">
     <h2>Chi sei?</h2>
-    <div class="group" data-key="role" data-required="1">
-      <button class="chip">Studente</button>
-      <button class="chip">Lavoratore</button>
-      <button class="chip">Creativo</button>
+    <div class="opts" id="who">
+      <div class="opt">Studente</div>
+      <div class="opt">Lavoratore</div>
+      <div class="opt">Creativo</div>
     </div>
-    <div class="req">Seleziona una opzione.</div>
+    <p class="note">Seleziona una opzione.</p>
   </div>
 
   <div class="section">
     <h2>Sesso</h2>
-    <div class="group" data-key="gender" data-required="1">
-      <button class="chip">Femmina</button>
-      <button class="chip">Maschio</button>
-      <button class="chip">Altro</button>
-      <button class="chip">Preferisco non dirlo</button>
+    <div class="opts" id="gender">
+      <div class="opt">Femmina</div>
+      <div class="opt">Maschio</div>
+      <div class="opt">Altro</div>
+      <div class="opt">Preferisco non dirlo</div>
     </div>
-    <div class="req">Seleziona una opzione.</div>
+    <p class="note">Seleziona una opzione.</p>
   </div>
 
   <div class="section">
     <h2>Età</h2>
-    <div class="group" data-key="age" data-required="1">
-      <button class="chip">&lt;18</button>
-      <button class="chip">18–25</button>
-      <button class="chip">26–35</button>
-      <button class="chip">&gt;35</button>
+    <div class="opts" id="age">
+      <div class="opt">&lt;18</div>
+      <div class="opt">18–25</div>
+      <div class="opt">26–35</div>
+      <div class="opt">&gt;35</div>
     </div>
-    <div class="req">Seleziona una opzione.</div>
+    <p class="note">Seleziona una opzione.</p>
   </div>
 
   <div class="section">
     <h2>In quale fase ti trovi?</h2>
-    <div class="group" data-key="stage" data-required="1">
-      <button class="chip">Studio</button>
-      <button class="chip">Carriera</button>
-      <button class="chip">Relazioni</button>
+    <div class="opts" id="phase">
+      <div class="opt">Studio</div>
+      <div class="opt">Carriera</div>
+      <div class="opt">Relazioni</div>
     </div>
-    <div class="req">Seleziona una opzione.</div>
-  </div>
-
-  <div class="section">
-    <h2>Cosa ti interessa esplorare? (opzionale)</h2>
-    <div class="group" data-key="explore" data-multi="1">
-      <button class="chip">Passato</button>
-      <button class="chip">Futuro</button>
-      <button class="chip">What the f</button>
-    </div>
+    <p class="note">Seleziona una opzione.</p>
   </div>
 
   <div class="section">
     <h2>Da dove vieni?</h2>
-    <input id="origin" class="input" placeholder="Città / Paese"/>
+    <input id="from" placeholder="Città / Paese" />
   </div>
 
   <div class="section">
-    <h2>Vuoi raccontarci qualcosa di più su di te? <span style="color:#86a2ab">(opzionale – aiuta l’AI a darti risposte più accurate)</span></h2>
-    <textarea id="notes" class="input" style="min-height:120px" placeholder="Esempio: lavoro nel digitale, sto pensando di cambiare città, ho due figli..."></textarea>
+    <h2>Vuoi raccontarci qualcosa di più su di te? <span style="color:var(--muted);font-weight:400">(opzionale – aiuta l’AI a darti risposte più accurate)</span></h2>
+    <textarea id="more" placeholder="Esempio: lavoro nel digitale, sto pensando di cambiare città, ho due figli..."></textarea>
   </div>
 
-  <div class="actions">
-    <button id="next" class="btn primary" disabled>Continua</button>
+  <div class="cta">
+    <button id="next" class="btn">Continua</button>
   </div>
 </main>
 
 <script>
-const groups=[...document.querySelectorAll('.group')];
-const state=JSON.parse(localStorage.getItem('whatif_profile')||'{}');
-
-function restore(){
-  groups.forEach(g=>{
-    const key=g.dataset.key;
-    if(!key) return;
-    if(g.dataset.multi==='1'){
-      const arr=state[key]||[];
-      [...g.children].forEach(b=>{ if(arr.includes(b.textContent)) b.classList.add('selected'); });
-    }else{
-      const val=state[key];
-      if(!val) return;
-      [...g.children].forEach(b=>{ if(b.textContent===val) b.classList.add('selected'); });
-    }
+function bindGroup(id){
+  const box=document.getElementById(id);
+  box.querySelectorAll('.opt').forEach(el=>{
+    el.onclick=()=>{
+      box.querySelectorAll('.opt').forEach(b=>b.classList.remove('active'));
+      el.classList.add('active');
+    };
   });
-  document.getElementById('origin').value=state.origin||'';
-  document.getElementById('notes').value=state.notes||'';
-  checkReady();
 }
+['who','gender','age','phase'].forEach(bindGroup);
+document.getElementById('backBtn').onclick=()=>history.back();
 
-function handleChipClick(e){
-  const b=e.target.closest('.chip'); if(!b) return;
-  const g=b.parentElement; const key=g.dataset.key;
-  if(g.dataset.multi==='1'){
-    b.classList.toggle('selected');
-  }else{
-    [...g.children].forEach(x=>x.classList.remove('selected'));
-    b.classList.add('selected');
-  }
-  save(); checkReady();
-}
+document.getElementById('next').onclick=()=>{
+  const who=document.querySelector('#who .active')?.textContent||'';
+  const gender=document.querySelector('#gender .active')?.textContent||'';
+  const age=document.querySelector('#age .active')?.textContent||'';
+  const phase=document.querySelector('#phase .active')?.textContent||'';
+  const from=document.getElementById('from').value.trim();
+  const more=document.getElementById('more').value.trim();
 
-function save(){
-  const profile={};
-  groups.forEach(g=>{
-    const key=g.dataset.key;
-    const sel=[...g.querySelectorAll('.chip.selected')].map(b=>b.textContent);
-    profile[key]=g.dataset.multi==='1'? sel : (sel[0]||undefined);
-  });
-  profile.origin=document.getElementById('origin').value.trim();
-  profile.notes=document.getElementById('notes').value.trim();
-  localStorage.setItem('whatif_profile',JSON.stringify(profile));
-}
-
-function checkReady(){
-  const requiredOK=groups.filter(g=>g.dataset.required==='1')
-    .every(g=>g.querySelector('.chip.selected'));
-  document.getElementById('next').disabled=!requiredOK;
-}
-
-groups.forEach(g=>g.addEventListener('click',handleChipClick));
-document.getElementById('origin').addEventListener('input',save);
-document.getElementById('notes').addEventListener('input',save);
-document.getElementById('next').addEventListener('click',()=>location.href='third.html');
-
-restore();
+  const data={who,gender,age,phase,from,more};
+  localStorage.setItem('whatif_about',JSON.stringify(data));
+  location.href='third.html';
+};
 </script>
 </body>
 </html>
