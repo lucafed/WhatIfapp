@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f – Home</title>
   <meta name="theme-color" content="#0A0F14" />
+  <!-- Preload immagine hero -->
   <link rel="preload" as="image" href="/home-hero.png" />
   <style>
     :root{
       --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
       --accent:#00E0FF; --accent-dark:#00B5CC;
-      --yellow:#f7b23b; --teal:#00d0e6;
       --chip:#17212a; --chip-text:#002329;
+      --yellow:#f7b23b; --teal:#00d0e6;
     }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
@@ -19,17 +20,14 @@
     main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;
       padding:14px 14px 26px; text-align:center;}
 
-    .topbar{width:min(100%,980px);display:flex;justify-content:flex-end}
-    .langbtn{background:#0f1820;border:1px solid #1d2b34;color:var(--muted);
-      padding:8px 12px;border-radius:999px;font-size:14px;cursor:pointer}
-
     .hero{width:min(100%,980px);background:#0c141b;border-radius:22px;padding:12px 12px 16px;
       box-shadow:0 10px 28px rgba(0,0,0,.35)}
     .hero img{width:100%;height:auto;border-radius:16px;display:block;
       filter:drop-shadow(0 10px 28px rgba(0,0,0,.42))}
-
     h1{margin:4px 0 0;width:min(100%,980px);font-size:clamp(26px,6vw,40px)}
     h1 span{color:var(--accent)}
+    h2{margin:2px 0 0;width:min(100%,980px);font-size:clamp(18px,4.5vw,24px);color:var(--accent)}
+
     .lead{width:min(100%,980px);color:#d7e8ec;margin-top:-2px;
       font-size:clamp(14px,4vw,18px);line-height:1.45}
 
@@ -58,31 +56,22 @@
     footer{width:min(100%,980px);color:var(--muted);font-size:12px;margin-top:2px}
     footer a{color:var(--accent);text-decoration:none}
 
-    /* Modal lingua */
-    .modal[hidden]{display:none !important} /* <- forza il nascondimento */
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);
-      display:flex;align-items:center;justify-content:center;z-index:50}
-    .modal-card{background:#0f1820;border:1px solid #1d2b34;border-radius:18px;
-      width:min(92%,520px);padding:20px;text-align:center}
-    .modal-card h2{margin:6px 0 4px;font-size:clamp(20px,5.5vw,28px)}
-    .modal-card p{margin:0 0 12px;color:var(--muted)}
-    .row{display:flex;gap:10px;justify-content:center}
+    /* MODALE lingua */
+    .modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.55);z-index:20}
+    .modal.open{display:grid}
+    .sheet{background:#0f1820;border:1px solid #1d2b34;border-radius:16px;
+      width:min(92vw,520px);padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+    .row{display:flex;gap:10px;justify-content:center;margin-top:10px}
+    .chip.primary{background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329}
   </style>
 </head>
 <body>
   <main>
-    <div class="topbar">
-      <button id="changeLang" class="langbtn">🌐 <span data-i18n="change_lang">Cambia lingua</span></button>
-    </div>
-
-    <h1>
-      <span data-i18n="home_title_prefix">Scopri il tuo</span>
-      <span style="color:var(--accent)">What?f</span>
-    </h1>
-
     <div class="hero">
-      <img id="hero" alt="Choose your way – due porte" loading="eager" decoding="async" />
+      <img id="hero" alt="Due porte illuminate: scegli la tua via" loading="eager" decoding="async" />
     </div>
+
+    <h1><span data-i18n="home_title_1">Scopri il tuo</span> <span style="color:var(--accent)">What?f</span></h1>
 
     <p class="lead" data-i18n="home_lead">
       Immagina la scelta che non hai fatto… e quella che potresti fare domani.
@@ -92,112 +81,76 @@
 
     <!-- Scelta 1: periodo -->
     <div class="group" id="periodGroup" aria-label="Periodo">
-      <button class="chip" data-key="periodo" data-val="past"   data-i18n="opt_past">Passato</button>
-      <button class="chip" data-key="periodo" data-val="future" data-i18n="opt_future">Futuro</button>
+      <button class="chip" data-key="periodo" data-val="past"  data-i18n="past">Passato</button>
+      <button class="chip" data-key="periodo" data-val="future" data-i18n="future">Futuro</button>
     </div>
 
     <!-- Scelta 2: stile -->
     <div class="group" id="styleGroup" aria-label="Stile">
-      <button class="chip yellow" data-key="stile" data-val="whatif" data-i18n="opt_whatif">What if</button>
-      <button class="chip teal"   data-key="stile" data-val="wtf"    data-i18n="opt_wtf">What the F</button>
+      <button class="chip yellow" data-key="stile" data-val="whatif" data-i18n="whatif">What if</button>
+      <button class="chip teal"   data-key="stile" data-val="wtf"    data-i18n="wtf">What the F</button>
     </div>
 
     <!-- micro-badge riepilogo -->
     <div class="badge" id="badge" style="display:none">
-      <span id="badgeText">—</span>
+      <span id="badgeText">Selezionato:</span>
     </div>
 
     <div class="cta-wrap">
-      <button id="go" class="cta" disabled data-i18n="cta_next">AVANTI</button>
+      <button id="go" class="cta" disabled data-i18n="next">AVANTI</button>
     </div>
 
     <footer>
-      <span data-i18n="disclaimer_short">Continuando accetti la nostra</span>
+      <span data-i18n="disclaimer">Continuando accetti la nostra</span>
       <a href="privacy.html" data-i18n="privacy">Privacy Policy</a>
-      <span> · </span>
-      <a href="terms.html" data-i18n="terms">Termini d’uso</a>.
-      <br/>© 2025 What?f
+      <span>&nbsp;<span data-i18n="and">e</span>&nbsp;</span>
+      <a href="terms.html" data-i18n="terms">Termini d’uso</a>. © 2025 What?f
+      &nbsp;•&nbsp;<a href="#" id="changeLangBtn" data-i18n="change_lang">Cambia lingua</a>
     </footer>
   </main>
 
-  <!-- MODAL LINGUA -->
-  <div id="langModal" class="modal" hidden>
-    <div class="modal-card" id="langCard">
-      <h2 data-i18n="choose_lang_title">Scegli la lingua</h2>
-      <p  data-i18n="choose_lang_sub">Potrai cambiarla in ogni momento.</p>
+  <!-- Modale lingua -->
+  <div id="langModal" class="modal">
+    <div class="sheet">
+      <h3 style="margin:0 0 4px" data-i18n="choose_lang_title">Scegli la lingua</h3>
+      <p style="margin:0 0 10px;color:var(--muted)" data-i18n="choose_lang_sub">Potrai cambiarla in ogni momento.</p>
       <div class="row">
-        <button id="btnLangIt" class="chip">Italiano</button>
-        <button id="btnLangEn" class="chip">English</button>
+        <button class="chip" data-lang="it">Italiano</button>
+        <button class="chip primary" data-lang="en">English</button>
       </div>
     </div>
   </div>
 
-  <script src="/i18n.js" defer></script>
-
-  <!-- immagine robusta -->
+  <!-- i18n + logica pagina -->
+  <script src="/i18n.js?v=4" defer></script>
   <script>
+    // Carica l'immagine con fallback (rimane in /public)
     (async function loadHero(){
       const hero=document.getElementById('hero');
-      const tries=['/home-hero.png','/public/home-hero.png','/assets/home-hero.png'];
+      const tries=['/home-hero.png','/public/home-hero.png'];
       for(const u of tries){
         try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ hero.src=u+'?v='+Date.now(); return; } }
         catch(e){}
       }
       hero.alt='Immagine non trovata';
     })();
-  </script>
 
-  <!-- logica -->
-  <script>
-    function t(key, fallback=''){ try { return I18N.t(key) || fallback } catch { return fallback } }
-
-    // === MODALE LINGUA ===
-    const modal = document.getElementById('langModal');
-    const card  = document.getElementById('langCard');
-    const change = document.getElementById('changeLang');
-    const itBtn = document.getElementById('btnLangIt');
-    const enBtn = document.getElementById('btnLangEn');
-
-    function setLangAndClose(lang){
-      try{ I18N.setLang(lang); }catch(e){}
-      modal.hidden = true;
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      // applica i18n se presente
-      try{ I18N.apply(); }catch(e){}
-
-      // apri solo se non scelta prima
-      if (!localStorage.getItem('whatif_lang')) {
-        modal.hidden = false;
-        // fallback automatico se l’utente non clicca
-        setTimeout(()=>{ if(!modal.hidden) setLangAndClose('it'); }, 2000);
-      }
-
-      change.addEventListener('click', ()=> modal.hidden=false);
-      itBtn.addEventListener('click', ()=> setLangAndClose('it'));
-      enBtn.addEventListener('click', ()=> setLangAndClose('en'));
-      // chiudi cliccando fuori
-      modal.addEventListener('click', (e)=>{ if(e.target===modal) setLangAndClose(localStorage.getItem('whatif_lang')||'it'); });
-      // Esc
-      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && !modal.hidden) setLangAndClose(localStorage.getItem('whatif_lang')||'it'); });
-    });
-
-    // === SELEZIONI ===
+    // Stato selezioni
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}'); // {periodo, stile}
-    const groups = [document.getElementById('periodGroup'), document.getElementById('styleGroup')];
-    const badge  = document.getElementById('badge');
+    const periodGroup = document.getElementById('periodGroup');
+    const styleGroup  = document.getElementById('styleGroup');
+    const badge = document.getElementById('badge');
     const badgeText = document.getElementById('badgeText');
     const go = document.getElementById('go');
 
     function updateBadge(){
-      const a = state.periodo === 'past'   ? t('opt_past','Passato') :
-                state.periodo === 'future' ? t('opt_future','Futuro') : null;
-      const b = state.stile   === 'whatif' ? t('opt_whatif','What if') :
-                state.stile   === 'wtf'    ? t('opt_wtf','What the F') : null;
+      const a = state.periodo === 'past' ? I18N.t('past') :
+                state.periodo === 'future' ? I18N.t('future') : null;
+      const b = state.stile === 'whatif' ? I18N.t('whatif') :
+                state.stile === 'wtf'    ? I18N.t('wtf')    : null;
       if(a || b){
         badge.style.display='flex';
-        badgeText.textContent = (t('selected','Selezionato: ')) + [a,b].filter(Boolean).join(' • ');
+        badgeText.textContent = I18N.t('selected') + ' ' + [a,b].filter(Boolean).join(' • ');
       }else{
         badge.style.display='none';
       }
@@ -215,18 +168,51 @@
         updateBadge(); checkReady();
       });
     }
-    groups.forEach(wireGroup);
+    wireGroup(periodGroup);
+    wireGroup(styleGroup);
 
-    // ripristino selezioni salvate
+    // Ripristina selezioni salvate
     if(state.periodo){
       document.querySelector(`#periodGroup .chip[data-val="${state.periodo}"]`)?.classList.add('selected');
     }
     if(state.stile){
       document.querySelector(`#styleGroup .chip[data-val="${state.stile}"]`)?.classList.add('selected');
     }
-    updateBadge(); checkReady();
+    // i18n pronto → aggiorna badge testuale
+    document.addEventListener('i18n:ready', ()=>{ updateBadge(); });
+    checkReady();
 
+    // Vai avanti
     go.addEventListener('click', ()=>{ if(go.disabled) return; location.href='second.html'; });
+
+    // MODALE LINGUA
+    (function ensureLangModal(){
+      const saved = localStorage.getItem('whatif_lang');
+      if (!saved) {
+        document.getElementById('langModal')?.classList.add('open');
+      } else {
+        if (window.I18N) I18N.setLang(saved);
+      }
+    })();
+
+    // Click sui bottoni lingua
+    document.querySelectorAll('#langModal [data-lang]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const lang = btn.dataset.lang;           // 'it' | 'en'
+        I18N.setLang(lang);                      // salva + applica
+        localStorage.setItem('whatif_lang_set','1');
+        document.getElementById('langModal')?.remove();
+        updateBadge();
+      });
+    });
+
+    // Cambio lingua dal footer
+    document.getElementById('changeLangBtn')?.addEventListener('click', (e)=>{
+      e.preventDefault();
+      const modal=document.getElementById('langModal');
+      if (!modal) return;
+      modal.classList.add('open');
+    });
   </script>
 </body>
 </html>
