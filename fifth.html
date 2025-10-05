@@ -1,56 +1,149 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>What?f — Risultato</title><meta name="theme-color" content="#0A0F14"/>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>What?f — Risultato</title>
+<meta name="theme-color" content="#0A0F14" />
 <style>
-  :root{--bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent2:#00B5CC}
-  *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:860px;margin:0 auto;padding:12px 14px 28px}
-  .topbar{width:100%;display:flex;align-items:center;justify-content:center;padding:8px 0 4px}
-  .mini-logo{width:72px;height:auto;border-radius:10px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));opacity:.95}
-  @media (min-width:768px){ .mini-logo{ width:84px } }
-  .rowtop{display:flex;align-items:center;gap:10px;margin-top:6px;margin-bottom:8px}
-  .back{appearance:none;border:0;background:#0f1820;color:#d8ebef;border-radius:12px;padding:8px 12px;cursor:pointer}
-  .meta{color:var(--muted);font-size:13px}
-  h1{margin:8px 0 10px;font-size:clamp(26px,6vw,40px)}
-  .card{background:var(--card);border-radius:16px;padding:16px;margin:12px 0}
-  .muted{color:var(--muted);font-size:14px}
-  .actions{display:flex;gap:8px;flex-wrap:wrap}
-  .btn{appearance:none;border:0;border-radius:20px;padding:10px 14px;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#00262f;font-weight:800;cursor:pointer}
+:root{
+  --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
+  --accent:#00E0FF; --accent2:#00B5CC;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+main{max-width:980px;margin:0 auto;min-height:100%;padding:18px 16px 28px}
+
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.back{appearance:none;border:0;border-radius:14px;background:#0f1820;color:#d3e6ea;
+  padding:10px 14px;font-weight:700;cursor:pointer}
+.pill{margin-left:auto;color:var(--muted);font-size:14px}
+
+h1{margin:6px 0 12px;font-size:clamp(30px,6vw,44px)}
+
+.card{background:var(--card);border-radius:18px;padding:16px;margin:0 0 14px;
+  box-shadow:0 10px 28px rgba(0,0,0,.28)}
+.answer{white-space:pre-wrap;line-height:1.5}
+
+.skel{position:relative;overflow:hidden}
+.skel::after{
+  content:"";position:absolute;inset:0;transform:translateX(-100%);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);
+  animation:sh 1.3s infinite
+}
+@keyframes sh{100%{transform:translateX(100%)}}
+
+.actions{display:flex;gap:12px;justify-content:center;margin-top:14px}
+.btn{appearance:none;border:0;border-radius:24px;padding:12px 18px;min-width:160px;
+  background:linear-gradient(180deg,var(--accent),var(--accent2));color:#002329;font-weight:900;
+  box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25);cursor:pointer}
+.btn.ghost{background:#0f1820;color:#d3e6ea;box-shadow:none}
+.small{font-size:13px;color:var(--muted);margin-top:8px}
 </style>
 </head>
 <body>
 <main>
-  <div class="topbar"><img id="miniLogo" class="mini-logo" alt="What?f" loading="eager" decoding="async"></div>
-  <div class="rowtop">
-    <button class="back" onclick="location.href='fourth.html'">← Indietro</button>
-    <div class="meta" id="meta"></div>
+  <div class="topbar">
+    <button class="back" id="backBtn">← Indietro</button>
+    <div class="pill" id="pill"> </div>
   </div>
 
   <h1>Risultato</h1>
-  <article id="answer" class="card">Sto preparando la tua risposta…</article>
 
-  <div class="actions">
-    <button class="btn" id="share">Condividi</button>
-    <button class="btn" onclick="location.href='index.html'">Home</button>
+  <div id="box" class="card skel">
+    <div id="ans" class="answer">Sto pensando alla risposta migliore…</div>
+    <div id="err" class="answer" style="display:none;color:#ffb3b3"></div>
   </div>
 
-  <p class="muted">Vuoi la versione estesa con piani d’azione e alternative? (in arrivo)</p>
+  <div class="actions">
+    <button id="share" class="btn">Condividi</button>
+    <button id="home" class="btn ghost">Home</button>
+  </div>
+
+  <p class="small">Vuoi la versione estesa con piani d’azione e alternative? (in arrivo)</p>
 </main>
 
 <script>
-  (async function(){ const el=document.getElementById('miniLogo'); for (const u of ['/home-hero.png','/public/home-hero.png','/assets/home-hero.png']){ try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){ el.src=u+'?v='+Date.now(); return; }}catch(_){}} el.alt='Immagine non trovata';})();
-  const saved = JSON.parse(localStorage.getItem('whatif_answer')||'null');
-  if(saved){ document.getElementById('meta').textContent = saved.meta||''; document.getElementById('answer').textContent = saved.answer||'—'; }
-  else { document.getElementById('answer').textContent='Nessun risultato disponibile.'; }
+  // UI base
+  document.getElementById('backBtn').onclick = () => history.back();
+  document.getElementById('home').onclick = () => location.href='index.html';
 
-  // Share API (fallback: copia testo)
-  document.getElementById('share').addEventListener('click', async ()=>{
-    const text = `What?f — ${saved?.question||''}\n\n${saved?.answer||''}`;
-    if(navigator.share){ try{ await navigator.share({ text }); }catch(_){} }
-    else { try{ await navigator.clipboard.writeText(text); alert('Copiato negli appunti!'); }catch(_){ alert('Condivisione non disponibile.'); } }
-  });
+  // Pill con preferenze
+  const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+  const pill = document.getElementById('pill');
+  function nicePrefs(){
+    const a = prefs.periodo==='past'?'Passato':(prefs.periodo==='future'?'Futuro':null);
+    const b = prefs.stile==='whatif'?'What if':(prefs.stile==='wtf'?'What the F':null);
+    return [a,b].filter(Boolean).join(' • ');
+  }
+  pill.textContent = nicePrefs();
+
+  // Recupero domanda e profilo (se esiste)
+  const question = sessionStorage.getItem('whatif_question') || '';
+  const about    = localStorage.getItem('whatif_about') || ''; // salvato nella 2ª pagina
+
+  // Condividi
+  document.getElementById('share').onclick = async ()=>{
+    const text = `What?f — ${nicePrefs()}\n\nDomanda: ${question}\n\n${document.getElementById('ans').textContent}`;
+    try{
+      if(navigator.share){ await navigator.share({text}); }
+      else {
+        await navigator.clipboard.writeText(text);
+        alert('Testo copiato negli appunti ✅');
+      }
+    }catch(_){}
+  };
+
+  // Call AI
+  async function ask(){
+    const ans = document.getElementById('ans');
+    const err = document.getElementById('err');
+    const box = document.getElementById('box');
+
+    if(!question){
+      box.classList.remove('skel');
+      ans.textContent = 'Nessuna domanda trovata. Torna indietro e scrivi la tua.';
+      return;
+    }
+
+    try{
+      const controller = new AbortController();
+      const to = setTimeout(()=>controller.abort(), 45000);
+
+      const r = await fetch('/api/ask', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          question,
+          about,
+          prefs,
+          // piccolo “boost” di qualità lato server (se supportato dall’endpoint)
+          boost: { style: prefs.stile, horizon: prefs.periodo }
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(to);
+
+      box.classList.remove('skel');
+
+      if(!r.ok){
+        const t = await r.text();
+        err.style.display='block';
+        ans.style.display='none';
+        err.textContent = 'Errore AI: '+t;
+        return;
+      }
+      const data = await r.json();
+      ans.textContent = (data.answer || '').trim() || 'Nessuna risposta ricevuta.';
+    }catch(e){
+      box.classList.remove('skel');
+      err.style.display='block';
+      document.getElementById('ans').style.display='none';
+      err.textContent = 'Connessione lenta o interrotta. Riprova.';
+    }
+  }
+  ask();
 </script>
 </body>
 </html>
