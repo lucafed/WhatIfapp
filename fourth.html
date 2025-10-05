@@ -4,19 +4,29 @@
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>What?f — La tua domanda</title><meta name="theme-color" content="#0A0F14"/>
 <style>
-  :root{--bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent2:#00B5CC}
-  *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:860px;margin:0 auto;padding:12px 14px 28px}
-  .topbar{width:100%;display:flex;align-items:center;justify-content:center;padding:8px 0 4px}
-  .mini-logo{width:72px;height:auto;border-radius:10px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));opacity:.95}
-  @media (min-width:768px){ .mini-logo{ width:84px } }
-  .rowtop{display:flex;align-items:center;gap:10px;margin-top:6px;margin-bottom:8px}
-  .back{appearance:none;border:0;background:#0f1820;color:#d8ebef;border-radius:12px;padding:8px 12px;cursor:pointer}
-  .meta{color:var(--muted);font-size:13px}
-  h1{margin:8px 0 10px;font-size:clamp(26px,6vw,40px)}
+  :root{
+    --bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;
+    --accent:#00E0FF;--accent2:#00B5CC;--yellow:#f7b23b;--teal:#00E0FF
+  }
+  *{box-sizing:border-box}
+  html,body{
+    height:100%;margin:0;color:var(--fg);
+    background:var(--bg) url('/home-hero.png') no-repeat center top / contain fixed;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  }
+  main{max-width:860px;margin:0 auto;padding:22px 14px 40px;backdrop-filter: blur(2px)}
+  .back{appearance:none;border:0;background:#0f1820;color:#d8ebef;border-radius:12px;padding:8px 12px;cursor:pointer;margin-top:8px}
+  .meta{color:var(--muted);font-size:13px;margin-left:8px;display:inline-block}
+
+  /* Titolo metà giallo/metà turchese */
+  h1{margin:16px 0 10px;font-size:clamp(26px,6vw,40px);line-height:1.15}
+  .split-title{background: linear-gradient(to right, var(--yellow) 0 50%, var(--teal) 50% 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;}
+
   .card{background:var(--card);border-radius:16px;padding:14px;margin:12px 0}
   textarea{width:100%;min-height:96px;background:#0b1218;color:var(--fg);border:1px solid #1d2b34;border-radius:12px;padding:12px;font-size:16px;resize:vertical}
   .cta{margin-top:12px;display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#00262f;font-weight:900;border:none;border-radius:24px;padding:12px 18px;min-width:210px;box-shadow:0 0 14px rgba(0,181,204,.45),0 0 30px rgba(0,181,204,.25);cursor:pointer}
+
   .qa{display:flex;flex-direction:column;gap:10px;margin-top:8px}
   .bubble{background:#0c141b;border:1px solid #1b2a33;border-radius:14px;padding:12px 14px}
   .you{background:#0b1218}
@@ -27,13 +37,10 @@
 </head>
 <body>
   <main>
-    <div class="topbar"><img id="miniLogo" class="mini-logo" alt="What?f" loading="eager" decoding="async"></div>
-    <div class="rowtop">
-      <button class="back" onclick="location.href='second.html'">← Indietro</button>
-      <div class="meta" id="meta"></div>
-    </div>
+    <button class="back" onclick="location.href='second.html'">← Indietro</button>
+    <span id="meta" class="meta"></span>
 
-    <h1>La tua domanda</h1>
+    <h1 class="split-title">La tua domanda</h1>
 
     <section class="card">
       <label for="q" class="muted">Scrivi la tua domanda What?f…</label>
@@ -47,7 +54,6 @@
   </main>
 
 <script>
-  (async function(){ const el=document.getElementById('miniLogo'); for (const u of ['/home-hero.png','/public/home-hero.png','/assets/home-hero.png']){ try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){ el.src=u+'?v='+Date.now(); return; }}catch(_){}} el.alt='Immagine non trovata';})();
   const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
   const profile = JSON.parse(localStorage.getItem('whatif_profile')||'{}');
   document.getElementById('meta').textContent =
@@ -104,8 +110,13 @@
     }catch(e){ addBubble('Si è verificato un errore. Puoi riprovare o saltare ai risultati.','ai'); }
   }
 
-  document.addEventListener('keydown',(ev)=>{ if(ev.key==='Enter' && !ev.shiftKey && chat.style.display==='flex'){ ev.preventDefault(); const val=qInput.value.trim(); if(val){ handleUserAnswer(val); qInput.value=''; } }});
   document.getElementById('start').addEventListener('click', startFlow);
+  document.addEventListener('keydown',(ev)=>{
+    if(ev.key==='Enter' && !ev.shiftKey && chat.style.display==='flex'){
+      ev.preventDefault();
+      const val=qInput.value.trim(); if(val){ handleUserAnswer(val); qInput.value=''; }
+    }
+  });
 </script>
 </body>
 </html>
