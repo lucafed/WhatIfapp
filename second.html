@@ -40,6 +40,8 @@ textarea{min-height:120px;resize:vertical}
 .btn{appearance:none;border:0;border-radius:24px;padding:12px 18px;min-width:210px;
   background:linear-gradient(180deg,var(--accent),var(--accent2));color:#002329;font-weight:900;
   box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25);cursor:pointer}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.error{color:#FF5555;font-size:14px;text-align:center;margin-top:10px;display:none}
 </style>
 </head>
 <body>
@@ -102,13 +104,18 @@ textarea{min-height:120px;resize:vertical}
   </div>
 
   <div class="section">
-    <h2>Vuoi raccontarci qualcosa di più su di te? <span style="color:var(--muted);font-weight:400">(opzionale – aiuta l’AI a darti risposte più accurate)</span></h2>
+    <h2>Vuoi raccontarci qualcosa di più su di te?
+      <span style="color:var(--muted);font-weight:400">
+        (opzionale – aiuta l’AI a darti risposte più accurate)
+      </span>
+    </h2>
     <textarea id="more" placeholder="Esempio: lavoro nel digitale, sto pensando di cambiare città, ho due figli..."></textarea>
   </div>
 
   <div class="cta">
     <button id="next" class="btn">Continua</button>
   </div>
+  <p id="errorMsg" class="error">⚠️ Seleziona tutte le opzioni obbligatorie prima di continuare.</p>
 </main>
 
 <script>
@@ -118,6 +125,7 @@ function bindGroup(id){
     el.onclick=()=>{
       box.querySelectorAll('.opt').forEach(b=>b.classList.remove('active'));
       el.classList.add('active');
+      document.getElementById('errorMsg').style.display='none';
     };
   });
 }
@@ -131,6 +139,11 @@ document.getElementById('next').onclick=()=>{
   const phase=document.querySelector('#phase .active')?.textContent||'';
   const from=document.getElementById('from').value.trim();
   const more=document.getElementById('more').value.trim();
+
+  if(!who||!gender||!age||!phase){
+    document.getElementById('errorMsg').style.display='block';
+    return;
+  }
 
   const data={who,gender,age,phase,from,more};
   localStorage.setItem('whatif_about',JSON.stringify(data));
