@@ -1,111 +1,92 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>What?f — La tua domanda</title><meta name="theme-color" content="#0A0F14"/>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>What?f — La tua domanda</title>
+<meta name="theme-color" content="#0A0F14" />
 <style>
-  :root{--bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent2:#00B5CC}
-  *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:860px;margin:0 auto;padding:12px 14px 28px}
-  .topbar{width:100%;display:flex;align-items:center;justify-content:center;padding:8px 0 4px}
-  .mini-logo{width:72px;height:auto;border-radius:10px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));opacity:.95}
-  @media (min-width:768px){ .mini-logo{ width:84px } }
-  .rowtop{display:flex;align-items:center;gap:10px;margin-top:6px;margin-bottom:8px}
-  .back{appearance:none;border:0;background:#0f1820;color:#d8ebef;border-radius:12px;padding:8px 12px;cursor:pointer}
-  .meta{color:var(--muted);font-size:13px}
-  h1{margin:8px 0 10px;font-size:clamp(26px,6vw,40px)}
-  .card{background:var(--card);border-radius:16px;padding:14px;margin:12px 0}
-  textarea{width:100%;min-height:96px;background:#0b1218;color:var(--fg);border:1px solid #1d2b34;border-radius:12px;padding:12px;font-size:16px;resize:vertical}
-  .cta{margin-top:12px;display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#00262f;font-weight:900;border:none;border-radius:24px;padding:12px 18px;min-width:210px;box-shadow:0 0 14px rgba(0,181,204,.45),0 0 30px rgba(0,181,204,.25);cursor:pointer}
-  .qa{display:flex;flex-direction:column;gap:10px;margin-top:8px}
-  .bubble{background:#0c141b;border:1px solid #1b2a33;border-radius:14px;padding:12px 14px}
-  .you{background:#0b1218}
-  .muted{color:var(--muted);font-size:13px}
-  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-  .chip{appearance:none;border:1px solid #1d2b34;background:#0f1820;color:#d8ebef;border-radius:999px;padding:8px 12px;cursor:pointer}
+:root{
+  --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
+  --accent:#00E0FF; --accent2:#00B5CC;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+main{max-width:980px;margin:0 auto;min-height:100%;padding:18px 16px 28px}
+
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.back{appearance:none;border:0;border-radius:14px;background:#0f1820;color:#d3e6ea;
+  padding:10px 14px;font-weight:700;cursor:pointer}
+.pill{margin-left:auto;color:var(--muted);font-size:14px}
+
+h1{margin:6px 0 12px;font-size:clamp(30px,6vw,44px);color:#E6F2F5}
+
+.card{background:var(--card);border-radius:18px;padding:16px;margin:0 0 14px;
+  box-shadow:0 10px 28px rgba(0,0,0,.28)}
+.label{color:var(--muted);font-weight:700;margin:0 0 10px}
+.ta{width:100%;min-height:160px;background:#0c141b;border:1px solid #1d2b34;color:var(--fg);
+  border-radius:14px;padding:14px;font-size:16px;resize:vertical}
+.hint{color:var(--muted);font-size:14px;margin-top:8px}
+
+.cta{display:flex;justify-content:center;margin-top:14px}
+.btn{appearance:none;border:0;border-radius:24px;padding:12px 18px;min-width:210px;
+  background:linear-gradient(180deg,var(--accent),var(--accent2));color:#002329;font-weight:900;
+  box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25);cursor:pointer}
+.btn[disabled]{background:#29404a;color:#86a6af;box-shadow:none;cursor:not-allowed}
 </style>
 </head>
 <body>
-  <main>
-    <div class="topbar"><img id="miniLogo" class="mini-logo" alt="What?f" loading="eager" decoding="async"></div>
-    <div class="rowtop">
-      <button class="back" onclick="location.href='second.html'">← Indietro</button>
-      <div class="meta" id="meta"></div>
+<main>
+  <div class="topbar">
+    <button class="back" id="backBtn">← Indietro</button>
+    <div class="pill" id="pill"> </div>
+  </div>
+
+  <h1>La tua domanda</h1>
+
+  <div class="card">
+    <p class="label">Scrivi la tua domanda What?f…</p>
+    <textarea id="q" class="ta" placeholder="Esempio: Se avessi accettato quel lavoro a Milano?"></textarea>
+    <p class="hint">
+      Suggerimento: sii specifico. Es: “Se restassi a L’Aquila per i prossimi 2 anni, come cambierebbe la mia carriera?”
+    </p>
+    <div class="cta">
+      <button id="go" class="btn" disabled>Scopri</button>
     </div>
-
-    <h1>La tua domanda</h1>
-
-    <section class="card">
-      <label for="q" class="muted">Scrivi la tua domanda What?f…</label>
-      <textarea id="q" placeholder="Esempio: Se avessi accettato quel lavoro a Milano?"></textarea>
-      <button id="start" class="cta">Scopri</button>
-    </section>
-
-    <section id="chat" class="qa" style="display:none"></section>
-
-    <p class="muted">Suggerimento: sii specifico. Es: “Se restassi a L’Aquila nei prossimi 2 anni, cosa cambierebbe nella mia carriera?”</p>
-  </main>
+  </div>
+</main>
 
 <script>
-  (async function(){ const el=document.getElementById('miniLogo'); for (const u of ['/home-hero.png','/public/home-hero.png','/assets/home-hero.png']){ try{const r=await fetch(u,{cache:'no-store'}); if(r.ok){ el.src=u+'?v='+Date.now(); return; }}catch(_){}} el.alt='Immagine non trovata';})();
+  // Ripristina selezioni (periodo/stile) dal primo step
   const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-  const profile = JSON.parse(localStorage.getItem('whatif_profile')||'{}');
-  document.getElementById('meta').textContent =
-    (prefs.periodo==='past'?'Passato':'Futuro') + ' • ' +
-    (prefs.stile==='whatif'?'What if (plausibile)':'What the F (ironico)');
-
-  const startBtn = document.getElementById('start');
-  const qInput = document.getElementById('q');
-  const chat = document.getElementById('chat');
-  const sid = 'wif_'+Math.random().toString(36).slice(2);
-  localStorage.setItem('whatif_session', sid);
-
-  function addBubble(text, who='ai'){
-    const b=document.createElement('div'); b.className='bubble'+(who==='you'?' you':''); b.textContent=text;
-    chat.appendChild(b); chat.style.display='flex'; window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+  const pill  = document.getElementById('pill');
+  function nicePrefs(){
+    const a = prefs.periodo==='past'?'Passato':(prefs.periodo==='future'?'Futuro':null);
+    const b = prefs.stile==='whatif'?'What if':(prefs.stile==='wtf'?'What the F':null);
+    return [a,b].filter(Boolean).join(' • ');
   }
-  function addQuickRow(options){
-    const row=document.createElement('div'); row.className='row';
-    options.forEach(opt=>{ const btn=document.createElement('button'); btn.className='chip'; btn.textContent=opt; btn.onclick=()=>handleUserAnswer(opt); row.appendChild(btn); });
-    chat.appendChild(row); window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
-  }
+  pill.textContent = nicePrefs();
 
-  let step=0; let transcript=[];
-  async function callAPI(payload){
-    const r = await fetch('/api/ask', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(payload) });
-    if(!r.ok) throw new Error('API error'); return r.json();
-  }
+  // Back
+  document.getElementById('backBtn').onclick = () => history.back();
 
-  async function startFlow(){
-    const question=qInput.value.trim(); if(!question){ qInput.focus(); return; }
-    startBtn.disabled=true; chat.innerHTML=''; transcript.length=0;
+  // Abilita CTA se c'è testo
+  const q = document.getElementById('q');
+  const go = document.getElementById('go');
+  q.addEventListener('input', ()=>{ go.disabled = q.value.trim().length<3; });
 
-    const ctx={ sessionId:sid, mode:prefs.stile||'whatif', period:prefs.periodo||'future', question, profile };
-    addBubble('Sto pensando alla risposta migliore per te…');
-    try{
-      const res=await callAPI({action:'clarify_start', ...ctx});
-      chat.lastChild.remove(); transcript.push({role:'user',content:question}); transcript.push({role:'ai',content:res.prompt});
-      addBubble(res.prompt,'ai'); if(res.quick){ addQuickRow(res.quick); } step=1;
-    }catch(e){ chat.lastChild.textContent='Ops, errore temporaneo. Riprova.'; startBtn.disabled=false; }
-  }
+  // Salva domanda e passa al risultato
+  go.addEventListener('click', ()=>{
+    const text = q.value.trim();
+    if(!text) return;
+    sessionStorage.setItem('whatif_question', text);
+    location.href = 'fifth.html';
+  });
 
-  async function handleUserAnswer(answer){
-    addBubble(answer,'you'); transcript.push({role:'user',content:answer});
-    try{
-      const res=await callAPI({ action:'clarify_next', sessionId:sid, turn: step+1, transcript, period:prefs.periodo, mode:prefs.stile, profile });
-      if(res.done){
-        localStorage.setItem('whatif_answer', JSON.stringify({ sessionId:sid, answer:res.answer, question:qInput.value.trim(), meta: document.getElementById('meta').textContent }));
-        location.href='fifth.html'; return;
-      }
-      transcript.push({role:'ai',content:res.prompt}); addBubble(res.prompt,'ai');
-      const rows=document.querySelectorAll('.row'); rows.forEach(r=>r.remove());
-      if(res.quick){ addQuickRow(res.quick); }
-      step++;
-    }catch(e){ addBubble('Si è verificato un errore. Puoi riprovare o saltare ai risultati.','ai'); }
-  }
-
-  document.addEventListener('keydown',(ev)=>{ if(ev.key==='Enter' && !ev.shiftKey && chat.style.display==='flex'){ ev.preventDefault(); const val=qInput.value.trim(); if(val){ handleUserAnswer(val); qInput.value=''; } }});
-  document.getElementById('start').addEventListener('click', startFlow);
+  // Se l'utente torna, ripristina la bozza
+  const cached = sessionStorage.getItem('whatif_question');
+  if(cached){ q.value = cached; go.disabled = false; }
 </script>
 </body>
 </html>
