@@ -3,107 +3,67 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – Parlami di te</title>
+  <title>What?f — Parlami di te</title>
   <meta name="theme-color" content="#0A0F14" />
-  <link rel="preload" as="image" href="/home-hero.png" />
   <style>
     :root{
-      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5;
-      --muted:#A0B2BA; --accent:#00E0FF; --accent-dark:#00B5CC;
-      --yellow:#f7b23b; --teal:#00d0e6;
+      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
+      --accent:#00E0FF; --accent-dark:#00B5CC;
     }
-    *{box-sizing:border-box}
-    html,body{
-      height:100%; margin:0; color:var(--fg);
-      background:
-        radial-gradient(rgba(10,15,20,0.88), rgba(10,15,20,0.95)),
-        url('/home-hero.png') no-repeat center / cover fixed;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    }
-    main{
-      display:flex; flex-direction:column; align-items:center;
-      padding:18px; gap:18px; text-align:center;
-      min-height:100%;
-    }
-    h1{
-      font-size:clamp(26px,6vw,38px);
-      margin:8px 0 6px;
-      color:var(--accent);
-    }
-    p.lead{
-      width:min(100%,900px);
-      font-size:clamp(14px,4vw,18px);
-      color:var(--fg);
-      line-height:1.5;
-    }
-    .form-card{
-      background:rgba(18,24,32,0.85);
-      border-radius:18px;
-      padding:16px;
-      width:min(100%,900px);
-      box-shadow:0 4px 16px rgba(0,0,0,.4);
-    }
-    textarea{
-      width:100%;
-      min-height:120px;
-      background:#0d141b;
-      border:1px solid #1c2a33;
-      color:var(--fg);
-      border-radius:10px;
-      padding:10px;
-      font-size:15px;
-      resize:none;
-    }
-    .cta{
-      margin-top:18px;
-      background:linear-gradient(180deg,var(--accent),var(--accent-dark));
-      color:#002329;
-      font-weight:900;
-      border:none;
-      border-radius:24px;
-      padding:12px 24px;
-      box-shadow:0 0 14px rgba(0,181,204,.45);
-      cursor:pointer;
-      transition:transform .08s ease;
-    }
-    .cta:active{transform:translateY(1px)}
-    .nav-back{
-      position:absolute; left:14px; top:14px;
-      background:rgba(20,28,34,0.85);
-      border-radius:999px; padding:8px 14px;
-      font-size:14px; color:var(--muted);
-      border:1px solid #1e2e37; text-decoration:none;
-    }
-    .nav-back:hover{color:var(--accent)}
+    *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    main{min-height:100%;max-width:980px;margin:0 auto;padding:18px 16px 28px}
+    .topbar{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+    .back{appearance:none;border:0;border-radius:14px;background:#0f1820;color:#d3e6ea;
+      padding:10px 14px;font-weight:700;cursor:pointer}
+    h1{font-size:clamp(28px,6vw,40px);margin:8px 0 6px;color:var(--accent)}
+    .subtitle{color:#d7e8ec;font-size:clamp(14px,4vw,18px);line-height:1.5;margin:10px 0 20px}
+    .card{background:var(--card);border-radius:18px;padding:16px;margin:0 0 14px;box-shadow:0 10px 28px rgba(0,0,0,.28)}
+    textarea{width:100%;min-height:150px;background:#0b1218;color:#cfe6eb;border:1px solid #20303a;
+      border-radius:14px;padding:16px;font-size:16px;outline:none}
+    .actions{display:flex;gap:12px;justify-content:center;margin-top:16px}
+    .btn{appearance:none;border:0;border-radius:24px;padding:12px 18px;font-weight:900;cursor:pointer}
+    .primary{background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329;min-width:200px}
   </style>
 </head>
 <body>
-  <main>
-    <a href="index.html" class="nav-back">← Indietro</a>
+<main>
+  <div class="topbar">
+    <button class="back" onclick="location.href='index.html'">← Indietro</button>
+  </div>
 
-    <h1>Parlami di te</h1>
-    <p class="lead">
-      Raccontami brevemente chi sei, cosa stai vivendo o cosa ti spinge a usare What?f.
-      Questo aiuterà l’intelligenza artificiale a comprenderti meglio e risponderti in modo più personale.
-    </p>
+  <h1>Parlami di te</h1>
 
-    <div class="form-card">
-      <textarea id="userInfo" placeholder="Esempio: Mi chiamo Luca, ho 30 anni, e sto valutando se trasferirmi all’estero per lavoro..."></textarea>
-      <button class="cta" id="next">Continua</button>
+  <p class="subtitle">
+    Raccontami brevemente chi sei, cosa stai vivendo o cosa ti spinge a usare What?f.
+    Questo aiuterà l’intelligenza artificiale a comprenderti meglio e
+    risponderti in modo più personale.
+  </p>
+
+  <div class="card">
+    <label for="bio" style="display:block;margin:0 0 8px;color:var(--muted);font-weight:700">
+      Scrivi qualcosa su di te (opzionale)…
+    </label>
+    <textarea id="bio" placeholder="Esempio: Mi chiamo Luca, ho 30 anni, e sto valutando se trasferirmi all’estero per lavoro…"></textarea>
+
+    <div class="actions">
+      <button class="primary btn" id="go">Continua</button>
     </div>
-  </main>
+  </div>
+</main>
 
-  <script>
-    const next = document.getElementById('next');
-    next.addEventListener('click', ()=>{
-      const text = document.getElementById('userInfo').value.trim();
-      if(!text){
-        alert("Per continuare scrivi qualcosa su di te 😊");
-        return;
-      }
-      localStorage.setItem('whatif_user', text);
-      location.href = 'third.html';
-    });
-  </script>
+<script>
+  // ripristina eventuale bio salvata
+  const bioEl = document.getElementById('bio');
+  const saved = JSON.parse(localStorage.getItem('whatif_profile')||'{}');
+  if(saved.bio) bioEl.value = saved.bio;
+
+  document.getElementById('go').addEventListener('click', ()=>{
+    const profile = JSON.parse(localStorage.getItem('whatif_profile')||'{}');
+    profile.bio = bioEl.value.trim();
+    localStorage.setItem('whatif_profile', JSON.stringify(profile));
+    location.href = 'third.html';
+  });
+</script>
 </body>
 </html>
