@@ -1,66 +1,84 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>What?f — Risultato</title><meta name="theme-color" content="#0A0F14"/>
-<style>
-  :root{
-    --bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;
-    --accent:#00E0FF;--accent2:#00B5CC;--yellow:#f7b23b;--teal:#00E0FF
-  }
-  *{box-sizing:border-box}
-  html,body{
-    height:100%;margin:0;color:var(--fg);
-    background:var(--bg) url('/home-hero.png') no-repeat center top / contain fixed;
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  }
-  main{max-width:860px;margin:0 auto;padding:22px 14px 40px;backdrop-filter: blur(2px)}
-  .back{appearance:none;border:0;background:#0f1820;color:#d8ebef;border-radius:12px;padding:8px 12px;cursor:pointer;margin-top:8px}
-  .meta{color:var(--muted);font-size:13px;margin-left:8px;display:inline-block}
-
-  /* Titolo metà giallo/metà turchese */
-  h1{margin:16px 0 10px;font-size:clamp(26px,6vw,40px);line-height:1.15}
-  .split-title{background: linear-gradient(to right, var(--yellow) 0 50%, var(--teal) 50% 100%);
-    -webkit-background-clip:text; background-clip:text; color:transparent;}
-
-  .card{background:var(--card);border-radius:16px;padding:16px;margin:12px 0}
-  .muted{color:var(--muted);font-size:14px}
-  .actions{display:flex;gap:8px;flex-wrap:wrap}
-  .btn{appearance:none;border:0;border-radius:20px;padding:10px 14px;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#00262f;font-weight:800;cursor:pointer}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f — Risultato</title>
+  <meta name="theme-color" content="#0A0F14" />
+  <style>
+    :root{
+      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
+      --accent:#00E0FF; --accent-dark:#00B5CC;
+    }
+    *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    main{min-height:100%;max-width:980px;margin:0 auto;padding:18px 16px 28px}
+    .topbar{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+    .back{appearance:none;border:0;border-radius:14px;background:#0f1820;color:#d3e6ea;
+      padding:10px 14px;font-weight:700;cursor:pointer}
+    .pill{color:var(--muted);font-size:14px;margin-left:auto}
+    h1{font-size:clamp(28px,6vw,40px);margin:8px 0 12px}
+    .card{background:var(--card);border-radius:18px;padding:16px;margin:0 0 14px;box-shadow:0 10px 28px rgba(0,0,0,.28)}
+    .answer{white-space:pre-wrap;line-height:1.5}
+    .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+    .btn{appearance:none;border:0;border-radius:20px;padding:10px 14px;font-weight:800;cursor:pointer;background:#0f1820;color:#cfe6eb}
+    .primary{background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329}
+  </style>
 </head>
 <body>
 <main>
-  <button class="back" onclick="location.href='fourth.html'">← Indietro</button>
-  <span id="meta" class="meta"></span>
-
-  <h1 class="split-title">Risultato</h1>
-
-  <article id="answer" class="card">Sto preparando la tua risposta…</article>
-
-  <div class="actions">
-    <button class="btn" id="share">Condividi</button>
-    <button class="btn" onclick="location.href='index.html'">Home</button>
+  <div class="topbar">
+    <button class="back" onclick="history.back()">← Indietro</button>
+    <span class="pill" id="contextPill"></span>
   </div>
 
-  <p class="muted">Vuoi la versione estesa con piani d’azione e alternative? (in arrivo)</p>
+  <h1>Risultato</h1>
+
+  <div class="card">
+    <div id="status" class="answer">Sto pensando…</div>
+    <div id="out" class="answer" style="margin-top:8px;"></div>
+
+    <div class="cta">
+      <button class="btn" id="regenerate">Riformula</button>
+      <button class="btn" id="shorter">Più breve</button>
+      <button class="btn" id="longer">Più dettagli</button>
+      <button class="primary btn" id="unlock">Leggi di più</button>
+    </div>
+  </div>
 </main>
 
 <script>
-  const saved = JSON.parse(localStorage.getItem('whatif_answer')||'null');
-  if(saved){
-    document.getElementById('meta').textContent = saved.meta||'';
-    document.getElementById('answer').textContent = saved.answer||'—';
-  } else {
-    document.getElementById('answer').textContent='Nessun risultato disponibile.';
+  const last = JSON.parse(localStorage.getItem('whatif_last')||'null');
+  const pill = document.getElementById('contextPill');
+  if(!last){ location.href='index.html'; }
+
+  const period = last?.prefs?.periodo==='past' ? 'Passato' : last?.prefs?.periodo==='future' ? 'Futuro' : '—';
+  const style  = last?.prefs?.stile==='whatif' ? 'What if (plausibile)' : last?.prefs?.stile==='wtf' ? 'What the F (ironico)' : '—';
+  pill.textContent = `${period} • ${style}`;
+
+  async function callAsk(extraInstr){
+    const status = document.getElementById('status');
+    const out = document.getElementById('out');
+    status.textContent = 'Sto pensando…';
+    try{
+      const res = await fetch('/api/ask.js',{method:'POST',headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ ...last, extraInstr })});
+      if(!res.ok) throw new Error('API non disponibile');
+      const data = await res.json();
+      status.textContent = '';
+      out.textContent = data.answer || 'Nessuna risposta.';
+    }catch(e){
+      status.textContent = 'Impossibile ottenere una risposta al momento.';
+    }
   }
 
-  // Share API (fallback: copia testo)
-  document.getElementById('share').addEventListener('click', async ()=>{
-    const text = `What?f — ${saved?.question||''}\n\n${saved?.answer||''}`;
-    if(navigator.share){ try{ await navigator.share({ text }); }catch(_){} }
-    else { try{ await navigator.clipboard.writeText(text); alert('Copiato negli appunti!'); }catch(_){ alert('Condivisione non disponibile.'); } }
-  });
+  // prima chiamata: la tua ask.js può gestire follow-up interni se vuoi (domande di chiarimento + risposta)
+  callAsk();
+
+  document.getElementById('regenerate').onclick = ()=>callAsk('Riformula con un taglio diverso.');
+  document.getElementById('shorter').onclick    = ()=>callAsk('Rispondi più breve, punti essenziali.');
+  document.getElementById('longer').onclick     = ()=>callAsk('Aggiungi dettagli e suggerimenti pratici.');
+  document.getElementById('unlock').onclick     = ()=>alert('Qui collegheremo il paywall per leggere di più.');
 </script>
 </body>
 </html>
