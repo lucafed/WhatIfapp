@@ -3,160 +3,60 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f — Privacy</title>
+  <title>What?f – Privacy</title>
   <meta name="theme-color" content="#0A0F14" />
   <style>
-    :root{ --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
-           --accent:#00E0FF; --accent-dark:#00B5CC; }
-    *{ box-sizing:border-box }
-    html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
-               font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
-    main{ max-width:960px; margin:0 auto; padding:20px 16px 64px; }
-    .paper{ background:var(--card); border:1px solid #1d2b34; border-radius:16px;
-            padding:18px; box-shadow:0 12px 28px rgba(0,0,0,.35); }
-    h1{ margin:4px 0 12px; font-size:clamp(20px,4.5vw,30px) }
-    h2{ margin:18px 0 8px; font-size:clamp(16px,4vw,22px); color:var(--accent) }
-    p, li{ color:#d7e8ec; line-height:1.55; font-size:clamp(14px,3.6vw,16px) }
-    ul{ padding-left:18px; margin:8px 0 0 }
-    .muted{ color:var(--muted) }
-    .back{ position:fixed; top:14px; left:14px; z-index:50;
-           background:#101922; border:1px solid #1d2b34; color:#cfe3e7;
-           padding:10px 14px; border-radius:999px; text-decoration:none }
-    .back:hover{ filter:brightness(1.1) }
-    footer{ text-align:center; color:var(--muted); font-size:12px; margin-top:18px }
-    footer a{ color:var(--accent); text-decoration:none }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Roboto, sans-serif;
+      background: #0A0F14;
+      color: #E6F2F5;
+      line-height: 1.6;
+      padding: 24px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 { color: #00E0FF; }
+    a.back {
+      display: inline-block;
+      margin-bottom: 24px;
+      text-decoration: none;
+      color: #00E0FF;
+      font-weight: bold;
+      border: 1px solid #00E0FF;
+      padding: 8px 14px;
+      border-radius: 8px;
+      transition: background .2s;
+    }
+    a.back:hover {
+      background: #00E0FF;
+      color: #001f26;
+    }
   </style>
 </head>
 <body>
-  <a href="index.html" class="back" id="backBtn">⬅ Torna indietro</a>
-  <main>
-    <div class="paper">
-      <h1 id="p_title">Informativa Privacy</h1>
-      <p class="muted" id="p_updated">Ultimo aggiornamento: 6 ottobre 2025</p>
-
-      <h2 id="p_1_h">1. Dati trattati</h2>
-      <p id="p_1_p1"></p>
-      <ul id="p_1_ul"></ul>
-
-      <h2 id="p_2_h">2. Finalità e base giuridica</h2>
-      <p id="p_2_p1"></p>
-
-      <h2 id="p_3_h">3. Servizi di terze parti (AI)</h2>
-      <p id="p_3_p1"></p>
-
-      <h2 id="p_4_h">4. Conservazione</h2>
-      <p id="p_4_p1"></p>
-
-      <h2 id="p_5_h">5. Diritti dell’utente</h2>
-      <p id="p_5_p1"></p>
-
-      <h2 id="p_6_h">6. Sicurezza</h2>
-      <p id="p_6_p1"></p>
-
-      <h2 id="p_7_h">7. Contatti</h2>
-      <p id="p_7_p1"></p>
-
-      <h2 id="p_8_h">8. Proprietà intellettuale e marchio</h2>
-      <p id="p_8_p1"></p>
-    </div>
-
-    <footer>© 2025 What?f · <a href="terms.html" id="f_terms">Termini d’Uso</a></footer>
-  </main>
+  <a href="#" class="back" id="backBtn">⬅ Torna indietro</a>
+  <h1>Informativa sulla Privacy</h1>
+  <p>
+    La tua privacy è importante per noi. L’app <strong>What?f</strong> non raccoglie dati personali
+    sensibili senza il tuo consenso. Le informazioni fornite vengono utilizzate esclusivamente
+    per migliorare l’esperienza e generare risposte personalizzate.
+  </p>
+  <p>
+    Nessun contenuto da te inserito viene condiviso o memorizzato su server di terze parti,
+    salvo l’elaborazione tramite modelli linguistici AI.
+  </p>
+  <p>
+    Per qualsiasi domanda o richiesta di cancellazione dei dati, contattaci all’indirizzo:
+    <a href="mailto:support@whatf.app">support@whatf.app</a>.
+  </p>
 
   <script>
-    const DICT = {
-      it: {
-        back: "⬅ Torna indietro",
-        title: "Informativa Privacy",
-        updated: "Ultimo aggiornamento: 6 ottobre 2025",
-        p1h: "1. Dati trattati",
-        p1p1: "What?f adotta un approccio di minimizzazione dei dati. L’app può trattare esclusivamente:",
-        p1ul: [
-          "Preferenze locali (lingua, scelte fatte nell’app), memorizzate nel tuo dispositivo (localStorage).",
-          "Domande e risposte inserite dall’utente per generare scenari, inviate ai servizi AI allo scopo di fornirti l’output richiesto.",
-          "Dati tecnici anonimi necessari al funzionamento (es. log del server in caso di errore)."
-        ],
-        p2h: "2. Finalità e base giuridica",
-        p2p1: "Le informazioni sono trattate per erogare il servizio richiesto (generazione di scenari), migliorare l’esperienza d’uso e garantire sicurezza e prevenzione abusi. La base giuridica è l’esecuzione del contratto (uso dell’app) e il legittimo interesse alla sicurezza.",
-        p3h: "3. Servizi di terze parti (AI)",
-        p3p1: "Per generare le risposte utilizziamo fornitori di AI (es. OpenAI). I dati inviati sono limitati alla tua domanda, alle risposte di chiarimento e a dati contestuali necessari (es. età, luogo se forniti). Non vendiamo né cediamo i tuoi dati a terzi.",
-        p4h: "4. Conservazione",
-        p4p1: "Le preferenze sono conservate sul tuo dispositivo. Eventuali log tecnici del server sono conservati per il tempo strettamente necessario all’individuazione e risoluzione dei problemi.",
-        p5h: "5. Diritti dell’utente",
-        p5p1: "Puoi cancellare le preferenze in qualsiasi momento dalle impostazioni del browser (eliminando i dati del sito). Se in futuro introdurremo la registrazione, forniremo strumenti per accedere, rettificare o cancellare i dati del profilo.",
-        p6h: "6. Sicurezza",
-        p6p1: "Adottiamo misure tecniche e organizzative proporzionate per proteggere le informazioni trattate.",
-        p7h: "7. Contatti",
-        p7p1: "Per richieste sulla privacy utilizza i recapiti indicati nell’app o sul sito.",
-        p8h: "8. Proprietà intellettuale e marchio",
-        p8p1: "Il nome, il logo e l’identità visiva di What?f sono marchi indipendenti del creatore. What?f non è affiliata con prodotti o servizi denominati “What If”. Contenuti e grafica sono tutelati dalle leggi sul diritto d’autore e sui marchi.",
-        f_terms: "Termini d’Uso"
-      },
-      en: {
-        back: "⬅ Back",
-        title: "Privacy Policy",
-        updated: "Last updated: October 6, 2025",
-        p1h: "1. Data processed",
-        p1p1: "What?f follows a data minimization approach. The app may process only:",
-        p1ul: [
-          "Local preferences (language, in-app choices) stored on your device (localStorage).",
-          "Questions and answers you provide to generate scenarios, sent to AI services to deliver your requested output.",
-          "Anonymous technical data required for operation (e.g., server logs on error)."
-        ],
-        p2h: "2. Purpose and legal basis",
-        p2p1: "Information is processed to provide the requested service (scenario generation), improve the user experience, and ensure security/abuse prevention. The legal basis is performance of the contract (use of the app) and legitimate interest in security.",
-        p3h: "3. Third-party AI services",
-        p3p1: "We use AI providers (e.g., OpenAI) to generate responses. Data sent is limited to your question, clarifying answers, and necessary context (e.g., age or location if provided). We do not sell or transfer your data to third parties.",
-        p4h: "4. Retention",
-        p4p1: "Preferences are kept on your device. Any server technical logs are retained only as long as strictly necessary to identify and fix issues.",
-        p5h: "5. Your rights",
-        p5p1: "You can delete preferences at any time from your browser settings (clearing site data). If we later add accounts, we will provide tools to access, rectify or erase profile data.",
-        p6h: "6. Security",
-        p6p1: "We adopt appropriate technical and organizational measures to protect information.",
-        p7h: "7. Contact",
-        p7p1: "For privacy inquiries, use the contact details provided in the app or website.",
-        p8h: "8. Intellectual property and trademark",
-        p8p1: "The name, logo, and visual identity of What?f are independent trademarks of the creator. What?f is not affiliated with products or services named “What If.” Content and graphics are protected by copyright and trademark laws.",
-        f_terms: "Terms of Use"
-      }
-    };
-
-    const L = localStorage.getItem('lang') || 'it';
-    const d = DICT[L] || DICT.it;
-    document.documentElement.lang = L;
-
-    // Apply
-    document.getElementById('backBtn').textContent = d.back;
-    document.getElementById('p_title').textContent = d.title;
-    document.getElementById('p_updated').textContent = d.updated;
-
-    document.getElementById('p_1_h').textContent = d.p1h;
-    document.getElementById('p_1_p1').textContent = d.p1p1;
-    const ul = document.getElementById('p_1_ul'); ul.innerHTML='';
-    (d.p1ul||[]).forEach(x=>{ const li=document.createElement('li'); li.textContent=x; ul.appendChild(li); });
-
-    document.getElementById('p_2_h').textContent = d.p2h;
-    document.getElementById('p_2_p1').textContent = d.p2p1;
-
-    document.getElementById('p_3_h').textContent = d.p3h;
-    document.getElementById('p_3_p1').textContent = d.p3p1;
-
-    document.getElementById('p_4_h').textContent = d.p4h;
-    document.getElementById('p_4_p1').textContent = d.p4p1;
-
-    document.getElementById('p_5_h').textContent = d.p5h;
-    document.getElementById('p_5_p1').textContent = d.p5p1;
-
-    document.getElementById('p_6_h').textContent = d.p6h;
-    document.getElementById('p_6_p1').textContent = d.p6p1;
-
-    document.getElementById('p_7_h').textContent = d.p7h;
-    document.getElementById('p_7_p1').textContent = d.p7p1;
-
-    document.getElementById('p_8_h').textContent = d.p8h;
-    document.getElementById('p_8_p1').textContent = d.p8p1;
-
-    document.getElementById('f_terms').textContent = d.f_terms;
+    // Pulsante "indietro" intelligente: torna sempre alla home
+    document.getElementById('backBtn').addEventListener('click', (e)=>{
+      e.preventDefault();
+      window.location.href = 'index.html';
+    });
   </script>
 </body>
 </html>
