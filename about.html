@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f – About</title>
+  <meta name="theme-color" content="#0A0F14" />
+  <style>
+    :root{
+      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
+      --accent:#00E0FF; --accent-dark:#00B5CC; --hl:#1AFFD5;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    main{min-height:100%;max-width:980px;margin:0 auto;padding:20px 16px 80px}
+    h1{font-size:clamp(26px,5.5vw,40px);margin:14px 0 8px;color:var(--accent)}
+    h2{font-size:clamp(18px,4.5vw,24px);margin:26px 0 10px;color:var(--hl)}
+    p,li{color:#d7e8ec; line-height:1.55}
+    .muted{color:var(--muted)}
+    .card{background:var(--card); border:1px solid #1d2831; border-radius:16px; padding:16px 14px; margin-top:10px}
+    .topbar{position:sticky; top:0; z-index:50; background:linear-gradient(#0A0F14,rgba(10,15,20,.6));
+      backdrop-filter: blur(6px); border-bottom:1px solid #121a20; padding:10px 14px; display:flex; gap:10px; align-items:center}
+    .back{appearance:none;border:1px solid #20303a;background:#141C22;color:#A0B2BA;border-radius:12px;padding:8px 12px;cursor:pointer}
+    .back:hover{filter:brightness(1.1)}
+    .container{padding:8px 2px}
+    .footer{color:var(--muted); font-size:12px; margin-top:24px}
+    a{color:var(--accent); text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <button class="back" onclick="history.back()">← <span data-i="back">Indietro</span></button>
+    <div class="muted" style="margin-left:6px;">About • What?f</div>
+  </div>
+
+  <main>
+    <div class="container">
+      <h1 data-i="title">What?f</h1>
+      <p class="card" data-i="desc">
+        What?f è la prima app che ti fa esplorare le scelte che non hai fatto — e quelle che potresti fare domani.
+        Un viaggio tra passato e futuro, dove l’intelligenza artificiale costruisce per te scenari realistici,
+        emozionali o surreali a seconda del tuo stato d’animo.
+      </p>
+
+      <h2 data-i="howTitle">Come funziona</h2>
+      <div class="card">
+        <ul>
+          <li data-i="how1">Scegli se esplorare il <strong>Passato</strong> o il <strong>Futuro</strong>.</li>
+          <li data-i="how2">Seleziona lo stile: <strong>What if</strong> (riflessivo e realistico) o <strong>What the F</strong> (ironico e surreale).</li>
+          <li data-i="how3">L’AI analizza la tua storia e ti propone scenari alternativi, unici e personali.</li>
+        </ul>
+      </div>
+
+      <h2 data-i="premiumTitle">Versione Premium</h2>
+      <p class="card" data-i="premium">
+        La versione gratuita offre 3 esplorazioni a settimana.
+        La versione Premium sblocca storie illimitate, personalità AI speciali e risposte più profonde.
+        A partire da <strong>€2,99/mese</strong>.
+      </p>
+
+      <h2 data-i="techTitle">Tecnologia</h2>
+      <p class="card" data-i="tech">
+        Alimentata da <strong>OpenAI GPT-4o-mini</strong> o <strong>GPT-5-mini</strong>, What?f crea storie personalizzate e interattive.
+        Il tutto con un design minimalista e immersivo, ospitato su GitHub + Vercel.
+      </p>
+
+      <p class="footer">
+        © 2025 What?f • <a href="privacy.html">Privacy</a> • <a href="terms.html">Termini</a>
+      </p>
+    </div>
+  </main>
+
+  <!-- Traduzioni IT/EN basate su localStorage `whatif_lang` -->
+  <script>
+    (function(){
+      const lang = (localStorage.getItem('whatif_lang') || 'it').toLowerCase();
+      const T = {
+        it: {
+          back: "Indietro",
+          title: "What?f",
+          desc: "What?f è la prima app che ti fa esplorare le scelte che non hai fatto — e quelle che potresti fare domani. Un viaggio tra passato e futuro, dove l’intelligenza artificiale costruisce per te scenari realistici, emozionali o surreali a seconda del tuo stato d’animo.",
+          howTitle: "Come funziona",
+          how1: "Scegli se esplorare il Passato o il Futuro.",
+          how2: "Seleziona lo stile: What if (riflessivo e realistico) o What the F (ironico e surreale).",
+          how3: "L’AI analizza la tua storia e ti propone scenari alternativi, unici e personali.",
+          premiumTitle: "Versione Premium",
+          premium: "La versione gratuita offre 3 esplorazioni a settimana. La versione Premium sblocca storie illimitate, personalità AI speciali e risposte più profonde. A partire da €2,99/mese.",
+          techTitle: "Tecnologia",
+          tech: "Alimentata da OpenAI GPT-4o-mini o GPT-5-mini, What?f crea storie personalizzate e interattive. Il tutto con un design minimalista e immersivo, ospitato su GitHub + Vercel."
+        },
+        en: {
+          back: "Back",
+          title: "What?f",
+          desc: "What?f is the first app that lets you explore the choices you didn’t make — and those you still can. A journey between past and future, where AI creates realistic, emotional, or surreal scenarios based on your mood.",
+          howTitle: "How it works",
+          how1: "Choose whether to explore the Past or the Future.",
+          how2: "Select your mode: What if (reflective and realistic) or What the F (ironic and surreal).",
+          how3: "AI analyzes your story and generates unique, personalized scenarios.",
+          premiumTitle: "Premium version",
+          premium: "The free version offers 3 explorations per week. The Premium version unlocks unlimited stories, special AI personalities, and deeper insights. Starting at €2.99/month.",
+          techTitle: "Technology",
+          tech: "Powered by OpenAI GPT-4o-mini or GPT-5-mini, What?f generates personal and interactive stories. All wrapped in a clean, immersive design hosted on GitHub + Vercel."
+        }
+      };
+      const dict = T[lang] || T.it;
+      document.querySelectorAll("[data-i]").forEach(node=>{
+        const key = node.getAttribute("data-i");
+        if (dict[key]) node.innerHTML = dict[key];
+      });
+      document.documentElement.lang = (lang === 'en') ? 'en' : 'it';
+    })();
+  </script>
+</body>
+</html>
