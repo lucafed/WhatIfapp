@@ -3,58 +3,162 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – Termini d’uso</title>
+  <title>What?f — Termini d’Uso</title>
   <meta name="theme-color" content="#0A0F14" />
   <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, Roboto, sans-serif;
-      background: #0A0F14;
-      color: #E6F2F5;
-      line-height: 1.6;
-      padding: 24px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    h1 { color: #00E0FF; }
-    a.back {
-      display: inline-block;
-      margin-bottom: 24px;
-      text-decoration: none;
-      color: #00E0FF;
-      font-weight: bold;
-      border: 1px solid #00E0FF;
-      padding: 8px 14px;
-      border-radius: 8px;
-      transition: background .2s;
-    }
-    a.back:hover {
-      background: #00E0FF;
-      color: #001f26;
-    }
+    :root{ --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA; --accent:#00E0FF; }
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Roboto,Arial,sans-serif}
+    main{max-width:960px;margin:0 auto;padding:20px 16px 64px}
+    .paper{background:#121820;border:1px solid #1d2b34;border-radius:16px;padding:18px;box-shadow:0 12px 28px rgba(0,0,0,.35)}
+    h1{margin:4px 0 12px;font-size:clamp(20px,4.5vw,30px);color:var(--accent)}
+    h2{margin:18px 0 8px;font-size:clamp(16px,4vw,22px);color:var(--accent)}
+    p,li{color:#d7e8ec;line-height:1.55;font-size:clamp(14px,3.6vw,16px)}
+    ul{padding-left:18px;margin:8px 0 0}
+    .muted{color:var(--muted)}
+    .btn{display:inline-block;text-decoration:none;border:1px solid var(--accent);color:var(--accent);padding:8px 14px;border-radius:10px}
+    .btn:hover{background:var(--accent);color:#001f26}
+    .bar{position:fixed;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;gap:8px}
+    .ghost{border-color:#1d2b34;color:#cfe3e7}
+    footer{text-align:center;color:var(--muted);font-size:12px;margin-top:18px}
+    footer a{color:var(--accent);text-decoration:none}
   </style>
 </head>
 <body>
-  <a href="#" class="back" id="backBtn">⬅ Torna indietro</a>
-  <h1>Termini di utilizzo</h1>
-  <p>
-    Benvenuto su <strong>What?f</strong>. Utilizzando questa applicazione accetti i presenti termini.
-    L’app è progettata per fornire esperienze interattive basate su intelligenza artificiale,
-    non rappresenta consigli professionali o medici e non garantisce l’accuratezza dei risultati.
-  </p>
-  <p>
-    L’uso è consentito solo a utenti maggiorenni o con consenso dei genitori. È vietato l’utilizzo
-    per scopi illegali o offensivi.
-  </p>
-  <p>
-    L’app può modificare in qualsiasi momento le proprie funzionalità o condizioni d’uso.
-  </p>
+  <div class="bar">
+    <a href="#" class="btn ghost" id="backBtn">⬅</a>
+    <a href="about.html" class="btn" id="infoBtn">ℹ︎ Info</a>
+  </div>
+
+  <main>
+    <div class="paper">
+      <h1 id="t_title">Termini d’Uso</h1>
+      <p class="muted" id="t_updated">Ultimo aggiornamento: 6 ottobre 2025</p>
+
+      <h2 id="t_1_h">1. Cos’è What?f</h2>
+      <p id="t_1_p"></p>
+
+      <h2 id="t_2_h">2. Uso consentito</h2>
+      <ul id="t_2_ul"></ul>
+
+      <h2 id="t_3_h">3. Contenuti generati dall’AI</h2>
+      <p id="t_3_p1"></p>
+      <p id="t_3_p2"></p>
+
+      <h2 id="t_4_h">4. Proprietà intellettuale e marchio</h2>
+      <p id="t_4_p1"></p>
+      <p id="t_4_p2"></p>
+
+      <h2 id="t_5_h">5. Limitazione di responsabilità</h2>
+      <p id="t_5_p1"></p>
+
+      <h2 id="t_6_h">6. Modifiche</h2>
+      <p id="t_6_p1"></p>
+
+      <h2 id="t_7_h">7. Contatti</h2>
+      <p id="t_7_p1"></p>
+    </div>
+
+    <footer>© 2025 What?f · <a href="privacy.html" id="f_priv">Privacy</a></footer>
+  </main>
 
   <script>
-    // Pulsante "indietro" intelligente: torna sempre alla home
+    // Dizionari
+    const DICT = {
+      it: {
+        back: "⬅ Indietro",
+        info: "ℹ︎ Info",
+        title: "Termini d’Uso",
+        updated: "Ultimo aggiornamento: 6 ottobre 2025",
+        t1h: "1. Cos’è What?f",
+        t1p: "What?f è un’esperienza interattiva che ti aiuta a esplorare scenari ipotetici legati alle tue scelte, nel passato o nel futuro. I contenuti sono generati da modelli di intelligenza artificiale e hanno finalità di intrattenimento, riflessione personale e creatività: non costituiscono consigli professionali (medici, legali, finanziari, ecc.).",
+        t2h: "2. Uso consentito",
+        t2ul: [
+          "Utilizzare l’app nel rispetto delle leggi vigenti e dei presenti Termini.",
+          "Non inserire contenuti illeciti, offensivi o che violino diritti di terzi.",
+          "Non tentare di eludere limiti, quote o misure di sicurezza.",
+          "Non riutilizzare i contenuti generati come se fossero verità oggettive."
+        ],
+        t3h: "3. Contenuti generati dall’AI",
+        t3p1: "Le risposte dell’AI sono probabilistiche, possono contenere errori o inesattezze e non devono essere intese come predizioni reali. La percentuale di probabilità riportata è un’indicazione narrativa.",
+        t3p2: "L’utente è l’unico responsabile dell’uso che fa dei contenuti generati e delle decisioni che ne derivano.",
+        t4h: "4. Proprietà intellettuale e marchio",
+        t4p1: "Il nome, il logo e l’identità visiva di What?f sono marchi indipendenti di proprietà del creatore dell’applicazione. What?f non è affiliata, associata né sponsorizzata da alcuna entità o prodotto denominato “What If” o con denominazioni simili.",
+        t4p2: "Tutti i contenuti, testi, immagini, elementi grafici e logici dell’app What?f sono protetti dalle leggi sul diritto d’autore e sui marchi. È vietata la riproduzione, distribuzione o modifica senza autorizzazione scritta.",
+        t5h: "5. Limitazione di responsabilità",
+        t5p1: "Nella misura massima consentita dalla legge, What?f non è responsabile per danni indiretti, incidentali, consequenziali o perdita di dati derivanti dall’uso dell’app o dai contenuti generati.",
+        t6h: "6. Modifiche",
+        t6p1: "Potremmo aggiornare periodicamente questi Termini. L’uso continuato dell’app dopo le modifiche implica l’accettazione dei Termini aggiornati.",
+        t7h: "7. Contatti",
+        t7p1: "Per domande sui Termini d’Uso puoi contattarci all’indirizzo indicato nell’app o sul sito.",
+        f_priv: "Privacy"
+      },
+      en: {
+        back: "⬅ Back",
+        info: "ℹ︎ Info",
+        title: "Terms of Use",
+        updated: "Last updated: October 6, 2025",
+        t1h: "1. What is What?f",
+        t1p: "What?f is an interactive experience that helps you explore hypothetical scenarios related to your choices, in the past or the future. Content is generated by AI models and is intended for entertainment, personal reflection and creativity. It is not professional advice (medical, legal, financial, etc.).",
+        t2h: "2. Permitted use",
+        t2ul: [
+          "Use the app in compliance with applicable laws and these Terms.",
+          "Do not submit unlawful, offensive content or content that infringes third-party rights.",
+          "Do not attempt to bypass limits, quotas or security measures.",
+          "Do not reuse generated content as if it were objective truth."
+        ],
+        t3h: "3. AI-generated content",
+        t3p1: "AI responses are probabilistic, may contain errors or inaccuracies, and should not be treated as real predictions. The displayed probability is a narrative hint.",
+        t3p2: "You are solely responsible for your use of generated content and any decisions you make.",
+        t4h: "4. Intellectual property and trademark",
+        t4p1: "The name, logo, and visual identity of What?f are independent trademarks owned by the app creator. What?f is not affiliated with, associated with, or sponsored by any entity or product named “What If” or similar denominations.",
+        t4p2: "All content, texts, images, graphics, and logic within the What?f app are protected by copyright and trademark laws. Reproduction, distribution, or modification without written permission is prohibited.",
+        t5h: "5. Limitation of liability",
+        t5p1: "To the maximum extent permitted by law, What?f shall not be liable for indirect, incidental, consequential damages or loss of data arising from the use of the app or generated content.",
+        t6h: "6. Changes",
+        t6p1: "We may periodically update these Terms. Continued use of the app after changes implies acceptance of the updated Terms.",
+        t7h: "7. Contact",
+        t7p1: "For questions about these Terms, contact us through the address provided in the app or website.",
+        f_priv: "Privacy"
+      }
+    };
+
+    const L = localStorage.getItem('lang') || 'it';
+    const d = DICT[L] || DICT.it;
+    document.documentElement.lang = L;
+
+    // Applica testi
+    document.getElementById('backBtn').textContent = d.back;
+    document.getElementById('infoBtn').textContent = d.info;
+    document.getElementById('t_title').textContent = d.title;
+    document.getElementById('t_updated').textContent = d.updated;
+    document.getElementById('t_1_h').textContent = d.t1h;
+    document.getElementById('t_1_p').textContent = d.t1p;
+    document.getElementById('t_2_h').textContent = d.t2h;
+    const ul = document.getElementById('t_2_ul'); ul.innerHTML='';
+    (d.t2ul||[]).forEach(x=>{ const li=document.createElement('li'); li.textContent=x; ul.appendChild(li); });
+    document.getElementById('t_3_h').textContent = d.t3h;
+    document.getElementById('t_3_p1').textContent = d.t3p1;
+    document.getElementById('t_3_p2').textContent = d.t3p2;
+    document.getElementById('t_4_h').textContent = d.t4h;
+    document.getElementById('t_4_p1').textContent = d.t4p1;
+    document.getElementById('t_4_p2').textContent = d.t4p2;
+    document.getElementById('t_5_h').textContent = d.t5h;
+    document.getElementById('t_5_p1').textContent = d.t5p1;
+    document.getElementById('t_6_h').textContent = d.t6h;
+    document.getElementById('t_6_p1').textContent = d.t6p1;
+    document.getElementById('t_7_h').textContent = d.t7h;
+    document.getElementById('t_7_p1').textContent = d.t7p1;
+    document.getElementById('f_priv').textContent = d.f_priv;
+
+    // BACK intelligente: salta sempre l’intro e torna in Home
     document.getElementById('backBtn').addEventListener('click', (e)=>{
       e.preventDefault();
-      window.location.href = 'index.html';
+      try {
+        localStorage.setItem('introSeen','1');
+        localStorage.setItem('whatif_intro_done','1');
+      }catch(e){}
+      window.location.replace('index.html'); // niente "indietro" all’intro
     });
   </script>
 </body>
