@@ -107,10 +107,7 @@
     // Azioni
     document.getElementById('back').addEventListener('click',()=>history.back());
     document.getElementById('home').addEventListener('click',()=>location.href='index.html');
-    document.getElementById('again').addEventListener('click',()=>{
-      // tieni lingua e preferenze, ma riparti dalla domanda
-      location.href='third.html';
-    });
+    document.getElementById('again').addEventListener('click',()=>location.href='third.html');
     document.getElementById('upgrade').addEventListener('click',()=>alert(lang==='en'?'Coming soon':'In arrivo'));
   </script>
 </body>
