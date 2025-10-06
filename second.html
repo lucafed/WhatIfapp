@@ -6,113 +6,130 @@
   <title>What?f – Parlami di te</title>
   <meta name="theme-color" content="#0A0F14" />
   <style>
-    :root{--bg:#0A0F14;--fg:#E6F2F5;--muted:#A0B2BA;--card:#121820;--accent:#00E0FF;--accent2:#00B5CC}
+    :root{--bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent-dark:#00B5CC;--chip:#17212a;--chip-text:#002329}
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{max-width:980px;margin:0 auto;padding:18px 14px 26px}
-    h1{margin:4px 0 10px;font-size:clamp(24px,5.5vw,34px)}
-    p.lead{margin:0 0 12px;color:#d7e8ec;font-size:clamp(14px,4vw,18px);line-height:1.5}
-    form{background:var(--card);border:1px solid #1b2730;border-radius:16px;padding:16px;display:grid;gap:12px}
-    label{font-weight:700}
-    select,input,textarea{width:100%;border:1px solid #223240;background:#0c141b;color:var(--fg);border-radius:12px;padding:10px 12px;font-size:16px}
-    .row{display:grid;gap:12px;grid-template-columns:1fr 1fr}
-    @media (max-width:640px){.row{grid-template-columns:1fr}}
-    .muted{color:var(--muted);font-size:13px}
-    .actions{display:flex;gap:10px;justify-content:space-between;margin-top:8px}
-    .btn{appearance:none;border:none;border-radius:14px;padding:12px 16px;font-weight:900;cursor:pointer}
-    .btn-secondary{background:#162029;color:#cfe3ea;border:1px solid #21313b}
-    .btn-primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#002329}
-    .error{color:#ffb3b3;font-size:13px;display:none}
-    .topbar{position:sticky;top:0;display:flex;justify-content:flex-end;padding:6px 0;background:linear-gradient(180deg,rgba(10,15,20,.9),rgba(10,15,20,0))}
-    .lang-btn{border:1px solid #1f2c36;background:#0f1820;color:var(--fg);border-radius:12px;padding:6px 10px;font-weight:700;cursor:pointer}
-    /* modal lingua */
+    .topbar{position:fixed;inset:0 0 auto 0;height:48px;display:flex;align-items:center;justify-content:flex-end;padding:6px 10px;background:linear-gradient(180deg,rgba(10,15,20,.85),rgba(10,15,20,0));z-index:2}
+    .lang-btn{appearance:none;border:1px solid #1f2c36;background:#0f1820;color:var(--fg);border-radius:12px;padding:6px 10px;font-weight:700;cursor:pointer}
+    main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:60px 14px 26px}
+    .wrap{width:min(100%,980px)}
+    h1{margin:0 0 6px;font-size:clamp(24px,6vw,36px)}
+    .blurb{color:#d7e8ec;margin:0 0 14px;font-size:clamp(14px,4vw,18px);line-height:1.45}
+    form{background:#0c141b;border:1px solid #1b2831;border-radius:16px;padding:14px;display:grid;gap:12px}
+    label{font-weight:700;margin-bottom:6px;display:block}
+    .row{display:grid;gap:12px}
+    @media (min-width:640px){ .row.two{grid-template-columns:1fr 1fr} .row.three{grid-template-columns:1fr 1fr 1fr} }
+    select, input[type="text"], textarea{
+      width:100%; background:#0f1820; color:var(--fg); border:1px solid #1f2c36; border-radius:12px;
+      padding:12px 12px; font-size:16px; outline:none;
+    }
+    textarea{min-height:110px; resize:vertical}
+    .muted{color:var(--muted); font-size:13px}
+    .actions{display:flex;gap:10px;justify-content:space-between;margin-top:6px}
+    .btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer}
+    .btn.ghost{background:#152029;color:#cfe6eb;border:1px solid #253342}
+    .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329}
+    .btn[disabled]{background:#2a3b45;color:#7f98a2;cursor:not-allowed}
+    .error{color:#ffb3b3;background:#3a1414;border:1px solid #5a2222;border-radius:10px;padding:10px 12px;display:none}
+    .error.show{display:block}
+
+    /* Modal lingua */
     .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);z-index:20}
     .modal.open{display:flex}
     .sheet{width:min(92vw,560px);background:#0f1820;border:1px solid #20303a;border-radius:20px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center}
+    .sheet h3{margin:0 0 8px;font-size:clamp(20px,5vw,26px)}
+    .sheet p{margin:0 0 18px;color:var(--muted)}
     .optrow{display:flex;gap:12px;justify-content:center}
-    .opt{flex:1;border:1px solid #1f2c36;background:#0c141b;color:var(--fg);padding:12px 16px;border-radius:14px;font-weight:900;cursor:pointer}
-    .opt.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#002329;border:none}
+    .opt{flex:1;appearance:none;border:1px solid #1f2c36;background:#0c141b;color:var(--fg);padding:12px 16px;border-radius:14px;font-weight:900;cursor:pointer}
+    .opt.primary{background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329;border:none}
   </style>
 </head>
 <body>
+  <div class="topbar">
+    <button id="openLang" class="lang-btn" aria-label="Language">🌐</button>
+  </div>
+
   <main>
-    <div class="topbar">
-      <button id="openLang" class="lang-btn" aria-label="Language">🌐</button>
+    <div class="wrap">
+      <h1 data-key="title">Parlami di te</h1>
+      <p class="blurb" data-key="blurb">
+        Raccontami brevemente chi sei, cosa stai vivendo o cosa ti spinge a usare What?f.
+        Questo aiuterà l’AI a comprenderti meglio e risponderti in modo più personale.
+      </p>
+
+      <div id="errorBox" class="error"></div>
+
+      <form id="aboutForm" novalidate>
+        <div class="row three">
+          <div>
+            <label for="gender" data-key="gender_lbl">Sesso</label>
+            <select id="gender" required>
+              <option value="" data-key="sel_choose">Seleziona…</option>
+              <option value="uomo" data-key="gender_m">Uomo</option>
+              <option value="donna" data-key="gender_f">Donna</option>
+              <option value="altro" data-key="gender_o">Altro</option>
+              <option value="non_specificato" data-key="gender_n">Preferisco non dirlo</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="age" data-key="age_lbl">Età</label>
+            <select id="age" required>
+              <option value="" data-key="sel_choose">Seleziona…</option>
+              <option value="under18" data-key="age_u18">-18</option>
+              <option value="18_24">18–24</option>
+              <option value="25_34">25–34</option>
+              <option value="35_44">35–44</option>
+              <option value="45_54">45–54</option>
+              <option value="55_64">55–64</option>
+              <option value="65_plus">65+</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="phase" data-key="phase_lbl">Fase attuale</label>
+            <select id="phase" required>
+              <option value="" data-key="sel_choose">Seleziona…</option>
+              <option value="studio" data-key="phase_study">Studio</option>
+              <option value="lavoro" data-key="phase_work">Lavoro</option>
+              <option value="cambio" data-key="phase_change">Cambio/Transizione</option>
+              <option value="altro" data-key="phase_other">Altro</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row two">
+          <div>
+            <label for="where" data-key="where_lbl">Da dove vieni?</label>
+            <input id="where" type="text" placeholder="Città / Paese" data-ph="where_ph" />
+          </div>
+
+          <div>
+            <label for="who" data-key="who_lbl">Chi sei?</label>
+            <input id="who" type="text" placeholder="Professione / Ruolo" data-ph="who_ph" />
+          </div>
+        </div>
+
+        <div>
+          <label for="more" data-key="more_lbl">
+            Vuoi raccontarci qualcosa di più su di te?
+            <span class="muted" data-key="more_hint">(opzionale – aiuta l’AI a darti risposte più accurate)</span>
+          </label>
+          <textarea id="more" data-ph="more_ph" placeholder="Esempio: lavoro nel digitale, sto pensando di cambiare città, ho due figli…"></textarea>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn ghost" id="backBtn" data-key="back">Indietro</button>
+          <button type="submit" class="btn primary" id="nextBtn" data-key="next">Continua</button>
+        </div>
+      </form>
     </div>
-
-    <h1 data-key="title">Parlami di te</h1>
-    <p class="lead" data-key="intro">
-      Raccontami brevemente chi sei, cosa stai vivendo o perché usi What?f:
-      aiuterà l’AI a comprenderti meglio e rispondere in modo più personale.
-    </p>
-
-    <form id="aboutForm" novalidate>
-      <div class="row">
-        <div>
-          <label for="sex" data-key="sex">Sesso</label>
-          <select id="sex" required>
-            <option value="" data-key="choose">Seleziona…</option>
-            <option value="male" data-key="male">Uomo</option>
-            <option value="female" data-key="female">Donna</option>
-            <option value="other" data-key="other">Altro</option>
-            <option value="skip" data-key="skip">Preferisco non dirlo</option>
-          </select>
-        </div>
-        <div>
-          <label for="age" data-key="age">Età</label>
-          <select id="age" required>
-            <option value="" data-key="choose">Seleziona…</option>
-            <option value="u18">-18</option>
-            <option value="18-24">18–24</option>
-            <option value="25-34">25–34</option>
-            <option value="35-44">35–44</option>
-            <option value="45-54">45–54</option>
-            <option value="55-64">55–64</option>
-            <option value="65p">65+</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="row">
-        <div>
-          <label for="phase" data-key="phase">In quale fase ti trovi?</label>
-          <select id="phase" required>
-            <option value="" data-key="choose">Seleziona…</option>
-            <option value="study" data-key="ph_study">Studio</option>
-            <option value="work" data-key="ph_work">Lavoro</option>
-            <option value="change" data-key="ph_change">Transizione/Scelta</option>
-            <option value="family" data-key="ph_family">Famiglia</option>
-            <option value="other" data-key="other">Altro</option>
-          </select>
-        </div>
-        <div>
-          <label for="where" data-key="where">Da dove vieni?</label>
-          <input id="where" type="text" placeholder="Città / Paese" />
-        </div>
-      </div>
-
-      <div>
-        <label for="more" data-key="more_label">Vuoi raccontarci qualcosa di più su di te? <span class="muted" data-key="more_hint">(opzionale – aiuta l’AI a darti risposte più accurate)</span></label>
-        <textarea id="more" rows="4" placeholder="Esempio: lavoro nel digitale, sto pensando di cambiare città…"></textarea>
-      </div>
-
-      <span id="err" class="error" data-key="err">Seleziona almeno un’opzione per continuare.</span>
-
-      <div class="actions">
-        <button type="button" class="btn btn-secondary" id="back" data-key="back">Indietro</button>
-        <button type="submit" class="btn btn-primary" id="next" data-key="next">Continua</button>
-      </div>
-    </form>
-
-    <footer style="margin-top:12px;color:var(--muted);font-size:12px">
-      © 2025 What?f
-    </footer>
   </main>
 
-  <!-- Selettore lingua -->
-  <div id="langModal" class="modal" role="dialog" aria-modal="true">
+  <!-- Modal lingua (uguale alla home) -->
+  <div id="langModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="langTitle">
     <div class="sheet">
-      <h3 data-key="modal_title">Scegli la lingua</h3>
+      <h3 id="langTitle" data-key="modal_title">Scegli la lingua</h3>
       <p data-key="modal_hint">Potrai cambiarla in ogni momento.</p>
       <div class="optrow">
         <button class="opt" id="itBtn">Italiano</button>
@@ -122,68 +139,87 @@
   </div>
 
   <script>
-    // I18N (stesso modello della home)
+    // —— i18n (stesso meccanismo della home) ————————————————
     const I18N = {
       it:{
         title:"Parlami di te",
-        intro:"Raccontami brevemente chi sei, cosa stai vivendo o perché usi What?f: aiuterà l’AI a comprenderti meglio e rispondere in modo più personale.",
-        sex:"Sesso", age:"Età", phase:"In quale fase ti trovi?", where:"Da dove vieni?",
-        choose:"Seleziona…", male:"Uomo", female:"Donna", other:"Altro", skip:"Preferisco non dirlo",
-        ph_study:"Studio", ph_work:"Lavoro", ph_change:"Transizione/Scelta", ph_family:"Famiglia",
-        more_label:"Vuoi raccontarci qualcosa di più su di te?",
-        more_hint:"(opzionale – aiuta l’AI a darti risposte più accurate)",
-        back:"Indietro", next:"Continua", err:"Seleziona almeno un’opzione per continuare.",
+        blurb:"Raccontami brevemente chi sei, cosa stai vivendo o cosa ti spinge a usare What?f. Questo aiuterà l’AI a comprenderti meglio e risponderti in modo più personale.",
+        gender_lbl:"Sesso", sel_choose:"Seleziona…", gender_m:"Uomo", gender_f:"Donna", gender_o:"Altro", gender_n:"Preferisco non dirlo",
+        age_lbl:"Età", age_u18:"-18",
+        phase_lbl:"Fase attuale", phase_study:"Studio", phase_work:"Lavoro", phase_change:"Cambio/Transizione", phase_other:"Altro",
+        where_lbl:"Da dove vieni?", where_ph:"Città / Paese",
+        who_lbl:"Chi sei?", who_ph:"Professione / Ruolo",
+        more_lbl:"Vuoi raccontarci qualcosa di più su di te?", more_hint:"(opzionale – aiuta l’AI a darti risposte più accurate)", more_ph:"Esempio: lavoro nel digitale, sto pensando di cambiare città, ho due figli…",
+        back:"Indietro", next:"Continua",
+        err_required:"Per continuare seleziona Sesso, Età e Fase.",
         modal_title:"Scegli la lingua", modal_hint:"Potrai cambiarla in ogni momento."
       },
       en:{
         title:"Tell me about you",
-        intro:"Briefly share who you are, what you’re going through or why you use What?f. It helps the AI understand you and reply more personally.",
-        sex:"Gender", age:"Age", phase:"Which phase are you in?", where:"Where are you from?",
-        choose:"Select…", male:"Male", female:"Female", other:"Other", skip:"Prefer not to say",
-        ph_study:"Study", ph_work:"Work", ph_change:"Transition/Choice", ph_family:"Family",
-        more_label:"Want to tell us more about you?",
-        more_hint:"(optional – helps the AI give more accurate answers)",
-        back:"Back", next:"Continue", err:"Please fill the required fields.",
+        blurb:"Briefly share who you are, what you’re going through or why you’re using What?f. This helps the AI understand you better and reply more personally.",
+        gender_lbl:"Gender", sel_choose:"Choose…", gender_m:"Male", gender_f:"Female", gender_o:"Other", gender_n:"Prefer not to say",
+        age_lbl:"Age", age_u18:"-18",
+        phase_lbl:"Current phase", phase_study:"Studying", phase_work:"Working", phase_change:"Changing/Transition", phase_other:"Other",
+        where_lbl:"Where are you from?", where_ph:"City / Country",
+        who_lbl:"Who are you?", who_ph:"Profession / Role",
+        more_lbl:"Want to tell us more about you?", more_hint:"(optional – helps the AI give more accurate answers)", more_ph:"Example: I work in tech, I’m thinking about moving city, I have two kids…",
+        back:"Back", next:"Continue",
+        err_required:"To continue please select Gender, Age and Phase.",
         modal_title:"Choose language", modal_hint:"You can change it anytime."
       }
     };
-    const LS=localStorage;
-    let lang = LS.getItem('lang') || ((navigator.language||'it').toLowerCase().startsWith('en')?'en':'it');
-    function apply(){
-      const D=I18N[lang];
-      document.documentElement.lang=lang;
+    const LS = localStorage;
+    let curLang = LS.getItem('lang') || ((navigator.language||'it').toLowerCase().startsWith('en') ? 'en' : 'it');
+
+    function tSet(){
+      const d = I18N[curLang];
+      document.documentElement.lang = curLang;
       document.querySelectorAll('[data-key]').forEach(el=>{
-        const k=el.getAttribute('data-key'); if(D[k]) el.innerHTML=D[k];
+        const k=el.getAttribute('data-key'); if(d[k]) el.textContent=d[k];
       });
-      document.getElementById('where').placeholder = (lang==='en'?'City / Country':'Città / Paese');
-      document.getElementById('more').placeholder  = (lang==='en'?'Example: I work in tech…':'Esempio: lavoro nel digitale…');
+      document.querySelectorAll('[data-ph]').forEach(el=>{
+        const k=el.getAttribute('data-ph'); if(d[k]) el.setAttribute('placeholder', d[k]);
+      });
     }
-    function setLang(l){ lang=l; LS.setItem('lang',l); apply(); }
-    // modal lingua
-    const modal=document.getElementById('langModal');
-    document.getElementById('openLang').addEventListener('click',()=>modal.classList.add('open'));
-    document.getElementById('itBtn').addEventListener('click',()=>{setLang('it');modal.classList.remove('open')});
-    document.getElementById('enBtn').addEventListener('click',()=>{setLang('en');modal.classList.remove('open')});
-    if(!LS.getItem('lang')) modal.classList.add('open');
-    apply();
+    function setLang(l){ curLang=l; LS.setItem('lang',l); tSet(); }
 
-    // back
-    document.getElementById('back').addEventListener('click',()=>history.back());
+    // — lingua UI
+    const langModal = document.getElementById('langModal');
+    document.getElementById('openLang')?.addEventListener('click', ()=> langModal.classList.add('open'));
+    document.getElementById('itBtn')?.addEventListener('click', ()=>{ setLang('it'); langModal.classList.remove('open'); });
+    document.getElementById('enBtn')?.addEventListener('click', ()=>{ setLang('en'); langModal.classList.remove('open'); });
+    if(!LS.getItem('lang')) langModal.classList.add('open');
+    tSet();
 
-    // submit con convalida
-    document.getElementById('aboutForm').addEventListener('submit',(e)=>{
+    // —— form logic ——————————————————————————————————————————
+    const form = document.getElementById('aboutForm');
+    const errBox = document.getElementById('errorBox');
+
+    document.getElementById('backBtn').addEventListener('click', ()=> history.back());
+
+    form.addEventListener('submit', (e)=>{
       e.preventDefault();
-      const sex = document.getElementById('sex').value.trim();
-      const age = document.getElementById('age').value.trim();
-      const phase= document.getElementById('phase').value.trim();
-      const where= document.getElementById('where').value.trim();
-      const more = document.getElementById('more').value.trim();
-      if(!sex || !age || !phase){
-        const err=document.getElementById('err'); err.style.display='block'; return;
+      const gender = document.getElementById('gender').value.trim();
+      const age    = document.getElementById('age').value.trim();
+      const phase  = document.getElementById('phase').value.trim();
+      const where  = document.getElementById('where').value.trim();
+      const who    = document.getElementById('who').value.trim();
+      const more   = document.getElementById('more').value.trim();
+
+      // obbligatori: gender, age, phase
+      if(!gender || !age || !phase){
+        errBox.textContent = I18N[curLang].err_required;
+        errBox.classList.add('show');
+        return;
       }
-      const profile={sex,age,phase,where,more};
-      LS.setItem('whatif_user', JSON.stringify(profile));
-      location.href='third.html';
+      errBox.classList.remove('show');
+
+      // salva profilo
+      const profile = { gender, age, phase, where, who, more };
+      LS.setItem('whatif_profile', JSON.stringify(profile));
+
+      // vai alla tua domanda (third)
+      location.href = 'third.html';
     });
   </script>
 </body>
