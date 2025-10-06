@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f – Home</title>
   <meta name="theme-color" content="#0A0F14" />
-  <link rel="preload" as="image" href="/home-hero.png" />
+
+  <!-- Preload immagine principale (non blocca il rendering) -->
+  <link rel="preload" as="image" href="/home-hero.png" imagesrcset="/home-hero.png" />
+
   <style>
-    :root {
-      --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA;
-      --accent:#00E0FF; --accent-dark:#00B5CC;
-    }
+    :root { --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA; --accent:#00E0FF; --accent-dark:#00B5CC; }
     *{ box-sizing:border-box }
     html,body{
       height:100%; margin:0; background:var(--bg); color:var(--fg);
@@ -18,13 +18,13 @@
     }
     main{
       min-height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;
-      text-align:center; padding:20px; gap:14px; transition:opacity .4s ease;
+      text-align:center; padding:20px; gap:14px; transition:opacity .25s ease;
     }
 
     /* Immagine */
     .hero-img{
       width:min(92vw,560px); height:auto; display:block; margin:0 auto 6px;
-      filter:drop-shadow(0 10px 28px rgba(0,0,0,.45))
+      filter:drop-shadow(0 10px 28px rgba(0,0,0,.45));
     }
 
     /* Titolo + lead */
@@ -32,93 +32,93 @@
     h1 span{ color:var(--accent) }
     .lead{
       max-width:680px; font-size:clamp(15px,4vw,18px); color:var(--muted);
-      line-height:1.5; margin:4px auto 16px
+      line-height:1.5; margin:4px auto 16px;
     }
 
     /* Scelte */
-    .group{
-      display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:6px
-    }
+    .group{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:6px }
     .chip{
       appearance:none; border:none; background:#141C22; color:#cfe3e7;
       padding:12px 16px; border-radius:16px; font-weight:700; cursor:pointer;
-      transition:transform .08s ease, background .16s ease
+      transition:transform .08s ease, background .16s ease;
     }
     .chip:active{ transform:translateY(1px) }
-    .chip.selected{
-      background:linear-gradient(180deg,var(--accent),var(--accent-dark)); color:#001f26
-    }
+    .chip.selected{ background:linear-gradient(180deg,var(--accent),var(--accent-dark)); color:#001f26 }
 
     /* CTA */
     .cta{
       display:inline-block; background:linear-gradient(180deg,var(--accent),var(--accent-dark));
       color:#001f26; font-weight:800; border:none; border-radius:24px; padding:14px 20px;
       box-shadow:0 0 14px rgba(0,181,204,.5), 0 0 28px rgba(0,181,204,.25);
-      cursor:pointer; transition:.2s
+      cursor:pointer; transition:.2s;
     }
     .cta[disabled]{ opacity:.4; cursor:not-allowed }
 
     /* Footer */
     footer{
-      position:fixed; left:0; right:0; bottom:10px; text-align:center; color:var(--muted); font-size:12px
+      position:fixed; left:0; right:0; bottom:10px; text-align:center; color:var(--muted); font-size:12px;
     }
     footer a{ color:var(--accent); text-decoration:none }
     footer .demo{ margin-left:8px; opacity:.9 }
 
-    /* Selettore lingua (solo Home) */
+    /* Lingua (solo Home) */
     .lang-fab{ position:fixed; top:calc(env(safe-area-inset-top,0px) + 14px); right:14px; z-index:50 }
     .lang-btn{
       appearance:none; border:1px solid #1d2b34; background:#0f1820; color:#E6F2F5;
-      padding:10px 12px; border-radius:999px; cursor:pointer
+      padding:10px 12px; border-radius:999px; cursor:pointer;
     }
     .lang-menu{
       position:absolute; top:46px; right:0; background:#101922; border:1px solid #1d2b34;
-      border-radius:12px; padding:8px; display:none; min-width:160px; box-shadow:0 12px 28px rgba(0,0,0,.35)
+      border-radius:12px; padding:8px; display:none; min-width:160px; box-shadow:0 12px 28px rgba(0,0,0,.35);
     }
     .lang-menu button{
       display:block; width:100%; text-align:left; background:transparent; border:none;
-      color:#E6F2F5; padding:10px; border-radius:10px; cursor:pointer
+      color:#E6F2F5; padding:10px; border-radius:10px; cursor:pointer;
     }
     .lang-menu button.active{ background:#14222b }
 
-    /* Bottone Info/About */
+    /* Info/About */
     .about-fab{
       position:fixed; right:14px; bottom:14px; z-index:60;
       background:#141C22; color:#A0B2BA; border:1px solid #1f2a33;
       border-radius:999px; padding:10px 14px; font-size:14px;
       text-decoration:none; display:inline-flex; gap:8px; align-items:center;
-      box-shadow:0 6px 18px rgba(0,0,0,.35); transition:filter .15s ease
+      box-shadow:0 6px 18px rgba(0,0,0,.35); transition:filter .15s ease;
     }
     .about-fab:hover{ filter:brightness(1.2) }
 
     /* Mobile spacing */
     @media (max-width:480px){
-      main{ padding-bottom:80px }
+      main{ padding-bottom:84px }
       .group{ gap:12px; margin-bottom:14px }
       .chip{ flex:1 1 45%; padding:10px 12px; font-size:15px }
       .cta{ margin-top:10px }
       footer{ font-size:11px; bottom:6px }
     }
 
-    /* ---------- INTRO OVERLAY (solo prima volta) ---------- */
+    /* ---------- INTRO (light & fast) ---------- */
     .intro{
-      position:fixed; inset:0; background:radial-gradient(1200px 1200px at 50% -10%, rgba(0,224,255,.08), transparent 60%), #0A0F14;
-      display:flex; align-items:center; justify-content:center; flex-direction:column; gap:18px;
-      z-index:100; opacity:1; pointer-events:auto; transition:opacity .6s ease
+      position:fixed; inset:0; background:#0A0F14;
+      display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px;
+      z-index:100; opacity:1; pointer-events:auto; transition:opacity .25s ease;
     }
     .intro.hide{ opacity:0; pointer-events:none }
     .intro .line{
-      max-width:90vw; text-align:center; color:#E6F2F5; font-size:clamp(18px,4.8vw,26px); line-height:1.35;
-      opacity:0; transform:translateY(10px); transition:opacity .6s ease, transform .6s ease
+      max-width:90vw; text-align:center; color:#E6F2F5; font-size:clamp(18px,4.8vw,24px); line-height:1.35;
+      opacity:0; transform:translateY(8px); transition:opacity .3s ease, transform .3s ease;
     }
     .intro .line.show{ opacity:1; transform:translateY(0) }
     .intro .accent{ color:var(--accent) }
-    .intro .skip{
-      position:absolute; bottom:18px; left:0; right:0; text-align:center
-    }
+    .intro .skip{ position:absolute; bottom:18px; left:0; right:0; text-align:center }
     .intro .skip button{
       appearance:none; background:#121a22; border:1px solid #1e2a34; color:#BFD2D9;
-      padding:8px 14px; border-radius:999px; cursor:pointer
+      padding:8px 14px; border-radius:999px; cursor:pointer;
+    }
+
+    /* Riduce animazioni se l’utente lo preferisce */
+    @media (prefers-reduced-motion: reduce){
+      .intro .line{ transition:none }
+      .intro{ transition:none }
     }
   </style>
 </head>
@@ -132,7 +132,7 @@
     </div>
   </div>
 
-  <!-- INTRO overlay (mostrata solo la prima volta) -->
+  <!-- INTRO veloce (mostra solo la prima volta o con ?demo=1) -->
   <div class="intro" id="intro" hidden>
     <div class="line" id="introL1"></div>
     <div class="line" id="introL2"></div>
@@ -141,7 +141,8 @@
   </div>
 
   <main>
-    <img id="hero" class="hero-img" alt="Porta luminosa What?f" loading="eager" decoding="async" />
+    <!-- Carico l’immagine subito: niente fetch JS prima di visualizzare -->
+    <img id="hero" class="hero-img" src="/home-hero.png" alt="Porta luminosa What?f" loading="eager" decoding="async" />
     <h1><span data-i18n="title">Scopri il tuo What?f</span></h1>
     <p class="lead" id="leadText"></p>
 
@@ -162,41 +163,40 @@
     <a href="#" class="demo" id="replayDemo">▶︎ Demo</a>
   </footer>
 
-  <!-- Bottone Info/About -->
+  <!-- Info/About -->
   <a href="about.html" class="about-fab" id="aboutFab"><span id="aboutLabel">Info</span></a>
 
-  <!-- Caricamento robusto immagine -->
   <script>
-    (async function loadHero(){
-      const hero=document.getElementById('hero');
-      const tries=['/home-hero.png','/public/home-hero.png','/assets/home-hero.png'];
-      for(const u of tries){
-        try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ hero.src=u+'?v='+Date.now(); return; } }
-        catch(e){}
-      }
+    // Fallback immagine (non blocca la UI)
+    (function(){
+      const hero = document.getElementById('hero');
+      hero.addEventListener('error', ()=>{
+        const fallbacks = ['/public/home-hero.png','/assets/home-hero.png'];
+        for(const u of fallbacks){ const test = new Image(); test.onload=()=>{ hero.src=u }; test.src=u; }
+      });
     })();
   </script>
 
-  <!-- Dizionario lingue (Home + Intro) -->
   <script>
+    // Dizionario IT/EN (Home + Intro)
     const DICT = {
       it: {
-        title: "Scopri il tuo What?f",
-        lead: "Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro. <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili. <strong>What the F</strong> ti farà vivere visioni ironiche, creative e imprevedibili.",
-        past: "Passato", future: "Futuro", whatif: "What if", wtf: "What the F", next: "Avanti", info: "Info",
-        intro1: "Immagina la scelta che non hai fatto…",
-        intro2: "…e quella che potresti ancora fare.",
-        intro3: "In What?f esplori <span class='accent'>Passato</span> o <span class='accent'>Futuro</span> e scegli lo stile: <strong>What if</strong> (realistico) o <strong>What the F</strong> (ironico).",
-        skip: "Salta intro", demo: "▶︎ Demo"
+        title:"Scopri il tuo What?f",
+        lead:"Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro. <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili. <strong>What the F</strong> ti farà vivere visioni ironiche, creative e imprevedibili.",
+        past:"Passato", future:"Futuro", whatif:"What if", wtf:"What the F", next:"Avanti", info:"Info",
+        intro1:"Immagina la scelta che non hai fatto…",
+        intro2:"…e quella che potresti ancora fare.",
+        intro3:"In What?f esplori <span class='accent'>Passato</span> o <span class='accent'>Futuro</span> e scegli lo stile: <strong>What if</strong> (realistico) o <strong>What the F</strong> (ironico).",
+        skip:"Salta intro", demo:"▶︎ Demo"
       },
       en: {
-        title: "Discover your What?f",
-        lead: "Imagine the choice you didn’t make… and the one you could make. Choose whether to look to the past or the future. <strong>What if</strong> explores realistic, reflective scenarios based on plausible choices. <strong>What the F</strong> lets you experience ironic, creative and unpredictable visions.",
-        past: "Past", future: "Future", whatif: "What if", wtf: "What the F", next: "Next", info: "About",
-        intro1: "Imagine the choice you didn’t make…",
-        intro2: "…and the one you could still make.",
-        intro3: "In What?f you explore the <span class='accent'>Past</span> or the <span class='accent'>Future</span> and choose the style: <strong>What if</strong> (realistic) or <strong>What the F</strong> (ironic).",
-        skip: "Skip intro", demo: "▶︎ Demo"
+        title:"Discover your What?f",
+        lead:"Imagine the choice you didn’t make… and the one you could make. Choose whether to look to the past or the future. <strong>What if</strong> explores realistic, reflective scenarios based on plausible choices. <strong>What the F</strong> lets you experience ironic, creative and unpredictable visions.",
+        past:"Past", future:"Future", whatif:"What if", wtf:"What the F", next:"Next", info:"About",
+        intro1:"Imagine the choice you didn’t make…",
+        intro2:"…and the one you could still make.",
+        intro3:"In What?f you explore the <span class='accent'>Past</span> or the <span class='accent'>Future</span> and choose the style: <strong>What if</strong> (realistic) or <strong>What the F</strong> (ironic).",
+        skip:"Skip intro", demo:"▶︎ Demo"
       }
     };
 
@@ -210,130 +210,101 @@
     function applyLang(){
       const L = getLang(), d = DICT[L] || DICT.it;
       document.documentElement.lang = L;
-      // testi base
       $$('[data-i18n]').forEach(el=>{
         const k = el.getAttribute('data-i18n');
         if(d[k] && !el.matches('#leadText')) el.textContent = d[k];
       });
       $('#leadText').innerHTML = d.lead;
-      // about + footer demo label
       $('#aboutLabel').textContent = d.info;
       $('#replayDemo').textContent = d.demo;
-      // intro labels
       $('#skipLbl').textContent = d.skip;
     }
-
     if(!LS.getItem('lang')) LS.setItem('lang','it');
     applyLang();
 
-    // Widget lingua
-    const fab=document.getElementById("langFab");
-    const btn=document.getElementById("langToggle");
-    const menu=document.getElementById("langMenu");
-    btn.addEventListener("click",()=>{
-      const open=menu.style.display==="block";
-      menu.style.display=open?"none":"block";
-      btn.setAttribute("aria-expanded",String(!open));
-    });
-    menu.addEventListener("click",e=>{
-      const b=e.target.closest("button[data-lang]"); if(!b) return;
-      setLang(b.dataset.lang);
-      menu.style.display="none";
-      // se l'intro è visibile, aggiorna anche i testi dell'intro
-      if(!document.getElementById('intro').hidden) fillIntroTexts();
-    });
-    document.addEventListener("click",e=>{
-      if(!fab.contains(e.target)){ menu.style.display="none"; }
-    });
-  </script>
-
-  <!-- Selezioni + CTA -->
-  <script>
-    const state = JSON.parse(localStorage.getItem("whatif_prefs")||"{}");
-    const go = document.getElementById("go");
-
-    function syncUI(){
-      if(state.periodo){
-        document.querySelector(`#periodGroup .chip[data-val="${state.periodo}"]`)?.classList.add('selected');
-      }
-      if(state.stile){
-        document.querySelector(`#styleGroup .chip[data-val="${state.stile}"]`)?.classList.add('selected');
-      }
-      go.disabled = !(state.periodo && state.stile);
-    }
-    function wireGroup(g){
-      g.addEventListener("click",(e)=>{
-        const b=e.target.closest(".chip"); if(!b) return;
-        g.querySelectorAll(".chip").forEach(c=>c.classList.remove("selected"));
-        b.classList.add("selected");
-        state[b.dataset.key]=b.dataset.val;
-        localStorage.setItem("whatif_prefs", JSON.stringify(state));
-        go.disabled = !(state.periodo && state.stile);
+    // Lingua UI
+    (function(){
+      const fab=$('#langFab'), btn=$('#langToggle'), menu=$('#langMenu');
+      btn.addEventListener("click",()=>{
+        const open=menu.style.display==="block";
+        menu.style.display=open?"none":"block";
+        btn.setAttribute("aria-expanded",String(!open));
       });
-    }
-    wireGroup(document.getElementById("periodGroup"));
-    wireGroup(document.getElementById("styleGroup"));
-    syncUI();
+      menu.addEventListener("click",e=>{
+        const b=e.target.closest("button[data-lang]"); if(!b) return;
+        setLang(b.dataset.lang);
+        menu.style.display="none";
+        if(!$('#intro').hidden) fillIntroTexts();
+      });
+      document.addEventListener("click",e=>{
+        if(!fab.contains(e.target)) menu.style.display="none";
+      });
+    })();
 
-    go.addEventListener("click", ()=>{
-      if(go.disabled) return;
-      location.href = "second.html";
-    });
-  </script>
+    // Selezioni + CTA
+    (function(){
+      const state = JSON.parse(LS.getItem("whatif_prefs")||"{}");
+      const go = $("#go");
+      function syncUI(){
+        if(state.periodo){ document.querySelector(`#periodGroup .chip[data-val="${state.periodo}"]`)?.classList.add('selected'); }
+        if(state.stile){ document.querySelector(`#styleGroup .chip[data-val="${state.stile}"]`)?.classList.add('selected'); }
+        go.disabled = !(state.periodo && state.stile);
+      }
+      function wireGroup(g){
+        g.addEventListener("click",(e)=>{
+          const b=e.target.closest(".chip"); if(!b) return;
+          g.querySelectorAll(".chip").forEach(c=>c.classList.remove("selected"));
+          b.classList.add("selected");
+          state[b.dataset.key]=b.dataset.val;
+          LS.setItem("whatif_prefs", JSON.stringify(state));
+          go.disabled = !(state.periodo && state.stile);
+        });
+      }
+      wireGroup($("#periodGroup"));
+      wireGroup($("#styleGroup"));
+      syncUI();
+      go.addEventListener("click", ()=>{ if(!go.disabled) location.href="second.html"; });
+    })();
 
-  <!-- Intro logic -->
-  <script>
-    const introEl = document.getElementById('intro');
-    const L1 = document.getElementById('introL1');
-    const L2 = document.getElementById('introL2');
-    const L3 = document.getElementById('introL3');
-    const skipBtn = document.getElementById('skipIntro');
+    // ---------- Intro: veloce, con timeout di sicurezza e "solo prima volta" ----------
+    const introEl = $('#intro'), L1=$('#introL1'), L2=$('#introL2'), L3=$('#introL3'), skipBtn=$('#skipIntro');
 
     function fillIntroTexts(){
       const d = DICT[getLang()] || DICT.it;
       L1.textContent = d.intro1;
       L2.textContent = d.intro2;
-      L3.innerHTML   = d.intro3; // contiene <span> e <strong>
+      L3.innerHTML   = d.intro3;
+    }
+
+    function hideIntro(save=true){
+      introEl.classList.add('hide');
+      setTimeout(()=>{ introEl.hidden = true; }, 260);
+      if(save) LS.setItem('introSeenUntil', String(Date.now()+24*60*60*1000)); // non riprodurre per 24h
     }
 
     function showIntro(){
       fillIntroTexts();
       introEl.hidden = false;
-      requestAnimationFrame(()=>{
-        // sequenza
-        setTimeout(()=>L1.classList.add('show'), 150);
-        setTimeout(()=>L2.classList.add('show'), 1800);
-        setTimeout(()=>L3.classList.add('show'), 3400);
-        // auto-hide
-        setTimeout(hideIntro, 5600);
-      });
+      // sequenza molto corta
+      setTimeout(()=>L1.classList.add('show'), 80);
+      setTimeout(()=>L2.classList.add('show'), 900);
+      setTimeout(()=>L3.classList.add('show'), 1700);
+      // auto-hide veloce + safety timeout
+      const t1 = setTimeout(()=>hideIntro(true), 2800);
+      const t2 = setTimeout(()=>hideIntro(true), 3500); // safety nel caso di tab sospese
+      // skip touch/click
+      const skipAll = ()=>{ clearTimeout(t1); clearTimeout(t2); hideIntro(true); };
+      skipBtn.addEventListener('click', skipAll, { once:true });
+      introEl.addEventListener('click', skipAll, { once:true });
+      document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') hideIntro(true); }, { once:true });
     }
 
-    function hideIntro(){
-      introEl.classList.add('hide');
-      setTimeout(()=>{ introEl.hidden = true; }, 650);
-      localStorage.setItem('introSeen','true');
-    }
-
-    // Skip manuale
-    skipBtn.addEventListener('click', hideIntro);
-    introEl.addEventListener('click', hideIntro); // tap ovunque per saltare
-
-    // Replay demo dal footer
-    document.getElementById('replayDemo').addEventListener('click', (e)=>{
-      e.preventDefault();
-      localStorage.removeItem('introSeen');
-      // reset stati intro
-      [L1,L2,L3].forEach(n=>n.classList.remove('show'));
-      introEl.classList.remove('hide');
-      showIntro();
-    });
-
-    // Mostra intro solo la prima volta o se forzata da ?demo=1
     (function initIntro(){
       const force = /[?&]demo=1/i.test(location.search);
-      const seen = localStorage.getItem('introSeen') === 'true';
-      if(force || !seen) showIntro();
+      const until = Number(LS.getItem('introSeenUntil')||0);
+      const seen  = Date.now() < until;
+      if(force){ LS.removeItem('introSeenUntil'); showIntro(); }
+      else if(!seen){ showIntro(); }
     })();
   </script>
 </body>
