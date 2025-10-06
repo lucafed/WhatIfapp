@@ -8,14 +8,13 @@
   <style>
     :root{
       --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
-      --accent:#00E0FF; --accent-dark:#00B5CC; --chip:#17212a;
+      --accent:#00E0FF; --accent-dark:#00B5CC;
     }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     main{min-height:100%;display:flex;flex-direction:column;gap:18px;padding:18px}
 
-    /* top bar */
     .top{display:flex;align-items:center;gap:12px}
     .back{appearance:none;border:none;background:#0f1820;color:var(--fg);
       padding:10px 14px;border-radius:14px;cursor:pointer}
@@ -24,14 +23,14 @@
     h1{margin:0;font-size:clamp(26px,6vw,40px);}
 
     .card{background:var(--card);border-radius:18px;padding:16px;box-shadow:0 10px 26px rgba(0,0,0,.35)}
-    .ta{width:100%;min-height:180px;background:#0f1820;border:1px solid #1d2b34;
-      color:var(--fg);padding:16px;border-radius:14px;resize:vertical;font-size:16px}
+    .label{margin-bottom:8px;color:var(--muted);font-weight:600}
+    textarea{width:100%;min-height:160px;background:#0f1820;color:var(--fg);
+      border:1px solid #1d2b34;border-radius:14px;padding:14px;font-size:16px;resize:vertical}
     .hint{color:var(--muted);font-size:14px;margin-top:10px}
-    .cta{display:inline-block;margin-top:16px;background:linear-gradient(180deg,var(--accent),var(--accent-dark));
-      color:#002329;font-weight:900;border:none;border-radius:24px;padding:14px 22px;min-width:220px;
-      box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25);
-      cursor:pointer}
-    .cta:disabled{background:#29404a;color:#7fa1aa;box-shadow:none;cursor:not-allowed}
+
+    .cta{margin-top:16px;display:flex;justify-content:center}
+    .btn{appearance:none;border:none;border-radius:16px;padding:14px 18px;min-width:220px;cursor:pointer}
+    .primary{background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329;font-weight:900}
 
     /* language fab */
     .lang-fab{position:fixed;top:14px;right:14px;z-index:20}
@@ -45,7 +44,7 @@
   </style>
 </head>
 <body>
-  <!-- Language selector -->
+  <!-- Selettore lingua -->
   <div class="lang-fab" id="langFab">
     <button class="lang-btn" id="langToggle" aria-haspopup="true" aria-expanded="false">🌐</button>
     <div class="lang-menu" id="langMenu" role="menu" aria-label="language">
@@ -63,45 +62,58 @@
     <h1 data-i18n="title">La tua domanda</h1>
 
     <div class="card">
-      <label class="label" for="q" data-i18n="label">Scrivi la tua domanda What?f…</label>
-      <textarea id="q" class="ta" placeholder="Esempio: Se avessi accettato quel lavoro a Milano?"></textarea>
-      <div class="hint" data-i18n="hint">
-        Suggerimento: sii specifico. Es. “Se restassi a L’Aquila i prossimi 2 anni, cosa cambierebbe nella mia carriera?”
+      <div class="label" data-i18n="label">Scrivi la tua domanda What?f…</div>
+      <textarea id="question" placeholder=""></textarea>
+      <div class="hint" id="hint"></div>
+      <div class="cta">
+        <button class="btn primary" id="go" data-i18n="discover">Scopri</button>
       </div>
-      <button id="go" class="cta" data-i18n="discover">Scopri</button>
     </div>
   </main>
 
   <script>
-    /* ---------- i18n tiny runtime ---------- */
+    /* ---------- i18n ---------- */
     const dict = {
       it: {
         back:"Indietro",
         title:"La tua domanda",
         label:"Scrivi la tua domanda What?f…",
+        discover:"Scopri",
+        placeholder:"Esempio: Se avessi accettato quel lavoro a Milano?",
         hint:'Suggerimento: sii specifico. Es. “Se restassi a L’Aquila i prossimi 2 anni, cosa cambierebbe nella mia carriera?”',
-        discover:"Scopri"
+        crumb:(s)=>[ s.periodo==="past"?"Passato": s.periodo==="future"?"Futuro":"", 
+                     s.stile==="whatif"?"What if (plausibile)": s.stile==="wtf"?"What the F (ironico)":""
+                   ].filter(Boolean).join(" • ")
       },
       en: {
         back:"Back",
         title:"Your question",
         label:"Write your What?f question…",
+        discover:"Discover",
+        placeholder:"Example: What if I had accepted that job in Milan?",
         hint:'Tip: be specific. E.g. “If I stayed in L’Aquila for the next 2 years, how would my career change?”',
-        discover:"Discover"
+        crumb:(s)=>[ s.periodo==="past"?"Past": s.periodo==="future"?"Future":"",
+                     s.stile==="whatif"?"What if (plausible)": s.stile==="wtf"?"What the F (ironic)":""
+                   ].filter(Boolean).join(" • ")
       }
     };
     const $ = s => document.querySelector(s);
     const $$ = s => document.querySelectorAll(s);
+    function getLang(){ return localStorage.getItem("lang") || "it"; }
     function tApply(lang){
       const pack = dict[lang] || dict.it;
       $$("[data-i18n]").forEach(el=>{
         const k = el.getAttribute("data-i18n");
         if(pack[k]) el.textContent = pack[k];
       });
+      $("#question").placeholder = pack.placeholder;
+      $("#hint").textContent = pack.hint;
       document.documentElement.lang = lang;
+      const prefs = JSON.parse(localStorage.getItem("whatif_prefs")||"{}");
+      $("#crumb").textContent = pack.crumb(prefs);
+      markMenu(lang);
     }
-    function getLang(){ return localStorage.getItem("lang") || "it"; }
-    function setLang(l){ localStorage.setItem("lang", l); tApply(l); markMenu(l); }
+    function setLang(l){ localStorage.setItem("lang", l); tApply(l); }
 
     /* ---------- language UI ---------- */
     const fab = $("#langFab");
@@ -126,44 +138,27 @@
     document.addEventListener("click",(e)=>{
       if(!fab.contains(e.target)) { menu.style.display="none"; btn.setAttribute("aria-expanded","false"); }
     });
+    window.addEventListener("storage",(e)=>{ if(e.key==="lang") tApply(getLang()); });
+    document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) tApply(getLang()); });
 
-    // init language
-    tApply(getLang()); markMenu(getLang());
+    // init
+    tApply(getLang());
 
-    /* ---------- crumb (riassunto scelte della home) ---------- */
-    (function(){
-      const s = JSON.parse(localStorage.getItem("whatif_prefs")||"{}");
-      const period = getLang()==="en"
-        ? (s.periodo==="past"?"Past": s.periodo==="future"?"Future": "")
-        : (s.periodo==="past"?"Passato": s.periodo==="future"?"Futuro": "");
-      const style = getLang()==="en"
-        ? (s.stile==="whatif"?"What if (plausible)": s.stile==="wtf"?"What the F (ironic)": "")
-        : (s.stile==="whatif"?"What if (plausibile)": s.stile==="wtf"?"What the F (ironico)": "");
-      $("#crumb").textContent = [period, style].filter(Boolean).join(" • ");
-    })();
-
-    /* ---------- navigazione ---------- */
+    /* ---------- nav & submit ---------- */
     $("#backBtn").addEventListener("click", ()=> history.back());
-
-    // Abilita/validazione e salva domanda -> vai ai risultati
-    const go = $("#go"), q = $("#q");
-    go.addEventListener("click", ()=>{
-      const v = (q.value||"").trim();
-      if(!v){
-        q.focus();
-        q.placeholder = getLang()==="en"
-          ? "Please write your question here…"
-          : "Scrivi qui la tua domanda…";
+    $("#go").addEventListener("click", ()=>{
+      const q = ($("#question").value || "").trim();
+      if(!q){
+        // piccolo feedback locale
+        $("#question").focus();
+        $("#question").style.boxShadow = "0 0 0 2px #00b5cc55";
+        setTimeout(()=>$("#question").style.boxShadow="none", 600);
         return;
       }
-      localStorage.setItem("whatif_question", v);
+      localStorage.setItem("whatif_question", q);
+      // qui si può chiamare la tua API; per ora naviga alla quinta
       location.href = "fifth.html";
     });
-
-    // Se c'è una bozza salvata, ricaricala
-    const draft = localStorage.getItem("whatif_question_draft");
-    if(draft) q.value = draft;
-    q.addEventListener("input", ()=> localStorage.setItem("whatif_question_draft", q.value));
   </script>
 </body>
 </html>
