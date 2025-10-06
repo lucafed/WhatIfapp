@@ -3,180 +3,148 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – Approfondiamo</title>
+  <title>What?f — La tua domanda</title>
   <meta name="theme-color" content="#0A0F14" />
   <style>
-    :root{--bg:#0A0F14;--fg:#E6F2F5;--muted:#A0B2BA;--card:#121820;--accent:#00E0FF;--accent2:#00B5CC}
+    :root{
+      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
+      --accent:#00E0FF; --accent-dark:#00B5CC;
+    }
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{max-width:980px;margin:0 auto;padding:18px 14px 26px}
-    .topbar{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;padding:6px 0;background:linear-gradient(180deg,rgba(10,15,20,.9),rgba(10,15,20,0));z-index:2}
-    .nav-btn{border:1px solid #1f2c36;background:#0f1820;color:var(--fg);border-radius:12px;padding:6px 10px;font-weight:700;cursor:pointer}
-    h1{margin:6px 0 8px;font-size:clamp(24px,5.5vw,34px)}
-    .pill{display:inline-block;background:#0f1820;border:1px solid #1e2b34;padding:6px 10px;border-radius:999px;font-size:12px;color:var(--muted)}
-    .card{background:var(--card);border:1px solid #1b2730;border-radius:16px;padding:16px;display:grid;gap:12px}
-    label{font-weight:700}
-    input,textarea{width:100%;border:1px solid #223240;background:#0c141b;color:var(--fg);border-radius:12px;padding:10px 12px;font-size:16px}
-    textarea{min-height:90px}
-    .muted{color:var(--muted);font-size:13px}
-    .actions{display:flex;gap:10px;justify-content:space-between;margin-top:6px}
-    .btn{appearance:none;border:none;border-radius:14px;padding:12px 16px;font-weight:900;cursor:pointer}
-    .btn.secondary{background:#162029;color:#cfe3ea;border:1px solid #21313b}
-    .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#002329}
-    .error{color:#ffb3b3;background:#3a1414;border:1px solid #5a2222;border-radius:10px;padding:10px 12px;display:none}
-    .error.show{display:block}
-    /* Modal lingua */
-    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);z-index:20}
-    .modal.open{display:flex}
-    .sheet{width:min(92vw,560px);background:#0f1820;border:1px solid #20303a;border-radius:20px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center}
-    .optrow{display:flex;gap:12px;justify-content:center}
-    .opt{flex:1;border:1px solid #1f2c36;background:#0c141b;color:var(--fg);padding:12px 16px;border-radius:14px;font-weight:900;cursor:pointer}
-    .opt.primary{background:linear-gradient(180deg,#00E0FF,#00B5CC);color:#002329;border:none}
-    /* Loader */
-    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:30}
-    .overlay.show{display:flex}
-    .spinner{width:46px;height:46px;border:4px solid rgba(255,255,255,.2);border-top-color:#00E0FF;border-radius:50%;animation:spin 1s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    main{min-height:100%;display:flex;flex-direction:column;gap:18px;padding:18px}
+
+    /* top bar */
+    .top{display:flex;align-items:center;justify-content:space-between}
+    .back{display:inline-flex;gap:10px;align-items:center;background:#0f1820;border:1px solid #1e2a34;
+      color:var(--fg); padding:10px 14px;border-radius:14px;text-decoration:none}
+    .crumb{color:var(--muted);font-size:14px;margin:8px 0 0}
+
+    /* language switch */
+    .lang{display:inline-flex;gap:8px;background:#0f1820;border:1px solid #1e2a34;
+      padding:6px;border-radius:999px}
+    .lang button{background:transparent;border:none;color:var(--muted);padding:8px 12px;border-radius:999px;
+      font-weight:700;cursor:pointer}
+    .lang button.active{background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329}
+
+    h1{font-size:clamp(28px,7vw,40px);margin:8px 0}
+
+    .card{background:var(--card);border-radius:18px;padding:16px;border:1px solid #1c2832}
+    textarea{width:100%;min-height:150px;background:#0f1820;border:1px solid #21323c;color:var(--fg);
+      border-radius:14px;padding:16px;font-size:16px;resize:vertical;outline:none}
+    .hint{color:var(--muted);font-size:14px;margin:10px 2px 0}
+
+    .cta{margin-top:16px;display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent-dark));
+      color:#002329;font-weight:900;border:none;border-radius:24px;padding:14px 22px;min-width:220px;
+      box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25);cursor:pointer}
+    .cta:disabled{background:#29404a;color:#7fa1aa;box-shadow:none;cursor:not-allowed}
   </style>
 </head>
 <body>
   <main>
-    <div class="topbar">
-      <button class="nav-btn" id="backTop" data-key="back">← Indietro</button>
-      <button class="nav-btn" id="openLang" aria-label="Language">🌐</button>
-    </div>
+    <div class="top">
+      <a href="second.html" class="back" aria-label="Indietro">
+        ← <span data-i18n="back">Indietro</span>
+      </a>
 
-    <h1 data-key="title">Approfondiamo</h1>
-    <p class="muted"><span class="pill" id="summary"></span></p>
-
-    <div id="err" class="error"></div>
-
-    <div class="card">
-      <div>
-        <label for="context" data-key="q1">Contesto: cosa sta succedendo davvero in questa situazione?</label>
-        <textarea id="context"></textarea>
-      </div>
-      <div>
-        <label for="goal" data-key="q2">Obiettivo: quale risultato speri di ottenere davvero?</label>
-        <input id="goal" type="text" />
-      </div>
-      <div>
-        <label for="constraints" data-key="q3">Vincoli/paure: quali rischi o limiti stai considerando?</label>
-        <textarea id="constraints"></textarea>
-      </div>
-
-      <div class="actions">
-        <button type="button" class="btn secondary" id="back" data-key="back">Indietro</button>
-        <button type="button" class="btn primary" id="go" data-key="go">Ottieni risposta</button>
+      <!-- Language selector -->
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" class="lang-btn" data-lang="it">Italiano</button>
+        <button type="button" class="lang-btn" data-lang="en">English</button>
       </div>
     </div>
+
+    <!-- breadcrumb periodo • stile -->
+    <div class="crumb" id="crumb"></div>
+
+    <h1 data-i18n="ask_title">La tua domanda</h1>
+
+    <form id="askForm" class="card" autocomplete="off">
+      <label for="q" style="display:block;margin:0 0 8px" data-i18n="ask_label">
+        Scrivi la tua domanda What?f…
+      </label>
+      <textarea id="q" name="q" placeholder="" required></textarea>
+
+      <div class="hint" data-i18n="ask_hint">
+        Suggerimento: sii specifico. Es.: “Se restassi a L’Aquila i prossimi 2 anni, cosa cambierebbe nella mia carriera?”
+      </div>
+
+      <button id="go" class="cta" type="submit" data-i18n="discover">Scopri</button>
+    </form>
   </main>
 
-  <!-- Modal lingua -->
-  <div id="langModal" class="modal" role="dialog" aria-modal="true">
-    <div class="sheet">
-      <h3 data-key="modal_title">Scegli la lingua</h3>
-      <p data-key="modal_hint">Potrai cambiarla in ogni momento.</p>
-      <div class="optrow">
-        <button class="opt" id="itBtn">Italiano</button>
-        <button class="opt primary" id="enBtn">English</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Loader -->
-  <div class="overlay" id="loader"><div class="spinner"></div></div>
-
+  <!-- i18n dictionary -->
+  <script src="/i18n.js"></script>
   <script>
-    // i18n
-    const I18N={it:{title:"Approfondiamo",q1:"Contesto: cosa sta succedendo davvero in questa situazione?",q2:"Obiettivo: quale risultato speri di ottenere davvero?",q3:"Vincoli/paure: quali rischi o limiti stai considerando?",back:"Indietro",go:"Ottieni risposta",modal_title:"Scegli la lingua",modal_hint:"Potrai cambiarla in ogni momento.",err_generic:"Si è verificato un problema. Riprova."},
-                en:{title:"Let’s clarify",q1:"Context: what’s really happening in this situation?",q2:"Goal: what outcome are you truly hoping for?",q3:"Constraints/Fears: which risks or limits are you considering?",back:"Back",go:"Get answer",modal_title:"Choose language",modal_hint:"You can change it anytime.",err_generic:"Something went wrong. Please try again."}};
-    const LS=localStorage;
-    let lang=LS.getItem('lang')||(navigator.language||'it').toLowerCase().startsWith('en')?'en':'it';
-    function apply(){const D=I18N[lang];document.documentElement.lang=lang;document.querySelectorAll('[data-key]').forEach(el=>{const k=el.getAttribute('data-key');if(D[k])el.textContent=D[k];});}
-    function setLang(l){lang=l;LS.setItem('lang',l);apply();}
-    const modal=document.getElementById('langModal');
-    document.getElementById('openLang').addEventListener('click',()=>modal.classList.add('open'));
-    document.getElementById('itBtn').addEventListener('click',()=>{setLang('it');modal.classList.remove('open')});
-    document.getElementById('enBtn').addEventListener('click',()=>{setLang('en');modal.classList.remove('open')});
-    if(!LS.getItem('lang')) modal.classList.add('open');
-    apply();
+    // --- helpers ---
+    const $ = s => document.querySelector(s);
+    const langKey = 'lang';
+    const prefsKey = 'whatif_prefs';   // { periodo:'past|future', stile:'whatif|wtf' }
+    const QKEY = 'whatif_question';
 
-    // back
-    document.getElementById('backTop').addEventListener('click',()=>history.back());
-    document.getElementById('back').addEventListener('click',()=>history.back());
-
-    // summary (scelte + domanda)
-    const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-    const profile = JSON.parse(LS.getItem('whatif_profile')||'{}');
-    const question = LS.getItem('whatif_question')||'';
-    const map = (lang==='en')?{past:'Past',future:'Future',whatif:'What if',wtf:'What the F'}:{past:'Passato',future:'Futuro',whatif:'What if',wtf:'What the F'};
-    document.getElementById('summary').textContent =
-      [map[prefs?.periodo], map[prefs?.stile]].filter(Boolean).join(' • ') + (question?` • “${question}”`:'');
-
-    // loader helpers
-    const loader = document.getElementById('loader');
-    const errBox = document.getElementById('err');
-    function showLoader(v){ loader.classList.toggle('show', !!v); }
-    function showError(msg){ errBox.textContent = msg; errBox.classList.add('show'); }
-
-    // MOCK builder (fallback)
-    function buildMock(ctx){
-      const realistic = ctx.prefs?.stile !== 'wtf';
-      const dir = ctx.prefs?.periodo==='past' ? (lang==='en'?'past':'passato') : (lang==='en'?'future':'futuro');
-      const base_it = realistic
-        ? `Scenario ${dir}: la tua scelta potrebbe portare ${ctx.followup.goal?('a '+ctx.followup.goal.toLowerCase()):'a un cambio concreto'}. `
-          + `${ctx.followup.context?('Dal contesto emerge che '+ctx.followup.context.toLowerCase()+'. '):''}`
-          + `${ctx.followup.constraints?('Rischi principali: '+ctx.followup.constraints.toLowerCase()+'. '):''}`
-          + `Probabilità stimata: `
-        : `WHAT THE F?! ${dir.toUpperCase()} edition: potresti finire a ${ctx.followup.goal?ctx.followup.goal.toLowerCase():'svoltare in modo imprevisto'}, `
-          + `con ${ctx.followup.constraints?ctx.followup.constraints.toLowerCase():'colpi di scena bizzarri'}… Probabilità stimata: `;
-      const base_en = realistic
-        ? `Scenario ${dir}: your choice could lead ${ctx.followup.goal?('to '+ctx.followup.goal.toLowerCase()):'to a concrete change'}. `
-          + `${ctx.followup.context?('From your context, '+ctx.followup.context.toLowerCase()+'. '):''}`
-          + `${ctx.followup.constraints?('Main risks: '+ctx.followup.constraints.toLowerCase()+'. '):''}`
-          + `Estimated probability: `
-        : `WHAT THE F?! ${dir.toUpperCase()} edition: you might end up ${ctx.followup.goal?ctx.followup.goal.toLowerCase():'taking an unexpected turn'}, `
-          + `with ${ctx.followup.constraints?ctx.followup.constraints.toLowerCase():'unusual twists'}… Estimated probability: `;
-      const pct = 60 + Math.floor(Math.random()*31);
-      return { text: (lang==='en'?base_en:base_it) + pct + '%', probPct: pct };
+    // Apply i18n to elements with [data-i18n]
+    function applyI18n(){
+      const lang = localStorage.getItem(langKey) || 'it';
+      document.documentElement.lang = lang;
+      const dict = (window.I18N && window.I18N[lang]) || {};
+      document.querySelectorAll('[data-i18n]').forEach(el=>{
+        const k = el.getAttribute('data-i18n');
+        if(dict[k]) el.textContent = dict[k];
+      });
+      // placeholder for textarea
+      const ph = dict['ask_placeholder'] ||
+        'Esempio: Se avessi accettato quel lavoro a Milano?';
+      $('#q').placeholder = ph;
+      // activate language pill UI
+      document.querySelectorAll('.lang-btn').forEach(b=>{
+        b.classList.toggle('active', b.dataset.lang === lang);
+      });
+      // breadcrumb translation
+      renderCrumb();
     }
 
-    // invio → chiama /api/ask (o mock)
-    document.getElementById('go').addEventListener('click', async ()=>{
-      errBox.classList.remove('show');
+    function t(key){
+      const lang = localStorage.getItem(langKey) || 'it';
+      const dict = (window.I18N && window.I18N[lang]) || {};
+      return dict[key] || key;
+    }
 
-      const followup = {
-        context: (document.getElementById('context').value||'').trim(),
-        goal: (document.getElementById('goal').value||'').trim(),
-        constraints: (document.getElementById('constraints').value||'').trim()
-      };
+    // Render breadcrumb: "Futuro • What if (plausibile)" ecc.
+    function renderCrumb(){
+      const prefs = JSON.parse(localStorage.getItem(prefsKey) || '{}');
+      const p = prefs.periodo === 'past' ? t('past') :
+                prefs.periodo === 'future' ? t('future') : '';
+      const s = prefs.stile === 'whatif' ? t('whatif_with_hint') :
+                prefs.stile === 'wtf'    ? t('wtf_with_hint') : '';
+      $('#crumb').textContent = [p, s].filter(Boolean).join(' • ');
+    }
 
-      LS.setItem('whatif_followup', JSON.stringify(followup));
+    // Lang switching
+    document.querySelectorAll('.lang-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const chosen = btn.dataset.lang;
+        localStorage.setItem(langKey, chosen);
+        applyI18n();
+      });
+    });
 
-      const payload = { lang, prefs, profile, question, followup };
-
-      showLoader(true);
-      let answer = null;
-
-      try {
-        const res = await fetch('/api/ask', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(payload)
-        });
-        if (res.ok) {
-          const data = await res.json();
-          answer = data && data.answer ? data.answer : null; // {text, probPct}
-        }
-      } catch(e) { /* fallback */ }
-
-      if (!answer) answer = buildMock({prefs,profile,question,followup});
-
-      LS.setItem('whatif_answer', JSON.stringify(answer));
-      showLoader(false);
+    // Submit: save question and go to result page
+    $('#askForm').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const q = $('#q').value.trim();
+      if(!q) return;
+      localStorage.setItem(QKEY, q);
+      // opzionale: azzera risposta precedente
+      localStorage.removeItem('whatif_answer');
       location.href = 'fifth.html';
     });
+
+    // init
+    (function init(){
+      if(!localStorage.getItem(langKey)) localStorage.setItem(langKey,'it');
+      applyI18n();
+    })();
   </script>
 </body>
 </html>
