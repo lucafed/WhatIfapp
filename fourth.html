@@ -1,92 +1,190 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>What?f — La tua domanda</title>
-<meta name="theme-color" content="#0A0F14" />
-<style>
-:root{
-  --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
-  --accent:#00E0FF; --accent2:#00B5CC;
-}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-main{max-width:980px;margin:0 auto;min-height:100%;padding:18px 16px 28px}
-
-.topbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.back{appearance:none;border:0;border-radius:14px;background:#0f1820;color:#d3e6ea;
-  padding:10px 14px;font-weight:700;cursor:pointer}
-.pill{margin-left:auto;color:var(--muted);font-size:14px}
-
-h1{margin:6px 0 12px;font-size:clamp(30px,6vw,44px);color:#E6F2F5}
-
-.card{background:var(--card);border-radius:18px;padding:16px;margin:0 0 14px;
-  box-shadow:0 10px 28px rgba(0,0,0,.28)}
-.label{color:var(--muted);font-weight:700;margin:0 0 10px}
-.ta{width:100%;min-height:160px;background:#0c141b;border:1px solid #1d2b34;color:var(--fg);
-  border-radius:14px;padding:14px;font-size:16px;resize:vertical}
-.hint{color:var(--muted);font-size:14px;margin-top:8px}
-
-.cta{display:flex;justify-content:center;margin-top:14px}
-.btn{appearance:none;border:0;border-radius:24px;padding:12px 18px;min-width:210px;
-  background:linear-gradient(180deg,var(--accent),var(--accent2));color:#002329;font-weight:900;
-  box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25);cursor:pointer}
-.btn[disabled]{background:#29404a;color:#86a6af;box-shadow:none;cursor:not-allowed}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f – Approfondiamo</title>
+  <meta name="theme-color" content="#0A0F14" />
+  <style>
+    :root{--bg:#0A0F14;--fg:#E6F2F5;--muted:#A0B2BA;--card:#121820;--accent:#00E0FF;--accent2:#00B5CC}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    main{max-width:980px;margin:0 auto;padding:18px 14px 26px}
+    .topbar{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;padding:6px 0;background:linear-gradient(180deg,rgba(10,15,20,.9),rgba(10,15,20,0));z-index:2}
+    .nav-btn{border:1px solid #1f2c36;background:#0f1820;color:var(--fg);border-radius:12px;padding:6px 10px;font-weight:700;cursor:pointer}
+    h1{margin:6px 0 8px;font-size:clamp(24px,5.5vw,34px)}
+    .pill{display:inline-block;background:#0f1820;border:1px solid #1e2b34;padding:6px 10px;border-radius:999px;font-size:12px;color:var(--muted)}
+    .card{background:var(--card);border:1px solid #1b2730;border-radius:16px;padding:16px;display:grid;gap:12px}
+    label{font-weight:700}
+    input,textarea{width:100%;border:1px solid #223240;background:#0c141b;color:var(--fg);border-radius:12px;padding:10px 12px;font-size:16px}
+    textarea{min-height:90px}
+    .muted{color:var(--muted);font-size:13px}
+    .actions{display:flex;gap:10px;justify-content:space-between;margin-top:6px}
+    .btn{appearance:none;border:none;border-radius:14px;padding:12px 16px;font-weight:900;cursor:pointer}
+    .btn.secondary{background:#162029;color:#cfe3ea;border:1px solid #21313b}
+    .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#002329}
+    .error{color:#ffb3b3;background:#3a1414;border:1px solid #5a2222;border-radius:10px;padding:10px 12px;display:none}
+    .error.show{display:block}
+    /* Modal lingua (come le altre pagine) */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);z-index:20}
+    .modal.open{display:flex}
+    .sheet{width:min(92vw,560px);background:#0f1820;border:1px solid #20303a;border-radius:20px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center}
+    .optrow{display:flex;gap:12px;justify-content:center}
+    .opt{flex:1;border:1px solid #1f2c36;background:#0c141b;color:var(--fg);padding:12px 16px;border-radius:14px;font-weight:900;cursor:pointer}
+    .opt.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#002329;border:none}
+    /* Loader overlay */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:30}
+    .overlay.show{display:flex}
+    .spinner{width:46px;height:46px;border:4px solid rgba(255,255,255,.2);border-top-color:#00E0FF;border-radius:50%;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
 </head>
 <body>
-<main>
-  <div class="topbar">
-    <button class="back" id="backBtn">← Indietro</button>
-    <div class="pill" id="pill"> </div>
-  </div>
+  <main>
+    <div class="topbar">
+      <button class="nav-btn" id="backTop" data-key="back">← Indietro</button>
+      <button class="nav-btn" id="openLang" aria-label="Language">🌐</button>
+    </div>
 
-  <h1>La tua domanda</h1>
+    <h1 data-key="title">Approfondiamo</h1>
+    <p class="muted"><span class="pill" id="summary"></span></p>
 
-  <div class="card">
-    <p class="label">Scrivi la tua domanda What?f…</p>
-    <textarea id="q" class="ta" placeholder="Esempio: Se avessi accettato quel lavoro a Milano?"></textarea>
-    <p class="hint">
-      Suggerimento: sii specifico. Es: “Se restassi a L’Aquila per i prossimi 2 anni, come cambierebbe la mia carriera?”
-    </p>
-    <div class="cta">
-      <button id="go" class="btn" disabled>Scopri</button>
+    <div id="err" class="error"></div>
+
+    <div class="card">
+      <div>
+        <label for="context" data-key="q1">Contesto: cosa sta succedendo davvero in questa situazione?</label>
+        <textarea id="context"></textarea>
+      </div>
+      <div>
+        <label for="goal" data-key="q2">Obiettivo: quale risultato speri di ottenere davvero?</label>
+        <input id="goal" type="text" />
+      </div>
+      <div>
+        <label for="constraints" data-key="q3">Vincoli/paure: quali rischi o limiti stai considerando?</label>
+        <textarea id="constraints"></textarea>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn secondary" id="back" data-key="back">Indietro</button>
+        <button type="button" class="btn primary" id="go" data-key="go">Ottieni risposta</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal lingua -->
+  <div id="langModal" class="modal" role="dialog" aria-modal="true">
+    <div class="sheet">
+      <h3 data-key="modal_title">Scegli la lingua</h3>
+      <p data-key="modal_hint">Potrai cambiarla in ogni momento.</p>
+      <div class="optrow">
+        <button class="opt" id="itBtn">Italiano</button>
+        <button class="opt primary" id="enBtn">English</button>
+      </div>
     </div>
   </div>
-</main>
 
-<script>
-  // Ripristina selezioni (periodo/stile) dal primo step
-  const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-  const pill  = document.getElementById('pill');
-  function nicePrefs(){
-    const a = prefs.periodo==='past'?'Passato':(prefs.periodo==='future'?'Futuro':null);
-    const b = prefs.stile==='whatif'?'What if':(prefs.stile==='wtf'?'What the F':null);
-    return [a,b].filter(Boolean).join(' • ');
-  }
-  pill.textContent = nicePrefs();
+  <!-- Loader -->
+  <div class="overlay" id="loader"><div class="spinner"></div></div>
 
-  // Back
-  document.getElementById('backBtn').onclick = () => history.back();
+  <script>
+    // i18n
+    const I18N={it:{title:"Approfondiamo",q1:"Contesto: cosa sta succedendo davvero in questa situazione?",q2:"Obiettivo: quale risultato speri di ottenere davvero?",q3:"Vincoli/paure: quali rischi o limiti stai considerando?",back:"Indietro",go:"Ottieni risposta",modal_title:"Scegli la lingua",modal_hint:"Potrai cambiarla in ogni momento.",err_generic:"Si è verificato un problema. Riprova."},
+                en:{title:"Let’s clarify",q1:"Context: what’s really happening in this situation?",q2:"Goal: what outcome are you truly hoping for?",q3:"Constraints/Fears: which risks or limits are you considering?",back:"Back",go:"Get answer",modal_title:"Choose language",modal_hint:"You can change it anytime.",err_generic:"Something went wrong. Please try again."}};
+    const LS=localStorage;
+    let lang=LS.getItem('lang')||(navigator.language||'it').toLowerCase().startsWith('en')?'en':'it';
+    function apply(){const D=I18N[lang];document.documentElement.lang=lang;document.querySelectorAll('[data-key]').forEach(el=>{const k=el.getAttribute('data-key');if(D[k])el.textContent=D[k];});}
+    function setLang(l){lang=l;LS.setItem('lang',l);apply();}
+    const modal=document.getElementById('langModal');
+    document.getElementById('openLang').addEventListener('click',()=>modal.classList.add('open'));
+    document.getElementById('itBtn').addEventListener('click',()=>{setLang('it');modal.classList.remove('open')});
+    document.getElementById('enBtn').addEventListener('click',()=>{setLang('en');modal.classList.remove('open')});
+    if(!LS.getItem('lang')) modal.classList.add('open');
+    apply();
 
-  // Abilita CTA se c'è testo
-  const q = document.getElementById('q');
-  const go = document.getElementById('go');
-  q.addEventListener('input', ()=>{ go.disabled = q.value.trim().length<3; });
+    // back
+    document.getElementById('backTop').addEventListener('click',()=>history.back());
+    document.getElementById('back').addEventListener('click',()=>history.back());
 
-  // Salva domanda e passa al risultato
-  go.addEventListener('click', ()=>{
-    const text = q.value.trim();
-    if(!text) return;
-    sessionStorage.setItem('whatif_question', text);
-    location.href = 'fifth.html';
-  });
+    // summary (scelte + domanda)
+    const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
+    const profile = JSON.parse(LS.getItem('whatif_profile')||'{}');
+    const question = LS.getItem('whatif_question')||'';
+    const map = (lang==='en')?{past:'Past',future:'Future',whatif:'What if',wtf:'What the F'}:{past:'Passato',future:'Futuro',whatif:'What if',wtf:'What the F'};
+    document.getElementById('summary').textContent =
+      [map[prefs?.periodo], map[prefs?.stile]].filter(Boolean).join(' • ') + (question?` • “${question}”`:'');
 
-  // Se l'utente torna, ripristina la bozza
-  const cached = sessionStorage.getItem('whatif_question');
-  if(cached){ q.value = cached; go.disabled = false; }
-</script>
+    // loader helpers
+    const loader = document.getElementById('loader');
+    const errBox = document.getElementById('err');
+    function showLoader(v){ loader.classList.toggle('show', !!v); }
+    function showError(msg){ errBox.textContent = msg; errBox.classList.add('show'); }
+
+    // MOCK builder (fallback)
+    function buildMock(ctx){
+      const realistic = ctx.prefs?.stile !== 'wtf';
+      const dir = ctx.prefs?.periodo==='past' ? (lang==='en'?'past':'passato') : (lang==='en'?'future':'futuro');
+      const base_it = realistic
+        ? `Scenario ${dir}: la tua scelta potrebbe portare ${ctx.followup.goal?('a '+ctx.followup.goal.toLowerCase()):'a un cambio concreto'}. `
+          + `${ctx.followup.context?('Dal contesto emerge che '+ctx.followup.context.toLowerCase()+'. '):''}`
+          + `${ctx.followup.constraints?('Rischi principali: '+ctx.followup.constraints.toLowerCase()+'. '):''}`
+          + `Probabilità stimata: `
+        : `WHAT THE F?! ${dir.toUpperCase()} edition: potresti finire a ${ctx.followup.goal?ctx.followup.goal.toLowerCase():'svoltare in modo imprevisto'}, `
+          + `con ${ctx.followup.constraints?ctx.followup.constraints.toLowerCase():'colpi di scena bizzarri'}… Probabilità stimata: `;
+      const base_en = realistic
+        ? `Scenario ${dir}: your choice could lead ${ctx.followup.goal?('to '+ctx.followup.goal.toLowerCase()):'to a concrete change'}. `
+          + `${ctx.followup.context?('From your context, '+ctx.followup.context.toLowerCase()+'. '):''}`
+          + `${ctx.followup.constraints?('Main risks: '+ctx.followup.constraints.toLowerCase()+'. '):''}`
+          + `Estimated probability: `
+        : `WHAT THE F?! ${dir.toUpperCase()} edition: you might end up ${ctx.followup.goal?ctx.followup.goal.toLowerCase():'taking an unexpected turn'}, `
+          + `with ${ctx.followup.constraints?ctx.followup.constraints.toLowerCase():'unusual twists'}… Estimated probability: `;
+      const pct = 60 + Math.floor(Math.random()*31);
+      return { text: (lang==='en'?base_en:base_it) + pct + '%', probPct: pct };
+    }
+
+    // invio → chiama /api/ask (o mock)
+    document.getElementById('go').addEventListener('click', async ()=>{
+      errBox.classList.remove('show');
+
+      const followup = {
+        context: (document.getElementById('context').value||'').trim(),
+        goal: (document.getElementById('goal').value||'').trim(),
+        constraints: (document.getElementById('constraints').value||'').trim()
+      };
+
+      // salva follow-up
+      LS.setItem('whatif_followup', JSON.stringify(followup));
+
+      const payload = { lang, prefs, profile, question, followup };
+
+      showLoader(true);
+      let answer = null;
+
+      try {
+        const res = await fetch('/api/ask', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          // formato atteso: { answer: { text, probPct } }
+          answer = data && data.answer ? data.answer : null;
+        }
+      } catch(e) {
+        // silenzioso: andiamo di mock
+      }
+
+      if (!answer) {
+        answer = buildMock({prefs,profile,question,followup});
+      }
+
+      // salva e vai al risultato
+      LS.setItem('whatif_answer', JSON.stringify(answer));
+      showLoader(false);
+      location.href = 'fifth.html';
+    });
+  </script>
 </body>
 </html>
