@@ -1,149 +1,117 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>What?f — Risultato</title>
-<meta name="theme-color" content="#0A0F14" />
-<style>
-:root{
-  --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
-  --accent:#00E0FF; --accent2:#00B5CC;
-}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-main{max-width:980px;margin:0 auto;min-height:100%;padding:18px 16px 28px}
-
-.topbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.back{appearance:none;border:0;border-radius:14px;background:#0f1820;color:#d3e6ea;
-  padding:10px 14px;font-weight:700;cursor:pointer}
-.pill{margin-left:auto;color:var(--muted);font-size:14px}
-
-h1{margin:6px 0 12px;font-size:clamp(30px,6vw,44px)}
-
-.card{background:var(--card);border-radius:18px;padding:16px;margin:0 0 14px;
-  box-shadow:0 10px 28px rgba(0,0,0,.28)}
-.answer{white-space:pre-wrap;line-height:1.5}
-
-.skel{position:relative;overflow:hidden}
-.skel::after{
-  content:"";position:absolute;inset:0;transform:translateX(-100%);
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);
-  animation:sh 1.3s infinite
-}
-@keyframes sh{100%{transform:translateX(100%)}}
-
-.actions{display:flex;gap:12px;justify-content:center;margin-top:14px}
-.btn{appearance:none;border:0;border-radius:24px;padding:12px 18px;min-width:160px;
-  background:linear-gradient(180deg,var(--accent),var(--accent2));color:#002329;font-weight:900;
-  box-shadow:0 0 14px rgba(0,181,204,.5),0 0 30px rgba(0,181,204,.25);cursor:pointer}
-.btn.ghost{background:#0f1820;color:#d3e6ea;box-shadow:none}
-.small{font-size:13px;color:var(--muted);margin-top:8px}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f – Risultato</title>
+  <meta name="theme-color" content="#0A0F14" />
+  <style>
+    :root{--bg:#0A0F14;--fg:#E6F2F5;--muted:#A0B2BA;--card:#121820;--accent:#00E0FF;--accent2:#00B5CC}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    main{max-width:980px;margin:0 auto;padding:18px 14px 26px}
+    .topbar{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;padding:6px 0;background:linear-gradient(180deg,rgba(10,15,20,.9),rgba(10,15,20,0));z-index:2}
+    .nav-btn{border:1px solid #1f2c36;background:#0f1820;color:var(--fg);border-radius:12px;padding:6px 10px;font-weight:700;cursor:pointer}
+    h1{margin:6px 0 8px;font-size:clamp(24px,5.5vw,34px)}
+    .meta{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 12px}
+    .pill{display:inline-block;background:#0f1820;border:1px solid #1e2b34;padding:6px 10px;border-radius:999px;font-size:12px;color:var(--muted)}
+    .box{background:var(--card);border:1px solid #1b2730;border-radius:16px;padding:16px}
+    .muted{color:var(--muted)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .btn{appearance:none;border:none;border-radius:14px;padding:12px 16px;font-weight:900;cursor:pointer}
+    .btn.secondary{background:#162029;color:#cfe3ea;border:1px solid #21313b}
+    .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#002329}
+    .share{background:#0f1a22;border:1px dashed #24404c;border-radius:14px;padding:12px;margin-top:12px}
+    .error{color:#ffb3b3;background:#3a1414;border:1px solid #5a2222;border-radius:10px;padding:10px 12px;display:none}
+    .error.show{display:block}
+  </style>
 </head>
 <body>
-<main>
-  <div class="topbar">
-    <button class="back" id="backBtn">← Indietro</button>
-    <div class="pill" id="pill"> </div>
+  <main>
+    <div class="topbar">
+      <button class="nav-btn" id="back" data-key="back">← Indietro</button>
+      <button class="nav-btn" id="openLang" aria-label="Language">🌐</button>
+    </div>
+
+    <h1 data-key="title">Risultato</h1>
+
+    <div id="err" class="error"></div>
+
+    <div class="meta">
+      <span class="pill" id="pillMode"></span>
+      <span class="pill" id="pillQuestion"></span>
+    </div>
+
+    <div class="box">
+      <p id="answerText">…</p>
+      <p class="muted" id="probText"></p>
+
+      <div class="actions">
+        <button class="btn secondary" id="again" data-key="again">Fai un’altra domanda</button>
+        <button class="btn primary"   id="home"  data-key="home">Home</button>
+      </div>
+
+      <div class="share">
+        <p class="muted" data-key="teaser">Vuoi la versione estesa con piani d’azione, alternative e condivisione social?</p>
+        <button class="btn primary" id="upgrade" data-key="upgrade">Scopri il piano (in arrivo)</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal lingua -->
+  <div id="langModal" class="modal" role="dialog" aria-modal="true" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);z-index:20">
+    <div class="sheet" style="width:min(92vw,560px);background:#0f1820;border:1px solid #20303a;border-radius:20px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center">
+      <h3 data-key="modal_title">Scegli la lingua</h3>
+      <p data-key="modal_hint">Potrai cambiarla in ogni momento.</p>
+      <div class="optrow" style="display:flex;gap:12px;justify-content:center">
+        <button class="opt" id="itBtn" style="flex:1;border:1px solid #1f2c36;background:#0c141b;color:#E6F2F5;padding:12px 16px;border-radius:14px;font-weight:900;cursor:pointer">Italiano</button>
+        <button class="opt primary" id="enBtn" style="flex:1;background:linear-gradient(180deg,#00E0FF,#00B5CC);color:#002329;border:none;padding:12px 16px;border-radius:14px;font-weight:900;cursor:pointer">English</button>
+      </div>
+    </div>
   </div>
 
-  <h1>Risultato</h1>
+  <script>
+    const I18N={it:{title:"Risultato",back:"Indietro",home:"Home",again:"Fai un’altra domanda",teaser:"Vuoi la versione estesa con piani d’azione, alternative e condivisione social?",upgrade:"Scopri il piano (in arrivo)",missing:"Manca la risposta: torna indietro e riprova.",modal_title:"Scegli la lingua",modal_hint:"Potrai cambiarla in ogni momento."},
+                en:{title:"Result", back:"Back", home:"Home", again:"Ask another question", teaser:"Want the extended version with action plans, alternatives and social share?", upgrade:"See the plan (coming soon)", missing:"Missing answer: please go back and try again.", modal_title:"Choose language", modal_hint:"You can change it anytime."}};
+    const LS=localStorage;
+    let lang=LS.getItem('lang')||(navigator.language||'it').toLowerCase().startsWith('en')?'en':'it';
+    function apply(){const D=I18N[lang];document.documentElement.lang=lang;document.querySelectorAll('[data-key]').forEach(el=>{const k=el.getAttribute('data-key');if(D[k])el.textContent=D[k];});}
+    function setLang(l){lang=l;LS.setItem('lang',l);apply();}
+    const modal=document.getElementById('langModal');
+    document.getElementById('openLang').addEventListener('click',()=>modal.style.display='flex');
+    document.getElementById('itBtn').addEventListener('click',()=>{setLang('it');modal.style.display='none';});
+    document.getElementById('enBtn').addEventListener('click',()=>{setLang('en');modal.style.display='none';});
+    if(!LS.getItem('lang')) modal.style.display='flex';
+    apply();
 
-  <div id="box" class="card skel">
-    <div id="ans" class="answer">Sto pensando alla risposta migliore…</div>
-    <div id="err" class="answer" style="display:none;color:#ffb3b3"></div>
-  </div>
+    // Ricostruisci contesto
+    const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
+    const q     = LS.getItem('whatif_question')||'';
+    const answer= JSON.parse(LS.getItem('whatif_answer')||'null');
 
-  <div class="actions">
-    <button id="share" class="btn">Condividi</button>
-    <button id="home" class="btn ghost">Home</button>
-  </div>
+    const map = (lang==='en')?{past:'Past',future:'Future',whatif:'What if',wtf:'What the F'}:{past:'Passato',future:'Futuro',whatif:'What if',wtf:'What the F'};
+    document.getElementById('pillMode').textContent = [map[prefs?.periodo], map[prefs?.stile]].filter(Boolean).join(' • ');
+    document.getElementById('pillQuestion').textContent = q ? `“${q}”` : '';
 
-  <p class="small">Vuoi la versione estesa con piani d’azione e alternative? (in arrivo)</p>
-</main>
-
-<script>
-  // UI base
-  document.getElementById('backBtn').onclick = () => history.back();
-  document.getElementById('home').onclick = () => location.href='index.html';
-
-  // Pill con preferenze
-  const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-  const pill = document.getElementById('pill');
-  function nicePrefs(){
-    const a = prefs.periodo==='past'?'Passato':(prefs.periodo==='future'?'Futuro':null);
-    const b = prefs.stile==='whatif'?'What if':(prefs.stile==='wtf'?'What the F':null);
-    return [a,b].filter(Boolean).join(' • ');
-  }
-  pill.textContent = nicePrefs();
-
-  // Recupero domanda e profilo (se esiste)
-  const question = sessionStorage.getItem('whatif_question') || '';
-  const about    = localStorage.getItem('whatif_about') || ''; // salvato nella 2ª pagina
-
-  // Condividi
-  document.getElementById('share').onclick = async ()=>{
-    const text = `What?f — ${nicePrefs()}\n\nDomanda: ${question}\n\n${document.getElementById('ans').textContent}`;
-    try{
-      if(navigator.share){ await navigator.share({text}); }
-      else {
-        await navigator.clipboard.writeText(text);
-        alert('Testo copiato negli appunti ✅');
-      }
-    }catch(_){}
-  };
-
-  // Call AI
-  async function ask(){
-    const ans = document.getElementById('ans');
-    const err = document.getElementById('err');
-    const box = document.getElementById('box');
-
-    if(!question){
-      box.classList.remove('skel');
-      ans.textContent = 'Nessuna domanda trovata. Torna indietro e scrivi la tua.';
-      return;
+    const errBox=document.getElementById('err');
+    if(!answer || !answer.text){
+      errBox.textContent = I18N[lang].missing;
+      errBox.classList.add('show');
+    } else {
+      document.getElementById('answerText').textContent = answer.text;
+      document.getElementById('probText').textContent = (typeof answer.probPct==='number')
+        ? ((lang==='en'?'Estimated probability: ':'Probabilità stimata: ') + answer.probPct + '%')
+        : '';
     }
 
-    try{
-      const controller = new AbortController();
-      const to = setTimeout(()=>controller.abort(), 45000);
-
-      const r = await fetch('/api/ask', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          question,
-          about,
-          prefs,
-          // piccolo “boost” di qualità lato server (se supportato dall’endpoint)
-          boost: { style: prefs.stile, horizon: prefs.periodo }
-        }),
-        signal: controller.signal
-      });
-      clearTimeout(to);
-
-      box.classList.remove('skel');
-
-      if(!r.ok){
-        const t = await r.text();
-        err.style.display='block';
-        ans.style.display='none';
-        err.textContent = 'Errore AI: '+t;
-        return;
-      }
-      const data = await r.json();
-      ans.textContent = (data.answer || '').trim() || 'Nessuna risposta ricevuta.';
-    }catch(e){
-      box.classList.remove('skel');
-      err.style.display='block';
-      document.getElementById('ans').style.display='none';
-      err.textContent = 'Connessione lenta o interrotta. Riprova.';
-    }
-  }
-  ask();
-</script>
+    // Azioni
+    document.getElementById('back').addEventListener('click',()=>history.back());
+    document.getElementById('home').addEventListener('click',()=>location.href='index.html');
+    document.getElementById('again').addEventListener('click',()=>{
+      // tieni lingua e preferenze, ma riparti dalla domanda
+      location.href='third.html';
+    });
+    document.getElementById('upgrade').addEventListener('click',()=>alert(lang==='en'?'Coming soon':'In arrivo'));
+  </script>
 </body>
 </html>
