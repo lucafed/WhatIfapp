@@ -8,7 +8,7 @@
   <style>
     :root{
       --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
-      --accent:#00E0FF; --accent-dark:#00B5CC; --hl:#1AFFD5;
+      --accent:#00E0FF; --hl:#1AFFD5;
     }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
@@ -71,10 +71,10 @@
     </div>
   </main>
 
-  <!-- Traduzioni IT/EN basate su localStorage `whatif_lang` -->
+  <!-- Traduzioni: legge la lingua da localStorage 'lang' (impostata in home) -->
   <script>
     (function(){
-      const lang = (localStorage.getItem('whatif_lang') || 'it').toLowerCase();
+      const lang = (localStorage.getItem('lang') || 'it').toLowerCase();
       const T = {
         it: {
           back: "Indietro",
