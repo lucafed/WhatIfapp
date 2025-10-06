@@ -7,60 +7,181 @@
   <meta name="theme-color" content="#0A0F14" />
   <link rel="preload" as="image" href="/home-hero.png" />
   <style>
-    :root{
-      --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA;
-      --accent:#00E0FF; --accent-dark:#00B5CC;
+    :root {
+      --bg: #0A0F14;
+      --fg: #ffffff;
+      --muted: #A0B2BA;
+      --accent: #00E0FF;
+      --accent-dark: #00B5CC;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
-      text-align:center;padding:20px;gap:14px;transition:opacity .4s ease}
 
-    .hero-img{width:min(92vw,560px);height:auto;display:block;margin:0 auto 6px;
-      filter:drop-shadow(0 10px 28px rgba(0,0,0,.45))}
-
-    h1{margin:.25rem 0 0;font-size:clamp(28px,5.5vw,44px);line-height:1.1}
-    h1 span{color:var(--accent)}
-    .lead{max-width:680px;font-size:clamp(15px,4vw,18px);color:var(--muted);
-      line-height:1.5;margin:4px auto 16px}
-
-    .group{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:6px}
-    .chip{appearance:none;border:none;background:#141C22;color:#cfe3e7;
-      padding:12px 16px;border-radius:16px;font-weight:700;cursor:pointer;
-      transition:transform .08s ease,background .16s ease}
-    .chip:active{transform:translateY(1px)}
-    .chip.selected{background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#001f26}
-
-    .cta{display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent-dark));
-      color:#001f26;font-weight:800;border:none;border-radius:24px;padding:14px 20px;
-      box-shadow:0 0 14px rgba(0,181,204,.5),0 0 28px rgba(0,181,204,.25);
-      cursor:pointer;transition:.2s}
-    .cta[disabled]{opacity:.4;cursor:not-allowed}
-
-    footer{position:fixed;bottom:10px;left:0;right:0;text-align:center;color:var(--muted);font-size:12px}
-    footer a{color:var(--accent);text-decoration:none}
-
-    /* Selettore lingua */
-    .lang-fab{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);right:14px;z-index:50}
-    .lang-btn{appearance:none;border:1px solid #1d2b34;background:#0f1820;color:#E6F2F5;
-      padding:10px 12px;border-radius:999px;cursor:pointer}
-    .lang-menu{position:absolute;top:46px;right:0;background:#101922;border:1px solid #1d2b34;
-      border-radius:12px;padding:8px;display:none;min-width:160px;box-shadow:0 12px 28px rgba(0,0,0,.35)}
-    .lang-menu button{display:block;width:100%;text-align:left;background:transparent;border:none;
-      color:#E6F2F5;padding:10px;border-radius:10px;cursor:pointer}
-    .lang-menu button.active{background:#14222b}
-
-    /* Bottone About */
-    .about-fab{
-      position:fixed; right:14px; bottom:14px; z-index:60;
-      background:#141C22; color:#A0B2BA; border:1px solid #1f2a33;
-      border-radius:999px; padding:10px 14px; font-size:14px;
-      text-decoration:none; display:inline-flex; gap:8px; align-items:center;
-      box-shadow:0 6px 18px rgba(0,0,0,.35); transition:filter .15s ease
+    * { box-sizing: border-box }
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
-    .about-fab:hover{ filter:brightness(1.12) }
-    .about-fab span{ color:#00E0FF; font-weight:700 }
+
+    main {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      gap: 14px;
+      transition: opacity .4s ease;
+    }
+
+    /* Immagine */
+    .hero-img {
+      width: min(92vw, 560px);
+      height: auto;
+      display: block;
+      margin: 0 auto 6px;
+      filter: drop-shadow(0 10px 28px rgba(0,0,0,.45));
+    }
+
+    /* Titolo + lead */
+    h1 {
+      margin: .25rem 0 0;
+      font-size: clamp(28px, 5.5vw, 44px);
+      line-height: 1.1;
+    }
+    h1 span { color: var(--accent); }
+    .lead {
+      max-width: 680px;
+      font-size: clamp(15px, 4vw, 18px);
+      color: var(--muted);
+      line-height: 1.5;
+      margin: 4px auto 16px;
+    }
+
+    /* Scelte */
+    .group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 6px;
+    }
+    .chip {
+      appearance: none;
+      border: none;
+      background: #141C22;
+      color: #cfe3e7;
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .08s ease, background .16s ease;
+    }
+    .chip:active { transform: translateY(1px); }
+    .chip.selected {
+      background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+      color: #001f26;
+    }
+
+    /* CTA */
+    .cta {
+      display: inline-block;
+      background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+      color: #001f26;
+      font-weight: 800;
+      border: none;
+      border-radius: 24px;
+      padding: 14px 20px;
+      box-shadow: 0 0 14px rgba(0,181,204,.5), 0 0 28px rgba(0,181,204,.25);
+      cursor: pointer;
+      transition: .2s;
+    }
+    .cta[disabled] { opacity: .4; cursor: not-allowed; }
+
+    /* Footer */
+    footer {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* Selettore lingua (solo Home) */
+    .lang-fab {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 14px);
+      right: 14px;
+      z-index: 50;
+    }
+    .lang-btn {
+      appearance: none;
+      border: 1px solid #1d2b34;
+      background: #0f1820;
+      color: #E6F2F5;
+      padding: 10px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .lang-menu {
+      position: absolute;
+      top: 46px;
+      right: 0;
+      background: #101922;
+      border: 1px solid #1d2b34;
+      border-radius: 12px;
+      padding: 8px;
+      display: none;
+      min-width: 160px;
+      box-shadow: 0 12px 28px rgba(0,0,0,.35);
+    }
+    .lang-menu button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: none;
+      color: #E6F2F5;
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .lang-menu button.active { background: #14222b; }
+
+    /* Bottone Info/About */
+    .about-fab {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 60;
+      background: #141C22;
+      color: #A0B2BA;
+      border: 1px solid #1f2a33;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 14px;
+      text-decoration: none;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      box-shadow: 0 6px 18px rgba(0,0,0,.35);
+      transition: filter .15s ease;
+    }
+    .about-fab:hover { filter: brightness(1.2); }
+
+    /* Migliora layout e spazi su dispositivi mobili */
+    @media (max-width: 480px) {
+      main { padding-bottom: 80px; }
+      .group { gap: 12px; margin-bottom: 14px; }
+      .chip { flex: 1 1 45%; padding: 10px 12px; font-size: 15px; }
+      .cta { margin-top: 10px; }
+      footer { font-size: 11px; bottom: 6px; }
+    }
   </style>
 </head>
 <body>
@@ -75,31 +196,28 @@
 
   <main>
     <img id="hero" class="hero-img" alt="Porta luminosa What?f" loading="eager" decoding="async" />
-
     <h1><span data-i18n="title">Scopri il tuo What?f</span></h1>
-
     <p class="lead" id="leadText"></p>
 
     <div class="group" id="periodGroup">
-      <button class="chip" data-key="periodo" data-val="past"   data-i18n="past">Passato</button>
+      <button class="chip" data-key="periodo" data-val="past" data-i18n="past">Passato</button>
       <button class="chip" data-key="periodo" data-val="future" data-i18n="future">Futuro</button>
     </div>
     <div class="group" id="styleGroup">
       <button class="chip" data-key="stile" data-val="whatif" data-i18n="whatif">What if</button>
-      <button class="chip" data-key="stile" data-val="wtf"    data-i18n="wtf">What the F</button>
+      <button class="chip" data-key="stile" data-val="wtf" data-i18n="wtf">What the F</button>
     </div>
 
     <button id="go" class="cta" disabled data-i18n="next">Avanti</button>
   </main>
 
-  <!-- Bottone About -->
-  <a id="aboutFab" class="about-fab" href="about.html" aria-label="About What?f">
-    <span>ℹ️</span> <b id="aboutLabel">Info</b>
-  </a>
-
   <footer>© 2025 What?f · <a href="privacy.html">Privacy</a> · <a href="terms.html">Termini</a></footer>
 
-  <!-- Caricamento immagine -->
+  <!-- Bottone Info/About -->
+  <a href="about.html" class="about-fab" id="aboutFab">
+    <span id="aboutLabel">Info</span>
+  </a>
+
   <script>
     (async function loadHero(){
       const hero=document.getElementById('hero');
@@ -110,7 +228,6 @@
     })();
   </script>
 
-  <!-- Lingue -->
   <script>
     const DICT = {
       it: {
@@ -136,7 +253,7 @@
     };
 
     const LS = localStorage;
-    const $ = s => document.querySelector(s);
+    const $  = s => document.querySelector(s);
     const $$ = s => document.querySelectorAll(s);
 
     function getLang(){ return LS.getItem('lang') || 'it'; }
@@ -150,10 +267,10 @@
         if(d[k] && !el.matches('#leadText')) el.textContent = d[k];
       });
       $('#leadText').innerHTML = d.lead;
-      $('#aboutLabel').textContent = d.info;
       document.querySelectorAll('#langMenu button').forEach(b=>{
         b.classList.toggle('active', b.dataset.lang === L);
       });
+      document.getElementById('aboutLabel').textContent = d.info;
     }
 
     if(!LS.getItem('lang')) LS.setItem('lang','it');
@@ -168,7 +285,8 @@
       btn.setAttribute("aria-expanded",String(!open));
     });
     menu.addEventListener("click",e=>{
-      const b=e.target.closest("button[data-lang]"); if(!b) return;
+      const b=e.target.closest("button[data-lang]");
+      if(!b) return;
       setLang(b.dataset.lang);
       menu.style.display="none";
     });
@@ -177,7 +295,6 @@
     });
   </script>
 
-  <!-- Scelte + Avanti -->
   <script>
     const state = JSON.parse(localStorage.getItem("whatif_prefs")||"{}");
     const go = document.getElementById("go");
