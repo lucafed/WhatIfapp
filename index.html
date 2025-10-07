@@ -12,16 +12,16 @@
       --accent:#00E0FF; --accent-dark:#00B5CC;
     }
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-
+    html,body{
+      height:100%;margin:0;background:var(--bg);color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      overflow-x:hidden;
+    }
     main{
-      min-height:100%;
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      text-align:center; padding:20px;
-      gap:14px; transition:opacity .4s ease;
-      /* spazio extra per non sovrapporsi al footer fisso */
-      padding-bottom: 140px;
+      min-height:100%;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      text-align:center;padding:20px;gap:14px;transition:opacity .4s ease;
+      padding-bottom: 140px; /* spazio per footer fisso */
     }
 
     /* Immagine */
@@ -70,18 +70,17 @@
   </style>
 </head>
 <body>
-  <!-- Consuma il flag per saltare la story/intro se si torna da pagine legali -->
+  <!-- Se arrivo da pagine legali, salta l’intro -->
   <script>
     try {
       if (localStorage.getItem('forceSkipIntro') === '1') {
         localStorage.setItem('introSeen','1');
-        localStorage.setItem('whatif_intro_done','1');
         localStorage.removeItem('forceSkipIntro');
       }
     } catch(e) {}
   </script>
 
-  <!-- Selettore lingua SOLO in Home -->
+  <!-- Selettore lingua SOLO qui -->
   <div class="lang-fab" id="langFab">
     <button class="lang-btn" id="langToggle" aria-haspopup="true" aria-expanded="false">🌐</button>
     <div class="lang-menu" id="langMenu" role="menu" aria-label="language">
@@ -111,12 +110,12 @@
   </main>
 
   <footer>© 2025 What?f · 
-    <a href="privacy.html">Privacy</a> · 
-    <a href="terms.html">Termini</a> · 
-    <a href="about.html">Info</a>
+    <a class="legal-link" href="privacy.html">Privacy</a> · 
+    <a class="legal-link" href="terms.html">Termini</a> · 
+    <a class="legal-link" href="about.html">Info</a>
   </footer>
 
-  <!-- Caricamento immagine robusto -->
+  <!-- Caricamento robusto immagine -->
   <script>
     (async function loadHero(){
       const hero=document.getElementById('hero');
@@ -156,8 +155,7 @@
     function getLang(){ return LS.getItem('lang') || 'it'; }
     function setLang(l){
       LS.setItem('lang', l);
-      // le altre pagine leggeranno la lingua all'apertura
-      applyLang();
+      applyLang(); // le altre pagine leggeranno la lingua all'apertura
     }
     function applyLang(){
       const L = getLang(), d = DICT[L] || DICT.it;
@@ -180,10 +178,10 @@
         const open=menu.style.display==="block";
         menu.style.display=open?"none":"block";
         btn.setAttribute("aria-expanded",String(!open));
-        // evidenzia lingua corrente
-        const L = getLang();
-        menu.querySelectorAll("button[data-lang]").forEach(b=>{
-          b.classList.toggle("active", b.dataset.lang===L);
+        // evidenzia corrente
+        const L=getLang();
+        menu.querySelectorAll('button[data-lang]').forEach(b=>{
+          b.classList.toggle('active', b.dataset.lang===L);
         });
       });
       menu.addEventListener("click",(e)=>{
@@ -229,11 +227,33 @@
 
     go.addEventListener("click", ()=>{
       if(go.disabled) return;
-      try {
-        localStorage.setItem('introSeen','1');
-        localStorage.setItem('whatif_intro_done','1');
-      } catch(e){}
       location.href = "second.html";
+    });
+  </script>
+
+  <!-- Mostra la STORY solo alla prima visita -->
+  <script>
+    (function(){
+      // se torno da pagine legali, non far partire la story
+      if (localStorage.getItem('forceSkipIntro') === '1') {
+        localStorage.setItem('introSeen','1');
+        localStorage.removeItem('forceSkipIntro');
+        return;
+      }
+      // prima visita ⇒ vai a story.html
+      if (!localStorage.getItem('introSeen')) {
+        localStorage.setItem('introSeen','1');
+        window.location.href = 'story.html';
+      }
+    })();
+  </script>
+
+  <!-- Flag per saltare la story al rientro da Privacy/Termini/Info -->
+  <script>
+    document.querySelectorAll('.legal-link').forEach(a=>{
+      a.addEventListener('click', ()=>{
+        try { localStorage.setItem('forceSkipIntro','1'); } catch(e){}
+      });
     });
   </script>
 </body>
