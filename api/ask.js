@@ -1,113 +1,129 @@
 // /api/ask.js
 import OpenAI from "openai";
 
+/**
+ * Supporta:
+ * - POST JSON { question|domanda, lang, periodo, stile, maxChars?, stream? }
+ * - stream: true  -> prova streaming reale (SSE); se non supportato dal runtime, ricade su risposta classica
+ * - maxChars: limite caratteri lato server (default 900)
+ */
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
+
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
-
-    const client = new OpenAI({ apiKey });
-
     const {
-      action,            // 'suggest-questions' | 'final-answer'
-      question,          // domanda iniziale
-      answers = [],      // array di { q: string, a: string }
+      question,
+      domanda,
       lang = "it",
-      periodo,           // 'past' | 'future'
-      stile              // 'whatif' | 'wtf'
+      periodo,
+      stile,
+      maxChars = 900,
+      stream = false,
     } = req.body || {};
 
-    const q = (question || "").toString().trim();
+    const q = (question || domanda || "").toString().trim();
     if (!q) return res.status(400).json({ error: "question required" });
 
-    // tono/tempo in base alle preferenze
+    // tono & contesto
     const tone =
       stile === "wtf"
         ? (lang === "en"
-            ? "ironic, playful, slightly surreal (but respectful)"
-            : "ironico, giocoso, leggermente surreale (ma rispettoso)")
+            ? "ironic, surreal, playful (but respectful) tone"
+            : "tono ironico, surreale e giocoso (ma rispettoso)")
         : (lang === "en"
-            ? "realistic, reflective, concrete"
-            : "realistico, riflessivo, concreto");
+            ? "realistic, reflective and concrete tone"
+            : "tono realistico, riflessivo e concreto");
 
     const time =
       periodo === "past"
         ? (lang === "en" ? "the past (what if)" : "il passato (what if)")
         : (lang === "en" ? "the future (plausible what if)" : "il futuro (what if plausibile)");
 
-    // MODE 1: follow-up questions
-    if (action === "suggest-questions") {
-      const sys =
-        lang === "en"
-          ? `You are What?f. Propose a short set of clarification questions (2 or 3)
-to better personalize an answer about ${time}, in a ${tone} tone.
-Return STRICT JSON: {"questions":["...","..."]} with concise, single-sentence questions.`
-          : `Sei What?f. Proponi un breve set di domande di chiarimento (2 o 3)
-per personalizzare la risposta sul ${time}, con tono ${tone}.
-Restituisci SOLO JSON: {"questions":["...","..."]} con domande concise a frase singola.`;
-
-      const rsp = await client.chat.completions.create({
-        model: "gpt-4o-mini",
-        temperature: 0.5,
-        messages: [
-          { role: "system", content: sys },
-          { role: "user", content: (lang === "en" ? "User question: " : "Domanda dell'utente: ") + q }
-        ]
-      });
-
-      let content = rsp.choices?.[0]?.message?.content || "{}";
-      let list = [];
-      try {
-        const obj = JSON.parse(content);
-        list = Array.isArray(obj.questions) ? obj.questions.slice(0,3) : [];
-      } catch {
-        // fallback: estrai righe
-        list = content.split(/\n+/).map(s => s.replace(/^[\-\d\.\)\s]+/,"").trim()).filter(Boolean).slice(0,3);
-      }
-      if (list.length === 0) {
-        list = lang === "en"
-          ? ["What is your main goal?", "Are there any constraints or preferences I should consider?"]
-          : ["Qual è il tuo obiettivo principale?", "Ci sono vincoli o preferenze da considerare?"];
-      }
-
-      return res.status(200).json({ ok: true, questions: list });
-    }
-
-    // MODE 2: final answer
     const sys =
       lang === "en"
-        ? `You are What?f. Generate a personalized, helpful answer about ${time}, in a ${tone} tone.
-Be clear, safe, and concise (8–12 sentences max). Use the clarifications if provided.`
-        : `Sei What?f. Genera una risposta personalizzata sul ${time}, con tono ${tone}.
-Sii chiaro, sicuro e conciso (massimo 8–12 frasi). Usa i chiarimenti se presenti.`;
+        ? `You are What?f. Generate a concise scenario in ${time}, with a ${tone}. Be helpful, safe and specific to the user. Keep it under ~${Math.floor(
+            maxChars * 0.9
+          )} characters.`
+        : `Sei What?f. Genera uno scenario conciso nel ${time}, con ${tone}. Sii utile, sicuro e specifico. Tieni tutto entro ~${Math.floor(
+            maxChars * 0.9
+          )} caratteri.`;
 
-    const clar =
-      answers && answers.length
-        ? (lang === "en"
-            ? "Clarifications:\n" + answers.map((x,i)=>`${i+1}) ${x.q}\n→ ${x.a}`).join("\n")
-            : "Chiarimenti:\n" + answers.map((x,i)=>`${i+1}) ${x.q}\n→ ${x.a}`).join("\n"))
-        : (lang === "en" ? "No clarifications provided." : "Nessun chiarimento fornito.");
+    const user =
+      lang === "en" ? `User question: ${q}` : `Domanda dell'utente: ${q}`;
 
-    const rsp = await client.chat.completions.create({
+    const client = new OpenAI({ apiKey });
+
+    // Parametri generali
+    const baseParams = {
       model: "gpt-4o-mini",
       temperature: stile === "wtf" ? 0.9 : 0.6,
+      max_tokens: 260, // soft cap lato modello
       messages: [
         { role: "system", content: sys },
-        { role: "user", content:
-            (lang === "en" ? "User question: " : "Domanda utente: ") + q + "\n\n" + clar }
-      ]
+        { role: "user", content: user },
+      ],
+    };
+
+    // STREAM REALE (SSE) – se richiesto
+    if (stream) {
+      try {
+        const streamResp = await client.chat.completions.create({
+          ...baseParams,
+          stream: true,
+        });
+
+        // headers SSE
+        res.writeHead(200, {
+          "Content-Type": "text/event-stream; charset=utf-8",
+          "Cache-Control": "no-cache, no-transform",
+          Connection: "keep-alive",
+          "X-Accel-Buffering": "no",
+        });
+
+        let sent = 0;
+        for await (const part of streamResp) {
+          const chunk = part?.choices?.[0]?.delta?.content || "";
+          if (!chunk) continue;
+          // taglio duro lato server
+          const remaining = maxChars - sent;
+          const toSend = chunk.slice(0, Math.max(0, remaining));
+          if (toSend) {
+            res.write(toSend);
+            sent += toSend.length;
+          }
+          if (sent >= maxChars) break;
+        }
+        if (sent >= maxChars) res.write("…");
+        return res.end();
+      } catch (e) {
+        // se il runtime non supporta streaming, cade sotto a risposta non streaming
+        console.warn("Streaming fallback:", e?.message || e);
+      }
+    }
+
+    // RISPOSTA CLASSICA (fallback)
+    const full = await client.chat.completions.create(baseParams);
+    let text = full.choices?.[0]?.message?.content?.trim() || "";
+    if (text.length > maxChars) text = text.slice(0, maxChars) + "…";
+
+    return res.status(200).json({
+      ok: true,
+      model: baseParams.model,
+      lang,
+      periodo,
+      stile,
+      answer: text,
     });
-
-    const text = rsp.choices?.[0]?.message?.content?.trim() || "";
-    return res.status(200).json({ ok: true, answer: text });
-
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
+    return res
+      .status(500)
+      .json({ error: "server_error", detail: String(err?.message || err) });
   }
 }
