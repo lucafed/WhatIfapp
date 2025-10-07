@@ -71,17 +71,6 @@
         <button class="btn" onclick="shareOut()" data-i18n="share">📤 Condividi</button>
       </div>
 
-      <div class="divider"></div>
-
-      <h4 class="label" data-i18n="refine">Raffina</h4>
-      <div class="tools">
-        <button class="btn" onclick="refine('realistic')" data-i18n="realistic">Più realistico</button>
-        <button class="btn" onclick="refine('creative')" data-i18n="creative">Più creativo</button>
-        <button class="btn" onclick="refine('shorter')" data-i18n="shorter">Più breve</button>
-        <button class="btn" onclick="refine('work')" data-i18n="work">Focalizza lavoro</button>
-        <button class="btn" onclick="refine('love')" data-i18n="love">Focalizza relazioni</button>
-        <button class="btn" onclick="refine('money')" data-i18n="money">Focalizza finanze</button>
-      </div>
       <p class="hint" data-i18n="limitHint">Le risposte sono concise per invogliarti a proseguire. Puoi salvare e rielaborare quando vuoi.</p>
     </div>
   </main>
@@ -110,10 +99,8 @@ const DICT = {
     edit:"Modifica domanda", regenerateWith:"Rielabora con questa domanda",
     regenerate:"Rigenera 🔁", save:"💾 Salva in cronologia",
     seeHistory:"📜 Vedi cronologia", copy:"📋 Copia", share:"📤 Condividi",
-    refine:"Raffina", realistic:"Più realistico", creative:"Più creativo",
-    shorter:"Più breve", work:"Focalizza lavoro", love:"Focalizza relazioni",
-    money:"Focalizza finanze", history:"Cronologia", clear:"Svuota",
-    close:"Chiudi", limitHint:"Le risposte sono concise per invogliarti a proseguire. Puoi salvare e rielaborare quando vuoi.",
+    history:"Cronologia", clear:"Svuota", close:"Chiudi",
+    limitHint:"Le risposte sono concise per invogliarti a proseguire. Puoi salvare e rielaborare quando vuoi.",
     err_network:"Errore di rete", err_server:"C’è stato un problema. Riprova.",
     badgePast:"Passato", badgeFuture:"Futuro", badgeWhatIf:"What if", badgeWTF:"What the F"
   },
@@ -124,10 +111,8 @@ const DICT = {
     edit:"Edit question", regenerateWith:"Re-run with this question",
     regenerate:"Regenerate 🔁", save:"💾 Save to history",
     seeHistory:"📜 View history", copy:"📋 Copy", share:"📤 Share",
-    refine:"Refine", realistic:"More realistic", creative:"More creative",
-    shorter:"Shorter", work:"Focus on work", love:"Focus on relationships",
-    money:"Focus on finances", history:"History", clear:"Clear",
-    close:"Close", limitHint:"Answers are concise to keep you curious. Save and re-run any time.",
+    history:"History", clear:"Clear", close:"Close",
+    limitHint:"Answers are concise to keep you curious. Save and re-run any time.",
     err_network:"Network error", err_server:"Something went wrong. Try again.",
     badgePast:"Past", badgeFuture:"Future", badgeWhatIf:"What if", badgeWTF:"What the F"
   }
@@ -142,7 +127,7 @@ document.querySelectorAll("[data-i18n]").forEach(el=>{
 });
 
 /* ====== stato recuperato ====== */
-const prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}"); // { periodo, stile }
+const prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}");
 let domanda = LS.getItem("domanda") || "";
 const questionEl = document.getElementById("question");
 const resultEl   = document.getElementById("result");
@@ -171,10 +156,10 @@ if (!domanda) {
 questionEl.textContent = domanda;
 
 /* ====== generazione (streaming SSE) ====== */
-const MAX_CHARS = 1200; // taglio morbido per non essere chilometrici
+const MAX_CHARS = 1200;
 let lastAnswer = "";
 
-async function generate(extraInstruction = "") {
+async function generate() {
   lastAnswer = "";
   resultEl.textContent = "⏳ " + T.gen + " ";
   const sk = document.createElement("span");
@@ -186,8 +171,7 @@ async function generate(extraInstruction = "") {
     lang,
     periodo: prefs.periodo || "future",
     stile:   prefs.stile   || "whatif",
-    stream: true,
-    extra: extraInstruction
+    stream: true
   };
 
   try{
@@ -223,7 +207,6 @@ async function generate(extraInstruction = "") {
             lastAnswer = text;
             resultEl.textContent = text;
           } else {
-            // abbiamo superato il limite: taglio elegante
             lastAnswer = text.trim() + "…";
             resultEl.textContent = lastAnswer;
           }
@@ -244,7 +227,7 @@ async function generate(extraInstruction = "") {
 
 /* azioni UI */
 function editQuestion(){
-  LS.setItem("domanda", domanda); // già c'è, ma la riaffermo
+  LS.setItem("domanda", domanda);
   location.href = "fourth.html";
 }
 function saveHistory(){
@@ -302,28 +285,6 @@ function shareOut(){
   if (navigator.share) navigator.share(data).catch(()=>{});
   else copyText();
 }
-function refine(kind){
-  const mapIt = {
-    realistic:"Rendi il tono più realistico e concreto.",
-    creative:"Rendi il tono più creativo, ironico ma rispettoso.",
-    shorter:"Rispondi più sinteticamente (90-120 parole).",
-    work:"Focalizza soprattutto sugli aspetti lavorativi.",
-    love:"Focalizza soprattutto su relazioni e vita sociale.",
-    money:"Focalizza soprattutto su aspetti economici e finanze personali."
-  };
-  const mapEn = {
-    realistic:"Make the tone more realistic and concrete.",
-    creative:"Make it more creative and playful yet respectful.",
-    shorter:"Be briefer (90–120 words).",
-    work:"Focus mainly on work/career aspects.",
-    love:"Focus mainly on relationships and social life.",
-    money:"Focus mainly on finances and money."
-  };
-  const extra = (lang==='en'?mapEn:mapIt)[kind] || "";
-  generate(extra);
-}
-
-/* utils */
 function escapeHTML(s){return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
 /* avvio */
