@@ -26,9 +26,7 @@
   .chip{background:#0f1820;border:1px solid #1b2a34;color:#cfe3e7;border-radius:999px;padding:8px 12px;font-size:12px}
   #result{min-height:160px;line-height:1.6}
   .tools{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
-  .divider{height:1px;background:#16222b;margin:16px 0}
   .hint{font-size:12px;color:var(--muted)}
-  /* Overlay cronologia */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:6000}
   .sheet{width:min(92vw,720px);max-height:75vh;overflow:auto;background:var(--card);border-radius:16px;padding:14px}
   .hist-item{border:1px solid #1d2b34;border-radius:12px;padding:10px;margin:8px 0}
@@ -58,9 +56,7 @@
         <button class="btn" onclick="generate()" data-i18n="regenerateWith">Rielabora con questa domanda</button>
       </div>
 
-      <div class="divider"></div>
-
-      <h3 class="label" data-i18n="answer">Risultato</h3>
+      <h3 class="label" style="margin-top:16px" data-i18n="answer">Risultato</h3>
       <div id="result" class="box">⏳ <span data-i18n="gen">Sto generando…</span> <span class="skeleton" style="width:40%"></span></div>
 
       <div class="tools">
@@ -90,7 +86,7 @@
   </div>
 
 <script>
-/* ====== i18n base ====== */
+// ===== i18n =====
 const DICT = {
   it: {
     back:"Indietro", home:"Home", title:"Il tuo scenario",
@@ -126,8 +122,8 @@ document.querySelectorAll("[data-i18n]").forEach(el=>{
   if (T[k]) el.textContent = T[k];
 });
 
-/* ====== stato recuperato ====== */
-const prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}");
+// ===== stato =====
+const prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}"); // periodo/stile da index
 let domanda = LS.getItem("domanda") || "";
 const questionEl = document.getElementById("question");
 const resultEl   = document.getElementById("result");
@@ -138,7 +134,7 @@ if (!domanda) {
   location.href = "fourth.html";
 }
 
-/* badge periodo/stile */
+// badge
 (function renderBadges(){
   const row = [];
   if (prefs.periodo) {
@@ -152,10 +148,10 @@ if (!domanda) {
   badges.innerHTML = row.join("");
 })();
 
-/* mostra domanda */
+// mostra domanda
 questionEl.textContent = domanda;
 
-/* ====== generazione (streaming SSE) ====== */
+// ===== generazione (SSE) =====
 const MAX_CHARS = 1200;
 let lastAnswer = "";
 
@@ -171,6 +167,8 @@ async function generate() {
     lang,
     periodo: prefs.periodo || "future",
     stile:   prefs.stile   || "whatif",
+    profile: JSON.parse(LS.getItem("whatif_profile") || "{}"),
+    archetypes: JSON.parse(LS.getItem("whatif_archetypes") || "{}"),
     stream: true
   };
 
@@ -180,10 +178,7 @@ async function generate() {
       headers:{"Content-Type":"application/json","x-whatif-stream":"1"},
       body: JSON.stringify(payload)
     });
-    if (!res.ok) {
-      resultEl.textContent = T.err_server;
-      return;
-    }
+    if (!res.ok) { resultEl.textContent = T.err_server; return; }
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -225,11 +220,8 @@ async function generate() {
   }
 }
 
-/* azioni UI */
-function editQuestion(){
-  LS.setItem("domanda", domanda);
-  location.href = "fourth.html";
-}
+// azioni
+function editQuestion(){ LS.setItem("domanda", domanda); location.href = "fourth.html"; }
 function saveHistory(){
   const arr = JSON.parse(LS.getItem("cronologia")||"[]");
   arr.unshift({
@@ -277,17 +269,13 @@ function copyText(){
   });
 }
 function shareOut(){
-  const data = {
-    title:"What?f",
-    text:`Domanda: ${domanda}\n\n${resultEl.textContent}`,
-    url: location.href
-  };
+  const data = { title:"What?f", text:`Domanda: ${domanda}\n\n${resultEl.textContent}`, url: location.href };
   if (navigator.share) navigator.share(data).catch(()=>{});
   else copyText();
 }
 function escapeHTML(s){return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
-/* avvio */
+// avvio
 generate();
 </script>
 </body>
