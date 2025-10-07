@@ -114,7 +114,7 @@
   </main>
 
   <script>
-    // I18N, solo lettura da localStorage.lang
+    // I18N (identica alla tua) — legge localStorage.lang
     const I18N = {
       it:{title:"Parlami di te", blurb:"Raccontami brevemente chi sei, cosa stai vivendo o cosa ti spinge a usare What?f. Questo aiuterà l’AI a comprenderti meglio e risponderti in modo più personale.",
           gender_lbl:"Sesso", sel_choose:"Seleziona…", gender_m:"Uomo", gender_f:"Donna", gender_o:"Altro", gender_n:"Preferisco non dirlo",
@@ -151,11 +151,27 @@
     }
     tSet();
 
+    // Navigazione
     document.getElementById('backTop').addEventListener('click', ()=> history.back());
     document.getElementById('backBtn').addEventListener('click', ()=> history.back());
 
+    // Prefill se esiste un profilo salvato
+    (function prefill(){
+      try{
+        const saved = JSON.parse(LS.getItem('whatif_profile') || '{}');
+        if (!saved || typeof saved !== 'object') return;
+        if (saved.gender) document.getElementById('gender').value = saved.gender;
+        if (saved.age)    document.getElementById('age').value    = saved.age;
+        if (saved.phase)  document.getElementById('phase').value  = saved.phase;
+        if (saved.where)  document.getElementById('where').value  = saved.where;
+        if (saved.who)    document.getElementById('who').value    = saved.who;
+        if (saved.more)   document.getElementById('more').value   = saved.more;
+      }catch(e){}
+    })();
+
     const form = document.getElementById('aboutForm');
     const errBox = document.getElementById('errorBox');
+
     form.addEventListener('submit', (e)=>{
       e.preventDefault();
       const gender = document.getElementById('gender').value.trim();
@@ -164,16 +180,19 @@
       const where  = document.getElementById('where').value.trim();
       const who    = document.getElementById('who').value.trim();
       const more   = document.getElementById('more').value.trim();
+
       if(!gender || !age || !phase){
         errBox.textContent = I18N[getLang()].err_required;
         errBox.classList.add('show'); return;
       }
       errBox.classList.remove('show');
+
       LS.setItem('whatif_profile', JSON.stringify({ gender, age, phase, where, who, more }));
-      location.href = 'fourth.html';
+      // 🔁 nuovo step: vai al quiz psicologico
+      location.href = 'third.html';
     });
 
-    // se la lingua cambia in un’altra scheda, aggiorna
+    // Aggiorna i18n se cambia la lingua in un’altra scheda
     window.addEventListener('storage', (e)=>{ if(e.key==='lang'){ tSet(); }});
     document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) tSet(); });
   </script>
