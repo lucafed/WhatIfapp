@@ -3,92 +3,437 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f — Risultato</title>
+  <title>What?f – Risultato</title>
   <meta name="theme-color" content="#0A0F14" />
   <style>
-    :root{--bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA; --accent:#00E0FF; --accent-dark:#00B5CC}
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{min-height:100%;display:flex;flex-direction:column;gap:18px;padding:18px}
-    .top{display:flex;align-items:center;gap:12px}
-    .back{appearance:none;border:none;background:#0f1820;color:var(--fg);padding:10px 14px;border-radius:14px;cursor:pointer}
-    .crumb{color:var(--muted);font-size:14px}
-    h1{margin:0;font-size:clamp(26px,6vw,40px)}
-    .box{background:var(--card);border:1px solid #1b2730;border-radius:16px;padding:16px}
-    .res{background:#0f1820;border:1px solid #1d2b34;color:var(--fg);padding:16px;border-radius:14px;min-height:120px}
-    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
-    .btn{appearance:none;border:none;border-radius:14px;padding:12px 16px;cursor:pointer}
-    .primary{background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329;font-weight:900}
-    .ghost{background:#132029;color:var(--fg);border:1px solid #1d2b34}
-    .note{color:var(--muted);font-size:14px;margin-top:8px}
-    .error{color:#ffb3b3;background:#3a1414;border:1px solid #5a2222;border-radius:10px;padding:10px 12px;display:none}
-    .error.show{display:block}
+    :root{
+      --bg:#0A0F14; --fg:#E6F2F5; --muted:#A0B2BA;
+      --card:#0f1820; --card2:#0b141a; --border:#1d2b34;
+      --accent:#00E0FF; --accent2:#00B5CC; --ok:#1AFFD5;
+    }
+    *{ box-sizing:border-box }
+    html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
+    main{ max-width:980px; margin:0 auto; padding:20px; }
+
+    h1{ margin:6px 0 4px; font-size:clamp(22px,4.5vw,30px); }
+    p.lead{ color:var(--muted); margin:0 0 10px; }
+
+    .bar{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px }
+    .btn{ appearance:none; border:1px solid var(--border); background:#121c25; color:var(--fg);
+      padding:10px 14px; border-radius:12px; cursor:pointer; }
+    .btn.primary{ background:linear-gradient(180deg,var(--accent),var(--accent2)); color:#001e26; border:none; font-weight:800; }
+    .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 14px; }
+    .card2{ background:var(--card2); border:1px solid #14222b; border-radius:12px; padding:16px 14px; }
+
+    .label{ color:var(--accent); font-weight:700 }
+
+    #answer{ white-space:pre-wrap; line-height:1.55; }
+    #caret{ opacity:.7; display:none; margin-top:6px }
+    #qaBox{ margin:14px 0 }
+
+    .chip{ appearance:none; border:none; background:#141C22; color:#cfe3e7;
+      padding:10px 14px; border-radius:16px; font-weight:700; cursor:pointer }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center }
+
+    /* Cronologia */
+    #history{ display:none; margin-top:14px }
+    .hist-card{ border:1px solid var(--border); border-radius:10px; padding:10px; background:#0f1820 }
+    .muted{ color:var(--muted); font-size:12px }
+
+    input[type="text"]{
+      width:100%; padding:12px; border-radius:10px; border:1px solid var(--border);
+      background:#0f1820; color:var(--fg);
+    }
   </style>
 </head>
 <body>
   <main>
-    <div class="top">
-      <button class="back" id="backBtn" data-i18n="back">Indietro</button>
-      <span class="crumb" id="crumb"></span>
+    <!-- NAV BAR -->
+    <div class="bar">
+      <button class="btn" id="backBtn">← <span data-i18n="back">Indietro</span></button>
+      <button class="btn" id="homeBtn">🏠 <span data-i18n="home">Home</span></button>
     </div>
 
-    <h1 data-i18n="title">Risultato</h1>
+    <h1 id="title">Il tuo scenario</h1>
+    <p class="lead" id="subtitle">Risposta generata in base alle scelte precedenti.</p>
 
-    <div id="err" class="error"></div>
-
-    <div class="box">
-      <div class="res" id="answer">…</div>
-      <div class="actions">
-        <button class="btn primary" id="shareBtn" data-i18n="share">Condividi</button>
-        <button class="btn ghost" id="homeBtn" data-i18n="home">Home</button>
+    <!-- Mostra domanda salvata -->
+    <div class="card">
+      <div class="label" id="qLabel">Domanda</div>
+      <div id="qText" style="white-space:pre-wrap; margin-top:6px;"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="chip" id="editQ"><span data-i18n="editQ">Modifica domanda</span></button>
+        <button class="chip" id="reAsk"><span data-i18n="reAsk">Rielabora con questa domanda</span></button>
       </div>
-      <div class="note" data-i18n="upsell">Vuoi la versione estesa con piani d’azione e alternative? (in arrivo)</div>
+    </div>
+
+    <!-- Domande di chiarimento -->
+    <div id="qaBox" class="card" style="margin-top:14px;">
+      <div class="label" id="clarLabel">Per personalizzare</div>
+      <div id="qaQuestion" style="margin:8px 0 6px; font-weight:700;"></div>
+      <input id="qaInput" type="text" placeholder="Rispondi qui…" />
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary" id="qaNext"><span data-i18n="next">Avanti</span></button>
+        <button class="btn" id="qaSkip"><span data-i18n="skip">Salta</span></button>
+      </div>
+      <div class="muted" id="qaProgress" style="margin-top:6px;"></div>
+    </div>
+
+    <!-- Risposta (streaming) -->
+    <div id="ansBox" class="card2" style="margin-top:14px; min-height:140px;">
+      <div class="label" id="ansLabel">Risultato</div>
+      <div id="answer"></div>
+      <div id="caret">▌</div>
+    </div>
+
+    <!-- Azioni -->
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="regen"><span data-i18n="regen">Rigenera</span></button>
+      <button class="btn" id="saveHist"><span data-i18n="save">Salva in cronologia</span></button>
+      <button class="btn" id="seeHist"><span data-i18n="see">Vedi cronologia</span></button>
+      <button class="btn" id="shareBtn">📤 <span data-i18n="share">Condividi</span></button>
+    </div>
+
+    <!-- Cronologia -->
+    <div id="history">
+      <h3 id="histTitle" style="margin:8px 0;">Cronologia</h3>
+      <div id="histList" style="display:flex; flex-direction:column; gap:10px;"></div>
     </div>
   </main>
 
   <script>
-    const dict={it:{back:"Indietro",title:"Risultato",share:"Condividi",home:"Home",
-                    upsell:"Vuoi la versione estesa con piani d’azione e alternative? (in arrivo)",
-                    missing:"Manca la risposta: torna indietro e riprova.",
-                    pill:(s)=>[ s.periodo==="past"?"Passato": s.periodo==="future"?"Futuro":"",
-                                s.stile==="whatif"?"What if (plausibile)": s.stile==="wtf"?"What the F (ironico)":""
-                              ].filter(Boolean).join(" • ")
-                   },
-               en:{back:"Back",title:"Result",share:"Share",home:"Home",
-                    upsell:"Want the extended version with action plans and alternatives? (coming soon)",
-                    missing:"Missing answer: please go back and try again.",
-                    pill:(s)=>[ s.periodo==="past"?"Past": s.periodo==="future"?"Future":"",
-                                s.stile==="whatif"?"What if (plausible)": s.stile==="wtf"?"What the F (ironic)":""
-                              ].filter(Boolean).join(" • ")
-                   }};
-    const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
-    const LS=localStorage;
-    function getLang(){return LS.getItem('lang')||'it';}
-    function tApply(){
-      const L=getLang(),D=dict[L]||dict.it;
-      document.documentElement.lang=L;
-      $$('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n'); if(D[k]) el.textContent=D[k];});
-      const prefs=JSON.parse(LS.getItem('whatif_prefs')||'{}');
-      $('#crumb').textContent=D.pill(prefs);
-      const a=JSON.parse(LS.getItem('whatif_answer')||'null');
-      const err=$('#err');
-      if(!a||!a.text){ err.textContent=D.missing; err.classList.add('show'); }
-      else { $('#answer').textContent=a.text; }
-    }
-    tApply();
-    window.addEventListener('storage',(e)=>{ if(e.key==='lang') tApply();});
-    document.addEventListener('visibilitychange',()=>{ if(!document.hidden) tApply(); });
+    // ========= CONFIG =========
+    const MAX_CHARS = 900; // limite duro di caratteri della risposta
+    const CLAR_COUNT = { min: 2, max: 3 }; // quante domande di chiarimento
 
-    // azioni
-    $('#backBtn').addEventListener('click',()=>history.back());
-    $('#homeBtn').addEventListener('click',()=>location.href='index.html');
-    $('#shareBtn').addEventListener('click', async ()=>{
-      const text=$('#answer').textContent||'';
+    // ========= UTILS =========
+    const LS = localStorage;
+    const $  = s => document.querySelector(s);
+
+    const prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}"); // {periodo, stile}
+    const lang  = (LS.getItem("lang") || "it").toLowerCase();
+    let question = LS.getItem("whatif_last_question") || "";
+    let followups = []; // array di string
+    let answers   = []; // array di {q,a}
+    let idx = 0;        // indice followup corrente
+
+    // i18n locale
+    const I18N = {
+      it: {
+        back:"Indietro", home:"Home",
+        title:"Il tuo scenario",
+        sub:"Risposta generata in base alle scelte precedenti.",
+        qLabel:"Domanda",
+        editQ:"Modifica domanda",
+        reAsk:"Rielabora con questa domanda",
+        clar:"Per personalizzare",
+        next:"Avanti", skip:"Salta",
+        ans:"Risultato",
+        regen:"Rigenera", save:"Salva in cronologia", see:"Vedi cronologia", share:"Condividi",
+        hist:"Cronologia",
+        place:"Rispondi qui…",
+        needQ:"Nessuna domanda trovata. Torna indietro.",
+        fetching:"Sto preparando le domande…",
+        done:"Fatto!",
+        emptyA:"Scrivi una risposta.",
+        err:"C’è stato un problema. Riprova.",
+        saved:"Salvata!",
+        shareText:"Guarda il mio What?f ✨",
+        clarProg:(n,tot)=>`Domanda ${n} di ${tot}`
+      },
+      en: {
+        back:"Back", home:"Home",
+        title:"Your scenario",
+        sub:"Answer generated from your previous choices.",
+        qLabel:"Question",
+        editQ:"Edit question",
+        reAsk:"Re-run with this question",
+        clar:"To personalize",
+        next:"Next", skip:"Skip",
+        ans:"Result",
+        regen:"Regenerate", save:"Save to history", see:"View history", share:"Share",
+        hist:"History",
+        place:"Type your answer…",
+        needQ:"No question found. Go back.",
+        fetching:"Preparing questions…",
+        done:"Done!",
+        emptyA:"Please enter an answer.",
+        err:"Something went wrong. Try again.",
+        saved:"Saved!",
+        shareText:"Check out my What?f ✨",
+        clarProg:(n,tot)=>`Question ${n} of ${tot}`
+      }
+    }[lang];
+
+    // ========= INIT UI =========
+    $("#backBtn").addEventListener("click", ()=> history.back());
+    $("#homeBtn").addEventListener("click", ()=> location.href = "index.html");
+
+    $("#title").textContent = I18N.title;
+    $("#subtitle").textContent = I18N.sub;
+    $("#qLabel").textContent   = I18N.qLabel;
+    $("#clarLabel").textContent= I18N.clar;
+    $("#ansLabel").textContent = I18N.ans;
+    $("#editQ").textContent    = I18N.editQ;
+    $("#reAsk").textContent    = I18N.reAsk;
+    $("#qaNext").textContent   = I18N.next;
+    $("#qaSkip").textContent   = I18N.skip;
+    $("#regen").textContent    = I18N.regen;
+    $("#saveHist").textContent = I18N.save;
+    $("#seeHist").textContent  = I18N.see;
+    $("#histTitle").textContent= I18N.hist;
+    $("#shareBtn").lastChild.textContent = " " + I18N.share;
+    $("#qaInput").placeholder  = I18N.place;
+
+    // mostra domanda
+    $("#qText").textContent = question || "(—)";
+
+    if (!question) {
+      alert(I18N.needQ);
+      location.href = "fourth.html";
+    }
+
+    // ========= FOLLOW-UPS =========
+    async function fetchFollowUpsIfNeeded(){
+      // prova a prendere followups salvati (se la pagina precedente li ha già calcolati)
+      try {
+        const stored = JSON.parse(LS.getItem("whatif_followups") || "[]");
+        if (Array.isArray(stored) && stored.length) {
+          followups = stored.slice(0, CLAR_COUNT.max);
+          return;
+        }
+      } catch {}
+
+      // altrimenti chiedi all'API
+      $("#qaQuestion").textContent = I18N.fetching;
+      $("#qaInput").disabled = true;
+      $("#qaNext").disabled  = true;
+      $("#qaSkip").disabled  = true;
+
       try{
-        if(navigator.share){ await navigator.share({text}); }
-        else{ await navigator.clipboard.writeText(text); alert(getLang()==='en'?'Copied to clipboard!':'Copiato negli appunti!'); }
-      }catch(_){}
+        const r = await fetch("/api/ask", {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({
+            action: "suggest-questions",
+            question,
+            lang,
+            periodo: prefs.periodo,
+            stile: prefs.stile
+          })
+        });
+        const data = await r.json();
+        const list = (data.questions || []).slice(0, CLAR_COUNT.max);
+        followups = list.length ? list : [];
+      }catch(e){
+        console.error(e);
+      }finally{
+        $("#qaInput").disabled = false;
+        $("#qaNext").disabled  = false;
+        $("#qaSkip").disabled  = false;
+      }
+    }
+
+    function renderFollowup(){
+      if (!followups.length || idx >= followups.length) {
+        $("#qaBox").style.display = "none";
+        // vai a risposta finale
+        startAnswerStreaming();
+        return;
+      }
+      $("#qaQuestion").textContent = followups[idx];
+      $("#qaInput").value = "";
+      $("#qaInput").focus();
+      $("#qaProgress").textContent = I18N.clarProg(idx+1, followups.length);
+    }
+
+    $("#qaNext").addEventListener("click", ()=>{
+      const val = ($("#qaInput").value || "").trim();
+      if (!val){ alert(I18N.emptyA); return; }
+      answers.push({ q: followups[idx], a: val });
+      idx++;
+      renderFollowup();
     });
+
+    $("#qaSkip").addEventListener("click", ()=>{
+      answers.push({ q: followups[idx], a: "(skipped)" });
+      idx++;
+      renderFollowup();
+    });
+
+    // ========= STREAMING RISPOSTA =========
+    const answerEl = $("#answer");
+    const caretEl  = $("#caret");
+
+    async function startAnswerStreaming(){
+      answerEl.textContent = "";
+      caretEl.style.display = "inline-block";
+
+      // Prova streaming SSE con action final-answer
+      try {
+        const resp = await fetch("/api/ask", {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({
+            action: "final-answer",
+            question,
+            answers,
+            lang,
+            periodo: prefs.periodo,
+            stile: prefs.stile,
+            stream: true,         // se supportato dal backend con SSE
+            maxChars: MAX_CHARS
+          })
+        });
+
+        const ctype = resp.headers.get("Content-Type") || "";
+        if (ctype.includes("text/event-stream")) {
+          const reader = resp.body.getReader();
+          const decoder = new TextDecoder();
+          let total = 0;
+          while (true) {
+            const {value, done} = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, {stream:true});
+            total += chunk.length;
+            answerEl.textContent += chunk;
+            if (total >= MAX_CHARS) break;
+          }
+          if (answerEl.textContent.length >= MAX_CHARS) {
+            answerEl.textContent = answerEl.textContent.slice(0, MAX_CHARS) + "…";
+          }
+          caretEl.style.display = "none";
+          return;
+        }
+        // Fallback a JSON
+        const data = await resp.json();
+        const text = (data.answer || "").toString();
+        await typewriter(answerEl, text, 12);
+        caretEl.style.display = "none";
+      } catch (e) {
+        console.error(e);
+        caretEl.style.display = "none";
+        answerEl.textContent = I18N.err;
+      }
+    }
+
+    function typewriter(el, text, delay=12){
+      const trimmed = text.length > MAX_CHARS ? (text.slice(0, MAX_CHARS) + "…") : text;
+      return new Promise(resolve=>{
+        let i=0;
+        (function tick(){
+          el.textContent = trimmed.slice(0,i);
+          i++;
+          if (i<=trimmed.length) setTimeout(tick, delay);
+          else resolve();
+        })();
+      });
+    }
+
+    // ========= CRONOLOGIA =========
+    const histWrap = $("#history");
+    const histList = $("#histList");
+
+    function loadHist(){
+      try{ return JSON.parse(LS.getItem("whatif_history") || "[]"); }
+      catch{ return []; }
+    }
+    function saveHist(entry){
+      const arr = loadHist();
+      arr.unshift(entry);
+      if (arr.length > 30) arr.pop();
+      LS.setItem("whatif_history", JSON.stringify(arr));
+    }
+    function renderHist(){
+      const arr = loadHist();
+      histList.innerHTML = "";
+      if (!arr.length){
+        histList.innerHTML = `<div class="muted">(vuota)</div>`;
+        return;
+      }
+      arr.forEach((x,i)=>{
+        const div = document.createElement("div");
+        div.className = "hist-card";
+        div.innerHTML = `
+          <div class="muted">${new Date(x.t).toLocaleString()}</div>
+          <div style="margin-top:6px"><strong>${lang==='en'?'Question':'Domanda'}:</strong> ${escapeHtml(x.q)}</div>
+          <div style="margin-top:6px"><strong>${lang==='en'?'Answer':'Risposta'}:</strong> ${escapeHtml(x.a)}</div>
+          <div class="muted" style="margin-top:6px">periodo: ${x.periodo} – stile: ${x.stile}</div>
+          <div class="row" style="margin-top:8px">
+            <button class="chip" data-act="replay" data-i="${i}">${lang==='en'?'Replay':'Riesegui'}</button>
+            <button class="chip" data-act="use"    data-i="${i}">${lang==='en'?'Use question':'Usa domanda'}</button>
+            <button class="chip" data-act="del"    data-i="${i}" style="background:#3a0e12;border:1px solid #5b1a20">Elimina</button>
+          </div>
+        `;
+        histList.appendChild(div);
+      });
+    }
+    histList.addEventListener("click",(e)=>{
+      const b = e.target.closest("button[data-act]"); if(!b) return;
+      const act = b.dataset.act, i = +b.dataset.i;
+      const arr = loadHist(), it = arr[i]; if(!it) return;
+      if (act === "replay"){
+        LS.setItem("whatif_last_question", it.q);
+        question = it.q;
+        $("#qText").textContent = question;
+        // reset e rilancio con nuove followup (o vecchie se vuoi)
+        followups = []; answers = []; idx = 0;
+        $("#qaBox").style.display = "block";
+        fetchFollowUpsIfNeeded().then(renderFollowup);
+      } else if (act === "use"){
+        LS.setItem("whatif_last_question", it.q);
+        question = it.q;
+        $("#qText").textContent = question;
+        window.scrollTo({top:0,behavior:"smooth"});
+      } else if (act === "del"){
+        arr.splice(i,1);
+        LS.setItem("whatif_history", JSON.stringify(arr));
+        renderHist();
+      }
+    });
+    function escapeHtml(s){ return (s||"").replace(/[&<>"]/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c])); }
+
+    // bottoni azione
+    $("#regen").addEventListener("click", ()=>{
+      answers = []; idx = 0;
+      $("#qaBox").style.display = "block";
+      fetchFollowUpsIfNeeded().then(renderFollowup);
+    });
+    $("#saveHist").addEventListener("click", ()=>{
+      const a = $("#answer").textContent.trim();
+      if (!a) return;
+      saveHist({ t:Date.now(), q:question, a, periodo:prefs.periodo||"", stile:prefs.stile||"", lang });
+      const orig = $("#saveHist").textContent;
+      $("#saveHist").textContent = I18N.saved;
+      setTimeout(()=> $("#saveHist").textContent = orig, 1200);
+    });
+    $("#seeHist").addEventListener("click", ()=>{
+      histWrap.style.display = (histWrap.style.display === "none") ? "block" : "none";
+      if (histWrap.style.display === "block") renderHist();
+    });
+
+    // Condivisione nativa se disponibile
+    $("#shareBtn").addEventListener("click", async ()=>{
+      const text = `${I18N.shareText}\n\nQ: ${question}\n\nA: ${$("#answer").textContent}`;
+      try{
+        if (navigator.share) {
+          await navigator.share({ text });
+        } else {
+          await navigator.clipboard.writeText(text);
+          alert(lang==='en'?'Copied to clipboard!':'Copiato negli appunti!');
+        }
+      }catch{}
+    });
+
+    // ========= AVVIO =========
+    (async function init(){
+      // prepara le follow-up (se non già presenti in LS)
+      await fetchFollowUpsIfNeeded();
+      renderFollowup();
+    })();
   </script>
 </body>
 </html>
