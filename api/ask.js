@@ -1,101 +1,104 @@
-// /api/ask.js
-export const config = { runtime: 'edge' };
+// api/ask.js — Vercel Serverless Function (Node.js)
 
-function json(status, obj){ return new Response(JSON.stringify(obj), { status, headers: { 'content-type':'application/json' } }); }
-
-// quick options per i chip
-const QUICK_TONE = ['Breve', 'Dettagliata', 'Pratica'];
-const QUICK_SCOPE = ['Solo vita personale', 'Solo lavoro/studio', 'Entrambe'];
-const QUICK_HORIZON = ['1-3 mesi', '6-12 mesi', '2-3 anni'];
-
-// Helper: se c'è OPENAI_API_KEY usa OpenAI
-async function openaiChat(messages, mode='whatif'){
-  const apiKey = process.env.OPENAI_API_KEY;
-  if(!apiKey) return null; // nessuna chiave → caller gestirà fallback
-  const sys = mode==='wtf'
-    ? "Sei un assistente creativo/ironico. Rispondi con tono brillante ma coerente e utile."
-    : "Sei un assistente riflessivo e realistico. Fornisci risposte plausibili, concrete e sintetiche.";
-  const payload = {
-    model: "gpt-4o-mini", // puoi cambiare in gpt-4o o 3.5-turbo se preferisci
-    messages: [{role:"system", content:sys}, ...messages],
-    temperature: mode==='wtf' ? 0.9 : 0.6,
-    max_tokens: 350
-  };
-  const r = await fetch("https://api.openai.com/v1/chat/completions",{
-    method:"POST",
-    headers:{ "authorization":"Bearer "+apiKey, "content-type":"application/json" },
-    body: JSON.stringify(payload)
-  });
-  if(!r.ok) throw new Error("OpenAI error");
-  const data = await r.json();
-  const content = data.choices?.[0]?.message?.content?.trim() || "";
-  return content;
-}
-
-export default async function handler(req) {
-  if (req.method !== 'POST') return json(405,{error:'Method not allowed'});
-  let body = {}; try { body = await req.json(); } catch { return json(400,{error:'Bad JSON'}); }
-
-  const { action, sessionId, question, turn, transcript, period, mode, profile } = body || {};
-  const MODE = mode || 'whatif';
-
-  // 1) Avvio chiarimento
-  if (action === 'clarify_start') {
-    const q = (question||'').toLowerCase();
-    let prompt = '';
-    let quick = null;
-    if (q.includes('lavor') || q.includes('carriera')) {
-      prompt = 'Per capire meglio: settore/ruolo e orizzonte temporale che hai in mente?';
-      quick = ['Settore attuale','Cambio settore','Manageriale','Autonomo/freelance'];
-    } else if (q.includes('relaz') || q.includes('amore')) {
-      prompt = 'Preferisci un taglio più riflessivo o pratico? Ti concentri sui prossimi mesi o più avanti?';
-      quick = ['Riflessivo, prossimi mesi','Pratico, prossimi mesi','Riflessivo, lungo termine','Pratico, lungo termine'];
-    } else {
-      prompt = 'Vuoi una risposta breve/pratica o più articolata con alternative?';
-      quick = QUICK_TONE;
-    }
-    return json(200,{ prompt, quick });
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // 2) Turni successivi
-  if (action === 'clarify_next') {
-    const t = Number(turn||1);
-
-    // se abbiamo già 2 turni → genera risposta finale
-    if (t >= 2) {
-      const baseQ = transcript?.find(x=>x.role==='user')?.content || (question || 'la tua domanda');
-      // Prova con OpenAI se disponibile
-      try{
-        const messages = [
-          { role:'user', content:
-            `Domanda: ${baseQ}\nPeriodo: ${period==='past'?'Passato':'Futuro'}\nStile: ${MODE==='wtf'?'What the F (ironico)':'What if (plausibile)'}\nProfilo utente (facoltativo): ${JSON.stringify(profile||{})}\n` +
-            `Scrivi una risposta breve (5–7 righe), personale, con percentuale motivata alla fine (es. "68% perché...").`
-          }
-        ];
-        const answer = await openaiChat(messages, MODE);
-        if (answer) return json(200,{ done:true, answer });
-      }catch(_){ /* fallback sotto */ }
-
-      // Fallback demo (senza chiave)
-      const pLabel = period==='past' ? 'ipotizzando come sarebbe potuto andare' : 'ipotizzando cosa potrebbe accadere';
-      const tone = MODE==='wtf'
-        ? 'Tono creativo/ironico, con un twist inaspettato ma utile.'
-        : 'Tono realistico e plausibile, con passi concreti.';
-      const answer =
-        `Scenario ${pLabel} partendo da “${baseQ}”. ${tone} `
-        + `Valutando contesto e preferenze, una traiettoria coerente emerge con buone chance di risultato. `
-        + `Probabilità stimata: 68% perché alcuni fattori chiave giocano a favore, a fronte di rischi gestibili.`;
-      return json(200,{ done:true, answer });
-    }
-
-    // t === 1 → seconda domanda
-    if (t === 1) {
-      return json(200,{ done:false, prompt:'Inquadriamo il contesto: vita personale, lavoro/studio o entrambi?', quick: QUICK_SCOPE });
-    }
-
-    // t === 2 → (non dovremmo arrivare) ma mettiamo un’ultima
-    return json(200,{ done:false, prompt:'Ultimo dettaglio: su quale orizzonte temporale vuoi che mi concentri?', quick: QUICK_HORIZON });
+  if (!process.env.OPENAI_API_KEY) {
+    return res.status(500).json({ error: 'Missing OPENAI_API_KEY' });
   }
 
-  return json(400,{error:'Unknown action'});
+  // Leggi body in modo robusto
+  let body = req.body;
+  if (!body || typeof body === 'string') {
+    try { body = JSON.parse(body || '{}'); } catch { body = {}; }
+  }
+
+  const {
+    lang = 'it',
+    period = 'future',    // 'past' | 'future'
+    style = 'whatif',     // 'whatif' | 'wtf'
+    question = '',
+    profile = {}
+  } = body;
+
+  if (!question || typeof question !== 'string') {
+    return res.status(400).json({ error: 'Bad request: question required' });
+  }
+
+  const isEN = (lang || 'it').toLowerCase() === 'en';
+  const tone = style === 'wtf'
+    ? (isEN
+        ? 'Answer with imaginative, ironic, slightly surreal humor—but be kind and safe. Short lively paragraphs, concrete ideas.'
+        : 'Rispondi in modo immaginativo, ironico e un po’ surreale — sempre gentile e sicuro. Paragrafi brevi, idee concrete.')
+    : (isEN
+        ? 'Answer realistically and constructively, using plausible steps and coherent reasoning. Friendly and concise.'
+        : 'Rispondi in modo realistico e costruttivo, con passi plausibili e ragionamento coerente. Tono amichevole e conciso.');
+
+  const periodHint = isEN
+    ? (period === 'past'
+        ? 'Focus on plausible alternative past outcomes and downstream effects to the present.'
+        : 'Project a plausible near-future trajectory with actionable steps and risks.')
+    : (period === 'past'
+        ? 'Concentrati su esiti alternativi plausibili del passato e sugli effetti fino al presente.'
+        : 'Proietta una traiettoria plausibile di futuro prossimo con passi concreti e rischi.');
+
+  const sys = `${tone}
+${periodHint}
+Keep safety; avoid medical/legal/financial advice. Return in ${isEN ? 'English' : 'Italiano'}.
+When helpful, end with 3 actionable next steps. If possible, estimate a rough likelihood and key factors.`;
+
+  const { who, age, stage, city, extra } = profile || {};
+  const contextParts = [];
+  if (who)  contextParts.push(isEN ? `I am ${who}` : `Sono ${who}`);
+  if (age)  contextParts.push(isEN ? `age ${age}` : `età ${age}`);
+  if (stage)contextParts.push(isEN ? `stage: ${stage}` : `fase: ${stage}`);
+  if (city) contextParts.push(isEN ? `from ${city}` : `da ${city}`);
+  if (extra)contextParts.push(extra);
+  const profileLine = contextParts.length
+    ? (isEN ? 'Context: ' : 'Contesto: ') + contextParts.join(', ')
+    : '';
+
+  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const temperature = style === 'wtf' ? 0.9 : 0.5;
+
+  try {
+    const apiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model,
+        temperature,
+        messages: [
+          { role: 'system', content: sys },
+          { role: 'user', content: `${profileLine}\nQuestion: ${question}`.trim() }
+        ]
+      })
+    });
+
+    if (!apiRes.ok) {
+      const detail = await apiRes.text().catch(()=>'');
+      return res.status(500).json({ error: 'OpenAI error', detail });
+    }
+
+    const data = await apiRes.json();
+    const answer = data?.choices?.[0]?.message?.content?.trim() || '';
+
+    return res.status(200).json({
+      ok: true,
+      model,
+      lang,
+      period,
+      style,
+      answer
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Server error' });
+  }
 }
