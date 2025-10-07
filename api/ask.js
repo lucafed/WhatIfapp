@@ -1,104 +1,105 @@
-// api/ask.js — Vercel Serverless Function (Node.js)
+// /api/ask.js
+import OpenAI from "openai";
+
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// Modello consigliato (puoi cambiarlo da env con OPENAI_MODEL)
+const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+
+// Metti a true se vuoi risposte finte per test locali
+const USE_MOCK = false;
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return res.status(405).json({ error: 'Method Not Allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
-
-  if (!process.env.OPENAI_API_KEY) {
-    return res.status(500).json({ error: 'Missing OPENAI_API_KEY' });
-  }
-
-  // Leggi body in modo robusto
-  let body = req.body;
-  if (!body || typeof body === 'string') {
-    try { body = JSON.parse(body || '{}'); } catch { body = {}; }
-  }
-
-  const {
-    lang = 'it',
-    period = 'future',    // 'past' | 'future'
-    style = 'whatif',     // 'whatif' | 'wtf'
-    question = '',
-    profile = {}
-  } = body;
-
-  if (!question || typeof question !== 'string') {
-    return res.status(400).json({ error: 'Bad request: question required' });
-  }
-
-  const isEN = (lang || 'it').toLowerCase() === 'en';
-  const tone = style === 'wtf'
-    ? (isEN
-        ? 'Answer with imaginative, ironic, slightly surreal humor—but be kind and safe. Short lively paragraphs, concrete ideas.'
-        : 'Rispondi in modo immaginativo, ironico e un po’ surreale — sempre gentile e sicuro. Paragrafi brevi, idee concrete.')
-    : (isEN
-        ? 'Answer realistically and constructively, using plausible steps and coherent reasoning. Friendly and concise.'
-        : 'Rispondi in modo realistico e costruttivo, con passi plausibili e ragionamento coerente. Tono amichevole e conciso.');
-
-  const periodHint = isEN
-    ? (period === 'past'
-        ? 'Focus on plausible alternative past outcomes and downstream effects to the present.'
-        : 'Project a plausible near-future trajectory with actionable steps and risks.')
-    : (period === 'past'
-        ? 'Concentrati su esiti alternativi plausibili del passato e sugli effetti fino al presente.'
-        : 'Proietta una traiettoria plausibile di futuro prossimo con passi concreti e rischi.');
-
-  const sys = `${tone}
-${periodHint}
-Keep safety; avoid medical/legal/financial advice. Return in ${isEN ? 'English' : 'Italiano'}.
-When helpful, end with 3 actionable next steps. If possible, estimate a rough likelihood and key factors.`;
-
-  const { who, age, stage, city, extra } = profile || {};
-  const contextParts = [];
-  if (who)  contextParts.push(isEN ? `I am ${who}` : `Sono ${who}`);
-  if (age)  contextParts.push(isEN ? `age ${age}` : `età ${age}`);
-  if (stage)contextParts.push(isEN ? `stage: ${stage}` : `fase: ${stage}`);
-  if (city) contextParts.push(isEN ? `from ${city}` : `da ${city}`);
-  if (extra)contextParts.push(extra);
-  const profileLine = contextParts.length
-    ? (isEN ? 'Context: ' : 'Contesto: ') + contextParts.join(', ')
-    : '';
-
-  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
-  const temperature = style === 'wtf' ? 0.9 : 0.5;
 
   try {
-    const apiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model,
-        temperature,
-        messages: [
-          { role: 'system', content: sys },
-          { role: 'user', content: `${profileLine}\nQuestion: ${question}`.trim() }
-        ]
-      })
-    });
+    const { lang = "it", periodo, stile, question, persona } = req.body || {};
 
-    if (!apiRes.ok) {
-      const detail = await apiRes.text().catch(()=>'');
-      return res.status(500).json({ error: 'OpenAI error', detail });
+    // Validazioni minime
+    if (!question || typeof question !== "string") {
+      return res.status(400).json({ error: "Bad request: question required" });
+    }
+    if (!["past", "future"].includes(periodo || "")) {
+      return res.status(400).json({ error: "Bad request: periodo must be past|future" });
+    }
+    if (!["whatif", "wtf"].includes(stile || "")) {
+      return res.status(400).json({ error: "Bad request: stile must be whatif|wtf" });
+    }
+    if (!["it", "en"].includes((lang || "").toLowerCase())) {
+      return res.status(400).json({ error: "Bad request: lang must be it|en" });
     }
 
-    const data = await apiRes.json();
-    const answer = data?.choices?.[0]?.message?.content?.trim() || '';
+    if (USE_MOCK) {
+      return res.json({
+        ok: true,
+        model: "mock",
+        lang, periodo, stile, question,
+        result: {
+          title: stile === "whatif"
+            ? (lang === "it" ? "Scenario plausibile" : "Plausible scenario")
+            : (lang === "it" ? "Scenario ironico" : "Ironic scenario"),
+          summary: lang === "it"
+            ? "Risposta di test (mock)."
+            : "Test (mock) response.",
+          steps: [],
+          probability: 0.68,
+          disclaimer: lang === "it"
+            ? "Contenuti generati automaticamente, non sono consigli professionali."
+            : "AI-generated content, not professional advice."
+        }
+      });
+    }
 
-    return res.status(200).json({
+    const sysIt = `
+Sei l'AI di What?f. Rispondi in italiano.
+- "whatif": tono realistico e plausibile con 4–6 passi concreti.
+- "wtf": tono ironico/surreale ma utile e benevolo.
+- "past": come sarebbe potuto andare; "future": cosa potrebbe accadere.
+- Personalizza con eventuale "persona".
+- Restituisci JSON: {title, summary, steps[], probability(0..1), disclaimer}.
+Non fornire consigli medici/legali/finanziari.
+`;
+    const sysEn = `
+You are What?f's AI. Reply in English.
+- "whatif": realistic & plausible with 4–6 concrete steps.
+- "wtf": playful/ironic, surreal yet helpful.
+- "past": what could have happened; "future": what could happen.
+- Personalize using "persona" if present.
+- Return JSON: {title, summary, steps[], probability(0..1), disclaimer}.
+No medical/legal/financial advice.
+`;
+
+    const system = lang === "it" ? sysIt : sysEn;
+    const user = {
+      role: "user",
+      content:
+        (lang === "it"
+          ? `Periodo: ${periodo}. Stile: ${stile}. Domanda: ${question}.`
+          : `Period: ${periodo}. Style: ${stile}. Question: ${question}.`) +
+        (persona ? (lang === "it" ? ` Persona: ${persona}.` : ` Persona: ${persona}.`) : "")
+    };
+
+    const completion = await client.chat.completions.create({
+      model: MODEL,
+      temperature: stile === "wtf" ? 0.9 : 0.6,
+      response_format: { type: "json_object" },
+      messages: [{ role: "system", content: system }, user]
+    });
+
+    const content = completion.choices?.[0]?.message?.content || "{}";
+    let parsed;
+    try { parsed = JSON.parse(content); } catch { parsed = { summary: content }; }
+
+    return res.json({
       ok: true,
-      model,
-      lang,
-      period,
-      style,
-      answer
+      model: MODEL,
+      lang, periodo, stile, question,
+      result: parsed
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'Server error' });
+    return res.status(500).json({ error: "AI error", detail: String(err?.message || err) });
   }
 }
