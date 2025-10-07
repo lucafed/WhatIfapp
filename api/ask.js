@@ -11,42 +11,35 @@ export default async function handler(req, res) {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
 
-    // === BODY ===
     const {
-      question,
-      domanda,
-      lang = "it",
-      periodo,       // "past" | "future" (da index.html)
-      stile,         // "whatif" | "wtf"
-      stream,
-      profile,       // { gender, age, phase, where, who, more } (second.html)
-      archetypes,    // { Ricercatore: 78, ... } (third.html normalizzati 0–100)
-      structured,    // opzionale: se true ritorna JSON con 3 bivi
+      question, domanda, lang = "it",
+      periodo, stile, stream,
+      profile, archetypes, anchors, // 👈 NEW: anchors {place, person, memory}
+      structured
     } = req.body || {};
 
     const q = (question || domanda || "").toString().trim();
     if (!q) return res.status(400).json({ error: "question required" });
 
-    // === TONO / TEMPO ===
     const time =
       periodo === "past"
         ? (lang === "en" ? "the past (what if)" : "il passato (what if)")
         : (lang === "en" ? "the near future (plausible what if)" : "il prossimo futuro (what if plausibile)");
 
-    // profilo/archetipi (sanificazione minima)
-    const safeProfile = typeof profile === "object" && profile ? profile : {};
-    const safeArche  = typeof archetypes === "object" && archetypes ? archetypes : {};
+    const safeProfile = (typeof profile === "object" && profile) ? profile : {};
+    const safeArche   = (typeof archetypes === "object" && archetypes) ? archetypes : {};
+    const safeAnch    = (typeof anchors === "object" && anchors) ? anchors : {};
 
     const profileLine =
       lang === "en"
-        ? `User profile (free text fields may be empty): ${JSON.stringify({
+        ? `User profile (some fields may be empty): ${JSON.stringify({
             gender: safeProfile.gender || null,
             age: safeProfile.age || null,
             phase: safeProfile.phase || null,
             where: safeProfile.where || null,
             who: safeProfile.who || null,
           })}.`
-        : `Profilo utente (alcuni campi potrebbero essere vuoti): ${JSON.stringify({
+        : `Profilo utente (alcuni campi possono essere vuoti): ${JSON.stringify({
             gender: safeProfile.gender || null,
             age: safeProfile.age || null,
             phase: safeProfile.phase || null,
@@ -59,18 +52,36 @@ export default async function handler(req, res) {
         ? `Psychological archetypes (0–100): ${JSON.stringify(safeArche)}.`
         : `Archetipi psicologici (0–100): ${JSON.stringify(safeArche)}.`;
 
+    const anchorLine = (safeAnch.place || safeAnch.person || safeAnch.memory)
+      ? (lang === "en"
+          ? `Personal anchors: ${JSON.stringify({
+              place: safeAnch.place || null,
+              person: safeAnch.person || null,
+              memory: safeAnch.memory || null,
+            })}.`
+          : `Ancore personali: ${JSON.stringify({
+              place: safeAnch.place || null,
+              person: safeAnch.person || null,
+              memory: safeAnch.memory || null,
+            })}.`)
+      : "";
+
     // === PROMPT ===
     let systemPrompt;
     if (stile === "wtf") {
       systemPrompt =
         lang === "en"
-          ? `You are What?f in WTF mode. Write like a witty friend at a bar: light, playful, with 2–3 punchlines. Keep it kind and non-offensive (no slurs/hate). Avoid humiliation. Use vivid, funny comparisons and an upbeat rhythm. 120–180 words. Make it clearly about ${time} and still coherent with the user's profile and archetypes.`
+          ? `You are What?f in WTF mode. Write like a witty friend at a bar: light, playful, with 2–3 punchlines. Be kind and non-offensive (no slurs/hate). Avoid humiliation. Use vivid, funny comparisons and an upbeat rhythm. 120–180 words. Make it clearly about ${time} and still coherent with the user's profile and archetypes.`
           : `Sei What?f in modalità WTF. Scrivi come un amico al bar: leggero, brillante, con 2–3 battute. Gentile e non offensivo (no insulti/odio). Evita umiliazioni. Usa paragoni divertenti e ritmo vivace. 120–180 parole. Indica chiaramente che parli del ${time} e resta coerente con profilo e archetipi dell’utente.`;
     } else {
+      // Tono realistico: se è PASSATO, chiediamo ancoraggio forte a luogo/persona/ricordo + sensorialità e motivazioni
+      const pastBoost_en = `If it's about the past, weave the 'personal anchors' concretely (place/person/memory) with sensory details (sounds, smells, textures), precise time markers (years/seasons), and an inner motivation line that explains why choices felt inevitable for THIS person.`;
+      const pastBoost_it = `Se parli del passato, intreccia in modo concreto le 'ancore personali' (luogo/persona/ricordo) con dettagli sensoriali (suoni, odori, consistenze), marcatori temporali precisi (anni/stagioni) e una linea motivazionale interiore che spieghi perché quelle scelte erano quasi inevitabili per QUESTA persona.`;
+
       systemPrompt =
         lang === "en"
-          ? `You are What?f. Generate a concise scenario in ${time}, with a realistic, reflective, concrete tone. Be clear, safe and helpful. Aim for ~120–180 words. The scenario must be psychologically coherent with the user's profile and archetypes. Prefer plausible, concrete dynamics over vague fluff.`
-          : `Sei What?f. Genera uno scenario conciso nel ${time}, con un tono realistico, riflessivo e concreto. Sii chiaro, sicuro e utile. ~120–180 parole. Lo scenario deve essere psicologicamente coerente con profilo e archetipi. Prediligi dinamiche plausibili e concrete.`;
+          ? `You are What?f. Generate a concise scenario in ${time}, with a realistic, reflective, concrete tone. Be clear, safe and helpful. Aim for ~120–180 words. The scenario must be psychologically coherent with the user's profile and archetypes. Prefer plausible, concrete dynamics over vague fluff. ${pastBoost_en}`
+          : `Sei What?f. Genera uno scenario conciso nel ${time}, con un tono realistico, riflessivo e concreto. Sii chiaro, sicuro e utile. ~120–180 parole. Lo scenario deve essere psicologicamente coerente con profilo e archetipi. Prediligi dinamiche plausibili e concrete. ${pastBoost_it}`;
     }
 
     if (structured === true) {
@@ -82,14 +93,12 @@ export default async function handler(req, res) {
 
     const userPrompt =
       lang === "en"
-        ? `User question: ${q}\n${profileLine}\n${archeLine}`
-        : `Domanda dell'utente: ${q}\n${profileLine}\n${archeLine}`;
+        ? `User question: ${q}\n${profileLine}\n${archeLine}\n${anchorLine}`
+        : `Domanda dell'utente: ${q}\n${profileLine}\n${archeLine}\n${anchorLine}`;
 
     const client = new OpenAI({ apiKey });
     const wantsStream =
-      stream === true ||
-      req.query?.stream === "1" ||
-      req.headers["x-whatif-stream"] === "1";
+      stream === true || req.query?.stream === "1" || req.headers["x-whatif-stream"] === "1";
 
     const temperature = stile === "wtf" ? 0.9 : 0.6;
     const MAX_TOKENS = 350;
@@ -140,11 +149,10 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       model: "gpt-4o-mini",
-      lang,
-      periodo,
-      stile,
+      lang, periodo, stile,
       profile: safeProfile,
       archetypes: safeArche,
+      anchors: safeAnch,
       structured: !!structured,
       answer: text,
     });
