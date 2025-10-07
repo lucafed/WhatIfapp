@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test AI – What?f</title>
+  <style>
+    body { font-family: sans-serif; background:#0A0F14; color:white; padding:20px; }
+    input, button { font-size:1rem; padding:10px; margin-top:10px; width:100%; border-radius:8px; border:none; }
+    button { background:#00E0FF; color:#000; font-weight:bold; }
+    pre { background:#141C22; padding:15px; border-radius:8px; overflow:auto; }
+  </style>
+</head>
+<body>
+  <h2>🔍 Test connessione AI</h2>
+  <input id="q" placeholder="Scrivi una domanda...">
+  <button id="btn">Invia alla AI</button>
+  <pre id="out"></pre>
+
+  <script>
+    const out = document.getElementById('out');
+    document.getElementById('btn').addEventListener('click', async () => {
+      const question = document.getElementById('q').value.trim();
+      if (!question) return alert('Scrivi una domanda');
+      out.textContent = '⏳ Attendere risposta...';
+      try {
+        const res = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lang: 'it',
+            periodo: 'future',
+            stile: 'whatif',
+            question
+          })
+        });
+        const data = await res.json();
+        out.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        out.textContent = '❌ Errore: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
