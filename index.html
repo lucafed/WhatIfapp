@@ -3,86 +3,112 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – Home</title>
+  <title>What?f — Home</title>
   <meta name="theme-color" content="#0A0F14" />
+  <!-- Preload ero: se non viene usata subito, nessun problema -->
   <link rel="preload" as="image" href="/home-hero.png" />
   <style>
     :root{
       --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA;
+      --card:#101922; --chip:#141C22;
       --accent:#00E0FF; --accent-dark:#00B5CC;
+      --accent-ink:#001f26;
     }
     *{box-sizing:border-box}
     html,body{
-      height:100%;margin:0;background:var(--bg);color:var(--fg);
+      height:100%; margin:0; background:var(--bg); color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
       overflow-x:hidden;
     }
     main{
-      min-height:100%;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;
-      text-align:center;padding:20px;gap:14px;transition:opacity .4s ease;
-      padding-bottom: 140px; /* spazio per footer fisso */
+      min-height:100%;
+      display:flex; flex-direction:column; align-items:center; text-align:center;
+      padding:20px; gap:14px;
+      /* spazio extra in basso per non sovrapporre il footer alla CTA */
+      padding-bottom:120px;
     }
 
-    /* Immagine */
-    .hero-img{width:min(92vw,560px);height:auto;display:block;margin:0 auto 6px;
-      filter:drop-shadow(0 10px 28px rgba(0,0,0,.45))}
+    /* Hero */
+    .hero-img{
+      width:min(92vw,560px); height:auto; display:block; margin:0 auto 6px;
+      filter:drop-shadow(0 10px 28px rgba(0,0,0,.45))
+    }
 
-    /* Titolo + lead */
-    h1{margin:.25rem 0 0;font-size:clamp(28px,5.5vw,44px);line-height:1.1}
+    /* Titoli & lead */
+    h1{margin:.25rem 0 0; font-size:clamp(28px,5.5vw,44px); line-height:1.1}
     h1 span{color:var(--accent)}
-    .lead{max-width:680px;font-size:clamp(15px,4vw,18px);color:var(--muted);
-      line-height:1.5;margin:4px auto 16px}
+    .lead{
+      max-width:680px; font-size:clamp(15px,4vw,18px); color:var(--muted);
+      line-height:1.55; margin:4px auto 16px;
+    }
 
     /* Scelte */
-    .group{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:6px}
-    .chip{appearance:none;border:none;background:#141C22;color:#cfe3e7;
-      padding:12px 16px;border-radius:16px;font-weight:700;cursor:pointer;
-      transition:transform .08s ease,background .16s ease}
+    .group{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:6px}
+    .chip{
+      appearance:none; border:none; background:var(--chip); color:#cfe3e7;
+      padding:12px 16px; border-radius:16px; font-weight:700; cursor:pointer;
+      transition:transform .08s ease, background .16s ease, box-shadow .16s ease;
+    }
     .chip:active{transform:translateY(1px)}
-    .chip.selected{background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#001f26}
+    .chip.selected{
+      background:linear-gradient(180deg,var(--accent),var(--accent-dark));
+      color:var(--accent-ink); box-shadow:0 0 0 1px rgba(0,224,255,.35) inset;
+    }
 
     /* CTA */
-    .cta{display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent-dark));
-      color:#001f26;font-weight:800;border:none;border-radius:24px;padding:14px 20px;
+    .cta{
+      display:inline-block;
+      background:linear-gradient(180deg,var(--accent),var(--accent-dark));
+      color:var(--accent-ink); font-weight:800; border:none; border-radius:24px;
+      padding:14px 20px;
       box-shadow:0 0 14px rgba(0,181,204,.5),0 0 28px rgba(0,181,204,.25);
-      cursor:pointer;transition:.2s;margin-top:6px}
-    .cta[disabled]{opacity:.4;cursor:not-allowed}
-
-    /* Footer fisso */
-    footer{
-      position:fixed; bottom:10px; left:0; right:0;
-      text-align:center; color:var(--muted); font-size:12px;
-      padding: 8px 12px;
-      background: linear-gradient(180deg, rgba(10,15,20,0) 0%, rgba(10,15,20,.7) 35%, rgba(10,15,20,1) 100%);
+      cursor:pointer; transition:.2s
     }
-    footer a{color:var(--accent);text-decoration:none}
+    .cta[disabled]{opacity:.4; cursor:not-allowed}
 
-    /* Selettore lingua (solo Home) */
-    .lang-fab{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);right:14px;z-index:60}
-    .lang-btn{appearance:none;border:1px solid #1d2b34;background:#0f1820;color:#E6F2F5;
-      padding:10px 12px;border-radius:999px;cursor:pointer}
-    .lang-menu{position:absolute;top:46px;right:0;background:#101922;border:1px solid #1d2b34;
-      border-radius:12px;padding:8px;display:none;min-width:160px;box-shadow:0 12px 28px rgba(0,0,0,.35)}
-    .lang-menu button{display:block;width:100%;text-align:left;background:transparent;border:none;
-      color:#E6F2F5;padding:10px;border-radius:10px;cursor:pointer}
+    /* Lingua (solo Home) */
+    .lang-fab{position:fixed; top:calc(env(safe-area-inset-top,0px) + 14px); right:14px; z-index:50}
+    .lang-btn{
+      appearance:none; border:1px solid #1d2b34; background:#0f1820; color:#E6F2F5;
+      padding:10px 12px; border-radius:999px; cursor:pointer
+    }
+    .lang-menu{
+      position:absolute; top:46px; right:0; background:var(--card); border:1px solid #1d2b34;
+      border-radius:12px; padding:8px; display:none; min-width:170px;
+      box-shadow:0 12px 28px rgba(0,0,0,.35)
+    }
+    .lang-menu button{
+      display:block; width:100%; text-align:left; background:transparent; border:none;
+      color:#E6F2F5; padding:10px; border-radius:10px; cursor:pointer
+    }
     .lang-menu button.active{background:#14222b}
+
+    /* Footer */
+    footer{
+      position:fixed; left:0; right:0; bottom:10px; text-align:center;
+      color:var(--muted); font-size:12px; padding:0 14px;
+    }
+    footer a{
+      color:var(--accent); text-decoration:none; font-weight:600;
+    }
+    footer .sep{opacity:.6; margin:0 6px}
+
+    /* piccolo layout per link + info */
+    .foot-links{
+      display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
+      margin-top:6px;
+    }
+    .info-btn{
+      background:#0f1820; border:1px solid #1f2a33; color:#E6F2F5;
+      border-radius:999px; padding:6px 10px; font-weight:700; text-decoration:none;
+    }
   </style>
 </head>
 <body>
-  <!-- Se arrivo da pagine legali, salta l’intro -->
-  <script>
-    try {
-      if (localStorage.getItem('forceSkipIntro') === '1') {
-        localStorage.setItem('introSeen','1');
-        localStorage.removeItem('forceSkipIntro');
-      }
-    } catch(e) {}
-  </script>
-
   <!-- Selettore lingua SOLO qui -->
   <div class="lang-fab" id="langFab">
-    <button class="lang-btn" id="langToggle" aria-haspopup="true" aria-expanded="false">🌐</button>
+    <button class="lang-btn" id="langToggle" aria-haspopup="true" aria-expanded="false" aria-label="Change language">🌐</button>
     <div class="lang-menu" id="langMenu" role="menu" aria-label="language">
       <button data-lang="it">Italiano</button>
       <button data-lang="en">English</button>
@@ -94,6 +120,7 @@
 
     <h1><span data-i18n="title">Scopri il tuo What?f</span></h1>
 
+    <!-- Frase corretta -->
     <p class="lead" id="leadText"></p>
 
     <!-- Scelte -->
@@ -109,96 +136,101 @@
     <button id="go" class="cta" disabled data-i18n="next">Avanti</button>
   </main>
 
-  <footer>© 2025 What?f · 
-    <a class="legal-link" href="privacy.html">Privacy</a> · 
-    <a class="legal-link" href="terms.html">Termini</a> · 
-    <a class="legal-link" href="about.html">Info</a>
+  <footer>
+    © 2025 What?f
+    <div class="foot-links">
+      <a href="privacy.html" data-i18n="privacy">Privacy</a>
+      <span class="sep">·</span>
+      <a href="terms.html" data-i18n="terms">Termini</a>
+      <span class="sep">·</span>
+      <a class="info-btn" href="about.html" id="aboutLink"><span data-i18n="info">Info</span></a>
+    </div>
   </footer>
 
   <!-- Caricamento robusto immagine -->
   <script>
     (async function loadHero(){
-      const hero=document.getElementById('hero');
-      const tries=['/home-hero.png','/public/home-hero.png','/assets/home-hero.png'];
-      for(const u of tries){
-        try{const r=await fetch(u,{cache:'no-store'});if(r.ok){hero.src=u+'?v='+Date.now();return;}}catch(e){}
+      const hero = document.getElementById('hero');
+      const candidates = ['/home-hero.png','/public/home-hero.png'];
+      for (const u of candidates){
+        try{
+          const r = await fetch(u,{cache:'no-store', method:'GET'});
+          if (r.ok){ hero.src = u + '?v=' + Date.now(); return; }
+        }catch(e){}
       }
+      // fallback “nascosto” se proprio non trova nulla (evita layout rotto)
+      hero.style.display='none';
     })();
   </script>
 
-  <!-- Dizionario lingua -->
+  <!-- i18n (solo Home imposta la lingua per TUTTE le pagine) -->
   <script>
     const DICT = {
-      it: {
-        title: "Scopri il tuo What?f",
-        lead: "Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro. <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili. <strong>What the F</strong> ti farà vivere visioni ironiche, creative e imprevedibili.",
-        past: "Passato",
-        future: "Futuro",
-        whatif: "What if",
-        wtf: "What the F",
-        next: "Avanti"
+      it:{
+        title:"Scopri il tuo What?f",
+        lead:"Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro. <strong>What if</strong> ti fa esplorare scenari realistici e riflessivi, basati su scelte plausibili. <strong>What the F</strong> ti farà vivere visioni ironiche, creative e imprevedibili.",
+        past:"Passato", future:"Futuro", whatif:"What if", wtf:"What the F",
+        next:"Avanti", privacy:"Privacy", terms:"Termini", info:"Info"
       },
-      en: {
-        title: "Discover your What?f",
-        lead: "Imagine the choice you didn’t make… and the one you could make. Choose whether to look to the past or the future. <strong>What if</strong> explores realistic, reflective scenarios based on plausible choices. <strong>What the F</strong> lets you experience ironic, creative and unpredictable visions.",
-        past: "Past",
-        future: "Future",
-        whatif: "What if",
-        wtf: "What the F",
-        next: "Next"
+      en:{
+        title:"Discover your What?f",
+        lead:"Imagine the choice you didn’t make… and the one you could make. Choose whether to look to the past or the future. <strong>What if</strong> explores realistic, reflective scenarios based on plausible choices. <strong>What the F</strong> lets you experience ironic, creative and unpredictable visions.",
+        past:"Past", future:"Future", whatif:"What if", wtf:"What the F",
+        next:"Next", privacy:"Privacy", terms:"Terms", info:"Info"
       }
     };
+
     const LS = localStorage;
     const $  = s => document.querySelector(s);
     const $$ = s => document.querySelectorAll(s);
 
     function getLang(){ return LS.getItem('lang') || 'it'; }
-    function setLang(l){
-      LS.setItem('lang', l);
-      applyLang(); // le altre pagine leggeranno la lingua all'apertura
-    }
+    function setLang(l){ LS.setItem('lang', l); applyLang(); }
+
     function applyLang(){
-      const L = getLang(), d = DICT[L] || DICT.it;
+      const L = getLang(), d = (DICT[L]||DICT.it);
       document.documentElement.lang = L;
+      // etichette semplici
       $$('[data-i18n]').forEach(el=>{
         const k = el.getAttribute('data-i18n');
-        if(d[k] && !el.matches('#leadText')) el.textContent = d[k];
+        if (k === 'lead') return; // la lead ha HTML
+        if (d[k]) el.textContent = d[k];
       });
+      // lead con <strong>
       $('#leadText').innerHTML = d.lead;
+      // attivi nel menu lingua
+      document.querySelectorAll('#langMenu button').forEach(b=>{
+        b.classList.toggle('active', b.dataset.lang === L);
+      });
     }
+
+    // init lingua
     if(!LS.getItem('lang')) LS.setItem('lang','it');
     applyLang();
 
     // widget lingua
-    (function(){
-      const fab=document.getElementById("langFab");
-      const btn=document.getElementById("langToggle");
-      const menu=document.getElementById("langMenu");
-      btn.addEventListener("click",()=>{
-        const open=menu.style.display==="block";
-        menu.style.display=open?"none":"block";
-        btn.setAttribute("aria-expanded",String(!open));
-        // evidenzia corrente
-        const L=getLang();
-        menu.querySelectorAll('button[data-lang]').forEach(b=>{
-          b.classList.toggle('active', b.dataset.lang===L);
-        });
-      });
-      menu.addEventListener("click",(e)=>{
-        const b=e.target.closest("button[data-lang]"); if(!b) return;
-        setLang(b.dataset.lang);
-        menu.style.display="none";
-      });
-      document.addEventListener("click",(e)=>{
-        if(!fab.contains(e.target)) menu.style.display="none";
-      });
-    })();
+    const fab  = $('#langFab');
+    const btn  = $('#langToggle');
+    const menu = $('#langMenu');
+    btn.addEventListener('click', ()=>{
+      const open = menu.style.display === 'block';
+      menu.style.display = open ? 'none' : 'block';
+      btn.setAttribute('aria-expanded', String(!open));
+    });
+    menu.addEventListener('click', e=>{
+      const b = e.target.closest('button[data-lang]'); if(!b) return;
+      setLang(b.dataset.lang);
+      menu.style.display='none';
+    });
+    document.addEventListener('click', e=>{
+      if(!fab.contains(e.target)) menu.style.display='none';
+    });
   </script>
 
   <!-- Logica selezioni + Avanti -->
   <script>
-    const state = JSON.parse(localStorage.getItem("whatif_prefs")||"{}");
-    const go = document.getElementById("go");
+    const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+    const go    = document.getElementById('go');
 
     function syncUI(){
       if(state.periodo){
@@ -211,49 +243,23 @@
     }
 
     function wireGroup(g){
-      g.addEventListener("click",(e)=>{
-        const b=e.target.closest(".chip"); if(!b) return;
-        g.querySelectorAll(".chip").forEach(c=>c.classList.remove("selected"));
-        b.classList.add("selected");
-        state[b.dataset.key]=b.dataset.val;
-        localStorage.setItem("whatif_prefs", JSON.stringify(state));
+      g.addEventListener('click', (e)=>{
+        const b = e.target.closest('.chip'); if(!b) return;
+        g.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+        b.classList.add('selected');
+        state[b.dataset.key] = b.dataset.val;
+        localStorage.setItem('whatif_prefs', JSON.stringify(state));
         go.disabled = !(state.periodo && state.stile);
       });
     }
 
-    wireGroup(document.getElementById("periodGroup"));
-    wireGroup(document.getElementById("styleGroup"));
+    wireGroup(document.getElementById('periodGroup'));
+    wireGroup(document.getElementById('styleGroup'));
     syncUI();
 
-    go.addEventListener("click", ()=>{
+    go.addEventListener('click', ()=>{
       if(go.disabled) return;
-      location.href = "second.html";
-    });
-  </script>
-
-  <!-- Mostra la STORY solo alla prima visita -->
-  <script>
-    (function(){
-      // se torno da pagine legali, non far partire la story
-      if (localStorage.getItem('forceSkipIntro') === '1') {
-        localStorage.setItem('introSeen','1');
-        localStorage.removeItem('forceSkipIntro');
-        return;
-      }
-      // prima visita ⇒ vai a story.html
-      if (!localStorage.getItem('introSeen')) {
-        localStorage.setItem('introSeen','1');
-        window.location.href = 'story.html';
-      }
-    })();
-  </script>
-
-  <!-- Flag per saltare la story al rientro da Privacy/Termini/Info -->
-  <script>
-    document.querySelectorAll('.legal-link').forEach(a=>{
-      a.addEventListener('click', ()=>{
-        try { localStorage.setItem('forceSkipIntro','1'); } catch(e){}
-      });
+      location.href = 'second.html';
     });
   </script>
 </body>
