@@ -225,4 +225,143 @@ const WEIGHTS = {
   Q2C:{Costruttore:2,Ribelle:2}, Q2D:{Mediatore:2,Ribelle:2},
   Q2E:{Ricercatore:2,Visionario:1,Costruttore:1},
   // Q3
-  Q3A:{Costruttore:4,Visionario:2}, Q3B:{Ricercatore:5}
+  Q3A:{Costruttore:4,Visionario:2}, Q3B:{Ricercatore:5},
+  Q3C:{Guaritore:4,Mediatore:2}, Q3D:{Visionario:3,Mediatore:2},
+  Q3E:{Ribelle:3,Visionario:2},
+  // Q4
+  Q4A:{Costruttore:3,Visionario:2}, Q4B:{Ricercatore:4},
+  Q4C:{Mediatore:3,Ricercatore:1,Guaritore:1}, Q4D:{Ricercatore:2,Mediatore:2},
+  Q4E:{Visionario:3,Ribelle:2},
+  // Q5
+  Q5A:{Ricercatore:4,Costruttore:1}, Q5B:{Visionario:3,Guaritore:1},
+  Q5C:{Costruttore:3,Mediatore:1}, Q5D:{Ribelle:3,Visionario:2},
+  Q5E:{Mediatore:3,Guaritore:2},
+  // Q6
+  Q6A:{Visionario:2,Costruttore:1}, Q6B:{Guaritore:3,Mediatore:1},
+  Q6C:{Costruttore:3,Visionario:1}, Q6D:{Mediatore:4},
+  Q6E:{Ricercatore:2,Ribelle:2},
+  // Q7
+  Q7A:{Visionario:3,Ricercatore:1}, Q7B:{Guaritore:3,Mediatore:1},
+  Q7C:{Ribelle:3,Costruttore:1}, Q7D:{Costruttore:3,Mediatore:1},
+  Q7E:{Ribelle:4,Visionario:1},
+  // Q8
+  Q8A:{Costruttore:2,Visionario:2}, Q8B:{Visionario:2,Ribelle:2},
+  Q8C:{Mediatore:3,Guaritore:1}, Q8D:{Ribelle:3,Visionario:2},
+  Q8E:{Ribelle:3,Visionario:1},
+  // Q9
+  Q9A:{Ribelle:4}, Q9B:{Guaritore:4,Mediatore:2},
+  Q9C:{Costruttore:4}, Q9D:{Ricercatore:4,Visionario:1},
+  Q9E:{Mediatore:2,Ricercatore:2,Guaritore:1},
+  // Q10
+  Q10A:{Ricercatore:3,Costruttore:2}, Q10B:{Guaritore:3},
+  Q10C:{Costruttore:3,Ribelle:2}, Q10D:{Mediatore:3,Guaritore:2},
+  Q10E:{Ricercatore:4},
+  // Q11
+  Q11A:{Ricercatore:3,Mediatore:2}, Q11B:{Costruttore:4},
+  Q11C:{Ribelle:4}, Q11D:{Guaritore:3,Mediatore:2},
+  Q11E:{Ricercatore:2,Costruttore:2},
+  // Q12
+  Q12A:{Costruttore:4,Visionario:1}, Q12B:{Ricercatore:4},
+  Q12C:{Guaritore:3,Visionario:1}, Q12D:{Ribelle:4,Visionario:1},
+  Q12E:{Mediatore:4,Guaritore:1},
+};
+
+/* ===== Stato ===== */
+const $ = (s)=>document.querySelector(s);
+const fill = $('#fill'); const qGroup=$('#qGroup'); const qText=$('#qText');
+const qOptions=$('#qOptions'); const stepLabel=$('#stepLabel'); const hint=$('#hint');
+const prevBtn=$('#prevBtn'); const nextBtn=$('#nextBtn'); const backBtn=$('#backBtn'); const skipBtn=$('#skipBtn');
+
+let step = Number(LS.getItem('whatif_mcq_step')||0);
+let answers = JSON.parse(LS.getItem('whatif_mcq_answers') || '{}'); // {1:'A',2:'C',...}
+
+function t(s){ return (s||'').replace('{i}', step+1).replace('{n}', TOTAL); }
+
+function render(){
+  const q = Q[step];
+  stepLabel.textContent = t(T.step);
+  fill.style.width = Math.round(((step)/TOTAL)*100) + '%';
+  $('#hint').textContent = T.hint;
+
+  qGroup.textContent = q.group[lang] || q.group.it;
+  qText.textContent  = q.text[lang] || q.text.it;
+
+  qOptions.innerHTML = '';
+  q.opts.forEach(o=>{
+    const b = document.createElement('button');
+    b.className = 'chip';
+    if (answers[step+1] === o.k) b.classList.add('selected');
+    b.innerHTML = `<strong>${o.k})</strong> ${o[lang] || o.it}`;
+    b.addEventListener('click', ()=>{
+      // toggle selezione singola
+      [...qOptions.children].forEach(c=>c.classList.remove('selected'));
+      b.classList.add('selected');
+      answers[step+1] = o.k;
+      LS.setItem('whatif_mcq_answers', JSON.stringify(answers));
+    });
+    qOptions.appendChild(b);
+  });
+
+  // pulsanti
+  prevBtn.disabled = step===0;
+  nextBtn.textContent = (step === TOTAL-1) ? (lang==='en'?'Confirm':'Conferma') : (T.next || 'Avanti');
+}
+
+function computeArchetypes(ans){
+  const scores = Object.fromEntries(ARCH.map(a=>[a,0]));
+  Object.entries(ans).forEach(([idx, key])=>{
+    const w = WEIGHTS[`Q${idx}${key}`];
+    if (w){
+      Object.entries(w).forEach(([a,val])=>{ scores[a] += val; });
+    }
+  });
+  const max = Math.max(1, ...Object.values(scores));
+  const normalized = {};
+  for (const a of ARCH){
+    normalized[a] = Math.round((scores[a] / max) * 100);
+  }
+  return { raw:scores, normalized };
+}
+
+function next(){
+  if (!answers[step+1]){ // nessuna risposta
+    // feedback leggero
+    const first = qOptions.firstElementChild;
+    if (first){ first.animate([{transform:'scale(1.0)'},{transform:'scale(1.02)'},{transform:'scale(1.0)'}],{duration:220}); }
+    return;
+  }
+  if (step < TOTAL-1){
+    step++;
+    LS.setItem('whatif_mcq_step', String(step));
+    render();
+  } else {
+    // fine → calcolo profilo e redirect
+    const { raw, normalized } = computeArchetypes(answers);
+    LS.setItem('whatif_archetypes_raw', JSON.stringify(raw));
+    LS.setItem('whatif_archetypes', JSON.stringify(normalized));
+    // reset step per future sessioni
+    LS.removeItem('whatif_mcq_step');
+    // avanti alla domanda
+    location.href = 'fourth.html';
+  }
+}
+
+function prev(){
+  if (step===0){ history.back(); return; }
+  step--;
+  LS.setItem('whatif_mcq_step', String(step));
+  render();
+}
+
+backBtn.addEventListener('click', ()=>history.back());
+skipBtn.addEventListener('click', ()=>{ location.href='fourth.html'; });
+prevBtn.addEventListener('click', prev);
+nextBtn.addEventListener('click', next);
+
+// init
+render();
+// se lingua cambia in altra scheda
+window.addEventListener('storage', (e)=>{ if(e.key==='lang'){ location.reload(); }});
+</script>
+</body>
+</html>
