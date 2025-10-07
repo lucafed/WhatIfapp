@@ -6,53 +6,59 @@
 <title>What?f – La tua domanda</title>
 <meta name="theme-color" content="#0A0F14" />
 <style>
-  :root {
-    --bg:#0A0F14; --card:#141C22; --fg:#FFFFFF; --muted:#A0B2BA;
-    --acc:#00E0FF; --acc2:#00B5CC; --ink:#001F26;
-  }
+  :root { --bg:#0A0F14; --card:#141C22; --fg:#FFFFFF; --muted:#A0B2BA; --acc:#00E0FF; --acc2:#00B5CC; --ink:#001F26 }
   *{box-sizing:border-box}
-  html,body{
-    margin:0; background:var(--bg); color:var(--fg);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  }
-  main{
-    min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    padding:24px;
-  }
-  h1{font-size:clamp(22px,5vw,32px); margin:0 0 14px}
-  .sub{color:var(--muted); margin:0 0 18px; text-align:center; max-width:640px}
-  .card{
-    width:min(92vw,720px);
-    background:var(--card); border-radius:16px; padding:18px;
-    box-shadow:0 10px 28px rgba(0,0,0,.25);
-  }
-  label{display:block; margin:6px 0 8px; font-weight:700}
-  input[type="text"]{
-    width:100%; background:#0E161D; color:var(--fg);
-    border:1px solid #1C2A33; padding:14px; border-radius:12px; font-size:16px;
-  }
-  .actions{display:flex; gap:10px; justify-content:flex-end; margin-top:16px}
-  .btn{
-    appearance:none; border:none; border-radius:12px; padding:12px 16px; font-weight:800; cursor:pointer;
-  }
-  .btn.primary{
-    background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);
-  }
-  .btn.ghost{
-    background:#0f1820; color:#cfe3e7; border:1px solid #1d2b34;
-  }
+  html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+  h1{font-size:clamp(22px,5vw,32px);margin:0 0 14px}
+  .sub{color:var(--muted);margin:0 0 18px;text-align:center;max-width:640px}
+  .card{width:min(92vw,720px);background:var(--card);border-radius:16px;padding:18px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
+  label{display:block;margin:6px 0 8px;font-weight:700}
+  input[type="text"], textarea{width:100%;background:#0E161D;color:var(--fg);border:1px solid #1C2A33;border-radius:12px;font-size:16px}
+  input[type="text"]{padding:14px}
+  textarea{padding:12px;min-height:68px;resize:vertical}
+  .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+  .btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer}
+  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink)}
+  .btn.ghost{background:#0f1820;color:#cfe3e7;border:1px solid #1d2b34}
+  .disclosure{margin-top:14px;border-top:1px solid #1c2a33;padding-top:12px}
+  .toggle{width:100%;text-align:left;background:#0f1820;border:1px solid #1d2b34;color:#cfe3e7;border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer}
+  .grid{display:grid;gap:10px;margin-top:10px}
+  @media(min-width:640px){ .grid.two{grid-template-columns:1fr 1fr} }
+  .muted{color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
 <main>
   <h1 id="mainTitle">Scrivi la tua domanda</h1>
-  <p class="sub" id="subtitle">
-    Esplora un “What if” personale: cosa sarebbe successo se… oppure cosa potrebbe succedere se…
-  </p>
+  <p class="sub" id="subtitle">Esplora un “What if” personale: cosa sarebbe successo se… oppure cosa potrebbe succedere se…</p>
 
   <div class="card">
     <label for="domandaInput" id="questionLabel">La tua domanda</label>
     <input type="text" id="domandaInput" placeholder="E se fossi rimasto a vivere all’Aquila?" />
+
+    <!-- Blocchetto opzionale per rendere il PASSATO super personale -->
+    <div class="disclosure">
+      <button class="toggle" id="toggleMore">✨ Rendi più personale in 30s</button>
+      <div id="moreBox" style="display:none">
+        <p class="muted" id="moreHint">Compila se vuoi soprattutto per il passato: useremo questi dettagli come “ancore” narrative.</p>
+        <div class="grid two">
+          <div>
+            <label for="anchor_place" id="lab_place">Un dettaglio del luogo</label>
+            <input id="anchor_place" type="text" placeholder="Via, quartiere, bar, piazza…" />
+          </div>
+          <div>
+            <label for="anchor_person" id="lab_person">Una persona (nome fittizio + ruolo)</label>
+            <input id="anchor_person" type="text" placeholder="Es. “Marco (amico di infanzia)”" />
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <label for="anchor_memory" id="lab_memory">Un ricordo concreto (oggetto, canzone, odore)</label>
+          <textarea id="anchor_memory" placeholder="Es. l’odore di pioggia sul Corso, la canzone al juke-box del bar…"></textarea>
+        </div>
+      </div>
+    </div>
+
     <div class="actions">
       <button class="btn ghost" id="backBtn">← <span id="backTxt">Indietro</span></button>
       <button class="btn primary" id="nextBtn"><span id="nextTxt">Avanti</span> →</button>
@@ -61,59 +67,64 @@
 </main>
 
 <script>
-  // i18n minimale (senza header): usa localStorage.lang
+  // i18n
   const lang = (localStorage.getItem("lang") || (navigator.language?.startsWith("en") ? "en" : "it")).toLowerCase();
   const T = {
-    it: {
-      title: "Scrivi la tua domanda",
-      sub: `Esplora un “What if” personale: cosa sarebbe successo se… oppure cosa potrebbe succedere se…`,
-      label: "La tua domanda",
-      ph: "E se fossi rimasto a vivere all’Aquila?",
-      back: "Indietro",
-      next: "Avanti",
-      missing: "Inserisci una domanda prima di continuare."
-    },
-    en: {
-      title: "Write your question",
-      sub: `Explore a personal “What if”: what would have happened if… or what might happen if…`,
-      label: "Your question",
-      ph: "What if I had stayed to live in L’Aquila?",
-      back: "Back",
-      next: "Next",
-      missing: "Please enter a question before continuing."
-    }
+    it:{title:"Scrivi la tua domanda",sub:"Esplora un “What if” personale: cosa sarebbe successo se… oppure cosa potrebbe succedere se…",label:"La tua domanda",ph:"E se fossi rimasto a vivere all’Aquila?",back:"Indietro",next:"Avanti",missing:"Inserisci una domanda prima di continuare.",toggle:"✨ Rendi più personale in 30s",hint:"Compila se vuoi soprattutto per il passato: useremo questi dettagli come “ancore” narrative.",place:"Un dettaglio del luogo",person:"Una persona (nome fittizio + ruolo)",memory:"Un ricordo concreto (oggetto, canzone, odore)",place_ph:"Via, quartiere, bar, piazza…",person_ph:"Es. “Marco (amico di infanzia)”",memory_ph:"Es. l’odore di pioggia sul Corso, la canzone al juke-box del bar…"},
+    en:{title:"Write your question",sub:"Explore a personal “What if”: what would have happened if… or what might happen if…",label:"Your question",ph:"What if I had stayed to live in L’Aquila?",back:"Back",next:"Next",missing:"Please enter a question before continuing.",toggle:"✨ Make it more personal in 30s",hint:"Fill these if you like (especially for the past): we’ll use them as narrative anchors.",place:"A place detail",person:"A person (alias + role)",memory:"A concrete memory (object, song, smell)",place_ph:"Street, neighborhood, café, square…",person_ph:`e.g., “Marco (childhood friend)”`,memory_ph:"e.g., the rain smell on the main street, the song at the café jukebox…"}
   }[lang];
 
   document.documentElement.lang = lang;
   document.title = lang === "en" ? "What?f – Your question" : "What?f – La tua domanda";
-  document.getElementById("mainTitle").textContent = T.title;
-  document.getElementById("subtitle").textContent = T.sub;
-  document.getElementById("questionLabel").textContent = T.label;
-  document.getElementById("domandaInput").placeholder = T.ph;
-  document.getElementById("backTxt").textContent = T.back;
-  document.getElementById("nextTxt").textContent = T.next;
+  const $ = id => document.getElementById(id);
+  $("mainTitle").textContent = T.title;
+  $("subtitle").textContent  = T.sub;
+  $("questionLabel").textContent = T.label;
+  $("domandaInput").placeholder = T.ph;
+  $("backTxt").textContent = T.back;
+  $("nextTxt").textContent = T.next;
+  $("toggleMore").textContent = T.toggle;
+  $("moreHint").textContent = T.hint;
+  $("lab_place").textContent = T.place; $("anchor_place").placeholder = T.place_ph;
+  $("lab_person").textContent = T.person; $("anchor_person").placeholder = T.person_ph;
+  $("lab_memory").textContent = T.memory; $("anchor_memory").placeholder = T.memory_ph;
 
-  // Azioni
-  document.getElementById("backBtn").addEventListener("click", ()=> history.back());
-  document.getElementById("nextBtn").addEventListener("click", salvaDomanda);
+  // toggle
+  $("toggleMore").addEventListener("click", ()=>{
+    const box = $("moreBox");
+    box.style.display = box.style.display === "none" ? "block" : "none";
+  });
 
-  function salvaDomanda() {
-    const domanda = document.getElementById("domandaInput").value.trim();
-    if (!domanda) {
-      alert(T.missing);
-      return;
-    }
-    // Salva domanda (periodo/stile sono già in localStorage.whatif_prefs da index.html)
-    localStorage.setItem("domanda", domanda);
-    // Vai al risultato
-    window.location.href = "fifth.html";
-  }
+  // back/next
+  $("backBtn").addEventListener("click", ()=> history.back());
+  $("nextBtn").addEventListener("click", salvaDomanda);
 
-  // (opzionale) precompila se l’utente è tornato indietro
+  // prefill
   (function prefill(){
     const prev = localStorage.getItem("domanda");
-    if (prev) document.getElementById("domandaInput").value = prev;
+    if (prev) $("domandaInput").value = prev;
+    const anchors = JSON.parse(localStorage.getItem("whatif_anchors") || "{}");
+    if (anchors.place) $("anchor_place").value = anchors.place;
+    if (anchors.person) $("anchor_person").value = anchors.person;
+    if (anchors.memory) $("anchor_memory").value = anchors.memory;
   })();
+
+  function salvaDomanda(){
+    const domanda = $("domandaInput").value.trim();
+    if (!domanda) { alert(T.missing); return; }
+    localStorage.setItem("domanda", domanda);
+
+    // salva “ancore personali” (opzionali)
+    const anchors = {
+      place:  $("anchor_place").value.trim(),
+      person: $("anchor_person").value.trim(),
+      memory: $("anchor_memory").value.trim()
+    };
+    localStorage.setItem("whatif_anchors", JSON.stringify(anchors));
+
+    // passa al risultato
+    window.location.href = "fifth.html";
+  }
 </script>
 </body>
 </html>
