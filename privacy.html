@@ -1,259 +1,238 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f — Privacy</title>
-<meta name="theme-color" content="#0A0F14" />
-<style>
-  :root{--bg:#0A0F14;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF}
-  *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  header{display:flex;align-items:center;gap:12px;padding:14px 16px}
-  header a{color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:8px}
-  main{max-width:980px;margin:0 auto;padding:8px 16px 36px;line-height:1.65}
-  h1{font-size:clamp(22px,5vw,30px);margin:6px 0 10px}
-  h2{font-size:clamp(18px,4vw,22px);margin:18px 0 8px;color:var(--accent)}
-  p,li{color:#d7e6ea}
-  ul{padding-left:18px}
-  small{color:var(--muted)}
-  a{color:var(--accent)}
-  .info-fab{display:none !important}
-  .box{border:1px solid #1d2b34;background:#0f1820;border-radius:12px;padding:12px 14px;margin:10px 0}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f — Privacy</title>
+  <meta name="theme-color" content="#0A0F14" />
+  <style>
+    :root{
+      --bg:#0A0F14; --fg:#E8F1F5; --muted:#A0B2BA;
+      --card:#0F1820; --stroke:#1d2b34;
+      --accent:#00E0FF; --accent-2:#1AFFD5;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .container{max-width:840px;margin:0 auto;padding:18px 16px 72px}
+    .crumbs{display:flex;align-items:center;gap:8px;color:var(--muted);margin:6px 0 14px}
+    .back{
+      display:inline-flex;align-items:center;gap:8px;
+      background:#0f1820;border:1px solid var(--stroke);color:var(--fg);
+      padding:10px 14px;border-radius:14px;text-decoration:none;cursor:pointer;
+    }
+    h1{font-size:clamp(26px,5vw,36px);margin:10px 0 8px}
+    h1 .hl{color:var(--accent)}
+    .meta{color:var(--muted);font-size:14px;margin-bottom:18px}
+    .card{
+      background:var(--card);border:1px solid var(--stroke);
+      border-radius:18px;padding:18px;margin:14px 0;
+    }
+    h2{color:var(--accent);font-size:clamp(20px,3.8vw,24px);margin:0 0 10px}
+    p{margin:10px 0;line-height:1.6}
+    ul{margin:8px 0 4px 18px;line-height:1.6}
+    a{color:var(--accent);text-decoration:none}
+    footer{position:fixed;left:0;right:0;bottom:8px;text-align:center;
+      font-size:12px;color:var(--muted)}
+  </style>
 </head>
 <body>
-<header>
-  <a href="index.html" id="backLink">← <span data-i18n="back">Indietro</span></a>
-  <div style="flex:1"></div>
-</header>
+  <div class="container">
+    <div class="crumbs">
+      <button class="back" id="backBtn" aria-label="Indietro">
+        ← <span data-i18n="back">Indietro</span>
+      </button>
+    </div>
 
-<main>
-  <h1 data-i18n="title">Informativa sulla Privacy</h1>
-  <p data-i18n="lastupd"><small>Ultimo aggiornamento: 07 ottobre 2025</small></p>
+    <h1><span class="hl">What?f</span> — <span data-i18n="title">Informativa Privacy</span></h1>
+    <div class="meta">
+      <span data-i18n="updated">Ultimo aggiornamento:</span>
+      <span id="updatedDate"></span>
+    </div>
 
-  <p data-i18n="intro">
-    Questa informativa descrive come What?f tratta i dati personali degli utenti in conformità al GDPR e alle leggi applicabili.
-  </p>
+    <div class="card">
+      <h2 data-i18n="s1">1. Dati trattati</h2>
+      <p data-i18n="s1p1">
+        What?f adotta un approccio di minimizzazione dei dati. L’app può trattare esclusivamente:
+      </p>
+      <ul>
+        <li data-i18n="s1b1">Preferenze locali (lingua, scelte fatte nell’app), memorizzate nel tuo dispositivo (localStorage).</li>
+        <li data-i18n="s1b2">Domande e risposte inserite dall’utente per generare scenari, inviate ai servizi AI allo scopo di fornirti l’output richiesto.</li>
+        <li data-i18n="s1b3">Dati tecnici anonimi necessari al funzionamento (es. log del server in caso di errore).</li>
+      </ul>
+    </div>
 
-  <div class="box">
-    <strong data-i18n="ai_box_h">Avvertenza sui contenuti generati dall’AI</strong>
-    <p data-i18n="ai_box_b">
-      Le risposte sono generate automaticamente. La modalità <em>What if</em> mira a scenari plausibili e riflessivi; la modalità <em>What the F</em> produce esiti ironici, creativi e imprevedibili. Le risposte possono contenere imprecisioni e non costituiscono consulenza professionale.
-    </p>
+    <div class="card">
+      <h2 data-i18n="s2">2. Finalità e base giuridica</h2>
+      <p data-i18n="s2p1">
+        Le informazioni sono trattate per erogare il servizio richiesto (generazione di scenari), migliorare l’esperienza d’uso e garantire sicurezza e prevenzione abusi. La base giuridica è l’esecuzione del contratto (uso dell’app) e il legittimo interesse alla sicurezza.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="s3">3. Servizi di terze parti (AI)</h2>
+      <p data-i18n="s3p1">
+        Per generare le risposte utilizziamo fornitori di AI (es. OpenAI). I dati inviati sono limitati alla tua domanda, alle risposte di chiarimento e a dati contestuali necessari (es. età, luogo se forniti).
+      </p>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="s4">4. Conservazione e condivisione dei dati</h2>
+      <p data-i18n="s4p1">
+        What?f utilizza i servizi di OpenAI per generare le risposte dell’intelligenza artificiale. Tutti i dati inviati (domande, input testuali, risposte) vengono elaborati in tempo reale solo per fornire il risultato richiesto e <strong>non vengono utilizzati da OpenAI per addestrare i propri modelli</strong>.
+      </p>
+      <p data-i18n="s4p2">
+        La funzione di condivisione dei dati con OpenAI è stata <strong>disattivata a livello di piattaforma</strong>, in conformità con il principio di minimizzazione del trattamento previsto dal Regolamento (UE) 2016/679 (GDPR).
+      </p>
+      <p data-i18n="s4p3">
+        I dati elaborati non vengono memorizzati né archiviati sui server di What?f, ma restano temporaneamente nei sistemi del fornitore AI esclusivamente per l’elaborazione tecnica della risposta. Nessun dato personale o contenuto delle richieste viene condiviso con terze parti per fini di marketing, analisi o addestramento.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="s5">5. Periodi di conservazione</h2>
+      <p data-i18n="s5p1">
+        Conserviamo i dati solo per il tempo strettamente necessario a fornire il servizio e a garantire sicurezza e conformità legale. Le preferenze locali restano sul tuo dispositivo finché non le cancelli.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="s6">6. Trasferimenti extra-UE</h2>
+      <p data-i18n="s6p1">
+        I fornitori AI possono trattare i dati anche fuori dallo Spazio Economico Europeo. In tali casi vengono adottate adeguate garanzie (es. Clausole Contrattuali Standard) per assicurare un livello di protezione equivalente a quello europeo.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="s7">7. Sicurezza</h2>
+      <p data-i18n="s7p1">
+        Applichiamo misure tecniche e organizzative per proteggere i dati da accessi non autorizzati, perdita o divulgazione.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="s8">8. Diritti dell’interessato</h2>
+      <p data-i18n="s8p1">
+        Puoi esercitare i diritti previsti dal GDPR (accesso, rettifica, cancellazione, limitazione, portabilità, opposizione) scrivendo al nostro contatto privacy. Hai anche diritto di proporre reclamo all’autorità di controllo competente.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="s9">9. Minori</h2>
+      <p data-i18n="s9p1">
+        Il servizio è destinato a utenti di età pari o superiore a 16 anni. Se ritieni che un minore ci abbia fornito dati personali, contattaci per la rimozione.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="s10">10. Titolare e contatti</h2>
+      <p data-i18n="s10p1">
+        Titolare del trattamento: What?f — Email: <a href="mailto:legal@whatif.app">legal@whatif.app</a>
+      </p>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="s11">11. Modifiche alla presente informativa</h2>
+      <p data-i18n="s11p1">
+        Potremmo aggiornare questa informativa. Le modifiche saranno pubblicate in questa pagina e avranno effetto dalla data di aggiornamento indicata sopra.
+      </p>
+    </div>
   </div>
 
-  <h2 data-i18n="controller_h">Titolare del trattamento</h2>
-  <p data-i18n="controller_b">
-    <strong>Titolare:</strong> What?f (progetto)<br>
-    <strong>Email:</strong> privacy@whatif.app<br>
-    <strong>Indirizzo:</strong> [Inserisci indirizzo]<br>
-    <strong>Rappresentante UE (se applicabile):</strong> [Inserisci contatto]<br>
-    <strong>DPO (se nominato):</strong> [Inserisci contatto]
-  </p>
+  <footer>© 2025 What?f</footer>
 
-  <h2 data-i18n="data_h">Categorie di dati trattati</h2>
-  <ul>
-    <li data-i18n="data_1"><strong>Dati forniti dall’utente</strong> (es. età, luogo, genere, domanda What?f, risposte ai follow-up, preferenze di modalità).</li>
-    <li data-i18n="data_2"><strong>Dati tecnici minimi</strong> (log anonimi, tempi di risposta, errori) per sicurezza e miglioramento.</li>
-    <li data-i18n="data_3"><strong>Dati locali</strong> su <em>localStorage</em> (storico, lingua, preferenze) sul tuo dispositivo — non ci arrivano sui nostri server se non decidi di condividerli.</li>
-  </ul>
+  <script>
+    // ---- lingua da localStorage (salvata in Home)
+    const LS = localStorage;
+    const lang = (LS.getItem('lang') || 'it').toLowerCase();
 
-  <h2 data-i18n="source_h">Origine dei dati</h2>
-  <p data-i18n="source_b">
-    I dati provengono direttamente dall’utente. Non acquisiamo dati da terze parti per profilazione. Eventuali integrazioni future (es. login social) saranno soggette a consenso esplicito.
-  </p>
+    const DICT = {
+      it: {
+        back:"Indietro",
+        title:"Informativa Privacy",
+        updated:"Ultimo aggiornamento:",
+        s1:"1. Dati trattati",
+        s1p1:"What?f adotta un approccio di minimizzazione dei dati. L’app può trattare esclusivamente:",
+        s1b1:"Preferenze locali (lingua, scelte fatte nell’app), memorizzate nel tuo dispositivo (localStorage).",
+        s1b2:"Domande e risposte inserite dall’utente per generare scenari, inviate ai servizi AI allo scopo di fornirti l’output richiesto.",
+        s1b3:"Dati tecnici anonimi necessari al funzionamento (es. log del server in caso di errore).",
+        s2:"2. Finalità e base giuridica",
+        s2p1:"Le informazioni sono trattate per erogare il servizio richiesto (generazione di scenari), migliorare l’esperienza d’uso e garantire sicurezza e prevenzione abusi. La base giuridica è l’esecuzione del contratto (uso dell’app) e il legittimo interesse alla sicurezza.",
+        s3:"3. Servizi di terze parti (AI)",
+        s3p1:"Per generare le risposte utilizziamo fornitori di AI (es. OpenAI). I dati inviati sono limitati alla tua domanda, alle risposte di chiarimento e a dati contestuali necessari (es. età, luogo se forniti).",
+        s4:"4. Conservazione e condivisione dei dati",
+        s4p1:"What?f utilizza i servizi di OpenAI per generare le risposte dell’intelligenza artificiale. Tutti i dati inviati (domande, input testuali, risposte) vengono elaborati in tempo reale solo per fornire il risultato richiesto e <strong>non vengono utilizzati da OpenAI per addestrare i propri modelli</strong>.",
+        s4p2:"La funzione di condivisione dei dati con OpenAI è stata <strong>disattivata a livello di piattaforma</strong>, in conformità con il principio di minimizzazione del trattamento previsto dal Regolamento (UE) 2016/679 (GDPR).",
+        s4p3:"I dati elaborati non vengono memorizzati né archiviati sui server di What?f, ma restano temporaneamente nei sistemi del fornitore AI esclusivamente per l’elaborazione tecnica della risposta. Nessun dato personale o contenuto delle richieste viene condiviso con terze parti per fini di marketing, analisi o addestramento.",
+        s5:"5. Periodi di conservazione",
+        s5p1:"Conserviamo i dati solo per il tempo strettamente necessario a fornire il servizio e a garantire sicurezza e conformità legale. Le preferenze locali restano sul tuo dispositivo finché non le cancelli.",
+        s6:"6. Trasferimenti extra-UE",
+        s6p1:"I fornitori AI possono trattare i dati anche fuori dallo Spazio Economico Europeo. In tali casi vengono adottate adeguate garanzie (es. Clausole Contrattuali Standard) per assicurare un livello di protezione equivalente a quello europeo.",
+        s7:"7. Sicurezza",
+        s7p1:"Applichiamo misure tecniche e organizzative per proteggere i dati da accessi non autorizzati, perdita o divulgazione.",
+        s8:"8. Diritti dell’interessato",
+        s8p1:"Puoi esercitare i diritti previsti dal GDPR (accesso, rettifica, cancellazione, limitazione, portabilità, opposizione) scrivendo al nostro contatto privacy. Hai anche diritto di proporre reclamo all’autorità di controllo competente.",
+        s9:"9. Minori",
+        s9p1:"Il servizio è destinato a utenti di età pari o superiore a 16 anni. Se ritieni che un minore ci abbia fornito dati personali, contattaci per la rimozione.",
+        s10:"10. Titolare e contatti",
+        s10p1:'Titolare del trattamento: What?f — Email: <a href="mailto:legal@whatif.app">legal@whatif.app</a>',
+        s11:"11. Modifiche alla presente informativa",
+        s11p1:"Potremmo aggiornare questa informativa. Le modifiche saranno pubblicate in questa pagina e avranno effetto dalla data di aggiornamento indicata sopra."
+      },
+      en: {
+        back:"Back",
+        title:"Privacy Policy",
+        updated:"Last updated:",
+        s1:"1. Data we process",
+        s1p1:"What?f follows a data-minimization approach. The app may process only:",
+        s1b1:"Local preferences (language, choices made in the app), stored on your device (localStorage).",
+        s1b2:"Questions and answers you enter to generate scenarios, sent to AI services solely to deliver the requested output.",
+        s1b3:"Anonymous technical data required for operation (e.g., server logs in case of error).",
+        s2:"2. Purpose and legal basis",
+        s2p1:"Information is processed to provide the requested service (scenario generation), improve user experience, and ensure security/abuse prevention. The legal basis is contract performance (use of the app) and our legitimate interest in security.",
+        s3:"3. Third-party services (AI)",
+        s3p1:"We use AI providers (e.g., OpenAI) to generate responses. Data sent is limited to your question, any clarifying replies, and strictly necessary context (e.g., age, location if provided).",
+        s4:"4. Data retention and sharing",
+        s4p1:"What?f uses OpenAI services to generate AI responses. All submitted data (questions, text inputs, outputs) is processed in real time only to provide the requested result and <strong>is not used by OpenAI to train their models</strong>.",
+        s4p2:"The OpenAI data sharing feature has been <strong>disabled at the platform level</strong>, in line with GDPR data-minimization principles.",
+        s4p3:"Data is not stored on What?f servers; it remains temporarily within the AI provider’s systems solely for technical processing of the response. No personal data or request content is shared with third parties for marketing, analytics, or training.",
+        s5:"5. Retention periods",
+        s5p1:"We retain data only as long as strictly necessary to provide the service and ensure security and legal compliance. Local preferences remain on your device until you delete them.",
+        s6:"6. Transfers outside the EEA",
+        s6p1:"AI providers may process data outside the European Economic Area. Appropriate safeguards (e.g., Standard Contractual Clauses) are applied to ensure an equivalent level of protection.",
+        s7:"7. Security",
+        s7p1:"We apply technical and organizational measures to protect data from unauthorized access, loss, or disclosure.",
+        s8:"8. Your rights",
+        s8p1:"You may exercise GDPR rights (access, rectification, erasure, restriction, portability, objection) by contacting our privacy address. You may also lodge a complaint with the competent supervisory authority.",
+        s9:"9. Children",
+        s9p1:"The service is intended for users aged 16+. If you believe a minor has provided personal data, please contact us for removal.",
+        s10:"10. Controller & contact",
+        s10p1:'Data Controller: What?f — Email: <a href="mailto:legal@whatif.app">legal@whatif.app</a>',
+        s11:"11. Changes to this notice",
+        s11p1:"We may update this notice. Changes will be published on this page and take effect from the update date indicated above."
+      }
+    };
 
-  <h2 data-i18n="purp_h">Finalità del trattamento</h2>
-  <ul>
-    <li data-i18n="purp_1">Erogare il servizio (generazione di risposte, domande di chiarimento personalizzate).</li>
-    <li data-i18n="purp_2">Migliorare stabilità e qualità (analisi aggregate, metriche tecniche anonime).</li>
-    <li data-i18n="purp_3">Sicurezza, prevenzione abusi e adempimenti legali.</li>
-    <li data-i18n="purp_4">Funzioni opzionali (storico locale, condivisione social) previo tuo consenso/azione.</li>
-  </ul>
-
-  <h2 data-i18n="basis_h">Basi giuridiche (art. 6 GDPR)</h2>
-  <ul>
-    <li data-i18n="basis_1">Esecuzione del contratto/servizio (art. 6.1.b).</li>
-    <li data-i18n="basis_2">Legittimo interesse (art. 6.1.f) per sicurezza, prevenzione abusi e miglioramento.</li>
-    <li data-i18n="basis_3">Consenso (art. 6.1.a) per funzioni opzionali (es. storico locale, comunicazioni future).</li>
-  </ul>
-
-  <h2 data-i18n="share_h">Destinatari / trasferimenti</h2>
-  <p data-i18n="share_b">
-    Possiamo coinvolgere fornitori cloud e provider AI come responsabili del trattamento. Alcuni trattamenti possono avvenire extra-UE: in tal caso adottiamo garanzie adeguate (es. SCC/DTIA). Non vendiamo dati personali.
-  </p>
-
-  <h2 data-i18n="ret_h">Conservazione</h2>
-  <ul>
-    <li data-i18n="ret_1">Dati locali (storico, preferenze): restano sul dispositivo finché non li elimini.</li>
-    <li data-i18n="ret_2">Log tecnici: conservati per periodi limitati strettamente necessari.</li>
-    <li data-i18n="ret_3">Richieste legali e contestazioni: per tutta la durata necessaria alla difesa o agli obblighi normativi.</li>
-  </ul>
-
-  <h2 data-i18n="cookie_h">Cookie e archiviazione locale</h2>
-  <p data-i18n="cookie_b">
-    Usiamo principalmente <em>localStorage</em> (lingua, introSeen, whatif_prefs). Possiamo usare cookie tecnici essenziali. Nessun cookie di profilazione senza consenso.
-  </p>
-
-  <h2 data-i18n="rights_h">Diritti dell’interessato</h2>
-  <ul>
-    <li data-i18n="r_a">Accesso, rettifica, cancellazione, limitazione, portabilità (artt. 15–22 GDPR).</li>
-    <li data-i18n="r_b">Opposizione per motivi legittimi ai trattamenti basati su interesse legittimo.</li>
-    <li data-i18n="r_c">Revoca del consenso senza pregiudicare la liceità del trattamento precedente.</li>
-    <li data-i18n="r_d">Reclamo al Garante o all’autorità competente.</li>
-  </ul>
-  <p data-i18n="rights_cta">
-    Per esercitare i diritti: <a href="mailto:privacy@whatif.app">privacy@whatif.app</a>
-  </p>
-
-  <h2 data-i18n="auto_h">Decisioni automatizzate / Profilazione</h2>
-  <p data-i18n="auto_b">
-    Non effettuiamo decisioni con effetti giuridici basate esclusivamente su trattamenti automatizzati. Le risposte AI sono generate su input dell’utente e non comportano profilazione a fini di marketing senza consenso.
-  </p>
-
-  <h2 data-i18n="minors_h">Minori</h2>
-  <p data-i18n="minors_b">
-    Il servizio è rivolto a utenti ≥ 16 anni (o maggiore età locale). Se un minore ha fornito dati, contattaci per rimuoverli.
-  </p>
-
-  <h2 data-i18n="sec_h">Sicurezza</h2>
-  <p data-i18n="sec_b">
-    Adottiamo misure tecniche e organizzative adeguate. Nessun sistema è totalmente sicuro; in caso di data breach agiremo secondo normativa.
-  </p>
-
-  <h2 data-i18n="changes_h">Modifiche</h2>
-  <p data-i18n="changes_b">
-    Possiamo aggiornare questa informativa. Pubblicheremo la nuova versione con la data di aggiornamento.
-  </p>
-
-  <h2 data-i18n="contact_h">Contatti</h2>
-  <p data-i18n="contact_b">
-    Email privacy: <a href="mailto:privacy@whatif.app">privacy@whatif.app</a><br>
-    Indirizzo: [Inserisci indirizzo]
-  </p>
-
-  <p><small data-i18n="disclaimer">Questa informativa ha finalità descrittive e non costituisce consulenza legale.</small></p>
-</main>
-
-<script>
-  // Non far ripartire la story al ritorno in Home
-  try { localStorage.setItem('forceSkipIntro','1'); } catch(e){}
-
-  // Dizionari IT/EN
-  const DICT={
-    it:{
-      back:"Indietro",
-      title:"Informativa sulla Privacy",
-      lastupd:"Ultimo aggiornamento: 07 ottobre 2025",
-      intro:"Questa informativa descrive come What?f tratta i dati personali degli utenti in conformità al GDPR e alle leggi applicabili.",
-      ai_box_h:"Avvertenza sui contenuti generati dall’AI",
-      ai_box_b:"Le risposte sono generate automaticamente. La modalità What if mira a scenari plausibili e riflessivi; la modalità What the F produce esiti ironici, creativi e imprevedibili. Le risposte possono contenere imprecisioni e non costituiscono consulenza professionale.",
-      controller_h:"Titolare del trattamento",
-      controller_b:"Titolare: What?f (progetto) — Email: privacy@whatif.app — Indirizzo: [Inserisci indirizzo] — Rappresentante UE (se applicabile): [Inserisci contatto] — DPO (se nominato): [Inserisci contatto]",
-      data_h:"Categorie di dati trattati",
-      data_1:"Dati forniti dall’utente (es. età, luogo, genere, domanda What?f, risposte ai follow-up, preferenze di modalità).",
-      data_2:"Dati tecnici minimi (log anonimi, tempi di risposta, errori) per sicurezza e miglioramento.",
-      data_3:"Dati locali su localStorage (storico, lingua, preferenze) sul tuo dispositivo — non ci arrivano sui nostri server se non decidi di condividerli.",
-      source_h:"Origine dei dati",
-      source_b:"I dati provengono direttamente dall’utente. Non acquisiamo dati da terze parti per profilazione. Eventuali integrazioni future (es. login social) saranno soggette a consenso esplicito.",
-      purp_h:"Finalità del trattamento",
-      purp_1:"Erogare il servizio (generazione di risposte, domande di chiarimento personalizzate).",
-      purp_2:"Migliorare stabilità e qualità (analisi aggregate, metriche tecniche anonime).",
-      purp_3:"Sicurezza, prevenzione abusi e adempimenti legali.",
-      purp_4:"Funzioni opzionali (storico locale, condivisione social) previo tuo consenso/azione.",
-      basis_h:"Basi giuridiche (art. 6 GDPR)",
-      basis_1:"Esecuzione del contratto/servizio (art. 6.1.b).",
-      basis_2:"Legittimo interesse (art. 6.1.f) per sicurezza, prevenzione abusi e miglioramento.",
-      basis_3:"Consenso (art. 6.1.a) per funzioni opzionali (es. storico locale, comunicazioni future).",
-      share_h:"Destinatari / trasferimenti",
-      share_b:"Possiamo coinvolgere fornitori cloud e provider AI come responsabili del trattamento. Alcuni trattamenti possono avvenire extra-UE: in tal caso adottiamo garanzie adeguate (es. SCC/DTIA). Non vendiamo dati personali.",
-      ret_h:"Conservazione",
-      ret_1:"Dati locali (storico, preferenze): restano sul dispositivo finché non li elimini.",
-      ret_2:"Log tecnici: conservati per periodi limitati strettamente necessari.",
-      ret_3:"Richieste legali e contestazioni: per tutta la durata necessaria alla difesa o agli obblighi normativi.",
-      cookie_h:"Cookie e archiviazione locale",
-      cookie_b:"Usiamo principalmente localStorage (lingua, introSeen, whatif_prefs). Possiamo usare cookie tecnici essenziali. Nessun cookie di profilazione senza consenso.",
-      rights_h:"Diritti dell’interessato",
-      r_a:"Accesso, rettifica, cancellazione, limitazione, portabilità (artt. 15–22 GDPR).",
-      r_b:"Opposizione per motivi legittimi ai trattamenti basati su interesse legittimo.",
-      r_c:"Revoca del consenso senza pregiudicare la liceità del trattamento precedente.",
-      r_d:"Reclamo al Garante o all’autorità competente.",
-      rights_cta:"Per esercitare i diritti: privacy@whatif.app",
-      auto_h:"Decisioni automatizzate / Profilazione",
-      auto_b:"Non effettuiamo decisioni con effetti giuridici basate esclusivamente su trattamenti automatizzati. Le risposte AI sono generate su input dell’utente e non comportano profilazione a fini di marketing senza consenso.",
-      minors_h:"Minori",
-      minors_b:"Il servizio è rivolto a utenti ≥ 16 anni (o maggiore età locale). Se un minore ha fornito dati, contattaci per rimuoverli.",
-      sec_h:"Sicurezza",
-      sec_b:"Adottiamo misure tecniche e organizzative adeguate. Nessun sistema è totalmente sicuro; in caso di data breach agiremo secondo normativa.",
-      changes_h:"Modifiche",
-      changes_b:"Possiamo aggiornare questa informativa. Pubblicheremo la nuova versione con la data di aggiornamento.",
-      contact_h:"Contatti",
-      contact_b:"Email privacy: privacy@whatif.app — Indirizzo: [Inserisci indirizzo]",
-      disclaimer:"Questa informativa ha finalità descrittive e non costituisce consulenza legale."
-    },
-    en:{
-      back:"Back",
-      title:"Privacy Policy",
-      lastupd:"Last updated: Oct 7, 2025",
-      intro:"This policy describes how What?f processes personal data in compliance with GDPR and applicable laws.",
-      ai_box_h:"Notice on AI-generated content",
-      ai_box_b:"Responses are generated automatically. The What if mode aims for plausible, reflective scenarios; What the F produces ironic, creative, and unpredictable outcomes. Answers may contain inaccuracies and are not professional advice.",
-      controller_h:"Data Controller",
-      controller_b:"Controller: What?f (project) — Email: privacy@whatif.app — Address: [Insert address] — EU Representative (if applicable): [Insert contact] — DPO (if appointed): [Insert contact]",
-      data_h:"Categories of data processed",
-      data_1:"Data you provide (e.g., age, location, gender, What?f question, follow-up answers, mode preferences).",
-      data_2:"Minimal technical data (anonymous logs, response times, errors) for security and improvement.",
-      data_3:"Local data in your device’s localStorage (history, language, preferences) — not sent to our servers unless you choose to share.",
-      source_h:"Source of data",
-      source_b:"Data comes directly from you. We do not buy data for profiling. Any future integrations (e.g., social login) will require explicit consent.",
-      purp_h:"Purposes",
-      purp_1:"Provide the service (generate answers, personalized follow-up questions).",
-      purp_2:"Improve stability and quality (aggregated analytics, anonymized metrics).",
-      purp_3:"Security, abuse prevention, and legal compliance.",
-      purp_4:"Optional features (local history, social sharing) with your consent/action.",
-      basis_h:"Legal bases (Art. 6 GDPR)",
-      basis_1:"Contract/service performance (Art. 6.1.b).",
-      basis_2:"Legitimate interest (Art. 6.1.f) for security, abuse prevention, and improvement.",
-      basis_3:"Consent (Art. 6.1.a) for optional features (e.g., local history, future communications).",
-      share_h:"Recipients / transfers",
-      share_b:"We may use cloud vendors and AI providers as processors. Some processing may occur outside the EU; in such cases we use appropriate safeguards (e.g., SCC/DTIA). We do not sell personal data.",
-      ret_h:"Retention",
-      ret_1:"Local data (history, preferences): remains on your device until you delete it.",
-      ret_2:"Technical logs: retained for limited periods strictly necessary.",
-      ret_3:"Legal requests and claims: retained as long as needed for defense or legal obligations.",
-      cookie_h:"Cookies & local storage",
-      cookie_b:"We primarily use localStorage (language, introSeen, whatif_prefs). We may use essential cookies. No profiling cookies without consent.",
-      rights_h:"Your rights",
-      r_a:"Access, rectification, erasure, restriction, portability (Arts. 15–22 GDPR).",
-      r_b:"Object to processing based on legitimate interest where applicable.",
-      r_c:"Withdraw consent at any time without affecting prior processing lawfulness.",
-      r_d:"Complain to the Supervisory Authority.",
-      rights_cta:"To exercise your rights: privacy@whatif.app",
-      auto_h:"Automated decision-making / Profiling",
-      auto_b:"We do not make decisions with legal effects based solely on automated processing. AI responses are generated from your input and are not used for marketing profiling without consent.",
-      minors_h:"Minors",
-      minors_b:"The service is intended for users aged 16+ (or higher local age). If a minor provided data, contact us for removal.",
-      sec_h:"Security",
-      sec_b:"We implement appropriate technical and organizational measures. No system is entirely secure; in case of a data breach we will act per law.",
-      changes_h:"Changes",
-      changes_b:"We may update this policy and will publish the updated version with its effective date.",
-      contact_h:"Contacts",
-      contact_b:"Privacy email: privacy@whatif.app — Address: [Insert address]",
-      disclaimer:"This policy is for informational purposes and does not constitute legal advice."
+    function applyLang(){
+      const dict = DICT[lang] || DICT.it;
+      document.documentElement.lang = (lang === 'en') ? 'en' : 'it';
+      document.querySelectorAll('[data-i18n]').forEach(el=>{
+        const k = el.getAttribute('data-i18n');
+        if(dict[k]) el.innerHTML = dict[k];
+      });
+      // Data formattata per lingua
+      const d = new Date('2025-10-06'); // <-- aggiorna qui la data ufficiale se serve
+      const fmt = new Intl.DateTimeFormat(lang === 'en' ? 'en-GB' : 'it-IT', { day:'numeric', month:'long', year:'numeric' });
+      document.getElementById('updatedDate').textContent = fmt.format(d);
     }
-  };
+    applyLang();
 
-  const L = localStorage.getItem('lang') || 'it';
-  document.documentElement.lang=L;
-  document.querySelectorAll('[data-i18n]').forEach(el=>{
-    const k=el.getAttribute('data-i18n');
-    const t=(DICT[L]||DICT.it)[k];
-    if(!t) return;
-    if(k==='lastupd') el.innerHTML = `<small>${t}</small>`;
-    else el.innerHTML = t;
-  });
-</script>
+    // Back: torna alla Home (evita rientro nella story)
+    document.getElementById('backBtn').addEventListener('click', ()=>{
+      // se c'è history e la pagina precedente è del sito, si può fare back; altrimenti vai a index
+      try { history.back(); setTimeout(()=>location.href='index.html', 350); }
+      catch(e){ location.href='index.html'; }
+    });
+  </script>
 </body>
 </html>
