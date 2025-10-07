@@ -1,222 +1,212 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – La tua domanda</title>
-  <meta name="theme-color" content="#0A0F14" />
-  <style>
-    :root{
-      --bg:#0A0F14; --fg:#E6F2F5; --muted:#A0B2BA;
-      --card:#0f1820; --border:#1d2b34;
-      --accent:#00E0FF; --accent2:#00B5CC;
-      --ok:#1AFFD5; --warn:#f7b23b;
-    }
-    *{ box-sizing:border-box }
-    html,body{
-      height:100%; margin:0; background:var(--bg); color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
-    }
-    main{ max-width:980px; margin:0 auto; padding:18px; }
-
-    .bar{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px }
-    .btn{
-      appearance:none; border:1px solid var(--border); background:#121c25; color:var(--fg);
-      padding:10px 14px; border-radius:12px; cursor:pointer;
-    }
-    .btn.primary{
-      background:linear-gradient(180deg,var(--accent),var(--accent2));
-      color:#001e26; border:none; font-weight:800;
-    }
-    .btn:disabled{ opacity:.5; cursor:not-allowed }
-
-    h1{ margin:4px 0 6px; font-size:clamp(22px,4.5vw,30px) }
-    .lead{ margin:0 0 12px; color:var(--muted) }
-
-    .summary{
-      display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 14px;
-    }
-    .pill{
-      border:1px solid var(--border); background:var(--card); color:#cfe6eb;
-      padding:8px 12px; border-radius:999px; font-weight:700; font-size:14px;
-    }
-
-    .card{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px }
-    label{ display:block; font-weight:700; margin-bottom:6px; color:var(--accent) }
-
-    textarea{
-      width:100%; min-height:160px; resize:vertical;
-      background:#0b141a; color:var(--fg);
-      border:1px solid var(--border); border-radius:10px; padding:12px;
-      font-size:16px; line-height:1.5;
-    }
-
-    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-top:10px }
-    .hint{ color:var(--muted); font-size:13px }
-    .count{ font-size:13px; color:var(--muted) }
-    .count.warn{ color:var(--warn) }
-
-    .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What?f – La tua domanda</title>
+<meta name="theme-color" content="#0A0F14" />
+<style>
+  :root {
+    --bg: #0A0F14;
+    --card: #141C22;
+    --fg: #FFFFFF;
+    --muted: #A0B2BA;
+    --accent: #00E0FF;
+    --accent2: #00B5CC;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: rgba(20, 28, 34, 0.8);
+    border-bottom: 1px solid #1a2630;
+  }
+  .lang-toggle {
+    background: var(--card);
+    color: var(--muted);
+    border: 1px solid #1C2A33;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .lang-toggle:hover {
+    background: var(--accent2);
+    color: #001f26;
+    font-weight: 600;
+  }
+  main {
+    max-width: 700px;
+    margin: auto;
+    padding: 24px;
+  }
+  h1 {
+    font-size: clamp(22px, 5vw, 32px);
+    margin-bottom: 10px;
+  }
+  p {
+    color: var(--muted);
+  }
+  .card {
+    background: var(--card);
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    margin-top: 20px;
+  }
+  input[type="text"] {
+    width: 100%;
+    background: #0E161D;
+    color: var(--fg);
+    border: 1px solid #1C2A33;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+  label {
+    display: block;
+    margin: 10px 0 6px;
+  }
+  .radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .radio-group label {
+    background: #0F1820;
+    border: 1px solid #1C2A33;
+    padding: 8px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  input[type="radio"]:checked + label {
+    background: linear-gradient(180deg, var(--accent), var(--accent2));
+    color: #001F26;
+    font-weight: bold;
+  }
+  button {
+    background: linear-gradient(180deg, var(--accent), var(--accent2));
+    color: #001F26;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 20px;
+  }
+  button:hover {
+    opacity: 0.9;
+  }
+</style>
 </head>
 <body>
-  <main>
-    <!-- NAV -->
-    <div class="bar">
-      <button class="btn" id="backBtn">← <span data-i18n="back">Indietro</span></button>
-      <button class="btn" id="homeBtn">🏠 <span data-i18n="home">Home</span></button>
+<header>
+  <h2 id="title">What?f</h2>
+  <button class="lang-toggle" onclick="toggleLang()">🇮🇹 IT</button>
+</header>
+
+<main>
+  <h1 id="mainTitle">Scrivi la tua domanda</h1>
+  <p id="subtitle">Esplora un "What if" personale: cosa sarebbe successo se... o cosa potrebbe succedere se...</p>
+
+  <div class="card">
+    <label id="questionLabel" for="domandaInput">La tua domanda</label>
+    <input type="text" id="domandaInput" placeholder="E se fossi rimasto a vivere all’Aquila?" />
+
+    <label id="periodLabel">Periodo</label>
+    <div class="radio-group">
+      <input type="radio" id="past" name="periodo" value="past" checked />
+      <label for="past" id="pastLabel">Passato</label>
+
+      <input type="radio" id="future" name="periodo" value="future" />
+      <label for="future" id="futureLabel">Futuro</label>
     </div>
 
-    <h1 id="title">La tua domanda</h1>
-    <p class="lead" id="subtitle">
-      Scrivi in modo chiaro e specifico. Ti faremo 2–3 domande rapide per personalizzare la risposta.
-    </p>
+    <label id="styleLabel">Stile</label>
+    <div class="radio-group">
+      <input type="radio" id="whatif" name="stile" value="whatif" checked />
+      <label for="whatif" id="whatifLabel">What if (realistico)</label>
 
-    <!-- RIEPILOGO SCELTE -->
-    <div class="summary" id="summary"></div>
-
-    <!-- FORM DOMANDA -->
-    <div class="card">
-      <label for="userQuestion" id="qLabel">Domanda</label>
-      <textarea id="userQuestion" placeholder="Es. What?f avessi accettato quel lavoro a Milano nel 2022?"></textarea>
-
-      <div class="row">
-        <div class="hint" id="hint">
-          Suggerimento: indica tempo, luogo o persone coinvolte per una risposta più precisa.
-        </div>
-        <div class="count" id="counter">0/280</div>
-      </div>
+      <input type="radio" id="wtf" name="stile" value="wtf" />
+      <label for="wtf" id="wtfLabel">WTF (surreale)</label>
     </div>
 
-    <!-- AZIONI -->
-    <div class="actions">
-      <button class="btn primary" id="goBtn">✨ <span data-i18n="discover">Scopri</span></button>
-      <button class="btn" id="clearBtn"><span data-i18n="clear">Pulisci</span></button>
-    </div>
-  </main>
+    <button id="nextBtn" onclick="salvaDomanda()">Avanti →</button>
+  </div>
+</main>
 
-  <script>
-    // ======= CONFIG =======
-    const MAX_LEN = 280;
+<script>
+let currentLang = localStorage.getItem("lang") || (navigator.language.startsWith("en") ? "en" : "it");
+aggiornaLingua(currentLang);
 
-    // ======= I18N =======
-    const lang = (localStorage.getItem('lang') || 'it').toLowerCase();
-    const TXT = {
-      it: {
-        back:"Indietro", home:"Home",
-        title:"La tua domanda",
-        sub:"Scrivi in modo chiaro e specifico. Ti faremo 2–3 domande rapide per personalizzare la risposta.",
-        qLabel:"Domanda",
-        placeholder:"Es. What?f avessi accettato quel lavoro a Milano nel 2022?",
-        hint:"Suggerimento: indica tempo, luogo o persone coinvolte per una risposta più precisa.",
-        discover:"Scopri",
-        clear:"Pulisci",
-        needQ:"Per continuare, scrivi una domanda.",
-        periodPast:"Passato",
-        periodFuture:"Futuro",
-        styleWhatif:"What if",
-        styleWTF:"What the F"
-      },
-      en: {
-        back:"Back", home:"Home",
-        title:"Your question",
-        sub:"Write clearly and specifically. We’ll ask 2–3 quick follow-ups to personalize the answer.",
-        qLabel:"Question",
-        placeholder:"e.g., What if I had accepted that job in Milan in 2022?",
-        hint:"Tip: add time, place or people involved for a more precise answer.",
-        discover:"Discover",
-        clear:"Clear",
-        needQ:"Please enter a question to continue.",
-        periodPast:"Past",
-        periodFuture:"Future",
-        styleWhatif:"What if",
-        styleWTF:"What the F"
-      }
-    }[lang];
+function toggleLang() {
+  currentLang = currentLang === "it" ? "en" : "it";
+  localStorage.setItem("lang", currentLang);
+  aggiornaLingua(currentLang);
+}
 
-    // ======= UTILS =======
-    const $ = s => document.querySelector(s);
+function aggiornaLingua(lang) {
+  const el = (id, text) => document.getElementById(id).textContent = text;
 
-    // Applica testi
-    $('#backBtn').childNodes[1].textContent = ' ' + TXT.back;
-    $('#homeBtn').childNodes[1].textContent = ' ' + TXT.home;
-    $('#title').textContent = TXT.title;
-    $('#subtitle').textContent = TXT.sub;
-    $('#qLabel').textContent = TXT.qLabel;
-    $('#userQuestion').placeholder = TXT.placeholder;
-    $('#hint').textContent = TXT.hint;
-    $('#goBtn').childNodes[1].textContent = ' ' + TXT.discover;
-    $('#clearBtn').textContent = TXT.clear;
+  if (lang === "en") {
+    document.title = "What?f – Your question";
+    el("mainTitle", "Write your question");
+    el("subtitle", `Explore a personal "What if": what would have happened if... or what might happen if...`);
+    el("questionLabel", "Your question");
+    document.getElementById("domandaInput").placeholder = "What if I had stayed to live in L’Aquila?";
+    el("periodLabel", "Time period");
+    el("pastLabel", "Past");
+    el("futureLabel", "Future");
+    el("styleLabel", "Style");
+    el("whatifLabel", "What if (realistic)");
+    el("wtfLabel", "WTF (surreal)");
+    el("nextBtn", "Next →");
+    document.querySelector(".lang-toggle").textContent = "🇬🇧 EN";
+  } else {
+    document.title = "What?f – La tua domanda";
+    el("mainTitle", "Scrivi la tua domanda");
+    el("subtitle", `Esplora un "What if" personale: cosa sarebbe successo se... o cosa potrebbe succedere se...`);
+    el("questionLabel", "La tua domanda");
+    document.getElementById("domandaInput").placeholder = "E se fossi rimasto a vivere all’Aquila?";
+    el("periodLabel", "Periodo");
+    el("pastLabel", "Passato");
+    el("futureLabel", "Futuro");
+    el("styleLabel", "Stile");
+    el("whatifLabel", "What if (realistico)");
+    el("wtfLabel", "WTF (surreale)");
+    el("nextBtn", "Avanti →");
+    document.querySelector(".lang-toggle").textContent = "🇮🇹 IT";
+  }
+}
 
-    // Riepilogo scelte (da localStorage.whatif_prefs)
-    const prefs = (()=>{ try{ return JSON.parse(localStorage.getItem('whatif_prefs')||'{}'); }catch{ return {}; }})();
-    const summary = $('#summary');
-    const pills = [];
-    const pLabel = (prefs.periodo === 'past') ? TXT.periodPast
-                  : (prefs.periodo === 'future') ? TXT.periodFuture : null;
-    const sLabel = (prefs.stile === 'whatif') ? TXT.styleWhatif
-                  : (prefs.stile === 'wtf') ? TXT.styleWTF : null;
-    if (pLabel) pills.push(pLabel);
-    if (sLabel) pills.push(sLabel);
-    if (pills.length){
-      pills.forEach(txt=>{
-        const span = document.createElement('span');
-        span.className = 'pill';
-        span.textContent = txt;
-        summary.appendChild(span);
-      });
-    }
+function salvaDomanda() {
+  const domanda = document.getElementById("domandaInput").value.trim();
+  if (!domanda) {
+    alert(currentLang === "en" ? "Please enter a question before continuing." : "Inserisci una domanda prima di continuare.");
+    return;
+  }
 
-    // Prefill domanda se esiste
-    const qEl = $('#userQuestion');
-    const counter = $('#counter');
-    const savedQ = localStorage.getItem('whatif_last_question') || '';
-    if (savedQ) { qEl.value = savedQ; }
-    counter.textContent = `${qEl.value.length}/${MAX_LEN}`;
-    if (qEl.value.length > MAX_LEN) counter.classList.add('warn');
+  const periodo = document.querySelector('input[name="periodo"]:checked')?.value || "future";
+  const stile = document.querySelector('input[name="stile"]:checked')?.value || "whatif";
 
-    qEl.addEventListener('input', ()=>{
-      const len = qEl.value.length;
-      counter.textContent = `${len}/${MAX_LEN}`;
-      counter.classList.toggle('warn', len > MAX_LEN);
-    });
+  localStorage.setItem("domanda", domanda);
+  localStorage.setItem("whatif_prefs", JSON.stringify({ periodo, stile, lang: currentLang }));
 
-    // Bottoni nav
-    $('#backBtn').addEventListener('click', ()=> history.back());
-    $('#homeBtn').addEventListener('click', ()=> location.href = 'index.html');
-
-    // Pulisci
-    $('#clearBtn').addEventListener('click', ()=>{
-      qEl.value = '';
-      counter.textContent = `0/${MAX_LEN}`;
-      counter.classList.remove('warn');
-      qEl.focus();
-    });
-
-    // Continua → salva e vai a fifth
-    $('#goBtn').addEventListener('click', ()=>{
-      const text = (qEl.value || '').trim();
-      if (!text){ alert(TXT.needQ); qEl.focus(); return; }
-
-      // Clampa a MAX_LEN (solo come igiene lato client; il server gestisce comunque)
-      const finalText = text.length > MAX_LEN ? text.slice(0, MAX_LEN) : text;
-
-      // Salva domanda
-      localStorage.setItem('whatif_last_question', finalText);
-
-      // Assicura prefs presenti
-      const periodo = prefs.periodo || localStorage.getItem('whatif_periodo') || 'future';
-      const stile   = prefs.stile   || localStorage.getItem('whatif_stile')   || 'whatif';
-      localStorage.setItem('whatif_prefs', JSON.stringify({ periodo, stile }));
-
-      // Pulisce follow-up/risposta precedenti
-      localStorage.removeItem('whatif_followups');
-      localStorage.removeItem('whatif_last_answer');
-
-      // Vai alla risposta
-      location.href = 'fifth.html';
-    });
-  </script>
+  window.location.href = "fifth.html";
+}
+</script>
 </body>
 </html>
