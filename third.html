@@ -1,56 +1,228 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — La tua domanda</title>
-<meta name="theme-color" content="#0A0F14"/>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What?f – Profilazione</title>
+<meta name="theme-color" content="#0A0F14" />
 <style>
-:root{--bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent2:#00B5CC}
-*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-main{max-width:980px;margin:0 auto;min-height:100%;padding:18px 16px 28px}
-.topbar{display:flex;gap:10px;align-items:center;margin-bottom:14px}
-.back{appearance:none;border:0;border-radius:14px;background:#0f1820;color:#d3e6ea;padding:10px 14px;font-weight:700;cursor:pointer}
-.pill{margin-left:auto;color:var(--muted);font-size:14px}
-h1{margin:6px 0 12px;font-size:clamp(30px,6vw,44px)}
-.card{background:var(--card);border-radius:18px;padding:16px;margin:0 0 14px;box-shadow:0 10px 28px rgba(0,0,0,.28)}
-label{display:block;margin:0 0 8px;color:var(--muted);font-weight:700}
-textarea{width:100%;min-height:150px;background:#0b1218;color:#cfe6eb;border:1px solid #20303a;border-radius:14px;padding:16px;font-size:16px}
-.hint{color:var(--muted);font-size:14px;margin-top:8px}
-.actions{display:flex;justify-content:center;margin-top:14px}
-.btn{appearance:none;border:0;border-radius:24px;padding:12px 18px;font-weight:900;cursor:pointer;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#002329;min-width:210px}
+  :root{
+    --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA;
+    --card:#101922; --chip:#141C22;
+    --accent:#00E0FF; --accent-dark:#00B5CC; --accent-ink:#001f26;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{min-height:100%;display:flex;flex-direction:column;align-items:center;padding:18px}
+  .wrap{width:min(100%,900px)}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .btn{appearance:none;border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
+  .btn.ghost{background:#0f1820;color:#cfe3e7;border:1px solid #1f2a33}
+  .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:var(--accent-ink)}
+  .progress{margin:10px 0 16px}
+  .bar{height:8px;background:#0f1820;border:1px solid #1d2b34;border-radius:999px;overflow:hidden}
+  .fill{height:100%;background:linear-gradient(180deg,var(--accent),var(--accent-dark));width:0%}
+  h1{font-size:clamp(22px,5vw,30px);margin:6px 0 0}
+  p.lead{color:var(--muted);margin:6px 0 16px}
+  .card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
+  .qgroup{color:#7fd8e6;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+  .qtext{font-size:clamp(18px,4.5vw,22px);margin:6px 0 10px}
+  .chips{display:grid;gap:10px}
+  .chip{appearance:none;border:none;background:var(--chip);color:#cfe3e7;
+    padding:12px 16px;border-radius:16px;font-weight:700;text-align:left;cursor:pointer;
+    transition:transform .08s ease, background .16s ease, box-shadow .16s ease, border .16s ease;
+    border:1px solid #1b2a34}
+  .chip:active{transform:translateY(1px)}
+  .chip.selected{background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:var(--accent-ink);
+    box-shadow:0 0 0 1px rgba(0,224,255,.35) inset}
+  .actions{display:flex;gap:10px;justify-content:space-between;margin-top:16px}
+  .muted{color:var(--muted);font-size:12px;margin-top:8px}
 </style>
 </head>
 <body>
 <main>
-  <div class="topbar">
-    <button class="back" onclick="history.back()">← Indietro</button>
-    <span id="pill" class="pill"></span>
-  </div>
+  <div class="wrap">
+    <div class="topbar">
+      <button class="btn ghost" id="backBtn">← <span data-i18n="back">Indietro</span></button>
+      <div class="muted" id="stepLabel"></div>
+      <button class="btn ghost" id="skipBtn"><span data-i18n="skip">Salta</span> →</button>
+    </div>
 
-  <h1>La tua domanda</h1>
+    <div class="progress">
+      <div class="bar"><div class="fill" id="fill"></div></div>
+    </div>
 
-  <div class="card">
-    <label for="q">Scrivi la tua domanda What?f…</label>
-    <textarea id="q" placeholder="Esempio: Se avessi accettato quel lavoro a Milano?"></textarea>
-    <div class="hint">Suggerimento: sii specifico. Es. “Se restassi a L’Aquila i prossimi 2 anni, cosa cambierebbe nella mia carriera?”</div>
-    <div class="actions"><button id="go" class="btn">Scopri</button></div>
+    <h1 data-i18n="title">Conosciamoci in 12 passi</h1>
+    <p class="lead" data-i18n="lead">
+      Rispondi velocemente a queste domande. Servono a rendere lo scenario più realistico e “tuo”.
+    </p>
+
+    <div class="card">
+      <div class="qgroup" id="qGroup"></div>
+      <div class="qtext" id="qText"></div>
+      <div class="chips" id="qOptions"></div>
+
+      <div class="actions">
+        <button class="btn ghost" id="prevBtn" data-i18n="prev">Indietro</button>
+        <button class="btn primary" id="nextBtn" data-i18n="next">Avanti</button>
+      </div>
+      <div class="muted" id="hint"></div>
+    </div>
   </div>
 </main>
 
 <script>
-const prefs=JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-document.getElementById('pill').textContent =
-  (prefs.periodo==='past'?'Passato':prefs.periodo==='future'?'Futuro':'—')+' • '+
-  (prefs.stile==='whatif'?'What if (plausibile)':prefs.stile==='wtf'?'What the F (ironico)':'—');
-
-document.getElementById('go').addEventListener('click',()=>{
-  const q=document.getElementById('q').value.trim();
-  if(!q){ alert('Scrivi una domanda.'); return; }
-  const profile=JSON.parse(localStorage.getItem('whatif_profile')||'{}');
-  localStorage.setItem('whatif_last', JSON.stringify({question:q,prefs,profile}));
-  location.href='fifth.html'; // vai diretto alla risposta AI (come da versione buona)
+/* ===== i18n ===== */
+const DICT = {
+  it: {
+    title:"Conosciamoci in 12 passi",
+    lead:"Rispondi velocemente a queste domande. Servono a rendere lo scenario più realistico e “tuo”.",
+    back:"Indietro", skip:"Salta", prev:"Indietro", next:"Avanti",
+    step:"Domanda {i} di {n}",
+    hint:"Puoi cambiare risposta in qualsiasi momento."
+  },
+  en: {
+    title:"Get to know you in 12 steps",
+    lead:"Quick questions to make your scenario more realistic and personal.",
+    back:"Back", skip:"Skip", prev:"Back", next:"Next",
+    step:"Question {i} of {n}",
+    hint:"You can change your answer at any time."
+  }
+};
+const LS = localStorage;
+const lang = (LS.getItem('lang') || 'it').toLowerCase();
+const T = DICT[lang] || DICT.it;
+document.documentElement.lang = lang;
+document.querySelectorAll('[data-i18n]').forEach(el=>{
+  const k = el.getAttribute('data-i18n');
+  el.textContent = T[k] || el.textContent;
 });
-</script>
-</body>
-</html>
+
+/* ===== Domande (IT/EN) ===== */
+const Q = [
+  { group:{it:"Origine",en:"Origin"},
+    text:{it:"Quale esperienza della tua infanzia ha lasciato il segno più profondo?",en:"Which childhood experience left the deepest mark?"},
+    opts:[
+      {k:"A", it:"Scoperta/curiosità intensa", en:"Discovery / intense curiosity"},
+      {k:"B", it:"Crescere in fretta / responsabilità", en:"Growing up fast / responsibility"},
+      {k:"C", it:"Isolamento o solitudine", en:"Isolation or loneliness"},
+      {k:"D", it:"Forte connessione familiare", en:"Strong family connection"},
+      {k:"E", it:"Ribellione / indipendenza precoce", en:"Rebellion / early independence"},
+    ]},
+  { group:{it:"Tensione interna",en:"Inner tension"},
+    text:{it:"Qual è la forza opposta che più spesso ti divide dentro?", en:"Which opposing force splits you most often?"},
+    opts:[
+      {k:"A", it:"Sicurezza vs Libertà", en:"Security vs Freedom"},
+      {k:"B", it:"Ragione vs Intuizione", en:"Reason vs Intuition"},
+      {k:"C", it:"Dovere vs Desiderio", en:"Duty vs Desire"},
+      {k:"D", it:"Appartenenza vs Autonomia", en:"Belonging vs Autonomy"},
+      {k:"E", it:"Controllo vs Caso", en:"Control vs Chance"},
+    ]},
+  { group:{it:"Vocazione",en:"Calling"},
+    text:{it:"Se non ci fossero limiti o giudizi, cosa faresti per puro piacere?", en:"With no limits or judgment, what would you do for pure joy?"},
+    opts:[
+      {k:"A", it:"Costruire o creare", en:"Build or create"},
+      {k:"B", it:"Scoprire e capire", en:"Discover and understand"},
+      {k:"C", it:"Aiutare o guidare gli altri", en:"Help or guide others"},
+      {k:"D", it:"Raccontare o esprimere", en:"Tell stories / express"},
+      {k:"E", it:"Viaggiare e sperimentare", en:"Travel and experiment"},
+    ]},
+  { group:{it:"Immagine di sé",en:"Self-image"},
+    text:{it:"Quale frase ti rappresenta meglio?", en:"Which sentence represents you best?"},
+    opts:[
+      {k:"A", it:"Do forma a ciò che immagino", en:"I shape what I imagine"},
+      {k:"B", it:"Capisco il senso nascosto delle cose", en:"I grasp the hidden meaning"},
+      {k:"C", it:"Cerco equilibrio cuore/logica", en:"I seek heart/logic balance"},
+      {k:"D", it:"Osservo e partecipo", en:"I observe and I participate"},
+      {k:"E", it:"Sono esploratore", en:"I'm an explorer"},
+    ]},
+  { group:{it:"Decisioni",en:"Decisions"},
+    text:{it:"Quando devi scegliere, cosa pesa di più?", en:"When deciding, what weighs most?"},
+    opts:[
+      {k:"A", it:"Logica e analisi", en:"Logic and analysis"},
+      {k:"B", it:"Istinto e sensazione", en:"Instinct and feeling"},
+      {k:"C", it:"Paura di sbagliare", en:"Fear of being wrong"},
+      {k:"D", it:"Libertà e novità", en:"Freedom and novelty"},
+      {k:"E", it:"Impatto sugli altri", en:"Impact on others"},
+    ]},
+  { group:{it:"Luogo e libertà",en:"Place & freedom"},
+    text:{it:"Dove senti di appartenere di più?", en:"Where do you feel you belong most?"},
+    opts:[
+      {k:"A", it:"In città (energia e movimento)", en:"In the city (energy & motion)"},
+      {k:"B", it:"Nella natura / luoghi tranquilli", en:"In nature / quiet places"},
+      {k:"C", it:"Spazio personale di creazione", en:"Personal creative space"},
+      {k:"D", it:"Tra persone affini", en:"Among kindred people"},
+      {k:"E", it:"Non l'ho ancora trovato", en:"Haven't found it yet"},
+    ]},
+  { group:{it:"Relazioni",en:"Relationships"},
+    text:{it:"Che tipo di persone tendi ad attrarre?", en:"What kind of people do you attract?"},
+    opts:[
+      {k:"A", it:"Curiose, intelligenti e creative", en:"Curious, smart and creative"},
+      {k:"B", it:"Fragili, da proteggere/aiutare", en:"Fragile, to protect/help"},
+      {k:"C", it:"Forti e decise, che sfidano", en:"Strong, decisive, challenging"},
+      {k:"D", it:"Tranquille e affidabili", en:"Calm and reliable"},
+      {k:"E", it:"Libere e fuori dagli schemi", en:"Free and unconventional"},
+    ]},
+  { group:{it:"Bivio",en:"Turning point"},
+    text:{it:"Quale situazione descrive meglio un 'bivio' della tua vita?", en:"Which situation best describes a 'fork' in your life?"},
+    opts:[
+      {k:"A", it:"Cambiare carriera o studi", en:"Change career/studies"},
+      {k:"B", it:"Trasferirmi altrove", en:"Move elsewhere"},
+      {k:"C", it:"Relazione importante sì/no", en:"Important relationship yes/no"},
+      {k:"D", it:"Rischiare in un progetto personale", en:"Risk a personal project"},
+      {k:"E", it:"Non seguire il percorso atteso", en:"Not follow the expected path"},
+    ]},
+  { group:{it:"Paura",en:"Fear"},
+    text:{it:"Cosa temi di più di perdere?", en:"What do you most fear losing?"},
+    opts:[
+      {k:"A", it:"La libertà", en:"Freedom"},
+      {k:"B", it:"Le persone che amo", en:"Loved ones"},
+      {k:"C", it:"Controllo e stabilità", en:"Control and stability"},
+      {k:"D", it:"Il senso di significato", en:"Sense of meaning"},
+      {k:"E", it:"Me stesso / identità", en:"Myself / identity"},
+    ]},
+  { group:{it:"Forza",en:"Strength"},
+    text:{it:"Cosa ti rialza nei momenti difficili?", en:"What lifts you up in hard times?"},
+    opts:[
+      {k:"A", it:"Logica e pianificazione", en:"Logic and planning"},
+      {k:"B", it:"Fede o speranza", en:"Faith or hope"},
+      {k:"C", it:"Determinazione e orgoglio", en:"Determination and pride"},
+      {k:"D", it:"Amore / sostegno degli altri", en:"Love / support of others"},
+      {k:"E", it:"Curiosità e voglia di capire", en:"Curiosity and desire to understand"},
+    ]},
+  { group:{it:"Evoluzione",en:"Evolution"},
+    text:{it:"Negli ultimi anni, in cosa sei cambiato di più?", en:"In recent years, what changed the most?"},
+    opts:[
+      {k:"A", it:"Più consapevole e riflessivo", en:"More self-aware and reflective"},
+      {k:"B", it:"Più concreto e orientato ai risultati", en:"More practical / results-oriented"},
+      {k:"C", it:"Più libero e meno condizionato", en:"Freer and less conditioned"},
+      {k:"D", it:"Più empatico e aperto", en:"More empathic and open"},
+      {k:"E", it:"Più selettivo sulle priorità", en:"More selective on priorities"},
+    ]},
+  { group:{it:"Essenza",en:"Essence"},
+    text:{it:"Se la tua vita fosse un film, che genere sarebbe?", en:"If your life were a film, what genre?"},
+    opts:[
+      {k:"A", it:"Costruzione e visione", en:"Building and vision"},
+      {k:"B", it:"Ricerca e mistero", en:"Quest and mystery"},
+      {k:"C", it:"Trasformazione", en:"Transformation"},
+      {k:"D", it:"Avventura", en:"Adventure"},
+      {k:"E", it:"Connessioni umane", en:"Human connections"},
+    ]},
+];
+const TOTAL = Q.length;
+
+/* ===== Pesi archetipi (tutti i casi QxY coperti) ===== */
+const ARCH = ["Ricercatore","Costruttore","Ribelle","Guaritore","Visionario","Mediatore"];
+
+const WEIGHTS = {
+  // Q1
+  Q1A:{Ricercatore:3,Visionario:2}, Q1B:{Costruttore:3,Mediatore:1},
+  Q1C:{Ricercatore:2,Ribelle:1,Guaritore:1}, Q1D:{Mediatore:3,Guaritore:2},
+  Q1E:{Ribelle:3,Visionario:2},
+  // Q2
+  Q2A:{Costruttore:2,Visionario:2}, Q2B:{Ricercatore:3,Visionario:2},
+  Q2C:{Costruttore:2,Ribelle:2}, Q2D:{Mediatore:2,Ribelle:2},
+  Q2E:{Ricercatore:2,Visionario:1,Costruttore:1},
+  // Q3
+  Q3A:{Costruttore:4,Visionario:2}, Q3B:{Ricercatore:5}
