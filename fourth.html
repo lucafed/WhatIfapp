@@ -7,206 +7,113 @@
 <meta name="theme-color" content="#0A0F14" />
 <style>
   :root {
-    --bg: #0A0F14;
-    --card: #141C22;
-    --fg: #FFFFFF;
-    --muted: #A0B2BA;
-    --accent: #00E0FF;
-    --accent2: #00B5CC;
+    --bg:#0A0F14; --card:#141C22; --fg:#FFFFFF; --muted:#A0B2BA;
+    --acc:#00E0FF; --acc2:#00B5CC; --ink:#001F26;
   }
-  body {
-    background: var(--bg);
-    color: var(--fg);
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    margin: 0;
-    padding: 0;
+  *{box-sizing:border-box}
+  html,body{
+    margin:0; background:var(--bg); color:var(--fg);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
   }
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 24px;
-    background: rgba(20, 28, 34, 0.8);
-    border-bottom: 1px solid #1a2630;
+  main{
+    min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:24px;
   }
-  .lang-toggle {
-    background: var(--card);
-    color: var(--muted);
-    border: 1px solid #1C2A33;
-    padding: 6px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
+  h1{font-size:clamp(22px,5vw,32px); margin:0 0 14px}
+  .sub{color:var(--muted); margin:0 0 18px; text-align:center; max-width:640px}
+  .card{
+    width:min(92vw,720px);
+    background:var(--card); border-radius:16px; padding:18px;
+    box-shadow:0 10px 28px rgba(0,0,0,.25);
   }
-  .lang-toggle:hover {
-    background: var(--accent2);
-    color: #001f26;
-    font-weight: 600;
+  label{display:block; margin:6px 0 8px; font-weight:700}
+  input[type="text"]{
+    width:100%; background:#0E161D; color:var(--fg);
+    border:1px solid #1C2A33; padding:14px; border-radius:12px; font-size:16px;
   }
-  main {
-    max-width: 700px;
-    margin: auto;
-    padding: 24px;
+  .actions{display:flex; gap:10px; justify-content:flex-end; margin-top:16px}
+  .btn{
+    appearance:none; border:none; border-radius:12px; padding:12px 16px; font-weight:800; cursor:pointer;
   }
-  h1 {
-    font-size: clamp(22px, 5vw, 32px);
-    margin-bottom: 10px;
+  .btn.primary{
+    background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);
   }
-  p {
-    color: var(--muted);
-  }
-  .card {
-    background: var(--card);
-    padding: 20px;
-    border-radius: 16px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    margin-top: 20px;
-  }
-  input[type="text"] {
-    width: 100%;
-    background: #0E161D;
-    color: var(--fg);
-    border: 1px solid #1C2A33;
-    padding: 12px;
-    border-radius: 10px;
-    font-size: 16px;
-    margin-bottom: 20px;
-  }
-  label {
-    display: block;
-    margin: 10px 0 6px;
-  }
-  .radio-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .radio-group label {
-    background: #0F1820;
-    border: 1px solid #1C2A33;
-    padding: 8px 14px;
-    border-radius: 999px;
-    cursor: pointer;
-    color: var(--muted);
-    font-size: 14px;
-  }
-  input[type="radio"]:checked + label {
-    background: linear-gradient(180deg, var(--accent), var(--accent2));
-    color: #001F26;
-    font-weight: bold;
-  }
-  button {
-    background: linear-gradient(180deg, var(--accent), var(--accent2));
-    color: #001F26;
-    border: none;
-    padding: 14px 24px;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    width: 100%;
-    margin-top: 20px;
-  }
-  button:hover {
-    opacity: 0.9;
+  .btn.ghost{
+    background:#0f1820; color:#cfe3e7; border:1px solid #1d2b34;
   }
 </style>
 </head>
 <body>
-<header>
-  <h2 id="title">What?f</h2>
-  <button class="lang-toggle" onclick="toggleLang()">🇮🇹 IT</button>
-</header>
-
 <main>
   <h1 id="mainTitle">Scrivi la tua domanda</h1>
-  <p id="subtitle">Esplora un "What if" personale: cosa sarebbe successo se... o cosa potrebbe succedere se...</p>
+  <p class="sub" id="subtitle">
+    Esplora un “What if” personale: cosa sarebbe successo se… oppure cosa potrebbe succedere se…
+  </p>
 
   <div class="card">
-    <label id="questionLabel" for="domandaInput">La tua domanda</label>
+    <label for="domandaInput" id="questionLabel">La tua domanda</label>
     <input type="text" id="domandaInput" placeholder="E se fossi rimasto a vivere all’Aquila?" />
-
-    <label id="periodLabel">Periodo</label>
-    <div class="radio-group">
-      <input type="radio" id="past" name="periodo" value="past" checked />
-      <label for="past" id="pastLabel">Passato</label>
-
-      <input type="radio" id="future" name="periodo" value="future" />
-      <label for="future" id="futureLabel">Futuro</label>
+    <div class="actions">
+      <button class="btn ghost" id="backBtn">← <span id="backTxt">Indietro</span></button>
+      <button class="btn primary" id="nextBtn"><span id="nextTxt">Avanti</span> →</button>
     </div>
-
-    <label id="styleLabel">Stile</label>
-    <div class="radio-group">
-      <input type="radio" id="whatif" name="stile" value="whatif" checked />
-      <label for="whatif" id="whatifLabel">What if (realistico)</label>
-
-      <input type="radio" id="wtf" name="stile" value="wtf" />
-      <label for="wtf" id="wtfLabel">WTF (surreale)</label>
-    </div>
-
-    <button id="nextBtn" onclick="salvaDomanda()">Avanti →</button>
   </div>
 </main>
 
 <script>
-let currentLang = localStorage.getItem("lang") || (navigator.language.startsWith("en") ? "en" : "it");
-aggiornaLingua(currentLang);
+  // i18n minimale (senza header): usa localStorage.lang
+  const lang = (localStorage.getItem("lang") || (navigator.language?.startsWith("en") ? "en" : "it")).toLowerCase();
+  const T = {
+    it: {
+      title: "Scrivi la tua domanda",
+      sub: `Esplora un “What if” personale: cosa sarebbe successo se… oppure cosa potrebbe succedere se…`,
+      label: "La tua domanda",
+      ph: "E se fossi rimasto a vivere all’Aquila?",
+      back: "Indietro",
+      next: "Avanti",
+      missing: "Inserisci una domanda prima di continuare."
+    },
+    en: {
+      title: "Write your question",
+      sub: `Explore a personal “What if”: what would have happened if… or what might happen if…`,
+      label: "Your question",
+      ph: "What if I had stayed to live in L’Aquila?",
+      back: "Back",
+      next: "Next",
+      missing: "Please enter a question before continuing."
+    }
+  }[lang];
 
-function toggleLang() {
-  currentLang = currentLang === "it" ? "en" : "it";
-  localStorage.setItem("lang", currentLang);
-  aggiornaLingua(currentLang);
-}
+  document.documentElement.lang = lang;
+  document.title = lang === "en" ? "What?f – Your question" : "What?f – La tua domanda";
+  document.getElementById("mainTitle").textContent = T.title;
+  document.getElementById("subtitle").textContent = T.sub;
+  document.getElementById("questionLabel").textContent = T.label;
+  document.getElementById("domandaInput").placeholder = T.ph;
+  document.getElementById("backTxt").textContent = T.back;
+  document.getElementById("nextTxt").textContent = T.next;
 
-function aggiornaLingua(lang) {
-  const el = (id, text) => document.getElementById(id).textContent = text;
+  // Azioni
+  document.getElementById("backBtn").addEventListener("click", ()=> history.back());
+  document.getElementById("nextBtn").addEventListener("click", salvaDomanda);
 
-  if (lang === "en") {
-    document.title = "What?f – Your question";
-    el("mainTitle", "Write your question");
-    el("subtitle", `Explore a personal "What if": what would have happened if... or what might happen if...`);
-    el("questionLabel", "Your question");
-    document.getElementById("domandaInput").placeholder = "What if I had stayed to live in L’Aquila?";
-    el("periodLabel", "Time period");
-    el("pastLabel", "Past");
-    el("futureLabel", "Future");
-    el("styleLabel", "Style");
-    el("whatifLabel", "What if (realistic)");
-    el("wtfLabel", "WTF (surreal)");
-    el("nextBtn", "Next →");
-    document.querySelector(".lang-toggle").textContent = "🇬🇧 EN";
-  } else {
-    document.title = "What?f – La tua domanda";
-    el("mainTitle", "Scrivi la tua domanda");
-    el("subtitle", `Esplora un "What if" personale: cosa sarebbe successo se... o cosa potrebbe succedere se...`);
-    el("questionLabel", "La tua domanda");
-    document.getElementById("domandaInput").placeholder = "E se fossi rimasto a vivere all’Aquila?";
-    el("periodLabel", "Periodo");
-    el("pastLabel", "Passato");
-    el("futureLabel", "Futuro");
-    el("styleLabel", "Stile");
-    el("whatifLabel", "What if (realistico)");
-    el("wtfLabel", "WTF (surreale)");
-    el("nextBtn", "Avanti →");
-    document.querySelector(".lang-toggle").textContent = "🇮🇹 IT";
-  }
-}
-
-function salvaDomanda() {
-  const domanda = document.getElementById("domandaInput").value.trim();
-  if (!domanda) {
-    alert(currentLang === "en" ? "Please enter a question before continuing." : "Inserisci una domanda prima di continuare.");
-    return;
+  function salvaDomanda() {
+    const domanda = document.getElementById("domandaInput").value.trim();
+    if (!domanda) {
+      alert(T.missing);
+      return;
+    }
+    // Salva domanda (periodo/stile sono già in localStorage.whatif_prefs da index.html)
+    localStorage.setItem("domanda", domanda);
+    // Vai al risultato
+    window.location.href = "fifth.html";
   }
 
-  const periodo = document.querySelector('input[name="periodo"]:checked')?.value || "future";
-  const stile = document.querySelector('input[name="stile"]:checked')?.value || "whatif";
-
-  localStorage.setItem("domanda", domanda);
-  localStorage.setItem("whatif_prefs", JSON.stringify({ periodo, stile, lang: currentLang }));
-
-  window.location.href = "fifth.html";
-}
+  // (opzionale) precompila se l’utente è tornato indietro
+  (function prefill(){
+    const prev = localStorage.getItem("domanda");
+    if (prev) document.getElementById("domandaInput").value = prev;
+  })();
 </script>
 </body>
 </html>
