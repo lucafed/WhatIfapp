@@ -30,17 +30,14 @@
   #result{min-height:180px;line-height:1.6}
   .tools{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
   .divider{height:1px;background:#16222b;margin:16px 0}
-  .hint{font-size:12px;color:var(--muted)}
-  .meter{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .badge{background:#0f1820;border:1px solid #1b2a34;border-radius:999px;padding:6px 10px;font-size:12px;color:#cfe3e7}
-  .proOnly{display:none}
-  /* Overlay generico */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:6000;padding:14px}
   .sheet{width:min(92vw,720px);max-height:80vh;overflow:auto;background:var(--card);border-radius:16px;padding:14px;border:1px solid #1d2b34}
-  .hist-item{border:1px solid #1d2b34;border-radius:12px;padding:10px;margin:8px 0}
-  .hist-item h4{margin:0 0 6px;color:var(--acc)}
   .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,#0d151c 0%,#122029 50%,#0d151c 100%);background-size:200% 100%;animation:sk 1s infinite}
   @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
+  .qitem{margin:10px 0}
+  .qitem label{display:block;margin:6px 0}
+  .qitem input, .qitem textarea{width:100%;background:#0f1820;color:var(--fg);border:1px solid #1b2a34;border-radius:10px;padding:10px}
 </style>
 </head>
 <body>
@@ -50,14 +47,13 @@
         <button class="btn ghost" onclick="history.back()">← Indietro</button>
         <button class="btn ghost" onclick="location.href='index.html'">🏠 Home</button>
       </div>
-      <div class="meter">
+      <div class="row">
         <span id="freeBadge" class="badge">Free oggi: —</span>
-        <button class="btn" id="proBtn">⭐ Pro</button>
       </div>
     </div>
 
     <h1>Il tuo scenario</h1>
-    <p class="sub">Seleziona lo stile e genera la risposta quando vuoi.</p>
+    <p class="sub">Per una risposta più personale, puoi fare prima 2–3 chiarimenti mirati.</p>
 
     <!-- STILE + PERIOD (solo display) -->
     <div class="card">
@@ -68,7 +64,7 @@
         </div>
         <div class="chips" id="styleChips">
           <button class="chip" data-style="whatif">What if (realistico)</button>
-          <button class="chip" data-style="wtf">WTF (surreale)</button>
+          <button class="chip" data-style="wtf">WTF (divertente)</button>
         </div>
       </div>
     </div>
@@ -78,7 +74,8 @@
       <div id="question" class="box"></div>
       <div class="tools">
         <button class="btn" onclick="editQuestion()">Modifica domanda</button>
-        <button class="btn primary" id="genBtn">Genera risposta</button>
+        <button class="btn" id="clarifyBtn">Chiarisci e genera</button>
+        <button class="btn primary" id="genBtn">Genera subito</button>
         <button class="btn" id="regenBtn" style="display:none">Rigenera 🔁</button>
       </div>
 
@@ -88,241 +85,147 @@
       <div id="result" class="box">—</div>
 
       <div class="tools">
-        <button class="btn" onclick="saveHistory()">💾 Salva in cronologia</button>
-        <button class="btn" onclick="openHistory()">📜 Vedi cronologia</button>
+        <button class="btn" onclick="saveHistory()">💾 Salva</button>
         <button class="btn" onclick="copyText()">📋 Copia</button>
         <button class="btn" onclick="shareOut()">📤 Condividi</button>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Barra PRO-ONLY -->
-      <div class="tools proOnly" id="proExploreBar" style="display:none">
-        <button class="btn" onclick="proAction('continue')">Continua a leggere ▶</button>
-        <button class="btn" onclick="proAction('branches')">Vedi due bivi ⤴⤵</button>
-        <button class="btn" onclick="proAction('rewind')">Riavvolgi ◀</button>
       </div>
     </div>
   </main>
 
-  <!-- Overlay cronologia -->
-  <div class="overlay" id="histOverlay" onclick="closeHistory(event)">
+  <!-- Overlay chiarimenti -->
+  <div class="overlay" id="clarifyOverlay">
     <div class="sheet">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <h3 style="margin:6px 0">Cronologia</h3>
-        <div>
-          <button class="btn ghost" onclick="clearHistory()">Svuota</button>
-          <button class="btn" onclick="closeHistory()">Chiudi</button>
-        </div>
+      <h3 style="margin:6px 0">2–3 domande per essere più precisi</h3>
+      <div id="clarifyList"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="applyClarify">Genera con queste risposte</button>
+        <button class="btn ghost" onclick="closeClarify()">Annulla</button>
       </div>
-      <div id="histList"></div>
-    </div>
-  </div>
-
-  <!-- Overlay Pro / Upgrade -->
-  <div class="overlay" id="proOverlay">
-    <div class="sheet">
-      <h3>Passa a Pro ⭐</h3>
-      <p class="sub">Sblocca “Continua a leggere”, “Due bivi” e “Riavvolgi”.</p>
-      <div class="row" style="margin:8px 0 12px">
-        <button class="btn primary" onclick="fakeUpgrade()">Attiva Pro (demo)</button>
-        <button class="btn ghost" onclick="closePro()">Annulla</button>
-      </div>
-      <p class="hint">Demo: questo tasto imposta <code>localStorage.whatif_credits.pro = true</code>.</p>
     </div>
   </div>
 
 <script>
-/* ====== Config base ====== */
+/* ====== Config ====== */
 const LS = localStorage;
-const DAILY_FREE = 3; // limite gratuito giornaliero (puoi cambiare)
+const DAILY_FREE = 3;
 const lang = (LS.getItem("lang") || "it").toLowerCase();
 
 /* ====== Helpers ====== */
-function todayStr(){
-  const d=new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function readCredits(){const v=JSON.parse(LS.getItem('whatif_credits')||'{}');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0};return v;}
+function writeCredits(v){LS.setItem('whatif_credits',JSON.stringify(v));renderFreeBadge();}
+function ensureCredits(){const c=readCredits();if(!c.date||c.date!==todayStr()){c.date=todayStr();c.used=0;writeCredits(c);}}
+
+/* ====== Profilo (locale) ====== */
+function buildProfilePayload(){
+  const base = JSON.parse(LS.getItem('whatif_profile')||'{}');
+  const micro = JSON.parse(LS.getItem('whatif_micro')||'{}');
+  return { ...base, micro };
 }
-function readCredits(){
-  const v = JSON.parse(LS.getItem('whatif_credits')||'{}');
-  const today = todayStr();
-  if (!v.date || v.date!==today) return {date:today, used:0, pro: !!v.pro};
-  return v;
+function saveMicroPatch(patch){ // salva i chiarimenti anche come micro-dati
+  const micro = JSON.parse(LS.getItem('whatif_micro')||'{}');
+  Object.assign(micro, patch);
+  LS.setItem('whatif_micro', JSON.stringify(micro));
 }
-function writeCredits(v){
-  LS.setItem('whatif_credits', JSON.stringify(v));
-  renderFreeBadge();
-}
-function isPro(){ return !!readCredits().pro; }
-function ensureCredits(){
-  const c = readCredits();
-  if (!c.date || c.date!==todayStr()){ c.date=todayStr(); c.used=0; writeCredits(c); }
-}
+
+/* ====== Badges ====== */
 function renderFreeBadge(){
-  const c = readCredits();
-  const left = Math.max(0, DAILY_FREE - (c.used||0));
-  document.getElementById('freeBadge').textContent = isPro() ? 'Pro attivo' : `Free oggi: ${left}/${DAILY_FREE}`;
-  document.getElementById('proExploreBar').style.display = isPro() ? 'flex' : 'none';
+  const c=readCredits(); const left=Math.max(0, DAILY_FREE - (c.used||0));
+  const el=document.getElementById('freeBadge'); if(!el) return;
+  el.textContent = `Free oggi: ${left}/${DAILY_FREE}`;
 }
 
 /* ====== Stato iniziale ====== */
-const prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}"); // { periodo, stile }
+const prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}");
 let domanda = LS.getItem("domanda") || "";
-if (!domanda) {
-  alert(lang==="en"?"No question found. Going back.":"Nessuna domanda trovata. Torno indietro.");
-  location.href = "fourth.html";
-}
-let currentStyle = (prefs.stile || "whatif"); // 'whatif' | 'wtf'
+if (!domanda) { alert("Nessuna domanda trovata."); location.href="fourth.html"; }
+let currentStyle = (prefs.stile || "whatif");
 const questionEl = document.getElementById("question");
 const resultEl   = document.getElementById("result");
-const proBar     = document.getElementById("proExploreBar");
-
-/* ====== UI iniziale ====== */
 questionEl.textContent = domanda;
 document.getElementById("badgePeriodo").textContent = "🕰️ " + (prefs.periodo==="past" ? "Passato" : "Futuro");
 document.getElementById("badgeStile").textContent   = "🎭 " + (currentStyle==="wtf" ? "What the F" : "What if");
-highlightStyleChip(currentStyle);
-
-/* ====== Chips stile ====== */
-document.getElementById("styleChips").addEventListener("click", (e)=>{
-  const b = e.target.closest(".chip"); if(!b) return;
-  currentStyle = b.dataset.style;
+document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===currentStyle));
+document.getElementById("styleChips").addEventListener("click",(e)=>{
+  const b=e.target.closest(".chip"); if(!b) return;
+  currentStyle=b.dataset.style;
   document.getElementById("badgeStile").textContent = "🎭 " + (currentStyle==="wtf" ? "What the F" : "What if");
-  highlightStyleChip(currentStyle);
+  document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===currentStyle));
 });
-function highlightStyleChip(val){
-  document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===val));
+
+/* ====== API helpers ====== */
+async function callClarifyAPI(){
+  const payload = {
+    domanda, lang, periodo:prefs.periodo||"future", stile:currentStyle,
+    clarify:true, profilo:buildProfilePayload()
+  };
+  const r = await fetch("/api/ask", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(payload) });
+  if (!r.ok) throw new Error("server");
+  return r.json();
+}
+async function callGenerateStream({ clarifications={}, extra="" }={}){
+  const payload = {
+    domanda, lang, periodo:prefs.periodo||"future", stile:currentStyle,
+    clarify:false, stream:true, profilo:buildProfilePayload(),
+    clarifications, extra
+  };
+  const r = await fetch("/api/ask", { method:"POST", headers:{ "Content-Type":"application/json","x-whatif-stream":"1" }, body: JSON.stringify(payload) });
+  if (!r.ok) throw new Error("server");
+  return r.body.getReader();
 }
 
-/* ====== Bottoni generate/regen ====== */
+/* ====== Chiarimenti UI ====== */
+const clarifyOverlay = document.getElementById('clarifyOverlay');
+const clarifyList    = document.getElementById('clarifyList');
+document.getElementById('clarifyBtn').addEventListener('click', openClarify);
+
+async function openClarify(){
+  clarifyList.innerHTML = `<p class="sub">Sto preparando 2–3 domande mirate…</p>`;
+  clarifyOverlay.style.display='flex';
+  try{
+    const j = await callClarifyAPI();
+    const qs = Array.isArray(j.questions)? j.questions.slice(0,3) : [];
+    if (!qs.length){ clarifyList.innerHTML = `<p class="sub">Nessun chiarimento necessario. Puoi generare direttamente.</p>`; return; }
+    clarifyList.innerHTML = qs.map(q=>`
+      <div class="qitem">
+        <label for="${q.id||''}">${escapeHTML(q.label||'Domanda')}</label>
+        <input id="${q.id||''}" type="text" placeholder="${escapeAttr(q.placeholder||'Rispondi in una riga')}" />
+      </div>`).join("");
+  }catch(e){
+    clarifyList.innerHTML = `<p class="sub">Errore nel recupero chiarimenti. Puoi generare direttamente.</p>`;
+  }
+}
+
+function closeClarify(){ clarifyOverlay.style.display='none'; }
+
+document.getElementById('applyClarify').addEventListener('click', async ()=>{
+  // costruisci oggetto chiarimenti {id: risposta}
+  const inputs = clarifyList.querySelectorAll('input');
+  const clar = {}; inputs.forEach(i=>{ const v=(i.value||"").trim(); if(i.id&&v) clar[i.id]=v; });
+  closeClarify();
+  if (Object.keys(clar).length) saveMicroPatch(clar);
+  await generate(false, clar);
+});
+
+/* ====== Generazione ====== */
 document.getElementById('genBtn').addEventListener('click', ()=> generate());
 document.getElementById('regenBtn').addEventListener('click', ()=> generate(true));
 
-/* ====== Modifica domanda ====== */
-function editQuestion(){
-  LS.setItem("domanda", domanda);
-  location.href = "fourth.html";
-}
-
-/* ====== API call ====== */
-async function callWhatIfAPI({ domanda, periodo, stile, extra }){
-  const payload = { domanda, lang, periodo, stile, stream:true, extra:(extra||"") };
-  const res = await fetch("/api/ask", {
-    method:"POST",
-    headers:{"Content-Type":"application/json","x-whatif-stream":"1"},
-    body: JSON.stringify(payload)
-  });
-  if (!res.ok) throw new Error("server");
-  return res.body.getReader();
-}
-
-/* ====== Tracking uso ====== */
-function trackUsage(kind){ // 'base' | 'pro'
-  try{
-    const key='usage_log';
-    const log=JSON.parse(LS.getItem(key)||'{}');
-    const t=todayStr();
-    log[t]=log[t]||{base:0,pro:0};
-    log[t][kind]=(log[t][kind]||0)+1;
-    LS.setItem(key, JSON.stringify(log));
-  }catch(e){ console.warn('tracking error', e); }
-}
-
-/* ====== Generazione ====== */
-async function generate(isRegen=false){
+async function generate(isRegen=false, clarOverride=null){
   ensureCredits();
   const credits = readCredits();
 
-  // gating free (solo per non-Pro)
-  if (!isPro() && credits.used >= DAILY_FREE && !isRegen){
-    openPro(); return;
+  if (!isRegen && (credits.used||0) >= DAILY_FREE){
+    alert("Hai raggiunto il limite gratuito di oggi. Torna domani!");
+    return;
   }
 
-  // UI reset
   resultEl.textContent = "⏳ Sto generando… ";
-  const sk = document.createElement("span");
-  sk.className="skeleton"; sk.style.width="40%"; resultEl.appendChild(sk);
+  const sk = document.createElement("span"); sk.className="skeleton"; sk.style.width="40%"; resultEl.appendChild(sk);
   document.getElementById('regenBtn').style.display = 'none';
 
-  let text = "";
   try{
-    const reader = await callWhatIfAPI({
-      domanda,
-      periodo: (prefs.periodo || "future"),
-      stile: currentStyle,
-    });
-    const decoder = new TextDecoder();
-    let buffer="";
-
-    while(true){
-      const {value, done} = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, {stream:true});
-      const chunks = buffer.split("\n\n");
-      buffer = chunks.pop();
-
-      for (const chunk of chunks){
-        if (!chunk.startsWith("data: ")) continue;
-        const data = JSON.parse(chunk.slice(6));
-        if (data.token){
-          text += data.token;
-          resultEl.textContent = text;
-        }
-        if (data.done){
-          resultEl.textContent = (text||"").trim();
-        }
-        if (data.error){
-          resultEl.textContent = "Errore: " + (data.detail||"");
-        }
-      }
-    }
-
-    // tracking + crediti
-    if (!isRegen){
-      if (!isPro()){
-        credits.used = (credits.used||0) + 1;
-        writeCredits(credits);
-      }
-      trackUsage('base');
-    } else {
-      // un regen lo contiamo comunque come base
-      if (!isPro()){
-        credits.used = (credits.used||0) + 1;
-        writeCredits(credits);
-      }
-      trackUsage('base');
-    }
-
-    // mostra rigenera
-    document.getElementById('regenBtn').style.display = 'inline-block';
-
-  }catch(e){
-    console.error(e);
-    resultEl.textContent = e.message === 'server' ? "C’è stato un problema. Riprova." : "Errore di rete.";
-  }
-}
-
-/* ====== Pro actions (solo se Pro) ====== */
-function proAction(kind){
-  if (!isPro()){ openPro(); return; }
-  // Semplice variazione del prompt per demo
-  const map = {
-    continue: lang==='en' ? "Continue the same scene with one more beat." : "Continua la stessa scena con un passo in più.",
-    branches: lang==='en' ? "Give me two short plausible forks." : "Dammi due brevi bivi plausibili.",
-    rewind:   lang==='en' ? "Rewind 6 months earlier and show a different entry point." : "Riavvolgi di 6 mesi e mostra un diverso punto d’ingresso."
-  };
-  generatePro(map[kind]||"");
-  trackUsage('pro');
-}
-async function generatePro(extra){
-  // non tocca i crediti free se sei Pro
-  resultEl.textContent = "⏳ Sto elaborando (Pro)… ";
-  const sk = document.createElement("span");
-  sk.className="skeleton"; sk.style.width="40%"; resultEl.appendChild(sk);
-  try{
-    const reader = await callWhatIfAPI({
-      domanda, periodo:(prefs.periodo||"future"), stile:currentStyle, extra
-    });
+    const reader = await callGenerateStream({ clarifications: (clarOverride||{} ) });
     const decoder = new TextDecoder();
     let buffer="", text="";
     while(true){
@@ -336,87 +239,38 @@ async function generatePro(extra){
         const data = JSON.parse(chunk.slice(6));
         if (data.token){ text += data.token; resultEl.textContent = text; }
         if (data.done){ resultEl.textContent = (text||"").trim(); }
+        if (data.error){ resultEl.textContent = "Errore: "+(data.detail||""); }
       }
     }
+
+    // conteggio solo alla generazione
+    const c = readCredits();
+    c.used = (c.used||0) + 1;
+    writeCredits(c);
+
+    document.getElementById('regenBtn').style.display = 'inline-block';
+
   }catch(e){
-    resultEl.textContent = "Errore Pro. Riprova.";
+    console.error(e);
+    resultEl.textContent = (e.message==='server' ? "Problema server." : "Errore di rete.");
   }
 }
 
-/* ====== Cronologia & utility ====== */
+/* ====== Utility ====== */
+function editQuestion(){ LS.setItem("domanda", domanda); location.href="fourth.html"; }
 function saveHistory(){
   const arr = JSON.parse(LS.getItem("cronologia")||"[]");
-  arr.unshift({
-    domanda,
-    risposta: (resultEl.textContent || "").trim(),
-    periodo: prefs.periodo || null,
-    stile: currentStyle,
-    lang, ts: Date.now()
-  });
+  arr.unshift({ domanda, risposta:(resultEl.textContent||"").trim(), periodo:prefs.periodo||null, stile:currentStyle, lang, ts:Date.now() });
   LS.setItem("cronologia", JSON.stringify(arr));
-  alert(lang==="en"?"Saved to history!":"Salvato nella cronologia!");
+  alert("Salvato!");
 }
-function openHistory(){
-  const ov = document.getElementById("histOverlay");
-  const list = document.getElementById("histList");
-  const arr = JSON.parse(LS.getItem("cronologia")||"[]");
-  if (!arr.length){ list.innerHTML = `<p class="hint">${lang==="en"?"Empty.":"Vuota."}</p>`; }
-  else{
-    list.innerHTML = arr.map((it,i)=>`
-      <div class="hist-item">
-        <h4>#${arr.length-i} — ${new Date(it.ts).toLocaleString()}</h4>
-        <div class="hint">${(it.periodo||"")} ${(it.stile||"")}</div>
-        <div class="label">Domanda</div>
-        <div class="box" style="margin-bottom:8px">${escapeHTML(it.domanda)}</div>
-        <div class="label">Risultato</div>
-        <div class="box">${escapeHTML(it.risposta||"")}</div>
-      </div>
-    `).join("");
-  }
-  ov.style.display="flex";
-}
-function closeHistory(ev){
-  if (ev && ev.target && ev.target.id!=="histOverlay" && ev.type==="click") return;
-  document.getElementById("histOverlay").style.display="none";
-}
-function clearHistory(){
-  if (confirm(lang==="en"?"Clear history?":"Svuotare la cronologia?")){
-    LS.removeItem("cronologia");
-    openHistory();
-  }
-}
-function copyText(){
-  navigator.clipboard.writeText(`Domanda: ${domanda}\n\n${resultEl.textContent}`).then(()=>{
-    alert(lang==="en"?"Copied!":"Copiato!");
-  });
-}
-function shareOut(){
-  const data = {
-    title:"What?f",
-    text:`Domanda: ${domanda}\n\n${resultEl.textContent}`,
-    url: location.href
-  };
-  if (navigator.share) navigator.share(data).catch(()=>{});
-  else copyText();
-}
+function copyText(){ navigator.clipboard.writeText(`Domanda: ${domanda}\n\n${resultEl.textContent}`).then(()=> alert("Copiato!")); }
+function shareOut(){ const data={title:"What?f",text:`Domanda: ${domanda}\n\n${resultEl.textContent}`,url: location.href}; if (navigator.share) navigator.share(data).catch(()=>{}); else copyText(); }
 function escapeHTML(s){return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-
-/* ====== Pro overlay ====== */
-document.getElementById('proBtn').addEventListener('click', ()=>{
-  if (isPro()){ alert("Pro già attivo."); return; }
-  openPro();
-});
-function openPro(){ document.getElementById('proOverlay').style.display='flex'; }
-function closePro(){ document.getElementById('proOverlay').style.display='none'; }
-function fakeUpgrade(){
-  const c = readCredits(); c.pro = true; writeCredits(c);
-  closePro();
-  alert("Pro attivato (demo).");
-}
+function escapeAttr(s){return String(s||"").replace(/"/g,'&quot;')}
 
 /* ====== Avvio ====== */
-ensureCredits();
-renderFreeBadge();
+ensureCredits(); renderFreeBadge();
 </script>
 </body>
 </html>
