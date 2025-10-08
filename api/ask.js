@@ -1,4 +1,6 @@
-// /api/ask.js — SSE + JSON. Narrazione realistica, personale (no fiaba, no elenco puntato)
+// /api/ask.js — SSE + JSON. Due stili:
+// - whatif: realistico, pratico, asciutto (NO prima persona, niente melassa)
+// - wtf: amico al bancone, brillante ma plausibile (come prima)
 import OpenAI from "openai";
 
 export default async function handler(req, res) {
@@ -14,39 +16,37 @@ export default async function handler(req, res) {
     const {
       question, domanda,
       lang = "it",
-      periodo,           // "past" | "future"
-      stile,             // "whatif" (realistico) | "wtf" (ironico)
+      periodo,     // "past" | "future"
+      stile,       // "whatif" | "wtf"
       stream,
-      profile,           // include: values[], style, change_attitude, motivation, self_view (+ eventuali age/phase/where/who)
-      archetypes,        // { Ricercatore, Costruttore, Visionario, Mediatore } 0–100
-      anchors,           // { place, person, memory } opzionale
-      structured         // opzionale
+      profile,     // { age, phase, where, who, values[], style, change_attitude, motivation, self_view }
+      archetypes,  // { Ricercatore, Costruttore, Visionario, Mediatore }
+      anchors,     // { place, person, memory }
+      structured
     } = req.body || {};
 
     const q = (question || domanda || "").toString().trim();
     if (!q) return res.status(400).json({ error: "question required" });
 
-    // ---- Sanitize/compact context ----
-    const P = (typeof profile === "object" && profile) ? profile : {};
-    const A = (typeof archetypes === "object" && archetypes) ? archetypes : {};
-    const AN = (typeof anchors === "object" && anchors) ? anchors : {};
+    const P  = profile && typeof profile === "object" ? profile : {};
+    const A  = archetypes && typeof archetypes === "object" ? archetypes : {};
+    const AN = anchors && typeof anchors === "object" ? anchors : {};
 
     const time =
       periodo === "past"
         ? (lang === "en" ? "the past (what if)" : "il passato (what if)")
         : (lang === "en" ? "the near future (plausible what if)" : "il prossimo futuro (what if plausibile)");
 
-    // Profilo compatto che esponiamo al modello (solo ciò che serve a personalizzare il tono)
     const profileBrief = {
       age: P.age || null,
       phase: P.phase || null,
       where: P.where || null,
       who: P.who || null,
-      values: Array.isArray(P.values) ? P.values.slice(0, 4) : null,
-      style: P.style || null,                // analitico/intuitivo/adattivo/equilibrato
-      change_attitude: P.change_attitude || null, // cauto/stimolato/valutativo/cerca il cambiamento
-      motivation: P.motivation || null,      // stabilità/crescita/libertà/riconoscimento
-      self_view: P.self_view || null         // serio/ironico/introspettivo/leggero
+      values: Array.isArray(P.values) ? P.values.slice(0,4) : null,
+      style: P.style || null,
+      change_attitude: P.change_attitude || null,
+      motivation: P.motivation || null,
+      self_view: P.self_view || null
     };
 
     const line_profile =
@@ -65,42 +65,32 @@ export default async function handler(req, res) {
           : `Ancore personali: ${JSON.stringify({ place: AN.place||null, person: AN.person||null, memory: AN.memory||null })}.`)
       : "";
 
-    // ---- Prompting: due modalità ----
+    // ===== Prompt per stile
     let systemPrompt;
-
     if (stile === "wtf") {
-      // Ironico, “da bar”, ma plausibile e non offensivo
       systemPrompt =
         lang === "en"
-          ? `You are What?f in WTF mode. Sound like a witty friend at a bar: light, playful, with 2–3 punchlines. Be kind, non-offensive (no slurs/hate), no humiliation. Keep it plausible, grounded in the user's context and psychology. Use real-world constraints (time, money, obligations). Length 140–180 words. Make it clearly about ${time}.`
-          : `Sei What?f in modalità WTF. Suona come un amico al bar: leggero, brillante, con 2–3 battute. Gentile e non offensivo (no insulti/odio), senza umiliazioni. Mantieni la plausibilità, ancorati al contesto e alla psicologia dell’utente. Usa vincoli reali (tempo, soldi, impegni). Lunghezza 140–180 parole. Indica chiaramente che parli del ${time}.`;
+          ? `You are What?f in WTF mode. Sound like a witty friend at a bar: crisp, playful, but grounded. Use SECOND PERSON only (you). Never use first person. Keep it plausible and tied to the user's context and psychology (values, decision style, motivation, change attitude, self-view). Mention real-world constraints (time, money, obligations). Light bar vibe: 1–2 subtle mentions (beer, spritz, Negroni), without promoting excess. Keep it clearly about ${time}. Length 140–180 words. No moral, no bullet lists, no fairy-tale — just a believable slice of life.`
+          : `Sei What?f in modalità WTF. Suona come un amico al bancone: asciutto, brillante ma con i piedi per terra. Usa SOLO la SECONDA persona (tu). Non usare mai la prima persona. Resta plausibile e ancorato alla psicologia e al contesto dell’utente (valori, stile decisionale, motivazione, atteggiamento verso il cambiamento, self-view). Cita vincoli reali (tempo, soldi, impegni). Atmosfera bar leggera: 1–2 cenni (birra, spritz, Negroni), senza celebrare l’eccesso. Rendi chiaro che parli del ${time}. Lunghezza 140–180 parole. Niente morale, niente elenchi, niente fiaba: solo uno scorcio credibile di vita.`;
     } else {
-      // Realistico, personale, “immagine di vita possibile”: narrativo sobrio, non romanzato, senza elenco
-      const core_en = `You are What?f, a reflective narrator. Write as if you truly knew this person—tone, doubts, ambitions.
-Describe a parallel timeline that feels intimate, plausible and emotionally true, without turning it into a plot or moral lesson.
-Weave the user's VALUES, STYLE of decision-making, ATTITUDE to change, core MOTIVATION and SELF-VIEW into the way you select details and explain causes.
-If anchors are provided, use them concretely (place/person/memory). Use sensory cues (light, sounds, smells) sparingly, and only if they make it feel real. Mention realistic constraints (time, work, fatigue, money).
-Make the user think: "this could really be my life." Calm, lucid tone. 140–180 words. Keep it clearly about ${time}.`;
+      // WHAT IF: realistico, pratico, asciutto — NO prima persona, niente sentimentalismi
+      const core_en =
+        `You are What?f in realistic mode. Write in SECOND PERSON (you). Never use first person. 
+Describe a plausible alternate timeline with a neutral, pragmatic tone: concrete context, constraints (time, money, obligations), and small cause→effect links. 
+No melodrama, no moral, no bullet lists. Avoid flowery language. Use short, clear sentences and specific, ordinary details. 
+Weave the user's values, decision style, change attitude, motivation and self-view subtly in what you select, not by labeling them. If anchors exist (place/person/memory), include them naturally. 140–180 words. Keep it clearly about ${time}.`;
 
-      const core_it = `Sei What?f, un narratore riflessivo. Scrivi come se conoscessi davvero questa persona — tono, dubbi, ambizioni.
-Descrivi una linea di vita parallela, plausibile e vera emotivamente, senza trasformarla in una trama o in una morale.
-Intreccia nei dettagli il sistema di VALORI, lo STILE decisionale, l’ATTEGGIAMENTO verso il cambiamento, la MOTIVAZIONE dominante e l’AUTOPERCEZIONE (self-view).
-Se ci sono ancore, usale in modo concreto (luogo/persona/ricordo). Usa accenni sensoriali con misura e solo se rendono autentica la scena. Cita vincoli realistici (tempo, lavoro, stanchezza, denaro).
-L’obiettivo è: “potrei davvero essere io”. Tono calmo e lucido. 140–180 parole. Rendi chiaro che parli del ${time}.`;
+      const core_it =
+        `Sei What?f in modalità realistica. Scrivi in SECONDA persona (tu). Non usare la prima persona. 
+Descrivi una linea alternativa plausibile con tono neutro e pratico: contesto concreto, vincoli reali (tempo, soldi, impegni) e piccole relazioni causa→effetto. 
+Niente melodramma, niente morale, niente elenchi puntati. Evita il linguaggio floreale. Frasi brevi e chiare, dettagli ordinari e verificabili. 
+Intreccia valori, stile decisionale, atteggiamento al cambiamento, motivazione e self-view in modo implicito, non dichiarato. Se ci sono ancore (luogo/persona/ricordo), inseriscile con naturalezza. 140–180 parole. Indica chiaramente che parli del ${time}.`;
 
-      // boost specifico se passato
-      const pastBoost_en = `When focusing on the past, prefer small believable shifts (jobs, routines, social circle) over dramatic twists; add time markers (years/seasons) only if natural.`;
-      const pastBoost_it = `Se parli del passato, privilegia piccoli scarti credibili (lavori, routine, cerchia sociale) rispetto a colpi di scena; inserisci marcatori temporali (anni/stagioni) solo se naturali.`;
-
-      systemPrompt = (lang === "en" ? core_en : core_it) +
-        (periodo === "past" ? (" " + (lang === "en" ? pastBoost_en : pastBoost_it)) : "");
+      systemPrompt = (lang === "en" ? core_en : core_it);
     }
 
     if (structured === true) {
-      // opzionale per futuri viewer
-      systemPrompt += (lang === "en")
-        ? ` If structured=true, instead return valid JSON: {"summary":"...","nodes":[{"label":"...","forces":["..."],"outcomeA":"...","outcomeB":"...","mood":-2..2}, ... (3 items)] }.`
-        : ` Se structured=true, restituisci invece JSON valido: {"summary":"...","nodes":[{"label":"...","forces":["..."],"outcomeA":"...","outcomeB":"...","mood":-2..2}, ... (3 elementi)] }.`;
+      // opzionale: mantenuto per futuri viewer se ti serve
     }
 
     const userPrompt =
@@ -109,12 +99,12 @@ L’obiettivo è: “potrei davvero essere io”. Tono calmo e lucido. 140–180
         : `Domanda dell'utente: ${q}\n${line_profile}\n${line_arche}\n${line_anchors}\nFocalizzazione temporale: ${time}`
       ).trim();
 
-    // ---- Model call ----
+    // ===== Model call
     const client = new OpenAI({ apiKey });
     const wantsStream =
       stream === true || req.query?.stream === "1" || req.headers["x-whatif-stream"] === "1";
 
-    const temperature = stile === "wtf" ? 0.9 : 0.6;   // WTF più creativo, What-if più sobrio
+    const temperature = stile === "wtf" ? 0.9 : 0.55; // WTF più frizzante, WHATIF più sobrio
     const MAX_TOKENS = 380;
 
     if (wantsStream) {
