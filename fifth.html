@@ -23,6 +23,7 @@
   .label{color:var(--acc);font-weight:800;margin:0 0 8px}
   .box{background:#0b1218;border:1px solid #18242c;border-radius:12px;padding:12px;white-space:pre-wrap;line-height:1.6}
   .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chip{background:#0f1820;border:1px solid #1b2a34;color:#cfe3e7;border-radius:999px;padding:8px 12px;font-size:12px;cursor:pointer}
   #result{min-height:160px}
   .tools{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
@@ -40,6 +41,10 @@
   .rate{display:flex;gap:8px;margin-top:10px}
   .rate button{background:#0f1820;border:1px solid #1b2a34;color:#cfe3e7;border-radius:999px;padding:6px 10px;cursor:pointer}
   .pin{cursor:pointer;float:right;color:#ffd24d}
+  /* toggle stile */
+  .seg{display:flex;background:#0b1218;border:1px solid #18242c;border-radius:999px;overflow:hidden}
+  .seg button{border:none;padding:8px 12px;background:transparent;color:#cfe3e7;cursor:pointer}
+  .seg button.active{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#001F26;font-weight:800}
 </style>
 </head>
 <body>
@@ -67,9 +72,14 @@
       <h3 class="label" data-i18n="question">Domanda</h3>
       <div id="question" class="box"></div>
 
+      <!-- Toggle STILE: What if / What the F -->
       <div class="tools">
-        <button class="btn" onclick="editQuestion()" data-i18n="edit">Modifica domanda</button>
+        <div class="seg" role="tablist" aria-label="Stile">
+          <button class="segbtn" id="seg_whatif" role="tab" aria-selected="true">What if</button>
+          <button class="segbtn" id="seg_wtf" role="tab" aria-selected="false">What the F</button>
+        </div>
         <button class="btn primary" onclick="generate()" id="sendBtn" data-i18n="send">Invia domanda</button>
+        <button class="btn" onclick="editQuestion()" data-i18n="edit">Modifica domanda</button>
       </div>
 
       <!-- Mini “Migliora precisione” -->
@@ -206,22 +216,39 @@ document.querySelectorAll("[data-i18n]").forEach(el=>{
 });
 
 /* ====== stato base ====== */
-const prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}"); // { periodo, stile }
+let prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}"); // { periodo, stile }
+if (!prefs.periodo) prefs.periodo = "future";
+if (!prefs.stile)   prefs.stile   = "whatif";
 let domanda = LS.getItem("domanda") || "";
 const questionEl = document.getElementById("question");
 const resultEl   = document.getElementById("result");
 const badges     = document.getElementById("badges");
-
 if (!domanda) { alert(lang==="en"?"No question found. Going back.":"Nessuna domanda trovata. Torno indietro."); location.href = "fourth.html"; }
 
-/* badge */
-(function renderBadges(){
+/* badge + stile */
+function renderBadges(){
   const row = [];
-  if (prefs.periodo) { row.push(`<span class="chip">🕰️ ${prefs.periodo === "past" ? T.badgePast : T.badgeFuture}</span>`); }
-  if (prefs.stile)   { row.push(`<span class="chip">🎭 ${prefs.stile === "wtf" ? T.badgeWTF : T.badgeWhatIf}</span>`); }
+  if (prefs.periodo) row.push(`<span class="chip">🕰️ ${prefs.periodo === "past" ? T.badgePast : T.badgeFuture}</span>`);
+  if (prefs.stile)   row.push(`<span class="chip">🎭 ${prefs.stile === "wtf" ? T.badgeWTF : T.badgeWhatIf}</span>`);
   badges.innerHTML = row.join("");
-})();
+}
+renderBadges();
 questionEl.textContent = domanda;
+
+/* ====== switch stile (What if ⇄ WTF) ====== */
+const segWhatif = document.getElementById('seg_whatif');
+const segWTF    = document.getElementById('seg_wtf');
+function applySeg(){
+  segWhatif.classList.toggle('active', prefs.stile==='whatif');
+  segWTF.classList.toggle('active', prefs.stile==='wtf');
+  segWhatif.setAttribute('aria-selected', prefs.stile==='whatif');
+  segWTF.setAttribute('aria-selected', prefs.stile==='wtf');
+  renderBadges();
+  LS.setItem('whatif_prefs', JSON.stringify(prefs));
+}
+segWhatif.onclick = ()=>{ prefs.stile='whatif'; applySeg(); };
+segWTF.onclick    = ()=>{ prefs.stile='wtf';    applySeg(); };
+applySeg();
 
 /* ====== overlays helpers ====== */
 function closeOverlay(ev,id){
@@ -350,11 +377,12 @@ async function generate(extraInstruction = "") {
     domanda,
     lang,
     periodo: prefs.periodo || "future",
-    stile:   prefs.stile   || "whatif",
+    stile:   prefs.stile   || "whatif", // ← prende lo stile selezionato
     profile: safeProfile,
     archetypes: JSON.parse(LS.getItem("whatif_archetypes") || "{}"),
     anchors: safeProfile.anchors || {},
-    stream: true
+    stream: true,
+    extra: extraInstruction || "" // per “Più concreto/ironico/diretto”
   };
 
   try{
