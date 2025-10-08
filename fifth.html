@@ -30,7 +30,7 @@
   #result{min-height:180px;line-height:1.6}
   .tools{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
   .divider{height:1px;background:#16222b;margin:16px 0}
-  .badge{background:#0f1820;border:1px solid #1b2a34;border-radius:999px;padding:6px 10px;font-size:12px;color:#cfe3e7}
+  .badge{background:#0f1820;border:1px solid #1b2a34;border-radius:999px;padding:6px 10px;font-size:12px;color:#cfe3e7;user-select:none}
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:6000;padding:14px}
   .sheet{width:min(92vw,720px);max-height:80vh;overflow:auto;background:var(--card);border-radius:16px;padding:14px;border:1px solid #1d2b34}
   .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,#0d151c 0%,#122029 50%,#0d151c 100%);background-size:200% 100%;animation:sk 1s infinite}
@@ -48,7 +48,7 @@
         <button class="btn ghost" onclick="location.href='index.html'">🏠 Home</button>
       </div>
       <div class="row">
-        <span id="freeBadge" class="badge">Free oggi: —</span>
+        <span id="freeBadge" class="badge" title="Long-press 2s: reset crediti · Triplo click: toggle Pro (solo dev)">Free oggi: —</span>
       </div>
     </div>
 
@@ -112,7 +112,7 @@ const lang = (LS.getItem("lang") || "it").toLowerCase();
 
 /* ====== Helpers ====== */
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function readCredits(){const v=JSON.parse(LS.getItem('whatif_credits')||'{}');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0};return v;}
+function readCredits(){const v=JSON.parse(LS.getItem('whatif_credits')||'{}');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0,pro:!!v.pro};return v;}
 function writeCredits(v){LS.setItem('whatif_credits',JSON.stringify(v));renderFreeBadge();}
 function ensureCredits(){const c=readCredits();if(!c.date||c.date!==todayStr()){c.date=todayStr();c.used=0;writeCredits(c);}}
 
@@ -122,7 +122,7 @@ function buildProfilePayload(){
   const micro = JSON.parse(LS.getItem('whatif_micro')||'{}');
   return { ...base, micro };
 }
-function saveMicroPatch(patch){ // salva i chiarimenti anche come micro-dati
+function saveMicroPatch(patch){
   const micro = JSON.parse(LS.getItem('whatif_micro')||'{}');
   Object.assign(micro, patch);
   LS.setItem('whatif_micro', JSON.stringify(micro));
@@ -199,7 +199,6 @@ async function openClarify(){
 function closeClarify(){ clarifyOverlay.style.display='none'; }
 
 document.getElementById('applyClarify').addEventListener('click', async ()=>{
-  // costruisci oggetto chiarimenti {id: risposta}
   const inputs = clarifyList.querySelectorAll('input');
   const clar = {}; inputs.forEach(i=>{ const v=(i.value||"").trim(); if(i.id&&v) clar[i.id]=v; });
   closeClarify();
@@ -268,6 +267,43 @@ function copyText(){ navigator.clipboard.writeText(`Domanda: ${domanda}\n\n${res
 function shareOut(){ const data={title:"What?f",text:`Domanda: ${domanda}\n\n${resultEl.textContent}`,url: location.href}; if (navigator.share) navigator.share(data).catch(()=>{}); else copyText(); }
 function escapeHTML(s){return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function escapeAttr(s){return String(s||"").replace(/"/g,'&quot;')}
+
+/* ====== Dev helpers (long-press reset, triplo click Pro) ====== */
+(function devHooks(){
+  const badge = document.getElementById('freeBadge');
+  if (!badge) return;
+
+  // Long-press 2s = reset crediti odierni
+  let pressT=null;
+  badge.addEventListener('pointerdown', ()=> { pressT = setTimeout(resetToday, 2000); });
+  badge.addEventListener('pointerup',   ()=> { clearTimeout(pressT); });
+  badge.addEventListener('pointerleave',()=> { clearTimeout(pressT); });
+
+  function resetToday(){
+    const d=new Date();
+    const today=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const c=JSON.parse(localStorage.getItem('whatif_credits')||'{}');
+    c.date=today; c.used=0;
+    localStorage.setItem('whatif_credits', JSON.stringify(c));
+    renderFreeBadge();
+    alert('Crediti di oggi azzerati ✅');
+  }
+
+  // Triplo click = toggle Pro (per futuri test, non influisce ora)
+  let clicks=0, timer=null;
+  badge.addEventListener('click', ()=>{
+    clicks++; clearTimeout(timer);
+    timer=setTimeout(()=>{ if (clicks>=3) togglePro(); clicks=0; }, 250);
+  });
+
+  function togglePro(){
+    const c=JSON.parse(localStorage.getItem('whatif_credits')||'{}');
+    c.pro = !c.pro; c.used = 0;
+    localStorage.setItem('whatif_credits', JSON.stringify(c));
+    renderFreeBadge();
+    alert('Pro '+(c.pro?'attivato':'disattivato')+' (solo locale) ✅');
+  }
+})();
 
 /* ====== Avvio ====== */
 ensureCredits(); renderFreeBadge();
