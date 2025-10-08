@@ -58,7 +58,7 @@
 <script>
 const LS=localStorage;
 function readJSON(k,def={}){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
-/* tema porte */
+/* Tema porte */
 (function(){ try{ const p=readJSON('whatif_prefs',{}); document.body.setAttribute('data-theme', p.stile==='wtf'?'wtf':'whatif'); }catch(_){}})();
 
 const prefs=readJSON('whatif_prefs',{periodo:'future',stile:'whatif'});
