@@ -68,7 +68,6 @@
   </main>
 
 <script>
-  // ===== i18n
   const L=(localStorage.getItem('lang')||'it').toLowerCase();
   const I = {
     it:{tb_back:'Indietro',tb_home:'Home',tb_skip:'Salta',title:'Conosciamoci in 30s',lead:'Rispondi a poche domande: gli scenari saranno più tuoi.',back:'Indietro',next:'Avanti',
@@ -77,15 +76,14 @@
       q3:'Il cambiamento, per te, è…',q3a:'Un po’ spaventoso',q3b:'Stimolante',q3c:'Da valutare con calma',q3d:'Qualcosa che cerco',
       q4:'Quale valore senti più tuo?',q4a:'Famiglia e legami',q4b:'Autenticità',q4c:'Successo personale',q4d:'Creatività',
       q5:'Come ti guardi quando pensi a te stesso?',q5a:'Mi prendo sul serio',q5b:'Con un po’ di ironia',q5c:'Mi interrogo spesso',q5d:'Cerco di non pensarci troppo',
-      // micro Q pool
-      m1:'Qual è un bar/locale dove ti vedono spesso?',
-      m2:'Una persona che senti “di casa” (nome fittizio + ruolo)?',
-      m3:'Un tragitto che fai spesso (es. casa→lavoro)?',
-      m4:'Una canzone che ti segue da anni?',
-      m5:'Un luogo che eviti o non sopporti?',
-      m6:'Un desiderio concreto per i prossimi 12 mesi?',
-      m7:'Un odore che ti riporta subito indietro?',
-      m8:'Una spesa ricorrente che non molli?'
+      // micro pool (taggato)
+      m_place1:'Un bar/locale dove ti vedono spesso?', m_place2:'Un percorso abituale (es. casa→lavoro)?',
+      m_work1:'Con chi vorresti lavorare (nome fittizio + ruolo)?', m_work2:'Quale competenza vorresti usare di più?',
+      m_money1:'Spesa ricorrente che non molli?', m_money2:'Un obiettivo economico realistico (12 mesi)?',
+      m_rel1:'Una persona “di casa” (alias + ruolo)?', m_rel2:'Un rapporto che vorresti migliorare?',
+      m_study1:'Cosa studieresti volentieri?', m_study2:'Un corso che hai adocchiato?',
+      m_time1:'Quando ti senti più “carico” (ora/giorno)?', m_time2:'Un’abitudine settimanale che non salteresti?',
+      m_well1:'Un gesto semplice che ti fa stare meglio?', m_well2:'Un luogo che eviti?',
     },
     en:{tb_back:'Back',tb_home:'Home',tb_skip:'Skip',title:'30s to know you',lead:'Answer a few and your scenarios become more “you”.',back:'Back',next:'Next',
       q1:'When deciding, how do you usually move?',q1a:'I think a lot before acting',q1b:'I follow my gut',q1c:'I adapt on the fly',q1d:'I look for balance',
@@ -93,16 +91,16 @@
       q3:'Change, for you, is…',q3a:'A bit scary',q3b:'Stimulating',q3c:'Something to assess calmly',q3d:'Something I actively seek',
       q4:'Which value feels most yours?',q4a:'Family & bonds',q4b:'Authenticity',q4c:'Personal success',q4d:'Creativity',
       q5:'How do you look at yourself?',q5a:'I take myself seriously',q5b:'With some irony',q5c:'I question myself often',q5d:'I try not to overthink',
-      m1:'A bar/place that knows you well?',
-      m2:'A person who feels “home” (alias + role)?',
-      m3:'A route you take often (e.g., home→work)?',
-      m4:'A song that follows you for years?',
-      m5:'A place you avoid or can’t stand?',
-      m6:'One concrete wish for the next 12 months?',
-      m7:'A smell that brings you back instantly?',
-      m8:'A recurring expense you won’t cut?'
+      m_place1:'A bar/place that knows you well?', m_place2:'A route you take often?',
+      m_work1:'Who would you like to work with (alias + role)?', m_work2:'A skill you want to use more?',
+      m_money1:'A recurring expense you won’t cut?', m_money2:'One realistic money goal (12 months)?',
+      m_rel1:'A person who feels “home” (alias + role)?', m_rel2:'A relationship you’d improve?',
+      m_study1:'What would you study gladly?', m_study2:'A course you’ve eyed?',
+      m_time1:'When are you most “on” (time/day)?', m_time2:'A weekly habit you won’t skip?',
+      m_well1:'One small thing that makes you feel better?', m_well2:'A place you avoid?',
     }
   }[L];
+
   document.getElementById('tb_back').textContent=I.tb_back;
   document.getElementById('tb_home').textContent=I.tb_home;
   document.getElementById('tb_skip').textContent=I.tb_skip;
@@ -111,80 +109,72 @@
   document.getElementById('back').textContent  = I.back;
   document.getElementById('next').textContent  = I.next;
 
-  const LS=localStorage;
-  const $=s=>document.querySelector(s);
+  const LS=localStorage; const $=s=>document.querySelector(s);
   const questionEl=$('#question'), chipsEl=$('#chips'), nextBtn=$('#nextBtn'), backBtn=$('#backBtn'), countEl=$('#count'), barEl=$('#bar');
 
-  // ==== modalità: prima volta (5 core) oppure rotante (3 micro) ====
+  // Prima volta? (core) altrimenti micro
   const FIRST_DONE = LS.getItem('whatif_quiz5_done')==='1';
 
-  // core (5 domande a scelta multipla)
+  // ===== CORE (come prima)
   const CORE = [
-    { k:'approach', t:I.q1, opts:[
-      {v:'reason',  label:I.q1a},{v:'instinct',label:I.q1b},{v:'adapt',label:I.q1c},{v:'balance',label:I.q1d}
-    ]},
-    { k:'motivation', t:I.q2, opts:[
-      {v:'stability', label:I.q2a},{v:'growth',label:I.q2b},{v:'freedom',label:I.q2c},{v:'recognition',label:I.q2d}
-    ]},
-    { k:'change', t:I.q3, opts:[
-      {v:'fear',label:I.q3a},{v:'stim',label:I.q3b},{v:'calm',label:I.q3c},{v:'seek',label:I.q3d}
-    ]},
-    { k:'value', t:I.q4, opts:[
-      {v:'family',label:I.q4a},{v:'auth',label:I.q4b},{v:'success',label:I.q4c},{v:'creativity',label:I.q4d}
-    ]},
-    { k:'selfview', t:I.q5, opts:[
-      {v:'serious',label:I.q5a},{v:'irony',label:I.q5b},{v:'reflect',label:I.q5c},{v:'light',label:I.q5d}
-    ]}
+    { k:'approach', t:I.q1, opts:[{v:'reason',label:I.q1a},{v:'instinct',label:I.q1b},{v:'adapt',label:I.q1c},{v:'balance',label:I.q1d}]},
+    { k:'motivation', t:I.q2, opts:[{v:'stability',label:I.q2a},{v:'growth',label:I.q2b},{v:'freedom',label:I.q2c},{v:'recognition',label:I.q2d}]},
+    { k:'change', t:I.q3, opts:[{v:'fear',label:I.q3a},{v:'stim',label:I.q3b},{v:'calm',label:I.q3c},{v:'seek',label:I.q3d}]},
+    { k:'value', t:I.q4, opts:[{v:'family',label:I.q4a},{v:'auth',label:I.q4b},{v:'success',label:I.q4c},{v:'creativity',label:I.q4d}]},
+    { k:'selfview', t:I.q5, opts:[{v:'serious',label:I.q5a},{v:'irony',label:I.q5b},{v:'reflect',label:I.q5c},{v:'light',label:I.q5d}]},
   ];
-  const WEIGHTS={ // archetipi
-    approach:{reason:{R:2,C:1},instinct:{V:2},adapt:{M:2},balance:{C:2,M:1}},
-    motivation:{stability:{C:2,M:1},growth:{R:1,V:2},freedom:{V:2},recognition:{M:2}},
-    change:{fear:{C:1,M:1},stim:{V:2,R:1},calm:{R:1,C:1},seek:{V:2}},
-    value:{family:{M:2,C:1},auth:{R:1,M:1},success:{C:2},creativity:{V:2}},
-    selfview:{serious:{C:1,R:1},irony:{V:1,M:1},reflect:{R:2},light:{V:1}}
-  };
+  const WEIGHTS={approach:{reason:{R:2,C:1},instinct:{V:2},adapt:{M:2},balance:{C:2,M:1}},
+                 motivation:{stability:{C:2,M:1},growth:{R:1,V:2},freedom:{V:2},recognition:{M:2}},
+                 change:{fear:{C:1,M:1},stim:{V:2,R:1},calm:{R:1,C:1},seek:{V:2}},
+                 value:{family:{M:2,C:1},auth:{R:1,M:1},success:{C:2},creativity:{V:2}},
+                 selfview:{serious:{C:1,R:1},irony:{V:1,M:1},reflect:{R:2},light:{V:1}}};
 
-  // micro pool (rotante) — 3 per sessione/giorno
-  const MICRO_POOL = [
-    {k:'fav_bar', t:I.m1, type:'text', ph:(L==='en'?'e.g., “Bar Centrale (spritz)”':'es. “Bar Centrale (spritz)”')},
-    {k:'home_person', t:I.m2, type:'text', ph:(L==='en'?'e.g., “Marco (childhood friend)”':'es. “Marco (amico di infanzia)”')},
-    {k:'route_often', t:I.m3, type:'text', ph:(L==='en'?'e.g., “home→Verona center (bus 11)”':'es. “casa→centro Verona (bus 11)”')},
-    {k:'song_long', t:I.m4, type:'text', ph:(L==='en'?'e.g., “De André –... ”':'es. “De André – ...”')},
-    {k:'avoid_place', t:I.m5, type:'text', ph:(L==='en'?'e.g., “shopping mall on weekends”':'es. “centro commerciale nel weekend”')},
-    {k:'wish12', t:I.m6, type:'text', ph:(L==='en'?'e.g., “open a small studio”':'es. “aprire uno studio”')},
-    {k:'smell_back', t:I.m7, type:'text', ph:(L==='en'?'e.g., “rain on old stones”':'es. “pioggia sulla pietra”')},
-    {k:'rec_spend', t:I.m8, type:'text', ph:(L==='en'?'e.g., “gym + coffee subscription”':'es. “palestra + abbonamento caffè”')}
+  // ===== MICRO pool taggato
+  const POOL = [
+    {k:'m_place1', tag:'place', t:I.m_place1},
+    {k:'m_place2', tag:'place', t:I.m_place2},
+    {k:'m_work1', tag:'work', t:I.m_work1},
+    {k:'m_work2', tag:'work', t:I.m_work2},
+    {k:'m_money1', tag:'money', t:I.m_money1},
+    {k:'m_money2', tag:'money', t:I.m_money2},
+    {k:'m_rel1', tag:'relationships', t:I.m_rel1},
+    {k:'m_rel2', tag:'relationships', t:I.m_rel2},
+    {k:'m_study1', tag:'study', t:I.m_study1},
+    {k:'m_study2', tag:'study', t:I.m_study2},
+    {k:'m_time1', tag:'future', t:I.m_time1},
+    {k:'m_time2', tag:'future', t:I.m_time2},
+    {k:'m_well1', tag:'wellbeing', t:I.m_well1},
+    {k:'m_well2', tag:'wellbeing', t:I.m_well2},
   ];
-  function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-  function pickDailySet(){
-    const key='whatif_micro_daily';
-    const cur = JSON.parse(LS.getItem(key)||'{}');
-    const t = todayStr();
-    if (cur.date === t && Array.isArray(cur.set) && cur.set.length===3) return cur.set;
-    // nuova estrazione casuale (senza ripetere le ultime usate se presenti)
-    const used = JSON.parse(LS.getItem('whatif_micro_used')||'[]'); // lista chiavi già chieste
-    const candidates = MICRO_POOL.filter(x=>!used.includes(x.k));
-    const pool = (candidates.length>=3 ? candidates : MICRO_POOL).slice(); // fallback se esaurito
-    // shuffle semplice
-    for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
-    const set = pool.slice(0,3).map(x=>x.k);
-    LS.setItem(key, JSON.stringify({date:t,set}));
-    return set;
-  }
 
-  // ===== modalità attiva
-  const MODE = FIRST_DONE ? 'micro' : 'core';
-  const answers = JSON.parse(LS.getItem('whatif_quiz5')||'{}'); // per core
-  const microAns = JSON.parse(LS.getItem('whatif_micro')||'{}'); // per micro
+  // letture
+  const answers = JSON.parse(LS.getItem('whatif_quiz5')||'{}');
+  const microAns = JSON.parse(LS.getItem('whatif_micro')||'{}');
+  const TAGS = JSON.parse(LS.getItem('whatif_tags')||'[]'); // ← dall'ultima domanda in fourth.html
+
   let idx=0, ITEMS=[];
 
-  if (MODE==='core'){
+  if (!FIRST_DONE){
     ITEMS = CORE.map(q=>({mode:'core', ...q}));
-    countEl.textContent = `1 / ${ITEMS.length}`;
   } else {
-    const setKeys = pickDailySet();
-    ITEMS = setKeys.map(k => ({mode:'micro', ...MICRO_POOL.find(m=>m.k===k)}));
-    countEl.textContent = `1 / ${ITEMS.length}`;
+    ITEMS = pickContextualSet(TAGS); // 3 micro basate sui tag
+  }
+  countEl.textContent = `1 / ${ITEMS.length}`;
+
+  function pickContextualSet(tags){
+    const used = new Set(JSON.parse(LS.getItem('whatif_micro_used')||'[]'));
+    // 1) preferisci matching tag non usati
+    const pref = POOL.filter(x=>tags.includes(x.tag) && !used.has(x.k));
+    // 2) poi matching tag usati
+    const pref2 = POOL.filter(x=>tags.includes(x.tag) && used.has(x.k));
+    // 3) poi altri non usati
+    const other = POOL.filter(x=>!tags.includes(x.tag) && !used.has(x.k));
+    const pool = [...pref, ...pref2, ...other];
+    // de-dup
+    const uniq=[]; const seen=new Set();
+    for(const it of pool){ if(!seen.has(it.k)){ uniq.push(it); seen.add(it.k);} }
+    // prendi i primi 3
+    return uniq.slice(0,3).map(x=>({mode:'micro', k:x.k, t:x.t}));
   }
 
   function render(){
@@ -200,19 +190,17 @@
       });
       nextBtn.disabled = !answers[it.k];
     } else {
-      // micro domanda (input breve)
       questionEl.textContent = it.t;
-      chipsEl.innerHTML = `<input id="microInput" type="text" style="width:100%;background:#0f1820;color:#E6F2F5;border:1px solid #1f2c36;border-radius:12px;padding:12px" placeholder="${it.ph||''}" />`;
+      chipsEl.innerHTML = `<input id="microInput" type="text" style="width:100%;background:#0f1820;color:#E6F2F5;border:1px solid #1f2c36;border-radius:12px;padding:12px" />`;
       const val = microAns[it.k]||'';
       const inp = document.getElementById('microInput'); inp.value = val;
       nextBtn.disabled = !val;
       inp.addEventListener('input', ()=>{ nextBtn.disabled = !inp.value.trim(); });
     }
-    // progress
     const total = ITEMS.length;
     countEl.textContent = `${idx+1} / ${total}`;
     const pct = Math.round((idx/total)*100);
-    barEl.style.width = Math.max(6, pct)+'%';
+    document.getElementById('bar').style.width = Math.max(6, pct)+'%';
   }
   render();
 
@@ -231,7 +219,6 @@
     else { finish(); }
   });
 
-  // Salta: vai diretto alla domanda se hai almeno un profilo base
   document.getElementById('skipBtn').addEventListener('click', ()=>{
     const base = JSON.parse(LS.getItem('whatif_profile')||'{}');
     if (base.gender || base.age || base.phase) location.href='fourth.html';
@@ -239,8 +226,8 @@
   });
 
   function finish(){
-    if (MODE==='core'){
-      // archetipi
+    if (!FIRST_DONE){
+      // calcola archetipi + merge profilo
       const scores={R:0,C:0,V:0,M:0};
       Object.entries(answers).forEach(([k,v])=>{ const w=WEIGHTS[k]?.[v]||{}; Object.entries(w).forEach(([A,pts])=>scores[A]+=pts); });
       const max=Math.max(1,...Object.values(scores)); const to100=x=>Math.round((x/max)*100);
@@ -253,11 +240,10 @@
       LS.setItem('whatif_quiz5_done','1');
       location.href='fourth.html';
     } else {
-      // merge micro nel profilo + segna usati
       const base=JSON.parse(LS.getItem('whatif_profile')||'{}');
       const merged = {...base, anchors_extra: {...(base.anchors_extra||{}), ...microAns}};
       LS.setItem('whatif_profile', JSON.stringify(merged));
-      // aggiorna used
+      // segna usate
       const used = JSON.parse(LS.getItem('whatif_micro_used')||'[]');
       const newUsed = Array.from(new Set([...used, ...ITEMS.map(x=>x.k)]));
       LS.setItem('whatif_micro_used', JSON.stringify(newUsed));
