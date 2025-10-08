@@ -38,28 +38,40 @@
   .sheet{width:min(92vw,720px);max-height:80vh;overflow:auto;background:var(--card);border-radius:16px;padding:14px;border:1px solid #1d2b34}
   .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,#0d151c 0%,#122029 50%,#0d151c 100%);background-size:200% 100%;animation:sk 1s infinite}
   @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
-  .qitem{margin:10px 0}
-  .qitem label{display:block;margin:6px 0}
-  .qitem input, .qitem textarea{width:100%;background:#0f1820;color:var(--fg);border:1px solid #1b2a34;border-radius:10px;padding:10px}
+
+  /* Mini-indicatore personalizzazione */
+  .know-mini{display:flex;align-items:center;gap:8px}
+  .meter{position:relative;height:10px;background:#0f1820;border:1px solid #1b2a34;border-radius:999px;overflow:hidden;width:120px}
+  .meter-fill{height:100%;width:0;background:linear-gradient(180deg,var(--acc),var(--acc2))}
+  .know-score{font-weight:800;color:var(--acc);font-size:12px}
+
+  /* “Segnali usati oggi” */
+  .signals{color:#cfe3e7;opacity:.9;font-size:12px;margin-top:8px}
+  .signals b{color:#9fefff}
 </style>
 </head>
 <body>
   <main>
     <div class="topbar">
       <div class="row">
-        <button class="btn ghost" id="backBtn">←</button>
-        <button class="btn ghost" id="homeBtn">🏠</button>
+        <button class="btn ghost" id="backBtnTop">←</button>
+        <button class="btn ghost" id="homeBtnTop">🏠</button>
       </div>
       <div class="row" style="gap:8px">
         <span id="freeBadge" class="badge" title="">—</span>
         <span id="clarifyBadge" class="badge accent" title="">—</span>
+        <div class="know-mini" title="" id="knowMini" style="cursor:help">
+          <span class="know-score" id="knowLabelMini">Personalizzazione</span>
+          <div class="meter"><div id="knowFill" class="meter-fill"></div></div>
+          <span class="badge" id="knowValueMini">0/100</span>
+        </div>
       </div>
     </div>
 
     <h1 id="titleH1">Your scenario</h1>
     <p class="sub" id="subtitle">For a more personal answer, use Clarify & Generate first.</p>
 
-    <!-- STILE + PERIOD -->
+    <!-- STILE + PERIOD (solo display + toggle stile) -->
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
         <div class="row">
@@ -76,6 +88,7 @@
     <div class="card">
       <h3 class="label" id="qLabel">Question</h3>
       <div id="question" class="box"></div>
+      <div id="signalsUsed" class="signals" aria-live="polite"></div>
 
       <div class="tools" style="align-items:flex-start">
         <div class="row" style="gap:10px">
@@ -133,7 +146,10 @@ const I18N = {
     loading:"Sto generando…", errServer:"Problema server.", errNet:"Errore di rete.",
     limitGen:"Hai raggiunto il limite gratuito di oggi. Torna domani!",
     limitClarify:"Hai raggiunto il limite di chiarimenti per oggi. Puoi comunque generare la risposta.",
-    copied:"Copiato!", saved:"Salvato!"
+    copied:"Copiato!", saved:"Salvato!",
+    know:"Personalizzazione", knowHint:"Più dettagli → più scenari plausibili. Clicca per scoprire come sale.",
+    signals:"Segnali usati oggi",
+    sig_city:"città", sig_goal:"obiettivo", sig_indicator:"indicatore", sig_constraint:"vincolo", sig_landmark:"luogo", sig_role:"ruolo"
   },
   en:{
     title:"Your scenario",
@@ -154,89 +170,77 @@ const I18N = {
     loading:"Generating…", errServer:"Server problem.", errNet:"Network error.",
     limitGen:"You’ve reached today’s free limit. Come back tomorrow!",
     limitClarify:"You’ve reached today’s clarify limit. You can still generate the answer.",
-    copied:"Copied!", saved:"Saved!"
+    copied:"Copied!", saved:"Saved!",
+    know:"Personalization", knowHint:"More detail → more plausible scenarios. Tap to learn how it grows.",
+    signals:"Signals used today",
+    sig_city:"city", sig_goal:"goal", sig_indicator:"indicator", sig_constraint:"constraint", sig_landmark:"place", sig_role:"role"
   }
 };
+
 const LS = localStorage;
 const lang = (LS.getItem("lang") || "it").toLowerCase();
 const T = I18N[lang] || I18N.it;
 document.documentElement.lang = lang;
-
-/* apply static i18n */
-document.getElementById('titleH1').textContent = T.title;
-document.getElementById('subtitle').textContent = T.subtitle;
-document.getElementById('backBtn').textContent = `← ${T.back}`;
-document.getElementById('homeBtn').textContent = `🏠 ${T.home}`;
-document.getElementById('freeBadge').title = T.badgeFreeTitle;
-document.getElementById('clarifyBadge').title = T.badgeClarifyTitle;
-document.getElementById('chipWhatIf').textContent = T.chipWhatIf;
-document.getElementById('chipWTF').textContent = T.chipWTF;
-document.getElementById('qLabel').textContent = T.qLabel;
-document.getElementById('rLabel').textContent = T.rLabel;
-document.getElementById('clarifyBtn').textContent = T.clarifyBtn;
-document.getElementById('genBtn').textContent = T.genBtn;
-document.getElementById('regenBtn').textContent = T.regenBtn;
-document.getElementById('hint').textContent = T.hint;
-document.getElementById('clarifyTitle').textContent = T.clarifyTitle;
-document.getElementById('applyClarify').textContent = T.applyClarify;
-document.getElementById('cancelClarify').textContent = T.cancelClarify;
-document.getElementById('saveBtn').textContent = `💾 ${T.save}`;
-document.getElementById('copyBtn').textContent = `📋 ${T.copy}`;
-document.getElementById('shareBtn').textContent = `📤 ${T.share}`;
 
 /* ====== Config ====== */
 const DAILY_FREE = 3;      // generations/day
 const DAILY_CLARIFY = 5;   // clarifications/day
 
 /* ====== Helpers ====== */
+function $(id){return document.getElementById(id);}
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function readJSON(k,def={}){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
-function $(id){return document.getElementById(id);}
+function writeJSON(k,v){LS.setItem(k,JSON.stringify(v));}
+function escapeHTML(s){return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
-/* Credits (generation) */
+/* ====== Credits ====== */
 function readCredits(){const v=readJSON('whatif_credits');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0,pro:!!v.pro};return v;}
-function writeCredits(v){LS.setItem('whatif_credits',JSON.stringify(v));renderBadges();}
+function writeCredits(v){writeJSON('whatif_credits',v);renderBadges();}
 function ensureCredits(){const c=readCredits();if(!c.date||c.date!==todayStr()){c.date=todayStr();c.used=0;writeCredits(c);}}
 
-/* Clarify limits */
+/* ====== Clarify limits ====== */
 function readClarify(){const v=readJSON('whatif_clarify');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0};return v;}
-function writeClarify(v){LS.setItem('whatif_clarify',JSON.stringify(v));renderBadges();}
+function writeClarify(v){writeJSON('whatif_clarify',v);renderBadges();}
 function ensureClarify(){const c=readClarify();if(!c.date||c.date!==todayStr()){c.date=todayStr();c.used=0;writeClarify(c);}}
 
-/* Profile */
+/* ====== Profilo ====== */
 function buildProfilePayload(){
   const base = readJSON('whatif_profile');
   const micro = readJSON('whatif_micro');
   return { ...base, micro };
 }
-function saveMicroPatch(patch){
-  const micro = readJSON('whatif_micro');
-  Object.assign(micro, patch);
-  LS.setItem('whatif_micro', JSON.stringify(micro));
-}
 
-/* Badges render */
-function renderBadges(){
-  const gc=readCredits(); const gl=Math.max(0, DAILY_FREE - (gc.used||0));
-  const bc=T.badgeFree(gl, DAILY_FREE);
-  $('freeBadge').textContent = bc;
+/* ====== I18N static ====== */
+$('titleH1').textContent = T.title;
+$('subtitle').textContent = T.subtitle;
+$('backBtnTop').textContent = `← ${T.back}`;
+$('homeBtnTop').textContent = `🏠 ${T.home}`;
+$('freeBadge').title = T.badgeFreeTitle;
+$('clarifyBadge').title = T.badgeClarifyTitle;
+$('chipWhatIf').textContent = T.chipWhatIf;
+$('chipWTF').textContent = T.chipWTF;
+$('qLabel').textContent = T.qLabel;
+$('rLabel').textContent = T.rLabel;
+$('clarifyBtn').textContent = T.clarifyBtn;
+$('genBtn').textContent = T.genBtn;
+$('regenBtn').textContent = T.regenBtn;
+$('hint').textContent = T.hint;
+$('clarifyTitle').textContent = T.clarifyTitle;
+$('applyClarify').textContent = T.applyClarify;
+$('cancelClarify').textContent = T.cancelClarify;
+$('saveBtn').textContent = `💾 ${T.save}`;
+$('copyBtn').textContent = `📋 ${T.copy}`;
+$('shareBtn').textContent = `📤 ${T.share}`;
+// mini-know labels
+$('knowLabelMini').textContent = T.know;
+$('knowMini').title = T.knowHint;
 
-  const cc=readClarify(); const cl=Math.max(0, DAILY_CLARIFY - (cc.used||0));
-  $('clarifyBadge').textContent = T.badgeClarify(cl, DAILY_CLARIFY);
-}
-
-/* ====== State ====== */
+/* ====== Stato ====== */
 const prefs = readJSON("whatif_prefs");
 let domanda = LS.getItem("domanda") || "";
 if (!domanda) { alert(lang==='en'?"No question found.":"Nessuna domanda trovata."); location.href="fourth.html"; }
 let currentStyle = (prefs.stile || "whatif");
-const questionEl = $('question');
-const resultEl   = $('result');
-
-$('backBtn').onclick = ()=> history.back();
-$('homeBtn').onclick = ()=> location.href='index.html';
-
-questionEl.textContent = domanda;
+$('question').textContent = domanda;
 $('badgePeriodo').textContent = "🕰️ " + (prefs.periodo==="past" ? T.periodoPast : T.periodoFuture);
 $('badgeStile').textContent   = "🎭 " + (currentStyle==="wtf" ? "What the F" : "What if");
 document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===currentStyle));
@@ -246,6 +250,105 @@ $('styleChips').addEventListener("click",(e)=>{
   $('badgeStile').textContent = "🎭 " + (currentStyle==="wtf" ? "What the F" : "What if");
   document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===currentStyle));
 });
+
+/* ====== Badge render ====== */
+function renderBadges(){
+  const gc=readCredits(); const gl=Math.max(0, DAILY_FREE - (gc.used||0));
+  $('freeBadge').textContent = T.badgeFree(gl, DAILY_FREE);
+
+  const cc=readClarify(); const cl=Math.max(0, DAILY_CLARIFY - (cc.used||0));
+  $('clarifyBadge').textContent = T.badgeClarify(cl, DAILY_CLARIFY);
+}
+
+/* ====== Indicatore Personalizzazione (mini) ====== */
+function daysBetween(iso1, iso2){
+  if(!iso1||!iso2) return 999;
+  const a=new Date(iso1), b=new Date(iso2);
+  return Math.round((b-a)/(1000*60*60*24));
+}
+function last(arr){ return Array.isArray(arr) && arr.length ? arr[arr.length-1] : null; }
+function computeKnowledge(){
+  const profile = readJSON('whatif_profile',{});
+  const micro   = readJSON('whatif_micro',{});
+  const clar    = readJSON('whatif_clarify',{date:null,used:0});
+  const microLog= readJSON('whatif_micro_log',[]);
+  const lastUpd = LS.getItem('whatif_last_update');
+  const today = todayStr();
+
+  // Copertura (max 55)
+  let cover=0;
+  const hasIdentity = !!(profile.name || profile.role);  cover += hasIdentity ? 8 : 0;
+  const hasRoutine = !!(micro.indicatore);               cover += hasRoutine ? 8 : 0;
+  const hasConstraints = !!(micro.vincolo_2w);           cover += hasConstraints ? 8 : 0;
+  const hasGoals = !!(profile.goal);                     cover += hasGoals ? 8 : 0;
+  const hasPlaces = !!(profile.city || micro.punto_riferimento); cover += hasPlaces ? 8 : 0;
+  const hasRelations = !!(micro.persona_chiave);         cover += hasRelations ? 8 : 0;
+  const hasRisk = !!(micro.rischio || micro.tolleranza_rischio); cover += hasRisk ? 7 : 0;
+
+  // Qualità (max 25)
+  const vals = Object.values(profile).concat(Object.values(micro)).filter(v=>typeof v==='string');
+  let usable = 0;
+  const numRe = /\b\d+([.,]\d+)?\b/;
+  const timeRe= /\b(\d{1,2}[:.]\d{2}|mattina|pomeriggio|sera|am|pm)\b/i;
+  const locRe = /\b(centro|stazione|ufficio|palestra|bar|parco|centro storico)\b/i;
+  vals.forEach(v=>{
+    if (usable>=10) return;
+    if (numRe.test(v) || timeRe.test(v) || locRe.test(v)) usable++;
+  });
+  let quality = Math.min(10, usable);
+  if (clar && clar.date === today && (clar.used||0)>0) quality += 5;
+  quality = Math.min(25, quality);
+
+  // Freschezza (max 20)
+  let streak=0;
+  if (Array.isArray(microLog) && microLog.length){
+    let d = new Date(today);
+    for(;;){
+      const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      if (microLog.includes(iso)){ streak++; d.setDate(d.getDate()-1); } else break;
+    }
+  }
+  const streakPts = Math.min(10, streak);
+  const lastDay = lastUpd || last(microLog);
+  let recencyPts = 0;
+  if (lastDay){
+    const gap = daysBetween(lastDay, today);
+    if (gap<=2) recencyPts=10; else if (gap<=5) recencyPts=8; else if (gap<=8) recencyPts=6;
+    else if (gap<=11) recencyPts=4; else if (gap<=14) recencyPts=2; else recencyPts=0;
+  }
+  const fresh = Math.min(20, streakPts + recencyPts);
+
+  let total = Math.max(0, Math.min(100, Math.round(cover + quality + fresh)));
+  return total;
+}
+function renderKnowledgeMini(){
+  const score = computeKnowledge();
+  $('knowFill').style.width = `${score}%`;
+  $('knowValueMini').textContent = `${score}/100`;
+}
+
+/* ====== Segnali usati oggi ====== */
+function summarizeSignals(clarUsed={}){
+  const p = readJSON('whatif_profile', {});
+  const m = readJSON('whatif_micro', {});
+  const parts = [];
+
+  if (p.city) parts.push(`${T.sig_city}: ${p.city}`);
+  if (p.goal) parts.push(`${T.sig_goal}: ${p.goal}`);
+  if (m.indicatore) parts.push(`${T.sig_indicator}: ${m.indicatore}`);
+  if (m.vincolo_2w) parts.push(`${T.sig_constraint}: ${m.vincolo_2w}`);
+  if (m.punto_riferimento) parts.push(`${T.sig_landmark}: ${m.punto_riferimento}`);
+  if (p.role) parts.push(`${T.sig_role}: ${p.role}`);
+
+  // includi chiarimenti applicati (solo chiavi + primi 30 char)
+  Object.entries(clarUsed||{}).forEach(([k,v])=>{
+    const v2 = String(v).trim().slice(0,30);
+    if (v2) parts.push(`${k}: ${v2}`);
+  });
+
+  if (!parts.length) return ''; // niente UI
+  return `<b>${T.signals}:</b> ${parts.map(escapeHTML).join(' · ')}`;
+}
 
 /* ====== API helpers ====== */
 async function callClarifyAPI(){
@@ -277,9 +380,7 @@ $('cancelClarify').addEventListener('click', ()=> clarifyOverlay.style.display='
 async function openClarify(){
   ensureClarify();
   const c = readClarify();
-  if ((c.used||0) >= DAILY_CLARIFY){
-    alert(T.limitClarify); return;
-  }
+  if ((c.used||0) >= DAILY_CLARIFY){ alert(T.limitClarify); return; }
   clarifyList.innerHTML = `<p class="sub">${lang==='en'?'Preparing 2–3 focused questions…':'Sto preparando 2–3 domande mirate…'}</p>`;
   clarifyOverlay.style.display='flex';
   try{
@@ -290,7 +391,7 @@ async function openClarify(){
     clarifyList.innerHTML = qs.map(q=>`
       <div class="qitem">
         <label for="${q.id||''}">${escapeHTML(q.label|| (lang==='en'?'Question':'Domanda'))}</label>
-        <input id="${q.id||''}" type="text" placeholder="${escapeAttr(q.placeholder|| (lang==='en'?'Answer in one line':'Rispondi in una riga'))}" />
+        <input id="${q.id||''}" type="text" placeholder="${(q.placeholder|| (lang==='en'?'Answer in one line':'Rispondi in una riga')).replace(/"/g,'&quot;')}" />
       </div>`).join("");
   }catch(e){
     clarifyList.innerHTML = `<p class="sub">${lang==='en'?'Error fetching clarifications. You can still generate.':'Errore nel recupero chiarimenti. Puoi generare comunque.'}</p>`;
@@ -301,7 +402,8 @@ $('applyClarify').addEventListener('click', async ()=>{
   const inputs = clarifyList.querySelectorAll('input');
   const clar = {}; inputs.forEach(i=>{ const v=(i.value||"").trim(); if(i.id&&v) clar[i.id]=v; });
   clarifyOverlay.style.display='none';
-  if (Object.keys(clar).length) saveMicroPatch(clar);
+  // mostra subito i segnali inclusi dai chiarimenti
+  $('signalsUsed').innerHTML = summarizeSignals(clar);
   await generate(false, clar);
 });
 
@@ -312,13 +414,14 @@ $('regenBtn').addEventListener('click', ()=> generate(true));
 async function generate(isRegen=false, clarOverride=null){
   ensureCredits();
   const credits = readCredits();
-  if (!isRegen && (credits.used||0) >= DAILY_FREE){
-    alert(T.limitGen); return;
-  }
+  if (!isRegen && (credits.used||0) >= DAILY_FREE){ alert(T.limitGen); return; }
 
-  resultEl.textContent = `⏳ ${T.loading} `;
-  const sk = document.createElement("span"); sk.className="skeleton"; sk.style.width="40%"; resultEl.appendChild(sk);
+  $('result').textContent = `⏳ ${T.loading} `;
+  const sk = document.createElement("span"); sk.className="skeleton"; sk.style.width="40%"; $('result').appendChild(sk);
   $('regenBtn').style.display = 'none';
+
+  // aggiorna “Segnali usati oggi” se non c’è già
+  if (!$('signalsUsed').innerHTML) $('signalsUsed').innerHTML = summarizeSignals(clarOverride||{});
 
   try{
     const reader = await callGenerateStream({ clarifications: (clarOverride||{} ) });
@@ -333,38 +436,37 @@ async function generate(isRegen=false, clarOverride=null){
       for (const chunk of chunks){
         if (!chunk.startsWith("data: ")) continue;
         const data = JSON.parse(chunk.slice(6));
-        if (data.token){ text += data.token; resultEl.textContent = text; }
-        if (data.done){ resultEl.textContent = (text||"").trim(); }
-        if (data.error){ resultEl.textContent = T.errServer + " " + (data.detail||""); }
+        if (data.token){ text += data.token; $('result').textContent = text; }
+        if (data.done){ $('result').textContent = (text||"").trim(); }
+        if (data.error){ $('result').textContent = T.errServer + " " + (data.detail||""); }
       }
     }
     const c = readCredits(); c.used = (c.used||0) + 1; writeCredits(c);
     $('regenBtn').style.display = 'inline-block';
+    // refresh mini-indicatore (sale per chiarimenti/recenza)
+    renderKnowledgeMini();
   }catch(e){
     console.error(e);
-    resultEl.textContent = (e.message==='server' ? T.errServer : T.errNet);
+    $('result').textContent = (e.message==='server' ? T.errServer : T.errNet);
   }
 }
 
 /* ====== Utility ====== */
-$('backBtn').addEventListener('click', ()=> history.back());
-$('homeBtn').addEventListener('click', ()=> location.href='index.html');
-
+$('backBtnTop').addEventListener('click', ()=> history.back());
+$('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
 $('saveBtn').addEventListener('click', ()=>{
   const arr = readJSON("cronologia", []);
-  arr.unshift({ domanda, risposta:(resultEl.textContent||"").trim(), periodo:prefs.periodo||null, stile:currentStyle, lang, ts:Date.now() });
-  LS.setItem("cronologia", JSON.stringify(arr));
+  arr.unshift({ domanda, risposta:($('result').textContent||"").trim(), periodo:prefs.periodo||null, stile:currentStyle, lang, ts:Date.now() });
+  writeJSON("cronologia", arr);
   alert(T.saved);
 });
 $('copyBtn').addEventListener('click', ()=>{
-  navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${resultEl.textContent}`).then(()=> alert(T.copied));
+  navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`).then(()=> alert(T.copied));
 });
 $('shareBtn').addEventListener('click', ()=>{
-  const data={title:"What?f",text:`${T.qLabel}: ${domanda}\n\n${resultEl.textContent}`,url: location.href};
-  if (navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${resultEl.textContent}`);
+  const data={title:"What?f",text:`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`,url: location.href};
+  if (navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`);
 });
-function escapeHTML(s){return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function escapeAttr(s){return String(s||"").replace(/"/g,'&quot;')}
 
 /* ====== Dev hooks (long-press reset, triple-click Pro) ====== */
 (function devHooks(){
@@ -378,11 +480,8 @@ function escapeAttr(s){return String(s||"").replace(/"/g,'&quot;')}
   badge.addEventListener('pointerleave',()=> { clearTimeout(pressT); });
 
   function resetToday(){
-    const d=new Date();
-    const today=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    const c=readJSON('whatif_credits');
-    c.date=today; c.used=0;
-    LS.setItem('whatif_credits', JSON.stringify(c));
+    const today=todayStr();
+    const c=readJSON('whatif_credits'); c.date=today; c.used=0; writeJSON('whatif_credits', c);
     renderBadges();
     alert(lang==='en'?'Today credits reset ✅':'Crediti di oggi azzerati ✅');
   }
@@ -393,16 +492,16 @@ function escapeAttr(s){return String(s||"").replace(/"/g,'&quot;')}
     timer=setTimeout(()=>{ if (clicks>=3) togglePro(); clicks=0; }, 250);
   });
   function togglePro(){
-    const c=readJSON('whatif_credits');
-    c.pro = !c.pro; c.used = 0;
-    LS.setItem('whatif_credits', JSON.stringify(c));
+    const c=readJSON('whatif_credits'); c.pro = !c.pro; c.used = 0; writeJSON('whatif_credits', c);
     renderBadges();
     alert('Pro '+(c.pro?'on':'off')+' (local) ✅');
   }
 })();
 
-/* ====== Start ====== */
-ensureCredits(); ensureClarify(); renderBadges();
+/* ====== Avvio ====== */
+ensureCredits(); ensureClarify(); renderBadges(); renderKnowledgeMini();
+// inizializza “Segnali usati” base (senza chiarimenti manuali)
+$('signalsUsed').innerHTML = summarizeSignals({});
 </script>
 </body>
 </html>
