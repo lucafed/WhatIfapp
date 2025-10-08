@@ -93,41 +93,62 @@
   document.getElementById('toggleMore').textContent=T.toggle; document.getElementById('moreHint').textContent=T.hint;
   document.getElementById('lab_place').textContent=T.place; document.getElementById('lab_person').textContent=T.person; document.getElementById('lab_memory').textContent=T.memory;
 
-  // placeholder dinamico
-  document.getElementById('domandaInput').placeholder = period==='past' ? T.pastPH : T.futurePH;
-
-  // template tap-to-fill
+  // placeholder dinamico + template
+  const domandaInput = document.getElementById('domandaInput');
+  domandaInput.placeholder = period==='past' ? T.pastPH : T.futurePH;
   const tBox = document.getElementById('templates');
   (period==='past'?T.tempPast:T.tempFuture).forEach(txt=>{
     const b=document.createElement('button'); b.className='chip'; b.textContent=txt;
-    b.addEventListener('click',()=>{ document.getElementById('domandaInput').value = txt; });
+    b.addEventListener('click',()=>{ domandaInput.value = txt; });
     tBox.appendChild(b);
   });
 
-  // prefill dati precedenti
+  // toggle more
+  document.getElementById('toggleMore').addEventListener('click',()=>{ const b=document.getElementById('moreBox'); b.style.display=b.style.display==='none'?'block':'none'; });
+  document.getElementById('backBtn').addEventListener('click',()=>history.back());
+  document.getElementById('nextBtn').addEventListener('click',salvaDomanda);
+
   (function prefill(){
-    const prev=localStorage.getItem("domanda"); if(prev) document.getElementById("domandaInput").value=prev;
+    const prev=localStorage.getItem("domanda"); if(prev) domandaInput.value=prev;
     const anchors=JSON.parse(localStorage.getItem("whatif_anchors")||"{}");
     if(anchors.place) document.getElementById("anchor_place").value=anchors.place;
     if(anchors.person) document.getElementById("anchor_person").value=anchors.person;
     if(anchors.memory) document.getElementById("anchor_memory").value=anchors.memory;
   })();
 
-  document.getElementById('toggleMore').addEventListener('click',()=>{ const b=document.getElementById('moreBox'); b.style.display=b.style.display==='none'?'block':'none'; });
-  document.getElementById('backBtn').addEventListener('click',()=>history.back());
-  document.getElementById('nextBtn').addEventListener('click',salvaDomanda);
-
   function salvaDomanda(){
-    const domanda = document.getElementById("domandaInput").value.trim();
+    const domanda = domandaInput.value.trim();
     if(!domanda){ alert(T.missing); return; }
     localStorage.setItem("domanda", domanda);
+    // salva ancore
     const anchors={
       place:document.getElementById("anchor_place").value.trim(),
       person:document.getElementById("anchor_person").value.trim(),
       memory:document.getElementById("anchor_memory").value.trim()
     };
     localStorage.setItem("whatif_anchors", JSON.stringify(anchors));
+    // classifica domanda → tag
+    const tags = classifyQuestion(domanda, period);
+    localStorage.setItem("whatif_tags", JSON.stringify(tags));
     location.href="fifth.html";
+  }
+
+  // ======= CLASSIFICATORE SEMPLICE LOCALE =======
+  function classifyQuestion(q, period){
+    const s = (q||"").toLowerCase();
+    const tags = new Set();
+    // tempo
+    if (period==='past' || /se fossi rimasto|se non avessi|se avessi/i.test(q)) tags.add('past');
+    if (period==='future' || /nei prossimi|e se domani|tra un anno|se lasciassi|se aprissi/i.test(q)) tags.add('future');
+    // domini
+    if (/\blavor|carriera|azienda|contratto|assunzione|licenzi|studio\b/i.test(s)) tags.add('work');
+    if (/\bamore|relazion|partner|figli|famiglia|amico|amica\b/i.test(s)) tags.add('relationships');
+    if (/\baffitto|mutuo|soldi|stipendio|debito|finanz|invest/i.test(s)) tags.add('money');
+    if (/\btrasfer|città|quartiere|via|piazza|trasloco|verona|l'aquila|roma|milano|napoli\b/i.test(s)) tags.add('place');
+    if (/\bstudio|laurea|master|corso|università|esame\b/i.test(s)) tags.add('study');
+    if (/\bsalute|allenament|palestra|sonno|stress\b/i.test(s)) tags.add('wellbeing');
+    if (/\bprogetto|startup|studio\b/i.test(s)) tags.add('project');
+    return Array.from(tags);
   }
 </script>
 </body>
