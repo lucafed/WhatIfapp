@@ -14,7 +14,6 @@
   body[data-theme="wtf"]{ --acc:#FF63E3; --acc2:#8A5BFF; --ink:#170021; --line:rgba(178,120,255,.28); --chip:#16122A; }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg1)}
-  /* sfondo orbitale “porte” */
   body::before{
     content:"";position:fixed;inset:0;z-index:-1;
     background:
@@ -25,11 +24,12 @@
   }
   .topbar{position:sticky;top:0;z-index:2;display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;background:linear-gradient(180deg,rgba(5,8,12,.9),rgba(5,8,12,0))}
   .btn{appearance:none;border:none;border-radius:12px;padding:10px 14px;cursor:pointer;color:var(--text);background:transparent;border:1px solid var(--line)}
-  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
+  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none}
   main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:10px 14px 24px}
   .wrap{width:min(100%,980px)}
   h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--acc)}
   .blurb{color:var(--muted);margin:0 0 14px;font-size:clamp(14px,4vw,18px);line-height:1.45}
+  .banner{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border-radius:14px;padding:10px 12px;font-weight:800}
   .card{background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
   label{font-weight:700;margin-bottom:6px;display:block}
   .row{display:grid;gap:12px}
@@ -41,25 +41,26 @@
   .error{color:#ffb3b3;background:#3a1414;border:1px solid #5a2222;border-radius:10px;padding:10px 12px;display:none}
   .error.show{display:block}
   .disclaimer{font-size:12px;color:var(--muted);margin-top:6px}
-  .mini{font-size:13px;color:var(--muted);margin:6px 0 0}
 </style>
 </head>
 <body>
   <div class="topbar">
-    <div>
-      <button id="homeBtnTop" class="btn">🏠 Home</button>
-    </div>
-    <button id="skipBtn" class="btn">Salta oggi</button>
+    <button id="homeBtnTop" class="btn">🏠 Home</button>
+    <button id="skipBtnTop" class="btn">Salta oggi</button>
   </div>
 
   <main>
     <div class="wrap">
+      <div id="dailyBanner" class="banner" style="display:none">
+        Giorno dopo giorno, tre micro-domande rendono What?f sempre più tua.
+      </div>
+
       <h1>Parlami di te</h1>
       <p class="blurb">Queste info restano sul tuo dispositivo e servono solo a personalizzare gli scenari.</p>
 
       <div id="errorBox" class="error"></div>
 
-      <!-- Profilo base (obbligatorio al primo giro) -->
+      <!-- Profilo base (obbligatorio la prima volta) -->
       <form id="aboutForm" class="card" novalidate>
         <h3 style="margin:0 0 8px">Profilo</h3>
         <div class="row three">
@@ -108,33 +109,31 @@
           <input id="goal" type="text" placeholder="Esempio: cambiare lavoro, trasferirmi, migliorare le finanze…">
         </div>
 
-        <p class="mini">Il profilo si compila una volta e puoi modificarlo in qualunque momento.</p>
-
         <div class="actions">
           <button type="submit" class="btn primary">Continua</button>
         </div>
       </form>
 
-      <!-- Micro-domande (una volta al giorno) -->
+      <!-- Micro-domande (1 volta al giorno) -->
       <form id="microForm" class="card" style="display:none">
-        <h3 style="margin:0 0 8px">3 micro-domande di oggi</h3>
+        <h3 style="margin:0 0 8px">Le 3 micro-domande di oggi</h3>
         <div class="row">
           <div>
             <label for="indicatore">Un indicatore utile oggi</label>
-            <input id="indicatore" type="text" placeholder="Es. sveglia 6:30 → corsa 20’ → caffè al bar di Mario">
+            <input id="indicatore" type="text" placeholder="Es. sveglia 6:30 → corsa 20’ → caffè da Mario">
           </div>
           <div>
-            <label for="vincolo_2w">Un vincolo nelle prossime 2 settimane</label>
+            <label for="vincolo_2w">Un vincolo (prossime 2 settimane)</label>
             <input id="vincolo_2w" type="text" placeholder="Es. budget 300€, visita medica, turni, ecc.">
           </div>
           <div>
             <label for="punto_riferimento">Un luogo/persona di riferimento</label>
-            <input id="punto_riferimento" type="text" placeholder="Es. Piazza Duomo / Sara / il coworking">
+            <input id="punto_riferimento" type="text" placeholder="Es. Piazza Duomo / Sara / coworking">
           </div>
         </div>
         <div class="actions">
           <button type="button" class="btn" id="skipMicro">Salta oggi</button>
-          <button type="submit" class="btn primary">Salva e vai avanti</button>
+          <button type="submit" class="btn primary">Salva e vai alla domanda</button>
         </div>
         <p class="disclaimer">Queste tre risposte escono solo una volta al giorno: aiutano What?f a diventare più precisa.</p>
       </form>
@@ -148,39 +147,38 @@ function readJSON(k,def={}){try{return JSON.parse(LS.getItem(k)||JSON.stringify(
 function writeJSON(k,v){LS.setItem(k,JSON.stringify(v));}
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 
-/* tema porte */
-(function applyTheme(){ try{ const p=readJSON('whatif_prefs',{}); document.body.setAttribute('data-theme', p.stile==='wtf'?'wtf':'whatif'); }catch(_){}})();
+/* Tema “porte” */
+(function(){ try{ const p=readJSON('whatif_prefs',{}); document.body.setAttribute('data-theme', p.stile==='wtf'?'wtf':'whatif'); }catch(_){}})();
 
-/* precompila profilo se già esiste */
-(function fillProfile(){
-  const pf=readJSON('whatif_profile',{});
-  if(pf.name) $('#name').value=pf.name;
-  if(pf.gender) $('#gender').value=pf.gender;
-  if(pf.age) $('#age').value=pf.age;
-  if(pf.city) $('#city').value=pf.city;
-  if(pf.role) $('#role').value=pf.role;
-  if(pf.goal) $('#goal').value=pf.goal;
+/* Banner 1 volta al giorno */
+(function(){
+  const t=todayStr(); const k='whatif_banner_last';
+  if(LS.getItem(k)!==t){ $('#dailyBanner').style.display='block'; LS.setItem(k,t); }
 })();
 
-/* profilo obbligatorio al primo giro */
+/* Precompila profilo se esiste */
+(function(){
+  const pf=readJSON('whatif_profile',{});
+  ['name','gender','age','city','role','goal'].forEach(id=>{
+    if(pf[id]){ const el=$('#'+id); if(el) el.value=pf[id]; }
+  });
+})();
+
+/* Profilo obbligatorio */
 $('#aboutForm').addEventListener('submit', (e)=>{
   e.preventDefault();
   const name=$('#name').value.trim(), gender=$('#gender').value, age=$('#age').value, city=$('#city').value.trim(), role=$('#role').value.trim(), goal=$('#goal').value.trim();
   if(!name||!gender||!age||!city||!role){ alert('Compila i campi obbligatori.'); return; }
   writeJSON('whatif_profile', {name,gender,age,city,role,goal});
-  // sblocca micro se non compilate oggi
   maybeShowMicro();
 });
 
-/* micro-domande giornaliere */
+/* Micro-domande daily */
 function maybeShowMicro(){
   const last=LS.getItem('whatif_micro_last');
   const today=todayStr();
-  if(last===today){ // già fatte oggi
-    location.href='fourth.html';
-  }else{
-    $('#microForm').style.display='block';
-  }
+  if(last===today){ location.href='fourth.html'; }
+  else { $('#microForm').style.display='block'; }
 }
 maybeShowMicro();
 
@@ -192,18 +190,13 @@ $('#microForm').addEventListener('submit', (e)=>{
   const obj=readJSON('whatif_micro',{});
   Object.assign(obj,{indicatore,vincolo_2w,punto_riferimento});
   writeJSON('whatif_micro',obj);
-  LS.setItem('whatif_micro_last', todayStr());
-  const log=readJSON('whatif_micro_log',[]);
-  if(!log.includes(todayStr())) log.push(todayStr());
-  writeJSON('whatif_micro_log',log);
+  const t=todayStr(); LS.setItem('whatif_micro_last', t);
+  const log=readJSON('whatif_micro_log',[]); if(!log.includes(t)) log.push(t); writeJSON('whatif_micro_log',log);
   location.href='fourth.html';
 });
 
-$('#skipMicro').addEventListener('click', ()=>{
-  LS.setItem('whatif_micro_last', todayStr()); // memorizzo che l’utente ha scelto di saltare
-  location.href='fourth.html';
-});
-$('#skipBtn').addEventListener('click', ()=>{ LS.setItem('whatif_micro_last', todayStr()); location.href='fourth.html'; });
+$('#skipMicro').addEventListener('click', ()=>{ LS.setItem('whatif_micro_last', todayStr()); location.href='fourth.html'; });
+$('#skipBtnTop').addEventListener('click', ()=>{ LS.setItem('whatif_micro_last', todayStr()); location.href='fourth.html'; });
 $('#homeBtnTop').addEventListener('click', ()=> location.href='index.html');
 </script>
 </body>
