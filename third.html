@@ -1,367 +1,319 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f – Profilazione</title>
-<meta name="theme-color" content="#0A0F14" />
-<style>
-  :root{
-    --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA;
-    --card:#101922; --chip:#141C22;
-    --accent:#00E0FF; --accent-dark:#00B5CC; --accent-ink:#001f26;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{min-height:100%;display:flex;flex-direction:column;align-items:center;padding:18px}
-  .wrap{width:min(100%,900px)}
-  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-  .btn{appearance:none;border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
-  .btn.ghost{background:#0f1820;color:#cfe3e7;border:1px solid #1f2a33}
-  .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:var(--accent-ink)}
-  .progress{margin:10px 0 16px}
-  .bar{height:8px;background:#0f1820;border:1px solid #1d2b34;border-radius:999px;overflow:hidden}
-  .fill{height:100%;background:linear-gradient(180deg,var(--accent),var(--accent-dark));width:0%}
-  h1{font-size:clamp(22px,5vw,30px);margin:6px 0 0}
-  p.lead{color:var(--muted);margin:6px 0 16px}
-  .card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
-  .qgroup{color:#7fd8e6;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
-  .qtext{font-size:clamp(18px,4.5vw,22px);margin:6px 0 10px}
-  .chips{display:grid;gap:10px}
-  .chip{appearance:none;border:none;background:var(--chip);color:#cfe3e7;
-    padding:12px 16px;border-radius:16px;font-weight:700;text-align:left;cursor:pointer;
-    transition:transform .08s ease, background .16s ease, box-shadow .16s ease, border .16s ease;
-    border:1px solid #1b2a34}
-  .chip:active{transform:translateY(1px)}
-  .chip.selected{background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:var(--accent-ink);
-    box-shadow:0 0 0 1px rgba(0,224,255,.35) inset}
-  .actions{display:flex;gap:10px;justify-content:space-between;margin-top:16px}
-  .muted{color:var(--muted);font-size:12px;margin-top:8px}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f – 5 domande</title>
+  <meta name="theme-color" content="#0A0F14" />
+  <style>
+    :root{
+      --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA;
+      --card:#101922; --chip:#141C22; --acc:#00E0FF; --acc2:#00B5CC; --ink:#001f26;
+    }
+    *{box-sizing:border-box}
+    html,body{
+      margin:0; background:var(--bg); color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    main{min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px}
+    .wrap{width:min(92vw,780px)}
+    h1{font-size:clamp(22px,5.5vw,32px); margin:6px 0}
+    .lead{color:var(--muted); margin:0 0 12px}
+    .card{background:var(--card); border:1px solid #1b2a34; border-radius:16px; padding:16px; box-shadow:0 10px 28px rgba(0,0,0,.25)}
+    .q{font-weight:800; margin:0 0 10px; font-size:clamp(18px,4.5vw,22px)}
+    .chips{display:flex; flex-wrap:wrap; gap:10px}
+    .chip{
+      appearance:none; border:none; background:var(--chip); color:#cfe3e7;
+      padding:12px 16px; border-radius:16px; font-weight:700; cursor:pointer;
+      transition:transform .08s ease, background .16s ease, box-shadow .16s ease;
+    }
+    .chip:active{transform:translateY(1px)}
+    .chip.selected{
+      background:linear-gradient(180deg,var(--acc),var(--acc2));
+      color:var(--ink); box-shadow:0 0 0 1px rgba(0,224,255,.35) inset;
+    }
+    .progress{
+      height:8px; background:#0f1820; border:1px solid #1c2a33; border-radius:999px; overflow:hidden; margin:10px 0 14px;
+    }
+    .bar{height:100%; width:0%; background:linear-gradient(90deg,var(--acc),var(--acc2))}
+    .row{display:flex; gap:10px; justify-content:space-between; align-items:center; margin-top:12px}
+    .btn{
+      appearance:none; border:none; border-radius:12px; padding:12px 16px; font-weight:900; cursor:pointer;
+    }
+    .btn.ghost{background:#0f1820; color:#cfe3e7; border:1px solid #1d2b34}
+    .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink)}
+    .btn[disabled]{opacity:.5; cursor:not-allowed}
+    .count{color:var(--muted); font-size:13px}
+  </style>
 </head>
 <body>
 <main>
   <div class="wrap">
-    <div class="topbar">
-      <button class="btn ghost" id="backBtn">← <span data-i18n="back">Indietro</span></button>
-      <div class="muted" id="stepLabel"></div>
-      <button class="btn ghost" id="skipBtn"><span data-i18n="skip">Salta</span> →</button>
-    </div>
+    <h1 id="title">Conosciamoci in 30s</h1>
+    <p class="lead" id="lead">5 domande rapide per cucire gli scenari su di te.</p>
 
-    <div class="progress">
-      <div class="bar"><div class="fill" id="fill"></div></div>
-    </div>
-
-    <h1 data-i18n="title">Conosciamoci in 12 passi</h1>
-    <p class="lead" data-i18n="lead">
-      Rispondi velocemente a queste domande. Servono a rendere lo scenario più realistico e “tuo”.
-    </p>
+    <div class="progress"><div class="bar" id="bar"></div></div>
 
     <div class="card">
-      <div class="qgroup" id="qGroup"></div>
-      <div class="qtext" id="qText"></div>
-      <div class="chips" id="qOptions"></div>
+      <p class="q" id="question">Domanda…</p>
+      <div class="chips" id="chips"></div>
 
-      <div class="actions">
-        <button class="btn ghost" id="prevBtn" data-i18n="prev">Indietro</button>
-        <button class="btn primary" id="nextBtn" data-i18n="next">Avanti</button>
+      <div class="row">
+        <button class="btn ghost" id="backBtn">← <span id="back">Indietro</span></button>
+        <span class="count" id="count">1 / 5</span>
+        <button class="btn primary" id="nextBtn" disabled><span id="next">Avanti</span> →</button>
       </div>
-      <div class="muted" id="hint"></div>
     </div>
   </div>
 </main>
 
 <script>
-/* ===== i18n ===== */
-const DICT = {
-  it: {
-    title:"Conosciamoci in 12 passi",
-    lead:"Rispondi velocemente a queste domande. Servono a rendere lo scenario più realistico e “tuo”.",
-    back:"Indietro", skip:"Salta", prev:"Indietro", next:"Avanti",
-    step:"Domanda {i} di {n}",
-    hint:"Puoi cambiare risposta in qualsiasi momento."
-  },
-  en: {
-    title:"Get to know you in 12 steps",
-    lead:"Quick questions to make your scenario more realistic and personal.",
-    back:"Back", skip:"Skip", prev:"Back", next:"Next",
-    step:"Question {i} of {n}",
-    hint:"You can change your answer at any time."
-  }
-};
-const LS = localStorage;
-const lang = (LS.getItem('lang') || 'it').toLowerCase();
-const T = DICT[lang] || DICT.it;
-document.documentElement.lang = lang;
-document.querySelectorAll('[data-i18n]').forEach(el=>{
-  const k = el.getAttribute('data-i18n');
-  el.textContent = T[k] || el.textContent;
-});
-
-/* ===== Domande (IT/EN) ===== */
-const Q = [
-  { group:{it:"Origine",en:"Origin"},
-    text:{it:"Quale esperienza della tua infanzia ha lasciato il segno più profondo?",en:"Which childhood experience left the deepest mark?"},
-    opts:[
-      {k:"A", it:"Scoperta/curiosità intensa", en:"Discovery / intense curiosity"},
-      {k:"B", it:"Crescere in fretta / responsabilità", en:"Growing up fast / responsibility"},
-      {k:"C", it:"Isolamento o solitudine", en:"Isolation or loneliness"},
-      {k:"D", it:"Forte connessione familiare", en:"Strong family connection"},
-      {k:"E", it:"Ribellione / indipendenza precoce", en:"Rebellion / early independence"},
-    ]},
-  { group:{it:"Tensione interna",en:"Inner tension"},
-    text:{it:"Qual è la forza opposta che più spesso ti divide dentro?", en:"Which opposing force splits you most often?"},
-    opts:[
-      {k:"A", it:"Sicurezza vs Libertà", en:"Security vs Freedom"},
-      {k:"B", it:"Ragione vs Intuizione", en:"Reason vs Intuition"},
-      {k:"C", it:"Dovere vs Desiderio", en:"Duty vs Desire"},
-      {k:"D", it:"Appartenenza vs Autonomia", en:"Belonging vs Autonomy"},
-      {k:"E", it:"Controllo vs Caso", en:"Control vs Chance"},
-    ]},
-  { group:{it:"Vocazione",en:"Calling"},
-    text:{it:"Se non ci fossero limiti o giudizi, cosa faresti per puro piacere?", en:"With no limits or judgment, what would you do for pure joy?"},
-    opts:[
-      {k:"A", it:"Costruire o creare", en:"Build or create"},
-      {k:"B", it:"Scoprire e capire", en:"Discover and understand"},
-      {k:"C", it:"Aiutare o guidare gli altri", en:"Help or guide others"},
-      {k:"D", it:"Raccontare o esprimere", en:"Tell stories / express"},
-      {k:"E", it:"Viaggiare e sperimentare", en:"Travel and experiment"},
-    ]},
-  { group:{it:"Immagine di sé",en:"Self-image"},
-    text:{it:"Quale frase ti rappresenta meglio?", en:"Which sentence represents you best?"},
-    opts:[
-      {k:"A", it:"Do forma a ciò che immagino", en:"I shape what I imagine"},
-      {k:"B", it:"Capisco il senso nascosto delle cose", en:"I grasp the hidden meaning"},
-      {k:"C", it:"Cerco equilibrio cuore/logica", en:"I seek heart/logic balance"},
-      {k:"D", it:"Osservo e partecipo", en:"I observe and I participate"},
-      {k:"E", it:"Sono esploratore", en:"I'm an explorer"},
-    ]},
-  { group:{it:"Decisioni",en:"Decisions"},
-    text:{it:"Quando devi scegliere, cosa pesa di più?", en:"When deciding, what weighs most?"},
-    opts:[
-      {k:"A", it:"Logica e analisi", en:"Logic and analysis"},
-      {k:"B", it:"Istinto e sensazione", en:"Instinct and feeling"},
-      {k:"C", it:"Paura di sbagliare", en:"Fear of being wrong"},
-      {k:"D", it:"Libertà e novità", en:"Freedom and novelty"},
-      {k:"E", it:"Impatto sugli altri", en:"Impact on others"},
-    ]},
-  { group:{it:"Luogo e libertà",en:"Place & freedom"},
-    text:{it:"Dove senti di appartenere di più?", en:"Where do you feel you belong most?"},
-    opts:[
-      {k:"A", it:"In città (energia e movimento)", en:"In the city (energy & motion)"},
-      {k:"B", it:"Nella natura / luoghi tranquilli", en:"In nature / quiet places"},
-      {k:"C", it:"Spazio personale di creazione", en:"Personal creative space"},
-      {k:"D", it:"Tra persone affini", en:"Among kindred people"},
-      {k:"E", it:"Non l'ho ancora trovato", en:"Haven't found it yet"},
-    ]},
-  { group:{it:"Relazioni",en:"Relationships"},
-    text:{it:"Che tipo di persone tendi ad attrarre?", en:"What kind of people do you attract?"},
-    opts:[
-      {k:"A", it:"Curiose, intelligenti e creative", en:"Curious, smart and creative"},
-      {k:"B", it:"Fragili, da proteggere/aiutare", en:"Fragile, to protect/help"},
-      {k:"C", it:"Forti e decise, che sfidano", en:"Strong, decisive, challenging"},
-      {k:"D", it:"Tranquille e affidabili", en:"Calm and reliable"},
-      {k:"E", it:"Libere e fuori dagli schemi", en:"Free and unconventional"},
-    ]},
-  { group:{it:"Bivio",en:"Turning point"},
-    text:{it:"Quale situazione descrive meglio un 'bivio' della tua vita?", en:"Which situation best describes a 'fork' in your life?"},
-    opts:[
-      {k:"A", it:"Cambiare carriera o studi", en:"Change career/studies"},
-      {k:"B", it:"Trasferirmi altrove", en:"Move elsewhere"},
-      {k:"C", it:"Relazione importante sì/no", en:"Important relationship yes/no"},
-      {k:"D", it:"Rischiare in un progetto personale", en:"Risk a personal project"},
-      {k:"E", it:"Non seguire il percorso atteso", en:"Not follow the expected path"},
-    ]},
-  { group:{it:"Paura",en:"Fear"},
-    text:{it:"Cosa temi di più di perdere?", en:"What do you most fear losing?"},
-    opts:[
-      {k:"A", it:"La libertà", en:"Freedom"},
-      {k:"B", it:"Le persone che amo", en:"Loved ones"},
-      {k:"C", it:"Controllo e stabilità", en:"Control and stability"},
-      {k:"D", it:"Il senso di significato", en:"Sense of meaning"},
-      {k:"E", it:"Me stesso / identità", en:"Myself / identity"},
-    ]},
-  { group:{it:"Forza",en:"Strength"},
-    text:{it:"Cosa ti rialza nei momenti difficili?", en:"What lifts you up in hard times?"},
-    opts:[
-      {k:"A", it:"Logica e pianificazione", en:"Logic and planning"},
-      {k:"B", it:"Fede o speranza", en:"Faith or hope"},
-      {k:"C", it:"Determinazione e orgoglio", en:"Determination and pride"},
-      {k:"D", it:"Amore / sostegno degli altri", en:"Love / support of others"},
-      {k:"E", it:"Curiosità e voglia di capire", en:"Curiosity and desire to understand"},
-    ]},
-  { group:{it:"Evoluzione",en:"Evolution"},
-    text:{it:"Negli ultimi anni, in cosa sei cambiato di più?", en:"In recent years, what changed the most?"},
-    opts:[
-      {k:"A", it:"Più consapevole e riflessivo", en:"More self-aware and reflective"},
-      {k:"B", it:"Più concreto e orientato ai risultati", en:"More practical / results-oriented"},
-      {k:"C", it:"Più libero e meno condizionato", en:"Freer and less conditioned"},
-      {k:"D", it:"Più empatico e aperto", en:"More empathic and open"},
-      {k:"E", it:"Più selettivo sulle priorità", en:"More selective on priorities"},
-    ]},
-  { group:{it:"Essenza",en:"Essence"},
-    text:{it:"Se la tua vita fosse un film, che genere sarebbe?", en:"If your life were a film, what genre?"},
-    opts:[
-      {k:"A", it:"Costruzione e visione", en:"Building and vision"},
-      {k:"B", it:"Ricerca e mistero", en:"Quest and mystery"},
-      {k:"C", it:"Trasformazione", en:"Transformation"},
-      {k:"D", it:"Avventura", en:"Adventure"},
-      {k:"E", it:"Connessioni umane", en:"Human connections"},
-    ]},
-];
-const TOTAL = Q.length;
-
-/* ===== Pesi archetipi (tutti i casi QxY coperti) ===== */
-const ARCH = ["Ricercatore","Costruttore","Ribelle","Guaritore","Visionario","Mediatore"];
-
-const WEIGHTS = {
-  // Q1
-  Q1A:{Ricercatore:3,Visionario:2}, Q1B:{Costruttore:3,Mediatore:1},
-  Q1C:{Ricercatore:2,Ribelle:1,Guaritore:1}, Q1D:{Mediatore:3,Guaritore:2},
-  Q1E:{Ribelle:3,Visionario:2},
-  // Q2
-  Q2A:{Costruttore:2,Visionario:2}, Q2B:{Ricercatore:3,Visionario:2},
-  Q2C:{Costruttore:2,Ribelle:2}, Q2D:{Mediatore:2,Ribelle:2},
-  Q2E:{Ricercatore:2,Visionario:1,Costruttore:1},
-  // Q3
-  Q3A:{Costruttore:4,Visionario:2}, Q3B:{Ricercatore:5},
-  Q3C:{Guaritore:4,Mediatore:2}, Q3D:{Visionario:3,Mediatore:2},
-  Q3E:{Ribelle:3,Visionario:2},
-  // Q4
-  Q4A:{Costruttore:3,Visionario:2}, Q4B:{Ricercatore:4},
-  Q4C:{Mediatore:3,Ricercatore:1,Guaritore:1}, Q4D:{Ricercatore:2,Mediatore:2},
-  Q4E:{Visionario:3,Ribelle:2},
-  // Q5
-  Q5A:{Ricercatore:4,Costruttore:1}, Q5B:{Visionario:3,Guaritore:1},
-  Q5C:{Costruttore:3,Mediatore:1}, Q5D:{Ribelle:3,Visionario:2},
-  Q5E:{Mediatore:3,Guaritore:2},
-  // Q6
-  Q6A:{Visionario:2,Costruttore:1}, Q6B:{Guaritore:3,Mediatore:1},
-  Q6C:{Costruttore:3,Visionario:1}, Q6D:{Mediatore:4},
-  Q6E:{Ricercatore:2,Ribelle:2},
-  // Q7
-  Q7A:{Visionario:3,Ricercatore:1}, Q7B:{Guaritore:3,Mediatore:1},
-  Q7C:{Ribelle:3,Costruttore:1}, Q7D:{Costruttore:3,Mediatore:1},
-  Q7E:{Ribelle:4,Visionario:1},
-  // Q8
-  Q8A:{Costruttore:2,Visionario:2}, Q8B:{Visionario:2,Ribelle:2},
-  Q8C:{Mediatore:3,Guaritore:1}, Q8D:{Ribelle:3,Visionario:2},
-  Q8E:{Ribelle:3,Visionario:1},
-  // Q9
-  Q9A:{Ribelle:4}, Q9B:{Guaritore:4,Mediatore:2},
-  Q9C:{Costruttore:4}, Q9D:{Ricercatore:4,Visionario:1},
-  Q9E:{Mediatore:2,Ricercatore:2,Guaritore:1},
-  // Q10
-  Q10A:{Ricercatore:3,Costruttore:2}, Q10B:{Guaritore:3},
-  Q10C:{Costruttore:3,Ribelle:2}, Q10D:{Mediatore:3,Guaritore:2},
-  Q10E:{Ricercatore:4},
-  // Q11
-  Q11A:{Ricercatore:3,Mediatore:2}, Q11B:{Costruttore:4},
-  Q11C:{Ribelle:4}, Q11D:{Guaritore:3,Mediatore:2},
-  Q11E:{Ricercatore:2,Costruttore:2},
-  // Q12
-  Q12A:{Costruttore:4,Visionario:1}, Q12B:{Ricercatore:4},
-  Q12C:{Guaritore:3,Visionario:1}, Q12D:{Ribelle:4,Visionario:1},
-  Q12E:{Mediatore:4,Guaritore:1},
-};
-
-/* ===== Stato ===== */
-const $ = (s)=>document.querySelector(s);
-const fill = $('#fill'); const qGroup=$('#qGroup'); const qText=$('#qText');
-const qOptions=$('#qOptions'); const stepLabel=$('#stepLabel'); const hint=$('#hint');
-const prevBtn=$('#prevBtn'); const nextBtn=$('#nextBtn'); const backBtn=$('#backBtn'); const skipBtn=$('#skipBtn');
-
-let step = Number(LS.getItem('whatif_mcq_step')||0);
-let answers = JSON.parse(LS.getItem('whatif_mcq_answers') || '{}'); // {1:'A',2:'C',...}
-
-function t(s){ return (s||'').replace('{i}', step+1).replace('{n}', TOTAL); }
-
-function render(){
-  const q = Q[step];
-  stepLabel.textContent = t(T.step);
-  fill.style.width = Math.round(((step)/TOTAL)*100) + '%';
-  $('#hint').textContent = T.hint;
-
-  qGroup.textContent = q.group[lang] || q.group.it;
-  qText.textContent  = q.text[lang] || q.text.it;
-
-  qOptions.innerHTML = '';
-  q.opts.forEach(o=>{
-    const b = document.createElement('button');
-    b.className = 'chip';
-    if (answers[step+1] === o.k) b.classList.add('selected');
-    b.innerHTML = `<strong>${o.k})</strong> ${o[lang] || o.it}`;
-    b.addEventListener('click', ()=>{
-      // toggle selezione singola
-      [...qOptions.children].forEach(c=>c.classList.remove('selected'));
-      b.classList.add('selected');
-      answers[step+1] = o.k;
-      LS.setItem('whatif_mcq_answers', JSON.stringify(answers));
-    });
-    qOptions.appendChild(b);
-  });
-
-  // pulsanti
-  prevBtn.disabled = step===0;
-  nextBtn.textContent = (step === TOTAL-1) ? (lang==='en'?'Confirm':'Conferma') : (T.next || 'Avanti');
-}
-
-function computeArchetypes(ans){
-  const scores = Object.fromEntries(ARCH.map(a=>[a,0]));
-  Object.entries(ans).forEach(([idx, key])=>{
-    const w = WEIGHTS[`Q${idx}${key}`];
-    if (w){
-      Object.entries(w).forEach(([a,val])=>{ scores[a] += val; });
+  // ===== i18n =====
+  const L = (localStorage.getItem('lang') || 'it').toLowerCase();
+  const I18N = {
+    it: {
+      title:"Conosciamoci in 30s", lead:"5 domande rapide per cucire gli scenari su di te.",
+      back:"Indietro", next:"Avanti",
+      q1:"Quando prendi decisioni, come ti muovi di solito?",
+      q1a:"Ragiono molto prima di agire",
+      q1b:"Seguo l’istinto",
+      q1c:"Mi adatto al momento",
+      q1d:"Cerco un equilibrio",
+      q2:"Cosa ti motiva di più nelle scelte importanti?",
+      q2a:"Stabilità e sicurezza",
+      q2b:"Crescita e scoperta",
+      q2c:"Libertà personale",
+      q2d:"Essere apprezzato",
+      q3:"Il cambiamento, per te, è…",
+      q3a:"Un po’ spaventoso",
+      q3b:"Stimolante",
+      q3c:"Da valutare con calma",
+      q3d:"Qualcosa che cerco",
+      q4:"Quale valore senti più tuo?",
+      q4a:"Famiglia e legami",
+      q4b:"Autenticità",
+      q4c:"Successo personale",
+      q4d:"Creatività",
+      q5:"Come ti guardi quando pensi a te stesso?",
+      q5a:"Mi prendo sul serio",
+      q5b:"Con un po’ di ironia",
+      q5c:"Mi interrogo spesso",
+      q5d:"Cerco di non pensarci troppo"
+    },
+    en: {
+      title:"30s to know you", lead:"5 quick questions to tailor scenarios to you.",
+      back:"Back", next:"Next",
+      q1:"When deciding, how do you usually move?",
+      q1a:"I think a lot before acting",
+      q1b:"I follow my gut",
+      q1c:"I adapt on the fly",
+      q1d:"I look for balance",
+      q2:"What motivates your big choices most?",
+      q2a:"Stability and security",
+      q2b:"Growth and discovery",
+      q2c:"Personal freedom",
+      q2d:"Being appreciated",
+      q3:"Change, for you, is…",
+      q3a:"A bit scary",
+      q3b:"Stimulating",
+      q3c:"Something to assess calmly",
+      q3d:"Something I actively seek",
+      q4:"Which value feels most yours?",
+      q4a:"Family & bonds",
+      q4b:"Authenticity",
+      q4c:"Personal success",
+      q4d:"Creativity",
+      q5:"How do you look at yourself?",
+      q5a:"I take myself seriously",
+      q5b:"With some irony",
+      q5c:"I question myself often",
+      q5d:"I try not to overthink"
     }
-  });
-  const max = Math.max(1, ...Object.values(scores));
-  const normalized = {};
-  for (const a of ARCH){
-    normalized[a] = Math.round((scores[a] / max) * 100);
-  }
-  return { raw:scores, normalized };
-}
+  }[L];
+  document.title = L === 'en' ? 'What?f – 5 questions' : 'What?f – 5 domande';
+  document.getElementById('title').textContent = I18N.title;
+  document.getElementById('lead').textContent  = I18N.lead;
+  document.getElementById('back').textContent  = I18N.back;
+  document.getElementById('next').textContent  = I18N.next;
 
-function next(){
-  if (!answers[step+1]){ // nessuna risposta
-    // feedback leggero
-    const first = qOptions.firstElementChild;
-    if (first){ first.animate([{transform:'scale(1.0)'},{transform:'scale(1.02)'},{transform:'scale(1.0)'}],{duration:220}); }
-    return;
+  // ===== modello dati =====
+  const QUESTIONS = [
+    { k:'approach', t:I18N.q1, opts:[
+      {v:'reason',  label:I18N.q1a},
+      {v:'instinct',label:I18N.q1b},
+      {v:'adapt',   label:I18N.q1c},
+      {v:'balance', label:I18N.q1d},
+    ]},
+    { k:'motivation', t:I18N.q2, opts:[
+      {v:'stability', label:I18N.q2a},
+      {v:'growth',    label:I18N.q2b},
+      {v:'freedom',   label:I18N.q2c},
+      {v:'recognition',label:I18N.q2d},
+    ]},
+    { k:'change', t:I18N.q3, opts:[
+      {v:'fear',  label:I18N.q3a},
+      {v:'stim',  label:I18N.q3b},
+      {v:'calm',  label:I18N.q3c},
+      {v:'seek',  label:I18N.q3d},
+    ]},
+    { k:'value', t:I18N.q4, opts:[
+      {v:'family', label:I18N.q4a},
+      {v:'auth',   label:I18N.q4b},
+      {v:'success',label:I18N.q4c},
+      {v:'creativity',label:I18N.q4d},
+    ]},
+    { k:'selfview', t:I18N.q5, opts:[
+      {v:'serious', label:I18N.q5a},
+      {v:'irony',   label:I18N.q5b},
+      {v:'reflect', label:I18N.q5c},
+      {v:'light',   label:I18N.q5d},
+    ]},
+  ];
+
+  // mapping risposte → archetipi (pesi semplici)
+  // Ricercatore (R), Costruttore (C), Visionario (V), Mediatore (M)
+  const WEIGHTS = {
+    approach: {
+      reason:{R:2,C:1}, instinct:{V:2}, adapt:{M:2}, balance:{C:2,M:1}
+    },
+    motivation: {
+      stability:{C:2,M:1}, growth:{R:1,V:2}, freedom:{V:2}, recognition:{M:2}
+    },
+    change: {
+      fear:{C:1,M:1}, stim:{V:2,R:1}, calm:{R:1,C:1}, seek:{V:2}
+    },
+    value: {
+      family:{M:2,C:1}, auth:{R:1,M:1}, success:{C:2}, creativity:{V:2}
+    },
+    selfview: {
+      serious:{C:1,R:1}, irony:{V:1,M:1}, reflect:{R:2}, light:{V:1}
+    }
+  };
+
+  // ===== stato =====
+  const LS = localStorage;
+  const saved = JSON.parse(LS.getItem('whatif_quiz5') || '{}');
+  let idx = 0;
+  const answers = { ...saved }; // {approach: 'reason', ...}
+
+  const $ = s=>document.querySelector(s);
+  const questionEl = $('#question');
+  const chipsEl    = $('#chips');
+  const nextBtn    = $('#nextBtn');
+  const backBtn    = $('#backBtn');
+  const countEl    = $('#count');
+  const barEl      = $('#bar');
+
+  // UI iniziale
+  render();
+
+  backBtn.addEventListener('click', ()=>{
+    if (idx===0){ history.back(); return; }
+    idx--; render();
+  });
+  nextBtn.addEventListener('click', ()=>{
+    if (!answers[QUESTIONS[idx].k]) return;
+    if (idx < QUESTIONS.length - 1){ idx++; render(); }
+    else { finish(); } // done
+  });
+
+  function render(){
+    const q = QUESTIONS[idx];
+    questionEl.textContent = q.t;
+    chipsEl.innerHTML = q.opts.map(opt=>{
+      const sel = answers[q.k] === opt.v ? 'selected' : '';
+      return `<button class="chip ${sel}" data-v="${opt.v}">${opt.label}</button>`;
+    }).join('');
+    chipsEl.querySelectorAll('.chip').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        chipsEl.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+        b.classList.add('selected');
+        answers[q.k] = b.getAttribute('data-v');
+        nextBtn.disabled = false;
+      });
+    });
+
+    // abilita "Avanti" solo se risposta esiste
+    nextBtn.disabled = !answers[q.k];
+
+    // progress
+    countEl.textContent = `${idx+1} / ${QUESTIONS.length}`;
+    const pct = Math.round(((idx) / (QUESTIONS.length)) * 100);
+    barEl.style.width = Math.max(6, pct) + '%'; // un minimo di 6% per feedback
+
+    // salvataggio parziale
+    LS.setItem('whatif_quiz5', JSON.stringify(answers));
   }
-  if (step < TOTAL-1){
-    step++;
-    LS.setItem('whatif_mcq_step', String(step));
-    render();
-  } else {
-    // fine → calcolo profilo e redirect
-    const { raw, normalized } = computeArchetypes(answers);
-    LS.setItem('whatif_archetypes_raw', JSON.stringify(raw));
-    LS.setItem('whatif_archetypes', JSON.stringify(normalized));
-    // reset step per future sessioni
-    LS.removeItem('whatif_mcq_step');
-    // avanti alla domanda
+
+  function finish(){
+    // calcola archetipi
+    const scores = {R:0,C:0,V:0,M:0};
+    Object.entries(answers).forEach(([k,v])=>{
+      const w = WEIGHTS[k]?.[v] || {};
+      Object.entries(w).forEach(([A,pts])=>{ scores[A] += pts; });
+    });
+    // normalizza 0–100
+    const max = Math.max(1, ...Object.values(scores));
+    const to100 = x => Math.round((x / max) * 100);
+    const archetypes = {
+      Ricercatore: to100(scores.R),
+      Costruttore: to100(scores.C),
+      Visionario:  to100(scores.V),
+      Mediatore:   to100(scores.M),
+    };
+
+    // profilo compatto (per prompt): deduce valori/tono utili
+    const profileCompact = buildProfileCompact(answers);
+
+    LS.setItem('whatif_archetypes', JSON.stringify(archetypes));
+    // merge soft nel profilo esistente (second.html)
+    const baseProfile = JSON.parse(LS.getItem('whatif_profile') || '{}');
+    const merged = { ...baseProfile, ...profileCompact };
+    LS.setItem('whatif_profile', JSON.stringify(merged));
+
+    // hint tono (può aiutare /api/ask.js)
+    LS.setItem('whatif_tone', JSON.stringify({ introspective: answers.selfview==='reflect', playful: answers.selfview==='irony' }));
+
+    // avanti
     location.href = 'fourth.html';
   }
-}
 
-function prev(){
-  if (step===0){ history.back(); return; }
-  step--;
-  LS.setItem('whatif_mcq_step', String(step));
-  render();
-}
+  function buildProfileCompact(a){
+    // derive “values”, “style”, “change_attitude”
+    const values = [];
+    if (a.value === 'family') values.push(L==='en'?'family & bonds':'famiglia e legami');
+    if (a.value === 'auth')   values.push(L==='en'?'authenticity':'autenticità');
+    if (a.value === 'success')values.push(L==='en'?'achievement':'successo personale');
+    if (a.value === 'creativity') values.push(L==='en'?'creativity':'creatività');
 
-backBtn.addEventListener('click', ()=>history.back());
-skipBtn.addEventListener('click', ()=>{ location.href='fourth.html'; });
-prevBtn.addEventListener('click', prev);
-nextBtn.addEventListener('click', next);
+    const style =
+      a.approach === 'reason'  ? (L==='en'?'analytical':'analitico') :
+      a.approach === 'instinct'? (L==='en'?'intuitive':'intuitivo') :
+      a.approach === 'adapt'   ? (L==='en'?'adaptive':'adattivo')   :
+                                 (L==='en'?'balanced':'equilibrato');
 
-// init
-render();
-// se lingua cambia in altra scheda
-window.addEventListener('storage', (e)=>{ if(e.key==='lang'){ location.reload(); }});
+    const change_attitude =
+      a.change === 'fear' ? (L==='en'?'cautious':'cauto') :
+      a.change === 'stim' ? (L==='en'?'energized by change':'stimolato dal cambiamento') :
+      a.change === 'calm' ? (L==='en'?'evaluative':'valutativo') :
+                            (L==='en'?'seeks change':'cerca il cambiamento');
+
+    const motivation =
+      a.motivation === 'stability'   ? (L==='en'?'stability':'stabilità') :
+      a.motivation === 'growth'      ? (L==='en'?'growth':'crescita') :
+      a.motivation === 'freedom'     ? (L==='en'?'freedom':'libertà') :
+                                       (L==='en'?'recognition':'riconoscimento');
+
+    const self_view =
+      a.selfview === 'serious' ? (L==='en'?'serious':'serio') :
+      a.selfview === 'irony'   ? (L==='en'?'ironic':'ironico') :
+      a.selfview === 'reflect' ? (L==='en'?'introspective':'introspettivo') :
+                                 (L==='en'?'light':'leggero');
+
+    return {
+      values, style, change_attitude, motivation, self_view
+    };
+  }
 </script>
 </body>
 </html>
