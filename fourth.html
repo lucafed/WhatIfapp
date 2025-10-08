@@ -1,155 +1,77 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>What?f – La tua domanda</title>
-<meta name="theme-color" content="#0A0F14" />
+<meta name="theme-color" content="#05080C" />
 <style>
-  :root { --bg:#0A0F14; --card:#141C22; --fg:#FFFFFF; --muted:#A0B2BA; --acc:#00E0FF; --acc2:#00B5CC; --ink:#001F26; --chip:#0f1820 }
+  :root{
+    --bg1:#05080C; --bg2:#0E1821; --text:#EAF3F7; --muted:#A0B2BA;
+    --card:rgba(16,26,34,.56); --line:rgba(85,140,168,.25);
+    --acc:#00E0FF; --acc2:#00B5CC; --ink:#001F26; --chip:#0E1A23;
+  }
+  body[data-theme="wtf"]{ --acc:#FF63E3; --acc2:#8A5BFF; --ink:#170021; --line:rgba(178,120,255,.28); --chip:#16122A; }
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  .topbar{position:fixed;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;z-index:10}
-  .btn{appearance:none;border:1px solid #1d2b34;background:#0f1820;color:#E6F2F5;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
-  main{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
-  h1{font-size:clamp(22px,5vw,32px);margin:0 0 14px}
-  .card{width:min(92vw,760px);background:var(--card);border-radius:16px;padding:18px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
-  label{display:block;margin:6px 0 8px;font-weight:700}
-  input[type="text"]{width:100%;background:#0E161D;color:var(--fg);border:1px solid #1C2A33;border-radius:12px;font-size:16px;padding:14px}
-  .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
-  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border:none}
-  .muted{color:var(--muted);font-size:12px}
-  .toggle{width:100%;text-align:left;background:#0f1820;border:1px solid #1d2b34;color:#cfe3e7;border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer}
-  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-  .chip{background:var(--chip);border:1px solid #1b2a34;color:#cfe3e7;border-radius:999px;padding:8px 12px;font-size:12px;cursor:pointer}
+  html,body{margin:0;color:var(--text);background:var(--bg1);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  body::before{
+    content:"";position:fixed;inset:0;z-index:-1;
+    background:
+      radial-gradient(1200px 800px at 12% -8%, var(--acc)10%, transparent 60%),
+      radial-gradient(1100px 780px at 88% 108%, var(--acc2)12%, transparent 62%),
+      linear-gradient(180deg,var(--bg1),var(--bg2));
+    filter:saturate(120%) brightness(105%);
+  }
+  header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:linear-gradient(180deg,rgba(5,8,12,.9),rgba(5,8,12,0))}
+  .btn{appearance:none;border:1px solid var(--line);background:transparent;color:var(--text);padding:10px 12px;border-radius:12px;cursor:pointer}
+  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none}
+  main{max-width:760px;margin:auto;padding:18px}
+  h1{font-size:clamp(22px,5vw,32px);margin-bottom:8px;color:var(--acc)}
+  .card{background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:16px;padding:16px}
+  label{display:block;margin:10px 0 6px}
+  input[type="text"]{width:100%;background:#0E161D;color:var(--text);border:1px solid var(--line);padding:12px;border-radius:12px;font-size:16px}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{background:var(--chip);border:1px solid var(--line);color:#cfe3e7;border-radius:999px;padding:8px 12px;font-size:13px}
 </style>
 </head>
 <body>
-<div class="topbar">
-  <button class="btn" onclick="history.back()">← <span id="tb_back">Indietro</span></button>
-  <button class="btn" onclick="location.href='index.html'">🏠 <span id="tb_home">Home</span></button>
-</div>
+<header>
+  <button class="btn" id="homeBtn">🏠 Home</button>
+  <div></div>
+</header>
 
 <main>
-  <h1 id="mainTitle">Scrivi la tua domanda</h1>
+  <h1>Scrivi la tua domanda</h1>
   <div class="card">
-    <label for="domandaInput" id="questionLabel">La tua domanda</label>
-    <input type="text" id="domandaInput" placeholder="" />
+    <label for="domandaInput">La tua domanda</label>
+    <input type="text" id="domandaInput" placeholder="E se…? / What if…?" />
 
-    <!-- Template dinamici (past/future) -->
-    <div class="chips" id="templates"></div>
-
-    <!-- ancore personali -->
-    <div style="margin-top:14px;border-top:1px solid #1c2a33;padding-top:12px">
-      <button class="toggle" id="toggleMore">✨ Rendi più personale in 30s</button>
-      <div id="moreBox" style="display:none">
-        <p class="muted" id="moreHint">Compila se vuoi soprattutto per il passato: useremo questi dettagli come ancore.</p>
-        <div style="display:grid;gap:10px;grid-template-columns:1fr;max-width:100%">
-          <div>
-            <label id="lab_place">Un dettaglio del luogo</label>
-            <input id="anchor_place" type="text" placeholder="Via, quartiere, bar, piazza…" />
-          </div>
-          <div>
-            <label id="lab_person">Una persona (nome fittizio + ruolo)</label>
-            <input id="anchor_person" type="text" placeholder="Es. “Marco (amico di infanzia)”" />
-          </div>
-          <div>
-            <label id="lab_memory">Un ricordo concreto (oggetto, canzone, odore)</label>
-            <input id="anchor_memory" type="text" placeholder="Es. odore di pioggia sul Corso, canzone al juke-box…" />
-          </div>
-        </div>
-      </div>
+    <div class="row" style="margin-top:12px">
+      <span class="chip" id="badgePeriodo">🕰️ —</span>
+      <span class="chip" id="badgeStile">🎭 —</span>
     </div>
 
-    <div class="actions">
-      <button class="btn" id="backBtn">← <span id="backTxt">Indietro</span></button>
-      <button class="btn primary" id="nextBtn"><span id="nextTxt">Avanti</span> →</button>
-    </div>
+    <button class="btn primary" style="width:100%;margin-top:14px" id="nextBtn">Avanti →</button>
   </div>
 </main>
 
 <script>
-  const L=(localStorage.getItem("lang")||"it").toLowerCase();
-  const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}'); // {periodo, stile}
-  const period = prefs.periodo || 'future';
-  const T = L==='en'
-    ? {back:'Back',home:'Home',title:'Write your question',label:'Your question',
-       pastPH:"What if you had stayed in ___?", futurePH:"What if in the next 12 months you ___?",
-       toggle:"✨ Make it more personal in 30s",hint:"Optional (especially useful for the past): anchors help realism.",
-       place:"A place detail",person:"A person (alias + role)",memory:"A concrete memory",
-       missing:"Please enter a question before continuing.",next:"Next",
-       tempPast:["What if you had stayed in your hometown?","What if you had worked with ___ instead?","What if you hadn’t moved in 2015?"],
-       tempFuture:["What if you quit and opened a small studio?","What if you moved to ___ for a year?","What if you went back to study ___?"]}
-    : {back:'Indietro',home:'Home',title:'Scrivi la tua domanda',label:'La tua domanda',
-       pastPH:"E se fossi rimasto a ___?", futurePH:"E se nei prossimi 12 mesi ___?",
-       toggle:"✨ Rendi più personale in 30s",hint:"Opzionale (utile soprattutto per il passato): le ancore aumentano il realismo.",
-       place:"Un dettaglio del luogo",person:"Una persona (nome fittizio + ruolo)",memory:"Un ricordo concreto",
-       missing:"Inserisci una domanda prima di continuare.",next:"Avanti",
-       tempPast:["E se fossi rimasto nella tua città?","E se avessi lavorato con ___ invece?","E se non ti fossi trasferito nel 2015?"],
-       tempFuture:["E se lasciassi e aprissi uno studio?","E se ti trasferissi a ___ per un anno?","E se tornassi a studiare ___?"]};
-  document.getElementById('tb_back').textContent=T.back; document.getElementById('tb_home').textContent=T.home;
-  document.getElementById('mainTitle').textContent=T.title; document.getElementById('questionLabel').textContent=T.label;
-  document.getElementById('backTxt').textContent=T.back; document.getElementById('nextTxt').textContent=T.next;
-  document.getElementById('toggleMore').textContent=T.toggle; document.getElementById('moreHint').textContent=T.hint;
-  document.getElementById('lab_place').textContent=T.place; document.getElementById('lab_person').textContent=T.person; document.getElementById('lab_memory').textContent=T.memory;
+const LS=localStorage;
+function readJSON(k,def={}){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
+/* tema porte */
+(function(){ try{ const p=readJSON('whatif_prefs',{}); document.body.setAttribute('data-theme', p.stile==='wtf'?'wtf':'whatif'); }catch(_){}})();
 
-  // placeholder dinamico + template
-  const domandaInput = document.getElementById('domandaInput');
-  domandaInput.placeholder = period==='past' ? T.pastPH : T.futurePH;
-  const tBox = document.getElementById('templates');
-  (period==='past'?T.tempPast:T.tempFuture).forEach(txt=>{
-    const b=document.createElement('button'); b.className='chip'; b.textContent=txt;
-    b.addEventListener('click',()=>{ domandaInput.value = txt; });
-    tBox.appendChild(b);
-  });
+const prefs=readJSON('whatif_prefs',{periodo:'future',stile:'whatif'});
+document.getElementById('badgePeriodo').textContent='🕰️ '+(prefs.periodo==='past'?'Passato':'Futuro');
+document.getElementById('badgeStile').textContent='🎭 '+(prefs.stile==='wtf'?'What the F':'What if');
 
-  // toggle more
-  document.getElementById('toggleMore').addEventListener('click',()=>{ const b=document.getElementById('moreBox'); b.style.display=b.style.display==='none'?'block':'none'; });
-  document.getElementById('backBtn').addEventListener('click',()=>history.back());
-  document.getElementById('nextBtn').addEventListener('click',salvaDomanda);
-
-  (function prefill(){
-    const prev=localStorage.getItem("domanda"); if(prev) domandaInput.value=prev;
-    const anchors=JSON.parse(localStorage.getItem("whatif_anchors")||"{}");
-    if(anchors.place) document.getElementById("anchor_place").value=anchors.place;
-    if(anchors.person) document.getElementById("anchor_person").value=anchors.person;
-    if(anchors.memory) document.getElementById("anchor_memory").value=anchors.memory;
-  })();
-
-  function salvaDomanda(){
-    const domanda = domandaInput.value.trim();
-    if(!domanda){ alert(T.missing); return; }
-    localStorage.setItem("domanda", domanda);
-    // salva ancore
-    const anchors={
-      place:document.getElementById("anchor_place").value.trim(),
-      person:document.getElementById("anchor_person").value.trim(),
-      memory:document.getElementById("anchor_memory").value.trim()
-    };
-    localStorage.setItem("whatif_anchors", JSON.stringify(anchors));
-    // classifica domanda → tag
-    const tags = classifyQuestion(domanda, period);
-    localStorage.setItem("whatif_tags", JSON.stringify(tags));
-    location.href="fifth.html";
-  }
-
-  // ======= CLASSIFICATORE SEMPLICE LOCALE =======
-  function classifyQuestion(q, period){
-    const s = (q||"").toLowerCase();
-    const tags = new Set();
-    // tempo
-    if (period==='past' || /se fossi rimasto|se non avessi|se avessi/i.test(q)) tags.add('past');
-    if (period==='future' || /nei prossimi|e se domani|tra un anno|se lasciassi|se aprissi/i.test(q)) tags.add('future');
-    // domini
-    if (/\blavor|carriera|azienda|contratto|assunzione|licenzi|studio\b/i.test(s)) tags.add('work');
-    if (/\bamore|relazion|partner|figli|famiglia|amico|amica\b/i.test(s)) tags.add('relationships');
-    if (/\baffitto|mutuo|soldi|stipendio|debito|finanz|invest/i.test(s)) tags.add('money');
-    if (/\btrasfer|città|quartiere|via|piazza|trasloco|verona|l'aquila|roma|milano|napoli\b/i.test(s)) tags.add('place');
-    if (/\bstudio|laurea|master|corso|università|esame\b/i.test(s)) tags.add('study');
-    if (/\bsalute|allenament|palestra|sonno|stress\b/i.test(s)) tags.add('wellbeing');
-    if (/\bprogetto|startup|studio\b/i.test(s)) tags.add('project');
-    return Array.from(tags);
-  }
+document.getElementById('nextBtn').addEventListener('click', ()=>{
+  const domanda=(document.getElementById('domandaInput').value||'').trim();
+  if(!domanda){ alert('Inserisci una domanda prima di continuare.'); return; }
+  LS.setItem('domanda', domanda);
+  location.href='fifth.html';
+});
+document.getElementById('homeBtn').addEventListener('click', ()=> location.href='index.html');
 </script>
 </body>
 </html>
