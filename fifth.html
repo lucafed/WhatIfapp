@@ -8,14 +8,14 @@
 <style>
   :root{
     --bg:#0A0F14; --card:#141C22; --muted:#A0B2BA;
-    --fg:#E6F2F5; --acc:#00E0FF; --acc2:#00B5CC; --chip:#0f1820;
+    --fg:#E6F2F5; --acc:#00E0FF; --acc2:#00B5CC; --chip:#0f1820; --ink:#001F26;
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
   main{max-width:920px;margin:auto;padding:18px}
-  .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between}
+  .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
   .btn{appearance:none;border:none;background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
-  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:#001f26;font-weight:800}
+  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800}
   .btn.ghost{background:transparent;border:1px solid #1d2b34}
   h1{font-size:clamp(24px,5vw,32px);margin:16px 0 4px}
   p.sub{color:var(--muted);margin:0 0 12px}
@@ -27,8 +27,8 @@
   #result{min-height:160px}
   .tools{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
   .hint{font-size:12px;color:var(--muted)}
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:6000}
-  .sheet{width:min(92vw,720px);max-height:75vh;overflow:auto;background:var(--card);border-radius:16px;padding:14px}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:6000;padding:10px}
+  .sheet{width:min(92vw,720px);max-height:80vh;overflow:auto;background:var(--card);border-radius:16px;padding:14px}
   .hist-item{border:1px solid #1d2b34;border-radius:12px;padding:10px;margin:8px 0}
   .hist-item h4{margin:0 0 6px;color:var(--acc)}
   .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,#0d151c 0%,#122029 50%,#0d151c 100%);background-size:200% 100%;animation:sk 1s infinite}
@@ -36,9 +36,9 @@
   .meter{display:flex;align-items:center;gap:10px;background:#0b1218;border:1px solid #18242c;padding:8px 12px;border-radius:12px}
   .meterbar{width:160px;height:8px;background:#0f1820;border:1px solid #1c2a33;border-radius:999px;overflow:hidden}
   .meterbar > div{height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+  .refine{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
   .rate{display:flex;gap:8px;margin-top:10px}
   .rate button{background:#0f1820;border:1px solid #1b2a34;color:#cfe3e7;border-radius:999px;padding:6px 10px;cursor:pointer}
-  .refine{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
   .pin{cursor:pointer;float:right;color:#ffd24d}
 </style>
 </head>
@@ -48,6 +48,7 @@
       <div class="row">
         <button class="btn ghost" onclick="history.back()">← <span data-i18n="back">Indietro</span></button>
         <button class="btn ghost" onclick="location.href='index.html'">🏠 <span data-i18n="home">Home</span></button>
+        <button class="btn ghost" id="privacyBtn">🔒 <span data-i18n="privacy">Privacy & dati</span></button>
       </div>
       <!-- Freemium meter -->
       <div class="meter" id="meter">
@@ -69,6 +70,11 @@
       <div class="tools">
         <button class="btn" onclick="editQuestion()" data-i18n="edit">Modifica domanda</button>
         <button class="btn primary" onclick="generate()" id="sendBtn" data-i18n="send">Invia domanda</button>
+      </div>
+
+      <!-- Mini “Migliora precisione” -->
+      <div class="tools">
+        <button class="btn" id="improveBtn">✨ <span data-i18n="improve">Migliora precisione</span></button>
       </div>
 
       <h3 class="label" style="margin-top:16px" data-i18n="answer">Risultato</h3>
@@ -127,12 +133,40 @@
     </div>
   </div>
 
+  <!-- Overlay privacy -->
+  <div class="overlay" id="privacyOverlay" style="display:none" onclick="closeOverlay(event,'privacyOverlay')">
+    <div class="sheet">
+      <h3>🔒 Privacy & dati</h3>
+      <p class="hint">Predefinito: i dati restano sul dispositivo. Per generare lo scenario, inviamo solo la domanda e un profilo ridotto con dati personali redatti.</p>
+      <div class="row" style="gap:8px;margin:8px 0">
+        <label><input type="checkbox" id="cloudSyncToggle" /> Sincronizza su cloud (opt-in)</label>
+      </div>
+      <div class="tools">
+        <button class="btn" id="exportBtn">Esporta JSON</button>
+        <button class="btn" id="eraseBtn">Elimina tutti i dati</button>
+        <button class="btn primary" onclick="closeOverlay(null,'privacyOverlay')">Chiudi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay improve -->
+  <div class="overlay" id="improveOverlay" style="display:none" onclick="closeOverlay(event,'improveOverlay')">
+    <div class="sheet">
+      <h3>✨ Aggiungi 2 dettagli</h3>
+      <div id="improveQs"></div>
+      <div class="tools" style="margin-top:10px">
+        <button class="btn primary" id="saveImprove">OK</button>
+        <button class="btn" onclick="closeOverlay(null,'improveOverlay')">Annulla</button>
+      </div>
+    </div>
+  </div>
+
 <script>
-// ===== i18n =====
+/* ====== i18n ====== */
 const DICT = {
   it: {
-    back:"Indietro", home:"Home", title:"Il tuo scenario",
-    subtitle:"Risposta generata in base alle scelte precedenti.",
+    back:"Indietro", home:"Home", privacy:"Privacy & dati",
+    title:"Il tuo scenario", subtitle:"Risposta generata in base alle scelte precedenti.",
     question:"Domanda", answer:"Risultato", gen:"Sto generando…",
     edit:"Modifica domanda", send:"Invia domanda",
     regenerate:"Rigenera 🔁", save:"💾 Salva in cronologia",
@@ -144,11 +178,11 @@ const DICT = {
     badgePast:"Passato", badgeFuture:"Futuro", badgeWhatIf:"What if", badgeWTF:"What the F",
     rateq:"Quanto ti somiglia?",
     r_concrete:"Più concreto", r_ironic:"Più ironico", r_direct:"Più diretto",
-    meter:"Scenari oggi", pro:"Pro"
+    improve:"Migliora precisione"
   },
   en: {
-    back:"Back", home:"Home", title:"Your scenario",
-    subtitle:"Answer generated from your previous choices.",
+    back:"Back", home:"Home", privacy:"Privacy & data",
+    title:"Your scenario", subtitle:"Answer generated from your previous choices.",
     question:"Question", answer:"Result", gen:"Generating…",
     edit:"Edit question", send:"Send question",
     regenerate:"Regenerate 🔁", save:"💾 Save to history",
@@ -160,7 +194,7 @@ const DICT = {
     badgePast:"Past", badgeFuture:"Future", badgeWhatIf:"What if", badgeWTF:"What the F",
     rateq:"How much does it feel like you?",
     r_concrete:"More concrete", r_ironic:"More ironic", r_direct:"More direct",
-    meter:"Scenarios today", pro:"Pro"
+    improve:"Improve accuracy"
   }
 };
 const LS = localStorage;
@@ -171,15 +205,16 @@ document.querySelectorAll("[data-i18n]").forEach(el=>{
   const k = el.getAttribute("data-i18n"); if (T[k]) el.textContent = T[k];
 });
 
-// ===== stato =====
-const prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}");
+/* ====== stato base ====== */
+const prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}"); // { periodo, stile }
 let domanda = LS.getItem("domanda") || "";
 const questionEl = document.getElementById("question");
 const resultEl   = document.getElementById("result");
 const badges     = document.getElementById("badges");
+
 if (!domanda) { alert(lang==="en"?"No question found. Going back.":"Nessuna domanda trovata. Torno indietro."); location.href = "fourth.html"; }
 
-// badge
+/* badge */
 (function renderBadges(){
   const row = [];
   if (prefs.periodo) { row.push(`<span class="chip">🕰️ ${prefs.periodo === "past" ? T.badgePast : T.badgeFuture}</span>`); }
@@ -188,7 +223,75 @@ if (!domanda) { alert(lang==="en"?"No question found. Going back.":"Nessuna doma
 })();
 questionEl.textContent = domanda;
 
-// ===== Freemium meter =====
+/* ====== overlays helpers ====== */
+function closeOverlay(ev,id){
+  if (ev && ev.target && ev.target.id!==id && ev.type==='click') return;
+  document.getElementById(id).style.display='none';
+}
+document.getElementById('privacyBtn').onclick = ()=>{ document.getElementById('privacyOverlay').style.display='flex'; };
+
+/* ====== Privacy: flags + export/erase ====== */
+function getFlags(){ return JSON.parse(LS.getItem('whatif_flags')||'{}'); }
+function setFlags(f){ LS.setItem('whatif_flags', JSON.stringify(f)); }
+(function initFlags(){
+  const f = getFlags();
+  if (typeof f.cloudSync!=='boolean') f.cloudSync=false; // default: local-only
+  setFlags(f);
+  setTimeout(()=>{ const t=document.getElementById('cloudSyncToggle'); if(t){ t.checked=f.cloudSync; t.onchange=()=>{ const f2=getFlags(); f2.cloudSync=!!t.checked; setFlags(f2); }; }},0);
+})();
+document.getElementById('exportBtn').onclick = ()=>{
+  const dump = {};
+  ['whatif_profile','whatif_archetypes','whatif_anchors','whatif_micro','whatif_micro_used','whatif_quiz5','whatif_quiz5_done','whatif_tags','whatif_credits','whatif_ratings','cronologia','whatif_flags','whatif_prefs','domanda'].forEach(k=>{
+    dump[k]=JSON.parse(LS.getItem(k)||'null');
+  });
+  const blob = new Blob([JSON.stringify(dump,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='whatif-data.json'; a.click(); URL.revokeObjectURL(url);
+};
+document.getElementById('eraseBtn').onclick = ()=>{
+  if(confirm(lang==='en'?'Delete all locally stored data?':'Eliminare tutti i dati locali?')){
+    Object.keys(localStorage).forEach(k=>{ if(k.startsWith('whatif_') || k==='domanda' || k==='whatif_prefs') localStorage.removeItem(k); });
+    alert(lang==='en'?'Done.':'Fatto.'); location.href='index.html';
+  }
+};
+
+/* ====== mini “Migliora precisione” (2 domande in base ai tag) ====== */
+document.getElementById('improveBtn').onclick = openImprove;
+function openImprove(){
+  const tags = JSON.parse(LS.getItem('whatif_tags')||'[]');
+  const qs = pickImproveQuestions(tags, 2);
+  const box = document.getElementById('improveQs');
+  box.innerHTML = qs.map(q=>`
+    <div style="margin:8px 0">
+      <div class="label" style="margin-bottom:6px">${q.t}</div>
+      <input type="text" data-k="${q.k}" style="width:100%;background:#0f1820;color:#E6F2F5;border:1px solid #1f2c36;border-radius:12px;padding:10px" />
+    </div>`).join('');
+  document.getElementById('improveOverlay').style.display='flex';
+}
+document.getElementById('saveImprove').onclick = ()=>{
+  const inputs = Array.from(document.querySelectorAll('#improveQs input'));
+  const micro = JSON.parse(LS.getItem('whatif_micro')||'{}');
+  inputs.forEach(inp=>{ const v=inp.value.trim(); if(v) micro[inp.dataset.k]=v; });
+  LS.setItem('whatif_micro', JSON.stringify(micro));
+  closeOverlay(null,'improveOverlay');
+  alert(lang==='en'?'Saved.':'Salvato.');
+};
+function pickImproveQuestions(tags, n){
+  const MAP = [
+    {k:'m_place1', tag:'place', t:(lang==='en'?'A bar/place that knows you well?':'Un bar/locale dove ti vedono spesso?')},
+    {k:'m_work1', tag:'work', t:(lang==='en'?'Who would you like to work with (alias + role)?':'Con chi vorresti lavorare (nome fittizio + ruolo)?')},
+    {k:'m_money2', tag:'money', t:(lang==='en'?'One realistic money goal (12 months)?':'Un obiettivo economico realistico (12 mesi)?')},
+    {k:'m_rel1', tag:'relationships', t:(lang==='en'?'A person who feels “home” (alias + role)?':'Una persona “di casa” (alias + ruolo)?')},
+    {k:'m_study2', tag:'study', t:(lang==='en'?'A course you’ve eyed?':'Un corso che hai adocchiato?')},
+    {k:'m_time1', tag:'future', t:(lang==='en'?'When are you most “on” (time/day)?':'Quando ti senti più “carico” (ora/giorno)?')},
+    {k:'m_well2', tag:'wellbeing', t:(lang==='en'?'A place you avoid?':'Un luogo che eviti?')}
+  ];
+  const used = new Set(Object.keys(JSON.parse(LS.getItem('whatif_micro')||'{}')));
+  const pref = MAP.filter(x=>tags.includes(x.tag) && !used.has(x.k));
+  const other = MAP.filter(x=>!tags.includes(x.tag) && !used.has(x.k));
+  return [...pref, ...other].slice(0,n);
+}
+
+/* ====== Freemium meter ====== */
 const DAILY_FREE = 3;
 function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function readCredits(){
@@ -204,24 +307,25 @@ function renderMeter(){
   document.getElementById('meterFill').style.width = (c.pro ? '0%' : pct+'%');
   document.getElementById('upgradeBtn').textContent = c.pro ? (lang==='en'?'Pro ✓':'Pro ✓') : (lang==='en'?'Pro':'Pro');
 }
-function haveQuota(){
-  const c = readCredits();
-  if (c.pro) return true;
-  return c.used < DAILY_FREE;
-}
-function consumeOne(){
-  const c = readCredits();
-  if (!c.pro) c.used = (c.used||0) + 1;
-  writeCredits(c);
-}
+function haveQuota(){ const c = readCredits(); return c.pro || c.used < DAILY_FREE; }
+function consumeOne(){ const c = readCredits(); if (!c.pro) c.used = (c.used||0) + 1; writeCredits(c); }
 renderMeter();
-
-// upgrade overlay (mock)
 document.getElementById('upgradeBtn').onclick = ()=>{ document.getElementById('upgradeOverlay').style.display='flex'; };
-function closeUpgrade(ev){ if(ev && ev.target && ev.target.id!=='upgradeOverlay' && ev.type==='click') return; document.getElementById('upgradeOverlay').style.display='none'; }
+function closeUpgrade(ev){ closeOverlay(ev,'upgradeOverlay'); }
 function fakeUpgrade(){ const c=readCredits(); c.pro=true; writeCredits(c); closeUpgrade(); alert(lang==='en'?'Pro activated (demo).':'Pro attivato (demo).'); }
 
-// ===== generazione (SSE) =====
+/* ====== PII redaction ====== */
+function redactPII(obj){
+  const s = JSON.stringify(obj||{});
+  const red = s
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi,'[email]')
+    .replace(/\b(\+?\d[\d\s\-().]{7,})\b/g,'[phone]')
+    .replace(/\bIT\d{2}[A-Z]\d{10,}\b/gi,'[iban]')
+    .replace(/\b([A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z])\b/gi,'[id]');
+  try { return JSON.parse(red); } catch { return obj; }
+}
+
+/* ====== generazione (SSE) ====== */
 const MAX_CHARS = 1200;
 let lastAnswer = "";
 let generating = false;
@@ -232,25 +336,26 @@ async function generate(extraInstruction = "") {
 
   generating = true;
   lastAnswer = "";
-  resultEl.textContent = "⏳ " + T.gen + " ";
+  resultEl.textContent = "⏳ " + (T.gen||'Generazione…') + " ";
   const sk = document.createElement("span"); sk.className = "skeleton"; sk.style.width="40%"; resultEl.appendChild(sk);
+
+  const rawProfile = {
+    ...JSON.parse(LS.getItem("whatif_profile") || "{}"),
+    anchors: JSON.parse(LS.getItem("whatif_anchors") || "{}"),
+    anchors_extra: JSON.parse(LS.getItem("whatif_micro") || "{}")
+  };
+  const safeProfile = redactPII(rawProfile);
 
   const payload = {
     domanda,
     lang,
     periodo: prefs.periodo || "future",
     stile:   prefs.stile   || "whatif",
-    profile: JSON.parse(LS.getItem("whatif_profile") || "{}"),
+    profile: safeProfile,
     archetypes: JSON.parse(LS.getItem("whatif_archetypes") || "{}"),
-    anchors: JSON.parse(LS.getItem("whatif_anchors") || "{}"),
+    anchors: safeProfile.anchors || {},
     stream: true
   };
-
-  // Rifiniture come hint aggiuntivo
-  if (extraInstruction){
-    payload.extra = extraInstruction; // lato server non usato, ma utile se vuoi loggare
-    // appendiamo al prompt utente con "guardrail" via header personalizzato? per ora usiamo messaggi post-processing lato client (semplice)
-  }
 
   try{
     const res = await fetch("/api/ask", {
@@ -258,7 +363,7 @@ async function generate(extraInstruction = "") {
       headers:{"Content-Type":"application/json","x-whatif-stream":"1"},
       body: JSON.stringify(payload)
     });
-    if (!res.ok) { resultEl.textContent = T.err_server; generating=false; return; }
+    if (!res.ok) { resultEl.textContent = (T.err_server||'Errore server'); generating=false; return; }
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -287,60 +392,28 @@ async function generate(extraInstruction = "") {
           }
         }
         if (data.done){
-          // consumo credito a generazione conclusa
           consumeOne();
           resultEl.textContent = (lastAnswer || text || "").trim();
           generating=false;
         }
         if (data.error){
-          resultEl.textContent = T.err_server + " ("+ (data.detail||"") +")";
+          resultEl.textContent = (T.err_server||'Errore') + " ("+ (data.detail||"") +")";
           generating=false;
         }
       }
     }
   }catch(e){
     console.error(e);
-    resultEl.textContent = T.err_network;
+    resultEl.textContent = (T.err_network||'Errore di rete');
     generating=false;
   }
 }
 
-// Rifiniture client-side: chiediamo una nuova generazione con un'indicazione semplice
-function refine(kind){
-  const mapIt = {
-    concrete:"Rendi il testo più concreto e pratico (dettagli quotidiani verificabili).",
-    ironic:"Aumenta leggermente l’ironia rimanendo rispettoso.",
-    direct:"Frasi più brevi e dirette, zero fronzoli."
-  };
-  const mapEn = {
-    concrete:"Make the text more concrete and practical (everyday, verifiable details).",
-    ironic:"Slightly increase irony while staying respectful.",
-    direct:"Shorter, more direct sentences, zero frills."
-  };
-  const extra = (lang==='en'?mapEn:mapIt)[kind] || "";
-  // Per semplicità rimandiamo un nuovo prompt completo (server non legge extra, ma il nuovo stile è già più diretto)
-  generate(extra);
-}
-
-// Feedback 1-click
-function rate(score){
-  const arr = JSON.parse(LS.getItem("whatif_ratings")||"[]");
-  arr.unshift({ ts:Date.now(), score, periodo:prefs.periodo||null, stile:prefs.stile||null });
-  LS.setItem("whatif_ratings", JSON.stringify(arr));
-  alert(lang==='en'?'Thanks for the feedback!':'Grazie del feedback!');
-}
-
-// ===== Cronologia con preferiti ⭐ =====
+/* ====== azioni UI ====== */
+function editQuestion(){ LS.setItem("domanda", domanda); location.href = "fourth.html"; }
 function saveHistory(pin=false){
   const arr = JSON.parse(LS.getItem("cronologia")||"[]");
-  arr.unshift({
-    domanda,
-    risposta: (resultEl.textContent || "").trim(),
-    periodo: prefs.periodo || null,
-    stile: prefs.stile || null,
-    lang, ts: Date.now(),
-    pinned: !!pin
-  });
+  arr.unshift({ domanda, risposta:(resultEl.textContent||"").trim(), periodo:prefs.periodo||null, stile:prefs.stile||null, lang, ts:Date.now(), pinned:!!pin });
   LS.setItem("cronologia", JSON.stringify(arr));
   alert(lang==="en"?"Saved to history!":"Salvato nella cronologia!");
 }
@@ -348,14 +421,11 @@ function openHistory(){
   const ov = document.getElementById("histOverlay");
   const list = document.getElementById("histList");
   const arr = JSON.parse(LS.getItem("cronologia")||"[]");
-
   if (!arr.length){ list.innerHTML = `<p class="hint">${lang==="en"?"Empty.":"Vuota."}</p>`; }
   else{
-    // prima i pinned
     const pinned = arr.filter(x=>x.pinned);
     const rest   = arr.filter(x=>!x.pinned);
     const show = [...pinned, ...rest];
-
     list.innerHTML = show.map((it,i)=>`
       <div class="hist-item">
         <h4>#${arr.length-i} — ${new Date(it.ts).toLocaleString()} ${it.pinned?'<span class="pin">⭐</span>':''}</h4>
@@ -373,17 +443,9 @@ function openHistory(){
   }
   ov.style.display="flex";
 }
-function togglePin(i){
-  const arr = JSON.parse(LS.getItem("cronologia")||"[]");
-  // ricostruisci ordinamento come in openHistory
-  const pinned = arr.filter(x=>x.pinned);
-  const rest   = arr.filter(x=>!x.pinned);
-  const show   = [...pinned, ...rest];
-  const item   = show[i];
-  // trova index reale in arr
-  const realIdx = arr.findIndex(x=>x.ts===item.ts && x.domanda===item.domanda);
-  if (realIdx>-1){ arr[realIdx].pinned = !arr[realIdx].pinned; LS.setItem("cronologia", JSON.stringify(arr)); openHistory(); }
-}
+function closeHistory(ev){ closeOverlay(ev,'histOverlay'); }
+function clearHistory(){ if (confirm(lang==="en"?"Clear history?":"Svuotare la cronologia?")){ LS.removeItem("cronologia"); openHistory(); } }
+function copyText(){ navigator.clipboard.writeText(`Domanda: ${domanda}\n\n${resultEl.textContent}`).then(()=>{ alert(lang==="en"?"Copied!":"Copiato!"); }); }
 function copySpecific(i){
   const arr = JSON.parse(LS.getItem("cronologia")||"[]");
   const show=[...arr.filter(x=>x.pinned),...arr.filter(x=>!x.pinned)];
@@ -391,25 +453,37 @@ function copySpecific(i){
   navigator.clipboard.writeText(`Domanda: ${it.domanda}\n\n${it.risposta||""}`);
   alert(lang==='en'?'Copied!':'Copiato!');
 }
-function closeHistory(ev){
-  if (ev && ev.target && ev.target.id!=="histOverlay" && ev.type==="click") return;
-  document.getElementById("histOverlay").style.display="none";
-}
-function clearHistory(){
-  if (confirm(lang==="en"?"Clear history?":"Svuotare la cronologia?")){
-    LS.removeItem("cronologia");
-    openHistory();
-  }
-}
-function copyText(){
-  navigator.clipboard.writeText(`Domanda: ${domanda}\n\n${resultEl.textContent}`).then(()=>{
-    alert(lang==="en"?"Copied!":"Copiato!");
-  });
+function togglePin(i){
+  const arr = JSON.parse(LS.getItem("cronologia")||"[]");
+  const show=[...arr.filter(x=>x.pinned),...arr.filter(x=>!x.pinned)];
+  const item=show[i];
+  const realIdx = arr.findIndex(x=>x.ts===item.ts && x.domanda===item.domanda);
+  if (realIdx>-1){ arr[realIdx].pinned=!arr[realIdx].pinned; LS.setItem("cronologia", JSON.stringify(arr)); openHistory(); }
 }
 function shareOut(){
   const data = { title:"What?f", text:`Domanda: ${domanda}\n\n${resultEl.textContent}`, url: location.href };
   if (navigator.share) navigator.share(data).catch(()=>{});
   else copyText();
+}
+function refine(kind){
+  const mapIt = {
+    concrete:"Rendi il testo più concreto e pratico (dettagli quotidiani verificabili).",
+    ironic:"Aumenta leggermente l’ironia rimanendo rispettoso.",
+    direct:"Frasi più brevi e dirette, zero fronzoli."
+  };
+  const mapEn = {
+    concrete:"Make the text more concrete and practical (everyday, verifiable details).",
+    ironic:"Slightly increase irony while staying respectful.",
+    direct:"Shorter, more direct sentences, zero frills."
+  };
+  const extra = (lang==='en'?mapEn:mapIt)[kind] || "";
+  generate(extra);
+}
+function rate(score){
+  const arr = JSON.parse(LS.getItem("whatif_ratings")||"[]");
+  arr.unshift({ ts:Date.now(), score, periodo:prefs.periodo||null, stile:prefs.stile||null });
+  LS.setItem("whatif_ratings", JSON.stringify(arr));
+  alert(lang==='en'?'Thanks for the feedback!':'Grazie del feedback!');
 }
 function escapeHTML(s){return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 </script>
