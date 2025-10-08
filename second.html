@@ -6,88 +6,72 @@
   <title>What?f – Parlami di te</title>
   <meta name="theme-color" content="#0A0F14" />
   <style>
-    :root{--bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent-dark:#00B5CC;--ink:#001F26}
+    :root {
+      --bg:#0A0F14; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
+      --accent:#00E0FF; --accent-dark:#00B5CC;
+    }
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    .topbar{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;
-      padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))}
-    .btn{appearance:none;border:1px solid #1f2c36;background:#0f1820;color:var(--fg);
-      border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
-    .btn.primary{border:none;background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:var(--ink)}
-    .btn.ghost{background:transparent}
+    html,body{
+      height:100%; margin:0; background:var(--bg); color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
     main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
     .wrap{width:min(100%,980px)}
     h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px)}
     .blurb{color:#d7e8ec;margin:0 0 14px;font-size:clamp(14px,4vw,18px);line-height:1.45}
     form{background:#0c141b;border:1px solid #1b2831;border-radius:16px;padding:14px;display:grid;gap:12px}
     label{font-weight:700;margin-bottom:6px;display:block}
-    .row{display:grid;gap:12px}
-    @media (min-width:640px){ .row.two{grid-template-columns:1fr 1fr} .row.three{grid-template-columns:1fr 1fr 1fr} }
     select,input[type="text"],textarea{width:100%;background:#0f1820;color:var(--fg);border:1px solid #1f2c36;border-radius:12px;padding:12px;font-size:16px}
     textarea{min-height:110px;resize:vertical}
     .muted{color:var(--muted);font-size:13px}
-    .actions{display:flex;gap:10px;justify-content:space-between;margin-top:6px;flex-wrap:wrap}
-    .error{color:#ffb3b3;background:#3a1414;border:1px solid #5a2222;border-radius:10px;padding:10px 12px;display:none}
-    .error.show{display:block}
-    .ok{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;background:#0e1820;border:1px solid #1e2a34;color:#cfe6eb;padding:8px 12px;border-radius:10px;display:none}
-    .ok.show{display:block}
-
-    /* Overlay giornaliero */
-    .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9999;
-      background:rgba(0,0,0,.55);padding:14px}
-    .sheet{width:min(92vw,760px);background:#101922;border:1px solid #1c2a33;border-radius:16px;padding:16px;
-      box-shadow:0 20px 40px rgba(0,0,0,.35)}
-    .motivate{background:linear-gradient(180deg,#072029,#0c1b24);border:1px solid #163240;border-radius:14px;padding:14px;margin:2px 0 12px;
-      box-shadow:0 0 20px rgba(0,224,255,.12)}
-    .motivate strong{color:var(--accent)}
-    .dqtitle{margin:6px 0 10px}
-    .qrow{display:grid;gap:10px}
-    @media (min-width:680px){ .qrow{grid-template-columns:1fr 1fr 1fr} }
-    .qcard{background:#0f1820;border:1px solid #1c2a33;border-radius:12px;padding:10px}
-    .qcard label{display:block;font-weight:800;margin-bottom:6px}
-    .qcard input{width:100%;background:#0b151c;color:var(--fg);border:1px solid #1e2a34;border-radius:10px;padding:10px}
-    .ov-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
+    .actions{display:flex;gap:10px;justify-content:space-between;margin-top:10px}
+    .btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer;transition:opacity .3s ease}
+    .btn.ghost{background:#152029;color:#cfe6eb;border:1px solid #253342}
+    .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329}
+    .btn:hover{opacity:.9}
+    .btn[disabled]{background:#2a3b45;color:#7f98a2;cursor:not-allowed}
+    .daily-box{background:#0f1820;border:1px solid #1b2831;border-radius:16px;padding:24px;margin-top:16px;animation:fadeIn 1s ease forwards}
+    .daily-box h2{margin-top:0;color:var(--accent);font-size:clamp(18px,4vw,24px);text-align:center;line-height:1.5;opacity:0;animation:fadeGlow 3s ease forwards .2s}
+    .daily-q{margin:10px 0}
+    @keyframes fadeIn {
+      from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none}
+    }
+    @keyframes fadeGlow {
+      0%{opacity:0;filter:drop-shadow(0 0 0 var(--accent));}
+      40%{opacity:1;filter:drop-shadow(0 0 6px var(--accent));}
+      100%{opacity:1;filter:drop-shadow(0 0 0 var(--accent));}
+    }
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <div style="display:flex;gap:8px;align-items:center">
-      <button id="backTop" class="btn">← <span data-key="back">Indietro</span></button>
-      <button class="btn" onclick="location.href='index.html'">🏠 <span data-key="home">Home</span></button>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button id="skipTop" class="btn ghost">⏭️ <span data-key="skip">Salta</span></button>
-      <button id="clearTop" class="btn ghost">🧹 <span data-key="clear">Pulisci</span></button>
-    </div>
+  <div class="topbar" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#0c141b;">
+    <button onclick="location.href='index.html'" class="btn ghost">🏠 Home</button>
+    <button onclick="history.back()" class="btn ghost">← Indietro</button>
   </div>
 
   <main>
     <div class="wrap">
-      <h1 data-key="title">Parlami di te</h1>
-      <p class="blurb" data-key="blurb">
-        Raccontami brevemente chi sei, cosa stai vivendo o cosa ti spinge a usare What?f.
-        I dati vengono salvati sul dispositivo e precompilati la prossima volta.
-      </p>
-
-      <div id="errorBox" class="error"></div>
+      <h1>Parlami di te</h1>
+      <p class="blurb">Raccontami brevemente chi sei, cosa stai vivendo o cosa ti spinge a usare What?f.  
+        Questo aiuterà l’AI a comprenderti meglio e risponderti in modo più personale.</p>
 
       <form id="aboutForm" novalidate>
-        <div class="row three">
+        <div class="row three" style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
           <div>
-            <label for="gender" data-key="gender_lbl">Sesso</label>
+            <label for="gender">Sesso</label>
             <select id="gender" required>
-              <option value="" data-key="sel_choose">Seleziona…</option>
-              <option value="uomo" data-key="gender_m">Uomo</option>
-              <option value="donna" data-key="gender_f">Donna</option>
-              <option value="altro" data-key="gender_o">Altro</option>
-              <option value="non_specificato" data-key="gender_n">Preferisco non dirlo</option>
+              <option value="">Seleziona…</option>
+              <option value="uomo">Uomo</option>
+              <option value="donna">Donna</option>
+              <option value="altro">Altro</option>
+              <option value="non_specificato">Preferisco non dirlo</option>
             </select>
           </div>
           <div>
-            <label for="age" data-key="age_lbl">Età</label>
+            <label for="age">Età</label>
             <select id="age" required>
-              <option value="" data-key="sel_choose">Seleziona…</option>
-              <option value="under18" data-key="age_u18">-18</option>
+              <option value="">Seleziona…</option>
+              <option value="under18">-18</option>
               <option value="18_24">18–24</option>
               <option value="25_34">25–34</option>
               <option value="35_44">35–44</option>
@@ -97,281 +81,120 @@
             </select>
           </div>
           <div>
-            <label for="phase" data-key="phase_lbl">Fase attuale</label>
+            <label for="phase">Fase attuale</label>
             <select id="phase" required>
-              <option value="" data-key="sel_choose">Seleziona…</option>
-              <option value="studio" data-key="phase_study">Studio</option>
-              <option value="lavoro" data-key="phase_work">Lavoro</option>
-              <option value="cambio" data-key="phase_change">Cambio/Transizione</option>
-              <option value="altro" data-key="phase_other">Altro</option>
+              <option value="">Seleziona…</option>
+              <option value="studio">Studio</option>
+              <option value="lavoro">Lavoro</option>
+              <option value="cambio">Cambio/Transizione</option>
+              <option value="altro">Altro</option>
             </select>
           </div>
         </div>
 
-        <div class="row two">
+        <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
           <div>
-            <label for="where" data-key="where_lbl">Da dove vieni?</label>
-            <input id="where" type="text" placeholder="Città / Paese" data-ph="where_ph" />
+            <label for="where">Da dove vieni?</label>
+            <input id="where" type="text" placeholder="Città / Paese" />
           </div>
           <div>
-            <label for="who" data-key="who_lbl">Chi sei?</label>
-            <input id="who" type="text" placeholder="Professione / Ruolo" data-ph="who_ph" />
+            <label for="who">Chi sei?</label>
+            <input id="who" type="text" placeholder="Professione / Ruolo" />
           </div>
         </div>
 
         <div>
-          <label for="more" data-key="more_lbl">
-            Vuoi raccontarci qualcosa di più su di te?
-            <span class="muted" data-key="more_hint">(opzionale – aiuta l’AI a darti risposte più accurate)</span>
-          </label>
-          <textarea id="more" data-ph="more_ph" placeholder="Esempio: lavoro nel digitale, sto pensando di cambiare città, ho due figli…"></textarea>
+          <label for="more">Vuoi raccontarci qualcosa di più su di te?</label>
+          <textarea id="more" placeholder="Esempio: lavoro nel digitale, sto pensando di cambiare città, ho due figli…"></textarea>
         </div>
 
         <div class="actions">
-          <div style="display:flex;gap:8px">
-            <button type="button" class="btn" id="backBtn" data-key="back">Indietro</button>
-            <button type="button" class="btn ghost" id="skipBtn" data-key="skip">Salta</button>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button type="button" class="btn ghost" id="clearBtn" data-key="clear">Pulisci</button>
-            <button type="submit" class="btn primary" id="nextBtn" data-key="next">Continua</button>
-          </div>
+          <button type="button" class="btn ghost" id="skipBtn">Salta</button>
+          <button type="submit" class="btn primary" id="nextBtn">Continua</button>
         </div>
-        <p class="muted" style="margin:6px 0 0">🔒 I tuoi dati restano sul dispositivo (local-only). Puoi esportarli o cancellarli in qualsiasi momento.</p>
       </form>
+
+      <!-- Box micro domande giornaliere -->
+      <div id="dailyBox" class="daily-box" style="display:none;">
+        <h2>Ogni giorno, tre micro-domande rendono What?f un po’ più tua.<br>Finché non ti accorgerai che ti capisce davvero — prima ancora che tu chieda.</h2>
+        <div id="dailyQuestions"></div>
+        <div class="actions">
+          <button class="btn ghost" id="dqSkip">Salta</button>
+          <button class="btn primary" id="dqSave">Salva</button>
+        </div>
+      </div>
     </div>
   </main>
 
-  <div id="toast" class="ok">✓ Salvato</div>
+<script>
+  const LS = localStorage;
+  const today = new Date().toISOString().slice(0,10);
+  const last = LS.getItem("whatif_daily_date");
 
-  <!-- Overlay giornaliero: frase + 3 micro-domande -->
-  <div class="overlay" id="dailyOverlay" role="dialog" aria-modal="true" aria-labelledby="dqTitle">
-    <div class="sheet">
-      <div class="motivate" id="motivateBox">
-        <p id="motivationText" style="margin:0;line-height:1.55"></p>
-      </div>
+  if (last !== today) {
+    document.getElementById("dailyBox").style.display = "block";
+    LS.setItem("whatif_daily_date", today);
+  }
 
-      <h3 class="dqtitle" id="dqTitle">3 micro-domande per personalizzare What?f</h3>
-      <div class="qrow" id="dqRows"></div>
+  const QUESTIONS = [
+    "Qual è la prima cosa che ti fa sorridere la mattina?",
+    "C’è un posto dove ti senti davvero te stesso?",
+    "Se potessi cambiare una cosa del tuo passato, quale sarebbe?",
+    "Cosa ti motiva nei giorni difficili?",
+    "Qual è una persona che ha cambiato il tuo modo di vedere le cose?",
+    "Se domani avessi una giornata libera, cosa faresti?"
+  ];
 
-      <div class="ov-actions">
-        <button class="btn" id="dqSkip">Salta oggi</button>
-        <button class="btn primary" id="dqSave">Salva</button>
-      </div>
-    </div>
-  </div>
+  function pickRandomQuestions(n=3){
+    return QUESTIONS.sort(()=>0.5-Math.random()).slice(0,n);
+  }
 
-  <script>
-    // I18N
-    const I18N = {
-      it:{title:"Parlami di te", blurb:"Raccontami brevemente chi sei, cosa stai vivendo o cosa ti spinge a usare What?f. I dati vengono salvati sul dispositivo e precompilati la prossima volta.",
-          gender_lbl:"Sesso", sel_choose:"Seleziona…", gender_m:"Uomo", gender_f:"Donna", gender_o:"Altro", gender_n:"Preferisco non dirlo",
-          age_lbl:"Età", age_u18:"-18",
-          phase_lbl:"Fase attuale", phase_study:"Studio", phase_work:"Lavoro", phase_change:"Cambio/Transizione", phase_other:"Altro",
-          where_lbl:"Da dove vieni?", where_ph:"Città / Paese",
-          who_lbl:"Chi sei?", who_ph:"Professione / Ruolo",
-          more_lbl:"Vuoi raccontarci qualcosa di più su di te?", more_hint:"(opzionale – aiuta l’AI a darti risposte più accurate)", more_ph:"Esempio: lavoro nel digitale, sto pensando di cambiare città, ho due figli…",
-          back:"Indietro", next:"Continua", home:"Home", skip:"Salta", clear:"Pulisci",
-          err_required:"Per continuare seleziona Sesso, Età e Fase.",
-          dq_title:"3 micro-domande per personalizzare What?f",
-          dq_skip:"Salta oggi", dq_save:"Salva",
-          motivate:"Giorno dopo giorno, tre micro-domande arricchiscono il tuo profilo… finché dirai: “What the F… potrei essere io!”"},
-      en:{title:"Tell me about you", blurb:"Briefly share who you are, what you’re going through or why you’re using What?f. Your data is saved locally and prefilled next time.",
-          gender_lbl:"Gender", sel_choose:"Choose…", gender_m:"Male", gender_f:"Female", gender_o:"Other", gender_n:"Prefer not to say",
-          age_lbl:"Age", age_u18:"-18",
-          phase_lbl:"Current phase", phase_study:"Studying", phase_work:"Working", phase_change:"Changing/Transition", phase_other:"Other",
-          where_lbl:"Where are you from?", where_ph:"City / Country",
-          who_lbl:"Who are you?", who_ph:"Profession / Role",
-          more_lbl:"Want to tell us more about you?", more_hint:"(optional – helps the AI give more accurate answers)", more_ph:"Example: I work in tech, I’m thinking about moving city, I have two kids…",
-          back:"Back", next:"Continue", home:"Home", skip:"Skip", clear:"Clear",
-          err_required:"To continue please select Gender, Age and Phase.",
-          dq_title:"3 micro-questions to personalize What?f",
-          dq_skip:"Skip today", dq_save:"Save",
-          motivate:"Day by day, three micro-questions enrich your profile… until you’ll say: “What the F… this could be me!”"}
+  const dailyQs = pickRandomQuestions();
+  const container = document.getElementById("dailyQuestions");
+  dailyQs.forEach((q,i)=>{
+    const div = document.createElement("div");
+    div.className = "daily-q";
+    div.innerHTML = `<label>${q}</label><input type="text" data-k="q${i}" placeholder="Rispondi qui...">`;
+    container.appendChild(div);
+  });
+
+  document.getElementById("dqSave").onclick = ()=>{
+    const answers = {};
+    container.querySelectorAll("input").forEach(inp=>{
+      const v = inp.value.trim();
+      if(v) answers[inp.dataset.k]=v;
+    });
+    LS.setItem("whatif_micro", JSON.stringify(answers));
+    document.getElementById("dailyBox").style.display="none";
+  };
+  document.getElementById("dqSkip").onclick = ()=>{
+    document.getElementById("dailyBox").style.display="none";
+  };
+
+  const form = document.getElementById('aboutForm');
+  form.addEventListener('submit', e=>{
+    e.preventDefault();
+    const profile = {
+      gender:gender.value, age:age.value, phase:phase.value,
+      where:where.value.trim(), who:who.value.trim(), more:more.value.trim()
     };
-    const LS = localStorage;
-    function getLang(){ return LS.getItem('lang') || 'it'; }
-    function tSet(){
-      const d = I18N[getLang()] || I18N.it;
-      document.documentElement.lang = getLang();
-      document.querySelectorAll('[data-key]').forEach(el=>{
-        const k=el.getAttribute('data-key'); if(d[k]) el.textContent=d[k];
-      });
-      document.querySelectorAll('[data-ph]').forEach(el=>{
-        const k=el.getAttribute('data-ph'); if(d[k]) el.setAttribute('placeholder', d[k]);
-      });
-      // overlay
-      document.getElementById('dqTitle').textContent = d.dq_title;
-      document.getElementById('dqSkip').textContent  = d.dq_skip;
-      document.getElementById('dqSave').textContent  = d.dq_save;
-      document.getElementById('motivationText').textContent = d.motivate;
-    }
-    tSet();
+    LS.setItem('whatif_profile', JSON.stringify(profile));
+    location.href = 'fourth.html';
+  });
 
-    const $ = s => document.querySelector(s);
-    const toast = (msg)=>{
-      const t = document.getElementById('toast'); t.textContent = msg || (getLang()==='en'?'Saved':'✓ Salvato');
-      t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1200);
-    };
+  document.getElementById('skipBtn').addEventListener('click', ()=>{
+    location.href = 'fourth.html';
+  });
 
-    const form   = document.getElementById('aboutForm');
-    const errBox = document.getElementById('errorBox');
-    const fields = { gender: $('#gender'), age: $('#age'), phase: $('#phase'), where: $('#where'), who: $('#who'), more: $('#more') };
-
-    // Prefill da localStorage
-    (function prefill(){
-      try{
-        const p = JSON.parse(LS.getItem('whatif_profile')||'{}');
-        if (p.gender) fields.gender.value = p.gender;
-        if (p.age)    fields.age.value    = p.age;
-        if (p.phase)  fields.phase.value  = p.phase;
-        if (p.where)  fields.where.value  = p.where;
-        if (p.who)    fields.who.value    = p.who;
-        if (p.more)   fields.more.value   = p.more;
-      }catch(e){}
-    })();
-
-    // Autosave
-    function saveProfile(showToast=false){
-      const profile = {
-        gender: fields.gender.value.trim(),
-        age:    fields.age.value.trim(),
-        phase:  fields.phase.value.trim(),
-        where:  fields.where.value.trim(),
-        who:    fields.who.value.trim(),
-        more:   fields.more.value.trim()
-      };
-      LS.setItem('whatif_profile', JSON.stringify(profile));
-      if (showToast) toast();
-    }
-    Object.values(fields).forEach(el=>{
-      el.addEventListener('change', ()=>saveProfile(true));
-      if (el.tagName==='INPUT' || el.tagName==='TEXTAREA'){ el.addEventListener('blur', ()=>saveProfile()); }
-    });
-
-    // Skip (se già compilato il minimo)
-    function canSkip(){
-      const p = JSON.parse(LS.getItem('whatif_profile')||'{}');
-      return !!(p.gender && p.age && p.phase);
-    }
-    function onSkip(){
-      if (canSkip()) location.href='fourth.html';
-      else {
-        const d = I18N[getLang()];
-        alert(getLang()==='en'
-          ? 'Please fill Gender, Age and Phase at least once, then you can skip next times.'
-          : 'Compila almeno Sesso, Età e Fase una volta: poi potrai saltare.');
-      }
-    }
-    document.getElementById('skipBtn').addEventListener('click', onSkip);
-    document.getElementById('skipTop').addEventListener('click', onSkip);
-
-    // Clear
-    function clearAll(){
-      Object.values(fields).forEach(el=>el.value='');
-      LS.removeItem('whatif_profile');
-      toast(getLang()==='en'?'Cleared':'Pulito');
-    }
-    document.getElementById('clearBtn').addEventListener('click', clearAll);
-    document.getElementById('clearTop').addEventListener('click', clearAll);
-
-    // Navigazione
-    document.getElementById('backTop').addEventListener('click', ()=> history.back());
-    document.getElementById('backBtn').addEventListener('click', ()=> history.back());
-
-    // Submit
-    form.addEventListener('submit', (e)=>{
-      e.preventDefault();
-      const d = I18N[getLang()];
-      const gender = fields.gender.value.trim();
-      const age    = fields.age.value.trim();
-      const phase  = fields.phase.value.trim();
-      if(!gender || !age || !phase){
-        errBox.textContent = d.err_required;
-        errBox.classList.add('show'); return;
-      }
-      errBox.classList.remove('show');
-      saveProfile();
-      location.href = 'fourth.html';
-    });
-
-    // ======= Micro-domande GIORNALIERE (frase + 3 domande) =======
-    function todayStr(){
-      const d = new Date();
-      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    }
-    function shouldShowDaily(){
-      return LS.getItem('whatif_daily_date') !== todayStr();
-    }
-    function markDailyShown(){
-      LS.setItem('whatif_daily_date', todayStr());
-    }
-
-    function pickDailyQuestions(n=3){
-      const tags = JSON.parse(LS.getItem('whatif_tags')||'[]');
-      const used = new Set(Object.keys(JSON.parse(LS.getItem('whatif_micro')||'{}')));
-      const pool = [
-        {k:'m_place1', tag:'place', it:'Un bar/locale dove ti vedono spesso?', en:'A bar/place that knows you well?'},
-        {k:'m_routine1', tag:'time', it:'Un orario in cui rendi al massimo?', en:'A time of day when you’re most “on”?'},
-        {k:'m_person1', tag:'relationships', it:'Una persona “di casa” (alias + ruolo)?', en:'A person who feels “home” (alias + role)?'},
-        {k:'m_goal12', tag:'money', it:'Un obiettivo realistico (12 mesi)?', en:'One realistic 12-month goal?'},
-        {k:'m_skill1', tag:'work', it:'Una skill che vuoi potenziare?', en:'One skill you want to level up?'},
-        {k:'m_city1', tag:'place', it:'Una città che ti attira?', en:'A city that attracts you?'},
-        {k:'m_course1', tag:'study', it:'Un corso che hai adocchiato?', en:'A course you’ve eyed?'},
-        {k:'m_habit1', tag:'wellbeing', it:'Un’abitudine che ti farebbe bene?', en:'One habit that would help you?'},
-        {k:'m_ally1', tag:'network', it:'Un alleato che vorresti (alias)?', en:'An ally you’d like (alias)?'}
-      ];
-      const L = getLang();
-      const pref = pool.filter(x=>tags.includes(x.tag) && !used.has(x.k));
-      const rest = pool.filter(x=>!tags.includes(x.tag) && !used.has(x.k));
-      const chosen = [...pref, ...rest].slice(0,n);
-      while (chosen.length < n){
-        const fallback = pool.find(x=>!chosen.some(c=>c.k===x.k));
-        if(!fallback) break; chosen.push(fallback);
-      }
-      return chosen.map(q=>({k:q.k, t:(L==='en'?q.en:q.it)}));
-    }
-
-    function openDailyOverlay(){
-      // frase sempre presente (ogni giorno, come richiesto)
-      document.getElementById('motivationText').textContent = (I18N[getLang()]||I18N.it).motivate;
-
-      // costruisci 3 domande
-      const box = document.getElementById('dqRows');
-      box.innerHTML = '';
-      pickDailyQuestions(3).forEach(q=>{
-        const div = document.createElement('div');
-        div.className='qcard';
-        div.innerHTML = `<label>${q.t}</label><input type="text" data-k="${q.k}" />`;
-        box.appendChild(div);
-      });
-
-      document.getElementById('dqSkip').onclick = ()=>{
-        markDailyShown();
-        document.getElementById('dailyOverlay').style.display='none';
-      };
-      document.getElementById('dqSave').onclick = ()=>{
-        const micro = JSON.parse(LS.getItem('whatif_micro')||'{}');
-        document.querySelectorAll('#dqRows input').forEach(inp=>{
-          const v = (inp.value||'').trim();
-          if (v) micro[inp.dataset.k] = v;
-        });
-        LS.setItem('whatif_micro', JSON.stringify(micro));
-        markDailyShown();
-        document.getElementById('dailyOverlay').style.display='none';
-      };
-
-      document.getElementById('dailyOverlay').style.display='flex';
-    }
-
-    document.addEventListener('DOMContentLoaded', ()=>{
-      tSet();
-      if (shouldShowDaily()) openDailyOverlay();
-    });
-
-    // sync lingua quando cambia in un’altra scheda
-    window.addEventListener('storage', (e)=>{ if(e.key==='lang'){ tSet(); }});
-    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) tSet(); });
-  </script>
+  const saved = JSON.parse(LS.getItem('whatif_profile')||'{}');
+  if(Object.keys(saved).length){
+    gender.value = saved.gender||"";
+    age.value = saved.age||"";
+    phase.value = saved.phase||"";
+    where.value = saved.where||"";
+    who.value = saved.who||"";
+    more.value = saved.more||"";
+  }
+</script>
 </body>
 </html>
