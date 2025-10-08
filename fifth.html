@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f – Risultato</title>
+<title>What?f – Result</title>
 <meta name="theme-color" content="#0A0F14" />
 <style>
   :root{
@@ -47,19 +47,19 @@
   <main>
     <div class="topbar">
       <div class="row">
-        <button class="btn ghost" onclick="history.back()">← Indietro</button>
-        <button class="btn ghost" onclick="location.href='index.html'">🏠 Home</button>
+        <button class="btn ghost" id="backBtn">←</button>
+        <button class="btn ghost" id="homeBtn">🏠</button>
       </div>
       <div class="row" style="gap:8px">
-        <span id="freeBadge" class="badge" title="Long-press 2s: reset crediti · Triplo click: toggle Pro (solo dev)">Free oggi: —</span>
-        <span id="clarifyBadge" class="badge accent" title="Chiarimenti disponibili oggi">Chiarimenti: —</span>
+        <span id="freeBadge" class="badge" title="">—</span>
+        <span id="clarifyBadge" class="badge accent" title="">—</span>
       </div>
     </div>
 
-    <h1>Il tuo scenario</h1>
-    <p class="sub">Per una risposta più personale, usa <strong>Chiarisci e genera</strong>.</p>
+    <h1 id="titleH1">Your scenario</h1>
+    <p class="sub" id="subtitle">For a more personal answer, use Clarify & Generate first.</p>
 
-    <!-- STILE + PERIOD (solo display) -->
+    <!-- STILE + PERIOD -->
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
         <div class="row">
@@ -67,34 +67,34 @@
           <span class="badge" id="badgeStile">🎭 —</span>
         </div>
         <div class="chips" id="styleChips">
-          <button class="chip" data-style="whatif">What if (realistico)</button>
-          <button class="chip" data-style="wtf">WTF (divertente)</button>
+          <button class="chip" data-style="whatif" id="chipWhatIf">What if (realistic)</button>
+          <button class="chip" data-style="wtf" id="chipWTF">WTF (fun)</button>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <h3 class="label">Domanda</h3>
+      <h3 class="label" id="qLabel">Question</h3>
       <div id="question" class="box"></div>
 
       <div class="tools" style="align-items:flex-start">
         <div class="row" style="gap:10px">
-          <button class="btn primary large" id="clarifyBtn">✨ Chiarisci e genera</button>
-          <button class="btn large" id="genBtn">Genera subito</button>
-          <button class="btn" id="regenBtn" style="display:none">Rigenera 🔁</button>
+          <button class="btn primary large" id="clarifyBtn">✨ Clarify & Generate</button>
+          <button class="btn large" id="genBtn">Generate now</button>
+          <button class="btn" id="regenBtn" style="display:none">Regenerate 🔁</button>
         </div>
       </div>
-      <p class="hint">Consiglio: con 2–3 dettagli mirati la risposta diventa molto più “tua”.</p>
+      <p class="hint" id="hint">Tip: with 2–3 focused details the answer becomes much more “yours”.</p>
 
       <div class="divider"></div>
 
-      <h3 class="label">Risultato</h3>
+      <h3 class="label" id="rLabel">Result</h3>
       <div id="result" class="box">—</div>
 
       <div class="tools">
-        <button class="btn" onclick="saveHistory()">💾 Salva</button>
-        <button class="btn" onclick="copyText()">📋 Copia</button>
-        <button class="btn" onclick="shareOut()">📤 Condividi</button>
+        <button class="btn" id="saveBtn">💾 Save</button>
+        <button class="btn" id="copyBtn">📋 Copy</button>
+        <button class="btn" id="shareBtn">📤 Share</button>
       </div>
     </div>
   </main>
@@ -102,37 +102,108 @@
   <!-- Overlay chiarimenti -->
   <div class="overlay" id="clarifyOverlay">
     <div class="sheet">
-      <h3 style="margin:6px 0">2–3 domande per essere più precisi</h3>
+      <h3 style="margin:6px 0" id="clarifyTitle">2–3 questions to be more precise</h3>
       <div id="clarifyList"></div>
       <div class="row" style="margin-top:12px">
-        <button class="btn primary" id="applyClarify">Genera con queste risposte</button>
-        <button class="btn ghost" onclick="closeClarify()">Annulla</button>
+        <button class="btn primary" id="applyClarify">Generate with these answers</button>
+        <button class="btn ghost" id="cancelClarify">Cancel</button>
       </div>
     </div>
   </div>
 
 <script>
-/* ====== Config ====== */
+/* ====== I18N ====== */
+const I18N = {
+  it:{
+    title:"Il tuo scenario",
+    subtitle:"Per una risposta più personale, usa prima Chiarisci e genera.",
+    back:"Indietro", home:"Home",
+    badgeFree:(l,d)=>`Free oggi: ${l}/${d}`,
+    badgeClarify:(l,d)=>`Chiarimenti: ${l}/${d}`,
+    badgeFreeTitle:"Long-press 2s: azzera crediti · Triplo click: toggle Pro (dev)",
+    badgeClarifyTitle:"Chiarimenti disponibili oggi",
+    periodoPast:"Passato", periodoFuture:"Futuro",
+    chipWhatIf:"What if (realistico)", chipWTF:"WTF (divertente)",
+    qLabel:"Domanda", rLabel:"Risultato",
+    clarifyBtn:"✨ Chiarisci e genera", genBtn:"Genera subito", regenBtn:"Rigenera 🔁",
+    hint:"Consiglio: con 2–3 dettagli mirati la risposta diventa molto più “tua”.",
+    clarifyTitle:"2–3 domande per essere più precisi",
+    applyClarify:"Genera con queste risposte", cancelClarify:"Annulla",
+    save:"Salva", copy:"Copia", share:"Condividi",
+    loading:"Sto generando…", errServer:"Problema server.", errNet:"Errore di rete.",
+    limitGen:"Hai raggiunto il limite gratuito di oggi. Torna domani!",
+    limitClarify:"Hai raggiunto il limite di chiarimenti per oggi. Puoi comunque generare la risposta.",
+    copied:"Copiato!", saved:"Salvato!"
+  },
+  en:{
+    title:"Your scenario",
+    subtitle:"For a more personal answer, use Clarify & Generate first.",
+    back:"Back", home:"Home",
+    badgeFree:(l,d)=>`Free today: ${l}/${d}`,
+    badgeClarify:(l,d)=>`Clarify: ${l}/${d}`,
+    badgeFreeTitle:"Long-press 2s: reset credits · Triple click: toggle Pro (dev)",
+    badgeClarifyTitle:"Clarifications available today",
+    periodoPast:"Past", periodoFuture:"Future",
+    chipWhatIf:"What if (realistic)", chipWTF:"WTF (fun)",
+    qLabel:"Question", rLabel:"Result",
+    clarifyBtn:"✨ Clarify & Generate", genBtn:"Generate now", regenBtn:"Regenerate 🔁",
+    hint:"Tip: with 2–3 focused details the answer becomes much more “yours”.",
+    clarifyTitle:"2–3 questions to be more precise",
+    applyClarify:"Generate with these answers", cancelClarify:"Cancel",
+    save:"Save", copy:"Copy", share:"Share",
+    loading:"Generating…", errServer:"Server problem.", errNet:"Network error.",
+    limitGen:"You’ve reached today’s free limit. Come back tomorrow!",
+    limitClarify:"You’ve reached today’s clarify limit. You can still generate the answer.",
+    copied:"Copied!", saved:"Saved!"
+  }
+};
 const LS = localStorage;
-const DAILY_FREE = 3;      // generazioni/giorno
-const DAILY_CLARIFY = 5;   // chiarimenti/giorno (nuovo)
 const lang = (LS.getItem("lang") || "it").toLowerCase();
+const T = I18N[lang] || I18N.it;
+document.documentElement.lang = lang;
+
+/* apply static i18n */
+document.getElementById('titleH1').textContent = T.title;
+document.getElementById('subtitle').textContent = T.subtitle;
+document.getElementById('backBtn').textContent = `← ${T.back}`;
+document.getElementById('homeBtn').textContent = `🏠 ${T.home}`;
+document.getElementById('freeBadge').title = T.badgeFreeTitle;
+document.getElementById('clarifyBadge').title = T.badgeClarifyTitle;
+document.getElementById('chipWhatIf').textContent = T.chipWhatIf;
+document.getElementById('chipWTF').textContent = T.chipWTF;
+document.getElementById('qLabel').textContent = T.qLabel;
+document.getElementById('rLabel').textContent = T.rLabel;
+document.getElementById('clarifyBtn').textContent = T.clarifyBtn;
+document.getElementById('genBtn').textContent = T.genBtn;
+document.getElementById('regenBtn').textContent = T.regenBtn;
+document.getElementById('hint').textContent = T.hint;
+document.getElementById('clarifyTitle').textContent = T.clarifyTitle;
+document.getElementById('applyClarify').textContent = T.applyClarify;
+document.getElementById('cancelClarify').textContent = T.cancelClarify;
+document.getElementById('saveBtn').textContent = `💾 ${T.save}`;
+document.getElementById('copyBtn').textContent = `📋 ${T.copy}`;
+document.getElementById('shareBtn').textContent = `📤 ${T.share}`;
+
+/* ====== Config ====== */
+const DAILY_FREE = 3;      // generations/day
+const DAILY_CLARIFY = 5;   // clarifications/day
 
 /* ====== Helpers ====== */
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function readJSON(k,def={}){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
+function $(id){return document.getElementById(id);}
 
-/* crediti generazione */
+/* Credits (generation) */
 function readCredits(){const v=readJSON('whatif_credits');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0,pro:!!v.pro};return v;}
-function writeCredits(v){LS.setItem('whatif_credits',JSON.stringify(v));renderFreeBadge();}
+function writeCredits(v){LS.setItem('whatif_credits',JSON.stringify(v));renderBadges();}
 function ensureCredits(){const c=readCredits();if(!c.date||c.date!==todayStr()){c.date=todayStr();c.used=0;writeCredits(c);}}
 
-/* limiti chiarimenti */
+/* Clarify limits */
 function readClarify(){const v=readJSON('whatif_clarify');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0};return v;}
-function writeClarify(v){LS.setItem('whatif_clarify',JSON.stringify(v));renderClarifyBadge();}
+function writeClarify(v){LS.setItem('whatif_clarify',JSON.stringify(v));renderBadges();}
 function ensureClarify(){const c=readClarify();if(!c.date||c.date!==todayStr()){c.date=todayStr();c.used=0;writeClarify(c);}}
 
-/* ====== Profilo (locale) ====== */
+/* Profile */
 function buildProfilePayload(){
   const base = readJSON('whatif_profile');
   const micro = readJSON('whatif_micro');
@@ -144,33 +215,35 @@ function saveMicroPatch(patch){
   LS.setItem('whatif_micro', JSON.stringify(micro));
 }
 
-/* ====== Badges ====== */
-function renderFreeBadge(){
-  const c=readCredits(); const left=Math.max(0, DAILY_FREE - (c.used||0));
-  const el=document.getElementById('freeBadge'); if(!el) return;
-  el.textContent = `Free oggi: ${left}/${DAILY_FREE}`;
-}
-function renderClarifyBadge(){
-  const c=readClarify(); const left=Math.max(0, DAILY_CLARIFY - (c.used||0));
-  const el=document.getElementById('clarifyBadge'); if(!el) return;
-  el.textContent = `Chiarimenti: ${left}/${DAILY_CLARIFY}`;
+/* Badges render */
+function renderBadges(){
+  const gc=readCredits(); const gl=Math.max(0, DAILY_FREE - (gc.used||0));
+  const bc=T.badgeFree(gl, DAILY_FREE);
+  $('freeBadge').textContent = bc;
+
+  const cc=readClarify(); const cl=Math.max(0, DAILY_CLARIFY - (cc.used||0));
+  $('clarifyBadge').textContent = T.badgeClarify(cl, DAILY_CLARIFY);
 }
 
-/* ====== Stato iniziale ====== */
+/* ====== State ====== */
 const prefs = readJSON("whatif_prefs");
 let domanda = LS.getItem("domanda") || "";
-if (!domanda) { alert("Nessuna domanda trovata."); location.href="fourth.html"; }
+if (!domanda) { alert(lang==='en'?"No question found.":"Nessuna domanda trovata."); location.href="fourth.html"; }
 let currentStyle = (prefs.stile || "whatif");
-const questionEl = document.getElementById("question");
-const resultEl   = document.getElementById("result");
+const questionEl = $('question');
+const resultEl   = $('result');
+
+$('backBtn').onclick = ()=> history.back();
+$('homeBtn').onclick = ()=> location.href='index.html';
+
 questionEl.textContent = domanda;
-document.getElementById("badgePeriodo").textContent = "🕰️ " + (prefs.periodo==="past" ? "Passato" : "Futuro");
-document.getElementById("badgeStile").textContent   = "🎭 " + (currentStyle==="wtf" ? "What the F" : "What if");
+$('badgePeriodo').textContent = "🕰️ " + (prefs.periodo==="past" ? T.periodoPast : T.periodoFuture);
+$('badgeStile').textContent   = "🎭 " + (currentStyle==="wtf" ? "What the F" : "What if");
 document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===currentStyle));
-document.getElementById("styleChips").addEventListener("click",(e)=>{
+$('styleChips').addEventListener("click",(e)=>{
   const b=e.target.closest(".chip"); if(!b) return;
   currentStyle=b.dataset.style;
-  document.getElementById("badgeStile").textContent = "🎭 " + (currentStyle==="wtf" ? "What the F" : "What if");
+  $('badgeStile').textContent = "🎭 " + (currentStyle==="wtf" ? "What the F" : "What if");
   document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===currentStyle));
 });
 
@@ -195,65 +268,57 @@ async function callGenerateStream({ clarifications={}, extra="" }={}){
   return r.body.getReader();
 }
 
-/* ====== Chiarimenti UI ====== */
-const clarifyOverlay = document.getElementById('clarifyOverlay');
-const clarifyList    = document.getElementById('clarifyList');
-document.getElementById('clarifyBtn').addEventListener('click', openClarify);
+/* ====== Clarify UI ====== */
+const clarifyOverlay = $('clarifyOverlay');
+const clarifyList    = $('clarifyList');
+$('clarifyBtn').addEventListener('click', openClarify);
+$('cancelClarify').addEventListener('click', ()=> clarifyOverlay.style.display='none');
 
 async function openClarify(){
-  // controllo limite chiarimenti
   ensureClarify();
   const c = readClarify();
   if ((c.used||0) >= DAILY_CLARIFY){
-    alert("Hai raggiunto il limite di chiarimenti per oggi. Puoi comunque generare la risposta.");
-    return;
+    alert(T.limitClarify); return;
   }
-
-  clarifyList.innerHTML = `<p class="sub">Sto preparando 2–3 domande mirate…</p>`;
+  clarifyList.innerHTML = `<p class="sub">${lang==='en'?'Preparing 2–3 focused questions…':'Sto preparando 2–3 domande mirate…'}</p>`;
   clarifyOverlay.style.display='flex';
   try{
     const j = await callClarifyAPI();
-    // conteggia 1 chiarimento (solo la richiesta di chiarimento, non la generazione)
-    c.used = (c.used||0) + 1; writeClarify(c);
-
+    c.used = (c.used||0) + 1; writeClarify(c); // count the clarify call
     const qs = Array.isArray(j.questions)? j.questions.slice(0,3) : [];
-    if (!qs.length){ clarifyList.innerHTML = `<p class="sub">Nessun chiarimento necessario. Puoi generare direttamente.</p>`; return; }
+    if (!qs.length){ clarifyList.innerHTML = `<p class="sub">${lang==='en'?'No clarification needed. You can generate now.':'Nessun chiarimento necessario. Puoi generare subito.'}</p>`; return; }
     clarifyList.innerHTML = qs.map(q=>`
       <div class="qitem">
-        <label for="${q.id||''}">${escapeHTML(q.label||'Domanda')}</label>
-        <input id="${q.id||''}" type="text" placeholder="${escapeAttr(q.placeholder||'Rispondi in una riga')}" />
+        <label for="${q.id||''}">${escapeHTML(q.label|| (lang==='en'?'Question':'Domanda'))}</label>
+        <input id="${q.id||''}" type="text" placeholder="${escapeAttr(q.placeholder|| (lang==='en'?'Answer in one line':'Rispondi in una riga'))}" />
       </div>`).join("");
   }catch(e){
-    clarifyList.innerHTML = `<p class="sub">Errore nel recupero chiarimenti. Puoi generare direttamente.</p>`;
+    clarifyList.innerHTML = `<p class="sub">${lang==='en'?'Error fetching clarifications. You can still generate.':'Errore nel recupero chiarimenti. Puoi generare comunque.'}</p>`;
   }
 }
 
-function closeClarify(){ clarifyOverlay.style.display='none'; }
-
-document.getElementById('applyClarify').addEventListener('click', async ()=>{
+$('applyClarify').addEventListener('click', async ()=>{
   const inputs = clarifyList.querySelectorAll('input');
   const clar = {}; inputs.forEach(i=>{ const v=(i.value||"").trim(); if(i.id&&v) clar[i.id]=v; });
-  closeClarify();
+  clarifyOverlay.style.display='none';
   if (Object.keys(clar).length) saveMicroPatch(clar);
   await generate(false, clar);
 });
 
-/* ====== Generazione ====== */
-document.getElementById('genBtn').addEventListener('click', ()=> generate());
-document.getElementById('regenBtn').addEventListener('click', ()=> generate(true));
+/* ====== Generation ====== */
+$('genBtn').addEventListener('click', ()=> generate());
+$('regenBtn').addEventListener('click', ()=> generate(true));
 
 async function generate(isRegen=false, clarOverride=null){
   ensureCredits();
   const credits = readCredits();
-
   if (!isRegen && (credits.used||0) >= DAILY_FREE){
-    alert("Hai raggiunto il limite gratuito di oggi. Torna domani!");
-    return;
+    alert(T.limitGen); return;
   }
 
-  resultEl.textContent = "⏳ Sto generando… ";
+  resultEl.textContent = `⏳ ${T.loading} `;
   const sk = document.createElement("span"); sk.className="skeleton"; sk.style.width="40%"; resultEl.appendChild(sk);
-  document.getElementById('regenBtn').style.display = 'none';
+  $('regenBtn').style.display = 'none';
 
   try{
     const reader = await callGenerateStream({ clarifications: (clarOverride||{} ) });
@@ -270,42 +335,43 @@ async function generate(isRegen=false, clarOverride=null){
         const data = JSON.parse(chunk.slice(6));
         if (data.token){ text += data.token; resultEl.textContent = text; }
         if (data.done){ resultEl.textContent = (text||"").trim(); }
-        if (data.error){ resultEl.textContent = "Errore: "+(data.detail||""); }
+        if (data.error){ resultEl.textContent = T.errServer + " " + (data.detail||""); }
       }
     }
-
-    // conteggio solo alla generazione
-    const c = readCredits();
-    c.used = (c.used||0) + 1;
-    writeCredits(c);
-
-    document.getElementById('regenBtn').style.display = 'inline-block';
-
+    const c = readCredits(); c.used = (c.used||0) + 1; writeCredits(c);
+    $('regenBtn').style.display = 'inline-block';
   }catch(e){
     console.error(e);
-    resultEl.textContent = (e.message==='server' ? "Problema server." : "Errore di rete.");
+    resultEl.textContent = (e.message==='server' ? T.errServer : T.errNet);
   }
 }
 
 /* ====== Utility ====== */
-function editQuestion(){ LS.setItem("domanda", domanda); location.href="fourth.html"; }
-function saveHistory(){
+$('backBtn').addEventListener('click', ()=> history.back());
+$('homeBtn').addEventListener('click', ()=> location.href='index.html');
+
+$('saveBtn').addEventListener('click', ()=>{
   const arr = readJSON("cronologia", []);
   arr.unshift({ domanda, risposta:(resultEl.textContent||"").trim(), periodo:prefs.periodo||null, stile:currentStyle, lang, ts:Date.now() });
   LS.setItem("cronologia", JSON.stringify(arr));
-  alert("Salvato!");
-}
-function copyText(){ navigator.clipboard.writeText(`Domanda: ${domanda}\n\n${resultEl.textContent}`).then(()=> alert("Copiato!")); }
-function shareOut(){ const data={title:"What?f",text:`Domanda: ${domanda}\n\n${resultEl.textContent}`,url: location.href}; if (navigator.share) navigator.share(data).catch(()=>{}); else copyText(); }
+  alert(T.saved);
+});
+$('copyBtn').addEventListener('click', ()=>{
+  navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${resultEl.textContent}`).then(()=> alert(T.copied));
+});
+$('shareBtn').addEventListener('click', ()=>{
+  const data={title:"What?f",text:`${T.qLabel}: ${domanda}\n\n${resultEl.textContent}`,url: location.href};
+  if (navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${resultEl.textContent}`);
+});
 function escapeHTML(s){return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function escapeAttr(s){return String(s||"").replace(/"/g,'&quot;')}
 
-/* ====== Dev helpers (long-press reset, triplo click Pro) ====== */
+/* ====== Dev hooks (long-press reset, triple-click Pro) ====== */
 (function devHooks(){
-  const badge = document.getElementById('freeBadge');
+  const badge = $('freeBadge');
   if (!badge) return;
+  badge.title = T.badgeFreeTitle;
 
-  // Long-press 2s = reset crediti odierni
   let pressT=null;
   badge.addEventListener('pointerdown', ()=> { pressT = setTimeout(resetToday, 2000); });
   badge.addEventListener('pointerup',   ()=> { clearTimeout(pressT); });
@@ -317,28 +383,26 @@ function escapeAttr(s){return String(s||"").replace(/"/g,'&quot;')}
     const c=readJSON('whatif_credits');
     c.date=today; c.used=0;
     LS.setItem('whatif_credits', JSON.stringify(c));
-    renderFreeBadge();
-    alert('Crediti di oggi azzerati ✅');
+    renderBadges();
+    alert(lang==='en'?'Today credits reset ✅':'Crediti di oggi azzerati ✅');
   }
 
-  // Triplo click = toggle Pro (per futuri test, non influisce ora)
   let clicks=0, timer=null;
   badge.addEventListener('click', ()=>{
     clicks++; clearTimeout(timer);
     timer=setTimeout(()=>{ if (clicks>=3) togglePro(); clicks=0; }, 250);
   });
-
   function togglePro(){
     const c=readJSON('whatif_credits');
     c.pro = !c.pro; c.used = 0;
     LS.setItem('whatif_credits', JSON.stringify(c));
-    renderFreeBadge();
-    alert('Pro '+(c.pro?'attivato':'disattivato')+' (solo locale) ✅');
+    renderBadges();
+    alert('Pro '+(c.pro?'on':'off')+' (local) ✅');
   }
 })();
 
-/* ====== Avvio ====== */
-ensureCredits(); ensureClarify(); renderFreeBadge(); renderClarifyBadge();
+/* ====== Start ====== */
+ensureCredits(); ensureClarify(); renderBadges();
 </script>
 </body>
 </html>
