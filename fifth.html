@@ -4,78 +4,139 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>What?f – Result</title>
-<meta name="theme-color" content="#0B1218" />
+<meta name="theme-color" content="#05080C" />
 <style>
+  /* ==== THEMES & TOKENS ==== */
   :root{
-    --bg:#0B1218; --card:#101820; --muted:#9EB2BC;
-    --fg:#E8F2F6; --acc:#31E1FF; --acc2:#00B5CC; --chip:#0f1820; --ink:#001f26;
-    --line:#1b2a34; --shadow:rgba(0,0,0,.28)
+    --bg1:#05080C; --bg2:#0E1821;             /* fondo orbitale base */
+    --card-bg:rgba(16,26,34,.56);             /* vetro */
+    --card-line:rgba(85,140,168,.25);
+    --text:#EAF3F7; --muted:#92A9B5;
+    --chip:#0E1A23; --ink:#001a1f;
+    --acc:#39E4FF; --acc2:#0FC2E1;            /* What if (realistico) */
+    --glow:rgba(57,228,255,.35);
+    --shadow:0 14px 36px rgba(0,0,0,.35);
   }
+  /* WTF theme (neon) togglata da [data-theme="wtf"] sul <body> */
+  body[data-theme="wtf"]{
+    --acc:#FF63E3; --acc2:#8A5BFF;
+    --glow:rgba(255,99,227,.35);
+    --card-line:rgba(178,120,255,.28);
+    --chip:#16122A; --ink:#170021;
+  }
+
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  html,body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg1);}
+
+  /* ==== ORBITAL BACKGROUND ==== */
+  body::before, body::after{
+    content:""; position:fixed; inset:0; z-index:-2;
+    background:
+      radial-gradient(1200px 800px at 10% -10%, rgba(63,146,255,.15), transparent 60%),
+      radial-gradient(1000px 700px at 90% 110%, rgba(57,228,255,.12), transparent 60%),
+      linear-gradient(180deg,var(--bg1),var(--bg2));
+  }
+  /* lieve movimento */
+  @keyframes drift { 0%{transform:translateY(0)} 50%{transform:translateY(7px)} 100%{transform:translateY(0)} }
+  body::before{animation:drift 16s ease-in-out infinite}
+
   main{max-width:980px;margin:auto;padding:18px}
   .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 
-  .btn{appearance:none;border:none;background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;transition:transform .06s ease,opacity .2s}
+  /* ==== CARDS (glass) ==== */
+  .card{
+    background:var(--card-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border:1px solid var(--card-line);
+    border-radius:18px; padding:18px; margin:14px 0; box-shadow:var(--shadow);
+  }
+
+  /* ==== TYPO ==== */
+  h1{font-size:clamp(22px,5vw,30px);margin:14px 0 2px}
+  p.sub{color:var(--muted);margin:0 0 8px}
+  .label{color:var(--acc);font-weight:800;margin:0 0 8px;letter-spacing:.2px}
+  .box{background:rgba(11,18,24,.75);border:1px solid rgba(24,36,44,.85);border-radius:12px;padding:12px;white-space:pre-wrap;line-height:1.6}
+
+  /* ==== BUTTONS & CHIPS ==== */
+  .btn{appearance:none;border:none;background:var(--chip);color:var(--text);
+    padding:10px 14px;border-radius:12px;cursor:pointer;
+    transition:transform .06s ease, opacity .2s, box-shadow .2s}
   .btn:active{transform:translateY(1px)}
-  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800;box-shadow:0 6px 18px var(--shadow)}
-  .btn.ghost{background:transparent;border:1px solid var(--line)}
+  .btn.primary{
+    background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink); font-weight:800;
+    box-shadow:0 0 0 1px var(--glow) inset, 0 10px 28px var(--glow)
+  }
+  .btn.ghost{background:transparent;border:1px solid rgba(27,42,52,.8)}
   .btn.large{padding:14px 18px;font-size:16px}
   .btn.icon{padding:8px 10px;border-radius:10px}
 
-  h1{font-size:clamp(22px,5vw,30px);margin:14px 0 2px}
-  p.sub{color:var(--muted);margin:0 0 8px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
-  .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-  .box{background:#0b1218;border:1px solid #18242c;border-radius:12px;padding:12px;white-space:pre-wrap;line-height:1.6}
-
-  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{background:#0f1820;border:1px solid var(--line);color:#cfe3e7;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
-  .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-  .badge{background:#0f1820;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#cfe3e7;user-select:none}
+  .chip{background:var(--chip);border:1px solid rgba(27,42,52,.75);color:#cfe3e7;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
+  .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;box-shadow:0 0 0 1px var(--glow) inset}
+
+  .badge{background:var(--chip);border:1px solid rgba(27,42,52,.75);border-radius:999px;padding:6px 10px;font-size:12px;color:#cfe3e7;user-select:none}
   .badge.accent{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border:none;font-weight:800}
 
-  /* CTA area */
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+  /* ==== CTA ZONE ==== */
   .cta-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .cta-row .btn.primary{flex:1}
   .menu{position:relative}
   .menu-btn{min-width:44px}
-  .menu-sheet{position:absolute;right:0;top:42px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px;display:none;min-width:200px;box-shadow:0 12px 28px var(--shadow);z-index:50}
+  .menu-sheet{position:absolute;right:0;top:42px;background:var(--card-bg);border:1px solid var(--card-line);border-radius:12px;padding:6px;display:none;min-width:200px;box-shadow:0 12px 28px rgba(0,0,0,.35);z-index:50}
   .menu-sheet button{display:block;width:100%;text-align:left;background:transparent;border:none;color:#E6F2F5;padding:10px;border-radius:10px;cursor:pointer}
-  .menu-sheet button:hover{background:#15222c}
+  .menu-sheet button:hover{background:rgba(21,34,44,.65)}
 
-  /* mini indicator */
+  /* ==== MINI KNOWLEDGE BAR + TOOLTIP ==== */
   .know-mini{display:flex;align-items:center;gap:8px}
-  .meter{position:relative;height:10px;background:#0f1820;border:1px solid var(--line);border-radius:999px;overflow:hidden;width:120px}
+  .meter{position:relative;height:10px;background:#0f1820;border:1px solid rgba(27,42,52,.85);border-radius:999px;overflow:hidden;width:120px}
   .meter-fill{height:100%;width:0;background:linear-gradient(180deg,var(--acc),var(--acc2))}
   .know-score{font-weight:800;color:var(--acc);font-size:12px}
   .tooltip{position:relative;cursor:help}
   .tooltip:hover .tip{opacity:1;transform:translateY(0)}
-  .tip{pointer-events:none;position:absolute;right:0;top:125%;background:#0f1820;border:1px solid var(--line);color:#cfe6eb;border-radius:10px;padding:8px 10px;font-size:12px;width:260px;opacity:0;transform:translateY(-4px);transition:.15s;box-shadow:0 12px 28px var(--shadow)}
+  .tip{pointer-events:none;position:absolute;right:0;top:125%;background:rgba(13,22,29,.95);border:1px solid var(--card-line);color:#cfe6eb;border-radius:10px;padding:8px 10px;font-size:12px;width:260px;opacity:0;transform:translateY(-4px);transition:.15s;box-shadow:0 12px 28px rgba(0,0,0,.35)}
 
-  /* Signals collapsible */
+  /* ==== “Segnali usati” collapsible ==== */
   .signals{margin-top:8px}
   .disclosure{display:flex;align-items:center;gap:8px;color:#cfe3e7;font-size:12px;cursor:pointer}
   .caret{transition:transform .15s ease}
   .signals-body{display:none;color:#cfe3e7;opacity:.9;font-size:12px;margin-top:6px}
 
+  /* ==== LOADER ==== */
   #result{min-height:190px}
   .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,#0d151c 0%,#122029 50%,#0d151c 100%);background-size:200% 100%;animation:sk 1s infinite}
   @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
 
-  /* overlay clarify */
+  /* ==== OVERLAY CHIARIMENTI ==== */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:6000;padding:14px}
-  .sheet{width:min(92vw,720px);max-height:80vh;overflow:auto;background:var(--card);border-radius:16px;padding:14px;border:1px solid var(--line)}
+  .sheet{width:min(92vw,720px);max-height:80vh;overflow:auto;background:var(--card-bg);border:1px solid var(--card-line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
   .qitem{margin:10px 0}
   .qitem label{display:block;margin:6px 0}
-  .qitem input{width:100%;background:#0f1820;color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .qitem input{width:100%;background:#0f1820;color:var(--text);border:1px solid rgba(27,42,52,.85);border-radius:10px;padding:10px}
+
+  /* ==== AI AVATAR (pulsing) ==== */
+  .ai-pulse{
+    width:28px;height:28px;border-radius:999px;background:radial-gradient(circle at 35% 35%, #fff, #eee 30%, transparent 31%), radial-gradient(circle at 50% 50%, var(--acc), var(--acc2));
+    box-shadow:0 0 18px var(--glow), 0 0 4px var(--glow) inset;
+    animation:breath 2.6s ease-in-out infinite;
+  }
+  @keyframes breath{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
+
+  /* ==== PROGRESS BAR (thin) ==== */
+  .pbar{position:fixed;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--acc),var(--acc2));transform:scaleX(0);transform-origin:left;transition:transform .35s ease;z-index:999}
+  .pbar.show{transform:scaleX(1)}
 </style>
 </head>
 <body>
+  <!-- top progress -->
+  <div id="pbar" class="pbar"></div>
+
   <main>
     <div class="topbar">
       <div class="row">
+        <div class="ai-pulse" title="What?f AI"></div>
         <button class="btn ghost" id="backBtnTop">←</button>
         <button class="btn ghost" id="homeBtnTop">🏠</button>
       </div>
@@ -127,8 +188,8 @@
         <button class="btn large" id="genBtn">Generate now</button>
 
         <div class="menu">
-          <button class="btn icon" id="menuBtn">⋯</button>
-          <div class="menu-sheet" id="menuSheet" role="menu" aria-label="More">
+          <button class="btn icon menu-btn" id="menuBtn" aria-haspopup="true" aria-expanded="false" aria-label="More">⋯</button>
+          <div class="menu-sheet" id="menuSheet" role="menu" aria-label="More actions">
             <button id="regenBtn" style="display:none">🔁 Regenerate</button>
             <button id="saveBtn">💾 Save</button>
             <button id="copyBtn">📋 Copy</button>
@@ -211,18 +272,18 @@ const lang=(LS.getItem('lang')||'it').toLowerCase();
 const T=I18N[lang]||I18N.it;
 document.documentElement.lang=lang;
 
-/* ====== Config ====== */
+/* ====== CONFIG ====== */
 const DAILY_FREE=3;
 const DAILY_CLARIFY=5;
 
-/* ====== Helpers ====== */
+/* ====== HELPERS ====== */
 const $=id=>document.getElementById(id);
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function readJSON(k,def={}){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
 function writeJSON(k,v){LS.setItem(k,JSON.stringify(v));}
 function escapeHTML(s){return (s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
-/* ====== Credits ====== */
+/* ====== CREDITS ====== */
 function readCredits(){const v=readJSON('whatif_credits');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0,pro:!!v.pro};return v;}
 function writeCredits(v){writeJSON('whatif_credits',v);renderBadges();}
 function ensureCredits(){const c=readCredits();if(!c.date||c.date!==todayStr()){c.date=todayStr();c.used=0;writeCredits(c);}}
@@ -262,11 +323,18 @@ $('clarifyBtn').textContent=T.clarifyBtn; $('genBtn').textContent=T.genBtn;
 $('knowLabelMini').textContent=T.know; $('knowTip').textContent=T.knowHint;
 $('signalsLabel').textContent=T.signalsLabel;
 
-/* ====== Stato ====== */
+/* ====== STATO ====== */
 const prefs = readJSON('whatif_prefs');
 let domanda = LS.getItem('domanda')||'';
 if(!domanda){ alert(lang==='en'?'No question found.':'Nessuna domanda trovata.'); location.href='fourth.html'; }
 let currentStyle=(prefs.stile||'whatif');
+
+/* applica tema visivo */
+function applyTheme(style){
+  document.body.setAttribute('data-theme', style==='wtf' ? 'wtf' : 'whatif');
+}
+applyTheme(currentStyle);
+
 $('question').textContent=domanda;
 $('badgePeriodo').textContent="🕰️ "+(prefs.periodo==='past'?T.periodoPast:T.periodoFuture);
 $('badgeStile').textContent="🎭 "+(currentStyle==='wtf'?'What the F':'What if');
@@ -276,9 +344,10 @@ $('styleChips').addEventListener('click',e=>{
   currentStyle=b.dataset.style;
   $('badgeStile').textContent="🎭 "+(currentStyle==='wtf'?'What the F':'What if');
   document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
+  applyTheme(currentStyle);
 });
 
-/* ====== Badges ====== */
+/* ====== BADGES ====== */
 function renderBadges(){
   const gc=readCredits(); const gl=Math.max(0,DAILY_FREE-(gc.used||0));
   $('freeBadge').textContent=T.badgeFree(gl,DAILY_FREE);
@@ -286,7 +355,7 @@ function renderBadges(){
   $('clarifyBadge').textContent=T.badgeClarify(cl,DAILY_CLARIFY);
 }
 
-/* ====== Mini personalizzazione ====== */
+/* ====== MINI PERSONALIZZAZIONE ====== */
 function daysBetween(iso1,iso2){ if(!iso1||!iso2) return 999; const a=new Date(iso1),b=new Date(iso2); return Math.round((b-a)/(1000*60*60*24)); }
 function last(arr){ return Array.isArray(arr)&&arr.length?arr[arr.length-1]:null; }
 function computeKnowledge(){
@@ -343,6 +412,7 @@ const menuBtn=$('menuBtn'), menuSheet=$('menuSheet');
 menuBtn.addEventListener('click', ()=>{
   const open = menuSheet.style.display==='block';
   menuSheet.style.display = open ? 'none' : 'block';
+  menuBtn.setAttribute('aria-expanded', String(!open));
 });
 document.addEventListener('click', (e)=>{
   if(!menuSheet.contains(e.target) && e.target!==menuBtn) menuSheet.style.display='none';
@@ -394,16 +464,36 @@ $('applyClarify').addEventListener('click', async ()=>{
   const inputs=clarifyList.querySelectorAll('input');
   const clar={}; inputs.forEach(i=>{ const v=(i.value||"").trim(); if(i.id&&v) clar[i.id]=v; });
   clarifyOverlay.style.display='none';
-  // popola segnali e apri disclosure
   $('signalsBody').textContent = summarizeSignals(clar);
   if ($('signalsBody').textContent){ $('signalsBody').style.display='block'; $('caret').style.transform='rotate(90deg)'; }
   await generate(false,clar);
 });
 
+/* ====== WebAudio chime (no file esterni) ====== */
+function playChime(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
+    const g = ctx.createGain();
+    o1.type='sine'; o2.type='sine';
+    const now=ctx.currentTime;
+    o1.frequency.setValueAtTime(880, now);   // A5
+    o2.frequency.setValueAtTime(1320, now);  // E6 (quinta)
+    g.gain.setValueAtTime(0.001, now);
+    g.gain.exponentialRampToValueAtTime(0.08, now+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, now+0.45);
+    o1.connect(g); o2.connect(g); g.connect(ctx.destination);
+    o1.start(now); o2.start(now);
+    o1.stop(now+0.5); o2.stop(now+0.5);
+  }catch(_){}
+}
+
 /* ====== Generate ====== */
+const pbar=$('pbar');
+function showPbar(on){ pbar.classList.toggle('show', !!on); }
+
 $('genBtn').textContent=T.genBtn;
 $('regenBtn').textContent='🔁 '+T.regenBtn;
-
 $('genBtn').addEventListener('click', ()=> generate());
 $('regenBtn').addEventListener('click', ()=> generate(true));
 
@@ -412,10 +502,9 @@ async function generate(isRegen=false, clarOverride=null){
   const credits=readCredits();
   if(!isRegen && (credits.used||0)>=DAILY_FREE){ alert(T.limitGen); return; }
 
+  showPbar(true);
   $('result').textContent=`⏳ ${T.loading} `; const sk=document.createElement('span'); sk.className='skeleton'; sk.style.width='40%'; $('result').appendChild(sk);
   $('regenBtn').style.display='none';
-
-  // se segnali vuoti, metti riassunto base
   if(!$('signalsBody').textContent){ $('signalsBody').textContent = summarizeSignals(clarOverride||{}); }
 
   try{
@@ -429,16 +518,21 @@ async function generate(isRegen=false, clarOverride=null){
         if(!chunk.startsWith("data: ")) continue;
         const data=JSON.parse(chunk.slice(6));
         if(data.token){ text+=data.token; $('result').textContent=text; }
-        if(data.done){ $('result').textContent=(text||"").trim(); }
-        if(data.error){ $('result').textContent=T.errServer+" "+(data.detail||""); }
+        if(data.done){
+          $('result').textContent=(text||"").trim();
+          $('regenBtn').style.display='block';
+          renderKnowledgeMini();
+          playChime(); // << suono all’arrivo
+          showPbar(false);
+        }
+        if(data.error){ $('result').textContent=T.errServer+" "+(data.detail||""); showPbar(false); }
       }
     }
     const c=readCredits(); c.used=(c.used||0)+1; writeCredits(c);
-    $('regenBtn').style.display='block';
-    renderKnowledgeMini();
   }catch(e){
     console.error(e);
     $('result').textContent=(e.message==='server'?T.errServer:T.errNet);
+    showPbar(false);
   }
 }
 
@@ -465,6 +559,9 @@ $('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
 (function devHooks(){
   const bFree=$('freeBadge'), bClar=$('clarifyBadge');
   if(!bFree||!bClar) return;
+
+  // tooltips
+  $('freeBadge').title=T.badgeFreeTitle; $('clarifyBadge').title=T.badgeClarifyTitle;
 
   // FREE long-press + triple click Pro
   let pressT=null;
@@ -504,7 +601,6 @@ function initSignalsBase(){
   if(s){ $('signalsBody').textContent=s; } // non apriamo di default
 }
 function initText(){
-  $('freeBadge').title=T.badgeFreeTitle; $('clarifyBadge').title=T.badgeClarifyTitle;
   $('clarifyBtn').textContent=T.clarifyBtn; $('genBtn').textContent=T.genBtn;
   $('menuBtn').setAttribute('aria-label','More');
 }
