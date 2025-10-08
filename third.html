@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – 5 domande</title>
+  <title>What?f – Domande</title>
   <meta name="theme-color" content="#0A0F14" />
   <style>
     :root{
@@ -12,6 +12,9 @@
     }
     *{box-sizing:border-box}
     html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .topbar{position:fixed;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;z-index:10}
+    .btn{appearance:none;border:1px solid #1d2b34;background:#0f1820;color:#E6F2F5;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
+    .btn.primary{border:none;background:linear-gradient(180deg,var(--acc),var(--acc2));color:#002329}
     main{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
     .wrap{width:min(92vw,780px)}
     h1{font-size:clamp(22px,5.5vw,32px);margin:6px 0}
@@ -32,26 +35,22 @@
     .progress{height:8px;background:#0f1820;border:1px solid #1c2a33;border-radius:999px;overflow:hidden;margin:10px 0 14px}
     .bar{height:100%;width:0%;background:linear-gradient(90deg,var(--acc),var(--acc2))}
     .row{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:12px}
-    .btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer}
-    .btn.ghost{background:#0f1820;color:#cfe3e7;border:1px solid #1d2b34}
-    .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink)}
-    .btn[disabled]{opacity:.5;cursor:not-allowed}
     .count{color:var(--muted);font-size:13px}
-    .topbar{position:fixed;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;z-index:10}
-    .topbar .btn{padding:8px 12px}
   </style>
 </head>
 <body>
-  <!-- Topbar: Indietro + Home -->
   <div class="topbar">
-    <button class="btn ghost" onclick="history.back()">← <span id="tb_back">Indietro</span></button>
-    <button class="btn ghost" onclick="location.href='index.html'">🏠 <span id="tb_home">Home</span></button>
+    <button class="btn" onclick="history.back()">← <span id="tb_back">Indietro</span></button>
+    <div style="display:flex;gap:8px">
+      <button class="btn primary" id="skipBtn">⏭️ <span id="tb_skip">Salta</span></button>
+      <button class="btn" onclick="location.href='index.html'">🏠 <span id="tb_home">Home</span></button>
+    </div>
   </div>
 
   <main>
     <div class="wrap">
       <h1 id="title">Conosciamoci in 30s</h1>
-      <p class="lead" id="lead">5 domande rapide per cucire gli scenari su di te.</p>
+      <p class="lead" id="lead">Rispondi a poche domande: gli scenari saranno più tuoi.</p>
 
       <div class="progress"><div class="bar" id="bar"></div></div>
 
@@ -60,7 +59,7 @@
         <div class="chips" id="chips"></div>
 
         <div class="row">
-          <button class="btn ghost" id="backBtn">← <span id="back">Indietro</span></button>
+          <button class="btn" id="backBtn">← <span id="back">Indietro</span></button>
           <span class="count" id="count">1 / 5</span>
           <button class="btn primary" id="nextBtn" disabled><span id="next">Avanti</span> →</button>
         </div>
@@ -69,41 +68,75 @@
   </main>
 
 <script>
-  // i18n
+  // ===== i18n
   const L=(localStorage.getItem('lang')||'it').toLowerCase();
   const I = {
-    it:{tb_back:'Indietro',tb_home:'Home',title:'Conosciamoci in 30s',lead:'5 domande rapide per cucire gli scenari su di te.',back:'Indietro',next:'Avanti',
+    it:{tb_back:'Indietro',tb_home:'Home',tb_skip:'Salta',title:'Conosciamoci in 30s',lead:'Rispondi a poche domande: gli scenari saranno più tuoi.',back:'Indietro',next:'Avanti',
       q1:'Quando prendi decisioni, come ti muovi di solito?',q1a:'Ragiono molto prima di agire',q1b:'Seguo l’istinto',q1c:'Mi adatto al momento',q1d:'Cerco un equilibrio',
       q2:'Cosa ti motiva di più nelle scelte importanti?',q2a:'Stabilità e sicurezza',q2b:'Crescita e scoperta',q2c:'Libertà personale',q2d:'Essere apprezzato',
       q3:'Il cambiamento, per te, è…',q3a:'Un po’ spaventoso',q3b:'Stimolante',q3c:'Da valutare con calma',q3d:'Qualcosa che cerco',
       q4:'Quale valore senti più tuo?',q4a:'Famiglia e legami',q4b:'Autenticità',q4c:'Successo personale',q4d:'Creatività',
-      q5:'Come ti guardi quando pensi a te stesso?',q5a:'Mi prendo sul serio',q5b:'Con un po’ di ironia',q5c:'Mi interrogo spesso',q5d:'Cerco di non pensarci troppo'},
-    en:{tb_back:'Back',tb_home:'Home',title:'30s to know you',lead:'5 quick questions to tailor scenarios to you.',back:'Back',next:'Next',
+      q5:'Come ti guardi quando pensi a te stesso?',q5a:'Mi prendo sul serio',q5b:'Con un po’ di ironia',q5c:'Mi interrogo spesso',q5d:'Cerco di non pensarci troppo',
+      // micro Q pool
+      m1:'Qual è un bar/locale dove ti vedono spesso?',
+      m2:'Una persona che senti “di casa” (nome fittizio + ruolo)?',
+      m3:'Un tragitto che fai spesso (es. casa→lavoro)?',
+      m4:'Una canzone che ti segue da anni?',
+      m5:'Un luogo che eviti o non sopporti?',
+      m6:'Un desiderio concreto per i prossimi 12 mesi?',
+      m7:'Un odore che ti riporta subito indietro?',
+      m8:'Una spesa ricorrente che non molli?'
+    },
+    en:{tb_back:'Back',tb_home:'Home',tb_skip:'Skip',title:'30s to know you',lead:'Answer a few and your scenarios become more “you”.',back:'Back',next:'Next',
       q1:'When deciding, how do you usually move?',q1a:'I think a lot before acting',q1b:'I follow my gut',q1c:'I adapt on the fly',q1d:'I look for balance',
       q2:'What motivates your big choices most?',q2a:'Stability and security',q2b:'Growth and discovery',q2c:'Personal freedom',q2d:'Being appreciated',
       q3:'Change, for you, is…',q3a:'A bit scary',q3b:'Stimulating',q3c:'Something to assess calmly',q3d:'Something I actively seek',
       q4:'Which value feels most yours?',q4a:'Family & bonds',q4b:'Authenticity',q4c:'Personal success',q4d:'Creativity',
-      q5:'How do you look at yourself?',q5a:'I take myself seriously',q5b:'With some irony',q5c:'I question myself often',q5d:'I try not to overthink'}
+      q5:'How do you look at yourself?',q5a:'I take myself seriously',q5b:'With some irony',q5c:'I question myself often',q5d:'I try not to overthink',
+      m1:'A bar/place that knows you well?',
+      m2:'A person who feels “home” (alias + role)?',
+      m3:'A route you take often (e.g., home→work)?',
+      m4:'A song that follows you for years?',
+      m5:'A place you avoid or can’t stand?',
+      m6:'One concrete wish for the next 12 months?',
+      m7:'A smell that brings you back instantly?',
+      m8:'A recurring expense you won’t cut?'
+    }
   }[L];
   document.getElementById('tb_back').textContent=I.tb_back;
   document.getElementById('tb_home').textContent=I.tb_home;
-  document.title = L==='en' ? 'What?f – 5 questions' : 'What?f – 5 domande';
+  document.getElementById('tb_skip').textContent=I.tb_skip;
   document.getElementById('title').textContent = I.title;
   document.getElementById('lead').textContent  = I.lead;
   document.getElementById('back').textContent  = I.back;
   document.getElementById('next').textContent  = I.next;
 
-  // domande
-  const QUESTIONS=[
-    {k:'approach', t:I.q1, opts:[{v:'reason',label:I.q1a},{v:'instinct',label:I.q1b},{v:'adapt',label:I.q1c},{v:'balance',label:I.q1d}]},
-    {k:'motivation', t:I.q2, opts:[{v:'stability',label:I.q2a},{v:'growth',label:I.q2b},{v:'freedom',label:I.q2c},{v:'recognition',label:I.q2d}]},
-    {k:'change', t:I.q3, opts:[{v:'fear',label:I.q3a},{v:'stim',label:I.q3b},{v:'calm',label:I.q3c},{v:'seek',label:I.q3d}]},
-    {k:'value', t:I.q4, opts:[{v:'family',label:I.q4a},{v:'auth',label:I.q4b},{v:'success',label:I.q4c},{v:'creativity',label:I.q4d}]},
-    {k:'selfview', t:I.q5, opts:[{v:'serious',label:I.q5a},{v:'irony',label:I.q5b},{v:'reflect',label:I.q5c},{v:'light',label:I.q5d}]},
-  ];
+  const LS=localStorage;
+  const $=s=>document.querySelector(s);
+  const questionEl=$('#question'), chipsEl=$('#chips'), nextBtn=$('#nextBtn'), backBtn=$('#backBtn'), countEl=$('#count'), barEl=$('#bar');
 
-  // pesi archetipi
-  const WEIGHTS={
+  // ==== modalità: prima volta (5 core) oppure rotante (3 micro) ====
+  const FIRST_DONE = LS.getItem('whatif_quiz5_done')==='1';
+
+  // core (5 domande a scelta multipla)
+  const CORE = [
+    { k:'approach', t:I.q1, opts:[
+      {v:'reason',  label:I.q1a},{v:'instinct',label:I.q1b},{v:'adapt',label:I.q1c},{v:'balance',label:I.q1d}
+    ]},
+    { k:'motivation', t:I.q2, opts:[
+      {v:'stability', label:I.q2a},{v:'growth',label:I.q2b},{v:'freedom',label:I.q2c},{v:'recognition',label:I.q2d}
+    ]},
+    { k:'change', t:I.q3, opts:[
+      {v:'fear',label:I.q3a},{v:'stim',label:I.q3b},{v:'calm',label:I.q3c},{v:'seek',label:I.q3d}
+    ]},
+    { k:'value', t:I.q4, opts:[
+      {v:'family',label:I.q4a},{v:'auth',label:I.q4b},{v:'success',label:I.q4c},{v:'creativity',label:I.q4d}
+    ]},
+    { k:'selfview', t:I.q5, opts:[
+      {v:'serious',label:I.q5a},{v:'irony',label:I.q5b},{v:'reflect',label:I.q5c},{v:'light',label:I.q5d}
+    ]}
+  ];
+  const WEIGHTS={ // archetipi
     approach:{reason:{R:2,C:1},instinct:{V:2},adapt:{M:2},balance:{C:2,M:1}},
     motivation:{stability:{C:2,M:1},growth:{R:1,V:2},freedom:{V:2},recognition:{M:2}},
     change:{fear:{C:1,M:1},stim:{V:2,R:1},calm:{R:1,C:1},seek:{V:2}},
@@ -111,44 +144,128 @@
     selfview:{serious:{C:1,R:1},irony:{V:1,M:1},reflect:{R:2},light:{V:1}}
   };
 
-  const LS=localStorage; const saved=JSON.parse(LS.getItem('whatif_quiz5')||'{}');
-  let idx=0; const answers={...saved};
+  // micro pool (rotante) — 3 per sessione/giorno
+  const MICRO_POOL = [
+    {k:'fav_bar', t:I.m1, type:'text', ph:(L==='en'?'e.g., “Bar Centrale (spritz)”':'es. “Bar Centrale (spritz)”')},
+    {k:'home_person', t:I.m2, type:'text', ph:(L==='en'?'e.g., “Marco (childhood friend)”':'es. “Marco (amico di infanzia)”')},
+    {k:'route_often', t:I.m3, type:'text', ph:(L==='en'?'e.g., “home→Verona center (bus 11)”':'es. “casa→centro Verona (bus 11)”')},
+    {k:'song_long', t:I.m4, type:'text', ph:(L==='en'?'e.g., “De André –... ”':'es. “De André – ...”')},
+    {k:'avoid_place', t:I.m5, type:'text', ph:(L==='en'?'e.g., “shopping mall on weekends”':'es. “centro commerciale nel weekend”')},
+    {k:'wish12', t:I.m6, type:'text', ph:(L==='en'?'e.g., “open a small studio”':'es. “aprire uno studio”')},
+    {k:'smell_back', t:I.m7, type:'text', ph:(L==='en'?'e.g., “rain on old stones”':'es. “pioggia sulla pietra”')},
+    {k:'rec_spend', t:I.m8, type:'text', ph:(L==='en'?'e.g., “gym + coffee subscription”':'es. “palestra + abbonamento caffè”')}
+  ];
+  function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+  function pickDailySet(){
+    const key='whatif_micro_daily';
+    const cur = JSON.parse(LS.getItem(key)||'{}');
+    const t = todayStr();
+    if (cur.date === t && Array.isArray(cur.set) && cur.set.length===3) return cur.set;
+    // nuova estrazione casuale (senza ripetere le ultime usate se presenti)
+    const used = JSON.parse(LS.getItem('whatif_micro_used')||'[]'); // lista chiavi già chieste
+    const candidates = MICRO_POOL.filter(x=>!used.includes(x.k));
+    const pool = (candidates.length>=3 ? candidates : MICRO_POOL).slice(); // fallback se esaurito
+    // shuffle semplice
+    for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+    const set = pool.slice(0,3).map(x=>x.k);
+    LS.setItem(key, JSON.stringify({date:t,set}));
+    return set;
+  }
 
-  const $=s=>document.querySelector(s);
-  const questionEl=$('#question'), chipsEl=$('#chips'), nextBtn=$('#nextBtn'), backBtn=$('#backBtn'), countEl=$('#count'), barEl=$('#bar');
+  // ===== modalità attiva
+  const MODE = FIRST_DONE ? 'micro' : 'core';
+  const answers = JSON.parse(LS.getItem('whatif_quiz5')||'{}'); // per core
+  const microAns = JSON.parse(LS.getItem('whatif_micro')||'{}'); // per micro
+  let idx=0, ITEMS=[];
+
+  if (MODE==='core'){
+    ITEMS = CORE.map(q=>({mode:'core', ...q}));
+    countEl.textContent = `1 / ${ITEMS.length}`;
+  } else {
+    const setKeys = pickDailySet();
+    ITEMS = setKeys.map(k => ({mode:'micro', ...MICRO_POOL.find(m=>m.k===k)}));
+    countEl.textContent = `1 / ${ITEMS.length}`;
+  }
 
   function render(){
-    const q=QUESTIONS[idx];
-    questionEl.textContent=q.t;
-    chipsEl.innerHTML=q.opts.map(o=>`<button class="chip ${answers[q.k]===o.v?'selected':''}" data-v="${o.v}">${o.label}</button>`).join('');
-    chipsEl.querySelectorAll('.chip').forEach(b=>{
-      b.addEventListener('click',()=>{
-        chipsEl.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
-        b.classList.add('selected'); answers[q.k]=b.dataset.v; nextBtn.disabled=false;
+    const it = ITEMS[idx];
+    if (it.mode==='core'){
+      questionEl.textContent = it.t;
+      chipsEl.innerHTML = it.opts.map(o=>`<button class="chip ${answers[it.k]===o.v?'selected':''}" data-v="${o.v}">${o.label}</button>`).join('');
+      chipsEl.querySelectorAll('.chip').forEach(b=>{
+        b.addEventListener('click',()=>{
+          chipsEl.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+          b.classList.add('selected'); answers[it.k]=b.dataset.v; nextBtn.disabled=false;
+        });
       });
-    });
-    nextBtn.disabled=!answers[q.k];
-    countEl.textContent=`${idx+1} / ${QUESTIONS.length}`;
-    barEl.style.width = Math.max(6, Math.round((idx/QUESTIONS.length)*100))+'%';
-    LS.setItem('whatif_quiz5', JSON.stringify(answers));
+      nextBtn.disabled = !answers[it.k];
+    } else {
+      // micro domanda (input breve)
+      questionEl.textContent = it.t;
+      chipsEl.innerHTML = `<input id="microInput" type="text" style="width:100%;background:#0f1820;color:#E6F2F5;border:1px solid #1f2c36;border-radius:12px;padding:12px" placeholder="${it.ph||''}" />`;
+      const val = microAns[it.k]||'';
+      const inp = document.getElementById('microInput'); inp.value = val;
+      nextBtn.disabled = !val;
+      inp.addEventListener('input', ()=>{ nextBtn.disabled = !inp.value.trim(); });
+    }
+    // progress
+    const total = ITEMS.length;
+    countEl.textContent = `${idx+1} / ${total}`;
+    const pct = Math.round((idx/total)*100);
+    barEl.style.width = Math.max(6, pct)+'%';
   }
-  backBtn.addEventListener('click',()=>{ if(idx===0){history.back();} else {idx--;render();}});
-  nextBtn.addEventListener('click',()=>{ if(!answers[QUESTIONS[idx].k])return; if(idx<QUESTIONS.length-1){idx++;render();} else {finish();}});
   render();
 
+  backBtn.addEventListener('click',()=>{ if(idx===0){history.back();} else { idx--; render(); }});
+  nextBtn.addEventListener('click',()=>{
+    const it = ITEMS[idx];
+    if (it.mode==='core'){
+      if (!answers[it.k]) return;
+      LS.setItem('whatif_quiz5', JSON.stringify(answers));
+    } else {
+      const v = (document.getElementById('microInput').value || '').trim(); if(!v) return;
+      microAns[it.k] = v;
+      LS.setItem('whatif_micro', JSON.stringify(microAns));
+    }
+    if (idx < ITEMS.length-1){ idx++; render(); }
+    else { finish(); }
+  });
+
+  // Salta: vai diretto alla domanda se hai almeno un profilo base
+  document.getElementById('skipBtn').addEventListener('click', ()=>{
+    const base = JSON.parse(LS.getItem('whatif_profile')||'{}');
+    if (base.gender || base.age || base.phase) location.href='fourth.html';
+    else alert(L==='en'?'Fill basic profile once before skipping.':'Compila una volta il profilo base prima di saltare.');
+  });
+
   function finish(){
-    const scores={R:0,C:0,V:0,M:0};
-    Object.entries(answers).forEach(([k,v])=>{ const w=WEIGHTS[k]?.[v]||{}; Object.entries(w).forEach(([A,pts])=>scores[A]+=pts); });
-    const max=Math.max(1,...Object.values(scores)); const to100=x=>Math.round((x/max)*100);
-    const archetypes={Ricercatore:to100(scores.R),Costruttore:to100(scores.C),Visionario:to100(scores.V),Mediatore:to100(scores.M)};
-    const base=JSON.parse(LS.getItem('whatif_profile')||'{}');
-    const profileCompact=buildProfile(answers);
-    LS.setItem('whatif_archetypes', JSON.stringify(archetypes));
-    LS.setItem('whatif_profile', JSON.stringify({...base, ...profileCompact}));
-    LS.setItem('whatif_tone', JSON.stringify({introspective:answers.selfview==='reflect',playful:answers.selfview==='irony'}));
-    location.href='fourth.html';
+    if (MODE==='core'){
+      // archetipi
+      const scores={R:0,C:0,V:0,M:0};
+      Object.entries(answers).forEach(([k,v])=>{ const w=WEIGHTS[k]?.[v]||{}; Object.entries(w).forEach(([A,pts])=>scores[A]+=pts); });
+      const max=Math.max(1,...Object.values(scores)); const to100=x=>Math.round((x/max)*100);
+      const archetypes={Ricercatore:to100(scores.R),Costruttore:to100(scores.C),Visionario:to100(scores.V),Mediatore:to100(scores.M)};
+      const base=JSON.parse(LS.getItem('whatif_profile')||'{}');
+      const prof=deriveProfile(answers);
+      LS.setItem('whatif_archetypes', JSON.stringify(archetypes));
+      LS.setItem('whatif_profile', JSON.stringify({...base, ...prof}));
+      LS.setItem('whatif_tone', JSON.stringify({introspective:answers.selfview==='reflect',playful:answers.selfview==='irony'}));
+      LS.setItem('whatif_quiz5_done','1');
+      location.href='fourth.html';
+    } else {
+      // merge micro nel profilo + segna usati
+      const base=JSON.parse(LS.getItem('whatif_profile')||'{}');
+      const merged = {...base, anchors_extra: {...(base.anchors_extra||{}), ...microAns}};
+      LS.setItem('whatif_profile', JSON.stringify(merged));
+      // aggiorna used
+      const used = JSON.parse(LS.getItem('whatif_micro_used')||'[]');
+      const newUsed = Array.from(new Set([...used, ...ITEMS.map(x=>x.k)]));
+      LS.setItem('whatif_micro_used', JSON.stringify(newUsed));
+      location.href='fourth.html';
+    }
   }
-  function buildProfile(a){
+
+  function deriveProfile(a){
     const values=[]; if(a.value==='family')values.push(L==='en'?'family & bonds':'famiglia e legami');
     if(a.value==='auth')values.push(L==='en'?'authenticity':'autenticità');
     if(a.value==='success')values.push(L==='en'?'achievement':'successo personale');
