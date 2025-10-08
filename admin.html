@@ -24,6 +24,8 @@
   .kpi .n{font-size:22px;font-weight:900}
   .list{margin:8px 0 0;padding-left:18px}
   code.badge{background:#0f1820;border:1px solid #1b2a34;border-radius:8px;padding:2px 6px}
+  table{width:100%;border-collapse:collapse;margin-top:10px}
+  td,th{padding:8px;border-bottom:1px solid #1f2a33;text-align:left}
 </style>
 </head>
 <body>
@@ -59,11 +61,9 @@
     <!-- DASHBOARD LOCALE -->
     <div class="card">
       <h2>Dashboard locale</h2>
-      <p class="muted">Dati letti da <code class="badge">localStorage</code> del dispositivo (demo/offline). Per dati server reali servirà un endpoint.</p>
+      <p class="muted">Dati letti da <code class="badge">localStorage</code> (demo/offline).</p>
 
-      <div class="kpis" id="kpis">
-        <!-- riempito da JS -->
-      </div>
+      <div class="kpis" id="kpis"></div>
 
       <div class="row" style="margin-top:10px">
         <button id="refresh">Aggiorna</button>
@@ -76,12 +76,24 @@
       </div>
     </div>
 
-    <!-- CALCOLATORE COSTI -->
+    <!-- CALCOLATORE COSTI INLINE -->
     <div class="card">
-      <h2>Calcolatore costi</h2>
-      <iframe src="cost.html" width="100%" height="1100" style="border:none;border-radius:12px"></iframe>
+      <h2>Calcolatore costi IA</h2>
+      <p class="muted">Stima approssimativa dei costi mensili in base al numero di utenti e risposte generate.</p>
+      <div class="row">
+        <label>Utenti attivi</label><input type="number" id="users" value="100" min="0" />
+        <label>Risposte medie per utente/mese</label><input type="number" id="genUser" value="10" min="0" />
+        <label>Costo per risposta (USD)</label><input type="number" id="costResp" value="0.002" step="0.001" />
+      </div>
+      <button style="margin-top:10px" onclick="calcCost()">Calcola costo mensile</button>
+      <p id="result" style="font-size:18px;margin-top:10px;font-weight:700"></p>
+      <table id="summary" class="hidden">
+        <thead><tr><th>Voce</th><th>Valore stimato</th></tr></thead>
+        <tbody id="sumBody"></tbody>
+      </table>
     </div>
 
+    <!-- SICUREZZA -->
     <div class="card">
       <h3>Sicurezza</h3>
       <div class="row">
@@ -95,148 +107,92 @@
 </main>
 
 <script>
-  // ======= SECURITY (come versione precedente) =======
-  const LS_KEY = "admin_key_hash";
-  const LS_AUTH = "admin_authenticated";
-  const status = document.getElementById("status");
-  const authBox = document.getElementById("authBox");
-  const deniedBox = document.getElementById("deniedBox");
-  const panel = document.getElementById("panel");
-
-  function hashStr(s){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i);} return String(h>>>0); }
-  function showAuth(){ status.textContent="Inserisci password per accedere."; authBox.classList.remove("hidden"); deniedBox.classList.add("hidden"); panel.classList.add("hidden"); }
-  function showDenied(){ status.textContent="Accesso negato."; authBox.classList.add("hidden"); deniedBox.classList.remove("hidden"); panel.classList.add("hidden"); }
-  function showPanel(){ status.textContent="Accesso consentito ✅"; authBox.classList.add("hidden"); deniedBox.classList.add("hidden"); panel.classList.remove("hidden"); render(); }
+  // === LOGIN & SICUREZZA ===
+  const LS_KEY="admin_key_hash",LS_AUTH="admin_authenticated";
+  const status=document.getElementById("status"),authBox=document.getElementById("authBox"),deniedBox=document.getElementById("deniedBox"),panel=document.getElementById("panel");
+  function hashStr(s){let h=5381;for(let i=0;i<s.length;i++){h=((h<<5)+h)+s.charCodeAt(i);}return String(h>>>0);}
+  function showAuth(){status.textContent="Inserisci password per accedere.";authBox.classList.remove("hidden");deniedBox.classList.add("hidden");panel.classList.add("hidden");}
+  function showDenied(){status.textContent="Accesso negato.";authBox.classList.add("hidden");deniedBox.classList.remove("hidden");panel.classList.add("hidden");}
+  function showPanel(){status.textContent="Accesso consentito ✅";authBox.classList.add("hidden");deniedBox.classList.add("hidden");panel.classList.remove("hidden");render();}
 
   (function init(){
-    const savedHash = localStorage.getItem(LS_KEY);
-    const authed = sessionStorage.getItem(LS_AUTH)==="1";
-    if(!savedHash){ status.textContent="Nessuna password impostata. Impostane una."; showAuth(); }
-    else if(authed){ showPanel(); } else { showAuth(); }
+    const saved=localStorage.getItem(LS_KEY),authed=sessionStorage.getItem(LS_AUTH)==="1";
+    if(!saved){status.textContent="Nessuna password impostata.";showAuth();}
+    else if(authed){showPanel();}else{showAuth();}
   })();
 
-  document.getElementById("loginBtn").onclick = ()=>{
-    const pwd = (document.getElementById("pwd").value||"").trim();
-    const savedHash = localStorage.getItem(LS_KEY);
-    if(!pwd) return alert("Inserisci la password.");
-    if(!savedHash) return alert("Nessuna password impostata.");
-    if(hashStr(pwd)===savedHash){ sessionStorage.setItem(LS_AUTH,"1"); showPanel(); } else { showDenied(); }
+  document.getElementById("loginBtn").onclick=()=>{
+    const pwd=document.getElementById("pwd").value.trim(),saved=localStorage.getItem(LS_KEY);
+    if(!pwd)return alert("Inserisci la password.");
+    if(!saved)return alert("Nessuna password impostata.");
+    if(hashStr(pwd)===saved){sessionStorage.setItem(LS_AUTH,"1");showPanel();}else showDenied();
   };
-  document.getElementById("setBtn").onclick = ()=>{
-    const pwd = (document.getElementById("pwd").value||"").trim();
-    if(!pwd) return alert("Inserisci una password.");
-    localStorage.setItem(LS_KEY, hashStr(pwd));
+  document.getElementById("setBtn").onclick=()=>{
+    const pwd=document.getElementById("pwd").value.trim();
+    if(!pwd)return alert("Inserisci una password.");
+    localStorage.setItem(LS_KEY,hashStr(pwd));
     alert("Password impostata. Ora premi Accedi.");
   };
-  document.getElementById("updatePwd").onclick = ()=>{
-    const pwd = (document.getElementById("newPwd").value||"").trim();
-    if(!pwd) return alert("Nuova password vuota.");
-    localStorage.setItem(LS_KEY, hashStr(pwd));
-    alert("Password aggiornata.");
-    document.getElementById("newPwd").value="";
+  document.getElementById("updatePwd").onclick=()=>{
+    const pwd=document.getElementById("newPwd").value.trim();
+    if(!pwd)return alert("Nuova password vuota.");
+    localStorage.setItem(LS_KEY,hashStr(pwd));
+    alert("Password aggiornata.");document.getElementById("newPwd").value="";
   };
-  document.getElementById("logout").onclick = ()=>{
+  document.getElementById("logout").onclick=()=>{
     sessionStorage.removeItem(LS_AUTH);
     localStorage.removeItem(LS_KEY);
     location.reload();
   };
 
-  // ======= DASHBOARD LOCALE =======
-  const $ = s=>document.querySelector(s);
-  const kpis = $("#kpis");
-  const last7 = $("#last7");
-
-  function todayStr(){
-    const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  }
-
-  function readCredits(){
-    const v = JSON.parse(localStorage.getItem('whatif_credits')||'{}');
-    const today = todayStr();
-    if (!v.date || v.date!==today) return {date:today, used:0, pro: !!v.pro};
-    return v;
-  }
-
-  function profileCompletion(){
-    const p = JSON.parse(localStorage.getItem('whatif_profile')||'{}');
-    const required = ['name','city','gender','age','phase'];
-    const filled = required.filter(k=>p[k] && String(p[k]).trim()).length;
-    return Math.round(100*filled/required.length);
-  }
-
-  function microCount(){
-    const m = JSON.parse(localStorage.getItem('whatif_micro')||'{}');
-    return Object.keys(m).length;
-  }
-
-  function historyCount(){
-    const arr = JSON.parse(localStorage.getItem('cronologia')||'[]');
-    return arr.length;
-  }
-
-  function readUsage(){
-    // usage_log: { 'YYYY-MM-DD': { base:n, pro:n } }
-    return JSON.parse(localStorage.getItem('usage_log')||'{}');
-  }
-
-  function streakDays(){
-    const u = readUsage();
-    const dates = Object.keys(u).sort().reverse();
-    if (!dates.length) return 0;
-    let streak = 0;
-    let cur = new Date();
-    for(;;){
-      const key = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
-      if (u[key]) { streak++; } else break;
-      cur.setDate(cur.getDate()-1);
-    }
-    return streak;
-  }
-
+  // === DASHBOARD LOCALE ===
+  const $=s=>document.querySelector(s);const kpis=$("#kpis"),last7=$("#last7");
+  function todayStr(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+  function readCredits(){const v=JSON.parse(localStorage.getItem('whatif_credits')||'{}');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0,pro:!!v.pro};return v;}
+  function profileCompletion(){const p=JSON.parse(localStorage.getItem('whatif_profile')||'{}');const req=['name','city','gender','age','phase'];const f=req.filter(k=>p[k]&&String(p[k]).trim()).length;return Math.round(100*f/req.length);}
+  function microCount(){const m=JSON.parse(localStorage.getItem('whatif_micro')||'{}');return Object.keys(m).length;}
+  function historyCount(){const arr=JSON.parse(localStorage.getItem('cronologia')||'[]');return arr.length;}
+  function readUsage(){return JSON.parse(localStorage.getItem('usage_log')||'{}');}
+  function streakDays(){const u=readUsage();const dates=Object.keys(u).sort().reverse();if(!dates.length)return 0;let s=0;let c=new Date();for(;;){const key=`${c.getFullYear()}-${String(c.getMonth()+1).padStart(2,'0')}-${String(c.getDate()).padStart(2,'0')}`;if(u[key]){s++;}else break;c.setDate(c.getDate()-1);}return s;}
   function render(){
-    const credits = readCredits();
-    const usage = readUsage();
-    const today = todayStr();
-    const todayBase = usage[today]?.base || 0;
-    const todayPro  = usage[today]?.pro  || 0;
-    const totalBase = Object.values(usage).reduce((s,v)=>s+(v.base||0),0);
-    const totalPro  = Object.values(usage).reduce((s,v)=>s+(v.pro||0),0);
-
-    const freeLimit = (window.DAILY_FREE || 3); // se definito nel tuo fifth.html
-    const freeLeft  = Math.max(0, freeLimit - credits.used);
-
-    kpis.innerHTML = `
-      <div class="kpi"><div class="n">${todayBase+todayPro}</div><div class="muted">Generazioni oggi</div></div>
+    const credits=readCredits(),usage=readUsage(),today=todayStr();
+    const tb=usage[today]?.base||0,tp=usage[today]?.pro||0;
+    const totalBase=Object.values(usage).reduce((s,v)=>s+(v.base||0),0),totalPro=Object.values(usage).reduce((s,v)=>s+(v.pro||0),0);
+    const freeLimit=(window.DAILY_FREE||3);const freeLeft=Math.max(0,freeLimit-credits.used);
+    kpis.innerHTML=`
+      <div class="kpi"><div class="n">${tb+tp}</div><div class="muted">Generazioni oggi</div></div>
       <div class="kpi"><div class="n">${totalBase+totalPro}</div><div class="muted">Generazioni totali</div></div>
-      <div class="kpi"><div class="n">${todayPro}</div><div class="muted">Azioni Pro oggi</div></div>
-      <div class="kpi"><div class="n">${credits.pro ? 'Attivo' : 'No'}</div><div class="muted">Stato Pro</div></div>
+      <div class="kpi"><div class="n">${tp}</div><div class="muted">Azioni Pro oggi</div></div>
+      <div class="kpi"><div class="n">${credits.pro?'Attivo':'No'}</div><div class="muted">Stato Pro</div></div>
       <div class="kpi"><div class="n">${freeLeft}</div><div class="muted">Free rimasti oggi</div></div>
       <div class="kpi"><div class="n">${profileCompletion()}%</div><div class="muted">Completezza profilo</div></div>
       <div class="kpi"><div class="n">${microCount()}</div><div class="muted">Micro-dati salvati</div></div>
-      <div class="kpi"><div class="n">${historyCount()}</div><div class="muted">Voci in cronologia</div></div>
-      <div class="kpi"><div class="n">${streakDays()}</div><div class="muted">Streak giorni attivi</div></div>
-    `;
-
-    // ultimi 7 giorni
-    const days = [];
-    for(let i=0;i<7;i++){
-      const d = new Date(); d.setDate(d.getDate()-i);
-      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      const base = usage[key]?.base||0, pro = usage[key]?.pro||0;
-      days.push({key,base,pro});
-    }
-    last7.innerHTML = days.map(d=>`<li>${d.key}: <strong>${d.base+d.pro}</strong> (base ${d.base}, pro ${d.pro})</li>`).join('');
+      <div class="kpi"><div class="n">${historyCount()}</div><div class="muted">Cronologia</div></div>
+      <div class="kpi"><div class="n">${streakDays()}</div><div class="muted">Streak giorni</div></div>`;
+    const days=[];for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;const b=usage[k]?.base||0,p=usage[k]?.pro||0;days.push({k,b,p});}
+    last7.innerHTML=days.map(d=>`<li>${d.k}: <strong>${d.b+d.p}</strong> (base ${d.b}, pro ${d.p})</li>`).join('');
   }
+  document.getElementById('refresh').onclick=render;
+  document.getElementById('resetUsage').onclick=()=>{if(confirm('Azzerare i contatori locali?')){localStorage.removeItem('usage_log');localStorage.removeItem('cronologia');const c=readCredits();c.used=0;localStorage.setItem('whatif_credits',JSON.stringify(c));render();}};
 
-  document.getElementById('refresh').onclick = render;
-  document.getElementById('resetUsage').onclick = ()=>{
-    if (confirm('Azzerare i contatori locali?')) {
-      localStorage.removeItem('usage_log');
-      localStorage.removeItem('cronologia');
-      const c = readCredits(); c.used = 0; localStorage.setItem('whatif_credits', JSON.stringify(c));
-      render();
-    }
-  };
+  // === CALCOLATORE COSTI ===
+  function calcCost(){
+    const users=+document.getElementById("users").value||0;
+    const genUser=+document.getElementById("genUser").value||0;
+    const costResp=+document.getElementById("costResp").value||0;
+    const totalGen=users*genUser;
+    const totalUSD=totalGen*costResp;
+    const sumBody=document.getElementById("sumBody");
+    const summary=document.getElementById("summary");
+    const result=document.getElementById("result");
+    result.textContent=`Costo stimato: ${totalUSD.toFixed(2)} USD/mese`;
+    sumBody.innerHTML=`
+      <tr><td>Utenti attivi</td><td>${users}</td></tr>
+      <tr><td>Risposte totali/mese</td><td>${totalGen}</td></tr>
+      <tr><td>Costo per risposta</td><td>${costResp} USD</td></tr>
+      <tr><td><strong>Costo totale stimato</strong></td><td><strong>${totalUSD.toFixed(2)} USD/mese</strong></td></tr>`;
+    summary.classList.remove("hidden");
+  }
 </script>
 </body>
 </html>
