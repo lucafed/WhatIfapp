@@ -8,101 +8,99 @@
 <style>
   :root{
     --bg:#0A0F14; --card:#141C22; --muted:#A0B2BA;
-    --fg:#E6F2F5; --acc:#00E0FF; --acc2:#00B5CC; --chip:#0f1820; --ink:#001F26;
+    --fg:#E6F2F5; --acc:#00E0FF; --acc2:#00B5CC; --chip:#0f1820; --ink:#001f26;
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:920px;margin:auto;padding:18px}
+  main{max-width:980px;margin:auto;padding:18px}
   .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-  .btn{appearance:none;border:none;background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
+  .btn{appearance:none;border:none;background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;transition:opacity .2s}
   .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800}
   .btn.ghost{background:transparent;border:1px solid #1d2b34}
+  .btn:hover{opacity:.9}
   h1{font-size:clamp(24px,5vw,32px);margin:16px 0 4px}
   p.sub{color:var(--muted);margin:0 0 12px}
   .card{background:var(--card);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px rgba(0,0,0,.25)}
   .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-  .box{background:#0b1218;border:1px solid #18242c;border-radius:12px;padding:12px;white-space:pre-wrap;line-height:1.6}
+  .box{background:#0b1218;border:1px solid #18242c;border-radius:12px;padding:12px;white-space:pre-wrap}
   .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{background:#0f1820;border:1px solid #1b2a34;color:#cfe3e7;border-radius:999px;padding:8px 12px;font-size:12px;cursor:pointer}
-  #result{min-height:160px}
+  .chip{background:#0f1820;border:1px solid #1b2a34;color:#cfe3e7;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
+  .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
+  #result{min-height:180px;line-height:1.6}
   .tools{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .divider{height:1px;background:#16222b;margin:16px 0}
   .hint{font-size:12px;color:var(--muted)}
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:6000;padding:10px}
-  .sheet{width:min(92vw,720px);max-height:80vh;overflow:auto;background:var(--card);border-radius:16px;padding:14px}
+  .meter{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .badge{background:#0f1820;border:1px solid #1b2a34;border-radius:999px;padding:6px 10px;font-size:12px;color:#cfe3e7}
+  .proOnly{display:none}
+  /* Overlay generico */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:6000;padding:14px}
+  .sheet{width:min(92vw,720px);max-height:80vh;overflow:auto;background:var(--card);border-radius:16px;padding:14px;border:1px solid #1d2b34}
   .hist-item{border:1px solid #1d2b34;border-radius:12px;padding:10px;margin:8px 0}
   .hist-item h4{margin:0 0 6px;color:var(--acc)}
   .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,#0d151c 0%,#122029 50%,#0d151c 100%);background-size:200% 100%;animation:sk 1s infinite}
   @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
-  .meter{display:flex;align-items:center;gap:10px;background:#0b1218;border:1px solid #18242c;padding:8px 12px;border-radius:12px}
-  .meterbar{width:160px;height:8px;background:#0f1820;border:1px solid #1c2a33;border-radius:999px;overflow:hidden}
-  .meterbar > div{height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2))}
-  .rate{display:flex;gap:8px;margin-top:10px}
-  .rate button{background:#0f1820;border:1px solid #1b2a34;color:#cfe3e7;border-radius:999px;padding:6px 10px;cursor:pointer}
-  .pin{cursor:pointer;float:right;color:#ffd24d}
-  .seg{display:flex;background:#0b1218;border:1px solid #18242c;border-radius:999px;overflow:hidden}
-  .seg button{border:none;padding:8px 12px;background:transparent;color:#cfe3e7;cursor:pointer}
-  .seg button.active{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#001F26;font-weight:800}
-  .proOnly{outline:1px dashed #20404a;border-radius:10px;padding:6px}
 </style>
 </head>
 <body>
   <main>
     <div class="topbar">
       <div class="row">
-        <button class="btn ghost" onclick="history.back()">← <span data-i18n="back">Indietro</span></button>
-        <button class="btn ghost" onclick="location.href='index.html'">🏠 <span data-i18n="home">Home</span></button>
-        <button class="btn ghost" id="privacyBtn">🔒 <span data-i18n="privacy">Privacy & dati</span></button>
+        <button class="btn ghost" onclick="history.back()">← Indietro</button>
+        <button class="btn ghost" onclick="location.href='index.html'">🏠 Home</button>
       </div>
-      <div class="meter" id="meter">
-        <span id="meterLabel">0/3</span>
-        <div class="meterbar"><div id="meterFill"></div></div>
-        <button class="btn primary" id="upgradeBtn">Pro</button>
+      <div class="meter">
+        <span id="freeBadge" class="badge">Free oggi: —</span>
+        <button class="btn" id="proBtn">⭐ Pro</button>
       </div>
     </div>
 
-    <h1 data-i18n="title">Il tuo scenario</h1>
-    <p class="sub" data-i18n="subtitle">Risposta generata in base alle scelte precedenti.</p>
+    <h1>Il tuo scenario</h1>
+    <p class="sub">Seleziona lo stile e genera la risposta quando vuoi.</p>
 
-    <div class="row" id="badges"></div>
+    <!-- STILE + PERIOD (solo display) -->
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div class="row">
+          <span class="badge" id="badgePeriodo">🕰️ —</span>
+          <span class="badge" id="badgeStile">🎭 —</span>
+        </div>
+        <div class="chips" id="styleChips">
+          <button class="chip" data-style="whatif">What if (realistico)</button>
+          <button class="chip" data-style="wtf">WTF (surreale)</button>
+        </div>
+      </div>
+    </div>
 
     <div class="card">
-      <h3 class="label" data-i18n="question">Domanda</h3>
+      <h3 class="label">Domanda</h3>
       <div id="question" class="box"></div>
+      <div class="tools">
+        <button class="btn" onclick="editQuestion()">Modifica domanda</button>
+        <button class="btn primary" id="genBtn">Genera risposta</button>
+        <button class="btn" id="regenBtn" style="display:none">Rigenera 🔁</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <h3 class="label">Risultato</h3>
+      <div id="result" class="box">—</div>
 
       <div class="tools">
-        <div class="seg" role="tablist" aria-label="Stile">
-          <button class="segbtn" id="seg_whatif" role="tab" aria-selected="true">What if</button>
-          <button class="segbtn" id="seg_wtf" role="tab" aria-selected="false">What the F</button>
-        </div>
-        <button class="btn primary" onclick="generate()" id="sendBtn" data-i18n="send">Invia domanda</button>
-        <button class="btn" onclick="editQuestion()" data-i18n="edit">Modifica domanda</button>
+        <button class="btn" onclick="saveHistory()">💾 Salva in cronologia</button>
+        <button class="btn" onclick="openHistory()">📜 Vedi cronologia</button>
+        <button class="btn" onclick="copyText()">📋 Copia</button>
+        <button class="btn" onclick="shareOut()">📤 Condividi</button>
       </div>
 
-      <h3 class="label" style="margin-top:16px" data-i18n="answer">Risultato</h3>
-      <div id="result" class="box" aria-live="polite"><span data-i18n="ready">Pronto: invia la domanda per generare lo scenario.</span></div>
+      <div class="divider"></div>
 
-      <!-- Esplorazione Pro -->
+      <!-- Barra PRO-ONLY -->
       <div class="tools proOnly" id="proExploreBar" style="display:none">
-        <button class="btn" id="btnContinue">➡️ Continua a leggere</button>
-        <button class="btn" id="btnBranches">🧭 Vedi due bivi</button>
-        <button class="btn" id="btnBackfill">🧩 Riavvolgi (contesto perso)</button>
-      </div>
-
-      <!-- Feedback 1-click -->
-      <div class="rate">
-        <span class="hint" data-i18n="rateq">Quanto ti somiglia?</span>
-        <button onclick="rate(1)">😕</button>
-        <button onclick="rate(2)">🙂</button>
-        <button onclick="rate(3)">🔥</button>
-      </div>
-
-      <div class="tools" style="margin-top:10px">
-        <button class="btn" onclick="generate()" data-i18n="regenerate">Rigenera 🔁</button>
-        <button class="btn" onclick="saveHistory()" data-i18n="save">💾 Salva in cronologia</button>
-        <button class="btn" onclick="openHistory()" data-i18n="seeHistory">📜 Vedi cronologia</button>
-        <button class="btn" onclick="copyText()" data-i18n="copy">📋 Copia</button>
-        <button class="btn" onclick="shareOut()" data-i18n="share">📤 Condividi</button>
+        <button class="btn" onclick="proAction('continue')">Continua a leggere ▶</button>
+        <button class="btn" onclick="proAction('branches')">Vedi due bivi ⤴⤵</button>
+        <button class="btn" onclick="proAction('rewind')">Riavvolgi ◀</button>
       </div>
     </div>
   </main>
@@ -111,244 +109,152 @@
   <div class="overlay" id="histOverlay" onclick="closeHistory(event)">
     <div class="sheet">
       <div class="row" style="justify-content:space-between;align-items:center">
-        <h3 style="margin:6px 0" data-i18n="history">Cronologia</h3>
+        <h3 style="margin:6px 0">Cronologia</h3>
         <div>
-          <button class="btn ghost" onclick="clearHistory()" data-i18n="clear">Svuota</button>
-          <button class="btn" onclick="closeHistory()" data-i18n="close">Chiudi</button>
+          <button class="btn ghost" onclick="clearHistory()">Svuota</button>
+          <button class="btn" onclick="closeHistory()">Chiudi</button>
         </div>
       </div>
       <div id="histList"></div>
     </div>
   </div>
 
-  <!-- Overlay upgrade -->
-  <div class="overlay" id="upgradeOverlay" style="display:none" onclick="closeUpgrade(event)">
+  <!-- Overlay Pro / Upgrade -->
+  <div class="overlay" id="proOverlay">
     <div class="sheet">
-      <h3>Pro sblocca l’esplorazione</h3>
-      <ul>
-        <li>➡️ <strong>Continua a leggere</strong>: sviluppi successivi, cause/effetti.</li>
-        <li>🧭 <strong>Due bivi alternativi</strong> immediati e plausibili.</li>
-        <li>🧩 <strong>Riavvolgi</strong>: aggiunge un contesto perso e riformula.</li>
-        <li>∞ Generazioni giornaliere “ragionevoli”.</li>
-      </ul>
-      <div class="tools">
-        <button class="btn primary" onclick="fakeUpgrade()">Attiva Pro</button>
-        <button class="btn ghost" onclick="closeUpgrade()">Chiudi</button>
+      <h3>Passa a Pro ⭐</h3>
+      <p class="sub">Sblocca “Continua a leggere”, “Due bivi” e “Riavvolgi”.</p>
+      <div class="row" style="margin:8px 0 12px">
+        <button class="btn primary" onclick="fakeUpgrade()">Attiva Pro (demo)</button>
+        <button class="btn ghost" onclick="closePro()">Annulla</button>
       </div>
-    </div>
-  </div>
-
-  <!-- Overlay privacy -->
-  <div class="overlay" id="privacyOverlay" style="display:none" onclick="closeOverlay(event,'privacyOverlay')">
-    <div class="sheet">
-      <h3>🔒 Privacy & dati</h3>
-      <p class="hint">Predefinito: i dati restano sul dispositivo. Per generare lo scenario, inviamo solo la domanda e un profilo ridotto con dati personali redatti.</p>
-      <div class="row" style="gap:8px;margin:8px 0">
-        <label><input type="checkbox" id="cloudSyncToggle" /> Sincronizza su cloud (opt-in)</label>
-      </div>
-      <div class="tools">
-        <button class="btn" id="exportBtn">Esporta JSON</button>
-        <button class="btn" id="eraseBtn">Elimina tutti i dati</button>
-        <button class="btn primary" onclick="closeOverlay(null,'privacyOverlay')">Chiudi</button>
-      </div>
+      <p class="hint">Demo: questo tasto imposta <code>localStorage.whatif_credits.pro = true</code>.</p>
     </div>
   </div>
 
 <script>
-/* ====== i18n ====== */
-const DICT = {
-  it: {
-    back:"Indietro", home:"Home", privacy:"Privacy & dati",
-    title:"Il tuo scenario", subtitle:"Risposta generata in base alle scelte precedenti.",
-    question:"Domanda", answer:"Risultato", gen:"Sto generando…",
-    edit:"Modifica domanda", send:"Invia domanda",
-    regenerate:"Rigenera 🔁", save:"💾 Salva in cronologia",
-    seeHistory:"📜 Vedi cronologia", copy:"📋 Copia", share:"📤 Condividi",
-    history:"Cronologia", clear:"Svuota", close:"Chiudi",
-    ready:"Pronto: invia la domanda per generare lo scenario.",
-    err_network:"Errore di rete", err_server:"C’è stato un problema. Riprova.",
-    badgePast:"Passato", badgeFuture:"Futuro", badgeWhatIf:"What if", badgeWTF:"What the F",
-    rateq:"Quanto ti somiglia?"
-  },
-  en: {
-    back:"Back", home:"Home", privacy:"Privacy & data",
-    title:"Your scenario", subtitle:"Answer generated from your previous choices.",
-    question:"Question", answer:"Result", gen:"Generating…",
-    edit:"Edit question", send:"Send question",
-    regenerate:"Regenerate 🔁", save:"💾 Save to history",
-    seeHistory:"📜 View history", copy:"📋 Copy", share:"📤 Share",
-    history:"History", clear:"Clear", close:"Close",
-    ready:"Ready: send the question to generate the scenario.",
-    err_network:"Network error", err_server:"Something went wrong. Try again.",
-    badgePast:"Past", badgeFuture:"Future", badgeWhatIf:"What if", badgeWTF:"What the F",
-    rateq:"How much does it feel like you?"
-  }
-};
+/* ====== Config base ====== */
 const LS = localStorage;
+const DAILY_FREE = 3; // limite gratuito giornaliero (puoi cambiare)
 const lang = (LS.getItem("lang") || "it").toLowerCase();
-const T = DICT[lang] || DICT.it;
-document.documentElement.lang = lang;
-document.querySelectorAll("[data-i18n]").forEach(el=>{
-  const k = el.getAttribute("data-i18n"); if (T[k]) el.textContent = T[k];
-});
 
-/* ====== stato base ====== */
-let prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}");
-if (!prefs.periodo) prefs.periodo = "future";
-if (!prefs.stile)   prefs.stile   = "whatif";
-let domanda = LS.getItem("domanda") || "";
-const questionEl = document.getElementById("question");
-const resultEl   = document.getElementById("result");
-const badges     = document.getElementById("badges");
-if (!domanda) { alert(lang==="en"?"No question found. Going back.":"Nessuna domanda trovata. Torno indietro."); location.href = "fourth.html"; }
-
-/* badge + stile */
-function renderBadges(){
-  const row = [];
-  if (prefs.periodo) row.push(`<span class="chip">🕰️ ${prefs.periodo === "past" ? T.badgePast : T.badgeFuture}</span>`);
-  if (prefs.stile)   row.push(`<span class="chip">🎭 ${prefs.stile === "wtf" ? T.badgeWTF : T.badgeWhatIf}</span>`);
-  badges.innerHTML = row.join("");
+/* ====== Helpers ====== */
+function todayStr(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-renderBadges();
-questionEl.textContent = domanda;
-
-/* stile switch */
-const segWhatif = document.getElementById('seg_whatif');
-const segWTF    = document.getElementById('seg_wtf');
-function applySeg(){
-  segWhatif.classList.toggle('active', prefs.stile==='whatif');
-  segWTF.classList.toggle('active', prefs.stile==='wtf');
-  segWhatif.setAttribute('aria-selected', prefs.stile==='whatif');
-  segWTF.setAttribute('aria-selected', prefs.stile==='wtf');
-  renderBadges();
-  LS.setItem('whatif_prefs', JSON.stringify(prefs));
-}
-segWhatif.onclick = ()=>{ prefs.stile='whatif'; applySeg(); };
-segWTF.onclick    = ()=>{ prefs.stile='wtf';    applySeg(); };
-applySeg();
-
-/* overlays helpers */
-function closeOverlay(ev,id){
-  if (ev && ev.target && ev.target.id!==id && ev.type==='click') return;
-  document.getElementById(id).style.display='none';
-}
-document.getElementById('privacyBtn').onclick = ()=>{ document.getElementById('privacyOverlay').style.display='flex'; };
-
-/* Privacy flags + export/erase */
-function getFlags(){ return JSON.parse(LS.getItem('whatif_flags')||'{}'); }
-function setFlags(f){ LS.setItem('whatif_flags', JSON.stringify(f)); }
-(function initFlags(){
-  const f = getFlags();
-  if (typeof f.cloudSync!=='boolean') f.cloudSync=false;
-  setFlags(f);
-  setTimeout(()=>{ const t=document.getElementById('cloudSyncToggle'); if(t){ t.checked=f.cloudSync; t.onchange=()=>{ const f2=getFlags(); f2.cloudSync=!!t.checked; setFlags(f2); }; }},0);
-})();
-document.getElementById('exportBtn')?.addEventListener('click', ()=>{
-  const dump = {};
-  ['whatif_profile','whatif_archetypes','whatif_anchors','whatif_micro','whatif_micro_used','whatif_quiz5','whatif_quiz5_done','whatif_tags','whatif_credits','whatif_ratings','cronologia','whatif_flags','whatif_prefs','domanda'].forEach(k=>{
-    dump[k]=JSON.parse(LS.getItem(k)||'null');
-  });
-  const blob = new Blob([JSON.stringify(dump,null,2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='whatif-data.json'; a.click(); URL.revokeObjectURL(url);
-});
-document.getElementById('eraseBtn')?.addEventListener('click', ()=>{
-  if(confirm(lang==='en'?'Delete all locally stored data?':'Eliminare tutti i dati locali?')){
-    Object.keys(localStorage).forEach(k=>{ if(k.startsWith('whatif_') || k==='domanda' || k==='whatif_prefs') localStorage.removeItem(k); });
-    alert(lang==='en'?'Done.':'Fatto.'); location.href='index.html';
-  }
-});
-
-/* ====== Pro: visibilità pulsanti esplorazione ====== */
-function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function readCredits(){
-  const v = JSON.parse(LS.getItem('whatif_credits')||'{}'); const today = todayStr();
+  const v = JSON.parse(LS.getItem('whatif_credits')||'{}');
+  const today = todayStr();
   if (!v.date || v.date!==today) return {date:today, used:0, pro: !!v.pro};
   return v;
 }
-function writeCredits(c){ LS.setItem('whatif_credits', JSON.stringify(c)); renderMeter(); renderProBar(); }
-function isPro(){ return !!readCredits().pro; }
-function renderMeter(){
-  const DAILY_FREE = 3;
-  const c = readCredits(); const used = c.pro ? 0 : (c.used||0);
-  document.getElementById('meterLabel').textContent = `${Math.min(used,DAILY_FREE)}/${DAILY_FREE}`;
-  const pct = Math.min(100, Math.round((used/DAILY_FREE)*100));
-  document.getElementById('meterFill').style.width = (c.pro ? '0%' : pct+'%');
-  document.getElementById('upgradeBtn').textContent = c.pro ? (lang==='en'?'Pro ✓':'Pro ✓') : (lang==='en'?'Pro':'Pro');
+function writeCredits(v){
+  LS.setItem('whatif_credits', JSON.stringify(v));
+  renderFreeBadge();
 }
-function renderProBar(){
+function isPro(){ return !!readCredits().pro; }
+function ensureCredits(){
+  const c = readCredits();
+  if (!c.date || c.date!==todayStr()){ c.date=todayStr(); c.used=0; writeCredits(c); }
+}
+function renderFreeBadge(){
+  const c = readCredits();
+  const left = Math.max(0, DAILY_FREE - (c.used||0));
+  document.getElementById('freeBadge').textContent = isPro() ? 'Pro attivo' : `Free oggi: ${left}/${DAILY_FREE}`;
   document.getElementById('proExploreBar').style.display = isPro() ? 'flex' : 'none';
 }
-renderMeter(); renderProBar();
-document.getElementById('upgradeBtn').onclick = ()=>{ document.getElementById('upgradeOverlay').style.display='flex'; };
-function closeUpgrade(ev){ closeOverlay(ev,'upgradeOverlay'); }
-function fakeUpgrade(){ const c=readCredits(); c.pro=true; writeCredits(c); closeUpgrade(); alert(lang==='en'?'Pro activated (demo).':'Pro attivato (demo).'); }
 
-/* ====== PII redaction ====== */
-function redactPII(obj){
-  const s = JSON.stringify(obj||{});
-  const red = s
-    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi,'[email]')
-    .replace(/\b(\+?\d[\d\s\-().]{7,})\b/g,'[phone]')
-    .replace(/\bIT\d{2}[A-Z]\d{10,}\b/gi,'[iban]')
-    .replace(/\b([A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z])\b/gi,'[id]');
-  try { return JSON.parse(red); } catch { return obj; }
+/* ====== Stato iniziale ====== */
+const prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}"); // { periodo, stile }
+let domanda = LS.getItem("domanda") || "";
+if (!domanda) {
+  alert(lang==="en"?"No question found. Going back.":"Nessuna domanda trovata. Torno indietro.");
+  location.href = "fourth.html";
+}
+let currentStyle = (prefs.stile || "whatif"); // 'whatif' | 'wtf'
+const questionEl = document.getElementById("question");
+const resultEl   = document.getElementById("result");
+const proBar     = document.getElementById("proExploreBar");
+
+/* ====== UI iniziale ====== */
+questionEl.textContent = domanda;
+document.getElementById("badgePeriodo").textContent = "🕰️ " + (prefs.periodo==="past" ? "Passato" : "Futuro");
+document.getElementById("badgeStile").textContent   = "🎭 " + (currentStyle==="wtf" ? "What the F" : "What if");
+highlightStyleChip(currentStyle);
+
+/* ====== Chips stile ====== */
+document.getElementById("styleChips").addEventListener("click", (e)=>{
+  const b = e.target.closest(".chip"); if(!b) return;
+  currentStyle = b.dataset.style;
+  document.getElementById("badgeStile").textContent = "🎭 " + (currentStyle==="wtf" ? "What the F" : "What if");
+  highlightStyleChip(currentStyle);
+});
+function highlightStyleChip(val){
+  document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===val));
 }
 
-/* ====== generazione (SSE) ====== */
-const MAX_CHARS = 1200;
-let lastAnswer = "";
-let generating = false;
+/* ====== Bottoni generate/regen ====== */
+document.getElementById('genBtn').addEventListener('click', ()=> generate());
+document.getElementById('regenBtn').addEventListener('click', ()=> generate(true));
 
-function haveQuota(){
-  const DAILY_FREE = 3;
-  const c = readCredits(); return c.pro || (c.used||0) < DAILY_FREE;
-}
-function consumeOne(){
-  const c = readCredits(); if (!c.pro){ c.used = (c.used||0)+1; } writeCredits(c);
+/* ====== Modifica domanda ====== */
+function editQuestion(){
+  LS.setItem("domanda", domanda);
+  location.href = "fourth.html";
 }
 
-async function generate(extraInstruction = "") {
-  if (generating) return;
-  if (!haveQuota()){ document.getElementById('upgradeOverlay').style.display='flex'; return; }
+/* ====== API call ====== */
+async function callWhatIfAPI({ domanda, periodo, stile, extra }){
+  const payload = { domanda, lang, periodo, stile, stream:true, extra:(extra||"") };
+  const res = await fetch("/api/ask", {
+    method:"POST",
+    headers:{"Content-Type":"application/json","x-whatif-stream":"1"},
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error("server");
+  return res.body.getReader();
+}
 
-  generating = true;
-  lastAnswer = "";
-  resultEl.textContent = "⏳ " + (T.gen||'Generazione…') + " ";
-  const sk = document.createElement("span"); sk.className = "skeleton"; sk.style.width="40%"; resultEl.appendChild(sk);
-
-  const rawProfile = {
-    ...JSON.parse(LS.getItem("whatif_profile") || "{}"),
-    anchors: JSON.parse(LS.getItem("whatif_anchors") || "{}"),
-    anchors_extra: JSON.parse(LS.getItem("whatif_micro") || "{}")
-  };
-  const safeProfile = redactPII(rawProfile);
-
-  const payload = {
-    domanda,
-    lang,
-    periodo: prefs.periodo || "future",
-    stile:   prefs.stile   || "whatif",
-    profile: safeProfile,
-    archetypes: JSON.parse(LS.getItem("whatif_archetypes") || "{}"),
-    anchors: safeProfile.anchors || {},
-    stream: true,
-    extra: extraInstruction || ""
-  };
-
+/* ====== Tracking uso ====== */
+function trackUsage(kind){ // 'base' | 'pro'
   try{
-    const res = await fetch("/api/ask", {
-      method:"POST",
-      headers:{"Content-Type":"application/json","x-whatif-stream":"1"},
-      body: JSON.stringify(payload)
+    const key='usage_log';
+    const log=JSON.parse(LS.getItem(key)||'{}');
+    const t=todayStr();
+    log[t]=log[t]||{base:0,pro:0};
+    log[t][kind]=(log[t][kind]||0)+1;
+    LS.setItem(key, JSON.stringify(log));
+  }catch(e){ console.warn('tracking error', e); }
+}
+
+/* ====== Generazione ====== */
+async function generate(isRegen=false){
+  ensureCredits();
+  const credits = readCredits();
+
+  // gating free (solo per non-Pro)
+  if (!isPro() && credits.used >= DAILY_FREE && !isRegen){
+    openPro(); return;
+  }
+
+  // UI reset
+  resultEl.textContent = "⏳ Sto generando… ";
+  const sk = document.createElement("span");
+  sk.className="skeleton"; sk.style.width="40%"; resultEl.appendChild(sk);
+  document.getElementById('regenBtn').style.display = 'none';
+
+  let text = "";
+  try{
+    const reader = await callWhatIfAPI({
+      domanda,
+      periodo: (prefs.periodo || "future"),
+      stile: currentStyle,
     });
-    if (!res.ok) { resultEl.textContent = (T.err_server||'Errore server'); generating=false; return; }
-
-    const reader = res.body.getReader();
     const decoder = new TextDecoder();
-    let buffer = "";
-    let text = "";
+    let buffer="";
 
-    while (true){
+    while(true){
       const {value, done} = await reader.read();
       if (done) break;
       buffer += decoder.decode(value, {stream:true});
@@ -358,67 +264,95 @@ async function generate(extraInstruction = "") {
       for (const chunk of chunks){
         if (!chunk.startsWith("data: ")) continue;
         const data = JSON.parse(chunk.slice(6));
-
         if (data.token){
-          if (text.length < MAX_CHARS){
-            text += data.token;
-            lastAnswer = text;
-            resultEl.textContent = text;
-          } else {
-            lastAnswer = text.trim() + "…";
-            resultEl.textContent = lastAnswer;
-          }
+          text += data.token;
+          resultEl.textContent = text;
         }
         if (data.done){
-          consumeOne();
-          resultEl.textContent = (lastAnswer || text || "").trim();
-          generating=false;
+          resultEl.textContent = (text||"").trim();
         }
         if (data.error){
-          resultEl.textContent = (T.err_server||'Errore') + " ("+ (data.detail||"") +")";
-          generating=false;
+          resultEl.textContent = "Errore: " + (data.detail||"");
         }
       }
     }
+
+    // tracking + crediti
+    if (!isRegen){
+      if (!isPro()){
+        credits.used = (credits.used||0) + 1;
+        writeCredits(credits);
+      }
+      trackUsage('base');
+    } else {
+      // un regen lo contiamo comunque come base
+      if (!isPro()){
+        credits.used = (credits.used||0) + 1;
+        writeCredits(credits);
+      }
+      trackUsage('base');
+    }
+
+    // mostra rigenera
+    document.getElementById('regenBtn').style.display = 'inline-block';
+
   }catch(e){
     console.error(e);
-    resultEl.textContent = (T.err_network||'Errore di rete');
-    generating=false;
+    resultEl.textContent = e.message === 'server' ? "C’è stato un problema. Riprova." : "Errore di rete.";
   }
 }
 
-/* ====== Esplorazioni Pro ====== */
-function requirePro(action){
-  if (!isPro()){ document.getElementById('upgradeOverlay').style.display='flex'; return false; }
-  return true;
+/* ====== Pro actions (solo se Pro) ====== */
+function proAction(kind){
+  if (!isPro()){ openPro(); return; }
+  // Semplice variazione del prompt per demo
+  const map = {
+    continue: lang==='en' ? "Continue the same scene with one more beat." : "Continua la stessa scena con un passo in più.",
+    branches: lang==='en' ? "Give me two short plausible forks." : "Dammi due brevi bivi plausibili.",
+    rewind:   lang==='en' ? "Rewind 6 months earlier and show a different entry point." : "Riavvolgi di 6 mesi e mostra un diverso punto d’ingresso."
+  };
+  generatePro(map[kind]||"");
+  trackUsage('pro');
 }
-document.getElementById('btnContinue')?.addEventListener('click', ()=>{
-  if(!requirePro('continue')) return;
-  const extra = lang==='en'
-    ? "Continue the scenario with the next concrete steps and consequences. Keep style and anchors. 180–220 words, no recap."
-    : "Prosegui lo scenario con i prossimi passi concreti e relative conseguenze. Mantieni stile e ancore. 180–220 parole, senza riassumere.";
-  generate(extra);
-});
-document.getElementById('btnBranches')?.addEventListener('click', ()=>{
-  if(!requirePro('branches')) return;
-  const extra = lang==='en'
-    ? "Show two plausible branches as A) and B): each 90–120 words, crisp and realistic, no fluff."
-    : "Mostra due bivi plausibili come A) e B): 90–120 parole ciascuno, asciutte e realistiche, zero fronzoli.";
-  generate(extra);
-});
-document.getElementById('btnBackfill')?.addEventListener('click', ()=>{
-  if(!requirePro('backfill')) return;
-  const extra = lang==='en'
-    ? "Rewind and add one missing context element based on the user's profile/anchors, then reformulate the scenario realistically."
-    : "Riavvolgi e aggiungi un elemento di contesto mancante in base a profilo/ancore, poi riformula lo scenario in modo realistico.";
-  generate(extra);
-});
+async function generatePro(extra){
+  // non tocca i crediti free se sei Pro
+  resultEl.textContent = "⏳ Sto elaborando (Pro)… ";
+  const sk = document.createElement("span");
+  sk.className="skeleton"; sk.style.width="40%"; resultEl.appendChild(sk);
+  try{
+    const reader = await callWhatIfAPI({
+      domanda, periodo:(prefs.periodo||"future"), stile:currentStyle, extra
+    });
+    const decoder = new TextDecoder();
+    let buffer="", text="";
+    while(true){
+      const {value, done} = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, {stream:true});
+      const chunks = buffer.split("\n\n");
+      buffer = chunks.pop();
+      for (const chunk of chunks){
+        if (!chunk.startsWith("data: ")) continue;
+        const data = JSON.parse(chunk.slice(6));
+        if (data.token){ text += data.token; resultEl.textContent = text; }
+        if (data.done){ resultEl.textContent = (text||"").trim(); }
+      }
+    }
+  }catch(e){
+    resultEl.textContent = "Errore Pro. Riprova.";
+  }
+}
 
-/* ====== cronologia & utility ====== */
-function editQuestion(){ LS.setItem("domanda", domanda); location.href = "fourth.html"; }
-function saveHistory(pin=false){
+/* ====== Cronologia & utility ====== */
+function saveHistory(){
   const arr = JSON.parse(LS.getItem("cronologia")||"[]");
-  arr.unshift({ domanda, risposta:(resultEl.textContent||"").trim(), periodo:prefs.periodo||null, stile:prefs.stile||null, lang, ts:Date.now(), pinned:!!pin });
+  arr.unshift({
+    domanda,
+    risposta: (resultEl.textContent || "").trim(),
+    periodo: prefs.periodo || null,
+    stile: currentStyle,
+    lang, ts: Date.now()
+  });
   LS.setItem("cronologia", JSON.stringify(arr));
   alert(lang==="en"?"Saved to history!":"Salvato nella cronologia!");
 }
@@ -428,49 +362,61 @@ function openHistory(){
   const arr = JSON.parse(LS.getItem("cronologia")||"[]");
   if (!arr.length){ list.innerHTML = `<p class="hint">${lang==="en"?"Empty.":"Vuota."}</p>`; }
   else{
-    const pinned = arr.filter(x=>x.pinned);
-    const rest   = arr.filter(x=>!x.pinned);
-    const show = [...pinned, ...rest];
-    list.innerHTML = show.map((it,i)=>`
+    list.innerHTML = arr.map((it,i)=>`
       <div class="hist-item">
-        <h4>#${arr.length-i} — ${new Date(it.ts).toLocaleString()} ${it.pinned?'<span class="pin">⭐</span>':''}</h4>
+        <h4>#${arr.length-i} — ${new Date(it.ts).toLocaleString()}</h4>
         <div class="hint">${(it.periodo||"")} ${(it.stile||"")}</div>
-        <div class="label">${T.question}</div>
+        <div class="label">Domanda</div>
         <div class="box" style="margin-bottom:8px">${escapeHTML(it.domanda)}</div>
-        <div class="label">${T.answer}</div>
+        <div class="label">Risultato</div>
         <div class="box">${escapeHTML(it.risposta||"")}</div>
-        <div class="tools" style="margin-top:8px">
-          <button class="btn" onclick="togglePin(${i})">${it.pinned?'★ Sfila':'☆ Pin'}</button>
-          <button class="btn" onclick="copySpecific(${i})">${lang==='en'?'Copy':'Copia'}</button>
-        </div>
       </div>
     `).join("");
   }
   ov.style.display="flex";
 }
-function closeHistory(ev){ closeOverlay(ev,'histOverlay'); }
-function clearHistory(){ if (confirm(lang==="en"?"Clear history?":"Svuotare la cronologia?")){ LS.removeItem("cronologia"); openHistory(); } }
-function copyText(){ navigator.clipboard.writeText(`Domanda: ${domanda}\n\n${resultEl.textContent}`).then(()=>{ alert(lang==="en"?"Copied!":"Copiato!"); }); }
-function copySpecific(i){
-  const arr = JSON.parse(LS.getItem("cronologia")||"[]");
-  const show=[...arr.filter(x=>x.pinned),...arr.filter(x=>!x.pinned)];
-  const it = show[i]; if(!it) return;
-  navigator.clipboard.writeText(`Domanda: ${it.domanda}\n\n${it.risposta||""}`);
-  alert(lang==='en'?'Copied!':'Copiato!');
+function closeHistory(ev){
+  if (ev && ev.target && ev.target.id!=="histOverlay" && ev.type==="click") return;
+  document.getElementById("histOverlay").style.display="none";
 }
-function togglePin(i){
-  const arr = JSON.parse(LS.getItem("cronologia")||"[]");
-  const show=[...arr.filter(x=>x.pinned),...arr.filter(x=>!x.pinned)];
-  const item=show[i];
-  const realIdx = arr.findIndex(x=>x.ts===item.ts && x.domanda===item.domanda);
-  if (realIdx>-1){ arr[realIdx].pinned=!arr[realIdx].pinned; LS.setItem("cronologia", JSON.stringify(arr)); openHistory(); }
+function clearHistory(){
+  if (confirm(lang==="en"?"Clear history?":"Svuotare la cronologia?")){
+    LS.removeItem("cronologia");
+    openHistory();
+  }
+}
+function copyText(){
+  navigator.clipboard.writeText(`Domanda: ${domanda}\n\n${resultEl.textContent}`).then(()=>{
+    alert(lang==="en"?"Copied!":"Copiato!");
+  });
 }
 function shareOut(){
-  const data = { title:"What?f", text:`Domanda: ${domanda}\n\n${resultEl.textContent}`, url: location.href };
+  const data = {
+    title:"What?f",
+    text:`Domanda: ${domanda}\n\n${resultEl.textContent}`,
+    url: location.href
+  };
   if (navigator.share) navigator.share(data).catch(()=>{});
   else copyText();
 }
 function escapeHTML(s){return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+
+/* ====== Pro overlay ====== */
+document.getElementById('proBtn').addEventListener('click', ()=>{
+  if (isPro()){ alert("Pro già attivo."); return; }
+  openPro();
+});
+function openPro(){ document.getElementById('proOverlay').style.display='flex'; }
+function closePro(){ document.getElementById('proOverlay').style.display='none'; }
+function fakeUpgrade(){
+  const c = readCredits(); c.pro = true; writeCredits(c);
+  closePro();
+  alert("Pro attivato (demo).");
+}
+
+/* ====== Avvio ====== */
+ensureCredits();
+renderFreeBadge();
 </script>
 </body>
 </html>
