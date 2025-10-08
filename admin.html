@@ -6,26 +6,24 @@
 <title>What?f – Admin</title>
 <meta name="theme-color" content="#0A0F14" />
 <style>
-  :root{
-    --bg:#0A0F14; --fg:#E6F2F5; --muted:#A0B2BA;
-    --card:#141C22; --chip:#0f1820;
-    --acc:#00E0FF; --acc2:#00B5CC; --ink:#001F26;
-  }
+  :root{--bg:#0A0F14;--fg:#E6F2F5;--muted:#A0B2BA;--card:#141C22;--chip:#0f1820;--acc:#00E0FF;--acc2:#00B5CC;--ink:#001F26}
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--fg);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:980px;margin:auto;padding:18px}
+  html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{max-width:1060px;margin:auto;padding:18px}
   h1{font-size:clamp(24px,5vw,36px);margin-bottom:10px}
   .card{background:var(--card);border-radius:16px;padding:16px;margin-top:16px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
   input{width:100%;background:#0f1820;color:var(--fg);border:1px solid #1c2a33;border-radius:12px;padding:10px;font-size:16px}
   .muted{color:var(--muted);font-size:14px}
   .hidden{display:none}
-  button{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);
-    border:none;padding:10px 16px;border-radius:12px;font-weight:700;cursor:pointer}
+  button{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border:none;padding:10px 16px;border-radius:12px;font-weight:700;cursor:pointer}
   .ghost{background:transparent;border:1px solid #1d2b34;color:#cfe3e7}
   .danger{background:#b54242;color:#fff}
   .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .ok{color:#8ee6ff}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+  .kpi{background:#0f1820;border:1px solid #1b2a34;border-radius:12px;padding:12px}
+  .kpi .n{font-size:22px;font-weight:900}
+  .list{margin:8px 0 0;padding-left:18px}
+  code.badge{background:#0f1820;border:1px solid #1b2a34;border-radius:8px;padding:2px 6px}
 </style>
 </head>
 <body>
@@ -38,140 +36,207 @@
   </div>
   <p class="muted" id="status">Verifica accesso…</p>
 
-  <!-- Schermata login -->
+  <!-- Login -->
   <div id="authBox" class="card hidden">
     <h2>Accesso riservato</h2>
-    <p class="muted">Imposta o inserisci la tua password segreta per accedere. Verrà salvata solo in questo dispositivo.</p>
+    <p class="muted">Imposta o inserisci la tua password segreta per accedere. Viene salvata solo su questo dispositivo.</p>
     <input type="password" id="pwd" placeholder="Password segreta…" />
     <div class="row" style="margin-top:10px">
       <button id="loginBtn">Accedi</button>
       <button id="setBtn" class="ghost">Imposta/aggiorna password</button>
     </div>
-    <p class="muted" style="margin-top:8px">Suggerimento: usa qualcosa di non ovvio, es. <code>luca#2025!wf</code></p>
   </div>
 
-  <!-- Schermata accesso negato -->
+  <!-- Accesso negato -->
   <div id="deniedBox" class="card hidden">
     <h2>Accesso negato 🚫</h2>
-    <p>Non hai l’autorizzazione per visualizzare questa pagina.</p>
     <button class="ghost" onclick="showAuth()">Prova di nuovo</button>
   </div>
 
-  <!-- Pannello admin -->
+  <!-- Pannello -->
   <div id="panel" class="hidden">
+
+    <!-- DASHBOARD LOCALE -->
     <div class="card">
-      <h2>Benvenuto, Luca 👋</h2>
-      <p class="muted">Qui puoi controllare i costi stimati e, in futuro, le statistiche private.</p>
+      <h2>Dashboard locale</h2>
+      <p class="muted">Dati letti da <code class="badge">localStorage</code> del dispositivo (demo/offline). Per dati server reali servirà un endpoint.</p>
+
+      <div class="kpis" id="kpis">
+        <!-- riempito da JS -->
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <button id="refresh">Aggiorna</button>
+        <button id="resetUsage" class="danger">Reset contatori locali</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <h3>Ultimi 7 giorni</h3>
+        <ol class="list" id="last7"></ol>
+      </div>
+    </div>
+
+    <!-- CALCOLATORE COSTI -->
+    <div class="card">
+      <h2>Calcolatore costi</h2>
       <iframe src="cost.html" width="100%" height="1100" style="border:none;border-radius:12px"></iframe>
     </div>
 
     <div class="card">
       <h3>Sicurezza</h3>
-      <p>Stato: <strong class="ok" id="lockStatus">protetto</strong></p>
       <div class="row">
         <input type="password" id="newPwd" placeholder="Nuova password…" />
         <button id="updatePwd">Aggiorna password</button>
         <button class="danger" id="logout">Esci (dimentica password)</button>
       </div>
-      <p class="muted">La password è salvata <em>solo</em> in questo browser (<code>localStorage</code>). Nessun salvataggio su server.</p>
+      <p class="muted">Password salvata solo in questo browser (hashata). Nessun invio a server.</p>
     </div>
   </div>
 </main>
 
 <script>
-  // ====== SECURITY LOGIC (no URL key) ======
-  const LS_KEY = "admin_key_hash"; // salviamo l'hash, non la password in chiaro
-  const LS_AUTH = "admin_authenticated"; // flag di sessione (finché non chiudi scheda)
+  // ======= SECURITY (come versione precedente) =======
+  const LS_KEY = "admin_key_hash";
+  const LS_AUTH = "admin_authenticated";
   const status = document.getElementById("status");
   const authBox = document.getElementById("authBox");
   const deniedBox = document.getElementById("deniedBox");
   const panel = document.getElementById("panel");
-  const lockStatus = document.getElementById("lockStatus");
 
-  // Hash semplice (non crittografico, ma meglio del plain): djb2
-  function hashStr(s){
-    let h = 5381; for (let i=0;i<s.length;i++){ h = ((h<<5)+h) + s.charCodeAt(i); }
-    return String(h>>>0);
-  }
+  function hashStr(s){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i);} return String(h>>>0); }
+  function showAuth(){ status.textContent="Inserisci password per accedere."; authBox.classList.remove("hidden"); deniedBox.classList.add("hidden"); panel.classList.add("hidden"); }
+  function showDenied(){ status.textContent="Accesso negato."; authBox.classList.add("hidden"); deniedBox.classList.remove("hidden"); panel.classList.add("hidden"); }
+  function showPanel(){ status.textContent="Accesso consentito ✅"; authBox.classList.add("hidden"); deniedBox.classList.add("hidden"); panel.classList.remove("hidden"); render(); }
 
-  function showAuth(){
-    status.textContent = "Inserisci password per accedere.";
-    authBox.classList.remove("hidden");
-    deniedBox.classList.add("hidden");
-    panel.classList.add("hidden");
-  }
-  function showDenied(){
-    status.textContent = "Accesso negato.";
-    authBox.classList.add("hidden");
-    deniedBox.classList.remove("hidden");
-    panel.classList.add("hidden");
-  }
-  function showPanel(){
-    status.textContent = "Accesso consentito ✅";
-    authBox.classList.add("hidden");
-    deniedBox.classList.add("hidden");
-    panel.classList.remove("hidden");
-    lockStatus.textContent = "protetto";
-  }
-
-  // Stato iniziale
   (function init(){
     const savedHash = localStorage.getItem(LS_KEY);
-    const authed = sessionStorage.getItem(LS_AUTH) === "1";
-    if (!savedHash) {
-      // Nessuna password impostata: chiedi di impostarne una
-      status.textContent = "Nessuna password impostata. Impostane una per proteggere l’area.";
-      showAuth();
-    } else if (authed) {
-      showPanel();
-    } else {
-      // Richiedi password
-      showAuth();
-    }
+    const authed = sessionStorage.getItem(LS_AUTH)==="1";
+    if(!savedHash){ status.textContent="Nessuna password impostata. Impostane una."; showAuth(); }
+    else if(authed){ showPanel(); } else { showAuth(); }
   })();
 
-  // Login
-  document.getElementById("loginBtn").addEventListener("click", ()=>{
-    const pwd = (document.getElementById("pwd").value || "").trim();
-    if (!pwd) return alert("Inserisci la password.");
+  document.getElementById("loginBtn").onclick = ()=>{
+    const pwd = (document.getElementById("pwd").value||"").trim();
     const savedHash = localStorage.getItem(LS_KEY);
-    if (!savedHash) return alert("Nessuna password impostata: usa 'Imposta/aggiorna password'.");
-
-    if (hashStr(pwd) === savedHash){
-      sessionStorage.setItem(LS_AUTH, "1"); // valida finché non chiudi la scheda
-      showPanel();
-    } else {
-      showDenied();
-    }
-  });
-
-  // Imposta/aggiorna password
-  document.getElementById("setBtn").addEventListener("click", ()=>{
-    const pwd = (document.getElementById("pwd").value || "").trim();
-    if (!pwd) return alert("Inserisci una password non vuota.");
-    const h = hashStr(pwd);
-    localStorage.setItem(LS_KEY, h);
-    alert("Password impostata/aggiornata. Ora puoi accedere con 'Accedi'.");
-    status.textContent = "Password aggiornata. Inseriscila e premi 'Accedi'.";
-  });
-
-  // Aggiorna password dall’area protetta
-  document.getElementById("updatePwd").addEventListener("click", ()=>{
-    const pwd = (document.getElementById("newPwd").value || "").trim();
-    if (!pwd) return alert("Inserisci una nuova password.");
-    const h = hashStr(pwd);
-    localStorage.setItem(LS_KEY, h);
-    document.getElementById("newPwd").value = "";
+    if(!pwd) return alert("Inserisci la password.");
+    if(!savedHash) return alert("Nessuna password impostata.");
+    if(hashStr(pwd)===savedHash){ sessionStorage.setItem(LS_AUTH,"1"); showPanel(); } else { showDenied(); }
+  };
+  document.getElementById("setBtn").onclick = ()=>{
+    const pwd = (document.getElementById("pwd").value||"").trim();
+    if(!pwd) return alert("Inserisci una password.");
+    localStorage.setItem(LS_KEY, hashStr(pwd));
+    alert("Password impostata. Ora premi Accedi.");
+  };
+  document.getElementById("updatePwd").onclick = ()=>{
+    const pwd = (document.getElementById("newPwd").value||"").trim();
+    if(!pwd) return alert("Nuova password vuota.");
+    localStorage.setItem(LS_KEY, hashStr(pwd));
     alert("Password aggiornata.");
-  });
-
-  // Logout: dimentica la sessione e la password locale
-  document.getElementById("logout").addEventListener("click", ()=>{
+    document.getElementById("newPwd").value="";
+  };
+  document.getElementById("logout").onclick = ()=>{
     sessionStorage.removeItem(LS_AUTH);
     localStorage.removeItem(LS_KEY);
-    alert("Password rimossa da questo dispositivo.");
     location.reload();
-  });
+  };
+
+  // ======= DASHBOARD LOCALE =======
+  const $ = s=>document.querySelector(s);
+  const kpis = $("#kpis");
+  const last7 = $("#last7");
+
+  function todayStr(){
+    const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function readCredits(){
+    const v = JSON.parse(localStorage.getItem('whatif_credits')||'{}');
+    const today = todayStr();
+    if (!v.date || v.date!==today) return {date:today, used:0, pro: !!v.pro};
+    return v;
+  }
+
+  function profileCompletion(){
+    const p = JSON.parse(localStorage.getItem('whatif_profile')||'{}');
+    const required = ['name','city','gender','age','phase'];
+    const filled = required.filter(k=>p[k] && String(p[k]).trim()).length;
+    return Math.round(100*filled/required.length);
+  }
+
+  function microCount(){
+    const m = JSON.parse(localStorage.getItem('whatif_micro')||'{}');
+    return Object.keys(m).length;
+  }
+
+  function historyCount(){
+    const arr = JSON.parse(localStorage.getItem('cronologia')||'[]');
+    return arr.length;
+  }
+
+  function readUsage(){
+    // usage_log: { 'YYYY-MM-DD': { base:n, pro:n } }
+    return JSON.parse(localStorage.getItem('usage_log')||'{}');
+  }
+
+  function streakDays(){
+    const u = readUsage();
+    const dates = Object.keys(u).sort().reverse();
+    if (!dates.length) return 0;
+    let streak = 0;
+    let cur = new Date();
+    for(;;){
+      const key = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
+      if (u[key]) { streak++; } else break;
+      cur.setDate(cur.getDate()-1);
+    }
+    return streak;
+  }
+
+  function render(){
+    const credits = readCredits();
+    const usage = readUsage();
+    const today = todayStr();
+    const todayBase = usage[today]?.base || 0;
+    const todayPro  = usage[today]?.pro  || 0;
+    const totalBase = Object.values(usage).reduce((s,v)=>s+(v.base||0),0);
+    const totalPro  = Object.values(usage).reduce((s,v)=>s+(v.pro||0),0);
+
+    const freeLimit = (window.DAILY_FREE || 3); // se definito nel tuo fifth.html
+    const freeLeft  = Math.max(0, freeLimit - credits.used);
+
+    kpis.innerHTML = `
+      <div class="kpi"><div class="n">${todayBase+todayPro}</div><div class="muted">Generazioni oggi</div></div>
+      <div class="kpi"><div class="n">${totalBase+totalPro}</div><div class="muted">Generazioni totali</div></div>
+      <div class="kpi"><div class="n">${todayPro}</div><div class="muted">Azioni Pro oggi</div></div>
+      <div class="kpi"><div class="n">${credits.pro ? 'Attivo' : 'No'}</div><div class="muted">Stato Pro</div></div>
+      <div class="kpi"><div class="n">${freeLeft}</div><div class="muted">Free rimasti oggi</div></div>
+      <div class="kpi"><div class="n">${profileCompletion()}%</div><div class="muted">Completezza profilo</div></div>
+      <div class="kpi"><div class="n">${microCount()}</div><div class="muted">Micro-dati salvati</div></div>
+      <div class="kpi"><div class="n">${historyCount()}</div><div class="muted">Voci in cronologia</div></div>
+      <div class="kpi"><div class="n">${streakDays()}</div><div class="muted">Streak giorni attivi</div></div>
+    `;
+
+    // ultimi 7 giorni
+    const days = [];
+    for(let i=0;i<7;i++){
+      const d = new Date(); d.setDate(d.getDate()-i);
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const base = usage[key]?.base||0, pro = usage[key]?.pro||0;
+      days.push({key,base,pro});
+    }
+    last7.innerHTML = days.map(d=>`<li>${d.key}: <strong>${d.base+d.pro}</strong> (base ${d.base}, pro ${d.pro})</li>`).join('');
+  }
+
+  document.getElementById('refresh').onclick = render;
+  document.getElementById('resetUsage').onclick = ()=>{
+    if (confirm('Azzerare i contatori locali?')) {
+      localStorage.removeItem('usage_log');
+      localStorage.removeItem('cronologia');
+      const c = readCredits(); c.used = 0; localStorage.setItem('whatif_credits', JSON.stringify(c));
+      render();
+    }
+  };
 </script>
 </body>
 </html>
