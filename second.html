@@ -9,7 +9,7 @@
     :root{--bg:#0A0F14;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent-dark:#00B5CC;--ink:#001F26}
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    .topbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;
+    .topbar{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;
       padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))}
     .btn{appearance:none;border:1px solid #1f2c36;background:#0f1820;color:var(--fg);
       border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
@@ -31,6 +31,22 @@
     .error.show{display:block}
     .ok{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;background:#0e1820;border:1px solid #1e2a34;color:#cfe6eb;padding:8px 12px;border-radius:10px;display:none}
     .ok.show{display:block}
+
+    /* Overlay giornaliero */
+    .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9999;
+      background:rgba(0,0,0,.55);padding:14px}
+    .sheet{width:min(92vw,760px);background:#101922;border:1px solid #1c2a33;border-radius:16px;padding:16px;
+      box-shadow:0 20px 40px rgba(0,0,0,.35)}
+    .motivate{background:linear-gradient(180deg,#072029,#0c1b24);border:1px solid #163240;border-radius:14px;padding:14px;margin:2px 0 12px;
+      box-shadow:0 0 20px rgba(0,224,255,.12)}
+    .motivate strong{color:var(--accent)}
+    .dqtitle{margin:6px 0 10px}
+    .qrow{display:grid;gap:10px}
+    @media (min-width:680px){ .qrow{grid-template-columns:1fr 1fr 1fr} }
+    .qcard{background:#0f1820;border:1px solid #1c2a33;border-radius:12px;padding:10px}
+    .qcard label{display:block;font-weight:800;margin-bottom:6px}
+    .qcard input{width:100%;background:#0b151c;color:var(--fg);border:1px solid #1e2a34;border-radius:10px;padding:10px}
+    .ov-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
   </style>
 </head>
 <body>
@@ -128,6 +144,23 @@
 
   <div id="toast" class="ok">✓ Salvato</div>
 
+  <!-- Overlay giornaliero: frase + 3 micro-domande -->
+  <div class="overlay" id="dailyOverlay" role="dialog" aria-modal="true" aria-labelledby="dqTitle">
+    <div class="sheet">
+      <div class="motivate" id="motivateBox">
+        <p id="motivationText" style="margin:0;line-height:1.55"></p>
+      </div>
+
+      <h3 class="dqtitle" id="dqTitle">3 micro-domande per personalizzare What?f</h3>
+      <div class="qrow" id="dqRows"></div>
+
+      <div class="ov-actions">
+        <button class="btn" id="dqSkip">Salta oggi</button>
+        <button class="btn primary" id="dqSave">Salva</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // I18N
     const I18N = {
@@ -139,7 +172,10 @@
           who_lbl:"Chi sei?", who_ph:"Professione / Ruolo",
           more_lbl:"Vuoi raccontarci qualcosa di più su di te?", more_hint:"(opzionale – aiuta l’AI a darti risposte più accurate)", more_ph:"Esempio: lavoro nel digitale, sto pensando di cambiare città, ho due figli…",
           back:"Indietro", next:"Continua", home:"Home", skip:"Salta", clear:"Pulisci",
-          err_required:"Per continuare seleziona Sesso, Età e Fase."},
+          err_required:"Per continuare seleziona Sesso, Età e Fase.",
+          dq_title:"3 micro-domande per personalizzare What?f",
+          dq_skip:"Salta oggi", dq_save:"Salva",
+          motivate:"Giorno dopo giorno, tre micro-domande arricchiscono il tuo profilo… finché dirai: “What the F… potrei essere io!”"},
       en:{title:"Tell me about you", blurb:"Briefly share who you are, what you’re going through or why you’re using What?f. Your data is saved locally and prefilled next time.",
           gender_lbl:"Gender", sel_choose:"Choose…", gender_m:"Male", gender_f:"Female", gender_o:"Other", gender_n:"Prefer not to say",
           age_lbl:"Age", age_u18:"-18",
@@ -148,7 +184,10 @@
           who_lbl:"Who are you?", who_ph:"Profession / Role",
           more_lbl:"Want to tell us more about you?", more_hint:"(optional – helps the AI give more accurate answers)", more_ph:"Example: I work in tech, I’m thinking about moving city, I have two kids…",
           back:"Back", next:"Continue", home:"Home", skip:"Skip", clear:"Clear",
-          err_required:"To continue please select Gender, Age and Phase."}
+          err_required:"To continue please select Gender, Age and Phase.",
+          dq_title:"3 micro-questions to personalize What?f",
+          dq_skip:"Skip today", dq_save:"Save",
+          motivate:"Day by day, three micro-questions enrich your profile… until you’ll say: “What the F… this could be me!”"}
     };
     const LS = localStorage;
     function getLang(){ return LS.getItem('lang') || 'it'; }
@@ -161,10 +200,14 @@
       document.querySelectorAll('[data-ph]').forEach(el=>{
         const k=el.getAttribute('data-ph'); if(d[k]) el.setAttribute('placeholder', d[k]);
       });
+      // overlay
+      document.getElementById('dqTitle').textContent = d.dq_title;
+      document.getElementById('dqSkip').textContent  = d.dq_skip;
+      document.getElementById('dqSave').textContent  = d.dq_save;
+      document.getElementById('motivationText').textContent = d.motivate;
     }
     tSet();
 
-    // helpers
     const $ = s => document.querySelector(s);
     const toast = (msg)=>{
       const t = document.getElementById('toast'); t.textContent = msg || (getLang()==='en'?'Saved':'✓ Salvato');
@@ -173,10 +216,7 @@
 
     const form   = document.getElementById('aboutForm');
     const errBox = document.getElementById('errorBox');
-    const fields = {
-      gender: $('#gender'), age: $('#age'), phase: $('#phase'),
-      where: $('#where'), who: $('#who'), more: $('#more')
-    };
+    const fields = { gender: $('#gender'), age: $('#age'), phase: $('#phase'), where: $('#where'), who: $('#who'), more: $('#more') };
 
     // Prefill da localStorage
     (function prefill(){
@@ -191,7 +231,7 @@
       }catch(e){}
     })();
 
-    // Autosave ad ogni modifica
+    // Autosave
     function saveProfile(showToast=false){
       const profile = {
         gender: fields.gender.value.trim(),
@@ -206,17 +246,15 @@
     }
     Object.values(fields).forEach(el=>{
       el.addEventListener('change', ()=>saveProfile(true));
-      if (el.tagName==='INPUT' || el.tagName==='TEXTAREA'){
-        el.addEventListener('blur', ()=>saveProfile());
-      }
+      if (el.tagName==='INPUT' || el.tagName==='TEXTAREA'){ el.addEventListener('blur', ()=>saveProfile()); }
     });
 
-    // Skip: se già presenti base (gender+age+phase), vai avanti
+    // Skip (se già compilato il minimo)
     function canSkip(){
       const p = JSON.parse(LS.getItem('whatif_profile')||'{}');
       return !!(p.gender && p.age && p.phase);
     }
-    const onSkip = ()=>{
+    function onSkip(){
       if (canSkip()) location.href='fourth.html';
       else {
         const d = I18N[getLang()];
@@ -224,12 +262,11 @@
           ? 'Please fill Gender, Age and Phase at least once, then you can skip next times.'
           : 'Compila almeno Sesso, Età e Fase una volta: poi potrai saltare.');
       }
-    };
-
+    }
     document.getElementById('skipBtn').addEventListener('click', onSkip);
     document.getElementById('skipTop').addEventListener('click', onSkip);
 
-    // Clear: pulisce i campi e il profilo salvato
+    // Clear
     function clearAll(){
       Object.values(fields).forEach(el=>el.value='');
       LS.removeItem('whatif_profile');
@@ -254,8 +291,82 @@
         errBox.classList.add('show'); return;
       }
       errBox.classList.remove('show');
-      saveProfile();          // salva comunque lo stato aggiornato
+      saveProfile();
       location.href = 'fourth.html';
+    });
+
+    // ======= Micro-domande GIORNALIERE (frase + 3 domande) =======
+    function todayStr(){
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+    function shouldShowDaily(){
+      return LS.getItem('whatif_daily_date') !== todayStr();
+    }
+    function markDailyShown(){
+      LS.setItem('whatif_daily_date', todayStr());
+    }
+
+    function pickDailyQuestions(n=3){
+      const tags = JSON.parse(LS.getItem('whatif_tags')||'[]');
+      const used = new Set(Object.keys(JSON.parse(LS.getItem('whatif_micro')||'{}')));
+      const pool = [
+        {k:'m_place1', tag:'place', it:'Un bar/locale dove ti vedono spesso?', en:'A bar/place that knows you well?'},
+        {k:'m_routine1', tag:'time', it:'Un orario in cui rendi al massimo?', en:'A time of day when you’re most “on”?'},
+        {k:'m_person1', tag:'relationships', it:'Una persona “di casa” (alias + ruolo)?', en:'A person who feels “home” (alias + role)?'},
+        {k:'m_goal12', tag:'money', it:'Un obiettivo realistico (12 mesi)?', en:'One realistic 12-month goal?'},
+        {k:'m_skill1', tag:'work', it:'Una skill che vuoi potenziare?', en:'One skill you want to level up?'},
+        {k:'m_city1', tag:'place', it:'Una città che ti attira?', en:'A city that attracts you?'},
+        {k:'m_course1', tag:'study', it:'Un corso che hai adocchiato?', en:'A course you’ve eyed?'},
+        {k:'m_habit1', tag:'wellbeing', it:'Un’abitudine che ti farebbe bene?', en:'One habit that would help you?'},
+        {k:'m_ally1', tag:'network', it:'Un alleato che vorresti (alias)?', en:'An ally you’d like (alias)?'}
+      ];
+      const L = getLang();
+      const pref = pool.filter(x=>tags.includes(x.tag) && !used.has(x.k));
+      const rest = pool.filter(x=>!tags.includes(x.tag) && !used.has(x.k));
+      const chosen = [...pref, ...rest].slice(0,n);
+      while (chosen.length < n){
+        const fallback = pool.find(x=>!chosen.some(c=>c.k===x.k));
+        if(!fallback) break; chosen.push(fallback);
+      }
+      return chosen.map(q=>({k:q.k, t:(L==='en'?q.en:q.it)}));
+    }
+
+    function openDailyOverlay(){
+      // frase sempre presente (ogni giorno, come richiesto)
+      document.getElementById('motivationText').textContent = (I18N[getLang()]||I18N.it).motivate;
+
+      // costruisci 3 domande
+      const box = document.getElementById('dqRows');
+      box.innerHTML = '';
+      pickDailyQuestions(3).forEach(q=>{
+        const div = document.createElement('div');
+        div.className='qcard';
+        div.innerHTML = `<label>${q.t}</label><input type="text" data-k="${q.k}" />`;
+        box.appendChild(div);
+      });
+
+      document.getElementById('dqSkip').onclick = ()=>{
+        markDailyShown();
+        document.getElementById('dailyOverlay').style.display='none';
+      };
+      document.getElementById('dqSave').onclick = ()=>{
+        const micro = JSON.parse(LS.getItem('whatif_micro')||'{}');
+        document.querySelectorAll('#dqRows input').forEach(inp=>{
+          const v = (inp.value||'').trim();
+          if (v) micro[inp.dataset.k] = v;
+        });
+        LS.setItem('whatif_micro', JSON.stringify(micro));
+        markDailyShown();
+        document.getElementById('dailyOverlay').style.display='none';
+      };
+
+      document.getElementById('dailyOverlay').style.display='flex';
+    }
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+      tSet();
+      if (shouldShowDaily()) openDailyOverlay();
     });
 
     // sync lingua quando cambia in un’altra scheda
