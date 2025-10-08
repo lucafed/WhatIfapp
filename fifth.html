@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f – Result</title>
+<title>What?f – Risultato</title>
 <meta name="theme-color" content="#05080C" />
 <style>
   :root{
@@ -29,7 +29,7 @@
   .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 10px 28px var(--glow)}
   .btn.ghost{background:transparent}
   .btn.large{padding:14px 18px;font-size:16px}
-  .chip{background:var(--chip);border:1px solid var(--line);color:#cfe3e7;border-radius:999px;padding:8px 12px;font-size:13px}
+  .chip{background:var(--chip);border:1px solid var(--line);color:#cfe3e7;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
   .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;box-shadow:0 0 0 1px var(--glow) inset}
   .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#cfe3e7;user-select:none}
   h1{font-size:clamp(22px,5vw,30px);margin:14px 0 2px;color:var(--acc)}
@@ -42,10 +42,8 @@
   #result{min-height:190px}
   .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,#0d151c 0%,#122029 50%,#0d151c 100%);background-size:200% 100%;animation:sk 1s infinite}
   @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
-  /* avatar */
   .ai-pulse{width:28px;height:28px;border-radius:999px;background:radial-gradient(circle at 35% 35%, #fff, #eee 30%, transparent 31%), radial-gradient(circle at 50% 50%, var(--acc), var(--acc2));box-shadow:0 0 18px var(--glow), 0 0 4px var(--glow) inset;animation:breath 2.6s ease-in-out infinite}
   @keyframes breath{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
-  /* knowledge mini */
   .know-mini{display:flex;align-items:center;gap:8px}
   .meter{position:relative;height:10px;background:#0f1820;border:1px solid var(--line);border-radius:999px;overflow:hidden;width:120px}
   .meter-fill{height:100%;width:0;background:linear-gradient(180deg,var(--acc),var(--acc2))}
@@ -91,15 +89,15 @@
     <h3 class="label">Domanda</h3>
     <div id="question" class="box"></div>
 
-    <!-- Segnali -->
-    <div style="margin-top:6px;color:#cfe3e7;font-size:12px" id="signalsLine">Segnali usati oggi: <span id="signalsBody"></span></div>
+    <div style="margin-top:6px;color:#cfe3e7;font-size:12px">
+      Segnali usati oggi: <span id="signalsBody"></span>
+    </div>
 
     <div class="row" style="margin-top:12px">
       <button class="btn primary large" id="clarifyBtn">✨ Chiarisci & genera</button>
       <button class="btn large" id="genBtn">Genera subito</button>
     </div>
 
-    <!-- azioni SEMPRE visibili -->
     <div class="actions-inline">
       <button class="btn" id="regenBtn" style="display:none">🔁 Rigenera</button>
       <button class="btn" id="saveBtn">💾 Salva</button>
@@ -115,6 +113,7 @@
 </main>
 
 <script>
+/* Utils */
 const LS=localStorage;
 const $=id=>document.getElementById(id);
 function readJSON(k,def={}){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
@@ -122,50 +121,15 @@ function writeJSON(k,v){LS.setItem(k,JSON.stringify(v));}
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function escapeHTML(s){return (s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
-/* tema “porte” */
+/* Tema “porte” e stato base */
 (function(){ try{ const p=readJSON('whatif_prefs',{}); document.body.setAttribute('data-theme', p.stile==='wtf'?'wtf':'whatif'); }catch(_){}})();
-
-/* limiti free/clarify */
-const DAILY_FREE=3, DAILY_CLARIFY=5;
-function readCredits(){const v=readJSON('whatif_credits');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0,pro:!!v.pro};return v;}
-function writeCredits(v){writeJSON('whatif_credits',v);renderBadges();}
-function readClarify(){const v=readJSON('whatif_clarify');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0};return v;}
-function writeClarify(v){writeJSON('whatif_clarify',v);renderBadges();}
-function renderBadges(){
-  const gc=readCredits(); const gl=Math.max(0,DAILY_FREE-(gc.used||0));
-  $('freeBadge').textContent=`Free oggi: ${gl}/${DAILY_FREE}`;
-  const cc=readClarify(); const cl=Math.max(0,DAILY_CLARIFY-(cc.used||0));
-  $('clarifyBadge').textContent=`Chiarimenti: ${cl}/${DAILY_CLARIFY}`;
-}
-
-/* knowledge mini */
-function computeKnowledge(){
-  const profile=readJSON('whatif_profile',{}); const micro=readJSON('whatif_micro',{}); const clar=readJSON('whatif_clarify',{date:null,used:0});
-  const microLog=readJSON('whatif_micro_log',[]); const today=todayStr();
-  let score=0;
-  if(profile.name||profile.role) score+=10;
-  if(profile.city) score+=8;
-  if(micro.indicatore) score+=10;
-  if(micro.vincolo_2w) score+=8;
-  if(profile.goal) score+=8;
-  if(micro.punto_riferimento) score+=8;
-  if(clar.date===today && clar.used>0) score+=8;
-  score+=Math.min(10, microLog.length); // continuità
-  return Math.max(0, Math.min(100, score));
-}
-function renderKnowledge(){ const s=computeKnowledge(); $('knowFill').style.width=`${s}%`; $('knowValueMini').textContent=`${s}/100`; }
-
-/* stato domanda + prefs */
 const prefs=readJSON('whatif_prefs',{periodo:'future',stile:'whatif'});
 let domanda=LS.getItem('domanda')||'';
 if(!domanda){ alert('Nessuna domanda trovata.'); location.href='fourth.html'; }
 $('question').textContent=domanda;
 $('badgePeriodo').textContent='🕰️ '+(prefs.periodo==='past'?'Passato':'Futuro');
 $('badgeStile').textContent='🎭 '+(prefs.stile==='wtf'?'What the F':'What if');
-document.body.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 document.querySelectorAll('[data-style]').forEach(b=> b.classList.toggle('sel', b.dataset.style===prefs.stile));
-
-/* switch stile */
 document.getElementById('chipWhatIf').addEventListener('click', ()=> setStyle('whatif'));
 document.getElementById('chipWTF').addEventListener('click', ()=> setStyle('wtf'));
 function setStyle(s){
@@ -175,7 +139,39 @@ function setStyle(s){
   document.querySelectorAll('[data-style]').forEach(b=> b.classList.toggle('sel', b.dataset.style===s));
 }
 
-/* segnali */
+/* Limiti giornalieri */
+const DAILY_FREE=3, DAILY_CLARIFY=5;
+function readCredits(){const v=readJSON('whatif_credits');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0};return v;}
+function writeCredits(v){writeJSON('whatif_credits',v);renderBadges();}
+function readClarify(){const v=readJSON('whatif_clarify');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0};return v;}
+function writeClarify(v){writeJSON('whatif_clarify',v);renderBadges();}
+function renderBadges(){
+  const gc=readCredits(); const gl=Math.max(0,DAILY_FREE-(gc.used||0));
+  $('freeBadge').textContent=`Free oggi: ${gl}/${DAILY_FREE}`;
+  const cc=readClarify(); const cl=Math.max(0,DAILY_CLARIFY-(cc.used||0));
+  $('clarifyBadge').textContent=`Chiarimenti: ${cl}/${DAILY_CLARIFY}`;
+}
+renderBadges();
+
+/* Barra “conoscenza” */
+function computeKnowledge(){
+  const profile=readJSON('whatif_profile',{}); const micro=readJSON('whatif_micro',{}); const clar=readJSON('whatif_clarify',{date:null,used:0});
+  const microLog=readJSON('whatif_micro_log',[]); const today=todayStr();
+  let s=0;
+  if(profile.name||profile.role) s+=10;
+  if(profile.city) s+=8;
+  if(profile.goal) s+=8;
+  if(micro.indicatore) s+=10;
+  if(micro.vincolo_2w) s+=8;
+  if(micro.punto_riferimento) s+=8;
+  if(clar.date===today && clar.used>0) s+=8;
+  s+=Math.min(10, microLog.length);
+  return Math.max(0, Math.min(100, s));
+}
+function renderKnowledge(){ const sc=computeKnowledge(); $('knowFill').style.width=`${sc}%`; $('knowValueMini').textContent=`${sc}/100`; }
+renderKnowledge();
+
+/* Segnali */
 function summarizeSignals(clarUsed={}){
   const p=readJSON('whatif_profile',{}); const m=readJSON('whatif_micro',{}); const out=[];
   if(p.city) out.push(`città: ${p.city}`);
@@ -189,45 +185,46 @@ function summarizeSignals(clarUsed={}){
 }
 $('signalsBody').textContent = summarizeSignals({});
 
-/* API helpers */
-async function callClarifyAPI(){
-  const payload={ domanda, lang:(LS.getItem('lang')||'it'), periodo:prefs.periodo, stile:prefs.stile, clarify:true, profilo:readJSON('whatif_profile',{}), micro:readJSON('whatif_micro',{}) };
-  const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-  if(!r.ok) throw new Error('server');
-  return r.json();
+/* Clarify (domande client-side) */
+function buildClarifyQuestions(){
+  const qs=[];
+  if(prefs.periodo==='past'){
+    qs.push({id:'periodo_preciso',label:'Quale periodo esatto del passato intendi (anno/stagione)?', placeholder:'Es. primavera 2015'});
+  }else{
+    qs.push({id:'orizzonte_temporale',label:'Su che orizzonte vuoi guardare?', placeholder:'Es. 6 mesi / 2 anni'});
+  }
+  qs.push({id:'vincolo_chiave',label:'C’è un vincolo o priorità da rispettare?', placeholder:'Es. budget 500€, cura di un familiare, orari'});
+  qs.push({id:'focus',label:'Su cosa vuoi focalizzarci di più?', placeholder:'lavoro / relazioni / denaro / salute'});
+  return qs;
 }
-async function callGenerateStream({clarifications={},extra=""}={}){
-  const payload={ domanda, lang:(LS.getItem('lang')||'it'), periodo:prefs.periodo, stile:prefs.stile, clarify:false, stream:true, profilo:readJSON('whatif_profile',{}), micro:readJSON('whatif_micro',{}), clarifications, extra };
+
+document.getElementById('clarifyBtn').addEventListener('click', async ()=>{
+  const c=readClarify(); if((c.used||0)>=DAILY_CLARIFY){ alert('Limite chiarimenti di oggi raggiunto.'); return; }
+  const qs=buildClarifyQuestions(); const answers={};
+  for(const q of qs){
+    const a=prompt(q.label, q.placeholder||''); if(a && a.trim()) answers[q.id]=a.trim();
+  }
+  $('signalsBody').textContent = summarizeSignals(answers);
+  c.used=(c.used||0)+1; writeClarify(c);
+  generate(false, answers);
+});
+
+/* API verso /api/ask (compatibile con il tuo backend) */
+async function callGenerateStream({clarifications={}}={}){
+  const lang=(LS.getItem('lang')||'it');
+  let domandaAug=domanda;
+  const clarStr=Object.entries(clarifications).map(([k,v])=>`${k}: ${v}`).join(' · ');
+  if(clarStr){ domandaAug += `\n\n[Dettagli utente: ${clarStr}]`; }
+  const payload={ domanda: domandaAug, lang, periodo:prefs.periodo, stile:prefs.stile, stream:true };
   const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json','x-whatif-stream':'1'},body:JSON.stringify(payload)});
   if(!r.ok) throw new Error('server');
   return r.body.getReader();
 }
 
-/* WebAudio chime */
+/* Suono finale */
 function chime(){ try{ const ctx=new (window.AudioContext||window.webkitAudioContext)(); const o1=ctx.createOscillator(),o2=ctx.createOscillator(),g=ctx.createGain(); o1.type='sine';o2.type='sine'; const t=ctx.currentTime; o1.frequency.setValueAtTime(880,t);o2.frequency.setValueAtTime(1320,t); g.gain.setValueAtTime(0.001,t); g.gain.exponentialRampToValueAtTime(0.08,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.45); o1.connect(g);o2.connect(g);g.connect(ctx.destination); o1.start(t);o2.start(t);o1.stop(t+0.5);o2.stop(t+0.5);}catch(_){}} 
 
-/* chiarimenti */
-document.getElementById('clarifyBtn').addEventListener('click', openClarify);
-async function openClarify(){
-  const c=readClarify(); if((c.used||0)>=DAILY_CLARIFY){ alert('Limite chiarimenti di oggi raggiunto.'); return; }
-  document.getElementById('result').textContent='Preparando 2–3 domande…';
-  try{
-    const j=await callClarifyAPI();
-    c.used=(c.used||0)+1; writeClarify(c);
-    const qs=Array.isArray(j.questions)?j.questions.slice(0,3):[];
-    const answers={};
-    for(const q of qs){
-      const a = prompt(q.label||'Dettaglio', q.placeholder||'');
-      if(a && q.id) answers[q.id]=a;
-    }
-    $('signalsBody').textContent = summarizeSignals(answers);
-    generate(false,answers);
-  }catch(_){
-    generate();
-  }
-}
-
-/* genera */
+/* Genera / Rigenera (SSE) */
 document.getElementById('genBtn').addEventListener('click', ()=> generate());
 document.getElementById('regenBtn').addEventListener('click', ()=> generate(true));
 
@@ -251,7 +248,7 @@ async function generate(isRegen=false, clarOverride=null){
         if(data.done){
           resEl.textContent=(text||"").trim();
           $('regenBtn').style.display='inline-block';
-          chime(); 
+          chime();
         }
         if(data.error){ resEl.textContent='Errore server.'; }
       }
@@ -263,7 +260,7 @@ async function generate(isRegen=false, clarOverride=null){
   }
 }
 
-/* azioni */
+/* Azioni */
 $('saveBtn').addEventListener('click', ()=>{
   const arr=readJSON('cronologia',[]);
   arr.unshift({ domanda, risposta:($('result').textContent||'').trim(), periodo:prefs.periodo, stile:prefs.stile, lang:(LS.getItem('lang')||'it'), ts:Date.now() });
@@ -278,13 +275,9 @@ $('shareBtn').addEventListener('click', ()=>{
   if(navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(`${data.title}\n${data.text}`);
 });
 
-/* nav */
+/* Nav */
 $('backBtnTop').addEventListener('click', ()=> history.back());
 $('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
-
-/* avvio */
-renderBadges(); renderKnowledge();
-$('signalsBody').textContent = summarizeSignals({});
 </script>
 </body>
 </html>
