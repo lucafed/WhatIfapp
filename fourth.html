@@ -6,20 +6,22 @@
 <title>What?f – La tua domanda</title>
 <meta name="theme-color" content="#0A0F14" />
 <style>
-  :root { --bg:#0A0F14; --card:#141C22; --fg:#FFFFFF; --muted:#A0B2BA; --acc:#00E0FF; --acc2:#00B5CC; --ink:#001F26 }
+  :root { --bg:#0A0F14; --card:#141C22; --fg:#FFFFFF; --muted:#A0B2BA; --acc:#00E0FF; --acc2:#00B5CC; --ink:#001F26; --chip:#0f1820 }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
   .topbar{position:fixed;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;z-index:10}
   .btn{appearance:none;border:1px solid #1d2b34;background:#0f1820;color:#E6F2F5;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
   main{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
   h1{font-size:clamp(22px,5vw,32px);margin:0 0 14px}
-  .card{width:min(92vw,720px);background:var(--card);border-radius:16px;padding:18px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
+  .card{width:min(92vw,760px);background:var(--card);border-radius:16px;padding:18px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
   label{display:block;margin:6px 0 8px;font-weight:700}
   input[type="text"]{width:100%;background:#0E161D;color:var(--fg);border:1px solid #1C2A33;border-radius:12px;font-size:16px;padding:14px}
   .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
   .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border:none}
   .muted{color:var(--muted);font-size:12px}
   .toggle{width:100%;text-align:left;background:#0f1820;border:1px solid #1d2b34;color:#cfe3e7;border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{background:var(--chip);border:1px solid #1b2a34;color:#cfe3e7;border-radius:999px;padding:8px 12px;font-size:12px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -32,13 +34,16 @@
   <h1 id="mainTitle">Scrivi la tua domanda</h1>
   <div class="card">
     <label for="domandaInput" id="questionLabel">La tua domanda</label>
-    <input type="text" id="domandaInput" placeholder="E se fossi rimasto a vivere all’Aquila?" />
+    <input type="text" id="domandaInput" placeholder="" />
 
-    <!-- opzionale: ancore personali per rendere il passato più “tuo” -->
+    <!-- Template dinamici (past/future) -->
+    <div class="chips" id="templates"></div>
+
+    <!-- ancore personali -->
     <div style="margin-top:14px;border-top:1px solid #1c2a33;padding-top:12px">
       <button class="toggle" id="toggleMore">✨ Rendi più personale in 30s</button>
       <div id="moreBox" style="display:none">
-        <p class="muted" id="moreHint">Compila se vuoi soprattutto per il passato: useremo questi dettagli come “ancore”.</p>
+        <p class="muted" id="moreHint">Compila se vuoi soprattutto per il passato: useremo questi dettagli come ancore.</p>
         <div style="display:grid;gap:10px;grid-template-columns:1fr;max-width:100%">
           <div>
             <label id="lab_place">Un dettaglio del luogo</label>
@@ -65,19 +70,41 @@
 
 <script>
   const L=(localStorage.getItem("lang")||"it").toLowerCase();
+  const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}'); // {periodo, stile}
+  const period = prefs.periodo || 'future';
   const T = L==='en'
-    ? {back:'Back',home:'Home',title:'Write your question',label:'Your question',ph:"What if I had stayed to live in L’Aquila?",toggle:"✨ Make it more personal in 30s",hint:"Fill if you like (esp. for the past): we’ll use these as anchors.",place:"A place detail",person:"A person (alias + role)",memory:"A concrete memory",missing:"Please enter a question before continuing.",next:"Next"}
-    : {back:'Indietro',home:'Home',title:'Scrivi la tua domanda',label:'La tua domanda',ph:"E se fossi rimasto a vivere all’Aquila?",toggle:"✨ Rendi più personale in 30s",hint:"Compila se vuoi soprattutto per il passato: useremo questi dettagli come ancore.",place:"Un dettaglio del luogo",person:"Una persona (nome fittizio + ruolo)",memory:"Un ricordo concreto",missing:"Inserisci una domanda prima di continuare.",next:"Avanti"};
+    ? {back:'Back',home:'Home',title:'Write your question',label:'Your question',
+       pastPH:"What if you had stayed in ___?", futurePH:"What if in the next 12 months you ___?",
+       toggle:"✨ Make it more personal in 30s",hint:"Optional (especially useful for the past): anchors help realism.",
+       place:"A place detail",person:"A person (alias + role)",memory:"A concrete memory",
+       missing:"Please enter a question before continuing.",next:"Next",
+       tempPast:["What if you had stayed in your hometown?","What if you had worked with ___ instead?","What if you hadn’t moved in 2015?"],
+       tempFuture:["What if you quit and opened a small studio?","What if you moved to ___ for a year?","What if you went back to study ___?"]}
+    : {back:'Indietro',home:'Home',title:'Scrivi la tua domanda',label:'La tua domanda',
+       pastPH:"E se fossi rimasto a ___?", futurePH:"E se nei prossimi 12 mesi ___?",
+       toggle:"✨ Rendi più personale in 30s",hint:"Opzionale (utile soprattutto per il passato): le ancore aumentano il realismo.",
+       place:"Un dettaglio del luogo",person:"Una persona (nome fittizio + ruolo)",memory:"Un ricordo concreto",
+       missing:"Inserisci una domanda prima di continuare.",next:"Avanti",
+       tempPast:["E se fossi rimasto nella tua città?","E se avessi lavorato con ___ invece?","E se non ti fossi trasferito nel 2015?"],
+       tempFuture:["E se lasciassi e aprissi uno studio?","E se ti trasferissi a ___ per un anno?","E se tornassi a studiare ___?"]};
   document.getElementById('tb_back').textContent=T.back; document.getElementById('tb_home').textContent=T.home;
   document.getElementById('mainTitle').textContent=T.title; document.getElementById('questionLabel').textContent=T.label;
-  document.getElementById('domandaInput').placeholder=T.ph; document.getElementById('backTxt').textContent=T.back; document.getElementById('nextTxt').textContent=T.next;
+  document.getElementById('backTxt').textContent=T.back; document.getElementById('nextTxt').textContent=T.next;
   document.getElementById('toggleMore').textContent=T.toggle; document.getElementById('moreHint').textContent=T.hint;
   document.getElementById('lab_place').textContent=T.place; document.getElementById('lab_person').textContent=T.person; document.getElementById('lab_memory').textContent=T.memory;
 
-  document.getElementById('toggleMore').addEventListener('click',()=>{ const b=document.getElementById('moreBox'); b.style.display=b.style.display==='none'?'block':'none'; });
-  document.getElementById('backBtn').addEventListener('click',()=>history.back());
-  document.getElementById('nextBtn').addEventListener('click',salvaDomanda);
+  // placeholder dinamico
+  document.getElementById('domandaInput').placeholder = period==='past' ? T.pastPH : T.futurePH;
 
+  // template tap-to-fill
+  const tBox = document.getElementById('templates');
+  (period==='past'?T.tempPast:T.tempFuture).forEach(txt=>{
+    const b=document.createElement('button'); b.className='chip'; b.textContent=txt;
+    b.addEventListener('click',()=>{ document.getElementById('domandaInput').value = txt; });
+    tBox.appendChild(b);
+  });
+
+  // prefill dati precedenti
   (function prefill(){
     const prev=localStorage.getItem("domanda"); if(prev) document.getElementById("domandaInput").value=prev;
     const anchors=JSON.parse(localStorage.getItem("whatif_anchors")||"{}");
@@ -85,6 +112,10 @@
     if(anchors.person) document.getElementById("anchor_person").value=anchors.person;
     if(anchors.memory) document.getElementById("anchor_memory").value=anchors.memory;
   })();
+
+  document.getElementById('toggleMore').addEventListener('click',()=>{ const b=document.getElementById('moreBox'); b.style.display=b.style.display==='none'?'block':'none'; });
+  document.getElementById('backBtn').addEventListener('click',()=>history.back());
+  document.getElementById('nextBtn').addEventListener('click',salvaDomanda);
 
   function salvaDomanda(){
     const domanda = document.getElementById("domandaInput").value.trim();
