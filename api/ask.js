@@ -1,10 +1,4 @@
-// /api/ask.js — supporta:
-// 1) clarify=true  -> restituisce 2–3 domande mirate (JSON, no streaming)
-// 2) clarify=false -> genera lo scenario (streaming SSE o JSON)
-//
-// Usa profilo locale + risposte di chiarimento per personalizzare la risposta.
-// Tono: "whatif" = realistico, asciutto, concreto; "wtf" = brillante, ironico, da bar ma plausibile.
-
+// /api/ask.js — chiarimenti + generazione con stile predittivo-personale (no “storiella”)
 import OpenAI from "openai";
 
 export default async function handler(req, res) {
@@ -20,16 +14,16 @@ export default async function handler(req, res) {
     const {
       question, domanda, lang = "it",
       periodo, stile, stream,
-      // nuovo:
-      clarify = false,        // true => restituisce domande mirate
-      clarifications = {},    // risposte utente alle domande mirate
-      profilo = {},           // profilo locale dell’utente
-      extra = ""              // eventuale istruzione aggiuntiva (es. continua/riavvolgi/bivi)
+      clarify = false,
+      clarifications = {},
+      profilo = {},
+      extra = ""
     } = req.body || {};
 
     const q = (question || domanda || "").toString().trim();
     if (!q) return res.status(400).json({ error: "question required" });
 
+    // ---- snapshot profilo
     const p = profilo || {};
     const snap = [
       p.name ? `nome: ${p.name}` : null,
@@ -49,33 +43,54 @@ export default async function handler(req, res) {
       ? Object.entries(clarifications).map(([k,v]) => `${k}: ${v}`).join(" | ")
       : "";
 
+    // ---- contesto temporale
     const time =
       periodo === "past"
         ? (lang === "en" ? "the past (what if)" : "il passato (what if)")
         : (lang === "en" ? "the near future (plausible what if)" : "il prossimo futuro (what if plausibile)");
 
-    const tone =
-      stile === "wtf"
-        ? (lang === "en"
-            ? "an ironic, lively, witty bar-story tone (playful yet realistic and respectful)"
-            : "tono ironico, brillante, da bar: vivace e divertente, ma plausibile e rispettoso")
-        : (lang === "en"
-            ? "a realistic, concrete, concise tone (no melodrama, no 1st-person diary)"
-            : "tono realistico, concreto e conciso (niente melodramma, niente diario in prima persona)");
+    // ---- guida di stile (NUOVA)
+    const baseGuide_it =
+`Scrivi in seconda persona (“tu”), tono analitico e concreto. Evita melodramma, frasi generiche e diario.
+Usa SOLO i dati forniti (profilo e chiarimenti); non inventare nomi propri o eventi specifici non dati.
+Struttura del testo (130–170 parole), SENZA elenchi numerati:
+• Apertura: 2 frasi che formulano un’ipotesi realistica su come ti comporteresti in ${time}.
+• Previsioni: 2–3 sviluppi concreti con marcatori di quotidianità (orari, luoghi tipologici, gesti), plausibili per il tuo profilo.
+• Trade-off: un compromesso reale che probabilmente dovrai gestire.
+• Indicatore da tenere d’occhio: un segnale pratico per capire se l’ipotesi regge.
+• Prossima mossa da 10 minuti: un’azione micro e fattibile ora.
+Niente bullet espliciti: integra le sezioni in un unico testo scorrevole con etichette brevi in grassetto (es. **Indicatore**, **Prossima mossa**).`;
 
-    const wtfAddon = stile === "wtf"
-      ? (lang === "en"
-          ? "Add subtle bar-scene color (a spritz, a busy counter, laughter). Do not encourage dangerous excess."
-          : "Aggiungi colore da bar (uno spritz, un bancone affollato, risate). Non incoraggiare eccessi pericolosi.")
-      : "";
+    const wtfAddon_it =
+`Mantieni la stessa struttura predittiva ma con piglio brillante e due tocchi da bar (uno spritz, il bancone affollato, una battuta secca).
+Il colore serve a rendere vivo lo scenario, non a incoraggiare eccessi pericolosi.`;
 
+    const baseGuide_en =
+`Write in second person (“you”), analytical and concrete tone. No melodrama, no diary voice.
+Use ONLY given data (profile and clarifications); don’t invent proper names or unknown facts.
+Output (130–170 words), NO numbered lists:
+• Opening: 2 sentences stating a realistic hypothesis about how you'd likely behave in ${time}.
+• Predictions: 2–3 concrete developments with everyday markers (times of day, typical places, gestures), plausible for this user.
+• Trade-off: one real compromise you’d likely manage.
+• Leading indicator: one practical signal to check if the hypothesis holds.
+• Next 10-minute move: one tiny action to do now.
+No bullets: weave everything into a single flowing text with short bold labels (e.g., **Indicator**, **Next move**).`;
+
+    const wtfAddon_en =
+`Keep the same predictive structure but with witty, lively bar color (a spritz, a noisy counter, a dry quip).
+Color makes it vivid, not an encouragement of dangerous excess.`;
+
+    const guide = lang === "en"
+      ? (stile === "wtf" ? `${baseGuide_en}\n${wtfAddon_en}` : baseGuide_en)
+      : (stile === "wtf" ? `${baseGuide_it}\n${wtfAddon_it}` : baseGuide_it);
+
+    // ---- sistema per chiarimenti
     const client = new OpenAI({ apiKey });
 
-    // ====== MODALITÀ 1: DOMANDE DI CHIARIMENTO (NO STREAM) ======
     if (clarify === true) {
       const clarifySystem = lang === "en"
-        ? `You are What?f. Given the user's question and profile, ask 2–3 SHORT, targeted clarifying questions that make the final scenario more personal and realistic. Output strict JSON: {"questions":[{"id":"q1","label":"...","placeholder":"..."}, ...]}`
-        : `Sei What?f. Dalla domanda e dal profilo, formula 2–3 domande di chiarimento, BREVI e mirate, per rendere lo scenario finale più personale e realistico. Rispondi SOLO in JSON: {"questions":[{"id":"q1","label":"...","placeholder":"..."}, ...]}`;
+        ? `You are What?f. Ask 2–3 SHORT, targeted clarifying questions to sharpen predictions (habits, constraints, tolerance for risk, key people). Output strict JSON: {"questions":[{"id":"q1","label":"...","placeholder":"..."}]}`
+        : `Sei What?f. Formula 2–3 domande di chiarimento, BREVI e mirate, per affinare le previsioni (abitudini, vincoli, tolleranza al rischio, figure chiave). Rispondi SOLO in JSON: {"questions":[{"id":"q1","label":"...","placeholder":"..."}]}`;
 
       const clarifyUser = [
         lang === "en" ? `User question: ${q}` : `Domanda utente: ${q}`,
@@ -95,24 +110,28 @@ export default async function handler(req, res) {
       });
 
       const text = resp.choices?.[0]?.message?.content?.trim() || "";
-      let json;
-      try { json = JSON.parse(text); }
-      catch { json = { questions: [] }; }
+      let json; try { json = JSON.parse(text); } catch { json = { questions: [] }; }
       return res.status(200).json({ ok: true, clarify: true, questions: json.questions || [] });
     }
 
-    // ====== MODALITÀ 2: GENERAZIONE SCENARIO (STREAM / NON STREAM) ======
-    const systemPrompt = lang === "en"
-      ? `You are What?f. Generate a concise scenario in ${time}, with ${tone}. Use only provided personal cues (name, city, life phase, routines) or clarifications; never invent facts. Make it feel tailored to this user. 120–180 words.`
-      : `Sei What?f. Genera uno scenario conciso nel ${time}, con ${tone}. Usa solo i riferimenti personali forniti (profilo e chiarimenti); non inventare. Deve sembrare su misura per questa persona. 120–180 parole.`;
+    // ---- generazione scenario predittivo
+    const sys = lang === "en"
+      ? `You are What?f. Generate a personal, predictive scenario in ${time}. ${guide}`
+      : `Sei What?f. Genera uno scenario personale e predittivo nel ${time}. ${guide}`;
 
-    const userPrompt = [
+    const wtfColor = stile === "wtf"
+      ? (lang === "en"
+          ? "Add light bar-scene color when useful; keep it plausible and respectful."
+          : "Aggiungi colore da bar quando utile; resta plausibile e rispettoso.")
+      : "";
+
+    const user = [
       lang === "en" ? `User question: ${q}` : `Domanda: ${q}`,
       snap ? (lang === "en" ? `Profile snapshot: ${snap}` : `Profilo: ${snap}`) : "",
       micro ? (lang === "en" ? `Micro-signals: ${micro}` : `Micro-dettagli: ${micro}`) : "",
       clarStr ? (lang === "en" ? `Clarifications: ${clarStr}` : `Chiarimenti: ${clarStr}`) : "",
       extra ? (lang === "en" ? `Extra instruction: ${extra}` : `Istruzione extra: ${extra}`) : "",
-      wtfAddon
+      wtfColor
     ].filter(Boolean).join("\n");
 
     const wantsStream =
@@ -133,8 +152,8 @@ export default async function handler(req, res) {
         max_tokens: MAX_TOKENS,
         stream: true,
         messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          { role: "system", content: sys },
+          { role: "user", content: user },
         ],
       });
 
@@ -157,8 +176,8 @@ export default async function handler(req, res) {
       temperature: stile === "wtf" ? 0.9 : 0.6,
       max_tokens: MAX_TOKENS,
       messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
+        { role: "system", content: sys },
+        { role: "user", content: user },
       ],
     });
 
