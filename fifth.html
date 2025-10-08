@@ -17,9 +17,11 @@
   .btn{appearance:none;border:none;background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;transition:opacity .2s}
   .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800}
   .btn.ghost{background:transparent;border:1px solid #1d2b34}
+  .btn.large{padding:14px 18px;font-size:16px}
   .btn:hover{opacity:.9}
   h1{font-size:clamp(24px,5vw,32px);margin:16px 0 4px}
   p.sub{color:var(--muted);margin:0 0 12px}
+  .hint{color:#cfe3e7;opacity:.9;font-size:13px;margin-top:6px}
   .card{background:var(--card);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px rgba(0,0,0,.25)}
   .label{color:var(--acc);font-weight:800;margin:0 0 8px}
   .box{background:#0b1218;border:1px solid #18242c;border-radius:12px;padding:12px;white-space:pre-wrap}
@@ -31,6 +33,7 @@
   .tools{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
   .divider{height:1px;background:#16222b;margin:16px 0}
   .badge{background:#0f1820;border:1px solid #1b2a34;border-radius:999px;padding:6px 10px;font-size:12px;color:#cfe3e7;user-select:none}
+  .badge.accent{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border:none;font-weight:800}
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:6000;padding:14px}
   .sheet{width:min(92vw,720px);max-height:80vh;overflow:auto;background:var(--card);border-radius:16px;padding:14px;border:1px solid #1d2b34}
   .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,#0d151c 0%,#122029 50%,#0d151c 100%);background-size:200% 100%;animation:sk 1s infinite}
@@ -47,13 +50,14 @@
         <button class="btn ghost" onclick="history.back()">← Indietro</button>
         <button class="btn ghost" onclick="location.href='index.html'">🏠 Home</button>
       </div>
-      <div class="row">
+      <div class="row" style="gap:8px">
         <span id="freeBadge" class="badge" title="Long-press 2s: reset crediti · Triplo click: toggle Pro (solo dev)">Free oggi: —</span>
+        <span id="clarifyBadge" class="badge accent" title="Chiarimenti disponibili oggi">Chiarimenti: —</span>
       </div>
     </div>
 
     <h1>Il tuo scenario</h1>
-    <p class="sub">Per una risposta più personale, puoi fare prima 2–3 chiarimenti mirati.</p>
+    <p class="sub">Per una risposta più personale, usa <strong>Chiarisci e genera</strong>.</p>
 
     <!-- STILE + PERIOD (solo display) -->
     <div class="card">
@@ -72,12 +76,15 @@
     <div class="card">
       <h3 class="label">Domanda</h3>
       <div id="question" class="box"></div>
-      <div class="tools">
-        <button class="btn" onclick="editQuestion()">Modifica domanda</button>
-        <button class="btn" id="clarifyBtn">Chiarisci e genera</button>
-        <button class="btn primary" id="genBtn">Genera subito</button>
-        <button class="btn" id="regenBtn" style="display:none">Rigenera 🔁</button>
+
+      <div class="tools" style="align-items:flex-start">
+        <div class="row" style="gap:10px">
+          <button class="btn primary large" id="clarifyBtn">✨ Chiarisci e genera</button>
+          <button class="btn large" id="genBtn">Genera subito</button>
+          <button class="btn" id="regenBtn" style="display:none">Rigenera 🔁</button>
+        </div>
       </div>
+      <p class="hint">Consiglio: con 2–3 dettagli mirati la risposta diventa molto più “tua”.</p>
 
       <div class="divider"></div>
 
@@ -107,23 +114,32 @@
 <script>
 /* ====== Config ====== */
 const LS = localStorage;
-const DAILY_FREE = 3;
+const DAILY_FREE = 3;      // generazioni/giorno
+const DAILY_CLARIFY = 5;   // chiarimenti/giorno (nuovo)
 const lang = (LS.getItem("lang") || "it").toLowerCase();
 
 /* ====== Helpers ====== */
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function readCredits(){const v=JSON.parse(LS.getItem('whatif_credits')||'{}');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0,pro:!!v.pro};return v;}
+function readJSON(k,def={}){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
+
+/* crediti generazione */
+function readCredits(){const v=readJSON('whatif_credits');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0,pro:!!v.pro};return v;}
 function writeCredits(v){LS.setItem('whatif_credits',JSON.stringify(v));renderFreeBadge();}
 function ensureCredits(){const c=readCredits();if(!c.date||c.date!==todayStr()){c.date=todayStr();c.used=0;writeCredits(c);}}
 
+/* limiti chiarimenti */
+function readClarify(){const v=readJSON('whatif_clarify');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0};return v;}
+function writeClarify(v){LS.setItem('whatif_clarify',JSON.stringify(v));renderClarifyBadge();}
+function ensureClarify(){const c=readClarify();if(!c.date||c.date!==todayStr()){c.date=todayStr();c.used=0;writeClarify(c);}}
+
 /* ====== Profilo (locale) ====== */
 function buildProfilePayload(){
-  const base = JSON.parse(LS.getItem('whatif_profile')||'{}');
-  const micro = JSON.parse(LS.getItem('whatif_micro')||'{}');
+  const base = readJSON('whatif_profile');
+  const micro = readJSON('whatif_micro');
   return { ...base, micro };
 }
 function saveMicroPatch(patch){
-  const micro = JSON.parse(LS.getItem('whatif_micro')||'{}');
+  const micro = readJSON('whatif_micro');
   Object.assign(micro, patch);
   LS.setItem('whatif_micro', JSON.stringify(micro));
 }
@@ -134,9 +150,14 @@ function renderFreeBadge(){
   const el=document.getElementById('freeBadge'); if(!el) return;
   el.textContent = `Free oggi: ${left}/${DAILY_FREE}`;
 }
+function renderClarifyBadge(){
+  const c=readClarify(); const left=Math.max(0, DAILY_CLARIFY - (c.used||0));
+  const el=document.getElementById('clarifyBadge'); if(!el) return;
+  el.textContent = `Chiarimenti: ${left}/${DAILY_CLARIFY}`;
+}
 
 /* ====== Stato iniziale ====== */
-const prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}");
+const prefs = readJSON("whatif_prefs");
 let domanda = LS.getItem("domanda") || "";
 if (!domanda) { alert("Nessuna domanda trovata."); location.href="fourth.html"; }
 let currentStyle = (prefs.stile || "whatif");
@@ -180,10 +201,21 @@ const clarifyList    = document.getElementById('clarifyList');
 document.getElementById('clarifyBtn').addEventListener('click', openClarify);
 
 async function openClarify(){
+  // controllo limite chiarimenti
+  ensureClarify();
+  const c = readClarify();
+  if ((c.used||0) >= DAILY_CLARIFY){
+    alert("Hai raggiunto il limite di chiarimenti per oggi. Puoi comunque generare la risposta.");
+    return;
+  }
+
   clarifyList.innerHTML = `<p class="sub">Sto preparando 2–3 domande mirate…</p>`;
   clarifyOverlay.style.display='flex';
   try{
     const j = await callClarifyAPI();
+    // conteggia 1 chiarimento (solo la richiesta di chiarimento, non la generazione)
+    c.used = (c.used||0) + 1; writeClarify(c);
+
     const qs = Array.isArray(j.questions)? j.questions.slice(0,3) : [];
     if (!qs.length){ clarifyList.innerHTML = `<p class="sub">Nessun chiarimento necessario. Puoi generare direttamente.</p>`; return; }
     clarifyList.innerHTML = qs.map(q=>`
@@ -258,7 +290,7 @@ async function generate(isRegen=false, clarOverride=null){
 /* ====== Utility ====== */
 function editQuestion(){ LS.setItem("domanda", domanda); location.href="fourth.html"; }
 function saveHistory(){
-  const arr = JSON.parse(LS.getItem("cronologia")||"[]");
+  const arr = readJSON("cronologia", []);
   arr.unshift({ domanda, risposta:(resultEl.textContent||"").trim(), periodo:prefs.periodo||null, stile:currentStyle, lang, ts:Date.now() });
   LS.setItem("cronologia", JSON.stringify(arr));
   alert("Salvato!");
@@ -282,9 +314,9 @@ function escapeAttr(s){return String(s||"").replace(/"/g,'&quot;')}
   function resetToday(){
     const d=new Date();
     const today=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    const c=JSON.parse(localStorage.getItem('whatif_credits')||'{}');
+    const c=readJSON('whatif_credits');
     c.date=today; c.used=0;
-    localStorage.setItem('whatif_credits', JSON.stringify(c));
+    LS.setItem('whatif_credits', JSON.stringify(c));
     renderFreeBadge();
     alert('Crediti di oggi azzerati ✅');
   }
@@ -297,16 +329,16 @@ function escapeAttr(s){return String(s||"").replace(/"/g,'&quot;')}
   });
 
   function togglePro(){
-    const c=JSON.parse(localStorage.getItem('whatif_credits')||'{}');
+    const c=readJSON('whatif_credits');
     c.pro = !c.pro; c.used = 0;
-    localStorage.setItem('whatif_credits', JSON.stringify(c));
+    LS.setItem('whatif_credits', JSON.stringify(c));
     renderFreeBadge();
     alert('Pro '+(c.pro?'attivato':'disattivato')+' (solo locale) ✅');
   }
 })();
 
 /* ====== Avvio ====== */
-ensureCredits(); renderFreeBadge();
+ensureCredits(); ensureClarify(); renderFreeBadge(); renderClarifyBadge();
 </script>
 </body>
 </html>
