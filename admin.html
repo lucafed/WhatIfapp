@@ -20,77 +20,158 @@
   input{width:100%;background:#0f1820;color:var(--fg);border:1px solid #1c2a33;border-radius:12px;padding:10px;font-size:16px}
   .muted{color:var(--muted);font-size:14px}
   .hidden{display:none}
-  button{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#001f26;border:none;padding:10px 16px;border-radius:12px;font-weight:700;cursor:pointer}
+  button{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);
+    border:none;padding:10px 16px;border-radius:12px;font-weight:700;cursor:pointer}
+  .ghost{background:transparent;border:1px solid #1d2b34;color:#cfe3e7}
   .danger{background:#b54242;color:#fff}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .ok{color:#8ee6ff}
 </style>
 </head>
 <body>
 <main>
-  <h1>Area Admin 🔒</h1>
-  <p class="muted" id="status">Verifica chiave di accesso…</p>
+  <div class="row" style="justify-content:space-between">
+    <h1>Area Admin 🔒</h1>
+    <div class="row">
+      <button class="ghost" onclick="location.href='index.html'">🏠 Home</button>
+    </div>
+  </div>
+  <p class="muted" id="status">Verifica accesso…</p>
 
-  <div id="authFail" class="card hidden">
-    <h2>Accesso negato 🚫</h2>
-    <p>Non hai l’autorizzazione per visualizzare questa pagina.</p>
+  <!-- Schermata login -->
+  <div id="authBox" class="card hidden">
+    <h2>Accesso riservato</h2>
+    <p class="muted">Imposta o inserisci la tua password segreta per accedere. Verrà salvata solo in questo dispositivo.</p>
+    <input type="password" id="pwd" placeholder="Password segreta…" />
+    <div class="row" style="margin-top:10px">
+      <button id="loginBtn">Accedi</button>
+      <button id="setBtn" class="ghost">Imposta/aggiorna password</button>
+    </div>
+    <p class="muted" style="margin-top:8px">Suggerimento: usa qualcosa di non ovvio, es. <code>luca#2025!wf</code></p>
   </div>
 
-  <div id="adminPanel" class="hidden">
-    <h2>Pannello interno</h2>
-    <p>Benvenuto, Luca 👋</p>
-    <p>Qui puoi controllare i costi stimati e le statistiche base.</p>
-    <iframe src="cost.html" width="100%" height="1100" style="border:none;border-radius:12px"></iframe>
+  <!-- Schermata accesso negato -->
+  <div id="deniedBox" class="card hidden">
+    <h2>Accesso negato 🚫</h2>
+    <p>Non hai l’autorizzazione per visualizzare questa pagina.</p>
+    <button class="ghost" onclick="showAuth()">Prova di nuovo</button>
+  </div>
 
+  <!-- Pannello admin -->
+  <div id="panel" class="hidden">
     <div class="card">
-      <h3>Gestione chiave</h3>
-      <p>Chiave attuale: <code id="curKey">–</code></p>
-      <input type="text" id="newKey" placeholder="Nuova chiave segreta..." />
-      <button id="saveKey">Aggiorna chiave</button>
-      <p class="muted">Usa un codice sicuro (es. "luca2025secret"). Verrà salvato solo nel tuo browser.</p>
+      <h2>Benvenuto, Luca 👋</h2>
+      <p class="muted">Qui puoi controllare i costi stimati e, in futuro, le statistiche private.</p>
+      <iframe src="cost.html" width="100%" height="1100" style="border:none;border-radius:12px"></iframe>
     </div>
 
-    <div style="margin-top:12px">
-      <button class="danger" onclick="logout()">Esci</button>
-      <button onclick="location.href='index.html'">🏠 Torna alla home</button>
+    <div class="card">
+      <h3>Sicurezza</h3>
+      <p>Stato: <strong class="ok" id="lockStatus">protetto</strong></p>
+      <div class="row">
+        <input type="password" id="newPwd" placeholder="Nuova password…" />
+        <button id="updatePwd">Aggiorna password</button>
+        <button class="danger" id="logout">Esci (dimentica password)</button>
+      </div>
+      <p class="muted">La password è salvata <em>solo</em> in questo browser (<code>localStorage</code>). Nessun salvataggio su server.</p>
     </div>
   </div>
 </main>
 
 <script>
-  const params = new URLSearchParams(location.search);
-  const keyParam = params.get("key");
-  const storedKey = localStorage.getItem("admin_key") || "luca2025";
-
+  // ====== SECURITY LOGIC (no URL key) ======
+  const LS_KEY = "admin_key_hash"; // salviamo l'hash, non la password in chiaro
+  const LS_AUTH = "admin_authenticated"; // flag di sessione (finché non chiudi scheda)
   const status = document.getElementById("status");
-  const fail = document.getElementById("authFail");
-  const panel = document.getElementById("adminPanel");
-  const curKey = document.getElementById("curKey");
-  const saveKeyBtn = document.getElementById("saveKey");
+  const authBox = document.getElementById("authBox");
+  const deniedBox = document.getElementById("deniedBox");
+  const panel = document.getElementById("panel");
+  const lockStatus = document.getElementById("lockStatus");
 
-  // verifica accesso
-  if (keyParam && keyParam === storedKey) {
-    status.textContent = "Accesso consentito ✅";
-    fail.classList.add("hidden");
-    panel.classList.remove("hidden");
-    curKey.textContent = storedKey;
-  } else {
-    status.textContent = "Accesso negato.";
-    fail.classList.remove("hidden");
+  // Hash semplice (non crittografico, ma meglio del plain): djb2
+  function hashStr(s){
+    let h = 5381; for (let i=0;i<s.length;i++){ h = ((h<<5)+h) + s.charCodeAt(i); }
+    return String(h>>>0);
+  }
+
+  function showAuth(){
+    status.textContent = "Inserisci password per accedere.";
+    authBox.classList.remove("hidden");
+    deniedBox.classList.add("hidden");
     panel.classList.add("hidden");
   }
+  function showDenied(){
+    status.textContent = "Accesso negato.";
+    authBox.classList.add("hidden");
+    deniedBox.classList.remove("hidden");
+    panel.classList.add("hidden");
+  }
+  function showPanel(){
+    status.textContent = "Accesso consentito ✅";
+    authBox.classList.add("hidden");
+    deniedBox.classList.add("hidden");
+    panel.classList.remove("hidden");
+    lockStatus.textContent = "protetto";
+  }
 
-  // cambio chiave
-  saveKeyBtn.addEventListener("click", ()=>{
-    const nk = document.getElementById("newKey").value.trim();
-    if (!nk) return alert("Inserisci una nuova chiave");
-    localStorage.setItem("admin_key", nk);
-    curKey.textContent = nk;
-    alert("Chiave aggiornata! Ora accedi con ?key=" + nk);
+  // Stato iniziale
+  (function init(){
+    const savedHash = localStorage.getItem(LS_KEY);
+    const authed = sessionStorage.getItem(LS_AUTH) === "1";
+    if (!savedHash) {
+      // Nessuna password impostata: chiedi di impostarne una
+      status.textContent = "Nessuna password impostata. Impostane una per proteggere l’area.";
+      showAuth();
+    } else if (authed) {
+      showPanel();
+    } else {
+      // Richiedi password
+      showAuth();
+    }
+  })();
+
+  // Login
+  document.getElementById("loginBtn").addEventListener("click", ()=>{
+    const pwd = (document.getElementById("pwd").value || "").trim();
+    if (!pwd) return alert("Inserisci la password.");
+    const savedHash = localStorage.getItem(LS_KEY);
+    if (!savedHash) return alert("Nessuna password impostata: usa 'Imposta/aggiorna password'.");
+
+    if (hashStr(pwd) === savedHash){
+      sessionStorage.setItem(LS_AUTH, "1"); // valida finché non chiudi la scheda
+      showPanel();
+    } else {
+      showDenied();
+    }
   });
 
-  function logout(){
-    localStorage.removeItem("admin_key");
-    location.href = "index.html";
-  }
+  // Imposta/aggiorna password
+  document.getElementById("setBtn").addEventListener("click", ()=>{
+    const pwd = (document.getElementById("pwd").value || "").trim();
+    if (!pwd) return alert("Inserisci una password non vuota.");
+    const h = hashStr(pwd);
+    localStorage.setItem(LS_KEY, h);
+    alert("Password impostata/aggiornata. Ora puoi accedere con 'Accedi'.");
+    status.textContent = "Password aggiornata. Inseriscila e premi 'Accedi'.";
+  });
+
+  // Aggiorna password dall’area protetta
+  document.getElementById("updatePwd").addEventListener("click", ()=>{
+    const pwd = (document.getElementById("newPwd").value || "").trim();
+    if (!pwd) return alert("Inserisci una nuova password.");
+    const h = hashStr(pwd);
+    localStorage.setItem(LS_KEY, h);
+    document.getElementById("newPwd").value = "";
+    alert("Password aggiornata.");
+  });
+
+  // Logout: dimentica la sessione e la password locale
+  document.getElementById("logout").addEventListener("click", ()=>{
+    sessionStorage.removeItem(LS_AUTH);
+    localStorage.removeItem(LS_KEY);
+    alert("Password rimossa da questo dispositivo.");
+    location.reload();
+  });
 </script>
 </body>
 </html>
