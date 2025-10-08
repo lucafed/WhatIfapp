@@ -11,308 +11,153 @@
       --card:#101922; --chip:#141C22; --acc:#00E0FF; --acc2:#00B5CC; --ink:#001f26;
     }
     *{box-sizing:border-box}
-    html,body{
-      margin:0; background:var(--bg); color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    }
-    main{min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px}
+    html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    main{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
     .wrap{width:min(92vw,780px)}
-    h1{font-size:clamp(22px,5.5vw,32px); margin:6px 0}
-    .lead{color:var(--muted); margin:0 0 12px}
-    .card{background:var(--card); border:1px solid #1b2a34; border-radius:16px; padding:16px; box-shadow:0 10px 28px rgba(0,0,0,.25)}
-    .q{font-weight:800; margin:0 0 10px; font-size:clamp(18px,4.5vw,22px)}
-    .chips{display:flex; flex-wrap:wrap; gap:10px}
+    h1{font-size:clamp(22px,5.5vw,32px);margin:6px 0}
+    .lead{color:var(--muted);margin:0 0 12px}
+    .card{background:var(--card);border:1px solid #1b2a34;border-radius:16px;padding:16px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
+    .q{font-weight:800;margin:0 0 10px;font-size:clamp(18px,4.5vw,22px)}
+    .chips{display:flex;flex-wrap:wrap;gap:10px}
     .chip{
-      appearance:none; border:none; background:var(--chip); color:#cfe3e7;
-      padding:12px 16px; border-radius:16px; font-weight:700; cursor:pointer;
+      appearance:none;border:none;background:var(--chip);color:#cfe3e7;
+      padding:12px 16px;border-radius:16px;font-weight:700;cursor:pointer;
       transition:transform .08s ease, background .16s ease, box-shadow .16s ease;
     }
     .chip:active{transform:translateY(1px)}
     .chip.selected{
       background:linear-gradient(180deg,var(--acc),var(--acc2));
-      color:var(--ink); box-shadow:0 0 0 1px rgba(0,224,255,.35) inset;
+      color:var(--ink);box-shadow:0 0 0 1px rgba(0,224,255,.35) inset;
     }
-    .progress{
-      height:8px; background:#0f1820; border:1px solid #1c2a33; border-radius:999px; overflow:hidden; margin:10px 0 14px;
-    }
-    .bar{height:100%; width:0%; background:linear-gradient(90deg,var(--acc),var(--acc2))}
-    .row{display:flex; gap:10px; justify-content:space-between; align-items:center; margin-top:12px}
-    .btn{
-      appearance:none; border:none; border-radius:12px; padding:12px 16px; font-weight:900; cursor:pointer;
-    }
-    .btn.ghost{background:#0f1820; color:#cfe3e7; border:1px solid #1d2b34}
-    .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink)}
-    .btn[disabled]{opacity:.5; cursor:not-allowed}
-    .count{color:var(--muted); font-size:13px}
+    .progress{height:8px;background:#0f1820;border:1px solid #1c2a33;border-radius:999px;overflow:hidden;margin:10px 0 14px}
+    .bar{height:100%;width:0%;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+    .row{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:12px}
+    .btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer}
+    .btn.ghost{background:#0f1820;color:#cfe3e7;border:1px solid #1d2b34}
+    .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink)}
+    .btn[disabled]{opacity:.5;cursor:not-allowed}
+    .count{color:var(--muted);font-size:13px}
+    .topbar{position:fixed;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;z-index:10}
+    .topbar .btn{padding:8px 12px}
   </style>
 </head>
 <body>
-<main>
-  <div class="wrap">
-    <h1 id="title">Conosciamoci in 30s</h1>
-    <p class="lead" id="lead">5 domande rapide per cucire gli scenari su di te.</p>
+  <!-- Topbar: Indietro + Home -->
+  <div class="topbar">
+    <button class="btn ghost" onclick="history.back()">← <span id="tb_back">Indietro</span></button>
+    <button class="btn ghost" onclick="location.href='index.html'">🏠 <span id="tb_home">Home</span></button>
+  </div>
 
-    <div class="progress"><div class="bar" id="bar"></div></div>
+  <main>
+    <div class="wrap">
+      <h1 id="title">Conosciamoci in 30s</h1>
+      <p class="lead" id="lead">5 domande rapide per cucire gli scenari su di te.</p>
 
-    <div class="card">
-      <p class="q" id="question">Domanda…</p>
-      <div class="chips" id="chips"></div>
+      <div class="progress"><div class="bar" id="bar"></div></div>
 
-      <div class="row">
-        <button class="btn ghost" id="backBtn">← <span id="back">Indietro</span></button>
-        <span class="count" id="count">1 / 5</span>
-        <button class="btn primary" id="nextBtn" disabled><span id="next">Avanti</span> →</button>
+      <div class="card">
+        <p class="q" id="question">Domanda…</p>
+        <div class="chips" id="chips"></div>
+
+        <div class="row">
+          <button class="btn ghost" id="backBtn">← <span id="back">Indietro</span></button>
+          <span class="count" id="count">1 / 5</span>
+          <button class="btn primary" id="nextBtn" disabled><span id="next">Avanti</span> →</button>
+        </div>
       </div>
     </div>
-  </div>
-</main>
+  </main>
 
 <script>
-  // ===== i18n =====
-  const L = (localStorage.getItem('lang') || 'it').toLowerCase();
-  const I18N = {
-    it: {
-      title:"Conosciamoci in 30s", lead:"5 domande rapide per cucire gli scenari su di te.",
-      back:"Indietro", next:"Avanti",
-      q1:"Quando prendi decisioni, come ti muovi di solito?",
-      q1a:"Ragiono molto prima di agire",
-      q1b:"Seguo l’istinto",
-      q1c:"Mi adatto al momento",
-      q1d:"Cerco un equilibrio",
-      q2:"Cosa ti motiva di più nelle scelte importanti?",
-      q2a:"Stabilità e sicurezza",
-      q2b:"Crescita e scoperta",
-      q2c:"Libertà personale",
-      q2d:"Essere apprezzato",
-      q3:"Il cambiamento, per te, è…",
-      q3a:"Un po’ spaventoso",
-      q3b:"Stimolante",
-      q3c:"Da valutare con calma",
-      q3d:"Qualcosa che cerco",
-      q4:"Quale valore senti più tuo?",
-      q4a:"Famiglia e legami",
-      q4b:"Autenticità",
-      q4c:"Successo personale",
-      q4d:"Creatività",
-      q5:"Come ti guardi quando pensi a te stesso?",
-      q5a:"Mi prendo sul serio",
-      q5b:"Con un po’ di ironia",
-      q5c:"Mi interrogo spesso",
-      q5d:"Cerco di non pensarci troppo"
-    },
-    en: {
-      title:"30s to know you", lead:"5 quick questions to tailor scenarios to you.",
-      back:"Back", next:"Next",
-      q1:"When deciding, how do you usually move?",
-      q1a:"I think a lot before acting",
-      q1b:"I follow my gut",
-      q1c:"I adapt on the fly",
-      q1d:"I look for balance",
-      q2:"What motivates your big choices most?",
-      q2a:"Stability and security",
-      q2b:"Growth and discovery",
-      q2c:"Personal freedom",
-      q2d:"Being appreciated",
-      q3:"Change, for you, is…",
-      q3a:"A bit scary",
-      q3b:"Stimulating",
-      q3c:"Something to assess calmly",
-      q3d:"Something I actively seek",
-      q4:"Which value feels most yours?",
-      q4a:"Family & bonds",
-      q4b:"Authenticity",
-      q4c:"Personal success",
-      q4d:"Creativity",
-      q5:"How do you look at yourself?",
-      q5a:"I take myself seriously",
-      q5b:"With some irony",
-      q5c:"I question myself often",
-      q5d:"I try not to overthink"
-    }
+  // i18n
+  const L=(localStorage.getItem('lang')||'it').toLowerCase();
+  const I = {
+    it:{tb_back:'Indietro',tb_home:'Home',title:'Conosciamoci in 30s',lead:'5 domande rapide per cucire gli scenari su di te.',back:'Indietro',next:'Avanti',
+      q1:'Quando prendi decisioni, come ti muovi di solito?',q1a:'Ragiono molto prima di agire',q1b:'Seguo l’istinto',q1c:'Mi adatto al momento',q1d:'Cerco un equilibrio',
+      q2:'Cosa ti motiva di più nelle scelte importanti?',q2a:'Stabilità e sicurezza',q2b:'Crescita e scoperta',q2c:'Libertà personale',q2d:'Essere apprezzato',
+      q3:'Il cambiamento, per te, è…',q3a:'Un po’ spaventoso',q3b:'Stimolante',q3c:'Da valutare con calma',q3d:'Qualcosa che cerco',
+      q4:'Quale valore senti più tuo?',q4a:'Famiglia e legami',q4b:'Autenticità',q4c:'Successo personale',q4d:'Creatività',
+      q5:'Come ti guardi quando pensi a te stesso?',q5a:'Mi prendo sul serio',q5b:'Con un po’ di ironia',q5c:'Mi interrogo spesso',q5d:'Cerco di non pensarci troppo'},
+    en:{tb_back:'Back',tb_home:'Home',title:'30s to know you',lead:'5 quick questions to tailor scenarios to you.',back:'Back',next:'Next',
+      q1:'When deciding, how do you usually move?',q1a:'I think a lot before acting',q1b:'I follow my gut',q1c:'I adapt on the fly',q1d:'I look for balance',
+      q2:'What motivates your big choices most?',q2a:'Stability and security',q2b:'Growth and discovery',q2c:'Personal freedom',q2d:'Being appreciated',
+      q3:'Change, for you, is…',q3a:'A bit scary',q3b:'Stimulating',q3c:'Something to assess calmly',q3d:'Something I actively seek',
+      q4:'Which value feels most yours?',q4a:'Family & bonds',q4b:'Authenticity',q4c:'Personal success',q4d:'Creativity',
+      q5:'How do you look at yourself?',q5a:'I take myself seriously',q5b:'With some irony',q5c:'I question myself often',q5d:'I try not to overthink'}
   }[L];
-  document.title = L === 'en' ? 'What?f – 5 questions' : 'What?f – 5 domande';
-  document.getElementById('title').textContent = I18N.title;
-  document.getElementById('lead').textContent  = I18N.lead;
-  document.getElementById('back').textContent  = I18N.back;
-  document.getElementById('next').textContent  = I18N.next;
+  document.getElementById('tb_back').textContent=I.tb_back;
+  document.getElementById('tb_home').textContent=I.tb_home;
+  document.title = L==='en' ? 'What?f – 5 questions' : 'What?f – 5 domande';
+  document.getElementById('title').textContent = I.title;
+  document.getElementById('lead').textContent  = I.lead;
+  document.getElementById('back').textContent  = I.back;
+  document.getElementById('next').textContent  = I.next;
 
-  // ===== modello dati =====
-  const QUESTIONS = [
-    { k:'approach', t:I18N.q1, opts:[
-      {v:'reason',  label:I18N.q1a},
-      {v:'instinct',label:I18N.q1b},
-      {v:'adapt',   label:I18N.q1c},
-      {v:'balance', label:I18N.q1d},
-    ]},
-    { k:'motivation', t:I18N.q2, opts:[
-      {v:'stability', label:I18N.q2a},
-      {v:'growth',    label:I18N.q2b},
-      {v:'freedom',   label:I18N.q2c},
-      {v:'recognition',label:I18N.q2d},
-    ]},
-    { k:'change', t:I18N.q3, opts:[
-      {v:'fear',  label:I18N.q3a},
-      {v:'stim',  label:I18N.q3b},
-      {v:'calm',  label:I18N.q3c},
-      {v:'seek',  label:I18N.q3d},
-    ]},
-    { k:'value', t:I18N.q4, opts:[
-      {v:'family', label:I18N.q4a},
-      {v:'auth',   label:I18N.q4b},
-      {v:'success',label:I18N.q4c},
-      {v:'creativity',label:I18N.q4d},
-    ]},
-    { k:'selfview', t:I18N.q5, opts:[
-      {v:'serious', label:I18N.q5a},
-      {v:'irony',   label:I18N.q5b},
-      {v:'reflect', label:I18N.q5c},
-      {v:'light',   label:I18N.q5d},
-    ]},
+  // domande
+  const QUESTIONS=[
+    {k:'approach', t:I.q1, opts:[{v:'reason',label:I.q1a},{v:'instinct',label:I.q1b},{v:'adapt',label:I.q1c},{v:'balance',label:I.q1d}]},
+    {k:'motivation', t:I.q2, opts:[{v:'stability',label:I.q2a},{v:'growth',label:I.q2b},{v:'freedom',label:I.q2c},{v:'recognition',label:I.q2d}]},
+    {k:'change', t:I.q3, opts:[{v:'fear',label:I.q3a},{v:'stim',label:I.q3b},{v:'calm',label:I.q3c},{v:'seek',label:I.q3d}]},
+    {k:'value', t:I.q4, opts:[{v:'family',label:I.q4a},{v:'auth',label:I.q4b},{v:'success',label:I.q4c},{v:'creativity',label:I.q4d}]},
+    {k:'selfview', t:I.q5, opts:[{v:'serious',label:I.q5a},{v:'irony',label:I.q5b},{v:'reflect',label:I.q5c},{v:'light',label:I.q5d}]},
   ];
 
-  // mapping risposte → archetipi (pesi semplici)
-  // Ricercatore (R), Costruttore (C), Visionario (V), Mediatore (M)
-  const WEIGHTS = {
-    approach: {
-      reason:{R:2,C:1}, instinct:{V:2}, adapt:{M:2}, balance:{C:2,M:1}
-    },
-    motivation: {
-      stability:{C:2,M:1}, growth:{R:1,V:2}, freedom:{V:2}, recognition:{M:2}
-    },
-    change: {
-      fear:{C:1,M:1}, stim:{V:2,R:1}, calm:{R:1,C:1}, seek:{V:2}
-    },
-    value: {
-      family:{M:2,C:1}, auth:{R:1,M:1}, success:{C:2}, creativity:{V:2}
-    },
-    selfview: {
-      serious:{C:1,R:1}, irony:{V:1,M:1}, reflect:{R:2}, light:{V:1}
-    }
+  // pesi archetipi
+  const WEIGHTS={
+    approach:{reason:{R:2,C:1},instinct:{V:2},adapt:{M:2},balance:{C:2,M:1}},
+    motivation:{stability:{C:2,M:1},growth:{R:1,V:2},freedom:{V:2},recognition:{M:2}},
+    change:{fear:{C:1,M:1},stim:{V:2,R:1},calm:{R:1,C:1},seek:{V:2}},
+    value:{family:{M:2,C:1},auth:{R:1,M:1},success:{C:2},creativity:{V:2}},
+    selfview:{serious:{C:1,R:1},irony:{V:1,M:1},reflect:{R:2},light:{V:1}}
   };
 
-  // ===== stato =====
-  const LS = localStorage;
-  const saved = JSON.parse(LS.getItem('whatif_quiz5') || '{}');
-  let idx = 0;
-  const answers = { ...saved }; // {approach: 'reason', ...}
+  const LS=localStorage; const saved=JSON.parse(LS.getItem('whatif_quiz5')||'{}');
+  let idx=0; const answers={...saved};
 
-  const $ = s=>document.querySelector(s);
-  const questionEl = $('#question');
-  const chipsEl    = $('#chips');
-  const nextBtn    = $('#nextBtn');
-  const backBtn    = $('#backBtn');
-  const countEl    = $('#count');
-  const barEl      = $('#bar');
-
-  // UI iniziale
-  render();
-
-  backBtn.addEventListener('click', ()=>{
-    if (idx===0){ history.back(); return; }
-    idx--; render();
-  });
-  nextBtn.addEventListener('click', ()=>{
-    if (!answers[QUESTIONS[idx].k]) return;
-    if (idx < QUESTIONS.length - 1){ idx++; render(); }
-    else { finish(); } // done
-  });
+  const $=s=>document.querySelector(s);
+  const questionEl=$('#question'), chipsEl=$('#chips'), nextBtn=$('#nextBtn'), backBtn=$('#backBtn'), countEl=$('#count'), barEl=$('#bar');
 
   function render(){
-    const q = QUESTIONS[idx];
-    questionEl.textContent = q.t;
-    chipsEl.innerHTML = q.opts.map(opt=>{
-      const sel = answers[q.k] === opt.v ? 'selected' : '';
-      return `<button class="chip ${sel}" data-v="${opt.v}">${opt.label}</button>`;
-    }).join('');
+    const q=QUESTIONS[idx];
+    questionEl.textContent=q.t;
+    chipsEl.innerHTML=q.opts.map(o=>`<button class="chip ${answers[q.k]===o.v?'selected':''}" data-v="${o.v}">${o.label}</button>`).join('');
     chipsEl.querySelectorAll('.chip').forEach(b=>{
-      b.addEventListener('click', ()=>{
+      b.addEventListener('click',()=>{
         chipsEl.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
-        b.classList.add('selected');
-        answers[q.k] = b.getAttribute('data-v');
-        nextBtn.disabled = false;
+        b.classList.add('selected'); answers[q.k]=b.dataset.v; nextBtn.disabled=false;
       });
     });
-
-    // abilita "Avanti" solo se risposta esiste
-    nextBtn.disabled = !answers[q.k];
-
-    // progress
-    countEl.textContent = `${idx+1} / ${QUESTIONS.length}`;
-    const pct = Math.round(((idx) / (QUESTIONS.length)) * 100);
-    barEl.style.width = Math.max(6, pct) + '%'; // un minimo di 6% per feedback
-
-    // salvataggio parziale
+    nextBtn.disabled=!answers[q.k];
+    countEl.textContent=`${idx+1} / ${QUESTIONS.length}`;
+    barEl.style.width = Math.max(6, Math.round((idx/QUESTIONS.length)*100))+'%';
     LS.setItem('whatif_quiz5', JSON.stringify(answers));
   }
+  backBtn.addEventListener('click',()=>{ if(idx===0){history.back();} else {idx--;render();}});
+  nextBtn.addEventListener('click',()=>{ if(!answers[QUESTIONS[idx].k])return; if(idx<QUESTIONS.length-1){idx++;render();} else {finish();}});
+  render();
 
   function finish(){
-    // calcola archetipi
-    const scores = {R:0,C:0,V:0,M:0};
-    Object.entries(answers).forEach(([k,v])=>{
-      const w = WEIGHTS[k]?.[v] || {};
-      Object.entries(w).forEach(([A,pts])=>{ scores[A] += pts; });
-    });
-    // normalizza 0–100
-    const max = Math.max(1, ...Object.values(scores));
-    const to100 = x => Math.round((x / max) * 100);
-    const archetypes = {
-      Ricercatore: to100(scores.R),
-      Costruttore: to100(scores.C),
-      Visionario:  to100(scores.V),
-      Mediatore:   to100(scores.M),
-    };
-
-    // profilo compatto (per prompt): deduce valori/tono utili
-    const profileCompact = buildProfileCompact(answers);
-
+    const scores={R:0,C:0,V:0,M:0};
+    Object.entries(answers).forEach(([k,v])=>{ const w=WEIGHTS[k]?.[v]||{}; Object.entries(w).forEach(([A,pts])=>scores[A]+=pts); });
+    const max=Math.max(1,...Object.values(scores)); const to100=x=>Math.round((x/max)*100);
+    const archetypes={Ricercatore:to100(scores.R),Costruttore:to100(scores.C),Visionario:to100(scores.V),Mediatore:to100(scores.M)};
+    const base=JSON.parse(LS.getItem('whatif_profile')||'{}');
+    const profileCompact=buildProfile(answers);
     LS.setItem('whatif_archetypes', JSON.stringify(archetypes));
-    // merge soft nel profilo esistente (second.html)
-    const baseProfile = JSON.parse(LS.getItem('whatif_profile') || '{}');
-    const merged = { ...baseProfile, ...profileCompact };
-    LS.setItem('whatif_profile', JSON.stringify(merged));
-
-    // hint tono (può aiutare /api/ask.js)
-    LS.setItem('whatif_tone', JSON.stringify({ introspective: answers.selfview==='reflect', playful: answers.selfview==='irony' }));
-
-    // avanti
-    location.href = 'fourth.html';
+    LS.setItem('whatif_profile', JSON.stringify({...base, ...profileCompact}));
+    LS.setItem('whatif_tone', JSON.stringify({introspective:answers.selfview==='reflect',playful:answers.selfview==='irony'}));
+    location.href='fourth.html';
   }
-
-  function buildProfileCompact(a){
-    // derive “values”, “style”, “change_attitude”
-    const values = [];
-    if (a.value === 'family') values.push(L==='en'?'family & bonds':'famiglia e legami');
-    if (a.value === 'auth')   values.push(L==='en'?'authenticity':'autenticità');
-    if (a.value === 'success')values.push(L==='en'?'achievement':'successo personale');
-    if (a.value === 'creativity') values.push(L==='en'?'creativity':'creatività');
-
-    const style =
-      a.approach === 'reason'  ? (L==='en'?'analytical':'analitico') :
-      a.approach === 'instinct'? (L==='en'?'intuitive':'intuitivo') :
-      a.approach === 'adapt'   ? (L==='en'?'adaptive':'adattivo')   :
-                                 (L==='en'?'balanced':'equilibrato');
-
-    const change_attitude =
-      a.change === 'fear' ? (L==='en'?'cautious':'cauto') :
-      a.change === 'stim' ? (L==='en'?'energized by change':'stimolato dal cambiamento') :
-      a.change === 'calm' ? (L==='en'?'evaluative':'valutativo') :
-                            (L==='en'?'seeks change':'cerca il cambiamento');
-
-    const motivation =
-      a.motivation === 'stability'   ? (L==='en'?'stability':'stabilità') :
-      a.motivation === 'growth'      ? (L==='en'?'growth':'crescita') :
-      a.motivation === 'freedom'     ? (L==='en'?'freedom':'libertà') :
-                                       (L==='en'?'recognition':'riconoscimento');
-
-    const self_view =
-      a.selfview === 'serious' ? (L==='en'?'serious':'serio') :
-      a.selfview === 'irony'   ? (L==='en'?'ironic':'ironico') :
-      a.selfview === 'reflect' ? (L==='en'?'introspective':'introspettivo') :
-                                 (L==='en'?'light':'leggero');
-
-    return {
-      values, style, change_attitude, motivation, self_view
-    };
+  function buildProfile(a){
+    const values=[]; if(a.value==='family')values.push(L==='en'?'family & bonds':'famiglia e legami');
+    if(a.value==='auth')values.push(L==='en'?'authenticity':'autenticità');
+    if(a.value==='success')values.push(L==='en'?'achievement':'successo personale');
+    if(a.value==='creativity')values.push(L==='en'?'creativity':'creatività');
+    const style=a.approach==='reason'?(L==='en'?'analytical':'analitico'):a.approach==='instinct'?(L==='en'?'intuitive':'intuitivo'):a.approach==='adapt'?(L==='en'?'adaptive':'adattivo'):(L==='en'?'balanced':'equilibrato');
+    const change_attitude=a.change==='fear'?(L==='en'?'cautious':'cauto'):a.change==='stim'?(L==='en'?'energized by change':'stimolato dal cambiamento'):a.change==='calm'?(L==='en'?'evaluative':'valutativo'):(L==='en'?'seeks change':'cerca il cambiamento');
+    const motivation=a.motivation==='stability'?(L==='en'?'stability':'stabilità'):a.motivation==='growth'?(L==='en'?'growth':'crescita'):a.motivation==='freedom'?(L==='en'?'freedom':'libertà'):(L==='en'?'recognition':'riconoscimento');
+    const self_view=a.selfview==='serious'?(L==='en'?'serious':'serio'):a.selfview==='irony'?(L==='en'?'ironic':'ironico'):a.selfview==='reflect'?(L==='en'?'introspective':'introspettivo'):(L==='en'?'light':'leggero');
+    return {values,style,change_attitude,motivation,self_view};
   }
 </script>
 </body>
