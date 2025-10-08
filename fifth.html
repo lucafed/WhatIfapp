@@ -6,18 +6,16 @@
 <title>What?f – Result</title>
 <meta name="theme-color" content="#05080C" />
 <style>
-  /* ==== THEMES & TOKENS ==== */
   :root{
-    --bg1:#05080C; --bg2:#0E1821;             /* fondo orbitale base */
-    --card-bg:rgba(16,26,34,.56);             /* vetro */
+    --bg1:#05080C; --bg2:#0E1821;
+    --card-bg:rgba(16,26,34,.56);
     --card-line:rgba(85,140,168,.25);
     --text:#EAF3F7; --muted:#92A9B5;
     --chip:#0E1A23; --ink:#001a1f;
-    --acc:#39E4FF; --acc2:#0FC2E1;            /* What if (realistico) */
+    --acc:#39E4FF; --acc2:#0FC2E1;
     --glow:rgba(57,228,255,.35);
     --shadow:0 14px 36px rgba(0,0,0,.35);
   }
-  /* WTF theme (neon) togglata da [data-theme="wtf"] sul <body> */
   body[data-theme="wtf"]{
     --acc:#FF63E3; --acc2:#8A5BFF;
     --glow:rgba(255,99,227,.35);
@@ -28,7 +26,7 @@
   *{box-sizing:border-box}
   html,body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg1);}
 
-  /* ==== ORBITAL BACKGROUND ==== */
+  /* sfondo orbitale */
   body::before, body::after{
     content:""; position:fixed; inset:0; z-index:-2;
     background:
@@ -36,29 +34,28 @@
       radial-gradient(1000px 700px at 90% 110%, rgba(57,228,255,.12), transparent 60%),
       linear-gradient(180deg,var(--bg1),var(--bg2));
   }
-  /* lieve movimento */
   @keyframes drift { 0%{transform:translateY(0)} 50%{transform:translateY(7px)} 100%{transform:translateY(0)} }
   body::before{animation:drift 16s ease-in-out infinite}
 
   main{max-width:980px;margin:auto;padding:18px}
   .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 
-  /* ==== CARDS (glass) ==== */
+  /* cards vetrose */
   .card{
     background:var(--card-bg);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border:1px solid var(--card-line);
     border-radius:18px; padding:18px; margin:14px 0; box-shadow:var(--shadow);
+    position:relative;           /* FIX menu */
+    overflow:visible;            /* FIX menu */
   }
 
-  /* ==== TYPO ==== */
   h1{font-size:clamp(22px,5vw,30px);margin:14px 0 2px}
   p.sub{color:var(--muted);margin:0 0 8px}
   .label{color:var(--acc);font-weight:800;margin:0 0 8px;letter-spacing:.2px}
   .box{background:rgba(11,18,24,.75);border:1px solid rgba(24,36,44,.85);border-radius:12px;padding:12px;white-space:pre-wrap;line-height:1.6}
 
-  /* ==== BUTTONS & CHIPS ==== */
   .btn{appearance:none;border:none;background:var(--chip);color:var(--text);
     padding:10px 14px;border-radius:12px;cursor:pointer;
     transition:transform .06s ease, opacity .2s, box-shadow .2s}
@@ -80,16 +77,22 @@
 
   .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 
-  /* ==== CTA ZONE ==== */
+  /* CTA / menu */
   .cta-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .cta-row .btn.primary{flex:1}
-  .menu{position:relative}
+
+  .menu{ position:relative; z-index:50; }       /* FIX menu layer */
   .menu-btn{min-width:44px}
-  .menu-sheet{position:absolute;right:0;top:42px;background:var(--card-bg);border:1px solid var(--card-line);border-radius:12px;padding:6px;display:none;min-width:200px;box-shadow:0 12px 28px rgba(0,0,0,.35);z-index:50}
+  .menu-sheet{
+    position:absolute;right:0;top:48px;         /* +6px spacing */
+    background:var(--card-bg);border:1px solid var(--card-line);
+    border-radius:12px;padding:6px;display:none;min-width:200px;
+    box-shadow:0 12px 28px rgba(0,0,0,.35);z-index:5000; /* FIX z-index */
+  }
   .menu-sheet button{display:block;width:100%;text-align:left;background:transparent;border:none;color:#E6F2F5;padding:10px;border-radius:10px;cursor:pointer}
   .menu-sheet button:hover{background:rgba(21,34,44,.65)}
 
-  /* ==== MINI KNOWLEDGE BAR + TOOLTIP ==== */
+  /* knowledge mini */
   .know-mini{display:flex;align-items:center;gap:8px}
   .meter{position:relative;height:10px;background:#0f1820;border:1px solid rgba(27,42,52,.85);border-radius:999px;overflow:hidden;width:120px}
   .meter-fill{height:100%;width:0;background:linear-gradient(180deg,var(--acc),var(--acc2))}
@@ -98,25 +101,24 @@
   .tooltip:hover .tip{opacity:1;transform:translateY(0)}
   .tip{pointer-events:none;position:absolute;right:0;top:125%;background:rgba(13,22,29,.95);border:1px solid var(--card-line);color:#cfe6eb;border-radius:10px;padding:8px 10px;font-size:12px;width:260px;opacity:0;transform:translateY(-4px);transition:.15s;box-shadow:0 12px 28px rgba(0,0,0,.35)}
 
-  /* ==== “Segnali usati” collapsible ==== */
+  /* segnali collassati */
   .signals{margin-top:8px}
   .disclosure{display:flex;align-items:center;gap:8px;color:#cfe3e7;font-size:12px;cursor:pointer}
   .caret{transition:transform .15s ease}
   .signals-body{display:none;color:#cfe3e7;opacity:.9;font-size:12px;margin-top:6px}
 
-  /* ==== LOADER ==== */
   #result{min-height:190px}
   .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,#0d151c 0%,#122029 50%,#0d151c 100%);background-size:200% 100%;animation:sk 1s infinite}
   @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
 
-  /* ==== OVERLAY CHIARIMENTI ==== */
+  /* overlay chiarimenti */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:6000;padding:14px}
   .sheet{width:min(92vw,720px);max-height:80vh;overflow:auto;background:var(--card-bg);border:1px solid var(--card-line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
   .qitem{margin:10px 0}
   .qitem label{display:block;margin:6px 0}
   .qitem input{width:100%;background:#0f1820;color:var(--text);border:1px solid rgba(27,42,52,.85);border-radius:10px;padding:10px}
 
-  /* ==== AI AVATAR (pulsing) ==== */
+  /* AI avatar */
   .ai-pulse{
     width:28px;height:28px;border-radius:999px;background:radial-gradient(circle at 35% 35%, #fff, #eee 30%, transparent 31%), radial-gradient(circle at 50% 50%, var(--acc), var(--acc2));
     box-shadow:0 0 18px var(--glow), 0 0 4px var(--glow) inset;
@@ -124,13 +126,12 @@
   }
   @keyframes breath{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
 
-  /* ==== PROGRESS BAR (thin) ==== */
+  /* progress bar */
   .pbar{position:fixed;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--acc),var(--acc2));transform:scaleX(0);transform-origin:left;transition:transform .35s ease;z-index:999}
   .pbar.show{transform:scaleX(1)}
 </style>
 </head>
 <body>
-  <!-- top progress -->
   <div id="pbar" class="pbar"></div>
 
   <main>
@@ -156,7 +157,6 @@
     <h1 id="titleH1">Your scenario</h1>
     <p class="sub" id="subtitle">For a more personal answer, use Clarify & Generate first.</p>
 
-    <!-- stile + periodo -->
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
         <div class="row">
@@ -174,7 +174,6 @@
       <h3 class="label" id="qLabel">Question</h3>
       <div id="question" class="box"></div>
 
-      <!-- Segnali usati (collassato) -->
       <div class="signals" id="signals">
         <div class="disclosure" id="signalsToggle">
           <span class="caret" id="caret">▸</span>
@@ -205,7 +204,6 @@
     </div>
   </main>
 
-  <!-- Overlay chiarimenti -->
   <div class="overlay" id="clarifyOverlay">
     <div class="sheet">
       <h3 style="margin:6px 0" id="clarifyTitle">2–3 questions to be more precise</h3>
@@ -218,7 +216,7 @@
   </div>
 
 <script>
-/* ====== I18N ====== */
+/* I18N */
 const I18N = {
   it:{
     title:"Il tuo scenario",
@@ -272,23 +270,23 @@ const lang=(LS.getItem('lang')||'it').toLowerCase();
 const T=I18N[lang]||I18N.it;
 document.documentElement.lang=lang;
 
-/* ====== CONFIG ====== */
+/* Config */
 const DAILY_FREE=3;
 const DAILY_CLARIFY=5;
 
-/* ====== HELPERS ====== */
+/* Helpers */
 const $=id=>document.getElementById(id);
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function readJSON(k,def={}){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
 function writeJSON(k,v){LS.setItem(k,JSON.stringify(v));}
 function escapeHTML(s){return (s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
-/* ====== CREDITS ====== */
+/* Credits */
 function readCredits(){const v=readJSON('whatif_credits');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0,pro:!!v.pro};return v;}
 function writeCredits(v){writeJSON('whatif_credits',v);renderBadges();}
 function ensureCredits(){const c=readCredits();if(!c.date||c.date!==todayStr()){c.date=todayStr();c.used=0;writeCredits(c);}}
 
-/* Clarify limits */
+/* Clarify */
 function readClarify(){const v=readJSON('whatif_clarify');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0};return v;}
 function writeClarify(v){writeJSON('whatif_clarify',v);renderBadges();}
 function ensureClarify(){const c=readClarify();if(!c.date||c.date!==todayStr()){c.date=todayStr();c.used=0;writeClarify(c);}}
@@ -313,7 +311,7 @@ function summarizeSignals(clarUsed={}){
   return parts.map(escapeHTML).join(' · ');
 }
 
-/* ====== I18N static text ====== */
+/* I18N text */
 $('titleH1').textContent=T.title; $('subtitle').textContent=T.subtitle;
 $('backBtnTop').textContent=`← ${T.back}`; $('homeBtnTop').textContent=`🏠 ${T.home}`;
 $('freeBadge').title=T.badgeFreeTitle; $('clarifyBadge').title=T.badgeClarifyTitle;
@@ -323,13 +321,13 @@ $('clarifyBtn').textContent=T.clarifyBtn; $('genBtn').textContent=T.genBtn;
 $('knowLabelMini').textContent=T.know; $('knowTip').textContent=T.knowHint;
 $('signalsLabel').textContent=T.signalsLabel;
 
-/* ====== STATO ====== */
+/* Stato */
 const prefs = readJSON('whatif_prefs');
 let domanda = LS.getItem('domanda')||'';
 if(!domanda){ alert(lang==='en'?'No question found.':'Nessuna domanda trovata.'); location.href='fourth.html'; }
 let currentStyle=(prefs.stile||'whatif');
 
-/* applica tema visivo */
+/* Tema */
 function applyTheme(style){
   document.body.setAttribute('data-theme', style==='wtf' ? 'wtf' : 'whatif');
 }
@@ -347,7 +345,7 @@ $('styleChips').addEventListener('click',e=>{
   applyTheme(currentStyle);
 });
 
-/* ====== BADGES ====== */
+/* Badges */
 function renderBadges(){
   const gc=readCredits(); const gl=Math.max(0,DAILY_FREE-(gc.used||0));
   $('freeBadge').textContent=T.badgeFree(gl,DAILY_FREE);
@@ -355,7 +353,7 @@ function renderBadges(){
   $('clarifyBadge').textContent=T.badgeClarify(cl,DAILY_CLARIFY);
 }
 
-/* ====== MINI PERSONALIZZAZIONE ====== */
+/* Knowledge mini */
 function daysBetween(iso1,iso2){ if(!iso1||!iso2) return 999; const a=new Date(iso1),b=new Date(iso2); return Math.round((b-a)/(1000*60*60*24)); }
 function last(arr){ return Array.isArray(arr)&&arr.length?arr[arr.length-1]:null; }
 function computeKnowledge(){
@@ -398,7 +396,7 @@ function renderKnowledgeMini(){
   $('knowValueMini').textContent=`${score}/100`;
 }
 
-/* ====== Segnali UI (collassato) ====== */
+/* Segnali UI */
 $('signalsLabel').textContent=T.signalsLabel;
 const sigToggle=$('signalsToggle'), sigBody=$('signalsBody'), caret=$('caret');
 sigToggle.addEventListener('click', ()=>{
@@ -407,18 +405,18 @@ sigToggle.addEventListener('click', ()=>{
   caret.style.transform = open ? 'rotate(0deg)' : 'rotate(90deg)';
 });
 
-/* ====== Menu ⋯ ====== */
+/* Menu ⋯ (FIX handlers) */
 const menuBtn=$('menuBtn'), menuSheet=$('menuSheet');
-menuBtn.addEventListener('click', ()=>{
+menuBtn.addEventListener('click', (e)=>{
+  e.stopPropagation();
   const open = menuSheet.style.display==='block';
   menuSheet.style.display = open ? 'none' : 'block';
   menuBtn.setAttribute('aria-expanded', String(!open));
 });
-document.addEventListener('click', (e)=>{
-  if(!menuSheet.contains(e.target) && e.target!==menuBtn) menuSheet.style.display='none';
-});
+menuSheet.addEventListener('click', (e)=>{ e.stopPropagation(); });
+document.addEventListener('click', ()=>{ menuSheet.style.display='none'; });
 
-/* ====== API helpers ====== */
+/* API */
 async function callClarifyAPI(){
   const payload={ domanda, lang, periodo:prefs.periodo||"future", stile:currentStyle, clarify:true, profilo:buildProfilePayload() };
   const r=await fetch("/api/ask",{method:"POST",headers:{ "Content-Type":"application/json" },body:JSON.stringify(payload)});
@@ -432,7 +430,7 @@ async function callGenerateStream({clarifications={},extra="" }={}){
   return r.body.getReader();
 }
 
-/* ====== Clarify ====== */
+/* Clarify overlay */
 const clarifyOverlay=$('clarifyOverlay'), clarifyList=$('clarifyList');
 $('clarifyBtn').textContent=T.clarifyBtn;
 $('clarifyBtn').addEventListener('click', openClarify);
@@ -469,7 +467,7 @@ $('applyClarify').addEventListener('click', async ()=>{
   await generate(false,clar);
 });
 
-/* ====== WebAudio chime (no file esterni) ====== */
+/* WebAudio chime */
 function playChime(){
   try{
     const ctx = new (window.AudioContext||window.webkitAudioContext)();
@@ -477,8 +475,8 @@ function playChime(){
     const g = ctx.createGain();
     o1.type='sine'; o2.type='sine';
     const now=ctx.currentTime;
-    o1.frequency.setValueAtTime(880, now);   // A5
-    o2.frequency.setValueAtTime(1320, now);  // E6 (quinta)
+    o1.frequency.setValueAtTime(880, now);
+    o2.frequency.setValueAtTime(1320, now);
     g.gain.setValueAtTime(0.001, now);
     g.gain.exponentialRampToValueAtTime(0.08, now+0.02);
     g.gain.exponentialRampToValueAtTime(0.0001, now+0.45);
@@ -488,7 +486,7 @@ function playChime(){
   }catch(_){}
 }
 
-/* ====== Generate ====== */
+/* Generate */
 const pbar=$('pbar');
 function showPbar(on){ pbar.classList.toggle('show', !!on); }
 
@@ -522,7 +520,7 @@ async function generate(isRegen=false, clarOverride=null){
           $('result').textContent=(text||"").trim();
           $('regenBtn').style.display='block';
           renderKnowledgeMini();
-          playChime(); // << suono all’arrivo
+          playChime();
           showPbar(false);
         }
         if(data.error){ $('result').textContent=T.errServer+" "+(data.detail||""); showPbar(false); }
@@ -536,7 +534,7 @@ async function generate(isRegen=false, clarOverride=null){
   }
 }
 
-/* ====== Actions (menu) ====== */
+/* Actions */
 $('saveBtn').addEventListener('click', ()=>{
   const arr=readJSON('cronologia',[]);
   arr.unshift({ domanda, risposta:($('result').textContent||"").trim(), periodo:prefs.periodo||null, stile:currentStyle, lang, ts:Date.now() });
@@ -551,19 +549,16 @@ $('shareBtn').addEventListener('click', ()=>{
   if(navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`);
 });
 
-/* ====== Nav ====== */
+/* Nav */
 $('backBtnTop').addEventListener('click', ()=> history.back());
 $('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
 
-/* ====== Dev hooks: reset FREE + reset CLARIFY + toggle Pro ====== */
+/* Dev hooks: reset FREE + reset CLARIFY + toggle Pro */
 (function devHooks(){
   const bFree=$('freeBadge'), bClar=$('clarifyBadge');
   if(!bFree||!bClar) return;
-
-  // tooltips
   $('freeBadge').title=T.badgeFreeTitle; $('clarifyBadge').title=T.badgeClarifyTitle;
 
-  // FREE long-press + triple click Pro
   let pressT=null;
   bFree.addEventListener('pointerdown', ()=>{ pressT=setTimeout(resetToday,2000); });
   bFree.addEventListener('pointerup', ()=>{ clearTimeout(pressT); });
@@ -583,7 +578,6 @@ $('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
     renderBadges(); alert('Pro '+(c.pro?'on':'off')+' (local) ✅');
   }
 
-  // CLARIFY long-press reset
   let pressC=null;
   bClar.addEventListener('pointerdown', ()=>{ pressC=setTimeout(resetClarify,2000); });
   bClar.addEventListener('pointerup', ()=>{ clearTimeout(pressC); });
@@ -595,10 +589,10 @@ $('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
   }
 })();
 
-/* ====== Avvio ====== */
+/* Avvio */
 function initSignalsBase(){
   const s=summarizeSignals({});
-  if(s){ $('signalsBody').textContent=s; } // non apriamo di default
+  if(s){ $('signalsBody').textContent=s; }
 }
 function initText(){
   $('clarifyBtn').textContent=T.clarifyBtn; $('genBtn').textContent=T.genBtn;
@@ -606,6 +600,7 @@ function initText(){
 }
 function initStyles(){
   document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
+  document.body.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
 }
 function boot(){
   ensureCredits(); ensureClarify(); renderBadges(); renderKnowledgeMini(); initSignalsBase(); initText(); initStyles();
