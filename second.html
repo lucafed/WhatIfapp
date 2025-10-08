@@ -11,8 +11,9 @@
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     .topbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;
       padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))}
-    .back-btn{appearance:none;border:1px solid #1f2c36;background:#0f1820;color:var(--fg);
+    .btn{appearance:none;border:1px solid #1f2c36;background:#0f1820;color:var(--fg);
       border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
+    .btn.primary{border:none;background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329}
     main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
     .wrap{width:min(100%,980px)}
     h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px)}
@@ -25,18 +26,17 @@
     textarea{min-height:110px;resize:vertical}
     .muted{color:var(--muted);font-size:13px}
     .actions{display:flex;gap:10px;justify-content:space-between;margin-top:6px}
-    .btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer}
-    .btn.ghost{background:#152029;color:#cfe6eb;border:1px solid #253342}
-    .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#002329}
-    .btn[disabled]{background:#2a3b45;color:#7f98a2;cursor:not-allowed}
     .error{color:#ffb3b3;background:#3a1414;border:1px solid #5a2222;border-radius:10px;padding:10px 12px;display:none}
     .error.show{display:block}
   </style>
 </head>
 <body>
   <div class="topbar">
-    <button id="backTop" class="back-btn" data-key="back">← Indietro</button>
-    <span></span>
+    <button id="backTop" class="btn" data-key="back">← Indietro</button>
+    <div style="display:flex;gap:8px">
+      <button id="skipTop" class="btn primary">⏭️ <span id="skipLbl">Salta</span></button>
+      <button class="btn" onclick="location.href='index.html'">🏠 Home</button>
+    </div>
   </div>
 
   <main>
@@ -106,15 +106,17 @@
         </div>
 
         <div class="actions">
-          <button type="button" class="btn ghost" id="backBtn" data-key="back">Indietro</button>
-          <button type="submit" class="btn primary" id="nextBtn" data-key="next">Continua</button>
+          <button type="button" class="btn" id="backBtn" data-key="back">Indietro</button>
+          <div>
+            <button type="button" class="btn" id="skipBtn">⏭️ <span id="skipLbl2">Salta</span></button>
+            <button type="submit" class="btn primary" id="nextBtn" data-key="next">Continua</button>
+          </div>
         </div>
       </form>
     </div>
   </main>
 
   <script>
-    // I18N (identica alla tua) — legge localStorage.lang
     const I18N = {
       it:{title:"Parlami di te", blurb:"Raccontami brevemente chi sei, cosa stai vivendo o cosa ti spinge a usare What?f. Questo aiuterà l’AI a comprenderti meglio e risponderti in modo più personale.",
           gender_lbl:"Sesso", sel_choose:"Seleziona…", gender_m:"Uomo", gender_f:"Donna", gender_o:"Altro", gender_n:"Preferisco non dirlo",
@@ -123,8 +125,7 @@
           where_lbl:"Da dove vieni?", where_ph:"Città / Paese",
           who_lbl:"Chi sei?", who_ph:"Professione / Ruolo",
           more_lbl:"Vuoi raccontarci qualcosa di più su di te?", more_hint:"(opzionale – aiuta l’AI a darti risposte più accurate)", more_ph:"Esempio: lavoro nel digitale, sto pensando di cambiare città, ho due figli…",
-          back:"Indietro", next:"Continua",
-          err_required:"Per continuare seleziona Sesso, Età e Fase."
+          back:"Indietro", next:"Continua", skip:"Salta", err_required:"Per continuare seleziona Sesso, Età e Fase."
       },
       en:{title:"Tell me about you", blurb:"Briefly share who you are, what you’re going through or why you’re using What?f. This helps the AI understand you better and reply more personally.",
           gender_lbl:"Gender", sel_choose:"Choose…", gender_m:"Male", gender_f:"Female", gender_o:"Other", gender_n:"Prefer not to say",
@@ -133,45 +134,41 @@
           where_lbl:"Where are you from?", where_ph:"City / Country",
           who_lbl:"Who are you?", who_ph:"Profession / Role",
           more_lbl:"Want to tell us more about you?", more_hint:"(optional – helps the AI give more accurate answers)", more_ph:"Example: I work in tech, I’m thinking about moving city, I have two kids…",
-          back:"Back", next:"Continue",
-          err_required:"To continue please select Gender, Age and Phase."
+          back:"Back", next:"Continue", skip:"Skip", err_required:"To continue please select Gender, Age and Phase."
       }
     };
     const LS = localStorage;
-    function getLang(){ return LS.getItem('lang') || 'it'; }
-    function tSet(){
-      const d = I18N[getLang()];
-      document.documentElement.lang = getLang();
-      document.querySelectorAll('[data-key]').forEach(el=>{
-        const k=el.getAttribute('data-key'); if(d[k]) el.textContent=d[k];
-      });
-      document.querySelectorAll('[data-ph]').forEach(el=>{
-        const k=el.getAttribute('data-ph'); if(d[k]) el.setAttribute('placeholder', d[k]);
-      });
+    const L = (LS.getItem('lang')||'it').toLowerCase();
+    const T = I18N[L] || I18N.it;
+    document.documentElement.lang = L;
+    document.querySelectorAll('[data-key]').forEach(el=>{
+      const k=el.getAttribute('data-key'); if(T[k]) el.textContent=T[k];
+    });
+    document.querySelectorAll('[data-ph]').forEach(el=>{
+      const k=el.getAttribute('data-ph'); if(T[k]) el.setAttribute('placeholder', T[k]);
+    });
+    document.getElementById('skipLbl').textContent = T.skip;
+    document.getElementById('skipLbl2').textContent = T.skip;
+
+    // Handlers
+    document.getElementById('backTop').onclick = ()=> history.back();
+    document.getElementById('backBtn').onclick = ()=> history.back();
+    document.getElementById('skipTop').onclick = trySkipToQuestion;
+    document.getElementById('skipBtn').onclick = trySkipToQuestion;
+
+    function trySkipToQuestion(){
+      // consenti skip se il profilo base già esiste (o almeno gender+age+phase salvati)
+      const base = JSON.parse(LS.getItem('whatif_profile')||'{}');
+      if (base.gender || base.age || base.phase) {
+        location.href = 'fourth.html';
+      } else {
+        // fallback: se l'utente non ha mai messo nulla, avvisa
+        alert(L==='en'?'Please fill the basic fields once before skipping.':'Compila almeno una volta i campi base prima di saltare.');
+      }
     }
-    tSet();
-
-    // Navigazione
-    document.getElementById('backTop').addEventListener('click', ()=> history.back());
-    document.getElementById('backBtn').addEventListener('click', ()=> history.back());
-
-    // Prefill se esiste un profilo salvato
-    (function prefill(){
-      try{
-        const saved = JSON.parse(LS.getItem('whatif_profile') || '{}');
-        if (!saved || typeof saved !== 'object') return;
-        if (saved.gender) document.getElementById('gender').value = saved.gender;
-        if (saved.age)    document.getElementById('age').value    = saved.age;
-        if (saved.phase)  document.getElementById('phase').value  = saved.phase;
-        if (saved.where)  document.getElementById('where').value  = saved.where;
-        if (saved.who)    document.getElementById('who').value    = saved.who;
-        if (saved.more)   document.getElementById('more').value   = saved.more;
-      }catch(e){}
-    })();
 
     const form = document.getElementById('aboutForm');
     const errBox = document.getElementById('errorBox');
-
     form.addEventListener('submit', (e)=>{
       e.preventDefault();
       const gender = document.getElementById('gender').value.trim();
@@ -180,21 +177,19 @@
       const where  = document.getElementById('where').value.trim();
       const who    = document.getElementById('who').value.trim();
       const more   = document.getElementById('more').value.trim();
-
       if(!gender || !age || !phase){
-        errBox.textContent = I18N[getLang()].err_required;
+        errBox.textContent = T.err_required;
         errBox.classList.add('show'); return;
       }
       errBox.classList.remove('show');
-
-      LS.setItem('whatif_profile', JSON.stringify({ gender, age, phase, where, who, more }));
-      // 🔁 nuovo step: vai al quiz psicologico
+      // merge nel profilo
+      const prev = JSON.parse(LS.getItem('whatif_profile')||'{}');
+      LS.setItem('whatif_profile', JSON.stringify({ ...prev, gender, age, phase, where, who, more }));
       location.href = 'third.html';
     });
 
-    // Aggiorna i18n se cambia la lingua in un’altra scheda
-    window.addEventListener('storage', (e)=>{ if(e.key==='lang'){ tSet(); }});
-    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) tSet(); });
+    // se la lingua cambia altrove
+    window.addEventListener('storage', (e)=>{ if(e.key==='lang'){ location.reload(); }});
   </script>
 </body>
 </html>
