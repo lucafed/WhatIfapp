@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f — Home</title>
   <meta name="theme-color" content="#0A0F14" />
-  <!-- Preload ero: se non viene usata subito, nessun problema -->
   <link rel="preload" as="image" href="/home-hero.png" />
   <style>
     :root{
@@ -36,7 +35,7 @@
     }
 
     /* Titoli & lead */
-    h1{margin:.25rem 0 0; font-size:clamp(28px,5.5vw,44px); line-height:1.1}
+    h1{margin:.25rem 0 0; font-size:clamp(28px,5.5vw,44px); line-height:1.1; cursor:default}
     h1 span{color:var(--accent)}
     .lead{
       max-width:680px; font-size:clamp(15px,4vw,18px); color:var(--muted);
@@ -118,7 +117,7 @@
   <main>
     <img id="hero" class="hero-img" alt="Porta luminosa What?f" loading="eager" decoding="async" />
 
-    <h1><span data-i18n="title">Scopri il tuo What?f</span></h1>
+    <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
 
     <!-- Frase corretta -->
     <p class="lead" id="leadText"></p>
@@ -163,7 +162,7 @@
     })();
   </script>
 
-  <!-- i18n (solo Home imposta la lingua per TUTTE le pagine) -->
+  <!-- i18n -->
   <script>
     const DICT = {
       it:{
@@ -261,6 +260,36 @@
       if(go.disabled) return;
       location.href = 'second.html';
     });
+  </script>
+
+  <!-- Admin segreto: triplo tap sul titolo (apre admin.html, senza ?key) -->
+  <script>
+    (function(){
+      let taps = 0, timer = null;
+      const target = document.getElementById('appTitle') || document.querySelector('h1') || document.body;
+
+      target.addEventListener('click', ()=>{
+        taps++;
+        clearTimeout(timer);
+        timer = setTimeout(()=>taps=0, 1200);
+        if (taps >= 3) {
+          taps = 0;
+          // flash visivo
+          const flash = document.createElement('div');
+          flash.style.position='fixed'; flash.style.inset='0';
+          flash.style.background='rgba(0,224,255,0.2)';
+          flash.style.backdropFilter='blur(2px)';
+          flash.style.transition='opacity .6s ease';
+          flash.style.opacity='1'; flash.style.zIndex='9999';
+          document.body.appendChild(flash);
+          setTimeout(()=>flash.style.opacity='0',150);
+          setTimeout(()=>flash.remove(),800);
+
+          // apri area admin protetta da password locale
+          location.href = 'admin.html';
+        }
+      });
+    })();
   </script>
 </body>
 </html>
