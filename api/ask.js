@@ -1,4 +1,4 @@
-// /api/ask.js — streaming SSE + risposta JSON, con formato ANALITICO realistico per "whatif"
+// /api/ask.js — SSE + JSON. Narrazione realistica, personale (no fiaba, no elenco puntato)
 import OpenAI from "openai";
 
 export default async function handler(req, res) {
@@ -12,128 +12,110 @@ export default async function handler(req, res) {
     if (!apiKey) return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
 
     const {
-      question, domanda, lang = "it",
-      periodo,   // "past" | "future"
-      stile,     // "whatif" (analitico) | "wtf" (ironico)
+      question, domanda,
+      lang = "it",
+      periodo,           // "past" | "future"
+      stile,             // "whatif" (realistico) | "wtf" (ironico)
       stream,
-      profile,   // { gender, age, phase, where, who, more }
-      archetypes,// { Ricercatore: 78, ... } (0–100)
-      anchors,   // { place, person, memory } opzionali
-      structured // (opzionale) se true → JSON con 3 nodi
+      profile,           // include: values[], style, change_attitude, motivation, self_view (+ eventuali age/phase/where/who)
+      archetypes,        // { Ricercatore, Costruttore, Visionario, Mediatore } 0–100
+      anchors,           // { place, person, memory } opzionale
+      structured         // opzionale
     } = req.body || {};
 
     const q = (question || domanda || "").toString().trim();
     if (!q) return res.status(400).json({ error: "question required" });
 
-    const safeProfile = (profile && typeof profile === "object") ? profile : {};
-    const safeArche   = (archetypes && typeof archetypes === "object") ? archetypes : {};
-    const safeAnch    = (anchors && typeof anchors === "object") ? anchors : {};
+    // ---- Sanitize/compact context ----
+    const P = (typeof profile === "object" && profile) ? profile : {};
+    const A = (typeof archetypes === "object" && archetypes) ? archetypes : {};
+    const AN = (typeof anchors === "object" && anchors) ? anchors : {};
 
     const time =
       periodo === "past"
         ? (lang === "en" ? "the past (what if)" : "il passato (what if)")
         : (lang === "en" ? "the near future (plausible what if)" : "il prossimo futuro (what if plausibile)");
 
-    // Linee di contesto da passare all'AI (compatte, niente dati sensibili superflui)
-    const profileLine =
-      lang === "en"
-        ? `User profile: ${JSON.stringify({
-            age: safeProfile.age || null,
-            phase: safeProfile.phase || null,
-            where: safeProfile.where || null,
-            who: safeProfile.who || null,
-          })}.`
-        : `Profilo utente: ${JSON.stringify({
-            age: safeProfile.age || null,
-            phase: safeProfile.phase || null,
-            where: safeProfile.where || null,
-            who: safeProfile.who || null,
-          })}.`;
+    // Profilo compatto che esponiamo al modello (solo ciò che serve a personalizzare il tono)
+    const profileBrief = {
+      age: P.age || null,
+      phase: P.phase || null,
+      where: P.where || null,
+      who: P.who || null,
+      values: Array.isArray(P.values) ? P.values.slice(0, 4) : null,
+      style: P.style || null,                // analitico/intuitivo/adattivo/equilibrato
+      change_attitude: P.change_attitude || null, // cauto/stimolato/valutativo/cerca il cambiamento
+      motivation: P.motivation || null,      // stabilità/crescita/libertà/riconoscimento
+      self_view: P.self_view || null         // serio/ironico/introspettivo/leggero
+    };
 
-    const archeLine =
+    const line_profile =
       lang === "en"
-        ? `Psychological archetypes (0–100): ${JSON.stringify(safeArche)}.`
-        : `Archetipi psicologici (0–100): ${JSON.stringify(safeArche)}.`;
+        ? `User profile: ${JSON.stringify(profileBrief)}.`
+        : `Profilo utente: ${JSON.stringify(profileBrief)}.`;
 
-    const anchorLine = (safeAnch.place || safeAnch.person || safeAnch.memory)
+    const line_arche =
+      lang === "en"
+        ? `Archetypes (0–100): ${JSON.stringify(A)}.`
+        : `Archetipi (0–100): ${JSON.stringify(A)}.`;
+
+    const line_anchors = (AN.place || AN.person || AN.memory)
       ? (lang === "en"
-          ? `Personal anchors: ${JSON.stringify({
-              place: safeAnch.place || null,
-              person: safeAnch.person || null,
-              memory: safeAnch.memory || null,
-            })}.`
-          : `Ancore personali: ${JSON.stringify({
-              place: safeAnch.place || null,
-              person: safeAnch.person || null,
-              memory: safeAnch.memory || null,
-            })}.`)
+          ? `Personal anchors: ${JSON.stringify({ place: AN.place||null, person: AN.person||null, memory: AN.memory||null })}.`
+          : `Ancore personali: ${JSON.stringify({ place: AN.place||null, person: AN.person||null, memory: AN.memory||null })}.`)
       : "";
 
-    // ----------------------------
-    // PROMPT
-    // ----------------------------
+    // ---- Prompting: due modalità ----
     let systemPrompt;
 
     if (stile === "wtf") {
-      // Modalità WTF: spiritosa ma sempre sicura
+      // Ironico, “da bar”, ma plausibile e non offensivo
       systemPrompt =
         lang === "en"
-          ? `You are What?f in WTF mode. Sound like a witty friend at a bar: light, playful, with 2–3 punchlines. Kind, non-offensive (no slurs/hate), no humiliation. Keep it plausible and grounded in the user's context. 120–180 words. Make it clearly about ${time} and still coherent with profile and archetypes.`
-          : `Sei What?f in modalità WTF. Suona come un amico al bar: leggero, brillante, con 2–3 battute. Gentile e non offensivo (no insulti/odio), evita umiliazioni. Mantieni plausibilità e ancoraggio al contesto utente. 120–180 parole. Indica chiaramente che parli del ${time} e resta coerente con profilo e archetipi.`;
+          ? `You are What?f in WTF mode. Sound like a witty friend at a bar: light, playful, with 2–3 punchlines. Be kind, non-offensive (no slurs/hate), no humiliation. Keep it plausible, grounded in the user's context and psychology. Use real-world constraints (time, money, obligations). Length 140–180 words. Make it clearly about ${time}.`
+          : `Sei What?f in modalità WTF. Suona come un amico al bar: leggero, brillante, con 2–3 battute. Gentile e non offensivo (no insulti/odio), senza umiliazioni. Mantieni la plausibilità, ancorati al contesto e alla psicologia dell’utente. Usa vincoli reali (tempo, soldi, impegni). Lunghezza 140–180 parole. Indica chiaramente che parli del ${time}.`;
     } else {
-      // Modalità WHAT IF (analitico, senza "storiella")
-      const header_en =
-        `NO storytelling. Write a compact scenario analysis in clearly labeled sections, second person allowed.
-Return this shape (concise bullet points, no fluff):
-1) Snapshot (2–3 bullets): personal traits inferred from profile & archetypes; relevant habits/context (place/phase).
-2) Turning point: the decision or condition at stake (1 line).
-3) Causal chain (${periodo === "past" ? "what would likely have happened then (3 steps within 1–3 years)" : "what could plausibly unfold in the next 6–18 months (3 steps)"}).
-4) Verifiable signals (3 bullets): external indicators you could actually notice.
-5) Small next step (1 bullet): a minimal, concrete action consistent with your profile.
+      // Realistico, personale, “immagine di vita possibile”: narrativo sobrio, non romanzato, senza elenco
+      const core_en = `You are What?f, a reflective narrator. Write as if you truly knew this person—tone, doubts, ambitions.
+Describe a parallel timeline that feels intimate, plausible and emotionally true, without turning it into a plot or moral lesson.
+Weave the user's VALUES, STYLE of decision-making, ATTITUDE to change, core MOTIVATION and SELF-VIEW into the way you select details and explain causes.
+If anchors are provided, use them concretely (place/person/memory). Use sensory cues (light, sounds, smells) sparingly, and only if they make it feel real. Mention realistic constraints (time, work, fatigue, money).
+Make the user think: "this could really be my life." Calm, lucid tone. 140–180 words. Keep it clearly about ${time}.`;
 
-Use realistic constraints (time, money, obligations). If anchors are present, weave them concretely.
-Avoid generic advice and generic life-lessons. 130–180 words.`;
+      const core_it = `Sei What?f, un narratore riflessivo. Scrivi come se conoscessi davvero questa persona — tono, dubbi, ambizioni.
+Descrivi una linea di vita parallela, plausibile e vera emotivamente, senza trasformarla in una trama o in una morale.
+Intreccia nei dettagli il sistema di VALORI, lo STILE decisionale, l’ATTEGGIAMENTO verso il cambiamento, la MOTIVAZIONE dominante e l’AUTOPERCEZIONE (self-view).
+Se ci sono ancore, usale in modo concreto (luogo/persona/ricordo). Usa accenni sensoriali con misura e solo se rendono autentica la scena. Cita vincoli realistici (tempo, lavoro, stanchezza, denaro).
+L’obiettivo è: “potrei davvero essere io”. Tono calmo e lucido. 140–180 parole. Rendi chiaro che parli del ${time}.`;
 
-      const header_it =
-        `Nessuna narrazione romanzata. Scrivi una breve ANALISI DI SCENARIO in sezioni con etichette chiare (puoi usare la seconda persona).
-Usa questo formato (punti concisi, senza fronzoli):
-1) Ritratto rapido (2–3 bullet): tratti personali dal profilo/archetipi; abitudini/contesto rilevante (luogo/fase).
-2) Punto di svolta: decisione o condizione in gioco (1 riga).
-3) Catena causale (${periodo === "past" ? "cosa sarebbe verosimilmente accaduto allora (3 passi entro 1–3 anni)" : "cosa può plausibilmente accadere nei prossimi 6–18 mesi (3 passi)"}).
-4) Indicatori verificabili (3 bullet): segnali esterni che potresti davvero notare.
-5) Prossimo passo minimo (1 bullet): azione piccola, concreta e coerente con te.
+      // boost specifico se passato
+      const pastBoost_en = `When focusing on the past, prefer small believable shifts (jobs, routines, social circle) over dramatic twists; add time markers (years/seasons) only if natural.`;
+      const pastBoost_it = `Se parli del passato, privilegia piccoli scarti credibili (lavori, routine, cerchia sociale) rispetto a colpi di scena; inserisci marcatori temporali (anni/stagioni) solo se naturali.`;
 
-Inserisci vincoli realistici (tempo, soldi, impegni). Se ci sono ancore, usale in modo concreto.
-Evita consigli generici e frasi universali. 130–180 parole.`;
-
-      systemPrompt =
-        lang === "en"
-          ? `You are What?f. ${header_en}`
-          : `Sei What?f. ${header_it}`;
+      systemPrompt = (lang === "en" ? core_en : core_it) +
+        (periodo === "past" ? (" " + (lang === "en" ? pastBoost_en : pastBoost_it)) : "");
     }
 
     if (structured === true) {
-      // opzionale: JSON con 3 nodi (lasciamo disponibile per futuro)
-      systemPrompt +=
-        lang === "en"
-          ? ` If structured=true, instead return valid JSON: {"summary":"...","nodes":[{"label":"...","forces":["..."],"outcomeA":"...","outcomeB":"...","mood":-2..2}, ... (3 items)] }.`
-          : ` Se structured=true, restituisci invece JSON valido: {"summary":"...","nodes":[{"label":"...","forces":["..."],"outcomeA":"...","outcomeB":"...","mood":-2..2}, ... (3 elementi)] }.`;
+      // opzionale per futuri viewer
+      systemPrompt += (lang === "en")
+        ? ` If structured=true, instead return valid JSON: {"summary":"...","nodes":[{"label":"...","forces":["..."],"outcomeA":"...","outcomeB":"...","mood":-2..2}, ... (3 items)] }.`
+        : ` Se structured=true, restituisci invece JSON valido: {"summary":"...","nodes":[{"label":"...","forces":["..."],"outcomeA":"...","outcomeB":"...","mood":-2..2}, ... (3 elementi)] }.`;
     }
 
     const userPrompt =
-      lang === "en"
-        ? `User question: ${q}\n${profileLine}\n${archeLine}\n${anchorLine}\nTime focus: ${time}`
-        : `Domanda dell'utente: ${q}\n${profileLine}\n${archeLine}\n${anchorLine}\nFocalizzazione temporale: ${time}`;
+      (lang === "en"
+        ? `User question: ${q}\n${line_profile}\n${line_arche}\n${line_anchors}\nTime focus: ${time}`
+        : `Domanda dell'utente: ${q}\n${line_profile}\n${line_arche}\n${line_anchors}\nFocalizzazione temporale: ${time}`
+      ).trim();
 
-    // ----------------------------
-    // CHIAMATA MODELLO
-    // ----------------------------
+    // ---- Model call ----
     const client = new OpenAI({ apiKey });
     const wantsStream =
       stream === true || req.query?.stream === "1" || req.headers["x-whatif-stream"] === "1";
 
-    const temperature = stile === "wtf" ? 0.9 : 0.55; // analitico leggermente più “freddo”
-    const MAX_TOKENS = 360;
+    const temperature = stile === "wtf" ? 0.9 : 0.6;   // WTF più creativo, What-if più sobrio
+    const MAX_TOKENS = 380;
 
     if (wantsStream) {
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
@@ -180,9 +162,9 @@ Evita consigli generici e frasi universali. 130–180 parole.`;
       ok: true,
       model: "gpt-4o-mini",
       lang, periodo, stile,
-      profile: safeProfile,
-      archetypes: safeArche,
-      anchors: safeAnch,
+      profile: profileBrief,
+      archetypes: A,
+      anchors: AN,
       structured: !!structured,
       answer: text,
     });
