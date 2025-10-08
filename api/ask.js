@@ -1,6 +1,10 @@
-// /api/ask.js — SSE + JSON. Due stili:
-// - whatif: realistico, pratico, asciutto (SEMPRE seconda persona; no melassa)
-// - wtf: amico al bancone, brillante ma plausibile
+// /api/ask.js — supporta:
+// 1) clarify=true  -> restituisce 2–3 domande mirate (JSON, no streaming)
+// 2) clarify=false -> genera lo scenario (streaming SSE o JSON)
+//
+// Usa profilo locale + risposte di chiarimento per personalizzare la risposta.
+// Tono: "whatif" = realistico, asciutto, concreto; "wtf" = brillante, ironico, da bar ma plausibile.
+
 import OpenAI from "openai";
 
 export default async function handler(req, res) {
@@ -14,96 +18,109 @@ export default async function handler(req, res) {
     if (!apiKey) return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
 
     const {
-      question, domanda,
-      lang = "it",
-      periodo,     // "past" | "future"
-      stile,       // "whatif" | "wtf"
-      stream,
-      profile,     // { age, phase, where, who, values[], style, change_attitude, motivation, self_view }
-      archetypes,  // { Ricercatore, Costruttore, Visionario, Mediatore }
-      anchors,     // { place, person, memory }
-      structured
+      question, domanda, lang = "it",
+      periodo, stile, stream,
+      // nuovo:
+      clarify = false,        // true => restituisce domande mirate
+      clarifications = {},    // risposte utente alle domande mirate
+      profilo = {},           // profilo locale dell’utente
+      extra = ""              // eventuale istruzione aggiuntiva (es. continua/riavvolgi/bivi)
     } = req.body || {};
 
     const q = (question || domanda || "").toString().trim();
     if (!q) return res.status(400).json({ error: "question required" });
 
-    const P  = profile && typeof profile === "object" ? profile : {};
-    const A  = archetypes && typeof archetypes === "object" ? archetypes : {};
-    const AN = anchors && typeof anchors === "object" ? anchors : {};
+    const p = profilo || {};
+    const snap = [
+      p.name ? `nome: ${p.name}` : null,
+      p.age ? `età: ${p.age}` : null,
+      p.city ? `città: ${p.city}` : null,
+      p.gender ? `sesso: ${p.gender}` : null,
+      p.phase ? `fase: ${p.phase}` : null,
+      p.role ? `professione: ${p.role}` : null,
+      p.goal ? `obiettivo: ${p.goal}` : null,
+    ].filter(Boolean).join(" · ");
+
+    const micro = p.micro && typeof p.micro === "object"
+      ? Object.entries(p.micro).slice(0, 8).map(([k,v]) => `${k}: ${v}`).join(" | ")
+      : "";
+
+    const clarStr = clarifications && typeof clarifications === "object"
+      ? Object.entries(clarifications).map(([k,v]) => `${k}: ${v}`).join(" | ")
+      : "";
 
     const time =
       periodo === "past"
         ? (lang === "en" ? "the past (what if)" : "il passato (what if)")
         : (lang === "en" ? "the near future (plausible what if)" : "il prossimo futuro (what if plausibile)");
 
-    const profileBrief = {
-      age: P.age || null,
-      phase: P.phase || null,
-      where: P.where || null,
-      who: P.who || null,
-      values: Array.isArray(P.values) ? P.values.slice(0,4) : null,
-      style: P.style || null,
-      change_attitude: P.change_attitude || null,
-      motivation: P.motivation || null,
-      self_view: P.self_view || null
-    };
+    const tone =
+      stile === "wtf"
+        ? (lang === "en"
+            ? "an ironic, lively, witty bar-story tone (playful yet realistic and respectful)"
+            : "tono ironico, brillante, da bar: vivace e divertente, ma plausibile e rispettoso")
+        : (lang === "en"
+            ? "a realistic, concrete, concise tone (no melodrama, no 1st-person diary)"
+            : "tono realistico, concreto e conciso (niente melodramma, niente diario in prima persona)");
 
-    const line_profile =
-      lang === "en"
-        ? `User profile: ${JSON.stringify(profileBrief)}.`
-        : `Profilo utente: ${JSON.stringify(profileBrief)}.`;
-
-    const line_arche =
-      lang === "en"
-        ? `Archetypes (0–100): ${JSON.stringify(A)}.`
-        : `Archetipi (0–100): ${JSON.stringify(A)}.`;
-
-    const line_anchors = (AN.place || AN.person || AN.memory)
+    const wtfAddon = stile === "wtf"
       ? (lang === "en"
-          ? `Personal anchors: ${JSON.stringify({ place: AN.place||null, person: AN.person||null, memory: AN.memory||null })}.`
-          : `Ancore personali: ${JSON.stringify({ place: AN.place||null, person: AN.person||null, memory: AN.memory||null })}.`)
+          ? "Add subtle bar-scene color (a spritz, a busy counter, laughter). Do not encourage dangerous excess."
+          : "Aggiungi colore da bar (uno spritz, un bancone affollato, risate). Non incoraggiare eccessi pericolosi.")
       : "";
 
-    // ===== Prompt per stile
-    let systemPrompt;
-    if (stile === "wtf") {
-      systemPrompt =
-        lang === "en"
-          ? `You are What?f in WTF mode. Sound like a witty friend at a bar: crisp, playful, but grounded. Use SECOND PERSON only (you). Never use first person. Keep it plausible and tied to the user's context and psychology (values, decision style, motivation, change attitude, self-view). Mention real-world constraints (time, money, obligations). Light bar vibe: 1–2 subtle mentions (beer, spritz, Negroni), without promoting excess. Keep it clearly about ${time}. Length 140–180 words. No moral, no bullet lists, no fairy-tale — just a believable slice of life.`
-          : `Sei What?f in modalità WTF. Suona come un amico al bancone: asciutto, brillante ma con i piedi per terra. Usa SOLO la SECONDA persona (tu). Non usare mai la prima persona. Resta plausibile e ancorato alla psicologia e al contesto dell’utente (valori, stile decisionale, motivazione, atteggiamento verso il cambiamento, self-view). Cita vincoli reali (tempo, soldi, impegni). Atmosfera bar leggera: 1–2 cenni (birra, spritz, Negroni), senza celebrare l’eccesso. Rendi chiaro che parli del ${time}. Lunghezza 140–180 parole. Niente morale, niente elenchi, niente fiaba: solo uno scorcio credibile di vita.`;
-    } else {
-      // WHAT IF: realistico, pratico, asciutto — SECONDA persona, niente sentimentalismi
-      const core_en =
-        `You are What?f in realistic mode. Write in SECOND PERSON (you). Never use first person.
-Describe a plausible alternate timeline with a neutral, pragmatic tone: concrete context, constraints (time, money, obligations), and small cause→effect links.
-No melodrama, no moral, no bullet lists. Avoid flowery language. Short, clear sentences; ordinary, verifiable details.
-Weave the user's values, decision style, change attitude, motivation and self-view implicitly. If anchors exist (place/person/memory), include them naturally. 140–180 words. Keep it clearly about ${time}.`;
-      const core_it =
-        `Sei What?f in modalità realistica. Scrivi in SECONDA persona (tu). Non usare la prima persona.
-Descrivi una linea alternativa plausibile con tono neutro e pratico: contesto concreto, vincoli reali (tempo, soldi, impegni) e piccole relazioni causa→effetto.
-Niente melodramma, niente morale, niente elenchi puntati. Evita linguaggio floreale. Frasi brevi e chiare; dettagli ordinari e verificabili.
-Intreccia valori, stile decisionale, atteggiamento al cambiamento, motivazione e self-view in modo implicito. Se ci sono ancore (luogo/persona/ricordo), inseriscile con naturalezza. 140–180 parole. Indica chiaramente che parli del ${time}.`;
-      systemPrompt = (lang === "en" ? core_en : core_it);
-    }
-
-    if (structured === true) {
-      // opzionale per futuri viewer (lasciato vuoto volutamente)
-    }
-
-    const userPrompt =
-      (lang === "en"
-        ? `User question: ${q}\n${line_profile}\n${line_arche}\n${line_anchors}\nTime focus: ${time}`
-        : `Domanda dell'utente: ${q}\n${line_profile}\n${line_arche}\n${line_anchors}\nFocalizzazione temporale: ${time}`
-      ).trim();
-
-    // ===== Model call
     const client = new OpenAI({ apiKey });
-    const wantsStream =
-      stream === true || req.query?.stream === "1" || req.headers["x-whatif-stream"] === "1";
 
-    const temperature = stile === "wtf" ? 0.9 : 0.55; // WTF più frizzante, WHATIF più sobrio
-    const MAX_TOKENS = 380;
+    // ====== MODALITÀ 1: DOMANDE DI CHIARIMENTO (NO STREAM) ======
+    if (clarify === true) {
+      const clarifySystem = lang === "en"
+        ? `You are What?f. Given the user's question and profile, ask 2–3 SHORT, targeted clarifying questions that make the final scenario more personal and realistic. Output strict JSON: {"questions":[{"id":"q1","label":"...","placeholder":"..."}, ...]}`
+        : `Sei What?f. Dalla domanda e dal profilo, formula 2–3 domande di chiarimento, BREVI e mirate, per rendere lo scenario finale più personale e realistico. Rispondi SOLO in JSON: {"questions":[{"id":"q1","label":"...","placeholder":"..."}, ...]}`;
+
+      const clarifyUser = [
+        lang === "en" ? `User question: ${q}` : `Domanda utente: ${q}`,
+        snap ? (lang === "en" ? `Profile snapshot: ${snap}` : `Profilo: ${snap}`) : "",
+        micro ? (lang === "en" ? `Micro-signals: ${micro}` : `Micro-dettagli: ${micro}`) : ""
+      ].filter(Boolean).join("\n");
+
+      const resp = await client.chat.completions.create({
+        model: "gpt-4o-mini",
+        temperature: 0.3,
+        max_tokens: 200,
+        messages: [
+          { role: "system", content: clarifySystem },
+          { role: "user", content: clarifyUser },
+        ],
+        response_format: { type: "json_object" }
+      });
+
+      const text = resp.choices?.[0]?.message?.content?.trim() || "";
+      let json;
+      try { json = JSON.parse(text); }
+      catch { json = { questions: [] }; }
+      return res.status(200).json({ ok: true, clarify: true, questions: json.questions || [] });
+    }
+
+    // ====== MODALITÀ 2: GENERAZIONE SCENARIO (STREAM / NON STREAM) ======
+    const systemPrompt = lang === "en"
+      ? `You are What?f. Generate a concise scenario in ${time}, with ${tone}. Use only provided personal cues (name, city, life phase, routines) or clarifications; never invent facts. Make it feel tailored to this user. 120–180 words.`
+      : `Sei What?f. Genera uno scenario conciso nel ${time}, con ${tone}. Usa solo i riferimenti personali forniti (profilo e chiarimenti); non inventare. Deve sembrare su misura per questa persona. 120–180 parole.`;
+
+    const userPrompt = [
+      lang === "en" ? `User question: ${q}` : `Domanda: ${q}`,
+      snap ? (lang === "en" ? `Profile snapshot: ${snap}` : `Profilo: ${snap}`) : "",
+      micro ? (lang === "en" ? `Micro-signals: ${micro}` : `Micro-dettagli: ${micro}`) : "",
+      clarStr ? (lang === "en" ? `Clarifications: ${clarStr}` : `Chiarimenti: ${clarStr}`) : "",
+      extra ? (lang === "en" ? `Extra instruction: ${extra}` : `Istruzione extra: ${extra}`) : "",
+      wtfAddon
+    ].filter(Boolean).join("\n");
+
+    const wantsStream =
+      stream === true ||
+      req.query?.stream === "1" ||
+      req.headers["x-whatif-stream"] === "1";
+
+    const MAX_TOKENS = 360;
 
     if (wantsStream) {
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
@@ -112,7 +129,7 @@ Intreccia valori, stile decisionale, atteggiamento al cambiamento, motivazione e
 
       const completion = await client.chat.completions.create({
         model: "gpt-4o-mini",
-        temperature,
+        temperature: stile === "wtf" ? 0.9 : 0.6,
         max_tokens: MAX_TOKENS,
         stream: true,
         messages: [
@@ -137,7 +154,7 @@ Intreccia valori, stile decisionale, atteggiamento al cambiamento, motivazione e
 
     const resp = await client.chat.completions.create({
       model: "gpt-4o-mini",
-      temperature,
+      temperature: stile === "wtf" ? 0.9 : 0.6,
       max_tokens: MAX_TOKENS,
       messages: [
         { role: "system", content: systemPrompt },
@@ -148,14 +165,12 @@ Intreccia valori, stile decisionale, atteggiamento al cambiamento, motivazione e
     const text = resp.choices?.[0]?.message?.content?.trim() || "";
     return res.status(200).json({
       ok: true,
+      clarify: false,
       model: "gpt-4o-mini",
       lang, periodo, stile,
-      profile: profileBrief,
-      archetypes: A,
-      anchors: AN,
-      structured: !!structured,
       answer: text,
     });
+
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
