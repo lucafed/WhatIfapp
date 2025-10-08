@@ -1,6 +1,6 @@
 // /api/ask.js — SSE + JSON. Due stili:
-// - whatif: realistico, pratico, asciutto (NO prima persona, niente melassa)
-// - wtf: amico al bancone, brillante ma plausibile (come prima)
+// - whatif: realistico, pratico, asciutto (SEMPRE seconda persona; no melassa)
+// - wtf: amico al bancone, brillante ma plausibile
 import OpenAI from "openai";
 
 export default async function handler(req, res) {
@@ -73,24 +73,22 @@ export default async function handler(req, res) {
           ? `You are What?f in WTF mode. Sound like a witty friend at a bar: crisp, playful, but grounded. Use SECOND PERSON only (you). Never use first person. Keep it plausible and tied to the user's context and psychology (values, decision style, motivation, change attitude, self-view). Mention real-world constraints (time, money, obligations). Light bar vibe: 1–2 subtle mentions (beer, spritz, Negroni), without promoting excess. Keep it clearly about ${time}. Length 140–180 words. No moral, no bullet lists, no fairy-tale — just a believable slice of life.`
           : `Sei What?f in modalità WTF. Suona come un amico al bancone: asciutto, brillante ma con i piedi per terra. Usa SOLO la SECONDA persona (tu). Non usare mai la prima persona. Resta plausibile e ancorato alla psicologia e al contesto dell’utente (valori, stile decisionale, motivazione, atteggiamento verso il cambiamento, self-view). Cita vincoli reali (tempo, soldi, impegni). Atmosfera bar leggera: 1–2 cenni (birra, spritz, Negroni), senza celebrare l’eccesso. Rendi chiaro che parli del ${time}. Lunghezza 140–180 parole. Niente morale, niente elenchi, niente fiaba: solo uno scorcio credibile di vita.`;
     } else {
-      // WHAT IF: realistico, pratico, asciutto — NO prima persona, niente sentimentalismi
+      // WHAT IF: realistico, pratico, asciutto — SECONDA persona, niente sentimentalismi
       const core_en =
-        `You are What?f in realistic mode. Write in SECOND PERSON (you). Never use first person. 
-Describe a plausible alternate timeline with a neutral, pragmatic tone: concrete context, constraints (time, money, obligations), and small cause→effect links. 
-No melodrama, no moral, no bullet lists. Avoid flowery language. Use short, clear sentences and specific, ordinary details. 
-Weave the user's values, decision style, change attitude, motivation and self-view subtly in what you select, not by labeling them. If anchors exist (place/person/memory), include them naturally. 140–180 words. Keep it clearly about ${time}.`;
-
+        `You are What?f in realistic mode. Write in SECOND PERSON (you). Never use first person.
+Describe a plausible alternate timeline with a neutral, pragmatic tone: concrete context, constraints (time, money, obligations), and small cause→effect links.
+No melodrama, no moral, no bullet lists. Avoid flowery language. Short, clear sentences; ordinary, verifiable details.
+Weave the user's values, decision style, change attitude, motivation and self-view implicitly. If anchors exist (place/person/memory), include them naturally. 140–180 words. Keep it clearly about ${time}.`;
       const core_it =
-        `Sei What?f in modalità realistica. Scrivi in SECONDA persona (tu). Non usare la prima persona. 
-Descrivi una linea alternativa plausibile con tono neutro e pratico: contesto concreto, vincoli reali (tempo, soldi, impegni) e piccole relazioni causa→effetto. 
-Niente melodramma, niente morale, niente elenchi puntati. Evita il linguaggio floreale. Frasi brevi e chiare, dettagli ordinari e verificabili. 
-Intreccia valori, stile decisionale, atteggiamento al cambiamento, motivazione e self-view in modo implicito, non dichiarato. Se ci sono ancore (luogo/persona/ricordo), inseriscile con naturalezza. 140–180 parole. Indica chiaramente che parli del ${time}.`;
-
+        `Sei What?f in modalità realistica. Scrivi in SECONDA persona (tu). Non usare la prima persona.
+Descrivi una linea alternativa plausibile con tono neutro e pratico: contesto concreto, vincoli reali (tempo, soldi, impegni) e piccole relazioni causa→effetto.
+Niente melodramma, niente morale, niente elenchi puntati. Evita linguaggio floreale. Frasi brevi e chiare; dettagli ordinari e verificabili.
+Intreccia valori, stile decisionale, atteggiamento al cambiamento, motivazione e self-view in modo implicito. Se ci sono ancore (luogo/persona/ricordo), inseriscile con naturalezza. 140–180 parole. Indica chiaramente che parli del ${time}.`;
       systemPrompt = (lang === "en" ? core_en : core_it);
     }
 
     if (structured === true) {
-      // opzionale: mantenuto per futuri viewer se ti serve
+      // opzionale per futuri viewer (lasciato vuoto volutamente)
     }
 
     const userPrompt =
