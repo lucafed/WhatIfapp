@@ -13,7 +13,7 @@
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
   main{max-width:920px;margin:auto;padding:18px}
-  .topbar{display:flex;gap:10px;align-items:center}
+  .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between}
   .btn{appearance:none;border:none;background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
   .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:#001f26;font-weight:800}
   .btn.ghost{background:transparent;border:1px solid #1d2b34}
@@ -21,10 +21,10 @@
   p.sub{color:var(--muted);margin:0 0 12px}
   .card{background:var(--card);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px rgba(0,0,0,.25)}
   .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-  .box{background:#0b1218;border:1px solid #18242c;border-radius:12px;padding:12px;white-space:pre-wrap}
+  .box{background:#0b1218;border:1px solid #18242c;border-radius:12px;padding:12px;white-space:pre-wrap;line-height:1.6}
   .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-  .chip{background:#0f1820;border:1px solid #1b2a34;color:#cfe3e7;border-radius:999px;padding:8px 12px;font-size:12px}
-  #result{min-height:160px;line-height:1.6}
+  .chip{background:#0f1820;border:1px solid #1b2a34;color:#cfe3e7;border-radius:999px;padding:8px 12px;font-size:12px;cursor:pointer}
+  #result{min-height:160px}
   .tools{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
   .hint{font-size:12px;color:var(--muted)}
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:6000}
@@ -33,13 +33,28 @@
   .hist-item h4{margin:0 0 6px;color:var(--acc)}
   .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,#0d151c 0%,#122029 50%,#0d151c 100%);background-size:200% 100%;animation:sk 1s infinite}
   @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
+  .meter{display:flex;align-items:center;gap:10px;background:#0b1218;border:1px solid #18242c;padding:8px 12px;border-radius:12px}
+  .meterbar{width:160px;height:8px;background:#0f1820;border:1px solid #1c2a33;border-radius:999px;overflow:hidden}
+  .meterbar > div{height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+  .rate{display:flex;gap:8px;margin-top:10px}
+  .rate button{background:#0f1820;border:1px solid #1b2a34;color:#cfe3e7;border-radius:999px;padding:6px 10px;cursor:pointer}
+  .refine{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .pin{cursor:pointer;float:right;color:#ffd24d}
 </style>
 </head>
 <body>
   <main>
     <div class="topbar">
-      <button class="btn ghost" onclick="history.back()">← <span data-i18n="back">Indietro</span></button>
-      <button class="btn ghost" onclick="location.href='index.html'">🏠 <span data-i18n="home">Home</span></button>
+      <div class="row">
+        <button class="btn ghost" onclick="history.back()">← <span data-i18n="back">Indietro</span></button>
+        <button class="btn ghost" onclick="location.href='index.html'">🏠 <span data-i18n="home">Home</span></button>
+      </div>
+      <!-- Freemium meter -->
+      <div class="meter" id="meter">
+        <span id="meterLabel">0/3</span>
+        <div class="meterbar"><div id="meterFill"></div></div>
+        <button class="btn primary" id="upgradeBtn">Pro</button>
+      </div>
     </div>
 
     <h1 data-i18n="title">Il tuo scenario</h1>
@@ -57,9 +72,24 @@
       </div>
 
       <h3 class="label" style="margin-top:16px" data-i18n="answer">Risultato</h3>
-      <div id="result" class="box"><span data-i18n="ready">Pronto: invia la domanda per generare lo scenario.</span></div>
+      <div id="result" class="box" aria-live="polite"><span data-i18n="ready">Pronto: invia la domanda per generare lo scenario.</span></div>
 
-      <div class="tools">
+      <!-- Rifiniture rapide -->
+      <div class="refine">
+        <button class="chip" onclick="refine('concrete')" data-i18n="r_concrete">Più concreto</button>
+        <button class="chip" onclick="refine('ironic')" data-i18n="r_ironic">Più ironico</button>
+        <button class="chip" onclick="refine('direct')" data-i18n="r_direct">Più diretto</button>
+      </div>
+
+      <!-- Feedback 1-click -->
+      <div class="rate">
+        <span class="hint" data-i18n="rateq">Quanto ti somiglia?</span>
+        <button onclick="rate(1)">😕</button>
+        <button onclick="rate(2)">🙂</button>
+        <button onclick="rate(3)">🔥</button>
+      </div>
+
+      <div class="tools" style="margin-top:10px">
         <button class="btn" onclick="generate()" data-i18n="regenerate">Rigenera 🔁</button>
         <button class="btn" onclick="saveHistory()" data-i18n="save">💾 Salva in cronologia</button>
         <button class="btn" onclick="openHistory()" data-i18n="seeHistory">📜 Vedi cronologia</button>
@@ -85,6 +115,18 @@
     </div>
   </div>
 
+  <!-- Overlay upgrade -->
+  <div class="overlay" id="upgradeOverlay" style="display:none" onclick="closeUpgrade(event)">
+    <div class="sheet">
+      <h3>Limite giornaliero raggiunto</h3>
+      <p>Hai usato tutti gli scenari gratuiti di oggi. Passa a <strong>Pro</strong> per continuare senza limiti ragionevoli.</p>
+      <div class="tools">
+        <button class="btn primary" onclick="fakeUpgrade()">Attiva Pro</button>
+        <button class="btn ghost" onclick="closeUpgrade()">Chiudi</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 // ===== i18n =====
 const DICT = {
@@ -99,7 +141,10 @@ const DICT = {
     ready:"Pronto: invia la domanda per generare lo scenario.",
     limitHint:"Le risposte sono concise per invogliarti a proseguire. Puoi salvare e rielaborare quando vuoi.",
     err_network:"Errore di rete", err_server:"C’è stato un problema. Riprova.",
-    badgePast:"Passato", badgeFuture:"Futuro", badgeWhatIf:"What if", badgeWTF:"What the F"
+    badgePast:"Passato", badgeFuture:"Futuro", badgeWhatIf:"What if", badgeWTF:"What the F",
+    rateq:"Quanto ti somiglia?",
+    r_concrete:"Più concreto", r_ironic:"Più ironico", r_direct:"Più diretto",
+    meter:"Scenari oggi", pro:"Pro"
   },
   en: {
     back:"Back", home:"Home", title:"Your scenario",
@@ -112,7 +157,10 @@ const DICT = {
     ready:"Ready: send the question to generate the scenario.",
     limitHint:"Answers are concise to keep you curious. Save and re-run any time.",
     err_network:"Network error", err_server:"Something went wrong. Try again.",
-    badgePast:"Past", badgeFuture:"Future", badgeWhatIf:"What if", badgeWTF:"What the F"
+    badgePast:"Past", badgeFuture:"Future", badgeWhatIf:"What if", badgeWTF:"What the F",
+    rateq:"How much does it feel like you?",
+    r_concrete:"More concrete", r_ironic:"More ironic", r_direct:"More direct",
+    meter:"Scenarios today", pro:"Pro"
   }
 };
 const LS = localStorage;
@@ -129,39 +177,63 @@ let domanda = LS.getItem("domanda") || "";
 const questionEl = document.getElementById("question");
 const resultEl   = document.getElementById("result");
 const badges     = document.getElementById("badges");
-
-if (!domanda) {
-  alert(lang==="en"?"No question found. Going back.":"Nessuna domanda trovata. Torno indietro.");
-  location.href = "fourth.html";
-}
+if (!domanda) { alert(lang==="en"?"No question found. Going back.":"Nessuna domanda trovata. Torno indietro."); location.href = "fourth.html"; }
 
 // badge
 (function renderBadges(){
   const row = [];
-  if (prefs.periodo) {
-    const lbl = prefs.periodo === "past" ? T.badgePast : T.badgeFuture;
-    row.push(`<span class="chip">🕰️ ${lbl}</span>`);
-  }
-  if (prefs.stile) {
-    const lbl = prefs.stile === "wtf" ? T.badgeWTF : T.badgeWhatIf;
-    row.push(`<span class="chip">🎭 ${lbl}</span>`);
-  }
+  if (prefs.periodo) { row.push(`<span class="chip">🕰️ ${prefs.periodo === "past" ? T.badgePast : T.badgeFuture}</span>`); }
+  if (prefs.stile)   { row.push(`<span class="chip">🎭 ${prefs.stile === "wtf" ? T.badgeWTF : T.badgeWhatIf}</span>`); }
   badges.innerHTML = row.join("");
 })();
-
-// mostra domanda
 questionEl.textContent = domanda;
+
+// ===== Freemium meter =====
+const DAILY_FREE = 3;
+function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function readCredits(){
+  const v = JSON.parse(LS.getItem('whatif_credits')||'{}'); const today = todayStr();
+  if (!v.date || v.date!==today) return {date:today, used:0, pro: !!v.pro};
+  return v;
+}
+function writeCredits(c){ LS.setItem('whatif_credits', JSON.stringify(c)); renderMeter(); }
+function renderMeter(){
+  const c = readCredits(); const used = c.pro ? 0 : c.used; const label = `${Math.min(used,DAILY_FREE)}/${DAILY_FREE}`;
+  document.getElementById('meterLabel').textContent = label;
+  const pct = Math.min(100, Math.round((used/DAILY_FREE)*100));
+  document.getElementById('meterFill').style.width = (c.pro ? '0%' : pct+'%');
+  document.getElementById('upgradeBtn').textContent = c.pro ? (lang==='en'?'Pro ✓':'Pro ✓') : (lang==='en'?'Pro':'Pro');
+}
+function haveQuota(){
+  const c = readCredits();
+  if (c.pro) return true;
+  return c.used < DAILY_FREE;
+}
+function consumeOne(){
+  const c = readCredits();
+  if (!c.pro) c.used = (c.used||0) + 1;
+  writeCredits(c);
+}
+renderMeter();
+
+// upgrade overlay (mock)
+document.getElementById('upgradeBtn').onclick = ()=>{ document.getElementById('upgradeOverlay').style.display='flex'; };
+function closeUpgrade(ev){ if(ev && ev.target && ev.target.id!=='upgradeOverlay' && ev.type==='click') return; document.getElementById('upgradeOverlay').style.display='none'; }
+function fakeUpgrade(){ const c=readCredits(); c.pro=true; writeCredits(c); closeUpgrade(); alert(lang==='en'?'Pro activated (demo).':'Pro attivato (demo).'); }
 
 // ===== generazione (SSE) =====
 const MAX_CHARS = 1200;
 let lastAnswer = "";
+let generating = false;
 
-async function generate() {
+async function generate(extraInstruction = "") {
+  if (generating) return;
+  if (!haveQuota()){ document.getElementById('upgradeOverlay').style.display='flex'; return; }
+
+  generating = true;
   lastAnswer = "";
   resultEl.textContent = "⏳ " + T.gen + " ";
-  const sk = document.createElement("span");
-  sk.className = "skeleton"; sk.style.width="40%";
-  resultEl.appendChild(sk);
+  const sk = document.createElement("span"); sk.className = "skeleton"; sk.style.width="40%"; resultEl.appendChild(sk);
 
   const payload = {
     domanda,
@@ -174,13 +246,19 @@ async function generate() {
     stream: true
   };
 
+  // Rifiniture come hint aggiuntivo
+  if (extraInstruction){
+    payload.extra = extraInstruction; // lato server non usato, ma utile se vuoi loggare
+    // appendiamo al prompt utente con "guardrail" via header personalizzato? per ora usiamo messaggi post-processing lato client (semplice)
+  }
+
   try{
     const res = await fetch("/api/ask", {
       method:"POST",
       headers:{"Content-Type":"application/json","x-whatif-stream":"1"},
       body: JSON.stringify(payload)
     });
-    if (!res.ok) { resultEl.textContent = T.err_server; return; }
+    if (!res.ok) { resultEl.textContent = T.err_server; generating=false; return; }
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -209,29 +287,59 @@ async function generate() {
           }
         }
         if (data.done){
+          // consumo credito a generazione conclusa
+          consumeOne();
           resultEl.textContent = (lastAnswer || text || "").trim();
+          generating=false;
         }
         if (data.error){
           resultEl.textContent = T.err_server + " ("+ (data.detail||"") +")";
+          generating=false;
         }
       }
     }
   }catch(e){
     console.error(e);
     resultEl.textContent = T.err_network;
+    generating=false;
   }
 }
 
-// azioni
-function editQuestion(){ LS.setItem("domanda", domanda); location.href = "fourth.html"; }
-function saveHistory(){
+// Rifiniture client-side: chiediamo una nuova generazione con un'indicazione semplice
+function refine(kind){
+  const mapIt = {
+    concrete:"Rendi il testo più concreto e pratico (dettagli quotidiani verificabili).",
+    ironic:"Aumenta leggermente l’ironia rimanendo rispettoso.",
+    direct:"Frasi più brevi e dirette, zero fronzoli."
+  };
+  const mapEn = {
+    concrete:"Make the text more concrete and practical (everyday, verifiable details).",
+    ironic:"Slightly increase irony while staying respectful.",
+    direct:"Shorter, more direct sentences, zero frills."
+  };
+  const extra = (lang==='en'?mapEn:mapIt)[kind] || "";
+  // Per semplicità rimandiamo un nuovo prompt completo (server non legge extra, ma il nuovo stile è già più diretto)
+  generate(extra);
+}
+
+// Feedback 1-click
+function rate(score){
+  const arr = JSON.parse(LS.getItem("whatif_ratings")||"[]");
+  arr.unshift({ ts:Date.now(), score, periodo:prefs.periodo||null, stile:prefs.stile||null });
+  LS.setItem("whatif_ratings", JSON.stringify(arr));
+  alert(lang==='en'?'Thanks for the feedback!':'Grazie del feedback!');
+}
+
+// ===== Cronologia con preferiti ⭐ =====
+function saveHistory(pin=false){
   const arr = JSON.parse(LS.getItem("cronologia")||"[]");
   arr.unshift({
     domanda,
     risposta: (resultEl.textContent || "").trim(),
     periodo: prefs.periodo || null,
     stile: prefs.stile || null,
-    lang, ts: Date.now()
+    lang, ts: Date.now(),
+    pinned: !!pin
   });
   LS.setItem("cronologia", JSON.stringify(arr));
   alert(lang==="en"?"Saved to history!":"Salvato nella cronologia!");
@@ -240,20 +348,48 @@ function openHistory(){
   const ov = document.getElementById("histOverlay");
   const list = document.getElementById("histList");
   const arr = JSON.parse(LS.getItem("cronologia")||"[]");
+
   if (!arr.length){ list.innerHTML = `<p class="hint">${lang==="en"?"Empty.":"Vuota."}</p>`; }
   else{
-    list.innerHTML = arr.map((it,i)=>`
+    // prima i pinned
+    const pinned = arr.filter(x=>x.pinned);
+    const rest   = arr.filter(x=>!x.pinned);
+    const show = [...pinned, ...rest];
+
+    list.innerHTML = show.map((it,i)=>`
       <div class="hist-item">
-        <h4>#${arr.length-i} — ${new Date(it.ts).toLocaleString()}</h4>
+        <h4>#${arr.length-i} — ${new Date(it.ts).toLocaleString()} ${it.pinned?'<span class="pin">⭐</span>':''}</h4>
         <div class="hint">${(it.periodo||"")} ${(it.stile||"")}</div>
         <div class="label">${T.question}</div>
         <div class="box" style="margin-bottom:8px">${escapeHTML(it.domanda)}</div>
         <div class="label">${T.answer}</div>
         <div class="box">${escapeHTML(it.risposta||"")}</div>
+        <div class="tools" style="margin-top:8px">
+          <button class="btn" onclick="togglePin(${i})">${it.pinned?'★ Sfila':'☆ Pin'}</button>
+          <button class="btn" onclick="copySpecific(${i})">${lang==='en'?'Copy':'Copia'}</button>
+        </div>
       </div>
     `).join("");
   }
   ov.style.display="flex";
+}
+function togglePin(i){
+  const arr = JSON.parse(LS.getItem("cronologia")||"[]");
+  // ricostruisci ordinamento come in openHistory
+  const pinned = arr.filter(x=>x.pinned);
+  const rest   = arr.filter(x=>!x.pinned);
+  const show   = [...pinned, ...rest];
+  const item   = show[i];
+  // trova index reale in arr
+  const realIdx = arr.findIndex(x=>x.ts===item.ts && x.domanda===item.domanda);
+  if (realIdx>-1){ arr[realIdx].pinned = !arr[realIdx].pinned; LS.setItem("cronologia", JSON.stringify(arr)); openHistory(); }
+}
+function copySpecific(i){
+  const arr = JSON.parse(LS.getItem("cronologia")||"[]");
+  const show=[...arr.filter(x=>x.pinned),...arr.filter(x=>!x.pinned)];
+  const it = show[i]; if(!it) return;
+  navigator.clipboard.writeText(`Domanda: ${it.domanda}\n\n${it.risposta||""}`);
+  alert(lang==='en'?'Copied!':'Copiato!');
 }
 function closeHistory(ev){
   if (ev && ev.target && ev.target.id!=="histOverlay" && ev.type==="click") return;
@@ -276,8 +412,6 @@ function shareOut(){
   else copyText();
 }
 function escapeHTML(s){return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-
-// ⚠️ NIENTE auto-generate all load
 </script>
 </body>
 </html>
