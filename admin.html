@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What?f – Admin</title>
+<meta name="theme-color" content="#0A0F14" />
+<style>
+  :root{
+    --bg:#0A0F14; --fg:#E6F2F5; --muted:#A0B2BA;
+    --card:#141C22; --chip:#0f1820;
+    --acc:#00E0FF; --acc2:#00B5CC; --ink:#001F26;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{max-width:980px;margin:auto;padding:18px}
+  h1{font-size:clamp(24px,5vw,36px);margin-bottom:10px}
+  .card{background:var(--card);border-radius:16px;padding:16px;margin-top:16px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
+  input{width:100%;background:#0f1820;color:var(--fg);border:1px solid #1c2a33;border-radius:12px;padding:10px;font-size:16px}
+  .muted{color:var(--muted);font-size:14px}
+  .hidden{display:none}
+  button{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#001f26;border:none;padding:10px 16px;border-radius:12px;font-weight:700;cursor:pointer}
+  .danger{background:#b54242;color:#fff}
+</style>
+</head>
+<body>
+<main>
+  <h1>Area Admin 🔒</h1>
+  <p class="muted" id="status">Verifica chiave di accesso…</p>
+
+  <div id="authFail" class="card hidden">
+    <h2>Accesso negato 🚫</h2>
+    <p>Non hai l’autorizzazione per visualizzare questa pagina.</p>
+  </div>
+
+  <div id="adminPanel" class="hidden">
+    <h2>Pannello interno</h2>
+    <p>Benvenuto, Luca 👋</p>
+    <p>Qui puoi controllare i costi stimati e le statistiche base.</p>
+    <iframe src="cost.html" width="100%" height="1100" style="border:none;border-radius:12px"></iframe>
+
+    <div class="card">
+      <h3>Gestione chiave</h3>
+      <p>Chiave attuale: <code id="curKey">–</code></p>
+      <input type="text" id="newKey" placeholder="Nuova chiave segreta..." />
+      <button id="saveKey">Aggiorna chiave</button>
+      <p class="muted">Usa un codice sicuro (es. "luca2025secret"). Verrà salvato solo nel tuo browser.</p>
+    </div>
+
+    <div style="margin-top:12px">
+      <button class="danger" onclick="logout()">Esci</button>
+      <button onclick="location.href='index.html'">🏠 Torna alla home</button>
+    </div>
+  </div>
+</main>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const keyParam = params.get("key");
+  const storedKey = localStorage.getItem("admin_key") || "luca2025";
+
+  const status = document.getElementById("status");
+  const fail = document.getElementById("authFail");
+  const panel = document.getElementById("adminPanel");
+  const curKey = document.getElementById("curKey");
+  const saveKeyBtn = document.getElementById("saveKey");
+
+  // verifica accesso
+  if (keyParam && keyParam === storedKey) {
+    status.textContent = "Accesso consentito ✅";
+    fail.classList.add("hidden");
+    panel.classList.remove("hidden");
+    curKey.textContent = storedKey;
+  } else {
+    status.textContent = "Accesso negato.";
+    fail.classList.remove("hidden");
+    panel.classList.add("hidden");
+  }
+
+  // cambio chiave
+  saveKeyBtn.addEventListener("click", ()=>{
+    const nk = document.getElementById("newKey").value.trim();
+    if (!nk) return alert("Inserisci una nuova chiave");
+    localStorage.setItem("admin_key", nk);
+    curKey.textContent = nk;
+    alert("Chiave aggiornata! Ora accedi con ?key=" + nk);
+  });
+
+  function logout(){
+    localStorage.removeItem("admin_key");
+    location.href = "index.html";
+  }
+</script>
+</body>
+</html>
