@@ -7,22 +7,33 @@
 
 <!-- PWA -->
 <meta name="theme-color" content="#0B0B0C" />
+<link rel="manifest" href="/manifest.json" />
+<link rel="apple-touch-icon" href="/icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
 <style>
-  /* ===== THEME SYSTEM (stesso schema delle altre pagine) ===== */
+  /* ===== PALETTE UFFICIALE (What if = blu/giallo ; WTF = verde/giallo) ===== */
   :root{
-    --bg:#0B1018; --bg2:#0E1724;
-    --fg:#F4F7FB; --muted:#A7B3C2;
-    --card:rgba(14,20,28,0.55); --line:rgba(255,255,255,.12);
-    --chip:#121A26; --ink:#11110A;
-    --acc:#1C57A0; --acc2:#FFEC01;
+    --bg:#0B0B0C; --bg2:#101414;
+    --fg:#FFFFFF; --muted:#A0B2BA;
+
+    /* What if (default) */
+    --acc:#1C57A0;       /* Blu Verona */
+    --acc2:#FFEC01;      /* Giallo Verona */
+
+    /* superfici */
+    --card:rgba(20,28,34,0.92);
+    --line:rgba(255,255,255,.12);
+    --chip:#121A26;      /* chip/btn scuri */
+    --ink:#0A0E12;
+    --shadow:rgba(0,0,0,.35);
+
+    --highlight:#FFEC01; /* evidenziazioni */
   }
   html[data-theme="wtf"]{
-    --bg:#0B0B0C; --bg2:#101414;
-    --fg:#EEF5F0; --muted:#A6B6AD;
-    --card:rgba(16,22,20,0.55); --line:rgba(255,255,255,.10);
-    --chip:#0F1714; --ink:#06110B;
-    --acc:#3A6B56; --acc2:#6FA58E;
+    --acc:#3A6B56;       /* Verde speranza */
+    --acc2:#5A8C75;      /* Verde chiaro gradient */
   }
 
   *{box-sizing:border-box}
@@ -37,15 +48,27 @@
 
   .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;transition:transform .06s ease,opacity .2s}
   .btn:active{transform:translateY(1px)}
-  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800;box-shadow:0 6px 18px rgba(0,0,0,.28);border:none}
+  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800;box-shadow:0 6px 18px var(--shadow);border:none}
   .btn.large{padding:14px 18px;font-size:16px}
   .btn.icon{padding:8px 10px;border-radius:10px}
 
-  h1{font-size:clamp(22px,5vw,30px);margin:14px 0 2px;color:var(--acc)}
+  h1{font-size:clamp(22px,5vw,30px);margin:14px 0 2px;color:var(--acc2)}
   p.sub{color:var(--muted);margin:0 0 8px}
-  .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px rgba(0,0,0,.28)}
+
+  .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
   .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-  .box{background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;padding:12px;white-space:pre-wrap;line-height:1.6}
+
+  /* Question emphasis */
+  .qbox{
+    background:rgba(255,255,255,.06);
+    border:1px solid var(--line);
+    border-left:4px solid var(--highlight);
+    border-radius:12px;
+    padding:14px;
+    font-size:18px;
+    line-height:1.55;
+    color:#EAF3EE;
+  }
 
   .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -57,13 +80,6 @@
   /* CTA area */
   .cta-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .cta-row .btn.primary{flex:1}
-  .cta-alt{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
-
-  .menu{position:relative}
-  .menu-btn{min-width:44px}
-  .menu-sheet{position:absolute;right:0;top:42px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px;display:none;min-width:200px;box-shadow:0 12px 28px rgba(0,0,0,.28);z-index:50}
-  .menu-sheet button{display:block;width:100%;text-align:left;background:transparent;border:none;color:#E6F2F5;padding:10px;border-radius:10px;cursor:pointer}
-  .menu-sheet button:hover{background:rgba(255,255,255,.05)}
 
   /* mini indicator */
   .know-mini{display:flex;align-items:center;gap:8px}
@@ -72,7 +88,7 @@
   .know-score{font-weight:800;color:var(--acc);font-size:12px}
   .tooltip{position:relative;cursor:help}
   .tooltip:hover .tip{opacity:1;transform:translateY(0)}
-  .tip{pointer-events:none;position:absolute;right:0;top:125%;background:var(--chip);border:1px solid var(--line);color:#e6fff0;border-radius:10px;padding:8px 10px;font-size:12px;width:260px;opacity:0;transform:translateY(-4px);transition:.15s;box-shadow:0 12px 28px rgba(0,0,0,.28)}
+  .tip{pointer-events:none;position:absolute;right:0;top:125%;background:var(--chip);border:1px solid var(--line);color:#e6fff0;border-radius:10px;padding:8px 10px;font-size:12px;width:260px;opacity:0;transform:translateY(-4px);transition:.15s;box-shadow:0 12px 28px var(--shadow)}
 
   /* Signals collapsible */
   .signals{margin-top:8px}
@@ -80,37 +96,59 @@
   .caret{transition:transform .15s ease}
   .signals-body{display:none;color:#eaf3ee;opacity:.9;font-size:12px;margin-top:6px}
 
+  /* Result */
   #result{min-height:190px}
   .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:sk 1s infinite}
   @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
+  #result.fade-in{animation:fade .6s ease}
+  @keyframes fade{from{opacity:.25;transform:translateY(2px)}to{opacity:1;transform:none}}
 
-  /* overlay clarify */
+  /* Clarify overlay */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:6000;padding:14px}
   .sheet{width:min(92vw,720px);max-height:80vh;overflow:auto;background:var(--card);border-radius:16px;padding:14px;border:1px solid var(--line)}
   .qitem{margin:10px 0}
   .qitem label{display:block;margin:6px 0}
   .qitem input{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px}
 
+  /* ===== MENU DOTS SOTTO LA RISPOSTA (in flusso, non sovrapposto) ===== */
+  .tools{
+    margin-top:12px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .tools .dots{
+    align-self:center;
+    border:none; background:var(--chip); color:var(--muted);
+    width:44px;height:44px;border-radius:50%; font-size:20px; cursor:pointer;
+  }
+  .tool-menu{
+    display:none;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.04);
+    border-radius:12px;
+    padding:8px;
+  }
+  .tool-menu.show{display:block; animation:fadeIn .2s ease}
+  .tool-menu button{
+    width:100%; text-align:left; border:none;
+    background:transparent; color:#E6F2F5; padding:10px; border-radius:10px; cursor:pointer
+  }
+  .tool-menu button:hover{background:rgba(255,255,255,.06)}
+
+  @keyframes fadeIn{from{opacity:0;transform:translateY(-2px)}to{opacity:1;transform:none}}
+
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-  <script>
-    // Tema dal prefs
-    (function(){
-      try{
-        const prefs=JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-        document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-      }catch(e){ document.documentElement.setAttribute('data-theme','whatif'); }
-    })();
-  </script>
-
   <main>
     <div class="topbar">
       <div class="row">
         <button class="btn" id="backBtnTop">←</button>
         <button class="btn" id="homeBtnTop">🏠</button>
       </div>
+
       <div class="row" style="gap:10px">
         <span id="freeBadge" class="badge" title="">—</span>
         <span id="clarifyBadge" class="badge accent" title="">—</span>
@@ -127,7 +165,7 @@
     <h1 id="titleH1">Your scenario</h1>
     <p class="sub" id="subtitle">For a more personal answer, use Clarify & Generate first.</p>
 
-    <!-- stile + periodo -->
+    <!-- STILE + PERIODO -->
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
         <div class="row">
@@ -141,9 +179,10 @@
       </div>
     </div>
 
+    <!-- DOMANDA IN EVIDENZA -->
     <div class="card">
       <h3 class="label" id="qLabel">Question</h3>
-      <div id="question" class="box"></div>
+      <div id="question" class="qbox"></div>
 
       <!-- Segnali usati (collassato) -->
       <div class="signals" id="signals">
@@ -154,31 +193,29 @@
         <div class="signals-body" id="signalsBody"></div>
       </div>
 
-      <div class="cta-row" style="margin-top:10px">
+      <div class="cta-row" style="margin-top:12px">
         <button class="btn primary large" id="clarifyBtn">✨ Clarify & Generate</button>
         <button class="btn large" id="genBtn">Generate now</button>
-
-        <div class="menu">
-          <button class="btn icon" id="menuBtn">⋯</button>
-          <div class="menu-sheet" id="menuSheet" role="menu" aria-label="More">
-            <button id="regenBtn" style="display:none">🔁 Regenerate</button>
-            <button id="saveBtn">💾 Save</button>
-            <button id="copyBtn">📋 Copy</button>
-            <button id="shareBtn">📤 Share</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Nuove CTA alternative -->
-      <div class="cta-alt">
-        <button class="btn" id="againBtn">🔁 <span id="againTxt">Micro test again</span></button>
-        <button class="btn primary" id="fullBtn">⏱ <span id="fullTxt">Full test (5 min)</span></button>
       </div>
     </div>
 
+    <!-- RISULTATO -->
     <div class="card">
       <h3 class="label" id="rLabel">Result</h3>
       <div id="result" class="box">—</div>
+
+      <!-- MENU DOTS SOTTO LA RISPOSTA -->
+      <div class="tools">
+        <button id="dotsBtn" class="dots" aria-label="More">⋯</button>
+        <div id="toolMenu" class="tool-menu" role="menu" aria-label="More">
+          <button id="retryBtn">🔁 Rifai micro test</button>
+          <button id="regenBtn" style="display:none">🔁 Rigenera</button>
+          <button id="saveBtn">💾 Salva</button>
+          <button id="copyBtn">📋 Copia</button>
+          <button id="shareBtn">📤 Condividi</button>
+          <button id="profileBtn">👤 Profilo</button>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -195,10 +232,21 @@
   </div>
 
 <script>
-/* ===== I18N ===== */
+/* ===== Apply theme from prefs (What if / WTF) ===== */
+(function applyThemeFromPrefs(){
+  try{
+    const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+    const theme = prefs.stile === 'wtf' ? 'wtf' : 'whatif';
+    document.documentElement.setAttribute('data-theme', theme);
+  }catch(e){
+    document.documentElement.setAttribute('data-theme','whatif');
+  }
+})();
+
+/* ====== I18N (tono aggiornato) ====== */
 const I18N = {
   it:{
-    title:"✨ Il tuo What?f prende forma…",
+    title:"✨ Il tuo What?f",
     subtitle:"Se vuoi un risultato più tuo, prova prima “Chiarisci & genera”.",
     back:"Indietro", home:"Home",
     badgeFree:(l,d)=>`Free oggi: ${l}/${d}`,
@@ -219,10 +267,10 @@ const I18N = {
     know:"Personalizzazione", knowHint:"Più dettagli → più scenari plausibili. Compila le 3 micro-domande e usa “Chiarisci & genera”.",
     signalsLabel:"Segnali usati oggi",
     sig_city:"città", sig_goal:"obiettivo", sig_indicator:"indicatore", sig_constraint:"vincolo", sig_landmark:"luogo", sig_role:"ruolo",
-    again:"Rifai micro test", full:"Test completo (5 min)"
+    redoMicro:"Rifai micro test", profile:"Profilo"
   },
   en:{
-    title:"✨ Your What?f is taking shape…",
+    title:"✨ Your What?f",
     subtitle:"For a more personal result, try “Clarify & Generate” first.",
     back:"Back", home:"Home",
     badgeFree:(l,d)=>`Free today: ${l}/${d}`,
@@ -243,7 +291,7 @@ const I18N = {
     know:"Personalization", knowHint:"More detail → more plausible scenarios. Fill today’s micro-questions and use Clarify.",
     signalsLabel:"Signals used today",
     sig_city:"city", sig_goal:"goal", sig_indicator:"indicator", sig_constraint:"constraint", sig_landmark:"place", sig_role:"role",
-    again:"Micro test again", full:"Full test (5 min)"
+    redoMicro:"Redo micro test", profile:"Profile"
   }
 };
 const LS=localStorage;
@@ -297,9 +345,9 @@ $('freeBadge').title=T.badgeFreeTitle; $('clarifyBadge').title=T.badgeClarifyTit
 $('chipWhatIf').textContent=T.chipWhatIf; $('chipWTF').textContent=T.chipWTF;
 $('qLabel').textContent=T.qLabel; $('rLabel').textContent=T.rLabel;
 $('clarifyBtn').textContent=T.clarifyBtn; $('genBtn').textContent=T.genBtn;
-$('knowLabelMini').textContent=T.know; $('knowTip').textContent=T.knowHint;
-$('signalsLabel').textContent=T.signalsLabel;
-$('againTxt').textContent=T.again; $('fullTxt').textContent=T.full;
+$('knowLabelMini').textContent=T.know; $('knowTip').textContent=T.knowHint; $('signalsLabel').textContent=T.signalsLabel;
+$('retryBtn').textContent = `🔁 ${T.redoMicro}`;
+$('profileBtn').textContent = `👤 ${T.profile}`;
 
 /* ====== Stato ====== */
 const prefs = readJSON('whatif_prefs');
@@ -337,8 +385,8 @@ function computeKnowledge(){
   const hasRoutine=!!(micro.indicatore);            cover+=hasRoutine?8:0;
   const hasConstraints=!!(micro.vincolo_2w);        cover+=hasConstraints?8:0;
   const hasGoals=!!(profile.goal);                  cover+=hasGoals?8:0;
-  const hasPlaces=!!(profile.city||micro.punto_riferimento); cover+=8;
-  const hasRelations=!!(micro.persona_chiave);      cover+=8;
+  const hasPlaces=!!(profile.city||micro.punto_riferimento); cover+=hasPlaces?8:0;
+  const hasRelations=!!(micro.persona_chiave);      cover+=hasRelations?8:0;
   const hasRisk=!!(micro.rischio||micro.tolleranza_rischio); cover+=7;
   const vals=Object.values(profile).concat(Object.values(micro)).filter(v=>typeof v==='string');
   let usable=0; const numRe=/\b\d+([.,]\d+)?\b/; const timeRe=/\b(\d{1,2}[:.]\d{2}|mattina|pomeriggio|sera|am|pm)\b/i; const locRe=/\b(centro|stazione|ufficio|palestra|bar|parco|centro storico)\b/i;
@@ -366,15 +414,10 @@ function renderKnowledgeMini(){
   $('knowValueMini').textContent=`${score}/100`;
 }
 
-/* ====== Segnali ====== */
+/* ====== Segnali UI (collassato) ====== */
 $('signalsLabel').textContent=T.signalsLabel;
 const sigToggle=$('signalsToggle'), sigBody=$('signalsBody'), caret=$('caret');
 sigToggle.addEventListener('click', ()=>{ const open = sigBody.style.display!=='none'; sigBody.style.display = open ? 'none' : 'block'; caret.style.transform = open ? 'rotate(0deg)' : 'rotate(90deg)'; });
-
-/* ====== Menu ⋯ ====== */
-const menuBtn=$('menuBtn'), menuSheet=$('menuSheet');
-menuBtn.addEventListener('click', ()=>{ const open = menuSheet.style.display==='block'; menuSheet.style.display = open ? 'none' : 'block'; });
-document.addEventListener('click', (e)=>{ if(!menuSheet.contains(e.target) && e.target!==menuBtn) menuSheet.style.display='none'; });
 
 /* ====== API helpers ====== */
 async function callClarifyAPI(){
@@ -417,7 +460,6 @@ async function openClarify(){
     clarifyList.innerHTML=`<p class="sub">${lang==='en'?'Error fetching clarifications. You can still generate.':'Errore nel recupero chiarimenti. Puoi generare comunque.'}</p>`;
   }
 }
-
 $('applyClarify').addEventListener('click', async ()=>{
   const inputs=clarifyList.querySelectorAll('input');
   const clar={}; inputs.forEach(i=>{ const v=(i.value||"").trim(); if(i.id&&v) clar[i.id]=v; });
@@ -440,6 +482,7 @@ async function generate(isRegen=false, clarOverride=null){
   if(!isRegen && (credits.used||0)>=DAILY_FREE){ alert(T.limitGen); return; }
 
   $('result').textContent=`⏳ ${T.loading} `; const sk=document.createElement('span'); sk.className='skeleton'; sk.style.width='40%'; $('result').appendChild(sk);
+  $('result').classList.remove('fade-in');
   $('regenBtn').style.display='none';
 
   if(!$('signalsBody').textContent){ $('signalsBody').textContent = summarizeSignals(clarOverride||{}); }
@@ -455,7 +498,7 @@ async function generate(isRegen=false, clarOverride=null){
         if(!chunk.startsWith("data: ")) continue;
         const data=JSON.parse(chunk.slice(6));
         if(data.token){ text+=data.token; $('result').textContent=text; }
-        if(data.done){ $('result').textContent=(text||"").trim(); }
+        if(data.done){ $('result').textContent=(text||"").trim(); $('result').classList.add('fade-in'); }
         if(data.error){ $('result').textContent=T.errServer+" "+(data.detail||""); }
       }
     }
@@ -468,7 +511,12 @@ async function generate(isRegen=false, clarOverride=null){
   }
 }
 
-/* ====== Actions (menu) ====== */
+/* ====== Tools menu (sotto la risposta) ====== */
+const dotsBtn=$('dotsBtn'), toolMenu=$('toolMenu');
+dotsBtn.addEventListener('click', ()=>{ toolMenu.classList.toggle('show'); });
+document.addEventListener('click', (e)=>{ if(!toolMenu.contains(e.target) && e.target!==dotsBtn) toolMenu.classList.remove('show'); });
+
+$('retryBtn').addEventListener('click', ()=> location.href='third.html');
 $('saveBtn').addEventListener('click', ()=>{
   const arr=readJSON('cronologia',[]);
   arr.unshift({ domanda, risposta:($('result').textContent||"").trim(), periodo:prefs.periodo||null, stile:currentStyle, lang, ts:Date.now() });
@@ -482,34 +530,64 @@ $('shareBtn').addEventListener('click', ()=>{
   const data={title:"What?f",text:`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`,url: location.href};
   if(navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`);
 });
-
-/* ====== Nuove CTA alt ====== */
-$('againBtn').addEventListener('click', ()=> location.href='third.html');
-$('fullBtn').addEventListener('click', ()=> location.href='fulltest.html');
+$('profileBtn').addEventListener('click', ()=> location.href='second.html');
 
 /* ====== Nav ====== */
 $('backBtnTop').addEventListener('click', ()=> history.back());
 $('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
 
-/* ====== Dev hooks (come prima) ====== */
+/* ====== Dev hooks: reset FREE + reset CLARIFY + toggle Pro ====== */
 (function devHooks(){
   const bFree=$('freeBadge'), bClar=$('clarifyBadge');
   if(!bFree||!bClar) return;
-  let pressT=null; bFree.addEventListener('pointerdown', ()=>{ pressT=setTimeout(resetToday,2000); });
-  bFree.addEventListener('pointerup', ()=>{ clearTimeout(pressT); }); bFree.addEventListener('pointerleave', ()=>{ clearTimeout(pressT); });
-  function resetToday(){ const today=todayStr(); const c=readJSON('whatif_credits'); c.date=today; c.used=0; writeCredits(c); renderBadges(); alert(lang==='en'?'Today credits reset ✅':'Crediti di oggi azzerati ✅'); }
-  let clicks=0,timer=null; bFree.addEventListener('click', ()=>{ clicks++; clearTimeout(timer); timer=setTimeout(()=>{ if(clicks>=3) togglePro(); clicks=0; },250); });
-  function togglePro(){ const c=readJSON('whatif_credits'); c.pro=!c.pro; c.used=0; writeCredits(c); renderBadges(); alert('Pro '+(c.pro?'on':'off')+' (local) ✅'); }
-  let pressC=null; bClar.addEventListener('pointerdown', ()=>{ pressC=setTimeout(resetClarify,2000); });
-  bClar.addEventListener('pointerup', ()=>{ clearTimeout(pressC); }); bClar.addEventListener('pointerleave', ()=>{ clearTimeout(pressC); });
-  function resetClarify(){ const today=todayStr(); const c=readJSON('whatif_clarify'); c.date=today; c.used=0; writeClarify(c); renderBadges(); alert(lang==='en'?'Clarify reset for today ✅':'Chiarimenti azzerati per oggi ✅'); }
+
+  // FREE long-press + triple click Pro
+  let pressT=null;
+  bFree.addEventListener('pointerdown', ()=>{ pressT=setTimeout(resetToday,2000); });
+  bFree.addEventListener('pointerup', ()=>{ clearTimeout(pressT); });
+  bFree.addEventListener('pointerleave', ()=>{ clearTimeout(pressT); });
+  function resetToday(){
+    const today=todayStr();
+    const c=readJSON('whatif_credits'); c.date=today; c.used=0; writeCredits(c);
+    renderBadges(); alert(lang==='en'?'Today credits reset ✅':'Crediti di oggi azzerati ✅');
+  }
+  let clicks=0,timer=null;
+  bFree.addEventListener('click', ()=>{ clicks++; clearTimeout(timer); timer=setTimeout(()=>{ if(clicks>=3) togglePro(); clicks=0; },250); });
+  function togglePro(){
+    const c=readJSON('whatif_credits'); c.pro=!c.pro; c.used=0; writeCredits(c);
+    renderBadges(); alert('Pro '+(c.pro?'on':'off')+' (local) ✅');
+  }
+
+  // CLARIFY long-press reset
+  let pressC=null;
+  bClar.addEventListener('pointerdown', ()=>{ pressC=setTimeout(resetClarify,2000); });
+  bClar.addEventListener('pointerup', ()=>{ clearTimeout(pressC); });
+  bClar.addEventListener('pointerleave', ()=>{ clearTimeout(pressC); });
+  function resetClarify(){
+    const today=todayStr();
+    const c=readJSON('whatif_clarify'); c.date=today; c.used=0; writeClarify(c);
+    renderBadges(); alert(lang==='en'?'Clarify reset for today ✅':'Chiarimenti azzerati per oggi ✅');
+  }
 })();
 
 /* ====== Avvio ====== */
-function initSignalsBase(){ const s=summarizeSignals({}); if(s){ $('signalsBody').textContent=s; } }
-function initText(){ $('freeBadge').title=T.badgeFreeTitle; $('clarifyBadge').title=T.badgeClarifyTitle; $('clarifyBtn').textContent=T.clarifyBtn; $('genBtn').textContent=T.genBtn; $('menuBtn').setAttribute('aria-label','More'); }
-function initStyles(){ document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle)); }
-function boot(){ ensureCredits(); ensureClarify(); renderBadges(); renderKnowledgeMini(); initSignalsBase(); initText(); initStyles(); }
+function initSignalsBase(){
+  const s=summarizeSignals({});
+  if(s){ $('signalsBody').textContent=s; }
+}
+function initText(){
+  $('freeBadge').title=T.badgeFreeTitle; $('clarifyBadge').title=T.badgeClarifyTitle;
+  $('clarifyBtn').textContent=T.clarifyBtn; $('genBtn').textContent=T.genBtn;
+  $('menuBtn')?.setAttribute('aria-label','More');
+}
+function initStyles(){
+  document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
+}
+function boot(){
+  ensureCredits(); ensureClarify(); renderBadges(); renderKnowledgeMini(); initSignalsBase(); initText(); initStyles();
+  // Mostra subito la domanda in evidenza
+  $('question').textContent = domanda;
+}
 boot();
 </script>
 
