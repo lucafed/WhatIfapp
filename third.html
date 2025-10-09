@@ -1,195 +1,399 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f – Micro quiz</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f – Conosciamoci</title>
 
-<!-- PWA -->
-<meta name="theme-color" content="#0B0B0C" />
-<link rel="manifest" href="/manifest.json" />
-<link rel="apple-touch-icon" href="/icons/icon-192.png" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <!-- PWA (facoltativo ma utile se già presente negli altri file) -->
+  <meta name="theme-color" content="#0B0B0C" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-<style>
-/* ===== THEME SYSTEM (palette ufficiali) ===== */
-:root{
-  --bg:#0C0F14; --bg2:#0E1724;
-  --fg:#F6F7FA; --muted:#AEB8C4;
-  --card:rgba(14,19,28,0.55); --card-border:rgba(255,255,255,.08);
-  --chip:#121A26;
-  --accent:#1C57A0;     /* Blu Verona */
-  --accent2:#FFEC01;    /* Giallo Verona */
-  --ink:#0A0E12;
-}
-html[data-theme="whatif"]{
-  --bg:#0B1018; --bg2:#0E1724;
-  --fg:#F4F7FB; --muted:#A7B3C2;
-  --card:rgba(14,20,28,0.55); --card-border:rgba(255,255,255,.10);
-  --chip:#121A26;
-  --accent:#1C57A0;
-  --accent2:#FFEC01;
-  --ink:#11110A;
-}
-html[data-theme="wtf"]{
-  --bg:#0B0B0C; --bg2:#101414;
-  --fg:#EEF5F0; --muted:#A6B6AD;
-  --card:rgba(16,22,20,0.55); --card-border:rgba(255,255,255,.08);
-  --chip:#0F1714;
-  --accent:#3A6B56;        /* Verde speranza */
-  --accent2:#5A8C75;       /* Verde più chiaro per gradient/hover */
-  --ink:#06110B;
-}
+  <style>
+    /* ===== THEME: Verona + Verde (switch automatico in base allo stile scelto) ===== */
+    :root{
+      /* fallback (What if) – Blu/Giallo Verona */
+      --bg:#0C0F14; --bg2:#0E1724;
+      --fg:#F6F7FA; --muted:#AEB8C4;
+      --card:rgba(14,19,28,0.55); --line:rgba(255,255,255,.10);
+      --chip:#121A26; --ink:#0A0E12;
+      --acc:#1C57A0;   /* Blu Verona */
+      --acc2:#FFEC01;  /* Giallo Verona */
+      --shadow:rgba(0,0,0,.28);
+    }
+    html[data-theme="whatif"]{
+      --bg:#0B1018; --bg2:#0E1724;
+      --fg:#F4F7FB; --muted:#A7B3C2;
+      --card:rgba(14,20,28,0.55); --line:rgba(255,255,255,.12);
+      --chip:#121A26; --ink:#11110A;
+      --acc:#1C57A0; --acc2:#FFEC01;
+    }
+    html[data-theme="wtf"]{
+      /* Verde speranza (gonfalone) + variante */
+      --bg:#0B0B0C; --bg2:#101414;
+      --fg:#EEF5F0; --muted:#A6B6AD;
+      --card:rgba(16,22,20,0.55); --line:rgba(255,255,255,.10);
+      --chip:#0F1714; --ink:#06110B;
+      --acc:#3A6B56;    /* Verde speranza */
+      --acc2:#5A8C75;   /* Variante più chiara */
+    }
 
-*{box-sizing:border-box}
-html,body{
-  height:100%;margin:0;
-  color:var(--fg);
-  background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
-}
-@media (prefers-reduced-motion:no-preference){
-  body{animation:bgShift 18s ease-in-out infinite alternate}
-  @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
-}
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;
+      background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+      color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility
+    }
+    main{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:16px}
+    .wrap{width:min(92vw,780px)}
+    .topbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))}
+    .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer}
+    .btn.primary{border:none;background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);box-shadow:0 10px 28px var(--shadow)}
+    .btn.round{border-radius:999px}
+    .ghost{background:rgba(255,255,255,.04)}
+    h1{margin:8px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--acc)}
+    .lead{color:var(--muted);margin:0 0 14px;font-size:clamp(14px,4vw,18px);line-height:1.45}
 
-main{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
-h1{font-size:clamp(24px,5vw,34px);margin:0 0 16px;color:var(--accent)}
-.card{
-  width:min(90vw,700px);
-  background:var(--card);border:1px solid var(--card-border);
-  backdrop-filter:blur(12px);
-  border-radius:16px;padding:20px;box-shadow:0 10px 28px rgba(0,0,0,.35);
-}
-label{display:block;margin:6px 0 4px;font-weight:700}
-input,select,textarea{
-  width:100%;background:var(--chip);color:var(--fg);
-  border:1px solid var(--card-border);border-radius:12px;
-  padding:10px;font-size:15px;
-}
-textarea{min-height:60px;resize:vertical}
-.btn{
-  appearance:none;border:none;
-  background:var(--chip);color:var(--fg);
-  border:1px solid var(--card-border);
-  border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;
-  transition:transform .08s ease,background .16s ease;
-}
-.btn:active{transform:translateY(1px)}
-.btn.primary{
-  border:none;
-  background:linear-gradient(180deg,var(--accent),var(--accent2));
-  color:var(--ink);font-weight:800;
-  box-shadow:0 0 18px rgba(0,0,0,.25);
-}
-.actions{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:14px}
-.muted{color:var(--muted);font-size:12px;margin-top:8px}
-</style>
+    .progress{height:10px;background:var(--chip);border:1px solid var(--line);border-radius:999px;overflow:hidden;margin:12px 0 16px}
+    .bar{height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+
+    .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 10px 28px var(--shadow)}
+    .q{font-weight:900;margin:0 0 12px;font-size:clamp(18px,4.5vw,22px)}
+    .chips{display:flex;flex-wrap:wrap;gap:10px}
+    .chip{
+      appearance:none;border:1px solid var(--line);background:var(--chip);color:#eaf3ee;
+      padding:12px 16px;border-radius:16px;font-weight:800;cursor:pointer;
+      transition:transform .08s ease, background .16s ease, box-shadow .16s ease;
+    }
+    .chip:active{transform:translateY(1px)}
+    .chip.selected{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);box-shadow:0 0 0 1px rgba(255,255,255,.12) inset}
+    .row{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:12px}
+    .count{color:var(--muted);font-size:13px}
+
+    input[type="text"]{
+      width:100%;background:var(--chip);color:var(--fg);
+      border:1px solid var(--line);border-radius:12px;padding:12px;font-size:16px
+    }
+
+    @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  </style>
 </head>
 <body>
+  <!-- theme from prefs -->
+  <script>
+    (function applyThemeFromPrefs(){
+      try{
+        const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+        const theme = prefs.stile === 'wtf' ? 'wtf' : 'whatif';
+        document.documentElement.setAttribute('data-theme', theme);
+      }catch(e){
+        document.documentElement.setAttribute('data-theme','whatif');
+      }
+    })();
+  </script>
 
-<main>
-  <h1 id="title">Rispondi a 3 micro-domande</h1>
-  <div class="card">
-    <form id="quizForm">
-      <div>
-        <label id="lab_indicatore">Cosa misura il tuo progresso?</label>
-        <input id="indicatore" type="text" placeholder="Esempio: ore di studio, clienti, km corsa..." />
-      </div>
-      <div>
-        <label id="lab_vincolo">Un vincolo o limite realistico (entro 2 settimane)</label>
-        <input id="vincolo_2w" type="text" placeholder="Esempio: budget, tempo, energia..." />
-      </div>
-      <div>
-        <label id="lab_punto">Un punto di riferimento fisico</label>
-        <input id="punto_riferimento" type="text" placeholder="Esempio: bar, biblioteca, fermata bus..." />
-      </div>
-      <div class="actions">
-        <button type="button" class="btn" id="backBtn">← Indietro</button>
-        <button type="submit" class="btn primary" id="nextBtn">Avanti →</button>
-      </div>
-      <p class="muted" id="hint">Le tue risposte restano solo sul tuo dispositivo.</p>
-    </form>
+  <div class="topbar">
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="backTop" class="btn">← <span id="tb_back">Indietro</span></button>
+      <button id="homeTop" class="btn">🏠 <span id="tb_home">Home</span></button>
+    </div>
+    <button id="langToggle" class="btn round">🌐</button>
   </div>
-</main>
 
-<script>
-/* ===== Apply theme from prefs ===== */
-(function(){
-  try{
-    const prefs=JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-    const theme=prefs.stile==='wtf'?'wtf':'whatif';
-    document.documentElement.setAttribute('data-theme',theme);
-  }catch(e){document.documentElement.setAttribute('data-theme','whatif');}
-})();
-</script>
+  <main>
+    <div class="wrap">
+      <h1 id="title">🎯 Conosciamoci in 30 secondi</h1>
+      <p class="lead" id="lead">Rispondi a poche cose: i tuoi scenari diventeranno più “tu”.</p>
 
-<script>
-/* ===== i18n ===== */
-const DICT={
-  it:{
-    title:"Rispondi a 3 micro-domande",
-    indicatore:"Cosa misura il tuo progresso?",
-    vincolo:"Un vincolo o limite realistico (entro 2 settimane)",
-    punto:"Un punto di riferimento fisico",
-    hint:"Le tue risposte restano solo sul tuo dispositivo.",
-    back:"Indietro", next:"Avanti →"
-  },
-  en:{
-    title:"Answer 3 micro-questions",
-    indicatore:"What measures your progress?",
-    vincolo:"A realistic constraint (within 2 weeks)",
-    punto:"A physical reference point",
-    hint:"Your answers remain only on your device.",
-    back:"Back", next:"Next →"
-  }
-};
-const L=(localStorage.getItem('lang')||'it').toLowerCase();
-const T=DICT[L]||DICT.it;
-document.documentElement.lang=L;
-document.getElementById('title').textContent=T.title;
-document.getElementById('lab_indicatore').textContent=T.indicatore;
-document.getElementById('lab_vincolo').textContent=T.vincolo;
-document.getElementById('lab_punto').textContent=T.punto;
-document.getElementById('hint').textContent=T.hint;
-document.getElementById('backBtn').textContent="← "+T.back;
-document.getElementById('nextBtn').textContent=T.next;
+      <div class="progress"><div class="bar" id="bar"></div></div>
 
-/* ===== Logica ===== */
-const F=document.getElementById('quizForm');
-F.addEventListener('submit',e=>{
-  e.preventDefault();
-  const micro={
-    indicatore:document.getElementById('indicatore').value.trim(),
-    vincolo_2w:document.getElementById('vincolo_2w').value.trim(),
-    punto_riferimento:document.getElementById('punto_riferimento').value.trim()
-  };
-  localStorage.setItem('whatif_micro',JSON.stringify(micro));
-  // log per knowledge score
-  const log=JSON.parse(localStorage.getItem('whatif_micro_log')||'[]');
-  const today=new Date().toISOString().split('T')[0];
-  if(!log.includes(today)){ log.push(today); localStorage.setItem('whatif_micro_log',JSON.stringify(log)); }
-  localStorage.setItem('whatif_last_update',today);
-  location.href='fourth.html';
-});
-document.getElementById('backBtn').addEventListener('click',()=> history.back());
+      <div class="card">
+        <p class="q" id="question">Domanda…</p>
+        <div class="chips" id="chips"></div>
 
-// Prefill se già compilato
-(function prefill(){
-  const m=JSON.parse(localStorage.getItem('whatif_micro')||'{}');
-  if(m.indicatore)document.getElementById('indicatore').value=m.indicatore;
-  if(m.vincolo_2w)document.getElementById('vincolo_2w').value=m.vincolo_2w;
-  if(m.punto_riferimento)document.getElementById('punto_riferimento').value=m.punto_riferimento;
-})();
-</script>
+        <div class="row">
+          <button class="btn ghost" id="backBtn">← <span id="back">Indietro</span></button>
+          <span class="count" id="count">1 / 5</span>
+          <button class="btn primary" id="nextBtn" disabled><span id="next">Continua</span> →</button>
+        </div>
+      </div>
 
-<!-- SW -->
-<script>
-if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
-}
-</script>
+      <div class="row" style="justify-content:flex-end;margin-top:12px">
+        <button class="btn ghost" id="skipBtn">⏭️ <span id="tb_skip">Salta</span></button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    /* =============== I18N =============== */
+    const LS = localStorage;
+    const L = (LS.getItem('lang') || 'it').toLowerCase();
+
+    const I = {
+      it:{
+        tb_back:'Indietro', tb_home:'Home', tb_skip:'Salta',
+        title:'🎯 Conosciamoci in 30 secondi',
+        lead:'Rispondi a poche cose: i tuoi scenari diventeranno più “tu”.',
+        back:'Indietro', next:'Continua',
+
+        // Core (prima volta)
+        q1:'Quando prendi una decisione, come ti muovi di solito?',
+        q1a:'Ragiono molto prima di agire', q1b:'Seguo l’istinto', q1c:'Mi adatto al momento', q1d:'Cerco equilibrio',
+        q2:'Cosa ti motiva di più nelle scelte importanti?',
+        q2a:'Stabilità e sicurezza', q2b:'Crescita e scoperta', q2c:'Libertà personale', q2d:'Essere apprezzato',
+        q3:'Il cambiamento, per te, è…',
+        q3a:'Un po’ spaventoso', q3b:'Stimolante', q3c:'Da valutare con calma', q3d:'Qualcosa che cerco',
+        q4:'Quale valore senti più tuo?',
+        q4a:'Famiglia e legami', q4b:'Autenticità', q4c:'Successo personale', q4d:'Creatività',
+        q5:'Quando pensi a te, ti guardi…',
+        q5a:'Con serietà', q5b:'Con un po’ di ironia', q5c:'In modo introspettivo', q5d:'Senza pensarci troppo',
+
+        // Micro pool (domande testuali, usate dopo la prima volta)
+        m_place1:'Un bar/locale dove ti vedono spesso?',
+        m_place2:'Un percorso abituale (es. casa → lavoro)?',
+        m_work1:'Con chi vorresti lavorare (alias + ruolo)?',
+        m_work2:'Quale competenza vorresti usare di più?',
+        m_money1:'Una spesa ricorrente che non molli?',
+        m_money2:'Un obiettivo economico realistico (12 mesi)?',
+        m_rel1:'Una persona “di casa” (alias + ruolo)?',
+        m_rel2:'Un rapporto che vorresti migliorare?',
+        m_study1:'Cosa studieresti volentieri?',
+        m_study2:'Un corso che hai adocchiato?',
+        m_time1:'Quando ti senti più “carico” (ora/giorno)?',
+        m_time2:'Un’abitudine settimanale che non salteresti?',
+        m_well1:'Un gesto semplice che ti fa stare meglio?',
+        m_well2:'Un luogo che eviti?',
+      },
+      en:{
+        tb_back:'Back', tb_home:'Home', tb_skip:'Skip',
+        title:'🎯 30 seconds to know you',
+        lead:'Answer a few things: your scenarios will become more “you”.',
+        back:'Back', next:'Continue',
+
+        q1:'When deciding, how do you usually move?',
+        q1a:'I think a lot before acting', q1b:'I follow my gut', q1c:'I adapt on the fly', q1d:'I look for balance',
+        q2:'What motivates your big choices most?',
+        q2a:'Stability and security', q2b:'Growth and discovery', q2c:'Personal freedom', q2d:'Being appreciated',
+        q3:'Change, for you, is…',
+        q3a:'A bit scary', q3b:'Stimulating', q3c:'Something to assess calmly', q3d:'Something I seek',
+        q4:'Which value feels most yours?',
+        q4a:'Family & bonds', q4b:'Authenticity', q4c:'Personal success', q4d:'Creativity',
+        q5:'When you think of yourself, you look…',
+        q5a:'Serious', q5b:'With some irony', q5c:'Introspective', q5d:'Light',
+
+        m_place1:'A bar/place that knows you well?',
+        m_place2:'A route you take often?',
+        m_work1:'Who would you like to work with (alias + role)?',
+        m_work2:'A skill you want to use more?',
+        m_money1:'A recurring expense you won’t cut?',
+        m_money2:'One realistic money goal (12 months)?',
+        m_rel1:'A person who feels “home” (alias + role)?',
+        m_rel2:'A relationship you’d improve?',
+        m_study1:'What would you study gladly?',
+        m_study2:'A course you’ve eyed?',
+        m_time1:'When are you most “on” (time/day)?',
+        m_time2:'A weekly habit you won’t skip?',
+        m_well1:'One small thing that makes you feel better?',
+        m_well2:'A place you avoid?',
+      }
+    }[L];
+
+    // Topbar text
+    document.getElementById('tb_back').textContent = I.tb_back;
+    document.getElementById('tb_home').textContent = I.tb_home;
+    document.getElementById('tb_skip').textContent = I.tb_skip;
+    document.getElementById('title').textContent  = I.title;
+    document.getElementById('lead').textContent   = I.lead;
+    document.getElementById('back').textContent   = I.back;
+    document.getElementById('next').textContent   = I.next;
+
+    // topbar actions
+    document.getElementById('backTop').addEventListener('click', ()=> history.back());
+    document.getElementById('homeTop').addEventListener('click', ()=> location.href='index.html');
+    document.getElementById('langToggle').addEventListener('click', ()=>{
+      LS.setItem('lang', L==='en'?'it':'en'); location.reload();
+    });
+
+    // Elements
+    const $ = s => document.querySelector(s);
+    const questionEl = $('#question'), chipsEl = $('#chips'),
+          nextBtn = $('#nextBtn'), backBtn = $('#backBtn'),
+          countEl = $('#count'), barEl = $('#bar');
+
+    // Stato
+    const FIRST_DONE = LS.getItem('whatif_quiz5_done') === '1';
+    const TAGS = JSON.parse(LS.getItem('whatif_tags') || '[]'); // da fourth.html dopo la domanda
+    const answers = JSON.parse(LS.getItem('whatif_quiz5') || '{}');
+    const microAns = JSON.parse(LS.getItem('whatif_micro') || '{}');
+
+    // ===== CORE (prima volta) =====
+    const CORE = [
+      { k:'approach', t:I.q1, opts:[{v:'reason',label:I.q1a},{v:'instinct',label:I.q1b},{v:'adapt',label:I.q1c},{v:'balance',label:I.q1d}]},
+      { k:'motivation', t:I.q2, opts:[{v:'stability',label:I.q2a},{v:'growth',label:I.q2b},{v:'freedom',label:I.q2c},{v:'recognition',label:I.q2d}]},
+      { k:'change', t:I.q3, opts:[{v:'fear',label:I.q3a},{v:'stim',label:I.q3b},{v:'calm',label:I.q3c},{v:'seek',label:I.q3d}]},
+      { k:'value', t:I.q4, opts:[{v:'family',label:I.q4a},{v:'auth',label:I.q4b},{v:'success',label:I.q4c},{v:'creativity',label:I.q4d}]},
+      { k:'selfview', t:I.q5, opts:[{v:'serious',label:I.q5a},{v:'irony',label:I.q5b},{v:'reflect',label:I.q5c},{v:'light',label:I.q5d}]},
+    ];
+    const WEIGHTS = {
+      approach:{reason:{R:2,C:1},instinct:{V:2},adapt:{M:2},balance:{C:2,M:1}},
+      motivation:{stability:{C:2,M:1},growth:{R:1,V:2},freedom:{V:2},recognition:{M:2}},
+      change:{fear:{C:1,M:1},stim:{V:2,R:1},calm:{R:1,C:1},seek:{V:2}},
+      value:{family:{M:2,C:1},auth:{R:1,M:1},success:{C:2},creativity:{V:2}},
+      selfview:{serious:{C:1,R:1},irony:{V:1,M:1},reflect:{R:2},light:{V:1}}
+    };
+
+    // ===== MICRO pool (per sessioni successive) =====
+    const POOL = [
+      {k:'m_place1', tag:'place', t:I.m_place1},
+      {k:'m_place2', tag:'place', t:I.m_place2},
+      {k:'m_work1', tag:'work', t:I.m_work1},
+      {k:'m_work2', tag:'work', t:I.m_work2},
+      {k:'m_money1', tag:'money', t:I.m_money1},
+      {k:'m_money2', tag:'money', t:I.m_money2},
+      {k:'m_rel1', tag:'relationships', t:I.m_rel1},
+      {k:'m_rel2', tag:'relationships', t:I.m_rel2},
+      {k:'m_study1', tag:'study', t:I.m_study1},
+      {k:'m_study2', tag:'study', t:I.m_study2},
+      {k:'m_time1', tag:'future', t:I.m_time1},
+      {k:'m_time2', tag:'future', t:I.m_time2},
+      {k:'m_well1', tag:'wellbeing', t:I.m_well1},
+      {k:'m_well2', tag:'wellbeing', t:I.m_well2},
+    ];
+
+    function pickContextualSet(tags){
+      const used = new Set(JSON.parse(LS.getItem('whatif_micro_used')||'[]'));
+      const pref  = POOL.filter(x=>tags.includes(x.tag) && !used.has(x.k));
+      const pref2 = POOL.filter(x=>tags.includes(x.tag) &&  used.has(x.k));
+      const other = POOL.filter(x=>!tags.includes(x.tag) && !used.has(x.k));
+      const pool  = [...pref, ...pref2, ...other];
+
+      const uniq=[]; const seen=new Set();
+      for(const it of pool){ if(!seen.has(it.k)){ uniq.push(it); seen.add(it.k); } }
+      return uniq.slice(0,3).map(x=>({mode:'micro', k:x.k, t:x.t}));
+    }
+
+    // Sequenza domande
+    let idx = 0;
+    let ITEMS = FIRST_DONE ? pickContextualSet(TAGS) : CORE.map(q=>({mode:'core', ...q}));
+    countEl.textContent = `1 / ${ITEMS.length}`;
+
+    function render(){
+      const it = ITEMS[idx];
+      if (it.mode === 'core'){
+        questionEl.textContent = it.t;
+        chipsEl.innerHTML = it.opts.map(o=>`
+          <button class="chip ${answers[it.k]===o.v?'selected':''}" data-v="${o.v}">${o.label}</button>
+        `).join('');
+        chipsEl.querySelectorAll('.chip').forEach(b=>{
+          b.addEventListener('click',()=>{
+            chipsEl.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+            b.classList.add('selected');
+            answers[it.k] = b.dataset.v;
+            nextBtn.disabled = false;
+          });
+        });
+        nextBtn.disabled = !answers[it.k];
+      } else {
+        questionEl.textContent = it.t;
+        chipsEl.innerHTML = `<input id="microInput" type="text" />`;
+        const val = microAns[it.k] || '';
+        const inp = document.getElementById('microInput'); inp.value = val;
+        nextBtn.disabled = !val;
+        inp.addEventListener('input', ()=>{ nextBtn.disabled = !inp.value.trim(); });
+      }
+
+      const total = ITEMS.length;
+      countEl.textContent = `${idx+1} / ${total}`;
+      const pct = Math.round((idx/total)*100);
+      barEl.style.width = Math.max(6, pct)+'%';
+    }
+    render();
+
+    backBtn.addEventListener('click', ()=>{
+      if (idx === 0){ history.back(); }
+      else { idx--; render(); }
+    });
+
+    nextBtn.addEventListener('click', ()=>{
+      const it = ITEMS[idx];
+      if (it.mode === 'core'){
+        if (!answers[it.k]) return;
+        LS.setItem('whatif_quiz5', JSON.stringify(answers));
+      } else {
+        const v = (document.getElementById('microInput').value || '').trim(); if(!v) return;
+        microAns[it.k] = v;
+        LS.setItem('whatif_micro', JSON.stringify(microAns));
+      }
+
+      if (idx < ITEMS.length - 1){ idx++; render(); }
+      else { finish(); }
+    });
+
+    document.getElementById('skipBtn').addEventListener('click', ()=>{
+      const base = JSON.parse(LS.getItem('whatif_profile')||'{}');
+      if (base.gender || base.age || base.phase) location.href='fourth.html';
+      else alert(L==='en'?'Fill basic profile once before skipping.':'Compila una volta il profilo base prima di saltare.');
+    });
+
+    function finish(){
+      if (!FIRST_DONE){
+        // calcola archetipi e salva profilo derivato
+        const scores={R:0,C:0,V:0,M:0};
+        Object.entries(answers).forEach(([k,v])=>{
+          const w = WEIGHTS[k]?.[v] || {};
+          Object.entries(w).forEach(([A,pts])=>scores[A]+=pts);
+        });
+        const max=Math.max(1,...Object.values(scores)); const to100=x=>Math.round((x/max)*100);
+        const archetypes={Ricercatore:to100(scores.R),Costruttore:to100(scores.C),Visionario:to100(scores.V),Mediatore:to100(scores.M)};
+
+        // profilo derivato rapido
+        function deriveProfile(a){
+          const values=[]; if(a.value==='family')values.push(L==='en'?'family & bonds':'famiglia e legami');
+          if(a.value==='auth')values.push(L==='en'?'authenticity':'autenticità');
+          if(a.value==='success')values.push(L==='en'?'achievement':'successo personale');
+          if(a.value==='creativity')values.push(L==='en'?'creativity':'creatività');
+          const style=a.approach==='reason'?(L==='en'?'analytical':'analitico'):a.approach==='instinct'?(L==='en'?'intuitive':'intuitivo'):a.approach==='adapt'?(L==='en'?'adaptive':'adattivo'):(L==='en'?'balanced':'equilibrato');
+          const change_attitude=a.change==='fear'?(L==='en'?'cautious':'cauto'):a.change==='stim'?(L==='en'?'energized by change':'stimolato dal cambiamento'):a.change==='calm'?(L==='en'?'evaluative':'valutativo'):(L==='en'?'seeks change':'cerca il cambiamento');
+          const motivation=a.motivation==='stability'?(L==='en'?'stability':'stabilità'):a.motivation==='growth'?(L==='en'?'growth':'crescita'):a.motivation==='freedom'?(L==='en'?'freedom':'libertà'):(L==='en'?'recognition':'riconoscimento');
+          const self_view=a.selfview==='serious'?(L==='en'?'serious':'serio'):a.selfview==='irony'?(L==='en'?'ironic':'ironico'):a.selfview==='reflect'?(L==='en'?'introspective':'introspettivo'):(L==='en'?'light':'leggero');
+          return {values,style,change_attitude,motivation,self_view};
+        }
+
+        const base=JSON.parse(LS.getItem('whatif_profile')||'{}');
+        const prof=deriveProfile(answers);
+        LS.setItem('whatif_archetypes', JSON.stringify(archetypes));
+        LS.setItem('whatif_profile', JSON.stringify({...base, ...prof}));
+        LS.setItem('whatif_tone', JSON.stringify({introspective:answers.selfview==='reflect',playful:answers.selfview==='irony'}));
+        LS.setItem('whatif_quiz5_done','1');
+
+        location.href='fourth.html';
+      } else {
+        const base=JSON.parse(LS.getItem('whatif_profile')||'{}');
+        const merged = {...base, anchors_extra: {...(base.anchors_extra||{}), ...microAns}};
+        LS.setItem('whatif_profile', JSON.stringify(merged));
+
+        // segna micro usate per rotazione futura
+        const used = JSON.parse(LS.getItem('whatif_micro_used')||'[]');
+        const newUsed = Array.from(new Set([...used, ...ITEMS.map(x=>x.k)]));
+        LS.setItem('whatif_micro_used', JSON.stringify(newUsed));
+
+        location.href='fourth.html';
+      }
+    }
+  </script>
+
+  <!-- SW (se già usato negli altri file) -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js").catch(()=>{});
+      });
+    }
+  </script>
 </body>
 </html>
