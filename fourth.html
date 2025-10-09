@@ -1,150 +1,148 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f – La tua domanda</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f – La tua domanda</title>
+  <meta name="theme-color" content="#0B0B0C" />
 
-<!-- PWA -->
-<meta name="theme-color" content="#0B0B0C" />
-<link rel="manifest" href="/manifest.json" />
-<link rel="apple-touch-icon" href="/icons/icon-192.png" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <style>
+    :root{
+      --bg:#0B0B0C;
+      --fg:#FFFFFF;
+      --muted:#A0B2BA;
+      --accent1:#1C57A0; /* Blu Verona */
+      --accent2:#3A6B56; /* Verde Speranza */
+      --highlight:#FFEC01; /* Giallo Verona */
+      --card:#141C22;
+      --chip:#1e2d34;
+    }
 
-<style>
-  /* ===== THEME SYSTEM (palette ufficiali) ===== */
-  :root{
-    --bg:#0C0F14; --bg2:#0E1724;
-    --fg:#FFFFFF; --muted:#A0B2BA;
-    --card:rgba(14,19,28,.55); --card-border:rgba(255,255,255,.12);
-    --chip:#141C22; --ink:#0A0E12;
-    --accent:#1C57A0;     /* Blu Verona */
-    --accent2:#FFEC01;    /* Giallo Verona */
-    --focus:#FFE680;
-    --shadow:rgba(0,0,0,.35);
-  }
-  html[data-theme="whatif"]{
-    --bg:#0B1018; --bg2:#0E1724;
-    --fg:#F4F7FB; --muted:#A7B3C2;
-    --card:rgba(14,20,28,.55); --card-border:rgba(255,255,255,.14);
-    --chip:#121A26; --accent:#1C57A0; --accent2:#FFEC01; --focus:#FFE680;
-  }
-  html[data-theme="wtf"]{
-    --bg:#0B0B0C; --bg2:#101414;
-    --fg:#EEF5F0; --muted:#A6B6AD;
-    --card:rgba(16,22,20,.55); --card-border:rgba(255,255,255,.12);
-    --chip:#0F1714; --accent:#3A6B56; --accent2:#5A8C75; --focus:#CFFFD0;
-  }
+    *{box-sizing:border-box;}
+    html,body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--fg);
+    }
 
-  *{box-sizing:border-box}
-  html,body{
-    margin:0; color:var(--fg);
-    background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
-  }
-  @media (prefers-reduced-motion:no-preference){
-    body{animation:bgShift 18s ease-in-out infinite alternate}
-    @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
-  }
-
-  .topbar{
-    position:fixed;top:10px;left:10px;right:10px;z-index:10;
-    display:flex;justify-content:space-between;align-items:center;
-  }
-  .btn{
-    appearance:none;border:1px solid var(--card-border);
-    background:var(--chip);color:#E6F2F5;border-radius:12px;
-    padding:8px 12px;font-weight:700;cursor:pointer
-  }
-  .btn.primary{
-    border:none;background:linear-gradient(180deg,var(--accent),var(--accent2));
-    color:var(--ink)
-  }
-
-  main{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
-  h1{font-size:clamp(22px,5vw,32px);margin:0 0 14px;color:var(--accent)}
-  .card{
-    width:min(92vw,760px);
-    background:var(--card);border:1px solid var(--card-border);
-    border-radius:16px;padding:18px;box-shadow:0 10px 28px var(--shadow);
-    backdrop-filter:blur(10px)
-  }
-  label{display:block;margin:6px 0 8px;font-weight:700}
-  input[type="text"]{
-    width:100%;background:var(--chip);color:var(--fg);
-    border:1px solid var(--card-border);border-radius:12px;font-size:16px;padding:14px
-  }
-  input[type="text"]:focus{outline:2px solid var(--focus);outline-offset:2px}
-  .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
-  .muted{color:var(--muted);font-size:12px}
-  .toggle{
-    width:100%;text-align:left;background:var(--chip);
-    border:1px solid var(--card-border);color:#cfe3e7;border-radius:12px;
-    padding:10px 12px;font-weight:800;cursor:pointer
-  }
-  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-  .chip{
-    background:var(--chip);border:1px solid var(--card-border);color:#cfe3e7;
-    border-radius:999px;padding:8px 12px;font-size:12px;cursor:pointer
-  }
-</style>
+    .topbar{
+      position:fixed;
+      top:10px;left:10px;right:10px;
+      display:flex;
+      justify-content:space-between;
+      z-index:10;
+    }
+    .btn{
+      appearance:none;
+      border:none;
+      border-radius:12px;
+      padding:10px 14px;
+      font-weight:700;
+      cursor:pointer;
+      color:#fff;
+      background:#1e2d34;
+      transition:background .2s ease, transform .1s ease;
+    }
+    .btn.primary{
+      background:linear-gradient(180deg,var(--accent1),var(--accent2));
+      color:#fff;
+    }
+    .btn:hover{transform:translateY(-1px);}
+    main{
+      min-height:100dvh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+    .wrap{width:min(92vw,720px);}
+    h1{
+      font-size:clamp(22px,5vw,30px);
+      margin:8px 0 12px;
+      text-align:center;
+      line-height:1.3;
+    }
+    label{display:block;margin:10px 0 6px;font-weight:600;}
+    input,textarea{
+      width:100%;
+      background:#101922;
+      border:1px solid #1b2a34;
+      border-radius:12px;
+      color:#E6F2F5;
+      padding:12px;
+      font-size:15px;
+      resize:none;
+    }
+    textarea:focus,input:focus{outline:none;border-color:var(--accent1);}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+    .chip{
+      background:var(--chip);
+      color:#d7e9eb;
+      border:none;
+      padding:10px 14px;
+      border-radius:16px;
+      cursor:pointer;
+      font-weight:600;
+      transition:background .2s ease;
+    }
+    .chip:hover{background:var(--accent1);}
+    .extra{
+      background:#111a21;
+      border:1px solid #1f2c36;
+      border-radius:16px;
+      padding:16px;
+      margin-top:16px;
+      display:none;
+    }
+    .hint{
+      font-size:13px;
+      color:var(--muted);
+      margin:6px 0 12px;
+    }
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-top:18px;
+    }
+  </style>
 </head>
+
 <body>
-<div class="topbar">
-  <button class="btn" onclick="history.back()">← <span id="tb_back">Indietro</span></button>
-  <button class="btn" onclick="location.href='index.html'">🏠 <span id="tb_home">Home</span></button>
-</div>
+  <div class="topbar">
+    <button class="btn" onclick="history.back()">← <span id="tb_back">Indietro</span></button>
+    <button class="btn" onclick="location.href='index.html'">🏠 <span id="tb_home">Home</span></button>
+  </div>
 
-<main>
-  <h1 id="mainTitle">Scrivi la tua domanda</h1>
-  <div class="card">
-    <label for="domandaInput" id="questionLabel">La tua domanda</label>
-    <input type="text" id="domandaInput" placeholder="" />
+  <main>
+    <div class="wrap">
+      <h1 id="mainTitle">💭 Qual è la domanda che non riesci a toglierti dalla testa?</h1>
+      <label id="questionLabel" for="domandaInput">Scrivila qui sotto</label>
+      <textarea id="domandaInput" rows="3" placeholder="E se..."></textarea>
 
-    <!-- Template dinamici (past/future) -->
-    <div class="chips" id="templates"></div>
+      <div class="chips" id="templates"></div>
 
-    <!-- ancore personali -->
-    <div style="margin-top:14px;border-top:1px solid var(--card-border);padding-top:12px">
-      <button class="toggle" id="toggleMore">✨ Rendi più personale in 30s</button>
-      <div id="moreBox" style="display:none">
-        <p class="muted" id="moreHint">Compila se vuoi soprattutto per il passato: useremo questi dettagli come ancore.</p>
-        <div style="display:grid;gap:10px;grid-template-columns:1fr;max-width:100%">
-          <div>
-            <label id="lab_place">Un dettaglio del luogo</label>
-            <input id="anchor_place" type="text" placeholder="Via, quartiere, bar, piazza…" />
-          </div>
-          <div>
-            <label id="lab_person">Una persona (nome fittizio + ruolo)</label>
-            <input id="anchor_person" type="text" placeholder="Es. “Marco (amico di infanzia)”" />
-          </div>
-          <div>
-            <label id="lab_memory">Un ricordo concreto (oggetto, canzone, odore)</label>
-            <input id="anchor_memory" type="text" placeholder="Es. odore di pioggia sul Corso, canzone al juke-box…" />
-          </div>
-        </div>
+      <div class="hint">
+        <button class="btn" id="toggleMore">✨ Aggiungi un tocco personale in 30s</button>
+      </div>
+
+      <div class="extra" id="moreBox">
+        <p class="hint" id="moreHint">Non è obbligatorio, ma rende lo scenario più tuo.</p>
+        <label id="lab_place">Un dettaglio del luogo</label>
+        <input id="anchor_place" type="text" placeholder="(es. la piazza, il bar, la stanza...)">
+        <label id="lab_person">Una persona (nome fittizio + ruolo)</label>
+        <input id="anchor_person" type="text" placeholder="(es. Anna, la collega di progetto)">
+        <label id="lab_memory">Un ricordo vivido</label>
+        <input id="anchor_memory" type="text" placeholder="(es. il profumo del caffè, una frase, un oggetto)">
+      </div>
+
+      <div class="row">
+        <button class="btn" id="backBtn">← <span id="backTxt">Indietro</span></button>
+        <button class="btn primary" id="nextBtn"><span id="nextTxt">✨ Scopri il tuo What?f</span> →</button>
       </div>
     </div>
-
-    <div class="actions">
-      <button class="btn" id="backBtn">← <span id="backTxt">Indietro</span></button>
-      <button class="btn primary" id="nextBtn"><span id="nextTxt">Avanti</span> →</button>
-    </div>
-  </div>
-</main>
-
-<script>
-  /* ===== Apply theme from prefs ===== */
-  (function(){
-    try{
-      const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-      const theme = prefs.stile==='wtf' ? 'wtf' : 'whatif';
-      document.documentElement.setAttribute('data-theme', theme);
-    }catch(e){ document.documentElement.setAttribute('data-theme','whatif'); }
-  })();
-</script>
+  </main>
 
 <script>
   // === WHAT?F (versione aggiornata – tono empatico e curioso) ===
@@ -188,7 +186,7 @@
         tempFuture:["E se lasciassi e aprissi uno studio?","E se ti trasferissi a ___ per un anno?","E se tornassi a studiare ___?"]
       };
 
-  // 🎨 Aggiornamento UI con i nuovi testi
+  // 🎨 Aggiornamento UI
   document.getElementById('mainTitle').textContent = T.title;
   document.getElementById('questionLabel').textContent = T.label;
   document.getElementById('tb_back').textContent = T.back;
@@ -269,6 +267,5 @@
     return Array.from(tags);
   }
 </script>
-
 </body>
 </html>
