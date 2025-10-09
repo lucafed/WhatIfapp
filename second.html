@@ -21,29 +21,18 @@
       --accent:#1C57A0; --accent2:#FFEC01; /* Blu/Giallo Verona */
       --ink:#001f26;
       --chip:#0f1820; --line:#1b2a34;
-
-      /* per i pulsanti hero */
-      --acc: var(--accent);
-      --acc2: var(--accent2);
     }
     html[data-theme="whatif"]{
       --bg:#0B1018; --bg2:#0E1724;
       --card:#141C22; --fg:#F4F7FB; --muted:#A7B3C2;
       --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
       --chip:#0f1820; --line:#1b2a34;
-
-      --acc: var(--accent);
-      --acc2: var(--accent2);
     }
     html[data-theme="wtf"]{
       --bg:#0B0B0C; --bg2:#101414;
       --card:#111713; --fg:#EEF5F0; --muted:#A6B6AD;
       --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; /* Verde speranza */
       --chip:#0F1714; --line:#21322A;
-
-      /* in tema wtf usiamo direttamente i verdi */
-      --acc: #3A6B56;
-      --acc2:#6FA58E;
     }
 
     *{box-sizing:border-box}
@@ -61,22 +50,29 @@
 
     .topbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;
       padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))}
-    .back-btn,.home-btn,.lang-btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);
+    .back-btn,.home-btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);
       border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
-    .lang-btn{border-radius:999px}
+
     main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
     .wrap{width:min(100%,980px)}
-    h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--acc)}
+    h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
     .blurb{color:#d7e8ec;margin:0 0 14px;font-size:clamp(14px,4vw,18px);line-height:1.45}
     .banner{display:none;background:#0b151d;border:1px dashed var(--line);color:#dff6fb;border-radius:14px;padding:12px;margin-bottom:8px}
     .banner strong{color:var(--accent2)}
+
+    /* ===== CTA strip (Improve / Full test) ===== */
+    .cta-strip{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+    .btn{appearance:none;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-weight:900;cursor:pointer;background:var(--chip);color:#cfe6eb}
+    .btn.primary{border:none;background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink)}
+    .btn.ghost{background:#152029}
+    .btn[disabled]{background:#2a3b45;color:#7f98a2;cursor:not-allowed}
 
     /* ===== Indicatore conoscenza ===== */
     .know{background:#0c141b;border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:6px}
     .know-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
     .meter{position:relative;height:12px;background:var(--chip);border:1px solid var(--line);border-radius:999px;overflow:hidden}
-    .meter-fill{height:100%;width:0;background:linear-gradient(180deg,var(--acc),var(--acc2))}
-    .know-score{font-weight:800;color:var(--acc)}
+    .meter-fill{height:100%;width:0;background:linear-gradient(180deg,var(--accent),var(--accent2))}
+    .know-score{font-weight:800;color:var(--accent)}
     .miss{margin-top:8px;color:#cfe6e9;font-size:13px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
     .chip{background:var(--chip);border:1px solid var(--line);color:#cfe3e7;border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer}
 
@@ -89,10 +85,6 @@
     textarea{min-height:110px;resize:vertical}
     .muted{color:var(--muted);font-size:13px}
     .actions{display:flex;gap:10px;justify-content:space-between;margin-top:6px;flex-wrap:wrap}
-    .btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer;border:1px solid var(--line);background:var(--chip);color:#cfe6eb}
-    .btn.ghost{background:#152029}
-    .btn.primary{border:none;background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink)}
-    .btn[disabled]{background:#2a3b45;color:#7f98a2;cursor:not-allowed}
     .error{color:#ffb3b3;background:#3a1414;border:1px solid #5a2222;border-radius:10px;padding:10px 12px;display:none}
     .error.show{display:block}
     .micro{display:none;background:#0c141b;border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:6px}
@@ -100,20 +92,16 @@
     .micro-q label{display:block;margin:0 0 6px}
     .micro-q input{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px}
 
-    /* barra comandi rapidi */
-    .quick-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
-    .quick-btn{appearance:none;border:none;border-radius:12px;padding:10px 14px;font-weight:900;cursor:pointer}
-    .quick-btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink)}
-    .quick-btn.ghost{background:var(--chip);border:1px solid var(--line);color:#eaf3ee}
+    .cta-group{display:flex;gap:8px;flex-wrap:wrap}
   </style>
 </head>
 <body>
   <div class="topbar">
     <div style="display:flex;gap:8px;align-items:center">
       <button id="backTop" class="back-btn">←</button>
-      <button id="homeTop" class="home-btn">🏠</button>
+      <button id="homeTop" class="back-btn">🏠</button>
     </div>
-    <button id="langToggle" class="lang-btn">🇮🇹 IT</button>
+    <!-- RIMOSSO il toggle lingua -->
   </div>
 
   <main>
@@ -125,6 +113,12 @@
         Raccontami brevemente chi sei, cosa stai vivendo o cosa ti spinge a usare What?f.
         Questo aiuterà l’AI a comprenderti meglio e risponderti in modo più personale.
       </p>
+
+      <!-- ===== CTA Improve / Full test ===== -->
+      <div class="cta-strip">
+        <button id="improveBtn" class="btn ghost">✨ Migliora profilo (30s)</button>
+        <button id="fulltestBtn" class="btn">🧪 Test completo (5 min)</button>
+      </div>
 
       <!-- ===== Indicatore di personalizzazione ===== -->
       <div class="know" id="knowBox">
@@ -139,12 +133,6 @@
       </div>
 
       <div id="errorBox" class="error"></div>
-
-      <!-- Comandi rapidi -->
-      <div class="quick-row" id="quickRow">
-        <button type="button" id="openMicro" class="quick-btn ghost">✨ Migliora profilo (30s)</button>
-        <button type="button" id="openFullTest" class="quick-btn primary">🧭 Test completo (5 min)</button>
-      </div>
 
       <form id="aboutForm" novalidate>
         <div class="row two">
@@ -236,7 +224,7 @@
 
         <div class="actions">
           <button type="button" class="btn ghost" id="backBtn">Indietro</button>
-          <div style="display:flex;gap:8px">
+          <div class="cta-group">
             <button type="button" class="btn ghost" id="skipBtn">Salta → domanda</button>
             <button type="submit" class="btn primary" id="nextBtn">Continua</button>
           </div>
@@ -282,7 +270,10 @@
         // Indicatore
         know:"Personalizzazione", missing:"Mancano:", miss_identity:"Identità/ruolo", miss_routine:"Routine/indicatori",
         miss_constraints:"Vincoli", miss_goals:"Obiettivi", miss_places:"Luoghi", miss_relations:"Relazioni", miss_risk:"Rischio",
-        bar_hint:"Più dettagli → più scenari plausibili. Le chip ti portano al punto giusto."
+        bar_hint:"Più dettagli → più scenari plausibili. Le chip ti portano al punto giusto.",
+        // CTA nuovi
+        improve:"✨ Migliora profilo (30s)",
+        fulltest:"🧪 Test completo (5 min)"
       },
       en:{
         title:"Tell me about you",
@@ -305,7 +296,10 @@
         // Indicator
         know:"Personalization", missing:"Missing:", miss_identity:"Identity/role", miss_routine:"Routine/indicators",
         miss_constraints:"Constraints", miss_goals:"Goals", miss_places:"Places", miss_relations:"Relationships", miss_risk:"Risk",
-        bar_hint:"More detail → more plausible scenarios. Chips take you to the right field."
+        bar_hint:"More detail → more plausible scenarios. Chips take you to the right field.",
+        // New CTAs
+        improve:"✨ Improve profile (30s)",
+        fulltest:"🧪 Full test (5 min)"
       }
     };
 
@@ -320,9 +314,12 @@
 
       $('#title').textContent = d.title;
       $('#blurb').textContent = d.blurb;
+
+      // topbar
       $('#backTop').textContent = '← ' + d.back;
       $('#homeTop').textContent = '🏠 ' + d.home;
 
+      // campi
       $('#name_lbl').textContent = d.name_lbl;
       $('#city_lbl').textContent = d.city_lbl;
 
@@ -368,8 +365,9 @@
       $('#missLabel').textContent = d.missing;
       $('#knowBox').title = d.bar_hint;
 
-      // Toggle label
-      $('#langToggle').textContent = getLang()==='en' ? '🇬🇧 EN' : '🇮🇹 IT';
+      // CTA strip i18n
+      $('#improveBtn').textContent = d.improve;
+      $('#fulltestBtn').textContent = d.fulltest;
 
       // error message bind
       $('#aboutForm').dataset.err = d.err_required;
@@ -382,20 +380,6 @@
     // topbar buttons
     $('#backTop').addEventListener('click', ()=> history.back());
     $('#homeTop').addEventListener('click', ()=> location.href='index.html');
-    $('#langToggle').addEventListener('click', ()=>{
-      const cur = getLang();
-      setLang(cur==='en'?'it':'en');
-    });
-
-    // quick actions
-    document.getElementById('openMicro').addEventListener('click', ()=>{
-      document.getElementById('microBox').style.display = 'block';
-      scrollIntoView('#microBox');
-      document.getElementById('mq1').focus();
-    });
-    document.getElementById('openFullTest').addEventListener('click', ()=>{
-      location.href='fulltest.html';
-    });
 
     // show daily banner + micro once per day
     function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -404,8 +388,8 @@
     const seenDay = LS.getItem(KEY_DAY);
     const showDaily = (seenDay !== today);
     if (showDaily){
-      document.getElementById('dailyBanner').style.display = 'block';
-      document.getElementById('microBox').style.display = 'block';
+      $('#dailyBanner').style.display = 'block';
+      $('#microBox').style.display = 'block';
     }
 
     // ====== INDICATORE: calcolo punteggio ======
@@ -418,7 +402,7 @@
     function last(arr){ return Array.isArray(arr) && arr.length ? arr[arr.length-1] : null; }
 
     function computeKnowledge(){
-      const L = I18N[getLang()] || I18N.it;
+      const Ld = I18N[getLang()] || I18N.it;
 
       const profile = readJSON('whatif_profile',{});
       const micro   = readJSON('whatif_micro',{});
@@ -576,6 +560,23 @@
       location.href = firstDone ? 'fourth.html' : 'third.html';
     });
 
+    // ====== CTA: Improve (30s) / Full test (5 min) ======
+    document.getElementById('improveBtn').addEventListener('click', ()=>{
+      // non tocchiamo lo stile; andiamo alle micro
+      location.href = 'third.html';
+    });
+    document.getElementById('fulltestBtn').addEventListener('click', ()=>{
+      // Prima di navigare, assicura che lo stile attuale venga letto e salvato
+      // così fulltest.html applica lo stesso tema (whatif/wtf)
+      try{
+        const curTheme = document.documentElement.getAttribute('data-theme')==='wtf' ? 'wtf' : 'whatif';
+        const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
+        prefs.stile = curTheme;
+        LS.setItem('whatif_prefs', JSON.stringify(prefs));
+      }catch(e){}
+      location.href = 'fulltest.html';
+    });
+
     // form save
     const form = document.getElementById('aboutForm');
     const errBox = document.getElementById('errorBox');
@@ -625,7 +626,7 @@
       location.href = firstDone ? 'fourth.html' : 'third.html';
     });
 
-    // se la lingua cambia in un’altra scheda, aggiorna
+    // se la lingua cambia in un’altra scheda, aggiorna (anche CTA)
     window.addEventListener('storage', (e)=>{ if(e.key==='lang'){ applyI18N(); renderKnowledge(); }});
     document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ applyI18N(); renderKnowledge(); }});
   </script>
