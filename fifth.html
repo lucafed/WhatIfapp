@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>What?f – Result</title>
 <meta name="theme-color" content="#0B1218" />
+<link rel="manifest" href="/manifest.json" />
+<link rel="apple-touch-icon" href="/icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <style>
   :root{
     --bg:#0B1218; --card:#101820; --muted:#9EB2BC;
@@ -394,7 +398,6 @@ $('applyClarify').addEventListener('click', async ()=>{
   const inputs=clarifyList.querySelectorAll('input');
   const clar={}; inputs.forEach(i=>{ const v=(i.value||"").trim(); if(i.id&&v) clar[i.id]=v; });
   clarifyOverlay.style.display='none';
-  // popola segnali e apri disclosure
   $('signalsBody').textContent = summarizeSignals(clar);
   if ($('signalsBody').textContent){ $('signalsBody').style.display='block'; $('caret').style.transform='rotate(90deg)'; }
   await generate(false,clar);
@@ -415,7 +418,6 @@ async function generate(isRegen=false, clarOverride=null){
   $('result').textContent=`⏳ ${T.loading} `; const sk=document.createElement('span'); sk.className='skeleton'; sk.style.width='40%'; $('result').appendChild(sk);
   $('regenBtn').style.display='none';
 
-  // se segnali vuoti, metti riassunto base
   if(!$('signalsBody').textContent){ $('signalsBody').textContent = summarizeSignals(clarOverride||{}); }
 
   try{
@@ -461,19 +463,17 @@ $('shareBtn').addEventListener('click', ()=>{
 $('backBtnTop').addEventListener('click', ()=> history.back());
 $('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
 
-/* ====== Dev hooks: reset FREE + reset CLARIFY + toggle Pro ====== */
+/* ====== Dev hooks ====== */
 (function devHooks(){
   const bFree=$('freeBadge'), bClar=$('clarifyBadge');
   if(!bFree||!bClar) return;
-
-  // FREE long-press + triple click Pro
   let pressT=null;
   bFree.addEventListener('pointerdown', ()=>{ pressT=setTimeout(resetToday,2000); });
   bFree.addEventListener('pointerup', ()=>{ clearTimeout(pressT); });
   bFree.addEventListener('pointerleave', ()=>{ clearTimeout(pressT); });
   function resetToday(){
     const today=todayStr();
-    const c=readJSON('whatif_credits'); c.date=today; c.used=0; writeJSON('whatif_credits',c);
+    const c=readJSON('whatif_credits'); c.date=today; c.used=0; writeCredits(c);
     renderBadges(); alert(lang==='en'?'Today credits reset ✅':'Crediti di oggi azzerati ✅');
   }
   let clicks=0,timer=null;
@@ -482,11 +482,10 @@ $('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
     timer=setTimeout(()=>{ if(clicks>=3) togglePro(); clicks=0; },250);
   });
   function togglePro(){
-    const c=readJSON('whatif_credits'); c.pro=!c.pro; c.used=0; writeJSON('whatif_credits',c);
+    const c=readJSON('whatif_credits'); c.pro=!c.pro; c.used=0; writeCredits(c);
     renderBadges(); alert('Pro '+(c.pro?'on':'off')+' (local) ✅');
   }
 
-  // CLARIFY long-press reset
   let pressC=null;
   bClar.addEventListener('pointerdown', ()=>{ pressC=setTimeout(resetClarify,2000); });
   bClar.addEventListener('pointerup', ()=>{ clearTimeout(pressC); });
@@ -501,7 +500,7 @@ $('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
 /* ====== Avvio ====== */
 function initSignalsBase(){
   const s=summarizeSignals({});
-  if(s){ $('signalsBody').textContent=s; } // non apriamo di default
+  if(s){ $('signalsBody').textContent=s; }
 }
 function initText(){
   $('freeBadge').title=T.badgeFreeTitle; $('clarifyBadge').title=T.badgeClarifyTitle;
@@ -515,6 +514,15 @@ function boot(){
   ensureCredits(); ensureClarify(); renderBadges(); renderKnowledgeMini(); initSignalsBase(); initText(); initStyles();
 }
 boot();
+</script>
+
+<!-- Service Worker registration -->
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});
+    });
+  }
 </script>
 </body>
 </html>
