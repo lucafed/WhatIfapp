@@ -6,114 +6,132 @@
   <title>What?f — Home</title>
 
   <!-- PWA -->
-  <meta name="theme-color" content="#0C1110" />
+  <meta name="theme-color" content="#0B0B0C" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-  <!-- Preload hero (come nel tuo file) -->
   <link rel="preload" as="image" href="/home-hero.png" />
 
   <style>
+    /* ===== THEME SYSTEM (palette ufficiali) ===== */
     :root{
-      /* VERDANT MIST */
-      --bg:#0C1110; --bg2:#1A2420;
-      --fg:#F4F8F6; --muted:#A5B2AD;
-      --card:rgba(25,35,32,0.55);
-      --card-border:rgba(255,255,255,.06);
-      --chip:#16211D;
-      --accent:#9EE493; --accent-dark:#6CC57C; --accent-ink:#08140B;
-      --focus:#CFFFD0; --shadow:rgba(0,0,0,.35);
+      --bg:#0C0F14; --bg2:#0E1724;
+      --fg:#ffffff; --muted:#A0B2BA;
+      --card:rgba(14,19,28,.55); --card-border:rgba(255,255,255,.10);
+      --chip:#141C22;
+      --accent:#1C57A0;     /* Blu Verona */
+      --accent2:#FFEC01;    /* Giallo Verona */
+      --ink:#0A0E12;
+      --shadow:rgba(0,0,0,.45);
     }
+    html[data-theme="whatif"]{
+      --bg:#0B1018; --bg2:#0E1724;
+      --fg:#F4F7FB; --muted:#A7B3C2;
+      --card:rgba(14,20,28,.55); --card-border:rgba(255,255,255,.12);
+      --chip:#121A26;
+      --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
+    }
+    html[data-theme="wtf"]{
+      --bg:#0B0B0C; --bg2:#101414;
+      --fg:#EEF5F0; --muted:#A6B6AD;
+      --card:rgba(16,22,20,.55); --card-border:rgba(255,255,255,.10);
+      --chip:#0F1714;
+      --accent:#3A6B56;     /* Verde speranza */
+      --accent2:#5A8C75;    /* Verde chiaro */
+      --ink:#06110B;
+    }
+
     *{box-sizing:border-box}
     html,body{
-      height:100%; margin:0; color:var(--fg);
+      height:100%;
+      margin:0;
+      background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+      color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background: radial-gradient(800px 600px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-      background-attachment:fixed;
       -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
       overflow-x:hidden;
     }
     @media (prefers-reduced-motion:no-preference){
-      body{animation:bgShift 18s ease-in-out infinite alternate;}
+      body{animation:bgShift 18s ease-in-out infinite alternate}
       @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
     }
+
     main{
       min-height:100%;
       display:flex; flex-direction:column; align-items:center; text-align:center;
-      padding:20px; gap:14px; padding-bottom:120px;
+      padding:20px; gap:14px;
+      padding-bottom:120px;
     }
-
-    /* Hero */
-    .hero-img{
-      width:min(92vw,560px); height:auto; display:block; margin:0 auto 10px;
-      border-radius:18px; filter:drop-shadow(0 10px 28px var(--shadow)); opacity:.95;
-    }
-
-    /* Titoli & lead */
-    h1{margin:.25rem 0 0; font-size:clamp(28px,5.5vw,44px); line-height:1.1; letter-spacing:.2px}
-    h1 span{color:var(--accent)}
-    .lead{
-      max-width:720px; font-size:clamp(15px,4vw,18px); color:var(--muted);
-      line-height:1.6; margin:6px auto 18px;
-      background:var(--card); border:1px solid var(--card-border);
-      backdrop-filter:blur(14px); border-radius:16px; padding:12px 16px;
-    }
-
-    /* Scelte */
-    .group{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:6px}
-    .chip{
-      appearance:none; border:1px solid var(--card-border); background:var(--chip); color:#E7F4E8;
-      padding:12px 16px; border-radius:16px; font-weight:700; cursor:pointer;
-      transition:transform .08s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
-      outline:none;
-    }
-    .chip:hover{ transform:translateY(-1px); border-color:var(--accent) }
-    .chip:focus-visible{ outline:2px solid var(--focus); outline-offset:2px }
-    .chip.selected{
-      background:linear-gradient(180deg,var(--accent),var(--accent-dark));
-      color:var(--accent-ink);
-      box-shadow:0 1px 0 0 rgba(0,0,0,.25) inset, 0 0 0 1px rgba(158,228,147,.35) inset;
-    }
-
-    /* CTA */
-    .cta{
-      display:inline-block;
-      background:linear-gradient(180deg,var(--accent),var(--accent-dark));
-      color:var(--accent-ink); font-weight:800; border:none; border-radius:24px;
-      padding:14px 20px; letter-spacing:.3px;
-      box-shadow:0 8px 24px rgba(108,197,124,.25);
-      cursor:pointer; transition:transform .08s ease, box-shadow .16s ease;
-    }
-    .cta:hover{ transform:translateY(-1px) }
-    .cta:active{ transform:translateY(0) }
-    .cta[disabled]{ opacity:.45; cursor:not-allowed; filter:saturate(.7) }
 
     /* Lingua (fab) */
     .lang-fab{position:fixed; top:calc(env(safe-area-inset-top,0px) + 14px); right:14px; z-index:50}
     .lang-btn{
-      appearance:none; border:1px solid var(--card-border); background:var(--chip); color:#E6F2F5;
-      padding:10px 12px; border-radius:999px; cursor:pointer; backdrop-filter: blur(8px)
+      appearance:none; border:1px solid var(--card-border); background:var(--chip); color:var(--fg);
+      padding:10px 12px; border-radius:999px; cursor:pointer
     }
     .lang-menu{
       position:absolute; top:46px; right:0; background:var(--card); border:1px solid var(--card-border);
       border-radius:12px; padding:8px; display:none; min-width:170px;
-      box-shadow:0 12px 28px var(--shadow); backdrop-filter: blur(14px)
+      box-shadow:0 12px 28px var(--shadow); backdrop-filter:blur(10px)
     }
     .lang-menu button{
       display:block; width:100%; text-align:left; background:transparent; border:none;
       color:#E6F2F5; padding:10px; border-radius:10px; cursor:pointer
     }
-    .lang-menu button.active{background:#203329}
+    .lang-menu button.active{background:rgba(255,255,255,.06)}
+
+    /* Hero */
+    .hero-img{
+      width:min(92vw,560px); height:auto; display:block; margin:0 auto 6px;
+      filter:drop-shadow(0 10px 28px var(--shadow));
+      border-radius:16px;
+    }
+
+    /* Titoli & lead */
+    h1{margin:.25rem 0 0; font-size:clamp(28px,5.5vw,44px); line-height:1.1; cursor:default}
+    h1 span{color:var(--accent)}
+    .lead{
+      max-width:720px; font-size:clamp(15px,4vw,18px); color:var(--muted);
+      line-height:1.55; margin:4px auto 16px;
+    }
+
+    /* Scelte */
+    .group{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:6px}
+    .chip{
+      appearance:none; border:1px solid var(--card-border); background:var(--chip); color:#e8f2ec;
+      padding:12px 16px; border-radius:16px; font-weight:700; cursor:pointer;
+      transition:transform .08s ease, background .16s ease, box-shadow .16s ease, color .16s ease;
+      backdrop-filter:blur(6px);
+    }
+    .chip:active{transform:translateY(1px)}
+    .chip.selected{
+      background:linear-gradient(180deg,var(--accent),var(--accent2));
+      color:var(--ink); box-shadow:0 0 0 1px rgba(255,255,255,.15) inset;
+    }
+
+    /* CTA */
+    .cta{
+      display:inline-block;
+      background:linear-gradient(180deg,var(--accent),var(--accent2));
+      color:var(--ink); font-weight:800; border:none; border-radius:24px;
+      padding:14px 20px;
+      box-shadow:0 0 14px rgba(0,0,0,.35),0 0 28px rgba(0,0,0,.15);
+      cursor:pointer; transition:.2s
+    }
+    .cta[disabled]{opacity:.45; cursor:not-allowed}
 
     /* Footer */
     footer{
       position:fixed; left:0; right:0; bottom:10px; text-align:center;
       color:var(--muted); font-size:12px; padding:0 14px;
     }
-    footer a{ color:var(--accent); text-decoration:none; font-weight:600 }
+    footer a{
+      color:var(--accent); text-decoration:none; font-weight:600;
+    }
     footer .sep{opacity:.6; margin:0 6px}
+
     .foot-links{
       display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
       margin-top:6px;
@@ -122,13 +140,10 @@
       background:var(--chip); border:1px solid var(--card-border); color:#E6F2F5;
       border-radius:999px; padding:6px 10px; font-weight:700; text-decoration:none;
     }
-
-    /* riduci movimento se preferito */
-    @media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
   </style>
 </head>
 <body>
-  <!-- Selettore lingua SOLO qui -->
+  <!-- Selettore lingua -->
   <div class="lang-fab" id="langFab">
     <button class="lang-btn" id="langToggle" aria-haspopup="true" aria-expanded="false" aria-label="Change language">🌐</button>
     <div class="lang-menu" id="langMenu" role="menu" aria-label="language">
@@ -138,11 +153,10 @@
   </div>
 
   <main>
-    <img id="hero" class="hero-img" alt="Illustrazione What?f" loading="eager" decoding="async" />
+    <img id="hero" class="hero-img" alt="Porta luminosa What?f" loading="eager" decoding="async" />
 
     <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
 
-    <!-- Lead con HTML (come nel tuo originale) -->
     <p class="lead" id="leadText"></p>
 
     <!-- Scelte -->
@@ -169,34 +183,44 @@
     </div>
   </footer>
 
-  <!-- Caricamento robusto immagine (come nel tuo file originale) -->
+  <!-- Hero robust loader -->
   <script>
     (async function loadHero(){
       const hero = document.getElementById('hero');
-      const candidates = ['/home-hero.png','/public/home-hero.png'];
+      const candidates = ['/home-hero.png','/public/home-hero.png','/assets/home-hero.png'];
       for (const u of candidates){
         try{
           const r = await fetch(u,{cache:'no-store', method:'GET'});
           if (r.ok){ hero.src = u + '?v=' + Date.now(); return; }
         }catch(e){}
       }
-      // fallback se non trova nulla
       hero.style.display='none';
     })();
   </script>
 
-  <!-- i18n (lead con <strong> come nel tuo) -->
+  <!-- i18n + theme + selections -->
   <script>
+    // Applica tema da prefs all'avvio
+    (function initTheme(){
+      try{
+        const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+        const theme = prefs.stile==='wtf' ? 'wtf' : 'whatif';
+        document.documentElement.setAttribute('data-theme', theme);
+      }catch(e){
+        document.documentElement.setAttribute('data-theme','whatif');
+      }
+    })();
+
     const DICT = {
       it:{
         title:"Scopri il tuo What?f",
-        lead:"Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro. <strong>What if</strong> esplora scenari realistici e riflessivi. <strong>What the F</strong> porta visioni creative e inaspettate.",
+        lead:"Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro. <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili. <strong>What the F</strong> ti fa vivere visioni ironiche, creative e imprevedibili.",
         past:"Passato", future:"Futuro", whatif:"What if", wtf:"What the F",
         next:"Avanti", privacy:"Privacy", terms:"Termini", info:"Info"
       },
       en:{
         title:"Discover your What?f",
-        lead:"Imagine the choice you didn’t make… and the one you could make. Choose whether to look to the past or the future. <strong>What if</strong> explores realistic, reflective scenarios. <strong>What the F</strong> brings creative, unexpected visions.",
+        lead:"Imagine the choice you didn’t make… and the one you could make. Choose whether to look to the past or the future. <strong>What if</strong> explores realistic, reflective scenarios based on plausible choices. <strong>What the F</strong> lets you experience ironic, creative and unpredictable visions.",
         past:"Past", future:"Future", whatif:"What if", wtf:"What the F",
         next:"Next", privacy:"Privacy", terms:"Terms", info:"Info"
       }
@@ -212,25 +236,22 @@
     function applyLang(){
       const L = getLang(), d = (DICT[L]||DICT.it);
       document.documentElement.lang = L;
-      // etichette semplici
       $$('[data-i18n]').forEach(el=>{
         const k = el.getAttribute('data-i18n');
-        if (k === 'lead') return; // lead ha HTML
+        if (k === 'lead') return;
         if (d[k]) el.textContent = d[k];
       });
-      // lead con HTML
       $('#leadText').innerHTML = d.lead;
-      // attivi nel menu lingua
+      // aggiorna attivi nel menu lingua
       document.querySelectorAll('#langMenu button').forEach(b=>{
         b.classList.toggle('active', b.dataset.lang === L);
       });
     }
 
-    // init lingua
     if(!LS.getItem('lang')) LS.setItem('lang','it');
     applyLang();
 
-    // widget lingua con ARIA come nel tuo
+    // widget lingua
     const fab  = $('#langFab');
     const btn  = $('#langToggle');
     const menu = $('#langMenu');
@@ -243,27 +264,26 @@
       const b = e.target.closest('button[data-lang]'); if(!b) return;
       setLang(b.dataset.lang);
       menu.style.display='none';
-      btn.setAttribute('aria-expanded','false');
     });
     document.addEventListener('click', e=>{
-      if(!fab.contains(e.target)){
-        menu.style.display='none';
-        btn.setAttribute('aria-expanded','false');
-      }
+      if(!fab.contains(e.target)) menu.style.display='none';
     });
-  </script>
 
-  <!-- Logica selezioni + Avanti (identica al tuo flusso) -->
-  <script>
+    // Logica selezioni + CTA
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
     const go    = document.getElementById('go');
 
     function syncUI(){
+      // chips selezionate
       if(state.periodo){
+        document.querySelectorAll(`#periodGroup .chip`).forEach(c=>c.classList.remove('selected'));
         document.querySelector(`#periodGroup .chip[data-val="${state.periodo}"]`)?.classList.add('selected');
       }
       if(state.stile){
+        document.querySelectorAll(`#styleGroup .chip`).forEach(c=>c.classList.remove('selected'));
         document.querySelector(`#styleGroup .chip[data-val="${state.stile}"]`)?.classList.add('selected');
+        // anteprima tema live
+        document.documentElement.setAttribute('data-theme', state.stile==='wtf'?'wtf':'whatif');
       }
       go.disabled = !(state.periodo && state.stile);
     }
@@ -271,10 +291,16 @@
     function wireGroup(g){
       g.addEventListener('click', (e)=>{
         const b = e.target.closest('.chip'); if(!b) return;
+        // toggle visuale
         g.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
         b.classList.add('selected');
+        // salva
         state[b.dataset.key] = b.dataset.val;
         localStorage.setItem('whatif_prefs', JSON.stringify(state));
+        // anteprima tema quando scegli lo stile
+        if (b.dataset.key === 'stile'){
+          document.documentElement.setAttribute('data-theme', b.dataset.val==='wtf'?'wtf':'whatif');
+        }
         go.disabled = !(state.periodo && state.stile);
       });
     }
@@ -287,38 +313,33 @@
       if(go.disabled) return;
       location.href = 'second.html';
     });
-  </script>
 
-  <!-- Admin segreto: triplo tap sul titolo (come nel tuo, con flash in tinta verdant) -->
-  <script>
+    // Admin segreto: triplo tap sul titolo
     (function(){
       let taps = 0, timer = null;
       const target = document.getElementById('appTitle') || document.querySelector('h1') || document.body;
-
       target.addEventListener('click', ()=>{
         taps++;
         clearTimeout(timer);
         timer = setTimeout(()=>taps=0, 1200);
         if (taps >= 3) {
           taps = 0;
-          // flash visivo
           const flash = document.createElement('div');
           flash.style.position='fixed'; flash.style.inset='0';
-          flash.style.background='rgba(158,228,147,.18)'; /* verdant mist */
+          flash.style.background='rgba(255,255,255,0.08)';
           flash.style.backdropFilter='blur(2px)';
           flash.style.transition='opacity .6s ease';
           flash.style.opacity='1'; flash.style.zIndex='9999';
           document.body.appendChild(flash);
           setTimeout(()=>flash.style.opacity='0',150);
           setTimeout(()=>flash.remove(),800);
-          // apri area admin
           location.href = 'admin.html';
         }
       });
     })();
   </script>
 
-  <!-- Service Worker registration (come nelle altre pagine) -->
+  <!-- SW -->
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
