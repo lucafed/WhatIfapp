@@ -170,6 +170,11 @@
     </div>
 
     <button id="go" class="cta" disabled data-i18n="next">Avanti</button>
+
+    <!-- CTA: Setup rapido (5 min) -->
+    <button id="fulltest" class="cta" style="background:linear-gradient(180deg,var(--accent2),var(--accent));margin-top:6px">
+      <span data-i18n="fulltest">Setup rapido (5 min)</span>
+    </button>
   </main>
 
   <footer>
@@ -216,13 +221,15 @@
         title:"Scopri il tuo What?f",
         lead:"Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro. <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili. <strong>What the F</strong> ti fa vivere visioni ironiche, creative e imprevedibili.",
         past:"Passato", future:"Futuro", whatif:"What if", wtf:"What the F",
-        next:"Avanti", privacy:"Privacy", terms:"Termini", info:"Info"
+        next:"Avanti", privacy:"Privacy", terms:"Termini", info:"Info",
+        fulltest:"Setup rapido (5 min)"
       },
       en:{
         title:"Discover your What?f",
         lead:"Imagine the choice you didn’t make… and the one you could make. Choose whether to look to the past or the future. <strong>What if</strong> explores realistic, reflective scenarios based on plausible choices. <strong>What the F</strong> lets you experience ironic, creative and unpredictable visions.",
         past:"Past", future:"Future", whatif:"What if", wtf:"What the F",
-        next:"Next", privacy:"Privacy", terms:"Terms", info:"Info"
+        next:"Next", privacy:"Privacy", terms:"Terms", info:"Info",
+        fulltest:"Quick setup (5 min)"
       }
     };
 
@@ -272,6 +279,7 @@
     // Logica selezioni + CTA
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
     const go    = document.getElementById('go');
+    const full  = document.getElementById('fulltest');
 
     function syncUI(){
       // chips selezionate
@@ -313,6 +321,17 @@
       if(go.disabled) return;
       location.href = 'second.html';
     });
+
+    // CTA full test
+    full.addEventListener('click', ()=>{
+      location.href = 'fulltest.html';
+    });
+
+    // Deep link ?fulltest=1
+    try{
+      const q = new URLSearchParams(location.search);
+      if (q.get('fulltest') === '1') location.href = 'fulltest.html';
+    }catch(_){}
 
     // Admin segreto: triplo tap sul titolo
     (function(){
