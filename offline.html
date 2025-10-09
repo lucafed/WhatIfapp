@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f – Offline</title>
+  <meta name="theme-color" content="#0A0F14" />
+  <link rel="manifest" href="/manifest.json" />
+  <style>
+    body{margin:0;min-height:100dvh;display:grid;place-items:center;background:#0A0F14;color:#E6F2F5;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .card{background:#141C22;border:1px solid #1c2a33;border-radius:16px;padding:20px;max-width:560px;box-shadow:0 10px 28px rgba(0,0,0,.25);text-align:center}
+    h1{margin:0 0 8px} p{margin:0 0 12px;color:#A0B2BA}
+    a{display:inline-block;margin-top:6px;background:linear-gradient(180deg,#00E0FF,#00B5CC);color:#001f26;
+      padding:10px 14px;border-radius:12px;font-weight:800;text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Sei offline</h1>
+    <p>Puoi comunque rileggere le pagine già aperte. Torna online per generare nuovi scenari.</p>
+    <a href="/">Torna alla Home</a>
+  </div>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js").catch(()=>{});
+      });
+    }
+  </script>
+</body>
+</html>
