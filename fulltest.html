@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What?f — Test completo</title>
+
+<!-- PWA -->
+<meta name="theme-color" content="#0B0B0C" />
+<link rel="manifest" href="/manifest.json" />
+<link rel="apple-touch-icon" href="/icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+<style>
+:root{
+  --bg:#0B0B0C; --bg2:#101414;
+  --fg:#EEF5F0; --muted:#A6B6AD;
+  --card:rgba(16,22,20,.55); --card-border:rgba(255,255,255,.10);
+  --chip:#0F1714;
+  --acc:#3A6B56; --acc2:#5A8C75; --ink:#06110B;
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0; min-height:100dvh; color:var(--fg);
+  background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+main{max-width:880px;margin:auto;padding:20px}
+.topbar{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:10px;background:linear-gradient(180deg,rgba(11,11,12,.9),rgba(11,11,12,0))}
+.btn{appearance:none;border:1px solid var(--card-border);background:var(--chip);color:var(--fg);
+  border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
+.btn.primary{border:none;background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink)}
+h1{font-size:clamp(24px,6vw,36px);margin:8px 0;color:var(--acc)}
+.lead{color:var(--muted);margin:0 0 14px}
+.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--card-border);
+  border-radius:16px;padding:18px;margin:14px 0;box-shadow:0 10px 28px rgba(0,0,0,.35)}
+.q{font-weight:900;font-size:clamp(18px,4.5vw,22px);margin:0 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{appearance:none;border:1px solid var(--card-border);background:var(--chip);color:#eaf3ee;padding:10px 14px;border-radius:12px;font-weight:800;cursor:pointer}
+.chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink)}
+input,select,textarea{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--card-border);border-radius:12px;padding:12px;font-size:16px}
+.progress{height:10px;background:var(--chip);border:1px solid var(--card-border);border-radius:999px;overflow:hidden}
+.bar{height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+.row{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap}
+.count{color:var(--muted);font-size:12px}
+.muted{color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <button class="btn" id="backTop">←</button>
+    <button class="btn" id="homeTop">🏠</button>
+  </div>
+
+  <main>
+    <h1 id="title">Test completo (5 minuti)</h1>
+    <p class="lead" id="lead">Costruiamo un profilo che sembri davvero il tuo. Poi, ogni giorno, piccole micro-domande lo affineranno.</p>
+
+    <div class="progress"><div class="bar" id="bar"></div></div>
+
+    <div class="card">
+      <p class="q" id="question">Domanda…</p>
+      <div id="answerBox"></div>
+
+      <div class="row">
+        <button class="btn" id="backBtn">← Indietro</button>
+        <span class="count" id="count">1 / 12</span>
+        <button class="btn primary" id="nextBtn" disabled>Continua →</button>
+      </div>
+      <p class="muted">I dati restano sul tuo dispositivo (localStorage).</p>
+    </div>
+  </main>
+
+<script>
+/* ===== tema dal prefs (whatif/wtf) ===== */
+(function(){
+  try{
+    const prefs=JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+    document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+  }catch(e){ document.documentElement.setAttribute('data-theme','whatif'); }
+})();
+</script>
+
+<script>
+const L=(localStorage.getItem('lang')||'it').toLowerCase();
+const T = {
+  it:{
+    title:"Test completo (5 minuti)",
+    lead:"Costruiamo un profilo che sembri davvero il tuo. Poi, ogni giorno, micro-domande lo affineranno.",
+    next:"Continua →", back:"Indietro",
+    qs:[
+      {k:"approach", t:"Quando decidi, come ti muovi di solito?", type:"chips",
+        opts:[["reason","Ragiono molto"],["instinct","Seguo l’istinto"],["adapt","Mi adatto al momento"],["balance","Cerco un equilibrio"]]},
+      {k:"motivation", t:"Cosa ti motiva di più nelle scelte importanti?", type:"chips",
+        opts:[["stability","Stabilità e sicurezza"],["growth","Crescita e scoperta"],["freedom","Libertà personale"],["recognition","Essere apprezzato"]]},
+      {k:"change", t:"Il cambiamento, per te, è…", type:"chips",
+        opts:[["fear","Un po’ spaventoso"],["stim","Stimolante"],["calm","Da valutare con calma"],["seek","Qualcosa che cerco"]]},
+      {k:"value", t:"Quale valore senti più tuo?", type:"chips",
+        opts:[["family","Famiglia e legami"],["auth","Autenticità"],["success","Successo personale"],["creativity","Creatività"]]},
+      {k:"selfview", t:"Come ti guardi quando pensi a te stesso?", type:"chips",
+        opts:[["serious","Mi prendo sul serio"],["irony","Con un po’ di ironia"],["reflect","Mi interrogo spesso"],["light","Cerco di non pensarci troppo"]]},
+      {k:"goal", t:"Il tuo obiettivo principale nei prossimi 12 mesi?", type:"text", ph:"Esempio: più equilibrio lavoro-vita"},
+      {k:"city", t:"La città base da cui parti?", type:"text", ph:"Es. Verona / L'Aquila"},
+      {k:"time_on", t:"Quando ti senti più “carico” (ora/giorno)?", type:"text", ph:"Es. mattina presto, mercoledì…"},
+      {k:"constraint", t:"Un vincolo realistico nelle prossime 2 settimane", type:"text", ph:"Budget, tempo, energia…"},
+      {k:"indicator", t:"Quale indicatore ti dice che stai andando bene?", type:"text", ph:"Ore di studio, clienti, km corsa…"},
+      {k:"domain", t:"Quale area vuoi esplorare di più con What?f?", type:"chips",
+        opts:[["work","Lavoro/Carriera"],["relationships","Relazioni"],["money","Soldi"],["place","Luogo"],["study","Studio"],["wellbeing","Benessere"]]},
+      {k:"risk", t:"Come ti senti rispetto al rischio?", type:"chips",
+        opts:[["low","Basso"],["mid","Medio"],["high","Alto"]]}
+    ]
+  },
+  en:{ /* (se vuoi attivare inglese, puoi tradurre qui) */ }
+}[L] || {};
+
+document.getElementById('title').textContent=T.title;
+document.getElementById('lead').textContent=T.lead;
+
+const answers = {};
+let idx = 0;
+
+const qEl = document.getElementById('question');
+const box = document.getElementById('answerBox');
+const nextBtn = document.getElementById('nextBtn');
+const backBtn = document.getElementById('backBtn');
+const countEl = document.getElementById('count');
+const bar = document.getElementById('bar');
+
+function render(){
+  const total = T.qs.length;
+  const q = T.qs[idx];
+  qEl.textContent = q.t;
+  nextBtn.disabled = !(answers[q.k]);
+
+  // UI risposta
+  if(q.type==='chips'){
+    box.innerHTML = `<div class="chips">${q.opts.map(([v,l])=>(
+      `<button class="chip ${answers[q.k]===v?'sel':''}" data-v="${v}">${l}</button>`
+    )).join('')}</div>`;
+    box.querySelectorAll('.chip').forEach(b=>{
+      b.addEventListener('click',()=>{
+        box.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel'));
+        b.classList.add('sel');
+        answers[q.k]=b.dataset.v;
+        nextBtn.disabled=false;
+      });
+    });
+  } else { // text
+    box.innerHTML = `<input id="txt" type="text" placeholder="${q.ph||''}" />`;
+    const inp = document.getElementById('txt');
+    if(answers[q.k]) inp.value = answers[q.k];
+    inp.addEventListener('input',()=>{ answers[q.k]=inp.value.trim(); nextBtn.disabled=!answers[q.k]; });
+  }
+
+  countEl.textContent = `${idx+1} / ${total}`;
+  bar.style.width = `${Math.max(6, Math.round((idx/total)*100))}%`;
+}
+render();
+
+backBtn.addEventListener('click',()=>{
+  if(idx===0){ history.back(); return; }
+  idx--; render();
+});
+nextBtn.addEventListener('click',()=>{
+  if(!answers[T.qs[idx].k]) return;
+  if(idx < T.qs.length-1){ idx++; render(); }
+  else { finish(); }
+});
+
+document.getElementById('backTop').addEventListener('click',()=>history.back());
+document.getElementById('homeTop').addEventListener('click',()=>location.href='index.html');
+
+function finish(){
+  // Calcola archetipi dai primi 5 come nel tuo quiz originale
+  const WEIGHTS={approach:{reason:{R:2,C:1},instinct:{V:2},adapt:{M:2},balance:{C:2,M:1}},
+                 motivation:{stability:{C:2,M:1},growth:{R:1,V:2},freedom:{V:2},recognition:{M:2}},
+                 change:{fear:{C:1,M:1},stim:{V:2,R:1},calm:{R:1,C:1},seek:{V:2}},
+                 value:{family:{M:2,C:1},auth:{R:1,M:1},success:{C:2},creativity:{V:2}},
+                 selfview:{serious:{C:1,R:1},irony:{V:1,M:1},reflect:{R:2},light:{V:1}}};
+  const scores={R:0,C:0,V:0,M:0};
+  ["approach","motivation","change","value","selfview"].forEach(k=>{
+    const v=answers[k]; const w=WEIGHTS[k]?.[v]||{};
+    Object.entries(w).forEach(([A,pts])=>scores[A]+=pts);
+  });
+  const max=Math.max(1,...Object.values(scores)); const to100=x=>Math.round((x/max)*100);
+  const archetypes={Ricercatore:to100(scores.R),Costruttore:to100(scores.C),Visionario:to100(scores.V),Mediatore:to100(scores.M)};
+
+  // Deriva profilo
+  const base = JSON.parse(localStorage.getItem('whatif_profile')||'{}');
+  const profilePatch = {
+    goal: answers.goal || base.goal || "",
+    city: answers.city || base.city || "",
+    values: (()=>{
+      const map={family:'famiglia e legami',auth:'autenticità',success:'successo personale',creativity:'creatività'};
+      return answers.value ? [map[answers.value]] : (base.values||[]);
+    })(),
+    style: {reason:'analitico',instinct:'intuitivo',adapt:'adattivo',balance:'equilibrato'}[answers.approach] || base.style,
+    change_attitude: {fear:'cauto',stim:'stimolato dal cambiamento',calm:'valutativo',seek:'cerca il cambiamento'}[answers.change] || base.change_attitude,
+    motivation: {stability:'stabilità',growth:'crescita',freedom:'libertà',recognition:'riconoscimento'}[answers.motivation] || base.motivation,
+    self_view: {serious:'serio',irony:'ironico',reflect:'introspettivo',light:'leggero'}[answers.selfview] || base.self_view,
+    domain_focus: answers.domain || base.domain_focus || "",
+    anchors_extra:{
+      time_on: answers.time_on || (base.anchors_extra?.time_on)||"",
+      constraint: answers.constraint || (base.anchors_extra?.constraint)||"",
+      indicator: answers.indicator || (base.anchors_extra?.indicator)||""
+    }
+  };
+
+  localStorage.setItem('whatif_profile', JSON.stringify({...base, ...profilePatch}));
+  localStorage.setItem('whatif_archetypes', JSON.stringify(archetypes));
+  localStorage.setItem('whatif_full_done','1');
+  localStorage.setItem('whatif_quiz5_done','1'); // così third.html passa alle micro giornaliere
+
+  // piccolo update “ultimo aggiornamento” per lo score
+  const today=new Date().toISOString().split('T')[0];
+  localStorage.setItem('whatif_last_update', today);
+
+  // porta l’utente a scrivere la domanda
+  location.href='fourth.html';
+}
+</script>
+
+<!-- SW -->
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
