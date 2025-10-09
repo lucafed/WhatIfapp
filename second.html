@@ -213,7 +213,9 @@
 
         <div class="actions">
           <button type="button" class="btn ghost" id="backBtn">Indietro</button>
-          <div style="display:flex;gap:8px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <!-- NEW: Test completo (5 min) -->
+            <button type="button" class="btn ghost" id="fulltestBtn">🧭 Test completo (5 min)</button>
             <button type="button" class="btn ghost" id="skipBtn">Salta → domanda</button>
             <button type="submit" class="btn primary" id="nextBtn">Continua</button>
           </div>
@@ -255,6 +257,8 @@
         mq3:"Una persona/luogo che conta nel tuo scenario?",
         micro_save:"Salva micro-dati", micro_skip:"Salta",
         backBtn:"Indietro", next:"Continua", skip:"Salta → domanda",
+        /* NEW: CTA full test */
+        fulltest_btn:"🧭 Test completo (5 min)",
         err_required:"Per continuare seleziona Sesso, Età e Fase.",
         // Indicatore
         know:"Personalizzazione", missing:"Mancano:", miss_identity:"Identità/ruolo", miss_routine:"Routine/indicatori",
@@ -278,6 +282,8 @@
         mq3:"One person/place that matters in your scenario?",
         micro_save:"Save micro-data", micro_skip:"Skip",
         backBtn:"Back", next:"Continue", skip:"Skip → question",
+        /* NEW: CTA full test */
+        fulltest_btn:"🧭 Full test (5 min)",
         err_required:"To continue please select Gender, Age and Phase.",
         // Indicator
         know:"Personalization", missing:"Missing:", miss_identity:"Identity/role", miss_routine:"Routine/indicators",
@@ -339,6 +345,9 @@
       $('#backBtn').textContent = d.backBtn;
       $('#nextBtn').textContent = d.next;
       $('#skipBtn').textContent = d.skip;
+
+      // NEW: label bottone full test
+      $('#fulltestBtn').textContent = d.fulltest_btn;
 
       // Indicatore labels
       $('#knowLabel').textContent = d.know;
@@ -541,6 +550,11 @@
       }
       const firstDone = LS.getItem('whatif_quiz5_done') === '1';
       location.href = firstDone ? 'fourth.html' : 'third.html';
+    });
+
+    // NEW: full test
+    document.getElementById('fulltestBtn').addEventListener('click', ()=>{
+      location.href = 'fulltest.html';
     });
 
     // form save
