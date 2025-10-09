@@ -3,56 +3,85 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – About you</title>
+  <title>What?f – Su di te</title>
 
   <!-- PWA -->
-  <meta name="theme-color" content="#0B0B0C" />
+  <meta name="theme-color" content="#0A0F14" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <style>
-    :root{--bg:#0B0B0C;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#1C57A0;--accent2:#FFEC01;--ink:#0A0E12}
-    html[data-theme="wtf"]{--bg:#0B0B0C;--card:#101614;--fg:#EEF5F0;--muted:#A6B6AD;--accent:#3A6B56;--accent2:#5A8C75;--ink:#06110B}
+    :root{
+      /* Base dark */
+      --bg:#0A0F14; --fg:#E6F2F5; --muted:#A0B2BA;
+      --card:#0C141B; --card-border:#1b2831; --chip:#0f1820;
+      --line:#1b2a34; --shadow:rgba(0,0,0,.30);
+      /* Accenti (colori logo home) */
+      --acc:#00E0FF;   /* turchese chiaro */
+      --acc2:#00B5CC;  /* turchese scuro */
+      --ink:#001F26;   /* inchiostro su CTA */
+    }
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 25% 20%, #0E1724 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    .topbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:linear-gradient(180deg,rgba(11,11,12,.9),rgba(11,11,12,0))}
-    .back-btn,.home-btn,.lang-btn{appearance:none;border:1px solid #1f2c36;background:#0f1820;color:var(--fg);border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
+    html,body{
+      height:100%; margin:0; color:var(--fg);
+      background: radial-gradient(900px 700px at 25% 20%, #0E1724 0%, var(--bg) 60%);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    }
+    .topbar{
+      position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between;
+      padding:8px 10px; background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))
+    }
+    .back-btn,.home-btn,.lang-btn{
+      appearance:none; border:1px solid #1f2c36; background:var(--chip); color:var(--fg);
+      border-radius:12px; padding:8px 12px; font-weight:700; cursor:pointer
+    }
     .lang-btn{border-radius:999px}
-    main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
+    main{min-height:100%; display:flex; flex-direction:column; align-items:center; gap:14px; padding:6px 14px 26px}
     .wrap{width:min(100%,980px)}
-    h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
-    .blurb{color:#d7e8ec;margin:0 0 14px;font-size:clamp(14px,4vw,18px);line-height:1.45}
-    .banner{display:none;background:#0b151d;border:1px dashed #1c2b36;color:#dff6fb;border-radius:14px;padding:12px;margin-bottom:8px}
-    .banner strong{color:var(--accent)}
+    h1{margin:6px 0 6px; font-size:clamp(24px,6vw,36px); color:var(--acc)}
+    .blurb{color:#d7e8ec; margin:0 0 14px; font-size:clamp(14px,4vw,18px); line-height:1.45}
 
-    .know{background:#0c141b;border:1px solid #1b2831;border-radius:16px;padding:14px;margin-top:6px}
-    .know-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-    .meter{position:relative;height:12px;background:#0f1820;border:1px solid #1b2a34;border-radius:999px;overflow:hidden}
-    .meter-fill{height:100%;width:0;background:linear-gradient(180deg,var(--accent),var(--accent2))}
-    .know-score{font-weight:800;color:var(--accent)}
-    .miss{margin-top:8px;color:#cfe6e9;font-size:13px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-    .chip{background:#0f1820;border:1px solid #1b2a34;color:#cfe3e7;border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer}
+    .banner{display:none; background:#0b151d; border:1px dashed #1c2b36; color:#dff6fb; border-radius:14px; padding:12px; margin-bottom:8px}
+    .banner strong{color:var(--acc)}
 
-    form{background:#0c141b;border:1px solid #1b2831;border-radius:16px;padding:14px;display:grid;gap:12px;margin-top:10px}
-    label{font-weight:700;margin-bottom:6px;display:block}
-    .row{display:grid;gap:12px}
+    /* Indicatore conoscenza */
+    .know{background:#0c141b; border:1px solid var(--card-border); border-radius:16px; padding:14px; margin-top:6px}
+    .know-head{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
+    .meter{position:relative; height:12px; background:var(--chip); border:1px solid var(--line); border-radius:999px; overflow:hidden}
+    .meter-fill{height:100%; width:0; background:linear-gradient(180deg,var(--acc),var(--acc2))}
+    .know-score{font-weight:800; color:var(--acc)}
+    .miss{margin-top:8px; color:#cfe6e9; font-size:13px; display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+    .chip{background:var(--chip); border:1px solid var(--line); color:#cfe3e7; border-radius:999px; padding:6px 10px; font-size:12px; cursor:pointer}
+
+    /* Pulsanti rapidi profilo */
+    .quick{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+    .btn{appearance:none; border:1px solid var(--line); background:var(--chip); color:var(--fg);
+      border-radius:12px; padding:10px 14px; font-weight:800; cursor:pointer}
+    .btn.primary{border:none; background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink); box-shadow:0 0 20px rgba(0,181,204,.25)}
+    .btn.ghost{background:#152029; color:#cfe6eb; border:1px solid #253342}
+
+    /* Form & micro */
+    form{background:#0c141b; border:1px solid var(--card-border); border-radius:16px; padding:14px; display:grid; gap:12px; margin-top:10px}
+    label{font-weight:700; margin-bottom:6px; display:block}
+    .row{display:grid; gap:12px}
     @media (min-width:640px){ .row.two{grid-template-columns:1fr 1fr} .row.three{grid-template-columns:1fr 1fr 1fr} }
-    select,input[type="text"],textarea{width:100%;background:#0f1820;color:var(--fg);border:1px solid #1f2c36;border-radius:12px;padding:12px;font-size:16px}
-    textarea{min-height:110px;resize:vertical}
-    .muted{color:var(--muted);font-size:13px}
-    .actions{display:flex;gap:10px;justify-content:space-between;margin-top:6px;flex-wrap:wrap}
-    .btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer}
-    .btn.ghost{background:#152029;color:#cfe6eb;border:1px solid #253342}
-    .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink)}
-    .btn[disabled]{background:#2a3b45;color:#7f98a2;cursor:not-allowed}
-    .error{color:#ffb3b3;background:#3a1414;border:1px solid #5a2222;border-radius:10px;padding:10px 12px;display:none}
+    select,input[type="text"],textarea{width:100%; background:var(--chip); color:var(--fg); border:1px solid #1f2c36; border-radius:12px; padding:12px; font-size:16px}
+    textarea{min-height:110px; resize:vertical}
+    .muted{color:var(--muted); font-size:13px}
+    .actions{display:flex; gap:10px; justify-content:space-between; margin-top:6px; flex-wrap:wrap}
+    .error{color:#ffb3b3; background:#3a1414; border:1px solid #5a2222; border-radius:10px; padding:10px 12px; display:none}
     .error.show{display:block}
-    .micro{display:none;background:#0c141b;border:1px solid #1b2831;border-radius:16px;padding:14px;margin-top:6px}
+
+    /* Micro giornaliere */
+    .micro{display:none; background:#0c141b; border:1px solid var(--card-border); border-radius:16px; padding:14px; margin-top:6px}
     .micro-q{margin:10px 0}
-    .micro-q label{display:block;margin:0 0 6px}
-    .micro-q input{width:100%;background:#0f1820;color:var(--fg);border:1px solid #1f2c36;border-radius:10px;padding:10px}
+    .micro-q label{display:block; margin:0 0 6px}
+    .micro-q input{width:100%; background:var(--chip); color:var(--fg); border:1px solid #1f2c36; border-radius:10px; padding:10px}
+
+    @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   </style>
 </head>
 <body>
@@ -61,7 +90,7 @@
       <button id="backTop" class="back-btn">←</button>
       <button id="homeTop" class="home-btn">🏠</button>
     </div>
-    <button id="langToggle" class="lang-btn">🇮🇹 IT</button>
+    <button id="langToggle" class="lang-btn">🌐</button>
   </div>
 
   <main>
@@ -69,7 +98,9 @@
       <div id="dailyBanner" class="banner"></div>
 
       <h1 id="title">Parlami di te</h1>
-      <p class="blurb" id="blurb">Raccontami brevemente chi sei, cosa stai vivendo o cosa ti spinge a usare What?f. Questo aiuterà l’AI a comprenderti meglio e risponderti in modo più personale.</p>
+      <p class="blurb" id="blurb">
+        Qualche dettaglio e le risposte iniziano a suonare come te.
+      </p>
 
       <!-- Indicatore di personalizzazione -->
       <div class="know" id="knowBox">
@@ -79,7 +110,12 @@
         </div>
         <div class="miss" id="missRow">
           <span id="missLabel">Mancano:</span>
-          <!-- chips suggerimenti -->
+        </div>
+
+        <!-- Azioni rapide profilo -->
+        <div class="quick">
+          <button type="button" class="btn" id="improveBtn">✨ Migliora profilo (30s)</button>
+          <button type="button" class="btn ghost" id="fullTestBtn">🔍 Test completo (5 min)</button>
         </div>
       </div>
 
@@ -152,7 +188,7 @@
           <textarea id="more" placeholder="Esempio: lavoro nel digitale, sto pensando di cambiare città, ho due figli…"></textarea>
         </div>
 
-        <!-- Micro-domande giornaliere (mostrate una volta al giorno all'apertura di questa pagina) -->
+        <!-- Micro-domande giornaliere -->
         <div id="microBox" class="micro">
           <h3 style="margin:6px 0" id="micro_title">3 micro-domande di oggi</h3>
           <div class="micro-q">
@@ -174,10 +210,8 @@
         </div>
 
         <div class="actions">
-          <button type="button" class="btn ghost" id="backBtn">Indietro</button>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <!-- NEW: link al test completo -->
-            <button type="button" class="btn ghost" id="fullTestBtn">🔍 Test completo (5 min)</button>
+          <button type="button" class="btn ghost" id="backBtn">← Indietro</button>
+          <div style="display:flex;gap:8px">
             <button type="button" class="btn ghost" id="skipBtn">Salta → domanda</button>
             <button type="submit" class="btn primary" id="nextBtn">Continua</button>
           </div>
@@ -187,22 +221,12 @@
   </main>
 
   <script>
-    /* ===== Tema dal prefs (whatif/wtf) ===== */
-    (function(){
-      try{
-        const prefs=JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-        document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-      }catch(e){ document.documentElement.setAttribute('data-theme','whatif'); }
-    })();
-  </script>
-
-  <script>
-    /* ================= I18N ================= */
+    /* ===== I18N ===== */
     const I18N = {
       it:{
         title:"Parlami di te",
-        blurb:"Raccontami brevemente chi sei, cosa stai vivendo o cosa ti spinge a usare What?f. Questo aiuterà l’AI a comprenderti meglio e risponderti in modo più personale.",
-        back:"Indietro", home:"Home",
+        blurb:"Qualche dettaglio e le risposte iniziano a suonare come te.",
+        back:"Indietro", home:"Home", lang:"🌐",
         name_lbl:"Nome", city_lbl:"Città",
         gender_lbl:"Sesso", choose:"Seleziona…", gender_m:"Uomo", gender_f:"Donna", gender_o:"Altro", gender_n:"Preferisco non dirlo",
         age_lbl:"Età", age_u18:"-18",
@@ -216,17 +240,19 @@
         mq3:"Una persona/luogo che conta nel tuo scenario?",
         micro_save:"Salva micro-dati", micro_skip:"Salta",
         backBtn:"Indietro", next:"Continua", skip:"Salta → domanda",
-        fulltest:"🔍 Test completo (5 min)",
         err_required:"Per continuare seleziona Sesso, Età e Fase.",
         // Indicatore
         know:"Personalizzazione", missing:"Mancano:", miss_identity:"Identità/ruolo", miss_routine:"Routine/indicatori",
         miss_constraints:"Vincoli", miss_goals:"Obiettivi", miss_places:"Luoghi", miss_relations:"Relazioni", miss_risk:"Rischio",
-        bar_hint:"Più dettagli → più scenari plausibili. Le chip ti portano al punto giusto."
+        bar_hint:"Più dettagli → più scenari plausibili. Le chip ti portano al punto giusto.",
+        // Azioni rapide
+        improve:"✨ Migliora profilo (30s)",
+        fulltest:"🔍 Test completo (5 min)"
       },
       en:{
         title:"Tell me about you",
-        blurb:"Briefly share who you are, what you’re going through, or why you’re using What?f. This helps the AI understand you better and reply more personally.",
-        back:"Back", home:"Home",
+        blurb:"A few details and the answers start sounding like you.",
+        back:"Back", home:"Home", lang:"🌐",
         name_lbl:"Name", city_lbl:"City",
         gender_lbl:"Gender", choose:"Choose…", gender_m:"Male", gender_f:"Female", gender_o:"Other", gender_n:"Prefer not to say",
         age_lbl:"Age", age_u18:"-18",
@@ -240,11 +266,12 @@
         mq3:"One person/place that matters in your scenario?",
         micro_save:"Save micro-data", micro_skip:"Skip",
         backBtn:"Back", next:"Continue", skip:"Skip → question",
-        fulltest:"🔍 Full test (5 min)",
         err_required:"To continue please select Gender, Age and Phase.",
         know:"Personalization", missing:"Missing:", miss_identity:"Identity/role", miss_routine:"Routine/indicators",
         miss_constraints:"Constraints", miss_goals:"Goals", miss_places:"Places", miss_relations:"Relationships", miss_risk:"Risk",
-        bar_hint:"More detail → more plausible scenarios. Chips take you to the right field."
+        bar_hint:"More detail → more plausible scenarios. Chips take you to the right field.",
+        improve:"✨ Improve profile (30s)",
+        fulltest:"🔍 Full test (5 min)"
       }
     };
 
@@ -260,8 +287,10 @@
 
       $('#title').textContent = d.title;
       $('#blurb').textContent = d.blurb;
+
       $('#backTop').textContent = '← ' + d.back;
       $('#homeTop').textContent = '🏠 ' + d.home;
+      $('#langToggle').textContent = d.lang;
 
       $('#name_lbl').textContent = d.name_lbl;
       $('#city_lbl').textContent = d.city_lbl;
@@ -303,24 +332,39 @@
       $('#nextBtn').textContent = d.next;
       $('#skipBtn').textContent = d.skip;
 
-      // NEW
-      $('#fullTestBtn').textContent = d.fulltest;
-
+      // Indicatore labels
       $('#knowLabel').textContent = d.know;
       $('#missLabel').textContent = d.missing;
       $('#knowBox').title = d.bar_hint;
 
-      $('#langToggle').textContent = getLang()==='en' ? '🇬🇧 EN' : '🇮🇹 IT';
+      // Quick actions
+      $('#improveBtn').textContent = d.improve;
+      $('#fullTestBtn').textContent = d.fulltest;
 
+      // error bind
       $('#aboutForm').dataset.err = d.err_required;
     }
 
-    // init lingua + tema
     if (!LS.getItem('lang')) LS.setItem('lang', getLang());
     applyI18N();
-    $('#langToggle').addEventListener('click', ()=> setLang(getLang()==='en'?'it':'en'));
+
+    // topbar buttons
     $('#backTop').addEventListener('click', ()=> history.back());
     $('#homeTop').addEventListener('click', ()=> location.href='index.html');
+    $('#langToggle').addEventListener('click', ()=>{
+      const cur = getLang();
+      setLang(cur==='en'?'it':'en');
+    });
+
+    // Quick actions
+    document.getElementById('improveBtn').addEventListener('click', ()=>{
+      try{
+        localStorage.removeItem('whatif_quiz5_done');
+        localStorage.removeItem('whatif_last_update');
+      }catch(e){}
+      location.href='third.html';
+    });
+    document.getElementById('fullTestBtn').addEventListener('click', ()=> location.href='fulltest.html');
 
     // show daily banner + micro once per day
     function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -335,28 +379,51 @@
 
     // ====== INDICATORE: calcolo punteggio ======
     function readJSON(k,def={}){ try{ return JSON.parse(LS.getItem(k)||JSON.stringify(def)); }catch{ return def; } }
-    function daysBetween(iso1, iso2){ if(!iso1||!iso2) return 999; const a=new Date(iso1), b=new Date(iso2); return Math.round((b-a)/(1000*60*60*24)); }
+    function daysBetween(iso1, iso2){
+      if(!iso1||!iso2) return 999;
+      const a=new Date(iso1), b=new Date(iso2);
+      return Math.round((b-a)/(1000*60*60*24));
+    }
     function last(arr){ return Array.isArray(arr) && arr.length ? arr[arr.length-1] : null; }
 
     function computeKnowledge(){
+      const Ld = I18N[getLang()] || I18N.it;
+
       const profile = readJSON('whatif_profile',{});
       const micro   = readJSON('whatif_micro',{});
       const clar    = readJSON('whatif_clarify',{date:null,used:0});
-      const microLog= readJSON('whatif_micro_log',[]);
-      const lastUpd = LS.getItem('whatif_last_update');
-      let cover = 0; const miss = [];
+      const microLog= readJSON('whatif_micro_log',[]); // array di date
+      const lastUpd = LS.getItem('whatif_last_update'); // ISO day
 
-      const hasIdentity = !!(profile.name || profile.role); cover += hasIdentity ? 8 : 0; if(!hasIdentity) miss.push('identity');
-      const hasRoutine  = !!(micro.indicatore); cover += hasRoutine ? 8 : 0; if(!hasRoutine) miss.push('routine');
-      const hasConstraints = !!(micro.vincolo_2w); cover += hasConstraints ? 8 : 0; if(!hasConstraints) miss.push('constraints');
-      const hasGoals = !!(profile.goal); cover += hasGoals ? 8 : 0; if(!hasGoals) miss.push('goals');
-      const hasPlaces= !!(profile.city || micro.punto_riferimento); cover += hasPlaces ? 8 : 0; if(!hasPlaces) miss.push('places');
-      const hasRelations= !!(micro.persona_chiave); cover += hasRelations ? 8 : 0; if(!hasRelations) miss.push('relations');
-      const hasRisk= !!(micro.rischio || micro.tolleranza_rischio); cover += hasRisk ? 7 : 0; if(!hasRisk) miss.push('risk');
+      let cover = 0;
+      const miss = [];
+
+      const hasIdentity = !!(profile.name || profile.role);
+      cover += hasIdentity ? 8 : 0; if(!hasIdentity) miss.push('identity');
+
+      const hasRoutine = !!(micro.indicatore);
+      cover += hasRoutine ? 8 : 0; if(!hasRoutine) miss.push('routine');
+
+      const hasConstraints = !!(micro.vincolo_2w);
+      cover += hasConstraints ? 8 : 0; if(!hasConstraints) miss.push('constraints');
+
+      const hasGoals = !!(profile.goal);
+      cover += hasGoals ? 8 : 0; if(!hasGoals) miss.push('goals');
+
+      const hasPlaces = !!(profile.city || micro.punto_riferimento);
+      cover += hasPlaces ? 8 : 0; if(!hasPlaces) miss.push('places');
+
+      const hasRelations = !!(micro.persona_chiave);
+      cover += hasRelations ? 8 : 0; if(!hasRelations) miss.push('relations');
+
+      const hasRisk = !!(micro.rischio || micro.tolleranza_rischio);
+      cover += hasRisk ? 7 : 0; if(!hasRisk) miss.push('risk');
 
       const vals = Object.values(profile).concat(Object.values(micro)).filter(v=>typeof v==='string');
       let usable = 0;
-      const numRe = /\b\d+([.,]\d+)?\b/; const timeRe=/\b(\d{1,2}[:.]\d{2}|mattina|pomeriggio|sera|am|pm)\b/i; const locRe=/\b(centro|stazione|ufficio|palestra|bar|parco|centro storico)\b/i;
+      const numRe = /\b\d+([.,]\d+)?\b/;
+      const timeRe= /\b(\d{1,2}[:.]\d{2}|mattina|pomeriggio|sera|am|pm)\b/i;
+      const locRe = /\b(centro|stazione|ufficio|palestra|bar|parco|centro storico)\b/i;
       vals.forEach(v=>{ if (usable>=10) return; if (numRe.test(v) || timeRe.test(v) || locRe.test(v)) usable++; });
       let quality = Math.min(10, usable);
       if (clar && clar.date === today && (clar.used||0)>0) quality += 5;
@@ -376,7 +443,12 @@
       let recencyPts = 0;
       if (lastDay){
         const gap = daysBetween(lastDay, today);
-        if (gap<=2) recencyPts=10; else if (gap<=5) recencyPts=8; else if (gap<=8) recencyPts=6; else if (gap<=11) recencyPts=4; else if (gap<=14) recencyPts=2; else recencyPts=0;
+        if (gap<=2) recencyPts=10;
+        else if (gap<=5) recencyPts=8;
+        else if (gap<=8) recencyPts=6;
+        else if (gap<=11) recencyPts=4;
+        else if (gap<=14) recencyPts=2;
+        else recencyPts=0;
       }
       const fresh = Math.min(20, streakPts + recencyPts);
 
@@ -387,9 +459,14 @@
     function renderKnowledge(){
       const d = I18N[getLang()] || I18N.it;
       const k = computeKnowledge();
+
       document.getElementById('knowValue').textContent = `${k.total}/100`;
       document.getElementById('knowFill').style.width = `${k.total}%`;
-      const map = {identity:d.miss_identity,routine:d.miss_routine,constraints:d.miss_constraints,goals:d.miss_goals,places:d.miss_places,relations:d.miss_relations,risk:d.miss_risk};
+
+      const map = {
+        identity: d.miss_identity, routine: d.miss_routine, constraints: d.miss_constraints,
+        goals: d.miss_goals, places: d.miss_places, relations: d.miss_relations, risk: d.miss_risk
+      };
       const missRow = document.getElementById('missRow');
       [...missRow.querySelectorAll('.chip')].forEach(n=>n.remove());
       k.miss.forEach(key=>{
@@ -420,7 +497,7 @@
     // micro actions
     document.getElementById('microSkip').addEventListener('click', ()=>{
       document.getElementById('microBox').style.display='none';
-      LS.setItem('whatif_daily_seen', (new Date()).toISOString().split('T')[0]);
+      LS.setItem(KEY_DAY, today);
     });
     document.getElementById('microSave').addEventListener('click', ()=>{
       const patch = {};
@@ -428,26 +505,28 @@
       const v2 = document.getElementById('mq2').value.trim(); if (v2) patch['indicatore'] = v2;
       const v3 = document.getElementById('mq3').value.trim(); if (v3) patch['punto_riferimento'] = v3;
 
-      const micro = JSON.parse(LS.getItem('whatif_micro')||'{}');
+      const micro = (function(){ try{return JSON.parse(LS.getItem('whatif_micro')||'{}');}catch{return {}} })();
       Object.assign(micro, patch);
       LS.setItem('whatif_micro', JSON.stringify(micro));
 
-      const log = JSON.parse(LS.getItem('whatif_micro_log')||'[]');
-      const today=(new Date()).toISOString().split('T')[0];
+      const log = (function(){ try{return JSON.parse(LS.getItem('whatif_micro_log')||'[]');}catch{return []} })();
       if (!log.includes(today)) log.push(today);
       LS.setItem('whatif_micro_log', JSON.stringify(log));
       LS.setItem('whatif_last_update', today);
 
       document.getElementById('microBox').style.display='none';
-      LS.setItem('whatif_daily_seen', today);
+      LS.setItem(KEY_DAY, today);
 
       renderKnowledge();
     });
 
-    // back / skip / full test
+    // back / skip
     document.getElementById('backBtn').addEventListener('click', ()=> history.back());
-    document.getElementById('skipBtn').addEventListener('click', ()=> location.href='fourth.html');
-    document.getElementById('fullTestBtn').addEventListener('click', ()=> location.href='fulltest.html');
+    document.getElementById('skipBtn').addEventListener('click', ()=>{
+      const base = (function(){ try{return JSON.parse(LS.getItem('whatif_profile')||'{}');}catch{return {}} })();
+      if (base.gender || base.age || base.phase) location.href='fourth.html';
+      else alert(getLang()==='en'?'Fill basic profile once before skipping.':'Compila una volta il profilo base prima di saltare.');
+    });
 
     // form save
     const form = document.getElementById('aboutForm');
@@ -456,7 +535,6 @@
     (function preload(){
       try{
         const p = JSON.parse(LS.getItem('whatif_profile')||'{}');
-        if (!p) return;
         if (p.name) document.getElementById('name').value = p.name;
         if (p.city) document.getElementById('city').value = p.city;
         if (p.gender) document.getElementById('gender').value = p.gender;
@@ -489,11 +567,11 @@
         more: document.getElementById('more').value.trim()
       };
       LS.setItem('whatif_profile', JSON.stringify(profile));
-      const today=(new Date()).toISOString().split('T')[0];
       LS.setItem('whatif_last_update', today);
 
       renderKnowledge();
-      // decidiamo dove andare: prima volta quiz core (third) o dritti alla domanda
+
+      // Prima volta? porta al quiz core (third) oppure direttamente alla domanda (fourth)
       const firstDone = LS.getItem('whatif_quiz5_done') === '1';
       location.href = firstDone ? 'fourth.html' : 'third.html';
     });
