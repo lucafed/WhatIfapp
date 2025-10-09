@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f – Domande</title>
   <meta name="theme-color" content="#0A0F14" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <style>
     :root{
       --bg:#0A0F14; --fg:#ffffff; --muted:#A0B2BA;
@@ -147,33 +151,27 @@
     {k:'m_well2', tag:'wellbeing', t:I.m_well2},
   ];
 
-  // letture
   const answers = JSON.parse(LS.getItem('whatif_quiz5')||'{}');
   const microAns = JSON.parse(LS.getItem('whatif_micro')||'{}');
-  const TAGS = JSON.parse(LS.getItem('whatif_tags')||'[]'); // ← dall'ultima domanda in fourth.html
+  const TAGS = JSON.parse(LS.getItem('whatif_tags')||'[]');
 
   let idx=0, ITEMS=[];
 
   if (!FIRST_DONE){
     ITEMS = CORE.map(q=>({mode:'core', ...q}));
   } else {
-    ITEMS = pickContextualSet(TAGS); // 3 micro basate sui tag
+    ITEMS = pickContextualSet(TAGS);
   }
   countEl.textContent = `1 / ${ITEMS.length}`;
 
   function pickContextualSet(tags){
     const used = new Set(JSON.parse(LS.getItem('whatif_micro_used')||'[]'));
-    // 1) preferisci matching tag non usati
     const pref = POOL.filter(x=>tags.includes(x.tag) && !used.has(x.k));
-    // 2) poi matching tag usati
     const pref2 = POOL.filter(x=>tags.includes(x.tag) && used.has(x.k));
-    // 3) poi altri non usati
     const other = POOL.filter(x=>!tags.includes(x.tag) && !used.has(x.k));
     const pool = [...pref, ...pref2, ...other];
-    // de-dup
     const uniq=[]; const seen=new Set();
     for(const it of pool){ if(!seen.has(it.k)){ uniq.push(it); seen.add(it.k);} }
-    // prendi i primi 3
     return uniq.slice(0,3).map(x=>({mode:'micro', k:x.k, t:x.t}));
   }
 
@@ -227,7 +225,6 @@
 
   function finish(){
     if (!FIRST_DONE){
-      // calcola archetipi + merge profilo
       const scores={R:0,C:0,V:0,M:0};
       Object.entries(answers).forEach(([k,v])=>{ const w=WEIGHTS[k]?.[v]||{}; Object.entries(w).forEach(([A,pts])=>scores[A]+=pts); });
       const max=Math.max(1,...Object.values(scores)); const to100=x=>Math.round((x/max)*100);
@@ -243,7 +240,6 @@
       const base=JSON.parse(LS.getItem('whatif_profile')||'{}');
       const merged = {...base, anchors_extra: {...(base.anchors_extra||{}), ...microAns}};
       LS.setItem('whatif_profile', JSON.stringify(merged));
-      // segna usate
       const used = JSON.parse(LS.getItem('whatif_micro_used')||'[]');
       const newUsed = Array.from(new Set([...used, ...ITEMS.map(x=>x.k)]));
       LS.setItem('whatif_micro_used', JSON.stringify(newUsed));
@@ -261,6 +257,15 @@
     const motivation=a.motivation==='stability'?(L==='en'?'stability':'stabilità'):a.motivation==='growth'?(L==='en'?'growth':'crescita'):a.motivation==='freedom'?(L==='en'?'freedom':'libertà'):(L==='en'?'recognition':'riconoscimento');
     const self_view=a.selfview==='serious'?(L==='en'?'serious':'serio'):a.selfview==='irony'?(L==='en'?'ironic':'ironico'):a.selfview==='reflect'?(L==='en'?'introspective':'introspettivo'):(L==='en'?'light':'leggero');
     return {values,style,change_attitude,motivation,self_view};
+  }
+</script>
+
+<!-- Service Worker registration -->
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});
+    });
   }
 </script>
 </body>
