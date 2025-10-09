@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>What?f – La tua domanda</title>
 <meta name="theme-color" content="#0A0F14" />
+<link rel="manifest" href="/manifest.json" />
+<link rel="apple-touch-icon" href="/icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <style>
   :root { --bg:#0A0F14; --card:#141C22; --fg:#FFFFFF; --muted:#A0B2BA; --acc:#00E0FF; --acc2:#00B5CC; --ink:#001F26; --chip:#0f1820 }
   *{box-sizing:border-box}
@@ -149,6 +153,15 @@
     if (/\bsalute|allenament|palestra|sonno|stress\b/i.test(s)) tags.add('wellbeing');
     if (/\bprogetto|startup|studio\b/i.test(s)) tags.add('project');
     return Array.from(tags);
+  }
+</script>
+
+<!-- Service Worker registration -->
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});
+    });
   }
 </script>
 </body>
