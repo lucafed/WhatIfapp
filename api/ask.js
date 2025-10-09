@@ -1,13 +1,29 @@
 // /api/ask.js — chiarimenti + generazione con stile predittivo-personale (no “storiella”)
 import OpenAI from "openai";
 
+function setCORS(res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-whatif-stream");
+}
+
 export default async function handler(req, res) {
+  // CORS / preflight
+  if (req.method === "OPTIONS") {
+    setCORS(res);
+    res.setHeader("Allow", "POST, OPTIONS");
+    return res.status(204).end();
+  }
+
   if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
+    setCORS(res);
+    res.setHeader("Allow", "POST, OPTIONS");
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   try {
+    setCORS(res);
+
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
 
@@ -22,6 +38,9 @@ export default async function handler(req, res) {
 
     const q = (question || domanda || "").toString().trim();
     if (!q) return res.status(400).json({ error: "question required" });
+
+    // Normalizzazione periodo (accetta "future" o "near_future")
+    const periodNorm = periodo === "past" ? "past" : "future";
 
     // ---- snapshot profilo
     const p = profilo || {};
@@ -45,11 +64,11 @@ export default async function handler(req, res) {
 
     // ---- contesto temporale
     const time =
-      periodo === "past"
+      periodNorm === "past"
         ? (lang === "en" ? "the past (what if)" : "il passato (what if)")
         : (lang === "en" ? "the near future (plausible what if)" : "il prossimo futuro (what if plausibile)");
 
-    // ---- guida di stile (NUOVA)
+    // ---- guida di stile
     const baseGuide_it =
 `Scrivi in seconda persona (“tu”), tono analitico e concreto. Evita melodramma, frasi generiche e diario.
 Usa SOLO i dati forniti (profilo e chiarimenti); non inventare nomi propri o eventi specifici non dati.
@@ -139,12 +158,14 @@ Color makes it vivid, not an encouragement of dangerous excess.`;
       req.query?.stream === "1" ||
       req.headers["x-whatif-stream"] === "1";
 
-    const MAX_TOKENS = 360;
+    const MAX_TOKENS = 240; // più vicino al target 130–170 parole
 
     if (wantsStream) {
+      // SSE headers + anti-buffering + ping
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
       res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
 
       const completion = await client.chat.completions.create({
         model: "gpt-4o-mini",
@@ -157,16 +178,27 @@ Color makes it vivid, not an encouragement of dangerous excess.`;
         ],
       });
 
+      const ping = setInterval(() => {
+        try { res.write(`: ping\n\n`); } catch {}
+      }, 15000);
+
+      const close = () => {
+        clearInterval(ping);
+        try { res.end(); } catch {}
+      };
+      req.on("close", close);
+      req.on("aborted", close);
+
       try {
         for await (const part of completion) {
           const delta = part.choices?.[0]?.delta?.content || "";
           if (delta) res.write(`data: ${JSON.stringify({ token: delta })}\n\n`);
         }
         res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-        res.end();
+        close();
       } catch (e) {
         res.write(`data: ${JSON.stringify({ error: "stream_error", detail: String(e?.message || e) })}\n\n`);
-        res.end();
+        close();
       }
       return;
     }
@@ -186,7 +218,7 @@ Color makes it vivid, not an encouragement of dangerous excess.`;
       ok: true,
       clarify: false,
       model: "gpt-4o-mini",
-      lang, periodo, stile,
+      lang, periodo: periodNorm, stile,
       answer: text,
     });
 
