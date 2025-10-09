@@ -4,73 +4,100 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f – About you</title>
-  <meta name="theme-color" content="#0C1110" />
+
+  <!-- PWA -->
+  <meta name="theme-color" content="#0B0B0C" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
   <style>
-    /* ===== Verdant Mist ===== */
+    /* ===== THEME SYSTEM (palette ufficiali) ===== */
     :root{
-      --bg:#0C1110; --bg2:#1A2420; --fg:#F4F8F6; --muted:#A5B2AD;
-      --card:#0F1613AA; /* glass */
-      --card-solid:#0F1613; --border:rgba(255,255,255,.08);
-      --chip:#16211D;
-      --accent:#9EE493; --accent2:#6CC57C; --ink:#08140B;
-      --focus:#CFFFD0; --shadow:rgba(0,0,0,.35);
-      --danger:#ffb3b3; --danger-bg:#3a1414; --danger-br:#5a2222;
+      --bg:#0C0F14; --bg2:#0E1724;
+      --fg:#E6F2F5; --muted:#A0B2BA;
+      --card:rgba(14,19,28,.55); --card-border:rgba(255,255,255,.10);
+      --chip:#121A26; --ink:#0A0E12;
+      --accent:#1C57A0;     /* Blu Verona */
+      --accent2:#FFEC01;    /* Giallo Verona */
+      --focus:#FFE680;
+      --shadow:rgba(0,0,0,.35);
     }
+    html[data-theme="whatif"]{
+      --bg:#0B1018; --bg2:#0E1724;
+      --fg:#F4F7FB; --muted:#A7B3C2;
+      --card:rgba(14,20,28,.55); --card-border:rgba(255,255,255,.12);
+      --chip:#121A26; --accent:#1C57A0; --accent2:#FFEC01; --focus:#FFE680;
+    }
+    html[data-theme="wtf"]{
+      --bg:#0B0B0C; --bg2:#101414;
+      --fg:#EEF5F0; --muted:#A6B6AD;
+      --card:rgba(16,22,20,.55); --card-border:rgba(255,255,255,.10);
+      --chip:#0F1714; --accent:#3A6B56; --accent2:#5A8C75; --focus:#CFFFD0;
+    }
+
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:radial-gradient(800px 600px at 25% 20%,var(--bg2) 0%,var(--bg) 60%);color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+    html,body{
+      height:100%; margin:0; color:var(--fg);
+      background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    }
     @media (prefers-reduced-motion:no-preference){
       body{animation:bgShift 18s ease-in-out infinite alternate}
       @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
     }
 
-    .topbar{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;
-      padding:8px 10px;background:linear-gradient(180deg,rgba(12,17,16,.92),rgba(12,17,16,0))}
-    .btn{appearance:none;border:1px solid var(--border);background:var(--chip);color:var(--fg);
-      border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
+    .topbar{
+      position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;
+      padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))
+    }
+    .back-btn,.home-btn,.lang-btn{
+      appearance:none;border:1px solid var(--card-border);background:var(--chip);color:var(--fg);
+      border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer
+    }
     .lang-btn{border-radius:999px}
 
     main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
     .wrap{width:min(100%,980px)}
     h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
-    .blurb{color:var(--muted);margin:0 0 14px;font-size:clamp(14px,4vw,18px);line-height:1.5}
+    .blurb{color:#d7e8ec;margin:0 0 14px;font-size:clamp(14px,4vw,18px);line-height:1.45}
 
-    .banner{display:none;background:var(--card);backdrop-filter:blur(10px);border:1px dashed var(--border);color:#e6fff0;border-radius:14px;padding:12px;margin-bottom:8px}
+    .banner{display:none;background:var(--card);border:1px dashed var(--card-border);color:#dff6fb;border-radius:14px;padding:12px;margin-bottom:8px}
+    .banner strong{color:var(--accent2)}
 
     /* ===== Indicatore conoscenza ===== */
-    .know{background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:16px;padding:14px;margin-top:6px}
+    .know{background:var(--card);border:1px solid var(--card-border);border-radius:16px;padding:14px;margin-top:6px;backdrop-filter:blur(10px)}
     .know-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-    .meter{position:relative;height:12px;background:#13201B;border:1px solid var(--border);border-radius:999px;overflow:hidden}
+    .meter{position:relative;height:12px;background:var(--chip);border:1px solid var(--card-border);border-radius:999px;overflow:hidden}
     .meter-fill{height:100%;width:0;background:linear-gradient(180deg,var(--accent),var(--accent2))}
     .know-score{font-weight:800;color:var(--accent)}
-    .miss{margin-top:8px;color:#e6fff0;font-size:13px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-    .chip{background:var(--chip);border:1px solid var(--border);color:#E7F4E8;border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer}
-    .chip:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+    .miss{margin-top:8px;color:#cfe6e9;font-size:13px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+    .chip{background:var(--chip);border:1px solid var(--card-border);color:#cfe3e7;border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer}
 
     /* Form & micro */
-    form{background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:16px;padding:14px;display:grid;gap:12px;margin-top:10px}
+    form{background:var(--card);border:1px solid var(--card-border);border-radius:16px;padding:14px;display:grid;gap:12px;margin-top:10px;backdrop-filter:blur(10px)}
     label{font-weight:700;margin-bottom:6px;display:block}
     .row{display:grid;gap:12px}
     @media (min-width:640px){ .row.two{grid-template-columns:1fr 1fr} .row.three{grid-template-columns:1fr 1fr 1fr} }
-    select,input[type="text"],textarea{width:100%;background:#0F1714;color:var(--fg);border:1px solid var(--border);border-radius:12px;padding:12px;font-size:16px}
-    select:focus,input:focus,textarea:focus{outline:2px solid var(--focus);outline-offset:2px}
+    select,input[type="text"],textarea{
+      width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--card-border);border-radius:12px;padding:12px;font-size:16px
+    }
+    select:focus,input[type="text"]:focus,textarea:focus{outline:2px solid var(--focus);outline-offset:2px}
     textarea{min-height:110px;resize:vertical}
     .muted{color:var(--muted);font-size:13px}
     .actions{display:flex;gap:10px;justify-content:space-between;margin-top:6px;flex-wrap:wrap}
-    .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);border:none}
-    .btn.ghost{background:#13201B;color:#E6FFF0;border:1px solid var(--border)}
-    .btn[disabled]{background:#2a3b45;color:#7f98a2;cursor:not-allowed}
-    .error{color:var(--danger);background:var(--danger-bg);border:1px solid var(--danger-br);border-radius:10px;padding:10px 12px;display:none}
+    .btn{appearance:none;border:1px solid var(--card-border);border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer;background:var(--chip);color:#cfe6eb}
+    .btn.ghost{background:var(--chip)}
+    .btn.primary{border:none;background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink)}
+    .btn[disabled]{opacity:.5;cursor:not-allowed}
+    .error{color:#ffb3b3;background:#3a1414;border:1px solid #5a2222;border-radius:10px;padding:10px 12px;display:none}
     .error.show{display:block}
-
-    .micro{display:none;background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:16px;padding:14px;margin-top:6px}
+    .micro{display:none;background:var(--card);border:1px solid var(--card-border);border-radius:16px;padding:14px;margin-top:6px}
     .micro-q{margin:10px 0}
     .micro-q label{display:block;margin:0 0 6px}
-    .micro-q input{width:100%;background:#0F1714;color:var(--fg);border:1px solid var(--border);border-radius:10px;padding:10px}
+    .micro-q input{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--card-border);border-radius:10px;padding:10px}
 
     @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   </style>
@@ -78,10 +105,10 @@
 <body>
   <div class="topbar">
     <div style="display:flex;gap:8px;align-items:center">
-      <button id="backTop" class="btn">←</button>
-      <button id="homeTop" class="btn">🏠</button>
+      <button id="backTop" class="back-btn">←</button>
+      <button id="homeTop" class="home-btn">🏠</button>
     </div>
-    <button id="langToggle" class="btn lang-btn">🇮🇹 IT</button>
+    <button id="langToggle" class="lang-btn">🇮🇹 IT</button>
   </div>
 
   <main>
@@ -102,7 +129,7 @@
         </div>
         <div class="miss" id="missRow">
           <span id="missLabel">Mancano:</span>
-          <!-- chip suggerimenti -->
+          <!-- chip suggerimenti qui -->
         </div>
       </div>
 
@@ -208,6 +235,19 @@
   </main>
 
   <script>
+    /* ===== Apply theme from prefs (What if / WTF) ===== */
+    (function applyThemeFromPrefs(){
+      try{
+        const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+        const theme = prefs.stile === 'wtf' ? 'wtf' : 'whatif';
+        document.documentElement.setAttribute('data-theme', theme);
+      }catch(e){
+        document.documentElement.setAttribute('data-theme','whatif');
+      }
+    })();
+  </script>
+
+  <script>
     /* ================= I18N ================= */
     const I18N = {
       it:{
@@ -228,6 +268,7 @@
         micro_save:"Salva micro-dati", micro_skip:"Salta",
         backBtn:"Indietro", next:"Continua", skip:"Salta → domanda",
         err_required:"Per continuare seleziona Sesso, Età e Fase.",
+        // Indicatore
         know:"Personalizzazione", missing:"Mancano:", miss_identity:"Identità/ruolo", miss_routine:"Routine/indicatori",
         miss_constraints:"Vincoli", miss_goals:"Obiettivi", miss_places:"Luoghi", miss_relations:"Relazioni", miss_risk:"Rischio",
         bar_hint:"Più dettagli → più scenari plausibili. Le chip ti portano al punto giusto."
@@ -250,6 +291,7 @@
         micro_save:"Save micro-data", micro_skip:"Skip",
         backBtn:"Back", next:"Continue", skip:"Skip → question",
         err_required:"To continue please select Gender, Age and Phase.",
+        // Indicator
         know:"Personalization", missing:"Missing:", miss_identity:"Identity/role", miss_routine:"Routine/indicators",
         miss_constraints:"Constraints", miss_goals:"Goals", miss_places:"Places", miss_relations:"Relationships", miss_risk:"Risk",
         bar_hint:"More detail → more plausible scenarios. Chips take you to the right field."
@@ -367,31 +409,24 @@
       let cover = 0;
       const miss = [];
 
-      // Identità/ruolo
       const hasIdentity = !!(profile.name || profile.role);
       cover += hasIdentity ? 8 : 0; if(!hasIdentity) miss.push('identity');
 
-      // Routine/indicatori
       const hasRoutine = !!(micro.indicatore);
       cover += hasRoutine ? 8 : 0; if(!hasRoutine) miss.push('routine');
 
-      // Vincoli
       const hasConstraints = !!(micro.vincolo_2w);
       cover += hasConstraints ? 8 : 0; if(!hasConstraints) miss.push('constraints');
 
-      // Obiettivi
       const hasGoals = !!(profile.goal);
       cover += hasGoals ? 8 : 0; if(!hasGoals) miss.push('goals');
 
-      // Luoghi
       const hasPlaces = !!(profile.city || micro.punto_riferimento);
       cover += hasPlaces ? 8 : 0; if(!hasPlaces) miss.push('places');
 
-      // Relazioni
       const hasRelations = !!(micro.persona_chiave);
       cover += hasRelations ? 8 : 0; if(!hasRelations) miss.push('relations');
 
-      // Rischio (tolleranza)
       const hasRisk = !!(micro.rischio || micro.tolleranza_rischio);
       cover += hasRisk ? 7 : 0; if(!hasRisk) miss.push('risk');
 
@@ -433,6 +468,7 @@
       }
       const fresh = Math.min(20, streakPts + recencyPts);
 
+      // Totale
       let total = Math.max(0, Math.min(100, Math.round(cover + quality + fresh)));
       return { total, miss };
     }
@@ -476,7 +512,7 @@
     // micro actions
     document.getElementById('microSkip').addEventListener('click', ()=>{
       document.getElementById('microBox').style.display='none';
-      LS.setItem(KEY_DAY, today);
+      LS.setItem('whatif_daily_seen', (new Date().toISOString().split('T')[0]));
     });
     document.getElementById('microSave').addEventListener('click', ()=>{
       const patch = {};
@@ -488,20 +524,21 @@
       Object.assign(micro, patch);
       LS.setItem('whatif_micro', JSON.stringify(micro));
 
+      const today = new Date().toISOString().split('T')[0];
       const log = readJSON('whatif_micro_log',[]);
       if (!log.includes(today)) log.push(today);
       LS.setItem('whatif_micro_log', JSON.stringify(log));
       LS.setItem('whatif_last_update', today);
 
       document.getElementById('microBox').style.display='none';
-      LS.setItem(KEY_DAY, today);
+      LS.setItem('whatif_daily_seen', today);
 
       renderKnowledge();
     });
 
     // back / skip
     document.getElementById('backBtn').addEventListener('click', ()=> history.back());
-    document.getElementById('skipBtn').addEventListener('click', ()=>{
+    document.getElementById('skipBtn').addEventListener('click', ()=> {
       const base = JSON.parse(LS.getItem('whatif_profile')||'{}');
       if (base.gender || base.age || base.phase) location.href='fourth.html';
       else alert(getLang()==='en'?'Fill basic profile once before skipping.':'Compila una volta il profilo base prima di saltare.');
@@ -538,6 +575,7 @@
       }
       errBox.classList.remove('show');
 
+      const today = new Date().toISOString().split('T')[0];
       const profile = {
         name: document.getElementById('name').value.trim(),
         city: document.getElementById('city').value.trim(),
@@ -553,11 +591,13 @@
       location.href = 'fourth.html';
     });
 
-    // re-render on visibility/lang change
+    // se la lingua cambia in un’altra scheda, aggiorna
     window.addEventListener('storage', (e)=>{ if(e.key==='lang'){ applyI18N(); renderKnowledge(); }});
     document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ applyI18N(); renderKnowledge(); }});
+  </script>
 
-    // SW
+  <!-- SW -->
+  <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("/sw.js").catch(()=>{});
