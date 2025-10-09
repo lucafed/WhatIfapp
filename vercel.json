@@ -20,7 +20,6 @@
         }
       ]
     },
-
     {
       "source": "/api/(.*)",
       "headers": [
@@ -29,7 +28,6 @@
         { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization, x-whatif-stream" }
       ]
     },
-
     {
       "source": "/(.*)\\.(png|jpg|jpeg|gif|webp|svg)",
       "headers": [
