@@ -113,4 +113,117 @@ Color makes it vivid, not an encouragement of dangerous excess.`;
 
       const clarifyUser = [
         lang === "en" ? `User question: ${q}` : `Domanda utente: ${q}`,
-        snap ? (lang === "en" ? `Profile snap
+        snap ? (lang === "en" ? `Profile snapshot: ${snap}` : `Profilo: ${snap}`) : "",
+        micro ? (lang === "en" ? `Micro-signals: ${micro}` : `Micro-dettagli: ${micro}`) : ""
+      ].filter(Boolean).join("\n");
+
+      const resp = await client.chat.completions.create({
+        model: "gpt-4o-mini",
+        temperature: 0.3,
+        max_tokens: 200,
+        messages: [
+          { role: "system", content: clarifySystem },
+          { role: "user", content: clarifyUser },
+        ],
+        response_format: { type: "json_object" }
+      });
+
+      const text = resp.choices?.[0]?.message?.content?.trim() || "";
+      let json; try { json = JSON.parse(text); } catch { json = { questions: [] }; }
+      return res.status(200).json({ ok: true, clarify: true, questions: json.questions || [] });
+    }
+
+    // ---- GENERATION MODE
+    const sys = lang === "en"
+      ? `You are What?f. Generate a personal, predictive scenario in ${time}. ${guide}`
+      : `Sei What?f. Genera uno scenario personale e predittivo nel ${time}. ${guide}`;
+
+    const wtfColor = stile === "wtf"
+      ? (lang === "en"
+          ? "Add light bar-scene color when useful; keep it plausible and respectful."
+          : "Aggiungi colore da bar quando utile; resta plausibile e rispettoso.")
+      : "";
+
+    const user = [
+      lang === "en" ? `User question: ${q}` : `Domanda: ${q}`,
+      snap ? (lang === "en" ? `Profile snapshot: ${snap}` : `Profilo: ${snap}`) : "",
+      micro ? (lang === "en" ? `Micro-signals: ${micro}` : `Micro-dettagli: ${micro}`) : "",
+      clarStr ? (lang === "en" ? `Clarifications: ${clarStr}` : `Chiarimenti: ${clarStr}`) : "",
+      extra ? (lang === "en" ? `Extra instruction: ${extra}` : `Istruzione extra: ${extra}`) : "",
+      wtfColor
+    ].filter(Boolean).join("\n");
+
+    const wantsStream =
+      stream === true ||
+      req.query?.stream === "1" ||
+      req.headers["x-whatif-stream"] === "1";
+
+    const MAX_TOKENS = 240; // più vicino al target 130–170 parole
+
+    if (wantsStream) {
+      // SSE headers + anti-buffering + ping
+      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
+
+      const completion = await client.chat.completions.create({
+        model: "gpt-4o-mini",
+        temperature: stile === "wtf" ? 0.9 : 0.6,
+        max_tokens: MAX_TOKENS,
+        stream: true,
+        messages: [
+          { role: "system", content: sys },
+          { role: "user", content: user },
+        ],
+      });
+
+      const ping = setInterval(() => {
+        try { res.write(`: ping\n\n`); } catch {}
+      }, 15000);
+
+      const close = () => {
+        clearInterval(ping);
+        try { res.end(); } catch {}
+      };
+      req.on("close", close);
+      req.on("aborted", close);
+
+      try {
+        for await (const part of completion) {
+          const delta = part.choices?.[0]?.delta?.content || "";
+          if (delta) res.write(`data: ${JSON.stringify({ token: delta })}\n\n`);
+        }
+        res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+        close();
+      } catch (e) {
+        res.write(`data: ${JSON.stringify({ error: "stream_error", detail: String(e?.message || e) })}\n\n`);
+        close();
+      }
+      return;
+    }
+
+    const resp = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      temperature: stile === "wtf" ? 0.9 : 0.6,
+      max_tokens: MAX_TOKENS,
+      messages: [
+        { role: "system", content: sys },
+        { role: "user", content: user },
+      ],
+    });
+
+    const text = resp.choices?.[0]?.message?.content?.trim() || "";
+    return res.status(200).json({
+      ok: true,
+      clarify: false,
+      model: "gpt-4o-mini",
+      lang, periodo: periodNorm, stile,
+      answer: text,
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
+  }
+}
