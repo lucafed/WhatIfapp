@@ -81,6 +81,7 @@
     .btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer;border:1px solid var(--line);background:var(--chip);color:#cfe6eb}
     .btn.ghost{background:#152029}
     .btn.primary{border:none;background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink)}
+    .btn.accent{border:none;background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink)}
     .btn[disabled]{background:#2a3b45;color:#7f98a2;cursor:not-allowed}
     .error{color:#ffb3b3;background:#3a1414;border:1px solid #5a2222;border-radius:10px;padding:10px 12px;display:none}
     .error.show{display:block}
@@ -214,8 +215,8 @@
         <div class="actions">
           <button type="button" class="btn ghost" id="backBtn">Indietro</button>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <!-- NEW: Test completo (5 min) -->
-            <button type="button" class="btn ghost" id="fulltestBtn">🧭 Test completo (5 min)</button>
+            <!-- 🔗 TEST COMPLETO (5 min) SOLO QUI -->
+            <button type="button" class="btn accent" id="fulltestBtn">🧭 Test completo (5 min)</button>
             <button type="button" class="btn ghost" id="skipBtn">Salta → domanda</button>
             <button type="submit" class="btn primary" id="nextBtn">Continua</button>
           </div>
@@ -257,8 +258,7 @@
         mq3:"Una persona/luogo che conta nel tuo scenario?",
         micro_save:"Salva micro-dati", micro_skip:"Salta",
         backBtn:"Indietro", next:"Continua", skip:"Salta → domanda",
-        /* NEW: CTA full test */
-        fulltest_btn:"🧭 Test completo (5 min)",
+        fulltest:"🧭 Test completo (5 min)",
         err_required:"Per continuare seleziona Sesso, Età e Fase.",
         // Indicatore
         know:"Personalizzazione", missing:"Mancano:", miss_identity:"Identità/ruolo", miss_routine:"Routine/indicatori",
@@ -282,8 +282,7 @@
         mq3:"One person/place that matters in your scenario?",
         micro_save:"Save micro-data", micro_skip:"Skip",
         backBtn:"Back", next:"Continue", skip:"Skip → question",
-        /* NEW: CTA full test */
-        fulltest_btn:"🧭 Full test (5 min)",
+        fulltest:"🧭 Full test (5 min)",
         err_required:"To continue please select Gender, Age and Phase.",
         // Indicator
         know:"Personalization", missing:"Missing:", miss_identity:"Identity/role", miss_routine:"Routine/indicators",
@@ -345,9 +344,7 @@
       $('#backBtn').textContent = d.backBtn;
       $('#nextBtn').textContent = d.next;
       $('#skipBtn').textContent = d.skip;
-
-      // NEW: label bottone full test
-      $('#fulltestBtn').textContent = d.fulltest_btn;
+      $('#fulltestBtn').textContent = d.fulltest;
 
       // Indicatore labels
       $('#knowLabel').textContent = d.know;
@@ -445,6 +442,7 @@
         if (numRe.test(v) || timeRe.test(v) || locRe.test(v)) usable++;
       });
       let quality = Math.min(10, usable);
+      const today = todayStr();
       if (clar && clar.date === today && (clar.used||0)>0) quality += 5;
       quality = Math.min(25, quality);
 
@@ -552,9 +550,9 @@
       location.href = firstDone ? 'fourth.html' : 'third.html';
     });
 
-    // NEW: full test
+    // 🔗 Test completo
     document.getElementById('fulltestBtn').addEventListener('click', ()=>{
-      location.href = 'fulltest.html';
+      location.href='fulltest.html';
     });
 
     // form save
@@ -597,6 +595,7 @@
         more: document.getElementById('more').value.trim()
       };
       LS.setItem('whatif_profile', JSON.stringify(profile));
+      const today = new Date().toISOString().slice(0,10);
       LS.setItem('whatif_last_update', today);
 
       renderKnowledge();
