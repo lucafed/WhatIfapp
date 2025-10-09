@@ -57,7 +57,7 @@ input,select,textarea{width:100%;background:var(--chip);color:var(--fg);border:1
 
   <main>
     <h1 id="title">Test completo (5 minuti)</h1>
-    <p class="lead" id="lead">Costruiamo un profilo che sembri davvero il tuo. Poi, ogni giorno, piccole micro-domande lo affineranno.</p>
+    <p class="lead" id="lead">Costruiamo un profilo che sembri davvero il tuo. Poi, ogni giorno, micro-domande lo affineranno.</p>
 
     <div class="progress"><div class="bar" id="bar"></div></div>
 
@@ -66,11 +66,11 @@ input,select,textarea{width:100%;background:var(--chip);color:var(--fg);border:1
       <div id="answerBox"></div>
 
       <div class="row">
-        <button class="btn" id="backBtn">← Indietro</button>
+        <button class="btn" id="backBtn">← <span id="backLbl">Indietro</span></button>
         <span class="count" id="count">1 / 12</span>
-        <button class="btn primary" id="nextBtn" disabled>Continua →</button>
+        <button class="btn primary" id="nextBtn" disabled><span id="nextLbl">Continua →</span></button>
       </div>
-      <p class="muted">I dati restano sul tuo dispositivo (localStorage).</p>
+      <p class="muted" id="storageHint">I dati restano sul tuo dispositivo (localStorage).</p>
     </div>
   </main>
 
@@ -85,12 +85,13 @@ input,select,textarea{width:100%;background:var(--chip);color:var(--fg);border:1
 </script>
 
 <script>
-const L=(localStorage.getItem('lang')||'it').toLowerCase();
+const LANG=(localStorage.getItem('lang')||'it').toLowerCase();
 const T = {
   it:{
     title:"Test completo (5 minuti)",
     lead:"Costruiamo un profilo che sembri davvero il tuo. Poi, ogni giorno, micro-domande lo affineranno.",
     next:"Continua →", back:"Indietro",
+    store:"I dati restano sul tuo dispositivo (localStorage).",
     qs:[
       {k:"approach", t:"Quando decidi, come ti muovi di solito?", type:"chips",
         opts:[["reason","Ragiono molto"],["instinct","Seguo l’istinto"],["adapt","Mi adatto al momento"],["balance","Cerco un equilibrio"]]},
@@ -113,11 +114,40 @@ const T = {
         opts:[["low","Basso"],["mid","Medio"],["high","Alto"]]}
     ]
   },
-  en:{ /* (se vuoi attivare inglese, puoi tradurre qui) */ }
-}[L] || {};
+  en:{
+    title:"Full test (5 minutes)",
+    lead:"Let’s build a profile that really feels like you. Then, day by day, micro-questions will refine it.",
+    next:"Continue →", back:"Back",
+    store:"Your data stays on your device (localStorage).",
+    qs:[
+      {k:"approach", t:"When deciding, how do you usually move?", type:"chips",
+        opts:[["reason","I think a lot"],["instinct","I follow my gut"],["adapt","I adapt on the fly"],["balance","I look for balance"]]},
+      {k:"motivation", t:"What motivates your big choices most?", type:"chips",
+        opts:[["stability","Stability & security"],["growth","Growth & discovery"],["freedom","Personal freedom"],["recognition","Being appreciated"]]},
+      {k:"change", t:"Change, for you, is…", type:"chips",
+        opts:[["fear","A bit scary"],["stim","Stimulating"],["calm","To assess calmly"],["seek","Something I seek"]]},
+      {k:"value", t:"Which value feels most yours?", type:"chips",
+        opts:[["family","Family & bonds"],["auth","Authenticity"],["success","Personal success"],["creativity","Creativity"]]},
+      {k:"selfview", t:"When you think of yourself, you look…", type:"chips",
+        opts:[["serious","Serious"],["irony","With some irony"],["reflect","Introspective"],["light","Light"]]},
+      {k:"goal", t:"Your main goal for the next 12 months?", type:"text", ph:"e.g., better work–life balance"},
+      {k:"city", t:"Your base city?", type:"text", ph:"e.g., Verona / L'Aquila"},
+      {k:"time_on", t:"When are you most “on” (time/day)?", type:"text", ph:"e.g., early morning, Wednesdays…"},
+      {k:"constraint", t:"One concrete constraint in the next 2 weeks", type:"text", ph:"Budget, time, energy…"},
+      {k:"indicator", t:"Which indicator tells you you’re doing well?", type:"text", ph:"Study hours, clients, km run…"},
+      {k:"domain", t:"Which area do you want to explore more with What?f?", type:"chips",
+        opts:[["work","Work/Career"],["relationships","Relationships"],["money","Money"],["place","Place"],["study","Study"],["wellbeing","Wellbeing"]]},
+      {k:"risk", t:"How do you feel about risk?", type:"chips",
+        opts:[["low","Low"],["mid","Medium"],["high","High"]]}
+    ]
+  }
+}[LANG] || {} ;
 
 document.getElementById('title').textContent=T.title;
 document.getElementById('lead').textContent=T.lead;
+document.getElementById('nextLbl').textContent=T.next;
+document.getElementById('backLbl').textContent=T.back;
+document.getElementById('storageHint').textContent=T.store;
 
 const answers = {};
 let idx = 0;
@@ -135,11 +165,8 @@ function render(){
   qEl.textContent = q.t;
   nextBtn.disabled = !(answers[q.k]);
 
-  // UI risposta
   if(q.type==='chips'){
-    box.innerHTML = `<div class="chips">${q.opts.map(([v,l])=>(
-      `<button class="chip ${answers[q.k]===v?'sel':''}" data-v="${v}">${l}</button>`
-    )).join('')}</div>`;
+    box.innerHTML = `<div class="chips">${q.opts.map(([v,l])=>(`<button class="chip ${answers[q.k]===v?'sel':''}" data-v="${v}">${l}</button>`)).join('')}</div>`;
     box.querySelectorAll('.chip').forEach(b=>{
       b.addEventListener('click',()=>{
         box.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel'));
@@ -148,7 +175,7 @@ function render(){
         nextBtn.disabled=false;
       });
     });
-  } else { // text
+  } else {
     box.innerHTML = `<input id="txt" type="text" placeholder="${q.ph||''}" />`;
     const inp = document.getElementById('txt');
     if(answers[q.k]) inp.value = answers[q.k];
@@ -174,7 +201,7 @@ document.getElementById('backTop').addEventListener('click',()=>history.back());
 document.getElementById('homeTop').addEventListener('click',()=>location.href='index.html');
 
 function finish(){
-  // Calcola archetipi dai primi 5 come nel tuo quiz originale
+  // Calcola archetipi dai primi 5 come nel quiz
   const WEIGHTS={approach:{reason:{R:2,C:1},instinct:{V:2},adapt:{M:2},balance:{C:2,M:1}},
                  motivation:{stability:{C:2,M:1},growth:{R:1,V:2},freedom:{V:2},recognition:{M:2}},
                  change:{fear:{C:1,M:1},stim:{V:2,R:1},calm:{R:1,C:1},seek:{V:2}},
@@ -194,13 +221,27 @@ function finish(){
     goal: answers.goal || base.goal || "",
     city: answers.city || base.city || "",
     values: (()=>{
-      const map={family:'famiglia e legami',auth:'autenticità',success:'successo personale',creativity:'creatività'};
+      const map=LANG==='en'
+        ? {family:'family & bonds',auth:'authenticity',success:'achievement',creativity:'creativity'}
+        : {family:'famiglia e legami',auth:'autenticità',success:'successo personale',creativity:'creatività'};
       return answers.value ? [map[answers.value]] : (base.values||[]);
     })(),
-    style: {reason:'analitico',instinct:'intuitivo',adapt:'adattivo',balance:'equilibrato'}[answers.approach] || base.style,
-    change_attitude: {fear:'cauto',stim:'stimolato dal cambiamento',calm:'valutativo',seek:'cerca il cambiamento'}[answers.change] || base.change_attitude,
-    motivation: {stability:'stabilità',growth:'crescita',freedom:'libertà',recognition:'riconoscimento'}[answers.motivation] || base.motivation,
-    self_view: {serious:'serio',irony:'ironico',reflect:'introspettivo',light:'leggero'}[answers.selfview] || base.self_view,
+    style: {reason: (LANG==='en'?'analytical':'analitico'),
+            instinct:(LANG==='en'?'intuitive':'intuitivo'),
+            adapt:  (LANG==='en'?'adaptive':'adattivo'),
+            balance:(LANG==='en'?'balanced':'equilibrato')}[answers.approach] || base.style,
+    change_attitude: {fear: (LANG==='en'?'cautious':'cauto'),
+                      stim: (LANG==='en'?'energized by change':'stimolato dal cambiamento'),
+                      calm: (LANG==='en'?'evaluative':'valutativo'),
+                      seek: (LANG==='en'?'seeks change':'cerca il cambiamento')}[answers.change] || base.change_attitude,
+    motivation: {stability:(LANG==='en'?'stability':'stabilità'),
+                 growth:(LANG==='en'?'growth':'crescita'),
+                 freedom:(LANG==='en'?'freedom':'libertà'),
+                 recognition:(LANG==='en'?'recognition':'riconoscimento')}[answers.motivation] || base.motivation,
+    self_view: {serious:(LANG==='en'?'serious':'serio'),
+                irony:(LANG==='en'?'ironic':'ironico'),
+                reflect:(LANG==='en'?'introspective':'introspettivo'),
+                light:(LANG==='en'?'light':'leggero')}[answers.selfview] || base.self_view,
     domain_focus: answers.domain || base.domain_focus || "",
     anchors_extra:{
       time_on: answers.time_on || (base.anchors_extra?.time_on)||"",
@@ -212,13 +253,13 @@ function finish(){
   localStorage.setItem('whatif_profile', JSON.stringify({...base, ...profilePatch}));
   localStorage.setItem('whatif_archetypes', JSON.stringify(archetypes));
   localStorage.setItem('whatif_full_done','1');
-  localStorage.setItem('whatif_quiz5_done','1'); // così third.html passa alle micro giornaliere
+  localStorage.setItem('whatif_quiz5_done','1'); // abilita micro-rotanti
 
-  // piccolo update “ultimo aggiornamento” per lo score
+  // update ultimo aggiornamento per lo score
   const today=new Date().toISOString().split('T')[0];
   localStorage.setItem('whatif_last_update', today);
 
-  // porta l’utente a scrivere la domanda
+  // vai a scrivere la domanda
   location.href='fourth.html';
 }
 </script>
