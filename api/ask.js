@@ -39,7 +39,6 @@ export default async function handler(req, res) {
     const q = (question || domanda || "").toString().trim();
     if (!q) return res.status(400).json({ error: "question required" });
 
-    // Normalizzazione periodo
     const periodNorm = periodo === "past" ? "past" : "future";
 
     // ---- snapshot profilo
@@ -161,7 +160,6 @@ Color makes it vivid, not an encouragement of dangerous excess.`;
     const MAX_TOKENS = 240; // più vicino al target 130–170 parole
 
     if (wantsStream) {
-      // SSE headers + anti-buffering + ping
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
       res.setHeader("Connection", "keep-alive");
