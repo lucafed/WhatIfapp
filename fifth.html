@@ -4,40 +4,69 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>What?f – Result</title>
-<meta name="theme-color" content="#0B1218" />
+
+<!-- PWA -->
+<meta name="theme-color" content="#0B0B0C" />
 <link rel="manifest" href="/manifest.json" />
 <link rel="apple-touch-icon" href="/icons/icon-192.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
 <style>
+  /* ===== THEME SYSTEM (palette ufficiali) ===== */
   :root{
-    --bg:#0B1218; --card:#101820; --muted:#9EB2BC;
-    --fg:#E8F2F6; --acc:#31E1FF; --acc2:#00B5CC; --chip:#0f1820; --ink:#001f26;
-    --line:#1b2a34; --shadow:rgba(0,0,0,.28)
+    /* fallback (What if) */
+    --bg:#0C0F14; --bg2:#0E1724;
+    --fg:#F6F7FA; --muted:#AEB8C4;
+    --card:rgba(14,19,28,0.55); --line:rgba(255,255,255,.10);
+    --chip:#121A26; --ink:#0A0E12;
+    --acc:#1C57A0;       /* Blu Verona */
+    --acc2:#FFEC01;      /* Giallo Verona */
+    --shadow:rgba(0,0,0,.28);
   }
+  html[data-theme="whatif"]{
+    --bg:#0B1018; --bg2:#0E1724;
+    --fg:#F4F7FB; --muted:#A7B3C2;
+    --card:rgba(14,20,28,0.55); --line:rgba(255,255,255,.12);
+    --chip:#121A26; --ink:#11110A;
+    --acc:#1C57A0; --acc2:#FFEC01;
+  }
+  html[data-theme="wtf"]{
+    --bg:#0B0B0C; --bg2:#101414;
+    --fg:#EEF5F0; --muted:#A6B6AD;
+    --card:rgba(16,22,20,0.55); --line:rgba(255,255,255,.10);
+    --chip:#0F1714; --ink:#06110B;
+    --acc:#3A6B56;        /* Verde speranza */
+    --acc2:#5A8C75;       /* Verde più chiaro per gradient/hover */
+  }
+
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  html,body{
+    margin:0;background: radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+    color:var(--fg);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility
+  }
   main{max-width:980px;margin:auto;padding:18px}
   .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 
-  .btn{appearance:none;border:none;background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;transition:transform .06s ease,opacity .2s}
+  .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;transition:transform .06s ease,opacity .2s}
   .btn:active{transform:translateY(1px)}
-  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800;box-shadow:0 6px 18px var(--shadow)}
-  .btn.ghost{background:transparent;border:1px solid var(--line)}
+  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800;box-shadow:0 6px 18px var(--shadow);border:none}
   .btn.large{padding:14px 18px;font-size:16px}
   .btn.icon{padding:8px 10px;border-radius:10px}
 
-  h1{font-size:clamp(22px,5vw,30px);margin:14px 0 2px}
+  h1{font-size:clamp(22px,5vw,30px);margin:14px 0 2px;color:var(--acc)}
   p.sub{color:var(--muted);margin:0 0 8px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
+  .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
   .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-  .box{background:#0b1218;border:1px solid #18242c;border-radius:12px;padding:12px;white-space:pre-wrap;line-height:1.6}
+  .box{background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;padding:12px;white-space:pre-wrap;line-height:1.6}
 
   .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{background:#0f1820;border:1px solid var(--line);color:#cfe3e7;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
+  .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
   .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-  .badge{background:#0f1820;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#cfe3e7;user-select:none}
+  .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
   .badge.accent{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border:none;font-weight:800}
 
   /* CTA area */
@@ -47,25 +76,25 @@
   .menu-btn{min-width:44px}
   .menu-sheet{position:absolute;right:0;top:42px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px;display:none;min-width:200px;box-shadow:0 12px 28px var(--shadow);z-index:50}
   .menu-sheet button{display:block;width:100%;text-align:left;background:transparent;border:none;color:#E6F2F5;padding:10px;border-radius:10px;cursor:pointer}
-  .menu-sheet button:hover{background:#15222c}
+  .menu-sheet button:hover{background:rgba(255,255,255,.05)}
 
   /* mini indicator */
   .know-mini{display:flex;align-items:center;gap:8px}
-  .meter{position:relative;height:10px;background:#0f1820;border:1px solid var(--line);border-radius:999px;overflow:hidden;width:120px}
+  .meter{position:relative;height:10px;background:var(--chip);border:1px solid var(--line);border-radius:999px;overflow:hidden;width:120px}
   .meter-fill{height:100%;width:0;background:linear-gradient(180deg,var(--acc),var(--acc2))}
   .know-score{font-weight:800;color:var(--acc);font-size:12px}
   .tooltip{position:relative;cursor:help}
   .tooltip:hover .tip{opacity:1;transform:translateY(0)}
-  .tip{pointer-events:none;position:absolute;right:0;top:125%;background:#0f1820;border:1px solid var(--line);color:#cfe6eb;border-radius:10px;padding:8px 10px;font-size:12px;width:260px;opacity:0;transform:translateY(-4px);transition:.15s;box-shadow:0 12px 28px var(--shadow)}
+  .tip{pointer-events:none;position:absolute;right:0;top:125%;background:var(--chip);border:1px solid var(--line);color:#e6fff0;border-radius:10px;padding:8px 10px;font-size:12px;width:260px;opacity:0;transform:translateY(-4px);transition:.15s;box-shadow:0 12px 28px var(--shadow)}
 
   /* Signals collapsible */
   .signals{margin-top:8px}
-  .disclosure{display:flex;align-items:center;gap:8px;color:#cfe3e7;font-size:12px;cursor:pointer}
+  .disclosure{display:flex;align-items:center;gap:8px;color:#eaf3ee;font-size:12px;cursor:pointer}
   .caret{transition:transform .15s ease}
-  .signals-body{display:none;color:#cfe3e7;opacity:.9;font-size:12px;margin-top:6px}
+  .signals-body{display:none;color:#eaf3ee;opacity:.9;font-size:12px;margin-top:6px}
 
   #result{min-height:190px}
-  .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,#0d151c 0%,#122029 50%,#0d151c 100%);background-size:200% 100%;animation:sk 1s infinite}
+  .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:sk 1s infinite}
   @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
 
   /* overlay clarify */
@@ -73,15 +102,17 @@
   .sheet{width:min(92vw,720px);max-height:80vh;overflow:auto;background:var(--card);border-radius:16px;padding:14px;border:1px solid var(--line)}
   .qitem{margin:10px 0}
   .qitem label{display:block;margin:6px 0}
-  .qitem input{width:100%;background:#0f1820;color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .qitem input{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
   <main>
     <div class="topbar">
       <div class="row">
-        <button class="btn ghost" id="backBtnTop">←</button>
-        <button class="btn ghost" id="homeBtnTop">🏠</button>
+        <button class="btn" id="backBtnTop">←</button>
+        <button class="btn" id="homeBtnTop">🏠</button>
       </div>
       <div class="row" style="gap:10px">
         <span id="freeBadge" class="badge" title="">—</span>
@@ -155,10 +186,23 @@
       <div id="clarifyList"></div>
       <div class="row" style="margin-top:12px">
         <button class="btn primary" id="applyClarify">Generate with these answers</button>
-        <button class="btn ghost" id="cancelClarify">Cancel</button>
+        <button class="btn" id="cancelClarify">Cancel</button>
       </div>
     </div>
   </div>
+
+<script>
+/* ===== Apply theme from prefs (What if / WTF) ===== */
+(function applyThemeFromPrefs(){
+  try{
+    const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+    const theme = prefs.stile === 'wtf' ? 'wtf' : 'whatif';
+    document.documentElement.setAttribute('data-theme', theme);
+  }catch(e){
+    document.documentElement.setAttribute('data-theme','whatif');
+  }
+})();
+</script>
 
 <script>
 /* ====== I18N ====== */
@@ -280,6 +324,8 @@ $('styleChips').addEventListener('click',e=>{
   currentStyle=b.dataset.style;
   $('badgeStile').textContent="🎭 "+(currentStyle==='wtf'?'What the F':'What if');
   document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
+  // cambia anche il tema visuale live
+  document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
 });
 
 /* ====== Badges ====== */
@@ -303,15 +349,13 @@ function computeKnowledge(){
   const hasGoals=!!(profile.goal);                  cover+=hasGoals?8:0;
   const hasPlaces=!!(profile.city||micro.punto_riferimento); cover+=hasPlaces?8:0;
   const hasRelations=!!(micro.persona_chiave);      cover+=hasRelations?8:0;
-  const hasRisk=!!(micro.rischio||micro.tolleranza_rischio); cover+=hasRisk?7:0;
-
+  const hasRisk=!!(micro.rischio||micro.tolleranza_rischio); cover+=7;
   const vals=Object.values(profile).concat(Object.values(micro)).filter(v=>typeof v==='string');
   let usable=0; const numRe=/\b\d+([.,]\d+)?\b/; const timeRe=/\b(\d{1,2}[:.]\d{2}|mattina|pomeriggio|sera|am|pm)\b/i; const locRe=/\b(centro|stazione|ufficio|palestra|bar|parco|centro storico)\b/i;
   vals.forEach(v=>{ if(usable>=10)return; if(numRe.test(v)||timeRe.test(v)||locRe.test(v)) usable++; });
   let quality=Math.min(10,usable);
   if(clar && clar.date===today && (clar.used||0)>0) quality+=5;
   quality=Math.min(25,quality);
-
   let streak=0;
   if(Array.isArray(microLog)&&microLog.length){
     let d=new Date(today);
@@ -398,6 +442,7 @@ $('applyClarify').addEventListener('click', async ()=>{
   const inputs=clarifyList.querySelectorAll('input');
   const clar={}; inputs.forEach(i=>{ const v=(i.value||"").trim(); if(i.id&&v) clar[i.id]=v; });
   clarifyOverlay.style.display='none';
+  // popola segnali e apri disclosure
   $('signalsBody').textContent = summarizeSignals(clar);
   if ($('signalsBody').textContent){ $('signalsBody').style.display='block'; $('caret').style.transform='rotate(90deg)'; }
   await generate(false,clar);
@@ -418,6 +463,7 @@ async function generate(isRegen=false, clarOverride=null){
   $('result').textContent=`⏳ ${T.loading} `; const sk=document.createElement('span'); sk.className='skeleton'; sk.style.width='40%'; $('result').appendChild(sk);
   $('regenBtn').style.display='none';
 
+  // se segnali vuoti, metti riassunto base
   if(!$('signalsBody').textContent){ $('signalsBody').textContent = summarizeSignals(clarOverride||{}); }
 
   try{
@@ -463,10 +509,12 @@ $('shareBtn').addEventListener('click', ()=>{
 $('backBtnTop').addEventListener('click', ()=> history.back());
 $('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
 
-/* ====== Dev hooks ====== */
+/* ====== Dev hooks: reset FREE + reset CLARIFY + toggle Pro ====== */
 (function devHooks(){
   const bFree=$('freeBadge'), bClar=$('clarifyBadge');
   if(!bFree||!bClar) return;
+
+  // FREE long-press + triple click Pro
   let pressT=null;
   bFree.addEventListener('pointerdown', ()=>{ pressT=setTimeout(resetToday,2000); });
   bFree.addEventListener('pointerup', ()=>{ clearTimeout(pressT); });
@@ -486,13 +534,14 @@ $('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
     renderBadges(); alert('Pro '+(c.pro?'on':'off')+' (local) ✅');
   }
 
+  // CLARIFY long-press reset
   let pressC=null;
   bClar.addEventListener('pointerdown', ()=>{ pressC=setTimeout(resetClarify,2000); });
   bClar.addEventListener('pointerup', ()=>{ clearTimeout(pressC); });
   bClar.addEventListener('pointerleave', ()=>{ clearTimeout(pressC); });
   function resetClarify(){
     const today=todayStr();
-    const c=readJSON('whatif_clarify'); c.date=today; c.used=0; writeJSON('whatif_clarify',c);
+    const c=readJSON('whatif_clarify'); c.date=today; c.used=0; writeClarify(c);
     renderBadges(); alert(lang==='en'?'Clarify reset for today ✅':'Chiarimenti azzerati per oggi ✅');
   }
 })();
@@ -500,7 +549,7 @@ $('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
 /* ====== Avvio ====== */
 function initSignalsBase(){
   const s=summarizeSignals({});
-  if(s){ $('signalsBody').textContent=s; }
+  if(s){ $('signalsBody').textContent=s; } // non apriamo di default
 }
 function initText(){
   $('freeBadge').title=T.badgeFreeTitle; $('clarifyBadge').title=T.badgeClarifyTitle;
@@ -516,7 +565,7 @@ function boot(){
 boot();
 </script>
 
-<!-- Service Worker registration -->
+<!-- SW -->
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
