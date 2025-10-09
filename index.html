@@ -6,49 +6,39 @@
   <title>What?f — Home</title>
 
   <!-- PWA -->
-  <meta name="theme-color" content="#0B0E11" />
+  <meta name="theme-color" content="#0C1110" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <!-- Preload hero (come nel tuo file) -->
   <link rel="preload" as="image" href="/home-hero.png" />
 
   <style>
     :root{
-      /* NUOVA PALETTE (calda, rilassante) */
-      --bg:#0B0E11;            /* sfondo base carbone */
-      --bg2:#12161B;           /* sfondo secondario per gradient */
-      --fg:#F5F7FA;            /* testo principale chiaro */
-      --muted:#AAB7C4;         /* testo secondario */
-      --card:rgba(19,24,32,0.55); /* card glassy */
-      --card-border:rgba(255, 255, 255, .06);
-      --chip:#171D24;          /* pillole */
-      --accent:#E6B980;        /* ambra morbida */
-      --accent-dark:#C89666;   /* ambra scura */
-      --accent-ink:#1A1108;    /* testo su CTA */
-      --focus:#FFE0B8;         /* stato focus accessibile */
-      --shadow:rgba(0,0,0,.35);
+      /* VERDANT MIST */
+      --bg:#0C1110; --bg2:#1A2420;
+      --fg:#F4F8F6; --muted:#A5B2AD;
+      --card:rgba(25,35,32,0.55);
+      --card-border:rgba(255,255,255,.06);
+      --chip:#16211D;
+      --accent:#9EE493; --accent-dark:#6CC57C; --accent-ink:#08140B;
+      --focus:#CFFFD0; --shadow:rgba(0,0,0,.35);
     }
-
     *{box-sizing:border-box}
     html,body{
       height:100%; margin:0; color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background: radial-gradient(800px 600px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+      background-attachment:fixed;
       -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
-      background: radial-gradient(1200px 800px at 25% 15%, var(--bg2) 0%, var(--bg) 60%),
-                  linear-gradient(180deg, var(--bg) 0%, #0A0D10 100%);
-      background-attachment: fixed;
       overflow-x:hidden;
     }
-    /* leggera “respirazione” dello sfondo, molto discreta */
     @media (prefers-reduced-motion:no-preference){
-      body{ animation: bgShift 16s ease-in-out infinite alternate }
-      @keyframes bgShift{
-        0% { background-position: 0% 20%, 0% 0% }
-        100%{ background-position: 100% 80%, 0% 0% }
-      }
+      body{animation:bgShift 18s ease-in-out infinite alternate;}
+      @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
     }
-
     main{
       min-height:100%;
       display:flex; flex-direction:column; align-items:center; text-align:center;
@@ -58,42 +48,33 @@
     /* Hero */
     .hero-img{
       width:min(92vw,560px); height:auto; display:block; margin:0 auto 10px;
-      filter: drop-shadow(0 12px 28px var(--shadow));
-      border-radius:18px;
-      opacity:.95;
+      border-radius:18px; filter:drop-shadow(0 10px 28px var(--shadow)); opacity:.95;
     }
 
     /* Titoli & lead */
-    h1{
-      margin:.25rem 0 0; font-size:clamp(28px,5.5vw,44px); line-height:1.1; cursor:default;
-      letter-spacing:.2px;
-    }
+    h1{margin:.25rem 0 0; font-size:clamp(28px,5.5vw,44px); line-height:1.1; letter-spacing:.2px}
     h1 span{color:var(--accent)}
     .lead{
       max-width:720px; font-size:clamp(15px,4vw,18px); color:var(--muted);
       line-height:1.6; margin:6px auto 18px;
-      background: var(--card);
-      border:1px solid var(--card-border);
-      backdrop-filter: blur(14px);
-      border-radius:16px; padding:12px 16px;
+      background:var(--card); border:1px solid var(--card-border);
+      backdrop-filter:blur(14px); border-radius:16px; padding:12px 16px;
     }
 
-    /* Gruppi scelte */
-    .group{
-      display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:6px
-    }
+    /* Scelte */
+    .group{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:6px}
     .chip{
-      appearance:none; border:1px solid var(--card-border); background:var(--chip); color:#DCE4EA;
+      appearance:none; border:1px solid var(--card-border); background:var(--chip); color:#E7F4E8;
       padding:12px 16px; border-radius:16px; font-weight:700; cursor:pointer;
-      transition:transform .08s ease, background .16s ease, box-shadow .16s ease, border-color .16s ease, color .16s ease;
+      transition:transform .08s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
       outline:none;
     }
-    .chip:hover{ transform:translateY(-1px); border-color:#e6b98055 }
+    .chip:hover{ transform:translateY(-1px); border-color:var(--accent) }
     .chip:focus-visible{ outline:2px solid var(--focus); outline-offset:2px }
     .chip.selected{
       background:linear-gradient(180deg,var(--accent),var(--accent-dark));
       color:var(--accent-ink);
-      box-shadow:0 1px 0 0 rgba(0,0,0,.25) inset, 0 0 0 1px rgba(230,185,128,.35) inset;
+      box-shadow:0 1px 0 0 rgba(0,0,0,.25) inset, 0 0 0 1px rgba(158,228,147,.35) inset;
     }
 
     /* CTA */
@@ -102,12 +83,12 @@
       background:linear-gradient(180deg,var(--accent),var(--accent-dark));
       color:var(--accent-ink); font-weight:800; border:none; border-radius:24px;
       padding:14px 20px; letter-spacing:.3px;
-      box-shadow:0 10px 28px rgba(201,150,102,.25), 0 2px 0 rgba(0,0,0,.25) inset;
-      cursor:pointer; transition:transform .08s ease, filter .16s ease, box-shadow .16s ease;
+      box-shadow:0 8px 24px rgba(108,197,124,.25);
+      cursor:pointer; transition:transform .08s ease, box-shadow .16s ease;
     }
     .cta:hover{ transform:translateY(-1px) }
     .cta:active{ transform:translateY(0) }
-    .cta[disabled]{opacity:.45; cursor:not-allowed; filter:saturate(.7)}
+    .cta[disabled]{ opacity:.45; cursor:not-allowed; filter:saturate(.7) }
 
     /* Lingua (fab) */
     .lang-fab{position:fixed; top:calc(env(safe-area-inset-top,0px) + 14px); right:14px; z-index:50}
@@ -124,7 +105,7 @@
       display:block; width:100%; text-align:left; background:transparent; border:none;
       color:#E6F2F5; padding:10px; border-radius:10px; cursor:pointer
     }
-    .lang-menu button.active{background:#1B242D}
+    .lang-menu button.active{background:#203329}
 
     /* Footer */
     footer{
@@ -134,7 +115,8 @@
     footer a{ color:var(--accent); text-decoration:none; font-weight:600 }
     footer .sep{opacity:.6; margin:0 6px}
     .foot-links{
-      display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:6px;
+      display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
+      margin-top:6px;
     }
     .info-btn{
       background:var(--chip); border:1px solid var(--card-border); color:#E6F2F5;
@@ -142,9 +124,7 @@
     }
 
     /* riduci movimento se preferito */
-    @media (prefers-reduced-motion:reduce){
-      *{animation:none!important; transition:none!important}
-    }
+    @media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
   </style>
 </head>
 <body>
@@ -162,7 +142,7 @@
 
     <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
 
-    <!-- Lead con card glassy -->
+    <!-- Lead con HTML (come nel tuo originale) -->
     <p class="lead" id="leadText"></p>
 
     <!-- Scelte -->
@@ -189,7 +169,7 @@
     </div>
   </footer>
 
-  <!-- Caricamento robusto immagine -->
+  <!-- Caricamento robusto immagine (come nel tuo file originale) -->
   <script>
     (async function loadHero(){
       const hero = document.getElementById('hero');
@@ -200,16 +180,17 @@
           if (r.ok){ hero.src = u + '?v=' + Date.now(); return; }
         }catch(e){}
       }
+      // fallback se non trova nulla
       hero.style.display='none';
     })();
   </script>
 
-  <!-- i18n -->
+  <!-- i18n (lead con <strong> come nel tuo) -->
   <script>
     const DICT = {
       it:{
         title:"Scopri il tuo What?f",
-        lead:"Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro. <strong>What if</strong> esplora scenari realistici e riflessivi. <strong>What the F</strong> ti porta in visioni creative e inaspettate.",
+        lead:"Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro. <strong>What if</strong> esplora scenari realistici e riflessivi. <strong>What the F</strong> porta visioni creative e inaspettate.",
         past:"Passato", future:"Futuro", whatif:"What if", wtf:"What the F",
         next:"Avanti", privacy:"Privacy", terms:"Termini", info:"Info"
       },
@@ -231,21 +212,25 @@
     function applyLang(){
       const L = getLang(), d = (DICT[L]||DICT.it);
       document.documentElement.lang = L;
+      // etichette semplici
       $$('[data-i18n]').forEach(el=>{
         const k = el.getAttribute('data-i18n');
-        if (k === 'lead') return;
+        if (k === 'lead') return; // lead ha HTML
         if (d[k]) el.textContent = d[k];
       });
+      // lead con HTML
       $('#leadText').innerHTML = d.lead;
+      // attivi nel menu lingua
       document.querySelectorAll('#langMenu button').forEach(b=>{
         b.classList.toggle('active', b.dataset.lang === L);
       });
     }
 
+    // init lingua
     if(!LS.getItem('lang')) LS.setItem('lang','it');
     applyLang();
 
-    // widget lingua
+    // widget lingua con ARIA come nel tuo
     const fab  = $('#langFab');
     const btn  = $('#langToggle');
     const menu = $('#langMenu');
@@ -258,13 +243,17 @@
       const b = e.target.closest('button[data-lang]'); if(!b) return;
       setLang(b.dataset.lang);
       menu.style.display='none';
+      btn.setAttribute('aria-expanded','false');
     });
     document.addEventListener('click', e=>{
-      if(!fab.contains(e.target)) menu.style.display='none';
+      if(!fab.contains(e.target)){
+        menu.style.display='none';
+        btn.setAttribute('aria-expanded','false');
+      }
     });
   </script>
 
-  <!-- Logica selezioni + Avanti -->
+  <!-- Logica selezioni + Avanti (identica al tuo flusso) -->
   <script>
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
     const go    = document.getElementById('go');
@@ -300,7 +289,7 @@
     });
   </script>
 
-  <!-- Admin segreto: triplo tap sul titolo -->
+  <!-- Admin segreto: triplo tap sul titolo (come nel tuo, con flash in tinta verdant) -->
   <script>
     (function(){
       let taps = 0, timer = null;
@@ -312,22 +301,24 @@
         timer = setTimeout(()=>taps=0, 1200);
         if (taps >= 3) {
           taps = 0;
+          // flash visivo
           const flash = document.createElement('div');
           flash.style.position='fixed'; flash.style.inset='0';
-          flash.style.background='rgba(230,185,128,.18)';
+          flash.style.background='rgba(158,228,147,.18)'; /* verdant mist */
           flash.style.backdropFilter='blur(2px)';
           flash.style.transition='opacity .6s ease';
           flash.style.opacity='1'; flash.style.zIndex='9999';
           document.body.appendChild(flash);
           setTimeout(()=>flash.style.opacity='0',150);
           setTimeout(()=>flash.remove(),800);
+          // apri area admin
           location.href = 'admin.html';
         }
       });
     })();
   </script>
 
-  <!-- Service Worker registration -->
+  <!-- Service Worker registration (come nelle altre pagine) -->
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
