@@ -147,96 +147,128 @@
 </script>
 
 <script>
-  const L=(localStorage.getItem("lang")||"it").toLowerCase();
-  const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}'); // {periodo, stile}
-  const period = prefs.periodo || 'future';
-  const T = L==='en'
-    ? {back:'Back',home:'Home',title:'Write your question',label:'Your question',
-       pastPH:"What if you had stayed in ___?", futurePH:"What if in the next 12 months you ___?",
-       toggle:"✨ Make it more personal in 30s",hint:"Optional (especially useful for the past): anchors help realism.",
-       place:"A place detail",person:"A person (alias + role)",memory:"A concrete memory",
-       missing:"Please enter a question before continuing.",next:"Next",
-       tempPast:["What if you had stayed in your hometown?","What if you had worked with ___ instead?","What if you hadn’t moved in 2015?"],
-       tempFuture:["What if you quit and opened a small studio?","What if you moved to ___ for a year?","What if you went back to study ___?"]}
-    : {back:'Indietro',home:'Home',title:'Scrivi la tua domanda',label:'La tua domanda',
-       pastPH:"E se fossi rimasto a ___?", futurePH:"E se nei prossimi 12 mesi ___?",
-       toggle:"✨ Rendi più personale in 30s",hint:"Opzionale (utile soprattutto per il passato): le ancore aumentano il realismo.",
-       place:"Un dettaglio del luogo",person:"Una persona (nome fittizio + ruolo)",memory:"Un ricordo concreto",
-       missing:"Inserisci una domanda prima di continuare.",next:"Avanti",
-       tempPast:["E se fossi rimasto nella tua città?","E se avessi lavorato con ___ invece?","E se non ti fossi trasferito nel 2015?"],
-       tempFuture:["E se lasciassi e aprissi uno studio?","E se ti trasferissi a ___ per un anno?","E se tornassi a studiare ___?"]};
-  document.getElementById('tb_back').textContent=T.back; document.getElementById('tb_home').textContent=T.home;
-  document.getElementById('mainTitle').textContent=T.title; document.getElementById('questionLabel').textContent=T.label;
-  document.getElementById('backTxt').textContent=T.back; document.getElementById('nextTxt').textContent=T.next;
-  document.getElementById('toggleMore').textContent=T.toggle; document.getElementById('moreHint').textContent=T.hint;
-  document.getElementById('lab_place').textContent=T.place; document.getElementById('lab_person').textContent=T.person; document.getElementById('lab_memory').textContent=T.memory;
+  // === WHAT?F (versione aggiornata – tono empatico e curioso) ===
 
-  // placeholder dinamico + template
+  const L=(localStorage.getItem("lang")||"it").toLowerCase();
+  const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+  const period = prefs.periodo || 'future';
+
+  // 💬 Testi aggiornati
+  const T = L==='en'
+    ? {
+        back:'Back',home:'Home',
+        title:"💭 What’s the question you can’t get out of your head?",
+        label:"Type it here",
+        pastPH:"What if you had stayed in ___?",
+        futurePH:"What if in the next 12 months you ___?",
+        toggle:"✨ Add a personal touch in 30s",
+        hint:"Optional, but helps make the story feel more *you*.",
+        place:"A place detail",
+        person:"A person (alias + role)",
+        memory:"A vivid memory (object, sound, smell…)",
+        missing:"Write your question before continuing.",
+        next:"✨ Discover your What?f",
+        tempPast:["What if you had stayed in your hometown?","What if you had worked with ___ instead?","What if you hadn’t moved in 2015?"],
+        tempFuture:["What if you quit and opened a small studio?","What if you moved to ___ for a year?","What if you went back to study ___?"]
+      }
+    : {
+        back:'Indietro',home:'Home',
+        title:"💭 Qual è la domanda che non riesci a toglierti dalla testa?",
+        label:"Scrivila qui sotto",
+        pastPH:"E se fossi rimasto a ___?",
+        futurePH:"E se nei prossimi 12 mesi ___?",
+        toggle:"✨ Aggiungi un tocco personale in 30 secondi",
+        hint:"Non è obbligatorio, ma rende lo scenario più *tuo*.",
+        place:"Un dettaglio del luogo",
+        person:"Una persona (nome fittizio + ruolo)",
+        memory:"Un ricordo vivido (oggetto, suono, odore…)",
+        missing:"Scrivi prima la tua domanda.",
+        next:"✨ Scopri il tuo What?f",
+        tempPast:["E se fossi rimasto nella tua città?","E se avessi lavorato con ___ invece?","E se non ti fossi trasferito nel 2015?"],
+        tempFuture:["E se lasciassi e aprissi uno studio?","E se ti trasferissi a ___ per un anno?","E se tornassi a studiare ___?"]
+      };
+
+  // 🎨 Aggiornamento UI con i nuovi testi
+  document.getElementById('mainTitle').textContent = T.title;
+  document.getElementById('questionLabel').textContent = T.label;
+  document.getElementById('tb_back').textContent = T.back;
+  document.getElementById('tb_home').textContent = T.home;
+  document.getElementById('backTxt').textContent = T.back;
+  document.getElementById('nextTxt').textContent = T.next;
+  document.getElementById('toggleMore').textContent = T.toggle;
+  document.getElementById('moreHint').textContent = T.hint;
+  document.getElementById('lab_place').textContent = T.place;
+  document.getElementById('lab_person').textContent = T.person;
+  document.getElementById('lab_memory').textContent = T.memory;
+
+  // Placeholder dinamico
   const domandaInput = document.getElementById('domandaInput');
   domandaInput.placeholder = period==='past' ? T.pastPH : T.futurePH;
+
+  // Suggerimenti (chips)
   const tBox = document.getElementById('templates');
   (period==='past'?T.tempPast:T.tempFuture).forEach(txt=>{
-    const b=document.createElement('button'); b.className='chip'; b.textContent=txt;
+    const b=document.createElement('button');
+    b.className='chip';
+    b.textContent=txt;
     b.addEventListener('click',()=>{ domandaInput.value = txt; });
     tBox.appendChild(b);
   });
 
-  // toggle more
-  document.getElementById('toggleMore').addEventListener('click',()=>{ const b=document.getElementById('moreBox'); b.style.display=b.style.display==='none'?'block':'none'; });
+  // Toggle extra box
+  document.getElementById('toggleMore').addEventListener('click',()=>{
+    const box=document.getElementById('moreBox');
+    box.style.display = box.style.display==='none'?'block':'none';
+  });
+
+  // Navigazione
   document.getElementById('backBtn').addEventListener('click',()=>history.back());
   document.getElementById('nextBtn').addEventListener('click',salvaDomanda);
 
+  // Prefill campi se già esistono
   (function prefill(){
-    const prev=localStorage.getItem("domanda"); if(prev) domandaInput.value=prev;
+    const prev=localStorage.getItem("domanda");
+    if(prev) domandaInput.value=prev;
     const anchors=JSON.parse(localStorage.getItem("whatif_anchors")||"{}");
     if(anchors.place) document.getElementById("anchor_place").value=anchors.place;
     if(anchors.person) document.getElementById("anchor_person").value=anchors.person;
     if(anchors.memory) document.getElementById("anchor_memory").value=anchors.memory;
   })();
 
+  // Salvataggio
   function salvaDomanda(){
     const domanda = domandaInput.value.trim();
     if(!domanda){ alert(T.missing); return; }
     localStorage.setItem("domanda", domanda);
-    // salva ancore
+
     const anchors={
       place:document.getElementById("anchor_place").value.trim(),
       person:document.getElementById("anchor_person").value.trim(),
       memory:document.getElementById("anchor_memory").value.trim()
     };
     localStorage.setItem("whatif_anchors", JSON.stringify(anchors));
-    // classifica domanda → tag
+
     const tags = classifyQuestion(domanda, period);
     localStorage.setItem("whatif_tags", JSON.stringify(tags));
+
+    // Vai avanti
     location.href="fifth.html";
   }
 
-  // ======= CLASSIFICATORE SEMPLICE LOCALE =======
+  // Classificatore (semplificato)
   function classifyQuestion(q, period){
     const s = (q||"").toLowerCase();
     const tags = new Set();
-    // tempo
-    if (period==='past' || /se fossi rimasto|se non avessi|se avessi|what if you had|hadn’t/i.test(q)) tags.add('past');
-    if (period==='future' || /nei prossimi|e se domani|tra un anno|se lasciassi|se aprissi|next 12 months|what if you/i.test(q)) tags.add('future');
-    // domini
-    if (/\blavor|carriera|azienda|contratto|assunzione|licenzi|studio\b/i.test(s)) tags.add('work');
-    if (/\bamore|relazion|partner|figli|famiglia|amico|amica\b/i.test(s)) tags.add('relationships');
-    if (/\baffitto|mutuo|soldi|stipendio|debito|finanz|invest/i.test(s)) tags.add('money');
-    if (/\btrasfer|città|quartiere|via|piazza|trasloco|verona|l'aquila|roma|milano|napoli\b/i.test(s)) tags.add('place');
-    if (/\bstudio|laurea|master|corso|università|esame\b/i.test(s)) tags.add('study');
-    if (/\bsalute|allenament|palestra|sonno|stress\b/i.test(s)) tags.add('wellbeing');
-    if (/\bprogetto|startup|studio\b/i.test(s)) tags.add('project');
+    if (period==='past' || /se fossi rimasto|se avessi/i.test(q)) tags.add('past');
+    if (period==='future' || /nei prossimi|tra un anno|se lasciassi/i.test(q)) tags.add('future');
+    if (/\blavor|carriera|azienda|studio|progetto\b/i.test(s)) tags.add('work');
+    if (/\bamore|relazion|partner|famiglia|amico|amica\b/i.test(s)) tags.add('relationships');
+    if (/\baffitto|mutuo|soldi|stipendio|debito|invest/i.test(s)) tags.add('money');
+    if (/\btrasfer|città|quartiere|piazza|verona|roma|milano\b/i.test(s)) tags.add('place');
+    if (/\bsalute|allenament|stress|sonno\b/i.test(s)) tags.add('wellbeing');
     return Array.from(tags);
   }
 </script>
 
-<!-- SW -->
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/sw.js").catch(()=>{});
-    });
-  }
-</script>
 </body>
 </html>
