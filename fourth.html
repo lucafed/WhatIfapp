@@ -4,112 +4,93 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f – La tua domanda</title>
+
+  <!-- PWA (coerente con il resto) -->
   <meta name="theme-color" content="#0B0B0C" />
 
   <style>
+    /* ===== THEME SYSTEM — stesse variabili delle altre pagine ===== */
     :root{
-      --bg:#0B0B0C;
-      --fg:#FFFFFF;
-      --muted:#A0B2BA;
-      --accent1:#1C57A0; /* Blu Verona */
-      --accent2:#3A6B56; /* Verde Speranza */
-      --highlight:#FFEC01; /* Giallo Verona */
-      --card:#141C22;
-      --chip:#1e2d34;
+      /* Fallback (What if) — Blu/Giallo Verona */
+      --bg:#0B1018; --bg2:#0E1724;
+      --fg:#F4F7FB; --muted:#A7B3C2;
+      --card:#141C22; --line:rgba(255,255,255,.12);
+      --chip:#0f1820; --ink:#11110A;
+      --acc:#1C57A0;  /* blu */
+      --acc2:#FFEC01; /* giallo */
+    }
+    html[data-theme="wtf"]{
+      /* WTF — verde speranza */
+      --bg:#0B0B0C; --bg2:#101414;
+      --fg:#EEF5F0; --muted:#A6B6AD;
+      --card:#111713; --line:rgba(255,255,255,.10);
+      --chip:#0F1714; --ink:#06110B;
+      --acc:#3A6B56;
+      --acc2:#5A8C75;
     }
 
-    *{box-sizing:border-box;}
+    *{box-sizing:border-box}
     html,body{
       margin:0;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:var(--bg);
+      -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
       color:var(--fg);
+      background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
     }
 
     .topbar{
-      position:fixed;
-      top:10px;left:10px;right:10px;
-      display:flex;
-      justify-content:space-between;
-      z-index:10;
+      position:fixed; top:10px; left:10px; right:10px; z-index:10;
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0));
+      padding:6px 0;
     }
     .btn{
-      appearance:none;
-      border:none;
-      border-radius:12px;
-      padding:10px 14px;
-      font-weight:700;
-      cursor:pointer;
-      color:#fff;
-      background:#1e2d34;
-      transition:background .2s ease, transform .1s ease;
+      appearance:none; border:1px solid var(--line); background:var(--chip); color:var(--fg);
+      border-radius:12px; padding:10px 14px; font-weight:800; cursor:pointer;
+      transition:transform .06s ease, opacity .2s;
     }
-    .btn.primary{
-      background:linear-gradient(180deg,var(--accent1),var(--accent2));
-      color:#fff;
-    }
-    .btn:hover{transform:translateY(-1px);}
-    main{
-      min-height:100dvh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:20px;
-    }
-    .wrap{width:min(92vw,720px);}
-    h1{
-      font-size:clamp(22px,5vw,30px);
-      margin:8px 0 12px;
-      text-align:center;
-      line-height:1.3;
-    }
-    label{display:block;margin:10px 0 6px;font-weight:600;}
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{border:none; background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink); box-shadow:0 6px 18px rgba(0,0,0,.28)}
+    .btn.ghost{background:rgba(255,255,255,.04)}
+
+    main{min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:20px}
+    .wrap{width:min(92vw,720px)}
+    h1{font-size:clamp(22px,5vw,30px); margin:8px 0 12px; text-align:center; color:var(--fg)}
+    label{display:block; margin:10px 0 6px; font-weight:700}
     input,textarea{
-      width:100%;
-      background:#101922;
-      border:1px solid #1b2a34;
-      border-radius:12px;
-      color:#E6F2F5;
-      padding:12px;
-      font-size:15px;
-      resize:none;
+      width:100%; background:#101922; color:#E6F2F5;
+      border:1px solid var(--line); border-radius:12px; padding:12px; font-size:15px; resize:none
     }
-    textarea:focus,input:focus{outline:none;border-color:var(--accent1);}
-    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+    textarea:focus,input:focus{outline:none; border-color:var(--acc)}
+    .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
     .chip{
-      background:var(--chip);
-      color:#d7e9eb;
-      border:none;
-      padding:10px 14px;
-      border-radius:16px;
-      cursor:pointer;
-      font-weight:600;
-      transition:background .2s ease;
+      background:var(--chip); color:#d7e9eb; border:1px solid var(--line);
+      padding:10px 14px; border-radius:16px; cursor:pointer; font-weight:700;
+      transition:background .16s ease, border-color .16s ease
     }
-    .chip:hover{background:var(--accent1);}
+    .chip:hover{background:rgba(255,255,255,.06)}
     .extra{
-      background:#111a21;
-      border:1px solid #1f2c36;
-      border-radius:16px;
-      padding:16px;
-      margin-top:16px;
-      display:none;
+      background:var(--card); border:1px solid var(--line);
+      border-radius:16px; padding:16px; margin-top:16px; display:none
     }
-    .hint{
-      font-size:13px;
-      color:var(--muted);
-      margin:6px 0 12px;
-    }
-    .row{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-top:18px;
-    }
+    .hint{font-size:13px; color:var(--muted); margin:6px 0 12px}
+    .row{display:flex; gap:10px; justify-content:space-between; align-items:center; margin-top:18px; flex-wrap:wrap}
+    .cta-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+    .cta-row .btn.primary{flex:1}
   </style>
 </head>
 
 <body>
+  <script>
+    /* Tema coerente dal prefs */
+    (function(){
+      try{
+        const prefs=JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+        document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+      }catch(e){ document.documentElement.setAttribute('data-theme','whatif'); }
+    })();
+  </script>
+
   <div class="topbar">
     <button class="btn" onclick="history.back()">← <span id="tb_back">Indietro</span></button>
     <button class="btn" onclick="location.href='index.html'">🏠 <span id="tb_home">Home</span></button>
@@ -123,8 +104,10 @@
 
       <div class="chips" id="templates"></div>
 
-      <div class="hint">
-        <button class="btn" id="toggleMore">✨ Aggiungi un tocco personale in 30s</button>
+      <div class="cta-row">
+        <button class="btn" id="toggleMore">✨ <span id="toggleTxt">Aggiungi un tocco personale (30s)</span></button>
+        <!-- Link FULL TEST (solo qui e in fifth) -->
+        <button class="btn primary" id="fullBtn">⏱ <span id="fullTxt">Test completo (5 min)</span></button>
       </div>
 
       <div class="extra" id="moreBox">
@@ -138,20 +121,18 @@
       </div>
 
       <div class="row">
-        <button class="btn" id="backBtn">← <span id="backTxt">Indietro</span></button>
+        <button class="btn ghost" id="backBtn">← <span id="backTxt">Indietro</span></button>
         <button class="btn primary" id="nextBtn"><span id="nextTxt">✨ Scopri il tuo What?f</span> →</button>
       </div>
     </div>
   </main>
 
 <script>
-  // === WHAT?F (versione aggiornata – tono empatico e curioso) ===
-
+  // ===== I18N =====
   const L=(localStorage.getItem("lang")||"it").toLowerCase();
   const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
   const period = prefs.periodo || 'future';
 
-  // 💬 Testi aggiornati
   const T = L==='en'
     ? {
         back:'Back',home:'Home',
@@ -159,13 +140,14 @@
         label:"Type it here",
         pastPH:"What if you had stayed in ___?",
         futurePH:"What if in the next 12 months you ___?",
-        toggle:"✨ Add a personal touch in 30s",
-        hint:"Optional, but helps make the story feel more *you*.",
+        toggle:"Add a personal touch (30s)",
+        full:"Full test (5 min)",
+        hint:"Optional, but makes the scenario feel more *you*.",
         place:"A place detail",
         person:"A person (alias + role)",
         memory:"A vivid memory (object, sound, smell…)",
         missing:"Write your question before continuing.",
-        next:"✨ Discover your What?f",
+        next:"Discover your What?f",
         tempPast:["What if you had stayed in your hometown?","What if you had worked with ___ instead?","What if you hadn’t moved in 2015?"],
         tempFuture:["What if you quit and opened a small studio?","What if you moved to ___ for a year?","What if you went back to study ___?"]
       }
@@ -175,96 +157,113 @@
         label:"Scrivila qui sotto",
         pastPH:"E se fossi rimasto a ___?",
         futurePH:"E se nei prossimi 12 mesi ___?",
-        toggle:"✨ Aggiungi un tocco personale in 30 secondi",
+        toggle:"Aggiungi un tocco personale (30s)",
+        full:"Test completo (5 min)",
         hint:"Non è obbligatorio, ma rende lo scenario più *tuo*.",
         place:"Un dettaglio del luogo",
         person:"Una persona (nome fittizio + ruolo)",
         memory:"Un ricordo vivido (oggetto, suono, odore…)",
         missing:"Scrivi prima la tua domanda.",
-        next:"✨ Scopri il tuo What?f",
+        next:"Scopri il tuo What?f",
         tempPast:["E se fossi rimasto nella tua città?","E se avessi lavorato con ___ invece?","E se non ti fossi trasferito nel 2015?"],
         tempFuture:["E se lasciassi e aprissi uno studio?","E se ti trasferissi a ___ per un anno?","E se tornassi a studiare ___?"]
       };
 
-  // 🎨 Aggiornamento UI
-  document.getElementById('mainTitle').textContent = T.title;
-  document.getElementById('questionLabel').textContent = T.label;
-  document.getElementById('tb_back').textContent = T.back;
-  document.getElementById('tb_home').textContent = T.home;
-  document.getElementById('backTxt').textContent = T.back;
-  document.getElementById('nextTxt').textContent = T.next;
-  document.getElementById('toggleMore').textContent = T.toggle;
-  document.getElementById('moreHint').textContent = T.hint;
-  document.getElementById('lab_place').textContent = T.place;
-  document.getElementById('lab_person').textContent = T.person;
-  document.getElementById('lab_memory').textContent = T.memory;
+  // UI copy
+  const $=s=>document.getElementById(s);
+  $('mainTitle').textContent=T.title;
+  $('questionLabel').textContent=T.label;
+  $('tb_back').textContent=T.back;
+  $('tb_home').textContent=T.home;
+  $('backTxt').textContent=T.back;
+  $('nextTxt').textContent='✨ '+T.next;
+  $('toggleTxt').textContent=T.toggle;
+  $('fullTxt').textContent=T.full;
+  $('moreHint').textContent=T.hint;
+  $('lab_place').textContent=T.place;
+  $('lab_person').textContent=T.person;
+  $('lab_memory').textContent=T.memory;
 
-  // Placeholder dinamico
-  const domandaInput = document.getElementById('domandaInput');
+  const domandaInput = $('domandaInput');
   domandaInput.placeholder = period==='past' ? T.pastPH : T.futurePH;
 
-  // Suggerimenti (chips)
-  const tBox = document.getElementById('templates');
+  // Suggerimenti
+  const tBox = $('templates');
   (period==='past'?T.tempPast:T.tempFuture).forEach(txt=>{
     const b=document.createElement('button');
-    b.className='chip';
-    b.textContent=txt;
-    b.addEventListener('click',()=>{ domandaInput.value = txt; });
+    b.className='chip'; b.textContent=txt;
+    b.addEventListener('click',()=>{ domandaInput.value = txt; nextBtn.disabled=false; });
     tBox.appendChild(b);
   });
 
-  // Toggle extra box
-  document.getElementById('toggleMore').addEventListener('click',()=>{
-    const box=document.getElementById('moreBox');
-    box.style.display = box.style.display==='none'?'block':'none';
+  // Toggle extra
+  $('toggleMore').addEventListener('click',()=>{
+    const box=$('moreBox');
+    box.style.display = box.style.display==='block' ? 'none' : 'block';
   });
 
-  // Navigazione
-  document.getElementById('backBtn').addEventListener('click',()=>history.back());
-  document.getElementById('nextBtn').addEventListener('click',salvaDomanda);
+  // Full test
+  $('fullBtn').addEventListener('click', ()=> location.href='fulltest.html');
 
-  // Prefill campi se già esistono
+  // Nav
+  $('backBtn').addEventListener('click',()=>history.back());
+  $('nextBtn').addEventListener('click', salvaDomanda);
+
+  // Prefill
   (function prefill(){
     const prev=localStorage.getItem("domanda");
-    if(prev) domandaInput.value=prev;
+    if(prev){ domandaInput.value=prev; $('nextBtn').disabled=false; }
     const anchors=JSON.parse(localStorage.getItem("whatif_anchors")||"{}");
-    if(anchors.place) document.getElementById("anchor_place").value=anchors.place;
-    if(anchors.person) document.getElementById("anchor_person").value=anchors.person;
-    if(anchors.memory) document.getElementById("anchor_memory").value=anchors.memory;
+    if(anchors.place) $('anchor_place').value=anchors.place;
+    if(anchors.person) $('anchor_person').value=anchors.person;
+    if(anchors.memory) $('anchor_memory').value=anchors.memory;
   })();
 
-  // Salvataggio
+  // Enable CTA
+  const nextBtn=$('nextBtn');
+  domandaInput.addEventListener('input',()=>{ nextBtn.disabled = !domandaInput.value.trim(); });
+  nextBtn.disabled = !domandaInput.value?.trim();
+
+  // Save
   function salvaDomanda(){
     const domanda = domandaInput.value.trim();
     if(!domanda){ alert(T.missing); return; }
     localStorage.setItem("domanda", domanda);
 
     const anchors={
-      place:document.getElementById("anchor_place").value.trim(),
-      person:document.getElementById("anchor_person").value.trim(),
-      memory:document.getElementById("anchor_memory").value.trim()
+      place:$('anchor_place').value.trim(),
+      person:$('anchor_person').value.trim(),
+      memory:$('anchor_memory').value.trim()
     };
     localStorage.setItem("whatif_anchors", JSON.stringify(anchors));
 
     const tags = classifyQuestion(domanda, period);
     localStorage.setItem("whatif_tags", JSON.stringify(tags));
 
-    // Vai avanti
     location.href="fifth.html";
   }
 
-  // Classificatore (semplificato)
+  // Classifier (it/en)
   function classifyQuestion(q, period){
-    const s = (q||"").toLowerCase();
-    const tags = new Set();
-    if (period==='past' || /se fossi rimasto|se avessi/i.test(q)) tags.add('past');
-    if (period==='future' || /nei prossimi|tra un anno|se lasciassi/i.test(q)) tags.add('future');
-    if (/\blavor|carriera|azienda|studio|progetto\b/i.test(s)) tags.add('work');
-    if (/\bamore|relazion|partner|famiglia|amico|amica\b/i.test(s)) tags.add('relationships');
-    if (/\baffitto|mutuo|soldi|stipendio|debito|invest/i.test(s)) tags.add('money');
-    if (/\btrasfer|città|quartiere|piazza|verona|roma|milano\b/i.test(s)) tags.add('place');
-    if (/\bsalute|allenament|stress|sonno\b/i.test(s)) tags.add('wellbeing');
+    const s=(q||"").toLowerCase();
+    const tags=new Set();
+    if(period==='past' || /se fossi rimasto|se avessi|had (stayed|worked)|hadn[’']t moved/i.test(q)) tags.add('past');
+    if(period==='future' || /nei prossimi|tra un anno|se lasciassi|next 12 months|moved to|go back to study/i.test(q)) tags.add('future');
+    if(/\b(lavor|carriera|azienda|studio|progetto|work|career|company|project)\b/i.test(s)) tags.add('work');
+    if(/\b(amore|relazion|partner|famiglia|amico|amica|relationship|family|partner|friend)\b/i.test(s)) tags.add('relationships');
+    if(/\b(affitto|mutuo|soldi|stipendio|debito|invest|rent|mortgage|salary|debt|invest)\b/i.test(s)) tags.add('money');
+    if(/\b(trasfer|città|quartiere|piazza|verona|roma|milano|move|city|neighborhood|square)\b/i.test(s)) tags.add('place');
+    if(/\b(salute|allenament|stress|sonno|health|training|sleep|stress)\b/i.test(s)) tags.add('wellbeing');
     return Array.from(tags);
+  }
+</script>
+
+<!-- SW -->
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});
+    });
   }
 </script>
 </body>
