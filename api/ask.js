@@ -6,65 +6,96 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL_TEXT = "gpt-4o-mini";
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
+/* ============== Utils: sintesi profilo per personalizzazione ============== */
+function renderProfileDigest(p) {
+  if (!p || typeof p !== "object") return "";
+  const parts = [];
+  if (p.name) parts.push(`${p.name}${p.age_range ? ", " + p.age_range : ""}`);
+  const roots = [p.city_origin, p.city_now].filter(Boolean).join(" → ");
+  if (roots) parts.push(`luoghi: ${roots}`);
+  if (p.work_role) parts.push(`ruolo: ${p.work_role}`);
+  if (Array.isArray(p.goals) && p.goals.length) parts.push(`obiettivi: ${p.goals.join(", ")}`);
+  if (Array.isArray(p.values) && p.values.length) parts.push(`valori: ${p.values.join(", ")}`);
+  if (Array.isArray(p.wins) && p.wins.length) parts.push(`vittorie: ${p.wins.join(", ")}`);
+  if (Array.isArray(p.pains) && p.pains.length) parts.push(`difficoltà: ${p.pains.join(", ")}`);
+  if (Array.isArray(p.hobbies) && p.hobbies.length) parts.push(`interessi: ${p.hobbies.join(", ")}`);
+  return parts.join(" • ");
+}
+
 /* ============== Persona prompts ============== */
 function systemPrompt({ stile = "whatif", lang = "it", profile = {} }) {
   const en = isEn(lang);
   const drinksYes = profile?.drinks_pref === "yes" || profile?.unwind === "drink";
+  const cityNow = profile?.city_now || "";
+  const cityOrigin = profile?.city_origin || "";
+  const workRole = profile?.work_role || "";
 
   if (stile === "wtf") {
+    // WHAT THE F — barista sarcastico, botta e risposta, con scena e gancio finale (10–12 righe)
     return en
-      ? `You are What?f's late-night bartender-philosopher: witty, razor-sharp, joyfully tipsy.
-Speak with high sarcasm, playful irony, and kind elegance. No insults, no slurs, no vulgarity.
-Your mission: narrate a vivid, compact scene showing the user's *alternate life path*:
-- If TIMEFRAME is PAST: write a counterfactual “road not taken” as if it had happened.
-- If TIMEFRAME is FUTURE: write a plausible near-future slice if they choose that option now.
+      ? `You are What the F: a late-night bartender philosopher — witty, razor-sharp, and warmly sarcastic.
+Speak in quick, punchy back-and-forth (max ~10–12 short lines). Be playful, clever, and a bit existential.
 Style:
-- Vary openings (hooks: “Picture this:”, “Plot twist:”, “Confession time:”, “Spoiler from another timeline:”, “Between us:”, “Small cosmic joke:”, “Okay, imagine this:”).
-- Cinematic, tight, funny; philosophical but joyful, not preachy.
-- Use concrete details only if useful.
-- If advice is needed, end with 3 crisp bullet options.
-“Alcoholic” flavor: ${drinksYes ? "slightly stronger cocktail metaphors (tasteful)" : "light occasional nods"}.
-Safety: never encourage harmful drinking; it's a mood, not a prescription.`
-      : `Sei il barista-filosofo nottambulo di What?f: arguto, affilato, felicemente alticcio.
-Parla con sarcasmo deciso, ironia giocosa ed eleganza gentile. Niente insulti o volgarità.
-Missione: racconta una scena vivida della *vita alternativa* dell’utente:
-- Se il PERIODO è PASSATO: scrivi un controfattuale “strada non presa” come se fosse accaduta.
-- Se il PERIODO è FUTURO: uno scorcio plausibile del prossimo futuro se oggi sceglie quella via.
+- Snappy one-liners + tiny vivid scene (let the user picture it).
+- Sarcasm elegant, never vulgar or insulting.
+- Human warmth beneath the irony.
+Alcohol vibe: ${drinksYes ? "occasional bar/cocktail metaphors (tasteful), never the main theme." : "rare, subtle nods only."}
+Personalization:
+- Use PROFILE DIGEST to ground places, work, goals, values (e.g., ${cityNow || "their city"}, ${workRole || "their role"}).
+- NEVER reveal raw private details; keep it implicit and classy.
+Ending:
+- Always close with a playful, personal cliffhanger that suggests the next beat (e.g., “Want the part that happens in ${cityNow || "their city"}? Next round.”).`
+      : `Sei “What the F”: barista filosofo nottambulo — ironico, affilato, ma umano.
+Parla in botta e risposta, ritmo rapido, con una mini-scena che si vede in testa (max ~10–12 righe).
 Stile:
-- Varia sempre l’incipit (ganci: “Immagina la scena:”, “Colpo di scena:”, “Confessione:”, “Spoiler da una timeline parallela:”, “Tra noi:”, “Piccola beffa cosmica:”, “Ok, visualizza questo:”).
-- Prosa cinematografica, asciutta, divertente; filosofia allegra, non pedante.
-- Dettagli concreti solo se servono.
-- Se serve un consiglio, chiudi con 3 punti elenco.
-“Tasso alcolico”: ${drinksYes ? "un filo più alto, con metafore da bancone (di buon gusto)" : "accenni leggeri"}.
-Sicurezza: mai promuovere eccessi; è atmosfera, non prescrizione.`;
+- Battute secche + immagine vivida.
+- Sarcasmo elegante, mai volgare o offensivo.
+- Sotto l’ironia, calore umano.
+Tocco alcolico: ${drinksYes ? "metafore da bancone ogni tanto (di buon gusto), mai tema centrale." : "accenni rari e leggeri."}
+Personalizzazione:
+- Usa la SINTESI PROFILO per ancorare città, lavoro, obiettivi, valori (es. ${cityNow || "città attuale"}, ${workRole || "ruolo"}).
+- Non esporre mai dettagli sensibili; resta implicito.
+Chiusura:
+- Termina sempre con un cliffhanger giocoso e personale che inviti al seguito (es. “Vuoi sapere cosa succede a ${cityNow || "casa"}? Prossimo giro.”).`;
   }
 
-  return isEn(lang)
-    ? `You are What?f, a warm, thoughtful scenario-designer and friend.
-Narrate a plausible, personal scenario for the user’s *alternative path*:
-- PAST → counterfactual “road not taken” as if it happened, with one enduring insight.
-- FUTURE → near-future slice if they choose that option now, with 1–3 actionable steps.
-Style: gentle philosophy, natural conversation, varied openings. Concise (~150–220 words).`
-    : `Sei What?f, un amico riflessivo e designer di scenari.
-Racconta uno scenario plausibile e personale della *strada alternativa*:
-- PASSATO → controfattuale come se fosse avvenuto, con un’idea che resta.
-- FUTURO → prossimo futuro se oggi sceglie quella via, con 1–3 passi concreti.
-Stile: filosofia gentile, conversazione naturale, incipit vari. Conciso (150–220 parole).`;
+  // WHAT?F — barista sobrio, botta e risposta, immagina “come sarebbe/potrebbe essere” (10–12 righe)
+  return en
+    ? `You are What?f: a sober, empathetic bartender-philosopher — lucid, kind, and precise.
+Speak in punchy back-and-forth (max ~10–12 short lines) with calm rhythm.
+Goal: help the user briefly SEE/FEEL an alternate life slice (past or near future).
+Style:
+- Gentle irony, never heavy. Concrete, visual hints (sound, light, small gestures).
+- Personalize using PROFILE DIGEST (cities, work, goals, values), never exposing private raw data.
+- If TIMEFRAME = PAST: “how it might have been” as a felt glimpse.
+- If TIMEFRAME = FUTURE: “how it could be next” with a grounded vibe.
+Ending:
+- Close with a soft, personal hook inviting the next step (e.g., “Tomorrow I’ll tell you what changes if you try it in ${cityNow || "your city"}.”).`
+    : `Sei What?f: barista sobrio ed empatico — lucido, gentile, preciso.
+Parla in botta e risposta (max ~10–12 righe) con ritmo calmo.
+Obiettivo: far VEDERE/SENTIRE un frammento di vita alternativa (passato o prossimo futuro).
+Stile:
+- Ironia leggera, concretezza visiva (suoni, luce, piccoli gesti).
+- Personalizza usando la SINTESI PROFILO (città, lavoro, obiettivi, valori), senza mostrare dati sensibili.
+- Se PERIODO = PASSATO: “come sarebbe stato” come scorcio sentito.
+- Se PERIODO = FUTURO: “come potrebbe essere” in modo realistico.
+Chiusura:
+- Termina con un gancio morbido e personale che inviti al seguito (es. “Domani ti dico cosa cambia se provi a farlo a ${cityNow || "casa"}.”).`;
 }
 
 function responseStyleInstruction(lang, stile) {
   const en = isEn(lang);
   if (stile === "wtf") {
     return en
-      ? `Write as a cheeky, philosophical bartender. Cinematic prose, tight rhythm. ~150–220 words. If advice is needed, end with 3 bullets. Never crude.`
-      : `Scrivi come un barista filosofico e sfacciato. Prosa cinematografica, ritmo asciutto. ~150–220 parole. Se serve, 3 bullet finali. Mai volgare.`;
+      ? `Format: short back-and-forth, ~10–12 concise lines. Tiny vivid scene. Elegant sarcasm. End with a playful personal cliffhanger.`
+      : `Formato: botta e risposta breve, ~10–12 righe concise. Mini-scena vivida. Sarcasmo elegante. Chiudi con un cliffhanger personale e giocoso.`;
   }
   return en
-    ? `Write as a warm, reflective friend. Realistic, actionable. 150–220 words.`
-    : `Scrivi come un amico riflessivo. Realistico, con passi concreti. 150–220 parole.`;
+    ? `Format: short back-and-forth, ~10–12 calm lines. Visual, empathetic. End with a soft personal hook.`
+    : `Formato: botta e risposta, ~10–12 righe. Visivo, empatico. Chiudi con un gancio morbido e personale.`;
 }
 
-/* ============== Costruzione messaggio utente ============== */
+/* ============== Costruzione messaggio utente (con profilo) ============== */
 function buildUserContent({ domanda, periodo, profilo, clarifications, lang, stile }) {
   const en = isEn(lang);
   const L = [];
@@ -72,24 +103,9 @@ function buildUserContent({ domanda, periodo, profilo, clarifications, lang, sti
   L.push(en ? `TIMEFRAME: ${periodo || "future"}` : `PERIODO: ${periodo || "future"}`);
   L.push(en ? `STYLE: ${stile}` : `STILE: ${stile}`);
 
-  if (profilo && typeof profilo === "object") {
-    const { name, role, city, goal, values, style, change_attitude, motivation, self_view, drinks_pref, unwind, micro } = profilo;
-    const p = [];
-    if (name) p.push(`name: ${name}`);
-    if (role) p.push(`role: ${role}`);
-    if (city) p.push(`city: ${city}`);
-    if (goal) p.push(`goal: ${goal}`);
-    if (values?.length) p.push(`values: ${values.join(", ")}`);
-    if (style) p.push(`style: ${style}`);
-    if (change_attitude) p.push(`change_attitude: ${change_attitude}`);
-    if (motivation) p.push(`motivation: ${motivation}`);
-    if (self_view) p.push(`self_view: ${self_view}`);
-    if (typeof drinks_pref === "string") p.push(`drinks_pref: ${drinks_pref}`);
-    if (typeof unwind === "string") p.push(`unwind: ${unwind}`);
-    if (micro && typeof micro === "object") {
-      Object.entries(micro).forEach(([k, v]) => { if (v && typeof v === "string" && v.trim()) p.push(`${k}: ${v}`); });
-    }
-    if (p.length) L.push((en ? "PROFILE:\n" : "PROFILO:\n") + p.join("\n"));
+  const digest = renderProfileDigest(profilo);
+  if (digest) {
+    L.push(en ? `PROFILE DIGEST: ${digest}` : `SINTESI PROFILO: ${digest}`);
   }
 
   if (clarifications && Object.keys(clarifications).length) {
@@ -99,49 +115,41 @@ function buildUserContent({ domanda, periodo, profilo, clarifications, lang, sti
 
   L.push(
     en
-      ? `NARRATIVE TARGET:
-- If TIMEFRAME = "past": counterfactual vignette as if it truly happened.
-- If TIMEFRAME = "future": near-future slice if they choose now.`
-      : `OBIETTIVO NARRATIVO:
-- PERIODO "past": vignetta controfattuale come se fosse successa.
-- PERIODO "future": scorcio di prossimo futuro se sceglie ora.`
+      ? `CONTEXT USE:
+- Personalize scenes with PROFILE DIGEST (cities, work, goals, values, pains, wins).
+- Never reveal raw private details; keep references implicit and respectful.
+- Imagine “how it would have been / could be next” for a few moments.`
+      : `USO DEL CONTESTO:
+- Personalizza le scene con la SINTESI PROFILO (città, lavoro, obiettivi, valori, difficoltà, vittorie).
+- Non rivelare dettagli privati in chiaro; resta implicito e rispettoso.
+- Immagina “come sarebbe stato / come potrebbe essere” per alcuni istanti.`
   );
-  L.push(
-    en
-      ? `CONSTRAINTS:
-- Avoid repeating the same person/place/object every time.
-- Vary the opening line.`
-      : `VINCOLI:
-- Non ripetere sempre gli stessi motivi (persone/luoghi/oggetti).
-- Varia l’incipit.`
-  );
+
   return L.join("\n\n");
 }
 
-/* ============== Clarify “aware” del periodo ============== */
+/* ============== Clarify “aware” del periodo + profiling progressivo ============== */
 function clarifySystemPrompt(lang = "it") {
   const en = isEn(lang);
-  return en
-    ? `You generate 2–3 short, focused clarifying questions to better answer the user's main question.
-You are PERIOD-AWARE:
-- If TIMEFRAME = "past": ask about the pivot year/event, location/context at that time, what constraint or signal would have changed the path.
-- If TIMEFRAME = "future": ask about next decision window/timing, success indicator, realistic constraint or resource.
-Constraints:
-- Tailor questions to QUESTION, TIMEFRAME and PROFILE (role, city, goal, micro signals).
-- Each question must be one line, concrete, non-generic.
-- Prefer action, constraints, indicators, timing, or success criteria.
-- Safety: avoid PII/invasive asks.
-- Output MUST be ONLY a JSON array of { "id": string, "label": string, "placeholder": string } (2–3 items).`
-    : `Generi 2–3 domande di chiarimento brevi e mirate per rispondere meglio.
-Sei CONSAPEVOLE DEL PERIODO:
-- Se PERIODO = "past": chiedi anno/evento di snodo, luogo/contesto di allora, quale vincolo o segnale avrebbe cambiato strada.
-- Se PERIODO = "future": chiedi finestra temporale/decisione, indicatore di successo, vincolo o risorsa realistica.
-Vincoli:
-- Adatta le domande a DOMANDA, PERIODO e PROFILO (ruolo, città, obiettivo, micro-segnali).
-- Una riga per domanda, concreta e non generica.
-- Privilegia azione, vincoli, indicatori, tempi, criteri di successo.
-- Sicurezza: evita PII/richieste invasive.
-- Output SOLO come array JSON di { "id": string, "label": string, "placeholder": string } (2–3 elementi).`;
+  const base = en
+    ? `You generate 2–3 short, focused clarifying questions (one line each) to better answer the user's main question. Return ONLY a JSON array of { "id","label","placeholder" }.`
+    : `Generi 2–3 domande brevi e mirate (una riga) per rispondere meglio. Restituisci SOLO un array JSON di { "id","label","placeholder" }.`;
+
+  const period = en
+    ? `You are PERIOD-AWARE:
+- If TIMEFRAME = "past": ask about pivot year/event, place/context back then, key constraint/signal.
+- If TIMEFRAME = "future": ask about decision window, success indicator, realistic constraint/resource.`
+    : `Consapevolezza del PERIODO:
+- PERIODO "past": chiedi anno/evento di svolta, luogo/contesto di allora, vincolo/segno chiave.
+- PERIODO "future": chiedi finestra decisionale, indicatore di successo, vincolo/risorsa realistica.`;
+
+  const profiling = en
+    ? `Progressive profiling:
+- If missing, ask one-liners to fill key profile fields for personalization: city_now/city_origin, work_role, main goal (one concrete), 2–3 values.`
+    : `Profilazione progressiva:
+- Se mancano, chiedi in una riga i campi profilo chiave: city_now/city_origin, work_role, obiettivo principale (concreto), 2–3 valori.`;
+
+  return `${base}\n${period}\n${profiling}`;
 }
 
 function clarifyUserContent({ domanda, periodo = "future", profilo = {}, lang = "it" }) {
@@ -149,71 +157,79 @@ function clarifyUserContent({ domanda, periodo = "future", profilo = {}, lang = 
   const parts = [];
   parts.push((en ? "QUESTION: " : "DOMANDA: ") + (domanda || ""));
   parts.push((en ? "TIMEFRAME: " : "PERIODO: ") + periodo);
-  if (profilo && typeof profilo === "object") {
-    const { name, role, city, goal, unwind, drinks_pref, micro = {} } = profilo;
-    const p = [];
-    if (name) p.push(`name: ${name}`);
-    if (role) p.push(`role: ${role}`);
-    if (city) p.push(`city: ${city}`);
-    if (goal) p.push(`goal: ${goal}`);
-    if (unwind) p.push(`unwind: ${unwind}`);
-    if (drinks_pref) p.push(`drinks_pref: ${drinks_pref}`);
-    Object.entries(micro || {}).forEach(([k, v]) => { if (v && typeof v === "string") p.push(`${k}: ${v}`); });
-    if (p.length) parts.push((en ? "PROFILE:\n" : "PROFILO:\n") + p.join("\n"));
+
+  // Passa un digest minimo per domande più intelligenti
+  const digest = renderProfileDigest(profilo);
+  if (digest) {
+    parts.push(en ? "PROFILE DIGEST: " + digest : "SINTESI PROFILO: " + digest);
   }
+
   parts.push(en ? "Return ONLY the JSON array." : "Ritornare SOLO l’array JSON.");
   return parts.join("\n\n");
 }
 
-/* ============== Fallback locale (period-aware) ============== */
+/* ============== Fallback clarify (se il modello non restituisce JSON valido) ============== */
 function localClarify(domanda = "", profilo = {}, lang = "it", periodo = "future") {
   const en = isEn(lang);
-  const s = (domanda || "").toLowerCase();
-
   const qs = [];
+
   if (periodo === "past") {
     qs.push({
       id: "pivot_year",
-      label: en ? "Which year/event is the real turning point?" : "Quale anno/evento è stato il vero punto di svolta?",
-      placeholder: en ? "e.g., 2010 job offer / 2015 move" : "es. offerta lavoro 2010 / trasferimento 2015",
+      label: en ? "Turning point year/event?" : "Anno/evento di svolta?",
+      placeholder: en ? "e.g., 2015 move / 2010 offer" : "es. trasferimento 2015 / offerta 2010",
     });
     qs.push({
       id: "then_context",
-      label: en ? "Where were you and what context mattered most back then?" : "Dove eri e quale contesto contava di più allora?",
-      placeholder: en ? "city / team / family situation" : "città / team / situazione familiare",
+      label: en ? "Where and what context mattered then?" : "Dove e quale contesto contava allora?",
+      placeholder: en ? "city/team/family" : "città/team/famiglia",
     });
     qs.push({
       id: "what_would_change",
-      label: en ? "What constraint or signal would have changed your choice?" : "Quale vincolo o segnale avrebbe cambiato la tua scelta?",
-      placeholder: en ? "money / time / a person / an offer" : "soldi / tempo / una persona / un’offerta",
+      label: en ? "One constraint/signal that would've changed it?" : "Un vincolo/segno che l’avrebbe cambiata?",
+      placeholder: en ? "money/time/person/offer" : "soldi/tempo/persona/offerta",
     });
   } else {
-    // future
     qs.push({
       id: "time_window",
-      label: en ? "What’s the real decision window?" : "Qual è la vera finestra decisionale?",
+      label: en ? "Real decision window?" : "Vera finestra decisionale?",
       placeholder: en ? "this month / 3–6 months / 12 months" : "questo mese / 3–6 mesi / 12 mesi",
     });
     qs.push({
       id: "success_indicator",
-      label: en ? "One indicator that tells you you’re on track?" : "Un indicatore che ti dice che sei sulla strada giusta?",
-      placeholder: en ? "€ saved, hours/week, first client" : "€ risparmiati, ore/settimana, primo cliente",
+      label: en ? "One success indicator?" : "Un indicatore di successo?",
+      placeholder: en ? "€ saved / hours / first client" : "€ risparmiati / ore / primo cliente",
     });
     qs.push({
       id: "real_constraint",
-      label: en ? "What’s the most concrete constraint?" : "Qual è il vincolo più concreto?",
+      label: en ? "Most concrete constraint?" : "Vincolo più concreto?",
       placeholder: en ? "budget / time / energy / commitment" : "budget / tempo / energia / impegno",
     });
   }
 
-  // Micro-heuristics extra sul testo della domanda
-  if (/\b(move|trasfer|city|quartiere)\b/i.test(s)) {
-    qs[1] = qs[1] || {
-      id: "landmark",
-      label: en ? "One place that matters in this scenario?" : "Un luogo di riferimento che conta in questo scenario?",
-      placeholder: en ? "station / square / office area" : "stazione / piazza / zona ufficio",
+  // Profilo mancante: prova a chiederne uno
+  if (!profilo?.city_now) {
+    qs[0] = qs[0] || {
+      id: "city_now",
+      label: en ? "Where do you live now?" : "Dove vivi adesso?",
+      placeholder: en ? "city" : "città",
     };
   }
+  if (!profilo?.work_role) {
+    qs[1] = qs[1] || {
+      id: "work_role",
+      label: en ? "Your current role in one line?" : "Il tuo ruolo attuale in una riga?",
+      placeholder: en ? "e.g., pharmacist technician" : "es. tecnico farmaceutico",
+    };
+  }
+  if (!Array.isArray(profilo?.goals) || !profilo.goals.length) {
+    qs[2] = qs[2] || {
+      id: "main_goal",
+      label: en ? "One concrete goal now?" : "Un obiettivo concreto ora?",
+      placeholder: en ? "e.g., change job / more time" : "es. cambiare lavoro / più tempo",
+    };
+  }
+
   return qs.slice(0, 3);
 }
 
@@ -236,7 +252,7 @@ export default async function handler(req, res) {
       stream = false,          // true => text/event-stream
       profilo = {},            // { ... , micro:{...} }
       clarifications = {},     // risposte dell’utente ai chiarimenti
-      extra = "",              // forza lingua ecc.
+      extra = "",              // input extra opzionale
     } = req.body || {};
 
     if (!domanda || typeof domanda !== "string") {
@@ -263,7 +279,7 @@ export default async function handler(req, res) {
         if (start >= 0 && end > start) {
           questions = JSON.parse(raw.slice(start, end + 1));
         }
-      } catch (_) { /* se fallisce, fallback */ }
+      } catch (_) { /* fallback sotto */ }
 
       if (!Array.isArray(questions) || questions.length === 0) {
         questions = localClarify(domanda, profilo, lang, periodo);
@@ -283,27 +299,17 @@ export default async function handler(req, res) {
     const user = buildUserContent({ domanda, periodo, profilo, clarifications, lang, stile });
     const sys2 = responseStyleInstruction(lang, stile);
 
-    const reminders = isEn(lang)
-      ? `Reminders:
-- TIMEFRAME awareness: if PAST → counterfactual as if it happened; if FUTURE → near-future slice if they choose now.
-- Vary the opening line; avoid repeating the same person/place/object motif.
-- Compact, vivid images.`
-      : `Promemoria:
-- Consapevolezza del PERIODO: PASSATO → come se fosse successo; FUTURO → scorcio di prossimo futuro se sceglie ora.
-- Varia l’incipit; non ripetere sempre gli stessi motivi (persona/luogo/oggetto).
-- Compatto, immagini vivide.`;
-
     const messages = [
       { role: "system", content: sys1 },
       { role: "user", content: user },
-      { role: "system", content: reminders },
       { role: "system", content: sys2 },
       extra ? { role: "user", content: extra } : null,
     ].filter(Boolean);
 
-    const temperature = stile === "wtf" ? 0.95 : 0.75;
+    // Creatività: un pelo più alta per "wtf" per favorire battute e scene rapide
+    const temperature = stile === "wtf" ? 0.9 : 0.8;
 
-    // Streaming
+    // Streaming (SSE)
     if (String(req.headers["x-whatif-stream"] || "").length > 0 || stream) {
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
@@ -339,4 +345,4 @@ export default async function handler(req, res) {
     const isAbort = ("" + err?.message).toLowerCase().includes("aborted");
     return res.status(500).json({ error: "server", detail: isAbort ? "aborted" : err?.message || "unknown" });
   }
-}
+      }
