@@ -59,6 +59,7 @@
     .blurb{color:#d7e8ec;margin:0 0 14px;font-size:clamp(14px,4vw,18px);line-height:1.45}
     .banner{display:none;background:#0b151d;border:1px dashed var(--line);color:#dff6fb;border-radius:14px;padding:12px;margin-bottom:8px}
     .banner strong{color:var(--accent2)}
+    .first-session{display:none;background:#0e1a23;border:1px solid var(--line);color:#daf0f6;border-radius:14px;padding:12px;margin-bottom:8px}
 
     /* ===== Indicatore conoscenza ===== */
     .know{background:#0c141b;border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:6px}
@@ -108,6 +109,7 @@
   <main>
     <div class="wrap">
       <div id="dailyBanner" class="banner"></div>
+      <div id="firstSessionBanner" class="first-session"></div>
 
       <h1 id="title">Parlami di te</h1>
       <p class="blurb" id="blurb"></p>
@@ -292,7 +294,9 @@
         uw_opt_workout:"Allenarmi",
         uw_opt_friends:"Uscire con amici",
         uw_opt_series:"Guardare una serie",
-        uw_opt_drink:"Godermi un drink"
+        uw_opt_drink:"Godermi un drink",
+        // Banner prima sessione
+        first_session:"Ciao! Oggi iniziamo a conoscerci meglio."
       },
       en:{
         title:"Tell me about you",
@@ -324,7 +328,9 @@
         uw_opt_workout:"Work out",
         uw_opt_friends:"Go out with friends",
         uw_opt_series:"Watch a show",
-        uw_opt_drink:"Enjoy a drink"
+        uw_opt_drink:"Enjoy a drink",
+        // First session banner
+        first_session:"Hey there! Today we start getting to know each other."
       }
     };
 
@@ -409,6 +415,9 @@
         document.getElementById('uw_opt_series').textContent  = d.uw_opt_series;
         document.getElementById('uw_opt_drink').textContent   = d.uw_opt_drink;
       }
+
+      // Banner prima sessione (testo)
+      $('#firstSessionBanner').textContent = d.first_session;
     }
 
     // init lang
@@ -420,6 +429,14 @@
     function baseProfilePresent(){
       try{ const p = JSON.parse(LS.getItem('whatif_profile')||'{}'); return !!(p && p.gender && p.age && p.phase); }catch{return false}
     }
+
+    // Mostra banner prima sessione SOLO se non visto e prima dell’onboarding
+    if (LS.getItem(KEY_ONBOARD)!=='1' && LS.getItem('whatif_first_session_seen')!=='1'){
+      const b = document.getElementById('firstSessionBanner');
+      b.style.display = 'block';
+      LS.setItem('whatif_first_session_seen','1');
+    }
+
     if (LS.getItem(KEY_ONBOARD)==='1' && baseProfilePresent()){
       location.replace('fourth.html');
     }
@@ -432,7 +449,8 @@
       if(!confirm('Reset profilo e dati giornalieri?')) return;
       const keys = [
         'whatif_profile','whatif_micro','whatif_micro_log','whatif_last_update',
-        'whatif_onboarding_done','whatif_daily_seen','whatif_clarify'
+        'whatif_onboarding_done','whatif_daily_seen','whatif_clarify',
+        'whatif_first_session_seen','whatif_profile_date'
       ];
       keys.forEach(k=>localStorage.removeItem(k));
       location.href='second.html';
@@ -441,8 +459,12 @@
     // CTA: migliora (30s) → third.html
     document.getElementById('improveBtn').addEventListener('click', ()=> location.href='third.html');
 
-    // CTA: test completo (5 min)
-    document.getElementById('fullBtn').addEventListener('click', ()=> location.href='fulltest.html');
+    // CTA: test completo (5 min) → fulltest.html (nascondi se già fatto)
+    (function handleFullTestCTA(){
+      const done = LS.getItem('whatif_quiz5_done') === '1';
+      if (done) document.getElementById('fullBtn').style.display = 'none';
+      document.getElementById('fullBtn').addEventListener('click', ()=> location.href='fulltest.html');
+    })();
 
     // show daily banner + micro once per day
     function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -509,6 +531,7 @@
       const locRe = /\b(centro|stazione|ufficio|palestra|bar|parco|centro storico)\b/i;
       vals.forEach(v=>{ if (usable>=10) return; if (numRe.test(v) || timeRe.test(v) || locRe.test(v)) usable++; });
       let quality = Math.min(10, usable);
+      const today = todayStr();
       if (clar && clar.date === today && (clar.used||0)>0) quality += 5;
       quality = Math.min(25, quality);
 
@@ -636,6 +659,8 @@
       renderKnowledge();
     })();
 
+    function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
     form.addEventListener('submit', (e)=>{
       e.preventDefault();
       const gender = document.getElementById('gender').value.trim();
@@ -658,8 +683,15 @@
         unwind: document.getElementById('unwindSel').value.trim(),
         drinks_pref: (document.getElementById('unwindSel').value === 'drink') ? 'yes' : 'no'
       };
+      const existing = LS.getItem('whatif_profile');
       LS.setItem('whatif_profile', JSON.stringify(profile));
+
+      const today = todayStr();
       LS.setItem('whatif_last_update', today);
+      // salva la data della prima compilazione, una volta sola
+      if (!LS.getItem('whatif_profile_date')) {
+        LS.setItem('whatif_profile_date', today);
+      }
 
       // onboarding completato
       LS.setItem('whatif_onboarding_done','1');
