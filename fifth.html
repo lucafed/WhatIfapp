@@ -70,7 +70,7 @@
     color:#EAF3EE;
   }
 
-  /* Result box (mancava) */
+  /* Result box */
   .box{
     background:rgba(255,255,255,.04);
     border:1px solid var(--line);
@@ -101,11 +101,10 @@
   .tooltip:hover .tip{opacity:1;transform:translateY(0)}
   .tip{pointer-events:none;position:absolute;right:0;top:125%;background:var(--chip);border:1px solid var(--line);color:#e6fff0;border-radius:10px;padding:8px 10px;font-size:12px;width:260px;opacity:0;transform:translateY(-4px);transition:.15s;box-shadow:0 12px 28px var(--shadow)}
 
-  /* Signals collapsible */
-  .signals{margin-top:8px}
-  .disclosure{display:flex;align-items:center;gap:8px;color:#eaf3ee;font-size:12px;cursor:pointer}
-  .caret{transition:transform .15s ease}
-  .signals-body{display:none;color:#eaf3ee;opacity:.9;font-size:12px;margin-top:6px}
+  /* Signals collapsible — NASCOSTO */
+  .signals{display:none !important} /* <— nascosti come richiesto */
+  .disclosure{display:none}
+  .signals-body{display:none}
 
   /* Result */
   #result{min-height:190px}
@@ -121,7 +120,7 @@
   .qitem label{display:block;margin:6px 0}
   .qitem input{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px}
 
-  /* ===== MENU DOTS SOTTO LA RISPOSTA (in flusso, non sovrapposto) ===== */
+  /* Tools menu (sotto la risposta) */
   .tools{
     margin-top:12px;
     display:flex;
@@ -149,7 +148,7 @@
 
   @keyframes fadeIn{from{opacity:0;transform:translateY(-2px)}to{opacity:1;transform:none}}
 
-  /* ===== Nuovo messaggio "impara e cresce" sotto l'H1 ===== */
+  /* Learn block sotto H1 */
   blockquote.learn{
     margin:10px 0 0; padding:12px 14px; line-height:1.6;
     border-left:4px solid var(--acc2);
@@ -158,7 +157,6 @@
     border-radius:12px;
     color:#EAF3EE;
   }
-  .lang-tag{display:inline-block; font-size:12px; opacity:.9; margin-bottom:6px}
 
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -186,7 +184,7 @@
 
     <h1 id="titleH1">Il tuo What?f prende forma…</h1>
 
-    <!-- Sostituisce la vecchia frase sotto l'H1 -->
+    <!-- Frase sotto H1 -->
     <div id="learnBlock">
       <blockquote class="learn" id="learnMsg"></blockquote>
     </div>
@@ -210,7 +208,7 @@
       <h3 class="label" id="qLabel">Question</h3>
       <div id="question" class="qbox"></div>
 
-      <!-- Segnali usati (collassato) -->
+      <!-- Segnali (NASCOSTI) -->
       <div class="signals" id="signals">
         <div class="disclosure" id="signalsToggle">
           <span class="caret" id="caret">▸</span>
@@ -269,7 +267,7 @@
   }
 })();
 
-/* ====== I18N (tono aggiornato) ====== */
+/* ====== I18N ====== */
 const I18N = {
   it:{
     title:"Il tuo What?f prende forma…",
@@ -325,7 +323,7 @@ const lang=(LS.getItem('lang')||'it').toLowerCase();
 const T=I18N[lang]||I18N.it;
 document.documentElement.lang=lang;
 
-// Messaggio chiave localizzato (IT/EN)
+/* Messaggio sotto H1 */
 const LEARN={
   it:"Ogni What?f che esplori aiuta l’app a comprendere come pensi. Così, con il tempo, diventa sempre più capace di risponderti in modo personale.",
   en:"Each What?f you explore helps the app understand how you think — and with time, it becomes better at replying in a truly personal way."
@@ -340,7 +338,7 @@ const $=id=>document.getElementById(id);
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function readJSON(k,def={}){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
 function writeJSON(k,v){LS.setItem(k,JSON.stringify(v));}
-function escapeHTML(s){return (s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&gt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function escapeHTML(s){return (s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
 /* ====== Credits ====== */
 function readCredits(){const v=readJSON('whatif_credits');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0,pro:!!v.pro};return v;}
@@ -445,11 +443,6 @@ function renderKnowledgeMini(){
   $('knowValueMini').textContent=`${score}/100`;
 }
 
-/* ====== Segnali UI (collassato) ====== */
-$('signalsLabel').textContent=T.signalsLabel;
-const sigToggle=$('signalsToggle'), sigBody=$('signalsBody'), caret=$('caret');
-sigToggle.addEventListener('click', ()=>{ const open = sigBody.style.display!=='none'; sigBody.style.display = open ? 'none' : 'block'; caret.style.transform = open ? 'rotate(0deg)' : 'rotate(90deg)'; });
-
 /* ====== API helpers ====== */
 async function callClarifyAPI(){
   const payload={ domanda, lang, periodo:prefs.periodo||"future", stile:currentStyle, clarify:true, profilo:buildProfilePayload() };
@@ -466,16 +459,32 @@ async function callGenerateStream({clarifications={},extra="" }={}){
 
 /* ====== Language enforcement (fix What if in EN) ====== */
 function buildLanguageExtra(currentLang, style){
-  // Non tocca il tono: chiede solo la lingua d’uscita.
   if (currentLang === 'en'){
     return (style === 'wtf')
       ? 'Please answer strictly in English.'
       : 'Please narrate the entire answer strictly in English.';
   }
-  // default IT (o qualsiasi altra lingua non-EN gestita come IT)
   return (style === 'wtf')
     ? 'Rispondi rigorosamente in italiano.'
     : 'Racconta l’intera risposta rigorosamente in italiano.';
+}
+
+/* ====== AUTO-LEARNING LOCALE (memoria) ====== */
+function learnFromInteraction({question, clarifications, answerText=""}){
+  const mem = readJSON('whatif_memory',[]);
+  // teniamo solo un estratto della risposta per non appesantire
+  const excerpt = (answerText||"").slice(0,400);
+  const entry = { q: question||"", clar: clarifications||{}, ans: excerpt, ts: Date.now() };
+  mem.unshift(entry);
+  // limitiamo a 200 voci per non gonfiare localStorage
+  const trimmed = mem.slice(0,200);
+  writeJSON('whatif_memory', trimmed);
+
+  // aggiorniamo freschezza per l’indicatore e lo streak giornaliero
+  const today = todayStr();
+  const log = readJSON('whatif_micro_log',[]);
+  if (!log.includes(today)) { log.push(today); writeJSON('whatif_micro_log', log); }
+  LS.setItem('whatif_last_update', today);
 }
 
 /* ====== Clarify ====== */
@@ -509,14 +518,15 @@ $('applyClarify').addEventListener('click', async ()=>{
   const inputs=clarifyList.querySelectorAll('input');
   const clar={}; inputs.forEach(i=>{ const v=(i.value||"").trim(); if(i.id&&v) clar[i.id]=v; });
   clarifyOverlay.style.display='none';
+  // (Nascosti) ma comunque consolidiamo i segnali per l’AI
   $('signalsBody').textContent = summarizeSignals(clar);
-  if ($('signalsBody').textContent){ $('signalsBody').style.display='block'; $('caret').style.transform='rotate(90deg)'; }
+  // learning dalle risposte di chiarimento
+  learnFromInteraction({ question: domanda, clarifications: clar, answerText: "" });
   await generate(false,clar);
 });
 
 /* ====== Generate ====== */
 $('genBtn').textContent=T.genBtn;
-
 $('genBtn').addEventListener('click', ()=> generate());
 $('regenBtn').addEventListener('click', ()=> generate(true));
 
@@ -532,9 +542,7 @@ async function generate(isRegen=false, clarOverride=null){
   if(!$('signalsBody').textContent){ $('signalsBody').textContent = summarizeSignals(clarOverride||{}); }
 
   try{
-    // >>> lingua forzata in base a localStorage.lang, senza cambiare il tono
     const extra = buildLanguageExtra(lang, currentStyle);
-
     const reader=await callGenerateStream({clarifications:(clarOverride||{}), extra});
     const decoder=new TextDecoder(); let buffer="", text="";
     while(true){
@@ -552,13 +560,16 @@ async function generate(isRegen=false, clarOverride=null){
     const c=readCredits(); c.used=(c.used||0)+1; writeCredits(c);
     $('regenBtn').style.display='block';
     renderKnowledgeMini();
+
+    // learning: memorizza domanda + chiarimenti + estratto risposta
+    learnFromInteraction({ question: domanda, clarifications: (clarOverride||{}), answerText: $('result').textContent });
   }catch(e){
     console.error(e);
     $('result').textContent=(e.message==='server'?T.errServer:T.errNet);
   }
 }
 
-/* ====== Tools menu (sotto la risposta) ====== */
+/* ====== Tools menu ====== */
 const dotsBtn=$('dotsBtn'), toolMenu=$('toolMenu');
 dotsBtn.addEventListener('click', ()=>{ toolMenu.classList.toggle('show'); });
 document.addEventListener('click', (e)=>{ if(!toolMenu.contains(e.target) && e.target!==dotsBtn) toolMenu.classList.remove('show'); });
@@ -631,10 +642,6 @@ $('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
 })();
 
 /* ====== Avvio ====== */
-function initSignalsBase(){
-  const s=summarizeSignals({});
-  if(s){ $('signalsBody').textContent=s; }
-}
 function initText(){
   $('freeBadge').title=T.badgeFreeTitle; $('clarifyBadge').title=T.badgeClarifyTitle;
   $('clarifyBtn').textContent=T.clarifyBtn; $('genBtn').textContent=T.genBtn;
@@ -643,7 +650,7 @@ function initStyles(){
   document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
 }
 function boot(){
-  ensureCredits(); ensureClarify(); renderBadges(); renderKnowledgeMini(); initSignalsBase(); initText(); initStyles();
+  ensureCredits(); ensureClarify(); renderBadges(); renderKnowledgeMini(); initText(); initStyles();
   $('question').textContent = domanda;
 }
 boot();
