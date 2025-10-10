@@ -70,6 +70,17 @@
     color:#EAF3EE;
   }
 
+  /* Result box (mancava) */
+  .box{
+    background:rgba(255,255,255,.04);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px;
+    line-height:1.6;
+    color:#EAF3EE;
+    white-space:pre-wrap;
+  }
+
   .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
@@ -346,8 +357,6 @@ $('chipWhatIf').textContent=T.chipWhatIf; $('chipWTF').textContent=T.chipWTF;
 $('qLabel').textContent=T.qLabel; $('rLabel').textContent=T.rLabel;
 $('clarifyBtn').textContent=T.clarifyBtn; $('genBtn').textContent=T.genBtn;
 $('knowLabelMini').textContent=T.know; $('knowTip').textContent=T.knowHint; $('signalsLabel').textContent=T.signalsLabel;
-$('retryBtn').textContent = `🔁 ${T.redoMicro}`;
-$('profileBtn').textContent = `👤 ${T.profile}`;
 
 /* ====== Stato ====== */
 const prefs = readJSON('whatif_prefs');
@@ -471,7 +480,6 @@ $('applyClarify').addEventListener('click', async ()=>{
 
 /* ====== Generate ====== */
 $('genBtn').textContent=T.genBtn;
-$('regenBtn').textContent='🔁 '+T.regenBtn;
 
 $('genBtn').addEventListener('click', ()=> generate());
 $('regenBtn').addEventListener('click', ()=> generate(true));
@@ -516,21 +524,34 @@ const dotsBtn=$('dotsBtn'), toolMenu=$('toolMenu');
 dotsBtn.addEventListener('click', ()=>{ toolMenu.classList.toggle('show'); });
 document.addEventListener('click', (e)=>{ if(!toolMenu.contains(e.target) && e.target!==dotsBtn) toolMenu.classList.remove('show'); });
 
-$('retryBtn').addEventListener('click', ()=> location.href='third.html');
+/* i18n pulsanti del menu (erano fissi in IT nell'HTML) */
+$('retryBtn').textContent = `🔁 ${T.redoMicro}`;
+$('regenBtn').textContent = `🔁 ${T.regenBtn}`;
+$('saveBtn').textContent  = `💾 ${T.save}`;
+$('copyBtn').textContent  = `📋 ${T.copy}`;
+$('shareBtn').textContent = `📤 ${T.share}`;
+$('profileBtn').textContent = `👤 ${T.profile}`;
+
+$('retryBtn').addEventListener('click', ()=> { toolMenu.classList.remove('show'); location.href='third.html'; });
 $('saveBtn').addEventListener('click', ()=>{
   const arr=readJSON('cronologia',[]);
   arr.unshift({ domanda, risposta:($('result').textContent||"").trim(), periodo:prefs.periodo||null, stile:currentStyle, lang, ts:Date.now() });
   writeJSON('cronologia',arr);
+  toolMenu.classList.remove('show');
   alert(T.saved);
 });
 $('copyBtn').addEventListener('click', ()=>{
-  navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`).then(()=> alert(T.copied));
+  navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`).then(()=> {
+    toolMenu.classList.remove('show');
+    alert(T.copied);
+  });
 });
 $('shareBtn').addEventListener('click', ()=>{
   const data={title:"What?f",text:`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`,url: location.href};
   if(navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`);
+  toolMenu.classList.remove('show');
 });
-$('profileBtn').addEventListener('click', ()=> location.href='second.html');
+$('profileBtn').addEventListener('click', ()=> { toolMenu.classList.remove('show'); location.href='second.html'; });
 
 /* ====== Nav ====== */
 $('backBtnTop').addEventListener('click', ()=> history.back());
@@ -578,14 +599,12 @@ function initSignalsBase(){
 function initText(){
   $('freeBadge').title=T.badgeFreeTitle; $('clarifyBadge').title=T.badgeClarifyTitle;
   $('clarifyBtn').textContent=T.clarifyBtn; $('genBtn').textContent=T.genBtn;
-  $('menuBtn')?.setAttribute('aria-label','More');
 }
 function initStyles(){
   document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
 }
 function boot(){
   ensureCredits(); ensureClarify(); renderBadges(); renderKnowledgeMini(); initSignalsBase(); initText(); initStyles();
-  // Mostra subito la domanda in evidenza
   $('question').textContent = domanda;
 }
 boot();
