@@ -1,14 +1,18 @@
 <!doctype html>
-
 <html lang="it">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – About you</title>  <!-- PWA -->  <meta name="theme-color" content="#0B0B0C" />
+  <title>What?f – About you</title>
+
+  <!-- PWA -->
+  <meta name="theme-color" content="#0B0B0C" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />  <style>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <style>
     /* ===== THEME SYSTEM – palette ufficiali ===== */
     :root{
       /* Fallback / What if */
@@ -87,7 +91,8 @@
     /* CTA pill */
     .cta-pill{display:inline-block;margin-top:10px}
     .cta-pill .btn{border-radius:16px}
-  </style></head>
+  </style>
+</head>
 <body>
   <div class="topbar">
     <div style="display:flex;gap:8px;align-items:center">
@@ -95,132 +100,151 @@
       <button id="homeTop" class="home-btn">🏠</button>
     </div>
     <!-- nessuno switch lingua qui (lo teniamo solo in fifth.html) -->
-  </div>  <main>
+  </div>
+
+  <main>
     <div class="wrap">
-      <div id="dailyBanner" class="banner"></div><h1 id="title">Parlami di te</h1>
-  <p class="blurb" id="blurb"></p>
+      <div id="dailyBanner" class="banner"></div>
 
-  <!-- ===== Indicatore di personalizzazione ===== -->
-  <div class="know" id="knowBox">
-    <div class="know-head">
-      <div><span id="knowLabel" class="know-score">Personalizzazione</span> <span id="knowValue">0/100</span></div>
-      <div class="meter" style="width:min(60vw,360px)"><div id="knowFill" class="meter-fill"></div></div>
+      <h1 id="title">Parlami di te</h1>
+      <p class="blurb" id="blurb"></p>
+
+      <!-- ===== Indicatore di personalizzazione ===== -->
+      <div class="know" id="knowBox">
+        <div class="know-head">
+          <div><span id="knowLabel" class="know-score">Personalizzazione</span> <span id="knowValue">0/100</span></div>
+          <div class="meter" style="width:min(60vw,360px)"><div id="knowFill" class="meter-fill"></div></div>
+        </div>
+        <div class="miss" id="missRow">
+          <span id="missLabel">Mancano:</span>
+          <!-- chip suggerimenti qui -->
+        </div>
+      </div>
+
+      <!-- CTAs rapidi -->
+      <div class="cta-pill">
+        <button type="button" class="btn" id="improveBtn">✨ Migliora profilo (30s)</button>
+      </div>
+      <div class="cta-pill">
+        <button type="button" class="btn" id="fullBtn">🕰️ Test completo (5 min)</button>
+      </div>
+
+      <div id="errorBox" class="error"></div>
+
+      <form id="aboutForm" novalidate>
+        <div class="row two">
+          <div>
+            <label for="name" id="name_lbl">Nome</label>
+            <input id="name" type="text" placeholder="Es. Luca" />
+          </div>
+          <div>
+            <label for="city" id="city_lbl">Città</label>
+            <input id="city" type="text" placeholder="Es. L’Aquila / Verona" />
+          </div>
+        </div>
+
+        <div class="row three">
+          <div>
+            <label for="gender" id="gender_lbl">Sesso</label>
+            <select id="gender" required>
+              <option value="" id="sel_choose">Seleziona…</option>
+              <option value="uomo" id="gender_m">Uomo</option>
+              <option value="donna" id="gender_f">Donna</option>
+              <option value="altro" id="gender_o">Altro</option>
+              <option value="non_specificato" id="gender_n">Preferisco non dirlo</option>
+            </select>
+          </div>
+          <div>
+            <label for="age" id="age_lbl">Età</label>
+            <select id="age" required>
+              <option value="" id="sel_choose2">Seleziona…</option>
+              <option value="under18" id="age_u18">-18</option>
+              <option value="18_24">18–24</option>
+              <option value="25_34">25–34</option>
+              <option value="35_44">35–44</option>
+              <option value="45_54">45–54</option>
+              <option value="55_64">55–64</option>
+              <option value="65_plus">65+</option>
+            </select>
+          </div>
+          <div>
+            <label for="phase" id="phase_lbl">Fase attuale</label>
+            <select id="phase" required>
+              <option value="" id="sel_choose3">Seleziona…</option>
+              <option value="studio" id="phase_study">Studio</option>
+              <option value="lavoro" id="phase_work">Lavoro</option>
+              <option value="cambio" id="phase_change">Cambio/Transizione</option>
+              <option value="altro" id="phase_other">Altro</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row two">
+          <div>
+            <label for="who" id="who_lbl">Chi sei?</label>
+            <input id="who" type="text" placeholder="Professione / Ruolo" />
+          </div>
+          <div>
+            <label for="goal" id="goal_lbl">Obiettivo</label>
+            <input id="goal" type="text" placeholder="Es. più equilibrio lavoro-vita" />
+          </div>
+        </div>
+
+        <!-- Domanda mascherata: mostrata solo la prima volta -->
+        <div id="unwindBox" class="micro" style="display:none">
+          <div class="micro-q">
+            <label for="unwindSel" id="unwind_lbl">Quando vuoi rilassarti dopo una giornata intensa, cosa preferisci fare?</label>
+            <select id="unwindSel">
+              <option value="" id="uw_opt_choose">Seleziona…</option>
+              <option value="workout" id="uw_opt_workout">Allenarmi</option>
+              <option value="friends" id="uw_opt_friends">Uscire con amici</option>
+              <option value="series"  id="uw_opt_series">Guardare una serie</option>
+              <option value="drink"   id="uw_opt_drink">Godermi un drink</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="more" id="more_lbl">
+            Vuoi raccontarci qualcosa di più su di te?
+            <span class="muted" id="more_hint">(opzionale – aiuta l’AI a darti risposte più accurate)</span>
+          </label>
+          <textarea id="more" placeholder=""></textarea>
+        </div>
+
+        <!-- Micro-domande giornaliere -->
+        <div id="microBox" class="micro">
+          <h3 style="margin:6px 0" id="micro_title">3 micro-domande di oggi</h3>
+          <div class="micro-q">
+            <label for="mq1" id="mq1_lbl">Qual è il vincolo più concreto nelle prossime 2 settimane?</label>
+            <input id="mq1" type="text" />
+          </div>
+          <div class="micro-q">
+            <label for="mq2" id="mq2_lbl">Che segnale ti dice che sei sulla strada giusta?</label>
+            <input id="mq2" type="text" />
+          </div>
+          <div class="micro-q">
+            <label for="mq3" id="mq3_lbl">Una persona/luogo che conta nel tuo scenario?</label>
+            <input id="mq3" type="text" />
+          </div>
+          <div class="actions" style="justify-content:flex-end">
+            <button type="button" class="btn ghost" id="microSkip">Salta</button>
+            <button type="button" class="btn primary" id="microSave">Salva micro-dati</button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn ghost" id="backBtn">Indietro</button>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="btn ghost" id="skipBtn">Salta → domanda</button>
+            <button type="submit" class="btn primary" id="nextBtn">Continua</button>
+          </div>
+        </div>
+      </form>
     </div>
-    <div class="miss" id="missRow">
-      <span id="missLabel">Mancano:</span>
-      <!-- chip suggerimenti qui -->
-    </div>
-  </div>
+  </main>
 
-  <!-- CTAs rapidi -->
-  <div class="cta-pill">
-    <button type="button" class="btn" id="improveBtn">✨ Migliora profilo (30s)</button>
-  </div>
-  <div class="cta-pill">
-    <button type="button" class="btn" id="fullBtn">🕰️ Test completo (5 min)</button>
-  </div>
-
-  <div id="errorBox" class="error"></div>
-
-  <form id="aboutForm" novalidate>
-    <div class="row two">
-      <div>
-        <label for="name" id="name_lbl">Nome</label>
-        <input id="name" type="text" placeholder="Es. Luca" />
-      </div>
-      <div>
-        <label for="city" id="city_lbl">Città</label>
-        <input id="city" type="text" placeholder="Es. L’Aquila / Verona" />
-      </div>
-    </div>
-
-    <div class="row three">
-      <div>
-        <label for="gender" id="gender_lbl">Sesso</label>
-        <select id="gender" required>
-          <option value="" id="sel_choose">Seleziona…</option>
-          <option value="uomo" id="gender_m">Uomo</option>
-          <option value="donna" id="gender_f">Donna</option>
-          <option value="altro" id="gender_o">Altro</option>
-          <option value="non_specificato" id="gender_n">Preferisco non dirlo</option>
-        </select>
-      </div>
-      <div>
-        <label for="age" id="age_lbl">Età</label>
-        <select id="age" required>
-          <option value="" id="sel_choose2">Seleziona…</option>
-          <option value="under18" id="age_u18">-18</option>
-          <option value="18_24">18–24</option>
-          <option value="25_34">25–34</option>
-          <option value="35_44">35–44</option>
-          <option value="45_54">45–54</option>
-          <option value="55_64">55–64</option>
-          <option value="65_plus">65+</option>
-        </select>
-      </div>
-      <div>
-        <label for="phase" id="phase_lbl">Fase attuale</label>
-        <select id="phase" required>
-          <option value="" id="sel_choose3">Seleziona…</option>
-          <option value="studio" id="phase_study">Studio</option>
-          <option value="lavoro" id="phase_work">Lavoro</option>
-          <option value="cambio" id="phase_change">Cambio/Transizione</option>
-          <option value="altro" id="phase_other">Altro</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="row two">
-      <div>
-        <label for="who" id="who_lbl">Chi sei?</label>
-        <input id="who" type="text" placeholder="Professione / Ruolo" />
-      </div>
-      <div>
-        <label for="goal" id="goal_lbl">Obiettivo</label>
-        <input id="goal" type="text" placeholder="Es. più equilibrio lavoro-vita" />
-      </div>
-    </div>
-
-    <div>
-      <label for="more" id="more_lbl">
-        Vuoi raccontarci qualcosa di più su di te?
-        <span class="muted" id="more_hint">(opzionale – aiuta l’AI a darti risposte più accurate)</span>
-      </label>
-      <textarea id="more" placeholder=""></textarea>
-    </div>
-
-    <!-- Micro-domande giornaliere -->
-    <div id="microBox" class="micro">
-      <h3 style="margin:6px 0" id="micro_title">3 micro-domande di oggi</h3>
-      <div class="micro-q">
-        <label for="mq1" id="mq1_lbl">Qual è il vincolo più concreto nelle prossime 2 settimane?</label>
-        <input id="mq1" type="text" />
-      </div>
-      <div class="micro-q">
-        <label for="mq2" id="mq2_lbl">Che segnale ti dice che sei sulla strada giusta?</label>
-        <input id="mq2" type="text" />
-      </div>
-      <div class="micro-q">
-        <label for="mq3" id="mq3_lbl">Una persona/luogo che conta nel tuo scenario?</label>
-        <input id="mq3" type="text" />
-      </div>
-      <div class="actions" style="justify-content:flex-end">
-        <button type="button" class="btn ghost" id="microSkip">Salta</button>
-        <button type="button" class="btn primary" id="microSave">Salva micro-dati</button>
-      </div>
-    </div>
-
-    <div class="actions">
-      <button type="button" class="btn ghost" id="backBtn">Indietro</button>
-      <div style="display:flex;gap:8px">
-        <button type="button" class="btn ghost" id="skipBtn">Salta → domanda</button>
-        <button type="submit" class="btn primary" id="nextBtn">Continua</button>
-      </div>
-    </div>
-  </form>
-</div>
-
-  </main>  <script>
+  <script>
     /* ===== Apply theme from prefs (What if / WTF) ===== */
     (function(){
       try{
@@ -231,12 +255,13 @@
         document.documentElement.setAttribute('data-theme','whatif');
       }
     })();
-  </script>  <script>
+  </script>
+
+  <script>
     /* ================= I18N ================= */
     const I18N = {
       it:{
         title:"Parlami di te",
-        // NUOVO BLURB localizzato (mostrato in una sola lingua)
         blurb:"Ogni risposta e ogni micro-test aiutano What?f a conoscerti meglio.<br>Più condividi, più le sue risposte saranno davvero tue.",
         back:"Indietro", home:"Home",
         improve:"✨ Migliora profilo (30s)",
@@ -259,11 +284,17 @@
         // Indicatore
         know:"Personalizzazione", missing:"Mancano:", miss_identity:"Identità/ruolo", miss_routine:"Routine/indicatori",
         miss_constraints:"Vincoli", miss_goals:"Obiettivi", miss_places:"Luoghi", miss_relations:"Relazioni", miss_risk:"Rischio",
-        bar_hint:"Più dettagli → più scenari plausibili. Le chip ti portano al punto giusto."
+        bar_hint:"Più dettagli → più scenari plausibili. Le chip ti portano al punto giusto.",
+        // Domanda mascherata (bere)
+        unwind_lbl:"Quando vuoi rilassarti dopo una giornata intensa, cosa preferisci fare?",
+        uw_opt_choose:"Seleziona…",
+        uw_opt_workout:"Allenarmi",
+        uw_opt_friends:"Uscire con amici",
+        uw_opt_series:"Guardare una serie",
+        uw_opt_drink:"Godermi un drink"
       },
       en:{
         title:"Tell me about you",
-        // NEW BLURB localized (single language shown)
         blurb:"Every answer and micro-test helps What?f understand you better.<br>The more you share, the more its answers become truly yours.",
         back:"Back", home:"Home",
         improve:"✨ Improve profile (30s)",
@@ -286,7 +317,14 @@
         // Indicator
         know:"Personalization", missing:"Missing:", miss_identity:"Identity/role", miss_routine:"Routine/indicators",
         miss_constraints:"Constraints", miss_goals:"Goals", miss_places:"Places", miss_relations:"Relationships", miss_risk:"Risk",
-        bar_hint:"More detail → more plausible scenarios. Chips take you to the right field."
+        bar_hint:"More detail → more plausible scenarios. Chips take you to the right field.",
+        // Masked question (drinks)
+        unwind_lbl:"When you need to unwind after a long day, what do you usually do?",
+        uw_opt_choose:"Choose…",
+        uw_opt_workout:"Work out",
+        uw_opt_friends:"Go out with friends",
+        uw_opt_series:"Watch a show",
+        uw_opt_drink:"Enjoy a drink"
       }
     };
 
@@ -300,7 +338,6 @@
       document.documentElement.lang = getLang();
 
       $('#title').textContent = d.title;
-      // >>> Sostituito con nuova frase localizzata (HTML consentito per <br>)
       $('#blurb').innerHTML = d.blurb;
 
       // topbar
@@ -362,11 +399,29 @@
 
       // error message bind
       $('#aboutForm').dataset.err = d.err_required;
+
+      // i18n domanda mascherata
+      document.getElementById('unwind_lbl').textContent    = d.unwind_lbl;
+      document.getElementById('uw_opt_choose').textContent = d.uw_opt_choose;
+      document.getElementById('uw_opt_workout').textContent= d.uw_opt_workout;
+      document.getElementById('uw_opt_friends').textContent= d.uw_opt_friends;
+      document.getElementById('uw_opt_series').textContent = d.uw_opt_series;
+      document.getElementById('uw_opt_drink').textContent  = d.uw_opt_drink;
     }
 
     // init lang
     if (!LS.getItem('lang')) LS.setItem('lang', getLang());
     applyI18N();
+
+    // ===== Only once: se onboarding già fatto e profilo base presente, salta pagina
+    const KEY_ONBOARD = 'whatif_onboarding_done';
+    function baseProfilePresent(){
+      try{ const p = JSON.parse(LS.getItem('whatif_profile')||'{}'); return !!(p && p.gender && p.age && p.phase); }catch{return false}
+    }
+    if (LS.getItem(KEY_ONBOARD)==='1' && baseProfilePresent()){
+      // vai direttamente alla domanda
+      location.replace('fourth.html');
+    }
 
     // topbar buttons
     $('#backTop').addEventListener('click', ()=> history.back());
@@ -384,6 +439,13 @@
     const today   = todayStr();
     const seenDay = LS.getItem(KEY_DAY);
     const showDaily = (seenDay !== today);
+
+    // mostra la domanda mascherata solo la prima volta (prima dell'onboarding)
+    if (LS.getItem('whatif_onboarding_done')!=='1'){
+      const box = document.getElementById('unwindBox');
+      if (box) box.style.display = 'block';
+    }
+
     if (showDaily){
       $('#dailyBanner').style.display = 'block';
       $('#microBox').style.display = 'block';
@@ -570,6 +632,7 @@
         if (p.role) document.getElementById('who').value = p.role;
         if (p.goal) document.getElementById('goal').value = p.goal;
         if (p.more) document.getElementById('more').value = p.more;
+        if (p.unwind) document.getElementById('unwindSel').value = p.unwind;
       }catch(e){}
       renderKnowledge();
     })();
@@ -591,10 +654,16 @@
         gender, age, phase,
         role: document.getElementById('who').value.trim(),
         goal: document.getElementById('goal').value.trim(),
-        more: document.getElementById('more').value.trim()
+        more: document.getElementById('more').value.trim(),
+        // nuova informazione mascherata
+        unwind: document.getElementById('unwindSel').value.trim(),
+        drinks_pref: (document.getElementById('unwindSel').value === 'drink') ? 'yes' : 'no'
       };
       LS.setItem('whatif_profile', JSON.stringify(profile));
       LS.setItem('whatif_last_update', today);
+
+      // marca onboarding completato la prima volta
+      LS.setItem('whatif_onboarding_done','1');
 
       renderKnowledge();
 
@@ -606,11 +675,15 @@
     // se la lingua cambia in un’altra scheda, aggiorna
     window.addEventListener('storage', (e)=>{ if(e.key==='lang'){ applyI18N(); renderKnowledge(); }});
     document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ applyI18N(); renderKnowledge(); }});
-  </script>  <!-- SW -->  <script>
+  </script>
+
+  <!-- SW -->
+  <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("/sw.js").catch(()=>{});
       });
     }
-  </script></body>
+  </script>
+</body>
 </html>
