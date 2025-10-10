@@ -179,16 +179,7 @@
 
 <!-- Sostituisce la vecchia frase sotto l'H1 -->
 <div id="learnBlock">
-  <blockquote class="learn">
-    <span class="lang-tag">🇮🇹</span><br />
-    <em>“Ogni What?f che esplori aiuta l’app a comprendere come pensi.
-    Così, con il tempo, diventa sempre più capace di risponderti in modo personale.”</em>
-  </blockquote>
-  <blockquote class="learn">
-    <span class="lang-tag">🇬🇧</span><br />
-    <em>“Each What?f you explore helps the app understand how you think —
-    and with time, it becomes better at replying in a truly personal way.”</em>
-  </blockquote>
+  <blockquote class="learn" id="learnMsg"></blockquote>
 </div>
 
 <!-- STILE + PERIODO -->
@@ -321,6 +312,12 @@ const lang=(LS.getItem('lang')||'it').toLowerCase();
 const T=I18N[lang]||I18N.it;
 document.documentElement.lang=lang;
 
+// Messaggio chiave localizzato (IT/EN) mostrato in singola lingua
+const LEARN={
+  it:"Ogni What?f che esplori aiuta l’app a comprendere come pensi. Così, con il tempo, diventa sempre più capace di risponderti in modo personale.",
+  en:"Each What?f you explore helps the app understand how you think — and with time, it becomes better at replying in a truly personal way."
+};
+
 /* ====== Config ====== */
 const DAILY_FREE=3;
 const DAILY_CLARIFY=5;
@@ -369,6 +366,8 @@ $('chipWhatIf').textContent=T.chipWhatIf; $('chipWTF').textContent=T.chipWTF;
 $('qLabel').textContent=T.qLabel; $('rLabel').textContent=T.rLabel;
 $('clarifyBtn').textContent=T.clarifyBtn; $('genBtn').textContent=T.genBtn;
 $('knowLabelMini').textContent=T.know; $('knowTip').textContent=T.knowHint; $('signalsLabel').textContent=T.signalsLabel;
+// Imposta la frase di apprendimento nella lingua selezionata
+$('learnMsg').textContent = (LEARN[lang]||LEARN.it);
 
 /* ====== Stato ====== */
 const prefs = readJSON('whatif_prefs');
