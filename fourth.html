@@ -106,8 +106,8 @@
 
       <div class="cta-row">
         <button class="btn" id="toggleMore">✨ <span id="toggleTxt">Aggiungi un tocco personale (30s)</span></button>
-        <!-- Link FULL TEST (solo qui e in fifth) -->
-        <button class="btn primary" id="fullBtn">⏱ <span id="fullTxt">Test completo (5 min)</span></button>
+        <!-- Link FULL TEST (si nasconde se già fatto) -->
+        <button class="btn primary" id="fullBtn" data-test-full>⏱ <span id="fullTxt">Test completo (5 min)</span></button>
       </div>
 
       <div class="extra" id="moreBox">
@@ -187,6 +187,13 @@
   const domandaInput = $('domandaInput');
   domandaInput.placeholder = period==='past' ? T.pastPH : T.futurePH;
 
+  // Nascondi “Test completo” se già completato
+  (function hideFullTestIfDone(){
+    const done = localStorage.getItem('whatif_quiz5_done') === '1';
+    const btn = document.getElementById('fullBtn');
+    if (btn && done) btn.style.display = 'none';
+  })();
+
   // Suggerimenti
   const tBox = $('templates');
   (period==='past'?T.tempPast:T.tempFuture).forEach(txt=>{
@@ -239,6 +246,15 @@
 
     const tags = classifyQuestion(domanda, period);
     localStorage.setItem("whatif_tags", JSON.stringify(tags));
+
+    // reset cache chiarimenti per questa nuova domanda
+    try{
+      const CLAR_CACHE_KEY='whatif_clarify_cache';
+      const cache = JSON.parse(localStorage.getItem(CLAR_CACHE_KEY)||'{}');
+      const key = [domanda, period, (JSON.parse(localStorage.getItem('whatif_prefs')||'{}').stile||'whatif')].join(' | ');
+      cache[key] = { round: 0, ids: [] };
+      localStorage.setItem(CLAR_CACHE_KEY, JSON.stringify(cache));
+    }catch(e){}
 
     location.href="fifth.html";
   }
