@@ -273,7 +273,7 @@
 const I18N = {
   it:{
     title:"Il tuo What?f prende forma…",
-    subtitle:"", // sostituito dal blocco bilingue
+    subtitle:"",
     back:"Indietro", home:"Home",
     badgeFree:(l,d)=>`Free oggi: ${l}/${d}`,
     badgeClarify:(l,d)=>`Chiarimenti: ${l}/${d}`,
@@ -297,7 +297,7 @@ const I18N = {
   },
   en:{
     title:"Your What?f is taking shape…",
-    subtitle:"", // replaced by bilingual block
+    subtitle:"",
     back:"Back", home:"Home",
     badgeFree:(l,d)=>`Free today: ${l}/${d}`,
     badgeClarify:(l,d)=>`Clarify: ${l}/${d}`,
@@ -325,7 +325,7 @@ const lang=(LS.getItem('lang')||'it').toLowerCase();
 const T=I18N[lang]||I18N.it;
 document.documentElement.lang=lang;
 
-// Messaggio chiave localizzato (IT/EN) mostrato in singola lingua
+// Messaggio chiave localizzato (IT/EN)
 const LEARN={
   it:"Ogni What?f che esplori aiuta l’app a comprendere come pensi. Così, con il tempo, diventa sempre più capace di risponderti in modo personale.",
   en:"Each What?f you explore helps the app understand how you think — and with time, it becomes better at replying in a truly personal way."
@@ -340,7 +340,7 @@ const $=id=>document.getElementById(id);
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function readJSON(k,def={}){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
 function writeJSON(k,v){LS.setItem(k,JSON.stringify(v));}
-function escapeHTML(s){return (s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function escapeHTML(s){return (s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&gt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
 /* ====== Credits ====== */
 function readCredits(){const v=readJSON('whatif_credits');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0,pro:!!v.pro};return v;}
@@ -371,15 +371,13 @@ function summarizeSignals(clarUsed={}){
 }
 
 /* ====== I18N static text ====== */
-$('titleH1').textContent=T.title; // H1 aggiornato
-// RIMOSSO: sottotitolo testuale, sostituito dal blocco bilingue
+$('titleH1').textContent=T.title;
 $('backBtnTop').textContent=`← ${T.back}`; $('homeBtnTop').textContent=`🏠 ${T.home}`;
 $('freeBadge').title=T.badgeFreeTitle; $('clarifyBadge').title=T.badgeClarifyTitle;
 $('chipWhatIf').textContent=T.chipWhatIf; $('chipWTF').textContent=T.chipWTF;
 $('qLabel').textContent=T.qLabel; $('rLabel').textContent=T.rLabel;
 $('clarifyBtn').textContent=T.clarifyBtn; $('genBtn').textContent=T.genBtn;
 $('knowLabelMini').textContent=T.know; $('knowTip').textContent=T.knowHint; $('signalsLabel').textContent=T.signalsLabel;
-// Imposta la frase di apprendimento nella lingua selezionata
 $('learnMsg').textContent = (LEARN[lang]||LEARN.it);
 
 /* ====== Stato ====== */
@@ -466,6 +464,20 @@ async function callGenerateStream({clarifications={},extra="" }={}){
   return r.body.getReader();
 }
 
+/* ====== Language enforcement (fix What if in EN) ====== */
+function buildLanguageExtra(currentLang, style){
+  // Non tocca il tono: chiede solo la lingua d’uscita.
+  if (currentLang === 'en'){
+    return (style === 'wtf')
+      ? 'Please answer strictly in English.'
+      : 'Please narrate the entire answer strictly in English.';
+  }
+  // default IT (o qualsiasi altra lingua non-EN gestita come IT)
+  return (style === 'wtf')
+    ? 'Rispondi rigorosamente in italiano.'
+    : 'Racconta l’intera risposta rigorosamente in italiano.';
+}
+
 /* ====== Clarify ====== */
 const clarifyOverlay=$('clarifyOverlay'), clarifyList=$('clarifyList');
 $('clarifyBtn').textContent=T.clarifyBtn;
@@ -520,7 +532,10 @@ async function generate(isRegen=false, clarOverride=null){
   if(!$('signalsBody').textContent){ $('signalsBody').textContent = summarizeSignals(clarOverride||{}); }
 
   try{
-    const reader=await callGenerateStream({clarifications:(clarOverride||{})});
+    // >>> lingua forzata in base a localStorage.lang, senza cambiare il tono
+    const extra = buildLanguageExtra(lang, currentStyle);
+
+    const reader=await callGenerateStream({clarifications:(clarOverride||{}), extra});
     const decoder=new TextDecoder(); let buffer="", text="";
     while(true){
       const {value,done}=await reader.read(); if(done)break;
@@ -548,7 +563,7 @@ const dotsBtn=$('dotsBtn'), toolMenu=$('toolMenu');
 dotsBtn.addEventListener('click', ()=>{ toolMenu.classList.toggle('show'); });
 document.addEventListener('click', (e)=>{ if(!toolMenu.contains(e.target) && e.target!==dotsBtn) toolMenu.classList.remove('show'); });
 
-/* i18n pulsanti del menu (erano fissi in IT nell'HTML) */
+/* i18n pulsanti del menu */
 $('retryBtn').textContent = `🔁 ${T.redoMicro}`;
 $('regenBtn').textContent = `🔁 ${T.regenBtn}`;
 $('saveBtn').textContent  = `💾 ${T.save}`;
