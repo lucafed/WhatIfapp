@@ -2,25 +2,21 @@
 import OpenAI from "openai";
 
 /**
- * Vercel Serverless (Node) – compatibile con fetch(..., { body.getReader() })
- * ENV richieste:
+ * Vercel Serverless (Node)
+ * ENV:
  * - OPENAI_API_KEY
  */
-
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 /* ───────────────────────── Helpers i18n ───────────────────────── */
-
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
 /** Prompts di personalità */
 function systemPrompt({ stile = "whatif", lang = "it", profile = {} }) {
   const en = isEn(lang);
-  const drinksYes =
-    profile?.drinks_pref === "yes" || profile?.unwind === "drink";
+  const drinksYes = profile?.drinks_pref === "yes" || profile?.unwind === "drink";
 
   if (stile === "wtf") {
-    // Barista filosofo, ironico & “alticcio” (ma elegante). Ubriachezza lieve↑ se drinksYes.
     return en
       ? `You are the late-night bartender-philosopher of What?f: witty, razor-sharp, joyfully tipsy.
 Speak with high sarcasm, playful irony, and kind elegance. No insults, no slurs, no vulgarity.
@@ -52,7 +48,7 @@ Stile:
 Sicurezza: mai promuovere consumo eccessivo; è solo atmosfera, non prescrizione.`;
   }
 
-  // WHATIF: amichevole, filosofico, pragmatico
+  // WHAT IF
   return en
     ? `You are What?f, a warm, thoughtful scenario-designer and friend.
 Narrate a plausible, personal scenario for the user’s *alternative path*:
@@ -73,14 +69,7 @@ Stile:
 }
 
 /** Costruisce il contenuto utente */
-function buildUserContent({
-  domanda,
-  periodo,
-  profilo,
-  clarifications,
-  lang,
-  stile,
-}) {
+function buildUserContent({ domanda, periodo, profilo, clarifications, lang, stile }) {
   const en = isEn(lang);
   const lines = [];
 
@@ -88,21 +77,10 @@ function buildUserContent({
   lines.push(en ? `TIMEFRAME: ${periodo || "future"}` : `PERIODO: ${periodo || "future"}`);
   lines.push(en ? `STYLE: ${stile}` : `STILE: ${stile}`);
 
-  // Profilo minimo utile
   if (profilo && typeof profilo === "object") {
     const {
-      name,
-      role,
-      city,
-      goal,
-      values,
-      style,
-      change_attitude,
-      motivation,
-      self_view,
-      drinks_pref,
-      unwind,
-      micro,
+      name, role, city, goal, values, style, change_attitude, motivation, self_view,
+      drinks_pref, unwind, micro,
     } = profilo;
 
     const p = [];
@@ -131,7 +109,6 @@ function buildUserContent({
     lines.push((en ? "CLARIFICATIONS:\n" : "CHIARIMENTI:\n") + cLines.join("\n"));
   }
 
-  // Istruzioni narrative specifiche per il timeframe
   lines.push(
     en
       ? `NARRATIVE TARGET:
@@ -142,7 +119,6 @@ function buildUserContent({
 - Se PERIODO = "future": scrivi uno scorcio di prossimo futuro se oggi prende quella strada.`
   );
 
-  // Vincoli: non ripetere sempre i soliti elementi
   lines.push(
     en
       ? `CONSTRAINTS:
@@ -156,7 +132,7 @@ function buildUserContent({
   return lines.join("\n\n");
 }
 
-/** Suggerimento stilistico aggiuntivo (ultimo system) */
+/** Istruzione stilistica finale */
 function responseStyleInstruction(lang, stile) {
   const en = isEn(lang);
   if (stile === "wtf") {
@@ -171,61 +147,49 @@ Circa 150–220 parole. Se serve un consiglio, chiudi con 3 punti elenco. Mai of
     : `Scrivi come un amico riflessivo. Realistico, con passi concreti. 150–220 parole.`;
 }
 
-/* ───────────── Clarify locale: 2–3 domande mirate (gratis) ───────────── */
-
+/* ───────── Clarify locale: 2–3 domande mirate (gratis) ───────── */
 function localClarify(domanda = "", profilo = {}, lang = "it") {
   const en = isEn(lang);
   const s = (domanda || "").toLowerCase();
 
-  const wantsWork = /(lavor|work|career|job|azienda|project)/i.test(s);
-  const wantsMove = /(trasfer|move|citt|paese|quartiere|city)/i.test(s);
+  const wantsWork  = /(lavor|work|career|job|azienda|project)/i.test(s);
+  const wantsMove  = /(trasfer|move|citt|paese|quartiere|city)/i.test(s);
   const wantsStudy = /(stud|master|course|laurea)/i.test(s);
   const wantsMoney = /(euro|€|soldi|stipendio|debito|invest|salary|debt|invest)/i.test(s);
 
   const qs = [];
-
   if (wantsWork) {
     qs.push({
       id: "priority",
-      label: en
-        ? "What’s the #1 priority here?"
-        : "Qual è la priorità numero uno qui?",
+      label: en ? "What’s the #1 priority here?" : "Qual è la priorità numero uno qui?",
       placeholder: en ? "growth / stability / flexibility" : "crescita / stabilità / flessibilità",
     });
   }
   if (wantsMove) {
     qs.push({
       id: "landmark",
-      label: en
-        ? "A reference place that matters to you?"
-        : "Un luogo di riferimento che conta per te?",
+      label: en ? "A reference place that matters to you?" : "Un luogo di riferimento che conta per te?",
       placeholder: en ? "square / station / neighborhood" : "piazza / stazione / quartiere",
     });
   }
   if (wantsStudy || wantsMoney) {
     qs.push({
       id: "indicator",
-      label: en
-        ? "One indicator that tells you you’re on track?"
-        : "Un indicatore che ti dice che sei sulla strada giusta?",
+      label: en ? "One indicator that tells you you’re on track?" : "Un indicatore che ti dice che sei sulla strada giusta?",
       placeholder: en ? "hours/week, € saved, clients" : "ore/settimana, € risparmiati, clienti",
     });
   }
   if (qs.length < 2) {
     qs.push({
       id: "constraint_2w",
-      label: en
-        ? "One realistic constraint in the next 2 weeks?"
-        : "Un vincolo realistico nelle prossime 2 settimane?",
+      label: en ? "One realistic constraint in the next 2 weeks?" : "Un vincolo realistico nelle prossime 2 settimane?",
       placeholder: en ? "budget / time / energy" : "budget / tempo / energia",
     });
   }
   if (qs.length < 3) {
     qs.push({
       id: "context",
-      label: en
-        ? "What detail would make this scenario feel more *you*?"
-        : "Quale dettaglio renderebbe questo scenario più *tuo*?",
+      label: en ? "What detail would make this scenario feel more *you*?" : "Quale dettaglio renderebbe questo scenario più *tuo*?",
       placeholder: en ? "a person, a place, a tiny constraint" : "una persona, un luogo, un piccolo vincolo",
     });
   }
@@ -233,15 +197,11 @@ function localClarify(domanda = "", profilo = {}, lang = "it") {
 }
 
 /* ───────────────────────── HTTP Handler ───────────────────────── */
-
 export default async function handler(req, res) {
   // CORS + preflight
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, x-whatif-stream"
-  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-whatif-stream");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
@@ -249,8 +209,8 @@ export default async function handler(req, res) {
     const {
       domanda,
       lang = "it",
-      periodo = "future", // "past" | "future"
-      stile = "whatif",   // "whatif" | "wtf"
+      periodo = "future",   // "past" | "future"
+      stile = "whatif",     // "whatif" | "wtf"
       clarify = false,
       stream = false,
       profilo = {},
@@ -262,7 +222,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    // 1) Clarify: locale, 0 costo
+    // 1) Clarify
     if (clarify) {
       const questions = localClarify(domanda, profilo, lang);
       return res.status(200).json({ questions });
@@ -270,14 +230,7 @@ export default async function handler(req, res) {
 
     // 2) Generazione
     const sys1 = systemPrompt({ stile, lang, profile: profilo });
-    const user = buildUserContent({
-      domanda,
-      periodo,
-      profilo,
-      clarifications,
-      lang,
-      stile,
-    });
+    const user = buildUserContent({ domanda, periodo, profilo, clarifications, lang, stile });
     const sys2 = responseStyleInstruction(lang, stile);
 
     const messages = [
@@ -295,7 +248,7 @@ export default async function handler(req, res) {
           : `Promemoria:
 - Varia l’incipit attingendo a una lista mentale di ganci (vedi sopra).
 - Se il PERIODO è PASSATO, scrivi come se fosse successo (vignetta controfattuale).
-- Se il PERIODO è FUTURO, scrivi uno scorcio di prossimo futuro come se scegliesse ora.
+- Se il PERIODO è FUTURO, scrivi uno scorcio di prossimo futuro come se scegliessi ora.
 - Non ripetere ogni volta gli stessi motivi (persona/luogo/oggetto).
 - Compatto, senza riempitivi; immagini vivide.`),
       },
@@ -306,7 +259,7 @@ export default async function handler(req, res) {
     const temperature = stile === "wtf" ? 0.95 : 0.75;
     const model = "gpt-4o-mini";
 
-    // STREAM: text/event-stream
+    // STREAM
     if (String(req.headers["x-whatif-stream"] || "").length > 0 || stream) {
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
@@ -328,7 +281,7 @@ export default async function handler(req, res) {
       return res.end();
     }
 
-    // NON-stream
+    // NON-STREAM
     const completion = await client.chat.completions.create({
       model,
       messages,
