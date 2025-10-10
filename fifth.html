@@ -1,12 +1,18 @@
-<!DOCTYPE html><html lang="it">
+<!DOCTYPE html>
+<html lang="it">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f – Result</title><!-- PWA --><meta name="theme-color" content="#0B0B0C" />
+<title>What?f – Result</title>
+
+<!-- PWA -->
+<meta name="theme-color" content="#0B0B0C" />
 <link rel="manifest" href="/manifest.json" />
 <link rel="apple-touch-icon" href="/icons/icon-192.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" /><style>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+<style>
   /* ===== PALETTE UFFICIALE (What if = blu/giallo ; WTF = verde/giallo) ===== */
   :root{
     --bg:#0B0B0C; --bg2:#101414;
@@ -64,7 +70,7 @@
     color:#EAF3EE;
   }
 
-  /* Result box (mancava) */
+  /* Result box */
   .box{
     background:rgba(255,255,255,.04);
     border:1px solid var(--line);
@@ -74,6 +80,11 @@
     color:#EAF3EE;
     white-space:pre-wrap;
   }
+  /* Lettura migliore per narrativa */
+  #result h1, #result h2, #result h3 { margin: 10px 0 6px; }
+  #result p { margin: 6px 0 10px; line-height: 1.65; }
+  #result ul { margin: 6px 0 12px 18px; }
+  #result em { opacity: .95; }
 
   .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -143,99 +154,89 @@
 
   @keyframes fadeIn{from{opacity:0;transform:translateY(-2px)}to{opacity:1;transform:none}}
 
-  /* ===== Nuovo messaggio "impara e cresce" sotto l'H1 ===== */
-  blockquote.learn{
-    margin:10px 0 0; padding:12px 14px; line-height:1.6;
-    border-left:4px solid var(--acc2);
-    background:rgba(255,255,255,.04);
-    border:1px solid var(--line);
-    border-radius:12px;
-    color:#EAF3EE;
-  }
-  .lang-tag{display:inline-block; font-size:12px; opacity:.9; margin-bottom:6px}
-
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-</style></head>
+</style>
+</head>
 <body>
   <main>
     <div class="topbar">
       <div class="row">
         <button class="btn" id="backBtnTop">←</button>
         <button class="btn" id="homeBtnTop">🏠</button>
-      </div><div class="row" style="gap:10px">
-    <span id="freeBadge" class="badge" title="">—</span>
-    <span id="clarifyBadge" class="badge accent" title="">—</span>
+      </div>
 
-    <div class="know-mini tooltip" id="knowMini">
-      <span class="know-score" id="knowLabelMini">Personalizzazione</span>
-      <div class="meter"><div id="knowFill" class="meter-fill"></div></div>
-      <span class="badge" id="knowValueMini">0/100</span>
-      <div class="tip" id="knowTip">Più dettagli → più scenari plausibili. Compila le 3 micro-domande (seconda pagina) e usa “Chiarisci & genera”.</div>
+      <div class="row" style="gap:10px">
+        <span id="freeBadge" class="badge" title="">—</span>
+        <span id="clarifyBadge" class="badge accent" title="">—</span>
+
+        <div class="know-mini tooltip" id="knowMini">
+          <span class="know-score" id="knowLabelMini">Personalizzazione</span>
+          <div class="meter"><div id="knowFill" class="meter-fill"></div></div>
+          <span class="badge" id="knowValueMini">0/100</span>
+          <div class="tip" id="knowTip">Più dettagli → più scenari plausibili. Compila le 3 micro-domande (seconda pagina) e usa “Chiarisci & genera”.</div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<h1 id="titleH1">Il tuo What?f prende forma…</h1>
+    <h1 id="titleH1">Your scenario</h1>
+    <p class="sub" id="subtitle">For a more personal answer, use Clarify & Generate first.</p>
 
-<!-- Sostituisce la vecchia frase sotto l'H1 -->
-<div id="learnBlock">
-  <blockquote class="learn" id="learnMsg"></blockquote>
-</div>
-
-<!-- STILE + PERIODO -->
-<div class="card">
-  <div class="row" style="justify-content:space-between;align-items:center">
-    <div class="row">
-      <span class="badge" id="badgePeriodo">🕰️ —</span>
-      <span class="badge" id="badgeStile">🎭 —</span>
+    <!-- STILE + PERIODO -->
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div class="row">
+          <span class="badge" id="badgePeriodo">🕰️ —</span>
+          <span class="badge" id="badgeStile">🎭 —</span>
+        </div>
+        <div class="chips" id="styleChips">
+          <button class="chip" data-style="whatif" id="chipWhatIf">What if (realistic)</button>
+          <button class="chip" data-style="wtf" id="chipWTF">WTF (fun)</button>
+        </div>
+      </div>
     </div>
-    <div class="chips" id="styleChips">
-      <button class="chip" data-style="whatif" id="chipWhatIf">What if (realistic)</button>
-      <button class="chip" data-style="wtf" id="chipWTF">WTF (fun)</button>
+
+    <!-- DOMANDA IN EVIDENZA -->
+    <div class="card">
+      <h3 class="label" id="qLabel">Question</h3>
+      <div id="question" class="qbox"></div>
+
+      <!-- Segnali usati (collassato) -->
+      <div class="signals" id="signals">
+        <div class="disclosure" id="signalsToggle">
+          <span class="caret" id="caret">▸</span>
+          <span id="signalsLabel">Signals used today</span>
+        </div>
+        <div class="signals-body" id="signalsBody"></div>
+      </div>
+
+      <div class="cta-row" style="margin-top:12px">
+        <button class="btn primary large" id="clarifyBtn">✨ Clarify & Generate</button>
+        <button class="btn large" id="genBtn">Generate now</button>
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- DOMANDA IN EVIDENZA -->
-<div class="card">
-  <h3 class="label" id="qLabel">Question</h3>
-  <div id="question" class="qbox"></div>
+    <!-- RISULTATO -->
+    <div class="card">
+      <h3 class="label" id="rLabel">Result</h3>
+      <div id="result" class="box">—</div>
 
-  <!-- Segnali usati (collassato) -->
-  <div class="signals" id="signals">
-    <div class="disclosure" id="signalsToggle">
-      <span class="caret" id="caret">▸</span>
-      <span id="signalsLabel">Signals used today</span>
+      <!-- MENU DOTS SOTTO LA RISPOSTA -->
+      <div class="tools">
+        <button id="dotsBtn" class="dots" aria-label="More">⋯</button>
+        <div id="toolMenu" class="tool-menu" role="menu" aria-label="More">
+          <button id="retryBtn">🔁 Rifai micro test</button>
+          <button id="regenBtn" style="display:none">🔁 Rigenera</button>
+          <button id="saveBtn">💾 Salva</button>
+          <button id="copyBtn">📋 Copia</button>
+          <button id="shareBtn">📤 Condividi</button>
+          <button id="profileBtn">👤 Profilo</button>
+        </div>
+      </div>
     </div>
-    <div class="signals-body" id="signalsBody"></div>
-  </div>
+  </main>
 
-  <div class="cta-row" style="margin-top:12px">
-    <button class="btn primary large" id="clarifyBtn">✨ Clarify & Generate</button>
-    <button class="btn large" id="genBtn">Generate now</button>
-  </div>
-</div>
-
-<!-- RISULTATO -->
-<div class="card">
-  <h3 class="label" id="rLabel">Result</h3>
-  <div id="result" class="box">—</div>
-
-  <!-- MENU DOTS SOTTO LA RISPOSTA -->
-  <div class="tools">
-    <button id="dotsBtn" class="dots" aria-label="More">⋯</button>
-    <div id="toolMenu" class="tool-menu" role="menu" aria-label="More">
-      <button id="retryBtn">🔁 Rifai micro test</button>
-      <button id="regenBtn" style="display:none">🔁 Rigenera</button>
-      <button id="saveBtn">💾 Salva</button>
-      <button id="copyBtn">📋 Copia</button>
-      <button id="shareBtn">📤 Condividi</button>
-      <button id="profileBtn">👤 Profilo</button>
-    </div>
-  </div>
-</div>
-
-  </main>  <!-- Overlay chiarimenti -->  <div class="overlay" id="clarifyOverlay">
+  <!-- Overlay chiarimenti -->
+  <div class="overlay" id="clarifyOverlay">
     <div class="sheet">
       <h3 style="margin:6px 0" id="clarifyTitle">2–3 questions to be more precise</h3>
       <div id="clarifyList"></div>
@@ -244,7 +245,9 @@
         <button class="btn" id="cancelClarify">Cancel</button>
       </div>
     </div>
-  </div><script>
+  </div>
+
+<script>
 /* ===== Apply theme from prefs (What if / WTF) ===== */
 (function applyThemeFromPrefs(){
   try{
@@ -259,8 +262,8 @@
 /* ====== I18N (tono aggiornato) ====== */
 const I18N = {
   it:{
-    title:"Il tuo What?f prende forma…",
-    subtitle:"", // sostituito dal blocco bilingue
+    title:"✨ Il tuo What?f",
+    subtitle:"Se vuoi un risultato più tuo, prova prima “Chiarisci & genera”.",
     back:"Indietro", home:"Home",
     badgeFree:(l,d)=>`Free oggi: ${l}/${d}`,
     badgeClarify:(l,d)=>`Chiarimenti: ${l}/${d}`,
@@ -283,8 +286,8 @@ const I18N = {
     redoMicro:"Rifai micro test", profile:"Profilo"
   },
   en:{
-    title:"Your What?f is taking shape…",
-    subtitle:"", // replaced by bilingual block
+    title:"✨ Your What?f",
+    subtitle:"For a more personal result, try “Clarify & Generate” first.",
     back:"Back", home:"Home",
     badgeFree:(l,d)=>`Free today: ${l}/${d}`,
     badgeClarify:(l,d)=>`Clarify: ${l}/${d}`,
@@ -312,12 +315,6 @@ const lang=(LS.getItem('lang')||'it').toLowerCase();
 const T=I18N[lang]||I18N.it;
 document.documentElement.lang=lang;
 
-// Messaggio chiave localizzato (IT/EN) mostrato in singola lingua
-const LEARN={
-  it:"Ogni What?f che esplori aiuta l’app a comprendere come pensi. Così, con il tempo, diventa sempre più capace di risponderti in modo personale.",
-  en:"Each What?f you explore helps the app understand how you think — and with time, it becomes better at replying in a truly personal way."
-};
-
 /* ====== Config ====== */
 const DAILY_FREE=3;
 const DAILY_CLARIFY=5;
@@ -327,7 +324,7 @@ const $=id=>document.getElementById(id);
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function readJSON(k,def={}){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
 function writeJSON(k,v){LS.setItem(k,JSON.stringify(v));}
-function escapeHTML(s){return (s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function escapeHTML(s){return (s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])}
 
 /* ====== Credits ====== */
 function readCredits(){const v=readJSON('whatif_credits');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0,pro:!!v.pro};return v;}
@@ -358,16 +355,13 @@ function summarizeSignals(clarUsed={}){
 }
 
 /* ====== I18N static text ====== */
-$('titleH1').textContent=T.title; // H1 aggiornato
-// RIMOSSO: sottotitolo testuale, sostituito dal blocco bilingue
+$('titleH1').textContent=T.title; $('subtitle').textContent=T.subtitle;
 $('backBtnTop').textContent=`← ${T.back}`; $('homeBtnTop').textContent=`🏠 ${T.home}`;
 $('freeBadge').title=T.badgeFreeTitle; $('clarifyBadge').title=T.badgeClarifyTitle;
 $('chipWhatIf').textContent=T.chipWhatIf; $('chipWTF').textContent=T.chipWTF;
 $('qLabel').textContent=T.qLabel; $('rLabel').textContent=T.rLabel;
 $('clarifyBtn').textContent=T.clarifyBtn; $('genBtn').textContent=T.genBtn;
 $('knowLabelMini').textContent=T.know; $('knowTip').textContent=T.knowHint; $('signalsLabel').textContent=T.signalsLabel;
-// Imposta la frase di apprendimento nella lingua selezionata
-$('learnMsg').textContent = (LEARN[lang]||LEARN.it);
 
 /* ====== Stato ====== */
 const prefs = readJSON('whatif_prefs');
@@ -439,6 +433,130 @@ $('signalsLabel').textContent=T.signalsLabel;
 const sigToggle=$('signalsToggle'), sigBody=$('signalsBody'), caret=$('caret');
 sigToggle.addEventListener('click', ()=>{ const open = sigBody.style.display!=='none'; sigBody.style.display = open ? 'none' : 'block'; caret.style.transform = open ? 'rotate(0deg)' : 'rotate(90deg)'; });
 
+/* ====== WHAT IF STYLE ENGINE ====== */
+/* SOLO per stile 'whatif' (realistico). NON tocca 'wtf'. */
+const WHATIF_STYLE = {
+  buildExtra({ domanda, lang, styleKey='whatif' }){
+    const s = getUserSignals();
+    const p = s.profile || {};
+    const m = s.micro   || {};
+
+    // tono finale: caldo, empatico, leggermente ironico/filosofico
+    const systemStyle = (lang==='en') ? `
+You are "What?f", a narrator of plausible alternative lives.
+Write in a warm, lightly ironic, human tone, a bit philosophical and empathic.
+Ground everything in the user's signals (role, city, goal, constraints, landmarks).
+Never moralize or be cruel. Prefer short paragraphs and sensory details.
+Avoid alcohol jokes unless the user has explicitly indicated it.`.trim() : `
+Sei "What?f", narratore di vite alternative plausibili.
+Scrivi con tono caldo, umano, leggermente ironico e un filo filosofico, sempre empatico.
+Ancora la storia ai segnali dell’utente (ruolo, città, obiettivo, vincoli, luoghi).
+Non moralizzare e non essere mai crudele. Paragrafi brevi, dettagli sensoriali.
+Evita battute sull’alcol se l’utente non l’ha indicato esplicitamente.`.trim();
+
+    const brief = {
+      user: {
+        name: p.name||null,
+        role: p.role||null,
+        city: p.city||null,
+        goal: p.goal||null,
+        phase: p.phase||null,
+        age: p.age||null,
+        likesDrink: p.drinks_pref==='yes'
+      },
+      micro: {
+        constraint_2w: m.vincolo_2w||null,
+        indicator: m.indicatore||null,
+        landmark: m.punto_riferimento||null,
+        key_person: m.persona_chiave||null
+      },
+      style: styleKey,
+      language: lang,
+      question: domanda
+    };
+
+    const L = (lang==='en') ? {
+      prologue:"Prologue",
+      scene:"Alternative reality",
+      choices:"Pivotal choices",
+      ripple:"Consequences (near & mid-term)",
+      twist:"Small twist",
+      reflect:"Reflection",
+      outro:"If you want, ask for a different path.",
+      bullet:"•"
+    } : {
+      prologue:"Prologo",
+      scene:"Realtà alternativa",
+      choices:"Scelte-chiave",
+      ripple:"Conseguenze (breve & medio termine)",
+      twist:"Piccolo colpo di scena",
+      reflect:"Riflessione",
+      outro:"Se vuoi, chiedimi una variazione.",
+      bullet:"•"
+    };
+
+    const skeleton = (lang==='en') ? `
+# ${L.prologue}
+2–3 lines that set vibe/time anchored to the user.
+
+# ${L.scene}
+Describe the alternative day/life in 2–4 short paragraphs using user's city/role/goal/constraints/landmarks.
+
+# ${L.choices}
+${L.bullet} Choice A — specific, doable action.
+${L.bullet} Choice B — different but concrete action.
+
+# ${L.ripple}
+Likely next beats (days → weeks), grounded in reality.
+
+# ${L.twist}
+Small credible surprise (no magic).
+
+# ${L.reflect}
+Mirror the user's motives and risk tolerance. End with one focusing question.
+
+— ${L.outro}
+`.trim() : `
+# ${L.prologue}
+2–3 righe che fissano atmosfera/tempo ancorate all’utente.
+
+# ${L.scene}
+Racconta la giornata/vita alternativa in 2–4 paragrafi brevi usando città/ruolo/obiettivo/vincoli/luoghi chiave.
+
+# ${L.choices}
+${L.bullet} Scelta A — azione specifica e fattibile.
+${L.bullet} Scelta B — azione diversa ma concreta.
+
+# ${L.ripple}
+Cosa accade in modo realistico (giorni → settimane), restando ancorati alla realtà.
+
+# ${L.twist}
+Piccolo colpo di scena credibile (non magico).
+
+# ${L.reflect}
+Rispecchia motivazioni e tolleranza al rischio. Chiudi con una domanda focalizzante.
+
+— ${L.outro}
+`.trim();
+
+    return [
+      `SYSTEM:: ${systemStyle}`,
+      `BRIEF:: ${JSON.stringify(brief)}`,
+      `FORMAT:: Markdown with the following sections`,
+      `SKELETON::\n${skeleton}`
+    ].join('\n\n');
+  }
+};
+
+function getUserSignals(){
+  function safe(k,def){ try{ return JSON.parse(localStorage.getItem(k)||JSON.stringify(def)); }catch{return def;} }
+  return {
+    profile: safe('whatif_profile', {}),
+    micro: safe('whatif_micro', {}),
+    prefs: safe('whatif_prefs', {}),
+  };
+}
+
 /* ====== API helpers ====== */
 async function callClarifyAPI(){
   const payload={ domanda, lang, periodo:prefs.periodo||"future", stile:currentStyle, clarify:true, profilo:buildProfilePayload() };
@@ -473,7 +591,7 @@ async function openClarify(){
     if(!qs.length){ clarifyList.innerHTML=`<p class="sub">${lang==='en'?'No clarification needed. You can generate now.':'Nessun chiarimento necessario. Puoi generare subito.'}</p>`; return;}
     clarifyList.innerHTML=qs.map(q=>`
       <div class="qitem">
-        <label for="${q.id||''}">${(q.label|| (lang==='en'?'Question':'Domanda'))}</label>
+        <label for="${q.id||''}">${escapeHTML(q.label|| (lang==='en'?'Question':'Domanda'))}</label>
         <input id="${q.id||''}" type="text" placeholder="${(q.placeholder|| (lang==='en'?'Answer in one line':'Rispondi in una riga')).replace(/"/g,'&quot;')}" />
       </div>`).join("");
   }catch(e){
@@ -507,7 +625,12 @@ async function generate(isRegen=false, clarOverride=null){
   if(!$('signalsBody').textContent){ $('signalsBody').textContent = summarizeSignals(clarOverride||{}); }
 
   try{
-    const reader=await callGenerateStream({clarifications:(clarOverride||{})});
+    // Applichiamo lo stile narrativo SOLO quando lo stile è "whatif"
+    const extra = (currentStyle==='whatif')
+      ? WHATIF_STYLE.buildExtra({ domanda, lang, styleKey: 'whatif' })
+      : ""; // per 'wtf' non passiamo extra, così non cambiamo il suo comportamento
+
+    const reader=await callGenerateStream({clarifications:(clarOverride||{}), extra});
     const decoder=new TextDecoder(); let buffer="", text="";
     while(true){
       const {value,done}=await reader.read(); if(done)break;
@@ -535,7 +658,7 @@ const dotsBtn=$('dotsBtn'), toolMenu=$('toolMenu');
 dotsBtn.addEventListener('click', ()=>{ toolMenu.classList.toggle('show'); });
 document.addEventListener('click', (e)=>{ if(!toolMenu.contains(e.target) && e.target!==dotsBtn) toolMenu.classList.remove('show'); });
 
-/* i18n pulsanti del menu (erano fissi in IT nell'HTML) */
+/* i18n pulsanti del menu */
 $('retryBtn').textContent = `🔁 ${T.redoMicro}`;
 $('regenBtn').textContent = `🔁 ${T.regenBtn}`;
 $('saveBtn').textContent  = `💾 ${T.save}`;
@@ -619,11 +742,15 @@ function boot(){
   $('question').textContent = domanda;
 }
 boot();
-</script><!-- SW --><script>
+</script>
+
+<!-- SW -->
+<script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("/sw.js").catch(()=>{});
     });
   }
-</script></body>
+</script>
+</body>
 </html>
