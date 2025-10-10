@@ -1,16 +1,21 @@
 // /api/ask.js
 import OpenAI from "openai";
 
+/**
+ * Serverless handler per What?f
+ * ENV richieste: OPENAI_API_KEY
+ * Facoltativo: WHATIF_MODEL
+ */
+
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.WHATIF_MODEL || "gpt-4o-mini";
 
-// --- Lang helpers -----------------------------------------------------------
+// ---------- Lang helpers ----------
 const normLang = (lang) => (String(lang || "it").toLowerCase().startsWith("en") ? "en" : "it");
 const isEn = (lang) => normLang(lang) === "en";
-const STRICT_LANG = (lang) =>
-  isEn(lang) ? `Write STRICTLY in English.` : `Scrivi RIGOROSAMENTE in italiano.`;
+const STRICT_LANG = (lang) => (isEn(lang) ? "Write STRICTLY in English." : "Scrivi RIGOROSAMENTE in italiano.");
 
-// --- Anti-repeat soft -------------------------------------------------------
+// ---------- Anti-repeat (soft) ----------
 function buildAntiRepeatBlock(history = {}, lang = "it") {
   const L = isEn(lang);
   const { recent_topics = [], recent_people = [], recent_places = [], recent_styles = [] } = history || {};
@@ -19,15 +24,15 @@ function buildAntiRepeatBlock(history = {}, lang = "it") {
     ? `NO-REPEAT:
 - Avoid leaning again on topics [${list(recent_topics)}], people [${list(recent_people)}], places [${list(recent_places)}], motifs [${list(recent_styles)}].
 - Use people/places/objects ONLY if naturally relevant this time.
-- Vary openings and nouns; avoid reusing the same motif >2 times.`
+- Vary the opening; avoid reusing the same motif >2 times.`
     : `ANTI-RIPETIZIONE:
 - Evita di tornare su temi [${list(recent_topics)}], persone [${list(recent_people)}], luoghi [${list(recent_places)}], espedienti [${list(recent_styles)}].
 - Usa persone/luoghi/oggetti SOLO se davvero rilevanti stavolta.
-- Varia gli attacchi e i sostantivi; non riusare lo stesso motivo >2 volte.`;
+- Varia l’attacco; non riusare lo stesso motivo >2 volte.`;
 }
 
-// --- Persona string ---------------------------------------------------------
-function personaLine(p = {}, lang = "it") {
+// ---------- Persona strings ----------
+function whoLine(p = {}, lang = "it") {
   const bits = [];
   if (p.name) bits.push(p.name);
   if (p.role) bits.push(p.role);
@@ -35,22 +40,15 @@ function personaLine(p = {}, lang = "it") {
   return bits.length ? bits.join(", ") : isEn(lang) ? "a curious person" : "una persona curiosa";
 }
 
-// --- WHAT IF (empatico) -----------------------------------------------------
+// ---------- WHAT IF persona ----------
 function systemPromptWhatIf(lang, profile) {
-  const who = personaLine(profile, lang);
-  return isEn(lang)
-    ? [
-        STRICT_LANG(lang),
-        `You are "What if": warm, empathetic, reflective with a light ironic wink.`,
-        `Imagine a PLAUSIBLE alternate-life scene for ${who}, grounded in their signals.`,
-        `Be sensory and specific, cinematic but concise. No grand promises or therapy.`,
-      ].join("\n")
-    : [
-        STRICT_LANG(lang),
-        `Sei “What if”: caldo, empatico, riflessivo con una leggera ironia.`,
-        `Immagina una scena di vita ALTERNATIVA PLAUSIBILE per ${who}, ancorata ai suoi segnali.`,
-        `Sensoriale e specifico, cinematografico ma conciso. Niente promesse grandiose o terapia.`,
-      ].join("\n");
+  const who = whoLine(profile, lang);
+  return [
+    STRICT_LANG(lang),
+    isEn(lang)
+      ? `You are "What if": warm, pragmatic, empathetic with a light ironic wink. Imagine a PLAUSIBLE alternate-life scene for ${who}, grounded in their signals. Be sensory, specific, cinematic but concise. Provide clear next steps only if helpful.`
+      : `Sei “What if”: caldo, pragmatico, empatico con una leggera ironia. Immagina una scena di vita ALTERNATIVA PLAUSIBILE per ${who}, ancorata ai suoi segnali. Sii sensoriale, specifico, cinematografico ma conciso. Fornisci passi concreti solo se utile.`,
+  ].join("\n");
 }
 
 function structureWhatIf(lang) {
@@ -60,81 +58,61 @@ function structureWhatIf(lang) {
 2) Alternate scene — tangible mini-sequence (6–10 lines)
 3) Key choices — 2–3 decisions
 4) Consequences — plausible outcomes
-5) Twist — small, human
-6) Reflection — 2–3 lines`
+5) Reflection — 2–3 lines`
     : `Struttura (usa titoli in **grassetto**):
 1) Prologo — tono (2–4 righe)
 2) Scena alternativa — mini-sequenza tangibile (6–10 righe)
 3) Scelte-chiave — 2–3 decisioni
 4) Conseguenze — esiti plausibili
-5) Colpo di scena — piccolo, umano
-6) Riflessione — 2–3 righe`;
+5) Riflessione — 2–3 righe`;
 }
 
-// --- WTF (sarcastico, “molto ubriaco” se l’utente beve) ---------------------
+// ---------- WTF persona (barista filosofo, brillante, sarcastico) ----------
 function systemPromptWTF(lang, profile) {
   const drinks = String(profile?.drinks_pref || "").toLowerCase() === "yes";
-  const base = isEn(lang)
-    ? [
-        STRICT_LANG(lang),
-        `You are "WTF": a razor-witty, joyfully sarcastic, late-night bartender-philosopher.`,
-        `Roast with affection, never punch down. Surprise metaphors, fast rhythm, punchy lines.`,
-        `Compact (≈10–16 lines). If advice needed, end with 3 crisp bullets.`,
-        `Safe, inclusive, no slurs, no incitement.`,
-      ]
-    : [
-        STRICT_LANG(lang),
-        `Sei “WTF”: barista filosofo nottambulo, arguto e gioiosamente sarcastico.`,
-        `Pungi con affetto, mai verso il basso. Metafore a sorpresa, ritmo rapido, battute secche.`,
-        `Compatto (≈10–16 righe). Se serve, chiudi con 3 bullet incisivi.`,
-        `Sicuro, inclusivo, niente insulti o istigazioni.`,
-      ];
-  base.push(
+  const base = [
+    STRICT_LANG(lang),
+    isEn(lang)
+      ? `You are "WTF": a late-night bartender-philosopher. Witty, sharp, joyfully sarcastic, never offensive. Playful cynicism, quick rhythm, clean punchlines.`
+      : `Sei “WTF”: barista filosofo nottambulo. Arguto, affilato, gioiosamente sarcastico, mai offensivo. Cinismo giocoso, ritmo rapido, chiuse pulite.`,
     drinks
-      ? (isEn(lang)
-          ? `Booze vibe: **HIGH**. You may sound delightfully tipsy—looser syntax, playful asides, bar imagery. Keep it tasteful; no glorification of harm.`
-          : `Vibe alcolica: **ALTA**. Puoi suonare piacevolmente “alticcio”: sintassi più sciolta, aside giocosi, immagini da bancone. Con gusto; niente glorificazione del danno.`)
-      : (isEn(lang)
-          ? `Booze vibe: OFF (user doesn't drink/unknown). Keep it sharp, spicy, but sober.`
-          : `Vibe alcolica: OFF (utente non beve/sconosciuto). Tagliente e speziato, ma sobrio.`)
-  );
+      ? isEn(lang)
+        ? `Booze vibe: HIGH (delightfully tipsy). Looser syntax and playful bar imagery allowed; tasteful, no glorification of harm.`
+        : `Vibe alcolica: ALTA (piacevolmente alticcio). Sintassi più sciolta e immagini da bancone; di gusto, senza glorificare comportamenti dannosi.`
+      : isEn(lang)
+      ? `Booze vibe: OFF (user doesn't drink/unknown). Keep it sharp, spicy, but sober.`
+      : `Vibe alcolica: OFF (utente non beve/sconosciuto). Tagliente e speziato, ma sobrio.`,
+    isEn(lang)
+      ? `Length: compact (≈10–14 lines). If advice emerges, close with up to 3 crisp bullets.`
+      : `Lunghezza: compatta (≈10–14 righe). Se emerge consiglio, chiudi con max 3 bullet incisivi.`,
+  ];
   return base.join("\n");
 }
 
-// --- Timeline blocks: past (counterfactual) & future (prospective) ----------
+// ---------- Timeline blocks ----------
 function timelineBlock(periodo, lang, stile) {
   const L = isEn(lang);
   const isPast = String(periodo || "").toLowerCase() === "past";
   if (isPast) {
     return stile === "wtf"
       ? (L
-          ? `COUNTERFACTUAL (PAST):
-- Stage a vivid alternate timeline as if the user HAD taken that path.
-- Second person + past tense. SHOW beats (fork moment → 2–3 consequences → ironic/philosophical aside).
-- Keep it cheeky; if booze vibe is on, sprinkle playful “bar-night” asides.`
-          : `CONTROFATTUALE (PASSATO):
-- Metti in scena una timeline alternativa come se l’utente AVESSE scelto quell’opzione.
-- Seconda persona + tempi passati. MOSTRA le battute (bivio → 2–3 conseguenze → stoccata ironico/filosofica).
-- Mantieni il piglio; se la vibe alcolica è attiva, qualche aside da notte al bancone.`)
+          ? `COUNTERFACTUAL (PAST): Second person, past tense. Stage a vivid alternate timeline (fork → 2–3 consequences → witty philosophical aside).`
+          : `CONTROFATTUALE (PASSATO): Seconda persona, tempi passati. Metti in scena una timeline vivida (bivio → 2–3 conseguenze → chiusa ironico-filosofica).`)
       : (L
-          ? `COUNTERFACTUAL (PAST): second person, past tense; concrete beats; reflective closing.`
-          : `CONTROFATTUALE (PASSATO): seconda persona, tempi passati; battute concrete; chiusura riflessiva.`);
+          ? `COUNTERFACTUAL (PAST): Second person, past tense; concrete beats; gentle reflection.`
+          : `CONTROFATTUALE (PASSATO): Seconda persona, tempi passati; battute concrete; riflessione gentile.`);
   }
-  // FUTURE
+  // Future
   return stile === "wtf"
     ? (L
-        ? `PROSPECTIVE (FUTURE):
-- Project a plausible near-future if the user CHOOSES that path now.
-- Second person; kinetic present→near future. Show concrete beats, then a smart, sarcastic reflection.`
-        : `PROSPETTICO (FUTURO):
-- Proietta un vicino futuro PLAUSIBILE se l’utente SCEGLIE ora quella strada.
-- Seconda persona; presente→prossimo futuro. Mostra battute concrete, poi riflessione pungente e brillante.`)
+        ? `PROSPECTIVE (FUTURE): Second person; present→near future. Concrete beats; smart sarcastic reflection at the end.`
+        : `PROSPETTICO (FUTURO): Seconda persona; presente→prossimo futuro. Battute concrete; chiusa sarcastica e intelligente.`)
     : (L
-        ? `PROSPECTIVE (FUTURE): second person; tangible steps; gentle reflection.`
-        : `PROSPETTICO (FUTURO): seconda persona; passi tangibili; riflessione gentile.`);
+        ? `PROSPECTIVE (FUTURE): Second person; tangible steps; gentle reflection.`
+        : `PROSPETTICO (FUTURO): Seconda persona; passi tangibili; riflessione gentile.`);
 }
 
-// --- Motif governor: quando citare persone/luoghi/oggetti -------------------
+// ---------- Motif governor: quando citare persone/luoghi/oggetti ----------
 function tok(s){ return (s||"").toLowerCase(); }
 function hasAny(text, arr){ const t=tok(text); return (arr||[]).some(x=>t.includes(String(x||"").toLowerCase())); }
 
@@ -194,7 +172,7 @@ function motifGovernor({ domanda, profilo, clarifications, history, dayCount = 1
     : `PERSONALIZZAZIONE (usa SOLO se naturalmente rilevante): ${items}`;
 }
 
-// --- Build user content -----------------------------------------------------
+// ---------- Build user content ----------
 function buildUserContent({ domanda, periodo, profilo, clarifications, lang, stile, history, dayCount }) {
   const L = isEn(lang);
   const p = profilo || {};
@@ -223,10 +201,7 @@ function buildUserContent({ domanda, periodo, profilo, clarifications, lang, sti
     lines.push(L ? `CLARIFICATIONS:\n${cLines.join("\n")}` : `CHIARIMENTI:\n${cLines.join("\n")}`);
   }
 
-  // Timeline mode (past/future)
   lines.push(timelineBlock(periodo, lang, stile));
-
-  // Quando citarli + anti repeat
   lines.push(motifGovernor({ domanda, profilo, clarifications, history, dayCount, lang }));
   lines.push(buildAntiRepeatBlock(history, lang));
 
@@ -236,17 +211,19 @@ function buildUserContent({ domanda, periodo, profilo, clarifications, lang, sti
     L
       ? `STYLE CONSTRAINTS:
 - Show, don't tell. Concrete beats and sensory verbs.
-- Vary openings; avoid same noun/phrase >2 times.`
+- Vary openings; avoid same noun/phrase >2 times.
+- No insults, no slurs, inclusive humor.`
       : `VINCOLI DI STILE:
 - Mostra, non spiegare. Battute concrete e verbi sensoriali.
-- Varia gli attacchi; evita lo stesso sostantivo/frase >2 volte.`
+- Varia gli attacchi; evita lo stesso sostantivo/frase >2 volte.
+- Niente insulti o volgarità; umorismo inclusivo.`
   );
 
   lines.push(L ? `STYLE: ${stile}` : `STILE: ${stile}`);
   return lines.join("\n\n");
 }
 
-// --- Clarify locale ---------------------------------------------------------
+// ---------- Local clarify (2–3 micro domande) ----------
 function localClarify(domanda, profilo, lang) {
   const en = isEn(lang);
   const out = [];
@@ -298,7 +275,7 @@ function localClarify(domanda, profilo, lang) {
   return out.slice(0, 3);
 }
 
-// --- HTTP handler -----------------------------------------------------------
+// ---------- HTTP handler ----------
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -342,14 +319,14 @@ export default async function handler(req, res) {
       {
         role: "system",
         content: isEn(lang)
-          ? `Constraints: personalized, specific, compact; show-don't-tell; no offensive language or therapy/medical advice.`
+          ? `Constraints: personalized, specific, compact; show-don't-tell; no offensive language or medical/therapy advice.`
           : `Vincoli: personalizzato, specifico, compatto; mostra-non-spiegare; niente linguaggio offensivo o consigli medici/terapeutici.`,
       },
       ...(extra ? [{ role: "system", content: String(extra) }] : []),
     ];
 
-    const temperature = stile === "wtf" ? 1.0 : 0.8;      // WTF più “libero”
-    const maxTokens = stile === "wtf" ? 850 : 900;
+    const temperature = stile === "wtf" ? 0.95 : 0.8;
+    const maxTokens  = stile === "wtf" ? 850 : 900;
 
     // Stream
     if (String(req.headers["x-whatif-stream"] || "").length > 0 || stream) {
