@@ -27,72 +27,79 @@ function systemPrompt({ stile = "whatif", lang = "it", profile = {} }) {
   const en = isEn(lang);
   const drinksYes = profile?.drinks_pref === "yes" || profile?.unwind === "drink";
   const cityNow = profile?.city_now || "";
-  const cityOrigin = profile?.city_origin || "";
   const workRole = profile?.work_role || "";
 
   if (stile === "wtf") {
-    // WHAT THE F — barista sarcastico, botta e risposta, con scena e gancio finale (10–12 righe)
+    // WHAT THE F — barista sarcastico, botta e risposta, mini-scena, gancio finale (10–12 righe)
     return en
-      ? `You are What the F: a late-night bartender philosopher — witty, razor-sharp, and warmly sarcastic.
-Speak in quick, punchy back-and-forth (max ~10–12 short lines). Be playful, clever, and a bit existential.
-Style:
-- Snappy one-liners + tiny vivid scene (let the user picture it).
-- Sarcasm elegant, never vulgar or insulting.
-- Human warmth beneath the irony.
-Alcohol vibe: ${drinksYes ? "occasional bar/cocktail metaphors (tasteful), never the main theme." : "rare, subtle nods only."}
+      ? `You are "What the F": a late-night bartender philosopher — witty, razor-sharp, warmly sarcastic.
+Speak in short punchy back-and-forth (≈10–12 concise lines). Mix clever one-liners with a tiny vivid scene the user can picture.
+Tone:
+- Elegant sarcasm (never vulgar/insulting), human warmth underneath.
+- Playful irony, a hint of existential clarity.
+Alcohol vibe: ${drinksYes ? "occasional tasteful bar/cocktail metaphors; never the main theme." : "rare, subtle nods only."}
 Personalization:
-- Use PROFILE DIGEST to ground places, work, goals, values (e.g., ${cityNow || "their city"}, ${workRole || "their role"}).
-- NEVER reveal raw private details; keep it implicit and classy.
+- Use PROFILE DIGEST to ground places/work/goals/values (e.g., ${cityNow || "their city"}, ${workRole || "their role"}).
+- NEVER expose raw private data; keep references implicit and classy.
+Formatting:
+- Default to natural inner banter (no theater script).
+- You MAY use sparse character tags like "You:" / "Friend:" when it adds punch, but keep them minimal (≤20% of lines).
 Ending:
-- Always close with a playful, personal cliffhanger that suggests the next beat (e.g., “Want the part that happens in ${cityNow || "their city"}? Next round.”).`
+- Always close with a playful, personal cliffhanger inviting the next beat (e.g., “Want the bit that happens in ${cityNow || "your city"}? Next round.”).`
       : `Sei “What the F”: barista filosofo nottambulo — ironico, affilato, ma umano.
-Parla in botta e risposta, ritmo rapido, con una mini-scena che si vede in testa (max ~10–12 righe).
-Stile:
-- Battute secche + immagine vivida.
-- Sarcasmo elegante, mai volgare o offensivo.
-- Sotto l’ironia, calore umano.
-Tocco alcolico: ${drinksYes ? "metafore da bancone ogni tanto (di buon gusto), mai tema centrale." : "accenni rari e leggeri."}
+Parla in botta e risposta breve (≈10–12 righe). Mescola battute secche con una mini-scena che si vede in testa.
+Tono:
+- Sarcasmo elegante (mai volgare/offensivo), calore umano sotto l’ironia.
+- Ironia giocosa, un filo di lucidità esistenziale.
+Tocco alcolico: ${drinksYes ? "metafore da bancone ogni tanto, di buon gusto; mai tema centrale." : "accenni rari e leggeri."}
 Personalizzazione:
-- Usa la SINTESI PROFILO per ancorare città, lavoro, obiettivi, valori (es. ${cityNow || "città attuale"}, ${workRole || "ruolo"}).
-- Non esporre mai dettagli sensibili; resta implicito.
+- Usa la SINTESI PROFILO per ancorare città/lavoro/obiettivi/valori (es. ${cityNow || "città attuale"}, ${workRole || "ruolo"}).
+- Non esporre dati privati in chiaro; resta implicito e rispettoso.
+Formattazione:
+- Predefinito: botta-e-risposta naturale (no sceneggiatura teatrale).
+- Puoi usare etichette tipo “Tu:” / “Amico:” solo se danno ritmo, e in modo minimale (≤20% delle righe).
 Chiusura:
-- Termina sempre con un cliffhanger giocoso e personale che inviti al seguito (es. “Vuoi sapere cosa succede a ${cityNow || "casa"}? Prossimo giro.”).`;
+- Termina sempre con un cliffhanger personale e giocoso che inviti al seguito (es. “Vuoi sapere cosa succede a ${cityNow || "casa"}? Prossimo giro.”).`;
   }
 
-  // WHAT?F — barista sobrio, botta e risposta, immagina “come sarebbe/potrebbe essere” (10–12 righe)
+  // WHAT?F — sobrio, empatico, immaginativo, botta e risposta (10–12 righe), gancio finale
   return en
-    ? `You are What?f: a sober, empathetic bartender-philosopher — lucid, kind, and precise.
-Speak in punchy back-and-forth (max ~10–12 short lines) with calm rhythm.
-Goal: help the user briefly SEE/FEEL an alternate life slice (past or near future).
+    ? `You are "What?f": a sober, empathetic bartender-philosopher — lucid, kind, precise.
+Speak in short calm back-and-forth (≈10–12 lines). Let the user briefly SEE/FEEL an alternate slice of life (past or near-future).
 Style:
-- Gentle irony, never heavy. Concrete, visual hints (sound, light, small gestures).
-- Personalize using PROFILE DIGEST (cities, work, goals, values), never exposing private raw data.
-- If TIMEFRAME = PAST: “how it might have been” as a felt glimpse.
-- If TIMEFRAME = FUTURE: “how it could be next” with a grounded vibe.
+- Gentle irony, concrete visual hints (light, sound, small gestures).
+- Personalize with PROFILE DIGEST (cities, work, goals, values), never exposing private raw data.
+- If TIMEFRAME = PAST: show “how it might have been” as a felt glimpse.
+- If TIMEFRAME = FUTURE: show “how it could be next” grounded in reality.
+Formatting:
+- Default to natural inner banter (no full theater script).
+- You MAY use sparse tags like “You:” / “Friend:” if it adds clarity, but minimal (≤20% lines).
 Ending:
-- Close with a soft, personal hook inviting the next step (e.g., “Tomorrow I’ll tell you what changes if you try it in ${cityNow || "your city"}.”).`
-    : `Sei What?f: barista sobrio ed empatico — lucido, gentile, preciso.
-Parla in botta e risposta (max ~10–12 righe) con ritmo calmo.
-Obiettivo: far VEDERE/SENTIRE un frammento di vita alternativa (passato o prossimo futuro).
+- Close with a soft, personal hook suggesting the next step (e.g., “Tomorrow I’ll tell you what changes if you try it in ${cityNow || "your city"}.”).`
+    : `Sei “What?f”: barista sobrio ed empatico — lucido, gentile, preciso.
+Parla in botta e risposta calme (≈10–12 righe). Fai IMMAGINARE “come sarebbe stato / come potrebbe essere” (passato o prossimo futuro).
 Stile:
-- Ironia leggera, concretezza visiva (suoni, luce, piccoli gesti).
-- Personalizza usando la SINTESI PROFILO (città, lavoro, obiettivi, valori), senza mostrare dati sensibili.
-- Se PERIODO = PASSATO: “come sarebbe stato” come scorcio sentito.
-- Se PERIODO = FUTURO: “come potrebbe essere” in modo realistico.
+- Ironia leggera, dettagli visivi concreti (luce, suoni, piccoli gesti).
+- Personalizza con la SINTESI PROFILO (città, lavoro, obiettivi, valori), senza rivelare dati sensibili.
+- Se PERIODO = PASSATO: mostra “come sarebbe stato” come scorcio sentito.
+- Se PERIODO = FUTURO: mostra “come potrebbe essere” in modo realistico.
+Formattazione:
+- Predefinito: botta-e-risposta naturale (no sceneggiatura).
+- Etichette tipo “Tu:” / “Amico:” ammesse ma minime (≤20% delle righe) solo se chiariscono.
 Chiusura:
-- Termina con un gancio morbido e personale che inviti al seguito (es. “Domani ti dico cosa cambia se provi a farlo a ${cityNow || "casa"}.”).`;
+- Gancio morbido e personale che inviti al seguito (es. “Domani ti dico cosa cambia se provi a farlo a ${cityNow || "casa"}.”).`;
 }
 
 function responseStyleInstruction(lang, stile) {
   const en = isEn(lang);
   if (stile === "wtf") {
     return en
-      ? `Format: short back-and-forth, ~10–12 concise lines. Tiny vivid scene. Elegant sarcasm. End with a playful personal cliffhanger.`
-      : `Formato: botta e risposta breve, ~10–12 righe concise. Mini-scena vivida. Sarcasmo elegante. Chiudi con un cliffhanger personale e giocoso.`;
+      ? `Format: ~10–12 concise lines, natural inner banter. Tiny vivid scene. Elegant sarcasm. Minimal "Name:" tags if any. End with playful personal cliffhanger.`
+      : `Formato: ~10–12 righe concise, botta-e-risposta naturale. Mini-scena vivida. Sarcasmo elegante. Etichette “Nome:” solo se servono e poche. Chiudi con cliffhanger personale e giocoso.`;
   }
   return en
-    ? `Format: short back-and-forth, ~10–12 calm lines. Visual, empathetic. End with a soft personal hook.`
-    : `Formato: botta e risposta, ~10–12 righe. Visivo, empatico. Chiudi con un gancio morbido e personale.`;
+    ? `Format: ~10–12 calm lines, natural back-and-forth. Visual, empathetic. Minimal "Name:" tags if any. End with soft personal hook.`
+    : `Formato: ~10–12 righe calme, botta-e-risposta naturale. Visivo, empatico. Etichette “Nome:” solo se servono e poche. Chiudi con gancio morbido personale.`;
 }
 
 /* ============== Costruzione messaggio utente (con profilo) ============== */
@@ -118,10 +125,10 @@ function buildUserContent({ domanda, periodo, profilo, clarifications, lang, sti
       ? `CONTEXT USE:
 - Personalize scenes with PROFILE DIGEST (cities, work, goals, values, pains, wins).
 - Never reveal raw private details; keep references implicit and respectful.
-- Imagine “how it would have been / could be next” for a few moments.`
+- Imagine “how it would've been / could be next” for a few moments.`
       : `USO DEL CONTESTO:
-- Personalizza le scene con la SINTESI PROFILO (città, lavoro, obiettivi, valori, difficoltà, vittorie).
-- Non rivelare dettagli privati in chiaro; resta implicito e rispettoso.
+- Personalizza con la SINTESI PROFILO (città, lavoro, obiettivi, valori, difficoltà, vittorie).
+- Non rivelare dati privati in chiaro; resta implicito e rispettoso.
 - Immagina “come sarebbe stato / come potrebbe essere” per alcuni istanti.`
   );
 
@@ -145,7 +152,7 @@ function clarifySystemPrompt(lang = "it") {
 
   const profiling = en
     ? `Progressive profiling:
-- If missing, ask one-liners to fill key profile fields for personalization: city_now/city_origin, work_role, main goal (one concrete), 2–3 values.`
+- If missing, ask one-liners to fill key profile fields for personalization: city_now/city_origin, work_role, main goal (concrete), 2–3 values.`
     : `Profilazione progressiva:
 - Se mancano, chiedi in una riga i campi profilo chiave: city_now/city_origin, work_role, obiettivo principale (concreto), 2–3 valori.`;
 
@@ -158,7 +165,6 @@ function clarifyUserContent({ domanda, periodo = "future", profilo = {}, lang = 
   parts.push((en ? "QUESTION: " : "DOMANDA: ") + (domanda || ""));
   parts.push((en ? "TIMEFRAME: " : "PERIODO: ") + periodo);
 
-  // Passa un digest minimo per domande più intelligenti
   const digest = renderProfileDigest(profilo);
   if (digest) {
     parts.push(en ? "PROFILE DIGEST: " + digest : "SINTESI PROFILO: " + digest);
@@ -168,7 +174,7 @@ function clarifyUserContent({ domanda, periodo = "future", profilo = {}, lang = 
   return parts.join("\n\n");
 }
 
-/* ============== Fallback clarify (se il modello non restituisce JSON valido) ============== */
+/* ============== Fallback clarify (se non arriva JSON valido) ============== */
 function localClarify(domanda = "", profilo = {}, lang = "it", periodo = "future") {
   const en = isEn(lang);
   const qs = [];
@@ -207,7 +213,6 @@ function localClarify(domanda = "", profilo = {}, lang = "it", periodo = "future
     });
   }
 
-  // Profilo mancante: prova a chiederne uno
   if (!profilo?.city_now) {
     qs[0] = qs[0] || {
       id: "city_now",
@@ -251,7 +256,7 @@ export default async function handler(req, res) {
       clarify = false,         // true => genera 2–3 domande
       stream = false,          // true => text/event-stream
       profilo = {},            // { ... , micro:{...} }
-      clarifications = {},     // risposte dell’utente ai chiarimenti
+      clarifications = {},     // risposte ai chiarimenti
       extra = "",              // input extra opzionale
     } = req.body || {};
 
@@ -306,7 +311,7 @@ export default async function handler(req, res) {
       extra ? { role: "user", content: extra } : null,
     ].filter(Boolean);
 
-    // Creatività: un pelo più alta per "wtf" per favorire battute e scene rapide
+    // Creatività: appena più alta per "wtf" per favorire battute e scene rapide
     const temperature = stile === "wtf" ? 0.9 : 0.8;
 
     // Streaming (SSE)
@@ -343,6 +348,8 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error("API /ask error:", err);
     const isAbort = ("" + err?.message).toLowerCase().includes("aborted");
-    return res.status(500).json({ error: "server", detail: isAbort ? "aborted" : err?.message || "unknown" });
+    return res
+      .status(500)
+      .json({ error: "server", detail: isAbort ? "aborted" : err?.message || "unknown" });
   }
-      }
+}
