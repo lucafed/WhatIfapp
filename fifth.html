@@ -349,7 +349,10 @@ function ensureCredits(){const c=readCredits();if(!c.date||c.date!==todayStr()){
 /* Clarify limits */
 function readClarify(){const v=readJSON('whatif_clarify');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0};return v;}
 function writeClarify(v){writeJSON('whatif_clarify',v);renderBadges();}
-function ensureClarify(){const c=readClarify();if(!c.date||!c.date===todayStr()){c.date=todayStr();c.used=0;writeClarify(c);}}
+function ensureClarify(){
+  const c=readClarify();
+  if(!c.date || c.date!==todayStr()){ c.date=todayStr(); c.used=0; writeClarify(c); }
+}
 
 /* Profilo / signals */
 function buildProfilePayload(){
@@ -446,7 +449,6 @@ function renderKnowledgeMini(){
 }
 
 /* ====== API helpers ====== */
-/* >>> MOD: passiamo anche tags, now, tz così il server può generare domande più pertinenti <<< */
 function getTags(){ try{ return JSON.parse(LS.getItem('whatif_tags')||'[]'); }catch{ return []; } }
 
 async function callClarifyAPI(){
@@ -457,15 +459,15 @@ async function callClarifyAPI(){
     stile: currentStyle,
     clarify: true,
     profilo: buildProfilePayload(),
-    tags: getTags(),                               // <— nuovo
-    now: new Date().toISOString(),                 // <— nuovo
-    tz: getTZ()                                    // <— nuovo
+    tags: getTags(),
+    now: new Date().toISOString(),
+    tz: getTZ()
   };
   const r=await fetch("/api/ask",{method:"POST",headers:{ "Content-Type":"application/json" },body:JSON.stringify(payload)});
   if(!r.ok) throw new Error("server");
   return r.json();
 }
-async function callGenerateStream({clarifications={},extra="" }={}){
+async function callGenerateStream({clarifications={} }={}){
   const payload={
     domanda,
     lang,
@@ -475,25 +477,12 @@ async function callGenerateStream({clarifications={},extra="" }={}){
     stream:true,
     profilo:buildProfilePayload(),
     clarifications,
-    extra,
-    now: new Date().toISOString(),                 // <— allineato
-    tz: getTZ()                                    // <— allineato
+    now: new Date().toISOString(),
+    tz: getTZ()
   };
   const r=await fetch("/api/ask",{method:"POST",headers:{ "Content-Type":"application/json","x-whatif-stream":"1" },body:JSON.stringify(payload)});
   if(!r.ok) throw new Error("server");
   return r.body.getReader();
-}
-
-/* ====== Language enforcement (non cambia il tono) ====== */
-function buildLanguageExtra(currentLang, style){
-  if (currentLang === 'en'){
-    return (style === 'wtf')
-      ? 'Please answer strictly in English.'
-      : 'Please narrate the entire answer strictly in English.';
-  }
-  return (style === 'wtf')
-    ? 'Rispondi rigorosamente in italiano.'
-    : 'Racconta l’intera risposta rigorosamente in italiano.';
 }
 
 /* ====== AUTO-LEARNING LOCALE ====== */
@@ -562,7 +551,6 @@ function isSameQuestions(qs){
   return last && now && last === now;
 }
 function buildVariantQuestions(qs){
-  // Piccole variazioni per evitare ripetizioni
   const it = lang!=='en';
   return qs.map((q,i)=>{
     const lbl = String(q.label||'').trim();
@@ -572,7 +560,6 @@ function buildVariantQuestions(qs){
       return {...q, label: it?'Un INDICATORE che puoi misurare entro 30 giorni?':'One INDICATOR you can measure in 30 days?'};
     if (/vincolo|constraint/i.test(lbl))
       return {...q, label: it?'Il VINCOLO più concreto nelle prossime 2 settimane?':'The most concrete CONSTRAINT in 2 weeks?'};
-    // altrimenti arricchisci con una parola chiave
     const hints = extractKeywords(domanda); const h = hints[i%hints.length]||'tema';
     return {...q, label: `${lbl} (${h})`};
   });
@@ -594,22 +581,18 @@ async function openClarify(){
 
   let qs=[];
   try{
-    // 1) Tentativo server (AI su domanda vera) — ora con tags/ora/tz
     const j=await callClarifyAPI();
     qs=Array.isArray(j.questions)? j.questions.slice(0,3):[];
   }catch(e){
     console.error('clarify server error',e);
   }
 
-  // 2) Fallback/Refine locale se vuote o ripetute
   if (!qs.length){
     qs = localClarifyContextual(domanda, (prefs.periodo||'future'));
   }else if (isSameQuestions(qs)){
     qs = buildVariantQuestions(qs);
   }
 
-  // 3) Dedup finale + cache del set mostrato
-  //    (normalizza placeholders)
   const seen = new Set();
   qs = qs.filter(q=>{
     const key = (q.label||'').trim().toLowerCase();
@@ -622,14 +605,12 @@ async function openClarify(){
 
   saveClarifySet(labelsFromQuestions(qs));
 
-  // Render
   clarifyList.innerHTML=qs.map(q=>`
     <div class="qitem">
       <label for="${q.id}">${q.label}</label>
       <input id="${q.id}" type="text" placeholder="${(q.placeholder||'').replace(/"/g,'&quot;')}" />
     </div>`).join("");
 
-  // Conta utilizzo
   const cc=readClarify(); cc.used=(cc.used||0)+1; writeClarify(cc);
 }
 
@@ -637,7 +618,7 @@ $('applyClarify').addEventListener('click', async ()=>{
   const inputs=clarifyList.querySelectorAll('input');
   const clar={}; inputs.forEach(i=>{ const v=(i.value||"").trim(); if(i.id&&v) clar[i.id]=v; });
   clarifyOverlay.style.display='none';
-  $('signalsBody').textContent = summarizeSignals(clar); // invisibile ma utile per debug locale
+  $('signalsBody').textContent = summarizeSignals(clar);
   learnFromInteraction({ question: domanda, clarifications: clar, answerText: "" });
   await generate(false,clar);
 });
@@ -659,8 +640,7 @@ async function generate(isRegen=false, clarOverride=null){
   if(!$('signalsBody').textContent){ $('signalsBody').textContent = summarizeSignals(clarOverride||{}); }
 
   try{
-    const extra = buildLanguageExtra(lang, currentStyle);
-    const reader=await callGenerateStream({clarifications:(clarOverride||{}), extra});
+    const reader=await callGenerateStream({clarifications:(clarOverride||{})});
     const decoder=new TextDecoder(); let buffer="", text="";
     while(true){
       const {value,done}=await reader.read(); if(done)break;
