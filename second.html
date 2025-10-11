@@ -57,6 +57,7 @@
     .wrap{width:min(100%,980px)}
     h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
     .blurb{color:#d7e8ec;margin:0 0 14px;font-size:clamp(14px,4vw,18px);line-height:1.45}
+
     .banner{display:none;background:#0b151d;border:1px dashed var(--line);color:#dff6fb;border-radius:14px;padding:12px;margin-bottom:8px}
     .banner strong{color:var(--accent2)}
     .first-session{display:none;background:#0e1a23;border:1px solid var(--line);color:#daf0f6;border-radius:14px;padding:12px;margin-bottom:8px}
@@ -78,25 +79,25 @@
     select,input[type="text"],textarea{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:16px}
     textarea{min-height:110px;resize:vertical}
     .muted{color:var(--muted);font-size:13px}
-    .actions{display:flex;gap:10px;justify-content:space-between;margin-top:6px;flex-wrap:wrap}
+
+    .divider{height:1px;background:var(--line);opacity:.7;margin:6px 0 2px}
+
+    .actions{display:flex;gap:10px;justify-content:space-between;margin-top:10px;flex-wrap:wrap}
     .btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer;border:1px solid var(--line);background:var(--chip);color:#cfe6eb}
     .btn.ghost{background:#152029}
     .btn.primary{border:none;background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink)}
     .btn[disabled]{background:#2a3b45;color:#7f98a2;cursor:not-allowed}
+
     .error{color:#ffb3b3;background:#3a1414;border:1px solid #5a2222;border-radius:10px;padding:10px 12px;display:none}
     .error.show{display:block}
-    .micro{display:none;background:#0c141b;border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:6px}
+
+    .micro{display:none;background:#0c141b;border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:10px}
     .micro-q{margin:10px 0}
     .micro-q label{display:block;margin:0 0 6px}
     .micro-q input, .micro-q select{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px}
 
-    /* Tags */
-    .tags{display:flex;flex-wrap:wrap;gap:8px}
-    .tag{background:var(--chip);border:1px solid var(--line);color:#cfe6e9;border-radius:999px;padding:6px 10px;cursor:pointer;user-select:none}
-    .tag.active{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink)}
-    .small{font-size:12px;color:var(--muted)}
-    .cta-pill{display:inline-block;margin-top:10px}
-    .cta-pill .btn{border-radius:16px}
+    /* CTA pill bottom */
+    .cta-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}
   </style>
 </head>
 <body>
@@ -129,41 +130,22 @@
         </div>
       </div>
 
-      <!-- CTAs rapidi -->
-      <div class="cta-pill">
-        <button type="button" class="btn" id="improveBtn">✨ Migliora profilo (30s)</button>
-      </div>
-      <div class="cta-pill">
-        <button type="button" class="btn" id="fullBtn">🕰️ Test completo (5 min)</button>
-      </div>
-
       <div id="errorBox" class="error"></div>
 
+      <!-- ================== FORM PRINCIPALE (domande spostate in alto) ================== -->
       <form id="aboutForm" novalidate>
-        <!-- Identità & Luoghi -->
+        <!-- Identità & contesto -->
         <div class="row two">
           <div>
             <label for="name" id="name_lbl">Nome</label>
             <input id="name" type="text" placeholder="Es. Luca" />
           </div>
           <div>
-            <label for="work_role" id="who_lbl">Chi sei?</label>
-            <input id="work_role" type="text" placeholder="Professione / Ruolo (es. Tecnico di farmacia)" />
+            <label for="city" id="city_lbl">Città</label>
+            <input id="city" type="text" placeholder="Es. L’Aquila / Verona" />
           </div>
         </div>
 
-        <div class="row two">
-          <div>
-            <label for="city_now" id="city_now_lbl">Dove vivi ora?</label>
-            <input id="city_now" type="text" placeholder="Es. Verona" />
-          </div>
-          <div>
-            <label for="city_origin" id="city_origin_lbl">Da dove vieni?</label>
-            <input id="city_origin" type="text" placeholder="Es. L'Aquila" />
-          </div>
-        </div>
-
-        <!-- Età & fase -->
         <div class="row three">
           <div>
             <label for="gender" id="gender_lbl">Sesso</label>
@@ -176,8 +158,8 @@
             </select>
           </div>
           <div>
-            <label for="age_range" id="age_lbl">Età</label>
-            <select id="age_range" required>
+            <label for="age" id="age_lbl">Età</label>
+            <select id="age" required>
               <option value="" id="sel_choose2">Seleziona…</option>
               <option value="under18" id="age_u18">-18</option>
               <option value="18_24">18–24</option>
@@ -200,50 +182,52 @@
           </div>
         </div>
 
-        <!-- Obiettivi (array) -->
-        <div class="row">
+        <div class="row two">
           <div>
-            <label for="goals" id="goal_lbl">Obiettivo principale</label>
-            <input id="goals" type="text" placeholder="Es. cambiare reparto / più equilibrio / trasferirmi entro 6 mesi" />
-            <div class="small" id="goals_hint">Puoi separare più obiettivi con virgola.</div>
+            <label for="who" id="who_lbl">Chi sei?</label>
+            <input id="who" type="text" placeholder="Professione / Ruolo" />
+          </div>
+          <div>
+            <label for="goal" id="goal_lbl">Obiettivo</label>
+            <input id="goal" type="text" placeholder="Es. più equilibrio lavoro-vita" />
           </div>
         </div>
 
-        <!-- Valori (chips → array) -->
-        <div class="row">
-          <label id="values_lbl">Cosa ti guida? <span class="small">(scegline 2–4)</span></label>
-          <div id="values" class="tags">
-            <span class="tag">famiglia</span>
-            <span class="tag">stabilità</span>
-            <span class="tag">crescita</span>
-            <span class="tag">libertà</span>
-            <span class="tag">curiosità</span>
-            <span class="tag">salute</span>
-            <span class="tag">coraggio</span>
-            <span class="tag">impatto</span>
+        <!-- ===== Blocco Predittivo (PER LA QUALITÀ DELLE RISPOSTE AI) ===== -->
+        <div class="divider"></div>
+        <div class="row two">
+          <div>
+            <label for="time_window" id="tw_lbl">Finestra decisionale reale</label>
+            <select id="time_window">
+              <option value="">Seleziona…</option>
+              <option value="this_month">Questo mese</option>
+              <option value="3_6_months">3–6 mesi</option>
+              <option value="12_months">~12 mesi</option>
+            </select>
+          </div>
+          <div>
+            <label for="success_indicator" id="si_lbl">Indicatore di successo</label>
+            <input id="success_indicator" type="text" placeholder="Es. +€500/mese, 6h/sett. libere, primo cliente…" />
           </div>
         </div>
 
-        <!-- Vittorie / Difficoltà / Hobby (array) -->
-        <div class="row three">
+        <div class="row two">
           <div>
-            <label for="wins" id="wins_lbl">Una piccola vittoria</label>
-            <input id="wins" type="text" placeholder="Es. ho gestito un turno difficile" />
-            <div class="small" id="wins_hint">Virgole per più voci.</div>
+            <label for="risk_tolerance" id="rt_lbl">Tolleranza al rischio</label>
+            <select id="risk_tolerance">
+              <option value="">Seleziona…</option>
+              <option value="low">Bassa</option>
+              <option value="medium">Media</option>
+              <option value="high">Alta</option>
+            </select>
           </div>
           <div>
-            <label for="pains" id="pains_lbl">Una difficoltà ricorrente</label>
-            <input id="pains" type="text" placeholder="Es. pendolarismo / budget stretto" />
-            <div class="small" id="pains_hint">Virgole per più voci.</div>
-          </div>
-          <div>
-            <label for="hobbies" id="hobbies_lbl">Interessi</label>
-            <input id="hobbies" type="text" placeholder="Es. moto, montagna, fotografia" />
-            <div class="small" id="hobbies_hint">Virgole per più voci.</div>
+            <label for="landmark" id="lm_lbl">Luogo/persona di riferimento</label>
+            <input id="landmark" type="text" placeholder="Es. Stazione, Piazza, quartiere, collega chiave…" />
           </div>
         </div>
 
-        <!-- Domanda mascherata (relax) -->
+        <!-- Domanda “mascherata” relax solo prima dell’onboarding -->
         <div id="unwindBox" class="micro" style="display:none">
           <div class="micro-q">
             <label for="unwindSel" id="unwind_lbl">Quando vuoi rilassarti dopo una giornata intensa, cosa preferisci fare?</label>
@@ -257,7 +241,6 @@
           </div>
         </div>
 
-        <!-- “More” libero -->
         <div>
           <label for="more" id="more_lbl">
             Vuoi raccontarci qualcosa di più su di te?
@@ -266,7 +249,7 @@
           <textarea id="more" placeholder=""></textarea>
         </div>
 
-        <!-- Micro-domande giornaliere -->
+        <!-- ===== Micro-domande giornaliere (SOLO DAL GIORNO DOPO) ===== -->
         <div id="microBox" class="micro">
           <h3 style="margin:6px 0" id="micro_title">3 micro-domande di oggi</h3>
           <div class="micro-q">
@@ -287,6 +270,7 @@
           </div>
         </div>
 
+        <!-- Azioni: in basso -->
         <div class="actions">
           <button type="button" class="btn ghost" id="backBtn">Indietro</button>
           <div style="display:flex;gap:8px">
@@ -295,6 +279,12 @@
           </div>
         </div>
       </form>
+
+      <!-- CTA in fondo pagina -->
+      <div class="cta-row">
+        <button type="button" class="btn" id="improveBtn">✨ Migliora profilo (30s)</button>
+        <button type="button" class="btn" id="fullBtn">🕰️ Test completo (5 min)</button>
+      </div>
     </div>
   </main>
 
@@ -320,19 +310,11 @@
         back:"Indietro", home:"Home",
         improve:"✨ Migliora profilo (30s)",
         full:"🕰️ Test completo (5 min)",
-        name_lbl:"Nome",
-        city_now_lbl:"Dove vivi ora?",
-        city_origin_lbl:"Da dove vieni?",
+        name_lbl:"Nome", city_lbl:"Città",
         gender_lbl:"Sesso", choose:"Seleziona…", gender_m:"Uomo", gender_f:"Donna", gender_o:"Altro", gender_n:"Preferisco non dirlo",
         age_lbl:"Età", age_u18:"-18",
         phase_lbl:"Fase attuale", phase_study:"Studio", phase_work:"Lavoro", phase_change:"Cambio/Transizione", phase_other:"Altro",
-        who_lbl:"Chi sei?",
-        goal_lbl:"Obiettivo principale",
-        goals_hint:"Puoi separare più obiettivi con virgola.",
-        values_lbl:"Cosa ti guida?",
-        wins_lbl:"Una piccola vittoria", wins_hint:"Virgole per più voci.",
-        pains_lbl:"Una difficoltà ricorrente", pains_hint:"Virgole per più voci.",
-        hobbies_lbl:"Interessi", hobbies_hint:"Virgole per più voci.",
+        who_lbl:"Chi sei?", goal_lbl:"Obiettivo",
         more_lbl:"Vuoi raccontarci qualcosa di più su di te?", more_hint:"(opzionale – aiuta l’AI a darti risposte più accurate)",
         more_ph:"Esempio: lavoro nel digitale, sto pensando di cambiare città, ho due figli…",
         banner:"<strong>Giorno dopo giorno</strong>, tre micro-domande arricchiscono il tuo profilo finché dirai: <strong>“Potrei essere io.”</strong>",
@@ -348,10 +330,18 @@
         bar_hint:"Più dettagli → più scenari plausibili. Le chip ti portano al punto giusto.",
         // Domanda mascherata
         unwind_lbl:"Quando vuoi rilassarti dopo una giornata intensa, cosa preferisci fare?",
-        uw_opt_choose:"Seleziona…", uw_opt_workout:"Allenarmi", uw_opt_friends:"Uscire con amici", uw_opt_series:"Guardare una serie", uw_opt_drink:"Godermi un drink",
+        uw_opt_choose:"Seleziona…",
+        uw_opt_workout:"Allenarmi",
+        uw_opt_friends:"Uscire con amici",
+        uw_opt_series:"Guardare una serie",
+        uw_opt_drink:"Godermi un drink",
         // Prima sessione
         first_session:"Ciao! Oggi iniziamo a conoscerci meglio.",
-        values_lbl_hint:"(scegline 2–4)"
+        // Predittivo
+        tw:"Finestra decisionale reale",
+        si:"Indicatore di successo",
+        rt:"Tolleranza al rischio",
+        lm:"Luogo/persona di riferimento"
       },
       en:{
         title:"Tell me about you",
@@ -359,19 +349,11 @@
         back:"Back", home:"Home",
         improve:"✨ Improve profile (30s)",
         full:"🕰️ Full test (5 min)",
-        name_lbl:"Name",
-        city_now_lbl:"Where do you live now?",
-        city_origin_lbl:"Where are you from?",
+        name_lbl:"Name", city_lbl:"City",
         gender_lbl:"Gender", choose:"Choose…", gender_m:"Male", gender_f:"Female", gender_o:"Other", gender_n:"Prefer not to say",
         age_lbl:"Age", age_u18:"-18",
         phase_lbl:"Current phase", phase_study:"Studying", phase_work:"Working", phase_change:"Changing/Transition", phase_other:"Other",
-        who_lbl:"Who are you?",
-        goal_lbl:"Main goal",
-        goals_hint:"You can separate multiple goals with commas.",
-        values_lbl:"What guides you?",
-        wins_lbl:"A small win", wins_hint:"Use commas for multiple.",
-        pains_lbl:"A recurring challenge", pains_hint:"Use commas for multiple.",
-        hobbies_lbl:"Interests", hobbies_hint:"Use commas for multiple.",
+        who_lbl:"Who are you?", goal_lbl:"Goal",
         more_lbl:"Want to tell us more about you?", more_hint:"(optional – helps the AI give more accurate answers)",
         more_ph:"Example: I work in digital, I’m considering moving city, I have two kids…",
         banner:"<strong>Day by day</strong>, three micro-questions enrich your profile until you’ll say: <strong>“That could be me.”</strong>",
@@ -385,12 +367,19 @@
         know:"Personalization", missing:"Missing:", miss_identity:"Identity/role", miss_routine:"Routine/indicators",
         miss_constraints:"Constraints", miss_goals:"Goals", miss_places:"Places", miss_relations:"Relationships", miss_risk:"Risk",
         bar_hint:"More detail → more plausible scenarios. Chips take you to the right field.",
-        // Masked question
+        // Masked q
         unwind_lbl:"When you need to unwind after a long day, what do you usually do?",
-        uw_opt_choose:"Choose…", uw_opt_workout:"Work out", uw_opt_friends:"Go out with friends", uw_opt_series:"Watch a show", uw_opt_drink:"Enjoy a drink",
-        // First session
+        uw_opt_choose:"Choose…",
+        uw_opt_workout:"Work out",
+        uw_opt_friends:"Go out with friends",
+        uw_opt_series:"Watch a show",
+        uw_opt_drink:"Enjoy a drink",
         first_session:"Hey there! Today we start getting to know each other.",
-        values_lbl_hint:"(pick 2–4)"
+        // Predictive
+        tw:"Real decision window",
+        si:"Success indicator",
+        rt:"Risk tolerance",
+        lm:"Reference place/person"
       }
     };
 
@@ -398,7 +387,6 @@
     function getLang(){ return (LS.getItem('lang') || (navigator.language||'it').slice(0,2)).toLowerCase(); }
     function setLang(l){ LS.setItem('lang', l); applyI18N(); renderKnowledge(); }
     const $ = s => document.querySelector(s);
-    const $$ = s => document.querySelectorAll(s);
 
     function applyI18N(){
       const d = I18N[getLang()] || I18N.it;
@@ -411,14 +399,13 @@
       $('#backTop').textContent = '← ' + d.back;
       $('#homeTop').textContent = '🏠 ' + d.home;
 
-      // CTAs
+      // CTA bottom
       $('#improveBtn').textContent = d.improve;
       $('#fullBtn').textContent = d.full;
 
       // labels
       $('#name_lbl').textContent = d.name_lbl;
-      $('#city_now_lbl').textContent = d.city_now_lbl;
-      $('#city_origin_lbl').textContent = d.city_origin_lbl;
+      $('#city_lbl').textContent = d.city_lbl;
 
       $('#gender_lbl').textContent = d.gender_lbl;
       $('#sel_choose').textContent = d.choose;
@@ -440,16 +427,12 @@
 
       $('#who_lbl').textContent = d.who_lbl;
       $('#goal_lbl').textContent = d.goal_lbl;
-      $('#goals_hint').textContent = d.goals_hint;
 
-      $('#values_lbl').innerHTML = d.values_lbl + ' <span class="small">' + (d.values_lbl_hint||'') + '</span>';
-
-      $('#wins_lbl').textContent = d.wins_lbl;
-      $('#wins_hint').textContent = d.wins_hint;
-      $('#pains_lbl').textContent = d.pains_lbl;
-      $('#pains_hint').textContent = d.pains_hint;
-      $('#hobbies_lbl').textContent = d.hobbies_lbl;
-      $('#hobbies_hint').textContent = d.hobbies_hint;
+      // predittivo
+      $('#tw_lbl').textContent = d.tw;
+      $('#si_lbl').textContent = d.si;
+      $('#rt_lbl').textContent = d.rt;
+      $('#lm_lbl').textContent = d.lm;
 
       // blocco “more”
       $('#more_lbl').firstChild.textContent = d.more_lbl + ' ';
@@ -475,7 +458,7 @@
       $('#missLabel').textContent = d.missing;
       $('#knowBox').title = d.bar_hint;
 
-      // error message bind
+      // error bind
       $('#aboutForm').dataset.err = d.err_required;
 
       // I18N domanda mascherata
@@ -488,7 +471,7 @@
         document.getElementById('uw_opt_drink').textContent   = d.uw_opt_drink;
       }
 
-      // Banner prima sessione (testo)
+      // Banner prima sessione
       $('#firstSessionBanner').textContent = d.first_session;
     }
 
@@ -499,16 +482,17 @@
     // ===== Only once: se onboarding già fatto e profilo base presente, salta pagina
     const KEY_ONBOARD = 'whatif_onboarding_done';
     function baseProfilePresent(){
-      try{ const p = JSON.parse(LS.getItem('whatif_profile')||'{}'); return !!(p && p.gender && (p.age_range||p.age) && p.phase); }catch{return false}
+      try{ const p = JSON.parse(LS.getItem('whatif_profile')||'{}'); return !!(p && p.gender && p.age && p.phase); }catch{return false}
     }
 
-    // Mostra banner prima sessione SOLO se non visto e prima dell’onboarding
+    // Prima sessione banner (solo pre-onboarding)
     if (LS.getItem(KEY_ONBOARD)!=='1' && LS.getItem('whatif_first_session_seen')!=='1'){
       const b = document.getElementById('firstSessionBanner');
       b.style.display = 'block';
       LS.setItem('whatif_first_session_seen','1');
     }
 
+    // Se già fatto, salta a quarta pagina
     if (LS.getItem(KEY_ONBOARD)==='1' && baseProfilePresent()){
       location.replace('fourth.html');
     }
@@ -516,6 +500,7 @@
     // topbar buttons
     $('#backTop').addEventListener('click', ()=> history.back());
     $('#homeTop').addEventListener('click', ()=> location.href='index.html');
+
     // Reset profilo
     $('#resetBtn').addEventListener('click', ()=>{
       if(!confirm('Reset profilo e dati giornalieri?')) return;
@@ -528,35 +513,19 @@
       location.href='second.html';
     });
 
-    // CTA: migliora (30s) → third.html
+    // CTA bottom
     document.getElementById('improveBtn').addEventListener('click', ()=> location.href='third.html');
-
-    // CTA: test completo (5 min) → fulltest.html (nascondi se già fatto)
     (function handleFullTestCTA(){
       const done = LS.getItem('whatif_quiz5_done') === '1';
       if (done) document.getElementById('fullBtn').style.display = 'none';
       document.getElementById('fullBtn').addEventListener('click', ()=> location.href='fulltest.html');
     })();
 
-    // show daily banner + micro once per day
+    // Helpers
     function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
     const KEY_DAY = 'whatif_daily_seen';
     const today   = todayStr();
-    const seenDay = LS.getItem(KEY_DAY);
-    const showDaily = (seenDay !== today);
 
-    // mostra domanda mascherata SOLO prima dell’onboarding
-    if (LS.getItem('whatif_onboarding_done')!=='1'){
-      const uwBox = document.getElementById('unwindBox');
-      if (uwBox) uwBox.style.display = 'block';
-    }
-
-    if (showDaily){
-      $('#dailyBanner').style.display = 'block';
-      $('#microBox').style.display = 'block';
-    }
-
-    // ====== INDICATORE: calcolo punteggio ======
     function readJSON(k,def={}){ try{ return JSON.parse(LS.getItem(k)||JSON.stringify(def)); }catch{ return def; } }
     function daysBetween(iso1, iso2){
       if(!iso1||!iso2) return 999;
@@ -565,17 +534,48 @@
     }
     function last(arr){ return Array.isArray(arr) && arr.length ? arr[arr.length-1] : null; }
 
+    // ===== Banner/micro: SOLO dal giorno dopo la prima compilazione
+    (function setupDailyBlocks(){
+      const profDate = LS.getItem('whatif_profile_date');
+      const onboard = LS.getItem(KEY_ONBOARD)==='1';
+      const showDaily = (() => {
+        if (!onboard || !profDate) return false; // prima volta: NON mostrare micro
+        const gap = daysBetween(profDate, today);
+        return gap >= 1; // dal giorno dopo
+      })();
+
+      if (showDaily){
+        document.getElementById('dailyBanner').style.display = 'block';
+        document.getElementById('microBox').style.display = 'block';
+        // limita a una volta per giorno
+        const seenDay = LS.getItem(KEY_DAY);
+        if (seenDay === today){
+          // già interagito oggi → nascondi solo il banner, micro visibile se rientra
+          document.getElementById('dailyBanner').style.display = 'none';
+        }
+      } else {
+        document.getElementById('dailyBanner').style.display = 'none';
+        document.getElementById('microBox').style.display = 'none';
+      }
+
+      // domanda mascherata relax SOLO prima dell’onboarding
+      if (LS.getItem(KEY_ONBOARD)!=='1'){
+        const uwBox = document.getElementById('unwindBox');
+        if (uwBox) uwBox.style.display = 'block';
+      }
+    })();
+
+    // ====== Indicatore di conoscenza ======
     function computeKnowledge(){
       const profile = readJSON('whatif_profile',{});
       const micro   = readJSON('whatif_micro',{});
-      const clar    = readJSON('whatif_clarify',{date:null,used:0});
       const microLog= readJSON('whatif_micro_log',[]);
       const lastUpd = LS.getItem('whatif_last_update');
 
       let cover = 0;
       const miss = [];
 
-      const hasIdentity = !!(profile.name || profile.role || profile.work_role);
+      const hasIdentity = !!(profile.name || profile.role);
       cover += hasIdentity ? 8 : 0; if(!hasIdentity) miss.push('identity');
 
       const hasRoutine = !!(micro.indicatore);
@@ -584,43 +584,47 @@
       const hasConstraints = !!(micro.vincolo_2w);
       cover += hasConstraints ? 8 : 0; if(!hasConstraints) miss.push('constraints');
 
-      const hasGoals = !!(profile.goal || (Array.isArray(profile.goals)&&profile.goals.length));
+      const hasGoals = !!(profile.goal);
       cover += hasGoals ? 8 : 0; if(!hasGoals) miss.push('goals');
 
-      const hasPlaces = !!(profile.city_now || profile.city || profile.city_origin || micro.punto_riferimento);
+      const hasPlaces = !!(profile.city || micro.punto_riferimento);
       cover += hasPlaces ? 8 : 0; if(!hasPlaces) miss.push('places');
 
       const hasRelations = !!(micro.persona_chiave);
       cover += hasRelations ? 8 : 0; if(!hasRelations) miss.push('relations');
 
-      const hasRisk = !!(micro.rischio || micro.tolleranza_rischio);
+      const hasRisk = !!(micro.rischio || micro.tolleranza_rischio || profile.risk_tolerance);
       cover += hasRisk ? 7 : 0; if(!hasRisk) miss.push('risk');
 
+      // qualità segnali
       const vals = Object.values(profile).concat(Object.values(micro)).filter(v=>typeof v==='string');
       let usable = 0;
       const numRe = /\b\d+([.,]\d+)?\b/;
       const timeRe= /\b(\d{1,2}[:.]\d{2}|mattina|pomeriggio|sera|am|pm)\b/i;
-      const locRe = /\b(centro|stazione|ufficio|palestra|bar|parco|centro storico|ospedale|farmacia)\b/i;
+      const locRe = /\b(centro|stazione|ufficio|palestra|bar|parco|centro storico|piazza|quartiere)\b/i;
       vals.forEach(v=>{ if (usable>=10) return; if (numRe.test(v) || timeRe.test(v) || locRe.test(v)) usable++; });
       let quality = Math.min(10, usable);
-      const today = todayStr();
-      if (clar && clar.date === today && (clar.used||0)>0) quality += 5;
+
+      // bonus se micro oggi
+      const microLogArr = Array.isArray(microLog)?microLog:[];
+      if (microLogArr.includes(today)) quality += 5;
       quality = Math.min(25, quality);
 
+      // freschezza dati
       let streak=0;
-      if (Array.isArray(microLog) && microLog.length){
+      if (microLogArr.length){
         let d = new Date(today);
         for(;;){
           const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-          if (microLog.includes(iso)){ streak++; d.setDate(d.getDate()-1); } else break;
+          if (microLogArr.includes(iso)){ streak++; d.setDate(d.getDate()-1); } else break;
         }
       }
       const streakPts = Math.min(10, streak);
 
-      const lastDay = lastUpd || last(microLog);
+      const lastDay = lastUpd || last(microLogArr);
       let recencyPts = 0;
       if (lastDay){
-        const gap = daysBetween(lastDay, today);
+        const gap = Math.max(0, daysBetween(lastDay, today));
         if (gap<=2) recencyPts=10;
         else if (gap<=5) recencyPts=8;
         else if (gap<=8) recencyPts=6;
@@ -655,8 +659,8 @@
 
     function jumpToKey(key){
       if (key==='identity'){ document.getElementById('name').focus(); scrollIntoView('#name'); return; }
-      if (key==='goals'){ document.getElementById('goals').focus(); scrollIntoView('#goals'); return; }
-      if (key==='places'){ document.getElementById('city_now').focus(); scrollIntoView('#city_now'); return; }
+      if (key==='goals'){ document.getElementById('goal').focus(); scrollIntoView('#goal'); return; }
+      if (key==='places'){ document.getElementById('city').focus(); scrollIntoView('#city'); return; }
       if (key==='constraints' || key==='routine' || key==='relations' || key==='risk'){
         document.getElementById('microBox').style.display = 'block';
         scrollIntoView('#microBox');
@@ -670,23 +674,14 @@
       el.scrollIntoView({behavior:'smooth', block:'center'});
     }
 
-    // Valori → chip toggle
-    (function wireValues(){
-      const box = document.getElementById('values');
-      box.addEventListener('click', (e)=>{
-        const t = e.target.closest('.tag'); if(!t) return;
-        t.classList.toggle('active');
-        // max 4
-        const act = [...box.querySelectorAll('.tag.active')];
-        if (act.length>4) act[0].classList.remove('active');
-      });
-    })();
-
     // micro actions
     document.getElementById('microSkip').addEventListener('click', ()=>{
+      document.getElementById('dailyBanner').style.display='none';
       document.getElementById('microBox').style.display='none';
       LS.setItem(KEY_DAY, today);
+      renderKnowledge();
     });
+
     document.getElementById('microSave').addEventListener('click', ()=>{
       const patch = {};
       const v1 = document.getElementById('mq1').value.trim(); if (v1) patch['vincolo_2w'] = v1;
@@ -702,6 +697,7 @@
       LS.setItem('whatif_micro_log', JSON.stringify(log));
       LS.setItem('whatif_last_update', today);
 
+      document.getElementById('dailyBanner').style.display='none';
       document.getElementById('microBox').style.display='none';
       LS.setItem(KEY_DAY, today);
 
@@ -712,7 +708,7 @@
     document.getElementById('backBtn').addEventListener('click', ()=> history.back());
     document.getElementById('skipBtn').addEventListener('click', ()=>{
       const base = JSON.parse(LS.getItem('whatif_profile')||'{}');
-      if (!base.gender || !(base.age_range||base.age) || !base.phase) {
+      if (!base.gender || !base.age || !base.phase) {
         alert(getLang()==='en'
           ? 'Fill basic profile once before skipping.'
           : 'Compila una volta il profilo base prima di saltare.');
@@ -731,83 +727,63 @@
         const p = JSON.parse(LS.getItem('whatif_profile')||'{}');
         if (!p) return;
         if (p.name) document.getElementById('name').value = p.name;
-        if (p.work_role || p.role) document.getElementById('work_role').value = p.work_role || p.role;
-        if (p.city_now || p.city) document.getElementById('city_now').value = p.city_now || p.city;
-        if (p.city_origin) document.getElementById('city_origin').value = p.city_origin;
+        if (p.city) document.getElementById('city').value = p.city;
         if (p.gender) document.getElementById('gender').value = p.gender;
-        if (p.age_range || p.age) document.getElementById('age_range').value = p.age_range || p.age;
+        if (p.age) document.getElementById('age').value = p.age;
         if (p.phase) document.getElementById('phase').value = p.phase;
-        if (p.goal) document.getElementById('goals').value = p.goal;
-        if (Array.isArray(p.goals)) document.getElementById('goals').value = p.goals.join(', ');
-        if (Array.isArray(p.values)){
-          const set = new Set(p.values.map(v=>String(v).toLowerCase().trim()));
-          document.querySelectorAll('#values .tag').forEach(tag=>{
-            const val = tag.textContent.toLowerCase().trim();
-            if (set.has(val)) tag.classList.add('active');
-          });
-        }
-        if (Array.isArray(p.wins))   document.getElementById('wins').value   = p.wins.join(', ');
-        if (Array.isArray(p.pains))  document.getElementById('pains').value  = p.pains.join(', ');
-        if (Array.isArray(p.hobbies))document.getElementById('hobbies').value= p.hobbies.join(', ');
+        if (p.role) document.getElementById('who').value = p.role;
+        if (p.goal) document.getElementById('goal').value = p.goal;
         if (p.more) document.getElementById('more').value = p.more;
+
+        // predittivo
+        if (p.time_window) document.getElementById('time_window').value = p.time_window;
+        if (p.success_indicator) document.getElementById('success_indicator').value = p.success_indicator;
+        if (p.risk_tolerance) document.getElementById('risk_tolerance').value = p.risk_tolerance;
+        if (p.landmark) document.getElementById('landmark').value = p.landmark;
+
         if (p.unwind) document.getElementById('unwindSel').value = p.unwind;
       }catch(e){}
       renderKnowledge();
     })();
 
-    function readJSON(k,def={}){ try{ return JSON.parse(LS.getItem(k)||JSON.stringify(def)); }catch{ return def; } }
-    function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+    function todayStr2(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
     form.addEventListener('submit', (e)=>{
       e.preventDefault();
-      const gender    = document.getElementById('gender').value.trim();
-      const age_range = document.getElementById('age_range').value.trim();
-      const phase     = document.getElementById('phase').value.trim();
-      if(!gender || !age_range || !phase){
+      const gender = document.getElementById('gender').value.trim();
+      const age    = document.getElementById('age').value.trim();
+      const phase  = document.getElementById('phase').value.trim();
+      if(!gender || !age || !phase){
         errBox.textContent = form.dataset.err;
         errBox.classList.add('show'); return;
       }
       errBox.classList.remove('show');
 
-      const values = [...document.querySelectorAll('#values .tag.active')].map(t=>t.textContent.trim());
-      const goalsInput   = document.getElementById('goals').value.trim();
-      const goals = goalsInput ? goalsInput.split(',').map(s=>s.trim()).filter(Boolean) : [];
-      const winsIn  = document.getElementById('wins').value.trim();
-      const painsIn = document.getElementById('pains').value.trim();
-      const hobIn   = document.getElementById('hobbies').value.trim();
-
       const profile = {
         name: document.getElementById('name').value.trim(),
-        work_role: document.getElementById('work_role').value.trim(),
-        city_now: document.getElementById('city_now').value.trim(),
-        city_origin: document.getElementById('city_origin').value.trim(),
-        gender, age_range, phase,
-        // compat con vecchi campi
-        role: document.getElementById('work_role').value.trim(),
-        city: document.getElementById('city_now').value.trim(),
-        // obiettivi e valori
-        goal: goals[0] || '',
-        goals,
-        values,
-        // liste
-        wins:  winsIn  ? winsIn.split(',').map(s=>s.trim()).filter(Boolean)  : [],
-        pains: painsIn ? painsIn.split(',').map(s=>s.trim()).filter(Boolean) : [],
-        hobbies: hobIn ? hobIn.split(',').map(s=>s.trim()).filter(Boolean)   : [],
-        // libera
+        city: document.getElementById('city').value.trim(),
+        gender, age, phase,
+        role: document.getElementById('who').value.trim(),
+        goal: document.getElementById('goal').value.trim(),
         more: document.getElementById('more').value.trim(),
-        // relax
+        // relax info
         unwind: document.getElementById('unwindSel').value.trim(),
         drinks_pref: (document.getElementById('unwindSel').value === 'drink') ? 'yes' : 'no',
-        // stato storia (default)
-        story_state: { thread_id: 'default', episode: 1, max_episodes: 3 }
+        // predittivo
+        time_window: document.getElementById('time_window').value.trim(),
+        success_indicator: document.getElementById('success_indicator').value.trim(),
+        risk_tolerance: document.getElementById('risk_tolerance').value.trim(),
+        landmark: document.getElementById('landmark').value.trim()
       };
 
       LS.setItem('whatif_profile', JSON.stringify(profile));
 
-      const today = todayStr();
-      LS.setItem('whatif_last_update', today);
+      const todayIso = todayStr2();
+      LS.setItem('whatif_last_update', todayIso);
+
+      // salva la data della prima compilazione una sola volta
       if (!LS.getItem('whatif_profile_date')) {
-        LS.setItem('whatif_profile_date', today);
+        LS.setItem('whatif_profile_date', todayIso);
       }
 
       // onboarding completato
@@ -820,9 +796,10 @@
       location.href = firstDone ? 'fourth.html' : 'third.html';
     });
 
-    // se la lingua cambia in un’altra scheda, aggiorna
+    // sync se lingua cambia altrove
     window.addEventListener('storage', (e)=>{ if(e.key==='lang'){ applyI18N(); renderKnowledge(); }});
     document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ applyI18N(); renderKnowledge(); }});
+
   </script>
 
   <!-- SW -->
