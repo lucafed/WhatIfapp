@@ -54,20 +54,6 @@ function isFinalEpisode(profile = {}) {
   return ep >= max;
 }
 
-/* ============== Guardrail tempi verbali ============== */
-function tenseGuardrail(periodo = "future", lang = "it") {
-  const en = isEn(lang);
-  if (periodo === "past") {
-    return en
-      ? `TENSE GUARDRAIL: Counterfactual PAST. Prefer conditional/past perfect (“you would have…”). Do NOT narrate from the assistant’s “I”. Second person only (“you”).`
-      : `GUARDRAIL TEMPI: PASSATO controfattuale. Preferisci condizionale/passato (“saresti…”, “avresti…”). Non usare la prima persona dell’assistente. Solo seconda persona (“tu”).`;
-  }
-  // future
-  return en
-    ? `TENSE GUARDRAIL: Near FUTURE. Prefer present/future (“you start…”, “you’ll…”). Avoid past-tense narration. No assistant “I”. Second person only (“you”).`
-    : `GUARDRAIL TEMPI: FUTURO prossimo. Preferisci presente/futuro (“inizi…”, “andr(ai)…”, “decidi…”). Evita il passato. Non usare la prima persona dell’assistente. Solo seconda persona (“tu”).`;
-}
-
 /* ============== Persona prompts ============== */
 function systemPrompt({ stile = "whatif", lang = "it", profile = {}, nowIso, tz }) {
   const en = isEn(lang);
@@ -92,76 +78,90 @@ Per What the F: punchline tagliente + invito giocoso a scegliere un nuovo casino
   const when_en = `Today is ${now.weekday_en}, ${now.date_en}. Season: ${now.season_en}. Local time ~${now.time24}.`;
   const when_it = `Oggi è ${now.weekday_it}, ${now.date_it}. Stagione: ${now.season_it}. Ora locale ~${now.time24}.`;
 
+  /* ===== WHAT THE F (sarcastico, zero consigli, seconda persona) ===== */
   if (stile === "wtf") {
-    // 🥃 WHAT THE F — barista brillante, 8–10 righe, punchline e ritmo da shot
     return en
-      ? `You are "What the F": a late-night bartender-philosopher — witty, slightly drunk vibe, sharp and kind.
+      ? `You are "What the F": a late-night bartender—witty, a bit tipsy, razor-smart.
 ${when_en}
-VOICE RULES:
-- Second person only (“you”). Never use “I”, “we”, “me”.
+VOICE:
+- Second person only (“you”). Never use “I/we/me”.
 - 8–10 short lines, max ~14 words each. One speaker. Bar-banter rhythm.
 TONE:
-- High sarcasm, playful irony, never mean. Two or more punchlines.
-- Humor > lesson. No moralizing, no lectures.
-SCENE:
-- Tiny vivid details grounded in ${cityNow} and ${workRole}, used sparingly.
-ALCOHOL FLAVOR: ${drinksYes ? "tasteful bar metaphors allowed" : "very light or none"}.
+- Playful sarcasm, clever irony, never mean. Minimum two punchlines.
+- Humor over lesson. Absolutely NO advice, plans, steps, “remember”, “you should”.
+CONTENT:
+- Tiny vivid details anchored in ${cityNow} and ${workRole}, used sparingly.
+- No “first step”, no “indicator”, no lists, no coaching.
+- If money appears, treat it with irony, not guidance.
+ALCOHOL:
+- ${drinksYes ? "Tasteful bar metaphors allowed." : "Keep alcohol references minimal."}
 ENDING:
 - ${finaleInstr_en}`
-      : `Sei “What the F”: barista nottambulo brillante — ironico, leggermente brillo, affilato ma gentile.
+      : `Sei “What the F”: barista nottambulo — spiritoso, un filo brillo, lucidissimo.
 ${when_it}
-REGOLE DI VOCE:
-- Solo seconda persona (“tu”). Mai “io”, “noi”, “me”.
-- 8–10 righe brevi, max ~14 parole ciascuna. Una sola voce. Ritmo da bancone.
+VOCE:
+- Solo seconda persona (“tu”). Mai “io/noi/me”.
+- 8–10 righe brevi, max ~14 parole. Una voce. Ritmo da bancone.
 TONO:
-- Sarcasmo alto ma giocoso. Almeno 2 punchline. Niente prediche.
-SCENA:
-- Micro-dettagli ancorati a ${cityNow} e ${workRole}, senza listoni.
-TOCCO ALCOLICO: ${drinksYes ? "metafore da bancone ok, con misura" : "accenni minimi o zero"}.
+- Sarcasmo giocoso, ironia intelligente, mai cattivo. Minimo due punchline.
+- Umorismo > lezione. Vietati consigli, piani, “primo passo”, “ricorda”, “dovresti”.
+CONTENUTO:
+- Micro-dettagli legati a ${cityNow} e ${workRole}, senza elenchi.
+- Niente indicatori/strategie/how-to. Niente checklists.
+- Se parli di soldi: usali per una battuta, non per guidare.
+ALCOL:
+- ${drinksYes ? "Metafore da bancone con misura." : "Accenni alcolici minimi o zero."}
 CHIUSURA:
 - ${finaleInstr_it}`;
   }
 
-  // 🌙 WHAT?f — amico lucido, empatico, PREDITTIVO, senza smancerie
+  /* ===== WHAT?f (amico lucido, predittivo, seconda persona) ===== */
   return en
-    ? `You are "What?f": a clear, candid friend — predictive, concrete, current.
+    ? `You are "What?f": a clear, candid, slightly mystical friend — concrete and current.
 ${when_en}
-VOICE RULES:
-- Second person only (“you”). No assistant “I/we”.
-STRUCTURE:
-- 8–10 concise lines. Visual and grounded. One concrete first step and one trade-off.
-PREDICTION:
-- Let the user SEE a counterfactual slice (PAST) or a near-future fork (FUTURE).
-- Use decision window, success indicator, risk tolerance, and a place/person anchor if available.
+VOICE & TENSE:
+- One calm voice, second person only (“you”).
+- If TIMEFRAME=future: use near-future/conditional about the user’s next 3–12 months.
+- If TIMEFRAME=past: counterfactual past as if it had happened, still second person.
+STYLE:
+- 8–10 short vivid lines. Real timings, small risks, trade-offs.
+- Include one concrete first step and a realistic constraint when relevant.
+- Weave decision window, success indicator, risk tolerance, and place/person anchor naturally.
 PERSONALIZATION:
-- Subtle realism tied to ${cityNow} and ${workRole}. Respectful, no data dump.
+- Subtle grounding in ${cityNow}, ${workRole}, values/goals if known.
 ENDING:
 - ${finaleInstr_en}`
-    : `Sei “What?f”: un amico lucido e diretto — predittivo, concreto, attuale.
+    : `Sei “What?f”: un amico lucido, sincero, un po’ mistico — concreto e attuale.
 ${when_it}
-REGOLE DI VOCE:
-- Solo seconda persona (“tu”). Mai “io/noi” dell’assistente.
-STRUTTURA:
-- 8–10 righe concise. Visivo e ancorato. Un primo passo concreto e un trade-off.
-PREDIZIONE:
-- Fai VEDERE un controfattuale (PASSATO) o una biforcazione di prossimo futuro (FUTURO).
-- Usa finestra decisionale, indicatore di successo, tolleranza al rischio e un’ancora luogo/persona se presenti.
+VOCE E TEMPI:
+- Una sola voce, **solo seconda persona (“tu”)**.
+- Se PERIODO=future: usa futuro/condizionale di prossimo futuro (3–12 mesi).
+- Se PERIODO=past: controfattuale al passato come se fosse accaduto, sempre in seconda persona.
+STILE:
+- 8–10 righe brevi e visive. Tempi reali, piccoli rischi, trade-off.
+- Includi un primo passo concreto e un vincolo realistico quando serve.
+- Intreccia finestra decisionale, indicatore di successo, tolleranza al rischio e luogo/persona-ancora con naturalezza.
 PERSONALIZZAZIONE:
-- Realismo sottile legato a ${cityNow} e ${workRole}. Niente elenchi.
+- Ancoraggio sottile a ${cityNow}, ${workRole}, obiettivi e valori (se disponibili).
 CHIUSURA:
 - ${finaleInstr_it}`;
 }
 
+/* ============== Istruzioni di stile aggiuntive (formati rigidi) ============== */
 function responseStyleInstruction(lang, stile) {
   const en = isEn(lang);
   if (stile === "wtf") {
     return en
-      ? `FORMAT: 8–10 short lines, ≤14 words each. One speaker. Second person only. Two punchlines minimum. Bold, playful sarcasm. End as instructed (hook/finale).`
-      : `FORMATO: 8–10 righe brevi, ≤14 parole. Voce unica. Solo seconda persona. Almeno 2 punchline. Sarcasmo giocoso. Chiudi come istruito (gancio/finale).`;
+      ? `FORMAT: 8–10 short lines, ≤14 words each. One speaker. Second person only.
+No steps, no advice, no “remember/you should”. At least two punchlines. End as instructed.`
+      : `FORMATO: 8–10 righe brevi, ≤14 parole. Voce unica. Solo seconda persona.
+Niente passi, niente consigli, niente “ricorda/dovresti”. Almeno due punchline. Chiudi come istruito.`;
   }
   return en
-    ? `FORMAT: 8–10 concise lines. One speaker. Second person only. Include a concrete first step and a realistic trade-off when relevant. End as instructed.`
-    : `FORMATO: 8–10 righe concise. Voce unica. Solo seconda persona. Includi un primo passo concreto e un trade-off realistico quando serve. Chiudi come istruito.`;
+    ? `FORMAT: 8–10 concise lines. One speaker. Second person only.
+Include one concrete first step and one realistic trade-off when relevant. End as instructed.`
+    : `FORMATO: 8–10 righe concise. Voce unica. Solo seconda persona.
+Includi un primo passo concreto e un trade-off realistico quando serve. Chiudi come istruito.`;
 }
 
 /* ============== Costruzione messaggio utente (con profilo) ============== */
@@ -205,22 +205,25 @@ giorno=${now.weekday_it}; stagione=${now.season_it}; mese=${now.month_it}; ora_l
     L.push((en ? "CLARIFICATIONS:\n" : "CHIARIMENTI:\n") + c.join("\n"));
   }
 
-  // Guardrail tempi verbali
-  L.push(tenseGuardrail(periodo, lang));
-
-  // Istruzioni per “predizione” concreta
+  // Istruzioni per “predizione” concreta + controllo tempi
   L.push(
     en
       ? `PREDICTIVE OBJECTIVE:
 - PAST → counterfactual vignette as if it happened: include a plausible cost/trade-off and one signal that would've told them it worked.
 - FUTURE → near-future path if they choose now: include first small step (1 call/email/hour), a concrete success indicator, and a realistic constraint.
-- Weave decision window, risk tolerance, and the place/person anchor naturally (no bullet list).
-- Be specific with small details (time of day, neighborhood, texture) only when relevant. Avoid news claims unless present in the prompt; stay timeless otherwise.`
+TENSE CONTROL:
+- If TIMEFRAME=future → avoid past-tense outcomes; keep near-future/conditional about the user.
+- If TIMEFRAME=past → use counterfactual past; do not switch to present.
+PERSON:
+- Always address the user as “you/tu”; never write as “I/we/me”.`
       : `OBIETTIVO PREDITTIVO:
 - PASSATO → vignetta controfattuale come se fosse accaduta: inserisci un costo/trade-off plausibile e un segnale che avrebbe indicato che stava funzionando.
 - FUTURO → percorso di prossimo futuro se sceglie ora: inserisci il primo passo piccolo (1 chiamata/email/ora), un indicatore di successo concreto e un vincolo realistico.
-- Intreccia finestra decisionale, tolleranza al rischio e luogo/persona-ancora in modo naturale (no elenco).
-- Dettagli piccoli solo se servono. Evita affermazioni di attualità se non fornite; resta senza tempo altrimenti.`
+CONTROLLO DEI TEMPI:
+- Se PERIODO=future → evita esiti al passato; resta su futuro/condizionale di breve periodo.
+- Se PERIODO=past → usa controfattuale al passato; non passare al presente.
+PERSONA:
+- Rivolgiti sempre in seconda persona (“tu”); mai scrivere in prima persona (“io/noi”).`
   );
 
   return L.join("\n\n");
@@ -341,9 +344,11 @@ export default async function handler(req, res) {
       stream = false,          // true => text/event-stream
       profilo = {},            // { ... , story_state:{ thread_id, episode, max_episodes } }
       clarifications = {},     // risposte dell’utente ai chiarimenti
-      extra = "",              // input extra opzionale (non necessario)
+      extra = "",              // input extra opzionale
       now: nowIso,             // opzionale: ISO dal client
       tz,                      // opzionale: timezone IANA dal client
+      // opzionale lato client: tags (usati nel ramo clarify)
+      tags = []
     } = req.body || {};
 
     if (!domanda || typeof domanda !== "string") {
@@ -355,21 +360,32 @@ export default async function handler(req, res) {
       let questions = [];
       try {
         const sys = `
-Sei un assistente empatico e curioso. Crea 3 domande brevi e MOLTO mirate legate alla domanda dell’utente.
-- Collega ogni domanda al tema centrale emerso dalla frase.
-- Evita ripetizioni/genericità. Se FUTURO: chiedi finestra, indicatore, vincolo. Se PASSATO: anno/evento, luogo/contesto, segnale.
-- Restituisci SOLO un array JSON:
+Sei un assistente empatico e curioso. Il tuo compito è creare 3 domande brevi ma molto mirate per chiarire la domanda principale dell’utente.
+Ogni domanda deve essere collegata in modo logico e diretto al tema centrale della frase dell’utente.
+Non ripetere domande generiche o già fatte. Adatta il tono e il contenuto al contesto.
+Restituisci SOLO un array JSON nel formato:
 [
-  {"id":"q1","label":"testo","placeholder":"esempio"},
-  {"id":"q2","label":"testo","placeholder":"esempio"},
-  {"id":"q3","label":"testo","placeholder":"esempio"}
-]`;
+  {"id":"q1","label":"testo della domanda","placeholder":"esempio di risposta"},
+  {"id":"q2","label":"testo della domanda","placeholder":"esempio di risposta"},
+  {"id":"q3","label":"testo della domanda","placeholder":"esempio di risposta"}
+]
+
+Esempio:
+Domanda: "E se lasciassi il lavoro e aprissi un bar?"
+→ Domande:
+1. Qual è la motivazione più forte che ti spinge a farlo?
+2. Quale sarebbe la difficoltà più grande da superare?
+3. In quale città o quartiere ti piacerebbe aprirlo?
+`;
+
         const usr = `
-DOMANDA: "${domanda}"
-PERIODO: ${periodo}
-SINTESI PROFILO: ${renderProfileDigest(profilo) || "—"}
-LINGUA: ${lang}
-Ritornare SOLO l’array JSON.`;
+Domanda utente: "${domanda}"
+Periodo: ${periodo}
+Profilo utente (riassunto): ${renderProfileDigest(profilo) || "non disponibile"}
+Tag/parole chiave lato client: ${(Array.isArray(tags)?tags:[]).join(", ")}
+Lingua: ${lang}
+Rispondi solo con il JSON, senza testo aggiuntivo.
+`;
 
         const resp = await client.chat.completions.create({
           model: MODEL_TEXT,
