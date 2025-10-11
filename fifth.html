@@ -58,7 +58,6 @@
   .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
   .label{color:var(--acc);font-weight:800;margin:0 0 8px}
 
-  /* Question emphasis */
   .qbox{
     background:rgba(255,255,255,.06);
     border:1px solid var(--line);
@@ -70,7 +69,6 @@
     color:#EAF3EE;
   }
 
-  /* Result box */
   .box{
     background:rgba(255,255,255,.04);
     border:1px solid var(--line);
@@ -88,11 +86,9 @@
   .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
   .badge.accent{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border:none;font-weight:800}
 
-  /* CTA area */
   .cta-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .cta-row .btn.primary{flex:1}
 
-  /* mini indicator */
   .know-mini{display:flex;align-items:center;gap:8px}
   .meter{position:relative;height:10px;background:var(--chip);border:1px solid var(--line);border-radius:999px;overflow:hidden;width:120px}
   .meter-fill{height:100%;width:0;background:linear-gradient(180deg,var(--acc),var(--acc2))}
@@ -101,62 +97,31 @@
   .tooltip:hover .tip{opacity:1;transform:translateY(0)}
   .tip{pointer-events:none;position:absolute;right:0;top:125%;background:var(--chip);border:1px solid var(--line);color:#e6fff0;border-radius:10px;padding:8px 10px;font-size:12px;width:260px;opacity:0;transform:translateY(-4px);transition:.15s;box-shadow:0 12px 28px var(--shadow)}
 
-  /* Signals collapsible — NASCOSTO (resta per compatibilità ma non visibile) */
   .signals{display:none !important}
   .disclosure{display:none}
   .signals-body{display:none}
 
-  /* Result */
   #result{min-height:190px}
   .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:sk 1s infinite}
   @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
   #result.fade-in{animation:fade .6s ease}
   @keyframes fade{from{opacity:.25;transform:translateY(2px)}to{opacity:1;transform:none}}
 
-  /* Clarify overlay */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:6000;padding:14px}
   .sheet{width:min(92vw,720px);max-height:80vh;overflow:auto;background:var(--card);border-radius:16px;padding:14px;border:1px solid var(--line)}
   .qitem{margin:10px 0}
   .qitem label{display:block;margin:6px 0}
   .qitem input{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px}
 
-  /* Tools menu (sotto la risposta) */
-  .tools{
-    margin-top:12px;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-  }
-  .tools .dots{
-    align-self:center;
-    border:none; background:var(--chip); color:var(--muted);
-    width:44px;height:44px;border-radius:50%; font-size:20px; cursor:pointer;
-  }
-  .tool-menu{
-    display:none;
-    border:1px solid var(--line);
-    background:rgba(255,255,255,.04);
-    border-radius:12px;
-    padding:8px;
-  }
+  .tools{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+  .tools .dots{align-self:center;border:none; background:var(--chip); color:var(--muted);width:44px;height:44px;border-radius:50%; font-size:20px; cursor:pointer}
+  .tool-menu{display:none;border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:12px;padding:8px}
   .tool-menu.show{display:block; animation:fadeIn .2s ease}
-  .tool-menu button{
-    width:100%; text-align:left; border:none;
-    background:transparent; color:#E6F2F5; padding:10px; border-radius:10px; cursor:pointer
-  }
+  .tool-menu button{width:100%; text-align:left; border:none;background:transparent; color:#E6F2F5; padding:10px; border-radius:10px; cursor:pointer}
   .tool-menu button:hover{background:rgba(255,255,255,.06)}
-
   @keyframes fadeIn{from{opacity:0;transform:translateY(-2px)}to{opacity:1;transform:none}}
 
-  /* Learn block sotto H1 */
-  blockquote.learn{
-    margin:10px 0 0; padding:12px 14px; line-height:1.6;
-    border-left:4px solid var(--acc2);
-    background:rgba(255,255,255,.04);
-    border:1px solid var(--line);
-    border-radius:12px;
-    color:#EAF3EE;
-  }
+  blockquote.learn{margin:10px 0 0; padding:12px 14px; line-height:1.6;border-left:4px solid var(--acc2);background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;color:#EAF3EE}
 
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -170,7 +135,6 @@
       </div>
 
       <div class="row" style="gap:10px">
-        <button class="btn" id="resetProfileBtn" title="Cancella profilo e micro-dati">♻️ Reset profilo</button>
         <span id="freeBadge" class="badge" title="">—</span>
         <span id="clarifyBadge" class="badge accent" title="">—</span>
 
@@ -185,12 +149,10 @@
 
     <h1 id="titleH1">Il tuo What?f prende forma…</h1>
 
-    <!-- Frase sotto H1 -->
     <div id="learnBlock">
       <blockquote class="learn" id="learnMsg"></blockquote>
     </div>
 
-    <!-- STILE + PERIODO -->
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
         <div class="row">
@@ -204,19 +166,9 @@
       </div>
     </div>
 
-    <!-- DOMANDA IN EVIDENZA -->
     <div class="card">
       <h3 class="label" id="qLabel">Question</h3>
       <div id="question" class="qbox"></div>
-
-      <!-- Segnali (NASCOSTI) -->
-      <div class="signals" id="signals">
-        <div class="disclosure" id="signalsToggle">
-          <span class="caret" id="caret">▸</span>
-          <span id="signalsLabel">Signals used today</span>
-        </div>
-        <div class="signals-body" id="signalsBody"></div>
-      </div>
 
       <div class="cta-row" style="margin-top:12px">
         <button class="btn primary large" id="clarifyBtn">✨ Clarify & Generate</button>
@@ -224,12 +176,10 @@
       </div>
     </div>
 
-    <!-- RISULTATO -->
     <div class="card">
       <h3 class="label" id="rLabel">Result</h3>
       <div id="result" class="box">—</div>
 
-      <!-- MENU DOTS SOTTO LA RISPOSTA -->
       <div class="tools">
         <button id="dotsBtn" class="dots" aria-label="More">⋯</button>
         <div id="toolMenu" class="tool-menu" role="menu" aria-label="More">
@@ -238,42 +188,36 @@
           <button id="saveBtn">💾 Salva</button>
           <button id="copyBtn">📋 Copia</button>
           <button id="shareBtn">📤 Condividi</button>
-          <button id="newQBtn">🆕 Nuova domanda</button>
           <button id="profileBtn">👤 Profilo</button>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- Overlay chiarimenti -->
   <div class="overlay" id="clarifyOverlay">
     <div class="sheet">
-      <h3 style="margin:6px 0" id="clarifyTitle">2–3 questions to be more precise</h3>
+      <h3 style="margin:6px 0" id="clarifyTitle">2–3 domande per essere più precisi</h3>
       <div id="clarifyList"></div>
       <div class="row" style="margin-top:12px">
-        <button class="btn primary" id="applyClarify">Generate with these answers</button>
-        <button class="btn" id="cancelClarify">Cancel</button>
+        <button class="btn primary" id="applyClarify">Genera con queste risposte</button>
+        <button class="btn" id="cancelClarify">Annulla</button>
       </div>
     </div>
   </div>
 
 <script>
-/* ===== Tema ===== */
-(function applyThemeFromPrefs(){
+/* ===== Theme ===== */
+(function(){
   try{
-    const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-    const theme = prefs.stile === 'wtf' ? 'wtf' : 'whatif';
-    document.documentElement.setAttribute('data-theme', theme);
-  }catch(e){
-    document.documentElement.setAttribute('data-theme','whatif');
-  }
+    const prefs=JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+    document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+  }catch{ document.documentElement.setAttribute('data-theme','whatif'); }
 })();
 
-/* ====== I18N ====== */
+/* ===== I18N ===== */
 const I18N = {
   it:{
     title:"Il tuo What?f prende forma…",
-    subtitle:"",
     back:"Indietro", home:"Home",
     badgeFree:(l,d)=>`Free oggi: ${l}/${d}`,
     badgeClarify:(l,d)=>`Chiarimenti: ${l}/${d}`,
@@ -285,21 +229,15 @@ const I18N = {
     clarifyBtn:"✨ Chiarisci & genera", genBtn:"Genera subito", regenBtn:"Rigenera",
     clarifyTitle:"2–3 domande per essere più precisi",
     applyClarify:"Genera con queste risposte", cancelClarify:"Annulla",
-    save:"Salva", copy:"Copia", share:"Condividi", newQ:"Nuova domanda",
+    save:"Salva", copy:"Copia", share:"Condividi",
     loading:"Sto immaginando il tuo scenario…", errServer:"Problema server.", errNet:"Errore di rete.",
     limitGen:"Hai raggiunto il limite gratuito di oggi. Torna domani!",
     limitClarify:"Hai raggiunto il limite di chiarimenti per oggi. Puoi comunque generare la risposta.",
     copied:"Copiato!", saved:"Salvato!",
     know:"Personalizzazione", knowHint:"Più dettagli → più scenari plausibili. Compila le 3 micro-domande e usa “Chiarisci & genera”.",
-    signalsLabel:"Segnali usati oggi",
-    sig_city:"città", sig_goal:"obiettivo", sig_indicator:"indicatore", sig_constraint:"vincolo", sig_landmark:"luogo", sig_role:"ruolo",
-    redoMicro:"Rifai micro test", profile:"Profilo",
-    resetConfirm:"Reset profilo e micro-dati? Questa azione non è reversibile.",
-    resetDone:"Profilo azzerato. Torniamo alla pagina profilo."
   },
   en:{
     title:"Your What?f is taking shape…",
-    subtitle:"",
     back:"Back", home:"Home",
     badgeFree:(l,d)=>`Free today: ${l}/${d}`,
     badgeClarify:(l,d)=>`Clarify: ${l}/${d}`,
@@ -311,17 +249,12 @@ const I18N = {
     clarifyBtn:"✨ Clarify & Generate", genBtn:"Generate now", regenBtn:"Regenerate",
     clarifyTitle:"2–3 questions to be more precise",
     applyClarify:"Generate with these answers", cancelClarify:"Cancel",
-    save:"Save", copy:"Copy", share:"Share", newQ:"New question",
+    save:"Save", copy:"Copy", share:"Share",
     loading:"Imagining your scenario…", errServer:"Server problem.", errNet:"Network error.",
     limitGen:"You’ve reached today’s free limit. Come back tomorrow!",
     limitClarify:"You’ve reached today’s clarify limit. You can still generate the answer.",
     copied:"Copied!", saved:"Saved!",
     know:"Personalization", knowHint:"More detail → more plausible scenarios. Fill today’s micro-questions and use Clarify.",
-    signalsLabel:"Signals used today",
-    sig_city:"city", sig_goal:"goal", sig_indicator:"indicator", sig_constraint:"constraint", sig_landmark:"place", sig_role:"role",
-    redoMicro:"Redo micro test", profile:"Profile",
-    resetConfirm:"Reset profile and micro-data? This cannot be undone.",
-    resetDone:"Profile reset. Taking you to the profile page."
   }
 };
 const LS=localStorage;
@@ -329,24 +262,18 @@ const lang=(LS.getItem('lang')||'it').toLowerCase();
 const T=I18N[lang]||I18N.it;
 document.documentElement.lang=lang;
 
-/* Messaggio sotto H1 */
-const LEARN={
-  it:"Ogni What?f che esplori aiuta l’app a comprendere come pensi. Così, con il tempo, diventa sempre più capace di risponderti in modo personale.",
-  en:"Each What?f you explore helps the app understand how you think — and with time, it becomes better at replying in a truly personal way."
-};
+const LEARN={ it:"Ogni What?f che esplori aiuta l’app a comprendere come pensi. Così, con il tempo, diventa sempre più capace di risponderti in modo personale.", en:"Each What?f you explore helps the app understand how you think — and with time, it becomes better at replying in a truly personal way." };
 
-/* ====== Config ====== */
 const DAILY_FREE=3;
 const DAILY_CLARIFY=5;
 
-/* ====== Helpers ====== */
 const $=id=>document.getElementById(id);
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function readJSON(k,def={}){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
 function writeJSON(k,v){LS.setItem(k,JSON.stringify(v));}
 function escapeHTML(s){return (s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
-/* ====== Credits ====== */
+/* ===== Credits ===== */
 function readCredits(){const v=readJSON('whatif_credits');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0,pro:!!v.pro};return v;}
 function writeCredits(v){writeJSON('whatif_credits',v);renderBadges();}
 function ensureCredits(){const c=readCredits();if(!c.date||c.date!==todayStr()){c.date=todayStr();c.used=0;writeCredits(c);}}
@@ -363,51 +290,24 @@ function buildProfilePayload(){
   const anchors = readJSON('whatif_anchors', {});
   return { ...base, micro, anchors };
 }
-function summarizeSignals(clarUsed={}){
-  const p=readJSON('whatif_profile',{}); const m=readJSON('whatif_micro',{}); const parts=[];
-  if (p.city) parts.push(`${T.sig_city}: ${p.city}`);
-  if (p.goal) parts.push(`${T.sig_goal}: ${p.goal}`);
-  if (m.indicatore) parts.push(`${T.sig_indicator}: ${m.indicatore}`);
-  if (m.vincolo_2w) parts.push(`${T.sig_constraint}: ${m.vincolo_2w}`);
-  if (m.punto_riferimento) parts.push(`${T.sig_landmark}: ${m.punto_riferimento}`);
-  if (p.role) parts.push(`${T.sig_role}: ${p.role}`);
-  Object.entries(clarUsed||{}).forEach(([k,v])=>{ const v2=String(v).trim().slice(0,40); if(v2) parts.push(`${k}: ${v2}`); });
-  return parts.map(escapeHTML).join(' · ');
-}
 
-/* ====== I18N static text ====== */
 $('titleH1').textContent=T.title;
 $('backBtnTop').textContent=`← ${T.back}`; $('homeBtnTop').textContent=`🏠 ${T.home}`;
 $('freeBadge').title=T.badgeFreeTitle; $('clarifyBadge').title=T.badgeClarifyTitle;
 $('chipWhatIf').textContent=T.chipWhatIf; $('chipWTF').textContent=T.chipWTF;
 $('qLabel').textContent=T.qLabel; $('rLabel').textContent=T.rLabel;
 $('clarifyBtn').textContent=T.clarifyBtn; $('genBtn').textContent=T.genBtn;
-$('knowLabelMini').textContent=T.know; $('knowTip').textContent=T.knowHint; $('signalsLabel').textContent=T.signalsLabel;
+$('knowLabelMini').textContent=T.know; $('knowTip').textContent=T.knowHint; 
 $('learnMsg').textContent = (LEARN[lang]||LEARN.it);
 
-/* ====== Stato (supporto pending payload) ====== */
+/* ===== Stato ===== */
 const prefs = readJSON('whatif_prefs');
-let domanda = '';
-let currentStyle = (prefs.stile || 'whatif');
-let periodo = (prefs.periodo || 'future');
-
-// Se esiste un payload pending (da future integrazioni), preferiscilo
-(function readPendingOrLocal(){
-  try{
-    const pending = readJSON('whatif_pending_payload', null);
-    if (pending && typeof pending === 'object'){
-      domanda = pending.domanda || '';
-      currentStyle = pending.stile || currentStyle;
-      periodo = pending.periodo || periodo;
-      // opz: potremmo anche usare pending.clarifications / extra al primo generate
-      // ma manteniamo compatibilità con flusso attuale.
-    }
-  }catch(e){}
-  if (!domanda){ domanda = LS.getItem('domanda') || ''; }
-  if(!domanda){ alert(lang==='en'?'No question found.':'Nessuna domanda trovata.'); location.href='fourth.html'; }
-})();
+let domanda = LS.getItem('domanda')||'';
+if(!domanda){ alert(lang==='en'?'No question found.':'Nessuna domanda trovata.'); location.href='fourth.html'; }
 $('question').textContent=domanda;
-$('badgePeriodo').textContent="🕰️ "+(periodo==='past'?T.periodoPast:T.periodoFuture);
+
+let currentStyle=(prefs.stile||'whatif');
+$('badgePeriodo').textContent="🕰️ "+(prefs.periodo==='past'?(T.periodoPast):(T.periodoFuture));
 $('badgeStile').textContent="🎭 "+(currentStyle==='wtf'?'What the F':'What if');
 document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
 $('styleChips').addEventListener('click',e=>{
@@ -418,7 +318,7 @@ $('styleChips').addEventListener('click',e=>{
   document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
 });
 
-/* ====== Badges ====== */
+/* ===== Badges ===== */
 function renderBadges(){
   const gc=readCredits(); const gl=Math.max(0,DAILY_FREE-(gc.used||0));
   $('freeBadge').textContent=T.badgeFree(gl,DAILY_FREE);
@@ -426,7 +326,7 @@ function renderBadges(){
   $('clarifyBadge').textContent=T.badgeClarify(cl,DAILY_CLARIFY);
 }
 
-/* ====== Mini personalizzazione ====== */
+/* ===== Mini personalizzazione ===== */
 function daysBetween(iso1,iso2){ if(!iso1||!iso2) return 999; const a=new Date(iso1),b=new Date(iso2); return Math.round((b-a)/(1000*60*60*24)); }
 function last(arr){ return Array.isArray(arr)&&arr.length?arr[arr.length-1]:null; }
 function computeKnowledge(){
@@ -437,8 +337,8 @@ function computeKnowledge(){
   const hasRoutine=!!(micro.indicatore);            cover+=hasRoutine?8:0;
   const hasConstraints=!!(micro.vincolo_2w);        cover+=hasConstraints?8:0;
   const hasGoals=!!(profile.goal);                  cover+=hasGoals?8:0;
-  const hasPlaces=!!(profile.city||micro.punto_riferimento); cover+=8;
-  const hasRelations=!!(micro.persona_chiave);      cover+=8;
+  const hasPlaces=!!(profile.city||micro.punto_riferimento); cover+=hasPlaces?8:0;
+  const hasRelations=!!(micro.persona_chiave);      cover+=hasRelations?8:0;
   const hasRisk=!!(micro.rischio||micro.tolleranza_rischio); cover+=7;
   const vals=Object.values(profile).concat(Object.values(micro)).filter(v=>typeof v==='string');
   let usable=0; const numRe=/\b\d+([.,]\d+)?\b/; const timeRe=/\b(\d{1,2}[:.]\d{2}|mattina|pomeriggio|sera|am|pm)\b/i; const locRe=/\b(centro|stazione|ufficio|palestra|bar|parco|centro storico)\b/i;
@@ -466,83 +366,84 @@ function renderKnowledgeMini(){
   $('knowValueMini').textContent=`${score}/100`;
 }
 
-/* ====== API helpers ====== */
+/* ===== API helpers ===== */
 async function callClarifyAPI(){
-  const payload={ domanda, lang, periodo:periodo||"future", stile:currentStyle, clarify:true, profilo:buildProfilePayload() };
+  const payload={ domanda, lang, periodo:prefs.periodo||"future", stile:currentStyle, clarify:true, profilo:buildProfilePayload() };
   const r=await fetch("/api/ask",{method:"POST",headers:{ "Content-Type":"application/json" },body:JSON.stringify(payload)});
   if(!r.ok) throw new Error("server");
   return r.json();
 }
 async function callGenerateStream({clarifications={},extra="" }={}){
-  const payload={ domanda, lang, periodo:periodo||"future", stile:currentStyle, clarify:false, stream:true, profilo:buildProfilePayload(), clarifications, extra };
+  const payload={ domanda, lang, periodo:prefs.periodo||"future", stile:currentStyle, clarify:false, stream:true, profilo:buildProfilePayload(), clarifications, extra };
   const r=await fetch("/api/ask",{method:"POST",headers:{ "Content-Type":"application/json","x-whatif-stream":"1" },body:JSON.stringify(payload)});
   if(!r.ok) throw new Error("server");
   return r.body.getReader();
 }
 
-/* ====== Language enforcement (non cambia il tono) ====== */
+/* ===== Hints lingua + tono WTF + tempi verbali ===== */
 function buildLanguageExtra(currentLang, style){
-  if (currentLang === 'en'){
-    return (style === 'wtf')
-      ? 'Please answer strictly in English.'
-      : 'Please narrate the entire answer strictly in English.';
-  }
-  return (style === 'wtf')
-    ? 'Rispondi rigorosamente in italiano.'
-    : 'Racconta l’intera risposta rigorosamente in italiano.';
+  const tense = ( (prefs.periodo||'future') === 'future'
+    ? (currentLang==='en' ? 'Use present-to-future tense; avoid past.' : 'Usa tempo presente → futuro; evita il passato.')
+    : (currentLang==='en' ? 'Counterfactual PAST: write as if it really happened.' : 'PASSATO controfattuale: scrivi come se fosse davvero accaduto.') );
+
+  const wtfTone = (style==='wtf'
+    ? (currentLang==='en'
+        ? 'Tone: sharp, witty, sarcastic bartender. No moralizing. 8–10 short lines, punchy rhythm.'
+        : 'Tono: barista brillante e sarcastico. Zero moralismi. 8–10 righe secche, ritmo da bancone.')
+    : '');
+
+  const langLine = (currentLang==='en'
+    ? 'Answer strictly in English.'
+    : 'Rispondi rigorosamente in italiano.');
+
+  return `${langLine}\n${tense}\n${wtfTone}`.trim();
 }
 
-/* ====== AUTO-LEARNING LOCALE (solo browser) ====== */
-function learnFromInteraction({question, clarifications, answerText=""}){
-  const mem = readJSON('whatif_memory',[]);
-  const excerpt = (answerText||"").slice(0,400);
-  mem.unshift({ q: question||"", clar: clarifications||{}, ans: excerpt, ts: Date.now() });
-  writeJSON('whatif_memory', mem.slice(0,200)); // mantieni leggero
+/* ===== Intent readership (da fourth) ===== */
+function readIntent(){ try{ return JSON.parse(LS.getItem('whatif_intent')||'{}'); }catch{return {}} }
+function readTags(){ try{ return JSON.parse(LS.getItem('whatif_tags')||'[]'); }catch{return []} }
 
-  const today = todayStr();
-  const log = readJSON('whatif_micro_log',[]);
-  const mark = `${today}-mem`;
-  if (!log.includes(mark)) { log.push(mark); writeJSON('whatif_micro_log', log); }
-  LS.setItem('whatif_last_update', today);
+/* ===== Domande dinamiche da intent/tags ===== */
+function buildClarifyFromIntent(){
+  const intent = readIntent();
+  const tags = new Set(readTags());
+  const dominio = intent.dominio || 'generico';
+  const isPast = (prefs.periodo||'future') === 'past';
 
-  // Micro-learning: se alcune chiavi sono note, fondile in whatif_micro
-  const micro = readJSON('whatif_micro',{});
-  if (clarifications.indicator) micro.indicatore = clarifications.indicator;
-  if (clarifications.constraint_2w) micro.vincolo_2w = clarifications.constraint_2w;
-  if (clarifications.landmark) micro.punto_riferimento = clarifications.landmark;
-  writeJSON('whatif_micro', micro);
+  const Q = [];
+
+  const add = (id,label,ph) => Q.push({id,label,placeholder:ph});
+
+  if (dominio==='lavoro'){
+    add('time_window', isPast? 'In che periodo sarebbe avvenuto il cambio?' : 'Quando pensi di cambiare davvero?', isPast?'es. estate 2021':'es. entro 6 mesi');
+    add('success_indicator', isPast?'Quale segnale ti avrebbe detto “era la scelta giusta”?' : 'Quale segnale ti dirà che funziona?', 'es. ruolo X, +€ Y, meno stress');
+    add('real_constraint', isPast?'Qual era il vincolo principale?' : 'Vincolo più concreto adesso?', 'budget / tempo / famiglia');
+  } else if (dominio==='trasferimento'){
+    add('landmark', isPast?'Quale zona/luogo contava allora?' : 'Una zona/luogo che conta dove andresti?', 'quartiere, piazza, stazione…');
+    add('time_window', isPast?'Quando sarebbe accaduto il trasferimento?' : 'Finestra decisionale reale?', isPast?'es. 2018':'questo mese / 3–6 mesi / 12 mesi');
+    add('success_indicator', isPast?'Che segnale avrebbe confermato la scelta?' : 'Un indicatore di successo?', 'es. ore con famiglia, spesa affitto');
+  } else if (dominio==='mobilità' || tags.has('mobility')){
+    add('vehicle', isPast?'Che mezzo avresti preso?' : 'Che mezzo prenderesti?', 'moto / scooter / auto');
+    add('budget', isPast?'Budget che avresti stanziato?' : 'Budget massimo realistico?', 'es. 5.000 €');
+    add('use_case', isPast?'Come l’avresti usato?' : 'Uso principale?', 'lavoro / weekend / viaggi');
+  } else if (dominio==='famiglia'){
+    add('relation_axis', isPast?'Con chi avrebbe avuto più impatto?' : 'Qual è la relazione coinvolta?', 'partner / figli / genitori');
+    add('success_indicator', isPast?'Segnale che stava andando bene?' : 'Segnale che va nella direzione giusta?', 'serenità / tempo insieme');
+    add('real_constraint', isPast?'Vincolo che avrebbe frenato?' : 'Vincolo più concreto ora?', 'logistica / soldi / energia');
+  } else if (dominio==='studio'){
+    add('focus', isPast?'Su cosa ti saresti concentrato?' : 'Quale focus sceglieresti?', 'materia/corso');
+    add('time_window', isPast?'Quando sarebbe successo?' : 'Finestra realistica?', '3–6 mesi / 12 mesi');
+    add('success_indicator', isPast?'Segnale di riuscita?' : 'Indicatore di riuscita?', 'ore/settimana, esami superati');
+  } else {
+    add('time_window', isPast?'Quando sarebbe accaduto?' : 'Finestra decisionale reale?', isPast?'anno/mese':'questo mese / 3–6 mesi / 12 mesi');
+    add('success_indicator', isPast?'Segnale che avrebbe confermato?' : 'Un indicatore di successo?', '€ risparmiati / ore / primo cliente');
+    add('real_constraint', isPast?'Vincolo chiave?' : 'Vincolo più concreto?', 'budget / tempo / energia');
+  }
+  return Q.slice(0,3);
 }
 
-/* ====== Clarify: server + fallback locale contestuale ====== */
-function localClarifyFallback(q, period){
-  const s=(q||'').toLowerCase();
-  const out=[];
-  const isWork = /\b(lavor|work|career|job|azienda|progetto|project)\b/i.test(s);
-  const isMove = /\b(trasfer|citt|quartiere|move|city|neigh|country)\b/i.test(s);
-  const isStudy= /\b(stud|master|laurea|course|study)\b/i.test(s);
-  const isMoney= /\b(euro|€|soldi|stipendio|debito|invest|salary|debt|rent|mutuo|mortgage)\b/i.test(s);
-
-  if (isWork){
-    out.push({id:"priority",label:lang==='en'?"What’s the #1 priority here?":"Qual è la priorità numero uno qui?",placeholder:lang==='en'?"growth / stability / flexibility":"crescita / stabilità / flessibilità"});
-  }
-  if (isMove){
-    out.push({id:"landmark",label:lang==='en'?"One place that matters near the new area?":"Un luogo che conta vicino alla nuova zona?",placeholder:lang==='en'?"square / station / neighborhood":"piazza / stazione / quartiere"});
-  }
-  if (isStudy||isMoney){
-    out.push({id:"indicator",label:lang==='en'?"One indicator you’ll track?":"Un indicatore che terrai d’occhio?",placeholder:lang==='en'?"hours/week, € saved, clients":"ore/settimana, € risparmiati, clienti"});
-  }
-  if (out.length<2){
-    out.push({id:"constraint_2w",label:lang==='en'?"One real constraint in the next 2 weeks?":"Un vincolo realistico nelle prossime 2 settimane?",placeholder:lang==='en'?"budget / time / energy":"budget / tempo / energia"});
-  }
-  if (out.length<3){
-    out.push({id:"context",label:lang==='en'?"A detail that makes this *yours*?":"Un dettaglio che lo renda più *tuo*?",placeholder:lang==='en'?"person, place, tiny constraint":"persona, luogo, piccolo vincolo"});
-  }
-  return out.slice(0,3);
-}
-
-/* ====== Clarify ====== */
+/* ===== Clarify overlay ===== */
 const clarifyOverlay=$('clarifyOverlay'), clarifyList=$('clarifyList');
-$('clarifyBtn').textContent=T.clarifyBtn;
 $('clarifyBtn').addEventListener('click', openClarify);
 $('cancelClarify').addEventListener('click', ()=> clarifyOverlay.style.display='none');
 $('clarifyTitle').textContent=T.clarifyTitle; $('applyClarify').textContent=T.applyClarify; $('cancelClarify').textContent=T.cancelClarify;
@@ -554,20 +455,29 @@ async function openClarify(){
   clarifyList.innerHTML=`<p class="sub">${lang==='en'?'Preparing 2–3 focused questions…':'Sto preparando 2–3 domande mirate…'}</p>`;
   clarifyOverlay.style.display='flex';
   try{
-    // Prova lato server (più ricco)…
-    const j=await callClarifyAPI();
+    // Prima: domande locali in base all’intent
+    let qs = buildClarifyFromIntent();
+
+    // Poi proviamo lato server; se sono migliori, le usiamo
+    try{
+      const j=await callClarifyAPI();
+      const srv = Array.isArray(j.questions)? j.questions.slice(0,3):[];
+      // Sostituisci se diverse/pertinenti (euristica semplice)
+      if (srv.length && JSON.stringify(srv.map(x=>x.label).sort()) !== JSON.stringify(qs.map(x=>x.label).sort())){
+        qs = srv;
+      }
+    }catch{ /* se fallisce, restano le locali */ }
+
     c.used=(c.used||0)+1; writeClarify(c);
-    let qs=Array.isArray(j.questions)? j.questions.slice(0,3):[];
-    // …se vuote o poco pertinenti, fallback locale contestuale alla domanda
-    if(!qs.length){ qs = localClarifyFallback(domanda, (periodo||'future')); }
+
     clarifyList.innerHTML=qs.map(q=>`
       <div class="qitem">
         <label for="${q.id||''}">${(q.label|| (lang==='en'?'Question':'Domanda'))}</label>
         <input id="${q.id||''}" type="text" placeholder="${(q.placeholder|| (lang==='en'?'Answer in one line':'Rispondi in una riga')).replace(/"/g,'&quot;')}" />
       </div>`).join("");
   }catch(e){
-    // totale fallback locale
-    const qs = localClarifyFallback(domanda, (periodo||'future'));
+    // Fallback totale
+    const qs = buildClarifyFromIntent();
     clarifyList.innerHTML=qs.map(q=>`
       <div class="qitem">
         <label for="${q.id||''}">${(q.label|| (lang==='en'?'Question':'Domanda'))}</label>
@@ -575,19 +485,16 @@ async function openClarify(){
       </div>`).join("");
   }
 }
+
 $('applyClarify').addEventListener('click', async ()=>{
   const inputs=clarifyList.querySelectorAll('input');
   const clar={}; inputs.forEach(i=>{ const v=(i.value||"").trim(); if(i.id&&v) clar[i.id]=v; });
   clarifyOverlay.style.display='none';
-  $('signalsBody').textContent = summarizeSignals(clar); // rimane invisibile
-  learnFromInteraction({ question: domanda, clarifications: clar, answerText: "" });
   await generate(false,clar);
 });
 
-/* ====== Generate / Regenerate ====== */
-$('genBtn').textContent=T.genBtn;
+/* ===== Generate / Regenerate ===== */
 $('genBtn').addEventListener('click', ()=> generate());
-$('regenBtn').textContent = `🔁 ${T.regenBtn}`;
 $('regenBtn').addEventListener('click', ()=> generate(true));
 
 async function generate(isRegen=false, clarOverride=null){
@@ -598,8 +505,6 @@ async function generate(isRegen=false, clarOverride=null){
   $('result').textContent=`⏳ ${T.loading} `; const sk=document.createElement('span'); sk.className='skeleton'; sk.style.width='40%'; $('result').appendChild(sk);
   $('result').classList.remove('fade-in');
   $('regenBtn').style.display='none';
-
-  if(!$('signalsBody').textContent){ $('signalsBody').textContent = summarizeSignals(clarOverride||{}); }
 
   try{
     const extra = buildLanguageExtra(lang, currentStyle);
@@ -620,30 +525,28 @@ async function generate(isRegen=false, clarOverride=null){
     const c=readCredits(); c.used=(c.used||0)+1; writeCredits(c);
     $('regenBtn').style.display='block';
     renderKnowledgeMini();
-
-    learnFromInteraction({ question: domanda, clarifications: (clarOverride||{}), answerText: $('result').textContent });
   }catch(e){
     console.error(e);
     $('result').textContent=(e.message==='server'?T.errServer:T.errNet);
   }
 }
 
-/* ====== Tools menu ====== */
+/* ===== Tools menu ===== */
 const dotsBtn=$('dotsBtn'), toolMenu=$('toolMenu');
 dotsBtn.addEventListener('click', ()=>{ toolMenu.classList.toggle('show'); });
 document.addEventListener('click', (e)=>{ if(!toolMenu.contains(e.target) && e.target!==dotsBtn) toolMenu.classList.remove('show'); });
 
-$('retryBtn').textContent = `🔁 ${T.redoMicro}`;
+$('retryBtn').textContent = `🔁 Rifai micro test`;
+$('regenBtn').textContent = `🔁 Rigenera`;
 $('saveBtn').textContent  = `💾 ${T.save}`;
 $('copyBtn').textContent  = `📋 ${T.copy}`;
 $('shareBtn').textContent = `📤 ${T.share}`;
-$('profileBtn').textContent = `👤 ${T.profile}`;
-$('newQBtn').textContent = `🆕 ${T.newQ}`;
+$('profileBtn').textContent = `👤 Profilo`;
 
 $('retryBtn').addEventListener('click', ()=> { toolMenu.classList.remove('show'); location.href='third.html'; });
 $('saveBtn').addEventListener('click', ()=>{
   const arr=readJSON('cronologia',[]);
-  arr.unshift({ domanda, risposta:($('result').textContent||"").trim(), periodo, stile:currentStyle, lang, ts:Date.now() });
+  arr.unshift({ domanda, risposta:($('result').textContent||"").trim(), periodo:prefs.periodo||null, stile:currentStyle, lang, ts:Date.now() });
   writeJSON('cronologia',arr);
   toolMenu.classList.remove('show');
   alert(T.saved);
@@ -659,33 +562,17 @@ $('shareBtn').addEventListener('click', ()=>{
   if(navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`);
   toolMenu.classList.remove('show');
 });
-$('newQBtn').addEventListener('click', ()=> { toolMenu.classList.remove('show'); location.href='fourth.html'; });
 $('profileBtn').addEventListener('click', ()=> { toolMenu.classList.remove('show'); location.href='second.html'; });
 
-/* ====== Nav ====== */
+/* ===== Nav ===== */
 $('backBtnTop').addEventListener('click', ()=> history.back());
 $('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
 
-/* ====== Reset profilo ====== */
-$('resetProfileBtn').addEventListener('click', ()=>{
-  if(!confirm(T.resetConfirm)) return;
-  const keys = [
-    'whatif_profile','whatif_micro','whatif_micro_log','whatif_last_update',
-    'whatif_onboarding_done','whatif_daily_seen','whatif_clarify',
-    'whatif_first_session_seen','whatif_profile_date','whatif_memory',
-    'cronologia','whatif_anchors'
-  ];
-  keys.forEach(k=>LS.removeItem(k));
-  alert(T.resetDone);
-  location.href='second.html';
-});
-
-/* ====== Dev hooks: reset FREE + reset CLARIFY + toggle Pro ====== */
+/* ===== Dev hooks ===== */
 (function devHooks(){
   const bFree=$('freeBadge'), bClar=$('clarifyBadge');
   if(!bFree||!bClar) return;
 
-  // FREE long-press + triple click Pro
   let pressT=null;
   bFree.addEventListener('pointerdown', ()=>{ pressT=setTimeout(resetToday,2000); });
   bFree.addEventListener('pointerup', ()=>{ clearTimeout(pressT); });
@@ -702,7 +589,6 @@ $('resetProfileBtn').addEventListener('click', ()=>{
     renderBadges(); alert('Pro '+(c.pro?'on':'off')+' (local) ✅');
   }
 
-  // CLARIFY long-press reset
   let pressC=null;
   bClar.addEventListener('pointerdown', ()=>{ pressC=setTimeout(resetClarify,2000); });
   bClar.addEventListener('pointerup', ()=>{ clearTimeout(pressC); });
@@ -714,20 +600,17 @@ $('resetProfileBtn').addEventListener('click', ()=>{
   }
 })();
 
-/* ====== Avvio ====== */
+/* ===== Avvio ===== */
 function initText(){
   $('freeBadge').title=T.badgeFreeTitle; $('clarifyBadge').title=T.badgeClarifyTitle;
   $('clarifyBtn').textContent=T.clarifyBtn; $('genBtn').textContent=T.genBtn;
-  // Titolo periodo/stile aggiornati
-  $('badgePeriodo').textContent="🕰️ "+(periodo==='past'?T.periodoPast:T.periodoFuture);
-  $('badgeStile').textContent="🎭 "+(currentStyle==='wtf'?'What the F':'What if');
+  $('question').textContent = domanda;
 }
 function initStyles(){
   document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
 }
 function boot(){
   renderBadges(); ensureCredits(); ensureClarify(); renderKnowledgeMini(); initText(); initStyles();
-  $('question').textContent = domanda;
 }
 boot();
 </script>
