@@ -13,29 +13,37 @@ function renderProfileDigest(p = {}) {
 
   // Identità & contesto base
   if (p.name) parts.push(`${p.name}${p.age_range ? ", " + p.age_range : ""}`);
-  const roots = [p.city_origin || p.city_from, p.city_now || p.city].filter(Boolean).join(" → ");
+  const roots = [p.city_origin || p.city_from, p.city_now || p.city]
+    .filter(Boolean)
+    .join(" → ");
   if (roots) parts.push(`luoghi: ${roots}`);
   if (p.work_role || p.role) parts.push(`ruolo: ${p.work_role || p.role}`);
-  if (Array.isArray(p.goals) && p.goals.length) parts.push(`obiettivi: ${p.goals.join(", ")}`);
-  if (p.goal && (!parts.find(x => x.startsWith("obiettivi:")))) parts.push(`obiettivo: ${p.goal}`);
-  if (Array.isArray(p.values) && p.values.length) parts.push(`valori: ${p.values.join(", ")}`);
-  if (Array.isArray(p.wins) && p.wins.length) parts.push(`vittorie: ${p.wins.join(", ")}`);
-  if (Array.isArray(p.pains) && p.pains.length) parts.push(`difficoltà: ${p.pains.join(", ")}`);
+  if (Array.isArray(p.goals) && p.goals.length)
+    parts.push(`obiettivi: ${p.goals.join(", ")}`);
+  if (p.goal && !parts.find((x) => x.startsWith("obiettivi:")))
+    parts.push(`obiettivo: ${p.goal}`);
+  if (Array.isArray(p.values) && p.values.length)
+    parts.push(`valori: ${p.values.join(", ")}`);
+  if (Array.isArray(p.wins) && p.wins.length)
+    parts.push(`vittorie: ${p.wins.join(", ")}`);
+  if (Array.isArray(p.pains) && p.pains.length)
+    parts.push(`difficoltà: ${p.pains.join(", ")}`);
 
   // Interessi generali
-  if (Array.isArray(p.hobbies) && p.hobbies.length) parts.push(`interessi: ${p.hobbies.join(", ")}`);
+  if (Array.isArray(p.hobbies) && p.hobbies.length)
+    parts.push(`interessi: ${p.hobbies.join(", ")}`);
 
   // Preferenze “relax” / bar vibe
   if (typeof p.drinks_pref === "string") parts.push(`drinks_pref: ${p.drinks_pref}`);
   if (typeof p.unwind === "string") parts.push(`unwind: ${p.unwind}`);
 
-  // === Nuovi campi predittivi ===
+  // === Segnali predittivi ===
   if (p.time_window) parts.push(`finestra: ${p.time_window}`);
   if (p.success_indicator) parts.push(`indicatore_successo: ${p.success_indicator}`);
   if (p.risk_tolerance) parts.push(`rischio: ${p.risk_tolerance}`);
   if (p.landmark) parts.push(`ancora: ${p.landmark}`);
 
-  // Micro-dati giornalieri (solo stringhe utili)
+  // Micro-dati giornalieri
   if (p.micro && typeof p.micro === "object") {
     const micro = p.micro;
     Object.entries(micro).forEach(([k, v]) => {
@@ -79,35 +87,43 @@ Per What the F: punchline tagliente + invito giocoso a scegliere un nuovo casino
   const when_it = `Oggi è ${now.weekday_it}, ${now.date_it}. Stagione: ${now.season_it}. Ora locale ~${now.time24}.`;
 
   if (stile === "wtf") {
-    // 🥃 WHAT THE F — barista alticcio, 8–10 righe, punchline e ritmo da shot
+    // 🥃 WHAT THE F — versione più sarcastica/divertente, tempi corretti
     return en
-      ? `You are "What the F": a late-night bartender-philosopher — witty, slightly drunk, brutally honest.
+      ? `You are "What the F": a late-night bartender-philosopher — witty, tipsy, razor-sharp.
 ${when_en}
-Speak as ONE voice (no script, no "Name:"). 8–10 punchy short lines — rhythm like quick bar banter.
-Tone:
-- High sarcasm, clever irony, never mean.
-- Two or more punchlines. Humor > lesson. No moralizing.
-- Each line ≤15 words; pause like you’re sipping between lines.
-Alcohol flavor: ${drinksYes ? "frequent, tasteful bar/hangover metaphors (never preachy)" : "rare, subtle nods"}.
-Personalization:
-- Keep realism subtly grounded in ${cityNow}, ${workRole}.
-Ending:
+SPEAKING RULES:
+- ONE voice only. 8–10 short lines. ≤13 words per line. Fast bar rhythm.
+- Humor > lesson. Two or three mini-punchlines, spaced every 2–3 lines.
+- Sarcastic but kind. No moralizing. No meanness. Never preach alcohol.
+TENSE CONSISTENCY:
+- If TIMEFRAME = FUTURE: write in FUTURE (no past phrasing).
+- If TIMEFRAME = PAST: counterfactual as if it ALREADY happened.
+TONE & TEXTURE:
+- Streetwise wit, clever callbacks, tiny sensory hints (glass clink, neon hum).
+- ${drinksYes ? "Bar metaphors allowed, tasteful." : "Alcohol references: rare, subtle."}
+PERSONALIZATION:
+- Ground realism lightly in ${cityNow}, ${workRole} without listing data.
+ENDING:
 - ${finaleInstr_en}`
       : `Sei “What the F”: barista nottambulo, ironico, un po’ brillo ma lucidissimo.
 ${when_it}
-Parla come UNA sola voce (niente sceneggiatura). 8–10 righe brevi, ritmo da bancone.
-Tono:
-- Sarcasmo alto, ironia arguta, mai cattiveria.
-- Almeno 2 punchline. Niente moralismi.
-- Ogni frase ≤15 parole; pausa come tra un sorso e l’altro.
-Tocco alcolico: ${drinksYes ? "metafore da bancone frequenti ma eleganti" : "accenni rari e leggeri"}.
-Personalizzazione:
-- Realismo ancorato a ${cityNow}, ${workRole}, senza elencare dati.
-Chiusura:
+REGOLE DI VOCE:
+- Una sola voce. 8–10 righe brevi. ≤13 parole per riga. Ritmo da bancone.
+- L’umorismo conta più della lezione. Due/tre mini-punchline ogni 2–3 righe.
+- Sarcasmo affilato ma gentile. Niente moralismi. Mai promuovere il bere.
+COERENZA DEI TEMPI:
+- PERIODO = FUTURO: scrivi al FUTURO (evita forme al passato).
+- PERIODO = PASSATO: controfattuale come se fosse GIÀ successo.
+TONO & TEXTURE:
+- Arguzia da strada, piccoli dettagli (tic del bicchiere, ronzio al neon).
+- ${drinksYes ? "Metafore da bar consentite, con gusto." : "Accenni alcolici rari e leggeri."}
+PERSONALIZZAZIONE:
+- Realismo ancorato a ${cityNow}, ${workRole} senza elencare dati.
+CHIUSURA:
 - ${finaleInstr_it}`;
   }
 
-  // 🌙 WHAT?f — sobrio, empatico, CONCRETO, attuale
+  // 🌙 WHAT?f — sobrio, empatico, CONCRETO, attuale (già migliorato)
   return en
     ? `You are "What?f": a sober, candid, slightly mystical friend — lucid, concrete, current.
 ${when_en}
@@ -135,12 +151,20 @@ function responseStyleInstruction(lang, stile) {
   const en = isEn(lang);
   if (stile === "wtf") {
     return en
-      ? `Format: 8–10 short lines. One speaker. Punchy inner banter. Tiny vivid scene. Bold sarcasm. End as instructed (hook or finale).`
-      : `Formato: 8–10 righe brevi. Voce unica. Botta-e-risposta interiore. Mini-scena vivida. Sarcasmo deciso. Chiudi come istruito (gancio o finale).`;
+      ? `FORMAT: 8–10 short lines. ≤13 words per line. One voice. Bar banter cadence.
+Insert 2–3 mini-punchlines. Keep it playful, not mean. 
+TENSE GUARD: FUTURE => future tense only. PAST => counterfactual already happened.
+Avoid moralizing. No alcohol encouragement. End as instructed (hook/finale).`
+      : `FORMATO: 8–10 righe brevi. ≤13 parole per riga. Voce unica. Ritmo da bancone.
+Inserisci 2–3 mini-punchline. Divertente, non cattivo.
+GUARDIA DEI TEMPI: FUTURO => solo futuro. PASSATO => controfattuale già accaduto.
+Evita moralismi. Mai incoraggiare il bere. Chiudi come istruito (gancio/finale).`;
   }
   return en
-    ? `Format: 8–10 short concise lines. One speaker. Visual, candid, current. Include a concrete first step and a realistic trade-off if relevant. End as instructed (soft hook or gentle finale).`
-    : `Formato: 8–10 righe brevi e incisive. Voce unica. Visivo, sincero, attuale. Includi un primo passo concreto e un trade-off realistico se rilevante. Chiudi come istruito (gancio morbido o finale gentile).`;
+    ? `Format: 8–10 short concise lines. One speaker. Visual, candid, current.
+Include a concrete first step and a realistic trade-off if relevant. End as instructed.`
+    : `Formato: 8–10 righe brevi e incisive. Voce unica. Visivo, sincero, attuale.
+Includi un primo passo concreto e un trade-off realistico se rilevante. Chiudi come istruito.`;
 }
 
 /* ============== Costruzione messaggio utente (con profilo) ============== */
@@ -184,19 +208,30 @@ giorno=${now.weekday_it}; stagione=${now.season_it}; mese=${now.month_it}; ora_l
     L.push((en ? "CLARIFICATIONS:\n" : "CHIARIMENTI:\n") + c.join("\n"));
   }
 
-  // Istruzioni per “predizione” concreta
+  // Istruzioni predittive
   L.push(
     en
       ? `PREDICTIVE OBJECTIVE:
 - PAST → counterfactual vignette as if it happened: include a plausible cost/trade-off and one signal that would've told them it worked.
 - FUTURE → near-future path if they choose now: include first small step (1 call/email/hour), a concrete success indicator, and a realistic constraint.
 - Weave decision window, risk tolerance, and the place/person anchor naturally (no bullet list).
-- Be specific with small details (time of day, neighborhood, texture) only when relevant. Avoid news claims unless present in the prompt; stay timeless otherwise.`
+- Use specific small details only when relevant. Avoid news claims unless present in prompt.`
       : `OBIETTIVO PREDITTIVO:
 - PASSATO → vignetta controfattuale come se fosse accaduta: inserisci un costo/trade-off plausibile e un segnale che avrebbe indicato che stava funzionando.
 - FUTURO → percorso di prossimo futuro se sceglie ora: inserisci il primo passo piccolo (1 chiamata/email/ora), un indicatore di successo concreto e un vincolo realistico.
 - Intreccia finestra decisionale, tolleranza al rischio e luogo/persona-ancora in modo naturale (no elenco).
-- Specifica dettagli piccoli (orario, quartiere, “texture”) solo se servono. Evita affermazioni di attualità se non fornite; resta senza tempo altrimenti.`
+- Usa dettagli piccoli solo quando servono. Evita notizie/attualità se non presenti nel prompt.`
+  );
+
+  // Guardia tempi per il modello (rinforzo)
+  L.push(
+    en
+      ? `TENSE GUARD:
+If TIMEFRAME = FUTURE, use only future tense. 
+If TIMEFRAME = PAST, write like it already happened.`
+      : `GUARDIA DEI TEMPI:
+Se PERIODO = FUTURO, usa solo il futuro.
+Se PERIODO = PASSATO, scrivi come se fosse già accaduto.`
   );
 
   return L.join("\n\n");
@@ -245,23 +280,65 @@ function localClarify(domanda = "", profilo = {}, lang = "it", periodo = "future
   const qs = [];
 
   if (periodo === "past") {
-    qs.push({ id: "pivot_year", label: en ? "Turning point year/event?" : "Anno/evento di svolta?", placeholder: en ? "e.g., 2015 move / 2010 offer" : "es. trasferimento 2015 / offerta 2010" });
-    qs.push({ id: "then_context", label: en ? "Where and what context mattered then?" : "Dove e quale contesto contava allora?", placeholder: en ? "city/team/family" : "città/team/famiglia" });
-    qs.push({ id: "what_would_change", label: en ? "One constraint/signal that would've changed it?" : "Un vincolo/segno che l’avrebbe cambiata?", placeholder: en ? "money/time/person/offer" : "soldi/tempo/persona/offerta" });
+    qs.push({
+      id: "pivot_year",
+      label: en ? "Turning point year/event?" : "Anno/evento di svolta?",
+      placeholder: en ? "e.g., 2015 move / 2010 offer" : "es. trasferimento 2015 / offerta 2010",
+    });
+    qs.push({
+      id: "then_context",
+      label: en ? "Where and what context mattered then?" : "Dove e quale contesto contava allora?",
+      placeholder: en ? "city/team/family" : "città/team/famiglia",
+    });
+    qs.push({
+      id: "what_would_change",
+      label: en ? "One constraint/signal that would've changed it?" : "Un vincolo/segno che l’avrebbe cambiata?",
+      placeholder: en ? "money/time/person/offer" : "soldi/tempo/persona/offerta",
+    });
   } else {
-    qs.push({ id: "time_window", label: en ? "Real decision window?" : "Vera finestra decisionale?", placeholder: en ? "this month / 3–6 months / 12 months" : "questo mese / 3–6 mesi / 12 mesi" });
-    qs.push({ id: "success_indicator", label: en ? "One success indicator?" : "Un indicatore di successo?", placeholder: en ? "€ saved / hours / first client" : "€ risparmiati / ore / primo cliente" });
-    qs.push({ id: "real_constraint", label: en ? "Most concrete constraint?" : "Vincolo più concreto?", placeholder: en ? "budget / time / energy / commitment" : "budget / tempo / energia / impegno" });
+    qs.push({
+      id: "time_window",
+      label: en ? "Real decision window?" : "Vera finestra decisionale?",
+      placeholder: en ? "this month / 3–6 months / 12 months" : "questo mese / 3–6 mesi / 12 mesi",
+    });
+    qs.push({
+      id: "success_indicator",
+      label: en ? "One success indicator?" : "Un indicatore di successo?",
+      placeholder: en ? "€ saved / hours / first client" : "€ risparmiati / ore / primo cliente",
+    });
+    qs.push({
+      id: "real_constraint",
+      label: en ? "Most concrete constraint?" : "Vincolo più concreto?",
+      placeholder: en ? "budget / time / energy / commitment" : "budget / tempo / energia / impegno",
+    });
   }
 
   if (!profilo?.city_now && !profilo?.city) {
-    qs[0] = qs[0] || { id: "city_now", label: en ? "Where do you live now?" : "Dove vivi adesso?", placeholder: en ? "city" : "città" };
+    qs[0] =
+      qs[0] ||
+      {
+        id: "city_now",
+        label: en ? "Where do you live now?" : "Dove vivi adesso?",
+        placeholder: en ? "city" : "città",
+      };
   }
   if (!profilo?.work_role && !profilo?.role) {
-    qs[1] = qs[1] || { id: "work_role", label: en ? "Your current role in one line?" : "Il tuo ruolo attuale in una riga?", placeholder: en ? "e.g., pharmacist technician" : "es. tecnico farmaceutico" };
+    qs[1] =
+      qs[1] ||
+      {
+        id: "work_role",
+        label: en ? "Your current role in one line?" : "Il tuo ruolo attuale in una riga?",
+        placeholder: en ? "e.g., pharmacist technician" : "es. tecnico farmaceutico",
+      };
   }
   if (!Array.isArray(profilo?.goals) || !profilo.goals?.length) {
-    qs[2] = qs[2] || { id: "main_goal", label: en ? "One concrete goal now?" : "Un obiettivo concreto ora?", placeholder: en ? "e.g., change job / more time" : "es. cambiare lavoro / più tempo" };
+    qs[2] =
+      qs[2] ||
+      {
+        id: "main_goal",
+        label: en ? "One concrete goal now?" : "Un obiettivo concreto ora?",
+        placeholder: en ? "e.g., change job / more time" : "es. cambiare lavoro / più tempo",
+      };
   }
 
   return qs.slice(0, 3);
@@ -272,8 +349,16 @@ function safeNow(nowIso, tz) {
   const d = nowIso ? new Date(nowIso) : new Date();
   const w = d.toLocaleDateString("en-GB", { weekday: "long" });
   const wd_it = d.toLocaleDateString("it-IT", { weekday: "long" });
-  const date_it = d.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" });
-  const date_en = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  const date_it = d.toLocaleDateString("it-IT", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+  const date_en = d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
   const hh = String(d.getHours()).padStart(2, "0");
   const mm = String(d.getMinutes()).padStart(2, "0");
   const month = d.getMonth() + 1;
@@ -285,17 +370,46 @@ function safeNow(nowIso, tz) {
     time24: `${hh}:${mm}`,
     weekday_en: w,
     weekday_it: wd_it,
-    date_it, date_en,
-    season_it, season_en,
-    month_it, month_en,
+    date_it,
+    date_en,
+    season_it,
+    season_en,
+    month_it,
+    month_en,
     tz: tz || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
   };
 }
 function seasonForMonth(m, lang) {
   // Emisfero nord, semplice
-  const it = ["inverno","inverno","primavera","primavera","primavera","estate","estate","estate","autunno","autunno","autunno","inverno"];
-  const en = ["winter","winter","spring","spring","spring","summer","summer","summer","autumn","autumn","autumn","winter"];
-  return (lang === "en" ? en : it)[(m-1)%12];
+  const it = [
+    "inverno",
+    "inverno",
+    "primavera",
+    "primavera",
+    "primavera",
+    "estate",
+    "estate",
+    "estate",
+    "autunno",
+    "autunno",
+    "autunno",
+    "inverno",
+  ];
+  const en = [
+    "winter",
+    "winter",
+    "spring",
+    "spring",
+    "spring",
+    "summer",
+    "summer",
+    "summer",
+    "autumn",
+    "autumn",
+    "autumn",
+    "winter",
+  ];
+  return (lang === "en" ? en : it)[(m - 1) % 12];
 }
 
 /* ============== HTTP handler ============== */
@@ -311,88 +425,60 @@ export default async function handler(req, res) {
     const {
       domanda,
       lang = "it",
-      periodo = "future",      // "past" | "future"
-      stile = "whatif",        // "whatif" | "wtf"
-      clarify = false,         // true => genera 2–3 domande
-      stream = false,          // true => text/event-stream
-      profilo = {},            // { ... , story_state:{ thread_id, episode, max_episodes } }
-      clarifications = {},     // risposte dell’utente ai chiarimenti
-      extra = "",              // input extra opzionale
-      now: nowIso,             // opzionale: ISO dal client
-      tz,                      // opzionale: timezone IANA dal client
+      periodo = "future", // "past" | "future"
+      stile = "whatif", // "whatif" | "wtf"
+      clarify = false, // true => genera 2–3 domande
+      stream = false, // true => text/event-stream
+      profilo = {}, // { ... , story_state:{ thread_id, episode, max_episodes } }
+      clarifications = {}, // risposte dell’utente ai chiarimenti
+      extra = "", // input extra opzionale
+      now: nowIso, // opzionale: ISO dal client
+      tz, // opzionale: timezone IANA dal client
     } = req.body || {};
 
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    /* ---------- Clarify branch (versione migliorata e dinamica) ---------- */
+    /* ---------- Clarify branch ---------- */
     if (clarify) {
       let questions = [];
       try {
-        const sys = `
-Sei un assistente empatico e curioso. Il tuo compito è creare 3 domande brevi ma molto mirate per chiarire la domanda principale dell’utente.
-Ogni domanda deve essere collegata in modo logico e diretto al tema centrale della frase dell’utente.
-Non ripetere domande generiche o già fatte. Adatta il tono e il contenuto al contesto.
-Restituisci SOLO un array JSON nel formato:
-[
-  {"id":"q1","label":"testo della domanda","placeholder":"esempio di risposta"},
-  {"id":"q2","label":"testo della domanda","placeholder":"esempio di risposta"},
-  {"id":"q3","label":"testo della domanda","placeholder":"esempio di risposta"}
-]
-
-Esempio:
-Domanda: "E se lasciassi il lavoro e aprissi un bar?"
-→ Domande:
-1. Qual è la motivazione più forte che ti spinge a farlo?
-2. Quale sarebbe la difficoltà più grande da superare?
-3. In quale città o quartiere ti piacerebbe aprirlo?
-`;
-
-        const usr = `
-Domanda utente: "${domanda}"
-Periodo: ${periodo}
-Profilo utente (riassunto): ${renderProfileDigest(profilo) || "non disponibile"}
-Lingua: ${lang}
-Rispondi solo con il JSON, senza testo aggiuntivo.
-`;
-
+        const sys = clarifySystemPrompt(lang);
+        const usr = clarifyUserContent({ domanda, periodo, profilo, lang });
         const resp = await client.chat.completions.create({
           model: MODEL_TEXT,
-          temperature: 0.7,
+          temperature: 0.4,
           messages: [
             { role: "system", content: sys },
             { role: "user", content: usr },
           ],
         });
-
         const raw = resp.choices?.[0]?.message?.content?.trim() || "[]";
         const start = raw.indexOf("[");
         const end = raw.lastIndexOf("]");
         if (start >= 0 && end > start) {
           questions = JSON.parse(raw.slice(start, end + 1));
         }
-      } catch (err) {
-        console.error("Clarify dynamic error:", err);
+      } catch (_) {
+        /* fallback sotto */
       }
 
-      // Fallback locale se la risposta non è valida
       if (!Array.isArray(questions) || questions.length === 0) {
         questions = localClarify(domanda, profilo, lang, periodo);
       }
 
-      // Normalizza e prepara le domande
       questions = questions.slice(0, 3).map((q, i) => ({
         id: String(q.id || `q${i + 1}`),
         label: String(q.label || q?.text || (isEn(lang) ? "Question" : "Domanda")),
         placeholder: String(q.placeholder || (isEn(lang) ? "Answer in one line" : "Rispondi in una riga")),
       }));
 
-      // Log chiarimenti usati oggi (header per eventuale client tracking)
+      // Log chiarimenti usati oggi (per knowledge score, se serve sul client)
       try {
         const todayIso = new Date().toISOString().slice(0, 10);
-        const clarHdr = { date: todayIso, used: (questions?.length || 0) };
-        res.setHeader("X-Whatif-Clarify", JSON.stringify(clarHdr));
+        const clar = { date: todayIso, used: (questions?.length || 0) };
+        res.setHeader("X-Whatif-Clarify", JSON.stringify(clar));
       } catch {}
 
       return res.status(200).json({ questions });
@@ -400,17 +486,26 @@ Rispondi solo con il JSON, senza testo aggiuntivo.
 
     /* ---------- Generation branch ---------- */
     const sys1 = systemPrompt({ stile, lang, profile: profilo, nowIso, tz });
-    const user = buildUserContent({ domanda, periodo, profilo, clarifications, lang, stile, nowIso, tz });
+    const user = buildUserContent({
+      domanda,
+      periodo,
+      profilo,
+      clarifications,
+      lang,
+      stile,
+      nowIso,
+      tz,
+    });
     const sys2 = responseStyleInstruction(lang, stile);
 
     // Finale/mid-episode hint (rinforzo)
     const finaleHint = isFinalEpisode(profilo)
-      ? (isEn(lang)
-          ? "This is the FINALE for this thread: deliver closure (no cliffhanger). One-line invite to start a new 'what if'."
-          : "Questo è il FINALE di questa storia: chiudi davvero (niente cliffhanger). Un invito in una riga a iniziare un nuovo 'e se'.")
-      : (isEn(lang)
-          ? `Mid-episode: end with a subtle personal hook linked to ${profilo?.city_now || profilo?.city || (isEn(lang) ? "their city" : "la tua città")} or ${profilo?.work_role || profilo?.role || (isEn(lang) ? "their role" : "il tuo ruolo")}.`
-          : `Episodio intermedio: chiudi con un gancio personale legato a ${profilo?.city_now || profilo?.city || "la tua città"} o ${profilo?.work_role || profilo?.role || "il tuo ruolo"}.`);
+      ? isEn(lang)
+        ? "This is the FINALE for this thread: deliver closure (no cliffhanger). One-line invite to start a new 'what if'."
+        : "Questo è il FINALE di questa storia: chiudi davvero (niente cliffhanger). Un invito in una riga a iniziare un nuovo 'e se'."
+      : isEn(lang)
+      ? `Mid-episode: end with a subtle personal hook linked to ${profilo?.city_now || profilo?.city || (isEn(lang) ? "their city" : "la tua città")} or ${profilo?.work_role || profilo?.role || (isEn(lang) ? "their role" : "il tuo ruolo")}.`
+      : `Episodio intermedio: chiudi con un gancio personale legato a ${profilo?.city_now || profilo?.city || "la tua città"} o ${profilo?.work_role || profilo?.role || "il tuo ruolo"}.`;
 
     const messages = [
       { role: "system", content: sys1 },
@@ -420,8 +515,8 @@ Rispondi solo con il JSON, senza testo aggiuntivo.
       extra ? { role: "user", content: extra } : null,
     ].filter(Boolean);
 
-    // Temperatura: più alta per wtf per favorire battute e ritmo
-    const temperature = stile === "wtf" ? 0.97 : 0.82;
+    // Temperatura: leggermente più alta per wtf (per favorire punchline e ritmo)
+    const temperature = stile === "wtf" ? 1.0 : 0.82;
 
     // Streaming (SSE)
     if (String(req.headers["x-whatif-stream"] || "").length > 0 || stream) {
@@ -461,4 +556,4 @@ Rispondi solo con il JSON, senza testo aggiuntivo.
       .status(500)
       .json({ error: "server", detail: isAbort ? "aborted" : err?.message || "unknown" });
   }
-    }
+}
