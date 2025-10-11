@@ -86,7 +86,22 @@ function sanitizeAndShape(raw = "", { stile = "whatif", finale = false } = {}) {
     if (out.length < TARGET_MAX) out.push(hooks[0]);
   }
 
-  // 8) righe pulite
+  // 8) PATCH finale per chiusura sempre pulita
+  if (out.length > 0) {
+    let lastLine = out[out.length - 1];
+    if (!/[\.!?…]$/.test(lastLine)) {
+      if (/ma\s*$/i.test(lastLine)) {
+        lastLine = lastLine.replace(/ma\s*$/i, "ma brindiamo a ciò che viene.");
+      } else if (/fai che/i.test(lastLine)) {
+        lastLine = lastLine + " forti abbastanza da coprire i rimpianti.";
+      } else {
+        lastLine = lastLine + ".";
+      }
+      out[out.length - 1] = lastLine;
+    }
+  }
+
+  // 9) righe pulite
   return out.map(s => s.replace(/\s+/g, " ").trim()).filter(Boolean).join("\n");
 }
 
