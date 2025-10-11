@@ -9,7 +9,7 @@ import OpenAI from "openai";
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL_TEXT = "gpt-4o-mini";
 
-/* ───────────────────────── Helpers ───────────────────────── */
+/* ───────── Helpers ───────── */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 function isFinalEpisode(profile = {}) {
   const ep = Number(profile?.story_state?.episode ?? 1);
@@ -17,7 +17,80 @@ function isFinalEpisode(profile = {}) {
   return ep >= max;
 }
 
-/* ───────────────── System Prompts: STILI DEFINITIVI ───────────────── */
+/* ───────── Formatter: enforce 8–10 righe, punchline, finale ───────── */
+function sanitizeAndShape(raw = "", { stile = "whatif", finale = false } = {}) {
+  if (!raw) return "";
+
+  // 1) togli etichette tipo "Luca:" / "Amico:"
+  let t = raw.replace(/^\s*[-–—]*\s*\b([A-ZÀ-ÖØ-Ý][\wÀ-ÖØ-öø-ÿ']{1,20})\s*:\s*/gmi, "");
+
+  // 2) normalizza spazi e righe
+  t = t.replace(/\r/g, "").replace(/\t/g, " ").replace(/ +/g, " ").trim();
+
+  // 3) spezza per frasi
+  let chunks = t.split(/\n+/).join(" ").split(/(?<=[\.\?\!])\s+/);
+
+  // 4) limite parole per riga
+  const limit = stile === "wtf" ? 12 : 14;
+  const lines = [];
+  for (const c of chunks) {
+    const words = c.trim().split(/\s+/);
+    if (!words[0]) continue;
+    while (words.length > limit) lines.push(words.splice(0, limit).join(" "));
+    lines.push(words.join(" "));
+  }
+
+  // 5) 8–10 righe
+  const TARGET_MIN = 8, TARGET_MAX = 10;
+  let out = lines.filter(Boolean);
+
+  if (out.length < TARGET_MIN) {
+    const more = out.flatMap(l => l.split(/, /)).map(s => s.trim()).filter(Boolean);
+    out = more.slice(0, Math.max(TARGET_MIN, more.length));
+  }
+  if (out.length > TARGET_MAX) out = out.slice(0, TARGET_MAX);
+
+  // 6) mini-punchline per WTF ogni 2–3 righe
+  if (stile === "wtf") {
+    const spices = [
+      "Calma: bicchieri pieni, drammi vuoti.",
+      "Sorridi: se va male, serve ghiaccio.",
+      "Elegante come un Negroni alle sette.",
+      "Se cade, almeno fa rumore."
+    ];
+    const bumped = [];
+    let iSpice = 0;
+    out.forEach((line, i) => {
+      bumped.push(line);
+      if (i > 0 && i % 2 === 1 && bumped.length < TARGET_MAX) {
+        bumped.push(spices[iSpice % spices.length]);
+        iSpice++;
+      }
+    });
+    out = bumped.slice(0, TARGET_MAX);
+    if (out.length < TARGET_MIN) out.push(spices[out.length % spices.length]);
+  }
+
+  // 7) finale/gancio garantito
+  const last = out[out.length - 1] || "";
+  if (finale) {
+    const enders = stile === "wtf"
+      ? ["Brindiamo alla scelta. Nuovo giro al bancone."]
+      : ["Qui si chiude, con calma."];
+    if (!/[\.!?…]$/.test(last)) out[out.length - 1] = last + ".";
+    out[out.length - 1] = enders[0];
+  } else {
+    const hooks = stile === "wtf"
+      ? ["Vuoi il seguito? Passa dopo il turno."]
+      : ["Il resto lo scopriamo domani."];
+    if (out.length < TARGET_MAX) out.push(hooks[0]);
+  }
+
+  // 8) righe pulite
+  return out.map(s => s.replace(/\s+/g, " ").trim()).filter(Boolean).join("\n");
+}
+
+/* ───────── System Prompts: STILI DEFINITIVI ───────── */
 function systemPrompt({ stile = "whatif", lang = "it", profile = {} }) {
   const en = isEn(lang);
   const drinksYes = profile?.drinks_pref === "yes" || profile?.unwind === "drink";
@@ -32,11 +105,10 @@ function systemPrompt({ stile = "whatif", lang = "it", profile = {} }) {
     : `EPISODIO INTERMEDIO: chiudi con UN gancio personale. Niente paywall.`;
 
   if (stile === "wtf") {
-    // 🥃 WHAT THE F — barista ironico, botta-e-risposta senza etichette
     return en
       ? `You are *What the F*: a witty late-night bartender, slightly tipsy yet kind.
 Purpose:
-- Speak in snappy call-and-response with NO labels. One single voice to the user.
+- Snappy call-and-response with NO labels. One single voice to the user.
 Tone:
 - Gentle sarcasm, dry wit, no anger. 2–3 mini punchlines required.
 - Late-night honesty with light bar hints (glasses, lights, coffee, hush).
@@ -49,7 +121,7 @@ Ending:
 - ${finaleEN}`
       : `Sei *What the F*: barista notturno brillante, un po’ alticcio ma gentile.
 Obiettivo:
-- Parla in botta-e-risposta SENZA etichette. Una sola voce rivolta all’utente.
+- Botta-e-risposta SENZA etichette. Una sola voce rivolta all’utente.
 Tono:
 - Sarcasmo gentile, ironia secca, zero rabbia. 2–3 mini-punchline obbligatorie.
 - Onestà da notte fonda con tocchi da bancone (bicchieri, luci, caffè).
@@ -62,7 +134,6 @@ Chiusura:
 - ${finaleIT}`;
   }
 
-  // 🌙 WHAT?f — sobrio, visivo, botta-e-risposta morbido
   return en
     ? `You are *What?f*: a sober, visual, empathetic counter-voice.
 Purpose:
@@ -88,7 +159,7 @@ Chiusura:
 - ${finaleIT}`;
 }
 
-/* ─────────────── User Content (contesto e vincoli) ─────────────── */
+/* ───────── User Content (contesto e vincoli) ───────── */
 function buildUserContent({ domanda, periodo, profilo, clarifications, lang, stile }) {
   const en = isEn(lang);
   const L = [];
@@ -96,7 +167,6 @@ function buildUserContent({ domanda, periodo, profilo, clarifications, lang, sti
   L.push(en ? `TIMEFRAME: ${periodo || "future"}` : `PERIODO: ${periodo || "future"}`);
   L.push(en ? `STYLE: ${stile}` : `STILE: ${stile}`);
 
-  // Profilo sintetico, solo se serve
   if (profilo && typeof profilo === "object") {
     const keys = [
       "name","city","city_now","city_origin","role","work_role","goal","goals","values","hobbies","drinks_pref"
@@ -132,10 +202,9 @@ GUARDIA FORMALE:
   return L.join("\n\n");
 }
 
-/* ───────────── Clarify locale: 2–3 domande mirate ───────────── */
+/* ───────── Clarify locale ───────── */
 function localClarify(domanda = "", profilo = {}, lang = "it", periodo = "future") {
   const en = isEn(lang);
-  const s = (domanda || "").toLowerCase();
   const qs = [];
 
   if (String(periodo).toLowerCase() === "past") {
@@ -185,7 +254,7 @@ function localClarify(domanda = "", profilo = {}, lang = "it", periodo = "future
   return qs.slice(0, 3);
 }
 
-/* ───────────────────────── HTTP HANDLER ───────────────────────── */
+/* ───────── HTTP HANDLER ───────── */
 export default async function handler(req, res) {
   // CORS / preflight
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -211,13 +280,13 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    // Clarify branch
+    // Clarify
     if (clarify) {
       const questions = localClarify(domanda, profilo, lang, periodo);
       return res.status(200).json({ questions });
     }
 
-    // Generation branch
+    // Generation
     const sys1 = systemPrompt({ stile, lang, profile: profilo });
     const user = buildUserContent({ domanda, periodo, profilo, clarifications, lang, stile });
 
@@ -230,15 +299,15 @@ export default async function handler(req, res) {
           ? "MID-EPISODE: finish with ONE subtle personal hook."
           : "EPISODIO INTERMEDIO: chiudi con UN gancio personale.");
 
-    // Guard-rail finale anti-derive
+    // Guard-rail finale
     const hardGuard = isEn(lang)
       ? `VERIFY STYLE BEFORE SENDING:
-- EXACTLY 8–10 lines. ONE sentence per line. No labels or speaker names.
+- EXACTLY 8–10 lines. ONE sentence per line. No labels.
 - Max words per line: ${stile === "wtf" ? 12 : 14}. If exceeded, REWRITE shorter.
 - Snappy call-and-response cadence. End with hook (mid) or closure (finale).
 - Do NOT write bartender-first-person monologue.`
       : `VERIFICA STILE PRIMA DELL'INVIO:
-- ESATTAMENTE 8–10 righe. UNA frase per riga. Niente etichette o nomi.
+- ESATTAMENTE 8–10 righe. UNA frase per riga. Niente etichette.
 - Parole massime per riga: ${stile === "wtf" ? 12 : 14}. Se sfori, RISCRIVI più corto.
 - Cadenza botta-e-risposta. Chiudi con gancio (intermedio) o chiusura (finale).
 - Vietato il monologo del barista in prima persona.`;
@@ -246,9 +315,6 @@ export default async function handler(req, res) {
     const messages = [
       { role: "system", content: sys1 },
       { role: "user", content: user },
-      { role: "system", content: isEn(lang)
-          ? `Reminders: respect 8–10 lines; per-line limits; timeframe logic; vary opening.`
-          : `Promemoria: rispetta 8–10 righe; limiti per riga; logica del periodo; incipit vari.` },
       { role: "system", content: finaleHint },
       { role: "system", content: hardGuard },
       extra ? { role: "user", content: extra } : null,
@@ -256,7 +322,7 @@ export default async function handler(req, res) {
 
     const temperature = stile === "wtf" ? 0.93 : 0.82;
 
-    // Streaming SSE
+    // STREAM: accumula e formatta a fine testo per coerenza stilistica
     if (String(req.headers["x-whatif-stream"] || "").length > 0 || stream) {
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
@@ -270,15 +336,18 @@ export default async function handler(req, res) {
         stream: true,
       });
 
+      let buffer = "";
       for await (const chunk of s) {
-        const delta = chunk.choices?.[0]?.delta?.content || "";
-        if (delta) res.write(`data: ${JSON.stringify({ token: delta })}\n\n`);
+        buffer += chunk.choices?.[0]?.delta?.content || "";
       }
+      const finale = isFinalEpisode(profilo);
+      const shaped = sanitizeAndShape(buffer, { stile, finale });
+      res.write(`data: ${JSON.stringify({ token: shaped })}\n\n`);
       res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
       return res.end();
     }
 
-    // Non-stream
+    // NON-stream
     const c = await client.chat.completions.create({
       model: MODEL_TEXT,
       messages,
@@ -286,7 +355,9 @@ export default async function handler(req, res) {
       max_tokens: 750,
     });
 
-    const text = c.choices?.[0]?.message?.content?.trim() || "";
+    let text = c.choices?.[0]?.message?.content?.trim() || "";
+    const finale = isFinalEpisode(profilo);
+    text = sanitizeAndShape(text, { stile, finale });
     return res.status(200).json({ answer: text });
   } catch (err) {
     console.error("API /ask error:", err);
