@@ -90,7 +90,11 @@
     .micro-q label{display:block;margin:0 0 6px}
     .micro-q input, .micro-q select{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px}
 
-    /* CTA pill */
+    /* Tags */
+    .tags{display:flex;flex-wrap:wrap;gap:8px}
+    .tag{background:var(--chip);border:1px solid var(--line);color:#cfe6e9;border-radius:999px;padding:6px 10px;cursor:pointer;user-select:none}
+    .tag.active{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink)}
+    .small{font-size:12px;color:var(--muted)}
     .cta-pill{display:inline-block;margin-top:10px}
     .cta-pill .btn{border-radius:16px}
   </style>
@@ -136,17 +140,30 @@
       <div id="errorBox" class="error"></div>
 
       <form id="aboutForm" novalidate>
+        <!-- Identità & Luoghi -->
         <div class="row two">
           <div>
             <label for="name" id="name_lbl">Nome</label>
             <input id="name" type="text" placeholder="Es. Luca" />
           </div>
           <div>
-            <label for="city" id="city_lbl">Città</label>
-            <input id="city" type="text" placeholder="Es. L’Aquila / Verona" />
+            <label for="work_role" id="who_lbl">Chi sei?</label>
+            <input id="work_role" type="text" placeholder="Professione / Ruolo (es. Tecnico di farmacia)" />
           </div>
         </div>
 
+        <div class="row two">
+          <div>
+            <label for="city_now" id="city_now_lbl">Dove vivi ora?</label>
+            <input id="city_now" type="text" placeholder="Es. Verona" />
+          </div>
+          <div>
+            <label for="city_origin" id="city_origin_lbl">Da dove vieni?</label>
+            <input id="city_origin" type="text" placeholder="Es. L'Aquila" />
+          </div>
+        </div>
+
+        <!-- Età & fase -->
         <div class="row three">
           <div>
             <label for="gender" id="gender_lbl">Sesso</label>
@@ -159,8 +176,8 @@
             </select>
           </div>
           <div>
-            <label for="age" id="age_lbl">Età</label>
-            <select id="age" required>
+            <label for="age_range" id="age_lbl">Età</label>
+            <select id="age_range" required>
               <option value="" id="sel_choose2">Seleziona…</option>
               <option value="under18" id="age_u18">-18</option>
               <option value="18_24">18–24</option>
@@ -183,18 +200,50 @@
           </div>
         </div>
 
-        <div class="row two">
+        <!-- Obiettivi (array) -->
+        <div class="row">
           <div>
-            <label for="who" id="who_lbl">Chi sei?</label>
-            <input id="who" type="text" placeholder="Professione / Ruolo" />
-          </div>
-          <div>
-            <label for="goal" id="goal_lbl">Obiettivo</label>
-            <input id="goal" type="text" placeholder="Es. più equilibrio lavoro-vita" />
+            <label for="goals" id="goal_lbl">Obiettivo principale</label>
+            <input id="goals" type="text" placeholder="Es. cambiare reparto / più equilibrio / trasferirmi entro 6 mesi" />
+            <div class="small" id="goals_hint">Puoi separare più obiettivi con virgola.</div>
           </div>
         </div>
 
-        <!-- Domanda mascherata: SOLO prima volta -->
+        <!-- Valori (chips → array) -->
+        <div class="row">
+          <label id="values_lbl">Cosa ti guida? <span class="small">(scegline 2–4)</span></label>
+          <div id="values" class="tags">
+            <span class="tag">famiglia</span>
+            <span class="tag">stabilità</span>
+            <span class="tag">crescita</span>
+            <span class="tag">libertà</span>
+            <span class="tag">curiosità</span>
+            <span class="tag">salute</span>
+            <span class="tag">coraggio</span>
+            <span class="tag">impatto</span>
+          </div>
+        </div>
+
+        <!-- Vittorie / Difficoltà / Hobby (array) -->
+        <div class="row three">
+          <div>
+            <label for="wins" id="wins_lbl">Una piccola vittoria</label>
+            <input id="wins" type="text" placeholder="Es. ho gestito un turno difficile" />
+            <div class="small" id="wins_hint">Virgole per più voci.</div>
+          </div>
+          <div>
+            <label for="pains" id="pains_lbl">Una difficoltà ricorrente</label>
+            <input id="pains" type="text" placeholder="Es. pendolarismo / budget stretto" />
+            <div class="small" id="pains_hint">Virgole per più voci.</div>
+          </div>
+          <div>
+            <label for="hobbies" id="hobbies_lbl">Interessi</label>
+            <input id="hobbies" type="text" placeholder="Es. moto, montagna, fotografia" />
+            <div class="small" id="hobbies_hint">Virgole per più voci.</div>
+          </div>
+        </div>
+
+        <!-- Domanda mascherata (relax) -->
         <div id="unwindBox" class="micro" style="display:none">
           <div class="micro-q">
             <label for="unwindSel" id="unwind_lbl">Quando vuoi rilassarti dopo una giornata intensa, cosa preferisci fare?</label>
@@ -208,6 +257,7 @@
           </div>
         </div>
 
+        <!-- “More” libero -->
         <div>
           <label for="more" id="more_lbl">
             Vuoi raccontarci qualcosa di più su di te?
@@ -270,11 +320,19 @@
         back:"Indietro", home:"Home",
         improve:"✨ Migliora profilo (30s)",
         full:"🕰️ Test completo (5 min)",
-        name_lbl:"Nome", city_lbl:"Città",
+        name_lbl:"Nome",
+        city_now_lbl:"Dove vivi ora?",
+        city_origin_lbl:"Da dove vieni?",
         gender_lbl:"Sesso", choose:"Seleziona…", gender_m:"Uomo", gender_f:"Donna", gender_o:"Altro", gender_n:"Preferisco non dirlo",
         age_lbl:"Età", age_u18:"-18",
         phase_lbl:"Fase attuale", phase_study:"Studio", phase_work:"Lavoro", phase_change:"Cambio/Transizione", phase_other:"Altro",
-        who_lbl:"Chi sei?", goal_lbl:"Obiettivo",
+        who_lbl:"Chi sei?",
+        goal_lbl:"Obiettivo principale",
+        goals_hint:"Puoi separare più obiettivi con virgola.",
+        values_lbl:"Cosa ti guida?",
+        wins_lbl:"Una piccola vittoria", wins_hint:"Virgole per più voci.",
+        pains_lbl:"Una difficoltà ricorrente", pains_hint:"Virgole per più voci.",
+        hobbies_lbl:"Interessi", hobbies_hint:"Virgole per più voci.",
         more_lbl:"Vuoi raccontarci qualcosa di più su di te?", more_hint:"(opzionale – aiuta l’AI a darti risposte più accurate)",
         more_ph:"Esempio: lavoro nel digitale, sto pensando di cambiare città, ho due figli…",
         banner:"<strong>Giorno dopo giorno</strong>, tre micro-domande arricchiscono il tuo profilo finché dirai: <strong>“Potrei essere io.”</strong>",
@@ -290,13 +348,10 @@
         bar_hint:"Più dettagli → più scenari plausibili. Le chip ti portano al punto giusto.",
         // Domanda mascherata
         unwind_lbl:"Quando vuoi rilassarti dopo una giornata intensa, cosa preferisci fare?",
-        uw_opt_choose:"Seleziona…",
-        uw_opt_workout:"Allenarmi",
-        uw_opt_friends:"Uscire con amici",
-        uw_opt_series:"Guardare una serie",
-        uw_opt_drink:"Godermi un drink",
-        // Banner prima sessione
-        first_session:"Ciao! Oggi iniziamo a conoscerci meglio."
+        uw_opt_choose:"Seleziona…", uw_opt_workout:"Allenarmi", uw_opt_friends:"Uscire con amici", uw_opt_series:"Guardare una serie", uw_opt_drink:"Godermi un drink",
+        // Prima sessione
+        first_session:"Ciao! Oggi iniziamo a conoscerci meglio.",
+        values_lbl_hint:"(scegline 2–4)"
       },
       en:{
         title:"Tell me about you",
@@ -304,11 +359,19 @@
         back:"Back", home:"Home",
         improve:"✨ Improve profile (30s)",
         full:"🕰️ Full test (5 min)",
-        name_lbl:"Name", city_lbl:"City",
+        name_lbl:"Name",
+        city_now_lbl:"Where do you live now?",
+        city_origin_lbl:"Where are you from?",
         gender_lbl:"Gender", choose:"Choose…", gender_m:"Male", gender_f:"Female", gender_o:"Other", gender_n:"Prefer not to say",
         age_lbl:"Age", age_u18:"-18",
         phase_lbl:"Current phase", phase_study:"Studying", phase_work:"Working", phase_change:"Changing/Transition", phase_other:"Other",
-        who_lbl:"Who are you?", goal_lbl:"Goal",
+        who_lbl:"Who are you?",
+        goal_lbl:"Main goal",
+        goals_hint:"You can separate multiple goals with commas.",
+        values_lbl:"What guides you?",
+        wins_lbl:"A small win", wins_hint:"Use commas for multiple.",
+        pains_lbl:"A recurring challenge", pains_hint:"Use commas for multiple.",
+        hobbies_lbl:"Interests", hobbies_hint:"Use commas for multiple.",
         more_lbl:"Want to tell us more about you?", more_hint:"(optional – helps the AI give more accurate answers)",
         more_ph:"Example: I work in digital, I’m considering moving city, I have two kids…",
         banner:"<strong>Day by day</strong>, three micro-questions enrich your profile until you’ll say: <strong>“That could be me.”</strong>",
@@ -324,13 +387,10 @@
         bar_hint:"More detail → more plausible scenarios. Chips take you to the right field.",
         // Masked question
         unwind_lbl:"When you need to unwind after a long day, what do you usually do?",
-        uw_opt_choose:"Choose…",
-        uw_opt_workout:"Work out",
-        uw_opt_friends:"Go out with friends",
-        uw_opt_series:"Watch a show",
-        uw_opt_drink:"Enjoy a drink",
-        // First session banner
-        first_session:"Hey there! Today we start getting to know each other."
+        uw_opt_choose:"Choose…", uw_opt_workout:"Work out", uw_opt_friends:"Go out with friends", uw_opt_series:"Watch a show", uw_opt_drink:"Enjoy a drink",
+        // First session
+        first_session:"Hey there! Today we start getting to know each other.",
+        values_lbl_hint:"(pick 2–4)"
       }
     };
 
@@ -338,6 +398,7 @@
     function getLang(){ return (LS.getItem('lang') || (navigator.language||'it').slice(0,2)).toLowerCase(); }
     function setLang(l){ LS.setItem('lang', l); applyI18N(); renderKnowledge(); }
     const $ = s => document.querySelector(s);
+    const $$ = s => document.querySelectorAll(s);
 
     function applyI18N(){
       const d = I18N[getLang()] || I18N.it;
@@ -356,7 +417,8 @@
 
       // labels
       $('#name_lbl').textContent = d.name_lbl;
-      $('#city_lbl').textContent = d.city_lbl;
+      $('#city_now_lbl').textContent = d.city_now_lbl;
+      $('#city_origin_lbl').textContent = d.city_origin_lbl;
 
       $('#gender_lbl').textContent = d.gender_lbl;
       $('#sel_choose').textContent = d.choose;
@@ -378,6 +440,16 @@
 
       $('#who_lbl').textContent = d.who_lbl;
       $('#goal_lbl').textContent = d.goal_lbl;
+      $('#goals_hint').textContent = d.goals_hint;
+
+      $('#values_lbl').innerHTML = d.values_lbl + ' <span class="small">' + (d.values_lbl_hint||'') + '</span>';
+
+      $('#wins_lbl').textContent = d.wins_lbl;
+      $('#wins_hint').textContent = d.wins_hint;
+      $('#pains_lbl').textContent = d.pains_lbl;
+      $('#pains_hint').textContent = d.pains_hint;
+      $('#hobbies_lbl').textContent = d.hobbies_lbl;
+      $('#hobbies_hint').textContent = d.hobbies_hint;
 
       // blocco “more”
       $('#more_lbl').firstChild.textContent = d.more_lbl + ' ';
@@ -427,7 +499,7 @@
     // ===== Only once: se onboarding già fatto e profilo base presente, salta pagina
     const KEY_ONBOARD = 'whatif_onboarding_done';
     function baseProfilePresent(){
-      try{ const p = JSON.parse(LS.getItem('whatif_profile')||'{}'); return !!(p && p.gender && p.age && p.phase); }catch{return false}
+      try{ const p = JSON.parse(LS.getItem('whatif_profile')||'{}'); return !!(p && p.gender && (p.age_range||p.age) && p.phase); }catch{return false}
     }
 
     // Mostra banner prima sessione SOLO se non visto e prima dell’onboarding
@@ -503,7 +575,7 @@
       let cover = 0;
       const miss = [];
 
-      const hasIdentity = !!(profile.name || profile.role);
+      const hasIdentity = !!(profile.name || profile.role || profile.work_role);
       cover += hasIdentity ? 8 : 0; if(!hasIdentity) miss.push('identity');
 
       const hasRoutine = !!(micro.indicatore);
@@ -512,10 +584,10 @@
       const hasConstraints = !!(micro.vincolo_2w);
       cover += hasConstraints ? 8 : 0; if(!hasConstraints) miss.push('constraints');
 
-      const hasGoals = !!(profile.goal);
+      const hasGoals = !!(profile.goal || (Array.isArray(profile.goals)&&profile.goals.length));
       cover += hasGoals ? 8 : 0; if(!hasGoals) miss.push('goals');
 
-      const hasPlaces = !!(profile.city || micro.punto_riferimento);
+      const hasPlaces = !!(profile.city_now || profile.city || profile.city_origin || micro.punto_riferimento);
       cover += hasPlaces ? 8 : 0; if(!hasPlaces) miss.push('places');
 
       const hasRelations = !!(micro.persona_chiave);
@@ -528,7 +600,7 @@
       let usable = 0;
       const numRe = /\b\d+([.,]\d+)?\b/;
       const timeRe= /\b(\d{1,2}[:.]\d{2}|mattina|pomeriggio|sera|am|pm)\b/i;
-      const locRe = /\b(centro|stazione|ufficio|palestra|bar|parco|centro storico)\b/i;
+      const locRe = /\b(centro|stazione|ufficio|palestra|bar|parco|centro storico|ospedale|farmacia)\b/i;
       vals.forEach(v=>{ if (usable>=10) return; if (numRe.test(v) || timeRe.test(v) || locRe.test(v)) usable++; });
       let quality = Math.min(10, usable);
       const today = todayStr();
@@ -583,8 +655,8 @@
 
     function jumpToKey(key){
       if (key==='identity'){ document.getElementById('name').focus(); scrollIntoView('#name'); return; }
-      if (key==='goals'){ document.getElementById('goal').focus(); scrollIntoView('#goal'); return; }
-      if (key==='places'){ document.getElementById('city').focus(); scrollIntoView('#city'); return; }
+      if (key==='goals'){ document.getElementById('goals').focus(); scrollIntoView('#goals'); return; }
+      if (key==='places'){ document.getElementById('city_now').focus(); scrollIntoView('#city_now'); return; }
       if (key==='constraints' || key==='routine' || key==='relations' || key==='risk'){
         document.getElementById('microBox').style.display = 'block';
         scrollIntoView('#microBox');
@@ -597,6 +669,18 @@
       const el=document.querySelector(sel); if(!el) return;
       el.scrollIntoView({behavior:'smooth', block:'center'});
     }
+
+    // Valori → chip toggle
+    (function wireValues(){
+      const box = document.getElementById('values');
+      box.addEventListener('click', (e)=>{
+        const t = e.target.closest('.tag'); if(!t) return;
+        t.classList.toggle('active');
+        // max 4
+        const act = [...box.querySelectorAll('.tag.active')];
+        if (act.length>4) act[0].classList.remove('active');
+      });
+    })();
 
     // micro actions
     document.getElementById('microSkip').addEventListener('click', ()=>{
@@ -628,7 +712,7 @@
     document.getElementById('backBtn').addEventListener('click', ()=> history.back());
     document.getElementById('skipBtn').addEventListener('click', ()=>{
       const base = JSON.parse(LS.getItem('whatif_profile')||'{}');
-      if (!base.gender || !base.age || !base.phase) {
+      if (!base.gender || !(base.age_range||base.age) || !base.phase) {
         alert(getLang()==='en'
           ? 'Fill basic profile once before skipping.'
           : 'Compila una volta il profilo base prima di saltare.');
@@ -647,48 +731,81 @@
         const p = JSON.parse(LS.getItem('whatif_profile')||'{}');
         if (!p) return;
         if (p.name) document.getElementById('name').value = p.name;
-        if (p.city) document.getElementById('city').value = p.city;
+        if (p.work_role || p.role) document.getElementById('work_role').value = p.work_role || p.role;
+        if (p.city_now || p.city) document.getElementById('city_now').value = p.city_now || p.city;
+        if (p.city_origin) document.getElementById('city_origin').value = p.city_origin;
         if (p.gender) document.getElementById('gender').value = p.gender;
-        if (p.age) document.getElementById('age').value = p.age;
+        if (p.age_range || p.age) document.getElementById('age_range').value = p.age_range || p.age;
         if (p.phase) document.getElementById('phase').value = p.phase;
-        if (p.role) document.getElementById('who').value = p.role;
-        if (p.goal) document.getElementById('goal').value = p.goal;
+        if (p.goal) document.getElementById('goals').value = p.goal;
+        if (Array.isArray(p.goals)) document.getElementById('goals').value = p.goals.join(', ');
+        if (Array.isArray(p.values)){
+          const set = new Set(p.values.map(v=>String(v).toLowerCase().trim()));
+          document.querySelectorAll('#values .tag').forEach(tag=>{
+            const val = tag.textContent.toLowerCase().trim();
+            if (set.has(val)) tag.classList.add('active');
+          });
+        }
+        if (Array.isArray(p.wins))   document.getElementById('wins').value   = p.wins.join(', ');
+        if (Array.isArray(p.pains))  document.getElementById('pains').value  = p.pains.join(', ');
+        if (Array.isArray(p.hobbies))document.getElementById('hobbies').value= p.hobbies.join(', ');
         if (p.more) document.getElementById('more').value = p.more;
         if (p.unwind) document.getElementById('unwindSel').value = p.unwind;
       }catch(e){}
       renderKnowledge();
     })();
 
+    function readJSON(k,def={}){ try{ return JSON.parse(LS.getItem(k)||JSON.stringify(def)); }catch{ return def; } }
     function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
     form.addEventListener('submit', (e)=>{
       e.preventDefault();
-      const gender = document.getElementById('gender').value.trim();
-      const age    = document.getElementById('age').value.trim();
-      const phase  = document.getElementById('phase').value.trim();
-      if(!gender || !age || !phase){
+      const gender    = document.getElementById('gender').value.trim();
+      const age_range = document.getElementById('age_range').value.trim();
+      const phase     = document.getElementById('phase').value.trim();
+      if(!gender || !age_range || !phase){
         errBox.textContent = form.dataset.err;
         errBox.classList.add('show'); return;
       }
       errBox.classList.remove('show');
 
+      const values = [...document.querySelectorAll('#values .tag.active')].map(t=>t.textContent.trim());
+      const goalsInput   = document.getElementById('goals').value.trim();
+      const goals = goalsInput ? goalsInput.split(',').map(s=>s.trim()).filter(Boolean) : [];
+      const winsIn  = document.getElementById('wins').value.trim();
+      const painsIn = document.getElementById('pains').value.trim();
+      const hobIn   = document.getElementById('hobbies').value.trim();
+
       const profile = {
         name: document.getElementById('name').value.trim(),
-        city: document.getElementById('city').value.trim(),
-        gender, age, phase,
-        role: document.getElementById('who').value.trim(),
-        goal: document.getElementById('goal').value.trim(),
+        work_role: document.getElementById('work_role').value.trim(),
+        city_now: document.getElementById('city_now').value.trim(),
+        city_origin: document.getElementById('city_origin').value.trim(),
+        gender, age_range, phase,
+        // compat con vecchi campi
+        role: document.getElementById('work_role').value.trim(),
+        city: document.getElementById('city_now').value.trim(),
+        // obiettivi e valori
+        goal: goals[0] || '',
+        goals,
+        values,
+        // liste
+        wins:  winsIn  ? winsIn.split(',').map(s=>s.trim()).filter(Boolean)  : [],
+        pains: painsIn ? painsIn.split(',').map(s=>s.trim()).filter(Boolean) : [],
+        hobbies: hobIn ? hobIn.split(',').map(s=>s.trim()).filter(Boolean)   : [],
+        // libera
         more: document.getElementById('more').value.trim(),
-        // nuova informazione mascherata
+        // relax
         unwind: document.getElementById('unwindSel').value.trim(),
-        drinks_pref: (document.getElementById('unwindSel').value === 'drink') ? 'yes' : 'no'
+        drinks_pref: (document.getElementById('unwindSel').value === 'drink') ? 'yes' : 'no',
+        // stato storia (default)
+        story_state: { thread_id: 'default', episode: 1, max_episodes: 3 }
       };
-      const existing = LS.getItem('whatif_profile');
+
       LS.setItem('whatif_profile', JSON.stringify(profile));
 
       const today = todayStr();
       LS.setItem('whatif_last_update', today);
-      // salva la data della prima compilazione, una volta sola
       if (!LS.getItem('whatif_profile_date')) {
         LS.setItem('whatif_profile_date', today);
       }
