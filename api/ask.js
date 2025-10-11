@@ -2,276 +2,316 @@
 import OpenAI from "openai";
 
 /**
- * Serverless handler (Vercel/Node)
- * ENV: OPENAI_API_KEY
+ * Vercel Serverless (Node) – compatibile con fetch(..., { body.getReader() })
+ * ENV richieste:
+ * - OPENAI_API_KEY
  */
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const MODEL_TEXT = "gpt-4o-mini";
 
-/* ───────── Helpers ───────── */
+/* ───────────────────────── Helpers i18n ───────────────────────── */
+
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
-function isFinalEpisode(profile = {}) {
-  const ep = Number(profile?.story_state?.episode ?? 1);
-  const max = Number(profile?.story_state?.max_episodes ?? 3);
-  return ep >= max;
-}
 
-/* ───────── Formatter: enforce 8–10 righe, punchline, finale ───────── */
-function sanitizeAndShape(raw = "", { stile = "whatif", finale = false } = {}) {
-  if (!raw) return "";
+/* ───────────────────── System prompts (STILI DEFINITIVI) ───────────────────── */
 
-  // 1) togli etichette tipo "Luca:" / "Amico:"
-  let t = raw.replace(/^\s*[-–—]*\s*\b([A-ZÀ-ÖØ-Ý][\wÀ-ÖØ-öø-ÿ']{1,20})\s*:\s*/gmi, "");
-
-  // 2) normalizza spazi e righe
-  t = t.replace(/\r/g, "").replace(/\t/g, " ").replace(/ +/g, " ").trim();
-
-  // 3) spezza per frasi
-  let chunks = t.split(/\n+/).join(" ").split(/(?<=[\.\?\!])\s+/);
-
-  // 4) limite parole per riga
-  const limit = stile === "wtf" ? 12 : 14;
-  const lines = [];
-  for (const c of chunks) {
-    const words = c.trim().split(/\s+/);
-    if (!words[0]) continue;
-    while (words.length > limit) lines.push(words.splice(0, limit).join(" "));
-    lines.push(words.join(" "));
-  }
-
-  // 5) 8–10 righe
-  const TARGET_MIN = 8, TARGET_MAX = 10;
-  let out = lines.filter(Boolean);
-
-  if (out.length < TARGET_MIN) {
-    const more = out.flatMap(l => l.split(/, /)).map(s => s.trim()).filter(Boolean);
-    out = more.slice(0, Math.max(TARGET_MIN, more.length));
-  }
-  if (out.length > TARGET_MAX) out = out.slice(0, TARGET_MAX);
-
-  // 6) mini-punchline per WTF ogni 2–3 righe
-  if (stile === "wtf") {
-    const spices = [
-      "Calma: bicchieri pieni, drammi vuoti.",
-      "Sorridi: se va male, serve ghiaccio.",
-      "Elegante come un Negroni alle sette.",
-      "Se cade, almeno fa rumore."
-    ];
-    const bumped = [];
-    let iSpice = 0;
-    out.forEach((line, i) => {
-      bumped.push(line);
-      if (i > 0 && i % 2 === 1 && bumped.length < TARGET_MAX) {
-        bumped.push(spices[iSpice % spices.length]);
-        iSpice++;
-      }
-    });
-    out = bumped.slice(0, TARGET_MAX);
-    if (out.length < TARGET_MIN) out.push(spices[out.length % spices.length]);
-  }
-
-  // 7) finale/gancio garantito
-  const last = out[out.length - 1] || "";
-  if (finale) {
-    const enders = stile === "wtf"
-      ? ["Brindiamo alla scelta. Nuovo giro al bancone."]
-      : ["Qui si chiude, con calma."];
-    if (!/[\.!?…]$/.test(last)) out[out.length - 1] = last + ".";
-    out[out.length - 1] = enders[0];
-  } else {
-    const hooks = stile === "wtf"
-      ? ["Vuoi il seguito? Passa dopo il turno."]
-      : ["Il resto lo scopriamo domani."];
-    if (out.length < TARGET_MAX) out.push(hooks[0]);
-  }
-
-  // 8) PATCH finale per chiusura sempre pulita
-  if (out.length > 0) {
-    let lastLine = out[out.length - 1];
-    if (!/[\.!?…]$/.test(lastLine)) {
-      if (/ma\s*$/i.test(lastLine)) {
-        lastLine = lastLine.replace(/ma\s*$/i, "ma brindiamo a ciò che viene.");
-      } else if (/fai che/i.test(lastLine)) {
-        lastLine = lastLine + " forti abbastanza da coprire i rimpianti.";
-      } else {
-        lastLine = lastLine + ".";
-      }
-      out[out.length - 1] = lastLine;
-    }
-  }
-
-  // 9) righe pulite
-  return out.map(s => s.replace(/\s+/g, " ").trim()).filter(Boolean).join("\n");
-}
-
-/* ───────── System Prompts: STILI DEFINITIVI ───────── */
 function systemPrompt({ stile = "whatif", lang = "it", profile = {} }) {
   const en = isEn(lang);
   const drinksYes = profile?.drinks_pref === "yes" || profile?.unwind === "drink";
-  const finale = isFinalEpisode(profile);
-
-  const finaleEN = finale
-    ? `FINALE: close with ONE memorable line and a playful invite to a new 'what if'.`
-    : `MID-EPISODE: end with ONE subtle personal hook. No paywall mention.`;
-
-  const finaleIT = finale
-    ? `FINALE: chiudi con UNA riga memorabile e un invito giocoso a un nuovo "e se".`
-    : `EPISODIO INTERMEDIO: chiudi con UN gancio personale. Niente paywall.`;
 
   if (stile === "wtf") {
+    // 🥃 WHAT THE F — barista ironico, diretto, “alticcio ma lucido”
     return en
-      ? `You are *What the F*: a witty late-night bartender, slightly tipsy yet kind.
-Purpose:
-- Snappy call-and-response with NO labels. One single voice to the user.
+      ? `You are *What the F*, a slightly tipsy but sharp bartender-philosopher.
+You talk like someone who’s seen it all — and still laughs.
+
 Tone:
-- Gentle sarcasm, dry wit, no anger. 2–3 mini punchlines required.
-- Late-night honesty with light bar hints (glasses, lights, coffee, hush).
-Form:
-- EXACTLY 8–10 lines. ONE sentence per line. Max 12 words per line.
-- Alternate: question → comeback → stinger. Tiny concrete image allowed.
-- Never preach. Never poetic narrator. Never "I am the bartender".
-Alcohol vibe: ${drinksYes ? "tasteful bar metaphors sprinkled in, never dominant." : "rare, subtle nods only."}
-Ending:
-- ${finaleEN}`
-      : `Sei *What the F*: barista notturno brillante, un po’ alticcio ma gentile.
-Obiettivo:
-- Botta-e-risposta SENZA etichette. Una sola voce rivolta all’utente.
+- Bright, familiar, ironic but kind.
+- Fast rhythm: setup → punch → reflection → punchline.
+- Gentle sarcasm, dry wit, late-night honesty.
+- Barroom hints (lights, glasses, noise, coffee smell).
+- Single voice, no dialogue tags.
+
+Structure:
+- 8–10 lines total.
+- Max 12 words per line.
+- Insert a mini-punchline every 2–3 lines.
+- End with a witty or bittersweet toast.
+
+Focus:
+- If timeframe = PAST: narrate the *missed choice* as if it happened.
+- If timeframe = FUTURE: show what might unfold if they choose that path.
+- Keep it real, human, mischievous — half irony, half truth.
+
+Alcohol vibe: ${drinksYes ? "you may sprinkle tasteful cocktail metaphors" : "very light, only occasional nods"}.
+Never promote harmful drinking: it’s mood, not advice.`
+      : `Sei *What the F*, un barista filosofo e un po’ alticcio, ma sempre lucido.
+Parli come chi ha visto tutto — e ancora ci ride su.
+
 Tono:
-- Sarcasmo gentile, ironia secca, zero rabbia. 2–3 mini-punchline obbligatorie.
-- Onestà da notte fonda con tocchi da bancone (bicchieri, luci, caffè).
-Forma:
-- ESATTAMENTE 8–10 righe. UNA frase per riga. Max 12 parole per riga.
-- Alterna: domanda → ribattuta → stoccata. Mini immagine concreta ammessa.
-- Niente prediche. Niente narratore poetico. Mai "io barista...".
-Tocco alcolico: ${drinksYes ? "metafore eleganti da bancone, mai tema centrale." : "accenni rari e leggeri."}
-Chiusura:
-- ${finaleIT}`;
+- Brillante, confidenziale, ironico ma mai cattivo.
+- Ritmo rapido: battuta → riflessione → punchline.
+- Sarcasmo gentile, onestà da notte fonda.
+- Accenni da bancone (luci, bicchieri, rumori, profumo di caffè).
+- Una sola voce, nessuna etichetta di dialogo.
+
+Struttura:
+- 8–10 righe.
+- Massimo 12 parole per riga.
+- Ogni 2–3 righe, una mini-punchline.
+- Chiudi con una riga ironica o un brindisi mentale.
+
+Focus:
+- PERIODO = PASSATO: racconta la *scelta mancata* come se fosse successa.
+- PERIODO = FUTURO: mostra cosa succede se sceglie ora quella via.
+- Vero, umano, birichino — metà ironia, metà verità.
+
+Tocco “alcolico”: ${
+          drinksYes
+            ? "puoi usare metafore da cocktail con gusto"
+            : "solo accenni, senza insistere"
+        }.
+Mai promuovere il bere eccessivo: è atmosfera, non consiglio.`;
   }
 
+  // 🌙 WHAT?F — narratore riflessivo, visivo, sobrio
   return en
-    ? `You are *What?f*: a sober, visual, empathetic counter-voice.
-Purpose:
-- Calm call-and-response with NO labels. One single voice to the user.
+    ? `You are *What?f*, a reflective, visual narrator.
+Your voice is calm, empathetic, lucid like a photograph that breathes.
+You don’t explain — you show. Words as slow air, with meaningful pauses.
+
 Tone:
-- Gentle irony, never sarcastic. Concrete sensory hints. No preaching.
-Form:
-- EXACTLY 8–10 lines. ONE sentence per line. Max 14 words per line.
-- Alternate: question → image → reflection → soft stinger.
-- No external narrator tone. No script labels.
-Ending:
-- ${finaleEN}`
-    : `Sei *What?f*: controvoce sobria, visiva, empatica.
-Obiettivo:
-- Botta-e-risposta calmo SENZA etichette. Una sola voce verso l’utente.
+- Empathic, poetic, never heavy.
+- Gentle irony; no preaching.
+- Everyday language with concrete, sensory details.
+- Single narrative voice, no dialogue tags.
+
+Structure:
+- 8–10 lines total.
+- Max 14 words per line.
+- Alternate: question → image → reflection → closure.
+- Use white space for breathing.
+- End with a short, memorable line — a soft truth.
+
+Focus:
+- PAST → write the road not taken as if it happened.
+- FUTURE → imagine what unfolds if they choose now.
+- Use realistic anchors (light, air, gestures) only when relevant.`
+    : `Sei *What?f*, un narratore riflessivo e visivo.
+Voce calma, empatica, lucida come una fotografia che respira.
+Non spieghi: mostri. Parole come aria lenta, con pause che significano.
+
 Tono:
-- Ironia leggera, mai sarcasmo. Dettagli sensoriali concreti. Niente prediche.
-Forma:
-- ESATTAMENTE 8–10 righe. UNA frase per riga. Max 14 parole per riga.
-- Alterna: domanda → immagine → riflessione → chiusura morbida.
-- Niente narratore esterno. Niente etichette.
-Chiusura:
-- ${finaleIT}`;
+- Empatico, poetico, mai pesante.
+- Ironia lieve; niente prediche.
+- Linguaggio quotidiano e dettagli sensoriali concreti.
+- Una sola voce, senza etichette di dialogo.
+
+Struttura:
+- 8–10 righe.
+- Massimo 14 parole per riga.
+- Alterna: domanda → immagine → riflessione → chiusura.
+- Usa spazi bianchi come respiro.
+- Chiudi con una riga breve e memorabile.
+
+Focus:
+- PASSATO → racconta la strada non presa come se fosse accaduta.
+- FUTURO → immagina cosa succede se sceglie ora quella via.
+- Ancore realistiche solo quando servono (luce, aria, gesti).`;
 }
 
-/* ───────── User Content (contesto e vincoli) ───────── */
-function buildUserContent({ domanda, periodo, profilo, clarifications, lang, stile }) {
-  const en = isEn(lang);
-  const L = [];
-  L.push(en ? `QUESTION: ${domanda}` : `DOMANDA: ${domanda}`);
-  L.push(en ? `TIMEFRAME: ${periodo || "future"}` : `PERIODO: ${periodo || "future"}`);
-  L.push(en ? `STYLE: ${stile}` : `STILE: ${stile}`);
+/* ───────────────────── User content builder ───────────────────── */
 
+function buildUserContent({
+  domanda,
+  periodo,
+  profilo,
+  clarifications,
+  lang,
+  stile,
+}) {
+  const en = isEn(lang);
+  const lines = [];
+
+  lines.push(en ? `QUESTION: ${domanda}` : `DOMANDA: ${domanda}`);
+  lines.push(en ? `TIMEFRAME: ${periodo || "future"}` : `PERIODO: ${periodo || "future"}`);
+  lines.push(en ? `STYLE: ${stile}` : `STILE: ${stile}`);
+
+  // Profilo sintetico utile
   if (profilo && typeof profilo === "object") {
-    const keys = [
-      "name","city","city_now","city_origin","role","work_role","goal","goals","values","hobbies","drinks_pref"
-    ];
-    const lines = [];
-    keys.forEach((k) => {
-      const v = profilo[k];
-      if (!v) return;
-      if (Array.isArray(v) && v.length) lines.push(`${k}: ${v.join(", ")}`);
-      else if (typeof v === "string") lines.push(`${k}: ${v}`);
-    });
-    if (lines.length) L.push((en ? "PROFILE:\n" : "PROFILO:\n") + lines.join("\n"));
+    const {
+      name, role, city, goal, values, style, change_attitude, motivation, self_view,
+      drinks_pref, unwind, micro,
+    } = profilo;
+
+    const p = [];
+    if (name) p.push(`name: ${name}`);
+    if (role) p.push(`role: ${role}`);
+    if (city) p.push(`city: ${city}`);
+    if (goal) p.push(`goal: ${goal}`);
+    if (values?.length) p.push(`values: ${values.join(", ")}`);
+    if (style) p.push(`style: ${style}`);
+    if (change_attitude) p.push(`change_attitude: ${change_attitude}`);
+    if (motivation) p.push(`motivation: ${motivation}`);
+    if (self_view) p.push(`self_view: ${self_view}`);
+    if (typeof drinks_pref === "string") p.push(`drinks_pref: ${drinks_pref}`);
+    if (typeof unwind === "string") p.push(`unwind: ${unwind}`);
+
+    if (micro && typeof micro === "object") {
+      Object.entries(micro).forEach(([k, v]) => {
+        if (v && typeof v === "string" && v.trim()) p.push(`${k}: ${v}`);
+      });
+    }
+    if (p.length) lines.push((en ? "PROFILE:\n" : "PROFILO:\n") + p.join("\n"));
   }
 
   if (clarifications && Object.keys(clarifications).length) {
-    const c = Object.entries(clarifications).map(([k, v]) => `${k}: ${v}`);
-    L.push((en ? "CLARIFICATIONS:\n" : "CHIARIMENTI:\n") + c.join("\n"));
+    const cLines = Object.entries(clarifications).map(([k, v]) => `${k}: ${v}`);
+    lines.push((en ? "CLARIFICATIONS:\n" : "CHIARIMENTI:\n") + cLines.join("\n"));
   }
 
-  L.push(
+  // Target narrativo e vincoli formali (linee/righe)
+  lines.push(
     en
       ? `NARRATIVE TARGET:
-- PAST → counterfactual slice as if it truly happened.
-- FUTURE → near-future slice if they choose now.
-FORM GUARD:
-- Output EXACTLY 8–10 short lines. Obey per-line word limits. No labels.`
+- If TIMEFRAME = PAST: counterfactual vignette as if it truly happened.
+- If TIMEFRAME = FUTURE: near-future slice if they choose now.
+Form:
+- 8–10 short lines. Respect per-line word limits for your style.
+- Vary the opening; avoid repeating same person/place/object motif.`
       : `OBIETTIVO NARRATIVO:
-- PASSATO → frammento controfattuale come se fosse accaduto.
-- FUTURO → scorcio di prossimo futuro se sceglie ora.
-GUARDIA FORMALE:
-- Produci ESATTAMENTE 8–10 righe brevi. Rispetta il limite parole/riga. Niente etichette.`
+- Se PERIODO = PASSATO: vignetta controfattuale come se fosse avvenuta.
+- Se PERIODO = FUTURO: scorcio di prossimo futuro se sceglie ora.
+Forma:
+- 8–10 righe. Rispetta i limiti di parole per riga del tuo stile.
+- Varia l’incipit; evita di ripetere sempre gli stessi motivi (persona/luogo/oggetto).`
   );
-  return L.join("\n\n");
+
+  return lines.join("\n\n");
 }
 
-/* ───────── Clarify locale ───────── */
+/* ───────────────────── Istruzione di stile finale ───────────────────── */
+
+function responseStyleInstruction(lang, stile) {
+  const en = isEn(lang);
+  if (stile === "wtf") {
+    return en
+      ? `Write as a cheeky late-night bartender. 8–10 lines. ≤12 words per line.
+Insert a mini-punchline every ~2–3 lines. End with a witty toast.`
+      : `Scrivi come un barista notturno e brillante. 8–10 righe. ≤12 parole per riga.
+Inserisci una mini-punchline ogni ~2–3 righe. Chiudi con un brindisi ironico.`;
+  }
+  return en
+    ? `Write as a calm, visual narrator. 8–10 lines. ≤14 words per line.
+Close with a short, memorable line.`
+    : `Scrivi come narratore calmo e visivo. 8–10 righe. ≤14 parole per riga.
+Chiudi con una riga breve e memorabile.`;
+}
+
+/* ───────── Clarify locale: 2–3 domande mirate, sensibili al PERIODO ───────── */
+
 function localClarify(domanda = "", profilo = {}, lang = "it", periodo = "future") {
   const en = isEn(lang);
+  const s = (domanda || "").toLowerCase();
+
+  const wantsWork  = /(lavor|work|career|job|azienda|project|manager|collega)/i.test(s);
+  const wantsMove  = /(trasfer|move|citt|paese|quartiere|city|emigra)/i.test(s);
+  const wantsStudy = /(stud|master|course|laurea|universit|bootcamp|corso)/i.test(s);
+  const wantsMoney = /(euro|€|soldi|stipendio|debito|invest|salary|debt|mutuo|affitto)/i.test(s);
+  const wantsRel   = /(amore|relazion|partner|famiglia|figli|friend|relationship)/i.test(s);
+  const wantsWell  = /(stress|burnout|sonno|salute|allen|work-life|equilibrio)/i.test(s);
+
   const qs = [];
 
+  // Domande dipendenti dal periodo
   if (String(periodo).toLowerCase() === "past") {
     qs.push({
       id: "past_year",
-      label: en ? "Which year did that pivot happen?" : "In che anno sarebbe avvenuto lo snodo?",
-      placeholder: en ? "e.g., 2018 / last winter" : "es. 2018 / inverno scorso",
+      label: en ? "Which year did that choice happen in your timeline?"
+                : "In che anno sarebbe successa quella scelta nella tua timeline?",
+      placeholder: en ? "e.g., 2018 / last winter" : "es. 2018 / inverno scorso"
     });
     qs.push({
-      id: "past_tradeoff",
-      label: en ? "One trade-off you would've paid?" : "Un prezzo concreto che avresti pagato?",
-      placeholder: en ? "rent/time/relationship/salary…" : "affitto/tempo/relazione/stipendio…",
+      id: "past_cost",
+      label: en ? "One concrete trade-off you’d have paid back then?"
+                : "Un prezzo concreto che avresti pagato allora?",
+      placeholder: en ? "rent, time, relationship, salary…" : "affitto, tempo, relazione, stipendio…"
     });
   } else {
     qs.push({
       id: "first_step",
-      label: en ? "First small step you’d actually take?" : "Primo piccolo passo che faresti davvero?",
-      placeholder: en ? "one call/email/hour" : "una chiamata/mail/ora",
+      label: en ? "What’s the first small step you’re actually willing to take?"
+                : "Qual è il primo passo piccolo che sei davvero disposto a fare?",
+      placeholder: en ? "one call, one email, one hour…" : "una chiamata, una mail, un’ora…"
     });
     qs.push({
-      id: "success_signal",
-      label: en ? "One signal you're on track?" : "Un segnale che sei sulla strada giusta?",
-      placeholder: en ? "€ saved, hours, first reply" : "€ risparmiati, ore, prima risposta",
+      id: "risk_tolerance",
+      label: en ? "Your honest risk tolerance for this choice?"
+                : "La tua reale tolleranza al rischio per questa scelta?",
+      placeholder: en ? "low / medium / high" : "bassa / media / alta"
     });
   }
 
-  if (!profilo?.city_now && !profilo?.city) {
+  // Domande specifiche per tema
+  if (wantsWork) {
     qs.push({
-      id: "city_now",
-      label: en ? "Where do you live now?" : "Dove vivi adesso?",
-      placeholder: en ? "city" : "città",
+      id: "priority",
+      label: en ? "Top priority right now?" : "La priorità numero uno adesso?",
+      placeholder: en ? "growth / stability / flexibility" : "crescita / stabilità / flessibilità"
     });
-  } else if (!profilo?.work_role && !profilo?.role) {
+  } else if (wantsMove) {
     qs.push({
-      id: "work_role",
-      label: en ? "Your current role in one line?" : "Il tuo ruolo attuale in una riga?",
-      placeholder: en ? "e.g., pharmacist technician" : "es. tecnico farmaceutico",
+      id: "landmark",
+      label: en ? "One reference place that matters to you?"
+                : "Un luogo di riferimento che conta per te?",
+      placeholder: en ? "station, square, neighborhood…" : "stazione, piazza, quartiere…"
+    });
+  } else if (wantsStudy) {
+    qs.push({
+      id: "focus",
+      label: en ? "Which focus would you choose first?"
+                : "Quale focus sceglieresti per primo?",
+      placeholder: en ? "topic, program, school" : "materia, corso, scuola"
+    });
+  } else if (wantsMoney) {
+    qs.push({
+      id: "budget",
+      label: en ? "Realistic monthly budget impact?"
+                : "Impatto realistico sul budget mensile?",
+      placeholder: en ? "±€ / fixed cost / variable…" : "±€ / costo fisso / variabile…"
+    });
+  } else if (wantsRel) {
+    qs.push({
+      id: "relation_axis",
+      label: en ? "What’s the relationship axis involved?"
+                : "Qual è l’asse della relazione in gioco?",
+      placeholder: en ? "partner / family / friends" : "partner / famiglia / amici"
+    });
+  } else if (wantsWell) {
+    qs.push({
+      id: "signal",
+      label: en ? "One signal that tells you you’re better?"
+                : "Un segnale che ti dice che stai meglio?",
+      placeholder: en ? "hours of sleep, energy, pace…" : "ore di sonno, energia, ritmo…"
     });
   } else {
+    // fallback generico
     qs.push({
-      id: "constraint",
-      label: en ? "Most concrete constraint?" : "Vincolo più concreto?",
-      placeholder: en ? "budget/time/energy/commitment" : "budget/tempo/energia/impegno",
+      id: "context",
+      label: en ? "One detail that would make the scenario feel *yours*?"
+                : "Un dettaglio che renderebbe lo scenario più *tuo*?",
+      placeholder: en ? "a place, a person, a tiny constraint" : "un luogo, una persona, un piccolo vincolo"
     });
   }
 
+  // massimo 3
   return qs.slice(0, 3);
 }
 
-/* ───────── HTTP HANDLER ───────── */
+/* ───────────────────────── HTTP Handler ───────────────────────── */
+
 export default async function handler(req, res) {
-  // CORS / preflight
+  // CORS + preflight
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-whatif-stream");
@@ -282,8 +322,8 @@ export default async function handler(req, res) {
     const {
       domanda,
       lang = "it",
-      periodo = "future",
-      stile = "whatif",       // "whatif" | "wtf"
+      periodo = "future", // "past" | "future"
+      stile = "whatif",   // "whatif" | "wtf"
       clarify = false,
       stream = false,
       profilo = {},
@@ -295,91 +335,86 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    // Clarify
+    // 1) Clarify: locale, zero costo (e sensibile al PERIODO)
     if (clarify) {
       const questions = localClarify(domanda, profilo, lang, periodo);
       return res.status(200).json({ questions });
     }
 
-    // Generation
+    // 2) Generazione
     const sys1 = systemPrompt({ stile, lang, profile: profilo });
-    const user = buildUserContent({ domanda, periodo, profilo, clarifications, lang, stile });
-
-    // Finale/gancio
-    const finaleHint = isFinalEpisode(profilo)
-      ? (isEn(lang)
-          ? "FINALE MODE: end with ONE memorable line. Invite a fresh new 'what if'."
-          : "MODALITÀ FINALE: chiudi con UNA riga memorabile. Invita a un nuovo 'e se'.")
-      : (isEn(lang)
-          ? "MID-EPISODE: finish with ONE subtle personal hook."
-          : "EPISODIO INTERMEDIO: chiudi con UN gancio personale.");
-
-    // Guard-rail finale
-    const hardGuard = isEn(lang)
-      ? `VERIFY STYLE BEFORE SENDING:
-- EXACTLY 8–10 lines. ONE sentence per line. No labels.
-- Max words per line: ${stile === "wtf" ? 12 : 14}. If exceeded, REWRITE shorter.
-- Snappy call-and-response cadence. End with hook (mid) or closure (finale).
-- Do NOT write bartender-first-person monologue.`
-      : `VERIFICA STILE PRIMA DELL'INVIO:
-- ESATTAMENTE 8–10 righe. UNA frase per riga. Niente etichette.
-- Parole massime per riga: ${stile === "wtf" ? 12 : 14}. Se sfori, RISCRIVI più corto.
-- Cadenza botta-e-risposta. Chiudi con gancio (intermedio) o chiusura (finale).
-- Vietato il monologo del barista in prima persona.`;
+    const user = buildUserContent({
+      domanda,
+      periodo,
+      profilo,
+      clarifications,
+      lang,
+      stile,
+    });
+    const sys2 = responseStyleInstruction(lang, stile);
 
     const messages = [
       { role: "system", content: sys1 },
       { role: "user", content: user },
-      { role: "system", content: finaleHint },
-      { role: "system", content: hardGuard },
+      {
+        role: "system",
+        content: (isEn(lang)
+          ? `Reminders:
+- Respect the 8–10 line format and per-line word limits of your style.
+- If TIMEFRAME is PAST, write it as if it truly happened.
+- If TIMEFRAME is FUTURE, write a near-future slice if the user chooses now.
+- Vary the opening line; avoid reusing the same person/place/object motif.
+- Be vivid, concrete, and tailored to the user.`
+          : `Promemoria:
+- Rispetta 8–10 righe e il limite parole/riga del tuo stile.
+- Se il PERIODO è PASSATO, scrivi come se fosse davvero accaduto.
+- Se il PERIODO è FUTURO, scrivi uno scorcio di prossimo futuro se sceglie ora.
+- Varia l’incipit; evita di riusare sempre gli stessi motivi (persona/luogo/oggetto).
+- Sii vivido, concreto e su misura.`),
+      },
+      { role: "system", content: sys2 },
       extra ? { role: "user", content: extra } : null,
     ].filter(Boolean);
 
-    const temperature = stile === "wtf" ? 0.93 : 0.82;
+    const temperature = stile === "wtf" ? 0.95 : 0.75;
+    const model = "gpt-4o-mini";
 
-    // STREAM: accumula e formatta a fine testo per coerenza stilistica
+    // STREAM: text/event-stream
     if (String(req.headers["x-whatif-stream"] || "").length > 0 || stream) {
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
       res.setHeader("Connection", "keep-alive");
 
-      const s = await client.chat.completions.create({
-        model: MODEL_TEXT,
+      const streamResp = await client.chat.completions.create({
+        model,
         messages,
         temperature,
         max_tokens: 700,
         stream: true,
       });
 
-      let buffer = "";
-      for await (const chunk of s) {
-        buffer += chunk.choices?.[0]?.delta?.content || "";
+      for await (const chunk of streamResp) {
+        const delta = chunk.choices?.[0]?.delta?.content || "";
+        if (delta) res.write(`data: ${JSON.stringify({ token: delta })}\n\n`);
       }
-      const finale = isFinalEpisode(profilo);
-      const shaped = sanitizeAndShape(buffer, { stile, finale });
-      res.write(`data: ${JSON.stringify({ token: shaped })}\n\n`);
       res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
       return res.end();
     }
 
     // NON-stream
-    const c = await client.chat.completions.create({
-      model: MODEL_TEXT,
+    const completion = await client.chat.completions.create({
+      model,
       messages,
       temperature,
       max_tokens: 750,
     });
-
-    let text = c.choices?.[0]?.message?.content?.trim() || "";
-    const finale = isFinalEpisode(profilo);
-    text = sanitizeAndShape(text, { stile, finale });
+    const text = completion.choices?.[0]?.message?.content?.trim() || "";
     return res.status(200).json({ answer: text });
   } catch (err) {
     console.error("API /ask error:", err);
     const isAbort = ("" + err?.message).toLowerCase().includes("aborted");
-    return res.status(500).json({
-      error: "server",
-      detail: isAbort ? "aborted" : err?.message || "unknown",
-    });
+    return res
+      .status(500)
+      .json({ error: "server", detail: isAbort ? "aborted" : err?.message || "unknown" });
   }
 }
