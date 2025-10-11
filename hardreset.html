@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reset What?f</title>
+<style>
+body{background:#0b0b0c;color:#fff;display:flex;align-items:center;justify-content:center;
+height:100vh;font-family:system-ui;text-align:center;padding:20px}
+button{background:#00e0ff;border:none;color:#000;font-weight:700;font-size:18px;
+padding:14px 28px;border-radius:14px;cursor:pointer}
+p{opacity:.8;margin-top:12px}
+</style>
+</head>
+<body>
+<div>
+  <h2>Reset completo What?f</h2>
+  <button id="reset">Esegui ora</button>
+  <p>⚠️ Cancella tutti i dati locali e ricarica l’app.</p>
+</div>
+<script>
+document.getElementById('reset').onclick = async () => {
+  localStorage.clear();
+  sessionStorage && sessionStorage.clear?.();
+  if (caches?.keys) {
+    for (const k of await caches.keys()) await caches.delete(k);
+  }
+  if (navigator.serviceWorker?.getRegistrations) {
+    for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
+  }
+  alert('Reset completato ✅');
+  location.href = 'index.html';
+};
+</script>
+</body>
+</html>
