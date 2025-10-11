@@ -92,8 +92,14 @@
   </script>
 
   <div class="topbar">
-    <button class="btn" onclick="history.back()">← <span id="tb_back">Indietro</span></button>
-    <button class="btn" onclick="location.href='index.html'">🏠 <span id="tb_home">Home</span></button>
+    <div style="display:flex; gap:8px; align-items:center">
+      <button class="btn" onclick="history.back()">← <span id="tb_back">Indietro</span></button>
+      <button class="btn" onclick="location.href='index.html'">🏠 <span id="tb_home">Home</span></button>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center">
+      <!-- NUOVO: Reset profilo -->
+      <button id="resetBtn" class="btn ghost" title="Reset profilo e dati">♻️ Reset profilo</button>
+    </div>
   </div>
 
   <main>
@@ -149,7 +155,8 @@
         missing:"Write your question before continuing.",
         next:"Discover your What?f",
         tempPast:["What if you had stayed in your hometown?","What if you had worked with ___ instead?","What if you hadn’t moved in 2015?"],
-        tempFuture:["What if you quit and opened a small studio?","What if you moved to ___ for a year?","What if you went back to study ___?"]
+        tempFuture:["What if you quit and opened a small studio?","What if you moved to ___ for a year?","What if you went back to study ___?"],
+        resetConfirm:"Reset profile and daily data?"
       }
     : {
         back:'Indietro',home:'Home',
@@ -166,7 +173,8 @@
         missing:"Scrivi prima la tua domanda.",
         next:"Scopri il tuo What?f",
         tempPast:["E se fossi rimasto nella tua città?","E se avessi lavorato con ___ invece?","E se non ti fossi trasferito nel 2015?"],
-        tempFuture:["E se lasciassi e aprissi uno studio?","E se ti trasferissi a ___ per un anno?","E se tornassi a studiare ___?"]
+        tempFuture:["E se lasciassi e aprissi uno studio?","E se ti trasferissi a ___ per un anno?","E se tornassi a studiare ___?"],
+        resetConfirm:"Reset profilo e dati giornalieri?"
       };
 
   // UI copy
@@ -216,7 +224,7 @@
   $('backBtn').addEventListener('click',()=>history.back());
   $('nextBtn').addEventListener('click', salvaDomanda);
 
-  // Prefill
+  // PREFILL
   (function prefill(){
     const prev=localStorage.getItem("domanda");
     if(prev){ domandaInput.value=prev; $('nextBtn').disabled=false; }
@@ -231,7 +239,100 @@
   domandaInput.addEventListener('input',()=>{ nextBtn.disabled = !domandaInput.value.trim(); });
   nextBtn.disabled = !domandaInput.value?.trim();
 
-  // Save
+  // Classifier (it/en)
+  function classifyQuestion(q, period){
+    const s=(q||"").toLowerCase();
+    const tags=new Set();
+    if(period==='past' || /se fossi rimasto|se avessi|had (stayed|worked)|hadn[’']t moved/i.test(q)) tags.add('past');
+    if(period==='future' || /nei prossimi|tra un anno|se lasciassi|next 12 months|moved to|go back to study/i.test(q)) tags.add('future');
+    if(/\b(lavor|carriera|azienda|studio|progetto|work|career|company|project)\b/i.test(s)) tags.add('work');
+    if(/\b(amore|relazion|partner|famiglia|amico|amica|relationship|family|partner|friend)\b/i.test(s)) tags.add('relationships');
+    if(/\b(affitto|mutuo|soldi|stipendio|debito|invest|rent|mortgage|salary|debt|invest)\b/i.test(s)) tags.add('money');
+    if(/\b(trasfer|città|quartiere|piazza|verona|roma|milano|move|city|neighborhood|square)\b/i.test(s)) tags.add('place');
+    if(/\b(salute|allenament|stress|sonno|health|training|sleep|stress)\b/i.test(s)) tags.add('wellbeing');
+    return Array.from(tags);
+  }
+
+  /* =========================
+     RESET PROFILO (nuovo)
+  ========================== */
+  $('resetBtn').addEventListener('click', ()=>{
+    if(!confirm(T.resetConfirm)) return;
+    const keys = [
+      'whatif_profile','whatif_micro','whatif_micro_log','whatif_last_update',
+      'whatif_onboarding_done','whatif_daily_seen','whatif_clarify',
+      'whatif_first_session_seen','whatif_profile_date',
+      'whatif_extras','whatif_pending_payload','whatif_anchors',
+      'domanda','whatif_tags'
+    ];
+    keys.forEach(k=>localStorage.removeItem(k));
+    location.href='second.html';
+  });
+
+  /* ==========================================================
+     >>>>>>  HELPER PREDITTIVI (ora/fuso + profilo + payload)  <<<<<<
+     (usati qui per salvare il payload che fifth.html invierà)
+  ========================================================== */
+
+  function getNowAndTz(){
+    try{
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Rome';
+      const now = new Date().toISOString();
+      return { now, tz };
+    }catch(e){
+      return { now: new Date().toISOString(), tz: 'Europe/Rome' };
+    }
+  }
+
+  function readJSON(key, fallback = {}) {
+    try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+    catch { return fallback; }
+  }
+
+  function buildAskPayload({ domanda, periodo = 'future', stile = 'whatif', lang }) {
+    const L = (lang || localStorage.getItem('lang') || (navigator.language||'it').slice(0,2)).toLowerCase();
+
+    const base   = readJSON('whatif_profile', {});
+    const micro  = readJSON('whatif_micro',   {});
+    const extras = readJSON('whatif_extras',  {});
+
+    const profilo = {
+      name: base.name || '',
+      city_now: base.city || base.city_now || '',
+      city_origin: base.city_origin || '',
+      work_role: base.role || base.work_role || '',
+      goals: base.goals || (base.goal ? [base.goal] : []),
+      values: base.values || [],
+      wins: base.wins || [],
+      pains: base.pains || [],
+      hobbies: base.hobbies || [],
+
+      unwind: base.unwind || '',
+      drinks_pref: base.drinks_pref || ((base.unwind === 'drink') ? 'yes' : 'no'),
+
+      time_window: base.time_window || extras.time_window || '',
+      success_indicator: base.success_indicator || micro.indicatore || '',
+      risk_tolerance: base.risk_tolerance || extras.risk_tolerance || '',
+      landmark: base.landmark || micro.punto_riferimento || base.city || '',
+
+      constraint_2w: micro.vincolo_2w || '',
+    };
+
+    const { now, tz } = getNowAndTz();
+
+    return {
+      domanda: String(domanda || '').trim(),
+      periodo,
+      stile,
+      lang: L.startsWith('en') ? 'en' : 'it',
+      profilo,
+      now, tz
+    };
+  }
+
+  /* ==========================================================
+     SALVATAGGIO + PASSAGGIO ALLO STEP SUCCESSIVO
+  ========================================================== */
   function salvaDomanda(){
     const domanda = domandaInput.value.trim();
     if(!domanda){ alert(T.missing); return; }
@@ -247,11 +348,18 @@
     const tags = classifyQuestion(domanda, period);
     localStorage.setItem("whatif_tags", JSON.stringify(tags));
 
+    // Preparo il payload completo qui (così fifth.html deve solo inviare)
+    try{
+      const stile = (prefs.stile || 'whatif');
+      const payload = buildAskPayload({ domanda, periodo: period, stile, lang: L });
+      localStorage.setItem('whatif_pending_payload', JSON.stringify(payload));
+    }catch(e){ /* non bloccare il flusso */ }
+
     // reset cache chiarimenti per questa nuova domanda
     try{
       const CLAR_CACHE_KEY='whatif_clarify_cache';
       const cache = JSON.parse(localStorage.getItem(CLAR_CACHE_KEY)||'{}');
-      const key = [domanda, period, (JSON.parse(localStorage.getItem('whatif_prefs')||'{}').stile||'whatif')].join(' | ');
+      const key = [domanda, period, (prefs.stile||'whatif')].join(' | ');
       cache[key] = { round: 0, ids: [] };
       localStorage.setItem(CLAR_CACHE_KEY, JSON.stringify(cache));
     }catch(e){}
@@ -259,19 +367,6 @@
     location.href="fifth.html";
   }
 
-  // Classifier (it/en)
-  function classifyQuestion(q, period){
-    const s=(q||"").toLowerCase();
-    const tags=new Set();
-    if(period==='past' || /se fossi rimasto|se avessi|had (stayed|worked)|hadn[’']t moved/i.test(q)) tags.add('past');
-    if(period==='future' || /nei prossimi|tra un anno|se lasciassi|next 12 months|moved to|go back to study/i.test(q)) tags.add('future');
-    if(/\b(lavor|carriera|azienda|studio|progetto|work|career|company|project)\b/i.test(s)) tags.add('work');
-    if(/\b(amore|relazion|partner|famiglia|amico|amica|relationship|family|partner|friend)\b/i.test(s)) tags.add('relationships');
-    if(/\b(affitto|mutuo|soldi|stipendio|debito|invest|rent|mortgage|salary|debt|invest)\b/i.test(s)) tags.add('money');
-    if(/\b(trasfer|città|quartiere|piazza|verona|roma|milano|move|city|neighborhood|square)\b/i.test(s)) tags.add('place');
-    if(/\b(salute|allenament|stress|sonno|health|training|sleep|stress)\b/i.test(s)) tags.add('wellbeing');
-    return Array.from(tags);
-  }
 </script>
 
 <!-- SW -->
