@@ -6,7 +6,7 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL_TEXT = "gpt-4o-mini";
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
-/* ============== Utils: sintesi profilo per personalizzazione ============== */
+/* ============== Utils: profilo + stagione/ora ============== */
 function renderProfileDigest(p = {}) {
   if (!p || typeof p !== "object") return "";
   const parts = [];
@@ -27,20 +27,34 @@ function renderProfileDigest(p = {}) {
   if (p.risk_tolerance) parts.push(`rischio: ${p.risk_tolerance}`);
   if (p.landmark) parts.push(`ancora: ${p.landmark}`);
   if (p.micro && typeof p.micro === "object") {
-    Object.entries(p.micro).forEach(([k, v]) => {
+    for (const [k, v] of Object.entries(p.micro)) {
       if (v && typeof v === "string" && v.trim()) parts.push(`${k}: ${v.trim()}`);
-    });
+    }
   }
   return parts.join(" • ");
 }
-
 function isFinalEpisode(profile = {}) {
   const ep = Number(profile?.story_state?.episode ?? 1);
   const max = Number(profile?.story_state?.max_episodes ?? 3);
   return ep >= max;
 }
+function safeNow(nowIso, tz) {
+  const d = nowIso ? new Date(nowIso) : new Date();
+  const w_en = d.toLocaleDateString("en-GB", { weekday: "long" });
+  const w_it = d.toLocaleDateString("it-IT", { weekday: "long" });
+  const date_it = d.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const date_en = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const month = d.getMonth() + 1;
+  const season_it = ["inverno","inverno","primavera","primavera","primavera","estate","estate","estate","autunno","autunno","autunno","inverno"][(month-1)%12];
+  const season_en = ["winter","winter","spring","spring","spring","summer","summer","summer","autumn","autumn","autumn","winter"][(month-1)%12];
+  const month_it = d.toLocaleDateString("it-IT", { month: "long" });
+  const month_en = d.toLocaleDateString("en-GB", { month: "long" });
+  return { time24: `${hh}:${mm}`, weekday_en: w_en, weekday_it: w_it, date_it, date_en, season_it, season_en, month_it, month_en, tz: tz || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" };
+}
 
-/* ===== Mirror (specchio) + closing predittivo ===== */
+/* ============== Mirror & closing ============== */
 function makeMirrorLine({ profilo = {}, lang = "it" }) {
   const it = !isEn(lang);
   const who = (profilo?.name ? profilo.name.split(" ")[0] : "").trim();
@@ -48,56 +62,50 @@ function makeMirrorLine({ profilo = {}, lang = "it" }) {
   const role = profilo?.work_role || profilo?.role || "";
   const goal = Array.isArray(profilo?.goals) && profilo.goals[0] ? profilo.goals[0] : (profilo?.goal || "");
   const values = (Array.isArray(profilo?.values) ? profilo.values.slice(0, 2) : []).filter(Boolean);
-
-  const itPool = [
-    who ? `${who}, quando cambi non è per capriccio: ti serve un senso pulito.` : `Tu non cambi per capriccio: ti serve un senso pulito.`,
-    city ? `Ti regge ${city}, ma ogni tanto ti manca una finestra aperta.` : `Ti serve una base solida e una finestra aperta.`,
-    role ? `Nel lavoro (${role}) reggi finché il “perché” resta acceso.` : `Reggi finché il “perché” resta acceso.`,
-    goal ? `In testa tieni questo filo: ${goal}. Il resto si allinea.` : `In testa tieni un filo chiaro. Il resto si allinea.`,
-    values.length ? `Quando rispetti ${values.join(" e ")}, il passo diventa naturale.` : `Quando qualcosa ti rispetta davvero, il passo diventa naturale.`,
+  const pool_it = [
+    who ? `${who}, quando cambi rotta non cerchi rumore: cerchi coerenza.` : `Non cambi rotta per rumore: cerchi coerenza.`,
+    city ? `${city} ti fa da base, ma ogni tanto vuoi aria larga.` : `Ti serve una base solida e uno spiraglio aperto.`,
+    role ? `Nel lavoro (${role}) reggi finché il “perché” resta acceso.` : `Reggi bene finché il “perché” resta acceso.`,
+    goal ? `In testa hai chiaro questo: ${goal}. Il resto deve allinearsi.` : `Hai un faro chiaro in testa. Il resto segue.`,
+    values.length ? `Quando rispetti ${values.join(" e ")}, ti si raddrizza il passo.` : `Quando ti senti rispettato, ti si raddrizza il passo.`,
   ];
-  const enPool = [
-    who ? `${who}, you don’t move on whims — you move for meaning.` : `You don’t move on whims — you move for meaning.`,
-    city ? `${city} grounds you, but you still need one open window.` : `You like a solid base and one open window.`,
-    role ? `In (${role}) you keep pace while the “why” is lit.` : `You keep pace while the “why” is lit.`,
-    goal ? `There’s a thread you hold: ${goal}. Everything else aligns.` : `There’s a clear thread you hold. Everything else aligns.`,
-    values.length ? `When you honor ${values.join(" and ")}, your stride clicks.` : `When it truly fits you, your stride clicks.`,
+  const pool_en = [
+    who ? `${who}, you don’t move for noise — you move for coherence.` : `You don’t move for noise — you move for coherence.`,
+    city ? `${city} grounds you, but you still need open air.` : `You like one steady base and one open window.`,
+    role ? `In (${role}) you keep pace while the “why” stays lit.` : `You keep pace while the “why” stays lit.`,
+    goal ? `Top of mind: ${goal}. Everything else aligns around it.` : `You carry one clear north. Everything else aligns.`,
+    values.length ? `When ${values.join(" and ")} are honored, your stride clicks.` : `When you feel honored, your stride clicks.`,
   ];
-  const pool = it ? itPool : enPool;
+  const pool = it ? pool_it : pool_en;
   return pool[Math.floor(Math.random() * pool.length)];
 }
-
 function pickClosing({ lang = "it", stile = "whatif" }) {
   const it = !isEn(lang);
-  const softIT = [
-    `Domani riprendiamo con due micro-domande furbe e vediamo dove porta.`,
-    `Se torni domani, aggiungiamo due dettagli e la storia scorre.`,
-    `Ci fermiamo qui: due domande corte domani e continuiamo puliti.`,
-    `Quando vuoi, passo successivo: due spunti rapidi e avanti.`,
+  const soft_it = [
+    `Domani continuiamo: due micro-domande e vediamo dove porta.`,
+    `Se torni domani, aggiungo due dettagli e la storia va avanti.`,
+    `Quando vuoi, riprendiamo: due appigli rapidi e si prosegue.`,
   ];
-  const sharpIT = [
+  const sharp_it = [
     `Stop qui. Domani due colpi secchi e si riparte.`,
-    `Ok, pausa. Domani due cue veloci e alziamo il livello.`,
-    `Segnalibro messo: domani due domande dritte e si va.`,
-    `Basta bancone: domani due tiri corti e movimento.`,
+    `Chiudi il conto: domani due prompt veloci e saliamo di livello.`,
+    `Segnalibro messo: domani due spinte e avanti.`,
   ];
-  const softEN = [
-    `Come back tomorrow: two tiny questions and we move the plot.`,
-    `Pause here. Tomorrow two sharp prompts and we go deeper.`,
-    `Bookmark this — tomorrow two micro-questions and the thread continues.`,
-    `We stop here; tomorrow two quick cues and we keep going.`,
+  const soft_en = [
+    `Come back tomorrow: two micro-questions and we move.`,
+    `Return tomorrow — two small details and the thread continues.`,
+    `We pause here. Tomorrow two tiny prompts and forward.`,
   ];
-  const sharpEN = [
-    `Close tab. Tomorrow two clean shots and we move.`,
-    `Enough talk. Tomorrow: two fast cues, then action.`,
-    `Pin this. Tomorrow two crisp prompts and we push on.`,
-    `Bar’s closed. Tomorrow two hits and we roll.`,
+  const sharp_en = [
+    `Cut here. Tomorrow two clean shots and go.`,
+    `Tab closed: tomorrow two quick cues and we level up.`,
+    `Bookmark it. Tomorrow two nudges and onward.`,
   ];
-  if (it) return (stile === "wtf" ? sharpIT : softIT)[Math.floor(Math.random() * 4)];
-  return (stile === "wtf" ? sharpEN : softEN)[Math.floor(Math.random() * 4)];
+  if (it) return (stile === "wtf" ? sharp_it : soft_it)[Math.floor(Math.random()*((stile==="wtf"?sharp_it:soft_it).length))];
+  return (stile === "wtf" ? sharp_en : soft_en)[Math.floor(Math.random()*((stile==="wtf"?sharp_en:soft_en).length))];
 }
 
-/* ============== Persona prompts (coerenti con lo stile concordato) ============== */
+/* ============== Persona prompts (forti, con anti-pattern) ============== */
 function systemPrompt({ stile = "whatif", lang = "it", profile = {}, nowIso, tz }) {
   const en = isEn(lang);
   const cityNow = profile?.city_now || profile?.city || (en ? "your city" : "la tua città");
@@ -105,208 +113,196 @@ function systemPrompt({ stile = "whatif", lang = "it", profile = {}, nowIso, tz 
   const finale = isFinalEpisode(profile);
   const now = safeNow(nowIso, tz);
 
-  const epHint_en = finale
-    ? `FINALE: deliver real closure (no cliffhanger). One memorable final line inviting a new thread.`
-    : `MID-EPISODE: close with a soft personal hook; no paywall mention.`;
-  const epHint_it = finale
-    ? `FINALE: chiudi davvero (niente cliffhanger). Una riga memorabile che invita a un nuovo filo.`
-    : `EPISODIO INTERMEDIO: chiudi con un gancio personale e sottile (senza paywall).`;
+  const epHint = en
+    ? (finale ? `FINALE: give real closure (no cliffhanger). One memorable last line inviting a new thread.` 
+              : `MID-EPISODE: end with a subtle personal hook (no paywall mention).`)
+    : (finale ? `FINALE: chiudi davvero (niente cliffhanger). Ultima riga memorabile con invito a un nuovo filo.`
+              : `EPISODIO INTERMEDIO: chiusura con gancio personale e sottile (senza paywall).`);
 
-  const ban_en = `Do NOT use literal labels like "constraint", "trade-off", "indicator", "first step".
-Weave those ideas naturally in narrative. Never use "I". Second person only. Avoid coaching tone.`;
-  const ban_it = `NON usare etichette letterali tipo "vincolo", "trade-off", "indicatore", "primo passo".
-Intreccia quei concetti nel racconto. Mai “io”. Solo seconda persona. Evita tono da coach.`;
+  const antipattern_en = `HARD BANS:
+- Do NOT use words: "constraint", "trade-off", "indicator", "first step", "imagine", "call a friend", "write an email".
+- Never say "I". Second person only. No moralizing.`;
+  const antipattern_it = `DIVIETI:
+- NON usare: "vincolo", "trade-off", "indicatore", "primo passo", "immagina", "chiama un amico", "scrivi una mail".
+- Mai "io". Solo seconda persona. Niente moralismi.`;
 
   if (stile === "wtf") {
     return en
-      ? `You are "What the F": witty late-night bartender — drunk-genius vibe, playful, never cruel.
-One voice, 8–10 short lines, bar rhythm. Personalize implicitly with ${cityNow}, ${workRole}.
-Use near-future for FUTURE, counterfactual for PAST. ${ban_en}
+      ? `You are "What the F": witty late-night bartender — brilliant, a bit tipsy, never cruel.
+Speak as ONE voice in 8–10 short punchy lines (≤15 words). Bar rhythm. Near-future for FUTURE; counterfactual for PAST.
+Personalize subtly with ${cityNow}, ${workRole}. ${antipattern_en}
 Today is ${now.weekday_en}, ${now.date_en}. Season ${now.season_en}. Local time ~${now.time24}.
-${epHint_en}`
-      : `Sei "What the F": barista nottambulo — genio un po’ brillo, tagliente ma pulito.
-Una voce, 8–10 righe brevi, ritmo da bancone. Personalizza in modo implicito con ${cityNow}, ${workRole}.
-Usa futuro vicino per FUTURO, controfattuale per PASSATO. ${ban_it}
+${epHint}`
+      : `Sei "What the F": barista nottambulo — brillante, un po’ brillo, mai cattivo.
+Una sola voce in 8–10 righe corte (≤15 parole). Ritmo da bancone. Futuro vicino per FUTURO; controfattuale per PASSATO.
+Personalizza in modo implicito con ${cityNow}, ${workRole}. ${antipattern_it}
 Oggi è ${now.weekday_it}, ${now.date_it}. Stagione ${now.season_it}. Ora ~${now.time24}.
-${epHint_it}`;
+${epHint}`;
   }
 
   return en
-    ? `You are "What?f": lucid, warm, predictive — “street oracle” tone.
-One calm voice, 8–10 vivid short lines, cinematic rhythm. Second person only.
-Real timings, small realistic costs, inner signals; personalize with ${cityNow}, ${workRole}.
-Zero nostalgia clichés; no “call a friend” unless present in prompt. ${ban_en}
+    ? `You are "What?f": lucid, warm, predictive friend — like a sharp fortune-teller.
+One calm voice, 8–10 vivid lines. Second person only.
+Show small realistic costs, inner signs, plausible scenes — but NEVER label them. Personalize with ${cityNow}, ${workRole}.
+${antipattern_en}
 Today is ${now.weekday_en}, ${now.date_en}. Season ${now.season_en}. Local time ~${now.time24}.
-${epHint_en}`
-    : `Sei "What?f": amico lucido, caldo, predittivo — “zingara lucida”.
-Una voce, 8–10 righe brevi e visive, ritmo cinematografico. Solo seconda persona.
-Tempi reali, piccoli costi plausibili, segnali interiori; personalizza con ${cityNow}, ${workRole}.
-Niente cliché; non proporre “chiama un amico” se non è nel prompt. ${ban_it}
+${epHint}`
+    : `Sei "What?f": amica lucida e calda — una zingara che azzecca il sottotesto.
+Una sola voce, 8–10 righe visive. Solo seconda persona.
+Mostra piccoli costi, segnali interiori, scene plausibili — ma NON etichettarli. Personalizza con ${cityNow}, ${workRole}.
+${antipattern_it}
 Oggi è ${now.weekday_it}, ${now.date_it}. Stagione ${now.season_it}. Ora ~${now.time24}.
-${epHint_it}`;
+${epHint}`;
 }
 
-/* ============== Few-shot (quelli “buoni” che avevi scelto) ============== */
+/* ============== Few-shots (IT/EN) curati ============== */
 function getFewShots(style = "whatif", lang = "it") {
   const it = !isEn(lang);
 
+  // WHAT THE F — bar rhythm
   if (style === "wtf") {
-    return it
-      ? [
-          { role: "system", content:
+    return it ? [
+      { role: "system", content:
 `WTF_IT_A
 DOMANDA: "E se tornassi all’Aquila?"
 RISPOSTA:
-Ti vedo rientrare e già due favori in tasca.
-Cuore pieno, lunedì pesante: pacchetto rientro.
-Stai dove ti vogliono, ma scegli tu gli orari.
-Se il primo lunedì è leggero, è casa. Se pesa, è museo.
-Brinda pure, poi acqua: domani due colpi secchi e si riparte.` },
-          { role: "system", content:
+Rientri e tre favori ti attendono alla porta.
+Cuore su, calendario giù: pacchetto rientro.
+Stai dove ti vogliono, ma scegli tu i confini.
+Se il lunedì è leggero, è casa.
+Se pesa, è museo con audio-guida.
+Fatti un giro corto; ascolta il passo.
+Se sorrido io, ok. Se no, cambiamo bar.
+Chiudi qui. Domani due colpi secchi e via.` },
+      { role: "system", content:
 `WTF_IT_B
-DOMANDA: "Se avessi un milione?"
+DOMANDA: "E se comprassi la moto a marzo?"
 RISPOSTA:
-Un milione? Premium errori inclusi.
-Attico? Bello. Anche il condominio.
-Non comprare trofei: compra respiro.
-Se dormi meglio e litighi meno, stai vincendo.
-Stop bancone: domani due cue rapidi e movimento.` },
-        ]
-      : [
-          { role: "system", content:
+La prendi e balli sui rattoppi di Bussolengo.
+Adrenalina su, assicurazione ti guarda storto.
+Cuffie? No. Casco, e cervello acceso.
+Se torni col sorriso, hai già capito.
+Se torni a bestemmiare, vendi l’idea, non la moto.
+Stappa acqua: domani due prompt veloci e ripensiamo.` },
+    ] : [
+      { role: "system", content:
 `WTF_EN_A
 QUESTION: "What if I moved back home?"
 ANSWER:
-You walk in and the favors walk with you.
-Full heart, heavy Mondays — the return bundle.
+You walk in; three favors walk with you.
+Heart up, calendar down — return bundle.
 Stay where you’re wanted, on your terms.
-If the first Monday feels light, that’s home.
-Close tab: tomorrow two clean shots and we move.` },
-          { role: "system", content:
+If Monday feels light, that’s home.
+If heavy, it’s a museum with echoes.
+Take a short loop, listen to your stride.
+If the bartender smiles, you’re fine.
+Cut here. Tomorrow two clean shots and go.` },
+      { role: "system", content:
 `WTF_EN_B
-QUESTION: "What if I had a million?"
+QUESTION: "What if I bought the bike in March?"
 ANSWER:
-A million buys premium mistakes.
-Penthouse? Gorgeous. Maintenance too.
-Don’t buy trophies, buy breathing room.
-If you sleep deeper and argue less, you’re winning.
-Bar’s closed — tomorrow two fast cues and we roll.` },
-        ];
+You’ll dance over potholes and grin.
+Adrenaline up, insurance staring back.
+Helmet on, brain online.
+If you return smiling, message received.
+If you return swearing, sell the idea, not the bike.
+Pause. Tomorrow two quick prompts and rethink.` },
+    ];
   }
 
-  // WHAT?f
-  return it
-    ? [
-        { role: "system", content:
+  // WHAT?f — mirror + predictive, no labels
+  return it ? [
+    { role: "system", content:
 `WHATIF_IT_A
 DOMANDA: "E se cambiassi lavoro?"
 RISPOSTA:
-Non scatti a caso: ti muovi quando il perché si accende.
-Il primo mese limi il rumore, tieni solo conversazioni buone.
+Ti muovi quando il perché si accende, non per capriccio.
+Il primo mese scegli poche conversazioni buone.
 Una sera il corpo si rilassa prima della testa.
-Se due volti nuovi ti danno energia, sei sulla rotta.
-Ci fermiamo qui: domani due micro-domande e si va avanti.` },
-        { role: "system", content:
+Le email diventano corte, chiare.
+Se due volti nuovi ti danno energia, sei in rotta.
+Quando raddrizzi la schiena senza pensarci, è un sì che cresce.
+Domani due dettagli e la trama continua.` },
+    { role: "system", content:
 `WHATIF_IT_B
 DOMANDA: "E se tornassi all’Aquila tra 3–6 mesi?"
 RISPOSTA:
-Ti piace una base: ${"${city}"} resta zattera, non gabbia.
-Provi settimane gemelle: stessi giorni, stesse persone.
-La sera il telefono tace, il passo si fa leggero.
-Se gli inviti scelti da te aumentano, la direzione è buona.
-Stop qui: domani due dettagli e continuiamo puliti.` },
-      ]
-    : [
-        { role: "system", content:
+${"${city}"} resta base, non gabbia.
+Provi settimane gemelle: stessi giorni, stessi volti.
+La sera senti più aria, il telefono chiede meno.
+Se aumentano gli inviti scelti da te, va bene così.
+Sorriso basso sulla via di casa: la scelta prende forma.
+Domani due micro-domande e andiamo più a fuoco.` },
+  ] : [
+    { role: "system", content:
 `WHATIF_EN_A
 QUESTION: "What if I changed jobs?"
 ANSWER:
-You don’t jump on whims — you move when the why lights up.
-Month one, fewer better conversations.
-One evening your body relaxes before your mind.
-If two new faces give you energy, you’re on line.
-Hold here: tomorrow two tiny prompts and we continue.` },
-        { role: "system", content:
+You move when the why lights up, not for noise.
+Month one: fewer, better conversations.
+One evening the body relaxes first.
+Emails turn short, tidy.
+If two new faces give energy, you’re aligned.
+When posture lifts by itself, a yes is forming.
+Tomorrow two tiny details and we go on.` },
+    { role: "system", content:
 `WHATIF_EN_B
 QUESTION: "What if I moved back in 3–6 months?"
 ANSWER:
-You like a base: ${"${city}"} stays raft, not cage.
+${"${city}"} stays raft, not cage.
 Test twin weeks: same days, same people.
-Evenings get lighter; the phone gets quiet.
-If chosen invitations grow, direction’s good.
-We stop here; tomorrow two details and we keep going.` },
-      ];
+Evenings get lighter; phone quiets down.
+If chosen invitations grow, direction’s right.
+Soft smile on the way home: choice forming.
+Tomorrow two micro-questions and we sharpen it.` },
+  ];
 }
 
-/* ============== Istruzioni di stile ============== */
+/* ============== Costruzione contenuti user ============== */
 function responseStyleInstruction(lang, stile) {
   const en = isEn(lang);
   if (stile === "wtf") {
     return en
-      ? `Format: 8–10 short lines. One speaker. Bold sarcasm, playful, never cruel. Second person only (no "I"). Respect tense by timeframe. Do NOT use literal labels — show, don’t name.`
-      : `Formato: 8–10 righe brevi. Voce unica. Sarcasmo brillante, mai cattivo. Solo seconda persona. Tempi coerenti. Niente etichette letterali — mostra, non nominare.`;
+      ? `Format: 8–10 short lines. One speaker. Punchy, playful, never cruel. Second person only. Respect timeframe. NEVER use the banned words.`
+      : `Formato: 8–10 righe corte. Voce unica. Punchy, giocoso, mai crudele. Solo seconda persona. Rispetta il periodo. Mai parole vietate.`;
   }
   return en
-    ? `Format: 8–10 concise lines. One speaker. Visual, candid, current. Second person only. Weave costs/signals/next moves naturally, without naming them. Respect timeframe.`
-    : `Formato: 8–10 righe concise. Voce unica. Visivo, sincero, attuale. Solo seconda persona. Intreccia costi/segnali/mosse senza etichette. Rispetta il periodo.`;
+    ? `Format: 8–10 concise lines. One speaker. Visual, candid, current. Show costs/signs/next moves without labels. Second person only.`
+    : `Formato: 8–10 righe concise. Una voce. Visivo, sincero, attuale. Mostra costi/segnali/mosse senza etichette. Solo seconda persona.`;
 }
-
-/* ============== Costruzione messaggio utente ============== */
 function buildUserContent({ domanda, periodo, profilo, clarifications, lang, stile, nowIso, tz }) {
   const en = isEn(lang);
   const L = [];
+  const now = safeNow(nowIso, tz);
   L.push(en ? `QUESTION: ${domanda}` : `DOMANDA: ${domanda}`);
   L.push(en ? `TIMEFRAME: ${periodo || "future"}` : `PERIODO: ${periodo || "future"}`);
   L.push(en ? `STYLE: ${stile}` : `STILE: ${stile}`);
-
-  const now = safeNow(nowIso, tz);
-  L.push(
-    en
-      ? `NOW:\nweekday=${now.weekday_en}; season=${now.season_en}; month=${now.month_en}; local_time≈${now.time24};`
-      : `ADESSO:\ngiorno=${now.weekday_it}; stagione=${now.season_it}; mese=${now.month_it}; ora_locale≈${now.time24};`
-  );
-
+  L.push(en
+    ? `NOW: weekday=${now.weekday_en}; season=${now.season_en}; month=${now.month_en}; local_time≈${now.time24};`
+    : `ADESSO: giorno=${now.weekday_it}; stagione=${now.season_it}; mese=${now.month_it}; ora≈${now.time24};`);
   const digest = renderProfileDigest(profilo);
   if (digest) L.push(en ? `PROFILE DIGEST: ${digest}` : `SINTESI PROFILO: ${digest}`);
-
   if (clarifications && Object.keys(clarifications).length) {
     const c = Object.entries(clarifications).map(([k, v]) => `${k}: ${v}`);
     L.push((en ? "CLARIFICATIONS:\n" : "CHIARIMENTI:\n") + c.join("\n"));
   }
-
-  L.push(
-    en
-      ? `PREDICTIVE OBJECTIVE:
-- PAST → counterfactual vignette as if it happened: include a small plausible cost and one inner/outer sign — but never label them.
-- FUTURE → near-future fork if they choose now: suggest a tiny move and a natural sign to watch — woven in the narrative.
-- Keep details small and timeless.`
-      : `OBIETTIVO PREDITTIVO:
-- PASSATO → vignetta controfattuale come se fosse accaduta: inserisci un piccolo costo plausibile e un segnale credibile — ma senza etichette.
-- FUTURO → biforcazione di prossimo futuro se sceglie ora: suggerisci una micro-mossa e un segno naturale da osservare — intrecciati nel racconto.
-- Dettagli piccoli e senza tempo.`
-  );
-
+  L.push(en
+    ? `PREDICTIVE OBJECTIVE:
+- PAST → counterfactual vignette that *feel lived*. Include one small cost and one sign it worked, but do NOT label them.
+- FUTURE → near-future fork. Suggest one tiny move and one inner/outer sign to watch, woven naturally.`
+    : `OBIETTIVO PREDITTIVO:
+- PASSATO → vignetta controfattuale “vissuta”. Un piccolo costo e un segno che funzionava, ma senza etichette.
+- FUTURO → biforcazione di prossimo futuro. Una micro-mossa e un segno da osservare, intrecciati nel racconto.`);
   return L.join("\n\n");
 }
 
-/* ============== Clarify (domande mirate) ============== */
+/* ============== Clarify (2–3 domande) ============== */
 function clarifySystemPrompt(lang = "it") {
   const en = isEn(lang);
-  const base = en
-    ? `You generate 2–3 short, focused clarifying questions (one line each). Return ONLY a JSON array of { "id","label","placeholder" }.`
-    : `Generi 2–3 domande brevi e mirate (una riga). Restituisci SOLO un array JSON di { "id","label","placeholder" }.`;
-
-  const period = en
-    ? `PERIOD-AWARE:
-- TIMEFRAME="past": ask pivot year/event, place/context then, key sign.
-- TIMEFRAME="future": ask decision window, personal sign of progress, concrete limit/resource.`
-    : `Consapevole del PERIODO:
-- PERIODO="past": chiedi anno/evento, luogo/contesto di allora, segno chiave.
-- PERIODO="future": chiedi finestra decisionale, segno personale di avanzamento, limite/risorsa concreta.`;
-
-  return `${base}\n${period}`;
+  return en
+    ? `Generate 2–3 focused clarifying questions (one line each). Return ONLY a JSON array of {"id","label","placeholder"}.`
+    : `Genera 2–3 domande di chiarimento, mirate e in una riga. Restituisci SOLO un array JSON di {"id","label","placeholder"}.`;
 }
-
 function clarifyUserContent({ domanda, periodo = "future", profilo = {}, lang = "it" }) {
   const en = isEn(lang);
   const parts = [];
@@ -317,50 +313,52 @@ function clarifyUserContent({ domanda, periodo = "future", profilo = {}, lang = 
   parts.push(en ? "Return ONLY the JSON array." : "Ritornare SOLO l’array JSON.");
   return parts.join("\n\n");
 }
-
-function localClarify(domanda = "", profilo = {}, lang = "it", periodo = "future") {
+function localClarify(domanda = "", _profilo = {}, lang = "it", periodo = "future") {
   const en = isEn(lang);
-  const qs = [];
   if (periodo === "past") {
-    qs.push({ id: "pivot_year", label: en ? "Turning point year/event?" : "Anno/evento di svolta?", placeholder: en ? "e.g., 2015 move / 2010 offer" : "es. trasferimento 2015 / offerta 2010" });
-    qs.push({ id: "then_context", label: en ? "Where and what context then?" : "Dove e quale contesto allora?", placeholder: en ? "city/team/family" : "città/team/famiglia" });
-    qs.push({ id: "key_sign", label: en ? "One sign it worked?" : "Un segno che funzionava?", placeholder: en ? "person/number/result" : "persona/numero/risultato" });
-  } else {
-    qs.push({ id: "time_window", label: en ? "Real decision window?" : "Vera finestra decisionale?", placeholder: en ? "this month / 3–6 months / 12 months" : "questo mese / 3–6 mesi / 12 mesi" });
-    qs.push({ id: "personal_sign", label: en ? "Personal sign you'd watch?" : "Segno personale che osserveresti?", placeholder: en ? "sleep/energy/first reply" : "sonno/energia/prima risposta" });
-    qs.push({ id: "concrete_limit", label: en ? "Most concrete limit?" : "Limite più concreto?", placeholder: en ? "budget/time/energy" : "budget/tempo/energia" });
+    return [
+      { id: "pivot_year", label: en ? "Turning point year/event?" : "Anno/evento di svolta?", placeholder: en ? "e.g., 2018 move" : "es. trasferimento 2018" },
+      { id: "then_place", label: en ? "Where and who mattered then?" : "Dove e chi contava allora?", placeholder: en ? "city/team/family" : "città/team/famiglia" },
+      { id: "one_sign", label: en ? "One sign it worked?" : "Un segno che funzionava?", placeholder: en ? "result/reply/feeling" : "risultato/risposta/sensazione" },
+    ];
   }
-  return qs.slice(0, 3);
+  return [
+    { id: "time_window", label: en ? "Real decision window?" : "Vera finestra decisionale?", placeholder: en ? "this month / 3–6 months" : "questo mese / 3–6 mesi" },
+    { id: "feel_sign", label: en ? "Personal sign you’d watch?" : "Segno personale da osservare?", placeholder: en ? "sleep/energy/first reply" : "sonno/energia/prima risposta" },
+    { id: "limit", label: en ? "Most concrete limit?" : "Limite più concreto?", placeholder: en ? "budget/time/energy" : "budget/tempo/energia" },
+  ];
 }
 
-/* ============== Helpers ============== */
-function safeNow(nowIso, tz) {
-  const d = nowIso ? new Date(nowIso) : new Date();
-  const w = d.toLocaleDateString("en-GB", { weekday: "long" });
-  const wd_it = d.toLocaleDateString("it-IT", { weekday: "long" });
-  const date_it = d.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" });
-  const date_en = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  const month = d.getMonth() + 1;
-  const season_it = seasonForMonth(month, "it");
-  const season_en = seasonForMonth(month, "en");
-  const month_it = d.toLocaleDateString("it-IT", { month: "long" });
-  const month_en = d.toLocaleDateString("en-GB", { month: "long" });
-  return {
-    time24: `${hh}:${mm}`,
-    weekday_en: w,
-    weekday_it: wd_it,
-    date_it, date_en,
-    season_it, season_en,
-    month_it, month_en,
-    tz: tz || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
-  };
+/* ============== Polish pass (riscrittura anti-cliché) ============== */
+function sanitizeInputForModel(text) { return String(text || ""); }
+
+function needsPolish(text) {
+  return /\b(immagina|chiama|telefonata|scrivi (una )?mail|indicatore|vincolo|trade[- ]?off|primo passo)\b/i.test(text);
 }
-function seasonForMonth(m, lang) {
-  const it = ["inverno","inverno","primavera","primavera","primavera","estate","estate","estate","autunno","autunno","autunno","inverno"];
-  const en = ["winter","winter","spring","spring","spring","summer","summer","summer","autumn","autumn","autumn","winter"];
-  return (lang === "en" ? en : it)[(m-1)%12];
+
+async function polishOutput({ text, lang = "it", stile = "whatif" }) {
+  const en = isEn(lang);
+  // Heuristic rewrite prompt: remove banned & keep tone.
+  const sys = en ? 
+`Rewrite with the same meaning and tone (${stile} persona), but:
+- remove clichés and banned words: "imagine/call a friend/email/indicator/constraint/trade-off/first step"
+- keep second person only
+- show ideas, don't label them
+- for WTF: 8–10 short lines (≤15 words), bar rhythm`
+:
+`R riscrivi con stesso senso e tono (${stile}), ma:
+- elimina cliché e parole vietate: "immagina/chiama/scrivi una mail/indicatore/vincolo/trade-off/primo passo"
+- solo seconda persona
+- mostra i concetti, non etichettarli
+- se WTF: 8–10 righe corte (≤15 parole), ritmo da bancone`;
+  const usr = en ? `TEXT:\n${text}` : `TESTO:\n${text}`;
+  const resp = await client.chat.completions.create({
+    model: MODEL_TEXT,
+    temperature: 0.4,
+    messages: [{ role: "system", content: sys }, { role: "user", content: usr }],
+    max_tokens: 700,
+  });
+  return resp.choices?.[0]?.message?.content?.trim() || text;
 }
 
 /* ============== HTTP handler ============== */
@@ -377,10 +375,10 @@ export default async function handler(req, res) {
       domanda,
       lang = "it",
       periodo = "future",
-      stile = "whatif",          // "whatif" | "wtf"
-      clarify = false,           // true => genera 2–3 domande
-      stream = false,            // true => text/event-stream
-      profilo = {},              // include story_state se vuoi archi episodici
+      stile = "whatif",    // "whatif" | "wtf"
+      clarify = false,
+      stream = false,
+      profilo = {},
       clarifications = {},
       extra = "",
       now: nowIso,
@@ -391,7 +389,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    /* ---------- Clarify branch ---------- */
+    /* ------ Clarify branch ------ */
     if (clarify) {
       let questions = [];
       try {
@@ -399,41 +397,28 @@ export default async function handler(req, res) {
         const usr = clarifyUserContent({ domanda, periodo, profilo, lang });
         const resp = await client.chat.completions.create({
           model: MODEL_TEXT,
-          temperature: 0.7,
+          temperature: 0.6,
           messages: [{ role: "system", content: sys }, { role: "user", content: usr }],
         });
         const raw = resp.choices?.[0]?.message?.content?.trim() || "[]";
-        const start = raw.indexOf("[");
-        const end = raw.lastIndexOf("]");
-        if (start >= 0 && end > start) questions = JSON.parse(raw.slice(start, end + 1));
+        const start = raw.indexOf("["); const end = raw.lastIndexOf("]");
+        if (start >= 0 && end > start) questions = JSON.parse(raw.slice(start, end+1));
       } catch {}
       if (!Array.isArray(questions) || questions.length === 0) {
         questions = localClarify(domanda, profilo, lang, periodo);
       }
       questions = questions.slice(0, 3).map((q, i) => ({
-        id: String(q.id || `q${i + 1}`),
+        id: String(q.id || `q${i+1}`),
         label: String(q.label || q?.text || (isEn(lang) ? "Question" : "Domanda")),
         placeholder: String(q.placeholder || (isEn(lang) ? "Answer in one line" : "Rispondi in una riga")),
       }));
-      try {
-        const todayIso = new Date().toISOString().slice(0, 10);
-        res.setHeader("X-Whatif-Clarify", JSON.stringify({ date: todayIso, used: (questions?.length || 0) }));
-      } catch {}
       return res.status(200).json({ questions });
     }
 
-    /* ---------- Generation branch ---------- */
+    /* ------ Generation branch ------ */
     const sys1 = systemPrompt({ stile, lang, profile: profilo, nowIso, tz });
     const user = buildUserContent({ domanda, periodo, profilo, clarifications, lang, stile, nowIso, tz });
     const sys2 = responseStyleInstruction(lang, stile);
-
-    const finaleHint = isFinalEpisode(profilo)
-      ? (isEn(lang)
-          ? "This is the FINALE for this thread: deliver closure (no cliffhanger). One-line invite to start a new 'what if'."
-          : "Questo è il FINALE di questa storia: chiudi davvero (niente cliffhanger). Una riga che invita a un nuovo 'e se'.")
-      : (isEn(lang)
-          ? `Mid-episode: end with a subtle personal hook linked to ${profilo?.city_now || profilo?.city || "their city"} or ${profilo?.work_role || profilo?.role || "their role"}.`
-          : `Episodio intermedio: chiudi con un gancio personale legato a ${profilo?.city_now || profilo?.city || "la tua città"} o ${profilo?.work_role || profilo?.role || "il tuo ruolo"}.`);
 
     const fewshots = getFewShots(stile, lang);
     const mirror = makeMirrorLine({ profilo, lang });
@@ -443,51 +428,35 @@ export default async function handler(req, res) {
       { role: "system", content: sys1 },
       ...fewshots,
       { role: "system", content: isEn(lang)
-        ? `Open with one short "mirror" line like (paraphrase, don't copy): "${mirror}"`
-        : `Apri con una breve riga di “specchio” (parafrasa, non copiare): "${mirror}"` },
-      { role: "user", content: user },
+          ? `Open with a short mirror line (paraphrase naturally): "${mirror}"`
+          : `Apri con una breve riga di specchio (parafrasa): "${mirror}"` },
+      { role: "user", content: sanitizeInputForModel(user) },
       { role: "system", content: sys2 },
-      { role: "system", content: finaleHint },
       { role: "system", content: isEn(lang)
-        ? `Close with a natural episodic line like: "${closing}" (vary wording each time).`
-        : `Chiudi con una riga episodica naturale tipo: "${closing}" (varia la frase ogni volta).` },
+          ? `Close with a natural episodic line like: "${closing}" — vary phrasing.`
+          : `Chiudi con una riga episodica tipo: "${closing}" — varia la frase.` },
       extra ? { role: "user", content: extra } : null,
     ].filter(Boolean);
 
-    const temperature = stile === "wtf" ? 0.97 : 0.82;
-
-    if (String(req.headers["x-whatif-stream"] || "").length > 0 || stream) {
-      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-      res.setHeader("Cache-Control", "no-cache, no-transform");
-      res.setHeader("Connection", "keep-alive");
-
-      const s = await client.chat.completions.create({
-        model: MODEL_TEXT,
-        messages,
-        temperature,
-        max_tokens: 700,
-        stream: true,
-      });
-
-      for await (const chunk of s) {
-        const delta = chunk.choices?.[0]?.delta?.content || "";
-        if (delta) res.write(`data: ${JSON.stringify({ token: delta })}\n\n`);
-      }
-      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-      return res.end();
-    }
-
-    const c = await client.chat.completions.create({
+    const temperature = stile === "wtf" ? 0.95 : 0.82;
+    const base = await client.chat.completions.create({
       model: MODEL_TEXT,
       messages,
       temperature,
+      presence_penalty: 0.3,   // meno ripetizioni
       max_tokens: 700,
     });
-    const text = c.choices?.[0]?.message?.content?.trim() || "";
+    let text = base.choices?.[0]?.message?.content?.trim() || "";
+
+    // Polish pass se compaiono parole/strutture vietate
+    if (needsPolish(text)) {
+      text = await polishOutput({ text, lang, stile });
+    }
+
     return res.status(200).json({ answer: text });
   } catch (err) {
     console.error("API /ask error:", err);
     const isAbort = ("" + err?.message).toLowerCase().includes("aborted");
     return res.status(500).json({ error: "server", detail: isAbort ? "aborted" : err?.message || "unknown" });
   }
-          }
+}
