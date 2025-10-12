@@ -6,30 +6,27 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL_TEXT = "gpt-4o-mini";
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
-/* ========= Heuristica lingua (fallback) ========= */
+/* ========= Lang detection (fallback) ========= */
 function detectLang(text = "", profile = {}) {
-  // Se la UI manda già lang, usala. Altrimenti heuristiche semplici.
   const t = `${text} ${profile?.name || ""}`.toLowerCase();
-  const itHits = ["che", "non", "perché", "all'", "l'", "gli", "una", "un", "sei"];
-  const enHits = ["what", "if", "you", "the", "and", "would", "could"];
+  const itHits = [" che ", " non ", " perché", " all'", " l'", " gli ", " una ", " un "];
+  const enHits = [" what ", " if ", " you ", " the ", " and ", " would ", " could "];
   const itScore = itHits.reduce((s, w) => s + (t.includes(w) ? 1 : 0), 0);
   const enScore = enHits.reduce((s, w) => s + (t.includes(w) ? 1 : 0), 0);
   return enScore > itScore ? "en" : "it";
 }
 
-/* ========= Persona & stile ========= */
+/* ========= Personas ========= */
 const PERSONAS = {
   whatif: {
     system: `
 Sei "What?f": voce empatica, lucida, concreta.
 Seconda persona, una sola voce. 8–12 frasi brevi, tono caldo e netto.
-Fai capire che lo conosci senza dirlo esplicitamente (specchio iniziale).
+Fai capire che lo conosci senza dirlo (apri con una riga specchio).
 NON usare etichette ("indicatore", "vincolo", "trade-off", "primo passo").
-Niente moralismi, niente nostalgia, niente liste di consigli.
-Preferisci dettagli verificabili (tempi, piccoli costi, segnali interni).
-LIMITA le metafore: massimo UNA breve, altrimenti lessico diretto.
-Evita verbi onirici (es. "danza", "abbraccia", "sinfonia", "sussurra", "tempesta interiore").
-Chiudi con un invito morbido: domani 2 micro-domande per continuare.
+Evita moralismi e nostalgia. Dettagli verificabili: tempi, piccoli costi, segnali interni.
+Metafore limitate: al massimo UNA breve; preferisci linguaggio semplice.
+Chiudi con invito morbido: domani 2 micro-domande per continuare.
 `,
     few_it: [
       "Lo capisci dal respiro: se si allunga, stai andando dove vuoi stare.",
@@ -44,27 +41,27 @@ Chiudi con un invito morbido: domani 2 micro-domande per continuare.
   },
   wtf: {
     system: `
-Sei "What the F": amico brillante da bancone, affettuosamente sarcastico.
-Seconda persona, una voce. 8–10 righe secche, ritmo da bar, punchline pulite.
-Niente volgarità, niente prediche. Verità schiette ma calorose.
-Personalizza in modo implicito (luogo/ruolo), senza elencare dati.
-LIMITA le metafore: massimo UNA breve, preferisci battute concrete.
-Chiudi con una battuta/invito (domani due colpi secchi).
+Sei "What the F": amico geniale da bancone, affettuosamente sarcastico.
+Una sola voce. 8–10 STROFE secche. Ogni frase ≤14 parole.
+Ritmo da bar. 2+ punchline. Zero metafore (a meno che siano microscopiche). Niente prediche.
+Tono: diretto, ironico, mai cattivo. Personalizza implicito (luogo/ruolo) senza elenchi.
+Non copiare lo stile di What?f: niente carezze, niente “voce interiore”.
+Chiudi con battuta/invito (domani due colpi secchi).
 `,
     few_it: [
       "Vuoi libertà con garanzia. Carino.",
-      "Le idee ti arrivano come gli aperitivi: una di troppo e inspiegabilmente prendi la decisione giusta.",
-      "Ok: niente drammi, ma fammi vedere una ricevuta."
+      "Le idee ti arrivano come aperitivi: una di troppo e prendi la migliore.",
+      "Ok: niente drammi. Facciamolo bene, senza fronzoli."
     ],
     few_en: [
       "You want freedom with a warranty. Cute.",
-      "Let’s mess this up beautifully — you bring hope, I’ll bring nonsense.",
-      "Calm beats chaos; attitude beats planning (but bring both)."
+      "Beautiful chaos, smarter choices. That’s your brand.",
+      "Keep the punchlines; skip the excuses."
     ]
   }
 };
 
-/* ========= Mirror (specchio) & chiusure ========= */
+/* ========= Mirror & Closings ========= */
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 function mirrorLine(profile = {}, lang = "it") {
@@ -82,7 +79,7 @@ function mirrorLine(profile = {}, lang = "it") {
   ];
   const enPool = [
     name ? `${name}, you don’t move on whims — you move for meaning.` : "You don’t move on whims — you move for meaning.",
-    city ? `${city} grounds you, but you still need an open window.` : "You like a solid base and one open window.",
+    city ? `${city} grounds you, yet you need one open window.` : "You like a solid base and one open window.",
     role ? `In ${role}, you keep pace while the “why” stays lit.` : "You keep pace while the “why” stays lit.",
     goal ? `There’s a clear target: ${goal}. Everything else must align.` : "There’s a clear target. Everything else must align."
   ];
@@ -115,7 +112,7 @@ function episodicClosing(style = "whatif", lang = "it") {
   return en ? pick(enSoft) : pick(itSoft);
 }
 
-/* ========= Time helpers ========= */
+/* ========= Helpers ========= */
 function todayInfo(lang){
   const d = new Date();
   const loc = isEn(lang) ? "en-GB" : "it-IT";
@@ -124,6 +121,24 @@ function todayInfo(lang){
   const hh = String(d.getHours()).padStart(2,"0");
   const mm = String(d.getMinutes()).padStart(2,"0");
   return `${weekday}, ${date} • ${hh}:${mm}`;
+}
+
+function normalizeClarifications(c) {
+  if (!c) return [];
+  if (Array.isArray(c)) return c.filter(Boolean).map(String);
+  if (typeof c === "object") return Object.values(c).filter(Boolean).map(String);
+  return [];
+}
+
+function enforceLangInstruction(lang, style){
+  if (isEn(lang)) {
+    return style === "wtf"
+      ? `Output MUST be strictly in English. Short, sharp one-liners. No Italian words.`
+      : `Write strictly in English. Warm, predictive tone. No Italian words.`;
+  }
+  return style === "wtf"
+    ? `Rispondi rigorosamente in italiano. Frasi brevi e secche. Nessuna parola inglese.`
+    : `Scrivi rigorosamente in italiano. Tono caldo e predittivo. Nessuna parola inglese.`;
 }
 
 /* ========= HTTP handler ========= */
@@ -138,21 +153,21 @@ export default async function handler(req, res) {
   try {
     let {
       domanda,
-      lang,                        // può mancare: lo deduciamo
-      periodo = "future",          // "future" | "past"
-      stile = "whatif",            // "whatif" | "wtf"
-      stream = false,              // true => SSE
-      clarify = false,             // true => 2–3 domande
+      lang,                       // può mancare → auto-detect
+      periodo = "future",         // "future" | "past"
+      stile = "whatif",           // "whatif" | "wtf"
+      stream = false,             // true => SSE
+      clarify = false,            // true => 2–3 domande
       profilo = {},
-      clarifications = [],         // array di brevi risposte (opzionale)
-      metaphors = "low"            // "off" | "low" | "default"
+      clarifications,             // array o object
+      metaphors = "low"           // "off" | "low" | "default"
     } = req.body || {};
 
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    // Lingua automatica se non arriva dal frontend
+    // Lingua: se non arriva, la stimiamo
     if (!lang) lang = detectLang(domanda, profilo);
 
     /* ----- Clarify branch ----- */
@@ -175,8 +190,9 @@ export default async function handler(req, res) {
     const persona = PERSONAS[stile === "wtf" ? "wtf" : "whatif"];
     const mirror = mirrorLine(profilo, lang);
     const closing = episodicClosing(stile, lang);
+    const clarArr = normalizeClarifications(clarifications);
 
-    // Regole anti-metafora
+    // Regole metafore
     const metaRule =
       metaphors === "off"
         ? (isEn(lang)
@@ -186,14 +202,27 @@ export default async function handler(req, res) {
             ? "At most ONE short metaphor. Prefer plain, concrete language."
             : "Al massimo UNA metafora breve. Preferisci linguaggio piano e concreto.");
 
+    // Guardie di stile forti per differenziare WTF
+    const wtfGuards = isEn(lang)
+      ? `WTF guardrails:
+- 8–10 one-liners. Max 14 words each.
+- 2+ punchlines. No soft counseling. No inner-voice vibe.
+- Minimal imagery. Prefer facts, jabs, decisions.`
+      : `Paletti WTF:
+- 8–10 stoccate. Max 14 parole ciascuna.
+- Almeno 2 punchline. Niente counseling morbido. Niente voce interiore.
+- Immagini al minimo. Preferisci fatti, frecciate, scelte.`;
+
     const system = `
 ${persona.system.trim()}
 ${metaRule}
+${stile === "wtf" ? wtfGuards : ""}
+${enforceLangInstruction(lang, stile)}
 Oggi: ${todayInfo(lang)}
 
 Linee guida forti:
 - Mai etichette esplicite (no "indicatore", "vincolo", "primo passo", ecc.).
-- Seconda persona, zero "io". Varia lessico e struttura; evita ripetizioni (niente "chiama un amico" fisso).
+- Seconda persona, zero "io". Varia lessico e struttura; niente ripetizioni.
 - Integra impliciti di città/ruolo/valori se presenti, senza elenchi.
 - Periodo: ${periodo === "past" ? (isEn(lang) ? "counterfactual past" : "controfattuale") : (isEn(lang) ? "near-future" : "futuro vicino")}.
 
@@ -204,18 +233,18 @@ ${persona.few_en.map(s => `• ${s}`).join("\n")}
 `.trim();
 
     const user = `
-Apertura-specchio (parafrasa, non copiare): "${mirror}".
+${isEn(lang) ? "Mirror opening (paraphrase, don't copy)" : "Apertura-specchio (parafrasa, non copiare)"}: "${mirror}".
 
 ${isEn(lang) ? "QUESTION" : "DOMANDA"}: "${domanda}"
-${isEn(lang) ? "DETAILS" : "DETTAGLI"}: ${Array.isArray(clarifications) && clarifications.length ? clarifications.join(", ") : (isEn(lang) ? "none" : "nessuno")}
+${isEn(lang) ? "DETAILS" : "DETTAGLI"}: ${clarArr.length ? clarArr.join(", ") : (isEn(lang) ? "none" : "nessuno")}
 
 ${isEn(lang)
-  ? `Write 8–12 flowing sentences (${stile==="wtf" ? "witty and sharp" : "warm and predictive"}), ~180 words max.
-Avoid bullet lists and rhetorical questions; use small realistic costs and inner/outer signals.
-Close with ONE single line, in the spirit of: "${closing}".`
-  : `Scrivi 8–12 frasi fluide (${stile==="wtf" ? "brillanti e taglienti" : "calde e predittive"}), max ~180 parole.
+  ? `Write ${stile==="wtf" ? "8–10 sharp one-liners (≤14 words each)" : "8–12 flowing sentences"}, ~180 words max.
+Avoid bullet lists and rhetorical questions; use small realistic costs and inner/outer signs.
+Close with ONE single line in this spirit: "${closing}".`
+  : `Scrivi ${stile==="wtf" ? "8–10 stoccate (≤14 parole ciascuna)" : "8–12 frasi fluide"}, max ~180 parole.
 Evita elenchi e domande retoriche; usa piccoli costi realistici e segnali interni/esterni.
-Chiudi con UNA sola riga, nello spirito: "${closing}".`
+Chiudi con UNA sola riga nello spirito: "${closing}".`
 }
 `.trim();
 
