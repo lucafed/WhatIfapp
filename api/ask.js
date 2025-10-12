@@ -36,7 +36,7 @@ function renderProfileDigest(p = {}) {
   if (p.landmark) parts.push(`ancora: ${p.landmark}`);
 
   // Micro-dati giornalieri (solo stringhe utili)
-  if (p.micro && typeof p !== "string" && typeof p === "object") {
+  if (p.micro && typeof p.micro === "object") {
     const micro = p.micro;
     Object.entries(micro).forEach(([k, v]) => {
       if (v && typeof v === "string" && v.trim()) {
@@ -52,28 +52,6 @@ function isFinalEpisode(profile = {}) {
   const ep = Number(profile?.story_state?.episode ?? 1);
   const max = Number(profile?.story_state?.max_episodes ?? 3);
   return ep >= max;
-}
-
-/* ============== SPECCHIO PERSONA (frasi al TU, usate nel prompt utente) ============== */
-function personaFingerprint(p = {}) {
-  const bits = [];
-  if (Array.isArray(p.values) && p.values.length) bits.push(`tieni molto a ${p.values.slice(0,3).join(", ")}`);
-  if (Array.isArray(p.goals) && p.goals.length)  bits.push(`ora insegui ${p.goals[0]}`);
-  if (p.risk_tolerance) bits.push(`tolleranza al rischio ${p.risk_tolerance}`);
-  if (p.success_indicator) bits.push(`misuri il successo con: ${p.success_indicator}`);
-  if (p.time_window) bits.push(`decidi dentro: ${p.time_window}`);
-  if (p.work_role || p.role) bits.push(`mente da ${p.work_role || p.role}`);
-  if (p.city_now || p.city) bits.push(`ritmo di ${p.city_now || p.city}`);
-  if (p.micro?.routine) bits.push(`routine: ${p.micro.routine}`);
-  if (p.micro?.pain_today) bits.push(`oggi ti pesa: ${p.micro.pain_today}`);
-  if (!bits.length) bits.push("sei pragmatico: ti sblocchi con scadenze corte e un primo passo chiaro");
-
-  return [
-    "Tu decidi meglio con scadenze corte e passi piccoli.",
-    "Cerchi conferme nei numeri, poi segui l’istinto.",
-    "Ti motivano le persone giuste più delle cose.",
-    ...bits
-  ].slice(0,5).join(" • ");
 }
 
 /* ============== Persona prompts ============== */
@@ -143,6 +121,7 @@ Chiusura:
 ${when_en}
 Speak as ONE calm inner voice. 8–10 short lines, firm and vivid.
 - Second person only ("you"); never "I".
+- ALWAYS open with a personal mirroring line like “You’re the kind who…”, or “Lately you find yourself…”.
 Goal: let the user SEE a counterfactual slice (PAST) or a near-future fork (FUTURE).
 Style:
 - Less sweet, more grounded. Real timings, small risks, trade-offs, first concrete step.
@@ -157,6 +136,7 @@ Ending:
 ${when_it}
 Parla come UNA voce interiore calma. 8–10 righe brevi, nette, visive.
 - Solo seconda persona (“tu”); mai “io”.
+- APRI SEMPRE con una frase di rispecchiamento personale: “Sei il tipo che…”, oppure “Ultimamente ti ritrovi a…”.
 Obiettivo: far VEDERE un controfattuale (PASSATO) o una biforcazione di prossimo futuro (FUTURO).
 Stile:
 - Meno smielato, più ancorato. Tempi reali, piccoli rischi, trade-off, primo passo concreto.
@@ -212,24 +192,24 @@ Punchline: cuore pieno, agenda… vediamo.`
       ];
     }
 
-    // WHAT?f — amico lucido, predittivo, 2a persona, concreto
+    // WHAT?f — amico lucido, predittivo, 2a persona, concreto (alla screenshot)
     return [
       {
         role: "system",
         content:
-`ESEMPIO_WHATIF_1
-DOMANDA: "Se avessi vinto 1.000.000 di euro?"
-RISPOSTA (8–10 righe, 2a persona, predittiva):
-Il primo mese alzi il respiro, non la pressione.
-Chiudi debiti, crei un cuscinetto, sposti la paura più in là.
-Poi arriva il trade-off: più opzioni, più scelte da difendere.
-Se la felicità è l’indicatore, guardi sonno ed energie.
-Vincolo realistico: tempo e attenzione, non il budget.
-Primo passo: blocchi una quota “intoccabile” e dai un nome a ogni euro.
-Segnale a 30 giorni: acquisti impulsivi giù del 30%, umore più stabile.
-Dopo 6 mesi l’attico può aspettare; la serenità no.
-Chiudi dove conta: persone, routine, salute.
-Gancio: vuoi provare una settimana “pilota” senza acquisti emotivi?`
+`ESEMPIO_WHATIF
+DOMANDA: "E se comprassi una moto?"
+RISPOSTA:
+Sei il tipo che si sente vivo quando sente il vento. Ultimamente la routine ti stringe.
+A marzo prossimo ti immagini al telefono con un concessionario, “giusto per informarti”.
+In realtà lo sai: quella chiamata segna l’inizio.
+Vincolo: il budget, ma anche la paura di sembrare impulsivo.
+Indicatore: il battito che risale appena pensi alla strada.
+Trade-off: meno serate ferme, più viaggi da pianificare.
+Primo passo: un’ora per vedere modelli e capire costi.
+Segnale che funziona: ti svegli prima, sorridi prima del caffè.
+E mentre Bussolengo resta porto sicuro, la moto diventa rotta.
+Domani, forse, scopri dove porta.`
       },
       {
         role: "system",
@@ -239,10 +219,10 @@ DOMANDA: "E se tornassi all’Aquila tra 3–6 mesi?"
 RISPOSTA:
 Nel primo mese crei una routine corta: lavoro, piazza, due volti certi.
 Vincolo: logistica doppia tra città e affetti.
-Primo passo: una settimana al mese in test, sempre stessi giorni.
+Primo passo: una settimana al mese in test, stessi giorni.
 Indicatore: due serate leggere e sonno regolare.
 Trade-off: meno anonimato, più richieste.
-Segnale a 30 giorni: meno notifiche urgenti, più inviti scelti da te.
+Segnale a 30 giorni: meno chat urgenti, più inviti scelti da te.
 Se funziona, raddoppi la finestra a due settimane.
 Dopo 90 giorni capisci se è rientro o pendolarismo emotivo.
 Gancio: fissiamo i 4 giorni “pilota” del prossimo mese?`
@@ -273,11 +253,12 @@ Punchline: keep the dream’s receipt.` },
 `WHATIF_EXAMPLE_1
 QUESTION: "What if I moved back home?"
 ANSWER:
+You’re the kind who needs a clear horizon. Lately, routine drags.
 Test one fixed week per month.
 Constraint: doubled logistics.
 Indicator: two light evenings + steady sleep.
 Trade-off: less anonymity, more asks.
-After 90 days, it's home or museum.
+After 90 days, it’s home or museum.
 Hook: want to schedule the pilot dates?` },
   ];
 }
@@ -317,15 +298,6 @@ giorno=${now.weekday_it}; stagione=${now.season_it}; mese=${now.month_it}; ora_l
   const digest = renderProfileDigest(profilo);
   if (digest) L.push(en ? `PROFILE DIGEST: ${digest}` : `SINTESI PROFILO: ${digest}`);
 
-  // >>> SPECCHIO PERSONA: frasi al TU per far “sentire” che lo conosce
-  const mirror = personaFingerprint(profilo);
-  if (mirror) L.push(en ? `PERSONA MIRROR: ${mirror}` : `SPECCHIO PERSONA: ${mirror}`);
-
-  // >>> Vincolo duro: solo seconda persona
-  L.push(en
-    ? "STRICT SECOND PERSON: address the user as 'you' throughout. Do not use 'I'."
-    : "SECONDA PERSONA STRETTA: parla sempre al 'tu'. Non usare 'io'.");
-
   // Predittivo esplicito
   const p = profilo || {};
   const pred = {
@@ -359,11 +331,6 @@ giorno=${now.weekday_it}; stagione=${now.season_it}; mese=${now.month_it}; ora_l
 - Intreccia finestra decisionale, tolleranza al rischio e luogo/persona-ancora in modo naturale (no elenco).
 - Specifica dettagli piccoli (orario, quartiere, “texture”) solo se servono. Evita affermazioni di attualità se non fornite; resta senza tempo altrimenti.`
   );
-
-  // >>> Gancio “torna domani” quando non è finale
-  L.push(en
-    ? "HOOK: unless finale, end with one short line inviting them to return tomorrow to continue the story."
-    : "GANCIO: se non è il finale, chiudi con una riga che inviti a tornare domani per continuare la storia.");
 
   return L.join("\n\n");
 }
@@ -492,7 +459,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    /* ---------- Clarify branch (versione migliorata e dinamica) ---------- */
+    /* ---------- Clarify branch ---------- */
     if (clarify) {
       let questions = [];
       try {
@@ -505,23 +472,14 @@ Restituisci SOLO un array JSON nel formato:
   {"id":"q1","label":"testo della domanda","placeholder":"esempio di risposta"},
   {"id":"q2","label":"testo della domanda","placeholder":"esempio di risposta"},
   {"id":"q3","label":"testo della domanda","placeholder":"esempio di risposta"}
-]
-
-Esempio:
-Domanda: "E se lasciassi il lavoro e aprissi un bar?"
-→ Domande:
-1. Qual è la motivazione più forte che ti spinge a farlo?
-2. Quale sarebbe la difficoltà più grande da superare?
-3. In quale città o quartiere ti piacerebbe aprirlo?
-`;
+]`;
 
         const usr = `
 Domanda utente: "${domanda}"
 Periodo: ${periodo}
 Profilo utente (riassunto): ${renderProfileDigest(profilo) || "non disponibile"}
 Lingua: ${lang}
-Rispondi solo con il JSON, senza testo aggiuntivo.
-`;
+Rispondi solo con il JSON, senza testo aggiuntivo.`;
 
         const resp = await client.chat.completions.create({
           model: MODEL_TEXT,
@@ -542,19 +500,19 @@ Rispondi solo con il JSON, senza testo aggiuntivo.
         console.error("Clarify dynamic error:", err);
       }
 
-      // Fallback locale se la risposta non è valida
+      // Fallback locale
       if (!Array.isArray(questions) || questions.length === 0) {
         questions = localClarify(domanda, profilo, lang, periodo);
       }
 
-      // Normalizza e prepara le domande
+      // Normalizza
       questions = questions.slice(0, 3).map((q, i) => ({
         id: String(q.id || `q${i + 1}`),
         label: String(q.label || q?.text || (isEn(lang) ? "Question" : "Domanda")),
         placeholder: String(q.placeholder || (isEn(lang) ? "Answer in one line" : "Rispondi in una riga")),
       }));
 
-      // Log chiarimenti usati oggi (header per eventuale client tracking)
+      // Header info (facoltativo per tracking client)
       try {
         const todayIso = new Date().toISOString().slice(0, 10);
         const clarHdr = { date: todayIso, used: (questions?.length || 0) };
@@ -568,8 +526,6 @@ Rispondi solo con il JSON, senza testo aggiuntivo.
     const sys1 = systemPrompt({ stile, lang, profile: profilo, nowIso, tz });
     const user = buildUserContent({ domanda, periodo, profilo, clarifications, lang, stile, nowIso, tz });
     const sys2 = responseStyleInstruction(lang, stile);
-
-    // Finale/mid-episode hint (rinforzo)
     const finaleHint = isFinalEpisode(profilo)
       ? (isEn(lang)
           ? "This is the FINALE for this thread: deliver closure (no cliffhanger). One-line invite to start a new 'what if'."
@@ -578,19 +534,18 @@ Rispondi solo con il JSON, senza testo aggiuntivo.
           ? `Mid-episode: end with a subtle personal hook linked to ${profilo?.city_now || profilo?.city || (isEn(lang) ? "their city" : "la tua città")} or ${profilo?.work_role || profilo?.role || (isEn(lang) ? "their role" : "il tuo ruolo")}.`
           : `Episodio intermedio: chiudi con un gancio personale legato a ${profilo?.city_now || profilo?.city || "la tua città"} o ${profilo?.work_role || profilo?.role || "il tuo ruolo"}.`);
 
-    // >>> Few-shots iniettati qui (guidano il tono e il formato)
+    // Few-shots che guidano il tono
     const fewshots = getFewShots(stile, lang);
 
     const messages = [
       { role: "system", content: sys1 },
-      ...fewshots,                    // <<— esempi di stile
+      ...fewshots,
       { role: "user", content: user },
       { role: "system", content: sys2 },
       { role: "system", content: finaleHint },
       extra ? { role: "user", content: extra } : null,
     ].filter(Boolean);
 
-    // Temperatura: più alta per wtf per favorire battute e ritmo
     const temperature = stile === "wtf" ? 0.97 : 0.82;
 
     // Streaming (SSE)
