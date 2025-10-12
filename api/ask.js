@@ -6,15 +6,16 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL_TEXT = "gpt-4o-mini";
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
-/* ========= Persona & stile (inline) ========= */
+/* ========= Persona & stile ========= */
 const PERSONAS = {
   whatif: {
     system: `
 Sei "What?f": una voce empatica e lucida, come una zingara digitale.
 Parla in seconda persona, una sola voce, 8–12 frasi brevi, tono caldo e netto.
 Fai percepire che “conosci” l’utente senza dichiararlo: leggi lo stato d’animo e anticipi il passo successivo.
-Non usare etichette come "indicatore", "vincolo", "trade-off", "primo passo": mostra, non nominare.
+NON usare etichette come "indicatore", "vincolo", "trade-off", "primo passo": mostra, non nominare.
 Evita moralismi, nostalgia e consigli banali. Realismo, dettagli plausibili, immagini leggere.
+Evita formule tipo "immagina", "pensa se": scrivi come se stesse davvero accadendo.
 Chiudi sempre con un invito morbido a tornare/domani per 2 micro-domande.
 `,
     few_it: [
@@ -25,14 +26,14 @@ Chiudi sempre con un invito morbido a tornare/domani per 2 micro-domande.
     few_en: [
       "You don’t move for noise, you move for meaning.",
       "Peace beats excitement when it’s real.",
-      "A solid base and one open window—that’s your pattern."
+      "A solid base and one open window — that’s your pattern."
     ]
   },
   wtf: {
     system: `
 Sei "What the F": amico geniale e sarcastico da bancone, mezzo brillo ma lucidissimo.
 Seconda persona, una sola voce, 8–10 righe secche. Ritmo da bar, punchline pulite.
-Ironia alta ma mai cattiva; zero volgarità; niente prediche. Sorprendi con verità scomode ma affettuose.
+Ironia alta ma mai cattiva; zero volgarità; niente prediche. Verità scomode ma affettuose.
 Personalizza in modo implicito (luogo/ruolo) senza elencare dati.
 Chiudi con una battuta/invito: "domani due colpi secchi", ecc.
 `,
@@ -44,13 +45,13 @@ Chiudi con una battuta/invito: "domani due colpi secchi", ecc.
     few_en: [
       "You want freedom with a warranty. Cute.",
       "Let’s mess this up beautifully. You bring hope, I’ll bring nonsense.",
-      "Chaos has a better sense of humor than logic—use it."
+      "Chaos has a better sense of humor than logic — use it."
     ]
   }
 };
 
 /* ========= Mirror (specchio) & chiusure ========= */
-function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 function mirrorLine(profile = {}, lang = "it") {
   const en = isEn(lang);
@@ -66,7 +67,7 @@ function mirrorLine(profile = {}, lang = "it") {
     goal ? `In testa gira questo: ${goal}. Il resto deve allinearsi.` : "Hai un punto chiaro in testa: il resto deve allinearsi."
   ];
   const enPool = [
-    name ? `${name}, you don’t move on whims—you move for meaning.` : "You don’t move on whims—you move for meaning.",
+    name ? `${name}, you don’t move on whims — you move for meaning.` : "You don’t move on whims — you move for meaning.",
     city ? `${city} grounds you, but you still need an open window.` : "You like a solid base and one open window.",
     role ? `In ${role}, you keep pace while the “why” stays lit.` : "You keep pace while the “why” stays lit.",
     goal ? `There’s a clear target: ${goal}. Everything else must align.` : "There’s a clear target. Everything else must align."
@@ -87,28 +88,55 @@ function episodicClosing(style = "whatif", lang = "it") {
     "Ok, chiudo il bancone: domani due domande e via."
   ];
   const enSoft = [
-    "Come back tomorrow—two micro-questions and we move on.",
+    "Come back tomorrow — two micro-questions and we move on.",
     "Return tomorrow: two small details, cleaner path.",
     "We’ll pick it up tomorrow with two quick prompts."
   ];
   const enSharp = [
-    "Pause here. Tomorrow two clean shots—then action.",
+    "Pause here. Tomorrow two clean shots — then action.",
     "Bookmark this. Two fast cues tomorrow and we level up.",
-    "Bar’s closed—for now. Tomorrow, two sharp questions."
+    "Bar’s closed — for now. Tomorrow, two sharp questions."
   ];
   if (style === "wtf") return en ? pick(enSharp) : pick(itSharp);
   return en ? pick(enSoft) : pick(itSoft);
 }
 
 /* ========= Time helpers ========= */
-function todayInfo(lang){
+function todayInfo(lang) {
   const d = new Date();
   const loc = isEn(lang) ? "en-GB" : "it-IT";
-  const weekday = d.toLocaleDateString(loc, { weekday:"long" });
-  const date = d.toLocaleDateString(loc, { day:"2-digit", month:"long", year:"numeric" });
-  const hh = String(d.getHours()).padStart(2,"0");
-  const mm = String(d.getMinutes()).padStart(2,"0");
+  const weekday = d.toLocaleDateString(loc, { weekday: "long" });
+  const date = d.toLocaleDateString(loc, { day: "2-digit", month: "long", year: "numeric" });
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
   return `${weekday}, ${date} • ${hh}:${mm}`;
+}
+
+/* ========= Intensità (manopola) =========
+   intensity: "soft" | "default" | "bold"
+   - regola temperatura e “spigolo” del tono.
+*/
+function toneSettings(style = "whatif", intensity = "default") {
+  const base = { temperature: style === "wtf" ? 0.93 : 0.82, extra: "" };
+  if (intensity === "soft") {
+    return {
+      temperature: style === "wtf" ? 0.88 : 0.75,
+      extra:
+        style === "wtf"
+          ? "Sarcasmo più leggero, zero eccessi. Mantieni calore e un filo di autoironia."
+          : "Tono più pacato e concreto; privilegia chiarezza e piccoli esempi reali."
+    };
+  }
+  if (intensity === "bold") {
+    return {
+      temperature: style === "wtf" ? 0.98 : 0.9,
+      extra:
+        style === "wtf"
+          ? "Spingi su ritmo e punchline, resta affettuoso ma netto. Frasi corte, taglio brillante."
+          : "Più intuitivo e assertivo: nomina i micro-segnali interni, riduci le premesse e vai al punto."
+    };
+  }
+  return base;
 }
 
 /* ========= HTTP handler ========= */
@@ -124,12 +152,13 @@ export default async function handler(req, res) {
     const {
       domanda,
       lang = "it",
-      periodo = "future",     // "future" | "past"
-      stile = "whatif",       // "whatif" | "wtf"
-      stream = false,         // true => SSE
-      clarify = false,        // true => 2–3 domande
+      periodo = "future",      // "future" | "past"
+      stile = "whatif",        // "whatif" | "wtf"
+      intensity = "default",   // "soft" | "default" | "bold"
+      stream = false,          // true => SSE
+      clarify = false,         // true => 2–3 domande
       profilo = {},
-      clarifications = []     // array di brevi risposte (opzionale)
+      clarifications = []      // array di brevi risposte (opzionale)
     } = req.body || {};
 
     if (!domanda || typeof domanda !== "string") {
@@ -141,13 +170,13 @@ export default async function handler(req, res) {
       const en = isEn(lang);
       const qs = [];
       if (periodo === "past") {
-        qs.push({ id:"pivot", label: en?"Turning point year/event?":"Anno/evento di svolta?", placeholder: en?"e.g., 2018 move / 2010 offer":"es. trasferimento 2018 / offerta 2010" });
-        qs.push({ id:"place", label: en?"Where & what context then?":"Dove e quale contesto allora?", placeholder: en?"city/team/family":"città/team/famiglia" });
-        qs.push({ id:"sign", label: en?"One sign it worked?":"Un segno che funzionava?", placeholder: en?"sleep/energy/text back":"sonno/energia/richiami" });
+        qs.push({ id:"pivot",  label: en?"Turning point year/event?":"Anno/evento di svolta?",    placeholder: en?"e.g., 2018 move / 2010 offer":"es. trasferimento 2018 / offerta 2010" });
+        qs.push({ id:"place",  label: en?"Where & what context then?":"Dove e quale contesto allora?", placeholder: en?"city/team/family":"città/team/famiglia" });
+        qs.push({ id:"sign",   label: en?"One sign it worked?":"Un segno che funzionava?",       placeholder: en?"sleep/energy/text back":"sonno/energia/richiami" });
       } else {
-        qs.push({ id:"window", label: en?"Real decision window?":"Finestra reale?", placeholder: en?"this month / 3–6 months / 12 months":"questo mese / 3–6 mesi / 12 mesi" });
+        qs.push({ id:"window", label: en?"Real decision window?":"Finestra reale?",               placeholder: en?"this month / 3–6 months / 12 months":"questo mese / 3–6 mesi / 12 mesi" });
         qs.push({ id:"signal", label: en?"Personal sign to watch?":"Segno personale da osservare?", placeholder: en?"sleep/energy/first reply":"sonno/energia/prima risposta" });
-        qs.push({ id:"limit", label: en?"Most concrete limit?":"Limite più concreto?", placeholder: en?"budget/time/energy":"budget/tempo/energia" });
+        qs.push({ id:"limit",  label: en?"Most concrete limit?":"Limite più concreto?",          placeholder: en?"budget/time/energy":"budget/tempo/energia" });
       }
       return res.status(200).json({ questions: qs });
     }
@@ -156,16 +185,19 @@ export default async function handler(req, res) {
     const persona = PERSONAS[stile === "wtf" ? "wtf" : "whatif"];
     const mirror = mirrorLine(profilo, lang);
     const closing = episodicClosing(stile, lang);
+    const tone = toneSettings(stile, intensity);
 
     const system = `
 ${persona.system.trim()}
+${tone.extra}
 Oggi: ${todayInfo(lang)}
+
 Linee guida forti:
 - Mai etichette esplicite (no "indicatore", "vincolo", "primo passo", ecc.).
-- Seconda persona, zero "io".
-- Varia lessico e struttura; evita ripetizioni (niente "chiama un amico" fisso).
+- Seconda persona, zero "io". Varia lessico e struttura; evita ripetizioni (niente "chiama un amico" fisso).
 - Integra impliciti di città/ruolo/valori se presenti, senza elenchi.
-- Periodo: ${periodo === "past" ? (isEn(lang) ? "counterfactual past" : "controfattuale") : (isEn(lang) ? "near-future" : "futuro vicino") }.
+- Periodo: ${periodo === "past" ? (isEn(lang) ? "counterfactual past" : "controfattuale") : (isEn(lang) ? "near-future" : "futuro vicino")}.
+
 Esempi IT:
 ${persona.few_it.map(s => `• ${s}`).join("\n")}
 Esempi EN:
@@ -173,21 +205,17 @@ ${persona.few_en.map(s => `• ${s}`).join("\n")}
 `.trim();
 
     const user = `
-Apertura-specchio (parafrasa liberamente): "${mirror}".
+Apertura-specchio (parafrasa, non copiare): "${mirror}".
 
 Domanda utente: "${domanda}"
 Dettagli: ${Array.isArray(clarifications) && clarifications.length ? clarifications.join(", ") : (isEn(lang) ? "none" : "nessuno")}
 
-Scrivi 8–12 frasi fluide (${stile==="wtf" ? "sarcastiche e brillanti" : "empatiche e predittive"}), ~180 parole max.
-Evita elenco puntato e domande dirette; usa immagini piccole e plausibili.
-Chiudi con una sola riga variata, nello spirito: "${closing}".
+Scrivi 8–12 frasi fluide (${stile === "wtf" ? "sarcastiche e brillanti" : "empatiche e predittive"}), max ~180 parole.
+Evita l'elenco puntato e le domande retoriche; usa segnali interni e dettagli plausibili.
+Chiudi con UNA sola riga variata, nello spirito: "${closing}".
 `.trim();
 
-    const temperature = stile === "wtf" ? 0.95 : 0.85;
-
-    // Streaming SSE se richiesto
     const doStream = stream || String(req.headers["x-whatif-stream"] || "") !== "";
-
     if (doStream) {
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
@@ -195,7 +223,7 @@ Chiudi con una sola riga variata, nello spirito: "${closing}".
 
       const s = await client.chat.completions.create({
         model: MODEL_TEXT,
-        temperature,
+        temperature: tone.temperature,
         stream: true,
         max_tokens: 700,
         messages: [
@@ -212,10 +240,9 @@ Chiudi con una sola riga variata, nello spirito: "${closing}".
       return res.end();
     }
 
-    // Non-stream
     const c = await client.chat.completions.create({
       model: MODEL_TEXT,
-      temperature,
+      temperature: tone.temperature,
       max_tokens: 700,
       messages: [
         { role: "system", content: system },
