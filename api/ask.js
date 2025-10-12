@@ -36,7 +36,7 @@ function renderProfileDigest(p = {}) {
   if (p.landmark) parts.push(`ancora: ${p.landmark}`);
 
   // Micro-dati giornalieri (solo stringhe utili)
-  if (p.micro && typeof p.micro === "object") {
+  if (p.micro && typeof p !== "string" && typeof p === "object") {
     const micro = p.micro;
     Object.entries(micro).forEach(([k, v]) => {
       if (v && typeof v === "string" && v.trim()) {
@@ -52,6 +52,28 @@ function isFinalEpisode(profile = {}) {
   const ep = Number(profile?.story_state?.episode ?? 1);
   const max = Number(profile?.story_state?.max_episodes ?? 3);
   return ep >= max;
+}
+
+/* ============== SPECCHIO PERSONA (frasi al TU, usate nel prompt utente) ============== */
+function personaFingerprint(p = {}) {
+  const bits = [];
+  if (Array.isArray(p.values) && p.values.length) bits.push(`tieni molto a ${p.values.slice(0,3).join(", ")}`);
+  if (Array.isArray(p.goals) && p.goals.length)  bits.push(`ora insegui ${p.goals[0]}`);
+  if (p.risk_tolerance) bits.push(`tolleranza al rischio ${p.risk_tolerance}`);
+  if (p.success_indicator) bits.push(`misuri il successo con: ${p.success_indicator}`);
+  if (p.time_window) bits.push(`decidi dentro: ${p.time_window}`);
+  if (p.work_role || p.role) bits.push(`mente da ${p.work_role || p.role}`);
+  if (p.city_now || p.city) bits.push(`ritmo di ${p.city_now || p.city}`);
+  if (p.micro?.routine) bits.push(`routine: ${p.micro.routine}`);
+  if (p.micro?.pain_today) bits.push(`oggi ti pesa: ${p.micro.pain_today}`);
+  if (!bits.length) bits.push("sei pragmatico: ti sblocchi con scadenze corte e un primo passo chiaro");
+
+  return [
+    "Tu decidi meglio con scadenze corte e passi piccoli.",
+    "Cerchi conferme nei numeri, poi segui l’istinto.",
+    "Ti motivano le persone giuste più delle cose.",
+    ...bits
+  ].slice(0,5).join(" • ");
 }
 
 /* ============== Persona prompts ============== */
@@ -295,6 +317,15 @@ giorno=${now.weekday_it}; stagione=${now.season_it}; mese=${now.month_it}; ora_l
   const digest = renderProfileDigest(profilo);
   if (digest) L.push(en ? `PROFILE DIGEST: ${digest}` : `SINTESI PROFILO: ${digest}`);
 
+  // >>> SPECCHIO PERSONA: frasi al TU per far “sentire” che lo conosce
+  const mirror = personaFingerprint(profilo);
+  if (mirror) L.push(en ? `PERSONA MIRROR: ${mirror}` : `SPECCHIO PERSONA: ${mirror}`);
+
+  // >>> Vincolo duro: solo seconda persona
+  L.push(en
+    ? "STRICT SECOND PERSON: address the user as 'you' throughout. Do not use 'I'."
+    : "SECONDA PERSONA STRETTA: parla sempre al 'tu'. Non usare 'io'.");
+
   // Predittivo esplicito
   const p = profilo || {};
   const pred = {
@@ -328,6 +359,11 @@ giorno=${now.weekday_it}; stagione=${now.season_it}; mese=${now.month_it}; ora_l
 - Intreccia finestra decisionale, tolleranza al rischio e luogo/persona-ancora in modo naturale (no elenco).
 - Specifica dettagli piccoli (orario, quartiere, “texture”) solo se servono. Evita affermazioni di attualità se non fornite; resta senza tempo altrimenti.`
   );
+
+  // >>> Gancio “torna domani” quando non è finale
+  L.push(en
+    ? "HOOK: unless finale, end with one short line inviting them to return tomorrow to continue the story."
+    : "GANCIO: se non è il finale, chiudi con una riga che inviti a tornare domani per continuare la storia.");
 
   return L.join("\n\n");
 }
