@@ -3,7 +3,6 @@ import OpenAI from "openai";
 
 /* ========= Setup ========= */
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-// Modello leggero, reattivo allo streaming
 const MODEL_TEXT = "gpt-4o-mini";
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
@@ -12,11 +11,9 @@ const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 function detectLang(text = "") {
   const enHits =
-    (text.match(/\b(what|if|and|or|you|should|would|move|work|buy|motor|bike|city)\b/gi) || [])
-      .length;
+    (text.match(/\b(what|if|and|or|you|should|would|move|work|buy|motor|bike|city)\b/gi) || []).length;
   const itHits =
-    (text.match(/\b(e|se|quando|perché|moto|tornassi|trasferir|lavor|comprare|acquistare)\b/gi) || [])
-      .length;
+    (text.match(/\b(e|se|quando|perché|moto|tornassi|trasferir|lavor|comprare|acquistare)\b/gi) || []).length;
   return enHits > itHits ? "en" : "it";
 }
 
@@ -44,44 +41,65 @@ function todayInfo(lang) {
 /* ========= Persona & stile ========= */
 const PERSONAS = {
   whatif: {
-    // Intimo, concreto, “ti conosce”, meno poetico
     system: (lang) =>
       isEn(lang)
         ? `
 You are "What?f": intimate, clear, quietly perceptive.
-Second person, one voice. 8–12 short sentences (~180 words). No lists.
-Sound like you *know* the user without saying it. Observe → reflect → land softly.
+Second person, one voice. 8–12 short sentences (~180 words). Newline between sentences. No lists.
+Sound like you know the user without saying it. Observe → reflect → land softly.
 Concrete details, minimal imagery (0–2), zero moralizing. Current, predictive.
-Do not end with "two clean shots". Close with a gentle episodic hook (e.g., "If you like, we’ll keep threading this tomorrow.").
+Never end with “two clean shots”. Close with a gentle episodic hook.
 Reply ONLY in English.`
         : `
 Sei "What?f": intima, chiara, percettiva.
-Seconda persona, una sola voce. 8–12 frasi brevi (~180 parole). Niente elenchi.
+Seconda persona, una sola voce. 8–12 frasi brevi (~180 parole). Vai a capo a ogni frase. No elenchi.
 Dai la sensazione di conoscerlo senza dirlo. Osserva → rifletti → chiudi morbido.
 Dettagli concreti, immagini minime (0–2), zero morale. Presente, predittiva.
-Non chiudere con “due colpi secchi”. Chiudi con un gancio episodico morbido (es. "Se ti va, domani riprendiamo il filo.").
+Non chiudere con “due colpi secchi”. Chiudi con un gancio episodico morbido.
 Rispondi SOLO in Italiano.`
   },
+
   wtf: {
-    // Sarcastico, da bancone notturno, “alcolico”, fa ridere e pensare
     system: (lang) =>
       isEn(lang)
         ? `
-You are "What the F": late-night witty bartender — funny, punchy, never mean, a bit boozy.
-Second person, one voice. 6–10 quick lines, ≤15 words each. No lists.
-Sharp images allowed; avoid poetry. Practical quips > advice. Make them smile and think.
-Do not end with "two clean shots". Use a playful episodic hook (e.g., "Same bar, tomorrow we stir again.").
-Reply ONLY in English.`
+You are "What the F": a late-night witty bartender — funny, punchy, never mean, a bit boozy.
+Write ONLY in English. Second person, one voice.
+FORM:
+- 6–10 quick LINES, each ≤15 words. Put each line on its own newline.
+- No lists. No paragraphs. No questions until the last line.
+- No poetic metaphors/similes. Ban words: nostalgia, perfume/scent, sunset, wine, whisper, poem, fairy-tale.
+- If you slip into poetic tone, self-correct immediately to dry, sardonic banter.
+TONE: practical quips, sharp images OK, no fluff. Make the user smile and think.
+Close with a playful episodic hook (e.g., "Same bar, tomorrow we stir again.").
+
+STYLE EXAMPLE (for rhythm only):
+"Move back? Bold. Rent won’t hug you, but deadlines will."
+"Your friends will clap; your wallet will cough."
+"Cold mornings, hot coffee, louder heart."
+"Call it a detour, not a destiny."
+"Same bar tomorrow; we’ll stir this again."`
         : `
 Sei "What the F": barista nottambulo, brillante e un filo "alcolico", sarcastico ma mai cattivo.
-Seconda persona, una voce. 6–10 righe secche, max 15 parole. Niente elenchi.
-Immagini piccole ok; niente poesia. Battute pratiche > consigli. Fai sorridere e pensare.
-Non chiudere con “due colpi secchi”. Usa un gancio episodico giocoso (es. "Stesso bancone, domani rimescoliamo.").
-Rispondi SOLO in Italiano.`
+Scrivi SOLO in Italiano. Seconda persona, una voce.
+FORMA:
+- 6–10 RIGHE secche, ciascuna ≤15 parole. Una riga = un a capo.
+- Niente elenchi, niente paragrafi. Niente domande prima dell’ultima riga.
+- Vietate metafore/poesia. Parole bandite: nostalgia, profumo, tramonto, vino, sussurro, poesia, fiaba.
+- Se scivoli nel poetico, AUTO-CORREGGITI subito: ritmo asciutto, da bancone.
+TONO: battute pratiche, immagini piccole ok, senza fronzoli. Fai sorridere e pensare.
+Chiudi con un gancio episodico giocoso (es. "Stesso bancone, domani rimescoliamo.").
+
+ESEMPIO (solo ritmo):
+"Tornare? Mossa coraggiosa. L’affitto non ti abbraccia, le scadenze sì."
+"Gli amici applaudono; il portafoglio tossisce."
+"Mattine fredde, caffè caldo, cuore più rumoroso."
+"Chiamalo pit-stop, non destino."
+"Stesso bancone, domani rimescoliamo."`
   }
 };
 
-/* ========= Frase-specchio (apertura che “ti conosce”) ========= */
+/* ========= Frase-specchio ========= */
 function mirrorLine(profile = {}, lang = "it") {
   const en = isEn(lang);
   const name = (profile?.name || "").split(" ")[0];
@@ -100,7 +118,7 @@ function mirrorLine(profile = {}, lang = "it") {
   return pick(en ? enPool : it);
 }
 
-/* ========= Chiusure episodiche (no “due colpi secchi”) ========= */
+/* ========= Chiusure episodiche ========= */
 function episodicClosing(style = "whatif", lang = "it") {
   const en = isEn(lang);
   const itSoft = [
@@ -182,9 +200,7 @@ export default async function handler(req, res) {
       stream = false,
       clarify = false,
       profilo = {},
-      // array o object — entrambi ok
       clarifications = [],
-      // guida extra dal front (buildGuidanceExtra)
       extra = ""
     } = req.body || {};
 
@@ -192,17 +208,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    // lingua: auto o forzata
     const lang = langIn === "auto" ? detectLang(domanda) : langIn;
     const en = isEn(lang);
     const topic = classifyTopic(domanda);
 
-    /* ----- Clarify branch ----- */
     if (clarify) {
       return res.status(200).json({ questions: clarifyQuestions(domanda, periodo, lang) });
     }
 
-    /* ----- Generation branch ----- */
     const persona = PERSONAS[stile === "wtf" ? "wtf" : "whatif"];
     const closing = episodicClosing(stile, lang);
     const mirror = mirrorLine(profilo, lang);
@@ -211,26 +224,24 @@ export default async function handler(req, res) {
 ${persona.system(lang).trim()}
 
 Today: ${todayInfo(lang)}
-Hard rules:
+HARD RULES:
 - Reply ONLY in ${en ? "English" : "Italiano"}.
-- Stay strictly on topic inferred from the question: "${topic}".
-- No lists/bullets; no direct questions before the final line.
+- Honor the topic: "${topic}".
+- No lists/bullets. No direct questions until the final line.
 - Minimal imagery (0–2), concrete details, no purple prose.
-- ${stile === "wtf" ? "Tone: witty, punchy, practical, a tad boozy." : "Tone: warm, clear, predictive."}
+- ${stile === "wtf" ? "Keep it punchy, sardonic, grounded; zero poetry." : "Keep it warm, clear, predictive; no moralizing."}
 ${extra ? `\nAdditional style guidance (must comply):\n${extra}\n` : ""}
 `.trim();
 
-    // Normalizziamo i chiarimenti (accettiamo array o oggetto)
-    let clarText = "none";
+    // normalizza chiarimenti
+    let clarText = en ? "none" : "nessuno";
     if (Array.isArray(clarifications) && clarifications.length) {
       clarText = clarifications.join(", ");
     } else if (clarifications && typeof clarifications === "object") {
       const pairs = Object.entries(clarifications)
         .filter(([, v]) => String(v || "").trim())
         .map(([k, v]) => `${k}: ${v}`);
-      clarText = pairs.length ? pairs.join(", ") : (en ? "none" : "nessuno");
-    } else if (!en) {
-      clarText = "nessuno";
+      if (pairs.length) clarText = pairs.join(", ");
     }
 
     const user = `
@@ -240,16 +251,18 @@ ${en ? "User question" : "Domanda utente"}: "${domanda}"
 ${en ? "Extra details" : "Dettagli"}: ${clarText}
 ${en ? "Topic to honor" : "Tema da rispettare"}: ${topic}
 ${en
-  ? `Write ${stile === "wtf" ? "6–10 punchy lines" : "8–12 short sentences"}, max ~180 words, single voice, second person.
-Avoid lists and direct questions; use 0–2 tiny, plausible images. End with a soft episodic hook like: "${closing}".`
-  : `Scrivi ${stile === "wtf" ? "6–10 righe secche" : "8–12 frasi brevi"}, max ~180 parole, una sola voce, seconda persona.
-Evita elenchi e domande dirette; usa 0–2 immagini piccole e plausibili. Chiudi con un gancio episodico tipo: "${closing}".`
+  ? `Write ${stile === "wtf" ? "6–10 punchy LINES (≤15 words each)" : "8–12 short sentences"}, ~180 words max, one voice, second person.
+Put each line/sentence on a new line. Avoid lists; 0–2 tiny plausible images.
+End with: "${closing}".`
+  : `Scrivi ${stile === "wtf" ? "6–10 RIGHE secche (≤15 parole ciascuna)" : "8–12 frasi brevi"}, max ~180 parole, una sola voce, seconda persona.
+Metti ogni riga/frase su una nuova riga. Evita elenchi; 0–2 immagini piccole plausibili.
+Chiudi con: "${closing}".`
 }
 `.trim();
 
     const temperature = stile === "wtf" ? 0.9 : 0.82;
 
-    // Streaming SSE opzionale
+    // Streaming SSE (manteniamo compatibilità con il front)
     const doStream = stream || String(req.headers["x-whatif-stream"] || "") !== "";
     if (doStream) {
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
