@@ -4,400 +4,230 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>What?f – Result</title>
-<meta name="theme-color" content="#0B0B0C" />
 <style>
-  :root{--bg:#0B0B0C;--bg2:#101414;--fg:#fff;--muted:#A0B2BA;--card:#141C22;--line:rgba(255,255,255,.12);--acc:#1C57A0;--acc2:#FFEC01;--chip:#121A26;--ink:#0A0E12;--shadow:rgba(0,0,0,.35)}
+  :root{--bg:#0B0B0C;--fg:#EAF3EE;--muted:#A0B2BA;--line:rgba(255,255,255,.12);--card:rgba(20,28,34,.92);--chip:#121A26;--acc:#1C57A0;--acc2:#FFEC01;--shadow:rgba(0,0,0,.35)}
   html[data-theme="wtf"]{--acc:#3A6B56;--acc2:#5A8C75}
-  html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2),var(--bg));color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  *{box-sizing:border-box} body{margin:0;background:#0B0B0C;color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
   main{max-width:980px;margin:auto;padding:18px}
-  .topbar{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
-  .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:#EAF3EE;padding:10px 14px;border-radius:12px;cursor:pointer}
-  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
-  .btn.large{padding:14px 18px}
-  h1{margin:14px 0 2px;color:var(--acc2)}
-  .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee}
-  .badge.accent{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border:none;font-weight:800}
-  .card{background:rgba(20,28,34,.92);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
-  .chips{display:flex;gap:8px;flex-wrap:wrap}
-  .chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:8px 12px;cursor:pointer}
-  .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none}
-  .qbox{background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--acc2);border-radius:12px;padding:16px}
-  .box{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:18px;white-space:pre-wrap;line-height:1.7}
-  .tools{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
-  .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.08),rgba(255,255,255,.04));background-size:200% 100%;animation:sk 1s infinite}
+  .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
+  .label{color:var(--acc2);font-weight:800;margin:0 0 8px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .btn{border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
+  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12;font-weight:800;border:none}
+  .chips{display:flex;gap:8px}
+  .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;cursor:pointer}
+  .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12;font-weight:800}
+  .qbox,.box{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:16px;line-height:1.7;white-space:pre-wrap}
+  .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:sk 1s infinite}
   @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
-  .hint{color:#CFE8F5;font-size:13px;margin-top:6px}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:6000;padding:14px}
+  .sheet{width:min(92vw,720px);max-height:80vh;overflow:auto;background:var(--card);border-radius:16px;padding:14px;border:1px solid var(--line)}
+  .qitem{margin:10px 0} .qitem label{display:block;margin:6px 0}
+  .qitem input{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px}
 </style>
 </head>
 <body>
 <main>
-  <div class="topbar">
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn" id="backBtnTop">←</button>
-      <button class="btn" id="homeBtnTop">🏠</button>
+  <div class="row" style="justify-content:space-between">
+    <div class="row">
+      <button class="btn" id="backBtn">←</button>
+      <button class="btn" id="homeBtn">🏠</button>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <span id="freeBadge" class="badge">—</span>
-      <span id="clarifyBadge" class="badge accent">—</span>
-    </div>
-  </div>
-
-  <h1 id="titleH1">Il tuo What?f prende forma…</h1>
-
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-      <div style="display:flex;gap:8px;align-items:center">
-        <span class="badge" id="badgePeriodo">🕰️ —</span>
-        <span class="badge" id="badgeStile">🎭 —</span>
-      </div>
-      <div class="chips" id="styleChips">
-        <button class="chip" data-style="whatif" id="chipWhatIf">What?f (empatico)</button>
-        <button class="chip" data-style="wtf" id="chipWTF">What the F (da bar)</button>
-      </div>
+    <div class="chips" id="styleChips">
+      <button class="chip" data-style="whatif" id="chipWhatIf">What if (realistico)</button>
+      <button class="chip" data-style="wtf" id="chipWTF">What the F (divertente)</button>
     </div>
   </div>
 
   <div class="card">
-    <h3 style="margin:0 0 8px">La tua domanda</h3>
+    <h3 class="label">La tua domanda</h3>
     <div id="question" class="qbox">—</div>
-    <div class="hint" id="signalsMini"></div>
-    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn primary large" id="clarifyBtn">✨ Chiarisci & Genera</button>
-      <button class="btn large" id="genBtn">Genera subito</button>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="clarifyBtn">✨ Chiarisci & genera</button>
+      <button class="btn" id="genBtn">Genera subito</button>
     </div>
   </div>
 
   <div class="card">
-    <h3 style="margin:0 0 8px">Risultato</h3>
+    <h3 class="label">Risultato</h3>
     <div id="result" class="box">—</div>
-    <div class="tools">
+    <div class="row" style="margin-top:12px">
       <button class="btn" id="regenBtn" style="display:none">🔁 Rigenera</button>
-      <button class="btn" id="saveBtn">💾 Salva</button>
       <button class="btn" id="copyBtn">📋 Copia</button>
-      <button class="btn" id="shareBtn">📤 Condividi</button>
-      <button class="btn" id="profileBtn">👤 Profilo</button>
+      <button class="btn" id="saveBtn">💾 Salva</button>
     </div>
   </div>
 </main>
 
+<!-- Clarify overlay -->
+<div class="overlay" id="clarifyOverlay">
+  <div class="sheet">
+    <h3 style="margin:6px 0">2–3 domande mirate sulla tua domanda</h3>
+    <div id="clarifyList"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="applyClarify">Genera con queste risposte</button>
+      <button class="btn" id="cancelClarify">Annulla</button>
+    </div>
+  </div>
+</div>
+
 <script>
-/* ===== Setup & utils ===== */
-const $ = (id)=>document.getElementById(id);
-const LS = localStorage;
+  const LS=localStorage; const $=id=>document.getElementById(id);
+  const domanda = LS.getItem('domanda')||'';
+  const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
+  let currentStyle = prefs.stile || 'whatif';
+  const lang = (LS.getItem('lang')||'it').toLowerCase();
 
-function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function readJSON(k,def={}){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
-function writeJSON(k,v){LS.setItem(k,JSON.stringify(v));}
-function getTZ(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }catch{ return 'UTC'; } }
+  if(!domanda){ alert('Nessuna domanda trovata.'); location.href='fourth.html'; }
 
-/* ===== State ===== */
-const domanda = (LS.getItem('domanda')||'').trim();
-if(!domanda){ alert('Nessuna domanda trovata.'); location.href='fourth.html'; }
-const prefs = readJSON('whatif_prefs');  // { periodo, stile }
-let currentStyle = prefs.stile || 'whatif';
-document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
-$('question').textContent = domanda;
-$('badgePeriodo').textContent = '🕰️ ' + (prefs.periodo==='past'?'Passato':'Futuro');
-$('badgeStile').textContent  = '🎭 ' + (currentStyle==='wtf'?'What the F':'What?f');
-document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
-$('styleChips').addEventListener('click', (e)=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  currentStyle=b.dataset.style;
-  $('badgeStile').textContent='🎭 '+(currentStyle==='wtf'?'What the F':'What?f');
-  document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
+  $('question').textContent = domanda;
+  document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel', c.dataset.style===currentStyle));
   document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
-});
 
-/* ===== Badges (free/clarify) ===== */
-const DAILY_FREE=3, DAILY_CLARIFY=5;
-function readCredits(){const v=readJSON('whatif_credits');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0,pro:!!v.pro};return v;}
-function writeCredits(v){writeJSON('whatif_credits',v);renderBadges();}
-function readClarify(){const v=readJSON('whatif_clarify');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0};return v;}
-function writeClarify(v){writeJSON('whatif_clarify',v);renderBadges();}
-function renderBadges(){
-  const c=readCredits(); $('freeBadge').textContent=`Free oggi: ${Math.max(0,DAILY_FREE-(c.used||0))}/${DAILY_FREE}`;
-  const k=readClarify(); $('clarifyBadge').textContent=`Chiarimenti: ${Math.max(0,DAILY_CLARIFY-(k.used||0))}/${DAILY_CLARIFY}`;
-}
-renderBadges();
-
-/* ===== Signals mini (profilo + micro) ===== */
-function buildLeanProfile(){
-  const p=readJSON('whatif_profile',{})||{};
-  const lean={}; if(p.name) lean.name=p.name; if(p.city_now) lean.city_now=p.city_now; else if(p.city) lean.city=p.city;
-  if(p.work_role) lean.work_role=p.work_role; else if(p.role) lean.role=p.role; if(p.goal) lean.goal=p.goal; return lean;
-}
-function summarizeSignals(){
-  const p=readJSON('whatif_profile',{}), m=readJSON('whatif_micro',{}), parts=[];
-  if(p.name) parts.push(`nome: ${p.name}`); if(p.city_now||p.city) parts.push(`città: ${p.city_now||p.city}`);
-  if(p.work_role||p.role) parts.push(`ruolo: ${p.work_role||p.role}`); if(p.goal) parts.push(`obiettivo: ${p.goal}`);
-  ['time_window','window','indicator','success_indicator','limit','budget','use'].forEach(k=>{ if(m[k]) parts.push(`${k}: ${m[k]}`); });
-  $('signalsMini').textContent = parts.join(' · ');
-}
-summarizeSignals();
-
-/* ===== Prompt “extra” per imporre tono & esempi ===== */
-const WHATIF_GUIDE = `
-You are "What?f": warm, clear, confident, *not* poetic. Sounds like a friend who knows the user well.
-Short sentences, natural rhythm, upbeat. No sadness/melancholy. Subtle familiarity: use the user's first name once if available.
-End with a gentle serial hook that implies tomorrow we continue with 2–3 tiny questions.
-
-Tone checkpoints:
-- empathetic, grounded, encouraging, cinematic *without* purple prose
-- zero lists/bullets, no moralizing, no coaching verbs ("devi", "should")
-- keep it positive, realistic, present-tense
-
-Use these samples as *style anchors* (do not copy, just match tone & rhythm):
-
-Esempio 1 — Aquila (What?f):
-"Non lo faresti per scappare, ma per respirare meglio. Ti serve ogni tanto: tornare dove le giornate hanno il ritmo giusto, dove ti basta poco per stare bene. L’Aquila ti fa ricominciare senza ricominciare da zero. Gente giusta, caffè di sempre, e quel 'ok, adesso va bene così'. Non è nostalgia, è equilibrio che torna. Hai già girato la chiave; domani ti faccio due domande e vediamo dove porta."
-
-Esempio 2 — Moto (What?f):
-"La prendi, e smetti di raccontartela. Settimana corta, weekend lunghi, quel tragitto che diventa tuo. Niente eroismi: casco, pioggia se capita, e una gioia piccola ogni volta che la accendi. Te la immagini da anni; adesso la vivi. Domani ti chiedo due cose pratiche e allarghiamo la strada."
-`;
-
-const WTF_GUIDE = `
-You are "What the F": witty bartender, joyfully tipsy, *never* mean. Make the user laugh hard.
-Smart one-liners, confident banter, playful exaggeration, no cruelty. Use a friendly nickname once (tipo "amico" o il nome).
-No lists/bullets. Keep 7–10 punchy lines. End with a cheeky serial hook about tomorrow and a fresh round.
-
-Use these samples as *style anchors* (do not copy, just match tone & rhythm):
-
-Esempio 1 — Aquila (WTF):
-"Tornare all’Aquila? Ottima mossa: aria fresca, montagne gratis e caffè che sa di chiacchiera vera. Qui anche il vento ha l’abbonamento mensile. Ti siedi al bancone, il barista ti riconosce e finge di non sapere quante ne hai bevute. Si ride, si brinda, e il tempo smette di correre. Niente cinismo, solo confusione che fa bene. Dai, non scappi: cambi colonna sonora. Domani ti verso un altro giro e vediamo chi entra dalla porta."
-
-Esempio 2 — Moto (WTF):
-"Vuoi la moto? Finalmente, amico. Vento in faccia, capelli in sciopero, e la fila in tangenziale che ti applaude in silenzio. La benzina costa? Anche il latte di mandorla, ma non ti fa sorridere così. Ti vedo già a parcheggiarla di sbieco come se stessi firmando autografi. Dai, prendila: il casco copre pure le scuse. Domani ti faccio due domandine e scegliamo il rum… ehm, il modello."
-`;
-
-/* ===== Sanitizer: dedupe, limite righe, hook coerente ===== */
-function sanitizeOutput(style, raw){
-  let out=(raw||'').trim();
-
-  // togli virgolette strane
-  out=out.replace(/[“”"«»]/g,'');
-
-  // rimuovi righe duplicate vicine
-  out=out.split(/\n+/).filter(Boolean).filter((ln,i,arr)=> ln.trim()!== (arr[i-1]||'').trim()).join('\n');
-
-  // rimuovi frasi doppie ripetute (heuristic)
-  out=out.replace(/(\.)(\s*\1)+/g,'.');
-
-  // limiti & hook
-  if (style==='wtf'){
-    // spezza in righe cortissime
-    const bits = out.split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
-    let lines=[];
-    bits.forEach(s=>{
-      const w=s.split(/\s+/);
-      for(let i=0;i<w.length;i+=15){ lines.push(w.slice(i,i+15).join(' ')); }
+  document.querySelectorAll('#styleChips .chip').forEach(c=>{
+    c.addEventListener('click', ()=>{
+      currentStyle=c.dataset.style;
+      document.querySelectorAll('#styleChips .chip').forEach(x=>x.classList.toggle('sel', x.dataset.style===currentStyle));
+      document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
     });
-    // filtra melassa
-    lines = lines.filter(x=>!/\b(nostalgia|anima|destino|tramonto|sussurra)\b/i.test(x));
-    // 7–10 righe
-    lines = lines.slice(0,10);
-    while(lines.length<7 && bits.length) lines.push(bits.shift());
-    // hook seriale
-    const hook = "Domani ti verso un altro giro e ti faccio due domandine: vediamo dove porta.";
-    if(!/domani/i.test(lines[lines.length-1]||'')) lines.push(hook);
-    out = lines.join('\n');
-  }else{
-    // whatif: 9–12 frasi brevi
-    let sentences = out.split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
-    sentences = sentences.slice(0,12);
-    // hook seriale
-    const hook = "Domani ti faccio due domande semplici e continuiamo da lì.";
-    if (!sentences.length || !/domani/i.test(sentences[sentences.length-1])) sentences.push(hook);
-    out = sentences.join(' ');
-  }
-  return out.trim();
-}
-
-/* ===== Clarify question builder (AI-first con fallback) ===== */
-function extractKeywords(s){
-  s=(s||'').toLowerCase();
-  const words=s.replace(/[^\p{L}\p{N}\s]/gu,' ').split(/\s+/).filter(w=>w.length>3);
-  const counts={}; words.forEach(w=>counts[w]=(counts[w]||0)+1);
-  return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4).map(x=>x[0]);
-}
-function localContextQs(q, period){
-  const kw=extractKeywords(q); const first=kw[0]||'il tema';
-  const L=(id,label,ph)=>({id,label,placeholder:ph});
-  if(period==='past'){
-    return [
-      L('pivot_year','In che anno cambiava la rotta?','2015 / 2010'),
-      L('then_context','Dove e con chi eri allora?','città, squadra, famiglia'),
-      L('signal','Segnale che diceva “ha funzionato”?','persona, numero, risultato')
-    ];
-  }
-  return [
-    L('time_window','Finestra decisionale reale','questo mese / 3–6 / 12'),
-    L('success_indicator',`Un indicatore di successo su ${first}`,'€ risparmiati, ore, primo cliente'),
-    L('real_constraint','Vincolo concreto da non ignorare','budget, tempo, energia'),
-  ];
-}
-
-/* ===== API calls ===== */
-async function callClarifyAPI(){
-  const payload={
-    domanda,
-    lang:'it',
-    periodo:(prefs.periodo||'future'),
-    stile:currentStyle,
-    clarify:true,
-    profilo:buildLeanProfile(),
-    tags: readJSON('whatif_tags',[]),
-    now:new Date().toISOString(),
-    tz:getTZ()
-  };
-  const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-  if(!r.ok) throw new Error('server');
-  return r.json();
-}
-
-function buildExtraGuide(){
-  return (currentStyle==='wtf'?WTF_GUIDE:WHATIF_GUIDE).trim();
-}
-
-async function callGenerateStream({clarifications={}}={}){
-  const payload={
-    domanda,
-    lang:'it',
-    periodo:(prefs.periodo||'future'),
-    stile:currentStyle,
-    clarify:false,
-    stream:true,
-    profilo:buildLeanProfile(),
-    clarifications,
-    extra: buildExtraGuide(),               // ← passiamo le guide con ESEMPI VERA
-    now:new Date().toISOString(),
-    tz:getTZ()
-  };
-  const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json','x-whatif-stream':'1'},body:JSON.stringify(payload)});
-  if(!r.ok) throw new Error('server');
-  return r.body.getReader();
-}
-
-/* ===== Clarify overlay inline (no modal, semplice) ===== */
-$('clarifyBtn').addEventListener('click', openClarify);
-async function openClarify(){
-  const c=readClarify(); if((c.used||0)>=DAILY_CLARIFY){ alert('Limite chiarimenti oggi.'); return; }
-  let qs=[];
-  try{
-    const j=await callClarifyAPI();
-    qs = Array.isArray(j.questions) && j.questions.length ? j.questions.slice(0,3) : [];
-  }catch(e){ /* ignore */ }
-  if(!qs.length){ qs = localContextQs(domanda,(prefs.periodo||'future')); }
-
-  // costruiamo un prompt veloce in-page
-  const inputs = await showInlineClarify(qs);
-  if (!inputs) return;
-
-  const clar={}; inputs.forEach(({id,val})=>{ if(val) clar[id]=val; });
-
-  // aggiorna micro locale per personalizzazione futura
-  const micro=readJSON('whatif_micro',{}); Object.assign(micro, clar); writeJSON('whatif_micro',micro);
-
-  const cc=readClarify(); cc.used=(cc.used||0)+1; writeClarify(cc);
-  summarizeSignals();
-  await generate(false,clar);
-}
-
-function showInlineClarify(qs){
-  return new Promise((resolve)=>{
-    const box = document.createElement('div');
-    box.className='card';
-    box.innerHTML = `<h3 style="margin:0 0 8px">2–3 domande al volo</h3>
-      <div id="clarWrap"></div>
-      <div style="margin-top:12px;display:flex;gap:10px">
-        <button class="btn primary" id="okClar">Genera con queste</button>
-        <button class="btn" id="cancelClar">Annulla</button>
-      </div>`;
-    document.querySelector('main').insertBefore(box, document.querySelectorAll('.card')[2]);
-    const wrap = box.querySelector('#clarWrap');
-    qs.forEach((q,i)=>{
-      const div=document.createElement('div');
-      div.style.margin='8px 0';
-      div.innerHTML=`<label>${q.label||q.id}</label>
-        <input id="c_input_${i}" placeholder="${(q.placeholder||'').replace(/"/g,'&quot;')}" style="width:100%;background:var(--chip);border:1px solid var(--line);border-radius:12px;padding:10px;color:#EAF3EE">`;
-      wrap.appendChild(div);
-    });
-    box.querySelector('#cancelClar').onclick=()=>{ box.remove(); resolve(null); };
-    box.querySelector('#okClar').onclick=()=>{
-      const res=[];
-      qs.forEach((q,i)=>{
-        const val=(document.getElementById('c_input_'+i).value||'').trim();
-        res.push({id:(q.id||('q'+(i+1))), val});
-      });
-      box.remove(); resolve(res);
-    };
   });
-}
 
-/* ===== Generate / Regen ===== */
-$('genBtn').addEventListener('click', ()=>generate());
-$('regenBtn').addEventListener('click', ()=>generate(true));
+  $('backBtn').onclick=()=>history.back();
+  $('homeBtn').onclick=()=>location.href='index.html';
 
-async function generate(isRegen=false, clarOverride=null){
-  const credits=readCredits();
-  if(!isRegen && (credits.used||0)>=DAILY_FREE){ alert('Hai raggiunto il limite gratuito di oggi.'); return; }
-
-  $('result').textContent = '⏳ Sto immaginando il tuo scenario… '; const sk=document.createElement('span'); sk.className='skeleton'; sk.style.width='40%'; $('result').appendChild(sk);
-  $('regenBtn').style.display='none';
-
-  try{
-    const reader = await callGenerateStream({clarifications:(clarOverride||{})});
-    const decoder = new TextDecoder(); let buffer='', text='';
-    while(true){
-      const {value,done}=await reader.read(); if(done) break;
-      buffer+=decoder.decode(value,{stream:true});
-      const chunks=buffer.split('\n\n'); buffer=chunks.pop();
-      for(const chunk of chunks){
-        if(!chunk.startsWith('data: ')) continue;
-        const data = JSON.parse(chunk.slice(6));
-        if (data.token){ text+=data.token; $('result').textContent=text; }
-        if (data.done){
-          text = sanitizeOutput(currentStyle, text);
-          // inserisci nome se presente e non usato (una volta)
-          const prof=buildLeanProfile();
-          if(prof.name && !new RegExp(`\\b${prof.name}\\b`,'i').test(text) && currentStyle==='wtf'){
-            text = text.replace(/(^|\n)/, `$1Oh ${prof.name}, `);
-          }else if(prof.name && !new RegExp(`\\b${prof.name}\\b`,'i').test(text) && currentStyle==='whatif'){
-            text = text.replace(/(^|\n)/, `$1${prof.name}, `);
-          }
-          $('result').textContent = text.trim();
-        }
-        if (data.error){ $('result').textContent = 'Problema server.'; }
-      }
-    }
-    const c=readCredits(); c.used=(c.used||0)+1; writeCredits(c);
-    $('regenBtn').style.display='inline-block';
-  }catch(e){
-    console.error(e); $('result').textContent = 'Errore di rete.';
+  function buildLeanProfile(){
+    const p=JSON.parse(LS.getItem('whatif_profile')||'{}');
+    const lean={}; if(p.name) lean.name=p.name; if(p.city_now) lean.city_now=p.city_now; else if(p.city) lean.city=p.city;
+    if(p.work_role) lean.work_role=p.work_role; else if(p.role) lean.role=p.role;
+    return lean;
   }
-}
 
-/* ===== Save, Copy, Share, Profile ===== */
-$('saveBtn').addEventListener('click', ()=>{
-  const arr=readJSON('cronologia',[]);
-  arr.unshift({ domanda, risposta:($('result').textContent||'').trim(), periodo:prefs.periodo||null, stile:currentStyle, lang:'it', ts:Date.now() });
-  writeJSON('cronologia',arr);
-  alert('Salvato!');
-});
-$('copyBtn').addEventListener('click', ()=>{
-  navigator.clipboard.writeText(`Domanda: ${domanda}\n\n${$('result').textContent}`).then(()=> alert('Copiato!'));
-});
-$('shareBtn').addEventListener('click', ()=>{
-  const data={title:'What?f',text:`Domanda: ${domanda}\n\n${$('result').textContent}`,url:location.href};
-  if(navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(`${data.title}\n\n${data.text}`);
-});
-$('profileBtn').addEventListener('click', ()=> location.href='second.html');
+  function getClarFromLS(){ try{ return JSON.parse(LS.getItem('whatif_micro')||'{}'); }catch{return {};}}
 
-/* ===== Nav ===== */
-$('backBtnTop').addEventListener('click', ()=> history.back());
-$('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
+  async function callClarifyAPI(){
+    const payload={
+      domanda, lang, periodo:(prefs.periodo||'future'),
+      stile: currentStyle, clarify: true, profilo: buildLeanProfile()
+    };
+    const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!r.ok) throw new Error('server');
+    return r.json();
+  }
 
-/* ===== Autogen on load (first credit free) ===== */
-generate(false,null);
+  function sanitizeOutput(style, raw){
+    let out=(raw||'').trim().replace(/[“”"«»]/g,'');
+    // de-dup righe/frasi adiacenti
+    out=out.split(/\n+/).filter(Boolean).filter((ln,i,arr)=>ln.trim()!==(arr[i-1]||'').trim()).join('\n');
+    out=out.replace(/(\.)(\s*\1)+/g,'.');
+
+    const words = (s)=> (s.match(/\b[\p{L}\p{N}’']+\b/gu)||[]).length;
+
+    if(style==='wtf'){
+      const hook="Domani ti verso un altro giro e due domandine: vediamo dove porta.";
+      if(!/domani/i.test(out)) out = out + (out.endsWith('.')?' ':' ') + hook;
+      // niente potature aggressive; garantiamo solo max ~220 parole
+      if (words(out)>220){
+        // taglia sull'ultimo punto prima di 220
+        const tokens=out.split(' ');
+        out=tokens.slice(0,220).join(' ');
+        if(!/domani/i.test(out)) out += ' ' + hook;
+      }
+      return out.trim();
+    }else{
+      const hook="Domani ti faccio due domande semplici e continuiamo da lì.";
+      if(!/domani/i.test(out)) out = out + (out.endsWith('.')?' ':' ') + hook;
+      if (words(out)>210){
+        const tokens=out.split(' ');
+        out=tokens.slice(0,210).join(' ');
+        if(!/domani/i.test(out)) out += ' ' + hook;
+      }
+      return out.trim();
+    }
+  }
+
+  async function callGenerateStream({clarifications={}}={}){
+    const payload={
+      domanda,
+      lang,
+      periodo:(prefs.periodo||'future'),
+      stile: currentStyle,
+      clarify:false,
+      stream:true,
+      profilo: buildLeanProfile(),
+      clarifications,
+      extra:""
+    };
+    const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json','x-whatif-stream':'1'},body:JSON.stringify(payload)});
+    if(!r.ok) throw new Error('server');
+    return r.body.getReader();
+  }
+
+  async function generate(isRegen=false, clarOverride=null){
+    $('result').textContent='⏳ Sto immaginando lo scenario… '; const sk=document.createElement('span'); sk.className='skeleton'; sk.style.width='40%'; $('result').appendChild(sk);
+    $('regenBtn').style.display='none';
+    try{
+      const reader=await callGenerateStream({clarifications:(clarOverride||getClarFromLS())});
+      const decoder=new TextDecoder(); let buffer="", text="";
+      for(;;){
+        const {value,done}=await reader.read(); if(done) break;
+        buffer+=decoder.decode(value,{stream:true});
+        const chunks=buffer.split("\n\n"); buffer=chunks.pop();
+        for(const chunk of chunks){
+          if(!chunk.startsWith("data: ")) continue;
+          const data=JSON.parse(chunk.slice(6));
+          if(data.token){ text+=data.token; $('result').textContent=text; }
+          if(data.done){
+            const clean = sanitizeOutput(currentStyle, text);
+            $('result').textContent = clean;
+          }
+          if(data.error){ $('result').textContent='Problema server.'; }
+        }
+      }
+      $('regenBtn').style.display='inline-block';
+    }catch(e){
+      $('result').textContent='Errore di rete.';
+    }
+  }
+
+  // Clarify overlay
+  const overlay=$('clarifyOverlay'), list=$('clarifyList');
+  $('clarifyBtn').onclick = async ()=>{
+    overlay.style.display='flex';
+    list.innerHTML='<p class="muted">Sto preparando 2–3 domande…</p>';
+    try{
+      const j=await callClarifyAPI();
+      const qs=(j.questions||[]).slice(0,3);
+      list.innerHTML=qs.map((q,i)=>`
+        <div class="qitem">
+          <label>${q.label||('Domanda '+(i+1))}</label>
+          <input data-id="${q.id||('q'+(i+1))}" placeholder="${(q.placeholder||'').replace(/"/g,'&quot;')}" />
+        </div>`).join('');
+    }catch(e){
+      list.innerHTML='<p class="muted">Non riesco adesso, riprova tra poco.</p>';
+    }
+  };
+  $('cancelClarify').onclick = ()=> overlay.style.display='none';
+  $('applyClarify').onclick = async ()=>{
+    const clar={}; list.querySelectorAll('input').forEach(i=>{ const v=i.value.trim(); if(v) clar[i.dataset.id]=v; });
+    overlay.style.display='none';
+    // salva anche localmente
+    const micro = Object.assign({}, JSON.parse(LS.getItem('whatif_micro')||'{}'), clar);
+    LS.setItem('whatif_micro', JSON.stringify(micro));
+    await generate(false, clar);
+  };
+
+  $('genBtn').onclick = ()=> generate(false, getClarFromLS());
+  $('regenBtn').onclick = ()=> generate(true, getClarFromLS());
+  $('copyBtn').onclick = ()=> navigator.clipboard.writeText(`${domanda}\n\n${$('result').textContent}`).then(()=>alert('Copiato!'));
+  $('saveBtn').onclick = ()=>{
+    const arr=JSON.parse(LS.getItem('cronologia')||'[]');
+    arr.unshift({ domanda, risposta:$('result').textContent.trim(), periodo:prefs.periodo||null, stile:currentStyle, lang, ts:Date.now() });
+    LS.setItem('cronologia', JSON.stringify(arr));
+    alert('Salvato!');
+  };
+
+  // autogen all'arrivo
+  generate(false, getClarFromLS());
 </script>
 </body>
 </html>
