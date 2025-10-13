@@ -58,6 +58,7 @@
   .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
   .label{color:var(--acc);font-weight:800;margin:0 0 8px}
 
+  /* Question */
   .qbox{
     background:rgba(255,255,255,.06);
     border:1px solid var(--line);
@@ -73,6 +74,7 @@
     hyphens:auto;
   }
 
+  /* Result box */
   .box{
     background:rgba(255,255,255,.04);
     border:1px solid var(--line);
@@ -142,6 +144,9 @@
     margin-inline:auto;
   }
 
+  .episodio{display:none;margin:10px auto 0;max-width:68ch;font-size:14px;color:#CFE7D9}
+  .episodio.show{display:block}
+
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -161,7 +166,7 @@
           <span class="know-score" id="knowLabelMini">Personalizzazione</span>
           <div class="meter"><div id="knowFill" class="meter-fill"></div></div>
           <span class="badge" id="knowValueMini">0/100</span>
-          <div class="tip" id="knowTip">Più dettagli → più scenari plausibili. Compila le 3 micro-domande (seconda pagina) e usa “Chiarisci & genera”.</div>
+          <div class="tip" id="knowTip">Più dettagli → più scenari plausibili. Compila le 3 micro-domande e usa “Chiarisci & genera”.</div>
         </div>
       </div>
     </div>
@@ -206,6 +211,7 @@
     <div class="card">
       <h3 class="label" id="rLabel">Result</h3>
       <div id="result" class="box">—</div>
+      <div id="episodio" class="episodio">Episodio 1 di 2 — Il prossimo episodio si sblocca domani su questa stessa domanda.</div>
 
       <div class="tools">
         <button id="dotsBtn" class="dots" aria-label="More">⋯</button>
@@ -268,7 +274,8 @@ const I18N = {
     know:"Personalizzazione", knowHint:"Più dettagli → più scenari plausibili. Compila le 3 micro-domande e usa “Chiarisci & genera”.",
     signalsLabel:"Segnali usati oggi",
     sig_city:"città", sig_goal:"obiettivo", sig_indicator:"indicatore", sig_constraint:"vincolo", sig_landmark:"luogo", sig_role:"ruolo",
-    redoMicro:"Rifai micro test", profile:"Profilo"
+    redoMicro:"Rifai micro test", profile:"Profilo",
+    ep1:"Episodio 1 di 2 — Il prossimo episodio si sblocca domani su questa stessa domanda."
   },
   en:{
     title:"Your What?f is taking shape…",
@@ -292,7 +299,8 @@ const I18N = {
     know:"Personalization", knowHint:"More detail → more plausible scenarios. Fill today’s micro-questions and use Clarify.",
     signalsLabel:"Signals used today",
     sig_city:"city", sig_goal:"goal", sig_indicator:"indicator", sig_constraint:"constraint", sig_landmark:"place", sig_role:"role",
-    redoMicro:"Redo micro test", profile:"Profile"
+    redoMicro:"Redo micro test", profile:"Profile",
+    ep1:"Episode 1 of 2 — Next episode unlocks tomorrow for this same question."
   }
 };
 const LS=localStorage;
@@ -328,13 +336,19 @@ function readClarify(){const v=readJSON('whatif_clarify');const t=todayStr();if(
 function writeClarify(v){writeJSON('whatif_clarify',v);renderBadges();}
 function ensureClarify(){const c=readClarify();if(!c.date||!c.date===todayStr()){c.date=todayStr();c.used=0;writeClarify(c);}}
 
-/* Profilo SOLO NOME (per tono personale) */
-function buildProfileNameOnly(){
-  const base = readJSON('whatif_profile', {});
-  const name = (base?.name || "").trim();
-  return name ? { name } : {};
+/* ===== Profilo: estrai SOLO ciò che serve alla mirror-line ===== */
+function buildLeanProfile(){
+  const p = readJSON('whatif_profile',{}) || {};
+  const lean = {};
+  if (p.name) lean.name = String(p.name);
+  if (p.city_now) lean.city_now = String(p.city_now);
+  else if (p.city) lean.city = String(p.city);
+  if (p.work_role) lean.work_role = String(p.work_role);
+  else if (p.role) lean.role = String(p.role);
+  return lean;
 }
 
+/* Solo per UI dei segnali */
 function summarizeSignals(clarUsed={}){
   const p=readJSON('whatif_profile',{}); const m=readJSON('whatif_micro',{}); const parts=[];
   if (p.city) parts.push(`${T.sig_city}: ${p.city}`);
@@ -389,7 +403,7 @@ function computeKnowledge(){
   const profile=readJSON('whatif_profile',{}); const micro=readJSON('whatif_micro',{}); const clar=readJSON('whatif_clarify',{date:null,used:0});
   const microLog=readJSON('whatif_micro_log',[]); const lastUpd=LS.getItem('whatif_last_update'); const today=todayStr();
   let cover=0;
-  const hasIdentity=!!(profile.name||profile.role); cover+=hasIdentity?8:0;
+  const hasIdentity=!!(profile.name||profile.role); cover+=8;
   const hasRoutine=!!(micro.indicatore);            cover+=8;
   const hasConstraints=!!(micro.vincolo_2w);        cover+=8;
   const hasGoals=!!(profile.goal);                  cover+=8;
@@ -405,7 +419,7 @@ function computeKnowledge(){
   let streak=0;
   if(Array.isArray(microLog)&&microLog.length){
     let d=new Date(today);
-    for(;;){ const iso=\`${'${d.getFullYear()}'}-${'${String(d.getMonth()+1).padStart(2,"0")'} }-${'${String(d.getDate()).padStart(2,"0")'} }-mem\`; if(microLog.includes(iso)){ streak++; d.setDate(d.getDate()-1);} else break;}
+    for(;;){ const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate())}-mem`; if(microLog.includes(iso)){ streak++; d.setDate(d.getDate()-1);} else break;}
   }
   const streakPts=Math.min(10,streak);
   const lastDay=lastUpd||last(microLog);
@@ -418,8 +432,31 @@ function computeKnowledge(){
 }
 function renderKnowledgeMini(){
   const score=computeKnowledge();
-  $('knowFill').style.width=\`${'${score}'}%\`;
-  $('knowValueMini').textContent=\`${'${score}'}\`+"/100";
+  $('knowFill').style.width=`${score}%`;
+  $('knowValueMini').textContent=`${score}/100`;
+}
+
+/* ===== Episodio planner (locale, gratuito per ora) ===== */
+function planNextEpisode(question){
+  try{
+    const key = 'whatif_episode_plan';
+    const plans = readJSON(key,{});
+    const today = todayStr();
+    if(!plans[question]){
+      const d = new Date(); d.setDate(d.getDate()+1);
+      const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      plans[question] = { next: iso, ep: 2 };
+      writeJSON(key, plans);
+    }
+  }catch{}
+}
+function canShowEpisode2(question){
+  try{
+    const plans = readJSON('whatif_episode_plan',{});
+    if(!plans[question]) return false;
+    const today = todayStr();
+    return plans[question].next && plans[question].next <= today;
+  }catch{ return false; }
 }
 
 /* ===== API helpers ===== */
@@ -432,6 +469,7 @@ async function callClarifyAPI(){
     periodo: (prefs.periodo||"future"),
     stile: currentStyle,
     clarify: true,
+    profilo: buildLeanProfile(),  // profilo leggero → per “ti conosco”
     tags: getTags(),
     now: new Date().toISOString(),
     tz: getTZ()
@@ -441,64 +479,164 @@ async function callClarifyAPI(){
   return r.json();
 }
 
-/* ===== Sanitizer minimo (no spezzatino) ===== */
-function sanitizeOutput(style, raw){
-  let out = (raw || "").trim();
-  // rimuovi virgolette caporali/“smart”
-  out = out.replace(/[“”«»]/g, '"');
+/* ===== Sanitizer & tonalità ===== */
+/* Chiuse episodiche coerenti con micro-domande */
+const HOOKS = {
+  whatif: [
+    "Domani ti faccio due micro-domande e vediamo dove porta davvero.",
+    "Continuiamo domani: due indizi in più e la storia si muove.",
+    "Torni qui domani? Ti mostro come prosegue, con i tuoi segnali."
+  ],
+  wtf: [
+    "Domani ti faccio tre domandine e vediamo se hai fegato, amico.",
+    "Passa domani: due micro-colpi e vediamo se reggi la scena.",
+    "Domani continuiamo: promesso, niente violini — solo verità al bancone."
+  ]
+};
 
-  // assicurati che termini con il gancio “domani…”
-  const hasHook = /domani|tomorrow/i.test(out) && /(domande|questions|continuiamo|keep|story|storia)/i.test(out);
-  if (!hasHook) {
-    const extraHook = (lang === 'en')
-      ? "Tomorrow I’ll ask you two quick things — we’ll keep knowing you and push the story forward."
-      : "Domani ti faccio due domande veloci: continuiamo a conoscerci e mandiamo avanti la storia.";
-    if (!/[.!?]$/.test(out)) out += ".";
-    out += " " + extraHook;
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] || arr[0]; }
+
+function injectNameIfAny(text){
+  const p = buildLeanProfile();
+  const name = (p.name||"").trim().split(" ")[0];
+  if(!name) return text;
+  // inserisci il nome nella prima frase se non presente
+  const parts = text.split(/\n+/);
+  if(parts.length){
+    if(!new RegExp(`\\b${name}\\b`,`i`).test(parts[0])){
+      parts[0] = parts[0].replace(/^(\W*)/, `$1${name}, `);
+    }
   }
+  return parts.join("\n");
+}
+
+function stripQuotes(s){ return s.replace(/[“”"«»]/g,""); }
+
+function sanitizeOutput(style, raw){
+  let out = stripQuotes((raw||"").trim());
+
+  // blocca appartamenti/lavori generici non richiesti
+  const blacklist = /\b(affitto|appartament[oi]|colloquio|ufficio|azienda|cv|mutuo)\b/gi;
+  out = out.replace(blacklist, (m)=> m[0]===' ' ? ' ' : '');
+
+  // frasi compatte (niente lirismi)
+  const sentences = out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
+
+  if(style==='wtf'){
+    // taglio ironico, ubriaco ma non cattivo
+    // rimuovi parole smielate
+    const softBan = /\b(nostalgia|tramonto|profumo|poesia|sussurr\w*|anima|destino)\b/gi;
+    let lines = sentences.map(s=> s.replace(softBan,'').trim()).filter(Boolean);
+
+    // split in battute ≤ 18 parole
+    const split18 = (t)=>{
+      const w=t.split(/\s+/); const chunks=[];
+      for(let i=0;i<w.length;i+=18) chunks.push(w.slice(i,i+18).join(' '));
+      return chunks;
+    };
+    lines = lines.flatMap(split18).map(s=>s.trim()).filter(Boolean);
+
+    // limiti: 7–11 battute
+    lines = lines.slice(0,11);
+    while(lines.length<7 && sentences.length) lines.push(sentences.shift());
+
+    // hook finale episodico
+    if(!/domani/i.test(lines[lines.length-1]||"")){
+      lines.push(pick(HOOKS.wtf));
+    }
+
+    out = lines.join("\n");
+  }else{
+    // WHATIF: 9–12 frasi, tono empatico e concreto, zero malinconia
+    const tooPoetic = /\b(liric\w*|fiab\w*|melancon\w*|tristezz\w*|pianto|lacrim\w*)\b/gi;
+    let lines = sentences.map(s=> s.replace(tooPoetic,'').trim()).filter(Boolean);
+    lines = lines.slice(0,12);
+    while(lines.length<9 && sentences.length) lines.push(sentences.shift());
+
+    // hook finale episodico soft
+    if(!/domani/i.test(lines[lines.length-1]||"")){
+      lines.push(pick(HOOKS.whatif));
+    }
+
+    out = lines.join("\n");
+  }
+
+  out = injectNameIfAny(out);
   return out.trim();
 }
 
-/* ===== AUTO-LEARNING (per badge/cronologia) ===== */
+/* ===== AUTO-LEARNING (solo per badge/cronologia locale) ===== */
 function learnFromInteraction({question, clarifications, answerText=""}){
   const mem = readJSON('whatif_memory',[]);
-  const excerpt = (answerText||"").slice(0,600);
+  const excerpt = (answerText||"").slice(0,400);
   mem.unshift({ q: question||"", clar: clarifications||{}, ans: excerpt, ts: Date.now() });
   writeJSON('whatif_memory', mem.slice(0,200));
 
   const today = todayStr();
   const log = readJSON('whatif_micro_log',[]);
-  const mark = \`\${today}-mem\`;
+  const mark = `${today}-mem`;
   if (!log.includes(mark)) { log.push(mark); writeJSON('whatif_micro_log', log); }
   LS.setItem('whatif_last_update', today);
+
+  const micro = readJSON('whatif_micro',{});
+  if (clarifications.indicator) micro.indicatore = clarifications.indicator;
+  if (clarifications.constraint_2w) micro.vincolo_2w = clarifications.constraint_2w;
+  if (clarifications.landmark) micro.punto_riferimento = clarifications.landmark;
+  writeJSON('whatif_micro', micro);
 }
 
-/* Clarify locale */
+/* Clarify locale (fallback coerente col topic) */
 function extractKeywords(q){
   const s=(q||'').toLowerCase();
   const words = s.replace(/[^\p{L}\p{N}\s]/gu,' ').split(/\s+/).filter(w=>w.length>3);
   const counts={}; words.forEach(w=>counts[w]=(counts[w]||0)+1);
-  return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5).map(x=>x[0]);
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,6).map(x=>x[0]);
 }
 function localClarifyContextual(q, period){
   const kw=extractKeywords(q);
-  const tg=getTags();
-  const hints=[...new Set([...kw, ...tg])].slice(0,5);
-  const L=(id,label,ph)=>({id,label,placeholder:ph});
+  const s=q.toLowerCase();
   const it = lang!=='en';
+  const L=(id,label,ph)=>({id,label,placeholder:ph});
 
-  if(period==='past'){
+  const isMoto   = /(moto|motor(e|bike)|scooter|vespa)/.test(s);
+  const isMove   = /(tornassi|trasferi|trasloco|vivere a|lugano|aquila|milano|roma|verona|londra|zurigo)/.test(s);
+  const isJob    = /(lavoro|job|ricercatore|azienda|ufficio|work)/.test(s);
+  const isBuy    = /(comprare|acquistare|buy|purchase)/.test(s);
+
+  if(isMoto){
     return [
-      L('pivot_year', it?'In che anno sarebbe cambiata la rotta?':'Which year was the turning point?', it?'es. 2015, offerta 2010':'e.g., 2015 move, 2010 offer'),
-      L('then_context', it?'Dove e con chi eri allora?':'Where and with whom back then?', it?'città, squadra, famiglia':'city, team, family'),
-      L('signal', it?'Che segnale ti avrebbe fatto capire che funzionava?':'Which signal would tell you it worked?', it?'persona, cifra, risultato':'person, metric, result')
+      L('timing', it?'Quando la prenderesti davvero?':'When would you actually buy?', it?'questo mese / 3–6 mesi':'this month / 3–6 months'),
+      L('use', it?'Uso principale?':'Main use?', it?'casa-lavoro / weekend / viaggi':'commute / weekends / trips'),
+      L('budget', it?'Budget mensile “tutto incluso”?':'Monthly all-in budget?', it?'assicurazione + benzina':'insurance + fuel')
     ];
   }
-  const topic = hints[0]||'il tema';
+  if(isMove){
+    return [
+      L('window', it?'Finestra reale per muoverti?':'Real window to move?', it?'entro 3 mesi / 6–12 mesi':'within 3 months / 6–12 months'),
+      L('anchor', it?'Cosa ti ancora dove sei?':'What anchors you now?', it?'famiglia / lavoro / costi':'family / work / costs'),
+      L('signal', it?'Segnale che direbbe “è giusto”?':'Signal that says “it’s right”?', it?'sonno/energia/risposte':'sleep/energy/callbacks')
+    ];
+  }
+  if(isJob){
+    return [
+      L('why', it?'Il tuo “perché” oggi?':'Your current why?', it?'impatto / crescita / serenità':'impact / growth / calm'),
+      L('option', it?'Opzioni sul tavolo?':'Options on the table?', it?'restare / cambiare team / uscire':'stay / switch team / leave'),
+      L('limit', it?'Vincolo concreto?':'Hard constraint?', it?'budget/tempo/relazioni':'budget/time/people')
+    ];
+  }
+  if(isBuy){
+    return [
+      L('time_window', it?'Quando decidi davvero?':'When do you really decide?', it?'questo mese / 3–6 / 12 mesi':'this month / 3–6 / 12 months'),
+      L('success_indicator', it?'Un indicatore misurabile?':'One measurable indicator?', it?'€ spesi/risparmiati, ore, primo uso':'€ spent/saved, hours, first use'),
+      L('real_constraint', it?'Vincolo da non ignorare?':'Constraint you can’t ignore?', it?'budget, tempo, energia':'budget, time, energy')
+    ];
+  }
+  // fallback neutro ma contestuale con keyword
+  const h = kw[0]||'il tema';
   return [
-    L('time_window', it?'Qual è la tua finestra decisionale reale?':'Your real decision window?', it?'questo mese / 3–6 mesi':'this month / 3–6 months'),
-    L('success_indicator', it?`Un indicatore di successo su ${topic}?`:`One success indicator about ${topic}?`, it?'€ risparmiati, ore, primo cliente':'€ saved, hours, first client'),
-    L('real_constraint', it?'Vincolo concreto da non ignorare?':'A concrete constraint you can’t ignore?', it?'budget, tempo, energia':'budget, time, energy')
+    L('time_window', it?'Qual è la tua finestra reale?':'Your real time window?', it?'questo mese / 3–6 mesi':'this month / 3–6 months'),
+    L('success_indicator', it?`Un indicatore di successo su ${h}?`:`One success indicator about ${h}?`, it?'€ / ore / prima risposta':'€ / hours / first reply'),
+    L('real_constraint', it?'Vincolo concreto da non ignorare?':'A concrete constraint to respect?', it?'budget, tempo, energia':'budget, time, energy')
   ];
 }
 
@@ -506,7 +644,7 @@ function localClarifyContextual(q, period){
 function cacheKeyForClarify(){ 
   const style = (prefs.stile||'whatif');
   const per = (prefs.periodo||'future');
-  return \`clarify_cache::\${lang}::\${style}::\${per}::\${domanda}\`;
+  return `clarify_cache::${lang}::${style}::${per}::${domanda}`;
 }
 function getLastClarifySet(){ return readJSON(cacheKeyForClarify(), {labels:[]}); }
 function saveClarifySet(labels){ writeJSON(cacheKeyForClarify(), {labels}); }
@@ -526,8 +664,7 @@ function buildVariantQuestions(qs){
       return {...q, label: it?'Un INDICATORE che puoi misurare entro 30 giorni?':'One INDICATOR you can measure in 30 days?'};
     if (/vincolo|constraint/i.test(lbl))
       return {...q, label: it?'Il VINCOLO più concreto nelle prossime 2 settimane?':'The most concrete CONSTRAINT in 2 weeks?'};
-    const hints = extractKeywords(domanda); const h = hints[i%hints.length]||'tema';
-    return {...q, label: \`\${lbl} (\${h})\`};
+    return q;
   });
 }
 
@@ -542,7 +679,7 @@ async function openClarify(){
   ensureClarify();
   const c=readClarify();
   if((c.used||0)>=DAILY_CLARIFY){ alert(T.limitClarify); return; }
-  clarifyList.innerHTML=\`<p class="sub">\${lang==='en'?'Preparing 2–3 focused questions…':'Sto preparando 2–3 domande mirate…'}</p>\`;
+  clarifyList.innerHTML=`<p class="sub">${lang==='en'?'Preparing 2–3 focused questions…':'Sto preparando 2–3 domande mirate…'}</p>`;
   clarifyOverlay.style.display='flex';
 
   let qs=[];
@@ -564,18 +701,18 @@ async function openClarify(){
     const key = (q.label||'').trim().toLowerCase();
     if (seen.has(key)) return false; seen.add(key); return true;
   }).map((q,i)=>({
-    id: String(q.id || \`q\${i+1}\`),
+    id: String(q.id || `q${i+1}`),
     label: String(q.label || (lang==='en'?'Question':'Domanda')),
     placeholder: String(q.placeholder || (lang==='en'?'Answer in one line':'Rispondi in una riga'))
   }));
 
   saveClarifySet(labelsFromQuestions(qs));
 
-  clarifyList.innerHTML=qs.map(q=>\`
+  clarifyList.innerHTML=qs.map(q=>`
     <div class="qitem">
-      <label for="\${q.id}">\${q.label}</label>
-      <input id="\${q.id}" type="text" placeholder="\${(q.placeholder||'').replace(/"/g,'&quot;')}" />
-    </div>\`).join("");
+      <label for="${q.id}">${q.label}</label>
+      <input id="${q.id}" type="text" placeholder="${(q.placeholder||'').replace(/"/g,'&quot;')}" />
+    </div>`).join("");
 
   const cc=readClarify(); cc.used=(cc.used||0)+1; writeClarify(cc);
 }
@@ -595,7 +732,7 @@ $('genBtn').addEventListener('click', ()=> generate());
 $('regenBtn').textContent=T.regenBtn;
 $('regenBtn').addEventListener('click', ()=> generate(true));
 
-async function callGenerateStream({clarifications={} }={}){
+async function callGenerateStream({clarifications={}, extra="" }={}){
   const payload={
     domanda,
     lang,
@@ -603,8 +740,9 @@ async function callGenerateStream({clarifications={} }={}){
     stile:currentStyle,
     clarify:false,
     stream:true,
-    profilo: buildProfileNameOnly(), // SOLO NOME
+    profilo: buildLeanProfile(),     // passiamo nome/città/ruolo per “ti conosco”
     clarifications,
+    extra:"",                        // niente override extra
     now: new Date().toISOString(),
     tz: getTZ()
   };
@@ -621,11 +759,12 @@ async function generate(isRegen=false, clarOverride=null){
   $('result').textContent=`⏳ ${T.loading} `; const sk=document.createElement('span'); sk.className='skeleton'; sk.style.width='40%'; $('result').appendChild(sk);
   $('result').classList.remove('fade-in');
   $('regenBtn').style.display='none';
+  $('episodio').classList.remove('show');
 
   if(!$('signalsBody').textContent){ $('signalsBody').textContent = summarizeSignals(clarOverride||{}); }
 
   try{
-    const reader=await callGenerateStream({clarifications:(clarOverride||{})});
+    const reader=await callGenerateStream({clarifications:(clarOverride||{}), extra:""});
     const decoder=new TextDecoder(); let buffer="", text="";
     while(true){
       const {value,done}=await reader.read(); if(done)break;
@@ -639,6 +778,16 @@ async function generate(isRegen=false, clarOverride=null){
           text = sanitizeOutput(currentStyle, text);
           $('result').textContent=(text||"").trim();
           $('result').classList.add('fade-in');
+          // pianifica episodio 2 (gratuito, domani)
+          planNextEpisode(domanda);
+          $('episodio').textContent = T.ep1;
+          $('episodio').classList.add('show');
+          // se già sbloccato episodio 2 (utente torna domani), segnala nella UI
+          if (canShowEpisode2(domanda)){
+            $('episodio').textContent = (lang==='en')
+              ? "Episode 2 unlocked — ask again tomorrow and we continue from here."
+              : "Episodio 2 sbloccato — rifai la stessa domanda e continuiamo da qui.";
+          }
         }
         if(data.error){ $('result').textContent=T.errServer+" "+(data.detail||""); }
       }
@@ -726,6 +875,7 @@ $('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
 function initText(){
   $('freeBadge').title=T.badgeFreeTitle; $('clarifyBadge').title=T.badgeClarifyTitle;
   $('clarifyBtn').textContent=T.clarifyBtn; $('genBtn').textContent=T.genBtn;
+  $('episodio').textContent = T.ep1;
 }
 function initStyles(){
   document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
