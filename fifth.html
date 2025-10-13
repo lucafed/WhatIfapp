@@ -98,8 +98,6 @@
   .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
   .badge.accent{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border:none;font-weight:800}
 
-  .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--line);font-size:12px;margin-right:8px}
-
   .cta-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .cta-row .btn.primary{flex:1}
 
@@ -179,10 +177,6 @@
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
         <div class="row">
-          <span id="epBadge" class="pill">🎬 Ep. <strong id="epN">1</strong>/2</span>
-          <span id="epHint" class="pill" style="background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border:none">Domani si sblocca l’episodio 2.</span>
-        </div>
-        <div class="row">
           <span class="badge" id="badgePeriodo">🕰️ —</span>
           <span class="badge" id="badgeStile">🎭 —</span>
         </div>
@@ -212,7 +206,7 @@
     </div>
 
     <div class="card">
-      <h3 class="label" id="rLabel">Risultato</h3>
+      <h3 class="label" id="rLabel">Result</h3>
       <div id="result" class="box">—</div>
 
       <div class="tools">
@@ -336,13 +330,19 @@ function readClarify(){const v=readJSON('whatif_clarify');const t=todayStr();if(
 function writeClarify(v){writeJSON('whatif_clarify',v);renderBadges();}
 function ensureClarify(){const c=readClarify();if(!c.date||!c.date===todayStr()){c.date=todayStr();c.used=0;writeClarify(c);}}
 
-/* Profilo / signals (solo per badge) */
-function buildProfilePayload(){
-  const base = readJSON('whatif_profile');
-  const micro = readJSON('whatif_micro');
-  const anchors = readJSON('whatif_anchors', {});
-  return { ...base, micro, anchors };
+/* ===== Profilo: estrai SOLO ciò che serve alla mirror-line ===== */
+function buildLeanProfile(){
+  const p = readJSON('whatif_profile',{}) || {};
+  const lean = {};
+  if (p.name) lean.name = String(p.name);
+  if (p.city_now) lean.city_now = String(p.city_now);
+  else if (p.city) lean.city = String(p.city);
+  if (p.work_role) lean.work_role = String(p.work_role);
+  else if (p.role) lean.role = String(p.role);
+  return lean;
 }
+
+/* Solo per UI dei segnali */
 function summarizeSignals(clarUsed={}){
   const p=readJSON('whatif_profile',{}); const m=readJSON('whatif_micro',{}); const parts=[];
   if (p.city) parts.push(`${T.sig_city}: ${p.city}`);
@@ -381,15 +381,6 @@ $('styleChips').addEventListener('click',e=>{
   document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
   document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
 });
-
-/* Episodi UI (Ep. 1/2 oggi, 2/2 domani) */
-(function episodesUI(){
-  const last = LS.getItem('whatif_ep_unlock_date');
-  const today = todayStr();
-  const epN = $('epN');
-  if (last === today){ epN.textContent='2'; $('epHint').textContent='Ultimo episodio disponibile.'; }
-  // Segneremo lo sblocco quando l’utente clicca Rigenera domani (vedi sotto)
-})();
 
 /* Badges */
 function renderBadges(){
@@ -449,6 +440,7 @@ async function callClarifyAPI(){
     periodo: (prefs.periodo||"future"),
     stile: currentStyle,
     clarify: true,
+    profilo: buildLeanProfile(),  // ← passiamo il profilo anche per eventuale tono
     tags: getTags(),
     now: new Date().toISOString(),
     tz: getTZ()
@@ -462,64 +454,48 @@ async function callClarifyAPI(){
 function sanitizeOutput(style, raw){
   let out = (raw || "").trim();
 
-  // via caporali/virgolette
-  out = out.replace(/[“”"«»]+/g, "");
+  // rimuovi virgolette/“caporali”
+  out = out.replace(/[“”"«»]/g, "");
 
-  // parole vietate (anti-poesia)
-  const banned = [
-    "aria","accarezza","profuma","montagne","silenzio","eco",
-    "nostalgia","anima","cuore","tramonto","dipinto","abbraccia",
-    "fiaba","poesia","sussurra","orizzonti","respiro","magico","fiori","cielo","stelle"
-  ];
-  const banRe = new RegExp(`\\b(${banned.join("|")})\\w*\\b`, "gi");
+  if (style === 'wtf') {
+    // spezza in righe corte (<=15 parole), una per riga
+    const bits = out
+      .split(/\n+|(?<=[.!?])\s+/)
+      .map(s => s.trim())
+      .filter(Boolean)
+      .flatMap(s => {
+        const words = s.split(/\s+/);
+        const lines = [];
+        for (let i=0;i<words.length;i+=15) lines.push(words.slice(i, i+15).join(' '));
+        return lines;
+      })
+      .filter(Boolean);
 
-  // split in frasi/righe
-  let parts = out
-    .split(/\n+|(?<=[.!?])\s+/)
-    .map(s => s.trim())
-    .filter(Boolean);
+    // filtra righe troppo poetiche
+    const poetic = /(cuore|anima|destino|fiaba|sogno|sussurra|tramonto troppo)/i;
+    let lines = bits.filter(x => !poetic.test(x));
 
-  // pulizia base
-  parts = parts
-    .map(s => s.replace(banRe, "").replace(/\s{2,}/g," ").trim())
-    .filter(s => s && !/^[-–•]/.test(s));
+    // limita 7–11 righe
+    lines = lines.slice(0, 11);
+    while (lines.length < 7 && bits.length) lines.push(bits.shift());
 
-  // rewrap: ≤15 parole (WTF) / ≤18 parole (What?f)
-  const maxWords = style === 'wtf' ? 15 : 18;
-  const rewrap = (s)=>{
-    const w = s.split(/\s+/).filter(Boolean);
-    const out = [];
-    for(let i=0;i<w.length;i+=maxWords) out.push(w.slice(i,i+maxWords).join(" "));
-    return out;
-  };
-  parts = parts.flatMap(rewrap).map(s=>s.trim()).filter(Boolean);
-
-  if(style==='wtf'){
-    // 6–10 righe secche
-    parts = parts.slice(0,10);
-    if(parts.length<6) { while(parts.length<6) parts.push(parts[parts.length-1]||""); }
-    // gancio comico garantito
-    if(!/bancone|conto aperto|domani/i.test(parts[parts.length-1]||"")){
-      parts.push("Stesso bancone, domani rimescoliamo.");
-    }
-  }else{
-    // 8–12 righe lucide
-    parts = parts.slice(0,12);
-    if(parts.length<8) { while(parts.length<8) parts.push(parts[parts.length-1]||""); }
-    // micro-passo pratico se manca
-    const hasStep = /chiama|telefonata|email|scrivi|entro|domani|20 minuti|30 giorni/i.test(parts.join(" "));
-    if(!hasStep) parts.splice(Math.min(2,parts.length),0,"Primo passo: una telefonata di 20 minuti entro domani.");
-    // gancio morbido garantito
-    const last = parts[parts.length-1]||"";
-    if(!/domani|riprendiamo il filo|continua/i.test(last)){
-      parts.push("Domani riprendiamo il filo.");
-    }
+    // gancio finale
+    const hook = "Stesso bancone, domani rimescoliamo.";
+    if (!lines[lines.length-1]?.match(/bancone|domani|giro|conto/i)) lines.push(hook);
+    out = lines.join("\n");
+  } else {
+    // WHATIF: frasi brevi, una per riga, 9–13 frasi
+    const sentences = out
+      .split(/\n+|(?<=[.!?])\s+/)
+      .map(s=>s.trim())
+      .filter(Boolean)
+      .slice(0,13);
+    out = sentences.join("\n");
   }
-
-  return parts.join("\n").trim();
+  return out.trim();
 }
 
-/* ===== AUTO-LEARNING (solo per badge) ===== */
+/* ===== AUTO-LEARNING (solo per badge/cronologia locale) ===== */
 function learnFromInteraction({question, clarifications, answerText=""}){
   const mem = readJSON('whatif_memory',[]);
   const excerpt = (answerText||"").slice(0,400);
@@ -669,9 +645,9 @@ async function callGenerateStream({clarifications={}, extra="" }={}){
     stile:currentStyle,
     clarify:false,
     stream:true,
-    profilo:{},            // niente ancore
+    profilo: buildLeanProfile(),     // ← QUI passiamo il profilo alla /api/ask
     clarifications,
-    extra:"",
+    extra:"",                        // non usiamo extra lato front
     now: new Date().toISOString(),
     tz: getTZ()
   };
@@ -715,11 +691,6 @@ async function generate(isRegen=false, clarOverride=null){
     renderKnowledgeMini();
 
     learnFromInteraction({ question: domanda, clarifications: (clarOverride||{}), answerText: $('result').textContent });
-
-    // Se oggi ha già visto ep1, sblocchiamo ep2 domani
-    if (!LS.getItem('whatif_ep_unlock_date')) {
-      LS.setItem('whatif_ep_unlock_date', todayStr());
-    }
   }catch(e){
     console.error(e);
     $('result').textContent=(e.message==='server'?T.errServer:T.errNet);
