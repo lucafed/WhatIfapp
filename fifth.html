@@ -58,7 +58,6 @@
   .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
   .label{color:var(--acc);font-weight:800;margin:0 0 8px}
 
-  /* Question */
   .qbox{
     background:rgba(255,255,255,.06);
     border:1px solid var(--line);
@@ -74,7 +73,6 @@
     hyphens:auto;
   }
 
-  /* Result box */
   .box{
     background:rgba(255,255,255,.04);
     border:1px solid var(--line);
@@ -330,19 +328,13 @@ function readClarify(){const v=readJSON('whatif_clarify');const t=todayStr();if(
 function writeClarify(v){writeJSON('whatif_clarify',v);renderBadges();}
 function ensureClarify(){const c=readClarify();if(!c.date||!c.date===todayStr()){c.date=todayStr();c.used=0;writeClarify(c);}}
 
-/* ===== Profilo: estrai SOLO ciò che serve alla mirror-line ===== */
-function buildLeanProfile(){
-  const p = readJSON('whatif_profile',{}) || {};
-  const lean = {};
-  if (p.name) lean.name = String(p.name);
-  if (p.city_now) lean.city_now = String(p.city_now);
-  else if (p.city) lean.city = String(p.city);
-  if (p.work_role) lean.work_role = String(p.work_role);
-  else if (p.role) lean.role = String(p.role);
-  return lean;
+/* Profilo SOLO NOME (per tono personale) */
+function buildProfileNameOnly(){
+  const base = readJSON('whatif_profile', {});
+  const name = (base?.name || "").trim();
+  return name ? { name } : {};
 }
 
-/* Solo per UI dei segnali */
 function summarizeSignals(clarUsed={}){
   const p=readJSON('whatif_profile',{}); const m=readJSON('whatif_micro',{}); const parts=[];
   if (p.city) parts.push(`${T.sig_city}: ${p.city}`);
@@ -413,7 +405,7 @@ function computeKnowledge(){
   let streak=0;
   if(Array.isArray(microLog)&&microLog.length){
     let d=new Date(today);
-    for(;;){ const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate())}-mem`; if(microLog.includes(iso)){ streak++; d.setDate(d.getDate()-1);} else break;}
+    for(;;){ const iso=\`${'${d.getFullYear()}'}-${'${String(d.getMonth()+1).padStart(2,"0")'} }-${'${String(d.getDate()).padStart(2,"0")'} }-mem\`; if(microLog.includes(iso)){ streak++; d.setDate(d.getDate()-1);} else break;}
   }
   const streakPts=Math.min(10,streak);
   const lastDay=lastUpd||last(microLog);
@@ -426,8 +418,8 @@ function computeKnowledge(){
 }
 function renderKnowledgeMini(){
   const score=computeKnowledge();
-  $('knowFill').style.width=`${score}%`;
-  $('knowValueMini').textContent=`${score}/100`;
+  $('knowFill').style.width=\`${'${score}'}%\`;
+  $('knowValueMini').textContent=\`${'${score}'}\`+"/100";
 }
 
 /* ===== API helpers ===== */
@@ -440,7 +432,6 @@ async function callClarifyAPI(){
     periodo: (prefs.periodo||"future"),
     stile: currentStyle,
     clarify: true,
-    profilo: buildLeanProfile(),  // ← passiamo il profilo anche per eventuale tono
     tags: getTags(),
     now: new Date().toISOString(),
     tz: getTZ()
@@ -450,69 +441,36 @@ async function callClarifyAPI(){
   return r.json();
 }
 
-/* ===== Sanitizer stile (LOCALE) ===== */
+/* ===== Sanitizer minimo (no spezzatino) ===== */
 function sanitizeOutput(style, raw){
   let out = (raw || "").trim();
+  // rimuovi virgolette caporali/“smart”
+  out = out.replace(/[“”«»]/g, '"');
 
-  // rimuovi virgolette/“caporali”
-  out = out.replace(/[“”"«»]/g, "");
-
-  if (style === 'wtf') {
-    // spezza in righe corte (<=15 parole), una per riga
-    const bits = out
-      .split(/\n+|(?<=[.!?])\s+/)
-      .map(s => s.trim())
-      .filter(Boolean)
-      .flatMap(s => {
-        const words = s.split(/\s+/);
-        const lines = [];
-        for (let i=0;i<words.length;i+=15) lines.push(words.slice(i, i+15).join(' '));
-        return lines;
-      })
-      .filter(Boolean);
-
-    // filtra righe troppo poetiche
-    const poetic = /(cuore|anima|destino|fiaba|sogno|sussurra|tramonto troppo)/i;
-    let lines = bits.filter(x => !poetic.test(x));
-
-    // limita 7–11 righe
-    lines = lines.slice(0, 11);
-    while (lines.length < 7 && bits.length) lines.push(bits.shift());
-
-    // gancio finale
-    const hook = "Stesso bancone, domani rimescoliamo.";
-    if (!lines[lines.length-1]?.match(/bancone|domani|giro|conto/i)) lines.push(hook);
-    out = lines.join("\n");
-  } else {
-    // WHATIF: frasi brevi, una per riga, 9–13 frasi
-    const sentences = out
-      .split(/\n+|(?<=[.!?])\s+/)
-      .map(s=>s.trim())
-      .filter(Boolean)
-      .slice(0,13);
-    out = sentences.join("\n");
+  // assicurati che termini con il gancio “domani…”
+  const hasHook = /domani|tomorrow/i.test(out) && /(domande|questions|continuiamo|keep|story|storia)/i.test(out);
+  if (!hasHook) {
+    const extraHook = (lang === 'en')
+      ? "Tomorrow I’ll ask you two quick things — we’ll keep knowing you and push the story forward."
+      : "Domani ti faccio due domande veloci: continuiamo a conoscerci e mandiamo avanti la storia.";
+    if (!/[.!?]$/.test(out)) out += ".";
+    out += " " + extraHook;
   }
   return out.trim();
 }
 
-/* ===== AUTO-LEARNING (solo per badge/cronologia locale) ===== */
+/* ===== AUTO-LEARNING (per badge/cronologia) ===== */
 function learnFromInteraction({question, clarifications, answerText=""}){
   const mem = readJSON('whatif_memory',[]);
-  const excerpt = (answerText||"").slice(0,400);
+  const excerpt = (answerText||"").slice(0,600);
   mem.unshift({ q: question||"", clar: clarifications||{}, ans: excerpt, ts: Date.now() });
   writeJSON('whatif_memory', mem.slice(0,200));
 
   const today = todayStr();
   const log = readJSON('whatif_micro_log',[]);
-  const mark = `${today}-mem`;
+  const mark = \`\${today}-mem\`;
   if (!log.includes(mark)) { log.push(mark); writeJSON('whatif_micro_log', log); }
   LS.setItem('whatif_last_update', today);
-
-  const micro = readJSON('whatif_micro',{});
-  if (clarifications.indicator) micro.indicatore = clarifications.indicator;
-  if (clarifications.constraint_2w) micro.vincolo_2w = clarifications.constraint_2w;
-  if (clarifications.landmark) micro.punto_riferimento = clarifications.landmark;
-  writeJSON('whatif_micro', micro);
 }
 
 /* Clarify locale */
@@ -548,7 +506,7 @@ function localClarifyContextual(q, period){
 function cacheKeyForClarify(){ 
   const style = (prefs.stile||'whatif');
   const per = (prefs.periodo||'future');
-  return `clarify_cache::${lang}::${style}::${per}::${domanda}`;
+  return \`clarify_cache::\${lang}::\${style}::\${per}::\${domanda}\`;
 }
 function getLastClarifySet(){ return readJSON(cacheKeyForClarify(), {labels:[]}); }
 function saveClarifySet(labels){ writeJSON(cacheKeyForClarify(), {labels}); }
@@ -569,7 +527,7 @@ function buildVariantQuestions(qs){
     if (/vincolo|constraint/i.test(lbl))
       return {...q, label: it?'Il VINCOLO più concreto nelle prossime 2 settimane?':'The most concrete CONSTRAINT in 2 weeks?'};
     const hints = extractKeywords(domanda); const h = hints[i%hints.length]||'tema';
-    return {...q, label: `${lbl} (${h})`};
+    return {...q, label: \`\${lbl} (\${h})\`};
   });
 }
 
@@ -584,7 +542,7 @@ async function openClarify(){
   ensureClarify();
   const c=readClarify();
   if((c.used||0)>=DAILY_CLARIFY){ alert(T.limitClarify); return; }
-  clarifyList.innerHTML=`<p class="sub">${lang==='en'?'Preparing 2–3 focused questions…':'Sto preparando 2–3 domande mirate…'}</p>`;
+  clarifyList.innerHTML=\`<p class="sub">\${lang==='en'?'Preparing 2–3 focused questions…':'Sto preparando 2–3 domande mirate…'}</p>\`;
   clarifyOverlay.style.display='flex';
 
   let qs=[];
@@ -606,18 +564,18 @@ async function openClarify(){
     const key = (q.label||'').trim().toLowerCase();
     if (seen.has(key)) return false; seen.add(key); return true;
   }).map((q,i)=>({
-    id: String(q.id || `q${i+1}`),
+    id: String(q.id || \`q\${i+1}\`),
     label: String(q.label || (lang==='en'?'Question':'Domanda')),
     placeholder: String(q.placeholder || (lang==='en'?'Answer in one line':'Rispondi in una riga'))
   }));
 
   saveClarifySet(labelsFromQuestions(qs));
 
-  clarifyList.innerHTML=qs.map(q=>`
+  clarifyList.innerHTML=qs.map(q=>\`
     <div class="qitem">
-      <label for="${q.id}">${q.label}</label>
-      <input id="${q.id}" type="text" placeholder="${(q.placeholder||'').replace(/"/g,'&quot;')}" />
-    </div>`).join("");
+      <label for="\${q.id}">\${q.label}</label>
+      <input id="\${q.id}" type="text" placeholder="\${(q.placeholder||'').replace(/"/g,'&quot;')}" />
+    </div>\`).join("");
 
   const cc=readClarify(); cc.used=(cc.used||0)+1; writeClarify(cc);
 }
@@ -637,7 +595,7 @@ $('genBtn').addEventListener('click', ()=> generate());
 $('regenBtn').textContent=T.regenBtn;
 $('regenBtn').addEventListener('click', ()=> generate(true));
 
-async function callGenerateStream({clarifications={}, extra="" }={}){
+async function callGenerateStream({clarifications={} }={}){
   const payload={
     domanda,
     lang,
@@ -645,9 +603,8 @@ async function callGenerateStream({clarifications={}, extra="" }={}){
     stile:currentStyle,
     clarify:false,
     stream:true,
-    profilo: buildLeanProfile(),     // ← QUI passiamo il profilo alla /api/ask
+    profilo: buildProfileNameOnly(), // SOLO NOME
     clarifications,
-    extra:"",                        // non usiamo extra lato front
     now: new Date().toISOString(),
     tz: getTZ()
   };
@@ -668,7 +625,7 @@ async function generate(isRegen=false, clarOverride=null){
   if(!$('signalsBody').textContent){ $('signalsBody').textContent = summarizeSignals(clarOverride||{}); }
 
   try{
-    const reader=await callGenerateStream({clarifications:(clarOverride||{}), extra:""});
+    const reader=await callGenerateStream({clarifications:(clarOverride||{})});
     const decoder=new TextDecoder(); let buffer="", text="";
     while(true){
       const {value,done}=await reader.read(); if(done)break;
