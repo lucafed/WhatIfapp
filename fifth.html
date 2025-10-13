@@ -68,13 +68,13 @@
     font-size:17px;
     line-height:1.65;
     color:#EAF3EE;
-    max-width:68ch;           /* centratura migliore */
+    max-width:68ch;
     margin:0 auto;
     text-wrap:pretty;
     hyphens:auto;
   }
 
-  /* Result box – leggibilità e centratura */
+  /* Result box */
   .box{
     background:rgba(255,255,255,.04);
     border:1px solid var(--line);
@@ -85,8 +85,8 @@
     white-space:pre-wrap;
     font-size:17px;
     letter-spacing:.1px;
-    max-width:68ch;           /* <<< limite di riga */
-    margin:0 auto;            /* <<< centrato nel card  */
+    max-width:68ch;
+    margin:0 auto;
     text-wrap:pretty;
     hyphens:auto;
   }
@@ -335,7 +335,8 @@ function buildProfilePayload(){
   const base = readJSON('whatif_profile');
   const micro = readJSON('whatif_micro');
   const anchors = readJSON('whatif_anchors', {});
-  return { ...base, micro, anchors };
+  const tone = readJSON('whatif_tone', {});
+  return { ...base, micro, anchors, tone };
 }
 function summarizeSignals(clarUsed={}){
   const p=readJSON('whatif_profile',{}); const m=readJSON('whatif_micro',{}); const parts=[];
@@ -384,7 +385,7 @@ function renderBadges(){
   $('clarifyBadge').textContent=T.badgeClarify(cl,DAILY_CLARIFY);
 }
 
-/* Knowledge mini (uguale al tuo file) */
+/* Knowledge mini */
 function daysBetween(iso1,iso2){ if(!iso1||!iso2) return 999; const a=new Date(iso1),b=new Date(iso2); return Math.round((b-a)/(1000*60*60*24)); }
 function last(arr){ return Array.isArray(arr)&&arr.length?arr[arr.length-1]:null; }
 function computeKnowledge(){
@@ -444,64 +445,75 @@ async function callClarifyAPI(){
   return r.json();
 }
 
-/* ===== GUIDANCE EXTRA (nuovo, sostituisce buildLanguageExtra) ===== */
+/* ===== GUIDANCE EXTRA =====
+   Rafforza il tono lato server: poche immagini, niente poesia, chiusura episodica.
+   Usiamo anche i segnali utente per l’ancoraggio (city/role) e il tone derivato dal quiz. */
 function buildGuidanceExtra(period, style, currentLang, profile={}){
   const city = profile.city_now || profile.city || "la tua città";
   const role = profile.work_role || profile.role || "il tuo ruolo";
+  const tone = profile?.tone || {};
+  const wantsPlayful = !!tone.playful;
+  const wantsIntro = !!tone.introspective;
 
   if (currentLang === 'en'){
     if (style === 'wtf'){
       return [
         "Answer strictly in English.",
-        "Tone: late-night witty bartender. High sarcasm, never mean. Fun > advice.",
-        "Second person only. No first person. No imperative advice.",
-        "8–10 short lines, max 15 words each, like quick bar banter.",
-        `Ground in ${city} or ${role} subtly. 2–3 punchlines.`,
+        "Voice: witty late-night bartender; sharp, playful, never mean; a bit boozy.",
+        "Second person only. One speaker. 6–10 quick lines, ≤15 words each.",
+        "No lists. Tiny, plausible images only. Zero purple prose.",
+        `Anchor softly in ${city} or ${role}. Land jokes with truth under them.`,
         (period==='past'
-         ? "Use counterfactual past (would have...), as if it had happened."
-         : "Use near-future conditional (you could..., you'll likely...). Avoid past-tense drift."),
-        "No bullet lists. One speaker. End with a tight punchline."
-      ].join("\n");
+         ? "Use counterfactual past (would have...), as if it already happened."
+         : "Use near-future conditional (you could..., you'll likely...). Stay present-leaning."),
+        "End with a playful episodic hook (no 'two clean shots').",
+        wantsPlayful ? "Allow extra banter; escalate quips by 10%." : "",
+        wantsIntro ? "Keep one honest beat after a joke." : ""
+      ].filter(Boolean).join("\n");
     }
     // whatif EN
     return [
       "Answer strictly in English.",
-      "Tone: lucid friendly inner-voice. Predictive, concrete, current.",
+      "Voice: lucid inner-friend; concrete, current, predictive. Not poetic.",
+      "8–12 short sentences (~180 words). No lists. Second person.",
       (period==='past'
-       ? "Counterfactual vignette in the past: as if it happened; include one trade-off and a success signal."
-       : "Near-future fork: first small step (1 call/email/hour), one success indicator, and one constraint."),
-      `Weave decision window/risk tolerance and an anchor place/person; keep it subtle. Use ${city}/${role} implicitly.`,
-      "Second person. No first person.",
-      "8–10 short lines. End with a soft personal hook (no cliffhanger)."
-    ].join("\n");
+       ? "Counterfactual past vignette (as if it happened). Include one realistic trade-off and one success signal."
+       : "Near-future fork: first small step (one call/email/hour), one success indicator, one constraint."),
+      `Weave a subtle anchor (place/person). Use ${city}/${role} implicitly.`,
+      wantsIntro ? "Slightly more introspective texture is ok." : "",
+      "Close with a soft episodic hook."
+    ].filter(Boolean).join("\n");
   }
 
   // Italiano
   if (style === 'wtf'){
     return [
       "Rispondi RIGOROSAMENTE in italiano.",
-      "Tono: barista nottambulo, brillante, sarcastico ma mai cattivo. Divertente > consigli.",
-      "Usa SOLO seconda persona. Vietata la prima persona. Vietati elenchi o consigli operativi.",
-      "8–10 righe brevi (≤15 parole), ritmo da bancone, 2–3 punchline.",
-      `Ancora sottile in ${city} o ${role}.`,
+      "Voce: barista nottambulo, brillante, sarcastico ma mai cattivo; un filo 'alcolico'.",
+      "SOLO seconda persona. Una sola voce. 6–10 righe secche, ≤15 parole.",
+      "Niente elenchi. Immagini piccole e plausibili. Bandita la poesia.",
+      `Ancora leggera in ${city} o ${role}. Battute pratiche che fanno sorridere ma dicono la verità.`,
       (period==='past'
-       ? "Tempo: passato controfattuale (sarebbe successo...), come se fosse davvero accaduto."
-       : "Tempo: futuro vicino/condizionale (potresti..., ti ritroverai...). Evita scivolate nel passato."),
-      "Una sola voce. Chiudi con battuta secca."
-    ].join("\n");
+       ? "Tempo: passato controfattuale (sarebbe successo...), come se fosse già accaduto."
+       : "Tempo: futuro vicino/condizionale (potresti..., ti ritroverai...). Restare sul presente spinto."),
+      "Chiudi con un gancio episodico giocoso (non 'due colpi secchi').",
+      wantsPlayful ? "Concedi un 10% in più di cazzeggio intelligente." : "",
+      wantsIntro ? "Dopo una battuta, lascia un attimo di verità." : ""
+    ].filter(Boolean).join("\n");
   }
 
   // whatif IT
   return [
     "Racconta RIGOROSAMENTE in italiano.",
-    "Tono: amico lucido, concreto e attuale. Predittivo.",
+    "Voce: amico lucido e concreto. Predittivo, non poetico.",
+    "8–12 frasi brevi (~180 parole). SOLO seconda persona. Niente elenchi.",
     (period==='past'
-     ? "PASSATO: vignetta controfattuale come se fosse accaduta; inserisci 1 trade-off realistico e 1 segnale di successo."
-     : "FUTURO: biforcazione di prossimo futuro; inserisci primo passo piccolo (1 chiamata/email/ora), 1 indicatore di successo e 1 vincolo realistico."),
-    `Intreccia finestra decisionale/tolleranza al rischio e un’ancora luogo/persona. Usa ${city}/${role} in modo implicito.`,
-    "SOLO seconda persona. Niente prima persona.",
-    "8–10 righe brevi. Chiudi con gancio personale sobrio."
-  ].join("\n");
+     ? "PASSATO: vignetta come se fosse accaduta; inserisci 1 trade-off realistico e 1 segnale di successo."
+     : "FUTURO: prossima biforcazione; inserisci un primo passo piccolo (1 chiamata/email/ora), 1 indicatore e 1 vincolo realistico."),
+    `Intreccia in modo sottile un’ancora luogo/persona. Usa ${city}/${role} in modo implicito.`,
+    wantsIntro ? "Consentito un filo più introspettivo, senza diventare poetico." : "",
+    "Chiudi con un gancio morbido, senza cliffhanger."
+  ].filter(Boolean).join("\n");
 }
 
 /* ===== AUTO-LEARNING ===== */
@@ -524,7 +536,7 @@ function learnFromInteraction({question, clarifications, answerText=""}){
   writeJSON('whatif_micro', micro);
 }
 
-/* Clarify locale intelligente (come nel tuo) */
+/* Clarify locale */
 function extractKeywords(q){
   const s=(q||'').toLowerCase();
   const words = s.replace(/[^\p{L}\p{N}\s]/gu,' ').split(/\s+/).filter(w=>w.length>3);
