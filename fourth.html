@@ -3,215 +3,223 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f – Chiedi & Prepara</title>
+<title>What?f – Chiedi</title>
 <meta name="theme-color" content="#0B0B0C" />
-<link rel="manifest" href="/manifest.json" />
 <style>
-  :root{
-    --bg:#0B0B0C; --bg2:#101414;
-    --fg:#FFFFFF; --muted:#A0B2BA;
-    --acc:#1C57A0; --acc2:#FFEC01;
-    --card:rgba(20,28,34,0.92); --line:rgba(255,255,255,.12);
-    --chip:#121A26; --ink:#0A0E12; --shadow:rgba(0,0,0,.35);
-  }
-  html[data-style="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
-  *{box-sizing:border-box} html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  :root{--bg:#0B0B0C;--bg2:#101414;--fg:#fff;--muted:#A0B2BA;--card:#141C22;--line:rgba(255,255,255,.12);--acc:#1C57A0;--acc2:#FFEC01;--chip:#121A26;--ink:#0A0E12;}
+  html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2),var(--bg));color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
   main{max-width:980px;margin:auto;padding:18px}
-  h1{margin:8px 0 2px;font-size:clamp(22px,5vw,30px);color:var(--acc2)}
-  p.sub{color:var(--muted);margin:0 0 10px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow);backdrop-filter:blur(12px)}
-  .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
-  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
-  .input, textarea{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:12px}
+  .card{background:rgba(20,28,34,.92);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+  h1{margin:8px 0 4px;color:var(--acc2)}
+  label{display:block;margin:8px 0 6px;font-weight:700;color:#E9F2FA}
+  input,textarea,select{width:100%;background:var(--chip);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:16px}
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:#EAF3EE;padding:12px 14px;border-radius:12px;cursor:pointer}
+  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none}
   .chips{display:flex;gap:8px;flex-wrap:wrap}
-  .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
+  .chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:8px 12px;cursor:pointer}
   .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none}
-  .grid{display:grid;grid-template-columns:1fr;gap:10px}
-  @media(min-width:720px){ .grid{grid-template-columns:repeat(2,1fr);} }
-  .helper{font-size:13px;color:var(--muted)}
-  .tip{font-size:12px;color:#CFE8FF}
+  .qmini{display:grid;gap:10px}
+  .qpair{display:grid;grid-template-columns:1fr;gap:6px}
+  small.muted{color:var(--muted)}
 </style>
 </head>
 <body>
 <main>
-  <h1>Componi il tuo What?f</h1>
-  <p class="sub">Una domanda chiara. Due stiletti: “What?f” o “What the F”. Poi 2–4 micro-risposte veloci.</p>
-
+  <h1>Formula la tua domanda</h1>
   <div class="card">
-    <h3 class="label">La tua domanda</h3>
-    <textarea id="domanda" rows="3" placeholder='Es: "E se tornassi a vivere all’Aquila?"'></textarea>
-    <div class="row" style="margin-top:8px">
-      <span class="helper">Periodo:</span>
-      <div class="chips" id="periodoChips">
-        <button class="chip sel" data-periodo="future">Futuro</button>
-        <button class="chip" data-periodo="past">Passato</button>
+    <label for="domanda">Domanda (es. “E se comprassi una moto?”)</label>
+    <textarea id="domanda" rows="3" placeholder="Scrivi la tua sliding door qui..."></textarea>
+
+    <div class="row" style="margin-top:12px">
+      <div>
+        <label>Periodo</label>
+        <div class="chips" id="chipsPeriodo">
+          <button class="chip sel" data-v="future">Futuro</button>
+          <button class="chip" data-v="past">Passato</button>
+        </div>
       </div>
-      <span class="helper">Stile:</span>
-      <div class="chips" id="styleChips">
-        <button class="chip sel" data-style="whatif">What?f</button>
-        <button class="chip" data-style="wtf">What the F</button>
+      <div>
+        <label>Stile</label>
+        <div class="chips" id="chipsStile">
+          <button class="chip sel" data-v="whatif">What?f (empatico)</button>
+          <button class="chip" data-v="wtf">What the F (da bar)</button>
+        </div>
       </div>
     </div>
-    <p class="tip">Consiglio: una sola scelta alla volta. Linguaggio semplice. Niente elenco di cose.</p>
   </div>
 
-  <div class="card" id="microWrap" style="display:none">
-    <h3 class="label">Micro-domande (30 sec)</h3>
-    <div class="grid" id="microList"></div>
-    <p class="helper">Rispondi al volo (una riga). Servono per farti conoscere e per la puntata di domani.</p>
+  <div class="card">
+    <h3 style="margin:0 0 8px">Micro-domande su di te</h3>
+    <small class="muted">Servono a far sembrare la risposta “ti conosco davvero”.</small>
+    <div class="qmini" id="profileQs"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 8px">Micro-domande sulla tua domanda</h3>
+    <small class="muted">Generate automaticamente in base a ciò che hai chiesto.</small>
+    <div class="qmini" id="contextQs"></div>
   </div>
 
   <div class="card">
     <div class="row" style="justify-content:space-between">
-      <button class="btn" id="annulla">← Indietro</button>
-      <div class="row">
-        <button class="btn" id="saltaMicro">Salta micro-domande</button>
-        <button class="btn primary" id="continua">Genera</button>
-      </div>
+      <button class="btn" id="annullaBtn">Annulla</button>
+      <button class="btn primary" id="vaiBtn">Vai al risultato</button>
     </div>
   </div>
 </main>
 
 <script>
-const LS=localStorage;
-const $=s=>document.querySelector(s);
-const $$=s=>Array.from(document.querySelectorAll(s));
+const $ = (id)=>document.getElementById(id);
+const LS = localStorage;
 
-/* ===== stato stile/periodo ===== */
-let periodo="future";
-let stile="whatif";
-function syncTheme(){ document.documentElement.setAttribute('data-style', stile==='wtf'?'wtf':'whatif'); }
-$('#periodoChips').addEventListener('click',e=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  periodo=b.dataset.periodo; $$('#periodoChips .chip').forEach(c=>c.classList.toggle('sel',c===b));
+function savePrefs(p){ LS.setItem('whatif_prefs', JSON.stringify(p)); }
+function readPrefs(){ try{ return JSON.parse(LS.getItem('whatif_prefs')||'{}'); }catch{ return {}; } }
+
+let periodo = 'future';
+let stile = 'whatif';
+
+document.querySelectorAll('#chipsPeriodo .chip').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#chipsPeriodo .chip').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel'); periodo = b.dataset.v;
+  });
 });
-$('#styleChips').addEventListener('click',e=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  stile=b.dataset.style; syncTheme(); $$('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c===b));
+document.querySelectorAll('#chipsStile .chip').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#chipsStile .chip').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel'); stile = b.dataset.v;
+  });
 });
 
-/* ===== micro-domande ===== */
-function detectLang(text=""){ 
-  const enHits=(text.match(/\b(what|if|and|or|you|would|move|work|buy|motor|bike|city)\b/gi)||[]).length;
-  const itHits=(text.match(/\b(e|se|quando|perché|moto|tornassi|trasferir|lavor|comprare|acquistare)\b/gi)||[]).length;
-  return enHits>itHits?"en":"it";
+/* ===== Profile micro questions (sempre) ===== */
+const PROFILE_SCHEMA = [
+  {id:'name', label:'Nome (come vuoi che ti chiami)', ph:'es. Luca'},
+  {id:'city_now', label:'Dove vivi ora?', ph:'es. Verona'},
+  {id:'work_role', label:'Cosa fai di lavoro (breve)?', ph:'es. marketing, developer, barista'},
+  {id:'goal', label:'Obiettivo dei prossimi 3 mesi', ph:'es. più tempo libero, cambiare città'},
+];
+function renderProfileQs(){
+  const wrap = $('profileQs'); wrap.innerHTML='';
+  const data = readProfile();
+  PROFILE_SCHEMA.forEach(q=>{
+    const div = document.createElement('div'); div.className='qpair';
+    div.innerHTML = `<label for="p_${q.id}">${q.label}</label>
+      <input id="p_${q.id}" placeholder="${q.ph}" value="${(data[q.id]||'').replace(/"/g,'&quot;')}">`;
+    wrap.appendChild(div);
+  });
 }
-function topicOf(q=""){
-  const s=q.toLowerCase();
-  if (/(moto|motor(e|bike)|scooter|vespa)/.test(s)) return "moto";
-  if (/(barca|vela|gommone|yacht|boat)/.test(s)) return "barca";
-  if (/(tornassi|trasferi|trasloco|vivere a|move|relocat)/.test(s)) return "trasferimento";
-  if (/(lugano|aquila|l'aquila|milano|roma|verona|bussolengo|londra|zurigo)/.test(s)) return "città";
-  if (/(lavoro|job|ricercatore|azienda|ufficio|work)/.test(s)) return "lavoro";
-  if (/(comprare|acquistare|buy|purchase)/.test(s)) return "acquisto";
-  return "generale";
+function readProfile(){ try{ return JSON.parse(LS.getItem('whatif_profile')||'{}'); }catch{ return {}; } }
+function writeProfile(p){ LS.setItem('whatif_profile', JSON.stringify(p)); }
+
+/* ===== Context micro questions (auto dalla domanda) ===== */
+function extractKeywords(s){
+  s = (s||'').toLowerCase();
+  const words = s.replace(/[^\p{L}\p{N}\s]/gu,' ').split(/\s+/).filter(w=>w.length>3);
+  const counts={}; words.forEach(w=>counts[w]=(counts[w]||0)+1);
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4).map(x=>x[0]);
 }
-function microFor(q, period){
-  const lang=detectLang(q);
-  const L=(id,it,en,phIt,phEn)=>({id,label:(lang==='en'?en:it),placeholder:(lang==='en'?phEn:phIt)});
-  const t=topicOf(q);
-  const basePersona=[
-    L("name_hint","Nome da usare in risposta? (opzionale)","Name to use in reply? (optional)","es. Luca","e.g., Luca"),
-    L("role_hint","Ruolo/lavoro in 2 parole?","Role/work in 2 words?","es. product designer","e.g., product designer"),
-    L("city_hint","Città di adesso?","City now?","es. Verona","e.g., Verona")
+function topicFromQ(q){
+  const s=(q||'').toLowerCase();
+  if (/(moto|motor(e|bike)|scooter|vespa)/.test(s)) return 'moto';
+  if (/(aquila|l\'aquila|lugano|milano|roma|verona|londra|zurigo)/.test(s)) return 'città';
+  if (/(trasferi|trasloco|vivere a|relocat|move)/.test(s)) return 'trasferimento';
+  if (/(lavor|job|azienda|ufficio|work)/.test(s)) return 'lavoro';
+  return 'generale';
+}
+function buildContextQs(q, per){
+  const kw = extractKeywords(q);
+  const first = kw[0] || 'il tema';
+  const L=(id,label,ph)=>({id,label,ph});
+  if (per==='past'){
+    return [
+      L('pivot_year', 'In che anno cambiava la rotta?', 'es. 2015 / 2010'),
+      L('then_context', 'Dove e con chi eri allora?', 'città, squadra, famiglia'),
+      L('signal_past', 'Segnale che ti diceva “ha funzionato”?', 'persona, numero, risultato'),
+    ];
+  }
+  const t = topicFromQ(q);
+  if (t==='moto'){
+    return [
+      L('timing', 'Quando la prenderesti davvero?', 'questo mese / 3–6 mesi'),
+      L('use', 'Uso principale?', 'casa-lavoro / weekend / viaggi'),
+      L('budget', 'Tetto mensile realistico', '€ assicurazione + carburante'),
+    ];
+  }
+  if (t==='città' || t==='trasferimento'){
+    return [
+      L('window', 'Finestra decisionale reale', 'entro 3 mesi / 6–12 mesi'),
+      L('anchor', 'Cosa ti tiene dove sei ora?', 'famiglia / lavoro / costi'),
+      L('indicator', 'Segnale che dice “è giusto”', 'sonno/energia/callback'),
+    ];
+  }
+  if (t==='lavoro'){
+    return [
+      L('why', 'Il tuo perché oggi', 'impatto / crescita / serenità'),
+      L('option', 'Opzioni sul tavolo', 'resto / cambio team / esco'),
+      L('limit', 'Vincolo concreto', 'budget / tempo / persone'),
+    ];
+  }
+  return [
+    L('time_window','Finestra decisionale reale','questo mese / 3–6 / 12'),
+    L('success_indicator',`Un indicatore di successo su ${first}`,'€ risparmiati, ore, primo cliente'),
+    L('real_constraint','Vincolo concreto da non ignorare','budget, tempo, energia'),
   ];
-  if (t==="moto"){
-    return basePersona.concat([
-      L("timing","Quando la compreresti davvero?","When would you actually buy it?","questo mese / 3–6 mesi","this month / 3–6 months"),
-      L("use","Uso principale?","Main use?","casa-lavoro / weekend / viaggi","commute / weekends / trips")
-    ]);
-  }
-  if (t==="trasferimento" || t==="città"){
-    return basePersona.concat([
-      L("window","Finestra realistica di spostamento?","Real window to move?","entro 3 mesi / 6–12 mesi","within 3 months / 6–12 months"),
-      L("anchor","Cosa ti trattiene adesso?","What anchors you now?","famiglia / lavoro / costi","family / work / costs")
-    ]);
-  }
-  if (t==="lavoro"){
-    return basePersona.concat([
-      L("why","Cosa cerchi di più adesso?","Your current *why*?","impatto / crescita / serenità","impact / growth / calm"),
-      L("option","Opzione sul tavolo?","Option on the table?","restare / cambiare / uscire","stay / switch / leave")
-    ]);
-  }
-  return basePersona.concat([
-    L("window","Finestra decisione?","Decision window?","questo mese / 3–6 / 12 mesi","this month / 3–6 / 12 months"),
-    L("indicator","Segnale che direbbe: funziona","Signal that says: it works","prima risposta / € / ore dormite","first reply / € / hours slept")
-  ]);
 }
-function renderMicro(q){
-  const list = microFor(q, periodo);
-  const box = $('#microList'); box.innerHTML="";
-  list.forEach(it=>{
-    const w=document.createElement('div');
-    w.innerHTML=`<label class="helper">${it.label}</label><input class="input" id="m_${it.id}" placeholder="${it.placeholder}">`;
-    box.appendChild(w);
+function renderContextQs(){
+  const q = $('domanda').value.trim();
+  const qs = buildContextQs(q, periodo);
+  const wrap = $('contextQs'); wrap.innerHTML='';
+  qs.forEach((x,i)=>{
+    const div = document.createElement('div'); div.className='qpair';
+    div.innerHTML = `<label for="c_${x.id}">${x.label}</label>
+      <input id="c_${x.id}" placeholder="${x.ph.replace(/"/g,'&quot;')}">`;
+    wrap.appendChild(div);
   });
-  $('#microWrap').style.display='block';
 }
 
-/* ===== load prefs ===== */
-(function boot(){
-  const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-  if (prefs.stile) { stile=prefs.stile; }
-  if (prefs.periodo) { periodo=prefs.periodo; }
-  syncTheme();
-  $$('#periodoChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.periodo===periodo));
-  $$('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===stile));
-  const prevQ=LS.getItem('domanda')||"";
-  if(prevQ){ $('#domanda').value=prevQ; renderMicro(prevQ); }
-})();
+$('domanda').addEventListener('input', ()=>renderContextQs());
 
-/* ===== events ===== */
-$('#domanda').addEventListener('input',e=>{
-  const v=(e.target.value||"").trim();
-  if(!v){ $('#microWrap').style.display='none'; return; }
-  renderMicro(v);
-});
+/* ===== Go / Save ===== */
+$('annullaBtn').addEventListener('click', ()=> history.back());
+$('vaiBtn').addEventListener('click', ()=>{
+  const domanda = $('domanda').value.trim();
+  if (!domanda) { alert('Scrivi una domanda.'); return; }
 
-$('#saltaMicro').addEventListener('click',()=>{
-  // salva solo domanda & prefs
-  const domanda = ($('#domanda').value||"").trim();
-  if(!domanda){ alert("Scrivi una domanda."); return; }
-  LS.setItem('domanda', domanda);
-  LS.setItem('whatif_prefs', JSON.stringify({stile, periodo}));
-  location.href='fifth.html';
-});
+  // salva domanda + prefs
+  const prefs = readPrefs();
+  prefs.periodo = periodo;
+  prefs.stile   = stile;
+  savePrefs(prefs);
+  localStorage.setItem('domanda', domanda);
 
-$('#continua').addEventListener('click',()=>{
-  const domanda = ($('#domanda').value||"").trim();
-  if(!domanda){ alert("Scrivi una domanda."); return; }
-  // salva domanda, prefs e micro
-  const microInputs = Array.from(document.querySelectorAll('#microList input'));
+  // salva profilo
+  const prof = readProfile();
+  PROFILE_SCHEMA.forEach(q=>{
+    const v = (document.getElementById('p_'+q.id)?.value||'').trim();
+    if (v) prof[q.id]=v;
+  });
+  writeProfile(prof);
+
+  // salva micro (context) separato
   const micro = {};
-  microInputs.forEach(i=>{
-    const key=i.id.replace(/^m_/,'');
-    const val=(i.value||"").trim();
-    if(val) micro[key]=val;
+  document.querySelectorAll('#contextQs input').forEach(i=>{
+    const id = i.id.replace(/^c_/, '');
+    const v = (i.value||'').trim(); if(v) micro[id]=v;
   });
-  // profilo lean (aggiorna solo se compilato)
-  const prof = JSON.parse(LS.getItem('whatif_profile')||'{}');
-  if (micro.name_hint) prof.name = micro.name_hint;
-  if (micro.role_hint) prof.role = micro.role_hint;
-  if (micro.city_hint) prof.city_now = micro.city_hint;
-  LS.setItem('whatif_profile', JSON.stringify(prof));
+  const old = JSON.parse(localStorage.getItem('whatif_micro')||'{}');
+  localStorage.setItem('whatif_micro', JSON.stringify({...old, ...micro}));
 
-  const microStore = JSON.parse(LS.getItem('whatif_micro')||'{}');
-  Object.assign(microStore, micro);
-  LS.setItem('whatif_micro', JSON.stringify(microStore));
+  // piccoli tag auto
+  const tags = Array.from(new Set(extractKeywords(domanda)));
+  localStorage.setItem('whatif_tags', JSON.stringify(tags));
 
-  // marca “episodio 1 avviato oggi”
-  const today=(d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`)(new Date());
-  const ep={ last_question: domanda, ep1_date: today };
-  LS.setItem('whatif_episode', JSON.stringify(ep));
-
-  LS.setItem('domanda', domanda);
-  LS.setItem('whatif_prefs', JSON.stringify({stile, periodo}));
   location.href='fifth.html';
 });
 
-$('#annulla').addEventListener('click',()=> history.back());
+/* boot */
+renderProfileQs();
+renderContextQs();
 </script>
 </body>
 </html>
