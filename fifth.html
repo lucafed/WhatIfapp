@@ -330,13 +330,12 @@ function readClarify(){const v=readJSON('whatif_clarify');const t=todayStr();if(
 function writeClarify(v){writeJSON('whatif_clarify',v);renderBadges();}
 function ensureClarify(){const c=readClarify();if(!c.date||!c.date===todayStr()){c.date=todayStr();c.used=0;writeClarify(c);}}
 
-/* Profilo / signals */
+/* Profilo / signals (teniamo solo per badge; NON inviato all'API) */
 function buildProfilePayload(){
   const base = readJSON('whatif_profile');
   const micro = readJSON('whatif_micro');
   const anchors = readJSON('whatif_anchors', {});
-  const tone = readJSON('whatif_tone', {});
-  return { ...base, micro, anchors, tone };
+  return { ...base, micro, anchors };
 }
 function summarizeSignals(clarUsed={}){
   const p=readJSON('whatif_profile',{}); const m=readJSON('whatif_micro',{}); const parts=[];
@@ -414,7 +413,7 @@ function computeKnowledge(){
   const lastDay=lastUpd||last(microLog);
   let recencyPts=0;
   if(lastDay){ const gap=daysBetween(lastDay,today);
-    if(gap<=2)recencyPts=10; else if(gap<=5)recencyPts=8; else if(gap<=8)recencyPts=6; else if(gap<=11)recencyPts=4; else if(gap<=14)recencyPts=2; else recencyPts=0;
+    if(gap<=2)recencyPts=10; else if(gap<=5)recencyPts=8; else if(gap<=8)recencyPts=6; else if(gap<=11)recencyPts=4; else recencyPts=2;
   }
   const fresh=Math.min(20,streakPts+recencyPts);
   return Math.max(0,Math.min(100,Math.round(cover+quality+fresh)));
@@ -435,7 +434,7 @@ async function callClarifyAPI(){
     periodo: (prefs.periodo||"future"),
     stile: currentStyle,
     clarify: true,
-    profilo: buildProfilePayload(),
+    // profilo non serve all'API lean; non inviamo ancore
     tags: getTags(),
     now: new Date().toISOString(),
     tz: getTZ()
@@ -445,78 +444,52 @@ async function callClarifyAPI(){
   return r.json();
 }
 
-/* ===== GUIDANCE EXTRA =====
-   Rafforza il tono lato server: poche immagini, niente poesia, chiusura episodica.
-   Usiamo anche i segnali utente per l’ancoraggio (city/role) e il tone derivato dal quiz. */
-function buildGuidanceExtra(period, style, currentLang, profile={}){
-  const city = profile.city_now || profile.city || "la tua città";
-  const role = profile.work_role || profile.role || "il tuo ruolo";
-  const tone = profile?.tone || {};
-  const wantsPlayful = !!tone.playful;
-  const wantsIntro = !!tone.introspective;
+/* ===== Sanitizer stile (LOCALE) ===== */
+function sanitizeOutput(style, raw){
+  let out = (raw || "").trim();
 
-  if (currentLang === 'en'){
-    if (style === 'wtf'){
-      return [
-        "Answer strictly in English.",
-        "Voice: witty late-night bartender; sharp, playful, never mean; a bit boozy.",
-        "Second person only. One speaker. 6–10 quick lines, ≤15 words each.",
-        "No lists. Tiny, plausible images only. Zero purple prose.",
-        `Anchor softly in ${city} or ${role}. Land jokes with truth under them.`,
-        (period==='past'
-         ? "Use counterfactual past (would have...), as if it already happened."
-         : "Use near-future conditional (you could..., you'll likely...). Stay present-leaning."),
-        "End with a playful episodic hook (no 'two clean shots').",
-        wantsPlayful ? "Allow extra banter; escalate quips by 10%." : "",
-        wantsIntro ? "Keep one honest beat after a joke." : ""
-      ].filter(Boolean).join("\n");
-    }
-    // whatif EN
-    return [
-      "Answer strictly in English.",
-      "Voice: lucid inner-friend; concrete, current, predictive. Not poetic.",
-      "8–12 short sentences (~180 words). No lists. Second person.",
-      (period==='past'
-       ? "Counterfactual past vignette (as if it happened). Include one realistic trade-off and one success signal."
-       : "Near-future fork: first small step (one call/email/hour), one success indicator, one constraint."),
-      `Weave a subtle anchor (place/person). Use ${city}/${role} implicitly.`,
-      wantsIntro ? "Slightly more introspective texture is ok." : "",
-      "Close with a soft episodic hook."
-    ].filter(Boolean).join("\n");
+  // rimuovi virgolette/“caporali”
+  out = out.replace(/[“”"«»]/g, "");
+
+  if (style === 'wtf') {
+    // vieta lirismi evidenti
+    const banned = /\b(nostalgia|profumo|tramonto|vino|sussurr\w*|poesi\w*|fiab\w*|liric\w*|romantic\w*)\b/gi;
+    out = out.replace(banned, '');
+
+    // spezza in righe corte (<=15 parole), una per riga
+    const bits = out
+      .split(/\n+|(?<=[.!?])\s+/)
+      .map(s => s.trim())
+      .filter(Boolean)
+      .flatMap(s => {
+        const words = s.split(/\s+/);
+        const lines = [];
+        for (let i=0;i<words.length;i+=15) lines.push(words.slice(i, i+15).join(' '));
+        return lines;
+      })
+      .filter(Boolean);
+
+    // filtra righe troppo poetiche
+    const poetic = /(cuore|anima|destino|fiaba|sogno|sussurra)/i;
+    let lines = bits.filter(x => !poetic.test(x));
+
+    // limita 6–10 righe
+    lines = lines.slice(0, 10);
+    while (lines.length < 6 && bits.length) lines.push(bits.shift());
+
+    // gancio finale
+    const hook = "Stesso bancone, domani rimescoliamo.";
+    if (!lines[lines.length-1]?.match(/bancone|domani|giro|conto/i)) lines.push(hook);
+    out = lines.join("\n");
+  } else {
+    // WHATIF: frasi brevi, una per riga, max 12
+    const sentences = out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean).slice(0,12);
+    out = sentences.join("\n");
   }
-
-  // Italiano
-  if (style === 'wtf'){
-    return [
-      "Rispondi RIGOROSAMENTE in italiano.",
-      "Voce: barista nottambulo, brillante, sarcastico ma mai cattivo; un filo 'alcolico'.",
-      "SOLO seconda persona. Una sola voce. 6–10 righe secche, ≤15 parole.",
-      "Niente elenchi. Immagini piccole e plausibili. Bandita la poesia.",
-      `Ancora leggera in ${city} o ${role}. Battute pratiche che fanno sorridere ma dicono la verità.`,
-      (period==='past'
-       ? "Tempo: passato controfattuale (sarebbe successo...), come se fosse già accaduto."
-       : "Tempo: futuro vicino/condizionale (potresti..., ti ritroverai...). Restare sul presente spinto."),
-      "Chiudi con un gancio episodico giocoso (non 'due colpi secchi').",
-      wantsPlayful ? "Concedi un 10% in più di cazzeggio intelligente." : "",
-      wantsIntro ? "Dopo una battuta, lascia un attimo di verità." : ""
-    ].filter(Boolean).join("\n");
-  }
-
-  // whatif IT
-  return [
-    "Racconta RIGOROSAMENTE in italiano.",
-    "Voce: amico lucido e concreto. Predittivo, non poetico.",
-    "8–12 frasi brevi (~180 parole). SOLO seconda persona. Niente elenchi.",
-    (period==='past'
-     ? "PASSATO: vignetta come se fosse accaduta; inserisci 1 trade-off realistico e 1 segnale di successo."
-     : "FUTURO: prossima biforcazione; inserisci un primo passo piccolo (1 chiamata/email/ora), 1 indicatore e 1 vincolo realistico."),
-    `Intreccia in modo sottile un’ancora luogo/persona. Usa ${city}/${role} in modo implicito.`,
-    wantsIntro ? "Consentito un filo più introspettivo, senza diventare poetico." : "",
-    "Chiudi con un gancio morbido, senza cliffhanger."
-  ].filter(Boolean).join("\n");
+  return out.trim();
 }
 
-/* ===== AUTO-LEARNING ===== */
+/* ===== AUTO-LEARNING (rimane per badge) ===== */
 function learnFromInteraction({question, clarifications, answerText=""}){
   const mem = readJSON('whatif_memory',[]);
   const excerpt = (answerText||"").slice(0,400);
@@ -594,7 +567,7 @@ function buildVariantQuestions(qs){
   });
 }
 
-/* Clarify */
+/* Clarify overlay */
 const clarifyOverlay=$('clarifyOverlay'), clarifyList=$('clarifyList');
 $('clarifyBtn').textContent=T.clarifyBtn;
 $('clarifyBtn').addEventListener('click', openClarify);
@@ -658,7 +631,7 @@ $('genBtn').addEventListener('click', ()=> generate());
 $('regenBtn').textContent=T.regenBtn;
 $('regenBtn').addEventListener('click', ()=> generate(true));
 
-async function callGenerateStream({clarifications={},extra="" }={}){
+async function callGenerateStream({clarifications={}, extra="" }={}){
   const payload={
     domanda,
     lang,
@@ -666,9 +639,9 @@ async function callGenerateStream({clarifications={},extra="" }={}){
     stile:currentStyle,
     clarify:false,
     stream:true,
-    profilo:buildProfilePayload(),
+    profilo:{},            // ← niente ancore
     clarifications,
-    extra,
+    extra:"",              // ← forziamo vuoto
     now: new Date().toISOString(),
     tz: getTZ()
   };
@@ -689,8 +662,7 @@ async function generate(isRegen=false, clarOverride=null){
   if(!$('signalsBody').textContent){ $('signalsBody').textContent = summarizeSignals(clarOverride||{}); }
 
   try{
-    const extra = buildGuidanceExtra((prefs.periodo||'future'), currentStyle, lang, buildProfilePayload());
-    const reader=await callGenerateStream({clarifications:(clarOverride||{}), extra});
+    const reader=await callGenerateStream({clarifications:(clarOverride||{}), extra:""});
     const decoder=new TextDecoder(); let buffer="", text="";
     while(true){
       const {value,done}=await reader.read(); if(done)break;
@@ -700,7 +672,11 @@ async function generate(isRegen=false, clarOverride=null){
         if(!chunk.startsWith("data: ")) continue;
         const data=JSON.parse(chunk.slice(6));
         if(data.token){ text+=data.token; $('result').textContent=text; }
-        if(data.done){ $('result').textContent=(text||"").trim(); $('result').classList.add('fade-in'); }
+        if(data.done){
+          text = sanitizeOutput(currentStyle, text);
+          $('result').textContent=(text||"").trim();
+          $('result').classList.add('fade-in');
+        }
         if(data.error){ $('result').textContent=T.errServer+" "+(data.detail||""); }
       }
     }
