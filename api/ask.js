@@ -1,315 +1,373 @@
 // /api/ask.js
-import OpenAI from "openai";
+// Serverless endpoint per What?f – Vercel / Node 18+
+//
+// ENV richiesti:
+// - OPENAI_API_KEY = "sk-..." oppure "sk-proj-..."
+// Opzionali (solo log):
+// - APP_ENV = "dev" per log più verbosi
 
-/* =============== Setup =============== */
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const MODEL = "gpt-4o-mini";
+export const config = {
+  runtime: "edge", // Edge = più veloce su Vercel. Se preferisci Node: commenta questa riga.
+};
 
-/* =============== Helpers =============== */
-const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
-const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-function detectLang(text = "") {
-  const enHits = (text.match(/\b(what|if|and|or|you|should|would|move|work|buy|car|bike|city|how|why)\b/gi) || []).length;
-  const itHits = (text.match(/\b(e|se|quando|perché|moto|tornassi|trasfer|lavor|comprare|città)\b/gi) || []).length;
-  return enHits > itHits ? "en" : "it";
+// ==== Utilities ===============================================================
+
+function jsonResponse(status, data) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+    },
+  });
 }
 
-function classifyTopic(q = "") {
-  const s = q.toLowerCase();
-  if (/(moto|motor(e|bike)|scooter|vespa)/.test(s)) return "moto";
-  if (/(auto|macchina|car|elettric)/.test(s)) return "auto";
-  if (/(tornassi|trasferi|trasloco|vivere a|move|relocat)/.test(s)) return "trasferimento";
-  if (/(l'aquila|aquila|milano|roma|verona|londra|zurigo|bussolengo)/.test(s)) return "città";
-  if (/(lavoro|job|ricercatore|ufficio|work)/.test(s)) return "lavoro";
-  if (/(comprare|acquistare|buy|purchase)/.test(s)) return "acquisto";
-  return "generale";
+function safeStr(x) {
+  return typeof x === "string" ? x : JSON.stringify(x || "");
+}
+function clampLines(txt = "", max = 14) {
+  const parts = safeStr(txt)
+    .replace(/[“”«»]/g, '"')
+    .split(/\n+|(?<=[.!?])\s+/)
+    .map(s => s.trim())
+    .filter(Boolean)
+    .slice(0, max);
+  return parts.join("\n").trim();
 }
 
-function todayInfo(lang) {
+function shortNowISO() {
   const d = new Date();
-  const loc = isEn(lang) ? "en-GB" : "it-IT";
-  const weekday = d.toLocaleDateString(loc, { weekday: "long" });
-  const date = d.toLocaleDateString(loc, { day: "2-digit", month: "long", year: "numeric" });
-  return `${weekday}, ${date}`;
+  return d.toISOString().replace(/\.\d+Z$/, "Z");
 }
 
-/* ======== Mirror (una sola riga naturale) ======== */
-function mirrorLine(profile = {}, lang = "it") {
-  const en = isEn(lang);
-  const name = (profile?.name || "").split(" ")[0] || "";
-  const city = profile?.city_now || profile?.city || "";
-  const role = profile?.work_role || profile?.role || "";
+// ==== Prompt builders =========================================================
 
-  const linesIt = [
-    name ? `${name}, non insegui rumore: cerchi ritmo utile.` : `Non insegui rumore: cerchi ritmo utile.`,
-    city ? `${city} ti raddrizza quando tutto corre troppo.` : `Una base familiare ti raddrizza quando tutto corre troppo.`,
-    role ? `Nel lavoro (${role}) per te conta il perché, non il cartellone.` : `Nel lavoro conta il perché, non il cartellone.`
-  ];
-  const linesEn = [
-    name ? `${name}, you don’t chase noise — you chase signal.` : `You don’t chase noise — you chase signal.`,
-    city ? `${city} steadies you when life spins too fast.` : `A familiar base steadies you when life spins too fast.`,
-    role ? `In ${role}, purpose beats prestige for you.` : `Purpose beats prestige for you.`
-  ];
-  return pick(en ? linesEn : linesIt);
+const STYLE_SYSTEM = {
+  whatif: `Sei un amico brillante, empatico e asciutto. 
+Parli con ritmo, zero malinconia, zero coachate. 
+Tono: “calmo ma sveglio”, intelligente, con una punta di ironia elegante. 
+Scrivi in frasi brevi, concrete. Mai poesia zuccherosa.
+Obiettivo: dare slancio e chiarezza a chi chiede “e se...?”, facendo venire voglia di provare.`,
+  wtf: `Sei un narratore da bar: sarcastico, ironico, ubriaco ma lucido. 
+Battute intelligenti, calore, ritmo. Fai ridere senza essere cattivo.
+Evita acidità o tristezza. Finale con una chiusura da bancone.`,
+};
+
+// Frasi di chiusura per WTF
+const WTF_CLOSES = [
+  "Clink. Stesso bancone, domani rimescoliamo.",
+  "Ok, giro offerto: domani ti verso l’episodio dopo.",
+  "Conto aperto, amico: domani si brinda sul seguito.",
+];
+
+// Finale episodio (generico)
+function episodeFooter(ep, lang) {
+  const it = (lang || "it").toLowerCase() !== "en";
+  if (ep === 1) return it ? "Domani sblocchiamo l’Episodio 2 alle 09:00." : "Tomorrow we unlock Episode 2 at 09:00.";
+  if (ep === 2) return it ? "Domani sblocchiamo l’Episodio 3 alle 09:00." : "Tomorrow we unlock Episode 3 at 09:00.";
+  return it ? "Finale sbloccato: oggi chiudiamo la storia." : "Final unlocked: we close the story today.";
 }
 
-/* ======== Clarify mirato alla domanda ======== */
-function extractKeywords(q = "") {
-  const tokens = q.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
-  const stop = new Set(["e","ed","di","a","da","in","con","su","per","tra","fra","the","and","of","to","for","che","sei","sei?"]);
-  const freq = {};
-  tokens.forEach(w => { if (!stop.has(w) && w.length > 2) freq[w] = (freq[w] || 0) + 1; });
-  return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5).map(x=>x[0]);
+// System prompt per episodi
+function systemFor(style = "whatif", lang = "it") {
+  const base =
+    STYLE_SYSTEM[style === "wtf" ? "wtf" : "whatif"] ||
+    STYLE_SYSTEM.whatif;
+  const locale =
+    (lang || "it").toLowerCase() === "en"
+      ? "Scrivi in inglese semplice e naturale."
+      : "Scrivi in italiano semplice e naturale.";
+  return `${base}\n${locale}\nRispetta massimo ~12-14 frasi a capo singolo.`;
 }
 
-function clarifyQuestions(domanda, periodo, lang = "it") {
-  const en = isEn(lang);
-  const topic = classifyTopic(domanda);
-  const hints = extractKeywords(domanda);
-  const key = (i, def) => hints[i] ? hints[i] : def;
+// Contenuto utente per generazione episodica + follow-up JSON
+function userPromptEpisode({
+  domanda,
+  episodio = 1,
+  periodo = "future",
+  stile = "whatif",
+  profilo = {},
+  lang = "it",
+}) {
+  const it = (lang || "it").toLowerCase() !== "en";
+  const head = it ? "Domanda:" : "Question:";
+  const epLab = it ? "Episodio" : "Episode";
+  const per = (periodo === "past") ? (it ? "Passato" : "Past") : (it ? "Futuro" : "Future");
 
-  const Q = (id, it, enStr, phIt, phEn) => ({
-    id, label: en ? enStr : it, placeholder: en ? phEn : phIt
+  const personaHints =
+    stile === "whatif"
+      ? (it
+          ? `Tono: amico intelligente, asciutto, positivo. Zero malinconia.`
+          : `Tone: smart friend, concise, positive. No melancholy.`)
+      : (it
+          ? `Tono: bar scanzonato, ironia calda, battute brillanti.`
+          : `Tone: cheeky pub vibe, warm irony, witty punchlines.`);
+
+  const closer = stile === "wtf" ? (it
+    ? `Chiudi con una riga spiritosa da bancone (senza ripetere la stessa a ogni output).`
+    : `End with a witty bar-style one-liner (don't repeat the same every time).`)
+    : (it ? `Chiudi con una riga motivante ma asciutta (no coaching).` : `End with one brisk, motivating line (no coaching).`);
+
+  const jsonInstr = it
+    ? `Dopo il testo dell'episodio, restituisci un JSON con questo schema:
+{
+  "answer": "testo episodio già scritto sopra, ripulito e senza duplicati",
+  "followups": [
+    "domanda breve collegata alla domanda e a quanto hai scritto",
+    "altra domanda breve pertinente"
+  ]
+}
+Stampa SOLO il JSON (senza altri commenti) alla fine.`
+    : `After the episode text, return JSON with:
+{
+  "answer": "episode text above, cleaned and without duplicates",
+  "followups": [
+    "short question tied to the user's question and what you wrote",
+    "another short, relevant question"
+  ]
+}
+Print ONLY the JSON (no extra comments) at the end.`;
+
+  const episodeAim = it
+    ? `${epLab} ${episodio} · ${per}. Guida l'immaginazione in modo concreto.`
+    : `${epLab} ${episodio} · ${per}. Guide the imagination concretely.`;
+
+  // Hints dal profilo (leggeri)
+  const lean = {
+    name: profilo?.name,
+    city: profilo?.city_now || profilo?.city,
+    role: profilo?.work_role || profilo?.role,
+  };
+  const hints = Object.entries(lean)
+    .filter(([, v]) => !!v)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join(" · ");
+  const persona = hints ? (it ? `Segnali utente: ${hints}` : `User hints: ${hints}`) : "";
+
+  return `${head} ${safeStr(domanda)}
+${episodeAim}
+${personaHints}
+${persona}
+${closer}
+
+${jsonInstr}
+`;
+}
+
+// Domande mirate per “Chiarisci & genera”
+function userPromptClarify({ domanda, lang = "it" }) {
+  const it = (lang || "it").toLowerCase() !== "en";
+  return (it
+    ? `Sulla base di questa domanda, proponi 2–3 domande mirate per chiarire meglio e ottenere una risposta più personale. Devono essere corte (max 8 parole), concrete e senza fronzoli.
+Domanda: ${safeStr(domanda)}
+Rispondi in JSON puro:
+{"questions":["...","...","..."]}`
+    : `Based on this question, propose 2–3 targeted clarifying questions to get a more personal, precise answer. Keep them short (max 8 words), concrete.
+Question: ${safeStr(domanda)}
+Reply in raw JSON:
+{"questions":["...","...","..."]}`);
+}
+
+// ==== OpenAI call (Edge fetch) ===============================================
+
+async function callOpenAIJSON({ system, user, temperature = 0.7, response_json = false }) {
+  if (!OPENAI_API_KEY) {
+    return { ok: false, error: "OPENAI_API_KEY missing" };
+  }
+
+  const body = {
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: user },
+    ],
+    temperature,
+  };
+
+  // JSON mode “soft”: chiediamo di stampare JSON, ma non imponiamo response_format
+  // per massima compatibilità Edge. Faremo parse robusto a valle.
+
+  const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "authorization": `Bearer ${OPENAI_API_KEY}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(body),
   });
 
-  if (topic === "auto") {
-    return [
-      Q("budget", "Budget reale tutto compreso al mese?", "Real all-in monthly budget?", "finanziamento+assicurazione+energia", "finance+insurance+energy"),
-      Q("uso", "Uso prevalente?", "Main use?", "casa-lavoro / weekend / viaggi lunghi", "commute / weekends / long trips"),
-      Q("finestra", "Quando la prenderesti davvero?", "When would you actually buy it?", "entro 3 mesi / 6–12 mesi", "within 3 months / 6–12 months")
-    ];
-  }
-  if (topic === "moto") {
-    return [
-      Q("uso", "Uso principale?", "Main use?", "città / extraurbano / viaggi", "city / extra-urban / trips"),
-      Q("limite", "Limite più concreto?", "Hardest constraint?", "patente / budget / meteo", "license / budget / weather"),
-      Q("finestra", "Finestra decisionale reale?", "Real decision window?", "questo mese / 3–6 / 12 mesi", "this month / 3–6 / 12 months")
-    ];
-  }
-  if (topic === "trasferimento" || topic === "città") {
-    return [
-      Q("ancora", "Cosa ti tiene dove sei ora?", "What anchors you now?", "famiglia / lavoro / costi", "family / work / costs"),
-      Q("segnale", "Primo segnale che direbbe “è giusto”?", "First sign that says “it’s right”?", "energia / sonno / una risposta", "energy / sleep / a callback"),
-      Q("finestra", "Quando potresti farlo davvero?", "When could you actually move?", "entro 3 mesi / 6–12 mesi", "within 3 months / 6–12 months")
-    ];
-  }
-  if (topic === "lavoro") {
-    return [
-      Q("perche", "Il tuo perché oggi?", "Your current why?", "impatto / crescita / serenità", "impact / growth / calm"),
-      Q("opzioni", "Opzioni sul tavolo?", "Options on the table?", "restare / cambiare team / uscire", "stay / switch team / leave"),
-      Q("vincolo", "Vincolo concreto da rispettare?", "Concrete constraint to respect?", "budget / tempo / famiglia", "budget / time / family")
-    ];
+  if (!r.ok) {
+    const detail = await r.text().catch(() => "");
+    return { ok: false, error: `OpenAI ${r.status}: ${detail.slice(0, 400)}` };
   }
 
-  // fallback generale ma legato ai termini chiave
-  return [
-    Q("tempo", `Finestra decisionale su “${key(0,"la scelta")}”?`, `Decision window for “${key(0,"the move")}”?`,
-      "questo mese / 3–6 / 12 mesi", "this month / 3–6 / 12 months"),
-    Q("segnale", `Segnale di successo su “${key(1,"il tema")}”?`, `Success signal for “${key(1,"the topic")}”?`,
-      "energia / risposta / €", "energy / reply / €"),
-    Q("vincolo", `Un vincolo da non sforare su “${key(2,"la mossa")}”?`, `One constraint you won’t break for “${key(2,"the move")}”?`,
-      "budget / tempo / relazioni", "budget / time / relationships")
-  ];
+  const j = await r.json();
+  const content = j?.choices?.[0]?.message?.content || "";
+  return { ok: true, content };
 }
 
-/* ======== PERSONAS (pulite, senza etichette da eco) ======== */
-function systemFor(style, lang) {
-  const en = isEn(lang);
-  const base =
-`${en ? "You are" : "Sei"} What?f / What the F.
-${en ? "Date" : "Data"}: ${todayInfo(lang)}
+function pickWtfCloser() {
+  return WTF_CLOSES[Math.floor(Math.random() * WTF_CLOSES.length)];
+}
 
-Hard rules:
-- ${en ? "Answer ONLY in" : "Rispondi SOLO in"} ${en ? "English" : "Italiano"}.
-- ${en ? "No meta-text, no labels, no headings, no lists." : "Niente meta-testo, niente etichette, niente titoli, niente elenchi."}
-- ${en ? "One voice, second person, short paragraphs." : "Una sola voce, seconda persona, paragrafi brevi."}
-- ${en ? "Never write words like: mirror, JSON, example, system, prompt." : "Non scrivere mai parole come: specchio, mirror, JSON, esempio, system, prompt."}
-- ${en ? "End with a soft cliffhanger that suggests we continue tomorrow (no exact times)." : "Chiudi con un cliffhanger morbido che invita a continuare domani (senza orari esatti)."}
-`;
+function sanitizeAnswer(ans = "", { stile = "whatif", lang = "it", episodio = 1 } = {}) {
+  let txt = safeStr(ans);
 
-  if (style === "wtf") {
-    // What the F
-    return base + (en ? `
-Persona: witty late-night bartender; tipsy but lucid; kind, never mean.
-Style: 7–11 lively lines, clever jokes, warm vibe; zero sadness; tiny concrete image ok; no poetry.
-` : `
-Persona: barista notturno brillante; un po’ alticcio ma lucido; affettuoso, mai cattivo.
-Stile: 7–11 righe vive, battute intelligenti, calore; zero tristezza; una piccola immagine concreta ok; niente poesia.
-`);
+  // Togli eventuale JSON rimasto attaccato, se presente
+  const jsonIdx = txt.indexOf("{");
+  if (jsonIdx > 0 && /"followups"\s*:/.test(txt)) {
+    // Manteniamo solo la parte "testo" prima del JSON
+    txt = txt.slice(0, jsonIdx).trim();
   }
 
-  // What?f
-  return base + (en ? `
-Persona: calm, clear, quietly perceptive friend; optimistic and practical.
-Style: 9–13 concise sentences; upbeat; zero melancholy; no syrupy poetry; feels like you know the user (light, plausible details).
-` : `
-Persona: amico lucido e asciutto; ottimista e pratico.
-Stile: 9–13 frasi concise; allegro; zero malinconia; niente zucchero poetico; sembra che lo conosci (dettagli plausibili e leggeri).
-`);
+  // Clamp frasi
+  txt = clampLines(txt, 14);
+
+  // Chiusa WTF
+  if (stile === "wtf") {
+    if (!/bancone|giro|domani|conto|brind/.test(txt.toLowerCase())) {
+      txt += (txt.endsWith("\n") ? "" : "\n") + pickWtfCloser();
+    }
+  } else {
+    // Chiusa asciutta
+    const it = (lang || "it").toLowerCase() !== "en";
+    const line = it ? "Ok: si riparte domani, un passo alla volta." : "Alright: tomorrow we push one step further.";
+    if (!/domani|tomorrow|passo/.test(txt.toLowerCase())) {
+      txt += (txt.endsWith("\n") ? "" : "\n") + line;
+    }
+  }
+
+  // Footer episodio
+  txt += "\n\n" + episodeFooter(episodio, lang);
+  return txt.trim();
 }
 
-/* ======== Follow-ups coerenti ======== */
-function followupPrompt(lang, domanda, answer, style) {
-  const en = isEn(lang);
-  return `
-${en ? "Propose exactly 2 short follow-up questions tied to the user's question AND your answer. Return JSON only." :
-       "Proponi esattamente 2 domande brevi di follow-up legate sia alla domanda dell’utente SIA alla tua risposta. Restituisci solo JSON."}
-Schema: {"followups":["q1","q2"]}
-Tone: ${style === "wtf" ? (en ? "witty bartender, playful" : "barista brillante, giocoso") : (en ? "empathetic, upbeat" : "empatico, positivo")}
-Question: "${domanda}"
-Answer excerpt: "${(answer||"").replace(/\s+/g," ").slice(0,400)}"
-`.trim();
-}
-
-/* =============== Handler HTTP =============== */
-export default async function handler(req, res) {
-  // CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-whatif-stream");
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
-
+function safeParseJSON(maybeJSON) {
   try {
+    return JSON.parse(maybeJSON);
+  } catch {
+    return null;
+  }
+}
+
+// ==== Handler =================================================================
+
+export default async function handler(req) {
+  try {
+    // GET ping: /api/ask?ping=1
+    const { searchParams } = new URL(req.url);
+    if (req.method === "GET" && searchParams.get("ping")) {
+      return jsonResponse(200, {
+        ok: true,
+        keyExists: !!OPENAI_API_KEY,
+        keyPrefix: OPENAI_API_KEY ? OPENAI_API_KEY.slice(0, 7) + "..." : null,
+        ts: shortNowISO(),
+      });
+    }
+
+    if (req.method !== "POST") {
+      return jsonResponse(405, { error: "Method not allowed" });
+    }
+
+    const body = await req.json().catch(() => ({}));
     const {
-      domanda,
-      lang: langIn = "auto",
+      domanda = "",
+      lang = "it",
       periodo = "future",
       stile = "whatif",
-      stream = false,
+      episodio = 1,
       clarify = false,
       profilo = {},
-      clarifications = [],
-      extra = ""
-    } = req.body || {};
+      // opzionali
+      extra = "",
+      tags = [],
+    } = body || {};
 
     if (!domanda || typeof domanda !== "string") {
-      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
+      return jsonResponse(400, { error: "Missing 'domanda' string" });
     }
 
-    const lang = langIn === "auto" ? detectLang(domanda) : langIn;
-    const topic = classifyTopic(domanda);
-
-    /* ---- Clarify branch ---- */
+    // Modalità CHIARISCI
     if (clarify) {
-      const qs = clarifyQuestions(domanda, periodo, lang);
-      return res.status(200).json({ questions: qs });
+      const system = systemFor(stile, lang);
+      const user = userPromptClarify({ domanda, lang });
+      const out = await callOpenAIJSON({ system, user, temperature: 0.3, response_json: true });
+      if (!out.ok) return jsonResponse(500, { error: out.error || "OpenAI error" });
+
+      const parsed = safeParseJSON(out.content.trim());
+      const qs = Array.isArray(parsed?.questions) ? parsed.questions.slice(0, 3) : [];
+      const cleaned = qs
+        .map(s => safeStr(s).replace(/^\p{P}+/u, "").trim())
+        .filter(Boolean);
+
+      // Fallback locali se il JSON non è arrivato bene
+      const it = (lang || "it").toLowerCase() !== "en";
+      const fallback = it
+        ? ["In che finestra di tempo decidi?", "Primo segnale che sta funzionando?", "Vincolo concreto da rispettare?"]
+        : ["Decision window?", "First signal it’s working?", "One concrete constraint?"];
+
+      return jsonResponse(200, { questions: cleaned.length ? cleaned : fallback });
     }
 
-    /* ---- Generation ---- */
-    const system = systemFor(stile === "wtf" ? "wtf" : "whatif", lang);
-    const mirror = mirrorLine(profilo, lang);
-    const en = isEn(lang);
-
-    // Istruzione utente pulita (niente etichette)
-    const userMsg = [
-      // 1) Una riga di mirror da integrare naturalmente
-      (en
-        ? `Open with ONE natural sentence that reflects the user: ${mirror}`
-        : `Apri con UNA frase naturale che rispecchia l’utente: ${mirror}`),
-
-      // 2) Domanda + contesto
-      (en ? `User question: "${domanda}"` : `Domanda utente: "${domanda}"`),
-      (en
-        ? `Context (brief, optional): ${Array.isArray(clarifications) && clarifications.length ? clarifications.join(", ") : "none"}`
-        : `Contesto (breve, opzionale): ${Array.isArray(clarifications) && clarifications.length ? clarifications.join(", ") : "nessuno"}`),
-
-      // 3) Vincoli di stile specifici
-      (stile === "wtf"
-        ? (en
-          ? `Write 7–11 lively lines, witty bartender tone, playful and warm. Zero melancholy, zero meanness, no lists.`
-          : `Scrivi 7–11 righe vive, tono da barista brillante, giocoso e caldo. Zero malinconia, zero cattiveria, niente elenchi.`)
-        : (en
-          ? `Write 9–13 concise upbeat sentences, empathetic and practical. Zero melancholy, no lists, no poetry.`
-          : `Scrivi 9–13 frasi concise e allegre, empatiche e pratiche. Zero malinconia, niente elenchi, niente poesia.`)
-      ),
-
-      // 4) Chiusura soft
-      (en
-        ? `Close with a soft cliffhanger that implies we continue tomorrow. Do not mention exact times.`
-        : `Chiudi con un cliffhanger morbido che invita a continuare domani. Non citare orari esatti.`),
-
-      // 5) Parole proibite da NON stampare
-      (en
-        ? `Never output these words: mirror, JSON, example, system, prompt, label, heading.`
-        : `Non scrivere mai queste parole: specchio, mirror, JSON, esempio, system, prompt, etichetta, titolo.`),
-
-      extra ? (en ? `Additional guidance: ${extra}` : `Indicazioni extra: ${extra}`) : ""
-    ].filter(Boolean).join("\n");
-
-    const temperature = stile === "wtf" ? 0.95 : 0.82;
-    const max_tokens = 700;
-
-    // Streaming SSE opzionale
-    const doStream = stream || String(req.headers["x-whatif-stream"] || "") !== "";
-    if (doStream) {
-      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-      res.setHeader("Cache-Control", "no-cache, no-transform");
-      res.setHeader("Connection", "keep-alive");
-
-      const s = await client.chat.completions.create({
-        model: MODEL,
-        temperature,
-        max_tokens,
-        stream: true,
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: userMsg }
-        ]
-      });
-
-      for await (const chunk of s) {
-        const delta = chunk.choices?.[0]?.delta?.content || "";
-        if (delta) res.write(`data: ${JSON.stringify({ token: delta })}\n\n`);
-      }
-      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-      return res.end();
-    }
-
-    // Non-stream: testo + followups coerenti
-    const c = await client.chat.completions.create({
-      model: MODEL,
-      temperature,
-      max_tokens,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: userMsg }
-      ]
+    // Modalità EPISODIO (generazione risposta + followups)
+    const system = systemFor(stile, lang);
+    const user = userPromptEpisode({
+      domanda,
+      episodio: Number(episodio) || 1,
+      periodo,
+      stile,
+      profilo,
+      lang,
     });
-    const text = (c.choices?.[0]?.message?.content || "").trim();
 
-    // Follow-up (JSON)
+    const out = await callOpenAIJSON({ system, user, temperature: stile === "wtf" ? 0.85 : 0.6, response_json: true });
+    if (!out.ok) return jsonResponse(500, { error: out.error || "OpenAI error" });
+
+    // L'assistente stampa prima il testo, poi il JSON. Noi prendiamo il JSON finale.
+    const jsonStart = out.content.lastIndexOf("{");
+    let answer = "";
     let followups = [];
-    try {
-      const f = await client.chat.completions.create({
-        model: MODEL,
-        temperature: 0.3,
-        max_tokens: 120,
-        messages: [
-          { role: "system", content: isEn(lang) ? "Return JSON only." : "Restituisci solo JSON." },
-          { role: "user", content: followupPrompt(lang, domanda, text, stile) }
-        ]
-      });
-      const raw = (f.choices?.[0]?.message?.content || "").trim();
-      const j = JSON.parse(raw);
-      if (Array.isArray(j.followups)) followups = j.followups.slice(0,2).map(s => String(s).trim()).filter(Boolean);
-    } catch {
-      followups = isEn(lang)
-        ? [
-            "What small sign tomorrow would tell you this is right?",
-            "What constraint would you relax for a week to test it?"
-          ]
-        : [
-            "Quale piccolo segnale domani ti direbbe che è la direzione giusta?",
-            "Quale vincolo allenteresti per una settimana per testarlo?"
-          ];
+
+    if (jsonStart >= 0) {
+      const maybe = out.content.slice(jsonStart);
+      const parsed = safeParseJSON(maybe);
+      if (parsed && typeof parsed === "object") {
+        answer = safeStr(parsed.answer || "");
+        const arr = Array.isArray(parsed.followups) ? parsed.followups : [];
+        followups = arr.map(s => clampLines(s, 2)).filter(Boolean).slice(0, 2);
+      }
+      // Aggiungiamo anche il testo prima del JSON (se l'LLM l'ha messo lì)
+      const pre = out.content.slice(0, jsonStart).trim();
+      if (pre && !answer) answer = pre;
+    } else {
+      answer = out.content;
     }
 
-    return res.status(200).json({ answer: text, lang, topic, followups });
+    // Sanitize + footer episodico
+    answer = sanitizeAnswer(answer, { stile, lang, episodio: Number(episodio) || 1 });
 
+    // Safety fallback followups
+    if (!followups.length) {
+      const it = (lang || "it").toLowerCase() !== "en";
+      followups = it
+        ? ["Qual è il primo segnale che ti direbbe che sta funzionando?", "Cosa potresti fare entro 7 giorni per provarci senza rischiare?"]
+        : ["What’s the first signal it’s working?", "What could you try within 7 days with low risk?"];
+    }
+
+    return jsonResponse(200, {
+      ok: true,
+      answer,
+      followups,
+      meta: {
+        stile,
+        periodo,
+        episodio: Number(episodio) || 1,
+        ts: shortNowISO(),
+      },
+    });
   } catch (err) {
-    console.error("API /ask error:", err?.message || err);
-    return res.status(500).json({ error: "server_error", detail: err?.message || "unknown" });
+    return jsonResponse(500, { error: `Server error: ${err?.message || String(err)}` });
   }
 }
