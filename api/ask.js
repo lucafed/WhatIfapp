@@ -1,281 +1,299 @@
-// /api/ask.js — serverless (Vercel / Netlify) o Express handler
-// Richiede process.env.OPENAI_API_KEY
+// /api/ask.js
+import OpenAI from "openai";
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' }); return;
+/* ========= Setup ========= */
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const MODEL_TEXT = "gpt-4o-mini";
+const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
+
+/* ========= Utils ========= */
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+function detectLang(text = "") {
+  const enHits = (text.match(/\b(what|if|and|or|you|should|would|move|work|buy|motor|bike|city)\b/gi) || []).length;
+  const itHits = (text.match(/\b(e|se|quando|perché|moto|tornassi|trasferir|lavor|comprare|acquistare)\b/gi) || []).length;
+  return enHits > itHits ? "en" : "it";
+}
+
+function classifyTopic(q = "") {
+  const s = q.toLowerCase();
+  if (/(moto|motor(e|bike)|scooter|vespa)/.test(s)) return "moto";
+  if (/(barca|vela|gommone|yacht|boat)/.test(s)) return "barca";
+  if (/(tornassi|trasferi|trasloco|vivere a|move|relocat)/.test(s)) return "trasferimento";
+  if (/(l'aquila|aquila|lugano|milano|roma|verona|bussolengo|londra|zurigo)/.test(s)) return "città";
+  if (/(lavoro|job|ricercatore|azienda|ufficio|work)/.test(s)) return "lavoro";
+  if (/(comprare|acquistare|buy|purchase)/.test(s)) return "acquisto";
+  return "generale";
+}
+
+function todayInfo(lang) {
+  const d = new Date();
+  const loc = isEn(lang) ? "en-GB" : "it-IT";
+  const weekday = d.toLocaleDateString(loc, { weekday: "long" });
+  const date = d.toLocaleDateString(loc, { day: "2-digit", month: "long", year: "numeric" });
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${weekday}, ${date} • ${hh}:${mm}`;
+}
+
+/* ========= Persona & stile ========= */
+const PERSONAS = {
+  whatif: {
+    system: (lang) =>
+      isEn(lang)
+        ? `
+You are "What?f": empathetic, upbeat, lightly intellectual.
+Second person, single voice. 9–12 short, clear sentences (~170–210 words).
+No melancholy, no coaching clichés. Present, concrete, gently forward-looking.
+Make it feel like you know the user (naturally), not forced.
+Always end with a soft episodic hook that implies tomorrow continues the same story.
+Reply ONLY in English.`
+        : `
+Sei "What?f": empatica, asciutta, brillante (leggermente “intellettuale”).
+Seconda persona, una voce. 9–12 frasi brevi e chiare (~170–210 parole).
+Zero malinconia, zero cliché da coach. Presente, concreto, con brio e fiducia.
+Fai sentire che conosci l’utente (in modo naturale), mai forzato.
+Chiudi sempre con un gancio morbido che fa capire che la storia continua domani.
+Rispondi SOLO in Italiano.`
+  },
+  wtf: {
+    system: (lang) =>
+      isEn(lang)
+        ? `
+You are "What the F": witty late-night bartender — tipsy, warm, irreverent, never mean.
+Single voice, punchy rhythm. 7–11 lines, ≤18 words per line.
+Make the user laugh; use clever, friendly sarcasm (no bitterness). A little “boozy wisdom”.
+Close with a playful serial hook that promises tomorrow continues the same scene.
+Reply ONLY in English.`
+        : `
+Sei "What the F": barista notturno — brillante, un po’ alticcio, irriverente ma affettuoso.
+Una voce, ritmo secco. 7–11 righe, max 18 parole per riga.
+Fai ridere con sarcasmo intelligente e caldo (mai acido). Un po’ di “saggezza ubriaca”.
+Chiudi con un gancio giocoso che promette che domani la scena prosegue.
+Rispondi SOLO in Italiano.`
   }
+};
 
-  // hard timeout per non far “pendere” il front
-  const timeoutMs = 12000;
-  const timeout = setTimeout(() => {
-    try { res.writeHead(200, { 'Content-Type': 'application/json' }); } catch {}
-    try { res.end(JSON.stringify({ error: 'timeout' })); } catch {}
-  }, timeoutMs);
+/* ========= Mirror (frase-specchio) ========= */
+function mirrorLine(profile = {}, lang = "it") {
+  const en = isEn(lang);
+  const name = (profile?.name || "").split(" ")[0];
+  const city = profile?.city_now || profile?.city || "";
+  const role = profile?.work_role || profile?.role || "";
+  const it = [
+    name ? `${name}, non ti muovi per capriccio: cerchi coerenza.` : "Non ti muovi per capriccio: cerchi coerenza.",
+    city ? `${city ti ? "" : ""}` : "Ti serve una base solida e una finestra aperta.",
+    role ? `Nel lavoro (${role}) reggi finché il perché resta acceso.` : "Reggi finché il perché resta acceso."
+  ].filter(Boolean);
+  const enPool = [
+    name ? `${name}, you don’t move on whims — you chase coherence.` : "You don’t move on whims — you chase coherence.",
+    city ? `${city} grounds you, but you still need an open window.` : "You like a solid base and one open window.",
+    role ? `In ${role}, you keep pace while the “why” stays lit.` : "You keep pace while the “why” stays lit."
+  ];
+  return pick(en ? enPool : it);
+}
+
+/* ========= Episodic closings ========= */
+function episodicClosing(style = "whatif", lang = "it") {
+  const en = isEn(lang);
+  const itSoft = [
+    "Domani riprendiamo da qui: vediamo come si muove davvero la tua storia.",
+    "Teniamo il filo: domani capiamo il passo successivo senza strappi.",
+    "Lascia il segnalibro qui: domani aggiungiamo il capitolo giusto."
+  ];
+  const itSharp = [
+    "Domani non cambiamo bar: continuiamo lo stesso brindisi, stessa storia.",
+    "Tieni il bicchiere: domani capiamo dove porta questo giro.",
+    "Non chiudere il conto: domani prosegue da qui, non altrove."
+  ];
+  const enSoft = [
+    "Tomorrow we pick up right here — same thread, one step forward.",
+    "Hold the thread; tomorrow we nudge this exact story.",
+    "Bookmark this spot; tomorrow we add the next beat."
+  ];
+  const enSharp = [
+    "Same bar tomorrow — same story, next pour.",
+    "Keep the tab open; tomorrow we push this scene.",
+    "Don’t close the check; tomorrow continues right here."
+  ];
+  return style === "wtf" ? pick(en ? enSharp : itSharp) : pick(en ? enSoft : itSoft);
+}
+
+/* ========= Clarify questions (leggere e contestuali) ========= */
+function clarifyQuestions(domanda, periodo, lang = "it") {
+  const en = isEn(lang);
+  const topic = classifyTopic(domanda);
+  const Q = (id, it, enStr, phIt, phEn) => ({
+    id, label: en ? enStr : it, placeholder: en ? phEn : phIt
+  });
+
+  if (topic === "moto") {
+    return [
+      Q("timing", "Quando la prenderesti davvero?", "When would you actually buy it?", "questo mese / 3–6 mesi", "this month / 3–6 months"),
+      Q("use", "Uso principale?", "Main use?", "casa-lavoro / weekend / viaggi", "commute / weekends / trips"),
+      Q("budget", "Tetto di spesa mensile?", "Monthly budget ceiling?", "€ assicurazione + carburante", "$ insurance + fuel")
+    ];
+  }
+  if (topic === "trasferimento" || topic === "città") {
+    return [
+      Q("window", "Finestra realistica per lo spostamento?", "Real window to move?", "entro 3 mesi / 6–12 mesi", "within 3 months / 6–12 months"),
+      Q("anchor", "Cosa ti tiene dove sei ora?", "What anchors you now?", "famiglia / lavoro / costi", "family / work / costs"),
+      Q("signal", "Segno che direbbe: è giusto?", "Sign that says: it’s right?", "energia/risposte/sonno", "energy/callback/sleep")
+    ];
+  }
+  if (topic === "lavoro") {
+    return [
+      Q("why", "Il tuo perché oggi?", "Your current why?", "impatto / crescita / serenità", "impact / growth / calm"),
+      Q("option", "Opzioni sul tavolo?", "Options on the table?", "restare / cambiare team / uscire", "stay / switch team / leave"),
+      Q("limit", "Vincolo più concreto?", "Hardest constraint?", "budget/tempo/relazioni", "budget/time/people")
+    ];
+  }
+  return [
+    Q("window", "Finestra reale della decisione?", "Real decision window?", "questo mese / 3–6 / 12 mesi", "this month / 3–6 / 12 months"),
+    Q("signal", "Segno personale da osservare?", "Personal sign to watch?", "energia/prima risposta/sonno", "energy/first reply/sleep"),
+    Q("limit", "Limite più concreto?", "Most concrete limit?", "budget/tempo/energia", "budget/time/energy")
+  ];
+}
+
+/* ========= FOLLOW-UP builder prompt ========= */
+function followupInstruction(lang, stile, closing) {
+  const en = isEn(lang);
+  return en
+    ? `
+After you write the answer in the requested persona and tone,
+also craft two *tailored* follow-up questions, strictly derived from BOTH:
+- the user's question, and
+- the content of your answer you just wrote.
+
+The two follow-ups must be:
+1) Reflective (personal insight, concrete but not therapy).
+2) Actionable (a single specific next step the user could try within 7 days).
+
+Output format (MANDATORY):
+<<ANSWER>>
+[the answer only; no bullets, no lists]
+<<FOLLOWUPS>>
+- [Reflective follow-up, one line]
+- [Actionable follow-up, one line]
+<<CLOSING>>
+${closing}
+`.trim()
+    : `
+Dopo aver scritto la risposta nel tono/persona richiesti,
+genera anche due *follow-up* su misura, derivati strettamente da:
+- la domanda dell’utente, e
+- ciò che hai appena scritto nella tua risposta.
+
+I due follow-up devono essere:
+1) Riflessivo (intuizione personale, concreto ma non terapeutico).
+2) Azionabile (un passo specifico da provare entro 7 giorni).
+
+Formato di output (OBBLIGATORIO):
+<<ANSWER>>
+[solo la risposta; niente elenchi]
+<<FOLLOWUPS>>
+- [Follow-up riflessivo, una riga]
+- [Follow-up azionabile, una riga]
+<<CLOSING>>
+${closing}
+`.trim();
+}
+
+/* ========= HTTP handler ========= */
+export default async function handler(req, res) {
+  // CORS
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-whatif-stream");
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
   try {
     const {
-      clarify = false,
-      want = 'answer',          // 'answer' | 'clarify' | 'followups'
-      domanda = '',
-      clarifications = {},
-      stile = 'whatif',         // 'whatif' | 'wtf'
-      periodo = 'future',       // 'past' | 'future'
-      lang = 'it',              // 'it' | 'en'
+      domanda,
+      lang: langIn = "auto",
+      periodo = "future",
+      stile = "whatif",
       stream = false,
-      tz = 'UTC'
-    } = await parseJSON(req);
+      clarify = false,
+      profilo = {},
+      clarifications = [],
+      extra = ""
+    } = req.body || {};
 
-    const MODE = clarify ? 'clarify' : want;
-
-    // Prompt di stile blindati
-    const PROMPTS = stylePrompts({ stile, periodo, lang });
-
-    if (MODE === 'clarify') {
-      const questions = await genClarify({ domanda, stile, periodo, lang, PROMPTS });
-      clearTimeout(timeout);
-      res.setHeader('Content-Type', 'application/json');
-      res.status(200).end(JSON.stringify({ questions }));
-      return;
+    if (!domanda || typeof domanda !== "string") {
+      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    if (MODE === 'followups') {
-      const { answer = '' } = await parseJSON(req);
-      const followups = await genFollowups({ domanda, answer, stile, periodo, lang, PROMPTS });
-      clearTimeout(timeout);
-      res.setHeader('Content-Type', 'application/json');
-      res.status(200).end(JSON.stringify({ followups }));
-      return;
+    const lang = langIn === "auto" ? detectLang(domanda) : langIn;
+    const en = isEn(lang);
+    const topic = classifyTopic(domanda);
+
+    if (clarify) {
+      return res.status(200).json({ questions: clarifyQuestions(domanda, periodo, lang) });
     }
 
-    // MODE: answer
-    if (stream) {
-      // streaming SSE
-      res.writeHead(200, {
-        'Content-Type': 'text/event-stream; charset=utf-8',
-        'Cache-Control': 'no-cache, no-transform',
-        Connection: 'keep-alive',
-        'Transfer-Encoding': 'chunked'
-      });
+    const persona = PERSONAS[stile === "wtf" ? "wtf" : "whatif"];
+    const closing = episodicClosing(stile, lang);
+    const system = `
+${persona.system(lang).trim()}
 
-      try {
-        await streamAnswer({
-          domanda, clarifications, stile, periodo, lang, PROMPTS,
-          onToken: (t) => res.write(`data: ${JSON.stringify({ token: t })}\n\n`),
-          onDone: () => res.write(`data: ${JSON.stringify({ done: true })}\n\n`)
-        });
-        clearTimeout(timeout);
-        res.end();
-      } catch (e) {
-        // se lo stream fallisce, invia un done e chiudi
-        res.write(`data: ${JSON.stringify({ done: true, error: true })}\n\n`);
-        clearTimeout(timeout);
-        res.end();
-      }
-      return;
-    } else {
-      const text = await genAnswer({ domanda, clarifications, stile, periodo, lang, PROMPTS });
-      clearTimeout(timeout);
-      res.setHeader('Content-Type', 'application/json');
-      res.status(200).end(JSON.stringify({ text }));
-      return;
-    }
+${followupInstruction(lang, stile, closing)}
+
+Today: ${todayInfo(lang)}
+Hard rules:
+- Reply ONLY in ${en ? "English" : "Italiano"}.
+- Stay on the inferred topic: "${topic}".
+- No lists/bullets inside <<ANSWER>>; follow-ups must be exactly 2 lines under <<FOLLOWUPS>>.
+- Sound naturally familiar with the user (use name if profile.name exists).
+- Keep imagery minimal; be concrete and upbeat; zero melancholy for What?f; friendly sarcasm for What the F.
+${extra ? `\nAdditional guidance (comply):\n${extra}\n` : ""}
+`.trim();
+
+    const mirror = mirrorLine(profilo, lang);
+    const user = `
+${en ? "Mirror-opening" : "Apertura-specchio"} (libera): "${mirror}"
+
+${en ? "User question" : "Domanda utente"}: "${domanda}"
+${en ? "Extra details" : "Dettagli"}: ${Array.isArray(clarifications) && clarifications.length ? clarifications.join(", ") : (en ? "none" : "nessuno")}
+${en ? "Topic to honor" : "Tema da rispettare"}: ${topic}
+
+Write the answer inside the <<ANSWER>> block, then the follow-ups inside <<FOLLOWUPS>>, then <<CLOSING>>.
+`.trim();
+
+    // Per garantire FOLLOWUPS pertinenti, usiamo NON-STREAM (così possiamo fare parsing sicuro)
+    const c = await client.chat.completions.create({
+      model: MODEL_TEXT,
+      temperature: stile === "wtf" ? 0.9 : 0.82,
+      max_tokens: 800,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user }
+      ]
+    });
+
+    const raw = c.choices?.[0]?.message?.content || "";
+    const answer = (raw.match(/<<ANSWER>>([\s\S]*?)<<FOLLOWUPS>>/i)?.[1] || "").trim();
+    const fblock = (raw.match(/<<FOLLOWUPS>>([\s\S]*?)<<CLOSING>>/i)?.[1] || "").trim();
+    const closingOut = (raw.match(/<<CLOSING>>([\s\S]*)$/i)?.[1] || "").trim();
+
+    const followups = fblock
+      .split("\n")
+      .map(s => s.replace(/^\s*-\s*/, "").trim())
+      .filter(Boolean)
+      .slice(0, 2);
+
+    return res.status(200).json({
+      answer: answer || raw.trim(),
+      followups: followups.length ? followups : [],
+      closing: closingOut || closing,
+      lang,
+      topic,
+      style: stile
+    });
+
   } catch (err) {
-    clearTimeout(timeout);
-    res.status(200).json({ error: err?.message || 'unknown_error' });
+    console.error("API /ask error:", err);
+    return res.status(500).json({ error: "server_error", detail: err?.message || "unknown" });
   }
-}
-
-/* ---------------------- utils ---------------------- */
-
-async function parseJSON(req) {
-  const raw = await new Promise((ok, ko) => {
-    let b = '';
-    req.on('data', (c) => (b += c));
-    req.on('end', () => ok(b));
-    req.on('error', ko);
-  });
-  try { return JSON.parse(raw || '{}'); } catch { return {}; }
-}
-
-function stylePrompts({ stile, periodo, lang }) {
-  const P = { sys: '', clarify: '', follow: '', close: '' };
-
-  if (lang === 'it') {
-    if (stile === 'wtf') {
-      P.sys =
-`Sei "What the F": sarcastico, ironico, da bar, ubriaco ma lucido, positivo. 
-Fai ridere, mai cattivo, niente malinconia, niente prediche. Frasi brevi, ritmo, battute intelligenti. 
-Chiudi spesso con “Clink. Stesso bancone, domani rimescoliamo.”`;
-      P.clarify = `Genera 3 domande mirate e concise (max 8 parole) per chiarire la richiesta dell’utente. Non numerarle, restituisci solo un elenco JSON semplice.`;
-      P.follow = `Genera 2 follow-up sintetici, scherzosi ma utili, legati alla domanda e alla risposta.`;
-      P.close = `Clink. Stesso bancone, domani rimescoliamo.`;
-    } else {
-      P.sys =
-`Sei "What if": empatico, asciutto, lucido. Niente tristezza, niente toni da coach. 
-Sembra un amico brillante che conosce l’utente e lo incoraggia con leggerezza. Frasi pulite, ritmo.`;
-      P.clarify = `Genera 3 domande mirate e chiare (max 10 parole) per rendere più personale la risposta. Non numerarle, restituisci solo un elenco JSON semplice.`;
-      P.follow = `Genera 2 follow-up corti, pratici e positivi, legati a domanda e risposta.`;
-      P.close = `Domani ripartiamo da qui.`;
-    }
-  } else { // EN
-    if (stile === 'wtf') {
-      P.sys =
-`You are "What the F": witty bar-friend, cheeky but kind, zero melancholy. 
-Short punchy lines, smart jokes, warm vibe. Never mean. Often end with “Clink. Same counter, we stir again tomorrow.”`;
-      P.clarify = `Produce 3 short, focused questions (max 8 words). Return plain JSON list.`;
-      P.follow = `Return 2 playful but useful follow-ups tied to question and answer.`;
-      P.close = `Clink. Same counter, we stir again tomorrow.`;
-    } else {
-      P.sys =
-`You are "What if": empathetic, concise, uplifting and realistic. 
-Sounds like a smart friend who knows the user. No melancholy, no coaching vibe.`;
-      P.clarify = `Produce 3 clear, targeted questions (max 10 words). Return plain JSON list.`;
-      P.follow = `Return 2 short, practical follow-ups tied to question and answer.`;
-      P.close = `Tomorrow we pick up from here.`;
-    }
-  }
-
-  P.periodo = (periodo === 'past')
-    ? (lang === 'it' ? 'Ambientazione: passato.' : 'Setting: past.')
-    : (lang === 'it' ? 'Ambientazione: futuro prossimo.' : 'Setting: near future.');
-
-  return P;
-}
-
-async function openAIChat(payload) {
-  const key = process.env.OPENAI_API_KEY || '';
-  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini', // veloce e a basso costo; cambia se vuoi
-      temperature: payload.temperature ?? 0.7,
-      top_p: 0.9,
-      presence_penalty: payload.presence_penalty ?? 0.3,
-      max_tokens: payload.max_tokens ?? 420,
-      messages: payload.messages
-    })
-  });
-  if (!resp.ok) throw new Error(`openai_${resp.status}`);
-  const data = await resp.json();
-  return data?.choices?.[0]?.message?.content || '';
-}
-
-/* -------- clarify -------- */
-async function genClarify({ domanda, stile, periodo, lang, PROMPTS }) {
-  const content = await openAIChat({
-    temperature: 0.2,
-    max_tokens: 120,
-    messages: [
-      { role: 'system', content: `${PROMPTS.sys}\n${PROMPTS.periodo}` },
-      { role: 'user', content: lang==='it'
-        ? `Domanda utente: "${domanda}". ${PROMPTS.clarify}`
-        : `User question: "${domanda}". ${PROMPTS.clarify}`
-      }
-    ]
-  });
-  // Prova a leggere JSON; in fallback splitta per newline
-  try {
-    const asJson = JSON.parse(content);
-    if (Array.isArray(asJson)) return asJson.map(s => ({ label: s }));
-  } catch {}
-  const lines = content.split(/\n/).map(s => s.replace(/^[\-•\d\.\s]+/,'').trim()).filter(Boolean);
-  return lines.slice(0,3).map(s => ({ label: s }));
-}
-
-/* -------- followups -------- */
-async function genFollowups({ domanda, answer, stile, periodo, lang, PROMPTS }) {
-  const content = await openAIChat({
-    temperature: 0.5,
-    max_tokens: 120,
-    messages: [
-      { role: 'system', content: `${PROMPTS.sys}\n${PROMPTS.periodo}` },
-      { role: 'user', content: lang==='it'
-        ? `Domanda: "${domanda}"\nRisposta: """${answer}"""\n${PROMPTS.follow}\nRispondi con un elenco JSON con 2 stringhe.`
-        : `Question: "${domanda}"\nAnswer: """${answer}"""\n${PROMPTS.follow}\nReply with a JSON array of 2 strings.`
-      }
-    ]
-  });
-  try {
-    const arr = JSON.parse(content);
-    if (Array.isArray(arr) && arr.length) return arr;
-  } catch {}
-  const lines = content.split(/\n/).map(s => s.replace(/^[\-•\d\.\s]+/,'').trim()).filter(Boolean);
-  return lines.slice(0,2);
-}
-
-/* -------- answer (non-stream) -------- */
-async function genAnswer({ domanda, clarifications, stile, periodo, lang, PROMPTS }) {
-  const clar = Object.values(clarifications||{}).filter(Boolean);
-  const clarText = clar.length ? (lang==='it' ? `Chiarimenti: ${clar.join(' • ')}` : `Clarifications: ${clar.join(' • ')}`) : '';
-  const content = await openAIChat({
-    temperature: stile==='wtf' ? 0.85 : 0.6,
-    max_tokens: 520,
-    presence_penalty: stile==='wtf' ? 0.6 : 0.2,
-    messages: [
-      { role: 'system', content: `${PROMPTS.sys}\n${PROMPTS.periodo}` },
-      { role: 'user', content:
-          (lang==='it'
-            ? `Domanda: "${domanda}". ${clarText}\nScrivi un episodio breve (10–14 righe max) nello stile indicato. Chiudi con: ${PROMPTS.close}`
-            : `Question: "${domanda}". ${clarText}\nWrite a short episode (10–14 lines max) in the style. End with: ${PROMPTS.close}`
-          )
-      }
-    ]
-  });
-  return content;
-}
-
-/* -------- answer (stream) -------- */
-async function streamAnswer({ domanda, clarifications, stile, periodo, lang, PROMPTS, onToken, onDone }) {
-  const key = process.env.OPENAI_API_KEY || '';
-  const clar = Object.values(clarifications||{}).filter(Boolean);
-  const clarText = clar.length ? (lang==='it' ? `Chiarimenti: ${clar.join(' • ')}` : `Clarifications: ${clar.join(' • ')}`) : '';
-  const body = {
-    model: 'gpt-4o-mini',
-    temperature: stile==='wtf' ? 0.85 : 0.6,
-    top_p: 0.9,
-    presence_penalty: stile==='wtf' ? 0.6 : 0.2,
-    max_tokens: 520,
-    stream: true,
-    messages: [
-      { role: 'system', content: `${PROMPTS.sys}\n${PROMPTS.periodo}` },
-      { role: 'user', content:
-          (lang==='it'
-            ? `Domanda: "${domanda}". ${clarText}\nScrivi un episodio breve (10–14 righe max) nello stile indicato. Chiudi con: ${PROMPTS.close}`
-            : `Question: "${domanda}". ${clarText}\nWrite a short episode (10–14 lines max) in the style. End with: ${PROMPTS.close}`
-          )
-      }
-    ]
-  };
-
-  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  if (!resp.ok || !resp.body) throw new Error(`openai_stream_${resp.status}`);
-
-  const reader = resp.body.getReader();
-  const decoder = new TextDecoder();
-  let done = false, buffer = '';
-  while (!done) {
-    const chunk = await reader.read();
-    if (chunk.done) break;
-    buffer += decoder.decode(chunk.value, { stream: true });
-    // risposta "chunked" del chat.completions stream
-    const parts = buffer.split('\n');
-    buffer = parts.pop() || '';
-    for (const line of parts) {
-      const m = line.match(/^data:\s*(.*)$/);
-      if (!m) continue;
-      if (m[1] === '[DONE]') { onDone(); return; }
-      try {
-        const j = JSON.parse(m[1]);
-        const delta = j.choices?.[0]?.delta?.content;
-        if (delta) onToken(delta);
-      } catch {}
-    }
-  }
-  onDone();
 }
