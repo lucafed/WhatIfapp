@@ -28,7 +28,7 @@ h1{font-size:clamp(22px,5vw,30px);margin:8px 0 2px;color:var(--acc2)}
 
 /* Tabs */
 .tabs{display:flex;gap:8px}
-.tab{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:14px;padding:8px 12px;cursor:pointer}
+.tab{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:14px;padding:8px 12px;cursor:pointer;user-select:none}
 .tab.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12;font-weight:800}
 
 /* Input */
@@ -42,12 +42,12 @@ h1{font-size:clamp(22px,5vw,30px);margin:8px 0 2px;color:var(--acc2)}
 .play{min-width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--chip);display:grid;place-items:center;cursor:pointer}
 .play:after{content:"▶";}
 
-/* Avoid overlays eating clicks */
+/* Click safety */
 .play, .story{pointer-events:auto}
-.story *{pointer-events:none}    /* testo non intercetta; la card sì */
-.play{pointer-events:auto}       /* ma il bottone play sì */
+.story *{pointer-events:none}
+.play{pointer-events:auto}
 
-/* Followup pill */
+/* Followup */
 .follow{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:12px}
 .tip{color:var(--muted);font-size:13px}
 </style>
@@ -74,7 +74,7 @@ h1{font-size:clamp(22px,5vw,30px);margin:8px 0 2px;color:var(--acc2)}
         <div class="tab sel" data-per="future" id="tabFuture">🧠 Futuro</div>
       </div>
       <div id="styleTabs" class="tabs">
-        <div class="tab sel" data-style="whatif" id="tabWhatIf">What if (realistico)</div>
+        <div class="tab" data-style="whatif" id="tabWhatIf">What if (realistico)</div>
         <div class="tab" data-style="wtf" id="tabWTF">What the F (divertente)</div>
       </div>
     </div>
@@ -102,7 +102,7 @@ h1{font-size:clamp(22px,5vw,30px);margin:8px 0 2px;color:var(--acc2)}
 </main>
 
 <script>
-/* ===== Lang & i18n ===== */
+/* ===== I18N ===== */
 const LS=localStorage;
 const I18N={ it:{
   title:"Imposta la tua domanda",
@@ -138,6 +138,7 @@ function setLang(v){ LS.setItem('lang',v); location.reload(); }
 let lang=getLang();
 let T=I18N[lang]||I18N.it;
 
+/* text */
 document.getElementById('titleH1').textContent=T.title;
 document.getElementById('qLabel').textContent=T.qLabel;
 document.getElementById('clarifyBtn').textContent=T.btnClarify;
@@ -151,102 +152,95 @@ document.getElementById('tabFuture').textContent='🧠 '+T.future;
 document.getElementById('langBtn').textContent=lang.toUpperCase();
 document.documentElement.lang=lang;
 
-/* ===== Theme by style ===== */
+/* ===== Prefs / Theme ===== */
+function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
+function writeJSON(k,v){ LS.setItem(k,JSON.stringify(v)); }
+
+const prefs = readJSON('whatif_prefs',{periodo:'future', stile:'whatif'});
+
 function applyThemeByStyle(style){
   document.documentElement.setAttribute('data-theme', style==='wtf'?'wtf':'whatif');
 }
 
-/* ===== Prefs ===== */
-function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
-function writeJSON(k,v){ LS.setItem(k,JSON.stringify(v)); }
-const prefs = readJSON('whatif_prefs',{periodo:'future', stile:'whatif'});
-applyThemeByStyle(prefs.stile);
+/* >>> INIT TABS STATE <<< */
+function initTabsFromPrefs(){
+  // stile
+  document.querySelectorAll('#styleTabs .tab').forEach(el=>{
+    el.classList.toggle('sel', el.dataset.style===prefs.stile);
+  });
+  // (se in futuro avremo altri periodi)
+  document.querySelectorAll('#periodTabs .tab').forEach(el=>{
+    el.classList.toggle('sel', el.dataset.per===(prefs.periodo||'future'));
+  });
+  applyThemeByStyle(prefs.stile);
+}
+initTabsFromPrefs();
 
-/* Tabs behavior */
+/* Change style */
 function setStyle(style){
   prefs.stile=style; writeJSON('whatif_prefs',prefs);
   applyThemeByStyle(style);
   document.querySelectorAll('#styleTabs .tab').forEach(el=>el.classList.toggle('sel', el.dataset.style===style));
 }
 document.getElementById('styleTabs').addEventListener('click',e=>{
-  const t=e.target.closest('.tab'); if(!t) return; setStyle(t.dataset.style);
-});
-document.getElementById('langBtn').addEventListener('click',()=>{
-  setLang(lang==='it'?'en':'it');
+  const t=e.target.closest('.tab'); if(!t) return;
+  setStyle(t.dataset.style);
 });
 
-/* ===== Credits + Clarify limits with Dev mode (local only) ===== */
-const DAILY_FREE=3, DAILY_CLAR=5;
-const DEV_PIN='9468';
-function isDevActive(){
-  const v=readJSON('whatif_dev',null);
-  if(!v) return false;
-  if(Date.now()>v.exp){ LS.removeItem('whatif_dev'); return false; }
-  return true;
-}
-function activateDev(){ writeJSON('whatif_dev',{exp:Date.now()+24*3600*1000}); alert('Dev mode ON (24h)'); }
+/* ===== Lang switch ===== */
+document.getElementById('langBtn').addEventListener('click',()=> setLang(lang==='it'?'en':'it') );
+
+/* ===== Credits & Clarify (con dev) ===== */
+const DAILY_FREE=3, DAILY_CLAR=5, DEV_PIN='9468';
+function todayKey(){ const d=new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
 function readCredits(){
-  const t=new Date(); const key=`${t.getFullYear()}-${t.getMonth()+1}-${t.getDate()}`;
-  const v=readJSON('whatif_credits',{date:key,used:0,pro:false});
+  const key=todayKey(); const v=readJSON('whatif_credits',{date:key,used:0,pro:false});
   if(v.date!==key){ v.date=key; v.used=0; writeJSON('whatif_credits',v); }
   return v;
 }
 function writeCredits(v){ writeJSON('whatif_credits',v); renderBadges(); }
 function readClarify(){
-  const t=new Date(); const key=`${t.getFullYear()}-${t.getMonth()+1}-${t.getDate()}`;
-  const v=readJSON('whatif_clarify',{date:key,used:0});
+  const key=todayKey(); const v=readJSON('whatif_clarify',{date:key,used:0});
   if(v.date!==key){ v.date=key; v.used=0; writeJSON('whatif_clarify',v); }
   return v;
 }
 function writeClarify(v){ writeJSON('whatif_clarify',v); renderBadges(); }
+function isDev(){ const v=readJSON('whatif_dev',null); return v && Date.now()<v.exp; }
+function activateDev(){ writeJSON('whatif_dev',{exp:Date.now()+24*3600*1000}); alert('Dev mode ON (24h)'); }
 function renderBadges(){
-  const c=readCredits(); const left=Math.max(0, (c.pro?10:DAILY_FREE)-(c.used||0));
-  document.getElementById('freeBadge').textContent=T.badgeFree(left,(c.pro?10:DAILY_FREE));
+  const c=readCredits(); const max=c.pro?10:DAILY_FREE; const left=Math.max(0, max-(c.used||0));
+  document.getElementById('freeBadge').textContent=T.badgeFree(left,max);
   const cl=readClarify(); const leftC=Math.max(0, DAILY_CLAR-(cl.used||0));
   document.getElementById('clarifyBadge').textContent=T.badgeClarify(leftC,DAILY_CLAR);
 }
 renderBadges();
-
-/* Hidden gestures (dev only) */
-(function attachDev(){
+/* dev gestures */
+(function dev(){
   let tap=0,timer=null;
   document.getElementById('titleH1').addEventListener('click',()=>{
     tap++; clearTimeout(timer);
-    timer=setTimeout(()=>{ if(tap>=7){ const ok=prompt('PIN dev?'); if(ok===DEV_PIN) activateDev(); } tap=0; },300);
+    timer=setTimeout(()=>{ if(tap>=7){ const pin=prompt('PIN dev?'); if(pin===DEV_PIN){ activateDev(); } } tap=0; },300);
   });
-  // long press to reset (only if dev)
-  function longPress(el,cb){
-    let t=null; el.addEventListener('pointerdown',()=>{ t=setTimeout(cb,1500);});
-    ['pointerup','pointerleave'].forEach(ev=>el.addEventListener(ev,()=>clearTimeout(t)));
-  }
-  if(isDevActive()){
-    longPress(document.getElementById('freeBadge'),()=>{
-      const c=readCredits(); c.used=0; writeCredits(c); alert('Free azzerati (local)');
-    });
-    longPress(document.getElementById('clarifyBadge'),()=>{
-      const c=readClarify(); c.used=0; writeClarify(c); alert('Chiarimenti azzerati (local)');
-    });
-    // triple tap Free → toggle Pro
+  function long(el,cb){ let h=null; el.addEventListener('pointerdown',()=>h=setTimeout(cb,1500)); ['pointerup','pointerleave'].forEach(ev=>el.addEventListener(ev,()=>clearTimeout(h))); }
+  if(isDev()){
+    long(document.getElementById('freeBadge'),()=>{ const c=readCredits(); c.used=0; writeCredits(c); alert('Free azzerati (local)'); });
+    long(document.getElementById('clarifyBadge'),()=>{ const c=readClarify(); c.used=0; writeClarify(c); alert('Chiarimenti azzerati (local)'); });
     let clicks=0,t=null;
-    document.getElementById('freeBadge').addEventListener('click',()=>{
-      clicks++; clearTimeout(t);
-      t=setTimeout(()=>{ if(clicks>=3){ const c=readCredits(); c.pro=!c.pro; c.used=0; writeCredits(c); alert('Pro '+(c.pro?'ON':'OFF')+' (local)'); } clicks=0; },250);
-    });
+    document.getElementById('freeBadge').addEventListener('click',()=>{ clicks++; clearTimeout(t); t=setTimeout(()=>{ if(clicks>=3){ const c=readCredits(); c.pro=!c.pro; c.used=0; writeCredits(c); alert('Pro '+(c.pro?'ON':'OFF')+' (local)'); } clicks=0; },250); });
   }
 })();
 
-/* ===== Navigation ===== */
+/* ===== Nav ===== */
 document.getElementById('backBtn').onclick=()=>history.back();
 document.getElementById('homeBtn').onclick=()=>location.href='index.html';
 
-/* ===== Clarify & Go ===== */
+/* ===== Buttons ===== */
 document.getElementById('clarifyBtn').addEventListener('click',()=>{
   const q=(document.getElementById('qInput').value||'').trim();
   if(!q) return alert(lang==='en'?'Write a question first.':'Scrivi prima una domanda.');
   LS.setItem('domanda',q);
-  // segna 1 chiarimento usato
   const c=readClarify(); c.used=(c.used||0)+1; writeClarify(c);
-  location.href='fifth.html'; // apri risposta direttamente dopo “chiarisci & genera”
+  location.href='fifth.html';
 });
 document.getElementById('goAnswerBtn').addEventListener('click',()=>{
   const q=(document.getElementById('qInput').value||'').trim();
@@ -255,22 +249,22 @@ document.getElementById('goAnswerBtn').addEventListener('click',()=>{
   location.href='fifth.html';
 });
 
-/* ===== Stories list (clickable) ===== */
+/* ===== Stories list ===== */
 function fmtDate(ts){
   try{ const d=new Date(ts); return d.toLocaleString(lang==='en'?'en-GB':'it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch{return '';}
 }
 function renderStories(){
   const wrap=document.getElementById('stories');
   const arr=readJSON('cronologia',[]);
-  if(!arr.length){ wrap.innerHTML = `<p class="tip">${lang==='en'?'No stories yet.':'Ancora nessuna storia.'}</p>`; return; }
+  if(!arr.length){ wrap.innerHTML=`<p class="tip">${lang==='en'?'No stories yet.':'Ancora nessuna storia.'}</p>`; return; }
   wrap.innerHTML='';
   arr.slice(0,20).forEach((it,i)=>{
-    const id=`story-${i}`;
     const div=document.createElement('div');
     div.className='story';
     div.setAttribute('role','button');
     div.setAttribute('tabindex','0');
-    div.dataset.question = it.domanda||'';
+    div.dataset.question=it.domanda||'';
+    div.dataset.style=it.stile||'whatif';
     div.innerHTML=`
       <div class="info">
         <div class="title">${(it.domanda||'').replace(/</g,'&lt;')}</div>
@@ -278,47 +272,39 @@ function renderStories(){
       </div>
       <div class="play" aria-label="${T.playAlt}" title="${T.playAlt}"></div>
     `;
-    // l'intera card è cliccabile
-    div.addEventListener('click',(e)=>{
-      const q=div.dataset.question||'';
-      if(!q) return;
-      LS.setItem('domanda', q);
-      // mantieni stile salvato per coerenza
-      if(it.stile){ setStyle(it.stile); }
+    function open(){
+      const q=div.dataset.question||''; if(!q) return;
+      LS.setItem('domanda',q);
+      // applica lo stile salvato per la storia, aggiorna tab e tema
+      setStyle(div.dataset.style==='wtf'?'wtf':'whatif');
       location.href='fifth.html';
-    });
-    // permetti click anche su invio/space
-    div.addEventListener('keydown',(e)=>{
-      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); div.click(); }
-    });
-    // il bottone play fa la stessa cosa
-    div.querySelector('.play').addEventListener('click',(e)=>{
-      e.stopPropagation(); div.click();
-    });
+    }
+    div.addEventListener('click',open);
+    div.addEventListener('keydown',(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open(); }});
+    div.querySelector('.play').addEventListener('click',(e)=>{ e.stopPropagation(); open(); });
     wrap.appendChild(div);
   });
 }
 renderStories();
 
-/* ===== Follow-up area (suggerimenti del giorno) ===== */
+/* ===== Follow-up ===== */
 function renderFollow(){
   const dom=LS.getItem('domanda')||'';
   const list=document.getElementById('followList');
-  if(!dom){ list.textContent = '—'; return; }
+  if(!dom){ list.textContent='—'; return; }
   const hints=[
     lang==='en' ? `What would be the first sign it's working?`
                 : `Qual è il primo segnale che ti direbbe che sta funzionando?`,
     lang==='en' ? `What can you test in 7 days with low risk?`
                 : `Cosa puoi testare entro 7 giorni a basso rischio?`
   ];
-  list.innerHTML = `• ${hints[0]}<br/>• ${hints[1]}`;
+  list.innerHTML=`• ${hints[0]}<br/>• ${hints[1]}`;
 }
 renderFollow();
 
-/* ===== Keep input in sync with last question ===== */
+/* ===== Preload last question in the box ===== */
 (function preloadQ(){
-  const last = LS.getItem('domanda')||'';
-  if(last) document.getElementById('qInput').value=last;
+  const last=LS.getItem('domanda')||''; if(last) document.getElementById('qInput').value=last;
 })();
 </script>
 </body>
