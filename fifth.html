@@ -1,166 +1,259 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f – Risposta</title>
-<meta name="theme-color" content="#0B0B0C"/>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What?f — Episodio</title>
+
+<!-- PWA basilare -->
+<meta name="theme-color" content="#0B0B0C" />
+<link rel="manifest" href="/manifest.json" />
+<link rel="apple-touch-icon" href="/icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
 <style>
-:root{ --bg:#0B0B0C; --bg2:#101414; --fg:#EAF3EE; --muted:#9EB0B8;
-  --acc:#1C57A0; --acc2:#FFEC01; --card:#141C22F0; --line:#FFFFFF20; --chip:#121A26; --shadow:rgba(0,0,0,.35);}
-html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
+:root{
+  --bg:#0B0B0C; --bg2:#101414; --fg:#FFFFFF; --muted:#A0B2BA;
+  --acc:#3A6B56; --acc2:#5A8C75; /* default tema WTF */
+  --card:rgba(20,28,34,0.92); --line:rgba(255,255,255,.12);
+  --chip:#121A26; --ink:#0A0E12; --shadow:rgba(0,0,0,.35);
+}
+html[data-style="whatif"]{ --acc:#1C57A0; --acc2:#FFEC01; }
+
 *{box-sizing:border-box}
-html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2),var(--bg));color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+html,body{
+  margin:0; background:radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%,var(--bg) 60%);
+  color:var(--fg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
 main{max-width:980px;margin:auto;padding:18px}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
-.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12;font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800;box-shadow:0 6px 18px var(--shadow);border:none}
 .btn.large{padding:14px 18px;font-size:16px}
-.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+h1{font-size:clamp(22px,5vw,30px);margin:14px 0 6px;color:var(--acc2)}
+.sub{color:var(--muted);margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
+.label{color:var(--acc);font-weight:800;margin:0 0 10px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
+.chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none}
 .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee}
-h1{font-size:clamp(22px,5vw,30px);margin:8px 0 2px;color:var(--acc2)}
-.label{color:var(--acc);font-weight:800;margin:0 0 8px}
-.box{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:18px;white-space:pre-wrap;line-height:1.7;font-size:17px;letter-spacing:.1px}
-.skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.08),rgba(255,255,255,.04));background-size:200% 100%;animation:sk 1s infinite}
+.input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--acc2);color:#eaf3ee;border-radius:12px;padding:14px;font-size:17px}
+.box{white-space:pre-wrap;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:16px;line-height:1.7;letter-spacing:.1px;font-size:17px;min-height:160px}
+.tools{display:flex;gap:10px;flex-wrap:wrap}
+.tools .btn{background:var(--chip);color:#eaf3ee;font-weight:600;border:1px solid var(--line);box-shadow:none}
+.skel{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:sk 1s infinite}
 @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
 </style>
 </head>
 <body>
-<main>
-  <div class="row" style="justify-content:space-between">
-    <div class="row">
-      <button class="btn" id="backBtn">←</button>
-      <button class="btn" id="homeBtn">🏠</button>
+  <main>
+    <div class="topbar">
+      <div class="row">
+        <button class="btn" id="backBtn">←</button>
+        <button class="btn" id="homeBtn">🏠</button>
+      </div>
+      <div class="row">
+        <span class="badge" id="epBadge">Ep 1/3</span>
+        <span class="badge" id="langBadge">IT</span>
+      </div>
     </div>
-    <div class="row">
-      <span class="badge" id="styleBadge">—</span>
-      <button class="btn" id="langBtn">IT</button>
+
+    <h1 id="titleH1">Il tuo What?f — Episodio 1</h1>
+    <p class="sub" id="subtitle">Scrivi la domanda, scegli lo stile e genera l’episodio.</p>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div class="chips" id="styleChips">
+          <button class="chip" data-style="whatif" id="chipWhatIf">What?f</button>
+          <button class="chip" data-style="wtf" id="chipWTF">What the F</button>
+        </div>
+        <div class="chips">
+          <button class="chip" id="prevEp">◀︎</button>
+          <button class="chip" id="nextEp">▶︎</button>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <h1 id="titleH1">Il tuo What?f — Episodio 1</h1>
-
-  <div class="card">
-    <h3 class="label" id="qLabel">Domanda</h3>
-    <div id="question" class="box"></div>
-    <div class="row" style="margin-top:10px">
-      <button class="btn primary large" id="regenBtn">🔁 Rigenera episodio</button>
+    <div class="card">
+      <h3 class="label" id="qLabel">Domanda</h3>
+      <input id="question" class="input" placeholder="E se tornassi a vivere all’Aquila?" />
+      <div class="row" style="margin-top:12px">
+        <button id="genBtn" class="btn primary large">🎬 <span id="genTxt">Genera episodio</span></button>
+      </div>
     </div>
-  </div>
 
-  <div class="card">
-    <h3 class="label" id="rLabel">Episodio</h3>
-    <div id="result" class="box">⏳ Sto immaginando il tuo episodio… <span class="skeleton" style="width:36%"></span></div>
-
-    <div class="row" style="gap:8px;margin-top:12px">
-      <button class="btn" id="saveBtn">💾 Salva</button>
-      <button class="btn" id="copyBtn">📋 Copia</button>
-      <button class="btn" id="shareBtn">📤 Condividi</button>
+    <div class="card">
+      <h3 class="label" id="eLabel">Episodio</h3>
+      <div id="result" class="box">—</div>
+      <div class="row tools" style="margin-top:10px">
+        <button id="saveBtn" class="btn">💾 <span id="saveTxt">Salva</span></button>
+        <button id="copyBtn" class="btn">📋 <span id="copyTxt">Copia</span></button>
+        <button id="shareBtn" class="btn">📤 <span id="shareTxt">Condividi</span></button>
+      </div>
     </div>
-  </div>
-</main>
+  </main>
 
 <script>
-/* I18N */
-const LS=localStorage,$=id=>document.getElementById(id);
-const I18N={it:{
-  title:"Il tuo What?f — Episodio 1",
-  qLabel:"Domanda", rLabel:"Episodio",
-  thinking:"Sto immaginando il tuo episodio…",
-  saved:"Salvato!", copied:"Copiato!",
-  styleWhatIf:"What if", styleWTF:"What the F",
-  regen:"🔁 Rigenera episodio"
-},en:{
-  title:"Your What?f — Episode 1",
-  qLabel:"Question", rLabel:"Episode",
-  thinking:"Imagining your episode…",
-  saved:"Saved!", copied:"Copied!",
-  styleWhatIf:"What if", styleWTF:"What the F",
-  regen:"🔁 Regenerate"
-}};
-function getLang(){return (LS.getItem('lang')||'it').toLowerCase();}
-function setLang(v){LS.setItem('lang',v);location.reload();}
-let lang=getLang(),T=I18N[lang]||I18N.it;
-document.documentElement.lang=lang;
+const LS = localStorage;
+const $  = (id)=>document.getElementById(id);
 
-/* UI text */
-$('titleH1').textContent=T.title; $('qLabel').textContent=T.qLabel; $('rLabel').textContent=T.rLabel;
-$('result').innerHTML=`⏳ ${T.thinking} <span class="skeleton" style="width:36%"></span>`;
-$('langBtn').textContent=lang.toUpperCase();
-$('regenBtn').textContent=T.regen;
+// lingua
+let lang = (LS.getItem('lang') || 'it').toLowerCase();
+document.documentElement.lang = (lang === 'en') ? 'en' : 'it';
+$('langBadge').textContent = (lang === 'en') ? 'EN' : 'IT';
 
-/* Theme from prefs */
-function readJSON(k,def){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
-const prefs=readJSON('whatif_prefs',{stile:'whatif'}); document.documentElement.setAttribute('data-theme',prefs.stile==='wtf'?'wtf':'whatif');
-$('styleBadge').textContent=prefs.stile==='wtf'?T.styleWTF:T.styleWhatIf;
+// stile
+const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
+let currentStyle = prefs.stile || 'wtf'; // default bar
+applyStyle(currentStyle);
+document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel', c.dataset.style===currentStyle));
+$('styleChips').addEventListener('click',(e)=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  currentStyle=b.dataset.style;
+  prefs.stile=currentStyle; LS.setItem('whatif_prefs', JSON.stringify(prefs));
+  applyStyle(currentStyle);
+  document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel', c.dataset.style===currentStyle));
+});
 
-/* Nav */
-$('backBtn').onclick=()=>history.back();
-$('homeBtn').onclick=()=>location.href='index.html';
-$('langBtn').onclick=()=>setLang(lang==='it'?'en':'it');
+// episodio
+let episode = Number(LS.getItem('whatif_episode')||1);
+episode = clamp(episode,1,3);
+renderEpBadge();
 
-/* Question */
-const domanda=LS.getItem('domanda')||''; $('question').textContent=domanda||'—';
+$('prevEp').addEventListener('click', ()=>{ episode=clamp(episode-1,1,3); LS.setItem('whatif_episode',episode); renderEpBadge(); });
+$('nextEp').addEventListener('click', ()=>{ episode=clamp(episode+1,1,3); LS.setItem('whatif_episode',episode); renderEpBadge(); });
 
-/* ====== MOCK GENERATION ======
-   Qui chiami la tua /api/ask come già fatto.
-   Io metto una funzione fake che simula una risposta dopo 600ms.
-*/
-function fakeAI(style,q){
-  const base = style==='wtf'
-    ? `Ok, ${q || 'amico'}, pensaci con un bicchiere in mano: meno drama, più risate.`
-    : `Sai già che non lo faresti per nostalgia: è più un esperimento di equilibrio.`;
-  return new Promise(r=>setTimeout(()=>r(base),600));
+function clamp(x,a,b){ return Math.max(a,Math.min(b,x)); }
+
+function applyStyle(s){
+  document.documentElement.setAttribute('data-style', s==='whatif'?'whatif':'wtf');
+  const it = (lang!=='en');
+  $('titleH1').textContent = it
+    ? (s==='whatif'?'Il tuo What?f — Episodio 1':'Il tuo What the F — Episodio 1')
+    : (s==='whatif'?'Your What?f — Episode 1':'Your What the F — Episode 1');
+  $('subtitle').textContent = it
+    ? 'Scrivi la domanda, scegli lo stile e genera l’episodio.'
+    : 'Type your question, pick a style, and generate the episode.';
+  $('qLabel').textContent = it ? 'Domanda' : 'Question';
+  $('eLabel').textContent = it ? 'Episodio' : 'Episode';
+  $('genTxt').textContent  = it ? 'Genera episodio' : 'Generate episode';
+  $('saveTxt').textContent = it ? 'Salva' : 'Save';
+  $('copyTxt').textContent = it ? 'Copia' : 'Copy';
+  $('shareTxt').textContent= it ? 'Condividi' : 'Share';
+  $('chipWhatIf').textContent='What?f';
+  $('chipWTF').textContent='What the F';
 }
 
-/* Sanitizer + Gancio finale */
-function sanitize(style,raw){
-  let out=(raw||'').trim().replace(/[“”"«»]/g,'');
-  // spezzatura sobria
-  const parts=out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
-  out=parts.join('\n');
+function renderEpBadge(){
+  $('epBadge').textContent = (lang==='en') ? `Ep ${episode}/3` : `Ep ${episode}/3`;
+}
 
-  if(style==='wtf'){
-    // chiusura da bar garantita
-    const hook=`Clink. Stesso bancone, domani rimescoliamo.`;
-    if(!/bancone|domani rimescoliamo|clink/i.test(out)){ out += `\n${hook}`; }
-  }else{
-    // chiusura What?f positiva e asciutta
-    const hook = lang==='en'
-      ? `Tomorrow we unlock Episode 2 at 09:00. Keep sharing bits of you and I’ll show where this goes.`
-      : `Domani sblocchiamo l’Episodio 2 alle 09:00. Continua a conoscerci e ti dico dove va la storia.`;
-    if(!/Episodio 2|Episode 2/i.test(out)){ out += `\n${hook}`; }
+// domanda precompilata
+const prevQ = LS.getItem('domanda') || '';
+if (prevQ) $('question').value = prevQ;
+
+// nav
+$('backBtn').addEventListener('click', ()=> history.back());
+$('homeBtn').addEventListener('click', ()=> location.href='index.html');
+
+// genera (non-stream)
+$('genBtn').addEventListener('click', generateEpisode);
+
+async function generateEpisode(){
+  const domanda = ($('question').value || '').trim();
+  if(!domanda){ $('question').focus(); return; }
+  LS.setItem('domanda', domanda);
+
+  $('result').innerHTML = (lang==='en'
+    ? '⏳ Imagining your episode… <span class="skel" style="width:40%"></span>'
+    : '⏳ Sto immaginando il tuo episodio… <span class="skel" style="width:40%"></span>'
+  );
+
+  try{
+    const body = {
+      domanda,
+      lang,
+      stile: currentStyle,
+      periodo: 'future',
+      episode,
+      profile: leanProfile(), // usiamo il nome se presente
+      micro: {}               // puoi passarci micro-risposte se vuoi
+    };
+
+    const r = await fetch('/api/ask', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if(!r.ok){
+      $('result').textContent = (lang==='en' ? 'Server error.' : 'Problema server.');
+      return;
+    }
+    const j = await r.json();
+    $('result').textContent = sanitize(j.answer || '');
+
+  }catch(e){
+    console.error(e);
+    $('result').textContent = (lang==='en' ? 'Network error.' : 'Errore di rete.');
   }
-  return out.trim();
 }
 
-/* Generate */
-async function generate(){
-  const style=prefs.stile==='wtf'?'wtf':'whatif';
-  const txt = await fakeAI(style,domanda); // <-- sostituisci con la tua /api/ask
-  $('result').textContent = sanitize(style,txt);
-  // log in cronologia
-  const arr=readJSON('cronologia',[]);
-  arr.unshift({domanda, risposta:$('result').textContent, stile:style, lang, ts:Date.now()});
-  LS.setItem('cronologia',JSON.stringify(arr.slice(0,100)));
+function leanProfile(){
+  try{
+    const p = JSON.parse(LS.getItem('whatif_profile')||'{}');
+    const o = {};
+    if (p.name) o.name = String(p.name);
+    if (p.city_now) o.city_now = String(p.city_now); else if (p.city) o.city = String(p.city);
+    if (p.work_role) o.work_role = String(p.work_role); else if (p.role) o.role = String(p.role);
+    return o;
+  }catch{return {}}
 }
-generate();
-$('regenBtn').onclick=generate;
 
-/* Tools */
-$('saveBtn').onclick=()=>{
-  const arr=readJSON('cronologia',[]);
-  arr.unshift({domanda, risposta:$('result').textContent, stile:prefs.stile, lang, ts:Date.now()});
-  LS.setItem('cronologia',JSON.stringify(arr.slice(0,100)));
-  alert(T.saved);
-};
-$('copyBtn').onclick=()=>{
-  navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`).then(()=>alert(T.copied));
-};
-$('shareBtn').onclick=()=>{
-  const data={title:"What?f",text:`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`,url:location.href};
-  if(navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`);
-};
+function sanitize(s=''){
+  return s.replace(/[“”«»]/g,'').replace(/\n{3,}/g,'\n\n').trim();
+}
+
+// tools
+$('saveBtn').addEventListener('click', ()=>{
+  const arr = JSON.parse(LS.getItem('cronologia')||'[]');
+  arr.unshift({
+    domanda: $('question').value || '',
+    risposta: $('result').textContent || '',
+    stile: currentStyle,
+    lang,
+    ep: episode,
+    ts: Date.now()
+  });
+  LS.setItem('cronologia', JSON.stringify(arr.slice(0,200)));
+  alert(lang==='en'?'Saved!':'Salvato!');
+});
+$('copyBtn').addEventListener('click', ()=>{
+  const domanda = $('question').value || '';
+  const txt = `${(lang==='en'?'Question':'Domanda')}: ${domanda}\n\n${$('result').textContent}`;
+  navigator.clipboard.writeText(txt).then(()=> alert(lang==='en'?'Copied!':'Copiato!'));
+});
+$('shareBtn').addEventListener('click', ()=>{
+  const data={ title:'What?f',
+    text:`${(lang==='en'?'Question':'Domanda')}: ${$('question').value}\n\n${$('result').textContent}`,
+    url: location.href
+  };
+  if(navigator.share) navigator.share(data).catch(()=>{});
+  else navigator.clipboard.writeText(data.text);
+});
+</script>
+
+<!-- SW opzionale -->
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>
