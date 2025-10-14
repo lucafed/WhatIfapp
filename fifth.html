@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f – Result</title>
+<title>What?f – Episodio</title>
 
+<!-- PWA -->
 <meta name="theme-color" content="#0B0B0C" />
 <link rel="manifest" href="/manifest.json" />
 <link rel="apple-touch-icon" href="/icons/icon-192.png" />
@@ -15,20 +16,31 @@
   :root{
     --bg:#0B0B0C; --bg2:#101414;
     --fg:#FFFFFF; --muted:#A0B2BA;
-    --acc:#1C57A0; --acc2:#FFEC01; /* What?f */
+
+    /* What?f (default) */
+    --acc:#1C57A0;       /* Blu Verona */
+    --acc2:#FFEC01;      /* Giallo Verona */
+
+    /* superfici */
     --card:rgba(20,28,34,0.92);
     --line:rgba(255,255,255,.12);
     --chip:#121A26;
     --ink:#0A0E12;
     --shadow:rgba(0,0,0,.35);
+
     --highlight:#FFEC01;
   }
-  html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
+  html[data-theme="wtf"]{
+    --acc:#3A6B56;
+    --acc2:#5A8C75;
+  }
 
   *{box-sizing:border-box}
   html,body{
-    margin:0; background: radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-    color:var(--fg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    margin:0;
+    background: radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+    color:var(--fg);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility
   }
   main{max-width:980px;margin:auto;padding:18px}
@@ -46,27 +58,62 @@
   .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
   .label{color:var(--acc);font-weight:800;margin:0 0 8px}
 
+  /* Question */
   .qbox{
-    background:rgba(255,255,255,.06); border:1px solid var(--line); border-left:4px solid var(--highlight);
-    border-radius:12px; padding:16px; font-size:17px; line-height:1.65; color:#EAF3EE; max-width:68ch; margin:0 auto; text-wrap:pretty; hyphens:auto;
+    background:rgba(255,255,255,.06);
+    border:1px solid var(--line);
+    border-left:4px solid var(--highlight);
+    border-radius:12px;
+    padding:16px;
+    font-size:17px;
+    line-height:1.65;
+    color:#EAF3EE;
+    max-width:68ch;
+    margin:0 auto;
+    text-wrap:pretty;
+    hyphens:auto;
   }
+
+  /* Result box */
   .box{
-    background:rgba(255,255,255,.04); border:1px solid var(--line); border-radius:12px; padding:18px; line-height:1.7;
-    color:#EAF3EE; white-space:pre-wrap; font-size:17px; letter-spacing:.1px; max-width:68ch; margin:0 auto; text-wrap:pretty; hyphens:auto;
+    background:rgba(255,255,255,.04);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:18px;
+    line-height:1.7;
+    color:#EAF3EE;
+    white-space:pre-wrap;
+    font-size:17px;
+    letter-spacing:.1px;
+    max-width:68ch;
+    margin:0 auto;
+    text-wrap:pretty;
+    hyphens:auto;
   }
 
   .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-  .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
-  .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
   .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
-  .badge.accent{background:var(--chip);border:1px solid var(--line);background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border:none;font-weight:800}
+  .badge.accent{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border:none;font-weight:800}
 
-  #result{min-height:190px}
+  .cta-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .cta-row .btn.primary{flex:1}
+
+  .know-mini{display:flex;align-items:center;gap:8px}
+  .meter{position:relative;height:10px;background:var(--chip);border:1px solid var(--line);border-radius:999px;overflow:hidden;width:120px}
+  .meter-fill{height:100%;width:0;background:linear-gradient(180deg,var(--acc),var(--acc2))}
+  .know-score{font-weight:800;color:var(--acc);font-size:12px}
+  .tooltip{position:relative;cursor:help}
+  .tooltip:hover .tip{opacity:1;transform:translateY(0)}
+  .tip{pointer-events:none;position:absolute;right:0;top:125%;background:var(--chip);border:1px solid var(--line);color:#e6fff0;border-radius:10px;padding:8px 10px;font-size:12px;width:260px;opacity:0;transform:translateY(-4px);transition:.15s;box-shadow:0 12px 28px var(--shadow)}
+
+  #result{min-height:220px}
   .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:sk 1s infinite}
   @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
   #result.fade-in{animation:fade .6s ease}
   @keyframes fade{from{opacity:.25;transform:translateY(2px)}to{opacity:1;transform:none}}
+  .teaser{color:var(--muted);font-size:14px;margin-top:8px}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -76,43 +123,47 @@
         <button class="btn" id="backBtnTop">←</button>
         <button class="btn" id="homeBtnTop">🏠</button>
       </div>
+
       <div class="row" style="gap:10px">
-        <span id="episodeBadge" class="badge accent">—</span>
-        <div class="row">
-          <button class="btn icon" id="prevEp" title="Episodio precedente">◀︎</button>
-          <button class="btn icon" id="nextEp" title="Episodio successivo">▶︎</button>
+        <span id="freeBadge" class="badge" title="">—</span>
+
+        <div class="know-mini tooltip" id="knowMini">
+          <span class="know-score" id="knowLabelMini">Personalizzazione</span>
+          <div class="meter"><div id="knowFill" class="meter-fill"></div></div>
+          <span class="badge" id="knowValueMini">0/100</span>
+          <div class="tip" id="knowTip">Più dettagli → più scenari plausibili. Compila le micro-domande nella pagina precedente.</div>
         </div>
       </div>
     </div>
 
-    <h1 id="titleH1">Il tuo What?f prende forma…</h1>
+    <h1 id="titleH1">Il tuo What?f — Episodio 1</h1>
 
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
         <div class="row">
           <span class="badge" id="badgePeriodo">🕰️ —</span>
           <span class="badge" id="badgeStile">🎭 —</span>
-        </div>
-        <div class="chips" id="styleChips">
-          <button class="chip" data-style="whatif" id="chipWhatIf">What if (realistic)</button>
-          <button class="chip" data-style="wtf" id="chipWTF">WTF (fun)</button>
+          <span class="badge" id="langBadge">🌐 IT</span>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <h3 class="label" id="qLabel">Question</h3>
+      <h3 class="label" id="qLabel">Domanda</h3>
       <div id="question" class="qbox">—</div>
-      <div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px">
-        <button class="btn" id="regenBtn">🔁 Rigenera</button>
+
+      <div class="cta-row" style="margin-top:12px">
+        <button class="btn primary large" id="genBtn">🎬 Genera episodio</button>
       </div>
     </div>
 
     <div class="card">
-      <h3 class="label" id="rLabel">Result</h3>
+      <h3 class="label" id="rLabel">Episodio</h3>
       <div id="result" class="box">—</div>
+      <p id="teaser" class="teaser">—</p>
 
-      <div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px">
+      <div class="cta-row">
+        <button id="regenBtn" class="btn" style="display:none">🔁 Rigenera (Pro)</button>
         <button id="saveBtn" class="btn">💾 Salva</button>
         <button id="copyBtn" class="btn">📋 Copia</button>
         <button id="shareBtn" class="btn">📤 Condividi</button>
@@ -121,27 +172,48 @@
   </main>
 
 <script>
+/* ===== Tema dal prefs (stile fissato in pag. precedente) ===== */
+(function applyThemeFromPrefs(){
+  try{
+    const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+    const theme = prefs.stile === 'wtf' ? 'wtf' : 'whatif';
+    document.documentElement.setAttribute('data-theme', theme);
+  }catch(e){
+    document.documentElement.setAttribute('data-theme','whatif');
+  }
+})();
+
 /* ===== I18N ===== */
 const I18N = {
   it:{
-    title:"Il tuo What?f prende forma…",
+    title:"Il tuo What?f — Episodio 1",
     back:"Indietro", home:"Home",
+    badgeFree:(l,d)=>`Free oggi: ${l}/${d}`,
+    badgeFreeTitle:"Pressione lunga 2s: azzera crediti · Triplo click: Pro ON/OFF (dev)",
     periodoPast:"Passato", periodoFuture:"Futuro",
-    chipWhatIf:"What if (realistico)", chipWTF:"What the F (divertente)",
-    qLabel:"La tua domanda", rLabel:"Risultato",
-    loading:"Sto immaginando il tuo scenario…", errServer:"Problema server.", errNet:"Errore di rete.",
-    copied:"Copiato!", saved:"Salvato!",
-    ep:(n)=>`Episodio ${n}/3`
+    qLabel:"Domanda", rLabel:"Episodio",
+    genBtn:"🎬 Genera episodio",
+    loading:"Sto immaginando il tuo episodio…",
+    errServer:"Problema server.",
+    errNet:"Errore di rete.",
+    limitGen:"Hai raggiunto il limite gratuito di oggi. Torna domani!",
+    saved:"Salvato!", copied:"Copiato!",
+    teaserTomorrow:"Domani sblocchiamo l’Episodio 2 alle 09:00. Continua a conoscerci e ti dico dove va la storia."
   },
   en:{
-    title:"Your What?f is taking shape…",
+    title:"Your What?f — Episode 1",
     back:"Back", home:"Home",
+    badgeFree:(l,d)=>`Free today: ${l}/${d}`,
+    badgeFreeTitle:"Long-press 2s: reset credits · Triple click: Pro ON/OFF (dev)",
     periodoPast:"Past", periodoFuture:"Future",
-    chipWhatIf:"What if (realistic)", chipWTF:"What the F (fun)",
-    qLabel:"Your question", rLabel:"Result",
-    loading:"Imagining your scenario…", errServer:"Server problem.", errNet:"Network error.",
-    copied:"Copied!", saved:"Saved!",
-    ep:(n)=>`Episode ${n}/3`
+    qLabel:"Question", rLabel:"Episode",
+    genBtn:"🎬 Generate episode",
+    loading:"Imagining your episode…",
+    errServer:"Server problem.",
+    errNet:"Network error.",
+    limitGen:"You’ve reached today’s free limit. Come back tomorrow!",
+    saved:"Saved!", copied:"Copied!",
+    teaserTomorrow:"Episode 2 unlocks tomorrow at 09:00. Keep getting to know each other and I’ll show where this goes."
   }
 };
 const LS=localStorage;
@@ -149,20 +221,55 @@ const lang=(LS.getItem('lang')||'it').toLowerCase();
 const T=I18N[lang]||I18N.it;
 document.documentElement.lang=lang;
 
-/* ===== Helpers ===== */
+/* UI testo statico */
 const $=id=>document.getElementById(id);
-function readJSON(k,def={}){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def; } }
-function writeJSON(k,v){ LS.setItem(k,JSON.stringify(v)); }
+$('titleH1').textContent=T.title;
+$('backBtnTop').textContent=`← ${T.back}`; $('homeBtnTop').textContent=`🏠 ${T.home}`;
+$('qLabel').textContent=T.qLabel; $('rLabel').textContent=T.rLabel;
+$('genBtn').textContent=T.genBtn;
+$('freeBadge').title=T.badgeFreeTitle;
 
-/* ===== Prefs & Stato ===== */
-const prefs = readJSON('whatif_prefs', { stile:'whatif', periodo:'future' });
-let domanda = LS.getItem('domanda') || '';
+/* Stato base */
+const prefs = readJSON('whatif_prefs', {});
+const domanda = LS.getItem('domanda') || '';
 if(!domanda){ alert(lang==='en'?'No question found.':'Nessuna domanda trovata.'); location.href='fourth.html'; }
+$('question').textContent = domanda;
+$('badgePeriodo').textContent="🕰️ "+(prefs.periodo==='past'?T.periodoPast:T.periodoFuture);
+$('badgeStile').textContent="🎭 "+(prefs.stile==='wtf'?'What the F':'What?f');
+$('langBadge').textContent = lang==='en'?'🌐 EN':'🌐 IT';
 
-let episode = Math.max(1, Math.min(3, Number(LS.getItem('whatif_episode')||1)));
-let currentStyle = (prefs.stile || 'whatif');
+/* ===== Helpers ===== */
+function readJSON(k,def={}){ try{ return JSON.parse(LS.getItem(k)||JSON.stringify(def)); }catch{return def;} }
+function writeJSON(k,v){ LS.setItem(k,JSON.stringify(v)); }
+function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
-/* ===== Profilo LEAN (mirror) ===== */
+/* Credits (free/day) + Pro toggle dev */
+const DAILY_FREE=3;
+function readCredits(){ const v=readJSON('whatif_credits'); const t=todayStr(); if(!v.date||v.date!==t) return {date:t,used:0,pro:!!v.pro}; return v; }
+function writeCredits(v){ writeJSON('whatif_credits',v); renderBadges(); }
+function ensureCredits(){ const c=readCredits(); if(!c.date||c.date!==todayStr()){ c.date=todayStr(); c.used=0; writeCredits(c);} }
+function renderBadges(){ const c=readCredits(); const left=Math.max(0,DAILY_FREE-(c.used||0)); $('freeBadge').textContent=T.badgeFree(left,DAILY_FREE); }
+
+/* Knowledge mini (solo per sensazione di “mi conosci”) */
+function computeKnowledge(){
+  const profile=readJSON('whatif_profile',{}); const micro=readJSON('whatif_micro',{});
+  let score=0;
+  if (profile.name) score+=12;
+  if (profile.city||profile.city_now) score+=12;
+  if (profile.role||profile.work_role) score+=12;
+  if (micro.indicatore) score+=12;
+  if (micro.vincolo_2w) score+=12;
+  if (micro.punto_riferimento) score+=12;
+  score += Math.min(28, (Object.keys(profile).length + Object.keys(micro).length) * 2);
+  return Math.max(0,Math.min(100,score));
+}
+function renderKnowledgeMini(){
+  const score=computeKnowledge();
+  document.getElementById('knowFill').style.width=`${score}%`;
+  document.getElementById('knowValueMini').textContent=`${score}/100`;
+}
+
+/* Profilo lean per mirror-line e tono “ti conosco” */
 function buildLeanProfile(){
   const p = readJSON('whatif_profile',{}) || {};
   const lean = {};
@@ -174,82 +281,95 @@ function buildLeanProfile(){
   return lean;
 }
 
-/* ===== UI ===== */
-$('titleH1').textContent=T.title;
-$('qLabel').textContent=T.qLabel; $('rLabel').textContent=T.rLabel;
-$('backBtnTop').textContent='← '+T.back; $('homeBtnTop').textContent='🏠 '+T.home;
-$('question').textContent = domanda;
-$('badgePeriodo').textContent="🕰️ "+(prefs.periodo==='past'?T.periodoPast:T.periodoFuture);
-$('badgeStile').textContent="🎭 "+(currentStyle==='wtf'?'What the F':'What if');
-$('episodeBadge').textContent = T.ep(episode);
-document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
-document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
-
-/* ===== Switch stile ===== */
-$('styleChips').addEventListener('click',e=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  currentStyle=b.dataset.style;
-  prefs.stile=currentStyle; writeJSON('whatif_prefs',prefs);
-  $('badgeStile').textContent="🎭 "+(currentStyle==='wtf'?'What the F':'What if');
-  document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
-  generate(true);
-});
-
-/* ===== Episodi ===== */
-$('prevEp').addEventListener('click', ()=>{
-  episode = Math.max(1, episode-1);
-  LS.setItem('whatif_episode', String(episode));
-  $('episodeBadge').textContent = T.ep(episode);
-  generate(true);
-});
-$('nextEp').addEventListener('click', ()=>{
-  episode = Math.min(3, episode+1);
-  LS.setItem('whatif_episode', String(episode));
-  $('episodeBadge').textContent = T.ep(episode);
-  generate(true);
-});
-
-/* ===== Sanitizer (solo rifinitura ritmo) ===== */
+/* ===== Sanitizer stile + chiusure “continua domani” ===== */
 function sanitizeOutput(style, raw){
-  let out = (raw || "").trim().replace(/[“”"«»]/g, "");
+  let out = (raw || "").trim();
+
+  // togli caporali/virgolette
+  out = out.replace(/[“”"«»]/g, "");
+
+  // normalizza spazi doppi
+  out = out.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n");
+
   if (style === 'wtf') {
-    const bits = out.split(/\n+|(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean);
-    const lines = [];
-    bits.forEach(s=>{
-      const w=s.split(/\s+/);
-      for(let i=0;i<w.length;i+=15) lines.push(w.slice(i,i+15).join(' '));
-    });
-    out = lines.slice(0,12).join("\n");
+    // blocchi corti, ritmo da bar, niente lirismi né malinconia
+    const banned = /\b(nostalgia|anima|destino|poetich\w*|liric\w*|fiaba|sussurr\w*)\b/gi;
+    out = out.replace(banned, '');
+
+    const lines = out
+      .split(/\n+|(?<=[.!?])\s+/)
+      .map(s=>s.trim())
+      .filter(Boolean);
+
+    // mantieni 8–12 righe max, punchy
+    const max = 12;
+    let kept = [];
+    for (const s of lines){
+      const chunks = s.split(/\s+/);
+      for (let i=0;i<chunks.length;i+=16){
+        kept.push(chunks.slice(i,i+16).join(' '));
+      }
+      if (kept.length>=max) break;
+    }
+    kept = kept.slice(0, Math.max(8, Math.min(12, kept.length)));
+
+    // chiusura divertente che promette seguito
+    const friendlyHook = "Oh amico, domani ti racconto cosa combina davvero questa scelta.";
+    if (!kept[kept.length-1]?.match(/domani|poi|continua/i)) kept.push(friendlyHook);
+
+    out = kept.join("\n");
   } else {
-    const sentences = out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
-    out = sentences.slice(0,12).join("\n");
+    // WHAT?f: empatico, asciutto, positivo; 9–13 frasi brevi
+    const sentences = out
+      .split(/\n+|(?<=[.!?])\s+/)
+      .map(s=>s.trim())
+      .filter(Boolean);
+
+    const trimmed = sentences.slice(0,13);
+    // chiusura “episodio 1→2” senza malinconia
+    const softHook = "Continuiamo a conoscerci: domani ti dico dove porta davvero questo primo passo.";
+    if (!trimmed[trimmed.length-1]?.match(/domani|continua|passo|seguito/i)) trimmed.push(softHook);
+
+    out = trimmed.join("\n");
   }
   return out.trim();
 }
 
-/* ===== Generate (SSE) ===== */
+/* ===== Teaser Episodio 2 ===== */
+function setTeaser(){
+  const text = T.teaserTomorrow;
+  document.getElementById('teaser').textContent = text;
+}
+
+/* ===== API: generate (NO clarify qui) ===== */
 async function callGenerateStream(){
   const payload={
     domanda,
     lang,
     periodo:(prefs.periodo||'future'),
-    stile:currentStyle,
-    episode,
+    stile:(prefs.stile||'whatif'),
     clarify:false,
     stream:true,
     profilo: buildLeanProfile(),
-    clarifications: [],
+    clarifications:{},    // niente chiarimenti in quinta
     extra:"",
-    now: new Date().toISOString()
+    now: new Date().toISOString(),
+    tz: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
   };
   const r=await fetch("/api/ask",{method:"POST",headers:{ "Content-Type":"application/json","x-whatif-stream":"1" },body:JSON.stringify(payload)});
   if(!r.ok) throw new Error("server");
   return r.body.getReader();
 }
 
-async function generate(){
-  $('result').textContent=`⏳ ${T.loading} `; const sk=document.createElement('span'); sk.className='skeleton'; sk.style.width='40%'; $('result').appendChild(sk);
-  $('result').classList.remove('fade-in');
+/* ===== Generate / Regenerate ===== */
+async function generate(isRegen=false){
+  ensureCredits();
+  const credits=readCredits();
+  if(!isRegen && (credits.used||0)>=DAILY_FREE){ alert(T.limitGen); return; }
+
+  const resEl=$('result');
+  resEl.textContent=`⏳ ${T.loading} `; const sk=document.createElement('span'); sk.className='skeleton'; sk.style.width='40%'; resEl.appendChild(sk);
+  resEl.classList.remove('fade-in');
 
   try{
     const reader=await callGenerateStream();
@@ -261,15 +381,27 @@ async function generate(){
       for(const chunk of chunks){
         if(!chunk.startsWith("data: ")) continue;
         const data=JSON.parse(chunk.slice(6));
-        if(data.token){ text+=data.token; $('result').textContent=text; }
+        if(data.token){ text+=data.token; resEl.textContent=text; }
         if(data.done){
-          text = sanitizeOutput(currentStyle, text);
-          $('result').textContent=(text||"").trim();
-          $('result').classList.add('fade-in');
+          const clean = sanitizeOutput((prefs.stile||'whatif'), text);
+          resEl.textContent=clean;
+          resEl.classList.add('fade-in');
+          setTeaser();
         }
-        if(data.error){ $('result').textContent=T.errServer+" "+(data.detail||""); }
+        if(data.error){ resEl.textContent=T.errServer+" "+(data.detail||""); }
       }
     }
+    const c=readCredits(); c.used=(c.used||0)+1; writeCredits(c);
+
+    // mostra Rigenera se Pro
+    const cc=readCredits();
+    document.getElementById('regenBtn').style.display = cc.pro ? 'inline-block' : 'none';
+
+    // salva estratto per cronologia
+    const arr=readJSON('cronologia',[]);
+    arr.unshift({ domanda, risposta:resEl.textContent.trim(), periodo:prefs.periodo||null, stile:(prefs.stile||'whatif'), lang, ts:Date.now() });
+    writeJSON('cronologia',arr);
+
   }catch(e){
     console.error(e);
     $('result').textContent=(e.message==='server'?T.errServer:T.errNet);
@@ -277,10 +409,11 @@ async function generate(){
 }
 
 /* ===== Buttons ===== */
-$('regenBtn').addEventListener('click', ()=> generate());
+$('genBtn').addEventListener('click', ()=> generate(false));
+$('regenBtn').addEventListener('click', ()=> generate(true));
 $('saveBtn').addEventListener('click', ()=>{
   const arr=readJSON('cronologia',[]);
-  arr.unshift({ domanda, risposta:($('result').textContent||"").trim(), periodo:prefs.periodo||null, stile:currentStyle, lang, ep:episode, ts:Date.now() });
+  arr.unshift({ domanda, risposta:($('result').textContent||"").trim(), periodo:prefs.periodo||null, stile:(prefs.stile||'whatif'), lang, ts:Date.now() });
   writeJSON('cronologia',arr);
   alert(T.saved);
 });
@@ -296,9 +429,39 @@ $('shareBtn').addEventListener('click', ()=>{
 $('backBtnTop').addEventListener('click', ()=> history.back());
 $('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
 
+/* ===== Dev hooks: Pro toggle e reset daily ===== */
+(function devHooks(){
+  const bFree=$('freeBadge');
+  if(!bFree) return;
+
+  // long press 2s -> reset day
+  let pressT=null;
+  bFree.addEventListener('pointerdown', ()=>{ pressT=setTimeout(resetToday,2000); });
+  bFree.addEventListener('pointerup', ()=>{ clearTimeout(pressT); });
+  bFree.addEventListener('pointerleave', ()=>{ clearTimeout(pressT); });
+  function resetToday(){
+    const today=todayStr();
+    const c=readJSON('whatif_credits'); c.date=today; c.used=0; writeCredits(c);
+    renderBadges(); alert(lang==='en'?'Today credits reset ✅':'Crediti di oggi azzerati ✅');
+  }
+
+  // triple click -> Pro ON/OFF
+  let clicks=0,timer=null;
+  bFree.addEventListener('click', ()=>{ clicks++; clearTimeout(timer); timer=setTimeout(()=>{ if(clicks>=3) togglePro(); clicks=0; },250); });
+  function togglePro(){
+    const c=readJSON('whatif_credits'); c.pro=!c.pro; c.used=0; writeCredits(c);
+    renderBadges();
+    // mostra/nascondi rigenera live
+    document.getElementById('regenBtn').style.display = c.pro ? 'inline-block' : 'none';
+    alert('Pro '+(c.pro?'on':'off')+' (local) ✅');
+  }
+})();
+
 /* ===== Boot ===== */
-document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
-generate();
+function boot(){
+  ensureCredits(); renderBadges(); renderKnowledgeMini();
+}
+boot();
 </script>
 
 <!-- SW -->
