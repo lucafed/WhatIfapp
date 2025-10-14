@@ -42,6 +42,7 @@
 
   h1{font-size:clamp(22px,5vw,30px);margin:14px 0 2px;color:var(--acc2)}
   p.sub{color:var(--muted);margin:0 0 8px}
+
   .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
   .label{color:var(--acc);font-weight:800;margin:0 0 8px}
 
@@ -59,7 +60,7 @@
   .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
   .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
   .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
-  .badge.accent{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border:none;font-weight:800}
+  .badge.accent{background:var(--chip);border:1px solid var(--line);background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border:none;font-weight:800}
 
   #result{min-height:190px}
   .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:sk 1s infinite}
@@ -161,7 +162,7 @@ if(!domanda){ alert(lang==='en'?'No question found.':'Nessuna domanda trovata.')
 let episode = Math.max(1, Math.min(3, Number(LS.getItem('whatif_episode')||1)));
 let currentStyle = (prefs.stile || 'whatif');
 
-/* ===== Profilo LEAN (solo per mirror-line) ===== */
+/* ===== Profilo LEAN (mirror) ===== */
 function buildLeanProfile(){
   const p = readJSON('whatif_profile',{}) || {};
   const lean = {};
@@ -173,11 +174,10 @@ function buildLeanProfile(){
   return lean;
 }
 
-/* ===== UI Text ===== */
+/* ===== UI ===== */
 $('titleH1').textContent=T.title;
 $('qLabel').textContent=T.qLabel; $('rLabel').textContent=T.rLabel;
-$('backBtnTop').textContent= (lang==='en'?'← '+T.back:'← '+T.back);
-$('homeBtnTop').textContent= (lang==='en'?'🏠 '+T.home:'🏠 '+T.home);
+$('backBtnTop').textContent='← '+T.back; $('homeBtnTop').textContent='🏠 '+T.home;
 $('question').textContent = domanda;
 $('badgePeriodo').textContent="🕰️ "+(prefs.periodo==='past'?T.periodoPast:T.periodoFuture);
 $('badgeStile').textContent="🎭 "+(currentStyle==='wtf'?'What the F':'What if');
@@ -209,11 +209,10 @@ $('nextEp').addEventListener('click', ()=>{
   generate(true);
 });
 
-/* ===== Sanitizer locale (rifinitura, NON stravolge) ===== */
+/* ===== Sanitizer (solo rifinitura ritmo) ===== */
 function sanitizeOutput(style, raw){
   let out = (raw || "").trim().replace(/[“”"«»]/g, "");
   if (style === 'wtf') {
-    // spezza in righe corte per ritmo
     const bits = out.split(/\n+|(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean);
     const lines = [];
     bits.forEach(s=>{
@@ -229,7 +228,7 @@ function sanitizeOutput(style, raw){
 }
 
 /* ===== Generate (SSE) ===== */
-async function callGenerateStream({clarifications={}, extra="" }={}){
+async function callGenerateStream(){
   const payload={
     domanda,
     lang,
@@ -239,7 +238,7 @@ async function callGenerateStream({clarifications={}, extra="" }={}){
     clarify:false,
     stream:true,
     profilo: buildLeanProfile(),
-    clarifications,
+    clarifications: [],
     extra:"",
     now: new Date().toISOString()
   };
@@ -248,12 +247,12 @@ async function callGenerateStream({clarifications={}, extra="" }={}){
   return r.body.getReader();
 }
 
-async function generate(isRegen=false){
+async function generate(){
   $('result').textContent=`⏳ ${T.loading} `; const sk=document.createElement('span'); sk.className='skeleton'; sk.style.width='40%'; $('result').appendChild(sk);
   $('result').classList.remove('fade-in');
 
   try{
-    const reader=await callGenerateStream({});
+    const reader=await callGenerateStream();
     const decoder=new TextDecoder(); let buffer="", text="";
     while(true){
       const {value,done}=await reader.read(); if(done)break;
@@ -278,7 +277,7 @@ async function generate(isRegen=false){
 }
 
 /* ===== Buttons ===== */
-$('regenBtn').addEventListener('click', ()=> generate(true));
+$('regenBtn').addEventListener('click', ()=> generate());
 $('saveBtn').addEventListener('click', ()=>{
   const arr=readJSON('cronologia',[]);
   arr.unshift({ domanda, risposta:($('result').textContent||"").trim(), periodo:prefs.periodo||null, stile:currentStyle, lang, ep:episode, ts:Date.now() });
@@ -302,7 +301,7 @@ document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('se
 generate();
 </script>
 
-<!-- SW (opzionale) -->
+<!-- SW -->
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
