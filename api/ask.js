@@ -1,276 +1,316 @@
-// /api/ask.js — What?f API (Edge, Vercel)
-// Requisiti ENV: OPENAI_API_KEY = "sk-..." o "sk-proj-..."
-// Funzioni: clarify (domande mirate), episodio (answer + followups), ping
+// /api/ask.js
+import OpenAI from "openai";
 
-export const config = { runtime: "edge" };
+/* ========= Setup ========= */
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const MODEL_TEXT = "gpt-4o-mini";
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+/* ========= Utils ========= */
+const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-// ---------- utils ----------
-const J = (status, data) =>
-  new Response(JSON.stringify(data), {
-    status,
-    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+function detectLang(text = "") {
+  // semplice euristica: se molti token inglesi, usa EN
+  const enHits = (text.match(/\b(what|if|and|or|you|should|would|move|work|buy|motor|bike|city)\b/gi) || []).length;
+  const itHits = (text.match(/\b(e|se|quando|perché|moto|tornassi|trasferir|lavor|comprare|acquistare)\b/gi) || []).length;
+  return enHits > itHits ? "en" : "it";
+}
+
+function classifyTopic(q = "") {
+  const s = q.toLowerCase();
+  if (/(moto|motor(e|bike)|scooter|vespa)/.test(s)) return "moto";
+  if (/(barca|vela|gommone|yacht|boat)/.test(s)) return "barca";
+  if (/(tornassi|trasferi|trasloco|vivere a|l'aquila|aquila|verona|lugano|milano|roma|move|relocat)/.test(s)) return "città";
+  if (/(lavoro|job|ricercatore|azienda|ufficio|work)/.test(s)) return "lavoro";
+  if (/(comprare|acquistare|buy|purchase)/.test(s)) return "acquisto";
+  return "generale";
+}
+
+function todayInfo(lang) {
+  const d = new Date();
+  const loc = isEn(lang) ? "en-GB" : "it-IT";
+  const weekday = d.toLocaleDateString(loc, { weekday: "long" });
+  const date = d.toLocaleDateString(loc, { day: "2-digit", month: "long", year: "numeric" });
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${weekday}, ${date} • ${hh}:${mm}`;
+}
+
+/* ========= Mirror (apertura confidenziale) ========= */
+function mirrorLine(profile = {}, lang = "it") {
+  const en = isEn(lang);
+  const name = (profile?.name || "").split(" ")[0] || "";
+  const baseIt = [
+    name ? `${name}, lo so: non cerchi drammi, cerchi mosse sensate.` : "Non cerchi drammi, cerchi mosse sensate.",
+    "Ti piace quando le cose hanno un ritmo e un perché.",
+    "Se capisci il quadro, decidi senza farla lunga."
+  ];
+  const baseEn = [
+    name ? `${name}, you don’t chase drama — you chase moves that make sense.` : "You don’t chase drama — you chase moves that make sense.",
+    "You like it when things have rhythm and a reason.",
+    "Once you see the board clearly, you decide fast."
+  ];
+  return pick(en ? baseEn : baseIt);
+}
+
+/* ========= Clarify generator (sempre attinente) ========= */
+function keywordHints(q) {
+  const words = (q || "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .split(/\s+/)
+    .filter((w) => w.length >= 3);
+  const count = {};
+  words.forEach((w) => (count[w] = (count[w] || 0) + 1));
+  return Object.entries(count)
+    .sort((a, b) => b[1] - a[1])
+    .map((x) => x[0])
+    .filter((w) => !["all", "the", "and", "con", "per", "una", "che", "come"].includes(w))
+    .slice(0, 5);
+}
+
+function clarifyQuestions(domanda, periodo, lang = "it") {
+  const en = isEn(lang);
+  const topic = classifyTopic(domanda);
+  const hints = keywordHints(domanda);
+  const H = (it, enStr, phIt, phEn) => ({
+    label: en ? enStr : it,
+    placeholder: en ? phEn : phIt
   });
 
-const s = v => (typeof v === "string" ? v : JSON.stringify(v || ""));
-const nowISO = () => new Date().toISOString().replace(/\.\d+Z$/, "Z");
-
-function clampLines(txt = "", max = 14) {
-  const out = s(txt)
-    .replace(/[“”«»]/g, '"')
-    .split(/\n+|(?<=[.!?])\s+/)
-    .map(t => t.trim())
-    .filter(Boolean)
-    .slice(0, max)
-    .join("\n")
-    .trim();
-  return out;
-}
-
-function safeParse(jsonStr) {
-  try { return JSON.parse(jsonStr); } catch { return null; }
-}
-
-const WTF_CLOSES = [
-  "Clink. Stesso bancone, domani rimescoliamo.",
-  "Ok, giro offerto: domani ti verso l’episodio dopo.",
-  "Conto aperto, amico: domani si brinda sul seguito."
-];
-const pickWtfClose = () => WTF_CLOSES[Math.floor(Math.random() * WTF_CLOSES.length)];
-
-function episodeFooter(ep, lang) {
-  const it = (lang || "it").toLowerCase() !== "en";
-  if (ep === 1) return it ? "Domani sblocchiamo l’Episodio 2 alle 09:00." : "Tomorrow we unlock Episode 2 at 09:00.";
-  if (ep === 2) return it ? "Domani sblocchiamo l’Episodio 3 alle 09:00." : "Tomorrow we unlock Episode 3 at 09:00.";
-  return it ? "Finale sbloccato: oggi chiudiamo la storia." : "Final unlocked: today we close the story.";
-}
-
-function sanitizeAnswer(ans, { stile, lang, episodio }) {
-  let txt = clampLines(ans || "", 14);
-  const lower = txt.toLowerCase();
-
-  if (stile === "wtf") {
-    if (!/(bancone|giro|brind|conto|domani)/.test(lower)) {
-      txt += (txt.endsWith("\n") ? "" : "\n") + pickWtfClose();
-    }
-  } else {
-    const it = (lang || "it").toLowerCase() !== "en";
-    const line = it ? "Ok: si riparte domani, un passo alla volta." : "Alright: tomorrow we push one step further.";
-    if (!/(domani|tomorrow)/.test(lower)) txt += (txt.endsWith("\n") ? "" : "\n") + line;
+  if (topic === "moto") {
+    return [
+      H("Uso principale?", "Main use?", "casa-lavoro / weekend / viaggi", "commute / weekends / trips"),
+      H("Finestra realistica per l’acquisto?", "Real purchase window?", "questo mese / 3–6 mesi", "this month / 3–6 months"),
+      H("Tetto mensile totale (assicurazione+carburante+manut.)?", "Monthly ceiling (insurance+fuel+maint)?", "€ al mese", "$ per month")
+    ];
   }
-  txt += "\n\n" + episodeFooter(episodio, lang);
-  return txt.trim();
+  if (topic === "città") {
+    return [
+      H("Perché proprio lì, adesso?", "Why there, now?", "famiglia / lavoro / aria nuova", "family / work / fresh start"),
+      H("Qual è il segnale che ti direbbe ‘funziona’?", "What’s the signal that says ‘it works’?", "sonno / energia / risposta certa", "sleep / energy / clear callback"),
+      H("Finestra reale per muoverti?", "Real window to move?", "entro 3 mesi / 6–12 mesi", "within 3 months / 6–12 months")
+    ];
+  }
+  if (topic === "lavoro") {
+    return [
+      H("Obiettivo nei prossimi 6 mesi?", "Goal in 6 months?", "impatto / crescita / serenità", "impact / growth / calm"),
+      H("Opzioni sul tavolo?", "Options on the table?", "restare / cambiare team / uscire", "stay / switch team / leave"),
+      H("Vincolo concreto?", "Hard constraint?", "budget / tempo / persone", "budget / time / people")
+    ];
+  }
+  // fallback: domande ancorate ai hints
+  const k = hints[0] || (en ? "your topic" : "il tema");
+  return [
+    H(`Cosa vuoi ottenere su ${k}?`, `What do you want on ${k}?`, "1 riga concreta", "1 concrete line"),
+    H("Finestra decisionale reale?", "Real decision window?", "questo mese / 3–6 / 12 mesi", "this month / 3–6 / 12 months"),
+    H("Vincolo non negoziabile?", "Non-negotiable constraint?", "budget/tempo/energia", "budget/time/energy")
+  ];
 }
 
-// ---------- prompts ----------
-const STYLE_SYSTEM = {
-  whatif: `Sei un amico brillante, empatico e asciutto.
-Tono: positivo, zero malinconia e zero coaching. Frasi brevi, concrete.
-Obiettivo: dare slancio e chiarezza a chi chiede “e se...?”.`,
-  wtf: `Sei un narratore da bar: sarcastico, ironico, ubriaco ma lucido.
-Battute intelligenti, calore, ritmo. Fai ridere senza cattiveria.`
+/* ========= PERSONAS (con esempi approvati) ========= */
+const PERSONAS = {
+  wtf: {
+    system: (lang) => {
+      const en = isEn(lang);
+      return `
+You are "What the F": late-night witty bartender — sarcastic, playful, warm, never mean.
+One voice. Short, punchy, natural sentences (no fragment spam).
+Make the user LAUGH and feel seen. No cynicism or gloom.
+Forbidden words: hero, champion, destiny, dream, fairytale (and Italian equivalents).
+
+Hard rules:
+- Reply ONLY in ${en ? "English" : "Italiano"}.
+- 7–11 lines, one idea per line. No bullets, no numbered lists.
+- No moralizing, no “how-to”. Avoid purple prose.
+- Use the user's first name naturally if provided (max 1 time).
+- Cap imagery to 1 tiny concrete detail (weather/object/sound) if any.
+- End with a continuation hook like: "${en ? "Tomorrow I’ll ask you two micro-questions and we push the story forward." : "Domani ti faccio due micro-domande e spingiamo avanti la storia."}"
+
+Examples to imitate (tone only, do not repeat verbatim):
+
+[EXAMPLE — L’Aquila]
+"Tornare all’Aquila? Grande mossa: aria fresca, montagne gratis e caffè che sa di chiacchiera vera. Qui anche il traffico ha la decenza di salutarti prima di bloccarti. Ti siedi al bancone, il barista ti riconosce e finge di non sapere quante ne hai bevute. Parli, ridi, qualcuno ti offre un giro e all’improvviso il tempo smette di correre. Non c’è cinismo, solo quel tipo di confusione che fa bene al fegato e all’anima. Dai, non sei scappato: hai solo cambiato musica. Clink. Stesso bancone, domani rimescoliamo."
+
+[EXAMPLE — Moto]
+"Una moto? Bravo, ${en ? "my friend" : "amico"}: vento in faccia, parcheggi come se fossi VIP, e una scusa onesta per allungare la strada al ritorno. Ti vedo già: casco in mano, sorriso scemo, e quella pace che arriva solo quando il motore fa ‘ok, ci sono anch’io’. I conti li fai, ma stavolta non ti rovinano la festa. Non stai comprando un capriccio: stai comprando chilometri di buon umore. ${en ? "Deal?" : "Si fa?"} (E no, non te la rubano: gliela fai ascoltare domani.)"
+`.trim();
+    }
+  },
+  whatif: {
+    system: (lang) => {
+      const en = isEn(lang);
+      return `
+You are "What?f": empathetic, clear, realistic-positive. A friend who knows the user well.
+No melancholy. No poetry. Concrete, breathable writing.
+
+Hard rules:
+- Reply ONLY in ${en ? "English" : "Italiano"}.
+- 9–12 compact sentences, natural flow. No bullets/lists.
+- Minimal imagery (0–2 small touches). No metaphors chains.
+- Use the user's first name naturally if provided (max 1 time).
+- End with a continuation hook like: "${en ? "Tomorrow I’ll ask two micro-questions and we move the story one step." : "Domani ti faccio due micro-domande e la muoviamo di un passo."}"
+
+Examples to imitate (tone only, do not repeat verbatim):
+
+[EXAMPLE — L’Aquila]
+"Non lo faresti per scappare, ma per respirare meglio. Ti serve ogni tanto: tornare dove le giornate hanno il ritmo giusto, dove ti basta poco per stare bene. All’Aquila potresti ricominciare senza dover ricominciare da zero — solo con un passo più tuo. La gente giusta, il caffè di sempre, e quella sensazione di ‘ok, adesso va bene così’. Quando succede, lo riconosci subito: non è nostalgia, è equilibrio che torna. Hai già girato la chiave, il resto prende forma domani."
+
+[EXAMPLE — Moto]
+"Se la prendi, cambia il modo in cui ti muovi e pensi al tempo. Smetti di ‘arrivare’ e inizi ‘a stare’ nel tragitto. Ti conosci: finché il perché resta acceso, la scelta tiene. La moto non risolve niente da sola, ma ti regala spazio mentale e due ore a settimana che senti davvero tue. Se questo è il punto, è già quasi deciso."
+`.trim();
+    }
+  }
 };
 
-function systemFor(style = "whatif", lang = "it") {
-  const base = STYLE_SYSTEM[style === "wtf" ? "wtf" : "whatif"];
-  const locale = (lang || "it").toLowerCase() === "en"
-    ? "Write in natural, simple English."
-    : "Scrivi in italiano semplice e naturale.";
-  return `${base}\n${locale}`;
+/* ========= User prompt builder ========= */
+function buildUserPrompt({ domanda, lang, stile, topic, profile, clarifications }) {
+  const en = isEn(lang);
+  const name = (profile?.name || "").split(" ")[0] || "";
+  const mirror = mirrorLine(profile, lang);
+
+  const closing = en
+    ? "Tomorrow I’ll ask you two micro-questions and we push the story forward."
+    : "Domani ti faccio due micro-domande e vediamo dove porta.";
+
+  const guard = `
+Hard constraints:
+- Stay strictly on the inferred topic: "${topic}".
+- No lists, no bullet points, no moralizing.
+- Zero purple prose; keep it light, witty/clear.
+- Do NOT invent jobs, apartments, or relationships not in the question.
+- If name exists, weave it once, naturally: "${name || "(nessun nome)"}".
+- The closing line MUST invite to continue tomorrow; do not add new questions today.
+- Close with: "${closing}"
+`.trim();
+
+  const header = en ? "Write a single, flowing answer." : "Scrivi una singola risposta fluida.";
+
+  const clar = Array.isArray(clarifications)
+    ? clarifications.join(", ")
+    : (clarifications && typeof clarifications === "object"
+        ? Object.values(clarifications).join(", ")
+        : "");
+
+  return `
+${en ? "Mirror-opening" : "Apertura confidenziale"}: ${mirror}
+
+${en ? "User question" : "Domanda"}: "${domanda}"
+${en ? "Extra details" : "Dettagli"}: ${clar || (en ? "none" : "nessuno")}
+${en ? "Style" : "Stile"}: ${stile === "wtf"
+    ? (en ? "What the F (witty, boozy, warm)" : "What the F (ironico, da bar, caldo)")
+    : (en ? "What?f (empathetic, dry, upbeat)" : "What?f (empatico, asciutto, positivo)")}
+
+${guard}
+
+${header}
+`.trim();
 }
 
-// Episodio: richiediamo SOLO JSON con {answer, followups}
-function episodeUserPrompt({ domanda, episodio, periodo, stile, lang, profilo }) {
-  const it = (lang || "it").toLowerCase() !== "en";
-  const per = periodo === "past" ? (it ? "Passato" : "Past") : (it ? "Futuro" : "Future");
-  const persona = [];
-  if (profilo?.name) persona.push(`name:${profilo.name}`);
-  if (profilo?.city_now || profilo?.city) persona.push(`city:${profilo.city_now || profilo.city}`);
-  if (profilo?.work_role || profilo?.role) persona.push(`role:${profilo.work_role || profilo.role}`);
-  const hints = persona.length ? (it ? `Segnali utente: ${persona.join(" · ")}` : `User hints: ${persona.join(" · ")}`) : "";
+/* ========= HTTP handler ========= */
+export default async function handler(req, res) {
+  // CORS
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-whatif-stream");
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
-  const styleNotes = stile === "wtf"
-    ? (it ? `Chiudi con una riga da bancone spiritosa.` : `End with a witty bar-style one-liner.`)
-    : (it ? `Chiudi con una riga motivante ma asciutta (no coach).` : `End with one brisk, motivating line (no coaching).`);
-
-  const instr = it ? `
-Restituisci SOLO un JSON valido con:
-{
-  "answer": "testo episodio in 9–13 righe (line breaks), concreto, senza ripetizioni, ${stile==="wtf"?"con chiusura da bancone":"con chiusura asciutta"}",
-  "followups": ["domanda breve e pertinente", "altra domanda breve pertinente"]
-}
-"answer" NON può essere vuoto.
-Domanda: ${s(domanda)}
-Episodio: ${episodio} · ${per}
-${hints}
-${styleNotes}
-` : `
-Return ONLY a valid JSON:
-{
-  "answer": "episode text in 9–13 short lines (line breaks), concrete, no repetition, ${stile==="wtf"?"with a witty bar close":"with a crisp closing line"}",
-  "followups": ["short relevant question", "another short relevant question"]
-}
-"answer" must NOT be empty.
-Question: ${s(domanda)}
-Episode: ${episodio} · ${per}
-${hints}
-${styleNotes}
-`;
-  return instr.trim();
-}
-
-// Clarify: SOLO JSON {questions:[...]}
-function clarifyUserPrompt({ domanda, lang }) {
-  const it = (lang || "it").toLowerCase() !== "en";
-  return it
-    ? `In base a questa domanda proponi 2–3 domande di chiarimento, corte (max 8 parole), pratiche.
-Domanda: ${s(domanda)}
-Rispondi SOLO JSON: {"questions":["...","...","..."]}`
-    : `Based on this question propose 2–3 short clarifying questions (max 8 words), practical.
-Question: ${s(domanda)}
-Reply ONLY JSON: {"questions":["...","...","..."]}`;
-}
-
-// ---------- OpenAI JSON mode ----------
-async function chatJSON({ system, user, temperature = 0.6, max_tokens = 800 }) {
-  if (!OPENAI_API_KEY) return { ok: false, error: "OPENAI_API_KEY missing" };
-
-  const body = {
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: system },
-      { role: "user", content: user }
-    ],
-    temperature,
-    max_tokens,
-    response_format: { type: "json_object" } // forza JSON
-  };
-
-  const r = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { authorization: `Bearer ${OPENAI_API_KEY}`, "content-type": "application/json" },
-    body: JSON.stringify(body)
-  });
-
-  if (!r.ok) {
-    let detail = "";
-    try { detail = await r.text(); } catch {}
-    return { ok: false, error: `OpenAI ${r.status}: ${detail.slice(0, 400)}` };
-  }
-  const j = await r.json();
-  const content = j?.choices?.[0]?.message?.content || "";
-  const parsed = safeParse(content);
-  if (!parsed) return { ok: false, error: "Invalid JSON from model" };
-  return { ok: true, json: parsed };
-}
-
-// Fallback ultra-semplice se answer vuoto
-function tinyFallback(domanda, stile, lang) {
-  const it = (lang || "it").toLowerCase() !== "en";
-  const base = it
-    ? `Parti dal concreto: un primo passo questa settimana, un segnale chiaro che ti dica che vale.`
-    : `Start concrete: one small step this week, one clear signal it’s worth it.`;
-  const close = stile === "wtf"
-    ? pickWtfClose()
-    : (it ? "Ok: domani lo portiamo avanti." : "Alright: tomorrow we push it forward.");
-  return `${s(domanda)}\n${base}\n${close}`;
-}
-
-// ---------- handler ----------
-export default async function handler(req) {
   try {
-    const url = new URL(req.url);
-
-    // GET ping
-    if (req.method === "GET" && url.searchParams.get("ping")) {
-      return J(200, {
-        ok: true,
-        keyExists: !!OPENAI_API_KEY,
-        keyPrefix: OPENAI_API_KEY ? OPENAI_API_KEY.slice(0, 7) + "..." : null,
-        ts: nowISO()
-      });
-    }
-
-    if (req.method !== "POST") return J(405, { error: "Method not allowed" });
-
-    const body = await req.json().catch(() => ({}));
     const {
-      domanda = "",
-      lang = "it",
+      domanda,
+      lang: langIn = "auto",
       periodo = "future",
-      stile = "whatif",
-      episodio = 1,
+      stile = "whatif",      // "wtf" | "whatif"
+      stream = false,
       clarify = false,
-      profilo = {}
-    } = body || {};
+      profilo = {},          // { name?, city_now?, role? } – opzionale
+      clarifications = [],
+      extra = ""             // ignorato volutamente per evitare incoerenze
+    } = req.body || {};
 
-    if (!domanda || typeof domanda !== "string") return J(400, { error: "Missing 'domanda' string" });
-
-    // CLARIFY
-    if (clarify) {
-      const out = await chatJSON({
-        system: systemFor(stile, lang),
-        user: clarifyUserPrompt({ domanda, lang }),
-        temperature: 0.3,
-        max_tokens: 300
-      });
-      if (!out.ok) return J(200, { questions: [
-        (lang==="en"?"Your real decision window?":"Finestra decisionale reale?"),
-        (lang==="en"?"First signal it’s working?":"Primo segnale che funziona?"),
-        (lang==="en"?"One constraint you can’t ignore?":"Un vincolo che non puoi ignorare?")
-      ], note: out.error });
-
-      let q = Array.isArray(out.json?.questions) ? out.json.questions : [];
-      q = q.map(x => s(x).trim()).filter(Boolean).slice(2, 5); // (evita vuoti)
-      if (!q.length) {
-        q = (lang==="en")
-          ? ["Your decision window?", "First signal it works?", "Concrete constraint in 2 weeks?"]
-          : ["Finestra decisionale?", "Primo segnale che funziona?", "Vincolo concreto (2 settimane)?"];
-      }
-      return J(200, { questions: q });
+    if (!domanda || typeof domanda !== "string") {
+      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    // EPISODIO
-    const ep = Number(episodio) || 1;
-    const out = await chatJSON({
-      system: systemFor(stile, lang),
-      user: episodeUserPrompt({ domanda, episodio: ep, periodo, stile, lang, profilo }),
-      temperature: stile === "wtf" ? 0.9 : 0.65,
-      max_tokens: 1200
+    // lingua & topic
+    const lang = langIn === "auto" ? detectLang(domanda) : langIn;
+    const topic = classifyTopic(domanda);
+    const persona = PERSONAS[stile === "wtf" ? "wtf" : "whatif"];
+
+    /* ----- Clarify branch (sempre attinente alla domanda) ----- */
+    if (clarify) {
+      const qs = clarifyQuestions(domanda, periodo, lang);
+      return res.status(200).json({ questions: qs });
+    }
+
+    /* ----- Generation branch ----- */
+    const system = `
+${persona.system(lang)}
+
+Today: ${todayInfo(lang)}
+
+REMEMBER:
+- No melancholy. Keep it upbeat and human.
+- No "eroe/campione/sogno/destino/fiaba" or their English equivalents.
+- Never output lists or numbered steps; keep one flowing paragraph (What?f) or 7–11 single lines (WTF).
+- Natural sentences, not chopped. Punchy ≠ fragmented.
+`.trim();
+
+    const user = buildUserPrompt({
+      domanda,
+      lang,
+      stile,
+      topic,
+      profile: profilo || {},
+      clarifications
     });
 
-    // Se la chiamata fallisce → fallback totale
-    if (!out.ok) {
-      const answer = sanitizeAnswer(tinyFallback(domanda, stile, lang), { stile, lang, episodio: ep });
-      const fu = (lang==="en")
-        ? ["What’s the first sign it’s working?", "What small 7-day test can you try?"]
-        : ["Qual è il primo segnale che sta funzionando?", "Che test piccolo puoi fare entro 7 giorni?"];
-      return J(200, { ok: true, answer, followups: fu, meta: { stile, periodo, episodio: ep, ts: nowISO(), note: out.error } });
+    const temperature = stile === "wtf" ? 0.95 : 0.82;
+    const doStream = stream || String(req.headers["x-whatif-stream"] || "") !== "";
+
+    if (doStream) {
+      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("Connection", "keep-alive");
+
+      const s = await client.chat.completions.create({
+        model: MODEL_TEXT,
+        temperature,
+        stream: true,
+        max_tokens: 900,
+        stop: ["\n- ", "\n• ", "\n1. ", "\n2. ", "\n•\t"], // blocca elenchi
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user }
+        ]
+      });
+
+      for await (const chunk of s) {
+        const delta = chunk.choices?.[0]?.delta?.content || "";
+        if (delta) res.write(`data: ${JSON.stringify({ token: delta })}\n\n`);
+      }
+      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+      return res.end();
     }
 
-    // Estraggo answer & followups dal JSON
-    let answer = s(out.json?.answer || "").trim();
-    let followups = Array.isArray(out.json?.followups) ? out.json.followups : [];
-    followups = followups.map(x => clampLines(x, 2)).filter(Boolean).slice(0, 2);
+    // Non-stream
+    const c = await client.chat.completions.create({
+      model: MODEL_TEXT,
+      temperature,
+      max_tokens: 900,
+      stop: ["\n- ", "\n• ", "\n1. ", "\n2. ", "\n•\t"], // blocca elenchi
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user }
+      ]
+    });
 
-    // Se answer è vuota → mini fallback
-    if (!answer || answer.length < 20) {
-      answer = tinyFallback(domanda, stile, lang);
-    }
+    const text = c.choices?.[0]?.message?.content?.trim() || "";
+    return res.status(200).json({ answer: text, lang, topic });
 
-    // Sanitize + chiusure + footer
-    answer = sanitizeAnswer(answer, { stile, lang, episodio: ep });
-
-    // Follow-up di sicurezza
-    if (!followups.length) {
-      followups = (lang==="en")
-        ? ["What’s the first sign it’s working?", "What could you try within 7 days at low risk?"]
-        : ["Qual è il primo segnale che ti direbbe che sta funzionando?", "Cosa potresti fare entro 7 giorni per provarci senza rischiare?"];
-    }
-
-    return J(200, { ok: true, answer, followups, meta: { stile, periodo, episodio: ep, ts: nowISO() } });
-  } catch (e) {
-    return J(500, { error: `Server error: ${e?.message || String(e)}` });
+  } catch (err) {
+    console.error("API /ask error:", err);
+    return res.status(500).json({ error: "server_error", detail: err?.message || "unknown" });
   }
 }
