@@ -1,335 +1,167 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>What?f – Risposta</title>
-
-<meta name="theme-color" content="#0B0B0C" />
-<link rel="manifest" href="/manifest.json" />
-<link rel="apple-touch-icon" href="/icons/icon-192.png" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
+<meta name="theme-color" content="#0B0B0C"/>
 <style>
-  :root{
-    --bg:#0B0B0C; --bg2:#101414;
-    --fg:#FFFFFF; --muted:#A0B2BA;
-
-    --acc:#1C57A0; --acc2:#FFEC01;
-
-    --card:rgba(20,28,34,0.92);
-    --line:rgba(255,255,255,.12);
-    --chip:#121A26;
-    --ink:#0A0E12;
-    --shadow:rgba(0,0,0,.35);
-    --highlight:#FFEC01;
-  }
-  html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
-
-  *{box-sizing:border-box}
-  html,body{
-    margin:0;
-    background: radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-    color:var(--fg);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility
-  }
-  main{max-width:980px;margin:auto;padding:18px}
-  .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-
-  .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;transition:transform .06s ease,opacity .2s}
-  .btn:active{transform:translateY(1px)}
-  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800;box-shadow:0 6px 18px var(--shadow);border:none}
-  .btn.large{padding:14px 18px;font-size:16px}
-  .btn.icon{padding:8px 10px;border-radius:10px}
-
-  h1{font-size:clamp(22px,5vw,30px);margin:14px 0 2px;color:var(--acc2)}
-  p.sub{color:var(--muted);margin:0 0 8px}
-
-  .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
-  .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-
-  .qbox{
-    background:rgba(255,255,255,.06);
-    border:1px solid var(--line);
-    border-left:4px solid var(--highlight);
-    border-radius:12px;
-    padding:16px;
-    font-size:17px;
-    line-height:1.65;
-    color:#EAF3EE;
-    max-width:68ch;
-    margin:0 auto;
-    text-wrap:pretty;
-    hyphens:auto;
-    white-space:pre-wrap;
-  }
-
-  .box{
-    background:rgba(255,255,255,.04);
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:18px;
-    line-height:1.7;
-    color:#EAF3EE;
-    white-space:pre-wrap;
-    font-size:17px;
-    letter-spacing:.1px;
-    max-width:68ch;
-    margin:0 auto;
-    text-wrap:pretty;
-    hyphens:auto;
-    min-height:200px;
-  }
-  .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:sk 1s infinite}
-  @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
-
-  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
-  .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
-  .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-
-  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-  input[type="text"]{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px}
+:root{ --bg:#0B0B0C; --bg2:#101414; --fg:#EAF3EE; --muted:#9EB0B8;
+  --acc:#1C57A0; --acc2:#FFEC01; --card:#141C22F0; --line:#FFFFFF20; --chip:#121A26; --shadow:rgba(0,0,0,.35);}
+html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
+*{box-sizing:border-box}
+html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2),var(--bg));color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:980px;margin:auto;padding:18px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12;font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
+.btn.large{padding:14px 18px;font-size:16px}
+.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee}
+h1{font-size:clamp(22px,5vw,30px);margin:8px 0 2px;color:var(--acc2)}
+.label{color:var(--acc);font-weight:800;margin:0 0 8px}
+.box{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:18px;white-space:pre-wrap;line-height:1.7;font-size:17px;letter-spacing:.1px}
+.skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.08),rgba(255,255,255,.04));background-size:200% 100%;animation:sk 1s infinite}
+@keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
 </style>
 </head>
 <body>
 <main>
-  <div class="topbar">
+  <div class="row" style="justify-content:space-between">
     <div class="row">
       <button class="btn" id="backBtn">←</button>
       <button class="btn" id="homeBtn">🏠</button>
     </div>
-
-    <div class="row" style="gap:10px">
-      <select id="langSwitch" class="btn">
-        <option value="it">IT</option>
-        <option value="en">EN</option>
-      </select>
+    <div class="row">
+      <span class="badge" id="styleBadge">—</span>
+      <button class="btn" id="langBtn">IT</button>
     </div>
   </div>
 
-  <h1 id="titleH1">Risultato</h1>
+  <h1 id="titleH1">Il tuo What?f — Episodio 1</h1>
 
   <div class="card">
     <h3 class="label" id="qLabel">Domanda</h3>
-    <div id="question" class="qbox">—</div>
-  </div>
-
-  <div class="card">
-    <h3 class="label" id="rLabel">Risultato</h3>
-    <div id="result" class="box">⏳ <span class="skeleton" style="width:40%"></span></div>
-  </div>
-
-  <div class="card">
-    <h3 class="label" id="deepLabel">Vuoi andare più a fondo?</h3>
-    <p class="sub" id="deepSub">Scegli una domanda o scrivi la tua. Domani continuiamo da qui.</p>
-    <div class="chips">
-      <button class="chip" id="sug1">–</button>
-      <button class="chip" id="sug2">–</button>
+    <div id="question" class="box"></div>
+    <div class="row" style="margin-top:6px">
+      <span class="badge" id="extraBadge" style="display:none"></span>
     </div>
-    <input id="userNote" type="text" placeholder="Scrivi qui cosa vuoi capire/provare…" />
     <div class="row" style="margin-top:10px">
-      <button class="btn primary" id="saveFollow">Salva per domani</button>
+      <button class="btn primary large" id="regenBtn">🔁 Rigenera episodio</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="label" id="rLabel">Episodio</h3>
+    <div id="result" class="box">⏳ Sto immaginando il tuo episodio… <span class="skeleton" style="width:36%"></span></div>
+
+    <div class="row" style="gap:8px;margin-top:12px">
+      <button class="btn" id="saveBtn">💾 Salva</button>
+      <button class="btn" id="copyBtn">📋 Copia</button>
+      <button class="btn" id="shareBtn">📤 Condividi</button>
     </div>
   </div>
 </main>
 
 <script>
-/* ===== Lingua & Tema ===== */
-const LS=localStorage;
-const lang=(LS.getItem('lang')||'it').toLowerCase();
+const LS=localStorage,$=id=>document.getElementById(id);
+
+/* I18N */
+const I18N={it:{
+  title:"Il tuo What?f — Episodio 1",
+  qLabel:"Domanda", rLabel:"Episodio",
+  thinking:"Sto immaginando il tuo episodio…",
+  saved:"Salvato!", copied:"Copiato!",
+  styleWhatIf:"What if", styleWTF:"What the F",
+  extra:"Dettaglio: ",
+  regen:"🔁 Rigenera episodio"
+},en:{
+  title:"Your What?f — Episode 1",
+  qLabel:"Question", rLabel:"Episode",
+  thinking:"Imagining your episode…",
+  saved:"Saved!", copied:"Copied!",
+  styleWhatIf:"What if", styleWTF:"What the F",
+  extra:"Detail: ",
+  regen:"🔁 Regenerate"
+}};
+function getLang(){return (LS.getItem('lang')||'it').toLowerCase();}
+function setLang(v){LS.setItem('lang',v);location.reload();}
+let lang=getLang(),T=I18N[lang]||I18N.it;
 document.documentElement.lang=lang;
-const prefs=JSON.parse(LS.getItem('whatif_prefs')||'{}');
-document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+$('titleH1').textContent=T.title; $('qLabel').textContent=T.qLabel; $('rLabel').textContent=T.rLabel;
+$('result').innerHTML=`⏳ ${T.thinking} <span class="skeleton" style="width:36%"></span>`;
+$('langBtn').textContent=lang.toUpperCase(); $('regenBtn').textContent=T.regen;
 
-const I18N={
-  it:{
-    title:"Risultato", qLabel:"Domanda", rLabel:"Risultato",
-    deepLabel:"Vuoi andare più a fondo?",
-    deepSub:"Scegli una domanda o scrivi la tua. Domani continuiamo da qui.",
-    placeholder:"Scrivi qui cosa vuoi capire/provare…",
-    save:"Salva per domani",
-    loading:"Sto immaginando il tuo scenario…",
-    saved:"Salvato per domani ✅"
-  },
-  en:{
-    title:"Answer", qLabel:"Question", rLabel:"Result",
-    deepLabel:"Go a bit deeper?",
-    deepSub:"Pick a question or write your own. We’ll continue here tomorrow.",
-    placeholder:"Write what you want to understand/try…",
-    save:"Save for tomorrow",
-    loading:"Imagining your scenario…",
-    saved:"Saved for tomorrow ✅"
-  }
-};
-const T=I18N[lang]||I18N.it;
-document.getElementById('titleH1').textContent=T.title;
-document.getElementById('qLabel').textContent=T.qLabel;
-document.getElementById('rLabel').textContent=T.rLabel;
-document.getElementById('deepLabel').textContent=T.deepLabel;
-document.getElementById('deepSub').textContent=T.deepSub;
-document.getElementById('userNote').placeholder=T.placeholder;
-document.getElementById('saveFollow').textContent=T.save;
-document.getElementById('langSwitch').value=lang;
+/* Theme */
+function readJSON(k,def){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
+const prefs=readJSON('whatif_prefs',{stile:'whatif'}); document.documentElement.setAttribute('data-theme',prefs.stile==='wtf'?'wtf':'whatif');
+$('styleBadge').textContent=prefs.stile==='wtf'?T.styleWTF:T.styleWhatIf;
 
-/* ===== Stato base ===== */
-let domanda = LS.getItem('domanda')||'';
-if(!domanda){ const m=new URLSearchParams(location.search).get('q'); if(m){ domanda=m; LS.setItem('domanda',m); } }
-if(!domanda){ alert(lang==='en'?'No question found.':'Nessuna domanda trovata.'); location.href='index.html'; }
-document.getElementById('question').textContent=domanda;
+/* Nav */
+$('backBtn').onclick=()=>history.back();
+$('homeBtn').onclick=()=>location.href='index.html';
+$('langBtn').onclick=()=>setLang(lang==='it'?'en':'it');
 
-const style=(prefs.stile||'whatif');
+/* Inputs */
+const domanda=LS.getItem('domanda')||''; $('question').textContent=domanda||'—';
+const extra=(LS.getItem('whatif_clarify_buffer')||'').trim(); if(extra){ const b=$('extraBadge'); b.style.display='inline-block'; b.textContent=T.extra+extra; }
 
-/* ===== Chip suggerimenti dinamici ===== */
-function suggestionPair(q, style, lang){
-  const s=q.toLowerCase();
-  const it=lang!=='en';
-
-  const isMove = /(trasfer|spostar|tornare|vivere|citt[aà]|aquila|verona|londra|zurigo)/.test(s);
-  const isStart = /(aprire|iniziare|lanciare|bar|business|progetto|startup)/.test(s);
-  const isCareer = /(lavor|job|carriera|team|azienda|ricercatore)/.test(s);
-
-  // What?f (empatico, asciutto, positivo)
-  if(style==='whatif'){
-    if(isMove) return it
-      ? ["Qual è il primo segnale che ti fa sentire parte?", "Cosa provi in 7 giorni senza stravolgere tutto?"]
-      : ["What’s the first sign you feel you belong?", "What can you try in 7 days without upheaval?"];
-    if(isStart) return it
-      ? ["Quale risultato minimo direbbe ‘vale la pena’?", "Che prova rapida fai entro 7 giorni?"]
-      : ["What’s the minimum result that says ‘worth it’?", "What quick test can you run in 7 days?"];
-    if(isCareer) return it
-      ? ["Cosa misuri per capire che stai meglio?", "Quale opzione provi in piccolo per 2 settimane?"]
-      : ["What will you measure to know you’re better off?", "Which option will you trial for 2 weeks?"];
-    return it
-      ? ["Qual è la cosa minima che ti direbbe ‘ok, direzione giusta’?", "Che esperimento fai in 7 giorni per capirlo?"]
-      : ["What’s the smallest sign ‘right direction’?", "What 7-day experiment will you try?"];
-  }
-
-  // WTF (bar, ironico, divertente)
-  if(isMove) return it
-    ? ["Test da bar: cosa fai domani per capire se ti piace davvero?", "Se va male, come lo capisci prima di combinare guai?"]
-    : ["Bar test: what will you do tomorrow to see if you actually like it?", "If it flops, how do you notice before messing up?"];
-  if(isStart) return it
-    ? ["Primo sì che cerchi: chi te lo deve dare?", "Prova lampo: 7 giorni, una mossa, zero scuse."]
-    : ["First ‘yes’ you need: who gives it?", "Lightning test: 7 days, one move, zero excuses."];
-  if(isCareer) return it
-    ? ["Sei meglio o solo più stanco? Cosa lo dimostra?", "Provalo mezz’ora al giorno per 2 settimane: su cosa?"]
-    : ["Better or just more tired? What proves it?", "30 minutes/day for 2 weeks: on what exactly?"];
-  return it
-    ? ["Ok, campione: qual è la prova piccola di domani?", "Dove puoi sbagliare in piccolo senza farti male?"]
-    : ["Alright champ: what’s tomorrow’s tiny test?", "Where can you fail small without getting hurt?"];
+/* === GENERATION ===
+   Sostituisci fakeAI con la tua /api/ask
+   Passa sia 'domanda' sia 'extra' (clarifications).
+*/
+function fakeAI(style,q,extra){
+  const withExtra = extra ? (lang==='en'?` (note: ${extra})`:` (nota: ${extra})`) : '';
+  const base = style==='wtf'
+    ? `Ok, ${q || 'amico'}, pensaci con un bicchiere in mano: meno drama, più risate${withExtra}.`
+    : `Sai già che non lo faresti per nostalgia: è più un esperimento di equilibrio${withExtra}.`;
+  return new Promise(r=>setTimeout(()=>r(base),600));
 }
 
-const [s1,s2]=suggestionPair(domanda, style, lang);
-const sug1Btn=document.getElementById('sug1');
-const sug2Btn=document.getElementById('sug2');
-sug1Btn.textContent=s1; sug2Btn.textContent=s2;
-sug1Btn.addEventListener('click',()=>{ document.getElementById('userNote').value=s1; });
-sug2Btn.addEventListener('click',()=>{ document.getElementById('userNote').value=s2; });
-
-/* ===== Generazione risposta (stream) ===== */
-function getTZ(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }catch{ return 'UTC'; } }
-function leanProfile(){
-  const p=JSON.parse(LS.getItem('whatif_profile')||'{}')||{};
-  const out={}; if(p.name) out.name=p.name; if(p.city_now) out.city_now=p.city_now; else if(p.city) out.city=p.city;
-  if(p.work_role) out.work_role=p.work_role; else if(p.role) out.role=p.role; return out;
-}
-function sanitize(style, raw){
+/* Sanitizer + chiusure */
+function sanitize(style,raw){
   let out=(raw||'').trim().replace(/[“”"«»]/g,'');
+  const parts=out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
+  out=parts.join('\n');
+
   if(style==='wtf'){
-    const bits = out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
-    const lines = [];
-    bits.forEach(s=>{ const words=s.split(/\s+/); for(let i=0;i<words.length;i+=15){ lines.push(words.slice(i,i+15).join(' ')); }});
-    let filtered = lines.filter(x=>!/(cuore|anima|fiaba|destino|sussurra)/i.test(x));
-    filtered = filtered.slice(0,11); while(filtered.length<7 && lines.length) filtered.push(lines.shift());
-    return filtered.join('\n').trim();
+    const hook=`Clink. Stesso bancone, domani rimescoliamo.`;
+    if(!/bancone|domani rimescoliamo|clink/i.test(out)){ out += `\n${hook}`; }
   }else{
-    const sentences=out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean).slice(0,13);
-    return sentences.join('\n').trim();
+    const hook = lang==='en'
+      ? `Tomorrow we unlock Episode 2 at 09:00. Keep sharing bits of you and I’ll show where this goes.`
+      : `Domani sblocchiamo l’Episodio 2 alle 09:00. Continua a conoscerci e ti dico dove va la storia.`;
+    if(!/Episodio 2|Episode 2/i.test(out)){ out += `\n${hook}`; }
   }
+  return out.trim();
 }
 
-async function generateAnswer(){
-  const result=document.getElementById('result');
-  const clar = JSON.parse(LS.getItem('clarifications')||'{}');
-
-  // includi eventuali followup salvati in passato (nota utente) come contesto
-  const follow = readFollowFor(domanda);
-  if(follow?.user_note){ clar.followup_note = follow.user_note; }
-
-  result.textContent = `⏳ ${T.loading} `; const sk=document.createElement('span'); sk.className='skeleton'; sk.style.width='40%'; result.appendChild(sk);
-
-  try{
-    const payload={
-      domanda, lang, periodo:(prefs.periodo||'future'), stile:style,
-      clarify:false, stream:true,
-      profilo: leanProfile(),
-      clarifications: clar,
-      extra:"", now:new Date().toISOString(), tz:getTZ()
-    };
-    const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json','x-whatif-stream':'1'},body:JSON.stringify(payload)});
-    if(!r.ok) throw new Error('server');
-
-    const reader=r.body.getReader(); const decoder=new TextDecoder();
-    let buffer="", text="";
-    for(;;){
-      const {value,done}=await reader.read(); if(done) break;
-      buffer+=decoder.decode(value,{stream:true});
-      const chunks=buffer.split("\n\n"); buffer=chunks.pop();
-      for(const chunk of chunks){
-        if(!chunk.startsWith("data: ")) continue;
-        const data=JSON.parse(chunk.slice(6));
-        if(data.token){ text+=data.token; result.textContent=text; }
-        if(data.done){ result.textContent = sanitize(style, text); }
-        if(data.error){ result.textContent="Server error"; }
-      }
-    }
-  }catch(e){
-    result.textContent = (lang==='en'?'Network error':'Errore di rete');
-  }
+async function generate(){
+  const style=prefs.stile==='wtf'?'wtf':'whatif';
+  const txt = await fakeAI(style,domanda,extra); // <-- chiamata reale qui
+  $('result').textContent = sanitize(style,txt);
+  // salva in cronologia
+  const arr=readJSON('cronologia',[]);
+  arr.unshift({domanda, risposta:$('result').textContent, stile:style, lang, ts:Date.now()});
+  LS.setItem('cronologia',JSON.stringify(arr.slice(0,100)));
 }
-generateAnswer();
+generate();
+$('regenBtn').onclick=generate;
 
-/* ===== Salvataggio follow-up (2 chip + campo libero) ===== */
-function fid(){ return String(domanda).toLowerCase().slice(0,160); }
-function storeKey(){ return 'whatif_followups'; }
-function readFollowups(){ return JSON.parse(LS.getItem(storeKey())||'{}'); }
-function writeFollowups(obj){ LS.setItem(storeKey(), JSON.stringify(obj)); }
-
-function readFollowFor(q){
-  const all=readFollowups(); const id=hash(q);
-  return all[id]||null;
-}
-function hash(s){ // piccolo hash stabile
-  let h=0,i,chr; if(s.length===0) return '0';
-  for(i=0;i<s.length;i++){ chr=s.charCodeAt(i); h=((h<<5)-h)+chr; h|=0; }
-  return String(h);
-}
-
-document.getElementById('saveFollow').addEventListener('click',()=>{
-  const userNote=(document.getElementById('userNote').value||'').trim();
-  const obj=readFollowups();
-  const id=hash(domanda);
-  obj[id]={
-    id, question:domanda, style,
-    suggestions:[s1,s2],
-    user_note:userNote||'',
-    updated_at: Date.now()
-  };
-  writeFollowups(obj);
+/* Tools */
+$('saveBtn').onclick=()=>{
+  const arr=readJSON('cronologia',[]);
+  arr.unshift({domanda, risposta:$('result').textContent, stile:prefs.stile, lang, ts:Date.now()});
+  LS.setItem('cronologia',JSON.stringify(arr.slice(0,100)));
   alert(T.saved);
-});
-
-/* ===== Switch lingua persistente ===== */
-document.getElementById('langSwitch').addEventListener('change', (e)=>{
-  LS.setItem('lang', e.target.value);
-  location.reload();
-});
-
-/* ===== Nav ===== */
-document.getElementById('backBtn').addEventListener('click', ()=> history.back());
-document.getElementById('homeBtn').addEventListener('click', ()=> location.href='index.html');
+};
+$('copyBtn').onclick=()=>{
+  navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`).then(()=>alert(T.copied));
+};
+$('shareBtn').onclick=()=>{
+  const data={title:"What?f",text:`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`,url:location.href};
+  if(navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`);
+};
 </script>
 </body>
 </html>
