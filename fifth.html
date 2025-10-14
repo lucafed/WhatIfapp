@@ -1,33 +1,27 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>What?f – Risposta</title>
-<meta name="theme-color" content="#0B0B0C" />
+<meta name="theme-color" content="#0B0B0C"/>
 <style>
-:root{
-  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
-  --acc:#1C57A0; --acc2:#FFEC01; /* What if */
-  --chip:#121A26; --line:rgba(255,255,255,.12); --ink:#0A0E12;
-  --card:rgba(20,28,34,.92); --shadow:rgba(0,0,0,.35);
-}
+:root{ --bg:#0B0B0C; --bg2:#101414; --fg:#EAF3EE; --muted:#9EB0B8;
+  --acc:#1C57A0; --acc2:#FFEC01; --card:#141C22F0; --line:#FFFFFF20; --chip:#121A26; --shadow:rgba(0,0,0,.35);}
 html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
-*{box-sizing:border-box} html,body{margin:0;background:
-radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2),var(--bg));color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
 main{max-width:980px;margin:auto;padding:18px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
-.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
-.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12;font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
+.btn.large{padding:14px 18px;font-size:16px}
 .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
-h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2)}
+.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee}
+h1{font-size:clamp(22px,5vw,30px);margin:8px 0 2px;color:var(--acc2)}
 .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-.box{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:18px;white-space:pre-wrap;line-height:1.7;font-size:17px}
-.meta{font-size:12px;color:var(--muted)}
-.input{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:12px}
-.skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:sk 1s infinite}
+.box{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:18px;white-space:pre-wrap;line-height:1.7;font-size:17px;letter-spacing:.1px}
+.skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.08),rgba(255,255,255,.04));background-size:200% 100%;animation:sk 1s infinite}
 @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
 </style>
 </head>
@@ -39,216 +33,133 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2)}
       <button class="btn" id="homeBtn">🏠</button>
     </div>
     <div class="row">
-      <span class="badge" id="styleBadge">🎭 —</span>
+      <span class="badge" id="styleBadge">—</span>
       <button class="btn" id="langBtn">IT</button>
     </div>
   </div>
 
-  <h1 id="titleH1">What?f — Episodio</h1>
+  <h1 id="titleH1">Il tuo What?f — Episodio 1</h1>
 
   <div class="card">
-    <div class="label" id="qLabel">Domanda</div>
-    <div class="box" id="question">—</div>
+    <h3 class="label" id="qLabel">Domanda</h3>
+    <div id="question" class="box"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary large" id="regenBtn">🔁 Rigenera episodio</button>
+    </div>
   </div>
 
   <div class="card">
-    <div class="row" style="justify-content:space-between">
-      <div class="label" id="rLabel">Episodio</div>
-      <span class="meta" id="stamp">—</span>
-    </div>
-    <div class="box" id="result">⌛ <span class="skeleton" style="width:40%"></span></div>
+    <h3 class="label" id="rLabel">Episodio</h3>
+    <div id="result" class="box">⏳ Sto immaginando il tuo episodio… <span class="skeleton" style="width:36%"></span></div>
 
-    <div class="row" style="margin-top:12px">
+    <div class="row" style="gap:8px;margin-top:12px">
+      <button class="btn" id="saveBtn">💾 Salva</button>
       <button class="btn" id="copyBtn">📋 Copia</button>
       <button class="btn" id="shareBtn">📤 Condividi</button>
-      <button class="btn primary" id="saveBtn">💾 Salva</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="label" id="fuLabel">Vuoi andare più a fondo?</div>
-    <p class="meta" id="fuHint">Scegli una delle domande (o scrivine una) per la prossima puntata.</p>
-    <div id="fuList" style="margin:8px 0"></div>
-    <input id="fuCustom" class="input" placeholder="Scrivi qui la tua domanda di follow-up…" />
-    <div class="row" style="margin-top:10px">
-      <button class="btn primary" id="fuSave">👉 Continua domani su questa</button>
     </div>
   </div>
 </main>
 
 <script>
-/* ===== I18N ===== */
-const I18N={
-  it:{ title:"What?f — Episodio", q:"Domanda", ep:"Episodio",
-       fu:"Vuoi andare più a fondo?", fuhint:"Scegli una delle domande (o scrivine una) per la prossima puntata.",
-       btnFu:"👉 Continua domani su questa", saved:"Salvato!", copied:"Copiato!",
-       closing_if:"Domani vediamo che succede quando inizi a sentirti di nuovo parte del posto.",
-       closing_wtf:"Ok amico: domani ti verso l’episodio dopo.",
-  },
-  en:{ title:"What?f — Episode", q:"Question", ep:"Episode",
-       fu:"Go deeper?", fuhint:"Pick one question (or write one) for the next episode.",
-       btnFu:"👉 Continue tomorrow on this", saved:"Saved!", copied:"Copied!",
-       closing_if:"Tomorrow we’ll see what happens when the place starts to feel yours again.",
-       closing_wtf:"Alright buddy — tomorrow I’ll pour the next round.",
-  }
-};
-const LS=localStorage;
-const lang=(LS.getItem('lang')||'it').toLowerCase();
-const T=I18N[lang]||I18N.it;
+/* I18N */
+const LS=localStorage,$=id=>document.getElementById(id);
+const I18N={it:{
+  title:"Il tuo What?f — Episodio 1",
+  qLabel:"Domanda", rLabel:"Episodio",
+  thinking:"Sto immaginando il tuo episodio…",
+  saved:"Salvato!", copied:"Copiato!",
+  styleWhatIf:"What if", styleWTF:"What the F",
+  regen:"🔁 Rigenera episodio"
+},en:{
+  title:"Your What?f — Episode 1",
+  qLabel:"Question", rLabel:"Episode",
+  thinking:"Imagining your episode…",
+  saved:"Saved!", copied:"Copied!",
+  styleWhatIf:"What if", styleWTF:"What the F",
+  regen:"🔁 Regenerate"
+}};
+function getLang(){return (LS.getItem('lang')||'it').toLowerCase();}
+function setLang(v){LS.setItem('lang',v);location.reload();}
+let lang=getLang(),T=I18N[lang]||I18N.it;
 document.documentElement.lang=lang;
 
-/* ===== Prefs / theme ===== */
-const prefs=JSON.parse(LS.getItem('whatif_prefs')||'{}');
-const style=(prefs.stile||'whatif');
-document.documentElement.setAttribute('data-theme', style==='wtf'?'wtf':'whatif');
+/* UI text */
+$('titleH1').textContent=T.title; $('qLabel').textContent=T.qLabel; $('rLabel').textContent=T.rLabel;
+$('result').innerHTML=`⏳ ${T.thinking} <span class="skeleton" style="width:36%"></span>`;
+$('langBtn').textContent=lang.toUpperCase();
+$('regenBtn').textContent=T.regen;
 
-/* ===== UI text ===== */
-document.getElementById('titleH1').textContent=T.title;
-document.getElementById('qLabel').textContent=T.q;
-document.getElementById('rLabel').textContent=T.ep;
-document.getElementById('fuLabel').textContent=T.fu;
-document.getElementById('fuHint').textContent=T.fuhint;
-document.getElementById('fuSave').textContent=T.btnFu;
-document.getElementById('langBtn').textContent=lang.toUpperCase();
-document.getElementById('styleBadge').textContent = "🎭 " + (style==='wtf'?"What the F":"What if");
+/* Theme from prefs */
+function readJSON(k,def){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
+const prefs=readJSON('whatif_prefs',{stile:'whatif'}); document.documentElement.setAttribute('data-theme',prefs.stile==='wtf'?'wtf':'whatif');
+$('styleBadge').textContent=prefs.stile==='wtf'?T.styleWTF:T.styleWhatIf;
 
-/* ===== nav ===== */
-document.getElementById('backBtn').onclick=()=>history.back();
-document.getElementById('homeBtn').onclick=()=>location.href='index.html';
-document.getElementById('langBtn').onclick=()=>{ const nxt=lang==='it'?'en':'it'; LS.setItem('lang',nxt); location.reload(); };
+/* Nav */
+$('backBtn').onclick=()=>history.back();
+$('homeBtn').onclick=()=>location.href='index.html';
+$('langBtn').onclick=()=>setLang(lang==='it'?'en':'it');
 
-/* ===== data ===== */
-const domanda = LS.getItem('domanda')||'';
-document.getElementById('question').textContent = domanda || '—';
-document.getElementById('stamp').textContent = new Date().toLocaleString(document.documentElement.lang||'it-IT',{hour12:false});
+/* Question */
+const domanda=LS.getItem('domanda')||''; $('question').textContent=domanda||'—';
 
-/* ===== read optional extra from buffer ===== */
-let extra="";
-try{ const b=JSON.parse(LS.getItem('whatif_clarify_buffer')||'{}'); if(b && b.q===domanda) extra=b.extra||""; }catch{}
-/* After using, we do not clear immediately—user might refresh; clear on save */
+/* ====== MOCK GENERATION ======
+   Qui chiami la tua /api/ask come già fatto.
+   Io metto una funzione fake che simula una risposta dopo 600ms.
+*/
+function fakeAI(style,q){
+  const base = style==='wtf'
+    ? `Ok, ${q || 'amico'}, pensaci con un bicchiere in mano: meno drama, più risate.`
+    : `Sai già che non lo faresti per nostalgia: è più un esperimento di equilibrio.`;
+  return new Promise(r=>setTimeout(()=>r(base),600));
+}
 
-/* ===== sanitize & closing ===== */
-function sanitize(style, raw){
-  let out=(raw||"").replace(/[“”"«»]/g,"").trim();
-  // compatta spazi e righe
-  out=out.split(/\n+/).map(s=>s.trim()).filter(Boolean).join("\n");
-  // chiusura garantita
-  const hook_if = T.closing_if;
-  const hook_wtf = T.closing_wtf;
+/* Sanitizer + Gancio finale */
+function sanitize(style,raw){
+  let out=(raw||'').trim().replace(/[“”"«»]/g,'');
+  // spezzatura sobria
+  const parts=out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
+  out=parts.join('\n');
+
   if(style==='wtf'){
-    if(!/domani/i.test(out)) out += (out.endsWith("\n")?"":"\n") + hook_wtf;
+    // chiusura da bar garantita
+    const hook=`Clink. Stesso bancone, domani rimescoliamo.`;
+    if(!/bancone|domani rimescoliamo|clink/i.test(out)){ out += `\n${hook}`; }
   }else{
-    if(!/Domani|Tomorrow/i.test(out)) out += (out.endsWith("\n")?"":"\n") + hook_if;
+    // chiusura What?f positiva e asciutta
+    const hook = lang==='en'
+      ? `Tomorrow we unlock Episode 2 at 09:00. Keep sharing bits of you and I’ll show where this goes.`
+      : `Domani sblocchiamo l’Episodio 2 alle 09:00. Continua a conoscerci e ti dico dove va la storia.`;
+    if(!/Episodio 2|Episode 2/i.test(out)){ out += `\n${hook}`; }
   }
-  return out;
+  return out.trim();
 }
 
-/* ===== API call (stream + fallback) ===== */
-async function callAsk({q,extra}){
-  const payload={
-    domanda:q, lang, periodo:'future',
-    stile:(style==='wtf'?'wtf':'whatif'),
-    clarify:false, stream:true,
-    profilo:{}, clarifications:{ extra: extra||"" },
-    now:new Date().toISOString()
-  };
-  try{
-    const r=await fetch("/api/ask",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json", "x-whatif-stream":"1" },
-      body:JSON.stringify(payload)
-    });
-    if(!r.ok || !r.body) throw new Error("nostream");
-    const reader=r.body.getReader(); const decoder=new TextDecoder();
-    let buffer="", text="";
-    for(;;){
-      const {value,done}=await reader.read(); if(done) break;
-      buffer+=decoder.decode(value,{stream:true});
-      const parts=buffer.split("\n\n"); buffer=parts.pop();
-      for(const chunk of parts){
-        if(!chunk.startsWith("data: ")) continue;
-        const msg=JSON.parse(chunk.slice(6));
-        if(msg.token){ text+=msg.token; document.getElementById('result').textContent=text; }
-        if(msg.done){
-          const clean=sanitize(style,text);
-          document.getElementById('result').textContent=clean;
-          return clean;
-        }
-        if(msg.error){ throw new Error(msg.detail||"api"); }
-      }
-    }
-    throw new Error("incomplete");
-  }catch(e){
-    // fallback non-stream
-    const r=await fetch("/api/ask",{method:"POST",headers:{ "Content-Type":"application/json" },body:JSON.stringify({...payload,stream:false})});
-    if(!r.ok) throw new Error("api");
-    const j=await r.json();
-    const text=sanitize(style, j.answer||j.text||"");
-    document.getElementById('result').textContent=text||"";
-    return text;
-  }
-}
-
-/* ===== Generate now ===== */
-(async function boot(){
-  if(!domanda){ document.getElementById('result').textContent="—"; return; }
-  const answer=await callAsk({q:domanda, extra});
-})().catch(()=>{ document.getElementById('result').textContent="Problema server."; });
-
-/* ===== Follow-up suggestions (fisse + dinamiche dal contesto) ===== */
-const FU_SUGG_IT=[
-  "Qual è il primo segnale che mi direbbe che sta funzionando?",
-  "Cosa posso provare entro 7 giorni senza rischiare troppo?",
-  "Quale ostacolo realistico ignorerei di solito?",
-  "Chi potrei coinvolgere per non farlo da solo?"
-];
-const FU_SUGG_EN=[
-  "What’s the first signal it’s working?",
-  "What can I test in 7 days with low risk?",
-  "Which realistic obstacle would I usually ignore?",
-  "Who could I involve so I’m not alone?"
-];
-function renderFU(){
-  const list=document.getElementById('fuList'); list.innerHTML='';
-  const base=(lang==='it'?FU_SUGG_IT:FU_SUGG_EN);
-  const sug=[...base];
-  // piccola iniezione contestuale dalla domanda
-  const kw=(domanda||"").split(/\s+/).filter(w=>w.length>3).slice(0,2).join(" ");
-  if(kw){ sug.unshift((lang==='it'?"Qual è un indicatore legato a: ":"One indicator about: ")+kw+"?"); }
-  sug.slice(0,4).forEach(s=>{
-    const b=document.createElement('button'); b.className='btn'; b.textContent='• '+s;
-    b.style.width='100%'; b.style.textAlign='left'; b.style.margin='4px 0';
-    b.onclick=()=>{ document.getElementById('fuCustom').value=s; };
-    list.appendChild(b);
-  });
-}
-renderFU();
-
-/* ===== Save follow-up for tomorrow ===== */
-document.getElementById('fuSave').onclick=()=>{
-  const text=document.getElementById('fuCustom').value.trim();
-  const chosen=text || document.querySelector('#fuList .btn')?.textContent?.replace(/^•\s/,'') || "";
-  // persist like "buffer" so fourth can show again domani (o per episodicità)
-  const next={ q:domanda, extra: chosen };
-  LS.setItem('whatif_clarify_buffer', JSON.stringify(next));
-  alert(lang==='it'?'Ok, continuiamo domani su questa.':'Got it — we’ll continue tomorrow on this.');
-};
-
-/* ===== Save / Copy / Share ===== */
-function readJSON(k,def){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
-function writeJSON(k,v){LS.setItem(k,JSON.stringify(v))}
-document.getElementById('saveBtn').onclick=()=>{
+/* Generate */
+async function generate(){
+  const style=prefs.stile==='wtf'?'wtf':'whatif';
+  const txt = await fakeAI(style,domanda); // <-- sostituisci con la tua /api/ask
+  $('result').textContent = sanitize(style,txt);
+  // log in cronologia
   const arr=readJSON('cronologia',[]);
-  arr.unshift({ domanda, risposta:document.getElementById('result').textContent, stile, periodo:'future', lang, ts:Date.now() });
-  writeJSON('cronologia',arr.slice(0,100));
-  alert((lang==='it')?I18N.it.saved:I18N.en.saved);
+  arr.unshift({domanda, risposta:$('result').textContent, stile:style, lang, ts:Date.now()});
+  LS.setItem('cronologia',JSON.stringify(arr.slice(0,100)));
+}
+generate();
+$('regenBtn').onclick=generate;
+
+/* Tools */
+$('saveBtn').onclick=()=>{
+  const arr=readJSON('cronologia',[]);
+  arr.unshift({domanda, risposta:$('result').textContent, stile:prefs.stile, lang, ts:Date.now()});
+  LS.setItem('cronologia',JSON.stringify(arr.slice(0,100)));
+  alert(T.saved);
 };
-document.getElementById('copyBtn').onclick=()=>{
-  navigator.clipboard.writeText(`${T.q}: ${domanda}\n\n${document.getElementById('result').textContent}`).then(()=>alert((lang==='it')?I18N.it.copied:I18N.en.copied));
+$('copyBtn').onclick=()=>{
+  navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`).then(()=>alert(T.copied));
 };
-document.getElementById('shareBtn').onclick=()=>{
-  const data={title:"What?f",text:`${T.q}: ${domanda}\n\n${document.getElementById('result').textContent}`,url: location.href};
-  if(navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(`${T.q}: ${domanda}\n\n${document.getElementById('result').textContent}`);
+$('shareBtn').onclick=()=>{
+  const data={title:"What?f",text:`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`,url:location.href};
+  if(navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`);
 };
 </script>
 </body>
