@@ -1,240 +1,281 @@
-// /api/ask.js — Vercel Edge (Node 18+). INCOLLA TUTTO.
-//
-// ENV:
-// - OPENAI_API_KEY = "sk-..." / "sk-proj-..."
-// Opzionale:
-// - APP_ENV="dev" per log più verbosi (console.warn)
+// /api/ask.js — serverless (Vercel / Netlify) o Express handler
+// Richiede process.env.OPENAI_API_KEY
 
-export const config = { runtime: "edge" };
-
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-
-// -------------------- utils ---------------------------------------------------
-const J = (s, d=200)=>new Response(JSON.stringify(s),{status:d,headers:{
-  "content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
-
-const S = x => typeof x==="string"?x:JSON.stringify(x||"");
-const nowISO = ()=>new Date().toISOString().replace(/\.\d+Z$/,"Z");
-
-function clampLines(txt="", max=14){
-  const parts=S(txt).replace(/[“”«»]/g,'"')
-    .split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean).slice(0,max);
-  return parts.join("\n").trim();
-}
-function safeJSON(s){ try{ return JSON.parse(s); }catch{ return null; } }
-
-// -------------------- style & prompts ----------------------------------------
-const STYLE = {
-  whatif: `Sei un amico brillante, empatico e asciutto.
-Parli con ritmo, zero malinconia e senza coachate. Ironia leggera, elegante.
-Scrivi frasi brevi, concrete. Obiettivo: dare slancio e chiarezza a chi chiede “e se...?”.`,
-  wtf: `Sei un narratore da bar: sarcastico, ironico, ubriaco ma lucido.
-Battute intelligenti, calore, ritmo. Fai ridere senza essere cattivo.
-Evita acidità o tristezza. Chiudi con una battuta da bancone.`
-};
-
-const WTF_ENDINGS = [
-  "Clink. Stesso bancone, domani rimescoliamo.",
-  "Giro offerto: domani brindiamo sul seguito.",
-  "Conto aperto, amico: domani si brinda al resto."
-];
-
-function systemFor(style="whatif", lang="it"){
-  const base = STYLE[style==="wtf"?"wtf":"whatif"];
-  const locale = (lang||"it").toLowerCase()==="en"
-    ? "Scrivi in inglese semplice e naturale."
-    : "Scrivi in italiano semplice e naturale.";
-  return `${base}\n${locale}\nMassimo 12–14 frasi, una per riga.`;
-}
-
-function epFooter(ep, lang){
-  const it = (lang||"it").toLowerCase()!=="en";
-  if(ep===1) return it?"Domani sblocchiamo l’Episodio 2 alle 09:00.":"Tomorrow we unlock Episode 2 at 09:00.";
-  if(ep===2) return it?"Domani sblocchiamo l’Episodio 3 alle 09:00.":"Tomorrow we unlock Episode 3 at 09:00.";
-  return it?"Finale sbloccato: oggi chiudiamo la storia.":"Final unlocked: we close the story today.";
-}
-
-function promptEpisode({domanda, episodio=1, periodo="future", stile="whatif", profilo={}, lang="it"}){
-  const it = (lang||"it").toLowerCase()!=="en";
-  const hints = [];
-  if(profilo?.name) hints.push(`name: ${profilo.name}`);
-  if(profilo?.city_now||profilo?.city) hints.push(`city: ${profilo.city_now||profilo.city}`);
-  if(profilo?.work_role||profilo?.role) hints.push(`role: ${profilo.work_role||profilo.role}`);
-  const sig = hints.length?(it?`Segnali utente: ${hints.join(" · ")}`:`User hints: ${hints.join(" · ")}`):"";
-
-  const close = stile==="wtf"
-    ? (it?`Chiudi con UNA battuta da bancone.`:`End with ONE witty bar line.`)
-    : (it?`Chiudi con UNA riga asciutta e motivante (no coaching).`:`End with ONE brisk motivating line (no coaching).`);
-
-  const jsonInstr = it ? `Dopo il testo episodio, STAMPA SOLO questo JSON:
-{"answer":"ripeti qui l'episodio, pulito e completo","followups":["domanda breve pertinente","altra domanda breve pertinente"]}`
-    : `After the episode text, PRINT ONLY this JSON:
-{"answer":"repeat here the episode, cleaned and complete","followups":["short relevant question","another short relevant question"]}`;
-
-  const epLab = it?"Episodio":"Episode";
-  const per = periodo==="past" ? (it?"Passato":"Past") : (it?"Futuro":"Future");
-
-  return `${it?"Domanda":"Question"}: ${S(domanda)}
-${epLab} ${episodio} · ${per}.
-${close}
-${sig}
-
-${jsonInstr}`;
-}
-
-function promptEpisodeNoJSON({domanda, episodio=1, periodo="future", stile="whatif", lang="it"}){
-  const it = (lang||"it").toLowerCase()!=="en";
-  const close = stile==="wtf"
-    ? (it?`Chiudi con UNA battuta da bancone.`:`End with ONE witty bar line.`)
-    : (it?`Chiudi con UNA riga asciutta e motivante (no coaching).`:`End with ONE brisk motivating line (no coaching).`);
-  const epLab = it?"Episodio":"Episode";
-  const per = periodo==="past" ? (it?"Passato":"Past") : (it?"Futuro":"Future");
-  return `${it?"Scrivi solo il testo, niente JSON.": "Write only the text, no JSON."}
-${it?"Domanda":"Question"}: ${S(domanda)}
-${epLab} ${episodio} · ${per}.
-${close}`;
-}
-
-function promptFollowups({domanda, testo, lang="it"}){
-  const it = (lang||"it").toLowerCase()!=="en";
-  return (it?`Genera due domande di follow-up brevi (max 12 parole), pertinenti alla domanda e a questo testo:\nQ: ${S(domanda)}\nTesto:\n${S(testo)}\nRispondi JSON puro: {"followups":["...","..."]}`
-           :`Generate two short follow-ups (max 12 words) relevant to the question and this text:\nQ: ${S(domanda)}\nText:\n${S(testo)}\nReply raw JSON: {"followups":["...","..."]}`);
-}
-
-function promptClarify({domanda, lang="it"}){
-  const it = (lang||"it").toLowerCase()!=="en";
-  return it
-    ? `Proponi 2–3 domande mirate, brevi (<=8 parole), per chiarire meglio:\nDomanda: ${S(domanda)}\nRispondi JSON puro: {"questions":["...","...","..."]}`
-    : `Propose 2–3 short (<=8 words) targeted questions to clarify:\nQuestion: ${S(domanda)}\nReply raw JSON: {"questions":["...","...","..."]}`;
-}
-
-// -------------------- OpenAI --------------------------------------------------
-async function callOpenAI({messages, temperature=0.7, model="gpt-4o-mini"}){
-  if(!OPENAI_API_KEY) return {ok:false, error:"OPENAI_API_KEY missing"};
-  const r = await fetch("https://api.openai.com/v1/chat/completions",{
-    method:"POST",
-    headers:{ "authorization":`Bearer ${OPENAI_API_KEY}`, "content-type":"application/json" },
-    body:JSON.stringify({model, messages, temperature})
-  });
-  if(!r.ok){
-    const txt=await r.text().catch(()=> "");
-    return {ok:false, error:`OpenAI ${r.status}: ${txt.slice(0,400)}`};
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' }); return;
   }
-  const j=await r.json();
-  const content=j?.choices?.[0]?.message?.content||"";
-  return {ok:true, content};
-}
 
-// -------------------- sanitizers ---------------------------------------------
-function finalizeAnswer(txt, {stile="whatif", lang="it", episodio=1}={}){
-  let out = clampLines(txt, 14);
-  if(stile==="wtf"){
-    if(!/bancone|giro|conto|brind/i.test(out)) out += (out.endsWith("\n")?"":"\n")+WTF_ENDINGS[Math.floor(Math.random()*WTF_ENDINGS.length)];
-  }else{
-    const it=(lang||"it").toLowerCase()!=="en";
-    const line = it? "Ok: domani spingiamo un passo oltre." : "Alright: tomorrow we push one step further.";
-    if(!/domani|tomorrow|passo/i.test(out)) out += (out.endsWith("\n")?"":"\n")+line;
-  }
-  out += "\n\n"+epFooter(episodio,lang);
-  return out.trim();
-}
+  // hard timeout per non far “pendere” il front
+  const timeoutMs = 12000;
+  const timeout = setTimeout(() => {
+    try { res.writeHead(200, { 'Content-Type': 'application/json' }); } catch {}
+    try { res.end(JSON.stringify({ error: 'timeout' })); } catch {}
+  }, timeoutMs);
 
-// -------------------- handler -------------------------------------------------
-export default async function handler(req){
-  try{
-    // ping debug
-    const {searchParams}=new URL(req.url);
-    if(req.method==="GET" && searchParams.get("ping")){
-      return J({ok:true,keyExists:!!OPENAI_API_KEY,keyPrefix:OPENAI_API_KEY?OPENAI_API_KEY.slice(0,7)+"...":null,ts:nowISO()},200);
-    }
-    if(req.method!=="POST") return J({error:"Method not allowed"},405);
-
-    const body=await req.json().catch(()=> ({}));
+  try {
     const {
-      domanda="", lang="it", periodo="future", stile="whatif",
-      episodio=1, clarify=false, profilo={}
-    } = body||{};
+      clarify = false,
+      want = 'answer',          // 'answer' | 'clarify' | 'followups'
+      domanda = '',
+      clarifications = {},
+      stile = 'whatif',         // 'whatif' | 'wtf'
+      periodo = 'future',       // 'past' | 'future'
+      lang = 'it',              // 'it' | 'en'
+      stream = false,
+      tz = 'UTC'
+    } = await parseJSON(req);
 
-    if(!domanda || typeof domanda!=="string") return J({error:"Missing 'domanda' string"},400);
+    const MODE = clarify ? 'clarify' : want;
 
-    // ---------- CLARIFY ----------
-    if(clarify){
-      const sys = systemFor(stile,lang);
-      const usr = promptClarify({domanda,lang});
-      const out = await callOpenAI({messages:[{role:"system",content:sys},{role:"user",content:usr}], temperature:0.3});
-      if(!out.ok) return J({error:out.error},500);
-      const parsed = safeJSON(out.content.trim());
-      let qs = Array.isArray(parsed?.questions) ? parsed.questions.filter(Boolean) : [];
-      if(!qs.length){
-        // fallback sicuro
-        const it=(lang||"it").toLowerCase()!=="en";
-        qs = it
-          ? ["In che finestra di tempo decidi?","Primo segnale che sta funzionando?","Vincolo concreto da rispettare?"]
-          : ["Decision window?","First signal it’s working?","One concrete constraint?"];
-      }
-      return J({questions: qs.slice(0,3)},200);
+    // Prompt di stile blindati
+    const PROMPTS = stylePrompts({ stile, periodo, lang });
+
+    if (MODE === 'clarify') {
+      const questions = await genClarify({ domanda, stile, periodo, lang, PROMPTS });
+      clearTimeout(timeout);
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200).end(JSON.stringify({ questions }));
+      return;
     }
 
-    // ---------- EPISODIO ----------
-    const sys = systemFor(stile,lang);
-    const usr = promptEpisode({domanda,episodio:Number(episodio)||1,periodo,stile,profilo,lang});
-    const out = await callOpenAI({messages:[{role:"system",content:sys},{role:"user",content:usr}], temperature:stile==="wtf"?0.85:0.6});
-    if(!out.ok) return J({error:out.error},500);
-
-    // Estraggo JSON alla fine
-    let answerText = "";
-    let followups = [];
-    const content = out.content || "";
-
-    const jsonStart = content.lastIndexOf("{");
-    if(jsonStart>=0 && /"followups"\s*:/.test(content)){
-      const jsonPart = content.slice(jsonStart);
-      const parsed = safeJSON(jsonPart);
-      if(parsed && typeof parsed==="object"){
-        answerText = S(parsed.answer||"");
-        followups = Array.isArray(parsed.followups)?parsed.followups.filter(Boolean).slice(0,2):[];
-      }
-      // Se pre-JSON contiene testo episodio, usalo come priorità (spesso è più ricco)
-      const pre = content.slice(0,jsonStart).trim();
-      if(pre && answerText.length<60) answerText = pre;
-    }else{
-      // nessun JSON → prendo tutto
-      answerText = content;
+    if (MODE === 'followups') {
+      const { answer = '' } = await parseJSON(req);
+      const followups = await genFollowups({ domanda, answer, stile, periodo, lang, PROMPTS });
+      clearTimeout(timeout);
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200).end(JSON.stringify({ followups }));
+      return;
     }
 
-    // Se ancora troppo corto, faccio UN secondo tentativo SOLO TESTO
-    if(!answerText || answerText.split(/\s+/).length < 12){
-      if(process.env.APP_ENV==="dev") console.warn("Retry: episode text too short, second pass without JSON");
-      const usr2 = promptEpisodeNoJSON({domanda,episodio:Number(episodio)||1,periodo,stile,lang});
-      const out2 = await callOpenAI({messages:[{role:"system",content:sys},{role:"user",content:usr2}], temperature:stile==="wtf"?0.9:0.65});
-      if(out2.ok && out2.content) answerText = out2.content;
-    }
-
-    // Followups mancanti? Generaliamo in un pass rapido sul testo ottenuto
-    if(!followups.length){
-      const fu = await callOpenAI({
-        messages:[{role:"system",content:systemFor("whatif",lang)},{role:"user",content:promptFollowups({domanda,testo:answerText,lang})}],
-        temperature:0.4, model:"gpt-4o-mini"
+    // MODE: answer
+    if (stream) {
+      // streaming SSE
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'Cache-Control': 'no-cache, no-transform',
+        Connection: 'keep-alive',
+        'Transfer-Encoding': 'chunked'
       });
-      if(fu.ok){
-        const pj = safeJSON(fu.content.trim());
-        if(Array.isArray(pj?.followups)) followups = pj.followups.filter(Boolean).slice(0,2);
+
+      try {
+        await streamAnswer({
+          domanda, clarifications, stile, periodo, lang, PROMPTS,
+          onToken: (t) => res.write(`data: ${JSON.stringify({ token: t })}\n\n`),
+          onDone: () => res.write(`data: ${JSON.stringify({ done: true })}\n\n`)
+        });
+        clearTimeout(timeout);
+        res.end();
+      } catch (e) {
+        // se lo stream fallisce, invia un done e chiudi
+        res.write(`data: ${JSON.stringify({ done: true, error: true })}\n\n`);
+        clearTimeout(timeout);
+        res.end();
       }
+      return;
+    } else {
+      const text = await genAnswer({ domanda, clarifications, stile, periodo, lang, PROMPTS });
+      clearTimeout(timeout);
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200).end(JSON.stringify({ text }));
+      return;
     }
-    // Ancora vuoti? fallback definitivo
-    if(!followups.length){
-      const it=(lang||"it").toLowerCase()!=="en";
-      followups = it
-        ? ["Qual è il primo segnale che ti direbbe che sta funzionando?","Cosa potresti fare entro 7 giorni per provarci senza rischiare?"]
-        : ["What’s the first signal it’s working?","What could you try within 7 days with low risk?"];
-    }
-
-    // Sanitize & chiusure
-    const final = finalizeAnswer(answerText||"", {stile,lang,episodio:Number(episodio)||1});
-
-    return J({ok:true, answer:final, followups, meta:{stile,periodo,episodio:Number(episodio)||1,ts:nowISO()}},200);
-
-  }catch(err){
-    return J({error:`Server error: ${err?.message||String(err)}`},500);
+  } catch (err) {
+    clearTimeout(timeout);
+    res.status(200).json({ error: err?.message || 'unknown_error' });
   }
+}
+
+/* ---------------------- utils ---------------------- */
+
+async function parseJSON(req) {
+  const raw = await new Promise((ok, ko) => {
+    let b = '';
+    req.on('data', (c) => (b += c));
+    req.on('end', () => ok(b));
+    req.on('error', ko);
+  });
+  try { return JSON.parse(raw || '{}'); } catch { return {}; }
+}
+
+function stylePrompts({ stile, periodo, lang }) {
+  const P = { sys: '', clarify: '', follow: '', close: '' };
+
+  if (lang === 'it') {
+    if (stile === 'wtf') {
+      P.sys =
+`Sei "What the F": sarcastico, ironico, da bar, ubriaco ma lucido, positivo. 
+Fai ridere, mai cattivo, niente malinconia, niente prediche. Frasi brevi, ritmo, battute intelligenti. 
+Chiudi spesso con “Clink. Stesso bancone, domani rimescoliamo.”`;
+      P.clarify = `Genera 3 domande mirate e concise (max 8 parole) per chiarire la richiesta dell’utente. Non numerarle, restituisci solo un elenco JSON semplice.`;
+      P.follow = `Genera 2 follow-up sintetici, scherzosi ma utili, legati alla domanda e alla risposta.`;
+      P.close = `Clink. Stesso bancone, domani rimescoliamo.`;
+    } else {
+      P.sys =
+`Sei "What if": empatico, asciutto, lucido. Niente tristezza, niente toni da coach. 
+Sembra un amico brillante che conosce l’utente e lo incoraggia con leggerezza. Frasi pulite, ritmo.`;
+      P.clarify = `Genera 3 domande mirate e chiare (max 10 parole) per rendere più personale la risposta. Non numerarle, restituisci solo un elenco JSON semplice.`;
+      P.follow = `Genera 2 follow-up corti, pratici e positivi, legati a domanda e risposta.`;
+      P.close = `Domani ripartiamo da qui.`;
+    }
+  } else { // EN
+    if (stile === 'wtf') {
+      P.sys =
+`You are "What the F": witty bar-friend, cheeky but kind, zero melancholy. 
+Short punchy lines, smart jokes, warm vibe. Never mean. Often end with “Clink. Same counter, we stir again tomorrow.”`;
+      P.clarify = `Produce 3 short, focused questions (max 8 words). Return plain JSON list.`;
+      P.follow = `Return 2 playful but useful follow-ups tied to question and answer.`;
+      P.close = `Clink. Same counter, we stir again tomorrow.`;
+    } else {
+      P.sys =
+`You are "What if": empathetic, concise, uplifting and realistic. 
+Sounds like a smart friend who knows the user. No melancholy, no coaching vibe.`;
+      P.clarify = `Produce 3 clear, targeted questions (max 10 words). Return plain JSON list.`;
+      P.follow = `Return 2 short, practical follow-ups tied to question and answer.`;
+      P.close = `Tomorrow we pick up from here.`;
+    }
+  }
+
+  P.periodo = (periodo === 'past')
+    ? (lang === 'it' ? 'Ambientazione: passato.' : 'Setting: past.')
+    : (lang === 'it' ? 'Ambientazione: futuro prossimo.' : 'Setting: near future.');
+
+  return P;
+}
+
+async function openAIChat(payload) {
+  const key = process.env.OPENAI_API_KEY || '';
+  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini', // veloce e a basso costo; cambia se vuoi
+      temperature: payload.temperature ?? 0.7,
+      top_p: 0.9,
+      presence_penalty: payload.presence_penalty ?? 0.3,
+      max_tokens: payload.max_tokens ?? 420,
+      messages: payload.messages
+    })
+  });
+  if (!resp.ok) throw new Error(`openai_${resp.status}`);
+  const data = await resp.json();
+  return data?.choices?.[0]?.message?.content || '';
+}
+
+/* -------- clarify -------- */
+async function genClarify({ domanda, stile, periodo, lang, PROMPTS }) {
+  const content = await openAIChat({
+    temperature: 0.2,
+    max_tokens: 120,
+    messages: [
+      { role: 'system', content: `${PROMPTS.sys}\n${PROMPTS.periodo}` },
+      { role: 'user', content: lang==='it'
+        ? `Domanda utente: "${domanda}". ${PROMPTS.clarify}`
+        : `User question: "${domanda}". ${PROMPTS.clarify}`
+      }
+    ]
+  });
+  // Prova a leggere JSON; in fallback splitta per newline
+  try {
+    const asJson = JSON.parse(content);
+    if (Array.isArray(asJson)) return asJson.map(s => ({ label: s }));
+  } catch {}
+  const lines = content.split(/\n/).map(s => s.replace(/^[\-•\d\.\s]+/,'').trim()).filter(Boolean);
+  return lines.slice(0,3).map(s => ({ label: s }));
+}
+
+/* -------- followups -------- */
+async function genFollowups({ domanda, answer, stile, periodo, lang, PROMPTS }) {
+  const content = await openAIChat({
+    temperature: 0.5,
+    max_tokens: 120,
+    messages: [
+      { role: 'system', content: `${PROMPTS.sys}\n${PROMPTS.periodo}` },
+      { role: 'user', content: lang==='it'
+        ? `Domanda: "${domanda}"\nRisposta: """${answer}"""\n${PROMPTS.follow}\nRispondi con un elenco JSON con 2 stringhe.`
+        : `Question: "${domanda}"\nAnswer: """${answer}"""\n${PROMPTS.follow}\nReply with a JSON array of 2 strings.`
+      }
+    ]
+  });
+  try {
+    const arr = JSON.parse(content);
+    if (Array.isArray(arr) && arr.length) return arr;
+  } catch {}
+  const lines = content.split(/\n/).map(s => s.replace(/^[\-•\d\.\s]+/,'').trim()).filter(Boolean);
+  return lines.slice(0,2);
+}
+
+/* -------- answer (non-stream) -------- */
+async function genAnswer({ domanda, clarifications, stile, periodo, lang, PROMPTS }) {
+  const clar = Object.values(clarifications||{}).filter(Boolean);
+  const clarText = clar.length ? (lang==='it' ? `Chiarimenti: ${clar.join(' • ')}` : `Clarifications: ${clar.join(' • ')}`) : '';
+  const content = await openAIChat({
+    temperature: stile==='wtf' ? 0.85 : 0.6,
+    max_tokens: 520,
+    presence_penalty: stile==='wtf' ? 0.6 : 0.2,
+    messages: [
+      { role: 'system', content: `${PROMPTS.sys}\n${PROMPTS.periodo}` },
+      { role: 'user', content:
+          (lang==='it'
+            ? `Domanda: "${domanda}". ${clarText}\nScrivi un episodio breve (10–14 righe max) nello stile indicato. Chiudi con: ${PROMPTS.close}`
+            : `Question: "${domanda}". ${clarText}\nWrite a short episode (10–14 lines max) in the style. End with: ${PROMPTS.close}`
+          )
+      }
+    ]
+  });
+  return content;
+}
+
+/* -------- answer (stream) -------- */
+async function streamAnswer({ domanda, clarifications, stile, periodo, lang, PROMPTS, onToken, onDone }) {
+  const key = process.env.OPENAI_API_KEY || '';
+  const clar = Object.values(clarifications||{}).filter(Boolean);
+  const clarText = clar.length ? (lang==='it' ? `Chiarimenti: ${clar.join(' • ')}` : `Clarifications: ${clar.join(' • ')}`) : '';
+  const body = {
+    model: 'gpt-4o-mini',
+    temperature: stile==='wtf' ? 0.85 : 0.6,
+    top_p: 0.9,
+    presence_penalty: stile==='wtf' ? 0.6 : 0.2,
+    max_tokens: 520,
+    stream: true,
+    messages: [
+      { role: 'system', content: `${PROMPTS.sys}\n${PROMPTS.periodo}` },
+      { role: 'user', content:
+          (lang==='it'
+            ? `Domanda: "${domanda}". ${clarText}\nScrivi un episodio breve (10–14 righe max) nello stile indicato. Chiudi con: ${PROMPTS.close}`
+            : `Question: "${domanda}". ${clarText}\nWrite a short episode (10–14 lines max) in the style. End with: ${PROMPTS.close}`
+          )
+      }
+    ]
+  };
+
+  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!resp.ok || !resp.body) throw new Error(`openai_stream_${resp.status}`);
+
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let done = false, buffer = '';
+  while (!done) {
+    const chunk = await reader.read();
+    if (chunk.done) break;
+    buffer += decoder.decode(chunk.value, { stream: true });
+    // risposta "chunked" del chat.completions stream
+    const parts = buffer.split('\n');
+    buffer = parts.pop() || '';
+    for (const line of parts) {
+      const m = line.match(/^data:\s*(.*)$/);
+      if (!m) continue;
+      if (m[1] === '[DONE]') { onDone(); return; }
+      try {
+        const j = JSON.parse(m[1]);
+        const delta = j.choices?.[0]?.delta?.content;
+        if (delta) onToken(delta);
+      } catch {}
+    }
+  }
+  onDone();
 }
