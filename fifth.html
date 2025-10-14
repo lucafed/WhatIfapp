@@ -1,385 +1,165 @@
-<!DOCTYPE html>
-<html lang="it">
+<!doctype html>
+<html lang="it" data-theme="whatif">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>What?f – Risultato</title>
-
+<meta name="theme-color" content="#0B0B0C">
 <style>
-  :root{
-    --bg:#0B0B0C; --bg2:#101414;
-    --fg:#EAF3EE; --muted:#A0B2BA;
-    --acc:#1C57A0;    /* What?f */
-    --acc2:#FFEC01;
-    --card:rgba(20,28,34,0.92);
-    --line:rgba(255,255,255,.12);
-    --chip:#121A26;
-    --ink:#0A0E12;
-    --shadow:rgba(0,0,0,.35);
-    --highlight:#FFEC01;
-  }
-  /* Tema per WTF */
-  html[data-theme="wtf"]{
-    --acc:#3A6B56;
-    --acc2:#5A8C75;
-  }
-
-  *{box-sizing:border-box}
-  html,body{
-    margin:0;
-    background: radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-    color:var(--fg);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility
-  }
-  main{max-width:980px;margin:auto;padding:18px}
-  .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-
-  .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;transition:transform .06s ease,opacity .2s}
-  .btn:active{transform:translateY(1px)}
-  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800;box-shadow:0 6px 18px var(--shadow);border:none}
-  .btn.large{padding:14px 18px;font-size:16px}
-
-  h1{font-size:clamp(22px,5vw,30px);margin:14px 0 2px;color:var(--acc2)}
-  p.sub{color:var(--muted);margin:0 0 8px}
-
-  .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
-  .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-
-  /* Question */
-  .qbox{
-    background:rgba(255,255,255,.06);
-    border:1px solid var(--line);
-    border-left:4px solid var(--highlight);
-    border-radius:12px;
-    padding:16px;
-    font-size:17px;
-    line-height:1.65;
-    color:#EAF3EE;
-    max-width:68ch;
-    margin:0 auto;
-    text-wrap:pretty;
-    hyphens:auto;
-  }
-
-  /* Result box */
-  .box{
-    background:rgba(255,255,255,.04);
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:18px;
-    line-height:1.7;
-    color:#EAF3EE;
-    white-space:pre-wrap;
-    font-size:17px;
-    letter-spacing:.1px;
-    max-width:68ch;
-    margin:0 auto;
-    text-wrap:pretty;
-    hyphens:auto;
-  }
-
-  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-  .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
-  .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-  .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
-  .badge.accent{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border:none;font-weight:800}
-
-  #result{min-height:190px}
-  .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:sk 1s infinite}
-  @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
-  #result.fade-in{animation:fade .6s ease}
-  @keyframes fade{from{opacity:.25;transform:translateY(2px)}to{opacity:1;transform:none}}
-
-  /* Followups */
-  .follow{display:grid;gap:10px}
-  .fup{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:12px}
-  .fup h4{margin:0 0 8px;color:var(--acc2)}
-  .fup .muted{color:var(--muted)}
-  .fup input{width:100%;background:var(--chip);color:#EAF3EE;border:1px solid var(--line);border-radius:10px;padding:10px}
+:root{
+  --bg:#0B0B0C; --bg2:#101414; --fg:#EAF3EE; --muted:#98A7AF;
+  --acc:#1C57A0; --acc2:#FFEC01; --card:rgba(20,28,34,.92);
+  --line:rgba(255,255,255,.12); --chip:#121A26; --ink:#0A0E12; --shadow:rgba(0,0,0,.35);
+}
+html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
+*{box-sizing:border-box}
+html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2),var(--bg));color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:980px;margin:auto;padding:18px}
+.top{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
+.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:12px}
+.h1{font-size:clamp(22px,5vw,30px);margin:14px 0 6px;color:var(--acc2)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;backdrop-filter:blur(12px);box-shadow:0 10px 28px var(--shadow)}
+.label{color:var(--acc);font-weight:800;margin:0 0 10px}
+.qbox,.abox{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:18px;white-space:pre-wrap;line-height:1.7;font-size:17px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.input{width:100%;background:var(--chip);border:1px solid var(--line);border-radius:12px;color:var(--fg);padding:12px}
+.tip{color:var(--muted);font-size:13px}
 </style>
 </head>
 <body>
-  <main>
-    <div class="topbar">
-      <div class="row">
-        <button class="btn" id="backBtnTop">←</button>
-        <button class="btn" id="homeBtnTop">🏠</button>
-      </div>
-
-      <div class="row" style="gap:10px">
-        <span id="badgePeriodo" class="badge">🕰️ —</span>
-        <span id="badgeStile" class="badge">🎭 —</span>
-        <span id="langBadge" class="badge accent">—</span>
-      </div>
+<main>
+  <div class="top">
+    <div class="row">
+      <button id="backBtn" class="btn">←</button>
+      <button id="homeBtn" class="btn">🏠</button>
     </div>
-
-    <h1 id="titleH1">Il tuo What?f prende forma…</h1>
-
-    <div class="card">
-      <h3 class="label" id="qLabel">La tua domanda</h3>
-      <div id="question" class="qbox">—</div>
+    <div class="row">
+      <span class="badge" id="periodBadge">🕰️ —</span>
+      <span class="badge" id="styleBadge">🎭 —</span>
+      <button id="langBtn" class="btn">IT / EN</button>
     </div>
+  </div>
 
-    <div class="card">
-      <h3 class="label" id="rLabel">Risultato</h3>
-      <div id="result" class="box">—</div>
-      <div class="row" style="margin-top:12px">
-        <button class="btn" id="regenBtn">🔁 Rigenera</button>
-        <button class="btn primary" id="saveBtn">💾 Salva</button>
-        <button class="btn" id="copyBtn">📋 Copia</button>
-        <button class="btn" id="shareBtn">📤 Condividi</button>
-      </div>
-    </div>
+  <h1 class="h1" id="h1">Il tuo What?f</h1>
 
-    <div class="card">
-      <h3 class="label" id="fupLabel">Domani andiamo avanti?</h3>
-      <div class="follow">
-        <div class="fup" id="fup1" style="display:none">
-          <h4 id="f1t">Suggerimento 1</h4>
-          <p class="muted" id="f1d">—</p>
-        </div>
-        <div class="fup" id="fup2" style="display:none">
-          <h4 id="f2t">Suggerimento 2</h4>
-          <p class="muted" id="f2d">—</p>
-        </div>
-        <div class="fup">
-          <h4 id="f3t">Oppure scrivi tu</h4>
-          <input id="f3input" placeholder="Domani voglio sapere…"/>
-        </div>
+  <div class="card">
+    <h3 class="label" id="qLabel">La tua domanda</h3>
+    <div id="question" class="qbox">—</div>
+  </div>
+
+  <div class="card">
+    <h3 class="label" id="rLabel">Risultato</h3>
+    <div id="result" class="abox">⏳ …</div>
+  </div>
+
+  <div class="card">
+    <h3 class="label" id="fupH3">Domani continuiamo da qui</h3>
+    <div id="fups"></div>
+    <div style="margin-top:10px">
+      <input id="fupInput" class="input" placeholder="Aggiungi una domanda o una nota (opzionale)">
+      <div class="row" style="margin-top:8px">
+        <button id="saveBtn" class="btn">💾 Salva nota</button>
+        <button id="copyBtn" class="btn">📋 Copia</button>
+        <button id="shareBtn" class="btn">📤 Condividi</button>
       </div>
-      <div class="row" style="margin-top:10px">
-        <button class="btn primary" id="saveFups">📌 Salva i follow-up</button>
-      </div>
+      <p class="tip" id="fupTip">Se salvi una nota, la ritrovi domani nella pagina domanda.</p>
     </div>
-  </main>
+  </div>
+</main>
 
 <script>
-/* ===== Setup / stato ===== */
 const LS=localStorage;
 const $=id=>document.getElementById(id);
 
+/* I18N */
 const I18N={
-  it:{
-    title:"Il tuo What?f prende forma…",
-    qLabel:"La tua domanda",
-    rLabel:"Risultato",
-    fupLabel:"Domani andiamo avanti?",
-    f1:"Vuoi un dettaglio preciso su questa scelta?",
-    f2:"Ti serve un passo concreto per le prossime 24 ore?",
-    f3:"Oppure scrivi tu",
-    saved:"Salvato ✅",
-    copied:"Copiato ✅",
-    errServer:"Problema server.",
-    loading:"Sto immaginando il tuo scenario…",
-    periodo:{future:"Futuro",past:"Passato"},
-    stile:{whatif:"What if",wtf:"What the F"},
-    close_wtf:"Ok amico: domani ti dico fin dove arriva questa mossa. Tieni il bicchiere.",
-    close_whatif:"Domani ripartiamo da qui e vediamo dove porta davvero."
-  },
-  en:{
-    title:"Your What?f is taking shape…",
-    qLabel:"Your question",
-    rLabel:"Result",
-    fupLabel:"Continue tomorrow?",
-    f1:"Want a precise detail about this path?",
-    f2:"Need one concrete step for the next 24h?",
-    f3:"Or write your own",
-    saved:"Saved ✅",
-    copied:"Copied ✅",
-    errServer:"Server error.",
-    loading:"Imagining your scenario…",
-    periodo:{future:"Future",past:"Past"},
-    stile:{whatif:"What if",wtf:"What the F"},
-    close_wtf:"Alright friend: tomorrow I’ll tell you how far this goes. Keep the glass ready.",
-    close_whatif:"Tomorrow we pick it up here and see where it really leads."
-  }
+  it:{ h1:"Il tuo What?f", q:"La tua domanda", r:"Risultato",
+      future:"Futuro", past:"Passato",
+      styleW:"What if", styleF:"What the F",
+      fTitle:"Domani continuiamo da qui",
+      fTip:"Se salvi una nota, la ritrovi domani nella pagina domanda.",
+      saved:"Salvato!", copied:"Copiato!", err:"Errore server" },
+  en:{ h1:"Your What?f", q:"Your question", r:"Result",
+      future:"Future", past:"Past",
+      styleW:"What if", styleF:"What the F",
+      fTitle:"Tomorrow we continue from here",
+      fTip:"If you save a note, you’ll find it tomorrow on the Ask page.",
+      saved:"Saved!", copied:"Copied!", err:"Server error" }
 };
+function L(){ return (LS.getItem('lang')||'it').toLowerCase(); }
+function T(k){ return (I18N[L()]||I18N.it)[k]; }
 
-const lang=(LS.getItem('lang')||'it').toLowerCase();
-const T=I18N[lang]||I18N.it;
-document.documentElement.lang=lang;
+/* Prefs & theme */
+function prefs(){ try{return JSON.parse(LS.getItem('whatif_prefs')||'{}')}catch{return{}} }
+function applyTheme(){ document.documentElement.setAttribute('data-theme',(prefs().stile==='wtf'?'wtf':'whatif')); }
 
-const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-const domanda = LS.getItem('domanda')||'';
-const micro = JSON.parse(LS.getItem('whatif_micro')||'{}');
-const profile = JSON.parse(LS.getItem('whatif_profile')||'{}');
-const stile = (prefs.stile||'whatif');
-const periodo = (prefs.periodo||'future');
-
-/* Tema coerente allo stile */
-document.documentElement.setAttribute('data-theme', stile==='wtf'?'wtf':'whatif');
-
-/* UI statiche */
-$('titleH1').textContent=T.title;
-$('qLabel').textContent=T.qLabel;
-$('rLabel').textContent=T.rLabel;
-$('fupLabel').textContent=T.fupLabel;
-$('question').textContent=domanda||'—';
-$('badgePeriodo').textContent="🕰️ "+(T.periodo[periodo]||'—');
-$('badgeStile').textContent="🎭 "+(T.stile[stile]||'—');
-$('langBadge').textContent=(lang==='en'?'EN':'IT');
-
-/* Nav */
-$('backBtnTop').addEventListener('click', ()=> history.back());
-$('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
-
-/* ===== Helpers ===== */
-function buildLeanProfile(){
-  const p = {};
-  if (profile.name) p.name=String(profile.name);
-  if (profile.city_now) p.city_now=String(profile.city_now);
-  else if (profile.city) p.city=String(profile.city);
-  if (profile.work_role) p.work_role=String(profile.work_role);
-  else if (profile.role) p.role=String(profile.role);
-  return p;
-}
-function getTZ(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }catch{ return 'UTC'; } }
-function sanitize(style, raw){
-  let out=(raw||"").trim().replace(/[“”"«»]/g,"");
-  // limiti soft per ritmo
-  if(style==='wtf'){
-    const lines= out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
-    const hook = T.close_wtf;
-    if (!lines.length || !/domani|tomorrow|bicchiere|glass/i.test(lines[lines.length-1])) lines.push(hook);
-    out = lines.slice(0,11).join("\n");
-  }else{
-    const lines= out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
-    const hook = T.close_whatif;
-    if (!lines.length || !/domani|tomorrow|qui|here/i.test(lines[lines.length-1])) lines.push(hook);
-    out = lines.slice(0,13).join("\n");
-  }
-  return out;
+/* API */
+async function callEpisode({domanda, stile, periodo, episodio=1, lang}){
+  const r=await fetch('/api/ask',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({domanda, stile, periodo, episodio, lang})});
+  if(!r.ok) throw new Error('net');
+  return r.json();
 }
 
-/* ===== Chiamata API (stream) ===== */
-async function callGenerateStream(){
-  const payload={
-    domanda, lang, periodo, stile,
-    clarify:false, stream:true,
-    profilo: buildLeanProfile(),
-    clarifications: micro,
-    extra:"", now:new Date().toISOString(), tz:getTZ()
+/* Render */
+function applyI18N(){
+  document.documentElement.lang=L();
+  $('h1').textContent=T('h1'); $('qLabel').textContent=T('q'); $('rLabel').textContent=T('r');
+  $('fupH3').textContent=T('fTitle'); $('fupTip').textContent=T('fTip');
+}
+function renderBadges(){
+  const p=prefs();
+  $('periodBadge').textContent = '🕰️ '+(p.periodo==='past'?T('past'):T('future'));
+  $('styleBadge').textContent = '🎭 '+(p.stile==='wtf'?T('styleF'):T('styleW'));
+}
+
+/* Follow-ups state */
+function saveFollowups(question,{auto=[], user=""}={}){
+  const map=JSON.parse(LS.getItem('next_followups')||'{}');
+  map[question]={auto,user,ts:Date.now()};
+  LS.setItem('next_followups',JSON.stringify(map));
+}
+
+function boot(){
+  applyTheme(); applyI18N(); renderBadges();
+
+  const domanda=LS.getItem('domanda')||'';
+  if(!domanda){ location.href='fourth.html'; return; }
+  $('question').textContent=domanda;
+
+  const p=prefs();
+  callEpisode({domanda, stile:p.stile||'whatif', periodo:p.periodo||'future', episodio:1, lang:L()})
+    .then(j=>{
+      $('result').textContent = (j.answer||'').trim() || I18N[L()].err;
+      const box=$('fups'); box.innerHTML="";
+      const arr=Array.isArray(j.followups)?j.followups.slice(0,2):[];
+      arr.forEach(q=>{
+        const d=document.createElement('div'); d.className='item';
+        d.style.cssText="border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.03);margin:6px 0";
+        d.textContent=q; box.appendChild(d);
+      });
+      saveFollowups(domanda,{auto:arr,user:""});
+    })
+    .catch(()=>{ $('result').textContent=I18N[L()].err; });
+
+  $('saveBtn').onclick=()=>{
+    const user=$('fupInput').value.trim(); 
+    const map=JSON.parse(LS.getItem('next_followups')||'{}'); const cur=map[domanda]||{auto:[]};
+    map[domanda]={auto:cur.auto||[],user,ts:Date.now()}; LS.setItem('next_followups',JSON.stringify(map));
+    alert(I18N[L()].saved);
   };
-  const r=await fetch("/api/ask",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json", "x-whatif-stream":"1" },
-    body:JSON.stringify(payload)
-  });
-  if(!r.ok) throw new Error("server");
-  return r.body.getReader();
-}
-
-/* ===== Follow-up (da AI via clarify) ===== */
-async function loadFollowups(){
-  const payload={
-    domanda, lang, periodo, stile,
-    clarify:true, profilo: buildLeanProfile()
+  $('copyBtn').onclick=()=>{
+    navigator.clipboard.writeText(`${T('q')}: ${$('question').textContent}\n\n${$('result').textContent}`).then(()=>alert(I18N[L()].copied));
   };
-  try{
-    const r=await fetch("/api/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-    if(!r.ok) throw 0;
-    const j=await r.json();
-    const qs=Array.isArray(j.questions)? j.questions.slice(0,2):[];
-    if(qs[0]){
-      $('fup1').style.display='block';
-      $('f1t').textContent = qs[0].label || (lang==='en'?'Follow-up':'Approfondimento');
-      $('f1d').textContent = qs[0].placeholder || (T.f1);
-      $('fup1').dataset.label = $('f1t').textContent;
-    }else{
-      $('fup1').style.display='block';
-      $('f1t').textContent = (lang==='en'?'What would prove this is right?':'Che segnale ti direbbe che è giusto?');
-      $('f1d').textContent = T.f1;
-      $('fup1').dataset.label = $('f1t').textContent;
-    }
-    if(qs[1]){
-      $('fup2').style.display='block';
-      $('f2t').textContent = qs[1].label || (lang==='en'?'Follow-up':'Approfondimento');
-      $('f2d').textContent = qs[1].placeholder || (T.f2);
-      $('fup2').dataset.label = $('f2t').textContent;
-    }else{
-      $('fup2').style.display='block';
-      $('f2t').textContent = (lang==='en'?'One concrete step in 24h?':'Un passo concreto in 24 ore?');
-      $('f2d').textContent = T.f2;
-      $('fup2').dataset.label = $('f2t').textContent;
-    }
-    $('f3t').textContent = T.f3;
-  }catch{
-    // fallback locale
-    $('fup1').style.display='block';
-    $('f1t').textContent=(lang==='en'?'What would prove this is right?':'Che segnale ti direbbe che è giusto?');
-    $('f1d').textContent=T.f1;
-    $('fup2').style.display='block';
-    $('f2t').textContent=(lang==='en'?'One concrete step in 24h?':'Un passo concreto in 24 ore?');
-    $('f2d').textContent=T.f2;
-  }
+  $('shareBtn').onclick=()=>{
+    const data={title:"What?f",text:`${T('q')}: ${$('question').textContent}\n\n${$('result').textContent}`,url:location.href};
+    if(navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(data.text);
+  };
+  $('backBtn').onclick=()=>history.back(); $('homeBtn').onclick=()=>location.href='index.html';
+  $('langBtn').onclick=()=>{ const cur=L(); LS.setItem('lang', cur==='it'?'en':'it'); applyI18N(); renderBadges(); };
 }
-
-/* ===== Genera subito all’apertura ===== */
-async function generateAnswer(){
-  const res=$('result');
-  res.textContent=`⏳ ${T.loading} `; const sk=document.createElement('span'); sk.className='skeleton'; sk.style.width='40%'; res.appendChild(sk);
-
-  try{
-    const reader=await callGenerateStream();
-    const decoder=new TextDecoder(); let buffer="", text="";
-    while(true){
-      const {value,done}=await reader.read(); if(done)break;
-      buffer+=decoder.decode(value,{stream:true});
-      const chunks=buffer.split("\n\n"); buffer=chunks.pop();
-      for(const chunk of chunks){
-        if(!chunk.startsWith("data: ")) continue;
-        const data=JSON.parse(chunk.slice(6));
-        if(data.token){ text+=data.token; res.textContent=text; }
-        if(data.done){
-          text = sanitize(stile, text);
-          res.textContent=(text||"").trim();
-          res.classList.add('fade-in');
-        }
-        if(data.error){ res.textContent=T.errServer+" "+(data.detail||""); }
-      }
-    }
-  }catch(e){
-    $('result').textContent=T.errServer;
-  }
-}
-
-/* ===== Azioni ===== */
-$('regenBtn').addEventListener('click', generateAnswer);
-$('saveBtn').addEventListener('click', ()=>{
-  const arr=JSON.parse(LS.getItem('cronologia')||'[]');
-  arr.unshift({ domanda, risposta:($('result').textContent||"").trim(), periodo, stile, lang, ts:Date.now() });
-  LS.setItem('cronologia', JSON.stringify(arr));
-  alert(T.saved);
-});
-$('copyBtn').addEventListener('click', ()=>{
-  navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`).then(()=> alert(T.copied));
-});
-$('shareBtn').addEventListener('click', ()=>{
-  const data={title:"What?f",text:`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`,url: location.href};
-  if(navigator.share) navigator.share(data).catch(()=>{});
-  else navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`).then(()=> alert(T.copied));
-});
-
-/* Salva follow-up selezionati/scritti per domani */
-$('saveFups').addEventListener('click', ()=>{
-  const fups=[];
-  if($('fup1').style.display!=='none') fups.push({ type:'suggested', label:$('f1t').textContent });
-  if($('fup2').style.display!=='none') fups.push({ type:'suggested', label:$('f2t').textContent });
-  const custom=($('f3input').value||'').trim();
-  if(custom) fups.push({ type:'custom', label: custom });
-  const pack={ domanda, fups, ts:Date.now() };
-  LS.setItem('whatif_followups_next', JSON.stringify(pack));
-  alert(T.saved);
-});
-
-/* ===== Boot ===== */
-(function boot(){
-  if(!domanda){ alert(lang==='en'?'No question found.':'Nessuna domanda trovata.'); location.href='fourth.html'; return; }
-  generateAnswer();
-  loadFollowups();
-})();
+boot();
 </script>
 </body>
 </html>
