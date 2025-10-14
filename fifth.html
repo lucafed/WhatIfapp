@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f – Risposta</title>
+<title>What?f – Result</title>
 
 <meta name="theme-color" content="#0B0B0C" />
 <link rel="manifest" href="/manifest.json" />
@@ -15,321 +15,207 @@
   :root{
     --bg:#0B0B0C; --bg2:#101414;
     --fg:#FFFFFF; --muted:#A0B2BA;
-
     --acc:#1C57A0; --acc2:#FFEC01;
-
     --card:rgba(20,28,34,0.92);
     --line:rgba(255,255,255,.12);
-    --chip:#121A26;
-    --ink:#0A0E12;
-    --shadow:rgba(0,0,0,.35);
+    --chip:#121A26; --ink:#0A0E12; --shadow:rgba(0,0,0,.35);
     --highlight:#FFEC01;
   }
   html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
 
   *{box-sizing:border-box}
-  html,body{
-    margin:0;
-    background: radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-    color:var(--fg);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility
-  }
+  html,body{margin:0;background: radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);color:var(--fg);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
   main{max-width:980px;margin:auto;padding:18px}
   .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-
   .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;transition:transform .06s ease,opacity .2s}
   .btn:active{transform:translateY(1px)}
   .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800;box-shadow:0 6px 18px var(--shadow);border:none}
   .btn.large{padding:14px 18px;font-size:16px}
-  .btn.icon{padding:8px 10px;border-radius:10px}
-
   h1{font-size:clamp(22px,5vw,30px);margin:14px 0 2px;color:var(--acc2)}
-  p.sub{color:var(--muted);margin:0 0 8px}
-
   .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
   .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-
-  .qbox{
-    background:rgba(255,255,255,.06);
-    border:1px solid var(--line);
-    border-left:4px solid var(--highlight);
-    border-radius:12px;
-    padding:16px;
-    font-size:17px;
-    line-height:1.65;
-    color:#EAF3EE;
-    max-width:68ch;
-    margin:0 auto;
-    text-wrap:pretty;
-    hyphens:auto;
-    white-space:pre-wrap;
-  }
-
-  .box{
-    background:rgba(255,255,255,.04);
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:18px;
-    line-height:1.7;
-    color:#EAF3EE;
-    white-space:pre-wrap;
-    font-size:17px;
-    letter-spacing:.1px;
-    max-width:68ch;
-    margin:0 auto;
-    text-wrap:pretty;
-    hyphens:auto;
-    min-height:200px;
-  }
-  .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:sk 1s infinite}
-  @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
-
-  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+  .qbox{background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--highlight);border-radius:12px;padding:16px;font-size:17px;line-height:1.65;color:#EAF3EE;max-width:68ch;margin:0 auto;}
+  .box{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:18px;line-height:1.7;color:#EAF3EE;white-space:pre-wrap;font-size:17px;letter-spacing:.1px;max-width:68ch;margin:0 auto;}
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
   .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-
-  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-  input[type="text"]{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
+  .follow{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .follow button{border:1px solid var(--line);background:var(--chip);color:#eaf3ee;border-radius:12px;padding:10px 12px;text-align:left;cursor:pointer}
+  .follow button:hover{background:rgba(255,255,255,.06)}
+  .follow .or{opacity:.7;text-align:center;margin:2px 0}
+  .follow .row{gap:8px}
+  .follow input{flex:1;background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:10px;padding:10px}
+  .mini{color:#A0B2BA;font-size:12px}
 </style>
 </head>
 <body>
-<main>
-  <div class="topbar">
-    <div class="row">
-      <button class="btn" id="backBtn">←</button>
-      <button class="btn" id="homeBtn">🏠</button>
+  <main>
+    <div class="topbar">
+      <div class="row">
+        <button class="btn" id="backBtnTop">←</button>
+        <button class="btn" id="homeBtnTop">🏠</button>
+      </div>
+      <div class="row" style="gap:10px">
+        <span id="badgePeriodo" class="badge">🕰️ —</span>
+        <span id="badgeStile" class="badge">🎭 —</span>
+      </div>
     </div>
 
-    <div class="row" style="gap:10px">
-      <select id="langSwitch" class="btn">
-        <option value="it">IT</option>
-        <option value="en">EN</option>
-      </select>
+    <h1 id="titleH1">Il tuo What?f</h1>
+
+    <div class="card">
+      <h3 class="label" id="qLabel">La tua domanda</h3>
+      <div id="question" class="qbox">—</div>
     </div>
-  </div>
 
-  <h1 id="titleH1">Risultato</h1>
-
-  <div class="card">
-    <h3 class="label" id="qLabel">Domanda</h3>
-    <div id="question" class="qbox">—</div>
-  </div>
-
-  <div class="card">
-    <h3 class="label" id="rLabel">Risultato</h3>
-    <div id="result" class="box">⏳ <span class="skeleton" style="width:40%"></span></div>
-  </div>
-
-  <div class="card">
-    <h3 class="label" id="deepLabel">Vuoi andare più a fondo?</h3>
-    <p class="sub" id="deepSub">Scegli una domanda o scrivi la tua. Domani continuiamo da qui.</p>
-    <div class="chips">
-      <button class="chip" id="sug1">–</button>
-      <button class="chip" id="sug2">–</button>
+    <div class="card">
+      <h3 class="label" id="rLabel">Risultato</h3>
+      <div id="result" class="box">⏳ Sto immaginando il tuo scenario…</div>
+      <p id="closing" class="mini" style="max-width:68ch;margin:8px auto 0">—</p>
     </div>
-    <input id="userNote" type="text" placeholder="Scrivi qui cosa vuoi capire/provare…" />
-    <div class="row" style="margin-top:10px">
-      <button class="btn primary" id="saveFollow">Salva per domani</button>
+
+    <div class="card" id="followCard" style="display:none">
+      <h3 class="label" id="fLabel">Domani continuiamo da qui</h3>
+      <div class="follow" id="followWrap">
+        <!-- qui entrano i 2 follow della IA -->
+        <button id="f1" style="display:none"></button>
+        <button id="f2" style="display:none"></button>
+        <div class="or">oppure</div>
+        <div class="row">
+          <input id="fFree" type="text" placeholder="Scrivi tu cosa vuoi sapere domani…" />
+          <button class="btn primary" id="fSend">Avanti</button>
+        </div>
+        <p class="mini" id="fHint">Scegli un suggerimento o scrivi tu: lo useremo come episodio successivo.</p>
+      </div>
     </div>
-  </div>
-</main>
+  </main>
 
 <script>
-/* ===== Lingua & Tema ===== */
-const LS=localStorage;
-const lang=(LS.getItem('lang')||'it').toLowerCase();
-document.documentElement.lang=lang;
-const prefs=JSON.parse(LS.getItem('whatif_prefs')||'{}');
-document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+/* ===== Helpers / I18N ===== */
+const LS = localStorage;
+const $  = (id)=>document.getElementById(id);
+const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
+const domanda = LS.getItem('domanda') || '';
+const lang = (LS.getItem('lang')||'it').toLowerCase();
+document.documentElement.lang = lang;
 
-const I18N={
-  it:{
-    title:"Risultato", qLabel:"Domanda", rLabel:"Risultato",
-    deepLabel:"Vuoi andare più a fondo?",
-    deepSub:"Scegli una domanda o scrivi la tua. Domani continuiamo da qui.",
-    placeholder:"Scrivi qui cosa vuoi capire/provare…",
-    save:"Salva per domani",
-    loading:"Sto immaginando il tuo scenario…",
-    saved:"Salvato per domani ✅"
-  },
-  en:{
-    title:"Answer", qLabel:"Question", rLabel:"Result",
-    deepLabel:"Go a bit deeper?",
-    deepSub:"Pick a question or write your own. We’ll continue here tomorrow.",
-    placeholder:"Write what you want to understand/try…",
-    save:"Save for tomorrow",
-    loading:"Imagining your scenario…",
-    saved:"Saved for tomorrow ✅"
-  }
-};
-const T=I18N[lang]||I18N.it;
-document.getElementById('titleH1').textContent=T.title;
-document.getElementById('qLabel').textContent=T.qLabel;
-document.getElementById('rLabel').textContent=T.rLabel;
-document.getElementById('deepLabel').textContent=T.deepLabel;
-document.getElementById('deepSub').textContent=T.deepSub;
-document.getElementById('userNote').placeholder=T.placeholder;
-document.getElementById('saveFollow').textContent=T.save;
-document.getElementById('langSwitch').value=lang;
+/* Tema per stile */
+(function applyTheme(){
+  const theme = (prefs.stile==='wtf')?'wtf':'whatif';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
 
-/* ===== Stato base ===== */
-let domanda = LS.getItem('domanda')||'';
-if(!domanda){ const m=new URLSearchParams(location.search).get('q'); if(m){ domanda=m; LS.setItem('domanda',m); } }
-if(!domanda){ alert(lang==='en'?'No question found.':'Nessuna domanda trovata.'); location.href='index.html'; }
-document.getElementById('question').textContent=domanda;
+/* UI init */
+$('backBtnTop').addEventListener('click', ()=> history.back());
+$('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
+$('qLabel').textContent = lang==='en' ? 'Your question' : 'La tua domanda';
+$('rLabel').textContent = lang==='en' ? 'Result' : 'Risultato';
+$('fLabel').textContent = lang==='en' ? 'Tomorrow we continue from here' : 'Domani continuiamo da qui';
+$('question').textContent = domanda || (lang==='en'?'(no question)':'(nessuna domanda)');
 
-const style=(prefs.stile||'whatif');
+$('badgePeriodo').textContent = '🕰️ ' + (prefs.periodo==='past' ? (lang==='en'?'Past':'Passato') : (lang==='en'?'Future':'Futuro'));
+$('badgeStile').textContent   = '🎭 ' + (prefs.stile==='wtf' ? 'What the F' : 'What if');
 
-/* ===== Chip suggerimenti dinamici ===== */
-function suggestionPair(q, style, lang){
-  const s=q.toLowerCase();
-  const it=lang!=='en';
-
-  const isMove = /(trasfer|spostar|tornare|vivere|citt[aà]|aquila|verona|londra|zurigo)/.test(s);
-  const isStart = /(aprire|iniziare|lanciare|bar|business|progetto|startup)/.test(s);
-  const isCareer = /(lavor|job|carriera|team|azienda|ricercatore)/.test(s);
-
-  // What?f (empatico, asciutto, positivo)
-  if(style==='whatif'){
-    if(isMove) return it
-      ? ["Qual è il primo segnale che ti fa sentire parte?", "Cosa provi in 7 giorni senza stravolgere tutto?"]
-      : ["What’s the first sign you feel you belong?", "What can you try in 7 days without upheaval?"];
-    if(isStart) return it
-      ? ["Quale risultato minimo direbbe ‘vale la pena’?", "Che prova rapida fai entro 7 giorni?"]
-      : ["What’s the minimum result that says ‘worth it’?", "What quick test can you run in 7 days?"];
-    if(isCareer) return it
-      ? ["Cosa misuri per capire che stai meglio?", "Quale opzione provi in piccolo per 2 settimane?"]
-      : ["What will you measure to know you’re better off?", "Which option will you trial for 2 weeks?"];
-    return it
-      ? ["Qual è la cosa minima che ti direbbe ‘ok, direzione giusta’?", "Che esperimento fai in 7 giorni per capirlo?"]
-      : ["What’s the smallest sign ‘right direction’?", "What 7-day experiment will you try?"];
-  }
-
-  // WTF (bar, ironico, divertente)
-  if(isMove) return it
-    ? ["Test da bar: cosa fai domani per capire se ti piace davvero?", "Se va male, come lo capisci prima di combinare guai?"]
-    : ["Bar test: what will you do tomorrow to see if you actually like it?", "If it flops, how do you notice before messing up?"];
-  if(isStart) return it
-    ? ["Primo sì che cerchi: chi te lo deve dare?", "Prova lampo: 7 giorni, una mossa, zero scuse."]
-    : ["First ‘yes’ you need: who gives it?", "Lightning test: 7 days, one move, zero excuses."];
-  if(isCareer) return it
-    ? ["Sei meglio o solo più stanco? Cosa lo dimostra?", "Provalo mezz’ora al giorno per 2 settimane: su cosa?"]
-    : ["Better or just more tired? What proves it?", "30 minutes/day for 2 weeks: on what exactly?"];
-  return it
-    ? ["Ok, campione: qual è la prova piccola di domani?", "Dove puoi sbagliare in piccolo senza farti male?"]
-    : ["Alright champ: what’s tomorrow’s tiny test?", "Where can you fail small without getting hurt?"];
-}
-
-const [s1,s2]=suggestionPair(domanda, style, lang);
-const sug1Btn=document.getElementById('sug1');
-const sug2Btn=document.getElementById('sug2');
-sug1Btn.textContent=s1; sug2Btn.textContent=s2;
-sug1Btn.addEventListener('click',()=>{ document.getElementById('userNote').value=s1; });
-sug2Btn.addEventListener('click',()=>{ document.getElementById('userNote').value=s2; });
-
-/* ===== Generazione risposta (stream) ===== */
-function getTZ(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }catch{ return 'UTC'; } }
-function leanProfile(){
-  const p=JSON.parse(LS.getItem('whatif_profile')||'{}')||{};
-  const out={}; if(p.name) out.name=p.name; if(p.city_now) out.city_now=p.city_now; else if(p.city) out.city=p.city;
-  if(p.work_role) out.work_role=p.work_role; else if(p.role) out.role=p.role; return out;
-}
-function sanitize(style, raw){
-  let out=(raw||'').trim().replace(/[“”"«»]/g,'');
-  if(style==='wtf'){
-    const bits = out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
-    const lines = [];
-    bits.forEach(s=>{ const words=s.split(/\s+/); for(let i=0;i<words.length;i+=15){ lines.push(words.slice(i,i+15).join(' ')); }});
-    let filtered = lines.filter(x=>!/(cuore|anima|fiaba|destino|sussurra)/i.test(x));
-    filtered = filtered.slice(0,11); while(filtered.length<7 && lines.length) filtered.push(lines.shift());
-    return filtered.join('\n').trim();
-  }else{
-    const sentences=out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean).slice(0,13);
-    return sentences.join('\n').trim();
-  }
-}
-
-async function generateAnswer(){
-  const result=document.getElementById('result');
-  const clar = JSON.parse(LS.getItem('clarifications')||'{}');
-
-  // includi eventuali followup salvati in passato (nota utente) come contesto
-  const follow = readFollowFor(domanda);
-  if(follow?.user_note){ clar.followup_note = follow.user_note; }
-
-  result.textContent = `⏳ ${T.loading} `; const sk=document.createElement('span'); sk.className='skeleton'; sk.style.width='40%'; result.appendChild(sk);
-
-  try{
-    const payload={
-      domanda, lang, periodo:(prefs.periodo||'future'), stile:style,
-      clarify:false, stream:true,
-      profilo: leanProfile(),
-      clarifications: clar,
-      extra:"", now:new Date().toISOString(), tz:getTZ()
-    };
-    const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json','x-whatif-stream':'1'},body:JSON.stringify(payload)});
-    if(!r.ok) throw new Error('server');
-
-    const reader=r.body.getReader(); const decoder=new TextDecoder();
-    let buffer="", text="";
-    for(;;){
-      const {value,done}=await reader.read(); if(done) break;
-      buffer+=decoder.decode(value,{stream:true});
-      const chunks=buffer.split("\n\n"); buffer=chunks.pop();
-      for(const chunk of chunks){
-        if(!chunk.startsWith("data: ")) continue;
-        const data=JSON.parse(chunk.slice(6));
-        if(data.token){ text+=data.token; result.textContent=text; }
-        if(data.done){ result.textContent = sanitize(style, text); }
-        if(data.error){ result.textContent="Server error"; }
-      }
-    }
-  }catch(e){
-    result.textContent = (lang==='en'?'Network error':'Errore di rete');
-  }
-}
-generateAnswer();
-
-/* ===== Salvataggio follow-up (2 chip + campo libero) ===== */
-function fid(){ return String(domanda).toLowerCase().slice(0,160); }
-function storeKey(){ return 'whatif_followups'; }
-function readFollowups(){ return JSON.parse(LS.getItem(storeKey())||'{}'); }
-function writeFollowups(obj){ LS.setItem(storeKey(), JSON.stringify(obj)); }
-
-function readFollowFor(q){
-  const all=readFollowups(); const id=hash(q);
-  return all[id]||null;
-}
-function hash(s){ // piccolo hash stabile
-  let h=0,i,chr; if(s.length===0) return '0';
-  for(i=0;i<s.length;i++){ chr=s.charCodeAt(i); h=((h<<5)-h)+chr; h|=0; }
-  return String(h);
-}
-
-document.getElementById('saveFollow').addEventListener('click',()=>{
-  const userNote=(document.getElementById('userNote').value||'').trim();
-  const obj=readFollowups();
-  const id=hash(domanda);
-  obj[id]={
-    id, question:domanda, style,
-    suggestions:[s1,s2],
-    user_note:userNote||'',
-    updated_at: Date.now()
+/* ===== Call API (non-stream, così otteniamo follow-up in JSON) ===== */
+async function callAsk({ q, stile, periodo, profile }){
+  const payload = {
+    domanda: q,
+    lang,
+    periodo: periodo || 'future',
+    stile: stile || 'whatif',
+    clarify: false,
+    stream: false,
+    profilo: profile || buildLeanProfile(),
+    clarifications: readClarificationsToday(),
+    extra: ''
   };
-  writeFollowups(obj);
-  alert(T.saved);
+  const r = await fetch('/api/ask',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+  if(!r.ok) throw new Error('server');
+  return r.json();
+}
+
+/* Solo ciò che serve per “nome/ruolo/città” */
+function buildLeanProfile(){
+  try{
+    const p = JSON.parse(LS.getItem('whatif_profile')||'{}');
+    const lean = {};
+    if (p.name) lean.name = String(p.name);
+    if (p.city_now) lean.city_now = String(p.city_now);
+    else if (p.city) lean.city = String(p.city);
+    if (p.work_role) lean.work_role = String(p.work_role);
+    else if (p.role) lean.role = String(p.role);
+    return lean;
+  }catch{ return {}; }
+}
+
+/* Clarifications usati oggi (per contesto morbido) */
+function readClarificationsToday(){
+  try{
+    const mem = JSON.parse(LS.getItem('whatif_memory')||'[]');
+    // prendiamo l’ultima interazione della stessa domanda
+    const item = mem.find(m => (m?.q||'') === (domanda||''));
+    return item?.clar || {};
+  }catch{ return {}; }
+}
+
+/* Render risposta + follow-ups */
+function renderAnswer({answer, followups, closing}){
+  $('result').textContent = (answer||'').trim() || (lang==='en'?'(empty)':'(vuoto)');
+  $('closing').textContent = (closing||'').trim();
+
+  const f1 = $('f1'), f2 = $('f2');
+  if (Array.isArray(followups) && followups.length){
+    $('followCard').style.display = 'block';
+    f1.style.display = 'none';
+    f2.style.display = 'none';
+    if (followups[0]){ f1.textContent = followups[0]; f1.style.display='block'; }
+    if (followups[1]){ f2.textContent = followups[1]; f2.style.display='block'; }
+  } else {
+    $('followCard').style.display = 'block';
+  }
+}
+
+/* Salva la scelta follow-up per episodio successivo */
+function saveNextFollow(text){
+  const key = 'whatif_next_followup';
+  const arr = JSON.parse(LS.getItem(key) || '[]');
+  arr.unshift({ q: domanda, follow: text, ts: Date.now() });
+  LS.setItem(key, JSON.stringify(arr.slice(0,50)));
+
+  // aggiorniamo memory (per coerenza badge)
+  const mem = JSON.parse(LS.getItem('whatif_memory')||'[]');
+  mem.unshift({ q: domanda, clar: { next_followup: text }, ans: ($('result').textContent||'').slice(0,400), ts: Date.now() });
+  LS.setItem('whatif_memory', JSON.stringify(mem.slice(0,200)));
+}
+
+/* Click handlers */
+$('f1').addEventListener('click', ()=>{ const t=$('f1').textContent.trim(); if(t){ saveNextFollow(t); okNext(); } });
+$('f2').addEventListener('click', ()=>{ const t=$('f2').textContent.trim(); if(t){ saveNextFollow(t); okNext(); } });
+$('fSend').addEventListener('click', ()=>{
+  const v = ($('fFree').value||'').trim();
+  if(!v){ alert(lang==='en'?'Write something or choose a suggestion':'Scrivi qualcosa o scegli un suggerimento'); return; }
+  saveNextFollow(v); okNext();
 });
 
-/* ===== Switch lingua persistente ===== */
-document.getElementById('langSwitch').addEventListener('change', (e)=>{
-  LS.setItem('lang', e.target.value);
-  location.reload();
-});
+function okNext(){
+  alert(lang==='en'?'Saved for the next episode ✅':'Salvato per il prossimo episodio ✅');
+  // resta in pagina: domani quinta userà questo follow
+}
 
-/* ===== Nav ===== */
-document.getElementById('backBtn').addEventListener('click', ()=> history.back());
-document.getElementById('homeBtn').addEventListener('click', ()=> location.href='index.html');
+/* Boot */
+(async function boot(){
+  try{
+    const j = await callAsk({ q: domanda, stile: (prefs.stile||'whatif'), periodo: (prefs.periodo||'future') });
+    renderAnswer(j);
+  }catch(e){
+    console.error(e);
+    $('result').textContent = (lang==='en'?'Server error':'Errore server');
+    $('followCard').style.display='none';
+  }
+})();
 </script>
 </body>
 </html>
