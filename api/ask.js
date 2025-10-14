@@ -1,29 +1,31 @@
-// api/ask.js
-// Endpoint completo per What?f
-// - POST /api/ask
-// Richiede Node 18+
-// Imposta OPENAI_API_KEY nell'ambiente se vuoi l'output IA reale.
+// api/ask.js (CommonJS) — VERSIONE ROBUSTA
+// Funziona su Node 14/16/18+ (no ESM necessario).
+// Se OPENAI_API_KEY manca o fallisce la chiamata → fallback locale (niente errori).
 
-import express from "express";
-import { Readable } from "node:stream";
+const express = require("express");
+const { Readable } = require("stream");
 
-// ==== Config base ====
-const router = express.Router();
-router.use(express.json({ limit: "1mb" }));
+// fetch on-demand (compatibile Node <18)
+const fetchCompat = async (...args) => {
+  try {
+    const mod = await import("node-fetch");
+    return mod.default(...args);
+  } catch {
+    // Se node-fetch non è installato, l'IA salta ma il server NON esplode
+    throw new Error("NO_FETCH");
+  }
+};
 
-// ==== Helpers di utilità ====
+// ====== Utils ======
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+const safeStr = (s) => (s || "").toString();
+
 const pick = (obj = {}, keys = []) =>
   keys.reduce((o, k) => (obj[k] !== undefined ? ((o[k] = obj[k]), o) : o), {});
-
-function safeStr(s) {
-  return (s || "").toString();
-}
 
 function firstName(profilo = {}) {
   const n = safeStr(profilo.name || "").trim();
   if (!n) return "";
-  // prendi solo la prima parola per naturalezza
   return n.split(/\s+/)[0];
 }
 
@@ -37,7 +39,6 @@ function extractKeywords(q) {
 }
 
 function buildFollowups(q, ans, lang = "it") {
-  // 2 follow-up sempre coerenti (domanda + risposta), e tono coerente allo stile
   const base = safeStr(q);
   const a = safeStr(ans);
   const brief = a.replace(/\s+/g, " ").slice(0, 220);
@@ -55,28 +56,22 @@ function buildFollowups(q, ans, lang = "it") {
 
 function sanitizeLines(style, raw) {
   let out = safeStr(raw).replace(/[“”«»]/g, '"').trim();
-
-  // niente poesia triste / termini troppo melensi
   const banned = /\b(nostalgia|sussurr\w*|liric\w*|fiab\w*|cuore infranto|destino crudele)\b/gi;
   out = out.replace(banned, "");
 
-  // righe
   let lines = out
     .split(/\n+|(?<=[.!?])\s+/)
     .map((s) => s.trim())
     .filter(Boolean);
 
   if (style === "wtf") {
-    // 7–11 righe, ritmo frizzante, zero cattiveria
     lines = lines.slice(0, 11);
     while (lines.length < 7) lines.push(".");
   } else {
-    // whatif 9–13 righe, asciutto, positivo
     lines = lines.slice(0, 13);
     while (lines.length < 9) lines.push(".");
   }
 
-  // hook finale (continua domani)
   const last = lines[lines.length - 1] || "";
   if (!/domani|prossim|continua|segu/i.test(last)) {
     if (style === "wtf") {
@@ -86,7 +81,6 @@ function sanitizeLines(style, raw) {
     }
   }
 
-  // riassembla
   return lines.join("\n").replace(/\n\./g, "");
 }
 
@@ -99,9 +93,7 @@ function localClarify(q, lang = "it", periodo = "future") {
     return [
       {
         id: "pivot_year",
-        label: it
-          ? "In che anno avresti davvero cambiato rotta?"
-          : "Which year was the real turning point?",
+        label: it ? "In che anno avresti davvero cambiato rotta?" : "Which year was the real turning point?",
         placeholder: it ? "es. 2015 (trasferimento) / 2010 (offerta)" : "e.g., 2015 move / 2010 offer",
       },
       {
@@ -147,7 +139,6 @@ function localGenerate({ domanda, stile, lang, profilo }) {
     : `${you}, I know you: you’re not running away—you’re choosing air that fits.`;
 
   if (stile === "wtf") {
-    // What the F — ubriaco simpatico, ironico, allegro
     const t = it
       ? `${baseWho}
 ${q}? Ma sì, cosa può andare storto: due decisioni impulsive e tre brindisi ben piazzati.
@@ -167,7 +158,6 @@ If needed, I’ll pick up the story tomorrow — you bring the ice.`;
     return sanitizeLines("wtf", t);
   }
 
-  // What if — empatico, asciutto, positivo
   const t = it
     ? `${baseWho}
 ${q}. Non per ricominciare da zero: per ricominciare da te.
@@ -187,9 +177,7 @@ Let’s keep getting to know you: tomorrow I’ll ask two things and we’ll mov
   return sanitizeLines("whatif", t);
 }
 
-// ==== OpenAI (opzionale) ====
-// Se vuoi usare l'IA vera, setta OPENAI_API_KEY.
-// Il codice usa Responses API (o Chat) in fallback. Stream gestito.
+// ====== OpenAI (opzionale) ======
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 async function openAIClarify({ domanda, lang, periodo, stile, profilo }) {
@@ -214,7 +202,7 @@ Return as an array ONLY: [{id,label,placeholder}], max 3.
   });
 
   try {
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    const r = await fetchCompat("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${OPENAI_API_KEY}`,
@@ -231,11 +219,16 @@ Return as an array ONLY: [{id,label,placeholder}], max 3.
       }),
     });
 
+    if (!r.ok) throw new Error("OPENAI_BAD_STATUS");
     const j = await r.json();
     const txt = j?.choices?.[0]?.message?.content || "{}";
-    const parsed = JSON.parse(txt);
+    let parsed = {};
+    try {
+      parsed = JSON.parse(txt);
+    } catch {
+      parsed = {};
+    }
     if (Array.isArray(parsed)) {
-      // Nel caso il modello abbia restituito direttamente []
       return parsed.slice(0, 3).map((q, i) => ({
         id: q.id || `c${i + 1}`,
         label: safeStr(q.label || q.text || "—"),
@@ -278,25 +271,29 @@ async function* openAIStreamGenerate({ domanda, lang, periodo, stile, profilo })
 
   const user = `${domanda}\n\nPeriod: ${periodo}. Style: ${stile}. Name: ${name || "-"}.\nTone rules strictly enforced.`;
 
-  // Chat Completions streaming
-  const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      temperature: 0.9,
-      stream: true,
-      messages: [
-        { role: "system", content: sys },
-        { role: "user", content: user },
-      ],
-    }),
-  });
+  let resp;
+  try {
+    resp = await fetchCompat("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        temperature: 0.9,
+        stream: true,
+        messages: [
+          { role: "system", content: sys },
+          { role: "user", content: user },
+        ],
+      }),
+    });
+  } catch {
+    return null;
+  }
 
-  if (!resp.ok || !resp.body) return null;
+  if (!resp || !resp.ok || !resp.body) return null;
 
   const reader = resp.body.getReader();
   const decoder = new TextDecoder();
@@ -317,58 +314,58 @@ async function* openAIStreamGenerate({ domanda, lang, periodo, stile, profilo })
         const tok = delta?.choices?.[0]?.delta?.content;
         if (tok) yield tok;
       } catch {
-        /* ignore */
+        /* ignore chunk */
       }
     }
   }
 }
 
-// ==== Endpoint principale ====
-// Body: { domanda, lang, periodo, stile, clarify, stream, profilo, clarifications, now, tz }
+// ====== Router ======
+const router = express.Router();
+router.use(express.json({ limit: "1mb" }));
+
+// health/test
+router.get("/", (_req, res) => {
+  res.json({ ok: true, msg: "What?f /api/ask alive" });
+});
+
+// Body: { domanda, lang, periodo, stile, clarify, stream, profilo }
 router.post("/", async (req, res) => {
-  const {
-    domanda = "",
-    lang = "it",
-    periodo = "future",
-    stile = "whatif",
-    clarify = false,
-    profilo = {},
-  } = req.body || {};
+  try {
+    const {
+      domanda = "",
+      lang = "it",
+      periodo = "future",
+      stile = "whatif",
+      clarify = false,
+      profilo = {},
+    } = req.body || {};
 
-  const wantStream = req.get("x-whatif-stream") === "1";
+    const wantStream = (req.get("x-whatif-stream") || "").toString() === "1";
+    const q = safeStr(domanda).trim();
 
-  // Validazione base
-  const q = safeStr(domanda).trim();
-  if (!q) {
+    if (!q) {
+      if (clarify) return res.json({ questions: localClarify("?", lang, periodo) });
+      return res.status(400).json({ error: "Missing 'domanda'." });
+    }
+
+    // ===== CLARIFY =====
     if (clarify) {
-      return res.json({ questions: localClarify("?", lang, periodo) });
+      let questions = await openAIClarify({ domanda: q, lang, periodo, stile, profilo });
+      if (!questions || !questions.length) questions = localClarify(q, lang, periodo);
+      return res.json({ questions });
     }
-    return res.status(400).json({ error: "Missing 'domanda'." });
-  }
 
-  // === BRANCH: CLARIFY ===
-  if (clarify) {
-    // 1) prova IA
-    let questions = await openAIClarify({ domanda: q, lang, periodo, stile, profilo });
-    // 2) fallback locale
-    if (!questions || !questions.length) {
-      questions = localClarify(q, lang, periodo);
-    }
-    return res.json({ questions });
-  }
+    // ===== GENERATE =====
+    if (wantStream) {
+      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("Connection", "keep-alive");
 
-  // === BRANCH: GENERATE ===
-  if (wantStream) {
-    // Streaming SSE-like: la tua fifth.html legge "data: {token}" e poi "data: {done:true,...}"
-    res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-    res.setHeader("Cache-Control", "no-cache, no-transform");
-    res.setHeader("Connection", "keep-alive");
+      let full = "";
+      let usedAI = false;
 
-    let full = "";
-    let usedAI = false;
-
-    try {
-      if (OPENAI_API_KEY) {
+      try {
         const gen = await openAIStreamGenerate({ domanda: q, lang, periodo, stile, profilo });
         if (gen) {
           usedAI = true;
@@ -377,91 +374,84 @@ router.post("/", async (req, res) => {
             res.write(`data: ${JSON.stringify({ token: tok })}\n\n`);
           }
         }
+      } catch {
+        // fallback sotto
       }
-    } catch {
-      // ignore → fallback
+
+      if (!usedAI) {
+        const text = localGenerate({ domanda: q, stile, lang, profilo });
+        full = text;
+        const chunks = text.match(/.{1,60}(\s|$)/g) || [text];
+        for (const c of chunks) res.write(`data: ${JSON.stringify({ token: c })}\n\n`);
+      }
+
+      const clean = sanitizeLines(stile, full);
+      const followups = buildFollowups(q, clean, lang);
+      res.write(`data: ${JSON.stringify({ done: true, followups })}\n\n`);
+      return res.end();
     }
 
-    if (!usedAI) {
-      // Fallback locale (no IA): generiamo tutto e lo "fintiamo" a token
-      const text = localGenerate({ domanda: q, stile, lang, profilo });
-      full = text;
-      const chunks = text.match(/.{1,60}(\s|$)/g) || [text];
-      for (const c of chunks) {
-        res.write(`data: ${JSON.stringify({ token: c })}\n\n`);
-      }
-    }
-
-    // Sanitize finale e follow-up coerenti
-    const clean = sanitizeLines(stile, full);
-    const followups = buildFollowups(q, clean, lang);
-
-    res.write(`data: ${JSON.stringify({ done: true, followups })}\n\n`);
-    return res.end();
-  }
-
-  // Non streaming (sync)
-  let answer = null;
-  if (OPENAI_API_KEY) {
-    try {
-      // Usa chat non-stream come fallback sincrono
-      const name = firstName(profilo);
-      const it = lang !== "en";
-      const sys =
-        stile === "wtf"
-          ? `You are "What the F": sarcastic, bar-humor, tipsy but kind. Make the user LAUGH, never cruel. No melancholy. No poetry.
+    // non-stream
+    let answer = null;
+    if (OPENAI_API_KEY) {
+      try {
+        const name = firstName(profilo);
+        const it = lang !== "en";
+        const sys =
+          stile === "wtf"
+            ? `You are "What the F": sarcastic, bar-humor, tipsy but kind. Make the user LAUGH, never cruel. No melancholy. No poetry.
 - Language: ${lang}
 - Length: 7–11 short lines.
 - If you know the user's name, weave it once naturally (${name || "no name"}).
 - End with: "${it ? "Ok amico, domani ti do il seguito — porta il ghiaccio." : "Alright pal, I’ll spill the sequel tomorrow — bring ice."}"`
-          : `You are "What?f": empathetic, dry, positive. Not a coach. No sadness, no poetry.
+            : `You are "What?f": empathetic, dry, positive. Not a coach. No sadness, no poetry.
 - Language: ${lang}
 - Length: 9–13 short lines.
 - If you know the user's name, weave it once naturally (${name || "no name"}).
 - End with: "${it ? "Continuiamo a conoscerci: domani ti chiedo due cose e portiamo avanti la storia." : "Let’s keep getting to know you: tomorrow I’ll ask two things and we’ll move the story forward."}"`;
 
-      const user = `${q}\n\nPeriod: ${periodo}. Style: ${stile}. Name: ${name || "-"}.\nTone rules strictly enforced.`;
+        const user = `${q}\n\nPeriod: ${periodo}. Style: ${stile}. Name: ${name || "-"}.\nTone rules strictly enforced.`;
 
-      const r = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          temperature: 0.9,
-          messages: [
-            { role: "system", content: sys },
-            { role: "user", content: user },
-          ],
-        }),
-      });
-      const j = await r.json();
-      answer = j?.choices?.[0]?.message?.content || null;
-    } catch {
-      answer = null;
+        const r = await fetchCompat("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            temperature: 0.9,
+            messages: [
+              { role: "system", content: sys },
+              { role: "user", content: user },
+            ],
+          }),
+        });
+
+        if (r.ok) {
+          const j = await r.json();
+          answer = j?.choices?.[0]?.message?.content || null;
+        }
+      } catch {
+        answer = null;
+      }
     }
-  }
 
-  if (!answer) {
-    answer = localGenerate({ domanda: q, stile, lang, profilo });
-  } else {
-    answer = sanitizeLines(stile, answer);
-  }
+    if (!answer) answer = localGenerate({ domanda: q, stile, lang, profilo });
+    else answer = sanitizeLines(stile, answer);
 
-  const followups = buildFollowups(q, answer, lang);
-  return res.json({ answer, followups });
+    const followups = buildFollowups(q, answer, lang);
+    return res.json({ answer, followups });
+  } catch (e) {
+    // Qualsiasi errore inatteso → 200 con fallback (mai 500)
+    const domanda = safeStr(req.body?.domanda || "");
+    const stile = safeStr(req.body?.stile || "whatif");
+    const lang = safeStr(req.body?.lang || "it");
+    const profilo = req.body?.profilo || {};
+    const answer = localGenerate({ domanda, stile, lang, profilo });
+    const followups = buildFollowups(domanda, answer, lang);
+    return res.status(200).json({ answer, followups, fallback: true });
+  }
 });
 
-// ===== Export router (Express) =====
-export default router;
-
-/*
-USO:
-import express from "express";
-import askRouter from "./api/ask.js";
-const app = express();
-app.use("/api/ask", askRouter);
-app.listen(3000);
-*/
+module.exports = router;
