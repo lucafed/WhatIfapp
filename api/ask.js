@@ -1,203 +1,290 @@
 // /api/ask.js
-// Edge API — restituisce SEMPRE { answer, followups, questions }
-// e forza il tono giusto lato server con un sanitizer.
+import OpenAI from "openai";
 
-export const config = { runtime: 'edge' };
+/* ========= Setup ========= */
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const MODEL_TEXT = "gpt-4o-mini";
+const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
-const SYS_TONES = {
-  it: {
-    whatif: `Tono: amico intelligente, empatico, asciutto. Zero malinconia, zero poesia.
-Frasi brevi, concrete, con un filo di ironia elegante. Mai coach, mai sdolcinato.
-Chiudi l’episodio con una micro-spinta sul “ci vediamo domani”.`,
-    wtf: `Tono: bar brillante, sarcastico ma affettuoso, da amico lucido e divertente.
-Battute intelligenti, ritmo veloce, alcolico quanto basta. Niente cattiveria, niente vittimismo.
-Chiudi sempre con: "Clink. Stesso bancone, domani rimescoliamo."`
-  },
-  en: {
-    whatif: `Tone: smart friend, empathetic, crisp. No sadness, no poetry.
-Short, concrete lines, a touch of dry wit. Never preachy.`,
-    wtf: `Tone: witty bar vibe, cheeky but warm. Punchy jokes, quick rhythm. End with: "Clink. Same counter, we reshuffle tomorrow."`
-  }
-};
+/* ========= Utils ========= */
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-// esempi “ancora meglio”
-const FEW_SHOTS = {
-  it: {
-    whatif: [
-      `Sai già che non lo faresti per nostalgia: è più un esperimento di equilibrio. All’inizio penseresti “che ci faccio qui?”, poi ti accorgeresti che respirare senza rumore non è male. Domani vediamo cosa succede quando inizi a sentirti di nuovo parte del posto.`,
-      `Hai già gli indizi: ti serve spazio mentale, non un colpo di scena. Posti che ti mettono in asse senza chiederti nulla. Da lì, si riparte.`],
-    wtf: [
-      `Tornare all’Aquila? Aria fresca, montagne gratis e barista che ti dà del tu dopo due caffè. Ti siedi, ridi, qualcuno offre un giro. Non è nostalgia: è manutenzione emotiva con vista Gran Sasso. Clink. Stesso bancone, domani rimescoliamo.`,
-      `Compra pure la moto: se va male hai almeno una scusa elegante per arrivare tardi. Se va bene, ti trovi un sorriso sotto il casco. Clink. Stesso bancone, domani rimescoliamo.`
-    ]
-  },
-  en: { whatif: [], wtf: [] }
-};
-
-function ensureString(x){ return (typeof x === 'string' ? x : JSON.stringify(x||'')).trim(); }
-
-// Post-process stile
-function sanitize(style, text, lang='it'){
-  let t = ensureString(text)
-    .replace(/[“”«»]/g,'"')
-    .replace(/\s+\n/g,'\n')
-    .trim();
-
-  // spezzatura in righe corte
-  const lines = t.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
-
-  if(style==='wtf'){
-    // taglia e rendi più punchy
-    let out = lines.map(s=>{
-      // togli zucchero e frasi tristi
-      if(/(nostalgia|triste|mancanza|vuoto)/i.test(s)) return '';
-      // stringhe lunghe -> accorcia
-      if(s.length>140){ s = s.slice(0,120).replace(/[,;:]?[^.?!]*$/,'')+'.'; }
-      return s;
-    }).filter(Boolean);
-
-    // evita doppioni della chiusura
-    out = out.filter(s=>!/(Stesso bancone|rimescoliamo)/i.test(s));
-    // massimo 8-12 righe
-    out = out.slice(0,10);
-    // chiusura obbligatoria
-    out.push(lang==='en' ? 'Clink. Same counter, we reshuffle tomorrow.' : 'Clink. Stesso bancone, domani rimescoliamo.');
-    return out.join('\n');
-  }
-
-  // WHATIF: asciutto, positivo
-  let out = lines.map(s=>{
-    if(/(tristezza|mancanza|vuoto|dolore)/i.test(s)) return '';
-    if(s.length>160){ s = s.slice(0,140).replace(/[,;:]?[^.?!]*$/,'')+'.'; }
-    return s;
-  }).filter(Boolean);
-
-  // 7–11 frasi
-  out = out.slice(0,11);
-  if(out.length<6 && FEW_SHOTS[lang]?.whatif?.length){
-    out = [FEW_SHOTS[lang].whatif[0]];
-  }
-  // chiusura soft
-  const end = lang==='en'
-    ? 'Tomorrow we nudge it forward.'
-    : 'Domani la spingiamo un passo avanti.';
-  if(!out[out.length-1]?.match(/Domani|Tomorrow/i)) out.push(end);
-  return out.join('\n');
+function detectLang(text = "") {
+  const enHits = (text.match(/\b(what|if|and|or|you|should|would|move|work|buy|motor|bike|city)\b/gi) || []).length;
+  const itHits = (text.match(/\b(e|se|quando|perché|moto|tornassi|trasferir|lavor|comprare|acquistare|aquila)\b/gi) || []).length;
+  return enHits > itHits ? "en" : "it";
 }
 
-// fallback followups dinamici
-function buildFollowups(domanda, stile='whatif', lang='it'){
-  const q = ensureString(domanda);
-  const isIt = lang==='it';
-  const base = [
-    isIt ? `Qual è il primo segnale concreto che ti direbbe che "${q}" sta funzionando?`
-         : `What is the first tangible signal that "${q}" is working?`,
-    isIt ? `Cosa puoi testare nei prossimi 7 giorni con rischio quasi zero?`
-         : `What can you test in the next 7 days with near-zero risk?`
+function classifyTopic(q = "") {
+  const s = q.toLowerCase();
+  if (/(moto|motor(e|bike)|scooter|vespa)/.test(s)) return "moto";
+  if (/(barca|vela|gommone|yacht|boat)/.test(s)) return "barca";
+  if (/(tornassi|trasferi|trasloco|vivere a|aquila|l'aquila|move|relocat)/.test(s)) return "città";
+  if (/(lugano|milano|roma|verona|bussolengo|londra|zurigo)/.test(s)) return "città";
+  if (/(lavoro|job|ricercatore|azienda|ufficio|work)/.test(s)) return "lavoro";
+  if (/(comprare|acquistare|buy|purchase)/.test(s)) return "acquisto";
+  return "generale";
+}
+
+function todayInfo(lang) {
+  const d = new Date();
+  const loc = isEn(lang) ? "en-GB" : "it-IT";
+  const weekday = d.toLocaleDateString(loc, { weekday: "long" });
+  const date = d.toLocaleDateString(loc, { day: "2-digit", month: "long", year: "numeric" });
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${weekday}, ${date} • ${hh}:${mm}`;
+}
+
+/* ========= Persona & stile – ESEMPI GIUSTI ========= */
+const PERSONAS = {
+  whatif: {
+    system: (lang) => isEn(lang)
+      ? `
+You are "What?f": warm, clear, confident, not poetic. Sounds like a friend who knows the user well.
+Length target: 130–170 words. Short sentences, upbeat. No sadness/melancholy. No lists.
+Use the user's first name once if available. Present-tense, grounded.
+Every reply must feel like episode 1 of a story that continues tomorrow with 2–3 tiny questions.
+END softly with a serial hook about tomorrow's two micro-questions.
+
+Tone anchors (DO NOT COPY TEXT, only match rhythm/attitude):
+- AQUILA (What?f): "Non lo faresti per scappare, ma per respirare meglio... L’Aquila ti fa ricominciare senza ricominciare da zero... Non è nostalgia, è equilibrio che torna. Hai già girato la chiave; domani ti faccio due domande e vediamo dove porta."
+- MOTO (What?f): "La prendi e smetti di raccontartela... niente eroismi, casco, pioggia se capita... una gioia piccola ogni volta che la accendi. Domani due cose pratiche e allarghiamo la strada."
+Reply ONLY in English.`
+      : `
+Sei "What?f": empatica, asciutta, positiva. Suoni come un amico che lo conosce bene.
+Lunghezza: 130–170 parole. Frasi brevi, ritmo naturale, senza malinconia o poesia. Niente elenchi.
+Usa il nome dell’utente una volta se disponibile. Presente, concreto.
+Ogni risposta è episodio 1 che continua domani con 2–3 micro-domande.
+CHIUDI con un gancio dolce sulle due micro-domande di domani.
+
+Ancore di tono (NON copiare, imita solo ritmo/atteggiamento):
+- AQUILA (What?f): "Non lo faresti per scappare, ma per respirare meglio... L’Aquila ti fa ricominciare senza ricominciare da zero... Non è nostalgia, è equilibrio che torna. Hai già girato la chiave; domani ti faccio due domande e vediamo dove porta."
+- MOTO (What?f): "La prendi e smetti di raccontartela... niente eroismi, casco, pioggia se capita... una gioia piccola ogni volta che la accendi. Domani due cose pratiche e allarghiamo la strada."
+Rispondi SOLO in Italiano.`
+  },
+  wtf: {
+    system: (lang) => isEn(lang)
+      ? `
+You are "What the F": witty bartender, joyfully tipsy, never mean. Make them really laugh.
+Length: 140–180 words. 10–14 punchy lines. Smart one-liners, playful, no cruelty. No lists.
+Use a friendly nickname once (“amico”) or the user’s name. Lightly boozy voice.
+Every reply is episode 1 and ENDS with a cheeky serial hook about tomorrow + two tiny questions.
+
+Tone anchors (DO NOT COPY TEXT, match rhythm/attitude only):
+- AQUILA (WTF): "Tornare all’Aquila? Ottima mossa: aria fresca, montagne gratis e caffè di chiacchiera vera. Qui anche il vento ha l’abbonamento mensile... Dai, non scappi: cambi colonna sonora. Domani un altro giro e vediamo chi entra dalla porta."
+- MOTO (WTF): "Vuoi la moto? Finalmente, amico... La benzina costa? Anche il latte di mandorla, ma non ti fa sorridere così... Domani due domandine e scegliamo il rum—ehm—il modello."
+Reply ONLY in English.`
+      : `
+Sei "What the F": barista brillante, allegramente ubriaco, mai cattivo. Deve far RIDERE.
+Lunghezza: 140–180 parole. 10–14 righe frizzanti. Battute intelligenti, affettuose. Niente elenchi.
+Usa un nomignolo (“amico”) o il nome. Voce alcolica ma lucida.
+Ogni risposta è episodio 1 e CHIUDE con un gancio sfacciato su domani + due micro-domande.
+
+Ancore di tono (NON copiare, imita solo ritmo/atteggiamento):
+- AQUILA (WTF): "Tornare all’Aquila? Aria fresca, montagne gratis e caffè da chiacchiera vera. Qui anche il vento ha l’abbonamento mensile... Non scappi: cambi colonna sonora. Domani un altro giro e vediamo chi entra dalla porta."
+- MOTO (WTF): "Vuoi la moto? Finalmente, amico... La benzina costa? Anche il latte di mandorla, ma non fa sorridere così... Domani due domandine e scegliamo il rum—ehm—il modello."
+Rispondi SOLO in Italiano.`
+  }
+};
+
+/* ========= Mirror line (una riga che “ti conosce”) ========= */
+function mirrorLine(profile = {}, lang = "it") {
+  const en = isEn(lang);
+  const name = (profile?.name || "").split(" ")[0] || "";
+  const city = profile?.city_now || profile?.city || "";
+  const role = profile?.work_role || profile?.role || "";
+  const poolIt = [
+    name ? `${name}, non cerchi scuse: cerchi aria che ti somiglia.` : "Non cerchi scuse: cerchi aria che ti somiglia.",
+    city ? `${city} ti tiene in equilibrio finché non diventa stretta.` : "Ti serve un posto che tenga il ritmo, non il freno tirato.",
+    role ? `Nel lavoro (${role}) ti muovi se il perché resta acceso.` : "Ti muovi solo quando il perché è acceso."
   ];
-  if(stile==='wtf'){
-    base[0] = isIt ? `Quando capisci che non ti stai raccontando storie su "${q}"?`
-                   : `When do you know you’re not fooling yourself about "${q}"?`;
-    base[1] = isIt ? `Qual è il “colpo della casa” che puoi provare entro una settimana?`
-                   : `What’s the “house special” you can try within a week?`;
-  }
-  return base;
+  const poolEn = [
+    name ? `${name}, you don’t hunt excuses—you hunt air that fits you.` : "You don’t hunt excuses—you hunt air that fits you.",
+    city ? `${city} steadies you until it feels tight.` : "You want rhythm, not a handbrake.",
+    role ? `In ${role}, you move when the why stays lit.` : "You move only when the why is lit."
+  ];
+  return pick(en ? poolEn : poolIt);
 }
 
-// fallback domande di chiarimento
-function buildClarify(domanda, periodo='future', lang='it'){
-  const isIt = lang==='it';
-  if(periodo==='past'){
-    return isIt
-      ? ['In che anno sarebbe cambiata la rotta?',
-         'Dove e con chi eri allora?',
-         'Che segnale ti avrebbe fatto capire che funzionava?']
-      : ['Which year was the turning point?',
-         'Where and with whom back then?',
-         'Which signal would tell you it worked?'];
-  }
-  return isIt
-    ? ['Finestra decisionale reale? (questo mese / 3–6 mesi)',
-       `Un indicatore su "${domanda}" che puoi misurare entro 30 giorni?`,
-       'Un vincolo concreto da non ignorare? (budget/tempo/energia)']
-    : ['Your real decision window? (this month / 3–6 months)',
-       `One indicator about "${domanda}" measurable within 30 days?`,
-       'A concrete constraint you can’t ignore? (budget/time/energy)'];
+/* ========= Episodic hooks (no “due colpi secchi”) ========= */
+function episodicClosing(style = "whatif", lang = "it") {
+  const en = isEn(lang);
+  const itSoft = [
+    "Domani ti faccio due domande semplici e vediamo dove porta.",
+    "Continuiamo domani con due micro-domande e allunghiamo la storia.",
+    "Lascia il segnalibro qui: domani due domande e si apre il capitolo dopo."
+  ];
+  const itSharp = [
+    "Domani ti verso un altro giro e due domandine: vediamo dove porta.",
+    "Tieni il posto al bancone: domani due domande e continuiamo da lì.",
+    "Non chiudere il conto: domani due domande e la scena riparte."
+  ];
+  const enSoft = [
+    "Tomorrow I’ll ask two tiny questions and we’ll push the story forward.",
+    "Bookmark this; tomorrow two micro-questions and we keep going.",
+    "Hold the thread — two questions tomorrow, next scene unlocked."
+  ];
+  const enSharp = [
+    "Tomorrow I pour another round and two tiny questions — let’s see where it goes.",
+    "Keep the tab open: two questions tomorrow and the scene rolls.",
+    "Don’t cash out: two questions tomorrow and we pick up the story."
+  ];
+  return style === "wtf" ? pick(en ? enSharp : itSharp) : pick(en ? enSoft : itSoft);
 }
 
-async function callModel(prompt){
-  const key = process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_EDGE || '';
-  if(!key) return null;
-  try{
-    const r = await fetch('https://api.openai.com/v1/chat/completions',{
-      method:'POST',
-      headers:{'content-type':'application/json','authorization':`Bearer ${key}`},
-      body:JSON.stringify({
-        model:'gpt-4o-mini',
-        messages:prompt,
-        temperature:0.7,
-        max_tokens:600
-      })
-    });
-    if(!r.ok) return null;
-    const j = await r.json();
-    return j.choices?.[0]?.message?.content || '';
-  }catch{
-    return null;
-  }
-}
+/* ========= Clarify (sempre legato alla domanda) ========= */
+function clarifyQuestions(domanda, periodo, lang = "it") {
+  const en = isEn(lang);
+  const t = classifyTopic(domanda);
+  const L = (id, it, enStr, phIt, phEn) => ({
+    id, label: en ? enStr : it, placeholder: en ? phEn : phIt
+  });
 
-export default async function handler(req){
-  try{
-    const body = await req.json();
-    const lang = (body.lang||'it').toLowerCase();
-    const stile = (body.stile==='wtf') ? 'wtf' : 'whatif';
-    const periodo = (body.periodo==='past') ? 'past' : 'future';
-    const domanda = ensureString(body.domanda||'');
-    const episodio = Number(body.episodio||1);
-    const clarify = !!body.clarify;
-
-    // Clarify only
-    if(clarify){
-      return new Response(JSON.stringify({
-        ok:true,
-        questions: buildClarify(domanda, periodo, lang)
-      }), {headers:{'content-type':'application/json'}});
-    }
-
-    // Prompt
-    const sys = SYS_TONES[lang]?.[stile] || SYS_TONES.it[stile];
-    const few = FEW_SHOTS[lang]?.[stile] || FEW_SHOTS.it[stile] || [];
-    const messages = [
-      {role:'system', content: sys},
-      ...few.slice(0,2).map(ex => ({role:'user', content: domanda}),),
-      {role:'user', content:
-`Domanda: ${domanda}
-Periodo: ${periodo}
-Episodio: ${episodio}
-Lingua: ${lang}
-
-Scrivi l’episodio in 7–12 righe. Non fare elenchi puntati. Non ripetere la domanda.
-Se stile=wtf chiudi con 'Clink. Stesso bancone, domani rimescoliamo.'`
-      }
+  if (t === "moto") {
+    return [
+      L("time_window", "Quando la prenderesti davvero?", "When would you actually buy it?", "questo mese / 3–6 mesi", "this month / 3–6 months"),
+      L("use", "Uso principale?", "Main use?", "casa-lavoro / weekend / viaggi", "commute / weekends / trips"),
+      L("budget", "Budget mensile realistico?", "Realistic monthly budget?", "assicurazione + carburante", "insurance + fuel")
     ];
+  }
+  if (t === "città") {
+    return [
+      L("window", "Finestra realistica per lo spostamento?", "Real window to move?", "entro 3 mesi / 6–12 mesi", "within 3 months / 6–12 months"),
+      L("anchor", "Cosa ti tiene dove sei ora?", "What anchors you now?", "famiglia / lavoro / costi", "family / work / costs"),
+      L("signal", "Segnale che direbbe “funziona”?", "Signal that says “this works”?", "sonno/energia/risposte", "sleep/energy/callback")
+    ];
+  }
+  if (t === "lavoro") {
+    return [
+      L("why", "Il tuo perché oggi?", "Your current *why*?", "impatto / crescita / serenità", "impact / growth / calm"),
+      L("option", "Opzioni sul tavolo?", "Options on the table?", "restare / cambiare team / uscire", "stay / switch team / leave"),
+      L("limit", "Vincolo più concreto?", "Hardest constraint?", "budget/tempo/relazioni", "budget/time/people")
+    ];
+  }
+  return [
+    L("time_window", "Finestra reale della decisione?", "Real decision window?", "questo mese / 3–6 / 12 mesi", "this month / 3–6 / 12 months"),
+    L("signal", "Segnale personale da osservare?", "Personal sign to watch?", "sonno/energia/prima risposta", "sleep/energy/first reply"),
+    L("limit", "Limite più concreto?", "Most concrete limit?", "budget/tempo/energia", "budget/time/energy")
+  ];
+}
 
-    // tenta il modello
-    let raw = await callModel(messages);
-    if(!raw || raw.length<10){
-      // fallback locale minimale
-      raw = stile==='wtf'
-        ? `Ok, ${domanda}? Mossa audace: meno rumore, più gusto. Fatti un giro di realtà, poi un giro al bancone. Clink. Stesso bancone, domani rimescoliamo.`
-        : `Hai già gli indizi: ${domanda}. Non ti serve un colpo di scena, ma un passo giusto. Domani lo portiamo avanti.`;
+/* ========= HTTP handler ========= */
+export default async function handler(req, res) {
+  // CORS
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-whatif-stream");
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
+
+  try {
+    const {
+      domanda,
+      lang: langIn = "auto",
+      periodo = "future",
+      stile = "whatif",
+      stream = false,
+      clarify = false,
+      profilo = {},
+      clarifications = [],
+      extra = ""
+    } = req.body || {};
+
+    if (!domanda || typeof domanda !== "string") {
+      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    const answer = sanitize(stile, raw, lang);
-    const followups = buildFollowups(domanda, stile, lang);
+    const lang = langIn === "auto" ? detectLang(domanda) : langIn;
+    const en = isEn(lang);
+    const topic = classifyTopic(domanda);
 
-    return new Response(JSON.stringify({ ok:true, answer, followups }), {
-      headers:{'content-type':'application/json'}
+    /* ----- Clarify branch (SEMPRE ATTINENTE ALLA DOMANDA) ----- */
+    if (clarify) {
+      // uniamo 2 domande “utente” + 1 “persona” per conoscersi meglio
+      const qs = clarifyQuestions(domanda, periodo, lang);
+      const personaQ = en
+        ? { id: "routine", label: "One daily habit that grounds you?", placeholder: "gym at 7, call mom on Sundays..." }
+        : { id: "routine", label: "Un’abitudine quotidiana che ti tiene a terra?", placeholder: "palestra alle 7, chiamata alla mamma..." };
+      return res.status(200).json({ questions: [...qs.slice(0,2), qs[2], personaQ] });
+    }
+
+    /* ----- Generation branch ----- */
+    const persona = PERSONAS[stile === "wtf" ? "wtf" : "whatif"];
+    const system = `
+${persona.system(lang).trim()}
+
+Today: ${todayInfo(lang)}
+Hard rules:
+- Reply ONLY in ${en ? "English" : "Italiano"}.
+- Stay strictly on topic inferred from the user question: "${topic}".
+- No lists/bullets; no moralizing; zero melancholy.
+- Use at most one small, plausible image. No poetry.
+- ${stile === "wtf" ? "Tone: witty, punchy, tipsy, friendly." : "Tone: warm, concrete, upbeat."}
+${extra ? `\nAdditional style guidance:\n${extra}\n` : ""}
+`.trim();
+
+    const mirror = mirrorLine(profilo, lang);
+    const closing = episodicClosing(stile, lang);
+
+    const user = `
+${en ? "Mirror-opening" : "Apertura-specchio"} (para-free): "${mirror}"
+
+${en ? "User question" : "Domanda utente"}: "${domanda}"
+${en ? "Extra details" : "Dettagli"}: ${Array.isArray(clarifications) && clarifications.length ? clarifications.join(", ") : (en ? "none" : "nessuno")}
+${en ? "Topic to honor" : "Tema da rispettare"}: ${topic}
+
+${en
+  ? `Write a single paragraph with natural line breaks. 130–180 words. Single voice, second person.
+Avoid lists and direct questions until the last line. End with: "${closing}".`
+  : `Scrivi un unico testo con a capo naturali. 130–180 parole. Una sola voce, seconda persona.
+Evita elenchi e domande dirette fino all’ultima riga. Chiudi con: "${closing}".`
+}
+`.trim();
+
+    const temperature = stile === "wtf" ? 0.92 : 0.84;
+    const max_tokens = 800;
+
+    // Streaming opzionale
+    const doStream = stream || String(req.headers["x-whatif-stream"] || "") !== "";
+    if (doStream) {
+      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("Connection", "keep-alive");
+      const s = await client.chat.completions.create({
+        model: MODEL_TEXT,
+        temperature,
+        stream: true,
+        max_tokens,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user }
+        ]
+      });
+      for await (const chunk of s) {
+        const delta = chunk.choices?.[0]?.delta?.content || "";
+        if (delta) res.write(`data: ${JSON.stringify({ token: delta })}\n\n`);
+      }
+      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+      return res.end();
+    }
+
+    // Non-stream
+    const c = await client.chat.completions.create({
+      model: MODEL_TEXT,
+      temperature,
+      max_tokens,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user }
+      ]
     });
-  }catch(e){
-    return new Response(JSON.stringify({ ok:false, error:'server' }), { status:500, headers:{'content-type':'application/json'}});
+
+    const text = c.choices?.[0]?.message?.content?.trim() || "";
+    return res.status(200).json({ answer: text, lang, topic });
+
+  } catch (err) {
+    console.error("API /ask error:", err);
+    return res.status(500).json({ error: "server_error", detail: err?.message || "unknown" });
   }
 }
