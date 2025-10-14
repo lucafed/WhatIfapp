@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f — Episodio</title>
+<title>What?f – Result</title>
 
-<!-- PWA basilare -->
 <meta name="theme-color" content="#0B0B0C" />
 <link rel="manifest" href="/manifest.json" />
 <link rel="apple-touch-icon" href="/icons/icon-192.png" />
@@ -13,247 +12,303 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
 <style>
-:root{
-  --bg:#0B0B0C; --bg2:#101414; --fg:#FFFFFF; --muted:#A0B2BA;
-  --acc:#3A6B56; --acc2:#5A8C75; /* default tema WTF */
-  --card:rgba(20,28,34,0.92); --line:rgba(255,255,255,.12);
-  --chip:#121A26; --ink:#0A0E12; --shadow:rgba(0,0,0,.35);
-}
-html[data-style="whatif"]{ --acc:#1C57A0; --acc2:#FFEC01; }
+  :root{
+    --bg:#0B0B0C; --bg2:#101414;
+    --fg:#FFFFFF; --muted:#A0B2BA;
+    --acc:#1C57A0; --acc2:#FFEC01; /* What?f */
+    --card:rgba(20,28,34,0.92);
+    --line:rgba(255,255,255,.12);
+    --chip:#121A26;
+    --ink:#0A0E12;
+    --shadow:rgba(0,0,0,.35);
+    --highlight:#FFEC01;
+  }
+  html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
 
-*{box-sizing:border-box}
-html,body{
-  margin:0; background:radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%,var(--bg) 60%);
-  color:var(--fg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
-}
-main{max-width:980px;margin:auto;padding:18px}
-.topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
-.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800;box-shadow:0 6px 18px var(--shadow);border:none}
-.btn.large{padding:14px 18px;font-size:16px}
-h1{font-size:clamp(22px,5vw,30px);margin:14px 0 6px;color:var(--acc2)}
-.sub{color:var(--muted);margin:0 0 10px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
-.label{color:var(--acc);font-weight:800;margin:0 0 10px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.chips{display:flex;gap:8px;flex-wrap:wrap}
-.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
-.chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none}
-.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee}
-.input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--acc2);color:#eaf3ee;border-radius:12px;padding:14px;font-size:17px}
-.box{white-space:pre-wrap;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:16px;line-height:1.7;letter-spacing:.1px;font-size:17px;min-height:160px}
-.tools{display:flex;gap:10px;flex-wrap:wrap}
-.tools .btn{background:var(--chip);color:#eaf3ee;font-weight:600;border:1px solid var(--line);box-shadow:none}
-.skel{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:sk 1s infinite}
-@keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
+  *{box-sizing:border-box}
+  html,body{
+    margin:0; background: radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+    color:var(--fg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility
+  }
+  main{max-width:980px;margin:auto;padding:18px}
+  .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+
+  .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;transition:transform .06s ease,opacity .2s}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800;box-shadow:0 6px 18px var(--shadow);border:none}
+  .btn.large{padding:14px 18px;font-size:16px}
+  .btn.icon{padding:8px 10px;border-radius:10px}
+
+  h1{font-size:clamp(22px,5vw,30px);margin:14px 0 2px;color:var(--acc2)}
+  p.sub{color:var(--muted);margin:0 0 8px}
+  .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
+  .label{color:var(--acc);font-weight:800;margin:0 0 8px}
+
+  .qbox{
+    background:rgba(255,255,255,.06); border:1px solid var(--line); border-left:4px solid var(--highlight);
+    border-radius:12px; padding:16px; font-size:17px; line-height:1.65; color:#EAF3EE; max-width:68ch; margin:0 auto; text-wrap:pretty; hyphens:auto;
+  }
+  .box{
+    background:rgba(255,255,255,.04); border:1px solid var(--line); border-radius:12px; padding:18px; line-height:1.7;
+    color:#EAF3EE; white-space:pre-wrap; font-size:17px; letter-spacing:.1px; max-width:68ch; margin:0 auto; text-wrap:pretty; hyphens:auto;
+  }
+
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
+  .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
+  .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
+  .badge.accent{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border:none;font-weight:800}
+
+  #result{min-height:190px}
+  .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:sk 1s infinite}
+  @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
+  #result.fade-in{animation:fade .6s ease}
+  @keyframes fade{from{opacity:.25;transform:translateY(2px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
   <main>
     <div class="topbar">
       <div class="row">
-        <button class="btn" id="backBtn">←</button>
-        <button class="btn" id="homeBtn">🏠</button>
+        <button class="btn" id="backBtnTop">←</button>
+        <button class="btn" id="homeBtnTop">🏠</button>
       </div>
-      <div class="row">
-        <span class="badge" id="epBadge">Ep 1/3</span>
-        <span class="badge" id="langBadge">IT</span>
+      <div class="row" style="gap:10px">
+        <span id="episodeBadge" class="badge accent">—</span>
+        <div class="row">
+          <button class="btn icon" id="prevEp" title="Episodio precedente">◀︎</button>
+          <button class="btn icon" id="nextEp" title="Episodio successivo">▶︎</button>
+        </div>
       </div>
     </div>
 
-    <h1 id="titleH1">Il tuo What?f — Episodio 1</h1>
-    <p class="sub" id="subtitle">Scrivi la domanda, scegli lo stile e genera l’episodio.</p>
+    <h1 id="titleH1">Il tuo What?f prende forma…</h1>
 
     <div class="card">
-      <div class="row" style="justify-content:space-between">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div class="row">
+          <span class="badge" id="badgePeriodo">🕰️ —</span>
+          <span class="badge" id="badgeStile">🎭 —</span>
+        </div>
         <div class="chips" id="styleChips">
-          <button class="chip" data-style="whatif" id="chipWhatIf">What?f</button>
-          <button class="chip" data-style="wtf" id="chipWTF">What the F</button>
-        </div>
-        <div class="chips">
-          <button class="chip" id="prevEp">◀︎</button>
-          <button class="chip" id="nextEp">▶︎</button>
+          <button class="chip" data-style="whatif" id="chipWhatIf">What if (realistic)</button>
+          <button class="chip" data-style="wtf" id="chipWTF">WTF (fun)</button>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <h3 class="label" id="qLabel">Domanda</h3>
-      <input id="question" class="input" placeholder="E se tornassi a vivere all’Aquila?" />
-      <div class="row" style="margin-top:12px">
-        <button id="genBtn" class="btn primary large">🎬 <span id="genTxt">Genera episodio</span></button>
+      <h3 class="label" id="qLabel">Question</h3>
+      <div id="question" class="qbox">—</div>
+      <div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px">
+        <button class="btn" id="regenBtn">🔁 Rigenera</button>
       </div>
     </div>
 
     <div class="card">
-      <h3 class="label" id="eLabel">Episodio</h3>
+      <h3 class="label" id="rLabel">Result</h3>
       <div id="result" class="box">—</div>
-      <div class="row tools" style="margin-top:10px">
-        <button id="saveBtn" class="btn">💾 <span id="saveTxt">Salva</span></button>
-        <button id="copyBtn" class="btn">📋 <span id="copyTxt">Copia</span></button>
-        <button id="shareBtn" class="btn">📤 <span id="shareTxt">Condividi</span></button>
+
+      <div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px">
+        <button id="saveBtn" class="btn">💾 Salva</button>
+        <button id="copyBtn" class="btn">📋 Copia</button>
+        <button id="shareBtn" class="btn">📤 Condividi</button>
       </div>
     </div>
   </main>
 
 <script>
-const LS = localStorage;
-const $  = (id)=>document.getElementById(id);
+/* ===== I18N ===== */
+const I18N = {
+  it:{
+    title:"Il tuo What?f prende forma…",
+    back:"Indietro", home:"Home",
+    periodoPast:"Passato", periodoFuture:"Futuro",
+    chipWhatIf:"What if (realistico)", chipWTF:"What the F (divertente)",
+    qLabel:"La tua domanda", rLabel:"Risultato",
+    loading:"Sto immaginando il tuo scenario…", errServer:"Problema server.", errNet:"Errore di rete.",
+    copied:"Copiato!", saved:"Salvato!",
+    ep:(n)=>`Episodio ${n}/3`
+  },
+  en:{
+    title:"Your What?f is taking shape…",
+    back:"Back", home:"Home",
+    periodoPast:"Past", periodoFuture:"Future",
+    chipWhatIf:"What if (realistic)", chipWTF:"What the F (fun)",
+    qLabel:"Your question", rLabel:"Result",
+    loading:"Imagining your scenario…", errServer:"Server problem.", errNet:"Network error.",
+    copied:"Copied!", saved:"Saved!",
+    ep:(n)=>`Episode ${n}/3`
+  }
+};
+const LS=localStorage;
+const lang=(LS.getItem('lang')||'it').toLowerCase();
+const T=I18N[lang]||I18N.it;
+document.documentElement.lang=lang;
 
-// lingua
-let lang = (LS.getItem('lang') || 'it').toLowerCase();
-document.documentElement.lang = (lang === 'en') ? 'en' : 'it';
-$('langBadge').textContent = (lang === 'en') ? 'EN' : 'IT';
+/* ===== Helpers ===== */
+const $=id=>document.getElementById(id);
+function readJSON(k,def={}){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def; } }
+function writeJSON(k,v){ LS.setItem(k,JSON.stringify(v)); }
 
-// stile
-const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
-let currentStyle = prefs.stile || 'wtf'; // default bar
-applyStyle(currentStyle);
-document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel', c.dataset.style===currentStyle));
-$('styleChips').addEventListener('click',(e)=>{
+/* ===== Prefs & Stato ===== */
+const prefs = readJSON('whatif_prefs', { stile:'whatif', periodo:'future' });
+let domanda = LS.getItem('domanda') || '';
+if(!domanda){ alert(lang==='en'?'No question found.':'Nessuna domanda trovata.'); location.href='fourth.html'; }
+
+let episode = Math.max(1, Math.min(3, Number(LS.getItem('whatif_episode')||1)));
+let currentStyle = (prefs.stile || 'whatif');
+
+/* ===== Profilo LEAN (solo per mirror-line) ===== */
+function buildLeanProfile(){
+  const p = readJSON('whatif_profile',{}) || {};
+  const lean = {};
+  if (p.name) lean.name = String(p.name);
+  if (p.city_now) lean.city_now = String(p.city_now);
+  else if (p.city) lean.city = String(p.city);
+  if (p.work_role) lean.work_role = String(p.work_role);
+  else if (p.role) lean.role = String(p.role);
+  return lean;
+}
+
+/* ===== UI Text ===== */
+$('titleH1').textContent=T.title;
+$('qLabel').textContent=T.qLabel; $('rLabel').textContent=T.rLabel;
+$('backBtnTop').textContent= (lang==='en'?'← '+T.back:'← '+T.back);
+$('homeBtnTop').textContent= (lang==='en'?'🏠 '+T.home:'🏠 '+T.home);
+$('question').textContent = domanda;
+$('badgePeriodo').textContent="🕰️ "+(prefs.periodo==='past'?T.periodoPast:T.periodoFuture);
+$('badgeStile').textContent="🎭 "+(currentStyle==='wtf'?'What the F':'What if');
+$('episodeBadge').textContent = T.ep(episode);
+document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
+document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
+
+/* ===== Switch stile ===== */
+$('styleChips').addEventListener('click',e=>{
   const b=e.target.closest('.chip'); if(!b) return;
   currentStyle=b.dataset.style;
-  prefs.stile=currentStyle; LS.setItem('whatif_prefs', JSON.stringify(prefs));
-  applyStyle(currentStyle);
-  document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel', c.dataset.style===currentStyle));
+  prefs.stile=currentStyle; writeJSON('whatif_prefs',prefs);
+  $('badgeStile').textContent="🎭 "+(currentStyle==='wtf'?'What the F':'What if');
+  document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
+  generate(true);
 });
 
-// episodio
-let episode = Number(LS.getItem('whatif_episode')||1);
-episode = clamp(episode,1,3);
-renderEpBadge();
+/* ===== Episodi ===== */
+$('prevEp').addEventListener('click', ()=>{
+  episode = Math.max(1, episode-1);
+  LS.setItem('whatif_episode', String(episode));
+  $('episodeBadge').textContent = T.ep(episode);
+  generate(true);
+});
+$('nextEp').addEventListener('click', ()=>{
+  episode = Math.min(3, episode+1);
+  LS.setItem('whatif_episode', String(episode));
+  $('episodeBadge').textContent = T.ep(episode);
+  generate(true);
+});
 
-$('prevEp').addEventListener('click', ()=>{ episode=clamp(episode-1,1,3); LS.setItem('whatif_episode',episode); renderEpBadge(); });
-$('nextEp').addEventListener('click', ()=>{ episode=clamp(episode+1,1,3); LS.setItem('whatif_episode',episode); renderEpBadge(); });
-
-function clamp(x,a,b){ return Math.max(a,Math.min(b,x)); }
-
-function applyStyle(s){
-  document.documentElement.setAttribute('data-style', s==='whatif'?'whatif':'wtf');
-  const it = (lang!=='en');
-  $('titleH1').textContent = it
-    ? (s==='whatif'?'Il tuo What?f — Episodio 1':'Il tuo What the F — Episodio 1')
-    : (s==='whatif'?'Your What?f — Episode 1':'Your What the F — Episode 1');
-  $('subtitle').textContent = it
-    ? 'Scrivi la domanda, scegli lo stile e genera l’episodio.'
-    : 'Type your question, pick a style, and generate the episode.';
-  $('qLabel').textContent = it ? 'Domanda' : 'Question';
-  $('eLabel').textContent = it ? 'Episodio' : 'Episode';
-  $('genTxt').textContent  = it ? 'Genera episodio' : 'Generate episode';
-  $('saveTxt').textContent = it ? 'Salva' : 'Save';
-  $('copyTxt').textContent = it ? 'Copia' : 'Copy';
-  $('shareTxt').textContent= it ? 'Condividi' : 'Share';
-  $('chipWhatIf').textContent='What?f';
-  $('chipWTF').textContent='What the F';
+/* ===== Sanitizer locale (rifinitura, NON stravolge) ===== */
+function sanitizeOutput(style, raw){
+  let out = (raw || "").trim().replace(/[“”"«»]/g, "");
+  if (style === 'wtf') {
+    // spezza in righe corte per ritmo
+    const bits = out.split(/\n+|(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean);
+    const lines = [];
+    bits.forEach(s=>{
+      const w=s.split(/\s+/);
+      for(let i=0;i<w.length;i+=15) lines.push(w.slice(i,i+15).join(' '));
+    });
+    out = lines.slice(0,12).join("\n");
+  } else {
+    const sentences = out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
+    out = sentences.slice(0,12).join("\n");
+  }
+  return out.trim();
 }
 
-function renderEpBadge(){
-  $('epBadge').textContent = (lang==='en') ? `Ep ${episode}/3` : `Ep ${episode}/3`;
+/* ===== Generate (SSE) ===== */
+async function callGenerateStream({clarifications={}, extra="" }={}){
+  const payload={
+    domanda,
+    lang,
+    periodo:(prefs.periodo||'future'),
+    stile:currentStyle,
+    episode,
+    clarify:false,
+    stream:true,
+    profilo: buildLeanProfile(),
+    clarifications,
+    extra:"",
+    now: new Date().toISOString()
+  };
+  const r=await fetch("/api/ask",{method:"POST",headers:{ "Content-Type":"application/json","x-whatif-stream":"1" },body:JSON.stringify(payload)});
+  if(!r.ok) throw new Error("server");
+  return r.body.getReader();
 }
 
-// domanda precompilata
-const prevQ = LS.getItem('domanda') || '';
-if (prevQ) $('question').value = prevQ;
-
-// nav
-$('backBtn').addEventListener('click', ()=> history.back());
-$('homeBtn').addEventListener('click', ()=> location.href='index.html');
-
-// genera (non-stream)
-$('genBtn').addEventListener('click', generateEpisode);
-
-async function generateEpisode(){
-  const domanda = ($('question').value || '').trim();
-  if(!domanda){ $('question').focus(); return; }
-  LS.setItem('domanda', domanda);
-
-  $('result').innerHTML = (lang==='en'
-    ? '⏳ Imagining your episode… <span class="skel" style="width:40%"></span>'
-    : '⏳ Sto immaginando il tuo episodio… <span class="skel" style="width:40%"></span>'
-  );
+async function generate(isRegen=false){
+  $('result').textContent=`⏳ ${T.loading} `; const sk=document.createElement('span'); sk.className='skeleton'; sk.style.width='40%'; $('result').appendChild(sk);
+  $('result').classList.remove('fade-in');
 
   try{
-    const body = {
-      domanda,
-      lang,
-      stile: currentStyle,
-      periodo: 'future',
-      episode,
-      profile: leanProfile(), // usiamo il nome se presente
-      micro: {}               // puoi passarci micro-risposte se vuoi
-    };
-
-    const r = await fetch('/api/ask', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify(body)
-    });
-
-    if(!r.ok){
-      $('result').textContent = (lang==='en' ? 'Server error.' : 'Problema server.');
-      return;
+    const reader=await callGenerateStream({});
+    const decoder=new TextDecoder(); let buffer="", text="";
+    while(true){
+      const {value,done}=await reader.read(); if(done)break;
+      buffer+=decoder.decode(value,{stream:true});
+      const chunks=buffer.split("\n\n"); buffer=chunks.pop();
+      for(const chunk of chunks){
+        if(!chunk.startsWith("data: ")) continue;
+        const data=JSON.parse(chunk.slice(6));
+        if(data.token){ text+=data.token; $('result').textContent=text; }
+        if(data.done){
+          text = sanitizeOutput(currentStyle, text);
+          $('result').textContent=(text||"").trim();
+          $('result').classList.add('fade-in');
+        }
+        if(data.error){ $('result').textContent=T.errServer+" "+(data.detail||""); }
+      }
     }
-    const j = await r.json();
-    $('result').textContent = sanitize(j.answer || '');
-
   }catch(e){
     console.error(e);
-    $('result').textContent = (lang==='en' ? 'Network error.' : 'Errore di rete.');
+    $('result').textContent=(e.message==='server'?T.errServer:T.errNet);
   }
 }
 
-function leanProfile(){
-  try{
-    const p = JSON.parse(LS.getItem('whatif_profile')||'{}');
-    const o = {};
-    if (p.name) o.name = String(p.name);
-    if (p.city_now) o.city_now = String(p.city_now); else if (p.city) o.city = String(p.city);
-    if (p.work_role) o.work_role = String(p.work_role); else if (p.role) o.role = String(p.role);
-    return o;
-  }catch{return {}}
-}
-
-function sanitize(s=''){
-  return s.replace(/[“”«»]/g,'').replace(/\n{3,}/g,'\n\n').trim();
-}
-
-// tools
+/* ===== Buttons ===== */
+$('regenBtn').addEventListener('click', ()=> generate(true));
 $('saveBtn').addEventListener('click', ()=>{
-  const arr = JSON.parse(LS.getItem('cronologia')||'[]');
-  arr.unshift({
-    domanda: $('question').value || '',
-    risposta: $('result').textContent || '',
-    stile: currentStyle,
-    lang,
-    ep: episode,
-    ts: Date.now()
-  });
-  LS.setItem('cronologia', JSON.stringify(arr.slice(0,200)));
-  alert(lang==='en'?'Saved!':'Salvato!');
+  const arr=readJSON('cronologia',[]);
+  arr.unshift({ domanda, risposta:($('result').textContent||"").trim(), periodo:prefs.periodo||null, stile:currentStyle, lang, ep:episode, ts:Date.now() });
+  writeJSON('cronologia',arr);
+  alert(T.saved);
 });
 $('copyBtn').addEventListener('click', ()=>{
-  const domanda = $('question').value || '';
-  const txt = `${(lang==='en'?'Question':'Domanda')}: ${domanda}\n\n${$('result').textContent}`;
-  navigator.clipboard.writeText(txt).then(()=> alert(lang==='en'?'Copied!':'Copiato!'));
+  navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`).then(()=> alert(T.copied));
 });
 $('shareBtn').addEventListener('click', ()=>{
-  const data={ title:'What?f',
-    text:`${(lang==='en'?'Question':'Domanda')}: ${$('question').value}\n\n${$('result').textContent}`,
-    url: location.href
-  };
-  if(navigator.share) navigator.share(data).catch(()=>{});
-  else navigator.clipboard.writeText(data.text);
+  const data={title:"What?f",text:`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`,url: location.href};
+  if(navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(`${T.qLabel}: ${domanda}\n\n${$('result').textContent}`);
 });
+
+/* ===== Nav ===== */
+$('backBtnTop').addEventListener('click', ()=> history.back());
+$('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
+
+/* ===== Boot ===== */
+document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
+generate();
 </script>
 
-<!-- SW opzionale -->
+<!-- SW (opzionale) -->
 <script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(()=>{});
-  });
-}
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});
+    });
+  }
 </script>
 </body>
 </html>
