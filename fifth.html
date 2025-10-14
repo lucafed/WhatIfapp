@@ -1,227 +1,198 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>What?f – Risultato</title>
-<meta name="theme-color" content="#0B0B0C" />
-<link rel="manifest" href="/manifest.json" />
-<link rel="apple-touch-icon" href="/icons/icon-192.png" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <style>
-  :root{
-    --bg:#0B0B0C; --bg2:#101414; --fg:#FFFFFF; --muted:#A0B2BA;
-    --acc:#1C57A0; --acc2:#FFEC01; --card:rgba(20,28,34,0.92);
-    --line:rgba(255,255,255,.12); --chip:#121A26; --ink:#0A0E12; --shadow:rgba(0,0,0,.35);
-  }
-  html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
-  *{box-sizing:border-box}
-  html,body{margin:0;background: radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-  main{max-width:980px;margin:auto;padding:18px}
-  .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
-  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800;box-shadow:0 6px 18px var(--shadow);border:none}
-  h1{font-size:clamp(22px,5vw,32px);margin:10px 0 4px;color:var(--acc2)}
-  .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
-  .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-  .qbox,.abox{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:18px;line-height:1.7;color:#EAF3EE;white-space:pre-wrap;font-size:17px;letter-spacing:.1px}
-  .abox{min-height:170px}
-  .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:sk 1s infinite}
-  @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
-  /* follow up */
-  .follow .sug{border:1px solid var(--line);background:rgba(255,255,255,.04);padding:12px 14px;border-radius:12px;margin:8px 0}
-  .follow input{width:100%;height:46px;border-radius:12px;padding:10px 12px;border:1.2px solid rgba(255,255,255,.35);background:#132032;color:#fff}
+:root{
+  --bg:#0B0B0C;--bg2:#101414;--fg:#fff;--muted:#A0B2BA;
+  --acc:#1C57A0;--acc2:#FFEC01;--line:rgba(255,255,255,.14);--chip:#121A26;--card:rgba(20,28,34,.92);--shadow:rgba(0,0,0,.35);
+}
+html[data-theme="wtf"]{--acc:#3A6B56;--acc2:#5A8C75;}
+*{box-sizing:border-box}
+html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2),var(--bg));color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+main{max-width:980px;margin:auto;padding:18px}
+.top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--chip);color:#eaf3ee;border-radius:12px;padding:10px 14px;cursor:pointer}
+.btn.primary{border:none;background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12;font-weight:800;box-shadow:0 6px 18px var(--shadow)}
+h1{margin:12px 0 6px;color:var(--acc2);font-size:clamp(22px,5vw,32px)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+.label{color:var(--acc);font-weight:800;margin:0 0 8px}
+.qbox,.abox{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:18px;white-space:pre-wrap;line-height:1.7}
+.sug{border:1px solid var(--line);background:rgba(255,255,255,.04);padding:12px 14px;border-radius:12px;margin:8px 0;cursor:pointer}
+input[type=text]{width:100%;height:46px;border-radius:12px;padding:10px 12px;border:1.2px solid rgba(255,255,255,.35);background:#132032;color:#fff}
+.skeleton{display:inline-block;min-height:1em;width:40%;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.1),rgba(255,255,255,.04));background-size:200% 100%;animation:sk 1s infinite}
+@keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
 </style>
 </head>
 <body>
 <main>
-  <div class="topbar">
-    <div class="row">
-      <button class="btn" id="backBtn">←</button>
-      <button class="btn" id="homeBtn">🏠</button>
+  <div class="top">
+    <div>
+      <button class="btn" id="back">←</button>
+      <button class="btn" id="home">🏠</button>
     </div>
-    <div class="row">
-      <button class="btn" id="periodBtn">🕰️ —</button>
-      <button class="btn" id="styleBtn">🎭 —</button>
-      <button class="btn" id="langBtn">IT</button>
+    <div>
+      <button class="btn" id="period">🕰️ —</button>
+      <button class="btn" id="style">🎭 —</button>
+      <button class="btn" id="lang">IT</button>
     </div>
   </div>
 
-  <h1 id="titleH1">Il tuo What?f</h1>
+  <h1 id="ttl">Il tuo What?f</h1>
 
   <div class="card">
-    <h3 class="label" id="qLabel">La tua domanda</h3>
+    <h3 class="label" id="ql">La tua domanda</h3>
     <div class="qbox" id="question">—</div>
   </div>
 
   <div class="card">
-    <h3 class="label" id="rLabel">Risultato</h3>
-    <div class="abox" id="answer">⏳ <span class="skeleton" style="width:40%"></span></div>
-    <div class="row" style="margin-top:10px">
-      <button class="btn" id="saveBtn">💾 Salva</button>
-      <button class="btn" id="copyBtn">📋 Copia</button>
-      <button class="btn" id="shareBtn">📤 Condividi</button>
+    <h3 class="label" id="rl">Risultato</h3>
+    <div class="abox" id="answer">⏳ <span class="skeleton"></span></div>
+    <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+      <button class="btn" id="save">💾 Salva</button>
+      <button class="btn" id="copy">📋 Copia</button>
+      <button class="btn" id="share">📤 Condividi</button>
     </div>
   </div>
 
-  <div class="card follow">
-    <h3 class="label" id="fLabel">Domani continuiamo da qui</h3>
-    <div id="sug1" class="sug">—</div>
-    <div id="sug2" class="sug">—</div>
-    <div style="text-align:center;margin:8px 0;color:#A0B2BA" id="orTxt">oppure</div>
-    <input id="nextInput" type="text" placeholder="Scrivi tu cosa vuoi sapere domani…"/>
-    <div class="row" style="margin-top:10px">
+  <div class="card">
+    <h3 class="label" id="fl">Domani continuiamo da qui</h3>
+    <div id="s1" class="sug">—</div>
+    <div id="s2" class="sug">—</div>
+    <div id="or" style="text-align:center;color:#A0B2BA;margin:8px 0">oppure</div>
+    <input id="next" type="text" placeholder="Scrivi tu cosa vuoi sapere domani…">
+    <div style="display:flex;gap:10px;margin-top:10px">
       <button class="btn primary" id="nextBtn">Avanti</button>
     </div>
-    <p id="fHint" style="color:#A0B2BA;margin:8px 0 0">Scegli un suggerimento o scrivi tu: lo useremo come episodio successivo.</p>
   </div>
 </main>
 
 <script>
-/* ===== Helpers ===== */
-const LS=localStorage;
-function readJSON(k,def){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def}}
-function writeJSON(k,v){LS.setItem(k,JSON.stringify(v));}
-function escapeHTML(s){return (s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])}
-function getTZ(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'}catch{ return 'UTC' }}
+/* helpers */
 function $(id){return document.getElementById(id)}
-/* ===== i18n ===== */
-const I18N={ it:{
-  title:"Il tuo What?f", qLabel:"La tua domanda", rLabel:"Risultato",
-  fLabel:"Domani continuiamo da qui", or:"oppure",
-  next:"Avanti", hint:"Scegli un suggerimento o scrivi tu: lo useremo come episodio successivo.",
-  periodPast:"Passato", periodFuture:"Futuro", styleWIF:"What if", styleWTF:"What the F",
-  saving:"Salvato!", copied:"Copiato!"
-}, en:{
-  title:"Your What?f", qLabel:"Your question", rLabel:"Result",
-  fLabel:"Tomorrow we continue from here", or:"or",
-  next:"Next", hint:"Pick a suggestion or write your own; we’ll use it for the next episode.",
-  periodPast:"Past", periodFuture:"Future", styleWIF:"What if", styleWTF:"What the F",
-  saving:"Saved!", copied:"Copied!"
-}};
-let lang=(LS.getItem('lang')||'it').toLowerCase();
-function T(){return I18N[lang]||I18N.it}
-/* ===== Prefs ===== */
-const prefs=readJSON('whatif_prefs',{ periodo:'future', stile:'whatif' });
-function setTheme(){ document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif'); }
-setTheme();
-
-/* ===== UI refs ===== */
-const backBtn=$('backBtn'), homeBtn=$('homeBtn'), langBtn=$('langBtn'), periodBtn=$('periodBtn'), styleBtn=$('styleBtn');
-const question=$('question'), answer=$('answer'), titleH1=$('titleH1');
-const qLabel=$('qLabel'), rLabel=$('rLabel'), fLabel=$('fLabel'), orTxt=$('orTxt'), nextBtn=$('nextBtn'), fHint=$('fHint');
-const sug1=$('sug1'), sug2=$('sug2'), nextInput=$('nextInput');
-const saveBtn=$('saveBtn'), copyBtn=$('copyBtn'), shareBtn=$('shareBtn');
-
-/* ===== Apply lang ===== */
-function applyI18N(){
-  document.documentElement.lang=lang;
-  titleH1.textContent=T().title; qLabel.textContent=T().qLabel; rLabel.textContent=T().rLabel;
-  fLabel.textContent=T().fLabel; orTxt.textContent=T().or; nextBtn.textContent=T().next; fHint.textContent=T().hint;
-  langBtn.textContent=lang.toUpperCase();
-  periodBtn.textContent='🕰️ '+(prefs.periodo==='past'?T().periodPast:T().periodFuture);
-  styleBtn.textContent='🎭 '+(prefs.stile==='wtf'?T().styleWTF:T().styleWIF);
+function readJ(k,d){try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d));}catch{return d}}
+function writeJ(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function tz(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'}catch{return'UTC'}}
+function sanitize(style,text){
+  var out=(text||'').trim().replace(/[“”"«»]/g,'');
+  if(style==='wtf'){
+    var bits=out.split(/\n+|(?<=[.!?])\s+/).map(function(s){return s.trim()}).filter(Boolean);
+    var lines=[]; for(var b of bits){var w=b.split(/\s+/); for(var i=0;i<w.length;i+=15) lines.push(w.slice(i,i+15).join(' '));}
+    lines=lines.filter(function(x){return !/(cuore|anima|destino)/i.test(x)}).slice(0,11);
+    if(!/bancone|domani|giro|conto/i.test(lines[lines.length-1]||'')) lines.push(lang==='it'?'Clink. Stesso bancone, domani rimescoliamo.':'Clink. Same counter, we stir again tomorrow.');
+    return lines.join('\n');
+  }
+  return out.split(/\n+|(?<=[.!?])\s+/).map(function(s){return s.trim()}).filter(Boolean).slice(0,13).join('\n');
 }
+
+/* i18n */
+var lang=(localStorage.getItem('lang')||'it').toLowerCase();
+var T={ it:{
+  ttl:"Il tuo What?f", ql:"La tua domanda", rl:"Risultato", fl:"Domani continuiamo da qui",
+  or:"oppure", next:"Avanti", saved:"Salvato!", copied:"Copiato!",
+  pPast:"Passato", pFut:"Futuro", sWTF:"What the F", sWIF:"What if",
+  thinking:"Sto immaginando il tuo scenario…", net:"Errore di rete.", nopic:"Nessuna domanda — torna indietro."
+}, en:{
+  ttl:"Your What?f", ql:"Your question", rl:"Result", fl:"Tomorrow we continue from here",
+  or:"or", next:"Next", saved:"Saved!", copied:"Copied!",
+  pPast:"Past", pFut:"Future", sWTF:"What the F", sWIF:"What if",
+  thinking:"Imagining your scenario…", net:"Network error.", nopic:"No question — go back."
+}};
+function applyI18N(){
+  $('ttl').textContent=T[lang].ttl; $('ql').textContent=T[lang].ql; $('rl').textContent=T[lang].rl; $('fl').textContent=T[lang].fl;
+  $('or').textContent=T[lang].or; $('nextBtn').textContent=T[lang].next; $('lang').textContent=lang.toUpperCase();
+  $('period').textContent='🕰️ '+(prefs.periodo==='past'?T[lang].pPast:T[lang].pFut);
+  $('style').textContent='🎭 '+(prefs.stile==='wtf'?T[lang].sWTF:T[lang].sWIF);
+}
+var prefs=readJ('whatif_prefs',{periodo:'future',stile:'whatif'});
+document.documentElement.setAttribute('data-theme',prefs.stile==='wtf'?'wtf':'whatif');
 applyI18N();
-langBtn.onclick=()=>{ lang=(lang==='it'?'en':'it'); LS.setItem('lang',lang); applyI18N(); };
 
-/* ===== Nav ===== */
-backBtn.onclick=()=>history.back(); homeBtn.onclick=()=>location.href='index.html';
-periodBtn.onclick=()=>{ prefs.periodo = (prefs.periodo==='past'?'future':'past'); writeJSON('whatif_prefs',prefs); applyI18N(); };
-styleBtn.onclick=()=>{ prefs.stile = (prefs.stile==='wtf'?'whatif':'wtf'); writeJSON('whatif_prefs',prefs); setTheme(); applyI18N(); };
+/* nav */
+$('back').onclick=()=>history.back();
+$('home').onclick=()=>location.href='index.html';
+$('lang').onclick=()=>{lang=lang==='it'?'en':'it';localStorage.setItem('lang',lang);applyI18N();}
+$('period').onclick=()=>{prefs.periodo=prefs.periodo==='past'?'future':'past';writeJ('whatif_prefs',prefs);applyI18N();}
+$('style').onclick=()=>{prefs.stile=prefs.stile==='wtf'?'whatif':'wtf';writeJ('whatif_prefs',prefs);document.documentElement.setAttribute('data-theme',prefs.stile==='wtf'?'wtf':'whatif');applyI18N();}
 
-/* ===== Load question ===== */
-const domanda=(LS.getItem('domanda')||'').trim();
-if(!domanda){ location.href='fourth.html'; }
-question.textContent=domanda;
+/* domanda */
+var domanda=(localStorage.getItem('domanda')||'').trim();
+if(!domanda){$('question').textContent=T[lang].nopic; $('answer').textContent='';}
+else{$('question').textContent=domanda;}
 
-/* ===== Ask API (stream) ===== */
-async function generate(){
-  answer.textContent='⏳ '+(lang==='it'?'Sto immaginando il tuo scenario…':'Imagining your scenario…')+' ';
-  const sk=document.createElement('span'); sk.className='skeleton'; sk.style.width='40%'; answer.appendChild(sk);
-  const clar=readJSON('clar_override',null);
+/* generate */
+async function ask(){
+  var clar={}; try{clar=JSON.parse(localStorage.getItem('clar_override')||'null')||{}}catch(e){}
+  var placeholder='⏳ '+T[lang].thinking+' '; $('answer').textContent=placeholder; var sk=document.createElement('span'); sk.className='skeleton'; $('answer').appendChild(sk);
+
+  // 1) tentativo stream
   try{
-    const payload={ domanda, lang, periodo:prefs.periodo, stile:prefs.stile, clarify:false, stream:true, profilo:leanProfile(), clarifications: (clar||{}), now:new Date().toISOString(), tz:getTZ() };
-    const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json','x-whatif-stream':'1'},body:JSON.stringify(payload)});
-    if(!r.ok) throw new Error('server');
-    const reader=r.body.getReader(); const decoder=new TextDecoder(); let buffer="", text="";
-    while(true){
-      const {value,done}=await reader.read(); if(done) break;
-      buffer+=decoder.decode(value,{stream:true});
-      const chunks=buffer.split("\n\n"); buffer=chunks.pop();
-      for(const chunk of chunks){
-        if(!chunk.startsWith('data: ')) continue;
-        const data=JSON.parse(chunk.slice(6));
-        if(data.token){ text+=data.token; answer.textContent=text; }
-        if(data.done){ text = sanitize(prefs.stile,text); answer.textContent=text; prepareFollowups(text); }
-        if(data.error){ answer.textContent = (lang==='it'?'Problema server.':'Server problem.'); }
+    var resp=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domanda,lang,periodo:prefs.periodo,stile:prefs.stile,clarifications:clar,stream:true,tz:tz()})});
+    if(resp.ok && resp.body){
+      var reader=resp.body.getReader(); var dec=new TextDecoder(); var buf="", out="";
+      while(true){
+        var ch=await reader.read(); if(ch.done) break;
+        buf+=dec.decode(ch.value,{stream:true});
+        var parts=buf.split("\n\n"); buf=parts.pop();
+        for(var c of parts){
+          if(c.indexOf('data: ')!==0) continue;
+          try{
+            var d=JSON.parse(c.slice(6));
+            if(d.token){ out+=d.token; $('answer').textContent=out; }
+            if(d.done){ out=sanitize(prefs.stile,out); $('answer').textContent=out; makeFollowups(out); return; }
+          }catch(e){}
+        }
       }
     }
-  }catch(e){
-    answer.textContent = (lang==='it'?'Errore di rete.':'Network error.');
-  }
-}
-function sanitize(style, raw){
-  let out=(raw||'').trim().replace(/[“”"«»]/g,'');
-  if(style==='wtf'){
-    const bits=out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
-    const lines=[]; bits.forEach(b=>{ const w=b.split(/\s+/); for(let i=0;i<w.length;i+=15) lines.push(w.slice(i,i+15).join(' '));});
-    let l=lines.filter(x=>!/(cuore|anima|destino)/i.test(x)).slice(0,11); while(l.length<7 && lines.length) l.push(lines.shift());
-    if(!/bancone|domani|giro|conto/i.test(l[l.length-1]||'')) l.push(lang==='it'?'Clink. Stesso bancone, domani rimescoliamo.':'Clink. Same counter, we stir again tomorrow.');
-    return l.join('\n');
-  }else{
-    const s=out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean).slice(0,13);
-    return s.join('\n');
-  }
-}
-function leanProfile(){ const p=readJSON('whatif_profile',{}); const o={}; if(p.name) o.name=String(p.name);
-  if(p.city_now) o.city_now=String(p.city_now); else if(p.city) o.city=String(p.city);
-  if(p.work_role) o.work_role=String(p.work_role); else if(p.role) o.role=String(p.role); return o; }
-
-/* ===== Follow-ups ===== */
-async function prepareFollowups(answerText){
-  // prova lato server
-  let q1="", q2="";
+  }catch(e){/* ignora */}
+  // 2) fallback non-stream
   try{
-    const payload={ domanda, answer:answerText, lang, periodo:prefs.periodo, stile:prefs.stile, want:'followups' };
-    const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    if(r.ok){ const j=await r.json(); if(j.followups && j.followups.length){ q1=j.followups[0]||''; q2=j.followups[1]||''; } }
-  }catch(e){}
-  // fallback
-  if(!q1||!q2){
-    const topic = (domanda.match(/[a-zA-Zà-ùÀ-Ù']+/g)||[]).slice(0,3).join(' ');
-    if(lang==='it'){
-      q1 = q1||`Qual è il primo segnale su “${topic}” che ti direbbe che sta funzionando?`;
-      q2 = q2||`Cosa potresti fare entro 7 giorni per provare senza rischiare troppo?`;
-    }else{
-      q1 = q1||`What's the first signal around “${topic}” that would tell you it's working?`;
-      q2 = q2||`What could you do within 7 days to try without big risks?`;
+    var r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domanda,lang,periodo:prefs.periodo,stile:prefs.stile,clarifications:clar,stream:false,tz:tz()})});
+    if(r.ok){
+      var j=await r.json();
+      var text=sanitize(prefs.stile, (j.text||j.answer||'').toString());
+      if(text){ $('answer').textContent=text; makeFollowups(text); return; }
     }
+  }catch(e){/* ignora */}
+  // 3) fallback locale
+  var local = (prefs.stile==='wtf')
+    ? (lang==='it'
+       ? "Aprire il file? Clink. Se va male, almeno il bartender sa il tuo nome. Domani rimescoliamo."
+       : "Open the tab? Clink. Worst case, the bartender knows your name. Tomorrow we stir again.")
+    : (lang==='it'
+       ? "Un passo alla volta, senza fanfare. Domani ripartiamo da qui."
+       : "One step at a time, no fanfare. Tomorrow we pick up from here.");
+  $('answer').textContent=local; makeFollowups(local);
+}
+ask();
+
+/* follow-ups */
+async function makeFollowups(text){
+  var s1=''; var s2='';
+  // prova server
+  try{
+    var r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({want:'followups',domanda,answer:text,lang,periodo:prefs.periodo,stile:prefs.stile})});
+    if(r.ok){var j=await r.json(); if(j.followups&&j.followups.length){s1=j.followups[0]||''; s2=j.followups[1]||'';}}
+  }catch(e){}
+  // fallback locale
+  if(!s1||!s2){
+    var topic=(domanda.match(/[a-zA-Zà-ùÀ-Ù']+/g)||[]).slice(0,3).join(' ');
+    if(lang==='it'){s1=s1||`Qual è il primo segnale su “${topic}” che ti direbbe che sta funzionando?`; s2=s2||`Cosa potresti fare entro 7 giorni per provarci senza rischiare troppo?`;}
+    else{s1=s1||`What's the first signal around “${topic}” that would tell you it's working?`; s2=s2||`What could you do within 7 days to try without big risks?`;}
   }
-  sug1.textContent=q1; sug2.textContent=q2;
-  sug1.onclick=()=>{ nextInput.value=sug1.textContent; }; sug2.onclick=()=>{ nextInput.value=sug2.textContent; };
+  $('s1').textContent=s1; $('s2').textContent=s2;
+  $('s1').onclick=()=>{$('next').value=s1}; $('s2').onclick=()=>{$('next').value=s2};
 }
 
-/* ===== Save / Share ===== */
-saveBtn.onclick=()=>{ const arr=readJSON('cronologia',[]); arr.unshift({domanda, risposta:(answer.textContent||'').trim(), periodo:prefs.periodo, stile:prefs.stile, lang, ts:Date.now()}); writeJSON('cronologia',arr.slice(0,200)); alert(T().saving); };
-copyBtn.onclick=()=>{ navigator.clipboard.writeText(`${T().qLabel}: ${domanda}\n\n${answer.textContent}`).then(()=>alert(T().copied)); };
-shareBtn.onclick=()=>{ const data={title:"What?f",text:`${T().qLabel}: ${domanda}\n\n${answer.textContent}`,url:location.href}; if(navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(`${T().qLabel}: ${domanda}\n\n${answer.textContent}`); };
+/* save/share */
+$('save').onclick=()=>{var arr=readJ('cronologia',[]);arr.unshift({domanda,risposta:($('answer').textContent||'').trim(),ts:Date.now(),periodo:prefs.periodo,stile:prefs.stile,lang});writeJ('cronologia',arr.slice(0,200));alert(T[lang].saved);}
+$('copy').onclick=()=>{navigator.clipboard.writeText(T[lang].ql+": "+domanda+"\n\n"+$('answer').textContent).then(()=>alert(T[lang].copied));}
+$('share').onclick=()=>{var data={title:'What?f',text:T[lang].ql+": "+domanda+"\n\n"+$('answer').textContent,url:location.href}; if(navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(data.text);}
 
-/* ===== Next episode intent ===== */
-nextBtn.onclick=()=>{
-  const v=(nextInput.value||'').trim() || sug1.textContent || sug2.textContent || '';
-  if(v){ writeJSON('whatif_next_prompt',{ base:domanda, next:v, ts:Date.now(), lang, periodo:prefs.periodo, stile:prefs.stile }); nextInput.value=''; }
-  // piccolo toast
-  nextBtn.textContent = lang==='it'?'Fatto ✅':'Saved ✅';
-  setTimeout(()=>{ nextBtn.textContent=T().next; },1200);
-};
-
-/* ===== Boot ===== */
-applyI18N();
-generate();
+/* next */
+$('nextBtn').onclick=()=>{var v=($('next').value||'').trim()||$('s1').textContent||$('s2').textContent; if(v){writeJ('whatif_next_prompt',{base:domanda,next:v,ts:Date.now(),lang,periodo:prefs.periodo,stile:prefs.stile}); $('next').value=''; $('nextBtn').textContent=lang==='it'?'Fatto ✅':'Saved ✅'; setTimeout(()=>{$('nextBtn').textContent=T[lang].next},1100);}};
 </script>
-<script> if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('/sw.js').catch(()=>{}); }); } </script>
 </body>
 </html>
