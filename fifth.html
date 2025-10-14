@@ -3,399 +3,225 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f – Result</title>
-
+<title>What?f – Risultato</title>
 <meta name="theme-color" content="#0B0B0C" />
 <link rel="manifest" href="/manifest.json" />
 <link rel="apple-touch-icon" href="/icons/icon-192.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
 <style>
   :root{
-    --bg:#0B0B0C; --bg2:#101414;
-    --fg:#EAF3EE; --muted:#A0B2BA;
-
-    /* What if (default) */
-    --acc:#1C57A0;       /* Blu Verona */
-    --acc2:#FFEC01;      /* Giallo Verona */
-
-    /* superfici */
-    --card:rgba(20,28,34,0.92);
-    --line:rgba(255,255,255,.12);
-    --chip:#121A26;
-    --ink:#0A0E12;
-    --shadow:rgba(0,0,0,.35);
+    --bg:#0B0B0C; --bg2:#101414; --fg:#FFFFFF; --muted:#A0B2BA;
+    --acc:#1C57A0; --acc2:#FFEC01; --card:rgba(20,28,34,0.92);
+    --line:rgba(255,255,255,.12); --chip:#121A26; --ink:#0A0E12; --shadow:rgba(0,0,0,.35);
   }
-  html[data-theme="wtf"]{
-    --acc:#3A6B56;
-    --acc2:#5A8C75;
-  }
-
+  html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
   *{box-sizing:border-box}
-  html,body{
-    margin:0;
-    background: radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-    color:var(--fg);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility
-  }
+  html,body{margin:0;background: radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
   main{max-width:980px;margin:auto;padding:18px}
   .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-
-  .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;transition:transform .06s ease,opacity .2s}
-  .btn:active{transform:translateY(1px)}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
   .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800;box-shadow:0 6px 18px var(--shadow);border:none}
-  .btn.large{padding:14px 18px;font-size:16px}
-  .btn.icon{padding:8px 10px;border-radius:10px}
-
-  h1{font-size:clamp(22px,5vw,30px);margin:14px 0 2px;color:var(--acc2)}
-  p.sub{color:var(--muted);margin:0 0 8px}
-
+  h1{font-size:clamp(22px,5vw,32px);margin:10px 0 4px;color:var(--acc2)}
   .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
-  .label{color:#89a7b3;font-weight:800;margin:0 0 8px}
-
-  .qbox, .box{
-    background:rgba(255,255,255,.04);
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:18px;
-    line-height:1.7;
-    color:#EAF3EE;
-    white-space:pre-wrap;
-    font-size:17px;
-    letter-spacing:.1px;
-    max-width:68ch;
-    margin:0 auto;
-    text-wrap:pretty;
-    hyphens:auto;
-  }
-
-  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-  .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
-  .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-  .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
-
-  #result{min-height:190px}
+  .label{color:var(--acc);font-weight:800;margin:0 0 8px}
+  .qbox,.abox{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:18px;line-height:1.7;color:#EAF3EE;white-space:pre-wrap;font-size:17px;letter-spacing:.1px}
+  .abox{min-height:170px}
   .skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:sk 1s infinite}
   @keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
-  #result.fade-in{animation:fade .6s ease}
-  @keyframes fade{from{opacity:.25;transform:translateY(2px)}to{opacity:1;transform:none}}
-
-  /* Follow-up */
-  .follow{margin-top:6px}
-  .suggest{display:flex;flex-direction:column;gap:8px;margin-top:6px}
-  .suggest .pill{display:block;border:1px solid var(--line);background:rgba(255,255,255,.03);padding:12px;border-radius:12px;cursor:pointer}
-  .or{ text-align:center; color:#89a7b3; margin:8px 0; }
-  .inrow{display:flex;gap:8px}
-  .inrow input{flex:1;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:12px}
+  /* follow up */
+  .follow .sug{border:1px solid var(--line);background:rgba(255,255,255,.04);padding:12px 14px;border-radius:12px;margin:8px 0}
+  .follow input{width:100%;height:46px;border-radius:12px;padding:10px 12px;border:1.2px solid rgba(255,255,255,.35);background:#132032;color:#fff}
 </style>
 </head>
 <body>
-  <main>
-    <div class="topbar">
-      <div class="row">
-        <button class="btn" id="backBtnTop">←</button>
-        <button class="btn" id="homeBtnTop">🏠</button>
-      </div>
-
-      <div class="row" style="gap:10px">
-        <span id="badgePeriodo" class="badge">—</span>
-        <span id="badgeStile" class="badge">—</span>
-      </div>
+<main>
+  <div class="topbar">
+    <div class="row">
+      <button class="btn" id="backBtn">←</button>
+      <button class="btn" id="homeBtn">🏠</button>
     </div>
-
-    <h1 id="titleH1">Il tuo What?f</h1>
-
-    <div class="card">
-      <h3 class="label" id="qLabel">La tua domanda</h3>
-      <div id="question" class="qbox">—</div>
+    <div class="row">
+      <button class="btn" id="periodBtn">🕰️ —</button>
+      <button class="btn" id="styleBtn">🎭 —</button>
+      <button class="btn" id="langBtn">IT</button>
     </div>
+  </div>
 
-    <div class="card">
-      <h3 class="label" id="rLabel">Risultato</h3>
-      <div id="result" class="box">⏳ <span id="loadingText">Sto immaginando il tuo scenario…</span> <span class="skeleton" style="width:40%"></span></div>
+  <h1 id="titleH1">Il tuo What?f</h1>
 
-      <div class="row" style="gap:10px;margin-top:12px">
-        <button id="saveBtn" class="btn">💾 Salva</button>
-        <button id="copyBtn" class="btn">📋 Copia</button>
-        <button id="shareBtn" class="btn">📤 Condividi</button>
-      </div>
+  <div class="card">
+    <h3 class="label" id="qLabel">La tua domanda</h3>
+    <div class="qbox" id="question">—</div>
+  </div>
+
+  <div class="card">
+    <h3 class="label" id="rLabel">Risultato</h3>
+    <div class="abox" id="answer">⏳ <span class="skeleton" style="width:40%"></span></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="saveBtn">💾 Salva</button>
+      <button class="btn" id="copyBtn">📋 Copia</button>
+      <button class="btn" id="shareBtn">📤 Condividi</button>
     </div>
+  </div>
 
-    <div class="card follow" id="followCard" style="display:none">
-      <h3 class="label" id="followTitle">Domani continuiamo da qui</h3>
-      <div id="suggestWrap" class="suggest"></div>
-      <div class="or" id="orTxt">oppure</div>
-      <div class="inrow">
-        <input id="followInput" placeholder="Scrivi tu cosa vuoi sapere domani…"/>
-        <button id="followGo" class="btn primary">Avanti</button>
-      </div>
-      <p class="sub" id="followHint">Scegli un suggerimento o scrivi tu: lo useremo come episodio successivo.</p>
+  <div class="card follow">
+    <h3 class="label" id="fLabel">Domani continuiamo da qui</h3>
+    <div id="sug1" class="sug">—</div>
+    <div id="sug2" class="sug">—</div>
+    <div style="text-align:center;margin:8px 0;color:#A0B2BA" id="orTxt">oppure</div>
+    <input id="nextInput" type="text" placeholder="Scrivi tu cosa vuoi sapere domani…"/>
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="nextBtn">Avanti</button>
     </div>
-  </main>
+    <p id="fHint" style="color:#A0B2BA;margin:8px 0 0">Scegli un suggerimento o scrivi tu: lo useremo come episodio successivo.</p>
+  </div>
+</main>
 
 <script>
-/* ===== Tema / I18N ===== */
+/* ===== Helpers ===== */
 const LS=localStorage;
-const $=id=>document.getElementById(id);
-const lang=(LS.getItem('lang')||'it').toLowerCase();
-document.documentElement.lang=lang;
+function readJSON(k,def){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def}}
+function writeJSON(k,v){LS.setItem(k,JSON.stringify(v));}
+function escapeHTML(s){return (s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])}
+function getTZ(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'}catch{ return 'UTC' }}
+function $(id){return document.getElementById(id)}
+/* ===== i18n ===== */
+const I18N={ it:{
+  title:"Il tuo What?f", qLabel:"La tua domanda", rLabel:"Risultato",
+  fLabel:"Domani continuiamo da qui", or:"oppure",
+  next:"Avanti", hint:"Scegli un suggerimento o scrivi tu: lo useremo come episodio successivo.",
+  periodPast:"Passato", periodFuture:"Futuro", styleWIF:"What if", styleWTF:"What the F",
+  saving:"Salvato!", copied:"Copiato!"
+}, en:{
+  title:"Your What?f", qLabel:"Your question", rLabel:"Result",
+  fLabel:"Tomorrow we continue from here", or:"or",
+  next:"Next", hint:"Pick a suggestion or write your own; we’ll use it for the next episode.",
+  periodPast:"Past", periodFuture:"Future", styleWIF:"What if", styleWTF:"What the F",
+  saving:"Saved!", copied:"Copied!"
+}};
+let lang=(LS.getItem('lang')||'it').toLowerCase();
+function T(){return I18N[lang]||I18N.it}
+/* ===== Prefs ===== */
+const prefs=readJSON('whatif_prefs',{ periodo:'future', stile:'whatif' });
+function setTheme(){ document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif'); }
+setTheme();
 
-const I18N={
-  it:{
-    title:"Il tuo What?f",
-    qLabel:"La tua domanda",
-    rLabel:"Risultato",
-    loading:"Sto immaginando il tuo scenario…",
-    periodoPast:"Passato", periodoFuture:"Futuro",
-    followTitle:"Domani continuiamo da qui",
-    or:"oppure",
-    followPH:"Scrivi tu cosa vuoi sapere domani…",
-    followCTA:"Avanti",
-    followHint:"Scegli un suggerimento o scrivi tu: lo useremo come episodio successivo.",
-    saved:"Salvato!", copied:"Copiato!", errNet:"Errore di rete.", errServer:"Problema server."
-  },
-  en:{
-    title:"Your What?f",
-    qLabel:"Your question",
-    rLabel:"Result",
-    loading:"Imagining your scenario…",
-    periodoPast:"Past", periodoFuture:"Future",
-    followTitle:"Tomorrow we continue from here",
-    or:"or",
-    followPH:"Write what you want to know tomorrow…",
-    followCTA:"Next",
-    followHint:"Pick a suggestion or write your own: we’ll use it for the next episode.",
-    saved:"Saved!", copied:"Copied!", errNet:"Network error.", errServer:"Server problem."
-  }
-};
-const T=(k)=> (I18N[lang]||I18N.it)[k];
+/* ===== UI refs ===== */
+const backBtn=$('backBtn'), homeBtn=$('homeBtn'), langBtn=$('langBtn'), periodBtn=$('periodBtn'), styleBtn=$('styleBtn');
+const question=$('question'), answer=$('answer'), titleH1=$('titleH1');
+const qLabel=$('qLabel'), rLabel=$('rLabel'), fLabel=$('fLabel'), orTxt=$('orTxt'), nextBtn=$('nextBtn'), fHint=$('fHint');
+const sug1=$('sug1'), sug2=$('sug2'), nextInput=$('nextInput');
+const saveBtn=$('saveBtn'), copyBtn=$('copyBtn'), shareBtn=$('shareBtn');
 
-/* ===== Prefs / Tema ===== */
-const prefs = (()=>{
-  try{ return JSON.parse(LS.getItem('whatif_prefs')||'{}'); }catch{return{};}
-})();
-document.documentElement.setAttribute('data-theme', (prefs.stile==='wtf')?'wtf':'whatif');
-
-/* ===== Setup UI testi ===== */
-$('titleH1').textContent=T('title');
-$('qLabel').textContent=T('qLabel');
-$('rLabel').textContent=T('rLabel');
-$('loadingText').textContent=T('loading');
-$('followTitle').textContent=T('followTitle');
-$('orTxt').textContent=T('or');
-$('followInput').placeholder=T('followPH');
-$('followGo').textContent=T('followCTA');
-$('followHint').textContent=T('followHint');
+/* ===== Apply lang ===== */
+function applyI18N(){
+  document.documentElement.lang=lang;
+  titleH1.textContent=T().title; qLabel.textContent=T().qLabel; rLabel.textContent=T().rLabel;
+  fLabel.textContent=T().fLabel; orTxt.textContent=T().or; nextBtn.textContent=T().next; fHint.textContent=T().hint;
+  langBtn.textContent=lang.toUpperCase();
+  periodBtn.textContent='🕰️ '+(prefs.periodo==='past'?T().periodPast:T().periodFuture);
+  styleBtn.textContent='🎭 '+(prefs.stile==='wtf'?T().styleWTF:T().styleWIF);
+}
+applyI18N();
+langBtn.onclick=()=>{ lang=(lang==='it'?'en':'it'); LS.setItem('lang',lang); applyI18N(); };
 
 /* ===== Nav ===== */
-$('backBtnTop').addEventListener('click', ()=> history.back());
-$('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
+backBtn.onclick=()=>history.back(); homeBtn.onclick=()=>location.href='index.html';
+periodBtn.onclick=()=>{ prefs.periodo = (prefs.periodo==='past'?'future':'past'); writeJSON('whatif_prefs',prefs); applyI18N(); };
+styleBtn.onclick=()=>{ prefs.stile = (prefs.stile==='wtf'?'whatif':'wtf'); writeJSON('whatif_prefs',prefs); setTheme(); applyI18N(); };
 
-/* ===== Mostra badge stile/periodo ===== */
-$('badgePeriodo').textContent="🕰️ "+(prefs.periodo==='past'?T('periodoPast'):T('periodoFuture'));
-$('badgeStile').textContent="🎭 "+(prefs.stile==='wtf'?'What the F':'What if');
+/* ===== Load question ===== */
+const domanda=(LS.getItem('domanda')||'').trim();
+if(!domanda){ location.href='fourth.html'; }
+question.textContent=domanda;
 
-/* ===== Dati domanda & chiarimenti ===== */
-const domanda = LS.getItem('domanda') || '';
-$('question').textContent = domanda || '—';
-const clar = (()=>{ try{return JSON.parse(LS.getItem('clarify_answers')||'{}');}catch{return{};} })();
-
-/* ===== Profilo quick-lean ===== */
-function buildLeanProfile(){
+/* ===== Ask API (stream) ===== */
+async function generate(){
+  answer.textContent='⏳ '+(lang==='it'?'Sto immaginando il tuo scenario…':'Imagining your scenario…')+' ';
+  const sk=document.createElement('span'); sk.className='skeleton'; sk.style.width='40%'; answer.appendChild(sk);
+  const clar=readJSON('clar_override',null);
   try{
-    const p = JSON.parse(LS.getItem('whatif_profile')||'{}');
-    const lean={};
-    if(p.name) lean.name=String(p.name);
-    if(p.city_now) lean.city_now=String(p.city_now); else if(p.city) lean.city=String(p.city);
-    if(p.work_role) lean.work_role=String(p.work_role); else if(p.role) lean.role=String(p.role);
-    return lean;
-  }catch{return {};}
-}
-
-/* ===== Follow-up helpers ===== */
-function extractKeywords(q){
-  const s=(q||'').toLowerCase();
-  return s.replace(/[^\p{L}\p{N}\s]/gu,' ').split(/\s+/).filter(w=>w.length>3).slice(0,5);
-}
-function localFollowups(q){
-  const topic = extractKeywords(q)[0] || (lang==='en'?'the topic':'il tema');
-  if(lang==='en'){
-    return [
-      `What's the first signal that would tell you it's working?`,
-      `What could you do within 7 days to try without big risk?`
-    ];
-  }
-  return [
-    `Qual è il primo segnale che ti direbbe che sta funzionando?`,
-    `Cosa potresti fare entro 7 giorni per provarci senza rischiare?`
-  ];
-}
-function showFollowups(arr){
-  const wrap=$('suggestWrap'); const a=Array.isArray(arr)?arr.filter(Boolean):[];
-  if(!a.length){ $('followCard').style.display='none'; return; }
-  wrap.innerHTML = a.slice(0,2).map((s,i)=>`<button class="pill" data-i="${i}">${s}</button>`).join('');
-  wrap.querySelectorAll('.pill').forEach(b=>{
-    b.addEventListener('click',()=>{
-      $('followInput').value = b.textContent.trim();
-    });
-  });
-  $('followCard').style.display='block';
-}
-function saveFollowup(text){
-  const storeKey='whatif_next_prompts';
-  let map={}; try{ map=JSON.parse(LS.getItem(storeKey)||'{}'); }catch{}
-  const key = domanda || ('q_'+Date.now());
-  const entry = { prompt:String(text||'').slice(0,300), ts:Date.now(), lang, stile:prefs.stile, periodo:prefs.periodo };
-  map[key]=entry; LS.setItem(storeKey, JSON.stringify(map));
-}
-
-/* ===== Stream chiamata ===== */
-async function callGenerateStream(){
-  const payload={
-    domanda, lang, periodo:(prefs.periodo||'future'), stile:(prefs.stile||'whatif'),
-    clarify:false, stream:true, profilo: buildLeanProfile(), clarifications: (clar||{}),
-    now: new Date().toISOString(), tz: (Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC')
-  };
-  const r=await fetch("/api/ask",{method:"POST",headers:{ "Content-Type":"application/json","x-whatif-stream":"1" },body:JSON.stringify(payload)});
-  return r;
-}
-
-async function run(){
-  if(!domanda){ $('result').textContent='—'; return; }
-
-  try{
-    let res = await callGenerateStream();
-
-    // se lo stream non è ok → fallback non-stream
-    if(!res.ok || !res.body){
-      const plain = await fetch("/api/ask",{method:"POST",headers:{ "Content-Type":"application/json" },body:JSON.stringify({
-        domanda, lang, periodo:(prefs.periodo||'future'), stile:(prefs.stile||'whatif'),
-        clarify:false, stream:false, profilo: buildLeanProfile(), clarifications:(clar||{})
-      })});
-      if(!plain.ok){ $('result').textContent=(lang==='en'?I18N.en.errServer:I18N.it.errServer); return; }
-      const j=await plain.json();
-      finalizeAnswer(j.text||j.answer||'');
-      showFollowups(j.followup||localFollowups(domanda));
-      return;
-    }
-
-    const reader=res.body.getReader();
-    const decoder=new TextDecoder();
-    let buffer="", text="";
-    let suggestions=null;
-
+    const payload={ domanda, lang, periodo:prefs.periodo, stile:prefs.stile, clarify:false, stream:true, profilo:leanProfile(), clarifications: (clar||{}), now:new Date().toISOString(), tz:getTZ() };
+    const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json','x-whatif-stream':'1'},body:JSON.stringify(payload)});
+    if(!r.ok) throw new Error('server');
+    const reader=r.body.getReader(); const decoder=new TextDecoder(); let buffer="", text="";
     while(true){
       const {value,done}=await reader.read(); if(done) break;
       buffer+=decoder.decode(value,{stream:true});
-      const parts=buffer.split(/\r?\n\r?\n/); buffer=parts.pop()||"";
-      for(const part of parts){
-        if(!part.startsWith("data:")) continue;
-        const line = part.replace(/^data:\s*/,'').trim();
-        if(!line) continue;
-        try{
-          const data = JSON.parse(line);
-          if(data.token){ text+=data.token; $('result').textContent=text; }
-          if(data.followup && !suggestions) suggestions = data.followup;
-          if(data.done){
-            finalizeAnswer(text);
-            showFollowups(Array.isArray(suggestions)&&suggestions.length?suggestions:localFollowups(domanda));
-          }
-          if(data.error){
-            $('result').textContent=(lang==='en'?I18N.en.errServer:I18N.it.errServer);
-            showFollowups(localFollowups(domanda));
-          }
-        }catch(e){/* ignora chunk non JSON */}
+      const chunks=buffer.split("\n\n"); buffer=chunks.pop();
+      for(const chunk of chunks){
+        if(!chunk.startsWith('data: ')) continue;
+        const data=JSON.parse(chunk.slice(6));
+        if(data.token){ text+=data.token; answer.textContent=text; }
+        if(data.done){ text = sanitize(prefs.stile,text); answer.textContent=text; prepareFollowups(text); }
+        if(data.error){ answer.textContent = (lang==='it'?'Problema server.':'Server problem.'); }
       }
     }
-
-    // se esce dal loop senza done, chiudi comunque
-    if(!$('result').classList.contains('fade-in')){
-      finalizeAnswer($('result').textContent||'');
-      showFollowups(localFollowups(domanda));
-    }
-
   }catch(e){
-    $('result').textContent=(lang==='en'?I18N.en.errNet:I18N.it.errNet);
-    showFollowups(localFollowups(domanda));
+    answer.textContent = (lang==='it'?'Errore di rete.':'Network error.');
   }
 }
-
-function sanitizeOutput(style, raw){
-  let out=(raw||"").trim();
-  out = out.replace(/[“”"«»]/g, "");
+function sanitize(style, raw){
+  let out=(raw||'').trim().replace(/[“”"«»]/g,'');
   if(style==='wtf'){
-    const bits = out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
-    const lines=[];
-    bits.forEach(s=>{
-      const w=s.split(/\s+/);
-      for(let i=0;i<w.length;i+=15) lines.push(w.slice(i,i+15).join(' '));
-    });
-    const poetic = /(cuore|anima|destino|fiaba|sogno\s|sussurra)/i;
-    let l = lines.filter(x=>!poetic.test(x)).slice(0,11);
-    while(l.length<7 && lines.length) l.push(lines.shift());
-    const hook = lang==='en'?"Tab still open; tomorrow we stir again.":"Clink. Stesso bancone, domani rimescoliamo.";
-    if(!l.length || !/bancone|domani|giro|conto|tomorrow|clink/i.test(l[l.length-1])) l.push(hook);
-    out = l.join("\n");
+    const bits=out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
+    const lines=[]; bits.forEach(b=>{ const w=b.split(/\s+/); for(let i=0;i<w.length;i+=15) lines.push(w.slice(i,i+15).join(' '));});
+    let l=lines.filter(x=>!/(cuore|anima|destino)/i.test(x)).slice(0,11); while(l.length<7 && lines.length) l.push(lines.shift());
+    if(!/bancone|domani|giro|conto/i.test(l[l.length-1]||'')) l.push(lang==='it'?'Clink. Stesso bancone, domani rimescoliamo.':'Clink. Same counter, we stir again tomorrow.');
+    return l.join('\n');
   }else{
-    const s = out.split(/\n+|(?<=[.!?])\s+/).map(x=>x.trim()).filter(Boolean).slice(0,13);
-    out = s.join("\n");
+    const s=out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean).slice(0,13);
+    return s.join('\n');
   }
-  return out.trim();
 }
-function finalizeAnswer(raw){
-  const clean = sanitizeOutput((prefs.stile||'whatif'), raw);
-  $('result').textContent = clean || '—';
-  $('result').classList.add('fade-in');
+function leanProfile(){ const p=readJSON('whatif_profile',{}); const o={}; if(p.name) o.name=String(p.name);
+  if(p.city_now) o.city_now=String(p.city_now); else if(p.city) o.city=String(p.city);
+  if(p.work_role) o.work_role=String(p.work_role); else if(p.role) o.role=String(p.role); return o; }
 
-  // salva in cronologia locale
-  const arr=(()=>{try{return JSON.parse(LS.getItem('cronologia')||'[]')}catch{return[]}})();
-  arr.unshift({ domanda, risposta:clean, periodo:prefs.periodo||null, stile:(prefs.stile||'whatif'), lang, ts:Date.now() });
-  LS.setItem('cronologia', JSON.stringify(arr.slice(0,200)));
+/* ===== Follow-ups ===== */
+async function prepareFollowups(answerText){
+  // prova lato server
+  let q1="", q2="";
+  try{
+    const payload={ domanda, answer:answerText, lang, periodo:prefs.periodo, stile:prefs.stile, want:'followups' };
+    const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(r.ok){ const j=await r.json(); if(j.followups && j.followups.length){ q1=j.followups[0]||''; q2=j.followups[1]||''; } }
+  }catch(e){}
+  // fallback
+  if(!q1||!q2){
+    const topic = (domanda.match(/[a-zA-Zà-ùÀ-Ù']+/g)||[]).slice(0,3).join(' ');
+    if(lang==='it'){
+      q1 = q1||`Qual è il primo segnale su “${topic}” che ti direbbe che sta funzionando?`;
+      q2 = q2||`Cosa potresti fare entro 7 giorni per provare senza rischiare troppo?`;
+    }else{
+      q1 = q1||`What's the first signal around “${topic}” that would tell you it's working?`;
+      q2 = q2||`What could you do within 7 days to try without big risks?`;
+    }
+  }
+  sug1.textContent=q1; sug2.textContent=q2;
+  sug1.onclick=()=>{ nextInput.value=sug1.textContent; }; sug2.onclick=()=>{ nextInput.value=sug2.textContent; };
 }
 
-/* ===== Follow action ===== */
-$('followGo').addEventListener('click', ()=>{
-  const text = ($('followInput').value||'').trim();
-  if(!text) return;
-  saveFollowup(text);
-  alert(lang==='en'?'Saved for tomorrow ✅':'Salvato per domani ✅');
-});
+/* ===== Save / Share ===== */
+saveBtn.onclick=()=>{ const arr=readJSON('cronologia',[]); arr.unshift({domanda, risposta:(answer.textContent||'').trim(), periodo:prefs.periodo, stile:prefs.stile, lang, ts:Date.now()}); writeJSON('cronologia',arr.slice(0,200)); alert(T().saving); };
+copyBtn.onclick=()=>{ navigator.clipboard.writeText(`${T().qLabel}: ${domanda}\n\n${answer.textContent}`).then(()=>alert(T().copied)); };
+shareBtn.onclick=()=>{ const data={title:"What?f",text:`${T().qLabel}: ${domanda}\n\n${answer.textContent}`,url:location.href}; if(navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(`${T().qLabel}: ${domanda}\n\n${answer.textContent}`); };
 
-/* Pill click prefill handled in showFollowups() */
-
-/* ===== Tool buttons ===== */
-$('saveBtn').addEventListener('click', ()=>{
-  const arr=(()=>{try{return JSON.parse(LS.getItem('cronologia')||'[]')}catch{return[]}})();
-  if(!arr.length){ alert(lang==='en'?'Nothing to save.':'Nulla da salvare.'); return; }
-  alert((lang==='en'?I18N.en.saved:I18N.it.saved));
-});
-$('copyBtn').addEventListener('click', ()=>{
-  navigator.clipboard.writeText(`${T('qLabel')}: ${domanda}\n\n${$('result').textContent}`).then(()=>{
-    alert((lang==='en'?I18N.en.copied:I18N.it.copied));
-  });
-});
-$('shareBtn').addEventListener('click', ()=>{
-  const data={title:"What?f",text:`${T('qLabel')}: ${domanda}\n\n${$('result').textContent}`,url: location.href};
-  if(navigator.share) navigator.share(data).catch(()=>{}); else navigator.clipboard.writeText(`${T('qLabel')}: ${domanda}\n\n${$('result').textContent}`);
-});
+/* ===== Next episode intent ===== */
+nextBtn.onclick=()=>{
+  const v=(nextInput.value||'').trim() || sug1.textContent || sug2.textContent || '';
+  if(v){ writeJSON('whatif_next_prompt',{ base:domanda, next:v, ts:Date.now(), lang, periodo:prefs.periodo, stile:prefs.stile }); nextInput.value=''; }
+  // piccolo toast
+  nextBtn.textContent = lang==='it'?'Fatto ✅':'Saved ✅';
+  setTimeout(()=>{ nextBtn.textContent=T().next; },1200);
+};
 
 /* ===== Boot ===== */
-(function boot(){
-  if(!domanda){ alert(lang==='en'?'No question found.':'Nessuna domanda trovata.'); location.href='fourth.html'; return; }
-  run();
-})();
+applyI18N();
+generate();
 </script>
-
-<!-- SW -->
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/sw.js").catch(()=>{});
-    });
-  }
-</script>
+<script> if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('/sw.js').catch(()=>{}); }); } </script>
 </body>
 </html>
