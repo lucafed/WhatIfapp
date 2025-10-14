@@ -43,9 +43,6 @@ h1{font-size:clamp(22px,5vw,30px);margin:8px 0 2px;color:var(--acc2)}
   <div class="card">
     <h3 class="label" id="qLabel">Domanda</h3>
     <div id="question" class="box"></div>
-    <div class="row" style="margin-top:6px">
-      <span class="badge" id="extraBadge" style="display:none"></span>
-    </div>
     <div class="row" style="margin-top:10px">
       <button class="btn primary large" id="regenBtn">🔁 Rigenera episodio</button>
     </div>
@@ -64,16 +61,14 @@ h1{font-size:clamp(22px,5vw,30px);margin:8px 0 2px;color:var(--acc2)}
 </main>
 
 <script>
-const LS=localStorage,$=id=>document.getElementById(id);
-
 /* I18N */
+const LS=localStorage,$=id=>document.getElementById(id);
 const I18N={it:{
   title:"Il tuo What?f — Episodio 1",
   qLabel:"Domanda", rLabel:"Episodio",
   thinking:"Sto immaginando il tuo episodio…",
   saved:"Salvato!", copied:"Copiato!",
   styleWhatIf:"What if", styleWTF:"What the F",
-  extra:"Dettaglio: ",
   regen:"🔁 Rigenera episodio"
 },en:{
   title:"Your What?f — Episode 1",
@@ -81,18 +76,20 @@ const I18N={it:{
   thinking:"Imagining your episode…",
   saved:"Saved!", copied:"Copied!",
   styleWhatIf:"What if", styleWTF:"What the F",
-  extra:"Detail: ",
   regen:"🔁 Regenerate"
 }};
 function getLang(){return (LS.getItem('lang')||'it').toLowerCase();}
 function setLang(v){LS.setItem('lang',v);location.reload();}
 let lang=getLang(),T=I18N[lang]||I18N.it;
 document.documentElement.lang=lang;
+
+/* UI text */
 $('titleH1').textContent=T.title; $('qLabel').textContent=T.qLabel; $('rLabel').textContent=T.rLabel;
 $('result').innerHTML=`⏳ ${T.thinking} <span class="skeleton" style="width:36%"></span>`;
-$('langBtn').textContent=lang.toUpperCase(); $('regenBtn').textContent=T.regen;
+$('langBtn').textContent=lang.toUpperCase();
+$('regenBtn').textContent=T.regen;
 
-/* Theme */
+/* Theme from prefs */
 function readJSON(k,def){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def));}catch{return def;}}
 const prefs=readJSON('whatif_prefs',{stile:'whatif'}); document.documentElement.setAttribute('data-theme',prefs.stile==='wtf'?'wtf':'whatif');
 $('styleBadge').textContent=prefs.stile==='wtf'?T.styleWTF:T.styleWhatIf;
@@ -102,32 +99,33 @@ $('backBtn').onclick=()=>history.back();
 $('homeBtn').onclick=()=>location.href='index.html';
 $('langBtn').onclick=()=>setLang(lang==='it'?'en':'it');
 
-/* Inputs */
+/* Question */
 const domanda=LS.getItem('domanda')||''; $('question').textContent=domanda||'—';
-const extra=(LS.getItem('whatif_clarify_buffer')||'').trim(); if(extra){ const b=$('extraBadge'); b.style.display='inline-block'; b.textContent=T.extra+extra; }
 
-/* === GENERATION ===
-   Sostituisci fakeAI con la tua /api/ask
-   Passa sia 'domanda' sia 'extra' (clarifications).
+/* ====== MOCK GENERATION ======
+   Qui chiami la tua /api/ask come già fatto.
+   Io metto una funzione fake che simula una risposta dopo 600ms.
 */
-function fakeAI(style,q,extra){
-  const withExtra = extra ? (lang==='en'?` (note: ${extra})`:` (nota: ${extra})`) : '';
+function fakeAI(style,q){
   const base = style==='wtf'
-    ? `Ok, ${q || 'amico'}, pensaci con un bicchiere in mano: meno drama, più risate${withExtra}.`
-    : `Sai già che non lo faresti per nostalgia: è più un esperimento di equilibrio${withExtra}.`;
+    ? `Ok, ${q || 'amico'}, pensaci con un bicchiere in mano: meno drama, più risate.`
+    : `Sai già che non lo faresti per nostalgia: è più un esperimento di equilibrio.`;
   return new Promise(r=>setTimeout(()=>r(base),600));
 }
 
-/* Sanitizer + chiusure */
+/* Sanitizer + Gancio finale */
 function sanitize(style,raw){
   let out=(raw||'').trim().replace(/[“”"«»]/g,'');
+  // spezzatura sobria
   const parts=out.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
   out=parts.join('\n');
 
   if(style==='wtf'){
+    // chiusura da bar garantita
     const hook=`Clink. Stesso bancone, domani rimescoliamo.`;
     if(!/bancone|domani rimescoliamo|clink/i.test(out)){ out += `\n${hook}`; }
   }else{
+    // chiusura What?f positiva e asciutta
     const hook = lang==='en'
       ? `Tomorrow we unlock Episode 2 at 09:00. Keep sharing bits of you and I’ll show where this goes.`
       : `Domani sblocchiamo l’Episodio 2 alle 09:00. Continua a conoscerci e ti dico dove va la storia.`;
@@ -136,11 +134,12 @@ function sanitize(style,raw){
   return out.trim();
 }
 
+/* Generate */
 async function generate(){
   const style=prefs.stile==='wtf'?'wtf':'whatif';
-  const txt = await fakeAI(style,domanda,extra); // <-- chiamata reale qui
+  const txt = await fakeAI(style,domanda); // <-- sostituisci con la tua /api/ask
   $('result').textContent = sanitize(style,txt);
-  // salva in cronologia
+  // log in cronologia
   const arr=readJSON('cronologia',[]);
   arr.unshift({domanda, risposta:$('result').textContent, stile:style, lang, ts:Date.now()});
   LS.setItem('cronologia',JSON.stringify(arr.slice(0,100)));
