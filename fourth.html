@@ -33,10 +33,10 @@
   .play:hover{filter:brightness(1.1)}
   .meta{font-size:12px;color:var(--muted)}
   .tip{font-size:12px;color:var(--muted);margin-top:8px}
-  details.stories summary{cursor:pointer;list-style:none}
-  details.stories summary::-webkit-details-marker{display:none}
-  details.stories summary .chev{transition:.15s}
-  details.stories[open] summary .chev{transform:rotate(90deg)}
+  details.box summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
+  details.box summary::-webkit-details-marker{display:none}
+  details.box summary .chev{transition:.15s}
+  details.box[open] summary .chev{transform:rotate(90deg)}
   .right{margin-left:auto}
 </style>
 </head>
@@ -49,9 +49,8 @@
     </div>
     <div class="row">
       <span class="badge" id="freeBadge">—</span>
-      <span class="badge" id="clarBadge">—</span>
       <button class="btn" id="langBtn">IT</button>
-      <span class="badge" id="devBadge" style="display:none">DEV</span>
+      <span class="badge" id="modeBadge" style="display:none"></span>
     </div>
   </div>
 
@@ -90,18 +89,18 @@
     </div>
   </div>
 
-  <details class="card stories" id="storiesWrap">
-    <summary class="row">
-      <span class="chev">▶</span>
-      <h3 class="label" id="storiesLabel" style="margin:0">Domande salvate per domani</h3>
-      <span class="right"></span>
-    </summary>
-    <div id="storyList" style="margin-top:10px"></div>
-    <div class="row" style="justify-content:flex-end;gap:8px">
-      <!-- se in pagina hai già un bottone “svuota”, questo non disturba -->
-      <button class="btn" id="clearStoriesBtn">Svuota storie</button>
-      <button class="btn" id="clearSavedBtn">Svuota salvate</button>
-    </div>
+  <!-- Storie recenti -->
+  <details class="card box" id="recentWrap" open>
+    <summary><span class="chev">▶</span><h3 class="label" style="margin:0" id="recentLbl">Storie recenti</h3></summary>
+    <div id="recentList" style="margin-top:10px"></div>
+    <div class="row" style="justify-content:flex-end"><button class="btn" id="clearStoriesBtn">Svuota storie</button></div>
+  </details>
+
+  <!-- Salvate per domani -->
+  <details class="card box" id="savedWrap">
+    <summary><span class="chev">▶</span><h3 class="label" style="margin:0" id="savedLbl">Domande salvate per domani</h3></summary>
+    <div id="savedList" style="margin-top:10px"></div>
+    <div class="row" style="justify-content:flex-end"><button class="btn" id="clearSavedBtn">Svuota salvate</button></div>
   </details>
 </main>
 
@@ -110,48 +109,45 @@
 const I18N = {
   it:{ title:"Imposta la tua domanda", yourq:"La tua domanda", addDetail:"Aggiungi un dettaglio (opzionale)",
        hint:"aiuta la risposta di oggi", tip:"Tip: puoi cambiare stile sopra; colori e tono si adattano.",
-       gen:"✨ Genera risposta", clear:"Pulisci", stories:"Domande salvate per domani",
-       free:(l,d)=>`Free oggi: ${l}/${d}`, clar:(l,d)=>`Chiarimenti: ${l}/${d}`,
-       whatif:"What if (realistico)", wtf:"What the F (divertente)",
-       future:"Futuro", past:"Passato",
-       usedOutTitle:"Hai finito i free di oggi",
-       usedOutBody:"Passa al Pro per continuare subito, oppure torna domani per nuovi crediti." },
+       gen:"✨ Genera risposta", clear:"Pulisci",
+       whatif:"What if (realistico)", wtf:"What the F (divertente)", future:"Futuro", past:"Passato",
+       free:(l,d)=>`Free oggi: ${l}/${d}`,
+       recent:"Storie recenti", saved:"Domande salvate per domani",
+       outTitle:"Hai finito i free di oggi", outBody:"Passa al Pro oppure torna domani." },
   en:{ title:"Set your question", yourq:"Your question", addDetail:"Add a detail (optional)",
        hint:"helps today's answer", tip:"Tip: switch style above; tone & colors adapt.",
-       gen:"✨ Generate answer", clear:"Clear", stories:"Questions saved for tomorrow",
-       free:(l,d)=>`Free today: ${l}/${d}`, clar:(l,d)=>`Clarify: ${l}/${d}`,
-       whatif:"What if (realistic)", wtf:"What the F (fun)",
-       future:"Future", past:"Past",
-       usedOutTitle:"You ran out of today’s free credits",
-       usedOutBody:"Upgrade to Pro to continue now, or come back tomorrow for fresh credits." }
+       gen:"✨ Generate answer", clear:"Clear",
+       whatif:"What if (realistic)", wtf:"What the F (fun)", future:"Future", past:"Past",
+       free:(l,d)=>`Free today: ${l}/${d}`,
+       recent:"Recent stories", saved:"Saved for tomorrow",
+       outTitle:"You ran out of today’s free credits", outBody:"Upgrade to Pro or come back tomorrow." }
 };
 const LS = localStorage;
-let lang = (LS.getItem('lang')||'it').toLowerCase();
-const T = I18N[lang]||I18N.it;
-document.documentElement.lang = lang;
+let lang=(LS.getItem('lang')||'it').toLowerCase();
+const T=I18N[lang]||I18N.it;
+document.documentElement.lang=lang;
 
 function readJSON(k,def){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
 function writeJSON(k,v){LS.setItem(k,JSON.stringify(v))}
 const todayStr=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 
-/* ===== prefs / stile / periodo ===== */
-const prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false,dev:false});
+/* ===== prefs ===== */
+const prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false,dev:false});
 let currentStyle=prefs.stile||'whatif';
 let currentPeriod=prefs.periodo||'future';
 document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
 
 /* ===== crediti ===== */
-const DAILY_FREE=3, DAILY_CLARIFY=5;
-function ensureDay(k){const v=readJSON(k,{});const t=todayStr();if(v.date!==t){v.date=t;v.used=0;writeJSON(k,v)}}
-function creditsLeft(){ensureDay('whatif_credits'); const c=readJSON('whatif_credits'); return Math.max(0,DAILY_FREE-(c.used||0));}
-function incCredits(){const c=readJSON('whatif_credits'); c.used=(c.used||0)+1; writeJSON('whatif_credits',c);}
-function renderBadges(){
-  ensureDay('whatif_credits'); ensureDay('whatif_clarify');
-  const c=readJSON('whatif_credits'); const cl=readJSON('whatif_clarify');
-  document.getElementById('freeBadge').textContent=T.free(Math.max(0,DAILY_FREE-(c.used||0)),DAILY_FREE);
-  document.getElementById('clarBadge').textContent=T.clar(Math.max(0,DAILY_CLARIFY-(cl.used||0)),DAILY_CLARIFY);
+const DAILY_FREE=3;
+function ensureDayCredits(){
+  const c=readJSON('whatif_credits',{date:todayStr(),used:0});
+  const t=todayStr();
+  if(c.date!==t){ c.date=t; c.used=0; writeJSON('whatif_credits',c); }
 }
-renderBadges();
+function creditsLeft(){ ensureDayCredits(); const c=readJSON('whatif_credits'); return Math.max(0,DAILY_FREE-(c.used||0)); }
+function spendCredit(){ const c=readJSON('whatif_credits'); c.used=(c.used||0)+1; writeJSON('whatif_credits',c); }
+function renderFree(){ document.getElementById('freeBadge').textContent=T.free(creditsLeft(),DAILY_FREE); }
+ensureDayCredits(); renderFree();
 
 /* ===== testo UI ===== */
 const $=id=>document.getElementById(id);
@@ -162,9 +158,10 @@ $('hintMeta').textContent=T.hint;
 $('tipNote').textContent=T.tip;
 $('goBtn').textContent=T.gen;
 $('clearBtn').textContent=T.clear;
-$('storiesLabel').textContent=T.stories;
 $('chipWhatIf').textContent=T.whatif; $('chipWTF').textContent=T.wtf;
 $('chipPast').textContent=T.past; $('chipFuture').textContent=T.future;
+$('recentLbl').textContent=T.recent;
+$('savedLbl').textContent=T.saved;
 $('langBtn').textContent=lang.toUpperCase();
 
 /* ===== nav + lingua ===== */
@@ -172,7 +169,7 @@ $('backBtn').onclick=()=>history.back();
 $('homeBtn').onclick=()=>location.href='index.html';
 $('langBtn').onclick=()=>{ LS.setItem('lang', lang==='it'?'en':'it'); location.reload(); };
 
-/* ===== switch stile ===== */
+/* ===== stile/periodo ===== */
 document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
 $('styleChips').addEventListener('click',e=>{
   const b=e.target.closest('.chip'); if(!b) return;
@@ -180,8 +177,6 @@ $('styleChips').addEventListener('click',e=>{
   document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
   document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c===b));
 });
-
-/* ===== switch periodo ===== */
 document.querySelectorAll('#periodChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.per===currentPeriod));
 $('periodChips').addEventListener('click',e=>{
   const b=e.target.closest('.chip'); if(!b) return;
@@ -189,19 +184,19 @@ $('periodChips').addEventListener('click',e=>{
   document.querySelectorAll('#periodChips .chip').forEach(c=>c.classList.toggle('sel',c===b));
 });
 
-/* ===== Dev/Pro ===== */
-// Dev: 5 tap sul titolo
+/* ===== Dev/Pro badge + shortcuts ===== */
+function renderMode(){ const b=$('modeBadge'); const t=[prefs.dev&&'DEV',prefs.pro&&'PRO'].filter(Boolean).join('/'); b.style.display=t? 'inline-block':'none'; b.textContent=t; }
+renderMode();
+// Dev toggle: 5 tap sul titolo
 let taps=0,timer=null;
-$('titleH1').addEventListener('click',()=>{
-  clearTimeout(timer); taps++; timer=setTimeout(()=>taps=0,700);
-  if(taps>=5){ prefs.dev=!prefs.dev; writeJSON('whatif_prefs',prefs); showToast(`Dev ${prefs.dev?'ON':'OFF'}`); renderDevBadge(); taps=0; }
-});
-// Pro: long-press 1.5s sul badge free
+$('titleH1').addEventListener('click',()=>{ clearTimeout(timer); taps++; timer=setTimeout(()=>taps=0,700); if(taps>=5){ prefs.dev=!prefs.dev; writeJSON('whatif_prefs',prefs); renderMode(); taps=0; } });
+// Pro toggle: long press 1.5s su badge free
 let press=null;
-$('freeBadge').addEventListener('mousedown',()=>{ press=setTimeout(()=>{ prefs.pro=!prefs.pro; writeJSON('whatif_prefs',prefs); showToast(`Pro ${prefs.pro?'ON':'OFF'}`); renderDevBadge(); },1500) });
+$('freeBadge').addEventListener('mousedown',()=>{ press=setTimeout(()=>{ prefs.pro=!prefs.pro; writeJSON('whatif_prefs',prefs); renderMode(); },1500) });
 ['mouseup','mouseleave','touchend','touchcancel'].forEach(ev=>$('freeBadge').addEventListener(ev,()=>clearTimeout(press)));
-function renderDevBadge(){ const b=$('devBadge'); b.style.display=(prefs.dev||prefs.pro)?'inline-block':'none'; b.textContent=(prefs.dev?'DEV ':'')+(prefs.pro?'PRO':'').trim() }
-renderDevBadge();
+// Dev helper: TRIPLO TAP su badge free = reset crediti (comodo per test)
+let t2=0,t2Timer=null;
+$('freeBadge').addEventListener('click',()=>{ clearTimeout(t2Timer); t2++; t2Timer=setTimeout(()=>t2=0,500); if(prefs.dev && t2>=3){ writeJSON('whatif_credits',{date:todayStr(),used:0}); renderFree(); t2=0; }});
 
 /* ===== chips extra ===== */
 const chipWrap=$('extraChips');
@@ -214,39 +209,49 @@ sugg.forEach(txt=>{ const b=document.createElement('button'); b.className='chip'
 
 /* ===== azioni ===== */
 $('clearBtn').onclick=()=>{ $('qInput').value=''; $('extraInput').value=''; $('qInput').focus(); };
-
 $('goBtn').onclick=()=>{
   const domanda=$('qInput').value.trim(); if(!domanda){ $('qInput').focus(); return; }
-  if(!prefs.pro && creditsLeft()<=0){ return alert(`${T.usedOutTitle}\n\n${T.usedOutBody}`); }
+  if(!prefs.pro && creditsLeft()<=0){ return alert(`${T.outTitle}\n\n${T.outBody}`); }
   LS.setItem('domanda',domanda);
   writeJSON('whatif_clarify_buffer',{ q:domanda, extra: $('extraInput').value.trim()||"", periodo: currentPeriod });
-  if(!prefs.pro){ incCredits(); renderBadges(); }
+  if(!prefs.pro){ spendCredit(); renderFree(); }
   location.href='fifth.html';
 };
 
-/* ===== storie ===== */
-function readJSONSafe(k){ try{ return JSON.parse(LS.getItem(k)||'[]'); }catch{ return [] } }
+/* ===== liste ===== */
 function fmtDate(ts){ return new Date(ts).toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
-function renderStories(){
-  const arr = readJSON('cronologia',[]);
-  const box = $('storyList'); box.innerHTML='';
-  arr.slice(-20).reverse().forEach(item=>{
-    const div=document.createElement('div'); div.className='story';
+
+function renderRecent(){
+  const list=$('recentList'); list.innerHTML='';
+  const items = readJSON('cronologia',[]).slice(-30).reverse();
+  if(!items.length){ list.innerHTML = `<div class="meta">${lang==='it'?'Nessuna storia al momento.':'No stories yet.'}</div>`; return; }
+  items.forEach(item=>{
+    const row=document.createElement('div'); row.className='story';
     const left=document.createElement('div');
     left.innerHTML=`<div style="font-weight:700">${item.domanda||'—'}</div><div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
     const play=document.createElement('button'); play.className='play'; play.textContent='▶';
     play.onclick=()=>{ LS.setItem('domanda', item.domanda||''); const p=readJSON('whatif_prefs',{}); p.stile=item.stile||'whatif'; writeJSON('whatif_prefs',p); location.href='fifth.html'; };
-    div.appendChild(left); div.appendChild(play); box.appendChild(div);
+    row.appendChild(left); row.appendChild(play); list.appendChild(row);
   });
 }
-renderStories();
+function renderSaved(){
+  const list=$('savedList'); list.innerHTML='';
+  const items = readJSON('followup_queue',[]).slice(-50).reverse();
+  if(!items.length){ list.innerHTML = `<div class="meta">${lang==='it'?'Niente in coda per domani.':'Nothing queued for tomorrow.'}</div>`; return; }
+  items.forEach(item=>{
+    const row=document.createElement('div'); row.className='story';
+    const left=document.createElement('div');
+    left.innerHTML=`<div style="font-weight:700">${item.text||item.base||'—'}</div><div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
+    const play=document.createElement('button'); play.className='play'; play.textContent='▶';
+    play.onclick=()=>{ LS.setItem('domanda', item.text||item.base||''); const p=readJSON('whatif_prefs',{}); p.stile=item.stile||'whatif'; writeJSON('whatif_prefs',p); location.href='fifth.html'; };
+    row.appendChild(left); row.appendChild(play); list.appendChild(row);
+  });
+}
+renderRecent(); renderSaved();
 
-/* pulsanti svuota (se presenti) */
-$('clearStoriesBtn')?.addEventListener('click',()=>{ if(confirm('Svuotare la cronologia?')){ writeJSON('cronologia',[]); renderStories(); }});
-$('clearSavedBtn')?.addEventListener('click',()=>{ if(confirm('Svuotare i follow-up salvati?')){ writeJSON('followup_queue',[]); showToast('Ok'); }});
-
-/* ===== helpers ===== */
-function showToast(msg){ const t=document.createElement('div'); t.textContent=msg; t.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#111;color:#fff;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.15);z-index:9999'; document.body.appendChild(t); setTimeout(()=>t.remove(),1600); }
+/* svuota */
+$('clearStoriesBtn').onclick=()=>{ if(confirm(lang==='it'?'Svuotare la cronologia?':'Clear history?')){ writeJSON('cronologia',[]); renderRecent(); } };
+$('clearSavedBtn').onclick=()=>{ if(confirm(lang==='it'?'Svuotare i salvati?':'Clear saved?')){ writeJSON('followup_queue',[]); renderSaved(); } };
 </script>
 </body>
 </html>
