@@ -3,365 +3,318 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f – Domanda</title>
+<title>What?f — Domanda</title>
 <meta name="theme-color" content="#0B0B0C" />
 <style>
-  :root{
-    --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
-    --acc:#1C57A0; --acc2:#FFEC01; /* What if */
-    --chip:#121A26; --line:rgba(255,255,255,.12); --ink:#0A0E12;
-    --card:rgba(20,28,34,.92); --shadow:rgba(0,0,0,.35);
-  }
-  html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
-
-  *{box-sizing:border-box}
-  html,body{
-    margin:0;
-    background: radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-    color:var(--fg);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility
-  }
-  main{max-width:980px;margin:auto;padding:18px}
-  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
-  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
-  .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
-  .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
-  h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2)}
-  .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-  .input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
-  .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
-  .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-  .story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
-  .play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
-  .meta{font-size:12px;color:var(--muted)}
-  .tip{font-size:12px;color:var(--muted);margin-top:8px}
-  .muted{color:var(--muted);font-size:13px}
-
-  /* Collapsible */
-  .collapsible{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:rgba(255,255,255,.04)}
-  .collapsible summary{list-style:none;cursor:pointer;padding:12px 14px;display:flex;align-items:center;justify-content:space-between}
-  .collapsible summary::-webkit-details-marker{display:none}
-  .caret{transition:transform .2s ease}
-  details[open] .caret{transform:rotate(90deg)}
-  .collapsible .body{padding:0 14px 14px}
+:root{
+  --bg:#0B0B0C; --bg2:#0E1216; --fg:#FFFFFF; --muted:#9FB1BA;
+  --chip:#121A26; --line:rgba(255,255,255,.14); --ink:#0A0E12;
+  --card:rgba(18,24,30,.92); --shadow:rgba(0,0,0,.35);
+  /* What if */
+  --acc:#1C57A0; --acc2:#FFEC01;
+  /* buttons */
+  --btn:#16202A; --btnText:#EAF3EE;
+  --playBG:#FDF7B2; --playFG:#1a1a1a; /* CONTRASTO ALTO */
+}
+html[data-theme="wtf"]{
+  --acc:#3A6B56; --acc2:#5A8C75;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:radial-gradient(900px 700px at 20% 18%,var(--bg2) 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:980px;margin:auto;padding:18px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{appearance:none;border:1px solid var(--line);background:var(--btn);color:var(--btnText);padding:10px 14px;border-radius:12px;cursor:pointer}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
+.btn.ghost{background:transparent}
+.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
+.badge.pro{background:linear-gradient(180deg,#2fd68a,#a7ffcf);color:#0b271b;border:none;font-weight:800}
+.badge.dev{background:#4b2b8f;color:#fff;border-color:#6a4cd4}
+.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2)}
+.label{color:var(--acc);font-weight:800;margin:0 0 8px}
+.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
+.chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
+.story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04);gap:10px}
+.story .meta{font-size:12px;color:var(--muted)}
+.play{border:none;background:var(--playBG);color:var(--playFG);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,.3)}
+.tip{font-size:12px;color:var(--muted);margin-top:8px}
+.wrap-collapsible{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:10px}
+.collab-head{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.05);padding:12px 14px;cursor:pointer}
+.arrow{transition:transform .2s ease}
+.collapsed .arrow{transform:rotate(-90deg)}
+.section-body{padding:12px 14px;border-top:1px solid var(--line)}
 </style>
 </head>
 <body>
-  <main>
-    <div class="row" style="justify-content:space-between">
-      <div class="row">
-        <button class="btn" id="backBtn">←</button>
-        <button class="btn" id="homeBtn">🏠</button>
-      </div>
-      <div class="row">
-        <span class="badge" id="freeBadge" title="">—</span>
-        <span class="badge" id="clarBadge">—</span>
-        <button class="btn" id="langBtn">IT</button>
+<main>
+  <!-- Header -->
+  <div class="row" style="justify-content:space-between">
+    <div class="row">
+      <button class="btn" id="backBtn">←</button>
+      <button class="btn" id="homeBtn">🏠</button>
+    </div>
+    <div class="row" id="badgesRow">
+      <span class="badge" id="freeBadge">—</span>
+      <span class="badge" id="proBadge" style="display:none">PRO</span>
+      <span class="badge dev" id="devBadge" style="display:none">DEV</span>
+      <button class="btn" id="langBtn">IT</button>
+    </div>
+  </div>
+
+  <h1 id="titleH1">Imposta la tua domanda</h1>
+
+  <!-- Stile -->
+  <div class="card">
+    <div class="row">
+      <span class="badge" id="periodoBadge">🕰️ Futuro</span>
+      <div class="chips" id="styleChips">
+        <button class="chip sel" data-style="whatif" id="chipWhatIf">What if (realistico)</button>
+        <button class="chip" data-style="wtf" id="chipWTF">What the F (divertente)</button>
       </div>
     </div>
+  </div>
 
-    <h1 id="titleH1">Imposta la tua domanda</h1>
+  <!-- Domanda + dettaglio -->
+  <div class="card">
+    <h3 class="label" id="qLabel">La tua domanda</h3>
+    <textarea id="qInput" rows="3" placeholder="E se tornassi a vivere all'Aquila?" class="input"></textarea>
 
-    <!-- Guida -->
-    <details id="guideBox" class="collapsible">
-      <summary>
-        <span class="label" id="guideTitle">Guida rapida</span>
-        <span class="caret">▶</span>
-      </summary>
-      <div class="body" id="guideBody"></div>
-    </details>
-
-    <!-- Stile -->
-    <div class="card">
-      <div class="row">
-        <span class="badge" id="periodoBadge">🕰️ Futuro</span>
-        <div class="chips" id="styleChips">
-          <button class="chip" data-style="whatif" id="chipWhatIf">What if (realistico)</button>
-          <button class="chip" data-style="wtf" id="chipWTF">What the F (divertente)</button>
-        </div>
+    <div style="margin-top:10px">
+      <div class="row" style="justify-content:space-between">
+        <div class="label" style="margin:0" id="detailLabel">Aggiungi un dettaglio (opzionale)</div>
+        <span class="tip" id="hintMeta">aiuta la risposta di oggi</span>
       </div>
+      <input id="extraInput" class="input" placeholder="es. primo segnale di successo, budget…" />
+      <div class="chips" id="extraChips" style="margin-top:8px"></div>
+      <p class="tip" id="tipNote">Tip: puoi cambiare stile sopra; colori e tono si adattano.</p>
     </div>
 
-    <!-- Domanda -->
-    <div class="card">
-      <h3 class="label" id="qLabel">La tua domanda</h3>
-      <textarea id="qInput" rows="3" placeholder="E se tornassi a vivere all'Aquila?" class="input"></textarea>
-
-      <div style="margin-top:10px">
-        <div class="row" style="justify-content:space-between;align-items:baseline">
-          <div class="label" id="addDetail" style="margin:0">Aggiungi un dettaglio (opzionale)</div>
-          <span class="meta" id="hintMeta">aiuta la risposta di oggi</span>
-        </div>
-        <input id="extraInput" class="input" placeholder="es. primo segnale di successo, budget, luogo specifico…" />
-        <div class="chips" id="extraChips" style="margin-top:8px"></div>
-        <p class="tip" id="tipNote">Tip: puoi cambiare stile sopra; colori e tono si adattano.</p>
-      </div>
-
-      <div class="row" style="margin-top:12px">
-        <button class="btn primary" id="goBtn">✨ Genera risposta</button>
-        <button class="btn" id="clearBtn">Pulisci</button>
-        <button class="btn" id="exportBtn">📦 Esporta .json</button>
-      </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="goBtn">✨ Genera risposta</button>
+      <button class="btn ghost" id="clearBtn">Pulisci</button>
     </div>
+  </div>
 
-    <!-- Domande salvate per domani -->
-    <details id="savedBox" class="collapsible">
-      <summary>
-        <span class="label" id="savedTitle">Domande salvate per domani</span>
-        <span class="caret">▶</span>
-      </summary>
-      <div class="body" style="padding-top:0">
-        <div id="savedList" style="margin-top:10px"></div>
-      </div>
-    </details>
+  <!-- Domande salvate per domani (collassabile) -->
+  <div class="wrap-collapsible" id="savedForTomorrow">
+    <div class="collab-head" data-target="tomorrowBody">
+      <div class="label" style="margin:0" id="savedTitle">Domande salvate per domani</div>
+      <div class="arrow">▾</div>
+    </div>
+    <div class="section-body" id="tomorrowBody">
+      <div id="savedList"></div>
+    </div>
+  </div>
 
-    <!-- Storie recenti -->
-    <details id="storiesBox" class="collapsible" open>
-      <summary>
-        <span class="label" id="storiesLabel">Storie recenti</span>
-        <span class="caret">▶</span>
-      </summary>
-      <div class="body" style="padding-top:0">
-        <p class="muted" id="storiesHint">Seleziona una storia per riaprire la risposta.</p>
-        <div id="storyList" style="margin-top:10px"></div>
-      </div>
-    </details>
-
-  </main>
+  <!-- Storie recenti (collassabile) -->
+  <div class="wrap-collapsible" id="recentStories">
+    <div class="collab-head" data-target="storiesBody">
+      <div class="label" style="margin:0" id="storiesLabel">Storie recenti</div>
+      <div class="arrow">▾</div>
+    </div>
+    <div class="section-body" id="storiesBody">
+      <div id="storyList"></div>
+    </div>
+  </div>
+</main>
 
 <script>
-/* ===== Helpers ===== */
-const LS=localStorage;
-const $=id=>document.getElementById(id);
-function readJSON(k,def){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
-function writeJSON(k,v){LS.setItem(k,JSON.stringify(v))}
-function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
-function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
-
-/* ===== I18N ===== */
+/* ===== i18n ===== */
 const I18N={
-  it:{
-    title:"Imposta la tua domanda", future:"Futuro",
+  it:{ title:"Imposta la tua domanda", future:"Futuro",
     whatif:"What if (realistico)", wtf:"What the F (divertente)",
     yourq:"La tua domanda", addDetail:"Aggiungi un dettaglio (opzionale)",
     hint:"aiuta la risposta di oggi", tip:"Tip: puoi cambiare stile sopra; colori e tono si adattano.",
-    go:"✨ Genera risposta", clear:"Pulisci", stories:"Storie recenti",
-    storiesHint:"Seleziona una storia per riaprire la risposta.",
-    savedTitle:"Domande salvate per domani",
-    guideTitle:"Guida rapida",
-    guideHTML:`<ul style="margin:6px 0 0 18px">
-      <li>Scrivi la domanda → scegli lo stile.</li>
-      <li>Premi “Genera risposta”: vai alla pagina con l’episodio di oggi.</li>
-      <li>Alla fine puoi salvare 2 follow-up: li rivedi qui sotto.</li>
-      <li>“What?f” è lucido e allegro; “What the F” è ironico da bar.</li>
-    </ul><p class="muted">Tip: i limiti Free si resettano ogni giorno. Il Pro ne ha di più.</p>`,
-    free:(l,d,pro)=> pro?`Pro oggi: ${l}/${d}`:`Free oggi: ${l}/${d}`,
-    clar:(l,d)=>`Chiarimenti: ${l}/${d}`,
-    chip_s1:"primo segnale", chip_s2:"vincolo 2 settimane", chip_s3:"luogo preciso", chip_s4:"tempo disponibile",
-    exportJson:"📦 Esporta .json",
-    use:"Usa", play:"Riprendi", noneSaved:"Nessuna domanda salvata.",
-    noneStories:"Ancora nessuna storia."
+    go:"✨ Genera risposta", clear:"Pulisci",
+    saved:"Domande salvate per domani", stories:"Storie recenti",
+    free:(l,d)=>`Free oggi: ${l}/${d}`, pro:"PRO", dev:"DEV",
+    chip_s1:"primo segnale", chip_s2:"vincolo 2 settimane", chip_s3:"luogo preciso", chip_s4:"tempo disponibile"
   },
-  en:{
-    title:"Set your question", future:"Future",
+  en:{ title:"Set your question", future:"Future",
     whatif:"What if (realistic)", wtf:"What the F (fun)",
     yourq:"Your question", addDetail:"Add a detail (optional)",
     hint:"helps today's answer", tip:"Tip: switch style above; tone & colors adapt.",
-    go:"✨ Generate answer", clear:"Clear", stories:"Recent stories",
-    storiesHint:"Pick one to reopen its answer.",
-    savedTitle:"Questions saved for tomorrow",
-    guideTitle:"Quick guide",
-    guideHTML:`<ul style="margin:6px 0 0 18px">
-      <li>Write your question → choose a style.</li>
-      <li>Press “Generate answer”: you’ll go to today’s episode.</li>
-      <li>At the end you can save 2 follow-ups: you’ll see them here.</li>
-      <li>“What?f” is clear & upbeat; “What the F” is witty bar-style.</li>
-    </ul><p class="muted">Tip: Free limits reset daily. Pro gets more.</p>`,
-    free:(l,d,pro)=> pro?`Pro today: ${l}/${d}`:`Free today: ${l}/${d}`,
-    clar:(l,d)=>`Clarify: ${l}/${d}`,
-    chip_s1:"first signal", chip_s2:"2-week constraint", chip_s3:"specific place", chip_s4:"time window",
-    exportJson:"📦 Export .json",
-    use:"Use", play:"Open", noneSaved:"No saved questions yet.",
-    noneStories:"No stories yet."
+    go:"✨ Generate answer", clear:"Clear",
+    saved:"Saved for tomorrow", stories:"Recent stories",
+    free:(l,d)=>`Free today: ${l}/${d}`, pro:"PRO", dev:"DEV",
+    chip_s1:"first signal", chip_s2:"2-week constraint", chip_s3:"specific place", chip_s4:"time window"
   }
 };
+const LS=localStorage;
 const lang=(LS.getItem('lang')||'it').toLowerCase();
 const T=I18N[lang]||I18N.it;
 document.documentElement.lang=lang;
 
-/* ===== Theme from prefs ===== */
-const prefs = readJSON('whatif_prefs',{});
+/* ===== theme & prefs ===== */
+const prefs=JSON.parse(LS.getItem('whatif_prefs')||'{}');
 let currentStyle=prefs.stile||'whatif';
 document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
 
-/* ===== UI text ===== */
-$('titleH1').textContent=T.title;
-$('qLabel').textContent=T.yourq;
-$('addDetail').textContent=T.addDetail;
-$('hintMeta').textContent=T.hint;
-$('tipNote').textContent=T.tip;
-$('goBtn').textContent=T.go;
-$('clearBtn').textContent=T.clear;
-$('storiesLabel').textContent=T.stories;
-$('storiesHint').textContent=T.storiesHint;
-$('chipWhatIf').textContent=T.whatif;
-$('chipWTF').textContent=T.wtf;
-$('langBtn').textContent=lang.toUpperCase();
-$('savedTitle').textContent=T.savedTitle;
-$('guideTitle').textContent=T.guideTitle;
-$('guideBody').innerHTML=T.guideHTML;
-
-/* ===== Persist accordions ===== */
-['guideBox','savedBox','storiesBox'].forEach(id=>{
-  const el=$(id); const key=`whatif_acc_${id}`;
-  const open = LS.getItem(key)!=='0'; if(open) el.setAttribute('open','');
-  el.addEventListener('toggle',()=> LS.setItem(key, el.open?'1':'0'));
-});
-
-/* ===== credits (Free/Pro) ===== */
-const DAILY_FREE=3, DAILY_PRO=10, DAILY_CLARIFY=5;
+/* ===== credits / pro / dev ===== */
+const DAILY_FREE=3;
+function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function readJSON(k,def){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
+function writeJSON(k,v){LS.setItem(k,JSON.stringify(v))}
 function ensureDay(k){const v=readJSON(k,{});const t=todayStr();if(v.date!==t){v.date=t;v.used=0;writeJSON(k,v)}}
 function renderBadges(){
-  const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:false});
-  const limit = c.pro ? DAILY_PRO : DAILY_FREE;
-  const left = Math.max(0, limit-(c.used||0));
-  $('freeBadge').textContent=T.free(left,limit,!!c.pro);
-  $('freeBadge').title = lang==='en'
-    ? 'Triple-click: toggle Pro (dev)\nLong-press 2s: reset today (dev)'
-    : 'Triplo click: attiva/disattiva Pro (dev)\nPressione lunga 2s: azzera oggi (dev)';
-  const cl=readJSON('whatif_clarify',{date:todayStr(),used:0});
-  $('clarBadge').textContent=T.clar(Math.max(0,(DAILY_CLARIFY-(cl.used||0))),DAILY_CLARIFY);
+  const c=readJSON('whatif_credits',{date:todayStr(),used:0}); const left=Math.max(0,DAILY_FREE-(c.used||0));
+  document.getElementById('freeBadge').textContent=T.free(left,DAILY_FREE);
+  const isPro=!!readJSON('whatif_pro',{pro:false}).pro;
+  document.getElementById('proBadge').style.display=isPro?'inline-block':'none';
+  const dev=!!readJSON('whatif_dev',{on:false}).on;
+  document.getElementById('devBadge').style.display=dev?'inline-block':'none';
 }
-ensureDay('whatif_credits'); ensureDay('whatif_clarify'); renderBadges();
+ensureDay('whatif_credits'); renderBadges();
 
-/* Dev toggle + reset (locale) */
-(function devControls(){
-  let clicks=0,timer=null,pressT=null;
-  $('freeBadge').addEventListener('click',()=>{
-    clicks++; clearTimeout(timer);
-    timer=setTimeout(()=>{
-      if(clicks>=3){
-        const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:false});
-        c.pro=!c.pro; c.used=0; writeJSON('whatif_credits',c); renderBadges();
-        alert(c.pro ? (lang==='en'?'Pro ON (local)':'Pro attivo (locale)') : (lang==='en'?'Pro OFF (local)':'Pro disattivo (locale)'));
-      }
-      clicks=0;
-    },250);
-  });
-  $('freeBadge').addEventListener('pointerdown',()=>{ pressT=setTimeout(()=>resetToday(),2000); });
-  ['pointerup','pointerleave','pointercancel'].forEach(ev=> $('freeBadge').addEventListener(ev,()=> clearTimeout(pressT)));
-  function resetToday(){
-    const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:false}); c.date=todayStr(); c.used=0; writeJSON('whatif_credits',c);
-    const cl=readJSON('whatif_clarify',{date:todayStr(),used:0}); cl.date=todayStr(); cl.used=0; writeJSON('whatif_clarify',cl);
-    renderBadges();
-    alert(lang==='en'?'Today counters reset (local) ✅':'Contatori di oggi azzerati (locale) ✅');
+/* dev/pro shortcuts */
+const freeBadge=document.getElementById('freeBadge');
+let tapCount=0, tapTimer=null, longTimer=null;
+freeBadge.addEventListener('click',()=>{ // triple tap => toggle PRO
+  tapCount++; clearTimeout(tapTimer);
+  tapTimer=setTimeout(()=>{tapCount=0},350);
+  if(tapCount===3){
+    const st=readJSON('whatif_pro',{pro:false}); st.pro=!st.pro; writeJSON('whatif_pro',st); tapCount=0; renderBadges();
   }
-})();
+});
+freeBadge.addEventListener('mousedown',()=>{ // long press => reset credits
+  longTimer=setTimeout(()=>{ const c=readJSON('whatif_credits',{date:todayStr(),used:0}); c.used=0; writeJSON('whatif_credits',c); renderBadges(); },2000);
+});
+freeBadge.addEventListener('mouseup',()=>clearTimeout(longTimer));
+document.getElementById('titleH1').addEventListener('mousedown',()=>{
+  longTimer=setTimeout(()=>{ const d=readJSON('whatif_dev',{on:false}); d.on=!d.on; writeJSON('whatif_dev',d); renderBadges(); },2000);
+});
+document.getElementById('titleH1').addEventListener('mouseup',()=>clearTimeout(longTimer));
 
-/* ===== Periodo badge (visual) ===== */
-$('periodoBadge').textContent = (readJSON('whatif_prefs',{}).periodo==='past' ? '🕰️ Passato' : (lang==='en'?'🕰️ Future':'🕰️ Futuro'));
+/* ===== text UI ===== */
+document.getElementById('titleH1').textContent=T.title;
+document.getElementById('periodoBadge').textContent=`🕰️ ${T.future}`;
+document.getElementById('qLabel').textContent=T.yourq;
+document.getElementById('detailLabel').textContent=T.addDetail;
+document.getElementById('hintMeta').textContent=T.hint;
+document.getElementById('tipNote').textContent=T.tip;
+document.getElementById('chipWhatIf').textContent=T.whatif;
+document.getElementById('chipWTF').textContent=T.wtf;
+document.getElementById('langBtn').textContent=lang.toUpperCase();
+document.getElementById('savedTitle').textContent=T.saved;
+document.getElementById('storiesLabel').textContent=T.stories;
+document.getElementById('goBtn').textContent=T.go;
+document.getElementById('clearBtn').textContent=T.clear;
+
+/* ===== nav ===== */
+document.getElementById('backBtn').onclick=()=>history.back();
+document.getElementById('homeBtn').onclick=()=>location.href='index.html';
+document.getElementById('langBtn').onclick=()=>{ const nxt=lang==='it'?'en':'it'; LS.setItem('lang',nxt); location.reload(); };
 
 /* ===== style chips ===== */
 document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
-$('styleChips').addEventListener('click',e=>{
+document.getElementById('styleChips').addEventListener('click',e=>{
   const b=e.target.closest('.chip'); if(!b) return;
-  currentStyle=b.dataset.style;
-  const p=readJSON('whatif_prefs',{}); p.stile=currentStyle; writeJSON('whatif_prefs',p);
+  currentStyle=b.dataset.style; prefs.stile=currentStyle; writeJSON('whatif_prefs',prefs);
   document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
   document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c===b));
 });
 
-/* ===== extras chips ===== */
+/* ===== chips di dettaglio ===== */
+const chipWrap=document.getElementById('extraChips');
 [T.chip_s1,T.chip_s2,T.chip_s3,T.chip_s4].forEach(txt=>{
   const b=document.createElement('button'); b.className='chip'; b.textContent=txt;
-  b.addEventListener('click',()=>{ const i=$('extraInput'); i.value = i.value? (i.value+' • '+txt):txt; i.focus(); });
-  $('extraChips').appendChild(b);
+  b.addEventListener('click',()=>{ const i=document.getElementById('extraInput'); i.value = i.value? (i.value+' • '+txt):txt; i.focus(); });
+  chipWrap.appendChild(b);
 });
 
-/* ===== nav ===== */
-$('backBtn').onclick=()=>history.back();
-$('homeBtn').onclick=()=>location.href='index.html';
-$('langBtn').onclick=()=>{ const nxt=lang==='it'?'en':'it'; LS.setItem('lang',nxt); location.reload(); };
-
-/* ===== Azioni principali ===== */
-$('goBtn').onclick=()=>{
-  const domanda=$('qInput').value.trim();
-  if(!domanda){ $('qInput').focus(); return; }
-  LS.setItem('domanda',domanda);
-  writeJSON('whatif_clarify_buffer',{ q:domanda, extra: $('extraInput').value.trim()||"" });
-  const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:false});
-  c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderBadges();
-  location.href='fifth.html';
-};
-$('clearBtn').onclick=()=>{ $('qInput').value=''; $('extraInput').value=''; $('qInput').focus(); };
-
-/* ===== export JSON ===== */
-$('exportBtn').textContent=T.exportJson;
-$('exportBtn').onclick=()=>{
-  const data={
-    exported_at:new Date().toISOString(),
-    lang,
-    stories: readJSON('cronologia',[]),
-    saved_for_tomorrow: readJSON('saved_tomorrow',[]),
-    followups: readJSON('followups',[])
+/* ===== collapsible ===== */
+document.querySelectorAll('.collab-head').forEach(h=>{
+  h.parentElement.classList.remove('collapsed');
+  h.onclick=()=>{
+    const p=h.parentElement;
+    p.classList.toggle('collapsed');
+    const tgt=document.getElementById(h.dataset.target);
+    tgt.style.display = (tgt.style.display==='none') ? 'block' : 'none';
   };
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download=`whatif_export_${Date.now()}.json`; a.click();
-  URL.revokeObjectURL(url);
-};
+});
 
-/* ===== "Domande salvate per domani" =====
-   - legge sia da 'saved_tomorrow' (nuovo) sia da 'followups' (compatibilità)
-   - ogni item: { domanda, ts, stile }
-*/
-function collectSaved(){
-  const a = readJSON('saved_tomorrow',[]);
-  const b = readJSON('followups',[]).map(x=>({domanda:x.q||x.domanda||x, ts:x.ts||Date.now(), stile:x.stile||currentStyle}));
-  // merge per testo
-  const map=new Map();
-  [...a,...b].forEach(it=>{ if(!it||!it.domanda) return; if(!map.has(it.domanda)) map.set(it.domanda,it); });
-  return Array.from(map.values()).sort((x,y)=> (y.ts||0)-(x.ts||0)).slice(0,12);
-}
+/* ===== list helpers ===== */
+function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
+function readArr(k){ return readJSON(k,[]); }
+
+/* ===== render "Domande salvate per domani" ===== */
 function renderSaved(){
-  const arr=collectSaved();
-  const box=$('savedList'); box.innerHTML='';
-  if(!arr.length){ const p=document.createElement('p'); p.className='muted'; p.textContent=T.noneSaved; box.appendChild(p); return; }
-  arr.forEach(item=>{
-    const row=document.createElement('div'); row.className='story';
-    const left=document.createElement('div');
-    left.innerHTML=`<div style="font-weight:700">${item.domanda}</div><div class="meta">${fmtDate(item.ts)}</div>`;
-    const right=document.createElement('div'); right.className='row';
-    const use=document.createElement('button'); use.className='btn'; use.textContent=T.use;
-    use.onclick=()=>{ $('qInput').value=item.domanda; window.scrollTo({top:0,behavior:'smooth'}); };
-    const play=document.createElement('button'); play.className='play'; play.textContent='▶';
-    play.onclick=()=>{ LS.setItem('domanda',item.domanda); const p=readJSON('whatif_prefs',{}); p.stile=item.stile||currentStyle; writeJSON('whatif_prefs',p); location.href='fifth.html'; };
-    right.appendChild(use); right.appendChild(play);
-    row.appendChild(left); row.appendChild(right);
-    box.appendChild(row);
-  });
-}
-renderSaved();
-
-/* ===== Storie recenti ===== */
-function renderStories(){
-  const arr=readJSON('cronologia',[]);
-  const box=$('storyList'); box.innerHTML='';
-  if(!arr.length){ const p=document.createElement('p'); p.className='muted'; p.textContent=T.noneStories; box.appendChild(p); return; }
-  arr.slice(0,12).forEach(item=>{
+  const box=document.getElementById('savedList'); box.innerHTML='';
+  const arr=readArr('saved_for_tomorrow');
+  if(!arr.length){ box.innerHTML=`<div class="tip">${lang==='en'?'Nothing saved yet.':'Nessuna domanda salvata.'}</div>`; return; }
+  arr.slice(-10).reverse().forEach(item=>{
     const div=document.createElement('div'); div.className='story';
     const left=document.createElement('div');
-    left.innerHTML=`<div style="font-weight:700">${item.domanda||'—'}</div>
-      <div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?(lang==='en'?'What the F':'What the F'):(lang==='en'?'What if':'What if'))}</div>`;
+    left.innerHTML=`<div style="font-weight:700">${item.q||'—'}</div><div class="meta">${fmtDate(item.ts)}</div>`;
     const play=document.createElement('button'); play.className='play'; play.textContent='▶';
-    play.onclick=()=>{ LS.setItem('domanda',item.domanda); const p=readJSON('whatif_prefs',{}); p.stile=item.stile; writeJSON('whatif_prefs',p); location.href='fifth.html'; };
+    play.title= lang==='en' ? 'Open saved reply' : 'Apri risposta salvata';
+    play.onclick=()=>{
+      // replay: porta in quinta con risposta salvata
+      LS.setItem('replay_story', JSON.stringify({
+        domanda:item.q, stile:item.stile||currentStyle, answer:item.answer||'', ts:item.ts
+      }));
+      location.href='fifth.html?view=replay';
+    };
     div.appendChild(left); div.appendChild(play); box.appendChild(div);
   });
 }
-renderStories();
+
+/* ===== render "Storie recenti" ===== */
+function renderStories(){
+  const box=document.getElementById('storyList'); box.innerHTML='';
+  const arr=readArr('cronologia');
+  if(!arr.length){ box.innerHTML=`<div class="tip">${lang==='en'?'No stories yet.':'Ancora nessuna storia.'}</div>`; return; }
+  arr.slice(-10).reverse().forEach(item=>{
+    const div=document.createElement('div'); div.className='story';
+    const left=document.createElement('div');
+    left.innerHTML=`<div style="font-weight:700">${item.domanda||'—'}</div><div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
+    const play=document.createElement('button'); play.className='play'; play.textContent='▶';
+    play.title= lang==='en' ? 'Open previous answer' : 'Apri risposta precedente';
+    play.onclick=()=>{
+      // REPLAY invece di rigenerare
+      LS.setItem('replay_story', JSON.stringify({
+        domanda:item.domanda, stile:item.stile, answer:item.answer||'', ts:item.ts
+      }));
+      location.href='fifth.html?view=replay';
+    };
+    div.appendChild(left); div.appendChild(play); box.appendChild(div);
+  });
+}
+
+/* ===== actions ===== */
+const qInput=document.getElementById('qInput');
+const extraInput=document.getElementById('extraInput');
+
+document.getElementById('goBtn').onclick=()=>{
+  const domanda=qInput.value.trim();
+  if(!domanda){ qInput.focus(); return; }
+  // memorizza cosa chiedere in quinta
+  writeJSON('whatif_request',{ domanda, extra:extraInput.value.trim()||"", stile:currentStyle });
+  // consumo credito (non in PRO)
+  const isPro = !!readJSON('whatif_pro',{pro:false}).pro;
+  if(!isPro){
+    const c=readJSON('whatif_credits'); c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderBadges();
+  }
+  location.href='fifth.html';
+};
+
+document.getElementById('clearBtn').onclick=()=>{
+  qInput.value=""; extraInput.value="";
+};
+
+/* ===== init ===== */
+(function init(){
+  // riporta ultimo stile
+  document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===currentStyle));
+  // collassare di default (più pulita)
+  document.getElementById('tomorrowBody').style.display='none';
+  document.getElementById('savedForTomorrow').classList.add('collapsed');
+  document.getElementById('storiesBody').style.display='none';
+  document.getElementById('recentStories').classList.add('collapsed');
+  renderSaved(); renderStories();
+})();
 </script>
 </body>
 </html>
