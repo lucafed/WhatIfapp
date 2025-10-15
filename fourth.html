@@ -3,32 +3,48 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f – Domanda</title>
+<title>What?f — Domanda</title>
 <meta name="theme-color" content="#0B0B0C" />
 <style>
-  :root{--bg:#0B0B0C;--bg2:#101414;--fg:#FFF;--muted:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01;--chip:#121A26;--line:rgba(255,255,255,.12);--ink:#0A0E12;--card:rgba(20,28,34,.92);--shadow:rgba(0,0,0,.35)}
-  html[data-theme="wtf"]{--acc:#3A6B56;--acc2:#5A8C75}
-  *{box-sizing:border-box}
-  html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:980px;margin:auto;padding:18px}
-  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
-  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
-  .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee}
-  .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
-  h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2)}
-  .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-  .input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
-  .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
-  .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-  .story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04);margin:8px 0}
-  .play{border:none;background:#0E141A;border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
-  .meta{font-size:12px;color:var(--muted)}
-  details.box summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
-  details.box summary::-webkit-details-marker{display:none}
-  details.box summary .chev{transition:.15s}
-  details.box[open] summary .chev{transform:rotate(90deg)}
+:root{
+  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
+  --acc:#1C57A0; --acc2:#6ED1A5;    /* tema What if */
+  --chip:#121A26; --line:rgba(255,255,255,.12); --ink:#0A0E12;
+  --card:rgba(20,28,34,.92); --shadow:rgba(0,0,0,.35);
+  --ok:#7BE091; --warn:#FFD85E;
+}
+html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
+*{box-sizing:border-box}
+html,body{margin:0;background:
+  radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+  color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:980px;margin:auto;padding:18px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
+.btn.ghost{background:transparent}
+.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
+.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2)}
+h2{font-size:18px;margin:0 0 10px;color:var(--acc)}
+.label{color:var(--acc);font-weight:800;margin:0 0 8px}
+.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
+textarea::placeholder,.input::placeholder{color:#7f8a90}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
+.chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
+.toggle{border-radius:999px;padding:8px 14px;border:1px solid var(--line);background:var(--chip);cursor:pointer}
+.toggle.active{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
+.story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04);margin:10px 0}
+.story .meta{font-size:12px;color:var(--muted);margin-top:2px}
+.play{border:none;background:linear-gradient(180deg,#FFEC99,#FFE580);width:46px;height:46px;border-radius:12px;cursor:pointer;font-weight:900;color:#222;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+.meta{font-size:12px;color:var(--muted)}
+.tip{font-size:12px;color:var(--muted);margin-top:8px}
+.disclosure{display:flex;align-items:center;gap:10px;cursor:pointer}
+.chev{transition:.2s transform}
+.collapsed .chev{transform:rotate(-90deg)}
+.hidden{display:none}
+.hr{height:1px;background:var(--line);margin:8px 0}
 </style>
 </head>
 <body>
@@ -41,17 +57,14 @@
     <div class="row">
       <span class="badge" id="freeBadge">—</span>
       <button class="btn" id="langBtn">IT</button>
-      <span class="badge" id="modeBadge" style="display:none"></span>
     </div>
   </div>
 
-  <h1 id="titleH1">Imposta la tua domanda</h1>
-
   <div class="card">
-    <div class="row" style="justify-content:space-between;align-items:center">
+    <div class="row" style="justify-content:space-between;gap:14px">
       <div class="chips" id="periodChips">
-        <button class="chip" data-per="past" id="chipPast">Passato</button>
-        <button class="chip sel" data-per="future" id="chipFuture">Futuro</button>
+        <button class="toggle" data-periodo="past" id="chipPast">Passato</button>
+        <button class="toggle active" data-periodo="future" id="chipFuture">Futuro</button>
       </div>
       <div class="chips" id="styleChips">
         <button class="chip sel" data-style="whatif" id="chipWhatIf">What if (realistico)</button>
@@ -61,137 +74,236 @@
   </div>
 
   <div class="card">
-    <h3 class="label" id="qLabel">La tua domanda</h3>
+    <h1 id="titleH1">Imposta la tua domanda</h1>
+    <h2 id="qLabel">La tua domanda</h2>
     <textarea id="qInput" rows="3" placeholder="E se tornassi a vivere all'Aquila?" class="input"></textarea>
 
-    <div style="margin-top:10px">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <div class="label" id="addDetailLbl">Aggiungi un dettaglio (opzionale)</div>
+    <div style="margin-top:12px">
+      <div class="row" style="justify-content:space-between">
+        <div class="label" id="detailLbl">Aggiungi un dettaglio (opzionale)</div>
         <span class="meta" id="hintMeta">aiuta la risposta di oggi</span>
       </div>
       <input id="extraInput" class="input" placeholder="es. primo segnale di successo, budget, luogo specifico…" />
       <div class="chips" id="extraChips" style="margin-top:8px"></div>
       <p class="tip" id="tipNote">Tip: puoi cambiare stile sopra; colori e tono si adattano.</p>
-    </div>
 
-    <div class="row" style="margin-top:12px">
-      <button class="btn primary" id="goBtn">✨ Genera risposta</button>
-      <button class="btn" id="clearBtn">Pulisci</button>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="goBtn">✨ Genera risposta</button>
+        <button class="btn" id="clearBtn">Pulisci</button>
+      </div>
     </div>
   </div>
 
-  <details class="card box" id="recentWrap" open>
-    <summary><span class="chev">▶</span><h3 class="label" style="margin:0" id="recentLbl">Storie recenti</h3></summary>
-    <div id="recentList" style="margin-top:10px"></div>
-    <div class="row" style="justify-content:flex-end"><button class="btn" id="clearStoriesBtn">Svuota storie</button></div>
-  </details>
-
-  <details class="card box" id="savedWrap">
-    <summary><span class="chev">▶</span><h3 class="label" style="margin:0" id="savedLbl">Domande salvate per domani</h3></summary>
-    <div id="savedList" style="margin-top:10px"></div>
-    <div class="row" style="justify-content:flex-end"><button class="btn" id="clearSavedBtn">Svuota salvate</button></div>
-  </details>
+  <div class="card" id="savedCard">
+    <div class="disclosure" id="savedHeader">
+      <span class="chev">▾</span>
+      <h2 id="savedTitle" style="margin:0">Domande salvate per domani</h2>
+    </div>
+    <div id="savedBody">
+      <div class="row" style="gap:10px;margin:8px 0 4px">
+        <button class="btn" id="clearHistoryBtn">Svuota storie</button>
+        <button class="btn" id="clearSavedBtn">Svuota salvate</button>
+      </div>
+      <div id="storyList"></div>
+    </div>
+  </div>
 </main>
 
 <script>
-const LS=localStorage;
-const I18N={it:{title:"Imposta la tua domanda",yourq:"La tua domanda",addDetail:"Aggiungi un dettaglio (opzionale)",hint:"aiuta la risposta di oggi",tip:"Tip: puoi cambiare stile sopra; colori e tono si adattano.",gen:"✨ Genera risposta",clear:"Pulisci",whatif:"What if (realistico)",wtf:"What the F (divertente)",future:"Futuro",past:"Passato",free:(l,d)=>`Free oggi: ${l}/${d}`,recent:"Storie recenti",saved:"Domande salvate per domani",none1:"Nessuna storia al momento.",none2:"Niente in coda per domani.",outT:"Hai finito i free di oggi",outB:"Passa al Pro oppure torna domani."},en:{title:"Set your question",yourq:"Your question",addDetail:"Add a detail (optional)",hint:"helps today's answer",tip:"Tip: switch style above; tone & colors adapt.",gen:"✨ Generate answer",clear:"Clear",whatif:"What if (realistic)",wtf:"What the F (fun)",future:"Future",past:"Past",free:(l,d)=>`Free today: ${l}/${d}`,recent:"Recent stories",saved:"Saved for tomorrow",none1:"No stories yet.",none2:"Nothing queued for tomorrow.",outT:"You ran out of today’s free credits",outB:"Upgrade to Pro or come back tomorrow."}};
-let lang=(LS.getItem('lang')||'it').toLowerCase(); const T=I18N[lang]||I18N.it; document.documentElement.lang=lang;
+/* ===== I18N ===== */
+const I18N = {
+  it: {
+    title:"Imposta la tua domanda",
+    past:"Passato", future:"Futuro",
+    whatif:"What if (realistico)", wtf:"What the F (divertente)",
+    yourq:"La tua domanda",
+    addDetail:"Aggiungi un dettaglio (opzionale)",
+    hint:"aiuta la risposta di oggi",
+    tip:"Tip: puoi cambiare stile sopra; colori e tono si adattano.",
+    go:"✨ Genera risposta", clear:"Pulisci",
+    saved:"Domande salvate per domani",
+    free:(l,d)=>`Free oggi: ${l}/${d}`
+  },
+  en: {
+    title:"Set your question",
+    past:"Past", future:"Future",
+    whatif:"What if (realistic)", wtf:"What the F (fun)",
+    yourq:"Your question",
+    addDetail:"Add a detail (optional)",
+    hint:"helps today's answer",
+    tip:"Tip: switch style above; tone & colors adapt.",
+    go:"✨ Generate answer", clear:"Clear",
+    saved:"Questions saved for tomorrow",
+    free:(l,d)=>`Free today: ${l}/${d}`
+  }
+};
+const LS = localStorage;
+let lang = (LS.getItem('lang')||'it').toLowerCase();
+const T = I18N[lang] || I18N.it;
+document.documentElement.lang = lang;
 
-function readJSON(k,def){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
-function writeJSON(k,v){LS.setItem(k,JSON.stringify(v))}
-const todayStr=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
-
-const prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false,dev:false});
+/* ===== Prefs & Theme ===== */
+const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
+if (!prefs.stile) prefs.stile = 'whatif';
+if (!prefs.periodo) prefs.periodo = 'future';
+LS.setItem('whatif_prefs', JSON.stringify(prefs));
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-const DAILY_FREE=3;
-function ensureDayCredits(){const c=readJSON('whatif_credits',{date:todayStr(),used:0});const t=todayStr();if(c.date!==t){c.date=t;c.used=0;writeJSON('whatif_credits',c)}}
-function creditsLeft(){ensureDayCredits();const c=readJSON('whatif_credits');return Math.max(0,DAILY_FREE-(c.used||0))}
-function spendCredit(){const c=readJSON('whatif_credits');c.used=(c.used||0)+1;writeJSON('whatif_credits',c)}
-function renderFree(){document.getElementById('freeBadge').textContent=T.free(creditsLeft(),DAILY_FREE)}
-ensureDayCredits();renderFree();
+/* ===== UI text ===== */
+function applyTexts(){
+  document.getElementById('titleH1').textContent = T.title;
+  document.getElementById('chipPast').textContent = T.past;
+  document.getElementById('chipFuture').textContent = T.future;
+  document.getElementById('chipWhatIf').textContent = T.whatif;
+  document.getElementById('chipWTF').textContent = T.wtf;
+  document.getElementById('qLabel').textContent = T.yourq;
+  document.getElementById('detailLbl').textContent = T.addDetail;
+  document.getElementById('hintMeta').textContent = T.hint;
+  document.getElementById('tipNote').textContent = T.tip;
+  document.getElementById('goBtn').textContent = T.go;
+  document.getElementById('clearBtn').textContent = T.clear;
+  document.getElementById('savedTitle').textContent = T.saved;
+  document.getElementById('langBtn').textContent = lang.toUpperCase();
+}
+applyTexts();
 
-/* UI copy */
-const $=id=>document.getElementById(id);
-$('titleH1').textContent=T.title; $('qLabel').textContent=T.yourq;
-$('addDetailLbl').textContent=T.addDetail; $('hintMeta').textContent=T.hint;
-$('tipNote').textContent=T.tip; $('goBtn').textContent=T.gen; $('clearBtn').textContent=T.clear;
-$('chipWhatIf').textContent=T.whatif; $('chipWTF').textContent=T.wtf;
-$('chipPast').textContent=T.past; $('chipFuture').textContent=T.future;
-$('recentLbl').textContent=T.recent; $('savedLbl').textContent=T.saved;
-$('langBtn').textContent=lang.toUpperCase();
+/* ===== Crediti free ===== */
+const DAILY_FREE = 3;
+function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def} }
+function writeJSON(k,v){ LS.setItem(k,JSON.stringify(v)); }
+function ensureCreditsDay(){
+  const c = readJSON('whatif_credits',{date:todayStr(),used:0,pro:false,dev:false});
+  const t = todayStr();
+  if (c.date !== t){ c.date=t; c.used=0; writeJSON('whatif_credits',c); }
+  return c;
+}
+function freeLeft(){ const c=ensureCreditsDay(); return Math.max(0, DAILY_FREE-(c.used||0)); }
+function isPro(){ return !!ensureCreditsDay().pro; }
+function isDev(){ return !!ensureCreditsDay().dev; }
+function renderBadges(){
+  const left = (isPro()||isDev()) ? '∞' : freeLeft();
+  const tot  = (isPro()||isDev()) ? '∞' : DAILY_FREE;
+  const b = document.getElementById('freeBadge');
+  b.textContent = T.free(left, tot);
+}
+window.addEventListener('load', ()=>{ ensureCreditsDay(); renderBadges(); });
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ ensureCreditsDay(); renderBadges(); }});
 
-$('backBtn').onclick=()=>history.back();
-$('homeBtn').onclick=()=>location.href='index.html';
-$('langBtn').onclick=()=>{LS.setItem('lang',lang==='it'?'en':'it');location.reload()};
-
-/* stile/periodo */
-document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===prefs.stile));
-document.getElementById('styleChips').addEventListener('click',e=>{
-  const b=e.target.closest('.chip');if(!b)return;prefs.stile=b.dataset.style;writeJSON('whatif_prefs',prefs);
-  document.documentElement.setAttribute('data-theme',prefs.stile==='wtf'?'wtf':'whatif');
-  document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c===b));
+/* ===== Chips (periodo + stile) ===== */
+function syncChips(){
+  document.querySelectorAll('#periodChips .toggle').forEach(el=>{
+    el.classList.toggle('active', el.dataset.periodo===prefs.periodo);
+  });
+  document.querySelectorAll('#styleChips .chip').forEach(el=>{
+    el.classList.toggle('sel', el.dataset.style===prefs.stile);
+  });
+  document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+}
+syncChips();
+document.getElementById('periodChips').addEventListener('click', (e)=>{
+  const b=e.target.closest('.toggle'); if(!b) return;
+  prefs.periodo=b.dataset.periodo; writeJSON('whatif_prefs',prefs); syncChips();
 });
-document.querySelectorAll('#periodChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.per===prefs.periodo));
-document.getElementById('periodChips').addEventListener('click',e=>{
-  const b=e.target.closest('.chip');if(!b)return;prefs.periodo=b.dataset.per;writeJSON('whatif_prefs',prefs);
-  document.querySelectorAll('#periodChips .chip').forEach(c=>c.classList.toggle('sel',c===b));
+document.getElementById('styleChips').addEventListener('click', (e)=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs); syncChips();
 });
 
-/* extra chips */
+/* ===== Extra chips ===== */
 const chipWrap=document.getElementById('extraChips');
-(lang==='it'?["primo segnale","vincolo 2 settimane","luogo preciso","tempo disponibile"]:["first signal","2-week constraint","specific place","time window"]).forEach(txt=>{
-  const b=document.createElement('button');b.className='chip';b.textContent=txt;
-  b.onclick=()=>{const i=$('extraInput');i.value=i.value?(i.value+' • '+txt):txt;i.focus()};
-  chipWrap.appendChild(b);
+function setExtraChips(){
+  chipWrap.innerHTML='';
+  const labs = lang.startsWith('en')
+    ? ["first signal","2-week constraint","specific place","time window"]
+    : ["primo segnale","vincolo 2 settimane","luogo preciso","tempo disponibile"];
+  labs.forEach(txt=>{
+    const b=document.createElement('button'); b.className='chip'; b.textContent=txt;
+    b.addEventListener('click',()=>{
+      const i=document.getElementById('extraInput');
+      i.value = i.value ? (i.value+' • '+txt) : txt; i.focus();
+    });
+    chipWrap.appendChild(b);
+  });
+}
+setExtraChips();
+
+/* ===== Nav ===== */
+document.getElementById('backBtn').onclick=()=>history.back();
+document.getElementById('homeBtn').onclick=()=>location.href='index.html';
+document.getElementById('langBtn').onclick=()=>{ lang = lang==='it' ? 'en' : 'it'; LS.setItem('lang',lang); location.reload(); };
+
+/* ===== Generazione / salvataggi ===== */
+const qInput=document.getElementById('qInput');
+const extraInput=document.getElementById('extraInput');
+
+function goToAnswer(consumaCredito){
+  const domanda=(qInput.value||'').trim();
+  if (!domanda){ qInput.focus(); return; }
+
+  // salva contesto per la 5a pagina
+  LS.setItem('domanda', domanda);
+  writeJSON('whatif_clarify_buffer',{ q:domanda, extra:(extraInput.value||'').trim() });
+
+  if (consumaCredito && !isPro() && !isDev()){
+    if (freeLeft() <= 0){
+      alert(lang.startsWith('en')
+        ? "You've used today's free answers. Come back tomorrow or upgrade to Pro."
+        : "Hai esaurito le risposte gratuite di oggi. Torna domani o passa a Pro.");
+      return;
+    }
+    const c=ensureCreditsDay(); c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderBadges();
+  }
+
+  location.href = 'fifth.html';
+}
+
+document.getElementById('goBtn').onclick=()=> goToAnswer(true);
+document.getElementById('clearBtn').onclick=()=>{ qInput.value=''; extraInput.value=''; qInput.focus(); };
+
+/* ===== Disclosure salvate ===== */
+const savedHeader = document.getElementById('savedHeader');
+const savedCard   = document.getElementById('savedCard');
+savedHeader.addEventListener('click', ()=>{
+  savedCard.classList.toggle('collapsed');
+  document.getElementById('savedBody').classList.toggle('hidden');
 });
 
-/* actions */
-$('clearBtn').onclick=()=>{$('qInput').value='';$('extraInput').value='';$('qInput').focus()};
-$('goBtn').onclick=()=>{
-  const domanda=$('qInput').value.trim(); if(!domanda){$('qInput').focus();return}
-  if(!prefs.pro && creditsLeft()<=0){return alert(`${T.outT}\n\n${T.outB}`)}
-  LS.setItem('domanda',domanda);
-  writeJSON('whatif_clarify_buffer',{q:domanda,extra:$('extraInput').value.trim()||"",periodo:prefs.periodo});
-  if(!prefs.pro){spendCredit();renderFree()}
-  location.href='fifth.html';
-};
+/* ===== Liste: cronologia + salvate ===== */
+function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(lang.startsWith('en')?'en-GB':'it-IT',{hour12:false}); }
+function renderStories(){
+  const hist = readJSON('cronologia',[]);
+  const saved = readJSON('salvate',[]);
+  const box = document.getElementById('storyList');
+  box.innerHTML = '';
 
-/* lists */
-function fmtDate(ts){return new Date(ts).toLocaleString(document.documentElement.lang||'it-IT',{hour12:false})}
+  const section = (title, arr)=>{
+    if (!arr.length) return;
+    const h = document.createElement('div');
+    h.className='hr';
+    box.appendChild(h);
+    arr.forEach(item=>{
+      const div=document.createElement('div'); div.className='story';
+      const left=document.createElement('div');
+      left.innerHTML = `<div style="font-weight:700">${item.domanda||'—'}</div>
+                        <div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
+      const play=document.createElement('button'); play.className='play'; play.textContent='▶';
+      play.onclick=()=>{ // riproduci SENZA rigenerare
+        LS.setItem('resume_id', item.id);
+        location.href='fifth.html';
+      };
+      div.appendChild(left); div.appendChild(play); box.appendChild(div);
+    });
+  };
 
-function renderRecent(){
-  const list=$('recentList'); list.innerHTML='';
-  const items=(readJSON('cronologia',[])).slice(-50).reverse();
-  if(!items.length){list.innerHTML=`<div class="meta">${T.none1}</div>`;return}
-  items.forEach(it=>{
-    const row=document.createElement('div');row.className='story';
-    const left=document.createElement('div');
-    left.innerHTML=`<div style="font-weight:700">${it.domanda||'—'}</div><div class="meta">${fmtDate(it.ts)} · ${(it.stile==='wtf'?'What the F':'What if')}</div>`;
-    const play=document.createElement('button');play.className='play';play.textContent='▶';
-    // APRI RISPOSTA SALVATA
-    play.onclick=()=>{ LS.setItem('view_id', it.id); location.href='fifth.html?view=1'; };
-    row.appendChild(left);row.appendChild(play);list.appendChild(row);
-  });
+  section(T.saved, saved);
+  section(lang.startsWith('en')?'Recent stories':'Storie recenti', hist);
 }
-function renderSaved(){
-  const list=$('savedList'); list.innerHTML='';
-  const items=(readJSON('followup_queue',[])).slice(-50).reverse();
-  if(!items.length){list.innerHTML=`<div class="meta">${T.none2}</div>`;return}
-  items.forEach(it=>{
-    const row=document.createElement('div');row.className='story';
-    const left=document.createElement('div');
-    left.innerHTML=`<div style="font-weight:700">${it.text||it.base||'—'}</div><div class="meta">${fmtDate(it.ts)} · ${(it.stile==='wtf'?'What the F':'What if')}</div>`;
-    const play=document.createElement('button');play.className='play';play.textContent='▶';
-    play.onclick=()=>{ LS.setItem('domanda', it.text||it.base||''); const p=readJSON('whatif_prefs',{}); p.stile=it.stile||'whatif'; writeJSON('whatif_prefs',p); location.href='fifth.html'; };
-    row.appendChild(left);row.appendChild(play);list.appendChild(row);
-  });
-}
-renderRecent();renderSaved();
+renderStories();
 
-document.getElementById('clearStoriesBtn').onclick=()=>{if(confirm(lang==='it'?'Svuotare la cronologia?':'Clear history?')){writeJSON('cronologia',[]);renderRecent()}};
-document.getElementById('clearSavedBtn').onclick=()=>{if(confirm(lang==='it'?'Svuotare i salvati?':'Clear saved?')){writeJSON('followup_queue',[]);renderSaved()}};
+/* ===== Svuota ===== */
+document.getElementById('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
+document.getElementById('clearSavedBtn').onclick=()=>{ LS.removeItem('salvate'); renderStories(); };
 </script>
 </body>
 </html>
