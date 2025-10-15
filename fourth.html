@@ -1,162 +1,171 @@
-Invio fourth
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What?f – Domanda</title>
+<style>
+  body{margin:0;background:#0B0B0C;color:#EAF3EE;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{max-width:900px;margin:auto;padding:20px}
+  .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:16px;margin:14px 0}
+  label{display:block;margin:8px 0 6px;color:#FFEC01;font-weight:700}
+  input,textarea,select{width:100%;background:#121A26;color:#EAF3EE;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .btn{border:none;border-radius:12px;padding:12px 16px;cursor:pointer}
+  .btn.primary{background:linear-gradient(180deg,#1C57A0,#FFEC01);color:#0A0E12;font-weight:800}
+  .chips{display:flex;gap:8px;margin-top:8px}
+  .chip{padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:#121A26;color:#EAF3EE;cursor:pointer}
+  .chip.sel{background:linear-gradient(180deg,#1C57A0,#FFEC01);color:#0A0E12;font-weight:800}
+  .micro{display:grid;gap:10px}
+  .muted{color:#A0B2BA;font-size:13px}
+</style>
+</head>
+<body>
+<main>
+  <h1>La tua domanda</h1>
+  <div class="card">
+    <label for="domanda">Scrivi il tuo “E se…?”</label>
+    <textarea id="domanda" rows="3" placeholder="E se tornassi a vivere all’Aquila?"></textarea>
 
-<!DOCTYPE html>  <html lang="it">  
-<head>  
-<meta charset="UTF-8" />  
-<meta name="viewport" content="width=device-width, initial-scale=1" />  
-<title>What?f – Domanda</title>  
-<style>  
-  body{margin:0;background:#0B0B0C;color:#EAF3EE;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}  
-  main{max-width:900px;margin:auto;padding:20px}  
-  .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:16px;margin:14px 0}  
-  label{display:block;margin:8px 0 6px;color:#FFEC01;font-weight:700}  
-  input,textarea,select{width:100%;background:#121A26;color:#EAF3EE;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px}  
-  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}  
-  .btn{border:none;border-radius:12px;padding:12px 16px;cursor:pointer}  
-  .btn.primary{background:linear-gradient(180deg,#1C57A0,#FFEC01);color:#0A0E12;font-weight:800}  
-  .chips{display:flex;gap:8px;margin-top:8px}  
-  .chip{padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:#121A26;color:#EAF3EE;cursor:pointer}  
-  .chip.sel{background:linear-gradient(180deg,#1C57A0,#FFEC01);color:#0A0E12;font-weight:800}  
-  .micro{display:grid;gap:10px}  
-  .muted{color:#A0B2BA;font-size:13px}  
-</style>  
-</head>  
-<body>  
-<main>  
-  <h1>La tua domanda</h1>  
-  <div class="card">  
-    <label for="domanda">Scrivi il tuo “E se…?”</label>  
-    <textarea id="domanda" rows="3" placeholder="E se tornassi a vivere all’Aquila?"></textarea>  <div class="row" style="margin-top:10px">  
-  <div>  
-    <label>Stile</label>  
-    <div class="chips">  
-      <button class="chip sel" data-style="whatif">What if (realistico)</button>  
-      <button class="chip" data-style="wtf">What the F (divertente)</button>  
-    </div>  
-  </div>  
-  <div>  
-    <label>Periodo</label>  
-    <select id="periodo">  
-      <option value="future" selected>Futuro</option>  
-      <option value="past">Passato</option>  
-    </select>  
-  </div>  
-</div>
+    <div class="row" style="margin-top:10px">
+      <div>
+        <label>Stile</label>
+        <div class="chips">
+          <button class="chip sel" data-style="whatif">What if (realistico)</button>
+          <button class="chip" data-style="wtf">What the F (divertente)</button>
+        </div>
+      </div>
+      <div>
+        <label>Periodo</label>
+        <select id="periodo">
+          <option value="future" selected>Futuro</option>
+          <option value="past">Passato</option>
+        </select>
+      </div>
+    </div>
+  </div>
 
-  </div>    <div class="card">  
-    <h3>Micro-domande (generate sulla tua domanda)</h3>  
-    <p class="muted" id="microHint">Compariranno appena smetti di scrivere per 0.6s.</p>  
-    <div id="microList" class="micro"></div>  
-  </div>    <div class="card">  
-    <h3>Dettagli personali (per conoscerti meglio)</h3>  
-    <div class="micro">  
-      <div>  
-        <label for="name">Nome (facoltativo)</label>  
-        <input id="name" placeholder="es. Luca" />  
-      </div>  
-      <div>  
-        <label for="city_now">Città attuale</label>  
-        <input id="city_now" placeholder="es. Verona" />  
-      </div>  
-      <div>  
-        <label for="work_role">Ruolo/lavoro</label>  
-        <input id="work_role" placeholder="es. Marketing, Ricerca..." />  
-      </div>  
-    </div>  
-  </div>    <div class="row">  
-    <button class="btn primary" id="goBtn">Vai al risultato</button>  
-  </div>  
-</main>  <script>  
-  const LS=localStorage;  
-  const $=id=>document.getElementById(id);  
-  const domandaEl=$('domanda'), periodoEl=$('periodo'), microList=$('microList');  
-  let stile='whatif';  
-  
-  // restore  
-  (function restore(){  
-    const prefs=JSON.parse(LS.getItem('whatif_prefs')||'{}');  
-    if(prefs.stile){ stile=prefs.stile; }  
-    document.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('sel', ch.dataset.style===stile));  
-    if(prefs.periodo) periodoEl.value=prefs.periodo;  
-  
-    const d=LS.getItem('domanda'); if(d) domandaEl.value=d;  
-  
-    const p=JSON.parse(LS.getItem('whatif_profile')||'{}');  
-    if(p.name) $('name').value=p.name;  
-    if(p.city_now||p.city) $('city_now').value=p.city_now||p.city;  
-    if(p.work_role||p.role) $('work_role').value=p.work_role||p.role;  
-  })();  
-  
-  // stile  
-  document.querySelectorAll('.chip').forEach(ch=>{  
-    ch.addEventListener('click', ()=>{  
-      document.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel'));  
-      ch.classList.add('sel'); stile=ch.dataset.style;  
-    });  
-  });  
-  
-  // debounce clarify  
-  let t=null;  
-  domandaEl.addEventListener('input', ()=>{  
-    clearTimeout(t);  
-    t=setTimeout(loadMicro, 600);  
-  });  
-  
-  async function loadMicro(){  
-    const domanda=(domandaEl.value||'').trim();  
-    if(!domanda) { microList.innerHTML=''; return; }  
-    const payload={  
-      domanda, lang:(LS.getItem('lang')||'it'),  
-      periodo:periodoEl.value, stile, clarify:true,  
-      profilo: buildLeanProfile()  
-    };  
-    microList.innerHTML='<p class="muted">Sto preparando 2–3 domande mirate…</p>';  
-    try{  
-      const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});  
-      const j=await r.json();  
-      const qs=Array.isArray(j.questions)? j.questions.slice(0,3):[];  
-      microList.innerHTML = qs.map(q=>`  
-        <div>  
-          <label>${q.label||'Domanda'}</label>  
-          <input data-id="${q.id||''}" placeholder="${(q.placeholder||'').replace(/"/g,'&quot;')}" />  
-        </div>  
-      `).join('');  
-    }catch(e){  
-      microList.innerHTML='<p class="muted">Non riesco ora. Riprova più tardi.</p>';  
-    }  
-  }  
-  
-  function buildLeanProfile(){  
-    const p={};  
-    const name=$('name').value.trim(); if(name) p.name=name;  
-    const city_now=$('city_now').value.trim(); if(city_now) p.city_now=city_now;  
-    const work_role=$('work_role').value.trim(); if(work_role) p.work_role=work_role;  
-    return p;  
-  }  
-  
-  $('goBtn').addEventListener('click', ()=>{  
-    const domanda=(domandaEl.value||'').trim();  
-    if(!domanda){ alert('Scrivi la domanda.'); return; }  
-    LS.setItem('domanda',domanda);  
-  
-    const prefs={ stile, periodo:periodoEl.value };  
-    LS.setItem('whatif_prefs', JSON.stringify(prefs));  
-  
-    const profile=Object.assign(JSON.parse(LS.getItem('whatif_profile')||'{}'), buildLeanProfile());  
-    LS.setItem('whatif_profile', JSON.stringify(profile));  
-  
-    // salva micro  
-    const clar={};  
-    microList.querySelectorAll('input').forEach(i=>{  
-      const v=i.value.trim(); const id=i.dataset.id||'q';  
-      if(v) clar[id]=v;  
-    });  
-    LS.setItem('whatif_micro', JSON.stringify(clar));  
-  
-    location.href='fifth.html';  
-  });  
-  
-  // se già c'è la domanda, pre-carica micro  
-  if ((domandaEl.value||'').trim()) loadMicro();  
-</script>  </body>  
+  <div class="card">
+    <h3>Micro-domande (generate sulla tua domanda)</h3>
+    <p class="muted" id="microHint">Compariranno appena smetti di scrivere per 0.6s.</p>
+    <div id="microList" class="micro"></div>
+  </div>
+
+  <div class="card">
+    <h3>Dettagli personali (per conoscerti meglio)</h3>
+    <div class="micro">
+      <div>
+        <label for="name">Nome (facoltativo)</label>
+        <input id="name" placeholder="es. Luca" />
+      </div>
+      <div>
+        <label for="city_now">Città attuale</label>
+        <input id="city_now" placeholder="es. Verona" />
+      </div>
+      <div>
+        <label for="work_role">Ruolo/lavoro</label>
+        <input id="work_role" placeholder="es. Marketing, Ricerca..." />
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <button class="btn primary" id="goBtn">Vai al risultato</button>
+  </div>
+</main>
+
+<script>
+  const LS=localStorage;
+  const $=id=>document.getElementById(id);
+  const domandaEl=$('domanda'), periodoEl=$('periodo'), microList=$('microList');
+  let stile='whatif';
+
+  // restore
+  (function restore(){
+    const prefs=JSON.parse(LS.getItem('whatif_prefs')||'{}');
+    if(prefs.stile){ stile=prefs.stile; }
+    document.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('sel', ch.dataset.style===stile));
+    if(prefs.periodo) periodoEl.value=prefs.periodo;
+
+    const d=LS.getItem('domanda'); if(d) domandaEl.value=d;
+
+    const p=JSON.parse(LS.getItem('whatif_profile')||'{}');
+    if(p.name) $('name').value=p.name;
+    if(p.city_now||p.city) $('city_now').value=p.city_now||p.city;
+    if(p.work_role||p.role) $('work_role').value=p.work_role||p.role;
+  })();
+
+  // stile
+  document.querySelectorAll('.chip').forEach(ch=>{
+    ch.addEventListener('click', ()=>{
+      document.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel'));
+      ch.classList.add('sel'); stile=ch.dataset.style;
+    });
+  });
+
+  // debounce clarify
+  let t=null;
+  domandaEl.addEventListener('input', ()=>{
+    clearTimeout(t);
+    t=setTimeout(loadMicro, 600);
+  });
+
+  async function loadMicro(){
+    const domanda=(domandaEl.value||'').trim();
+    if(!domanda) { microList.innerHTML=''; return; }
+    const payload={
+      domanda, lang:(LS.getItem('lang')||'it'),
+      periodo:periodoEl.value, stile, clarify:true,
+      profilo: buildLeanProfile()
+    };
+    microList.innerHTML='<p class="muted">Sto preparando 2–3 domande mirate…</p>';
+    try{
+      const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const j=await r.json();
+      const qs=Array.isArray(j.questions)? j.questions.slice(0,3):[];
+      microList.innerHTML = qs.map(q=>`
+        <div>
+          <label>${q.label||'Domanda'}</label>
+          <input data-id="${q.id||''}" placeholder="${(q.placeholder||'').replace(/"/g,'&quot;')}" />
+        </div>
+      `).join('');
+    }catch(e){
+      microList.innerHTML='<p class="muted">Non riesco ora. Riprova più tardi.</p>';
+    }
+  }
+
+  function buildLeanProfile(){
+    const p={};
+    const name=$('name').value.trim(); if(name) p.name=name;
+    const city_now=$('city_now').value.trim(); if(city_now) p.city_now=city_now;
+    const work_role=$('work_role').value.trim(); if(work_role) p.work_role=work_role;
+    return p;
+  }
+
+  $('goBtn').addEventListener('click', ()=>{
+    const domanda=(domandaEl.value||'').trim();
+    if(!domanda){ alert('Scrivi la domanda.'); return; }
+    LS.setItem('domanda',domanda);
+
+    const prefs={ stile, periodo:periodoEl.value };
+    LS.setItem('whatif_prefs', JSON.stringify(prefs));
+
+    const profile=Object.assign(JSON.parse(LS.getItem('whatif_profile')||'{}'), buildLeanProfile());
+    LS.setItem('whatif_profile', JSON.stringify(profile));
+
+    // salva micro
+    const clar={};
+    microList.querySelectorAll('input').forEach(i=>{
+      const v=i.value.trim(); const id=i.dataset.id||'q';
+      if(v) clar[id]=v;
+    });
+    LS.setItem('whatif_micro', JSON.stringify(clar));
+
+    location.href='fifth.html';
+  });
+
+  // se già c'è la domanda, pre-carica micro
+  if ((domandaEl.value||'').trim()) loadMicro();
+</script>
+</body>
 </html>
