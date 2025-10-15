@@ -26,6 +26,7 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2)}
 .input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
 .answer{white-space:pre-wrap;line-height:1.5}
 .meta{font-size:12px;color:var(--muted)}
+.sep{height:1px;background:rgba(255,255,255,.08);margin:10px 0}
 </style>
 </head>
 <body>
@@ -47,6 +48,11 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2)}
     <div class="input" style="min-height:54px" id="qView"></div>
   </div>
 
+  <div class="card" id="yesterdayCard" style="display:none">
+    <div class="label" id="lblYesterday">Ieri in breve</div>
+    <div class="answer" id="yesterdayBox">—</div>
+  </div>
+
   <div class="card">
     <div class="label" id="lblAnswer">Risultato</div>
     <div class="answer" id="answerBox">…</div>
@@ -64,48 +70,41 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2)}
 </main>
 
 <script>
-/* ===== i18n ===== */
-const I18N = {
-  it:{
-    title:"Il tuo What?f",
-    yourq:"La tua domanda",
-    result:"Risultato",
-    cont:"Domani continuiamo da qui",
-    saved:"Salva per domani",
-    customPH:"oppure scrivi tu la prossima micro-domanda…",
-    metaReplay:"(risposta salvata)",
-    metaLive:"(generata ora)"
-  },
-  en:{
-    title:"Your What?f",
-    yourq:"Your question",
-    result:"Result",
-    cont:"Tomorrow we pick up from here",
-    saved:"Save for tomorrow",
-    customPH:"or write your own next micro-question…",
-    metaReplay:"(saved answer)",
-    metaLive:"(generated now)"
-  }
-};
+/* ===== helpers ===== */
 const LS=localStorage;
-let lang=(LS.getItem('lang')||'it').toLowerCase();
-const T=I18N[lang]||I18N.it;
+function readJSON(k,def){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
+function writeJSON(k,v){LS.setItem(k,JSON.stringify(v))}
+const $=(id)=>document.getElementById(id);
+
+/* ===== i18n ===== */
+const I18N={it:{
+  title:"Il tuo What?f", yourq:"La tua domanda", result:"Risultato",
+  cont:"Domani continuiamo da qui", saved:"Salva per domani",
+  customPH:"oppure scrivi tu la prossima micro-domanda…",
+  metaReplay:"(risposta salvata)", metaLive:"(generata ora)",
+  yesterday:"Ieri in breve", gen1:"⏳ Genero l’episodio…", err:"[errore server]"
+},en:{
+  title:"Your What?f", yourq:"Your question", result:"Result",
+  cont:"Tomorrow we pick up from here", saved:"Save for tomorrow",
+  customPH:"or write your own next micro-question…",
+  metaReplay:"(saved answer)", metaLive:"(generated now)",
+  yesterday:"Yesterday, in short", gen1:"⏳ Generating the episode…", err:"[server error]"
+}};
+let lang=(LS.getItem('lang')||'it').toLowerCase(); const T=I18N[lang]||I18N.it;
 document.documentElement.lang=lang;
 
-/* ===== theme from prefs ===== */
-function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
-function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
+/* ===== theme/prefs ===== */
 const prefs = readJSON('whatif_prefs',{stile:'whatif'});
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
 /* ===== UI text ===== */
-const $=(id)=>document.getElementById(id);
 $('hTitle').textContent=T.title;
 $('lblQuestion').textContent=T.yourq;
 $('lblAnswer').textContent=T.result;
 $('lblTomorrow').textContent=T.cont;
 $('saveFuBtn').textContent=T.saved;
 $('fuCustom').placeholder=T.customPH;
+$('lblYesterday').textContent=T.yesterday;
 $('langBtn').textContent=lang.toUpperCase();
 
 /* ===== nav ===== */
@@ -113,116 +112,165 @@ $('backBtn').onclick=()=>history.back();
 $('homeBtn').onclick=()=>location.href='index.html';
 $('langBtn').onclick=()=>{ const nxt=lang==='it'?'en':'it'; LS.setItem('lang',nxt); location.reload(); };
 
+/* ===== state ===== */
+const domanda = LS.getItem('domanda') || "";
+const stile = prefs.stile || 'whatif';
+$('qView').textContent = domanda || '—';
+
+/* ===== threading ===== */
+let currentThreadId = null;
+let currentEpisode = 1; // default
+const resumeSaved = readJSON('resume_from_saved', null); // {threadId,nextEp}
+const resumeId = LS.getItem('resume_id') || null;       // compat con storie recenti
+const resumeMode = LS.getItem('resume_mode') || null;
+
+function groupByThread(arr){
+  const out={};
+  arr.forEach(it=>{
+    const key = it.threadId || ('Q::'+(it.domanda||'')); (out[key]||(out[key]=[])).push(it);
+  });
+  return out;
+}
+
 /* ===== history helpers ===== */
-function saveStoryToHistory({ domanda, answer, stile }){
+function pushHistory({ threadId, episode, domanda, answer, stile }){
   const arr=readJSON('cronologia',[]);
-  const ts=Date.now();
-  const last=arr[arr.length-1];
-  if(last && last.domanda===domanda && (last.answer||'')===(answer||'') && last.stile===stile) return;
-  arr.push({ domanda, answer, stile, ts });
-  writeJSON('cronologia', arr.slice(-50));
+  const id=Date.now();
+  arr.unshift({ id, threadId, episode, domanda, risposta:answer, stile, lang, ts:id });
+  writeJSON('cronologia', arr.slice(0,50));
 }
-function saveForTomorrow({ q, stile, answer }){
-  const arr=readJSON('saved_for_tomorrow',[]);
-  const ts=Date.now();
-  arr.push({ q, stile, answer, ts });
-  writeJSON('saved_for_tomorrow', arr.slice(-50));
+function findThreadEpisodes(threadId){
+  const arr=readJSON('cronologia',[]);
+  return (groupByThread(arr)[threadId]||[]).sort((a,b)=>(a.episode||1)-(b.episode||1));
 }
 
-/* ===== load context ===== */
-const params=new URLSearchParams(location.search);
-const isReplay = params.get('view')==='replay';
-let domanda='', stile=prefs.stile||'whatif', extra='';
-let answerText='';
-
-if(isReplay){
-  const r=readJSON('replay_story',null);
-  domanda=r?.domanda||LS.getItem('domanda')||'';
-  stile=r?.stile||stile;
-  answerText=r?.answer||'';
-  $('qView').textContent=domanda||'—';
-  $('answerBox').textContent=answerText||'—';
-  $('metaInfo').textContent=T.metaReplay;
-  // niente salvataggi/followup in replay
-  $('contBox').style.display='none';
-} else {
-  const req = readJSON('whatif_request',null);
-  domanda = req?.domanda || LS.getItem('domanda') || '';
-  stile = req?.stile || stile;
-  extra = req?.extra || '';
-  $('qView').textContent = domanda || '—';
-  // generate
-  generate(domanda, stile, extra).catch(err=>{
-    $('answerBox').textContent='[server error] '+(err?.message||err);
-  });
+/* ===== generate core ===== */
+async function callAsk(q){ // NON tocco /api/ask.js
+  const r = await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ domanda:q, stile, lang })});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const j=await r.json(); return (j.answer||'').trim();
 }
 
-/* ===== call API & postprocess ===== */
-async function generate(domanda, stile, extra){
-  $('answerBox').textContent='…';
-  const res = await fetch('/api/ask', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ domanda, stile, lang, extra })
-  });
-  if(!res.ok) throw new Error('HTTP '+res.status);
-  const data = await res.json();
-  answerText = (data.answer||'').trim();
-  $('answerBox').textContent = answerText||'—';
-  $('metaInfo').textContent = T.metaLive;
-
-  // salva in cronologia
-  saveStoryToHistory({ domanda, answer: answerText, stile });
-
-  // followups
-  const fu = await getFollowups(domanda, answerText, stile).catch(()=>[]);
-  renderFollowups(fu);
-}
-
-/* ===== followups: prova API, poi fallback ===== */
-async function getFollowups(q, a, stile){
+/* ===== followups ===== */
+async function callFollowups(q, answer){
   try{
-    const r = await fetch('/api/followups',{method:'POST',headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ domanda:q, answer:a, stile, lang })});
-    if(r.ok){ const j=await r.json(); if(Array.isArray(j.followups)) return j.followups.slice(0,2); }
+    const r = await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ domanda:q, stile, lang, follow:true, answer })});
+    const j=await r.json();
+    if(Array.isArray(j.followups)) return j.followups.slice(0,2);
   }catch{}
-  // fallback locale semplice ma sensato
-  const lower = q.toLowerCase();
-  if(lower.includes('moto')||lower.includes('car')||lower.includes('bike')){
-    return lang==='en'
-      ? ["What would be the first test route?", "How much monthly cost would feel sustainable?"]
-      : ["Quale sarebbe il primo giro di prova?", "Che costo mensile ti sembrerebbe sostenibile?"];
-  }
-  if(lower.includes("aquila")||lower.includes("l'aquila")||lower.includes('verona')||lower.includes('lugano')){
-    return lang==='en'
-      ? ["What sign would tell you the move is working?", "Which part of daily rhythm would you change first?"]
-      : ["Qual è il segnale che ti direbbe che funziona?", "Quale pezzo di ritmo quotidiano cambieresti per primo?"];
-  }
+  // fallback
   return lang==='en'
-    ? ["What’s the smallest 7-day step here?", "What would make you say ‘this was worth it’?"]
-    : ["Qual è il passo più piccolo da 7 giorni?", "Cosa ti farebbe dire ‘ne è valsa la pena’?"];
+    ? ["What’s the smallest 7-day step here?","What sign tomorrow would tell you it’s right?"]
+    : ["Qual è il passo più piccolo da 7 giorni?","Quale segnale domani ti direbbe che è la direzione giusta?"];
 }
 
 function renderFollowups(list){
   const box=$('fuList'); box.innerHTML='';
   list.slice(0,2).forEach(txt=>{
-    const div=document.createElement('div');
-    div.className='input';
-    div.textContent=txt;
-    div.style.cursor='pointer';
-    div.onclick=()=>{ $('fuCustom').value = txt; };
+    const div=document.createElement('div'); div.className='input'; div.textContent=txt; div.style.cursor='pointer';
+    div.onclick=()=>{ $('fuCustom').value=txt; };
     box.appendChild(div);
   });
 }
 
-/* ===== save custom followup ===== */
+/* ===== save followup (include threadId & nextEp) ===== */
 $('saveFuBtn').onclick=()=>{
-  const v = $('fuCustom').value.trim(); if(!v) { $('fuCustom').focus(); return; }
-  saveForTomorrow({ q:v, stile, answer: answerText });
+  const v = $('fuCustom').value.trim(); if(!v){$('fuCustom').focus();return;}
+  const saved = readJSON('saved_for_tomorrow',[]);
+  const nextEp = Math.min(currentEpisode+1,3);
+  saved.push({ q:v, stile, lang, ts:Date.now(), threadId: currentThreadId, nextEp });
+  writeJSON('saved_for_tomorrow', saved.slice(-50));
   $('fuCustom').value='';
-  $('saveFuBtn').textContent = lang==='en' ? 'Saved!' : 'Salvato!';
-  setTimeout(()=>{ $('saveFuBtn').textContent = I18N[lang].saved; }, 1200);
+  $('saveFuBtn').textContent = (lang==='en'?'Saved!':'Salvato!');
+  setTimeout(()=>{$('saveFuBtn').textContent=(lang==='en'?'Save for tomorrow':'Salva per domani');},1200);
 };
+
+/* ===== yesterday helper ===== */
+function showYesterday(prev){
+  if(!prev){ $('yesterdayCard').style.display='none'; return; }
+  $('yesterdayBox').textContent = prev.risposta || '—';
+  $('yesterdayCard').style.display='block';
+}
+
+/* ===== boot modes ===== */
+(async function boot(){
+  // Caso A: arrivo da “salvata per domani” (quarta → usa → genera)
+  if(resumeSaved && resumeSaved.threadId){
+    currentThreadId = resumeSaved.threadId;
+    currentEpisode  = Math.min(resumeSaved.nextEp||2,3);
+    const episodes = findThreadEpisodes(currentThreadId);
+    const prev = episodes.find(e => e.episode === (currentEpisode-1));
+    showYesterday(prev);
+
+    $('answerBox').textContent=T.gen1;
+    const ans = await callAsk(domanda);
+    $('answerBox').textContent = ans; $('metaInfo').textContent = T.metaLive;
+    pushHistory({ threadId: currentThreadId, episode: currentEpisode, domanda, answer: ans, stile });
+    const fu = await callFollowups(domanda, ans); renderFollowups(fu);
+
+    // pulizia del token di resume
+    LS.removeItem('resume_from_saved');
+    return;
+  }
+
+  // Caso B: arrivo da “storie recenti” → continua/review (compat)
+  if(resumeId){
+    const hist=readJSON('cronologia',[]);
+    const item = hist.find(x=>String(x.id||x.ts)===String(resumeId));
+    if(item){
+      currentThreadId = item.threadId || ('Q::'+item.domanda);
+      if(LS.getItem('resume_mode')==='review'){
+        // rivedi tutto: mostra ieri (ultimo) + NON genera nuovo
+        const episodes = findThreadEpisodes(currentThreadId);
+        showYesterday(episodes[episodes.length-1]);
+        $('answerBox').textContent = episodes[episodes.length-1].risposta || '—';
+        $('metaInfo').textContent = T.metaReplay;
+        const fu = await callFollowups(domanda, episodes[episodes.length-1].risposta||'');
+        renderFollowups(fu);
+        LS.removeItem('resume_id'); LS.removeItem('resume_mode');
+        return;
+      } else {
+        // continua: se <3 genera ep successivo
+        const episodes = findThreadEpisodes(currentThreadId);
+        const last = episodes[episodes.length-1];
+        currentEpisode = Math.min((last?.episode||1)+1,3);
+        showYesterday(last);
+
+        if((last?.episode||1) >= 3){
+          $('answerBox').textContent = last.risposta || '—';
+          $('metaInfo').textContent = T.metaReplay;
+          const fu = await callFollowups(domanda, last.risposta||''); renderFollowups(fu);
+          LS.removeItem('resume_id'); LS.removeItem('resume_mode');
+          return;
+        }
+
+        $('answerBox').textContent=T.gen1;
+        const ans = await callAsk(domanda);
+        $('answerBox').textContent = ans; $('metaInfo').textContent = T.metaLive;
+        pushHistory({ threadId: currentThreadId, episode: currentEpisode, domanda, answer: ans, stile });
+        const fu = await callFollowups(domanda, ans); renderFollowups(fu);
+        LS.removeItem('resume_id'); LS.removeItem('resume_mode');
+        return;
+      }
+    }
+  }
+
+  // Caso C: NUOVA storia (nessun resume)
+  currentThreadId = Date.now().toString();
+  currentEpisode  = 1;
+  $('answerBox').textContent=T.gen1;
+  try{
+    const ans = await callAsk(domanda);
+    $('answerBox').textContent = ans; $('metaInfo').textContent = T.metaLive;
+    pushHistory({ threadId: currentThreadId, episode: currentEpisode, domanda, answer: ans, stile });
+    const fu = await callFollowups(domanda, ans); renderFollowups(fu);
+  }catch(e){
+    $('answerBox').textContent = T.err + ' ' + (e?.message||e);
+  }
+})();
 </script>
+</main>
 </body>
 </html>
