@@ -304,6 +304,59 @@ renderStories();
 /* ===== Svuota ===== */
 document.getElementById('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
 document.getElementById('clearSavedBtn').onclick=()=>{ LS.removeItem('salvate'); renderStories(); };
+  <script>
+// ===== Admin gestures (local-only): Pro toggle & reset giorno =====
+(function adminGestures(){
+  const b = document.getElementById('freeBadge');
+  if(!b) return;
+
+  // Long-press 2s sul badge -> reset crediti del giorno (solo per te, locale)
+  let pressTimer=null;
+  b.addEventListener('pointerdown', ()=>{
+    clearTimeout(pressTimer);
+    pressTimer = setTimeout(()=>{
+      const c = (JSON.parse(localStorage.getItem('whatif_credits')||'{}'));
+      const today = (new Date()); 
+      const dayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+      c.date = dayStr; 
+      c.used = 0; 
+      localStorage.setItem('whatif_credits', JSON.stringify(c));
+      renderBadges();
+      alert((localStorage.getItem('lang')||'it').startsWith('en') ? 'Credits reset for today ✅' : 'Crediti di oggi azzerati ✅');
+    }, 2000);
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=> b.addEventListener(ev, ()=>clearTimeout(pressTimer)));
+
+  // Triplo click rapido sul badge -> toggle Pro (locale)
+  let clicks=0, t=null;
+  b.addEventListener('click', ()=>{
+    clicks++; clearTimeout(t);
+    t=setTimeout(()=>{
+      if(clicks>=3){
+        const c = (JSON.parse(localStorage.getItem('whatif_credits')||'{}'));
+        c.pro = !c.pro;            // attiva/disattiva Pro
+        c.used = 0;                // “ricarica” istantaneamente
+        localStorage.setItem('whatif_credits', JSON.stringify(c));
+        renderBadges();
+        alert('Pro: ' + (c.pro?'ON':'OFF'));
+      }
+      clicks=0;
+    },250);
+  });
+
+  // Scorciatoia tastiera: Ctrl+Shift+P -> toggle Pro
+  window.addEventListener('keydown',(e)=>{
+    if(e.ctrlKey && e.shiftKey && e.key.toLowerCase()==='p'){
+      const c = (JSON.parse(localStorage.getItem('whatif_credits')||'{}'));
+      c.pro = !c.pro; c.used=0;
+      localStorage.setItem('whatif_credits', JSON.stringify(c));
+      renderBadges();
+      alert('Pro: ' + (c.pro?'ON':'OFF'));
+    }
+  });
+})();
+</script>
+
 </script>
 </body>
 </html>
