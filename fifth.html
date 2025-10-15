@@ -3,140 +3,238 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f – Risultato</title>
+<title>What?f — Risposta</title>
 <meta name="theme-color" content="#0B0B0C" />
 <style>
-  :root{--bg:#0B0B0C;--bg2:#101414;--fg:#FFF;--muted:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01;--chip:#121A26;--line:rgba(255,255,255,.12);--ink:#0A0E12;--card:rgba(20,28,34,.92)}
-  html[data-theme="wtf"]{--acc:#3A6B56;--acc2:#5A8C75}
-  *{box-sizing:border-box} html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:980px;margin:auto;padding:18px}
-  .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
-  .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px}
-  .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
-  .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-  pre.answer{white-space:pre-wrap;line-height:1.5;background:rgba(255,255,255,.04);border:1px solid var(--line);padding:16px;border-radius:14px}
-  .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
-  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .meta{font-size:12px;color:var(--muted)}
-  .pill{border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--line);padding:6px 10px}
+:root{
+  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
+  --acc:#1C57A0; --acc2:#6ED1A5;
+  --chip:#121A26; --line:rgba(255,255,255,.12); --ink:#0A0E12;
+  --card:rgba(20,28,34,.92); --shadow:rgba(0,0,0,.35);
+}
+html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
+*{box-sizing:border-box}
+html,body{margin:0;background:
+  radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+  color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:980px;margin:auto;padding:18px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
+.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2)}
+.label{color:var(--acc);font-weight:800;margin:0 0 8px}
+.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
+.ep{white-space:pre-wrap;line-height:1.55}
+.meta{font-size:12px;color:var(--muted)}
+.follow{display:flex;flex-direction:column;gap:10px}
+.follow .q{border:1px solid var(--line);border-radius:12px;padding:10px;background:rgba(255,255,255,.04)}
 </style>
 </head>
 <body>
 <main>
   <div class="row" style="justify-content:space-between">
     <div class="row">
-      <button class="btn" onclick="history.back()">←</button>
-      <button class="btn" onclick="location.href='index.html'">🏠</button>
+      <button class="btn" id="backBtn">←</button>
+      <button class="btn" id="homeBtn">🏠</button>
     </div>
     <div class="row">
-      <span class="badge" id="modeBadge" style="display:none"></span>
       <button class="btn" id="langBtn">IT</button>
     </div>
   </div>
 
+  <h1 id="h1">Il tuo What?f</h1>
+
   <div class="card">
     <div class="label" id="qLabel">La tua domanda</div>
-    <div class="pill" id="questionBox">—</div>
+    <div id="qBox" class="input" style="min-height:48px;display:flex;align-items:center"></div>
   </div>
 
   <div class="card">
-    <div class="label" id="resLabel">Risultato</div>
-    <pre id="answerBox" class="answer">…</pre>
+    <div class="label" id="rLabel">Risultato</div>
+    <div id="answer" class="ep">…</div>
+    <div class="meta" id="metaLine" style="margin-top:8px">—</div>
   </div>
 
   <div class="card">
     <div class="label" id="contLabel">Domani continuiamo da qui</div>
-    <div id="fuWrap" class="chips"></div>
-    <div class="meta" style="margin-top:8px" id="orMeta">oppure</div>
-    <input id="freeInput" class="pill" style="width:100%;font-size:16px" placeholder="Scrivi qui cosa vuoi chiedere domani…" />
-    <div class="row" style="margin-top:10px;justify-content:flex-end">
-      <button class="btn" id="saveFU">Salva per domani</button>
+    <div id="followWrap" class="follow"></div>
+    <div class="row" style="margin-top:10px">
+      <input id="followFree" class="input" placeholder="Scrivi qui cosa vuoi sapere domani…" />
+      <button class="btn primary" id="saveFollow">Salva per domani</button>
     </div>
   </div>
 </main>
 
 <script>
-const LS=localStorage;
-const I18N={it:{ql:"La tua domanda",rl:"Risultato",cl:"Domani continuiamo da qui",or:"oppure",ph:"Scrivi qui cosa vuoi chiedere domani…",save:"Salva per domani"},en:{ql:"Your question",rl:"Result",cl:"Tomorrow let’s continue from here",or:"or",ph:"Write what you want to ask tomorrow…",save:"Save for tomorrow"}};
-let lang=(LS.getItem('lang')||'it').toLowerCase(); const T=I18N[lang]||I18N.it; document.getElementById('langBtn').textContent=lang.toUpperCase(); document.documentElement.lang=lang;
+/* ===== I18N ===== */
+const I18N = {
+  it:{
+    h1:"Il tuo What?f",
+    yourq:"La tua domanda",
+    res:"Risultato",
+    cont:"Domani continuiamo da qui",
+    write:"Scrivi qui cosa vuoi sapere domani…",
+    save:"Salva per domani",
+    meta:(ts,stile)=>`${new Date(ts).toLocaleString('it-IT',{hour12:false})} · ${stile==='wtf'?'What the F':'What if'}`
+  },
+  en:{
+    h1:"Your What?f",
+    yourq:"Your question",
+    res:"Result",
+    cont:"Tomorrow we pick it up from here",
+    write:"Write what you want to ask tomorrow…",
+    save:"Save for tomorrow",
+    meta:(ts,stile)=>`${new Date(ts).toLocaleString('en-GB',{hour12:false})} · ${stile==='wtf'?'What the F':'What if'}`
+  }
+};
+const LS = localStorage;
+let lang = (LS.getItem('lang')||'it').toLowerCase();
+const T = I18N[lang]||I18N.it;
+document.documentElement.lang=lang;
 
-const $=id=>document.getElementById(id);
-$('qLabel').textContent=T.ql; $('resLabel').textContent=T.rl; $('contLabel').textContent=T.cl; $('orMeta').textContent=T.or; $('freeInput').placeholder=T.ph; $('saveFU').textContent=T.save;
+/* ===== Prefs ===== */
+const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}'); // {stile,periodo}
+document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-const prefs=JSON.parse(LS.getItem('whatif_prefs')||'{}'); document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-$('langBtn').onclick=()=>{LS.setItem('lang',lang==='it'?'en':'it');location.reload()};
-
-function readJSON(k,def){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
-function writeJSON(k,v){LS.setItem(k,JSON.stringify(v))}
-
-/* ---- capire se sto aprendo una risposta salvata ---- */
-const viewId = LS.getItem('view_id');  // messo dalla 4ª quando premo ▶
-const historyArr = readJSON('cronologia',[]);
-let loaded = null;
-
-if (viewId) {
-  loaded = historyArr.find(x=>String(x.id)===String(viewId));
-  LS.removeItem('view_id');
+/* ===== UI text ===== */
+function applyTexts(){
+  document.getElementById('h1').textContent=T.h1;
+  document.getElementById('qLabel').textContent=T.yourq;
+  document.getElementById('rLabel').textContent=T.res;
+  document.getElementById('contLabel').textContent=T.cont;
+  document.getElementById('followFree').placeholder=T.write;
+  document.getElementById('saveFollow').textContent=T.save;
+  document.getElementById('langBtn').textContent=lang.toUpperCase();
 }
+applyTexts();
 
-const domanda = loaded?.domanda || (LS.getItem('domanda')||'').trim();
-$('questionBox').textContent = domanda || '—';
+/* ===== Nav ===== */
+document.getElementById('backBtn').onclick=()=>history.back();
+document.getElementById('homeBtn').onclick=()=>location.href='index.html';
+document.getElementById('langBtn').onclick=()=>{ lang = lang==='it' ? 'en' : 'it'; LS.setItem('lang',lang); location.reload(); };
 
-/* ---- mostra o genera ---- */
-async function getFollowups(q, a){
+/* ===== Helpers ===== */
+function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def} }
+function writeJSON(k,v){ LS.setItem(k,JSON.stringify(v)); }
+
+/* ===== Rendering domanda ===== */
+const domanda = LS.getItem('domanda') || '';
+document.getElementById('qBox').textContent = domanda || '—';
+
+/* ===== Logica “resume” vs “genera” ===== */
+const resumeId = LS.getItem('resume_id');
+let current = null; // entry correntemente mostrata (serve per follow-up consistenti)
+
+async function generateIfNeeded(){
+  // Se arrivi da "play" in 4a, mostra l'episodio SALVATO (niente rigenerazione)
+  if (resumeId){
+    const hist = readJSON('cronologia',[]);
+    const it = hist.find(x=>x.id===resumeId);
+    LS.removeItem('resume_id');
+    if (it){
+      current = it;
+      renderAnswer(it.answer, it.ts, it.stile);
+      return;
+    }
+  }
+
+  // Altrimenti genera con /api/ask usando i parametri salvati (tono invariato)
+  const buf = readJSON('whatif_clarify_buffer',{extra:""});
+  const payload = {
+    domanda: domanda,
+    lang: (LS.getItem('lang')||'it'),
+    stile: (prefs.stile||'whatif'),
+    profilo: readJSON('profilo',{}),
+    extra: buf.extra || ""
+  };
+
   try{
-    const r = await fetch('/api/followups',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,answer:a,lang,style:prefs.stile||'whatif'})});
-    const js = await r.json();
-    return Array.isArray(js?.followups) ? js.followups.slice(0,2) : [];
-  }catch{return []}
-}
+    const r = await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const j = await r.json();
+    const answer = j.answer || '…';
 
-function paintFollowups(list){
-  const box=$('fuWrap'); box.innerHTML='';
-  list.forEach(txt=>{
-    const b=document.createElement('button'); b.className='chip'; b.textContent=txt;
-    b.onclick=()=>{$('freeInput').value=txt};
-    box.appendChild(b);
-  });
-}
+    // render
+    current = {
+      id: (self.crypto?.randomUUID?.() || String(Date.now())),
+      ts: Date.now(),
+      domanda,
+      answer,
+      stile: prefs.stile||'whatif',
+      periodo: prefs.periodo||'future',
+      lang: (LS.getItem('lang')||'it')
+    };
+    renderAnswer(answer, current.ts, current.stile);
 
-async function showExisting(item){
-  $('answerBox').textContent = item.answer || '—';
-  paintFollowups(await getFollowups(item.domanda, item.answer));
-}
+    // salva in cronologia (in testa)
+    const history = readJSON('cronologia',[]);
+    history.unshift(current);
+    writeJSON('cronologia', history);
 
-async function generateFresh(){
-  $('answerBox').textContent='…';
-  const buf = readJSON('whatif_clarify_buffer', {});
-  try{
-    const r = await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domanda,lang,stile:(prefs.stile||'whatif'),profilo:readJSON('profilo',{}),extra:(buf?.extra||"")})});
-    const js = await r.json();
-    const ans = js?.answer || '—';
-    $('answerBox').textContent = ans;
-
-    // salva in cronologia (con risposta) — serve per il play della 4ª
-    const id = Date.now().toString(36)+Math.random().toString(36).slice(2,8);
-    const entry = { id, domanda, answer: ans, stile:(prefs.stile||'whatif'), ts: Date.now() };
-    const arr = readJSON('cronologia',[]); arr.push(entry); writeJSON('cronologia',arr);
-
-    paintFollowups(await getFollowups(domanda, ans));
   }catch(e){
-    $('answerBox').textContent='Errore server';
+    document.getElementById('answer').textContent = (lang.startsWith('en')?'Server error':'Errore server');
   }
 }
 
-/* avvio */
-if (loaded) { showExisting(loaded); } else { generateFresh(); }
+function renderAnswer(text, ts, stile){
+  document.getElementById('answer').textContent = text;
+  document.getElementById('metaLine').textContent = T.meta(ts, stile);
+  // genera follow-up coerenti con questa risposta
+  buildFollowups(domanda, text, stile);
+}
 
-/* salva follow-up scelto o scritto */
-$('saveFU').onclick=()=>{
-  const text = $('freeInput').value.trim(); if(!text) return;
-  const q = readJSON('followup_queue',[]);
-  q.push({ text, base:domanda, stile:(prefs.stile||'whatif'), ts:Date.now() });
-  writeJSON('followup_queue',q);
-  $('freeInput').value='';
-  alert(lang==='it'?'Salvato per domani.':'Saved for tomorrow.');
+generateIfNeeded();
+
+/* ===== Follow-ups dalla AI (se /api/followups esiste), altrimenti fallback ===== */
+async function buildFollowups(q, episode, stile){
+  const wrap = document.getElementById('followWrap');
+  wrap.innerHTML = '';
+  try{
+    const r = await fetch('/api/followups',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      domanda:q, episodio:episode, stile, lang
+    })});
+    if (!r.ok) throw new Error('no api');
+    const j = await r.json();
+    (j.questions||[]).slice(0,2).forEach(s => {
+      const div=document.createElement('div'); div.className='q'; div.textContent='• '+s;
+      div.addEventListener('click',()=>{ document.getElementById('followFree').value = s; });
+      wrap.appendChild(div);
+    });
+  }catch{
+    // fallback minimale, ma legato al testo
+    const hints = lang.startsWith('en')
+      ? [
+          "What would tell you it’s working?",
+          "What could you try in 7 days with low risk?"
+        ]
+      : [
+          "Qual è il primo segnale che ti direbbe che funziona?",
+          "Cosa potresti provare in 7 giorni con poco rischio?"
+        ];
+    hints.forEach(s=>{
+      const div=document.createElement('div'); div.className='q'; div.textContent='• '+s;
+      div.addEventListener('click',()=>{ document.getElementById('followFree').value = s; });
+      wrap.appendChild(div);
+    });
+  }
+}
+
+/* ===== Salvataggio follow-up per domani ===== */
+document.getElementById('saveFollow').onclick=()=>{
+  const txt = (document.getElementById('followFree').value||'').trim();
+  if (!txt) return;
+  const saved = readJSON('salvate',[]);
+  saved.unshift({
+    id: (self.crypto?.randomUUID?.() || String(Date.now())),
+    ts: Date.now(),
+    domanda: txt,
+    stile: current?.stile || (prefs.stile||'whatif'),
+    periodo: current?.periodo || (prefs.periodo||'future'),
+    lang: lang
+  });
+  writeJSON('salvate', saved);
+  document.getElementById('followFree').value='';
+  alert(lang.startsWith('en') ? 'Saved for tomorrow.' : 'Salvata per domani.');
 };
 </script>
 </body>
