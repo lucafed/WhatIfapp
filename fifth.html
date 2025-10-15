@@ -1,31 +1,33 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Risposta</title>
-<meta name="theme-color" content="#0B0B0C"/>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What?f – Risultato</title>
+<meta name="theme-color" content="#0B0B0C" />
 <style>
 :root{
   --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
-  --acc:#1C57A0; --acc2:#FFEC01; --chip:#121A26; --line:rgba(255,255,255,.12); --ink:#0A0E12;
-  --card:rgba(20,28,34,.92); --shadow:rgba(0,0,0,.35);
+  --acc:#1C57A0; --acc2:#FFEC01; --card:rgba(20,28,34,.92);
+  --line:rgba(255,255,255,.12); --chip:#121A26; --ink:#0A0E12;
+  --danger:#F26A6A; --cta:#FFE780;
 }
-html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
+html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; --cta:#C7F0D9; }
 *{box-sizing:border-box}
 html,body{margin:0;background:
 radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
 color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
 main{max-width:980px;margin:auto;padding:18px}
+.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
-.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
-.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none}
 h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2)}
 .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
-.answer{white-space:pre-wrap;line-height:1.5}
+textarea,.input{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
 .meta{font-size:12px;color:var(--muted)}
+.answer{white-space:pre-wrap; line-height:1.55; font-size:18px}
+.small{font-size:12px;padding:6px 10px;border-radius:10px}
 </style>
 </head>
 <body>
@@ -36,84 +38,136 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2)}
       <button class="btn" id="homeBtn">🏠</button>
     </div>
     <div class="row">
-      <button class="btn" id="langBtn">IT</button>
+      <span class="btn small" id="styleBadge">—</span>
+      <span class="btn small" id="periodoBadge">—</span>
+      <button class="btn small" id="langBtn">IT</button>
     </div>
   </div>
 
-  <h1 id="hTitle">Il tuo What?f</h1>
+  <h1 id="titleH1">Il tuo What?f</h1>
 
   <div class="card">
-    <div class="label" id="lblQuestion">La tua domanda</div>
-    <div class="input" style="min-height:54px" id="qView"></div>
+    <div class="label" id="qLabel">La tua domanda</div>
+    <div class="input" id="qBox" style="min-height:56px"></div>
   </div>
 
   <div class="card">
-    <div class="label" id="lblAnswer">Risultato</div>
+    <div class="label">Risultato</div>
     <div class="answer" id="answerBox">…</div>
-    <div class="meta" id="metaInfo"></div>
+    <div class="meta" id="genMeta" style="margin-top:8px">—</div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="regenBtn">🔁 Rigenera</button>
+      <button class="btn" id="saveFollowBtn">💾 Salva per domani</button>
+    </div>
   </div>
 
-  <div class="card" id="contBox">
-    <div class="label" id="lblTomorrow">Domani continuiamo da qui</div>
-    <div id="fuList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px"></div>
-    <div class="row">
-      <input id="fuCustom" class="input" placeholder="oppure scrivi tu la prossima micro-domanda…"/>
-      <button class="btn primary" id="saveFuBtn">Salva per domani</button>
+  <div class="card">
+    <div class="label" id="fuLabel">Domani continuiamo da qui</div>
+    <div class="row" style="gap:8px">
+      <input id="fuCustom" class="input" placeholder="Scrivi qui il tuo follow-up (es. primo segnale che cercheresti)"/>
+      <button class="btn primary" id="saveFuBtn">Salva</button>
     </div>
+    <div class="tip" id="fuTip" style="margin-top:8px">Puoi anche usare il follow-up già proposto nel testo.</div>
   </div>
 </main>
 
 <script>
-/* ===== i18n ===== */
-const I18N = {
-  it:{
-    title:"Il tuo What?f",
-    yourq:"La tua domanda",
-    result:"Risultato",
-    cont:"Domani continuiamo da qui",
-    saved:"Salva per domani",
-    customPH:"oppure scrivi tu la prossima micro-domanda…",
-    metaReplay:"(risposta salvata)",
-    metaLive:"(generata ora)"
+const $=(id)=>document.getElementById(id);
+const LS=localStorage;
+function readJSON(k,def){ try{ return JSON.parse(LS.getItem(k)||JSON.stringify(def)) }catch{return def} }
+function writeJSON(k,v){ LS.setItem(k,JSON.stringify(v)) }
+
+/* i18n */
+const I18N={
+  it:{ title:"Il tuo What?f", yourq:"La tua domanda", result:"Risultato",
+      regen:"🔁 Rigenera", saveForTomorrow:"💾 Salva per domani",
+      fuTitle:"Domani continuiamo da qui", fuTip:"Puoi anche usare il follow-up già proposto nel testo.",
+      saved:"Salvato!", style:{whatif:"What if", wtf:"What the F"}, period:{past:"Passato",future:"Futuro"},
   },
-  en:{
-    title:"Your What?f",
-    yourq:"Your question",
-    result:"Result",
-    cont:"Tomorrow we pick up from here",
-    saved:"Save for tomorrow",
-    customPH:"or write your own next micro-question…",
-    metaReplay:"(saved answer)",
-    metaLive:"(generated now)"
+  en:{ title:"Your What?f", yourq:"Your question", result:"Result",
+      regen:"🔁 Regenerate", saveForTomorrow:"💾 Save for tomorrow",
+      fuTitle:"Tomorrow we pick it up from here", fuTip:"You can also copy a follow-up proposed in the text.",
+      saved:"Saved!", style:{whatif:"What if", wtf:"What the F"}, period:{past:"Past",future:"Future"},
   }
 };
-const LS=localStorage;
-let lang=(LS.getItem('lang')||'it').toLowerCase();
+const lang=(LS.getItem('lang')||'it').toLowerCase();
 const T=I18N[lang]||I18N.it;
 document.documentElement.lang=lang;
 
-/* ===== theme from prefs ===== */
-function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
-function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
-const prefs = readJSON('whatif_prefs',{stile:'whatif'});
+/* prefs/theme */
+const prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future'});
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-/* ===== UI text ===== */
-const $=(id)=>document.getElementById(id);
-$('hTitle').textContent=T.title;
-$('lblQuestion').textContent=T.yourq;
-$('lblAnswer').textContent=T.result;
-$('lblTomorrow').textContent=T.cont;
-$('saveFuBtn').textContent=T.saved;
-$('fuCustom').placeholder=T.customPH;
+$('titleH1').textContent=T.title;
+$('qLabel').textContent=T.yourq;
+$('regenBtn').textContent=T.regen;
+$('saveFollowBtn').textContent=T.saveForTomorrow;
+$('fuLabel').textContent=T.fuTitle;
+$('fuTip').textContent=T.fuTip;
 $('langBtn').textContent=lang.toUpperCase();
 
-/* ===== nav ===== */
+/* nav */
 $('backBtn').onclick=()=>history.back();
 $('homeBtn').onclick=()=>location.href='index.html';
-$('langBtn').onclick=()=>{ const nxt=lang==='it'?'en':'it'; LS.setItem('lang',nxt); location.reload(); };
+$('langBtn').onclick=()=>{ const nxt=lang==='it'?'en':'it'; localStorage.setItem('lang',nxt); location.reload(); };
 
-/* ===== history helpers ===== */
+/* from 4th */
+const buffer = readJSON('whatif_clarify_buffer',{q:"",extra:"",stile:prefs.stile,periodo:prefs.periodo});
+let domanda = buffer.q || '';
+let extra = buffer.extra || '';
+let stile = buffer.stile || prefs.stile;
+let periodo = buffer.periodo || prefs.periodo;
+
+/* badges */
+$('styleBadge').textContent = (T.style[stile]||'—');
+$('periodoBadge').textContent = (T.period[periodo]||'—');
+
+/* show question */
+$('qBox').textContent = domanda;
+
+/* check if we must display a SAVED answer (not regenerate) */
+const showHistory = readJSON('show_history',null);
+if(showHistory && showHistory.answer && showHistory.domanda){
+  // consume once
+  localStorage.removeItem('show_history');
+  domanda = showHistory.domanda;
+  stile = showHistory.stile || stile;
+  periodo = showHistory.periodo || periodo;
+  $('qBox').textContent = domanda;
+  $('styleBadge').textContent = (T.style[stile]||'—');
+  $('periodoBadge').textContent = (T.period[periodo]||'—');
+  $('answerBox').textContent = showHistory.answer;
+  $('genMeta').textContent = (new Date().toLocaleString(document.documentElement.lang||'it-IT',{hour12:false})) + ' · ' + (T.style[stile]||'');
+} else {
+  generate();
+}
+
+/* API call */
+async function askAPI({q,extra,stile,lang,periodo}){
+  const payload = { domanda:q, lang, stile, periodo, extra };
+  const r = await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  if(!r.ok) throw new Error('API error');
+  return r.json();
+}
+
+let answerText="";
+
+async function generate(){
+  try{
+    $('answerBox').textContent='…';
+    const res = await askAPI({ q:domanda, extra, stile, lang, periodo });
+    answerText = res.answer || '…';
+    $('answerBox').textContent = answerText;
+    $('genMeta').textContent = (new Date().toLocaleString(document.documentElement.lang||'it-IT',{hour12:false})) + ' · ' + (T.style[stile]||'');
+    // save to RECENTS with answer
+    saveStoryToHistory({ domanda, answer:answerText, stile });
+  }catch(e){
+    $('answerBox').textContent = 'Errore server';
+    $('genMeta').textContent = String(e.message||e);
+  }
+}
+
+/* history helpers */
 function saveStoryToHistory({ domanda, answer, stile }){
   const arr=readJSON('cronologia',[]);
   const ts=Date.now();
@@ -122,106 +176,32 @@ function saveStoryToHistory({ domanda, answer, stile }){
   arr.push({ domanda, answer, stile, ts });
   writeJSON('cronologia', arr.slice(-50));
 }
-function saveForTomorrow({ q, stile, answer }){
+
+/* save followup with CONTEXT for tomorrow */
+function saveForTomorrow({ parentQ, followupQ, stile, parentAnswer, lang, periodo }){
   const arr=readJSON('saved_for_tomorrow',[]);
   const ts=Date.now();
-  arr.push({ q, stile, answer, ts });
+  arr.push({ type:'followup', parentQ, followupQ, stile, parentAnswer, lang, periodo, ts });
   writeJSON('saved_for_tomorrow', arr.slice(-50));
 }
 
-/* ===== load context ===== */
-const params=new URLSearchParams(location.search);
-const isReplay = params.get('view')==='replay';
-let domanda='', stile=prefs.stile||'whatif', extra='';
-let answerText='';
+/* actions */
+$('regenBtn').onclick=()=>generate();
 
-if(isReplay){
-  const r=readJSON('replay_story',null);
-  domanda=r?.domanda||LS.getItem('domanda')||'';
-  stile=r?.stile||stile;
-  answerText=r?.answer||'';
-  $('qView').textContent=domanda||'—';
-  $('answerBox').textContent=answerText||'—';
-  $('metaInfo').textContent=T.metaReplay;
-  // niente salvataggi/followup in replay
-  $('contBox').style.display='none';
-} else {
-  const req = readJSON('whatif_request',null);
-  domanda = req?.domanda || LS.getItem('domanda') || '';
-  stile = req?.stile || stile;
-  extra = req?.extra || '';
-  $('qView').textContent = domanda || '—';
-  // generate
-  generate(domanda, stile, extra).catch(err=>{
-    $('answerBox').textContent='[server error] '+(err?.message||err);
-  });
-}
+$('saveFollowBtn').onclick=()=>{
+  // simple default: take a smart prompt from current "extra" or ask user box
+  const v = $('fuCustom').value.trim() || extra || '';
+  saveForTomorrow({ parentQ:domanda, followupQ:v, stile, parentAnswer:answerText, lang, periodo });
+  $('saveFollowBtn').textContent = T.saved;
+  setTimeout(()=>{ $('saveFollowBtn').textContent = T.saveForTomorrow; }, 1200);
+};
 
-/* ===== call API & postprocess ===== */
-async function generate(domanda, stile, extra){
-  $('answerBox').textContent='…';
-  const res = await fetch('/api/ask', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ domanda, stile, lang, extra })
-  });
-  if(!res.ok) throw new Error('HTTP '+res.status);
-  const data = await res.json();
-  answerText = (data.answer||'').trim();
-  $('answerBox').textContent = answerText||'—';
-  $('metaInfo').textContent = T.metaLive;
-
-  // salva in cronologia
-  saveStoryToHistory({ domanda, answer: answerText, stile });
-
-  // followups
-  const fu = await getFollowups(domanda, answerText, stile).catch(()=>[]);
-  renderFollowups(fu);
-}
-
-/* ===== followups: prova API, poi fallback ===== */
-async function getFollowups(q, a, stile){
-  try{
-    const r = await fetch('/api/followups',{method:'POST',headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ domanda:q, answer:a, stile, lang })});
-    if(r.ok){ const j=await r.json(); if(Array.isArray(j.followups)) return j.followups.slice(0,2); }
-  }catch{}
-  // fallback locale semplice ma sensato
-  const lower = q.toLowerCase();
-  if(lower.includes('moto')||lower.includes('car')||lower.includes('bike')){
-    return lang==='en'
-      ? ["What would be the first test route?", "How much monthly cost would feel sustainable?"]
-      : ["Quale sarebbe il primo giro di prova?", "Che costo mensile ti sembrerebbe sostenibile?"];
-  }
-  if(lower.includes("aquila")||lower.includes("l'aquila")||lower.includes('verona')||lower.includes('lugano')){
-    return lang==='en'
-      ? ["What sign would tell you the move is working?", "Which part of daily rhythm would you change first?"]
-      : ["Qual è il segnale che ti direbbe che funziona?", "Quale pezzo di ritmo quotidiano cambieresti per primo?"];
-  }
-  return lang==='en'
-    ? ["What’s the smallest 7-day step here?", "What would make you say ‘this was worth it’?"]
-    : ["Qual è il passo più piccolo da 7 giorni?", "Cosa ti farebbe dire ‘ne è valsa la pena’?"];
-}
-
-function renderFollowups(list){
-  const box=$('fuList'); box.innerHTML='';
-  list.slice(0,2).forEach(txt=>{
-    const div=document.createElement('div');
-    div.className='input';
-    div.textContent=txt;
-    div.style.cursor='pointer';
-    div.onclick=()=>{ $('fuCustom').value = txt; };
-    box.appendChild(div);
-  });
-}
-
-/* ===== save custom followup ===== */
 $('saveFuBtn').onclick=()=>{
-  const v = $('fuCustom').value.trim(); if(!v) { $('fuCustom').focus(); return; }
-  saveForTomorrow({ q:v, stile, answer: answerText });
+  const v = $('fuCustom').value.trim(); if(!v){ $('fuCustom').focus(); return; }
+  saveForTomorrow({ parentQ:domanda, followupQ:v, stile, parentAnswer:answerText, lang, periodo });
   $('fuCustom').value='';
-  $('saveFuBtn').textContent = lang==='en' ? 'Saved!' : 'Salvato!';
-  setTimeout(()=>{ $('saveFuBtn').textContent = I18N[lang].saved; }, 1200);
+  $('saveFuBtn').textContent = T.saved;
+  setTimeout(()=>{ $('saveFuBtn').textContent = T.saveForTomorrow; }, 1200);
 };
 </script>
 </body>
