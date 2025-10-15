@@ -3,219 +3,181 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f – Result</title>
-
+<title>What?f – Risposta</title>
 <meta name="theme-color" content="#0B0B0C" />
-<link rel="manifest" href="/manifest.json" />
-<link rel="apple-touch-icon" href="/icons/icon-192.png" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
 <style>
-  :root{
-    --bg:#0B0B0C; --bg2:#101414;
-    --fg:#FFFFFF; --muted:#A0B2BA;
-    --acc:#1C57A0; --acc2:#FFEC01;
-    --card:rgba(20,28,34,0.92);
-    --line:rgba(255,255,255,.12);
-    --chip:#121A26; --ink:#0A0E12; --shadow:rgba(0,0,0,.35);
-    --highlight:#FFEC01;
-  }
-  html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
-
-  *{box-sizing:border-box}
-  html,body{margin:0;background: radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);color:var(--fg);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-  main{max-width:980px;margin:auto;padding:18px}
-  .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-  .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;transition:transform .06s ease,opacity .2s}
-  .btn:active{transform:translateY(1px)}
-  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);font-weight:800;box-shadow:0 6px 18px var(--shadow);border:none}
-  .btn.large{padding:14px 18px;font-size:16px}
-  h1{font-size:clamp(22px,5vw,30px);margin:14px 0 2px;color:var(--acc2)}
-  .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px var(--shadow)}
-  .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-  .qbox{background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--highlight);border-radius:12px;padding:16px;font-size:17px;line-height:1.65;color:#EAF3EE;max-width:68ch;margin:0 auto;}
-  .box{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:18px;line-height:1.7;color:#EAF3EE;white-space:pre-wrap;font-size:17px;letter-spacing:.1px;max-width:68ch;margin:0 auto;}
-  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-  .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
-  .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-  .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
-  .follow{display:flex;flex-direction:column;gap:8px;margin-top:10px}
-  .follow button{border:1px solid var(--line);background:var(--chip);color:#eaf3ee;border-radius:12px;padding:10px 12px;text-align:left;cursor:pointer}
-  .follow button:hover{background:rgba(255,255,255,.06)}
-  .follow .or{opacity:.7;text-align:center;margin:2px 0}
-  .follow .row{gap:8px}
-  .follow input{flex:1;background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:10px;padding:10px}
-  .mini{color:#A0B2BA;font-size:12px}
+:root{
+  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
+  --acc:#1C57A0; --acc2:#FFEC01; /* What if */
+  --chip:#121A26; --line:rgba(255,255,255,.12); --ink:#0A0E12;
+  --card:rgba(20,28,34,.92); --shadow:rgba(0,0,0,.35);
+}
+html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
+*{box-sizing:border-box}
+html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:980px;margin:auto;padding:18px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
+.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
+.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2)}
+.label{color:var(--acc);font-weight:800;margin:0 0 8px}
+.box{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:18px;line-height:1.7;white-space:pre-wrap}
+.q{background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--acc2);border-radius:12px;padding:14px}
+.follow{display:flex;flex-direction:column;gap:8px}
+.opt{border:1px solid var(--line);background:rgba(255,255,255,.04);padding:10px;border-radius:10px;cursor:pointer}
+.opt:hover{background:rgba(255,255,255,.06)}
+.input{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:12px}
+.meta{font-size:12px;color:var(--muted)}
+.skeleton{display:inline-block;min-width:6px;min-height:1em;background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:sk 1s infinite}
+@keyframes sk{0%{background-position:0 0}100%{background-position:-200% 0}}
 </style>
 </head>
 <body>
-  <main>
-    <div class="topbar">
-      <div class="row">
-        <button class="btn" id="backBtnTop">←</button>
-        <button class="btn" id="homeBtnTop">🏠</button>
-      </div>
-      <div class="row" style="gap:10px">
-        <span id="badgePeriodo" class="badge">🕰️ —</span>
-        <span id="badgeStile" class="badge">🎭 —</span>
-      </div>
+<main>
+  <div class="row" style="justify-content:space-between">
+    <div class="row">
+      <button class="btn" id="backBtn">←</button>
+      <button class="btn" id="homeBtn">🏠</button>
     </div>
-
-    <h1 id="titleH1">Il tuo What?f</h1>
-
-    <div class="card">
-      <h3 class="label" id="qLabel">La tua domanda</h3>
-      <div id="question" class="qbox">—</div>
+    <div class="row">
+      <button class="btn" id="langBtn">IT</button>
     </div>
+  </div>
 
-    <div class="card">
-      <h3 class="label" id="rLabel">Risultato</h3>
-      <div id="result" class="box">⏳ Sto immaginando il tuo scenario…</div>
-      <p id="closing" class="mini" style="max-width:68ch;margin:8px auto 0">—</p>
-    </div>
+  <h1 id="titleH1">Risultato</h1>
 
-    <div class="card" id="followCard" style="display:none">
-      <h3 class="label" id="fLabel">Domani continuiamo da qui</h3>
-      <div class="follow" id="followWrap">
-        <!-- qui entrano i 2 follow della IA -->
-        <button id="f1" style="display:none"></button>
-        <button id="f2" style="display:none"></button>
-        <div class="or">oppure</div>
-        <div class="row">
-          <input id="fFree" type="text" placeholder="Scrivi tu cosa vuoi sapere domani…" />
-          <button class="btn primary" id="fSend">Avanti</button>
-        </div>
-        <p class="mini" id="fHint">Scegli un suggerimento o scrivi tu: lo useremo come episodio successivo.</p>
-      </div>
+  <div class="card">
+    <div class="label" id="qLabel">Domanda</div>
+    <div id="question" class="q">—</div>
+  </div>
+
+  <div class="card">
+    <div class="label" id="rLabel">Risposta</div>
+    <div id="result" class="box"><span class="skeleton" style="width:60%"></span></div>
+  </div>
+
+  <div class="card">
+    <div class="label" id="fLabel">Domande per continuare</div>
+    <div id="fWrap" class="follow">
+      <div class="meta" id="fMeta">Sto preparando due spunti mirati…</div>
     </div>
-  </main>
+    <div style="margin-top:10px">
+      <input id="freeInput" class="input" placeholder="Oppure scrivi qui cosa vuoi sapere domani…" />
+    </div>
+    <div class="row" style="margin-top:10px;justify-content:flex-end">
+      <button class="btn primary" id="saveBtn">Salva per domani</button>
+    </div>
+  </div>
+</main>
 
 <script>
-/* ===== Helpers / I18N ===== */
-const LS = localStorage;
-const $  = (id)=>document.getElementById(id);
+/* ===== I18N ===== */
+const I18N={
+  it:{ title:"Risultato", q:"Domanda", r:"Risposta", follow:"Domande per continuare",
+       prepping:"Sto preparando due spunti mirati…", inputPH:"Oppure scrivi qui cosa vuoi sapere domani…",
+       save:"Salva per domani", saved:"Salvato! Lo troverai domani nella quarta pagina.",
+       err:"Problema server." },
+  en:{ title:"Result", q:"Question", r:"Answer", follow:"Follow-ups to continue",
+       prepping:"Preparing two targeted prompts…", inputPH:"Or write what you want to know tomorrow…",
+       save:"Save for tomorrow", saved:"Saved! You’ll find it tomorrow on the question page.",
+       err:"Server error." }
+};
+const LS=localStorage;
+const lang=(LS.getItem('lang')||'it').toLowerCase();
+const T=I18N[lang]||I18N.it;
+document.documentElement.lang=lang;
+
+/* ===== theme & prefs ===== */
 const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-const domanda = LS.getItem('domanda') || '';
-const lang = (LS.getItem('lang')||'it').toLowerCase();
-document.documentElement.lang = lang;
+const stile = prefs.stile || 'whatif';
+document.documentElement.setAttribute('data-theme', stile==='wtf'?'wtf':'whatif');
 
-/* Tema per stile */
-(function applyTheme(){
-  const theme = (prefs.stile==='wtf')?'wtf':'whatif';
-  document.documentElement.setAttribute('data-theme', theme);
-})();
+/* ===== UI ===== */
+document.getElementById('titleH1').textContent=T.title;
+document.getElementById('qLabel').textContent=T.q;
+document.getElementById('rLabel').textContent=T.r;
+document.getElementById('fLabel').textContent=T.follow;
+document.getElementById('fMeta').textContent=T.prepping;
+document.getElementById('freeInput').placeholder=T.inputPH;
+document.getElementById('saveBtn').textContent=T.save;
+document.getElementById('langBtn').textContent=lang.toUpperCase();
 
-/* UI init */
-$('backBtnTop').addEventListener('click', ()=> history.back());
-$('homeBtnTop').addEventListener('click', ()=> location.href='index.html');
-$('qLabel').textContent = lang==='en' ? 'Your question' : 'La tua domanda';
-$('rLabel').textContent = lang==='en' ? 'Result' : 'Risultato';
-$('fLabel').textContent = lang==='en' ? 'Tomorrow we continue from here' : 'Domani continuiamo da qui';
-$('question').textContent = domanda || (lang==='en'?'(no question)':'(nessuna domanda)');
+/* ===== nav ===== */
+document.getElementById('backBtn').onclick=()=>history.back();
+document.getElementById('homeBtn').onclick=()=>location.href='index.html';
+document.getElementById('langBtn').onclick=()=>{ const nxt=lang==='it'?'en':'it'; LS.setItem('lang',nxt); location.reload(); };
 
-$('badgePeriodo').textContent = '🕰️ ' + (prefs.periodo==='past' ? (lang==='en'?'Past':'Passato') : (lang==='en'?'Future':'Futuro'));
-$('badgeStile').textContent   = '🎭 ' + (prefs.stile==='wtf' ? 'What the F' : 'What if');
+/* ===== data ===== */
+const domanda = LS.getItem('domanda')||'';
+const extra   = LS.getItem('whatif_extra')||'';
+document.getElementById('question').textContent=domanda||'—';
 
-/* ===== Call API (non-stream, così otteniamo follow-up in JSON) ===== */
-async function callAsk({ q, stile, periodo, profile }){
-  const payload = {
-    domanda: q,
-    lang,
-    periodo: periodo || 'future',
-    stile: stile || 'whatif',
-    clarify: false,
-    stream: false,
-    profilo: profile || buildLeanProfile(),
-    clarifications: readClarificationsToday(),
-    extra: ''
-  };
-  const r = await fetch('/api/ask',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
-  if(!r.ok) throw new Error('server');
-  return r.json();
-}
-
-/* Solo ciò che serve per “nome/ruolo/città” */
-function buildLeanProfile(){
+/* ===== call API (answer, poi followups) ===== */
+async function askAnswer(){
   try{
-    const p = JSON.parse(LS.getItem('whatif_profile')||'{}');
-    const lean = {};
-    if (p.name) lean.name = String(p.name);
-    if (p.city_now) lean.city_now = String(p.city_now);
-    else if (p.city) lean.city = String(p.city);
-    if (p.work_role) lean.work_role = String(p.work_role);
-    else if (p.role) lean.role = String(p.role);
-    return lean;
-  }catch{ return {}; }
-}
-
-/* Clarifications usati oggi (per contesto morbido) */
-function readClarificationsToday(){
-  try{
-    const mem = JSON.parse(LS.getItem('whatif_memory')||'[]');
-    // prendiamo l’ultima interazione della stessa domanda
-    const item = mem.find(m => (m?.q||'') === (domanda||''));
-    return item?.clar || {};
-  }catch{ return {}; }
-}
-
-/* Render risposta + follow-ups */
-function renderAnswer({answer, followups, closing}){
-  $('result').textContent = (answer||'').trim() || (lang==='en'?'(empty)':'(vuoto)');
-  $('closing').textContent = (closing||'').trim();
-
-  const f1 = $('f1'), f2 = $('f2');
-  if (Array.isArray(followups) && followups.length){
-    $('followCard').style.display = 'block';
-    f1.style.display = 'none';
-    f2.style.display = 'none';
-    if (followups[0]){ f1.textContent = followups[0]; f1.style.display='block'; }
-    if (followups[1]){ f2.textContent = followups[1]; f2.style.display='block'; }
-  } else {
-    $('followCard').style.display = 'block';
-  }
-}
-
-/* Salva la scelta follow-up per episodio successivo */
-function saveNextFollow(text){
-  const key = 'whatif_next_followup';
-  const arr = JSON.parse(LS.getItem(key) || '[]');
-  arr.unshift({ q: domanda, follow: text, ts: Date.now() });
-  LS.setItem(key, JSON.stringify(arr.slice(0,50)));
-
-  // aggiorniamo memory (per coerenza badge)
-  const mem = JSON.parse(LS.getItem('whatif_memory')||'[]');
-  mem.unshift({ q: domanda, clar: { next_followup: text }, ans: ($('result').textContent||'').slice(0,400), ts: Date.now() });
-  LS.setItem('whatif_memory', JSON.stringify(mem.slice(0,200)));
-}
-
-/* Click handlers */
-$('f1').addEventListener('click', ()=>{ const t=$('f1').textContent.trim(); if(t){ saveNextFollow(t); okNext(); } });
-$('f2').addEventListener('click', ()=>{ const t=$('f2').textContent.trim(); if(t){ saveNextFollow(t); okNext(); } });
-$('fSend').addEventListener('click', ()=>{
-  const v = ($('fFree').value||'').trim();
-  if(!v){ alert(lang==='en'?'Write something or choose a suggestion':'Scrivi qualcosa o scegli un suggerimento'); return; }
-  saveNextFollow(v); okNext();
-});
-
-function okNext(){
-  alert(lang==='en'?'Saved for the next episode ✅':'Salvato per il prossimo episodio ✅');
-  // resta in pagina: domani quinta userà questo follow
-}
-
-/* Boot */
-(async function boot(){
-  try{
-    const j = await callAsk({ q: domanda, stile: (prefs.stile||'whatif'), periodo: (prefs.periodo||'future') });
-    renderAnswer(j);
+    const r = await fetch("/api/ask",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ domanda, lang, stile, extra, mode:"answer", stream:false, profilo: JSON.parse(LS.getItem('whatif_profile')||'{}') })
+    });
+    if(!r.ok) throw new Error("server");
+    const j = await r.json();
+    const text = (j.answer||'').trim();
+    document.getElementById('result').textContent=text || '—';
+    LS.setItem('last_answer', text);
+    renderHistory(text);
+    await askFollowups(text);
   }catch(e){
-    console.error(e);
-    $('result').textContent = (lang==='en'?'Server error':'Errore server');
-    $('followCard').style.display='none';
+    document.getElementById('result').textContent=T.err;
   }
-})();
+}
+
+async function askFollowups(answerText){
+  try{
+    const r = await fetch("/api/ask",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ domanda, lang, stile, mode:"followups", previous_answer: answerText })
+    });
+    if(!r.ok) throw new Error("server");
+    const j = await r.json();
+    const arr = Array.isArray(j.followups)? j.followups.slice(0,2):[];
+    const wrap = document.getElementById('fWrap');
+    wrap.innerHTML='';
+    arr.forEach(q=>{
+      const b=document.createElement('div'); b.className='opt'; b.textContent=q;
+      b.onclick=()=>{ document.getElementById('freeInput').value = q; };
+      wrap.appendChild(b);
+    });
+    if(!arr.length){
+      const m=document.createElement('div'); m.className='meta'; m.textContent='—';
+      wrap.appendChild(m);
+    }
+  }catch(e){
+    document.getElementById('fMeta').textContent=T.err;
+  }
+}
+
+/* ===== salva prompt per domani ===== */
+document.getElementById('saveBtn').onclick=()=>{
+  const val=(document.getElementById('freeInput').value||'').trim();
+  if(!val) { document.getElementById('freeInput').focus(); return; }
+  const list = JSON.parse(LS.getItem('next_prompts')||'[]');
+  list.unshift({ q:domanda, next:val, stile, lang, ts:Date.now() });
+  LS.setItem('next_prompts', JSON.stringify(list.slice(0,50)));
+  alert(T.saved);
+};
+
+/* ===== cronologia minima ===== */
+function renderHistory(answerText){
+  const arr = JSON.parse(LS.getItem('cronologia')||'[]');
+  arr.unshift({ domanda, risposta: answerText, stile, lang, ts:Date.now() });
+  LS.setItem('cronologia', JSON.stringify(arr.slice(0,200)));
+}
+
+askAnswer();
 </script>
 </body>
 </html>
