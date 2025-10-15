@@ -7,49 +7,47 @@
 <meta name="theme-color" content="#0B0B0C" />
 <style>
 :root{
-  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
-  --acc:#1C57A0; --acc2:#6ED1A5;    /* tema What if */
-  --chip:#121A26; --line:rgba(255,255,255,.12); --ink:#0A0E12;
-  --card:rgba(20,28,34,.92); --shadow:rgba(0,0,0,.35);
-  --ok:#7BE091; --warn:#FFD85E;
+  --bg:#0B0B0C; --bg2:#0E1114; --card:rgba(20,28,34,.92);
+  --fg:#EAF3EE; --muted:#9FB1B9; --line:rgba(255,255,255,.12);
+  --chip:#111820; --ink:#0B0B0C; --shadow:rgba(0,0,0,.35);
+  --acc:#66f0a6; --acc2:#21c06b; /* primario fisso */
+  --pill:#16202a;
 }
-html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
+/* Tema WTF cambia solo le pill, non il primario */
+html[data-theme="wtf"]{ --pill:#1A2426; }
 *{box-sizing:border-box}
 html,body{margin:0;background:
-  radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-  color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
 main{max-width:980px;margin:auto;padding:18px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
-.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
-.btn.ghost{background:transparent}
-.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
+h1{font-size:clamp(22px,5vw,30px);margin:10px 0 4px}
+h2{font-size:18px;margin:0 0 8px;color:var(--acc)}
 .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
-h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2)}
-h2{font-size:18px;margin:0 0 10px;color:var(--acc)}
-.label{color:var(--acc);font-weight:800;margin:0 0 8px}
-.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
-textarea::placeholder,.input::placeholder{color:#7f8a90}
+.input, textarea{width:100%;background:rgba(255,255,255,.06);color:var(--fg);
+  border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
-.chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-.toggle{border-radius:999px;padding:8px 14px;border:1px solid var(--line);background:var(--chip);cursor:pointer}
-.toggle.active{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-.story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04);margin:10px 0}
-.story .meta{font-size:12px;color:var(--muted);margin-top:2px}
-.play{border:none;background:linear-gradient(180deg,#FFEC99,#FFE580);width:46px;height:46px;border-radius:12px;cursor:pointer;font-weight:900;color:#222;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+.chip{background:var(--pill);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
+.chip.sel{outline:2px solid var(--acc2);font-weight:700}
+.btn{appearance:none;border:1px solid var(--line);background:var(--pill);color:var(--fg);
+  padding:10px 14px;border-radius:12px;cursor:pointer}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)) !important;color:var(--ink)!important;font-weight:800;border:none;box-shadow:0 8px 24px var(--shadow)}
+.badge{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
+.badge.pro{background:linear-gradient(180deg,#66f0a6,#21c06b);color:#0B0B0C;font-weight:800}
 .meta{font-size:12px;color:var(--muted)}
 .tip{font-size:12px;color:var(--muted);margin-top:8px}
-.disclosure{display:flex;align-items:center;gap:10px;cursor:pointer}
-.chev{transition:.2s transform}
-.collapsed .chev{transform:rotate(-90deg)}
-.hidden{display:none}
-.hr{height:1px;background:var(--line);margin:8px 0}
+.story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,.04);margin-top:8px}
+.play{border:none;background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0B0B0C;width:46px;height:46px;border-radius:12px;cursor:pointer;font-weight:900}
+.use{border:1px solid var(--line);background:var(--pill);color:var(--fg);border-radius:10px;padding:8px 12px}
+.caret{cursor:pointer;user-select:none}
+.collapsed .body{display:none}
+.header{display:flex;align-items:center;justify-content:space-between}
 </style>
 </head>
 <body>
 <main>
-  <div class="row" style="justify-content:space-between">
+  <!-- top bar -->
+  <div class="row" style="justify-content:space-between;margin-bottom:8px">
     <div class="row">
       <button class="btn" id="backBtn">←</button>
       <button class="btn" id="homeBtn">🏠</button>
@@ -60,11 +58,14 @@ textarea::placeholder,.input::placeholder{color:#7f8a90}
     </div>
   </div>
 
+  <h1 id="pageTitle">Imposta la tua domanda</h1>
+
+  <!-- switches -->
   <div class="card">
-    <div class="row" style="justify-content:space-between;gap:14px">
+    <div class="row" style="justify-content:space-between">
       <div class="chips" id="periodChips">
-        <button class="toggle" data-periodo="past" id="chipPast">Passato</button>
-        <button class="toggle active" data-periodo="future" id="chipFuture">Futuro</button>
+        <button class="chip sel" data-period="future" id="chipFuture">Futuro</button>
+        <button class="chip" data-period="past" id="chipPast">Passato</button>
       </div>
       <div class="chips" id="styleChips">
         <button class="chip sel" data-style="whatif" id="chipWhatIf">What if (realistico)</button>
@@ -73,237 +74,255 @@ textarea::placeholder,.input::placeholder{color:#7f8a90}
     </div>
   </div>
 
+  <!-- question -->
   <div class="card">
-    <h1 id="titleH1">Imposta la tua domanda</h1>
-    <h2 id="qLabel">La tua domanda</h2>
-    <textarea id="qInput" rows="3" placeholder="E se tornassi a vivere all'Aquila?" class="input"></textarea>
+    <h2 id="yourQ">La tua domanda</h2>
+    <textarea id="qInput" rows="3" placeholder="E se tornassi a vivere all’Aquila?" class="input"></textarea>
 
     <div style="margin-top:12px">
-      <div class="row" style="justify-content:space-between">
-        <div class="label" id="detailLbl">Aggiungi un dettaglio (opzionale)</div>
-        <span class="meta" id="hintMeta">aiuta la risposta di oggi</span>
+      <div class="row" style="justify-content:space-between;gap:8px">
+        <div class="meta" id="optLabel">Aggiungi un dettaglio (opzionale)</div>
+        <div class="meta" id="hintMeta">aiuta la risposta di oggi</div>
       </div>
-      <input id="extraInput" class="input" placeholder="es. primo segnale di successo, budget, luogo specifico…" />
-      <div class="chips" id="extraChips" style="margin-top:8px"></div>
+      <input id="extraInput" class="input" placeholder="es. primo segnale di successo, budget, luogo preciso…" />
+      <div class="chips" id="suggestChips" style="margin-top:8px"></div>
       <p class="tip" id="tipNote">Tip: puoi cambiare stile sopra; colori e tono si adattano.</p>
+    </div>
 
-      <div class="row" style="margin-top:12px">
-        <button class="btn primary" id="goBtn">✨ Genera risposta</button>
-        <button class="btn" id="clearBtn">Pulisci</button>
-      </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="genBtn">✨ Genera risposta</button>
+      <button class="btn" id="clearBtn">Pulisci</button>
     </div>
   </div>
 
-  <div class="card" id="savedCard">
-    <div class="disclosure" id="savedHeader">
-      <span class="chev">▾</span>
-      <h2 id="savedTitle" style="margin:0">Domande salvate per domani</h2>
-    </div>
-    <div id="savedBody">
-      <div class="row" style="gap:10px;margin:8px 0 4px">
-        <button class="btn" id="clearHistoryBtn">Svuota storie</button>
+  <!-- saved for tomorrow -->
+  <div class="card collapsed" id="savedCard">
+    <div class="header">
+      <div class="row">
+        <span class="caret">▾</span>&nbsp;
+        <h2 id="savedTitle" style="margin:0">Domande salvate per domani</h2>
+      </div>
+      <div class="row">
         <button class="btn" id="clearSavedBtn">Svuota salvate</button>
       </div>
-      <div id="storyList"></div>
     </div>
+    <div class="body" id="savedBody"></div>
+  </div>
+
+  <!-- history -->
+  <div class="card collapsed" id="historyCard">
+    <div class="header">
+      <div class="row">
+        <span class="caret">▾</span>&nbsp;
+        <h2 id="histTitle" style="margin:0">Storie recenti</h2>
+      </div>
+      <div class="row">
+        <button class="btn" id="clearHistoryBtn">Svuota storie</button>
+      </div>
+    </div>
+    <div class="body" id="storyList"></div>
   </div>
 </main>
 
 <script>
-/* ===== I18N ===== */
-const I18N = {
-  it: {
+/* ===== i18n ===== */
+const I18N={
+  it:{
     title:"Imposta la tua domanda",
-    past:"Passato", future:"Futuro",
-    whatif:"What if (realistico)", wtf:"What the F (divertente)",
-    yourq:"La tua domanda",
-    addDetail:"Aggiungi un dettaglio (opzionale)",
+    q:"La tua domanda",
+    opt:"Aggiungi un dettaglio (opzionale)",
     hint:"aiuta la risposta di oggi",
     tip:"Tip: puoi cambiare stile sopra; colori e tono si adattano.",
-    go:"✨ Genera risposta", clear:"Pulisci",
-    saved:"Domande salvate per domani",
-    free:(l,d)=>`Free oggi: ${l}/${d}`
+    gen:"✨ Genera risposta", clear:"Pulisci",
+    future:"Futuro", past:"Passato",
+    whatif:"What if (realistico)", wtf:"What the F (divertente)",
+    saved:"Domande salvate per domani", hist:"Storie recenti",
+    svuotaS:"Svuota salvate", svuotaH:"Svuota storie",
+    chip1:"primo segnale", chip2:"vincolo 2 settimane", chip3:"luogo preciso", chip4:"tempo disponibile",
+    free:(l,d,pro)=>`Free oggi: ${pro?'∞':l}/${pro?'∞':d}`,
+    alertNoCredits:"Hai finito i free di oggi.\nTorna domani o attiva Pro."
   },
-  en: {
+  en:{
     title:"Set your question",
-    past:"Past", future:"Future",
-    whatif:"What if (realistic)", wtf:"What the F (fun)",
-    yourq:"Your question",
-    addDetail:"Add a detail (optional)",
+    q:"Your question",
+    opt:"Add a detail (optional)",
     hint:"helps today's answer",
     tip:"Tip: switch style above; tone & colors adapt.",
-    go:"✨ Generate answer", clear:"Clear",
-    saved:"Questions saved for tomorrow",
-    free:(l,d)=>`Free today: ${l}/${d}`
+    gen:"✨ Generate answer", clear:"Clear",
+    future:"Future", past:"Past",
+    whatif:"What if (realistic)", wtf:"What the F (fun)",
+    saved:"Questions saved for tomorrow", hist:"Recent stories",
+    svuotaS:"Clear saved", svuotaH:"Clear stories",
+    chip1:"first signal", chip2:"2-week constraint", chip3:"specific place", chip4:"time window",
+    free:(l,d,pro)=>`Free today: ${pro?'∞':l}/${pro?'∞':d}`,
+    alertNoCredits:"Daily free limit reached.\nCome back tomorrow or enable Pro."
   }
 };
-const LS = localStorage;
-let lang = (LS.getItem('lang')||'it').toLowerCase();
-const T = I18N[lang] || I18N.it;
-document.documentElement.lang = lang;
+const LS=localStorage;
+const lang=(LS.getItem('lang')||'it').toLowerCase().startsWith('en')?'en':'it';
+const T=I18N[lang];
+document.documentElement.lang=lang;
 
-/* ===== Prefs & Theme ===== */
+/* ===== theme by style ===== */
 const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-if (!prefs.stile) prefs.stile = 'whatif';
-if (!prefs.periodo) prefs.periodo = 'future';
-LS.setItem('whatif_prefs', JSON.stringify(prefs));
-document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+let currentStyle=prefs.stile||'whatif';
+document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
 
-/* ===== UI text ===== */
-function applyTexts(){
-  document.getElementById('titleH1').textContent = T.title;
-  document.getElementById('chipPast').textContent = T.past;
-  document.getElementById('chipFuture').textContent = T.future;
-  document.getElementById('chipWhatIf').textContent = T.whatif;
-  document.getElementById('chipWTF').textContent = T.wtf;
-  document.getElementById('qLabel').textContent = T.yourq;
-  document.getElementById('detailLbl').textContent = T.addDetail;
-  document.getElementById('hintMeta').textContent = T.hint;
-  document.getElementById('tipNote').textContent = T.tip;
-  document.getElementById('goBtn').textContent = T.go;
-  document.getElementById('clearBtn').textContent = T.clear;
-  document.getElementById('savedTitle').textContent = T.saved;
-  document.getElementById('langBtn').textContent = lang.toUpperCase();
-}
-applyTexts();
+/* ===== bind texts ===== */
+const $=id=>document.getElementById(id);
+$('pageTitle').textContent=T.title;
+$('yourQ').textContent=T.q;
+$('optLabel').textContent=T.opt;
+$('hintMeta').textContent=T.hint;
+$('tipNote').textContent=T.tip;
+$('genBtn').textContent=T.gen;
+$('clearBtn').textContent=T.clear;
+$('chipFuture').textContent=T.future;
+$('chipPast').textContent=T.past;
+$('chipWhatIf').textContent=T.whatif;
+$('chipWTF').textContent=T.wtf;
+$('savedTitle').textContent=T.saved;
+$('histTitle').textContent=T.hist;
+$('clearSavedBtn').textContent=T.svuotaS;
+$('clearHistoryBtn').textContent=T.svuotaH;
+$('langBtn').textContent=lang.toUpperCase();
 
-/* ===== Crediti free ===== */
-const DAILY_FREE = 3;
-function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def} }
-function writeJSON(k,v){ LS.setItem(k,JSON.stringify(v)); }
-function ensureCreditsDay(){
-  const c = readJSON('whatif_credits',{date:todayStr(),used:0,pro:false,dev:false});
-  const t = todayStr();
-  if (c.date !== t){ c.date=t; c.used=0; writeJSON('whatif_credits',c); }
-  return c;
-}
-function freeLeft(){ const c=ensureCreditsDay(); return Math.max(0, DAILY_FREE-(c.used||0)); }
-function isPro(){ return !!ensureCreditsDay().pro; }
-function isDev(){ return !!ensureCreditsDay().dev; }
-function renderBadges(){
-  const left = (isPro()||isDev()) ? '∞' : freeLeft();
-  const tot  = (isPro()||isDev()) ? '∞' : DAILY_FREE;
-  const b = document.getElementById('freeBadge');
-  b.textContent = T.free(left, tot);
-}
-window.addEventListener('load', ()=>{ ensureCreditsDay(); renderBadges(); });
-document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ ensureCreditsDay(); renderBadges(); }});
+/* ===== nav ===== */
+$('backBtn').onclick=()=>history.back();
+$('homeBtn').onclick=()=>location.href='index.html';
+$('langBtn').onclick=()=>{LS.setItem('lang',lang==='it'?'en':'it');location.reload();};
 
-/* ===== Chips (periodo + stile) ===== */
-function syncChips(){
-  document.querySelectorAll('#periodChips .toggle').forEach(el=>{
-    el.classList.toggle('active', el.dataset.periodo===prefs.periodo);
-  });
-  document.querySelectorAll('#styleChips .chip').forEach(el=>{
-    el.classList.toggle('sel', el.dataset.style===prefs.stile);
-  });
-  document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-}
-syncChips();
-document.getElementById('periodChips').addEventListener('click', (e)=>{
-  const b=e.target.closest('.toggle'); if(!b) return;
-  prefs.periodo=b.dataset.periodo; writeJSON('whatif_prefs',prefs); syncChips();
+/* ===== chips suggerimenti ===== */
+const sugg=[T.chip1,T.chip2,T.chip3,T.chip4];
+const sugWrap=$('suggestChips');
+sugg.forEach(s=>{
+  const b=document.createElement('button'); b.className='chip'; b.textContent=s;
+  b.onclick=()=>{const i=$('extraInput'); i.value= i.value? (i.value+' • '+s) : s; i.focus();};
+  sugWrap.appendChild(b);
 });
-document.getElementById('styleChips').addEventListener('click', (e)=>{
+
+/* ===== style chips ===== */
+function refreshStyleChips(){
+  document.querySelectorAll('#styleChips .chip').forEach(el=>el.classList.toggle('sel', el.dataset.style===currentStyle));
+  document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
+}
+document.getElementById('styleChips').addEventListener('click',e=>{
   const b=e.target.closest('.chip'); if(!b) return;
-  prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs); syncChips();
+  currentStyle=b.dataset.style; prefs.stile=currentStyle; LS.setItem('whatif_prefs',JSON.stringify(prefs));
+  refreshStyleChips();
 });
+refreshStyleChips();
 
-/* ===== Extra chips ===== */
-const chipWrap=document.getElementById('extraChips');
-function setExtraChips(){
-  chipWrap.innerHTML='';
-  const labs = lang.startsWith('en')
-    ? ["first signal","2-week constraint","specific place","time window"]
-    : ["primo segnale","vincolo 2 settimane","luogo preciso","tempo disponibile"];
-  labs.forEach(txt=>{
-    const b=document.createElement('button'); b.className='chip'; b.textContent=txt;
-    b.addEventListener('click',()=>{
-      const i=document.getElementById('extraInput');
-      i.value = i.value ? (i.value+' • '+txt) : txt; i.focus();
-    });
-    chipWrap.appendChild(b);
+/* ===== period chips ===== */
+let currentPeriod = (prefs.period||'future');
+function refreshPeriod(){
+  document.querySelectorAll('#periodChips .chip').forEach(el=>el.classList.toggle('sel', el.dataset.period===currentPeriod));
+}
+document.getElementById('periodChips').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  currentPeriod=b.dataset.period; prefs.period=currentPeriod; LS.setItem('whatif_prefs',JSON.stringify(prefs));
+  refreshPeriod();
+});
+refreshPeriod();
+
+/* ===== credits ===== */
+const DAILY_FREE=3;
+function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function readJSON(k,def){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
+function writeJSON(k,v){LS.setItem(k,JSON.stringify(v))}
+function ensureDay(){
+  const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:false});
+  const t=todayStr();
+  if(c.date!==t){c.date=t;c.used=0;writeJSON('whatif_credits',c);}
+}
+function renderBadges(){
+  const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:false});
+  const left = c.pro ? '∞' : Math.max(0, DAILY_FREE-(c.used||0));
+  $('freeBadge').textContent=T.free(left,DAILY_FREE,!!c.pro);
+  $('freeBadge').classList.toggle('pro', !!c.pro);
+}
+ensureDay(); renderBadges();
+
+/* gestures: long press reset, triple click Pro */
+(function adminGestures(){
+  const b=$('freeBadge'); if(!b) return;
+  let pressTimer=null;
+  b.addEventListener('pointerdown',()=>{ clearTimeout(pressTimer); pressTimer=setTimeout(()=>{
+    const c=readJSON('whatif_credits',{}); c.date=todayStr(); c.used=0; writeJSON('whatif_credits',c); renderBadges();
+    alert(lang==='en'?'Credits reset for today ✅':'Crediti di oggi azzerati ✅');
+  },1500);});
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>clearTimeout(pressTimer)));
+  let clicks=0,t=null;
+  b.addEventListener('click',()=>{ clearTimeout(t); clicks++; t=setTimeout(()=>{
+    if(clicks>=3){ const c=readJSON('whatif_credits',{}); c.pro=!c.pro; writeJSON('whatif_credits',c); renderBadges(); alert(c.pro?'Pro: ON':'Pro: OFF'); }
+    clicks=0;
+  },250);});
+})();
+
+/* ===== clear ===== */
+$('clearBtn').onclick=()=>{ $('qInput').value=''; $('extraInput').value=''; };
+
+/* ===== generate ===== */
+$('genBtn').onclick=()=>{
+  const domanda=$('qInput').value.trim();
+  if(!domanda){ $('qInput').focus(); return; }
+  const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:false});
+  if(!c.pro && (c.used||0)>=DAILY_FREE){ alert(T.alertNoCredits); return; }
+  if(!c.pro){ c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderBadges(); }
+
+  writeJSON('whatif_session',{
+    domanda, extra: $('extraInput').value.trim()||'',
+    stile: currentStyle, periodo: currentPeriod, lang
+  });
+  // pulisco resume-id (forzo generazione)
+  LS.removeItem('resume_id');
+  location.href='fifth.html';
+};
+
+/* ===== saved + history ===== */
+function fmtDate(ts){const d=new Date(ts);return d.toLocaleString(lang==='en'?'en-GB':'it-IT',{hour12:false});}
+function drawList(title, arr, where, type){
+  const box=$(where); box.innerHTML='';
+  if(!arr.length){ box.innerHTML='<div class="meta">—</div>'; return; }
+  arr.forEach(item=>{
+    const row=document.createElement('div'); row.className='story';
+    const left=document.createElement('div');
+    left.innerHTML=`<div style="font-weight:700">${item.domanda||'—'}</div><div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
+    const right=document.createElement('div');
+    if(type==='saved'){
+      const use=document.createElement('button'); use.className='use'; use.textContent= lang==='en'?'Use':'Usa';
+      use.onclick=()=>{ $('qInput').value=item.domanda||''; currentStyle=item.stile||'whatif'; refreshStyleChips(); window.scrollTo({top:0,behavior:'smooth'}); };
+      right.appendChild(use);
+    }else{ // history
+      const play=document.createElement('button'); play.className='play'; play.textContent='▶';
+      play.onclick=()=>{ LS.setItem('resume_id', item.id); location.href='fifth.html'; };
+      right.appendChild(play);
+    }
+    row.appendChild(left); row.appendChild(right); box.appendChild(row);
   });
 }
-setExtraChips();
-
-/* ===== Nav ===== */
-document.getElementById('backBtn').onclick=()=>history.back();
-document.getElementById('homeBtn').onclick=()=>location.href='index.html';
-document.getElementById('langBtn').onclick=()=>{ lang = lang==='it' ? 'en' : 'it'; LS.setItem('lang',lang); location.reload(); };
-
-/* ===== Generazione / salvataggi ===== */
-const qInput=document.getElementById('qInput');
-const extraInput=document.getElementById('extraInput');
-
-function goToAnswer(consumaCredito){
-  const domanda=(qInput.value||'').trim();
-  if (!domanda){ qInput.focus(); return; }
-
-  // salva contesto per la 5a pagina
-  LS.setItem('domanda', domanda);
-  writeJSON('whatif_clarify_buffer',{ q:domanda, extra:(extraInput.value||'').trim() });
-
-  if (consumaCredito && !isPro() && !isDev()){
-    if (freeLeft() <= 0){
-      alert(lang.startsWith('en')
-        ? "You've used today's free answers. Come back tomorrow or upgrade to Pro."
-        : "Hai esaurito le risposte gratuite di oggi. Torna domani o passa a Pro.");
-      return;
-    }
-    const c=ensureCreditsDay(); c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderBadges();
-  }
-
-  location.href = 'fifth.html';
+function renderLists(){
+  const hist=readJSON('cronologia',[]);
+  const saved=readJSON('salvate',[]);
+  drawList(T.hist,hist,'storyList','hist');
+  drawList(T.saved,saved,'savedBody','saved');
 }
+renderLists();
 
-document.getElementById('goBtn').onclick=()=> goToAnswer(true);
-document.getElementById('clearBtn').onclick=()=>{ qInput.value=''; extraInput.value=''; qInput.focus(); };
+$('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderLists(); };
+$('clearSavedBtn').onclick=()=>{ LS.removeItem('salvate'); renderLists(); };
 
-/* ===== Disclosure salvate ===== */
-const savedHeader = document.getElementById('savedHeader');
-const savedCard   = document.getElementById('savedCard');
-savedHeader.addEventListener('click', ()=>{
-  savedCard.classList.toggle('collapsed');
-  document.getElementById('savedBody').classList.toggle('hidden');
-});
-
-/* ===== Liste: cronologia + salvate ===== */
-function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(lang.startsWith('en')?'en-GB':'it-IT',{hour12:false}); }
-function renderStories(){
-  const hist = readJSON('cronologia',[]);
-  const saved = readJSON('salvate',[]);
-  const box = document.getElementById('storyList');
-  box.innerHTML = '';
-
-  const section = (title, arr)=>{
-    if (!arr.length) return;
-    const h = document.createElement('div');
-    h.className='hr';
-    box.appendChild(h);
-    arr.forEach(item=>{
-      const div=document.createElement('div'); div.className='story';
-      const left=document.createElement('div');
-      left.innerHTML = `<div style="font-weight:700">${item.domanda||'—'}</div>
-                        <div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
-      const play=document.createElement('button'); play.className='play'; play.textContent='▶';
-      play.onclick=()=>{ // riproduci SENZA rigenerare
-        LS.setItem('resume_id', item.id);
-        location.href='fifth.html';
-      };
-      div.appendChild(left); div.appendChild(play); box.appendChild(div);
-    });
-  };
-
-  section(T.saved, saved);
-  section(lang.startsWith('en')?'Recent stories':'Storie recenti', hist);
+/* collapsible */
+function makeCollapsible(cardId){
+  const card=$(cardId);
+  const caret=card.querySelector('.caret');
+  card.querySelector('.header').addEventListener('click',()=>{
+    card.classList.toggle('collapsed');
+    caret.textContent = card.classList.contains('collapsed')?'▾':'▴';
+  });
 }
-renderStories();
-
-/* ===== Svuota ===== */
-document.getElementById('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
-document.getElementById('clearSavedBtn').onclick=()=>{ LS.removeItem('salvate'); renderStories(); };
+makeCollapsible('savedCard');
+makeCollapsible('historyCard');
 </script>
 </body>
 </html>
