@@ -1,29 +1,27 @@
-// /api/ask.js — definitivo (IT/EN) con esempi approvati e fix robustezza
-
+// /api/ask.js
 import OpenAI from "openai";
 
 /* ========= Setup ========= */
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL_TEXT = "gpt-4o-mini";
-const DEBUG = String(process.env.WHATIF_DEBUG || "") === "1";
 
+/* ========= Utils ========= */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-/* ========= Utils ========= */
 function detectLang(text = "") {
+  // semplice euristica: se molti token inglesi, usa EN
   const enHits = (text.match(/\b(what|if|and|or|you|should|would|move|work|buy|motor|bike|city)\b/gi) || []).length;
-  const itHits = (text.match(/\b(e|se|quando|perché|moto|tornassi|trasferir|lavor|comprare|acquistare|aquila)\b/gi) || []).length;
+  const itHits = (text.match(/\b(e|se|quando|perché|moto|tornassi|trasferir|lavor|comprare|acquistare)\b/gi) || []).length;
   return enHits > itHits ? "en" : "it";
 }
 
 function classifyTopic(q = "") {
-  const s = (q || "").toLowerCase();
+  const s = q.toLowerCase();
   if (/(moto|motor(e|bike)|scooter|vespa)/.test(s)) return "moto";
   if (/(barca|vela|gommone|yacht|boat)/.test(s)) return "barca";
-  if (/(tornare|tornassi|trasferi|trasloco|vivere a|move|relocat)/.test(s)) return "trasferimento";
-  if (/(lugano|aquila|l'aquila|milano|roma|verona|bussolengo|londra|zurigo)/.test(s)) return "città";
-  if (/(lavoro|job|ricercatore|azienda|ufficio|work|career)/.test(s)) return "lavoro";
+  if (/(tornassi|trasferi|trasloco|vivere a|l'aquila|aquila|verona|lugano|milano|roma|move|relocat)/.test(s)) return "città";
+  if (/(lavoro|job|ricercatore|azienda|ufficio|work)/.test(s)) return "lavoro";
   if (/(comprare|acquistare|buy|purchase)/.test(s)) return "acquisto";
   return "generale";
 }
@@ -38,242 +36,178 @@ function todayInfo(lang) {
   return `${weekday}, ${date} • ${hh}:${mm}`;
 }
 
-/* ========= Exemplars approvati ========= */
-const EXEMPLARS_IT = {
-  whatif: [
-`E se decidessi di tornare all’Aquila?
-Ti conosco: diresti che è solo per cambiare aria, ma non è vero.
-Hai bisogno di riconoscere le strade, non di scoprirne di nuove.
-Ti mancano i ritmi che capiscono il tuo silenzio, non i locali nuovi.
-All’inizio penseresti di esserti fermato, ma in realtà stai solo respirando come prima non riuscivi più.
-Non cerchi una città: cerchi te stesso in una versione meno rumorosa.
-La domanda vera non è “torno?” ma “sono pronto a restare?”.
-Continua domani: capiremo cosa ti aspetta quando arrivi.`,
-
-`Il ritorno non è mai come te lo ricordavi.
-Ti stupirà quanto in fretta la mente ricostruisce le abitudini, anche quelle che credevi superate.
-Ci saranno giorni in cui ti sentirai fuori posto, eppure più centrato che mai.
-All’Aquila le montagne non cambiano, ma tu sì — ed è questo l’equilibrio difficile.
-Oggi osserva solo una cosa: cosa ti fa sentire di nuovo parte, e cosa ti tira indietro.
-Domani, la svolta.`,
-
-`Dopo un po’ smetterai di contare le differenze.
-Capirai che “tornare” non era l’obiettivo, ma il pretesto per guardarti meglio.
-Ci sarà un momento preciso — un caffè, un pomeriggio di vento — in cui sentirai che va bene così.
-Non perché tutto è a posto, ma perché finalmente lo sei tu.
-E allora potrai dirlo: non sono tornato, mi sono ritrovato.`
-  ],
-  wtf: [
-`Tornare all’Aquila?
-Ah, geniale: la città dove anche il vento ha l’abbonamento mensile.
-Ti vedo già al bar, a dire “mi serviva cambiare aria”… mentre ordini il terzo corretto.
-Qui la gente non corre, ma ti batte comunque sul tempo.
-Hai lasciato Verona per il caos? Bravo: hai scelto un freddo che ti dà del tu.
-Ma sai che c’è? Ti farà bene.
-L’Aquila è un detox a base di vino rosso e silenzio.
-Vediamo domani se reggi la prima settimana senza insultare il meteo.`,
-
-`Tre giorni dopo: frigo vuoto, Wi-Fi pure.
-Due “ah, sei tornato?” e un “ma che t’è venuto in mente?” già incassati.
-Però ammettilo: ti senti strano, ma vivo.
-Qui anche il silenzio ha carattere: ti guarda e dice “non ti nascondere, eh?”.
-Stai facendo pace col vuoto e vi state pure simpatici.
-Tranquillo: la fase “forse non era un errore” sta arrivando.
-Domani vediamo se il bar sotto casa ti adotta ufficialmente.`,
-
-`Una settimana dopo: apri la finestra e non pensi più “che ci faccio qui?”.
-Hai il tuo bar, il tuo tavolo, e l’illusione che il vino scaldi più del termosifone.
-L’Aquila non è cambiata, ma tu sì: ridi anche quando va storto, e lo fai meglio di prima.
-Hai scoperto che la normalità, con il bicchiere giusto, è una festa sobria.
-Il difficile non era tornare: era restare senza prenderti troppo sul serio.
-E domani, chissà, magari succede pure qualcosa — niente spoiler.`
-  ]
-};
-
-const EXEMPLARS_EN = {
-  whatif: [
-`What if you moved back to L’Aquila?
-You know it wouldn’t be nostalgia — more like a balance experiment.
-You’d rediscover slowness: once annoying, now almost a luxury.
-At first you’d think “why am I here?”, then notice how breathing without noise feels good.
-Some places work like mirrors: they reflect without judging.
-L’Aquila would be one of those — it puts you back in line without asking anything.
-Tomorrow we’ll see what happens when it starts feeling yours again.`,
-
-`Returns never match the memory.
-Routines rebuild fast, with new rules.
-People ask “so, did it work?” like you won or lost something — you’re just learning to be.
-Some days feel suspended, yet you’re coming back into focus.
-Maybe you weren’t chasing change, just a different tempo.
-Today, notice what makes you feel good without needing an explanation.
-Tomorrow we’ll see if staying becomes a choice or a discovery.`,
-
-`One day you stop counting reasons for coming back.
-Life no longer needs rehearsals.
-You wake up, look outside, and realize calm isn’t stillness — it’s direction.
-You’re curious again, lighter, even a bit ironic about yourself.
-Nothing dramatic happened, yet something shifted.
-Maybe the point wasn’t returning, but staying on purpose.
-And then you can say it: you didn’t just come back — you found yourself.`
-  ],
-  wtf: [
-`Back to L’Aquila?
-Brilliant. A city where even the wind pays a monthly subscription.
-I can see you at the counter saying “needed fresh air”… while ordering the third espresso-with-attitude.
-You left the chaos? Congrats — you chose a cold that calls you by your first name.
-But hey, it might be good for you.
-L’Aquila is detox powered by red wine and friendly sarcasm.
-Tomorrow we’ll check if you survive a week without swearing at the weather.`,
-
-`Day three: empty fridge, empty Wi-Fi.
-Two “oh, you’re back?” and one “what were you thinking?” already collected.
-Admit it: odd feeling, but you’re alive.
-Even the silence has character here — it stares and says “don’t hide.”
-You’re making peace with the void, and you two get along.
-Relax: the “maybe this wasn’t a mistake” phase is loading.
-Tomorrow we’ll see if the bar downstairs adopts you.`,
-
-`One week in: you open the window and stop thinking “why am I here?”
-You’ve got your bar, your table, and the illusion that wine heats better than radiators.
-L’Aquila hasn’t changed — you have: you laugh when things go sideways, and you’re good at it.
-Turns out normal life, with the right glass, is a quiet party.
-The hard part wasn’t returning — it was staying without taking yourself too seriously.
-Tomorrow? Who knows — no spoilers.`
-  ]
-};
-
-/* ========= Persona & stile ========= */
-const PERSONAS = {
-  whatif: {
-    system: (lang) =>
-      isEn(lang)
-        ? `
-You are "What?f": warm, bright, quietly confident friend.
-Second person. 9–13 short, concrete sentences; no bullets.
-Zero melancholy; no coaching clichés; no purple prose.
-Sound like you *know* the user already (natural, never forced).
-Feel like a living scene that can continue tomorrow (soft cliffhanger).
-Never invent jobs, apartments, recruiters, landlords unless the user mentioned them.
-Tone: upbeat, clear, a little intellectual, curious about what’s next.
-Reply ONLY in English.`
-        : `
-Sei "What?f": amico lucido, asciutto e positivo.
-Seconda persona. 9–13 frasi brevi e concrete; niente elenchi.
-Zero malinconia, zero retorica, zero lirismi.
-Suona come se conoscessi già l’utente (naturale, mai forzato).
-Sembra un episodio che continua domani (gancio morbido).
-Non inventare appartamenti, uffici, recruiter, padroni di casa se l’utente non li cita.
-Tono: allegro, chiaro, un filo intellettuale, curioso del seguito.
-Rispondi SOLO in Italiano.`
-  },
-  wtf: {
-    system: (lang) =>
-      isEn(lang)
-        ? `
-You are "What the F": witty late-night bartender, cheerfully tipsy.
-Second person. 7–11 punchy lines; ≤15 words each; no bullets.
-Make them laugh, not sad. Warm sarcasm, never mean.
-Add one or two clever bar/booze metaphors per answer.
-Feel serial: end with a playful “to be continued” vibe.
-Never invent apartments, offices or recruiters unless the user mentioned them.
-Reply ONLY in English.`
-        : `
-Sei "What the F": barista notturno brillante, simpaticamente sbronzo.
-Seconda persona. 7–11 righe secche; max 15 parole; niente elenchi.
-Fai ridere, non deprimere. Sarcasmo caldo, mai cattivo.
-Una o due metafore da bancone a risposta.
-Senti la serialità: chiudi con un gancio da “continua”.
-Non inventare appartamenti, uffici o recruiter se l’utente non li cita.
-Rispondi SOLO in Italiano.`
-  }
-};
-
-/* ========= Closings seriali ========= */
-function episodicClosing(style = "whatif", lang = "it") {
-  const en = isEn(lang);
-  const soft = en
-    ? [
-        "Tomorrow I’ll nudge the story forward with two tiny questions.",
-        "Come back tomorrow; I’ll ask two quick things and push the thread.",
-        "We’ll keep the thread alive tomorrow — two small questions, new step."
-      ]
-    : [
-        "Domani ti faccio due micro-domande e spingiamo avanti la storia.",
-        "Torna domani: due domande rapide e vediamo dove va.",
-        "Domani riprendiamo il filo con due domande e un passo in più."
-      ];
-  const playful = en
-    ? [
-        "Tomorrow I’ll toss you two bar-questions and we’ll see where it leads.",
-        "Park your tab; tomorrow two quick questions and a new scene.",
-        "Same stool tomorrow: two sharp questions, story keeps pouring."
-      ]
-    : [
-        "Domani ti lancio due domande da bancone e vediamo dove porta.",
-        "Lascia il conto aperto: domani due domande e una scena nuova.",
-        "Stesso sgabello domani: due domande secche e la storia continua."
-      ];
-  return style === "wtf" ? pick(playful) : pick(soft);
-}
-
-/* ========= Mirror (confidenza naturale) ========= */
+/* ========= Mirror (apertura confidenziale) ========= */
 function mirrorLine(profile = {}, lang = "it") {
   const en = isEn(lang);
-  const name = (profile?.name || "").split(" ")[0];
-  const city = profile?.city_now || profile?.city || "";
-  const role = profile?.work_role || profile?.role || "";
-  const it = [
-    name ? `${name}, non ti muovi per capriccio: cerchi coerenza.` : "Non ti muovi per capriccio: cerchi coerenza.",
-    city ? `${city} ti tiene dritto, ma ogni tanto vuoi aria più larga.` : "Ti serve una base solida e una finestra aperta.",
-    role ? `Nel lavoro (${role}) reggi finché il perché resta acceso.` : "Reggi finché il perché resta acceso."
+  const name = (profile?.name || "").split(" ")[0] || "";
+  const baseIt = [
+    name ? `${name}, lo so: non cerchi drammi, cerchi mosse sensate.` : "Non cerchi drammi, cerchi mosse sensate.",
+    "Ti piace quando le cose hanno un ritmo e un perché.",
+    "Se capisci il quadro, decidi senza farla lunga."
   ];
-  const enPool = [
-    name ? `${name}, you don’t move on whims — you move for coherence.` : "You don’t move on whims — you move for coherence.",
-    city ? `${city} steadies you, but you still need a wider window.` : "You want one solid base and one open window.",
-    role ? `In ${role}, you hold as long as the “why” stays lit.` : "You hold as long as the “why” stays lit."
+  const baseEn = [
+    name ? `${name}, you don’t chase drama — you chase moves that make sense.` : "You don’t chase drama — you chase moves that make sense.",
+    "You like it when things have rhythm and a reason.",
+    "Once you see the board clearly, you decide fast."
   ];
-  return pick(en ? enPool : it);
+  return pick(en ? baseEn : baseIt);
 }
 
-/* ========= Clarify (mirato sul topic) ========= */
+/* ========= Clarify generator (sempre attinente) ========= */
+function keywordHints(q) {
+  const words = (q || "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .split(/\s+/)
+    .filter((w) => w.length >= 3);
+  const count = {};
+  words.forEach((w) => (count[w] = (count[w] || 0) + 1));
+  return Object.entries(count)
+    .sort((a, b) => b[1] - a[1])
+    .map((x) => x[0])
+    .filter((w) => !["all", "the", "and", "con", "per", "una", "che", "come"].includes(w))
+    .slice(0, 5);
+}
+
 function clarifyQuestions(domanda, periodo, lang = "it") {
   const en = isEn(lang);
   const topic = classifyTopic(domanda);
-  const Q = (id, it, enStr, phIt, phEn) => ({
-    id,
+  const hints = keywordHints(domanda);
+  const H = (it, enStr, phIt, phEn) => ({
     label: en ? enStr : it,
     placeholder: en ? phEn : phIt
   });
 
   if (topic === "moto") {
     return [
-      Q("timing", "Quando la prenderesti davvero?", "When would you actually buy it?", "questo mese / 3–6 mesi", "this month / 3–6 months"),
-      Q("use", "Uso principale?", "Main use?", "casa-lavoro / weekend / viaggi", "commute / weekends / trips"),
-      Q("budget", "Tetto di spesa mensile?", "Monthly budget ceiling?", "€ assicurazione + carburante", "$ insurance + fuel")
+      H("Uso principale?", "Main use?", "casa-lavoro / weekend / viaggi", "commute / weekends / trips"),
+      H("Finestra realistica per l’acquisto?", "Real purchase window?", "questo mese / 3–6 mesi", "this month / 3–6 months"),
+      H("Tetto mensile totale (assicurazione+carburante+manut.)?", "Monthly ceiling (insurance+fuel+maint)?", "€ al mese", "$ per month")
     ];
   }
-  if (topic === "trasferimento" || topic === "città") {
+  if (topic === "città") {
     return [
-      Q("window", "Finestra realistica per lo spostamento?", "Real window to move?", "entro 3 mesi / 6–12", "within 3 months / 6–12"),
-      Q("anchor", "Cosa ti ancora ora?", "What anchors you now?", "famiglia / lavoro / costi", "family / work / costs"),
-      Q("signal", "Segnale che direbbe: è giusto?", "Signal that says: it’s right?", "sonno/energia/risposte", "sleep/energy/callback")
+      H("Perché proprio lì, adesso?", "Why there, now?", "famiglia / lavoro / aria nuova", "family / work / fresh start"),
+      H("Qual è il segnale che ti direbbe ‘funziona’?", "What’s the signal that says ‘it works’?", "sonno / energia / risposta certa", "sleep / energy / clear callback"),
+      H("Finestra reale per muoverti?", "Real window to move?", "entro 3 mesi / 6–12 mesi", "within 3 months / 6–12 months")
     ];
   }
   if (topic === "lavoro") {
     return [
-      Q("why", "Il tuo perché oggi?", "Your current *why*?", "impatto / crescita / serenità", "impact / growth / calm"),
-      Q("option", "Opzioni sul tavolo?", "Options on the table?", "restare / cambiare team / uscire", "stay / switch / leave"),
-      Q("limit", "Vincolo più concreto?", "Hardest constraint?", "budget/tempo/relazioni", "budget/time/people")
+      H("Obiettivo nei prossimi 6 mesi?", "Goal in 6 months?", "impatto / crescita / serenità", "impact / growth / calm"),
+      H("Opzioni sul tavolo?", "Options on the table?", "restare / cambiare team / uscire", "stay / switch team / leave"),
+      H("Vincolo concreto?", "Hard constraint?", "budget / tempo / persone", "budget / time / people")
     ];
   }
+  // fallback: domande ancorate ai hints
+  const k = hints[0] || (en ? "your topic" : "il tema");
   return [
-    Q("window", "Finestra reale della decisione?", "Real decision window?", "questo mese / 3–6 / 12 mesi", "this month / 3–6 / 12 months"),
-    Q("signal", "Segnale personale da osservare?", "Personal sign to watch?", "sonno/energia/prima risposta", "sleep/energy/first reply"),
-    Q("limit", "Limite più concreto?", "Most concrete limit?", "budget/tempo/energia", "budget/time/energy")
+    H(`Cosa vuoi ottenere su ${k}?`, `What do you want on ${k}?`, "1 riga concreta", "1 concrete line"),
+    H("Finestra decisionale reale?", "Real decision window?", "questo mese / 3–6 / 12 mesi", "this month / 3–6 / 12 months"),
+    H("Vincolo non negoziabile?", "Non-negotiable constraint?", "budget/tempo/energia", "budget/time/energy")
   ];
 }
 
-/* ========= Handler ========= */
+/* ========= PERSONAS (con esempi approvati) ========= */
+const PERSONAS = {
+  wtf: {
+    system: (lang) => {
+      const en = isEn(lang);
+      return `
+You are "What the F": late-night witty bartender — sarcastic, playful, warm, never mean.
+One voice. Short, punchy, natural sentences (no fragment spam).
+Make the user LAUGH and feel seen. No cynicism or gloom.
+Forbidden words: hero, champion, destiny, dream, fairytale (and Italian equivalents).
+
+Hard rules:
+- Reply ONLY in ${en ? "English" : "Italiano"}.
+- 7–11 lines, one idea per line. No bullets, no numbered lists.
+- No moralizing, no “how-to”. Avoid purple prose.
+- Use the user's first name naturally if provided (max 1 time).
+- Cap imagery to 1 tiny concrete detail (weather/object/sound) if any.
+- End with a continuation hook like: "${en ? "Tomorrow I’ll ask you two micro-questions and we push the story forward." : "Domani ti faccio due micro-domande e spingiamo avanti la storia."}"
+
+Examples to imitate (tone only, do not repeat verbatim):
+
+[EXAMPLE — L’Aquila]
+"Tornare all’Aquila? Grande mossa: aria fresca, montagne gratis e caffè che sa di chiacchiera vera. Qui anche il traffico ha la decenza di salutarti prima di bloccarti. Ti siedi al bancone, il barista ti riconosce e finge di non sapere quante ne hai bevute. Parli, ridi, qualcuno ti offre un giro e all’improvviso il tempo smette di correre. Non c’è cinismo, solo quel tipo di confusione che fa bene al fegato e all’anima. Dai, non sei scappato: hai solo cambiato musica. Clink. Stesso bancone, domani rimescoliamo."
+
+[EXAMPLE — Moto]
+"Una moto? Bravo, ${en ? "my friend" : "amico"}: vento in faccia, parcheggi come se fossi VIP, e una scusa onesta per allungare la strada al ritorno. Ti vedo già: casco in mano, sorriso scemo, e quella pace che arriva solo quando il motore fa ‘ok, ci sono anch’io’. I conti li fai, ma stavolta non ti rovinano la festa. Non stai comprando un capriccio: stai comprando chilometri di buon umore. ${en ? "Deal?" : "Si fa?"} (E no, non te la rubano: gliela fai ascoltare domani.)"
+`.trim();
+    }
+  },
+  whatif: {
+    system: (lang) => {
+      const en = isEn(lang);
+      return `
+You are "What?f": empathetic, clear, realistic-positive. A friend who knows the user well.
+No melancholy. No poetry. Concrete, breathable writing.
+
+Hard rules:
+- Reply ONLY in ${en ? "English" : "Italiano"}.
+- 9–12 compact sentences, natural flow. No bullets/lists.
+- Minimal imagery (0–2 small touches). No metaphors chains.
+- Use the user's first name naturally if provided (max 1 time).
+- End with a continuation hook like: "${en ? "Tomorrow I’ll ask two micro-questions and we move the story one step." : "Domani ti faccio due micro-domande e la muoviamo di un passo."}"
+
+Examples to imitate (tone only, do not repeat verbatim):
+
+[EXAMPLE — L’Aquila]
+"Non lo faresti per scappare, ma per respirare meglio. Ti serve ogni tanto: tornare dove le giornate hanno il ritmo giusto, dove ti basta poco per stare bene. All’Aquila potresti ricominciare senza dover ricominciare da zero — solo con un passo più tuo. La gente giusta, il caffè di sempre, e quella sensazione di ‘ok, adesso va bene così’. Quando succede, lo riconosci subito: non è nostalgia, è equilibrio che torna. Hai già girato la chiave, il resto prende forma domani."
+
+[EXAMPLE — Moto]
+"Se la prendi, cambia il modo in cui ti muovi e pensi al tempo. Smetti di ‘arrivare’ e inizi ‘a stare’ nel tragitto. Ti conosci: finché il perché resta acceso, la scelta tiene. La moto non risolve niente da sola, ma ti regala spazio mentale e due ore a settimana che senti davvero tue. Se questo è il punto, è già quasi deciso."
+`.trim();
+    }
+  }
+};
+
+/* ========= User prompt builder ========= */
+function buildUserPrompt({ domanda, lang, stile, topic, profile, clarifications }) {
+  const en = isEn(lang);
+  const name = (profile?.name || "").split(" ")[0] || "";
+  const mirror = mirrorLine(profile, lang);
+
+  const closing = en
+    ? "Tomorrow I’ll ask you two micro-questions and we push the story forward."
+    : "Domani ti faccio due micro-domande e vediamo dove porta.";
+
+  const guard = `
+Hard constraints:
+- Stay strictly on the inferred topic: "${topic}".
+- No lists, no bullet points, no moralizing.
+- Zero purple prose; keep it light, witty/clear.
+- Do NOT invent jobs, apartments, or relationships not in the question.
+- If name exists, weave it once, naturally: "${name || "(nessun nome)"}".
+- The closing line MUST invite to continue tomorrow; do not add new questions today.
+- Close with: "${closing}"
+`.trim();
+
+  const header = en ? "Write a single, flowing answer." : "Scrivi una singola risposta fluida.";
+
+  const clar = Array.isArray(clarifications)
+    ? clarifications.join(", ")
+    : (clarifications && typeof clarifications === "object"
+        ? Object.values(clarifications).join(", ")
+        : "");
+
+  return `
+${en ? "Mirror-opening" : "Apertura confidenziale"}: ${mirror}
+
+${en ? "User question" : "Domanda"}: "${domanda}"
+${en ? "Extra details" : "Dettagli"}: ${clar || (en ? "none" : "nessuno")}
+${en ? "Style" : "Stile"}: ${stile === "wtf"
+    ? (en ? "What the F (witty, boozy, warm)" : "What the F (ironico, da bar, caldo)")
+    : (en ? "What?f (empathetic, dry, upbeat)" : "What?f (empatico, asciutto, positivo)")}
+
+${guard}
+
+${header}
+`.trim();
+}
+
+/* ========= HTTP handler ========= */
 export default async function handler(req, res) {
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -283,85 +217,59 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
   try {
-    // Body robust parsing (Next a volte passa stringa)
-    const raw = req.body ?? {};
-    const body = typeof raw === "string" ? JSON.parse(raw || "{}") : raw;
-
     const {
       domanda,
       lang: langIn = "auto",
       periodo = "future",
-      stile = "whatif",
+      stile = "whatif",      // "wtf" | "whatif"
       stream = false,
       clarify = false,
-      profilo = {},
+      profilo = {},          // { name?, city_now?, role? } – opzionale
       clarifications = [],
-      extra = ""
-    } = body;
+      extra = ""             // ignorato volutamente per evitare incoerenze
+    } = req.body || {};
 
-    if (DEBUG) console.log("[/api/ask] in:", { hasKey: !!process.env.OPENAI_API_KEY, domanda, langIn, stile, clarify, stream });
-
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ error: "server_error", detail: "OPENAI_API_KEY missing" });
-    }
-    if (!domanda || typeof domanda !== "string" || !domanda.trim()) {
+    if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
+    // lingua & topic
     const lang = langIn === "auto" ? detectLang(domanda) : langIn;
-    const en = isEn(lang);
     const topic = classifyTopic(domanda);
+    const persona = PERSONAS[stile === "wtf" ? "wtf" : "whatif"];
 
-    /* ----- Clarify branch ----- */
+    /* ----- Clarify branch (sempre attinente alla domanda) ----- */
     if (clarify) {
       const qs = clarifyQuestions(domanda, periodo, lang);
-      if (DEBUG) console.log("[/api/ask] clarify:", qs.map(q => q.label));
-      return res.status(200).json({ questions: qs, lang, topic });
+      return res.status(200).json({ questions: qs });
     }
 
     /* ----- Generation branch ----- */
-    const persona = PERSONAS[stile === "wtf" ? "wtf" : "whatif"];
-    const closing = episodicClosing(stile, lang);
-    const mirror = mirrorLine(profilo, lang);
-
-    // Esempi tono nella lingua corretta
-    const exemplars = en
-      ? (stile === "wtf" ? EXEMPLARS_EN.wtf : EXEMPLARS_EN.whatif)
-      : (stile === "wtf" ? EXEMPLARS_IT.wtf : EXEMPLARS_IT.whatif);
-
     const system = `
-${persona.system(lang).trim()}
+${persona.system(lang)}
 
 Today: ${todayInfo(lang)}
-Hard rules:
-- Reply ONLY in ${en ? "English" : "Italiano"}.
-- Stay strictly on topic inferred from the user question: "${topic}".
-- No lists/bullets; no direct questions before the final line.
-- Keep it upbeat; no melancholy; no bitterness.
-- DO NOT invent apartments, jobs, recruiters, money issues unless the user mentioned them.
 
-Style exemplars (do NOT copy; match tone/rhythm only):
-${exemplars.map((e, i) => `— Example #${i + 1}:\n${e}`).join("\n\n")}
+REMEMBER:
+- No melancholy. Keep it upbeat and human.
+- No "eroe/campione/sogno/destino/fiaba" or their English equivalents.
+- Never output lists or numbered steps; keep one flowing paragraph (What?f) or 7–11 single lines (WTF).
+- Natural sentences, not chopped. Punchy ≠ fragmented.
 `.trim();
 
-    const user = `
-${en ? "Mirror-opening" : "Apertura confidente"}: "${mirror}"
+    const user = buildUserPrompt({
+      domanda,
+      lang,
+      stile,
+      topic,
+      profile: profilo || {},
+      clarifications
+    });
 
-${en ? "User question" : "Domanda utente"}: "${domanda}"
-${en ? "Topic" : "Tema"}: ${topic}
-
-${en
-  ? `Write a single-paragraph answer that *feels* like an Episode of a mini-series (unless the user implies “day 2/3”). End with: "${closing}".`
-  : `Scrivi una risposta che *sembri* un Episodio di una mini-serie (a meno che l’utente non implichi “giorno 2/3”). Chiudi con: "${closing}".`
-}
-`.trim();
-
-    const temperature = stile === "wtf" ? 0.92 : 0.8;
-
-    // Streaming SSE opzionale
+    const temperature = stile === "wtf" ? 0.95 : 0.82;
     const doStream = stream || String(req.headers["x-whatif-stream"] || "") !== "";
+
     if (doStream) {
-      if (DEBUG) console.log("[/api/ask] → OpenAI stream start");
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
       res.setHeader("Connection", "keep-alive");
@@ -370,7 +278,8 @@ ${en
         model: MODEL_TEXT,
         temperature,
         stream: true,
-        max_tokens: 700,
+        max_tokens: 900,
+        stop: ["\n- ", "\n• ", "\n1. ", "\n2. ", "\n•\t"], // blocca elenchi
         messages: [
           { role: "system", content: system },
           { role: "user", content: user }
@@ -382,16 +291,15 @@ ${en
         if (delta) res.write(`data: ${JSON.stringify({ token: delta })}\n\n`);
       }
       res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-      if (DEBUG) console.log("[/api/ask] ← OpenAI stream end");
       return res.end();
     }
 
     // Non-stream
-    if (DEBUG) console.log("[/api/ask] → OpenAI non-stream call");
     const c = await client.chat.completions.create({
       model: MODEL_TEXT,
       temperature,
-      max_tokens: 700,
+      max_tokens: 900,
+      stop: ["\n- ", "\n• ", "\n1. ", "\n2. ", "\n•\t"], // blocca elenchi
       messages: [
         { role: "system", content: system },
         { role: "user", content: user }
@@ -399,11 +307,10 @@ ${en
     });
 
     const text = c.choices?.[0]?.message?.content?.trim() || "";
-    if (DEBUG) console.log("[/api/ask] ← OK len:", text.length);
     return res.status(200).json({ answer: text, lang, topic });
 
   } catch (err) {
-    console.error("[/api/ask] ERROR:", err?.response?.data || err?.message || err);
+    console.error("API /ask error:", err);
     return res.status(500).json({ error: "server_error", detail: err?.message || "unknown" });
   }
 }
