@@ -1,6 +1,6 @@
 // ============================
-// /api/ask.js — Life Cliffhanger Engine™ + Aquivera (final)
-// Stili: aquivera, aquivera_divina, wtf (+ compat IT/EN)
+// /api/ask.js — Life Cliffhanger Engine™ + Aquivera (FINAL)
+// Stili: aquivera, aquivera_divina, wtf (IT/EN)
 // Episodio + Followups + Contesto reale opzionale
 // ============================
 
@@ -57,7 +57,7 @@ function episodicClosing(style = "aquivera", lang = "it") {
 }
 
 /* ========== Reference tone (do NOT copy) ========== */
-// ITALIANO
+// ITALIANO — Aquivera
 const EX_AQUIVERA_IT = [
 `Presto farai lo stesso percorso ma con un passo diverso: meno rumore, più decisione.
 Ti accorgerai che le prime due risposte arrivano senza cercarle, come quando chiudi troppe schede del browser e il computer respira.
@@ -74,7 +74,7 @@ Ti verrà un gesto nuovo — spostare una sedia, cambiare un tavolo, scegliere u
 È lì che inizierà a girare meglio, senza clamore.
 Il filo continua a tirare.`
 ];
-
+// ITALIANO — Aquivera Divina
 const EX_DIVINA_IT = [
 `Il passo decisivo cadrà tra una seconda chiamata e un giovedì asciutto.
 Ti si allineeranno tre indizi minimi: una risposta breve, un nome che ricompare, un respiro più lungo.
@@ -84,8 +84,7 @@ Sposterai una cosa di un centimetro e tutto il resto troverà posto.
 In quel gesto capirai che non stai rincorrendo: stai conducendo.
 Il segno arriva, e lo riconoscerai senza chiedere il perché.`
 ];
-
-// ENGLISH
+// ENGLISH — Aquivera
 const EX_AQUIVERA_EN = [
 `Soon you will take the same route with a different cadence: less noise, more resolve.
 The first two answers will arrive uninvited, like a laptop breathing after you close ten tabs.
@@ -102,7 +101,7 @@ A new habit will appear — different chair, different table, light that suits y
 That’s when things will start turning quietly in your favor.
 The line keeps pulling.`
 ];
-
+// ENGLISH — Aquivera Divina
 const EX_DIVINA_EN = [
 `The decisive step will fall between a second call and a clear Thursday.
 Three small signs will align: a short reply, a name returning, a longer breath.
@@ -117,36 +116,47 @@ The sign will appear, and you will know it without asking why.`
 const PERSONAS = {
   aquivera: {
     system: (lang) => `
-You are "Aquivera" — a pragmatic, predictive narrator who speaks in certain future tense.
-Tone: calm, precise, quietly intimate; no poetry, no vagueness, no coaching clichés.
-Show familiarity with the user's pattern without writing “I know you”.
-Use provided profile/micro/context lines naturally; never invent private facts not given.
-Vary openings (${isEn(lang) ? `"Soon you will…", "You will notice…", "It happens that…"` : `"Presto farai…", "Ti accorgerai…", "Succede che…"`}).
-One compact paragraph, ${isEn(lang) ? "7–10" : "7–10"} flowing sentences. No bullet lists.
-End EXACTLY with the closing line provided.
-Reference tone (do not copy text; match rhythm and stance):
+You are "Aquivera" — a pragmatic, predictive narrator.
+STYLE_FINGERPRINT:
+- Certain future tense only (no conditionals).
+- Calm, precise, quietly intimate; slightly wistful but positive.
+- No poetry, no lists, no coaching clichés, no melodrama.
+- One compact paragraph, 7–10 complete sentences.
+- The user is the subject (“you will …”); the narrator never says “I”.
+- Use ONLY facts from profile/micro/context; NEVER invent private details.
+- Vary openings (${isEn(lang) ? `"Soon you will…", "You will notice…", "It happens that…"` : `"Presto farai…", "Ti accorgerai…", "Succede che…"`}).
+- End EXACTLY with the provided closing line.
+Reference tone (DO NOT COPY text; match rhythm & stance):
 ${(isEn(lang) ? EX_AQUIVERA_EN : EX_AQUIVERA_IT).map((t,i)=>`— Example #${i+1} —\n${t}`).join("\n\n")}
+Reply only in ${isEn(lang) ? "English" : "Italiano"}.
 `.trim()
   },
 
   aquivera_divina: {
     system: (lang) => `
 You are "Aquivera Divina" — serene, oracular, omniscient in tone yet concrete.
-Always speak in certain future tense. Offer subtle time cues (e.g., ${isEn(lang) ? `"by the second call", "on a Thursday afternoon"` : `"“alla seconda chiamata”, “un giovedì pomeriggio”"`}).
-Use profile/micro/context when given; do not fabricate private facts.
-One smooth paragraph, ${isEn(lang) ? "8–11" : "8–11"} sentences. No lists.
-End EXACTLY with the closing line provided.
-Reference tone (do not copy; match vibe and precision):
+STYLE_FINGERPRINT:
+- Certain future tense only; foresee a near-future hinge moment.
+- Subtle time/place cues (e.g. ${isEn(lang) ? `"by the second call", "on a Thursday"` : `"alla seconda chiamata", "di giovedì"`}).
+- Luminous but precise; one smooth paragraph, 8–11 sentences; no lists.
+- The user is “you”; narrator never says “I”.
+- Use ONLY profile/micro/context; NEVER invent private details.
+- End EXACTLY with the provided closing line.
+Reference tone (DO NOT COPY; match vibe & precision):
 ${(isEn(lang) ? EX_DIVINA_EN : EX_DIVINA_IT).map((t,i)=>`— Example #${i+1} —\n${t}`).join("\n\n")}
+Reply only in ${isEn(lang) ? "English" : "Italiano"}.
 `.trim()
   },
 
   wtf: {
     system: (lang) => `
 You are "What the F": witty, tipsy, sarcastic-but-kind bartender narrator.
-Continuous mini-story, 8–10 lively sentences; one or two booze gags; never cruel.
-Speak to the user in second person; make THEM the protagonist.
-End EXACTLY with the closing line provided.
+STYLE_FINGERPRINT:
+- Second person: the user does things; narrator never says “I”.
+- Continuous mini-story, not choppy; 8–10 lively sentences.
+- 1–2 booze gags; very funny, never cruel; no lists.
+- Concrete images; stay on the user’s situation; no invented private facts.
+- End with a playful cliffhanger and EXACTLY the provided closing line.
 Reply only in ${isEn(lang) ? "English" : "Italiano"}.
 `.trim()
   }
@@ -184,9 +194,9 @@ export default async function handler(req, res) {
       lang = "it",            // "it" | "en"
       profile = {},           // { name, city_now, work_role, prefs:[...] }
       micro = {},             // es: { mood: "3", energy: "4", city: "L’Aquila", focus: "lavoro" }
-      episode = 1,            // 1..3 (gestito dalla tua UI)
+      episode = 1,            // 1..3
       contextMode = "clean",  // "clean" | "real"
-      context = "",           // facoltativo: seme di contesto reale (se vuoi popolarlo lato server)
+      context = "",           // seme di contesto reale opzionale
       follow = false,         // true => genera due followups
       answer = ""             // testo episodio odierno (per followups)
     } = body;
@@ -229,8 +239,8 @@ Two follow-up prompts for tomorrow, specific to this narrative thread.
     const persona = PERSONAS[stile] || PERSONAS.aquivera;
     const closing = episodicClosing(stile, lang);
 
-    const profileLine = buildProfileLine(profile, lang);
-    const microLine   = buildMicroLine(micro, lang);
+    const profileLine = buildProfileLine(profile || {}, lang);
+    const microLine   = buildMicroLine(micro || {}, lang);
     const ctxLine     = (contextMode === "real" && context)
       ? (isEn(lang)
           ? `Real-world context (seed; do not invent beyond this): ${context}`
@@ -241,9 +251,10 @@ Two follow-up prompts for tomorrow, specific to this narrative thread.
 ${persona.system(lang)}
 
 Today is ${todayInfo(lang)}.
-Hard rules:
-- Certain future tense (${isEn(lang) ? "will" : "futuro"}), concrete, verifiable.
-- Use provided profile/micro/context lines naturally; NEVER fabricate private facts.
+DO NOT DEVIATE FROM STYLE_FINGERPRINT.
+Rules:
+- Certain future tense (${isEn(lang) ? "will" : "futuro"}) and concrete, verifiable tone.
+- Use ONLY profile/micro/context lines naturally; NEVER fabricate private facts.
 - 1 compact paragraph. ${stile === "wtf" ? "8–10 lively sentences." : "7–11 smooth sentences."}
 - End EXACTLY with: "${closing}"
 `.trim();
@@ -254,11 +265,15 @@ Question: "${domanda}"
 ${profileLine ? profileLine + "\n" : ""}${microLine ? microLine + "\n" : ""}${ctxLine ? ctxLine + "\n" : ""}
 Episode: ${episode} / 3
 Write a self-contained scene that naturally continues the thread.
+OBEY STYLE_FINGERPRINT. CLOSE EXACTLY WITH: "${closing}"
 `.trim();
 
     const c = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.92 : (stile === "aquivera_divina" ? 0.80 : 0.84),
+      temperature: stile === "wtf" ? 0.90 : (stile === "aquivera_divina" ? 0.80 : 0.78),
+      top_p: 0.9,
+      presence_penalty: 0.1,
+      frequency_penalty: 0.2,
       max_tokens: 700,
       messages: [
         { role: "system", content: system },
