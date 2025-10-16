@@ -1,157 +1,103 @@
 // ============================
 // /api/ask.js — The Life Cliffhanger Engine™
-// versione stabile e completa (IT/EN) con contesto reale automatico
+// Stili: aquivera, aquivera_divina, wtf
+// Follow-ups + Suggestions coerenti
 // ============================
 
 import OpenAI from "openai";
 
-// ====== Setup ======
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const MODEL = "gpt-4o-mini"; // affidabile e rapido
+const MODEL = "gpt-4o-mini"; // stabile e veloce
 
-// News: opzionale — metti una key (GNews o simile) in NEWS_API_KEY
-const NEWS_API = process.env.NEWS_API_KEY || "";
-
-// ====== Utilities ======
+/* ---------- Helpers ---------- */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
-const clamp = (s, n) => (s && s.length > n ? s.slice(0, n) + "…" : s || "");
-const withTimeout = (p, ms = 2500) =>
-  Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error("timeout")), ms))]);
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-function detectLang(text = "") {
-  const enHits = (text.match(/\b(what|if|you|move|work|city|buy|should|back|life)\b/gi) || []).length;
-  const itHits = (text.match(/\b(e|se|quando|perché|vivere|tornare|aquila|verona|lugano|roma)\b/gi) || []).length;
-  return enHits > itHits ? "en" : "it";
+function episodicClosing(style = "aquivera", lang = "it") {
+  const en = isEn(lang);
+  const base = en
+    ? ["Let’s see where this takes you next.", "You’ll feel the next step sooner than you expect.", "We’ll pick up the thread right here."]
+    : ["Vediamo dove ti porta il prossimo passo.", "Ti accorgi prima di quanto pensi del seguito.", "Riprendiamo il filo da qui."];
+  const divina = en
+    ? ["The pattern is set; the sign will appear.", "The hour is near. Keep your eyes soft.", "Your thread is already pulling you onward."]
+    : ["Il disegno è tracciato; il segno arriva.", "L’ora è vicina. Tieni lo sguardo morbido.", "Il tuo filo già ti tira in avanti."];
+  const wtf = en
+    ? ["Keep the glass. The next scene pours itself.", "Park your tab—tomorrow gets noisy.", "The punchline lands tomorrow."]
+    : ["Tieni il bicchiere: la prossima scena si versa da sola.", "Conta aperto: domani fa rumore.", "La battuta atterra domani."];
+
+  if (style === "aquivera_divina") return pick(divina);
+  if (style === "wtf") return pick(wtf);
+  return pick(base);
 }
 
-function guessCityFromQuestion(q = "") {
-  const m = q.match(/\b(l['’]aquila|aquila|roma|milano|verona|lugano|napoli|torino|bologna|londra|zurigo)\b/i);
-  return m ? m[1] : "";
-}
-
-function todayISO() {
-  const d = new Date();
-  return d.toISOString().slice(0, 10);
-}
-
-// ====== Real-world context (all optional; degrade gracefully) ======
-async function fetchWeather(city = "", lang = "it") {
-  // Open-Meteo via geocoding (no key). If geocoding fails, skip.
-  try {
-    const geo = await withTimeout(
-      fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=${lang}`)
-    );
-    const gj = await geo.json();
-    if (!gj?.results?.[0]) return null;
-    const { latitude, longitude, name, country } = gj.results[0];
-    const w = await withTimeout(
-      fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,precipitation&timezone=auto`
-      )
-    );
-    const wj = await w.json();
-    const cur = wj?.current || {};
-    return {
-      label: `${name}${country ? ", " + country : ""}`,
-      temp: cur.temperature_2m,
-      precipitation: cur.precipitation,
-    };
-  } catch {
-    return null;
-  }
-}
-
-async function fetchHoliday(lang = "it") {
-  // Nager.Date supports many countries; we’ll default to IT.
-  try {
-    const year = new Date().getFullYear();
-    const country = isEn(lang) ? "GB" : "IT";
-    const res = await withTimeout(fetch(`https://date.nager.at/api/v3/publicholidays/${year}/${country}`));
-    const arr = await res.json();
-    const today = todayISO();
-    const h = arr.find((x) => x.date === today);
-    if (!h) return null;
-    return { name: h.localName || h.name };
-  } catch {
-    return null;
-  }
-}
-
-async function fetchOnThisDay(lang = "it") {
-  // Wikipedia "On this day" summary
-  try {
-    const d = new Date();
-    const url = `https://byabbe.se/on-this-day/${d.getMonth() + 1}/${d.getDate()}/events.json`;
-    const r = await withTimeout(fetch(url));
-    const j = await r.json();
-    const pick = (j?.events || [])[0];
-    if (!pick) return null;
-    const txt = isEn(lang)
-      ? `${pick.year}: ${pick.description}`
-      : `${pick.year}: ${pick.description}`;
-    return { text: clamp(txt, 200) };
-  } catch {
-    return null;
-  }
-}
-
-async function fetchNews(city = "", lang = "it") {
-  if (!NEWS_API) return null;
-  try {
-    const q = city || (isEn(lang) ? "city life" : "cronaca locale");
-    const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(q)}&lang=${isEn(lang) ? "en" : "it"}&max=3&apikey=${NEWS_API}`;
-    const r = await withTimeout(fetch(url));
-    const j = await r.json();
-    if (!j?.articles?.length) return null;
-    const titles = j.articles.map((a) => a.title).slice(0, 3);
-    return { titles };
-  } catch {
-    return null;
-  }
-}
-
-// ====== Personas ======
-const Whatif_IT = `
-Tu sei "What?f": voce lucida, realistica e predittiva; conosci bene l'utente.
-Niente poesia o retorica: visivo, umano, profetico. 7–10 frasi complete, non spezzate.
-Varia l’incipit (“Presto ti accorgi…”, “Ti conosco…”, “Succede che…”, “Tra poco…”).
-Contesto reale consentito: puoi usare solo ciò che ricevi dentro CONTEXT_REAL (meteo/festività/notizie/oggi nella storia).
-Mai inventare fatti; collega la risposta alla domanda dell’utente e al micro-profilo (mood, cosa ti tiene, come decidi, segno).
-Chiudi con un gancio morbido che faccia venire voglia di tornare domani.
-Rispondi SOLO in Italiano.
-`;
-
-const Whatif_EN = `
-You are "What?f": clear, realistic, predictive; you know the user well.
-No purple prose: visual, human, quietly prophetic. 7–10 full sentences.
+/* ---------- Personas (IT/EN) ---------- */
+const PERSONA = {
+  aquivera: (lang) => isEn(lang) ? `
+You are Aquivera — a clear, cultured, predictive narrator. You know the user well.
+Write 7–10 smooth sentences, no lists. Visual, grounded, quietly prophetic.
+Use reality-aware touches (season, weekdays, city mood), but don’t fabricate personal facts.
 Vary openings (“Soon you notice…”, “You always do this…”, “It turns out…”).
-Real-world context allowed ONLY from CONTEXT_REAL (weather/holiday/news/on-this-day). Never invent events.
-Tie the answer to the user's question and micro-profile (mood, anchor, decisions, zodiac).
-End with a soft hook that invites tomorrow. Reply ONLY in English.
-`;
+End with a soft, forward pull to tomorrow.
+Reply ONLY in English.
+` : `
+Sei Aquivera — narratrice lucida, colta, predittiva. Conosci bene l’utente.
+Scrivi 7–10 frasi fluide, senza elenchi. Visiva, concreta, lievemente profetica.
+Accenna al contesto reale (stagione, ritmo della città) senza inventare fatti personali.
+Varia gli inizi (“Tra poco ti accorgi…”, “Con te succede sempre…”).
+Chiudi con un invito morbido al seguito di domani.
+Rispondi SOLO in Italiano.
+`,
+  aquivera_divina: (lang) => isEn(lang) ? `
+You are Aquivera Divina — omniscient, oracular, elegant. Still kind and concrete.
+7–10 flowing lines. You read the user’s pattern and foresee a near-future hinge moment.
+Use subtle real-world hints (weather, weekday mood) but never invent private facts.
+Close with a prophetic whisper that pulls to tomorrow.
+Reply ONLY in English.
+` : `
+Sei Aquivera Divina — onnisciente, oracolare, elegante. Ma concreta e benevola.
+7–10 righe fluide. Leggi il pattern dell’utente e prefiguri un momento-chiave a breve.
+Inserisci cenni realistici (meteo, ritmo del giorno), senza inventare fatti privati.
+Chiudi con un sussurro profetico che spinge a domani.
+Rispondi SOLO in Italiano.
+`,
+  wtf: (lang) => isEn(lang) ? `
+You are "What the F": witty, tipsy, brutally sarcastic but kind.
+8–10 lively sentences, continuous mini-story (not choppy). One or two booze gags.
+Make them laugh hard, never cruel. End with a playful cliffhanger for tomorrow.
+Reply ONLY in English.
+` : `
+Sei "What the F": brillante, alticcio, sarcastico ma affettuoso.
+8–10 frasi vive, racconto continuo (non spezzettato). Una o due gag alcoliche.
+Falli ridere forte, mai cattivo. Chiudi con un cliffhanger giocoso per domani.
+Rispondi SOLO in Italiano.
+`,
+};
 
-const Wtf_IT = `
-Tu sei "What the F": amico brillante da fine serata, sarcastico e un po' alticcio.
-Racconto continuo, divertente, 8–10 frasi, almeno un riferimento all’alcol.
-Puoi usare fatti reali SOLO da CONTEXT_REAL; niente invenzioni di notizie.
-Sii pungente ma affettuoso; sembra che conosci l’utente da anni.
-Chiudi con una battuta in sospeso. Rispondi SOLO in Italiano.
+/* ---------- Suggestions builder (post-episode) ---------- */
+function buildSuggestionPrompt({ domanda, answer, stile, lang }) {
+  const en = isEn(lang);
+  const sys = en ? `
+Generate 3 concise, on-topic SUGGESTIONS (not questions) to nudge the story forward tomorrow.
+They must derive from the user's question and today's answer tone (${stile}).
+Each suggestion must start with a verb. 5–12 words each. No lists in the JSON.
+Return JSON ONLY: {"suggestions":["...","...","..."]} in English.
+` : `
+Genera 3 SUGGERIMENTI concisi (non domande) per spingere avanti la storia domani.
+Devono derivare dalla domanda dell’utente e dal tono di oggi (${stile}).
+Ogni suggerimento inizi con un verbo. 5–12 parole ciascuno. Niente liste nel JSON.
+Restituisci SOLO JSON: {"suggestions":["...","...","..."]} in Italiano.
 `;
-
-const Wtf_EN = `
-You are "What the F": drunk-brilliant, sarcastic friend at 2AM.
-Continuous mini-story, 8–10 sentences, at least one alcohol gag.
-Real facts allowed ONLY from CONTEXT_REAL; no fabrication.
-Affectionate sarcasm, like you’ve known the user for years.
-End with a playful cliffhanger. Reply ONLY in English.
+  const user = en ? `
+User question: "${domanda}"
+Today's answer: "${(answer||"").slice(0,1200)}"
+` : `
+Domanda utente: "${domanda}"
+Risposta di oggi: "${(answer||"").slice(0,1200)}"
 `;
-
-function personaSystem(stile, lang) {
-  if (stile === "wtf") return isEn(lang) ? Wtf_EN : Wtf_IT;
-  return isEn(lang) ? Whatif_EN : Whatif_IT;
+  return { sys, user };
 }
 
-// ====== Handler ======
+/* ---------- HTTP handler ---------- */
 export default async function handler(req, res) {
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -167,120 +113,71 @@ export default async function handler(req, res) {
 
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const {
+      // core
       domanda = "",
-      stile = "whatif",
-      lang: langIn = "auto",
-      extra = "",
-      // micro-profilo dal client:
-      micro = {}, // { mood, anchor, decide, zodiac }
-      // follow: genera suggerimenti coerenti post-risposta
-      follow = false,
-      answer = "",
-      // facts
-      fantasy_mode = false,
+      stile = "aquivera",      // "aquivera" | "aquivera_divina" | "wtf"
+      lang = "it",             // "it" | "en"
+      extra = "",              // dettagli opzionali (profilo/micro-tratti)
+      // suggestions branch
+      suggestions = false,     // true => ritorna suggerimenti coerenti
+      answer = "",             // testo episodio, per generare suggerimenti coerenti
     } = body;
 
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    const lang = langIn === "auto" ? detectLang(domanda) : langIn;
-
-    // ====== Build CONTEXT_REAL (if not fantasy_mode) ======
-    let CONTEXT_REAL = "";
-    if (!fantasy_mode) {
-      const cityHint = guessCityFromQuestion(domanda);
-      const [w, h, otd, nw] = await Promise.all([
-        cityHint ? fetchWeather(cityHint, lang) : Promise.resolve(null),
-        fetchHoliday(lang),
-        fetchOnThisDay(lang),
-        fetchNews(cityHint, lang),
-      ]);
-
-      const parts = [];
-      if (w) parts.push(`Weather: ${w.label}: ${w.temp}°C, precipitation ${w.precipitation}mm`);
-      if (h) parts.push(`Holiday: ${h.name}`);
-      if (otd) parts.push(`OnThisDay: ${otd.text}`);
-      if (nw) parts.push(`News: ${nw.titles.join(" | ")}`);
-      if (parts.length) CONTEXT_REAL = parts.join("\n");
-    }
-
-    // ====== FOLLOW-UPS branch ======
-    if (follow) {
-      const system = `
-Generate exactly two short follow-up prompts for TOMORROW.
-They must be clearly connected to the user's question AND today's answer tone (${stile}).
-Return STRICT JSON: {"followups":["Q1","Q2"]}. Language: ${isEn(lang) ? "English" : "Italiano"}.
-`.trim();
-
-      const user = `
-QUESTION: "${domanda}"
-ANSWER_TODAY: "${clamp(answer, 1200)}"
-MICRO_PROFILE: ${JSON.stringify(micro)}
-CONTEXT_REAL:
-${CONTEXT_REAL || "(none)"}
-`.trim();
-
+    // branch: SUGGERIMENTI
+    if (suggestions) {
+      const { sys, user } = buildSuggestionPrompt({ domanda, answer, stile, lang });
       const r = await client.chat.completions.create({
         model: MODEL,
-        temperature: 0.7,
-        max_tokens: 200,
+        temperature: 0.5,
+        max_tokens: 220,
         messages: [
-          { role: "system", content: system },
-          { role: "user", content: user },
-        ],
+          { role: "system", content: sys },
+          { role: "user", content: user }
+        ]
       });
-      let out = {};
-      try {
-        out = JSON.parse(r.choices?.[0]?.message?.content || "{}");
-      } catch {}
-      if (!Array.isArray(out.followups) || out.followups.length < 2) {
-        out.followups = isEn(lang)
-          ? ["What small sign tomorrow would prove this is right?", "Which detail should we watch first?"]
-          : ["Quale piccolo segnale domani ti direbbe che è giusto?", "Da quale dettaglio partiamo davvero?"];
+      let raw = r.choices?.[0]?.message?.content?.trim() || "{}";
+      let out = { suggestions: [] };
+      try { out = JSON.parse(raw); } catch {}
+      if (!Array.isArray(out.suggestions) || out.suggestions.length < 3) {
+        out.suggestions = isEn(lang)
+          ? ["Note one concrete sign you’d expect tomorrow.",
+             "Name a tiny step you’d actually take.",
+             "Pick a place that sets the right rhythm."]
+          : ["Annota un segnale concreto che ti aspetti domani.",
+             "Scegli un passo minuscolo che faresti davvero.",
+             "Indica un luogo che imposti il ritmo giusto."];
       }
       return res.status(200).json(out);
     }
 
-    // ====== EPISODIO branch ======
-    const system = personaSystem(stile, lang);
-    const closing = isEn(lang)
-      ? (stile === "wtf"
-          ? "Keep the glass; the rest pours tomorrow."
-          : "Let’s see where this leads next.")
-      : (stile === "wtf"
-          ? "Tieni il bicchiere: il resto si versa domani."
-          : "Vediamo dove ti porta il seguito.");
+    // branch: EPISODIO
+    const systemPrompt = PERSONA[stile] ? PERSONA[stile](lang) : PERSONA.aquivera(lang);
+    const finalClosing = episodicClosing(stile, lang);
+    const userPrompt =
+      (isEn(lang)
+        ? `User question: "${domanda}". Extra: "${extra}". Close with: "${finalClosing}"`
+        : `Domanda: "${domanda}". Dettagli: "${extra}". Chiudi con: "${finalClosing}"`);
 
-    const user = `
-QUESTION: "${domanda.trim()}"${extra ? ` (${String(extra).trim()})` : ""}
-MICRO_PROFILE: ${JSON.stringify(micro)}
-CONTEXT_REAL (do NOT invent facts; use only these if relevant):
-${CONTEXT_REAL || "(none)"}
-
-Write a single episode in style "${stile}" with a gentle cliffhanger.
-End EXACTLY with: "${closing}"
-`.trim();
-
-    const c = await client.chat.completions.create({
+    const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.95 : 0.85,
-      max_tokens: 700,
       messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
       ],
+      temperature: stile === "wtf" ? 0.95 : (stile === "aquivera_divina" ? 0.9 : 0.85),
+      max_tokens: 700
     });
 
-    const text = c.choices?.[0]?.message?.content?.trim() || "";
-    if (!text) throw new Error("empty_model_response");
+    const out = completion?.choices?.[0]?.message?.content?.trim() || "";
+    if (!out) throw new Error("empty_model_response");
 
-    return res.status(200).json({
-      answer: text,
-      used_context: Boolean(CONTEXT_REAL),
-    });
+    return res.status(200).json({ answer: out, closing: finalClosing });
   } catch (err) {
-    console.error("[/api/ask] error:", err);
+    console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
 }
