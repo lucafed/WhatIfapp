@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>What?f — Domanda</title>
-<meta name="theme-color" content="#0B0B0C"/>
+<meta name="theme-color" content="#0B0B0C" />
 <style>
 :root{
   --bg:#0B0B0C; --bg2:#101414; --fg:#FFFFFF; --muted:#A0B2BA;
@@ -25,22 +25,18 @@ main{max-width:980px;margin:auto;padding:18px}
 .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
 h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:center}
 .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-.input,textarea,select{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
+.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
 .center{max-width:760px;margin:0 auto}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer} /* più piccole */
+.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
 .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-.story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
-.play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.04)}
 .meta{font-size:12px;color:var(--muted)}
-.tip{font-size:12px;color:var(--muted);margin-top:8px}
-.list{display:flex;flex-direction:column;gap:10px}
-.empty{color:var(--muted);font-size:14px}
-.hr{border:none;height:1px;background:rgba(255,255,255,.08);margin:10px 0}
-.sectionHead{display:flex;justify-content:space-between;align-items:center;cursor:pointer}
-.sectionHead h3{margin:0;color:var(--acc);font-size:16px}
-.rotate{transform:rotate(90deg)}
-.small{font-size:12px;color:var(--muted)}
+.icon{cursor:pointer;border:none;background:transparent;color:#fff;font-size:18px}
+hr.sep{border:none;height:1px;background:rgba(255,255,255,.08);margin:10px 0}
+summary{cursor:pointer}
+.hidden{display:none}
 </style>
 </head>
 <body>
@@ -54,18 +50,16 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
     </div>
     <div class="row">
       <span class="badge" id="freeBadge" title="">—</span>
-      <button class="btn" id="proBtn">Pro</button>
       <button class="btn" id="langBtn">IT</button>
     </div>
   </div>
 
   <h1 id="titleH1">Imposta la tua domanda</h1>
 
-  <!-- Periodo & stile -->
+  <!-- Stile -->
   <div class="card center">
     <div class="row" style="justify-content:space-between;align-items:center">
       <div class="row">
-        <span class="badge" id="periodoBadge">🕰️ —</span>
         <span class="badge" id="styleBadge">🎭 —</span>
       </div>
       <div class="chips" id="styleChips">
@@ -75,95 +69,79 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
     </div>
   </div>
 
-  <!-- Domanda -->
+  <!-- Domanda centrale -->
   <div class="card center">
     <h3 class="label" id="qLabel">La tua domanda</h3>
     <textarea id="qInput" rows="3" class="input" placeholder="E se tornassi a vivere all’Aquila?"></textarea>
 
-    <div style="margin-top:8px">
-      <div class="row" style="justify-content:space-between">
-        <div class="label" style="margin:0" id="addLabel">Aggiungi un dettaglio (opzionale)</div>
-        <span class="meta" id="hintMeta">aiuta la risposta di oggi</span>
-      </div>
-      <input id="extraInput" class="input" placeholder="es. primo segnale di successo, quartiere, budget…"/>
-      <div class="chips" id="extraChips" style="margin-top:6px"></div>
-      <p class="tip" id="tipNote">Tip: cambia stile sopra; tono e colori si adattano.</p>
+    <div class="row" style="margin-top:10px;justify-content:space-between">
+      <input id="extraInput" class="input" placeholder="Aggiungi un dettaglio (opzionale)…" />
+      <button class="btn ghost" id="suggestBtn">+ Suggerimenti</button>
     </div>
 
-    <div class="row" style="margin-top:10px">
+    <div class="chips hidden" id="extraChips" style="margin-top:8px"></div>
+
+    <div class="row" style="margin-top:12px;justify-content:center">
       <button class="btn primary" id="goBtn">✨ Genera risposta</button>
-      <button class="btn ghost" id="clearBtn">Svuota</button>
     </div>
   </div>
 
-  <!-- Micro-domande di oggi (collassabile) -->
-  <div class="card center" id="microCard">
-    <div class="sectionHead" id="microHead">
-      <h3 id="microTitle">Micro-domande di oggi</h3>
-      <span id="microArrow">›</span>
-    </div>
-    <div id="microBody" style="display:none; margin-top:10px">
-      <div class="row" style="gap:8px">
-        <div style="flex:1;min-width:200px">
-          <div class="small" id="m1Label">Che lavoro fai oggi?</div>
-          <input class="input" id="m1" placeholder="es. progettista, barista…"/>
-        </div>
-        <div style="flex:1;min-width:200px">
-          <div class="small" id="m2Label">Città attuale?</div>
-          <input class="input" id="m2" placeholder="es. L’Aquila, Verona…"/>
-        </div>
-        <div style="flex:1;min-width:200px">
-          <div class="small" id="m3Label">Vivi con qualcuno?</div>
-          <select class="input" id="m3">
-            <option value=""></option>
-            <option>Solo</option><option>Partner</option><option>Famiglia</option><option>Coinquilino/a</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="row" style="gap:8px; margin-top:8px">
-        <div style="flex:1;min-width:200px">
-          <div class="small" id="m4Label">Ore di sonno (ieri)</div>
-          <select class="input" id="m4">
-            <option value=""></option><option>≤4</option><option>5–6</option><option>7–8</option><option>≥9</option>
-          </select>
-        </div>
-        <div style="flex:1;min-width:200px">
-          <div class="small" id="m5Label">Stress oggi (1–5)</div>
-          <select class="input" id="m5">
-            <option value=""></option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-          </select>
-        </div>
-        <div style="flex:1;min-width:200px;align-self:end">
-          <button class="btn primary" id="microSaveBtn">Salva profilo di oggi</button>
-        </div>
-      </div>
-      <p class="tip" id="microTip">Puoi rispondere 1 volta al giorno. Le risposte aiutano la voce narrante a conoscerti.</p>
-    </div>
-  </div>
-
-  <!-- Salvate per domani (collassabile) -->
+  <!-- Micro-domande semplici (collassabili) -->
   <div class="card center">
-    <div class="sectionHead" id="nextHead">
-      <h3 id="nextLabel">Domande salvate per domani</h3>
-      <span id="nextArrow">›</span>
-    </div>
-    <div id="nextList" class="list" style="display:none"></div>
-    <div class="row" style="justify-content:flex-end; margin-top:8px">
-      <button class="btn ghost" id="clearNext">Svuota</button>
-    </div>
+    <details id="microDetails" open>
+      <summary>🧩 Micro-domande di oggi <span class="meta" id="microHint">(1 volta al giorno)</span></summary>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        <input id="moodToday" class="input" placeholder="Oggi come ti senti? (una parola)">
+        <input id="timeWindow" class="input" placeholder="Quando decidi davvero? (es. 1–3 mesi)">
+        <input id="anchorNow" class="input" placeholder="Cosa ti tiene qui adesso?">
+        <input id="firstSignal" class="input" placeholder="Che segno ti dice: funziona?">
+      </div>
+      <div class="row" style="margin-top:8px;justify-content:flex-end">
+        <button class="btn ghost" id="saveMicroBtn">💾 Salva micro-profilo</button>
+      </div>
+      <div class="meta" id="microSaved"></div>
+    </details>
+  </div>
+
+  <!-- Contesto reale (collassabile) -->
+  <div class="card center">
+    <details id="realityDetails">
+      <summary>🌍 Contesto reale <span class="meta" id="realityHint">(usato dal narratore)</span></summary>
+      <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input id="factToday" class="input" placeholder="Fatto di oggi (evento/meteo/notizia)…">
+        <input id="factSource" class="input" placeholder="Fonte (opzionale)">
+        <input id="cityInput" class="input" placeholder="Città (es. L’Aquila)">
+        <select id="seasonInput" class="input">
+          <option value="">Stagione</option><option>Inverno</option><option>Primavera</option><option>Estate</option><option>Autunno</option>
+        </select>
+        <label class="row" style="gap:8px">
+          <input type="checkbox" id="fantasyToggle">
+          <span id="fantasyLbl">Modalità senza fatti reali</span>
+        </label>
+      </div>
+    </details>
+  </div>
+
+  <!-- Domande salvate per domani (collassabile) -->
+  <div class="card center">
+    <details id="nextDetails">
+      <summary>🗓️ Domande salvate per domani</summary>
+      <div id="nextList" class="list" style="margin-top:10px"></div>
+      <div class="row" style="justify-content:flex-end;margin-top:8px">
+        <button class="btn ghost" id="clearNextBtn">🧹 Svuota</button>
+      </div>
+    </details>
   </div>
 
   <!-- Storie recenti (collassabile) -->
   <div class="card center">
-    <div class="sectionHead" id="storiesHead">
-      <h3 id="storiesLabel">Le tue storie recenti</h3>
-      <span id="storiesArrow">›</span>
-    </div>
-    <div id="storyList" class="list" style="display:none"></div>
-    <div class="row" style="justify-content:flex-end; margin-top:8px">
-      <button class="btn ghost" id="clearStories">Svuota</button>
-    </div>
+    <details id="storiesDetails">
+      <summary>📚 Le tue storie recenti</summary>
+      <div id="storyList" class="list" style="margin-top:10px"></div>
+      <div class="row" style="justify-content:flex-end;margin-top:8px">
+        <button class="btn ghost" id="clearStoriesBtn">🧹 Svuota</button>
+      </div>
+    </details>
   </div>
 
 </main>
@@ -173,331 +151,270 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
 const I18N = {
   it:{
     title:"Imposta la tua domanda",
-    periodPast:"Passato", periodFuture:"Futuro",
     whatif:"What if (realistico)", wtf:"What the F (divertente)",
     yourq:"La tua domanda",
-    addDetail:"Aggiungi un dettaglio (opzionale)",
-    hint:"aiuta la risposta di oggi",
-    tip:"Tip: cambia stile sopra; tono e colori si adattano.",
-    gen:"✨ Genera risposta", clear:"Svuota",
-    free:(l,d)=>`Free oggi: ${l}/${d}`,
-    microTitle:"Micro-domande di oggi",
-    m1:"Che lavoro fai oggi?", m2:"Città attuale?", m3:"Vivi con qualcuno?",
-    m4:"Ore di sonno (ieri)", m5:"Stress oggi (1–5)",
-    microSave:"Salva profilo di oggi",
-    microTip:"Puoi rispondere 1 volta al giorno. Le risposte aiutano la voce narrante a conoscerti.",
-    next:"Domande salvate per domani",
-    stories:"Le tue storie recenti",
-    emptyNext:"— Nessuna domanda salvata. Leggi una risposta e salva i suggerimenti in quinta.",
+    add:"Aggiungi un dettaglio (opzionale)…",
+    suggest:"+ Suggerimenti",
+    gen:"✨ Genera risposta",
+    microTitle:"🧩 Micro-domande di oggi",
+    microHint:"(1 volta al giorno)",
+    saveMicro:"💾 Salva micro-profilo",
+    microSaved:"Micro-profilo salvato per oggi.",
+    realityTitle:"🌍 Contesto reale",
+    realityHint:"(usato dal narratore)",
+    fantasy:"Modalità senza fatti reali",
+    savedTomorrow:"🗓️ Domande salvate per domani",
+    stories:"📚 Le tue storie recenti",
+    emptyNext:"— Nessuna domanda salvata.",
     emptyStories:"— Nessuna storia recente.",
-    reuse:"Usa", play:"▶", clearBtn:"Svuota",
-    pro:"Pro", proOn:"Pro ON", proOff:"Pro OFF",
-    devResetTip:"Pressione lunga: reset oggi (dev)"
+    use:"Usa",
+    view:"Vedi",
+    del:"✖",
+    play:"▶",
+    clear:"🧹 Svuota",
+    free:(l,d)=>`Free oggi: ${l}/${d}`,
+    noCredits:"Hai finito i crediti giornalieri. Torna domani o passa a PRO.",
+    placeholderQ:"E se tornassi a vivere all’Aquila?",
+    placeholderExtra:"Aggiungi un dettaglio (opzionale)…"
   },
   en:{
     title:"Set your question",
-    periodPast:"Past", periodFuture:"Future",
     whatif:"What if (realistic)", wtf:"What the F (fun)",
     yourq:"Your question",
-    addDetail:"Add a detail (optional)",
-    hint:"helps today's answer",
-    tip:"Tip: change style above; tone & colors adapt.",
-    gen:"✨ Generate answer", clear:"Clear",
-    free:(l,d)=>`Free today: ${l}/${d}`,
-    microTitle:"Today’s micro-questions",
-    m1:"What’s your job today?", m2:"Current city?", m3:"Do you live with someone?",
-    m4:"Sleep hours (yesterday)", m5:"Stress today (1–5)",
-    microSave:"Save today’s profile",
-    microTip:"You can answer once per day. This helps the narrator know you.",
-    next:"Saved for tomorrow",
-    stories:"Your recent stories",
-    emptyNext:"— No saved prompts. Save the suggestions from page five.",
+    add:"Add a detail (optional)…",
+    suggest:"+ Suggestions",
+    gen:"✨ Generate answer",
+    microTitle:"🧩 Today’s micro-questions",
+    microHint:"(once per day)",
+    saveMicro:"💾 Save micro-profile",
+    microSaved:"Micro-profile saved for today.",
+    realityTitle:"🌍 Real-world context",
+    realityHint:"(used by the narrator)",
+    fantasy:"No real-world facts mode",
+    savedTomorrow:"🗓️ Saved for tomorrow",
+    stories:"📚 Your recent stories",
+    emptyNext:"— No saved questions.",
     emptyStories:"— No recent stories.",
-    reuse:"Use", play:"▶", clearBtn:"Clear",
-    pro:"Pro", proOn:"Pro ON", proOff:"Pro OFF",
-    devResetTip:"Long-press: reset today (dev)"
+    use:"Use",
+    view:"View",
+    del:"✖",
+    play:"▶",
+    clear:"🧹 Clear",
+    free:(l,d)=>`Free today: ${l}/${d}`,
+    noCredits:"You ran out of daily credits. Come back tomorrow or go PRO.",
+    placeholderQ:"What if I moved back to L’Aquila?",
+    placeholderExtra:"Add a detail (optional)…"
   }
 };
 const LS=localStorage;
-const lang=(LS.getItem('lang')||'it').toLowerCase();
+let lang=(LS.getItem('lang')||'it').toLowerCase();
 const T=I18N[lang]||I18N.it;
 document.documentElement.lang=lang;
 
-/* ===== Prefs / Tema / Stile / Periodo ===== */
+/* ===== Prefs/Tema/Crediti ===== */
 function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def} }
 function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
-function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 
-const prefs = readJSON('whatif_prefs',{stile:'whatif', periodo:'future', pro:false});
+const prefs = readJSON('whatif_prefs',{stile:'whatif',pro:false});
 let currentStyle = prefs.stile || 'whatif';
-let currentPeriod = prefs.periodo || 'future';
 document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
 
-/* ===== UI text ===== */
-const $ = (id)=>document.getElementById(id);
-$('titleH1').textContent=T.title;
-$('qLabel').textContent=T.yourq;
-$('addLabel').textContent=T.addDetail;
-$('hintMeta').textContent=T.hint;
-$('tipNote').textContent=T.tip;
-$('goBtn').textContent=T.gen;
-$('clearBtn').textContent=T.clear;
-$('chipWhatIf').textContent=T.whatif;
-$('chipWTF').textContent=T.wtf;
-$('langBtn').textContent=lang.toUpperCase();
-$('proBtn').textContent = prefs.pro ? T.proOn : T.pro;
-
-/* ===== Periodo & stile badge ===== */
-const periodoBadge = $('periodoBadge');
-const styleBadge   = $('styleBadge');
-function renderBadgesTop(){
-  periodoBadge.textContent = "🕰️ " + (currentPeriod==='past'? T.periodPast : T.periodFuture);
-  styleBadge.textContent   = "🎭 " + (currentStyle==='wtf'? (lang==='en'?"What the F":"What the F") : (lang==='en'?"What if":"What if"));
-  document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===currentStyle));
-}
-renderBadgesTop();
-
-/* ===== Crediti (3 / 10 Pro) con reset dev via long-press ===== */
-const DAILY_FREE = prefs.pro ? 10 : 3;
+const DAILY = (prefs.pro?10:3);
 function ensureCredits(){
-  const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:Boolean(prefs.pro)});
+  const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:!!prefs.pro});
   if(c.date!==todayStr()){ c.date=todayStr(); c.used=0; }
-  c.pro = Boolean(prefs.pro);
+  c.pro = !!prefs.pro;
   writeJSON('whatif_credits',c);
 }
-function renderFree(){
-  const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:Boolean(prefs.pro)});
-  const left=Math.max(0,(c.pro?10:3)-(c.used||0));
-  $('freeBadge').textContent=T.free(left, c.pro?10:3);
-  $('freeBadge').title = T.devResetTip;
-}
+function freeLeft(){ const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:!!prefs.pro}); return Math.max(0, DAILY - (c.used||0)); }
+function useCredit(){ const c=readJSON('whatif_credits'); c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderFree(); }
+function renderFree(){ document.getElementById('freeBadge').textContent=T.free(freeLeft(),DAILY); }
 ensureCredits(); renderFree();
 
-/* Dev reset: long-press solo a te (dev) */
+/* Dev reset via long-press sul badge credit */
 (function devReset(){
-  const b=$('freeBadge'); let t=null;
-  b.addEventListener('pointerdown', ()=>{ t=setTimeout(()=>{ const c=readJSON('whatif_credits'); c.date=todayStr(); c.used=0; writeJSON('whatif_credits',c); renderFree(); alert(T.devResetTip.replace(/:.+$/, '')); },1600); });
+  const b=document.getElementById('freeBadge'); let t=null;
+  b.title = (lang==='en'?'Long-press: reset today (dev only)':'Pressione lunga: azzera oggi (dev)');
+  b.addEventListener('pointerdown', ()=>{ t=setTimeout(()=>{ const c=readJSON('whatif_credits'); c.date=todayStr(); c.used=0; writeJSON('whatif_credits',c); renderFree(); alert(lang==='en'?'Today credits reset (dev)':'Crediti di oggi azzerati (dev)'); },1400); });
   b.addEventListener('pointerup', ()=> clearTimeout(t));
   b.addEventListener('pointerleave', ()=> clearTimeout(t));
 })();
 
-/* ===== Nav ===== */
+/* ===== UI text ===== */
+const $=id=>document.getElementById(id);
+$('titleH1').textContent=T.title;
+$('qLabel').textContent=T.yourq;
+$('qInput').placeholder=T.placeholderQ;
+$('extraInput').placeholder=T.placeholderExtra;
+$('suggestBtn').textContent=T.suggest;
+$('goBtn').textContent=T.gen;
+$('microHint').textContent=T.microHint;
+$('saveMicroBtn').textContent=T.saveMicro;
+$('realityHint').textContent=T.realityHint;
+$('fantasyLbl').textContent=T.fantasy;
+$('chipWhatIf').textContent=T.whatif;
+$('chipWTF').textContent=T.wtf;
+$('langBtn').textContent=lang.toUpperCase();
+
+/* ===== lingua / nav ===== */
+$('langBtn').onclick=()=>{ LS.setItem('lang', lang==='it'?'en':'it'); location.reload(); };
 $('backBtn').onclick=()=>history.back();
 $('homeBtn').onclick=()=>location.href='index.html';
-$('langBtn').onclick=()=>{ LS.setItem('lang', lang==='it'?'en':'it'); location.reload(); };
 
-/* ===== Pro toggle (mock) ===== */
-$('proBtn').onclick=()=>{
-  prefs.pro = !prefs.pro;
-  writeJSON('whatif_prefs', prefs);
-  $('proBtn').textContent = prefs.pro ? T.proOn : T.proOff;
-  ensureCredits(); renderFree();
-};
-
-/* ===== Period toggle (tap sul badge) ===== */
-periodoBadge.addEventListener('click', ()=>{
-  currentPeriod = currentPeriod==='past' ? 'future' : 'past';
-  prefs.periodo = currentPeriod; writeJSON('whatif_prefs', prefs);
-  renderBadgesTop();
-});
-
-/* ===== Stile chips ===== */
-document.getElementById('styleChips').addEventListener('click', (e)=>{
+/* ===== stile ===== */
+function renderStyle(){
+  document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===currentStyle));
+  $('styleBadge').textContent = "🎭 " + (currentStyle==='wtf' ? (lang==='en'?"What the F":"What the F") : (lang==='en'?"What if":"What if"));
+  document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
+}
+renderStyle();
+$('styleChips').addEventListener('click', (e)=>{
   const b=e.target.closest('.chip'); if(!b) return;
   currentStyle=b.dataset.style;
-  prefs.stile=currentStyle; writeJSON('whatif_prefs',prefs);
-  document.documentElement.setAttribute('data-theme', currentStyle==='wtf'?'wtf':'whatif');
-  renderBadgesTop();
+  writeJSON('whatif_prefs',{...prefs,stile:currentStyle});
+  renderStyle();
 });
 
-/* ===== Chips "Aggiungi un dettaglio" compatti e CONTEXTUALI ===== */
-function classifyTopic(q=""){
-  const s=q.toLowerCase();
-  if (/(aquila|l'aquila|verona|lugano|roma|milano|trasfer|torna|move|relocat)/.test(s)) return "city";
-  if (/(lavoro|job|ufficio|career|azienda)/.test(s)) return "work";
-  if (/(moto|motor|bike|scooter|vespa)/.test(s)) return "moto";
-  return "general";
-}
-function renderExtraChips(){
-  const wrap=$('extraChips'); wrap.innerHTML="";
-  const q=($('qInput').value||"").trim();
-  const t=classifyTopic(q);
-  const chips = (()=>{
-    if(t==="city") return lang==='en'
-      ? ["first sign of 'I’m better'", "precise neighborhood", "who do you tell first?"]
-      : ["primo segnale 'sto meglio'", "quartiere preciso", "a chi lo diresti per primo?"];
-    if(t==="work") return lang==='en'
-      ? ["why still here?", "option on table", "non-negotiable limit"]
-      : ["perché sei ancora lì?", "opzione concreta", "limite non negoziabile"];
-    if(t==="moto") return lang==='en'
-      ? ["main use", "budget/month", "first test route"]
-      : ["uso principale", "budget/mese", "primo giro di prova"];
-    return lang==='en'
-      ? ["what would change first?", "who’s involved?", "time window"]
-      : ["cosa cambierebbe prima?", "chi è coinvolto?", "finestra di tempo"];
-  })();
-  chips.forEach(txt=>{
+/* ===== suggestion chips compatti ===== */
+const EXTRA_SUG = {
+  it:["primo segnale","budget","luogo preciso","tempo disponibile","contatto chiave","vincolo reale"],
+  en:["first signal","budget","specific place","time window","key contact","real constraint"]
+}[lang];
+$('suggestBtn').onclick=()=>{
+  const box=$('extraChips'); box.innerHTML=""; box.classList.toggle('hidden');
+  (EXTRA_SUG||[]).forEach(txt=>{
     const b=document.createElement('button'); b.className='chip'; b.textContent=txt;
-    b.addEventListener('click',()=>{
-      const i=$('extraInput');
-      i.value = i.value ? (i.value + " • " + txt) : txt;
-      i.focus();
-    });
-    wrap.appendChild(b);
+    b.onclick=()=>{ const i=$('extraInput'); i.value = i.value ? (i.value+' • '+txt) : txt; i.focus(); };
+    box.appendChild(b);
   });
-}
-$('qInput').addEventListener('input', renderExtraChips);
-renderExtraChips();
-
-/* ===== Micro-domande (collassate, 1 volta al giorno) ===== */
-const microKey = 'micro_profile';
-const microCollKey = 'micro_collapsed';
-const microHead=$('microHead'), microBody=$('microBody'), microArrow=$('microArrow');
-function microSetCollapsed(v){
-  writeJSON(microCollKey,{v}); microBody.style.display = v?'none':'block'; microArrow.textContent = v?'›':'⌄';
-}
-(function microBoot(){
-  const st=readJSON(microCollKey,{v:true}); microSetCollapsed(st.v);
-  $('microTitle').textContent=T.microTitle;
-  $('m1Label').textContent=T.m1; $('m2Label').textContent=T.m2; $('m3Label').textContent=T.m3;
-  $('m4Label').textContent=T.m4; $('m5Label').textContent=T.m5;
-  $('microSaveBtn').textContent=T.microSave; $('microTip').textContent=T.microTip;
-})();
-microHead.onclick=()=>{ const st=readJSON(microCollKey,{v:true}); microSetCollapsed(!st.v); };
-
-function microDisabledForToday(){
-  const mp=readJSON(microKey,{date:"",data:{}});
-  return mp.date===todayStr();
-}
-function loadMicro(){
-  const mp=readJSON(microKey,{date:"",data:{}});
-  if(mp.data){
-    $('m1').value=mp.data.job||""; $('m2').value=mp.data.city||"";
-    $('m3').value=mp.data.lives_with||""; $('m4').value=mp.data.sleep_hours||"";
-    $('m5').value=mp.data.stress||"";
-  }
-  const dis = microDisabledForToday();
-  ['m1','m2','m3','m4','m5','microSaveBtn'].forEach(id=>{ $(id).disabled = dis; });
-}
-loadMicro();
-
-$('microSaveBtn').onclick=()=>{
-  const mp = {
-    date: todayStr(),
-    data: {
-      job: $('m1').value.trim(),
-      city: $('m2').value.trim(),
-      lives_with: $('m3').value.trim(),
-      sleep_hours: $('m4').value.trim(),
-      stress: $('m5').value.trim()
-    }
-  };
-  writeJSON(microKey, mp);
-  loadMicro();
-  alert(lang==='en'?'Saved for today.':'Salvato per oggi.');
 };
 
-/* ===== Crediti consumo e blocco se 0 ===== */
-function canUseCredit(){
-  const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:Boolean(prefs.pro)});
-  const limit = c.pro?10:3;
-  return (c.used||0) < limit;
+/* ===== micro-domande — una volta al giorno ===== */
+function lockMicroIfSaved(){
+  const mp = readJSON('micro_profile',null);
+  const today = new Date().toISOString().slice(0,10);
+  if(mp && mp.date===today){
+    ['moodToday','timeWindow','anchorNow','firstSignal'].forEach(id=>{ const el=$(id); el.value = mp.data?.[id]||el.value; el.disabled=true; });
+    $('microSaved').textContent = (lang==='en'?T.microSaved:T.microSaved);
+  }
 }
-function useCredit(){
-  const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:Boolean(prefs.pro)});
-  const limit = c.pro?10:3;
-  if((c.used||0) >= limit) return false;
-  c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderFree(); return true;
+lockMicroIfSaved();
+
+$('saveMicroBtn').onclick=()=>{
+  const data={
+    moodToday: ($('moodToday').value||"").trim(),
+    timeWindow: ($('timeWindow').value||"").trim(),
+    anchorNow: ($('anchorNow').value||"").trim(),
+    firstSignal: ($('firstSignal').value||"").trim()
+  };
+  const today = new Date().toISOString().slice(0,10);
+  writeJSON('micro_profile', { date: today, data });
+  lockMicroIfSaved();
+};
+
+/* ===== ambient/facts pack ===== */
+function getAmbient(){
+  const d=new Date();
+  const weekday = d.toLocaleDateString(lang==='en'?'en-GB':'it-IT',{weekday:'long'});
+  return {
+    dateISO: d.toISOString().slice(0,10),
+    weekday,
+    season: ($('seasonInput').value||"") || undefined,
+    city: ($('cityInput').value||"") || undefined
+  };
+}
+function gatherFacts(){
+  const facts=[];
+  const f1=($('factToday').value||"").trim();
+  const src=($('factSource').value||"").trim();
+  if(f1) facts.push({ text:f1, source:src||undefined });
+  const mp = readJSON('micro_profile',null);
+  const micro = mp && mp.date===getAmbient().dateISO ? {
+    mood: mp.data?.moodToday,
+    timeWindow: mp.data?.timeWindow,
+    anchorNow: mp.data?.anchorNow,
+    firstSignal: mp.data?.firstSignal
+  } : {};
+  return { facts, micro };
 }
 
-/* ===== Genera ===== */
-$('goBtn').onclick=()=>{
-  const domanda=$('qInput').value.trim();
+/* ===== generate ===== */
+$('goBtn').onclick=async ()=>{
+  const domanda = ($('qInput').value||"").trim();
   if(!domanda){ $('qInput').focus(); return; }
-  if(!canUseCredit()){ alert(lang==='en'?'Daily limit reached':'Limite giornaliero raggiunto'); return; }
 
-  const micro = readJSON('micro_profile',{date:"",data:{}}).data || {};
-  const req = { domanda, stile: currentStyle, lang, periodo: currentPeriod, extra: ($('extraInput').value||"").trim(), profile: micro };
-  writeJSON('whatif_prefs', { ...prefs, stile: currentStyle, periodo: currentPeriod });
+  if(freeLeft()<=0){ alert(T.noCredits); return; }
 
-  // memorizzo la richiesta (usata in quinta per mostrare profilo/contesto)
-  writeJSON('whatif_request', req);
+  // pack profilo
+  const fantasyMode = !!$('fantasyToggle').checked;
+  const ambient = getAmbient();
+  const { facts, micro } = gatherFacts();
+  const payload = {
+    domanda,
+    stile: currentStyle,
+    lang,
+    extra: ($('extraInput').value||"").trim(),
+    profile: { ambient, reality:{ fantasyMode, facts }, micro }
+  };
+
+  // salva preferenze + domanda
+  writeJSON('whatif_prefs', { ...readJSON('whatif_prefs',{}), stile: currentStyle });
   LS.setItem('domanda', domanda);
+  writeJSON('whatif_request', { domanda, stile: currentStyle, extra: ($('extraInput').value||"").trim(), profile: payload.profile });
 
+  // consuma credito e vai alla quinta
   useCredit();
   location.href='fifth.html';
 };
 
-/* ===== Pulisci ===== */
-$('clearBtn').onclick=()=>{ $('qInput').value=""; $('extraInput').value=""; renderExtraChips(); $('qInput').focus(); };
-
-/* ===== Sezioni collassabili: Salvate & Storie ===== */
-function setColl(id, v){ const k=id+'_collapsed'; writeJSON(k,{v}); $(id+'List') && ($(id+'List').style.display = v?'none':'block'); $(id+'Arrow').textContent = v?'›':'⌄'; }
-function bootColl(id, def=true){ const st=readJSON(id+'_collapsed',{v:def}); setColl(id, st.v); }
-['next','stories'].forEach(id=>bootColl(id,true));
-$('nextHead').onclick=()=>{ const st=readJSON('next_collapsed',{v:true}); setColl('next', !st.v); };
-$('storiesHead').onclick=()=>{ const st=readJSON('stories_collapsed',{v:true}); setColl('stories', !st.v); };
-
-/* ===== Render "Salvate per domani" ==== */
+/* ===== saved-for-tomorrow ===== */
 function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
 function renderNext(){
   const box=$('nextList'); box.innerHTML="";
   const arr=readJSON('next_prompts',[]);
-  if(!arr.length){ const p=document.createElement('div'); p.className='empty'; p.textContent=T.emptyNext; box.appendChild(p); return; }
-  arr.slice(0,12).forEach(item=>{
-    const row=document.createElement('div'); row.className='story';
-    const left=document.createElement('div');
-    left.innerHTML = `<div style="font-weight:700;max-width:540px">${item.q||'—'}</div><div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'WTF':'What?f')}</div>`;
+  if(!arr.length){ const p=document.createElement('div'); p.className='meta'; p.textContent=T.emptyNext; box.appendChild(p); return; }
+  arr.slice(0,20).forEach((it,idx)=>{
+    const row=document.createElement('div'); row.className='item';
+    const left=document.createElement('div'); left.innerHTML=`<div style="font-weight:700;max-width:540px">${it.q||'—'}</div><div class="meta">${fmtDate(it.ts||Date.now())}</div>`;
     const right=document.createElement('div'); right.className='row';
-    const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=T.reuse;
-    useBtn.onclick=()=>{ $('qInput').value=item.q||""; window.scrollTo({top:0,behavior:'smooth'}); };
-    const play=document.createElement('button'); play.className='play'; play.textContent=T.play;
-    play.onclick=()=>{ 
-      // carica la domanda nel campo + profilo attuale, poi vai in quinta per la CONTINUAZIONE domani
-      $('qInput').value=item.q||"";
-      writeJSON('whatif_prefs', { ...prefs, stile: item.stile||currentStyle, periodo: currentPeriod });
-      // non generiamo subito: l'utente preme "Genera" quando vuole ripartire
-      window.scrollTo({top:0,behavior:'smooth'});
-    };
-    right.appendChild(useBtn); right.appendChild(play);
-    row.appendChild(left); row.appendChild(right);
-    box.appendChild(row);
+    const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=T.use;
+    useBtn.onclick=()=>{ $('qInput').value = it.q || ""; window.scrollTo({top:0,behavior:'smooth'}); };
+    const del=document.createElement('button'); del.className='icon'; del.textContent=T.del;
+    del.onclick=()=>{ const arr=readJSON('next_prompts',[]); arr.splice(idx,1); writeJSON('next_prompts',arr); renderNext(); };
+    right.appendChild(useBtn); right.appendChild(del);
+    row.appendChild(left); row.appendChild(right); box.appendChild(row);
   });
 }
-$('clearNext').textContent=T.clearBtn;
-$('clearNext').onclick=()=>{ writeJSON('next_prompts',[]); renderNext(); };
+$('clearNextBtn').onclick=()=>{ writeJSON('next_prompts',[]); renderNext(); };
 
-/* ===== Render Storie recenti ==== */
+/* ===== recent stories ===== */
 function renderStories(){
   const box=$('storyList'); box.innerHTML="";
   const arr=readJSON('cronologia',[]);
-  if(!arr.length){ const p=document.createElement('div'); p.className='empty'; p.textContent=T.emptyStories; box.appendChild(p); return; }
-  arr.slice(0,12).forEach(item=>{
-    const row=document.createElement('div'); row.className='story';
-    const left=document.createElement('div');
-    left.innerHTML = `<div style="font-weight:700;max-width:540px">${item.domanda||'—'}</div><div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'WTF':'What?f')}</div>`;
-    const play=document.createElement('button'); play.className='play'; play.textContent=T.play;
-    play.onclick=()=>{ 
-      // rivedi l'episodio precedente in quinta in modalità replay
-      writeJSON('replay_story', { domanda: item.domanda, stile: item.stile, answer: item.risposta || item.answer || "" });
-      location.href='fifth.html?view=replay';
-    };
-    row.appendChild(left); row.appendChild(play);
-    box.appendChild(row);
+  if(!arr.length){ const p=document.createElement('div'); p.className='meta'; p.textContent=T.emptyStories; box.appendChild(p); return; }
+  arr.slice(-20).reverse().forEach((it,idx)=>{
+    const row=document.createElement('div'); row.className='item';
+    const left=document.createElement('div'); left.innerHTML=`<div style="font-weight:700;max-width:540px">${it.domanda||'—'}</div><div class="meta">${fmtDate(it.ts)} · ${(it.stile==='wtf'?'WTF':'What?f')}</div>`;
+    const right=document.createElement('div'); right.className='row';
+    const view=document.createElement('button'); view.className='btn'; view.textContent=T.view;
+    view.onclick=()=>{ writeJSON('replay_story',it); location.href='fifth.html?view=replay'; };
+    const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=T.use;
+    useBtn.onclick=()=>{ $('qInput').value = it.domanda||""; window.scrollTo({top:0,behavior:'smooth'}); };
+    const del=document.createElement('button'); del.className='icon'; del.textContent=T.del;
+    del.onclick=()=>{ const a=readJSON('cronologia',[]); const ix=a.findIndex(x=>x.ts===it.ts); if(ix>=0){a.splice(ix,1); writeJSON('cronologia',a); renderStories();} };
+    right.appendChild(view); right.appendChild(useBtn); right.appendChild(del);
+    row.appendChild(left); row.appendChild(right); box.appendChild(row);
   });
 }
-$('clearStories').textContent=T.clearBtn;
-$('clearStories').onclick=()=>{ writeJSON('cronologia',[]); renderStories(); };
+$('clearStoriesBtn').onclick=()=>{ writeJSON('cronologia',[]); renderStories(); };
 
-/* ===== Boot final ===== */
+/* ===== boot ===== */
 function boot(){
-  $('periodoBadge').textContent="🕰️ "+(currentPeriod==='past'?T.periodPast:T.periodFuture);
-  $('styleBadge').textContent="🎭 "+(currentStyle==='wtf'?(lang==='en'?"What the F":"What the F"):(lang==='en'?"What if":"What if"));
-  document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===currentStyle));
-  renderFree(); renderNext(); renderStories();
-  // placeholders coerenti con lingua
-  $('qInput').placeholder = (lang==='en' ? "What if I moved back to L’Aquila?" : "E se tornassi a vivere all’Aquila?");
-  $('extraInput').placeholder = (lang==='en' ? "e.g., first sign, neighborhood, budget…" : "es. primo segnale, quartiere, budget…");
+  renderNext(); renderStories();
+  // placeholder coerenti
+  $('qInput').placeholder = T.placeholderQ;
+  $('extraInput').placeholder = T.placeholderExtra;
 }
 boot();
 </script>
