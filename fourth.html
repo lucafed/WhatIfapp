@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Aquivera — Domanda</title>
+<title>What?f — Domanda</title>
 <meta name="theme-color" content="#0B0B0C"/>
 <style>
 :root{
   --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
-  --acc:#1C57A0; --acc2:#FFEC01;     /* Aquivera */
-  --wtf1:#3A6B56; --wtf2:#5A8C75;    /* WTF */
+  --acc:#1C57A0; --acc2:#FFEC01;              /* Aquivera */
+  --wtf1:#3A6B56; --wtf2:#5A8C75;             /* WTF    */
   --card:rgba(20,28,34,.92); --line:rgba(255,255,255,.12);
   --chip:#121A26; --ink:#0A0E12; --shadow:rgba(0,0,0,.35);
 }
 html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
 *{box-sizing:border-box}
-html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
 main{max-width:980px;margin:auto;padding:18px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
@@ -25,22 +25,26 @@ main{max-width:980px;margin:auto;padding:18px}
 .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
 h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:center}
 .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-.input,textarea,select{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
+.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
 .center{max-width:760px;margin:0 auto}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
 .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-.collapsible{border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.04)}
-.collapsible > summary{list-style:none;cursor:pointer;padding:12px 14px;font-weight:700}
-.collapsible > summary::-webkit-details-marker{display:none}
-.list{display:flex;flex-direction:column;gap:10px}
-.story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
-.play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
 .meta{font-size:12px;color:var(--muted)}
+.tip{font-size:12px;color:var(--muted);margin-top:8px}
+.section{border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,.04)}
+.section header{display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.section h3{margin:0;font-size:15px;color:var(--acc)}
+.section .content{margin-top:10px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kv .mini{display:flex;gap:6px;align-items:center}
+.kv .mini input{flex:1;min-width:0;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:10px;padding:10px;color:#fff}
 .small{font-size:12px;color:var(--muted)}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media (max-width:720px){ .grid-2{grid-template-columns:1fr} }
-hr.sep{border:none;height:1px;background:rgba(255,255,255,.08);margin:10px 0}
+.storyItem{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px;background:rgba(255,255,255,.03)}
+.play{border:none;background:var(--chip);border:1px solid var(--line);width:42px;height:42px;border-radius:12px;cursor:pointer;font-size:18px}
+.icon{opacity:.8}
+.rightRow{display:flex;gap:8px;align-items:center}
+.link{color:#EAF3EE;text-decoration:underline;cursor:pointer}
 </style>
 </head>
 <body>
@@ -53,97 +57,81 @@ hr.sep{border:none;height:1px;background:rgba(255,255,255,.08);margin:10px 0}
       <button class="btn" id="homeBtn">🏠</button>
     </div>
     <div class="row">
-      <span class="badge" id="freeBadge">—</span>
-      <button class="btn" id="proBtn">PRO</button>
+      <span class="badge" id="proBadge" title="">FREE</span>
+      <span class="badge" id="freeBadge" title="">—</span>
       <button class="btn" id="langBtn">IT</button>
     </div>
   </div>
 
   <h1 id="titleH1">Imposta la tua domanda</h1>
 
-  <!-- Stile & periodo -->
+  <!-- Stile -->
   <div class="card center">
-    <div class="row" style="justify-content:space-between;align-items:center">
-      <div class="row">
-        <span class="badge" id="periodoBadge">🕰️ —</span>
-        <span class="badge" id="styleBadge">🎭 —</span>
-      </div>
+    <div class="row" style="justify-content:space-between">
       <div class="chips" id="styleChips">
-        <button class="chip" data-style="aquivera" id="chipAq">Aquivera</button>
+        <button class="chip" data-style="aquivera" id="chipAqv">Aquivera</button>
         <button class="chip" data-style="wtf" id="chipWTF">What the F</button>
-        <button class="chip" data-style="aquivera_divina" id="chipDiv">Aquivera Divina ⭐</button>
+        <button class="chip" data-style="aquivera_divina" id="chipDivina">🔒 Divina</button>
       </div>
+      <div class="meta" id="styleHint">—</div>
     </div>
   </div>
 
-  <!-- Domanda al centro -->
+  <!-- Domanda centrale -->
   <div class="card center">
     <h3 class="label" id="qLabel">La tua domanda</h3>
     <textarea id="qInput" rows="3" class="input" placeholder="E se tornassi a vivere all’Aquila?"></textarea>
 
-    <!-- Micro domande giornaliere (semplici) -->
-    <details class="collapsible" id="microBox" style="margin-top:12px">
-      <summary id="microTitle">Micro domande di oggi</summary>
-      <div class="grid-2" style="padding:12px 14px">
-        <div>
-          <div class="small" id="moodLbl">Umore (1–5)</div>
-          <select id="mood" class="input">
-            <option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-          </select>
-        </div>
-        <div>
-          <div class="small" id="energyLbl">Energia (1–5)</div>
-          <select id="energy" class="input">
-            <option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-          </select>
-        </div>
-        <div>
-          <div class="small" id="cityLbl">Dove sei oggi?</div>
-          <input id="city" class="input" placeholder="es. L’Aquila / Verona / Lugano"/>
-        </div>
-        <div>
-          <div class="small" id="focusLbl">Una cosa su cui ti concentri</div>
-          <input id="focus" class="input" placeholder="es. lavoro / salute / famiglia"/>
-        </div>
-      </div>
-      <div class="small" style="padding:0 14px 12px" id="microNote">Compilabile una volta al giorno. Rimane collassato dopo il salvataggio.</div>
-      <div class="row" style="padding:0 14px 14px">
-        <button class="btn" id="saveMicroBtn">💾 Salva oggi</button>
-      </div>
-    </details>
+    <!-- Micro-suggerimenti compatti -->
+    <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap" id="suggestRow"></div>
 
-    <!-- Dettagli compatti -->
-    <details class="collapsible" id="extraBox" style="margin-top:10px">
-      <summary id="extraTitle">Aggiungi un dettaglio</summary>
-      <div style="padding:12px 14px">
-        <input id="extraInput" class="input" placeholder="es. primo segnale, budget, luogo preciso…"/>
-        <div class="chips" id="extraChips" style="margin-top:8px"></div>
-        <p class="small" id="tipNote">Suggerimenti non invasivi; servono a personalizzare la storia.</p>
-      </div>
-    </details>
-
-    <div class="row" style="margin-top:12px;justify-content:space-between">
-      <button class="btn primary" id="goBtn">✨ Genera</button>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="goBtn">✨ Genera risposta</button>
       <button class="btn ghost" id="clearBtn">Svuota</button>
     </div>
   </div>
 
+  <!-- Micro-domande di OGGI (profilo) -->
+  <div class="card center section" id="secProfile">
+    <header id="hdrProfile">
+      <h3 id="profTitle">Micro-domande di oggi (profilo)</h3>
+      <span class="icon" id="profToggle">▼</span>
+    </header>
+    <div class="content" id="profContent">
+      <div class="kv" id="kvProfile"><!-- filled by JS --></div>
+      <div class="row" style="justify-content:flex-end;margin-top:8px">
+        <button class="btn" id="saveProfileBtn">💾 Salva profilo</button>
+      </div>
+      <div class="small" id="profSaved"></div>
+    </div>
+  </div>
+
   <!-- Domande salvate per domani -->
-  <div class="card center">
-    <details class="collapsible" open id="nextWrap">
-      <summary id="nextLabel">Salvati per domani</summary>
-      <div class="row" style="justify-content:flex-end"><button class="btn" id="clearNextBtn">🗑️ Cancella salvati</button></div>
-      <div id="nextList" class="list"></div>
-    </details>
+  <div class="card center section" id="secNext">
+    <header id="hdrNext">
+      <h3 id="nextTitle">Domande salvate per domani</h3>
+      <span class="icon" id="nextToggle">▼</span>
+    </header>
+    <div class="content" id="nextContent">
+      <div id="nextList"></div>
+      <div class="row" style="justify-content:flex-end;margin-top:8px">
+        <button class="btn ghost" id="clearNextBtn">🗑️ <span id="clearNextTxt">Svuota</span></button>
+      </div>
+    </div>
   </div>
 
   <!-- Storie recenti -->
-  <div class="card center">
-    <details class="collapsible" id="storiesWrap">
-      <summary id="storiesLabel">Storie recenti</summary>
-      <div class="row" style="justify-content:flex-end"><button class="btn" id="clearHistBtn">🗑️ Svuota cronologia</button></div>
-      <div id="storyList" class="list"></div>
-    </details>
+  <div class="card center section" id="secStories">
+    <header id="hdrStories">
+      <h3 id="storiesTitle">Le tue storie recenti</h3>
+      <span class="icon" id="storiesToggle">▼</span>
+    </header>
+    <div class="content" id="storiesContent">
+      <div id="storyList"></div>
+      <div class="row" style="justify-content:flex-end;margin-top:8px">
+        <button class="btn ghost" id="clearHistBtn">🗑️ <span id="clearHistTxt">Svuota</span></button>
+      </div>
+    </div>
   </div>
 
 </main>
@@ -152,219 +140,260 @@ hr.sep{border:none;height:1px;background:rgba(255,255,255,.08);margin:10px 0}
 /* ===== I18N ===== */
 const I18N = {
   it:{
-    title:"Imposta la tua domanda", gen:"✨ Genera", clear:"Svuota",
-    periodPast:"Passato", periodFuture:"Futuro",
-    styleAq:"Aquivera", styleWTF:"What the F", styleDiv:"Aquivera Divina ⭐",
+    title:"Imposta la tua domanda",
     yourq:"La tua domanda",
-    micro:"Micro domande di oggi", mood:"Umore (1–5)", energy:"Energia (1–5)", city:"Dove sei oggi?", focus:"Una cosa su cui ti concentri",
-    microNote:"Compilabile una volta al giorno. Rimane collassato dopo il salvataggio.",
-    saveToday:"💾 Salva oggi",
-    addDetail:"Aggiungi un dettaglio", tip:"Suggerimenti non invasivi; servono a personalizzare la storia.",
-    chip1:"primo segnale", chip2:"vincolo 2 settimane", chip3:"luogo preciso", chip4:"tempo disponibile",
-    savedTomorrow:"Salvati per domani", clearSaved:"🗑️ Cancella salvati",
-    stories:"Storie recenti", clearHist:"🗑️ Svuota cronologia",
-    play:"▶", use:"Usa",
-    free:(left,tot)=>`Free oggi: ${left}/${tot}`, pro:"PRO", proOn:"PRO attivo", proNeed:"Serve PRO per Aquivera Divina",
+    gen:"✨ Genera risposta", clear:"Svuota",
+    pro:"PRO", free:"FREE",
+    freeLbl:(l,d)=>`Free oggi: ${l}/${d}`,
+    chips:["primo segnale","vincolo concreto","tempo disponibile","luogo preciso"],
+    styleHint:"Aquivera = profetico realistico · What the F = sarcastico · Divina = sblocca al 3° episodio o PRO",
+    profTitle:"Micro-domande di oggi (profilo)",
+    profSaved:"Profilo salvato.",
+    nextTitle:"Domande salvate per domani",
+    emptyNext:"— Nessuna domanda salvata.",
+    storiesTitle:"Le tue storie recenti",
+    emptyStories:"— Nessuna storia recente.",
+    reuse:"Usa", play:"▶", replay:"Rileggi",
+    clearNext:"Svuota", clearHist:"Svuota",
+    devReset:"Pressione lunga: azzera crediti (solo dev)",
+    locked:"🔒 Divina (al 3° ep. o PRO)",
+    microToday:[
+      {k:"name", lbl:"Nome", ph:"es. Luca"},
+      {k:"city_now", lbl:"Dove vivi", ph:"es. Verona"},
+      {k:"work_role", lbl:"Cosa fai", ph:"es. Marketing"},
+      {k:"priority", lbl:"Cosa conta ora", ph:"es. serenità / crescita"},
+      {k:"anchor", lbl:"Cosa ti ancora", ph:"es. famiglia / costi"},
+      {k:"energy", lbl:"Energia media", ph:"bassa / media / alta"}
+    ]
   },
   en:{
-    title:"Set your question", gen:"✨ Generate", clear:"Clear",
-    periodPast:"Past", periodFuture:"Future",
-    styleAq:"Aquivera", styleWTF:"What the F", styleDiv:"Aquivera Divina ⭐",
+    title:"Set your question",
     yourq:"Your question",
-    micro:"Today’s micro-questions", mood:"Mood (1–5)", energy:"Energy (1–5)", city:"Where are you today?", focus:"One focus for today",
-    microNote:"Fill once per day. It stays collapsed after saving.",
-    saveToday:"💾 Save today",
-    addDetail:"Add a detail", tip:"Light hints to personalize the story.",
-    chip1:"first signal", chip2:"2-week constraint", chip3:"specific place", chip4:"time window",
-    savedTomorrow:"Saved for tomorrow", clearSaved:"🗑️ Clear saved",
-    stories:"Recent stories", clearHist:"🗑️ Clear history",
-    play:"▶", use:"Use",
-    free:(left,tot)=>`Free today: ${left}/${tot}`, pro:"PRO", proOn:"PRO active", proNeed:"PRO required for Aquivera Divina",
+    gen:"✨ Generate answer", clear:"Clear",
+    pro:"PRO", free:"FREE",
+    freeLbl:(l,d)=>`Free today: ${l}/${d}`,
+    chips:["first signal","hard constraint","time window","specific place"],
+    styleHint:"Aquivera = realistic prophetic · What the F = sarcastic · Divina = unlock at 3rd episode or PRO",
+    profTitle:"Today’s micro-questions (profile)",
+    profSaved:"Profile saved.",
+    nextTitle:"Saved for tomorrow",
+    emptyNext:"— No saved questions.",
+    storiesTitle:"Your recent stories",
+    emptyStories:"— No recent stories.",
+    reuse:"Use", play:"▶", replay:"Replay",
+    clearNext:"Clear", clearHist:"Clear",
+    devReset:"Long press: reset credits (dev only)",
+    locked:"🔒 Divina (3rd ep. or PRO)",
+    microToday:[
+      {k:"name", lbl:"Name", ph:"e.g., Luca"},
+      {k:"city_now", lbl:"Where you live", ph:"e.g., Verona"},
+      {k:"work_role", lbl:"What you do", ph:"e.g., Marketing"},
+      {k:"priority", lbl:"What matters now", ph:"e.g., calm / growth"},
+      {k:"anchor", lbl:"What anchors you", ph:"e.g., family / costs"},
+      {k:"energy", lbl:"Energy level", ph:"low / medium / high"}
+    ]
   }
 };
 const LS=localStorage;
-let lang=(LS.getItem('lang')||'it').toLowerCase();
+const lang=(LS.getItem('lang')||'it').toLowerCase();
 const T=I18N[lang]||I18N.it;
 document.documentElement.lang=lang;
 
-/* ===== Prefs / Tema / PRO ===== */
-function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def} }
-function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
-const prefs = readJSON('whatif_prefs',{stile:'aquivera',periodo:'future',pro:false});
+/* ===== Prefs / Tema / Crediti ===== */
+function readJSON(k,def){try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
+function writeJSON(k,v){LS.setItem(k,JSON.stringify(v))}
+function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+const prefs = readJSON('whatif_prefs',{stile:'aquivera',periodo:'future',pro:false,episodes:0});
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-/* ===== UI text ===== */
-const $=id=>document.getElementById(id);
-$('titleH1').textContent=T.title;
-$('goBtn').textContent=T.gen; $('clearBtn').textContent=T.clear;
-$('qLabel').textContent=T.yourq;
-$('microTitle').textContent=T.micro;
-$('moodLbl').textContent=T.mood; $('energyLbl').textContent=T.energy; $('cityLbl').textContent=T.city; $('focusLbl').textContent=T.focus;
-$('microNote').textContent=T.microNote; $('saveMicroBtn').textContent=T.saveToday;
-$('extraTitle').textContent=T.addDetail; $('tipNote').textContent=T.tip;
-$('nextLabel').textContent=T.savedTomorrow; $('clearNextBtn').textContent=T.clearSaved;
-$('storiesLabel').textContent=T.stories; $('clearHistBtn').textContent=T.clearHist;
-$('chipAq').textContent=T.styleAq; $('chipWTF').textContent=T.styleWTF; $('chipDiv').textContent=T.styleDiv;
-$('langBtn').textContent=lang.toUpperCase(); $('proBtn').textContent=prefs.pro?T.proOn:T.pro;
-
-/* ===== Crediti (3 free / 10 pro) con reset dev long-press ===== */
-const DAILY_FREE=3, DAILY_PRO=10;
-function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+/* Crediti */
+const DAILY_FREE = prefs.pro ? 10 : 3;
 function ensureCredits(){
-  const key='whatif_credits';
-  let c=readJSON(key,{date:todayStr(),used:0,pro:!!prefs.pro});
-  if(c.date!==todayStr()){ c.date=todayStr(); c.used=0; c.pro=!!prefs.pro; }
-  writeJSON(key,c);
+  const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:!!prefs.pro});
+  if(c.date!==todayStr()){c.date=todayStr();c.used=0;}
+  c.pro=!!prefs.pro;
+  writeJSON('whatif_credits',c);
 }
-function leftCredits(){ const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:false}); return Math.max(0,(c.pro?DAILY_PRO:DAILY_FREE)-(c.used||0)); }
-function renderFree(){ $('freeBadge').textContent=T.free(leftCredits(), prefs.pro?DAILY_PRO:DAILY_FREE); }
-ensureCredits(); renderFree();
+function renderCredits(){
+  const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:false});
+  const left=Math.max(0, (c.pro?10:3)-(c.used||0));
+  document.getElementById('freeBadge').textContent=T.freeLbl(left, c.pro?10:3);
+  const proB=document.getElementById('proBadge');
+  proB.textContent = c.pro ? T.pro : T.free;
+  proB.title = c.pro ? "Pro attivo" : "Free";
+  const fb=document.getElementById('freeBadge');
+  fb.title = T.devReset;
+}
+ensureCredits(); renderCredits();
 
-/* Dev reset (solo long-press badge free) */
+/* Long-press reset (solo dev) */
 (function devReset(){
-  const b=$('freeBadge'); let t=null;
-  b.addEventListener('pointerdown', ()=>{ t=setTimeout(()=>{ const c=readJSON('whatif_credits'); c.date=todayStr(); c.used=0; writeJSON('whatif_credits',c); renderFree(); alert(lang==='en'?'Credits reset (dev)':'Crediti azzerati (dev)'); },1500); });
-  b.addEventListener('pointerup', ()=>clearTimeout(t));
-  b.addEventListener('pointerleave', ()=>clearTimeout(t));
+  let t=null; const b=document.getElementById('freeBadge');
+  b.addEventListener('pointerdown', ()=>{ t=setTimeout(()=>{ const c=readJSON('whatif_credits'); c.date=todayStr(); c.used=0; writeJSON('whatif_credits',c); renderCredits(); alert(T.devReset); },1500);});
+  ["pointerup","pointerleave","pointercancel"].forEach(ev=>b.addEventListener(ev,()=>clearTimeout(t)));
 })();
 
-/* ===== Periodo & stile ===== */
-function renderBadges(){
-  $('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past' ? (lang==='en'?'Past':'Passato') : (lang==='en'?'Future':'Futuro'));
-  const label = prefs.stile==='wtf' ? T.styleWTF : (prefs.stile==='aquivera_divina' ? T.styleDiv : T.styleAq);
-  $('styleBadge').textContent = "🎭 " + label;
-}
-renderBadges();
+/* ===== UI static ===== */
+document.getElementById('titleH1').textContent=T.title;
+document.getElementById('qLabel').textContent=T.yourq;
+document.getElementById('goBtn').textContent=T.gen;
+document.getElementById('clearBtn').textContent=T.clear;
+document.getElementById('styleHint').textContent=T.styleHint;
+document.getElementById('langBtn').textContent=lang.toUpperCase();
+document.getElementById('chipAqv').classList.toggle('sel', prefs.stile==='aquivera');
+document.getElementById('chipWTF').classList.toggle('sel', prefs.stile==='wtf');
 
-$('periodoBadge').onclick=()=>{ prefs.periodo = (prefs.periodo==='past'?'future':'past'); writeJSON('whatif_prefs',prefs); renderBadges(); };
+/* Divina lock */
+const chipDiv=document.getElementById('chipDivina');
+const canDivina = prefs.pro || (prefs.episodes||0) >= 3;
+chipDiv.textContent = canDivina ? "Aquivera Divina" : T.locked;
+chipDiv.disabled = !canDivina;
+
+/* Suggerimenti compatti */
+const sugg = T.chips;
+const sRow=document.getElementById('suggestRow');
+sugg.forEach(txt=>{
+  const b=document.createElement('button');
+  b.className='chip'; b.textContent=txt;
+  b.onclick=()=>{ const i=document.getElementById('qInput'); i.value = i.value ? (i.value+" • "+txt) : txt; i.focus(); };
+  sRow.appendChild(b);
+});
+
+/* Micro-domande profilo (semplici) */
+document.getElementById('profTitle').textContent=T.profTitle;
+const kv=document.getElementById('kvProfile');
+const profStore = readJSON('whatif_profile', {});
+T.microToday.forEach(f=>{
+  const wrap=document.createElement('div'); wrap.className='mini';
+  const lab=document.createElement('div'); lab.className='badge'; lab.textContent=f.lbl;
+  const inp=document.createElement('input'); inp.placeholder=f.ph; inp.value = profStore[f.k] || "";
+  inp.id = 'pf_'+f.k;
+  wrap.appendChild(lab); wrap.appendChild(inp);
+  kv.appendChild(wrap);
+});
+document.getElementById('saveProfileBtn').onclick=()=>{
+  const out={};
+  T.microToday.forEach(f=>{ out[f.k] = (document.getElementById('pf_'+f.k).value||"").trim(); });
+  writeJSON('whatif_profile', {...profStore, ...out, date: todayStr()});
+  document.getElementById('profSaved').textContent=T.profSaved;
+  setTimeout(()=>{document.getElementById('profSaved').textContent=""},1400);
+};
+
+/* Collassabili con stato persistente */
+function setupCollapsible(secId, hdrId, cntId, storeKey){
+  const sec=document.getElementById(secId);
+  const hdr=document.getElementById(hdrId);
+  const cnt=document.getElementById(cntId);
+  const st=readJSON('collapse_state', {});
+  const open = st[storeKey]!==false;
+  cnt.style.display = open ? 'block' : 'none';
+  sec.querySelector('.icon').textContent = open ? '▼' : '▲';
+  hdr.onclick = ()=>{
+    const isOpen = cnt.style.display!=='none';
+    cnt.style.display = isOpen ? 'none' : 'block';
+    sec.querySelector('.icon').textContent = isOpen ? '▲' : '▼';
+    const cur=readJSON('collapse_state',{});
+    cur[storeKey]=!isOpen; writeJSON('collapse_state',cur);
+  };
+}
+setupCollapsible('secProfile','hdrProfile','profContent','profile');
+setupCollapsible('secNext','hdrNext','nextContent','next');
+setupCollapsible('secStories','hdrStories','storiesContent','stories');
+
+/* Navigazione & lingua */
+document.getElementById('backBtn').onclick=()=>history.back();
+document.getElementById('homeBtn').onclick=()=>location.href='index.html';
+document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang', lang==='it'?'en':'it'); location.reload(); };
+
+/* Stile chips */
 document.getElementById('styleChips').addEventListener('click',(e)=>{
   const b=e.target.closest('.chip'); if(!b) return;
-  const next = b.dataset.style;
-  if(next==='aquivera_divina' && !prefs.pro){ alert(T.proNeed); return; }
-  prefs.stile = next; writeJSON('whatif_prefs',prefs);
-  document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-  renderBadges();
+  const style=b.dataset.style;
+  if(style==='aquivera_divina' && !canDivina) return;
+  prefs.stile=style; writeJSON('whatif_prefs',prefs);
+  document.querySelectorAll('#styleChips .chip').forEach(x=>x.classList.remove('sel'));
+  b.classList.add('sel');
+  document.documentElement.setAttribute('data-theme', style==='wtf'?'wtf':'whatif');
 });
 
-/* ===== Language / Pro / Nav ===== */
-$('langBtn').onclick=()=>{ LS.setItem('lang', lang==='it'?'en':'it'); location.reload(); };
-$('proBtn').onclick=()=>{ prefs.pro=!prefs.pro; writeJSON('whatif_prefs',prefs); ensureCredits(); renderFree(); $('proBtn').textContent=prefs.pro?T.proOn:T.pro; };
-$('backBtn').onclick=()=>history.back();
-$('homeBtn').onclick=()=>location.href='index.html';
-
-/* ===== Extra chips ===== */
-const chipWrap=$('extraChips');
-[T.chip1,T.chip2,T.chip3,T.chip4].forEach(txt=>{
-  const b=document.createElement('button'); b.className='chip'; b.textContent=txt;
-  b.onclick=()=>{ const i=$('extraInput'); i.value = i.value ? (i.value+' • '+txt) : txt; i.focus(); };
-  chipWrap.appendChild(b);
-});
-
-/* ===== Micro-questions: once per day, collapsible state persists ===== */
-function microKey(){ return 'micro_'+todayStr(); }
-function loadMicro(){
-  const d=readJSON(microKey(), null);
-  if(d){ $('mood').value=d.mood||""; $('energy').value=d.energy||""; $('city').value=d.city||""; $('focus').value=d.focus||""; $('microBox').open=false; }
+/* Credito check */
+function canGenerate(){
+  const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:false});
+  const cap=c.pro?10:3;
+  return (c.used||0) < cap;
 }
-$('saveMicroBtn').onclick=()=>{
-  const payload = { mood:$('mood').value, energy:$('energy').value, city:$('city').value.trim(), focus:$('focus').value.trim(), ts:Date.now() };
-  writeJSON(microKey(),payload);
-  $('microBox').open=false;
-  alert(lang==='en'?'Saved for today.':'Salvato per oggi.');
-};
-loadMicro();
-
-/* ===== Clear fields ===== */
-$('clearBtn').onclick=()=>{ $('qInput').value=""; $('extraInput').value=""; };
-
-/* ===== Credits gate ===== */
-function consumeCreditOrBlock(){
-  const c=readJSON('whatif_credits'); const cap=c.pro?DAILY_PRO:DAILY_FREE;
-  if((c.used||0)>=cap){ alert(lang==='en'?'No credits left today.':'Crediti esauriti per oggi.'); return false; }
-  c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderFree(); return true;
+function consumeCredit(){
+  const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:false});
+  c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderCredits();
 }
 
-/* ===== Saved for tomorrow + History ===== */
-function fmt(ts){ const d=new Date(ts); return d.toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
+/* Domande salvate per domani */
+function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
 function renderNext(){
+  const box=document.getElementById('nextList'); box.innerHTML="";
   const arr=readJSON('next_prompts',[]);
-  const box=$('nextList'); box.innerHTML="";
-  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent= lang==='en'?'— No saved items.':'— Nessun salvato.'; box.appendChild(p); return; }
-  arr.slice(0,12).forEach(item=>{
-    const row=document.createElement('div'); row.className='story';
+  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=T.emptyNext; box.appendChild(p); return; }
+  arr.slice(0,10).forEach(item=>{
+    const row=document.createElement('div'); row.className='storyItem';
     const left=document.createElement('div');
-    left.innerHTML = `<div style="font-weight:700;max-width:540px">${item.q}</div><div class="meta">${fmt(item.ts)} · ${item.stile}</div>`;
-    const right=document.createElement('div'); right.className='row';
-    const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=T.use;
-    useBtn.onclick=()=>{ $('qInput').value=item.q; window.scrollTo({top:0,behavior:'smooth'}); };
+    left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.q}</div><div class="small">${fmtDate(item.ts)} · ${item.stile||'aquivera'}</div>`;
+    const right=document.createElement('div'); right.className='rightRow';
+    const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=T.reuse;
+    useBtn.onclick=()=>{ document.getElementById('qInput').value=item.q; window.scrollTo({top:0,behavior:'smooth'}); };
     const play=document.createElement('button'); play.className='play'; play.textContent=T.play;
-    play.onclick=()=>{
-      // riprende il thread: incrementa step e lancia la quinta
-      const threads = readJSON('threads', {});
-      const id = item.threadId || (item.q.toLowerCase().slice(0,80));
-      threads[id] = { base:item.base||item.q, steps:(item.steps||0)+1, stile:item.stile||'aquivera', divinaDemo:false };
-      writeJSON('threads', threads);
-      LS.setItem('thread_id', id);
-      LS.setItem('domanda', item.q);
-      location.href='fifth.html';
-    };
-    right.appendChild(useBtn); right.appendChild(play);
+    play.onclick=()=>{ LS.setItem('domanda', item.q); writeJSON('whatif_prefs', {...prefs, stile: item.stile||'aquivera' }); location.href='fifth.html'; };
     row.appendChild(left); row.appendChild(right);
+    right.appendChild(useBtn); right.appendChild(play);
     box.appendChild(row);
   });
 }
-function renderHist(){
+renderNext();
+document.getElementById('clearNextBtn').onclick=()=>{ writeJSON('next_prompts',[]); renderNext(); document.getElementById('clearNextTxt').textContent=T.clearNext; };
+
+/* Storie recenti (replay) */
+function renderStories(){
+  const box=document.getElementById('storyList'); box.innerHTML="";
   const arr=readJSON('cronologia',[]);
-  const box=$('storyList'); box.innerHTML="";
-  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent= lang==='en'?'— No history.':'— Nessuna storia.'; box.appendChild(p); return; }
-  arr.slice(0,12).forEach(item=>{
-    const row=document.createElement('div'); row.className='story';
+  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=T.emptyStories; box.appendChild(p); return; }
+  arr.slice(0,10).forEach(item=>{
+    const row=document.createElement('div'); row.className='storyItem';
     const left=document.createElement('div');
-    left.innerHTML = `<div style="font-weight:700;max-width:540px">${item.domanda}</div><div class="meta">${fmt(item.ts)} · ${item.stile}</div>`;
+    left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.domanda}</div><div class="small">${fmtDate(item.ts)} · ${item.stile||'aquivera'} · <span class="link" data-id="${item.ts}" data-act="replay">${T.replay}</span></div>`;
+    const right=document.createElement('div'); right.className='rightRow';
     const play=document.createElement('button'); play.className='play'; play.textContent=T.play;
-    play.onclick=()=>{
-      // replay: non genera, mostra la risposta salvata in quinta
-      writeJSON('replay_story', { domanda:item.domanda, stile:item.stile, answer:item.risposta, ts:item.ts });
-      location.href='fifth.html?view=replay';
-    };
-    row.appendChild(left); row.appendChild(play);
+    play.onclick=()=>{ LS.setItem('domanda', item.domanda); writeJSON('replay_story', item); location.href='fifth.html?view=replay'; };
+    row.appendChild(left); row.appendChild(right);
+    right.appendChild(play);
     box.appendChild(row);
   });
+  // link replay inline
+  box.querySelectorAll('[data-act="replay"]').forEach(a=>{
+    a.onclick=()=>{ const ts=a.getAttribute('data-id'); const it=arr.find(x=>String(x.ts)===String(ts)); if(!it)return; writeJSON('replay_story',it); location.href='fifth.html?view=replay'; };
+  });
 }
-$('clearNextBtn').onclick=()=>{ localStorage.removeItem('next_prompts'); renderNext(); };
-$('clearHistBtn').onclick=()=>{ localStorage.removeItem('cronologia'); renderHist(); };
+renderStories();
+document.getElementById('clearHistBtn').onclick=()=>{ writeJSON('cronologia',[]); renderStories(); document.getElementById('clearHistTxt').textContent=T.clearHist; };
 
-/* ===== Genera → vai in quinta ===== */
-$('goBtn').onclick=()=>{
-  const domanda=$('qInput').value.trim(); if(!domanda){ $('qInput').focus(); return; }
-  if(!consumeCreditOrBlock()) return;
-
-  const micro = readJSON(microKey(),{});
-  const extra = (($('extraInput').value||"") + " | " +
-    [micro.mood?`mood:${micro.mood}`:"", micro.energy?`energy:${micro.energy}`:"", micro.city?`city:${micro.city}`:"", micro.focus?`focus:${micro.focus}`:""].filter(Boolean).join(", ")
-  ).trim();
-
+/* Genera */
+document.getElementById('goBtn').onclick=()=>{
+  if(!canGenerate()){ alert(lang==='en'?'Out of daily credits.':'Crediti giornalieri esauriti.'); return; }
+  const domanda=(document.getElementById('qInput').value||"").trim();
+  if(!domanda){ document.getElementById('qInput').focus(); return; }
+  // salva profilo rapido in req
+  const prof=readJSON('whatif_profile',{});
+  writeJSON('whatif_request',{domanda, stile:prefs.stile, extra: JSON.stringify(prof)});
   LS.setItem('domanda',domanda);
-  writeJSON('whatif_request',{ domanda, stile:prefs.stile, lang, extra });
-
-  // crea/aggiorna thread
-  const threads = readJSON('threads', {});
-  const id = domanda.toLowerCase().slice(0,80);
-  if(!threads[id]) threads[id] = { base:domanda, steps:1, stile:prefs.stile, divinaDemo:false };
-  LS.setItem('thread_id', id);
-  writeJSON('threads', threads);
-
+  consumeCredit();
   location.href='fifth.html';
 };
 
-/* ===== Boot ===== */
-function boot(){
-  document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-  $('qInput').placeholder = (lang==='en'?"What if I moved back to L’Aquila?":"E se tornassi a vivere all’Aquila?");
-  renderNext(); renderHist();
-  // default collapsed states persist via <details> native
-}
-boot();
+/* Pulisci */
+document.getElementById('clearBtn').onclick=()=>{ document.getElementById('qInput').value=""; };
+
+/* Lingua & nav */
+document.getElementById('backBtn').onclick=()=>history.back();
+document.getElementById('homeBtn').onclick=()=>location.href='index.html';
+document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang', lang==='it'?'en':'it'); location.reload(); };
 </script>
 </body>
 </html>
