@@ -8,8 +8,8 @@
 <style>
 :root{
   --bg:#0B0B0C; --bg2:#101414; --fg:#ffffff; --muted:#A0B2BA;
-  --acc:#1C57A0; --acc2:#FFEC01;            /* whatif */
-  --wtf1:#3A6B56; --wtf2:#5A8C75;           /* wtf */
+  --acc:#1C57A0; --acc2:#FFEC01;
+  --wtf1:#3A6B56; --wtf2:#5A8C75;
   --card:rgba(20,28,34,.92); --line:rgba(255,255,255,.12);
   --chip:#121A26; --ink:#0A0E12; --shadow:rgba(0,0,0,.35);
 }
@@ -27,9 +27,6 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
 .label{color:var(--acc);font-weight:800;margin:0 0 8px}
 .input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
 .center{max-width:760px;margin:0 auto}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
-.chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
 .story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
 .play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
 .meta{font-size:12px;color:var(--muted)}
@@ -38,12 +35,12 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
 .empty{color:var(--muted);font-size:14px}
 hr.sep{border:none;height:1px;background:rgba(255,255,255,.08);margin:10px 0}
 
-/* Micro Q responsive grid */
+/* grid micro */
 .kv{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
 .kv input{font-size:14px;padding:10px}
 @media (min-width:700px){ .kv{grid-template-columns:repeat(3,1fr)} }
 
-/* Collapsible */
+/* collapsible */
 .collapsed .body{display:none}
 .collapsed .arrow{transform:rotate(-90deg)}
 .header{display:flex;justify-content:space-between;align-items:center;cursor:pointer}
@@ -61,7 +58,7 @@ hr.sep{border:none;height:1px;background:rgba(255,255,255,.08);margin:10px 0}
       <button class="btn" id="homeBtn">🏠</button>
     </div>
     <div class="row">
-      <span class="badge" id="freeBadge" title="">—</span>
+      <span class="badge" id="freeBadge">—</span>
       <button class="btn" id="langBtn">IT</button>
     </div>
   </div>
@@ -75,14 +72,14 @@ hr.sep{border:none;height:1px;background:rgba(255,255,255,.08);margin:10px 0}
         <span class="badge" id="periodoBadge">🕰️ —</span>
         <span class="badge" id="styleBadge">🎭 —</span>
       </div>
-      <div class="chips" id="styleChips">
-        <button class="chip" data-style="whatif" id="chipWhatIf">What if (realistico)</button>
-        <button class="chip" data-style="wtf" id="chipWTF">What the F (divertente)</button>
+      <div class="row" id="styleChips">
+        <button class="btn ghost" data-style="whatif" id="chipWhatIf">What if (realistico)</button>
+        <button class="btn ghost" data-style="wtf" id="chipWTF">What the F (divertente)</button>
       </div>
     </div>
   </div>
 
-  <!-- Domanda al centro -->
+  <!-- Domanda -->
   <div class="card center">
     <h3 class="label" id="qLabel">La tua domanda</h3>
     <textarea id="qInput" rows="3" class="input" placeholder="E se tornassi a vivere all’Aquila?"></textarea>
@@ -92,7 +89,7 @@ hr.sep{border:none;height:1px;background:rgba(255,255,255,.08);margin:10px 0}
         <div class="label" style="margin:0" id="addLabel">Aggiungi un dettaglio (opzionale)</div>
         <span class="meta" id="hintMeta">aiuta la risposta di oggi</span>
       </div>
-      <input id="extraInput" class="input" placeholder="es. primo segnale di successo, budget, luogo specifico…"/>
+      <input id="extraInput" class="input" placeholder="es. budget, quartiere, primo segnale che cerchi…"/>
       <p class="tip" id="tipNote">Tip: puoi cambiare stile sopra; colori e tono si adattano.</p>
     </div>
 
@@ -102,7 +99,7 @@ hr.sep{border:none;height:1px;background:rgba(255,255,255,.08);margin:10px 0}
     </div>
   </div>
 
-  <!-- Micro-domande di oggi -->
+  <!-- Micro-domande semplici -->
   <div class="card center" id="microCard">
     <div class="header" id="microHeader">
       <h3 class="label" id="microTitle">Micro-domande di oggi • 0/3</h3>
@@ -110,18 +107,18 @@ hr.sep{border:none;height:1px;background:rgba(255,255,255,.08);margin:10px 0}
     </div>
     <div class="body">
       <div class="kv">
-        <input id="m1" class="input" />
-        <input id="m2" class="input" />
-        <input id="m3" class="input" />
+        <input id="m1" class="input"/>
+        <input id="m2" class="input"/>
+        <input id="m3" class="input"/>
       </div>
       <div class="row" style="margin-top:10px;justify-content:space-between">
-        <span class="tip" id="microHint">Servono per personalizzare la voce: identità, famiglia, motivazione.</span>
+        <span class="tip" id="microHint">Servono per personalizzare la voce.</span>
         <button class="btn" id="saveMicroBtn">Salva micro-risposte</button>
       </div>
     </div>
   </div>
 
-  <!-- Domande salvate per domani -->
+  <!-- Salvate -->
   <div class="card center collapsed" id="savedCard">
     <div class="header" id="savedHeader">
       <h3 class="label" id="nextLabel">Domande salvate per domani</h3>
@@ -130,9 +127,7 @@ hr.sep{border:none;height:1px;background:rgba(255,255,255,.08);margin:10px 0}
         <span class="arrow">▾</span>
       </div>
     </div>
-    <div class="body">
-      <div id="nextList" class="list"></div>
-    </div>
+    <div class="body"><div id="nextList" class="list"></div></div>
   </div>
 
   <!-- Storie recenti -->
@@ -144,9 +139,7 @@ hr.sep{border:none;height:1px;background:rgba(255,255,255,.08);margin:10px 0}
         <span class="arrow">▾</span>
       </div>
     </div>
-    <div class="body">
-      <div id="storyList" class="list"></div>
-    </div>
+    <div class="body"><div id="storyList" class="list"></div></div>
   </div>
 
 </main>
@@ -172,22 +165,23 @@ const I18N={
     next:"Domande salvate per domani", stories:"Le tue storie recenti",
     emptyNext:"— Nessuna domanda salvata.", emptyStories:"— Nessuna storia.",
     reuse:"Usa", play:"▶",
-    /* micro */
+    clearSaved:"Svuota salvate", clearStories:"Svuota storie",
+    /* micro semplici, rotazione */
     microTitle:(n,d)=>`Micro-domande di oggi • ${n}/${d}`,
     microSave:"Salva micro-risposte",
     microHint:"Servono per personalizzare la voce.",
     microLocked:"Già salvate oggi. Si sbloccano domani.",
-    /* rota set */
     set:[
-      ["Chi sei in una riga? (ruolo/lavoro)","Chi conta su di te? (partner/figli/genitori/nessuno)","Cosa cerchi ora? (impatto/crescita/serenità)"],
-      ["Cosa fai davvero meglio?","Cosa ti annoia a lavoro?","Quando rendi al massimo?"],
-      ["Come inizi le mattine di solito?","Cosa rubi tempo per te?","Cosa taglieresti subito?"],
-      ["Energia: bassa/media/alta? perché?","Quante ore di sonno vere?","Cosa ti ricarica velocemente?"],
-      ["Relazioni che ti spingono?","Relazioni che ti frenano?","Persona da chiamare più spesso?"],
-      ["Budget mensile realistico?","Spese che non vuoi più?","Cosa vale pagare di più?"],
-      ["Cosa non vuoi perdere?","Cosa vuoi guadagnare?","Segnale che dice: sto andando bene."]
+      ["Il tuo nome e città?","Che lavoro fai (una parola)?","Con chi vivi?"],
+      ["Orario in cui rendi meglio?","Hai figli/animali?","Dove lavori (casa/ufficio/misto)?"],
+      ["Budget mensile libero (stima)?","Cosa ti stressa di più?","Cosa ti ricarica subito?"],
+      ["Quanto dormi (ore vere)?","Hai qualcuno che conti come ‘base’?", "Che obiettivo ti guida ora?"],
+      ["Vuoi cambiare città? sì/no","Hai un piano o navighi a vista?","Primo segnale che cerchi?"],
+      ["Cosa non vuoi perdere?","Cosa vuoi aggiungere?","In 1 parola: priorità ora?"],
+      ["Relazione con lavoro: ok/stretta/troppo?","Soldi: ok/stretti?","Energia: bassa/media/alta?"]
     ],
-    saved:"Salvato!"
+    saved:"Salvato!",
+    alertLimit:"Hai finito i crediti di oggi. Torna domani."
   },
   en:{
     title:"Set your question",
@@ -200,119 +194,102 @@ const I18N={
     next:"Saved for tomorrow", stories:"Your recent stories",
     emptyNext:"— No saved questions.", emptyStories:"— No recent stories.",
     reuse:"Use", play:"▶",
+    clearSaved:"Clear saved", clearStories:"Clear stories",
     microTitle:(n,d)=>`Today’s micro-questions • ${n}/${d}`,
     microSave:"Save micro-answers",
     microHint:"They personalize the voice.",
-    microLocked:"Saved for today. Unlocks tomorrow.",
+    microLocked:"Already saved today. Unlocks tomorrow.",
     set:[
-      ["Who are you in one line? (role/job)","Who relies on you? (partner/kids/parents/none)","What are you optimizing for now? (impact/growth/calm)"],
-      ["What do you do best?","What bores you at work?","When do you perform best?"],
-      ["How do you start mornings?","What do you steal time for?","What would you cut first?"],
-      ["Energy: low/medium/high — why?","Real hours of sleep?","What recharges you fast?"],
-      ["Relationships that push you?","Ones that hold you back?","Who should you call more?"],
-      ["Real monthly budget?","Expenses you want less of?","What’s worth paying extra for?"],
-      ["What can’t you lose?","What do you want more of?","A sign that says: I’m on track."]
+      ["Your name & city?","What’s your job (one word)?","Who do you live with?"],
+      ["Best focus time?","Kids/pets?","Where do you work (home/office/mix)?"],
+      ["Free monthly budget (rough)?","What stresses you most?","What recharges you fast?"],
+      ["How many real sleep hours?","Who’s your ‘base’ person?", "What goal drives you now?"],
+      ["Want to move city? yes/no","Plan or improvise?","First sign you’ll watch for?"],
+      ["What can’t you lose?","What do you add next?","One word: priority now?"],
+      ["Work: fine/tight/too much?","Money: fine/tight?","Energy: low/med/high?"]
     ],
-    saved:"Saved!"
+    saved:"Saved!",
+    alertLimit:"Daily limit reached. Come back tomorrow."
   }
 };
 const lang=(LS.getItem('lang')||'it').toLowerCase();
 const T=I18N[lang]||I18N.it; document.documentElement.lang=lang;
 
-/* ===== Prefs / Tema ===== */
+/* ===== Prefs & tema ===== */
 const prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
 /* ===== UI static ===== */
-$('titleH1').textContent=T.title;
-$('qLabel').textContent=T.yourq; $('addLabel').textContent=T.addDetail;
-$('hintMeta').textContent=T.hint; $('tipNote').textContent=T.tip;
-$('goBtn').textContent=T.gen; $('clearBtn').textContent=T.clear;
+$('titleH1').textContent=T.title; $('qLabel').textContent=T.yourq;
+$('addLabel').textContent=T.addDetail; $('hintMeta').textContent=T.hint;
+$('tipNote').textContent=T.tip; $('goBtn').textContent=T.gen; $('clearBtn').textContent=T.clear;
 $('chipWhatIf').textContent=T.whatif; $('chipWTF').textContent=T.wtf;
 $('nextLabel').textContent=T.next; $('storiesLabel').textContent=T.stories;
 $('langBtn').textContent=lang.toUpperCase();
+$('clearSavedBtn').textContent=T.clearSaved; $('clearHistoryBtn').textContent=T.clearStories;
 
-/* ===== Periodo & stile badge ===== */
+/* ===== badges ===== */
 function renderTopBadges(){
-  $('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past'? (lang==='en'?'Past':'Passato') : (lang==='en'?'Future':'Futuro'));
-  $('styleBadge').textContent   = "🎭 " + (prefs.stile==='wtf'? (lang==='en'?'What the F':'What the F') : (lang==='en'?'What if':'What if'));
-  document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
+  $('periodoBadge').textContent="🕰️ "+(prefs.periodo==='past'?(lang==='en'?'Past':'Passato'):(lang==='en'?'Future':'Futuro'));
+  $('styleBadge').textContent="🎭 "+(prefs.stile==='wtf'?(lang==='en'?'What the F':'What the F'):(lang==='en'?'What if':'What if'));
+  document.querySelectorAll('#styleChips .btn').forEach(b=> b.classList.toggle('primary', b.dataset.style===prefs.stile));
 }
 renderTopBadges();
 
-/* ===== Crediti ===== */
+/* ===== credits ===== */
 const DAILY_FREE=3, DAILY_PRO=10;
+function today(){return todayStr()}
 function ensureCredits(){
-  const c=readJSON('whatif_credits',{date:todayStr(),used:0,pro:!!prefs.pro});
-  if(c.date!==todayStr()){c.date=todayStr(); c.used=0;}
-  c.pro = !!prefs.pro; writeJSON('whatif_credits',c);
+  const c=readJSON('whatif_credits',{date:today(),used:0,pro:!!prefs.pro});
+  if(c.date!==today()){c.date=today(); c.used=0;}
+  c.pro=!!prefs.pro; writeJSON('whatif_credits',c);
 }
 function renderCredits(){
   const c=readJSON('whatif_credits'); const cap=c.pro?DAILY_PRO:DAILY_FREE;
-  const left=Math.max(0, cap-(c.used||0));
-  $('freeBadge').textContent=T.free(left,cap,c.pro);
-  $('freeBadge').title = (lang==='en'
-    ? "Long-press to dev-reset today · Triple-tap to toggle PRO (local)"
-    : "Pressione lunga reset dev oggi · Triplo tap per PRO (locale)");
+  const left=Math.max(0,cap-(c.used||0)); $('freeBadge').textContent=T.free(left,cap,c.pro);
 }
 ensureCredits(); renderCredits();
-
-/* DEV: reset & PRO toggle */
+/* dev: long-press reset + triple-tap toggle PRO */
 (function adminGestures(){
-  const b=$('freeBadge'); let pressTimer=null, clicks=0, clickT=null;
-  b.addEventListener('pointerdown',()=>{ clearTimeout(pressTimer); pressTimer=setTimeout(()=>{ const c=readJSON('whatif_credits'); c.date=todayStr(); c.used=0; writeJSON('whatif_credits',c); renderCredits(); alert(lang==='en'?'Credits reset for today (dev)':'Crediti di oggi azzerati (dev)'); },1500); });
-  ['pointerup','pointerleave','pointercancel'].forEach(ev=> b.addEventListener(ev,()=>clearTimeout(pressTimer)));
-  b.addEventListener('click', ()=>{ clearTimeout(clickT); clicks++; clickT=setTimeout(()=>{ if(clicks>=3){ prefs.pro=!prefs.pro; writeJSON('whatif_prefs',prefs); ensureCredits(); renderCredits(); alert(prefs.pro?'PRO ON':'PRO OFF'); } clicks=0; },280); });
+  const b=$('freeBadge'); let t=null, clicks=0, h=null;
+  b.addEventListener('pointerdown',()=>{ t=setTimeout(()=>{ const c=readJSON('whatif_credits'); c.date=today(); c.used=0; writeJSON('whatif_credits',c); renderCredits(); alert(lang==='en'?'Credits reset (dev)':'Crediti azzerati (dev)'); },1500); });
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=> b.addEventListener(ev,()=>clearTimeout(t)));
+  b.addEventListener('click',()=>{ clearTimeout(h); clicks++; h=setTimeout(()=>{ if(clicks>=3){ prefs.pro=!prefs.pro; writeJSON('whatif_prefs',prefs); ensureCredits(); renderCredits(); alert(prefs.pro?'PRO ON':'PRO OFF'); } clicks=0; },280); });
 })();
 
-/* ===== Lingua & nav ===== */
+/* ===== lingua & nav ===== */
 $('langBtn').onclick=()=>{ LS.setItem('lang', lang==='it'?'en':'it'); location.reload(); };
 $('backBtn').onclick=()=>history.back(); $('homeBtn').onclick=()=>location.href='index.html';
-$('periodoBadge').onclick=()=>{ prefs.periodo = (prefs.periodo==='past'?'future':'past'); writeJSON('whatif_prefs',prefs); renderTopBadges(); };
+$('periodoBadge').onclick=()=>{ prefs.periodo=prefs.periodo==='past'?'future':'past'; writeJSON('whatif_prefs',prefs); renderTopBadges(); };
+document.getElementById('styleChips').addEventListener('click',e=>{ const b=e.target.closest('.btn'); if(!b) return; prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs); document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif'); renderTopBadges(); });
 
-/* ===== Stile chips ===== */
-document.getElementById('styleChips').addEventListener('click', (e)=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs);
-  document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-  renderTopBadges();
-});
+/* ===== collapsible ===== */
+function makeCollapsible(card, header){ header.addEventListener('click',()=>card.classList.toggle('collapsed')); }
+makeCollapsible($('savedCard'),$('savedHeader')); makeCollapsible($('storyCard'),$('storyHeader')); makeCollapsible($('microCard'),$('microHeader'));
 
-/* ===== Collapsible boxes ===== */
-function makeCollapsible(card, header){
-  header.addEventListener('click', ()=> card.classList.toggle('collapsed'));
-}
-makeCollapsible($('savedCard'), $('savedHeader'));
-makeCollapsible($('storyCard'), $('storyHeader'));
-makeCollapsible($('microCard'), $('microHeader'));
+/* ===== placeholders ===== */
+$('qInput').placeholder = (lang==='en'?"What if I moved back to L’Aquila?":"E se tornassi a vivere all’Aquila?");
+$('extraInput').placeholder = (lang==='en'?"e.g., budget, neighborhood, first success sign…":"es. budget, quartiere, primo segnale…");
 
-/* ===== Extra chips minimal (restano input libero) ===== */
-$('qInput').placeholder = (lang==='en' ? "What if I moved back to L’Aquila?" : "E se tornassi a vivere all’Aquila?");
-$('extraInput').placeholder = (lang==='en' ? "e.g., success signal, budget, specific place…" : "es. primo segnale di successo, budget, luogo specifico…");
-
-/* ===== Micro-domande (rotazione giornaliera + 1 volta/dì) ===== */
-function weekIndex(){ return new Date().getDay(); } // 0=Dom
-function microKey(){ return 'micro_'+todayStr(); }
+/* ===== micro-domande semplici ===== */
+function weekIndex(){ return new Date().getDay(); } // 0..6
+function microKey(){ return 'micro_'+today(); }
 function microAll(){ return readJSON('whatif_micro',{}); }
 function microToday(){ return microAll()[microKey()] || {m1:"",m2:"",m3:"",saved:false}; }
 function microSave(v){ const all=microAll(); all[microKey()]=v; writeJSON('whatif_micro',all); }
 
 function setMicroPlaceholders(){
-  const set = T.set[weekIndex()] || T.set[0];
+  const set=(T.set[weekIndex()]||T.set[0]);
   $('m1').placeholder=set[0]; $('m2').placeholder=set[1]; $('m3').placeholder=set[2];
-  $('microHint').textContent=T.microHint; $('saveMicroBtn').textContent=T.microSave;
 }
-
 function updateMicroSummary(){
   const n=[ $('m1').value, $('m2').value, $('m3').value ].filter(v=>(v||"").trim()).length;
   $('microTitle').textContent=T.microTitle(n,3); $('microCount').textContent=`${n}/3`;
 }
-
 function lockMicro(lock){
   ['m1','m2','m3','saveMicroBtn'].forEach(id=>{ const el=$(id); el.disabled=!!lock; el.classList.toggle('ghost',!!lock); });
-  $('microHint').textContent = lock ? T.microLocked : T.microHint;
+  $('microHint').textContent = lock ? (T.microLocked) : (T.microHint);
 }
-
 (function bootMicro(){
   setMicroPlaceholders();
   const t=microToday(); $('m1').value=t.m1||""; $('m2').value=t.m2||""; $('m3').value=t.m3||"";
@@ -320,44 +297,28 @@ function lockMicro(lock){
   ['m1','m2','m3'].forEach(id=> $(id).addEventListener('input', updateMicroSummary));
   $('saveMicroBtn').onclick=()=>{
     const payload={ m1:($('m1').value||"").trim(), m2:($('m2').value||"").trim(), m3:($('m3').value||"").trim(), saved:true, ts:Date.now() };
-    const filled=[payload.m1,payload.m2,payload.m3].filter(Boolean).length;
-    if(filled<2){ alert(lang==='en'?'Please answer at least two fields.':'Rispondi ad almeno due campi.'); return; }
-    microSave(payload); lockMicro(true); $('saveMicroBtn').textContent=T.saved; setTimeout(()=>{$('saveMicroBtn').textContent=T.microSave;},1200); updateMicroSummary();
+    if([payload.m1,payload.m2,payload.m3].filter(Boolean).length<2){ alert(lang==='en'?'Answer at least two fields.':'Rispondi ad almeno due campi.'); return; }
+    microSave(payload); lockMicro(true); $('saveMicroBtn').textContent=T.saved; setTimeout(()=>$('saveMicroBtn').textContent=T.microSave,1200); updateMicroSummary();
   };
 })();
 
 /* ===== Genera ===== */
 $('goBtn').onclick=()=>{
-  // crediti
-  const c=readJSON('whatif_credits'); const cap=c.pro?DAILY_PRO:DAILY_FREE;
-  if((c.used||0)>=cap){ alert(lang==='en'?'Daily limit reached. Come back tomorrow.':'Hai finito i crediti di oggi. Torna domani.'); return; }
-
+  const c=readJSON('whatif_credits'); const cap=c.pro?10:3;
+  if((c.used||0)>=cap){ alert(T.alertLimit); return; }
   const domanda=$('qInput').value.trim(); if(!domanda){ $('qInput').focus(); return; }
   const extra=$('extraInput').value.trim();
-  const micro=microToday(); // inviamo anche se non salvate (prendiamo valori correnti)
-
-  // buffer per la quinta (il narratore userà davvero questi dettagli)
-  writeJSON('whatif_clarify_buffer',{
-    q:domanda,
-    extra,
-    micro:{ m1:micro.m1||$('m1').value||"", m2:micro.m2||$('m2').value||"", m3:micro.m3||$('m3').value||"" },
-    ts:Date.now()
-  });
-
-  // consumo credito visibile (la generazione è in quinta)
+  const t=microToday();
+  writeJSON('whatif_clarify_buffer',{ q:domanda, extra, micro:{ m1: t.m1||$('m1').value||"", m2: t.m2||$('m2').value||"", m3: t.m3||$('m3').value||"" }, ts:Date.now()});
   c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderCredits();
-
-  LS.setItem('domanda',domanda);
-  writeJSON('whatif_prefs',prefs);
+  LS.setItem('domanda',domanda); writeJSON('whatif_prefs',prefs);
   location.href='fifth.html';
 };
-
 $('clearBtn').onclick=()=>{ $('qInput').value=""; $('extraInput').value=""; $('qInput').focus(); };
 
-/* ===== Salvati per domani (dalla quinta) ===== */
+/* ===== salvate ===== */
 function renderNextPrompts(){
-  const arr=readJSON('next_prompts',[]);
-  const box=$('nextList'); box.innerHTML='';
+  const arr=readJSON('next_prompts',[]); const box=$('nextList'); box.innerHTML='';
   if(!arr.length){ const p=document.createElement('div'); p.className='empty'; p.textContent=T.emptyNext; box.appendChild(p); return; }
   arr.slice(0,10).forEach(item=>{
     const row=document.createElement('div'); row.className='story';
@@ -367,21 +328,15 @@ function renderNextPrompts(){
     const use=document.createElement('button'); use.className='btn'; use.textContent=T.reuse;
     use.onclick=()=>{ $('qInput').value=item.q||""; window.scrollTo({top:0,behavior:'smooth'}); };
     const play=document.createElement('button'); play.className='play'; play.textContent=T.play;
-    play.onclick=()=>{ // continua subito con quella domanda
-      LS.setItem('domanda', item.q||"");
-      writeJSON('whatif_prefs',{...prefs, stile:item.stile||prefs.stile});
-      location.href='fifth.html';
-    };
-    right.appendChild(use); right.appendChild(play);
-    row.appendChild(left); row.appendChild(right); box.appendChild(row);
+    play.onclick=()=>{ LS.setItem('domanda',item.q||""); writeJSON('whatif_prefs',{...prefs,stile:item.stile||prefs.stile}); location.href='fifth.html'; };
+    right.appendChild(use); right.appendChild(play); row.appendChild(left); row.appendChild(right); box.appendChild(row);
   });
 }
 $('clearSavedBtn').onclick=()=>{ LS.removeItem('next_prompts'); renderNextPrompts(); };
 
-/* ===== Storie recenti (replay fedele) ===== */
+/* ===== storie recenti ===== */
 function renderStories(){
-  const arr=readJSON('cronologia',[]);
-  const box=$('storyList'); box.innerHTML='';
+  const arr=readJSON('cronologia',[]); const box=$('storyList'); box.innerHTML='';
   if(!arr.length){ const p=document.createElement('div'); p.className='empty'; p.textContent=T.emptyStories; box.appendChild(p); return; }
   arr.slice(0,12).forEach(item=>{
     const row=document.createElement('div'); row.className='story';
@@ -394,11 +349,9 @@ function renderStories(){
 }
 $('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
 
-/* ===== Boot lists ===== */
-function boot(){
-  renderTopBadges(); renderCredits(); renderNextPrompts(); renderStories();
-}
-boot();
+/* ===== boot lists ===== */
+(function boot(){ renderTopBadges(); renderCredits(); renderNextPrompts(); renderStories(); })();
+
 </script>
 </body>
 </html>
