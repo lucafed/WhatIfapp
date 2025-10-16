@@ -1,7 +1,7 @@
 // ============================
-// /api/ask.js — Life Cliffhanger Engine™ + Aquivera (final)
-// Stili: aquivera, aquivera_divina, wtf (+ compat IT/EN)
-// Episodio + Followups + Contesto reale opzionale
+// /api/ask.js — Life Cliffhanger Engine™ (finale)
+// Stili: aquivera, aquivera_divina, wtf
+// Features: episodio, suggestions (spunti), followups (opzionale)
 // ============================
 
 import OpenAI from "openai";
@@ -21,145 +21,141 @@ function todayInfo(lang) {
 }
 
 function episodicClosing(style = "aquivera", lang = "it") {
-  const enSoft = [
-    "We’ll pick the thread up right here.",
-    "You’ll feel the next step sooner than you expect.",
-    "Watch the sign; the line keeps pulling."
+  const enAq = [
+    "We’ll pick the thread up tomorrow.",
+    "You’ll see the rest soon.",
+    "The next step will be obvious."
   ];
-  const itSoft = [
-    "Riprendiamo il filo proprio qui.",
-    "Sentirai il prossimo passo prima di quanto credi.",
-    "Osserva il segno: la linea tira ancora."
+  const itAq = [
+    "Riprendiamo il filo domani.",
+    "Il resto lo vedrai presto.",
+    "Il prossimo passo sarà evidente."
   ];
+
   const enDiv = [
-    "The pattern is set; the sign will appear.",
-    "The hour is near. Keep your eyes soft.",
-    "Your thread is already pulling you onward."
+    "The pattern is set; watch for the sign.",
+    "Your hour draws near. Keep your eyes soft.",
+    "The thread is already pulling you forward."
   ];
   const itDiv = [
-    "Il disegno è tracciato; il segno arriverà.",
-    "L’ora è vicina. Tieni lo sguardo morbido.",
-    "Il tuo filo già ti tira in avanti."
+    "Il disegno è tracciato: attendi il segno.",
+    "L’ora si avvicina: tieni lo sguardo morbido.",
+    "Il filo ti sta già tirando avanti."
   ];
+
   const enWtf = [
-    "Keep the glass; tomorrow pours the next scene.",
-    "Park your tab—tomorrow gets loud.",
+    "Keep the glass — the next scene pours itself.",
+    "Leave the tab open; tomorrow gets loud.",
     "The punchline lands tomorrow."
   ];
   const itWtf = [
-    "Tieni il bicchiere: domani si versa la prossima scena.",
+    "Tieni il bicchiere: la prossima scena si versa da sola.",
     "Lascia il conto aperto: domani fa rumore.",
     "La battuta atterra domani."
   ];
-  if (style === "wtf") return pick(isEn(lang) ? enWtf : itWtf);
+
   if (style === "aquivera_divina") return pick(isEn(lang) ? enDiv : itDiv);
-  return pick(isEn(lang) ? enSoft : itSoft);
+  if (style === "wtf") return pick(isEn(lang) ? enWtf : itWtf);
+  return pick(isEn(lang) ? enAq : itAq);
 }
 
-/* ========== Reference tone (do NOT copy) ========== */
-// ITALIANO
-const EX_AQUIVERA_IT = [
-`Presto farai lo stesso percorso ma con un passo diverso: meno rumore, più decisione.
-Ti accorgerai che le prime due risposte arrivano senza cercarle, come quando chiudi troppe schede del browser e il computer respira.
-Una mattina sposterai un appuntamento e quello spazio libero non lo riempirai di ansia: lo userai.
-Ti verrà naturale tenere il telefono a faccia in giù e l’aria sembrerà più larga.
-Capirai che non stai cambiando tutto: stai cambiando ritmo, che è più difficile ma più vero.
-Il primo segnale? Dormirai meglio la notte in cui non ti verrà voglia di spiegarti.
-Riprendiamo da qui.`,
-`Tra poco noterai che gli altri ti faranno domande che non ti infastidiscono più.
-Risponderai breve, chiaro, come chi ha già scelto la direzione.
-Il lunedì perderà il suo volume e il giovedì ti sorprenderà gentile.
-Una piccola cosa si sblocca: non chiedi permessi al passato per muoverti nel presente.
-Ti verrà un gesto nuovo — spostare una sedia, cambiare un tavolo, scegliere un bar con luce migliore.
-È lì che inizierà a girare meglio, senza clamore.
-Il filo continua a tirare.`
-];
-
-const EX_DIVINA_IT = [
-`Il passo decisivo cadrà tra una seconda chiamata e un giovedì asciutto.
-Ti si allineeranno tre indizi minimi: una risposta breve, un nome che ricompare, un respiro più lungo.
-Non cercherai conferme: ti arriveranno con la naturalezza della pioggia leggera.
-La città ti darà una scena chiara — due voci al bar, una finestra aperta, una risata che scioglie.
-Sposterai una cosa di un centimetro e tutto il resto troverà posto.
-In quel gesto capirai che non stai rincorrendo: stai conducendo.
-Il segno arriva, e lo riconoscerai senza chiedere il perché.`
-];
-
-// ENGLISH
-const EX_AQUIVERA_EN = [
-`Soon you will take the same route with a different cadence: less noise, more resolve.
-The first two answers will arrive uninvited, like a laptop breathing after you close ten tabs.
-One morning you will move a meeting and leave the space empty—on purpose.
-Your phone will stay face down, and the air will feel wider.
-You won’t change everything; you’ll change tempo, which is harder and truer.
-The first sign? You will sleep better the night you feel no urge to explain.
-We’ll pick the thread up here.`,
-`Before long, you will notice questions from others no longer bother you.
-You will answer briefly, clearly, like someone who has already chosen a direction.
-Mondays will lose volume; Thursdays will surprise you by being kind.
-A small lock opens: you no longer ask permission from the past to move in the present.
-A new habit will appear — different chair, different table, light that suits you.
-That’s when things will start turning quietly in your favor.
-The line keeps pulling.`
-];
-
-const EX_DIVINA_EN = [
-`The decisive step will fall between a second call and a clear Thursday.
-Three small signs will align: a short reply, a name returning, a longer breath.
-You won’t seek confirmation; it will arrive with the ease of light rain.
-The city will stage it for you — two voices at the counter, a window open, a laugh that releases.
-You will move something by a centimeter and everything else will find its place.
-In that gesture you will know you are leading, not chasing.
-The sign will appear, and you will know it without asking why.`
-];
-
-/* ========== PERSONAS (final) ========== */
+/* ========== Personas (tono definitivo) ========== */
 const PERSONAS = {
+  // Aquivera — pragmatica, reale, “ooooooh”, positiva con lieve malinconia,
+  // SEMPRE al futuro certo. Fa sentire che prevede davvero.
   aquivera: {
     system: (lang) => `
-You are "Aquivera" — a pragmatic, predictive narrator who speaks in certain future tense.
-Tone: calm, precise, quietly intimate; no poetry, no vagueness, no coaching clichés.
-Show familiarity with the user's pattern without writing “I know you”.
-Use provided profile/micro/context lines naturally; never invent private facts not given.
-Vary openings (${isEn(lang) ? `"Soon you will…", "You will notice…", "It happens that…"` : `"Presto farai…", "Ti accorgerai…", "Succede che…"`}).
-One compact paragraph, ${isEn(lang) ? "7–10" : "7–10"} flowing sentences. No bullet lists.
-End EXACTLY with the closing line provided.
-Reference tone (do not copy text; match rhythm and stance):
-${(isEn(lang) ? EX_AQUIVERA_EN : EX_AQUIVERA_IT).map((t,i)=>`— Example #${i+1} —\n${t}`).join("\n\n")}
+You are "Aquivera" — a pragmatic, quietly emotive narrator who speaks in certain future tense.
+Tone: realistic, grounded, slightly wistful but ultimately positive (“ooooooh” feeling), never purple.
+Sound like you’ve mapped the user’s patterns (do NOT say “I know you”).
+Use any provided profile/micro/context hints naturally; never invent private facts.
+Avoid lists. 7–10 smooth complete sentences in one compact paragraph.
+Close with a gentle hook for tomorrow.
+Reply ONLY in ${isEn(lang) ? "English" : "Italiano"}.
 `.trim()
   },
 
+  // Aquivera Divina — più oracolare, colta, con segni/tempi (“alla seconda chiamata”, “di giovedì”),
+  // SEMPRE al futuro, ma concreta.
   aquivera_divina: {
     system: (lang) => `
-You are "Aquivera Divina" — serene, oracular, omniscient in tone yet concrete.
-Always speak in certain future tense. Offer subtle time cues (e.g., ${isEn(lang) ? `"by the second call", "on a Thursday afternoon"` : `"“alla seconda chiamata”, “un giovedì pomeriggio”"`}).
-Use profile/micro/context when given; do not fabricate private facts.
-One smooth paragraph, ${isEn(lang) ? "8–11" : "8–11"} sentences. No lists.
-End EXACTLY with the closing line provided.
-Reference tone (do not copy; match vibe and precision):
-${(isEn(lang) ? EX_DIVINA_EN : EX_DIVINA_IT).map((t,i)=>`— Example #${i+1} —\n${t}`).join("\n\n")}
+You are "Aquivera Divina" — serene, oracular, cultured. Still concrete and kind.
+Speak in certain future tense; foresee a near-future hinge moment, with subtle time/place cues.
+Weave in provided profile/micro/context hints; NEVER invent personal facts not given.
+No melodrama; luminous precision. 8–11 flowing sentences, one paragraph.
+End with a prophetic hook that clearly implies continuation.
+Reply ONLY in ${isEn(lang) ? "English" : "Italiano"}.
 `.trim()
   },
 
+  // What the F — barista sarcastico, demenziale ma affettuoso, leggermente alticcio,
+  // mini-racconto continuo (non spezzato), 8–10 frasi, con 1–2 gag alcoliche.
   wtf: {
     system: (lang) => `
-You are "What the F": witty, tipsy, sarcastic-but-kind bartender narrator.
-Continuous mini-story, 8–10 lively sentences; one or two booze gags; never cruel.
-Speak to the user in second person; make THEM the protagonist.
-End EXACTLY with the closing line provided.
-Reply only in ${isEn(lang) ? "English" : "Italiano"}.
+You are "What the F" — witty, tipsy, brutally sarcastic but kind.
+Continuous mini-story (not choppy), 8–10 lively sentences. One or two booze gags.
+Never cruel; make them laugh hard and end with a playful cliffhanger for tomorrow.
+Address the user in second person; *they* do the things, not you.
+Reply ONLY in ${isEn(lang) ? "English" : "Italiano"}.
 `.trim()
   }
 };
 
-/* ========== FOLLOWUP PROMPTER ========== */
-function followupSystem(stile, lang) {
+/* ===== Lines from profile/micro (non inventare nulla) ===== */
+function buildProfileLine(profile = {}, lang = "it") {
+  const name = (profile?.name || "").split(" ")[0];
+  const city = profile?.city_now || profile?.city || "";
+  const role = profile?.work_role || profile?.role || "";
+  const tags = profile?.prefs || [];
+
+  const bits = [];
+  if (name) bits.push(isEn(lang) ? `Name: ${name}.` : `Nome: ${name}.`);
+  if (city) bits.push(isEn(lang) ? `City now: ${city}.` : `Città attuale: ${city}.`);
+  if (role) bits.push(isEn(lang) ? `Work: ${role}.` : `Lavoro: ${role}.`);
+  if (Array.isArray(tags) && tags.length) bits.push(isEn(lang) ? `Hints: ${tags.join(", ")}.` : `Indizi: ${tags.join(", ")}.`);
+
+  if (!bits.length) return "";
+  return isEn(lang) ? `Profile hints: ${bits.join(" ")}` : `Indizi profilo: ${bits.join(" ")}`;
+}
+
+function buildMicroLine(micro = {}, lang = "it") {
+  const keys = Object.keys(micro || {}).filter(k => micro[k] !== undefined && micro[k] !== "");
+  if (!keys.length) return "";
+  const pairs = keys.map(k => `${k}: ${micro[k]}`).join("; ");
+  return isEn(lang) ? `Micro-answers today: ${pairs}` : `Micro-risposte di oggi: ${pairs}`;
+}
+
+/* ========== Suggestion builder (post-episodio) ========== */
+function buildSuggestionPrompt({ domanda, answer, stile, lang }) {
+  const sys = isEn(lang) ? `
+Generate 3 concise SUGGESTIONS (not questions) to nudge tomorrow’s continuation.
+They must derive from the user's question and today's answer tone (${stile}).
+Each suggestion MUST start with a verb and stay within 5–12 words.
+Return JSON ONLY: {"suggestions":["...","...","..."]} in English.
+`.trim() : `
+Genera 3 SUGGERIMENTI concisi (non domande) per spingere la continuazione di domani.
+Devono derivare dalla domanda dell’utente e dal tono di oggi (${stile}).
+Ogni suggerimento DEVE iniziare con un verbo e stare tra 5–12 parole.
+Restituisci SOLO JSON: {"suggestions":["...","...","..."]} in Italiano.
+`.trim();
+
+  const usr = isEn(lang) ? `
+User question: "${domanda}"
+Today's answer: "${(answer || "").slice(0, 1200)}"
+`.trim() : `
+Domanda utente: "${domanda}"
+Risposta di oggi: "${(answer || "").slice(0, 1200)}"
+`.trim();
+
+  return { sys, usr };
+}
+
+/* ========== Follow-up builder (se vuoi anche 2 domande mirate) ========== */
+function buildFollowupPrompt(stile, lang) {
   return `
-You generate exactly two short follow-up prompts for TOMORROW.
-They MUST derive from the original question AND TODAY'S ANSWER tone (${stile}).
-Be specific, narrative-linked; no generic coaching.
-Return STRICT JSON: {"followups":["Q1","Q2"]} — nothing else.
-Language: ${isEn(lang) ? "English" : "Italiano"}.
+Return STRICT JSON: {"followups":["Q1","Q2"]}
+Both follow-ups must clearly continue THIS storyline tomorrow, in ${isEn(lang) ? "English" : "Italiano"}.
+Keep them specific and connected to today's answer and the original question. No generic coaching.
 `.trim();
 }
 
@@ -179,29 +175,58 @@ export default async function handler(req, res) {
 
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const {
+      // episodio
       domanda = "",
       stile = "aquivera",     // "aquivera" | "aquivera_divina" | "wtf"
       lang = "it",            // "it" | "en"
-      profile = {},           // { name, city_now, work_role, prefs:[...] }
-      micro = {},             // es: { mood: "3", energy: "4", city: "L’Aquila", focus: "lavoro" }
-      episode = 1,            // 1..3 (gestito dalla tua UI)
+      profile = {},           // { name, city_now, work_role, prefs:[] }
+      micro = {},             // { mood, energy, city, focus, ... }
+      episode = 1,            // 1..3 (se vuoi visualizzarlo)
       contextMode = "clean",  // "clean" | "real"
-      context = "",           // facoltativo: seme di contesto reale (se vuoi popolarlo lato server)
-      follow = false,         // true => genera due followups
-      answer = ""             // testo episodio odierno (per followups)
+      context = "",           // seed realistico opzionale (meteo/eventi) fornito da server/app
+      // suggestions
+      suggestions = false,    // true -> ritorna { suggestions:[] }
+      answer = "",            // testo episodio (per suggestions/followups)
+      // followups (opzionale)
+      follow = false          // true -> ritorna { followups:[] }
     } = body;
 
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    /* ===== FOLLOWUPS ===== */
+    // ----- suggestions branch -----
+    if (suggestions) {
+      const { sys, usr } = buildSuggestionPrompt({ domanda, answer, stile, lang });
+      const r = await client.chat.completions.create({
+        model: MODEL,
+        temperature: 0.5,
+        max_tokens: 220,
+        messages: [
+          { role: "system", content: sys },
+          { role: "user", content: usr }
+        ]
+      });
+      let raw = r.choices?.[0]?.message?.content?.trim() || "{}";
+      let out = { suggestions: [] };
+      try { out = JSON.parse(raw); } catch {}
+      if (!Array.isArray(out.suggestions) || out.suggestions.length < 3) {
+        out.suggestions = isEn(lang)
+          ? ["Note one sign you expect tomorrow.", "Name a tiny step you will take.", "Choose one place that sets your rhythm."]
+          : ["Annota un segno che ti aspetti domani.", "Nomina un passo minuscolo che farai.", "Scegli un luogo che imposti il tuo ritmo."];
+      }
+      return res.status(200).json(out);
+    }
+
+    // ----- followups branch (se vuoi 2 domande mirate per domani) -----
     if (follow) {
-      const sys = followupSystem(stile, lang);
-      const usr = `
+      const sys = buildFollowupPrompt(stile, lang);
+      const usr = isEn(lang) ? `
 Original question: "${domanda}"
 Today's answer: "${(answer || "").slice(0, 1400)}"
-Two follow-up prompts for tomorrow, specific to this narrative thread.
+`.trim() : `
+Domanda originale: "${domanda}"
+Risposta di oggi: "${(answer || "").slice(0, 1400)}"
 `.trim();
 
       const r = await client.chat.completions.create({
@@ -214,51 +239,51 @@ Two follow-up prompts for tomorrow, specific to this narrative thread.
         ]
       });
 
-      const raw = r.choices?.[0]?.message?.content?.trim() || "{}";
+      let raw = r.choices?.[0]?.message?.content?.trim() || "{}";
       let out = { followups: [] };
       try { out = JSON.parse(raw); } catch {}
       if (!Array.isArray(out.followups) || out.followups.length < 2) {
         out.followups = isEn(lang)
-          ? ["What precise sign tomorrow would confirm the direction?", "Which constraint will you remove first?"]
-          : ["Quale segno preciso domani confermerà la direzione?", "Quale vincolo toglierai per primo?"];
+          ? ["What precise sign tomorrow would confirm you’re on track?", "Which constraint will you remove first?"]
+          : ["Quale segno preciso domani ti confermerà la direzione?", "Quale vincolo toglierai per primo?"];
       }
       return res.status(200).json(out);
     }
 
-    /* ===== EPISODIO ===== */
+    // ----- episodio branch -----
     const persona = PERSONAS[stile] || PERSONAS.aquivera;
     const closing = episodicClosing(stile, lang);
 
     const profileLine = buildProfileLine(profile, lang);
     const microLine   = buildMicroLine(micro, lang);
-    const ctxLine     = (contextMode === "real" && context)
-      ? (isEn(lang)
-          ? `Real-world context (seed; do not invent beyond this): ${context}`
-          : `Contesto reale (seme; non inventare oltre questo): ${context}`)
-      : "";
+    const ctxLine     =
+      (contextMode === "real" && context)
+        ? (isEn(lang)
+            ? `Real-world seed (do not invent beyond this): ${context}`
+            : `Contesto reale (seed, non inventare oltre): ${context}`)
+        : "";
 
     const system = `
 ${persona.system(lang)}
 
 Today is ${todayInfo(lang)}.
-Hard rules:
-- Certain future tense (${isEn(lang) ? "will" : "futuro"}), concrete, verifiable.
-- Use provided profile/micro/context lines naturally; NEVER fabricate private facts.
-- 1 compact paragraph. ${stile === "wtf" ? "8–10 lively sentences." : "7–11 smooth sentences."}
+Rules:
+- Speak in certain future tense; concrete, verifiable tone (no fortune-cookie vagueness).
+- Use provided profile/micro/context hints naturally; NEVER invent private facts.
+- One compact paragraph: ${stile === "wtf" ? "8–10 lively sentences." : "7–11 smooth sentences."}
 - End EXACTLY with: "${closing}"
 `.trim();
 
     const user = `
 Question: "${domanda}"
-
 ${profileLine ? profileLine + "\n" : ""}${microLine ? microLine + "\n" : ""}${ctxLine ? ctxLine + "\n" : ""}
 Episode: ${episode} / 3
-Write a self-contained scene that naturally continues the thread.
+Write a self-contained scene that feels like the next step.
 `.trim();
 
-    const c = await client.chat.completions.create({
+    const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.92 : (stile === "aquivera_divina" ? 0.80 : 0.84),
+      temperature: stile === "wtf" ? 0.92 : (stile === "aquivera_divina" ? 0.78 : 0.82),
       max_tokens: 700,
       messages: [
         { role: "system", content: system },
@@ -266,39 +291,19 @@ Write a self-contained scene that naturally continues the thread.
       ]
     });
 
-    const text = c.choices?.[0]?.message?.content?.trim() || "";
+    const text = completion?.choices?.[0]?.message?.content?.trim() || "";
+    if (!text) throw new Error("empty_model_response");
+
     return res.status(200).json({
       answer: text,
       lang,
       style: stile,
-      episode
+      episode,
+      closing
     });
 
   } catch (err) {
     console.error("[/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-}
-
-/* ===== Lines from profile/micro ===== */
-function buildProfileLine(profile = {}, lang = "it") {
-  const name = (profile?.name || "").split(" ")[0];
-  const city = profile?.city_now || profile?.city || "";
-  const role = profile?.work_role || profile?.role || "";
-  const prefs = profile?.prefs || [];
-
-  const parts = [];
-  if (name) parts.push(isEn(lang) ? `Name: ${name}.` : `Nome: ${name}.`);
-  if (city) parts.push(isEn(lang) ? `City now: ${city}.` : `Città attuale: ${city}.`);
-  if (role) parts.push(isEn(lang) ? `Work: ${role}.` : `Lavoro: ${role}.`);
-  if (prefs?.length) parts.push(isEn(lang) ? `Hints: ${prefs.join(", ")}.` : `Indizi: ${prefs.join(", ")}.`);
-
-  return parts.length ? (isEn(lang) ? `Profile hints: ${parts.join(" ")}` : `Indizi profilo: ${parts.join(" ")}`) : "";
-}
-
-function buildMicroLine(micro = {}, lang = "it") {
-  const keys = Object.keys(micro || {});
-  if (!keys.length) return "";
-  const pairs = keys.map(k => `${k}: ${micro[k]}`).join("; ");
-  return isEn(lang) ? `Micro-answers today: ${pairs}` : `Micro-risposte di oggi: ${pairs}`;
 }
