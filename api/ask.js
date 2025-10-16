@@ -1,12 +1,69 @@
 // ============================
 // /api/ask.js — The Life Cliffhanger Engine™
-// versione stabile e compatibile
+// versione stabile e completa (IT/EN, future & past/counterfactual)
 // ============================
 
 import OpenAI from "openai";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const MODEL = "gpt-4o-mini"; // ✅ compatibile
+const MODEL = "gpt-4o-mini";
+
+/* ---------------- Utils ---------------- */
+const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+function episodicClosing(style = "whatif", lang = "it") {
+  const en = isEn(lang);
+  const wtf = en
+    ? ["Keep the glass; the night isn’t done", "Save the tab; next round writes itself", "Same bar tomorrow; truth on ice"]
+    : ["Tieni il bicchiere: la serata non è finita", "Conto aperto: il prossimo giro si scrive da solo", "Stesso bancone domani: verità col ghiaccio"];
+  const whf = en
+    ? ["We’ll nudge the thread soon", "Let’s see where this leads next", "You haven’t seen the rest yet"]
+    : ["Tra poco spingiamo il filo", "Vediamo dove porta il passo dopo", "Non hai ancora visto il resto"];
+  return pick(style === "wtf" ? wtf : whf);
+}
+
+/* ---------------- Personas ---------------- */
+
+const Whatif_IT = `
+Sei "What?f": voce lucida, realistica e predittiva che conosce l’utente.
+Tono: visivo, umano, profetico senza retorica. Frasi complete, fluide (7–10 frasi).
+L’episodio deve avere un seguito implicito (gancio finale).
+Se periodo=future: descrivi un futuro prossimo verosimile, come se lo stessi vedendo accadere.
+Se periodo=past: costruisci un controfattuale (“cosa sarebbe potuto succedere”), chiaro e coinvolgente, senza riscrivere il passato: racconta la linea possibile che sarebbe seguita da lì in avanti.
+Evita elenchi puntati e coaching generico. Niente invenzioni di fatti specifici (soldi, case, offerte) non menzionati dall’utente.
+Chiudi con un gancio morbido e predittivo (non ripetere “Domani” ogni volta; varia).
+Rispondi soltanto in Italiano.
+`;
+
+const Wtf_IT = `
+Sei "What the F": amico da bar brillante, sarcastico, leggermente alticcio ma lucido.
+Racconto continuo, 8–10 frasi, ritmo vivo, battute intelligenti, almeno un riferimento all’alcol.
+Obiettivo: far ridere forte ma far intravedere verità. Mai cattivo.
+Se periodo=future: futuro vicino, realistico ma scatenato; se periodo=past: controfattuale “come sarebbe andata” con ironia.
+Chiudi sempre con una battuta in sospeso (gancio da seriale).
+Niente elenchi. Non inventare dettagli concreti non menzionati.
+Rispondi soltanto in Italiano.
+`;
+
+const Whatif_EN = `
+You are "What?f": clear, realistic, gently prophetic voice that knows the user.
+Tone: visual, human, no grandstanding. 7–10 smooth sentences, complete lines.
+Each episode must feel like it continues.
+If period=future: show a plausible near future as if you’re watching it happen.
+If period=past: craft a counterfactual line (“what could have unfolded”) without rewriting the past; narrate the path that would likely follow from that point.
+No bullet lists, no generic coaching. Do not invent concrete facts (money, apartments, offers) not mentioned by the user.
+End with a soft predictive hook. Reply only in English.
+`;
+
+const Wtf_EN = `
+You are "What the F": witty, tipsy, brutally funny but kind bartender-friend.
+Continuous mini-story, 8–10 sentences, sharp rhythm, at least one booze gag.
+Goal: big laugh + a glimpse of truth. Never mean.
+If period=future: near-future mayhem but believable; if period=past: counterfactual “how it would have gone” with irony.
+Always end with a playful cliffhanger. No lists. Don’t invent concrete facts not mentioned.
+Reply only in English.
+`;
 
 /* ---------------- HTTP handler ---------------- */
 export default async function handler(req, res) {
@@ -22,120 +79,93 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "missing_api_key" });
     }
 
-    // parse body (string or object)
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const {
       domanda = "",
       stile = "whatif",       // "whatif" | "wtf"
       lang = "it",            // "it" | "en"
-      extra = ""
+      extra = "",
+      periodo = "future",     // "future" | "past" (counterfactual)
+      follow = false,         // teaser for tomorrow
+      answer = ""             // today's text (for teasers)
+      // profile, micro … opzionali in futuro
     } = body;
 
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    const systemPrompt = buildSystemPrompt(stile, lang);
-    const userPrompt = `${domanda.trim()}${extra ? ` (${String(extra).trim()})` : ""}`;
+    /* ---- FOLLOW TEASERS ---- */
+    if (follow) {
+      const system = `
+You create exactly three SHORT teaser prompts for TOMORROW to continue a serial story.
+They MUST be derived from the user's original question AND today's answer (tone: "${stile}", period: "${periodo}").
+Write brief IMPERATIVES (not questions), 5–12 words, no final punctuation.
+Reference specific concrete elements from today's answer (places, objects, tiny decisions, time hints).
+Return STRICT JSON: {"followups":["t1","t2","t3"]} — nothing else.
+Language: ${isEn(lang) ? "English" : "Italiano"}.
+`.trim();
+
+      const user = `
+Original question: "${domanda}"
+Today's answer (trimmed): "${(answer || "").slice(0, 1400)}"
+Generate 3 concrete story-driven teasers for tomorrow in the same voice.
+`.trim();
+
+      const r = await client.chat.completions.create({
+        model: MODEL,
+        temperature: stile === "wtf" ? 0.9 : 0.7,
+        max_tokens: 180,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user }
+        ]
+      });
+
+      const raw = r.choices?.[0]?.message?.content?.trim() || "{}";
+      let out = { followups: [] };
+      try { out = JSON.parse(raw); } catch {}
+      if (!Array.isArray(out.followups) || out.followups.length < 3) {
+        out.followups = isEn(lang)
+          ? ["Note the first sign you’ll accept", "Go back to the place you mentioned", "Tell one person and watch what shifts"]
+          : ["Segna il primo segnale che accetterai", "Torna nel posto che hai citato", "Dillo a una persona e guarda cosa cambia"];
+      }
+      return res.status(200).json(out);
+    }
+
+    /* ---- EPISODIO ---- */
+    const system = (stile === "wtf"
+      ? (isEn(lang) ? Wtf_EN : Wtf_IT)
+      : (isEn(lang) ? Whatif_EN : Whatif_IT)
+    ).trim();
+
+    const closing = episodicClosing(stile, lang);
+    const user = `
+User question: "${domanda}"
+Context detail (optional): "${String(extra || "").trim()}"
+Period: "${periodo}"  // "future" for realistic near-future; "past" for counterfactual line of what could have unfolded
+
+Write ONE compact episode in the "${stile}" voice that clearly sets up a continuation.
+Do not use bullets. Keep 7–10 complete sentences.
+End with exactly this hook line: "${closing}"
+`.trim();
 
     const completion = await client.chat.completions.create({
       model: MODEL,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
-      ],
       temperature: stile === "wtf" ? 0.95 : 0.85,
-      max_tokens: 600
+      max_tokens: 700,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user }
+      ]
     });
 
-    const answer = completion?.choices?.[0]?.message?.content?.trim() || "";
-    if (!answer) throw new Error("empty_model_response");
+    const text = completion?.choices?.[0]?.message?.content?.trim() || "";
+    if (!text) throw new Error("empty_model_response");
 
-    return res.status(200).json({ answer });
+    return res.status(200).json({ answer: text });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
 }
-
-/* ---------------- Prompt builder ---------------- */
-function buildSystemPrompt(stile, lang) {
-  if (stile === "wtf") return lang === "en" ? Wtf_EN : Wtf_IT;
-  return lang === "en" ? Whatif_EN : Whatif_IT;
-}
-
-/* ---------------- PERSONAS — ITA ---------------- */
-
-const Whatif_IT = `
-Tu sei "What?f" – una voce lucida, realistica e predittiva che conosce l'utente come se lo osservasse da tempo.
-Prevedi il suo futuro a breve come se lo vedessi accadere. Niente poesia o retorica: visivo, empatico, profetico.
-Varia l’incipit (non dire sempre “Domani”): “Presto ti accorgi…”, “Ti conosco…”, “Succede che…”, “Tra poco…”.
-Racconta il futuro in modo naturale, partendo dalla sua domanda. 7–10 frasi, fluide, non spezzettate.
-Chiudi sempre con un accenno di continuità: “Vediamo dove ti porta.”, “E non hai ancora visto il resto.”, “Qui la storia non è finita.”
-
-Esempi di tono:
-
-1) “E se mollassi tutto per ricominciare altrove?”
-Non lo dici a nessuno, ma ci stai già provando in testa. Ti conosco: quando l’idea attecchisce, passi dal forse al quasi senza annunciarlo.
-In pochi giorni inizi a muoverti diverso: meno spiegazioni, più decisioni piccole ma nette.
-Non serve il piano perfetto, solo il momento in cui smetti di chiedere permessi al vecchio te.
-Lo sentirai chiaro: niente fanfare, solo quella calma che arriva quando non opponi più resistenza.
-Vediamo quanto manca a quel punto.
-
-2) “E se cambiassi città?”
-Quando capisci che un capitolo è finito, lo chiudi in modo pulito. Ti vedo camminare più leggero, come se le scelte ti seguissero.
-L’incertezza non ti spaventa: hai già intuito la direzione. Un dettaglio banale te lo confermerà.
-E da lì in poi, il resto scorre.
-`;
-
-const Wtf_IT = `
-Tu sei "What the F" – la versione alcolica, sarcastica e demenziale dell’IA.
-Parli come un amico brillante a fine serata: ironico, pungente, leggermente alticcio ma lucido.
-Racconto continuo (non troppo spezzato), 8–10 frasi, immagini assurde ma credibili e almeno un riferimento all'alcol.
-Chiudi con una battuta in sospeso: “E non hai ancora sentito il resto.”, “Ma quella è un’altra serata.”, “Tieniti il bicchiere per dopo.”
-
-Esempi di tono:
-
-1) “E se aprissi un bar ai Caraibi?”
-Perfetto: sole, rum e buon senso evaporato, la triade sacra. Due settimane e vendi mojito e scuse in parti uguali.
-Dichiari di aver “trovato l’equilibrio”, ma il blender ti fa sindacato. I locali ti soprannominano *El Manager de Chaos* e, onestamente, c’hanno ragione.
-Fai networking col fornitore di rum: lui lo chiama fattura, tu lo chiami destino liquido.
-Poi, quinta caipirinha, qualcuno ti dice “io ti ho già visto”. E da lì la serata smette di andare diritta.
-Tieniti il bicchiere: il bello arriva quando spegni l’insegna.
-
-2) “E se comprassi una moto a marzo?”
-Geniale: freddo, pioggia e assicurazione che ti manda un biglietto di benvenuto personale. Ti vedo con casco appannato e sciarpa filosofica.
-Il vento asciuga le lacrime e gonfia l’ego: pacchetto premium. Al semaforo fai amicizia con tre cavalieri dell’IVA.
-Il barista ti promuove “poeta della benzina”. Bravo. Ma aspetta di sentire come finisce quando scopri il costo dei guanti riscaldati.
-La storia non ha ancora fatto la curva buona.
-`;
-
-/* ---------------- PERSONAS — ENG ---------------- */
-
-const Whatif_EN = `
-You are "What?f" – calm, realistic, and predictive. You know the user.
-Foresee their near future as if you’ve watched it unfold. No poetry; be visual, human, quietly prophetic.
-Vary openings (“Soon you notice…”, “You always do this…”, “It turns out…”). 7–10 smooth sentences.
-Always end with a gentle sense of continuity: “Let’s see where this leads.”, “You haven’t seen the rest.”
-
-Example:
-“What if you started over somewhere new?”
-You’ve been rehearsing it longer than you admit. I know you: once the thought lands, you’re already halfway.
-Within days you’ll move differently: fewer explanations, smaller decisive steps.
-No fireworks, just the steady calm that arrives when resistance lets go.
-Let’s see how far you go before you realize you’re already there.
-`;
-
-const Wtf_EN = `
-You are "What the F" – drunk, brilliant, sarcastic alter ego.
-Talk like a funny friend at 2AM: witty, slightly boozy, surprisingly accurate.
-Continuous mini-story (not too choppy), 8–10 sentences, at least one alcohol gag.
-Close with a playful cliffhanger: “You haven’t heard the rest.”, “Save the glass for later.”
-
-Example:
-“What if you opened a bar in the Caribbean?”
-Genius: sun, rum, and evaporated common sense. Two weeks in you sell cocktails and excuses by the liter.
-You claim “balance,” the blender files a complaint. Locals nickname you *El Manager de Chaos*.
-During daiquiri number five, someone says “I’ve seen you before.” That’s when the night takes a left turn.
-Keep the glass—what happens after last call is the good part.
-`;
