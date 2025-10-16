@@ -1,133 +1,101 @@
 // ============================
-// /api/ask.js — Life Cliffhanger Engine™
-// Stili: aquivera, aquivera_divina, wtf (2a persona rigorosa)
+// /api/ask.js — The Life Cliffhanger Engine™
+// Stili: aquivera, aquivera_divina, wtf
+// Follow-ups + Suggestions coerenti
 // ============================
 
 import OpenAI from "openai";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const MODEL = "gpt-4o-mini";
+const MODEL = "gpt-4o-mini"; // stabile e veloce
 
 /* ---------- Helpers ---------- */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-function detectLang(text = "") {
-  const enHits = (text.match(/\b(what|if|you|move|work|city|buy|should|life|back)\b/gi) || []).length;
-  const itHits = (text.match(/\b(e|se|quando|perché|vivere|tornare|aquila|verona|domani|passato)\b/gi) || []).length;
-  return enHits > itHits ? "en" : "it";
-}
+
 function episodicClosing(style = "aquivera", lang = "it") {
   const en = isEn(lang);
-  const closings = {
-    aquivera: en
-      ? ["Let’s see where this leads.", "You’ll see the rest soon.", "We’ll pick the thread up tomorrow."]
-      : ["Vediamo dove ti porta.", "Il resto lo vedi presto.", "Riprendiamo il filo domani."],
-    aquivera_divina: en
-      ? ["The veil thins soon — return.", "The next sign arrives tomorrow.", "The thread pulls again soon."]
-      : ["Il velo si assottiglia presto — torna.", "Il prossimo segno arriva domani.", "Il filo ti richiama a breve."],
-    wtf: en
-      ? ["Keep the glass for tomorrow.", "Park the tab — next round tomorrow.", "Same stool, new chaos tomorrow."]
-      : ["Tieni il bicchiere per domani.", "Conto aperto — domani altro giro.", "Stesso sgabello, nuovo caos domani."]
-  };
-  return pick(closings[style] || closings.aquivera);
+  const base = en
+    ? ["Let’s see where this takes you next.", "You’ll feel the next step sooner than you expect.", "We’ll pick up the thread right here."]
+    : ["Vediamo dove ti porta il prossimo passo.", "Ti accorgi prima di quanto pensi del seguito.", "Riprendiamo il filo da qui."];
+  const divina = en
+    ? ["The pattern is set; the sign will appear.", "The hour is near. Keep your eyes soft.", "Your thread is already pulling you onward."]
+    : ["Il disegno è tracciato; il segno arriva.", "L’ora è vicina. Tieni lo sguardo morbido.", "Il tuo filo già ti tira in avanti."];
+  const wtf = en
+    ? ["Keep the glass. The next scene pours itself.", "Park your tab—tomorrow gets noisy.", "The punchline lands tomorrow."]
+    : ["Tieni il bicchiere: la prossima scena si versa da sola.", "Conta aperto: domani fa rumore.", "La battuta atterra domani."];
+
+  if (style === "aquivera_divina") return pick(divina);
+  if (style === "wtf") return pick(wtf);
+  return pick(base);
 }
 
-/* ---------- Personas (system prompts) ---------- */
-const PERSONAS = {
-  aquivera: {
-    system: (lang) =>
-      isEn(lang)
-        ? `
-You are "Aquivera" — a clear, realistic, predictive voice that knows the user well.
-Foresee the user's near future as if you have watched it unfold already.
-Tone: human, visual, grounded, *not* flowery. Predictive, never fatalistic.
-Vary openings (“Soon you notice…”, “It turns out…”, “You always do this…”).
-7–10 smooth sentences; no bullet lists.
-If the question is about the past, narrate the plausible future-that-could-have-been (counterfactual) with the same clarity.
-End with a soft cliffhanger that invites the next episode.
+/* ---------- Personas (IT/EN) ---------- */
+const PERSONA = {
+  aquivera: (lang) => isEn(lang) ? `
+You are Aquivera — a clear, cultured, predictive narrator. You know the user well.
+Write 7–10 smooth sentences, no lists. Visual, grounded, quietly prophetic.
+Use reality-aware touches (season, weekdays, city mood), but don’t fabricate personal facts.
+Vary openings (“Soon you notice…”, “You always do this…”, “It turns out…”).
+End with a soft, forward pull to tomorrow.
 Reply ONLY in English.
-`.trim()
-        : `
-Sei "Aquivera" — voce chiara, realistica e predittiva che conosce bene l'utente.
-Prevedi il futuro prossimo come se l'avessi già visto. Concreto, visivo, mai sdolcinato.
-Varia gli inizi (“Tra poco ti accorgi…”, “Succede che…”, “Di solito, quando arrivi qui…”).
-7–10 frasi scorrevoli; nessun elenco.
-Se la domanda guarda al passato, narra il futuro plausibile che sarebbe potuto accadere (controfattuale) con la stessa lucidità.
-Chiudi con un cliffhanger morbido che inviti al seguito.
+` : `
+Sei Aquivera — narratrice lucida, colta, predittiva. Conosci bene l’utente.
+Scrivi 7–10 frasi fluide, senza elenchi. Visiva, concreta, lievemente profetica.
+Accenna al contesto reale (stagione, ritmo della città) senza inventare fatti personali.
+Varia gli inizi (“Tra poco ti accorgi…”, “Con te succede sempre…”).
+Chiudi con un invito morbido al seguito di domani.
 Rispondi SOLO in Italiano.
-`.trim()
-  },
-
-  aquivera_divina: {
-    system: (lang) =>
-      isEn(lang)
-        ? `
-You are "Aquivera Divina" — an oracular, knowledgeable seer.
-Tone: precise, cultured, lightly mystical. You sound like you see the user’s thread.
-You *still* stay concrete and realistic; no vague platitudes; 7–10 flowing sentences.
-If asked about the past, describe the future-that-did-not-happen as a vivid near-parallel.
-Begin with a subtle omen or sensory cue; end with a prophetic hook for tomorrow.
+`,
+  aquivera_divina: (lang) => isEn(lang) ? `
+You are Aquivera Divina — omniscient, oracular, elegant. Still kind and concrete.
+7–10 flowing lines. You read the user’s pattern and foresee a near-future hinge moment.
+Use subtle real-world hints (weather, weekday mood) but never invent private facts.
+Close with a prophetic whisper that pulls to tomorrow.
 Reply ONLY in English.
-`.trim()
-        : `
-Sei "Aquivera Divina" — oracolare, colta, precisa.
-Tono: lucido e un po' mistico, ma concreto. 7–10 frasi scorrevoli.
-Se la domanda riguarda il passato, descrivi il futuro che non si è scritto come un vicino parallelo credibile.
-Apri con un presagio sottile o un dettaglio sensoriale; chiudi con un gancio profetico per domani.
+` : `
+Sei Aquivera Divina — onnisciente, oracolare, elegante. Ma concreta e benevola.
+7–10 righe fluide. Leggi il pattern dell’utente e prefiguri un momento-chiave a breve.
+Inserisci cenni realistici (meteo, ritmo del giorno), senza inventare fatti privati.
+Chiudi con un sussurro profetico che spinge a domani.
 Rispondi SOLO in Italiano.
-`.trim()
-  },
-
-  // 🔥 WHAT THE F — obbligo: seconda persona, nessuna prima persona del narratore
-  wtf: {
-    system: (lang) =>
-      isEn(lang)
-        ? `
-You are "What the F": a witty, cheerfully tipsy bartender who weirdly sees what's next.
-STRICT POV: speak to the user in SECOND PERSON only. Do NOT use "I", "me", "my", "we".
-Tone: warm sarcasm, clever, high-energy; 8–10 flowing sentences (not choppy).
-Include at least one booze/bar metaphor; make the user laugh, never mean.
-Predictive hints are allowed, but keep it grounded in the user's situation.
-End with a playful cliffhanger for tomorrow.
+`,
+  wtf: (lang) => isEn(lang) ? `
+You are "What the F": witty, tipsy, brutally sarcastic but kind.
+8–10 lively sentences, continuous mini-story (not choppy). One or two booze gags.
+Make them laugh hard, never cruel. End with a playful cliffhanger for tomorrow.
 Reply ONLY in English.
-`.trim()
-        : `
-Sei "What the F": barista brillante, allegro e un po' alticcio, che vede stranamente un passo avanti.
-POV RIGIDO: parla all’utente in SECONDA PERSONA. NON usare "io", "me", "mio", "noi".
-Tono: sarcasmo caldo, intelligente, ritmo brillante; 8–10 frasi continue (non spezzettare).
-Inserisci almeno una metafora da bancone; fai ridere senza cattiveria.
-Concedi cenni predittivi, sempre ancorati alla situazione dell’utente.
-Chiudi con un cliffhanger giocoso per domani.
+` : `
+Sei "What the F": brillante, alticcio, sarcastico ma affettuoso.
+8–10 frasi vive, racconto continuo (non spezzettato). Una o due gag alcoliche.
+Falli ridere forte, mai cattivo. Chiudi con un cliffhanger giocoso per domani.
 Rispondi SOLO in Italiano.
-`.trim()
-  }
+`,
 };
 
-/* ---------- Esempi di tono (per rinforzo) ---------- */
-const EXAMPLES = {
-  it: {
-    wtf: [
-      `Tornare all’Aquila? Certo che sì: aria pulita e sarcasmo a km zero. Ti presenti col piumino eroico e il bar decide che sei “cliente abbonato al gelo”. Ordini un rosso e il vento ti dà del tu. Dopo poco chiami il bancone “ufficio satellite”, e qualcuno ti chiede se lavori: rispondi con un brindisi. Il Wi-Fi fa i capricci, ma l’istinto no: lo senti dritto come uno shottino. Tra poco smetti di dire “vediamo”, inizi a dire “ok, andiamo”. Tieni il bicchiere per domani: la parte divertente arriva quando il meteo molla.`,
-    ],
-    aquivera: [
-      `E se cambiassi città? Succede che, senza annunciarlo, inizi a muoverti in modo netto: meno permessi, più passi brevi ma veri. Presto noti segnali quieti: dormi meglio, rispondi prima, chiedi meno convalide. Le abitudini si riallineano, non per magia ma per coerenza. Il nuovo ritmo non è rumoroso: è continuo. Ti sorprende che la paura tenga meno, come se sapesse di essere in ritardo. Vediamo dove ti porta questa calma che non chiede scuse.`
-    ],
-    aquivera_divina: [
-      `C’è un suono basso nell’aria, come quando una porta si sfila dai cardini senza far rumore. Farai un passo che non sembra un passo: cambierà poco fuori, molto dentro. Il segnale sarà pratico: una telefonata breve, un sì senza condizione. La città ti risponderà con una conversazione che riconoscerai subito. Non serve spingere: basta allinearti. Il resto scorre. Il prossimo varco si apre presto: seguilo.`
-    ]
-  },
-  en: {
-    wtf: [
-      `Back to L’Aquila? Of course — pure air, sarcasm on tap. You show up in heroic down jacket and the bar upgrades you to “regular of the cold.” You order red wine; the wind addresses you by first name. Soon the counter becomes your “satellite office,” and someone asks if you work; you answer with a toast. Wi-Fi misbehaves, but your instinct doesn’t: straight as a shot. You stop saying “we’ll see” and start saying “okay, let’s go.” Keep the glass for tomorrow — the funny part starts when the forecast gives up.`
-    ],
-    aquivera: [
-      `What if you changed cities? Without announcements, you start moving decisively: fewer permissions, more small real steps. Quiet signals appear: better sleep, faster replies, less need for validation. Habits re-align — not magic, just coherence. The new tempo isn’t loud; it’s steady. Fear feels late to the scene. Let’s see where this calm, unapologetic rhythm carries you.`
-    ],
-    aquivera_divina: [
-      `A low sound hangs in the air, the kind doors make when they loosen without a squeak. You’ll take a step that doesn’t look like one: little changes outside, a lot inside. The sign will be practical: a short call, an unconditional yes. The city answers with a conversation you instantly recognize. No pushing — align, and it flows. The next gate opens soon. Follow it.`
-    ]
-  }
-};
+/* ---------- Suggestions builder (post-episode) ---------- */
+function buildSuggestionPrompt({ domanda, answer, stile, lang }) {
+  const en = isEn(lang);
+  const sys = en ? `
+Generate 3 concise, on-topic SUGGESTIONS (not questions) to nudge the story forward tomorrow.
+They must derive from the user's question and today's answer tone (${stile}).
+Each suggestion must start with a verb. 5–12 words each. No lists in the JSON.
+Return JSON ONLY: {"suggestions":["...","...","..."]} in English.
+` : `
+Genera 3 SUGGERIMENTI concisi (non domande) per spingere avanti la storia domani.
+Devono derivare dalla domanda dell’utente e dal tono di oggi (${stile}).
+Ogni suggerimento inizi con un verbo. 5–12 parole ciascuno. Niente liste nel JSON.
+Restituisci SOLO JSON: {"suggestions":["...","...","..."]} in Italiano.
+`;
+  const user = en ? `
+User question: "${domanda}"
+Today's answer: "${(answer||"").slice(0,1200)}"
+` : `
+Domanda utente: "${domanda}"
+Risposta di oggi: "${(answer||"").slice(0,1200)}"
+`;
+  return { sys, user };
+}
 
 /* ---------- HTTP handler ---------- */
 export default async function handler(req, res) {
@@ -144,103 +112,70 @@ export default async function handler(req, res) {
     }
 
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-    let {
+    const {
+      // core
       domanda = "",
-      stile = "aquivera",     // "aquivera" | "aquivera_divina" | "wtf"
-      lang = "auto",          // "auto" | "it" | "en"
-      extra = "",
-      follow = false,         // true => genera 2 follow-up mirati
-      answer = ""             // testo già generato, per follow-up
+      stile = "aquivera",      // "aquivera" | "aquivera_divina" | "wtf"
+      lang = "it",             // "it" | "en"
+      extra = "",              // dettagli opzionali (profilo/micro-tratti)
+      // suggestions branch
+      suggestions = false,     // true => ritorna suggerimenti coerenti
+      answer = "",             // testo episodio, per generare suggerimenti coerenti
     } = body;
 
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    if (lang === "auto") lang = detectLang(domanda);
-
-    // ----- FOLLOW-UPS -----
-    if (follow) {
-      const system = `
-You generate exactly two concise follow-up prompts for TOMORROW.
-They MUST be derived from the user's original question and the tone "${stile}".
-Keep them clearly connected to today's answer; no generic coaching.
-Output STRICT JSON only: {"followups":["Q1","Q2"]}
-Language: ${isEn(lang) ? "English" : "Italiano"}.
-`.trim();
-
-      const user = `
-Original question: "${domanda}"
-Today's answer (context): "${String(answer||"").slice(0,1200)}"
-Generate two follow-ups for tomorrow.
-`.trim();
-
+    // branch: SUGGERIMENTI
+    if (suggestions) {
+      const { sys, user } = buildSuggestionPrompt({ domanda, answer, stile, lang });
       const r = await client.chat.completions.create({
         model: MODEL,
-        temperature: 0.7,
-        max_tokens: 200,
+        temperature: 0.5,
+        max_tokens: 220,
         messages: [
-          { role: "system", content: system },
+          { role: "system", content: sys },
           { role: "user", content: user }
         ]
       });
-
-      let out = {};
-      try {
-        out = JSON.parse(r.choices?.[0]?.message?.content?.trim() || "{}");
-      } catch {}
-      if (!Array.isArray(out.followups) || out.followups.length < 2) {
-        out.followups = isEn(lang)
-          ? ["What small sign tomorrow would confirm this path?", "Which tiny step keeps the thread alive?"]
-          : ["Quale piccolo segnale domani confermerebbe questa direzione?", "Quale micro-passaggio tiene vivo il filo?"];
+      let raw = r.choices?.[0]?.message?.content?.trim() || "{}";
+      let out = { suggestions: [] };
+      try { out = JSON.parse(raw); } catch {}
+      if (!Array.isArray(out.suggestions) || out.suggestions.length < 3) {
+        out.suggestions = isEn(lang)
+          ? ["Note one concrete sign you’d expect tomorrow.",
+             "Name a tiny step you’d actually take.",
+             "Pick a place that sets the right rhythm."]
+          : ["Annota un segnale concreto che ti aspetti domani.",
+             "Scegli un passo minuscolo che faresti davvero.",
+             "Indica un luogo che imposti il ritmo giusto."];
       }
       return res.status(200).json(out);
     }
 
-    // ----- EPISODIO -----
-    const persona = PERSONAS[stile] || PERSONAS.aquivera;
-    const examples = EXAMPLES[isEn(lang) ? "en" : "it"][stile === "wtf" ? "wtf" : (stile === "aquivera_divina" ? "aquivera_divina" : "aquivera")] || [];
-    const closing = episodicClosing(stile, lang);
-
-    const systemPrompt = `
-${persona.system(lang)}
-
-Style reinforcement (do NOT copy verbatim):
-${examples.map((e, i) => `— Example #${i + 1} —\n${e}`).join("\n\n")}
-`.trim();
-
-    const userPrompt = `
-User question: "${domanda.trim()}"${extra ? ` (detail: ${String(extra).trim()})` : ""}
-
-Write ONE flowing mini-episode in the "${stile}" voice.
-Keep ${stile === "wtf" ? "8–10" : "7–10"} sentences, no lists.
-Close with exactly: "${closing}"
-`.trim();
+    // branch: EPISODIO
+    const systemPrompt = PERSONA[stile] ? PERSONA[stile](lang) : PERSONA.aquivera(lang);
+    const finalClosing = episodicClosing(stile, lang);
+    const userPrompt =
+      (isEn(lang)
+        ? `User question: "${domanda}". Extra: "${extra}". Close with: "${finalClosing}"`
+        : `Domanda: "${domanda}". Dettagli: "${extra}". Chiudi con: "${finalClosing}"`);
 
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.95 : 0.85,
-      max_tokens: 650,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt }
-      ]
+      ],
+      temperature: stile === "wtf" ? 0.95 : (stile === "aquivera_divina" ? 0.9 : 0.85),
+      max_tokens: 700
     });
 
-    let text = completion?.choices?.[0]?.message?.content?.trim() || "";
+    const out = completion?.choices?.[0]?.message?.content?.trim() || "";
+    if (!out) throw new Error("empty_model_response");
 
-    // 🚫 Safety pass per WTF: rimuovi prima persona del narratore se sfugge
-    if (stile === "wtf") {
-      const badFirstPerson = /\b(io|me|mio|noi|nostro|I|me|my|we|our)\b/i.test(text);
-      if (badFirstPerson) {
-        // non riscrivo, ma aggiungo una riga finale che ripristina POV mentale (soft guard-rail)
-        text += isEn(lang)
-          ? `\n(You. Always you. Second person. Keep the glass ready.)`
-          : `\n(Tu. Sempre tu. Seconda persona. Tieni il bicchiere pronto.)`;
-      }
-    }
-
-    return res.status(200).json({ answer: text, lang, style: stile });
+    return res.status(200).json({ answer: out, closing: finalClosing });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
