@@ -8,182 +8,195 @@
 <style>
 :root{
   --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
-  --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;
+  --acc:#1C57A0; --acc2:#FFEC01; --chip:#121A26; --line:rgba(255,255,255,.12); --ink:#0A0E12;
+  --card:rgba(20,28,34,.92); --shadow:rgba(0,0,0,.35);
 }
-html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
+html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
 *{box-sizing:border-box}
-html,body{margin:0;background:radial-gradient(800px 600px at 25% 20%,var(--bg2),var(--bg));color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
-main{max-width:820px;margin:auto;padding:20px}
-h1{font-size:clamp(22px,5vw,30px);color:var(--acc2);text-align:center;margin:10px 0 6px}
-.sub{color:var(--muted);text-align:center;margin:0 0 10px}
-.card{background:rgba(20,28,34,.9);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px;backdrop-filter:blur(10px);margin-top:16px}
-.story{white-space:pre-wrap;line-height:1.65;font-size:18px;letter-spacing:.1px}
-.progress{height:6px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden;margin:12px 0}
-.bar{height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));width:33%}
+html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:860px;margin:auto;padding:18px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
-.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink)}
-.btn.ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff}
-textarea{width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12);font-size:16px}
-.small{font-size:12px;color:var(--muted)}
+.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
+.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:center}
+.label{color:var(--acc);font-weight:800;margin:0 0 8px}
+.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
+.answer{white-space:pre-wrap;line-height:1.6;font-size:18px}
+.meta{font-size:12px;color:var(--muted)}
 .sep{height:1px;background:rgba(255,255,255,.08);margin:12px 0}
+.sugg{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer}
 </style>
 </head>
 <body>
 <main>
   <div class="row" style="justify-content:space-between">
     <div class="row">
-      <button class="btn ghost" id="backBtn">←</button>
-      <button class="btn ghost" id="homeBtn">🏠</button>
+      <button class="btn" id="backBtn">←</button>
+      <button class="btn" id="homeBtn">🏠</button>
     </div>
     <div class="row">
-      <button class="btn ghost" id="langBtn">IT</button>
+      <button class="btn" id="langBtn">IT</button>
     </div>
   </div>
 
   <h1 id="title">Episodio</h1>
-  <p class="sub" id="subtitle">—</p>
-  <div class="progress"><div class="bar" id="bar"></div></div>
+  <p class="meta" id="subtitle">—</p>
 
   <div class="card">
     <div class="label" id="lblQ">Domanda</div>
-    <div class="story" id="qView">—</div>
+    <div id="qBox" class="input" style="min-height:52px"></div>
   </div>
 
   <div class="card">
-    <div class="label" id="lblAnswer">Risposta</div>
-    <div id="answer" class="story">⏳ …</div>
+    <div class="label" id="lblA">Risultato</div>
+    <div id="answerBox" class="answer">⏳ …</div>
+    <div class="meta" id="metaInfo"></div>
     <div class="row" style="margin-top:10px">
-      <button class="btn primary" id="copyBtn">📋 Copia tutto</button>
-      <button class="btn ghost" id="shareBtn">🔗 Condividi</button>
+      <button class="btn" id="copyBtn">📋 Copia</button>
+      <button class="btn" id="shareBtn">🔗 Condividi</button>
     </div>
-    <p class="small" id="metaInfo"></p>
   </div>
 
-  <div class="card" id="followCard" style="display:none">
-    <h3 id="followTitle">Per continuare domani</h3>
-    <div id="followList" class="story" style="font-size:16px"></div>
+  <div class="card" id="suggCard" style="display:none">
+    <div class="label" id="lblSugg">Spunti per domani</div>
+    <div id="suggList" style="display:flex;flex-direction:column;gap:8px"></div>
     <div class="sep"></div>
-    <textarea id="customFollow" rows="3" placeholder="Aggiungi un tuo spunto per domani…"></textarea>
+    <textarea id="customSugg" rows="3" placeholder="Aggiungi un tuo spunto…"></textarea>
     <div class="row" style="margin-top:10px">
       <button class="btn primary" id="saveBtn">💾 Salva per domani</button>
-      <button class="btn ghost" id="homeBtn2">🏠 Home</button>
+      <button class="btn" id="homeBtn2">🏠 Home</button>
     </div>
-    <p class="small" id="saveInfo"></p>
+    <p class="meta" id="saveInfo"></p>
   </div>
 </main>
 
 <script>
 const LS=localStorage;
-const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-const style = prefs.stile || 'whatif';
-const lang  = (LS.getItem('lang')||'it').toLowerCase();
-document.documentElement.setAttribute('data-theme', style==='wtf'?'wtf':'whatif');
+let lang=(LS.getItem('lang')||'it').toLowerCase();
+const T = {
+  it:{
+    title:"Episodio",
+    q:"Domanda", a:"Risultato",
+    saved:"✅ Salvato per domani.",
+    copy:"📋 Copiato.",
+    shareFail:"Condivisione non supportata",
+    sugg:"Spunti per domani",
+    custom:"Aggiungi un tuo spunto…",
+    metaReplay:"(risposta salvata)", metaLive:"(generata ora)"
+  },
+  en:{
+    title:"Episode",
+    q:"Question", a:"Result",
+    saved:"✅ Saved for tomorrow.",
+    copy:"📋 Copied.",
+    shareFail:"Share not supported",
+    sugg:"Prompts for tomorrow",
+    custom:"Add your own prompt…",
+    metaReplay:"(saved answer)", metaLive:"(generated now)"
+  }
+}[lang];
 
-const T = (lang==='en') ? {
-  q:"Question", a:"Answer", epi:"Episode", saved:"✅ Saved for tomorrow.", copy:"Copied!", shareFail:"Sharing not available",
-  cont:"To continue tomorrow", placeholder:"Add your hint for tomorrow…", metaLive:"(generated now)", metaReplay:"(saved episode)"
-} : {
-  q:"Domanda", a:"Risposta", epi:"Episodio", saved:"✅ Salvato per domani.", copy:"Copiato!", shareFail:"Condivisione non disponibile",
-  cont:"Per continuare domani", placeholder:"Aggiungi un tuo spunto per domani…", metaLive:"(generata ora)", metaReplay:"(episodio salvato)"
-};
-
-const $=(id)=>document.getElementById(id);
-$('langBtn').textContent=lang.toUpperCase();
+const $=id=>document.getElementById(id);
+$('langBtn').textContent = lang.toUpperCase();
 $('backBtn').onclick=()=>history.back();
 $('homeBtn').onclick=()=>location.href='index.html';
 $('homeBtn2').onclick=()=>location.href='index.html';
 $('langBtn').onclick=()=>{ LS.setItem('lang', lang==='it'?'en':'it'); location.reload(); };
 
-$('title').textContent = T.epi;
-$('lblQ').textContent = T.q;
-$('lblAnswer').textContent = T.a;
-$('followTitle').textContent = T.cont;
-$('customFollow').placeholder = T.placeholder;
+const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
+const style = prefs.stile || 'whatif';
+document.documentElement.setAttribute('data-theme', style==='wtf'?'wtf':'whatif');
 
+$('title').textContent=T.title;
+$('lblQ').textContent=T.q;
+$('lblA').textContent=T.a;
+$('lblSugg').textContent=T.sugg;
+$('customSugg').placeholder=T.custom;
+
+/* replay? */
 const params=new URLSearchParams(location.search);
 const isReplay = params.get('view')==='replay';
 
-const req = JSON.parse(LS.getItem('whatif_request')||'{}');
-const domanda = isReplay ? (JSON.parse(LS.getItem('replay_story')||'{}').domanda||'') : (req.domanda||LS.getItem('domanda')||'');
-const periodo = isReplay ? (prefs.periodo||'future') : (req.periodo||prefs.periodo||'future');
-const profile = isReplay ? {} : (req.profile||{});
-$('qView').textContent = domanda || '—';
-$('subtitle').textContent = (style==='wtf'?'⚡ What the F':'💡 What?f') + (lang==='en'?' — Episode':' — Episodio');
+const req = JSON.parse(LS.getItem('whatif_request')||'null');
+const domanda = isReplay ? (JSON.parse(LS.getItem('replay_story')||'null')?.domanda || "") : (req?.domanda || LS.getItem('domanda') || "");
+$('qBox').textContent = domanda || '—';
+$('subtitle').textContent = (style==='wtf'?'⚡ What the F':'💡 What?f');
 
-(async function run(){
+async function callAsk(payload){ const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); const j=await r.json(); if(!r.ok) throw new Error(j.detail||'server'); return j; }
+
+/* COPY/SHARE */
+$('copyBtn').onclick=async ()=>{
+  const text = `Q: ${$('qBox').textContent}\n\n${$('answerBox').textContent}`;
+  await navigator.clipboard.writeText(text).catch(()=>{});
+  $('copyBtn').textContent = T.copy;
+  setTimeout(()=> $('copyBtn').textContent='📋 Copia', 1200);
+};
+$('shareBtn').onclick=async ()=>{
+  const text = `Q: ${$('qBox').textContent}\n\n${$('answerBox').textContent}`;
+  if(navigator.share){ try{ await navigator.share({text}); }catch{} } else { alert(T.shareFail); }
+};
+
+/* LIVE vs REPLAY */
+(async ()=>{
   if(isReplay){
-    const r=JSON.parse(LS.getItem('replay_story')||'{}');
-    $('answer').textContent = r.answer || '—';
+    const r = JSON.parse(LS.getItem('replay_story')||'null');
+    $('answerBox').textContent = r?.answer || '—';
     $('metaInfo').textContent = T.metaReplay;
-    $('followCard').style.display='none';
+    // niente suggerimenti in replay
     return;
   }
+
+  // genera episodio
   try{
-    const res = await fetch('/api/ask',{ method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ domanda, stile: style, lang, periodo, extra: (req.extra||""), profile })});
-    const data = await res.json();
-    if(!res.ok || !data.answer) throw new Error(data.detail||'bad_response');
-    const answer = data.answer.trim();
-    $('answer').textContent = answer;
+    const payload = req || {};
+    payload.lang = (LS.getItem('lang')||'it').toLowerCase();
+    payload.mode = "episode";
+    const ep = await callAsk(payload);
+    const answer = (ep.answer||"").trim();
+    $('answerBox').textContent = answer || '—';
     $('metaInfo').textContent = T.metaLive;
 
-    // salva in cronologia
+    // salva cronologia
     const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.unshift({ domanda, risposta: answer, stile: style, lang, ts: Date.now() });
-    LS.setItem('cronologia', JSON.stringify(hist.slice(0,50)));
+    hist.push({ domanda, answer, stile: style, ts: Date.now() });
+    LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
 
-    // suggerimenti coerenti generati dalla AI
-    await buildFollowups(answer);
+    // suggerimenti coerenti (non si continua oggi)
+    $('suggCard').style.display='block';
+    const follow = await callAsk({
+      domanda,
+      stile: style,
+      lang: (LS.getItem('lang')||'it').toLowerCase(),
+      mode: "follow",
+      profile: req?.profile || {},
+      answer
+    }).catch(()=>({ suggestions:[] }));
 
-    // copy / share
-    $('copyBtn').onclick=async ()=>{
-      const block = `${T.q}: ${domanda}\n\n${T.a}:\n${answer}`;
-      await navigator.clipboard.writeText(block).catch(()=>{});
-      $('copyBtn').textContent="✅ "+T.copy; setTimeout(()=>$('copyBtn').textContent="📋 "+(lang==='en'?'Copy all':'Copia tutto'),1200);
-    };
-    $('shareBtn').onclick=async ()=>{
-      const block = `${T.q}: ${domanda}\n\n${T.a}:\n${answer}`;
-      try{
-        if(navigator.share){ await navigator.share({ text:block }); }
-        else { throw new Error('no-share'); }
-      }catch{ alert(T.shareFail); }
-    };
+    const list = Array.isArray(follow.suggestions) ? follow.suggestions.slice(0,3) : [];
+    const box=$('suggList'); box.innerHTML="";
+    (list.length?list:(
+      (payload.lang==='en')
+        ? ["Pick one tiny detail you’ll notice first.","Name the first sign it works.","Choose a place to test the new rhythm."]
+        : ["Scegli un dettaglio minuscolo da notare.","Nomina il primo segnale che funziona.","Scegli un posto dove provi il nuovo ritmo."]
+    )).forEach(s=>{
+      const d=document.createElement('div'); d.className='sugg'; d.textContent=s; d.onclick=()=>{ $('customSugg').value=s; };
+      box.appendChild(d);
+    });
 
-  }catch(err){
-    $('answer').textContent = '[server error] '+(err?.message||err);
+  }catch(e){
+    $('answerBox').textContent = '[server error]';
   }
 })();
 
-async function buildFollowups(answerText){
-  const list=$('followList'); const card=$('followCard');
-  list.textContent = (lang==='en'?'Making two smart hints for tomorrow…':'Creo due spunti intelligenti per domani…');
-
-  try{
-    const r = await fetch('/api/ask',{ method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ domanda, stile: style, lang, periodo, follow:true, answer: answerText, profile })});
-    const dj = await r.json();
-    const arr = Array.isArray(dj.followups) ? dj.followups.slice(0,2) : [];
-    list.innerHTML = arr.length ? arr.map(q=>`• ${q}`).join("\n")
-      : (style==='wtf'
-        ? "• Quanto reggi prima di cercare il Wi-Fi?\n• Ti senti più vivo o solo più congelato?"
-        : "• Quale segnale ti direbbe che funziona?\n• Cosa cambierebbe se restassi davvero?");
-  }catch{
-    list.innerHTML = (style==='wtf'
-      ? "• Quanto reggi prima di cercare il Wi-Fi?\n• Ti senti più vivo o solo più congelato?"
-      : "• Quale segnale ti direbbe che funziona?\n• Cosa cambierebbe se restassi davvero?");
-  }
-  card.style.display='block';
-}
-
-// salva per domani (non continua oggi)
+/* salva per domani (non continua oggi) */
 $('saveBtn').onclick=()=>{
-  const note = ($('customFollow').value||"").trim();
-  const saved = JSON.parse(LS.getItem('next_prompts')||'[]');
-  saved.unshift({ q: (note || domanda), stile: style, lang, ts: Date.now() });
-  LS.setItem('next_prompts', JSON.stringify(saved.slice(0,50)));
+  const v = ($('customSugg').value||"").trim();
+  const arr = JSON.parse(LS.getItem('next_prompts')||'[]');
+  arr.unshift({ q: v && v.length>0 ? v : domanda, stile: style, lang: (LS.getItem('lang')||'it').toLowerCase(), ts: Date.now() });
+  LS.setItem('next_prompts', JSON.stringify(arr.slice(0,50)));
   $('saveInfo').textContent = T.saved;
-  $('customFollow').value="";
+  $('customSugg').value='';
 };
 </script>
 </body>
