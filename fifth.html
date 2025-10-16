@@ -16,15 +16,15 @@ html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
 html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
 main{max-width:860px;margin:auto;padding:18px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
-.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
+.btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;background:var(--chip);border:1px solid var(--line);color:#fff}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink); font-weight:800}
 .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
 h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:center}
 .label{color:var(--acc);font-weight:800;margin:0 0 8px}
 .input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
 .answer{white-space:pre-wrap;line-height:1.6}
 .meta{font-size:12px;color:var(--muted)}
-.small{font-size:12px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;padding:10px 14px;border-radius:10px;font-size:13px}
 </style>
 </head>
 <body>
@@ -62,194 +62,132 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
       <textarea id="customNext" rows="2" placeholder="Aggiungi un tuo spunto…"></textarea>
       <button class="btn primary" id="saveBtn">💾 Salva per domani</button>
     </div>
-    <p class="small" id="saveInfo"></p>
+    <div class="meta" id="saveInfo"></div>
   </div>
 </main>
 
 <script>
-/* ===== LS helpers ===== */
 const LS=localStorage;
 const $=id=>document.getElementById(id);
+function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),1800); }
 function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def} }
 function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
-function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-function microKey(){ return 'micro_'+todayStr(); }
-
-/* ===== i18n ===== */
-let lang=(LS.getItem('lang')||'it').toLowerCase();
+const lang=(LS.getItem('lang')||'it').toLowerCase();
 const T = (lang==='en') ? {
   title:"Episode", q:"Question", a:"Answer", cont:"To continue tomorrow",
   metaLive:"(generated now)", metaReplay:"(saved answer)",
   copy:"📋 Copy text", share:"🔗 Share", saved:"✅ Saved for tomorrow.",
-  hint:"Add your own nudge…", building:"Building suggestions…", err:"[server error]"
+  hint:"Add your own nudge…", copied:"Copied!", notSupported:"Sharing not supported here."
 } : {
   title:"Episodio", q:"Domanda", a:"Risposta", cont:"Per continuare domani",
   metaLive:"(generata ora)", metaReplay:"(risposta salvata)",
   copy:"📋 Copia testo", share:"🔗 Condividi", saved:"✅ Salvato per domani.",
-  hint:"Aggiungi un tuo spunto…", building:"Creo suggerimenti…", err:"[errore server]"
+  hint:"Aggiungi un tuo spunto…", copied:"Copiato!", notSupported:"Condivisione non supportata qui."
 };
-$('title').textContent=T.title;
-$('lblQ').textContent=T.q;
-$('lblA').textContent=T.a;
-$('lblSug').textContent=T.cont;
-$('copyBtn').textContent=T.copy;
-$('shareBtn').textContent=T.share;
-$('customNext').placeholder=T.hint;
+$('title').textContent=T.title; $('lblQ').textContent=T.q; $('lblA').textContent=T.a; $('lblSug').textContent=T.cont;
+$('copyBtn').textContent=T.copy; $('shareBtn').textContent=T.share;
+$('backBtn').onclick=()=>history.back(); $('homeBtn').onclick=()=>location.href='index.html';
+$('langBtn').textContent=lang.toUpperCase(); $('langBtn').onclick=()=>{ LS.setItem('lang', lang==='it'?'en':'it'); location.reload(); };
 
-$('backBtn').onclick=()=>history.back();
-$('homeBtn').onclick=()=>location.href='index.html';
-$('langBtn').textContent=lang.toUpperCase();
-$('langBtn').onclick=()=>{ LS.setItem('lang', lang==='it'?'en':'it'); location.reload(); };
-
-/* ===== tema/stile ===== */
-const prefs = readJSON('whatif_prefs',{stile:'aquivera',pro:false});
-document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-
-/* normalizza eventuali stili legacy */
-function normalizeStyle(s){
-  if(s==='whatif') return 'aquivera';
-  return s||'aquivera';
-}
-
-/* ===== domanda + thread ===== */
-const isReplay = new URLSearchParams(location.search).get('view')==='replay';
-const domanda = isReplay
+const request = readJSON('whatif_request',null);
+const domanda = (new URLSearchParams(location.search).get('view')==='replay')
   ? (readJSON('replay_story',{}).domanda||LS.getItem('domanda')||'')
-  : (readJSON('whatif_request',null)?.domanda || LS.getItem('domanda') || '');
+  : (request?.domanda || LS.getItem('domanda') || '');
+let prefs = readJSON('whatif_prefs',{stile:'aquivera',pro:false});
+let style = prefs.stile || 'aquivera';
+document.documentElement.setAttribute('data-theme', style==='wtf'?'wtf':'whatif');
 $('qView').textContent = domanda || '—';
 
-const threadId = LS.getItem('thread_id') || domanda.toLowerCase().slice(0,80);
-const threads = readJSON('threads',{});
-threads[threadId] = threads[threadId] || { base:domanda, steps:1, stile:normalizeStyle(prefs.stile), divinaDemo:false };
-writeJSON('threads', threads);
-
-/* ===== replay ===== */
+const isReplay = new URLSearchParams(location.search).get('view')==='replay';
 if(isReplay){
   const r=readJSON('replay_story',null);
   $('answerBox').textContent=r?.answer||'—';
   $('metaInfo').textContent=T.metaReplay;
   $('contBox').style.display='none';
-} else {
-  generateEpisode().catch(err=>{ $('answerBox').textContent=T.err; console.error(err); });
+}else{
+  generateEpisode();
 }
 
-/* ===== profilo + micro ===== */
-function getProfile(){
-  const p = readJSON('user_profile', {});          // opzionale: {name, city_now, work_role, prefs[]}
-  if(!p.city_now && readJSON(microKey(),null)?.city) p.city_now = readJSON(microKey(),null).city;
-  return p;
-}
-function getMicroToday(){ return readJSON(microKey(), {}); }
-
-/* ===== episodio ===== */
+/* Thread & demo Divina al 3º step */
+function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 async function generateEpisode(){
-  const thread = readJSON('threads',{})[threadId];
-  let useStyle = normalizeStyle(thread.stile);
+  const id = LS.getItem('thread_id') || domanda.toLowerCase().slice(0,80);
+  const threads = readJSON('threads',{});
+  threads[id] = threads[id] || { base:domanda, steps:1, stile:style, divinaDemo:false };
+  let useStyle = threads[id].stile || style;
 
-  // demo Aquivera Divina al 3º episodio per non-Pro
-  if(thread.steps>=3 && !thread.divinaDemo && useStyle!=='aquivera_divina'){
-    useStyle = 'aquivera_divina';
-    thread.divinaDemo = true;
-    threads[threadId]=thread; writeJSON('threads',threads);
+  if(threads[id].steps>=3 && !threads[id].divinaDemo && !prefs.pro){
+    useStyle = 'aquivera_divina'; // demo automatica
+    threads[id].divinaDemo = true;
+    writeJSON('threads', threads);
   }
 
-  const payload = {
-    domanda,
-    stile: useStyle,
-    lang,
-    profile: getProfile(),
-    micro: getMicroToday(),
-    episode: thread.steps || 1,
-    contextMode: "clean"        // passa a "real" quando attivi l’arricchimento server
-  };
-
-  const r = await fetch('/api/ask',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(payload)
-  });
-  const j = await r.json();
-  if(!r.ok || !j.answer) throw new Error(j.detail||'bad_response');
-
-  const answer = (j.answer||'').trim();
-  $('answerBox').textContent = answer;
-  $('metaInfo').textContent  = T.metaLive;
-
-  // cronologia
-  const hist = readJSON('cronologia',[]);
-  hist.unshift({ domanda, risposta:answer, stile:useStyle, lang, ts:Date.now(), episode:payload.episode });
-  writeJSON('cronologia', hist.slice(0,50));
-
-  // suggerimenti coerenti dopo la risposta
-  await buildSuggestions(answer, useStyle);
-}
-
-/* ===== suggestions ===== */
-async function buildSuggestions(answerText, useStyle){
-  const list=$('sugList');
-  list.textContent = T.building;
+  // micro extra di oggi
+  const micro = readJSON('micro_'+todayStr(),{});
+  const extra = [micro.mood?`mood:${micro.mood}`:"", micro.energy?`energy:${micro.energy}`:"", micro.city?`city:${micro.city}`:"", micro.focus?`focus:${micro.focus}`:""].filter(Boolean).join(", ");
 
   try{
-    const rr = await fetch('/api/ask',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        suggestions: true,
-        domanda,
-        answer: answerText,
-        stile: useStyle,
-        lang
-      })
-    });
-    const dj = await rr.json();
-    const arr = Array.isArray(dj.suggestions) ? dj.suggestions.slice(0,3) : [];
-    list.innerHTML = arr.length
-      ? arr.map(s=>`• ${s}`).join("\n")
-      : (lang==='en'
-          ? "• Note one concrete sign you will notice.\n• Block ten minutes for a tiny decision.\n• Pick a place that supports tomorrow’s rhythm."
-          : "• Annota un segno concreto che noterai.\n• Blocca dieci minuti per una micro-decisione.\n• Scegli un luogo che sostenga il ritmo di domani.");
+    const r = await fetch('/api/ask',{ method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ domanda, lang, stile:useStyle, extra }) });
+    const j = await r.json(); if(!r.ok) throw new Error(j.detail||'server');
+    const answer = (j.answer||"").trim();
+    $('answerBox').textContent = answer;
+    $('metaInfo').textContent = T.metaLive;
+
+    // salva cronologia
+    const hist = readJSON('cronologia',[]);
+    hist.unshift({ domanda, risposta:answer, stile:useStyle, lang, ts:Date.now() });
+    writeJSON('cronologia', hist.slice(0,50));
+
+    // genera suggerimenti coerenti (non domande)
+    await buildSuggestions(answer, useStyle);
+
   }catch(e){
-    console.error("suggestions error", e);
-    list.innerHTML = (lang==='en'
-      ? "• Note one concrete sign you will notice.\n• Block ten minutes for a tiny decision.\n• Pick a place that supports tomorrow’s rhythm."
-      : "• Annota un segno concreto che noterai.\n• Blocca dieci minuti per una micro-decisione.\n• Scegli un luogo che sostenga il ritmo di domani.");
+    $('answerBox').textContent='[server error]';
+    console.error(e);
   }
 }
 
-/* ===== salva per domani ===== */
+/* Suggerimenti coerenti */
+async function buildSuggestions(answerText, useStyle){
+  const list=$('sugList'); list.textContent = (lang==='en'?"Building suggestions…":"Creo suggerimenti…");
+  try{
+    const r = await fetch('/api/ask',{ method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ suggestions:true, domanda, answer:answerText, stile:useStyle, lang })});
+    const j = await r.json();
+    const arr = Array.isArray(j.suggestions)? j.suggestions.slice(0,3) : [];
+    list.innerHTML = arr.map(s=>`• ${s}`).join("\n");
+  }catch(e){
+    list.innerHTML = (lang==='en'
+      ? "• Note one concrete sign for tomorrow.\n• Pick a tiny step.\n• Choose a place that sets your rhythm."
+      : "• Annota un segnale concreto per domani.\n• Scegli un passo minuscolo.\n• Indica un luogo che imposti il ritmo.");
+  }
+}
+
+/* Salva per domani (niente continuazione oggi) */
 $('saveBtn').onclick=()=>{
   const custom = ($('customNext').value||"").trim();
   const arr = readJSON('next_prompts',[]);
-  const thread = readJSON('threads',{})[threadId];
-
-  arr.unshift({
-    q: custom || domanda,
-    base: thread.base || domanda,
-    stile: thread.stile || 'aquivera',
-    threadId,
-    steps: (thread.steps||1),     // incrementerà quando riprende dalla 4ª
-    lang,
-    ts: Date.now()
-  });
-  writeJSON('next_prompts', arr.slice(0,50));
-
-  $('saveInfo').textContent = T.saved;
-  $('customNext').value = "";
-
-  // Nessuna continuazione oggi: si prosegue domani dalla 4ª
-  const all = readJSON('threads',{}); all[threadId].steps = (all[threadId].steps||1)+1; writeJSON('threads',all);
+  const id = LS.getItem('thread_id') || domanda.toLowerCase().slice(0,80);
+  const threads = readJSON('threads',{}); const th = threads[id]||{base:domanda,steps:1,stile:prefs.stile};
+  const next = { q: custom||domanda, stile:th.stile, base:th.base, steps:th.steps, threadId:id, ts:Date.now() };
+  arr.unshift(next); writeJSON('next_prompts', arr.slice(0,50));
+  threads[id] = { ...th, steps:(th.steps||1)+1 }; writeJSON('threads',threads);
+  $('saveInfo').textContent = T.saved; $('customNext').value="";
 };
 
-/* ===== copy & share ===== */
+/* Copy & Share */
 $('copyBtn').onclick=async()=>{
-  const txt = `Q: ${$('qView').textContent}\n\n${$('answerBox').textContent}`;
-  try{ await navigator.clipboard.writeText(txt); $('copyBtn').textContent = (lang==='en'?'Copied!':'Copiato!'); setTimeout(()=>$('copyBtn').textContent=T.copy,1200); }catch{}
+  const who = (prefs.stile==='wtf' ? 'What the F' : (prefs.stile==='aquivera_divina' ? 'Aquivera Divina' : 'Aquivera'));
+  const txt = `[${who}] Q: ${$('qView').textContent}\n\n${$('answerBox').textContent}`;
+  try{ await navigator.clipboard.writeText(txt); $('copyBtn').textContent=T.copied; setTimeout(()=> $('copyBtn').textContent=T.copy,1200); }catch{}
 };
 $('shareBtn').onclick=async()=>{
-  const title = 'Aquivera — Episodio';
+  const who = (prefs.stile==='wtf' ? 'What the F' : (prefs.stile==='aquivera_divina' ? 'Aquivera Divina' : 'Aquivera'));
+  const title = `Aquivera — Episodio (${who})`;
   const text = `${$('qView').textContent}\n\n${$('answerBox').textContent}`;
   if(navigator.share){ try{ await navigator.share({title,text}); }catch{} }
-  else { alert(lang==='en'?'Sharing not supported here.':'Condivisione non supportata qui.'); }
+  else { toast(T.notSupported); }
 };
 </script>
 </body>
