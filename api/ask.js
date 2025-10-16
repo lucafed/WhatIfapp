@@ -1,71 +1,73 @@
 // ============================
 // /api/ask.js — The Life Cliffhanger Engine™
-// versione stabile e completa (IT/EN, future & past/counterfactual)
+// versione stabile e compatibile (IT/EN, What?f & WTF)
 // ============================
 
 import OpenAI from "openai";
-
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = "gpt-4o-mini";
 
-/* ---------------- Utils ---------------- */
+// -------- util
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
-const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+
+function detectLang(text = "") {
+  const enHits = (text.match(/\b(what|if|you|move|work|city|buy|should|life|back)\b/gi) || []).length;
+  const itHits = (text.match(/\b(e|se|quando|perché|vivere|tornare|aquila|verona|freddo|domani)\b/gi) || []).length;
+  return enHits > itHits ? "en" : "it";
+}
 
 function episodicClosing(style = "whatif", lang = "it") {
   const en = isEn(lang);
   const wtf = en
-    ? ["Keep the glass; the night isn’t done", "Save the tab; next round writes itself", "Same bar tomorrow; truth on ice"]
-    : ["Tieni il bicchiere: la serata non è finita", "Conto aperto: il prossimo giro si scrive da solo", "Stesso bancone domani: verità col ghiaccio"];
+    ? ["Keep the glass — the night isn’t over.", "Same stool tomorrow. Bring the bottle.", "We’ll see if it’s heat or nostalgia."]
+    : ["Tieniti il bicchiere — la notte non è finita.", "Stesso sgabello domani. Porta la bottiglia.", "Vediamo se è calore o nostalgia."];
   const whf = en
-    ? ["We’ll nudge the thread soon", "Let’s see where this leads next", "You haven’t seen the rest yet"]
-    : ["Tra poco spingiamo il filo", "Vediamo dove porta il passo dopo", "Non hai ancora visto il resto"];
+    ? ["We’ll pick it up when you come back.", "Let’s see where this leads next.", "You haven’t seen the rest."]
+    : ["Riprendiamo quando torni.", "Vediamo dove porta il prossimo passo.", "Non hai ancora visto il resto."];
   return pick(style === "wtf" ? wtf : whf);
 }
 
-/* ---------------- Personas ---------------- */
-
+// -------- PERSONAS aggiornate (amico di lunga data, profilo soft, controfattuale se 'past')
 const Whatif_IT = `
-Sei "What?f": voce lucida, realistica e predittiva che conosce l’utente.
-Tono: visivo, umano, profetico senza retorica. Frasi complete, fluide (7–10 frasi).
-L’episodio deve avere un seguito implicito (gancio finale).
-Se periodo=future: descrivi un futuro prossimo verosimile, come se lo stessi vedendo accadere.
-Se periodo=past: costruisci un controfattuale (“cosa sarebbe potuto succedere”), chiaro e coinvolgente, senza riscrivere il passato: racconta la linea possibile che sarebbe seguita da lì in avanti.
-Evita elenchi puntati e coaching generico. Niente invenzioni di fatti specifici (soldi, case, offerte) non menzionati dall’utente.
-Chiudi con un gancio morbido e predittivo (non ripetere “Domani” ogni volta; varia).
-Rispondi soltanto in Italiano.
+Sei "What?f": voce lucida, realistica e predittiva di un amico di lunga data.
+Parla come qualcuno che conosce i pattern dell’utente (senza elencarli). Usa il profilo fornito solo in controluce.
+Se periodo = "past", genera un futuro possibile che sarebbe potuto accadere (controfattuale); se "future", predici a breve termine.
+Niente retorica o poesia: immagini concrete, tono umano e fiducioso. 7–10 frasi, fluide (non spezzettate).
+Evita di ripetere sempre “Domani”; varia: “Presto ti accorgi…”, “Ti conosco…”, “Succede che…”.
+Chiudi con un invito morbido a continuare in futuro.
 `;
 
 const Wtf_IT = `
-Sei "What the F": amico da bar brillante, sarcastico, leggermente alticcio ma lucido.
-Racconto continuo, 8–10 frasi, ritmo vivo, battute intelligenti, almeno un riferimento all’alcol.
-Obiettivo: far ridere forte ma far intravedere verità. Mai cattivo.
-Se periodo=future: futuro vicino, realistico ma scatenato; se periodo=past: controfattuale “come sarebbe andata” con ironia.
-Chiudi sempre con una battuta in sospeso (gancio da seriale).
-Niente elenchi. Non inventare dettagli concreti non menzionati.
-Rispondi soltanto in Italiano.
+Sei "What the F": barista brillante, sarcastico e un po’ alticcio, ma buono.
+Sembri ubriaco, ma sei lucido: battute intelligenti, ritmo continuo (non troppo spezzato), 8–10 frasi.
+Se periodo = "past", ricrea un futuro alternativo esilarante ma plausibile; se "future", predici in avanti con ironia.
+Almeno un riferimento all’alcol o al bancone. Chiudi con un gancio da serata che continua.
+Parla come un amico che lo conosce da anni (senza inventare vita/famiglia/soldi non detti).
 `;
 
 const Whatif_EN = `
-You are "What?f": clear, realistic, gently prophetic voice that knows the user.
-Tone: visual, human, no grandstanding. 7–10 smooth sentences, complete lines.
-Each episode must feel like it continues.
-If period=future: show a plausible near future as if you’re watching it happen.
-If period=past: craft a counterfactual line (“what could have unfolded”) without rewriting the past; narrate the path that would likely follow from that point.
-No bullet lists, no generic coaching. Do not invent concrete facts (money, apartments, offers) not mentioned by the user.
-End with a soft predictive hook. Reply only in English.
+You are "What?f": clear, realistic, predictive voice of a longtime friend.
+Sound like you know the user's patterns (use profile subtly). If "past", write a believable counterfactual future; if "future", near-term prediction.
+No coaching clichés or purple prose; concrete images; 7–10 smooth sentences.
+Don’t overuse “Tomorrow”; vary: “Soon you notice…”, “You always do this…”, “It turns out…”.
+End with a soft invitation to continue.
 `;
 
 const Wtf_EN = `
-You are "What the F": witty, tipsy, brutally funny but kind bartender-friend.
-Continuous mini-story, 8–10 sentences, sharp rhythm, at least one booze gag.
-Goal: big laugh + a glimpse of truth. Never mean.
-If period=future: near-future mayhem but believable; if period=past: counterfactual “how it would have gone” with irony.
-Always end with a playful cliffhanger. No lists. Don’t invent concrete facts not mentioned.
-Reply only in English.
+You are "What the F": witty bartender, slightly drunk, always kind underneath.
+Continuous mini-story (not too choppy), 8–10 sentences with smart sarcasm and one booze/bar image.
+If "past", build a hilarious but plausible alternative future; if "future", predict forward with bite.
+Talk like a friend who’s known them for years (no invented facts about money/family/work).
+Close with a playful cliffhanger.
 `;
 
-/* ---------------- HTTP handler ---------------- */
+function buildSystem(stile, lang) {
+  if (stile === "wtf") return isEn(lang) ? Wtf_EN : Wtf_IT;
+  return isEn(lang) ? Whatif_EN : Whatif_IT;
+}
+
+// -------- HTTP handler
 export default async function handler(req, res) {
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -82,90 +84,106 @@ export default async function handler(req, res) {
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const {
       domanda = "",
-      stile = "whatif",       // "whatif" | "wtf"
-      lang = "it",            // "it" | "en"
+      stile = "whatif",        // "whatif" | "wtf"
+      lang = "auto",           // "auto" | "it" | "en"
+      periodo = "future",      // "future" | "past"
       extra = "",
-      periodo = "future",     // "future" | "past" (counterfactual)
-      follow = false,         // teaser for tomorrow
-      answer = ""             // today's text (for teasers)
-      // profile, micro … opzionali in futuro
+      profile = {},            // { job, city, lives_with, sleep_hours, stress, ... }
+      follow = false,          // if true => return followup suggestions coherent with 'answer'
+      answer = ""              // the episode just generated (for follow)
     } = body;
 
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    /* ---- FOLLOW TEASERS ---- */
-    if (follow) {
-      const system = `
-You create exactly three SHORT teaser prompts for TOMORROW to continue a serial story.
-They MUST be derived from the user's original question AND today's answer (tone: "${stile}", period: "${periodo}").
-Write brief IMPERATIVES (not questions), 5–12 words, no final punctuation.
-Reference specific concrete elements from today's answer (places, objects, tiny decisions, time hints).
-Return STRICT JSON: {"followups":["t1","t2","t3"]} — nothing else.
-Language: ${isEn(lang) ? "English" : "Italiano"}.
-`.trim();
+    const langReal = lang === "auto" ? detectLang(domanda) : lang;
 
-      const user = `
-Original question: "${domanda}"
-Today's answer (trimmed): "${(answer || "").slice(0, 1400)}"
-Generate 3 concrete story-driven teasers for tomorrow in the same voice.
+    // ------- FOLLOWUP branch
+    if (follow) {
+      const sys = `
+Generate exactly 2 concise next-step prompts for TOMORROW, coherent with the user's question, today's answer, and tone (${stile}).
+They must tease the continuation, not generic coaching. Language: ${isEn(langReal) ? "English" : "Italiano"}.
+Return STRICT JSON: {"followups":["Q1","Q2"]} only.
+`.trim();
+      const usr = `
+Question: "${domanda}"
+Period: ${periodo}
+Profile (subtle): ${JSON.stringify(profile).slice(0, 400)}
+Today's answer (context): ${String(answer).slice(0, 1600)}
+Now produce 2 tomorrow prompts.
 `.trim();
 
       const r = await client.chat.completions.create({
         model: MODEL,
-        temperature: stile === "wtf" ? 0.9 : 0.7,
-        max_tokens: 180,
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: user }
-        ]
+        temperature: 0.7,
+        max_tokens: 220,
+        messages: [{ role: "system", content: sys }, { role: "user", content: usr }]
       });
 
-      const raw = r.choices?.[0]?.message?.content?.trim() || "{}";
       let out = { followups: [] };
-      try { out = JSON.parse(raw); } catch {}
-      if (!Array.isArray(out.followups) || out.followups.length < 3) {
-        out.followups = isEn(lang)
-          ? ["Note the first sign you’ll accept", "Go back to the place you mentioned", "Tell one person and watch what shifts"]
-          : ["Segna il primo segnale che accetterai", "Torna nel posto che hai citato", "Dillo a una persona e guarda cosa cambia"];
+      try { out = JSON.parse(r.choices?.[0]?.message?.content?.trim() || "{}"); } catch {}
+      if (!Array.isArray(out.followups) || out.followups.length < 2) {
+        out.followups = isEn(langReal)
+          ? ["What small sign would tell you the path is right?", "Which detail would change if you truly stayed?"]
+          : ["Quale segnale ti direbbe che la direzione è giusta?", "Quale dettaglio cambierebbe se restassi davvero?"];
       }
       return res.status(200).json(out);
     }
 
-    /* ---- EPISODIO ---- */
-    const system = (stile === "wtf"
-      ? (isEn(lang) ? Wtf_EN : Wtf_IT)
-      : (isEn(lang) ? Whatif_EN : Whatif_IT)
-    ).trim();
+    // ------- EPISODE branch
+    const sys = buildSystem(stile, langReal);
+    const mirror = buildMirror(profile, langReal); // breve riga “ti conosco”
+    const closing = episodicClosing(stile, langReal);
 
-    const closing = episodicClosing(stile, lang);
     const user = `
-User question: "${domanda}"
-Context detail (optional): "${String(extra || "").trim()}"
-Period: "${periodo}"  // "future" for realistic near-future; "past" for counterfactual line of what could have unfolded
+${mirror}
 
-Write ONE compact episode in the "${stile}" voice that clearly sets up a continuation.
-Do not use bullets. Keep 7–10 complete sentences.
-End with exactly this hook line: "${closing}"
+User question: "${domanda}"
+Period: ${periodo}
+Extra hint: "${(extra || "").slice(0, 200)}"
+Profile (subtle, do not list explicitly): ${JSON.stringify(profile).slice(0, 400)}
+
+Write a single self-contained episode in the "${stile}" voice with a natural sequel feeling.
+If period = "past", make a believable counterfactual future. If "future", predict forward.
+Close with EXACTLY: "${closing}"
 `.trim();
 
-    const completion = await client.chat.completions.create({
+    const c = await client.chat.completions.create({
       model: MODEL,
       temperature: stile === "wtf" ? 0.95 : 0.85,
       max_tokens: 700,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user }
-      ]
+      messages: [{ role: "system", content: sys }, { role: "user", content: user }]
     });
 
-    const text = completion?.choices?.[0]?.message?.content?.trim() || "";
-    if (!text) throw new Error("empty_model_response");
-
-    return res.status(200).json({ answer: text });
+    const text = c.choices?.[0]?.message?.content?.trim() || "";
+    return res.status(200).json({ answer: text, lang: langReal, style: stile, period: periodo });
   } catch (err) {
-    console.error("❌ [/api/ask] error:", err);
+    console.error("[/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
+}
+
+// ------- mirror line (amico di lunga data)
+function buildMirror(p = {}, lang = "it") {
+  const name = (p.name || "").split(" ")[0];
+  const city = p.city || p.city_now || "";
+  const job  = p.job || p.work_role || "";
+  const lives= p.lives_with || "";
+  if (isEn(lang)) {
+    const pool = [
+      name ? `${name}, you don’t chase noise — you chase rhythm.` : "You don’t chase noise — you chase rhythm.",
+      city ? `${city} keeps you steady, but you need one open window.` : "One solid base and one open window — that’s you.",
+      job  ? `In ${job}, you last as long as the “why” stays lit.` : "You last as long as the “why” stays lit.",
+      lives? `Sharing life with ${lives} taught you what really weighs.` : "You already know what truly weighs and what doesn’t."
+    ].filter(Boolean);
+    return pick(pool);
+  }
+  const poolIt = [
+    name ? `${name}, non rincorri il rumore: rincorri il ritmo.` : "Non rincorri il rumore: rincorri il ritmo.",
+    city ? `${city} ti tiene dritto, ma ti serve sempre una finestra aperta.` : "Ti serve una base solida e una finestra aperta.",
+    job  ? `Nel lavoro (${job}) resisti finché il perché resta acceso.` : "Resisti finché il perché resta acceso.",
+    lives? `Vivere con ${lives} ti ha insegnato cosa pesa davvero.` : "Sai già cosa pesa e cosa no."
+  ].filter(Boolean);
+  return pick(poolIt);
 }
