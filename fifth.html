@@ -8,196 +8,225 @@
 <style>
 :root{
   --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
-  --acc:#1C57A0; --acc2:#FFEC01; --chip:#121A26; --line:rgba(255,255,255,.12); --ink:#0A0E12;
-  --card:rgba(20,28,34,.92); --shadow:rgba(0,0,0,.35);
+  --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;
 }
-html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
+html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
 *{box-sizing:border-box}
-html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
-main{max-width:860px;margin:auto;padding:18px}
+html,body{margin:0;background:radial-gradient(800px 600px at 25% 20%,var(--bg2),var(--bg));color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:820px;margin:auto;padding:20px}
+h1{font-size:clamp(22px,5vw,30px);color:var(--acc2);text-align:center;margin:10px 0 6px}
+.sub{color:var(--muted);text-align:center;margin:0 0 10px}
+.card{background:rgba(20,28,34,.9);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px;backdrop-filter:blur(10px);margin-top:16px}
+.story{white-space:pre-wrap;line-height:1.65;font-size:18px;letter-spacing:.1px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
-.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
-.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
-h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:center}
-.label{color:var(--acc);font-weight:800;margin:0 0 8px}
-.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
-.answer{white-space:pre-wrap;line-height:1.6;font-size:18px}
-.meta{font-size:12px;color:var(--muted)}
-.sep{height:1px;background:rgba(255,255,255,.08);margin:12px 0}
-.sugg{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer}
+.btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink)}
+.btn.ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff}
+textarea{width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12);font-size:16px}
+.small{font-size:12px;color:var(--muted)}
+.input{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px}
+.sugg{cursor:pointer}
 </style>
 </head>
 <body>
 <main>
   <div class="row" style="justify-content:space-between">
     <div class="row">
-      <button class="btn" id="backBtn">←</button>
-      <button class="btn" id="homeBtn">🏠</button>
+      <button class="btn ghost" id="backBtn">←</button>
+      <button class="btn ghost" id="homeBtn">🏠</button>
     </div>
-    <div class="row">
-      <button class="btn" id="langBtn">IT</button>
-    </div>
+    <button class="btn ghost" id="langBtn">IT</button>
   </div>
 
-  <h1 id="title">Episodio</h1>
-  <p class="meta" id="subtitle">—</p>
+  <h1 id="title">Episodio 1 di 3</h1>
+  <p class="sub" id="subtitle">—</p>
 
   <div class="card">
-    <div class="label" id="lblQ">Domanda</div>
-    <div id="qBox" class="input" style="min-height:52px"></div>
+    <div class="label" style="color:var(--acc);font-weight:800;margin-bottom:8px" id="lblQ">La tua domanda</div>
+    <div class="input" id="qView" style="min-height:46px"></div>
   </div>
 
   <div class="card">
-    <div class="label" id="lblA">Risultato</div>
-    <div id="answerBox" class="answer">⏳ …</div>
-    <div class="meta" id="metaInfo"></div>
+    <div class="label" style="color:var(--acc);font-weight:800;margin-bottom:8px" id="lblA">Risultato</div>
+    <div id="answer" class="story">⏳ Genero la storia...</div>
     <div class="row" style="margin-top:10px">
-      <button class="btn" id="copyBtn">📋 Copia</button>
-      <button class="btn" id="shareBtn">🔗 Condividi</button>
+      <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
     </div>
+    <p class="small" id="metaInfo"></p>
   </div>
 
-  <div class="card" id="suggCard" style="display:none">
-    <div class="label" id="lblSugg">Spunti per domani</div>
-    <div id="suggList" style="display:flex;flex-direction:column;gap:8px"></div>
-    <div class="sep"></div>
-    <textarea id="customSugg" rows="3" placeholder="Aggiungi un tuo spunto…"></textarea>
+  <div class="card" id="followCard" style="display:none">
+    <div class="label" style="color:var(--acc);font-weight:800;margin-bottom:8px" id="followTitle">Suggerimenti per domani</div>
+    <div id="followList" class="story" style="font-size:16px"></div>
+    <div class="row" style="margin-top:10px">
+      <textarea id="customFollow" rows="2" placeholder="Aggiungi la tua micro-domanda per domani…"></textarea>
+    </div>
     <div class="row" style="margin-top:10px">
       <button class="btn primary" id="saveBtn">💾 Salva per domani</button>
-      <button class="btn" id="homeBtn2">🏠 Home</button>
+      <button class="btn ghost" id="doneBtn">✅ Fatto</button>
     </div>
-    <p class="meta" id="saveInfo"></p>
+    <p class="small" id="saveInfo"></p>
   </div>
 </main>
 
 <script>
 const LS=localStorage;
-let lang=(LS.getItem('lang')||'it').toLowerCase();
-const T = {
+const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
+const style = prefs.stile || 'whatif';
+const lang = (LS.getItem('lang') || 'it').toLowerCase();
+document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
+
+const I18N={
   it:{
-    title:"Episodio",
-    q:"Domanda", a:"Risultato",
+    tWTF:"⚡ What the F — Episodio 1 di 3",
+    tWHF:"💡 What?f — Episodio 1 di 3",
+    sub:(q)=>`Domanda: “${q}”`,
+    q:"La tua domanda", a:"Risultato",
+    share:"📤 Condividi / Copia",
     saved:"✅ Salvato per domani.",
-    copy:"📋 Copiato.",
-    shareFail:"Condivisione non supportata",
-    sugg:"Spunti per domani",
-    custom:"Aggiungi un tuo spunto…",
-    metaReplay:"(risposta salvata)", metaLive:"(generata ora)"
+    follow:"Suggerimenti per domani",
+    add:"Aggiungi la tua micro-domanda per domani…",
+    done:"✅ Fatto",
+    copied:"Copiato!",
+    error:"[errore server]",
   },
   en:{
-    title:"Episode",
-    q:"Question", a:"Result",
+    tWTF:"⚡ What the F — Episode 1 of 3",
+    tWHF:"💡 What?f — Episode 1 of 3",
+    sub:(q)=>`Question: “${q}”`,
+    q:"Your question", a:"Result",
+    share:"📤 Share / Copy",
     saved:"✅ Saved for tomorrow.",
-    copy:"📋 Copied.",
-    shareFail:"Share not supported",
-    sugg:"Prompts for tomorrow",
-    custom:"Add your own prompt…",
-    metaReplay:"(saved answer)", metaLive:"(generated now)"
+    follow:"Suggestions for tomorrow",
+    add:"Add your micro-question for tomorrow…",
+    done:"✅ Done",
+    copied:"Copied!",
+    error:"[server error]",
   }
 }[lang];
 
-const $=id=>document.getElementById(id);
-$('langBtn').textContent = lang.toUpperCase();
-$('backBtn').onclick=()=>history.back();
-$('homeBtn').onclick=()=>location.href='index.html';
-$('homeBtn2').onclick=()=>location.href='index.html';
-$('langBtn').onclick=()=>{ LS.setItem('lang', lang==='it'?'en':'it'); location.reload(); };
+document.getElementById('langBtn').textContent=lang.toUpperCase();
+document.getElementById('backBtn').onclick=()=>history.back();
+document.getElementById('homeBtn').onclick=()=>location.href='index.html';
+document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
 
-const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-const style = prefs.stile || 'whatif';
-document.documentElement.setAttribute('data-theme', style==='wtf'?'wtf':'whatif');
+document.getElementById('lblQ').textContent=I18N.q;
+document.getElementById('lblA').textContent=I18N.a;
+document.getElementById('shareBtn').textContent=I18N.share;
 
-$('title').textContent=T.title;
-$('lblQ').textContent=T.q;
-$('lblA').textContent=T.a;
-$('lblSugg').textContent=T.sugg;
-$('customSugg').placeholder=T.custom;
-
-/* replay? */
+// context
 const params=new URLSearchParams(location.search);
 const isReplay = params.get('view')==='replay';
 
-const req = JSON.parse(LS.getItem('whatif_request')||'null');
-const domanda = isReplay ? (JSON.parse(LS.getItem('replay_story')||'null')?.domanda || "") : (req?.domanda || LS.getItem('domanda') || "");
-$('qBox').textContent = domanda || '—';
-$('subtitle').textContent = (style==='wtf'?'⚡ What the F':'💡 What?f');
+let domanda = "";
+let answerText = "";
+let micro = JSON.parse(LS.getItem('micro_profile')||'{}');
 
-async function callAsk(payload){ const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); const j=await r.json(); if(!r.ok) throw new Error(j.detail||'server'); return j; }
+if(isReplay){
+  const r = JSON.parse(LS.getItem('replay_story')||'{}');
+  domanda = r.domanda || LS.getItem('domanda') || "";
+  answerText = r.answer || "";
+  document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
+  document.getElementById('subtitle').textContent = I18N.sub(domanda);
+  document.getElementById('qView').textContent = domanda || '—';
+  document.getElementById('answer').textContent = answerText || '—';
+  document.getElementById('followCard').style.display='none'; // niente teaser in replay
+} else {
+  const req = JSON.parse(LS.getItem('whatif_request')||'{}');
+  domanda = req.domanda || LS.getItem('domanda') || "";
+  micro   = req.micro || micro;
+  const extra = req.extra || "";
+  const fantasy_mode = !!req.fantasy_mode;
 
-/* COPY/SHARE */
-$('copyBtn').onclick=async ()=>{
-  const text = `Q: ${$('qBox').textContent}\n\n${$('answerBox').textContent}`;
-  await navigator.clipboard.writeText(text).catch(()=>{});
-  $('copyBtn').textContent = T.copy;
-  setTimeout(()=> $('copyBtn').textContent='📋 Copia', 1200);
-};
-$('shareBtn').onclick=async ()=>{
-  const text = `Q: ${$('qBox').textContent}\n\n${$('answerBox').textContent}`;
-  if(navigator.share){ try{ await navigator.share({text}); }catch{} } else { alert(T.shareFail); }
-};
+  document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
+  document.getElementById('subtitle').textContent = I18N.sub(domanda);
+  document.getElementById('qView').textContent = domanda || '—';
 
-/* LIVE vs REPLAY */
-(async ()=>{
-  if(isReplay){
-    const r = JSON.parse(LS.getItem('replay_story')||'null');
-    $('answerBox').textContent = r?.answer || '—';
-    $('metaInfo').textContent = T.metaReplay;
-    // niente suggerimenti in replay
-    return;
-  }
+  (async ()=>{
+    try{
+      const r = await fetch("/api/ask",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({ domanda, lang, stile:style, extra, micro, fantasy_mode })
+      });
+      const data = await r.json();
+      if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
+      answerText = (data.answer||"").trim();
+      document.getElementById('answer').textContent = answerText;
 
-  // genera episodio
+      // salva cronologia
+      const hist = JSON.parse(LS.getItem('cronologia')||'[]');
+      hist.push({ domanda, risposta:answerText, stile:style, ts:Date.now() });
+      LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
+
+      // suggerimenti coerenti (teaser per domani)
+      await buildSuggestions(answerText, req);
+    }catch(e){
+      document.getElementById('answer').textContent = I18N.error;
+      console.error(e);
+    }
+  })();
+}
+
+// Share / Copy
+document.getElementById('shareBtn').onclick=async()=>{
+  const full = `What?f — ${style==='wtf'?'What the F':'What?f'}\n\nQ: ${domanda}\n\n${answerText}`;
   try{
-    const payload = req || {};
-    payload.lang = (LS.getItem('lang')||'it').toLowerCase();
-    payload.mode = "episode";
-    const ep = await callAsk(payload);
-    const answer = (ep.answer||"").trim();
-    $('answerBox').textContent = answer || '—';
-    $('metaInfo').textContent = T.metaLive;
-
-    // salva cronologia
-    const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, answer, stile: style, ts: Date.now() });
-    LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-
-    // suggerimenti coerenti (non si continua oggi)
-    $('suggCard').style.display='block';
-    const follow = await callAsk({
-      domanda,
-      stile: style,
-      lang: (LS.getItem('lang')||'it').toLowerCase(),
-      mode: "follow",
-      profile: req?.profile || {},
-      answer
-    }).catch(()=>({ suggestions:[] }));
-
-    const list = Array.isArray(follow.suggestions) ? follow.suggestions.slice(0,3) : [];
-    const box=$('suggList'); box.innerHTML="";
-    (list.length?list:(
-      (payload.lang==='en')
-        ? ["Pick one tiny detail you’ll notice first.","Name the first sign it works.","Choose a place to test the new rhythm."]
-        : ["Scegli un dettaglio minuscolo da notare.","Nomina il primo segnale che funziona.","Scegli un posto dove provi il nuovo ritmo."]
-    )).forEach(s=>{
-      const d=document.createElement('div'); d.className='sugg'; d.textContent=s; d.onclick=()=>{ $('customSugg').value=s; };
-      box.appendChild(d);
-    });
-
-  }catch(e){
-    $('answerBox').textContent = '[server error]';
-  }
-})();
-
-/* salva per domani (non continua oggi) */
-$('saveBtn').onclick=()=>{
-  const v = ($('customSugg').value||"").trim();
-  const arr = JSON.parse(LS.getItem('next_prompts')||'[]');
-  arr.unshift({ q: v && v.length>0 ? v : domanda, stile: style, lang: (LS.getItem('lang')||'it').toLowerCase(), ts: Date.now() });
-  LS.setItem('next_prompts', JSON.stringify(arr.slice(0,50)));
-  $('saveInfo').textContent = T.saved;
-  $('customSugg').value='';
+    if(navigator.share){
+      await navigator.share({ title: "What?f", text: full });
+    }else{
+      await navigator.clipboard.writeText(full);
+      document.getElementById('shareBtn').textContent = I18N.copied;
+      setTimeout(()=>document.getElementById('shareBtn').textContent=I18N.share,1200);
+    }
+  }catch{}
 };
+
+// Suggerimenti
+async function buildSuggestions(ans, req){
+  const card = document.getElementById('followCard');
+  const list = document.getElementById('followList');
+  document.getElementById('followTitle').textContent = I18N.follow;
+  list.textContent = "…";
+  try{
+    const rr = await fetch("/api/ask",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ domanda, lang, stile:style, follow:true, answer: ans, micro })
+    });
+    const dj = await rr.json();
+    const arr = Array.isArray(dj.followups) ? dj.followups.slice(0,2) : [];
+    list.innerHTML = arr.length ? arr.map(q=>`• ${q}`).join("\n") :
+      (lang==='en' ? "• A small sign we should track\n• One detail to test tomorrow" :
+                     "• Un piccolo segnale da osservare\n• Un dettaglio da testare domani");
+
+    // click on suggestion → fill custom
+    list.querySelectorAll('br'); // ensure formatting
+    card.style.display='block';
+    list.classList.add('sugg');
+    list.onclick=(e)=>{
+      const sel = window.getSelection()?.toString();
+      const pick = (sel && sel.trim()) ? sel.trim() : (arr[0]||"");
+      document.getElementById('customFollow').value = pick;
+    };
+  }catch(e){
+    console.error("suggestions error", e);
+    card.style.display='block';
+    list.textContent = (lang==='en' ? "Two ideas ready for tomorrow." : "Due spunti pronti per domani.");
+  }
+
+  // Save for tomorrow
+  document.getElementById('customFollow').placeholder = I18N.add;
+  document.getElementById('saveBtn').onclick=()=>{
+    const v = (document.getElementById('customFollow').value||"").trim();
+    if(!v) { document.getElementById('customFollow').focus(); return; }
+    const saved = JSON.parse(LS.getItem('next_prompts')||'[]');
+    saved.unshift({ q:v, stile:style, lang, ts:Date.now() });
+    LS.setItem('next_prompts', JSON.stringify(saved.slice(0,50)));
+    document.getElementById('saveInfo').textContent = I18N.saved;
+  };
+  document.getElementById('doneBtn').onclick=()=> location.href='fourth.html';
+}
 </script>
 </body>
 </html>
