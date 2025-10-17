@@ -33,7 +33,12 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
 .pill input{border:none;background:transparent;color:#fff;outline:none;min-width:120px}
 .toggle{cursor:pointer;user-select:none}
 .collapsed>.body{display:none}
+.list{display:flex;flex-direction:column;gap:10px}
+.story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
+.play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
+.meta{font-size:12px;color:var(--muted)}
 .small{font-size:12px;color:var(--muted)}
+.lock{opacity:.6;pointer-events:none}
 </style>
 </head>
 <body>
@@ -46,14 +51,14 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
       <button class="btn" id="homeBtn">🏠</button>
     </div>
     <div class="row">
-      <span class="badge" id="freeBadge" title="">—</span>
+      <span class="badge" id="freeBadge">—</span>
       <button class="btn" id="langBtn">IT</button>
     </div>
   </div>
 
   <h1 id="titleH1">Imposta la tua domanda</h1>
 
-  <!-- Style -->
+  <!-- Stile -->
   <div class="card center">
     <div class="row" style="justify-content:space-between;align-items:center">
       <div class="row">
@@ -66,41 +71,33 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
     </div>
   </div>
 
-  <!-- Question -->
+  <!-- Domanda -->
   <div class="card center">
     <h3 class="label" id="qLabel">La tua domanda</h3>
     <textarea id="qInput" rows="3" class="input" placeholder="E se tornassi a vivere all’Aquila?"></textarea>
 
-    <!-- Quick detail chips -->
-    <div class="chips" style="margin-top:10px">
-      <button class="chip" data-extra="primo segnale">primo segnale</button>
-      <button class="chip" data-extra="budget">budget</button>
-      <button class="chip" data-extra="luogo preciso">luogo preciso</button>
-      <button class="chip" data-extra="tempo disponibile">tempo disponibile</button>
-      <button class="chip" data-extra="contatto chiave">contatto chiave</button>
-      <button class="chip" data-extra="vincolo reale">vincolo reale</button>
-    </div>
-
-    <input id="extraInput" class="input" placeholder="es. primo segnale di successo, budget, luogo specifico…" style="margin-top:8px"/>
+    <!-- Suggerimenti compatti (seguono lingua & stile) -->
+    <div class="chips" id="hintChips" style="margin-top:10px"></div>
+    <input id="extraInput" class="input" placeholder="es. primo segnale, budget, luogo specifico…" style="margin-top:8px"/>
 
     <div class="row" style="margin-top:12px">
       <button class="btn primary" id="goBtn">✨ Genera risposta</button>
       <button class="btn ghost" id="clearBtn">Pulisci</button>
     </div>
-    <div class="small" id="tipNote" style="margin-top:8px">Tip: puoi cambiare stile sopra; colori e tono si adattano.</div>
+    <div class="small" id="tipNote" style="margin-top:8px"></div>
   </div>
 
-  <!-- Micro-domande di oggi (una volta al giorno) -->
-  <div class="card center" id="microCard">
+  <!-- Micro-domande (1 volta al giorno, poi lock) -->
+  <div class="card center collapsed" id="microCard">
     <div class="row toggle" id="microHead" style="justify-content:space-between">
-      <div class="label" id="microTitle">▼ Micro-domande di oggi • 0/3</div>
+      <div class="label" id="microTitle">▶ Micro-domande di oggi • 0/3</div>
       <div class="small" id="microHint">(1 volta al giorno)</div>
     </div>
     <div class="body" id="microBody" style="margin-top:10px">
       <div class="row" style="gap:8px;flex-wrap:wrap">
-        <div class="pill"><span>🙂</span><input id="mood"   placeholder="Oggi come ti senti?"/></div>
-        <div class="pill"><span>📍</span><input id="city"   placeholder="Dove sei oggi?"/></div>
-        <div class="pill"><span>🎯</span><input id="focus"  placeholder="Cosa è importante oggi?"/></div>
+        <div class="pill"><span>🙂</span><input id="mood" placeholder="Oggi come ti senti?"/></div>
+        <div class="pill"><span>📍</span><input id="city" placeholder="Dove sei oggi?"/></div>
+        <div class="pill"><span>🎯</span><input id="focus" placeholder="Cosa è prioritario?"/></div>
       </div>
       <div class="row" style="margin-top:10px">
         <button class="btn primary" id="saveMicroBtn">💾 Salva micro-profilo</button>
@@ -109,159 +106,269 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
     </div>
   </div>
 
+  <!-- Salvati per domani -->
+  <div class="card center collapsed" id="savedCard">
+    <div class="row toggle" id="savedHeader" style="justify-content:space-between">
+      <div class="label" id="nextLabel">▶ Domande salvate per domani</div>
+      <div class="row">
+        <button class="btn ghost" id="clearSavedBtn">Svuota salvate</button>
+      </div>
+    </div>
+    <div class="body" id="savedBody">
+      <div id="nextList" class="list"></div>
+    </div>
+  </div>
+
+  <!-- Storie recenti -->
+  <div class="card center collapsed" id="histCard">
+    <div class="row toggle" id="histHeader" style="justify-content:space-between">
+      <div class="label" id="storiesLabel">▶ Storie recenti</div>
+      <div class="row">
+        <button class="btn ghost" id="clearHistoryBtn">Svuota storie</button>
+      </div>
+    </div>
+    <div class="body">
+      <div id="storyList" class="list"></div>
+    </div>
+  </div>
+
 </main>
 
 <script>
-/* ===== I18N ===== */
-const I18N = {
+/* ===== Helpers & I18N ===== */
+const LS=localStorage;
+const $=id=>document.getElementById(id);
+const todayStr=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+const readJSON=(k,def)=>{try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
+const writeJSON=(k,v)=>LS.setItem(k, JSON.stringify(v));
+
+let lang=(LS.getItem('lang')||'it').toLowerCase();
+const I18N={
   it:{
     title:"Imposta la tua domanda",
     whatif:"What if (realistico)", wtf:"What the F (divertente)",
-    yourq:"La tua domanda", gen:"✨ Genera risposta", clear:"Pulisci",
-    tip:"Tip: puoi cambiare stile sopra; colori e tono si adattano.",
-    free:(l,d)=>`Free oggi: ${l}/${d}`,
-    microT:(n)=>`▼ Micro-domande di oggi • ${n}/3`,
-    microHint:"(1 volta al giorno)",
-    savedOK:"Micro-profilo salvato per oggi.",
-    savedOnce:"Già salvato oggi.",
-    outOfCredits:"Hai finito i crediti di oggi.",
     styleBadgeWhat:"What if", styleBadgeWtf:"What the F",
+    q:"La tua domanda", gen:"✨ Genera risposta", clear:"Pulisci",
+    tipWhat:"Tip: aggiungi un dettaglio reale, ti conosco meglio.",
+    tipWtf:"Tip: lancia un indizio assurdo, ci penso io a farlo tornare.",
+    microTitle:(n)=>`${n? "▼":"▶"} Micro-domande di oggi • ${n}/3`,
+    microHint:"(1 volta al giorno)",
+    microSaved:"Micro-profilo salvato. Torna domani per aggiornarlo.",
+    microOnce:"Già salvato oggi.",
+    saved:"▶ Domande salvate per domani",
+    stories:"▶ Storie recenti",
+    use:"Usa", play:"▶",
+    emptyNext:"— Nessuna domanda salvata.",
+    emptyStories:"— Nessuna storia recente.",
+    clearSaved:"Svuota salvate", clearHist:"Svuota storie",
+    free:(l,d)=>`Free oggi: ${l}/${d}`,
+    hintChips:{
+      whatif:["primo segnale","vincolo reale","luogo preciso","tempo disponibile","contatto chiave","budget"],
+      wtf:["colpo di scena","bicchiere mezzo pieno","amico complice","bar di fiducia","scusa brillante","ciabatte da eroe"]
+    },
     qPH:"E se tornassi a vivere all’Aquila?",
-    extraPH:"es. primo segnale di successo, budget, luogo specifico…"
+    extraPH:"es. primo segnale, budget, luogo specifico…"
   },
   en:{
     title:"Set your question",
     whatif:"What if (realistic)", wtf:"What the F (fun)",
-    yourq:"Your question", gen:"✨ Generate answer", clear:"Clear",
-    tip:"Tip: switch style above; tone & colors adapt.",
-    free:(l,d)=>`Free today: ${l}/${d}`,
-    microT:(n)=>`▼ Today’s micro-questions • ${n}/3`,
-    microHint:"(once per day)",
-    savedOK:"Micro-profile saved for today.",
-    savedOnce:"Already saved today.",
-    outOfCredits:"You’ve used today’s credits.",
     styleBadgeWhat:"What if", styleBadgeWtf:"What the F",
+    q:"Your question", gen:"✨ Generate answer", clear:"Clear",
+    tipWhat:"Tip: add one real detail; I’ll know you better.",
+    tipWtf:"Tip: throw a silly hint; I’ll make it work.",
+    microTitle:(n)=>`${n? "▼":"▶"} Today’s micro-questions • ${n}/3`,
+    microHint:"(once per day)",
+    microSaved:"Micro-profile saved. Come back tomorrow to update.",
+    microOnce:"Already saved today.",
+    saved:"▶ Saved for tomorrow",
+    stories:"▶ Recent stories",
+    use:"Use", play:"▶",
+    emptyNext:"— No saved questions.",
+    emptyStories:"— No recent stories.",
+    clearSaved:"Clear saved", clearHist:"Clear history",
+    free:(l,d)=>`Free today: ${l}/${d}`,
+    hintChips:{
+      whatif:["first signal","real constraint","specific place","time window","key contact","budget"],
+      wtf:["plot twist","half-full glass","wingman friend","trusted bar","brilliant excuse","hero slippers"]
+    },
     qPH:"What if I moved back to L’Aquila?",
-    extraPH:"e.g., first success signal, budget, specific place…"
+    extraPH:"e.g., first signal, budget, specific place…"
   }
-};
-const LS=localStorage;
-let lang=(LS.getItem('lang')||'it').toLowerCase();
-const T=I18N[lang]||I18N.it;
-document.documentElement.lang=lang;
+}[lang];
 
-/* ===== Prefs / Theme ===== */
-function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def} }
-function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
-const prefs = readJSON('whatif_prefs',{stile:'whatif',pro:false});
+/* ===== Prefs & Theme ===== */
+let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-/* ===== Credits ===== */
-const DAILY_FREE = prefs.pro ? 10 : 3;
-function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function ensureCredits(){
-  const key='whatif_credits';
-  let c=readJSON(key,{date:todayStr(),used:0});
-  if(c.date!==todayStr()){ c.date=todayStr(); c.used=0; }
-  writeJSON(key,c);
-}
-function leftCredits(){ const c=readJSON('whatif_credits',{date:todayStr(),used:0}); return Math.max(0,DAILY_FREE-(c.used||0)); }
-function renderCredits(){ document.getElementById('freeBadge').textContent=T.free(leftCredits(),DAILY_FREE); }
-ensureCredits(); renderCredits();
-
-/* Dev reset (long press) */
-(function devReset(){
-  const b=document.getElementById('freeBadge'); let t=null;
-  b.addEventListener('pointerdown',()=>{ t=setTimeout(()=>{ const c=readJSON('whatif_credits'); c.date=todayStr(); c.used=0; writeJSON('whatif_credits',c); renderCredits(); alert(lang==='en'?'Credits reset (dev)':'Crediti azzerati (dev)'); },1500); });
-  ['pointerup','pointerleave','pointercancel'].forEach(ev=> b.addEventListener(ev,()=>clearTimeout(t)));
-})();
-
-/* ===== UI text ===== */
-const $=id=>document.getElementById(id);
-$('titleH1').textContent=T.title;
-$('qLabel').textContent=T.yourq;
-$('goBtn').textContent=T.gen; $('clearBtn').textContent=T.clear;
-$('tipNote').textContent=T.tip;
-$('chipWhatIf').textContent=T.whatif; $('chipWTF').textContent=T.wtf;
+/* ===== UI static ===== */
+$('titleH1').textContent=I18N.title;
+$('qLabel').textContent=I18N.q;
+$('goBtn').textContent=I18N.gen;
+$('clearBtn').textContent=I18N.clear;
 $('langBtn').textContent=lang.toUpperCase();
-$('qInput').placeholder=T.qPH; $('extraInput').placeholder=T.extraPH;
+$('clearSavedBtn').textContent=I18N.clearSaved;
+$('clearHistoryBtn').textContent=I18N.clearHist;
+$('qInput').placeholder=I18N.qPH;
+$('extraInput').placeholder=I18N.extraPH;
+renderTip();
+renderStyleBadges();
+renderHintChips();
 
-/* ===== nav & lang ===== */
+/* ===== Topbar actions ===== */
 $('backBtn').onclick=()=>history.back();
 $('homeBtn').onclick=()=>location.href='index.html';
-$('langBtn').onclick=()=>{ LS.setItem('lang', lang==='it'?'en':'it'); location.reload(); };
+$('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
 
-/* ===== Style chips ===== */
-function renderStyleBadge(){
-  document.getElementById('styleBadge').textContent = "🎭 " + (prefs.stile==='wtf'? T.styleBadgeWtf : T.styleBadgeWhat);
-  document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
-  document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-}
-renderStyleBadge();
-
-document.getElementById('styleChips').addEventListener('click',(e)=>{
+/* ===== Style switching ===== */
+$('styleChips').addEventListener('click',(e)=>{
   const b=e.target.closest('.chip'); if(!b) return;
   prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs);
-  renderStyleBadge();
+  document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+  renderStyleBadges(); renderTip(); renderHintChips();
 });
 
-/* ===== Quick detail chips → append to extra input ===== */
-document.querySelectorAll('.chip[data-extra]').forEach(ch=>{
-  ch.addEventListener('click',()=>{
-    const i=$('extraInput'); const v=ch.dataset.extra;
-    i.value = i.value ? (i.value+' • '+v) : v; i.focus();
-  });
-});
-
-/* ===== Micro-domande ===== */
-const microKey='micro_profile';
-const microSavedKey='micro_saved';
-const microStateKey='micro_state';
-
-function renderMicroHeader(){
-  const saved=readJSON(microSavedKey,{date:"",ok:false});
-  const today = saved.date===todayStr() && saved.ok;
-  const count = today ? 3 : 0;
-  $('microTitle').textContent = T.microT(count);
+function renderStyleBadges(){
+  $('styleBadge').textContent = "🎭 " + (prefs.stile==='wtf'? I18N.styleBadgeWtf : I18N.styleBadgeWhat);
+  document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
 }
-renderMicroHeader();
+function renderTip(){
+  $('tipNote').textContent = (prefs.stile==='wtf') ? I18N.tipWtf : I18N.tipWhat;
+}
+function renderHintChips(){
+  const wrap=$('hintChips'); wrap.innerHTML="";
+  const list = prefs.stile==='wtf'? I18N.hintChips.wtf : I18N.hintChips.whatif;
+  list.forEach(txt=>{
+    const b=document.createElement('button'); b.className='chip'; b.textContent=txt;
+    b.onclick=()=>{ const i=$('extraInput'); i.value = i.value ? (i.value+' • '+txt) : txt; i.focus(); };
+    wrap.appendChild(b);
+  });
+}
 
-const microState=readJSON(microStateKey,{collapsed:false});
-if(microState.collapsed) document.getElementById('microCard').classList.add('collapsed');
-document.getElementById('microHead').onclick=()=>{
-  const card=document.getElementById('microCard');
-  card.classList.toggle('collapsed');
-  writeJSON(microStateKey,{collapsed:card.classList.contains('collapsed')});
-};
+/* ===== Credits (facoltativi, lascio 3 free default) ===== */
+const DAILY_FREE = readJSON('whatif_credits',{date:todayStr(),used:0}).pro ? 10 : 3;
+function ensureCredits(){
+  const c=readJSON('whatif_credits',{date:todayStr(),used:0});
+  if(c.date!==todayStr()){ c.date=todayStr(); c.used=0; }
+  writeJSON('whatif_credits',c);
+}
+function renderCredits(){
+  const c=readJSON('whatif_credits',{date:todayStr(),used:0});
+  const left=Math.max(0,DAILY_FREE-(c.used||0));
+  $('freeBadge').textContent=I18N.free(left,DAILY_FREE);
+}
+ensureCredits(); renderCredits();
 
-document.getElementById('saveMicroBtn').onclick=()=>{
-  const saved=readJSON(microSavedKey,{date:"",ok:false});
-  if(saved.date===todayStr()){ $('microSavedMsg').textContent=T.savedOnce; return; }
+/* ===== Micro-domande (1/giorno + lock & collapse persistente) ===== */
+const microCard=$('microCard'), microHead=$('microHead');
+const microState = readJSON('micro_state',{open:false});
+if(!microState.open) microCard.classList.add('collapsed');
+
+function microSavedToday(){
+  const s=readJSON('micro_saved',{date:"",ok:false});
+  return s.date===todayStr() && s.ok;
+}
+function renderMicroBox(){
+  const saved = microSavedToday();
+  const count = saved ? 3 : 0;
+  $('microTitle').textContent = I18N.microTitle(saved ? 3 : 0);
+  $('microHint').textContent = I18N.microHint;
+
+  const inputs=['mood','city','focus'].map(id=>$(id));
+  if(saved){
+    // lock
+    inputs.forEach(i=>{ i.setAttribute('disabled','disabled'); i.parentElement.classList.add('lock'); });
+    $('saveMicroBtn').style.display='none';
+    $('microSavedMsg').textContent = I18N.microSaved;
+    // resta collassato dopo il salvataggio
+    microCard.classList.add('collapsed');
+    microState.open=false; writeJSON('micro_state', microState);
+  }else{
+    inputs.forEach(i=>{ i.removeAttribute('disabled'); i.parentElement.classList.remove('lock'); });
+    $('saveMicroBtn').style.display='';
+    $('microSavedMsg').textContent = "";
+  }
+}
+microHead.onclick=()=>{ microCard.classList.toggle('collapsed'); microState.open=!microCard.classList.contains('collapsed'); writeJSON('micro_state',microState); };
+renderMicroBox();
+
+$('saveMicroBtn').onclick=()=>{
+  if(microSavedToday()){ $('microSavedMsg').textContent=I18N.microOnce; return; }
   const micro={
-    mood:  (document.getElementById('mood').value||"").trim(),
-    city:  (document.getElementById('city').value||"").trim(),
-    focus: (document.getElementById('focus').value||"").trim()
+    mood: ($('mood').value||"").trim(),
+    city: ($('city').value||"").trim(),
+    focus: ($('focus').value||"").trim()
   };
-  writeJSON(microKey, micro);
-  writeJSON(microSavedKey, {date:todayStr(),ok:true});
-  $('microSavedMsg').textContent=T.savedOK;
-  renderMicroHeader();
+  writeJSON('micro_profile',micro);
+  writeJSON('micro_saved',{date:todayStr(),ok:true});
+  renderMicroBox();
 };
 
-/* ===== Generate ===== */
+/* ===== Salvati & Storie: sempre collassabili con stato persistente ===== */
+const savedCard=$('savedCard'), histCard=$('histCard');
+const savedState=readJSON('ui_saved_state',{open:false});
+const histState =readJSON('ui_hist_state',{open:false});
+if(!savedState.open) savedCard.classList.add('collapsed');
+if(!histState.open)  histCard.classList.add('collapsed');
+$('savedHeader').onclick=()=>{ savedCard.classList.toggle('collapsed'); savedState.open=!savedCard.classList.contains('collapsed'); writeJSON('ui_saved_state',savedState); };
+$('histHeader').onclick =()=>{ histCard.classList.toggle('collapsed');  histState.open=!histCard.classList.contains('collapsed');   writeJSON('ui_hist_state',histState);  };
+
+function fmt(ts){ const d=new Date(ts); return d.toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
+
+function renderNext(){
+  const box=$('nextList'); box.innerHTML='';
+  const arr=readJSON('next_prompts',[]);
+  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=I18N.emptyNext; box.appendChild(p); return; }
+  arr.slice(0,12).forEach(item=>{
+    const row=document.createElement('div'); row.className='story';
+    const left=document.createElement('div');
+    left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.q||'—'}</div><div class="meta">${fmt(item.ts)}</div>`;
+    const right=document.createElement('div'); right.className='row';
+    const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=I18N.use;
+    useBtn.onclick=()=>{ $('qInput').value=item.q||""; window.scrollTo({top:0,behavior:'smooth'}); };
+    const play=document.createElement('button'); play.className='play'; play.textContent=I18N.play;
+    play.onclick=()=>{ LS.setItem('domanda', item.q||""); location.href='fifth.html'; };
+    right.appendChild(useBtn); right.appendChild(play);
+    row.appendChild(left); row.appendChild(right);
+    box.appendChild(row);
+  });
+}
+function renderStories(){
+  const box=$('storyList'); box.innerHTML='';
+  const arr=readJSON('cronologia',[]);
+  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=I18N.emptyStories; box.appendChild(p); return; }
+  arr.slice(-12).reverse().forEach(item=>{
+    const row=document.createElement('div'); row.className='story';
+    const left=document.createElement('div');
+    left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.domanda||'—'}</div><div class="meta">${fmt(item.ts)} · ${(item.stile==='wtf'?'What the F':'What?f')}</div>`;
+    const play=document.createElement('button'); play.className='play'; play.textContent=I18N.play;
+    play.onclick=()=>{ writeJSON('replay_story', { domanda:item.domanda, answer:item.risposta||item.answer||"", stile:item.stile||'whatif', ts:item.ts }); location.href='fifth.html?view=replay'; };
+    row.appendChild(left); row.appendChild(play);
+    box.appendChild(row);
+  });
+}
+$('clearSavedBtn').onclick=()=>{ LS.removeItem('next_prompts'); renderNext(); };
+$('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
+renderNext(); renderStories();
+
+/* ===== Genera (nessuna logica di “storia a episodi”) ===== */
 $('goBtn').onclick=()=>{
   const domanda=($('qInput').value||"").trim();
   if(!domanda){ $('qInput').focus(); return; }
 
-  const c=readJSON('whatif_credits'); const used=(c.used||0);
-  if(used>=DAILY_FREE){ alert(T.outOfCredits); return; }
-  c.used=used+1; writeJSON('whatif_credits',c); renderCredits();
+  const cred=readJSON('whatif_credits',{date:todayStr(),used:0}); 
+  if(cred.date!==todayStr()){ cred.date=todayStr(); cred.used=0; }
+  if((cred.used||0)>=3 && !readJSON('whatif_prefs',{pro:false}).pro){ alert(lang==='en'?'You’ve used today’s credits.':'Hai finito i crediti di oggi.'); return; }
+  cred.used=(cred.used||0)+1; writeJSON('whatif_credits',cred); renderCredits();
 
-  const micro = readJSON('micro_profile', {});
-  const extra = ($('extraInput').value||"").trim();
+  const micro=readJSON('micro_profile', {});
+  const extra=($('extraInput').value||"").trim();
   writeJSON('whatif_prefs', prefs);
   LS.setItem('domanda',domanda);
-  writeJSON('whatif_request',{ domanda, stile:prefs.stile, lang, extra, micro });
+
+  writeJSON('whatif_request',{
+    domanda, stile:prefs.stile, lang, extra, micro, fantasy_mode:false
+  });
+
   location.href='fifth.html';
 };
 
