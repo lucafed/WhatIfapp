@@ -1,5 +1,5 @@
 // ============================
-// /api/ask.js — What?f Engine (final)
+// /api/ask.js — What?f Engine (final) + Context Mode
 // Stili supportati: whatif, wtf
 // Singola risposta (no episodi), IT/EN
 // ============================
@@ -75,19 +75,41 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "missing_api_key" });
     }
 
-    // Input
-    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-    const {
+    // ===== Input (MUTABLE) =====
+    const rawBody = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+    let {
       domanda = "",
       stile = "whatif", // "whatif" | "wtf"
       lang = "it",      // "it" | "en"
       extra = ""        // opzionale: contesto/dettagli (micro-profili, note, vincoli)
-    } = body;
+    } = rawBody;
 
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
+    // ===== CONTEXT MODE (auto, opzionale, non invasivo) =====
+    // Se CONTEXT_MODE=real, prova ad arricchire "extra" con un seed contestuale restituito dal tuo endpoint.
+    if (process.env.CONTEXT_MODE === "real") {
+      try {
+        const resp = await fetch(process.env.CONTEXT_ENDPOINT || "https://your-api/context-enrich", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ domanda, lang })
+        });
+        if (resp.ok) {
+          const ctx = await resp.json();
+          if (ctx?.contextText) {
+            // Append non distruttivo: mantiene ciò che c’è già in extra
+            extra = (extra ? extra + " • " : "") + ctx.contextText;
+          }
+        }
+      } catch (e) {
+        console.warn("context enrich failed:", e?.message || e);
+      }
+    }
+
+    // Persona system prompt
     const systemPrompt = personaSystem(stile, lang);
     const userPrompt = isEn(lang)
       ? `User question: "${domanda}". Context or hints: "${String(extra || "").trim()}".`
