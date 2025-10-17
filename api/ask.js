@@ -1,7 +1,7 @@
 // ============================
-// /api/ask.js — What?f Engine (final) + Context Mode
-// Stili supportati: whatif, wtf
-// Singola risposta (no episodi), IT/EN
+// /api/ask.js — What?f Engine (pragmatic v2)
+// Stili: whatif, wtf
+// IT/EN, singola risposta, con accorciamento server-side
 // ============================
 
 import OpenAI from "openai";
@@ -12,52 +12,75 @@ const MODEL = "gpt-4o-mini"; // stabile e leggero
 /* ---------- Helpers ---------- */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
-/* ---------- Personas (toni definitivi) ---------- */
+// Normalizza spazi, tronca per frasi e parole
+function tighten(text, style = "whatif") {
+  if (!text) return "";
+  const clean = text
+    .replace(/\s+/g, " ")
+    .replace(/\n+/g, " ")
+    .trim();
+
+  const limits = (style === "wtf")
+    ? { maxSent: 8, maxWords: 130 }
+    : { maxSent: 7, maxWords: 110 };
+
+  // Split su fine frase (. ! ?), mantenendo fluidità
+  const sentences = clean.split(/(?<=[\.!?])\s+/).filter(Boolean);
+  let clipped = sentences.slice(0, limits.maxSent).join(" ").trim();
+
+  // Clip anche per parole
+  const words = clipped.split(/\s+/);
+  if (words.length > limits.maxWords) {
+    clipped = words.slice(0, limits.maxWords).join(" ").trim() + "…";
+  }
+
+  return clipped;
+}
+
+/* ---------- Personas (toni pragmatici) ---------- */
 function personaSystem(style, lang) {
   if (style === "wtf") {
-    // WHAT THE F — barista demenziale, alcolico, confidenziale; racconto continuo (meno punti)
+    // WHAT THE F — barista amico, demenziale ma affettuoso; flusso continuo, meno puntini
     return isEn(lang)
       ? `
 You are "What the F" — a witty, tipsy, chaotic-but-kind bartender best friend.
-Speak in SECOND PERSON and make the user the protagonist.
-Write ONE continuous mini-story of 8–10 sentences that FLOWS (avoid choppy, too many short sentences).
-Use surreal humor and bar/drink references; a little nonsense is welcome.
-Be cheeky and bold but never cruel; affection must show under the sarcasm.
-Keep it conversational, like a late-night bar monologue to a dear friend.
-Do NOT ask questions to the user. No lists. No emojis. No moralizing.
-Answer ONLY in English.
+SECOND PERSON. One continuous mini-story, natural flow (no choppy lines).
+6–8 sentences, ≤130 words. Use bar/drink references, allow a touch of surreal nonsense.
+Bold but never cruel; warmth must show under the sarcasm.
+No lists. No emojis. Do NOT ask the user questions. No moralizing.
+Keep it colloquial, like a late-night bar monologue to a dear friend.
+Write ONLY in English.
 `.trim()
       : `
-Sei "What the F" — barista amico, demenziale e un po' alticcio, ma affettuoso.
-Parla in SECONDA PERSONA e rendi l’utente il protagonista.
-Scrivi UN racconto continuo di 8–10 frasi che SCORRE (evita frasi spezzate e troppi punti).
-Usa ironia surreale e riferimenti a bar/alcol; un po' di nonsense va bene.
-Sfacciato ma mai cattivo: l’affetto deve sentirsi sotto il sarcasmo.
-Tono da bancone a tarda sera, confidenziale.
-NON fare domande all’utente. Niente elenchi. Niente emoji. Niente prediche.
-Rispondi SOLO in Italiano.
+Sei "What the F" — barista amico, demenziale e un po’ alticcio, ma affettuoso.
+SECONDA PERSONA. Un racconto continuo, scorrevole (evita frasi spezzate).
+6–8 frasi, ≤130 parole. Riferimenti a bar/alcol, un pizzico di nonsense va bene.
+Sfacciato ma mai cattivo; il calore deve sentirsi sotto il sarcasmo.
+Niente elenchi. Niente emoji. NON fare domande all’utente. Niente prediche.
+Tono colloquiale da bancone, tarda sera, tra amici stretti.
+Scrivi SOLO in Italiano.
 `.trim();
   }
 
-  // WHAT IF — amico empatico, realistico con un filo di magia; confidenziale
+  // WHAT IF — amico empatico e concreto; meno poetico, più pragmatico
   return isEn(lang)
     ? `
 You are "What If" — a warm, lucid friend who truly understands the user.
-Speak in SECOND PERSON. 7–10 smooth sentences in a single paragraph.
-Tone: empathetic, realistic, lightly poetic yet grounded, optimistic.
-Reveal familiarity via concrete hints and micro-observations (never write “I know you”).
-Encourage calmly; end with a gentle, hopeful nudge forward.
-Do NOT ask questions to the user. No lists. No emojis. No therapy clichés.
-Answer ONLY in English.
+SECOND PERSON. 5–7 smooth sentences in a single paragraph, ≤110 words.
+Tone: empathetic, realistic, grounded; lightly poetic at most, but pragmatic.
+Show familiarity via micro-observations and concrete hints (never write “I know you”).
+Encourage calmly; end with a small, hopeful push forward.
+No lists. No emojis. Do NOT ask the user questions. No therapy clichés.
+Write ONLY in English.
 `.trim()
     : `
 Sei "What If" — un amico caldo e lucido che capisce davvero l’utente.
-Parla in SECONDA PERSONA. 7–10 frasi fluide in un unico paragrafo.
-Tono: empatico, realistico, leggermente poetico ma concreto, positivo.
-Fai percepire familiarità con piccoli indizi e micro-osservazioni (mai scrivere “ti conosco”).
+SECONDA PERSONA. 5–7 frasi fluide in un unico paragrafo, ≤110 parole.
+Tono: empatico, realistico, concreto; un filo poetico al massimo, ma pragmatico.
+Fai percepire familiarità con piccole osservazioni e dettagli reali (mai scrivere “ti conosco”).
 Incoraggia con calma; chiudi con una spinta gentile e fiduciosa.
-NON porre domande all’utente. Niente elenchi. Niente emoji. Niente cliché da coaching.
-Rispondi SOLO in Italiano.
+Niente elenchi. Niente emoji. NON porre domande all’utente. Evita cliché da coaching.
+Scrivi SOLO in Italiano.
 `.trim();
 }
 
@@ -75,59 +98,40 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "missing_api_key" });
     }
 
-    // ===== Input (MUTABLE) =====
-    const rawBody = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-    let {
+    // Input
+    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+    const {
       domanda = "",
       stile = "whatif", // "whatif" | "wtf"
       lang = "it",      // "it" | "en"
-      extra = ""        // opzionale: contesto/dettagli (micro-profili, note, vincoli)
-    } = rawBody;
+      extra = ""        // opzionale: note/indizi (non è obbligatorio)
+    } = body;
 
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    // ===== CONTEXT MODE (auto, opzionale, non invasivo) =====
-    // Se CONTEXT_MODE=real, prova ad arricchire "extra" con un seed contestuale restituito dal tuo endpoint.
-    if (process.env.CONTEXT_MODE === "real") {
-      try {
-        const resp = await fetch(process.env.CONTEXT_ENDPOINT || "https://your-api/context-enrich", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ domanda, lang })
-        });
-        if (resp.ok) {
-          const ctx = await resp.json();
-          if (ctx?.contextText) {
-            // Append non distruttivo: mantiene ciò che c’è già in extra
-            extra = (extra ? extra + " • " : "") + ctx.contextText;
-          }
-        }
-      } catch (e) {
-        console.warn("context enrich failed:", e?.message || e);
-      }
-    }
-
-    // Persona system prompt
     const systemPrompt = personaSystem(stile, lang);
     const userPrompt = isEn(lang)
-      ? `User question: "${domanda}". Context or hints: "${String(extra || "").trim()}".`
-      : `Domanda utente: "${domanda}". Contesto o indizi: "${String(extra || "").trim()}".`;
+      ? `User question: "${domanda}". Context or hints (optional): "${String(extra || "").trim()}".`
+      : `Domanda utente: "${domanda}". Contesto o indizi (facoltativi): "${String(extra || "").trim()}".`;
 
-    // Generate response
+    // Generate response (più sobrio in token e temperatura)
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.97 : 0.86,
-      max_tokens: 700,
+      temperature: stile === "wtf" ? 0.92 : 0.82,
+      max_tokens: 320,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt }
       ]
     });
 
-    const answer = completion?.choices?.[0]?.message?.content?.trim() || "";
-    if (!answer) throw new Error("empty_model_response");
+    const raw = completion?.choices?.[0]?.message?.content?.trim() || "";
+    if (!raw) throw new Error("empty_model_response");
+
+    // Accorcia in modo deterministico lato server
+    const answer = tighten(raw, stile);
 
     return res.status(200).json({ answer, style: stile, lang });
   } catch (err) {
