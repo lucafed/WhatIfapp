@@ -3,16 +3,13 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Risposta</title>
+<title>What?f — Episodio</title>
 <meta name="theme-color" content="#0B0B0C"/>
 <style>
-:root{
-  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
-  --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;
-}
+:root{ --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA; --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12; }
 html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
 *{box-sizing:border-box}
-html,body{margin:0;background:radial-gradient(820px 620px at 25% 20%,var(--bg2),var(--bg));color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+html,body{margin:0;background:radial-gradient(800px 600px at 25% 20%,var(--bg2),var(--bg));color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
 main{max-width:820px;margin:auto;padding:20px}
 h1{font-size:clamp(22px,5vw,30px);color:var(--acc2);text-align:center;margin:10px 0 6px}
 .sub{color:var(--muted);text-align:center;margin:0 0 10px}
@@ -37,31 +34,31 @@ textarea{width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,
     <button class="btn ghost" id="langBtn">IT</button>
   </div>
 
-  <h1 id="title">What?f — Risposta</h1>
+  <h1 id="title">Episodio</h1>
   <p class="sub" id="subtitle">—</p>
 
   <div class="card">
-    <div class="label" style="color:var(--acc);font-weight:800;margin-bottom:8px" id="lblQ">Domanda</div>
+    <div class="label" style="color:var(--acc);font-weight:800;margin-bottom:8px" id="lblQ">La tua domanda</div>
     <div class="input" id="qView" style="min-height:46px"></div>
   </div>
 
   <div class="card">
     <div class="label" style="color:var(--acc);font-weight:800;margin-bottom:8px" id="lblA">Risultato</div>
-    <div id="answer" class="story">⏳ Genero la risposta…</div>
+    <div id="answer" class="story">⏳ …</div>
     <div class="row" style="margin-top:10px">
       <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
     </div>
     <p class="small" id="metaInfo"></p>
   </div>
 
-  <div class="card" id="suggCard">
-    <div class="label" style="color:var(--acc);font-weight:800;margin-bottom:8px" id="suggTitle">Spunti legati alla risposta</div>
-    <div id="suggList" class="story" style="font-size:16px"></div>
+  <div class="card" id="followCard" style="display:none">
+    <div class="label" style="color:var(--acc);font-weight:800;margin-bottom:8px" id="followTitle">Suggerimenti per domani</div>
+    <div id="followList" class="story" style="font-size:16px"></div>
     <div class="row" style="margin-top:10px">
-      <textarea id="customNext" rows="2" placeholder="Aggiungi un tuo spunto concreto…"></textarea>
+      <textarea id="customFollow" rows="2" placeholder="Aggiungi un E se… per domani"></textarea>
     </div>
     <div class="row" style="margin-top:10px">
-      <button class="btn primary" id="saveBtn">💾 Salva</button>
+      <button class="btn primary" id="saveBtn">💾 Salva per domani</button>
       <button class="btn ghost" id="doneBtn">✅ Fatto</button>
     </div>
     <p class="small" id="saveInfo"></p>
@@ -76,142 +73,138 @@ const lang = (LS.getItem('lang') || 'it').toLowerCase();
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 
 const I18N={
-  it:{
-    titleW:"💡 What if — Risposta", titleF:"⚡ What the F — Risposta",
-    sub:(q)=>`Domanda: “${q}”`,
-    q:"Domanda", a:"Risultato",
-    share:"📤 Condividi / Copia", copied:"Copiato!",
-    saved:"✅ Salvato.", done:"✅ Fatto",
-    error:"[errore server]",
-    sugg:"Spunti legati alla risposta",
-    phNext:"Aggiungi un tuo spunto concreto…"
-  },
-  en:{
-    titleW:"💡 What if — Answer", titleF:"⚡ What the F — Answer",
-    sub:(q)=>`Question: “${q}”`,
-    q:"Question", a:"Result",
-    share:"📤 Share / Copy", copied:"Copied!",
-    saved:"✅ Saved.", done:"✅ Done",
-    error:"[server error]",
-    sugg:"Prompts tied to this answer",
-    phNext:"Add your concrete nudge…"
-  }
+  it:{ title:(s)=> (s==='wtf'?'⚡ What the F — Episodio':'💡 What if — Episodio'),
+       sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risultato",
+       share:"📤 Condividi / Copia", copied:"Copiato!", error:"[errore server]",
+       follow:"Suggerimenti per domani", add:"Aggiungi un E se… per domani",
+       saved:"✅ Salvato per domani." },
+  en:{ title:(s)=> (s==='wtf'?'⚡ What the F — Episode':'💡 What if — Episode'),
+       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Result",
+       share:"📤 Share / Copy", copied:"Copied!", error:"[server error]",
+       follow:"Suggestions for tomorrow", add:"Add a What if… for tomorrow",
+       saved:"✅ Saved for tomorrow." }
 }[lang];
 
-const $=id=>document.getElementById(id);
-$('langBtn').textContent=lang.toUpperCase();
-$('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
-$('backBtn').onclick=()=>history.back(); $('homeBtn').onclick=()=>location.href='index.html';
+// static suggestions (mirror of page 4)
+const SUGG = {
+  it:{
+    whatif:[
+      "E se domani mi prendessi una giornata solo per pensarci bene?",
+      "E se scrivessi a quella persona invece di rimandare?",
+      "E se cambiassi una sola abitudine — quella giusta?",
+      "E se mi trasferissi solo per vedere che succede?"
+    ],
+    wtf:[
+      "E se aprissi un chiringuito a Oslo?",
+      "E se comprassi un lama invece dell’auto?",
+      "E se diventassi influencer di frigoriferi?",
+      "E se fosse tutto un sogno e stessimo già brindando?"
+    ]
+  },
+  en:{
+    whatif:[
+      "What if I took one day just to think?",
+      "What if I texted that person instead of delaying?",
+      "What if I changed one habit — the right one?",
+      "What if I moved somewhere new just to see?"
+    ],
+    wtf:[
+      "What if I opened a beach bar in Oslo?",
+      "What if I bought a llama instead of a car?",
+      "What if I became a fridge influencer?",
+      "What if it’s all a dream and we’re already celebrating?"
+    ]
+  }
+};
 
-$('title').textContent = (style==='wtf'? I18N.titleF : I18N.titleW);
-$('lblQ').textContent = I18N.q; $('lblA').textContent = I18N.a;
-$('shareBtn').textContent = I18N.share;
-$('suggTitle').textContent = I18N.sugg;
-$('customNext').placeholder = I18N.phNext;
+document.getElementById('langBtn').textContent=lang.toUpperCase();
+document.getElementById('backBtn').onclick=()=>history.back();
+document.getElementById('homeBtn').onclick=()=>location.href='index.html';
+document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
 
-/* ===== Context ===== */
+document.getElementById('title').textContent = I18N.title(style);
+document.getElementById('lblQ').textContent = I18N.q;
+document.getElementById('lblA').textContent = I18N.a;
+document.getElementById('shareBtn').textContent = I18N.share;
+
 const params=new URLSearchParams(location.search);
 const isReplay = params.get('view')==='replay';
 
 let domanda = "";
 let answerText = "";
+let micro = JSON.parse(LS.getItem('micro_profile')||'{}');
 
-// replay branch
 if(isReplay){
   const r = JSON.parse(LS.getItem('replay_story')||'{}');
   domanda = r.domanda || LS.getItem('domanda') || "";
   answerText = r.answer || "";
-  $('subtitle').textContent = I18N.sub(domanda);
-  $('qView').textContent = domanda || '—';
-  $('answer').textContent = answerText || '—';
-  $('metaInfo').textContent = '';
-  buildSuggestions(domanda, answerText, style, lang);
-} else {
+  document.getElementById('subtitle').textContent = I18N.sub(domanda);
+  document.getElementById('qView').textContent = domanda || '—';
+  document.getElementById('answer').textContent = answerText || '—';
+  // in replay mostriamo comunque i suggerimenti statici
+  buildStaticSuggestions();
+}else{
   const req = JSON.parse(LS.getItem('whatif_request')||'{}');
   domanda = req.domanda || LS.getItem('domanda') || "";
+  micro   = req.micro || micro;
   const extra = req.extra || "";
-  const micro = req.micro || {};
-  $('subtitle').textContent = I18N.sub(domanda);
-  $('qView').textContent = domanda || '—';
+
+  document.getElementById('subtitle').textContent = I18N.sub(domanda);
+  document.getElementById('qView').textContent = domanda || '—';
 
   (async ()=>{
     try{
       const r = await fetch("/api/ask",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({ domanda, lang, stile:style, extra })
+        body:JSON.stringify({ domanda, lang, stile:style, extra, micro })
       });
       const data = await r.json();
       if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
       answerText = (data.answer||"").trim();
-      $('answer').textContent = answerText;
+      document.getElementById('answer').textContent = answerText;
 
-      // cronologia
+      // storia in cronologia
       const hist = JSON.parse(LS.getItem('cronologia')||'[]');
       hist.push({ domanda, risposta:answerText, stile:style, ts:Date.now() });
       LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
 
-      // suggerimenti client-side
-      buildSuggestions(domanda, answerText, style, lang);
+      buildStaticSuggestions();
     }catch(e){
-      $('answer').textContent = I18N.error;
+      document.getElementById('answer').textContent = I18N.error;
       console.error(e);
     }
   })();
 }
 
-/* ===== Suggerimenti che seguono stile & lingua (client-side) ===== */
-function buildSuggestions(q, a, style, lang){
-  const list=$('suggList');
+function buildStaticSuggestions(){
+  const card = document.getElementById('followCard');
+  const list = document.getElementById('followList');
+  document.getElementById('followTitle').textContent = I18N.follow;
+  document.getElementById('customFollow').placeholder = I18N.add;
 
-  const SUGG = {
-    it: {
-      whatif: [
-        "Annota un segno concreto che vedrai entro domani.",
-        "Definisci un micro-passo di 10 minuti che farai davvero.",
-        "Scegli un luogo che ti mette nel ritmo giusto."
-      ],
-      wtf: [
-        "Prometti un brindisi se compi un passo minuscolo (vale anche acqua).",
-        "Scrivi la scusa più assurda che userai, poi non usarla.",
-        "Dichiara al barista il tuo micro-obiettivo come un segreto di stato."
-      ]
-    },
-    en: {
-      whatif: [
-        "Note one concrete sign you’ll see by tomorrow.",
-        "Pick a 10-minute micro-step you’ll actually do.",
-        "Choose a place that sets the right tempo."
-      ],
-      wtf: [
-        "Promise a toast if you take one tiny step (water counts).",
-        "Write your most absurd excuse, then don’t use it.",
-        "Tell the bartender your micro-goal like a state secret."
-      ]
-    }
+  const L=lang.startsWith('en')?'en':'it';
+  const arr = (style==='wtf') ? SUGG[L].wtf : SUGG[L].whatif;
+  list.innerHTML = arr.slice(0,4).map(s=>`• ${s}`).join("\n");
+  card.style.display='block';
+
+  // click to copy into textarea
+  list.onclick=()=>{ const sel = window.getSelection()?.toString(); if(sel) document.getElementById('customFollow').value=sel; };
+  document.getElementById('saveBtn').onclick=()=>{
+    const v=(document.getElementById('customFollow').value||"").trim(); if(!v){ document.getElementById('customFollow').focus(); return; }
+    const saved = JSON.parse(LS.getItem('next_prompts')||'[]');
+    saved.unshift({ q:v, stile:style, lang, ts:Date.now() }); LS.setItem('next_prompts', JSON.stringify(saved.slice(0,50)));
+    document.getElementById('saveInfo').textContent = I18N.saved;
   };
-
-  const arr = SUGG[lang][style] || [];
-  list.innerHTML = "• " + arr.join("\n• ");
+  document.getElementById('doneBtn').onclick=()=> history.back();
 }
 
-/* ===== Save & Done ===== */
-$('saveBtn').onclick=()=>{
-  const v = ($('customNext').value||"").trim();
-  if(!v){ $('customNext').focus(); return; }
-  const saved = JSON.parse(LS.getItem('next_prompts')||'[]');
-  saved.unshift({ q:v, stile:style, lang, ts:Date.now() });
-  LS.setItem('next_prompts', JSON.stringify(saved.slice(0,50)));
-  $('saveInfo').textContent = I18N.saved;
-};
-$('doneBtn').onclick=()=>{ location.href='fourth.html'; };
-
-/* ===== Share / Copy ===== */
-$('shareBtn').onclick=async()=>{
+// Share / Copy
+document.getElementById('shareBtn').onclick=async()=>{
   const full = `What?f — ${style==='wtf'?'What the F':'What if'}\n\nQ: ${domanda}\n\n${answerText}`;
   try{
     if(navigator.share){ await navigator.share({ title: "What?f", text: full }); }
-    else { await navigator.clipboard.writeText(full); $('shareBtn').textContent=I18N.copied; setTimeout(()=>$('shareBtn').textContent=I18N.share,1200); }
+    else{ await navigator.clipboard.writeText(full); document.getElementById('shareBtn').textContent = I18N.copied; setTimeout(()=>document.getElementById('shareBtn').textContent=I18N.share,1200); }
   }catch{}
 };
 </script>
