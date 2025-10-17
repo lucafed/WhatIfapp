@@ -1,75 +1,102 @@
 // ============================
-// /api/ask.js — What?f Engine (FINAL v2.0)
-// Stili supportati: whatif, wtf
+// /api/ask.js — What?f Engine (deterministic openers, toned & concise)
+// Stili: "whatif" (realistic, warm) • "wtf" (barista demenziale)
 // Singola risposta (no episodi), IT/EN
 // ============================
 
 import OpenAI from "openai";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const MODEL = "gpt-4o-mini"; // stabile, veloce e preciso
+const MODEL = "gpt-4o-mini"; // stabile e leggero
 
 /* ---------- Helpers ---------- */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
-/* ---------- Personas (toni definitivi) ---------- */
-function personaSystem(style, lang) {
-  // ====================
-  // WHAT THE F — barista comico, esplosivo, demenziale
-  // ====================
+// Hash deterministico semplice per scegliere sempre lo stesso incipit su stessa domanda
+function hashStr(s = "") {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h) ^ s.charCodeAt(i);
+  return Math.abs(h >>> 0);
+}
+function pickDeterministic(arr, seed) {
+  if (!arr?.length) return "";
+  return arr[hashStr(String(seed || "")) % arr.length];
+}
+
+/* ---------- Incipit per stile (IT/EN) ---------- */
+const WTF_OPENERS_IT = [
+  "Bravo genio,", "Campione,", "Fenomeno,", "Eroe del venerdì,",
+  "Stratega del caos,", "Capolavoro ambulante,", "Sultano degli aperitivi,",
+  "Ninja del procrastino,", "Meteora del bar,"
+];
+const WTF_OPENERS_EN = [
+  "Nice one, genius,", "Champ,", "You glorious menace,", "Friday hero,",
+  "Chaos strategist,", "Walking masterpiece,", "Bar legend,",
+  "You magnificent disaster,", "Spark plug,"
+];
+
+const WHATIF_OPENERS_IT = [
+  "Ti ci vedo già:", "Sì, vai.", "Te lo dico piano:", "Lo farai senza rumore:",
+  "Ci arrivi così, semplice:", "Succederà in piccolo:"
+];
+const WHATIF_OPENERS_EN = [
+  "I can see you there already:", "Yes, go.", "Here’s how it plays out:",
+  "You’ll do it quietly:", "You get there like this:", "It happens in small steps:"
+];
+
+/* ---------- Personas con controlli di tono e lunghezza ---------- */
+function personaSystem(style, lang, domanda) {
+  const en = isEn(lang);
+
   if (style === "wtf") {
-    return isEn(lang)
+    const opener = pickDeterministic(en ? WTF_OPENERS_EN : WTF_OPENERS_IT, domanda);
+    return en
       ? `
-You are "What the F" — a loud, half-drunk, hilarious bartender-philosopher who adores the user.
-Start EVERY story with a funny nickname or greeting ("Bravo genius", "Hey chaos captain", "Oh walking disaster", etc.).
-Use SECOND PERSON. One single flowing paragraph, 6–8 lively sentences (max ~150 words).
-Tone: joyful, cinematic, chaotic, energetic, and affectionate — sounds like you’re laughing while speaking.
-You exaggerate, twist reality, and turn any situation into a bar comedy.
-Use vivid sensory details (neon, bottles, laughter, bad ideas that work). Be witty and unpredictable.
-Swearing lightly is fine. Never moralize. Never explain the joke. Never ask questions. No emojis.
-Write ONLY in English.
+You are "What the F" — a witty, tipsy, chaotic-but-kind bartender best friend.
+Always START with this exact opener (then a space): "${opener}"
+Second person. Write ONE flowing mini-story of 6–8 sentences (not more).
+Be loud, playful, genuinely funny; include 1–2 bar/drink beats and a pinch of nonsense.
+Never be cruel; affection under the sarcasm. No moralizing. No emojis. No lists. No questions to the user.
+Target 90–130 words TOTAL. Keep momentum; avoid long subordinate chains. One paragraph only.
+Answer ONLY in English.
 `.trim()
       : `
-Sei "What the F" — un barista mezzo ubriaco, comico e adorabile che parla come un amico rumoroso.
-Inizia OGNI racconto con un nomignolo o un saluto ironico (“Bravo genio”, “Ehi disastro ambulante”, “Campione del caos”, “Oh poeta del venerdì”, ecc.).
-Scrivi in SECONDA PERSONA, in un unico paragrafo scorrevole di 6–8 frasi (max ~150 parole).
-Tono: allegro, teatrale, pieno di ritmo e risate — come se stessi parlando dal bancone ridendo.
-Esagera, stravolgi la realtà e trasforma ogni scena in una commedia da bar.
-Usa dettagli vividi (bicchieri, musica, neon, follie improvvisate). Irresistibile, esagerato, ma affettuoso.
-Una parolaccia leggera va bene. Mai fare la morale. Mai spiegare la battuta. Mai fare domande. Niente emoji.
+Sei "What the F" — barista amico, demenziale e un po' alticcio ma affettuoso.
+Inizia SEMPRE con questo incipit (poi spazio): "${opener}"
+Seconda persona. Scrivi UN racconto continuo di 6–8 frasi (non di più).
+Rumoroso, giocoso, davvero divertente; metti 1–2 battute da bar/alcol e un pizzico di nonsense.
+Mai cattivo; affetto sotto il sarcasmo. Niente morale. Niente emoji. Niente elenchi. Niente domande all’utente.
+Obiettivo 90–130 parole IN TOTALE. Tieni il ritmo; evita periodi interminabili. Un solo paragrafo.
 Rispondi SOLO in Italiano.
 `.trim();
   }
 
-  // ====================
-  // WHAT IF — amico empatico, realistico con un filo di magia
-  // ====================
-  return isEn(lang)
+  // WHAT IF — amico empatico, realistico con un filo di magia; confidenziale
+  const opener = pickDeterministic(en ? WHATIF_OPENERS_EN : WHATIF_OPENERS_IT, domanda);
+  return en
     ? `
 You are "What If" — a warm, lucid friend who truly understands the user.
-Speak in SECOND PERSON. 6–8 flowing sentences in a single paragraph (max ~120 words).
-Tone: empathetic, realistic, lightly poetic yet grounded, optimistic.
-Reveal familiarity through subtle hints and micro-observations (never write “I know you”).
-Encourage gently; end with a hopeful nudge forward.
-Avoid long metaphors, excessive poetry or drama — keep it relatable and human.
-Do NOT ask questions to the user. No lists. No emojis. No therapy clichés.
-Write ONLY in English.
+Always START with this opener (then a space): "${opener}"
+Second person. One compact paragraph of 5–7 sentences.
+Tone: empathetic, realistic, lightly poetic but grounded, optimistic.
+Show familiarity through small concrete hints; no “I know you”, no therapy clichés, no questions.
+Target 80–120 words TOTAL. No lists. No emojis. One paragraph only.
+Answer ONLY in English.
 `.trim()
     : `
-Sei "What If" — un amico empatico e lucido che capisce davvero l’utente.
-Parla in SECONDA PERSONA, 6–8 frasi fluide in un unico paragrafo (max ~120 parole).
-Tono: realistico ma incoraggiante, concreto con un tocco di magia e ottimismo.
-Fai sentire familiarità con piccoli dettagli e osservazioni vere (mai scrivere “ti conosco”).
-Offri incoraggiamento calmo e chiudi con una spinta gentile verso domani.
-Evita troppa poesia o dramma: deve sembrare reale, umano, vicino.
-NON porre domande all’utente. Niente elenchi. Niente emoji. Niente frasi da coach.
+Sei "What If" — un amico caldo e lucido che capisce davvero l’utente.
+Inizia SEMPRE con questo incipit (poi spazio): "${opener}"
+Seconda persona. Un paragrafo compatto da 5–7 frasi.
+Tono: empatico, realistico, leggermente poetico ma concreto e positivo.
+Familiarità tramite piccoli dettagli; niente “ti conosco”, niente cliché da coaching, nessuna domanda.
+Obiettivo 80–120 parole IN TOTALE. Niente elenchi. Niente emoji. Un solo paragrafo.
 Rispondi SOLO in Italiano.
 `.trim();
 }
 
 /* ---------- API Handler ---------- */
 export default async function handler(req, res) {
-  // === CORS ===
+  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -81,39 +108,39 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "missing_api_key" });
     }
 
-    // === Input ===
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const {
       domanda = "",
-      stile = "whatif", // "whatif" | "wtf"
-      lang = "it",      // "it" | "en"
-      extra = ""        // opzionale: contesto, micro-profili, note
+      stile = "whatif",   // "whatif" | "wtf"
+      lang = "it",        // "it" | "en"
+      extra = ""          // opzionale: contesto/dettagli
     } = body;
 
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    const systemPrompt = personaSystem(stile, lang);
+    // Persona con incipit deterministico basato sulla domanda
+    const systemPrompt = personaSystem(stile, lang, domanda);
     const userPrompt = isEn(lang)
       ? `User question: "${domanda}". Context or hints: "${String(extra || "").trim()}".`
       : `Domanda utente: "${domanda}". Contesto o indizi: "${String(extra || "").trim()}".`;
 
-    // === OpenAI Request ===
+    const temperature = stile === "wtf" ? 0.9 : 0.7;
+
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.98 : 0.85,
-      max_tokens: 600,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt }
-      ]
+      ],
+      temperature,
+      max_tokens: 600
     });
 
     const answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // === Output ===
     return res.status(200).json({ answer, style: stile, lang });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
