@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Episodio</title>
+<title>What?f — Risposta</title>
 <meta name="theme-color" content="#0B0B0C"/>
 <style>
 :root{
@@ -22,10 +22,8 @@ h1{font-size:clamp(22px,5vw,30px);color:var(--acc2);text-align:center;margin:10p
 .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
 .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink)}
 .btn.ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff}
-textarea{width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12);font-size:16px}
-.small{font-size:12px;color:var(--muted)}
 .input{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px}
-.sugg{cursor:pointer}
+.small{font-size:12px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -38,7 +36,7 @@ textarea{width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,
     <button class="btn ghost" id="langBtn">IT</button>
   </div>
 
-  <h1 id="title">Episodio 1 di 3</h1>
+  <h1 id="title">What?f — Risposta</h1>
   <p class="sub" id="subtitle">—</p>
 
   <div class="card">
@@ -48,24 +46,11 @@ textarea{width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,
 
   <div class="card">
     <div class="label" style="color:var(--acc);font-weight:800;margin-bottom:8px" id="lblA">Risultato</div>
-    <div id="answer" class="story">⏳ Genero la storia...</div>
+    <div id="answer" class="story">⏳ Genero la risposta...</div>
     <div class="row" style="margin-top:10px">
       <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
     </div>
     <p class="small" id="metaInfo"></p>
-  </div>
-
-  <div class="card" id="followCard" style="display:none">
-    <div class="label" style="color:var(--acc);font-weight:800;margin-bottom:8px" id="followTitle">Suggerimenti per domani</div>
-    <div id="followList" class="story" style="font-size:16px"></div>
-    <div class="row" style="margin-top:10px">
-      <textarea id="customFollow" rows="2" placeholder="Aggiungi la tua micro-domanda per domani…"></textarea>
-    </div>
-    <div class="row" style="margin-top:10px">
-      <button class="btn primary" id="saveBtn">💾 Salva per domani</button>
-      <button class="btn ghost" id="doneBtn">✅ Fatto</button>
-    </div>
-    <p class="small" id="saveInfo"></p>
   </div>
 </main>
 
@@ -78,30 +63,22 @@ document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'w
 
 const I18N={
   it:{
-    tWTF:"⚡ What the F — Episodio 1 di 3",
-    tWHF:"💡 What?f — Episodio 1 di 3",
+    titleWhat:"💡 What if — Risposta",
+    titleWtf:"⚡ What the F — Risposta",
     sub:(q)=>`Domanda: “${q}”`,
     q:"La tua domanda", a:"Risultato",
     share:"📤 Condividi / Copia",
-    saved:"✅ Salvato per domani.",
-    follow:"Suggerimenti per domani",
-    add:"Aggiungi la tua micro-domanda per domani…",
-    done:"✅ Fatto",
     copied:"Copiato!",
-    error:"[errore server]",
+    error:"[errore server]"
   },
   en:{
-    tWTF:"⚡ What the F — Episode 1 of 3",
-    tWHF:"💡 What?f — Episode 1 of 3",
+    titleWhat:"💡 What if — Answer",
+    titleWtf:"⚡ What the F — Answer",
     sub:(q)=>`Question: “${q}”`,
     q:"Your question", a:"Result",
     share:"📤 Share / Copy",
-    saved:"✅ Saved for tomorrow.",
-    follow:"Suggestions for tomorrow",
-    add:"Add your micro-question for tomorrow…",
-    done:"✅ Done",
     copied:"Copied!",
-    error:"[server error]",
+    error:"[server error]"
   }
 }[lang];
 
@@ -113,120 +90,54 @@ document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'
 document.getElementById('lblQ').textContent=I18N.q;
 document.getElementById('lblA').textContent=I18N.a;
 document.getElementById('shareBtn').textContent=I18N.share;
+document.getElementById('title').textContent = (style==='wtf'? I18N.titleWtf : I18N.titleWhat);
 
 // context
-const params=new URLSearchParams(location.search);
-const isReplay = params.get('view')==='replay';
-
 let domanda = "";
 let answerText = "";
-let micro = JSON.parse(LS.getItem('micro_profile')||'{}');
+const req = JSON.parse(LS.getItem('whatif_request')||'{}');
+domanda = req.domanda || LS.getItem('domanda') || "";
+const extra   = req.extra || "";
+const micro   = req.micro || {};
 
-if(isReplay){
-  const r = JSON.parse(LS.getItem('replay_story')||'{}');
-  domanda = r.domanda || LS.getItem('domanda') || "";
-  answerText = r.answer || "";
-  document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
-  document.getElementById('subtitle').textContent = I18N.sub(domanda);
-  document.getElementById('qView').textContent = domanda || '—';
-  document.getElementById('answer').textContent = answerText || '—';
-  document.getElementById('followCard').style.display='none'; // niente teaser in replay
-} else {
-  const req = JSON.parse(LS.getItem('whatif_request')||'{}');
-  domanda = req.domanda || LS.getItem('domanda') || "";
-  micro   = req.micro || micro;
-  const extra = req.extra || "";
-  const fantasy_mode = !!req.fantasy_mode;
+document.getElementById('subtitle').textContent = I18N.sub(domanda);
+document.getElementById('qView').textContent = domanda || '—';
 
-  document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
-  document.getElementById('subtitle').textContent = I18N.sub(domanda);
-  document.getElementById('qView').textContent = domanda || '—';
+// fetch answer
+(async ()=>{
+  try{
+    const r = await fetch("/api/ask",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ domanda, lang, stile:style, extra, micro })
+    });
+    const data = await r.json();
+    if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
+    answerText = (data.answer||"").trim();
+    document.getElementById('answer').textContent = answerText;
 
-  (async ()=>{
-    try{
-      const r = await fetch("/api/ask",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({ domanda, lang, stile:style, extra, micro, fantasy_mode })
-      });
-      const data = await r.json();
-      if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
-      answerText = (data.answer||"").trim();
-      document.getElementById('answer').textContent = answerText;
-
-      // salva cronologia
-      const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-      hist.push({ domanda, risposta:answerText, stile:style, ts:Date.now() });
-      LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-
-      // suggerimenti coerenti (teaser per domani)
-      await buildSuggestions(answerText, req);
-    }catch(e){
-      document.getElementById('answer').textContent = I18N.error;
-      console.error(e);
-    }
-  })();
-}
+    // opzionale: salva cronologia (anche se non la mostriamo qui)
+    const hist = JSON.parse(LS.getItem('cronologia')||'[]');
+    hist.push({ domanda, risposta:answerText, stile:style, ts:Date.now() });
+    LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
+  }catch(e){
+    document.getElementById('answer').textContent = I18N.error;
+    console.error(e);
+  }
+})();
 
 // Share / Copy
 document.getElementById('shareBtn').onclick=async()=>{
-  const full = `What?f — ${style==='wtf'?'What the F':'What?f'}\n\nQ: ${domanda}\n\n${answerText}`;
+  const full = `What?f — ${style==='wtf'?'What the F':'What if'}\n\nQ: ${domanda}\n\n${answerText}`;
   try{
-    if(navigator.share){
-      await navigator.share({ title: "What?f", text: full });
-    }else{
+    if(navigator.share) await navigator.share({ title: "What?f", text: full });
+    else{
       await navigator.clipboard.writeText(full);
       document.getElementById('shareBtn').textContent = I18N.copied;
       setTimeout(()=>document.getElementById('shareBtn').textContent=I18N.share,1200);
     }
   }catch{}
 };
-
-// Suggerimenti
-async function buildSuggestions(ans, req){
-  const card = document.getElementById('followCard');
-  const list = document.getElementById('followList');
-  document.getElementById('followTitle').textContent = I18N.follow;
-  list.textContent = "…";
-  try{
-    const rr = await fetch("/api/ask",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ domanda, lang, stile:style, follow:true, answer: ans, micro })
-    });
-    const dj = await rr.json();
-    const arr = Array.isArray(dj.followups) ? dj.followups.slice(0,2) : [];
-    list.innerHTML = arr.length ? arr.map(q=>`• ${q}`).join("\n") :
-      (lang==='en' ? "• A small sign we should track\n• One detail to test tomorrow" :
-                     "• Un piccolo segnale da osservare\n• Un dettaglio da testare domani");
-
-    // click on suggestion → fill custom
-    list.querySelectorAll('br'); // ensure formatting
-    card.style.display='block';
-    list.classList.add('sugg');
-    list.onclick=(e)=>{
-      const sel = window.getSelection()?.toString();
-      const pick = (sel && sel.trim()) ? sel.trim() : (arr[0]||"");
-      document.getElementById('customFollow').value = pick;
-    };
-  }catch(e){
-    console.error("suggestions error", e);
-    card.style.display='block';
-    list.textContent = (lang==='en' ? "Two ideas ready for tomorrow." : "Due spunti pronti per domani.");
-  }
-
-  // Save for tomorrow
-  document.getElementById('customFollow').placeholder = I18N.add;
-  document.getElementById('saveBtn').onclick=()=>{
-    const v = (document.getElementById('customFollow').value||"").trim();
-    if(!v) { document.getElementById('customFollow').focus(); return; }
-    const saved = JSON.parse(LS.getItem('next_prompts')||'[]');
-    saved.unshift({ q:v, stile:style, lang, ts:Date.now() });
-    LS.setItem('next_prompts', JSON.stringify(saved.slice(0,50)));
-    document.getElementById('saveInfo').textContent = I18N.saved;
-  };
-  document.getElementById('doneBtn').onclick=()=> location.href='fourth.html';
-}
 </script>
 </body>
 </html>
