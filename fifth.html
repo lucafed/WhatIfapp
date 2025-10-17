@@ -12,7 +12,7 @@
 }
 html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
 *{box-sizing:border-box}
-html,body{margin:0;background:radial-gradient(800px 600px at 25% 20%,var(--bg2),var(--bg));color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+html,body{margin:0;background:radial-gradient(820px 620px at 25% 20%,var(--bg2),var(--bg));color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
 main{max-width:820px;margin:auto;padding:20px}
 h1{font-size:clamp(22px,5vw,30px);color:var(--acc2);text-align:center;margin:10px 0 6px}
 .sub{color:var(--muted);text-align:center;margin:0 0 10px}
@@ -22,8 +22,9 @@ h1{font-size:clamp(22px,5vw,30px);color:var(--acc2);text-align:center;margin:10p
 .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
 .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink)}
 .btn.ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff}
-.input{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px}
+textarea{width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12);font-size:16px}
 .small{font-size:12px;color:var(--muted)}
+.input{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px}
 </style>
 </head>
 <body>
@@ -40,17 +41,30 @@ h1{font-size:clamp(22px,5vw,30px);color:var(--acc2);text-align:center;margin:10p
   <p class="sub" id="subtitle">—</p>
 
   <div class="card">
-    <div class="label" style="color:var(--acc);font-weight:800;margin-bottom:8px" id="lblQ">La tua domanda</div>
+    <div class="label" style="color:var(--acc);font-weight:800;margin-bottom:8px" id="lblQ">Domanda</div>
     <div class="input" id="qView" style="min-height:46px"></div>
   </div>
 
   <div class="card">
     <div class="label" style="color:var(--acc);font-weight:800;margin-bottom:8px" id="lblA">Risultato</div>
-    <div id="answer" class="story">⏳ Genero la risposta...</div>
+    <div id="answer" class="story">⏳ Genero la risposta…</div>
     <div class="row" style="margin-top:10px">
       <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
     </div>
     <p class="small" id="metaInfo"></p>
+  </div>
+
+  <div class="card" id="suggCard">
+    <div class="label" style="color:var(--acc);font-weight:800;margin-bottom:8px" id="suggTitle">Spunti legati alla risposta</div>
+    <div id="suggList" class="story" style="font-size:16px"></div>
+    <div class="row" style="margin-top:10px">
+      <textarea id="customNext" rows="2" placeholder="Aggiungi un tuo spunto concreto…"></textarea>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="saveBtn">💾 Salva</button>
+      <button class="btn ghost" id="doneBtn">✅ Fatto</button>
+    </div>
+    <p class="small" id="saveInfo"></p>
   </div>
 </main>
 
@@ -63,79 +77,141 @@ document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'w
 
 const I18N={
   it:{
-    titleWhat:"💡 What if — Risposta",
-    titleWtf:"⚡ What the F — Risposta",
+    titleW:"💡 What if — Risposta", titleF:"⚡ What the F — Risposta",
     sub:(q)=>`Domanda: “${q}”`,
-    q:"La tua domanda", a:"Risultato",
-    share:"📤 Condividi / Copia",
-    copied:"Copiato!",
-    error:"[errore server]"
+    q:"Domanda", a:"Risultato",
+    share:"📤 Condividi / Copia", copied:"Copiato!",
+    saved:"✅ Salvato.", done:"✅ Fatto",
+    error:"[errore server]",
+    sugg:"Spunti legati alla risposta",
+    phNext:"Aggiungi un tuo spunto concreto…"
   },
   en:{
-    titleWhat:"💡 What if — Answer",
-    titleWtf:"⚡ What the F — Answer",
+    titleW:"💡 What if — Answer", titleF:"⚡ What the F — Answer",
     sub:(q)=>`Question: “${q}”`,
-    q:"Your question", a:"Result",
-    share:"📤 Share / Copy",
-    copied:"Copied!",
-    error:"[server error]"
+    q:"Question", a:"Result",
+    share:"📤 Share / Copy", copied:"Copied!",
+    saved:"✅ Saved.", done:"✅ Done",
+    error:"[server error]",
+    sugg:"Prompts tied to this answer",
+    phNext:"Add your concrete nudge…"
   }
 }[lang];
 
-document.getElementById('langBtn').textContent=lang.toUpperCase();
-document.getElementById('backBtn').onclick=()=>history.back();
-document.getElementById('homeBtn').onclick=()=>location.href='index.html';
-document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
+const $=id=>document.getElementById(id);
+$('langBtn').textContent=lang.toUpperCase();
+$('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
+$('backBtn').onclick=()=>history.back(); $('homeBtn').onclick=()=>location.href='index.html';
 
-document.getElementById('lblQ').textContent=I18N.q;
-document.getElementById('lblA').textContent=I18N.a;
-document.getElementById('shareBtn').textContent=I18N.share;
-document.getElementById('title').textContent = (style==='wtf'? I18N.titleWtf : I18N.titleWhat);
+$('title').textContent = (style==='wtf'? I18N.titleF : I18N.titleW);
+$('lblQ').textContent = I18N.q; $('lblA').textContent = I18N.a;
+$('shareBtn').textContent = I18N.share;
+$('suggTitle').textContent = I18N.sugg;
+$('customNext').placeholder = I18N.phNext;
 
-// context
+/* ===== Context ===== */
+const params=new URLSearchParams(location.search);
+const isReplay = params.get('view')==='replay';
+
 let domanda = "";
 let answerText = "";
-const req = JSON.parse(LS.getItem('whatif_request')||'{}');
-domanda = req.domanda || LS.getItem('domanda') || "";
-const extra   = req.extra || "";
-const micro   = req.micro || {};
 
-document.getElementById('subtitle').textContent = I18N.sub(domanda);
-document.getElementById('qView').textContent = domanda || '—';
+// replay branch
+if(isReplay){
+  const r = JSON.parse(LS.getItem('replay_story')||'{}');
+  domanda = r.domanda || LS.getItem('domanda') || "";
+  answerText = r.answer || "";
+  $('subtitle').textContent = I18N.sub(domanda);
+  $('qView').textContent = domanda || '—';
+  $('answer').textContent = answerText || '—';
+  $('metaInfo').textContent = '';
+  buildSuggestions(domanda, answerText, style, lang);
+} else {
+  const req = JSON.parse(LS.getItem('whatif_request')||'{}');
+  domanda = req.domanda || LS.getItem('domanda') || "";
+  const extra = req.extra || "";
+  const micro = req.micro || {};
+  $('subtitle').textContent = I18N.sub(domanda);
+  $('qView').textContent = domanda || '—';
 
-// fetch answer
-(async ()=>{
-  try{
-    const r = await fetch("/api/ask",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ domanda, lang, stile:style, extra, micro })
-    });
-    const data = await r.json();
-    if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
-    answerText = (data.answer||"").trim();
-    document.getElementById('answer').textContent = answerText;
+  (async ()=>{
+    try{
+      const r = await fetch("/api/ask",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({ domanda, lang, stile:style, extra })
+      });
+      const data = await r.json();
+      if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
+      answerText = (data.answer||"").trim();
+      $('answer').textContent = answerText;
 
-    // opzionale: salva cronologia (anche se non la mostriamo qui)
-    const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, risposta:answerText, stile:style, ts:Date.now() });
-    LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-  }catch(e){
-    document.getElementById('answer').textContent = I18N.error;
-    console.error(e);
-  }
-})();
+      // cronologia
+      const hist = JSON.parse(LS.getItem('cronologia')||'[]');
+      hist.push({ domanda, risposta:answerText, stile:style, ts:Date.now() });
+      LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
 
-// Share / Copy
-document.getElementById('shareBtn').onclick=async()=>{
+      // suggerimenti client-side
+      buildSuggestions(domanda, answerText, style, lang);
+    }catch(e){
+      $('answer').textContent = I18N.error;
+      console.error(e);
+    }
+  })();
+}
+
+/* ===== Suggerimenti che seguono stile & lingua (client-side) ===== */
+function buildSuggestions(q, a, style, lang){
+  const list=$('suggList');
+
+  const SUGG = {
+    it: {
+      whatif: [
+        "Annota un segno concreto che vedrai entro domani.",
+        "Definisci un micro-passo di 10 minuti che farai davvero.",
+        "Scegli un luogo che ti mette nel ritmo giusto."
+      ],
+      wtf: [
+        "Prometti un brindisi se compi un passo minuscolo (vale anche acqua).",
+        "Scrivi la scusa più assurda che userai, poi non usarla.",
+        "Dichiara al barista il tuo micro-obiettivo come un segreto di stato."
+      ]
+    },
+    en: {
+      whatif: [
+        "Note one concrete sign you’ll see by tomorrow.",
+        "Pick a 10-minute micro-step you’ll actually do.",
+        "Choose a place that sets the right tempo."
+      ],
+      wtf: [
+        "Promise a toast if you take one tiny step (water counts).",
+        "Write your most absurd excuse, then don’t use it.",
+        "Tell the bartender your micro-goal like a state secret."
+      ]
+    }
+  };
+
+  const arr = SUGG[lang][style] || [];
+  list.innerHTML = "• " + arr.join("\n• ");
+}
+
+/* ===== Save & Done ===== */
+$('saveBtn').onclick=()=>{
+  const v = ($('customNext').value||"").trim();
+  if(!v){ $('customNext').focus(); return; }
+  const saved = JSON.parse(LS.getItem('next_prompts')||'[]');
+  saved.unshift({ q:v, stile:style, lang, ts:Date.now() });
+  LS.setItem('next_prompts', JSON.stringify(saved.slice(0,50)));
+  $('saveInfo').textContent = I18N.saved;
+};
+$('doneBtn').onclick=()=>{ location.href='fourth.html'; };
+
+/* ===== Share / Copy ===== */
+$('shareBtn').onclick=async()=>{
   const full = `What?f — ${style==='wtf'?'What the F':'What if'}\n\nQ: ${domanda}\n\n${answerText}`;
   try{
-    if(navigator.share) await navigator.share({ title: "What?f", text: full });
-    else{
-      await navigator.clipboard.writeText(full);
-      document.getElementById('shareBtn').textContent = I18N.copied;
-      setTimeout(()=>document.getElementById('shareBtn').textContent=I18N.share,1200);
-    }
+    if(navigator.share){ await navigator.share({ title: "What?f", text: full }); }
+    else { await navigator.clipboard.writeText(full); $('shareBtn').textContent=I18N.copied; setTimeout(()=>$('shareBtn').textContent=I18N.share,1200); }
   }catch{}
 };
 </script>
