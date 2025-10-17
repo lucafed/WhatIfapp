@@ -1,376 +1,286 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Domanda</title>
-<meta name="theme-color" content="#0B0B0C"/>
-<style>
-:root{
-  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
-  --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75;
-  --card:rgba(20,28,34,.92); --line:rgba(255,255,255,.12);
-  --chip:#121A26; --ink:#0A0E12; --shadow:rgba(0,0,0,.35);
+// ============================
+// /api/ask.js — The Life Cliffhanger Engine™
+// versione stabile e completa (IT/EN) con contesto reale automatico
+// ============================
+
+import OpenAI from "openai";
+
+// ====== Setup ======
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const MODEL = "gpt-4o-mini"; // affidabile e rapido
+
+// News: opzionale — metti una key (GNews o simile) in NEWS_API_KEY
+const NEWS_API = process.env.NEWS_API_KEY || "";
+
+// ====== Utilities ======
+const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
+const clamp = (s, n) => (s && s.length > n ? s.slice(0, n) + "…" : s || "");
+const withTimeout = (p, ms = 2500) =>
+  Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error("timeout")), ms))]);
+
+function detectLang(text = "") {
+  const enHits = (text.match(/\b(what|if|you|move|work|city|buy|should|back|life)\b/gi) || []).length;
+  const itHits = (text.match(/\b(e|se|quando|perché|vivere|tornare|aquila|verona|lugano|roma)\b/gi) || []).length;
+  return enHits > itHits ? "en" : "it";
 }
-html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
-*{box-sizing:border-box}
-html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
-main{max-width:980px;margin:auto;padding:18px}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
-.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
-.btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--line)}
-.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
-.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
-h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:center}
-.label{color:var(--acc);font-weight:800;margin:0 0 8px}
-.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
-.center{max-width:760px;margin:0 auto}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:7px 10px;font-size:13px;cursor:pointer}
-.chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-.pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;padding:10px 12px}
-.pill input{border:none;background:transparent;color:#fff;outline:none;min-width:120px}
-.toggle{cursor:pointer;user-select:none}
-.collapsed>.body{display:none}
-.list{display:flex;flex-direction:column;gap:10px}
-.story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
-.play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
-.meta{font-size:12px;color:var(--muted)}
-.small{font-size:12px;color:var(--muted)}
-</style>
-</head>
-<body>
-<main>
 
-  <!-- Topbar -->
-  <div class="row" style="justify-content:space-between">
-    <div class="row">
-      <button class="btn" id="backBtn">←</button>
-      <button class="btn" id="homeBtn">🏠</button>
-    </div>
-    <div class="row">
-      <span class="badge" id="freeBadge" title="">—</span>
-      <button class="btn" id="langBtn">IT</button>
-    </div>
-  </div>
+function guessCityFromQuestion(q = "") {
+  const m = q.match(/\b(l['’]aquila|aquila|roma|milano|verona|lugano|napoli|torino|bologna|londra|zurigo)\b/i);
+  return m ? m[1] : "";
+}
 
-  <h1 id="titleH1">Imposta la tua domanda</h1>
+function todayISO() {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
 
-  <!-- Style & period -->
-  <div class="card center">
-    <div class="row" style="justify-content:space-between;align-items:center">
-      <div class="row">
-        <span class="badge" id="periodoBadge">🕰️ —</span>
-        <span class="badge" id="styleBadge">🎭 —</span>
-      </div>
-      <div class="chips" id="styleChips">
-        <button class="chip" data-style="whatif" id="chipWhatIf">What if (realistico)</button>
-        <button class="chip" data-style="wtf" id="chipWTF">What the F (divertente)</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Question block -->
-  <div class="card center">
-    <h3 class="label" id="qLabel">La tua domanda</h3>
-    <textarea id="qInput" rows="3" class="input" placeholder="E se tornassi a vivere all’Aquila?"></textarea>
-
-    <!-- Quick detail chips (tiny, single-line) -->
-    <div class="chips" style="margin-top:10px">
-      <button class="chip" data-extra="primo segnale" id="c1">primo segnale</button>
-      <button class="chip" data-extra="budget" id="c2">budget</button>
-      <button class="chip" data-extra="luogo preciso" id="c3">luogo preciso</button>
-      <button class="chip" data-extra="tempo disponibile" id="c4">tempo disponibile</button>
-      <button class="chip" data-extra="contatto chiave" id="c5">contatto chiave</button>
-      <button class="chip" data-extra="vincolo reale" id="c6">vincolo reale</button>
-    </div>
-
-    <input id="extraInput" class="input" placeholder="es. primo segnale di successo, budget, luogo specifico…" style="margin-top:8px"/>
-
-    <div class="row" style="margin-top:12px">
-      <button class="btn primary" id="goBtn">✨ Genera risposta</button>
-      <button class="btn ghost" id="clearBtn">Pulisci</button>
-    </div>
-    <div class="small" id="tipNote" style="margin-top:8px">Tip: puoi cambiare stile sopra; colori e tono si adattano.</div>
-  </div>
-
-  <!-- Micro-domande di oggi -->
-  <div class="card center" id="microCard">
-    <div class="row toggle" id="microHead" style="justify-content:space-between">
-      <div class="label" id="microTitle">▼ Micro-domande di oggi • 0/3</div>
-      <div class="small" id="microHint">(1 volta al giorno)</div>
-    </div>
-    <div class="body" id="microBody" style="margin-top:10px">
-      <div class="row" style="gap:8px;flex-wrap:wrap">
-        <div class="pill"><span>🙂</span><input id="mood" placeholder="Oggi come ti senti?"/></div>
-        <div class="pill"><span>🧭</span><input id="anchor" placeholder="Cosa ti tiene qui?"/></div>
-        <div class="pill"><span>⚙️</span><input id="decide" placeholder="Come decidi di solito?"/></div>
-        <div class="pill"><span>♈</span><input id="zodiac" placeholder="Segno (se vuoi)"/></div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <button class="btn primary" id="saveMicroBtn">💾 Salva micro-profilo</button>
-      </div>
-      <div class="small" id="microSavedMsg" style="margin-top:6px"></div>
-    </div>
-  </div>
-
-  <!-- Saved for tomorrow -->
-  <div class="card center collapsed" id="savedCard">
-    <div class="row toggle" id="savedHeader" style="justify-content:space-between">
-      <div class="label" id="nextLabel">▶ Domande salvate per domani</div>
-      <div class="row">
-        <button class="btn ghost" id="clearSavedBtn">Svuota salvate</button>
-      </div>
-    </div>
-    <div class="body" id="savedBody">
-      <div id="nextList" class="list"></div>
-    </div>
-  </div>
-
-  <!-- Recent stories -->
-  <div class="card center collapsed" id="histCard">
-    <div class="row toggle" id="histHeader" style="justify-content:space-between">
-      <div class="label" id="storiesLabel">▶ Storie recenti</div>
-      <div class="row">
-        <button class="btn ghost" id="clearHistoryBtn">Svuota storie</button>
-      </div>
-    </div>
-    <div class="body">
-      <div id="storyList" class="list"></div>
-    </div>
-  </div>
-</main>
-
-<script>
-// ===== I18N =====
-const I18N = {
-  it:{
-    title:"Imposta la tua domanda",
-    periodPast:"Passato", periodFuture:"Futuro",
-    whatif:"What if (realistico)", wtf:"What the F (divertente)",
-    yourq:"La tua domanda", gen:"✨ Genera risposta", clear:"Pulisci",
-    tip:"Tip: puoi cambiare stile sopra; colori e tono si adattano.",
-    free:(l,d)=>`Free oggi: ${l}/${d}`,
-    microT:(n)=>`▼ Micro-domande di oggi • ${n}/`,
-    microHint:"(1 volta al giorno)",
-    saved:"▶ Domande salvate per domani",
-    stories:"▶ Storie recenti",
-    use:"Usa", play:"▶", emptyNext:"— Nessuna domanda salvata.", emptyStories:"— Nessuna storia recente.",
-    clearSaved:"Svuota salvate", clearHist:"Svuota storie",
-    savedOK:"Micro-profilo salvato per oggi.",
-    savedOnce:"Già salvato oggi.",
-    outOfCredits:"Hai finito i crediti di oggi.",
-    styleBadgeWhat:"What if", styleBadgeWtf:"What the F"
-  },
-  en:{
-    title:"Set your question",
-    periodPast:"Past", periodFuture:"Future",
-    whatif:"What if (realistic)", wtf:"What the F (fun)",
-    yourq:"Your question", gen:"✨ Generate answer", clear:"Clear",
-    tip:"Tip: switch style above; tone & colors adapt.",
-    free:(l,d)=>`Free today: ${l}/${d}`,
-    microT:(n)=>`▼ Today’s micro-questions • ${n}/`,
-    microHint:"(once per day)",
-    saved:"▶ Saved for tomorrow",
-    stories:"▶ Recent stories",
-    use:"Use", play:"▶", emptyNext:"— No saved questions.", emptyStories:"— No recent stories.",
-    clearSaved:"Clear saved", clearHist:"Clear stories",
-    savedOK:"Micro-profile saved for today.",
-    savedOnce:"Already saved today.",
-    outOfCredits:"You’ve used today’s credits.",
-    styleBadgeWhat:"What if", styleBadgeWtf:"What the F"
+// ====== Real-world context (all optional; degrade gracefully) ======
+async function fetchWeather(city = "", lang = "it") {
+  // Open-Meteo via geocoding (no key). If geocoding fails, skip.
+  try {
+    const geo = await withTimeout(
+      fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=${lang}`)
+    );
+    const gj = await geo.json();
+    if (!gj?.results?.[0]) return null;
+    const { latitude, longitude, name, country } = gj.results[0];
+    const w = await withTimeout(
+      fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,precipitation&timezone=auto`
+      )
+    );
+    const wj = await w.json();
+    const cur = wj?.current || {};
+    return {
+      label: `${name}${country ? ", " + country : ""}`,
+      temp: cur.temperature_2m,
+      precipitation: cur.precipitation,
+    };
+  } catch {
+    return null;
   }
-};
-const LS=localStorage;
-const lang=(LS.getItem('lang')||'it').toLowerCase();
-const T=I18N[lang]||I18N.it;
-document.documentElement.lang=lang;
-
-// ===== Prefs / Theme =====
-function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
-function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
-const prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
-document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-
-// ===== Credits =====
-const DAILY_FREE = prefs.pro ? 10 : 3;
-function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function ensureCredits(){
-  const c=readJSON('whatif_credits',{date:todayStr(),used:0});
-  if(c.date!==todayStr()){ c.date=todayStr(); c.used=0; }
-  writeJSON('whatif_credits',c);
-}
-function renderCredits(){
-  const c=readJSON('whatif_credits',{date:todayStr(),used:0});
-  const left=Math.max(0,DAILY_FREE-(c.used||0));
-  document.getElementById('freeBadge').textContent=T.free(left,DAILY_FREE);
-}
-ensureCredits(); renderCredits();
-
-// dev reset (long-press on badge, local only)
-(function devReset(){
-  const b=document.getElementById('freeBadge'); let t=null;
-  b.addEventListener('pointerdown',()=>{ t=setTimeout(()=>{ const c=readJSON('whatif_credits'); c.date=todayStr(); c.used=0; writeJSON('whatif_credits',c); renderCredits(); alert(lang==='en'?'Today’s credits reset (dev)':'Crediti di oggi azzerati (dev)'); },1500); });
-  ['pointerup','pointerleave','pointercancel'].forEach(ev=> b.addEventListener(ev,()=>clearTimeout(t)));
-})();
-
-// ===== UI text =====
-document.getElementById('titleH1').textContent=T.title;
-document.getElementById('qLabel').textContent=T.yourq;
-document.getElementById('goBtn').textContent=T.gen;
-document.getElementById('clearBtn').textContent=T.clear;
-document.getElementById('tipNote').textContent=T.tip;
-document.getElementById('chipWhatIf').textContent=T.whatif;
-document.getElementById('chipWTF').textContent=T.wtf;
-document.getElementById('nextLabel').textContent=T.saved;
-document.getElementById('storiesLabel').textContent=T.stories;
-document.getElementById('clearSavedBtn').textContent=T.clearSaved;
-document.getElementById('clearHistoryBtn').textContent=T.clearHist;
-document.getElementById('langBtn').textContent=lang.toUpperCase();
-
-// style & period badges
-function renderBadges(){
-  document.getElementById('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past'? T.periodPast : T.periodFuture);
-  document.getElementById('styleBadge').textContent   = "🎭 " + (prefs.stile==='wtf'? T.styleBadgeWtf : T.styleBadgeWhat);
-  document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
-}
-renderBadges();
-
-// ===== nav =====
-document.getElementById('backBtn').onclick=()=>history.back();
-document.getElementById('homeBtn').onclick=()=>location.href='index.html';
-document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
-
-// ===== style switching =====
-document.getElementById('styleChips').addEventListener('click',(e)=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs);
-  document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-  renderBadges();
-});
-
-// ===== quick extra chips → append to input
-document.querySelectorAll('.chip[data-extra]').forEach(ch=>{
-  ch.addEventListener('click',()=>{
-    const i=document.getElementById('extraInput');
-    const v=ch.dataset.extra;
-    i.value = i.value ? (i.value + ' • ' + v) : v;
-    i.focus();
-  });
-});
-
-// ===== Micro-domande (compact) =====
-const microState = readJSON('micro_state',{collapsed:true});
-const microCard=document.getElementById('microCard');
-const microTitle=document.getElementById('microTitle');
-function renderMicroHeader(){
-  const cnt = readJSON('micro_saved',{date:"",ok:false}).date===todayStr()? 3:0;
-  microTitle.textContent = (T.microT(cnt) + (prefs.pro? (prefs.pro? (prefs.pro? (prefs.pro? "10" : "3") : "3"):"3") : "3"));
-}
-renderMicroHeader();
-if(microState.collapsed) microCard.classList.add('collapsed');
-document.getElementById('microHead').onclick=()=>{ microCard.classList.toggle('collapsed'); microState.collapsed=microCard.classList.contains('collapsed'); writeJSON('micro_state',microState); };
-
-// save micro (once per day)
-document.getElementById('saveMicroBtn').onclick=()=>{
-  const saved=readJSON('micro_saved',{date:"",ok:false});
-  if(saved.date===todayStr()){ document.getElementById('microSavedMsg').textContent=T.savedOnce; return; }
-  const micro={
-    mood: (document.getElementById('mood').value||"").trim(),
-    anchor: (document.getElementById('anchor').value||"").trim(),
-    decide: (document.getElementById('decide').value||"").trim(),
-    zodiac: (document.getElementById('zodiac').value||"").trim()
-  };
-  writeJSON('micro_profile', micro);
-  writeJSON('micro_saved', {date:todayStr(),ok:true});
-  document.getElementById('microSavedMsg').textContent=T.savedOK;
-  renderMicroHeader();
-};
-
-// ===== Saved & History: collapsible state =====
-const savedState = readJSON('ui_saved_state',{collapsed:true});
-const histState  = readJSON('ui_hist_state',{collapsed:true});
-if(savedState.collapsed) document.getElementById('savedCard').classList.add('collapsed');
-if(histState.collapsed)  document.getElementById('histCard').classList.add('collapsed');
-document.getElementById('savedHeader').onclick=()=>{ const c=document.getElementById('savedCard'); c.classList.toggle('collapsed'); savedState.collapsed=c.classList.contains('collapsed'); writeJSON('ui_saved_state',savedState); };
-document.getElementById('histHeader').onclick =()=>{ const c=document.getElementById('histCard');  c.classList.toggle('collapsed'); histState.collapsed=c.classList.contains('collapsed');   writeJSON('ui_hist_state',histState);  };
-
-// ===== Render lists =====
-function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
-
-function renderNext(){
-  const box=document.getElementById('nextList'); box.innerHTML='';
-  const arr=readJSON('next_prompts',[]);
-  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=T.emptyNext; box.appendChild(p); return; }
-  arr.slice(0,10).forEach(item=>{
-    const row=document.createElement('div'); row.className='story';
-    const left=document.createElement('div');
-    left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.q||'—'}</div><div class="meta">${fmtDate(item.ts)}</div>`;
-    const right=document.createElement('div'); right.className='row';
-    const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=T.use;
-    useBtn.onclick=()=>{ document.getElementById('qInput').value=item.q||""; window.scrollTo({top:0,behavior:'smooth'}); };
-    const play=document.createElement('button'); play.className='play'; play.textContent=T.play;
-    play.onclick=()=>{ LS.setItem('domanda', item.q||""); location.href='fifth.html'; };
-    right.appendChild(useBtn); right.appendChild(play);
-    row.appendChild(left); row.appendChild(right);
-    box.appendChild(row);
-  });
 }
 
-function renderStories(){
-  const box=document.getElementById('storyList'); box.innerHTML='';
-  const arr=readJSON('cronologia',[]);
-  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=T.emptyStories; box.appendChild(p); return; }
-  arr.slice(-10).reverse().forEach(item=>{
-    const row=document.createElement('div'); row.className='story';
-    const left=document.createElement('div');
-    left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.domanda||'—'}</div><div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'What the F':'What?f')}</div>`;
-    const play=document.createElement('button'); play.className='play'; play.textContent=T.play;
-    play.onclick=()=>{ writeJSON('replay_story', { domanda:item.domanda, answer:item.risposta||item.answer||"", stile:item.stile||'whatif' }); location.href='fifth.html?view=replay'; };
-    row.appendChild(left); row.appendChild(play);
-    box.appendChild(row);
-  });
+async function fetchHoliday(lang = "it") {
+  // Nager.Date supports many countries; we’ll default to IT.
+  try {
+    const year = new Date().getFullYear();
+    const country = isEn(lang) ? "GB" : "IT";
+    const res = await withTimeout(fetch(`https://date.nager.at/api/v3/publicholidays/${year}/${country}`));
+    const arr = await res.json();
+    const today = todayISO();
+    const h = arr.find((x) => x.date === today);
+    if (!h) return null;
+    return { name: h.localName || h.name };
+  } catch {
+    return null;
+  }
 }
 
-renderNext(); renderStories();
+async function fetchOnThisDay(lang = "it") {
+  // Wikipedia "On this day" summary
+  try {
+    const d = new Date();
+    const url = `https://byabbe.se/on-this-day/${d.getMonth() + 1}/${d.getDate()}/events.json`;
+    const r = await withTimeout(fetch(url));
+    const j = await r.json();
+    const pick = (j?.events || [])[0];
+    if (!pick) return null;
+    const txt = isEn(lang)
+      ? `${pick.year}: ${pick.description}`
+      : `${pick.year}: ${pick.description}`;
+    return { text: clamp(txt, 200) };
+  } catch {
+    return null;
+  }
+}
 
-document.getElementById('clearSavedBtn').onclick=()=>{ LS.removeItem('next_prompts'); renderNext(); };
-document.getElementById('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
+async function fetchNews(city = "", lang = "it") {
+  if (!NEWS_API) return null;
+  try {
+    const q = city || (isEn(lang) ? "city life" : "cronaca locale");
+    const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(q)}&lang=${isEn(lang) ? "en" : "it"}&max=3&apikey=${NEWS_API}`;
+    const r = await withTimeout(fetch(url));
+    const j = await r.json();
+    if (!j?.articles?.length) return null;
+    const titles = j.articles.map((a) => a.title).slice(0, 3);
+    return { titles };
+  } catch {
+    return null;
+  }
+}
 
-// ===== Generate =====
-document.getElementById('goBtn').onclick=()=>{
-  const domanda=(document.getElementById('qInput').value||"").trim();
-  if(!domanda){ document.getElementById('qInput').focus(); return; }
+// ====== Personas ======
+const Whatif_IT = `
+Tu sei "What?f": voce lucida, realistica e predittiva; conosci bene l'utente.
+Niente poesia o retorica: visivo, umano, profetico. 7–10 frasi complete, non spezzate.
+Varia l’incipit (“Presto ti accorgi…”, “Ti conosco…”, “Succede che…”, “Tra poco…”).
+Contesto reale consentito: puoi usare solo ciò che ricevi dentro CONTEXT_REAL (meteo/festività/notizie/oggi nella storia).
+Mai inventare fatti; collega la risposta alla domanda dell’utente e al micro-profilo (mood, cosa ti tiene, come decidi, segno).
+Chiudi con un gancio morbido che faccia venire voglia di tornare domani.
+Rispondi SOLO in Italiano.
+`;
 
-  const c=readJSON('whatif_credits'); const used=(c.used||0);
-  if(used>=DAILY_FREE){ alert(T.outOfCredits); return; }
+const Whatif_EN = `
+You are "What?f": clear, realistic, predictive; you know the user well.
+No purple prose: visual, human, quietly prophetic. 7–10 full sentences.
+Vary openings (“Soon you notice…”, “You always do this…”, “It turns out…”).
+Real-world context allowed ONLY from CONTEXT_REAL (weather/holiday/news/on-this-day). Never invent events.
+Tie the answer to the user's question and micro-profile (mood, anchor, decisions, zodiac).
+End with a soft hook that invites tomorrow. Reply ONLY in English.
+`;
 
-  // consume credit now (UX chiaro)
-  c.used=used+1; writeJSON('whatif_credits',c); renderCredits();
+const Wtf_IT = `
+Tu sei "What the F": amico brillante da fine serata, sarcastico e un po' alticcio.
+Racconto continuo, divertente, 8–10 frasi, almeno un riferimento all’alcol.
+Puoi usare fatti reali SOLO da CONTEXT_REAL; niente invenzioni di notizie.
+Sii pungente ma affettuoso; sembra che conosci l’utente da anni.
+Chiudi con una battuta in sospeso. Rispondi SOLO in Italiano.
+`;
 
-  const micro = readJSON('micro_profile', {});
-  const extra=(document.getElementById('extraInput').value||"").trim();
-  writeJSON('whatif_prefs', prefs);
-  LS.setItem('domanda',domanda);
-  writeJSON('whatif_request',{
-    domanda, stile:prefs.stile, lang, extra,
-    micro, fantasy_mode:false
-  });
-  location.href='fifth.html';
-};
+const Wtf_EN = `
+You are "What the F": drunk-brilliant, sarcastic friend at 2AM.
+Continuous mini-story, 8–10 sentences, at least one alcohol gag.
+Real facts allowed ONLY from CONTEXT_REAL; no fabrication.
+Affectionate sarcasm, like you’ve known the user for years.
+End with a playful cliffhanger. Reply ONLY in English.
+`;
 
-document.getElementById('clearBtn').onclick=()=>{
-  document.getElementById('qInput').value="";
-  document.getElementById('extraInput').value="";
-  document.getElementById('qInput').focus();
-};
+function personaSystem(stile, lang) {
+  if (stile === "wtf") return isEn(lang) ? Wtf_EN : Wtf_IT;
+  return isEn(lang) ? Whatif_EN : Whatif_IT;
+}
 
-// placeholders per lingua
-document.getElementById('qInput').placeholder = (lang==='en' ? "What if I moved back to L’Aquila?" : "E se tornassi a vivere all’Aquila?");
-document.getElementById('extraInput').placeholder = (lang==='en'
-  ? "e.g., first success signal, budget, specific place…"
-  : "es. primo segnale di successo, budget, luogo specifico…");
-</script>
-</body>
-</html>
+// ====== Handler ======
+export default async function handler(req, res) {
+  // CORS
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
+
+  try {
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: "missing_api_key" });
+    }
+
+    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+    const {
+      domanda = "",
+      stile = "whatif",
+      lang: langIn = "auto",
+      extra = "",
+      // micro-profilo dal client:
+      micro = {}, // { mood, anchor, decide, zodiac }
+      // follow: genera suggerimenti coerenti post-risposta
+      follow = false,
+      answer = "",
+      // facts
+      fantasy_mode = false,
+    } = body;
+
+    if (!domanda || typeof domanda !== "string") {
+      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
+    }
+
+    const lang = langIn === "auto" ? detectLang(domanda) : langIn;
+
+    // ====== Build CONTEXT_REAL (if not fantasy_mode) ======
+    let CONTEXT_REAL = "";
+    if (!fantasy_mode) {
+      const cityHint = guessCityFromQuestion(domanda);
+      const [w, h, otd, nw] = await Promise.all([
+        cityHint ? fetchWeather(cityHint, lang) : Promise.resolve(null),
+        fetchHoliday(lang),
+        fetchOnThisDay(lang),
+        fetchNews(cityHint, lang),
+      ]);
+
+      const parts = [];
+      if (w) parts.push(`Weather: ${w.label}: ${w.temp}°C, precipitation ${w.precipitation}mm`);
+      if (h) parts.push(`Holiday: ${h.name}`);
+      if (otd) parts.push(`OnThisDay: ${otd.text}`);
+      if (nw) parts.push(`News: ${nw.titles.join(" | ")}`);
+      if (parts.length) CONTEXT_REAL = parts.join("\n");
+    }
+
+    // ====== FOLLOW-UPS branch ======
+    if (follow) {
+      const system = `
+Generate exactly two short follow-up prompts for TOMORROW.
+They must be clearly connected to the user's question AND today's answer tone (${stile}).
+Return STRICT JSON: {"followups":["Q1","Q2"]}. Language: ${isEn(lang) ? "English" : "Italiano"}.
+`.trim();
+
+      const user = `
+QUESTION: "${domanda}"
+ANSWER_TODAY: "${clamp(answer, 1200)}"
+MICRO_PROFILE: ${JSON.stringify(micro)}
+CONTEXT_REAL:
+${CONTEXT_REAL || "(none)"}
+`.trim();
+
+      const r = await client.chat.completions.create({
+        model: MODEL,
+        temperature: 0.7,
+        max_tokens: 200,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+      });
+      let out = {};
+      try {
+        out = JSON.parse(r.choices?.[0]?.message?.content || "{}");
+      } catch {}
+      if (!Array.isArray(out.followups) || out.followups.length < 2) {
+        out.followups = isEn(lang)
+          ? ["What small sign tomorrow would prove this is right?", "Which detail should we watch first?"]
+          : ["Quale piccolo segnale domani ti direbbe che è giusto?", "Da quale dettaglio partiamo davvero?"];
+      }
+      return res.status(200).json(out);
+    }
+
+    // ====== EPISODIO branch ======
+    const system = personaSystem(stile, lang);
+    const closing = isEn(lang)
+      ? (stile === "wtf"
+          ? "Keep the glass; the rest pours tomorrow."
+          : "Let’s see where this leads next.")
+      : (stile === "wtf"
+          ? "Tieni il bicchiere: il resto si versa domani."
+          : "Vediamo dove ti porta il seguito.");
+
+    const user = `
+QUESTION: "${domanda.trim()}"${extra ? ` (${String(extra).trim()})` : ""}
+MICRO_PROFILE: ${JSON.stringify(micro)}
+CONTEXT_REAL (do NOT invent facts; use only these if relevant):
+${CONTEXT_REAL || "(none)"}
+
+Write a single episode in style "${stile}" with a gentle cliffhanger.
+End EXACTLY with: "${closing}"
+`.trim();
+
+    const c = await client.chat.completions.create({
+      model: MODEL,
+      temperature: stile === "wtf" ? 0.95 : 0.85,
+      max_tokens: 700,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+    });
+
+    const text = c.choices?.[0]?.message?.content?.trim() || "";
+    if (!text) throw new Error("empty_model_response");
+
+    return res.status(200).json({
+      answer: text,
+      used_context: Boolean(CONTEXT_REAL),
+    });
+  } catch (err) {
+    console.error("[/api/ask] error:", err);
+    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
+  }
+}
