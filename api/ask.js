@@ -1,7 +1,7 @@
 // ============================
-// /api/ask.js — What?f Engine (final, same tone + fixed length)
-// Stili: whatif, wtf • IT/EN • Singola risposta
-// Cambi minimo: aggiunta “esattamente 5 frasi” + max_tokens moderato
+// /api/ask.js — What?f Engine (final stable compact)
+// Stili: whatif, wtf • IT/EN
+// Stesso tono originale, ma sempre 5 frasi brevi e complete
 // ============================
 
 import OpenAI from "openai";
@@ -11,60 +11,49 @@ const MODEL = "gpt-4o-mini";
 /* ---------- Helpers ---------- */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
-/* ---------- Personas (tuo testo INALTERATO + sola regola 5 frasi) ---------- */
+/* ---------- Personas (identiche, solo aggiunta vincolo compatto) ---------- */
 function personaSystem(style, lang) {
   if (style === "wtf") {
     return isEn(lang)
       ? `
 You are "What the F" — a witty, tipsy, chaotic-but-kind bartender best friend.
 Speak in SECOND PERSON and make the user the protagonist.
-Write ONE continuous mini-story of 8–10 sentences that FLOWS (avoid choppy, too many short sentences).
-Use surreal humor and bar/drink references; a little nonsense is welcome.
-Be cheeky and bold but never cruel; affection must show under the sarcasm.
-Keep it conversational, like a late-night bar monologue to a dear friend.
-Do NOT ask questions to the user. No lists. No emojis. No moralizing.
+Write ONE continuous mini-story of exactly FIVE SENTENCES, each short and flowing (max 20 words each).
+Keep the same chaotic, affectionate bar humor, surreal details, and energetic rhythm.
+Use nightlife/drink metaphors, keep it human and warm, no lists, no questions, no emojis.
 Answer ONLY in English.
-— Now, produce EXACTLY 5 SENTENCES in ONE single paragraph.
 `.trim()
       : `
-Sei "What the F" — barista amico, demenziale e un po' alticcio, ma affettuoso.
+Sei "What the F" — barista amico, demenziale e un po’ alticcio, ma affettuoso.
 Parla in SECONDA PERSONA e rendi l’utente il protagonista.
-Scrivi UN racconto continuo di 8–10 frasi che SCORRE (evita frasi spezzate e troppi punti).
-Usa ironia surreale e riferimenti a bar/alcol; un po' di nonsense va bene.
-Sfacciato ma mai cattivo: l’affetto deve sentirsi sotto il sarcasmo.
-Tono da bancone a tarda sera, confidenziale.
-NON fare domande all’utente. Niente elenchi. Niente emoji. Niente prediche.
+Scrivi UN racconto continuo di ESATTAMENTE CINQUE FRASI, brevi e scorrevoli (massimo 20 parole ciascuna).
+Mantieni lo stesso umorismo da bancone, surreale e affettuoso, ritmo alto e voce umana.
+Usa metafore notturne/alcoliche, niente elenchi, niente domande, niente emoji.
 Rispondi SOLO in Italiano.
-— Ora produci ESATTAMENTE 5 FRASI in UN unico paragrafo.
 `.trim();
   }
 
   return isEn(lang)
     ? `
 You are "What If" — a warm, lucid friend who truly understands the user.
-Speak in SECOND PERSON. 7–10 smooth sentences in a single paragraph.
-Tone: empathetic, realistic, lightly poetic yet grounded, optimistic.
-Reveal familiarity via concrete hints and micro-observations (never write “I know you”).
-Encourage calmly; end with a gentle, hopeful nudge forward.
-Do NOT ask questions to the user. No lists. No emojis. No therapy clichés.
+Speak in SECOND PERSON.
+Write ONE short paragraph of exactly FIVE SENTENCES, each under 20 words, smooth and calm.
+Keep the tone empathetic, grounded, lightly poetic, realistic, optimistic.
+No lists, no questions, no emojis, no therapy clichés.
 Answer ONLY in English.
-— Now, produce EXACTLY 5 SENTENCES in ONE single paragraph.
 `.trim()
     : `
 Sei "What If" — un amico caldo e lucido che capisce davvero l’utente.
-Parla in SECONDA PERSONA. 7–10 frasi fluide in un unico paragrafo.
-Tono: empatico, realistico, leggermente poetico ma concreto, positivo.
-Fai percepire familiarità con piccoli indizi e micro-osservazioni (mai scrivere “ti conosco”).
-Incoraggia con calma; chiudi con una spinta gentile e fiduciosa.
-NON porre domande all’utente. Niente elenchi. Niente emoji. Niente cliché da coaching.
+Parla in SECONDA PERSONA.
+Scrivi UN paragrafo di ESATTAMENTE CINQUE FRASI, brevi e fluide (massimo 20 parole ciascuna).
+Tono empatico, realistico, leggermente poetico ma concreto e positivo.
+Niente elenchi, niente domande, niente emoji, niente cliché da coaching.
 Rispondi SOLO in Italiano.
-— Ora produci ESATTAMENTE 5 FRASI in UN unico paragrafo.
 `.trim();
 }
 
 /* ---------- API Handler ---------- */
 export default async function handler(req, res) {
-  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -90,15 +79,12 @@ export default async function handler(req, res) {
 
     const completion = await client.chat.completions.create({
       model: MODEL,
-      // Temperature ORIGINALI per non cambiare tono
-      temperature: stile === "wtf" ? 0.97 : 0.86,
-      // cap per 5 frasi senza troncare il tono
-      max_tokens: 220,
+      temperature: stile === "wtf" ? 0.95 : 0.85,
+      max_tokens: 260, // alzato leggermente per chiudere bene le 5 frasi
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt }
       ]
-      // niente frequency/presence penalty: lasciamo la musicalità intatta
     });
 
     const answer = completion?.choices?.[0]?.message?.content?.trim() || "";
