@@ -1,7 +1,7 @@
 // ============================
-// /api/ask.js — What?f Engine (STYLE-LOCKED, hardened)
+// /api/ask.js — What?f Engine (SHORT & FUN)
 // Stili: whatif, wtf  •  IT/EN
-// Tono, incipit, frasi e lunghezza forzati + sanificazione output
+// Lunghezze corte tipo demo + tono bloccato
 // ============================
 
 import OpenAI from "openai";
@@ -14,18 +14,10 @@ const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
 /* ---------- Openings/Nicknames ---------- */
 const OPENINGS_IT_WHATIF = [
-  "Ti ci vedo già,",
-  "Sì, lo fai con calma:",
-  "Vai piano ma deciso,",
-  "Cominci leggero:",
-  "Succederà così,"
+  "Ti ci vedo già,", "Sì, lo fai con calma:", "Vai piano ma deciso,", "Cominci leggero:", "Succederà così,"
 ];
 const OPENINGS_EN_WHATIF = [
-  "I can already see you,",
-  "Yes, you’ll do it quietly:",
-  "You’ll move slowly but sure,",
-  "You start light:",
-  "It’ll go like this,"
+  "I can already see you,", "Yes, you’ll do it quietly:", "You’ll move slowly but sure,", "You start light:", "It’ll go like this,"
 ];
 
 const NICKS_IT_WTF = [
@@ -36,86 +28,90 @@ const NICKS_EN_WTF = [
   "You legend","Champ","Captain","Mastermind","Chaos royalty","Bar astronaut"
 ];
 
-/* ---------- Personas (bloccate) ---------- */
+/* ---------- Personas (bloccate e corte) ---------- */
 function systemWhatIf(lang){
   return isEn(lang) ? `
 You are "What If" — calm, realistic, warm.
-Write EXACTLY 8 sentences, ~160–180 words, ONE paragraph, SECOND PERSON only.
+Write EXACTLY 6 sentences, ~110–130 words, ONE paragraph, SECOND PERSON only.
 Tone: empathetic, grounded, quiet optimism; everyday images (mug, routine, streets, light, sleep, market).
-Present/imperfect tenses only. No questions, no exclamations, no lists, no dialogue, no coaching clichés.
-Avoid grand words (soul/heart/destiny/purpose/dream). End with a soft forward nudge about tomorrow.
+Present/imperfect only. No questions, no exclamations, no lists or dialogue, no coaching clichés.
+Avoid grand words (soul/heart/destiny/purpose/dream). End with a soft tomorrow-nudge.
 `.trim() : `
 Sei "What If" — voce amica, calma e concreta.
-Scrivi ESATTAMENTE 8 frasi, ~160–180 parole, UN paragrafo, SOLO SECONDA PERSONA.
+Scrivi ESATTAMENTE 6 frasi, ~110–130 parole, UN paragrafo, SOLO SECONDA PERSONA.
 Tono: empatico, realistico, ottimismo sobrio; immagini quotidiane (tazza, orari, strada, luce, sonno, mercato).
-Solo presente/imperfetto. Niente domande, niente punti esclamativi, niente elenchi o dialoghi, niente frasi da coach.
-Evita parole altisonanti (anima/cuore/destino/scopo/sogno). Chiudi con un accenno a “domani”.
+Solo presente/imperfetto. Niente domande, niente punti esclamativi, niente elenchi/dialoghi, niente frasi da coach.
+Evita parole altisonanti (anima/cuore/destino/scopo/sogno). Chiudi con un cenno a “domani”.
 `.trim();
 }
 
 function systemWTF(lang){
   return isEn(lang) ? `
-You are "What the F" — drunk-but-kind bartender.
-Write EXACTLY 9 long chained sentences, ~170–190 words, ONE paragraph, SECOND PERSON focus.
-Start with the provided nickname + comma. Nightlife/bar lexicon, neon, music, playful mild swearing (“damn/heck”), no blasphemy.
-NEVER use the Italian phrase “porca miseria”. No questions, no lists, no dialogue. High-energy, affectionate, surreal-but-coherent.
+You are "What the F" — drunk-but-kind bartender, high-energy and funny.
+Write EXACTLY 7 long chained sentences, ~120–140 words, ONE paragraph, SECOND PERSON focus.
+Start with the provided nickname + comma. Use nightlife/bar lexicon, at least TWO playful absurd images (neon/lamp post winks, penguin DJ, shaker suitcase, etc.).
+Use one mild expletive in English (e.g., "damn" or "heck") max once; never blasphemy. No questions, no lists, no dialogue.
 End with a short toast to destiny (“a toast with destiny, champ”).
 `.trim() : `
-Sei "What the F" — barista amico, alticcio e affettuoso.
-Scrivi ESATTAMENTE 9 frasi lunghe concatenate, ~170–190 parole, UN paragrafo, focalizzate sulla SECONDA PERSONA.
-Inizia con il soprannome fornito + virgola. Lessico da bar/notte/neon; parolacce leggere (“cavolo”, “diamine”), MA niente bestemmie
-e NON usare mai “porca miseria”. Niente domande/elenco/dialoghi. Energia alta, surreale ma coerente.
-Chiudi con un brindisi al destino (“brindisi col destino, campione”).
+Sei "What the F" — barista amico, alticcio e affettuoso, ritmo allegro.
+Scrivi ESATTAMENTE 7 frasi concatenate, ~120–140 parole, UN paragrafo, in SECONDA PERSONA.
+Inizia con il soprannome fornito + virgola. Usa lessico da bar/notte/neon e inserisci almeno DUE immagini assurde ma coerenti (es. lampione che fa l’occhiolino, GPS che brontola, pinguino DJ).
+Concedi UNA sola parolina di sfogo soft (“cavolo” o “diamine”), mai bestemmie e MAI “porca miseria”.
+Niente domande/elenco/dialoghi. Chiudi con un brindisi al destino (“brindisi col destino, campione”).
 `.trim();
 }
 
-/* ---------- Style seeds (àncore brevi) ---------- */
-const SEED_IT_WTF = `Bravo genio, prendi la valigia come fosse uno shaker, ci butti dentro vita nuova e due calzini spaiati; arrivi in città col navigatore che borbotta in dialetto ma i bar ti adottano, il lampione fa l’occhiolino, il barista diventa guru al secondo spritz e quando appoggi le chiavi capisci che hai appena fatto un brindisi col destino, campione.`;
-const SEED_IT_WHATIF = `Ti ci vedo già: poche cose, orari che si sistemano, bar luminosi e strade semplici; il silenzio buono della casa ti sorprende e domani ti accorgerai che la chiamerai casa.`;
-const SEED_EN_WTF = `You legend, you shake the suitcase like a cocktail, toss in new life and mismatched socks; the bars adopt you, the lamp post winks, the bartender turns guru by the second spritz, and when you drop the keys you’ve just toasted with fate, champ.`;
-const SEED_EN_WHATIF = `I can already see you: a few boxes, simple streets and bright cafés; the quiet of the house arrives and tomorrow you’ll call it home.`;
+/* ---------- Style seeds (mini-àncora) ---------- */
+const SEED_IT_WTF = `Bravo genio, prendi la valigia come fosse uno shaker e ci butti dentro vita nuova e calzini spaiati; i bar ti adottano, il lampione fa l’occhiolino, il barista diventa guru al secondo spritz e quando appoggi le chiavi capisci che hai brindato col destino, campione.`;
+const SEED_IT_WHATIF = `Ti ci vedo già: poche cose, orari che si sistemano, bar luminosi e strade semplici; il silenzio buono della casa arriva e domani ti accorgerai che la chiamerai casa.`;
+const SEED_EN_WTF = `You legend, you shake the suitcase like a cocktail; the bars adopt you, the lamp post winks, the bartender turns guru by the second spritz and when you drop the keys you’ve toasted with fate, champ.`;
+const SEED_EN_WHATIF = `I can already see you: a few boxes, simple streets and bright cafés; the house quiet arrives and tomorrow you’ll call it home.`;
 
-/* ---------- Post-processing: filtri & vincoli ---------- */
+/* ---------- Post-processing (accorcia davvero) ---------- */
 const BANNED = [/porca\s+miseria/gi];
 
-function sanitize(text, {style, lang}) {
-  let t = (text || "").trim();
+function hardTrimBySentences(text, targetSentences){
+  // split su punto; togli sequenze strane
+  let parts = text.replace(/[!?]+/g,".").split(/\.\s+/).map(s=>s.trim()).filter(Boolean);
+  if (parts.length > targetSentences) parts = parts.slice(0, targetSentences);
+  // se minore, lasciamo così (meglio corto che prolisso)
+  return parts.join(". ") + (parts.length ? "." : "");
+}
 
-  // filtri parole vietate
-  BANNED.forEach(rx => t = t.replace(rx, ""));
+function hardTrimByWords(text, maxWords){
+  const w = text.trim().split(/\s+/);
+  return (w.length>maxWords) ? (w.slice(0,maxWords).join(" ") + ".") : text;
+}
+
+function sanitize(text, {style, lang}){
+  let t = (text||"").trim();
+
+  // ban parole
+  BANNED.forEach(rx => t = t.replace(rx,""));
 
   // niente ? o !
-  t = t.replace(/[!?]+/g, ".");
+  t = t.replace(/[!?]+/g,".");
 
-  // taglia eventuali spazi strani
-  t = t.replace(/\s+/g, " ").replace(/\s*\.\s*\./g, ".").trim();
+  // vincoli numerici
+  const targetSent = (style==="wtf") ? 7 : 6;
+  const maxWords   = (style==="wtf") ? 140 : 130;
 
-  // vincolo frasi
-  const targetSentences = style === "wtf" ? 9 : 8;
-  // split “morbido” su punto
-  let parts = t.split(/\.\s+/).map(s => s.trim()).filter(Boolean);
-  if (parts.length > targetSentences) parts = parts.slice(0, targetSentences);
-  if (parts.length < targetSentences) {
-    // se corto, non forziamo padding testuale: lasciamo così
-  }
-  t = parts.join(". ") + (parts.length ? "." : "");
+  t = hardTrimBySentences(t, targetSent);
+  t = hardTrimByWords(t, maxWords);
 
-  // range parole (soft trim)
-  const words = t.split(/\s+/);
-  const maxWords = style === "wtf" ? 190 : 180;
-  if (words.length > maxWords) t = words.slice(0, maxWords).join(" ") + ".";
-
-  // finale WTF: brindisi se manca
-  if (style === "wtf") {
-    const toast = isEn(lang) ? " A toast with destiny, champ." : " Brindisi col destino, campione.";
+  // finale WTF: assicurare brindisi
+  if (style==="wtf") {
+    const toast = isEn(lang) ? " a toast with destiny, champ." : " brindisi col destino, campione.";
     if (!/[Bb]rindisi col destino|toast with destiny/.test(t)) t = t.replace(/\.*$/, ".") + toast;
   }
 
+  // pulizia finale
+  t = t.replace(/\s+/g," ").replace(/\s*\.\s*\./g,".").trim();
   return t;
 }
 
 /* ---------- Handler ---------- */
-export default async function handler(req, res){
+export default async function handler(req,res){
   // CORS
   res.setHeader("Access-Control-Allow-Origin","*");
   res.setHeader("Access-Control-Allow-Methods","POST, OPTIONS");
@@ -128,7 +124,7 @@ export default async function handler(req, res){
 
     const body = typeof req.body==="string" ? JSON.parse(req.body||"{}") : (req.body||{});
     const { domanda="", stile="whatif", lang="it", extra="" } = body;
-    if(!domanda || typeof domanda !== "string"){
+    if(!domanda || typeof domanda!=="string"){
       return res.status(400).json({error:"bad_request", detail:"domanda_required"});
     }
 
@@ -143,16 +139,16 @@ export default async function handler(req, res){
     const userMsg = isEn(lang)
       ? `Question: "${domanda}". Context: "${String(extra||"").slice(0,300)}".
 Begin with EXACTLY this opening (keep it verbatim, then continue): "${opening},"
-Respect sentence count and length. Second person only.`
+Respect sentence count and length. Second person only. Keep it crisp.`
       : `Domanda: "${domanda}". Contesto: "${String(extra||"").slice(0,300)}".
 Inizia con QUESTO incipit (identico, poi continua): "${opening},"
-Rispetta numero frasi e lunghezza. Solo seconda persona.`;
+Rispetta numero frasi e lunghezza. Solo seconda persona. Tieni il testo compatto.`;
 
     const r = await client.chat.completions.create({
       model: MODEL,
-      temperature: (stile==="wtf") ? 0.86 : 0.72,
-      max_tokens: 520,                 // ampio per non tagliare
-      frequency_penalty: 0.3,
+      temperature: (stile==="wtf") ? 0.9 : 0.7,
+      max_tokens: 360,                 // sufficiente ma non enorme
+      frequency_penalty: 0.35,
       presence_penalty: 0.0,
       messages: [
         { role:"system", content: system },
