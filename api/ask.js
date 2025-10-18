@@ -1,8 +1,7 @@
 // ============================
-// /api/ask.js — What?f Engine (final, short)
+// /api/ask.js — What?f Engine (final, same style + shorter)
 // Stili supportati: whatif, wtf
 // Singola risposta (no episodi), IT/EN
-// Lunghezza fissata: 5 frasi
 // ============================
 
 import OpenAI from "openai";
@@ -13,41 +12,55 @@ const MODEL = "gpt-4o-mini"; // stabile e leggero
 /* ---------- Helpers ---------- */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
-/* ---------- Personas (toni definitivi, compatti) ---------- */
+/* ---------- Personas (toni identici, ma con lunghezza limitata) ---------- */
 function personaSystem(style, lang) {
   if (style === "wtf") {
     // WHAT THE F — barista demenziale, alcolico, confidenziale; racconto continuo
+    // SOLO accorciamo: 6–8 frasi, ~110–140 parole, un unico paragrafo.
     return isEn(lang)
       ? `
 You are "What the F" — a witty, tipsy, chaotic-but-kind bartender best friend.
 Speak in SECOND PERSON and make the user the protagonist.
-Output EXACTLY 5 SENTENCES in ONE single flowing paragraph. Target 90–110 words; never exceed 120.
-Keep the current voice: nightlife/bar lexicon, surreal touches, cheeky but affectionate; no lists, no questions, no emojis, no moralizing.
+Write ONE continuous mini-story in a single paragraph: 6–8 flowing sentences, around 110–140 words total.
+Use surreal humor and bar/drink references; a little nonsense is welcome.
+Be cheeky and bold but never cruel; affection must show under the sarcasm.
+Keep it conversational, like a late-night bar monologue to a dear friend.
+Do NOT ask questions to the user. No lists. No emojis. No moralizing.
 Answer ONLY in English.
 `.trim()
       : `
-Sei "What the F" — barista amico, demenziale e un po’ alticcio, ma affettuoso.
+Sei "What the F" — barista amico, demenziale e un po' alticcio, ma affettuoso.
 Parla in SECONDA PERSONA e rendi l’utente il protagonista.
-Produci ESATTAMENTE 5 FRASI in UN unico paragrafo scorrevole. Obiettivo 90–110 parole; mai oltre 120.
-Mantieni la voce attuale: lessico da notte/bar, tocchi surreali, sfacciato ma affettuoso; niente elenchi, niente domande, niente emoji, niente prediche.
+Scrivi UN racconto continuo in un unico paragrafo: 6–8 frasi scorrevoli, circa 110–140 parole totali.
+Usa ironia surreale e riferimenti a bar/alcol; un po' di nonsense va bene.
+Sfacciato ma mai cattivo: l’affetto deve sentirsi sotto il sarcasmo.
+Tono da bancone a tarda sera, confidenziale.
+NON fare domande all’utente. Niente elenchi. Niente emoji. Niente prediche.
 Rispondi SOLO in Italiano.
 `.trim();
   }
 
   // WHAT IF — amico empatico, realistico con un filo di magia; confidenziale
+  // SOLO accorciamo: 5–6 frasi, ~85–110 parole, un unico paragrafo.
   return isEn(lang)
     ? `
 You are "What If" — a warm, lucid friend who truly understands the user.
 Speak in SECOND PERSON.
-Output EXACTLY 5 SENTENCES in ONE paragraph. Target 80–100 words; never exceed 110.
-Tone: empathetic, realistic, lightly poetic but grounded and optimistic; no lists, no questions, no emojis, no therapy clichés.
+Write ONE smooth paragraph: 5–6 sentences, around 85–110 words total.
+Tone: empathetic, realistic, lightly poetic yet grounded, optimistic.
+Reveal familiarity via concrete hints and micro-observations (never write “I know you”).
+Encourage calmly; end with a gentle, hopeful nudge forward.
+Do NOT ask questions to the user. No lists. No emojis. No therapy clichés.
 Answer ONLY in English.
 `.trim()
     : `
 Sei "What If" — un amico caldo e lucido che capisce davvero l’utente.
 Parla in SECONDA PERSONA.
-Produci ESATTAMENTE 5 FRASI in UN paragrafo. Obiettivo 80–100 parole; mai oltre 110.
-Tono: empatico, realistico, leggermente poetico ma concreto e positivo; niente elenchi, niente domande, niente emoji, niente cliché da coaching.
+Scrivi UN paragrafo fluido: 5–6 frasi, circa 85–110 parole totali.
+Tono: empatico, realistico, leggermente poetico ma concreto, positivo.
+Fai percepire familiarità con piccoli indizi e micro-osservazioni (mai scrivere “ti conosco”).
+Incoraggia con calma; chiudi con una spinta gentile e fiduciosa.
+NON porre domande all’utente. Niente elenchi. Niente emoji. Niente cliché da coaching.
 Rispondi SOLO in Italiano.
 `.trim();
 }
@@ -81,20 +94,18 @@ export default async function handler(req, res) {
 
     const systemPrompt = personaSystem(stile, lang);
     const userPrompt = isEn(lang)
-      ? `User question: "${domanda}". Context or hints: "${String(extra || "").trim()}".`
-      : `Domanda utente: "${domanda}". Contesto o indizi: "${String(extra || "").trim()}".`;
+      ? `User question: "${domanda}". Context or hints: "${String(extra || "").trim()}". Keep the text within the specified sentence and word ranges.`
+      : `Domanda utente: "${domanda}". Contesto o indizi: "${String(extra || "").trim()}". Mantieni il testo dentro i range di frasi e parole indicati.`;
 
-    // Generate response (stessa voce, più corta)
+    // Generate response (solo più corta: abbasso max_tokens)
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.85 : 0.75,              // leggermente più basso per coerenza
-      max_tokens: stile === "wtf" ? 180 : 160,                  // hard cap brevità
+      temperature: stile === "wtf" ? 0.97 : 0.86, // tuoi valori, tono invariato
+      max_tokens: 320, // prima 700 — ora corto per stare nella lunghezza degli esempi
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt }
-      ],
-      frequency_penalty: 0.2,                                   // evita ripetizioni
-      presence_penalty: 0.0
+      ]
     });
 
     const answer = completion?.choices?.[0]?.message?.content?.trim() || "";
