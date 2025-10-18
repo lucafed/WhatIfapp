@@ -82,6 +82,44 @@ document.getElementById('lblA').textContent=I18N.a;
 document.getElementById('shareBtn').textContent=I18N.share;
 document.getElementById('againBtn').textContent=I18N.again;
 
+// ---------- Normalizzatore forma/lunghezza (non cambia il tono) ----------
+function normalizeAnswer(text, style, lang){
+  if(!text) return text;
+
+  let t = String(text)
+    .replace(/\s+\n+/g, ' ')
+    .replace(/\n+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  // Split frasi
+  let sentences = t.split(/(?<=[\.\!\?…])\s+/).filter(s=>s && s.trim().length>0);
+
+  // Target per stile (coerente con gli esempi)
+  const cfg = (style==='wtf')
+    ? { minS:6, maxS:8, maxWords:140 }   // What the F → flusso, più lungo
+    : { minS:5, maxS:6, maxWords:110 };  // What If → più compatto
+
+  // Se troppe frasi, taglia
+  if (sentences.length > cfg.maxS) {
+    sentences = sentences.slice(0, cfg.maxS);
+  }
+
+  t = sentences.join(' ');
+
+  // Clamp parole
+  const words = t.split(/\s+/);
+  if (words.length > cfg.maxWords) {
+    t = words.slice(0, cfg.maxWords).join(' ');
+    if (!/[\.!\?…]$/.test(t)) t += '.';
+  }
+
+  // Fix spazi
+  t = t.replace(/\s+([,.;:!?\)])/g, '$1').replace(/\s{2,}/g,' ');
+
+  return t;
+}
+
 const params=new URLSearchParams(location.search);
 const isReplay = params.get('view')==='replay';
 
@@ -90,7 +128,7 @@ let domanda=""; let answerText="";
 if(isReplay){
   const r = JSON.parse(LS.getItem('replay_story')||'{}');
   domanda = r.domanda || LS.getItem('domanda') || "";
-  answerText = r.answer || "";
+  answerText = normalizeAnswer((r.answer || ""), style, lang);
   document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
   document.getElementById('subtitle').textContent = I18N.sub(domanda);
   document.getElementById('qView').textContent = domanda || '—';
@@ -111,7 +149,7 @@ if(isReplay){
       });
       const data = await r.json();
       if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
-      answerText = (data.answer||"").trim();
+      answerText = normalizeAnswer((data.answer||"").trim(), style, lang);
       document.getElementById('answer').textContent = answerText;
 
       const hist = JSON.parse(LS.getItem('cronologia')||'[]');
