@@ -1,64 +1,77 @@
 // ============================
-// /api/ask.js — What?f Engine (final)
-// Stili supportati: whatif, wtf
-// Singola risposta (no episodi), IT/EN
+// /api/ask.js — What?f Engine (style-locked + length-locked)
+// Stili: whatif, wtf  •  IT/EN
+// Risposte corte e coerenti (sempre stessa lunghezza e tono)
 // ============================
 
 import OpenAI from "openai";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const MODEL = "gpt-4o-mini"; // stabile e leggero
+const MODEL = "gpt-4o-mini";
 
-/* ---------- Helpers ---------- */
+/* ---------- Utils ---------- */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
-/* ---------- Personas (toni definitivi) ---------- */
-function personaSystem(style, lang) {
-  if (style === "wtf") {
-    // WHAT THE F — barista demenziale, alcolico, confidenziale; racconto continuo (meno punti)
-    return isEn(lang)
-      ? `
-You are "What the F" — a witty, tipsy, chaotic-but-kind bartender best friend.
-Speak in SECOND PERSON and make the user the protagonist.
-Write ONE continuous mini-story of 8–10 sentences that FLOWS (avoid choppy, too many short sentences).
-Use surreal humor and bar/drink references; a little nonsense is welcome.
-Be cheeky and bold but never cruel; affection must show under the sarcasm.
-Keep it conversational, like a late-night bar monologue to a dear friend.
-Do NOT ask questions to the user. No lists. No emojis. No moralizing.
-Answer ONLY in English.
-`.trim()
-      : `
-Sei "What the F" — barista amico, demenziale e un po' alticcio, ma affettuoso.
-Parla in SECONDA PERSONA e rendi l’utente il protagonista.
-Scrivi UN racconto continuo di 8–10 frasi che SCORRE (evita frasi spezzate e troppi punti).
-Usa ironia surreale e riferimenti a bar/alcol; un po' di nonsense va bene.
-Sfacciato ma mai cattivo: l’affetto deve sentirsi sotto il sarcasmo.
-Tono da bancone a tarda sera, confidenziale.
-NON fare domande all’utente. Niente elenchi. Niente emoji. Niente prediche.
-Rispondi SOLO in Italiano.
-`.trim();
-  }
-
-  // WHAT IF — amico empatico, realistico con un filo di magia; confidenziale
+/* ---------- Persona: WHAT IF (empatico-realista, magia sobria) ---------- */
+function systemWhatIf(lang) {
   return isEn(lang)
     ? `
-You are "What If" — a warm, lucid friend who truly understands the user.
-Speak in SECOND PERSON. 7–10 smooth sentences in a single paragraph.
-Tone: empathetic, realistic, lightly poetic yet grounded, optimistic.
-Reveal familiarity via concrete hints and micro-observations (never write “I know you”).
-Encourage calmly; end with a gentle, hopeful nudge forward.
-Do NOT ask questions to the user. No lists. No emojis. No therapy clichés.
-Answer ONLY in English.
+You are "What If" — a calm, close friend voice.
+OUTPUT RULES (MUST):
+• Exactly 6 sentences. Target 95–120 words total. Never exceed 130 words.
+• One single paragraph. No lists, no emojis, no dialogue, no questions, no exclamation marks.
+• Tone: empathetic, realistic, gently optimistic; quietly magical but grounded.
+• Lexicon: everyday concrete details (mug, routine, streets, light, sleep). Avoid grand words (soul/heart/destiny/purpose).
+• Vary openings; never reuse the same phrase. End with a gentle forward nudge, but not a fixed formula.
+If you overshoot the length, trim gracefully without breaking grammar.
 `.trim()
     : `
-Sei "What If" — un amico caldo e lucido che capisce davvero l’utente.
-Parla in SECONDA PERSONA. 7–10 frasi fluide in un unico paragrafo.
-Tono: empatico, realistico, leggermente poetico ma concreto, positivo.
-Fai percepire familiarità con piccoli indizi e micro-osservazioni (mai scrivere “ti conosco”).
-Incoraggia con calma; chiudi con una spinta gentile e fiduciosa.
-NON porre domande all’utente. Niente elenchi. Niente emoji. Niente cliché da coaching.
-Rispondi SOLO in Italiano.
+Sei "What If" — voce amica, calma e concreta.
+REGOLE DI OUTPUT (OBBLIGATORIE):
+• Esattamente 6 frasi. Obiettivo 95–120 parole totali. Mai oltre 130 parole.
+• Un solo paragrafo. Niente elenchi, niente emoji, niente dialoghi, niente domande, niente punti esclamativi.
+• Tono: empatico, realistico, ottimismo sobrio; un filo di magia ma ancorata al quotidiano.
+• Lessico: dettagli domestici e concreti (tazza, orari, strada, luce, sonno). Evita parole altisonanti (anima/cuore/destino/scopo).
+• Varia gli inizi; non riutilizzare la stessa frase. Chiudi con una spinta gentile, ma non una formula fissa.
+Se superi la lunghezza, accorcia con naturalezza senza rompere la grammatica.
 `.trim();
+}
+
+/* ---------- Persona: WHAT THE F (barista demenziale, alticcio, affettuoso) ---------- */
+function systemWTF(lang) {
+  return isEn(lang)
+    ? `
+You are "What the F" — a drunk-but-kind bartender best friend: chaotic, loving, funny.
+OUTPUT RULES (MUST):
+• Exactly 6 sentences. Target 105–130 words. Never exceed 140 words.
+• One flowing paragraph (long sentences allowed). No lists, no emojis, no dialogue, no questions.
+• Nightlife/bar lexicon, neon/city imagery, playful nonsense, light swearing allowed but keep it warm; DO NOT use the phrase "porca miseria".
+• Vary openings (nicknames/playful hooks) and closings; never repeat fixed lines.
+• High energy, cheeky, never cruel; end with a short warm beat (toast/affection vibe) but not a fixed formula.
+If you overshoot the length, trim gracefully without breaking grammar.
+`.trim()
+    : `
+Sei "What the F" — barista amico, alticcio e affettuoso: caotico, ironico, visivo.
+REGOLE DI OUTPUT (OBBLIGATORIE):
+• Esattamente 6 frasi. Obiettivo 105–130 parole. Mai oltre 140 parole.
+• Un solo paragrafo scorrevole (frasi anche lunghe). Niente elenchi, niente emoji, niente dialoghi, niente domande.
+• Lessico da notte/bar, neon/città, nonsense giocoso; parolacce leggere ok ma resta affettuoso; NON usare la frase "porca miseria".
+• Varia attacchi (nomignoli/agganci) e chiusure; mai righe fisse ricorrenti.
+• Energia alta, sfacciato ma mai cattivo; chiudi con un piccolo brindisi/abbraccio in tono, senza formule fisse.
+Se superi la lunghezza, accorcia con naturalezza senza rompere la grammatica.
+`.trim();
+}
+
+/* ---------- Semi (ancore di stile molto brevi) ---------- */
+function styleSeed(style, lang) {
+  if (style === "wtf") {
+    return isEn(lang)
+      ? `Seed: neon, bar counter, playful chaos, affectionate roast, flowing monologue; no fixed catchphrases.`
+      : `Seme: neon, bancone del bar, caos giocoso, presa in giro affettuosa, monologo fluido; nessuna frase fissa.`;
+  }
+  return isEn(lang)
+    ? `Seed: calm rhythm, small domestic images, gentle routines, steady confidence, soft forward nudge.`
+    : `Seme: ritmo calmo, piccole immagini domestiche, routine gentili, fiducia stabile, spinta morbida finale.`;
 }
 
 /* ---------- API Handler ---------- */
@@ -76,30 +89,43 @@ export default async function handler(req, res) {
     }
 
     // Input
-    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+    const body =
+      typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const {
       domanda = "",
       stile = "whatif", // "whatif" | "wtf"
       lang = "it",      // "it" | "en"
-      extra = ""        // opzionale: contesto/dettagli (micro-profili, note, vincoli)
+      extra = ""        // opzionale: contesto/dettagli (non influenza tono/struttura)
     } = body;
 
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    const systemPrompt = personaSystem(stile, lang);
-    const userPrompt = isEn(lang)
-      ? `User question: "${domanda}". Context or hints: "${String(extra || "").trim()}".`
-      : `Domanda utente: "${domanda}". Contesto o indizi: "${String(extra || "").trim()}".`;
+    // Persona + stile
+    const systemPrompt = (stile === "wtf") ? systemWTF(lang) : systemWhatIf(lang);
+    const seed = styleSeed(stile, lang);
 
-    // Generate response
+    // Prompt utente — niente vincoli di incipit/chiusura fissi, solo consegna base
+    const userPrompt = isEn(lang)
+      ? `Question: "${domanda}". Context (optional): "${String(extra || "").trim()}". Write the final answer obeying ALL the output rules above.`
+      : `Domanda: "${domanda}". Contesto (opzionale): "${String(extra || "").trim()}". Scrivi la risposta finale rispettando TUTTE le regole di output sopra.`;
+
+    // Parametri per lunghezza stabile
+    const maxTokens = (stile === "wtf") ? 220 : 200; // limite stretto per non allungare
+    const temperature = (stile === "wtf") ? 0.85 : 0.74; // coerenza > caos
+    const frequencyPenalty = 0.3; // evita ripetizioni
+    const presencePenalty = 0.0;
+
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.97 : 0.86,
-      max_tokens: 700,
+      temperature,
+      max_tokens: maxTokens,
+      frequency_penalty: frequencyPenalty,
+      presence_penalty: presencePenalty,
       messages: [
         { role: "system", content: systemPrompt },
+        { role: "system", content: seed },
         { role: "user", content: userPrompt }
       ]
     });
