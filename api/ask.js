@@ -1,6 +1,3 @@
-piAsk
-
-
 // ============================
 // /api/ask.js — What?f Engine (final)
 // Stili supportati: whatif, wtf
