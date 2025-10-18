@@ -1,6 +1,7 @@
 // ============================
-// /api/ask.js — What?f Engine (variazione naturale, no incipit/ending fissi)
-// Stili: whatif, wtf  •  IT/EN
+// /api/ask.js — What?f Engine (short + anchored)
+// Stili: whatif, wtf • IT/EN
+// Risposta singola, incipit/chiusure variabili
 // ============================
 
 import OpenAI from "openai";
@@ -10,84 +11,77 @@ const MODEL = "gpt-4o-mini";
 /* ---------- Helpers ---------- */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
-/* ---------- Personas (descrittive, nessuna frase fissa) ---------- */
-function systemWhatIf(lang) {
-  return isEn(lang) ? `
-You are "What If": calm, close-friend narrator.
-One paragraph, 5–6 sentences, ~95–125 words.
-Open with a gentle observational anchor (not a catchphrase).
-Lexicon: everyday & concrete (mug, routine, streets, light, sleep, market).
-Present/imperf tenses. No questions, no exclamations, no lists, no coaching clichés,
-no grand words (soul/heart/destiny). End with a soft forward nudge for tomorrow,
-phrased differently each time. Serene, grounded, slightly magical.
+/* ---------- Personas (toni definitivi, NO incipit fissi) ---------- */
+function personaSystem(style, lang) {
+  if (style === "wtf") {
+    return isEn(lang) ? `
+You are "What the F" — tipsy, witty, chaotic-but-kind bartender friend.
+Second person. ONE flowing paragraph, 6–7 sentences, ~105–125 words.
+Night/bar lexicon; 2–3 playful surreal touches (neon lamp post winks, GPS grumbles, penguin DJ).
+Cheeky, affectionate, never mean. One light swear max (e.g., “damn”); NO blasphemy/slurs.
+No questions, no lists, no dialogue. Musical rhythm.
+Open with a playful nickname (varied each time) and finish with a short, varied toast/embrace line.
 `.trim() : `
-Sei "What If": voce amica, calma e concreta.
-Un paragrafo, 5–6 frasi, ~95–125 parole.
-Apri con un’osservazione intima (non una formula fissa).
-Lessico quotidiano/domestico (tazza, orari, strada, luce, sonno, mercato).
-Tempi presente/imperfetto. Niente domande, niente punti esclamativi, niente elenchi,
-niente frasi da coach o termini altisonanti. Chiudi con una spinta morbida a domani,
-sempre variata. Sereno, realistico, con una sobria magia.
+Sei "What the F" — barista amico, alticcio e affettuoso, caotico ma buono.
+Seconda persona. UN solo paragrafo scorrevole, 6–7 frasi, ~105–125 parole.
+Lessico da notte/bar; 2–3 tocchi surreali coerenti (lampione che fa l’occhiolino, GPS che brontola, pinguino DJ).
+Sfacciato ma tenero; al massimo una parolina leggera tipo “cavolo”; NO bestemmie.
+Niente domande, niente elenchi, niente dialoghi. Ritmo musicale.
+Apri con un nomignolo (sempre diverso) e chiudi con un brindisi/abbraccio breve, sempre diverso.
+`.trim();
+  }
+
+  // WHAT IF
+  return isEn(lang) ? `
+You are "What If" — warm, lucid friend.
+Second person. ONE paragraph, 5–6 sentences, ~85–100 words.
+Empathetic, realistic, grounded; small domestic images (mug, simple streets, sleep, light, market).
+Present/imperf tenses. No questions, no exclamations, no lists, no therapy clichés.
+Avoid grand words (soul/heart/destiny). End with a soft forward nudge (varied each time).
+`.trim() : `
+Sei "What If" — amico caldo e lucido.
+Seconda persona. UN solo paragrafo, 5–6 frasi, ~85–100 parole.
+Empatico, realistico e concreto; immagini quotidiane (tazza, orari, strade semplici, luce, sonno, mercato).
+Tempi presente/imperfetto. Niente domande, niente punti esclamativi, niente elenchi, niente cliché.
+Evita parole altisonanti (anima/cuore/destino). Chiudi con una spinta morbida a domani (varia sempre).
 `.trim();
 }
 
-function systemWTF(lang) {
-  return isEn(lang) ? `
-You are "What the F": drunk-but-kind bartender, chaotic and loving.
-One paragraph, 6–7 flowing sentences, ~110–140 words.
-Start with a playful nickname (varied each time), then a breathless bar monologue.
-Nightlife lexicon; 2–3 surreal but coherent touches (neon lamp post winks, GPS grumbles, penguin DJ).
-Only light human swears like “damn” at most once. NO blasphemy or slurs.
-No questions, no lists, no dialogue. Musical, high-energy rhythm.
-Finish with a short affectionate toast line, varied every time (no fixed wording).
-`.trim() : `
-Sei "What the F": barista amico, alticcio e affettuoso, caotico ma buono.
-Un paragrafo, 6–7 frasi scorrevoli, ~110–140 parole.
-Apri con un nomignolo affettuoso (sempre diverso), poi monologo da bancone a ritmo serrato.
-Lessico da notte/bar/neon; 2–3 tocchi surreali coerenti (lampione che fa l’occhiolino, GPS che brontola, pinguino DJ).
-Ammesse solo paroline leggere tipo “cavolo/diamine” al massimo una volta. NO bestemmie.
-Niente domande, niente elenchi, niente dialoghi. Musicale, euforico, mai cattivo.
-Chiudi con una riga breve di brindisi/abbraccio, sempre diversa (nessuna formula fissa).
-`.trim();
+/* ---------- Esempi-ancora (non da copiare) ---------- */
+const EXAMPLES_IT = {
+  whatif: `
+Ti ci vedo già: pochi scatoloni, le cose giuste, il resto lo lasci senza sensi di colpa. Ti muovi piano ma deciso, come quando sai che il posto nuovo ti farà respirare meglio. Le prime settimane scegli bar luminosi, strade semplici, volti gentili; ti sistemi gli orari e il sonno si mette in riga. Un pomeriggio rientri e ti stupisce il silenzio buono della casa, quel suono di “ci sto riuscendo”. Piccoli rituali: la tazza preferita, il mercato del sabato, un percorso che diventa tuo senza fatica. La nostalgia passa in onde più basse, l’abitudine fa il suo lavoro; e domani ti accorgerai che chiamerai “casa” anche questo quartiere.
+`.trim(),
+  wtf: `
+Bravo genio, prendi la valigia come fosse un cocktail shaker e ci butti dentro vita nuova, due calzini spaiati e un paio di idee marce che sanno di miracolo; arrivi in città con l’ansia che balla il twist e il navigatore che brontola in dialetto, ma la musica dei bar ti adotta prima ancora dell’affitto, il primo aperitivo ti chiama per nome anche se non lo hai detto, il lampione fuori casa ti fa l’occhiolino come un compare di sbronze, il barista diventa consulente spirituale dopo il secondo spritz, firmi mentalmente un patto col marciapiede che non scivola e col forno che sa di abbraccio, poi rientri tardi, appoggi le chiavi, guardi il neon dalla finestra e capisci che hai appena fatto un brindisi col destino, campione.
+`.trim()
+};
+
+const EXAMPLES_EN = {
+  whatif: `
+I can already see you: a few boxes, the right things, the rest you leave without guilt. You move slowly but sure, the new place lets you breathe better. Bright cafés, simple streets, kind faces; routines settle and sleep falls in line. One afternoon the quiet of the house surprises you, that sound of “I’m getting there”. Small rituals: the mug, the Saturday market, a route that becomes yours. Nostalgia ebbs in lower waves, habit does its work; tomorrow you’ll notice you call this neighborhood “home”.
+`.trim(),
+  wtf: `
+You legend, you shake the suitcase like a cocktail and toss in new life, mismatched socks and a couple of rotten ideas that somehow smell like miracles; you arrive with your nerves doing the twist and the GPS muttering, but the bars adopt you before the lease does, the first aperitif calls your name, the lamp post winks like a drinking buddy, the bartender turns into a life coach by spritz number two, you sign a pact with the non-slippery sidewalk and the oven that hugs, then you get home late, drop the keys, watch the neon, and realize you just toasted with fate, champ.
+`.trim()
+};
+
+/* ---------- Post-processing: compatta & limita parole ---------- */
+function clampWords(text, min, max) {
+  let t = (text || "").replace(/\s+/g, " ").trim();
+  const words = t.split(" ");
+  if (words.length > max) t = words.slice(0, max).join(" ") + ".";
+  // se è troppo corto, lasciamo così (meglio conciso che riempito a caso)
+  return t;
 }
-
-/* ---------- Micro few-shot (solo ritmo, non da copiare) ---------- */
-const SEED_WHATIF_IT = `
-Ritmo: frasi medie, immagini pratiche (bar luminosi, strade semplici, silenzio buono della casa),
-finale morbido che guarda a domani senza slogan. No esclamazioni/domande.
-`.trim();
-
-const SEED_WTF_IT = `
-Ritmo: soprannome al volo, catena di immagini urbane-notturne (neon, spritz, lampioni complici),
-un tocco nonsense affettuoso; chiusura con brindisi affettuoso, variata ogni volta.
-`.trim();
-
-/* ---------- Post-processing: pulizia + lunghezze + filtro sobrio ---------- */
-const BAD_WORDS = [
-  "cazzo","merda","vaffanculo","stronzo","porca miseria","bestemmia"
-];
-const badWordsRe = new RegExp(`\\b(${BAD_WORDS.join("|")})\\b`, "gi");
 
 function tidy(text, style) {
-  let t = (text || "").trim();
-
-  // compatta spazi/punteggiatura
-  t = t.replace(/\s+/g, " ").replace(/\s*\.\s*\./g, ". ").trim();
-
-  // lunghezze stile-esempi
-  const maxWords = style === "wtf" ? 140 : 125;
-  const minWords = style === "wtf" ? 105 : 95;
-  const words = t.split(/\s+/);
-  if (words.length > maxWords) t = words.slice(0, maxWords).join(" ") + ".";
-  if (words.length < minWords) t += " ";
-
-  // filtro parolacce pesanti (soft)
-  t = t.replace(badWordsRe, "caspita");
-
-  return t.trim();
+  const t = text.replace(/\s+/g, " ").trim();
+  const ranges = style === "wtf" ? { min: 105, max: 125 } : { min: 85, max: 100 };
+  return clampWords(t, ranges.min, ranges.max);
 }
 
-/* ---------- Handler ---------- */
+/* ---------- API Handler ---------- */
 export default async function handler(req, res) {
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -101,38 +95,43 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "missing_api_key" });
     }
 
+    // Input
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-    const { domanda = "", stile = "whatif", lang = "it" } = body;
+    const { domanda = "", stile = "whatif", lang = "it", extra = "" } = body;
     if (!domanda || typeof domanda !== "string") {
-      return res.status(400).json({ error: "domanda_required" });
+      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    const system = stile === "wtf" ? systemWTF(lang) : systemWhatIf(lang);
-    const seed   = stile === "wtf" ? SEED_WTF_IT    : SEED_WHATIF_IT;
+    const systemPrompt = personaSystem(stile, lang);
+    const userPrompt = isEn(lang)
+      ? `Question: "${domanda}". Context: "${String(extra || "").trim()}". Keep opening/ending varied (no fixed catchphrases).`
+      : `Domanda: "${domanda}". Contesto: "${String(extra || "").trim()}". Incipit/chiusura variati (nessuna formula fissa).`;
 
-    const userMsg = isEn(lang)
-      ? `Question: "${domanda}". Keep openings and closings varied (no fixed catchphrases).`
-      : `Domanda: "${domanda}". Mantieni incipit e chiusure variati (nessuna formula fissa).`;
+    const examples = isEn(lang) ? EXAMPLES_EN : EXAMPLES_IT;
+    const styleSeed = stile === "wtf" ? examples.wtf : examples.whatif;
 
+    // Generate
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.88 : 0.72,
+      temperature: stile === "wtf" ? 0.9 : 0.78,
       frequency_penalty: stile === "wtf" ? 0.35 : 0.25,
       presence_penalty: 0.1,
-      max_tokens: 360, // poi rifiliamo con tidy()
+      max_tokens: 360, // poi rifiliamo
       messages: [
-        { role: "system", content: system },
-        { role: "system", content: `RHYTHM EXAMPLE (do not copy text):\n${seed}` },
-        { role: "user", content: userMsg }
+        { role: "system", content: systemPrompt },
+        // ancora di ritmo/tono — NON da copiare
+        { role: "system", content: `STYLE EXAMPLE (do not copy verbatim):\n${styleSeed}` },
+        { role: "user", content: userPrompt }
       ]
     });
 
-    const raw = completion?.choices?.[0]?.message?.content || "";
-    const answer = tidy(raw, stile);
+    const raw = completion?.choices?.[0]?.message?.content?.trim() || "";
+    if (!raw) throw new Error("empty_model_response");
 
+    const answer = tidy(raw, stile);
     return res.status(200).json({ answer, style: stile, lang });
   } catch (err) {
-    console.error("❌ /api/ask error:", err);
+    console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
 }
