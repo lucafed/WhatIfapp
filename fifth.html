@@ -69,8 +69,7 @@ const I18N={
       copied:"Copiato!", error:"[errore server]"},
   en:{tWTF:"⚡ What the F — Result", tWHF:"💡 What if — Result",
       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-      share:"📤 Share / Copy", again:"🔁 Ask another",
-      copied:"Copied!", error:"[server error]"}
+      share:"📤 Share / Copy", again:"🔁 Ask another", copied:"Copied!", error:"[server error]"}
 }[lang];
 
 document.getElementById('langBtn').textContent=lang.toUpperCase();
@@ -83,35 +82,47 @@ document.getElementById('lblA').textContent=I18N.a;
 document.getElementById('shareBtn').textContent=I18N.share;
 document.getElementById('againBtn').textContent=I18N.again;
 
+const params=new URLSearchParams(location.search);
+const isReplay = params.get('view')==='replay';
+
 let domanda=""; let answerText="";
 
-const req = JSON.parse(LS.getItem('whatif_request')||'{}');
-domanda = req.domanda || LS.getItem('domanda') || "";
-document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
-document.getElementById('subtitle').textContent = I18N.sub(domanda);
-document.getElementById('qView').textContent = domanda || '—';
+if(isReplay){
+  const r = JSON.parse(LS.getItem('replay_story')||'{}');
+  domanda = r.domanda || LS.getItem('domanda') || "";
+  answerText = r.answer || "";
+  document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
+  document.getElementById('subtitle').textContent = I18N.sub(domanda);
+  document.getElementById('qView').textContent = domanda || '—';
+  document.getElementById('answer').textContent = answerText || '—';
+} else {
+  const req = JSON.parse(LS.getItem('whatif_request')||'{}');
+  domanda = req.domanda || LS.getItem('domanda') || "";
+  document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
+  document.getElementById('subtitle').textContent = I18N.sub(domanda);
+  document.getElementById('qView').textContent = domanda || '—';
 
-(async ()=>{
-  try{
-    const r = await fetch("/api/ask",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ domanda, lang, stile:style, extra:req.extra||"" })
-    });
-    const data = await r.json();
-    if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
-    answerText = (data.answer||"").trim();
-    document.getElementById('answer').textContent = answerText;
+  (async ()=>{
+    try{
+      const r = await fetch("/api/ask",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({ domanda, lang, stile:style, extra:"" })
+      });
+      const data = await r.json();
+      if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
+      answerText = (data.answer||"").trim();
+      document.getElementById('answer').textContent = answerText;
 
-    // storia locale
-    const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, risposta:answerText, stile:style, ts:Date.now() });
-    LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-  }catch(e){
-    document.getElementById('answer').textContent = I18N.error;
-    console.error(e);
-  }
-})();
+      const hist = JSON.parse(LS.getItem('cronologia')||'[]');
+      hist.push({ domanda, risposta:answerText, stile:style, ts:Date.now() });
+      LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
+    }catch(e){
+      document.getElementById('answer').textContent = I18N.error;
+      console.error(e);
+    }
+  })();
+}
 
 // Share / Copy
 document.getElementById('shareBtn').onclick=async()=>{
@@ -127,7 +138,7 @@ document.getElementById('shareBtn').onclick=async()=>{
   }catch{}
 };
 
-// ask another
+// again
 document.getElementById('againBtn').onclick=()=>{ location.href='fourth.html'; };
 </script>
 </body>
