@@ -17,7 +17,7 @@ main{max-width:820px;margin:auto;padding:20px}
 h1{font-size:clamp(22px,5vw,30px);color:var(--acc2);text-align:center;margin:10px 0 6px}
 .sub{color:var(--muted);text-align:center;margin:0 0 10px}
 .card{background:rgba(20,28,34,.9);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px;backdrop-filter:blur(10px);margin-top:16px}
-.story{white-space:pre-wrap;line-height:1.65;font-size:18px;letter-spacing:.1px}
+.story{white-space:pre-wrap;line-height:1.6;font-size:18px;letter-spacing:.1px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
 .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink)}
@@ -69,7 +69,8 @@ const I18N={
       copied:"Copiato!", error:"[errore server]"},
   en:{tWTF:"⚡ What the F — Result", tWHF:"💡 What if — Result",
       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-      share:"📤 Share / Copy", again:"🔁 Ask another", copied:"Copied!", error:"[server error]"}
+      share:"📤 Share / Copy", again:"🔁 Ask another",
+      copied:"Copied!", error:"[server error]"}
 }[lang];
 
 document.getElementById('langBtn').textContent=lang.toUpperCase();
@@ -87,33 +88,47 @@ const isReplay = params.get('view')==='replay';
 
 let domanda=""; let answerText="";
 
+function setTitles(q){
+  document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
+  document.getElementById('subtitle').textContent = I18N.sub(q);
+  document.getElementById('qView').textContent = q || '—';
+}
+
 if(isReplay){
   const r = JSON.parse(LS.getItem('replay_story')||'{}');
   domanda = r.domanda || LS.getItem('domanda') || "";
   answerText = r.answer || "";
-  document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
-  document.getElementById('subtitle').textContent = I18N.sub(domanda);
-  document.getElementById('qView').textContent = domanda || '—';
+  setTitles(domanda);
   document.getElementById('answer').textContent = answerText || '—';
+  document.getElementById('metaInfo').textContent = (style==='wtf'?'Tone: What the F':'Tone: What if');
 } else {
   const req = JSON.parse(LS.getItem('whatif_request')||'{}');
   domanda = req.domanda || LS.getItem('domanda') || "";
-  document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
-  document.getElementById('subtitle').textContent = I18N.sub(domanda);
-  document.getElementById('qView').textContent = domanda || '—';
+  setTitles(domanda);
 
   (async ()=>{
     try{
+      // passiamo anche extra/micro se presenti (niente follow-up)
       const r = await fetch("/api/ask",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({ domanda, lang, stile:style, extra:"", micro:req.micro||{} })
+        body:JSON.stringify({
+          domanda,
+          lang,
+          stile: style,
+          extra: (req.extra || ""),     // <— ora passa l’extra
+          micro: (req.micro || {})      // non usato dall’API, ma non fa danni
+        })
       });
       const data = await r.json();
       if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
+
       answerText = (data.answer||"").trim();
       document.getElementById('answer').textContent = answerText;
+      document.getElementById('metaInfo').textContent =
+        (style==='wtf'?'Tone: What the F':'Tone: What if');
 
+      // cronologia locale
       const hist = JSON.parse(LS.getItem('cronologia')||'[]');
       hist.push({ domanda, risposta:answerText, stile:style, ts:Date.now() });
       LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
@@ -138,7 +153,7 @@ document.getElementById('shareBtn').onclick=async()=>{
   }catch{}
 };
 
-// ask another → torna in quarta con domanda vuota (o la stessa se vuoi)
+// back to question
 document.getElementById('againBtn').onclick=()=>{ location.href='fourth.html'; };
 </script>
 </body>
