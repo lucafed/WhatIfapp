@@ -83,61 +83,35 @@ document.getElementById('lblA').textContent=I18N.a;
 document.getElementById('shareBtn').textContent=I18N.share;
 document.getElementById('againBtn').textContent=I18N.again;
 
-const params=new URLSearchParams(location.search);
-const isReplay = params.get('view')==='replay';
-
 let domanda=""; let answerText="";
 
-function setTitles(q){
-  document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
-  document.getElementById('subtitle').textContent = I18N.sub(q);
-  document.getElementById('qView').textContent = q || '—';
-}
+const req = JSON.parse(LS.getItem('whatif_request')||'{}');
+domanda = req.domanda || LS.getItem('domanda') || "";
+document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
+document.getElementById('subtitle').textContent = I18N.sub(domanda);
+document.getElementById('qView').textContent = domanda || '—';
 
-if(isReplay){
-  const r = JSON.parse(LS.getItem('replay_story')||'{}');
-  domanda = r.domanda || LS.getItem('domanda') || "";
-  answerText = r.answer || "";
-  setTitles(domanda);
-  document.getElementById('answer').textContent = answerText || '—';
-  document.getElementById('metaInfo').textContent = (style==='wtf'?'Tone: What the F':'Tone: What if');
-} else {
-  const req = JSON.parse(LS.getItem('whatif_request')||'{}');
-  domanda = req.domanda || LS.getItem('domanda') || "";
-  setTitles(domanda);
+(async ()=>{
+  try{
+    const r = await fetch("/api/ask",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ domanda, lang, stile:style, extra:req.extra||"" })
+    });
+    const data = await r.json();
+    if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
+    answerText = (data.answer||"").trim();
+    document.getElementById('answer').textContent = answerText;
 
-  (async ()=>{
-    try{
-      // passiamo anche extra/micro se presenti (niente follow-up)
-      const r = await fetch("/api/ask",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          domanda,
-          lang,
-          stile: style,
-          extra: (req.extra || ""),     // <— ora passa l’extra
-          micro: (req.micro || {})      // non usato dall’API, ma non fa danni
-        })
-      });
-      const data = await r.json();
-      if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
-
-      answerText = (data.answer||"").trim();
-      document.getElementById('answer').textContent = answerText;
-      document.getElementById('metaInfo').textContent =
-        (style==='wtf'?'Tone: What the F':'Tone: What if');
-
-      // cronologia locale
-      const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-      hist.push({ domanda, risposta:answerText, stile:style, ts:Date.now() });
-      LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-    }catch(e){
-      document.getElementById('answer').textContent = I18N.error;
-      console.error(e);
-    }
-  })();
-}
+    // storia locale
+    const hist = JSON.parse(LS.getItem('cronologia')||'[]');
+    hist.push({ domanda, risposta:answerText, stile:style, ts:Date.now() });
+    LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
+  }catch(e){
+    document.getElementById('answer').textContent = I18N.error;
+    console.error(e);
+  }
+})();
 
 // Share / Copy
 document.getElementById('shareBtn').onclick=async()=>{
@@ -153,7 +127,7 @@ document.getElementById('shareBtn').onclick=async()=>{
   }catch{}
 };
 
-// back to question
+// ask another
 document.getElementById('againBtn').onclick=()=>{ location.href='fourth.html'; };
 </script>
 </body>
