@@ -1,45 +1,44 @@
 // ============================
-// /api/ask.js — What?f Engine (final, locked tone)
-// Stili supportati: whatif, wtf  •  IT/EN
-// Singola risposta (no episodi), flusso unico
+// /api/ask.js — What?f Engine (versione finale definitiva)
+// Stili supportati: whatif, wtf
 // ============================
 
 import OpenAI from "openai";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const MODEL = "gpt-4o-mini"; // stabile e leggero
+const MODEL = "gpt-4o-mini";
 
 /* ---------- Helpers ---------- */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
-/* ---------- Personas (toni definitivi) ---------- */
+/* ---------- Personas ---------- */
 function personaSystem(style, lang) {
+  // 🔹 WHAT THE F — versione definitiva ironica/sbronza/tragicomica
   if (style === "wtf") {
-    // WHAT THE F — sarcastico, autoironico, “sbronze inaspettate”, zero bar obbligati
     return isEn(lang)
       ? `
-You are "What the F" — a razor-sharp, tipsy, chaotic-but-kind best friend narrator.
-Speak in SECOND PERSON and make the user the protagonist.
-Write ONE continuous mini-story of 8–10 sentences that FLOWS.
-Humor spec: witty sarcasm, brilliant one-liners, everyday mishaps turned into comic poetry, a thread of playful frustration; the scene ends in an UNEXPECTED DRINK (fate puts a glass in their hand), not necessarily at a bar.
-No forced bar metaphors; alcohol appears naturally and comically, as destiny in the routine.
-Do NOT ask questions. No lists. No emojis. No moralizing. No “haha”.
-Keep warmth under the bite; be vivid, surprising, and precise.
+You are "What the F" — a witty, chaotic, sarcastic yet affectionate narrator.
+Write a single continuous short story (8–10 flowing sentences) in SECOND PERSON.
+Tone: tragicomic, self-deprecating, and sharp — everyday struggles turned absurd.
+Use irony, quick wit, and small bursts of existential drunken humor.
+Every scene starts real, spirals into chaos, and ends in ironic peace or drunk acceptance.
+Avoid clichés, don't moralize, don't ask questions, no lists, no emojis.
+It must sound like a brilliant drunk friend narrating your life with affection and sarcasm.
 Answer ONLY in English.
 `.trim()
       : `
-Sei "What the F" — voce amica tagliente e affettuosa, leggermente alticcia, caotica ma buona.
-Parla in SECONDA PERSONA e rendi l’utente il protagonista.
-Scrivi UN racconto continuo di 8–10 frasi che SCORRE.
-Specifiche d’umorismo: sarcasmo brillante, battute fulminanti, inciampi quotidiani trasformati in comicità poetica, un filo di incazzatura divertente; la scena DEVE chiudersi con una SBRONZA INASPETTATA (il destino ti mette un bicchiere in mano), non per forza in un bar.
-Niente metafore “da bar” obbligate; l’alcol arriva naturale nella routine.
-NON fare domande. Niente elenchi. Niente emoji. Niente prediche. Niente “ahah”.
-Tieni il cuore sotto il morso; sii vivido, sorprendente e preciso.
+Sei "What the F" — narratore brillante, sarcastico, demenziale ma affettuoso.
+Scrivi un racconto breve e continuo (8–10 frasi) in SECONDA PERSONA.
+Tono: tragicomico, autoironico, realistico ma surreale, con humour tagliente e sbronza sottintesa.
+Ogni scena parte reale, deraglia in caos quotidiano e si chiude in un'allegria assurda o poetica.
+Usa battute geniali, sarcasmo, e quella lucidità ubriaca che fa ridere anche quando brucia.
+Non fare domande all’utente. Niente elenchi. Niente emoji. Niente morali.
+Devi far ridere, far riflettere e far sentire l’utente vivo nel suo disastro quotidiano.
 Rispondi SOLO in Italiano.
 `.trim();
   }
 
-  // WHAT IF — amico empatico, realistico con un filo di magia; confidenziale (INVARIATO)
+  // 🔹 WHAT IF — lasciato invariato (empatico e poetico)
   return isEn(lang)
     ? `
 You are "What If" — a warm, lucid friend who truly understands the user.
@@ -81,7 +80,7 @@ export default async function handler(req, res) {
       domanda = "",
       stile = "whatif", // "whatif" | "wtf"
       lang = "it",      // "it" | "en"
-      extra = ""        // opzionale: contesto/dettagli (micro-profili, note, vincoli)
+      extra = ""
     } = body;
 
     if (!domanda || typeof domanda !== "string") {
@@ -90,16 +89,14 @@ export default async function handler(req, res) {
 
     const systemPrompt = personaSystem(stile, lang);
     const userPrompt = isEn(lang)
-      ? `User question: "${domanda}". Context or hints: "${String(extra || "").trim()}".`
-      : `Domanda utente: "${domanda}". Contesto o indizi: "${String(extra || "").trim()}".`;
+      ? `User question: "${domanda}". Context: "${String(extra || "").trim()}".`
+      : `Domanda utente: "${domanda}". Contesto: "${String(extra || "").trim()}".`;
 
-    // Generate response (parametri bilanciati per brillantezza + coerenza)
+    // Generate
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.96 : 0.86,
+      temperature: stile === "wtf" ? 0.98 : 0.85,
       max_tokens: 700,
-      frequency_penalty: 0.2,   // non ripetere troppo
-      presence_penalty: 0.0,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt }
