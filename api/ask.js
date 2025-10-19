@@ -1,5 +1,5 @@
 // ============================
-// /api/ask.js — What?f Engine (bilingue, episodio+bar lock • friendly open)
+// /api/ask.js — What?f Engine (bilingue, episodio+bar lock • friendly open + Easter Egg)
 // Stili: whatif, wtf  •  IT/EN
 // ============================
 
@@ -10,6 +10,7 @@ const MODEL = "gpt-4o-mini";
 /* ---------- Utils ---------- */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const chance = (p) => Math.random() < p;
 
 function normLine(s = "") {
   return String(s)
@@ -26,7 +27,6 @@ function tightenSentences(text, maxSentences) {
     .split(/(?<=[.!?])\s+/)
     .map((x) => x.trim())
     .filter(Boolean);
-
   const out = [];
   const seen = new Set();
 
@@ -118,12 +118,11 @@ Mantieni SEMPRE questa voce; niente ripetizioni di immagini o idee.
 `.trim();
 }
 
-/* ---------- Style seeds (apertura amichevole, destino-al-bar) ---------- */
+/* ---------- Style seeds ---------- */
 const SEEDS_WTF_IT = [
   "Amico mio, esci con la testa piena di buoni propositi e il passo leggero: la città ti annusa, il neon fa l’occhiolino, e il bancone si comporta come se avesse già tenuto il posto a tuo nome.",
   "Campione, parti con l’idea dell’acqua frizzante e del rientro presto: poi il semaforo sbaglia ritmo, il profumo di luppolo ti saluta per primo, e un bicchiere compare come una vecchia conoscenza.",
   "Compà, dici “stasera leggero”, ma i tavolini allungano le gambe, il barista ti chiama per cognome e il destino appare sotto forma di giro offerto.",
-  // nuove aggiunte
   "Fratello, oggi sembri deciso a stare tranquillo: cammini dritto, guardi avanti, e perfino il vento sembra darti del lei. Ma poi un bar apre la porta da solo, la musica ti sussurra il nome, e una birra ti compare in mano come un miracolo carbonico.",
   "Amico, dici che vuoi solo fare due passi, ma il marciapiede ti trascina come un tapis roulant verso la felicità fermentata. Ti siedi, ordini acqua, e ti arriva un bicchiere che sa di tentazione e luppolo benedetto.",
   "Campione, giuri al mondo che stasera niente alcol, poi un lampione ti fa l’occhiolino e il destino ti versa uno spritz dal nulla. Provi a dire di no ma il bicchiere ti guarda con la stessa intensità di chi sa già come va a finire.",
@@ -135,7 +134,6 @@ const SEEDS_WTF_EN = [
   "Buddy, you step out full of good intentions and light footsteps: the city sniffs you, neon winks, and the counter behaves like it saved you a seat.",
   "Champ, you swear it’s sparkling water and an early night: then the traffic light loses the beat, hops perfume says hello, and a glass appears like an old friend.",
   "My friend, you mutter “tonight I’m good,” but tables grow legs, the bartender knows your last name, and destiny arrives as a round on the house.",
-  // new additions
   "Buddy, you promise a quiet night — candles, tea, self-respect — then destiny texts you 'just one drink' and the rest is liquid history. You wake up with new friends and someone’s hat, grinning like you shook hands with fate.",
   "Champ, you start steady, noble, hydrated; but the city smells like gin and bad decisions. You resist until a neon sign literally spells your name and a bartender hands you your destiny on the rocks.",
   "My friend, you say no tonight, then the air itself tastes like beer foam and the universe slides you a pint with your own reflection inside. By the second sip, you’re philosophical; by the third, you’re immortal.",
@@ -143,6 +141,13 @@ const SEEDS_WTF_EN = [
   "Bro, tonight was supposed to be calm, maybe a salad, maybe some self-care — but the stars align in the shape of a margarita, and suddenly the cosmos is buying the next round."
 ];
 
+/* --- Easter Egg: “Negroni Cosmico” --- */
+const EASTER_IT =
+  "Fratello, quella sera il cielo si è versato addosso come un Negroni cosmico: pianeti come cubetti di ghiaccio, Saturno che mescola con l’anello, e tu che giuri di bere solo metafore ma finisci in un brindisi galattico con la Via Lattea.";
+const EASTER_EN =
+  "Buddy, that night the sky poured itself like a cosmic Negroni — planets as ice cubes, Saturn stirring with its ring, and you swearing to drink only metaphors before clinking glasses with the Milky Way.";
+
+/* ---------- WHAT IF ---------- */
 const SEEDS_WHATIF_IT = [
   "Poche cose in valigia, luce buona sul tavolo, strade semplici: ti sistemi gli orari, il sonno torna educato, e la casa impara a respirare con te."
 ];
@@ -170,9 +175,16 @@ export default async function handler(req, res) {
     }
 
     const systemPrompt = personaSystem(stile, lang);
-    const seed = stile === "wtf"
-      ? (isEn(lang) ? pick(SEEDS_WTF_EN) : pick(SEEDS_WTF_IT))
-      : (isEn(lang) ? pick(SEEDS_WHATIF_EN) : pick(SEEDS_WHATIF_IT));
+
+    // Easter egg casuale (5% chance)
+    let seed;
+    if (stile === "wtf" && chance(0.05)) {
+      seed = isEn(lang) ? EASTER_EN : EASTER_IT;
+    } else {
+      seed = stile === "wtf"
+        ? (isEn(lang) ? pick(SEEDS_WTF_EN) : pick(SEEDS_WTF_IT))
+        : (isEn(lang) ? pick(SEEDS_WHATIF_EN) : pick(SEEDS_WHATIF_IT));
+    }
 
     const userPrompt = isEn(lang)
       ? `User question: "${domanda}". Context: "${String(extra || "").trim()}".
