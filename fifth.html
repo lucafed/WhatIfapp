@@ -135,10 +135,10 @@ document.getElementById('shareBtn').onclick=async()=>{
       document.getElementById('shareBtn').textContent = I18N.copied;
       setTimeout(()=>document.getElementById('shareBtn').textContent=I18N.share,1200);
     }
-  }catch{}i
-}
+  }catch{}
+};
 
-// ask another → torna in quarta con domanda vuota (o la stessa se vuoi)
+// ask another → torna in quarta
 document.getElementById('againBtn').onclick=()=>{ location.href='fourth.html'; };
 </script>
 </body>
