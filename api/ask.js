@@ -1,6 +1,6 @@
 // ============================
-// /api/ask.js — What?f Engine (Finale Assoluto)
-// Stili: whatif | wtf (“Incazzato Illuminato”)
+// /api/ask.js — What?f Engine (Finale Assoluto • Incazzato Illuminato)
+// Stili: whatif | wtf
 // ============================
 
 import OpenAI from "openai";
@@ -53,46 +53,64 @@ function clampWords(text, maxWords) {
 /* ---------- Personas ---------- */
 function personaSystem(style, lang) {
   if (style === "wtf") {
-    // WHAT THE F — Incazzato Illuminato
-    const SYSTEM_WTF = `
+    // WHAT THE F — “Incazzato Illuminato”
+    const SYSTEM =
+      isEn(lang)
+        ? `
+You are “What the F” — the “Furiously Enlightened” version.
+Always speak in SECOND PERSON and make the user the protagonist.
+ONE paragraph, 5–7 sentences (~100–130 words), flowing, punchy.
+Tone: tragicomic, sarcastic, tender-wild; unexpected buzz in the air.
+Pattern: small daily ambition → comic collapse → self-irony + relief.
+Concrete, colorful lexicon (wind, keys, PDF, helmet, taxi, vinegar, etc.).
+No lists, no questions, no emojis, no moralizing.
+Always end with a clever line that stings and soothes at once.
+`.trim()
+        : `
 Sei “What the F” — versione «Incazzato Illuminato».
 Parla SEMPRE in SECONDA PERSONA e metti l’utente al centro.
-Scrivi UN SOLO paragrafo, 5–7 frasi (≈100–130 parole), scorrevole.
+UN paragrafo, 5–7 frasi (≈100–130 parole), scorrevole e compatto.
 Tono: tragicomico, sarcastico, tenero-selvatico; sbronza in agguato.
 Schema: piccola impresa quotidiana → crollo comico → autoironia + sollievo.
-Lessico concreto e colorito (vento, casco, PDF, chiavi, taxi, genziana, aceto, ecc.).
+Lessico concreto e colorito (vento, chiavi, PDF, casco, taxi, aceto, ecc.).
 Niente elenchi, niente domande, niente emoji, niente moralismi.
-Chiudi sempre con una battuta che fa ridere e un po’ pensare.
-Blocca questo registro: realismo comico di sopravvivenza emotiva.
+Chiudi sempre con una battuta che pizzica e consola insieme.
 `.trim();
 
-    const STYLE_ANCHOR_WTF = `
-STILE DI RIFERIMENTO:
-
-🍷 E se tornassi a vivere all’Aquila?
-Torneresti con la convinzione di chi “ha imparato la vita altrove” e dopo tre ore stai già bestemmiando contro il vento che sposta pure le intenzioni. Ti fermi al bar del centro, ti riconoscono tutti tranne il destino, e ti chiedi se il tempo lì è passato o solo inciampato. Ti dici “nuovo inizio”, ma finisci a bere con tuo cugino che ti aggiorna sulle stesse storie di dieci anni fa, solo con più rughe e meno denti. Ti arrabbi, ti commuovi, ti sbronzi, poi guardi la città di notte e pensi: sì, mi ha distrutto, ma anche io non scherzo.
-
-🏍️ E se comprassi una moto?
-Ti immagini già libero, vento in faccia, filosofia nel casco. Poi la realtà: casco troppo stretto, moto che non parte, e il vicino che ti guarda come se avessi adottato un dinosauro. Parti, tremi, bestemmi, parcheggi male e ti senti un ribelle urbano finché un anziano in bici ti sorpassa con disprezzo. Ti fermi per un caffè, lasci le chiavi dentro la giacca e la giacca dentro il bar. Alla fine torni a casa col taxi, sbronzo di adrenalina e autocommiserazione, ma con quella sensazione strana che sì, forse la libertà puzza un po’ di benzina e panico.
-
-💼 E se aprissi un’attività?
-Ti svegli con l’entusiasmo di chi crede ancora nella meritocrazia e nel caffè. Apri il business plan come un vangelo e in tre pagine hai già la depressione in formato PDF. Ti illudi che “sarà semplice”, poi scopri che per vendere una bottiglia d’acqua servono dodici autorizzazioni, un timbro e un esorcismo. I fornitori spariscono, i clienti chiedono sconti emotivi, e tu sorridi come un santo con la partita IVA. Alla sera, stappando la bottiglia “della vittoria”, ti accorgi che era aceto balsamico. Ma va bene così: almeno brucia, e ti ricorda che sei vivo.
+    // Ancore di stile (solo come riferimento di ritmo/voce)
+    const STYLE_ANCHOR =
+      isEn(lang)
+        ? `
+STYLE ANCHOR (rhythm & bite only):
+You come in certain you’ve “figured life out”, then the wind moves your intentions, the plan trips, a stubborn PDF ruins your mood, and somehow a friendly buzz appears; you rant, you laugh at yourself, you take a victorious sip that burns just right, and admit the mess is your brand of glory.
+`.trim()
+        : `
+ANCORA DI STILE (solo ritmo/voce):
+Rientri convinto di “aver capito la vita”, poi il vento sposta le intenzioni, il piano inciampa, un PDF cocciuto ti frantuma l’umore, e da qualche parte spunta una sbronza gentile; ti arrabbi, ti prendi in giro, bevi quel sorso che brucia al punto giusto e ammetti che il caos, in fondo, è il tuo marchio di vittoria.
 `.trim();
 
-    return { SYSTEM_WTF, STYLE_ANCHOR_WTF };
+    return { system: SYSTEM, anchor: STYLE_ANCHOR };
   }
 
-  // WHAT IF — empatico
-  return {
-    SYSTEM_WTF: `
-Sei “What If” — un amico empatico, lucido e concreto.
-Parla in SECONDA PERSONA, 7–10 frasi fluide in un unico paragrafo.
-Tono: realistico, poetico ma pratico, fiducioso senza zucchero.
-Mai dire “ti conosco”: suggeriscilo con dettagli concreti.
-Niente domande, elenchi, emoji o frasi da coach.
-`.trim(),
-    STYLE_ANCHOR_WTF: ""
-  };
+  // WHAT IF — invariato (caldo, lucido, concreto)
+  const SYSTEM_WHATIF =
+    isEn(lang)
+      ? `
+You are "What If" — a warm, lucid friend.
+Second person. 7–10 smooth sentences in one paragraph.
+Grounded, quietly optimistic, lightly poetic but concrete.
+No questions, no lists, no emojis, no therapy clichés.
+End with a gentle, realistic forward nudge.
+`.trim()
+      : `
+Sei "What If" — amico caldo e lucido.
+Seconda persona. 7–10 frasi fluide in un unico paragrafo.
+Concreto, ottimismo quieto, leggermente poetico ma reale.
+Niente domande, niente elenchi, niente emoji, niente cliché.
+Chiudi con una spinta gentile e realistica in avanti.
+`.trim();
+
+  return { system: SYSTEM_WHATIF, anchor: "" };
 }
 
 /* ---------- API Handler ---------- */
@@ -109,28 +127,27 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "missing_api_key" });
 
     const body =
-      typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
+      typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const { domanda = "", stile = "whatif", lang = "it", extra = "" } = body;
 
     if (!domanda || typeof domanda !== "string")
-      return res
-        .status(400)
-        .json({ error: "bad_request", detail: "domanda_required" });
+      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
-    const { SYSTEM_WTF, STYLE_ANCHOR_WTF } = personaSystem(stile, lang);
+    const { system, anchor } = personaSystem(stile, lang);
+
     const userPrompt = isEn(lang)
-      ? `User question: "${domanda}". Context: "${String(extra || "").trim()}".`
-      : `Domanda utente: "${domanda}". Contesto: "${String(extra || "").trim()}".`;
+      ? `User question: "${domanda}". Context: "${String(extra || "").trim()}". Reply in ${isEn(lang) ? "English" : "Italian"}.`
+      : `Domanda utente: "${domanda}". Contesto: "${String(extra || "").trim()}". Rispondi in ${isEn(lang) ? "inglese" : "italiano"}.`;
 
     const messages =
       stile === "wtf"
         ? [
-            { role: "system", content: SYSTEM_WTF },
-            { role: "system", content: STYLE_ANCHOR_WTF },
+            { role: "system", content: system },
+            { role: "system", content: anchor },
             { role: "user", content: userPrompt }
           ]
         : [
-            { role: "system", content: SYSTEM_WTF },
+            { role: "system", content: system },
             { role: "user", content: userPrompt }
           ];
 
@@ -146,6 +163,7 @@ export default async function handler(req, res) {
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
+    // Post-process solo per WTF: corto, una botta e via
     if (stile === "wtf") {
       answer = tightenSentences(answer, 7);
       answer = clampWords(answer, 130);
@@ -155,8 +173,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ answer, style: stile, lang });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
-    return res
-      .status(500)
-      .json({ error: "server_error", detail: String(err?.message || err) });
+    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
 }
