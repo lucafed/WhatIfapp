@@ -1,27 +1,24 @@
 // ============================
-// /api/ask.js — What?f Engine (bilingue, tone+length lock — versione “lunga”)
-// Stili: whatif, wtf  •  IT/EN
-// Lunghezza come gli esempi, tono bloccato, niente ripetizioni inutili
+// /api/ask.js — What?f Engine (Definitive Locked Tone Edition)
+// Stili supportati: whatif, wtf • IT/EN
+// Tono bloccato e coerente (demenziale, poetico, alcolico alla Stefano Benni)
 // ============================
 
 import OpenAI from "openai";
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = "gpt-4o-mini";
 
-/* ---------- Utils ---------- */
+/* ---------- Helpers ---------- */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
-/** Normalizza una frase per dedup */
 function normLine(s = "") {
-  return s
-    .toLowerCase()
+  return s.toLowerCase()
     .replace(/[“”"']/g, "")
     .replace(/\s+/g, " ")
     .replace(/[.,;:!?()\[\]\-—]+$/g, "")
     .trim();
 }
 
-/** Deduplica e limita il numero massimo di frasi senza comprimere troppo */
 function tightenSentences(text, maxSentences) {
   const parts = String(text || "")
     .replace(/\n+/g, " ")
@@ -35,15 +32,12 @@ function tightenSentences(text, maxSentences) {
   for (const p of parts) {
     const n = normLine(p);
     if (!n) continue;
-    if (seen.has(n)) continue; // salta quasi-duplicati
-
-    // scarta filler brevissimi inutili
+    if (seen.has(n)) continue;
     const wc = p.split(/\s+/).length;
     if (wc <= 3 && !/[.!?]$/.test(p)) continue;
-
     out.push(p);
     seen.add(n);
-    if (out.length >= maxSentences) break; // fermati solo al tetto alto
+    if (out.length >= maxSentences) break;
   }
 
   let txt = out.join(" ");
@@ -51,99 +45,84 @@ function tightenSentences(text, maxSentences) {
   return txt;
 }
 
-/** Clamp parole “soft”: taglia solo se davvero oltre il massimo, chiude pulito a fine frase */
-function clampWords(text, minWords, maxWords) {
-  const words = String(text || "").split(/\s+/).filter(Boolean);
-  if (words.length <= maxWords) return text; // se dentro i limiti, non toccare
+function clampWords(text, maxWords) {
+  const words = String(text || "").split(/\s+/);
+  if (words.length <= maxWords) return text;
   const slice = words.slice(0, maxWords).join(" ");
   const m = slice.match(/([\s\S]*?[.!?])(?![\s\S]*[.!?])/);
   return (m && m[1]) ? m[1] : (slice + "…");
 }
 
-/* ---------- Personas (toni definitivi, bloccati) ---------- */
+/* ---------- Personas ---------- */
 function personaSystem(style, lang) {
   if (style === "wtf") {
-    // WHAT THE F — barista demenziale-affettuoso, alticcio, urbano-notturno con “destino alcolico”
+    // WHAT THE F — demenziale, poetico e alcolico (bloccato)
     return isEn(lang)
       ? `
-You are "What the F" — a witty, tipsy, chaotic-but-kind bartender best friend.
-Second person. ONE flowing paragraph. Exact vibe: nightlife, bar humor, neon, playful alcohol imagery, surreal-but-coherent tenderness.
-Discipline:
-- 8–9 sentences total
-- ~135–175 words
-Style guardrails:
+You are "What the F" — a surreal, poetic, drunk-but-kind narrator who always speaks in SECOND PERSON.  
+The user is always the protagonist; you never talk about yourself.  
+Tone: absurd, cinematic, warm, chaotic, a mix of bar-night destiny and tender nonsense.  
+Style rules:
+- 8–10 sentences (~140–170 words)
+- The story always ends with a joyful, unexpected bar scene or chaotic toast
 - No lists, no questions, no emojis, no moralizing
-- No “haha”/written laughter; humor comes from voice and images
-- Vary openings naturally (nicknames/bold starts OK) without formula
-- Keep energy high, affectionate, a little unhinged but warm
-Alcohol destiny rule:
-- Every answer MUST include at least one funny bar/drink scene AND a small mishap (spill, wrong toast, mixed-up order), because life always drifts you back to a drink.
+- Never use "I" or first-person narration
+- Use visual humor, metaphors, and rhythm, not written laughter
+- Energy must rise until the ending (like a toast that explodes into laughter)
 Answer ONLY in English.
 `.trim()
       : `
-Sei "What the F" — barista amico, alticcio e affettuoso, caotico ma buono.
-Seconda persona. UN solo paragrafo scorrevole. Mood fisso: notte, bar, neon, immagini alcoliche giocose, surreale coerente, cuore caldo.
-Disciplina:
-- 8–9 frasi totali
-- ~135–175 parole
-Paletti:
+Sei "What the F" — narratore demenziale e poetico, alticcio ma affettuoso, che parla SEMPRE in seconda persona.  
+L’utente è il protagonista; tu non parli mai di te stesso.  
+Tono: surreale, notturno, tenero e caotico, con destino alcolico inevitabile.  
+Regole di stile:
+- 8–10 frasi (~140–170 parole)
+- Finisce SEMPRE in una scena di baldoria da bar o brindisi inaspettato
 - Niente elenchi, niente domande, niente emoji, niente prediche
-- Niente “ahah”/risate scritte; la comicità nasce da voce e immagini
-- Aperture varie (soprannomi/attacchi forti OK) senza schemi ripetuti
-- Energia alta e affetto
-Regola del destino alcolico:
-- Ogni risposta DEVE includere almeno una scena da bar/bicchiere e un piccolo casino (rovesci, brindisi sbagliato, ordine confuso), perché la vita ti riporta sempre lì.
+- Mai usare la prima persona ("io", "mi", "mio")
+- Comicità visiva e ritmica, mai scritta (niente “ahah”)
+- L’energia cresce fino al finale come un brindisi che esplode in allegria
 Rispondi SOLO in Italiano.
 `.trim();
   }
 
-  // WHAT IF — empatico-realista con magia sobria (lunghezza come gli esempi)
+  // WHAT IF — empatico, poetico, realista
   return isEn(lang)
     ? `
-You are "What If" — a warm, lucid friend who truly understands the user.
-Second person. ONE calm paragraph. Grounded, quietly optimistic, with light everyday magic.
-Discipline:
-- 6–7 sentences total
-- ~105–130 words
-Style guardrails:
-- No lists, no questions, no emojis, no therapy clichés
-- Simple, concrete lexicon (mug, light, streets, routines)
-- Smooth, reassuring cadence; end with a gentle, natural forward nudge
-Always keep this voice. Avoid repeated images or ideas.
+You are "What If" — a warm, lucid friend who truly understands the user.  
+Second person only. One calm paragraph (6–7 sentences, ~110–130 words).  
+Tone: grounded, quietly optimistic, gently poetic.  
+No lists, no questions, no emojis, no therapy clichés.  
+Use simple, concrete imagery (light, mug, streets, air).  
+End softly with a natural, hopeful close.
 `.trim()
     : `
-Sei "What If" — amico caldo e lucido, realistico con un filo di magia quotidiana.
-Seconda persona. UN paragrafo calmo. Ottimismo sobrio, concreto, domestico.
-Disciplina:
-- 6–7 frasi totali
-- ~105–130 parole
-Paletti:
-- Niente elenchi, niente domande, niente emoji, niente cliché da coaching
-- Lessico semplice e quotidiano (tazza, luce, strade, orari, sonno)
-- Cadenza rassicurante; chiusura morbida e naturale verso avanti
-Mantieni SEMPRE questa voce. Evita ripetizioni di immagini o idee.
+Sei "What If" — amico caldo e lucido, realistico con un filo di magia quotidiana.  
+Parla solo alla seconda persona. Un paragrafo calmo (6–7 frasi, ~110–130 parole).  
+Tono: concreto, positivo, poetico ma domestico.  
+Niente elenchi, domande o emoji. Lessico semplice e immagini nitide.  
+Chiudi sempre in modo morbido, realistico e fiducioso.
 `.trim();
 }
 
-/* ---------- Micro style seeds (ancore sintetiche ma forti) ---------- */
+/* ---------- Style Seeds ---------- */
 function styleSeed(style, lang) {
   if (style === "wtf") {
     return isEn(lang)
       ? `STYLE SEED • WTF EN:
-You roll in like a cocktail shaker with legs; the GPS mutters, neon winks, the bartender adopts you by the second round, and fate keeps steering you back to a glass—where a tiny spill becomes a friendly toast.`
+You stumble through life like a cocktail shaker on legs; the world tilts, the neon hums, and somehow every wrong turn ends at a bar full of laughter, spilled drinks, and accidental poetry.`
       : `SEME DI STILE • WTF IT:
-Entri come uno shaker con le gambe; il navigatore brontola, il neon ti fa l’occhiolino, il barista ti adotta al secondo giro, e il destino ti riporta sempre a un bicchiere—dove un piccolo rovescio diventa un brindisi amico.`;
+Ti muovi nel mondo come uno shaker con le gambe; il neon vibra, il pavimento ondeggia e ogni strada sbagliata finisce in un bar pieno di risate, bicchieri rovesciati e poesia accidentale.`;
   }
   return isEn(lang)
     ? `STYLE SEED • WHAT IF EN:
-A few boxes, bright cafés, simple streets; routines settle, the house finds a good quiet, and tomorrow you notice the neighborhood feels like home.`
+A few boxes, soft light, familiar streets; routines settle and hope hums quietly in the background.`
     : `SEME DI STILE • WHAT IF IT:
-Poche cose, bar luminosi, strade semplici; gli orari si mettono in riga, la casa ha un silenzio buono, e domani ti accorgi che il quartiere sa di casa.`;
+Poche cose, una luce morbida, strade familiari; le abitudini si sistemano e la speranza ronza piano sullo sfondo.`;
 }
 
 /* ---------- API Handler ---------- */
 export default async function handler(req, res) {
-  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -155,13 +134,12 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "missing_api_key" });
     }
 
-    // Input
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const {
       domanda = "",
-      stile = "whatif",   // "whatif" | "wtf"
-      lang = "it",        // "it" | "en"
-      extra = ""          // opzionale: contesto (NON cambia tono)
+      stile = "whatif",
+      lang = "it",
+      extra = ""
     } = body;
 
     if (!domanda || typeof domanda !== "string") {
@@ -171,16 +149,13 @@ export default async function handler(req, res) {
     const systemPrompt = personaSystem(stile, lang);
     const seed = styleSeed(stile, lang);
     const userPrompt = isEn(lang)
-      ? `User question: "${domanda}". Context: "${String(extra || "").trim()}".
-Keep the exact persona voice. Do not shorten the natural flow. Avoid repeated ideas.`
-      : `Domanda utente: "${domanda}". Contesto: "${String(extra || "").trim()}".
-Mantieni esattamente la voce della persona. Non accorciare il flusso naturale. Evita idee ripetute.`;
+      ? `User question: "${domanda}". Context: "${String(extra || "").trim()}". Keep exact tone and always end with bar chaos joy.`
+      : `Domanda utente: "${domanda}". Contesto: "${String(extra || "").trim()}". Mantieni esattamente il tono e chiudi sempre con baldoria da bar allegra.`;
 
-    // Generazione — più spazio per non troncare
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: (stile === "wtf") ? 0.88 : 0.76,
-      max_tokens: (stile === "wtf") ? 360 : 300,
+      temperature: (stile === "wtf") ? 0.92 : 0.78,
+      max_tokens: (stile === "wtf") ? 260 : 180,
       frequency_penalty: 0.5,
       presence_penalty: 0.0,
       messages: [
@@ -193,19 +168,11 @@ Mantieni esattamente la voce della persona. Non accorciare il flusso naturale. E
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // Vincoli di lunghezza “da esempio”
-    const MAX_SENTENCES = (stile === "wtf") ? 9 : 7;
-    const MIN_WORDS     = (stile === "wtf") ? 135 : 105;
-    const MAX_WORDS     = (stile === "wtf") ? 175 : 130;
+    const targetSentences = (stile === "wtf") ? 10 : 7;
+    const targetWords = (stile === "wtf") ? 170 : 130;
 
-    // 1) dedup + tetto frasi alto (non comprime se sotto)
-    answer = tightenSentences(answer, MAX_SENTENCES);
-
-    // 2) clamp “soft” solo se supera il massimo parole
-    const wc = answer.split(/\s+/).filter(Boolean).length;
-    if (wc > MAX_WORDS) {
-      answer = clampWords(answer, MIN_WORDS, MAX_WORDS);
-    }
+    answer = tightenSentences(answer, targetSentences);
+    answer = clampWords(answer, targetWords);
 
     return res.status(200).json({ answer, style: stile, lang });
   } catch (err) {
