@@ -20,7 +20,6 @@ function normLine(s = "") {
     .trim();
 }
 
-/** Taglia a N frasi; elimina duplicati quasi-identici; mantiene ritmo. */
 function tightenSentences(text, maxSentences) {
   const parts = String(text || "")
     .replace(/\n+/g, " ")
@@ -35,11 +34,8 @@ function tightenSentences(text, maxSentences) {
     const n = normLine(p);
     if (!n) continue;
     if (seen.has(n)) continue;
-
-    // scarta filler brevissimi (<=3 parole) che non chiudono
     const wc = p.split(/\s+/).length;
     if (wc <= 3 && !/[.!?]$/.test(p)) continue;
-
     out.push(p);
     seen.add(n);
     if (out.length >= maxSentences) break;
@@ -50,7 +46,6 @@ function tightenSentences(text, maxSentences) {
   return txt;
 }
 
-/** Clamp parole con chiusura pulita (cerca fine frase) */
 function clampWords(text, maxWords) {
   const words = String(text || "").split(/\s+/);
   if (words.length <= maxWords) return text;
@@ -127,12 +122,25 @@ Mantieni SEMPRE questa voce; niente ripetizioni di immagini o idee.
 const SEEDS_WTF_IT = [
   "Amico mio, esci con la testa piena di buoni propositi e il passo leggero: la città ti annusa, il neon fa l’occhiolino, e il bancone si comporta come se avesse già tenuto il posto a tuo nome.",
   "Campione, parti con l’idea dell’acqua frizzante e del rientro presto: poi il semaforo sbaglia ritmo, il profumo di luppolo ti saluta per primo, e un bicchiere compare come una vecchia conoscenza.",
-  "Compà, dici “stasera leggero”, ma i tavolini allungano le gambe, il barista ti chiama per cognome e il destino appare sotto forma di giro offerto."
+  "Compà, dici “stasera leggero”, ma i tavolini allungano le gambe, il barista ti chiama per cognome e il destino appare sotto forma di giro offerto.",
+  // nuove aggiunte
+  "Fratello, oggi sembri deciso a stare tranquillo: cammini dritto, guardi avanti, e perfino il vento sembra darti del lei. Ma poi un bar apre la porta da solo, la musica ti sussurra il nome, e una birra ti compare in mano come un miracolo carbonico.",
+  "Amico, dici che vuoi solo fare due passi, ma il marciapiede ti trascina come un tapis roulant verso la felicità fermentata. Ti siedi, ordini acqua, e ti arriva un bicchiere che sa di tentazione e luppolo benedetto.",
+  "Campione, giuri al mondo che stasera niente alcol, poi un lampione ti fa l’occhiolino e il destino ti versa uno spritz dal nulla. Provi a dire di no ma il bicchiere ti guarda con la stessa intensità di chi sa già come va a finire.",
+  "Compà, sei in pace, respiri, senti che la vita ha un senso — poi senti anche l’odore del rum e il senso si sposta di due metri verso il bancone. Ti arrendi con la grazia di un santo e la sete di un poeta.",
+  "Amico mio, avevi giurato serata sobria: pigiama, tisana, documentario. Poi qualcuno ti scrive “solo un drink” e la realtà collassa in un sorriso appiccicoso di gin tonic. Ti risvegli con nuovi amici, un cappello che non è tuo e la sensazione di aver riso col destino."
 ];
+
 const SEEDS_WTF_EN = [
   "Buddy, you step out full of good intentions and light footsteps: the city sniffs you, neon winks, and the counter behaves like it saved you a seat.",
   "Champ, you swear it’s sparkling water and an early night: then the traffic light loses the beat, hops perfume says hello, and a glass appears like an old friend.",
-  "My friend, you mutter “tonight I’m good,” but tables grow legs, the bartender knows your last name, and destiny arrives as a round on the house."
+  "My friend, you mutter “tonight I’m good,” but tables grow legs, the bartender knows your last name, and destiny arrives as a round on the house.",
+  // new additions
+  "Buddy, you promise a quiet night — candles, tea, self-respect — then destiny texts you 'just one drink' and the rest is liquid history. You wake up with new friends and someone’s hat, grinning like you shook hands with fate.",
+  "Champ, you start steady, noble, hydrated; but the city smells like gin and bad decisions. You resist until a neon sign literally spells your name and a bartender hands you your destiny on the rocks.",
+  "My friend, you say no tonight, then the air itself tastes like beer foam and the universe slides you a pint with your own reflection inside. By the second sip, you’re philosophical; by the third, you’re immortal.",
+  "Pal, you take a stroll to clear your mind, but the sidewalk winks and your legs clock out of responsibility. You end up holding a glass you didn’t order, nodding like it’s always been part of the plan.",
+  "Bro, tonight was supposed to be calm, maybe a salad, maybe some self-care — but the stars align in the shape of a margarita, and suddenly the cosmos is buying the next round."
 ];
 
 const SEEDS_WHATIF_IT = [
@@ -144,7 +152,6 @@ const SEEDS_WHATIF_EN = [
 
 /* ---------- API Handler ---------- */
 export default async function handler(req, res) {
-  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -156,24 +163,16 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "missing_api_key" });
     }
 
-    // Input
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-    const {
-      domanda = "",
-      stile = "whatif",   // "whatif" | "wtf"
-      lang = "it",        // "it" | "en"
-      extra = ""          // opzionale: contesto (NON cambia tono)
-    } = body;
-
+    const { domanda = "", stile = "whatif", lang = "it", extra = "" } = body;
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
     const systemPrompt = personaSystem(stile, lang);
-    const seed =
-      stile === "wtf"
-        ? (isEn(lang) ? pick(SEEDS_WTF_EN) : pick(SEEDS_WTF_IT))
-        : (isEn(lang) ? pick(SEEDS_WHATIF_EN) : pick(SEEDS_WHATIF_IT));
+    const seed = stile === "wtf"
+      ? (isEn(lang) ? pick(SEEDS_WTF_EN) : pick(SEEDS_WTF_IT))
+      : (isEn(lang) ? pick(SEEDS_WHATIF_EN) : pick(SEEDS_WHATIF_IT));
 
     const userPrompt = isEn(lang)
       ? `User question: "${domanda}". Context: "${String(extra || "").trim()}".
@@ -187,7 +186,6 @@ Niente elenchi, domande, emoji, risate scritte.
 WTF: mini-episodio → piccola svolta → chiusura festosa al bar (il destino porta un brindisi); provi a restare sobrio ma il bicchiere arriva comunque; surreale coerente, affettuoso, mai cattivo.
 What If: calmo, concreto, ottimismo quieto; chiusura morbida in avanti.`;
 
-    // Generazione (parametri stretti per costanza)
     const completion = await client.chat.completions.create({
       model: MODEL,
       temperature: (stile === "wtf") ? 0.9 : 0.78,
@@ -205,10 +203,8 @@ What If: calmo, concreto, ottimismo quieto; chiusura morbida in avanti.`;
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // Lunghezze stabili come concordato
     const targetSentences = (stile === "wtf") ? 8 : 6;
     const targetWords = (stile === "wtf") ? 155 : 105;
-
     answer = tightenSentences(answer, targetSentences);
     answer = clampWords(answer, targetWords);
 
