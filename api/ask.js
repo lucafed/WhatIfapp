@@ -80,3 +80,4 @@ console.error("❌ [/api/ask] error:", err);
 return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
 }
 }
+
