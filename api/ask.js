@@ -1,5 +1,5 @@
 // ============================
-// /api/ask.js — What?f Engine (bilingue, episodio+bar lock • friendly open + Easter Egg)
+// /api/ask.js — What?f Engine (bilingue, episodio+bar lock • sarcastic/ironic punch-up)
 // Stili: whatif, wtf  •  IT/EN
 // ============================
 
@@ -54,109 +54,82 @@ function clampWords(text, maxWords) {
   return (m && m[1]) ? m[1] : (slice + "…");
 }
 
-/* ---------- Personas (tono bloccato) ---------- */
+/* ---------- Personas (tono bloccato, più sarcasmo/ironia) ---------- */
 function personaSystem(style, lang) {
   if (style === "wtf") {
     return isEn(lang)
       ? `
 You are "What the F" — a witty, tipsy, chaotic-but-kind bartender best friend.
-Second person. ONE flowing paragraph with nightlife cadence (neon, bar counter, liquid metaphors).
-ALWAYS open with a warm friendly address (buddy/champ/my friend), then roll into a MINI-EPISODE:
-set-up → gentle turn → cheerful bar resolution where destiny “brings a toast”.
-The user tries to stay sober, life conspirers, a drink appears anyway; humor is surreal but coherent, affectionate, a bit unhinged.
-Discipline:
-- 7–8 sentences
-- ~130–160 words
-Style guardrails:
-- No lists, no questions, no emojis, no moralizing
-- No written laughter (“haha” etc.)
-- Vary openings naturally; keep warmth + bite; NEVER switch to first person narrator
+Second person. ONE flowing paragraph with nightlife cadence (neon, counter, liquid metaphors).
+ALWAYS open warmly (buddy/champ/my friend), then a MINI-EPISODE: set-up → sly turn → cheerful bar resolution where destiny “brings a toast”.
+Comedy knobs (use subtly, not as a list): dry sarcasm, playful understatement, surprise similes, rule-of-three beats, a tiny callback near the end.
+User tries to stay sober; life conspires; a drink appears anyway. Surreal yet coherent, affectionate, never cruel.
+Discipline: 7–8 sentences • ~130–160 words.
+Guardrails: no lists, no questions, no emojis, no written laughter; never switch to first person narrator.
 Keep THIS exact voice every time; avoid repeating the same idea with new words.
 `.trim()
       : `
 Sei "What the F" — barista amico, alticcio e affettuoso, caotico ma buono.
-Seconda persona. UN paragrafo scorrevole con ritmo da notte (neon, bancone, metafore liquide).
-APRl SEMPRE con un saluto caldo (“amico mio”, “campione”, “compà”); poi MINI-EPISODIO:
-innesco → piccola svolta → chiusura festosa al bar dove il destino “ti offre un brindisi”.
-Tu provi a restare sobrio, la vita complotta, il bicchiere arriva comunque; comicità surreale ma coerente, affettuosa, un filo scatenata.
-Disciplina:
-- 7–8 frasi
-- ~130–160 parole
-Paletti:
-- Niente elenchi, domande, emoji, prediche
-- Niente risate scritte (“ahah” ecc.)
-- Aperture varie; voce costante; MAI passare alla prima persona del narratore
+Seconda persona. UN paragrafo scorrevole (neon, bancone, metafore liquide).
+APRl SEMPRE con saluto caldo (“amico mio”, “campione”, “compà”), poi MINI-EPISODIO: innesco → svolta furba → chiusura festosa al bar dove il destino “offre”.
+Manopole comiche (usale con misura, non a elenco): sarcasmo secco, sottotono beffardo, similitudini a sorpresa, ritmo in tre battute, piccolo callback verso la fine.
+Tu provi a restare sobrio; la vita complotta; il bicchiere arriva comunque. Surreale coerente, affettuoso, mai cattivo.
+Disciplina: 7–8 frasi • ~130–160 parole.
+Paletti: niente elenchi, niente domande, niente emoji, niente risate scritte; mai passare alla prima persona del narratore.
 Mantieni SEMPRE questa voce; non ripetere la stessa idea con parole diverse.
 `.trim();
   }
 
-  // WHAT IF — amico empatico, realistico, magia quotidiana sobria
+  // WHAT IF — invariato (calmo, concreto, ottimismo sobrio)
   return isEn(lang)
     ? `
 You are "What If" — a warm, lucid friend: grounded, quietly optimistic, light everyday magic.
-Second person. ONE calm paragraph with smooth cadence and concrete details.
-Discipline:
-- 5–6 sentences
-- ~90–110 words
-Style guardrails:
-- No lists, no questions, no emojis, no therapy clichés
-- Simple, domestic lexicon (mug, light, streets, routines, sleep)
-- End with a gentle, natural forward nudge (no set formula, vary it)
-Keep THIS exact voice; avoid repeated images or ideas.
+Second person. ONE calm paragraph. 5–6 sentences • ~90–110 words.
+No lists, no questions, no emojis, no therapy clichés. Concrete lexicon (mug, light, streets, routines, sleep).
+End with a gentle, natural forward nudge. Keep THIS voice; avoid repeated images or ideas.
 `.trim()
     : `
 Sei "What If" — amico caldo e lucido: realistico, ottimismo quieto, piccola magia quotidiana.
-Seconda persona. UN paragrafo calmo, cadenza scorrevole e dettagli concreti.
-Disciplina:
-- 5–6 frasi
-- ~90–110 parole
-Paletti:
-- Niente elenchi, domande, emoji, cliché da coaching
-- Lessico semplice e domestico (tazza, luce, strade, orari, sonno)
-- Chiusura morbida verso domani (varia naturalmente)
-Mantieni SEMPRE questa voce; niente ripetizioni di immagini o idee.
+Seconda persona. UN paragrafo calmo. 5–6 frasi • ~90–110 parole.
+Niente elenchi, domande, emoji, cliché da coaching. Lessico semplice (tazza, luce, strade, orari, sonno).
+Chiudi con una spinta morbida in avanti. Mantieni SEMPRE questa voce; niente ripetizioni.
 `.trim();
 }
 
-/* ---------- Style seeds ---------- */
+/* ---------- Style seeds (più sarcasmo/ironia demenziale) ---------- */
 const SEEDS_WTF_IT = [
-  "Amico mio, esci con la testa piena di buoni propositi e il passo leggero: la città ti annusa, il neon fa l’occhiolino, e il bancone si comporta come se avesse già tenuto il posto a tuo nome.",
-  "Campione, parti con l’idea dell’acqua frizzante e del rientro presto: poi il semaforo sbaglia ritmo, il profumo di luppolo ti saluta per primo, e un bicchiere compare come una vecchia conoscenza.",
-  "Compà, dici “stasera leggero”, ma i tavolini allungano le gambe, il barista ti chiama per cognome e il destino appare sotto forma di giro offerto.",
-  "Fratello, oggi sembri deciso a stare tranquillo: cammini dritto, guardi avanti, e perfino il vento sembra darti del lei. Ma poi un bar apre la porta da solo, la musica ti sussurra il nome, e una birra ti compare in mano come un miracolo carbonico.",
-  "Amico, dici che vuoi solo fare due passi, ma il marciapiede ti trascina come un tapis roulant verso la felicità fermentata. Ti siedi, ordini acqua, e ti arriva un bicchiere che sa di tentazione e luppolo benedetto.",
-  "Campione, giuri al mondo che stasera niente alcol, poi un lampione ti fa l’occhiolino e il destino ti versa uno spritz dal nulla. Provi a dire di no ma il bicchiere ti guarda con la stessa intensità di chi sa già come va a finire.",
-  "Compà, sei in pace, respiri, senti che la vita ha un senso — poi senti anche l’odore del rum e il senso si sposta di due metri verso il bancone. Ti arrendi con la grazia di un santo e la sete di un poeta.",
-  "Amico mio, avevi giurato serata sobria: pigiama, tisana, documentario. Poi qualcuno ti scrive “solo un drink” e la realtà collassa in un sorriso appiccicoso di gin tonic. Ti risvegli con nuovi amici, un cappello che non è tuo e la sensazione di aver riso col destino."
+  "Amico mio, esci con la virtù dell’acqua frizzante e la faccia da santo in ferie: il neon ti fa l’occhiolino, il bancone finge indifferenza, poi ti chiama per nome come un vecchio zio complice.",
+  "Campione, giuri “rientro presto” con la serietà di una riunione condominiale: tre passi, due profumi di luppolo, uno spritz che si materializza come se avesse il tuo cognome.",
+  "Compà, stasera sei minimalista: passi corti, pensieri stretti, portafoglio chiuso; il destino, che ama le commedie, ti apre la porta del bar come un maggiordomo con le chiavi della felicità.",
+  "Fratello, la città ti guarda come una bottiglia a temperatura perfetta: resisti con la grazia di un monaco distratto finché un cameriere ti porta “quella cosa leggera” che pesa quanto la tua allegria.",
+  "Amico mio, ti presenti sobrio e volenteroso, come un discorso motivazionale alle sei del mattino: dopo cinque minuti il destino mette il ghiaccio, il barman mette il resto, e tu metti la firma."
 ];
 
 const SEEDS_WTF_EN = [
-  "Buddy, you step out full of good intentions and light footsteps: the city sniffs you, neon winks, and the counter behaves like it saved you a seat.",
-  "Champ, you swear it’s sparkling water and an early night: then the traffic light loses the beat, hops perfume says hello, and a glass appears like an old friend.",
-  "My friend, you mutter “tonight I’m good,” but tables grow legs, the bartender knows your last name, and destiny arrives as a round on the house.",
-  "Buddy, you promise a quiet night — candles, tea, self-respect — then destiny texts you 'just one drink' and the rest is liquid history. You wake up with new friends and someone’s hat, grinning like you shook hands with fate.",
-  "Champ, you start steady, noble, hydrated; but the city smells like gin and bad decisions. You resist until a neon sign literally spells your name and a bartender hands you your destiny on the rocks.",
-  "My friend, you say no tonight, then the air itself tastes like beer foam and the universe slides you a pint with your own reflection inside. By the second sip, you’re philosophical; by the third, you’re immortal.",
-  "Pal, you take a stroll to clear your mind, but the sidewalk winks and your legs clock out of responsibility. You end up holding a glass you didn’t order, nodding like it’s always been part of the plan.",
-  "Bro, tonight was supposed to be calm, maybe a salad, maybe some self-care — but the stars align in the shape of a margarita, and suddenly the cosmos is buying the next round."
+  "Buddy, you step out with sparkling-water virtue and a saint-on-holiday face: neon winks, the counter plays coy, then calls your name like a criminally charming uncle.",
+  "Champ, you swear “early night” with the authority of a board meeting: three steps, two whiffs of hops, one spritz materializing like it shares your last name.",
+  "My friend, you go minimalist — short steps, tight thoughts, wallet sealed; destiny, who loves comedies, opens the bar door like a butler with the keys to happiness.",
+  "Pal, the city looks at you like a bottle at perfect temperature: you resist with monkish grace until a waiter brings “something light” that weighs exactly as much as your joy.",
+  "Buddy, you arrive sober and motivated, like a 6 a.m. pep talk; five minutes later fate adds ice, the bartender adds the rest, and you sign the evening with a grin."
 ];
 
-/* --- Easter Egg: “Negroni Cosmico” --- */
+/* --- Easter Egg (opzionale, resta) --- */
 const EASTER_IT =
-  "Fratello, quella sera il cielo si è versato addosso come un Negroni cosmico: pianeti come cubetti di ghiaccio, Saturno che mescola con l’anello, e tu che giuri di bere solo metafore ma finisci in un brindisi galattico con la Via Lattea.";
+  "Fratello, il cielo si versa addosso come un Negroni cosmico: pianeti come cubetti, Saturno che mescola, e tu che brindi alla Via Lattea fingendo fosse acqua frizzante con stella alpina.";
 const EASTER_EN =
-  "Buddy, that night the sky poured itself like a cosmic Negroni — planets as ice cubes, Saturn stirring with its ring, and you swearing to drink only metaphors before clinking glasses with the Milky Way.";
+  "Buddy, the sky pours like a cosmic Negroni: planets as ice, Saturn stirring, and you clinking with the Milky Way while insisting it’s just sparkling water with a star-shaped garnish.";
 
-/* ---------- WHAT IF ---------- */
+/* ---------- WHAT IF seeds ---------- */
 const SEEDS_WHATIF_IT = [
-  "Poche cose in valigia, luce buona sul tavolo, strade semplici: ti sistemi gli orari, il sonno torna educato, e la casa impara a respirare con te."
+  "Poche cose sul tavolo, luce che non sgrida, strade semplici; gli orari si rimettono in riga, il sonno riprende fiducia, e la casa impara il tuo passo."
 ];
 const SEEDS_WHATIF_EN = [
-  "A few things in the bag, good light on the table, simple streets: your hours settle, sleep behaves, and the house learns to breathe with you."
+  "A few things on the table, a kind light, simple streets; your hours fall back in line, sleep regains trust, and the house learns your footsteps."
 ];
 
 /* ---------- API Handler ---------- */
 export default async function handler(req, res) {
+  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -168,6 +141,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "missing_api_key" });
     }
 
+    // Input
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const { domanda = "", stile = "whatif", lang = "it", extra = "" } = body;
     if (!domanda || typeof domanda !== "string") {
@@ -176,7 +150,7 @@ export default async function handler(req, res) {
 
     const systemPrompt = personaSystem(stile, lang);
 
-    // Easter egg casuale (5% chance)
+    // Seed: raro Easter + sarcasmo/ironia
     let seed;
     if (stile === "wtf" && chance(0.05)) {
       seed = isEn(lang) ? EASTER_EN : EASTER_IT;
@@ -188,19 +162,19 @@ export default async function handler(req, res) {
 
     const userPrompt = isEn(lang)
       ? `User question: "${domanda}". Context: "${String(extra || "").trim()}".
-Keep the EXACT persona voice. Second person. Friendly opening.
+Keep the EXACT persona voice. Second person. Warm friendly opening.
 No lists, no questions, no emojis, no written laughter.
-WTF: mini-episode → gentle turn → cheerful bar ending (destiny brings a toast); user tries to stay sober but a drink appears anyway; surreal yet coherent, affectionate, never cruel.
+WTF: mini-episode → sly turn → cheerful bar ending (destiny brings a toast); the user *tries* to stay sober, life conspires; use dry sarcasm, playful understatement, surprise similes, and a tiny callback.
 What If: calm, concrete, quiet optimism; end with a gentle forward nudge.`
       : `Domanda utente: "${domanda}". Contesto: "${String(extra || "").trim()}".
 Mantieni ESATTAMENTE la voce. Seconda persona. Apertura amichevole.
 Niente elenchi, domande, emoji, risate scritte.
-WTF: mini-episodio → piccola svolta → chiusura festosa al bar (il destino porta un brindisi); provi a restare sobrio ma il bicchiere arriva comunque; surreale coerente, affettuoso, mai cattivo.
+WTF: mini-episodio → svolta furba → chiusura festosa al bar (il destino porta un brindisi); tu *provi* a restare sobrio, la vita complotta; usa sarcasmo secco, sottotono beffardo, similitudini a sorpresa e un piccolo callback.
 What If: calmo, concreto, ottimismo quieto; chiusura morbida in avanti.`;
 
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: (stile === "wtf") ? 0.9 : 0.78,
+      temperature: (stile === "wtf") ? 0.92 : 0.78, // leggermente più spezia per battute
       top_p: 0.9,
       max_tokens: (stile === "wtf") ? 320 : 240,
       frequency_penalty: 0.6,
@@ -215,8 +189,10 @@ What If: calmo, concreto, ottimismo quieto; chiusura morbida in avanti.`;
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
+    // Lunghezze bloccate
     const targetSentences = (stile === "wtf") ? 8 : 6;
     const targetWords = (stile === "wtf") ? 155 : 105;
+
     answer = tightenSentences(answer, targetSentences);
     answer = clampWords(answer, targetWords);
 
