@@ -1,6 +1,6 @@
 // ============================
-// /api/ask.js — What?f Engine (Finale Assoluto • Incazzato Illuminato)
-// Stili: whatif | wtf
+// /api/ask.js — What?f Engine (Finale Assoluto)
+// Stili: whatif | wtf (“Incazzato Illuminato”)
 // ============================
 
 import OpenAI from "openai";
@@ -48,22 +48,9 @@ function clampWords(text, maxWords) {
   const slice = w.slice(0, maxWords).join(" ");
   const m = slice.match(/([\s\S]*?[.!?])(?![\s\S]*[.!?])/);
   return m ? m[1] : slice + "…";
+}
 
-
-
-
-/* ---------- API Handler ---------- */
-export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "method_not_allowed" });
-
-  try {
-    if (!process.env.OPENAI_API_KEY)
-      return res.status(500).json({ error: "missing_api_key" });/* ---------- Personas ---------- */
+/* ---------- Personas ---------- */
 function personaSystem(style, lang) {
   if (style === "wtf") {
     // WHAT THE F — versione “Incazzato Illuminato”
@@ -92,7 +79,7 @@ Ti svegli carico, credi nel destino, nel caffè e nella burocrazia gentile. Dopo
     return { SYSTEM_WTF, STYLE_ANCHOR_WTF };
   }
 
-  // WHAT IF — voce empatica (resta invariata)
+  // WHAT IF — voce empatica (invariata)
   return {
     SYSTEM_WTF: `
 Sei “What If” — un amico empatico, lucido e concreto.
@@ -105,28 +92,42 @@ Niente domande, elenchi, emoji o frasi da coach.
   };
 }
 
+/* ---------- API Handler ---------- */
+export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST")
+    return res.status(405).json({ error: "method_not_allowed" });
+
+  try {
+    if (!process.env.OPENAI_API_KEY)
+      return res.status(500).json({ error: "missing_api_key" });
+
     const body =
-      typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+      typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
     const { domanda = "", stile = "whatif", lang = "it", extra = "" } = body;
 
     if (!domanda || typeof domanda !== "string")
-      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
+      return res
+        .status(400)
+        .json({ error: "bad_request", detail: "domanda_required" });
 
-    const { system, anchor } = personaSystem(stile, lang);
-
+    const { SYSTEM_WTF, STYLE_ANCHOR_WTF } = personaSystem(stile, lang);
     const userPrompt = isEn(lang)
-      ? `User question: "${domanda}". Context: "${String(extra || "").trim()}". Reply in ${isEn(lang) ? "English" : "Italian"}.`
-      : `Domanda utente: "${domanda}". Contesto: "${String(extra || "").trim()}". Rispondi in ${isEn(lang) ? "inglese" : "italiano"}.`;
+      ? `User question: "${domanda}". Context: "${String(extra || "").trim()}".`
+      : `Domanda utente: "${domanda}". Contesto: "${String(extra || "").trim()}".`;
 
     const messages =
       stile === "wtf"
         ? [
-            { role: "system", content: system },
-            { role: "system", content: anchor },
+            { role: "system", content: SYSTEM_WTF },
+            { role: "system", content: STYLE_ANCHOR_WTF },
             { role: "user", content: userPrompt }
           ]
         : [
-            { role: "system", content: system },
+            { role: "system", content: SYSTEM_WTF },
             { role: "user", content: userPrompt }
           ];
 
@@ -142,7 +143,7 @@ Niente domande, elenchi, emoji o frasi da coach.
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // Post-process solo per WTF: corto, una botta e via
+    // Mantieni ritmo e densità del tono “Incazzato Illuminato”
     if (stile === "wtf") {
       answer = tightenSentences(answer, 7);
       answer = clampWords(answer, 130);
@@ -152,6 +153,8 @@ Niente domande, elenchi, emoji o frasi da coach.
     return res.status(200).json({ answer, style: stile, lang });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
-    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
+    return res
+      .status(500)
+      .json({ error: "server_error", detail: String(err?.message || err) });
   }
 }
