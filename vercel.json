@@ -5,7 +5,8 @@
     { "src": "*.html", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/(.*)", "dest": "/$1" }
+    { "src": "^/$", "dest": "/index.html" },
+    { "src": "^/([a-zA-Z0-9_-]+)\\.html$", "dest": "/$1.html" },
+    { "src": "^/api/(.*)$", "dest": "/api/$1" }
   ]
 }
