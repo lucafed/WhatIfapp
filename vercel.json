@@ -3,7 +3,6 @@
   "trailingSlash": false,
   "functions": {
     "api/**": {
-      "regions": ["fra1", "cdg1"],
       "runtime": "nodejs20.x",
       "memory": 1024,
       "maxDuration": 30
