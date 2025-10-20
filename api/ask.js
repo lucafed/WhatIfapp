@@ -2,6 +2,7 @@
 // /api/ask.js — What?f Engine (Incazzato Illuminato + Realismo Lucido con Sorriso)
 // Stili supportati: whatif, wtf
 // IT/EN — singolo paragrafo, ritmo fisso, niente emoji/liste/domande
+// (AGGIUNTO) Micro-profilo opzionale: arricchisce il contesto senza influenzare il tono
 // ============================
 
 import OpenAI from "openai";
@@ -58,6 +59,41 @@ function normalizeOneParagraph(s = "") {
     .replace(/\s{2,}/g, " ")
     .replace(/\s+([.,;:!?])/g, "$1")
     .trim();
+}
+
+/* ---------- Micro-profile (nuovo) ---------- */
+/** Converte un oggetto micro in una stringa sintetica e pulita (max ~140 chars). */
+function microToInline(micro = {}, lang = "it") {
+  try {
+    const entries = Object.entries(micro)
+      .map(([k, v]) => [String(k).trim(), String(v || "").trim()])
+      .filter(([, v]) => v);
+
+    if (!entries.length) return "";
+
+    // Normalizza chiavi più comuni in etichette brevi
+    const label = (k) => {
+      const m = {
+        mood: lang.startsWith("en") ? "mood" : "umore",
+        anchor: lang.startsWith("en") ? "anchor" : "ancora",
+        decide: lang.startsWith("en") ? "decides" : "decide",
+        zodiac: lang.startsWith("en") ? "zodiac" : "segno",
+        music: lang.startsWith("en") ? "music" : "musica",
+        work: lang.startsWith("en") ? "work" : "lavoro",
+        city: lang.startsWith("en") ? "city" : "città",
+        style: lang.startsWith("en") ? "style" : "stile",
+      };
+      return (m[k] || k);
+    };
+
+    let chunks = entries.map(([k, v]) => `${label(k)}: ${v}`);
+    // Limita lunghezza per non “sporcare” il prompt
+    let out = chunks.join(" · ");
+    if (out.length > 160) out = out.slice(0, 157) + "...";
+    return out;
+  } catch {
+    return "";
+  }
 }
 
 /* ---------- Personas ---------- */
@@ -191,15 +227,24 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "missing_api_key" });
 
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-    const { domanda = "", stile = "whatif", lang = "it", extra = "" } = body;
+    const { domanda = "", stile = "whatif", lang = "it", extra = "", micro = {} } = body;
 
     if (!domanda || typeof domanda !== "string")
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
     const { sys, fewshots } = personaSystem(stile, lang);
+
+    // (NUOVO) Micro-profilo conciso, NON cambia tono — solo contesto discreto
+    const microLine = microToInline(micro, lang);
+    const microNote = microLine
+      ? (isEn(lang)
+          ? `\n[Microprofile (context only, do not alter voice/style): ${microLine}]`
+          : `\n[Micro-profilo (solo contesto, NON alterare voce/stile): ${microLine}]`)
+      : "";
+
     const userPrompt = isEn(lang)
-      ? `User question: "${domanda}". Context: "${String(extra || "").trim()}". Keep the exact persona voice.`
-      : `Domanda: "${domanda}". Contesto: "${String(extra || "").trim()}". Mantieni esattamente la voce della persona.`;
+      ? `User question: "${domanda}". Context: "${String(extra || "").trim()}". Keep the exact persona voice.${microNote}`
+      : `Domanda: "${domanda}". Contesto: "${String(extra || "").trim()}". Mantieni esattamente la voce della persona.${microNote}`;
 
     const messages = [{ role: "system", content: sys }, ...(fewshots || []), { role: "user", content: userPrompt }];
 
