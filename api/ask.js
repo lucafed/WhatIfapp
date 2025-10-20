@@ -1,11 +1,10 @@
 // ============================
-// /api/ask.js — What?f Engine (Incazzato Illuminato • locked)
-// Stili supportati: whatif, wtf
-// IT/EN — singolo paragrafo, ritmo fisso, niente emoji/liste/domande
+// /api/ask.js — What?f Engine (Incazzato Illuminato + What If lucido)
+// Stili: wtf | whatif  •  IT/EN
+// Risposta: 1 paragrafo, tono bloccato, lunghezza controllata
 // ============================
 
 import OpenAI from "openai";
-
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = "gpt-4o-mini";
 
@@ -13,8 +12,7 @@ const MODEL = "gpt-4o-mini";
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
 function normLine(s = "") {
-  return String(s)
-    .toLowerCase()
+  return String(s).toLowerCase()
     .replace(/[“”"']/g, "")
     .replace(/\s+/g, " ")
     .replace(/[.,;:!?()\[\]\-—]+$/g, "")
@@ -25,11 +23,12 @@ function tightenSentences(text, maxSentences) {
   const parts = String(text || "")
     .replace(/\n+/g, " ")
     .split(/(?<=[.!?])\s+/)
-    .map((x) => x.trim())
+    .map(x => x.trim())
     .filter(Boolean);
 
   const out = [];
   const seen = new Set();
+
   for (const p of parts) {
     const n = normLine(p);
     if (!n) continue;
@@ -42,6 +41,7 @@ function tightenSentences(text, maxSentences) {
     seen.add(n);
     if (out.length >= maxSentences) break;
   }
+
   let t = out.join(" ");
   if (!/[.!?…]$/.test(t)) t += ".";
   return t;
@@ -52,7 +52,7 @@ function clampWords(text, maxWords) {
   if (w.length <= maxWords) return text;
   const slice = w.slice(0, maxWords).join(" ");
   const m = slice.match(/([\s\S]*?[.!?])(?![\s\S]*[.!?])/);
-  return m ? m[1] : slice + "…";
+  return (m && m[1]) ? m[1] : (slice + "…");
 }
 
 function normalizeOneParagraph(s = "") {
@@ -66,93 +66,40 @@ function normalizeOneParagraph(s = "") {
 /* ---------- Personas (toni definitivi) ---------- */
 function personaSystem(style, lang) {
   if (style === "wtf") {
-    // WHAT THE F — Incazzato Illuminato (locked)
-    const SYS = (isEn(lang) ? `
-You are “What the F” — version: Incazzato Illuminato (angry–enlightened, tragicomic).
-Write in SECOND PERSON and make the user the protagonist.
-ONE paragraph, 5–7 sentences, ~100–130 words.
-Voice: sarcastic, sharp, tender under the snarl; everyday chaos; unexpected tipsy beats.
-No lists. No questions. No emojis. No moralizing. Light swearing okay, human and funny.
-Concrete lexicon (wind, helmet, PDFs, keys, taxis, balsamic, basil, radiator).
-Always end with a punchline that stings and soothes.
-` : `
-Sei “What the F” — versione Incazzato Illuminato.
-Parla in SECONDA PERSONA e metti l’utente al centro.
-UN paragrafo, 5–7 frasi, ~100–130 parole.
-Voce: sarcastica, tagliente, affettuosa sotto la rabbia; caos quotidiano; sbronza in agguato.
-Niente elenchi. Niente domande. Niente emoji. Niente prediche. Parolacce leggere ok se servono alla comicità.
-Lessico concreto (vento, casco, PDF, chiavi, taxi, aceto, basilico, termosifone).
-Chiudi sempre con una battuta che fa ridere e un po’ pensare.
-`).trim();
-
-    // Few-shot anchors IT + EN (corti, stesso ritmo)
-    const FEWSHOTS = [
-      // ===== ITALIANO =====
-      {
-        role: "system",
-        content:
-`ESEMPIO IT • E se tornassi a vivere all’Aquila?
-Torneresti con l’aria di chi “ha visto il mondo” e dopo tre ore stai già litigando col vento che ti sposta pure l’autostima. Metti un piede in centro, ti salutano tutti tranne la fortuna, e ti chiedi se il tempo lì è passato o solo andato a prendersi un amaro. Dichiari “nuovo inizio” e finisci a bere con tuo cugino che ripete la saga del 2012 con più pause, meno denti e doppio rimpianto. Ti incazzi, ti sciogli, fai pace col freddo e col passato, poi guardi le luci sulla pietra e capisci che ti ha spezzato ma non piegato. E mentre il bicchiere scalda, ammetti l’ovvio: sei un disastro bello, e L’Aquila ha sempre avuto un debole per i disastri belli.`
-      },
-      {
-        role: "system",
-        content:
-`ESEMPIO IT • E se comprassi una moto?
-Ti vedi già filosofo su due ruote, poi il casco ti strizza il cervello come un limone e la moto parte solo per finta. Esci con l’ego alto e ti sorpassa un nonno in graziella che respira meglio di te. Freni, sbagli marcia, parcheggi storto, e il vicino ti osserva come se allevassi un velociraptor in condominio. Prometti prudenza, poi premi il coraggio con un “micro brindisi” che diventa macro per colpa del polso onesto. Torni a casa con il cuore a 9.000 giri e quella risata scema che sa di benzina, paura e un goccetto di gloria.`
-      },
-      {
-        role: "system",
-        content:
-`ESEMPIO IT • E se aprissi un’attività?
-Ti alzi gasato come un TED Talk e dopo due moduli scopri che per vendere acqua serve un timbro, un rito e tre file identiche. Scrivi “business plan” e il PDF ti guarda come un avvocato in ferie: non collabora, non esporta, non salva. I fornitori spariscono, i clienti pagano in complimenti, e il commercialista ti benedice con occhio da martire. La sera stappi per festeggiare e scopri che era aceto balsamico: brucia, ma almeno dà carattere alla dignità. E ridi, perché se il caos è socio di maggioranza, tu sei l’AD dell’autoironia con diritto di brindisi.`
-      },
-      {
-        role: "system",
-        content:
-`ESEMPIO IT • E se mollassi tutto e andassi al mare?
-Parti convinto, “vita semplice”, e il primo giorno litighi con la sabbia che entra nel letto come una tassa comunale. Fai amicizia col vicino che alle 7 frigge alice e illusioni, poi prometti sobrietà e ti ritrovi con una genziana che parla dialetto. Il sole ti cuoce i progetti a fuoco lento, ma la sera l’aria sa di perdono e patatine unte. Rimandi le decisioni a domani, brindando al genio che sarai dopodomani. E ti accorgi che la felicità ha i piedi bagnati e il cervello a tratti, proprio come te quando funziona.`
-      },
-
-      // ===== ENGLISH =====
-      {
-        role: "system",
-        content:
-`EXAMPLE EN • What if I moved back to my hometown?
-You’d arrive like a reformatted hard drive and realize the wind still shuffles your settings. People greet you, luck does not, and the timeline feels paused by a petty god with a coffee break. You declare “fresh start,” then end up clinking glasses with your cousin retelling the 2012 saga with longer sighs and fewer teeth. You get mad, get soft, make peace with asphalt and memory, then look at the lights and admit they cracked you but didn’t fold you. And with that honest buzz, you accept it: you’re a beautiful mess, and this town has a lifelong crush on beautiful messes.`
-      },
-      {
-        role: "system",
-        content:
-`EXAMPLE EN • What if I bought a motorcycle?
-You picture freedom chewing the horizon, then the helmet wrings your skull like a citrus press and the bike coughs at commitment. You roll out proud and get passed by a grandfather on a bicycle who breathes like a yoga app. You stall, mis-shift, park diagonally into shame, swear allegiance to caution, and reward yourself with a “tiny drink” that performs a growth spurt. You go home with adrenaline hiccups and a dumb grin that smells like gasoline, panic, and a sip of glory.`
-      },
-      {
-        role: "system",
-        content:
-`EXAMPLE EN • What if I started a business?
-You wake up TED-talk brave and learn it takes stamps, rites, and three identical queues to sell water. Your business plan PDF behaves like a lawyer on vacation: unreadable, unprintable, unimpressed. Suppliers vanish, customers pay in compliments, and your accountant blesses you with martyr eyes. At night you pop a “victory” bottle and discover it’s balsamic—painful, yes, but character-building for dignity. You laugh, because if chaos holds majority shares, you’re the CEO of self-irony with guaranteed drink rights.`
-      }
-    ];
-
-    return { sys: SYS, fewshots: FEWSHOTS };
+    // WHAT THE F — Incazzato Illuminato (tragicomico, sbronza in agguato)
+    return isEn(lang) ? `
+You are "What the F" — the “Enlightened Furious” voice: sarcastic, tender, chaotic-but-kind.
+SECOND PERSON. ONE single flowing paragraph. 5–7 sentences (~100–130 words).
+Make the user the protagonist. Routine → funny collapse → self-ironic relief.
+Keep it witty, colorful, a little unhinged; unexpected buzz can appear.
+No lists. No questions. No emojis. No moralizing. Avoid slapstick injuries.
+End on a sharp, funny line that also lands a tiny truth. Keep it punchy and human.
+`.trim() : `
+Sei “What the F” — versione «Incazzato Illuminato»: sarcastico, tenero, caotico-ma-buono.
+SECONDA PERSONA. UN solo paragrafo scorrevole. 5–7 frasi (~100–130 parole).
+Metti te al centro: routine → crollo comico → autoironia con sollievo.
+Wit alto, immagini concrete, sbronza che arriva da sola. Niente elenchi, domande, emoji, prediche.
+Evita slapstick forzato. Chiudi con una battuta affilata che dice una verità piccola.
+Tono fisso: realismo comico da sopravvivenza emotiva.
+`.trim();
   }
 
-  // WHAT IF — empatico, invariato
-  const SYS_WHATIF = (isEn(lang) ? `
-You are "What If" — a warm, lucid friend who truly understands the user.
-SECOND PERSON. One calm paragraph, 7–10 smooth sentences (~100–140 words).
-Grounded, quiet optimism, light everyday magic; concrete details (mug, light, streets, routines).
+  // WHAT IF — lucido, empatico, con micro-ironìa tenera (stessa struttura fissa)
+  return isEn(lang) ? `
+You are "What If" — warm, lucid, grounded. SECOND PERSON.
+ONE calm paragraph, 5–7 sentences (~90–120 words).
+Be concrete and relatable: small routines, light sensory details, gentle self-ironies.
 No lists. No questions. No emojis. No therapy clichés.
-End with a gentle, natural forward nudge.
-` : `
-Sei "What If" — amico caldo e lucido.
-SECONDA PERSONA. Un paragrafo calmo, 7–10 frasi (~100–140 parole).
-Realistico, ottimismo quieto, piccola magia quotidiana; dettagli concreti (tazza, luce, strade, orari).
-Niente elenchi. Niente domande. Niente emoji. Niente cliché da coaching.
-Chiudi con una spinta gentile e naturale in avanti.
-`).trim();
-
-  return { sys: SYS_WHATIF, fewshots: [] };
+Keep hope practical; end with a quiet forward nudge that feels earned.
+Tone: kind, witty in small doses, zero melodrama, everyday magic.
+`.trim() : `
+Sei “What If” — caldo, lucido, concreto. SECONDA PERSONA.
+UN paragrafo calmo, 5–7 frasi (~90–120 parole).
+Dettagli quotidiani, ironia lieve, zero zucchero: speranza pratica e vicina.
+Niente elenchi, domande, emoji o cliché da coaching.
+Chiudi con una spinta morbida e credibile, come un respiro che rimette a fuoco.
+Tono: gentile, asciutto, con una micro-ironìa che sorride senza giudicare.
+`.trim();
 }
 
 /* ---------- API Handler ---------- */
@@ -173,49 +120,43 @@ export default async function handler(req, res) {
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const {
       domanda = "",
-      stile = "whatif",  // "whatif" | "wtf"
-      lang = "it",       // "it" | "en"
-      extra = ""         // contesto opzionale (non cambia tono)
+      stile = "whatif", // "wtf" | "whatif"
+      lang = "it",      // "it" | "en"
+      extra = ""        // opzionale: contesto (non cambia tono)
     } = body;
 
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    const { sys, fewshots } = personaSystem(stile, lang);
+    const systemPrompt = personaSystem(stile, lang);
     const userPrompt = isEn(lang)
       ? `User question: "${domanda}". Context: "${String(extra || "").trim()}". Keep the exact persona voice.`
-      : `Domanda: "${domanda}". Contesto: "${String(extra || "").trim()}". Mantieni esattamente la voce della persona.`;
+      : `Domanda utente: "${domanda}". Contesto: "${String(extra || "").trim()}". Mantieni esattamente la voce della persona.`;
 
-    // Build messages
-    const messages = [
-      { role: "system", content: sys },
-      ...(fewshots || []), // few-shots solo per WTF
-      { role: "user", content: userPrompt }
-    ];
-
-    // Generate
+    // Generation
     const completion = await client.chat.completions.create({
       model: MODEL,
       temperature: (stile === "wtf") ? 0.92 : 0.82,
-      top_p: 0.9,
-      max_tokens: (stile === "wtf") ? 260 : 260,
-      frequency_penalty: (stile === "wtf") ? 0.4 : 0.0,
+      max_tokens: (stile === "wtf") ? 260 : 240,
+      frequency_penalty: 0.4,
       presence_penalty: 0.0,
-      messages
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ]
     });
 
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // Lock ritmo/lunghezza/paragrafo singolo
+    // Post-processing: blocco lunghezza/ritmo in 1 paragrafo
     if (stile === "wtf") {
       answer = tightenSentences(answer, 7);
       answer = clampWords(answer, 130);
     } else {
-      // whatif: leggermente più lungo e morbido
-      answer = tightenSentences(answer, 10);
-      answer = clampWords(answer, 140);
+      answer = tightenSentences(answer, 7);
+      answer = clampWords(answer, 115);
     }
     answer = normalizeOneParagraph(answer);
 
