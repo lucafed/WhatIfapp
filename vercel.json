@@ -1,16 +1,14 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
-
   "functions": {
     "api/**": {
-      "regions": ["fra1", "cdg1"],        // evita iad1
-      "runtime": "nodejs20.x",            // opzionale ma consigliato
-      "memory": 1024,                     // opzionale
-      "maxDuration": 30                   // opzionale (secondi)
+      "regions": ["fra1", "cdg1"],
+      "runtime": "nodejs20.x",
+      "memory": 1024,
+      "maxDuration": 30
     }
   },
-
   "headers": [
     {
       "source": "/(.*)",
@@ -44,7 +42,6 @@
       ]
     }
   ],
-
   "redirects": [],
   "rewrites": []
 }
