@@ -88,15 +88,18 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
     <div class="small" id="tipNote" style="margin-top:8px">Tip: puoi cambiare stile e periodo sopra; colori e tono si adattano.</div>
   </div>
 
-  <!-- Micro-domande (una volta al giorno; poi resta collassato) -->
+  <!-- Micro-domande (dinamiche giornaliere) -->
   <div class="card center" id="microCard">
     <div class="row toggle" id="microHead" style="justify-content:space-between">
       <div class="label" id="microTitle">▼ Micro-domande di oggi</div>
       <div class="small" id="microHint">(una volta al giorno)</div>
     </div>
     <div class="body" id="microBody" style="margin-top:10px">
-      <div class="row" id="microPills" style="gap:8px;flex-wrap:wrap">
-        <!-- Le pill dinamiche del giorno verranno iniettate qui -->
+      <div class="row" style="gap:8px;flex-wrap:wrap">
+        <div class="pill"><span id="moodIcon">🙂</span><input id="mood" placeholder="Oggi come ti senti?"/></div>
+        <div class="pill"><span id="anchorIcon">🧭</span><input id="anchor" placeholder="Cosa ti tiene qui?"/></div>
+        <div class="pill"><span id="decideIcon">⚙️</span><input id="decide" placeholder="Come decidi di solito?"/></div>
+        <div class="pill"><span id="zodiacIcon">♈</span><input id="zodiac" placeholder="Segno (se vuoi)"/></div>
       </div>
       <div class="row" style="margin-top:10px">
         <button class="btn primary" id="saveMicroBtn">💾 Salva micro-profilo</button>
@@ -105,7 +108,7 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
     </div>
   </div>
 
-  <!-- Spunti rapidi “E se…” (collassabili) -->
+  <!-- Spunti rapidi “E se…” (dinamici giornalieri) -->
   <div class="card center collapsed" id="hintsCard">
     <div class="row toggle" id="hintsHeader" style="justify-content:space-between">
       <div class="label" id="hintsTitle">▶ Spunti rapidi “E se…”</div>
@@ -217,7 +220,11 @@ document.documentElement.lang=lang;
 function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
 function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function dayOfYear(d=new Date()){const s=new Date(d.getFullYear(),0,0);const diff=d-s;return Math.floor(diff/86400000);}
+function rngForDay(seedStr){
+  // seed PRNG on YYYY-MM-DD
+  let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0);
+  return ()=>{ s=(s*9301+49297)%233280; return s/233280; };
+}
 
 let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
@@ -295,127 +302,96 @@ document.getElementById('goBtn').onclick=()=>{
 };
 document.getElementById('clearBtn').onclick=()=>{ document.getElementById('qInput').value=""; document.getElementById('qInput').focus(); };
 
-// ===== Micro-questions (rotanti, una volta al giorno) =====
-
-// Pool di set giornalieri (4 domande per set). Cambiano in base al giorno dell'anno.
-// Ogni item = { icon, key, placeholder }
-const MICRO_POOL_IT = [
-  [
-    {icon:"🙂", key:"mood",       placeholder:"Oggi come ti senti (in 3 parole)?" },
-    {icon:"🎧", key:"music",      placeholder:"Canzone che ti rappresenta oggi" },
-    {icon:"⚙️", key:"decide",     placeholder:"Come prendi decisioni di solito?" },
-    {icon:"🧭", key:"anchor",     placeholder:"Cosa ti tiene qui, concretamente?" }
-  ],
-  [
-    {icon:"☕", key:"morning",    placeholder:"Rituale del mattino (vero, non ideale)" },
-    {icon:"💼", key:"work",       placeholder:"Cosa fai (o vorresti fare) di lavoro?" },
-    {icon:"🧨", key:"risk",       placeholder:"Rischio che ti spaventa ma ti attrae" },
-    {icon:"🍝", key:"taste",      placeholder:"Cibo comfort che ti rimette in asse" }
-  ],
-  [
-    {icon:"🧑‍🤝‍🧑", key:"social", placeholder:"Ti ricarichi con gente o da solo?" },
-    {icon:"🧠", key:"strength",   placeholder:"Tuo punto forte “nascosto”" },
-    {icon:"🪫", key:"drain",      placeholder:"Cosa ti scarica le batterie" },
-    {icon:"📍", key:"city",       placeholder:"Città che senti tua (e perché)" }
-  ],
-  [
-    {icon:"🛏️", key:"sleep",     placeholder:"Come stai dormendo in questo periodo?" },
-    {icon:"📚", key:"learn",      placeholder:"Cosa vuoi imparare nei prossimi mesi?" },
-    {icon:"🏃", key:"energy",     placeholder:"Energia oggi: bassa/media/alta (perché)" },
-    {icon:"💬", key:"quote",      placeholder:"Frase/mantra che ti aiuta davvero" }
-  ],
-  [
-    {icon:"🌦️", key:"stress",    placeholder:"Fattore stress principale (oggi)" },
-    {icon:"🎯", key:"goal",       placeholder:"Un obiettivo concreto di breve periodo" },
-    {icon:"🧩", key:"hobby",      placeholder:"Hobby o fissazione attuale" },
-    {icon:"🫶", key:"values",     placeholder:"Valori non negoziabili (2-3 parole)" }
-  ],
-  [
-    {icon:"🗺️", key:"travel",    placeholder:"Prossimo posto dove andresti subito" },
-    {icon:"🧾", key:"budget",     placeholder:"Come ti rapporti ai soldi (onesto)" },
-    {icon:"🧯", key:"coping",     placeholder:"Quando va male, cosa fai che funziona" },
-    {icon:"♈",  key:"zodiac",     placeholder:"Segno o “profilo” che ti descrive" }
-  ],
-  [
-    {icon:"🧲", key:"motivation", placeholder:"Cosa ti motiva davvero (non per gli altri)" },
-    {icon:"🧱", key:"blocks",     placeholder:"Blocco più frequente che incontri" },
-    {icon:"🪴", key:"habit",      placeholder:"Abitudine piccola che ti salva le giornate" },
-    {icon:"🧑‍🍳", key:"kitchen",  placeholder:"Piatti o sapori che raccontano chi sei" }
-  ]
-];
-
-const MICRO_POOL_EN = [
-  [
-    {icon:"🙂", key:"mood",       placeholder:"How do you feel today (3 words)?" },
-    {icon:"🎧", key:"music",      placeholder:"Song that fits you today" },
-    {icon:"⚙️", key:"decide",     placeholder:"How do you usually decide?" },
-    {icon:"🧭", key:"anchor",     placeholder:"What keeps you grounded, really?" }
-  ],
-  [
-    {icon:"☕", key:"morning",    placeholder:"Your real morning ritual (not ideal)" },
-    {icon:"💼", key:"work",       placeholder:"What you do or want to do" },
-    {icon:"🧨", key:"risk",       placeholder:"Risk that scares you but tempts you" },
-    {icon:"🍝", key:"taste",      placeholder:"Comfort food that resets you" }
-  ],
-  [
-    {icon:"🧑‍🤝‍🧑", key:"social", placeholder:"Recharge with people or alone?" },
-    {icon:"🧠", key:"strength",   placeholder:"Your “hidden” strong point" },
-    {icon:"🪫", key:"drain",      placeholder:"What drains your battery" },
-    {icon:"📍", key:"city",       placeholder:"City that feels like yours (why)" }
-  ],
-  [
-    {icon:"🛏️", key:"sleep",     placeholder:"How’s your sleep these days?" },
-    {icon:"📚", key:"learn",      placeholder:"What you want to learn next months" },
-    {icon:"🏃", key:"energy",     placeholder:"Energy today: low/medium/high (why)" },
-    {icon:"💬", key:"quote",      placeholder:"Phrase/mantra that actually helps" }
-  ],
-  [
-    {icon:"🌦️", key:"stress",    placeholder:"Main stress factor (today)" },
-    {icon:"🎯", key:"goal",       placeholder:"One concrete short-term goal" },
-    {icon:"🧩", key:"hobby",      placeholder:"Hobby or current fixation" },
-    {icon:"🫶", key:"values",     placeholder:"Non-negotiable values (2–3 words)" }
-  ],
-  [
-    {icon:"🗺️", key:"travel",    placeholder:"Next place you’d go instantly" },
-    {icon:"🧾", key:"budget",     placeholder:"How you relate to money (honest)" },
-    {icon:"🧯", key:"coping",     placeholder:"When it’s rough, what actually works" },
-    {icon:"♈",  key:"zodiac",     placeholder:"Sign/profile that describes you" }
-  ],
-  [
-    {icon:"🧲", key:"motivation", placeholder:"What really motivates you (not for others)" },
-    {icon:"🧱", key:"blocks",     placeholder:"Most frequent block you hit" },
-    {icon:"🪴", key:"habit",      placeholder:"Tiny habit that saves your days" },
-    {icon:"🧑‍🍳", key:"kitchen",  placeholder:"Dishes/flavors that tell who you are" }
-  ]
-];
-
-function getDailySet(){
-  const idx = dayOfYear() % 7;
-  return (lang==='en' ? MICRO_POOL_EN : MICRO_POOL_IT)[idx];
-}
-
-function renderDailyMicroPills(){
-  const wrap = document.getElementById('microPills');
-  wrap.innerHTML = '';
-  const set = getDailySet();
-  set.forEach(({icon,key,placeholder})=>{
-    const pill = document.createElement('div');
-    pill.className='pill';
-    pill.innerHTML = `<span>${icon}</span><input class="micro-input" data-key="${key}" placeholder="${placeholder}"/>`;
-    wrap.appendChild(pill);
-  });
-}
-
+// ===== Micro-questions (daily dynamic placeholders) =====
 const microCard=document.getElementById('microCard');
 const microSaved=readJSON('micro_saved',{date:"",ok:false});
+
 function renderMicro(){
   document.getElementById('microTitle').textContent = T.microT;
   document.getElementById('microHint').textContent = T.microHint;
-  renderDailyMicroPills();
+
+  // Se già salvate oggi: resta collassato
   if(microSaved.date===todayStr()){
     microCard.classList.add('collapsed');
     document.getElementById('microSavedMsg').textContent=T.microSaved;
+    return;
   }
+
+  // Pool di prompt per i 4 campi (cambiano per data)
+  const SEED = todayStr();
+  const rand = rngForDay(SEED);
+
+  const moodPool = (lang==='en'
+    ? [
+      "How’s your energy really, from 0 to “I can move cities”?",
+      "Today you feel more anchor or sail?",
+      "If your mood had a ringtone, which one?",
+      "What color is your head right now?"
+    ]
+    : [
+      "Quanta energia hai davvero, da 0 a “trasloco la vita”?",
+      "Oggi ti senti più àncora o vela?",
+      "Se il tuo umore fosse una suoneria, quale?",
+      "Di che colore è la tua testa adesso?"
+    ]);
+
+  const anchorPool = (lang==='en'
+    ? [
+      "What’s keeping you here lately (person, habit, bill, dream)?",
+      "Name one thing you won’t give up this month.",
+      "Which routine feels surprisingly good to protect?",
+      "What’s the tiny ritual that keeps you sane?"
+    ]
+    : [
+      "Cosa ti tiene qui ultimamente (persona, abitudine, bolletta, sogno)?",
+      "Una cosa che non molli questo mese.",
+      "Quale routine ti sorprende proteggere?",
+      "Qual è il piccolo rito che ti tiene in riga?"
+    ]);
+
+  const decidePool = (lang==='en'
+    ? [
+      "How do you usually decide: gut, list, coin, or panic?",
+      "When you choose, what wins: time, money, or peace?",
+      "You pick faster with deadlines or with coffee?",
+      "Describe your default decision algorithm in 5 words."
+    ]
+    : [
+      "Come decidi di solito: pancia, lista, moneta o panico?",
+      "Quando scegli vince cosa: tempo, soldi o pace?",
+      "Scegli più in fretta con scadenze o con caffè?",
+      "Descrivi il tuo algoritmo di scelta in 5 parole."
+    ]);
+
+  const zodiacPool = (lang==='en'
+    ? [
+      "Sign (optional) or your personal weather.",
+      "Astro stuff (if you want) or a lucky habit.",
+      "Write your sign or your superstition.",
+      "Skip sign if you want; write your lucky snack."
+    ]
+    : [
+      "Segno (opzionale) o il tuo meteo personale.",
+      "Astro-cose (se vuoi) o un’abitudine portafortuna.",
+      "Scrivi il segno o la tua superstizione.",
+      "Salta il segno se vuoi: scrivi lo snack portafortuna."
+    ]);
+
+  // Emojis dinamiche leggere
+  const moodIcons = ["🙂","😌","🤘","🧊","⚡","🌤️","🧩"];
+  const anchorIcons = ["🧭","⚓","🏠","🧱","🪴","📌","🧷"];
+  const decideIcons = ["⚙️","🧠","🎯","🪙","📋","⏳","☕"];
+  const zodiacIcons = ["♈","♉","♊","♋","♌","♍","✨"];
+
+  document.getElementById('mood').placeholder   = moodPool[Math.floor(rand()*moodPool.length)];
+  document.getElementById('anchor').placeholder = anchorPool[Math.floor(rand()*anchorPool.length)];
+  document.getElementById('decide').placeholder = decidePool[Math.floor(rand()*decidePool.length)];
+  document.getElementById('zodiac').placeholder = zodiacPool[Math.floor(rand()*zodiacPool.length)];
+
+  document.getElementById('moodIcon').textContent   = moodIcons[Math.floor(rand()*moodIcons.length)];
+  document.getElementById('anchorIcon').textContent = anchorIcons[Math.floor(rand()*anchorIcons.length)];
+  document.getElementById('decideIcon').textContent = decideIcons[Math.floor(rand()*decideIcons.length)];
+  document.getElementById('zodiacIcon').textContent = zodiacIcons[Math.floor(rand()*zodiacIcons.length)];
 }
 renderMicro();
 
@@ -423,29 +399,21 @@ document.getElementById('microHead').onclick=()=>{
   if(microSaved.date===todayStr()) return; // resta collassato dopo salvataggio
   microCard.classList.toggle('collapsed'); 
 };
-
 document.getElementById('saveMicroBtn').onclick=()=>{
-  if(microSaved.date===todayStr()){
-    document.getElementById('microSavedMsg').textContent=T.microOnce; 
-    return; 
-  }
-  const inputs = Array.from(document.querySelectorAll('.micro-input'));
-  const todayData = {};
-  inputs.forEach(inp=>{
-    const v = (inp.value||'').trim();
-    if(v) todayData[inp.dataset.key] = v;
-  });
-  // merge non distruttivo con micro_profile esistente
-  const existing = readJSON('micro_profile', {});
-  const merged = {...existing, ...todayData};
-  writeJSON('micro_profile', merged);
-
+  if(microSaved.date===todayStr()){ document.getElementById('microSavedMsg').textContent=T.microOnce; return; }
+  const micro={
+    mood:(document.getElementById('mood').value||"").trim(),
+    anchor:(document.getElementById('anchor').value||"").trim(),
+    decide:(document.getElementById('decide').value||"").trim(),
+    zodiac:(document.getElementById('zodiac').value||"").trim()
+  };
+  writeJSON('micro_profile', micro);
   writeJSON('micro_saved', {date:todayStr(),ok:true});
   document.getElementById('microSavedMsg').textContent=T.microSaved;
   microCard.classList.add('collapsed');
 };
 
-// ===== Hints “E se…” (collassabili, 4 realistici) =====
+// ===== Hints “E se…” (daily deterministic) =====
 const hintsState = readJSON('ui_hints_state',{collapsed:true});
 const hintsCard=document.getElementById('hintsCard');
 if(hintsState.collapsed) hintsCard.classList.add('collapsed');
@@ -457,8 +425,67 @@ document.getElementById('hintsHeader').onclick=()=>{
 document.getElementById('hintsTitle').textContent=T.hints;
 document.getElementById('hintsNote').textContent=T.hintsNote;
 
-const hints = [T.h1, T.h2, T.h3, T.h4];
+// Pool spunti (ampio). Verranno selezionati 4 al giorno in modo deterministico.
+const HINT_POOL_IT = [
+  "E se cambiassi lavoro?",
+  "E se cambiassi città?",
+  "E se provassi a mettermi in proprio?",
+  "E se tornassi a studiare?",
+  "E se mollassi tutto e partissi per il Giappone?",
+  "E se aprissi un chiringuito in Islanda?",
+  "E se parlassi con il me di 10 anni fa?",
+  "E se imparassi una lingua strana?",
+  "E se mi svegliassi ogni giorno all’alba per un mese?",
+  "E se facessi pace con una persona?",
+  "E se vivessi per 30 giorni senza social?",
+  "E se provassi a cambiare routine per una settimana?",
+  "E se prendessi un cane?",
+  "E se mettessi da parte ogni giorno 5 euro?",
+  "E se provassi a suonare la chitarra?",
+  "E se organizzassi un viaggio da solo?",
+  "E se chiedessi un aumento?",
+  "E se facessi volontariato?",
+  "E se provassi a scrivere un libro?",
+  "E se aprissi un canale di qualcosa che ami?"
+];
+const HINT_POOL_EN = [
+  "What if I changed jobs?",
+  "What if I moved city?",
+  "What if I started my own thing?",
+  "What if I went back to study?",
+  "What if I dropped everything and moved to Japan?",
+  "What if I opened a beach bar in Iceland?",
+  "What if I talked to my 10-years-ago self?",
+  "What if I learned a weird language?",
+  "What if I woke up at dawn for a month?",
+  "What if I made peace with someone?",
+  "What if I lived 30 days without social media?",
+  "What if I changed my routine for a week?",
+  "What if I adopted a dog?",
+  "What if I saved 5 euros a day?",
+  "What if I learned guitar?",
+  "What if I traveled alone?",
+  "What if I asked for a raise?",
+  "What if I volunteered?",
+  "What if I wrote a book?",
+  "What if I launched a channel about what I love?"
+];
+
+function dailyHints(pool, n=4) {
+  const seed = todayStr();
+  const rnd = rngForDay(seed);
+  const seen = new Set();
+  const out=[];
+  while(out.length<n && seen.size<pool.length){
+    const idx = Math.floor(rnd()*pool.length);
+    if(seen.has(idx)) continue;
+    seen.add(idx); out.push(pool[idx]);
+  }
+  return out;
+}
+
 const hintsWrap=document.getElementById('hintsChips');
+const hints = dailyHints(lang==='en'?HINT_POOL_EN:HINT_POOL_IT, 4);
 hints.forEach(h=>{
   const b=document.createElement('button');
   b.className='chip';
