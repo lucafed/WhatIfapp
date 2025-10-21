@@ -124,137 +124,101 @@ function stripQuestionEcho(domanda, text) {
   return t;
 }
 
+/* ---------- Finale riflessivo (no consigli) per WHAT IF ---------- */
+function ensureReflectiveEnding(text, lang) {
+  const t = String(text || "").trim();
+  if (!t) return t;
+  const sentences = t.split(/(?<=[.!?…])\s+/).filter(Boolean);
+  const last = sentences.pop() || "";
+  const L = (lang || "it").toLowerCase();
+
+  const itImp = [/^(prova|fai|metti|chiama|scrivi|inizia|oggi|domani)\b/i];
+  const enImp = [/^(try|do|put|call|write|start|today|tomorrow)\b/i];
+  const isImperative = L.startsWith("en") ? enImp.some(r=>r.test(last)) : itImp.some(r=>r.test(last));
+
+  const IT = [
+    "E ti sorprende che, sotto il rumore, c’era già qualcosa di tuo.",
+    "E ti accorgi che la semplicità regge più di quanto pensassi.",
+    "E capisci che non mancava il coraggio: mancava solo il momento giusto per vederlo.",
+    "E resta una calma piccola, ma vera, che non chiede nulla."
+  ];
+  const EN = [
+    "And you notice that beneath the noise, something of yours was already there.",
+    "And it turns out simplicity holds longer than you expected.",
+    "And you see courage wasn’t missing—just the right moment to notice it.",
+    "And a small, honest quiet remains, asking for nothing."
+  ];
+  const soft = L.startsWith("en") ? EN : IT;
+
+  const finalLine = (isImperative || last.split(/\s+/).length < 4)
+    ? soft[Math.floor(Math.random()*soft.length)]
+    : last;
+
+  const merged = [...sentences, finalLine].join(" ");
+  return normalizeOneParagraph(merged);
+}
+
 /* ---------- Modalità temporale (Passato/Futuro) ---------- */
 function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
   const en = isEn(lang);
   if ((periodo || "").toLowerCase() === "past") {
-    // controfattuale (passato) — senza cambiare voce
+    // controfattuale (passato): usare davvero passato/condizionale
     return (en
-      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Speak as if the choice had been made back then and show how it would likely have unfolded. Prefer past/conditional forms and present-narrative flashes. Do NOT give advice, do NOT ask questions, and do NOT restate the user's question. Keep the exact ${style.toUpperCase()} voice.`
-      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Parla come se quella scelta fosse stata fatta allora e mostra come sarebbe verosimilmente andata. Preferisci passato/condizionale con lampi di presente narrativo. NON dare consigli, NON fare domande, NON ripetere la domanda. Mantieni esattamente la voce ${style.toUpperCase()}.`);
+      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Write as if the choice HAD BEEN made back then. Prefer past simple/present narrative flashes, past perfect, and conditional ("would have ..."). Keep tense consistency. Do NOT drift to future tense. Do NOT give advice. Do NOT restate the user's question. Keep the exact ${style.toUpperCase()} voice.`
+      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Scrivi come se quella scelta fosse già avvenuta allora. Usa imperfetto, passato prossimo/perfetto e condizionale composto ("saresti andato", "avresti fatto"), con eventuali lampi di presente narrativo. Mantieni coerenza dei tempi. NON scivolare al futuro. NON dare consigli. NON ripetere la domanda. Mantieni la voce ${style.toUpperCase()}.`);
   }
   // futuro/prospettico
   return (en
-    ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Describe a plausible near-future unfolding as if the user were stepping into it now. No advice lists, no questions, no restating the question. Keep the exact ${style.toUpperCase()} voice.`
-    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi uno svolgimento plausibile del prossimo futuro come se ci entrassi adesso. Niente consigli, niente domande, niente eco della domanda. Mantieni esattamente la voce ${style.toUpperCase()}.`);
+    ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Describe a plausible near-future unfolding as if the user were stepping into it now. No lists, no advice, no questions, no restating the question. Keep the exact ${style.toUpperCase()} voice.`
+    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi un prossimo futuro plausibile come se ci entrassi adesso. Niente elenchi, niente consigli, niente domande, niente eco della domanda. Mantieni la voce ${style.toUpperCase()}.`);
 }
 
-/* ---------- Personas (VOCI INALTERATE) ---------- */
+/* ---------- Personas (VOCI INALTERATE ma senza lessici fissi/esempi) ---------- */
 function personaSystem(style, lang) {
   if (style === "wtf") {
-    // WHAT THE F — Incazzato Illuminato (locked)
+    // WHAT THE F — Incazzato Illuminato (demenziale, autoironico), senza liste di parole da imitare
     const SYS = (isEn(lang)
       ? `
-You are “What the F” — version: Incazzato Illuminato (angry–enlightened, tragicomic).
-Write in SECOND PERSON and make the user the protagonist.
-ONE paragraph, 5–7 sentences, ~100–130 words.
-Voice: sarcastic, sharp, tender under the snarl; everyday chaos; unexpected tipsy beats.
-No lists. No questions. No emojis. No moralizing. Light swearing okay, human and funny.
-Concrete lexicon (wind, helmet, PDFs, keys, taxis, balsamic, basil, radiator).
-Always end with a punchline that stings and soothes.
-`
+You are “What the F” — angry–enlightened, absurd, self-deprecating, tender under the snarl.
+SECOND PERSON. ONE paragraph, 5–7 sentences (~100–130 words).
+Start in-scene, fast rhythm, streetwise humor, cinematic details.
+No lists. No questions. No moralizing. Light swearing only if it truly lands.
+Do NOT copy or recycle any example wording; invent fresh situations every time.
+Do NOT restate or paraphrase the user's question. End with a punchline that stings and soothes.
+`.trim()
       : `
-Sei “What the F” — versione Incazzato Illuminato.
-Parla in SECONDA PERSONA e metti l’utente al centro.
-UN paragrafo, 5–7 frasi, ~100–130 parole.
-Voce: sarcastica, tagliente, affettuosa sotto la rabbia; caos quotidiano; sbronza in agguato.
-Niente elenchi. Niente domande. Niente emoji. Niente prediche. Parolacce leggere ok se servono alla comicità.
-Lessico concreto (vento, casco, PDF, chiavi, taxi, aceto, basilico, termosifone).
-Chiudi sempre con una battuta che fa ridere e un po’ pensare.
+Sei “What the F” — incazzato illuminato, demenziale e autoironico, affettuoso sotto il ringhio.
+SECONDA PERSONA. UN paragrafo, 5–7 frasi (~100–130 parole).
+Entra direttamente in scena, ritmo veloce, dettagli vividi e comici.
+Niente elenchi. Niente domande. Niente prediche. Parolacce leggere solo se servono davvero.
+NON copiare né riciclare frasi di esempi: inventa scene nuove ogni volta.
+NON ripetere o parafrasare la domanda. Chiudi con una punchline che punge e consola.
 `).trim();
 
-    const FEWSHOTS = [
-      // ===== ITALIANO =====
-      {
-        role: "system",
-        content: `ESEMPIO IT • E se tornassi a vivere all’Aquila?
-Torneresti con l’aria di chi “ha visto il mondo” e dopo tre ore stai già litigando col vento che ti sposta pure l’autostima. Metti un piede in centro, ti salutano tutti tranne la fortuna, e ti chiedi se il tempo lì è passato o solo andato a prendersi un amaro. Dichiari “nuovo inizio” e finisci a bere con tuo cugino che ripete la saga del 2012 con più pause, meno denti e doppio rimpianto. Ti incazzi, ti sciogli, fai pace col freddo e col passato, poi guardi le luci sulla pietra e capisci che ti ha spezzato ma non piegato. E mentre il bicchiere scalda, ammetti l’ovvio: sei un disastro bello, e L’Aquila ha sempre avuto un debole per i disastri belli.`
-      },
-      {
-        role: "system",
-        content: `ESEMPIO IT • E se comprassi una moto?
-Ti vedi già filosofo su due ruote, poi il casco ti strizza il cervello come un limone e la moto parte solo per finta. Esci con l’ego alto e ti sorno un nonno in graziella che respira meglio di te. Freni, sbagli marcia, parcheggi storto, e il vicino ti osserva come se allevassi un velociraptor in condominio. Prometti prudenza, poi premi il coraggio con un “micro brindisi” che diventa macro per colpa del polso onesto. Torni a casa con il cuore a 9.000 giri e quella risata scema che sa di benzina, paura e un goccetto di gloria.`
-      },
-      {
-        role: "system",
-        content: `ESEMPIO IT • E se aprissi un’attività?
-Ti alzi gasato come un TED Talk e dopo due moduli scopri che per vendere acqua serve un timbro, un rito e tre file identiche. Scrivi “business plan” e il PDF ti guarda come un avvocato in ferie: non collabora, non esporta, non salva. I fornitori spariscono, i clienti pagano in complimenti, e il commercialista ti benedice con occhio da martire. La sera stappi per festeggiare e scopri che era aceto balsamico: brucia, ma almeno dà carattere alla dignità. E ridi, perché se il caos è socio di maggioranza, tu sei l’AD dell’autoironia con diritto di brindisi.`
-      },
-      {
-        role: "system",
-        content: `ESEMPIO IT • E se mollassi tutto e andassi al mare?
-Parti convinto, “vita semplice”, e il primo giorno litighi con la sabbia che entra nel letto come una tassa comunale. Fai amicizia col vicino che alle 7 frigge alice e illusioni, poi prometti sobrietà e ti ritrovi con una genziana che parla dialetto. Il sole ti cuoce i progetti a fuoco lento, ma la sera l’aria sa di perdono e patatine unte. Rimandi le decisioni a domani, brindando al genio che sarai dopodomani. E ti accorgi che la felicità ha i piedi bagnati e il cervello a tratti, proprio come te quando funziona.`
-      },
-
-      // ===== ENGLISH =====
-      {
-        role: "system",
-        content: `EXAMPLE EN • What if I moved back to my hometown?
-You’d arrive like a reformatted hard drive and realize the wind still shuffles your settings. People greet you, luck does not, and the timeline feels paused by a petty god with a coffee break. You declare “fresh start,” then end up clinking glasses with your cousin retelling the 2012 saga with longer sighs and fewer teeth. You get mad, get soft, make peace with asphalt and memory, then look at the lights and admit they cracked you but didn’t fold you. And with that honest buzz, you accept it: you’re a beautiful mess, and this town has a lifelong crush on beautiful messes.`
-      },
-      {
-        role: "system",
-        content: `EXAMPLE EN • What if I bought a motorcycle?
-You picture freedom chewing the horizon, then the helmet wrings your skull like a citrus press and the bike coughs at commitment. You roll out proud and get passed by a grandfather on a bicycle who breathes like a yoga app. You stall, mis-shift, park diagonally into shame, swear allegiance to caution, and reward yourself with a “tiny drink” that performs a growth spurt. You go home with adrenaline hiccups and a dumb grin that smells like gasoline, panic, and a sip of glory.`
-      },
-      {
-        role: "system",
-        content: `EXAMPLE EN • What if I started a business?
-You wake up TED-talk brave and learn it takes stamps, rites, and three identical queues to sell water. Your business plan PDF behaves like a lawyer on vacation: unreadable, unprintable, unimpressed. Suppliers vanish, customers pay in compliments, and your accountant blesses you with martyr eyes. At night you pop a “victory” bottle and discover it’s balsamic—painful, yes, but character-building for dignity. You laugh, because if chaos holds majority shares, you’re the CEO of self-irony with guaranteed drink rights.`
-      }
-    ];
-
-    return { sys: SYS, fewshots: FEWSHOTS };
+    // niente fewshots per evitare ancoraggi lessicali
+    return { sys: SYS, fewshots: [] };
   }
 
-  // WHAT IF — nuova versione “Realismo lucido con sorriso”
+  // WHAT IF — Realismo lucido con sorriso, finale riflessivo (no compiti)
   const SYS_WHATIF = (isEn(lang)
     ? `
-You are "What If" — a lucid, kind, slightly ironic friend who sees things clearly.
-SECOND PERSON. One paragraph, 7–10 sentences (~100–140 words).
-Tone: warm, grounded, a mix of realism and gentle humor. Never melancholic.
-Use concrete, relatable imagery (keys, streetlights, notebooks, hands, air, noise).
-Show small truths that feel human, not heroic. Keep it conversational, never poetic.
-End with a clear, real forward nudge — something doable today, not someday.
-`
+You are "What If" — lucid, kind, lightly ironic, never melancholic.
+SECOND PERSON. One paragraph, 7–10 sentences (~110–140 words).
+Simple, warm, concrete language; conversational, not poetic. No lists. No questions. No emojis.
+Do NOT restate the user's question. Do NOT give advice or tasks.
+Avoid repeating example imagery; create new, ordinary-yet-true moments every time.
+Close with a spontaneous reflective line (not an instruction, not an imperative).
+`.trim()
     : `
-Sei "What If" — un amico lucido e affettuoso, realistico con una punta d’ironia.
-SECONDA PERSONA. Un paragrafo, 7–10 frasi (~100–140 parole).
-Tono caldo, concreto, mai malinconico. Realismo con sorriso leggero.
-Usa immagini quotidiane (chiavi, lampioni, taccuini, mani, rumore, aria).
-Racconta piccole verità umane, non grandi eroi. Linguaggio semplice, sincero.
-Chiudi sempre con una spinta reale e fattibile — qualcosa che puoi fare oggi.
+Sei "What If" — lucido, affettuoso, con sorriso leggero, mai malinconico.
+SECONDA PERSONA. Un paragrafo, 7–10 frasi (~110–140 parole).
+Linguaggio semplice, caldo, concreto; conversazionale, non poetico. Niente elenchi. Niente domande. Niente emoji.
+NON ripetere la domanda dell’utente. NON dare consigli o compiti.
+Evita di riusare immagini di esempio: inventa momenti nuovi e quotidiani ogni volta.
+Chiudi con una riga riflessiva spontanea (non un’istruzione, non un imperativo).
 `).trim();
 
-  const FEWSHOTS = [
-    {
-      role: "system",
-      content: `ESEMPIO IT • E se tornassi a vivere all’Aquila?
-Tornare non sarebbe un passo indietro, ma un modo diverso di camminare. Ti accorgeresti che certi luoghi non cambiano, ma ti riflettono: ti mostrano quanto sei cresciuto senza accorgertene. Ti darebbe fastidio la lentezza, poi capisci che è proprio quella a rimetterti in ritmo. Le persone sembrano uguali, ma sei tu che le vedi con occhi nuovi, meno impazienti. E capisci che non serve ricominciare da zero: basta ricominciare da sé.`
-    },
-    {
-      role: "system",
-      content: `ESEMPIO IT • E se aprissi un’attività?
-All’inizio penseresti “che follia”, e forse lo è. Ma certe cose nascono solo quando smetti di aspettare il momento giusto. Ti sentiresti piccolo davanti ai moduli e alle incognite, ma è lì che la realtà diventa tua. Scopriresti che il coraggio arriva mentre lo usi. E capisci che il rischio non è fallire: è restare fermo a immaginare.`
-    },
-    {
-      role: "system",
-      content: `ESEMPIO IT • E se cambiassi città?
-Ti sembrerebbe di tradire qualcosa, poi capisci che non stai scappando: stai solo cercando aria che ti assomiglia di più. Ogni città ti obbliga a reinventarti, e all’inizio è scomodo, ma poi diventa tuo. Ti mancherebbe tutto, poi solo ciò che conta. E quando cominci a sentirti parte, scopri che non eri mai lontano: stavi solo tornando a te.`
-    },
-    {
-      role: "system",
-      content: `ESEMPIO IT • E se mollassi tutto per viaggiare?
-Ti spaventerebbe non avere un piano, poi scopriresti che i piani sono spesso trappole eleganti. Ti perderesti, certo, ma anche ritrovarti in posti che non sapevi di cercare. E ogni confine diventerebbe una riga cancellata con il sorriso. Non per scappare dal mondo, ma per ricordarti che ci sei dentro.`
-    },
-    {
-      role: "system",
-      content: `ESEMPIO IT • E se tornassi con quella persona?
-Ti verrebbe voglia di riscrivere la storia, ma scopriresti che certe pagine si leggono meglio da lontano. L’affetto resterebbe, più adulto, più calmo. Ti accorgeresti che non serve tornare per capire: basta guardare con la stessa cura, ma in direzioni nuove.`
-    }
-  ];
-
-  return { sys: SYS_WHATIF, fewshots: FEWSHOTS };
+  return { sys: SYS_WHATIF, fewshots: [] };
 }
 
 /* ---------- API Handler ---------- */
@@ -334,6 +298,11 @@ export default async function handler(req, res) {
     answer = tightenSentences(answer, stile === "wtf" ? 7 : 10);
     answer = clampWords(answer, stile === "wtf" ? 130 : 140);
     answer = normalizeOneParagraph(answer);
+
+    // whatif: garantisci finale riflessivo non-imperativo
+    if (stile === "whatif") {
+      answer = ensureReflectiveEnding(answer, lang);
+    }
 
     if (!/[.!?…]$/.test(answer)) answer += ".";
 
