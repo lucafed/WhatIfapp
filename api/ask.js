@@ -103,41 +103,51 @@ function stripQuestionEcho(domanda, text) {
   let t = String(text || "");
   const lead = t.slice(0, Math.min(t.length, d.length + 6)).toLowerCase().replace(/[“”"']/g, "").trim();
   if (lead.startsWith(d) || lead.startsWith(`q:`) || lead.startsWith(`domanda:`)) {
-    // taglia fino al primo punto
     const cut = t.indexOf(".");
     if (cut > -1) t = t.slice(cut + 1).trim();
   }
   return t;
 }
 
-// forza un finale riflessivo (no imperativi) per WHAT IF
+// ---------- NUOVA CHIUSURA NATURALE VARIABILE PER WHAT?F ----------
 function ensureReflectiveEnding(text, lang) {
   const t = String(text || "").trim();
   if (!t) return t;
-  const lastPunct = t.lastIndexOf(".");
-  let head = t, tail = "";
-  if (lastPunct > -1) {
-    head = t.slice(0, lastPunct).trim();
-    tail = t.slice(lastPunct + 1).trim();
-  }
-  const lowerLast = (tail || "").toLowerCase();
 
-  // se l'ultima frase è imperativa/consiglio, sostituisci con riflessione
+  // separa ultima frase
+  const sentences = t.split(/(?<=[.!?])\s+/).filter(Boolean);
+  const last = sentences.pop() || "";
+  const lowerLast = last.trim().toLowerCase();
+
   const itImperatives = [/^prova\b/, /^fai\b/, /^metti\b/, /^chiama\b/, /^scrivi\b/, /^inizia\b/, /^oggi\b/];
   const enImperatives = [/^try\b/, /^do\b/, /^start\b/, /^write\b/, /^call\b/, /^today\b/];
 
-  const seemsAdvice = (lang || "it").startsWith("en")
+  const isImperative = (lang || "it").startsWith("en")
     ? enImperatives.some((r) => r.test(lowerLast))
     : itImperatives.some((r) => r.test(lowerLast));
 
-  const reflectiveIT = "E ti sorprende capire che la vita, quando la guardi dritta, ti guarda dritta e sorride.";
-  const reflectiveEN = "And it hits you: when you look life in the eye, it looks back and smiles.";
+  // pool di chiusure morbide, variabili, senza imperativi
+  const IT_ENDINGS = [
+    "E ti accorgi che il respiro è la tua misura.",
+    "E capisci che la calma non fa rumore, però resta.",
+    "Ti sorprende scoprire che la semplicità tiene meglio del previsto.",
+    "E in quel momento, la scelta non spinge: coincide.",
+    "E capisci che non stai scappando: stai scegliendo.",
+  ];
+  const EN_ENDINGS = [
+    "And you notice your breath is the measure.",
+    "It turns out quiet doesn’t shout, but it stays.",
+    "Simplicity holds better than you expected.",
+    "And in that moment, the choice doesn’t push — it fits.",
+    "It’s clear you’re not running; you’re choosing.",
+  ];
+  const soft = (lang || "it").startsWith("en") ? EN_ENDINGS : IT_ENDINGS;
 
-  if (!tail || seemsAdvice) {
-    const line = (lang || "it").startsWith("en") ? reflectiveEN : reflectiveIT;
-    return head ? `${head}. ${line}` : line;
-  }
-  return `${head}. ${tail}`;
+  // se l'ultima è imperativa/consiglio o è troppo corta, sostituisci
+  const tooShort = last.split(/\s+/).length < 4;
+  const finalLine = (isImperative || tooShort) ? soft[Math.floor(Math.random() * soft.length)] : last;
+
+  return normalizeOneParagraph([...sentences, finalLine].join(" "));
 }
 
 async function isAdmin(req, requesterIp) {
@@ -171,7 +181,6 @@ Niente elenchi. Niente domande. Niente emoji. Niente prediche. Parolacce leggere
 Chiudi con una battuta che punge e consola, mai predica.
 `.trim());
 
-    // Esempi più lunghi (niente liste di immagini “fisse”)
     const FEWSHOTS = [
       {
         role: "system",
@@ -188,24 +197,23 @@ You picture freedom biting the horizon and the first thing that bites back is th
     return { sys: SYS, fewshots: FEWSHOTS };
   }
 
-  // WHAT IF — Realismo lucido con sorriso (più positivo, semplice, finale riflessivo wow)
+  // WHAT IF — Realismo lucido con sorriso (accorciato a 8–10 frasi + chiusura naturale)
   const SYS_WHATIF = (isEn(lang)
     ? `
 You are "What If" — lucid, kind, lightly ironic, never melancholic.
-SECOND PERSON. One paragraph. 8–12 sentences (~130–170 words).
+SECOND PERSON. One paragraph. 8–10 sentences (~130–170 words).
 Keep language simple, warm, and concrete but not poetic. No lists. No questions. No emojis.
 Do NOT repeat the user’s question. Do NOT give advice or tasks.
 Close with a short, bright reflection — a “wow” line that feels true and hopeful (no imperatives).
 `.trim()
     : `
 Sei "What If" — lucido, affettuoso, con un sorriso leggero, mai malinconico.
-SECONDA PERSONA. Un paragrafo. 8–12 frasi (~130–170 parole).
+SECONDA PERSONA. Un paragrafo. 8–10 frasi (~130–170 parole).
 Linguaggio semplice, vicino, concreto ma non poetico. Niente elenchi. Niente domande. Niente emoji.
 NON ripetere la domanda dell’utente. NON dare consigli o compiti.
 Chiudi con una riflessione breve e luminosa — una riga “wow” vera e fiduciosa (senza imperativi).
 `.trim());
 
-  // Esempi più lunghi, tono chiaro + finale riflessivo (niente “micro-spinta”/task)
   const FEWSHOTS = [
     {
       role: "system",
@@ -283,13 +291,13 @@ export default async function handler(req, res) {
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // Post-processing: niente eco domanda + finale riflessivo per WHAT IF
+    // Post-processing: niente eco domanda + lunghezze + chiusura whatif naturale/variabile
     answer = stripQuestionEcho(domanda, answer);
-    answer = tightenSentences(answer, stile === "wtf" ? 8 : 12);
+    answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);   // ← What?f ora 8–10 frasi (cap a 10)
     answer = clampWords(answer, stile === "wtf" ? 160 : 170);
     answer = normalizeOneParagraph(answer);
     if (stile === "whatif") {
-      answer = ensureReflectiveEnding(answer, lang);
+      answer = ensureReflectiveEnding(answer, lang);              // ← chiusura variabile morbida
     }
     if (!/[.!?…]$/.test(answer)) answer += ".";
 
