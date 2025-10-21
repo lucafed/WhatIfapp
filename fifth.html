@@ -74,14 +74,8 @@ h1{
   font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);
   border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 10px;
 }
-
-/* Micro-tocco narrativo (lead) */
 .lead{
-  color:#E7F2EE;
-  font-size:14px;
-  line-height:1.45;
-  opacity:.86;
-  margin: 2px 0 10px;
+  color:#E7F2EE;font-size:14px;line-height:1.45;opacity:.86;margin:2px 0 10px;
 }
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
@@ -89,7 +83,6 @@ h1{
 </head>
 <body>
 <main>
-  <!-- Topbar -->
   <div class="row" style="justify-content:space-between">
     <div class="row">
       <button class="btn ghost" id="backBtn">←</button>
@@ -104,13 +97,11 @@ h1{
   <h1 id="title">Risultato</h1>
   <p class="sub" id="subtitle">—</p>
 
-  <!-- Domanda -->
   <div class="card">
     <div class="label" id="lblQ">La tua domanda</div>
     <div class="input" id="qView" style="min-height:46px"></div>
   </div>
 
-  <!-- Risposta -->
   <div class="card">
     <div class="label" id="lblA">Risposta</div>
     <div id="lead" class="lead fade-in">—</div>
@@ -125,7 +116,6 @@ h1{
 </main>
 
 <script>
-/* ---------- State & I18N ---------- */
 const LS=localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
 const style = prefs.stile || 'whatif';
@@ -145,7 +135,6 @@ const I18N={
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if"}
 }[lang];
 
-/* ---------- UI init ---------- */
 document.getElementById('langBtn').textContent=lang.toUpperCase();
 document.getElementById('backBtn').onclick=()=>history.back();
 document.getElementById('homeBtn').onclick=()=>location.href='index.html';
@@ -156,19 +145,12 @@ document.getElementById('shareBtn').textContent=I18N.share;
 document.getElementById('againBtn').textContent=I18N.again;
 document.getElementById('styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
 
-/* ---------- Helpers ---------- */
 function normalizeOneParagraph(s=""){
-  return String(s)
-    .replace(/\s*\n+\s*/g," ")
-    .replace(/\s{2,}/g," ")
-    .replace(/\s+([.,;:!?])/g,"$1")
-    .trim();
+  return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
 }
 
-/* Micro-lead (tono coerente al profilo) */
 const LEADS = {
-  it:{
-    wtf:[
+  it:{wtf:[
       "Respiri corto, tasche piene di chiavi e idee storte: ok, si parte.",
       "Entri nella scena come una nota a margine che ha deciso di diventare titolo.",
       "Hai fatto pace col caos? Perfetto: lui non l’ha fatta con te.",
@@ -179,10 +161,8 @@ const LEADS = {
       "Metti in fila i pensieri: pochi, chiari, abbastanza tuoi.",
       "La stanza è la stessa, lo sguardo è nuovo: già basta.",
       "Tieni vicino ciò che funziona; il resto lo metti in pausa."
-    ]
-  },
-  en:{
-    wtf:[
+    ]},
+  en:{wtf:[
       "Short breath, jangling keys, slightly tilted hope: alright, roll in.",
       "You enter like a footnote that chose to be the headline.",
       "Truce with chaos? Cute. Chaos didn’t sign it.",
@@ -193,16 +173,12 @@ const LEADS = {
       "Line up your thoughts: few, clear, recognizably yours.",
       "Same room, different gaze—that’s already movement.",
       "Keep what works within reach; let the rest wait outside."
-    ]
-  }
+    ]}
 };
-
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 
-/* ---------- Load & Render ---------- */
 const params=new URLSearchParams(location.search);
 const isReplay = params.get('view')==='replay';
-
 let domanda=""; let answerText="";
 
 function setTitles(q){
@@ -227,16 +203,32 @@ if(isReplay){
   document.getElementById('qView').textContent = domanda || '—';
 
   (async ()=>{
+    // tracking non bloccante
+    navigator.sendBeacon?.("/api/track") || fetch("/api/track",{method:"POST",keepalive:true}).catch(()=>{});
     try{
+      const headers={"Content-Type":"application/json"};
+      if(LS.getItem('whatif_pro_test')==='1') headers['x-pro']='1';
       const r = await fetch("/api/ask",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
+        method:"POST", headers,
         body:JSON.stringify({ domanda, lang, stile:style, extra:"", micro:req.micro||{} })
       });
+
+      // gestione errori 429/402
+      if(r.status===429){
+        document.getElementById('answer').textContent =
+          lang==='en'?"Too many requests. Try again in a minute.":"Troppo traffico, riprova tra un minuto.";
+        return;
+      }
+      if(r.status===402){
+        const d=await r.json().catch(()=>({}));
+        document.getElementById('answer').textContent =
+          lang==='en'?`You used today's free credits (${d?.used||"?"}/3).`:`Hai usato i crediti gratuiti di oggi (${d?.used||"?"}/3).`;
+        return;
+      }
+
       const data = await r.json();
       if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
-
-      answerText = normalizeOneParagraph((data.answer||"").trim());
+      answerText = normalizeOneParagraph(data.answer||"");
       document.getElementById('answer').textContent = answerText;
 
       const hist = JSON.parse(LS.getItem('cronologia')||'[]');
@@ -249,7 +241,6 @@ if(isReplay){
   })();
 }
 
-/* ---------- Share / Copy ---------- */
 document.getElementById('shareBtn').onclick=async()=>{
   const full = `What?f — ${style==='wtf'?'What the F':'What if'}\n\nQ: ${domanda}\n\n${normalizeOneParagraph(answerText)}`;
   try{
@@ -262,8 +253,6 @@ document.getElementById('shareBtn').onclick=async()=>{
     }
   }catch{}
 };
-
-/* ---------- Ask another ---------- */
 document.getElementById('againBtn').onclick=()=>{ location.href='fourth.html'; };
 </script>
 </body>
