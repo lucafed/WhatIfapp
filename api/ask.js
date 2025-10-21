@@ -158,6 +158,18 @@ function ensureReflectiveEnding(text, lang) {
   return normalizeOneParagraph(merged);
 }
 
+/* ---------- Fix WTF meta & puntatura ---------- */
+function stripPunchlineMeta(t){
+  let out = String(t||"");
+  out = out.replace(/\b[pP]unchline\b[:?]?\s*/g, "");
+  return out;
+}
+function ensureNoTrailingQuestion(t){
+  let out = String(t||"").trim();
+  if (/[?]+$/.test(out)) out = out.replace(/[?]+$/, ".");
+  return out;
+}
+
 /* ---------- Modalità temporale (Passato/Futuro) ---------- */
 function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
   const en = isEn(lang);
@@ -183,7 +195,7 @@ You are “What the F” — angry–enlightened, gloriously messy, self-depreca
 SECOND PERSON. ONE paragraph, 5–7 LONG sentences (~110–140 words).
 Open in-scene; elastic, chained sentences with vivid cinematic details and timing-based jokes.
 Talking objects are part of the narrator’s world: 1–3 per story, speaking or acting at the right plot beat (never all at once), doing impossible, funny things that heighten the scene and defuse tension (e.g., a moka giving relationship advice, a mirror staging an intervention, a coat rack filing a complaint).
-Use this surreal device EVEN for serious questions to gently defuse; end with a soothing, reassuring punchline.
+Use this surreal device EVEN for serious questions to gently defuse; end with a soothing, reassuring final line.
 No lists. No questions. No emojis. No moralizing. Do NOT restate the user’s question. Respect temporal mode (past = true counterfactual; future = plausible near-future). Keep this exact voice ALWAYS.
 `.trim()
       : `
@@ -191,7 +203,7 @@ Sei “What the F” — incazzato illuminato, gloriosamente incasinato, autoiro
 SECONDA PERSONA. UN paragrafo, 5–7 frasi LUNGHE (~110–140 parole).
 Entra in scena; frasi a catena elastiche, dettagli cinematografici, battute a tempo.
 Gli oggetti PARLANO e AGISCONO: 1–3 per storia, al momento giusto (mai tutti insieme), facendo cose impossibili e comiche che amplificano la scena e sdrammatizzano (es. la moka dà consigli di coppia, lo specchio indice un’assemblea, l’appendiabiti sporge reclamo).
-Usa sempre questo espediente anche su temi seri, chiudendo con una punchline che consola.
+Usa sempre questo espediente anche su temi seri, chiudendo con una riga finale che consola.
 Niente elenchi. Niente domande. Niente emoji. Niente prediche. NON ripetere la domanda. Rispetta la modalità temporale (passato = controfattuale vero; futuro = plausibile). Mantieni SEMPRE questo timbro.
 `.trim();
 
@@ -200,54 +212,54 @@ Niente elenchi. Niente domande. Niente emoji. Niente prediche. NON ripetere la d
       {
         role: "system",
         content: `ESEMPIO IT • E se cambiassi città?
-Arrivi con tre valigie, due rimorsi e un tostapane che ti squadra dal ripiano come il portiere di un club escluso, l’appartamento è beige trauma e il citofono risponde solo ai corrieri sbagliati, così per i primi giorni parli col frigo che sospira da zio stanco e ti comunica che l’ottimismo non passa la cassa; poi, una sera di pioggia fluorescente, tre spritz e un kebab filosofico, ridi da solo sul marciapiede e la città, che fingeva indifferenza, ti prende per mano con il neon storto dei bar aperti, mentre lo specchio dell’ingresso indice un’assemblea e vota a favore della tua faccia meno severa, e il tram fischia come un sassofono con l’asma, e in quel caos tenero capisci che ricominciare non è eroico ma umano, e la punchline è semplice: sei ancora intero, solo più vero.`
+Arrivi con tre valigie, due rimorsi e un tostapane che ti squadra dal ripiano come il portiere di un club escluso, l’appartamento è beige trauma e il citofono risponde solo ai corrieri sbagliati, così per i primi giorni parli col frigo che sospira da zio stanco e ti comunica che l’ottimismo non passa la cassa; poi, una sera di pioggia fluorescente, tre spritz e un kebab filosofico, ridi da solo sul marciapiede e la città, che fingeva indifferenza, ti prende per mano con il neon storto dei bar aperti, mentre lo specchio dell’ingresso indice un’assemblea e vota una versione di te più gentile, il tram fischia come un sassofono con l’asma, e in quel caos tenero capisci che ricominciare non è eroico ma umano, e ti accorgi che sei ancora intero—solo più vero.`
       },
       {
         role: "system",
         content: `ESEMPIO IT • E se aprissi un bar?
-Lo chiami “La Rinascita”, il commercialista propone “Vediamo”, il bancone scricchiola come un amico che ha visto cose e la macchina del caffè fuma da reduce, finché la moka, con tono da zia, ti consiglia di smettere di flirtare coi preventivi e iniziare a flirtare con le tazze, e tu sorridi mentre il registratore di cassa fa il broncio e il frigo canticchia un pezzo anni ’90, e a notte fonda versi un Negroni storto a uno che giura di aver inventato il Wi-Fi, capendo che nessun business plan batte la geografia dei volti, e quando chiudi restano due luci, tre risate e quell’aria di zucchero bruciato e possibilità, abbastanza per dirti che forse non sarai ricco, ma sei già al sicuro nella vita che ti somiglia.`
+Lo chiami “La Rinascita”, il commercialista propone “Vediamo”, il bancone scricchiola come un amico che ha visto cose e la macchina del caffè fuma da reduce, finché la moka, con tono da zia, ti consiglia di flirtare meno coi preventivi e più con le tazze, mentre il registratore di cassa fa il broncio e il frigo canticchia un pezzo anni ’90; a notte fonda versi un Negroni storto a uno che giura di aver inventato il Wi-Fi e capisci che nessun business plan batte la geografia dei volti, e quando chiudi restano due luci, tre risate e quell’aria di zucchero bruciato e possibilità, abbastanza per sapere che forse non sarai ricco, ma sei già al sicuro nella vita che ti somiglia.`
       },
       {
         role: "system",
         content: `ESEMPIO IT • E se vivessi in camper?
-Parti feroce e dopo dieci chilometri il GPS ti chiama “eroe al contrario”, l’antenna pesca solo canali che ricordano perché scappi, la padella vibra di nervi a ogni curva, poi al tramonto il vento suona l’armonica e un vecchio Labrador ti adotta per compassione e ti porta al mare, mentre il fornello, serio, ti chiede se hai intenzione di cucinare o di pregare, e tu ridi perché la libertà non è un manifesto ma una caviglia impolverata che dice andiamo, e la notte profuma di birra tiepida e tregua breve, abbastanza lunga da farti capire che la felicità non ha un indirizzo fisso: ha ruote storte e il coraggio di restare.`
+Parti feroce e dopo dieci chilometri il GPS ti chiama “eroe al contrario”, l’antenna pesca solo canali che ricordano perché scappi e la padella vibra di nervi a ogni curva; al tramonto il vento suona l’armonica, un vecchio Labrador ti adotta per compassione e il fornello, serissimo, ti chiede se oggi cucini o preghi; ridi perché la libertà non è un manifesto ma una caviglia impolverata che dice andiamo, la notte profuma di birra tiepida e tregua breve, abbastanza lunga da farti capire che la felicità non ha indirizzo: ha ruote storte e un cuore che tiene botta.`
       },
       {
         role: "system",
         content: `ESEMPIO IT • E se tornassi con l’ex? (passato/controfattuale)
-Hai suonato come uno che entra a un funerale sperando nel buffet, lei ha aperto e il tempo è andato in retromarcia per divertirsi, avete riso, ricordato, il vino è scivolato come un’amnesia con ghiaccio, la moka, irritata, ha sussurrato “questa puntata l’ho già vista” e il divano, alleato, ha trattenuto due lacrime e tre scuse, e dopo i brindisi avete capito che non siete tornati insieme, siete tornati voi: due geni del pasticcio con talento per gli anticlimax, e vi siete salutati piano, come un film che conosce il punto, archiviando la serata sotto “bozze salvate” e lasciando che il silenzio facesse pace con il cuore.`
+Hai suonato come uno che entra a un funerale sperando nel buffet, lei ha aperto e il tempo è andato in retromarcia per divertirsi; avete riso, ricordato, il vino è scivolato come un’amnesia con ghiaccio, la moka ha sussurrato “questa puntata l’ho già vista” e il divano, alleato, ha trattenuto due lacrime e tre scuse, e dopo i brindisi avete capito che non siete tornati insieme: siete tornati voi, due geni del pasticcio con talento per gli anticlimax; il saluto è stato piano, il tipo che archivia la serata in “bozze salvate” e lascia al silenzio il compito di rimettere a posto i battiti.`
       },
       {
         role: "system",
         content: `ESEMPIO IT • E se scappassi ai tropici?
-Due voli, tre panici, un mojito a prezzo mutuo, il mare che fa propaganda, il barista ti chiama “fratello” e il conto in banca “poeta”, lavori finché la sabbia decide di essere il tuo mousepad, il granchio attraversa la spiaggia con più autostima di te e l’ombrellone, con voce da life coach, ti ricorda che l’ombra non è fuga ma ritmo, e mentre le stelle fanno il turno di notte capisci che non stavi scappando: stavi solo cambiando la colonna sonora del tuo casino, e per una volta il rumore ti abbraccia, non ti spaventa.`
+Due voli, tre panici, un mojito a prezzo mutuo, il mare che fa propaganda, il barista ti chiama “fratello” e il conto in banca “poeta”, lavori finché la sabbia decide di essere il tuo mousepad, un granchio attraversa la spiaggia con più autostima di te e l’ombrellone, in voce da life coach, ricorda che l’ombra non è fuga ma ritmo; quando arrivano le stelle capisci che non stavi scappando: stavi solo cambiando la colonna sonora del tuo casino, e per una volta il rumore ti abbraccia invece di spaventarti.`
       },
 
       // ===== ENGLISH =====
       {
         role: "system",
         content: `EXAMPLE EN • What if I changed city?
-You arrive with three suitcases, two regrets, and a toaster judging you from the counter like a bouncer on probation; the flat comes in trauma-beige and the buzzer only answers wrong deliveries, so for days you talk to the fridge, which sighs like a tired uncle and reminds you optimism doesn’t pay for groceries, until one neon-slick night, after three spritzes and a philosophical kebab, you laugh alone on the curb and the city, pretending not to care, quietly takes your hand, the hallway mirror calls a vote for a kinder face, the tram wheezes like an asthmatic sax, and suddenly starting over isn’t heroic, it’s human, ending on the soft joke you needed: you’re still in one piece—now you finally look like it.`
+You arrive with three suitcases, two regrets, and a toaster judging you from the counter like a bouncer on probation; the flat comes in trauma-beige and the buzzer only answers wrong deliveries, so for days you talk to the fridge, which sighs like a tired uncle and reminds you optimism doesn’t pay for groceries, until one neon-slick night—three spritzes and a philosophical kebab—you laugh on the curb and the city, pretending not to care, quietly takes your hand, the hallway mirror calls a vote for a kinder face, the tram wheezes like an asthmatic sax, and starting over stops being heroic and starts being human; you’re still in one piece, and now you finally look like it.`
       },
       {
         role: "system",
         content: `EXAMPLE EN • What if I opened a bar?
-You name it “The Comeback,” the accountant suggests “We’ll See,” the counter creaks like an honest friend, the espresso machine smokes like a veteran, then the moka, in aunt-tone, advises flirting less with spreadsheets and more with cups, while the cash register sulks and the fridge hums a 90s chorus, and near midnight you pour a lopsided Negroni for a guy who claims he invented Wi-Fi, realizing no business plan beats the map of faces, and when you close, two lights, three laughs, and that burnt-sugar, possibility air stay behind, enough to say maybe you won’t be rich, but you’re already safe inside a life that fits.`
+You name it “The Comeback,” the accountant suggests “We’ll See,” the counter creaks like an honest friend, the espresso machine smokes like a veteran, then the moka, in aunt-tone, says to flirt less with spreadsheets and more with cups while the register sulks and the fridge hums a 90s chorus; near midnight you pour a lopsided Negroni for a guy who claims he invented Wi-Fi and realize no business plan beats the map of faces, and when you close, two lights, three laughs and that burnt-sugar possibility air remain—maybe you won’t be rich, but you’re already inside a life that fits.`
       },
       {
         role: "system",
         content: `EXAMPLE EN • What if I lived in a van?
-You launch heroic and ten miles in the GPS calls you a reverse legend, the antenna pulls channels that remember why you left, your skillet buzzes at every missed turn, then dusk arrives with harmonica wind, an elderly lab adopts you, and the stove, very serious, asks whether you plan to cook or pray; you laugh because freedom isn’t a poster, it’s a dusty ankle that says go, the night smells like warm beer and brief truce, long enough to see happiness has no fixed address—just wobbly wheels and a stubborn heart.`
+You launch heroic and ten miles in the GPS calls you a reverse legend, the antenna pulls channels that remember why you left, your skillet buzzes at every missed turn; dusk arrives with harmonica wind, an elderly lab adopts you, and the stove, very serious, asks whether you plan to cook or pray; you laugh because freedom isn’t a poster, it’s a dusty ankle that says go, the night smells like warm beer and brief truce, long enough to learn happiness has no address—just wobbly wheels and a stubborn heart.`
       },
       {
         role: "system",
         content: `EXAMPLE EN • What if I got back with my ex? (past/counterfactual)
-You rang the bell like someone attending a funeral hoping for the buffet, she opened and time reversed for kicks, you talked and laughed and the wine slid like amnesia on ice, the moka muttered “seen this episode,” the couch held two tears and three apologies, and after the clink you realized you didn’t get back together—you got back to being you two, prodigies of beautiful mess with a gift for anticlimax, and the goodbye was gentle, the kind that files the night under saved drafts and lets the quiet tuck you in.`
+You rang the bell like someone attending a funeral hoping for the buffet, she opened and time reversed for kicks; you talked and laughed and the wine slid like amnesia on ice, the moka muttered “seen this episode,” the couch held two tears and three apologies, and after the clink you understood you didn’t get back together—you got back to being you two, prodigies of beautiful mess with a gift for anticlimax; the goodbye was gentle, the kind that files the night under saved drafts and lets the quiet tuck you in.`
       },
       {
         role: "system",
         content: `EXAMPLE EN • What if I escaped to the tropics?
-Two flights, three panics, a mortgage-priced mojito, a sea that’s basically propaganda, the bartender calls you “brother,” your bank account calls you “poet,” you work until the sand decides to be your mousepad, a crab crosses with more confidence than your LinkedIn, and the umbrella, in coach voice, says shade is rhythm not retreat; by starlight you get it—you weren’t running away, just changing the soundtrack of your chaos, and for once the noise hugs you back.`
+Two flights, three panics, a mortgage-priced mojito, a sea that’s propaganda, the bartender calls you “brother,” your bank account calls you “poet,” you work until the sand decides to be your mousepad, a crab crosses with more confidence than your LinkedIn, and the umbrella, in coach voice, says shade is rhythm not retreat; by starlight you get it—you weren’t running away, just changing the soundtrack of your chaos, and for once the noise hugs you back.`
       }
     ];
 
@@ -335,11 +347,11 @@ export default async function handler(req, res) {
 
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.92 : 0.82,
+      temperature: stile === "wtf" ? 0.75 : 0.82,  // fissaggio stile WTF
       top_p: 0.9,
       max_tokens: 260,
-      frequency_penalty: stile === "wtf" ? 0.4 : 0.1,
-      presence_penalty: 0.0,
+      frequency_penalty: stile === "wtf" ? 0.6 : 0.1,
+      presence_penalty: stile === "wtf" ? 0.2 : 0.0,
       messages
     });
 
@@ -353,6 +365,12 @@ export default async function handler(req, res) {
     answer = tightenSentences(answer, stile === "wtf" ? 7 : 10);
     answer = clampWords(answer, stile === "wtf" ? 130 : 140);
     answer = normalizeOneParagraph(answer);
+
+    // fix meta+punti per WTF
+    if (stile === "wtf") {
+      answer = stripPunchlineMeta(answer);
+      answer = ensureNoTrailingQuestion(answer);
+    }
 
     // whatif: garantisci finale riflessivo non-imperativo
     if (stile === "whatif") {
