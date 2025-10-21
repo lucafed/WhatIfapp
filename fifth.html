@@ -90,7 +90,6 @@ h1{
     </div>
     <div class="row" style="gap:8px">
       <span class="badge" id="styleBadge">🎭 —</span>
-      <!-- Badge TEST/PRO: visibile se admin_token o prefs.pro -->
       <span class="badge" id="proBadge" title="" style="display:none">🧪 TEST · ⭐ PRO</span>
       <button class="btn ghost" id="langBtn">IT</button>
     </div>
@@ -121,10 +120,10 @@ h1{
 const LS=localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
 const style = prefs.stile || 'whatif';
+const periodo = prefs.periodo || 'future'; // ✅ aggiunto: periodo scelto
 const lang  = (LS.getItem('lang') || 'it').toLowerCase();
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 
-// Badge TEST/PRO: ON se hai un admin_token o se PRO locale è attivo
 (function showProBadge(){
   const el = document.getElementById('proBadge');
   const hasToken = !!LS.getItem('admin_token');
@@ -132,8 +131,6 @@ document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'w
     el.style.display = 'inline-flex';
     el.textContent = (lang === 'en') ? '🧪 TEST · ⭐ PRO' : '🧪 TEST · ⭐ PRO';
     el.title = (lang === 'en') ? 'Test mode active' : 'Modalità test attiva';
-  } else {
-    el.style.display = 'none';
   }
 })();
 
@@ -142,14 +139,12 @@ const I18N={
       sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
       share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
       copied:"Copiato!", error:"[errore server]",
-      styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-      limit:"Hai usato i crediti gratuiti di oggi."},
+      styleWTF:"🎭 What the F", styleWHF:"🎭 What if"},
   en:{tWTF:"⚡ What the F — Result", tWHF:"💡 What if — Result",
       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
       share:"📤 Share / Copy", again:"🔁 Ask another",
       copied:"Copied!", error:"[server error]",
-      styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-      limit:"You used today's free credits."}
+      styleWTF:"🎭 What the F", styleWHF:"🎭 What if"}
 }[lang];
 
 document.getElementById('langBtn').textContent=lang.toUpperCase();
@@ -220,26 +215,29 @@ if(isReplay){
   document.getElementById('qView').textContent = domanda || '—';
 
   (async ()=>{
-    // tracking non bloccante
     navigator.sendBeacon?.("/api/track") || fetch("/api/track",{method:"POST",keepalive:true}).catch(()=>{});
     try{
-      // >>>>>>>>> HEADERS CON X-PRO E (OPZIONALE) ADMIN TOKEN <<<<<<<<<
       const headers = { "Content-Type": "application/json" };
-      if (prefs && prefs.pro === true) {
-        headers["x-pro"] = "1";          // bypass crediti per modalità TEST/PRO locale
-      }
+      if (prefs.pro === true) headers["x-pro"] = "1";
       const adminToken = localStorage.getItem("admin_token");
-      if (adminToken) headers["x-admin-token"] = adminToken; // opzionale
-      // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+      if (adminToken) headers["x-admin-token"] = adminToken;
 
+      // ✅ ora invia anche periodo (passato/futuro)
       const r = await fetch("/api/ask",{
         method:"POST", headers,
-        body:JSON.stringify({ domanda, lang, stile:style, extra:"", micro:req.micro||{} })
+        body:JSON.stringify({
+          domanda,
+          lang,
+          stile:style,
+          extra:"",
+          micro:req.micro||{},
+          periodo
+        })
       });
 
       if(r.status===429){
         document.getElementById('answer').textContent =
-          lang==='en'?"Too many requests. Try again in a minute.":"Troppo traffico, riprova tra un minuto.";
+          lang==='en'?"Too many requests. Try again later.":"Troppo traffico, riprova più tardi.";
         return;
       }
       if(r.status===402){
@@ -257,7 +255,7 @@ if(isReplay){
       document.getElementById('answer').textContent = answerText;
 
       const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-      hist.push({ domanda, risposta:answerText, stile:style, ts:Date.now() });
+      hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
       LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
     }catch(e){
       document.getElementById('answer').textContent = I18N.error;
@@ -267,7 +265,7 @@ if(isReplay){
 }
 
 document.getElementById('shareBtn').onclick=async()=>{
-  const full = `What?f — ${style==='wtf'?'What the F':'What if'}\n\nQ: ${domanda}\n\n${normalizeOneParagraph(answerText)}`;
+  const full = `What?f — ${style==='wtf'?'What the F':'What if'}\n(${periodo})\n\nQ: ${domanda}\n\n${normalizeOneParagraph(answerText)}`;
   try{
     if(navigator.share){
       await navigator.share({ title: "What?f", text: full });
