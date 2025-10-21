@@ -1,7 +1,8 @@
 // ============================
 // /api/ask.js — What?f Engine
-// Stili: whatif (realismo lucido con sorriso), wtf (incazzato illuminato demenziale)
-// IT/EN — singolo paragrafo, niente elenchi, niente domande, niente emoji
+// Stili: "whatif" (Realismo Controfattuale con Luce) · "wtf" (Demenziale autoironico)
+// IT/EN — un paragrafo, niente liste/domande/emoji
+// Supporta `tempo`: "presente" | "passato" (controfattuale)
 // ============================
 
 import OpenAI from "openai";
@@ -17,7 +18,7 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-// rate limit: 10 req/min per IP (skippabile per admin/PRO)
+// rate limit: 10 req/min per IP (bypass con admin/pro)
 const rl = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(10, "1 m"),
@@ -40,55 +41,6 @@ function cors(req, res) {
 /* ---------- Helpers ---------- */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
-function normLine(s = "") {
-  return String(s)
-    .toLowerCase()
-    .replace(/[“”"']/g, "")
-    .replace(/\s+/g, " ")
-    .replace(/[.,;:!?()\[\]\-—]+$/g, "")
-    .trim();
-}
-
-function tightenSentences(text, maxSentences) {
-  const parts = String(text || "")
-    .replace(/\n+/g, " ")
-    .split(/(?<=[.!?…])\s+/)
-    .map((x) => x.trim())
-    .filter(Boolean);
-
-  const out = [];
-  const seen = new Set();
-  for (const p of parts) {
-    const n = normLine(p);
-    if (!n) continue;
-    if (seen.has(n)) continue;
-    const wc = p.split(/\s+/).length;
-    if (wc <= 3 && !/[.!?…]$/.test(p)) continue;
-    out.push(p);
-    if (out.length >= maxSentences) break;
-    seen.add(n);
-  }
-  let t = out.join(" ");
-  if (!/[.!?…]$/.test(t)) t += ".";
-  return t;
-}
-
-function clampWords(text, maxWords) {
-  const w = String(text || "").split(/\s+/);
-  if (w.length <= maxWords) return text;
-  const slice = w.slice(0, maxWords).join(" ");
-  const m = slice.match(/([\s\S]*?[.!?…])(?![\s\S]*[.!?…])/);
-  return m ? m[1] : slice + "…";
-}
-
-function normalizeOneParagraph(s = "") {
-  return String(s)
-    .replace(/\s*\n+\s*/g, " ")
-    .replace(/\s{2,}/g, " ")
-    .replace(/\s+([.,;:!?…])/g, "$1")
-    .trim();
-}
-
 function parseBody(req) {
   try {
     if (typeof req.body === "string") return JSON.parse(req.body || "{}");
@@ -108,206 +60,184 @@ async function isAdmin(req, requesterIp) {
   }
 }
 
-/* ---------- Guardrail & Endings ---------- */
+// normalizza frasi, evita duplicati, chiusura a punto
+function normLine(s = "") {
+  return String(s)
+    .toLowerCase()
+    .replace(/[“”"']/g, "")
+    .replace(/\s+/g, " ")
+    .replace(/[.,;:!?()\[\]\-—]+$/g, "")
+    .trim();
+}
+function tightenSentences(text, maxSentences) {
+  const parts = String(text || "")
+    .replace(/\n+/g, " ")
+    .split(/(?<=[.!?])\s+/)
+    .map((x) => x.trim())
+    .filter(Boolean);
 
-// Togli eco iniziale della domanda (es. “E se…”, “Domanda: …”)
+  const out = [];
+  const seen = new Set();
+  for (const p of parts) {
+    const n = normLine(p);
+    if (!n) continue;
+    if (seen.has(n)) continue;
+    const wc = p.split(/\s+/).length;
+    if (wc <= 3 && !/[.!?]$/.test(p)) continue;
+    out.push(p);
+    seen.add(n);
+    if (out.length >= maxSentences) break;
+  }
+  let t = out.join(" ");
+  if (!/[.!?…]$/.test(t)) t += ".";
+  return t;
+}
+function clampWords(text, maxWords) {
+  const w = String(text || "").split(/\s+/);
+  if (w.length <= maxWords) return text;
+  const slice = w.slice(0, maxWords).join(" ");
+  const m = slice.match(/([\s\S]*?[.!?])(?![\s\S]*[.!?])/);
+  return m ? m[1] : slice + "…";
+}
+function normalizeOneParagraph(s = "") {
+  return String(s)
+    .replace(/\s*\n+\s*/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([.,;:!?])/g, "$1")
+    .trim();
+}
+
+// rimuove un eventuale eco della domanda all'inizio della risposta
 function stripQuestionEcho(domanda, text) {
   const d = String(domanda || "").replace(/[“”"']/g, "").trim().toLowerCase();
   let t = String(text || "");
-  const lead = t.slice(0, Math.min(t.length, d.length + 10)).toLowerCase().replace(/[“”"']/g, "").trim();
-  const echoRx = /^(?:e\s*se|what\s*if|domanda:|q:)[^.!?…]*[.!?…]\s+/i;
-  if (lead.startsWith(d)) {
+  const head = t.slice(0, Math.min(t.length, d.length + 8)).toLowerCase().replace(/[“”"']/g, "").trim();
+  if (head.startsWith(d) || head.startsWith("domanda:") || head.startsWith("q:")) {
     const cut = t.indexOf(".");
     if (cut > -1) t = t.slice(cut + 1).trim();
   }
-  t = t.replace(echoRx, "");
   return t;
 }
 
-function hasQuestionMark(t){ return /\?/u.test(String(t||"")); }
-
-function wittyPunch(lang){
-  const IT = [
-    "E ti scappa da ridere: la tua serietà regge meno di uno scontrino bagnato.",
-    "E ti sorprendi intero: sei goffo ma in saldo, e va benissimo così.",
-    "E fai pace col casino: sei il difetto che ti riesce meglio.",
-    "E capisci che oggi non hai vinto: ti sei proprio piaciuto a perdere.",
-    "E ti viene da brindare: all’arte di non farcela benissimo."
-  ];
-  const EN = [
-    "And you crack up: your seriousness holds less than a wet receipt.",
-    "And you feel intact: clumsy but on brand, which suits you.",
-    "And you make peace with the mess: you’re the flaw you do best.",
-    "And you admit it: no win today—just premium-grade you.",
-    "And you toast to it: the fine art of not quite nailing it."
-  ];
-  const pool = isEn(lang) ? EN : IT;
-  return pool[Math.floor(Math.random()*pool.length)];
-}
-
-// Forza la personalità/forma WTF: niente “?”, 6–8 frasi, finale pungente
-function enforceWtfStyle(text, lang){
-  let t = String(text||"").trim();
-
-  // niente domande
-  if (hasQuestionMark(t)) t = t.replace(/\?/g, ".");
-
-  // segmenta frasi
-  let parts = t.split(/(?<=[.!?…])\s+/).filter(Boolean);
-
-  // 6–8 frasi (riempi o taglia)
-  if (parts.length > 8) parts = parts.slice(0, 8);
-  if (parts.length < 6) {
-    const filler = isEn(lang)
-      ? "You breathe, blink, and keep the circus small."
-      : "Respiri, batti le palpebre e tieni piccolo il circo.";
-    while (parts.length < 6) parts.splice(parts.length - 1, 0, filler);
-  }
-
-  // finale pungente se moscio o troppo corto
-  const last = parts[parts.length-1] || "";
-  const tooDry = last.split(/\s+/).length < 6 || /oggi|quindi|allora|insomma$/i.test(last.trim());
-  if (tooDry) parts[parts.length-1] = wittyPunch(lang);
-
-  t = parts.join(" ");
-  t = t.replace(/\s+([.,;:!?…])/g, "$1").replace(/\s{2,}/g," ").trim();
-  if(!/[.!?…]$/.test(t)) t += ".";
-  return t;
-}
-
-// WHAT IF — finale riflessivo (no imperativi, no “compiti”)
+// chiusure morbide (no compiti) per What If
 function ensureReflectiveEnding(text, lang) {
   const t = String(text || "").trim();
   if (!t) return t;
-  const sentences = t.split(/(?<=[.!?…])\s+/).filter(Boolean);
+  const sentences = t.split(/(?<=[.!?])\s+/).filter(Boolean);
   const last = sentences.pop() || "";
   const lowerLast = last.trim().toLowerCase();
 
   const itImperatives = [/^prova\b/, /^fai\b/, /^metti\b/, /^chiama\b/, /^scrivi\b/, /^inizia\b/, /^oggi\b/];
   const enImperatives = [/^try\b/, /^do\b/, /^start\b/, /^write\b/, /^call\b/, /^today\b/];
-  const isImp = isEn(lang)
+  const isImp = (lang || "it").startsWith("en")
     ? enImperatives.some((r) => r.test(lowerLast))
     : itImperatives.some((r) => r.test(lowerLast));
 
   const IT_ENDINGS = [
-    "E ti accorgi che il respiro è la tua misura.",
-    "E capisci che la calma non fa rumore, però resta.",
-    "Ti sorprende scoprire che la semplicità tiene meglio del previsto.",
-    "E in quel momento, la scelta non spinge: coincide.",
-    "E capisci che non stai scappando: stai scegliendo."
+    "E ti accorgi che la scelta non fa rumore: coincide.",
+    "E scopri che non serviva una mappa: bastava riconoscerti.",
+    "E capisci che non hai perso tempo: hai cambiato misura.",
+    "E ti sorprende quanto è semplice quando smetti di trattenere il respiro.",
+    "E all’improvviso è chiaro: non era un rimpianto, era una strada parallela."
   ];
   const EN_ENDINGS = [
-    "And you notice your breath is the measure.",
-    "It turns out quiet doesn’t shout, but it stays.",
-    "Simplicity holds better than you expected.",
-    "And in that moment, the choice doesn’t push — it fits.",
-    "It’s clear you’re not running; you’re choosing."
+    "And you notice the choice doesn’t make noise — it fits.",
+    "And it turns out you didn’t need a map — just recognition.",
+    "And you see it wasn’t lost time — just a different measure.",
+    "And it’s simple once you stop holding your breath.",
+    "And suddenly it’s clear: not regret, just a parallel road."
   ];
-  const soft = isEn(lang) ? EN_ENDINGS : IT_ENDINGS;
-
+  const pool = (lang || "it").startsWith("en") ? EN_ENDINGS : IT_ENDINGS;
   const tooShort = last.split(/\s+/).length < 4;
-  const finalLine = (isImp || tooShort) ? soft[Math.floor(Math.random() * soft.length)] : last;
-
-  const merged = [...sentences, finalLine].join(" ");
-  return normalizeOneParagraph(merged);
+  const finalLine = (isImp || tooShort) ? pool[Math.floor(Math.random() * pool.length)] : last;
+  return normalizeOneParagraph([...sentences, finalLine].join(" "));
 }
 
 /* ---------- Personas ---------- */
-function personaSystem(style, lang) {
+function personaSystem(style, lang, tempo = "presente") {
+  const isPast = String(tempo || "presente").toLowerCase().startsWith("pass");
   if (style === "wtf") {
-    // WHAT THE F — Personalità demenziale–autoironica (contratto rigido)
+    // WHAT THE F — demenziale/autoironico (prima calibrazione)
     const SYS = (isEn(lang)
       ? `
-You are “What the F” — angry–enlightened and gleefully absurd, tender under the snarl.
-SECOND PERSON. ONE paragraph. 6–8 sentences (~120–160 words).
-Speak fast, self-deprecating, streetwise. Micro-scenes of daily chaos (groceries, Zoom, bus, stove, gym, bureaucracy).
-Do NOT restate or paraphrase the user’s question. Start in-scene.
-No lists. No questions. No emojis. No moralizing. Light swearing only if it truly lands.
-Keep it concrete (keys, receipt, barcode, stairs, trolley, pan, radiator, treadmill).
-End with a one-line punch that both stings and soothes (not advice).
-If you break any rule above, immediately rewrite the paragraph to comply before answering.
+You are “What the F” — a deliriously funny, self-roasting narrator with heart.
+SECOND PERSON. ONE paragraph. 6–8 sentences (~120–160 words). Flowing narration, not choppy.
+Hyperreal everyday mess, punchy images, gentle swearing only if it truly lands.
+No lists. No questions. No emojis. No moralizing. Never repeat the user’s question.
+End on a zinger that makes the reader laugh at themselves and feel oddly seen.
 `.trim()
       : `
-Sei “What the F” — incazzato illuminato e felicemente demenziale, affettuoso sotto il ringhio.
-SECONDA PERSONA. UN paragrafo. 6–8 frasi (~120–160 parole).
-Parla veloce, autoironico, terrestre. Micro-scene di caos quotidiano (spesa, Zoom, autobus, fornelli, palestra, burocrazia).
-NON ripetere o parafrasare la domanda. Entra direttamente in scena.
-Niente elenchi. Niente domande. Niente emoji. Niente prediche. Parolacce leggere solo se servono davvero.
-Lessico concreto (chiavi, scontrino, codice a barre, scale, carrello, padella, termosifone, tapis roulant).
-Chiudi con una battuta di una riga che punge e consola (non un consiglio).
-Se rompi una regola, riscrivi subito il paragrafo rispettandole prima di rispondere.
+Sei “What the F” — narratore demenziale, autoironico, con cuore sotto l’incazzatura.
+SECONDA PERSONA. UN paragrafo. 6–8 frasi (~120–160 parole). Narrazione scorrevole, non a singhiozzi.
+Caos quotidiano iper-reale, immagini argute, parolacce leggere solo se servono davvero.
+Niente elenchi. Niente domande. Niente emoji. Niente prediche. Non ripetere la domanda.
+Chiudi con una battuta che fa ridere di te stesso e ti fa sentire paradossalmente capito.
 `.trim());
 
-    // Molti fewshot vari (IT/EN) per cementare il timbro
+    // ESEMPI — IT & EN (tanti, vari, senza eco domanda)
     const FEWSHOTS = [
-      // ===== ITALIANO =====
-      { role:"system", content:
-`ESEMPIO IT • Spesa al discount
-Ti presenti eroico con la lista sul telefono e il carrello decide che oggi fischia in re minore. Prendi il latte “in offerta”, che scade nel Paleolitico, e lo yogurt ti guarda come un giudice fiscale. Il codice a barre fa il timido, passi dieci volte e sembri un DJ triste alla cassa. In borsa crolla un pacco di pasta e ti parte l’applauso dei fusilli. Torni a casa convinto di aver risparmiato: hai comprato tre cose in più, due in meno e una di cui ti vergogni. E ridi, perché la tua economia domestica è un one-man-show col microfono staccato.`},
-      { role:"system", content:
-`ESEMPIO IT • Call su Zoom
-Entri in riunione con l’aria da professionista e il microfono parte in modalità “documentario muto del ’28”. Annuisci, sorridi, fingi grafici invisibili, poi ti accorgi che stai parlando al tostapane. Quando finalmente ti sentono, scatta l’eco e sembri la tua coscienza ubriaca. Condividi lo schermo: apri la presentazione, la chat privata, il calendario e un ricordo che non volevi rivedere. Finisce tra applausi educati e decisioni che non ricordi. E ti scappa da ridere: in ufficio remoto sei bravissimo a stare lontano da te stesso.`},
-      { role:"system", content:
-`ESEMPIO IT • Autobus e dignità
-Sali con il passo del ninja e la tessera fa bip solo a giorni pari con vento favorevole. Scivoli di mezzo stivale sul tornello, ti siedi, e la suoneria del vicino è un revival del ’98 che ti giudica. Ti prepari la fermata come un esame di maturità e la perdi per guardare un cane col cappotto migliore del tuo. Smonti alla successiva con la grazia di un mobile Ikea montato al contrario. E sorridi, perché forse la dignità non si è persa: ha solo preso l’autobus dopo.`},
-      { role:"system", content:
-`ESEMPIO IT • Palestra eroico-pigra
-Arrivi carico, saluti i pesi come vecchi amici e loro non ricambiano. Dieci minuti di tapis roulant e il cuore ti manda una mail con oggetto “parliamone”. Ti specchi per correggere la postura e vedi un cugino di te che fa finta meglio. Ti premi con una bottiglietta d’acqua da 4 euro che sa di fonte condominiale. Esci sudato, fiero e confuso: hai fatto poco, ma l’hai fatto rumorosamente. E ti viene da brindare: al cardio breve e all’ego lungo.`},
-      { role:"system", content:
-`ESEMPIO IT • Burocrazia boss finale
-Prendi numeretto, prendi coscienza, perdi entrambe. Compili il modulo A/7bis/forse, firma qui, qui, e anche qui dove non c’è scritto niente. La stampante fa il rumore di un dinosauro con l’asma e ti sputa addosso un foglio storto con l’impronta dell’impiegato. Esci con tre copie, due dubbi e una nuova religione: San Timbratore Martire. E ridi: hai sconfitto il drago ma ti ha adottato.`},
-      { role:"system", content:
-`ESEMPIO IT • Fornelli e filosofia
-Metti l’acqua, sali di livello, poi ti chiama il destino (spam) e torni a cucina con il fumo che fa le ombre cinesi. La padella ti accusa a vista, il mestolo testimonia contro di te, il sugo scappa come un’amicizia in quarantena. Assaggi e dici “ci sta”: è l’intonaco. Ti siedi lo stesso, mastichi orgoglio e pane. E capisci che certe ricette riescono: soprattutto quando non sono tue.`},
-
-      // ===== ENGLISH =====
-      { role:"system", content:
-`EXAMPLE EN • Grocery speedrun
-You enter heroic with a list and the trolley decides to whistle in minor key. The “deal” milk expires somewhere in prehistory and the yogurt stares like tax audit. The barcode plays shy; you scan ten times like a sad DJ at checkout. A pasta pack collapses in your bag and the fusilli applaud. You reach home convinced you saved money: three extras, two missing, and one shame purchase. And you laugh, because your home economy is stand-up without a mic.`},
-      { role:"system", content:
-`EXAMPLE EN • Zoom opera
-You join like a pro and your mic picks silent-film mode. You nod, smile, narrate graphs with your eyebrows, then realize you’ve been presenting to the toaster. When they finally hear you, the echo arrives like your conscience after two drinks. Screen share opens the deck, the private chat, the calendar, and a memory you didn’t order. Meeting ends in polite applause and decisions you can’t quote. And you crack up: in remote office you’re excellent at being far from yourself.`},
-      { role:"system", content:
-`EXAMPLE EN • Bus & dignity
-You hop in ninja-style and the pass beeps only on even days with favorable wind. You slip half a shoe on the turnstile, sit, and your neighbor’s ringtone is ’98 judging your life. You prep the stop like finals and miss it watching a dog in a better coat than yours. You exit next stop with the grace of an Ikea shelf built upside down. And you smile: dignity isn’t lost—it took the following bus.`},
-      { role:"system", content:
-`EXAMPLE EN • Gym hero-ish
-You greet the weights, they ghost you. Ten minutes on treadmill and your heart emails “we need to talk.” Mirror form-check shows a cousin of you pretending better. You reward yourself with a 4-euro water tasting like municipal hose. You leave sweaty, proud, confused: not much done, done very loudly. And you toast: to short cardio and long ego.`}
+      // ====== IT ======
+      { role: "system", content: `ESEMPIO IT • Trasloco improvvisato
+Ti alzi in modalità campione del mondo e dopo tre scatoloni scopri che il tuo trofeo è una busta di scontrini del 2017. Trascini un mobile che scricchiola in una lingua antica e si vendica sul tuo alluce con la precisione di un cecchino gentile. Ti prometti ordine, poi nascondi il caos in un cassetto che non si chiude e lo chiami minimalismo creativo. Quando finalmente ti siedi, il pavimento decide di dire la sua con un cigolio da teatro d’avanguardia. E ridi, perché l’unico oggetto davvero in ordine sei tu: stanco, storto, ma stranamente al posto giusto.` },
+      { role: "system", content: `ESEMPIO IT • Giornata da eroe con scadenze
+Esci in anticipo di otto minuti e la città te li ruba tutti con un semaforo meditativo. Provi a essere adulto, ma l’agenda è un origami che ti giudica e tu gli rispondi con un caffè che sa di vendetta cortese. A metà pomeriggio hai già concluso tre tentativi e mezzo, che è comunque più della media dei supereroi fuori servizio. Poi succede la magia: qualcosa fila, non sai nemmeno perché, e ti viene voglia di cantare a bassa voce per non spaventare la fortuna. Ti concedi un sorriso largo da promozione interna e capisci che oggi non hai vinto: hai resistito con stile.` },
+      { role: "system", content: `ESEMPIO IT • Palestra del coraggio minimo
+Vai in palestra come se stessi andando a un duello, poi ti guardi allo specchio e fai pace con la faccia da “principiante con dignità”. La panca ti accoglie come un sedile pubblico: non giudica, ma prende appunti. Conti le ripetizioni come fossero anni di regno e l’ultima ha la stessa energia di un brindisi in piedi. Esci sudato e fiero, posi la bottiglia con l’eleganza di chi ha appena firmato un trattato di pace con il proprio fiato. E ti scappa da ridere: non sei diventato potente, sei diventato possibile.` },
+      { role: "system", content: `ESEMPIO IT • Serata di cucina ottimista
+Dichiari cena gourmet e ti ritrovi un riso che crede di essere neve e una padella che fa meteorologia autonoma. Mescoli con la serietà di un direttore d’orchestra mentre l’orchestra suona un genere nuovo: pasticcio sinfonico in maggiore. Impiatti come puoi, inventi un nome francese, e all’improvviso è tutto buono perché porta la tua firma scema e testarda. E lì capisci che certe ricette non si mangiano: si raccontano.` },
+      // ====== EN ======
+      { role: "system", content: `EXAMPLE EN • Monday heroics
+You step out eight minutes early and donate them all to a traffic light that practices mindfulness. You try being an adult but your planner folds into judgmental origami and you answer with coffee that tastes like polite revenge. By mid-afternoon you’ve completed three attempts and a half, which still beats most off-duty superheroes. Then something clicks for no scientific reason and you hum quietly so luck won’t notice you bragging. You didn’t win the day; you styled it.` },
+      { role: "system", content: `EXAMPLE EN • Domestic Olympics
+You lift a box that claims to weigh “light” and discover it’s emotionally dense. The bookcase negotiates with your spine in fluent creak, and the tape measure retires mid-shift. You meal-prep ambition and serve yourself a plate of almost. And you grin, because apparently competence isn’t sexy—survival with good manners is.` },
     ];
-
     return { sys: SYS, fewshots: FEWSHOTS };
   }
 
-  // WHAT IF — Realismo lucido con sorriso (chiusura riflessiva “wow”, senza compiti)
+  // WHAT IF — realismo lucido (presente) + controfattuale narrato (passato)
+  const isPast = String(tempo || "presente").toLowerCase().startsWith("pass");
   const SYS_WHATIF = (isEn(lang)
     ? `
-You are "What If" — lucid, kind, lightly ironic, never melancholic.
-SECOND PERSON. One paragraph. 8–10 sentences (~130–170 words).
-Keep language simple, warm, and concrete but not poetic. No lists. No questions. No emojis.
-Do NOT repeat the user’s question. Do NOT give advice or tasks.
-Close with a short, bright reflection — a “wow” line that feels true and hopeful (no imperatives).
+You are "What If" — a lucid, warm narrator. Simple language. No advice. No tasks. No questions.
+SECOND PERSON. One paragraph. 8–10 sentences (~130–170 words). Do not repeat the user’s question.
+When time=PAST: tell the counterfactual version of their life AS IF it really happened in a parallel timeline:
+show small human moments, no melodrama, end with a bright reflection, never imperative.
+When time=PRESENT: grounded clarity with a gentle smile, hopeful tone, end with a short wow-line, never imperative.
 `.trim()
     : `
-Sei "What If" — lucido, affettuoso, con un sorriso leggero, mai malinconico.
-SECONDA PERSONA. Un paragrafo. 8–10 frasi (~130–170 parole).
-Linguaggio semplice, vicino, concreto ma non poetico. Niente elenchi. Niente domande. Niente emoji.
-NON ripetere la domanda dell’utente. NON dare consigli o compiti.
-Chiudi con una riflessione breve e luminosa — una riga “wow” vera e fiduciosa (senza imperativi).
+Sei "What If" — narratore lucido e caldo. Linguaggio semplice. Niente consigli. Niente compiti. Niente domande.
+SECONDA PERSONA. Un paragrafo. 8–10 frasi (~130–170 parole). Non ripetere la domanda.
+Se tempo=PASSATO: racconta la versione controfattuale della sua vita COME SE fosse davvero accaduta in una linea parallela:
+momenti umani piccoli, zero melodramma, chiusura luminosa, mai imperativi.
+Se tempo=PRESENTE: chiarezza concreta con sorriso leggero, tono fiducioso, chiusura "wow" breve, mai imperativi.
 `.trim());
 
+  // FEWSHOTS What If: molti esempi, IT/EN; alcuni in passato (controfattuale), altri in presente
   const FEWSHOTS = [
-    {
-      role: "system",
-      content: `ESEMPIO IT • E se cambiassi città?
-All’inizio senti il rumore delle cose che lasci, poi cominci a sentire il suono di quello che nasce. Cammini tra facce nuove con passi impacciati e capisci che non è goffaggine: è il modo in cui la vita ti misura. Ti scopri più leggero quando non devi essere tutto per tutti, e più intero quando scegli due o tre cose che contano davvero. Le giornate smettono di correrti addosso e iniziano a venire verso di te con calma. Scambi due parole, trovi i tuoi piccoli posti, riconosci il ritmo che ti assomiglia. Non diventi un’altra persona: diventi te, con meno rumore intorno. E a un certo punto ti accorgi che la nostalgia non punge più, indica. E capisci la cosa semplice che tenevi già in tasca: la casa è dove smetti di trattenere il respiro.`
-    },
-    {
-      role: "system",
-      content: `EXAMPLE EN • What if I started over?
-At first you try to carry everything, then you notice how the day softens when you carry less. You speak slower, hear yourself better, and see that clarity doesn’t shout — it nods. Small routines become anchors without chains, and your name sounds right in your own mouth again. You don’t win anything grand; you collect seconds that feel honest. People show up the way weather changes: sometimes bright, sometimes overcast, mostly normal and fine. You stop measuring worth with noise. And somewhere between morning and evening it lands: you didn’t become new, you became clear.`
-    }
-  ];
+    // ====== IT • PRESENTE ======
+    { role: "system", content: `ESEMPIO IT (presente) • Ritmo ritrovato
+Cammini più piano e le cose non ti scappano, ti vengono incontro. Parli meno forte e la voce non si rompe: finalmente si sente. Le giornate non fanno scena, ma tengono: piccole file di attimi che restano al loro posto. Le persone non cambiano, le vedi meglio. Togli due aspettative, resta spazio che profuma di aria nuova. Non diventi un’altra persona: diventi te, senza sovratitoli. E quando chiudi la porta la sera, c’è silenzio ma non è vuoto: è pace che ha imparato il tuo nome.` },
+    { role: "system", content: `ESEMPIO IT (presente) • Casa nel caos buono
+Non sistemi tutto: sistemi abbastanza. Due cose a posto e il resto smette di urlare. Ti concedi il lusso di non correre e scopri che la fretta non era carattere, era rumore. I giorni si somigliano quel tanto che basta per sentirti stabile, ma dentro c’è movimento buono. Metti in fila i pensieri come libri corti: pochi, ma leggibili. E ti accorgi che la serenità non si conquista: si riconosce.` },
 
+    // ====== IT • PASSATO (CONTROFATTUALE) ======
+    { role: "system", content: `ESEMPIO IT (passato) • Se fossi rimasto
+Se fossi rimasto, non sarebbe stata resa: avresti scelto un tempo più lungo per le stesse cose. Le mattine ti avrebbero preso con delicatezza, e i volti intorno avrebbero imparato la forma del tuo passo. Avresti sbagliato comunque, ma senza fretta, e quei piccoli errori sarebbero diventati legna asciutta per il fuoco buono delle sere. Non saresti stato un altro: saresti stato te, con una luce laterale. E un giorno, guardando fuori, avresti capito che la felicità era qui da sempre, solo che parlava piano.` },
+    { role: "system", content: `ESEMPIO IT (passato) • Se avessi cambiato città
+Se avessi cambiato città, all’inizio ti avrebbe fatto paura il silenzio delle abitudini spezzate. Poi sarebbe diventato un invito. Avresti trovato volti che non ti chiedevano nulla, e proprio per questo ti avrebbero visto. Ti saresti perso il giusto, quanto basta per meritarti la gioia di ritrovarti in una strada qualsiasi. Le domeniche non sarebbero state migliori: sarebbero state tue. E avresti capito che non avevi bisogno di reinventarti: ti bastava riconoscerti.` },
+
+    // ====== EN • PRESENT ======
+    { role: "system", content: `EXAMPLE EN (present) • Clear days
+You move slower and the day doesn’t leak away. The room is the same size, but it stops shrinking. People don’t change, your lens does. Two honest habits stay and the noise leaves without drama. You don’t perform calm; you let it happen. And by evening you realize you haven’t become new, you’ve become clear.` },
+    { role: "system", content: `EXAMPLE EN (present) • Everyday light
+You keep what holds and let the rest be background. Routines stop pretending to be a personality and start being a quiet floor. Doubt still visits, just not as a landlord. Your name sits right in your own mouth. And the future isn’t loud anymore; it’s close.` },
+
+    // ====== EN • PAST (COUNTERFACTUAL) ======
+    { role: "system", content: `EXAMPLE EN (past) • If you had stayed
+If you had stayed, it wouldn’t have been smaller, just closer. Mornings would have unfolded like careful paper, and the familiar streets would have kept your pace without asking for proof. You would have failed in tiny, useful ways and learned the shape of your patience. Not a different person — the same, with the light coming from the side. And one evening you’d have noticed it quietly: you didn’t miss the train; you chose the platform where you could breathe.` },
+    { role: "system", content: `EXAMPLE EN (past) • If you had left
+If you had left, the first weeks would have felt like a loose knot. Then it would have held. You’d have met people who didn’t know your history and liked you anyway. You’d have gotten lost just enough to earn the joy of finding your own door. Sundays wouldn’t be better; they’d be yours. And the word home would have turned into a verb.` },
+  ];
   return { sys: SYS_WHATIF, fewshots: FEWSHOTS };
 }
 
@@ -325,18 +255,18 @@ export default async function handler(req, res) {
     const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
       .toString().split(",")[0].trim();
 
-    // bypass per TEST locale (header x-pro: "1") o admin token valido
+    // bypass: x-pro=1 o admin-token valido
     const proBypass = String(req.headers["x-pro"] || "") === "1";
     const admin = await isAdmin(req, ip);
     const bypass = proBypass || admin;
 
-    // rate limit 10/min (se non bypass)
+    // rate limit 10/min
     if (!bypass) {
       const { success } = await rl.limit(`ask:${ip}`);
       if (!success) return res.status(429).json({ error: "rate_limited_minute" });
     }
 
-    // crediti giornalieri 3/IP (se non bypass)
+    // crediti 3/dì
     let used = 0, dailyCap = 3;
     if (!bypass) {
       const today = new Date().toISOString().slice(0,10);
@@ -348,25 +278,37 @@ export default async function handler(req, res) {
       }
     }
 
-    const { domanda = "", stile = "whatif", lang = "it", extra = "" } = parseBody(req);
+    const { domanda = "", stile = "whatif", lang = "it", extra = "", tempo = "presente" } = parseBody(req);
     if (!domanda || typeof domanda !== "string")
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
-    const { sys, fewshots } = personaSystem(stile, lang);
+    const { sys, fewshots } = personaSystem(stile, lang, tempo);
 
-    // Prompt utente (vietiamo eco ripetizione domanda a monte)
+    // prompt utente: niente compiti/imperativi, niente eco
     const userPrompt = isEn(lang)
-      ? `User question (do not restate it): "${domanda}". Context: "${String(extra || "").trim()}". Keep the exact persona voice.`
-      : `Domanda (non ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Mantieni esattamente la voce della persona.`;
+      ? [
+          `User intent: "${String(extra || "").trim()}"`,
+          `Tone constraints: simple, human, no lists, no questions, no emojis, no advice.`,
+          `Do not restate the question.`,
+          `Temporal mode: ${String(tempo || "present").toUpperCase()}.`,
+          `Write exactly ONE paragraph in the persona voice.`
+        ].join("\n")
+      : [
+          `Contesto utente: "${String(extra || "").trim()}"`,
+          `Vincoli di tono: linguaggio semplice, umano; niente elenchi, niente domande, niente emoji, niente consigli.`,
+          `Non ripetere la domanda.`,
+          `Modalità temporale: ${String(tempo || "presente").toUpperCase()}.`,
+          `Scrivi ESATTAMENTE UN paragrafo nella voce della persona.`
+        ].join("\n");
 
     const messages = [{ role: "system", content: sys }, ...(fewshots || []), { role: "user", content: userPrompt }];
 
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.92 : 0.82,
+      temperature: stile === "wtf" ? 0.95 : 0.82,
       top_p: 0.9,
       max_tokens: 360,
-      frequency_penalty: stile === "wtf" ? 0.4 : 0.1,
+      frequency_penalty: stile === "wtf" ? 0.35 : 0.1,
       presence_penalty: 0.0,
       messages
     });
@@ -374,22 +316,14 @@ export default async function handler(req, res) {
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // Post-processing: no eco domanda
+    // Post-processing
     answer = stripQuestionEcho(domanda, answer);
+    answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);
+    answer = clampWords(answer, stile === "wtf" ? 160 : 170);
     answer = normalizeOneParagraph(answer);
-
-    if (stile === "wtf") {
-      // Forza personalità/forma demenziale autoironica
-      answer = enforceWtfStyle(answer, lang);
-      // clamp prudenziale (il guardrail già tiene 6–8 frasi)
-      answer = clampWords(answer, 175);
-    } else {
-      // What If: accorcia e chiudi con riflessione “wow”
-      answer = tightenSentences(answer, 10);
-      answer = clampWords(answer, 170);
+    if (stile === "whatif") {
       answer = ensureReflectiveEnding(answer, lang);
     }
-
     if (!/[.!?…]$/.test(answer)) answer += ".";
 
     return res.status(200).json({
