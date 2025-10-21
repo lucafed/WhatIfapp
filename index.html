@@ -182,18 +182,46 @@
     </div>
   </footer>
 
-  <!-- Hero robust loader -->
+  <!-- Hero robust loader (stesse dimensioni; AVIF/WEBP/PNG + @2x) -->
   <script>
     (async function loadHero(){
       const hero = document.getElementById('hero');
-      const candidates = ['/home-hero.png','/public/home-hero.png','/assets/home-hero.png'];
-      for (const u of candidates){
+
+      const CANDIDATES = [
+        { base: "/home-hero" },
+        { base: "/public/home-hero" },
+        { base: "/assets/home-hero" }
+      ];
+      const EXT_ORDER = [".avif", ".webp", ".png", ".jpg", ".jpeg"];
+
+      // helper per test rapido
+      async function exists(url){
         try{
-          const r = await fetch(u,{cache:'no-store', method:'GET'});
-          if (r.ok){ hero.src = u + '?v=' + Date.now(); return; }
-        }catch(e){}
+          const r = await fetch(url, { method:"HEAD", cache:"no-store" });
+          return r.ok;
+        }catch{ return false; }
       }
-      hero.style.display='none';
+
+      // imposta src + srcset + sizes (nessun cambio dimensioni CSS)
+      function applySource(base, ext){
+        const base1x = `${base}${ext}`;
+        const base2x = `${base}@2x${ext}`;
+        hero.src = base1x + `?v=${Date.now()}`;
+        hero.srcset = `${base1x} 1x, ${base2x} 2x`;
+        hero.sizes = "(max-width: 560px) 92vw, 560px";
+      }
+
+      for (const c of CANDIDATES){
+        for (const ext of EXT_ORDER){
+          const ok1x = await exists(`${c.base}${ext}`);
+          if (ok1x){
+            applySource(c.base, ext);
+            return;
+          }
+        }
+      }
+      // fallback: nascondi se proprio non c’è nulla
+      hero.style.display = 'none';
     })();
   </script>
 
@@ -241,7 +269,6 @@
         if (d[k]) el.textContent = d[k];
       });
       $('#leadText').innerHTML = d.lead;
-      // aggiorna attivi nel menu lingua
       document.querySelectorAll('#langMenu button').forEach(b=>{
         b.classList.toggle('active', b.dataset.lang === L);
       });
