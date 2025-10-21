@@ -12,43 +12,30 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-  <!-- Hero priority -->
-  <link rel="preload" as="image" href="/home-hero.png" imagesrcset="/home-hero.png 1x, /home-hero@2x.png 2x" fetchpriority="high" />
-  <link rel="preconnect" href="/" crossorigin>
+  <link rel="preload" as="image" href="/home-hero.png" imagesrcset="/home-hero.png 800w, /home-hero@2x.png 1200w" imagesizes="(max-width: 560px) 92vw, 560px" />
 
   <style>
-    /* ===== THEME SYSTEM (palette ufficiali) ===== */
     :root{
       --bg:#0C0F14; --bg2:#0E1724;
       --fg:#ffffff; --muted:#A0B2BA;
       --card:rgba(14,19,28,.55); --card-border:rgba(255,255,255,.10);
       --chip:#141C22;
-      --accent:#1C57A0;     /* Blu Verona */
-      --accent2:#FFEC01;    /* Giallo Verona */
-      --ink:#0A0E12;
+      --accent:#1C57A0; --accent2:#FFEC01; --ink:#0A0E12;
       --shadow:rgba(0,0,0,.45);
     }
     html[data-theme="whatif"]{
-      --bg:#0B1018; --bg2:#0E1724;
-      --fg:#F4F7FB; --muted:#A7B3C2;
+      --bg:#0B1018; --bg2:#0E1724; --fg:#F4F7FB; --muted:#A7B3C2;
       --card:rgba(14,20,28,.55); --card-border:rgba(255,255,255,.12);
-      --chip:#121A26;
-      --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
+      --chip:#121A26; --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
     }
     html[data-theme="wtf"]{
-      --bg:#0B0B0C; --bg2:#101414;
-      --fg:#EEF5F0; --muted:#A6B6AD;
+      --bg:#0B0B0C; --bg2:#101414; --fg:#EEF5F0; --muted:#A6B6AD;
       --card:rgba(16,22,20,.55); --card-border:rgba(255,255,255,.10);
-      --chip:#0F1714;
-      --accent:#3A6B56;     /* Verde speranza */
-      --accent2:#5A8C75;    /* Verde chiaro */
-      --ink:#06110B;
+      --chip:#0F1714; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;
     }
-
     *{box-sizing:border-box}
     html,body{
-      height:100%;
-      margin:0;
+      height:100%; margin:0;
       background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
       color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
@@ -59,89 +46,43 @@
       body{animation:bgShift 18s ease-in-out infinite alternate}
       @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
     }
-
-    main{
-      min-height:100%;
-      display:flex; flex-direction:column; align-items:center; text-align:center;
-      padding:20px; gap:14px;
-      padding-bottom:120px;
-    }
+    main{ min-height:100%; display:flex; flex-direction:column; align-items:center; text-align:center; padding:20px; gap:14px; padding-bottom:120px; }
 
     /* Lingua (fab) */
     .lang-fab{position:fixed; top:calc(env(safe-area-inset-top,0px) + 14px); right:14px; z-index:50}
-    .lang-btn{
-      appearance:none; border:1px solid var(--card-border); background:var(--chip); color:var(--fg);
-      padding:10px 12px; border-radius:999px; cursor:pointer
-    }
-    .lang-menu{
-      position:absolute; top:46px; right:0; background:var(--card); border:1px solid var(--card-border);
-      border-radius:12px; padding:8px; display:none; min-width:170px;
-      box-shadow:0 12px 28px var(--shadow); backdrop-filter:blur(10px)
-    }
-    .lang-menu button{
-      display:block; width:100%; text-align:left; background:transparent; border:none;
-      color:#E6F2F5; padding:10px; border-radius:10px; cursor:pointer
-    }
+    .lang-btn{appearance:none; border:1px solid var(--card-border); background:var(--chip); color:var(--fg); padding:10px 12px; border-radius:999px; cursor:pointer}
+    .lang-menu{position:absolute; top:46px; right:0; background:var(--card); border:1px solid var(--card-border); border-radius:12px; padding:8px; display:none; min-width:170px; box-shadow:0 12px 28px var(--shadow); backdrop-filter:blur(10px)}
+    .lang-menu button{display:block; width:100%; text-align:left; background:transparent; border:none; color:#E6F2F5; padding:10px; border-radius:10px; cursor:pointer}
     .lang-menu button.active{background:rgba(255,255,255,.06)}
 
     /* Hero */
     .hero-img{
-      width:min(92vw,560px); height:auto; display:block; margin:0 auto 6px;
+      width:min(92vw,560px);
+      aspect-ratio: 16/9;           /* evita schiacciamenti */
+      height:auto;
+      object-fit:contain;
+      display:block; margin:0 auto 6px;
       filter:drop-shadow(0 10px 28px var(--shadow));
       border-radius:16px;
-      aspect-ratio: 1120 / 748; /* evita layout shift se manca width/height */
     }
 
-    /* Titoli & lead */
-    h1{margin:.25rem 0 0; font-size:clamp(28px,5.5vw,44px); line-height:1.1; cursor:default}
+    h1{margin:.25rem 0 0; font-size:clamp(28px,5.5vw,44px); line-height:1.1}
     h1 span{color:var(--accent)}
-    .lead{
-      max-width:720px; font-size:clamp(15px,4vw,18px); color:var(--muted);
-      line-height:1.55; margin:4px auto 16px;
-    }
+    .lead{max-width:720px; font-size:clamp(15px,4vw,18px); color:var(--muted); line-height:1.55; margin:4px auto 16px}
 
-    /* Scelte */
     .group{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:6px}
-    .chip{
-      appearance:none; border:1px solid var(--card-border); background:var(--chip); color:#e8f2ec;
-      padding:12px 16px; border-radius:16px; font-weight:700; cursor:pointer;
-      transition:transform .08s ease, background .16s ease, box-shadow .16s ease, color .16s ease;
-      backdrop-filter:blur(6px);
-    }
+    .chip{appearance:none; border:1px solid var(--card-border); background:var(--chip); color:#e8f2ec; padding:12px 16px; border-radius:16px; font-weight:700; cursor:pointer; transition:transform .08s ease, background .16s ease, box-shadow .16s ease, color .16s ease; backdrop-filter:blur(6px)}
     .chip:active{transform:translateY(1px)}
-    .chip.selected{
-      background:linear-gradient(180deg,var(--accent),var(--accent2));
-      color:var(--ink); box-shadow:0 0 0 1px rgba(255,255,255,.15) inset;
-    }
+    .chip.selected{background:linear-gradient(180deg,var(--accent),var(--accent2)); color:var(--ink); box-shadow:0 0 0 1px rgba(255,255,255,.15) inset}
 
-    /* CTA */
-    .cta{
-      display:inline-block;
-      background:linear-gradient(180deg,var(--accent),var(--accent2));
-      color:var(--ink); font-weight:800; border:none; border-radius:24px;
-      padding:14px 20px;
-      box-shadow:0 0 14px rgba(0,0,0,.35),0 0 28px rgba(0,0,0,.15);
-      cursor:pointer; transition:.2s
-    }
+    .cta{display:inline-block; background:linear-gradient(180deg,var(--accent),var(--accent2)); color:var(--ink); font-weight:800; border:none; border-radius:24px; padding:14px 20px; box-shadow:0 0 14px rgba(0,0,0,.35),0 0 28px rgba(0,0,0,.15); cursor:pointer; transition:.2s}
     .cta[disabled]{opacity:.45; cursor:not-allowed}
 
-    /* Footer */
-    footer{
-      position:fixed; left:0; right:0; bottom:10px; text-align:center;
-      color:var(--muted); font-size:12px; padding:0 14px;
-    }
-    footer a{
-      color:var(--accent); text-decoration:none; font-weight:600;
-    }
+    footer{position:fixed; left:0; right:0; bottom:10px; text-align:center; color:var(--muted); font-size:12px; padding:0 14px}
+    footer a{color:var(--accent); text-decoration:none; font-weight:600}
     footer .sep{opacity:.6; margin:0 6px}
-    .foot-links{
-      display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
-      margin-top:6px;
-    }
-    .info-btn{
-      background:var(--chip); border:1px solid var(--card-border); color:#E6F2F5;
-      border-radius:999px; padding:6px 10px; font-weight:700; text-decoration:none;
-    }
+    .foot-links{display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:6px}
+    .info-btn{background:var(--chip); border:1px solid var(--card-border); color:#E6F2F5; border-radius:999px; padding:6px 10px; font-weight:700; text-decoration:none}
   </style>
 </head>
 <body>
@@ -155,25 +96,19 @@
   </div>
 
   <main>
-    <!-- HERO: carico immediato, alta priorità, fallback automatico -->
     <img
       id="hero"
       class="hero-img"
-      src="/home-hero.png"
-      srcset="/home-hero.png 1x, /home-hero@2x.png 2x"
-      width="1120" height="748"
       alt="Porta luminosa What?f"
-      loading="eager"
       decoding="async"
       fetchpriority="high"
-      onerror="this.onerror=null; this.src='/public/home-hero.png'; this.srcset='';"
+      loading="eager"
+      width="1120" height="630"
     />
 
     <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
-
     <p class="lead" id="leadText"></p>
 
-    <!-- Scelte -->
     <div class="group" id="periodGroup">
       <button class="chip" data-key="periodo" data-val="past"   data-i18n="past">Passato</button>
       <button class="chip" data-key="periodo" data-val="future" data-i18n="future">Futuro</button>
@@ -197,21 +132,36 @@
     </div>
   </footer>
 
+  <!-- Hero loader con srcset -->
+  <script>
+    (async function loadHero(){
+      const hero = document.getElementById('hero');
+      const tries = ['/home-hero.webp','/home-hero.png','/public/home-hero.png','/assets/home-hero.png'];
+      for (const u of tries){
+        try{
+          const r = await fetch(u,{cache:'no-store'});
+          if (r.ok){
+            hero.src = u + '?v=' + Date.now();
+            hero.srcset = `${u}?w=560 560w, ${u}?w=840 840w, ${u}?w=1120 1120w`;
+            hero.sizes = '(max-width: 560px) 92vw, 560px';
+            return;
+          }
+        }catch(e){}
+      }
+      hero.style.display='none';
+    })();
+  </script>
+
   <!-- i18n + theme + selections -->
   <script>
-    const LS = localStorage;
-    const $  = s => document.querySelector(s);
-    const $$ = s => document.querySelectorAll(s);
-
-    // ===== THEME INIT (unica fonte: whatif_prefs.stile) =====
     (function initTheme(){
-      let prefs;
-      try{ prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}'); }catch{ prefs = {}; }
-      const theme = prefs.stile === 'wtf' ? 'wtf' : 'whatif';
-      document.documentElement.setAttribute('data-theme', theme);
+      try{
+        const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+        const theme = prefs.stile==='wtf' ? 'wtf' : 'whatif';
+        document.documentElement.setAttribute('data-theme', theme);
+      }catch{ document.documentElement.setAttribute('data-theme','whatif'); }
     })();
 
-    // ===== I18N =====
     const DICT = {
       it:{
         title:"Scopri il tuo What?f",
@@ -226,6 +176,10 @@
         next:"Next", privacy:"Privacy", terms:"Terms", info:"Info"
       }
     };
+
+    const LS = localStorage;
+    const $  = s => document.querySelector(s);
+    const $$ = s => document.querySelectorAll(s);
 
     function getLang(){ return LS.getItem('lang') || 'it'; }
     function setLang(l){ LS.setItem('lang', l); applyLang(); }
@@ -246,10 +200,8 @@
     if(!LS.getItem('lang')) LS.setItem('lang','it');
     applyLang();
 
-    // ===== Language FAB =====
-    const fab  = $('#langFab');
-    const btn  = $('#langToggle');
-    const menu = $('#langMenu');
+    // lingua menu
+    const fab  = $('#langFab'); const btn  = $('#langToggle'); const menu = $('#langMenu');
     btn.addEventListener('click', ()=>{
       const open = menu.style.display === 'block';
       menu.style.display = open ? 'none' : 'block';
@@ -257,88 +209,59 @@
     });
     menu.addEventListener('click', e=>{
       const b = e.target.closest('button[data-lang]'); if(!b) return;
-      setLang(b.dataset.lang);
-      menu.style.display='none';
+      setLang(b.dataset.lang); menu.style.display='none';
     });
-    document.addEventListener('click', e=>{
-      if(!fab.contains(e.target)) menu.style.display='none';
-    });
+    document.addEventListener('click', e=>{ if(!fab.contains(e.target)) menu.style.display='none'; });
 
-    // ===== Selezioni & Persistenza (SORGENTE UNICA) =====
-    const state = (()=>{ try{ return JSON.parse(LS.getItem('whatif_prefs')||'{}'); }catch{return {}} })();
-    if (!state.periodo) state.periodo = 'future';   // default
-    if (!state.stile)   state.stile   = 'whatif';   // default
-    LS.setItem('whatif_prefs', JSON.stringify(state));
-
-    const go = $('#go');
+    // selections
+    const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+    const go = document.getElementById('go');
 
     function syncUI(){
-      // chips selezionate
       if(state.periodo){
-        $$('#periodGroup .chip').forEach(c=>c.classList.remove('selected'));
+        document.querySelectorAll(`#periodGroup .chip`).forEach(c=>c.classList.remove('selected'));
         document.querySelector(`#periodGroup .chip[data-val="${state.periodo}"]`)?.classList.add('selected');
       }
       if(state.stile){
-        $$('#styleGroup .chip').forEach(c=>c.classList.remove('selected'));
+        document.querySelectorAll(`#styleGroup .chip`).forEach(c=>c.classList.remove('selected'));
         document.querySelector(`#styleGroup .chip[data-val="${state.stile}"]`)?.classList.add('selected');
-        // anteprima tema live
         document.documentElement.setAttribute('data-theme', state.stile==='wtf'?'wtf':'whatif');
       }
       go.disabled = !(state.periodo && state.stile);
     }
-
     function wireGroup(g){
       g.addEventListener('click', (e)=>{
         const b = e.target.closest('.chip'); if(!b) return;
         g.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
         b.classList.add('selected');
         state[b.dataset.key] = b.dataset.val;
-        LS.setItem('whatif_prefs', JSON.stringify(state));
+        localStorage.setItem('whatif_prefs', JSON.stringify(state));
         if (b.dataset.key === 'stile'){
           document.documentElement.setAttribute('data-theme', b.dataset.val==='wtf'?'wtf':'whatif');
         }
         go.disabled = !(state.periodo && state.stile);
       });
     }
-
     wireGroup(document.getElementById('periodGroup'));
     wireGroup(document.getElementById('styleGroup'));
     syncUI();
 
-    // CTA
     go.addEventListener('click', ()=>{
       if(go.disabled) return;
-      // da qui in poi fourth leggerà whatif_prefs.periodo & stile
       location.href = 'second.html';
     });
 
-    // Admin segreto: triplo tap sul titolo
+    // Admin segreto: triplo tap
     (function(){
       let taps = 0, timer = null;
-      const target = document.getElementById('appTitle') || document.querySelector('h1') || document.body;
+      const target = document.getElementById('appTitle') || document.body;
       target.addEventListener('click', ()=>{
-        taps++;
-        clearTimeout(timer);
-        timer = setTimeout(()=>taps=0, 1200);
-        if (taps >= 3) {
-          taps = 0;
-          const flash = document.createElement('div');
-          flash.style.position='fixed'; flash.style.inset='0';
-          flash.style.background='rgba(255,255,255,0.08)';
-          flash.style.backdropFilter='blur(2px)';
-          flash.style.transition='opacity .6s ease';
-          flash.style.opacity='1'; flash.style.zIndex='9999';
-          document.body.appendChild(flash);
-          setTimeout(()=>flash.style.opacity='0',150);
-          setTimeout(()=>flash.remove(),800);
-          location.href = 'admin.html';
-        }
+        taps++; clearTimeout(timer); timer = setTimeout(()=>taps=0, 1200);
+        if (taps >= 3) { taps = 0; location.href = 'admin.html'; }
       });
     })();
-  </script>
 
-  <!-- SW -->
-  <script>
+    // SW
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("/sw.js").catch(()=>{});
