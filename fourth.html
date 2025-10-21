@@ -108,7 +108,7 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
     </div>
   </div>
 
-  <!-- Spunti rapidi “E se…” (dinamici giornalieri) -->
+  <!-- Spunti rapidi -->
   <div class="card center collapsed" id="hintsCard">
     <div class="row toggle" id="hintsHeader" style="justify-content:space-between">
       <div class="label" id="hintsTitle">▶ Spunti rapidi “E se…”</div>
@@ -156,10 +156,10 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
       <div id="adminPanel" class="hidden" style="margin-top:10px">
         <div class="row" style="gap:8px;flex-wrap:wrap">
           <button id="adminReset" class="btn primary">🔄 Reset crediti (oggi)</button>
-          <button id="adminTogglePro" class="btn ghost">⭐ Toggle PRO</button>
+          <button id="adminTogglePro" class="btn ghost">⭐ Toggle PRO (TEST)</button>
         </div>
         <p class="small" style="margin-top:8px">
-          <span id="adminCreditsState">—</span> · PRO: <span id="adminProState">—</span>
+          Token admin: <span id="adminTokenState">—</span> · PRO: <span id="adminProState">—</span>
         </p>
       </div>
     </div>
@@ -170,46 +170,38 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
 <script>
 // ===== I18N =====
 const I18N = {
-  it:{
-    title:"Imposta la tua domanda",
-    periodPast:"Passato", periodFuture:"Futuro",
-    whatif:"What if (realistico)", wtf:"What the F (divertente)",
-    yourq:"La tua domanda", gen:"✨ Genera risposta", clear:"Svuota",
-    tip:"Tip: puoi cambiare stile e periodo sopra; colori e tono si adattano.",
-    free:(l,d)=>`Free oggi: ${l}/${d}`, proOn:"PRO attivo", proOff:"PRO non attivo",
-    microT:"▼ Micro-domande di oggi", microHint:"(una volta al giorno)", microSaved:"Micro-profilo salvato per oggi.", microOnce:"Già salvato oggi.",
-    saved:"▶ Domande salvate", stories:"▶ Cronologia",
-    use:"Usa", play:"▶", emptyNext:"— Nessuna domanda salvata.", emptyStories:"— Nessuna storia.",
-    clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota",
-    hints:"▶ Spunti rapidi “E se…”", hintsNote:"Clicca uno spunto per riempire la domanda.",
-    h1:"E se cambiassi lavoro?", h2:"E se cambiassi città?", h3:"E se provassi a mettermi in proprio?", h4:"E se tornassi a studiare?",
-    adminTitle:"Admin", adminEnter:"Entra", adminPin:"PIN amministratore",
-    adminReset:"🔄 Reset crediti (oggi)", adminPro:"⭐ Toggle PRO",
-    pinOk:"PIN ok", pinBad:"PIN errato",
-    resetOk:"Crediti di oggi azzerati su questo dispositivo.",
-    proOn:"PRO attivato su questo dispositivo.", proOff2:"PRO disattivato su questo dispositivo.",
-    outOfCredits:"Hai finito i crediti di oggi."
-  },
-  en:{
-    title:"Set your question",
-    periodPast:"Past", periodFuture:"Future",
-    whatif:"What if (realistic)", wtf:"What the F (fun)",
-    yourq:"Your question", gen:"✨ Generate answer", clear:"Clear",
-    tip:"Tip: switch style and period above; tone & colors adapt.",
-    free:(l,d)=>`Free today: ${l}/${d}`, proOn:"PRO active", proOff:"PRO not active",
-    microT:"▼ Today’s micro-questions", microHint:"(once per day)", microSaved:"Micro-profile saved for today.", microOnce:"Already saved today.",
-    saved:"▶ Saved questions", stories:"▶ History",
-    use:"Use", play:"▶", emptyNext:"— No saved questions.", emptyStories:"— No history.",
-    clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear",
-    hints:"▶ Quick “What if…” prompts", hintsNote:"Click a prompt to fill the question.",
-    h1:"What if I changed jobs?", h2:"What if I moved city?", h3:"What if I started my own thing?", h4:"What if I went back to study?",
-    adminTitle:"Admin", adminEnter:"Enter", adminPin:"Admin PIN",
-    adminReset:"🔄 Reset credits (today)", adminPro:"⭐ Toggle PRO",
-    pinOk:"PIN ok", pinBad:"Wrong PIN",
-    resetOk:"Today’s credits reset on this device.",
-    proOn:"PRO enabled on this device.", proOff2:"PRO disabled on this device.",
-    outOfCredits:"You’ve used today’s credits."
-  }
+  it:{ title:"Imposta la tua domanda", periodPast:"Passato", periodFuture:"Futuro",
+       whatif:"What if (realistico)", wtf:"What the F (divertente)",
+       yourq:"La tua domanda", gen:"✨ Genera risposta", clear:"Svuota",
+       tip:"Tip: puoi cambiare stile e periodo sopra; colori e tono si adattano.",
+       free:(l,d)=>`Free oggi: ${l}/${d}`, proOn:"PRO attivo", proOff:"PRO non attivo",
+       microT:"▼ Micro-domande di oggi", microHint:"(una volta al giorno)", microSaved:"Micro-profilo salvato per oggi.", microOnce:"Già salvato oggi.",
+       saved:"▶ Domande salvate", stories:"▶ Cronologia",
+       use:"Usa", play:"▶", emptyNext:"— Nessuna domanda salvata.", emptyStories:"— Nessuna storia.",
+       clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota",
+       hints:"▶ Spunti rapidi “E se…”", hintsNote:"Clicca uno spunto per riempire la domanda.",
+       adminTitle:"Admin", adminEnter:"Entra", adminPin:"PIN amministratore",
+       adminReset:"🔄 Reset crediti (oggi)", adminPro:"⭐ Toggle PRO (TEST)",
+       pinOk:"PIN ok", pinBad:"PIN errato",
+       resetOk:"Crediti di oggi azzerati.",
+       proOn:"PRO attivato su questo dispositivo.", proOff2:"PRO disattivato su questo dispositivo.",
+       outOfCredits:"Hai finito i crediti di oggi." },
+  en:{ title:"Set your question", periodPast:"Past", periodFuture:"Future",
+       whatif:"What if (realistic)", wtf:"What the F (fun)",
+       yourq:"Your question", gen:"✨ Generate answer", clear:"Clear",
+       tip:"Tip: switch style and period above; tone & colors adapt.",
+       free:(l,d)=>`Free today: ${l}/${d}`, proOn:"PRO active", proOff:"PRO not active",
+       microT:"▼ Today’s micro-questions", microHint:"(once per day)", microSaved:"Micro-profile saved for today.", microOnce:"Already saved today.",
+       saved:"▶ Saved questions", stories:"▶ History",
+       use:"Use", play:"▶", emptyNext:"— No saved questions.", emptyStories:"— No history.",
+       clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear",
+       hints:"▶ Quick “What if…” prompts", hintsNote:"Click a prompt to fill the question.",
+       adminTitle:"Admin", adminEnter:"Enter", adminPin:"Admin PIN",
+       adminReset:"🔄 Reset credits (today)", adminPro:"⭐ Toggle PRO (TEST)",
+       pinOk:"PIN ok", pinBad:"Wrong PIN",
+       resetOk:"Today's credits reset.",
+       proOn:"PRO enabled on this device.", proOff2:"PRO disabled on this device.",
+       outOfCredits:"You’ve used today’s credits." }
 };
 const LS=localStorage;
 const lang=(LS.getItem('lang')||'it').toLowerCase();
@@ -219,17 +211,13 @@ document.documentElement.lang=lang;
 // ===== Helpers & state =====
 function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
 function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
-function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function rngForDay(seedStr){
-  // seed PRNG on YYYY-MM-DD
-  let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0);
-  return ()=>{ s=(s*9301+49297)%233280; return s/233280; };
-}
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function rngForDay(seedStr){ let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
 
 let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-// ===== Credits =====
+// ===== Credits (local badge rendering) =====
 function ensureCredits(){
   const c=readJSON('whatif_credits',{date:todayStr(),used:0});
   if(c.date!==todayStr()){ c.date=todayStr(); c.used=0; }
@@ -255,8 +243,6 @@ document.getElementById('clearBtn').textContent=T.clear;
 document.getElementById('tipNote').textContent=T.tip;
 document.getElementById('chipWhatIf').textContent=T.whatif;
 document.getElementById('chipWTF').textContent=T.wtf;
-document.getElementById('nextLabel').textContent=T.saved;
-document.getElementById('storiesLabel').textContent=T.stories;
 document.getElementById('langBtn').textContent=lang.toUpperCase();
 
 // style & period badges
@@ -287,7 +273,7 @@ document.getElementById('goBtn').onclick=()=>{
   const domanda=(document.getElementById('qInput').value||"").trim();
   if(!domanda){ document.getElementById('qInput').focus(); return; }
 
-  // credits
+  // credits (local badge only)
   const c=readJSON('whatif_credits'); const used=(c.used||0);
   const cap = prefs.pro?10:3;
   if(used>=cap){ alert(T.outOfCredits); return; }
@@ -302,118 +288,53 @@ document.getElementById('goBtn').onclick=()=>{
 };
 document.getElementById('clearBtn').onclick=()=>{ document.getElementById('qInput').value=""; document.getElementById('qInput').focus(); };
 
-// ===== Micro-questions (daily dynamic placeholders) =====
+// ===== Micro-questions =====
 const microCard=document.getElementById('microCard');
 const microSaved=readJSON('micro_saved',{date:"",ok:false});
-
 function renderMicro(){
   document.getElementById('microTitle').textContent = T.microT;
   document.getElementById('microHint').textContent = T.microHint;
-
-  // Se già salvate oggi: resta collassato
   if(microSaved.date===todayStr()){
     microCard.classList.add('collapsed');
     document.getElementById('microSavedMsg').textContent=T.microSaved;
     return;
   }
-
-  // Pool di prompt per i 4 campi (cambiano per data)
   const SEED = todayStr();
   const rand = rngForDay(SEED);
-
   const moodPool = (lang==='en'
-    ? [
-      "How’s your energy really, from 0 to “I can move cities”?",
-      "Today you feel more anchor or sail?",
-      "If your mood had a ringtone, which one?",
-      "What color is your head right now?"
-    ]
-    : [
-      "Quanta energia hai davvero, da 0 a “trasloco la vita”?",
-      "Oggi ti senti più àncora o vela?",
-      "Se il tuo umore fosse una suoneria, quale?",
-      "Di che colore è la tua testa adesso?"
-    ]);
-
+    ? ["How’s your energy really, from 0 to “I can move cities”?","Today you feel more anchor or sail?","If your mood had a ringtone, which one?","What color is your head right now?"]
+    : ["Quanta energia hai davvero, da 0 a “trasloco la vita”?","Oggi ti senti più àncora o vela?","Se il tuo umore fosse una suoneria, quale?","Di che colore è la tua testa adesso?"]);
   const anchorPool = (lang==='en'
-    ? [
-      "What’s keeping you here lately (person, habit, bill, dream)?",
-      "Name one thing you won’t give up this month.",
-      "Which routine feels surprisingly good to protect?",
-      "What’s the tiny ritual that keeps you sane?"
-    ]
-    : [
-      "Cosa ti tiene qui ultimamente (persona, abitudine, bolletta, sogno)?",
-      "Una cosa che non molli questo mese.",
-      "Quale routine ti sorprende proteggere?",
-      "Qual è il piccolo rito che ti tiene in riga?"
-    ]);
-
+    ? ["What’s keeping you here lately (person, habit, bill, dream)?","Name one thing you won’t give up this month.","Which routine feels surprisingly good to protect?","What’s the tiny ritual that keeps you sane?"]
+    : ["Cosa ti tiene qui ultimamente (persona, abitudine, bolletta, sogno)?","Una cosa che non molli questo mese.","Quale routine ti sorprende proteggere?","Qual è il piccolo rito che ti tiene in riga?"]);
   const decidePool = (lang==='en'
-    ? [
-      "How do you usually decide: gut, list, coin, or panic?",
-      "When you choose, what wins: time, money, or peace?",
-      "You pick faster with deadlines or with coffee?",
-      "Describe your default decision algorithm in 5 words."
-    ]
-    : [
-      "Come decidi di solito: pancia, lista, moneta o panico?",
-      "Quando scegli vince cosa: tempo, soldi o pace?",
-      "Scegli più in fretta con scadenze o con caffè?",
-      "Descrivi il tuo algoritmo di scelta in 5 parole."
-    ]);
-
+    ? ["How do you usually decide: gut, list, coin, or panic?","When you choose, what wins: time, money, or peace?","You pick faster with deadlines or with coffee?","Describe your default decision algorithm in 5 words."]
+    : ["Come decidi di solito: pancia, lista, moneta o panico?","Quando scegli vince cosa: tempo, soldi o pace?","Scegli più in fretta con scadenze o con caffè?","Descrivi il tuo algoritmo di scelta in 5 parole."]);
   const zodiacPool = (lang==='en'
-    ? [
-      "Sign (optional) or your personal weather.",
-      "Astro stuff (if you want) or a lucky habit.",
-      "Write your sign or your superstition.",
-      "Skip sign if you want; write your lucky snack."
-    ]
-    : [
-      "Segno (opzionale) o il tuo meteo personale.",
-      "Astro-cose (se vuoi) o un’abitudine portafortuna.",
-      "Scrivi il segno o la tua superstizione.",
-      "Salta il segno se vuoi: scrivi lo snack portafortuna."
-    ]);
-
-  // Emojis dinamiche leggere
-  const moodIcons = ["🙂","😌","🤘","🧊","⚡","🌤️","🧩"];
-  const anchorIcons = ["🧭","⚓","🏠","🧱","🪴","📌","🧷"];
-  const decideIcons = ["⚙️","🧠","🎯","🪙","📋","⏳","☕"];
-  const zodiacIcons = ["♈","♉","♊","♋","♌","♍","✨"];
-
+    ? ["Sign (optional) or your personal weather.","Astro stuff (if you want) or a lucky habit.","Write your sign or your superstition.","Skip sign if you want; write your lucky snack."]
+    : ["Segno (opzionale) o il tuo meteo personale.","Astro-cose (se vuoi) o un’abitudine portafortuna.","Scrivi il segno o la tua superstizione.","Salta il segno se vuoi: scrivi lo snack portafortuna."]);
+  const moodIcons=["🙂","😌","🤘","🧊","⚡","🌤️","🧩"], anchorIcons=["🧭","⚓","🏠","🧱","🪴","📌","🧷"], decideIcons=["⚙️","🧠","🎯","🪙","📋","⏳","☕"], zodiacIcons=["♈","♉","♊","♋","♌","♍","✨"];
   document.getElementById('mood').placeholder   = moodPool[Math.floor(rand()*moodPool.length)];
   document.getElementById('anchor').placeholder = anchorPool[Math.floor(rand()*anchorPool.length)];
   document.getElementById('decide').placeholder = decidePool[Math.floor(rand()*decidePool.length)];
   document.getElementById('zodiac').placeholder = zodiacPool[Math.floor(rand()*zodiacPool.length)];
-
-  document.getElementById('moodIcon').textContent   = moodIcons[Math.floor(rand()*moodIcons.length)];
-  document.getElementById('anchorIcon').textContent = anchorIcons[Math.floor(rand()*anchorIcons.length)];
-  document.getElementById('decideIcon').textContent = decideIcons[Math.floor(rand()*decideIcons.length)];
-  document.getElementById('zodiacIcon').textContent = zodiacIcons[Math.floor(rand()*zodiacIcons.length)];
+  document.getElementById('moodIcon').textContent=moodIcons[Math.floor(rand()*moodIcons.length)];
+  document.getElementById('anchorIcon').textContent=anchorIcons[Math.floor(rand()*anchorIcons.length)];
+  document.getElementById('decideIcon').textContent=decideIcons[Math.floor(rand()*decideIcons.length)];
+  document.getElementById('zodiacIcon').textContent=zodiacIcons[Math.floor(rand()*zodiacIcons.length)];
 }
 renderMicro();
-
-document.getElementById('microHead').onclick=()=>{ 
-  if(microSaved.date===todayStr()) return; // resta collassato dopo salvataggio
-  microCard.classList.toggle('collapsed'); 
-};
+document.getElementById('microHead').onclick=()=>{ if(microSaved.date===todayStr()) return; microCard.classList.toggle('collapsed'); };
 document.getElementById('saveMicroBtn').onclick=()=>{
   if(microSaved.date===todayStr()){ document.getElementById('microSavedMsg').textContent=T.microOnce; return; }
-  const micro={
-    mood:(document.getElementById('mood').value||"").trim(),
-    anchor:(document.getElementById('anchor').value||"").trim(),
-    decide:(document.getElementById('decide').value||"").trim(),
-    zodiac:(document.getElementById('zodiac').value||"").trim()
-  };
+  const micro={mood:(document.getElementById('mood').value||"").trim(),anchor:(document.getElementById('anchor').value||"").trim(),decide:(document.getElementById('decide').value||"").trim(),zodiac:(document.getElementById('zodiac').value||"").trim()};
   writeJSON('micro_profile', micro);
   writeJSON('micro_saved', {date:todayStr(),ok:true});
   document.getElementById('microSavedMsg').textContent=T.microSaved;
   microCard.classList.add('collapsed');
 };
 
-// ===== Hints “E se…” (daily deterministic) =====
+// ===== Hints “E se…” =====
 const hintsState = readJSON('ui_hints_state',{collapsed:true});
 const hintsCard=document.getElementById('hintsCard');
 if(hintsState.collapsed) hintsCard.classList.add('collapsed');
@@ -425,95 +346,24 @@ document.getElementById('hintsHeader').onclick=()=>{
 document.getElementById('hintsTitle').textContent=T.hints;
 document.getElementById('hintsNote').textContent=T.hintsNote;
 
-// Pool spunti (ampio). Verranno selezionati 4 al giorno in modo deterministico.
-const HINT_POOL_IT = [
-  "E se cambiassi lavoro?",
-  "E se cambiassi città?",
-  "E se provassi a mettermi in proprio?",
-  "E se tornassi a studiare?",
-  "E se mollassi tutto e partissi per il Giappone?",
-  "E se aprissi un chiringuito in Islanda?",
-  "E se parlassi con il me di 10 anni fa?",
-  "E se imparassi una lingua strana?",
-  "E se mi svegliassi ogni giorno all’alba per un mese?",
-  "E se facessi pace con una persona?",
-  "E se vivessi 30 giorni senza social?",
-  "E se provassi a cambiare routine per una settimana?",
-  "E se prendessi un cane?",
-  "E se mettessi da parte ogni giorno 5 euro?",
-  "E se provassi a suonare la chitarra?",
-  "E se organizzassi un viaggio da solo?",
-  "E se chiedessi un aumento?",
-  "E se facessi volontariato?",
-  "E se provassi a scrivere un libro?",
-  "E se aprissi un canale di qualcosa che ami?"
-];
-const HINT_POOL_EN = [
-  "What if I changed jobs?",
-  "What if I moved city?",
-  "What if I started my own thing?",
-  "What if I went back to study?",
-  "What if I dropped everything and moved to Japan?",
-  "What if I opened a beach bar in Iceland?",
-  "What if I talked to my 10-years-ago self?",
-  "What if I learned a weird language?",
-  "What if I woke up at dawn for a month?",
-  "What if I made peace with someone?",
-  "What if I lived 30 days without social media?",
-  "What if I changed my routine for a week?",
-  "What if I adopted a dog?",
-  "What if I saved 5 euros a day?",
-  "What if I learned guitar?",
-  "What if I traveled alone?",
-  "What if I asked for a raise?",
-  "What if I volunteered?",
-  "What if I wrote a book?",
-  "What if I launched a channel about what I love?"
-];
-
-function dailyHints(pool, n=4) {
-  const seed = todayStr();
-  const rnd = rngForDay(seed);
-  const seen = new Set();
-  const out=[];
-  while(out.length<n && seen.size<pool.length){
-    const idx = Math.floor(rnd()*pool.length);
-    if(seen.has(idx)) continue;
-    seen.add(idx); out.push(pool[idx]);
-  }
-  return out;
-}
-
+const HINT_POOL_IT=[ "E se cambiassi lavoro?","E se cambiassi città?","E se provassi a mettermi in proprio?","E se tornassi a studiare?","E se mollassi tutto e partissi per il Giappone?","E se aprissi un chiringuito in Islanda?","E se parlassi con il me di 10 anni fa?","E se imparassi una lingua strana?","E se mi svegliassi ogni giorno all’alba per un mese?","E se facessi pace con una persona?","E se vivessi 30 giorni senza social?","E se provassi a cambiare routine per una settimana?","E se prendessi un cane?","E se mettessi da parte ogni giorno 5 euro?","E se provassi a suonare la chitarra?","E se organizzassi un viaggio da solo?","E se chiedessi un aumento?","E se facessi volontariato?","E se provassi a scrivere un libro?","E se aprissi un canale di qualcosa che ami?" ];
+const HINT_POOL_EN=[ "What if I changed jobs?","What if I moved city?","What if I started my own thing?","What if I went back to study?","What if I dropped everything and moved to Japan?","What if I opened a beach bar in Iceland?","What if I talked to my 10-years-ago self?","What if I learned a weird language?","What if I woke up at dawn for a month?","What if I made peace with someone?","What if I lived 30 days without social media?","What if I changed my routine for a week?","What if I adopted a dog?","What if I saved 5 euros a day?","What if I learned guitar?","What if I traveled alone?","What if I asked for a raise?","What if I volunteered?","What if I wrote a book?","What if I launched a channel about what I love?" ];
+function dailyHints(pool, n=4){ const seed=todayStr(); const rnd=rngForDay(seed); const seen=new Set(); const out=[]; while(out.length<n && seen.size<pool.length){ const idx=Math.floor(rnd()*pool.length); if(seen.has(idx)) continue; seen.add(idx); out.push(pool[idx]); } return out; }
 const hintsWrap=document.getElementById('hintsChips');
-const hints = dailyHints(lang==='en'?HINT_POOL_EN:HINT_POOL_IT, 4);
-hints.forEach(h=>{
-  const b=document.createElement('button');
-  b.className='chip';
-  b.textContent=h;
-  b.onclick=()=>{ document.getElementById('qInput').value = h; window.scrollTo({top:0,behavior:'smooth'}); };
+(dailyHints(lang==='en'?HINT_POOL_EN:HINT_POOL_IT,4)).forEach(h=>{
+  const b=document.createElement('button'); b.className='chip'; b.textContent=h;
+  b.onclick=()=>{ document.getElementById('qInput').value=h; window.scrollTo({top:0,behavior:'smooth'}); };
   hintsWrap.appendChild(b);
 });
 
-// ===== Saved & History (collassabili, bottoni allineati) =====
+// ===== Saved & History =====
 function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
-
 const savedState = readJSON('ui_saved_state',{collapsed:true});
 const histState  = readJSON('ui_hist_state',{collapsed:true});
 if(savedState.collapsed) document.getElementById('savedCard').classList.add('collapsed');
 if(histState.collapsed)  document.getElementById('histCard').classList.add('collapsed');
-document.getElementById('savedHeader').onclick=()=>{ 
-  const c=document.getElementById('savedCard'); 
-  c.classList.toggle('collapsed'); 
-  savedState.collapsed=c.classList.contains('collapsed'); 
-  writeJSON('ui_saved_state',savedState);
-};
-document.getElementById('histHeader').onclick =()=>{ 
-  const c=document.getElementById('histCard');  
-  c.classList.toggle('collapsed'); 
-  histState.collapsed=c.classList.contains('collapsed');   
-  writeJSON('ui_hist_state',histState);
-};
-
+document.getElementById('savedHeader').onclick=()=>{ const c=document.getElementById('savedCard'); c.classList.toggle('collapsed'); savedState.collapsed=c.classList.contains('collapsed'); writeJSON('ui_saved_state',savedState); };
+document.getElementById('histHeader').onclick =()=>{ const c=document.getElementById('histCard');  c.classList.toggle('collapsed'); histState.collapsed=c.classList.contains('collapsed');   writeJSON('ui_hist_state',histState); };
 function renderNext(){
   const box=document.getElementById('nextList'); box.innerHTML='';
   const arr=readJSON('next_prompts',[]);
@@ -550,27 +400,19 @@ function renderStories(){
   });
 }
 renderNext(); renderStories();
-
 document.getElementById('clearSavedBtn').textContent=T.clearSaved;
 document.getElementById('clearHistoryBtn').textContent=T.clearHist;
 document.getElementById('clearSavedBtn').onclick=()=>{ LS.removeItem('next_prompts'); renderNext(); };
 document.getElementById('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
 
-// ===== Admin PIN inline (long-press su badge crediti) =====
-const ADMIN_PIN_HASH_HEX = "497b37a23ce6b4b9da5e53d392266a4e0779a3f365faac6c3eff17faf763f21d"; // hash per PIN: DadiMatti0114
-
-async function sha256Hex(str){
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
+// ===== Admin (server PIN -> token) =====
 const adminModal = document.getElementById('adminModal');
 const adminPin = document.getElementById('adminPin');
 const adminEnter = document.getElementById('adminEnter');
 const adminClose = document.getElementById('adminClose');
 const adminPanel = document.getElementById('adminPanel');
 const adminStatus = document.getElementById('adminStatus');
-const adminCreditsState = document.getElementById('adminCreditsState');
-const adminProState = document.getElementById('adminProState');
+const adminTokenState = document.getElementById('adminTokenState');
 const adminReset = document.getElementById('adminReset');
 const adminTogglePro = document.getElementById('adminTogglePro');
 
@@ -578,38 +420,65 @@ document.getElementById('adminTitle').textContent=T.adminTitle;
 adminPin.placeholder=T.adminPin; adminEnter.textContent=T.adminEnter;
 adminReset.textContent=T.adminReset; adminTogglePro.textContent=T.adminPro;
 
-function openAdmin(){ adminModal.classList.remove('hidden'); adminPin.value=""; adminStatus.textContent=""; adminPanel.classList.add('hidden'); adminPin.focus(); renderAdminState(); }
+function openAdmin(){ adminModal.classList.remove('hidden'); adminPin.value=""; adminStatus.textContent=""; adminPanel.classList.add('hidden'); adminPin.focus(); refreshAdminState(); }
 function closeAdmin(){ adminModal.classList.add('hidden'); }
 adminClose.onclick = closeAdmin;
 adminModal.addEventListener('click',(e)=>{ if(e.target===adminModal) closeAdmin(); });
 
+function refreshAdminState(){
+  const tok=LS.getItem('admin_token');
+  adminTokenState.textContent = tok ? 'OK' : '—';
+  document.getElementById('adminProState').textContent = prefs.pro ? 'ON' : 'OFF';
+}
+
+// login: PIN -> token da server
 adminEnter.onclick = async ()=>{
   const pin = (adminPin.value||"").trim();
   if(!pin){ adminStatus.textContent = T.adminPin; return; }
-  const hex = await sha256Hex(pin);
-  if(hex === ADMIN_PIN_HASH_HEX){
-    adminStatus.innerHTML = `<span style="color:#7CDA8E">${T.pinOk}</span>`;
-    adminPanel.classList.remove('hidden');
-    renderAdminState();
-  } else {
-    adminStatus.innerHTML = `<span style="color:#F27A7A">${T.pinBad}</span>`;
-    adminPanel.classList.add('hidden');
+  try{
+    const r = await fetch("/api/admin-token", { method:"POST", headers:{ "x-admin-secret": pin } });
+    const d = await r.json().catch(()=>({}));
+    if(r.ok && d.token){
+      LS.setItem('admin_token', d.token);
+      adminStatus.innerHTML = `<span style="color:#7CDA8E">${T.pinOk}</span>`;
+      adminPanel.classList.remove('hidden');
+      refreshAdminState();
+    }else{
+      adminStatus.innerHTML = `<span style="color:#F27A7A">${T.pinBad}</span>`;
+      adminPanel.classList.add('hidden');
+    }
+  }catch{
+    adminStatus.innerHTML = `<span style="color:#F27A7A">Errore rete</span>`;
   }
 };
-function renderAdminState(){
-  const c=readJSON('whatif_credits',{date:todayStr(),used:0});
-  adminCreditsState.textContent = (lang==='en' ? `Credits left: ${leftCredits()}` : `Crediti residui: ${leftCredits()}`);
-  adminProState.textContent = prefs.pro ? (lang==='en'?'ON':'ON') : 'OFF';
-}
-adminReset.onclick = ()=>{
-  const c=readJSON('whatif_credits',{date:todayStr(),used:0});
-  c.date=todayStr(); c.used=0; writeJSON('whatif_credits',c); renderCredits(); renderAdminState();
-  alert(T.resetOk);
+
+// reset crediti: server + locale
+adminReset.onclick = async ()=>{
+  const tok = LS.getItem('admin_token');
+  if(!tok){ alert("Inserisci il PIN prima."); return; }
+  try{
+    const r = await fetch("/api/reset", { method:"POST", headers:{ "x-admin-token": tok } });
+    const d = await r.json().catch(()=>({}));
+    if(r.ok){
+      const c=readJSON('whatif_credits',{date:todayStr(),used:0});
+      c.date=todayStr(); c.used=0; writeJSON('whatif_credits',c); renderCredits(); refreshAdminState();
+      alert(T.resetOk);
+    }else{
+      alert("Errore reset: "+(d.error||"unknown"));
+    }
+  }catch{
+    alert("Errore di rete");
+  }
 };
+
+// toggle PRO (TEST) — salva anche flag che fifth può leggere per inviare x-pro
 adminTogglePro.onclick = ()=>{
-  prefs.pro=!prefs.pro; writeJSON('whatif_prefs',prefs); renderCredits(); renderAdminState();
-  alert(prefs.pro ? T.proOn : T.proOff2);
+  prefs.pro=!prefs.pro; writeJSON('whatif_prefs',prefs);
+  if(prefs.pro){ LS.setItem('whatif_pro_test','1'); alert(T.proOn); }
+  else{ LS.removeItem('whatif_pro_test'); alert(T.proOff2); }
+  renderCredits(); refreshAdminState();
 };
+
 // apertura nascosta via long-press sul badge crediti
 (function hookLongPress(){
   const b = document.getElementById('freeBadge'); if(!b) return;
