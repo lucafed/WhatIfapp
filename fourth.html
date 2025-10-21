@@ -557,7 +557,7 @@ document.getElementById('clearSavedBtn').onclick=()=>{ LS.removeItem('next_promp
 document.getElementById('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
 
 // ===== Admin PIN inline (long-press su badge crediti) =====
-const ADMIN_PIN_HASH_HEX = "b52798c041f3cb9aef9db2379e32683a60deae6c1a53ab79b18151e53c52c1c1"; // hash per PIN: DadiMatti0114
+const ADMIN_PIN_HASH_HEX = "497b37a23ce6b4b9da5e53d392266a4e0779a3f365faac6c3eff17faf763f21d"; // hash per PIN: DadiMatti0114
 
 async function sha256Hex(str){
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
