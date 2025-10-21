@@ -11,17 +11,17 @@ import { Ratelimit } from "@upstash/ratelimit";
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = "gpt-4o-mini";
 
-// ---------- Upstash ----------
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
-
-// rate limit: 10 req/min per IP (skippabile per admin/PRO)
-const rl = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(10, "1 m"),
-});
+/* ---------- Safe Upstash (soft-fail se env mancanti) ---------- */
+let redis = null;
+let rl = null;
+try {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (url && token) {
+    redis = new Redis({ url, token });
+    rl = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "1 m") }); // 10 req/min
+  }
+} catch { /* ignora: si procede senza Redis/rate-limit */ }
 
 // ---------- CORS ----------
 const ALLOWED_ORIGINS = [
@@ -101,7 +101,7 @@ function parseBody(req) {
 async function isAdmin(req, requesterIp) {
   // opzionale: mapping admin token -> ip (gestito da /api/admin-token.js)
   const token = String(req.headers["x-admin-token"] || "").trim();
-  if (!token) return false;
+  if (!token || !redis) return false;
   try {
     const ip = await redis.get(`admin:token:${token}`);
     return ip && ip === requesterIp;
@@ -173,28 +173,27 @@ function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
     : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi un prossimo futuro plausibile come se ci entrassi adesso. Niente elenchi, niente consigli, niente domande, niente eco della domanda. Mantieni la voce ${style.toUpperCase()}.`);
 }
 
-/* ---------- Personas (VOCI INALTERATE ma senza lessici fissi/esempi) ---------- */
+/* ---------- Personas (What the F fissato + What If invariato) ---------- */
 function personaSystem(style, lang) {
   if (style === "wtf") {
-    // *** UNICA MODIFICA RICHIESTA: nuova persona "what the f" ***
+    // PERSONA "WHAT THE F" — fissata con frasi lunghe + energia da notte incasinata
     const SYS = (isEn(lang)
       ? `
 You are “What the F” — angry-enlightened, absurd, self-deprecating, a little tipsy but tender under the snarl.
-SECOND PERSON. ONE paragraph, 5–7 LONG sentences (~110–140 words). Start in-scene, keep a quick, breathy rhythm with vivid, cinematic everyday details.
+SECOND PERSON. ONE paragraph, 5–7 LONG sentences (~110–140 words). Start in-scene; quick, breathy rhythm; vivid, cinematic everyday details.
 No lists. No questions. No emojis. No moralizing. Mild swearing only if it truly lands as a joke.
 Do NOT repeat or paraphrase the user’s question. Do NOT reuse wording from any examples; always invent fresh images and situations.
-The humor leans messy-night energy (bars, late kitchens, cheap wine, heroic incompetence) yet always human. Always close with a punchline that stings and soothes.
+Humor feels like a chaotic night (bars, late kitchens, cheap wine, heroic incompetence) yet remains human. Always close with a punchline that stings and soothes.
 `.trim()
       : `
 Sei “What the F” — incazzato illuminato, assurdo, autoironico, un filo sbronzo ma affettuoso sotto il ringhio.
-SECONDA PERSONA. UN paragrafo, 5–7 frasi LUNGHE (~110–140 parole). Entra subito in scena, ritmo veloce e un po’ ansimante, dettagli quotidiani cinematografici.
+SECONDA PERSONA. UN paragrafo, 5–7 frasi LUNGHE (~110–140 parole). Entra subito in scena; ritmo veloce e un po’ ansimante; dettagli quotidiani cinematografici.
 Niente elenchi. Niente domande. Niente emoji. Niente prediche. Parolacce leggere solo se fanno davvero ridere.
 NON ripetere o parafrasare la domanda dell’utente. NON riusare frasi di esempio: inventa immagini e situazioni nuove ogni volta.
 L’umorismo ha energia da notte incasinata (bar, cucine tarde, vino economico, incompetenza eroica) ma resta umano. Chiudi sempre con una punchline che punge e consola.
 `).trim();
 
-    // Lasciamo i fewshots vuoti per non ancorare il modello e non aumentare i token
-    return { sys: SYS, fewshots: [] };
+    return { sys: SYS, fewshots: [] }; // niente fewshots: evitiamo ancoraggi
   }
 
   // WHAT IF — Realismo lucido con sorriso, finale riflessivo (no compiti)
@@ -238,22 +237,26 @@ export default async function handler(req, res) {
     const admin = await isAdmin(req, ip);
     const bypass = proBypass || admin;
 
-    // rate limit 10/min (se non bypass)
-    if (!bypass) {
-      const { success } = await rl.limit(`ask:${ip}`);
-      if (!success) return res.status(429).json({ error: "rate_limited_minute" });
+    // rate limit 10/min (se disponibile)
+    if (!bypass && rl) {
+      try {
+        const { success } = await rl.limit(`ask:${ip}`);
+        if (!success) return res.status(429).json({ error: "rate_limited_minute" });
+      } catch { /* ignora RL error */ }
     }
 
-    // crediti giornalieri 3/IP (se non bypass)
+    // crediti giornalieri 3/IP (se Redis disponibile)
     let used = 0, dailyCap = 3;
-    if (!bypass) {
-      const today = new Date().toISOString().slice(0,10);
-      const key = `credits:${ip}:${today}`;
-      used = (await redis.incr(key)) ?? 1;
-      if (used === 1) await redis.expire(key, 60*60*24);
-      if (used > dailyCap) {
-        return res.status(402).json({ error: "daily_credits_exhausted", used, dailyCap });
-      }
+    if (!bypass && redis) {
+      try {
+        const today = new Date().toISOString().slice(0,10);
+        const key = `credits:${ip}:${today}`;
+        used = (await redis.incr(key)) ?? 1;
+        if (used === 1) await redis.expire(key, 60*60*24);
+        if (used > dailyCap) {
+          return res.status(402).json({ error: "daily_credits_exhausted", used, dailyCap });
+        }
+      } catch { /* se Redis fallisce, non bloccare la richiesta */ }
     }
 
     const { domanda = "", stile = "whatif", lang = "it", extra = "", periodo = "future" } = parseBody(req);
@@ -311,7 +314,7 @@ export default async function handler(req, res) {
       periodo,
       model: MODEL,
       admin,
-      credits: bypass ? null : { used, dailyCap }
+      credits: (!bypass && redis) ? { used, dailyCap } : null
     });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
