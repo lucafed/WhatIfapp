@@ -161,36 +161,34 @@ function normalizeOneParagraph(s=""){
   return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
 }
 
-/* ===== LEADS aggiornati: WTF con oggetti parlanti + una nota di sbronza ===== */
+/* ===== LEADS: una sola frase, aforistiche (IT/EN) ===== */
 const LEADS = {
   it:{
     wtf:[
-      "Il tostapane ti guarda come un coach motivazionale stanco e dice «vai, brucia qualcosa anche oggi», tu annuisci, la tazzina applaude con un tintinnio fuori tempo e il coraggio scende come un sorso di amaro rimasto da ieri.",
-      "Parti con due neuroni in sciopero e le chiavi che fanno gossip in tasca; il frigo ti chiama per nome, l’aspirapolvere sospira come un mezzo parente, e tu ti prometti sobrietà mentre il bicchiere ti fa l’occhiolino come se foste complici da sempre.",
-      "Entri nella scena e la porta si richiude lenta per farti sentire importante; lo specchio propone un armistizio, il telecomando vota astensione, e il bar all’angolo ti saluta come un vecchio compare che sa esattamente quante verità ci sono in un Negroni.",
-      "Il computer accende la ventola per dirti «non fare cavolate», il portacenere applaude dal cassetto anche se non fumi da anni, e intanto la città ti tira la giacca come un amico ubriaco che conosce la strada migliore e quella più divertente.",
-      "Ti muovi con la grazia di un carrello al supermercato in curva: la porta fa finta di essere automatica, l’ascensore recita il rosario dei piani, e il primo bar ti batte una pacca sulla spalla che sa di alibi e di aperitivo lungo."
+      "Entri piano, come chi sa che il caos ti riconosce dalla camminata.",
+      "Respiri e lasci che sia il destino a inciampare per primo.",
+      "Ti presenti al futuro con la faccia da adesso e la pazienza da dopo.",
+      "La scena è già in corso: tu ci metti il rumore buono."
     ],
     whatif:[
-      "Prendi fiato, appoggi le chiavi, lasci parlare il silenzio buono.",
-      "Metti in fila i pensieri: pochi, chiari, abbastanza tuoi.",
-      "La stanza è la stessa, lo sguardo è nuovo: già basta.",
-      "Tieni vicino ciò che funziona; il resto lo metti in pausa."
+      "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.",
+      "Ti siedi un attimo e scopri che la calma ha memoria lunga.",
+      "La stanza è la stessa, lo sguardo no: è già un inizio.",
+      "Tieniti stretto ciò che funziona e lascia che il resto perda importanza."
     ]
   },
   en:{
     wtf:[
-      "The toaster stares like a tired life coach and says “go on, burn something again,” the cup clinks applause off-beat, and courage arrives like the last sip of last night’s bitters.",
-      "You roll in with two neurons on strike and keys gossiping in your pocket; the fridge calls you by your first name, the vacuum sighs like a distant aunt, and the bar glass winks as if you’ve always been partners in minor crimes.",
-      "You enter and the door closes slowly to make you feel epic; the mirror offers a ceasefire, the remote abstains, and the corner bar greets you like an old friend who knows exactly how many truths fit in a Negroni.",
-      "The laptop spins its fan to say “don’t do anything stupid,” the ashtray claps from the drawer even though you quit years ago, and the city tugs your jacket like a tipsy buddy who knows both the right way and the fun one.",
-      "You move with the grace of a shopping cart taking a bend: the door pretends to be automatic, the elevator prays its list of floors, and the first bar pats your back with an alibi that tastes like an extra-long aperitivo."
+      "You step in slowly, the kind of slow that chaos recognizes.",
+      "You breathe and let fate be the one who trips first.",
+      "You show up to the future with today’s face and tomorrow’s patience.",
+      "The scene is already rolling; you provide the good noise."
     ],
     whatif:[
-      "You set the keys down and let the good quiet speak first.",
-      "Line up your thoughts: few, clear, recognizably yours.",
-      "Same room, different gaze—that’s already movement.",
-      "Keep what works within reach; let the rest wait outside."
+      "Set the keys down and let the quiet that doesn’t judge go first.",
+      "Sit for a moment and notice how calm remembers you.",
+      "Same room, different gaze—that’s a beginning already.",
+      "Hold what works close and let the rest lose importance."
     ]
   }
 };
