@@ -5,8 +5,37 @@
 // ============================
 
 import OpenAI from "openai";
+import { Redis } from "@upstash/redis";
+import { Ratelimit } from "@upstash/ratelimit";
+
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = "gpt-4o-mini";
+
+// ---------- Upstash ----------
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
+
+// rate limit: 10 req/min per IP (skippabile per admin/PRO)
+const rl = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "1 m"),
+});
+
+// ---------- CORS ----------
+const ALLOWED_ORIGINS = [
+  "https://what-ifapp.vercel.app",
+  "http://localhost:3000",
+  "http://127.0.0.1:5500",
+];
+function cors(req, res) {
+  const origin = String(req.headers.origin || "");
+  if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-pro, x-admin-token");
+}
 
 /* ---------- Helpers ---------- */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
@@ -60,7 +89,7 @@ function normalizeOneParagraph(s = "") {
     .trim();
 }
 
-// robust parse
+// estrai body in modo robusto
 function parseBody(req) {
   try {
     if (typeof req.body === "string") return JSON.parse(req.body || "{}");
@@ -69,11 +98,23 @@ function parseBody(req) {
   return {};
 }
 
-// rimuove un eventuale eco della domanda all'inizio della risposta
+async function isAdmin(req, requesterIp) {
+  // opzionale: mapping admin token -> ip (gestito da /api/admin-token.js)
+  const token = String(req.headers["x-admin-token"] || "").trim();
+  if (!token) return false;
+  try {
+    const ip = await redis.get(`admin:token:${token}`);
+    return ip && ip === requesterIp;
+  } catch {
+    return false;
+  }
+}
+
+/* ---------- Anti-eco domanda ---------- */
 function stripQuestionEcho(domanda, text) {
   const d = String(domanda || "").replace(/[“”"']/g, "").trim().toLowerCase();
   let t = String(text || "");
-  const lead = t.slice(0, Math.min(t.length, d.length + 10)).toLowerCase().replace(/[“”"']/g, "").trim();
+  const lead = t.slice(0, Math.min(t.length, d.length + 12)).toLowerCase().replace(/[“”"']/g, "").trim();
   const echoRx = /^(?:e\s*se|what\s*if|domanda:|q:)[^.!?…]*[.!?…]\s+/i;
   if (lead.startsWith(d)) {
     const cut = t.indexOf(".");
@@ -83,22 +124,27 @@ function stripQuestionEcho(domanda, text) {
   return t;
 }
 
-/* ---------- Personas (VOCI INALTERATE) + flag controfattuale ---------- */
-function personaSystem(style, lang, periodo) {
-  // addon controfattuale da applicare senza cambiare voce
-  const ADDON_IT =
-    "Se il periodo è PASSATO, racconta in chiave controfattuale: come sarebbe andata SE avesse fatto quella scelta. Usa condizionale passato in modo naturale. Mantieni esattamente il tono della persona.";
-  const ADDON_EN =
-    "If period is PAST, narrate in counterfactual past: how it would have gone IF they had taken that path. Use natural conditional past. Keep the exact persona voice.";
+/* ---------- Modalità temporale (Passato/Futuro) ---------- */
+function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
+  const en = isEn(lang);
+  if ((periodo || "").toLowerCase() === "past") {
+    // controfattuale (passato) — senza cambiare voce
+    return (en
+      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Speak as if the choice had been made back then and show how it would likely have unfolded. Prefer past/conditional forms and present-narrative flashes. Do NOT give advice, do NOT ask questions, and do NOT restate the user's question. Keep the exact ${style.toUpperCase()} voice.`
+      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Parla come se quella scelta fosse stata fatta allora e mostra come sarebbe verosimilmente andata. Preferisci passato/condizionale con lampi di presente narrativo. NON dare consigli, NON fare domande, NON ripetere la domanda. Mantieni esattamente la voce ${style.toUpperCase()}.`);
+  }
+  // futuro/prospettico
+  return (en
+    ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Describe a plausible near-future unfolding as if the user were stepping into it now. No advice lists, no questions, no restating the question. Keep the exact ${style.toUpperCase()} voice.`
+    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi uno svolgimento plausibile del prossimo futuro come se ci entrassi adesso. Niente consigli, niente domande, niente eco della domanda. Mantieni esattamente la voce ${style.toUpperCase()}.`);
+}
 
-  const addPast = (base) =>
-    periodo === "past" ? `${base}\n${isEn(lang) ? ADDON_EN : ADDON_IT}` : base;
-
+/* ---------- Personas (VOCI INALTERATE) ---------- */
+function personaSystem(style, lang) {
   if (style === "wtf") {
-    // WHAT THE F — Incazzato Illuminato (locked) — INVARIATO
-    const SYS = addPast(
-      (isEn(lang)
-        ? `
+    // WHAT THE F — Incazzato Illuminato (locked)
+    const SYS = (isEn(lang)
+      ? `
 You are “What the F” — version: Incazzato Illuminato (angry–enlightened, tragicomic).
 Write in SECOND PERSON and make the user the protagonist.
 ONE paragraph, 5–7 sentences, ~100–130 words.
@@ -107,7 +153,7 @@ No lists. No questions. No emojis. No moralizing. Light swearing okay, human and
 Concrete lexicon (wind, helmet, PDFs, keys, taxis, balsamic, basil, radiator).
 Always end with a punchline that stings and soothes.
 `
-        : `
+      : `
 Sei “What the F” — versione Incazzato Illuminato.
 Parla in SECONDA PERSONA e metti l’utente al centro.
 UN paragrafo, 5–7 frasi, ~100–130 parole.
@@ -115,8 +161,7 @@ Voce: sarcastica, tagliente, affettuosa sotto la rabbia; caos quotidiano; sbronz
 Niente elenchi. Niente domande. Niente emoji. Niente prediche. Parolacce leggere ok se servono alla comicità.
 Lessico concreto (vento, casco, PDF, chiavi, taxi, aceto, basilico, termosifone).
 Chiudi sempre con una battuta che fa ridere e un po’ pensare.
-`).trim()
-    );
+`).trim();
 
     const FEWSHOTS = [
       // ===== ITALIANO =====
@@ -162,8 +207,8 @@ You wake up TED-talk brave and learn it takes stamps, rites, and three identical
     return { sys: SYS, fewshots: FEWSHOTS };
   }
 
-  // WHAT IF — nuova versione “Realismo lucido con sorriso” — INVARIATA
-  const baseWHF = (isEn(lang)
+  // WHAT IF — nuova versione “Realismo lucido con sorriso”
+  const SYS_WHATIF = (isEn(lang)
     ? `
 You are "What If" — a lucid, kind, slightly ironic friend who sees things clearly.
 SECOND PERSON. One paragraph, 7–10 sentences (~100–140 words).
@@ -180,12 +225,6 @@ Usa immagini quotidiane (chiavi, lampioni, taccuini, mani, rumore, aria).
 Racconta piccole verità umane, non grandi eroi. Linguaggio semplice, sincero.
 Chiudi sempre con una spinta reale e fattibile — qualcosa che puoi fare oggi.
 `).trim();
-
-  const addPastWHF = isEn(lang)
-    ? `${baseWHF}\nNarrate in COUNTERFACTUAL PAST if period is PAST: how it would have unfolded IF that path had been taken. Keep the same voice.`
-    : `${baseWHF}\nSe il periodo è PASSATO, racconta in CONTROFATTUALE: come sarebbe andata SE avesse preso quella strada. Mantieni la stessa voce.`;
-
-  const SYS_WHATIF = (periodo === "past") ? addPastWHF : baseWHF;
 
   const FEWSHOTS = [
     {
@@ -220,9 +259,7 @@ Ti verrebbe voglia di riscrivere la storia, ma scopriresti che certe pagine si l
 
 /* ---------- API Handler ---------- */
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  cors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
@@ -230,25 +267,52 @@ export default async function handler(req, res) {
     if (!process.env.OPENAI_API_KEY)
       return res.status(500).json({ error: "missing_api_key" });
 
-    const body = parseBody(req);
-    const {
-      domanda = "",
-      stile = "whatif",
-      lang = "it",
-      extra = "",
-      periodo = "future" // <— NUOVO: arriva da fourth/fifth
-    } = body;
+    // IP del richiedente
+    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
+      .toString().split(",")[0].trim();
 
+    // bypass per TEST locale (header x-pro: "1") o admin token valido
+    const proBypass = String(req.headers["x-pro"] || "") === "1";
+    const admin = await isAdmin(req, ip);
+    const bypass = proBypass || admin;
+
+    // rate limit 10/min (se non bypass)
+    if (!bypass) {
+      const { success } = await rl.limit(`ask:${ip}`);
+      if (!success) return res.status(429).json({ error: "rate_limited_minute" });
+    }
+
+    // crediti giornalieri 3/IP (se non bypass)
+    let used = 0, dailyCap = 3;
+    if (!bypass) {
+      const today = new Date().toISOString().slice(0,10);
+      const key = `credits:${ip}:${today}`;
+      used = (await redis.incr(key)) ?? 1;
+      if (used === 1) await redis.expire(key, 60*60*24);
+      if (used > dailyCap) {
+        return res.status(402).json({ error: "daily_credits_exhausted", used, dailyCap });
+      }
+    }
+
+    const { domanda = "", stile = "whatif", lang = "it", extra = "", periodo = "future" } = parseBody(req);
     if (!domanda || typeof domanda !== "string")
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
-    const { sys, fewshots } = personaSystem(stile, lang, String(periodo || "future").toLowerCase());
+    const { sys, fewshots } = personaSystem(stile, lang);
+
+    // system add-on per Passato/Futuro (senza cambiare la voce)
+    const temporal = temporalSystem(periodo, lang, stile);
 
     const userPrompt = isEn(lang)
-      ? `User question (do not restate it): "${domanda}". Context: "${String(extra || "").trim()}". Keep the exact persona voice.`
-      : `Domanda (non ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Mantieni esattamente la voce della persona.`;
+      ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Keep the exact persona voice.`
+      : `Domanda (NON ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Mantieni esattamente la voce della persona.`;
 
-    const messages = [{ role: "system", content: sys }, ...(fewshots || []), { role: "user", content: userPrompt }];
+    const messages = [
+      { role: "system", content: sys },
+      { role: "system", content: temporal }, // 👈 modalità passato/futuro
+      ...(fewshots || []),
+      { role: "user", content: userPrompt }
+    ];
 
     const completion = await client.chat.completions.create({
       model: MODEL,
@@ -263,14 +327,25 @@ export default async function handler(req, res) {
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // Post-processing (non altera il timbro)
+    // niente eco della domanda
     answer = stripQuestionEcho(domanda, answer);
+
+    // lunghezze/forma come prima
     answer = tightenSentences(answer, stile === "wtf" ? 7 : 10);
     answer = clampWords(answer, stile === "wtf" ? 130 : 140);
     answer = normalizeOneParagraph(answer);
+
     if (!/[.!?…]$/.test(answer)) answer += ".";
 
-    return res.status(200).json({ answer, style: stile, lang, periodo });
+    return res.status(200).json({
+      answer,
+      style: stile,
+      lang,
+      periodo,
+      model: MODEL,
+      admin,
+      credits: bypass ? null : { used, dailyCap }
+    });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
