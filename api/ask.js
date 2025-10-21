@@ -1,7 +1,7 @@
 // ============================
-// /api/ask.js — What?f Engine (Incazzato Illuminato + Realismo Lucido con Sorriso)
-// Stili supportati: whatif, wtf
-// IT/EN — singolo paragrafo, ritmo fisso, niente emoji/liste/domande
+// /api/ask.js — What?f Engine
+// Stili: whatif (realismo lucido con sorriso), wtf (incazzato illuminato demenziale)
+// IT/EN — singolo paragrafo, niente elenchi, niente domande, niente emoji
 // ============================
 
 import OpenAI from "openai";
@@ -52,7 +52,7 @@ function normLine(s = "") {
 function tightenSentences(text, maxSentences) {
   const parts = String(text || "")
     .replace(/\n+/g, " ")
-    .split(/(?<=[.!?])\s+/)
+    .split(/(?<=[.!?…])\s+/)
     .map((x) => x.trim())
     .filter(Boolean);
 
@@ -63,10 +63,10 @@ function tightenSentences(text, maxSentences) {
     if (!n) continue;
     if (seen.has(n)) continue;
     const wc = p.split(/\s+/).length;
-    if (wc <= 3 && !/[.!?]$/.test(p)) continue;
+    if (wc <= 3 && !/[.!?…]$/.test(p)) continue;
     out.push(p);
-    seen.add(n);
     if (out.length >= maxSentences) break;
+    seen.add(n);
   }
   let t = out.join(" ");
   if (!/[.!?…]$/.test(t)) t += ".";
@@ -77,7 +77,7 @@ function clampWords(text, maxWords) {
   const w = String(text || "").split(/\s+/);
   if (w.length <= maxWords) return text;
   const slice = w.slice(0, maxWords).join(" ");
-  const m = slice.match(/([\s\S]*?[.!?])(?![\s\S]*[.!?])/);
+  const m = slice.match(/([\s\S]*?[.!?…])(?![\s\S]*[.!?…])/);
   return m ? m[1] : slice + "…";
 }
 
@@ -85,7 +85,7 @@ function normalizeOneParagraph(s = "") {
   return String(s)
     .replace(/\s*\n+\s*/g, " ")
     .replace(/\s{2,}/g, " ")
-    .replace(/\s+([.,;:!?])/g, "$1")
+    .replace(/\s+([.,;:!?…])/g, "$1")
     .trim();
 }
 
@@ -95,57 +95,6 @@ function parseBody(req) {
     if (req.body && typeof req.body === "object") return req.body;
   } catch {}
   return {};
-}
-
-// rimuove un eventuale eco della domanda all'inizio della risposta
-function stripQuestionEcho(domanda, text) {
-  const d = String(domanda || "").replace(/[“”"']/g, "").trim().toLowerCase();
-  let t = String(text || "");
-  const lead = t.slice(0, Math.min(t.length, d.length + 6)).toLowerCase().replace(/[“”"']/g, "").trim();
-  if (lead.startsWith(d) || lead.startsWith(`q:`) || lead.startsWith(`domanda:`)) {
-    const cut = t.indexOf(".");
-    if (cut > -1) t = t.slice(cut + 1).trim();
-  }
-  return t;
-}
-
-// ---------- NUOVA CHIUSURA NATURALE VARIABILE PER WHAT?F ----------
-function ensureReflectiveEnding(text, lang) {
-  const t = String(text || "").trim();
-  if (!t) return t;
-
-  // separa ultima frase
-  const sentences = t.split(/(?<=[.!?])\s+/).filter(Boolean);
-  const last = sentences.pop() || "";
-  const lowerLast = last.trim().toLowerCase();
-
-  const itImperatives = [/^prova\b/, /^fai\b/, /^metti\b/, /^chiama\b/, /^scrivi\b/, /^inizia\b/, /^oggi\b/];
-  const enImperatives = [/^try\b/, /^do\b/, /^start\b/, /^write\b/, /^call\b/, /^today\b/];
-
-  const isImperative = (lang || "it").startsWith("en")
-    ? enImperatives.some((r) => r.test(lowerLast))
-    : itImperatives.some((r) => r.test(lowerLast));
-
-  const IT_ENDINGS = [
-    "E ti accorgi che il respiro è la tua misura.",
-    "E capisci che la calma non fa rumore, però resta.",
-    "Ti sorprende scoprire che la semplicità tiene meglio del previsto.",
-    "E in quel momento, la scelta non spinge: coincide.",
-    "E capisci che non stai scappando: stai scegliendo.",
-  ];
-  const EN_ENDINGS = [
-    "And you notice your breath is the measure.",
-    "It turns out quiet doesn’t shout, but it stays.",
-    "Simplicity holds better than you expected.",
-    "And in that moment, the choice doesn’t push — it fits.",
-    "It’s clear you’re not running; you’re choosing.",
-  ];
-  const soft = (lang || "it").startsWith("en") ? EN_ENDINGS : IT_ENDINGS;
-
-  const tooShort = last.split(/\s+/).length < 4;
-  const finalLine = (isImperative || tooShort) ? soft[Math.floor(Math.random() * soft.length)] : last;
-
-  return normalizeOneParagraph([...sentences, finalLine].join(" "));
 }
 
 async function isAdmin(req, requesterIp) {
@@ -159,69 +108,177 @@ async function isAdmin(req, requesterIp) {
   }
 }
 
-/* ---------- Personas (PROMPT AGGIORNATI) ---------- */
+/* ---------- Guardrail & Endings ---------- */
+
+// Togli eco iniziale della domanda (es. “E se…”, “Domanda: …”)
+function stripQuestionEcho(domanda, text) {
+  const d = String(domanda || "").replace(/[“”"']/g, "").trim().toLowerCase();
+  let t = String(text || "");
+  const lead = t.slice(0, Math.min(t.length, d.length + 10)).toLowerCase().replace(/[“”"']/g, "").trim();
+  const echoRx = /^(?:e\s*se|what\s*if|domanda:|q:)[^.!?…]*[.!?…]\s+/i;
+  if (lead.startsWith(d)) {
+    const cut = t.indexOf(".");
+    if (cut > -1) t = t.slice(cut + 1).trim();
+  }
+  t = t.replace(echoRx, "");
+  return t;
+}
+
+function hasQuestionMark(t){ return /\?/u.test(String(t||"")); }
+
+function wittyPunch(lang){
+  const IT = [
+    "E ti scappa da ridere: la tua serietà regge meno di uno scontrino bagnato.",
+    "E ti sorprendi intero: sei goffo ma in saldo, e va benissimo così.",
+    "E fai pace col casino: sei il difetto che ti riesce meglio.",
+    "E capisci che oggi non hai vinto: ti sei proprio piaciuto a perdere.",
+    "E ti viene da brindare: all’arte di non farcela benissimo."
+  ];
+  const EN = [
+    "And you crack up: your seriousness holds less than a wet receipt.",
+    "And you feel intact: clumsy but on brand, which suits you.",
+    "And you make peace with the mess: you’re the flaw you do best.",
+    "And you admit it: no win today—just premium-grade you.",
+    "And you toast to it: the fine art of not quite nailing it."
+  ];
+  const pool = isEn(lang) ? EN : IT;
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+// Forza la personalità/forma WTF: niente “?”, 6–8 frasi, finale pungente
+function enforceWtfStyle(text, lang){
+  let t = String(text||"").trim();
+
+  // niente domande
+  if (hasQuestionMark(t)) t = t.replace(/\?/g, ".");
+
+  // segmenta frasi
+  let parts = t.split(/(?<=[.!?…])\s+/).filter(Boolean);
+
+  // 6–8 frasi (riempi o taglia)
+  if (parts.length > 8) parts = parts.slice(0, 8);
+  if (parts.length < 6) {
+    const filler = isEn(lang)
+      ? "You breathe, blink, and keep the circus small."
+      : "Respiri, batti le palpebre e tieni piccolo il circo.";
+    while (parts.length < 6) parts.splice(parts.length - 1, 0, filler);
+  }
+
+  // finale pungente se moscio o troppo corto
+  const last = parts[parts.length-1] || "";
+  const tooDry = last.split(/\s+/).length < 6 || /oggi|quindi|allora|insomma$/i.test(last.trim());
+  if (tooDry) parts[parts.length-1] = wittyPunch(lang);
+
+  t = parts.join(" ");
+  t = t.replace(/\s+([.,;:!?…])/g, "$1").replace(/\s{2,}/g," ").trim();
+  if(!/[.!?…]$/.test(t)) t += ".";
+  return t;
+}
+
+// WHAT IF — finale riflessivo (no imperativi, no “compiti”)
+function ensureReflectiveEnding(text, lang) {
+  const t = String(text || "").trim();
+  if (!t) return t;
+  const sentences = t.split(/(?<=[.!?…])\s+/).filter(Boolean);
+  const last = sentences.pop() || "";
+  const lowerLast = last.trim().toLowerCase();
+
+  const itImperatives = [/^prova\b/, /^fai\b/, /^metti\b/, /^chiama\b/, /^scrivi\b/, /^inizia\b/, /^oggi\b/];
+  const enImperatives = [/^try\b/, /^do\b/, /^start\b/, /^write\b/, /^call\b/, /^today\b/];
+  const isImp = isEn(lang)
+    ? enImperatives.some((r) => r.test(lowerLast))
+    : itImperatives.some((r) => r.test(lowerLast));
+
+  const IT_ENDINGS = [
+    "E ti accorgi che il respiro è la tua misura.",
+    "E capisci che la calma non fa rumore, però resta.",
+    "Ti sorprende scoprire che la semplicità tiene meglio del previsto.",
+    "E in quel momento, la scelta non spinge: coincide.",
+    "E capisci che non stai scappando: stai scegliendo."
+  ];
+  const EN_ENDINGS = [
+    "And you notice your breath is the measure.",
+    "It turns out quiet doesn’t shout, but it stays.",
+    "Simplicity holds better than you expected.",
+    "And in that moment, the choice doesn’t push — it fits.",
+    "It’s clear you’re not running; you’re choosing."
+  ];
+  const soft = isEn(lang) ? EN_ENDINGS : IT_ENDINGS;
+
+  const tooShort = last.split(/\s+/).length < 4;
+  const finalLine = (isImp || tooShort) ? soft[Math.floor(Math.random() * soft.length)] : last;
+
+  const merged = [...sentences, finalLine].join(" ");
+  return normalizeOneParagraph(merged);
+}
+
+/* ---------- Personas ---------- */
 function personaSystem(style, lang) {
   if (style === "wtf") {
-    // WHAT THE F — Demenziale autoironico, concretezza quotidiana
+    // WHAT THE F — Personalità demenziale–autoironica (contratto rigido)
     const SYS = (isEn(lang)
       ? `
-You are “What the F” — angry-enlightened and gleefully absurd, tender under the snarl.
+You are “What the F” — angry–enlightened and gleefully absurd, tender under the snarl.
 SECOND PERSON. ONE paragraph. 6–8 sentences (~120–160 words).
-Style: self-deprecating, fast, streetwise. Micro-scenes of daily chaos (supermarket, Zoom, gym, stove, bureaucracy).
+Speak fast, self-deprecating, streetwise. Micro-scenes of daily chaos (groceries, Zoom, bus, stove, gym, bureaucracy).
+Do NOT restate or paraphrase the user’s question. Start in-scene.
 No lists. No questions. No emojis. No moralizing. Light swearing only if it truly lands.
-Do NOT repeat or paraphrase the user’s question. Start directly in-scene.
-Always end with a one-line punch that stings and soothes (not advice).
+Keep it concrete (keys, receipt, barcode, stairs, trolley, pan, radiator, treadmill).
+End with a one-line punch that both stings and soothes (not advice).
+If you break any rule above, immediately rewrite the paragraph to comply before answering.
 `.trim()
       : `
 Sei “What the F” — incazzato illuminato e felicemente demenziale, affettuoso sotto il ringhio.
 SECONDA PERSONA. UN paragrafo. 6–8 frasi (~120–160 parole).
-Stile: autoironico, rapido, concreto. Micro-scene di caos quotidiano (spesa, Zoom, palestra, fornelli, burocrazia).
-Niente elenchi. Niente domande. Niente emoji. Niente prediche. Parolacce leggere solo se fanno davvero ridere.
+Parla veloce, autoironico, terrestre. Micro-scene di caos quotidiano (spesa, Zoom, autobus, fornelli, palestra, burocrazia).
 NON ripetere o parafrasare la domanda. Entra direttamente in scena.
-Chiudi sempre con una battuta che punge e consola (non un consiglio).
+Niente elenchi. Niente domande. Niente emoji. Niente prediche. Parolacce leggere solo se servono davvero.
+Lessico concreto (chiavi, scontrino, codice a barre, scale, carrello, padella, termosifone, tapis roulant).
+Chiudi con una battuta di una riga che punge e consola (non un consiglio).
+Se rompi una regola, riscrivi subito il paragrafo rispettandole prima di rispondere.
 `.trim());
 
-    // FEWSHOTS ricchi (IT + EN). Ogni esempio: 1 paragrafo, 6–8 frasi, chiusura pungente.
+    // Molti fewshot vari (IT/EN) per cementare il timbro
     const FEWSHOTS = [
       // ===== ITALIANO =====
-      { role:"system", content:`IT • Supermercato self-checkout
-Entri deciso e in tre secondi la bilancia ti tratta come un ladro di banane: “appoggia il prodotto nell’area di pesatura” e tu ci appoggi anche la dignità. Passi il codice a barre come un DJ in pensione, la cassa suona ogni due respiri e lo yogurt diventa caso diplomatico. Chiedi aiuto con lo sguardo da cerbiatto fiscale, arriva l’addetta e spegne l’allarme toccando un tasto segreto tipo cheat code. Paghi con tre carte, due app, mezzo esaurimento, e lo scontrino è più lungo del tuo curriculum. In uscita ti cade la mozzarella che rimbalza come la tua autostima, e tu ridacchi mentre raccogli i cocci della logistica. Non hai fatto la spesa: hai fatto pace col ridicolo, e ti dona pure.`},
-      { role:"system", content:`IT • Riunione su Zoom
-Accendi la call con la faccia da professionista e il microfono in sciopero bianco: parli cinque minuti in muto, poi quando lo attivi entri in modalità cattedrale con eco. Condividi lo schermo sbagliato e mostri “documento_finalissimo_VERAVERISSIMA_def2” e un meme del 2014 che grida misericordia. I cursori ballano, qualcuno disegna rettangoli come se fossero Frisbee, e tu annuisci a 12 pixel per secondo. La connessione ti congela in sorriso da santino tech, poi riparti dicendo una cosa geniale che nessuno sente. Chiudi il laptop come se avessi esorcizzato un router e ti versi un bicchiere d’ossigeno. Non hai lavorato: hai sopravvissuto con stile, che oggi vale doppio.`},
-      { role:"system", content:`IT • Palestra & tapis roulant
-Sali col passo da campione, scendi con la coreografia del pinguino impiegato. Metti velocità 6, poi 7, poi 8, e il cuore firma un referendum contro di te. Sudi come un termosifone poetico, la borraccia fa “toc” ogni volta che ti ricordi di non morire. Il trainer ti guarda come si guarda un film d’autore: non capisce ma applaude piano. Scendi, fingi nonchalance, le ginocchia tifano per la sedia e tu sorridi a caso. Non stai diventando atletico: stai diventando sincero col tuo motore, ed è quasi più faticoso.`},
-      { role:"system", content:`IT • Carbonara del sabato
-L’acqua bolle, tu no. Il guanciale canta, le uova decidono la carriera da frittata e il pecorino nevica con ambizione. Mescoli con la fede cieca di un parroco in cucina, assaggi e capisci: buona, ma non da raccontare ai nipoti. Impiatti come un ladro gentile, spegni la luce per bellezza, e al primo boccone senti casa e tentativi. Non è perfetta, è tua: e quel sapore lì non lo trovi nei manuali, lo trovi quando smetti di vergognarti del cucchiaio.`},
-      { role:"system", content:`IT • Mobile IKEA
-Apri lo scatolone e ti investe il lessico svedese con accento passivo-aggressivo. Viti A, B, C, senso della vita in allegato, e la brugola che ti giudica. Monti, smonti, rimonti, e il ripiano decide di essere diagonale per vocazione artistica. Perdi una vite che emigra sotto il divano e fonda una piccola Svizzera. Alla fine sta su, storto di tre millimetri, come le verità che eviti al pranzo di Natale. Non è un mobile, è un’educazione sentimentale: impari a lasciare stare senza mollare.`},
-      { role:"system", content:`IT • PEC, SPID & portali
-Entro con SPID, esco con crisi mistica: il captcha mi chiede 14 semafori in una foto del ’72 e l’OTP arriva a un cugino immaginario. Carico il PDF firmato, il sito dice che è “troppo PDF”, e io mi sento un formato sbagliato. Provo da telefono, tablet, frigorifero, e alla fine piango in stampatello. Riparto, invio, silenzio… poi “operazione riuscita” come se fossi uscito da una sala operatoria. Non ho vinto: mi hanno lasciato passare—che è persino più dolce.`},
-      { role:"system", content:`IT • Autobus al volo
-Corri come in un film francese ma senza la colonna sonora: il bus ti vede, tu vedi il bus, vi amate malissimo. Arrivi, la porta si chiude con la lentezza crudele dei grandi addii, e l’autista ti regala lo sguardo da filosofo urbano. Resti lì a fare finta di stirarti i polmoni, poi sorridi alla fermata come se fosse uno specchio. E decidi che camminare ha dignità: soprattutto quando fai finta che fosse tutto voluto.`},
-      { role:"system", content:`IT • Parrucchiere coraggioso
-“Solo le punte”, dici, e il parrucchiere capisce “nuova identità fiscale”. I capelli cadono con entusiasmo teatrale, tu guardi il pavimento e saluti un’era geologica. Uscendo sembri un personaggio principale senza contratto, poi la brezza ti sistema l’ego. Ti specchi in una vetrina e capisci che non sei cambiato: sei atterrato. E con atterraggio morbido, che è la cosa più rock che c’è.`},
-      { role:"system", content:`IT • Colloquio
-Camicia stirata, voce impostata, anima in ciabatte. La prima risposta è un romanzo, la seconda è un haiku, la terza un suono misterioso del condizionatore. Sorridi come se avessi capito la domanda, loro annuiscono come se avessero capito te. Esci con la dignità appesa alla cravatta e una fame di patatine esistenziali. Se va, bene; se non va, meglio: almeno oggi hai provato l’aria sottile di quando ti giochi tutto e resti intero.`},
+      { role:"system", content:
+`ESEMPIO IT • Spesa al discount
+Ti presenti eroico con la lista sul telefono e il carrello decide che oggi fischia in re minore. Prendi il latte “in offerta”, che scade nel Paleolitico, e lo yogurt ti guarda come un giudice fiscale. Il codice a barre fa il timido, passi dieci volte e sembri un DJ triste alla cassa. In borsa crolla un pacco di pasta e ti parte l’applauso dei fusilli. Torni a casa convinto di aver risparmiato: hai comprato tre cose in più, due in meno e una di cui ti vergogni. E ridi, perché la tua economia domestica è un one-man-show col microfono staccato.`},
+      { role:"system", content:
+`ESEMPIO IT • Call su Zoom
+Entri in riunione con l’aria da professionista e il microfono parte in modalità “documentario muto del ’28”. Annuisci, sorridi, fingi grafici invisibili, poi ti accorgi che stai parlando al tostapane. Quando finalmente ti sentono, scatta l’eco e sembri la tua coscienza ubriaca. Condividi lo schermo: apri la presentazione, la chat privata, il calendario e un ricordo che non volevi rivedere. Finisce tra applausi educati e decisioni che non ricordi. E ti scappa da ridere: in ufficio remoto sei bravissimo a stare lontano da te stesso.`},
+      { role:"system", content:
+`ESEMPIO IT • Autobus e dignità
+Sali con il passo del ninja e la tessera fa bip solo a giorni pari con vento favorevole. Scivoli di mezzo stivale sul tornello, ti siedi, e la suoneria del vicino è un revival del ’98 che ti giudica. Ti prepari la fermata come un esame di maturità e la perdi per guardare un cane col cappotto migliore del tuo. Smonti alla successiva con la grazia di un mobile Ikea montato al contrario. E sorridi, perché forse la dignità non si è persa: ha solo preso l’autobus dopo.`},
+      { role:"system", content:
+`ESEMPIO IT • Palestra eroico-pigra
+Arrivi carico, saluti i pesi come vecchi amici e loro non ricambiano. Dieci minuti di tapis roulant e il cuore ti manda una mail con oggetto “parliamone”. Ti specchi per correggere la postura e vedi un cugino di te che fa finta meglio. Ti premi con una bottiglietta d’acqua da 4 euro che sa di fonte condominiale. Esci sudato, fiero e confuso: hai fatto poco, ma l’hai fatto rumorosamente. E ti viene da brindare: al cardio breve e all’ego lungo.`},
+      { role:"system", content:
+`ESEMPIO IT • Burocrazia boss finale
+Prendi numeretto, prendi coscienza, perdi entrambe. Compili il modulo A/7bis/forse, firma qui, qui, e anche qui dove non c’è scritto niente. La stampante fa il rumore di un dinosauro con l’asma e ti sputa addosso un foglio storto con l’impronta dell’impiegato. Esci con tre copie, due dubbi e una nuova religione: San Timbratore Martire. E ridi: hai sconfitto il drago ma ti ha adottato.`},
+      { role:"system", content:
+`ESEMPIO IT • Fornelli e filosofia
+Metti l’acqua, sali di livello, poi ti chiama il destino (spam) e torni a cucina con il fumo che fa le ombre cinesi. La padella ti accusa a vista, il mestolo testimonia contro di te, il sugo scappa come un’amicizia in quarantena. Assaggi e dici “ci sta”: è l’intonaco. Ti siedi lo stesso, mastichi orgoglio e pane. E capisci che certe ricette riescono: soprattutto quando non sono tue.`},
 
       // ===== ENGLISH =====
-      { role:"system", content:`EN • Self-checkout
-You march in like a logistics ninja and the scale treats you like a banana thief. The barcode beeps in Morse, yogurt becomes a diplomatic incident, and the attendant disables the alarm with a secret boss-key. You pay with three cards, two apps, and half your sanity; the receipt is longer than your career. Outside the mozzarella bounces like your confidence and you laugh while gathering the ruins of efficiency. You didn’t shop—you made peace with the ridiculous, and it fits you.`},
-      { role:"system", content:`EN • Zoom meeting
-Five minutes on mute, then cathedral echo, then the sacred ritual of sharing the wrong screen. Cursors waltz, rectangles multiply, and your wisdom uploads at 12 pixels per second. The call ends with everyone thanking the concept of work. You close the laptop like you sealed a demon and pour yourself a glass of oxygen. Not productive—survivor-chic, which counts double today.`},
-      { role:"system", content:`EN • Treadmill
-You step up like a champion and step down like an elegant penguin on probation. Speed 6, then 7, then 8, and your heart files a union complaint. Sweat performs a small opera; the bottle says “toc” in the key of humility. You grin, wobble, and call it training. It isn’t athleticism; it’s honesty with your engine—and that’s tougher.`},
-      { role:"system", content:`EN • Bureaucratic portal
-The captcha wants twelve traffic lights from a 1972 postcard; the OTP arrives to a cousin who doesn’t exist. You upload a signed PDF; the site says it’s “too PDF.” You try phone, desktop, smart fridge, then cry in block letters. Submit again, silence… success. You didn’t win—they let you pass, which is kinder.`},
-      { role:"system", content:`EN • IKEA
-Screws A, B, C, and a quiet allen key that judges you. The shelf selects a diagonal lifestyle; a tiny screw immigrates under the couch to start a neutral country. In the end it stands—crooked by three millimeters, like truths you avoid at family lunch. Not furniture: a sentimental education.`},
-      { role:"system", content:`EN • Street bus almost-catch
-You sprint in indie-movie slow motion; the bus closes its doors with Shakespearean cruelty. You adjust your pride, pretend it was cardio by design, and walk like a citizen of grace. Missed rides can be small mercies in disguise.`},
+      { role:"system", content:
+`EXAMPLE EN • Grocery speedrun
+You enter heroic with a list and the trolley decides to whistle in minor key. The “deal” milk expires somewhere in prehistory and the yogurt stares like tax audit. The barcode plays shy; you scan ten times like a sad DJ at checkout. A pasta pack collapses in your bag and the fusilli applaud. You reach home convinced you saved money: three extras, two missing, and one shame purchase. And you laugh, because your home economy is stand-up without a mic.`},
+      { role:"system", content:
+`EXAMPLE EN • Zoom opera
+You join like a pro and your mic picks silent-film mode. You nod, smile, narrate graphs with your eyebrows, then realize you’ve been presenting to the toaster. When they finally hear you, the echo arrives like your conscience after two drinks. Screen share opens the deck, the private chat, the calendar, and a memory you didn’t order. Meeting ends in polite applause and decisions you can’t quote. And you crack up: in remote office you’re excellent at being far from yourself.`},
+      { role:"system", content:
+`EXAMPLE EN • Bus & dignity
+You hop in ninja-style and the pass beeps only on even days with favorable wind. You slip half a shoe on the turnstile, sit, and your neighbor’s ringtone is ’98 judging your life. You prep the stop like finals and miss it watching a dog in a better coat than yours. You exit next stop with the grace of an Ikea shelf built upside down. And you smile: dignity isn’t lost—it took the following bus.`},
+      { role:"system", content:
+`EXAMPLE EN • Gym hero-ish
+You greet the weights, they ghost you. Ten minutes on treadmill and your heart emails “we need to talk.” Mirror form-check shows a cousin of you pretending better. You reward yourself with a 4-euro water tasting like municipal hose. You leave sweaty, proud, confused: not much done, done very loudly. And you toast: to short cardio and long ego.`}
     ];
 
     return { sys: SYS, fewshots: FEWSHOTS };
   }
 
-  // WHAT IF — Realismo lucido con sorriso (resta invariato)
+  // WHAT IF — Realismo lucido con sorriso (chiusura riflessiva “wow”, senza compiti)
   const SYS_WHATIF = (isEn(lang)
     ? `
 You are "What If" — lucid, kind, lightly ironic, never melancholic.
@@ -296,9 +353,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
     const { sys, fewshots } = personaSystem(stile, lang);
+
+    // Prompt utente (vietiamo eco ripetizione domanda a monte)
     const userPrompt = isEn(lang)
-      ? `User question: "${domanda}". Context: "${String(extra || "").trim()}". Keep the exact persona voice.`
-      : `Domanda: "${domanda}". Contesto: "${String(extra || "").trim()}". Mantieni esattamente la voce della persona.`;
+      ? `User question (do not restate it): "${domanda}". Context: "${String(extra || "").trim()}". Keep the exact persona voice.`
+      : `Domanda (non ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Mantieni esattamente la voce della persona.`;
 
     const messages = [{ role: "system", content: sys }, ...(fewshots || []), { role: "user", content: userPrompt }];
 
@@ -306,7 +365,7 @@ export default async function handler(req, res) {
       model: MODEL,
       temperature: stile === "wtf" ? 0.92 : 0.82,
       top_p: 0.9,
-      max_tokens: 320,
+      max_tokens: 360,
       frequency_penalty: stile === "wtf" ? 0.4 : 0.1,
       presence_penalty: 0.0,
       messages
@@ -315,14 +374,22 @@ export default async function handler(req, res) {
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // Post-processing: niente eco domanda + lunghezze + chiusura whatif naturale/variabile
+    // Post-processing: no eco domanda
     answer = stripQuestionEcho(domanda, answer);
-    answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);
-    answer = clampWords(answer, stile === "wtf" ? 160 : 170);
     answer = normalizeOneParagraph(answer);
-    if (stile === "whatif") {
+
+    if (stile === "wtf") {
+      // Forza personalità/forma demenziale autoironica
+      answer = enforceWtfStyle(answer, lang);
+      // clamp prudenziale (il guardrail già tiene 6–8 frasi)
+      answer = clampWords(answer, 175);
+    } else {
+      // What If: accorcia e chiudi con riflessione “wow”
+      answer = tightenSentences(answer, 10);
+      answer = clampWords(answer, 170);
       answer = ensureReflectiveEnding(answer, lang);
     }
+
     if (!/[.!?…]$/.test(answer)) answer += ".";
 
     return res.status(200).json({
