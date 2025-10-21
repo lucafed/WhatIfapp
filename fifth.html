@@ -90,8 +90,8 @@ h1{
     </div>
     <div class="row" style="gap:8px">
       <span class="badge" id="styleBadge">🎭 —</span>
-      <!-- BADGE TEST/PRO (mostrato solo se prefs.pro === true) -->
-      <span class="badge" id="proBadge" title="Modalità test attiva" style="display:none">🧪 TEST · ⭐ PRO</span>
+      <!-- Badge TEST/PRO: visibile se admin_token o prefs.pro -->
+      <span class="badge" id="proBadge" title="" style="display:none">🧪 TEST · ⭐ PRO</span>
       <button class="btn ghost" id="langBtn">IT</button>
     </div>
   </div>
@@ -124,10 +124,11 @@ const style = prefs.stile || 'whatif';
 const lang  = (LS.getItem('lang') || 'it').toLowerCase();
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 
-// Mostra badge TEST/PRO se la modalità PRO (test) è ON da fourth.html
+// Badge TEST/PRO: ON se hai un admin_token o se PRO locale è attivo
 (function showProBadge(){
   const el = document.getElementById('proBadge');
-  if (prefs && prefs.pro === true){
+  const hasToken = !!LS.getItem('admin_token');
+  if (hasToken || prefs.pro === true){
     el.style.display = 'inline-flex';
     el.textContent = (lang === 'en') ? '🧪 TEST · ⭐ PRO' : '🧪 TEST · ⭐ PRO';
     el.title = (lang === 'en') ? 'Test mode active' : 'Modalità test attiva';
@@ -141,12 +142,14 @@ const I18N={
       sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
       share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
       copied:"Copiato!", error:"[errore server]",
-      styleWTF:"🎭 What the F", styleWHF:"🎭 What if"},
+      styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+      limit:"Hai usato i crediti gratuiti di oggi."},
   en:{tWTF:"⚡ What the F — Result", tWHF:"💡 What if — Result",
       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
       share:"📤 Share / Copy", again:"🔁 Ask another",
       copied:"Copied!", error:"[server error]",
-      styleWTF:"🎭 What the F", styleWHF:"🎭 What if"}
+      styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+      limit:"You used today's free credits."}
 }[lang];
 
 document.getElementById('langBtn').textContent=lang.toUpperCase();
@@ -221,6 +224,10 @@ if(isReplay){
     navigator.sendBeacon?.("/api/track") || fetch("/api/track",{method:"POST",keepalive:true}).catch(()=>{});
     try{
       const headers={"Content-Type":"application/json"};
+      // Se hai fatto login admin su fourth, invia il token: bypass crediti/limiti solo per te
+      const adminToken = LS.getItem('admin_token');
+      if(adminToken) headers['x-admin-token'] = adminToken;
+
       const r = await fetch("/api/ask",{
         method:"POST", headers,
         body:JSON.stringify({ domanda, lang, stile:style, extra:"", micro:req.micro||{} })
@@ -234,13 +241,15 @@ if(isReplay){
       if(r.status===402){
         const d=await r.json().catch(()=>({}));
         document.getElementById('answer').textContent =
-          lang==='en'?`You used today's free credits (${d?.used||"?"}/3).`:`Hai usato i crediti gratuiti di oggi (${d?.used||"?"}/3).`;
+          lang==='en'?`You used today's free credits (${d?.used||"?"}/${d?.dailyCap||3}).`
+                     :`Hai usato i crediti gratuiti di oggi (${d?.used||"?"}/${d?.dailyCap||3}).`;
         return;
       }
 
       const data = await r.json();
       if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
       answerText = normalizeOneParagraph((data.answer||"").trim());
+      if(!/[.!?…]$/.test(answerText)) answerText += ".";
       document.getElementById('answer').textContent = answerText;
 
       const hist = JSON.parse(LS.getItem('cronologia')||'[]');
