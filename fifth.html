@@ -223,10 +223,14 @@ if(isReplay){
     // tracking non bloccante
     navigator.sendBeacon?.("/api/track") || fetch("/api/track",{method:"POST",keepalive:true}).catch(()=>{});
     try{
-      const headers={"Content-Type":"application/json"};
-      // Se hai fatto login admin su fourth, invia il token: bypass crediti/limiti solo per te
-      const adminToken = LS.getItem('admin_token');
-      if(adminToken) headers['x-admin-token'] = adminToken;
+      // >>>>>>>>> HEADERS CON X-PRO E (OPZIONALE) ADMIN TOKEN <<<<<<<<<
+      const headers = { "Content-Type": "application/json" };
+      if (prefs && prefs.pro === true) {
+        headers["x-pro"] = "1";          // bypass crediti per modalità TEST/PRO locale
+      }
+      const adminToken = localStorage.getItem("admin_token");
+      if (adminToken) headers["x-admin-token"] = adminToken; // opzionale
+      // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
       const r = await fetch("/api/ask",{
         method:"POST", headers,
