@@ -12,14 +12,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-  <!-- Preload adattivo (aiuta LCP) -->
-  <link
-    rel="preload"
-    as="image"
-    href="/home-hero.png"
-    imagesrcset="/home-hero.avif 1x, /home-hero@2x.avif 2x"
-    imagesizes="(max-width:720px) 92vw, 720px"
-  />
+  <link rel="preload" as="image" href="/home-hero.png" />
 
   <style>
     /* ===== THEME SYSTEM (palette ufficiali) ===== */
@@ -90,21 +83,10 @@
     .lang-menu button.active{background:rgba(255,255,255,.06)}
 
     /* Hero */
-    .hero-wrap{
-      width:min(92vw, 720px);
-      aspect-ratio:16 / 9;                   /* evita lo “schiacciamento” */
-      border-radius:16px;
-      overflow:hidden;
-      filter:drop-shadow(0 10px 28px var(--shadow));
-      background:linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.2));
-    }
     .hero-img{
-      width:100%;
-      height:100%;
-      display:block;
-      object-fit:contain;                     /* mantiene proporzioni */
-      image-rendering:auto;
-      background:transparent;
+      width:min(92vw,560px); height:auto; display:block; margin:0 auto 6px;
+      filter:drop-shadow(0 10px 28px var(--shadow));
+      border-radius:16px;
     }
 
     /* Titoli & lead */
@@ -145,7 +127,9 @@
       position:fixed; left:0; right:0; bottom:10px; text-align:center;
       color:var(--muted); font-size:12px; padding:0 14px;
     }
-    footer a{ color:var(--accent); text-decoration:none; font-weight:600; }
+    footer a{
+      color:var(--accent); text-decoration:none; font-weight:600;
+    }
     footer .sep{opacity:.6; margin:0 6px}
     .foot-links{
       display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
@@ -168,19 +152,10 @@
   </div>
 
   <main>
-    <div class="hero-wrap">
-      <picture id="heroPic">
-        <source type="image/avif" srcset="/home-hero.avif 1x, /home-hero@2x.avif 2x" sizes="(max-width:720px) 92vw, 720px" />
-        <source type="image/webp" srcset="/home-hero.webp 1x, /home-hero@2x.webp 2x" sizes="(max-width:720px) 92vw, 720px" />
-        <img id="hero" class="hero-img"
-             alt="Porta luminosa What?f"
-             decoding="async"
-             loading="eager"
-             width="1600" height="900" />
-      </picture>
-    </div>
+    <img id="hero" class="hero-img" alt="Porta luminosa What?f" loading="eager" decoding="async" />
 
     <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
+
     <p class="lead" id="leadText"></p>
 
     <!-- Scelte -->
@@ -207,45 +182,46 @@
     </div>
   </footer>
 
-  <!-- Hero robust loader (sceglie il primo percorso disponibile e imposta srcset) -->
+  <!-- Hero robust loader (stesse dimensioni; AVIF/WEBP/PNG + @2x) -->
   <script>
     (async function loadHero(){
-      const img = document.getElementById('hero');
-      const pic = document.getElementById('heroPic');
-      const tryPaths = [
-        { base:"/home-hero", exts:[".avif",".webp",".png"] },
-        { base:"/public/home-hero", exts:[".avif",".webp",".png"] },
-        { base:"/assets/home-hero", exts:[".avif",".webp",".png"] },
-      ];
+      const hero = document.getElementById('hero');
 
-      function setAll(base){
-        // aggiorna le <source> dentro <picture>
-        pic.querySelectorAll('source[type="image/avif"]').forEach(s=>{
-          s.srcset = `${base}.avif 1x, ${base}@2x.avif 2x`;
-        });
-        pic.querySelectorAll('source[type="image/webp"]').forEach(s=>{
-          s.srcset = `${base}.webp 1x, ${base}@2x.webp 2x`;
-        });
-        // fallback PNG/JPG
-        img.src = `${base}.png`;
-        img.srcset = `${base}.png 1x, ${base}@2x.png 2x`;
-        img.sizes = "(max-width:720px) 92vw, 720px";
+      const CANDIDATES = [
+        { base: "/home-hero" },
+        { base: "/public/home-hero" },
+        { base: "/assets/home-hero" }
+      ];
+      const EXT_ORDER = [".avif", ".webp", ".png", ".jpg", ".jpeg"];
+
+      // helper per test rapido
+      async function exists(url){
+        try{
+          const r = await fetch(url, { method:"HEAD", cache:"no-store" });
+          return r.ok;
+        }catch{ return false; }
       }
 
-      for (const p of tryPaths){
-        for (const ext of p.exts){
-          const url = p.base + ext;
-          try{
-            const r = await fetch(url, { method:"HEAD", cache:"no-store" });
-            if(r.ok){
-              setAll(p.base);
-              return;
-            }
-          }catch(e){}
+      // imposta src + srcset + sizes (nessun cambio dimensioni CSS)
+      function applySource(base, ext){
+        const base1x = `${base}${ext}`;
+        const base2x = `${base}@2x${ext}`;
+        hero.src = base1x + `?v=${Date.now()}`;
+        hero.srcset = `${base1x} 1x, ${base2x} 2x`;
+        hero.sizes = "(max-width: 560px) 92vw, 560px";
+      }
+
+      for (const c of CANDIDATES){
+        for (const ext of EXT_ORDER){
+          const ok1x = await exists(`${c.base}${ext}`);
+          if (ok1x){
+            applySource(c.base, ext);
+            return;
+          }
         }
       }
-      // se proprio nulla, nascondi
-      document.querySelector('.hero-wrap').style.display='none';
+      // fallback: nascondi se proprio non c’è nulla
+      hero.style.display = 'none';
     })();
   </script>
 
@@ -324,6 +300,7 @@
     const go    = document.getElementById('go');
 
     function syncUI(){
+      // chips selezionate
       if(state.periodo){
         document.querySelectorAll(`#periodGroup .chip`).forEach(c=>c.classList.remove('selected'));
         document.querySelector(`#periodGroup .chip[data-val="${state.periodo}"]`)?.classList.add('selected');
@@ -331,6 +308,7 @@
       if(state.stile){
         document.querySelectorAll(`#styleGroup .chip`).forEach(c=>c.classList.remove('selected'));
         document.querySelector(`#styleGroup .chip[data-val="${state.stile}"]`)?.classList.add('selected');
+        // anteprima tema live
         document.documentElement.setAttribute('data-theme', state.stile==='wtf'?'wtf':'whatif');
       }
       go.disabled = !(state.periodo && state.stile);
@@ -339,10 +317,13 @@
     function wireGroup(g){
       g.addEventListener('click', (e)=>{
         const b = e.target.closest('.chip'); if(!b) return;
+        // toggle visuale
         g.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
         b.classList.add('selected');
+        // salva
         state[b.dataset.key] = b.dataset.val;
         localStorage.setItem('whatif_prefs', JSON.stringify(state));
+        // anteprima tema quando scegli lo stile
         if (b.dataset.key === 'stile'){
           document.documentElement.setAttribute('data-theme', b.dataset.val==='wtf'?'wtf':'whatif');
         }
