@@ -437,7 +437,7 @@ const HINT_POOL_IT = [
   "E se imparassi una lingua strana?",
   "E se mi svegliassi ogni giorno all’alba per un mese?",
   "E se facessi pace con una persona?",
-  "E se vivessi per 30 giorni senza social?",
+  "E se vivessi 30 giorni senza social?",
   "E se provassi a cambiare routine per una settimana?",
   "E se prendessi un cane?",
   "E se mettessi da parte ogni giorno 5 euro?",
@@ -557,7 +557,7 @@ document.getElementById('clearSavedBtn').onclick=()=>{ LS.removeItem('next_promp
 document.getElementById('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
 
 // ===== Admin PIN inline (long-press su badge crediti) =====
-const ADMIN_PIN_HASH_HEX = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"; // <--- SOSTITUISCI con l'hash del tuo PIN
+const ADMIN_PIN_HASH_HEX = "b52798c041f3cb9aef9db2379e32683a60deae6c1a53ab79b18151e53c52c1c1"; // hash per PIN: DadiMatti0114
 
 async function sha256Hex(str){
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
