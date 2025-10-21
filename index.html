@@ -12,30 +12,48 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-  <link rel="preload" as="image" href="/home-hero.png" imagesrcset="/home-hero.png 800w, /home-hero@2x.png 1200w" imagesizes="(max-width: 560px) 92vw, 560px" />
+  <!-- Preload adattivo (aiuta LCP) -->
+  <link
+    rel="preload"
+    as="image"
+    href="/home-hero.png"
+    imagesrcset="/home-hero.avif 1x, /home-hero@2x.avif 2x"
+    imagesizes="(max-width:720px) 92vw, 720px"
+  />
 
   <style>
+    /* ===== THEME SYSTEM (palette ufficiali) ===== */
     :root{
       --bg:#0C0F14; --bg2:#0E1724;
       --fg:#ffffff; --muted:#A0B2BA;
       --card:rgba(14,19,28,.55); --card-border:rgba(255,255,255,.10);
       --chip:#141C22;
-      --accent:#1C57A0; --accent2:#FFEC01; --ink:#0A0E12;
+      --accent:#1C57A0;     /* Blu Verona */
+      --accent2:#FFEC01;    /* Giallo Verona */
+      --ink:#0A0E12;
       --shadow:rgba(0,0,0,.45);
     }
     html[data-theme="whatif"]{
-      --bg:#0B1018; --bg2:#0E1724; --fg:#F4F7FB; --muted:#A7B3C2;
+      --bg:#0B1018; --bg2:#0E1724;
+      --fg:#F4F7FB; --muted:#A7B3C2;
       --card:rgba(14,20,28,.55); --card-border:rgba(255,255,255,.12);
-      --chip:#121A26; --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
+      --chip:#121A26;
+      --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
     }
     html[data-theme="wtf"]{
-      --bg:#0B0B0C; --bg2:#101414; --fg:#EEF5F0; --muted:#A6B6AD;
+      --bg:#0B0B0C; --bg2:#101414;
+      --fg:#EEF5F0; --muted:#A6B6AD;
       --card:rgba(16,22,20,.55); --card-border:rgba(255,255,255,.10);
-      --chip:#0F1714; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;
+      --chip:#0F1714;
+      --accent:#3A6B56;     /* Verde speranza */
+      --accent2:#5A8C75;    /* Verde chiaro */
+      --ink:#06110B;
     }
+
     *{box-sizing:border-box}
     html,body{
-      height:100%; margin:0;
+      height:100%;
+      margin:0;
       background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
       color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
@@ -46,43 +64,97 @@
       body{animation:bgShift 18s ease-in-out infinite alternate}
       @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
     }
-    main{ min-height:100%; display:flex; flex-direction:column; align-items:center; text-align:center; padding:20px; gap:14px; padding-bottom:120px; }
+
+    main{
+      min-height:100%;
+      display:flex; flex-direction:column; align-items:center; text-align:center;
+      padding:20px; gap:14px;
+      padding-bottom:120px;
+    }
 
     /* Lingua (fab) */
     .lang-fab{position:fixed; top:calc(env(safe-area-inset-top,0px) + 14px); right:14px; z-index:50}
-    .lang-btn{appearance:none; border:1px solid var(--card-border); background:var(--chip); color:var(--fg); padding:10px 12px; border-radius:999px; cursor:pointer}
-    .lang-menu{position:absolute; top:46px; right:0; background:var(--card); border:1px solid var(--card-border); border-radius:12px; padding:8px; display:none; min-width:170px; box-shadow:0 12px 28px var(--shadow); backdrop-filter:blur(10px)}
-    .lang-menu button{display:block; width:100%; text-align:left; background:transparent; border:none; color:#E6F2F5; padding:10px; border-radius:10px; cursor:pointer}
+    .lang-btn{
+      appearance:none; border:1px solid var(--card-border); background:var(--chip); color:var(--fg);
+      padding:10px 12px; border-radius:999px; cursor:pointer
+    }
+    .lang-menu{
+      position:absolute; top:46px; right:0; background:var(--card); border:1px solid var(--card-border);
+      border-radius:12px; padding:8px; display:none; min-width:170px;
+      box-shadow:0 12px 28px var(--shadow); backdrop-filter:blur(10px)
+    }
+    .lang-menu button{
+      display:block; width:100%; text-align:left; background:transparent; border:none;
+      color:#E6F2F5; padding:10px; border-radius:10px; cursor:pointer
+    }
     .lang-menu button.active{background:rgba(255,255,255,.06)}
 
     /* Hero */
-    .hero-img{
-      width:min(92vw,560px);
-      aspect-ratio: 16/9;           /* evita schiacciamenti */
-      height:auto;
-      object-fit:contain;
-      display:block; margin:0 auto 6px;
-      filter:drop-shadow(0 10px 28px var(--shadow));
+    .hero-wrap{
+      width:min(92vw, 720px);
+      aspect-ratio:16 / 9;                   /* evita lo “schiacciamento” */
       border-radius:16px;
+      overflow:hidden;
+      filter:drop-shadow(0 10px 28px var(--shadow));
+      background:linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.2));
+    }
+    .hero-img{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit:contain;                     /* mantiene proporzioni */
+      image-rendering:auto;
+      background:transparent;
     }
 
-    h1{margin:.25rem 0 0; font-size:clamp(28px,5.5vw,44px); line-height:1.1}
+    /* Titoli & lead */
+    h1{margin:.25rem 0 0; font-size:clamp(28px,5.5vw,44px); line-height:1.1; cursor:default}
     h1 span{color:var(--accent)}
-    .lead{max-width:720px; font-size:clamp(15px,4vw,18px); color:var(--muted); line-height:1.55; margin:4px auto 16px}
+    .lead{
+      max-width:720px; font-size:clamp(15px,4vw,18px); color:var(--muted);
+      line-height:1.55; margin:4px auto 16px;
+    }
 
+    /* Scelte */
     .group{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:6px}
-    .chip{appearance:none; border:1px solid var(--card-border); background:var(--chip); color:#e8f2ec; padding:12px 16px; border-radius:16px; font-weight:700; cursor:pointer; transition:transform .08s ease, background .16s ease, box-shadow .16s ease, color .16s ease; backdrop-filter:blur(6px)}
+    .chip{
+      appearance:none; border:1px solid var(--card-border); background:var(--chip); color:#e8f2ec;
+      padding:12px 16px; border-radius:16px; font-weight:700; cursor:pointer;
+      transition:transform .08s ease, background .16s ease, box-shadow .16s ease, color .16s ease;
+      backdrop-filter:blur(6px);
+    }
     .chip:active{transform:translateY(1px)}
-    .chip.selected{background:linear-gradient(180deg,var(--accent),var(--accent2)); color:var(--ink); box-shadow:0 0 0 1px rgba(255,255,255,.15) inset}
+    .chip.selected{
+      background:linear-gradient(180deg,var(--accent),var(--accent2));
+      color:var(--ink); box-shadow:0 0 0 1px rgba(255,255,255,.15) inset;
+    }
 
-    .cta{display:inline-block; background:linear-gradient(180deg,var(--accent),var(--accent2)); color:var(--ink); font-weight:800; border:none; border-radius:24px; padding:14px 20px; box-shadow:0 0 14px rgba(0,0,0,.35),0 0 28px rgba(0,0,0,.15); cursor:pointer; transition:.2s}
+    /* CTA */
+    .cta{
+      display:inline-block;
+      background:linear-gradient(180deg,var(--accent),var(--accent2));
+      color:var(--ink); font-weight:800; border:none; border-radius:24px;
+      padding:14px 20px;
+      box-shadow:0 0 14px rgba(0,0,0,.35),0 0 28px rgba(0,0,0,.15);
+      cursor:pointer; transition:.2s
+    }
     .cta[disabled]{opacity:.45; cursor:not-allowed}
 
-    footer{position:fixed; left:0; right:0; bottom:10px; text-align:center; color:var(--muted); font-size:12px; padding:0 14px}
-    footer a{color:var(--accent); text-decoration:none; font-weight:600}
+    /* Footer */
+    footer{
+      position:fixed; left:0; right:0; bottom:10px; text-align:center;
+      color:var(--muted); font-size:12px; padding:0 14px;
+    }
+    footer a{ color:var(--accent); text-decoration:none; font-weight:600; }
     footer .sep{opacity:.6; margin:0 6px}
-    .foot-links{display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:6px}
-    .info-btn{background:var(--chip); border:1px solid var(--card-border); color:#E6F2F5; border-radius:999px; padding:6px 10px; font-weight:700; text-decoration:none}
+    .foot-links{
+      display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
+      margin-top:6px;
+    }
+    .info-btn{
+      background:var(--chip); border:1px solid var(--card-border); color:#E6F2F5;
+      border-radius:999px; padding:6px 10px; font-weight:700; text-decoration:none;
+    }
   </style>
 </head>
 <body>
@@ -96,19 +168,22 @@
   </div>
 
   <main>
-    <img
-      id="hero"
-      class="hero-img"
-      alt="Porta luminosa What?f"
-      decoding="async"
-      fetchpriority="high"
-      loading="eager"
-      width="1120" height="630"
-    />
+    <div class="hero-wrap">
+      <picture id="heroPic">
+        <source type="image/avif" srcset="/home-hero.avif 1x, /home-hero@2x.avif 2x" sizes="(max-width:720px) 92vw, 720px" />
+        <source type="image/webp" srcset="/home-hero.webp 1x, /home-hero@2x.webp 2x" sizes="(max-width:720px) 92vw, 720px" />
+        <img id="hero" class="hero-img"
+             alt="Porta luminosa What?f"
+             decoding="async"
+             loading="eager"
+             width="1600" height="900" />
+      </picture>
+    </div>
 
     <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
     <p class="lead" id="leadText"></p>
 
+    <!-- Scelte -->
     <div class="group" id="periodGroup">
       <button class="chip" data-key="periodo" data-val="past"   data-i18n="past">Passato</button>
       <button class="chip" data-key="periodo" data-val="future" data-i18n="future">Futuro</button>
@@ -132,34 +207,59 @@
     </div>
   </footer>
 
-  <!-- Hero loader con srcset -->
+  <!-- Hero robust loader (sceglie il primo percorso disponibile e imposta srcset) -->
   <script>
     (async function loadHero(){
-      const hero = document.getElementById('hero');
-      const tries = ['/home-hero.webp','/home-hero.png','/public/home-hero.png','/assets/home-hero.png'];
-      for (const u of tries){
-        try{
-          const r = await fetch(u,{cache:'no-store'});
-          if (r.ok){
-            hero.src = u + '?v=' + Date.now();
-            hero.srcset = `${u}?w=560 560w, ${u}?w=840 840w, ${u}?w=1120 1120w`;
-            hero.sizes = '(max-width: 560px) 92vw, 560px';
-            return;
-          }
-        }catch(e){}
+      const img = document.getElementById('hero');
+      const pic = document.getElementById('heroPic');
+      const tryPaths = [
+        { base:"/home-hero", exts:[".avif",".webp",".png"] },
+        { base:"/public/home-hero", exts:[".avif",".webp",".png"] },
+        { base:"/assets/home-hero", exts:[".avif",".webp",".png"] },
+      ];
+
+      function setAll(base){
+        // aggiorna le <source> dentro <picture>
+        pic.querySelectorAll('source[type="image/avif"]').forEach(s=>{
+          s.srcset = `${base}.avif 1x, ${base}@2x.avif 2x`;
+        });
+        pic.querySelectorAll('source[type="image/webp"]').forEach(s=>{
+          s.srcset = `${base}.webp 1x, ${base}@2x.webp 2x`;
+        });
+        // fallback PNG/JPG
+        img.src = `${base}.png`;
+        img.srcset = `${base}.png 1x, ${base}@2x.png 2x`;
+        img.sizes = "(max-width:720px) 92vw, 720px";
       }
-      hero.style.display='none';
+
+      for (const p of tryPaths){
+        for (const ext of p.exts){
+          const url = p.base + ext;
+          try{
+            const r = await fetch(url, { method:"HEAD", cache:"no-store" });
+            if(r.ok){
+              setAll(p.base);
+              return;
+            }
+          }catch(e){}
+        }
+      }
+      // se proprio nulla, nascondi
+      document.querySelector('.hero-wrap').style.display='none';
     })();
   </script>
 
   <!-- i18n + theme + selections -->
   <script>
+    // Applica tema da prefs all'avvio
     (function initTheme(){
       try{
         const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
         const theme = prefs.stile==='wtf' ? 'wtf' : 'whatif';
         document.documentElement.setAttribute('data-theme', theme);
-      }catch{ document.documentElement.setAttribute('data-theme','whatif'); }
+      }catch(e){
+        document.documentElement.setAttribute('data-theme','whatif');
+      }
     })();
 
     const DICT = {
@@ -197,11 +297,14 @@
         b.classList.toggle('active', b.dataset.lang === L);
       });
     }
+
     if(!LS.getItem('lang')) LS.setItem('lang','it');
     applyLang();
 
-    // lingua menu
-    const fab  = $('#langFab'); const btn  = $('#langToggle'); const menu = $('#langMenu');
+    // widget lingua
+    const fab  = $('#langFab');
+    const btn  = $('#langToggle');
+    const menu = $('#langMenu');
     btn.addEventListener('click', ()=>{
       const open = menu.style.display === 'block';
       menu.style.display = open ? 'none' : 'block';
@@ -209,13 +312,16 @@
     });
     menu.addEventListener('click', e=>{
       const b = e.target.closest('button[data-lang]'); if(!b) return;
-      setLang(b.dataset.lang); menu.style.display='none';
+      setLang(b.dataset.lang);
+      menu.style.display='none';
     });
-    document.addEventListener('click', e=>{ if(!fab.contains(e.target)) menu.style.display='none'; });
+    document.addEventListener('click', e=>{
+      if(!fab.contains(e.target)) menu.style.display='none';
+    });
 
-    // selections
+    // Logica selezioni + CTA
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-    const go = document.getElementById('go');
+    const go    = document.getElementById('go');
 
     function syncUI(){
       if(state.periodo){
@@ -229,6 +335,7 @@
       }
       go.disabled = !(state.periodo && state.stile);
     }
+
     function wireGroup(g){
       g.addEventListener('click', (e)=>{
         const b = e.target.closest('.chip'); if(!b) return;
@@ -242,6 +349,7 @@
         go.disabled = !(state.periodo && state.stile);
       });
     }
+
     wireGroup(document.getElementById('periodGroup'));
     wireGroup(document.getElementById('styleGroup'));
     syncUI();
@@ -251,17 +359,33 @@
       location.href = 'second.html';
     });
 
-    // Admin segreto: triplo tap
+    // Admin segreto: triplo tap sul titolo
     (function(){
       let taps = 0, timer = null;
-      const target = document.getElementById('appTitle') || document.body;
+      const target = document.getElementById('appTitle') || document.querySelector('h1') || document.body;
       target.addEventListener('click', ()=>{
-        taps++; clearTimeout(timer); timer = setTimeout(()=>taps=0, 1200);
-        if (taps >= 3) { taps = 0; location.href = 'admin.html'; }
+        taps++;
+        clearTimeout(timer);
+        timer = setTimeout(()=>taps=0, 1200);
+        if (taps >= 3) {
+          taps = 0;
+          const flash = document.createElement('div');
+          flash.style.position='fixed'; flash.style.inset='0';
+          flash.style.background='rgba(255,255,255,0.08)';
+          flash.style.backdropFilter='blur(2px)';
+          flash.style.transition='opacity .6s ease';
+          flash.style.opacity='1'; flash.style.zIndex='9999';
+          document.body.appendChild(flash);
+          setTimeout(()=>flash.style.opacity='0',150);
+          setTimeout(()=>flash.remove(),800);
+          location.href = 'admin.html';
+        }
       });
     })();
+  </script>
 
-    // SW
+  <!-- SW -->
+  <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("/sw.js").catch(()=>{});
