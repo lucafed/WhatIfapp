@@ -11,17 +11,17 @@ import { Ratelimit } from "@upstash/ratelimit";
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = "gpt-4o-mini";
 
-/* ---------- Safe Upstash (soft-fail se env mancanti) ---------- */
-let redis = null;
-let rl = null;
-try {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (url && token) {
-    redis = new Redis({ url, token });
-    rl = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "1 m") }); // 10 req/min
-  }
-} catch { /* ignora: si procede senza Redis/rate-limit */ }
+// ---------- Upstash ----------
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
+
+// rate limit: 10 req/min per IP (skippabile per admin/PRO)
+const rl = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "1 m"),
+});
 
 // ---------- CORS ----------
 const ALLOWED_ORIGINS = [
@@ -101,7 +101,7 @@ function parseBody(req) {
 async function isAdmin(req, requesterIp) {
   // opzionale: mapping admin token -> ip (gestito da /api/admin-token.js)
   const token = String(req.headers["x-admin-token"] || "").trim();
-  if (!token || !redis) return false;
+  if (!token) return false;
   try {
     const ip = await redis.get(`admin:token:${token}`);
     return ip && ip === requesterIp;
@@ -134,7 +134,7 @@ function ensureReflectiveEnding(text, lang) {
 
   const itImp = [/^(prova|fai|metti|chiama|scrivi|inizia|oggi|domani)\b/i];
   const enImp = [/^(try|do|put|call|write|start|today|tomorrow)\b/i];
-  const isImperative = L.startsWith("en") ? enImp.some(r=>r.test(last)) : itImp.some(r=>r.test(last));
+  const isImperative = L.startsWith("en") ? enImp.some((r) => r.test(last)) : itImp.some((r) => r.test(last));
 
   const IT = [
     "E ti sorprende che, sotto il rumore, c’era già qualcosa di tuo.",
@@ -151,7 +151,7 @@ function ensureReflectiveEnding(text, lang) {
   const soft = L.startsWith("en") ? EN : IT;
 
   const finalLine = (isImperative || last.split(/\s+/).length < 4)
-    ? soft[Math.floor(Math.random()*soft.length)]
+    ? soft[Math.floor(Math.random() * soft.length)]
     : last;
 
   const merged = [...sentences, finalLine].join(" ");
@@ -163,41 +163,45 @@ function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
   const en = isEn(lang);
   if ((periodo || "").toLowerCase() === "past") {
     // controfattuale (passato): usare davvero passato/condizionale
-    return (en
+    return en
       ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Write as if the choice HAD BEEN made back then. Prefer past simple/present narrative flashes, past perfect, and conditional ("would have ..."). Keep tense consistency. Do NOT drift to future tense. Do NOT give advice. Do NOT restate the user's question. Keep the exact ${style.toUpperCase()} voice.`
-      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Scrivi come se quella scelta fosse già avvenuta allora. Usa imperfetto, passato prossimo/perfetto e condizionale composto ("saresti andato", "avresti fatto"), con eventuali lampi di presente narrativo. Mantieni coerenza dei tempi. NON scivolare al futuro. NON dare consigli. NON ripetere la domanda. Mantieni la voce ${style.toUpperCase()}.`);
+      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Scrivi come se quella scelta fosse già avvenuta allora. Usa imperfetto, passato prossimo/perfetto e condizionale composto ("saresti andato", "avresti fatto"), con eventuali lampi di presente narrativo. Mantieni coerenza dei tempi. NON scivolare al futuro. NON dare consigli. NON ripetere la domanda. Mantieni la voce ${style.toUpperCase()}.`;
   }
   // futuro/prospettico
-  return (en
+  return en
     ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Describe a plausible near-future unfolding as if the user were stepping into it now. No lists, no advice, no questions, no restating the question. Keep the exact ${style.toUpperCase()} voice.`
-    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi un prossimo futuro plausibile come se ci entrassi adesso. Niente elenchi, niente consigli, niente domande, niente eco della domanda. Mantieni la voce ${style.toUpperCase()}.`);
+    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi un prossimo futuro plausibile come se ci entrassi adesso. Niente elenchi, niente consigli, niente domande, niente eco della domanda. Mantieni la voce ${style.toUpperCase()}.`;
 }
 
-/* ---------- Personas (What the F fissato + What If invariato) ---------- */
+/* ---------- Personas (WHAT IF invariato • WHAT THE F riscritto e fissato) ---------- */
 function personaSystem(style, lang) {
   if (style === "wtf") {
-    // PERSONA "WHAT THE F" — fissata con frasi lunghe + energia da notte incasinata
-    const SYS = (isEn(lang)
+    // WHAT THE F — frasi lunghe, caotico, autoironico, sbronze; niente fewshots
+    const SYS = isEn(lang)
       ? `
-You are “What the F” — angry-enlightened, absurd, self-deprecating, a little tipsy but tender under the snarl.
-SECOND PERSON. ONE paragraph, 5–7 LONG sentences (~110–140 words). Start in-scene; quick, breathy rhythm; vivid, cinematic everyday details.
-No lists. No questions. No emojis. No moralizing. Mild swearing only if it truly lands as a joke.
-Do NOT repeat or paraphrase the user’s question. Do NOT reuse wording from any examples; always invent fresh images and situations.
-Humor feels like a chaotic night (bars, late kitchens, cheap wine, heroic incompetence) yet remains human. Always close with a punchline that stings and soothes.
+You are “What the F” — angry–enlightened, gloriously messy, self-deprecating and secretly tender.
+SECOND PERSON. ONE paragraph, 5–7 LONG sentences (~110–140 words).
+Open in scene; fast but elastic rhythm with chained clauses and vivid, cinematic details.
+Sarcastic, streetwise, a bit chaotic; light swearing only if it truly lands; boozy misadventures are welcome.
+No lists. No questions. No moralizing. Do NOT restate or paraphrase the user’s question.
+Respect temporal mode (past = true counterfactual; future = plausible near-future). Invent fresh situations every time.
+Always end with a punchline that stings and soothes.
 `.trim()
       : `
-Sei “What the F” — incazzato illuminato, assurdo, autoironico, un filo sbronzo ma affettuoso sotto il ringhio.
-SECONDA PERSONA. UN paragrafo, 5–7 frasi LUNGHE (~110–140 parole). Entra subito in scena; ritmo veloce e un po’ ansimante; dettagli quotidiani cinematografici.
-Niente elenchi. Niente domande. Niente emoji. Niente prediche. Parolacce leggere solo se fanno davvero ridere.
-NON ripetere o parafrasare la domanda dell’utente. NON riusare frasi di esempio: inventa immagini e situazioni nuove ogni volta.
-L’umorismo ha energia da notte incasinata (bar, cucine tarde, vino economico, incompetenza eroica) ma resta umano. Chiudi sempre con una punchline che punge e consola.
-`).trim();
+Sei “What the F” — incazzato illuminato, gloriosamente incasinato, autoironico e segretamente affettuoso.
+SECONDA PERSONA. UN paragrafo, 5–7 frasi LUNGHE (~110–140 parole).
+Entra in scena subito; ritmo veloce ma elastico, frasi a catena con dettagli vividi e cinematografici.
+Sarcastico, di strada, un filo caotico; parolacce leggere solo se servono davvero; sbronze e micro-disastri benvenuti.
+Niente elenchi. Niente domande. Niente prediche. NON ripetere o parafrasare la domanda.
+Rispetta la modalità temporale (passato = vero controfattuale; futuro = prossimo plausibile). Ogni volta scene nuove.
+Chiudi sempre con una punchline che punge e consola.
+`.trim();
 
-    return { sys: SYS, fewshots: [] }; // niente fewshots: evitiamo ancoraggi
+    return { sys: SYS, fewshots: [] };
   }
 
-  // WHAT IF — Realismo lucido con sorriso, finale riflessivo (no compiti)
-  const SYS_WHATIF = (isEn(lang)
+  // WHAT IF — invariato (finale riflessivo)
+  const SYS_WHATIF = isEn(lang)
     ? `
 You are "What If" — lucid, kind, lightly ironic, never melancholic.
 SECOND PERSON. One paragraph, 7–10 sentences (~110–140 words).
@@ -211,7 +215,7 @@ Sei "What If" — lucido, affettuoso, con sorriso leggero, mai malinconico.
 SECONDA PERSONA. Un paragrafo, 7–10 frasi (~110–140 parole).
 Linguaggio semplice, caldo, concreto; conversazionale, non poetico. Niente elenchi. Niente domande. Niente emoji.
 NON ripetere la domanda dell’utente. NON dare consigli o compiti.
-Evita di riusare immagini di esempio: inventa momenti nuovi e quotidiani ogni volta.
+Inventa momenti nuovi e quotidiani ogni volta.
 Chiudi con una riga riflessiva spontanea (non un’istruzione, non un imperativo).
 `.trim();
 
@@ -237,26 +241,22 @@ export default async function handler(req, res) {
     const admin = await isAdmin(req, ip);
     const bypass = proBypass || admin;
 
-    // rate limit 10/min (se disponibile)
-    if (!bypass && rl) {
-      try {
-        const { success } = await rl.limit(`ask:${ip}`);
-        if (!success) return res.status(429).json({ error: "rate_limited_minute" });
-      } catch { /* ignora RL error */ }
+    // rate limit 10/min (se non bypass)
+    if (!bypass) {
+      const { success } = await rl.limit(`ask:${ip}`);
+      if (!success) return res.status(429).json({ error: "rate_limited_minute" });
     }
 
-    // crediti giornalieri 3/IP (se Redis disponibile)
+    // crediti giornalieri 3/IP (se non bypass)
     let used = 0, dailyCap = 3;
-    if (!bypass && redis) {
-      try {
-        const today = new Date().toISOString().slice(0,10);
-        const key = `credits:${ip}:${today}`;
-        used = (await redis.incr(key)) ?? 1;
-        if (used === 1) await redis.expire(key, 60*60*24);
-        if (used > dailyCap) {
-          return res.status(402).json({ error: "daily_credits_exhausted", used, dailyCap });
-        }
-      } catch { /* se Redis fallisce, non bloccare la richiesta */ }
+    if (!bypass) {
+      const today = new Date().toISOString().slice(0, 10);
+      const key = `credits:${ip}:${today}`;
+      used = (await redis.incr(key)) ?? 1;
+      if (used === 1) await redis.expire(key, 60 * 60 * 24);
+      if (used > dailyCap) {
+        return res.status(402).json({ error: "daily_credits_exhausted", used, dailyCap });
+      }
     }
 
     const { domanda = "", stile = "whatif", lang = "it", extra = "", periodo = "future" } = parseBody(req);
@@ -314,7 +314,7 @@ export default async function handler(req, res) {
       periodo,
       model: MODEL,
       admin,
-      credits: (!bypass && redis) ? { used, dailyCap } : null
+      credits: bypass ? null : { used, dailyCap }
     });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
