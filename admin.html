@@ -90,7 +90,7 @@
 <script>
 /* ===== Costanti ===== */
 const LS = localStorage;
-const ADMIN_SECRET = "wtf-setup-2025";  // deve combaciare con /api/admin-token.js
+const ADMIN_SECRET = "wtf-setup-2025";
 const TOKEN_KEY = "admin_token";
 const PRO_PREFS_KEY = "whatif_prefs";
 
@@ -140,38 +140,56 @@ async function resetCredits(){
     const d = await r.json().catch(()=>({}));
     throw new Error(d.error||"reset_failed");
   }
-  // ripulisci anche i crediti locali del device admin
   const today = new Date().toISOString().slice(0,10);
   let c = JSON.parse(LS.getItem('whatif_credits')||'{"date":"'+today+'","used":0}');
   c.date=today; c.used=0; LS.setItem('whatif_credits', JSON.stringify(c));
   alert("Crediti di oggi azzerati.");
 }
 
-/* ===== Render ===== */
+/* ===== Render Logs con statistiche locali ===== */
 function renderLogs(data){
   const tbody = document.querySelector("#logsTbl tbody");
   tbody.innerHTML = "";
+
   const fStyle = document.getElementById("filterStyle").value;
   const fLang  = document.getElementById("filterLang").value;
   const fPer   = document.getElementById("filterPeriod").value;
   const q      = document.getElementById("searchQ").value.trim().toLowerCase();
 
-  const rows = (data.items||[]).filter(x=>{
+  const all = Array.isArray(data.items) ? data.items : [];
+
+  const rows = all.filter(x=>{
     if(fStyle && x.style!==fStyle) return false;
-    if(fLang && x.lang!==fLang) return false;
-    if(fPer && x.periodo!==fPer) return false;
+    if(fLang  && x.lang!==fLang)   return false;
+    if(fPer   && x.periodo!==fPer) return false;
     if(q && !String(x.domanda||"").toLowerCase().includes(q)) return false;
     return true;
   });
 
   for(const it of rows){
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${fmtDate(it.ts)}</td><td>${it.style}</td><td>${it.lang}</td><td>${it.periodo}</td><td>${(it.domanda||"").replace(/\s+/g," ").slice(0,180)}</td>`;
+    tr.innerHTML = `<td>${fmtDate(it.ts)}</td>
+                    <td>${it.style||"—"}</td>
+                    <td>${it.lang||"—"}</td>
+                    <td>${it.periodo||"—"}</td>
+                    <td>${(it.domanda||"").replace(/\s+/g," ").slice(0,180)}</td>`;
     tbody.appendChild(tr);
   }
 
-  const s = data.stats || {};
-  const txt = `Totale: ${s.total||0} · Per stile: ${JSON.stringify(s.style||{})} · Per lingua: ${JSON.stringify(s.lang||{})} · Per tempo: ${JSON.stringify(s.periodo||{})}`;
+  // Calcolo statistiche locali
+  const compute = list=>{
+    const s={ total:list.length, style:{}, lang:{}, periodo:{} };
+    for(const it of list){
+      if(it.style)   s.style[it.style]     = (s.style[it.style]||0)+1;
+      if(it.lang)    s.lang[it.lang]       = (s.lang[it.lang]||0)+1;
+      if(it.periodo) s.periodo[it.periodo] = (s.periodo[it.periodo]||0)+1;
+    }
+    return s;
+  };
+  const overall = compute(all);
+  const filtered= compute(rows);
+
+  const txt = `Totale: ${overall.total} · Per stile: ${JSON.stringify(overall.style)} · Per lingua: ${JSON.stringify(overall.lang)} · Per tempo: ${JSON.stringify(overall.periodo)} · Filtrati: ${filtered.total}`;
   document.getElementById("stats").textContent = txt;
 }
 
