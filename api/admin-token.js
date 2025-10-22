@@ -6,34 +6,41 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-// Passphrase (PIN) semplice per mobile — cambiala quando vuoi
-const ADMIN_PASSPHRASE = process.env.ADMIN_PASSPHRASE || "mobile";
-// Quanto dura il token admin (in secondi)
-const TOKEN_TTL_SECONDS = 60 * 60 * 24; // 24h
-
-function getIp(req){
-  return (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
-    .toString().split(",")[0].trim();
+const ALLOWED_ORIGINS = [
+  "https://what-ifapp.vercel.app",
+  "http://localhost:3000",
+  "http://127.0.0.1:5500",
+];
+function cors(req, res) {
+  const origin = String(req.headers.origin || "");
+  if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
+const PASSPHRASE = "basilico"; // semplice come richiesto
+
 export default async function handler(req, res) {
+  cors(req, res);
+  if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
-  const secret = String(req.headers["x-admin-secret"] || "");
-  if (!secret || secret !== ADMIN_PASSPHRASE) {
-    return res.status(401).json({ error: "bad_secret" });
-  }
-
-  // Token “semplice per mobile” come richiesto; in futuro possiamo randomizzarlo
-  const token = "any-mobile-admin-token-4u7x";
-  const ip = getIp(req);
-
   try {
-    // Salva il token legato al tuo IP per 24h
-    await redis.set(`admin:token:${token}`, ip, { ex: TOKEN_TTL_SECONDS });
-    return res.status(200).json({ token, ttl: TOKEN_TTL_SECONDS });
+    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
+      .toString().split(",")[0].trim();
+
+    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+    const { token, passphrase } = body;
+
+    if (!token || !passphrase) return res.status(400).json({ error: "bad_request" });
+    if (passphrase !== PASSPHRASE) return res.status(403).json({ error: "forbidden" });
+
+    await redis.set(`admin:token:${token}`, ip);
+    await redis.expire(`admin:token:${token}`, 60 * 60 * 24 * 7); // 7 giorni
+    return res.status(200).json({ ok: true, ip });
   } catch (e) {
-    console.error("[/api/admin-token] error:", e);
+    console.error("admin-token error", e);
     return res.status(500).json({ error: "server_error" });
   }
 }
