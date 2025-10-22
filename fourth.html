@@ -47,11 +47,8 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
 .meta{font-size:12px;color:var(--muted)}
 .small{font-size:12px;color:var(--muted)}
 
-/* Admin modal */
-.admin-modal.hidden{display:none}
-.admin-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px}
-.admin-sheet{width:100%;max-width:520px;background:rgba(20,28,34,.96);border:1px solid var(--line);border-radius:14px;padding:14px}
-.admin-head{display:flex;align-items:center;justify-content:space-between}
+/* Utility */
+.hidden{display:none !important}
 </style>
 </head>
 <body>
@@ -66,7 +63,8 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
     <div class="row">
       <span class="badge" id="periodoBadge">🕰️ —</span>
       <span class="badge" id="styleBadge">🎭 —</span>
-      <span class="badge" id="freeBadge" title="">—</span>
+      <!-- Free badge: visibile SOLO se admin_token presente -->
+      <span class="badge hidden" id="freeBadge" title="">—</span>
       <button class="btn" id="langBtn">IT</button>
     </div>
   </div>
@@ -161,30 +159,6 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
     </div>
   </div>
 
-  <!-- Admin Modal (PIN) -->
-  <div id="adminModal" class="admin-modal hidden" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
-    <div class="admin-sheet">
-      <div class="admin-head">
-        <h3 id="adminTitle">Admin</h3>
-        <button class="btn ghost" id="adminClose">✕</button>
-      </div>
-      <div class="row" style="margin-top:6px">
-        <input id="adminPin" class="input" type="password" placeholder="PIN amministratore"/>
-        <button id="adminEnter" class="btn primary">Entra</button>
-      </div>
-      <p id="adminStatus" class="small" style="margin:6px 0 2px"></p>
-      <div id="adminPanel" class="hidden" style="margin-top:10px">
-        <div class="row" style="gap:8px;flex-wrap:wrap">
-          <button id="adminReset" class="btn primary">🔄 Reset crediti (oggi)</button>
-          <button id="adminTogglePro" class="btn ghost">⭐ Toggle PRO (TEST)</button>
-        </div>
-        <p class="small" style="margin-top:8px">
-          Token admin: <span id="adminTokenState">—</span> · PRO: <span id="adminProState">—</span>
-        </p>
-      </div>
-    </div>
-  </div>
-
 </main>
 
 <script>
@@ -208,10 +182,6 @@ const I18N = {
     use:"Usa", play:"▶", emptyNext:"— Nessuna domanda salvata.", emptyStories:"— Nessuna storia.",
     clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota",
     hints:"▶ Spunti rapidi “E se…”", hintsNote:"Clicca uno spunto per riempire la domanda.",
-    adminTitle:"Admin", adminEnter:"Entra", adminPin:"PIN amministratore",
-    adminReset:"🔄 Reset crediti (oggi)", adminPro:"⭐ Toggle PRO (TEST)",
-    pinOk:"PIN ok", pinBad:"PIN errato", resetOk:"Crediti di oggi azzerati.",
-    proOn2:"PRO attivato su questo dispositivo.", proOff2:"PRO disattivato su questo dispositivo.",
     outOfCredits:"Hai finito i crediti di oggi."
   },
   en:{
@@ -231,11 +201,6 @@ const I18N = {
     saved:"▶ Saved questions", stories:"▶ History",
     use:"Use", play:"▶", emptyNext:"— No saved questions.", emptyStories:"— No history.",
     clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear",
-    hints:"▶ Quick “What if…” prompts", hintsNote:"Click a prompt to fill the question.",
-    adminTitle:"Admin", adminEnter:"Enter", adminPin:"Admin PIN",
-    adminReset:"🔄 Reset credits (today)", adminPro:"⭐ Toggle PRO (TEST)",
-    pinOk:"PIN ok", pinBad:"Wrong PIN", resetOk:"Today's credits reset.",
-    proOn2:"PRO enabled on this device.", proOff2:"PRO disabled on this device.",
     outOfCredits:"You’ve used today’s credits."
   }
 };
@@ -248,12 +213,11 @@ document.documentElement.lang=lang;
 function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
 function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
 function todayStr(){return new Date().toISOString().slice(0,10);}
-function rngForDay(seedStr){ let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
 
 let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-// ===== Credits =====
+// ===== Credits (client-only) =====
 function ensureCredits(){
   const c=readJSON('whatif_credits',{date:todayStr(),used:0});
   if(c.date!==todayStr()){ c.date=todayStr(); c.used=0; }
@@ -266,10 +230,11 @@ function leftCredits(){
 }
 function renderCredits(){
   const cap = prefs.pro?10:3;
-  document.getElementById('freeBadge').textContent=T.free(leftCredits(),cap);
-  document.getElementById('proBadge').textContent = prefs.pro? T.proOn : T.proOff;
+  const fb = document.getElementById('freeBadge');
+  fb.textContent=T.free(leftCredits(),cap);
+  document.getElementById('proBadge').textContent = prefs.pro? (lang==='en'?'PRO active':'PRO attivo') : (lang==='en'?'PRO not active':'PRO non attivo');
 }
-ensureCredits(); renderCredits();
+ensureCredits();
 
 // ===== UI text =====
 document.getElementById('titleH1').textContent=T.title;
@@ -282,19 +247,31 @@ document.getElementById('chipWTF').textContent=T.wtf;
 document.getElementById('langBtn').textContent=lang.toUpperCase();
 document.getElementById('microTitle').textContent   = T.microT;
 document.getElementById('microHint').textContent    = T.microHint;
-document.getElementById('saveMicroBtn').textContent = T.microSaveBtn;
-document.getElementById('moodTitle').textContent    = T.qMood;
-document.getElementById('anchorTitle').textContent  = T.qAnchor;
-document.getElementById('decideTitle').textContent  = T.qDecide;
-document.getElementById('zodiacTitle').textContent  = T.qZodiac;
+document.getElementById('saveMicroBtn').textContent = I18N[lang]?.microSaveBtn || I18N.it.microSaveBtn;
+document.getElementById('moodTitle').textContent    = I18N[lang]?.qMood || I18N.it.qMood;
+document.getElementById('anchorTitle').textContent  = I18N[lang]?.qAnchor || I18N.it.qAnchor;
+document.getElementById('decideTitle').textContent  = I18N[lang]?.qDecide || I18N.it.qDecide;
+document.getElementById('zodiacTitle').textContent  = I18N[lang]?.qZodiac || I18N.it.qZodiac;
 
 // style & period badges
 function renderBadges(){
-  document.getElementById('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past'? T.periodPast : T.periodFuture);
-  document.getElementById('styleBadge').textContent   = "🎭 " + (prefs.stile==='wtf'? T.wtf.split(' (')[0] : T.whatif.split(' (')[0]);
+  document.getElementById('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past'? (lang==='en'?'Past':'Passato') : (lang==='en'?'Future':'Futuro'));
+  document.getElementById('styleBadge').textContent   = "🎭 " + (prefs.stile==='wtf'? 'What the F' : 'What if');
   document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
 }
 renderBadges();
+
+// ===== Admin visibility gate (SOLO QUI): mostra il badge crediti solo a te
+(function gateFreeBadge(){
+  const isAdmin = !!LS.getItem('admin_token'); // token messo da admin.html
+  const fb = document.getElementById('freeBadge');
+  if(isAdmin){
+    fb.classList.remove('hidden');
+    renderCredits();
+  }else{
+    fb.classList.add('hidden');
+  }
+})();
 
 // ===== nav =====
 document.getElementById('backBtn').onclick=()=>history.back();
@@ -316,11 +293,12 @@ document.getElementById('goBtn').onclick=()=>{
   const domanda=(document.getElementById('qInput').value||"").trim();
   if(!domanda){ document.getElementById('qInput').focus(); return; }
 
-  // credits
+  // credits (client)
+  ensureCredits();
   const c=readJSON('whatif_credits'); const used=(c.used||0);
   const cap = prefs.pro?10:3;
-  if(used>=cap){ alert(T.outOfCredits); return; }
-  c.used=used+1; writeJSON('whatif_credits',c); renderCredits();
+  if(used>=cap){ alert(lang==='en'? I18N.en.outOfCredits : I18N.it.outOfCredits); return; }
+  c.used=used+1; writeJSON('whatif_credits',c);
 
   const micro = readJSON('micro_profile', {});
   writeJSON('whatif_prefs', prefs);
@@ -333,6 +311,9 @@ document.getElementById('clearBtn').onclick=()=>{ document.getElementById('qInpu
 // ===== Micro-questions (multiple choice) =====
 const microCard=document.getElementById('microCard');
 const microSaved=readJSON('micro_saved',{date:"",ok:false});
+
+function rngForDay(seedStr){ let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
+function todayStr(){return new Date().toISOString().slice(0,10);}
 
 function pickDaily(list, n, rnd){
   const seen=new Set(), out=[];
@@ -353,7 +334,6 @@ function renderOptions(containerId, options, key){
     b.className='opt'; b.textContent=text;
     if(saved[key]===text) b.classList.add('sel');
     b.onclick=()=>{
-      // single-select
       wrap.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));
       b.classList.add('sel');
       const cur=readJSON('micro_profile',{});
@@ -366,7 +346,7 @@ function renderOptions(containerId, options, key){
 function renderMicro(){
   if(microSaved.date===todayStr()){
     microCard.classList.add('collapsed');
-    document.getElementById('microSavedMsg').textContent=T.microSaved;
+    document.getElementById('microSavedMsg').textContent=(lang==='en'? I18N.en.microSaved : I18N.it.microSaved);
     return;
   }
   const rand = rngForDay(todayStr());
@@ -401,12 +381,11 @@ renderMicro();
 
 document.getElementById('microHead').onclick=()=>{ if(microSaved.date===todayStr()) return; microCard.classList.toggle('collapsed'); };
 document.getElementById('saveMicroBtn').onclick=()=>{
-  if(microSaved.date===todayStr()){ document.getElementById('microSavedMsg').textContent=T.microOnce; return; }
-  // assicurati che esista micro_profile, anche se l’utente non ha toccato nulla
+  if(microSaved.date===todayStr()){ document.getElementById('microSavedMsg').textContent=(lang==='en'? I18N.en.microOnce : I18N.it.microOnce); return; }
   const cur = readJSON('micro_profile',{});
   writeJSON('micro_profile', cur);
   writeJSON('micro_saved', {date:todayStr(),ok:true});
-  document.getElementById('microSavedMsg').textContent=T.microSaved;
+  document.getElementById('microSavedMsg').textContent=(lang==='en'? I18N.en.microSaved : I18N.it.microSaved);
   microCard.classList.add('collapsed');
 };
 
@@ -424,6 +403,7 @@ document.getElementById('hintsNote').textContent=T.hintsNote;
 
 const HINT_POOL_IT=[ "E se cambiassi lavoro?","E se cambiassi città?","E se provassi a mettermi in proprio?","E se tornassi a studiare?","E se mollassi tutto e partissi per il Giappone?","E se aprissi un chiringuito in Islanda?","E se parlassi con il me di 10 anni fa?","E se imparassi una lingua strana?","E se mi svegliassi ogni giorno all’alba per un mese?","E se facessi pace con una persona?","E se vivessi 30 giorni senza social?","E se provassi a cambiare routine per una settimana?","E se prendessi un cane?","E se mettessi da parte ogni giorno 5 euro?","E se provassi a suonare la chitarra?","E se organizzassi un viaggio da solo?","E se chiedessi un aumento?","E se facessi volontariato?","E se provassi a scrivere un libro?","E se aprissi un canale di qualcosa che ami?" ];
 const HINT_POOL_EN=[ "What if I changed jobs?","What if I moved city?","What if I started my own thing?","What if I went back to study?","What if I dropped everything and moved to Japan?","What if I opened a beach bar in Iceland?","What if I talked to my 10-years-ago self?","What if I learned a weird language?","What if I woke up at dawn for a month?","What if I made peace with someone?","What if I lived 30 days without social media?","What if I changed my routine for a week?","What if I adopted a dog?","What if I saved 5 euros a day?","What if I learned guitar?","What if I traveled alone?","What if I asked for a raise?","What if I volunteered?","What if I wrote a book?","What if I launched a channel about what I love?" ];
+function rngForDay(seedStr){ let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
 function dailyHints(pool, n=4){ const seed=todayStr(); const rnd=rngForDay(seed); const seen=new Set(); const out=[]; while(out.length<n && seen.size<pool.length){ const idx=Math.floor(rnd()*pool.length); if(seen.has(idx)) continue; seen.add(idx); out.push(pool[idx]); } return out; }
 const hintsWrap=document.getElementById('hintsChips');
 (dailyHints(lang==='en'?HINT_POOL_EN:HINT_POOL_IT,4)).forEach(h=>{
@@ -446,15 +426,15 @@ document.getElementById('storiesLabel').textContent = T.stories;
 function renderNext(){
   const box=document.getElementById('nextList'); box.innerHTML='';
   const arr=readJSON('next_prompts',[]);
-  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=T.emptyNext; box.appendChild(p); return; }
+  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=(lang==='en'? I18N.en.emptyNext : I18N.it.emptyNext); box.appendChild(p); return; }
   arr.slice(0,12).forEach(item=>{
     const row=document.createElement('div'); row.className='story';
     const left=document.createElement('div');
     left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.q||'—'}</div><div class="meta">${fmtDate(item.ts)}</div>`;
     const right=document.createElement('div'); right.className='row';
-    const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=T.use;
+    const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=(lang==='en'? I18N.en.use : I18N.it.use);
     useBtn.onclick=()=>{ document.getElementById('qInput').value=item.q||""; window.scrollTo({top:0,behavior:'smooth'}); };
-    const play=document.createElement('button'); play.className='play'; play.textContent=T.play;
+    const play=document.createElement('button'); play.className='play'; play.textContent=(lang==='en'? I18N.en.play : I18N.it.play);
     play.onclick=()=>{ LS.setItem('domanda', item.q||""); location.href='fifth.html'; };
     right.appendChild(useBtn); right.appendChild(play);
     row.appendChild(left); row.appendChild(right);
@@ -464,12 +444,12 @@ function renderNext(){
 function renderStories(){
   const box=document.getElementById('storyList'); box.innerHTML='';
   const arr=readJSON('cronologia',[]);
-  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=T.emptyStories; box.appendChild(p); return; }
+  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=(lang==='en'? I18N.en.emptyStories : I18N.it.emptyStories); box.appendChild(p); return; }
   arr.slice(-12).reverse().forEach(item=>{
     const row=document.createElement('div'); row.className='story';
     const left=document.createElement('div');
     left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.domanda||'—'}</div><div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
-    const play=document.createElement('button'); play.className='play'; play.textContent=T.play;
+    const play=document.createElement('button'); play.className='play'; play.textContent=(lang==='en'? I18N.en.play : I18N.it.play);
     play.onclick=()=>{ 
       writeJSON('replay_story', { domanda:item.domanda, answer:item.risposta||item.answer||"", stile:item.stile||'whatif' });
       location.href='fifth.html?view=replay'; 
@@ -479,92 +459,12 @@ function renderStories(){
   });
 }
 renderNext(); renderStories();
-document.getElementById('clearSavedBtn').textContent=T.clearSaved;
-document.getElementById('clearHistoryBtn').textContent=T.clearHist;
+
+// Pulsanti gestione liste
+document.getElementById('clearSavedBtn').textContent=(lang==='en'? I18N.en.clearSaved : I18N.it.clearSaved);
+document.getElementById('clearHistoryBtn').textContent=(lang==='en'? I18N.en.clearHist : I18N.it.clearHist);
 document.getElementById('clearSavedBtn').onclick=()=>{ LS.removeItem('next_prompts'); renderNext(); };
 document.getElementById('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
-
-// ===== Admin =====
-const adminModal = document.getElementById('adminModal');
-const adminPin = document.getElementById('adminPin');
-const adminEnter = document.getElementById('adminEnter');
-const adminClose = document.getElementById('adminClose');
-const adminPanel = document.getElementById('adminPanel');
-const adminStatus = document.getElementById('adminStatus');
-const adminTokenState = document.getElementById('adminTokenState');
-const adminReset = document.getElementById('adminReset');
-const adminTogglePro = document.getElementById('adminTogglePro');
-
-document.getElementById('adminTitle').textContent=T.adminTitle;
-adminPin.placeholder=T.adminPin; adminEnter.textContent=T.adminEnter;
-adminReset.textContent=T.adminReset; adminTogglePro.textContent=T.adminPro;
-
-function openAdmin(){ adminModal.classList.remove('hidden'); adminPin.value=""; adminStatus.textContent=""; adminPanel.classList.add('hidden'); adminPin.focus(); refreshAdminState(); }
-function closeAdmin(){ adminModal.classList.add('hidden'); }
-adminClose.onclick = closeAdmin;
-adminModal.addEventListener('click',(e)=>{ if(e.target===adminModal) closeAdmin(); });
-
-function refreshAdminState(){
-  const tok=LS.getItem('admin_token');
-  adminTokenState.textContent = tok ? 'OK' : '—';
-  document.getElementById('adminProState').textContent = prefs.pro ? 'ON' : 'OFF';
-}
-
-// login: PIN -> token
-adminEnter.onclick = async ()=>{
-  const pin = (adminPin.value||"").trim();
-  if(!pin){ adminStatus.textContent = T.adminPin; return; }
-  try{
-    const r = await fetch("/api/admin-token", { method:"POST", headers:{ "x-admin-secret": pin } });
-    const d = await r.json().catch(()=>({}));
-    if(r.ok && d.token){
-      LS.setItem('admin_token', d.token);
-      adminStatus.innerHTML = `<span style="color:#7CDA8E">${T.pinOk}</span>`;
-      adminPanel.classList.remove('hidden');
-      refreshAdminState();
-    }else{
-      adminStatus.innerHTML = `<span style="color:#F27A7A">${T.pinBad}</span>`;
-      adminPanel.classList.add('hidden');
-    }
-  }catch{
-    adminStatus.innerHTML = `<span style="color:#F27A7A">Errore rete</span>`;
-  }
-};
-
-// reset crediti
-adminReset.onclick = async ()=>{
-  const tok = LS.getItem('admin_token');
-  if(!tok){ alert("Inserisci il PIN prima."); return; }
-  try{
-    const r = await fetch("/api/reset", { method:"POST", headers:{ "x-admin-token": tok } });
-    const d = await r.json().catch(()=>({}));
-    if(r.ok){
-      const c=readJSON('whatif_credits',{date:todayStr(),used:0});
-      c.date=todayStr(); c.used=0; writeJSON('whatif_credits',c); renderCredits(); refreshAdminState();
-      alert(T.resetOk);
-    }else{
-      alert("Errore reset: "+(d.error||"unknown"));
-    }
-  }catch{
-    alert("Errore di rete");
-  }
-};
-
-// toggle PRO
-adminTogglePro.onclick = ()=>{
-  prefs.pro=!prefs.pro; writeJSON('whatif_prefs',prefs);
-  if(prefs.pro){ LS.setItem('whatif_pro_test','1'); alert(T.proOn2); }
-  else{ LS.removeItem('whatif_pro_test'); alert(T.proOff2); }
-  renderCredits(); refreshAdminState();
-};
-
-// long-press per Admin
-(function hookLongPress(){
-  const b = document.getElementById('freeBadge'); if(!b) return;
-  let t=null;
-  b.addEventListener('pointerdown', ()=>{ t=setTimeout(openAdmin, 700); });
-  ['pointerup','pointerleave','pointercancel'].forEach(ev=> b.addEventListener(ev, ()=>clearTimeout(t)));
-})();
 </script>
 </body>
 </html>
