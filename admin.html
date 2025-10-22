@@ -1,194 +1,317 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-<meta charset="UTF-8"/>
+<meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>What?f — Admin</title>
 <meta name="theme-color" content="#0B0B0C"/>
 <style>
 :root{
-  --bg:#0B0B0C; --fg:#fff; --muted:#A0B2BA; --card:#11161a; --brd:rgba(255,255,255,.12);
-  --acc:#1C57A0; --acc2:#FFEC01;
+  --bg:#0B0B0C; --bg2:#101414; --fg:#fff; --muted:#A0B2BA;
+  --card:rgba(20,28,34,.80); --card-brd:rgba(255,255,255,.12);
+  --chip:#121A18;
+  --acc:#1C57A0; --acc2:#FFEC01; --ok:#54D88C; --warn:#E2B643; --err:#F07C7C;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:radial-gradient(900px 700px at 25% 18%, #0E1620 0%, #0B0B0C 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+html,body{margin:0;background:radial-gradient(900px 700px at 20% 18%, var(--bg2) 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
 main{max-width:920px;margin:auto;padding:18px}
-h1{margin:8px 0 14px;font-size:24px}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-@media (max-width:720px){.grid{grid-template-columns:1fr}}
-.card{background:var(--card);border:1px solid var(--brd);border-radius:14px;padding:14px}
-.kpi{font-size:34px;font-weight:800;margin:2px 0}
-.kpi-sub{color:var(--muted);font-size:13px}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.input, .btn{border-radius:12px;border:1px solid var(--brd);padding:10px;background:rgba(255,255,255,.06);color:#fff}
-.btn{cursor:pointer;font-weight:800}
-.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12}
-.badge{display:inline-block;background:rgba(255,255,255,.06);border:1px solid var(--brd);border-radius:999px;padding:6px 10px;font-size:12px;margin-right:6px}
-.table{width:100%;border-collapse:collapse;margin-top:10px}
-.table th,.table td{border-bottom:1px solid rgba(255,255,255,.08);padding:8px 6px;text-align:left;font-size:13px}
-.small{color:var(--muted);font-size:12px}
-.hide{display:none}
-.center{display:flex;align-items:center;justify-content:center;min-height:40vh}
+h1{font-size:clamp(22px,4.5vw,30px);margin:6px 0 10px}
+small.muted{color:var(--muted)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.card{background:var(--card);border:1px solid var(--card-brd);border-radius:16px;padding:14px;backdrop-filter:blur(10px)}
+.grid{display:grid;gap:12px}
+@media(min-width:800px){ .grid.cols-2{grid-template-columns:1fr 1fr} }
+.btn{padding:10px 12px;border:none;border-radius:12px;font-weight:800;cursor:pointer}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0a0e12}
+.btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--card-brd);color:#fff}
+.input,select{background:rgba(255,255,255,.06);border:1px solid var(--card-brd);border-radius:10px;color:#fff;padding:10px}
+.kv{display:flex;gap:8px;flex-wrap:wrap}
+.kv .pill{background:rgba(255,255,255,.06);border:1px solid var(--card-brd);border-radius:999px;padding:6px 10px;font-size:12px}
+.badge{display:inline-flex;gap:6px;align-items:center;font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--card-brd);background:rgba(255,255,255,.06)}
+.badge.ok{background:rgba(84,216,140,.15)}
+.badge.warn{background:rgba(226,182,67,.15)}
+.hr{height:1px;background:rgba(255,255,255,.10);margin:10px 0}
+.card-log{border:1px solid var(--card-brd);border-radius:12px;padding:10px;background:rgba(255,255,255,.04)}
+.meta{font-size:12px;color:var(--muted)}
+.q{margin:4px 0 0;font-weight:600}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+.right{margin-left:auto}
+footer{color:var(--muted);text-align:center;font-size:12px;margin:18px 0}
+.empty{opacity:.8;text-align:center;padding:16px}
+.hidden{display:none}
 </style>
 </head>
 <body>
 <main>
-  <h1>Admin</h1>
-
-  <!-- LOGIN PANNELLO -->
-  <section id="loginBox" class="card">
-    <div class="row" style="gap:10px">
-      <input id="pin" class="input" placeholder="PIN (es. 010818)" inputmode="numeric" />
-      <input id="token" class="input" placeholder="Admin token (uno a tua scelta)" />
-      <input id="pass" class="input" placeholder="Passphrase segreta" />
-      <button id="reg" class="btn">Registra Token</button>
-      <button id="go" class="btn primary">Entra</button>
+  <div class="row" style="justify-content:space-between">
+    <h1>Admin · What?f</h1>
+    <div class="row">
+      <span id="authState" class="badge warn">🔒 Non autenticato</span>
+      <button class="btn ghost" onclick="location.href='index.html'">🏠 Home</button>
     </div>
-    <p class="small">Il token viene legato al tuo IP con la passphrase. Poi usa <strong>Entra</strong> (salva in locale).</p>
-  </section>
+  </div>
 
-  <!-- DASHBOARD -->
-  <section id="dash" class="hide">
-    <div class="grid">
-      <div class="card">
-        <div class="kpi" id="tot">0</div>
-        <div class="kpi-sub">Totale</div>
+  <!-- AUTH -->
+  <div id="authCard" class="card grid cols-2">
+    <div>
+      <div class="row" style="justify-content:space-between">
+        <strong>Accesso</strong>
+        <small class="muted">Il PIN genera il token admin legato al tuo IP</small>
       </div>
-      <div class="card">
-        <div class="kpi" id="recent">0</div>
-        <div class="kpi-sub">Ultimi caricati</div>
+      <div class="hr"></div>
+      <div class="row">
+        <input id="pin" class="input" type="password" placeholder="PIN segreto" inputmode="numeric" style="min-width:200px"/>
+        <button id="btnLogin" class="btn primary">Entra</button>
+        <button id="btnLogout" class="btn ghost">Esci</button>
       </div>
-      <div class="card">
-        <div class="kpi-sub">Per stile</div>
-        <div id="byStyle" class="small">—</div>
+      <small class="muted">Lo stato resta in memoria sul dispositivo.</small>
+    </div>
+    <div>
+      <div class="row" style="justify-content:space-between">
+        <strong>Modalità PRO (bypass limiti client)</strong>
+        <small class="muted">Solo locale: influisce sulle chiamate fatte da questo device</small>
       </div>
-      <div class="card">
-        <div class="kpi-sub">Per lingua</div>
-        <div id="byLang" class="small">—</div>
-      </div>
-      <div class="card">
-        <div class="kpi-sub">Per periodo</div>
-        <div id="byPeriod" class="small">—</div>
+      <div class="hr"></div>
+      <div class="row">
+        <button id="btnProOn" class="btn ghost">Attiva PRO</button>
+        <button id="btnProOff" class="btn ghost">Disattiva PRO</button>
+        <span id="proState" class="badge">—</span>
       </div>
     </div>
+  </div>
 
-    <div class="card" style="margin-top:12px">
-      <div class="row" style="gap:8px;margin-bottom:8px">
-        <input id="q" class="input" placeholder="Cerca nella domanda…" />
-        <button id="refresh" class="btn primary">Aggiorna</button>
+  <!-- TOOLS -->
+  <div class="card">
+    <div class="row controls">
+      <button id="btnRefresh" class="btn primary">⟳ Aggiorna</button>
+      <button id="btnAuto" class="btn ghost">▶ Auto-refresh</button>
+      <button id="btnExport" class="btn ghost">⬇︎ Export CSV</button>
+      <div class="right row">
+        <select id="fStyle" class="input">
+          <option value="">Stile: tutti</option>
+          <option value="whatif">whatif</option>
+          <option value="wtf">wtf</option>
+        </select>
+        <select id="fLang" class="input">
+          <option value="">Lingua: tutte</option>
+          <option value="it">it</option>
+          <option value="en">en</option>
+        </select>
+        <select id="fPeriodo" class="input">
+          <option value="">Tempo: tutti</option>
+          <option value="past">past</option>
+          <option value="future">future</option>
+        </select>
+        <input id="fSearch" class="input" placeholder="Cerca nella domanda…" style="min-width:180px"/>
       </div>
-      <div id="countLabel" class="small">Mostrando 0 elementi (ordinati dal più recente).</div>
-      <table class="table" id="tbl">
-        <thead>
-          <tr>
-            <th>Quando</th><th>Domanda</th><th>Stile</th><th>Lingua</th><th>Periodo</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
     </div>
-  </section>
+  </div>
+
+  <!-- STATS -->
+  <div id="statsCard" class="card">
+    <strong>Statistiche</strong>
+    <div class="hr"></div>
+    <div id="stats" class="kv"></div>
+  </div>
+
+  <!-- LIST -->
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <strong>Ultime domande</strong>
+      <small class="muted" id="countInfo">—</small>
+    </div>
+    <div class="hr"></div>
+    <div id="list"></div>
+    <div id="empty" class="empty hidden">Nessun log trovato.</div>
+  </div>
+
+  <footer>© 2025 What?f · Admin</footer>
 </main>
 
 <script>
-const LS = localStorage;
-const api = (path, {q, limit, offset} = {}) => {
-  const token = LS.getItem("admin_token") || "";
-  const url = new URL(path, location.origin);
-  if (q) url.searchParams.set("q", q);
-  if (limit) url.searchParams.set("limit", limit);
-  if (offset) url.searchParams.set("offset", offset);
-  return fetch(url.toString(), { headers: { "x-admin-token": token }});
-};
+const LS=localStorage;
+const $=s=>document.querySelector(s);
+const listEl = $('#list');
+const statsEl= $('#stats');
+const countInfo = $('#countInfo');
+let AUTO = false, TIMER=null;
+let LAST_ITEMS = []; // cache per export/filtri
 
-function fmtPctMap(map){
-  const total = Object.values(map).map(Number).reduce((a,b)=>a+b,0) || 0;
-  if (!total) return "—";
-  return Object.entries(map).map(([k,v])=>{
-    const p = Math.round((Number(v)/total)*100);
-    return `${k}: ${v} (${p}%)`;
-  }).join(" · ");
+function setAuthUI(ok){
+  const badge = $('#authState');
+  badge.textContent = ok ? '✅ Autenticato' : '🔒 Non autenticato';
+  badge.classList.toggle('ok', ok);
+  badge.classList.toggle('warn', !ok);
 }
-function fmtWhen(ts){
-  try {
-    const d = new Date(Number(ts)||Date.now());
-    return d.toLocaleString();
-  } catch { return "—"; }
+function setProUI(){
+  const isPro = LS.getItem('whatif_prefs') && JSON.parse(LS.getItem('whatif_prefs')).pro===true;
+  $('#proState').textContent = isPro ? '⭐ PRO attivo su questo device' : '• PRO non attivo';
 }
 
-const loginBox = document.getElementById("loginBox");
-const dash = document.getElementById("dash");
-const pin  = document.getElementById("pin");
-const token= document.getElementById("token");
-const pass = document.getElementById("pass");
-document.getElementById("reg").onclick = async ()=>{
-  const t = token.value.trim(); if(!t){ alert("Inserisci un token"); return; }
-  const p = pass.value.trim() || "basilico";
-  const resp = await fetch("/api/admin-token", {
-    method:"POST",
-    headers:{"Content-Type":"application/json","admin-secret": `wtf-setup-2025`, "x-pin": pin.value.trim()||""},
-    body: JSON.stringify({ token: t, passphrase: p, bind: "ANY" })
-  });
-  const data = await resp.json().catch(()=>({}));
-  if(!resp.ok){ alert("Errore: " + (data?.error||"x")); return; }
-  alert("Token registrato: " + (data?.token||t));
-};
-document.getElementById("go").onclick = ()=>{
-  const t = token.value.trim(); if(!t){ alert("Inserisci token"); return; }
-  LS.setItem("admin_token", t);
-  loginBox.classList.add("hide");
-  dash.classList.remove("hide");
-  loadStats();
-  loadLogs();
-};
-
-// auto-login se già salvato
-if (LS.getItem("admin_token")){
-  loginBox.classList.add("hide");
-  dash.classList.remove("hide");
-  loadStats();
-  loadLogs();
-}
-
-async function loadStats(){
+async function login(){
+  const pin = $('#pin').value.trim();
+  if(!pin) { alert('Inserisci PIN'); return; }
+  // Chiama l’endpoint che lega token->IP. Se il tuo endpoint si chiama diversamente, aggiorna qui.
   try{
-    const r = await api("/api/admin-stats?limit=10");
-    if(!r.ok){ if(r.status===401){ alert("Non autorizzato"); logout(); } return; }
-    const d = await r.json();
-    document.getElementById("tot").textContent = d.total || 0;
-    document.getElementById("recent").textContent = (d.logs||[]).length || 0;
-    document.getElementById("byStyle").textContent = fmtPctMap(d.style||{});
-    document.getElementById("byLang").textContent  = fmtPctMap(d.lang||{});
-    document.getElementById("byPeriod").textContent= fmtPctMap(d.periodo||{}); // 👈 nuovo
-  }catch(e){ console.error(e); }
+    const r = await fetch('/api/admin-token', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ pin })
+    });
+    if(!r.ok){ alert('PIN errato o server'); return; }
+    const { token } = await r.json();
+    if(!token){ alert('Nessun token ricevuto'); return; }
+    LS.setItem('admin_token', token);
+    setAuthUI(true);
+    refresh();
+  }catch(e){ alert('Errore rete'); }
 }
-
-async function loadLogs(){
-  const q = document.getElementById("q").value.trim();
-  const r = await api("/api/admin-logs", { q, limit: 100 });
-  if(!r.ok){ if(r.status===401){ alert("Non autorizzato"); logout(); } return; }
-  const d = await r.json();
-  const tbody = document.querySelector("#tbl tbody");
-  tbody.innerHTML = "";
-  (d.items||[]).forEach(it=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${fmtWhen(it.ts)}</td>
-      <td>${(it.domanda||"").replace(/[<>]/g, "")}</td>
-      <td>${it.style||"—"}</td>
-      <td>${it.lang||"—"}</td>
-      <td>${it.periodo||"—"}</td>`;
-    tbody.appendChild(tr);
-  });
-  document.getElementById("countLabel").textContent =
-    `Mostrando ${d.items?.length||0} elementi (ordinati dal più recente).`;
-}
-document.getElementById("refresh").onclick = ()=>{ loadStats(); loadLogs(); };
-
 function logout(){
-  localStorage.removeItem("admin_token");
-  location.reload();
+  LS.removeItem('admin_token');
+  setAuthUI(false);
 }
+
+function togglePro(on){
+  const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
+  prefs.pro = !!on;
+  LS.setItem('whatif_prefs', JSON.stringify(prefs));
+  setProUI();
+}
+
+function fmt(obj){ return Object.entries(obj||{}).map(([k,v])=>`${k}: ${v}`).join(' · ') || '—'; }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function applyFilters(items){
+  const fS = $('#fStyle').value.trim();
+  const fL = $('#fLang').value.trim();
+  const fP = $('#fPeriodo').value.trim();
+  const q  = $('#fSearch').value.trim().toLowerCase();
+  return items.filter(it=>{
+    if (fS && it.style !== fS) return false;
+    if (fL && it.lang !== fL) return false;
+    if (fP && String(it.periodo||'') !== fP) return false;
+    if (q && !String(it.domanda||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function render(items, stats){
+  LAST_ITEMS = items.slice();
+  const filtered = applyFilters(LAST_ITEMS);
+  // stats
+  statsEl.innerHTML = `
+    <span class="pill">Totale: ${Number(stats.total||0)}</span>
+    <span class="pill">Stile → ${esc(fmt(stats.style))}</span>
+    <span class="pill">Lingua → ${esc(fmt(stats.lang))}</span>
+    <span class="pill">Periodo → ${esc(fmt(stats.periodo))}</span>
+  `;
+  countInfo.textContent = `${filtered.length} di ${items.length} mostrati`;
+
+  // list
+  if(!filtered.length){
+    $('#empty').classList.remove('hidden');
+    listEl.innerHTML = '';
+    return;
+  }
+  $('#empty').classList.add('hidden');
+
+  listEl.innerHTML = filtered.map(it=>{
+    const when = new Date(it.ts||0).toLocaleString();
+    return `
+      <div class="card-log">
+        <div class="meta">${when}</div>
+        <div class="q">Q: ${esc(it.domanda)}</div>
+        <div class="meta" style="margin-top:6px">
+          stile: <b>${esc(it.style)}</b> · lang: <b>${esc(it.lang)}</b> · periodo: <b>${esc(it.periodo)}</b> · chars: ${it.answer_chars} · pro: ${it.pro?'yes':'no'}
+        </div>
+        <div class="meta">ip: ${esc(it.ip)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function fetchLogs(limit=200){
+  const token = LS.getItem('admin_token')||'';
+  const r = await fetch(`/api/admin-logs?limit=${limit}`,{
+    headers:{'x-admin-token': token}
+  });
+  if(r.status===401){ setAuthUI(false); throw new Error('unauth'); }
+  if(!r.ok) throw new Error('server');
+  return r.json();
+}
+
+async function refresh(){
+  try{
+    const { items, stats } = await fetchLogs(200);
+    setAuthUI(true);
+    render(items, stats||{});
+  }catch(e){
+    if(e.message==='unauth'){
+      render([], {total:0,style:{},lang:{},periodo:{}});
+    }else{
+      console.error(e);
+      alert('Errore nel caricamento log');
+    }
+  }
+}
+
+function startAuto(){
+  AUTO=true;
+  $('#btnAuto').textContent='⏸ Auto-refresh';
+  TIMER = setInterval(refresh, 5000);
+}
+function stopAuto(){
+  AUTO=false;
+  $('#btnAuto').textContent='▶ Auto-refresh';
+  clearInterval(TIMER); TIMER=null;
+}
+
+function exportCSV(){
+  const rows = applyFilters(LAST_ITEMS);
+  if(!rows.length){ alert('Niente da esportare'); return; }
+  const header = ['ts_iso','ts','ip','style','lang','periodo','domanda','answer_chars','pro'];
+  const csv = [header.join(',')].concat(rows.map(it=>{
+    const ts = Number(it.ts||0);
+    const iso = new Date(ts).toISOString();
+    const line = [
+      iso,
+      ts,
+      (it.ip||'').replace(/,/g,' '),
+      it.style||'',
+      it.lang||'',
+      it.periodo||'',
+      `"${String(it.domanda||'').replace(/"/g,'""')}"`,
+      Number(it.answer_chars||0),
+      it.pro ? '1' : '0'
+    ];
+    return line.join(',');
+  })).join('\n');
+
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `whatif-logs-${Date.now()}.csv`;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
+}
+
+/* wiring */
+$('#btnLogin').onclick = login;
+$('#btnLogout').onclick = ()=>{ logout(); render([], {total:0,style:{},lang:{},periodo:{}}); };
+$('#btnRefresh').onclick = refresh;
+$('#btnAuto').onclick = ()=> AUTO ? stopAuto() : startAuto();
+$('#btnExport').onclick = exportCSV;
+$('#btnProOn').onclick = ()=>{ togglePro(true); };
+$('#btnProOff').onclick = ()=>{ togglePro(false); };
+
+['#fStyle','#fLang','#fPeriodo','#fSearch'].forEach(sel=>{
+  $(sel).addEventListener('input', ()=> render(LAST_ITEMS, { total: LAST_ITEMS.length }));
+});
+
+/* init */
+setProUI();
+setAuthUI(!!LS.getItem('admin_token'));
+refresh();
 </script>
 </body>
 </html>
