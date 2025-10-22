@@ -219,26 +219,9 @@ const LEADS = {
 
 /* ===== Utils ===== */
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
-// hash semplice e stabile (djb2) per scelta deterministica
-function hashStr(s=""){
-  let h=5381;
-  for(let i=0;i<s.length;i++){ h=((h<<5)+h) + s.charCodeAt(i); h=h|0; }
-  return Math.abs(h);
-}
-function stablePick(arr, seedStr){
-  if(!arr || !arr.length) return "";
-  if(!seedStr || !seedStr.trim()) return pick(arr);
-  const h = hashStr(seedStr);
-  return arr[h % arr.length];
-}
-// Garantisce 1 frase e chiusura con punto
-function oneSentence(s=""){
-  let t=String(s).trim();
-  const m = t.match(/^([\s\S]*?[.!?…])\s/);
-  if (m) t = m[1];
-  if (!/[.!?…]$/.test(t)) t += ".";
-  return t;
-}
+function hashStr(s=""){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i); h=h|0; } return Math.abs(h); }
+function stablePick(arr, seedStr){ if(!arr?.length) return ""; if(!seedStr?.trim()) return pick(arr); const h=hashStr(seedStr); return arr[h%arr.length]; }
+function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
 
 const params=new URLSearchParams(location.search);
 const isReplay = params.get('view')==='replay';
@@ -249,7 +232,6 @@ function setTitles(q){
   document.getElementById('subtitle').textContent = I18N.sub(q);
   document.getElementById('styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
   const bank = LEADS[lang]?.[style] || LEADS['it']['whatif'];
-  // scelta deterministica sul seed: domanda+stile+lang
   const seed = `${(q||"").toLowerCase().trim()}|${style}|${lang}`;
   const line = oneSentence(stablePick(bank, seed));
   document.getElementById('lead').textContent = line;
