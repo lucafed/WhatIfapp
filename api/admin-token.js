@@ -6,12 +6,10 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-// segreto “di setup” usato dal client per poter generare il token admin
+// puoi cambiarli da env, ma hanno default già pronti
 const ADMIN_SETUP_SECRET = process.env.ADMIN_SETUP_SECRET || "wtf-setup-2025";
-// PIN valido (quello che digiti nella UI)
 const ADMIN_PIN = process.env.ADMIN_PIN || "010818";
 
-// CORS base
 const ALLOWED_ORIGINS = [
   "https://what-ifapp.vercel.app",
   "http://localhost:3000",
@@ -37,30 +35,22 @@ export default async function handler(req, res) {
 
   try {
     const secret = String(req.headers["admin-secret"] || "").trim();
-    if (!secret || secret !== ADMIN_SETUP_SECRET) {
+    if (secret !== ADMIN_SETUP_SECRET) {
       return res.status(401).json({ ok: false, error: "missing_or_invalid_secret" });
     }
 
     let body = {};
-    try {
-      body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-    } catch { body = {}; }
-
+    try { body = typeof req.body === "string" ? JSON.parse(req.body||"{}") : (req.body||{}); } catch {}
     const pin = String(body.pin || "").trim();
-    if (!pin || pin !== ADMIN_PIN) {
-      return res.status(403).json({ ok: false, error: "bad_pin" });
-    }
+    if (pin !== ADMIN_PIN) return res.status(403).json({ ok:false, error:"bad_pin" });
 
-    // genera token “fisso” (va benissimo uno statico)
-    const token = "wtf-admin-master";
+    const token = "wtf-admin-master"; // statico va benissimo
     const ip = getIp(req);
+    await redis.set(`admin:token:${token}`, ip, { ex: 60*60*48 }); // 48h
 
-    // lega token -> ip per 48h
-    await redis.set(`admin:token:${token}`, ip, { ex: 60 * 60 * 48 });
-
-    return res.status(200).json({ ok: true, token, bound_to: ip || "ANY" });
+    return res.status(200).json({ ok:true, token, bound_to: ip || "ANY" });
   } catch (e) {
     console.error("admin-token error", e);
-    return res.status(500).json({ ok: false, error: "server_error" });
+    return res.status(500).json({ ok:false, error:"server_error" });
   }
 }
