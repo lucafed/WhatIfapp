@@ -1,151 +1,194 @@
-<!-- /admin.html -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>What?f — Admin</title>
+<meta name="theme-color" content="#0B0B0C"/>
 <style>
-  :root{
-    --bg:#0B0B0C; --card:#151A1F; --fg:#fff; --muted:#9fb0b7; --acc:#1C57A0; --ok:#29a36a; --bad:#c95c5c;
-  }
-  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:860px;margin:auto;padding:16px}
-  h1{font-size:22px;margin:6px 0 12px}
-  .card{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;margin:12px 0}
-  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  input,button{font-size:16px}
-  input{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff}
-  button{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg,#1c57a0,#144379);color:#fff;font-weight:700}
-  small{color:var(--muted)}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);font-size:12px}
-  .log{padding:10px;border-bottom:1px solid rgba(255,255,255,.08)}
-  .badge{font-size:12px;opacity:.8}
-  .muted{color:var(--muted)}
-  @media (min-width:740px){ .grid{grid-template-columns:repeat(4,1fr)} }
+:root{
+  --bg:#0B0B0C; --fg:#fff; --muted:#A0B2BA; --card:#11161a; --brd:rgba(255,255,255,.12);
+  --acc:#1C57A0; --acc2:#FFEC01;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:radial-gradient(900px 700px at 25% 18%, #0E1620 0%, #0B0B0C 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+main{max-width:920px;margin:auto;padding:18px}
+h1{margin:8px 0 14px;font-size:24px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:720px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--brd);border-radius:14px;padding:14px}
+.kpi{font-size:34px;font-weight:800;margin:2px 0}
+.kpi-sub{color:var(--muted);font-size:13px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.input, .btn{border-radius:12px;border:1px solid var(--brd);padding:10px;background:rgba(255,255,255,.06);color:#fff}
+.btn{cursor:pointer;font-weight:800}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12}
+.badge{display:inline-block;background:rgba(255,255,255,.06);border:1px solid var(--brd);border-radius:999px;padding:6px 10px;font-size:12px;margin-right:6px}
+.table{width:100%;border-collapse:collapse;margin-top:10px}
+.table th,.table td{border-bottom:1px solid rgba(255,255,255,.08);padding:8px 6px;text-align:left;font-size:13px}
+.small{color:var(--muted);font-size:12px}
+.hide{display:none}
+.center{display:flex;align-items:center;justify-content:center;min-height:40vh}
 </style>
 </head>
 <body>
 <main>
   <h1>Admin</h1>
 
-  <div class="card" id="gate">
+  <!-- LOGIN PANNELLO -->
+  <section id="loginBox" class="card">
     <div class="row" style="gap:10px">
-      <input id="pin" placeholder="PIN" inputmode="numeric" maxlength="6"/>
-      <input id="token" placeholder="Admin token (uno a tua scelta)"/>
+      <input id="pin" class="input" placeholder="PIN (es. 010818)" inputmode="numeric" />
+      <input id="token" class="input" placeholder="Admin token (uno a tua scelta)" />
+      <input id="pass" class="input" placeholder="Passphrase segreta" />
+      <button id="reg" class="btn">Registra Token</button>
+      <button id="go" class="btn primary">Entra</button>
     </div>
-    <div class="row" style="gap:10px;margin-top:8px">
-      <input id="passphrase" placeholder="Passphrase segreta" value="basilico"/>
-      <button id="saveToken">Registra Token</button>
-      <button id="enter">Entra</button>
-    </div>
-    <small>Il token lo “registri” per il tuo IP con la passphrase. Poi <b>Entra</b>.</small>
-    <div id="msg" class="muted" style="margin-top:6px"></div>
-  </div>
+    <p class="small">Il token viene legato al tuo IP con la passphrase. Poi usa <strong>Entra</strong> (salva in locale).</p>
+  </section>
 
-  <div id="app" style="display:none">
-    <div class="card">
-      <div class="grid">
-        <div><div class="pill">Totale</div><div id="tot" style="font-size:22px;font-weight:800;margin-top:6px">—</div></div>
-        <div><div class="pill">Ultimi caricati</div><div id="loaded" style="font-size:22px;font-weight:800;margin-top:6px">—</div></div>
-        <div><div class="pill">Per stile</div><div id="byStyle" style="margin-top:6px" class="muted">—</div></div>
-        <div><div class="pill">Per lingua</div><div id="byLang" style="margin-top:6px" class="muted">—</div></div>
+  <!-- DASHBOARD -->
+  <section id="dash" class="hide">
+    <div class="grid">
+      <div class="card">
+        <div class="kpi" id="tot">0</div>
+        <div class="kpi-sub">Totale</div>
+      </div>
+      <div class="card">
+        <div class="kpi" id="recent">0</div>
+        <div class="kpi-sub">Ultimi caricati</div>
+      </div>
+      <div class="card">
+        <div class="kpi-sub">Per stile</div>
+        <div id="byStyle" class="small">—</div>
+      </div>
+      <div class="card">
+        <div class="kpi-sub">Per lingua</div>
+        <div id="byLang" class="small">—</div>
+      </div>
+      <div class="card">
+        <div class="kpi-sub">Per periodo</div>
+        <div id="byPeriod" class="small">—</div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="row" style="gap:10px">
-        <input id="search" placeholder="Cerca nella domanda… (locale)"/>
-        <button id="refresh">Aggiorna</button>
+    <div class="card" style="margin-top:12px">
+      <div class="row" style="gap:8px;margin-bottom:8px">
+        <input id="q" class="input" placeholder="Cerca nella domanda…" />
+        <button id="refresh" class="btn primary">Aggiorna</button>
       </div>
-      <small id="meta" class="muted">—</small>
-      <div id="logs"></div>
+      <div id="countLabel" class="small">Mostrando 0 elementi (ordinati dal più recente).</div>
+      <table class="table" id="tbl">
+        <thead>
+          <tr>
+            <th>Quando</th><th>Domanda</th><th>Stile</th><th>Lingua</th><th>Periodo</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
-  </div>
+  </section>
 </main>
 
 <script>
-const PIN_OK = "9426"; // cambia qui se vuoi
 const LS = localStorage;
-const el = (id)=>document.getElementById(id);
+const api = (path, {q, limit, offset} = {}) => {
+  const token = LS.getItem("admin_token") || "";
+  const url = new URL(path, location.origin);
+  if (q) url.searchParams.set("q", q);
+  if (limit) url.searchParams.set("limit", limit);
+  if (offset) url.searchParams.set("offset", offset);
+  return fetch(url.toString(), { headers: { "x-admin-token": token }});
+};
 
-function fmtPctMap(obj){
-  const entries = Object.entries(obj||{});
-  const tot = entries.reduce((a,[,v])=>a+Number(v||0),0) || 1;
-  return entries.map(([k,v])=>{
-    const pct = Math.round((Number(v||0)*100)/tot);
-    return `${k}: ${v} (${pct}%)`;
+function fmtPctMap(map){
+  const total = Object.values(map).map(Number).reduce((a,b)=>a+b,0) || 0;
+  if (!total) return "—";
+  return Object.entries(map).map(([k,v])=>{
+    const p = Math.round((Number(v)/total)*100);
+    return `${k}: ${v} (${p}%)`;
   }).join(" · ");
 }
+function fmtWhen(ts){
+  try {
+    const d = new Date(Number(ts)||Date.now());
+    return d.toLocaleString();
+  } catch { return "—"; }
+}
 
-async function apiRegisterToken(){
-  const token = el('token').value.trim();
-  const passphrase = el('passphrase').value.trim();
-  if(!token || !passphrase){ el('msg').textContent = "Token e passphrase obbligatori."; return; }
-  const r = await fetch("/api/admin-token",{method:"POST",headers:{ "Content-Type":"application/json" },body:JSON.stringify({ token, passphrase })});
-  if(!r.ok){ el('msg').textContent = "Registrazione token fallita."; return; }
-  const d = await r.json();
-  if(d?.ok){ el('msg').textContent = `Token registrato per IP: ${d.ip}`; LS.setItem("admin_token", token); }
-  else el('msg').textContent = "Errore imprevisto.";
+const loginBox = document.getElementById("loginBox");
+const dash = document.getElementById("dash");
+const pin  = document.getElementById("pin");
+const token= document.getElementById("token");
+const pass = document.getElementById("pass");
+document.getElementById("reg").onclick = async ()=>{
+  const t = token.value.trim(); if(!t){ alert("Inserisci un token"); return; }
+  const p = pass.value.trim() || "basilico";
+  const resp = await fetch("/api/admin-token", {
+    method:"POST",
+    headers:{"Content-Type":"application/json","admin-secret": `wtf-setup-2025`, "x-pin": pin.value.trim()||""},
+    body: JSON.stringify({ token: t, passphrase: p, bind: "ANY" })
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok){ alert("Errore: " + (data?.error||"x")); return; }
+  alert("Token registrato: " + (data?.token||t));
+};
+document.getElementById("go").onclick = ()=>{
+  const t = token.value.trim(); if(!t){ alert("Inserisci token"); return; }
+  LS.setItem("admin_token", t);
+  loginBox.classList.add("hide");
+  dash.classList.remove("hide");
+  loadStats();
+  loadLogs();
+};
+
+// auto-login se già salvato
+if (LS.getItem("admin_token")){
+  loginBox.classList.add("hide");
+  dash.classList.remove("hide");
+  loadStats();
+  loadLogs();
+}
+
+async function loadStats(){
+  try{
+    const r = await api("/api/admin-stats?limit=10");
+    if(!r.ok){ if(r.status===401){ alert("Non autorizzato"); logout(); } return; }
+    const d = await r.json();
+    document.getElementById("tot").textContent = d.total || 0;
+    document.getElementById("recent").textContent = (d.logs||[]).length || 0;
+    document.getElementById("byStyle").textContent = fmtPctMap(d.style||{});
+    document.getElementById("byLang").textContent  = fmtPctMap(d.lang||{});
+    document.getElementById("byPeriod").textContent= fmtPctMap(d.periodo||{}); // 👈 nuovo
+  }catch(e){ console.error(e); }
 }
 
 async function loadLogs(){
-  const token = LS.getItem("admin_token") || el('token').value.trim();
-  if(!token){ el('msg').textContent="Manca il token."; return; }
-  const r = await fetch("/api/admin-logs?limit=300", { headers: { "x-admin-token": token } });
-  if(!r.ok){ el('msg').textContent="Accesso negato o errore server."; return; }
-  const data = await r.json();
-  if(!data?.ok){ el('msg').textContent="Risposta non valida."; return; }
-
-  el('tot').textContent = data.total ?? 0;
-  el('loaded').textContent = (data.logs||[]).length;
-  el('byStyle').textContent = fmtPctMap(data.style);
-  el('byLang').textContent  = fmtPctMap(data.lang);
-
-  window.__LOGS = data.logs || [];
-  renderList(window.__LOGS);
-  el('meta').textContent = `Mostrando ${window.__LOGS.length} elementi (ordinati dal più recente).`;
-}
-
-function renderList(arr){
-  const box = el('logs'); box.innerHTML="";
-  arr.forEach(item=>{
-    const time = new Date(item.ts||Date.now()).toLocaleString();
-    const d = document.createElement("div");
-    d.className="log";
-    d.innerHTML = `
-      <div class="row" style="justify-content:space-between">
-        <div><span class="badge">⏱</span> <small class="muted">${time}</small></div>
-        <div><span class="pill">${item.style||"?"}</span> <span class="pill">${item.lang||"?"}</span> <span class="pill">${item.periodo||"?"}</span></div>
-      </div>
-      <div style="margin-top:6px"><b>Q:</b> ${escapeHtml(item.domanda||"")}</div>
-      <div class="muted" style="margin-top:4px"><small>ip:${item.ip||"?"} · chars:${item.answer_chars||0} · pro:${item.pro ? "yes":"no"}</small></div>
-    `;
-    box.appendChild(d);
+  const q = document.getElementById("q").value.trim();
+  const r = await api("/api/admin-logs", { q, limit: 100 });
+  if(!r.ok){ if(r.status===401){ alert("Non autorizzato"); logout(); } return; }
+  const d = await r.json();
+  const tbody = document.querySelector("#tbl tbody");
+  tbody.innerHTML = "";
+  (d.items||[]).forEach(it=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${fmtWhen(it.ts)}</td>
+      <td>${(it.domanda||"").replace(/[<>]/g, "")}</td>
+      <td>${it.style||"—"}</td>
+      <td>${it.lang||"—"}</td>
+      <td>${it.periodo||"—"}</td>`;
+    tbody.appendChild(tr);
   });
+  document.getElementById("countLabel").textContent =
+    `Mostrando ${d.items?.length||0} elementi (ordinati dal più recente).`;
 }
+document.getElementById("refresh").onclick = ()=>{ loadStats(); loadLogs(); };
 
-function escapeHtml(s){ return String(s||"").replace(/[&<>"]/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c])); }
-
-el('saveToken').onclick = apiRegisterToken;
-el('enter').onclick = ()=>{
-  const pinOk = (el('pin').value.trim() === PIN_OK);
-  const tk = el('token').value.trim();
-  if(!pinOk){ el('msg').textContent="PIN errato."; return; }
-  if(!tk){ el('msg').textContent="Inserisci token."; return; }
-  LS.setItem("admin_token", tk);
-  el('gate').style.display="none";
-  el('app').style.display="block";
-  loadLogs();
-};
-el('refresh').onclick = loadLogs;
-el('search').oninput = (e)=>{
-  const q = e.target.value.trim().toLowerCase();
-  if(!q){ renderList(window.__LOGS||[]); return; }
-  const f = (window.__LOGS||[]).filter(x=> String(x.domanda||"").toLowerCase().includes(q));
-  renderList(f);
-};
+function logout(){
+  localStorage.removeItem("admin_token");
+  location.reload();
+}
 </script>
 </body>
 </html>
