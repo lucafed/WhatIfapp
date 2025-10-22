@@ -1,198 +1,151 @@
-<!doctype html>
+<!-- /admin.html -->
+<!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f – Admin</title>
-<meta name="theme-color" content="#0A0F14" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>What?f — Admin</title>
 <style>
-  :root{--bg:#0A0F14;--fg:#E6F2F5;--muted:#A0B2BA;--card:#141C22;--chip:#0f1820;--acc:#00E0FF;--acc2:#00B5CC;--ink:#001F26}
-  *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:1060px;margin:auto;padding:18px}
-  h1{font-size:clamp(24px,5vw,36px);margin-bottom:10px}
-  .card{background:var(--card);border-radius:16px;padding:16px;margin-top:16px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
-  input{width:100%;background:#0f1820;color:var(--fg);border:1px solid #1c2a33;border-radius:12px;padding:10px;font-size:16px}
-  .muted{color:var(--muted);font-size:14px}
-  .hidden{display:none}
-  button{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);border:none;padding:10px 16px;border-radius:12px;font-weight:700;cursor:pointer}
-  .ghost{background:transparent;border:1px solid #1d2b34;color:#cfe3e7}
-  .danger{background:#b54242;color:#fff}
-  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
-  .kpi{background:#0f1820;border:1px solid #1b2a34;border-radius:12px;padding:12px}
-  .kpi .n{font-size:22px;font-weight:900}
-  .list{margin:8px 0 0;padding-left:18px}
-  code.badge{background:#0f1820;border:1px solid #1b2a34;border-radius:8px;padding:2px 6px}
-  table{width:100%;border-collapse:collapse;margin-top:10px}
-  td,th{padding:8px;border-bottom:1px solid #1f2a33;text-align:left}
+  :root{
+    --bg:#0B0B0C; --card:#151A1F; --fg:#fff; --muted:#9fb0b7; --acc:#1C57A0; --ok:#29a36a; --bad:#c95c5c;
+  }
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{max-width:860px;margin:auto;padding:16px}
+  h1{font-size:22px;margin:6px 0 12px}
+  .card{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;margin:12px 0}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input,button{font-size:16px}
+  input{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff}
+  button{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg,#1c57a0,#144379);color:#fff;font-weight:700}
+  small{color:var(--muted)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);font-size:12px}
+  .log{padding:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .badge{font-size:12px;opacity:.8}
+  .muted{color:var(--muted)}
+  @media (min-width:740px){ .grid{grid-template-columns:repeat(4,1fr)} }
 </style>
 </head>
 <body>
 <main>
-  <div class="row" style="justify-content:space-between">
-    <h1>Area Admin 🔒</h1>
-    <div class="row">
-      <button class="ghost" onclick="location.href='index.html'">🏠 Home</button>
+  <h1>Admin</h1>
+
+  <div class="card" id="gate">
+    <div class="row" style="gap:10px">
+      <input id="pin" placeholder="PIN" inputmode="numeric" maxlength="6"/>
+      <input id="token" placeholder="Admin token (uno a tua scelta)"/>
     </div>
-  </div>
-  <p class="muted" id="status">Verifica accesso…</p>
-
-  <!-- Login -->
-  <div id="authBox" class="card hidden">
-    <h2>Accesso riservato</h2>
-    <p class="muted">Imposta o inserisci la tua password segreta per accedere. Viene salvata solo su questo dispositivo.</p>
-    <input type="password" id="pwd" placeholder="Password segreta…" />
-    <div class="row" style="margin-top:10px">
-      <button id="loginBtn">Accedi</button>
-      <button id="setBtn" class="ghost">Imposta/aggiorna password</button>
+    <div class="row" style="gap:10px;margin-top:8px">
+      <input id="passphrase" placeholder="Passphrase segreta" value="basilico"/>
+      <button id="saveToken">Registra Token</button>
+      <button id="enter">Entra</button>
     </div>
+    <small>Il token lo “registri” per il tuo IP con la passphrase. Poi <b>Entra</b>.</small>
+    <div id="msg" class="muted" style="margin-top:6px"></div>
   </div>
 
-  <!-- Accesso negato -->
-  <div id="deniedBox" class="card hidden">
-    <h2>Accesso negato 🚫</h2>
-    <button class="ghost" onclick="showAuth()">Prova di nuovo</button>
-  </div>
-
-  <!-- Pannello -->
-  <div id="panel" class="hidden">
-
-    <!-- DASHBOARD LOCALE -->
+  <div id="app" style="display:none">
     <div class="card">
-      <h2>Dashboard locale</h2>
-      <p class="muted">Dati letti da <code class="badge">localStorage</code> (demo/offline).</p>
+      <div class="grid">
+        <div><div class="pill">Totale</div><div id="tot" style="font-size:22px;font-weight:800;margin-top:6px">—</div></div>
+        <div><div class="pill">Ultimi caricati</div><div id="loaded" style="font-size:22px;font-weight:800;margin-top:6px">—</div></div>
+        <div><div class="pill">Per stile</div><div id="byStyle" style="margin-top:6px" class="muted">—</div></div>
+        <div><div class="pill">Per lingua</div><div id="byLang" style="margin-top:6px" class="muted">—</div></div>
+      </div>
+    </div>
 
-      <div class="kpis" id="kpis"></div>
-
-      <div class="row" style="margin-top:10px">
+    <div class="card">
+      <div class="row" style="gap:10px">
+        <input id="search" placeholder="Cerca nella domanda… (locale)"/>
         <button id="refresh">Aggiorna</button>
-        <button id="resetUsage" class="danger">Reset contatori locali</button>
       </div>
-
-      <div style="margin-top:12px">
-        <h3>Ultimi 7 giorni</h3>
-        <ol class="list" id="last7"></ol>
-      </div>
-    </div>
-
-    <!-- CALCOLATORE COSTI INLINE -->
-    <div class="card">
-      <h2>Calcolatore costi IA</h2>
-      <p class="muted">Stima approssimativa dei costi mensili in base al numero di utenti e risposte generate.</p>
-      <div class="row">
-        <label>Utenti attivi</label><input type="number" id="users" value="100" min="0" />
-        <label>Risposte medie per utente/mese</label><input type="number" id="genUser" value="10" min="0" />
-        <label>Costo per risposta (USD)</label><input type="number" id="costResp" value="0.002" step="0.001" />
-      </div>
-      <button style="margin-top:10px" onclick="calcCost()">Calcola costo mensile</button>
-      <p id="result" style="font-size:18px;margin-top:10px;font-weight:700"></p>
-      <table id="summary" class="hidden">
-        <thead><tr><th>Voce</th><th>Valore stimato</th></tr></thead>
-        <tbody id="sumBody"></tbody>
-      </table>
-    </div>
-
-    <!-- SICUREZZA -->
-    <div class="card">
-      <h3>Sicurezza</h3>
-      <div class="row">
-        <input type="password" id="newPwd" placeholder="Nuova password…" />
-        <button id="updatePwd">Aggiorna password</button>
-        <button class="danger" id="logout">Esci (dimentica password)</button>
-      </div>
-      <p class="muted">Password salvata solo in questo browser (hashata). Nessun invio a server.</p>
+      <small id="meta" class="muted">—</small>
+      <div id="logs"></div>
     </div>
   </div>
 </main>
 
 <script>
-  // === LOGIN & SICUREZZA ===
-  const LS_KEY="admin_key_hash",LS_AUTH="admin_authenticated";
-  const status=document.getElementById("status"),authBox=document.getElementById("authBox"),deniedBox=document.getElementById("deniedBox"),panel=document.getElementById("panel");
-  function hashStr(s){let h=5381;for(let i=0;i<s.length;i++){h=((h<<5)+h)+s.charCodeAt(i);}return String(h>>>0);}
-  function showAuth(){status.textContent="Inserisci password per accedere.";authBox.classList.remove("hidden");deniedBox.classList.add("hidden");panel.classList.add("hidden");}
-  function showDenied(){status.textContent="Accesso negato.";authBox.classList.add("hidden");deniedBox.classList.remove("hidden");panel.classList.add("hidden");}
-  function showPanel(){status.textContent="Accesso consentito ✅";authBox.classList.add("hidden");deniedBox.classList.add("hidden");panel.classList.remove("hidden");render();}
+const PIN_OK = "9426"; // cambia qui se vuoi
+const LS = localStorage;
+const el = (id)=>document.getElementById(id);
 
-  (function init(){
-    const saved=localStorage.getItem(LS_KEY),authed=sessionStorage.getItem(LS_AUTH)==="1";
-    if(!saved){status.textContent="Nessuna password impostata.";showAuth();}
-    else if(authed){showPanel();}else{showAuth();}
-  })();
+function fmtPctMap(obj){
+  const entries = Object.entries(obj||{});
+  const tot = entries.reduce((a,[,v])=>a+Number(v||0),0) || 1;
+  return entries.map(([k,v])=>{
+    const pct = Math.round((Number(v||0)*100)/tot);
+    return `${k}: ${v} (${pct}%)`;
+  }).join(" · ");
+}
 
-  document.getElementById("loginBtn").onclick=()=>{
-    const pwd=document.getElementById("pwd").value.trim(),saved=localStorage.getItem(LS_KEY);
-    if(!pwd)return alert("Inserisci la password.");
-    if(!saved)return alert("Nessuna password impostata.");
-    if(hashStr(pwd)===saved){sessionStorage.setItem(LS_AUTH,"1");showPanel();}else showDenied();
-  };
-  document.getElementById("setBtn").onclick=()=>{
-    const pwd=document.getElementById("pwd").value.trim();
-    if(!pwd)return alert("Inserisci una password.");
-    localStorage.setItem(LS_KEY,hashStr(pwd));
-    alert("Password impostata. Ora premi Accedi.");
-  };
-  document.getElementById("updatePwd").onclick=()=>{
-    const pwd=document.getElementById("newPwd").value.trim();
-    if(!pwd)return alert("Nuova password vuota.");
-    localStorage.setItem(LS_KEY,hashStr(pwd));
-    alert("Password aggiornata.");document.getElementById("newPwd").value="";
-  };
-  document.getElementById("logout").onclick=()=>{
-    sessionStorage.removeItem(LS_AUTH);
-    localStorage.removeItem(LS_KEY);
-    location.reload();
-  };
+async function apiRegisterToken(){
+  const token = el('token').value.trim();
+  const passphrase = el('passphrase').value.trim();
+  if(!token || !passphrase){ el('msg').textContent = "Token e passphrase obbligatori."; return; }
+  const r = await fetch("/api/admin-token",{method:"POST",headers:{ "Content-Type":"application/json" },body:JSON.stringify({ token, passphrase })});
+  if(!r.ok){ el('msg').textContent = "Registrazione token fallita."; return; }
+  const d = await r.json();
+  if(d?.ok){ el('msg').textContent = `Token registrato per IP: ${d.ip}`; LS.setItem("admin_token", token); }
+  else el('msg').textContent = "Errore imprevisto.";
+}
 
-  // === DASHBOARD LOCALE ===
-  const $=s=>document.querySelector(s);const kpis=$("#kpis"),last7=$("#last7");
-  function todayStr(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-  function readCredits(){const v=JSON.parse(localStorage.getItem('whatif_credits')||'{}');const t=todayStr();if(!v.date||v.date!==t)return{date:t,used:0,pro:!!v.pro};return v;}
-  function profileCompletion(){const p=JSON.parse(localStorage.getItem('whatif_profile')||'{}');const req=['name','city','gender','age','phase'];const f=req.filter(k=>p[k]&&String(p[k]).trim()).length;return Math.round(100*f/req.length);}
-  function microCount(){const m=JSON.parse(localStorage.getItem('whatif_micro')||'{}');return Object.keys(m).length;}
-  function historyCount(){const arr=JSON.parse(localStorage.getItem('cronologia')||'[]');return arr.length;}
-  function readUsage(){return JSON.parse(localStorage.getItem('usage_log')||'{}');}
-  function streakDays(){const u=readUsage();const dates=Object.keys(u).sort().reverse();if(!dates.length)return 0;let s=0;let c=new Date();for(;;){const key=`${c.getFullYear()}-${String(c.getMonth()+1).padStart(2,'0')}-${String(c.getDate()).padStart(2,'0')}`;if(u[key]){s++;}else break;c.setDate(c.getDate()-1);}return s;}
-  function render(){
-    const credits=readCredits(),usage=readUsage(),today=todayStr();
-    const tb=usage[today]?.base||0,tp=usage[today]?.pro||0;
-    const totalBase=Object.values(usage).reduce((s,v)=>s+(v.base||0),0),totalPro=Object.values(usage).reduce((s,v)=>s+(v.pro||0),0);
-    const freeLimit=(window.DAILY_FREE||3);const freeLeft=Math.max(0,freeLimit-credits.used);
-    kpis.innerHTML=`
-      <div class="kpi"><div class="n">${tb+tp}</div><div class="muted">Generazioni oggi</div></div>
-      <div class="kpi"><div class="n">${totalBase+totalPro}</div><div class="muted">Generazioni totali</div></div>
-      <div class="kpi"><div class="n">${tp}</div><div class="muted">Azioni Pro oggi</div></div>
-      <div class="kpi"><div class="n">${credits.pro?'Attivo':'No'}</div><div class="muted">Stato Pro</div></div>
-      <div class="kpi"><div class="n">${freeLeft}</div><div class="muted">Free rimasti oggi</div></div>
-      <div class="kpi"><div class="n">${profileCompletion()}%</div><div class="muted">Completezza profilo</div></div>
-      <div class="kpi"><div class="n">${microCount()}</div><div class="muted">Micro-dati salvati</div></div>
-      <div class="kpi"><div class="n">${historyCount()}</div><div class="muted">Cronologia</div></div>
-      <div class="kpi"><div class="n">${streakDays()}</div><div class="muted">Streak giorni</div></div>`;
-    const days=[];for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;const b=usage[k]?.base||0,p=usage[k]?.pro||0;days.push({k,b,p});}
-    last7.innerHTML=days.map(d=>`<li>${d.k}: <strong>${d.b+d.p}</strong> (base ${d.b}, pro ${d.p})</li>`).join('');
-  }
-  document.getElementById('refresh').onclick=render;
-  document.getElementById('resetUsage').onclick=()=>{if(confirm('Azzerare i contatori locali?')){localStorage.removeItem('usage_log');localStorage.removeItem('cronologia');const c=readCredits();c.used=0;localStorage.setItem('whatif_credits',JSON.stringify(c));render();}};
+async function loadLogs(){
+  const token = LS.getItem("admin_token") || el('token').value.trim();
+  if(!token){ el('msg').textContent="Manca il token."; return; }
+  const r = await fetch("/api/admin-logs?limit=300", { headers: { "x-admin-token": token } });
+  if(!r.ok){ el('msg').textContent="Accesso negato o errore server."; return; }
+  const data = await r.json();
+  if(!data?.ok){ el('msg').textContent="Risposta non valida."; return; }
 
-  // === CALCOLATORE COSTI ===
-  function calcCost(){
-    const users=+document.getElementById("users").value||0;
-    const genUser=+document.getElementById("genUser").value||0;
-    const costResp=+document.getElementById("costResp").value||0;
-    const totalGen=users*genUser;
-    const totalUSD=totalGen*costResp;
-    const sumBody=document.getElementById("sumBody");
-    const summary=document.getElementById("summary");
-    const result=document.getElementById("result");
-    result.textContent=`Costo stimato: ${totalUSD.toFixed(2)} USD/mese`;
-    sumBody.innerHTML=`
-      <tr><td>Utenti attivi</td><td>${users}</td></tr>
-      <tr><td>Risposte totali/mese</td><td>${totalGen}</td></tr>
-      <tr><td>Costo per risposta</td><td>${costResp} USD</td></tr>
-      <tr><td><strong>Costo totale stimato</strong></td><td><strong>${totalUSD.toFixed(2)} USD/mese</strong></td></tr>`;
-    summary.classList.remove("hidden");
-  }
+  el('tot').textContent = data.total ?? 0;
+  el('loaded').textContent = (data.logs||[]).length;
+  el('byStyle').textContent = fmtPctMap(data.style);
+  el('byLang').textContent  = fmtPctMap(data.lang);
+
+  window.__LOGS = data.logs || [];
+  renderList(window.__LOGS);
+  el('meta').textContent = `Mostrando ${window.__LOGS.length} elementi (ordinati dal più recente).`;
+}
+
+function renderList(arr){
+  const box = el('logs'); box.innerHTML="";
+  arr.forEach(item=>{
+    const time = new Date(item.ts||Date.now()).toLocaleString();
+    const d = document.createElement("div");
+    d.className="log";
+    d.innerHTML = `
+      <div class="row" style="justify-content:space-between">
+        <div><span class="badge">⏱</span> <small class="muted">${time}</small></div>
+        <div><span class="pill">${item.style||"?"}</span> <span class="pill">${item.lang||"?"}</span> <span class="pill">${item.periodo||"?"}</span></div>
+      </div>
+      <div style="margin-top:6px"><b>Q:</b> ${escapeHtml(item.domanda||"")}</div>
+      <div class="muted" style="margin-top:4px"><small>ip:${item.ip||"?"} · chars:${item.answer_chars||0} · pro:${item.pro ? "yes":"no"}</small></div>
+    `;
+    box.appendChild(d);
+  });
+}
+
+function escapeHtml(s){ return String(s||"").replace(/[&<>"]/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c])); }
+
+el('saveToken').onclick = apiRegisterToken;
+el('enter').onclick = ()=>{
+  const pinOk = (el('pin').value.trim() === PIN_OK);
+  const tk = el('token').value.trim();
+  if(!pinOk){ el('msg').textContent="PIN errato."; return; }
+  if(!tk){ el('msg').textContent="Inserisci token."; return; }
+  LS.setItem("admin_token", tk);
+  el('gate').style.display="none";
+  el('app').style.display="block";
+  loadLogs();
+};
+el('refresh').onclick = loadLogs;
+el('search').oninput = (e)=>{
+  const q = e.target.value.trim().toLowerCase();
+  if(!q){ renderList(window.__LOGS||[]); return; }
+  const f = (window.__LOGS||[]).filter(x=> String(x.domanda||"").toLowerCase().includes(q));
+  renderList(f);
+};
 </script>
 </body>
 </html>
