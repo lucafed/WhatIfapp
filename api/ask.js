@@ -178,7 +178,7 @@ Ti alzi gasato come un TED Talk e dopo due moduli scopri che per vendere acqua s
 `ESEMPIO IT • E se mollassi tutto e andassi al mare?
 Parti convinto, “vita semplice”, e il primo giorno litighi con la sabbia che entra nel letto come una tassa comunale. Fai amicizia col vicino che alle 7 frigge alice e illusioni, poi prometti sobrietà e ti ritrovi con una genziana che parla dialetto. Il sole ti cuoce i progetti a fuoco lento, ma la sera l’aria sa di perdono e patatine unte. Rimandi le decisioni a domani, brindando al genio che sarai dopodomani. Scopri che la felicità ha i piedi bagnati e il cervello a tratti: come te quando funzioni.` },
 
-      // nuove situazioni IT, stesso tono
+      // nuove situazioni IT
       { role: "system", content:
 `ESEMPIO IT • E se tornassi in palestra?
 Entrasti tronfio e lo specchio fece finta di non riconoscerti, il tapis roulant ti denunciò per abbandono e la borraccia sospirò “finalmente” con passivo-aggressività. Due flessioni, tre universi paralleli, i quadricipiti proclamarono sciopero emotivo. Il trainer ti guardò come un antivirus scaduto ma salvò la dignità con un cinque basso. Tornasti a casa tremando di endorfina low-cost e firmasti pace col corpo: non eri una statua, ma almeno non un soprammobile.` },
@@ -284,7 +284,7 @@ export default async function handler(req, res) {
     // system add-on per Passato/Futuro (senza cambiare la voce)
     const temporal = temporalSystem(periodo, lang, stile);
 
-    // Hint aggiuntivo per forzare davvero il passato nelle controfattuali WTF
+    // Hint extra: forza davvero il PASSATO per WTF
     let extraTemporalHint = "";
     if (stile === "wtf" && String(periodo).toLowerCase() === "past") {
       extraTemporalHint = isEn(lang)
@@ -298,7 +298,7 @@ export default async function handler(req, res) {
 
     const messages = [
       { role: "system", content: sys },
-      { role: "system", content: temporal }, // modalità passato/futuro
+      { role: "system", content: temporal },
       ...(extraTemporalHint ? [{ role: "system", content: extraTemporalHint }] : []),
       ...(fewshots || []),
       { role: "user", content: userPrompt }
@@ -308,7 +308,7 @@ export default async function handler(req, res) {
       model: MODEL,
       temperature: stile === "wtf" ? 0.92 : 0.82,
       top_p: 0.9,
-      max_tokens: 300, // alzato per 1 frase in più
+      max_tokens: 300, // una frase in più
       frequency_penalty: stile === "wtf" ? 0.4 : 0.1,
       presence_penalty: 0.0,
       messages
@@ -325,7 +325,7 @@ export default async function handler(req, res) {
     answer = clampWords(answer, stile === "wtf" ? 150 : 155);
     answer = normalizeOneParagraph(answer);
 
-    // WHAT IF: assicurati che finisca con una spinta concreta "oggi"
+    // WHAT IF: se manca, aggiungi micro-spinta concreta "oggi"
     if (stile === "whatif") {
       const lastSentence = (answer.match(/[^.!?…]+[.!?…]/g) || []).slice(-1)[0] || "";
       const last = lastSentence.trim().toLowerCase();
@@ -338,6 +338,41 @@ export default async function handler(req, res) {
     }
 
     if (!/[.!?…]$/.test(answer)) answer += ".";
+
+    /* ---------- LOGGING (Upstash) ---------- */
+    try {
+      const now = new Date();
+      const day = now.toISOString().slice(0,10);
+      const entry = {
+        ts: now.toISOString(),
+        ip,
+        stile,
+        lang,
+        periodo,
+        domanda: String(domanda).slice(0, 1000),
+        answer: String(answer).slice(0, 1000),
+        // derive qualche metrica semplice
+        q_wc: String(domanda).trim().split(/\s+/).filter(Boolean).length,
+        a_wc: String(answer).trim().split(/\s+/).filter(Boolean).length,
+        ua: String(req.headers["user-agent"] || "")
+      };
+
+      // Lista globale (coda) + daily + per-IP, con trim
+      await redis.rpush("logs:ask", JSON.stringify(entry));
+      await redis.ltrim("logs:ask", -5000, -1); // tieni ultimi 5000
+      await redis.rpush(`logs:ask:${day}`, JSON.stringify(entry));
+      await redis.ltrim(`logs:ask:${day}`, -5000, -1);
+      await redis.rpush(`logs:ip:${ip}`, JSON.stringify(entry));
+      await redis.ltrim(`logs:ip:${ip}`, -200, -1);
+
+      // contatori
+      await redis.incr("stats:ask:total");
+      await redis.incr(`stats:ask:day:${day}`);
+      await redis.incr(`stats:ask:style:${stile}`);
+    } catch (e) {
+      // non bloccare la risposta
+      console.error("log_error", e?.message || e);
+    }
 
     return res.status(200).json({
       answer,
