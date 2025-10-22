@@ -1,4 +1,9 @@
-// /api/admin-logs.js
+// ============================
+// /api/admin-logs.js — elenco log What?f (per dashboard admin)
+// Autenticazione: header x-admin-token legato a IP (come /api/admin-token)
+// Query supportate: ?offset=0&limit=100&style=whatif|wtf|all&lang=it|en|all&periodo=past|future|all&q=testo
+// ============================
+
 import { Redis } from "@upstash/redis";
 
 const redis = new Redis({
@@ -6,64 +11,75 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-const ALLOWED_ORIGINS = [
-  "https://what-ifapp.vercel.app",
-  "http://localhost:3000",
-  "http://127.0.0.1:5500",
-];
-function setCors(req, res) {
-  const origin = String(req.headers.origin || "");
-  if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
-  res.setHeader("Vary", "Origin");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-token");
-}
-function getIp(req) {
-  const xf = String(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim();
-  return xf || req.socket?.remoteAddress || "unknown";
-}
-
-async function isAdmin(req) {
-  const token = String(req.headers["x-admin-token"] || "").trim();
-  if (!token) return false;
-  try {
-    const ip = await redis.get(`admin:token:${token}`);
-    return ip && ip === getIp(req);
-  } catch { return false; }
+function toInt(v, def) {
+  const n = parseInt(v, 10);
+  return Number.isFinite(n) && n >= 0 ? n : def;
 }
 
 export default async function handler(req, res) {
-  setCors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "GET") return res.status(405).json({ error: "method_not_allowed" });
 
   try {
-    if (!(await isAdmin(req))) return res.status(401).json({ error: "unauthorized" });
+    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
+      .toString().split(",")[0].trim();
+    const token = String(req.headers["x-admin-token"] || "").trim();
+    if (!token) return res.status(401).json({ error: "missing_token" });
 
-    const limit = Math.min(parseInt(req.query.limit||"100",10), 500);
-    const raw = await redis.lrange("logs:ask", 0, limit-1);
-    const items = (raw||[]).map(x=>{ try{return JSON.parse(x)}catch{return null} }).filter(Boolean);
+    // auth: token -> ip
+    const boundIp = await redis.get(`admin:token:${token}`);
+    if (!boundIp || boundIp !== ip) {
+      return res.status(403).json({ error: "unauthorized" });
+    }
 
-    // stats aggregate
-    const [total, style, lang, periodo] = await Promise.all([
-      redis.get("stats:total"),
-      redis.hgetall("stats:style"),
-      redis.hgetall("stats:lang"),
-      redis.hgetall("stats:periodo"),
-    ]);
+    // query
+    const offset = toInt(req.query.offset, 0);
+    const limit  = Math.min(toInt(req.query.limit, 100), 500);
 
-    return res.status(200).json({
-      ok: true,
-      items,
-      stats: {
-        total: Number(total||0),
-        style: style || {},
-        lang: lang || {},
-        periodo: periodo || {},
-      }
-    });
-  } catch (e) {
-    console.error("admin-logs error", e);
-    return res.status(500).json({ ok:false, error:"server_error" });
+    const style   = String(req.query.style || "all").toLowerCase();
+    const lang    = String(req.query.lang || "all").toLowerCase();
+    const periodo = String(req.query.periodo || "all").toLowerCase();
+    const q       = String(req.query.q || "").toLowerCase().trim();
+
+    // prendi un blocco ampio (ultimi 2000) e filtra
+    const RAW_MAX = 2000;
+    const raws = await redis.lrange("logs:ask", 0, RAW_MAX - 1);
+
+    const all = [];
+    for (const r of raws) {
+      try {
+        const o = typeof r === "string" ? JSON.parse(r) : r;
+        if (!o || !o.ts) continue;
+
+        // filtri
+        if (style !== "all"   && String(o.style || "").toLowerCase()   !== style) continue;
+        if (lang  !== "all"   && String(o.lang  || "").toLowerCase()    !== lang) continue;
+        if (periodo !== "all" && String(o.periodo || "").toLowerCase()  !== periodo) continue;
+        if (q && !String(o.domanda || "").toLowerCase().includes(q)) continue;
+
+        all.push({
+          ts: o.ts,
+          whenISO: new Date(o.ts).toISOString(),
+          ip: o.ip || "-",
+          style: o.style || "",
+          lang: o.lang || "",
+          periodo: o.periodo || "",
+          domanda: o.domanda || "",
+          answer_chars: o.answer_chars || 0,
+          pro: !!o.pro,
+        });
+      } catch { /* skip corrotto */ }
+    }
+
+    // ordinamento: più recenti prima
+    all.sort((a, b) => b.ts - a.ts);
+
+    const total = all.length;
+    const items = all.slice(offset, offset + limit);
+
+    return res.status(200).json({ ok: true, total, items });
+  } catch (err) {
+    console.error("❌ [/api/admin-logs] error:", err);
+    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
 }
