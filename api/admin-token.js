@@ -1,4 +1,4 @@
-// /api/admin-token.js
+// pages/api/admin-token.js
 import { Redis } from "@upstash/redis";
 
 const redis = new Redis({
@@ -6,51 +6,70 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-// puoi cambiarli da env, ma hanno default già pronti
-const ADMIN_SETUP_SECRET = process.env.ADMIN_SETUP_SECRET || "wtf-setup-2025";
-const ADMIN_PIN = process.env.ADMIN_PIN || "010818";
-
 const ALLOWED_ORIGINS = [
   "https://what-ifapp.vercel.app",
   "http://localhost:3000",
   "http://127.0.0.1:5500",
 ];
-function setCors(req, res) {
+
+function cors(req, res) {
   const origin = String(req.headers.origin || "");
   if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Vary", "Origin");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, admin-secret");
+  res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 }
 
-function getIp(req) {
-  const xf = String(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim();
-  return xf || req.socket?.remoteAddress || "unknown";
+function parseBody(req){
+  try{
+    if (typeof req.body === "string") return JSON.parse(req.body || "{}");
+    if (req.body && typeof req.body === "object") return req.body;
+  }catch{}
+  return {};
 }
 
-export default async function handler(req, res) {
-  setCors(req, res);
+function getIp(req){
+  return (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
+    .toString().split(",")[0].trim();
+}
+
+function genToken(){
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(b).map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+
+export default async function handler(req, res){
+  cors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
-  try {
-    const secret = String(req.headers["admin-secret"] || "").trim();
-    if (secret !== ADMIN_SETUP_SECRET) {
-      return res.status(401).json({ ok: false, error: "missing_or_invalid_secret" });
+  const ip = getIp(req);
+
+  try{
+    if (req.method === "POST"){
+      const { pin = "" } = parseBody(req);
+      const adminPin = String(process.env.ADMIN_PIN || "").trim();
+      if (!adminPin) return res.status(500).json({ error:"missing_admin_pin" });
+
+      if (String(pin).trim() !== adminPin){
+        return res.status(401).json({ ok:false, error:"bad_pin" });
+      }
+
+      const token = genToken();
+      await redis.set(`admin:token:${token}`, ip, { ex: 60*60*24 }); // TTL 24h
+      return res.status(200).json({ ok:true, token, ttl_seconds: 60*60*24 });
     }
 
-    let body = {};
-    try { body = typeof req.body === "string" ? JSON.parse(req.body||"{}") : (req.body||{}); } catch {}
-    const pin = String(body.pin || "").trim();
-    if (pin !== ADMIN_PIN) return res.status(403).json({ ok:false, error:"bad_pin" });
+    if (req.method === "GET"){
+      const token = String(req.headers["authorization"] || "").replace(/^Bearer\s+/i,"").trim();
+      if (!token) return res.status(401).json({ ok:false, error:"missing_token" });
+      const savedIp = await redis.get(`admin:token:${token}`);
+      if (!savedIp || savedIp !== ip) return res.status(401).json({ ok:false, error:"invalid_token" });
+      return res.status(200).json({ ok:true });
+    }
 
-    const token = "wtf-admin-master"; // statico va benissimo
-    const ip = getIp(req);
-    await redis.set(`admin:token:${token}`, ip, { ex: 60*60*48 }); // 48h
-
-    return res.status(200).json({ ok:true, token, bound_to: ip || "ANY" });
-  } catch (e) {
-    console.error("admin-token error", e);
-    return res.status(500).json({ ok:false, error:"server_error" });
+    return res.status(405).json({ error:"method_not_allowed" });
+  }catch(err){
+    console.error("❌ [/api/admin-token] error:", err);
+    return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
 }
