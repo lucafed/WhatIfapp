@@ -1,6 +1,5 @@
 // /api/admin-logs.js
 import { Redis } from "@upstash/redis";
-
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
@@ -18,16 +17,17 @@ function cors(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-token");
 }
-
 async function isAdmin(req, requesterIp) {
   const token = String(req.headers["x-admin-token"] || "").trim();
   if (!token) return false;
   try {
-    const ip = await redis.get(`admin:token:${token}`);
-    return ip && ip === requesterIp;
-  } catch {
-    return false;
-  }
+    const bound = await redis.get(`admin:token:${token}`);
+    if (!bound) return false;
+    if (bound === "ANY") return true;
+    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
+      .toString().split(",")[0].trim();
+    return ip === bound;
+  } catch { return false; }
 }
 
 export default async function handler(req, res) {
@@ -36,24 +36,29 @@ export default async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).json({ error: "method_not_allowed" });
 
   try {
-    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
-      .toString().split(",")[0].trim();
+    const ok = await isAdmin(req);
+    if (!ok) return res.status(401).json({ error: "unauthorized" });
 
-    if (!(await isAdmin(req, ip))) return res.status(403).json({ error: "forbidden" });
+    const q = String(req.query.q || "").toLowerCase();
+    const offset = Math.max(Number(req.query.offset || 0), 0);
+    const limit  = Math.min(Math.max(Number(req.query.limit || 50), 1), 200);
 
-    const limit = Math.min(parseInt(req.query.limit || "200", 10), 1000);
-    const logsRaw = await redis.lrange("logs:ask", 0, limit - 1); // già ordinati dal più recente
-    const logs = (logsRaw || []).map((x) => {
-      try { return JSON.parse(x); } catch { return null; }
-    }).filter(Boolean);
+    const raw = await redis.lrange("logs:ask", offset, offset + limit - 1);
+    let items = (raw || []).map(x => { try { return JSON.parse(x); } catch { return null; } })
+                            .filter(Boolean);
 
-    const total = parseInt((await redis.get("stats:total")) || "0", 10);
-    const style = (await redis.hgetall("stats:style")) || {};
-    const lang  = (await redis.hgetall("stats:lang")) || {};
+    if (q) {
+      items = items.filter(it =>
+        (it.domanda || "").toLowerCase().includes(q) ||
+        (it.style || "").toLowerCase().includes(q) ||
+        (it.lang || "").toLowerCase().includes(q) ||
+        (it.periodo || "").toLowerCase().includes(q)
+      );
+    }
 
-    return res.status(200).json({ ok: true, total, style, lang, logs });
+    return res.status(200).json({ ok: true, offset, limit, count: items.length, items });
   } catch (e) {
-    console.error("admin-logs error", e);
+    console.error("admin-logs error:", e);
     return res.status(500).json({ error: "server_error" });
   }
 }
