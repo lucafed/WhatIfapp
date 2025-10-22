@@ -331,28 +331,115 @@
       location.href = 'second.html';
     });
 
-    // Admin segreto: triplo tap sul titolo
+    /* ===== Admin segreto: 3 TAP → LONG PRESS (>=1.2s) → 5 TAP, poi PIN ===== */
     (function(){
-      let taps = 0, timer = null;
       const target = document.getElementById('appTitle') || document.querySelector('h1') || document.body;
-      target.addEventListener('click', ()=>{
-        taps++;
-        clearTimeout(timer);
-        timer = setTimeout(()=>taps=0, 1200);
-        if (taps >= 3) {
-          taps = 0;
-          const flash = document.createElement('div');
-          flash.style.position='fixed'; flash.style.inset='0';
-          flash.style.background='rgba(255,255,255,0.08)';
-          flash.style.backdropFilter='blur(2px)';
-          flash.style.transition='opacity .6s ease';
-          flash.style.opacity='1'; flash.style.zIndex='9999';
-          document.body.appendChild(flash);
-          setTimeout(()=>flash.style.opacity='0',150);
-          setTimeout(()=>flash.remove(),800);
-          location.href = 'admin.html';
+
+      const TAPS1_REQUIRED = 3;
+      const TAPS1_WINDOW_MS = 1200;
+      const LONG_PRESS_MIN_MS = 1200;
+      const LONG_PRESS_MAX_GAP_MS = 2500;
+      const TAPS2_REQUIRED = 5;
+      const TAPS2_WINDOW_MS = 1800;
+
+      let phase = 0; // 0 idle, 1=taps1, 2=long-press, 3=taps2
+      let taps1 = 0, taps2 = 0;
+      let taps1Timer = null, taps2Timer = null, longPressTimer = null, longPressArmed = false;
+      let lastPhaseTs = 0;
+
+      function resetAll(){
+        phase = 0; taps1 = 0; taps2 = 0; lastPhaseTs = 0;
+        clearTimeout(taps1Timer); clearTimeout(taps2Timer); clearTimeout(longPressTimer);
+        taps1Timer = taps2Timer = longPressTimer = null;
+        longPressArmed = false;
+      }
+
+      async function askPinAndLogin(){
+        const pin = prompt("Inserisci PIN amministratore:");
+        if (!pin) { resetAll(); return; }
+        try{
+          const r = await fetch("/api/admin-token", {
+            method: "POST",
+            headers: { "Content-Type":"application/json" },
+            body: JSON.stringify({ pin })
+          });
+          const data = await r.json();
+          if (!r.ok || !data?.ok) {
+            alert("PIN errato.");
+            resetAll();
+            return;
+          }
+          localStorage.setItem("admin_token", data.token);
+          location.href = "admin.html";
+        }catch{
+          alert("Errore server. Riprova.");
+          resetAll();
         }
-      });
+      }
+
+      function handleTap(){
+        const now = Date.now();
+
+        if (phase === 0) {
+          phase = 1; taps1 = 1; lastPhaseTs = now;
+          clearTimeout(taps1Timer);
+          taps1Timer = setTimeout(resetAll, TAPS1_WINDOW_MS);
+          return;
+        }
+
+        if (phase === 1) {
+          taps1++;
+          if (taps1 >= TAPS1_REQUIRED) {
+            clearTimeout(taps1Timer);
+            phase = 2;
+            lastPhaseTs = now;
+            setTimeout(()=>{
+              if (phase === 2 && !longPressArmed) resetAll();
+            }, LONG_PRESS_MAX_GAP_MS);
+          }
+          return;
+        }
+
+        if (phase === 3) {
+          taps2++;
+          if (taps2 === 1) {
+            clearTimeout(taps2Timer);
+            taps2Timer = setTimeout(resetAll, TAPS2_WINDOW_MS);
+          }
+          if (taps2 >= TAPS2_REQUIRED) {
+            clearTimeout(taps2Timer);
+            askPinAndLogin();
+          }
+          return;
+        }
+      }
+
+      function onPointerDown(){
+        if (phase !== 2) return;
+        longPressArmed = true;
+        clearTimeout(longPressTimer);
+        longPressTimer = setTimeout(()=>{
+          if (phase === 2) {
+            phase = 3; taps2 = 0; lastPhaseTs = Date.now();
+          }
+        }, LONG_PRESS_MIN_MS);
+      }
+
+      function onPointerUp(){
+        if (phase !== 2) return;
+        clearTimeout(longPressTimer);
+        if (Date.now() - lastPhaseTs < LONG_PRESS_MIN_MS) {
+          resetAll();
+        }
+      }
+
+      target.addEventListener('click', handleTap, { passive: true });
+      target.addEventListener('pointerdown', onPointerDown);
+      target.addEventListener('pointerup', onPointerUp);
+      target.addEventListener('pointercancel', ()=>{ if (phase===2) resetAll(); });
+
+      window.addEventListener('blur', resetAll);
+      window.addEventListener('beforeunload', resetAll);
     })();
   </script>
 
