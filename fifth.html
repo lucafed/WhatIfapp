@@ -216,8 +216,6 @@ const LEADS = {
     ]
   }
 };
-
-/* ===== Utils ===== */
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 function hashStr(s=""){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i); h=h|0; } return Math.abs(h); }
 function stablePick(arr, seedStr){ if(!arr?.length) return ""; if(!seedStr?.trim()) return pick(arr); const h=hashStr(seedStr); return arr[h%arr.length]; }
