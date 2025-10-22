@@ -396,6 +396,7 @@ export default async function handler(req, res) {
       await redis.incr("stats:total");
       await redis.hincrby("stats:style", stile, 1);
       await redis.hincrby("stats:lang", lang, 1);
+      await redis.hincrby("stats:periodo", String(periodo || "future"), 1); // 👈 aggiunto
     } catch (e) {
       console.warn("log failure (non-bloccante)", e);
     }
@@ -413,4 +414,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-       }
+}
