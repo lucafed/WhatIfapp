@@ -6,312 +6,212 @@
 <title>What?f — Admin</title>
 <meta name="theme-color" content="#0B0B0C"/>
 <style>
-:root{
-  --bg:#0B0B0C; --bg2:#101414; --fg:#fff; --muted:#A0B2BA;
-  --card:rgba(20,28,34,.80); --card-brd:rgba(255,255,255,.12);
-  --chip:#121A18;
-  --acc:#1C57A0; --acc2:#FFEC01; --ok:#54D88C; --warn:#E2B643; --err:#F07C7C;
-}
-*{box-sizing:border-box}
-html,body{margin:0;background:radial-gradient(900px 700px at 20% 18%, var(--bg2) 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
-main{max-width:920px;margin:auto;padding:18px}
-h1{font-size:clamp(22px,4.5vw,30px);margin:6px 0 10px}
-small.muted{color:var(--muted)}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.card{background:var(--card);border:1px solid var(--card-brd);border-radius:16px;padding:14px;backdrop-filter:blur(10px)}
-.grid{display:grid;gap:12px}
-@media(min-width:800px){ .grid.cols-2{grid-template-columns:1fr 1fr} }
-.btn{padding:10px 12px;border:none;border-radius:12px;font-weight:800;cursor:pointer}
-.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0a0e12}
-.btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--card-brd);color:#fff}
-.input,select{background:rgba(255,255,255,.06);border:1px solid var(--card-brd);border-radius:10px;color:#fff;padding:10px}
-.kv{display:flex;gap:8px;flex-wrap:wrap}
-.kv .pill{background:rgba(255,255,255,.06);border:1px solid var(--card-brd);border-radius:999px;padding:6px 10px;font-size:12px}
-.badge{display:inline-flex;gap:6px;align-items:center;font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--card-brd);background:rgba(255,255,255,.06)}
-.badge.ok{background:rgba(84,216,140,.15)}
-.badge.warn{background:rgba(226,182,67,.15)}
-.hr{height:1px;background:rgba(255,255,255,.10);margin:10px 0}
-.card-log{border:1px solid var(--card-brd);border-radius:12px;padding:10px;background:rgba(255,255,255,.04)}
-.meta{font-size:12px;color:var(--muted)}
-.q{margin:4px 0 0;font-weight:600}
-.controls{display:flex;gap:8px;flex-wrap:wrap}
-.right{margin-left:auto}
-footer{color:var(--muted);text-align:center;font-size:12px;margin:18px 0}
-.empty{opacity:.8;text-align:center;padding:16px}
-.hidden{display:none}
+  :root{--bg:#0B0B0C;--card:#13191E;--fg:#EAF2EE;--muted:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01}
+  body{margin:0;background:radial-gradient(900px 700px at 20% 18%,#101414 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{max-width:900px;margin:auto;padding:18px}
+  h1{margin:4px 0 12px}
+  .card{background:var(--card);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:14px;margin:12px 0}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input,select{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px}
+  button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
+  .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12}
+  .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:13px}
+  .muted{color:var(--muted);font-size:12px}
+  .badge{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:12px}
 </style>
 </head>
 <body>
 <main>
-  <div class="row" style="justify-content:space-between">
-    <h1>Admin · What?f</h1>
-    <div class="row">
-      <span id="authState" class="badge warn">🔒 Non autenticato</span>
-      <button class="btn ghost" onclick="location.href='index.html'">🏠 Home</button>
-    </div>
-  </div>
+  <h1>Admin · What?f</h1>
 
-  <!-- AUTH -->
-  <div id="authCard" class="card grid cols-2">
-    <div>
-      <div class="row" style="justify-content:space-between">
-        <strong>Accesso</strong>
-        <small class="muted">Il PIN genera il token admin legato al tuo IP</small>
-      </div>
-      <div class="hr"></div>
-      <div class="row">
-        <input id="pin" class="input" type="password" placeholder="PIN segreto" inputmode="numeric" style="min-width:200px"/>
-        <button id="btnLogin" class="btn primary">Entra</button>
-        <button id="btnLogout" class="btn ghost">Esci</button>
-      </div>
-      <small class="muted">Lo stato resta in memoria sul dispositivo.</small>
-    </div>
-    <div>
-      <div class="row" style="justify-content:space-between">
-        <strong>Modalità PRO (bypass limiti client)</strong>
-        <small class="muted">Solo locale: influisce sulle chiamate fatte da questo device</small>
-      </div>
-      <div class="hr"></div>
-      <div class="row">
-        <button id="btnProOn" class="btn ghost">Attiva PRO</button>
-        <button id="btnProOff" class="btn ghost">Disattiva PRO</button>
-        <span id="proState" class="badge">—</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- TOOLS -->
   <div class="card">
-    <div class="row controls">
-      <button id="btnRefresh" class="btn primary">⟳ Aggiorna</button>
-      <button id="btnAuto" class="btn ghost">▶ Auto-refresh</button>
-      <button id="btnExport" class="btn ghost">⬇︎ Export CSV</button>
-      <div class="right row">
-        <select id="fStyle" class="input">
-          <option value="">Stile: tutti</option>
-          <option value="whatif">whatif</option>
-          <option value="wtf">wtf</option>
-        </select>
-        <select id="fLang" class="input">
-          <option value="">Lingua: tutte</option>
-          <option value="it">it</option>
-          <option value="en">en</option>
-        </select>
-        <select id="fPeriodo" class="input">
-          <option value="">Tempo: tutti</option>
-          <option value="past">past</option>
-          <option value="future">future</option>
-        </select>
-        <input id="fSearch" class="input" placeholder="Cerca nella domanda…" style="min-width:180px"/>
-      </div>
+    <h3>Accesso</h3>
+    <p class="muted">Il PIN genera il token admin legato al tuo IP.</p>
+    <div class="row">
+      <input id="pin" type="password" inputmode="numeric" placeholder="PIN segreto" style="min-width:180px"/>
+      <button class="primary" id="enterBtn">Entra</button>
+      <button class="ghost" id="logoutBtn">Esci</button>
+      <span id="authState" class="badge">Non autenticato</span>
+    </div>
+    <p class="muted" id="authHelp"></p>
+  </div>
+
+  <div class="card">
+    <h3>Modalità PRO (bypass limiti client)</h3>
+    <div class="row">
+      <button class="ghost" id="proOn">Attiva PRO</button>
+      <button class="ghost" id="proOff">Disattiva PRO</button>
+      <span id="proState" class="badge">PRO inattivo</span>
     </div>
   </div>
 
-  <!-- STATS -->
-  <div id="statsCard" class="card">
-    <strong>Statistiche</strong>
-    <div class="hr"></div>
-    <div id="stats" class="kv"></div>
-  </div>
-
-  <!-- LIST -->
   <div class="card">
     <div class="row" style="justify-content:space-between">
-      <strong>Ultime domande</strong>
-      <small class="muted" id="countInfo">—</small>
+      <h3 style="margin:0">Log & Statistiche</h3>
+      <div class="row">
+        <button class="primary" id="refreshBtn">Aggiorna</button>
+        <button class="ghost" id="autoBtn">Auto-refresh</button>
+      </div>
     </div>
-    <div class="hr"></div>
-    <div id="list"></div>
-    <div id="empty" class="empty hidden">Nessun log trovato.</div>
-  </div>
+    <div class="row">
+      <select id="filterStyle">
+        <option value="">Stile: tutti</option>
+        <option value="whatif">whatif</option>
+        <option value="wtf">wtf</option>
+      </select>
+      <select id="filterLang">
+        <option value="">Lingua: tutte</option>
+        <option value="it">it</option>
+        <option value="en">en</option>
+      </select>
+      <select id="filterPeriod">
+        <option value="">Tempo: tutti</option>
+        <option value="past">past</option>
+        <option value="future">future</option>
+      </select>
+      <input id="searchQ" placeholder="Cerca nella domanda…" style="min-width:220px"/>
+    </div>
 
-  <footer>© 2025 What?f · Admin</footer>
+    <div id="stats" class="muted" style="margin-top:8px">—</div>
+    <table id="logsTbl">
+      <thead><tr><th>Quando</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Domanda</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
 </main>
 
 <script>
-const LS=localStorage;
-const $=s=>document.querySelector(s);
-const listEl = $('#list');
-const statsEl= $('#stats');
-const countInfo = $('#countInfo');
-let AUTO = false, TIMER=null;
-let LAST_ITEMS = []; // cache per export/filtri
+const LS = localStorage;
+const ADMIN_SECRET = "wtf-setup-2025";     // deve combaciare con l'API
+const TOKEN_KEY = "admin_token";
+const PRO_KEY = "whatif_prefs";
+
+function fmtDate(ts){
+  const d = new Date(ts);
+  return d.toLocaleString();
+}
 
 function setAuthUI(ok){
-  const badge = $('#authState');
-  badge.textContent = ok ? '✅ Autenticato' : '🔒 Non autenticato';
-  badge.classList.toggle('ok', ok);
-  badge.classList.toggle('warn', !ok);
-}
-function setProUI(){
-  const isPro = LS.getItem('whatif_prefs') && JSON.parse(LS.getItem('whatif_prefs')).pro===true;
-  $('#proState').textContent = isPro ? '⭐ PRO attivo su questo device' : '• PRO non attivo';
+  document.getElementById("authState").textContent = ok ? "Autenticato" : "Non autenticato";
+  document.getElementById("authState").style.background = ok ? "rgba(0,255,0,.08)" : "rgba(255,255,255,.06)";
 }
 
-async function login(){
-  const pin = $('#pin').value.trim();
-  if(!pin) { alert('Inserisci PIN'); return; }
-  // Chiama l’endpoint che lega token->IP. Se il tuo endpoint si chiama diversamente, aggiorna qui.
-  try{
-    const r = await fetch('/api/admin-token', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ pin })
-    });
-    if(!r.ok){ alert('PIN errato o server'); return; }
-    const { token } = await r.json();
-    if(!token){ alert('Nessun token ricevuto'); return; }
-    LS.setItem('admin_token', token);
-    setAuthUI(true);
-    refresh();
-  }catch(e){ alert('Errore rete'); }
-}
-function logout(){
-  LS.removeItem('admin_token');
-  setAuthUI(false);
+async function registerToken(pin){
+  const r = await fetch("/api/admin-token",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "admin-secret": ADMIN_SECRET
+    },
+    body: JSON.stringify({ pin })
+  });
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok || !data.ok){ throw new Error(data.error||"token_error"); }
+  LS.setItem(TOKEN_KEY, data.token);
+  return data.token;
 }
 
-function togglePro(on){
-  const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-  prefs.pro = !!on;
-  LS.setItem('whatif_prefs', JSON.stringify(prefs));
-  setProUI();
+async function fetchLogs(){
+  const token = LS.getItem(TOKEN_KEY)||"";
+  const params = new URLSearchParams({ limit:"200" });
+  const r = await fetch(`/api/admin-logs?${params}`, {
+    headers: { "x-admin-token": token }
+  });
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok || !data.ok) throw new Error(data.error||"auth");
+  return data;
 }
 
-function fmt(obj){ return Object.entries(obj||{}).map(([k,v])=>`${k}: ${v}`).join(' · ') || '—'; }
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function renderLogs(data){
+  const tbody = document.querySelector("#logsTbl tbody");
+  tbody.innerHTML = "";
+  const fStyle = document.getElementById("filterStyle").value;
+  const fLang  = document.getElementById("filterLang").value;
+  const fPer   = document.getElementById("filterPeriod").value;
+  const q      = document.getElementById("searchQ").value.trim().toLowerCase();
 
-function applyFilters(items){
-  const fS = $('#fStyle').value.trim();
-  const fL = $('#fLang').value.trim();
-  const fP = $('#fPeriodo').value.trim();
-  const q  = $('#fSearch').value.trim().toLowerCase();
-  return items.filter(it=>{
-    if (fS && it.style !== fS) return false;
-    if (fL && it.lang !== fL) return false;
-    if (fP && String(it.periodo||'') !== fP) return false;
-    if (q && !String(it.domanda||'').toLowerCase().includes(q)) return false;
+  const rows = (data.items||[]).filter(x=>{
+    if(fStyle && x.style!==fStyle) return false;
+    if(fLang && x.lang!==fLang) return false;
+    if(fPer && x.periodo!==fPer) return false;
+    if(q && !String(x.domanda||"").toLowerCase().includes(q)) return false;
     return true;
   });
-}
 
-function render(items, stats){
-  LAST_ITEMS = items.slice();
-  const filtered = applyFilters(LAST_ITEMS);
-  // stats
-  statsEl.innerHTML = `
-    <span class="pill">Totale: ${Number(stats.total||0)}</span>
-    <span class="pill">Stile → ${esc(fmt(stats.style))}</span>
-    <span class="pill">Lingua → ${esc(fmt(stats.lang))}</span>
-    <span class="pill">Periodo → ${esc(fmt(stats.periodo))}</span>
-  `;
-  countInfo.textContent = `${filtered.length} di ${items.length} mostrati`;
-
-  // list
-  if(!filtered.length){
-    $('#empty').classList.remove('hidden');
-    listEl.innerHTML = '';
-    return;
+  for(const it of rows){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${fmtDate(it.ts)}</td><td>${it.style}</td><td>${it.lang}</td><td>${it.periodo}</td><td>${(it.domanda||"").replace(/\s+/g," ").slice(0,180)}</td>`;
+    tbody.appendChild(tr);
   }
-  $('#empty').classList.add('hidden');
 
-  listEl.innerHTML = filtered.map(it=>{
-    const when = new Date(it.ts||0).toLocaleString();
-    return `
-      <div class="card-log">
-        <div class="meta">${when}</div>
-        <div class="q">Q: ${esc(it.domanda)}</div>
-        <div class="meta" style="margin-top:6px">
-          stile: <b>${esc(it.style)}</b> · lang: <b>${esc(it.lang)}</b> · periodo: <b>${esc(it.periodo)}</b> · chars: ${it.answer_chars} · pro: ${it.pro?'yes':'no'}
-        </div>
-        <div class="meta">ip: ${esc(it.ip)}</div>
-      </div>
-    `;
-  }).join('');
+  const s = data.stats || {};
+  const txt = `Totale: ${s.total||0} · Per stile: ${JSON.stringify(s.style||{})} · Per lingua: ${JSON.stringify(s.lang||{})} · Per tempo: ${JSON.stringify(s.periodo||{})}`;
+  document.getElementById("stats").textContent = txt;
 }
 
-async function fetchLogs(limit=200){
-  const token = LS.getItem('admin_token')||'';
-  const r = await fetch(`/api/admin-logs?limit=${limit}`,{
-    headers:{'x-admin-token': token}
-  });
-  if(r.status===401){ setAuthUI(false); throw new Error('unauth'); }
-  if(!r.ok) throw new Error('server');
-  return r.json();
-}
+let autoTimer = null;
+document.getElementById("autoBtn").onclick = ()=>{
+  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; document.getElementById("autoBtn").textContent="Auto-refresh"; return; }
+  autoTimer = setInterval(()=>document.getElementById("refreshBtn").click(), 5000);
+  document.getElementById("autoBtn").textContent="Stop auto-refresh";
+};
 
-async function refresh(){
+document.getElementById("refreshBtn").onclick = async ()=>{
   try{
-    const { items, stats } = await fetchLogs(200);
+    const data = await fetchLogs();
     setAuthUI(true);
-    render(items, stats||{});
+    renderLogs(data);
   }catch(e){
-    if(e.message==='unauth'){
-      render([], {total:0,style:{},lang:{},periodo:{}});
-    }else{
-      console.error(e);
-      alert('Errore nel caricamento log');
-    }
+    setAuthUI(false);
+    alert("Autenticazione richiesta o errore server.");
   }
+};
+
+document.getElementById("enterBtn").onclick = async ()=>{
+  try{
+    const pin = document.getElementById("pin").value.trim();
+    if(!pin) return alert("Inserisci il PIN");
+    await registerToken(pin);
+    setAuthUI(true);
+    document.getElementById("refreshBtn").click();
+    document.getElementById("authHelp").textContent = "Token registrato sul tuo IP (valido ~48h).";
+  }catch(e){
+    setAuthUI(false);
+    document.getElementById("authHelp").textContent = "PIN errato o segreto mancante.";
+  }
+};
+
+document.getElementById("logoutBtn").onclick = ()=>{
+  LS.removeItem(TOKEN_KEY);
+  setAuthUI(false);
+  document.querySelector("#logsTbl tbody").innerHTML="";
+  document.getElementById("stats").textContent = "—";
+};
+
+// PRO locale (influisce solo sul device corrente)
+function setProUI(){
+  try{
+    const prefs = JSON.parse(LS.getItem(PRO_KEY)||"{}");
+    const active = prefs.pro === true;
+    document.getElementById("proState").textContent = active ? "PRO attivo su questo device" : "PRO inattivo";
+  }catch{}
 }
+document.getElementById("proOn").onclick = ()=>{
+  const p = JSON.parse(LS.getItem(PRO_KEY)||"{}"); p.pro = true; LS.setItem(PRO_KEY, JSON.stringify(p)); setProUI();
+};
+document.getElementById("proOff").onclick = ()=>{
+  const p = JSON.parse(LS.getItem(PRO_KEY)||"{}"); delete p.pro; LS.setItem(PRO_KEY, JSON.stringify(p)); setProUI();
+};
 
-function startAuto(){
-  AUTO=true;
-  $('#btnAuto').textContent='⏸ Auto-refresh';
-  TIMER = setInterval(refresh, 5000);
-}
-function stopAuto(){
-  AUTO=false;
-  $('#btnAuto').textContent='▶ Auto-refresh';
-  clearInterval(TIMER); TIMER=null;
-}
-
-function exportCSV(){
-  const rows = applyFilters(LAST_ITEMS);
-  if(!rows.length){ alert('Niente da esportare'); return; }
-  const header = ['ts_iso','ts','ip','style','lang','periodo','domanda','answer_chars','pro'];
-  const csv = [header.join(',')].concat(rows.map(it=>{
-    const ts = Number(it.ts||0);
-    const iso = new Date(ts).toISOString();
-    const line = [
-      iso,
-      ts,
-      (it.ip||'').replace(/,/g,' '),
-      it.style||'',
-      it.lang||'',
-      it.periodo||'',
-      `"${String(it.domanda||'').replace(/"/g,'""')}"`,
-      Number(it.answer_chars||0),
-      it.pro ? '1' : '0'
-    ];
-    return line.join(',');
-  })).join('\n');
-
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `whatif-logs-${Date.now()}.csv`;
-  document.body.appendChild(a); a.click();
-  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
-}
-
-/* wiring */
-$('#btnLogin').onclick = login;
-$('#btnLogout').onclick = ()=>{ logout(); render([], {total:0,style:{},lang:{},periodo:{}}); };
-$('#btnRefresh').onclick = refresh;
-$('#btnAuto').onclick = ()=> AUTO ? stopAuto() : startAuto();
-$('#btnExport').onclick = exportCSV;
-$('#btnProOn').onclick = ()=>{ togglePro(true); };
-$('#btnProOff').onclick = ()=>{ togglePro(false); };
-
-['#fStyle','#fLang','#fPeriodo','#fSearch'].forEach(sel=>{
-  $(sel).addEventListener('input', ()=> render(LAST_ITEMS, { total: LAST_ITEMS.length }));
+["filterStyle","filterLang","filterPeriod","searchQ"].forEach(id=>{
+  document.getElementById(id).addEventListener("input", ()=>document.getElementById("refreshBtn").click());
 });
 
-/* init */
+// init
+setAuthUI(!!LS.getItem(TOKEN_KEY));
 setProUI();
-setAuthUI(!!LS.getItem('admin_token'));
-refresh();
 </script>
 </body>
 </html>
