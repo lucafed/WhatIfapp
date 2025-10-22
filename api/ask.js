@@ -181,7 +181,7 @@ Parti convinto, “vita semplice”, e il primo giorno litighi con la sabbia che
       // nuove situazioni IT, stesso tono
       { role: "system", content:
 `ESEMPIO IT • E se tornassi in palestra?
-Entro tronfio e lo specchio fa finta di non riconoscerti, il tapis roulant ti denuncia per abbandono e la borraccia sospira “finalmente” con passivo-aggressività. Due flessioni, tre universi paralleli, i quadricipiti proclamano sciopero emotivo. Il trainer ti guarda come un antivirus scaduto ma ti salva la dignità con un cinque basso. Torni a casa tremando di endorfina low-cost e firmi pace con il corpo: oggi non sei una statua, ma almeno non sei un soprammobile.` },
+Entrasti tronfio e lo specchio fece finta di non riconoscerti, il tapis roulant ti denunciò per abbandono e la borraccia sospirò “finalmente” con passivo-aggressività. Due flessioni, tre universi paralleli, i quadricipiti proclamarono sciopero emotivo. Il trainer ti guardò come un antivirus scaduto ma salvò la dignità con un cinque basso. Tornasti a casa tremando di endorfina low-cost e firmasti pace col corpo: non eri una statua, ma almeno non un soprammobile.` },
 
       // ===== ENGLISH =====
       { role: "system", content:
@@ -189,10 +189,10 @@ Entro tronfio e lo specchio fa finta di non riconoscerti, il tapis roulant ti de
 You’d arrive like a reformatted hard drive and realize the wind still shuffles your settings. People greet you, luck does not, and the timeline feels paused by a petty god on coffee break. You declare “fresh start,” then end up clinking glasses with your cousin retelling the 2012 saga with longer sighs and fewer teeth. You get mad, get soft, make peace with asphalt and memory, then look at the lights and admit they cracked you but didn’t fold you. The night smells like vinyl and wood smoke, and you accept it: you’re a beautiful mess, and this town has a lifelong crush on beautiful messes.` },
       { role: "system", content:
 `EXAMPLE EN • What if I bought a motorcycle?
-You picture freedom chewing the horizon, then the helmet wrings your skull like a citrus press and the bike coughs at commitment. You roll out proud and get passed by a grandfather on a bicycle who breathes like a yoga app. You stall, mis-shift, park diagonally into shame, swear allegiance to caution, and reward yourself with a “tiny drink” that grows up fast. You ride home with adrenaline hiccups, fear on mute, and that dumb grin that smells like gasoline, panic, and a sip of glory.` },
+You pictured freedom chewing the horizon, then the helmet wrung your skull like a citrus press and the bike coughed at commitment. You rolled out proud and got passed by a grandfather on a bicycle who breathed like a yoga app. You stalled, mis-shifted, parked diagonally into shame, swore allegiance to caution, and rewarded yourself with a “tiny drink” that grew up fast. You rode home with adrenaline hiccups, fear on mute, and that dumb grin that smelled like gasoline, panic, and a sip of glory.` },
       { role: "system", content:
 `EXAMPLE EN • What if I started a business?
-You wake TED-brave and learn it takes stamps, rites, and three identical queues to sell water. Your business-plan PDF behaves like a lawyer on vacation: unreadable, unprintable, unimpressed. Suppliers vanish, customers pay in compliments, and your accountant blesses you with martyr eyes. At night you pop a “victory” bottle that turns out to be balsamic—painful, yes, but character-building for dignity. You laugh, because if chaos holds the majority, you’re still CEO of self-irony with guaranteed drink rights.` }
+You woke TED-brave and learned it took stamps, rites, and three identical queues to sell water. Your business-plan PDF behaved like a lawyer on vacation: unreadable, unprintable, unimpressed. Suppliers vanished, customers paid in compliments, and your accountant blessed you with martyr eyes. At night you popped a “victory” bottle that turned out to be balsamic—painful, yes, but character-building for dignity. You laughed, because if chaos held the majority, you were still CEO of self-irony with guaranteed drink rights.` }
     ];
 
     return { sys: SYS, fewshots: FEWSHOTS };
@@ -284,6 +284,14 @@ export default async function handler(req, res) {
     // system add-on per Passato/Futuro (senza cambiare la voce)
     const temporal = temporalSystem(periodo, lang, stile);
 
+    // Hint aggiuntivo per forzare davvero il passato nelle controfattuali WTF
+    let extraTemporalHint = "";
+    if (stile === "wtf" && String(periodo).toLowerCase() === "past") {
+      extraTemporalHint = isEn(lang)
+        ? "Write entirely in past or conditional tense, as if it already happened, keeping the same sarcastic tragicomic tone."
+        : "Scrivi tutto al passato o al condizionale, come se fosse già successo, mantenendo il tono sarcastico e tragicomico.";
+    }
+
     const userPrompt = isEn(lang)
       ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Keep the exact persona voice.`
       : `Domanda (NON ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Mantieni esattamente la voce della persona.`;
@@ -291,6 +299,7 @@ export default async function handler(req, res) {
     const messages = [
       { role: "system", content: sys },
       { role: "system", content: temporal }, // modalità passato/futuro
+      ...(extraTemporalHint ? [{ role: "system", content: extraTemporalHint }] : []),
       ...(fewshots || []),
       { role: "user", content: userPrompt }
     ];
@@ -315,6 +324,18 @@ export default async function handler(req, res) {
     answer = tightenSentences(answer, stile === "wtf" ? 8 : 11);
     answer = clampWords(answer, stile === "wtf" ? 150 : 155);
     answer = normalizeOneParagraph(answer);
+
+    // WHAT IF: assicurati che finisca con una spinta concreta "oggi"
+    if (stile === "whatif") {
+      const lastSentence = (answer.match(/[^.!?…]+[.!?…]/g) || []).slice(-1)[0] || "";
+      const last = lastSentence.trim().toLowerCase();
+      const hasNudge = /(oggi|adesso|ora|subito|puoi|potresti|fai|prova|inizia)/.test(last);
+      if (!hasNudge) {
+        answer += (isEn(lang)
+          ? " Today you could just take one small step toward it."
+          : " Oggi puoi solo fare un passo piccolo verso di lì.");
+      }
+    }
 
     if (!/[.!?…]$/.test(answer)) answer += ".";
 
