@@ -23,22 +23,6 @@
 </style>
 </head>
 <body>
-
-<!-- Gate: verifica token al load -->
-<script>
-  (async function guardAdmin(){
-    try{
-      const t = localStorage.getItem("admin_token");
-      if (!t) { location.href="index.html"; return; }
-      const r = await fetch("/api/admin-token", { method:"GET", headers:{ Authorization: "Bearer " + t }});
-      const data = await r.json();
-      if (!r.ok || !data?.ok) { localStorage.removeItem("admin_token"); location.href="index.html"; }
-    }catch{
-      location.href="index.html";
-    }
-  })();
-</script>
-
 <main>
   <h1>Admin · What?f</h1>
 
@@ -100,24 +84,27 @@
 
 <script>
 const LS = localStorage;
+const ADMIN_SECRET = "wtf-setup-2025";     // deve combaciare con l'API
 const TOKEN_KEY = "admin_token";
 const PRO_KEY = "whatif_prefs";
 
 function fmtDate(ts){
   const d = new Date(ts);
-  try { return d.toLocaleString(); } catch { return String(ts); }
+  return d.toLocaleString();
 }
 
 function setAuthUI(ok){
-  const el = document.getElementById("authState");
-  el.textContent = ok ? "Autenticato" : "Non autenticato";
-  el.style.background = ok ? "rgba(0,255,0,.08)" : "rgba(255,255,255,.06)";
+  document.getElementById("authState").textContent = ok ? "Autenticato" : "Non autenticato";
+  document.getElementById("authState").style.background = ok ? "rgba(0,255,0,.08)" : "rgba(255,255,255,.06)";
 }
 
 async function registerToken(pin){
   const r = await fetch("/api/admin-token",{
     method:"POST",
-    headers:{ "Content-Type":"application/json" },
+    headers:{
+      "Content-Type":"application/json",
+      "admin-secret": ADMIN_SECRET
+    },
     body: JSON.stringify({ pin })
   });
   const data = await r.json().catch(()=>({}));
@@ -189,10 +176,10 @@ document.getElementById("enterBtn").onclick = async ()=>{
     await registerToken(pin);
     setAuthUI(true);
     document.getElementById("refreshBtn").click();
-    document.getElementById("authHelp").textContent = "Token registrato sul tuo IP (valido ~24h).";
+    document.getElementById("authHelp").textContent = "Token registrato sul tuo IP (valido ~48h).";
   }catch(e){
     setAuthUI(false);
-    document.getElementById("authHelp").textContent = "PIN errato.";
+    document.getElementById("authHelp").textContent = "PIN errato o segreto mancante.";
   }
 };
 
@@ -221,6 +208,21 @@ document.getElementById("proOff").onclick = ()=>{
 ["filterStyle","filterLang","filterPeriod","searchQ"].forEach(id=>{
   document.getElementById(id).addEventListener("input", ()=>document.getElementById("refreshBtn").click());
 });
+
+// === Autocompilazione PIN passato dalla home ===
+(function(){
+  const pin = sessionStorage.getItem('pending_admin_pin');
+  if(!pin) return;
+  sessionStorage.removeItem('pending_admin_pin');
+  window.addEventListener('DOMContentLoaded', ()=>{
+    const pinEl = document.getElementById('pin');
+    const btn = document.getElementById('enterBtn');
+    if(pinEl && btn){
+      pinEl.value = pin;
+      btn.click();
+    }
+  });
+})();
 
 // init
 setAuthUI(!!LS.getItem(TOKEN_KEY));
