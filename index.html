@@ -182,15 +182,13 @@
     </div>
   </footer>
 
-  <!-- Hero robust loader (stesse dimensioni, caricamento affidabile) -->
+  <!-- Hero robust loader -->
   <script>
     (function loadHero(){
       const hero = document.getElementById('hero');
-
       const DIRS  = ["", "/public", "/assets", "/img", "/images"];
       const NAMES = ["home-hero.webp","home-hero.png","home_hero.webp","home_hero.png"];
-
-      const cacheBust = () => `?v=${Math.floor(Date.now()/60000)}`; // cambia ogni minuto
+      const cacheBust = () => `?v=${Math.floor(Date.now()/60000)}`;
 
       function trySrc(url){
         return new Promise(resolve=>{
@@ -208,21 +206,16 @@
           for (const name of NAMES){
             const url = `${dir}/${name}`.replace(/\/{2,}/g,"/");
             const ok  = await trySrc(url);
-            if (ok){
-              hero.src = ok;      // imposta solo quando è pronta (niente icona rotta)
-              hero.alt = "Porta luminosa What?f";
-              return;
-            }
+            if (ok){ hero.src = ok; hero.alt = "Porta luminosa What?f"; return; }
           }
         }
-        hero.style.display = "none"; // fallback silenzioso se non trovata
+        hero.style.display = "none";
       })();
     })();
   </script>
 
   <!-- i18n + theme + selections -->
   <script>
-    // Applica tema da prefs all'avvio
     (function initTheme(){
       try{
         const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
@@ -264,7 +257,6 @@
         if (d[k]) el.textContent = d[k];
       });
       $('#leadText').innerHTML = d.lead;
-      // aggiorna attivi nel menu lingua
       document.querySelectorAll('#langMenu button').forEach(b=>{
         b.classList.toggle('active', b.dataset.lang === L);
       });
@@ -273,25 +265,6 @@
     if(!LS.getItem('lang')) LS.setItem('lang','it');
     applyLang();
 
-    // widget lingua
-    const fab  = $('#langFab');
-    const btn  = $('#langToggle');
-    const menu = $('#langMenu');
-    btn.addEventListener('click', ()=>{
-      const open = menu.style.display === 'block';
-      menu.style.display = open ? 'none' : 'block';
-      btn.setAttribute('aria-expanded', String(!open));
-    });
-    menu.addEventListener('click', e=>{
-      const b = e.target.closest('button[data-lang]'); if(!b) return;
-      setLang(b.dataset.lang);
-      menu.style.display='none';
-    });
-    document.addEventListener('click', e=>{
-      if(!fab.contains(e.target)) menu.style.display='none';
-    });
-
-    // Logica selezioni + CTA (salva {periodo, stile} per le pagine successive / API)
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
     const go    = document.getElementById('go');
 
@@ -330,116 +303,73 @@
       if(go.disabled) return;
       location.href = 'second.html';
     });
+  </script>
 
-    /* ===== Admin segreto: 3 TAP → LONG PRESS (>=1.2s) → 5 TAP, poi PIN ===== */
+  <!-- Admin segreto: 3 tap sul titolo + 5 tap su "Passato" -->
+  <script>
     (function(){
-      const target = document.getElementById('appTitle') || document.querySelector('h1') || document.body;
+      const title = document.getElementById('appTitle') || document.querySelector('h1');
+      const pastBtn = document.querySelector('button[data-val="past"]');
 
-      const TAPS1_REQUIRED = 3;
-      const TAPS1_WINDOW_MS = 1200;
-      const LONG_PRESS_MIN_MS = 1200;
-      const LONG_PRESS_MAX_GAP_MS = 2500;
-      const TAPS2_REQUIRED = 5;
-      const TAPS2_WINDOW_MS = 1800;
+      if(!title || !pastBtn) return;
 
-      let phase = 0; // 0 idle, 1=taps1, 2=long-press, 3=taps2
-      let taps1 = 0, taps2 = 0;
-      let taps1Timer = null, taps2Timer = null, longPressTimer = null, longPressArmed = false;
-      let lastPhaseTs = 0;
+      let tapTitle = 0;
+      let tapPast = 0;
+      let stage = 0; // 0 = non iniziato, 1 = attesa 5 tap su "Passato"
+      let timer = null;
 
       function resetAll(){
-        phase = 0; taps1 = 0; taps2 = 0; lastPhaseTs = 0;
-        clearTimeout(taps1Timer); clearTimeout(taps2Timer); clearTimeout(longPressTimer);
-        taps1Timer = taps2Timer = longPressTimer = null;
-        longPressArmed = false;
+        tapTitle = 0; tapPast = 0; stage = 0;
+        if(timer) clearTimeout(timer);
+        timer = null;
+        pastBtn.classList.remove("unlocking");
       }
 
-      async function askPinAndLogin(){
-        const pin = prompt("Inserisci PIN amministratore:");
-        if (!pin) { resetAll(); return; }
-        try{
-          const r = await fetch("/api/admin-token", {
-            method: "POST",
-            headers: { "Content-Type":"application/json" },
-            body: JSON.stringify({ pin })
-          });
-          const data = await r.json();
-          if (!r.ok || !data?.ok) {
-            alert("PIN errato.");
-            resetAll();
-            return;
-          }
-          localStorage.setItem("admin_token", data.token);
-          location.href = "admin.html";
-        }catch{
-          alert("Errore server. Riprova.");
-          resetAll();
-        }
+      function flashScreen(){
+        const flash = document.createElement("div");
+        flash.style.position="fixed";
+        flash.style.inset="0";
+        flash.style.background="rgba(255,255,255,0.05)";
+        flash.style.backdropFilter="blur(2px)";
+        flash.style.transition="opacity .6s ease";
+        flash.style.opacity="1";
+        flash.style.zIndex="9999";
+        document.body.appendChild(flash);
+        setTimeout(()=>flash.style.opacity="0",150);
+        setTimeout(()=>flash.remove(),800);
       }
 
-      function handleTap(){
-        const now = Date.now();
-
-        if (phase === 0) {
-          phase = 1; taps1 = 1; lastPhaseTs = now;
-          clearTimeout(taps1Timer);
-          taps1Timer = setTimeout(resetAll, TAPS1_WINDOW_MS);
-          return;
-        }
-
-        if (phase === 1) {
-          taps1++;
-          if (taps1 >= TAPS1_REQUIRED) {
-            clearTimeout(taps1Timer);
-            phase = 2;
-            lastPhaseTs = now;
-            setTimeout(()=>{
-              if (phase === 2 && !longPressArmed) resetAll();
-            }, LONG_PRESS_MAX_GAP_MS);
-          }
-          return;
-        }
-
-        if (phase === 3) {
-          taps2++;
-          if (taps2 === 1) {
-            clearTimeout(taps2Timer);
-            taps2Timer = setTimeout(resetAll, TAPS2_WINDOW_MS);
-          }
-          if (taps2 >= TAPS2_REQUIRED) {
-            clearTimeout(taps2Timer);
-            askPinAndLogin();
-          }
-          return;
-        }
+      function success(){
+        resetAll();
+        const pin = prompt("PIN amministratore:");
+        if(!pin) return;
+        try{ sessionStorage.setItem("pending_admin_pin", pin); }catch{}
+        location.href = "admin.html";
       }
 
-      function onPointerDown(){
-        if (phase !== 2) return;
-        longPressArmed = true;
-        clearTimeout(longPressTimer);
-        longPressTimer = setTimeout(()=>{
-          if (phase === 2) {
-            phase = 3; taps2 = 0; lastPhaseTs = Date.now();
-          }
-        }, LONG_PRESS_MIN_MS);
-      }
+      title.addEventListener('click', ()=>{
+        tapTitle++;
+        if(timer) clearTimeout(timer);
+        timer = setTimeout(resetAll, 2000);
 
-      function onPointerUp(){
-        if (phase !== 2) return;
-        clearTimeout(longPressTimer);
-        if (Date.now() - lastPhaseTs < LONG_PRESS_MIN_MS) {
-          resetAll();
+        if(tapTitle >= 3){
+          stage = 1;
+          tapTitle = 0;
+          flashScreen();
+          // feedback sul bottone "Passato"
+          pastBtn.classList.add("unlocking");
+          pastBtn.style.boxShadow = "0 0 0 2px rgba(255,255,255,.15) inset, 0 0 22px rgba(255,255,255,.12)";
+          setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); }, 2500);
         }
-      }
+      });
 
-      target.addEventListener('click', handleTap, { passive: true });
-      target.addEventListener('pointerdown', onPointerDown);
-      target.addEventListener('pointerup', onPointerUp);
-      target.addEventListener('pointercancel', ()=>{ if (phase===2) resetAll(); });
-
-      window.addEventListener('blur', resetAll);
-      window.addEventListener('beforeunload', resetAll);
+      pastBtn.addEventListener('click', ()=>{
+        if(stage !== 1) return;
+        tapPast++;
+        if(timer) clearTimeout(timer);
+        timer = setTimeout(resetAll, 2500);
+        if(tapPast >= 5){ success(); }
+      });
     })();
   </script>
 
