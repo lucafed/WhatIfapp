@@ -8,7 +8,7 @@
 <style>
   :root{--bg:#0B0B0C;--card:#13191E;--fg:#EAF2EE;--muted:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01}
   body{margin:0;background:radial-gradient(900px 700px at 20% 18%,#101414 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:900px;margin:auto;padding:18px}
+  main{max-width:980px;margin:auto;padding:18px}
   h1{margin:4px 0 12px}
   .card{background:var(--card);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:14px;margin:12px 0}
   .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -26,9 +26,10 @@
 <main>
   <h1>Admin · What?f</h1>
 
+  <!-- Accesso -->
   <div class="card">
     <h3>Accesso</h3>
-    <p class="muted">Il PIN genera il token admin legato al tuo IP.</p>
+    <p class="muted">Il PIN genera il token admin legato al tuo IP (~48h). Deve combaciare con l’API.</p>
     <div class="row">
       <input id="pin" type="password" inputmode="numeric" placeholder="PIN segreto" style="min-width:180px"/>
       <button class="primary" id="enterBtn">Entra</button>
@@ -38,15 +39,19 @@
     <p class="muted" id="authHelp"></p>
   </div>
 
+  <!-- Operazioni veloci -->
   <div class="card">
-    <h3>Modalità PRO (bypass limiti client)</h3>
+    <h3>Operazioni veloci</h3>
     <div class="row">
-      <button class="ghost" id="proOn">Attiva PRO</button>
-      <button class="ghost" id="proOff">Disattiva PRO</button>
-      <span id="proState" class="badge">PRO inattivo</span>
+      <button class="primary" id="resetBtn">🔄 Reset crediti (oggi)</button>
+      <button class="ghost" id="proOn">⭐ Attiva PRO (solo questo device)</button>
+      <button class="ghost" id="proOff">☆ Disattiva PRO</button>
+      <button class="ghost" id="clearLogsBtn">🗑️ Svuota log</button>
     </div>
+    <p class="muted">Stato PRO locale: <span id="proState" class="badge">—</span></p>
   </div>
 
+  <!-- Log & Statistiche -->
   <div class="card">
     <div class="row" style="justify-content:space-between">
       <h3 style="margin:0">Log & Statistiche</h3>
@@ -83,28 +88,32 @@
 </main>
 
 <script>
+/* ===== Costanti ===== */
 const LS = localStorage;
-const ADMIN_SECRET = "wtf-setup-2025";     // deve combaciare con l'API
+const ADMIN_SECRET = "wtf-setup-2025";  // deve combaciare con /api/admin-token.js
 const TOKEN_KEY = "admin_token";
-const PRO_KEY = "whatif_prefs";
+const PRO_PREFS_KEY = "whatif_prefs";
 
-function fmtDate(ts){
-  const d = new Date(ts);
-  return d.toLocaleString();
-}
-
+/* ===== UI helpers ===== */
+function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(); }
 function setAuthUI(ok){
-  document.getElementById("authState").textContent = ok ? "Autenticato" : "Non autenticato";
-  document.getElementById("authState").style.background = ok ? "rgba(0,255,0,.08)" : "rgba(255,255,255,.06)";
+  const el = document.getElementById("authState");
+  el.textContent = ok ? "Autenticato" : "Non autenticato";
+  el.style.background = ok ? "rgba(0,255,0,.08)" : "rgba(255,255,255,.06)";
+}
+function setProUI(){
+  try{
+    const prefs = JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}");
+    const active = prefs.pro === true;
+    document.getElementById("proState").textContent = active ? "PRO attivo su questo device" : "PRO non attivo";
+  }catch{}
 }
 
+/* ===== API helpers ===== */
 async function registerToken(pin){
   const r = await fetch("/api/admin-token",{
     method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "admin-secret": ADMIN_SECRET
-    },
+    headers:{ "Content-Type":"application/json", "admin-secret": ADMIN_SECRET },
     body: JSON.stringify({ pin })
   });
   const data = await r.json().catch(()=>({}));
@@ -124,6 +133,21 @@ async function fetchLogs(){
   return data;
 }
 
+async function resetCredits(){
+  const token = LS.getItem(TOKEN_KEY)||"";
+  const r = await fetch("/api/reset", { method:"POST", headers:{ "x-admin-token": token } });
+  if(!r.ok) {
+    const d = await r.json().catch(()=>({}));
+    throw new Error(d.error||"reset_failed");
+  }
+  // ripulisci anche i crediti locali del device admin
+  const today = new Date().toISOString().slice(0,10);
+  let c = JSON.parse(LS.getItem('whatif_credits')||'{"date":"'+today+'","used":0}');
+  c.date=today; c.used=0; LS.setItem('whatif_credits', JSON.stringify(c));
+  alert("Crediti di oggi azzerati.");
+}
+
+/* ===== Render ===== */
 function renderLogs(data){
   const tbody = document.querySelector("#logsTbl tbody");
   tbody.innerHTML = "";
@@ -151,6 +175,7 @@ function renderLogs(data){
   document.getElementById("stats").textContent = txt;
 }
 
+/* ===== Eventi ===== */
 let autoTimer = null;
 document.getElementById("autoBtn").onclick = ()=>{
   if(autoTimer){ clearInterval(autoTimer); autoTimer=null; document.getElementById("autoBtn").textContent="Auto-refresh"; return; }
@@ -190,41 +215,29 @@ document.getElementById("logoutBtn").onclick = ()=>{
   document.getElementById("stats").textContent = "—";
 };
 
-// PRO locale (influisce solo sul device corrente)
-function setProUI(){
-  try{
-    const prefs = JSON.parse(LS.getItem(PRO_KEY)||"{}");
-    const active = prefs.pro === true;
-    document.getElementById("proState").textContent = active ? "PRO attivo su questo device" : "PRO inattivo";
-  }catch{}
-}
+document.getElementById("resetBtn").onclick = async ()=>{
+  try{ await resetCredits(); }catch(e){ alert("Errore reset: "+e.message); }
+};
+
 document.getElementById("proOn").onclick = ()=>{
-  const p = JSON.parse(LS.getItem(PRO_KEY)||"{}"); p.pro = true; LS.setItem(PRO_KEY, JSON.stringify(p)); setProUI();
+  const p = JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}"); p.pro = true; LS.setItem(PRO_PREFS_KEY, JSON.stringify(p)); setProUI();
 };
 document.getElementById("proOff").onclick = ()=>{
-  const p = JSON.parse(LS.getItem(PRO_KEY)||"{}"); delete p.pro; LS.setItem(PRO_KEY, JSON.stringify(p)); setProUI();
+  const p = JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}"); delete p.pro; LS.setItem(PRO_PREFS_KEY, JSON.stringify(p)); setProUI();
 };
 
-["filterStyle","filterLang","filterPeriod","searchQ"].forEach(id=>{
-  document.getElementById(id).addEventListener("input", ()=>document.getElementById("refreshBtn").click());
-});
+document.getElementById("clearLogsBtn").onclick = async ()=>{
+  const token = LS.getItem(TOKEN_KEY)||"";
+  if(!token) return alert("Serve il login admin.");
+  if(!confirm("Sicuro di svuotare i log?")) return;
+  try{
+    const r = await fetch("/api/admin-logs", { method:"DELETE", headers:{ "x-admin-token": token }});
+    if(!r.ok) throw new Error((await r.json().catch(()=>({}))).error||"delete_failed");
+    alert("Log svuotati."); document.getElementById("refreshBtn").click();
+  }catch(e){ alert("Errore: "+e.message); }
+};
 
-// === Autocompilazione PIN passato dalla home ===
-(function(){
-  const pin = sessionStorage.getItem('pending_admin_pin');
-  if(!pin) return;
-  sessionStorage.removeItem('pending_admin_pin');
-  window.addEventListener('DOMContentLoaded', ()=>{
-    const pinEl = document.getElementById('pin');
-    const btn = document.getElementById('enterBtn');
-    if(pinEl && btn){
-      pinEl.value = pin;
-      btn.click();
-    }
-  });
-})();
-
-// init
+/* ===== Init ===== */
 setAuthUI(!!LS.getItem(TOKEN_KEY));
 setProUI();
 </script>
