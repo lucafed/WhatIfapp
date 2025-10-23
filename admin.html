@@ -6,7 +6,7 @@
 <title>What?f — Console Admin</title>
 <meta name="theme-color" content="#0B0B0C"/>
 <style>
-  :root{--bg:#0B0B0C;--card:#13191E;--fg:#EAF2EE;--muted:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01}
+  :root{--bg:#0B0B0C;--card:#13191E;--fg:#EAF2EE;--muted:#A0B2BA;--acc:#00E0FF;--acc2:#1AFFD5}
   body{margin:0;background:radial-gradient(900px 700px at 20% 18%,#101414 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
   main{max-width:980px;margin:auto;padding:18px}
   h1{margin:4px 0 12px;text-align:center;color:var(--acc)}
@@ -20,15 +20,20 @@
   th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:13px}
   .muted{color:var(--muted);font-size:12px}
   .badge{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:12px}
+  .statbox{display:flex;justify-content:space-around;text-align:center;margin-top:8px}
+  .stat{background:rgba(255,255,255,.06);border-radius:10px;padding:10px 14px;min-width:90px}
+  .stat h4{margin:0;font-size:13px;color:var(--muted)}
+  .stat div{font-size:20px;font-weight:800;margin-top:4px}
 </style>
 </head>
 <body>
 <main>
   <h1>What?f — Console Admin</h1>
 
+  <!-- 🔐 Accesso -->
   <div class="card">
     <h3>Accesso</h3>
-    <p class="muted">Inserisci il PIN per ottenere il token admin (valido ~48h, legato al tuo IP).</p>
+    <p class="muted">Inserisci il PIN per generare un token admin valido 48h, legato al tuo IP.</p>
     <div class="row">
       <input id="pin" type="password" placeholder="PIN segreto" style="min-width:180px"/>
       <button class="primary" id="enterBtn">Entra</button>
@@ -38,6 +43,7 @@
     <p class="muted" id="authHelp"></p>
   </div>
 
+  <!-- ⚙️ Operazioni -->
   <div class="card">
     <h3>Operazioni veloci</h3>
     <div class="row">
@@ -49,6 +55,18 @@
     <p class="muted">Stato PRO locale: <span id="proState" class="badge">—</span></p>
   </div>
 
+  <!-- 📊 Statistiche globali -->
+  <div class="card">
+    <h3>Statistiche globali</h3>
+    <div class="statbox">
+      <div class="stat"><h4>Totale</h4><div id="statTot">—</div></div>
+      <div class="stat"><h4>Oggi</h4><div id="statToday">—</div></div>
+      <div class="stat"><h4>Ultimi 7g</h4><div id="stat7">—</div></div>
+    </div>
+    <p class="muted" id="statErr"></p>
+  </div>
+
+  <!-- 🧠 Log -->
   <div class="card">
     <div class="row" style="justify-content:space-between">
       <h3 style="margin:0">Log & Statistiche</h3>
@@ -85,11 +103,7 @@
 </main>
 
 <script>
-const LS = localStorage;
-const TOKEN_KEY = "admin_token";
-const PRO_PREFS_KEY = "whatif_prefs";
-const ADMIN_SECRET = "wtf-setup-2025";
-
+const LS=localStorage,TOKEN_KEY="admin_token",PRO_PREFS_KEY="whatif_prefs",ADMIN_SECRET="wtf-setup-2025";
 function fmtDate(ts){const d=new Date(ts);return d.toLocaleString();}
 function setAuthUI(ok){const el=document.getElementById("authState");el.textContent=ok?"Autenticato":"Non autenticato";el.style.background=ok?"rgba(0,255,0,.08)":"rgba(255,255,255,.06)";}
 function setProUI(){try{const prefs=JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}");const active=prefs.pro===true;document.getElementById("proState").textContent=active?"PRO attivo":"PRO non attivo";}catch{}}
@@ -100,6 +114,16 @@ async function registerToken(pin){
   LS.setItem(TOKEN_KEY,data.token);return data.token;
 }
 
+async function fetchStats(){
+  const token=LS.getItem(TOKEN_KEY)||"";
+  const r=await fetch("/api/admin-stats",{headers:{"x-admin-token":token}});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok||!d.ok){document.getElementById("statErr").textContent="Impossibile leggere statistiche.";return;}
+  document.getElementById("statTot").textContent=d.total;
+  document.getElementById("statToday").textContent=d.today;
+  document.getElementById("stat7").textContent=d.last7;
+}
+
 async function fetchLogs(){
   const token=LS.getItem(TOKEN_KEY)||"";
   const r=await fetch(`/api/admin-logs?limit=200`,{headers:{"x-admin-token":token}});
@@ -107,43 +131,22 @@ async function fetchLogs(){
 }
 
 function renderLogs(data){
-  const tbody=document.querySelector("#logsTbl tbody");
-  tbody.innerHTML="";
-  const fStyle=document.getElementById("filterStyle").value;
-  const fLang=document.getElementById("filterLang").value;
-  const fPer=document.getElementById("filterPeriod").value;
-  const q=document.getElementById("searchQ").value.trim().toLowerCase();
-  const all=Array.isArray(data.items)?data.items:[];
-  const rows=all.filter(x=>{
-    if(fStyle&&x.style!==fStyle)return false;
-    if(fLang&&x.lang!==fLang)return false;
-    if(fPer&&x.periodo!==fPer)return false;
-    if(q&&!String(x.domanda||"").toLowerCase().includes(q))return false;
-    return true;
+  const tbody=document.querySelector("#logsTbl tbody");tbody.innerHTML="";
+  const fStyle=document.getElementById("filterStyle").value,fLang=document.getElementById("filterLang").value,fPer=document.getElementById("filterPeriod").value,q=document.getElementById("searchQ").value.trim().toLowerCase();
+  const all=Array.isArray(data.items)?data.items:[];const rows=all.filter(x=>{
+    if(fStyle&&x.style!==fStyle)return false;if(fLang&&x.lang!==fLang)return false;if(fPer&&x.periodo!==fPer)return false;if(q&&!String(x.domanda||"").toLowerCase().includes(q))return false;return true;
   });
-  for(const it of rows){
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${fmtDate(it.ts)}</td><td>${it.style}</td><td>${it.lang}</td><td>${it.periodo}</td><td>${(it.domanda||"").slice(0,160)}</td>`;
-    tbody.appendChild(tr);
-  }
-  const stats=data.stats||{};
-  document.getElementById("stats").textContent=`Totale: ${stats.total||rows.length} · Per stile: ${JSON.stringify(stats.style||{})} · Per lingua: ${JSON.stringify(stats.lang||{})} · Per tempo: ${JSON.stringify(stats.periodo||{})}`;
+  for(const it of rows){const tr=document.createElement("tr");tr.innerHTML=`<td>${fmtDate(it.ts)}</td><td>${it.style}</td><td>${it.lang}</td><td>${it.periodo}</td><td>${(it.domanda||"").slice(0,160)}</td>`;tbody.appendChild(tr);}
+  const s=data.stats||{};document.getElementById("stats").textContent=`Totale: ${s.total||rows.length} · Per stile: ${JSON.stringify(s.style||{})} · Per lingua: ${JSON.stringify(s.lang||{})} · Per tempo: ${JSON.stringify(s.periodo||{})}`;
 }
 
-document.getElementById("refreshBtn").onclick=async()=>{try{const data=await fetchLogs();setAuthUI(true);renderLogs(data);}catch(e){alert("Errore o token mancante.");setAuthUI(false);}};
+document.getElementById("refreshBtn").onclick=async()=>{try{await fetchStats();const data=await fetchLogs();setAuthUI(true);renderLogs(data);}catch(e){alert("Errore o token mancante.");setAuthUI(false);}};
 
-document.getElementById("enterBtn").onclick=async()=>{
-  const pin=document.getElementById("pin").value.trim();
-  if(!pin)return alert("Inserisci il PIN");
-  try{await registerToken(pin);setAuthUI(true);document.getElementById("refreshBtn").click();document.getElementById("authHelp").textContent="Token registrato.";}
-  catch(e){setAuthUI(false);document.getElementById("authHelp").textContent="PIN errato o segreto mancante.";}
-};
+document.getElementById("enterBtn").onclick=async()=>{const pin=document.getElementById("pin").value.trim();if(!pin)return alert("Inserisci il PIN");try{await registerToken(pin);setAuthUI(true);await fetchStats();document.getElementById("refreshBtn").click();document.getElementById("authHelp").textContent="Token registrato.";}catch(e){setAuthUI(false);document.getElementById("authHelp").textContent="PIN errato.";}};
 
 document.getElementById("logoutBtn").onclick=()=>{LS.removeItem(TOKEN_KEY);setAuthUI(false);document.querySelector("#logsTbl tbody").innerHTML="";document.getElementById("stats").textContent="—";};
 
-document.getElementById("clearLogsBtn").onclick=async()=>{
-  const token=LS.getItem(TOKEN_KEY)||"";if(!token)return alert("Serve login admin.");
-  if(!confirm("Sicuro di svuotare i log?"))return;
+document.getElementById("clearLogsBtn").onclick=async()=>{const token=LS.getItem(TOKEN_KEY)||"";if(!token)return alert("Serve login admin.");if(!confirm("Sicuro di svuotare i log?"))return;
   const r=await fetch("/api/admin-clear-logs",{method:"DELETE",headers:{"x-admin-token":token}});
   if(!r.ok)return alert("Errore cancellazione log.");alert("Log svuotati.");document.getElementById("refreshBtn").click();
 };
