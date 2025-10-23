@@ -36,7 +36,6 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
 .optset{display:flex;flex-wrap:wrap;gap:8px}
 .opt{background:var(--chip);border:1px solid var(--line);color:#EAF3EE;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer}
 .opt.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-.opt.kbd{font-family:ui-monospace, SFMono-Regular, Menlo, monospace}
 
 /* Toggles & lists */
 .toggle{cursor:pointer;user-select:none}
@@ -201,6 +200,7 @@ const I18N = {
     saved:"▶ Saved questions", stories:"▶ History",
     use:"Use", play:"▶", emptyNext:"— No saved questions.", emptyStories:"— No history.",
     clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear",
+    hints:"▶ Quick “What if…” ideas", hintsNote:"Click a hint to fill the question.",
     outOfCredits:"You’ve used today’s credits."
   }
 };
@@ -245,13 +245,6 @@ document.getElementById('tipNote').textContent=T.tip;
 document.getElementById('chipWhatIf').textContent=T.whatif;
 document.getElementById('chipWTF').textContent=T.wtf;
 document.getElementById('langBtn').textContent=lang.toUpperCase();
-document.getElementById('microTitle').textContent   = T.microT;
-document.getElementById('microHint').textContent    = T.microHint;
-document.getElementById('saveMicroBtn').textContent = I18N[lang]?.microSaveBtn || I18N.it.microSaveBtn;
-document.getElementById('moodTitle').textContent    = I18N[lang]?.qMood || I18N.it.qMood;
-document.getElementById('anchorTitle').textContent  = I18N[lang]?.qAnchor || I18N.it.qAnchor;
-document.getElementById('decideTitle').textContent  = I18N[lang]?.qDecide || I18N.it.qDecide;
-document.getElementById('zodiacTitle').textContent  = I18N[lang]?.qZodiac || I18N.it.qZodiac;
 
 // style & period badges
 function renderBadges(){
