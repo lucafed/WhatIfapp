@@ -1,9 +1,4 @@
-// ============================
-// /api/admin-logs.js — elenco log What?f (per dashboard admin)
-// Autenticazione: header x-admin-token legato a IP (come /api/admin-token)
-// Query supportate: ?offset=0&limit=100&style=whatif|wtf|all&lang=it|en|all&periodo=past|future|all&q=testo
-// ============================
-
+// /api/admin-logs.js
 import { Redis } from "@upstash/redis";
 
 const redis = new Redis({
@@ -11,75 +6,66 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-function toInt(v, def) {
-  const n = parseInt(v, 10);
-  return Number.isFinite(n) && n >= 0 ? n : def;
+function cors(res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-token");
+}
+
+async function ipForToken(token) {
+  try { return await redis.get(`admin:token:${token}`); } catch { return null; }
 }
 
 export default async function handler(req, res) {
+  cors(res);
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "GET") return res.status(405).json({ error: "method_not_allowed" });
+  if (!["GET","DELETE"].includes(req.method))
+    return res.status(405).json({ ok:false, error:"method_not_allowed" });
 
   try {
-    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
-      .toString().split(",")[0].trim();
     const token = String(req.headers["x-admin-token"] || "").trim();
-    if (!token) return res.status(401).json({ error: "missing_token" });
+    if (!token) return res.status(401).json({ ok:false, error:"missing_admin_token" });
 
-    // auth: token -> ip
-    const boundIp = await redis.get(`admin:token:${token}`);
-    if (!boundIp || boundIp !== ip) {
-      return res.status(403).json({ error: "unauthorized" });
+    const ip = await ipForToken(token);
+    if (!ip) return res.status(403).json({ ok:false, error:"invalid_or_expired_token" });
+
+    if (req.method === "DELETE") {
+      // Svuota i log completamente (come fa la tua UI)
+      await redis.del("logs:ask");
+      return res.status(200).json({ ok:true, cleared:true });
     }
 
-    // query
-    const offset = toInt(req.query.offset, 0);
-    const limit  = Math.min(toInt(req.query.limit, 100), 500);
+    // GET — lista ultimi N
+    const limit = Math.max(1, Math.min(1000, parseInt(String(req.query.limit || "200"), 10) || 200));
+    const raw = await redis.lrange("logs:ask", 0, limit - 1);
 
-    const style   = String(req.query.style || "all").toLowerCase();
-    const lang    = String(req.query.lang || "all").toLowerCase();
-    const periodo = String(req.query.periodo || "all").toLowerCase();
-    const q       = String(req.query.q || "").toLowerCase().trim();
-
-    // prendi un blocco ampio (ultimi 2000) e filtra
-    const RAW_MAX = 2000;
-    const raws = await redis.lrange("logs:ask", 0, RAW_MAX - 1);
-
-    const all = [];
-    for (const r of raws) {
+    const items = [];
+    for (const r of raw || []) {
       try {
-        const o = typeof r === "string" ? JSON.parse(r) : r;
-        if (!o || !o.ts) continue;
-
-        // filtri
-        if (style !== "all"   && String(o.style || "").toLowerCase()   !== style) continue;
-        if (lang  !== "all"   && String(o.lang  || "").toLowerCase()    !== lang) continue;
-        if (periodo !== "all" && String(o.periodo || "").toLowerCase()  !== periodo) continue;
-        if (q && !String(o.domanda || "").toLowerCase().includes(q)) continue;
-
-        all.push({
-          ts: o.ts,
-          whenISO: new Date(o.ts).toISOString(),
-          ip: o.ip || "-",
-          style: o.style || "",
-          lang: o.lang || "",
-          periodo: o.periodo || "",
+        const o = JSON.parse(r);
+        items.push({
+          ts: o.ts || Date.now(),
+          ip: o.ip || "",
+          style: o.style || o.stile || "whatif",
+          lang: o.lang || "it",
+          periodo: o.periodo || "future",
           domanda: o.domanda || "",
           answer_chars: o.answer_chars || 0,
           pro: !!o.pro,
         });
-      } catch { /* skip corrotto */ }
+      } catch {}
     }
 
-    // ordinamento: più recenti prima
-    all.sort((a, b) => b.ts - a.ts);
+    const stats = { total: items.length, style: {}, lang: {}, periodo: {} };
+    for (const it of items) {
+      stats.style[it.style] = (stats.style[it.style] || 0) + 1;
+      stats.lang[it.lang] = (stats.lang[it.lang] || 0) + 1;
+      stats.periodo[it.periodo] = (stats.periodo[it.periodo] || 0) + 1;
+    }
 
-    const total = all.length;
-    const items = all.slice(offset, offset + limit);
-
-    return res.status(200).json({ ok: true, total, items });
-  } catch (err) {
-    console.error("❌ [/api/admin-logs] error:", err);
-    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
+    return res.status(200).json({ ok:true, items, stats });
+  } catch (e) {
+    console.error("admin-logs error:", e);
+    return res.status(500).json({ ok:false, error:"server_error" });
   }
 }
