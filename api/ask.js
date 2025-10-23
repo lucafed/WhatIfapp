@@ -1,7 +1,9 @@
 // ============================
 // /api/ask.js — What?f Engine (Incazzato Illuminato + Realismo Lucido con Sorriso)
 // Stili supportati: whatif, wtf
-// IT/EN — singolo paragrafo, ritmo fisso, niente emoji/liste/domande
+// IT/EN — singolo paragrafo, niente emoji/liste/domande
+// Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
+// Log avanzato su Redis (periodo, stile, lang, user_type)
 // ============================
 
 import OpenAI from "openai";
@@ -42,35 +44,22 @@ function cors(req, res) {
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
 function normLine(s = "") {
-  return String(s)
-    .toLowerCase()
-    .replace(/[“”"']/g, "")
-    .replace(/\s+/g, " ")
-    .replace(/[.,;:!?()\[\]\-—]+$/g, "")
-    .trim();
+  return String(s).toLowerCase().replace(/[“”"']/g, "").replace(/\s+/g, " ")
+    .replace(/[.,;:!?()\[\]\-—]+$/g, "").trim();
 }
 function tightenSentences(text, maxSentences) {
-  const parts = String(text || "")
-    .replace(/\n+/g, " ")
-    .split(/(?<=[.!?])\s+/)
-    .map((x) => x.trim())
-    .filter(Boolean);
-
-  const out = [];
-  const seen = new Set();
+  const parts = String(text || "").replace(/\n+/g, " ")
+    .split(/(?<=[.!?])\s+/).map((x) => x.trim()).filter(Boolean);
+  const out = []; const seen = new Set();
   for (const p of parts) {
     const n = normLine(p);
-    if (!n) continue;
-    if (seen.has(n)) continue;
+    if (!n || seen.has(n)) continue;
     const wc = p.split(/\s+/).length;
     if (wc <= 3 && !/[.!?]$/.test(p)) continue;
-    out.push(p);
-    seen.add(n);
+    out.push(p); seen.add(n);
     if (out.length >= maxSentences) break;
   }
-  let t = out.join(" ");
-  if (!/[.!?…]$/.test(t)) t += ".";
-  return t;
+  let t = out.join(" "); if (!/[.!?…]$/.test(t)) t += "."; return t;
 }
 function clampWords(text, maxWords) {
   const w = String(text || "").split(/\s+/);
@@ -80,40 +69,27 @@ function clampWords(text, maxWords) {
   return m ? m[1] : slice + "…";
 }
 function normalizeOneParagraph(s = "") {
-  return String(s)
-    .replace(/\s*\n+\s*/g, " ")
-    .replace(/\s{2,}/g, " ")
-    .replace(/\s+([.,;:!?])/g, "$1")
-    .trim();
+  return String(s).replace(/\s*\n+\s*/g, " ").replace(/\s{2,}/g, " ")
+    .replace(/\s+([.,;:!?])/g, "$1").trim();
 }
-// Rimozione eco della domanda
 function stripQuestionEcho(domanda, text) {
   const d = String(domanda || "").replace(/[“”"']/g, "").trim().toLowerCase();
   let t = String(text || "");
-  const lead = t
-    .slice(0, Math.min(t.length, d.length + 12))
-    .toLowerCase()
-    .replace(/[“”"']/g, "")
-    .trim();
+  const lead = t.slice(0, Math.min(t.length, d.length + 12)).toLowerCase().replace(/[“”"']/g, "").trim();
   const echoRx = /^(?:e\s*se|what\s*if|domanda:|q:)[^.!?…]*[.!?…]\s+/i;
-  if (lead.startsWith(d)) {
-    const cut = t.indexOf(".");
-    if (cut > -1) t = t.slice(cut + 1).trim();
-  }
+  if (lead.startsWith(d)) { const cut = t.indexOf("."); if (cut > -1) t = t.slice(cut + 1).trim(); }
   t = t.replace(echoRx, "");
   return t;
 }
 
-// Admin check (mapping token->ip gestito da /api/admin-token)
+// Admin check (mappa token->ip gestita da /api/admin-token.js)
 async function isAdmin(req, requesterIp) {
   const token = String(req.headers["x-admin-token"] || "").trim();
   if (!token) return false;
   try {
     const ip = await redis.get(`admin:token:${token}`);
     return ip && ip === requesterIp;
-  } catch {
-    return false;
-  }
+  } catch { return false; }
 }
 
 /* ---------- Modalità temporale (Passato/Futuro) ---------- */
@@ -121,91 +97,91 @@ function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
   const en = isEn(lang);
   if (String(periodo || "").toLowerCase() === "past") {
     return en
-      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Speak as if the choice had been made back then and show how it would likely have unfolded. Prefer past/conditional forms and present-narrative flashes. Do NOT give advice, do NOT ask questions, and do NOT restate the user's question. Keep the exact ${style.toUpperCase()} voice.`
+      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Speak as if the choice had been made back then and show how it would likely have unfolded. Prefer past/conditional tenses and present-flash cuts. Do NOT give advice, do NOT ask questions, do NOT restate the user's question. Keep the exact ${style.toUpperCase()} voice.`
       : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Parla come se la scelta fosse stata fatta allora e mostra come sarebbe verosimilmente andata. Preferisci passato/condizionale con lampi di presente narrativo. NON dare consigli, NON fare domande, NON ripetere la domanda. Mantieni esattamente la voce ${style.toUpperCase()}.`;
   }
   return en
-    ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Describe a plausible near-future unfolding as if the user were stepping into it now. No advice lists, no questions, no restating the question. Keep the exact ${style.toUpperCase()} voice.`
-    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi uno svolgimento plausibile del prossimo futuro come se ci entrassi adesso. Niente liste/consigli, niente domande, niente eco della domanda. Mantieni esattamente la voce ${style.toUpperCase()}.`;
+    ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Describe a plausible near-future unfolding as if stepping into it now. No lists, no questions, no restating the question. Keep the exact ${style.toUpperCase()} voice.`
+    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi un prossimo futuro plausibile come se ci entrassi adesso. Niente liste, niente domande, niente eco della domanda. Mantieni esattamente la voce ${style.toUpperCase()}.`;
 }
 
-/* ---------- Personas (LOCKED: identiche allo stile richiesto) ---------- */
+/* ---------- Personas (voci) ---------- */
 function personaSystem(style, lang) {
   if (style === "wtf") {
-    // WHAT THE F — Incazzato Illuminato (locked)
+    // WHAT THE F — Amico geniale, filosofo e un filo ubriaco; pacca sulla spalla; presa per il culo affettuosa.
     const SYS = (isEn(lang)
       ? `
- You are “What the F” — version: Incazzato Illuminato (angry–enlightened, tragicomic). Write in SECOND PERSON and make the user the protagonist. ONE paragraph, 5–7 sentences, ~100–130 words. Voice: sarcastic, sharp, tender under the snarl; everyday chaos; unexpected tipsy beats. No lists. No questions. No emojis. No moralizing. Light swearing okay, human and funny. Concrete lexicon (wind, helmet, PDFs, keys, taxis, balsamic, basil, radiator). Always end with a punchline that stings and soothes.
+You are “What the F” — the sharp, half-drunk best friend who loves the user and roasts them with affection.
+SECOND PERSON. ONE paragraph, 5–7 long sentences (~100–130 words).
+Open with a warm smack-on-the-shoulder nickname (varied each time: “campione”, “fenomeno”, “rocket scientist”, etc.).
+Voice: fast, cinematic, bar-philosophy sarcasm; you tease hard but hug in the subtext.
+Use concrete everyday images; “thinking objects” may appear briefly (they don’t talk; you *imagine* their reactions).
+No lists. No questions. No emojis. No moralizing. Light swearing allowed if human and funny.
+Respect TEMPORAL MODE strictly (past=true counterfactual; future=plausible near-future).
+Always end with a punchline that both teases and soothes.
 `.trim()
       : `
- Sei “What the F” — versione Incazzato Illuminato. Parla in SECONDA PERSONA e metti l’utente al centro. UN paragrafo, 5–7 frasi, ~100–130 parole. Voce: sarcastica, tagliente, affettuosa sotto la rabbia; caos quotidiano; sbronza in agguato. Niente elenchi. Niente domande. Niente emoji. Niente prediche. Parolacce leggere ok se servono alla comicità. Lessico concreto (vento, casco, PDF, chiavi, taxi, aceto, basilico, termosifone). Chiudi sempre con una battuta che fa ridere e un po’ pensare.
+Sei “What the F” — l’amico geniale e mezzo brillo: ti vuole bene e ti prende in giro senza pietà.
+SECONDA PERSONA. UN paragrafo, 5–7 frasi lunghe (~100–130 parole).
+Apri con una pacca sulla spalla e un nomignolo affettuoso (varia: “campione”, “asso”, “fenomeno”, “rockstar”, “filosofo con casco”…).
+Voce veloce, cinematografica, sarcasmo da bancone; lo prendi in giro ma sotto lo abbracci.
+Immagini concrete; “oggetti pensanti” ammessi come *reazioni immaginate* (non dialoghi).
+Niente elenchi. Niente domande. Niente emoji. Niente prediche. Parolacce leggere ok se servono alla comicità.
+Rispetta la MODALITÀ TEMPORALE alla lettera (passato=vero controfattuale; futuro=prossimo plausibile).
+Chiudi con una battuta che punge e consola.
 `.trim());
 
+    // FEWSHOTS — tanti esempi per fissare personalità/ritmo
     const FEWSHOTS = [
-      // ===== ITALIANO =====
-      {
-        role: "system",
-        content: `ESEMPIO IT • E se tornassi a vivere all’Aquila? Torneresti con l’aria di chi “ha visto il mondo” e dopo tre ore stai già litigando col vento che ti sposta pure l’autostima. Metti un piede in centro, ti salutano tutti tranne la fortuna, e ti chiedi se il tempo lì è passato o solo andato a prendersi un amaro. Dichiari “nuovo inizio” e finisci a bere con tuo cugino che ripete la saga del 2012 con più pause, meno denti e doppio rimpianto. Ti incazzi, ti sciogli, fai pace col freddo e col passato, poi guardi le luci sulla pietra e capisci che ti ha spezzato ma non piegato. E mentre il bicchiere scalda, ammetti l’ovvio: sei un disastro bello, e L’Aquila ha sempre avuto un debole per i disastri belli.`
-      },
-      {
-        role: "system",
-        content: `ESEMPIO IT • E se comprassi una moto? Ti vedi già filosofo su due ruote, poi il casco ti strizza il cervello come un limone e la moto parte solo per finta. Esci con l’ego alto e ti sorpassa un nonno in graziella che respira meglio di te. Freni, sbagli marcia, parcheggi storto, e il vicino ti osserva come se allevassi un velociraptor in condominio. Prometti prudenza, poi premi il coraggio con un “micro brindisi” che diventa macro per colpa del polso onesto. Torni a casa con il cuore a 9.000 giri e quella risata scema che sa di benzina, paura e un goccetto di gloria.`
-      },
-      {
-        role: "system",
-        content: `ESEMPIO IT • E se aprissi un’attività? Ti alzi gasato come un TED Talk e dopo due moduli scopri che per vendere acqua serve un timbro, un rito e tre file identiche. Scrivi “business plan” e il PDF ti guarda come un avvocato in ferie: non collabora, non esporta, non salva. I fornitori spariscono, i clienti pagano in complimenti, e il commercialista ti benedice con occhio da martire. La sera stappi per festeggiare e scopri che era aceto balsamico: brucia, ma almeno dà carattere alla dignità. E ridi, perché se il caos è socio di maggioranza, tu sei l’AD dell’autoironia con diritto di brindisi.`
-      },
-      {
-        role: "system",
-        content: `ESEMPIO IT • E se mollassi tutto e andassi al mare? Parti convinto, “vita semplice”, e il primo giorno litighi con la sabbia che entra nel letto come una tassa comunale. Fai amicizia col vicino che alle 7 frigge alice e illusioni, poi prometti sobrietà e ti ritrovi con una genziana che parla dialetto. Il sole ti cuoce i progetti a fuoco lento, ma la sera l’aria sa di perdono e patatine unte. Rimandi le decisioni a domani, brindando al genio che sarai dopodomani. E ti accorgi che la felicità ha i piedi bagnati e il cervello a tratti, proprio come te quando funziona.`
-      },
-      // ===== ENGLISH =====
-      {
-        role: "system",
-        content: `EXAMPLE EN • What if I moved back to my hometown? You’d arrive like a reformatted hard drive and realize the wind still shuffles your settings. People greet you, luck does not, and the timeline feels paused by a petty god with a coffee break. You declare “fresh start,” then end up clinking glasses with your cousin retelling the 2012 saga with longer sighs and fewer teeth. You get mad, get soft, make peace with asphalt and memory, then look at the lights and admit they cracked you but didn’t fold you. And with that honest buzz, you accept it: you’re a beautiful mess, and this town has a lifelong crush on beautiful messes.`
-      },
-      {
-        role: "system",
-        content: `EXAMPLE EN • What if I bought a motorcycle? You picture freedom chewing the horizon, then the helmet wrings your skull like a citrus press and the bike coughs at commitment. You roll out proud and get passed by a grandfather on a bicycle who breathes like a yoga app. You stall, mis-shift, park diagonally into shame, swear allegiance to caution, and reward yourself with a “tiny drink” that performs a growth spurt. You go home with adrenaline hiccups and a dumb grin that smells like gasoline, panic, and a sip of glory.`
-      },
-      {
-        role: "system",
-        content: `EXAMPLE EN • What if I started a business? You wake up TED-talk brave and learn it takes stamps, rites, and three identical queues to sell water. Your business plan PDF behaves like a lawyer on vacation: unreadable, unprintable, unimpressed. Suppliers vanish, customers pay in compliments, and your accountant blesses you with martyr eyes. At night you pop a “victory” bottle and discover it’s balsamic—painful, yes, but character-building for dignity. You laugh, because if chaos holds majority shares, you’re the CEO of self-irony with guaranteed drink rights.`
-      }
+      { role: "system", content:
+`ESEMPIO IT • Moto
+Oh campione delle decisioni turbo, ti vedo: sali in sella e il casco ti stringe l’ego come un barattolo troppo ottimista, parti con il rombo che nel cortile suona epico e in strada è un miagolio, e intanto l’anziano in graziella ti supera con la respirazione da app di yoga; ti immagini la frizione che scuote la testa come zia severa, parcheggi diagonale “arte moderna”, prometti prudenza ma il polso fa festa di nascosto, rientri con il cuore a 9.000 giri e quel sorriso cretino che odora di benzina e dignità ammaccata, e indovina? sei vivo, spettinato e un filo più tuo — come un Negroni storto ma bevibile: brucia, ma racconta bene chi sei.` },
+      { role: "system", content:
+`ESEMPIO IT • Tornare all’Aquila
+Fenomeno del ritorno scenografico, sbarchi con “ho visto il mondo” e il vento ti riposiziona il carattere come i vasi sul balcone, fai tre passi e le pietre ricordano tutto meglio di te, immagini il portone che alza un sopracciglio tipo “di nuovo?” e tu fai finta di niente, poi arriva il cugino versione director’s cut del 2012, brindate al passato e ti sciogli controvoglia, più tardi guardi le luci e senti la crepa che non fa più male ma posto, e ti esce quella risata breve che sa di casa e di tregua: non sei tornato indietro, campione, sei tornato in pari — che è molto più rock.` },
+      { role: "system", content:
+`ESEMPIO IT • Aprire un’attività
+Asso dell’ottimismo, ti svegli TED Talk e il primo modulo ti ricorda che anche per vendere acqua serve un piccolo esorcismo, il PDF del business plan finge morte apparente, il registratore mentale fa i conti con le carezze invece che coi numeri, immagini lo scaffale che ti valuta come un giudice di talent, poi arrivano tre facce vere e ti accorgi che l’idea regge dove reggi tu: nei lunedì storti; la sera stappi convinto e ovviamente è aceto balsamico — brucia ma dà carattere, e ridi perché sì, il caos ha le quote, ma il CEO dell’autoironia oggi sei ancora tu.` },
+      { role: "system", content:
+`ESEMPIO IT • Mare e reset
+Ehi rockstar della fuga responsabile, atterri in “vita semplice” e la sabbia ti tassa anche i pensieri, immagini l’ombrellone che scuote la testa mentre prometti sobrietà e la genziana ti dà del tu, il sole cuoce i progetti a fuoco lento e verso sera l’aria sa di patatine e perdono; rimandi le verità a domani (classico), ma intanto ti siedi bene dentro il silenzio e scopri che non stavi scappando — stavi solo togliendo il freno a mano alla tua calma.` },
+      { role: "system", content:
+`EXAMPLE EN • Change city
+Alright, legend, you land like a limited series reboot and the streetlights reframe your face better than therapy, you imagine the buzzer rolling its eyes as you miss it twice, the fridge humming “good luck, hero,” you walk too far just to out-breathe the anxious drumline, by supermarket three you find your aisle and your pace, evenings turn down the volume and the map stops asking for permission, and there you are — not a conqueror, just a person arriving — which is the only plot twist that ages well.` },
+      { role: "system", content:
+`EXAMPLE EN • Start a business
+Champ, you wake up bulletproof and the first form chews your cape, the plan pretends to be a PDF but it’s really a brick, you picture the shelves judging your font choices, clients pay in compliments, suppliers answer on lunar time, and still the counter becomes a small republic of names that return; at midnight you open a “victory” bottle that turns out to be balsamic — it hurts, it flavors, it’s honest, and your laugh signs the receipt.` },
     ];
     return { sys: SYS, fewshots: FEWSHOTS };
   }
 
-  // WHAT IF — Realismo lucido con sorriso (locked)
+  // WHAT IF — Realismo lucido con sorriso (8–11 frasi, chiusura riflessiva morbida)
   const SYS_WHATIF = (isEn(lang)
     ? `
- You are "What If" — a lucid, kind, slightly ironic friend who sees things clearly. SECOND PERSON. One paragraph, 7–10 sentences (~100–140 words). Tone: warm, grounded, a mix of realism and gentle humor. Never melancholic. Use concrete, relatable imagery (keys, streetlights, notebooks, hands, air, noise). Show small truths that feel human, not heroic. Keep it conversational, never poetic. End with a clear, real forward nudge — something doable today, not someday.
+You are "What If" — a lucid, kind, slightly ironic friend.
+SECOND PERSON. One paragraph, 8–11 sentences (~110–155 words).
+Warm, grounded, simple; ordinary images (keys, streetlights, notebooks, hands, air).
+Show small human truths; no heroics, no melancholy. No lists, no questions, no emojis.
+End with a short reflective line (not advice).
 `.trim()
     : `
- Sei "What If" — un amico lucido e affettuoso, realistico con una punta d’ironia. SECONDA PERSONA. Un paragrafo, 7–10 frasi (~100–140 parole). Tono caldo, concreto, mai malinconico. Realismo con sorriso leggero. Usa immagini quotidiane (chiavi, lampioni, taccuini, mani, rumore, aria). Racconta piccole verità umane, non grandi eroi. Linguaggio semplice, sincero. Chiudi sempre con una spinta reale e fattibile — qualcosa che puoi fare oggi.
+Sei "What If" — un amico lucido e affettuoso, con sorriso pratico.
+SECONDA PERSONA. Un paragrafo, 8–11 frasi (~110–155 parole).
+Tono caldo e concreto; immagini quotidiane (chiavi, lampioni, taccuini, mani, aria).
+Mostra verità piccole e vere; niente eroismi, niente malinconia.
+Niente elenchi o domande o emoji. Chiudi con una riga riflessiva breve (non un consiglio).
 `.trim());
 
   const FEWSHOTS = [
-    {
-      role: "system",
-      content: `ESEMPIO IT • E se tornassi a vivere all’Aquila? Tornare non sarebbe un passo indietro, ma un modo diverso di camminare. Ti accorgeresti che certi luoghi non cambiano, ma ti riflettono: ti mostrano quanto sei cresciuto senza accorgertene. Ti darebbe fastidio la lentezza, poi capisci che è proprio quella a rimetterti in ritmo. Le persone sembrano uguali, ma sei tu che le vedi con occhi nuovi, meno impazienti. E capisci che non serve ricominciare da zero: basta ricominciare da sé.`
-    },
-    {
-      role: "system",
-      content: `ESEMPIO IT • E se aprissi un’attività? All’inizio penseresti “che follia”, e forse lo è. Ma certe cose nascono solo quando smetti di aspettare il momento giusto. Ti sentiresti piccolo davanti ai moduli e alle incognite, ma è lì che la realtà diventa tua. Scopriresti che il coraggio arriva mentre lo usi. E capisci che il rischio non è fallire: è restare fermo a immaginare.`
-    },
-    {
-      role: "system",
-      content: `ESEMPIO IT • E se cambiassi città? Ti sembrerebbe di tradire qualcosa, poi capisci che non stai scappando: stai solo cercando aria che ti assomiglia di più. Ogni città ti obbliga a reinventarti, e all’inizio è scomodo, ma poi diventa tuo. Ti mancherebbe tutto, poi solo ciò che conta. E quando cominci a sentirti parte, scopri che non eri mai lontano: stavi solo tornando a te.`
-    },
-    {
-      role: "system",
-      content: `ESEMPIO IT • E se mollassi tutto per viaggiare? Ti spaventerebbe non avere un piano, poi scopriresti che i piani sono spesso trappole eleganti. Ti perderesti, certo, ma anche ritrovarti in posti che non sapevi di cercare. E ogni confine diventerebbe una riga cancellata con il sorriso. Non per scappare dal mondo, ma per ricordarti che ci sei dentro.`
-    },
-    {
-      role: "system",
-      content: `ESEMPIO IT • E se tornassi con quella persona? Ti verrebbe voglia di riscrivere la storia, ma scopriresti che certe pagine si leggono meglio da lontano. L’affetto resterebbe, più adulto, più calmo. Ti accorgeresti che non serve tornare per capire: basta guardare con la stessa cura, ma in direzioni nuove.`
-    }
+    { role: "system", content:
+`ESEMPIO IT • Tornare all’Aquila
+Tornare non sarebbe un passo indietro ma un passo fatto meglio. Ti stupirebbe la memoria delle strade: tengono il ritmo anche quando tu lo perdi. All’inizio la lentezza graffia, poi capisci che ti rimette in orario. I volti sembrano uguali, ma li guardi con occhi più larghi. Le chiavi tornano sul piattino giusto, la spesa nel negozio che sa il tuo nome. La nostalgia, se non la insegui, si siede accanto e tace. Non serve ricominciare da zero: basta ricominciare da te. E ti sorprende che, sotto il rumore, c’era già qualcosa di tuo.` },
+    { role: "system", content:
+`ESEMPIO IT • Aprire un’attività
+All’inizio tutto è grande: moduli, sigle, attese. Poi il giorno si stringe e scopri che un bancone, un taccuino e tre volti sono già abbastanza. La pazienza pesa meno dell’entusiasmo: tiene quando la luce è piatta. Non devi convincere tutti: ti basta riconoscere chi torna. Anche la stanchezza, quando ha senso, diventa leggera. L’idea non deve stupire: deve reggere. E resta una calma piccola, ma vera, che non chiede nulla.` },
+    { role: "system", content:
+`EXAMPLE EN • Move city
+You’ll feel like a guest, then your hands learn the new keys. You’ll walk not to think better but to tire the noise. By the third grocery you’ll know which aisle is yours. Evenings soften and ask less proof. You’ll miss some things, not all at once. The rest finds its place. And you notice that beneath the noise something of yours was already there.` },
   ];
 
   return { sys: SYS_WHATIF, fewshots: FEWSHOTS };
@@ -218,10 +194,9 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
   try {
-    if (!process.env.OPENAI_API_KEY)
-      return res.status(500).json({ error: "missing_api_key" });
+    if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: "missing_api_key" });
 
-    // IP del richiedente (primo IP in XFF o remoteAddress)
+    // IP richiedente
     const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
       .toString().split(",")[0].trim();
 
@@ -229,7 +204,7 @@ export default async function handler(req, res) {
     const admin = await isAdmin(req, ip);
     const bypass = admin === true;
 
-    // PRO flag da header
+    // PRO header (UI locale): x-pro: "1"
     const isPro = String(req.headers["x-pro"] || "").trim() === "1";
 
     // Rate limit 10/min (se non bypass)
@@ -238,8 +213,8 @@ export default async function handler(req, res) {
       if (!success) return res.status(429).json({ error: "rate_limited_minute" });
     }
 
-    // Crediti giornalieri (∞ admin, altrimenti 3 free / 10 pro)
-    let used = 0, dailyCap = bypass ? Infinity : (isPro ? 10 : 3);
+    // Crediti giornalieri: Admin ∞, PRO 10, Free 3
+    let used = 0, dailyCap = isPro ? 10 : 3;
     if (!bypass) {
       const today = new Date().toISOString().slice(0, 10);
       const key = `credits:${ip}:${today}`;
@@ -252,29 +227,20 @@ export default async function handler(req, res) {
 
     // Body
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-    const {
-      domanda = "",
-      stile = "whatif",
-      lang = "it",
-      extra = "",
-      periodo = "future"
-    } = body;
-
+    const { domanda = "", stile = "whatif", lang = "it", extra = "", periodo = "future" } = body;
     if (!domanda || typeof domanda !== "string")
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
-    // Personas (immutate)
+    // Personas
     const { sys, fewshots } = personaSystem(stile, lang);
 
-    // Modalità temporale add-on
+    // Temporal mode
     const temporal = temporalSystem(periodo, lang, stile);
-
-    // Hint extra: forzare davvero il passato nel WTF controfattuale
     let extraTemporalHint = "";
     if (stile === "wtf" && String(periodo).toLowerCase() === "past") {
       extraTemporalHint = isEn(lang)
-        ? "Write entirely in past or conditional tense, as if it already happened, keeping the same sarcastic tragicomic tone."
-        : "Scrivi tutto al passato o al condizionale, come se fosse già successo, mantenendo il tono sarcastico e tragicomico.";
+        ? "Write entirely in past or conditional tense, as if it already happened, keeping the same teasing-tragicomic tone."
+        : "Scrivi tutto al passato o al condizionale, come se fosse già successo, mantenendo il tono pungente-tragicomico.";
     }
 
     const userPrompt = isEn(lang)
@@ -286,7 +252,7 @@ export default async function handler(req, res) {
       { role: "system", content: temporal },
       ...(extraTemporalHint ? [{ role: "system", content: extraTemporalHint }] : []),
       ...(fewshots || []),
-      { role: "user", content: userPrompt }
+      { role: "user", content: userPrompt },
     ];
 
     const completion = await client.chat.completions.create({
@@ -296,41 +262,43 @@ export default async function handler(req, res) {
       max_tokens: 320,
       frequency_penalty: stile === "wtf" ? 0.4 : 0.1,
       presence_penalty: 0.0,
-      messages
+      messages,
     });
 
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // Niente eco della domanda
+    // Post-process
     answer = stripQuestionEcho(domanda, answer);
-
-    // Forma/lunghezze coerenti con le voci definite
-    answer = tightenSentences(answer, stile === "wtf" ? 7 : 10);
-    answer = clampWords(answer, stile === "wtf" ? 130 : 140);
+    answer = tightenSentences(answer, stile === "wtf" ? 7 : 11);
+    answer = clampWords(answer, stile === "wtf" ? 130 : 155);
     answer = normalizeOneParagraph(answer);
     if (!/[.!?…]$/.test(answer)) answer += ".";
 
-    // --- LOG persistente per dashboard admin ---
+    // --- LOG persistente (per /api/stats) ---
     try {
-      const logKey = "logs:ask";
       const entry = {
         ts: Date.now(),
         ip,
-        style: stile,
+        style: stile,            // "whatif" | "wtf"
         lang,
-        periodo,
+        periodo,                 // "past" | "future"
         domanda,
         answer_chars: (answer || "").length,
         admin: !!admin,
-        pro: !!isPro
+        user_type: bypass ? "admin" : (isPro ? "pro" : "free"),
       };
-      await redis.lpush(logKey, JSON.stringify(entry));
-      await redis.ltrim(logKey, 0, 4999); // ultimi 5000
+      await redis.lpush("logs:ask", JSON.stringify(entry));
+      await redis.ltrim("logs:ask", 0, 9999); // ultimi 10k
       await redis.incr("stats:total");
       await redis.hincrby("stats:style", stile, 1);
       await redis.hincrby("stats:lang", lang, 1);
       await redis.hincrby("stats:periodo", String(periodo || "future"), 1);
+      await redis.hincrby("stats:user_type", entry.user_type, 1);
+      // bucket giorno
+      const dayKey = `stats:day:${new Date().toISOString().slice(0,10)}`;
+      await redis.hincrby(dayKey, `${stile}:${periodo}`, 1);
+      await redis.expire(dayKey, 90 * 24 * 60 * 60);
     } catch (e) {
       console.warn("log failure (non-bloccante)", e);
     }
@@ -343,7 +311,7 @@ export default async function handler(req, res) {
       model: MODEL,
       admin,
       pro: isPro,
-      credits: bypass ? { used: 0, dailyCap: Infinity } : { used, dailyCap }
+      credits: bypass ? null : { used, dailyCap },
     });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
