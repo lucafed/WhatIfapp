@@ -1,18 +1,18 @@
-// ============================
-// /api/admin-token.js — Token ADMIN (∞ crediti) legato all’IP, TTL 7gg
-// ============================
+// /api/admin-token.js
 import { Redis } from "@upstash/redis";
-import crypto from "crypto";
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-function cors(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-token");
+const ADMIN_PIN = process.env.ADMIN_PIN || "wtf-setup-2025";
+const TTL_SECS = 60 * 60 * 48; // 48h
+
+function cors(res){
+  res.setHeader("Access-Control-Allow-Origin","*");
+  res.setHeader("Access-Control-Allow-Methods","POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers","Content-Type, admin-secret, x-admin-secret");
 }
 
 function getIp(req) {
@@ -21,45 +21,22 @@ function getIp(req) {
 }
 
 export default async function handler(req, res) {
-  cors(req, res);
+  cors(res);
   if (req.method === "OPTIONS") return res.status(200).end();
-
-  const ip = getIp(req);
-  const ttl = 7 * 24 * 60 * 60; // 7 giorni
+  if (req.method !== "POST") return res.status(405).json({ ok:false, error:"method_not_allowed" });
 
   try {
-    if (req.method === "GET") {
-      const tok = String(req.headers["x-admin-token"] || "").trim();
-      if (!tok) return res.status(200).json({ admin: false, ip, token: null });
-      const savedIp = await redis.get(`admin:token:${tok}`);
-      const admin = !!savedIp && savedIp === ip;
-      return res.status(200).json({ admin, ip, token: admin ? tok : null });
-    }
+    const headerSecret = String(req.headers["x-admin-secret"] || req.headers["admin-secret"] || "").trim();
+    if (!headerSecret) return res.status(401).json({ ok:false, error:"missing_pin" });
+    if (headerSecret !== ADMIN_PIN) return res.status(403).json({ ok:false, error:"bad_pin" });
 
-    const url = new URL(req.url, "http://x");
-    const renew = url.searchParams.get("renew");
-    const revoke = url.searchParams.get("revoke");
-    const clientTok = String(req.headers["x-admin-token"] || "").trim();
+    const ip = getIp(req);
+    const token = `adm_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
+    await redis.set(`admin:token:${token}`, ip, { ex: TTL_SECS });
 
-    if (revoke) {
-      if (clientTok) await redis.del(`admin:token:${clientTok}`);
-      return res.status(200).json({ ok: true, ip, revoked: !!clientTok });
-    }
-
-    if (renew) {
-      if (!clientTok) return res.status(400).json({ error: "missing_token" });
-      const savedIp = await redis.get(`admin:token:${clientTok}`);
-      if (savedIp !== ip) return res.status(403).json({ error: "ip_mismatch" });
-      await redis.expire(`admin:token:${clientTok}`, ttl);
-      return res.status(200).json({ ok: true, ip, token: clientTok });
-    }
-
-    // attiva nuovo token
-    const token = crypto.randomBytes(16).toString("hex");
-    await redis.set(`admin:token:${token}`, ip, { ex: ttl });
-    return res.status(200).json({ ok: true, ip, token });
-  } catch (err) {
-    console.error("❌ [/api/admin-token] error:", err);
-    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
+    return res.status(200).json({ ok:true, token, ttlHours: TTL_SECS / 3600, ip });
+  } catch (e) {
+    console.error("admin-token error:", e);
+    return res.status(500).json({ ok:false, error:"server_error" });
   }
 }
