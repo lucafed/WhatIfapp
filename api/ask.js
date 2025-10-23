@@ -240,17 +240,29 @@ export default async function handler(req, res) {
       if (!success) return res.status(429).json({ error: "rate_limited_minute" });
     }
 
-    // Crediti giornalieri 3/IP (se non bypass)
-    let used = 0, dailyCap = 3;
-    if (!bypass) {
-      const today = new Date().toISOString().slice(0, 10);
-      const key = `credits:${ip}:${today}`;
-      used = (await redis.incr(key)) ?? 1;
-      if (used === 1) await redis.expire(key, 60 * 60 * 24);
-      if (used > dailyCap) {
-        return res.status(402).json({ error: "daily_credits_exhausted", used, dailyCap });
-      }
-    }
+    // ---------- Gestione crediti giornalieri ----------
+let used = 0;
+let dailyCap = 3; // default: utente free
+
+// bypass = admin → infinito (nessun limite)
+if (bypass) {
+  used = 0;
+  dailyCap = Infinity;
+} else {
+  // utente PRO (inviato dal frontend)
+  const isProUser = String(req.headers["x-user-tier"] || "").toLowerCase() === "pro";
+  if (isProUser) dailyCap = 10;
+
+  const today = new Date().toISOString().slice(0,10);
+  const key = `credits:${ip}:${today}`;
+
+  used = (await redis.incr(key)) ?? 1;
+  if (used === 1) await redis.expire(key, 60*60*24);
+
+  if (used > dailyCap) {
+    return res.status(402).json({ error: "daily_credits_exhausted", used, dailyCap });
+  }
+}
 
     // Body
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
