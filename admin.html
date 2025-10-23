@@ -1,141 +1,157 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>What?f — Console Admin</title>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      background: #0A0F14;
-      color: #fff;
-      margin: 0;
-      padding: 2rem;
-    }
-    h1 {
-      color: #00E0FF;
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-    button {
-      border: none;
-      border-radius: 10px;
-      padding: 0.7rem 1.2rem;
-      cursor: pointer;
-      font-size: 1rem;
-      margin: 0.2rem;
-    }
-    .activate { background: linear-gradient(90deg, #00E0FF, #00B5CC); color: #000; }
-    .renew { background: #FFD700; color: #000; }
-    .revoke { background: #E74C3C; color: #fff; }
-    .card {
-      background: #141C22;
-      border-radius: 12px;
-      padding: 1rem;
-      margin-top: 1rem;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-    }
-    .stat {
-      display: inline-block;
-      margin: 0.5rem;
-      padding: 0.8rem 1rem;
-      background: #1C252B;
-      border-radius: 8px;
-      text-align: center;
-      min-width: 100px;
-    }
-    .error { color: #FF8080; }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>What?f — Console Admin</title>
+<meta name="theme-color" content="#0B0B0C"/>
+<style>
+  :root{--bg:#0B0B0C;--card:#13191E;--fg:#EAF2EE;--muted:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01}
+  body{margin:0;background:radial-gradient(900px 700px at 20% 18%,#101414 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{max-width:980px;margin:auto;padding:18px}
+  h1{margin:4px 0 12px;text-align:center;color:var(--acc)}
+  .card{background:var(--card);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:14px;margin:12px 0}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input,select{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px}
+  button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
+  .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12}
+  .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:13px}
+  .muted{color:var(--muted);font-size:12px}
+  .badge{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:12px}
+</style>
 </head>
 <body>
+<main>
   <h1>What?f — Console Admin</h1>
 
   <div class="card">
-    <div id="admin-status">Verifica token...</div>
-    <button class="activate" id="btn-activate">🔑 Attiva admin su questo device</button>
-    <button class="renew" id="btn-renew">♻️ Rinnova/Estendi (7gg)</button>
-    <button class="revoke" id="btn-revoke">🧹 Revoca admin su questo device</button>
-  </div>
-
-  <div class="card">
-    <h3>Verifica rapida</h3>
-    <button id="btn-check">🔍 Controlla stato server</button>
-    <div id="server-status"></div>
-  </div>
-
-  <div class="card">
-    <h3>Statistiche</h3>
-    <div id="stats">
-      <div class="stat"><strong>Totale</strong><br><span id="total">–</span></div>
-      <div class="stat"><strong>Oggi</strong><br><span id="today">–</span></div>
-      <div class="stat"><strong>Ultimi 7 giorni</strong><br><span id="last7">–</span></div>
+    <h3>Accesso</h3>
+    <p class="muted">Inserisci il PIN per ottenere il token admin (valido ~48h, legato al tuo IP).</p>
+    <div class="row">
+      <input id="pin" type="password" placeholder="PIN segreto" style="min-width:180px"/>
+      <button class="primary" id="enterBtn">Entra</button>
+      <button class="ghost" id="logoutBtn">Esci</button>
+      <span id="authState" class="badge">Non autenticato</span>
     </div>
-    <div id="stats-error" class="error"></div>
+    <p class="muted" id="authHelp"></p>
   </div>
 
-  <script>
-    const API = {
-      token: "/api/admin-token",
-      stats: "/api/admin-stats",
-      logs: "/api/admin-logs",
-      clearLogs: "/api/admin-clear-logs",
-    };
+  <div class="card">
+    <h3>Operazioni veloci</h3>
+    <div class="row">
+      <button class="primary" id="resetBtn">🔄 Reset crediti (oggi)</button>
+      <button class="ghost" id="proOn">⭐ Attiva PRO (solo locale)</button>
+      <button class="ghost" id="proOff">☆ Disattiva PRO</button>
+      <button class="ghost" id="clearLogsBtn">🗑️ Svuota log</button>
+    </div>
+    <p class="muted">Stato PRO locale: <span id="proState" class="badge">—</span></p>
+  </div>
 
-    async function fetchJSON(url, options = {}) {
-      const res = await fetch(url, options);
-      if (!res.ok) throw new Error(res.status);
-      return res.json();
-    }
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <h3 style="margin:0">Log & Statistiche</h3>
+      <div class="row">
+        <button class="primary" id="refreshBtn">Aggiorna</button>
+        <button class="ghost" id="autoBtn">Auto-refresh</button>
+      </div>
+    </div>
+    <div class="row">
+      <select id="filterStyle">
+        <option value="">Stile: tutti</option>
+        <option value="whatif">whatif</option>
+        <option value="wtf">wtf</option>
+      </select>
+      <select id="filterLang">
+        <option value="">Lingua: tutte</option>
+        <option value="it">it</option>
+        <option value="en">en</option>
+      </select>
+      <select id="filterPeriod">
+        <option value="">Tempo: tutti</option>
+        <option value="past">past</option>
+        <option value="future">future</option>
+      </select>
+      <input id="searchQ" placeholder="Cerca nella domanda…" style="min-width:220px"/>
+    </div>
 
-    const tokenKey = "admin_token";
-    let token = localStorage.getItem(tokenKey) || "";
+    <div id="stats" class="muted" style="margin-top:8px">—</div>
+    <table id="logsTbl">
+      <thead><tr><th>Quando</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Domanda</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</main>
 
-    async function refreshStatus() {
-      const ipInfo = await fetchJSON(API.token, { headers: { "x-admin-token": token } });
-      const div = document.getElementById("admin-status");
-      if (ipInfo.admin) {
-        div.innerHTML = `<b>ADMIN attivo (∞ crediti)</b><br>IP: ${ipInfo.ip}<br>Token: ${token.slice(0,6)}…${token.slice(-4)}`;
-      } else {
-        div.innerHTML = `Nessun token attivo per IP ${ipInfo.ip}`;
-      }
-    }
+<script>
+const LS = localStorage;
+const TOKEN_KEY = "admin_token";
+const PRO_PREFS_KEY = "whatif_prefs";
+const ADMIN_SECRET = "wtf-setup-2025";
 
-    document.getElementById("btn-activate").onclick = async () => {
-      const res = await fetchJSON(API.token, { method: "POST" });
-      localStorage.setItem(tokenKey, res.token);
-      token = res.token;
-      await refreshStatus();
-    };
+function fmtDate(ts){const d=new Date(ts);return d.toLocaleString();}
+function setAuthUI(ok){const el=document.getElementById("authState");el.textContent=ok?"Autenticato":"Non autenticato";el.style.background=ok?"rgba(0,255,0,.08)":"rgba(255,255,255,.06)";}
+function setProUI(){try{const prefs=JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}");const active=prefs.pro===true;document.getElementById("proState").textContent=active?"PRO attivo":"PRO non attivo";}catch{}}
 
-    document.getElementById("btn-renew").onclick = async () => {
-      if (!token) return alert("Nessun token salvato");
-      await fetchJSON(`${API.token}?renew=1`, { headers: { "x-admin-token": token } });
-      alert("Token rinnovato per altri 7 giorni!");
-      await refreshStatus();
-    };
+async function registerToken(pin){
+  const r=await fetch("/api/admin-token",{method:"POST",headers:{"Content-Type":"application/json","admin-secret":ADMIN_SECRET},body:JSON.stringify({pin})});
+  const data=await r.json().catch(()=>({}));if(!r.ok||!data.ok)throw new Error(data.error||"token_error");
+  LS.setItem(TOKEN_KEY,data.token);return data.token;
+}
 
-    document.getElementById("btn-revoke").onclick = async () => {
-      if (!token) return alert("Nessun token salvato");
-      await fetchJSON(`${API.token}?revoke=1`, { headers: { "x-admin-token": token } });
-      localStorage.removeItem(tokenKey);
-      token = "";
-      alert("Token revocato.");
-      await refreshStatus();
-    };
+async function fetchLogs(){
+  const token=LS.getItem(TOKEN_KEY)||"";
+  const r=await fetch(`/api/admin-logs?limit=200`,{headers:{"x-admin-token":token}});
+  const data=await r.json().catch(()=>({}));if(!r.ok||!data.ok)throw new Error(data.error||"auth");return data;
+}
 
-    document.getElementById("btn-check").onclick = async () => {
-      try {
-        const s = await fetchJSON(API.stats, { headers: { "x-admin-token": token } });
-        document.getElementById("server-status").textContent = "✅ Server attivo";
-        document.getElementById("total").textContent = s.total;
-        document.getElementById("today").textContent = s.today;
-        document.getElementById("last7").textContent = s.last7;
-      } catch {
-        document.getElementById("server-status").textContent = "❌ Errore server (404 o token mancante)";
-      }
-    };
+function renderLogs(data){
+  const tbody=document.querySelector("#logsTbl tbody");
+  tbody.innerHTML="";
+  const fStyle=document.getElementById("filterStyle").value;
+  const fLang=document.getElementById("filterLang").value;
+  const fPer=document.getElementById("filterPeriod").value;
+  const q=document.getElementById("searchQ").value.trim().toLowerCase();
+  const all=Array.isArray(data.items)?data.items:[];
+  const rows=all.filter(x=>{
+    if(fStyle&&x.style!==fStyle)return false;
+    if(fLang&&x.lang!==fLang)return false;
+    if(fPer&&x.periodo!==fPer)return false;
+    if(q&&!String(x.domanda||"").toLowerCase().includes(q))return false;
+    return true;
+  });
+  for(const it of rows){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${fmtDate(it.ts)}</td><td>${it.style}</td><td>${it.lang}</td><td>${it.periodo}</td><td>${(it.domanda||"").slice(0,160)}</td>`;
+    tbody.appendChild(tr);
+  }
+  const stats=data.stats||{};
+  document.getElementById("stats").textContent=`Totale: ${stats.total||rows.length} · Per stile: ${JSON.stringify(stats.style||{})} · Per lingua: ${JSON.stringify(stats.lang||{})} · Per tempo: ${JSON.stringify(stats.periodo||{})}`;
+}
 
-    refreshStatus();
-  </script>
+document.getElementById("refreshBtn").onclick=async()=>{try{const data=await fetchLogs();setAuthUI(true);renderLogs(data);}catch(e){alert("Errore o token mancante.");setAuthUI(false);}};
+
+document.getElementById("enterBtn").onclick=async()=>{
+  const pin=document.getElementById("pin").value.trim();
+  if(!pin)return alert("Inserisci il PIN");
+  try{await registerToken(pin);setAuthUI(true);document.getElementById("refreshBtn").click();document.getElementById("authHelp").textContent="Token registrato.";}
+  catch(e){setAuthUI(false);document.getElementById("authHelp").textContent="PIN errato o segreto mancante.";}
+};
+
+document.getElementById("logoutBtn").onclick=()=>{LS.removeItem(TOKEN_KEY);setAuthUI(false);document.querySelector("#logsTbl tbody").innerHTML="";document.getElementById("stats").textContent="—";};
+
+document.getElementById("clearLogsBtn").onclick=async()=>{
+  const token=LS.getItem(TOKEN_KEY)||"";if(!token)return alert("Serve login admin.");
+  if(!confirm("Sicuro di svuotare i log?"))return;
+  const r=await fetch("/api/admin-clear-logs",{method:"DELETE",headers:{"x-admin-token":token}});
+  if(!r.ok)return alert("Errore cancellazione log.");alert("Log svuotati.");document.getElementById("refreshBtn").click();
+};
+
+document.getElementById("proOn").onclick=()=>{const p=JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}");p.pro=true;LS.setItem(PRO_PREFS_KEY,JSON.stringify(p));setProUI();};
+document.getElementById("proOff").onclick=()=>{const p=JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}");delete p.pro;LS.setItem(PRO_PREFS_KEY,JSON.stringify(p));setProUI();};
+
+setAuthUI(!!LS.getItem(TOKEN_KEY));setProUI();
+</script>
 </body>
 </html>
