@@ -1,4 +1,7 @@
-// pages/api/admin-token.js
+// ============================
+// /api/admin-token.js
+// Crea/controlla/revoca token admin (token -> IP) con TTL
+// ============================
 import { Redis } from "@upstash/redis";
 
 const redis = new Redis({
@@ -16,54 +19,47 @@ function cors(req, res) {
   const origin = String(req.headers.origin || "");
   if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Vary", "Origin");
-  res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-token");
 }
 
-function parseBody(req){
-  try{
-    if (typeof req.body === "string") return JSON.parse(req.body || "{}");
-    if (req.body && typeof req.body === "object") return req.body;
-  }catch{}
-  return {};
-}
-
-function getIp(req){
+function requesterIp(req) {
   return (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
     .toString().split(",")[0].trim();
 }
 
-function genToken(){
-  const b = crypto.getRandomValues(new Uint8Array(16));
-  return Array.from(b).map(x=>x.toString(16).padStart(2,"0")).join("");
+function randHex(len=32){
+  const bytes = Array.from({length:len/2}, ()=> Math.floor(Math.random()*256));
+  return bytes.map(b=> b.toString(16).padStart(2,"0")).join("");
 }
 
 export default async function handler(req, res){
   cors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const ip = getIp(req);
-
   try{
-    if (req.method === "POST"){
-      const { pin = "" } = parseBody(req);
-      const adminPin = String(process.env.ADMIN_PIN || "").trim();
-      if (!adminPin) return res.status(500).json({ error:"missing_admin_pin" });
-
-      if (String(pin).trim() !== adminPin){
-        return res.status(401).json({ ok:false, error:"bad_pin" });
-      }
-
-      const token = genToken();
-      await redis.set(`admin:token:${token}`, ip, { ex: 60*60*24 }); // TTL 24h
-      return res.status(200).json({ ok:true, token, ttl_seconds: 60*60*24 });
-    }
+    const ip = requesterIp(req);
 
     if (req.method === "GET"){
-      const token = String(req.headers["authorization"] || "").replace(/^Bearer\s+/i,"").trim();
-      if (!token) return res.status(401).json({ ok:false, error:"missing_token" });
+      const token = String(req.headers["x-admin-token"] || "").trim();
+      if(!token) return res.status(200).json({ admin:false, ip, token:null });
       const savedIp = await redis.get(`admin:token:${token}`);
-      if (!savedIp || savedIp !== ip) return res.status(401).json({ ok:false, error:"invalid_token" });
+      return res.status(200).json({ admin: !!(savedIp && savedIp === ip), ip, token: token || null });
+    }
+
+    if (req.method === "POST"){
+      // crea o rinnova un token admin per QUESTO IP
+      // se arriva x-admin-token, lo ri-associa all'IP; altrimenti ne genera uno
+      let token = String(req.headers["x-admin-token"] || "").trim();
+      if(!token) token = randHex(32);
+      await redis.set(`admin:token:${token}`, ip, { ex: 60 * 60 * 24 * 7 }); // 7gg
+      return res.status(200).json({ ok:true, token, ip, ttl_days:7 });
+    }
+
+    if (req.method === "DELETE"){
+      const token = String(req.headers["x-admin-token"] || "").trim();
+      if(!token) return res.status(400).json({ error:"missing_token" });
+      await redis.del(`admin:token:${token}`);
       return res.status(200).json({ ok:true });
     }
 
