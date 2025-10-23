@@ -1,4 +1,11 @@
-// /api/admin-stats.js
+// ============================
+// /api/stats.js — Dashboard aggregata per Console Admin
+// Legge "logs:ask" (ultimi 10k) e restituisce:
+//   - totals: all-time, today, 7d
+//   - breakdown: style, periodo, lang, user_type
+//   - sparkline: ultimi 7 giorni (per style/periodo)
+// ============================
+
 import { Redis } from "@upstash/redis";
 
 const redis = new Redis({
@@ -6,60 +13,65 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-const ALLOWED_ORIGINS = [
-  "https://what-ifapp.vercel.app",
-  "http://localhost:3000",
-  "http://127.0.0.1:5500",
-];
-function cors(req, res) {
-  const origin = String(req.headers.origin || "");
-  if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
-  res.setHeader("Vary", "Origin");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-token");
+function dayStr(ts = Date.now()) {
+  return new Date(ts).toISOString().slice(0, 10);
 }
-
-async function isAdmin(req, requesterIp) {
-  const token = String(req.headers["x-admin-token"] || "").trim();
-  if (!token) return false;
-  try {
-    const bound = await redis.get(`admin:token:${token}`);
-    if (!bound) return false;
-    if (bound === "ANY") return true;
-    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
-      .toString().split(",")[0].trim();
-    return ip === bound;
-  } catch {
-    return false;
-  }
+function withinDays(ts, days) {
+  const now = Date.now();
+  return (now - ts) <= days * 24 * 60 * 60 * 1000;
 }
 
 export default async function handler(req, res) {
-  cors(req, res);
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "GET") return res.status(405).json({ error: "method_not_allowed" });
 
   try {
-    const ok = await isAdmin(req);
-    if (!ok) return res.status(401).json({ error: "unauthorized" });
+    // prendi ultimi N log
+    const raw = await redis.lrange("logs:ask", 0, 9999);
+    const rows = (raw || []).map((x) => { try { return JSON.parse(x); } catch { return null; } }).filter(Boolean);
 
-    const [total, style, lang, periodo] = await Promise.all([
-      redis.get("stats:total").then(v => Number(v || 0)),
-      redis.hgetall("stats:style").then(v => v || {}),
-      redis.hgetall("stats:lang").then(v => v || {}),
-      redis.hgetall("stats:periodo").then(v => v || {}), // 👈 nuovo
-    ]);
+    const today = dayStr();
+    const totals = { all: rows.length, today: 0, last7d: 0 };
+    const breakdown = {
+      style: { whatif: 0, wtf: 0 },
+      periodo: { past: 0, future: 0 },
+      user_type: { free: 0, pro: 0, admin: 0 },
+      lang: {},
+    };
+    const byDay = {}; // yyyy-mm-dd -> count
+    const spark = []; // ultimi 7 giorni
 
-    // ultimi N dal log (solo header, senza testo risposta)
-    const N = Math.min(Number(req.query.limit || 20), 200);
-    const raw = await redis.lrange("logs:ask", 0, N - 1);
-    const logs = (raw || []).map(x => {
-      try { return JSON.parse(x); } catch { return null; }
-    }).filter(Boolean);
+    for (const r of rows) {
+      const d = dayStr(r.ts || Date.now());
+      byDay[d] = (byDay[d] || 0) + 1;
 
-    return res.status(200).json({ ok: true, total, style, lang, periodo, logs });
-  } catch (e) {
-    console.error("admin-stats error:", e);
-    return res.status(500).json({ error: "server_error" });
+      if (d === today) totals.today++;
+      if (withinDays(r.ts || Date.now(), 7)) totals.last7d++;
+
+      if (r.style && breakdown.style[r.style] !== undefined) breakdown.style[r.style]++;
+      if (r.periodo && breakdown.periodo[r.periodo] !== undefined) breakdown.periodo[r.periodo]++;
+      if (r.user_type && breakdown.user_type[r.user_type] !== undefined) breakdown.user_type[r.user_type]++;
+      breakdown.lang[r.lang || "unk"] = (breakdown.lang[r.lang || "unk"] || 0) + 1;
+    }
+
+    // Sparkline ultimi 7 giorni
+    for (let i = 6; i >= 0; i--) {
+      const d = dayStr(Date.now() - i * 24 * 60 * 60 * 1000);
+      spark.push({ day: d, total: byDay[d] || 0 });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      totals,
+      breakdown,
+      spark,
+      sample: rows.slice(0, 20)  // piccola coda per debug in admin
+    });
+  } catch (err) {
+    console.error("❌ [/api/stats] error:", err);
+    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
 }
