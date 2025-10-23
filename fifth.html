@@ -6,7 +6,8 @@
 <title>What?f — Risultato</title>
 <meta name="theme-color" content="#0B0B0C"/>
 <style>
-:root{ --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
+:root{
+  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
   --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;
   --glow: rgba(255, 236, 1, .22);
 }
@@ -31,18 +32,51 @@ h1{
   text-shadow: 0 0 18px var(--glow);
 }
 .sub{color:var(--muted);text-align:center;margin:0 0 8px}
-.card{background:rgba(20,28,34,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px;backdrop-filter:blur(10px);margin-top:16px;box-shadow:0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06)}
+.card{
+  background:rgba(20,28,34,.92);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:16px;
+  padding:18px;
+  backdrop-filter:blur(10px);
+  margin-top:16px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
+}
 .label{color:var(--acc);font-weight:800;margin-bottom:8px}
-.input{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px}
-.story{white-space:normal;line-height:1.68;font-size:18px;letter-spacing:.1px;text-wrap:pretty}
+.input{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;
+  padding:10px;
+}
+.story{
+  white-space:normal;
+  line-height:1.68;
+  font-size:18px;
+  letter-spacing:.1px;
+  text-wrap:pretty;
+}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
-.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.35),0 0 28px var(--glow)}
-.btn.ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff}
+.btn.primary{
+  background:linear-gradient(180deg,var(--acc),var(--acc2));
+  color:var(--ink);
+  box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 28px var(--glow);
+}
+.btn.ghost{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  color:#fff
+}
 .small{font-size:12px;color:var(--muted)}
 .hr{height:1px;background:rgba(255,255,255,.10);margin:12px 0}
-.badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 10px;}
-.lead{color:#E7F2EE;font-size:14px;line-height:1.45;opacity:.86;margin:2px 0 10px;}
+.badge{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 10px;
+}
+.lead{
+  color:#E7F2EE;font-size:14px;line-height:1.45;opacity:.86;margin:2px 0 10px;
+}
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
 </style>
@@ -90,7 +124,6 @@ const periodo = prefs.periodo || 'future';
 const lang  = (LS.getItem('lang') || 'it').toLowerCase();
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 
-/* badge PRO come tuo */
 (function showProBadge(){
   const el = document.getElementById('proBadge');
   const hasToken = !!LS.getItem('admin_token');
@@ -101,7 +134,6 @@ document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'w
   }
 })();
 
-/* I18N + meta aggiornati ai nuovi range frasi */
 const I18N={
   it:{tWTF:"⚡ What the F — Risultato", tWHF:"💡 What if — Risultato",
       sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
@@ -135,7 +167,7 @@ function normalizeOneParagraph(s=""){
   return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
 }
 
-/* LEADS (invariati) */
+/* ===== LEADS: 1 sola frase, filosofiche/intime, senza oggetti parlanti ===== */
 const LEADS = {
   it:{
     wtf:[
@@ -163,7 +195,32 @@ const LEADS = {
       "La parte forte di te è quella che non urla."
     ]
   },
-  en:{ wtf:[/* ... */], whatif:[/* ... */] }
+  en:{
+    wtf:[
+      "You step in slowly, the kind of slow that chaos recognizes.",
+      "You breathe and let fate be the one who trips first.",
+      "You bring today’s face and tomorrow’s patience to the door.",
+      "The scene is already rolling; you supply the good noise.",
+      "You don’t ask doubt for permission; you sit beside it.",
+      "Stand still for a second and truth borrows your face.",
+      "Trust the short step; it travels just as far.",
+      "Anxiety knocks, but only calm has the keys today.",
+      "Say little, listen loudly, and the air changes.",
+      "The present stares back, asking only to be seen."
+    ],
+    whatif:[
+      "Set the keys down and let the quiet that doesn’t judge go first.",
+      "Sit a moment and notice how calm remembers you.",
+      "Same room, different gaze—that’s already a start.",
+      "Hold what works close and let the rest lose weight.",
+      "Breathe like someone with time, and time believes you.",
+      "The answer doesn’t run; it waits where you begin to feel.",
+      "When you stop insisting, what matters insists on you.",
+      "The future isn’t conquered; it’s invited kindly.",
+      "Give yourself the benefit of doubt until it becomes compass.",
+      "The strongest part of you is the one that doesn’t shout."
+    ]
+  }
 };
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 function hashStr(s=""){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i); h=h|0; } return Math.abs(h); }
@@ -182,6 +239,7 @@ function setTitles(q){
   const seed = `${(q||"").toLowerCase().trim()}|${style}|${lang}`;
   const line = oneSentence(stablePick(bank, seed));
   document.getElementById('lead').textContent = line;
+  // meta sotto: range frasi + vincoli + periodo
   document.getElementById('metaInfo').textContent = I18N.meta(style, periodo);
 }
 
@@ -214,7 +272,7 @@ if(isReplay){
           stile:style,
           extra:"",
           micro:req.micro||{},
-          periodo  // <-- passa il periodo (past/future) al nuovo API ask.js
+          periodo
         })
       });
 
