@@ -35,7 +35,7 @@ function cors(req, res) {
   if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token, x-pro");
 }
 
 /* ---------- Helpers ---------- */
@@ -49,7 +49,6 @@ function normLine(s = "") {
     .replace(/[.,;:!?()\[\]\-—]+$/g, "")
     .trim();
 }
-
 function tightenSentences(text, maxSentences) {
   const parts = String(text || "")
     .replace(/\n+/g, " ")
@@ -73,7 +72,6 @@ function tightenSentences(text, maxSentences) {
   if (!/[.!?…]$/.test(t)) t += ".";
   return t;
 }
-
 function clampWords(text, maxWords) {
   const w = String(text || "").split(/\s+/);
   if (w.length <= maxWords) return text;
@@ -81,7 +79,6 @@ function clampWords(text, maxWords) {
   const m = slice.match(/([\s\S]*?[.!?])(?![\s\S]*[.!?])/);
   return m ? m[1] : slice + "…";
 }
-
 function normalizeOneParagraph(s = "") {
   return String(s)
     .replace(/\s*\n+\s*/g, " ")
@@ -89,7 +86,6 @@ function normalizeOneParagraph(s = "") {
     .replace(/\s+([.,;:!?])/g, "$1")
     .trim();
 }
-
 // Rimozione eco della domanda
 function stripQuestionEcho(domanda, text) {
   const d = String(domanda || "").replace(/[“”"']/g, "").trim().toLowerCase();
@@ -133,7 +129,7 @@ function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
     : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi uno svolgimento plausibile del prossimo futuro come se ci entrassi adesso. Niente liste/consigli, niente domande, niente eco della domanda. Mantieni esattamente la voce ${style.toUpperCase()}.`;
 }
 
-/* ---------- Personas (immutate) ---------- */
+/* ---------- Personas (LOCKED: identiche allo stile richiesto) ---------- */
 function personaSystem(style, lang) {
   if (style === "wtf") {
     // WHAT THE F — Incazzato Illuminato (locked)
@@ -153,7 +149,7 @@ function personaSystem(style, lang) {
       },
       {
         role: "system",
-        content: `ESEMPIO IT • E se comprassi una moto? Ti vedi già filosofo su due ruote, poi il casco ti strizza il cervello come un limone e la moto parte solo per finta. Esci con l’ego alto e ti sorno un nonno in graziella che respira meglio di te. Freni, sbagli marcia, parcheggi storto, e il vicino ti osserva come se allevassi un velociraptor in condominio. Prometti prudenza, poi premi il coraggio con un “micro brindisi” che diventa macro per colpa del polso onesto. Torni a casa con il cuore a 9.000 giri e quella risata scema che sa di benzina, paura e un goccetto di gloria.`
+        content: `ESEMPIO IT • E se comprassi una moto? Ti vedi già filosofo su due ruote, poi il casco ti strizza il cervello come un limone e la moto parte solo per finta. Esci con l’ego alto e ti sorpassa un nonno in graziella che respira meglio di te. Freni, sbagli marcia, parcheggi storto, e il vicino ti osserva come se allevassi un velociraptor in condominio. Prometti prudenza, poi premi il coraggio con un “micro brindisi” che diventa macro per colpa del polso onesto. Torni a casa con il cuore a 9.000 giri e quella risata scema che sa di benzina, paura e un goccetto di gloria.`
       },
       {
         role: "system",
@@ -177,11 +173,10 @@ function personaSystem(style, lang) {
         content: `EXAMPLE EN • What if I started a business? You wake up TED-talk brave and learn it takes stamps, rites, and three identical queues to sell water. Your business plan PDF behaves like a lawyer on vacation: unreadable, unprintable, unimpressed. Suppliers vanish, customers pay in compliments, and your accountant blesses you with martyr eyes. At night you pop a “victory” bottle and discover it’s balsamic—painful, yes, but character-building for dignity. You laugh, because if chaos holds majority shares, you’re the CEO of self-irony with guaranteed drink rights.`
       }
     ];
-
     return { sys: SYS, fewshots: FEWSHOTS };
   }
 
-  // WHAT IF — nuova versione “Realismo lucido con sorriso”
+  // WHAT IF — Realismo lucido con sorriso (locked)
   const SYS_WHATIF = (isEn(lang)
     ? `
  You are "What If" — a lucid, kind, slightly ironic friend who sees things clearly. SECOND PERSON. One paragraph, 7–10 sentences (~100–140 words). Tone: warm, grounded, a mix of realism and gentle humor. Never melancholic. Use concrete, relatable imagery (keys, streetlights, notebooks, hands, air, noise). Show small truths that feel human, not heroic. Keep it conversational, never poetic. End with a clear, real forward nudge — something doable today, not someday.
@@ -234,35 +229,26 @@ export default async function handler(req, res) {
     const admin = await isAdmin(req, ip);
     const bypass = admin === true;
 
+    // PRO flag da header
+    const isPro = String(req.headers["x-pro"] || "").trim() === "1";
+
     // Rate limit 10/min (se non bypass)
     if (!bypass) {
       const { success } = await rl.limit(`ask:${ip}`);
       if (!success) return res.status(429).json({ error: "rate_limited_minute" });
     }
 
-    // ---------- Gestione crediti giornalieri ----------
-let used = 0;
-let dailyCap = 3; // default: utente free
-
-// bypass = admin → infinito (nessun limite)
-if (bypass) {
-  used = 0;
-  dailyCap = Infinity;
-} else {
-  // utente PRO (inviato dal frontend)
-  const isProUser = String(req.headers["x-user-tier"] || "").toLowerCase() === "pro";
-  if (isProUser) dailyCap = 10;
-
-  const today = new Date().toISOString().slice(0,10);
-  const key = `credits:${ip}:${today}`;
-
-  used = (await redis.incr(key)) ?? 1;
-  if (used === 1) await redis.expire(key, 60*60*24);
-
-  if (used > dailyCap) {
-    return res.status(402).json({ error: "daily_credits_exhausted", used, dailyCap });
-  }
-}
+    // Crediti giornalieri (∞ admin, altrimenti 3 free / 10 pro)
+    let used = 0, dailyCap = bypass ? Infinity : (isPro ? 10 : 3);
+    if (!bypass) {
+      const today = new Date().toISOString().slice(0, 10);
+      const key = `credits:${ip}:${today}`;
+      used = (await redis.incr(key)) ?? 1;
+      if (used === 1) await redis.expire(key, 60 * 60 * 24);
+      if (used > dailyCap) {
+        return res.status(402).json({ error: "daily_credits_exhausted", used, dailyCap });
+      }
+    }
 
     // Body
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
@@ -319,7 +305,7 @@ if (bypass) {
     // Niente eco della domanda
     answer = stripQuestionEcho(domanda, answer);
 
-    // Forma/lunghezze coerenti con le voci che hai definito
+    // Forma/lunghezze coerenti con le voci definite
     answer = tightenSentences(answer, stile === "wtf" ? 7 : 10);
     answer = clampWords(answer, stile === "wtf" ? 130 : 140);
     answer = normalizeOneParagraph(answer);
@@ -336,7 +322,8 @@ if (bypass) {
         periodo,
         domanda,
         answer_chars: (answer || "").length,
-        admin: !!admin
+        admin: !!admin,
+        pro: !!isPro
       };
       await redis.lpush(logKey, JSON.stringify(entry));
       await redis.ltrim(logKey, 0, 4999); // ultimi 5000
@@ -355,7 +342,8 @@ if (bypass) {
       periodo,
       model: MODEL,
       admin,
-      credits: bypass ? null : { used, dailyCap }
+      pro: isPro,
+      credits: bypass ? { used: 0, dailyCap: Infinity } : { used, dailyCap }
     });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
