@@ -1,55 +1,52 @@
-// ============================
-// /api/admin-stats.js — Statistiche globali veloci
-// Legge i contatori incrementali creati in /api/ask.js
-// ============================
+// /api/admin-stats.js
 import { Redis } from "@upstash/redis";
-const redis = new Redis({ url: process.env.UPSTASH_REDIS_REST_URL, token: process.env.UPSTASH_REDIS_REST_TOKEN });
 
-function cors(req, res) {
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
+
+async function ipForToken(token) {
+  try { return await redis.get(`admin:token:${token}`); } catch { return null; }
+}
+function dateISO(d){ return new Date(d).toISOString().slice(0,10); }
+
+export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-token");
-}
-async function isAdmin(req) {
-  const token = String(req.headers["x-admin-token"] || "").trim();
-  if (!token) return false;
-  try { return !!(await redis.get(`admin:token:${token}`)); } catch { return false; }
-}
-
-export default async function handler(req, res) {
-  cors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "GET") return res.status(405).json({ ok:false, error:"method_not_allowed" });
 
   try {
-    if (!(await isAdmin(req))) return res.status(401).json({ ok:false, error:"not_admin" });
+    const token = String(req.headers["x-admin-token"] || "").trim();
+    if (!token) return res.status(401).json({ ok:false, error:"missing_admin_token" });
+    const ip = await ipForToken(token);
+    if (!ip) return res.status(403).json({ ok:false, error:"invalid_or_expired_token" });
 
-    // contatori cumulativi
-    const total = parseInt((await redis.get("stats:total")) || "0", 10) || 0;
-    const style  = (await redis.hgetall("stats:style"))   || {};
-    const lang   = (await redis.hgetall("stats:lang"))    || {};
-    const period = (await redis.hgetall("stats:periodo")) || {};
-    const utype  = (await redis.hgetall("stats:user_type")) || {};
+    const total = parseInt((await redis.get("stats:total")) || "0", 10);
+    const style   = (await redis.hgetall("stats:style"))   || {};
+    const lang    = (await redis.hgetall("stats:lang"))    || {};
+    const periodo = (await redis.hgetall("stats:periodo")) || {};
+    const userType= (await redis.hgetall("stats:user_type")) || {};
 
-    // oggi & ultimi 7 giorni dal bucket day
-    const todayKey = `stats:day:${new Date().toISOString().slice(0,10)}`;
-    const todayHash = (await redis.hgetall(todayKey)) || {};
-    let last7 = 0;
-    for (let i=0;i<7;i++){
-      const d = new Date(); d.setDate(d.getDate()-i);
-      const k = `stats:day:${d.toISOString().slice(0,10)}`;
-      const h = (await redis.hgetall(k)) || {};
-      last7 += Object.values(h).map(v=>parseInt(v||"0",10)||0).reduce((a,b)=>a+b,0);
+    // ultimi 14 giorni: stats:day:YYYY-MM-DD -> hmap { "wtf:future":N, "whatif:past":N, ... }
+    const days = [];
+    const today = new Date();
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(today.getTime() - i*24*3600*1000);
+      const key = `stats:day:${dateISO(d)}`;
+      const h = (await redis.hgetall(key)) || {};
+      days.push({ day: dateISO(d), buckets: h });
     }
-    const today = Object.values(todayHash).map(v=>parseInt(v||"0",10)||0).reduce((a,b)=>a+b,0);
 
     return res.status(200).json({
       ok:true,
-      total, today, last7,
-      byStyle: style, byLang: lang, byTime: period, byUser: utype
+      counters: { total, style, lang, periodo, userType },
+      days: days.reverse(),
     });
   } catch (e) {
-    console.error("❌ [/api/admin-stats] error:", e);
+    console.error("admin-stats error:", e);
     return res.status(500).json({ ok:false, error:"server_error" });
   }
 }
