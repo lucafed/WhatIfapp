@@ -142,7 +142,7 @@ const I18N={
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
       meta:(st,p)=> st==='wtf'
         ? `Stile: What the F · 6–8 frasi · un solo paragrafo · niente elenchi/domande/emoji · periodo: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if · 6–9 frasi · un solo paragrafo · niente elenchi/domande/emoji · ${p==='past'?'Controfattuale (Passato)':'Predittivo (Futuro)'}.`},
+        : `Stile: What if · 8–11 frasi · un solo paragrafo · niente elenchi/domande/emoji · periodo: ${p==='past'?'Passato':'Futuro'}.`},
   en:{tWTF:"⚡ What the F — Result", tWHF:"💡 What if — Result",
       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
       share:"📤 Share / Copy", again:"🔁 Ask another",
@@ -150,7 +150,7 @@ const I18N={
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
       meta:(st,p)=> st==='wtf'
         ? `Style: What the F · 6–8 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if · 6–9 sentences · single paragraph · no lists/questions/emojis · ${p==='past'?'Counterfactual (Past)':'Predictive (Future)'}.`}
+        : `Style: What if · 8–11 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`}
 }[lang];
 
 document.getElementById('langBtn').textContent=lang.toUpperCase();
