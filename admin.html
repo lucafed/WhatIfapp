@@ -1,314 +1,178 @@
-<!-- /public/admin.html -->
 <!doctype html>
 <html lang="it">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Admin (dashboard)</title>
+<title>What?f — Admin</title>
 <meta name="theme-color" content="#0B0B0C"/>
 <style>
-  :root{
-    --bg:#0B0B0C; --bg2:#101414; --card:#13191E; --fg:#EAF2EE; --muted:#A0B2BA;
-    --acc:#00B5CC; --acc2:#00E0FF; --ink:#0A0E12; --ok:#1FBF75; --warn:#FFB020; --err:#FF5A59;
-    --line:rgba(255,255,255,.12);
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;background:radial-gradient(900px 700px at 18% 18%,var(--bg2) 0%,var(--bg) 62%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
-  main{max-width:1100px;margin:auto;padding:18px}
-  h1{margin:8px 0 14px;font-size:clamp(22px,4.5vw,30px)}
-  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 8px 26px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06)}
-  input,select{background:rgba(255,255,255,.06);color:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
-  button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
-  .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.35)}
-  .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid var(--line)}
-  .danger{background:rgba(255,90,89,.12);border:1px solid rgba(255,90,89,.4);color:#fff}
-  .ok{background:rgba(31,191,117,.12);border:1px solid rgba(31,191,117,.4);color:#fff}
-  .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06)}
-  .muted{color:var(--muted);font-size:12px}
-  table{width:100%;border-collapse:collapse;margin-top:8px}
-  th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:13px;vertical-align:top}
-  th{font-size:12px;letter-spacing:.2px;text-transform:uppercase;color:#BFD2D9}
-  .kpi{min-width:160px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
-  .kpi .v{font-size:22px;font-weight:900}
-  .pill{padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px}
-  .pill.free{background:rgba(255,255,255,.05)}
-  .pill.pro{background:rgba(0,224,255,.12);border-color:rgba(0,224,255,.45)}
-  .pill.admin{background:rgba(31,191,117,.14);border-color:rgba(31,191,117,.5)}
-  .right{margin-left:auto}
+:root{--bg:#0B0B0C;--card:#12181d;--fg:#eaf2ee;--muted:#9bb0ba;--acc:#1C57A0;--acc2:#FFEC01;--ok:#29cc74;--bad:#ff6b6b}
+*{box-sizing:border-box}
+html,body{margin:0;background:#0b0b0c;color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:100%;overflow-x:hidden}
+main{max-width:980px;margin:0 auto;padding:16px}
+.card{background:rgba(18,24,29,.92);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px;margin:12px 0;backdrop-filter:blur(8px)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input,button,select{border-radius:12px;border:1px solid rgba(255,255,255,.12);padding:10px 12px;background:rgba(255,255,255,.06);color:#fff}
+button.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0a0e12;border:none;font-weight:800}
+button.ghost{background:rgba(255,255,255,.06);color:#fff}
+.badge{display:inline-block;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);border-radius:999px;padding:4px 8px;font-size:12px}
+.ok{color:#0a0;}.bad{color:#ff6b6b}
+table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}
+th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:13px;white-space:nowrap}
+.stat{min-width:120px;text-align:center;background:rgba(255,255,255,.04);border-radius:12px;padding:10px 8px}
 </style>
 </head>
 <body>
 <main>
-  <div class="row" style="justify-content:space-between">
-    <h1>What?f — Admin (dashboard)</h1>
-    <div class="row">
-      <span id="authState" class="badge">Non autenticato</span>
-      <span id="serverState" class="badge">Server: —</span>
-    </div>
-  </div>
+  <h1 style="margin:6px 0 10px">Admin · What?f</h1>
 
-  <!-- Accesso -->
   <div class="card">
-    <h3 style="margin:4px 0 10px">Accesso</h3>
-    <p class="muted">Inserisci il PIN per ottenere un token admin (legato al tuo IP). Il server legge l’header <code>admin-secret</code> su <code>/api/admin-token</code>.</p>
-    <div class="row">
-      <input id="pin" type="password" placeholder="PIN segreto" style="min-width:200px"/>
+    <h3>Accesso</h3>
+    <p class="badge" id="authState">Non autenticato</p>
+    <div class="row" style="margin-top:8px">
+      <input id="pin" type="password" inputmode="numeric" placeholder="PIN segreto" style="min-width:180px"/>
       <button class="primary" id="enterBtn">Entra</button>
       <button class="ghost" id="logoutBtn">Esci</button>
-      <span id="authHelp" class="muted"></span>
     </div>
+    <p id="authHelp" style="color:var(--muted);margin:8px 0 0">Il token è legato all’IP attuale e dura 7 giorni.</p>
   </div>
 
-  <!-- Operazioni veloci -->
   <div class="card">
-    <h3 style="margin:4px 0 10px">Operazioni veloci</h3>
+    <h3>Operazioni veloci</h3>
     <div class="row">
-      <button class="primary" id="resetBtn">🔄 Reset crediti (oggi)</button>
-      <button class="ghost" id="proOn">⭐ Attiva PRO (solo questo device)</button>
-      <button class="ghost" id="proOff">☆ Disattiva PRO</button>
-      <button class="danger" id="clearLogsBtn">🗑️ Svuota log</button>
+      <button class="primary" id="refreshBtn">Aggiorna</button>
+      <button class="ghost" id="autoBtn">Auto-refresh</button>
+      <button class="ghost" id="clearBtn">Svuota log</button>
     </div>
-    <p class="muted">Stato PRO locale: <span id="proState" class="badge">—</span></p>
   </div>
 
-  <!-- Statistiche globali -->
+  <div class="card">
+    <h3>Statistiche globali (finestra caricata)</h3>
+    <div class="row" style="gap:12px">
+      <div class="stat"><div>Totale</div><div id="s_total" style="font-size:20px">—</div></div>
+      <div class="stat"><div>Oggi</div><div id="s_today" style="font-size:20px">—</div></div>
+      <div class="stat"><div>Ultimi 7g</div><div id="s_7" style="font-size:20px">—</div></div>
+      <div class="stat"><div>Per stile</div><div id="s_style">—</div></div>
+      <div class="stat"><div>Per lingua</div><div id="s_lang">—</div></div>
+      <div class="stat"><div>Per tempo</div><div id="s_period">—</div></div>
+      <div class="stat"><div>User types</div><div id="s_user">—</div></div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="row" style="justify-content:space-between">
-      <h3 style="margin:4px 0 10px">Statistiche globali (dalla finestra caricata)</h3>
-      <div class="row">
-        <button class="primary" id="refreshBtn">Aggiorna</button>
-        <button class="ghost" id="autoBtn">Auto-refresh</button>
-      </div>
-    </div>
-    <div class="row">
-      <div class="kpi"><div class="muted">Totale log</div><div id="kTotal" class="v">—</div></div>
-      <div class="kpi"><div class="muted">Per stile</div><div id="kStyle" class="v">—</div></div>
-      <div class="kpi"><div class="muted">Per lingua</div><div id="kLang" class="v">—</div></div>
-      <div class="kpi"><div class="muted">User types</div><div id="kUser" class="v">—</div></div>
-    </div>
-  </div>
-
-  <!-- LOG -->
-  <div class="card">
-    <h3 style="margin:4px 0 10px">Log richieste</h3>
-    <div class="row">
-      <select id="filterStyle">
-        <option value="">Stile: tutti</option>
-        <option value="whatif">whatif</option>
-        <option value="wtf">wtf</option>
-      </select>
-      <select id="filterLang">
-        <option value="">Lingua: tutte</option>
-        <option value="it">it</option>
-        <option value="en">en</option>
-      </select>
-      <select id="filterPer">
-        <option value="">Tempo: tutti</option>
-        <option value="past">past</option>
-        <option value="future">future</option>
-      </select>
-      <select id="filterType">
-        <option value="">Tipo utente: tutti</option>
-        <option value="free">free</option>
-        <option value="pro">pro</option>
-        <option value="admin">admin</option>
-      </select>
-      <input id="searchQ" placeholder="Cerca nella domanda…" style="min-width:220px"/>
-      <div class="right"></div>
+      <h3 style="margin:0">Log richieste</h3>
       <select id="limitSel">
-        <option>ultimi 200</option>
-        <option>ultimi 500</option>
-        <option>ultimi 1000</option>
+        <option value="200">ultimi 200</option>
+        <option value="500">ultimi 500</option>
+        <option value="1000">ultimi 1000</option>
       </select>
+    </div>
+    <div class="row" style="margin:8px 0">
+      <select id="fStyle"><option value="">Stile: tutti</option><option value="whatif">whatif</option><option value="wtf">wtf</option></select>
+      <select id="fLang"><option value="">Lingua: tutte</option><option value="it">it</option><option value="en">en</option></select>
+      <select id="fPeriod"><option value="">Tempo: tutti</option><option value="past">past</option><option value="future">future</option></select>
+      <select id="fUser"><option value="">Tipo utente: tutti</option><option value="free">free</option><option value="pro">pro</option><option value="admin">admin</option></select>
+      <input id="searchQ" placeholder="Cerca nella domanda…" style="min-width:220px"/>
     </div>
 
     <table>
       <thead>
-        <tr>
-          <th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th>
-        </tr>
+        <tr><th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th></tr>
       </thead>
-      <tbody id="logsBody"></tbody>
+      <tbody id="tbody"></tbody>
     </table>
   </div>
 </main>
 
 <script>
-/* ===== Costanti / storage ===== */
 const LS = localStorage;
 const TOKEN_KEY = "admin_token";
-const PRO_PREFS_KEY = "whatif_prefs";
+const ADMIN_SECRET = "wtf-setup-2025"; // deve combaciare col server (o con ADMIN_PIN)
 
-/* ===== UI helpers ===== */
-function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(); }
-function setAuthUI(ok){ const el=document.getElementById("authState"); el.textContent = ok?"Autenticato":"Non autenticato"; el.style.background = ok?"rgba(31,191,117,.14)":"rgba(255,255,255,.06)"; }
-function setServerUI(txt){ document.getElementById("serverState").textContent = "Server: "+txt; }
-function setProUI(){
-  try{
-    const prefs = JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}");
-    document.getElementById("proState").textContent = prefs.pro===true ? "PRO attivo su questo device" : "PRO non attivo";
-  }catch{}
-}
+function setAuth(ok){ const b=document.getElementById("authState"); b.textContent = ok?"Autenticato":"Non autenticato"; b.style.background = ok?"rgba(0,255,0,.08)":"rgba(255,255,255,.06)"; }
+function fmt(d){ return new Date(d).toLocaleString(); }
+function json(x){ try{return JSON.stringify(x)}catch{return String(x)} }
 
-/* ===== API wrappers ===== */
-async function checkServer(){
-  try{
-    const r = await fetch("/api/whoami");
-    setServerUI(r.ok ? "attivo ✅" : "errore");
-  }catch{ setServerUI("errore"); }
-}
-async function createToken(pin){
+async function login(){
+  const pin = document.getElementById("pin").value.trim();
+  if(!pin) return alert("Inserisci il PIN");
+  // Header + body (server accetta entrambe)
   const r = await fetch("/api/admin-token", {
     method:"POST",
-    headers:{ "Content-Type":"application/json", "admin-secret": pin },
-    body:"{}"
+    headers:{ "Content-Type":"application/json", "admin-secret": ADMIN_SECRET },
+    body: JSON.stringify({ pin })
   });
   const d = await r.json().catch(()=>({}));
-  if(!r.ok || !d.token) throw new Error(d.error||"token_error");
+  if(!r.ok || !d.ok){ document.getElementById("authHelp").textContent="PIN errato o segreto non accettato."; setAuth(false); return; }
   LS.setItem(TOKEN_KEY, d.token);
-  return d.token;
+  setAuth(true);
+  refreshAll();
 }
-async function fetchStats(){
-  const tok = LS.getItem(TOKEN_KEY)||"";
-  const r = await fetch("/api/admin-stats", { headers:{ "x-admin-token": tok }});
-  const d = await r.json().catch(()=>({}));
-  if(!r.ok) throw new Error(d.error||"auth");
-  return d; // {total,today,last7}
-}
-async function fetchLogs(limit=200){
-  const tok = LS.getItem(TOKEN_KEY)||"";
-  const r = await fetch(`/api/admin-logs?limit=${limit}`, { headers:{ "x-admin-token": tok }});
-  const d = await r.json().catch(()=>({}));
-  if(!r.ok || !d.ok) throw new Error(d.error||"auth");
-  return d; // {ok, items:[...], stats:{...}}
-}
-async function resetCredits(){
-  const tok = LS.getItem(TOKEN_KEY)||"";
-  const r = await fetch("/api/reset", { method:"POST", headers:{ "x-admin-token": tok }});
-  if(!r.ok){ const d=await r.json().catch(()=>({})); throw new Error(d.error||"reset_failed"); }
-}
-async function clearLogs(){
-  const tok = LS.getItem(TOKEN_KEY)||"";
-  const r = await fetch("/api/admin-clear-logs", { method:"POST", headers:{ "x-admin-token": tok }});
-  if(!r.ok){ const d=await r.json().catch(()=>({})); throw new Error(d.error||"clear_failed"); }
-}
+document.getElementById("enterBtn").onclick = login;
+document.getElementById("logoutBtn").onclick = ()=>{ LS.removeItem(TOKEN_KEY); setAuth(false); };
 
-/* ===== Render ===== */
-function renderKPIs(loaded){
-  // loaded = data from /api/admin-logs {items, stats}
-  const total = loaded?.items?.length || 0;
-  const style = loaded?.stats?.style || {};
-  const lang  = loaded?.stats?.lang || {};
-  const utype = loaded?.stats?.user_type || {};
-  document.getElementById("kTotal").textContent = total;
-  document.getElementById("kStyle").textContent = JSON.stringify(style);
-  document.getElementById("kLang").textContent  = JSON.stringify(lang);
-  document.getElementById("kUser").textContent  = JSON.stringify(utype);
+async function refreshAll(){
+  const tok = LS.getItem(TOKEN_KEY)||"";
+  if(!tok){ setAuth(false); return; }
+
+  // stats
+  const s = await fetch("/api/admin-stats", { headers:{ "x-admin-token": tok }}).then(r=>r.json()).catch(()=>null);
+  if(!s || !s.ok){ setAuth(false); return; }
+  setAuth(true);
+  const set = (id,v)=> document.getElementById(id).textContent = (typeof v==="object")? json(v): String(v);
+  set("s_total", s.total); set("s_today", s.today); set("s_7", s.last7);
+  set("s_style", s.byStyle); set("s_lang", s.byLang); set("s_period", s.byPeriod); set("s_user", s.byUser);
+
+  // logs
+  const limit = document.getElementById("limitSel").value || "200";
+  const L = await fetch(`/api/admin-logs?limit=${encodeURIComponent(limit)}`, { headers:{ "x-admin-token": tok }}).then(r=>r.json()).catch(()=>null);
+  if(!L || !L.ok) return;
+  renderLogs(L.items||[]);
 }
-
-function renderLogs(loaded){
-  const body = document.getElementById("logsBody");
-  body.innerHTML = "";
-  const all = Array.isArray(loaded?.items) ? loaded.items : [];
-
-  // filtri
-  const fStyle = document.getElementById("filterStyle").value;
-  const fLang  = document.getElementById("filterLang").value;
-  const fPer   = document.getElementById("filterPer").value;
-  const fType  = document.getElementById("filterType").value;
-  const q      = document.getElementById("searchQ").value.trim().toLowerCase();
-
+function renderLogs(all){
+  const fS=document.getElementById("fStyle").value;
+  const fL=document.getElementById("fLang").value;
+  const fP=document.getElementById("fPeriod").value;
+  const fU=document.getElementById("fUser").value;
+  const q =(document.getElementById("searchQ").value||"").trim().toLowerCase();
   const rows = all.filter(x=>{
-    if(fStyle && x.style!==fStyle) return false;
-    if(fLang  && x.lang!==fLang)   return false;
-    if(fPer   && x.periodo!==fPer) return false;
-    if(fType  && (x.user_type||"")!==fType) return false;
+    if(fS && x.style!==fS) return false;
+    if(fL && x.lang!==fL) return false;
+    if(fP && x.periodo!==fP) return false;
+    if(fU && x.user_type!==fU) return false;
     if(q && !String(x.domanda||"").toLowerCase().includes(q)) return false;
     return true;
   });
-
+  const tb = document.getElementById("tbody"); tb.innerHTML="";
   for(const it of rows){
     const tr = document.createElement("tr");
-    const userPill = `<span class="pill ${it.user_type||'free'}">${it.user_type||'free'}</span>`;
-    tr.innerHTML = `
-      <td>${fmtDate(it.ts||Date.now())}</td>
-      <td>${it.ip||"—"}</td>
-      <td>${userPill}</td>
-      <td>${it.style||"—"}</td>
-      <td>${it.lang||"—"}</td>
-      <td>${it.periodo||"—"}</td>
-      <td>${it.answer_chars||0}</td>
-      <td>${(it.domanda||"").replace(/\s+/g," ").slice(0,300)}</td>`;
-    body.appendChild(tr);
+    tr.innerHTML = `<td>${fmt(it.ts)}</td><td>${it.ip||"—"}</td><td>${it.user_type||"—"}</td>
+      <td>${it.style}</td><td>${it.lang}</td><td>${it.periodo}</td><td>${it.len||0}</td>
+      <td>${(it.domanda||"").replace(/\s+/g," ").slice(0,220)}</td>`;
+    tb.appendChild(tr);
   }
-
-  renderKPIs(loaded);
 }
 
-/* ===== Eventi ===== */
-document.getElementById("enterBtn").onclick = async ()=>{
-  const pin = document.getElementById("pin").value.trim();
-  if(!pin) return alert("Inserisci il PIN.");
-  try{
-    await createToken(pin);
-    setAuthUI(true);
-    document.getElementById("authHelp").textContent = "Token attivo sul tuo IP (48h).";
-    document.getElementById("refreshBtn").click();
-  }catch(e){
-    setAuthUI(false);
-    document.getElementById("authHelp").textContent = "PIN errato o server non allineato.";
-  }
-};
-document.getElementById("logoutBtn").onclick = ()=>{
-  LS.removeItem(TOKEN_KEY);
-  setAuthUI(false);
-  document.getElementById("logsBody").innerHTML="";
-  renderKPIs({items:[],stats:{}});
-};
-
-document.getElementById("resetBtn").onclick = async ()=>{
-  try{ await resetCredits(); alert("Crediti di oggi azzerati."); }catch(e){ alert("Errore reset: "+e.message); }
-};
-document.getElementById("clearLogsBtn").onclick = async ()=>{
-  if(!confirm("Sicuro di svuotare i log?")) return;
-  try{ await clearLogs(); alert("Log svuotati."); document.getElementById("refreshBtn").click(); }catch(e){ alert("Errore: "+e.message); }
-};
-document.getElementById("proOn").onclick = ()=>{
-  const p = JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}"); p.pro = true; LS.setItem(PRO_PREFS_KEY, JSON.stringify(p)); setProUI();
-};
-document.getElementById("proOff").onclick = ()=>{
-  const p = JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}"); delete p.pro; LS.setItem(PRO_PREFS_KEY, JSON.stringify(p)); setProUI();
-};
-
-["filterStyle","filterLang","filterPer","filterType","searchQ"].forEach(id=>{
-  document.getElementById(id).oninput = ()=>document.getElementById("refreshBtn").click();
-});
-document.getElementById("limitSel").onchange = ()=>document.getElementById("refreshBtn").click();
-
-let autoTimer=null;
-document.getElementById("autoBtn").onclick=()=>{
-  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; document.getElementById("autoBtn").textContent="Auto-refresh"; return; }
-  autoTimer = setInterval(()=>document.getElementById("refreshBtn").click(), 5000);
+document.getElementById("refreshBtn").onclick = refreshAll;
+let timer=null;
+document.getElementById("autoBtn").onclick = ()=>{
+  if(timer){ clearInterval(timer); timer=null; document.getElementById("autoBtn").textContent="Auto-refresh"; return; }
+  timer=setInterval(refreshAll, 5000);
   document.getElementById("autoBtn").textContent="Stop auto-refresh";
 };
-
-document.getElementById("refreshBtn").onclick = async ()=>{
-  const limit = (document.getElementById("limitSel").value.match(/\d+/)||[200])[0];
-  try{
-    const data = await fetchLogs(limit);
-    setAuthUI(true);
-    renderLogs(data);
-  }catch(e){
-    setAuthUI(false);
-    alert("Autenticazione richiesta o errore server.");
-  }
+document.getElementById("clearBtn").onclick = async ()=>{
+  const tok = LS.getItem(TOKEN_KEY)||"";
+  if(!tok) return alert("Fai login admin.");
+  if(!confirm("Sicuro di svuotare i log?")) return;
+  await fetch("/api/admin-clear-logs", { method:"POST", headers:{ "x-admin-token": tok }});
+  refreshAll();
 };
-
-/* ===== Init ===== */
-setAuthUI(!!LS.getItem(TOKEN_KEY));
-setProUI();
-checkServer();
+["limitSel","fStyle","fLang","fPeriod","fUser","searchQ"].forEach(id=>{
+  const el=document.getElementById(id); el && el.addEventListener("change", ()=>renderLogs.cached && renderLogs(renderLogs.cached));
+});
+setAuth(!!LS.getItem(TOKEN_KEY));
+refreshAll();
 </script>
 </body>
 </html>
