@@ -1,71 +1,65 @@
 // ============================
-// /api/admin-token.js
-// Crea/controlla/revoca token admin (token -> IP) con TTL
+// /api/admin-token.js — Token ADMIN (∞ crediti) legato all’IP, TTL 7gg
 // ============================
 import { Redis } from "@upstash/redis";
+import crypto from "crypto";
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-const ALLOWED_ORIGINS = [
-  "https://what-ifapp.vercel.app",
-  "http://localhost:3000",
-  "http://127.0.0.1:5500",
-];
-
 function cors(req, res) {
-  const origin = String(req.headers.origin || "");
-  if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
-  res.setHeader("Vary", "Origin");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-token");
 }
 
-function requesterIp(req) {
+function getIp(req) {
   return (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
     .toString().split(",")[0].trim();
 }
 
-function randHex(len=32){
-  const bytes = Array.from({length:len/2}, ()=> Math.floor(Math.random()*256));
-  return bytes.map(b=> b.toString(16).padStart(2,"0")).join("");
-}
-
-export default async function handler(req, res){
+export default async function handler(req, res) {
   cors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  try{
-    const ip = requesterIp(req);
+  const ip = getIp(req);
+  const ttl = 7 * 24 * 60 * 60; // 7 giorni
 
-    if (req.method === "GET"){
-      const token = String(req.headers["x-admin-token"] || "").trim();
-      if(!token) return res.status(200).json({ admin:false, ip, token:null });
-      const savedIp = await redis.get(`admin:token:${token}`);
-      return res.status(200).json({ admin: !!(savedIp && savedIp === ip), ip, token: token || null });
+  try {
+    if (req.method === "GET") {
+      const tok = String(req.headers["x-admin-token"] || "").trim();
+      if (!tok) return res.status(200).json({ admin: false, ip, token: null });
+      const savedIp = await redis.get(`admin:token:${tok}`);
+      const admin = !!savedIp && savedIp === ip;
+      return res.status(200).json({ admin, ip, token: admin ? tok : null });
     }
 
-    if (req.method === "POST"){
-      // crea o rinnova un token admin per QUESTO IP
-      // se arriva x-admin-token, lo ri-associa all'IP; altrimenti ne genera uno
-      let token = String(req.headers["x-admin-token"] || "").trim();
-      if(!token) token = randHex(32);
-      await redis.set(`admin:token:${token}`, ip, { ex: 60 * 60 * 24 * 7 }); // 7gg
-      return res.status(200).json({ ok:true, token, ip, ttl_days:7 });
+    const url = new URL(req.url, "http://x");
+    const renew = url.searchParams.get("renew");
+    const revoke = url.searchParams.get("revoke");
+    const clientTok = String(req.headers["x-admin-token"] || "").trim();
+
+    if (revoke) {
+      if (clientTok) await redis.del(`admin:token:${clientTok}`);
+      return res.status(200).json({ ok: true, ip, revoked: !!clientTok });
     }
 
-    if (req.method === "DELETE"){
-      const token = String(req.headers["x-admin-token"] || "").trim();
-      if(!token) return res.status(400).json({ error:"missing_token" });
-      await redis.del(`admin:token:${token}`);
-      return res.status(200).json({ ok:true });
+    if (renew) {
+      if (!clientTok) return res.status(400).json({ error: "missing_token" });
+      const savedIp = await redis.get(`admin:token:${clientTok}`);
+      if (savedIp !== ip) return res.status(403).json({ error: "ip_mismatch" });
+      await redis.expire(`admin:token:${clientTok}`, ttl);
+      return res.status(200).json({ ok: true, ip, token: clientTok });
     }
 
-    return res.status(405).json({ error:"method_not_allowed" });
-  }catch(err){
+    // attiva nuovo token
+    const token = crypto.randomBytes(16).toString("hex");
+    await redis.set(`admin:token:${token}`, ip, { ex: ttl });
+    return res.status(200).json({ ok: true, ip, token });
+  } catch (err) {
     console.error("❌ [/api/admin-token] error:", err);
-    return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
+    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
 }
