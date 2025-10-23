@@ -3,79 +3,114 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Console Admin</title>
+<title>What?f — Admin (dashboard)</title>
 <meta name="theme-color" content="#0B0B0C"/>
 <style>
-  :root{--bg:#0B0B0C;--card:#13191E;--fg:#EAF2EE;--muted:#A0B2BA;--acc:#00E0FF;--acc2:#1AFFD5}
-  body{margin:0;background:radial-gradient(900px 700px at 20% 18%,#101414 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:980px;margin:auto;padding:18px}
-  h1{margin:4px 0 12px;text-align:center;color:var(--acc)}
-  .card{background:var(--card);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:14px;margin:12px 0}
-  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  input,select{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px}
-  button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
-  .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12}
-  .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
-  table{width:100%;border-collapse:collapse;margin-top:8px}
-  th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:13px}
-  .muted{color:var(--muted);font-size:12px}
-  .badge{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:12px}
-  .statbox{display:flex;justify-content:space-around;text-align:center;margin-top:8px}
-  .stat{background:rgba(255,255,255,.06);border-radius:10px;padding:10px 14px;min-width:90px}
-  .stat h4{margin:0;font-size:13px;color:var(--muted)}
-  .stat div{font-size:20px;font-weight:800;margin-top:4px}
+  :root{
+    --bg:#0B0B0C; --bg2:#101414; --fg:#EAF2EE; --muted:#A0B2BA;
+    --card:#13191E; --line:rgba(255,255,255,.12);
+    --acc:#1C57A0; --acc2:#FFEC01; --ink:#0A0E12;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:
+    radial-gradient(900px 700px at 20% 18%, var(--bg2) 0%, var(--bg) 60%),
+    radial-gradient(600px 480px at 80% 12%, rgba(255,236,1,.06), transparent 60%); color:var(--fg);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; -webkit-font-smoothing:antialiased;}
+  main{max-width:1080px;margin:auto;padding:22px}
+  h1{margin:0 0 8px; font-size:clamp(22px,4vw,30px)}
+  .sub{color:var(--muted); margin:0 0 16px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; margin:12px 0; backdrop-filter:blur(8px)}
+  .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  .grow{flex:1}
+  input,select{background:rgba(255,255,255,.06); border:1px solid var(--line); color:#fff; border-radius:12px; padding:10px}
+  button{border:none; border-radius:12px; padding:10px 14px; font-weight:800; cursor:pointer}
+  .primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink); box-shadow:0 6px 18px rgba(0,0,0,.35)}
+  .ghost{background:rgba(255,255,255,.06); color:#fff; border:1px solid var(--line)}
+  .badge{display:inline-flex;align-items:center;gap:6px; font-size:12px; padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:rgba(255,255,255,.06)}
+  .ok{background:rgba(0,255,0,.08)}
+  .err{background:rgba(255,0,0,.08)}
+  .muted{color:var(--muted); font-size:12px}
+  .hdr{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px}
+  table{width:100%; border-collapse:collapse}
+  th,td{padding:10px 8px; border-bottom:1px solid rgba(255,255,255,.08); text-align:left; font-size:13px; line-height:1.4}
+  th{font-size:12px; color:#D7E6F0; text-transform:uppercase; letter-spacing:.4px}
+  .kpi{display:grid; grid-template-columns:repeat(4,minmax(160px,1fr)); gap:10px}
+  .kpi .card{margin:0}
+  .big{font-size:22px; font-weight:900}
+  .chips{display:flex; flex-wrap:wrap; gap:8px}
+  .chip{background:rgba(255,255,255,.06); border:1px solid var(--line); color:#eaf3ee; border-radius:999px; padding:6px 10px; font-size:12px}
+  .hr{height:1px; background:rgba(255,255,255,.10); margin:12px 0}
+  .right{margin-left:auto}
+  .nowrap{white-space:nowrap}
 </style>
 </head>
 <body>
 <main>
-  <h1>What?f — Console Admin</h1>
-
-  <!-- 🔐 Accesso -->
-  <div class="card">
-    <h3>Accesso</h3>
-    <p class="muted">Inserisci il PIN per generare un token admin valido 48h, legato al tuo IP.</p>
-    <div class="row">
-      <input id="pin" type="password" placeholder="PIN segreto" style="min-width:180px"/>
-      <button class="primary" id="enterBtn">Entra</button>
-      <button class="ghost" id="logoutBtn">Esci</button>
-      <span id="authState" class="badge">Non autenticato</span>
+  <div class="hdr">
+    <div>
+      <h1>Admin · What?f</h1>
+      <p class="sub">Controllo accessi, crediti, log e statistiche in tempo reale.</p>
     </div>
-    <p class="muted" id="authHelp"></p>
+    <div class="chips">
+      <span class="chip">Regole crediti: <b>Admin ∞</b> · <b>PRO 10/g</b> · <b>FREE 3/g</b></span>
+    </div>
   </div>
 
-  <!-- ⚙️ Operazioni -->
+  <!-- ACCESSO -->
   <div class="card">
-    <h3>Operazioni veloci</h3>
+    <div class="hdr">
+      <h3 style="margin:0">Accesso</h3>
+      <span id="authBadge" class="badge">Non autenticato</span>
+    </div>
+    <div class="row">
+      <input id="pin" type="password" placeholder="PIN segreto" style="min-width:220px"/>
+      <button class="primary" id="enterBtn">Entra</button>
+      <button class="ghost" id="renewBtn">Rinnova token</button>
+      <button class="ghost" id="logoutBtn">Esci</button>
+      <span id="ipBadge" class="badge">IP: —</span>
+      <span id="ttlBadge" class="badge">TTL: —</span>
+    </div>
+    <p id="authHelp" class="muted" style="margin-top:6px">Il PIN non è salvato nel client. Il token admin è legato al tuo IP (TTL ~48h, lato server).</p>
+  </div>
+
+  <!-- OPERAZIONI VELOCI -->
+  <div class="card">
+    <div class="hdr"><h3 style="margin:0">Operazioni veloci</h3></div>
     <div class="row">
       <button class="primary" id="resetBtn">🔄 Reset crediti (oggi)</button>
-      <button class="ghost" id="proOn">⭐ Attiva PRO (solo locale)</button>
-      <button class="ghost" id="proOff">☆ Disattiva PRO</button>
+      <button class="ghost" id="proOn">⭐ PRO ON (solo questo device)</button>
+      <button class="ghost" id="proOff">☆ PRO OFF</button>
       <button class="ghost" id="clearLogsBtn">🗑️ Svuota log</button>
+      <span id="proState" class="badge right">PRO locale: —</span>
     </div>
-    <p class="muted">Stato PRO locale: <span id="proState" class="badge">—</span></p>
   </div>
 
-  <!-- 📊 Statistiche globali -->
+  <!-- KPI + STATISTICHE -->
   <div class="card">
-    <h3>Statistiche globali</h3>
-    <div class="statbox">
-      <div class="stat"><h4>Totale</h4><div id="statTot">—</div></div>
-      <div class="stat"><h4>Oggi</h4><div id="statToday">—</div></div>
-      <div class="stat"><h4>Ultimi 7g</h4><div id="stat7">—</div></div>
-    </div>
-    <p class="muted" id="statErr"></p>
-  </div>
-
-  <!-- 🧠 Log -->
-  <div class="card">
-    <div class="row" style="justify-content:space-between">
-      <h3 style="margin:0">Log & Statistiche</h3>
+    <div class="hdr">
+      <h3 style="margin:0">Statistiche globali (sulla finestra caricata)</h3>
       <div class="row">
         <button class="primary" id="refreshBtn">Aggiorna</button>
         <button class="ghost" id="autoBtn">Auto-refresh</button>
       </div>
     </div>
+
+    <div class="kpi" style="margin-bottom:10px">
+      <div class="card"><div class="muted">Totale log</div><div id="k_total" class="big">—</div></div>
+      <div class="card"><div class="muted">Per stile</div><div id="k_style" class="big">—</div></div>
+      <div class="card"><div class="muted">Per lingua</div><div id="k_lang" class="big">—</div></div>
+      <div class="card"><div class="muted">Per tempo</div><div id="k_period" class="big">—</div></div>
+    </div>
     <div class="row">
+      <span class="badge">Utenti: <span id="k_users">—</span></span>
+      <span class="badge">User types: <span id="k_utype">—</span></span>
+    </div>
+  </div>
+
+  <!-- LOG + FILTRI -->
+  <div class="card">
+    <div class="hdr"><h3 style="margin:0">Log richieste</h3></div>
+    <div class="row" style="margin-bottom:6px">
       <select id="filterStyle">
         <option value="">Stile: tutti</option>
         <option value="whatif">whatif</option>
@@ -91,70 +126,263 @@
         <option value="past">past</option>
         <option value="future">future</option>
       </select>
-      <input id="searchQ" placeholder="Cerca nella domanda…" style="min-width:220px"/>
+      <select id="filterType">
+        <option value="">Tipo utente: tutti</option>
+        <option value="admin">admin</option>
+        <option value="pro">pro</option>
+        <option value="free">free</option>
+      </select>
+      <input id="searchQ" class="grow" placeholder="Cerca nella domanda…" />
+      <select id="limitSel" class="nowrap">
+        <option value="200">ultimi 200</option>
+        <option value="500">ultimi 500</option>
+        <option value="1000">ultimi 1000</option>
+      </select>
     </div>
 
-    <div id="stats" class="muted" style="margin-top:8px">—</div>
     <table id="logsTbl">
-      <thead><tr><th>Quando</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Domanda</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th>
+        </tr>
+      </thead>
       <tbody></tbody>
     </table>
+    <div class="hr"></div>
+    <div class="muted" id="statsTxt">—</div>
   </div>
 </main>
 
 <script>
-const LS=localStorage,TOKEN_KEY="admin_token",PRO_PREFS_KEY="whatif_prefs",ADMIN_SECRET="wtf-setup-2025";
-function fmtDate(ts){const d=new Date(ts);return d.toLocaleString();}
-function setAuthUI(ok){const el=document.getElementById("authState");el.textContent=ok?"Autenticato":"Non autenticato";el.style.background=ok?"rgba(0,255,0,.08)":"rgba(255,255,255,.06)";}
-function setProUI(){try{const prefs=JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}");const active=prefs.pro===true;document.getElementById("proState").textContent=active?"PRO attivo":"PRO non attivo";}catch{}}
+/* ===== Local state & helpers ===== */
+const LS = localStorage;
+const TOKEN_KEY = "admin_token";
+const PRO_PREFS_KEY = "whatif_prefs";
 
-async function registerToken(pin){
-  const r=await fetch("/api/admin-token",{method:"POST",headers:{"Content-Type":"application/json","admin-secret":ADMIN_SECRET},body:JSON.stringify({pin})});
-  const data=await r.json().catch(()=>({}));if(!r.ok||!data.ok)throw new Error(data.error||"token_error");
-  LS.setItem(TOKEN_KEY,data.token);return data.token;
+function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(undefined,{hour12:false}); }
+function setAuthUI(ok, ip="—", ttl="—"){
+  const b=document.getElementById("authBadge");
+  b.textContent = ok ? "Autenticato" : "Non autenticato";
+  b.classList.toggle("ok", ok); b.classList.toggle("err", !ok);
+  document.getElementById("ipBadge").textContent = "IP: " + ip;
+  document.getElementById("ttlBadge").textContent = "TTL: " + ttl;
 }
-
-async function fetchStats(){
-  const token=LS.getItem(TOKEN_KEY)||"";
-  const r=await fetch("/api/admin-stats",{headers:{"x-admin-token":token}});
-  const d=await r.json().catch(()=>({}));
-  if(!r.ok||!d.ok){document.getElementById("statErr").textContent="Impossibile leggere statistiche.";return;}
-  document.getElementById("statTot").textContent=d.total;
-  document.getElementById("statToday").textContent=d.today;
-  document.getElementById("stat7").textContent=d.last7;
+function setProUI(){
+  try{
+    const prefs = JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}");
+    const active = prefs.pro === true;
+    document.getElementById("proState").textContent = active ? "PRO attivo su questo device" : "PRO non attivo";
+  }catch{}
 }
+function token(){ return LS.getItem(TOKEN_KEY)||""; }
 
-async function fetchLogs(){
-  const token=LS.getItem(TOKEN_KEY)||"";
-  const r=await fetch(`/api/admin-logs?limit=200`,{headers:{"x-admin-token":token}});
-  const data=await r.json().catch(()=>({}));if(!r.ok||!data.ok)throw new Error(data.error||"auth");return data;
-}
-
-function renderLogs(data){
-  const tbody=document.querySelector("#logsTbl tbody");tbody.innerHTML="";
-  const fStyle=document.getElementById("filterStyle").value,fLang=document.getElementById("filterLang").value,fPer=document.getElementById("filterPeriod").value,q=document.getElementById("searchQ").value.trim().toLowerCase();
-  const all=Array.isArray(data.items)?data.items:[];const rows=all.filter(x=>{
-    if(fStyle&&x.style!==fStyle)return false;if(fLang&&x.lang!==fLang)return false;if(fPer&&x.periodo!==fPer)return false;if(q&&!String(x.domanda||"").toLowerCase().includes(q))return false;return true;
+/* ===== API calls ===== */
+async function adminEnter(pin){
+  const r = await fetch("/api/admin-token",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "x-admin-secret": pin }
   });
-  for(const it of rows){const tr=document.createElement("tr");tr.innerHTML=`<td>${fmtDate(it.ts)}</td><td>${it.style}</td><td>${it.lang}</td><td>${it.periodo}</td><td>${(it.domanda||"").slice(0,160)}</td>`;tbody.appendChild(tr);}
-  const s=data.stats||{};document.getElementById("stats").textContent=`Totale: ${s.total||rows.length} · Per stile: ${JSON.stringify(s.style||{})} · Per lingua: ${JSON.stringify(s.lang||{})} · Per tempo: ${JSON.stringify(s.periodo||{})}`;
+  const d = await r.json().catch(()=>({}));
+  if(!r.ok || !d.ok) throw new Error(d.error||"bad_pin");
+  LS.setItem(TOKEN_KEY, d.token);
+  return d;
+}
+async function adminRenew(){
+  const tok = token();
+  if(!tok) throw new Error("not_logged");
+  const r = await fetch("/api/admin-token?renew=1",{ method:"POST", headers:{ "x-admin-token": tok }});
+  const d = await r.json().catch(()=>({}));
+  if(!r.ok || !d.ok) throw new Error(d.error||"renew_failed");
+  return d;
+}
+async function adminLogout(){
+  const tok = token();
+  if(tok){
+    await fetch("/api/admin-token?revoke=1",{ method:"POST", headers:{ "x-admin-token": tok } }).catch(()=>{});
+  }
+  LS.removeItem(TOKEN_KEY);
+}
+async function fetchLogs(limit=200){
+  const tok = token();
+  const r = await fetch(`/api/admin-logs?limit=${limit}`,{ headers:{ "x-admin-token": tok }});
+  const d = await r.json().catch(()=>({}));
+  if(!r.ok || !d.ok) throw new Error(d.error||"auth");
+  return d; // { ok, items, stats }
+}
+async function resetCredits(){
+  const tok = token();
+  const r = await fetch("/api/reset",{ method:"POST", headers:{ "x-admin-token": tok }});
+  if(!r.ok){
+    const d = await r.json().catch(()=>({})); throw new Error(d.error||"reset_failed");
+  }
+  // azzera cache locale facoltativa
+  const today = new Date().toISOString().slice(0,10);
+  let c = JSON.parse(LS.getItem('whatif_credits')||'{"date":"'+today+'","used":0}');
+  c.date=today; c.used=0; LS.setItem('whatif_credits', JSON.stringify(c));
 }
 
-document.getElementById("refreshBtn").onclick=async()=>{try{await fetchStats();const data=await fetchLogs();setAuthUI(true);renderLogs(data);}catch(e){alert("Errore o token mancante.");setAuthUI(false);}};
+/* ===== Render ===== */
+function renderKPI(items){
+  // totali
+  document.getElementById("k_total").textContent = items.length;
 
-document.getElementById("enterBtn").onclick=async()=>{const pin=document.getElementById("pin").value.trim();if(!pin)return alert("Inserisci il PIN");try{await registerToken(pin);setAuthUI(true);await fetchStats();document.getElementById("refreshBtn").click();document.getElementById("authHelp").textContent="Token registrato.";}catch(e){setAuthUI(false);document.getElementById("authHelp").textContent="PIN errato.";}};
+  // counters
+  const style={}, lang={}, period={}, utype={}, ips={};
+  for(const it of items){
+    style[it.style] = (style[it.style]||0)+1;
+    lang[it.lang]   = (lang[it.lang]||0)+1;
+    period[it.periodo] = (period[it.periodo]||0)+1;
+    const ut = it.user_type || (it.admin?"admin":"free");
+    utype[ut] = (utype[ut]||0)+1;
+    ips[it.ip] = true;
+  }
+  const fmt = o => Object.entries(o).map(([k,v])=>`${k}:${v}`).join(" · ") || "—";
+  document.getElementById("k_style").textContent  = fmt(style);
+  document.getElementById("k_lang").textContent   = fmt(lang);
+  document.getElementById("k_period").textContent = fmt(period);
+  document.getElementById("k_users").textContent  = Object.keys(ips).length;
+  document.getElementById("k_utype").textContent  = fmt(utype);
+}
 
-document.getElementById("logoutBtn").onclick=()=>{LS.removeItem(TOKEN_KEY);setAuthUI(false);document.querySelector("#logsTbl tbody").innerHTML="";document.getElementById("stats").textContent="—";};
+function renderTable(data){
+  const tbody = document.querySelector("#logsTbl tbody");
+  tbody.innerHTML = "";
 
-document.getElementById("clearLogsBtn").onclick=async()=>{const token=LS.getItem(TOKEN_KEY)||"";if(!token)return alert("Serve login admin.");if(!confirm("Sicuro di svuotare i log?"))return;
-  const r=await fetch("/api/admin-clear-logs",{method:"DELETE",headers:{"x-admin-token":token}});
-  if(!r.ok)return alert("Errore cancellazione log.");alert("Log svuotati.");document.getElementById("refreshBtn").click();
+  const fStyle  = document.getElementById("filterStyle").value;
+  const fLang   = document.getElementById("filterLang").value;
+  const fPer    = document.getElementById("filterPeriod").value;
+  const fType   = document.getElementById("filterType").value;
+  const q       = document.getElementById("searchQ").value.trim().toLowerCase();
+
+  const items = (data.items||[]).map(o=>{
+    const ut = o.user_type || (o.admin ? "admin" : "free");
+    return {...o, user_type: ut};
+  });
+
+  const rows = items.filter(x=>{
+    if(fStyle && x.style!==fStyle) return false;
+    if(fLang  && x.lang!==fLang) return false;
+    if(fPer   && x.periodo!==fPer) return false;
+    if(fType  && x.user_type!==fType) return false;
+    if(q && !String(x.domanda||"").toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  for(const it of rows){
+    const tr = document.createElement("tr");
+    const len = it.answer_chars || 0;
+    tr.innerHTML = `
+      <td>${fmtDate(it.ts)}</td>
+      <td class="nowrap">${it.ip||"—"}</td>
+      <td class="nowrap">${it.user_type||"—"}</td>
+      <td>${it.style||"—"}</td>
+      <td>${it.lang||"—"}</td>
+      <td>${it.periodo||"—"}</td>
+      <td class="nowrap">${len}</td>
+      <td>${String(it.domanda||"").replace(/\s+/g," ").slice(0,220)}</td>`;
+    tbody.appendChild(tr);
+  }
+
+  // testo stats di riepilogo (globali + filtrati)
+  const compute = list=>{
+    const s={ total:list.length, style:{}, lang:{}, periodo:{}, type:{} };
+    for(const it of list){
+      s.style[it.style]     = (s.style[it.style]||0)+1;
+      s.lang[it.lang]       = (s.lang[it.lang]||0)+1;
+      s.periodo[it.periodo] = (s.periodo[it.periodo]||0)+1;
+      const ut = it.user_type || (it.admin?"admin":"free");
+      s.type[ut]            = (s.type[ut]||0)+1;
+    }
+    return s;
+  };
+  const overall  = compute(items);
+  const filtered = compute(rows);
+  const fmt = o => Object.entries(o).map(([k,v])=>`${k}:${v}`).join(" · ") || "—";
+  document.getElementById("statsTxt").textContent =
+    `Totale: ${overall.total} · Stile: ${fmt(overall.style)} · Lingua: ${fmt(overall.lang)} · Tempo: ${fmt(overall.periodo)} · Tipo: ${fmt(overall.type)} · Filtrati: ${filtered.total}`;
+  // KPI
+  renderKPI(items);
+}
+
+/* ===== Events ===== */
+let autoTimer=null;
+
+document.getElementById("enterBtn").onclick = async ()=>{
+  const pin = document.getElementById("pin").value.trim();
+  if(!pin) return alert("Inserisci il PIN");
+  try{
+    const d = await adminEnter(pin);
+    setAuthUI(true, d.ip || "—", (d.ttlHours ? (d.ttlHours+"h") : "—"));
+    document.getElementById("authHelp").textContent = "Token admin creato e legato al tuo IP.";
+    document.getElementById("refreshBtn").click();
+  }catch(e){
+    setAuthUI(false); document.getElementById("authHelp").textContent = "PIN errato o API non raggiungibile.";
+    alert("PIN errato.");
+  }
 };
 
-document.getElementById("proOn").onclick=()=>{const p=JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}");p.pro=true;LS.setItem(PRO_PREFS_KEY,JSON.stringify(p));setProUI();};
-document.getElementById("proOff").onclick=()=>{const p=JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}");delete p.pro;LS.setItem(PRO_PREFS_KEY,JSON.stringify(p));setProUI();};
+document.getElementById("renewBtn").onclick = async ()=>{
+  try{
+    const d = await adminRenew();
+    setAuthUI(true, d.ip || "—", (d.ttlHours ? (d.ttlHours+"h") : "—"));
+    alert("Token rinnovato.");
+  }catch(e){ alert("Rinnovo fallito: "+e.message); }
+};
 
-setAuthUI(!!LS.getItem(TOKEN_KEY));setProUI();
+document.getElementById("logoutBtn").onclick = async ()=>{
+  await adminLogout();
+  setAuthUI(false); document.querySelector("#logsTbl tbody").innerHTML=""; document.getElementById("statsTxt").textContent="—";
+};
+
+document.getElementById("resetBtn").onclick = async ()=>{
+  try{ await resetCredits(); alert("Crediti giornalieri azzerati."); }catch(e){ alert("Errore reset: "+e.message); }
+};
+
+document.getElementById("proOn").onclick = ()=>{
+  const p = JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}"); p.pro=true; LS.setItem(PRO_PREFS_KEY, JSON.stringify(p)); setProUI();
+};
+document.getElementById("proOff").onclick = ()=>{
+  const p = JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}"); delete p.pro; LS.setItem(PRO_PREFS_KEY, JSON.stringify(p)); setProUI();
+};
+
+document.getElementById("clearLogsBtn").onclick = async ()=>{
+  const tok = token(); if(!tok) return alert("Serve login admin.");
+  if(!confirm("Sicuro di svuotare i log?")) return;
+  try{
+    const r = await fetch("/api/admin-logs",{ method:"DELETE", headers:{ "x-admin-token": tok }});
+    if(!r.ok){ const d = await r.json().catch(()=>({})); throw new Error(d.error||"delete_failed"); }
+    alert("Log svuotati."); document.getElementById("refreshBtn").click();
+  }catch(e){ alert("Errore: "+e.message); }
+};
+
+["filterStyle","filterLang","filterPeriod","filterType","searchQ"].forEach(id=>{
+  document.getElementById(id).addEventListener("input", ()=> window._lastData && renderTable(window._lastData));
+});
+document.getElementById("limitSel").onchange = ()=> document.getElementById("refreshBtn").click();
+
+document.getElementById("refreshBtn").onclick = async ()=>{
+  try{
+    const lim = parseInt(document.getElementById("limitSel").value, 10) || 200;
+    const data = await fetchLogs(lim);
+    setAuthUI(true);
+    window._lastData = data;
+    renderTable(data);
+  }catch(e){
+    setAuthUI(false);
+    alert("Autenticazione richiesta o errore server.");
+  }
+};
+
+document.getElementById("autoBtn").onclick = ()=>{
+  const b = document.getElementById("autoBtn");
+  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; b.textContent="Auto-refresh"; return; }
+  autoTimer = setInterval(()=>document.getElementById("refreshBtn").click(), 5000);
+  b.textContent="Stop auto-refresh";
+};
+
+/* ===== Init ===== */
+setAuthUI(!!token());
+setProUI();
 </script>
 </body>
 </html>
