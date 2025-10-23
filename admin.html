@@ -7,194 +7,231 @@
 <meta name="theme-color" content="#0B0B0C"/>
 <style>
 :root{
-  --bg:#0B0B0C; --panel:#121821; --line:rgba(255,255,255,.12);
-  --fg:#EAF3EE; --muted:#9FB0B9; --ok:#2ECC71; --warn:#FFB020; --bad:#E44;
-  --acc:#FFEC01; --chip:#0E141C;
+  --bg:#0B0B0C; --card:#141C22; --line:rgba(255,255,255,.12);
+  --fg:#EAF3EE; --muted:#93A5AE; --acc:#FFEC01; --ok:#11B36A; --bad:#E85D5D;
 }
-*{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-main{max-width:980px;margin:auto;padding:20px}
-h1{color:#FFE91A;text-align:center;margin:10px 0 16px;font-size:clamp(22px,4vw,32px)}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+*{box-sizing:border-box}
+html,body{margin:0;background:radial-gradient(900px 700px at 20% 18%, #101414 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:980px;margin:auto;padding:18px}
+h1{color:var(--acc);text-align:center;margin:8px 0 14px;font-size:clamp(22px,5vw,30px)}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.btn{border:1px solid var(--line);background:linear-gradient(180deg,#1a212c,#121821);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700}
-.btn.primary{background:linear-gradient(180deg,#2f3c4e,#18202a);border-color:#2b3a49}
-.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee}
-.kv{display:grid;grid-template-columns:160px 1fr;gap:8px;margin:8px 0}
-.hr{height:1px;background:var(--line);margin:10px 0}
-.table{width:100%;border-collapse:collapse}
-.table th,.table td{border-bottom:1px solid var(--line);padding:8px;text-align:left}
-.bar{height:8px;background:#2f3c4e;border-radius:6px;overflow:hidden}
-.bar>span{display:block;height:100%;background:#FFE91A}
+.btn{border:1px solid var(--line);background:#0F151B;color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
+.btn.primary{background:linear-gradient(180deg,#1C57A0,var(--acc));color:#0A0E12;border:none;font-weight:800}
+.btn.warn{background:#1F262C;border-color:#3a2;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+.btn.danger{background:#1C1212;border-color:#3a2}
+.badge{border:1px solid var(--line);background:#111820;border-radius:999px;padding:6px 10px;font-size:12px;color:#EAF3EE}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+.label{font-weight:800;color:#8EC5FF;margin:0 0 10px}
+.kv{display:grid;grid-template-columns:140px 1fr;gap:8px 12px;margin:10px 0}
+.kv div{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#0F151B}
+.switch{display:flex;align-items:center;gap:10px}
+input[type="checkbox"]{width:18px;height:18px}
+.hr{height:1px;background:var(--line);margin:12px 0}
+h2{font-size:18px;margin:6px 0 10px}
 .small{font-size:12px;color:var(--muted)}
-.status-dot{width:10px;height:10px;border-radius:50%}
+.statchips{display:flex;flex-wrap:wrap;gap:8px}
+.stat{background:#0F151B;border:1px solid var(--line);border-radius:999px;padding:8px 12px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+@media (max-width:640px){ .kv{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
 <main>
-  <div class="row" style="justify-content:space-between">
-    <button class="btn" onclick="history.back()">←</button>
+  <div class="topbar">
+    <div class="row">
+      <button class="btn" onclick="history.back()">←</button>
+      <a class="btn" href="index.html">🏠</a>
+    </div>
     <div class="row">
       <span class="badge" id="adminBadge">ADMIN: —</span>
       <span class="badge" id="creditsBadge">Crediti: —</span>
     </div>
-    <button class="btn" onclick="location.href='index.html'">🏠</button>
   </div>
 
   <h1>Console Admin</h1>
 
-  <!-- Stato Admin -->
+  <!-- Stato -->
   <div class="card">
     <div class="kv">
-      <div>Stato</div><div id="stateText">—</div>
-      <div>IP</div><div id="ipText">—</div>
-      <div>Token locale</div><div id="tokText">—</div>
+      <div class="label">Stato</div><div id="stateText">—</div>
+      <div class="label">IP</div><div id="ipText">—</div>
+      <div class="label">Token locale</div><div id="tokText">—</div>
     </div>
-    <div class="row" style="margin-top:8px">
+    <div class="row" style="gap:10px;flex-wrap:wrap">
       <button class="btn primary" id="btnActivate">🔑 Attiva admin su questo device</button>
-      <button class="btn" id="btnRenew">🔁 Rinnova/Estendi (7gg)</button>
-      <button class="btn" id="btnRevoke">🧹 Revoca admin su questo device</button>
+      <button class="btn warn" id="btnRenew">♻️ Rinnova/Estendi (7gg)</button>
+      <button class="btn danger" id="btnRevoke">🧹 Revoca admin su questo device</button>
     </div>
-    <div class="small" style="margin-top:6px">
-      Il token è legato all’<b>IP corrente</b> e dura 7 giorni. Salvato in <code>localStorage.admin_token</code>.
-    </div>
+    <p class="small">Il token è legato all’<b>IP corrente</b> e dura 7 giorni. Viene salvato in <code>localStorage.admin_token</code>.</p>
+
     <div class="hr"></div>
-    <!-- PRO locale -->
+
+    <div class="switch">
+      <input type="checkbox" id="proToggle"/>
+      <label for="proToggle"><b>Stato PRO (solo UI locale)</b> • 10/giorno</label>
+    </div>
+    <p class="small">
+      Il server legge l’header <code>x-pro: 1</code> inviato dal client. Questa spunta modifica
+      <code>localStorage.whatif_prefs.pro</code>.
+    </p>
+  </div>
+
+  <!-- Verifica rapida -->
+  <div class="card">
+    <h2>Verifica rapida</h2>
     <div class="row">
-      <label class="row" style="gap:8px">
-        <input type="checkbox" id="proToggle"/>
-        <b>Stato PRO (solo UI locale) · 10/giorno</b>
-      </label>
-      <span class="small">Il server legge l’header <code>x-pro: 1</code> inviato dal client.</span>
+      <button class="btn" id="btnPing">🔎 Controlla stato server</button>
+      <span id="pingOut" class="small">—</span>
     </div>
   </div>
 
   <!-- Statistiche -->
   <div class="card">
-    <h3 style="margin:6px 0 10px">Statistiche</h3>
-    <div class="row">
-      <div class="badge" id="totalAll">Totale: —</div>
-      <div class="badge" id="totalToday">Oggi: —</div>
-      <div class="badge" id="total7d">Ultimi 7g: —</div>
+    <h2>Statistiche</h2>
+    <div class="statchips">
+      <span class="stat" id="totalAll">Totale: —</span>
+      <span class="stat" id="totalToday">Oggi: —</span>
+      <span class="stat" id="total7d">Ultimi 7g: —</span>
     </div>
     <div class="hr"></div>
-
-    <table class="table" id="tblBreak"></table>
-
-    <div class="hr"></div>
-    <div id="sparkWrap"></div>
-    <div class="small" style="margin-top:8px">Fonte: ultimi 10.000 eventi da <code>logs:ask</code>.</div>
+    <div class="statchips" id="styleStats"></div>
+    <div class="statchips" id="periodStats"></div>
+    <div class="statchips" id="langStats"></div>
+    <p class="small" id="statsFoot">Fonte: —</p>
   </div>
 </main>
 
 <script>
 const LS = localStorage;
 
-// ===== ADMIN status =====
-function setBadges(adminActive){
-  document.getElementById('adminBadge').textContent = adminActive ? 'ADMIN: attivo (∞ crediti)' : 'ADMIN: non attivo';
-  document.getElementById('creditsBadge').textContent = adminActive ? 'Crediti: ∞' : (isPro()? 'Crediti: 10/g PRO' : 'Crediti: 3/g FREE');
+/* ==== Helpers ==== */
+const qs = (s)=>document.querySelector(s);
+const qsa = (s)=>Array.from(document.querySelectorAll(s));
+
+function isPro(){
+  try{ return JSON.parse(LS.getItem('whatif_prefs')||'{}')?.pro === true; }catch{return false}
 }
-function isPro(){ return JSON.parse(LS.getItem('whatif_prefs')||'{}')?.pro === true; }
-function setPro(v){
-  const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}'); prefs.pro = !!v;
+function setPro(val){
+  const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
+  prefs.pro = !!val;
   LS.setItem('whatif_prefs', JSON.stringify(prefs));
-  setBadges(!!LS.getItem('admin_token'));
-  renderStats(); // non necessario ma utile
 }
 
-// Fake IP display (best effort, lato server è quello vero)
-function getIpFromToken(){ return LS.getItem('admin_ip') || '—'; }
-
-function renderState(){
-  const admTok = LS.getItem('admin_token');
-  const adminActive = !!admTok;
-  setBadges(adminActive);
-  document.getElementById('stateText').textContent = adminActive ? 'ADMIN attivo (∞ crediti)' : 'Non attivo';
-  document.getElementById('ipText').textContent = getIpFromToken();
-  document.getElementById('tokText').textContent = admTok ? (admTok.slice(0,6)+'…'+admTok.slice(-4)) : '—';
+function setBadges(adminActive){
+  qs('#adminBadge').textContent = adminActive ? 'ADMIN: attivo (∞)' : 'ADMIN: —';
+  qs('#creditsBadge').textContent = adminActive
+    ? 'Crediti: ∞'
+    : (isPro() ? 'Crediti: 10/g (PRO)' : 'Crediti: 3/g (FREE)');
 }
-renderState();
 
-document.getElementById('proToggle').checked = isPro();
-document.getElementById('proToggle').onchange = (e)=> setPro(e.target.checked);
+function renderState(data){
+  const admin = !!data?.admin;
+  setBadges(admin);
+  qs('#stateText').textContent = admin ? 'ADMIN attivo (∞ crediti)' : 'Non attivo';
+  qs('#ipText').textContent    = data?.ip || '—';
+  const token = data?.token || LS.getItem('admin_token') || null;
+  qs('#tokText').textContent   = token ? (token.slice(0,6)+'…'+token.slice(-4)) : '—';
+  if (token) LS.setItem('admin_token', token);
+  if (data?.ip) LS.setItem('admin_ip', data.ip);
+}
 
-// Bottoni admin (si appoggiano alla tua /api/admin-token esistente)
-document.getElementById('btnActivate').onclick = async ()=>{
+async function refreshState(){
   try{
-    const r = await fetch('/api/admin-token',{method:'POST'});
-    const d = await r.json();
-    if(d?.token){
-      LS.setItem('admin_token', d.token);
-      if(d?.ip) LS.setItem('admin_ip', d.ip);
-      renderState(); alert('Admin attivato su questo device.');
-    }else{ alert('Errore attivazione.'); }
-  }catch{ alert('Errore rete.'); }
-};
-document.getElementById('btnRenew').onclick = async ()=>{
-  try{
-    const r = await fetch('/api/admin-token?renew=1',{method:'POST', headers:{'x-admin-token': LS.getItem('admin_token')||''}});
-    const d = await r.json();
-    if(d?.ok){ alert('Token rinnovato.'); } else { alert('Errore rinnovo.'); }
-  }catch{ alert('Errore rete.'); }
-};
-document.getElementById('btnRevoke').onclick = async ()=>{
-  try{
-    const r = await fetch('/api/admin-token?revoke=1',{method:'POST', headers:{'x-admin-token': LS.getItem('admin_token')||''}});
-    const d = await r.json();
-    LS.removeItem('admin_token'); renderState();
-    alert(d?.ok ? 'Revocato.' : 'Revoca locale effettuata.');
-  }catch{ LS.removeItem('admin_token'); renderState(); }
-};
-
-// ===== STATISTICHE =====
-async function renderStats(){
-  try{
-    const r = await fetch('/api/stats');
-    const d = await r.json();
-    document.getElementById('totalAll').textContent = 'Totale: ' + d.totals.all;
-    document.getElementById('totalToday').textContent = 'Oggi: ' + d.totals.today;
-    document.getElementById('total7d').textContent = 'Ultimi 7g: ' + d.totals.last7d;
-
-    // Breakdown table
-    const tbl = document.getElementById('tblBreak');
-    tbl.innerHTML = `
-      <tr><th>Sezione</th><th>Dettaglio</th><th>Valore</th><th>Bar</th></tr>
-      ${rowBlock('Stile','What if', d.breakdown.style.whatif, d.totals.all)}
-      ${rowBlock('Stile','What the F', d.breakdown.style.wtf, d.totals.all)}
-      ${rowBlock('Periodo','Futuro', d.breakdown.periodo.future, d.totals.all)}
-      ${rowBlock('Periodo','Passato', d.breakdown.periodo.past, d.totals.all)}
-      ${rowBlock('User','Free', d.breakdown.user_type.free, d.totals.all)}
-      ${rowBlock('User','PRO', d.breakdown.user_type.pro, d.totals.all)}
-      ${rowBlock('User','Admin', d.breakdown.user_type.admin, d.totals.all)}
-    `;
-
-    // Sparkline
-    const wrap = document.getElementById('sparkWrap');
-    wrap.innerHTML = '<div class="small" style="margin-bottom:6px">Ultimi 7 giorni</div>';
-    d.spark.forEach(s=>{
-      wrap.innerHTML += `
-        <div class="row" style="width:100%">
-          <div style="width:90px" class="small">${s.day}</div>
-          <div class="bar" style="flex:1"><span style="width:${Math.min(100, (d.totals.last7d? (s.total / Math.max(...d.spark.map(x=>x.total))||0 : 0))*100)}%"></span></div>
-          <div style="width:48px;text-align:right" class="small">${s.total}</div>
-        </div>`;
+    const r = await fetch('/api/admin-token', {
+      method:'GET',
+      headers:{ 'x-admin-token': LS.getItem('admin_token')||'' }
     });
-  }catch(e){
-    console.error(e);
-    document.getElementById('sparkWrap').textContent = 'Errore caricamento stats.';
+    const d = await r.json();
+    renderState(d);
+  }catch{
+    setBadges(false);
   }
 }
 
-function rowBlock(sec, label, val, total){
-  const pct = total ? Math.round((val/total)*100) : 0;
-  return `
-    <tr>
-      <td>${sec}</td><td>${label}</td><td>${val}</td>
-      <td><div class="bar"><span style="width:${pct}%"></span></div></td>
-    </tr>`;
+async function loadStats(){
+  try{
+    const r = await fetch('/api/stats');
+    const d = await r.json();
+    qs('#totalAll').textContent   = 'Totale: ' + (d?.totals?.all ?? '—');
+    qs('#totalToday').textContent = 'Oggi: ' + (d?.totals?.today ?? '—');
+    qs('#total7d').textContent    = 'Ultimi 7g: ' + (d?.totals?.last7d ?? '—');
+
+    const styleBox  = qs('#styleStats');  styleBox.innerHTML = '';
+    for (const k of Object.keys(d?.byStyle||{})){
+      const v=d.byStyle[k]; const el=document.createElement('span');
+      el.className='stat'; el.textContent=`Stile ${k}: ${v}`; styleBox.appendChild(el);
+    }
+    const periodBox = qs('#periodStats'); periodBox.innerHTML = '';
+    for (const k of Object.keys(d?.byPeriod||{})){
+      const v=d.byPeriod[k]; const el=document.createElement('span');
+      el.className='stat'; el.textContent=`${k}: ${v}`; periodBox.appendChild(el);
+    }
+    const langBox   = qs('#langStats');   langBox.innerHTML = '';
+    for (const k of Object.keys(d?.byLang||{})){
+      const v=d.byLang[k]; const el=document.createElement('span');
+      el.className='stat'; el.textContent=`lang ${k}: ${v}`; langBox.appendChild(el);
+    }
+    qs('#statsFoot').textContent = `Fonte: ultimi ${d?.source?.sampleSize ?? 0} eventi da logs:ask`;
+  }catch(e){
+    qs('#statsFoot').textContent = 'Impossibile leggere statistiche.';
+  }
 }
 
-renderStats();
+/* ==== Init ==== */
+qs('#proToggle').checked = isPro();
+qs('#proToggle').addEventListener('change', (e)=>{
+  setPro(e.target.checked);
+  refreshState();
+});
+
+// Bottoni
+qs('#btnActivate').onclick = async ()=>{
+  try{
+    const r = await fetch('/api/admin-token', { method:'POST' });
+    const d = await r.json();
+    if (d?.token) LS.setItem('admin_token', d.token);
+    renderState(d);
+    alert(d?.token ? 'Admin attivato su questo device.' : 'Errore attivazione.');
+  }catch{ alert('Errore rete.'); }
+};
+qs('#btnRenew').onclick = async ()=>{
+  try{
+    const r = await fetch('/api/admin-token?renew=1', {
+      method:'POST',
+      headers:{ 'x-admin-token': LS.getItem('admin_token')||'' }
+    });
+    const d = await r.json();
+    alert(d?.ok ? 'Token rinnovato (7gg).' : 'Impossibile rinnovare.');
+    refreshState();
+  }catch{ alert('Errore rete.'); }
+};
+qs('#btnRevoke').onclick = async ()=>{
+  try{
+    await fetch('/api/admin-token?revoke=1', {
+      method:'POST',
+      headers:{ 'x-admin-token': LS.getItem('admin_token')||'' }
+    });
+  }catch{}
+  LS.removeItem('admin_token'); LS.removeItem('admin_ip');
+  refreshState();
+};
+
+qs('#btnPing').onclick = async ()=>{
+  qs('#pingOut').textContent = '…';
+  try{
+    const r1 = await fetch('/api/admin-token', { headers:{ 'x-admin-token': LS.getItem('admin_token')||'' }});
+    const s1 = r1.ok ? 'admin-token OK' : 'admin-token KO';
+    const r2 = await fetch('/api/stats');
+    const s2 = r2.ok ? 'stats OK' : 'stats KO';
+    qs('#pingOut').textContent = s1 + ' · ' + s2;
+  }catch{
+    qs('#pingOut').textContent = 'Errore rete';
+  }
+};
+
+// start
+refreshState();
+loadStats();
 </script>
 </body>
 </html>
