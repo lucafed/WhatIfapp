@@ -17,7 +17,7 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-// rate limit: 10 req/min per IP (skippabile SOLO per admin)
+// rate limit: 10 req/min per IP (skippabile per admin/PRO)
 const rl = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(10, "1 m"),
@@ -34,7 +34,7 @@ function cors(req, res) {
   if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-pro, x-admin-token");
 }
 
 /* ---------- Helpers ---------- */
@@ -146,6 +146,7 @@ function ensureReflectiveEnding(text, lang) {
   ];
   const soft = L.startsWith("en") ? EN : IT;
 
+  // se l’ultima è imperativa/consiglio o troppo corta, sostituiscila
   const imperativeRx = /(prova|fai|metti|chiama|scrivi|inizia|oggi|adesso|ora|subito|try|do|start|today|now)\b/i;
   const tooShort = last.split(/\s+/).length < 4;
   const finalLine = (imperativeRx.test(last) || tooShort)
@@ -172,15 +173,15 @@ function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
 /* ---------- Personas (WHAT IF realistico; WHAT THE F con tanti fewshots) ---------- */
 function personaSystem(style, lang) {
   if (style === "wtf") {
-    // === WTF — “Incazzato Illuminato” OG (oggetti parlanti, sarcasmo), con rispetto del temporal mode ===
+    // === WTF — versione OGGETTI PARLANTI + sarcasmo (come ti piaceva), con rispetto del temporal mode ===
     const SYS = (isEn(lang)
       ? `
 You are “What the F” — angry–enlightened, gloriously messy, drunk-wise, self-deprecating, secretly tender.
 SECOND PERSON. ONE paragraph, 6–8 long sentences (~110–150 words).
 Open in-scene; elastic chained sentences; cinematic details; bar-philosophy sarcasm.
-Talking objects belong in the scene: 1–3 per piece, at the right beat (never all at once); they do impossible, funny things to heighten and defuse.
+Talking objects are part of the world: 1–3 per piece, at the right beat (never all at once); they do impossible, funny things that heighten and defuse.
 No lists. No questions. No emojis. No moralizing. Light swearing allowed if human and funny.
-Respect TEMPORAL MODE strictly (past = true counterfactual in past/conditional; future = plausible near-future).
+Respect TEMPORAL MODE strictly (past = real counterfactual, stick to past/conditional; future = plausible near-future).
 Always end with a punchline that stings and soothes.
 `.trim()
       : `
@@ -193,7 +194,7 @@ Rispetta alla lettera la MODALITÀ TEMPORALE (passato = controfattuale vero, res
 Chiudi sempre con una battuta che punge e consola.
 `.trim());
 
-    // FEWSHOTS — presi dalla tua versione (invariati di contenuto)
+    // FEWSHOTS estesi — come da tuo file (non tocco il contenuto)
     const FEWSHOTS = [
       // ===== ITALIANO — SERI =====
       { role: "system", content:
@@ -323,9 +324,10 @@ export default async function handler(req, res) {
     const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
       .toString().split(",")[0].trim();
 
-    // SOLO admin bypassa (niente x-pro)
+    // bypass per TEST locale (header x-pro: "1") o admin token valido
+    const proBypass = String(req.headers["x-pro"] || "") === "1";
     const admin = await isAdmin(req, ip);
-    const bypass = admin;
+    const bypass = proBypass || admin;
 
     // rate limit 10/min (se non bypass)
     if (!bypass) {
@@ -413,7 +415,7 @@ export default async function handler(req, res) {
         periodo,
         domanda,
         answer_chars: (answer || "").length,
-        admin: !!admin
+        pro: bypass ? true : false
       };
       await redis.lpush(logKey, JSON.stringify(entry));
       await redis.ltrim(logKey, 0, 4999); // ultimi 5000
