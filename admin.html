@@ -1,227 +1,141 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What?f — Console Admin</title>
-<meta name="theme-color" content="#0B0B0C" />
-<style>
-:root{
-  --bg:#0B0B0C; --panel:#12181f; --line:#2a3440; --fg:#EAF3EE; --muted:#9FB0BA;
-  --ok:#2ecc71; --warn:#f39c12; --err:#e74c3c; --accent:#FFEC01; --chip:#0f141a;
-}
-*{box-sizing:border-box}
-html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%, #0B0B0C 0%, #0B0B0C 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
-main{max-width:980px;margin:auto;padding:18px}
-h1{font-size:clamp(22px,5vw,30px);margin:10px 0 6px;color:var(--accent);text-align:center;text-shadow:0 0 16px rgba(255,236,1,.2)}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.btn{appearance:none;border:1px solid var(--line);background:linear-gradient(180deg,#243140,#1a2430);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
-.btn.primary{background:linear-gradient(180deg,#1fa2ff,#12d8fa,#a6ffcb);color:#081016;border:none;font-weight:800}
-.btn.warn{background:linear-gradient(180deg,#ffdd57,#f6c90e);color:#1b1300;border:none;font-weight:800}
-.btn.danger{background:linear-gradient(180deg,#ff7979,#ff4d4d);color:#140a0a;border:none;font-weight:800}
-.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none;white-space:nowrap}
-.kv{display:grid;grid-template-columns:160px 1fr;gap:8px 12px}
-.kv .k{color:var(--muted)}
-.kv .v{font-weight:700}
-hr{border:none;height:1px;background:var(--line);margin:12px 0}
-.small{font-size:12px;color:var(--muted)}
-.status-dot{width:10px;height:10px;border-radius:50%}
-.dot-ok{background:var(--ok)} .dot-off{background:#777} .dot-warn{background:var(--warn)}
-.statgrid{display:grid;grid-template-columns:repeat(3, minmax(120px,1fr));gap:10px}
-.stat{background:var(--chip);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
-.stat .n{font-size:20px;font-weight:900}
-.topbar{display:flex;justify-content:space-between;align-items:center}
-.iconbtn{padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--chip);cursor:pointer}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What?f — Console Admin</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0A0F14;
+      color: #fff;
+      margin: 0;
+      padding: 2rem;
+    }
+    h1 {
+      color: #00E0FF;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 0.7rem 1.2rem;
+      cursor: pointer;
+      font-size: 1rem;
+      margin: 0.2rem;
+    }
+    .activate { background: linear-gradient(90deg, #00E0FF, #00B5CC); color: #000; }
+    .renew { background: #FFD700; color: #000; }
+    .revoke { background: #E74C3C; color: #fff; }
+    .card {
+      background: #141C22;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-top: 1rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    .stat {
+      display: inline-block;
+      margin: 0.5rem;
+      padding: 0.8rem 1rem;
+      background: #1C252B;
+      border-radius: 8px;
+      text-align: center;
+      min-width: 100px;
+    }
+    .error { color: #FF8080; }
+  </style>
 </head>
 <body>
-<main>
-  <div class="topbar">
-    <div class="row">
-      <button class="iconbtn" id="backBtn">←</button>
-      <button class="iconbtn" id="homeBtn">🏠</button>
-    </div>
-    <div class="row">
-      <span class="badge" id="adminBadge"><span class="status-dot dot-off"></span>&nbsp;ADMIN: —</span>
-      <span class="badge" id="creditsBadge">Crediti: —</span>
-    </div>
-  </div>
+  <h1>What?f — Console Admin</h1>
 
-  <h1>Console Admin</h1>
-
-  <!-- Stato + gestione token -->
   <div class="card">
-    <div class="kv">
-      <div class="k">Stato</div><div class="v" id="statoV">—</div>
-      <div class="k">IP</div><div class="v" id="ipV">—</div>
-      <div class="k">Token locale</div><div class="v" id="tokV">—</div>
-    </div>
-    <hr/>
-    <div class="row">
-      <button class="btn primary" id="btnAttiva">🔑 Attiva admin su questo device</button>
-      <button class="btn warn" id="btnRinnova">♻️ Rinnova/Estendi (7gg)</button>
-      <button class="btn danger" id="btnRevoca">🧹 Revoca admin su questo device</button>
-    </div>
-    <p class="small">Il token è legato all’<b>IP corrente</b> e dura 7 giorni. Viene salvato in <code>localStorage.admin_token</code>.</p>
-    <hr/>
-    <div class="row">
-      <input type="checkbox" id="proChk" />
-      <label for="proChk"><b>Stato PRO (solo UI locale) · 10/giorno</b></label>
-    </div>
-    <p class="small">Il server legge l’header <code>x-pro: 1</code> inviato dal client. Questa spunta modifica <code>localStorage.whatif_prefs.pro</code>.</p>
+    <div id="admin-status">Verifica token...</div>
+    <button class="activate" id="btn-activate">🔑 Attiva admin su questo device</button>
+    <button class="renew" id="btn-renew">♻️ Rinnova/Estendi (7gg)</button>
+    <button class="revoke" id="btn-revoke">🧹 Revoca admin su questo device</button>
   </div>
 
-  <!-- Verifica rapida -->
   <div class="card">
     <h3>Verifica rapida</h3>
-    <div class="row">
-      <button class="btn" id="btnPing">🔎 Controlla stato server</button>
-      <span id="pingRes" class="small">—</span>
-    </div>
+    <button id="btn-check">🔍 Controlla stato server</button>
+    <div id="server-status"></div>
   </div>
 
-  <!-- Statistiche -->
   <div class="card">
     <h3>Statistiche</h3>
-    <div class="statgrid">
-      <div class="stat"><div class="k">Totale</div><div class="n" id="totN">—</div></div>
-      <div class="stat"><div class="k">Oggi</div><div class="n" id="todayN">—</div></div>
-      <div class="stat"><div class="k">Ultimi 7g</div><div class="n" id="w7N">—</div></div>
+    <div id="stats">
+      <div class="stat"><strong>Totale</strong><br><span id="total">–</span></div>
+      <div class="stat"><strong>Oggi</strong><br><span id="today">–</span></div>
+      <div class="stat"><strong>Ultimi 7 giorni</strong><br><span id="last7">–</span></div>
     </div>
-    <hr/>
-    <div class="small" id="statsNote">Fonte: ultimi eventi da <code>logs:ask</code>.</div>
-    <div class="small" id="statsErr" style="color:var(--err);display:none;margin-top:8px"></div>
+    <div id="stats-error" class="error"></div>
   </div>
-</main>
 
-<script>
-const LS = localStorage;
+  <script>
+    const API = {
+      token: "/api/admin-token",
+      stats: "/api/admin-stats",
+      logs: "/api/admin-logs",
+      clearLogs: "/api/admin-clear-logs",
+    };
 
-/* -------- Helpers -------- */
-function $(id){ return document.getElementById(id); }
-function setBadge(admin, pro){
-  const ab = $('adminBadge'); const cb = $('creditsBadge');
-  const dot = ab.querySelector('.status-dot');
-  if(admin){
-    ab.innerHTML = '<span class="status-dot dot-ok"></span>&nbsp;ADMIN: attivo';
-    cb.textContent = 'Crediti: ∞';
-  }else{
-    ab.innerHTML = '<span class="status-dot dot-off"></span>&nbsp;ADMIN: —';
-    cb.textContent = 'Crediti: ' + (pro ? '10/giorno' : '3/giorno');
-  }
-}
-function shortTok(t){ if(!t) return '—'; if(t.length<=10) return t; return t.slice(0,6)+'…'+t.slice(-4); }
-function getPrefs(){ try{ return JSON.parse(LS.getItem('whatif_prefs')||'{}'); }catch{return{}} }
-function setPrefs(p){ LS.setItem('whatif_prefs', JSON.stringify(p||{})); }
-
-/* -------- NAV -------- */
-$('backBtn').onclick = ()=> history.back();
-$('homeBtn').onclick = ()=> location.href = 'index.html';
-
-/* -------- UI INIT -------- */
-const proInit = !!getPrefs().pro;
-$('proChk').checked = proInit;
-
-/* -------- PRO TOGGLE (solo UI locale) -------- */
-$('proChk').addEventListener('change', ()=>{
-  const p = getPrefs();
-  p.pro = $('proChk').checked;
-  setPrefs(p);
-  // aggiorna badge crediti se non admin
-  const state = window.__ADMIN_STATE || { admin:false };
-  setBadge(state.admin, p.pro);
-});
-
-/* -------- Admin State -------- */
-async function readAdminState(){
-  const tok = LS.getItem('admin_token') || '';
-  const r = await fetch('/api/admin-token', { method:'GET', headers: tok ? { 'x-admin-token': tok } : {} });
-  const d = await r.json().catch(()=>({}));
-  const admin = !!d.admin;
-  window.__ADMIN_STATE = { admin, ip: d.ip || '—', token: admin ? d.token : (tok || '') };
-  // UI
-  $('statoV').textContent = admin ? 'ADMIN attivo (∞ crediti)' : '—';
-  $('ipV').textContent = d.ip || '—';
-  $('tokV').textContent = shortTok(window.__ADMIN_STATE.token);
-  setBadge(admin, getPrefs().pro);
-  return admin;
-}
-
-/* -------- Bottoni token -------- */
-$('btnAttiva').onclick = async ()=>{
-  const r = await fetch('/api/admin-token', { method:'POST' });
-  const d = await r.json().catch(()=>({}));
-  if(d?.token){
-    LS.setItem('admin_token', d.token);
-    await readAdminState();
-    await loadStats(); // appena attivi, carica stats
-  } else {
-    alert('Attivazione fallita.');
-  }
-};
-$('btnRinnova').onclick = async ()=>{
-  const tok = LS.getItem('admin_token') || '';
-  if(!tok){ alert('Nessun token locale. Premi "Attiva".'); return; }
-  const r = await fetch('/api/admin-token?renew=1', { headers:{ 'x-admin-token': tok }});
-  const d = await r.json().catch(()=>({}));
-  if(d?.ok){ await readAdminState(); } else { alert('Rinnovo fallito.'); }
-};
-$('btnRevoca').onclick = async ()=>{
-  const tok = LS.getItem('admin_token') || '';
-  await fetch('/api/admin-token?revoke=1', { headers: tok?{'x-admin-token': tok}:{}}).catch(()=>{});
-  LS.removeItem('admin_token');
-  await readAdminState();
-  // pulisci stats
-  $('totN').textContent='—'; $('todayN').textContent='—'; $('w7N').textContent='—';
-};
-
-/* -------- Ping -------- */
-$('btnPing').onclick = async ()=>{
-  const t0 = performance.now();
-  try{
-    const tok = LS.getItem('admin_token') || '';
-    const r = await fetch('/api/admin/stats', { headers: tok?{'x-admin-token':tok}:{}, cache:'no-store' });
-    const ok = r.ok;
-    const t1 = performance.now();
-    $('pingRes').textContent = ok ? `OK · ${(t1-t0|0)}ms` : `Errore ${r.status}`;
-  }catch(e){
-    $('pingRes').textContent = 'Offline';
-  }
-};
-
-/* -------- Stats -------- */
-async function loadStats(){
-  const tok = LS.getItem('admin_token') || '';
-  $('statsErr').style.display='none';
-  if(!tok){
-    $('statsErr').style.display='block';
-    $('statsErr').textContent = 'Non hai un token admin attivo. Premi “Attiva admin su questo device”.';
-    return;
-  }
-  try{
-    const r = await fetch('/api/admin/stats', { headers:{ 'x-admin-token': tok }, cache:'no-store' });
-    if(r.status===401 || r.status===403){
-      $('statsErr').style.display='block';
-      $('statsErr').textContent = 'Token scaduto o IP diverso. Rinnova o riattiva.';
-      $('totN').textContent='—'; $('todayN').textContent='—'; $('w7N').textContent='—';
-      return;
+    async function fetchJSON(url, options = {}) {
+      const res = await fetch(url, options);
+      if (!res.ok) throw new Error(res.status);
+      return res.json();
     }
-    const d = await r.json();
-    $('totN').textContent   = (d?.total ?? 0);
-    $('todayN').textContent = (d?.today ?? 0);
-    $('w7N').textContent    = (d?.week ?? 0);
-  }catch(e){
-    $('statsErr').style.display='block';
-    $('statsErr').textContent = 'Impossibile leggere statistiche.';
-  }
-}
 
-/* -------- Boot -------- */
-(async ()=>{
-  await readAdminState();
-  await loadStats();
-})();
-</script>
+    const tokenKey = "admin_token";
+    let token = localStorage.getItem(tokenKey) || "";
+
+    async function refreshStatus() {
+      const ipInfo = await fetchJSON(API.token, { headers: { "x-admin-token": token } });
+      const div = document.getElementById("admin-status");
+      if (ipInfo.admin) {
+        div.innerHTML = `<b>ADMIN attivo (∞ crediti)</b><br>IP: ${ipInfo.ip}<br>Token: ${token.slice(0,6)}…${token.slice(-4)}`;
+      } else {
+        div.innerHTML = `Nessun token attivo per IP ${ipInfo.ip}`;
+      }
+    }
+
+    document.getElementById("btn-activate").onclick = async () => {
+      const res = await fetchJSON(API.token, { method: "POST" });
+      localStorage.setItem(tokenKey, res.token);
+      token = res.token;
+      await refreshStatus();
+    };
+
+    document.getElementById("btn-renew").onclick = async () => {
+      if (!token) return alert("Nessun token salvato");
+      await fetchJSON(`${API.token}?renew=1`, { headers: { "x-admin-token": token } });
+      alert("Token rinnovato per altri 7 giorni!");
+      await refreshStatus();
+    };
+
+    document.getElementById("btn-revoke").onclick = async () => {
+      if (!token) return alert("Nessun token salvato");
+      await fetchJSON(`${API.token}?revoke=1`, { headers: { "x-admin-token": token } });
+      localStorage.removeItem(tokenKey);
+      token = "";
+      alert("Token revocato.");
+      await refreshStatus();
+    };
+
+    document.getElementById("btn-check").onclick = async () => {
+      try {
+        const s = await fetchJSON(API.stats, { headers: { "x-admin-token": token } });
+        document.getElementById("server-status").textContent = "✅ Server attivo";
+        document.getElementById("total").textContent = s.total;
+        document.getElementById("today").textContent = s.today;
+        document.getElementById("last7").textContent = s.last7;
+      } catch {
+        document.getElementById("server-status").textContent = "❌ Errore server (404 o token mancante)";
+      }
+    };
+
+    refreshStatus();
+  </script>
 </body>
 </html>
