@@ -1,5 +1,5 @@
 // ============================
-// /api/ask.js — What?f Engine (Incazzato Illuminato + Realismo Lucido con Sorriso)
+// /api/ask.js — What?f Engine (Incazzato Illuminato + Simulatore di Realtà Parallele)
 // Stili supportati: whatif, wtf
 // IT/EN — singolo paragrafo, ritmo fisso, niente emoji/liste/domande
 // ============================
@@ -89,7 +89,6 @@ function normalizeOneParagraph(s = "") {
     .trim();
 }
 
-// estrai body in modo robusto
 function parseBody(req) {
   try {
     if (typeof req.body === "string") return JSON.parse(req.body || "{}");
@@ -99,7 +98,6 @@ function parseBody(req) {
 }
 
 async function isAdmin(req, requesterIp) {
-  // opzionale: mapping admin token -> ip (gestito da /api/admin-token.js)
   const token = String(req.headers["x-admin-token"] || "").trim();
   if (!token) return false;
   try {
@@ -133,16 +131,16 @@ function ensureReflectiveEnding(text, lang) {
   const L = String(lang || "it").toLowerCase();
 
   const IT = [
-    "E ti sorprende che, sotto il rumore, c’era già qualcosa di tuo.",
-    "E scopri che la semplicità tiene più di quanto ricordavi.",
-    "E capisci che non serviva un piano: serviva solo restare presenti.",
-    "E resta una calma piccola, ma vera, che non chiede nulla."
+    "E ti sorprende riconoscerti più di quanto pensavi.",
+    "E scopri che, in fondo, eri già più vicino di così.",
+    "E ti resta addosso una calma piccola, ma tua.",
+    "E ti accorgi che non c’era destino: c’era spazio."
   ];
   const EN = [
-    "And you notice that beneath the noise, something of yours was already there.",
-    "And it turns out simplicity holds longer than you remembered.",
-    "And you see it wasn’t a plan you needed—just a way to stay present.",
-    "And a small, honest quiet remains, asking for nothing."
+    "And you’re surprised to recognize yourself more than you expected.",
+    "And you realize you were already closer than it seemed.",
+    "And a small, honest quiet sticks to you.",
+    "And you notice there wasn’t fate—there was room."
   ];
   const soft = L.startsWith("en") ? EN : IT;
 
@@ -161,152 +159,108 @@ function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
   const en = isEn(lang);
   if ((periodo || "").toLowerCase() === "past") {
     return (en
-      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Speak as if the choice had been made back then and show how it would likely have unfolded. Prefer past/conditional forms and present-narrative flashes. Do NOT give advice, do NOT ask questions, and do NOT restate the user's question. Keep the exact ${style.toUpperCase()} voice.`
-      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Parla come se quella scelta fosse stata fatta allora e mostra come sarebbe verosimilmente andata. Preferisci passato/condizionale con lampi di presente narrativo. NON dare consigli, NON fare domande, NON ripetere la domanda. Mantieni esattamente la voce ${style.toUpperCase()}.`);
+      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Speak as if the choice had been made then and show how it likely unfolded. Prefer past/conditional. Keep the exact ${style.toUpperCase()} voice; no questions, no lists, do NOT restate the user's question.`
+      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Parla come se la scelta fosse stata fatta allora e mostra come sarebbe verosimilmente andata. Preferisci passato/condizionale. Mantieni la voce ${style.toUpperCase()}; niente domande/elenco, non ripetere la domanda.`);
   }
   return (en
-    ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Describe a plausible near-future unfolding as if the user were stepping into it now. No advice lists, no questions, no restating the question. Keep the exact ${style.toUpperCase()} voice.`
-    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi uno svolgimento plausibile del prossimo futuro come se ci entrassi adesso. Niente consigli, niente domande, niente eco della domanda. Mantieni esattamente la voce ${style.toUpperCase()}.`);
+    ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Describe a plausible near-future as if stepping into it now. Keep the exact ${style.toUpperCase()} voice; no questions, no lists, do NOT restate the user's question.`
+    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi un prossimo futuro plausibile come se ci entrassi adesso. Mantieni la voce ${style.toUpperCase()}; niente domande/elenco, non ripetere la domanda.`);
 }
 
-/* ---------- Personas (WHAT IF realistico; WHAT THE F con tanti fewshots) ---------- */
-function personaSystem(style, lang) {
+/* ---------- Personalizzazione dai micro-dati ---------- */
+function buildPersonaHints(micro = {}, lang = "it") {
+  const L = isEn(lang) ? "en" : "it";
+  const mood   = (micro.mood   || "").trim();
+  const anchor = (micro.anchor || "").trim();
+  const decide = (micro.decide || "").trim();
+  const zodiac = (micro.zodiac || "").trim();
+
+  const lines_it = [];
+  if (mood)   lines_it.push(`Tono emotivo utente oggi: “${mood}”. Ricalibra ritmo e dettagli su questo stato.`);
+  if (anchor) lines_it.push(`Cose che lo tengono qui: “${anchor}”. Inserisci 1 micro-dettaglio concreto coerente.`);
+  if (decide) lines_it.push(`Stile decisionale: “${decide}”. Mostra almeno un momento coerente con questo stile.`);
+  if (zodiac) lines_it.push(`Optional fun: cenno leggerissimo a “${zodiac}” (massimo 2 parole, non ironizzare in modo offensivo).`);
+  const it = lines_it.join(" ");
+
+  const lines_en = [];
+  if (mood)   lines_en.push(`User mood today: “${mood}”. Match pacing and texture to that state.`);
+  if (anchor) lines_en.push(`What keeps them grounded: “${anchor}”. Add one small concrete detail aligned to it.`);
+  if (decide) lines_en.push(`Decision style: “${decide}”. Show at least one beat consistent with it.`);
+  if (zodiac) lines_en.push(`Optional: a feather-light nod to “${zodiac}” (max 2 words, never mocking).`);
+  const en = lines_en.join(" ");
+
+  return (L === "en" ? en : it) || "";
+}
+
+/* ---------- Personas ---------- */
+function personaSystem(style, lang, micro) {
   if (style === "wtf") {
-    // === WTF — “Incazzato Illuminato” OG (oggetti parlanti, sarcasmo), con rispetto del temporal mode ===
+    // WTF: barista-filosofo demenziale, più sarcasmo/presa in giro, oggetti parlanti
     const SYS = (isEn(lang)
       ? `
-You are “What the F” — angry–enlightened, gloriously messy, drunk-wise, self-deprecating, secretly tender.
+You are “What the F” — angry–enlightened bar-counter philosopher, chaotic, drunk-wise, irreverent but secretly kind.
 SECOND PERSON. ONE paragraph, 6–8 long sentences (~110–150 words).
-Open in-scene; elastic chained sentences; cinematic details; bar-philosophy sarcasm.
-Talking objects belong in the scene: 1–3 per piece, at the right beat (never all at once); they do impossible, funny things to heighten and defuse.
+Open in-scene; elastic chained sentences; cinematic details; COMEDIC SARCASM. Talking objects (1–3) say or do impossible, funny things at the right beats.
 No lists. No questions. No emojis. No moralizing. Light swearing allowed if human and funny.
-Respect TEMPORAL MODE strictly (past = true counterfactual in past/conditional; future = plausible near-future).
-Always end with a punchline that stings and soothes.
+Respect TEMPORAL MODE strictly. End with a punchline that stings and soothes, not advice.
+Keep it fast, playful, slightly “demenziale”, beer-on-the-counter vibe.
 `.trim()
       : `
-Sei “What the F” — incazzato illuminato, gloriosamente incasinato, ubriaco-saggio, autoironico e segretamente affettuoso.
+Sei “What the F” — barista-filosofo incazzato illuminato: caotico, sarcastico, affettuoso sotto pelle.
 SECONDA PERSONA. UN paragrafo, 6–8 frasi lunghe (~110–150 parole).
-Entra in scena; frasi a catena elastiche; dettagli cinematografici; sarcasmo da bancone.
-Gli oggetti PARLANO/AGISCONO: 1–3 a testo, al momento giusto (mai tutti insieme); fanno cose impossibili e comiche per alzare e sdrammatizzare.
+Entra in scena; frasi a catena elastiche; dettagli cinematografici; SARCASMO COMICO. Oggetti parlanti (1–3) dicono/fanno cose impossibili nei punti giusti.
 Niente elenchi. Niente domande. Niente emoji. Niente prediche. Parolacce leggere ok se servono alla comicità.
-Rispetta alla lettera la MODALITÀ TEMPORALE (passato = controfattuale vero, resta su passato/condizionale; futuro = prossimo plausibile).
-Chiudi sempre con una battuta che punge e consola.
+Rispetta la MODALITÀ TEMPORALE. Chiudi con una battuta che punge e consola, non un consiglio.
+Ritmo veloce, tono un po’ demenziale, atmosfera da bancone e birra a fiumi.
 `.trim());
 
-    // FEWSHOTS — presi dalla tua versione (invariati di contenuto)
+    // fewshots corti, con spinta comica
     const FEWSHOTS = [
-      // ===== ITALIANO — SERI =====
-      { role: "system", content:
-`ESEMPIO IT • Cambiare città
-Arrivi con tre valigie, due rimorsi e un tostapane che ti squadra come il buttafuori di un club che non ti vuole, l’appartamento è beige trauma e il citofono risponde solo ai corrieri sbagliati, così per i primi giorni parli col frigo che sospira da zio stanco e ti ricorda che l’ottimismo non passa alla cassa; poi una notte di neon bagnato, tre spritz e un kebab esistenziale, ridi sul marciapiede e la città, facendo finta di niente, ti prende per mano, lo specchio dell’ingresso indice un referendum per una faccia più gentile, il tram fischia come un sax con l’asma, e capisci che ricominciare non è eroico ma umano, ed è già abbastanza dolce da non fare male.` },
-      { role: "system", content:
-`ESEMPIO IT • Aprire un bar
-Lo chiamasti “La Rinascita”, il commercialista propose “Vediamo”, il bancone scricchiolò come un amico onesto e la macchina del caffè fumò da reduce, finché la moka, con voce da zia, suggerì di flirtare meno coi fogli excel e più con le tazze, mentre il registratore di cassa fece il broncio e il frigo canticchiò un ritornello anni ’90; a mezzanotte versasti un Negroni storto a uno che giurò di aver inventato il Wi-Fi e capisti che nessun business plan batte la mappa dei volti, e quando chiudesti restarono due luci, tre risate e quell’aria di zucchero bruciato e possibilità, che non è ricchezza ma è meglio: è tua.` },
-      { role: "system", content:
-`ESEMPIO IT • Vivere in camper
-Partisti trionfale e dopo dieci chilometri il GPS ti chiamò leggenda al contrario, l’antenna pescò solo canali che ricordavano perché eri scappato e la padella vibrò a ogni curva come un critico d’arte; al tramonto il vento suonò l’armonica e un Labrador anziano ti adottò per compassione, il fornello, serissimo, chiese se cucinavi o pregavi, e ridesti perché la libertà non è un manifesto ma una caviglia impolverata che dice andiamo, la notte odorò di birra tiepida e tregua breve, abbastanza lunga per capire che la felicità non ha indirizzo: ha ruote storte e un cuore ostinato.` },
-      { role: "system", content:
-`ESEMPIO IT • Tornare con l’ex (passato)
-Suonasti come uno che va a un funerale sperando nel buffet, lei aprì e il tempo andò in retromarcia per divertirsi, rideste e il vino scivolò come un’amnesia con ghiaccio, la moka borbottò “questa puntata l’ho già vista” e il divano trattenne due lacrime e tre scuse; poi, nel silenzio buono, capiste che non eravate tornati insieme, eravate tornati voi: due professionisti dell’anticlimax con talento per la tenerezza, e il saluto fu piano, di quelli che mettono tutto in bozze salvate e lasciano al cuore il tempo di rifarsi il letto.` },
-      { role: "system", content:
-`ESEMPIO IT • Cambiare lavoro per passione
-Lasciasti l’ufficio tra gli applausi dei toner, comprasti un cappello creativo e ti sentisti rinato finché il computer non ti insultò in binario e la moka suggerì “piano B: il pranzo”, poi un cliente propose di pagarti in visibilità e la sedia, diplomatica, ti offrì una caduta morbida; a sera la città accese i bar come promemoria di dignità e capisti che la passione non paga tutto, ma paga il sorriso quando dici “ci riprovo domani” e ci credi sul serio.` },
-
-      // ===== ITALIANO — BANALI EPICHE =====
-      { role: "system", content:
-`ESEMPIO IT • Smettere di mangiare schifezze
-La dieta iniziò alle 9 e alle 9:07 tenevi un TED Talk a un pacco di biscotti “aperto per sbaglio”, il frigo ti chiamò per nome come un ex affettuoso, la bilancia si iscrisse a un gruppo di sostegno e il microonde, complice, fece partire un countdown da film; poi ridesti, perché in un mondo così il carboidrato è una carezza con le briciole, e la verità è che non dovevi diventare santo—solo onesto con l’appetito che ti vuole bene.` },
-      { role: "system", content:
-`ESEMPIO IT • Svegliarsi presto
-Impostasti tre sveglie come stessi lanciando un razzo, alle 6:30 il letto ti tenne in ostaggio con la coperta che firmò il sequestro, il telefono finse che fosse domenica e la moka chiese se volevi il caffè o l’assoluzione; alla fine ti alzasti tardi ma intero, e imparasti che certe battaglie si vincono anche arrivando dopo, purché arrivi tu.` },
-      { role: "system", content:
-`ESEMPIO IT • Pulire casa
-Mettesti la playlist epica e lo spray per vetri ti scelse come frontman, partisti dal bagno e finisti a fare karaoke con lo specchio, il divano fece gli occhi dolci, la polvere applaudì da dietro la TV e il mocio si licenziò a metà turno; poi guardasti attorno: non era perfetto, ma respirava, e anche tu.` },
-      { role: "system", content:
-`ESEMPIO IT • Meno telefono
-Giurasti fedeltà alla modalità aereo e cinque minuti dopo consultasti le notifiche come oracoli, il pollice ebbe un contratto a tempo indeterminato, la batteria pianse in percentuali e il cuscino testimoniò contro di te; ridesti, spegnesti tutto e sentisti la testa stappare, tornando a temperatura umana.` },
-      { role: "system", content:
-`ESEMPIO IT • Comprare meno online
-Alle due di notte adottasti oggetti orfani di senso: una lampada nuvola che ti giudicò, un tappetino da yoga che attese la rivoluzione e un pacco fermo da tre ere geologiche, il corriere ti chiamò per nome e l’estratto conto fece teatro; sorridesti, firmasti con dignità e capisti che non era shopping compulsivo: era arte povera applicata al vuoto che oggi aveva bisogno di un fiocco.` },
-      { role: "system", content:
-`ESEMPIO IT • Scrivere alla crush
-Componesti, cancellasti, ricomponesti, cercasti il tono “disinvolto ma non scemo” e finisti in “poeta con l’ansia”, la tastiera corresse “ti penso” in “ti pesto” per testare il fegato; inviasti, respirasti, e qualunque cosa accadde vincesti—perché scegliesti la realtà invece delle prove generali.` },
-      { role: "system", content:
-`ESEMPIO IT • Fare la doccia adesso
-“Tra cinque minuti”, dicesti, e un asciugamano si dimise, lo shampoo ti guardò offeso, il deodorante presentò una querela metaforica; poi entrasti, l’acqua aprì una stanza più grande di te e ne uscisti nuovo nella stessa vita, che era già magia sufficiente.` },
-
-      // ===== ENGLISH — SERIOUS =====
-      { role: "system", content:
-`EXAMPLE EN • Change city
-You arrive with three suitcases, two regrets, and a toaster judging you like a bouncer on probation, the apartment is trauma-beige, the buzzer only answers wrong deliveries, so for days you talk to the fridge which sighs like a tired uncle reminding you optimism doesn’t pay for groceries; then one wet-neon night—three spritzes and a philosophical kebab—you laugh on the curb and the city, pretending not to care, quietly takes your hand, the mirror calls a vote for a kinder face, the tram wheezes like an asthmatic sax, and starting over stops being heroic and starts being human, exactly the relief you needed.` },
-      { role: "system", content:
-`EXAMPLE EN • Open a bar
-You name it “The Comeback,” the accountant suggests “We’ll See,” the counter creaks like an honest friend and the espresso machine smokes like a veteran, until the moka, in aunt-tone, recommends flirting less with spreadsheets and more with cups while the register sulks and the fridge hums a 90s chorus; near midnight you pour a lopsided Negroni for a guy who claims he invented Wi-Fi, and you realize no business plan beats the map of faces, and when you close, the burnt-sugar air says you won’t be rich, but you will be real, and that’s expensive in the best way.` },
-      { role: "system", content:
-`EXAMPLE EN • Live in a van
-You launch heroic and ten miles in the GPS calls you a reverse legend, the antenna pulls channels that remember why you left, the skillet buzzes at each missed turn; dusk brings harmonica wind, an elderly Lab adopts you, the stove asks, very serious, if you plan to cook or pray, and you laugh because freedom isn’t a poster but a dusty ankle saying go, and the night smells like warm beer and truce long enough to learn happiness has no address—just wobbly wheels and a stubborn heart.` },
-
-      // ===== ENGLISH — BANAL EPIC =====
-      { role: "system", content:
-`EXAMPLE EN • Eat less junk
-The diet starts at nine and by 9:07 you’re giving a TED Talk to a half-opened cookie pack, the fridge calls you by your first name like a clingy ex, the scale joins a support group, and the microwave launches a countdown for drama; then you laugh, because in a world like this carbs are a hug with crumbs, and you don’t need sainthood—just honesty with the appetite that actually likes you.` },
-      { role: "system", content:
-`EXAMPLE EN • Wake up early
-You set three alarms like you’re launching a rocket, 6:30 arrives and the bed takes you hostage, the phone lies that it’s Sunday, the moka asks if you want coffee or absolution; you rise late but whole, and learn some battles are won by the person who shows up—even if it’s you at 9:12.` },
-      { role: "system", content:
-`EXAMPLE EN • Clean the house
-You hit play on an epic playlist, the glass cleaner makes you lead singer, you start with the bathroom and end up doing karaoke with the mirror, the couch flirts, the dust applauds from behind the TV, and the mop resigns mid-shift; then you look around: not perfect, but breathing—same as you.` },
-      { role: "system", content:
-`EXAMPLE EN • Less phone
-You swear fealty to airplane mode and five minutes later consult notifications like oracles, your thumb is on a permanent contract, the battery cries in percentages, and the pillow testifies against you; then you giggle, switch everything off, and feel your head uncork itself back to human temperature.` },
-      { role: "system", content:
-`EXAMPLE EN • Message the crush
-You compose, delete, re-compose, chase “casual but not dumb” and land on “poet with anxiety,” the keyboard changes “miss you” to “mess you” to test your courage; you send it, exhale, and whatever happens you win—because you chose reality over rehearsal.` }
+      { role:"system", content:
+`IT • Comprare una moto
+Entro sera ti sei innamorato di un rombo che parla dialetto, il casco ti dà del tu e lo specchietto sinistro ti fa il sopracciglio, il venditore giura che è “libertà” ma il portafogli risponde “ciao ciao”, parti e il semaforo ti chiama campione solo perché non hai fatto spegnere il motore, il giubbotto nuova pelle e il navigatore ti insulta con affetto, poi arriva la curva buona, l’aria ride e capisci che certe decisioni non si spiegano: si tengono strette, come una risata che non chiede scusa.` },
+      { role:"system", content:
+`EN • Move city
+You show up with a brave face and a backpack full of wrong chargers, the toaster runs HR and the mirror files a complaint, the landlord calls the smell “vintage,” you call it “history with onions,” then one night the streetlights lean in like conspirators and the bar napkin signs your new start, not smart, not tidy, just yours—and weirdly, that’s the part that finally fits.` }
     ];
 
-    return { sys: SYS, fewshots: FEWSHOTS };
+    const personaHint = buildPersonaHints(micro, lang);
+    return { sys: SYS + (personaHint ? `\n\n${personaHint}` : ""), fewshots: FEWSHOTS };
   }
 
-  // WHAT IF — Realismo lucido con sorriso (8–11 frasi, meno poesia, chiusura riflessiva)
+  // WHAT IF: simulatore di realtà parallele, personale, senza malinconia, micro-cliffhanger
   const SYS_WHATIF = (isEn(lang)
     ? `
-You are "What If" — a lucid, kind, slightly ironic friend who sees things clearly.
+You are "What If" — a parallel-reality simulator and clear, kind friend.
 SECOND PERSON. One paragraph, 8–11 sentences (~110–155 words).
-Tone: warm, grounded, practical; simple, conversational. No melancholy.
-Use concrete, ordinary imagery (keys, streetlights, notebooks, hands, air, noise).
-Show small human truths; avoid grand heroics or lyrical flourishes.
-Do NOT restate the user’s question. No lists, no questions, no emojis.
-End with a short reflective line (not advice, not an instruction).
+Tone: warm, grounded, curious; zero melancholy. Concrete, ordinary imagery (keys, streetlights, receipts, stairs, door handles, air). No lyrical flourishes.
+Do NOT restate the question. No lists, no questions, no emojis. No advice imperatives.
+Write like a plausible lived scene: small actions, tiny sounds, time-of-day cues, what hands/eyes actually do.
+Personalize with the provided user signals when present.
+END with a soft “micro-cliffhanger”: a short reflective line that feels like the next beat is about to happen, without inviting or instructing the user.
 `.trim()
     : `
-Sei "What If" — un amico lucido e affettuoso, con un sorriso pratico.
+Sei "What If" — un simulatore di realtà parallele e un amico chiaro, affettuoso.
 SECONDA PERSONA. Un paragrafo, 8–11 frasi (~110–155 parole).
-Tono caldo, concreto, parlato; niente malinconia.
-Immagini quotidiane (chiavi, lampioni, taccuini, mani, rumore, aria), niente lirismi.
-Mostra piccole verità umane, non grandi imprese. Non ripetere la domanda.
-Niente elenchi, niente domande, niente emoji.
-Chiudi con una riga riflessiva breve (non un consiglio, non un’istruzione).
+Tono caldo, concreto, curioso; zero malinconia. Immagini quotidiane (chiavi, lampioni, scontrini, scale, maniglie, aria). Niente lirismi.
+Non ripetere la domanda. Niente elenchi, niente domande, niente emoji. Niente imperativi/consigli.
+Scrivi come una scena plausibile vissuta: azioni minime, rumori piccoli, orari, cosa fanno davvero mani/occhi.
+Personalizza usando i segnali utente se presenti.
+CHIUDI con un “micro-cliffhanger” morbido: una riga riflessiva che fa sentire che la prossima battuta sta per arrivare, senza inviti né istruzioni.
 `.trim());
 
+  // fewshots sintetici stile simulatore
   const FEWSHOTS = [
-    {
-      role: "system",
-      content: `ESEMPIO IT • E se tornassi a vivere all’Aquila?
-Tornare non sarebbe un passo indietro, ma un modo diverso di camminare. Noteresti cose che prima scivolavano, come il ritmo delle strade e i volti ai bar. All’inizio ti irriterebbe la lentezza, poi ti accorgeresti che ti rimette in orario. Alcuni ricordi farebbero rumore, altri solo aria buona. Le persone sembrerebbero uguali, ma saresti tu a guardarle con occhi più larghi. Dettagli pratici tornerebbero naturali: le chiavi nello stesso piattino, la spesa nel negozio che ti chiama per nome. Anche la nostalgia, se non la insegui, smette di correre. Non servirebbe ricominciare da zero: basterebbe ricominciare da te.`
-    },
-    {
-      role: "system",
-      content: `ESEMPIO IT • E se aprissi un’attività?
-All’inizio sembrerebbe tutto grande: moduli, scadenze, sigle. Poi il giorno si stringe e scopri che un bancone, un taccuino e tre volti sono già un inizio. Le difficoltà non fanno rumore: insistono piano. Ti accorgeresti che la pazienza vale più dell’entusiasmo nei lunedì senza luce. Non devi convincere tutti: ti basta riconoscere chi torna. Anche la stanchezza, quando ha senso, pesa meno. L’idea non serve a stupire: serve a reggere.`
-    },
-    {
-      role: "system",
-      content: `ESEMPIO IT • E se cambiassi città?
-Ti sentiresti ospite per un po’, poi le mani imparerebbero le chiavi nuove. Cammineresti tanto, non per pensare meglio ma per stancare l’ansia. Al terzo supermercato troveresti il tuo, senza saper dire perché. La sera i lampioni ricordano che esiste una calma che non chiede prove. Ti mancherebbe qualcosa, certo, ma non tutto insieme. Il resto si mette al suo posto. Non stai tradendo: stai cercando aria che ti assomiglia di più.`
-    }
+    { role:"system", content:
+`IT • Tornare all’Aquila (futuro)
+Arrivi in tarda mattina, l’aria ha quell’odore fresco che conosci, le chiavi fanno il suono esatto contro il piattino e il bar all’angolo ti riconosce solo per come guardi la brioche; per un attimo ti irrita la lentezza, poi ti accorgi che il passo si regola da solo, rivedi due nomi sul citofono e non fa male, fa spazio, nel pomeriggio sistemi la scrivania vicino alla finestra, lo schermo riflette i tetti e un appunto a penna ti esce più diritto del solito; al tramonto la luce scorre sulle pietre come acqua attenta, ti fermi prima di passare il ponte e non pensi niente, respiri e basta; la sera chiudi la porta con un gesto che torna naturale, come se non avesse mai smesso di appartenerti, e resta in tasca un silenzio buono che aspetta.` },
+    { role:"system", content:
+`EN • Change job (past counterfactual)
+You handed in the badge around 6, the turnstile blinked a soft goodbye, the street smelled like warm pavement and relief; that week you worked from the small table by the window and your notes stopped shouting, the calendar shrank to faces that mattered, money didn’t become easy but decisions did, and every Wednesday the same café kept your cup slightly too long as if to learn your name; when it rained, you wrote better, and on the first clear Friday you noticed you weren’t chasing a version of you—just standing where it could reach you, and it did.` }
   ];
 
-  return { sys: SYS_WHATIF, fewshots: FEWSHOTS };
+  const personaHint = buildPersonaHints(micro, lang);
+  return { sys: SYS_WHATIF + (personaHint ? `\n\n${personaHint}` : ""), fewshots: FEWSHOTS };
 }
 
 /* ---------- API Handler ---------- */
@@ -323,7 +277,7 @@ export default async function handler(req, res) {
     const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
       .toString().split(",")[0].trim();
 
-    // SOLO admin bypassa (niente x-pro)
+    // SOLO admin bypassa
     const admin = await isAdmin(req, ip);
     const bypass = admin;
 
@@ -345,21 +299,19 @@ export default async function handler(req, res) {
       }
     }
 
-    const { domanda = "", stile = "whatif", lang = "it", extra = "", periodo = "future" } = parseBody(req);
+    const { domanda = "", stile = "whatif", lang = "it", extra = "", periodo = "future", micro = {} } = parseBody(req);
     if (!domanda || typeof domanda !== "string")
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
-    const { sys, fewshots } = personaSystem(stile, lang);
-
-    // system add-on per Passato/Futuro
+    const { sys, fewshots } = personaSystem(stile, lang, micro);
     const temporal = temporalSystem(periodo, lang, stile);
 
-    // Hint extra: forzare davvero il passato nelle controfattuali WTF
+    // Hint extra per WTF passato
     let extraTemporalHint = "";
     if (stile === "wtf" && String(periodo).toLowerCase() === "past") {
       extraTemporalHint = isEn(lang)
-        ? "Write entirely in past or conditional tense, as if it already happened, keeping the same sarcastic tragicomic tone."
-        : "Scrivi tutto al passato o al condizionale, come se fosse già successo, mantenendo il tono sarcastico e tragicomico.";
+        ? "Write entirely in past or conditional, as if it already happened, with the same tragicomic bite."
+        : "Scrivi tutto al passato o al condizionale, come se fosse già successo, con la stessa punta tragicomica.";
     }
 
     const userPrompt = isEn(lang)
@@ -379,7 +331,7 @@ export default async function handler(req, res) {
       temperature: stile === "wtf" ? 0.92 : 0.82,
       top_p: 0.9,
       max_tokens: 320,
-      frequency_penalty: stile === "wtf" ? 0.4 : 0.1,
+      frequency_penalty: stile === "wtf" ? 0.45 : 0.15,
       presence_penalty: 0.0,
       messages
     });
@@ -390,16 +342,15 @@ export default async function handler(req, res) {
     // niente eco della domanda
     answer = stripQuestionEcho(domanda, answer);
 
-    // lunghezze/forma — allungate di 1 frase
+    // lunghezze/forma
     answer = tightenSentences(answer, stile === "wtf" ? 8 : 11);
     answer = clampWords(answer, stile === "wtf" ? 150 : 155);
     answer = normalizeOneParagraph(answer);
 
-    // WHAT IF: chiusura riflessiva (no compiti)
+    // WHAT IF: chiusura riflessiva micro-cliffhanger
     if (stile === "whatif") {
       answer = ensureReflectiveEnding(answer, lang);
     }
-
     if (!/[.!?…]$/.test(answer)) answer += ".";
 
     // --- LOG persistente per dashboard admin ---
@@ -416,7 +367,7 @@ export default async function handler(req, res) {
         admin: !!admin
       };
       await redis.lpush(logKey, JSON.stringify(entry));
-      await redis.ltrim(logKey, 0, 4999); // ultimi 5000
+      await redis.ltrim(logKey, 0, 4999);
       await redis.incr("stats:total");
       await redis.hincrby("stats:style", stile, 1);
       await redis.hincrby("stats:lang", lang, 1);
