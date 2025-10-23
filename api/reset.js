@@ -1,34 +1,40 @@
-// ============================
-// /api/reset.js — Reset crediti giornalieri (admin only)
-// ============================
+// /api/reset.js
 import { Redis } from "@upstash/redis";
-const redis = new Redis({ url: process.env.UPSTASH_REDIS_REST_URL, token: process.env.UPSTASH_REDIS_REST_TOKEN });
 
-function cors(req,res){
-  res.setHeader("Access-Control-Allow-Origin","*");
-  res.setHeader("Access-Control-Allow-Methods","POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers","Content-Type,x-admin-token");
-}
-async function isAdmin(req){
-  const token = String(req.headers["x-admin-token"]||"").trim();
-  if(!token) return false;
-  try { return !!(await redis.get(`admin:token:${token}`)); } catch { return false; }
-}
-export default async function handler(req,res){
-  cors(req,res);
-  if(req.method==="OPTIONS") return res.status(200).end();
-  if(req.method!=="POST") return res.status(405).json({ok:false,error:"method_not_allowed"});
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
 
-  try{
-    if(!(await isAdmin(req))) return res.status(401).json({ok:false,error:"not_admin"});
-    // Svuota chiavi "credits:*:YYYY-MM-DD" di oggi
+function getIp(req) {
+  return (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
+    .toString().split(",")[0].trim();
+}
+async function ipForToken(token) {
+  try { return await redis.get(`admin:token:${token}`); } catch { return null; }
+}
+
+export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-token");
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ ok:false, error:"method_not_allowed" });
+
+  try {
+    const token = String(req.headers["x-admin-token"] || "").trim();
+    if (!token) return res.status(401).json({ ok:false, error:"missing_admin_token" });
+    const savedIp = await ipForToken(token);
+    if (!savedIp) return res.status(403).json({ ok:false, error:"invalid_or_expired_token" });
+
+    const ip = getIp(req);
     const today = new Date().toISOString().slice(0,10);
-    const prefix = `credits:`;
-    // Upstash non supporta keys wildcard in REST: pulizia soft (logica lato client nella tua UI)
-    // Ti ritorno solo ok; i client locali azzerano i contatori memorizzati localmente.
-    return res.status(200).json({ ok:true, notice:"Soft reset: azzera lato client. Le chiavi server scadono in 24h." });
-  }catch(e){
-    console.error("❌ [/api/reset] error:",e);
+    const key = `credits:${ip}:${today}`;
+    await redis.del(key);
+
+    return res.status(200).json({ ok:true, ip, date:today });
+  } catch (e) {
+    console.error("reset error:", e);
     return res.status(500).json({ ok:false, error:"server_error" });
   }
 }
