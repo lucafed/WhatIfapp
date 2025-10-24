@@ -1,44 +1,41 @@
+// /api/admin-logs.js — elenco richieste + domande (ultimi N) con auth admin
 import { Redis } from "@upstash/redis";
+
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-function cors(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-token");
-}
-async function isAdmin(req) {
+// Validazione admin: token presente in Redis (niente lock IP di default)
+async function isValidAdmin(req) {
   const tok = String(req.headers["x-admin-token"] || "").trim();
   if (!tok) return false;
-  const saved = await redis.get(`admin:token:${tok}`);
-  const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
-    .toString().split(",")[0].trim();
-  return !!saved && saved === ip;
-}
-function maskIp(ip) {
-  if (!ip) return "";
-  const parts = String(ip).split(".");
-  if (parts.length !== 4) return ip;
-  return `${parts[0]}.${parts[1]}.***.${parts[3]}`;
+  try {
+    const exists = await redis.exists(`admin:token:${tok}`);
+    return !!exists;
+  } catch { return false; }
 }
 
 export default async function handler(req, res) {
-  cors(req, res);
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-token");
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  try {
-    if (!(await isAdmin(req))) return res.status(401).json({ ok: false, error: "unauthorized" });
+  // Auth
+  const admin = await isValidAdmin(req);
+  if (!admin) return res.status(401).json({ ok:false, error: "auth_required" });
 
+  try {
     if (req.method === "DELETE") {
       await redis.del("logs:ask");
-      return res.status(200).json({ ok: true, cleared: true });
+      return res.status(200).json({ ok:true });
     }
+
+    if (req.method !== "GET") return res.status(405).json({ ok:false, error:"method_not_allowed" });
 
     const limit = Math.max(1, Math.min(1000, parseInt(String(req.query.limit || "200"), 10) || 200));
     const raw = await redis.lrange("logs:ask", 0, limit - 1);
-
     const items = [];
     for (const r of raw || []) {
       try {
@@ -46,24 +43,28 @@ export default async function handler(req, res) {
         items.push({
           ts: o.ts || Date.now(),
           ip: o.ip || "",
+          user_type: o.user_type || (o.admin ? "admin" : (o.pro ? "pro" : "free")),
           style: o.style || "whatif",
           lang: o.lang || "it",
           periodo: o.periodo || "future",
-          user_type: o.user_type || (o.admin ? "admin" : "free"),
-          domanda: o.domanda ?? "(nessuna domanda registrata)",
+          domanda: o.domanda || "",
           answer_chars: o.answer_chars || 0,
         });
-      } catch (err) {
-        console.warn("log parse error", err);
-      }
+      } catch {}
     }
 
-    const mask = String(req.query.mask || "1") === "1";
-    if (mask) for (const it of items) it.ip = maskIp(it.ip);
+    // stat locali sul blocco caricato
+    const stats = { total: items.length, byStyle:{}, byLang:{}, byPeriod:{}, byUserType:{} };
+    for (const it of items) {
+      stats.byStyle[it.style] = (stats.byStyle[it.style] || 0) + 1;
+      stats.byLang[it.lang] = (stats.byLang[it.lang] || 0) + 1;
+      stats.byPeriod[it.periodo] = (stats.byPeriod[it.periodo] || 0) + 1;
+      stats.byUserType[it.user_type] = (stats.byUserType[it.user_type] || 0) + 1;
+    }
 
-    return res.status(200).json({ ok: true, items });
+    return res.status(200).json({ ok:true, items, stats });
   } catch (e) {
     console.error("admin-logs error:", e);
-    return res.status(500).json({ ok: false, error: "server_error", detail: String(e?.message || e) });
+    return res.status(500).json({ ok:false, error:"server_error" });
   }
 }
