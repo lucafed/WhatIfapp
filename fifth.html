@@ -79,6 +79,14 @@ h1{
 }
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
+
+/* evidenzia le parentesi comiche tra em-dash senza toccare il testo */
+.embit {
+  padding: 0 .08em;
+  box-shadow: 0 -4px 0 0 rgba(255,255,255,.05) inset;
+  text-shadow: 0 0 12px rgba(255,255,255,.08);
+  border-radius: 4px;
+}
 </style>
 </head>
 <body>
@@ -134,25 +142,23 @@ document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'w
   }
 })();
 
-/* ===== I18N + meta ===== */
 const I18N={
   it:{tWTF:"⚡ What the F — Risultato", tWHF:"💡 What if — Risultato",
       sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
       share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
       copied:"Copiato!", error:"[errore server]",
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-      // Meta aggiornato: WTF = sarcasmo demenziale + doppia punchline
       meta:(st,p)=> st==='wtf'
-        ? `Stile: What the F · 6–8 frasi · paragrafo unico · sarcasmo demenziale (mai cattivo) · chiusura con doppia punchline “— … — …” · niente elenchi/domande/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if · 8–11 frasi · paragrafo unico · tono caldo e concreto · niente elenchi/domande/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.`},
+        ? `Stile: What the F · 6–9 frasi · paragrafo unico · 3+ stoccate interne · doppia punchline · modalità: ${p==='past'?'Passato':'Futuro'}.`
+        : `Stile: What if · 8–11 frasi · paragrafo unico · niente elenchi/domande/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.`},
   en:{tWTF:"⚡ What the F — Result", tWHF:"💡 What if — Result",
       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
       share:"📤 Share / Copy", again:"🔁 Ask another",
       copied:"Copied!", error:"[server error]",
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
       meta:(st,p)=> st==='wtf'
-        ? `Style: What the F · 6–8 sentences · single paragraph · goofy sarcasm (never mean) · ends with a double punchline “— … — …” · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if · 8–11 sentences · single paragraph · warm and grounded · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`}
+        ? `Style: What the F · 6–9 sentences · single paragraph · 3+ inside jabs · double punchline · mode: ${p==='past'?'Past':'Future'}.`
+        : `Style: What if · 8–11 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`}
 }[lang];
 
 document.getElementById('langBtn').textContent=lang.toUpperCase();
@@ -169,39 +175,35 @@ function normalizeOneParagraph(s=""){
   return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
 }
 
-/* ===== LEADS: 1 frase breve (coerente con tono) ===== */
+/* LEADS */
 const LEADS = {
   it:{
     wtf:[
-      "Entri e il caos fa finta di niente, ma ti apre la corsia veloce.",
-      "Respiri e lasci inciampare prima il destino, poi l’ansia.",
-      "La scena corre da sola: tu aggiungi i sottotitoli col sorriso storto.",
-      "Non chiedi permesso al dubbio: gli rubi la sedia.",
-      "Ti fermi un secondo e la verità si sistema la cravatta.",
-      "Oggi fai pace con il casino: guida tu."
+      "Entri piano, il caos ti riconosce ma oggi ti lascia passare.",
+      "Respiri e lasci che sia il destino a inciampare per primo.",
+      "Ti presenti al futuro con la faccia di adesso e la pazienza di domani.",
+      "La scena è già in corso: tu ci metti il rumore buono.",
+      "Non chiedi permesso al dubbio, gli siedi accanto.",
+      "Stai un secondo fermo e la verità ti prende la misura."
     ],
     whatif:[
-      "Metti giù le chiavi e il silenzio, finalmente, parla chiaro.",
-      "La stanza è la stessa; lo sguardo, per fortuna, no.",
-      "Tieniti ciò che funziona: il resto smette di chiederti prove.",
-      "Cammini piano, e il futuro smette di urlarti addosso.",
-      "Respiri come chi ha tempo, e il tempo ci crede."
+      "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.",
+      "Ti siedi un attimo e scopri che la calma ha memoria lunga.",
+      "La stanza è la stessa, lo sguardo no: è già un inizio.",
+      "Tieniti stretto ciò che funziona e lascia che il resto perda importanza.",
+      "Respiri come chi ha tempo, e il tempo ti crede."
     ]
   },
   en:{
     wtf:[
-      "You step in and chaos pretends not to know you, then ushers you in.",
-      "You breathe and let fate trip first, anxiety second.",
-      "The scene rolls on; you add subtitles with a crooked grin.",
-      "You don’t ask doubt for a chair — you take it.",
-      "Pause one beat; truth fixes its tie.",
-      "You make peace with the mess: you’re driving."
+      "You step in slowly; chaos recognizes you and lets you through.",
+      "You breathe and let fate be the one who trips first.",
+      "You bring today’s face and tomorrow’s patience to the door.",
+      "The scene is already rolling; you supply the good noise."
     ],
     whatif:[
-      "Set the keys down and the quiet finally speaks.",
-      "Same room; thankfully, not the same gaze.",
-      "Keep what works; the rest stops asking for proof.",
-      "Walk slowly and the future stops shouting.",
+      "Set the keys down and let the quiet that doesn’t judge go first.",
+      "Same room, different gaze — that’s already a start.",
       "Breathe like someone with time, and time believes you."
     ]
   }
@@ -226,13 +228,30 @@ function setTitles(q){
   document.getElementById('metaInfo').textContent = I18N.meta(style, periodo);
 }
 
+// evidenzia parentesi tra em-dash “— … — …”
+function decorateEmBits(el){
+  const raw = el.textContent;
+  if(!raw.includes("—")) return;
+  const parts = raw.split("—");
+  // ricompone: i segmenti dispari (1,3,5,...) sono parentesi/colpi comici
+  let html = "";
+  for(let i=0;i<parts.length;i++){
+    const seg = parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    if(i%2===1) html += `<span class="embit">— ${seg} </span>`;
+    else html += (i===0 ? seg : `—${seg}`);
+  }
+  el.innerHTML = html;
+}
+
 if(isReplay){
   const r = JSON.parse(LS.getItem('replay_story')||'{}');
   domanda = r.domanda || LS.getItem('domanda') || "";
   answerText = normalizeOneParagraph(r.answer || "");
   setTitles(domanda);
   document.getElementById('qView').textContent = domanda || '—';
-  document.getElementById('answer').textContent = answerText || '—';
+  const node = document.getElementById('answer');
+  node.textContent = answerText || '—';
+  decorateEmBits(node);
 } else {
   const req = JSON.parse(LS.getItem('whatif_request')||'{}');
   domanda = req.domanda || LS.getItem('domanda') || "";
@@ -240,7 +259,6 @@ if(isReplay){
   document.getElementById('qView').textContent = domanda || '—';
 
   (async ()=>{
-    // ping tracking (non bloccante)
     navigator.sendBeacon?.("/api/track") || fetch("/api/track",{method:"POST",keepalive:true}).catch(()=>{});
     try{
       const headers = { "Content-Type": "application/json" };
@@ -277,9 +295,10 @@ if(isReplay){
       if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
       answerText = normalizeOneParagraph((data.answer||"").trim());
       if(!/[.!?…]$/.test(answerText)) answerText += ".";
-      document.getElementById('answer').textContent = answerText;
+      const node = document.getElementById('answer');
+      node.textContent = answerText;
+      decorateEmBits(node);
 
-      // salva cronologia locale (ultime 50)
       const hist = JSON.parse(LS.getItem('cronologia')||'[]');
       hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
       LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
@@ -290,10 +309,8 @@ if(isReplay){
   })();
 }
 
-// Share / Copy
 document.getElementById('shareBtn').onclick=async()=>{
-  const mode = (lang==='en') ? (periodo==='past'?'Past':'Future') : (periodo==='past'?'Passato':'Futuro');
-  const full = `What?f — ${style==='wtf'?'What the F':'What if'}\n(${mode})\n\nQ: ${domanda}\n\n${normalizeOneParagraph(answerText)}`;
+  const full = `What?f — ${style==='wtf'?'What the F':'What if'}\n(${periodo})\n\nQ: ${domanda}\n\n${answerText}`;
   try{
     if(navigator.share){
       await navigator.share({ title: "What?f", text: full });
@@ -304,7 +321,6 @@ document.getElementById('shareBtn').onclick=async()=>{
     }
   }catch{}
 };
-
 document.getElementById('againBtn').onclick=()=>{ location.href='fourth.html'; };
 </script>
 </body>
