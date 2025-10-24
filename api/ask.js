@@ -1,10 +1,8 @@
-// ============================
 // /api/ask.js — What?f Engine (Incazzato Illuminato + Realismo Lucido con Sorriso)
 // Stili supportati: whatif, wtf
 // IT/EN — singolo paragrafo, niente emoji/liste/domande
 // Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
 // Log avanzato su Redis (periodo, stile, lang, user_type, domanda)
-// ============================
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -20,7 +18,7 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-// rate limit: 10 req/min per IP (bypassabile SOLO per admin)
+// rate limit: 10 req/min per IP (bypass SOLO per admin)
 const rl = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(10, "1 m"),
@@ -82,14 +80,22 @@ function stripQuestionEcho(domanda, text) {
   return t;
 }
 
-// Admin check (mappa token->ip gestita da /api/admin-token.js)
+// ---------- Admin check (coerente con /api/admin-token.js: HASH + LOCK_IP) ----------
 async function isAdmin(req, requesterIp) {
   const token = String(req.headers["x-admin-token"] || "").trim();
   if (!token) return false;
   try {
-    const ip = await redis.get(`admin:token:${token}`);
-    return ip && ip === requesterIp;
-  } catch { return false; }
+    const data = await redis.hgetall(`admin:token:${token}`); // { ip, ua }
+    if (!data) return false;
+    const LOCK_IP = String(process.env.ADMIN_LOCK_IP || "false").toLowerCase() === "true";
+    if (LOCK_IP) {
+      if (!data.ip) return false;
+      return data.ip === requesterIp;
+    }
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /* ---------- Modalità temporale (Passato/Futuro) ---------- */
@@ -108,7 +114,6 @@ function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
 /* ---------- Personas (voci) ---------- */
 function personaSystem(style, lang) {
   if (style === "wtf") {
-    // WHAT THE F — amico geniale, filosofo, mezzo brillo: tanta ironia, oggetti “pensanti” immaginati, aperture variate.
     const SYS = (isEn(lang)
       ? `
 You are “What the F” — the sharp, half-drunk best friend who loves the user and roasts them with affection.
@@ -131,7 +136,6 @@ Rispetta la MODALITÀ TEMPORALE alla lettera (passato=controfattuale; futuro=pla
 CHIUDI sempre con una battuta che punge e consola.
 `.trim());
 
-    // FEWSHOTS — esempi fissi per bloccare personalità/ritmo
     const FEWSHOTS = [
       { role: "system", content:
 `ESEMPIO IT • Moto
@@ -155,7 +159,6 @@ Champ, you wake up bulletproof and the first form chews your cape, the plan pret
     return { sys: SYS, fewshots: FEWSHOTS };
   }
 
-  // WHAT IF — Realismo lucido con sorriso (8–11 frasi, chiusura riflessiva morbida)
   const SYS_WHATIF = (isEn(lang)
     ? `
 You are "What If" — a lucid, kind, slightly ironic friend.
@@ -295,7 +298,6 @@ export default async function handler(req, res) {
       await redis.hincrby("stats:lang", lang, 1);
       await redis.hincrby("stats:periodo", String(periodo || "future"), 1);
       await redis.hincrby("stats:user_type", entry.user_type, 1);
-      // bucket giorno
       const dayKey = `stats:day:${new Date().toISOString().slice(0,10)}`;
       await redis.hincrby(dayKey, `${stile}:${periodo}`, 1);
       await redis.expire(dayKey, 90 * 24 * 60 * 60);
