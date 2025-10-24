@@ -132,7 +132,7 @@
 
       <div id="errorBox" class="error"></div>
 
-      <!-- ================== FORM PRINCIPALE (domande spostate in alto) ================== -->
+      <!-- ================== FORM PRINCIPALE ================== -->
       <form id="aboutForm" novalidate>
         <!-- Identità & contesto -->
         <div class="row two">
@@ -193,7 +193,7 @@
           </div>
         </div>
 
-        <!-- ===== Blocco Predittivo (PER LA QUALITÀ DELLE RISPOSTE AI) ===== -->
+        <!-- ===== Predittivo ===== -->
         <div class="divider"></div>
         <div class="row two">
           <div>
@@ -227,7 +227,7 @@
           </div>
         </div>
 
-        <!-- Domanda “mascherata” relax solo prima dell’onboarding -->
+        <!-- Domanda “mascherata” relax (prima dell’onboarding) -->
         <div id="unwindBox" class="micro" style="display:none">
           <div class="micro-q">
             <label for="unwindSel" id="unwind_lbl">Quando vuoi rilassarti dopo una giornata intensa, cosa preferisci fare?</label>
@@ -249,7 +249,7 @@
           <textarea id="more" placeholder=""></textarea>
         </div>
 
-        <!-- ===== Micro-domande giornaliere (SOLO DAL GIORNO DOPO) ===== -->
+        <!-- ===== Micro-domande giornaliere (solo dal giorno dopo) ===== -->
         <div id="microBox" class="micro">
           <h3 style="margin:6px 0" id="micro_title">3 micro-domande di oggi</h3>
           <div class="micro-q">
@@ -270,7 +270,7 @@
           </div>
         </div>
 
-        <!-- Azioni: in basso -->
+        <!-- Azioni -->
         <div class="actions">
           <button type="button" class="btn ghost" id="backBtn">Indietro</button>
           <div style="display:flex;gap:8px">
@@ -479,10 +479,19 @@
     if (!LS.getItem('lang')) LS.setItem('lang', getLang());
     applyI18N();
 
+    // Theme from prefs
+    (function(){
+      try{
+        const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
+        const theme = prefs.stile === 'wtf' ? 'wtf' : 'whatif';
+        document.documentElement.setAttribute('data-theme', theme);
+      }catch{}
+    })();
+
     // ===== Only once: se onboarding già fatto e profilo base presente, salta pagina
     const KEY_ONBOARD = 'whatif_onboarding_done';
     function baseProfilePresent(){
-      try{ const p = JSON.parse(LS.getItem('whatif_profile')||'{}'); return !!(p && p.gender && p.age && p.phase); }catch{return false}
+      try{ const p = JSON.parse(LS.getItem('whatif_profile')||'{}'); return !!(p && (p.gender || p.sex) && p.age && p.phase); }catch{return false}
     }
 
     // Prima sessione banner (solo pre-onboarding)
@@ -498,11 +507,11 @@
     }
 
     // topbar buttons
-    $('#backTop').addEventListener('click', ()=> history.back());
-    $('#homeTop').addEventListener('click', ()=> location.href='index.html');
+    document.getElementById('backTop').addEventListener('click', ()=> history.back());
+    document.getElementById('homeTop').addEventListener('click', ()=> location.href='index.html');
 
     // Reset profilo
-    $('#resetBtn').addEventListener('click', ()=>{
+    document.getElementById('resetBtn').addEventListener('click', ()=>{
       if(!confirm('Reset profilo e dati giornalieri?')) return;
       const keys = [
         'whatif_profile','whatif_micro','whatif_micro_log','whatif_last_update',
@@ -550,7 +559,7 @@
         // limita a una volta per giorno
         const seenDay = LS.getItem(KEY_DAY);
         if (seenDay === today){
-          // già interagito oggi → nascondi solo il banner, micro visibile se rientra
+          // già interagito oggi → nascondi solo il banner
           document.getElementById('dailyBanner').style.display = 'none';
         }
       } else {
@@ -708,7 +717,7 @@
     document.getElementById('backBtn').addEventListener('click', ()=> history.back());
     document.getElementById('skipBtn').addEventListener('click', ()=>{
       const base = JSON.parse(LS.getItem('whatif_profile')||'{}');
-      if (!base.gender || !base.age || !base.phase) {
+      if (!(base.gender || base.sex) || !base.age || !base.phase) {
         alert(getLang()==='en'
           ? 'Fill basic profile once before skipping.'
           : 'Compila una volta il profilo base prima di saltare.');
@@ -718,17 +727,24 @@
       location.href = firstDone ? 'fourth.html' : 'third.html';
     });
 
-    // form save
-    const form = document.getElementById('aboutForm');
-    const errBox = document.getElementById('errorBox');
-
+    // ======= Preload form dai dati salvati (con mapping sex<->gender) =======
     (function preload(){
       try{
         const p = JSON.parse(LS.getItem('whatif_profile')||'{}');
         if (!p) return;
+
+        // preferisci p.sex per risettare <select id="gender">
+        let gval = p.gender || "";
+        if (!gval && p.sex){
+          if (p.sex === 'm') gval = 'uomo';
+          else if (p.sex === 'f') gval = 'donna';
+          else if (p.sex === 'nb') gval = 'altro';
+          else gval = 'non_specificato';
+        }
+
         if (p.name) document.getElementById('name').value = p.name;
         if (p.city) document.getElementById('city').value = p.city;
-        if (p.gender) document.getElementById('gender').value = p.gender;
+        if (gval) document.getElementById('gender').value = gval;
         if (p.age) document.getElementById('age').value = p.age;
         if (p.phase) document.getElementById('phase').value = p.phase;
         if (p.role) document.getElementById('who').value = p.role;
@@ -746,6 +762,18 @@
       renderKnowledge();
     })();
 
+    // ===== submit: salva anche sex normalizzato =====
+    const form = document.getElementById('aboutForm');
+    const errBox = document.getElementById('errorBox');
+
+    function mapGenderToSex(g){
+      switch(String(g||'').toLowerCase()){
+        case 'uomo': return 'm';
+        case 'donna': return 'f';
+        case 'altro': return 'nb';
+        default: return '';
+      }
+    }
     function todayStr2(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
     form.addEventListener('submit', (e)=>{
@@ -759,13 +787,16 @@
       }
       errBox.classList.remove('show');
 
+      const sex = mapGenderToSex(gender);
+
       const profile = {
         name: document.getElementById('name').value.trim(),
         city: document.getElementById('city').value.trim(),
-        gender, age, phase,
+        gender,         // human-readable
+        sex,            // normalizzato: 'm' | 'f' | 'nb' | ''
+        age, phase,
         role: document.getElementById('who').value.trim(),
         goal: document.getElementById('goal').value.trim(),
-        more: document.getElementById('more').value.trim(),
         // relax info
         unwind: document.getElementById('unwindSel').value.trim(),
         drinks_pref: (document.getElementById('unwindSel').value === 'drink') ? 'yes' : 'no',
@@ -780,13 +811,7 @@
 
       const todayIso = todayStr2();
       LS.setItem('whatif_last_update', todayIso);
-
-      // salva la data della prima compilazione una sola volta
-      if (!LS.getItem('whatif_profile_date')) {
-        LS.setItem('whatif_profile_date', todayIso);
-      }
-
-      // onboarding completato
+      if (!LS.getItem('whatif_profile_date')) LS.setItem('whatif_profile_date', todayIso);
       LS.setItem('whatif_onboarding_done','1');
 
       renderKnowledge();
@@ -796,10 +821,9 @@
       location.href = firstDone ? 'fourth.html' : 'third.html';
     });
 
-    // sync se lingua cambia altrove
+    // sync su cambio lingua
     window.addEventListener('storage', (e)=>{ if(e.key==='lang'){ applyI18N(); renderKnowledge(); }});
     document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ applyI18N(); renderKnowledge(); }});
-
   </script>
 
   <!-- SW -->
