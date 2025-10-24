@@ -1,5 +1,6 @@
-// /api/admin-token.js — genera/verifica/revoca token admin (HASH + TTL, lock IP opzionale + cookie)
-// Accetta token via header x-admin-token, Authorization: Bearer, query ?token=..., o cookie adm_tok
+// /api/admin-token.js
+// Gestione token ADMIN legato all'IP: crea / valida / rinnova / revoca
+// PIN letto dal body (mai da header). TTL 7 giorni.
 
 import { Redis } from "@upstash/redis";
 
@@ -8,105 +9,70 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-// ⚙️ Config
-const ADMIN_PIN  = process.env.ADMIN_PIN || "wtf-setup-2025";
-const TTL_SECS   = parseInt(process.env.ADMIN_TTL_SECS || "", 10) || 2 * 24 * 60 * 60; // 48h
-const LOCK_IP    = String(process.env.ADMIN_LOCK_IP || "false").toLowerCase() === "true";
-const COOKIE_NAME = "adm_tok";
+const TTL = 7 * 24 * 60 * 60; // 7 giorni
 
-function parseCookies(req) {
-  const c = String(req.headers.cookie || "");
-  const out = {};
-  c.split(";").forEach(p => {
-    const i = p.indexOf("=");
-    if (i > -1) out[p.slice(0, i).trim()] = decodeURIComponent(p.slice(i + 1));
-  });
-  return out;
-}
-function getToken(req) {
-  const h = String(req.headers["x-admin-token"] || "").trim();
-  if (h) return h;
-  const auth = String(req.headers.authorization || "");
-  if (auth.toLowerCase().startsWith("bearer ")) return auth.slice(7).trim();
-  const q = req.query?.token ? String(req.query.token).trim() : "";
-  if (q) return q;
-  const cookies = parseCookies(req);
-  if (cookies[COOKIE_NAME]) return cookies[COOKIE_NAME].trim();
-  return "";
-}
 function getIp(req) {
-  const xff = String(req.headers["x-forwarded-for"] || "").trim();
-  if (xff) {
-    // prendi il PRIMO IP non-vuoto
-    const ip = xff.split(",").map(s => s.trim()).find(Boolean);
-    if (ip) return ip;
-  }
-  return (req.socket?.remoteAddress || "unknown").toString();
+  return (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
+    .toString().split(",")[0].trim();
 }
-
-// Validator condiviso
-export async function isValidAdmin(req) {
-  const tok = getToken(req);
-  if (!tok) return false;
-  try {
-    const data = await redis.hgetall(`admin:token:${tok}`); // { ip, ua }
-    if (!data) return false;
-    if (LOCK_IP) {
-      const ip = getIp(req);
-      if (!data.ip || data.ip !== ip) return false;
-    }
-    return true;
-  } catch { return false; }
-}
-
-function setCors(res) {
+function cors(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-token, admin-secret, Authorization");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-token");
 }
 
 export default async function handler(req, res) {
-  setCors(res);
+  cors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
 
+  const ip = getIp(req);
+
   try {
-    if (req.method === "POST") {
-      const pin = String(req.headers["admin-secret"] || req.body?.pin || "").trim();
-      if (!pin) return res.status(401).json({ ok:false, error:"missing_pin" });
-      if (pin !== ADMIN_PIN) return res.status(403).json({ ok:false, error:"bad_pin" });
-
-      const ip = getIp(req);
-      const ua = String(req.headers["user-agent"] || "");
-      const token = `adm_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
-
-      await redis.hset(`admin:token:${token}`, { ip, ua });
-      await redis.expire(`admin:token:${token}`, TTL_SECS);
-
-      // imposta cookie comodo lato browser
-      res.setHeader("Set-Cookie",
-        `${COOKIE_NAME}=${encodeURIComponent(token)}; Max-Age=${TTL_SECS}; Path=/; SameSite=Lax; Secure`);
-
-      return res.status(200).json({ ok:true, token, ttlHours: Math.round(TTL_SECS/3600), ip, lockIp: LOCK_IP });
-    }
-
     if (req.method === "GET") {
-      const ok = await isValidAdmin(req);
-      return res.status(200).json({ ok });
+      // valida token passato nell'header
+      const tok = String(req.headers["x-admin-token"] || "").trim();
+      if (!tok) return res.status(200).json({ ok: true, admin: false, ip, token: null });
+      const savedIp = await redis.get(`admin:token:${tok}`);
+      const admin = !!savedIp && savedIp === ip;
+      return res.status(200).json({ ok: true, admin, ip, token: admin ? tok : null });
     }
 
-    if (req.method === "DELETE") {
-      const tok = getToken(req);
-      if (!tok) return res.status(400).json({ ok:false, error:"missing_token" });
-      await redis.del(`admin:token:${tok}`);
-      // cancella cookie
-      res.setHeader("Set-Cookie", `${COOKIE_NAME}=; Max-Age=0; Path=/; SameSite=Lax; Secure`);
-      return res.status(200).json({ ok:true });
+    if (req.method !== "POST") {
+      return res.status(405).json({ ok: false, error: "method_not_allowed" });
     }
 
-    return res.status(405).json({ ok:false, error:"method_not_allowed" });
+    const url = new URL(req.url, "http://x");
+    const action = url.searchParams.get("action"); // renew | revoke | create(default)
+    const passedToken = String(req.headers["x-admin-token"] || "").trim();
+
+    if (action === "renew") {
+      if (!passedToken) return res.status(400).json({ ok: false, error: "missing_token" });
+      const savedIp = await redis.get(`admin:token:${passedToken}`);
+      if (savedIp !== ip) return res.status(403).json({ ok: false, error: "ip_mismatch" });
+      await redis.expire(`admin:token:${passedToken}`, TTL);
+      return res.status(200).json({ ok: true, token: passedToken, ip, ttl: TTL });
+    }
+
+    if (action === "revoke") {
+      if (passedToken) await redis.del(`admin:token:${passedToken}`);
+      return res.status(200).json({ ok: true, revoked: !!passedToken });
+    }
+
+    // create: confronta PIN con env
+    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+    const pin = String(body.pin || "").trim();
+    const envPin = String(process.env.ADMIN_PIN || "").trim();
+    if (!envPin) return res.status(500).json({ ok: false, error: "missing_admin_pin_env" });
+    if (!pin) return res.status(400).json({ ok: false, error: "missing_pin" });
+    if (pin !== envPin) return res.status(401).json({ ok: false, error: "bad_pin" });
+
+    const token = `adm_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
+    await redis.set(`admin:token:${token}`, ip, { ex: TTL });
+
+    return res.status(200).json({ ok: true, token, ip, ttl: TTL });
   } catch (e) {
     console.error("admin-token error:", e);
-    return res.status(500).json({ ok:false, error:"server_error" });
+    return res.status(500).json({ ok: false, error: "server_error", detail: String(e?.message || e) });
   }
 }
