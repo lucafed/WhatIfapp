@@ -1,8 +1,10 @@
-// /api/ask.js — What?f Engine (Incazzato Illuminato + Realismo Lucido con Sorriso)
-// Stili supportati: whatif, wtf
-// IT/EN — singolo paragrafo, niente emoji/liste/domande
-// Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
-// Log su Redis SENZA contenuto della domanda (solo metadati + hash non reversibile)
+// /api/ask.js — What?f Engine (2025) — COMPLETO
+// - Modello: gpt-4o-mini
+// - Stili: whatif (riflessivo) | wtf (sarcasmo demenziale potenziato)
+// - IT/EN, paragrafo singolo, niente elenchi/domande/emoji
+// - Rate: 10/min per IP
+// - Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
+// - Log: Redis (periodo, stile, lang, user_type, domanda)
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -28,7 +30,7 @@ const rl = new Ratelimit({
 const ALLOWED_ORIGINS = [
   "https://what-ifapp.vercel.app",
   "http://localhost:3000",
-  "http://127.0.0.1:5500"
+  "http://127.0.0.1:5500",
 ];
 function cors(req, res) {
   const origin = String(req.headers.origin || "");
@@ -57,7 +59,8 @@ function tightenSentences(text, maxSentences) {
     out.push(p); seen.add(n);
     if (out.length >= maxSentences) break;
   }
-  let t = out.join(" "); if (!/[.!?…]$/.test(t)) t += "."; return t;
+  let t = out.join(" "); if (!/[.!?…]$/.test(t)) t += ".";
+  return t;
 }
 function clampWords(text, maxWords) {
   const w = String(text || "").split(/\s+/);
@@ -79,8 +82,19 @@ function stripQuestionEcho(domanda, text) {
   t = t.replace(echoRx, "");
   return t;
 }
+// Garantisce la doppia punchline per wtf (— … — …)
+function ensureDoublePunchline(answer, lang) {
+  let t = String(answer || "").trim();
+  const hasEmDash = /—/.test(t);
+  const hasTwo = (t.match(/—/g) || []).length >= 2;
+  if (hasEmDash && hasTwo) return t;
+  const tail = isEn(lang) ? "good chaos — carry on." : "buon caos — avanti così.";
+  // se non termina con punto, aggiungilo prima della chiusura
+  if (!/[.!?…]$/.test(t)) t += ".";
+  return `${t} — ${tail}`;
+}
 
-// ---------- Admin check ----------
+/* ---------- Admin check (coerente con /api/admin-token.js) ---------- */
 async function isAdmin(req, requesterIp) {
   const token = String(req.headers["x-admin-token"] || "").trim();
   if (!token) return false;
@@ -98,7 +112,7 @@ async function isAdmin(req, requesterIp) {
   }
 }
 
-/* ---------- Modalità temporale ---------- */
+/* ---------- Modalità temporale (Passato/Futuro) ---------- */
 function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
   const en = isEn(lang);
   if (String(periodo || "").toLowerCase() === "past") {
@@ -116,45 +130,38 @@ function personaSystem(style, lang) {
   if (style === "wtf") {
     const SYS = (isEn(lang)
       ? `
-You are “What the F” — the sharp, half-drunk best friend who loves the user and roasts them with affection.
-SECOND PERSON. ONE paragraph, 5–7 long sentences (~100–130 words).
-OPEN with a warm shoulder-smack + varied nickname (e.g., “champ”, “genius”, “rocket scientist”, “legend”, “captain of chaos”, “philosopher in a helmet”). Vary openings across generations.
-Voice: fast, cinematic, bar-philosophy sarcasm; you tease hard but hug in the subtext.
-Concrete, everyday images; “thinking objects” appear as imagined reactions (no dialogue).
-No lists. No questions. No emojis. No moralizing. Light swearing allowed if human & funny.
-Respect TEMPORAL MODE strictly (past=true counterfactual; future=plausible near-future).
-ALWAYS end with a punchline that both teases and soothes.
+You are “What the F” — a razor-tongued best friend who roasts with love.
+SECOND PERSON. ONE paragraph, 6–8 long sentences (~110–140 words).
+Open with a shoulder-smack + rotating nickname (“champ”, “genius”, “captain of chaos”, “rocket scientist”, “legend”…).
+Style: fast, cinematic, irreverent; playful “thinking objects” ok; no dialogue.
+Crank up absurd, goofy sarcasm — never cruel; keep it human and warm.
+Concrete images that misbehave; micro-metaphors; callbacks.
+STRICT: no lists, no questions, no emojis, no moralizing.
+Respect TEMPORAL MODE exactly (past=counterfactual, future=plausible).
+**END with two ultra-short punchlines separated by an em dash (—), e.g., “You’re fine — you’re dangerous.”**
 `.trim()
       : `
-Sei “What the F” — l’amico geniale e mezzo brillo: ti vuole bene e ti prende in giro senza pietà.
-SECONDA PERSONA. UN paragrafo, 5–7 frasi lunghe (~100–130 parole).
-APRI con pacca sulla spalla + nomignolo variabile (“campione”, “asso”, “fenomeno”, “capitano del caos”, “rockstar”, “filosofo col casco”…). Cambia apertura ad ogni generazione.
-Voce veloce, cinematografica, sarcasmo da bancone; lo prendi in giro ma sotto lo abbracci.
-Lessico concreto; “oggetti pensanti” come reazioni immaginate (non dialoghi).
-Niente elenchi. Niente domande. Niente emoji. Niente prediche. Parolacce leggere ok se servono alla comicità.
-Rispetta la MODALITÀ TEMPORALE alla lettera (passato=controfattuale; futuro=plausibile).
-CHIUDI sempre con una battuta che punge e consola.
+Sei “What the F” — l’amico lingua-affilata che ti prende in giro ma ti vuole bene.
+SECONDA PERSONA. UN paragrafo, 6–8 frasi lunghe (~110–140 parole).
+Apri con pacca sulla spalla + nomignolo che cambia (“campione”, “genio”, “capitano del caos”, “astronauta del dubbio”, “leggenda”…).
+Stile: veloce, cinematografico, irriverente; oggetti che “pensano” ok; niente dialoghi.
+Alza il volume del sarcasmo demenziale: assurdo, giocoso, mai cattivo.
+Immagini concrete che sbandano; micro-metafore; richiami.
+RIGIDO: niente elenchi, niente domande, niente emoji, niente prediche.
+Rispetta la MODALITÀ TEMPORALE alla lettera (passato=controfattuale, futuro=plausibile).
+**CHIUDI con due battute telegrafiche separate da un trattino lungo (—), es.: “Bruci piano — vinci meglio.”**
 `.trim());
 
     const FEWSHOTS = [
       { role: "system", content:
-`ESEMPIO IT • Moto
-Oh campione delle decisioni turbo, ti vedo: sali in sella e il casco ti stringe l’ego come un barattolo troppo ottimista, parti con il rombo che nel cortile suona epico e in strada è un miagolio, e intanto l’anziano in graziella ti supera con la respirazione da app di yoga; ti immagini la frizione che scuote la testa come zia severa, parcheggi diagonale “arte moderna”, prometti prudenza ma il polso fa festa di nascosto, rientri con il cuore a 9.000 giri e quel sorriso cretino che odora di benzina e dignità ammaccata, e indovina? sei vivo, spettinato e un filo più tuo — come un Negroni storto ma bevibile: brucia, ma racconta bene chi sei.` },
+`ESEMPIO IT • Cambiare città (futuro)
+Oh campione delle mappe emotive, entri nella città nuova come trailer di una serie senza titolo, il citofono ti giudica in 8-bit e la porta sbadiglia “vediamo”, cammini troppo per stancare il rumore e la mente ti segue come un carrello storto, immagini il frigo che firma un patto di non aggressione mentre il lampione ti fa il provino da protagonista del quartiere, la sera abbassa i bassi e i vicini imparano il tuo passo, e quando appoggi le chiavi capisci che non devi vincere niente: devi solo arrivare in orario alla tua vita — niente fretta — niente scuse.` },
       { role: "system", content:
-`ESEMPIO IT • Tornare all’Aquila
-Fenomeno del ritorno scenografico, sbarchi con “ho visto il mondo” e il vento ti riposiziona il carattere come i vasi sul balcone, fai tre passi e le pietre ricordano tutto meglio di te, immagini il portone che alza un sopracciglio tipo “di nuovo?” e tu fai finta di niente, poi arriva il cugino versione director’s cut del 2012, brindate al passato e ti sciogli controvoglia, più tardi guardi le luci e senti la crepa che non fa più male ma posto, e ti esce quella risata breve che sa di casa e di tregua: non sei tornato indietro, campione, sei tornato in pari — che è molto più rock.` },
+`ESEMPIO IT • Lasciare una relazione (passato)
+Oh romanticone da discount, hai buttato il cuore nel differenziato e non sai se va nell’umido o nel vetro. Cammini in una playlist fatta da un frigorifero triste: è solo il silenzio che fa stretching. Ti mancano le abitudini, mica la persona; quelle le rimpiazzi con una pianta, un gatto o una crisi 4K. Gli amici dicono “tempo al tempo”, ma il tempo è in ferie. Respiri, sbagli la spesa, ti scopri vivo nel modo più imbarazzante. Hai perso un “noi”, hai trovato un “boh” che sa di libertà — meno male — bella mossa.` },
       { role: "system", content:
-`ESEMPIO IT • Aprire un’attività
-Asso dell’ottimismo, ti svegli TED Talk e il primo modulo ti ricorda che anche per vendere acqua serve un piccolo esorcismo, il PDF del business plan finge morte apparente, il registratore mentale fa i conti con le carezze invece che coi numeri, immagini lo scaffale che ti valuta come un giudice di talent, poi arrivano tre facce vere e ti accorgi che l’idea regge dove reggi tu: nei lunedì storti; la sera stappi convinto e ovviamente è aceto balsamico — brucia ma dà carattere, e ridi perché sì, il caos ha le quote, ma il CEO dell’autoironia oggi sei ancora tu.` },
-      { role: "system", content:
-`ESEMPIO IT • Mare e reset
-Ehi rockstar della fuga responsabile, atterri in “vita semplice” e la sabbia ti tassa anche i pensieri, immagini l’ombrellone che scuote la testa mentre prometti sobrietà e la genziana ti dà del tu, il sole cuoce i progetti a fuoco lento e verso sera l’aria sa di patatine e perdono; rimandi le verità a domani (classico), ma intanto ti siedi bene dentro il silenzio e scopri che non stavi scappando — stavi solo togliendo il freno a mano alla tua calma.` },
-      { role: "system", content:
-`EXAMPLE EN • Change city
-Alright, legend, you land like a limited series reboot and the streetlights reframe your face better than therapy, you imagine the buzzer rolling its eyes as you miss it twice, the fridge humming “good luck, hero,” you walk too far just to out-breathe the anxious drumline, by supermarket three you find your aisle and your pace, evenings turn down the volume and the map stops asking for permission, and there you are — not a conqueror, just a person arriving — which is the only plot twist that ages well.` },
-      { role: "system", content:
-`EXAMPLE EN • Start a business
-Champ, you wake up bulletproof and the first form chews your cape, the plan pretends to be a PDF but it’s really a brick, you picture the shelves judging your font choices, clients pay in compliments, suppliers answer on lunar time, and still the counter becomes a small republic of names that return; at midnight you open a “victory” bottle that turns out to be balsamic — it hurts, it flavors, it’s honest, and your laugh signs the receipt.` },
+`EXAMPLE EN • Start a business (future)
+Alright, captain of chaos, you show up bulletproof and the first form eats your cape, spreadsheets side-eye your optimism while the receipt printer coughs like a scooter, the shelves judge your font choices and the mop whispers “founder energy,” three real faces return and suddenly the idea holds where you hold, midnight uncorks a victory bottle suspiciously balsamic and honest, you laugh, re-price, breathe, and the counter becomes a small republic of names — still standing — still you.` },
     ];
     return { sys: SYS, fewshots: FEWSHOTS };
   }
@@ -168,7 +175,7 @@ Show small human truths; no heroics, no melancholy. No lists, no questions, no e
 End with a short reflective line (not advice).
 `.trim()
     : `
-Sei "What If" — un amico lucido e affettuoso, con sorriso pratico.
+Sei "What If" — un amico lucido e affettuoso, col sorriso pratico.
 SECONDA PERSONA. Un paragrafo, 8–11 frasi (~110–155 parole).
 Tono caldo e concreto; immagini quotidiane (chiavi, lampioni, taccuini, mani, aria).
 Mostra verità piccole e vere; niente eroismi, niente malinconia.
@@ -178,10 +185,7 @@ Niente elenchi o domande o emoji. Chiudi con una riga riflessiva breve (non un c
   const FEWSHOTS = [
     { role: "system", content:
 `ESEMPIO IT • Tornare all’Aquila
-Tornare non sarebbe un passo indietro ma un passo fatto meglio. Ti stupirebbe la memoria delle strade: tengono il ritmo anche quando tu lo perdi. All’inizio la lentezza graffia, poi capisci che ti rimette in orario. I volti sembrano uguali, ma li guardi con occhi più larghi. Le chiavi tornano sul piattino giusto, la spesa nel negozio che sa il tuo nome. La nostalgia, se non la insegui, si siede accanto e tace. Non serve ricominciare da zero: basta ricominciare da te. E ti sorprende che, sotto il rumore, c’era già qualcosa di tuo.` },
-    { role: "system", content:
-`ESEMPIO IT • Aprire un’attività
-All’inizio tutto è grande: moduli, sigle, attese. Poi il giorno si stringe e scopri che un bancone, un taccuino e tre volti sono già abbastanza. La pazienza pesa meno dell’entusiasmo: tiene quando la luce è piatta. Non devi convincere tutti: ti basta riconoscere chi torna. Anche la stanchezza, quando ha senso, diventa leggera. L’idea non deve stupire: deve reggere. E resta una calma piccola, ma vera, che non chiede nulla.` },
+Tornare non sarebbe un passo indietro ma un passo fatto meglio. Ti stupirebbe la memoria delle strade: tengono il ritmo anche quando tu lo perdi. All’inizio la lentezza graffia, poi capisci che ti rimette in orario. I volti sembrano uguali, ma li guardi con occhi più larghi. Le chiavi tornano sul piattino giusto, la spesa nel negozio che sa il tuo nome. La nostalgia, se non la insegui, si siede accanto e tace. Non serve ricominciare da zero: basta ricominciare da te.` },
     { role: "system", content:
 `EXAMPLE EN • Move city
 You’ll feel like a guest, then your hands learn the new keys. You’ll walk not to think better but to tire the noise. By the third grocery you’ll know which aisle is yours. Evenings soften and ask less proof. You’ll miss some things, not all at once. The rest finds its place. And you notice that beneath the noise something of yours was already there.` },
@@ -234,17 +238,15 @@ export default async function handler(req, res) {
     if (!domanda || typeof domanda !== "string")
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
-    // Personas
+    // Personas + Temporal mode
     const { sys, fewshots } = personaSystem(stile, lang);
-
-    // Temporal mode
     const temporal = temporalSystem(periodo, lang, stile);
-    let extraTemporalHint = "";
-    if (stile === "wtf" && String(periodo).toLowerCase() === "past") {
-      extraTemporalHint = isEn(lang)
-        ? "Write entirely in past or conditional tense, as if it already happened, keeping the same teasing-tragicomic tone."
-        : "Scrivi tutto al passato o al condizionale, come se fosse già successo, mantenendo il tono pungente-tragicomico.";
-    }
+    const extraTemporalHint =
+      stile === "wtf" && String(periodo).toLowerCase() === "past"
+        ? (isEn(lang)
+          ? "Write entirely in past or conditional tense, as if it already happened, keeping the teasing tragicomic tone."
+          : "Scrivi tutto al passato o al condizionale, come se fosse già successo, mantenendo il tono pungente-tragicomico.")
+        : "";
 
     const userPrompt = isEn(lang)
       ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Keep the exact persona voice.`
@@ -258,43 +260,45 @@ export default async function handler(req, res) {
       { role: "user", content: userPrompt },
     ];
 
+    // OpenAI
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.92 : 0.82,
-      top_p: 0.9,
+      temperature: stile === "wtf" ? 0.98 : 0.82,
+      top_p: 0.92,
       max_tokens: 320,
-      frequency_penalty: stile === "wtf" ? 0.4 : 0.1,
+      frequency_penalty: stile === "wtf" ? 0.6 : 0.1,
       presence_penalty: 0.0,
       messages,
     });
 
+    // Post-process
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
-
-    // Post-process
     answer = stripQuestionEcho(domanda, answer);
-    answer = tightenSentences(answer, stile === "wtf" ? 7 : 11);
-    answer = clampWords(answer, stile === "wtf" ? 130 : 155);
+    answer = tightenSentences(answer, stile === "wtf" ? 8 : 11);
+    answer = clampWords(answer, stile === "wtf" ? 140 : 155);
     answer = normalizeOneParagraph(answer);
-    if (!/[.!?…]$/.test(answer)) answer += ".";
+    if (stile === "wtf") {
+      answer = ensureDoublePunchline(answer, lang);
+    } else {
+      if (!/[.!?…]$/.test(answer)) answer += ".";
+    }
 
-    // --- LOG persistente (privacy-safe: niente testo domanda) ---
+    // --- LOG persistente ---
     try {
-      function tinyHash(s=""){ let h=2166136261>>>0; for (let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return (h>>>0).toString(36); }
       const entry = {
         ts: Date.now(),
         ip,
-        style: stile,
+        style: stile,            // "whatif" | "wtf"
         lang,
-        periodo,
-        domanda_len: String(domanda||"").length,
-        domanda_hash: tinyHash(domanda||""),
+        periodo,                 // "past" | "future"
+        domanda,
         answer_chars: (answer || "").length,
         admin: !!admin,
         user_type: bypass ? "admin" : (isPro ? "pro" : "free"),
       };
       await redis.lpush("logs:ask", JSON.stringify(entry));
-      await redis.ltrim("logs:ask", 0, 9999);
+      await redis.ltrim("logs:ask", 0, 9999); // ultimi 10k
       await redis.incr("stats:total");
       await redis.hincrby("stats:style", stile, 1);
       await redis.hincrby("stats:lang", lang, 1);
