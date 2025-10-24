@@ -14,7 +14,13 @@
 }
 html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
 *{box-sizing:border-box}
-html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+html,body{
+  margin:0;
+  background:radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%,var(--bg) 60%);
+  color:var(--fg);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
 main{max-width:980px;margin:auto;padding:18px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
@@ -46,8 +52,8 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
 .play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
 .meta{font-size:12px;color:var(--muted)}
 .small{font-size:12px;color:var(--muted)}
-
-/* Utility */
+.hint{font-size:13px;color:#cfe7ff;margin-top:10px}
+.hint b{color:var(--acc2)}
 .hidden{display:none !important}
 </style>
 </head>
@@ -63,7 +69,6 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
     <div class="row">
       <span class="badge" id="periodoBadge">🕰️ —</span>
       <span class="badge" id="styleBadge">🎭 —</span>
-      <!-- Badge crediti: NON cliccabile -->
       <span class="badge" id="freeBadge" title="">—</span>
       <button class="btn" id="langBtn">IT</button>
     </div>
@@ -76,20 +81,21 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
     <div class="row" style="justify-content:space-between;align-items:center">
       <div class="chips" id="styleChips">
         <button class="chip" data-style="whatif" id="chipWhatIf">What if (realistico)</button>
-        <button class="chip" data-style="wtf" id="chipWTF">What the F (divertente)</button>
+        <button class="chip" data-style="wtf" id="chipWTF">What the F (demenziale)</button>
       </div>
       <div class="row">
         <span class="badge" id="proBadge">—</span>
       </div>
     </div>
+    <div id="styleHint" class="hint"></div>
   </div>
 
   <!-- Question -->
   <div class="card center">
     <h3 class="label" id="qLabel">La tua domanda</h3>
-    <textarea id="qInput" rows="3" class="input" placeholder="E se tornassi a vivere all’Aquila?"></textarea>
+    <textarea id="qInput" rows="3" class="input" placeholder="E se tornassi a vivere all’Aquila?" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
     <div class="row" style="margin-top:12px;justify-content:space-between">
-      <button class="btn primary" id="goBtn">✨ Genera risposta</button>
+      <button class="btn primary" id="goBtn" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
       <button class="btn ghost" id="clearBtn">Svuota</button>
     </div>
     <div class="small" id="tipNote" style="margin-top:8px">Tip: puoi cambiare stile e periodo sopra; colori e tono si adattano.</div>
@@ -167,7 +173,9 @@ const I18N = {
   it:{
     title:"Imposta la tua domanda",
     periodPast:"Passato", periodFuture:"Futuro",
-    whatif:"What if (realistico)", wtf:"What the F (divertente)",
+    whatif:"What if (realistico)", wtf:"What the F (demenziale)",
+    hintWhatif:"Stile <b>What if</b>: tono caldo e realistico, immagini quotidiane, chiusura riflessiva breve.",
+    hintWTF:"Stile <b>What the F</b>: <b>sarcasmo demenziale</b>, ritmo alto, oggetti che “pensano”, <b>doppia punchline finale</b> “— … — …”.",
     yourq:"La tua domanda", gen:"✨ Genera risposta", clear:"Svuota",
     tip:"Tip: puoi cambiare stile e periodo sopra; colori e tono si adattano.",
     free:(l,d)=>`Crediti oggi: ${l}/${d}`, proOn:"PRO attivo", proOff:"PRO non attivo",
@@ -186,7 +194,9 @@ const I18N = {
   en:{
     title:"Set your question",
     periodPast:"Past", periodFuture:"Future",
-    whatif:"What if (realistic)", wtf:"What the F (fun)",
+    whatif:"What if (realistic)", wtf:"What the F (goofy)",
+    hintWhatif:"<b>What if</b>: warm and realistic, everyday images, short reflective ending.",
+    hintWTF:"<b>What the F</b>: <b>goofy sarcasm</b>, fast pace, “thinking objects”, <b>double punchline</b> at the end “— … — …”.",
     yourq:"Your question", gen:"✨ Generate answer", clear:"Clear",
     tip:"Tip: switch style and period above; tone & colors adapt.",
     free:(l,d)=>`Credits today: ${l}/${d}`, proOn:"PRO active", proOff:"PRO not active",
@@ -199,6 +209,7 @@ const I18N = {
     qZodiac:"Sign or lucky habit (optional)",
     saved:"▶ Saved questions", stories:"▶ History",
     use:"Use", play:"▶", emptyNext:"— No saved questions.", emptyStories:"— No history.",
+    clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear",
     outOfCredits:"You’ve used today’s credits."
   }
 };
@@ -226,17 +237,19 @@ document.getElementById('chipWTF').textContent=T.wtf;
 document.getElementById('langBtn').textContent=lang.toUpperCase();
 document.getElementById('microTitle').textContent   = T.microT;
 document.getElementById('microHint').textContent    = T.microHint;
-document.getElementById('saveMicroBtn').textContent = I18N[lang]?.microSaveBtn || I18N.it.microSaveBtn;
-document.getElementById('moodTitle').textContent    = I18N[lang]?.qMood || I18N.it.qMood;
-document.getElementById('anchorTitle').textContent  = I18N[lang]?.qAnchor || I18N.it.qAnchor;
-document.getElementById('decideTitle').textContent  = I18N[lang]?.qDecide || I18N.it.qDecide;
-document.getElementById('zodiacTitle').textContent  = I18N[lang]?.qZodiac || I18N.it.qZodiac;
+document.getElementById('saveMicroBtn').textContent = T.microSaveBtn;
+document.getElementById('moodTitle').textContent    = T.qMood;
+document.getElementById('anchorTitle').textContent  = T.qAnchor;
+document.getElementById('decideTitle').textContent  = T.qDecide;
+document.getElementById('zodiacTitle').textContent  = T.qZodiac;
 
 // style & period badges
 function renderBadges(){
   document.getElementById('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past'? (lang==='en'?'Past':'Passato') : (lang==='en'?'Future':'Futuro'));
   document.getElementById('styleBadge').textContent   = "🎭 " + (prefs.stile==='wtf'? 'What the F' : 'What if');
   document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
+  // hint dinamico per lo stile
+  document.getElementById('styleHint').innerHTML = (prefs.stile==='wtf') ? T.hintWTF : T.hintWhatif;
 }
 renderBadges();
 
@@ -283,36 +296,39 @@ document.getElementById('styleChips').addEventListener('click',(e)=>{
 });
 
 // ===== Question
-document.getElementById('qInput').placeholder = (lang==='en' ? "What if I moved back to L’Aquila?" : "E se tornassi a vivere all’Aquila?");
-document.getElementById('goBtn').onclick=()=>{
-  const domanda=(document.getElementById('qInput').value||"").trim();
-  if(!domanda){ document.getElementById('qInput').focus(); return; }
+const qEl = document.getElementById('qInput');
+qEl.placeholder = (lang==='en' ? "What if I moved back to L’Aquila?" : "E se tornassi a vivere all’Aquila?");
+qEl.autofocus = true;
 
-  // aggiorna il contatore locale (solo visual) — admin non scala
+// submit helpers
+function trySubmit(){
+  const domanda=(qEl.value||"").trim();
+  if(!domanda){ qEl.focus(); return; }
   const c=readJSON('whatif_credits',{date:todayStr(),used:0});
   if(!userIsAdmin()){
     const cap=capForUser();
-    if((c.used||0)>=cap){ alert(lang==='en'? I18N.en.outOfCredits : I18N.it.outOfCredits); return; }
+    if((c.used||0)>=cap){ alert(T.outOfCredits); return; }
     c.used=(c.used||0)+1;
     writeJSON('whatif_credits',c);
     renderCreditsBadge();
   }
-
   const micro = readJSON('micro_profile', {});
   writeJSON('whatif_prefs', prefs);
   LS.setItem('domanda',domanda);
   writeJSON('whatif_request',{ domanda, stile:prefs.stile, lang, extra:"", micro, fantasy_mode:false, periodo:prefs.periodo });
   location.href='fifth.html';
-};
-document.getElementById('clearBtn').onclick=()=>{ document.getElementById('qInput').value=""; document.getElementById('qInput').focus(); };
+}
+
+document.getElementById('goBtn').onclick=trySubmit;
+document.getElementById('clearBtn').onclick=()=>{ qEl.value=""; qEl.focus(); };
+// Ctrl/⌘+Invio
+qEl.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
 // ===== Micro-questions (multiple choice) =====
 const microCard=document.getElementById('microCard');
 const microSaved=readJSON('micro_saved',{date:"",ok:false});
-
 function rngForDay(seedStr){ let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
 function todayIso(){return new Date().toISOString().slice(0,10);}
-
 function pickDaily(list, n, rnd){
   const seen=new Set(), out=[];
   while(out.length<n && seen.size<list.length){
@@ -346,28 +362,22 @@ function renderMicro(){
     return;
   }
   const rand = rngForDay(todayIso());
-
   const moodPool = (lang==='en'
     ? ["Calm like airplane mode","Charged like a socket","Foggy but fine","Restless astronaut","Light and chatty","Solid and quiet","Bit chaotic, funny"]
     : ["Calmo in modalità aereo","Carico come una presa","Appannato ma ok","Astronauta irrequieto","Leggero e chiacchierone","Solido e in silenzio","Un po’ caotico ma divertito"]);
-
   const anchorPool = (lang==='en'
     ? ["People I love","Money & bills","A routine that works","A promise to myself","Fear of changing","Curiosity about what’s here"]
     : ["Le persone che amo","Soldi & bollette","Una routine che funziona","Una promessa a me stesso/a","Paura di cambiare","Curiosità per ciò che c’è"]);
-
   const decidePool = (lang==='en'
     ? ["Gut first","Lists & pros/cons","Ask a friend","Deadline decides","Flip a coin","Coffee + walk"]
     : ["Pancia prima","Liste pro/contro","Chiedo a un amico","Decide la scadenza","Tiro la moneta","Caffè + passeggiata"]);
-
   const zodiacPool = (lang==='en'
-    ? ["Aries/Taurus/Gemini","Cancer/Leo/Virgo","Libra/Scorpio/Sag","Capricorn/Aquarius/Pisces","No sign, just vibes","Lucky habit: wear the same socks"]
+    ? ["Aries/Taurus/Gemini","Cancer/Leo/Virgo","Libra/Scorpio/Sag","Capricorn/Aquarius/Pisces","No sign, just vibes","Lucky habit: same socks"]
     : ["Ariete/Toro/Gemelli","Cancro/Leone/Vergine","Bilancia/Scorpione/Sag","Capricorno/Acquario/Pesci","Niente segno, solo vibrazioni","Portafortuna: stesse calze"]);
-
   document.getElementById('moodIcon').textContent   = ["🙂","😌","⚡","🌤️","🤘","🧊","🧩"][Math.floor(rand()*7)];
   document.getElementById('anchorIcon').textContent = ["🧭","⚓","🏠","🧱","🪴","📌"][Math.floor(rand()*6)];
   document.getElementById('decideIcon').textContent = ["⚙️","🧠","🎯","🪙","📋","⏳","☕"][Math.floor(rand()*7)];
   document.getElementById('zodiacIcon').textContent = ["♈","♉","♊","♋","♌","♍","✨"][Math.floor(rand()*7)];
-
   renderOptions('moodOpts',   pickDaily(moodPool,   5, rand), 'mood');
   renderOptions('anchorOpts', pickDaily(anchorPool, 5, rand), 'anchor');
   renderOptions('decideOpts', pickDaily(decidePool, 5, rand), 'decide');
@@ -405,7 +415,7 @@ function dailyHints(pool, n=4){ const seed=todayStr2(); const rnd=rngForDay2(see
 const hintsWrap=document.getElementById('hintsChips');
 (dailyHints(lang==='en'?HINT_POOL_EN:HINT_POOL_IT,4)).forEach(h=>{
   const b=document.createElement('button'); b.className='chip'; b.textContent=h;
-  b.onclick=()=>{ document.getElementById('qInput').value=h; window.scrollTo({top:0,behavior:'smooth'}); };
+  b.onclick=()=>{ qEl.value=h; window.scrollTo({top:0,behavior:'smooth'}); };
   hintsWrap.appendChild(b);
 });
 
@@ -430,9 +440,9 @@ function renderNext(){
     left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.q||'—'}</div><div class="meta">${fmtDate(item.ts)}</div>`;
     const right=document.createElement('div'); right.className='row';
     const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=(lang==='en'? 'Use' : 'Usa');
-    useBtn.onclick=()=>{ document.getElementById('qInput').value=item.q||""; window.scrollTo({top:0,behavior:'smooth'}); };
+    useBtn.onclick=()=>{ qEl.value=item.q||""; window.scrollTo({top:0,behavior:'smooth'}); };
     const play=document.createElement('button'); play.className='play'; play.textContent='▶';
-    play.onclick=()=>{ LS.setItem('domanda', item.q||""); location.href='fifth.html'; };
+    play.onclick=()=>{ LS.setItem('domanda', item.q||""); writeJSON('whatif_request',{ domanda:item.q||"", stile:prefs.stile, lang, extra:"", micro:readJSON('micro_profile',{}), fantasy_mode:false, periodo:prefs.periodo }); location.href='fifth.html'; };
     right.appendChild(useBtn); right.appendChild(play);
     row.appendChild(left); row.appendChild(right);
     box.appendChild(row);
