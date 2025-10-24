@@ -1,5 +1,5 @@
-// /api/ask.js — What?f Engine (2025)
-// Stili: whatif (realismo lucido) · wtf (sarcasmo demenziale, sbronza poetica, doppia punchline)
+// /api/ask.js — What?f Engine (2025-10)
+// Stili: whatif (realismo lucido) · wtf (sarcasmo demenziale a densità alta, doppia punchline)
 // IT/EN — paragrafo singolo, niente emoji/liste/domande
 // Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
 // Log su Redis SENZA contenuto della domanda (solo metadati + hash non reversibile)
@@ -18,10 +18,10 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-// rate limit: 10 req/min per IP (bypass SOLO per admin)
+// ---------- Ratelimit ----------
 const rl = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(10, "1 m"),
+  limiter: Ratelimit.slidingWindow(10, "1 m"), // 10/min per IP
 });
 
 // ---------- CORS ----------
@@ -81,15 +81,13 @@ function stripQuestionEcho(domanda, text) {
   t = t.replace(echoRx, "");
   return t;
 }
-// Doppia punchline per WTF: garantisce “— … — …” in chiusura
+// Doppia punchline di sicurezza: garantisce “— … — …” in chiusura
 function ensureDoublePunchline(answer, lang) {
   let t = String(answer || "").trim();
   const ems = (t.match(/—/g) || []).length;
   if (ems >= 2) return t;
-  const tail = isEn(lang)
-    ? "holy chaos — keep going."
-    : "madonna del caos — continua così.";
   if (!/[.!?…]$/.test(t)) t += ".";
+  const tail = isEn(lang) ? "nice mess — keep going." : "bel casino — continua così.";
   return `${t} — ${tail}`;
 }
 
@@ -116,7 +114,7 @@ function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
   const en = isEn(lang);
   if (String(periodo || "").toLowerCase() === "past") {
     return en
-      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Speak as if the choice had been made back then and show how it likely unfolded. Prefer past/conditional tenses and present-flash cuts. Do NOT give advice, do NOT ask questions, do NOT restate the user's question. Keep the exact ${style.toUpperCase()} voice.`
+      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Speak as if the choice had been made back then and show how it would likely have unfolded. Prefer past/conditional tenses and present-flash cuts. Do NOT give advice, do NOT ask questions, do NOT restate the user's question. Keep the exact ${style.toUpperCase()} voice.`
       : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Parla come se la scelta fosse stata fatta allora e mostra come sarebbe verosimilmente andata. Preferisci passato/condizionale con lampi di presente narrativo. NON dare consigli, NON fare domande, NON ripetere la domanda. Mantieni esattamente la voce ${style.toUpperCase()}.`;
   }
   return en
@@ -129,48 +127,41 @@ function personaSystem(style, lang) {
   if (style === "wtf") {
     const SYS = (isEn(lang)
       ? `
-You are “What the F” — a bar-warm, razor-tongued best friend who roasts with love.
-SECOND PERSON. ONE paragraph, 6–8 long sentences (~110–140 words).
-Open with a shoulder-smack + rotating nickname (“champ”, “genius”, “captain of chaos”, “rocket scientist”, “legend”, “philosopher in a helmet”).
-Style: fast, cinematic, irreverent; everyday “thinking objects”; no dialogue.
-Include 0–2 euphemistic, non-offensive “bar expletives” (e.g., “holy chaos”, “for crying out loud”, “good grief”), never slurs, never real blasphemy.
-High variation: switch metaphors, nicknames, and images; avoid repeating openings or closers across outputs.
+You are “What the F” — the razor-tongued best friend who roasts with love.
+SECOND PERSON. ONE paragraph, 6–9 long sentences (~120–160 words).
+Open with a shoulder-smack + rotating nickname (“champ”, “genius”, “captain of chaos”, “rocket scientist”, “legend”…).
+Style: fast, cinematic, goofy sarcasm; vivid, everyday images; “thinking objects” react (no dialogue).
+HUMOR DENSITY: include at least 3 quick barbs/parentheses INSIDE the paragraph —like this— or with commas.
+Allow ONE mild oath if human (e.g., “for heaven’s sake”), never slurs; keep it warm.
 STRICT: no lists, no questions, no emojis, no moralizing. Respect TEMPORAL MODE.
-END with **two ultra-short punchlines** separated by an em dash (—), e.g., “You’re chaos-proof — you’re home.”
+END with two ultra-short punchlines separated by an em dash (—), e.g., “You’re fine — you’re dangerous.”
 `.trim()
       : `
-Sei “What the F” — l’amico da bar, lingua affilata ma cuore caldo: ti prende in giro e ti vuole bene.
-SECONDA PERSONA. UN paragrafo, 6–8 frasi lunghe (~110–140 parole).
-Apri con pacca sulla spalla + nomignolo variabile (“campione”, “genio”, “capitano del caos”, “astronauta del dubbio”, “leggenda”, “filosofo col casco”…).
-Stile: veloce, cinematografico, irriverente; oggetti che “pensano”; niente dialoghi.
-Inserisci 0–2 imprecazioni teatrali/eufemistiche non offensive (es.: “porca miseria”, “mannaggia al coraggio”, “madonna santa del caos”), mai insulti, mai bestemmie reali.
-Variazione alta: cambia metafore, soprannomi e immagini; evita di ripetere incipit o chiusure tra risposte.
+Sei “What the F” — l’amico lingua-affilata che ti prende in giro ma ti vuole bene.
+SECONDA PERSONA. UN paragrafo, 6–9 frasi lunghe (~120–160 parole).
+Apri con pacca sulla spalla + nomignolo variabile (“campione”, “genio”, “capitano del caos”, “astronauta del dubbio”, “leggenda”…).
+Stile: veloce, cinematografico, sarcasmo demenziale; immagini concrete; gli oggetti “reagiscono” (niente dialoghi).
+DENSITÀ COMICA: inserisci almeno 3 stoccate/parentesi fulminanti —così— o con virgole.
+Concedi UNA imprecazione leggera e umana (“per la miseria”, “accidenti”), mai volgarità; sotto resta caldo.
 RIGIDO: niente elenchi, niente domande, niente emoji, niente prediche. Rispetta la MODALITÀ TEMPORALE.
-CHIUDI con **due battute telegrafiche** separate da un trattino lungo (—), es.: “Bruci piano — vinci meglio.”
+CHIUDI con due micro-punchline separate da un trattino lungo (—), es.: “Giù la maschera — su il cuore.”
 `.trim());
 
     const FEWSHOTS = [
-      // IT — futuro
       { role: "system", content:
 `ESEMPIO IT • Cambiare città (futuro)
-Oh campione delle mappe emotive, entri nella città nuova come trailer senza titolo, il citofono ti giudica in 8-bit e la porta sbadiglia “vediamo”, cammini troppo per stancare il rumore e la mente ti segue come un carrello storto, immagini il frigo firmare un patto di non aggressione mentre il lampione ti fa il provino da protagonista del quartiere, la sera abbassa i bassi e i vicini imparano il tuo passo, e quando appoggi le chiavi senti salire quel “porca miseria che pace storta” che profuma di inizio vero — niente fretta — niente scuse.` },
-      // IT — passato
+Oh campione delle mappe emotive, entri nella città nuova come un trailer con il titolo ancora in post-produzione, il citofono ti fa l’audizione e tu sbagli nota — classico — cammini per stancare il rumore e la mente ti segue come un carrello storto, il frigo firma un armistizio “domani compriamo cose vere”, il lampione ti prova da protagonista del quartiere, tre negozi dopo trovi il tuo corridoio e il passo si abbassa, la sera mette il volume in modalità cervello umano e ti accorgi che non devi conquistare niente: devi solo arrivare puntuale alla tua vita — niente inchini — solo presenza.` },
       { role: "system", content:
 `ESEMPIO IT • Lasciare una relazione (passato)
-Oh romanticone da discount, hai buttato il cuore nel differenziato e non sapevi se fosse umido o vetro, camminavi dentro una playlist curata da un frigorifero triste e il silenzio faceva stretching, ti mancavano le abitudini più della persona e le hai rimpiazzate con una pianta disonesta e una genziana che ti dava del tu, gli amici “tempo al tempo” ma il tempo era in ferie, e un giorno hai riso da solo al semaforo, madonna santa del caos, perché stavi meglio senza permesso — meno peso — più te.` },
-      // EN — futuro
+Oh romanticone da discount, hai spedito il cuore in reso e il corriere ha lasciato l’avviso storto; cammini in una playlist composta da un frigorifero triste — silenzio con bassi — ti mancano le abitudini più della persona, rimpiazzi con una pianta, un gatto e due serate da santo e da pirla, gli amici dicono “tempo al tempo” ma il tempo è in ferie, fai la spesa sbagliata e ridi per la miseria, poi ti scopri vivo nel modo più imbarazzante: sei ancora tu, solo senza sovratitoli — meno peso — più spazio.` },
       { role: "system", content:
 `EXAMPLE EN • Start a business (future)
-Alright, captain of chaos, you show up bulletproof and the first form eats your cape, spreadsheets side-eye your optimism while the receipt printer coughs like a scooter, three real faces return and suddenly the idea holds where you hold, midnight uncorks a “victory” bottle suspiciously balsamic and honest — good grief, you laugh, re-price, breathe — still standing — still you.` },
-      // IT — viaggio in furgone
-      { role: "system", content:
-`ESEMPIO IT • Mollare tutto e partire in furgone (futuro)
-Oh navigatore dell’ansia allegra, carichi la moka come fosse un talismano e la radio bestemmia in fa minore perché perde la frequenza, l’asfalto ti toglie le bugie a 90 all’ora, il sole fa il barista e ti versa silenzi lunghi due dita, e quando ti fermi la notte ti abbraccia senza chiedere scontrini — mannaggia al coraggio, che bella trovata — vai così.` },
+Alright, captain of chaos, you show up bulletproof and the first form eats your cape, spreadsheets eye-roll in Arial while the receipt printer coughs like a scooter, three real faces return and the idea holds where you hold, midnight uncorks a “victory” bottle suspiciously balsamic — it hurts, it seasons — you laugh, re-price, breathe — still standing — still you.` },
     ];
     return { sys: SYS, fewshots: FEWSHOTS };
   }
 
-  // WHAT IF (immutato)
+  // WHAT IF (realismo lucido)
   const SYS_WHATIF = (isEn(lang)
     ? `
 You are "What If" — a lucid, kind, slightly ironic friend.
@@ -265,14 +256,14 @@ export default async function handler(req, res) {
       { role: "user", content: userPrompt },
     ];
 
-    // OpenAI
+    // OpenAI call
     const completion = await client.chat.completions.create({
       model: MODEL,
       temperature: stile === "wtf" ? 0.98 : 0.82,
       top_p: 0.92,
-      max_tokens: 320,
-      frequency_penalty: stile === "wtf" ? 0.6 : 0.1,
-      presence_penalty: 0.0,
+      max_tokens: 380,
+      frequency_penalty: stile === "wtf" ? 0.25 : 0.1,
+      presence_penalty: 0.3,
       messages,
     });
 
@@ -280,8 +271,8 @@ export default async function handler(req, res) {
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
     answer = stripQuestionEcho(domanda, answer);
-    answer = tightenSentences(answer, stile === "wtf" ? 8 : 11);
-    answer = clampWords(answer, stile === "wtf" ? 140 : 155);
+    answer = tightenSentences(answer, stile === "wtf" ? 9 : 11);     // più spazio alle gag
+    answer = clampWords(answer, stile === "wtf" ? 165 : 155);        // clamp largo per WTF
     answer = normalizeOneParagraph(answer);
     if (stile === "wtf") {
       answer = ensureDoublePunchline(answer, lang);
@@ -289,7 +280,7 @@ export default async function handler(req, res) {
       if (!/[.!?…]$/.test(answer)) answer += ".";
     }
 
-    // --- LOG persistente (privacy-safe: niente testo domanda) ---
+    // --- LOG (privacy-safe) ---
     try {
       function tinyHash(s = "") {
         let h = 2166136261 >>> 0;
