@@ -38,31 +38,31 @@
     <div class="container">
       <h1 data-i="title">What?f</h1>
       <p class="card" data-i="desc">
-        What?f è la prima app che ti fa esplorare le scelte che non hai fatto — e quelle che potresti fare domani.
+        What?f è l’app che ti fa esplorare le scelte che non hai fatto — e quelle che potresti fare domani.
         Un viaggio tra passato e futuro, dove l’intelligenza artificiale costruisce per te scenari realistici,
-        emozionali o surreali a seconda del tuo stato d’animo.
+        affettuosi o surreali a seconda del tuo stato d’animo.
       </p>
 
       <h2 data-i="howTitle">Come funziona</h2>
       <div class="card">
         <ul>
           <li data-i="how1">Scegli se esplorare il <strong>Passato</strong> o il <strong>Futuro</strong>.</li>
-          <li data-i="how2">Seleziona lo stile: <strong>What if</strong> (riflessivo e realistico) o <strong>What the F</strong> (ironico e surreale).</li>
-          <li data-i="how3">L’AI analizza la tua storia e ti propone scenari alternativi, unici e personali.</li>
+          <li data-i="how2">Seleziona lo stile: <strong>What if</strong> (riflessivo e realistico) o <strong>What the F</strong> (ironico e creativo).</li>
+          <li data-i="how3">L’AI genera per te scenari personali in un unico paragrafo, senza elenchi né domande.</li>
         </ul>
       </div>
 
-      <h2 data-i="premiumTitle">Versione Premium</h2>
+      <h2 data-i="premiumTitle">Piani e limiti</h2>
       <p class="card" data-i="premium">
-        La versione gratuita offre 3 esplorazioni a settimana.
-        La versione Premium sblocca storie illimitate, personalità AI speciali e risposte più profonde.
-        A partire da <strong>€2,99/mese</strong>.
+        La versione <strong>FREE</strong> offre <strong>3</strong> esplorazioni al giorno.  
+        La versione <strong>PRO</strong> sblocca fino a <strong>10</strong> esplorazioni al giorno.  
+        I limiti servono a garantire qualità e disponibilità del servizio.
       </p>
 
       <h2 data-i="techTitle">Tecnologia</h2>
       <p class="card" data-i="tech">
-        Alimentata da <strong>OpenAI GPT-4o-mini</strong> o <strong>GPT-5-mini</strong>, What?f crea storie personalizzate e interattive.
-        Il tutto con un design minimalista e immersivo, ospitato su GitHub + Vercel.
+        Alimentata da <strong>OpenAI GPT-4o-mini</strong>, What?f crea testi personalizzati con un design minimale e immersivo.
+        L’app è ospitata su <strong>GitHub + Vercel</strong>. La condivisione dati per l’addestramento dei modelli è disattivata a livello di piattaforma.
       </p>
 
       <p class="footer">
@@ -71,7 +71,7 @@
     </div>
   </main>
 
-  <!-- Traduzioni: legge la lingua da localStorage 'lang' (impostata in home) -->
+  <!-- i18n: lingua da localStorage 'lang' -->
   <script>
     (function(){
       const lang = (localStorage.getItem('lang') || 'it').toLowerCase();
@@ -79,28 +79,28 @@
         it: {
           back: "Indietro",
           title: "What?f",
-          desc: "What?f è la prima app che ti fa esplorare le scelte che non hai fatto — e quelle che potresti fare domani. Un viaggio tra passato e futuro, dove l’intelligenza artificiale costruisce per te scenari realistici, emozionali o surreali a seconda del tuo stato d’animo.",
+          desc: "What?f è l’app che ti fa esplorare le scelte che non hai fatto — e quelle che potresti fare domani. Un viaggio tra passato e futuro, dove l’intelligenza artificiale costruisce per te scenari realistici, affettuosi o surreali a seconda del tuo stato d’animo.",
           howTitle: "Come funziona",
           how1: "Scegli se esplorare il Passato o il Futuro.",
-          how2: "Seleziona lo stile: What if (riflessivo e realistico) o What the F (ironico e surreale).",
-          how3: "L’AI analizza la tua storia e ti propone scenari alternativi, unici e personali.",
-          premiumTitle: "Versione Premium",
-          premium: "La versione gratuita offre 3 esplorazioni a settimana. La versione Premium sblocca storie illimitate, personalità AI speciali e risposte più profonde. A partire da €2,99/mese.",
+          how2: "Seleziona lo stile: What if (riflessivo e realistico) o What the F (ironico e creativo).",
+          how3: "L’AI genera per te scenari personali in un unico paragrafo, senza elenchi né domande.",
+          premiumTitle: "Piani e limiti",
+          premium: "La versione FREE offre 3 esplorazioni al giorno. La versione PRO sblocca fino a 10 esplorazioni al giorno. I limiti servono a garantire qualità e disponibilità del servizio.",
           techTitle: "Tecnologia",
-          tech: "Alimentata da OpenAI GPT-4o-mini o GPT-5-mini, What?f crea storie personalizzate e interattive. Il tutto con un design minimalista e immersivo, ospitato su GitHub + Vercel."
+          tech: "Alimentata da OpenAI GPT-4o-mini, What?f crea testi personalizzati con un design minimale e immersivo. L’app è ospitata su GitHub + Vercel. La condivisione dati per l’addestramento dei modelli è disattivata a livello di piattaforma."
         },
         en: {
           back: "Back",
           title: "What?f",
-          desc: "What?f is the first app that lets you explore the choices you didn’t make — and those you still can. A journey between past and future, where AI creates realistic, emotional, or surreal scenarios based on your mood.",
+          desc: "What?f lets you explore the choices you didn’t make — and the ones you still can. A journey between past and future where AI builds realistic, caring or surreal scenarios based on your mood.",
           howTitle: "How it works",
           how1: "Choose whether to explore the Past or the Future.",
-          how2: "Select your mode: What if (reflective and realistic) or What the F (ironic and surreal).",
-          how3: "AI analyzes your story and generates unique, personalized scenarios.",
-          premiumTitle: "Premium version",
-          premium: "The free version offers 3 explorations per week. The Premium version unlocks unlimited stories, special AI personalities, and deeper insights. Starting at €2.99/month.",
+          how2: "Pick a style: What if (reflective and realistic) or What the F (ironic and creative).",
+          how3: "AI generates a single-paragraph, personal scenario with no lists or questions.",
+          premiumTitle: "Plans & limits",
+          premium: "The FREE plan offers 3 explorations per day. The PRO plan unlocks up to 10 per day. Limits help ensure service quality and availability.",
           techTitle: "Technology",
-          tech: "Powered by OpenAI GPT-4o-mini or GPT-5-mini, What?f generates personal and interactive stories. All wrapped in a clean, immersive design hosted on GitHub + Vercel."
+          tech: "Powered by OpenAI GPT-4o-mini, What?f crafts personal text with a minimal, immersive design. Hosted on GitHub + Vercel. Training data sharing is disabled at the platform level."
         }
       };
       const dict = T[lang] || T.it;
