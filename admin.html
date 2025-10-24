@@ -1,307 +1,328 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>What?f — Admin (dashboard)</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<meta name="theme-color" content="#0B0B0C"/>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <style>
-:root{ --bg:#0B0F14; --card:#131A20; --fg:#EAF2EE; --muted:#A0B2BA; --acc:#00E0FF; --ok:#3bd671; --warn:#ffe082; --danger:#ff8a80;}
-*{ box-sizing:border-box }
-body{ margin:0; background:var(--bg); color:var(--fg); font-family:Inter,system-ui,Arial,sans-serif; }
-main{ max-width:1100px; margin:auto; padding:16px; }
-h1{ font-size:22px; margin:8px 0 12px; color:var(--acc); text-align:center }
-h3{ margin:6px 0 10px; }
-.card{ background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:14px; margin:10px 0; box-shadow:0 6px 18px rgba(0,0,0,.35); }
-.row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center }
-button{ border:none; border-radius:10px; padding:9px 12px; background:var(--acc); color:#001014; font-weight:800; cursor:pointer }
-button.ghost{ background:rgba(255,255,255,.06); color:#fff; border:1px solid rgba(255,255,255,.12) }
-.small{ font-size:12px; color:var(--muted) }
-.kbd{ font-family:ui-monospace,Menlo,monospace }
-table{ width:100%; border-collapse:collapse; font-size:14px; margin-top:8px }
-th,td{ border-bottom:1px solid rgba(255,255,255,.10); padding:8px; text-align:left }
-th{ color:var(--muted) }
-.qcell{ max-width:520px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer }
-.qcell.expanded{ white-space:normal }
-.badge{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); font-size:12px }
-select,input{ background:rgba(255,255,255,.06); color:#fff; border:1px solid rgba(255,255,255,.14); border-radius:8px; padding:8px }
-.chartbox{ flex:1; min-width:260px; height:220px; }
-.status-dot{ display:inline-block; width:10px; height:10px; border-radius:50%; background:#888; margin-right:6px }
-.status-dot.ok{ background:var(--ok) }
-.status-dot.no{ background:#999 }
-.tag{ padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06) }
-.tag.pro{ border-color:#79e3ff }
-.tag.admin{ border-color:#ffd54f }
-.tag.free{ border-color:#9ccc65 }
+:root{
+  --bg:#0B0B0C; --bg2:#101414; --card:#13191E; --fg:#EAF2EE; --muted:#A0B2BA;
+  --acc:#1C57A0; --acc2:#FFEC01; --ink:#0A0E12; --line:rgba(255,255,255,.12);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:
+  radial-gradient(900px 700px at 20% 18%,var(--bg2) 0%,var(--bg) 60%),
+  radial-gradient(600px 480px at 80% 12%, rgba(255,236,1,.06), transparent 60%);
+  color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+main{max-width:1080px;margin:auto;padding:18px}
+h1{margin:8px 0 14px;font-size:clamp(22px,4vw,32px);color:#7fd8ff}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 8px 28px rgba(0,0,0,.35)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+input,select{background:rgba(255,255,255,.06);border:1px solid var(--line);color:#fff;border-radius:12px;padding:10px}
+button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
+.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink)}
+.ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid var(--line)}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;border:1px solid var(--line);background:rgba(255,255,255,.06);font-size:12px}
+.kpi{min-width:140px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+.kpi .t{font-size:12px;color:var(--muted)}
+.kpi .v{font-size:20px;margin-top:6px}
+table{width:100%;border-collapse:collapse}
+th,td{border-bottom:1px solid rgba(255,255,255,.08);padding:8px;text-align:left;font-size:13px}
+pre{white-space:pre-wrap;word-wrap:anywhere}
+.small{font-size:12px;color:var(--muted)}
+.flex{display:flex;gap:10px;flex-wrap:wrap}
+hr{border:none;height:1px;background:rgba(255,255,255,.08);margin:12px 0}
+#charts canvas{max-width:100%;height:260px}
 </style>
 </head>
 <body>
 <main>
   <h1>What?f — Admin (dashboard)</h1>
 
-  <!-- OPERAZIONI -->
+  <!-- ===== OPERAZIONI VELOCI ===== -->
   <div class="card">
-    <h3>Operazioni veloci</h3>
+    <h3 style="margin:0 0 8px">Operazioni veloci</h3>
     <div class="row">
-      <button id="refreshBtn">Aggiorna</button>
-      <button class="ghost" id="autoBtn">Auto-refresh</button>
-      <button class="ghost" id="clearBtn">Svuota log</button>
+      <button id="refreshBtn" class="primary">Aggiorna</button>
+      <button id="autoBtn" class="ghost">Auto-refresh</button>
+      <button id="clearBtn" class="ghost">Svuota log</button>
     </div>
-    <div class="row" style="margin-top:8px">
-      <span class="badge">IP mascherati: <input type="checkbox" id="maskIp" checked></span>
-      <span class="badge">Window log: 
+    <div class="row" style="margin-top:10px">
+      <label class="badge"><input type="checkbox" id="maskIp" checked style="transform:translateY(1px);margin-right:6px">IP mascherati</label>
+      <div class="row">
+        <span class="badge">Window log:</span>
         <select id="limitSel">
           <option>200</option><option>500</option><option>1000</option>
         </select>
-      </span>
-      <span class="badge">Trend giorni:
-        <select id="daysSel">
-          <option>7</option><option>14</option><option>30</option>
-        </select>
-      </span>
-      <span id="ts" class="small">—</span>
+      </div>
+      <div class="row">
+        <span class="badge">Trend giorni:</span>
+        <select id="trendSel"><option>7</option><option>14</option><option>30</option></select>
+      </div>
+      <span class="small" id="nowTs"></span>
     </div>
   </div>
 
-  <!-- STATO UTENTE & CREDITI -->
+  <!-- ===== STATO UTENTE & CREDITI ===== -->
   <div class="card">
-    <h3>Stato utente & crediti (questo device)</h3>
+    <h3 style="margin:0 0 8px">Stato utente & crediti (questo device)</h3>
+    <div class="flex">
+      <span class="badge">Admin: <b id="isAdmin">no</b></span>
+      <span class="badge">IP: <b id="myIp">—</b></span>
+      <span class="badge">Token: <b id="tokShort">—</b></span>
+      <span class="badge">Tipo: <b id="userType">free</b></span>
+    </div>
+    <div class="flex" style="margin-top:8px">
+      <span class="badge">Crediti oggi: <b id="creditsToday">—</b></span>
+    </div>
+    <hr/>
     <div class="row">
-      <span class="badge"><span id="admDot" class="status-dot no"></span>Admin: <b id="admState">no</b></span>
-      <span class="badge">IP: <span id="myIp" class="kbd">—</span></span>
-      <span class="badge">Token: <span id="tokShort" class="kbd">—</span></span>
-      <span class="badge">Tipo: <span id="userType" class="tag free">free</span></span>
-      <span class="badge">Crediti oggi: <b id="credTxt">—</b></span>
+      <input id="pin" type="password" placeholder="PIN admin" style="min-width:180px"/>
+      <button id="enterBtn" class="primary">Entra admin</button>
+      <button id="renewBtn" class="ghost">Rinnova (7gg)</button>
+      <button id="revokeBtn" class="ghost">Revoca token</button>
     </div>
     <div class="row" style="margin-top:8px">
-      <input id="pin" type="password" placeholder="PIN admin" style="min-width:160px">
-      <button id="btnEnter">Entra admin</button>
-      <button class="ghost" id="btnRenew">Rinnova (7gg)</button>
-      <button class="ghost" id="btnRevoke">Revoca token</button>
-      <button class="ghost" id="proOn">Attiva PRO locale</button>
-      <button class="ghost" id="proOff">Disattiva PRO</button>
+      <button id="proOn" class="ghost">Attiva PRO locale</button>
+      <button id="proOff" class="ghost">Disattiva PRO</button>
+      <span class="badge" id="proState">—</span>
     </div>
-    <div class="small" id="authMsg" style="margin-top:6px">—</div>
+    <div class="small" id="authMsg" style="margin-top:6px"></div>
   </div>
 
-  <!-- STATISTICHE -->
+  <!-- ===== STATISTICHE GLOBALI (finestra caricata) ===== -->
   <div class="card">
-    <h3>Statistiche globali (finestra caricata)</h3>
-    <div class="row">
-      <span class="badge">Totale: <b id="tot">—</b></span>
-      <span class="badge">Oggi: <b id="today">—</b></span>
-      <span class="badge">Ultimi <span id="daysTxt">7</span> g: <b id="lastN">—</b></span>
-      <span class="badge">Per stile: <span id="bystyle">—</span></span>
-      <span class="badge">Per lingua: <span id="bylang">—</span></span>
-      <span class="badge">Per tempo: <span id="byperiod">—</span></span>
-      <span class="badge">User types: <span id="byuser">—</span></span>
+    <h3 style="margin:0 0 8px">Statistiche globali (finestra caricata)</h3>
+    <div class="flex">
+      <div class="kpi"><div class="t">Totale</div><div class="v" id="kTotal">—</div></div>
+      <div class="kpi"><div class="t">Oggi</div><div class="v" id="kToday">—</div></div>
+      <div class="kpi"><div class="t">Ultimi 7g</div><div class="v" id="k7">—</div></div>
     </div>
-  </div>
-
-  <!-- GRAFICI -->
-  <div class="card">
-    <h3>Grafici</h3>
-    <div class="row">
-      <div class="chartbox"><canvas id="chartStyleToday"></canvas></div>
-      <div class="chartbox"><canvas id="chartPeriodToday"></canvas></div>
-      <div class="chartbox"><canvas id="chartTrend"></canvas></div>
+    <div class="flex" style="margin-top:10px">
+      <div class="kpi" style="min-width:220px"><div class="t">Per stile</div><div class="v" id="kStyle">—</div></div>
+      <div class="kpi" style="min-width:220px"><div class="t">Per lingua</div><div class="v" id="kLang">—</div></div>
+      <div class="kpi" style="min-width:220px"><div class="t">Per tempo</div><div class="v" id="kPeriod">—</div></div>
+      <div class="kpi" style="min-width:220px"><div class="t">User types</div><div class="v" id="kUserTypes">—</div></div>
     </div>
   </div>
 
-  <!-- LOG -->
+  <!-- ===== GRAFICI ===== -->
+  <div class="card" id="charts">
+    <h3 style="margin:0 0 8px">Grafici</h3>
+    <canvas id="barTrend"></canvas>
+    <canvas id="barStyle" style="margin-top:18px"></canvas>
+    <canvas id="barPeriod" style="margin-top:18px"></canvas>
+  </div>
+
+  <!-- ===== LOG RICHIESTE ===== -->
   <div class="card">
-    <h3>Log richieste</h3>
-    <div class="row">
+    <div class="row" style="justify-content:space-between">
+      <h3 style="margin:0">Log richieste</h3>
+      <select id="limitRows"><option value="200">ultimi 200</option><option value="500">ultimi 500</option><option value="1000">ultimi 1000</option></select>
+    </div>
+    <div class="row" style="margin-top:8px">
       <select id="fStyle"><option value="">Stile: tutti</option><option value="whatif">whatif</option><option value="wtf">wtf</option></select>
       <select id="fLang"><option value="">Lingua: tutte</option><option value="it">it</option><option value="en">en</option></select>
       <select id="fPeriod"><option value="">Tempo: tutti</option><option value="future">future</option><option value="past">past</option></select>
       <select id="fUser"><option value="">Tipo utente: tutti</option><option value="free">free</option><option value="pro">pro</option><option value="admin">admin</option></select>
-      <input id="fSearch" placeholder="Cerca nella domanda…">
-      <button class="ghost" id="applyFilters">Filtra</button>
+      <input id="q" placeholder="Cerca nella domanda…" style="flex:1;min-width:200px"/>
     </div>
-    <table id="logTbl">
-      <thead><tr><th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th></tr></thead>
-      <tbody></tbody>
-    </table>
+    <div class="small" style="margin-top:6px">Nota privacy: vedi l’IP solo se togli “IP mascherati”.</div>
+    <div style="overflow:auto;margin-top:8px">
+      <table id="tbl">
+        <thead><tr>
+          <th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const ADMIN_SECRET = "wtf-setup-2025";              // deve combaciare con /api/admin-token (PIN)
+const LS = localStorage;
 const TOKEN_KEY = "admin_token";
-const PRO_PREFS_KEY = "whatif_prefs";               // { pro: true }
+const PRO_PREFS_KEY = "whatif_prefs";
 
-const qs = s => document.querySelector(s);
-const fmt = n => JSON.stringify(n).replace(/"/g,'').replace(/(:)/g,': ');
 let autoTimer=null, charts={};
 
-function token(){ return localStorage.getItem(TOKEN_KEY) || ""; }
-function shortTok(t){ return t ? (t.slice(0,6)+"…"+t.slice(-4)) : "—"; }
-function isProLocal(){
-  try{ return !!(JSON.parse(localStorage.getItem(PRO_PREFS_KEY)||"{}").pro); }catch{return false}
+function fmtDate(ts){const d=new Date(ts);return d.toLocaleString();}
+function shortTok(t){if(!t) return "—"; return t.slice(0,6)+"…"+t.slice(-4);}
+function mask(ip){ if(!ip) return "—"; const parts=ip.split("."); return parts.length===4?parts[0]+".*."+parts[2]+".*":ip; }
+function setProUI(){
+  try{ const p=JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}"); const on=p.pro===true;
+    document.getElementById("proState").textContent= on ? "PRO attivo su questo device (10/g)" : "PRO non attivo (3/g)";
+  }catch{}
+}
+function setNow(){ document.getElementById("nowTs").textContent = new Date().toLocaleString(); }
+
+async function adminCall(path, opts={}){
+  const headers = Object.assign({"Content-Type":"application/json"}, (opts.headers||{}));
+  const tok = LS.getItem(TOKEN_KEY)||"";
+  if(tok) headers["x-admin-token"]=tok;
+  const r = await fetch(path, { ...opts, headers });
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(data.error||"api_error");
+  return data;
 }
 
-// ===== Admin token API (compatibile col tuo endpoint) =====
-async function adminEnter(pin){
-  const r = await fetch("/api/admin-token", {
+async function login(pin){
+  const r = await fetch("/api/admin-token",{
     method:"POST",
-    headers:{ "Content-Type":"application/json", "admin-secret": ADMIN_SECRET },
-    body: JSON.stringify({ pin })
+    headers:{"Content-Type":"application/json","x-admin-secret": pin},
+    body: JSON.stringify({pin})
   });
-  const d = await r.json().catch(()=>({}));
-  if(!r.ok || !d.ok) throw new Error(d.error||"enter_failed");
-  localStorage.setItem(TOKEN_KEY, d.token);
-  return d;
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok || !data.ok) throw new Error(data.error||"pin_error");
+  LS.setItem(TOKEN_KEY, data.token);
+  return data;
 }
-async function adminGet(){
-  const r = await fetch("/api/admin-token", { headers:{ "x-admin-token": token() }});
-  return r.json().catch(()=>({}));
+async function renew(){ const tok=LS.getItem(TOKEN_KEY)||""; if(!tok) throw new Error("no_token");
+  const r = await fetch("/api/admin-token?renew=1",{headers:{"x-admin-token":tok}});
+  const d = await r.json().catch(()=>({})); if(!r.ok) throw new Error(d.error||"renew_error"); return d;
 }
-async function adminRenew(){
-  const r = await fetch("/api/admin-token?renew=1", { method:"POST", headers:{ "x-admin-token": token() }});
-  const d = await r.json().catch(()=>({}));
-  if(!r.ok) throw new Error(d.error||"renew_failed");
-  return d;
-}
-async function adminRevoke(){
-  const r = await fetch("/api/admin-token?revoke=1", { method:"POST", headers:{ "x-admin-token": token() }});
-  const d = await r.json().catch(()=>({}));
-  if(!r.ok) throw new Error(d.error||"revoke_failed");
-  localStorage.removeItem(TOKEN_KEY);
-  return d;
+async function revoke(){ const tok=LS.getItem(TOKEN_KEY)||""; if(!tok) return;
+  await fetch("/api/admin-token?revoke=1",{headers:{"x-admin-token":tok}});
+  LS.removeItem(TOKEN_KEY);
 }
 
-async function loadCredits(){
-  const hdrs = { "x-admin-token": token() };
-  if(isProLocal()) hdrs["x-pro"] = "1";
-  const r = await fetch("/api/credits", { headers: hdrs });
-  const d = await r.json().catch(()=>({}));
-  if(!r.ok || !d.ok) throw new Error(d.error||"credits_failed");
-  // UI
-  qs("#myIp").textContent = d.ip || "—";
-  qs("#admState").textContent = d.admin ? "attivo" : "no";
-  qs("#admDot").classList.toggle("ok", !!d.admin);
-  qs("#tokShort").textContent = shortTok(token());
-  const tag = qs("#userType");
-  tag.textContent = d.admin ? "admin" : (d.pro ? "pro" : "free");
-  tag.className = "tag " + (d.admin ? "admin" : d.pro ? "pro" : "free");
-  qs("#credTxt").textContent = d.admin ? "∞" : `${d.credits.used}/${d.credits.dailyCap} (restano ${d.credits.remaining})`;
+async function getStats(){ return adminCall("/api/admin-stats"); }
+async function getLogs(limit){ return adminCall("/api/admin-logs?limit="+encodeURIComponent(limit||200)); }
+async function clearLogs(){ return adminCall("/api/admin-logs",{method:"DELETE"}); }
+async function whoami(){ const r=await fetch("/api/whoami"); return r.json().catch(()=>({})); }
+
+function renderKPIs(fromStats){
+  const s = fromStats || {};
+  document.getElementById("kTotal").textContent = s.total ?? "—";
+  document.getElementById("kToday").textContent = s.today ?? "—";
+  document.getElementById("k7").textContent = s.last7 ?? "—";
+  document.getElementById("kStyle").textContent = JSON.stringify(s.byStyle||{});
+  document.getElementById("kLang").textContent = JSON.stringify(s.byLang||{});
+  document.getElementById("kPeriod").textContent = JSON.stringify(s.byPeriod||{});
+  document.getElementById("kUserTypes").textContent = JSON.stringify(s.byUserType||{});
 }
 
-function params(){
-  const mask = qs('#maskIp').checked ? '1' : '0';
-  const limit = qs('#limitSel').value;
-  const days  = qs('#daysSel').value;
-  return `limit=${encodeURIComponent(limit)}&days=${encodeURIComponent(days)}&mask=${mask}`;
+function drawBars(id, labels, values, title){
+  const ctx = document.getElementById(id).getContext("2d");
+  if(charts[id]) charts[id].destroy();
+  charts[id] = new Chart(ctx,{
+    type:"bar",
+    data:{ labels, datasets:[{ label:title, data:values }]},
+    options:{ responsive:true, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false}},y:{beginAtZero:true}} }
+  });
 }
 
-async function loadStats(){
-  const r = await fetch(`/api/admin-stats?${params()}`);
-  const data = await r.json();
-  if(!data?.ok) throw new Error('stats_error');
-
-  qs('#tot').textContent   = data.total;
-  qs('#today').textContent = data.today;
-  qs('#lastN').textContent = data.lastN;
-  qs('#daysTxt').textContent = data.days;
-  qs('#bystyle').textContent  = fmt(data.breakdown.style || {});
-  qs('#bylang').textContent   = fmt(data.breakdown.lang  || {});
-  qs('#byperiod').textContent = fmt(data.breakdown.periodo || {});
-  qs('#byuser').textContent   = fmt(data.breakdown.user_type || {});
-  qs('#ts').textContent = new Date().toLocaleString();
-
-  renderLogs(data.items||[]);
-  renderCharts(data);
-  window.__CACHE = data;
+function buildTrend(items, days){
+  const dayms=86400000, now=Date.now(), labels=[], values=[];
+  for(let i=days-1;i>=0;i--){
+    const d=new Date(now - i*dayms).toISOString().slice(0,10);
+    labels.push(d);
+    values.push(items.filter(x=> new Date(x.ts).toISOString().slice(0,10)===d).length);
+  }
+  return {labels, values};
 }
+function countBy(items, key){ const m={}; items.forEach(x=>{ const k=x[key]||"—"; m[k]=(m[k]||0)+1; }); return m; }
 
-function renderLogs(items){
-  const tb = qs('#logTbl tbody'); tb.innerHTML='';
-  const fs=qs('#fStyle').value, fl=qs('#fLang').value, fp=qs('#fPeriod').value, fu=qs('#fUser').value, q=(qs('#fSearch').value||'').toLowerCase();
-  const rows = items.filter(it=>{
-    if(fs && it.style!==fs) return false;
-    if(fl && it.lang!==fl) return false;
-    if(fp && it.periodo!==fp) return false;
-    if(fu && it.user_type!==fu) return false;
-    if(q && !String(it.domanda||'').toLowerCase().includes(q)) return false;
+function renderTable(items){
+  const tb = document.querySelector("#tbl tbody"); tb.innerHTML="";
+  const maskOn = document.getElementById("maskIp").checked;
+  const fS = document.getElementById("fStyle").value;
+  const fL = document.getElementById("fLang").value;
+  const fP = document.getElementById("fPeriod").value;
+  const fU = document.getElementById("fUser").value;
+  const q  = document.getElementById("q").value.trim().toLowerCase();
+  const rows = items.filter(x=>{
+    if(fS && x.style!==fS) return false;
+    if(fL && x.lang!==fL) return false;
+    if(fP && x.periodo!==fP) return false;
+    if(fU && x.user_type!==fU) return false;
+    if(q && !String(x.domanda||"").toLowerCase().includes(q)) return false;
     return true;
   });
   for(const it of rows){
-    const tr=document.createElement('tr');
-    const full = String(it.domanda||'');
-    const short = full.length>180 ? full.slice(0,180)+'…' : full;
+    const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${new Date(it.ts).toLocaleString()}</td>
-      <td class="kbd">${it.ip||''}</td>
-      <td>${it.user_type||'free'}</td>
-      <td>${it.style}</td>
-      <td>${it.lang}</td>
-      <td>${it.periodo}</td>
-      <td>${it.answer_chars}</td>
-      <td class="qcell">${short}</td>
-    `;
-    const qcell = tr.querySelector('.qcell');
-    qcell.addEventListener('click',()=>{ qcell.classList.toggle('expanded'); qcell.textContent = qcell.classList.contains('expanded') ? full : short; });
+      <td>${fmtDate(it.ts)}</td>
+      <td>${maskOn ? mask(it.ip) : (it.ip||"—")}</td>
+      <td>${it.user_type||"—"}</td>
+      <td>${it.style||"—"}</td>
+      <td>${it.lang||"—"}</td>
+      <td>${it.periodo||"—"}</td>
+      <td>${it.answer_chars||0}</td>
+      <td><pre>${(it.domanda||"").replace(/\s+/g," ").slice(0,400)}</pre></td>`;
     tb.appendChild(tr);
   }
 }
 
-function renderCharts(data){
-  for(const k of Object.keys(charts)){ charts[k].destroy(); }
-  charts={};
-  const todayItems = (data.items||[]).filter(it=>{
-    const d=new Date(it.ts), n=new Date();
-    return d.getFullYear()===n.getFullYear() && d.getMonth()===n.getMonth() && d.getDate()===n.getDate();
-  });
-  const byS={}, byP={};
-  for(const it of todayItems){ byS[it.style]=(byS[it.style]||0)+1; byP[it.periodo]=(byP[it.periodo]||0)+1; }
+async function refreshAll(){
+  setNow();
+  try{
+    // whoami
+    const me = await whoami();
+    document.getElementById("myIp").textContent = me.ip || "—";
 
-  charts.styleToday = new Chart(qs('#chartStyleToday'), {
-    type:'bar',
-    data:{ labels:Object.keys(byS), datasets:[{ label:'Oggi · per stile', data:Object.values(byS) }]},
-    options:{ responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true,ticks:{precision:0}}}, plugins:{legend:{display:false}} }
-  });
-  charts.periodToday = new Chart(qs('#chartPeriodToday'), {
-    type:'bar',
-    data:{ labels:Object.keys(byP), datasets:[{ label:'Oggi · per tempo', data:Object.values(byP) }]},
-    options:{ responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true,ticks:{precision:0}}}, plugins:{legend:{display:false}} }
-  });
-  const labels = (data.trend||[]).map(x=>x.day);
-  const values = (data.trend||[]).map(x=>x.count);
-  charts.trend = new Chart(qs('#chartTrend'), {
-    type:'line',
-    data:{ labels, datasets:[{ label:`Trend ultimi ${data.days} giorni`, data:values, tension:.25 }]},
-    options:{ responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true,ticks:{precision:0}}}}
-  });
+    // pro/free state (locale)
+    setProUI();
+
+    // admin stats
+    const stats = await getStats();
+    renderKPIs({
+      total: stats.total, today: stats.today, last7: stats.last7,
+      byStyle: stats.byStyle, byLang: stats.byLang, byPeriod: stats.byPeriod, byUserType: stats.byUserType
+    });
+
+    // logs window (per tabella e grafici)
+    const limit = document.getElementById("limitSel").value||200;
+    const data = await getLogs(limit);
+    const items = data.items||[];
+
+    // status ribbons
+    const tok = LS.getItem(TOKEN_KEY)||"";
+    document.getElementById("tokShort").textContent = shortTok(tok);
+    document.getElementById("isAdmin").textContent = data.ok ? "yes" : "no";
+    document.getElementById("userType").textContent = me.pro ? "pro" : (data.ok ? "admin" : "free");
+    document.getElementById("creditsToday").textContent = me.credits ? `${me.credits.used}/${me.credits.dailyCap}` : (data.ok?"∞":"—");
+
+    // grafici
+    const days = parseInt(document.getElementById("trendSel").value||"7",10);
+    const trend = buildTrend(items, days);
+    drawBars("barTrend", trend.labels, trend.values, "Richieste per giorno (finestra)");
+
+    const byS = countBy(items,"style"); drawBars("barStyle", Object.keys(byS), Object.values(byS), "Per stile (finestra)");
+    const byP = countBy(items,"periodo"); drawBars("barPeriod", Object.keys(byP), Object.values(byP), "Per tempo (finestra)");
+
+    renderTable(items);
+  }catch(e){
+    document.getElementById("authMsg").textContent = "Serve login admin o API non allineata.";
+  }
 }
 
-// ====== Event handlers ======
-qs('#refreshBtn').onclick = async ()=>{ await Promise.all([loadCredits(), loadStats()]); };
-qs('#autoBtn').onclick = ()=>{ if(autoTimer){ clearInterval(autoTimer); autoTimer=null; qs('#autoBtn').textContent='Auto-refresh'; } else { autoTimer=setInterval(()=>qs('#refreshBtn').click(), 60000); qs('#autoBtn').textContent='Stop auto-refresh'; }};
-qs('#clearBtn').onclick = async ()=>{ if(confirm('Svuotare i log?')){ await fetch('/api/admin-clear-logs'); await loadStats(); }};
-
-qs('#applyFilters').onclick = ()=> renderLogs((window.__CACHE||{}).items||[]);
-qs('#maskIp').onchange = ()=> loadStats();
-qs('#limitSel').onchange = ()=> loadStats();
-qs('#daysSel').onchange = ()=> loadStats();
-
-qs('#btnEnter').onclick = async ()=>{
-  try{ const p = qs('#pin').value.trim(); if(!p) return alert("Inserisci il PIN"); const d=await adminEnter(p); qs('#authMsg').textContent=`Token ok (TTL ~${d.ttlHours}h)`; await loadCredits(); }
-  catch(e){ qs('#authMsg').textContent="PIN errato o API non allineata."; }
+// ====== LISTENERS ======
+document.getElementById("refreshBtn").onclick = refreshAll;
+document.getElementById("autoBtn").onclick = ()=>{
+  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; document.getElementById("autoBtn").textContent="Auto-refresh"; return;}
+  autoTimer=setInterval(refreshAll, 5000); document.getElementById("autoBtn").textContent="Stop auto-refresh";
 };
-qs('#btnRenew').onclick = async ()=>{ try{ await adminRenew(); qs('#authMsg').textContent="Token rinnovato."; await loadCredits(); }catch(e){ qs('#authMsg').textContent="Rinnovo fallito."; } };
-qs('#btnRevoke').onclick = async ()=>{ try{ await adminRevoke(); qs('#authMsg').textContent="Token revocato."; await loadCredits(); }catch(e){ qs('#authMsg').textContent="Revoca fallita."; } };
-qs('#proOn').onclick  = ()=>{ const p=JSON.parse(localStorage.getItem(PRO_PREFS_KEY)||"{}"); p.pro=true; localStorage.setItem(PRO_PREFS_KEY, JSON.stringify(p)); loadCredits(); };
-qs('#proOff').onclick = ()=>{ const p=JSON.parse(localStorage.getItem(PRO_PREFS_KEY)||"{}"); delete p.pro; localStorage.setItem(PRO_PREFS_KEY, JSON.stringify(p)); loadCredits(); };
+document.getElementById("clearBtn").onclick = async()=>{ if(!confirm("Sicuro di svuotare i log?")) return; try{ await clearLogs(); alert("Log svuotati"); refreshAll(); }catch(e){ alert("Errore: "+e.message); } };
+["limitSel","trendSel","fStyle","fLang","fPeriod","fUser","q","limitRows","maskIp"].forEach(id=>{
+  document.getElementById(id).onchange = refreshAll;
+});
+document.getElementById("enterBtn").onclick = async()=>{
+  const pin = document.getElementById("pin").value.trim(); if(!pin) return;
+  try{ await login(pin); document.getElementById("authMsg").textContent="Admin attivo su questo IP (~48h)."; refreshAll(); }
+  catch(e){ document.getElementById("authMsg").textContent="PIN errato o API non allineata."; }
+};
+document.getElementById("renewBtn").onclick = async()=>{ try{ await renew(); document.getElementById("authMsg").textContent="Token rinnovato (7gg)."; }catch(e){ document.getElementById("authMsg").textContent="Rinnovo fallito."; } };
+document.getElementById("revokeBtn").onclick = async()=>{ await revoke(); document.getElementById("authMsg").textContent="Token revocato."; refreshAll(); };
+
+document.getElementById("proOn").onclick = ()=>{ const p=JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}"); p.pro=true; LS.setItem(PRO_PREFS_KEY, JSON.stringify(p)); setProUI(); refreshAll(); };
+document.getElementById("proOff").onclick = ()=>{ const p=JSON.parse(LS.getItem(PRO_PREFS_KEY)||"{}"); delete p.pro; LS.setItem(PRO_PREFS_KEY, JSON.stringify(p)); setProUI(); refreshAll(); };
 
 // init
-(async function init(){
-  // prova a validare token esistente
-  try{ const g=await adminGet(); if(g?.admin){ qs('#authMsg').textContent="Admin attivo."; } }catch{}
-  await loadCredits();
-  await loadStats();
-})();
+setNow(); setProUI(); refreshAll();
 </script>
 </body>
 </html>
