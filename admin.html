@@ -5,41 +5,34 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>What?f — Admin</title>
 <meta name="theme-color" content="#0B0B0C"/>
+<link rel="preconnect" href="https://cdn.jsdelivr.net"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  :root{
-    --bg:#0B0B0C; --bg2:#101414; --fg:#EAF2EE; --muted:#A0B2BA;
-    --card:#13191E; --line:rgba(255,255,255,.12); --acc:#1C57A0; --acc2:#FFEC01; --ink:#0A0E12;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;background:radial-gradient(900px 700px at 20% 18%,var(--bg2) 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
-  main{max-width:1000px;margin:auto;padding:16px}
-  h1{margin:8px 0 12px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0;backdrop-filter:blur(8px)}
-  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  input,select{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:10px;color:#fff;padding:10px}
-  button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
-  .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.35)}
-  .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid var(--line)}
-  .badge{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06);font-size:12px}
-  .muted{color:var(--muted);font-size:12px}
-  .ok{background:rgba(0,255,0,.08)}
-  .err{background:rgba(255,0,0,.08)}
-  table{width:100%;border-collapse:collapse;margin-top:8px}
-  th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:13px;vertical-align:top}
-  th{position:sticky;top:0;background:rgba(19,25,30,.9);backdrop-filter:blur(8px);z-index:2}
-  .tblwrap{max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:12px}
-  .nowrap{white-space:nowrap}
-  .ellipsis{max-width:540px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  canvas{width:100%;height:260px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03)}
-  @media (max-width: 680px){
-    .ellipsis{max-width:240px}
-    th:nth-child(2), td:nth-child(2){display:none} /* nasconde IP su mobile */
-  }
-  /* Modal */
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px}
-  .modal .box{max-width:720px;width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
-  .close{float:right;background:rgba(255,255,255,.06)}
-  pre{white-space:pre-wrap;word-wrap:break-word;font-family:ui-monospace, SFMono-Regular, Menlo, monospace;font-size:12px;background:rgba(255,255,255,.04);padding:10px;border-radius:10px;border:1px solid var(--line)}
+:root{
+  --bg:#0B0B0C; --card:#13191E; --fg:#EAF2EE; --muted:#A0B2BA; --acc:#1C57A0; --acc2:#FFEC01;
+  --line:rgba(255,255,255,.12);
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(900px 700px at 20% 18%,#101414 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+main{max-width:1100px;margin:auto;padding:18px}
+h1{margin:6px 0 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0;box-shadow:0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input,select{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px}
+button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
+.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid var(--line)}
+.muted{color:var(--muted);font-size:12px}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:880px){ .grid{grid-template-columns:1fr} }
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:13px;vertical-align:top}
+thead th{position:sticky;top:0;background:rgba(0,0,0,.35);backdrop-filter:blur(8px)}
+#logsWrap{max-height:48vh;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.kpis{display:flex;gap:10px;flex-wrap:wrap}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.06);min-width:140px}
+.kpi .n{font-size:22px;font-weight:900}
 </style>
 </head>
 <body>
@@ -49,12 +42,12 @@
   <!-- Accesso -->
   <div class="card">
     <h3>Accesso</h3>
-    <p class="muted">Inserisci il PIN admin (uguale a quello in <code>ADMIN_PIN</code> su Vercel). Genera un token legato al tuo IP.</p>
+    <p class="muted">Inserisci il PIN admin. Genererà un token legato al tuo IP (TTL definito nell’API).</p>
     <div class="row">
-      <input id="pin" type="password" placeholder="PIN admin" style="min-width:180px"/>
+      <input id="pin" type="password" inputmode="numeric" placeholder="PIN segreto" style="min-width:180px"/>
       <button class="primary" id="enterBtn">Entra</button>
       <button class="ghost" id="logoutBtn">Esci</button>
-      <span id="authBadge" class="badge">Non autenticato</span>
+      <span id="authState" class="badge">Non autenticato</span>
     </div>
     <p class="muted" id="authHelp"></p>
   </div>
@@ -65,359 +58,231 @@
     <div class="row">
       <button class="primary" id="refreshBtn">Aggiorna</button>
       <button class="ghost" id="autoBtn">Auto-refresh</button>
+      <button class="ghost" id="resetBtn">🔄 Reset crediti (oggi)</button>
       <button class="ghost" id="clearLogsBtn">🗑️ Svuota log</button>
-      <label class="row" style="gap:6px">
-        <span class="muted">Limite</span>
-        <select id="limitSel">
-          <option>100</option><option selected>200</option><option>500</option><option>1000</option>
-        </select>
-      </label>
-      <label class="row" style="gap:6px">
-        <span class="muted">Maschera IP</span>
-        <select id="maskSel">
-          <option value="1" selected>Sì</option>
-          <option value="0">No</option>
-        </select>
-      </label>
     </div>
-    <p class="muted">Suggerimento: fai almeno una richiesta a <code>/api/ask</code> dopo il deploy per popolare i log.</p>
+    <div class="row kpis" id="kpis">
+      <div class="kpi"><div class="n" id="kpiTotal">0</div><div class="muted">Richieste totali (caricate)</div></div>
+      <div class="kpi"><div class="n" id="kpiAdmin">0</div><div class="muted">Admin</div></div>
+      <div class="kpi"><div class="n" id="kpiPro">0</div><div class="muted">Pro</div></div>
+      <div class="kpi"><div class="n" id="kpiFree">0</div><div class="muted">Free</div></div>
+    </div>
   </div>
 
   <!-- Filtri -->
   <div class="card">
     <h3>Filtri</h3>
     <div class="row">
-      <select id="filterStyle">
-        <option value="">Stile: tutti</option>
-        <option value="whatif">whatif</option>
-        <option value="wtf">wtf</option>
-      </select>
-      <select id="filterLang">
-        <option value="">Lingua: tutte</option>
-        <option value="it">it</option>
-        <option value="en">en</option>
-      </select>
-      <select id="filterPeriod">
-        <option value="">Tempo: tutti</option>
-        <option value="past">past</option>
-        <option value="future">future</option>
-      </select>
-      <select id="filterUserType">
-        <option value="">Utente: tutti</option>
-        <option value="free">free</option>
-        <option value="pro">pro</option>
-        <option value="admin">admin</option>
-      </select>
+      <select id="filterStyle"><option value="">Stile: tutti</option><option value="whatif">whatif</option><option value="wtf">wtf</option></select>
+      <select id="filterLang"><option value="">Lingua: tutte</option><option value="it">it</option><option value="en">en</option></select>
+      <select id="filterPeriod"><option value="">Tempo: tutti</option><option value="past">past</option><option value="future">future</option></select>
       <input id="searchQ" placeholder="Cerca nella domanda…" style="min-width:220px"/>
     </div>
   </div>
 
-  <!-- Statistiche sintetiche + grafico -->
+  <!-- Grafici -->
   <div class="card">
-    <div class="row" style="justify-content:space-between">
-      <h3 style="margin:0">Statistiche</h3>
-      <span id="countBadge" class="badge">—</span>
+    <h3>Grafici</h3>
+    <div class="grid">
+      <canvas id="barUserType" height="200"></canvas>
+      <canvas id="barStylePeriod" height="200"></canvas>
     </div>
-    <div id="statsText" class="muted" style="margin:8px 0">—</div>
-    <canvas id="chart"></canvas>
-    <p class="muted">Grafico: conteggio per <strong>stile</strong> e per <strong>user type</strong> (dataset doppi).</p>
   </div>
 
-  <!-- Log -->
+  <!-- Log con domande -->
   <div class="card">
     <div class="row" style="justify-content:space-between">
-      <h3 style="margin:0">Log</h3>
-      <span class="muted">Ultimi eventi (ordinati dal più recente)</span>
+      <h3 style="margin:0">Log (ultimi)</h3>
+      <span id="stats" class="muted">—</span>
     </div>
-    <div class="tblwrap">
+    <div id="logsWrap">
       <table>
-        <thead>
-          <tr>
-            <th class="nowrap">Quando</th>
-            <th class="nowrap">IP</th>
-            <th class="nowrap">Stile</th>
-            <th class="nowrap">Lingua</th>
-            <th class="nowrap">Tempo</th>
-            <th class="nowrap">Utente</th>
-            <th class="nowrap">Domanda</th>
-            <th class="nowrap">Azioni</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Quando</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Tipo</th><th>Domanda</th></tr></thead>
         <tbody id="logsBody"></tbody>
       </table>
     </div>
   </div>
 </main>
 
-<!-- Modal domanda -->
-<div class="modal" id="modal">
-  <div class="box">
-    <button class="ghost close" id="closeModal">Chiudi</button>
-    <h3 style="margin-top:0">Dettaglio log</h3>
-    <div id="modalMeta" class="muted" style="margin-bottom:8px">—</div>
-    <div>
-      <div class="badge" style="margin-bottom:6px">Domanda</div>
-      <pre id="modalQ">—</pre>
-    </div>
-  </div>
-</div>
-
 <script>
-/* ====== Costanti ====== */
+/* ===== Costanti & stato ===== */
 const LS = localStorage;
 const TOKEN_KEY = "admin_token";
-
-/* ====== Stato ====== */
-let allItems = [];
 let autoTimer = null;
+let CHARTS = {};
 
-/* ====== Helpers UI ====== */
-function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(undefined,{hour12:false}); }
+/* ===== UI ===== */
+function fmtDate(ts){ const d = new Date(ts); return d.toLocaleString(); }
 function setAuthUI(ok){
-  const b = document.getElementById("authBadge");
-  b.textContent = ok ? "Autenticato" : "Non autenticato";
-  b.classList.toggle("ok", ok); b.classList.toggle("err", !ok);
+  const el = document.getElementById("authState");
+  el.textContent = ok ? "Autenticato" : "Non autenticato";
+  el.style.background = ok ? "rgba(0,255,0,.08)" : "rgba(255,255,255,.06)";
 }
-function qs(id){ return document.getElementById(id); }
 
-/* ====== API ====== */
+/* ===== API helpers ===== */
 async function loginWithPin(pin){
-  const r = await fetch("/api/admin-token",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json", "x-admin-secret": pin.trim() }
+  // compatibilità: il tuo /api/admin-token accetta PIN in query (?pin=...)
+  const r = await fetch(`/api/admin-token?pin=${encodeURIComponent(pin.trim())}`, {
+    method: "POST",
+    headers: { "Content-Type":"application/json" }
   });
   const d = await r.json().catch(()=>({}));
-  if(!r.ok || !d.token) throw new Error(d.error||"bad_pin");
+  if(!r.ok || !d.ok || !d.token) throw new Error(d.error||"bad_pin");
   LS.setItem(TOKEN_KEY, d.token);
   return d.token;
 }
-async function fetchLogs(limit=200, mask=1){
-  const token = LS.getItem(TOKEN_KEY)||"";
-  const r = await fetch(`/api/admin-logs?limit=${limit}&mask=${mask}`, {
-    headers: { "x-admin-token": token }
-  });
+async function fetchLogs(limit=400){
+  const tok = LS.getItem(TOKEN_KEY)||"";
+  const r = await fetch(`/api/admin-logs?limit=${limit}`, { headers:{ "x-admin-token": tok }});
   const d = await r.json().catch(()=>({}));
   if(!r.ok || !d.ok) throw new Error(d.error||"auth");
-  return d.items||[];
+  return d;
 }
-async function clearLogs(){
-  const token = LS.getItem(TOKEN_KEY)||"";
-  const r = await fetch("/api/admin-logs", { method:"DELETE", headers:{ "x-admin-token": token }});
-  if(!r.ok) throw new Error("delete_failed");
+async function resetCredits(){
+  const tok = LS.getItem(TOKEN_KEY)||"";
+  const r = await fetch("/api/reset", { method:"POST", headers:{ "x-admin-token": tok } });
+  if(!r.ok){ const d=await r.json().catch(()=>({})); throw new Error(d.error||"reset_failed"); }
+  alert("Crediti di oggi azzerati (server).");
 }
 
-/* ====== Statistiche & Grafico ====== */
+/* ===== Render ===== */
 function computeStats(items){
-  const stat = {
-    total: items.length,
-    style:{}, lang:{}, periodo:{}, user_type:{}
-  };
+  const s = { total: items.length, style:{}, lang:{}, periodo:{}, user_type:{}, combo:{} };
   for(const it of items){
-    stat.style[it.style] = (stat.style[it.style]||0)+1;
-    stat.lang[it.lang] = (stat.lang[it.lang]||0)+1;
-    stat.periodo[it.periodo] = (stat.periodo[it.periodo]||0)+1;
-    const ut = it.user_type || (it.admin ? "admin":"free");
-    stat.user_type[ut] = (stat.user_type[ut]||0)+1;
+    s.style[it.style] = (s.style[it.style]||0)+1;
+    s.lang[it.lang] = (s.lang[it.lang]||0)+1;
+    s.periodo[it.periodo] = (s.periodo[it.periodo]||0)+1;
+    const ut = it.user_type || (it.admin ? "admin" : "free");
+    s.user_type[ut] = (s.user_type[ut]||0)+1;
+    const key = `${it.style||"?"}:${it.periodo||"?"}`;
+    s.combo[key] = (s.combo[key]||0)+1;
   }
-  return stat;
+  return s;
 }
 
-function drawBarChart(canvas, items){
-  const ctx = canvas.getContext("2d");
-  const w = canvas.width = canvas.clientWidth * devicePixelRatio;
-  const h = canvas.height = canvas.clientHeight * devicePixelRatio;
-  ctx.clearRect(0,0,w,h);
-
-  // dataset 1: per stile
-  const s = computeStats(items);
-  const labels = ["whatif","wtf"];
-  const valuesStyle = labels.map(k=>s.style[k]||0);
-
-  // dataset 2: per user type
-  const uLabels = ["free","pro","admin"];
-  const valuesUser = uLabels.map(k=>s.user_type[k]||0);
-
-  // layout
-  const pad = 40 * devicePixelRatio;
-  const innerW = w - pad*2;
-  const innerH = h - pad*2;
-
-  // helper draw
-  function drawGroup(baseY, labels, vals, title){
-    const maxVal = Math.max(1, ...vals);
-    const barW = innerW / (labels.length * 2);
-    ctx.save();
-    ctx.translate(pad, baseY);
-    // title
-    ctx.fillStyle="#EAF2EE";
-    ctx.font = `${12*devicePixelRatio}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
-    ctx.fillText(title, 0, -10*devicePixelRatio);
-    // axes
-    ctx.globalAlpha=0.3; ctx.strokeStyle="#EAF2EE"; ctx.beginPath();
-    ctx.moveTo(0,0); ctx.lineTo(0, innerH/2 - 10*devicePixelRatio); ctx.stroke();
-    ctx.globalAlpha=1;
-
-    // bars
-    for(let i=0;i<labels.length;i++){
-      const x = i * barW * 2 + barW*0.25;
-      const hBar = (vals[i] / maxVal) * (innerH/2 - 20*devicePixelRatio);
-      const y = (innerH/2 - 10*devicePixelRatio) - hBar;
-      ctx.fillStyle = "rgba(255,255,255,.15)";
-      ctx.fillRect(x, y, barW, hBar);
-      // label
-      ctx.fillStyle="#A0B2BA";
-      ctx.font = `${11*devicePixelRatio}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
-      ctx.fillText(labels[i], x, (innerH/2 + 12*devicePixelRatio));
-      // value
-      ctx.fillStyle="#EAF2EE";
-      ctx.fillText(String(vals[i]), x, y - 4*devicePixelRatio);
-    }
-    ctx.restore();
-  }
-
-  drawGroup(pad, labels, valuesStyle, "Per stile");
-  drawGroup(pad + h/2 - pad, uLabels, valuesUser, "Per utente");
+function renderKPIs(stats){
+  document.getElementById("kpiTotal").textContent = stats.total||0;
+  document.getElementById("kpiAdmin").textContent = stats.user_type?.admin||0;
+  document.getElementById("kpiPro").textContent   = stats.user_type?.pro||0;
+  document.getElementById("kpiFree").textContent  = stats.user_type?.free||0;
 }
 
-/* ====== Render tabella ====== */
-function applyFilters(list){
-  const fStyle = qs("filterStyle").value;
-  const fLang  = qs("filterLang").value;
-  const fPer   = qs("filterPeriod").value;
-  const fUser  = qs("filterUserType").value;
-  const q      = qs("searchQ").value.trim().toLowerCase();
+function renderCharts(stats){
+  const ctx1 = document.getElementById("barUserType").getContext("2d");
+  const ctx2 = document.getElementById("barStylePeriod").getContext("2d");
 
-  return list.filter(x=>{
-    if(fStyle && x.style!==fStyle) return false;
-    if(fLang && x.lang!==fLang) return false;
-    if(fPer && x.periodo!==fPer) return false;
-    if(fUser && (x.user_type||"")!==fUser) return false;
-    if(q && !String(x.domanda||"").toLowerCase().includes(q)) return false;
-    return true;
+  const utLabels = Object.keys(stats.user_type||{});
+  const utData   = utLabels.map(k=>stats.user_type[k]);
+
+  const comboLabels = Object.keys(stats.combo||{});
+  const comboData   = comboLabels.map(k=>stats.combo[k]);
+
+  if(CHARTS.ut) CHARTS.ut.destroy();
+  if(CHARTS.combo) CHARTS.combo.destroy();
+
+  CHARTS.ut = new Chart(ctx1, {
+    type: "bar",
+    data: { labels: utLabels, datasets: [{ label: "User type", data: utData }] },
+    options: { responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true } } }
+  });
+
+  CHARTS.combo = new Chart(ctx2, {
+    type: "bar",
+    data: { labels: comboLabels, datasets: [{ label: "Style:Period", data: comboData }] },
+    options: { responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true } } }
   });
 }
 
 function renderTable(items){
-  const tbody = qs("logsBody");
-  tbody.innerHTML = "";
+  const fStyle = document.getElementById("filterStyle").value;
+  const fLang  = document.getElementById("filterLang").value;
+  const fPer   = document.getElementById("filterPeriod").value;
+  const q      = document.getElementById("searchQ").value.trim().toLowerCase();
 
-  if(!items.length){
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="8" class="muted">— nessun evento —</td>`;
-    tbody.appendChild(tr);
-    return;
-  }
-
-  for(const it of items){
-    const tr = document.createElement("tr");
-    const domandaShort = String(it.domanda||"— nessuna domanda —").replace(/\s+/g," ").slice(0,180);
-    tr.innerHTML = `
-      <td class="nowrap">${fmtDate(it.ts)}</td>
-      <td class="nowrap">${it.ip||"—"}</td>
-      <td class="nowrap">${it.style||"—"}</td>
-      <td class="nowrap">${it.lang||"—"}</td>
-      <td class="nowrap">${it.periodo||"—"}</td>
-      <td class="nowrap">${it.user_type||(it.admin?"admin":"free")}</td>
-      <td class="ellipsis" title="${(it.domanda||"").replace(/"/g,'&quot;')}">${domandaShort}</td>
-      <td class="nowrap"><button class="ghost" data-act="view" data-ts="${it.ts}">Vedi domanda</button></td>
-    `;
-    tbody.appendChild(tr);
-  }
-
-  // bind “Vedi domanda”
-  tbody.querySelectorAll('button[data-act="view"]').forEach(btn=>{
-    btn.onclick = ()=>{
-      const ts = Number(btn.getAttribute("data-ts"));
-      const row = allItems.find(x=>x.ts===ts);
-      if(!row) return;
-      qs("modalQ").textContent = row.domanda || "—";
-      qs("modalMeta").textContent = `${fmtDate(row.ts)} · ${row.style} · ${row.lang} · ${row.periodo} · ${row.user_type||"free"}`;
-      showModal(true);
-    };
+  const rows = items.filter(x=>{
+    if(fStyle && x.style!==fStyle) return false;
+    if(fLang  && x.lang!==fLang)   return false;
+    if(fPer   && x.periodo!==fPer) return false;
+    if(q && !String(x.domanda||"").toLowerCase().includes(q)) return false;
+    return true;
   });
-}
 
-/* ====== Modal ====== */
-function showModal(show){
-  const m = qs("modal");
-  m.style.display = show ? "flex" : "none";
-}
-qs("closeModal").onclick = ()=>showModal(false);
-qs("modal").addEventListener("click",(e)=>{ if(e.target.id==="modal") showModal(false); });
-
-/* ====== Caricamento principale ====== */
-async function loadAll(){
-  try{
-    const limit = parseInt(qs("limitSel").value,10)||200;
-    const mask  = parseInt(qs("maskSel").value,10)||1;
-    const items = await fetchLogs(limit, mask);
-    // server torna gli ultimi dal più nuovo al più vecchio → ok
-    allItems = items;
-
-    setAuthUI(true);
-
-    const filtered = applyFilters(allItems);
-    renderTable(filtered);
-
-    const stats = computeStats(filtered);
-    qs("countBadge").textContent = `Totale visibile: ${stats.total}`;
-    qs("statsText").textContent =
-      `Stile: ${JSON.stringify(stats.style)} · Lingue: ${JSON.stringify(stats.lang)} · Tempo: ${JSON.stringify(stats.periodo)} · Utenti: ${JSON.stringify(stats.user_type)}`;
-
-    drawBarChart(qs("chart"), filtered);
-
-  }catch(e){
-    setAuthUI(false);
-    qs("statsText").textContent = "Errore o non autenticato.";
-    qs("logsBody").innerHTML = `<tr><td colspan="8" class="muted">— autenticazione richiesta —</td></tr>`;
-    console.error(e);
+  const tbody = document.getElementById("logsBody");
+  tbody.innerHTML = "";
+  for(const it of rows){
+    const tr = document.createElement("tr");
+    const ut = it.user_type || (it.admin ? "admin" : "free");
+    tr.innerHTML = `<td>${fmtDate(it.ts)}</td>
+                    <td>${it.style||"—"}</td>
+                    <td>${it.lang||"—"}</td>
+                    <td>${it.periodo||"—"}</td>
+                    <td>${ut}</td>
+                    <td>${(it.domanda||"").replace(/\s+/g," ").slice(0,300)}</td>`;
+    tbody.appendChild(tr);
   }
+  document.getElementById("stats").textContent =
+    `Tot: ${items.length} · Filtrati: ${rows.length}`;
 }
 
-/* ====== Eventi ====== */
-qs("enterBtn").onclick = async ()=>{
-  const pin = qs("pin").value.trim();
-  if(!pin) return alert("Inserisci il PIN");
+/* ===== Event handlers ===== */
+document.getElementById("enterBtn").onclick = async ()=>{
   try{
+    const pin = document.getElementById("pin").value.trim();
+    if(!pin) return alert("Inserisci il PIN");
     await loginWithPin(pin);
     setAuthUI(true);
-    qs("authHelp").textContent = "Token admin registrato sul tuo IP. Ora puoi aggiornare i log.";
-    loadAll();
+    document.getElementById("refreshBtn").click();
+    document.getElementById("authHelp").textContent = "Token registrato sul tuo IP.";
   }catch(e){
     setAuthUI(false);
-    qs("authHelp").textContent = "PIN errato o API non allineata.";
+    document.getElementById("authHelp").textContent = "PIN errato o API non allineata.";
   }
 };
-qs("logoutBtn").onclick = ()=>{
+document.getElementById("logoutBtn").onclick = ()=>{
   LS.removeItem(TOKEN_KEY);
   setAuthUI(false);
-  allItems = [];
-  renderTable([]);
-  qs("statsText").textContent = "—";
+  document.getElementById("logsBody").innerHTML = "";
+  document.getElementById("stats").textContent = "—";
+  if(CHARTS.ut) CHARTS.ut.destroy();
+  if(CHARTS.combo) CHARTS.combo.destroy();
 };
-qs("refreshBtn").onclick = ()=>loadAll();
-qs("autoBtn").onclick = ()=>{
-  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; qs("autoBtn").textContent="Auto-refresh"; return; }
-  autoTimer = setInterval(loadAll, 5000);
-  qs("autoBtn").textContent="Stop auto-refresh";
+document.getElementById("refreshBtn").onclick = async ()=>{
+  try{
+    const data = await fetchLogs(600);
+    setAuthUI(true);
+    const items = Array.isArray(data.items)? data.items : [];
+    const stats = computeStats(items);
+    renderKPIs(stats);
+    renderCharts(stats);
+    renderTable(items);
+  }catch(e){
+    setAuthUI(false);
+    alert("Autenticazione richiesta o errore server.");
+  }
 };
-["filterStyle","filterLang","filterPeriod","filterUserType","searchQ","limitSel","maskSel"].forEach(id=>{
-  qs(id).addEventListener(id==="searchQ"?"input":"change", ()=> {
-    const filtered = applyFilters(allItems);
-    renderTable(filtered);
-    const s = computeStats(filtered);
-    qs("countBadge").textContent = `Totale visibile: ${s.total}`;
-    drawBarChart(qs("chart"), filtered);
-  });
+document.getElementById("autoBtn").onclick = ()=>{
+  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; document.getElementById("autoBtn").textContent="Auto-refresh"; return; }
+  autoTimer = setInterval(()=>document.getElementById("refreshBtn").click(), 5000);
+  document.getElementById("autoBtn").textContent="Stop auto-refresh";
+};
+["filterStyle","filterLang","filterPeriod","searchQ"].forEach(id=>{
+  document.getElementById(id).addEventListener("input", ()=>document.getElementById("refreshBtn").click());
 });
-qs("clearLogsBtn").onclick = async ()=>{
+document.getElementById("resetBtn").onclick = async ()=>{ try{ await resetCredits(); }catch(e){ alert("Errore reset: "+e.message);} };
+document.getElementById("clearLogsBtn").onclick = async ()=>{
+  const tok = LS.getItem(TOKEN_KEY)||"";
+  if(!tok) return alert("Serve login admin.");
   if(!confirm("Sicuro di svuotare i log?")) return;
-  try{ await clearLogs(); alert("Log svuotati."); loadAll(); }catch(e){ alert("Errore nel cancellare i log."); }
+  try{
+    const r = await fetch("/api/admin-logs", { method:"DELETE", headers:{ "x-admin-token": tok }});
+    if(!r.ok) throw new Error((await r.json().catch(()=>({}))).error||"delete_failed");
+    alert("Log svuotati.");
+    document.getElementById("refreshBtn").click();
+  }catch(e){ alert("Errore: "+e.message); }
 };
 
-/* ====== Init ====== */
+/* ===== Init ===== */
 setAuthUI(!!LS.getItem(TOKEN_KEY));
-loadAll();
 </script>
 </body>
 </html>
