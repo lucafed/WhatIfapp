@@ -3,228 +3,421 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Admin (dashboard)</title>
+<title>What?f — Admin</title>
 <meta name="theme-color" content="#0B0B0C"/>
-<link rel="preconnect" href="https://cdn.jsdelivr.net"/>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-  :root{--bg:#0B0B0C;--card:#13191E;--fg:#EAF2EE;--muted:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01;--ok:#11c46f;--bad:#e85b5b}
-  *{box-sizing:border-box} body{margin:0;background:#0B0B0C;color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:1100px;margin:auto;padding:18px}
-  h1{margin:8px 0 14px;font-size:28px}
-  .grid{display:grid;gap:12px}
-  .card{background:var(--card);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:14px}
-  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  input,select{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px}
+  :root{
+    --bg:#0B0B0C; --bg2:#101414; --fg:#EAF2EE; --muted:#A0B2BA;
+    --card:#13191E; --line:rgba(255,255,255,.12); --acc:#1C57A0; --acc2:#FFEC01; --ink:#0A0E12;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:radial-gradient(900px 700px at 20% 18%,var(--bg2) 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  main{max-width:1000px;margin:auto;padding:16px}
+  h1{margin:8px 0 12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0;backdrop-filter:blur(8px)}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input,select{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:10px;color:#fff;padding:10px}
   button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
-  .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12}
-  .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
-  .badge{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:12px}
-  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
-  th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
-  .ok{color:var(--ok)} .bad{color:var(--bad)} .muted{color:var(--muted)}
-  @media(min-width:900px){ .cols-2{grid-template-columns:1fr 1fr} }
+  .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.35)}
+  .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid var(--line)}
+  .badge{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06);font-size:12px}
+  .muted{color:var(--muted);font-size:12px}
+  .ok{background:rgba(0,255,0,.08)}
+  .err{background:rgba(255,0,0,.08)}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:13px;vertical-align:top}
+  th{position:sticky;top:0;background:rgba(19,25,30,.9);backdrop-filter:blur(8px);z-index:2}
+  .tblwrap{max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:12px}
+  .nowrap{white-space:nowrap}
+  .ellipsis{max-width:540px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  canvas{width:100%;height:260px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03)}
+  @media (max-width: 680px){
+    .ellipsis{max-width:240px}
+    th:nth-child(2), td:nth-child(2){display:none} /* nasconde IP su mobile */
+  }
+  /* Modal */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px}
+  .modal .box{max-width:720px;width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .close{float:right;background:rgba(255,255,255,.06)}
+  pre{white-space:pre-wrap;word-wrap:break-word;font-family:ui-monospace, SFMono-Regular, Menlo, monospace;font-size:12px;background:rgba(255,255,255,.04);padding:10px;border-radius:10px;border:1px solid var(--line)}
 </style>
 </head>
 <body>
 <main>
-  <h1>What?f — <span class="muted">Admin (dashboard)</span></h1>
+  <h1>Admin · What?f</h1>
 
-  <!-- Stato & azioni -->
-  <div class="grid cols-2">
-    <div class="card">
-      <h3>Operazioni veloci</h3>
-      <div class="row">
-        <button id="btnRefresh" class="primary">Aggiorna</button>
-        <button id="btnAuto" class="ghost">Auto-refresh</button>
-        <button id="btnClear" class="ghost">Svuota log</button>
-      </div>
-      <div class="row" style="margin-top:8px">
-        <label class="row"><input type="checkbox" id="maskIp" checked/> IP mascherati</label>
-        <label>Window log:
-          <select id="win">
-            <option>100</option><option selected>200</option><option>400</option><option>800</option>
-          </select>
-        </label>
-        <label>Trend giorni:
-          <select id="trend">
-            <option>7</option><option selected>10</option><option>14</option><option>30</option>
-          </select>
-        </label>
-        <span class="muted" id="ts"></span>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>Stato utente & crediti (questo device)</h3>
-      <div class="row"><span>Admin:</span> <span id="adminState" class="badge">no</span> <span class="muted">IP:</span> <span id="myIp" class="badge">—</span></div>
-      <div class="row" style="margin-top:6px"><span class="muted">Token:</span> <span id="tok" class="badge">—</span> <span class="muted">Tipo:</span> <span id="usertype" class="badge">free</span></div>
-      <div class="row" style="margin-top:6px"><span class="muted">Crediti oggi:</span> <span id="credits" class="badge">—</span></div>
-      <div class="row" style="margin-top:10px">
-        <input id="pin" type="password" placeholder="PIN admin" style="min-width:180px"/>
-        <button id="enter" class="primary">Entra admin</button>
-      </div>
-      <div class="row" style="margin-top:8px">
-        <button id="renew" class="ghost">Rinnova (7gg)</button>
-        <button id="revoke" class="ghost">Revoca token</button>
-      </div>
-      <div class="row" style="margin-top:8px">
-        <button id="proOn" class="ghost">Attiva PRO locale</button>
-        <button id="proOff" class="ghost">Disattiva PRO</button>
-      </div>
-      <p class="muted" id="hint"></p>
-    </div>
-  </div>
-
-  <!-- Statistiche -->
-  <div class="card" style="margin-top:12px">
-    <h3>Statistiche globali (finestra caricata)</h3>
+  <!-- Accesso -->
+  <div class="card">
+    <h3>Accesso</h3>
+    <p class="muted">Inserisci il PIN admin (uguale a quello in <code>ADMIN_PIN</code> su Vercel). Genera un token legato al tuo IP.</p>
     <div class="row">
-      <span class="badge">Totale: <b id="stTotal">—</b></span>
-      <span class="badge">Oggi: <b id="stToday">—</b></span>
-      <span class="badge">Ultimi 7 g: <b id="stLast7">—</b></span>
-      <span class="badge">Per stile: <b id="stStyle">{}</b></span>
-      <span class="badge">Per lingua: <b id="stLang">{}</b></span>
-      <span class="badge">Per tempo: <b id="stPeriod">{}</b></span>
-      <span class="badge">User types: <b id="stUsers">{}</b></span>
+      <input id="pin" type="password" placeholder="PIN admin" style="min-width:180px"/>
+      <button class="primary" id="enterBtn">Entra</button>
+      <button class="ghost" id="logoutBtn">Esci</button>
+      <span id="authBadge" class="badge">Non autenticato</span>
     </div>
-    <div style="margin-top:10px"><canvas id="trendChart" height="110"></canvas></div>
+    <p class="muted" id="authHelp"></p>
   </div>
 
-  <!-- Log richieste -->
-  <div class="card" style="margin-top:12px">
-    <div class="row" style="justify-content:space-between">
-      <h3 style="margin:0">Log richieste</h3>
-      <label>
+  <!-- Operazioni veloci -->
+  <div class="card">
+    <h3>Operazioni veloci</h3>
+    <div class="row">
+      <button class="primary" id="refreshBtn">Aggiorna</button>
+      <button class="ghost" id="autoBtn">Auto-refresh</button>
+      <button class="ghost" id="clearLogsBtn">🗑️ Svuota log</button>
+      <label class="row" style="gap:6px">
+        <span class="muted">Limite</span>
         <select id="limitSel">
-          <option value="100">ultimi 100</option>
-          <option value="200" selected>ultimi 200</option>
-          <option value="400">ultimi 400</option>
+          <option>100</option><option selected>200</option><option>500</option><option>1000</option>
+        </select>
+      </label>
+      <label class="row" style="gap:6px">
+        <span class="muted">Maschera IP</span>
+        <select id="maskSel">
+          <option value="1" selected>Sì</option>
+          <option value="0">No</option>
         </select>
       </label>
     </div>
-    <div class="row" style="margin-top:6px">
-      <select id="fStyle"><option value="">Stile: tutti</option><option>whatif</option><option>wtf</option></select>
-      <select id="fLang"><option value="">Lingua: tutte</option><option>it</option><option>en</option></select>
-      <select id="fPeriod"><option value="">Tempo: tutti</option><option>past</option><option>future</option></select>
-      <select id="fUser"><option value="">Tipo utente: tutti</option><option>free</option><option>pro</option><option>admin</option></select>
-      <input id="q" placeholder="Cerca nella domanda…" style="min-width:220px"/>
+    <p class="muted">Suggerimento: fai almeno una richiesta a <code>/api/ask</code> dopo il deploy per popolare i log.</p>
+  </div>
+
+  <!-- Filtri -->
+  <div class="card">
+    <h3>Filtri</h3>
+    <div class="row">
+      <select id="filterStyle">
+        <option value="">Stile: tutti</option>
+        <option value="whatif">whatif</option>
+        <option value="wtf">wtf</option>
+      </select>
+      <select id="filterLang">
+        <option value="">Lingua: tutte</option>
+        <option value="it">it</option>
+        <option value="en">en</option>
+      </select>
+      <select id="filterPeriod">
+        <option value="">Tempo: tutti</option>
+        <option value="past">past</option>
+        <option value="future">future</option>
+      </select>
+      <select id="filterUserType">
+        <option value="">Utente: tutti</option>
+        <option value="free">free</option>
+        <option value="pro">pro</option>
+        <option value="admin">admin</option>
+      </select>
+      <input id="searchQ" placeholder="Cerca nella domanda…" style="min-width:220px"/>
     </div>
-    <table id="tbl">
-      <thead><tr><th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th></tr></thead>
-      <tbody></tbody>
-    </table>
+  </div>
+
+  <!-- Statistiche sintetiche + grafico -->
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <h3 style="margin:0">Statistiche</h3>
+      <span id="countBadge" class="badge">—</span>
+    </div>
+    <div id="statsText" class="muted" style="margin:8px 0">—</div>
+    <canvas id="chart"></canvas>
+    <p class="muted">Grafico: conteggio per <strong>stile</strong> e per <strong>user type</strong> (dataset doppi).</p>
+  </div>
+
+  <!-- Log -->
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <h3 style="margin:0">Log</h3>
+      <span class="muted">Ultimi eventi (ordinati dal più recente)</span>
+    </div>
+    <div class="tblwrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="nowrap">Quando</th>
+            <th class="nowrap">IP</th>
+            <th class="nowrap">Stile</th>
+            <th class="nowrap">Lingua</th>
+            <th class="nowrap">Tempo</th>
+            <th class="nowrap">Utente</th>
+            <th class="nowrap">Domanda</th>
+            <th class="nowrap">Azioni</th>
+          </tr>
+        </thead>
+        <tbody id="logsBody"></tbody>
+      </table>
+    </div>
   </div>
 </main>
 
+<!-- Modal domanda -->
+<div class="modal" id="modal">
+  <div class="box">
+    <button class="ghost close" id="closeModal">Chiudi</button>
+    <h3 style="margin-top:0">Dettaglio log</h3>
+    <div id="modalMeta" class="muted" style="margin-bottom:8px">—</div>
+    <div>
+      <div class="badge" style="margin-bottom:6px">Domanda</div>
+      <pre id="modalQ">—</pre>
+    </div>
+  </div>
+</div>
+
 <script>
-const LS=localStorage, TKEY="admin_token", PROKEY="whatif_prefs";
-let chart=null, auto=null;
+/* ====== Costanti ====== */
+const LS = localStorage;
+const TOKEN_KEY = "admin_token";
 
-function setBadge(id, text){ document.getElementById(id).textContent = text; }
-function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(); }
-function getTok(){ return LS.getItem(TKEY)||""; }
-function setTok(t){ if(t) LS.setItem(TKEY,t); else LS.removeItem(TKEY); setBadge("tok", t? t.slice(0,6)+"…"+t.slice(-4): "—"); }
-function setProUI(){ try{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); setBadge("usertype", p.pro?"pro":"free"); }catch{} }
+/* ====== Stato ====== */
+let allItems = [];
+let autoTimer = null;
 
-async function adminCheck(){
-  const r = await fetch("/api/admin-token",{ headers:{ "x-admin-token": getTok() }});
+/* ====== Helpers UI ====== */
+function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(undefined,{hour12:false}); }
+function setAuthUI(ok){
+  const b = document.getElementById("authBadge");
+  b.textContent = ok ? "Autenticato" : "Non autenticato";
+  b.classList.toggle("ok", ok); b.classList.toggle("err", !ok);
+}
+function qs(id){ return document.getElementById(id); }
+
+/* ====== API ====== */
+async function loginWithPin(pin){
+  const r = await fetch("/api/admin-token",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "x-admin-secret": pin.trim() }
+  });
   const d = await r.json().catch(()=>({}));
-  const yes = d?.ok && d.admin;
-  setBadge("adminState", yes?"yes":"no");
-  setBadge("myIp", d?.ip || "—");
-  setBadge("credits", yes?"∞": (JSON.parse(LS.getItem("whatif_credits")||"{}").used||0)+"/(3/10)");
-  return yes;
+  if(!r.ok || !d.token) throw new Error(d.error||"bad_pin");
+  LS.setItem(TOKEN_KEY, d.token);
+  return d.token;
+}
+async function fetchLogs(limit=200, mask=1){
+  const token = LS.getItem(TOKEN_KEY)||"";
+  const r = await fetch(`/api/admin-logs?limit=${limit}&mask=${mask}`, {
+    headers: { "x-admin-token": token }
+  });
+  const d = await r.json().catch(()=>({}));
+  if(!r.ok || !d.ok) throw new Error(d.error||"auth");
+  return d.items||[];
+}
+async function clearLogs(){
+  const token = LS.getItem(TOKEN_KEY)||"";
+  const r = await fetch("/api/admin-logs", { method:"DELETE", headers:{ "x-admin-token": token }});
+  if(!r.ok) throw new Error("delete_failed");
 }
 
-function renderTrend(tr){
-  const ctx=document.getElementById("trendChart").getContext("2d");
-  if(chart) chart.destroy();
-  chart=new Chart(ctx,{type:"bar", data:{ labels: tr.labels||[], datasets:[{ label:"Richieste/giorno", data: tr.data||[] }] },
-    options:{ responsive:true, plugins:{ legend:{ display:false }}}});
+/* ====== Statistiche & Grafico ====== */
+function computeStats(items){
+  const stat = {
+    total: items.length,
+    style:{}, lang:{}, periodo:{}, user_type:{}
+  };
+  for(const it of items){
+    stat.style[it.style] = (stat.style[it.style]||0)+1;
+    stat.lang[it.lang] = (stat.lang[it.lang]||0)+1;
+    stat.periodo[it.periodo] = (stat.periodo[it.periodo]||0)+1;
+    const ut = it.user_type || (it.admin ? "admin":"free");
+    stat.user_type[ut] = (stat.user_type[ut]||0)+1;
+  }
+  return stat;
 }
 
-function drawTable(items){
-  const fs=document.getElementById("fStyle").value, fl=document.getElementById("fLang").value,
-        fp=document.getElementById("fPeriod").value, fu=document.getElementById("fUser").value,
-        q=document.getElementById("q").value.toLowerCase();
-  const rows=(items||[]).filter(x=>{
-    if(fs && x.style!==fs) return false;
-    if(fl && x.lang!==fl) return false;
-    if(fp && x.periodo!==fp) return false;
-    if(fu && x.user_type!==fu) return false;
+function drawBarChart(canvas, items){
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width = canvas.clientWidth * devicePixelRatio;
+  const h = canvas.height = canvas.clientHeight * devicePixelRatio;
+  ctx.clearRect(0,0,w,h);
+
+  // dataset 1: per stile
+  const s = computeStats(items);
+  const labels = ["whatif","wtf"];
+  const valuesStyle = labels.map(k=>s.style[k]||0);
+
+  // dataset 2: per user type
+  const uLabels = ["free","pro","admin"];
+  const valuesUser = uLabels.map(k=>s.user_type[k]||0);
+
+  // layout
+  const pad = 40 * devicePixelRatio;
+  const innerW = w - pad*2;
+  const innerH = h - pad*2;
+
+  // helper draw
+  function drawGroup(baseY, labels, vals, title){
+    const maxVal = Math.max(1, ...vals);
+    const barW = innerW / (labels.length * 2);
+    ctx.save();
+    ctx.translate(pad, baseY);
+    // title
+    ctx.fillStyle="#EAF2EE";
+    ctx.font = `${12*devicePixelRatio}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+    ctx.fillText(title, 0, -10*devicePixelRatio);
+    // axes
+    ctx.globalAlpha=0.3; ctx.strokeStyle="#EAF2EE"; ctx.beginPath();
+    ctx.moveTo(0,0); ctx.lineTo(0, innerH/2 - 10*devicePixelRatio); ctx.stroke();
+    ctx.globalAlpha=1;
+
+    // bars
+    for(let i=0;i<labels.length;i++){
+      const x = i * barW * 2 + barW*0.25;
+      const hBar = (vals[i] / maxVal) * (innerH/2 - 20*devicePixelRatio);
+      const y = (innerH/2 - 10*devicePixelRatio) - hBar;
+      ctx.fillStyle = "rgba(255,255,255,.15)";
+      ctx.fillRect(x, y, barW, hBar);
+      // label
+      ctx.fillStyle="#A0B2BA";
+      ctx.font = `${11*devicePixelRatio}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+      ctx.fillText(labels[i], x, (innerH/2 + 12*devicePixelRatio));
+      // value
+      ctx.fillStyle="#EAF2EE";
+      ctx.fillText(String(vals[i]), x, y - 4*devicePixelRatio);
+    }
+    ctx.restore();
+  }
+
+  drawGroup(pad, labels, valuesStyle, "Per stile");
+  drawGroup(pad + h/2 - pad, uLabels, valuesUser, "Per utente");
+}
+
+/* ====== Render tabella ====== */
+function applyFilters(list){
+  const fStyle = qs("filterStyle").value;
+  const fLang  = qs("filterLang").value;
+  const fPer   = qs("filterPeriod").value;
+  const fUser  = qs("filterUserType").value;
+  const q      = qs("searchQ").value.trim().toLowerCase();
+
+  return list.filter(x=>{
+    if(fStyle && x.style!==fStyle) return false;
+    if(fLang && x.lang!==fLang) return false;
+    if(fPer && x.periodo!==fPer) return false;
+    if(fUser && (x.user_type||"")!==fUser) return false;
     if(q && !String(x.domanda||"").toLowerCase().includes(q)) return false;
     return true;
   });
+}
 
-  const tb=document.querySelector("#tbl tbody"); tb.innerHTML="";
-  for(const it of rows){
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${fmtDate(it.ts)}</td><td>${it.ip||""}</td><td>${it.user_type||""}</td>
-                  <td>${it.style}</td><td>${it.lang}</td><td>${it.periodo}</td>
-                  <td>${it.answer_chars||0}</td><td>${(it.domanda||"").replace(/\s+/g," ").slice(0,250)}</td>`;
-    tb.appendChild(tr);
+function renderTable(items){
+  const tbody = qs("logsBody");
+  tbody.innerHTML = "";
+
+  if(!items.length){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="8" class="muted">— nessun evento —</td>`;
+    tbody.appendChild(tr);
+    return;
+  }
+
+  for(const it of items){
+    const tr = document.createElement("tr");
+    const domandaShort = String(it.domanda||"— nessuna domanda —").replace(/\s+/g," ").slice(0,180);
+    tr.innerHTML = `
+      <td class="nowrap">${fmtDate(it.ts)}</td>
+      <td class="nowrap">${it.ip||"—"}</td>
+      <td class="nowrap">${it.style||"—"}</td>
+      <td class="nowrap">${it.lang||"—"}</td>
+      <td class="nowrap">${it.periodo||"—"}</td>
+      <td class="nowrap">${it.user_type||(it.admin?"admin":"free")}</td>
+      <td class="ellipsis" title="${(it.domanda||"").replace(/"/g,'&quot;')}">${domandaShort}</td>
+      <td class="nowrap"><button class="ghost" data-act="view" data-ts="${it.ts}">Vedi domanda</button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  // bind “Vedi domanda”
+  tbody.querySelectorAll('button[data-act="view"]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const ts = Number(btn.getAttribute("data-ts"));
+      const row = allItems.find(x=>x.ts===ts);
+      if(!row) return;
+      qs("modalQ").textContent = row.domanda || "—";
+      qs("modalMeta").textContent = `${fmtDate(row.ts)} · ${row.style} · ${row.lang} · ${row.periodo} · ${row.user_type||"free"}`;
+      showModal(true);
+    };
+  });
+}
+
+/* ====== Modal ====== */
+function showModal(show){
+  const m = qs("modal");
+  m.style.display = show ? "flex" : "none";
+}
+qs("closeModal").onclick = ()=>showModal(false);
+qs("modal").addEventListener("click",(e)=>{ if(e.target.id==="modal") showModal(false); });
+
+/* ====== Caricamento principale ====== */
+async function loadAll(){
+  try{
+    const limit = parseInt(qs("limitSel").value,10)||200;
+    const mask  = parseInt(qs("maskSel").value,10)||1;
+    const items = await fetchLogs(limit, mask);
+    // server torna gli ultimi dal più nuovo al più vecchio → ok
+    allItems = items;
+
+    setAuthUI(true);
+
+    const filtered = applyFilters(allItems);
+    renderTable(filtered);
+
+    const stats = computeStats(filtered);
+    qs("countBadge").textContent = `Totale visibile: ${stats.total}`;
+    qs("statsText").textContent =
+      `Stile: ${JSON.stringify(stats.style)} · Lingue: ${JSON.stringify(stats.lang)} · Tempo: ${JSON.stringify(stats.periodo)} · Utenti: ${JSON.stringify(stats.user_type)}`;
+
+    drawBarChart(qs("chart"), filtered);
+
+  }catch(e){
+    setAuthUI(false);
+    qs("statsText").textContent = "Errore o non autenticato.";
+    qs("logsBody").innerHTML = `<tr><td colspan="8" class="muted">— autenticazione richiesta —</td></tr>`;
+    console.error(e);
   }
 }
 
-async function loadAll(){
-  document.getElementById("ts").textContent=new Date().toLocaleString();
-  const mask=document.getElementById("maskIp").checked ? "1":"0";
-  const limit=document.getElementById("limitSel").value || "200";
-  const days=document.getElementById("trend").value || "10";
-
-  // stats
-  const s = await fetch(`/api/admin-stats?days=${days}`,{ headers:{ "x-admin-token": getTok() }});
-  const S = await s.json().catch(()=>({}));
-  setBadge("stTotal", S.total??"0"); setBadge("stToday", S.today??"0"); setBadge("stLast7", S.last7??"0");
-  setBadge("stStyle", JSON.stringify(S.byStyle||{})); setBadge("stLang", JSON.stringify(S.byLang||{}));
-  setBadge("stPeriod", JSON.stringify(S.byPeriod||{})); setBadge("stUsers", JSON.stringify(S.byUserType||{}));
-  if(S.trend) renderTrend(S.trend);
-
-  // logs
-  const r = await fetch(`/api/admin-logs?limit=${limit}&mask=${mask}`,{ headers:{ "x-admin-token": getTok() }});
-  const d = await r.json().catch(()=>({}));
-  drawTable(d.items||[]);
-}
-
-// eventi
-document.getElementById("enter").onclick = async ()=>{
-  const pin = document.getElementById("pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
-  const r = await fetch("/api/admin-token",{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ pin })});
-  const d = await r.json().catch(()=>({}));
-  if(r.ok && d.ok){ setTok(d.token); document.getElementById("hint").textContent="Login ok. Token legato al tuo IP per ~7gg."; await adminCheck(); loadAll(); }
-  else { alert("PIN errato"); }
+/* ====== Eventi ====== */
+qs("enterBtn").onclick = async ()=>{
+  const pin = qs("pin").value.trim();
+  if(!pin) return alert("Inserisci il PIN");
+  try{
+    await loginWithPin(pin);
+    setAuthUI(true);
+    qs("authHelp").textContent = "Token admin registrato sul tuo IP. Ora puoi aggiornare i log.";
+    loadAll();
+  }catch(e){
+    setAuthUI(false);
+    qs("authHelp").textContent = "PIN errato o API non allineata.";
+  }
 };
-document.getElementById("renew").onclick = async ()=>{
-  const r = await fetch("/api/admin-token?action=renew",{ method:"POST", headers:{ "x-admin-token": getTok() }});
-  if(r.ok) alert("Rinnovato per 7gg"); else alert("Errore rinnovo");
+qs("logoutBtn").onclick = ()=>{
+  LS.removeItem(TOKEN_KEY);
+  setAuthUI(false);
+  allItems = [];
+  renderTable([]);
+  qs("statsText").textContent = "—";
 };
-document.getElementById("revoke").onclick = async ()=>{
-  await fetch("/api/admin-token?action=revoke",{ method:"POST", headers:{ "x-admin-token": getTok() }});
-  setTok(""); await adminCheck();
+qs("refreshBtn").onclick = ()=>loadAll();
+qs("autoBtn").onclick = ()=>{
+  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; qs("autoBtn").textContent="Auto-refresh"; return; }
+  autoTimer = setInterval(loadAll, 5000);
+  qs("autoBtn").textContent="Stop auto-refresh";
 };
-document.getElementById("proOn").onclick = ()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); p.pro=true; LS.setItem(PROKEY,JSON.stringify(p)); setProUI(); };
-document.getElementById("proOff").onclick = ()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); delete p.pro; LS.setItem(PROKEY,JSON.stringify(p)); setProUI(); };
+["filterStyle","filterLang","filterPeriod","filterUserType","searchQ","limitSel","maskSel"].forEach(id=>{
+  qs(id).addEventListener(id==="searchQ"?"input":"change", ()=> {
+    const filtered = applyFilters(allItems);
+    renderTable(filtered);
+    const s = computeStats(filtered);
+    qs("countBadge").textContent = `Totale visibile: ${s.total}`;
+    drawBarChart(qs("chart"), filtered);
+  });
+});
+qs("clearLogsBtn").onclick = async ()=>{
+  if(!confirm("Sicuro di svuotare i log?")) return;
+  try{ await clearLogs(); alert("Log svuotati."); loadAll(); }catch(e){ alert("Errore nel cancellare i log."); }
+};
 
-document.getElementById("btnRefresh").onclick = loadAll;
-document.getElementById("btnClear").onclick = async ()=>{
-  if(!confirm("Svuotare i log?")) return;
-  await fetch("/api/admin-logs",{ method:"DELETE", headers:{ "x-admin-token": getTok() }});
-  loadAll();
-};
-document.getElementById("btnAuto").onclick = ()=>{
-  if(auto){ clearInterval(auto); auto=null; document.getElementById("btnAuto").textContent="Auto-refresh"; }
-  else { auto=setInterval(loadAll, 5000); document.getElementById("btnAuto").textContent="Stop auto"; }
-};
-for(const id of ["fStyle","fLang","fPeriod","fUser","q","limitSel","maskIp","win","trend"])
-  document.getElementById(id).addEventListener("input", ()=>loadAll());
-
-(async function init(){
-  setProUI();
-  setTok(getTok());
-  await adminCheck();
-  loadAll();
-})();
+/* ====== Init ====== */
+setAuthUI(!!LS.getItem(TOKEN_KEY));
+loadAll();
 </script>
 </body>
 </html>
