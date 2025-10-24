@@ -1,178 +1,147 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Admin</title>
-<meta name="theme-color" content="#0B0B0C"/>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>What?f — Console Admin</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
 <style>
-:root{--bg:#0B0B0C;--card:#12181d;--fg:#eaf2ee;--muted:#9bb0ba;--acc:#1C57A0;--acc2:#FFEC01;--ok:#29cc74;--bad:#ff6b6b}
-*{box-sizing:border-box}
-html,body{margin:0;background:#0b0b0c;color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:100%;overflow-x:hidden}
-main{max-width:980px;margin:0 auto;padding:16px}
-.card{background:rgba(18,24,29,.92);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px;margin:12px 0;backdrop-filter:blur(8px)}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-input,button,select{border-radius:12px;border:1px solid rgba(255,255,255,.12);padding:10px 12px;background:rgba(255,255,255,.06);color:#fff}
-button.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0a0e12;border:none;font-weight:800}
-button.ghost{background:rgba(255,255,255,.06);color:#fff}
-.badge{display:inline-block;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);border-radius:999px;padding:4px 8px;font-size:12px}
-.ok{color:#0a0;}.bad{color:#ff6b6b}
-table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}
-th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:13px;white-space:nowrap}
-.stat{min-width:120px;text-align:center;background:rgba(255,255,255,.04);border-radius:12px;padding:10px 8px}
+body {
+  background: #0A0F14; color: #fff; font-family: Inter, sans-serif; margin: 0; padding: 0;
+}
+h2, h3 { margin: 8px 0; }
+.card {
+  background: #141C22; border-radius: 12px; padding: 16px; margin: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+button {
+  border: none; border-radius: 8px; padding: 8px 14px; margin: 4px;
+  background: #00E0FF; color: #000; font-weight: 600; cursor: pointer;
+}
+button:hover { background: #00B5CC; }
+
+.qcell { max-width: 520px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.qcell.expanded { white-space: normal; }
+.ip { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; opacity:.9 }
+
+table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
+th, td { border-bottom: 1px solid #2a2a2a; padding: 6px; text-align: left; }
+th { color: #A0B2BA; }
+
+.label { font-size:13px; opacity:0.8; margin-bottom:4px; }
+.row { display:flex; gap:12px; flex-wrap:wrap; }
 </style>
 </head>
+
 <body>
-<main>
-  <h1 style="margin:6px 0 10px">Admin · What?f</h1>
+<h2 style="text-align:center;color:#00E0FF">What?f — Console Admin</h2>
 
-  <div class="card">
-    <h3>Accesso</h3>
-    <p class="badge" id="authState">Non autenticato</p>
-    <div class="row" style="margin-top:8px">
-      <input id="pin" type="password" inputmode="numeric" placeholder="PIN segreto" style="min-width:180px"/>
-      <button class="primary" id="enterBtn">Entra</button>
-      <button class="ghost" id="logoutBtn">Esci</button>
+<div class="card" id="ops">
+  <h3>Operazioni veloci</h3>
+  <button onclick="loadStats()">🔄 Aggiorna</button>
+  <button onclick="toggleAuto()">Auto-refresh</button>
+  <button onclick="clearLogs()">🗑️ Svuota log</button>
+  <p id="autoStatus" style="font-size:13px;opacity:.8;margin:4px 0 0">Auto-refresh: OFF</p>
+</div>
+
+<div class="card" id="globalStats">
+  <h3>Statistiche globali (finestra caricata)</h3>
+  <div id="statText" style="white-space:pre-line;line-height:1.4"></div>
+</div>
+
+<div class="card" id="chartsCard">
+  <h3>Grafici (oggi)</h3>
+  <div class="row">
+    <div style="flex:1;min-width:260px">
+      <div class="label">Per stile</div>
+      <canvas id="chartStyleToday" height="180"></canvas>
     </div>
-    <p id="authHelp" style="color:var(--muted);margin:8px 0 0">Il token è legato all’IP attuale e dura 7 giorni.</p>
-  </div>
-
-  <div class="card">
-    <h3>Operazioni veloci</h3>
-    <div class="row">
-      <button class="primary" id="refreshBtn">Aggiorna</button>
-      <button class="ghost" id="autoBtn">Auto-refresh</button>
-      <button class="ghost" id="clearBtn">Svuota log</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3>Statistiche globali (finestra caricata)</h3>
-    <div class="row" style="gap:12px">
-      <div class="stat"><div>Totale</div><div id="s_total" style="font-size:20px">—</div></div>
-      <div class="stat"><div>Oggi</div><div id="s_today" style="font-size:20px">—</div></div>
-      <div class="stat"><div>Ultimi 7g</div><div id="s_7" style="font-size:20px">—</div></div>
-      <div class="stat"><div>Per stile</div><div id="s_style">—</div></div>
-      <div class="stat"><div>Per lingua</div><div id="s_lang">—</div></div>
-      <div class="stat"><div>Per tempo</div><div id="s_period">—</div></div>
-      <div class="stat"><div>User types</div><div id="s_user">—</div></div>
+    <div style="flex:1;min-width:260px">
+      <div class="label">Per tempo</div>
+      <canvas id="chartPeriodToday" height="180"></canvas>
     </div>
   </div>
+</div>
 
-  <div class="card">
-    <div class="row" style="justify-content:space-between">
-      <h3 style="margin:0">Log richieste</h3>
-      <select id="limitSel">
-        <option value="200">ultimi 200</option>
-        <option value="500">ultimi 500</option>
-        <option value="1000">ultimi 1000</option>
-      </select>
-    </div>
-    <div class="row" style="margin:8px 0">
-      <select id="fStyle"><option value="">Stile: tutti</option><option value="whatif">whatif</option><option value="wtf">wtf</option></select>
-      <select id="fLang"><option value="">Lingua: tutte</option><option value="it">it</option><option value="en">en</option></select>
-      <select id="fPeriod"><option value="">Tempo: tutti</option><option value="past">past</option><option value="future">future</option></select>
-      <select id="fUser"><option value="">Tipo utente: tutti</option><option value="free">free</option><option value="pro">pro</option><option value="admin">admin</option></select>
-      <input id="searchQ" placeholder="Cerca nella domanda…" style="min-width:220px"/>
-    </div>
+<div class="card">
+  <h3>Log richieste</h3>
+  <label class="label">Filtri:</label>
+  <select id="filterStyle">
+    <option value="">Tutti gli stili</option><option value="whatif">What If</option><option value="wtf">What the F</option>
+  </select>
+  <select id="filterLang">
+    <option value="">Tutte le lingue</option><option value="it">IT</option><option value="en">EN</option>
+  </select>
+  <select id="filterPeriod">
+    <option value="">Tutti i periodi</option><option value="future">Futuro</option><option value="past">Passato</option>
+  </select>
+  <input id="searchQ" placeholder="Cerca nella domanda…" style="padding:4px;border-radius:6px;border:none;width:200px;">
+  <button onclick="renderLogs(window.__data)">Filtra</button>
 
-    <table>
-      <thead>
-        <tr><th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th></tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
-</main>
+  <table id="logsTbl">
+    <thead>
+      <tr><th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
 
 <script>
-const LS = localStorage;
-const TOKEN_KEY = "admin_token";
-const ADMIN_SECRET = "wtf-setup-2025"; // deve combaciare col server (o con ADMIN_PIN)
+const API = '/api/admin-stats';
+let autoTimer = null;
+let chartStyleToday = null, chartPeriodToday = null;
 
-function setAuth(ok){ const b=document.getElementById("authState"); b.textContent = ok?"Autenticato":"Non autenticato"; b.style.background = ok?"rgba(0,255,0,.08)":"rgba(255,255,255,.06)"; }
-function fmt(d){ return new Date(d).toLocaleString(); }
-function json(x){ try{return JSON.stringify(x)}catch{return String(x)} }
-
-async function login(){
-  const pin = document.getElementById("pin").value.trim();
-  if(!pin) return alert("Inserisci il PIN");
-  // Header + body (server accetta entrambe)
-  const r = await fetch("/api/admin-token", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json", "admin-secret": ADMIN_SECRET },
-    body: JSON.stringify({ pin })
-  });
-  const d = await r.json().catch(()=>({}));
-  if(!r.ok || !d.ok){ document.getElementById("authHelp").textContent="PIN errato o segreto non accettato."; setAuth(false); return; }
-  LS.setItem(TOKEN_KEY, d.token);
-  setAuth(true);
-  refreshAll();
+// --- grafici e helper ---
+function maskIp(ip=""){ if(ip.includes(".")){const p=ip.split(".");p[3]="x";return p.join(".");} return ip; }
+function isSameDay(ts){ const d=new Date(ts),n=new Date(); return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()&&d.getDate()===n.getDate(); }
+function aggregateToday(items){ const t=items.filter(x=>isSameDay(x.ts));const ps={},pp={};for(const x of t){ps[x.style]=(ps[x.style]||0)+1;pp[x.periodo]=(pp[x.periodo]||0)+1;}return {ps,pp};}
+function drawBar(ctxId, dataMap, title, holder){
+  const ctx=document.getElementById(ctxId);
+  if(!ctx)return;
+  if(holder.chart) holder.chart.destroy();
+  holder.chart=new Chart(ctx,{type:'bar',data:{labels:Object.keys(dataMap),datasets:[{label:title,data:Object.values(dataMap)}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,ticks:{precision:0}}},plugins:{legend:{display:false}}}});
 }
-document.getElementById("enterBtn").onclick = login;
-document.getElementById("logoutBtn").onclick = ()=>{ LS.removeItem(TOKEN_KEY); setAuth(false); };
 
-async function refreshAll(){
-  const tok = LS.getItem(TOKEN_KEY)||"";
-  if(!tok){ setAuth(false); return; }
-
-  // stats
-  const s = await fetch("/api/admin-stats", { headers:{ "x-admin-token": tok }}).then(r=>r.json()).catch(()=>null);
-  if(!s || !s.ok){ setAuth(false); return; }
-  setAuth(true);
-  const set = (id,v)=> document.getElementById(id).textContent = (typeof v==="object")? json(v): String(v);
-  set("s_total", s.total); set("s_today", s.today); set("s_7", s.last7);
-  set("s_style", s.byStyle); set("s_lang", s.byLang); set("s_period", s.byPeriod); set("s_user", s.byUser);
-
-  // logs
-  const limit = document.getElementById("limitSel").value || "200";
-  const L = await fetch(`/api/admin-logs?limit=${encodeURIComponent(limit)}`, { headers:{ "x-admin-token": tok }}).then(r=>r.json()).catch(()=>null);
-  if(!L || !L.ok) return;
-  renderLogs(L.items||[]);
-}
-function renderLogs(all){
-  const fS=document.getElementById("fStyle").value;
-  const fL=document.getElementById("fLang").value;
-  const fP=document.getElementById("fPeriod").value;
-  const fU=document.getElementById("fUser").value;
-  const q =(document.getElementById("searchQ").value||"").trim().toLowerCase();
-  const rows = all.filter(x=>{
-    if(fS && x.style!==fS) return false;
-    if(fL && x.lang!==fL) return false;
-    if(fP && x.periodo!==fP) return false;
-    if(fU && x.user_type!==fU) return false;
-    if(q && !String(x.domanda||"").toLowerCase().includes(q)) return false;
-    return true;
-  });
-  const tb = document.getElementById("tbody"); tb.innerHTML="";
+// --- rendering ---
+function renderLogs(data){
+  const tbody=document.querySelector("#logsTbl tbody"); tbody.innerHTML="";
+  const fS=document.getElementById("filterStyle").value,fL=document.getElementById("filterLang").value,fP=document.getElementById("filterPeriod").value,q=document.getElementById("searchQ").value.toLowerCase();
+  const all=Array.isArray(data.items)?data.items:[];
+  const rows=all.filter(x=>(!fS||x.style===fS)&&(!fL||x.lang===fL)&&(!fP||x.periodo===fP)&&(!q||x.domanda.toLowerCase().includes(q)));
   for(const it of rows){
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${fmt(it.ts)}</td><td>${it.ip||"—"}</td><td>${it.user_type||"—"}</td>
-      <td>${it.style}</td><td>${it.lang}</td><td>${it.periodo}</td><td>${it.len||0}</td>
-      <td>${(it.domanda||"").replace(/\s+/g," ").slice(0,220)}</td>`;
-    tb.appendChild(tr);
+    const tr=document.createElement("tr");
+    const quando=new Date(it.ts).toLocaleString(); const ip=maskIp(it.ip||""); const domanda=it.domanda||""; const short=domanda.length>160?domanda.slice(0,160)+"…":domanda;
+    tr.innerHTML=`<td>${quando}</td><td class="ip">${ip}</td><td>${it.user_type||'free'}</td><td>${it.style}</td><td>${it.lang}</td><td>${it.periodo}</td><td>${it.answer_chars}</td><td class="qcell">${short}</td>`;
+    const qcell=tr.querySelector(".qcell"); qcell.onclick=()=>{qcell.classList.toggle("expanded"); qcell.textContent=qcell.classList.contains("expanded")?domanda:short;};
+    tbody.appendChild(tr);
   }
+
+  // stats + grafici
+  const statDiv=document.getElementById("statText");
+  const s={total:all.length,style:{},lang:{},periodo:{},user_type:{}};
+  for(const x of all){s.style[x.style]=(s.style[x.style]||0)+1;s.lang[x.lang]=(s.lang[x.lang]||0)+1;s.periodo[x.periodo]=(s.periodo[x.periodo]||0)+1;s.user_type[x.user_type]=(s.user_type[x.user_type]||0)+1;}
+  statDiv.textContent=`Totale: ${s.total}\nPer stile: ${JSON.stringify(s.style)}\nPer lingua: ${JSON.stringify(s.lang)}\nPer tempo: ${JSON.stringify(s.periodo)}\nUser types: ${JSON.stringify(s.user_type)}`;
+  const agg=aggregateToday(all);
+  drawBar("chartStyleToday",agg.ps,"Oggi per stile",chartStyleToday={});
+  drawBar("chartPeriodToday",agg.pp,"Oggi per tempo",chartPeriodToday={});
 }
 
-document.getElementById("refreshBtn").onclick = refreshAll;
-let timer=null;
-document.getElementById("autoBtn").onclick = ()=>{
-  if(timer){ clearInterval(timer); timer=null; document.getElementById("autoBtn").textContent="Auto-refresh"; return; }
-  timer=setInterval(refreshAll, 5000);
-  document.getElementById("autoBtn").textContent="Stop auto-refresh";
-};
-document.getElementById("clearBtn").onclick = async ()=>{
-  const tok = LS.getItem(TOKEN_KEY)||"";
-  if(!tok) return alert("Fai login admin.");
-  if(!confirm("Sicuro di svuotare i log?")) return;
-  await fetch("/api/admin-clear-logs", { method:"POST", headers:{ "x-admin-token": tok }});
-  refreshAll();
-};
-["limitSel","fStyle","fLang","fPeriod","fUser","searchQ"].forEach(id=>{
-  const el=document.getElementById(id); el && el.addEventListener("change", ()=>renderLogs.cached && renderLogs(renderLogs.cached));
-});
-setAuth(!!LS.getItem(TOKEN_KEY));
-refreshAll();
+// --- fetch + refresh ---
+async function loadStats(){
+  const r=await fetch(API); const data=await r.json();
+  window.__data=data; renderLogs(data);
+}
+function toggleAuto(){
+  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; document.getElementById("autoStatus").textContent="Auto-refresh: OFF"; }
+  else { autoTimer=setInterval(loadStats,60000); document.getElementById("autoStatus").textContent="Auto-refresh: ON (1min)"; loadStats(); }
+}
+async function clearLogs(){ if(confirm("Sicuro di svuotare i log?")){ await fetch('/api/admin-clear-logs'); loadStats(); } }
+
+// --- init ---
+loadStats();
 </script>
 </body>
 </html>
