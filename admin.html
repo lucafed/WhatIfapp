@@ -1,147 +1,227 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>What?f — Console Admin</title>
-
+<title>What?f — Admin (dashboard)</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
 <style>
-body {
-  background: #0A0F14; color: #fff; font-family: Inter, sans-serif; margin: 0; padding: 0;
-}
-h2, h3 { margin: 8px 0; }
-.card {
-  background: #141C22; border-radius: 12px; padding: 16px; margin: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.4);
-}
-button {
-  border: none; border-radius: 8px; padding: 8px 14px; margin: 4px;
-  background: #00E0FF; color: #000; font-weight: 600; cursor: pointer;
-}
-button:hover { background: #00B5CC; }
-
-.qcell { max-width: 520px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
-.qcell.expanded { white-space: normal; }
-.ip { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; opacity:.9 }
-
-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
-th, td { border-bottom: 1px solid #2a2a2a; padding: 6px; text-align: left; }
-th { color: #A0B2BA; }
-
-.label { font-size:13px; opacity:0.8; margin-bottom:4px; }
-.row { display:flex; gap:12px; flex-wrap:wrap; }
+:root{ --bg:#0B0F14; --card:#131A20; --fg:#EAF2EE; --muted:#A0B2BA; --acc:#00E0FF; }
+*{ box-sizing:border-box }
+body{ margin:0; background:var(--bg); color:var(--fg); font-family:Inter,system-ui,Arial,sans-serif; }
+main{ max-width:1100px; margin:auto; padding:16px; }
+h1{ font-size:22px; margin:8px 0 12px; color:var(--acc); text-align:center }
+h3{ margin:6px 0 10px; }
+.card{ background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:14px; margin:10px 0; box-shadow:0 6px 18px rgba(0,0,0,.35); }
+.row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center }
+button{ border:none; border-radius:10px; padding:9px 12px; background:var(--acc); color:#001014; font-weight:800; cursor:pointer }
+button.ghost{ background:rgba(255,255,255,.06); color:#fff; border:1px solid rgba(255,255,255,.12) }
+.small{ font-size:12px; color:var(--muted) }
+.kbd{ font-family:ui-monospace,Menlo,monospace }
+table{ width:100%; border-collapse:collapse; font-size:14px; margin-top:8px }
+th,td{ border-bottom:1px solid rgba(255,255,255,.10); padding:8px; text-align:left }
+th{ color:var(--muted) }
+.qcell{ max-width:520px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer }
+.qcell.expanded{ white-space:normal }
+.badge{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); font-size:12px }
+select,input{ background:rgba(255,255,255,.06); color:#fff; border:1px solid rgba(255,255,255,.14); border-radius:8px; padding:8px }
+.chartbox{ flex:1; min-width:260px; height:220px; }
 </style>
 </head>
-
 <body>
-<h2 style="text-align:center;color:#00E0FF">What?f — Console Admin</h2>
+<main>
+  <h1>What?f — Admin (dashboard)</h1>
 
-<div class="card" id="ops">
-  <h3>Operazioni veloci</h3>
-  <button onclick="loadStats()">🔄 Aggiorna</button>
-  <button onclick="toggleAuto()">Auto-refresh</button>
-  <button onclick="clearLogs()">🗑️ Svuota log</button>
-  <p id="autoStatus" style="font-size:13px;opacity:.8;margin:4px 0 0">Auto-refresh: OFF</p>
-</div>
-
-<div class="card" id="globalStats">
-  <h3>Statistiche globali (finestra caricata)</h3>
-  <div id="statText" style="white-space:pre-line;line-height:1.4"></div>
-</div>
-
-<div class="card" id="chartsCard">
-  <h3>Grafici (oggi)</h3>
-  <div class="row">
-    <div style="flex:1;min-width:260px">
-      <div class="label">Per stile</div>
-      <canvas id="chartStyleToday" height="180"></canvas>
-    </div>
-    <div style="flex:1;min-width:260px">
-      <div class="label">Per tempo</div>
-      <canvas id="chartPeriodToday" height="180"></canvas>
+  <div class="card">
+    <h3>Operazioni veloci</h3>
+    <div class="row">
+      <button id="refreshBtn">Aggiorna</button>
+      <button class="ghost" id="autoBtn">Auto-refresh</button>
+      <button class="ghost" id="clearBtn">Svuota log</button>
+      <span class="badge">IP mascherati: <input type="checkbox" id="maskIp" checked></span>
+      <span class="badge">Window log: 
+        <select id="limitSel">
+          <option>200</option><option>500</option><option>1000</option>
+        </select>
+      </span>
+      <span class="badge">Trend giorni:
+        <select id="daysSel">
+          <option>7</option><option>14</option><option>30</option>
+        </select>
+      </span>
+      <span id="ts" class="small">—</span>
     </div>
   </div>
-</div>
 
-<div class="card">
-  <h3>Log richieste</h3>
-  <label class="label">Filtri:</label>
-  <select id="filterStyle">
-    <option value="">Tutti gli stili</option><option value="whatif">What If</option><option value="wtf">What the F</option>
-  </select>
-  <select id="filterLang">
-    <option value="">Tutte le lingue</option><option value="it">IT</option><option value="en">EN</option>
-  </select>
-  <select id="filterPeriod">
-    <option value="">Tutti i periodi</option><option value="future">Futuro</option><option value="past">Passato</option>
-  </select>
-  <input id="searchQ" placeholder="Cerca nella domanda…" style="padding:4px;border-radius:6px;border:none;width:200px;">
-  <button onclick="renderLogs(window.__data)">Filtra</button>
+  <div class="card">
+    <h3>Statistiche globali (finestra caricata)</h3>
+    <div class="row">
+      <span class="badge">Totale: <b id="tot">—</b></span>
+      <span class="badge">Oggi: <b id="today">—</b></span>
+      <span class="badge">Ultimi <span id="daysTxt">7</span>g: <b id="lastN">—</b></span>
+      <span class="badge">Per stile: <span id="bystyle">—</span></span>
+      <span class="badge">Per lingua: <span id="bylang">—</span></span>
+      <span class="badge">Per tempo: <span id="byperiod">—</span></span>
+      <span class="badge">User types: <span id="byuser">—</span></span>
+    </div>
+  </div>
 
-  <table id="logsTbl">
-    <thead>
-      <tr><th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
+  <div class="card">
+    <h3>Grafici</h3>
+    <div class="row">
+      <div class="chartbox"><canvas id="chartStyleToday"></canvas></div>
+      <div class="chartbox"><canvas id="chartPeriodToday"></canvas></div>
+      <div class="chartbox"><canvas id="chartTrend"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Log richieste</h3>
+    <div class="row">
+      <select id="fStyle"><option value="">Stile: tutti</option><option value="whatif">whatif</option><option value="wtf">wtf</option></select>
+      <select id="fLang"><option value="">Lingua: tutte</option><option value="it">it</option><option value="en">en</option></select>
+      <select id="fPeriod"><option value="">Tempo: tutti</option><option value="future">future</option><option value="past">past</option></select>
+      <select id="fUser"><option value="">Tipo utente: tutti</option><option value="free">free</option><option value="pro">pro</option><option value="admin">admin</option></select>
+      <input id="fSearch" placeholder="Cerca nella domanda…">
+      <button class="ghost" id="applyFilters">Filtra</button>
+    </div>
+
+    <table id="logTbl">
+      <thead>
+        <tr>
+          <th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</main>
 
 <script>
-const API = '/api/admin-stats';
-let autoTimer = null;
-let chartStyleToday = null, chartPeriodToday = null;
+const fmt = (n)=>JSON.stringify(n).replace(/"/g,'').replace(/(:)/g,': ');
+const qs = (sel)=>document.querySelector(sel);
+let autoTimer=null;
+let charts={};
 
-// --- grafici e helper ---
-function maskIp(ip=""){ if(ip.includes(".")){const p=ip.split(".");p[3]="x";return p.join(".");} return ip; }
-function isSameDay(ts){ const d=new Date(ts),n=new Date(); return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()&&d.getDate()===n.getDate(); }
-function aggregateToday(items){ const t=items.filter(x=>isSameDay(x.ts));const ps={},pp={};for(const x of t){ps[x.style]=(ps[x.style]||0)+1;pp[x.periodo]=(pp[x.periodo]||0)+1;}return {ps,pp};}
-function drawBar(ctxId, dataMap, title, holder){
-  const ctx=document.getElementById(ctxId);
-  if(!ctx)return;
-  if(holder.chart) holder.chart.destroy();
-  holder.chart=new Chart(ctx,{type:'bar',data:{labels:Object.keys(dataMap),datasets:[{label:title,data:Object.values(dataMap)}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,ticks:{precision:0}}},plugins:{legend:{display:false}}}});
+function params(){
+  const mask = qs('#maskIp').checked ? '1' : '0';
+  const limit = qs('#limitSel').value;
+  const days  = qs('#daysSel').value;
+  return `limit=${encodeURIComponent(limit)}&days=${encodeURIComponent(days)}&mask=${mask}`;
 }
 
-// --- rendering ---
-function renderLogs(data){
-  const tbody=document.querySelector("#logsTbl tbody"); tbody.innerHTML="";
-  const fS=document.getElementById("filterStyle").value,fL=document.getElementById("filterLang").value,fP=document.getElementById("filterPeriod").value,q=document.getElementById("searchQ").value.toLowerCase();
-  const all=Array.isArray(data.items)?data.items:[];
-  const rows=all.filter(x=>(!fS||x.style===fS)&&(!fL||x.lang===fL)&&(!fP||x.periodo===fP)&&(!q||x.domanda.toLowerCase().includes(q)));
+async function load(){
+  const r = await fetch(`/api/admin-stats?${params()}`);
+  const data = await r.json();
+  if(!data?.ok) throw new Error('stats_error');
+
+  // top stats
+  qs('#tot').textContent   = data.total;
+  qs('#today').textContent = data.today;
+  qs('#lastN').textContent = data.lastN;
+  qs('#daysTxt').textContent = data.days;
+  qs('#bystyle').textContent  = fmt(data.breakdown.style || {});
+  qs('#bylang').textContent   = fmt(data.breakdown.lang  || {});
+  qs('#byperiod').textContent = fmt(data.breakdown.periodo || {});
+  qs('#byuser').textContent   = fmt(data.breakdown.user_type || {});
+  qs('#ts').textContent = new Date().toLocaleString();
+
+  renderLogs(data.items || []);
+  renderCharts(data);
+  window.__CACHE = data; // per filtri
+}
+
+function renderLogs(items){
+  const tb = qs('#logTbl tbody'); tb.innerHTML='';
+  const fs=qs('#fStyle').value, fl=qs('#fLang').value, fp=qs('#fPeriod').value, fu=qs('#fUser').value, q=(qs('#fSearch').value||'').toLowerCase();
+
+  const rows = items.filter(it=>{
+    if(fs && it.style!==fs) return false;
+    if(fl && it.lang!==fl) return false;
+    if(fp && it.periodo!==fp) return false;
+    if(fu && it.user_type!==fu) return false;
+    if(q && !String(it.domanda||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+
   for(const it of rows){
-    const tr=document.createElement("tr");
-    const quando=new Date(it.ts).toLocaleString(); const ip=maskIp(it.ip||""); const domanda=it.domanda||""; const short=domanda.length>160?domanda.slice(0,160)+"…":domanda;
-    tr.innerHTML=`<td>${quando}</td><td class="ip">${ip}</td><td>${it.user_type||'free'}</td><td>${it.style}</td><td>${it.lang}</td><td>${it.periodo}</td><td>${it.answer_chars}</td><td class="qcell">${short}</td>`;
-    const qcell=tr.querySelector(".qcell"); qcell.onclick=()=>{qcell.classList.toggle("expanded"); qcell.textContent=qcell.classList.contains("expanded")?domanda:short;};
-    tbody.appendChild(tr);
+    const tr=document.createElement('tr');
+    const full = String(it.domanda||'');
+    const short = full.length>180 ? full.slice(0,180)+'…' : full;
+    tr.innerHTML = `
+      <td>${new Date(it.ts).toLocaleString()}</td>
+      <td class="kbd">${it.ip||''}</td>
+      <td>${it.user_type||'free'}</td>
+      <td>${it.style}</td>
+      <td>${it.lang}</td>
+      <td>${it.periodo}</td>
+      <td>${it.answer_chars}</td>
+      <td class="qcell">${short}</td>
+    `;
+    const qcell = tr.querySelector('.qcell');
+    qcell.addEventListener('click',()=>{ qcell.classList.toggle('expanded'); qcell.textContent = qcell.classList.contains('expanded') ? full : short; });
+    tb.appendChild(tr);
   }
-
-  // stats + grafici
-  const statDiv=document.getElementById("statText");
-  const s={total:all.length,style:{},lang:{},periodo:{},user_type:{}};
-  for(const x of all){s.style[x.style]=(s.style[x.style]||0)+1;s.lang[x.lang]=(s.lang[x.lang]||0)+1;s.periodo[x.periodo]=(s.periodo[x.periodo]||0)+1;s.user_type[x.user_type]=(s.user_type[x.user_type]||0)+1;}
-  statDiv.textContent=`Totale: ${s.total}\nPer stile: ${JSON.stringify(s.style)}\nPer lingua: ${JSON.stringify(s.lang)}\nPer tempo: ${JSON.stringify(s.periodo)}\nUser types: ${JSON.stringify(s.user_type)}`;
-  const agg=aggregateToday(all);
-  drawBar("chartStyleToday",agg.ps,"Oggi per stile",chartStyleToday={});
-  drawBar("chartPeriodToday",agg.pp,"Oggi per tempo",chartPeriodToday={});
 }
 
-// --- fetch + refresh ---
-async function loadStats(){
-  const r=await fetch(API); const data=await r.json();
-  window.__data=data; renderLogs(data);
+function renderCharts(data){
+  // distruggi eventuali grafici
+  for(const k of Object.keys(charts)){ charts[k].destroy(); }
+  charts={};
+
+  // Oggi per stile/tempo -> deriviamo dai log caricati (oggi)
+  const todayItems = (data.items||[]).filter(it=>{
+    const d=new Date(it.ts), n=new Date();
+    return d.getFullYear()===n.getFullYear() && d.getMonth()===n.getMonth() && d.getDate()===n.getDate();
+  });
+  const byS={}, byP={};
+  for(const it of todayItems){ byS[it.style]=(byS[it.style]||0)+1; byP[it.periodo]=(byP[it.periodo]||0)+1; }
+
+  charts.styleToday = new Chart(qs('#chartStyleToday'), {
+    type:'bar',
+    data:{ labels:Object.keys(byS), datasets:[{ label:'Oggi · per stile', data:Object.values(byS) }]},
+    options:{ responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true,ticks:{precision:0}}}, plugins:{legend:{display:false}} }
+  });
+
+  charts.periodToday = new Chart(qs('#chartPeriodToday'), {
+    type:'bar',
+    data:{ labels:Object.keys(byP), datasets:[{ label:'Oggi · per tempo', data:Object.values(byP) }]},
+    options:{ responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true,ticks:{precision:0}}}, plugins:{legend:{display:false}} }
+  });
+
+  // Trend ultimi N giorni
+  const labels = (data.trend||[]).map(x=>x.day);
+  const values = (data.trend||[]).map(x=>x.count);
+  charts.trend = new Chart(qs('#chartTrend'), {
+    type:'line',
+    data:{ labels, datasets:[{ label:`Trend ultimi ${data.days} giorni`, data:values, tension:.25 }]},
+    options:{ responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true,ticks:{precision:0}}}}
+  });
 }
+
 function toggleAuto(){
-  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; document.getElementById("autoStatus").textContent="Auto-refresh: OFF"; }
-  else { autoTimer=setInterval(loadStats,60000); document.getElementById("autoStatus").textContent="Auto-refresh: ON (1min)"; loadStats(); }
+  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; qs('#autoBtn').textContent='Auto-refresh'; }
+  else { autoTimer=setInterval(load, 60000); qs('#autoBtn').textContent='Stop auto-refresh'; }
 }
-async function clearLogs(){ if(confirm("Sicuro di svuotare i log?")){ await fetch('/api/admin-clear-logs'); loadStats(); } }
 
-// --- init ---
-loadStats();
+async function clearLogs(){
+  if(!confirm('Sicuro di svuotare i log?')) return;
+  await fetch('/api/admin-clear-logs');
+  await load();
+}
+
+// events
+qs('#refreshBtn').onclick = load;
+qs('#autoBtn').onclick = toggleAuto;
+qs('#clearBtn').onclick = clearLogs;
+qs('#applyFilters').onclick = ()=> renderLogs((window.__CACHE||{}).items||[]);
+qs('#maskIp').onchange = load;
+qs('#limitSel').onchange = load;
+qs('#daysSel').onchange = load;
+
+// init
+load();
 </script>
 </body>
 </html>
