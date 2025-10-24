@@ -1,30 +1,31 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Admin (dashboard)</title>
-<meta name="theme-color" content="#0B0B0C"/>
-<link rel="preconnect" href="https://cdn.jsdelivr.net"/>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<style>
-  :root{--bg:#0B0B0C;--card:#13191E;--fg:#EAF2EE;--muted:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01;--ok:#11c46f;--bad:#e85b5b}
-  *{box-sizing:border-box} body{margin:0;background:#0B0B0C;color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:1100px;margin:auto;padding:18px}
-  h1{margin:8px 0 14px;font-size:28px}
-  .grid{display:grid;gap:12px}
-  .card{background:var(--card);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:14px}
-  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  input,select{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px}
-  button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
-  .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12}
-  .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
-  .badge{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:12px}
-  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
-  th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
-  .ok{color:var(--ok)} .bad{color:var(--bad)} .muted{color:var(--muted)}
-  @media(min-width:900px){ .cols-2{grid-template-columns:1fr 1fr} }
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>What?f — Admin (dashboard)</title>
+  <meta name="theme-color" content="#0B0B0C"/>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{--bg:#0B0B0C;--card:#13191E;--fg:#EAF2EE;--muted:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01;--ok:#11c46f;--bad:#e85b5b}
+    *{box-sizing:border-box}
+    body{margin:0;background:#0B0B0C;color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    main{max-width:1100px;margin:auto;padding:18px}
+    h1{margin:8px 0 14px;font-size:28px}
+    .grid{display:grid;gap:12px}
+    .card{background:var(--card);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:14px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    input,select{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px}
+    button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
+    .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12}
+    .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:12px}
+    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+    th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
+    .ok{color:var(--ok)} .bad{color:var(--bad)} .muted{color:var(--muted)}
+    @media(min-width:900px){ .cols-2{grid-template-columns:1fr 1fr} }
+  </style>
 </head>
 <body>
 <main>
@@ -130,7 +131,7 @@ function setProUI(){ try{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); setBadge
 async function adminCheck(){
   const r = await fetch("/api/admin-token",{ headers:{ "x-admin-token": getTok() }});
   const d = await r.json().catch(()=>({}));
-  const yes = d?.ok && d.admin;
+  const yes = !!(d && (d.ok ? (d.admin ?? d.ok) : d.admin)); // compat varianti API
   setBadge("adminState", yes?"yes":"no");
   setBadge("myIp", d?.ip || "—");
   setBadge("credits", yes?"∞": (JSON.parse(LS.getItem("whatif_credits")||"{}").used||0)+"/(3/10)");
@@ -144,10 +145,12 @@ function renderTrend(tr){
     options:{ responsive:true, plugins:{ legend:{ display:false }}}});
 }
 
+/* ############ FIX: uso di textContent per mostrare SEMPRE le domande ############ */
 function drawTable(items){
   const fs=document.getElementById("fStyle").value, fl=document.getElementById("fLang").value,
         fp=document.getElementById("fPeriod").value, fu=document.getElementById("fUser").value,
         q=document.getElementById("q").value.toLowerCase();
+
   const rows=(items||[]).filter(x=>{
     if(fs && x.style!==fs) return false;
     if(fl && x.lang!==fl) return false;
@@ -157,12 +160,22 @@ function drawTable(items){
     return true;
   });
 
-  const tb=document.querySelector("#tbl tbody"); tb.innerHTML="";
+  const tb=document.querySelector("#tbl tbody");
+  tb.innerHTML="";
   for(const it of rows){
     const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${fmtDate(it.ts)}</td><td>${it.ip||""}</td><td>${it.user_type||""}</td>
-                  <td>${it.style}</td><td>${it.lang}</td><td>${it.periodo}</td>
-                  <td>${it.answer_chars||0}</td><td>${(it.domanda||"").replace(/\s+/g," ").slice(0,250)}</td>`;
+
+    const tdQuando=document.createElement("td"); tdQuando.textContent = fmtDate(it.ts);
+    const tdIp=document.createElement("td"); tdIp.textContent = it.ip || "";
+    const tdTipo=document.createElement("td"); tdTipo.textContent = it.user_type || "";
+    const tdStile=document.createElement("td"); tdStile.textContent = it.style || "";
+    const tdLang=document.createElement("td"); tdLang.textContent = it.lang || "";
+    const tdPeriodo=document.createElement("td"); tdPeriodo.textContent = it.periodo || "";
+    const tdLen=document.createElement("td"); tdLen.textContent = String(it.answer_chars || 0);
+    const tdDomanda=document.createElement("td");
+    tdDomanda.textContent = String(it.domanda || "").replace(/\s+/g," ").slice(0,250);
+
+    tr.append(tdQuando, tdIp, tdTipo, tdStile, tdLang, tdPeriodo, tdLen, tdDomanda);
     tb.appendChild(tr);
   }
 }
@@ -193,7 +206,7 @@ document.getElementById("enter").onclick = async ()=>{
   const r = await fetch("/api/admin-token",{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ pin })});
   const d = await r.json().catch(()=>({}));
   if(r.ok && d.ok){ setTok(d.token); document.getElementById("hint").textContent="Login ok. Token legato al tuo IP per ~7gg."; await adminCheck(); loadAll(); }
-  else { alert("PIN errato"); }
+  else { alert("PIN errato o errore server"); }
 };
 document.getElementById("renew").onclick = async ()=>{
   const r = await fetch("/api/admin-token?action=renew",{ method:"POST", headers:{ "x-admin-token": getTok() }});
