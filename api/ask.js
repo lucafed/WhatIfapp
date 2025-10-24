@@ -1,10 +1,8 @@
-// /api/ask.js — What?f Engine (2025) — COMPLETO
-// - Modello: gpt-4o-mini
-// - Stili: whatif (riflessivo) | wtf (sarcasmo demenziale potenziato)
-// - IT/EN, paragrafo singolo, niente elenchi/domande/emoji
-// - Rate: 10/min per IP
-// - Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
-// - Log: Redis (periodo, stile, lang, user_type, domanda)
+// /api/ask.js — What?f Engine (2025)
+// Stili: whatif (realismo lucido) · wtf (sarcasmo demenziale, doppia punchline)
+// IT/EN — paragrafo singolo, niente emoji/liste/domande
+// Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
+// Log su Redis SENZA contenuto della domanda (solo metadati + hash non reversibile)
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -59,7 +57,8 @@ function tightenSentences(text, maxSentences) {
     out.push(p); seen.add(n);
     if (out.length >= maxSentences) break;
   }
-  let t = out.join(" "); if (!/[.!?…]$/.test(t)) t += ".";
+  let t = out.join(" ");
+  if (!/[.!?…]$/.test(t)) t += ".";
   return t;
 }
 function clampWords(text, maxWords) {
@@ -82,19 +81,20 @@ function stripQuestionEcho(domanda, text) {
   t = t.replace(echoRx, "");
   return t;
 }
-// Garantisce la doppia punchline per wtf (— … — …)
+// Doppia punchline per WTF: garantisce “— … — …” in chiusura
 function ensureDoublePunchline(answer, lang) {
   let t = String(answer || "").trim();
-  const hasEmDash = /—/.test(t);
-  const hasTwo = (t.match(/—/g) || []).length >= 2;
-  if (hasEmDash && hasTwo) return t;
-  const tail = isEn(lang) ? "good chaos — carry on." : "buon caos — avanti così.";
-  // se non termina con punto, aggiungilo prima della chiusura
+  const ems = (t.match(/—/g) || []).length;
+  if (ems >= 2) return t;
+  // se manca, attacca una doppia coda cortissima
+  const tail = isEn(lang)
+    ? "nice mess — keep going."
+    : "bel casino — continua così.";
   if (!/[.!?…]$/.test(t)) t += ".";
   return `${t} — ${tail}`;
 }
 
-/* ---------- Admin check (coerente con /api/admin-token.js) ---------- */
+/* ---------- Admin check ---------- */
 async function isAdmin(req, requesterIp) {
   const token = String(req.headers["x-admin-token"] || "").trim();
   if (!token) return false;
@@ -112,7 +112,7 @@ async function isAdmin(req, requesterIp) {
   }
 }
 
-/* ---------- Modalità temporale (Passato/Futuro) ---------- */
+/* ---------- Modalità temporale ---------- */
 function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
   const en = isEn(lang);
   if (String(periodo || "").toLowerCase() === "past") {
@@ -132,23 +132,19 @@ function personaSystem(style, lang) {
       ? `
 You are “What the F” — a razor-tongued best friend who roasts with love.
 SECOND PERSON. ONE paragraph, 6–8 long sentences (~110–140 words).
-Open with a shoulder-smack + rotating nickname (“champ”, “genius”, “captain of chaos”, “rocket scientist”, “legend”…).
-Style: fast, cinematic, irreverent; playful “thinking objects” ok; no dialogue.
-Crank up absurd, goofy sarcasm — never cruel; keep it human and warm.
-Concrete images that misbehave; micro-metaphors; callbacks.
-STRICT: no lists, no questions, no emojis, no moralizing.
-Respect TEMPORAL MODE exactly (past=counterfactual, future=plausible).
+Open with a shoulder-smack + rotating nickname (“champ”, “genius”, “captain of chaos”, “rocket scientist”, “legend”).
+Style: fast, cinematic, irreverent; playful “thinking objects”; no dialogue.
+Goofy sarcasm turned up, never cruel; human and warm under the joke.
+STRICT: no lists, no questions, no emojis, no moralizing. Respect TEMPORAL MODE.
 **END with two ultra-short punchlines separated by an em dash (—), e.g., “You’re fine — you’re dangerous.”**
 `.trim()
       : `
 Sei “What the F” — l’amico lingua-affilata che ti prende in giro ma ti vuole bene.
 SECONDA PERSONA. UN paragrafo, 6–8 frasi lunghe (~110–140 parole).
-Apri con pacca sulla spalla + nomignolo che cambia (“campione”, “genio”, “capitano del caos”, “astronauta del dubbio”, “leggenda”…).
-Stile: veloce, cinematografico, irriverente; oggetti che “pensano” ok; niente dialoghi.
-Alza il volume del sarcasmo demenziale: assurdo, giocoso, mai cattivo.
-Immagini concrete che sbandano; micro-metafore; richiami.
-RIGIDO: niente elenchi, niente domande, niente emoji, niente prediche.
-Rispetta la MODALITÀ TEMPORALE alla lettera (passato=controfattuale, futuro=plausibile).
+Apri con pacca sulla spalla + nomignolo variabile (“campione”, “genio”, “capitano del caos”, “astronauta del dubbio”, “leggenda”…).
+Stile: veloce, cinematografico, irriverente; oggetti che “pensano”; niente dialoghi.
+Sarcasmo demenziale alzato, mai cattivo; sotto resta umano e caldo.
+RIGIDO: niente elenchi, niente domande, niente emoji, niente prediche. Rispetta la MODALITÀ TEMPORALE.
 **CHIUDI con due battute telegrafiche separate da un trattino lungo (—), es.: “Bruci piano — vinci meglio.”**
 `.trim());
 
@@ -161,7 +157,7 @@ Oh campione delle mappe emotive, entri nella città nuova come trailer di una se
 Oh romanticone da discount, hai buttato il cuore nel differenziato e non sai se va nell’umido o nel vetro. Cammini in una playlist fatta da un frigorifero triste: è solo il silenzio che fa stretching. Ti mancano le abitudini, mica la persona; quelle le rimpiazzi con una pianta, un gatto o una crisi 4K. Gli amici dicono “tempo al tempo”, ma il tempo è in ferie. Respiri, sbagli la spesa, ti scopri vivo nel modo più imbarazzante. Hai perso un “noi”, hai trovato un “boh” che sa di libertà — meno male — bella mossa.` },
       { role: "system", content:
 `EXAMPLE EN • Start a business (future)
-Alright, captain of chaos, you show up bulletproof and the first form eats your cape, spreadsheets side-eye your optimism while the receipt printer coughs like a scooter, the shelves judge your font choices and the mop whispers “founder energy,” three real faces return and suddenly the idea holds where you hold, midnight uncorks a victory bottle suspiciously balsamic and honest, you laugh, re-price, breathe, and the counter becomes a small republic of names — still standing — still you.` },
+Alright, captain of chaos, you show up bulletproof and the first form eats your cape, spreadsheets side-eye your optimism while the receipt printer coughs like a scooter, three real faces return and suddenly the idea holds where you hold, midnight uncorks a “victory” bottle suspiciously balsamic and honest — you laugh, re-price, breathe — still standing — still you.` },
     ];
     return { sys: SYS, fewshots: FEWSHOTS };
   }
@@ -284,27 +280,33 @@ export default async function handler(req, res) {
       if (!/[.!?…]$/.test(answer)) answer += ".";
     }
 
-    // --- LOG persistente ---
+    // --- LOG persistente (privacy-safe: niente testo domanda) ---
     try {
+      function tinyHash(s = "") {
+        let h = 2166136261 >>> 0;
+        for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+        return (h >>> 0).toString(36);
+      }
       const entry = {
         ts: Date.now(),
         ip,
-        style: stile,            // "whatif" | "wtf"
+        style: stile,
         lang,
-        periodo,                 // "past" | "future"
-        domanda,
+        periodo,
+        domanda_len: String(domanda || "").length,
+        domanda_hash: tinyHash(domanda || ""),
         answer_chars: (answer || "").length,
         admin: !!admin,
         user_type: bypass ? "admin" : (isPro ? "pro" : "free"),
       };
       await redis.lpush("logs:ask", JSON.stringify(entry));
-      await redis.ltrim("logs:ask", 0, 9999); // ultimi 10k
+      await redis.ltrim("logs:ask", 0, 9999);
       await redis.incr("stats:total");
       await redis.hincrby("stats:style", stile, 1);
       await redis.hincrby("stats:lang", lang, 1);
       await redis.hincrby("stats:periodo", String(periodo || "future"), 1);
       await redis.hincrby("stats:user_type", entry.user_type, 1);
-      const dayKey = `stats:day:${new Date().toISOString().slice(0,10)}`;
+      const dayKey = `stats:day:${new Date().toISOString().slice(0, 10)}`;
       await redis.hincrby(dayKey, `${stile}:${periodo}`, 1);
       await redis.expire(dayKey, 90 * 24 * 60 * 60);
     } catch (e) {
