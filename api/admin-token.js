@@ -1,9 +1,4 @@
-// ==============================
-// /api/admin-token.js
-// Gestione accesso admin via PIN + token IP
-// Compatibile con admin.html (usa query ?pin=...)
-// ==============================
-
+// /api/admin-token.js — genera e verifica token admin
 import { Redis } from "@upstash/redis";
 
 const redis = new Redis({
@@ -11,36 +6,78 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
+// ⚙️ Config
+const ADMIN_PIN = process.env.ADMIN_PIN || "wtf-setup-2025";
+const TTL_SECS  = parseInt(process.env.ADMIN_TTL_SECS || "", 10) || 2 * 24 * 60 * 60; // default 48h
+// Se true il token è legato all'IP; se false NO (consigliato su mobile)
+const LOCK_IP   = String(process.env.ADMIN_LOCK_IP || "false").toLowerCase() === "true";
+
+function getIp(req) {
+  return (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
+    .toString().split(",")[0].trim();
+}
+
+async function isValidAdmin(req) {
+  const tok = String(req.headers["x-admin-token"] || "").trim();
+  if (!tok) return false;
+  const data = await redis.hgetall(`admin:token:${tok}`); // {ip, ua}
+  if (!data) return false;
+  if (LOCK_IP) {
+    const ip = getIp(req);
+    if (!data.ip || data.ip !== ip) return false;
+  }
+  return true;
+}
+
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-token, admin-secret");
   if (req.method === "OPTIONS") return res.status(200).end();
 
   try {
-    // ✅ PIN letto dalla QUERY (non dal body!)
-    const { pin } = req.query;
-    const ADMIN_PIN = process.env.ADMIN_PIN;
+    // POST => crea/rigenera token da PIN
+    if (req.method === "POST") {
+      const pin = String(req.headers["admin-secret"] || req.body?.pin || "").trim();
+      if (!pin) return res.status(401).json({ ok:false, error:"missing_pin" });
+      if (pin !== ADMIN_PIN) return res.status(403).json({ ok:false, error:"bad_pin" });
 
-    if (!ADMIN_PIN)
-      return res.status(500).json({ ok: false, error: "missing_env_PIN" });
+      const ip = getIp(req);
+      const ua = String(req.headers["user-agent"] || "");
+      const token = `adm_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
 
-    if (!pin || pin !== ADMIN_PIN)
-      return res.status(401).json({ ok: false, error: "bad_pin" });
+      await redis.hset(`admin:token:${token}`, { ip, ua });
+      await redis.expire(`admin:token:${token}`, TTL_SECS);
 
-    // IP del richiedente
-    const ip = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown")
-      .toString().split(",")[0].trim();
+      return res.status(200).json({
+        ok: true,
+        token,
+        ttlHours: Math.round(TTL_SECS / 3600),
+        ip,
+        lockIp: LOCK_IP
+      });
+    }
 
-    // genera token random
-    const token = Math.random().toString(36).slice(2);
+    // GET => verifica token corrente
+    if (req.method === "GET") {
+      const ok = await isValidAdmin(req);
+      return res.status(200).json({ ok });
+    }
 
-    // salva token legato all’IP (12 ore)
-    await redis.set(`admin:token:${token}`, ip, { ex: 3600 * 12 });
+    // DELETE => revoca token corrente
+    if (req.method === "DELETE") {
+      const tok = String(req.headers["x-admin-token"] || "").trim();
+      if (!tok) return res.status(400).json({ ok:false, error:"missing_token" });
+      await redis.del(`admin:token:${tok}`);
+      return res.status(200).json({ ok:true });
+    }
 
-    return res.status(200).json({ ok: true, token, ip });
-  } catch (err) {
-    console.error("❌ /api/admin-token.js error", err);
-    return res.status(500).json({ ok: false, error: "server_error", detail: String(err.message || err) });
+    return res.status(405).json({ ok:false, error:"method_not_allowed" });
+  } catch (e) {
+    console.error("admin-token error:", e);
+    return res.status(500).json({ ok:false, error:"server_error" });
   }
 }
+
+// Esporta il validatore per riuso negli altri endpoint (facoltativo se import comune non disponibile)
+export { isValidAdmin };
