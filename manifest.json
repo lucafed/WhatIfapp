@@ -5,7 +5,8 @@
   "description": "Esplora scenari personali: il passato che poteva essere e il futuro che potresti scegliere.",
   "lang": "it-IT",
   "dir": "ltr",
-  "start_url": "/index.html",
+
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
@@ -27,6 +28,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icons/icon-512-maskable.png",
