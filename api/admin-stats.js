@@ -1,73 +1,145 @@
 // ============================
-// /api/admin-stats.js — Statistiche aggregate
-// (usa sia contatori veloci sia i bucket giornalieri creati da /api/ask)
-// Protetto da x-admin-token
+// /api/admin-stats.js — Stats + Log per dashboard
+//  - Keys lette: logs:ask, stats:* (compatibile col tuo /api/ask.js)
+//  - Query params:
+//      limit   -> max elementi log (default 200, max 1000)
+//      days    -> finestra per stats lastN (default 7)
+//      mask    -> "1" per mascherare IP nel payload log (solo estetica)
 // ============================
 import { Redis } from "@upstash/redis";
-const redis = new Redis({ url: process.env.UPSTASH_REDIS_REST_URL, token: process.env.UPSTASH_REDIS_REST_TOKEN });
 
-function cors(req,res){
-  res.setHeader("Access-Control-Allow-Origin","*");
-  res.setHeader("Access-Control-Allow-Methods","GET,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers","Content-Type, x-admin-token");
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
+
+function clamp(n, lo, hi) {
+  n = Number(n || 0);
+  if (Number.isNaN(n)) n = lo;
+  return Math.max(lo, Math.min(hi, n));
 }
-async function isAdmin(req){
-  const tok = String(req.headers["x-admin-token"]||"").trim();
-  if(!tok) return false;
-  try{
-    const ip   = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").toString().split(",")[0].trim();
-    const save = await redis.get(`admin:token:${tok}`);
-    return !!save && save===ip;
-  }catch{ return false; }
+
+// somma valori numerici di un hash (string->int)
+function sumHash(h) {
+  let s = 0;
+  if (!h) return 0;
+  for (const k of Object.keys(h)) s += Number(h[k] || 0);
+  return s;
 }
-function iso(d){ return d.toISOString().slice(0,10); }
 
-export default async function handler(req,res){
-  cors(req,res);
-  if(req.method==="OPTIONS") return res.status(200).end();
-  if(req.method!=="GET") return res.status(405).json({ ok:false, error:"method_not_allowed" });
+function isoDay(d = new Date()) {
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 10);
+}
 
-  try{
-    if(!(await isAdmin(req))) return res.status(401).json({ ok:false, error:"not_admin" });
+function maskIp(ip = "") {
+  if (!ip) return ip;
+  if (ip.includes(".")) {
+    const p = ip.split(".");
+    p[3] = "x";
+    return p.join(".");
+  }
+  // IPv6: tronca
+  return ip.replace(/:[0-9a-f]+$/i, ":xxxx");
+}
 
-    const total = parseInt(await redis.get("stats:total")||"0",10);
-
-    // today & last7 dai bucket stats:day:YYYY-MM-DD
-    const today   = new Date();
-    const keys7   = [];
-    for(let i=0;i<7;i++){ const d = new Date(today); d.setDate(d.getDate()-i); keys7.push(`stats:day:${iso(d)}`); }
-
-    let todayCount = 0, last7 = 0;
-    const [todayMap, ...rest] = await redis.hmget(keys7[0], []) // hmget([]) non serve, facciamo hgetall
-      .catch(()=>[null]) || [null];
-    const all = await Promise.all(keys7.map(k => redis.hgetall(k).catch(()=>null)));
-    for(let i=0;i<all.length;i++){
-      const m = all[i]; if(!m) continue;
-      const sum = Object.values(m).map(v=>parseInt(v||"0",10)).reduce((a,b)=>a+b,0);
-      if(i===0) todayCount = sum;
-      last7 += sum;
+export default async function handler(req, res) {
+  try {
+    if (req.method !== "GET") {
+      res.status(405).json({ ok: false, error: "method_not_allowed" });
+      return;
     }
 
-    // breakdown veloci
-    const [byStyle, byLang, byPeriod, byType] = await Promise.all([
-      redis.hgetall("stats:style").catch(()=>null),
-      redis.hgetall("stats:lang").catch(()=>null),
-      redis.hgetall("stats:periodo").catch(()=>null),
-      redis.hgetall("stats:user_type").catch(()=>null),
-    ]);
+    const url = new URL(req.url, "http://x");
+    const limit = clamp(url.searchParams.get("limit") || 200, 1, 1000);
+    const days = clamp(url.searchParams.get("days") || 7, 1, 30);
+    const mask = String(url.searchParams.get("mask") || "0") === "1";
 
-    return res.status(200).json({
-      ok:true,
+    // ---- LOGS (ultimi N)
+    const raw = await redis.lrange("logs:ask", 0, limit - 1); // già ordinati dal più recente
+    let items = [];
+    for (const r of raw || []) {
+      try {
+        const o = JSON.parse(r);
+        // normalizzazione minima per robustezza
+        items.push({
+          ts: Number(o.ts || Date.now()),
+          ip: mask ? maskIp(o.ip || "") : String(o.ip || ""),
+          style: o.style || o.stile || "whatif",
+          lang: o.lang || "it",
+          periodo: o.periodo || "future",
+          domanda: o.domanda || "",
+          answer_chars: Number(o.answer_chars || 0),
+          user_type: o.user_type || (o.admin ? "admin" : "free"),
+        });
+      } catch {}
+    }
+
+    // ---- TOTAL (counter cumulativo)
+    const total = Number((await redis.get("stats:total")) || 0);
+
+    // ---- TODAY / LAST N DAYS (da bucket stats:day:YYYY-MM-DD)
+    const todayKey = `stats:day:${isoDay()}`;
+    const todayHash = (await redis.hgetall(todayKey)) || {};
+    const today = sumHash(todayHash);
+
+    const keys = [];
+    for (let i = 0; i < days; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      keys.push(`stats:day:${isoDay(d)}`);
+    }
+    const hashes = await Promise.all(keys.map((k) => redis.hgetall(k)));
+    const lastNBreakdown = {}; // somma per chiave (es. "wtf:future")
+    for (const h of hashes) {
+      if (!h) continue;
+      for (const k of Object.keys(h)) {
+        lastNBreakdown[k] = (lastNBreakdown[k] || 0) + Number(h[k] || 0);
+      }
+    }
+    const lastN = sumHash(lastNBreakdown);
+
+    // trend giornaliero (array di { day, count })
+    const trend = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const k = `stats:day:${isoDay(d)}`;
+      const h = hashes[days - 1 - i] || {};
+      trend.push({ day: isoDay(d), count: sumHash(h) });
+    }
+
+    // breakdown globali (ricavati dai logs caricati in finestra)
+    const breakdown = {
+      style: {},
+      lang: {},
+      periodo: {},
+      user_type: {},
+    };
+    for (const it of items) {
+      breakdown.style[it.style] = (breakdown.style[it.style] || 0) + 1;
+      breakdown.lang[it.lang] = (breakdown.lang[it.lang] || 0) + 1;
+      breakdown.periodo[it.periodo] =
+        (breakdown.periodo[it.periodo] || 0) + 1;
+      breakdown.user_type[it.user_type] =
+        (breakdown.user_type[it.user_type] || 0) + 1;
+    }
+
+    res.status(200).json({
+      ok: true,
       total,
-      today: todayCount,
-      last7,
-      byStyle:  byStyle  || {},
-      byLang:   byLang   || {},
-      byPeriod: byPeriod || {},
-      byUser:   byType   || {},
+      today,
+      lastN, // somma ultimi "days"
+      days,
+      todayBreakdown: todayHash, // es. {"wtf:future":12,"whatif:past":3}
+      lastNBreakdown,            // stesso formato
+      trend,                     // serie nel tempo per grafico lineare
+      breakdown,                 // breakdown sulla finestra di log caricata
+      items,                     // lista log (con domanda)
     });
-  }catch(e){
+  } catch (e) {
     console.error("admin-stats error:", e);
-    return res.status(500).json({ ok:false, error:"server_error" });
+    res.status(500).json({ ok: false, error: "server_error", detail: String(e?.message || e) });
   }
 }
