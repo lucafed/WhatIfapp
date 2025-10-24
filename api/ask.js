@@ -1,8 +1,8 @@
-// /api/ask.js — What?f Engine (2025 • seed-variability, WTF turbo, metaphorical curses only)
-// Stili: whatif (realismo lucido) · wtf (sarcasmo demenziale, oggetti viventi, doppia punchline)
+// /api/ask.js — What?f Engine (2025)
+// Stili: whatif (realismo lucido) · wtf (sarcasmo demenziale con “bestemmia metaforica”)
 // IT/EN — paragrafo singolo, niente emoji/liste/domande
 // Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
-// Log su Redis: soli metadati + hash non reversibile della domanda (no contenuti in chiaro)
+// Log su Redis SENZA contenuto della domanda (solo metadati + hash non reversibile)
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -40,6 +40,7 @@ function cors(req, res) {
 
 /* ---------- Helpers ---------- */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
+
 function normLine(s = "") {
   return String(s).toLowerCase().replace(/[“”"']/g, "").replace(/\s+/g, " ")
     .replace(/[.,;:!?()\[\]\-—]+$/g, "").trim();
@@ -56,7 +57,9 @@ function tightenSentences(text, maxSentences) {
     out.push(p); seen.add(n);
     if (out.length >= maxSentences) break;
   }
-  let t = out.join(" "); if (!/[.!?…]$/.test(t)) t += "."; return t;
+  let t = out.join(" ");
+  if (!/[.!?…]$/.test(t)) t += ".";
+  return t;
 }
 function clampWords(text, maxWords) {
   const w = String(text || "").split(/\s+/);
@@ -79,145 +82,53 @@ function stripQuestionEcho(domanda, text) {
   return t;
 }
 
-// tiny hash + seeded RNG (deterministico su domanda+stile+lang+periodo)
-function tinyHash(s = "") { let h = 2166136261 >>> 0; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) >>> 0; }
-function seededRng(seedStr) {
-  let s = tinyHash(seedStr) || 1;
-  return () => { // xorshift32
-    s ^= s << 13; s ^= s >>> 17; s ^= s << 5; s >>>= 0;
-    return (s % 1e9) / 1e9;
-  };
-}
-function pickSeeded(arr, rnd) { return arr[Math.floor(rnd() * arr.length) % arr.length]; }
+// Aggiunge (quando serve) una “bestemmia metaforica” — mai letterale, solo immaginata/suggestiva.
+function ensureMetaphoricCurse(answer, lang) {
+  let t = String(answer || "");
+  const hasMeta = /(destino|cielo|universo|vento|strada|silenzio).{0,40}(impreca|brontola|borbotta|sussurra la peggior parolaccia|sospira storto)/i.test(t)
+               || /(fate|sky|universe|wind|street|silence).{0,40}(curses under its breath|grumbles|mumbles something unholy|swears without words)/i.test(t);
+  if (hasMeta) return t;
 
-// WTF seeds (IT/EN): opener nickname, vibe, metaphoric-curse lines, closers
-const SEEDS = {
-  it: {
-    nick: ["campione", "fenomeno", "capitano del caos", "astronauta del dubbio", "rockstar", "genio", "filosofo col casco", "tifoso del destino", "capo dei forse"],
-    openerBeat: [
-      "pacca sulla spalla e si parte",
-      "ti raddrizzo il colletto e via",
-      "ti aggancio come un carrello al supermercato e andiamo",
-      "ti aspetto all’angolo col sorriso storto, poi gas",
-      "ti illumino come un lampione stanco e ripartiamo"
-    ],
-    hangover: [
-      "la testa fruscia come un neon difettoso ma tiene botta",
-      "lo stomaco firma tregue con il caffè e fa finta di niente",
-      "i pensieri camminano in infradito, rumorosi, ma arrivano",
-      "il fegato batte il cinque all’acqua frizzante e si volta offeso"
-    ],
-    livingObjects: [
-      "il citofono giudica in 8-bit",
-      "la sedia applaude piano per non farsi notare",
-      "il frigo ti fa il contratto a progetto: solo speranze",
-      "il lampione ti promuove protagonista del marciapiede",
-      "il portone alza un sopracciglio professionale",
-      "il trolley ti fa causa per mobbing emotivo"
-    ],
-    metaCurses: [ // imprecazioni solo metaforiche (mai esplicite)
-      "il destino inciampa e mormora in dialetto stretto",
-      "la sorte sbatte il mignolo e impreca in burocratese",
-      "l’universo fa spallucce e bestemmina in metafora agricola",
-      "il caso starnutisce e manda tutti a quel paese in latino maccheronico",
-      "il fato sussurra un’imprecazione d’archivio e timbra l’uscita"
-    ],
-    closersLeft: [
-      "Sei oltre il rumore",
-      "Stai in piedi anche da seduto",
-      "Ti viene bene sembrare pronto",
-      "Hai fatto pace col forse",
-      "Hai imparato a ridere in corsivo"
-    ],
-    closersRight: [
-      "resta così",
-      "non strafare",
-      "continua piano",
-      "non spiegarlo",
-      "portati avanti"
-    ],
-  },
-  en: {
-    nick: ["champ", "legend", "captain of chaos", "rocket scientist", "genius", "philosopher in a helmet", "boss of maybes"],
-    openerBeat: [
-      "shoulder-smack and go",
-      "I straighten your collar and we roll",
-      "I hook you like a wobbly cart and push",
-      "I meet you at the corner with a crooked grin",
-      "I light you up like a tired streetlight and we move"
-    ],
-    hangover: [
-      "your head buzzes like a faulty neon but holds",
-      "your stomach signs a truce with coffee and pretends",
-      "thoughts walk in flip-flops, loud but arriving",
-      "your liver high-fives sparkling water and looks offended"
-    ],
-    livingObjects: [
-      "the buzzer judges in 8-bit",
-      "the chair claps softly not to get caught",
-      "the fridge drafts a freelance hope contract",
-      "the streetlight casts you as lead of the block",
-      "the door raises one professional eyebrow",
-      "the trolley sues you for emotional bullying"
-    ],
-    metaCurses: [
-      "fate trips and mutters in regional subtitles",
-      "luck jams a pinky toe and swears in paperwork",
-      "the universe shrugs and curses in agricultural metaphor",
-      "chance sneezes and sends everyone to Latin detention",
-      "destiny whispers an archival expletive and clocks out"
-    ],
-    closersLeft: [
-      "You’re past the noise",
-      "You can stand even sitting",
-      "You make readiness look casual",
-      "You made peace with maybe",
-      "You learned to laugh in italics"
-    ],
-    closersRight: [
-      "keep it that way",
-      "don’t overdo it",
-      "keep it slow",
-      "don’t explain it",
-      "get ahead of it"
-    ],
-  }
-};
-
-// costruisce prompt additivo per WTF con semi coerenti
-function buildWtfAdditive(lang, domanda, periodo) {
-  const L = isEn(lang) ? "en" : "it";
-  const rnd = seededRng(`[whatif.wtf]|${domanda}|${lang}|${periodo}|v2`);
-  const s = SEEDS[L];
-
-  const nick = pickSeeded(s.nick, rnd);
-  const beat = pickSeeded(s.openerBeat, rnd);
-  const hang = pickSeeded(s.hangover, rnd);
-  const obj1 = pickSeeded(s.livingObjects, rnd);
-  const obj2 = pickSeeded(s.livingObjects, rnd);
-  const meta = pickSeeded(s.metaCurses, rnd);
-  const closerL = pickSeeded(s.closersLeft, rnd);
-  const closerR = pickSeeded(s.closersRight, rnd);
-
-  if (L === "it") {
-    return `
-USA QUESTI GANCHI (senza elenchi, fondili nel paragrafo):
-- Apertura: pacca + nomignolo: “Oh ${nick}, ${beat}”.
-- Micro-sbornia evocata: ${hang}.
-- Oggetti viventi obbligatori: ${obj1}; ${obj2}.
-- “Bestemmia” solo metaforica (no parolacce): ${meta}.
-- CHIUSURA: doppia punchline con trattino lungo — “${closerL} — ${closerR}.”`.trim();
-  }
-  return `
-MUST-WEAVE HOOKS (no lists, blend into prose):
-- Opening: shoulder-smack + nickname: “Hey ${nick}, ${beat}.”
-- Hangover hint: ${hang}.
-- Living objects (mandatory): ${obj1}; ${obj2}.
-- Metaphorical curse only (no explicit profanity): ${meta}.
-- CLOSING: double punchline with em dash — “${closerL} — ${closerR}.”`.trim();
+  const tailsIt = [
+    "il destino brontola in dialetto ma senza parole",
+    "il cielo impreca a denti stretti senza dire nulla",
+    "l’universo scuote la testa e sussurra la peggior parolaccia, ma solo nell’aria",
+    "il vento fa finta di niente e bestemmia metaforicamente dietro l’angolo",
+  ];
+  const tailsEn = [
+    "fate grumbles in dialect but without words",
+    "the sky swears under its breath without saying anything",
+    "the universe shakes its head and mumbles an unholy metaphor",
+    "the wind pretends nothing happened and curses offstage",
+  ];
+  const extra = (isEn(lang) ? tailsEn : tailsIt)[Math.floor(Math.random() * 4)];
+  if (!/[.!?…]$/.test(t)) t += ".";
+  return `${t} ${extra}.`;
 }
 
-// ---------- Admin check ----------
+// Doppia punchline (— —) per WTF
+function ensureDoublePunchline(answer, lang) {
+  let t = String(answer || "").trim();
+  const ems = (t.match(/—/g) || []).length;
+  if (ems >= 2) return t;
+  const ends = isEn(lang)
+    ? [
+        "nice disaster — keep going.",
+        "wrong shoes — right direction.",
+        "you’re chaos — you’re charming.",
+        "bad idea — great story.",
+      ]
+    : [
+        "bel disastro — continua così.",
+        "scarpe sbagliate — direzione giusta.",
+        "sei caos — sei adorabile.",
+        "idea pessima — storia perfetta.",
+      ];
+  if (!/[.!?…]$/.test(t)) t += ".";
+  return `${t} — ${ends[Math.floor(Math.random()*ends.length)]}`;
+}
+
+/* ---------- Admin check ---------- */
 async function isAdmin(req, requesterIp) {
   const token = String(req.headers["x-admin-token"] || "").trim();
   if (!token) return false;
@@ -249,56 +160,54 @@ function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
 }
 
 /* ---------- Personas (voci) ---------- */
-function personaSystem(style, lang, domanda, periodo) {
+function personaSystem(style, lang) {
   if (style === "wtf") {
     const SYS = (isEn(lang)
       ? `
 You are “What the F” — a razor-tongued best friend who roasts with love.
-SECOND PERSON. ONE paragraph, 6–8 long sentences (~120–165 words).
-Open with a shoulder-smack + rotating nickname (“champ”, “genius”, “captain of chaos”, “legend”…).
-Style: fast, cinematic, irreverent; playful “thinking objects” reacting to the user; no dialogue.
-Use goofy, affectionate sarcasm; keep it human and warm under the joke.
-Metaphorical curses ONLY (no explicit profanity), e.g., “fate trips and mutters in regional subtitles.”
-STRICT: no lists, no questions, no emojis, no moralizing. Respect TEMPORAL MODE.
-END with two ultra-short punchlines separated by an em dash (—), e.g., “You’re fine — you’re dangerous.”
+SECOND PERSON. ONE paragraph, 6–8 long sentences (~110–145 words).
+OPEN with a rotating nickname ONLY (e.g., “champ”, “genius”, “captain of chaos”, “rocket scientist”, “legend”, “chief of bad ideas”).
+Tone: fast, cinematic, goofy, affectionate; playful “thinking objects” appear only when useful (no dialogue).
+Use *metaphorical curses*: exasperations narrated, never literal profanity (e.g., “the sky swears under its breath”, “fate grumbles in dialect”).
+STRICT: no lists, no questions, no emojis, no moralizing. Obey TEMPORAL MODE.
+END with two ultra-short punchlines separated by an em dash — e.g., “bad idea — great story.”
 `.trim()
       : `
 Sei “What the F” — l’amico lingua-affilata che ti prende in giro ma ti vuole bene.
-SECONDA PERSONA. UN paragrafo, 6–8 frasi lunghe (~120–165 parole).
-Apri con pacca sulla spalla + nomignolo (“campione”, “genio”, “capitano del caos”, “leggenda”…).
-Stile: veloce, cinematografico, irriverente; oggetti che “reagiscono” al tuo passaggio; niente dialoghi.
-Sarcasmo demenziale ma affettuoso; sotto resta umano e caldo.
-Imprecazioni SOLO metaforiche, mai esplicite (es.: “il destino inciampa e mormora in dialetto stretto”).
+SECONDA PERSONA. UN paragrafo, 6–8 frasi lunghe (~110–145 parole).
+APRI solo con un nomignolo variabile (es. “campione”, “genio”, “capitano del caos”, “astronauta del dubbio”, “leggenda”, “capo delle cattive idee”).
+Tono: veloce, cinematografico, demenziale ma affettuoso; oggetti “pensanti” solo quando servono (niente dialoghi).
+Usa *bestemmie metaforiche*: esasperazioni narrate, mai letterali (es. “il cielo impreca a denti stretti”, “il destino brontola in dialetto”).
 RIGIDO: niente elenchi, niente domande, niente emoji, niente prediche. Rispetta la MODALITÀ TEMPORALE.
-CHIUDI con doppia punchline separata da — (trattino lungo).
+CHIUDI con due punchline telegrafiche separate da un trattino lungo — es.: “idea pessima — storia perfetta.”
 `.trim());
 
-    // Aggiunta seed-variability come istruzione di sistema
-    const add = buildWtfAdditive(lang, domanda, periodo);
-
+    // Few-shots con umorismo + “bestemmia metaforica”
     const FEWSHOTS = [
       { role: "system", content:
-`ESEMPIO IT • Cambiare città (futuro)
-Oh campione delle mappe emotive, entri nella città nuova come trailer di una serie senza titolo, il citofono ti giudica in 8-bit e la porta sbadiglia “vediamo”, cammini troppo per stancare il rumore e la mente ti segue come un carrello storto, il frigo firma una tregua con la speranza e il lampione ti mette in scena, la sera abbassa i bassi e i vicini imparano il tuo passo, il destino inciampa e mormora in dialetto stretto, e quando appoggi le chiavi capisci che non devi vincere niente: devi solo arrivare in orario alla tua vita — niente fretta — niente scuse.` },
+`ESEMPIO IT • Tornare con l’ex (futuro)
+Oh campione del replay emotivo, rientri nella saga convinto di cambiare finale e invece cambi solo il font: i primi giorni siete una pubblicità di sorrisi, poi il frigo ti giudica come un ex su LinkedIn, la playlist ti fa gli agguati e il divano ti ricorda dove ti eri perso; quando scivoli sul solito discorso, senti l’aria che sussurra una parolaccia che non osa dirsi, e il destino — paziente — brontola in dialetto ma senza parole; alla fine capisci che non ti mancava “lei”, ti mancava la versione di te che promette tutto: saluti, fai pace con lo specchio e riparti — poche scuse — passo giusto.` },
       { role: "system", content:
-`EXAMPLE EN • Start a business (future)
-Alright, legend, you clock in bulletproof and the first form eats your cape, spreadsheets side-eye your optimism, the receipt printer coughs like a scooter, the chair claps softly at closing time, fate jams a pinky toe and swears in paperwork, three real faces return and the counter becomes a republic of names, midnight uncorks a suspiciously balsamic “victory” and you laugh honest — still standing — still you.` },
+`ESEMPIO IT • Chiringuito in Islanda (futuro)
+Oh genio della sabbia fredda, apri un bar tropicale dove il ghiaccio fa sindacato: mojito coi guanti, occhiali da sole al buio e gabbiani che ridono del listino; il vento ti pettina male e l’insegna ti dà del coraggioso a metà, quando la grandine suona il campanello il cielo impreca a denti stretti ma si scusa subito, e tu versi sorrisi come se bastasse la menta a domare il Polo; non diventi ricco, diventi racconto: “quello del Caldo Dentro”, e fa ridere pure il meteo — idea folle — memoria lunga.` },
+      { role: "system", content:
+`EXAMPLE EN • Change job (future)
+Alright, captain of Mondays, you peel yourself off the chair and send a CV with the charisma of a damp fax, the printer coughs like a scooter and the spreadsheet rolls its eyes, when you doubt yourself the ceiling swears under its breath and then pretends it was the pipes, and still you show up clearer, ask for less noise, get one solid yes that feels like a clean window — messy start — better plot.` },
     ];
-
-    return { sys: SYS + "\n\n" + add, fewshots: FEWSHOTS };
+    return { sys: SYS, fewshots: FEWSHOTS };
   }
 
   const SYS_WHATIF = (isEn(lang)
     ? `
 You are "What If" — a lucid, kind, slightly ironic friend.
-SECOND PERSON. One paragraph, 8–11 sentences (~115–160 words).
+SECOND PERSON. One paragraph, 8–11 sentences (~110–155 words).
 Warm, grounded, simple; ordinary images (keys, streetlights, notebooks, hands, air).
 Show small human truths; no heroics, no melancholy. No lists, no questions, no emojis.
 End with a short reflective line (not advice).
 `.trim()
     : `
 Sei "What If" — un amico lucido e affettuoso, col sorriso pratico.
-SECONDA PERSONA. Un paragrafo, 8–11 frasi (~115–160 parole).
+SECONDA PERSONA. Un paragrafo, 8–11 frasi (~110–155 parole).
 Tono caldo e concreto; immagini quotidiane (chiavi, lampioni, taccuini, mani, aria).
 Mostra verità piccole e vere; niente eroismi, niente malinconia.
 Niente elenchi o domande o emoji. Chiudi con una riga riflessiva breve (non un consiglio).
@@ -356,12 +265,12 @@ export default async function handler(req, res) {
 
     // Body
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-    const { domanda = "", stile = "whatif", lang = "it", extra = "", micro = {}, periodo = "future" } = body;
+    const { domanda = "", stile = "whatif", lang = "it", extra = "", periodo = "future" } = body;
     if (!domanda || typeof domanda !== "string")
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
     // Personas + Temporal mode
-    const { sys, fewshots } = personaSystem(stile, lang, domanda, periodo);
+    const { sys, fewshots } = personaSystem(stile, lang);
     const temporal = temporalSystem(periodo, lang, stile);
     const extraTemporalHint =
       stile === "wtf" && String(periodo).toLowerCase() === "past"
@@ -369,20 +278,6 @@ export default async function handler(req, res) {
           ? "Write entirely in past or conditional tense, as if it already happened, keeping the teasing tragicomic tone."
           : "Scrivi tutto al passato o al condizionale, come se fosse già successo, mantenendo il tono pungente-tragicomico.")
         : "";
-
-    // micro-profile (se presente) in una riga poetica, senza renderlo elenco
-    const microLine = (() => {
-      const mood = micro?.mood ? String(micro.mood) : "";
-      const anchor = micro?.anchor ? String(micro.anchor) : "";
-      const decide = micro?.decide ? String(micro.decide) : "";
-      const zodiac = micro?.zodiac ? String(micro.zodiac) : "";
-      const L = isEn(lang);
-      const bits = [mood, anchor, decide, zodiac].filter(Boolean).join(L ? "; " : "; ");
-      if (!bits) return "";
-      return L
-        ? `Subtext for tone only (do NOT enumerate): today the user feels: ${bits}.`
-        : `Sottotesto per il tono (NON farne elenco): oggi l’utente è: ${bits}.`;
-    })();
 
     const userPrompt = isEn(lang)
       ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Keep the exact persona voice.`
@@ -392,7 +287,6 @@ export default async function handler(req, res) {
       { role: "system", content: sys },
       { role: "system", content: temporal },
       ...(extraTemporalHint ? [{ role: "system", content: extraTemporalHint }] : []),
-      ...(microLine ? [{ role: "system", content: microLine }] : []),
       ...(fewshots || []),
       { role: "user", content: userPrompt },
     ];
@@ -400,10 +294,10 @@ export default async function handler(req, res) {
     // OpenAI
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.98 : 0.84,
+      temperature: stile === "wtf" ? 0.98 : 0.82,
       top_p: 0.92,
-      max_tokens: 380,
-      frequency_penalty: stile === "wtf" ? 0.55 : 0.1,
+      max_tokens: 340, // leggermente più ampio per la comicità
+      frequency_penalty: stile === "wtf" ? 0.6 : 0.1,
       presence_penalty: 0.0,
       messages,
     });
@@ -411,30 +305,25 @@ export default async function handler(req, res) {
     // Post-process
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
+
     answer = stripQuestionEcho(domanda, answer);
     answer = tightenSentences(answer, stile === "wtf" ? 8 : 11);
-    answer = clampWords(answer, stile === "wtf" ? 165 : 160);
+    answer = clampWords(answer, stile === "wtf" ? 145 : 155);
     answer = normalizeOneParagraph(answer);
-
-    // Forza doppia punchline per WTF, con fallback em-dash se il modello manca
-    function ensureDoublePunchline(answerText) {
-      const t = String(answerText || "").trim();
-      const ems = (t.match(/—/g) || []).length;
-      if (ems >= 1 && /—[^—]{1,60}$/.test(t)) return t; // già chiuso a doppia idea
-      // aggiunge chiusura seed-based coerente con lingua
-      const L = isEn(lang) ? "en" : "it";
-      const rnd = seededRng(`[closer]|${domanda}|${lang}|${stile}|${periodo}`);
-      const s = SEEDS[L];
-      const left = pickSeeded(s.closersLeft, rnd);
-      const right = pickSeeded(s.closersRight, rnd);
-      const base = /[.!?…]$/.test(t) ? t : t + ".";
-      return `${base} — ${left} — ${right}.`;
+    if (stile === "wtf") {
+      answer = ensureMetaphoricCurse(answer, lang);
+      answer = ensureDoublePunchline(answer, lang);
+    } else {
+      if (!/[.!?…]$/.test(answer)) answer += ".";
     }
-    if (stile === "wtf") answer = ensureDoublePunchline(answer);
-    else if (!/[.!?…]$/.test(answer)) answer += ".";
 
     // --- LOG persistente (privacy-safe: niente testo domanda) ---
     try {
+      function tinyHash(s = "") {
+        let h = 2166136261 >>> 0;
+        for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+        return (h >>> 0).toString(36);
+      }
       const entry = {
         ts: Date.now(),
         ip,
@@ -442,7 +331,7 @@ export default async function handler(req, res) {
         lang,
         periodo,
         domanda_len: String(domanda || "").length,
-        domanda_hash: tinyHash(domanda || "").toString(36),
+        domanda_hash: tinyHash(domanda || ""),
         answer_chars: (answer || "").length,
         admin: !!admin,
         user_type: bypass ? "admin" : (isPro ? "pro" : "free"),
@@ -475,4 +364,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-      }
+}
