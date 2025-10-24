@@ -3,313 +3,227 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Admin · What?f (stabile)</title>
+<title>What?f — Admin (dashboard)</title>
 <meta name="theme-color" content="#0B0B0C"/>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+<link rel="preconnect" href="https://cdn.jsdelivr.net"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-  :root{--bg:#0b0c0f;--card:#12161c;--fg:#eaf2ee;--muted:#9fb0ba;--acc1:#1c57a0;--acc2:#ffec01}
-  *{box-sizing:border-box}
-  body{margin:0;background:radial-gradient(900px 700px at 20% 18%,#101414 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:1040px;margin:auto;padding:18px}
-  h1{margin:8px 0 14px}
-  .grid{display:grid;gap:14px}
-  .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
-  @media (max-width:860px){.g2,.g3{grid-template-columns:1fr}}
+  :root{--bg:#0B0B0C;--card:#13191E;--fg:#EAF2EE;--muted:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01;--ok:#11c46f;--bad:#e85b5b}
+  *{box-sizing:border-box} body{margin:0;background:#0B0B0C;color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{max-width:1100px;margin:auto;padding:18px}
+  h1{margin:8px 0 14px;font-size:28px}
+  .grid{display:grid;gap:12px}
   .card{background:var(--card);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:14px}
-  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   input,select{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px}
   button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
-  .primary{background:linear-gradient(180deg,var(--acc1),var(--acc2));color:#0A0E12}
+  .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12}
   .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
   .badge{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:12px}
-  table{width:100%;border-collapse:collapse;margin-top:8px}
-  th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:13px}
-  canvas{width:100%!important;max-height:280px}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+  th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
+  .ok{color:var(--ok)} .bad{color:var(--bad)} .muted{color:var(--muted)}
+  @media(min-width:900px){ .cols-2{grid-template-columns:1fr 1fr} }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <main>
-  <h1>Admin · What?f</h1>
+  <h1>What?f — <span class="muted">Admin (dashboard)</span></h1>
 
-  <!-- Accesso -->
-  <div class="card">
-    <h3>Accesso</h3>
-    <p class="muted">Inserisci il PIN admin (variabile <code>ADMIN_PIN</code> su Vercel). Genero un token legato al tuo IP per 7 giorni.</p>
+  <!-- Stato & azioni -->
+  <div class="grid cols-2">
+    <div class="card">
+      <h3>Operazioni veloci</h3>
+      <div class="row">
+        <button id="btnRefresh" class="primary">Aggiorna</button>
+        <button id="btnAuto" class="ghost">Auto-refresh</button>
+        <button id="btnClear" class="ghost">Svuota log</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <label class="row"><input type="checkbox" id="maskIp" checked/> IP mascherati</label>
+        <label>Window log:
+          <select id="win">
+            <option>100</option><option selected>200</option><option>400</option><option>800</option>
+          </select>
+        </label>
+        <label>Trend giorni:
+          <select id="trend">
+            <option>7</option><option selected>10</option><option>14</option><option>30</option>
+          </select>
+        </label>
+        <span class="muted" id="ts"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Stato utente & crediti (questo device)</h3>
+      <div class="row"><span>Admin:</span> <span id="adminState" class="badge">no</span> <span class="muted">IP:</span> <span id="myIp" class="badge">—</span></div>
+      <div class="row" style="margin-top:6px"><span class="muted">Token:</span> <span id="tok" class="badge">—</span> <span class="muted">Tipo:</span> <span id="usertype" class="badge">free</span></div>
+      <div class="row" style="margin-top:6px"><span class="muted">Crediti oggi:</span> <span id="credits" class="badge">—</span></div>
+      <div class="row" style="margin-top:10px">
+        <input id="pin" type="password" placeholder="PIN admin" style="min-width:180px"/>
+        <button id="enter" class="primary">Entra admin</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button id="renew" class="ghost">Rinnova (7gg)</button>
+        <button id="revoke" class="ghost">Revoca token</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button id="proOn" class="ghost">Attiva PRO locale</button>
+        <button id="proOff" class="ghost">Disattiva PRO</button>
+      </div>
+      <p class="muted" id="hint"></p>
+    </div>
+  </div>
+
+  <!-- Statistiche -->
+  <div class="card" style="margin-top:12px">
+    <h3>Statistiche globali (finestra caricata)</h3>
     <div class="row">
-      <input id="pin" type="password" placeholder="PIN admin" style="min-width:180px"/>
-      <button class="primary" id="enterBtn">Entra</button>
-      <button class="ghost" id="logoutBtn">Esci</button>
-      <span id="authState" class="badge">Non autenticato</span>
+      <span class="badge">Totale: <b id="stTotal">—</b></span>
+      <span class="badge">Oggi: <b id="stToday">—</b></span>
+      <span class="badge">Ultimi 7 g: <b id="stLast7">—</b></span>
+      <span class="badge">Per stile: <b id="stStyle">{}</b></span>
+      <span class="badge">Per lingua: <b id="stLang">{}</b></span>
+      <span class="badge">Per tempo: <b id="stPeriod">{}</b></span>
+      <span class="badge">User types: <b id="stUsers">{}</b></span>
     </div>
-    <p class="muted" id="authHelp"></p>
-  </div>
-
-  <!-- Operazioni veloci + Stato -->
-  <div class="card">
-    <div class="grid g3">
-      <div>
-        <h3>Operazioni veloci</h3>
-        <div class="row">
-          <button class="primary" id="refreshBtn">Aggiorna</button>
-          <button class="ghost" id="autoBtn">Auto-refresh</button>
-          <button class="ghost" id="clearBtn">Svuota log</button>
-        </div>
-        <div class="row" style="margin-top:8px">
-          <label>Window log:</label>
-          <select id="limitSel">
-            <option>100</option><option selected>200</option><option>500</option><option>1000</option>
-          </select>
-          <label style="margin-left:8px">Trend giorni:</label>
-          <select id="trendSel">
-            <option>7</option><option selected>14</option><option>21</option><option>30</option>
-          </select>
-          <label class="row" style="margin-left:8px"><input type="checkbox" id="maskIp" checked> &nbsp;IP mascherati</label>
-        </div>
-      </div>
-      <div>
-        <h3>Stato</h3>
-        <div class="row">
-          <span class="badge">IP: <span id="stateIp">—</span></span>
-          <span class="badge">Token: <span id="stateTok">—</span></span>
-          <span class="badge">Tipo: <span id="stateType">—</span></span>
-        </div>
-      </div>
-      <div>
-        <h3>Contatori (finestra)</h3>
-        <div class="row">
-          <span class="badge">Totale: <span id="total">—</span></span>
-          <span class="badge">Oggi: <span id="today">—</span></span>
-          <span class="badge">Ultimi 7g: <span id="last7">—</span></span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Grafici -->
-  <div class="card">
-    <h3>Grafici</h3>
-    <div class="grid g2">
-      <div><canvas id="styleChart"></canvas></div>
-      <div><canvas id="periodChart"></canvas></div>
-    </div>
-    <div style="margin-top:12px"><canvas id="trendChart"></canvas></div>
+    <div style="margin-top:10px"><canvas id="trendChart" height="110"></canvas></div>
   </div>
 
   <!-- Log richieste -->
-  <div class="card">
-    <h3>Log richieste</h3>
-    <div class="row">
-      <select id="fStyle">
-        <option value="">Stile: tutti</option>
-        <option value="whatif">whatif</option>
-        <option value="wtf">wtf</option>
-      </select>
-      <select id="fLang">
-        <option value="">Lingua: tutte</option>
-        <option value="it">it</option>
-        <option value="en">en</option>
-      </select>
-      <select id="fPer">
-        <option value="">Tempo: tutti</option>
-        <option value="past">past</option>
-        <option value="future">future</option>
-      </select>
-      <input id="searchQ" placeholder="Cerca nella domanda…" style="min-width:220px"/>
+  <div class="card" style="margin-top:12px">
+    <div class="row" style="justify-content:space-between">
+      <h3 style="margin:0">Log richieste</h3>
+      <label>
+        <select id="limitSel">
+          <option value="100">ultimi 100</option>
+          <option value="200" selected>ultimi 200</option>
+          <option value="400">ultimi 400</option>
+        </select>
+      </label>
     </div>
-    <table id="logsTbl">
-      <thead><tr><th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Domanda</th></tr></thead>
+    <div class="row" style="margin-top:6px">
+      <select id="fStyle"><option value="">Stile: tutti</option><option>whatif</option><option>wtf</option></select>
+      <select id="fLang"><option value="">Lingua: tutte</option><option>it</option><option>en</option></select>
+      <select id="fPeriod"><option value="">Tempo: tutti</option><option>past</option><option>future</option></select>
+      <select id="fUser"><option value="">Tipo utente: tutti</option><option>free</option><option>pro</option><option>admin</option></select>
+      <input id="q" placeholder="Cerca nella domanda…" style="min-width:220px"/>
+    </div>
+    <table id="tbl">
+      <thead><tr><th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th></tr></thead>
       <tbody></tbody>
     </table>
   </div>
 </main>
 
 <script>
-const LS = localStorage;
-const TOKEN_KEY = "admin_token";
-const fmtDate = ts => new Date(ts).toLocaleString();
-const maskIp = ip => ip.replace(/^(\d+\.\d+)\.\d+\.\d+/, "$1.*.*");
+const LS=localStorage, TKEY="admin_token", PROKEY="whatif_prefs";
+let chart=null, auto=null;
 
-let autoTimer = null;
-let charts = {};
+function setBadge(id, text){ document.getElementById(id).textContent = text; }
+function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(); }
+function getTok(){ return LS.getItem(TKEY)||""; }
+function setTok(t){ if(t) LS.setItem(TKEY,t); else LS.removeItem(TKEY); setBadge("tok", t? t.slice(0,6)+"…"+t.slice(-4): "—"); }
+function setProUI(){ try{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); setBadge("usertype", p.pro?"pro":"free"); }catch{} }
 
-function setAuthUI(ok, ip="—", tok="—"){
-  document.getElementById("authState").textContent = ok ? "Autenticato" : "Non autenticato";
-  document.getElementById("stateIp").textContent = ip || "—";
-  document.getElementById("stateTok").textContent = tok ? (tok.slice(0,6)+"…"+tok.slice(-4)) : "—";
-  document.getElementById("stateType").textContent = ok ? "admin" : "guest";
-}
-
-async function verifyToken() {
-  const tok = LS.getItem(TOKEN_KEY)||"";
-  if (!tok) { setAuthUI(false); return false; }
-  const r = await fetch("/api/admin-token", { headers: { "x-admin-token": tok }});
+async function adminCheck(){
+  const r = await fetch("/api/admin-token",{ headers:{ "x-admin-token": getTok() }});
   const d = await r.json().catch(()=>({}));
-  setAuthUI(!!d.admin, d.ip, d.token||tok);
-  return !!d.admin;
+  const yes = d?.ok && d.admin;
+  setBadge("adminState", yes?"yes":"no");
+  setBadge("myIp", d?.ip || "—");
+  setBadge("credits", yes?"∞": (JSON.parse(LS.getItem("whatif_credits")||"{}").used||0)+"/(3/10)");
+  return yes;
 }
 
-async function loginWithPin(pin) {
-  const r = await fetch("/api/admin-token", {
-    method:"POST",
-    headers: { "admin-secret": pin }
-  });
-  const d = await r.json().catch(()=>({}));
-  if (!r.ok || !d.ok) throw new Error(d.error||"auth");
-  LS.setItem(TOKEN_KEY, d.token);
-  return d.token;
+function renderTrend(tr){
+  const ctx=document.getElementById("trendChart").getContext("2d");
+  if(chart) chart.destroy();
+  chart=new Chart(ctx,{type:"bar", data:{ labels: tr.labels||[], datasets:[{ label:"Richieste/giorno", data: tr.data||[] }] },
+    options:{ responsive:true, plugins:{ legend:{ display:false }}}});
 }
 
-async function fetchStats(limit, trendDays){
-  const tok = LS.getItem(TOKEN_KEY)||"";
-  const url = `/api/stats?limit=${encodeURIComponent(limit)}&trendDays=${encodeURIComponent(trendDays)}`;
-  const r = await fetch(url, { headers: tok ? { "x-admin-token": tok } : {} });
-  return await r.json();
-}
-
-async function fetchLogs(limit, mask){
-  const tok = LS.getItem(TOKEN_KEY)||"";
-  const url = `/api/admin-logs?limit=${encodeURIComponent(limit)}&mask=${mask?1:0}`;
-  const r = await fetch(url, { headers: { "x-admin-token": tok } });
-  const d = await r.json().catch(()=>({}));
-  if (!r.ok || !d.ok) throw new Error(d.error||"auth");
-  return d.items || [];
-}
-
-function renderTable(items){
-  const fStyle = document.getElementById("fStyle").value;
-  const fLang  = document.getElementById("fLang").value;
-  const fPer   = document.getElementById("fPer").value;
-  const q      = document.getElementById("searchQ").value.trim().toLowerCase();
-
-  const rows = (items||[]).filter(x=>{
-    if (fStyle && x.style!==fStyle) return false;
-    if (fLang  && x.lang!==fLang) return false;
-    if (fPer   && x.periodo!==fPer) return false;
-    if (q && !String(x.domanda||"").toLowerCase().includes(q)) return false;
+function drawTable(items){
+  const fs=document.getElementById("fStyle").value, fl=document.getElementById("fLang").value,
+        fp=document.getElementById("fPeriod").value, fu=document.getElementById("fUser").value,
+        q=document.getElementById("q").value.toLowerCase();
+  const rows=(items||[]).filter(x=>{
+    if(fs && x.style!==fs) return false;
+    if(fl && x.lang!==fl) return false;
+    if(fp && x.periodo!==fp) return false;
+    if(fu && x.user_type!==fu) return false;
+    if(q && !String(x.domanda||"").toLowerCase().includes(q)) return false;
     return true;
   });
 
-  const tb = document.querySelector("#logsTbl tbody");
-  tb.innerHTML = "";
-  for (const it of rows) {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${fmtDate(it.ts)}</td>
-                    <td>${it.ip||"—"}</td>
-                    <td>${it.user_type||"—"}</td>
-                    <td>${it.style||"—"}</td>
-                    <td>${it.lang||"—"}</td>
-                    <td>${it.periodo||"—"}</td>
-                    <td>${(it.domanda||"").replace(/\s+/g," ").slice(0,220)}</td>`;
+  const tb=document.querySelector("#tbl tbody"); tb.innerHTML="";
+  for(const it of rows){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${fmtDate(it.ts)}</td><td>${it.ip||""}</td><td>${it.user_type||""}</td>
+                  <td>${it.style}</td><td>${it.lang}</td><td>${it.periodo}</td>
+                  <td>${it.answer_chars||0}</td><td>${(it.domanda||"").replace(/\s+/g," ").slice(0,250)}</td>`;
     tb.appendChild(tr);
   }
 }
 
-function renderCharts(stats){
-  const styleCtx = document.getElementById("styleChart");
-  const perCtx   = document.getElementById("periodChart");
-  const trCtx    = document.getElementById("trendChart");
+async function loadAll(){
+  document.getElementById("ts").textContent=new Date().toLocaleString();
+  const mask=document.getElementById("maskIp").checked ? "1":"0";
+  const limit=document.getElementById("limitSel").value || "200";
+  const days=document.getElementById("trend").value || "10";
 
-  const kill = id => { if (charts[id]) { charts[id].destroy(); delete charts[id]; } };
+  // stats
+  const s = await fetch(`/api/admin-stats?days=${days}`,{ headers:{ "x-admin-token": getTok() }});
+  const S = await s.json().catch(()=>({}));
+  setBadge("stTotal", S.total??"0"); setBadge("stToday", S.today??"0"); setBadge("stLast7", S.last7??"0");
+  setBadge("stStyle", JSON.stringify(S.byStyle||{})); setBadge("stLang", JSON.stringify(S.byLang||{}));
+  setBadge("stPeriod", JSON.stringify(S.byPeriod||{})); setBadge("stUsers", JSON.stringify(S.byUserType||{}));
+  if(S.trend) renderTrend(S.trend);
 
-  // Stili
-  kill("style");
-  const sLabels = Object.keys(stats.byStyle||{});
-  const sData   = sLabels.map(k=>stats.byStyle[k]);
-  charts.style = new Chart(styleCtx, {
-    type: "bar",
-    data: { labels: sLabels, datasets: [{ label:"Per stile", data: sData }]},
-    options: { responsive:true, plugins:{ legend:{display:false}}}
-  });
-
-  // Tempo
-  kill("period");
-  const pLabels = Object.keys(stats.byPeriod||{});
-  const pData   = pLabels.map(k=>stats.byPeriod[k]);
-  charts.period = new Chart(perCtx, {
-    type: "bar",
-    data: { labels: pLabels, datasets: [{ label:"Per tempo", data: pData }]},
-    options: { responsive:true, plugins:{ legend:{display:false}}}
-  });
-
-  // Trend
-  kill("trend");
-  const tLabels = (stats.trend||[]).map(x=>x.day);
-  const tData   = (stats.trend||[]).map(x=>x.count);
-  charts.trend = new Chart(trCtx, {
-    type: "line",
-    data: { labels: tLabels, datasets: [{ label:"Trend (giorni)", data: tData, tension: .3 }]},
-    options: { responsive:true, plugins:{ legend:{display:false}}}
-  });
+  // logs
+  const r = await fetch(`/api/admin-logs?limit=${limit}&mask=${mask}`,{ headers:{ "x-admin-token": getTok() }});
+  const d = await r.json().catch(()=>({}));
+  drawTable(d.items||[]);
 }
 
-async function refreshAll(){
-  try{
-    const limit = parseInt(document.getElementById("limitSel").value,10);
-    const trend = parseInt(document.getElementById("trendSel").value,10);
-    const mask  = document.getElementById("maskIp").checked;
-
-    const [stats, logs] = await Promise.all([
-      fetchStats(limit, trend),
-      fetchLogs(limit, mask)
-    ]);
-
-    document.getElementById("total").textContent = stats.total ?? 0;
-    document.getElementById("today").textContent = stats.today ?? 0;
-    document.getElementById("last7").textContent = stats.last7 ?? 0;
-
-    renderCharts(stats);
-    renderTable(logs);
-  }catch(e){
-    alert("Autenticazione richiesta o errore server.");
-  }
-}
-
-/* Eventi */
-document.getElementById("enterBtn").onclick = async ()=>{
-  try{
-    const pin = document.getElementById("pin").value.trim();
-    if(!pin) return alert("Inserisci il PIN");
-    await loginWithPin(pin);
-    document.getElementById("authHelp").textContent = "Token registrato (7gg) legato al tuo IP.";
-    await verifyToken();
-    await refreshAll();
-  }catch(e){
-    document.getElementById("authHelp").textContent = "PIN errato o API non allineata.";
-    setAuthUI(false);
-  }
+// eventi
+document.getElementById("enter").onclick = async ()=>{
+  const pin = document.getElementById("pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
+  const r = await fetch("/api/admin-token",{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ pin })});
+  const d = await r.json().catch(()=>({}));
+  if(r.ok && d.ok){ setTok(d.token); document.getElementById("hint").textContent="Login ok. Token legato al tuo IP per ~7gg."; await adminCheck(); loadAll(); }
+  else { alert("PIN errato"); }
 };
-document.getElementById("logoutBtn").onclick = ()=>{
-  LS.removeItem(TOKEN_KEY);
-  setAuthUI(false);
+document.getElementById("renew").onclick = async ()=>{
+  const r = await fetch("/api/admin-token?action=renew",{ method:"POST", headers:{ "x-admin-token": getTok() }});
+  if(r.ok) alert("Rinnovato per 7gg"); else alert("Errore rinnovo");
 };
-
-document.getElementById("refreshBtn").onclick = refreshAll;
-document.getElementById("autoBtn").onclick = ()=>{
-  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; document.getElementById("autoBtn").textContent="Auto-refresh"; return; }
-  autoTimer = setInterval(refreshAll, 5000);
-  document.getElementById("autoBtn").textContent="Stop auto-refresh";
+document.getElementById("revoke").onclick = async ()=>{
+  await fetch("/api/admin-token?action=revoke",{ method:"POST", headers:{ "x-admin-token": getTok() }});
+  setTok(""); await adminCheck();
 };
-document.getElementById("clearBtn").onclick = async ()=>{
-  try{
-    const tok = LS.getItem(TOKEN_KEY)||"";
-    if(!tok) return alert("Serve login admin.");
-    if(!confirm("Sicuro di svuotare i log?")) return;
-    const r = await fetch("/api/admin-logs", { method:"DELETE", headers:{ "x-admin-token": tok }});
-    if(!r.ok) throw new Error("delete_failed");
-    alert("Log svuotati."); refreshAll();
-  }catch(e){ alert("Errore: "+e.message); }
+document.getElementById("proOn").onclick = ()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); p.pro=true; LS.setItem(PROKEY,JSON.stringify(p)); setProUI(); };
+document.getElementById("proOff").onclick = ()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); delete p.pro; LS.setItem(PROKEY,JSON.stringify(p)); setProUI(); };
+
+document.getElementById("btnRefresh").onclick = loadAll;
+document.getElementById("btnClear").onclick = async ()=>{
+  if(!confirm("Svuotare i log?")) return;
+  await fetch("/api/admin-logs",{ method:"DELETE", headers:{ "x-admin-token": getTok() }});
+  loadAll();
 };
+document.getElementById("btnAuto").onclick = ()=>{
+  if(auto){ clearInterval(auto); auto=null; document.getElementById("btnAuto").textContent="Auto-refresh"; }
+  else { auto=setInterval(loadAll, 5000); document.getElementById("btnAuto").textContent="Stop auto"; }
+};
+for(const id of ["fStyle","fLang","fPeriod","fUser","q","limitSel","maskIp","win","trend"])
+  document.getElementById(id).addEventListener("input", ()=>loadAll());
 
-["fStyle","fLang","fPer","searchQ"].forEach(id=>{
-  document.getElementById(id).addEventListener("input", ()=>refreshAll());
-});
-
-/* Init */
-(async ()=>{
-  await verifyToken(); // set UI state if token già presente
-  // Non auto-carico i dati se non autenticato per evitare errore pop-up
+(async function init(){
+  setProUI();
+  setTok(getTok());
+  await adminCheck();
+  loadAll();
 })();
 </script>
 </body>
