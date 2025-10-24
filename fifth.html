@@ -233,7 +233,6 @@ function decorateEmBits(el){
   const raw = el.textContent;
   if(!raw.includes("—")) return;
   const parts = raw.split("—");
-  // ricompone: i segmenti dispari (1,3,5,...) sono parentesi/colpi comici
   let html = "";
   for(let i=0;i<parts.length;i++){
     const seg = parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -241,6 +240,15 @@ function decorateEmBits(el){
     else html += (i===0 ? seg : `—${seg}`);
   }
   el.innerHTML = html;
+}
+
+function mapGenderToSex(g){
+  switch(String(g||'').toLowerCase()){
+    case 'uomo': return 'm';
+    case 'donna': return 'f';
+    case 'altro': return 'nb';
+    default: return '';
+  }
 }
 
 if(isReplay){
@@ -258,6 +266,11 @@ if(isReplay){
   setTitles(domanda);
   document.getElementById('qView').textContent = domanda || '—';
 
+  // ===== NEW: leggi sex dal profilo (fallback da gender) =====
+  const profile = JSON.parse(LS.getItem('whatif_profile') || '{}');
+  const sex = (profile.sex) ? String(profile.sex).toLowerCase()
+            : mapGenderToSex(profile.gender || '');
+
   (async ()=>{
     navigator.sendBeacon?.("/api/track") || fetch("/api/track",{method:"POST",keepalive:true}).catch(()=>{});
     try{
@@ -274,7 +287,8 @@ if(isReplay){
           stile:style,
           extra:"",
           micro:req.micro||{},
-          periodo
+          periodo,
+          sex // <-- PASSA IL SESSO NORMALIZZATO
         })
       });
 
