@@ -1,5 +1,5 @@
 // /api/ask.js — What?f Engine (2025)
-// Stili: whatif (realismo lucido) · wtf (sarcasmo demenziale, doppia punchline)
+// Stili: whatif (realismo lucido) · wtf (sarcasmo demenziale, sbronza poetica, doppia punchline)
 // IT/EN — paragrafo singolo, niente emoji/liste/domande
 // Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
 // Log su Redis SENZA contenuto della domanda (solo metadati + hash non reversibile)
@@ -86,10 +86,9 @@ function ensureDoublePunchline(answer, lang) {
   let t = String(answer || "").trim();
   const ems = (t.match(/—/g) || []).length;
   if (ems >= 2) return t;
-  // se manca, attacca una doppia coda cortissima
   const tail = isEn(lang)
-    ? "nice mess — keep going."
-    : "bel casino — continua così.";
+    ? "holy chaos — keep going."
+    : "madonna del caos — continua così.";
   if (!/[.!?…]$/.test(t)) t += ".";
   return `${t} — ${tail}`;
 }
@@ -117,7 +116,7 @@ function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
   const en = isEn(lang);
   if (String(periodo || "").toLowerCase() === "past") {
     return en
-      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Speak as if the choice had been made back then and show how it would likely have unfolded. Prefer past/conditional tenses and present-flash cuts. Do NOT give advice, do NOT ask questions, do NOT restate the user's question. Keep the exact ${style.toUpperCase()} voice.`
+      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Speak as if the choice had been made back then and show how it likely unfolded. Prefer past/conditional tenses and present-flash cuts. Do NOT give advice, do NOT ask questions, do NOT restate the user's question. Keep the exact ${style.toUpperCase()} voice.`
       : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Parla come se la scelta fosse stata fatta allora e mostra come sarebbe verosimilmente andata. Preferisci passato/condizionale con lampi di presente narrativo. NON dare consigli, NON fare domande, NON ripetere la domanda. Mantieni esattamente la voce ${style.toUpperCase()}.`;
   }
   return en
@@ -130,38 +129,48 @@ function personaSystem(style, lang) {
   if (style === "wtf") {
     const SYS = (isEn(lang)
       ? `
-You are “What the F” — a razor-tongued best friend who roasts with love.
+You are “What the F” — a bar-warm, razor-tongued best friend who roasts with love.
 SECOND PERSON. ONE paragraph, 6–8 long sentences (~110–140 words).
-Open with a shoulder-smack + rotating nickname (“champ”, “genius”, “captain of chaos”, “rocket scientist”, “legend”).
-Style: fast, cinematic, irreverent; playful “thinking objects”; no dialogue.
-Goofy sarcasm turned up, never cruel; human and warm under the joke.
+Open with a shoulder-smack + rotating nickname (“champ”, “genius”, “captain of chaos”, “rocket scientist”, “legend”, “philosopher in a helmet”).
+Style: fast, cinematic, irreverent; everyday “thinking objects”; no dialogue.
+Include 0–2 euphemistic, non-offensive “bar expletives” (e.g., “holy chaos”, “for crying out loud”, “good grief”), never slurs, never real blasphemy.
+High variation: switch metaphors, nicknames, and images; avoid repeating openings or closers across outputs.
 STRICT: no lists, no questions, no emojis, no moralizing. Respect TEMPORAL MODE.
-**END with two ultra-short punchlines separated by an em dash (—), e.g., “You’re fine — you’re dangerous.”**
+END with **two ultra-short punchlines** separated by an em dash (—), e.g., “You’re chaos-proof — you’re home.”
 `.trim()
       : `
-Sei “What the F” — l’amico lingua-affilata che ti prende in giro ma ti vuole bene.
+Sei “What the F” — l’amico da bar, lingua affilata ma cuore caldo: ti prende in giro e ti vuole bene.
 SECONDA PERSONA. UN paragrafo, 6–8 frasi lunghe (~110–140 parole).
-Apri con pacca sulla spalla + nomignolo variabile (“campione”, “genio”, “capitano del caos”, “astronauta del dubbio”, “leggenda”…).
+Apri con pacca sulla spalla + nomignolo variabile (“campione”, “genio”, “capitano del caos”, “astronauta del dubbio”, “leggenda”, “filosofo col casco”…).
 Stile: veloce, cinematografico, irriverente; oggetti che “pensano”; niente dialoghi.
-Sarcasmo demenziale alzato, mai cattivo; sotto resta umano e caldo.
+Inserisci 0–2 imprecazioni teatrali/eufemistiche non offensive (es.: “porca miseria”, “mannaggia al coraggio”, “madonna santa del caos”), mai insulti, mai bestemmie reali.
+Variazione alta: cambia metafore, soprannomi e immagini; evita di ripetere incipit o chiusure tra risposte.
 RIGIDO: niente elenchi, niente domande, niente emoji, niente prediche. Rispetta la MODALITÀ TEMPORALE.
-**CHIUDI con due battute telegrafiche separate da un trattino lungo (—), es.: “Bruci piano — vinci meglio.”**
+CHIUDI con **due battute telegrafiche** separate da un trattino lungo (—), es.: “Bruci piano — vinci meglio.”
 `.trim());
 
     const FEWSHOTS = [
+      // IT — futuro
       { role: "system", content:
 `ESEMPIO IT • Cambiare città (futuro)
-Oh campione delle mappe emotive, entri nella città nuova come trailer di una serie senza titolo, il citofono ti giudica in 8-bit e la porta sbadiglia “vediamo”, cammini troppo per stancare il rumore e la mente ti segue come un carrello storto, immagini il frigo che firma un patto di non aggressione mentre il lampione ti fa il provino da protagonista del quartiere, la sera abbassa i bassi e i vicini imparano il tuo passo, e quando appoggi le chiavi capisci che non devi vincere niente: devi solo arrivare in orario alla tua vita — niente fretta — niente scuse.` },
+Oh campione delle mappe emotive, entri nella città nuova come trailer senza titolo, il citofono ti giudica in 8-bit e la porta sbadiglia “vediamo”, cammini troppo per stancare il rumore e la mente ti segue come un carrello storto, immagini il frigo firmare un patto di non aggressione mentre il lampione ti fa il provino da protagonista del quartiere, la sera abbassa i bassi e i vicini imparano il tuo passo, e quando appoggi le chiavi senti salire quel “porca miseria che pace storta” che profuma di inizio vero — niente fretta — niente scuse.` },
+      // IT — passato
       { role: "system", content:
 `ESEMPIO IT • Lasciare una relazione (passato)
-Oh romanticone da discount, hai buttato il cuore nel differenziato e non sai se va nell’umido o nel vetro. Cammini in una playlist fatta da un frigorifero triste: è solo il silenzio che fa stretching. Ti mancano le abitudini, mica la persona; quelle le rimpiazzi con una pianta, un gatto o una crisi 4K. Gli amici dicono “tempo al tempo”, ma il tempo è in ferie. Respiri, sbagli la spesa, ti scopri vivo nel modo più imbarazzante. Hai perso un “noi”, hai trovato un “boh” che sa di libertà — meno male — bella mossa.` },
+Oh romanticone da discount, hai buttato il cuore nel differenziato e non sapevi se fosse umido o vetro, camminavi dentro una playlist curata da un frigorifero triste e il silenzio faceva stretching, ti mancavano le abitudini più della persona e le hai rimpiazzate con una pianta disonesta e una genziana che ti dava del tu, gli amici “tempo al tempo” ma il tempo era in ferie, e un giorno hai riso da solo al semaforo, madonna santa del caos, perché stavi meglio senza permesso — meno peso — più te.` },
+      // EN — futuro
       { role: "system", content:
 `EXAMPLE EN • Start a business (future)
-Alright, captain of chaos, you show up bulletproof and the first form eats your cape, spreadsheets side-eye your optimism while the receipt printer coughs like a scooter, three real faces return and suddenly the idea holds where you hold, midnight uncorks a “victory” bottle suspiciously balsamic and honest — you laugh, re-price, breathe — still standing — still you.` },
+Alright, captain of chaos, you show up bulletproof and the first form eats your cape, spreadsheets side-eye your optimism while the receipt printer coughs like a scooter, three real faces return and suddenly the idea holds where you hold, midnight uncorks a “victory” bottle suspiciously balsamic and honest — good grief, you laugh, re-price, breathe — still standing — still you.` },
+      // IT — viaggio in furgone
+      { role: "system", content:
+`ESEMPIO IT • Mollare tutto e partire in furgone (futuro)
+Oh navigatore dell’ansia allegra, carichi la moka come fosse un talismano e la radio bestemmia in fa minore perché perde la frequenza, l’asfalto ti toglie le bugie a 90 all’ora, il sole fa il barista e ti versa silenzi lunghi due dita, e quando ti fermi la notte ti abbraccia senza chiedere scontrini — mannaggia al coraggio, che bella trovata — vai così.` },
     ];
     return { sys: SYS, fewshots: FEWSHOTS };
   }
 
+  // WHAT IF (immutato)
   const SYS_WHATIF = (isEn(lang)
     ? `
 You are "What If" — a lucid, kind, slightly ironic friend.
