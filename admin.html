@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-:root{ --bg:#0B0F14; --card:#131A20; --fg:#EAF2EE; --muted:#A0B2BA; --acc:#00E0FF; }
+:root{ --bg:#0B0F14; --card:#131A20; --fg:#EAF2EE; --muted:#A0B2BA; --acc:#00E0FF; --ok:#3bd671; --warn:#ffe082; --danger:#ff8a80;}
 *{ box-sizing:border-box }
 body{ margin:0; background:var(--bg); color:var(--fg); font-family:Inter,system-ui,Arial,sans-serif; }
 main{ max-width:1100px; margin:auto; padding:16px; }
@@ -27,18 +27,28 @@ th{ color:var(--muted) }
 .badge{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); font-size:12px }
 select,input{ background:rgba(255,255,255,.06); color:#fff; border:1px solid rgba(255,255,255,.14); border-radius:8px; padding:8px }
 .chartbox{ flex:1; min-width:260px; height:220px; }
+.status-dot{ display:inline-block; width:10px; height:10px; border-radius:50%; background:#888; margin-right:6px }
+.status-dot.ok{ background:var(--ok) }
+.status-dot.no{ background:#999 }
+.tag{ padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06) }
+.tag.pro{ border-color:#79e3ff }
+.tag.admin{ border-color:#ffd54f }
+.tag.free{ border-color:#9ccc65 }
 </style>
 </head>
 <body>
 <main>
   <h1>What?f — Admin (dashboard)</h1>
 
+  <!-- OPERAZIONI -->
   <div class="card">
     <h3>Operazioni veloci</h3>
     <div class="row">
       <button id="refreshBtn">Aggiorna</button>
       <button class="ghost" id="autoBtn">Auto-refresh</button>
       <button class="ghost" id="clearBtn">Svuota log</button>
+    </div>
+    <div class="row" style="margin-top:8px">
       <span class="badge">IP mascherati: <input type="checkbox" id="maskIp" checked></span>
       <span class="badge">Window log: 
         <select id="limitSel">
@@ -54,12 +64,34 @@ select,input{ background:rgba(255,255,255,.06); color:#fff; border:1px solid rgb
     </div>
   </div>
 
+  <!-- STATO UTENTE & CREDITI -->
+  <div class="card">
+    <h3>Stato utente & crediti (questo device)</h3>
+    <div class="row">
+      <span class="badge"><span id="admDot" class="status-dot no"></span>Admin: <b id="admState">no</b></span>
+      <span class="badge">IP: <span id="myIp" class="kbd">—</span></span>
+      <span class="badge">Token: <span id="tokShort" class="kbd">—</span></span>
+      <span class="badge">Tipo: <span id="userType" class="tag free">free</span></span>
+      <span class="badge">Crediti oggi: <b id="credTxt">—</b></span>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <input id="pin" type="password" placeholder="PIN admin" style="min-width:160px">
+      <button id="btnEnter">Entra admin</button>
+      <button class="ghost" id="btnRenew">Rinnova (7gg)</button>
+      <button class="ghost" id="btnRevoke">Revoca token</button>
+      <button class="ghost" id="proOn">Attiva PRO locale</button>
+      <button class="ghost" id="proOff">Disattiva PRO</button>
+    </div>
+    <div class="small" id="authMsg" style="margin-top:6px">—</div>
+  </div>
+
+  <!-- STATISTICHE -->
   <div class="card">
     <h3>Statistiche globali (finestra caricata)</h3>
     <div class="row">
       <span class="badge">Totale: <b id="tot">—</b></span>
       <span class="badge">Oggi: <b id="today">—</b></span>
-      <span class="badge">Ultimi <span id="daysTxt">7</span>g: <b id="lastN">—</b></span>
+      <span class="badge">Ultimi <span id="daysTxt">7</span> g: <b id="lastN">—</b></span>
       <span class="badge">Per stile: <span id="bystyle">—</span></span>
       <span class="badge">Per lingua: <span id="bylang">—</span></span>
       <span class="badge">Per tempo: <span id="byperiod">—</span></span>
@@ -67,6 +99,7 @@ select,input{ background:rgba(255,255,255,.06); color:#fff; border:1px solid rgb
     </div>
   </div>
 
+  <!-- GRAFICI -->
   <div class="card">
     <h3>Grafici</h3>
     <div class="row">
@@ -76,6 +109,7 @@ select,input{ background:rgba(255,255,255,.06); color:#fff; border:1px solid rgb
     </div>
   </div>
 
+  <!-- LOG -->
   <div class="card">
     <h3>Log richieste</h3>
     <div class="row">
@@ -86,23 +120,74 @@ select,input{ background:rgba(255,255,255,.06); color:#fff; border:1px solid rgb
       <input id="fSearch" placeholder="Cerca nella domanda…">
       <button class="ghost" id="applyFilters">Filtra</button>
     </div>
-
     <table id="logTbl">
-      <thead>
-        <tr>
-          <th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th></tr></thead>
       <tbody></tbody>
     </table>
   </div>
 </main>
 
 <script>
-const fmt = (n)=>JSON.stringify(n).replace(/"/g,'').replace(/(:)/g,': ');
-const qs = (sel)=>document.querySelector(sel);
-let autoTimer=null;
-let charts={};
+const ADMIN_SECRET = "wtf-setup-2025";              // deve combaciare con /api/admin-token (PIN)
+const TOKEN_KEY = "admin_token";
+const PRO_PREFS_KEY = "whatif_prefs";               // { pro: true }
+
+const qs = s => document.querySelector(s);
+const fmt = n => JSON.stringify(n).replace(/"/g,'').replace(/(:)/g,': ');
+let autoTimer=null, charts={};
+
+function token(){ return localStorage.getItem(TOKEN_KEY) || ""; }
+function shortTok(t){ return t ? (t.slice(0,6)+"…"+t.slice(-4)) : "—"; }
+function isProLocal(){
+  try{ return !!(JSON.parse(localStorage.getItem(PRO_PREFS_KEY)||"{}").pro); }catch{return false}
+}
+
+// ===== Admin token API (compatibile col tuo endpoint) =====
+async function adminEnter(pin){
+  const r = await fetch("/api/admin-token", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "admin-secret": ADMIN_SECRET },
+    body: JSON.stringify({ pin })
+  });
+  const d = await r.json().catch(()=>({}));
+  if(!r.ok || !d.ok) throw new Error(d.error||"enter_failed");
+  localStorage.setItem(TOKEN_KEY, d.token);
+  return d;
+}
+async function adminGet(){
+  const r = await fetch("/api/admin-token", { headers:{ "x-admin-token": token() }});
+  return r.json().catch(()=>({}));
+}
+async function adminRenew(){
+  const r = await fetch("/api/admin-token?renew=1", { method:"POST", headers:{ "x-admin-token": token() }});
+  const d = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.error||"renew_failed");
+  return d;
+}
+async function adminRevoke(){
+  const r = await fetch("/api/admin-token?revoke=1", { method:"POST", headers:{ "x-admin-token": token() }});
+  const d = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.error||"revoke_failed");
+  localStorage.removeItem(TOKEN_KEY);
+  return d;
+}
+
+async function loadCredits(){
+  const hdrs = { "x-admin-token": token() };
+  if(isProLocal()) hdrs["x-pro"] = "1";
+  const r = await fetch("/api/credits", { headers: hdrs });
+  const d = await r.json().catch(()=>({}));
+  if(!r.ok || !d.ok) throw new Error(d.error||"credits_failed");
+  // UI
+  qs("#myIp").textContent = d.ip || "—";
+  qs("#admState").textContent = d.admin ? "attivo" : "no";
+  qs("#admDot").classList.toggle("ok", !!d.admin);
+  qs("#tokShort").textContent = shortTok(token());
+  const tag = qs("#userType");
+  tag.textContent = d.admin ? "admin" : (d.pro ? "pro" : "free");
+  tag.className = "tag " + (d.admin ? "admin" : d.pro ? "pro" : "free");
+  qs("#credTxt").textContent = d.admin ? "∞" : `${d.credits.used}/${d.credits.dailyCap} (restano ${d.credits.remaining})`;
+}
 
 function params(){
   const mask = qs('#maskIp').checked ? '1' : '0';
@@ -111,12 +196,11 @@ function params(){
   return `limit=${encodeURIComponent(limit)}&days=${encodeURIComponent(days)}&mask=${mask}`;
 }
 
-async function load(){
+async function loadStats(){
   const r = await fetch(`/api/admin-stats?${params()}`);
   const data = await r.json();
   if(!data?.ok) throw new Error('stats_error');
 
-  // top stats
   qs('#tot').textContent   = data.total;
   qs('#today').textContent = data.today;
   qs('#lastN').textContent = data.lastN;
@@ -127,15 +211,14 @@ async function load(){
   qs('#byuser').textContent   = fmt(data.breakdown.user_type || {});
   qs('#ts').textContent = new Date().toLocaleString();
 
-  renderLogs(data.items || []);
+  renderLogs(data.items||[]);
   renderCharts(data);
-  window.__CACHE = data; // per filtri
+  window.__CACHE = data;
 }
 
 function renderLogs(items){
   const tb = qs('#logTbl tbody'); tb.innerHTML='';
   const fs=qs('#fStyle').value, fl=qs('#fLang').value, fp=qs('#fPeriod').value, fu=qs('#fUser').value, q=(qs('#fSearch').value||'').toLowerCase();
-
   const rows = items.filter(it=>{
     if(fs && it.style!==fs) return false;
     if(fl && it.lang!==fl) return false;
@@ -144,7 +227,6 @@ function renderLogs(items){
     if(q && !String(it.domanda||'').toLowerCase().includes(q)) return false;
     return true;
   });
-
   for(const it of rows){
     const tr=document.createElement('tr');
     const full = String(it.domanda||'');
@@ -166,11 +248,8 @@ function renderLogs(items){
 }
 
 function renderCharts(data){
-  // distruggi eventuali grafici
   for(const k of Object.keys(charts)){ charts[k].destroy(); }
   charts={};
-
-  // Oggi per stile/tempo -> deriviamo dai log caricati (oggi)
   const todayItems = (data.items||[]).filter(it=>{
     const d=new Date(it.ts), n=new Date();
     return d.getFullYear()===n.getFullYear() && d.getMonth()===n.getMonth() && d.getDate()===n.getDate();
@@ -183,14 +262,11 @@ function renderCharts(data){
     data:{ labels:Object.keys(byS), datasets:[{ label:'Oggi · per stile', data:Object.values(byS) }]},
     options:{ responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true,ticks:{precision:0}}}, plugins:{legend:{display:false}} }
   });
-
   charts.periodToday = new Chart(qs('#chartPeriodToday'), {
     type:'bar',
     data:{ labels:Object.keys(byP), datasets:[{ label:'Oggi · per tempo', data:Object.values(byP) }]},
     options:{ responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true,ticks:{precision:0}}}, plugins:{legend:{display:false}} }
   });
-
-  // Trend ultimi N giorni
   const labels = (data.trend||[]).map(x=>x.day);
   const values = (data.trend||[]).map(x=>x.count);
   charts.trend = new Chart(qs('#chartTrend'), {
@@ -200,28 +276,32 @@ function renderCharts(data){
   });
 }
 
-function toggleAuto(){
-  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; qs('#autoBtn').textContent='Auto-refresh'; }
-  else { autoTimer=setInterval(load, 60000); qs('#autoBtn').textContent='Stop auto-refresh'; }
-}
+// ====== Event handlers ======
+qs('#refreshBtn').onclick = async ()=>{ await Promise.all([loadCredits(), loadStats()]); };
+qs('#autoBtn').onclick = ()=>{ if(autoTimer){ clearInterval(autoTimer); autoTimer=null; qs('#autoBtn').textContent='Auto-refresh'; } else { autoTimer=setInterval(()=>qs('#refreshBtn').click(), 60000); qs('#autoBtn').textContent='Stop auto-refresh'; }};
+qs('#clearBtn').onclick = async ()=>{ if(confirm('Svuotare i log?')){ await fetch('/api/admin-clear-logs'); await loadStats(); }};
 
-async function clearLogs(){
-  if(!confirm('Sicuro di svuotare i log?')) return;
-  await fetch('/api/admin-clear-logs');
-  await load();
-}
-
-// events
-qs('#refreshBtn').onclick = load;
-qs('#autoBtn').onclick = toggleAuto;
-qs('#clearBtn').onclick = clearLogs;
 qs('#applyFilters').onclick = ()=> renderLogs((window.__CACHE||{}).items||[]);
-qs('#maskIp').onchange = load;
-qs('#limitSel').onchange = load;
-qs('#daysSel').onchange = load;
+qs('#maskIp').onchange = ()=> loadStats();
+qs('#limitSel').onchange = ()=> loadStats();
+qs('#daysSel').onchange = ()=> loadStats();
+
+qs('#btnEnter').onclick = async ()=>{
+  try{ const p = qs('#pin').value.trim(); if(!p) return alert("Inserisci il PIN"); const d=await adminEnter(p); qs('#authMsg').textContent=`Token ok (TTL ~${d.ttlHours}h)`; await loadCredits(); }
+  catch(e){ qs('#authMsg').textContent="PIN errato o API non allineata."; }
+};
+qs('#btnRenew').onclick = async ()=>{ try{ await adminRenew(); qs('#authMsg').textContent="Token rinnovato."; await loadCredits(); }catch(e){ qs('#authMsg').textContent="Rinnovo fallito."; } };
+qs('#btnRevoke').onclick = async ()=>{ try{ await adminRevoke(); qs('#authMsg').textContent="Token revocato."; await loadCredits(); }catch(e){ qs('#authMsg').textContent="Revoca fallita."; } };
+qs('#proOn').onclick  = ()=>{ const p=JSON.parse(localStorage.getItem(PRO_PREFS_KEY)||"{}"); p.pro=true; localStorage.setItem(PRO_PREFS_KEY, JSON.stringify(p)); loadCredits(); };
+qs('#proOff').onclick = ()=>{ const p=JSON.parse(localStorage.getItem(PRO_PREFS_KEY)||"{}"); delete p.pro; localStorage.setItem(PRO_PREFS_KEY, JSON.stringify(p)); loadCredits(); };
 
 // init
-load();
+(async function init(){
+  // prova a validare token esistente
+  try{ const g=await adminGet(); if(g?.admin){ qs('#authMsg').textContent="Admin attivo."; } }catch{}
+  await loadCredits();
+  await loadStats();
+})();
 </script>
 </body>
 </html>
