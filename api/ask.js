@@ -1,24 +1,22 @@
-// /api/ask.js — What?f Engine (Incazzato Illuminato + Realismo Lucido con Sorriso)
-// Stili supportati: whatif, wtf
-// IT/EN — singolo paragrafo, niente emoji/liste/domande
-// Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
-// Log avanzato su Redis (periodo, stile, lang, user_type, domanda)
+// /api/ask.js — What?f Engine
+// Stili: whatif | wtf • IT/EN • 1 paragrafo, no emoji/liste/domande
+// Rate: 10/min per IP • Crediti: Free 3/d · PRO 10/d · Admin ∞
+// Log su Redis
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
 
-// ---------- OpenAI ----------
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// ---------- Config ----------
 const MODEL = "gpt-4o-mini";
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// ---------- Upstash ----------
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-// rate limit: 10 req/min per IP (bypass SOLO per admin)
+// 10 req/min per IP
 const rl = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(10, "1 m"),
@@ -30,16 +28,37 @@ const ALLOWED_ORIGINS = [
   "http://localhost:3000",
   "http://127.0.0.1:5500",
 ];
-function cors(req, res) {
+
+function applyCors(req, res) {
   const origin = String(req.headers.origin || "");
-  if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token, x-pro");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, x-admin-token, x-pro"
+  );
+  res.setHeader("Access-Control-Max-Age", "86400"); // 24h preflight cache
 }
 
-/* ---------- Helpers ---------- */
+// ---------- Helpers ----------
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
+
+function safeJSON(body) {
+  try { return typeof body === "string" ? JSON.parse(body || "{}") : (body || {}); }
+  catch { return {}; }
+}
+
+function getIp(req) {
+  const h = req.headers || {};
+  const xff = String(h["x-forwarded-for"] || "").split(",")[0].trim();
+  const cf = String(h["cf-connecting-ip"] || "").trim();
+  const xr = String(h["x-real-ip"] || "").trim();
+  const sock = req.socket?.remoteAddress || "";
+  return xff || cf || xr || sock || "unknown";
+}
 
 function normLine(s = "") {
   return String(s).toLowerCase().replace(/[“”"']/g, "").replace(/\s+/g, " ")
@@ -57,7 +76,8 @@ function tightenSentences(text, maxSentences) {
     out.push(p); seen.add(n);
     if (out.length >= maxSentences) break;
   }
-  let t = out.join(" "); if (!/[.!?…]$/.test(t)) t += "."; return t;
+  let t = out.join(" "); if (!/[.!?…]$/.test(t)) t += ".";
+  return t;
 }
 function clampWords(text, maxWords) {
   const w = String(text || "").split(/\s+/);
@@ -80,7 +100,7 @@ function stripQuestionEcho(domanda, text) {
   return t;
 }
 
-// ---------- Admin check (coerente con /api/admin-token.js: HASH + LOCK_IP) ----------
+// ---------- Admin check ----------
 async function isAdmin(req, requesterIp) {
   const token = String(req.headers["x-admin-token"] || "").trim();
   if (!token) return false;
@@ -88,17 +108,14 @@ async function isAdmin(req, requesterIp) {
     const data = await redis.hgetall(`admin:token:${token}`); // { ip, ua }
     if (!data) return false;
     const LOCK_IP = String(process.env.ADMIN_LOCK_IP || "false").toLowerCase() === "true";
-    if (LOCK_IP) {
-      if (!data.ip) return false;
-      return data.ip === requesterIp;
-    }
+    if (LOCK_IP) return data.ip && data.ip === requesterIp;
     return true;
   } catch {
     return false;
   }
 }
 
-/* ---------- Modalità temporale (Passato/Futuro) ---------- */
+/* ---------- Temporal mode ---------- */
 function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
   const en = isEn(lang);
   if (String(periodo || "").toLowerCase() === "past") {
@@ -111,7 +128,7 @@ function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
     : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi un prossimo futuro plausibile come se ci entrassi adesso. Niente liste, niente domande, niente eco della domanda. Mantieni esattamente la voce ${style.toUpperCase()}.`;
 }
 
-/* ---------- Personas (voci) ---------- */
+/* ---------- Personas ---------- */
 function personaSystem(style, lang) {
   if (style === "wtf") {
     const SYS = (isEn(lang)
@@ -146,9 +163,6 @@ Fenomeno del ritorno scenografico, sbarchi con “ho visto il mondo” e il vent
       { role: "system", content:
 `ESEMPIO IT • Aprire un’attività
 Asso dell’ottimismo, ti svegli TED Talk e il primo modulo ti ricorda che anche per vendere acqua serve un piccolo esorcismo, il PDF del business plan finge morte apparente, il registratore mentale fa i conti con le carezze invece che coi numeri, immagini lo scaffale che ti valuta come un giudice di talent, poi arrivano tre facce vere e ti accorgi che l’idea regge dove reggi tu: nei lunedì storti; la sera stappi convinto e ovviamente è aceto balsamico — brucia ma dà carattere, e ridi perché sì, il caos ha le quote, ma il CEO dell’autoironia oggi sei ancora tu.` },
-      { role: "system", content:
-`ESEMPIO IT • Mare e reset
-Ehi rockstar della fuga responsabile, atterri in “vita semplice” e la sabbia ti tassa anche i pensieri, immagini l’ombrellone che scuote la testa mentre prometti sobrietà e la genziana ti dà del tu, il sole cuoce i progetti a fuoco lento e verso sera l’aria sa di patatine e perdono; rimandi le verità a domani (classico), ma intanto ti siedi bene dentro il silenzio e scopri che non stavi scappando — stavi solo togliendo il freno a mano alla tua calma.` },
       { role: "system", content:
 `EXAMPLE EN • Change city
 Alright, legend, you land like a limited series reboot and the streetlights reframe your face better than therapy, you imagine the buzzer rolling its eyes as you miss it twice, the fridge humming “good luck, hero,” you walk too far just to out-breathe the anxious drumline, by supermarket three you find your aisle and your pace, evenings turn down the volume and the map stops asking for permission, and there you are — not a conqueror, just a person arriving — which is the only plot twist that ages well.` },
@@ -190,33 +204,40 @@ You’ll feel like a guest, then your hands learn the new keys. You’ll walk no
   return { sys: SYS_WHATIF, fewshots: FEWSHOTS };
 }
 
-/* ---------- API Handler ---------- */
+/* ---------- Handler ---------- */
 export default async function handler(req, res) {
-  cors(req, res);
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
+  applyCors(req, res);
+  if (req.method === "OPTIONS") {
+    res.status(200).end();
+    return;
+  }
+  if (req.method !== "POST") {
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(405).json({ error: "method_not_allowed" });
+  }
+
+  res.setHeader("Cache-Control", "no-store");
 
   try {
-    if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: "missing_api_key" });
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: "missing_api_key" });
+    }
 
-    // IP richiedente
-    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
-      .toString().split(",")[0].trim();
-
-    // Admin bypass (rate+crediti)
+    // IP e admin
+    const ip = getIp(req);
     const admin = await isAdmin(req, ip);
     const bypass = admin === true;
 
-    // PRO header (UI locale): x-pro: "1"
+    // PRO (header dalla tua UI)
     const isPro = String(req.headers["x-pro"] || "").trim() === "1";
 
-    // Rate limit 10/min (se non bypass)
+    // Rate limit
     if (!bypass) {
       const { success } = await rl.limit(`ask:${ip}`);
       if (!success) return res.status(429).json({ error: "rate_limited_minute" });
     }
 
-    // Crediti giornalieri: Admin ∞, PRO 10, Free 3
+    // Crediti giornalieri (nota: conteggia solo se passa il rate-limit)
     let used = 0, dailyCap = isPro ? 10 : 3;
     if (!bypass) {
       const today = new Date().toISOString().slice(0, 10);
@@ -229,24 +250,30 @@ export default async function handler(req, res) {
     }
 
     // Body
-    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-    const { domanda = "", stile = "whatif", lang = "it", extra = "", periodo = "future" } = body;
-    if (!domanda || typeof domanda !== "string")
+    const body = safeJSON(req.body);
+    let { domanda = "", stile = "whatif", lang = "it", extra = "", periodo = "future" } = body;
+
+    // Normalizzazioni input
+    if (typeof domanda !== "string" || !domanda.trim()) {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
-
-    // Personas
-    const { sys, fewshots } = personaSystem(stile, lang);
-
-    // Temporal mode
-    const temporal = temporalSystem(periodo, lang, stile);
-    let extraTemporalHint = "";
-    if (stile === "wtf" && String(periodo).toLowerCase() === "past") {
-      extraTemporalHint = isEn(lang)
-        ? "Write entirely in past or conditional tense, as if it already happened, keeping the same teasing-tragicomic tone."
-        : "Scrivi tutto al passato o al condizionale, come se fosse già successo, mantenendo il tono pungente-tragicomico.";
     }
+    domanda = domanda.trim().slice(0, 400); // limite di lunghezza “umano”
+    stile = (stile === "wtf") ? "wtf" : "whatif";
+    lang = (String(lang || "it").toLowerCase().startsWith("en")) ? "en" : "it";
+    periodo = (String(periodo || "future").toLowerCase() === "past") ? "past" : "future";
+    extra = (typeof extra === "string" ? extra : "").slice(0, 400);
 
-    const userPrompt = isEn(lang)
+    // Prompt
+    const { sys, fewshots } = personaSystem(stile, lang);
+    const temporal = temporalSystem(periodo, lang, stile);
+    const extraTemporalHint =
+      (stile === "wtf" && periodo === "past")
+        ? (lang === "en"
+            ? "Write entirely in past or conditional tense, as if it already happened, keeping the same teasing-tragicomic tone."
+            : "Scrivi tutto al passato o al condizionale, come se fosse già successo, mantenendo il tono pungente-tragicomico.")
+        : "";
+
+    const userPrompt = (lang === "en")
       ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Keep the exact persona voice.`
       : `Domanda (NON ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Mantieni esattamente la voce della persona.`;
 
@@ -278,25 +305,25 @@ export default async function handler(req, res) {
     answer = normalizeOneParagraph(answer);
     if (!/[.!?…]$/.test(answer)) answer += ".";
 
-    // --- LOG persistente (per /api/admin-logs, /api/stats) ---
+    // Log
     try {
       const entry = {
         ts: Date.now(),
         ip,
-        style: stile,            // "whatif" | "wtf"
+        style: stile,
         lang,
-        periodo,                 // "past" | "future"
+        periodo,
         domanda,
         answer_chars: (answer || "").length,
         admin: !!admin,
         user_type: bypass ? "admin" : (isPro ? "pro" : "free"),
       };
       await redis.lpush("logs:ask", JSON.stringify(entry));
-      await redis.ltrim("logs:ask", 0, 9999); // ultimi 10k
+      await redis.ltrim("logs:ask", 0, 9999);
       await redis.incr("stats:total");
       await redis.hincrby("stats:style", stile, 1);
       await redis.hincrby("stats:lang", lang, 1);
-      await redis.hincrby("stats:periodo", String(periodo || "future"), 1);
+      await redis.hincrby("stats:periodo", periodo, 1);
       await redis.hincrby("stats:user_type", entry.user_type, 1);
       const dayKey = `stats:day:${new Date().toISOString().slice(0,10)}`;
       await redis.hincrby(dayKey, `${stile}:${periodo}`, 1);
@@ -306,13 +333,8 @@ export default async function handler(req, res) {
     }
 
     return res.status(200).json({
-      answer,
-      style: stile,
-      lang,
-      periodo,
-      model: MODEL,
-      admin,
-      pro: isPro,
+      answer, style: stile, lang, periodo, model: MODEL,
+      admin, pro: isPro,
       credits: bypass ? null : { used, dailyCap },
     });
   } catch (err) {
