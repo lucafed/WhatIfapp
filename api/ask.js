@@ -1,8 +1,5 @@
-// /api/ask.js — What?f Engine (2025 FINAL)
-// Stili: whatif (realismo lucido) · wtf (sarcasmo demenziale affettuoso, alcol, oggetti, "bestemmia" narrata)
-// IT/EN — paragrafo singolo, niente liste/domande/emoji
-// Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
-// Log su Redis SENZA contenuto della domanda (solo metadati + hash non reversibile)
+// /api/ask.js — What?f Engine (2025 FINAL) — persona-aware + registro + rotazione “bestemmia”
+// Conserva: OpenAI, Upstash Redis, rate limit, crediti, logging, CORS, 1 paragrafo IT/EN
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -81,19 +78,105 @@ function stripQuestionEcho(domanda, text) {
   t = t.replace(echoRx, "");
   return t;
 }
-function ensureSpicyButSafeWTF(t, lang) {
-  // Garantisce chiusura sentita + evita output vuoto; NON inserisce mai bestemmie letterali
-  let out = String(t || "").trim();
-  if (!/[.!?…]$/.test(out)) out += ".";
-  return out;
-}
 function tinyHash(s = "") {
   let h = 2166136261 >>> 0;
   for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
   return (h >>> 0).toString(36);
 }
 
-// ---------- Admin check ----------
+/* ---------- Intent & registro ---------- */
+function intentHeuristic(text = "", extra = "") {
+  const s = `${text} ${extra}`;
+  if (/scrivi|poetico|poesia|tono poetico|racconto|storia/i.test(s)) return "poetic";
+  if (/analisi|pro e contro|vantaggi|svantaggi|schema|criteri/i.test(s)) return "analytical";
+  if (/reale|concreto|terra terra|pratico|come si fa|come faccio|passi|step/i.test(s)) return "realistic";
+  return "general";
+}
+function preferedRegisterFromExtra(extra = "") {
+  const m = String(extra).match(/preferisci\s+registro\s*=\s*(poetico|realistico|analitico)/i);
+  return m ? m[1].toLowerCase() : "auto";
+}
+
+/* ---------- WhatIf: varia lessico per evitare tic ---------- */
+function varyWhatIfLexicon(ans, lang, seed = 0) {
+  const en = isEn(lang);
+  let out = String(ans || "");
+  const replIT = [
+    { rx: /\bchiavi\b/gi, alts: ["mazzo di chiavi","badge","pass","tessera","tasti di casa"] },
+    { rx: /\blampioni\b/gi, alts: ["insegne","vetrine","fari","finestre accese","pali della luce"] },
+    { rx: /\btaccuini?\b/gi, alts: ["quaderno","notes","post-it","appunti","agenda"] },
+    { rx: /\bmani\b/gi, alts: ["polsi","dita","palmi","spalle","passi"] },
+    { rx: /\baria\b/gi, alts: ["silenzio","respiro","rumore basso","sfondo","luce"] },
+    { rx: /\bin sintesi\b/gi, alts: ["stringendo","il succo è","in due righe","riassumendo"] },
+    { rx: /\bchiave\b/gi, alts: ["fulcro","cardine","nocciolo","perno","punto centrale"] },
+  ];
+  const replEN = [
+    { rx: /\bkeys\b/gi, alts: ["keyring","pass","badge","card","door code"] },
+    { rx: /\bstreetlights\b/gi, alts: ["signs","storefronts","headlights","windows","porch lights"] },
+    { rx: /\bnotebooks?\b/gi, alts: ["journal","notes","post-its","pad","agenda"] },
+    { rx: /\bhands\b/gi, alts: ["wrists","fingers","palms","steps","shoulders"] },
+    { rx: /\bair\b/gi, alts: ["silence","breath","low noise","backdrop","light"] },
+    { rx: /\bin short\b/gi, alts: ["long story short","the gist is","in two lines","to sum up"] },
+  ];
+  const pack = en ? replEN : replIT;
+  for (const { rx, alts } of pack) {
+    if (rx.test(out) && Math.random() < 0.7) {
+      const alt = alts[(seed + alts.length) % alts.length];
+      out = out.replace(rx, alt);
+    }
+  }
+  return out;
+}
+
+/* ---------- WTF: scena “bestemmia narrata” a rotazione (mai letterale) ---------- */
+function ensureSpicyButSafeWTF(t = "", lang = "it") {
+  const en = isEn(lang);
+  let out = String(t || "").trim();
+
+  // Interiezioni censurate
+  const INTERJ = en
+    ? ["dam—", "holy sh—", "chr—", "mad—", "je—"]
+    : ["porc—", "madonn—", "miser—", "cavolo santo", "crist—"];
+
+  // Template narrativi (uno include, a rotazione, “parte la bestemmia”)
+  const TEMPL = en
+    ? [
+        "you let out a {X} that rattles the glasses",
+        "a {X} slips out and the air shifts",
+        "you drop a quick {X} and the counter pretends not to hear",
+        "a tiny {X} rings the glasses and nobody files a complaint",
+        "and yeah, the blasphemy almost starts by itself — {X} — like a reflex the bar forgives"
+      ]
+    : [
+        "ti scappa una {X} che fa vibrare i bicchieri",
+        "ti parte una {X} e l’aria si sposta",
+        "ti esce una {X} e il bancone finge di non sentire",
+        "butti lì una {X} che fa tintinnare i vetri",
+        "parte la bestemmia — {X} — e i bicchieri fanno finta di niente"
+      ];
+
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const interj = pick(INTERJ);
+  const narr = pick(TEMPL).replace("{X}", interj);
+
+  // Non duplicare scene
+  const hasScene = /\b(bestemmia|blasphemy|porc—|madonn—|miser—|cavolo santo|crist—|dam—|holy sh—|chr—|mad—|je—)\b/i.test(out);
+
+  if (!hasScene) {
+    const idx = out.search(/[.?!]/);
+    if (idx > -1 && idx < out.length - 1) {
+      out = out.slice(0, idx + 1) + " " + narr + ". " + out.slice(idx + 1).trim();
+    } else {
+      out = `${narr}. ${out}`;
+    }
+  }
+
+  out = out.replace(/\s{2,}/g, " ").trim();
+  if (!/[.!?…]$/.test(out)) out += ".";
+  return out;
+}
+
+/* ---------- Admin check ---------- */
 async function isAdmin(req, requesterIp) {
   const token = String(req.headers["x-admin-token"] || "").trim();
   if (!token) return false;
@@ -145,7 +228,7 @@ You are “What the F” — the loud, loving friend who roasts with affection.
 SECOND PERSON. ONE paragraph, 6–8 sentences (~125–165 words). Simple, colloquial language.
 OPEN with ONLY a rotating nickname (no verbs around it): pick one that fits the user’s vibe.
 Inject goofy alcohol beats and occasional “objects reacting” when relevant (not random).
-Include exactly one brief, narrated blasphemy moment (“you let out a blasphemy that rattles the glasses”), never write religious slurs literally.
+Include exactly one brief, narrated blasphemy moment (never literal).
 Insults must be earned by context and end up affectionate; tone stays upbeat and human.
 STRICT: no lists, no questions, no emojis, no moralizing. Respect TEMPORAL MODE.
 Close warm and funny, like a shoulder-laugh, not a lecture.
@@ -157,7 +240,7 @@ Sei “What the F” — l’amico rumoroso ma che ti vuole bene e ti prende in 
 SECONDA PERSONA. UN paragrafo, 6–8 frasi (~125–165 parole). Lingua semplice e colloquiale.
 APERTURA SOLO con un nomignolo (senza verbi): scegline uno adatto al mood dell’utente.
 Inserisci battute con alcol e “oggetti che reagiscono” solo quando servono (mai a caso).
-Metti esattamente una breve bestemmia narrata (“ti esce una bestemmia che fa tremare i bicchieri”), mai scritta letteralmente.
+Metti esattamente una breve bestemmia narrata (mai letterale).
 Le prese in giro devono avere un motivo nella scena e restare affettuose; tono allegro.
 RIGIDO: niente elenchi, niente domande, niente emoji, niente prediche. Rispetta la MODALITÀ TEMPORALE.
 Chiudi caldo e divertente, come una risata sulla spalla.
@@ -168,13 +251,13 @@ SEED per variare immagini: usa il numero qui sotto nel sottofondo.
     const FEWSHOTS = [
       { role: "system", content:
 `ESEMPIO IT • Tornare all’Aquila (futuro)
-Pellegrino del ritorno, scendi con la valigia che scricchiola dignità e il vento ti sistema i pensieri come sedie al bar; il marciapiede riconosce il tuo passo e ti fa lo sconto sul dubbio, al bancone la tazzina ti guarda “di nuovo?” e tu, che fai il duro da metropoli, ti addolcisci come grappino alle undici, sbagli parcheggio con la sicurezza di uno che vuole soffrire bene, ti esce una bestemmia che fa tremare i bicchieri e il lampione finge di non sentire, poi due facce ti chiamano per nome e scopri che non stai tornando indietro ma tornando intero, con le crepe lucidate a festa, e ridi perché la città ti punge solo per controllare se sei vivo.` },
+Pellegrino del ritorno, scendi con la valigia che scricchiola dignità e il vento ti sistema i pensieri come sedie al bar; il marciapiede riconosce il tuo passo e ti fa lo sconto sul dubbio, al bancone la tazzina ti guarda “di nuovo?” e tu, che fai il duro da metropoli, ti addolcisci come grappino alle undici, sbagli parcheggio con la sicurezza di uno che vuole soffrire bene, ti esce una porc— che fa tremare i bicchieri e il lampione finge di non sentire, poi due facce ti chiamano per nome e scopri che non stai tornando indietro ma tornando intero, con le crepe lucidate a festa, e ridi perché la città ti punge solo per controllare se sei vivo.` },
       { role: "system", content:
 `ESEMPIO IT • Mettersi in proprio (futuro)
-Capitano del caos, arrivi col piano che sembra un tovagliolo firmato e l’Excel ti guarda come un cameriere stanco; il registratore di cassa tossisce come scooter in salita ma tre facce tornano e la vetrina si raddrizza da sola, stappi la bottiglia “buona” ed è aceto balsamico: brucia onesto, benedice l’errore, ti esce una bestemmia che scuote i bicchieri e il bancone risponde “anche oggi imprenditore”, alla sera conti spicci e sorrisi e capisci che non stai vincendo il mondo, stai reggendo te — che è molto più redditizio del previsto.` },
+Capitano del caos, arrivi col piano che sembra un tovagliolo firmato e l’Excel ti guarda come un cameriere stanco; il registratore di cassa tossisce come scooter in salita ma tre facce tornano e la vetrina si raddrizza da sola, stappi la bottiglia “buona” ed è aceto balsamico: brucia onesto, benedice l’errore, parte la bestemmia — madonn— — e il bancone risponde “anche oggi imprenditore”, alla sera conti spicci e sorrisi e capisci che non stai vincendo il mondo, stai reggendo te — che è molto più redditizio del previsto.` },
       { role: "system", content:
 `EXAMPLE EN • Moving city (future)
-Champ, you arrive like a limited series pilot and the buzzer rolls its eyes; the fridge hums “good luck” while the streetlights do wardrobe tests, you walk too far just to tire the nerves and a tiny beer forgives your accent, you let out a blasphemy that rattles the glasses and the mailbox pretends it didn’t hear, by grocery three you find your aisle and your pace, and the map stops asking for proof — you’re not conquering a city, you’re landing your life.` },
+Champ, you arrive like a limited series pilot and the buzzer rolls its eyes; the fridge hums “good luck” while the streetlights do wardrobe tests, you walk too far just to tire the nerves and a tiny beer forgives your accent, you let out a dam— that rattles the glasses and the mailbox pretends it didn’t hear, by grocery three you find your aisle and your pace, and the map stops asking for proof — you’re not conquering a city, you’re landing your life.` },
     ];
     return { sys: SYS, fewshots: FEWSHOTS };
   }
@@ -183,14 +266,14 @@ Champ, you arrive like a limited series pilot and the buzzer rolls its eyes; the
     ? `
 You are "What If" — a lucid, kind, slightly ironic friend.
 SECOND PERSON. One paragraph, 8–11 sentences (~115–160 words).
-Warm, grounded, simple; ordinary images (keys, streetlights, notebooks, hands, air).
+Warm, grounded, simple; everyday images.
 Small truths; no heroics, no melancholy. No lists, no questions, no emojis.
 End with a short reflective line (not advice).
 `.trim()
     : `
 Sei "What If" — un amico lucido e affettuoso, col sorriso pratico.
 SECONDA PERSONA. Un paragrafo, 8–11 frasi (~115–160 parole).
-Immagini quotidiane (chiavi, lampioni, taccuini, mani, aria).
+Immagini quotidiane (mai stucchevoli).
 Verità piccole e vere; niente eroismi, niente malinconia.
 Niente elenchi o domande o emoji. Chiudi con una riga riflessiva breve (non un consiglio).
 `.trim());
@@ -253,20 +336,39 @@ export default async function handler(req, res) {
       lang = "it",
       extra = "",
       periodo = "future",
-      sex = "",          // <-- NEW: top-level sex (from second page) "m" | "f" | "nb"
-      micro = {}         // optional micro-profile; may include micro.sex too
+      sex = "",
+      micro = {}
     } = body;
 
     if (!domanda || typeof domanda !== "string")
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
-    const resolvedSex = String(sex || micro?.sex || "").toLowerCase(); // prefer top-level
+    const resolvedSex = String(sex || micro?.sex || "").toLowerCase();
 
     // Personas + Temporal mode
     const { sys, fewshots } = personaSystem(stile, lang, resolvedSex);
     const temporal = temporalSystem(periodo, lang, stile);
 
-    // A tiny deterministic seed (helps variety while keeping brand tone)
+    // Intent + registro richiesto da UI (se presente)
+    const uiRegister = preferedRegisterFromExtra(extra); // "auto"|poetico|realistico|analitico
+    const intent = intentHeuristic(domanda, extra);
+    const intentLine = (() => {
+      const en = isEn(lang);
+      const reg = (uiRegister !== "auto") ? uiRegister : intent;
+      if (en) {
+        if (reg === "poetico" || reg === "poetic") return "REGISTER: Poetic, light metaphors, no melodrama.";
+        if (reg === "analitico" || reg === "analytical") return "REGISTER: Analytical, small criteria woven into sentences.";
+        if (reg === "realistico" || reg === "realistic" || reg === "howto") return "REGISTER: Realistic, concrete, everyday images.";
+        return "REGISTER: Default What If tone; vary cadence and wording.";
+      } else {
+        if (reg === "poetico" || reg === "poetic") return "REGISTRO: Poetico, metafore leggere, zero melodramma.";
+        if (reg === "analitico" || reg === "analytical") return "REGISTRO: Analitico, criteri intrecciati nelle frasi.";
+        if (reg === "realistico" || reg === "realistic" || reg === "howto") return "REGISTRO: Realistico, concreto, immagini quotidiane.";
+        return "REGISTRO: What If standard, varia cadenza e lessico.";
+      }
+    })();
+
+    // Seed per varietà
     const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${lang}|${resolvedSex}`), 36) % 1000000;
 
     const extraTemporalHint =
@@ -280,14 +382,16 @@ export default async function handler(req, res) {
       ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Persona must adapt to user sex="${resolvedSex||"unknown"}". Keep the exact persona voice. INTERNAL SEED: ${seedNum}.`
       : `Domanda (NON ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Adatta la voce al sesso utente="${resolvedSex||"unknown"}". Mantieni esattamente la voce della persona. SEED INTERNO: ${seedNum}.`;
 
+    // Messaggi
     const messages = [
       { role: "system", content: sys },
       { role: "system", content: temporal },
       ...(extraTemporalHint ? [{ role: "system", content: extraTemporalHint }] : []),
       ...(fewshots || []),
       { role: "system", content: isEn(lang)
-          ? `Hard rules for WTF: one narrated blasphemy allowed (never literal), alcohol beats ok, “reacting objects” only when relevant, opening is ONLY a nickname (no verbs).`
-          : `Regole dure per WTF: una sola bestemmia narrata (mai letterale), alcol ok, “oggetti che reagiscono” solo quando servono, apertura SOLO con nomignolo (senza verbi).` },
+          ? `Hard rules for WTF: one narrated blasphemy allowed (never literal), alcohol beats ok, “reacting objects” only when relevant, opening is ONLY a nickname (no verbs). Vary phrasing; no fixed catchphrases.`
+          : `Regole dure per WTF: una sola bestemmia narrata (mai letterale), alcol ok, “oggetti che reagiscono” solo quando servono, apertura SOLO con nomignolo (senza verbi). Varia la frase; niente tormentoni fissi.` },
+      ...(stile === 'whatif' ? [{ role: 'system', content: intentLine }] : []),
       { role: "user", content: userPrompt },
     ];
 
@@ -312,6 +416,7 @@ export default async function handler(req, res) {
     if (stile === "wtf") {
       answer = ensureSpicyButSafeWTF(answer, lang);
     } else {
+      answer = varyWhatIfLexicon(answer, lang, seedNum);
       if (!/[.!?…]$/.test(answer)) answer += ".";
     }
 
