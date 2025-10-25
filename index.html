@@ -8,11 +8,11 @@
   <!-- PWA -->
   <meta name="theme-color" content="#0B0B0C" />
   <link rel="manifest" href="/manifest.json" />
-  <link rel="apple-touch-icon" href="/public/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-  <link rel="preload" as="image" href="/public/home-hero.png" />
+  <link rel="preload" as="image" href="/home-hero.png" />
 
   <style>
     /* ===== THEME SYSTEM (palette ufficiali) ===== */
@@ -144,7 +144,7 @@
 <body>
   <!-- Selettore lingua -->
   <div class="lang-fab" id="langFab">
-    <button class="lang-btn" id="langToggle" aria-haspopup="true" aria-expanded="false" aria-label="Change language">🌐 <span id="langCode">IT</span></button>
+    <button class="lang-btn" id="langToggle" aria-haspopup="true" aria-expanded="false" aria-label="Change language">🌐</button>
     <div class="lang-menu" id="langMenu" role="menu" aria-label="language">
       <button data-lang="it">Italiano</button>
       <button data-lang="en">English</button>
@@ -152,8 +152,7 @@
   </div>
 
   <main>
-    <!-- ✅ src di default così l’immagine si vede subito -->
-    <img id="hero" class="hero-img" src="/public/home-hero.png" alt="Porta luminosa What?f" loading="eager" decoding="async" />
+    <img id="hero" class="hero-img" alt="Porta luminosa What?f" loading="eager" decoding="async" />
 
     <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
 
@@ -183,11 +182,11 @@
     </div>
   </footer>
 
-  <!-- Hero robust loader (fallback se /home-hero.png non esiste) -->
+  <!-- Hero robust loader -->
   <script>
     (function loadHero(){
       const hero = document.getElementById('hero');
-      const DIRS  = ["/public", "", "/assets", "/img", "/images"];
+      const DIRS  = ["", "/public", "/assets", "/img", "/images"];
       const NAMES = ["home-hero.webp","home-hero.png","home_hero.webp","home_hero.png"];
       const cacheBust = () => `?v=${Math.floor(Date.now()/60000)}`;
 
@@ -203,7 +202,6 @@
       }
 
       (async ()=>{
-        if (hero.complete && hero.naturalWidth>0) return;
         for (const dir of DIRS){
           for (const name of NAMES){
             const url = `${dir}/${name}`.replace(/\/{2,}/g,"/");
@@ -211,12 +209,12 @@
             if (ok){ hero.src = ok; hero.alt = "Porta luminosa What?f"; return; }
           }
         }
-        if(!hero.getAttribute('src')) hero.style.display = "none";
+        hero.style.display = "none";
       })();
     })();
   </script>
 
-  <!-- i18n + theme + selections + SWITCH LINGUA FUNZIONANTE -->
+  <!-- i18n + theme + selections -->
   <script>
     (function initTheme(){
       try{
@@ -226,7 +224,7 @@
       }catch(e){
         document.documentElement.setAttribute('data-theme','whatif');
       }
-    })()
+    })();
 
     const DICT = {
       it:{
@@ -247,52 +245,25 @@
     const $  = s => document.querySelector(s);
     const $$ = s => document.querySelectorAll(s);
 
-    function detectBrowserLang(){
-      const n = (navigator.language || 'it').toLowerCase();
-      return n.startsWith('en') ? 'en' : 'it';
-    }
-    function getLang(){
-      return (LS.getItem('lang') || detectBrowserLang());
-    }
-    function setLang(l){
-      LS.setItem('lang', l);
-      applyLang();
-    }
+    function getLang(){ return LS.getItem('lang') || 'it'; }
+    function setLang(l){ LS.setItem('lang', l); applyLang(); }
+
     function applyLang(){
-      const L = getLang();
-      const d = DICT[L] || DICT.it;
+      const L = getLang(), d = (DICT[L]||DICT.it);
       document.documentElement.lang = L;
-      $('#langCode').textContent = L.toUpperCase();
       $$('[data-i18n]').forEach(el=>{
         const k = el.getAttribute('data-i18n');
-        if (k === 'lead'){ $('#leadText').innerHTML = d.lead; }
-        else if (d[k]) el.textContent = d[k];
+        if (k === 'lead') return;
+        if (d[k]) el.textContent = d[k];
       });
+      $('#leadText').innerHTML = d.lead;
       document.querySelectorAll('#langMenu button').forEach(b=>{
         b.classList.toggle('active', b.dataset.lang === L);
       });
     }
 
-    if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang());
+    if(!LS.getItem('lang')) LS.setItem('lang','it');
     applyLang();
-
-    (function wireLangMenu(){
-      const btn  = $('#langToggle');
-      const menu = $('#langMenu');
-      btn.addEventListener('click', ()=>{
-        const open = menu.style.display === 'block';
-        menu.style.display = open ? 'none' : 'block';
-        btn.setAttribute('aria-expanded', String(!open));
-      });
-      menu.addEventListener('click', (e)=>{
-        const b = e.target.closest('button[data-lang]'); if(!b) return;
-        setLang(b.dataset.lang);
-        menu.style.display='none';
-      });
-      document.addEventListener('click', (e)=>{
-        if(!menu.contains(e.target) && e.target!==btn) menu.style.display='none';
-      });
-    })();
 
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
     const go    = document.getElementById('go');
