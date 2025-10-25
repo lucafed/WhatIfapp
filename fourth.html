@@ -36,25 +36,23 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
 .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
 .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
 
-/* Micro-domande: multiple choice */
+/* Micro-domande */
 .qblock{border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0;background:rgba(255,255,255,.04)}
 .qtitle{display:flex;align-items:center;gap:8px;font-weight:800;color:#E7F2EE;margin-bottom:8px}
 .optset{display:flex;flex-wrap:wrap;gap:8px}
 .opt{background:var(--chip);border:1px solid var(--line);color:#EAF3EE;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer}
 .opt.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-.opt.kbd{font-family:ui-monospace, SFMono-Regular, Menlo, monospace}
-
-/* Toggles & lists */
 .toggle{cursor:pointer;user-select:none}
 .collapsed>.body{display:none}
+
+/* Lists */
 .list{display:flex;flex-direction:column;gap:10px}
 .story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
 .play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
-.meta{font-size:12px;color:var(--muted)}
-.small{font-size:12px;color:var(--muted)}
+.meta{font-size:12px;color:#A0B2BA}
+.small{font-size:12px;color:#A0B2BA}
 .hint{font-size:13px;color:#cfe7ff;margin-top:10px}
 .hint b{color:var(--acc2)}
-.hidden{display:none !important}
 </style>
 </head>
 <body>
@@ -90,6 +88,18 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
     <div id="styleHint" class="hint"></div>
   </div>
 
+  <!-- REGISTRO What If -->
+  <div class="card center" id="registroCard" style="display:none">
+    <div class="label" id="regLabel">Registro (solo What if)</div>
+    <div class="chips" id="registroChips">
+      <button class="chip" data-reg="auto" id="regAuto">Auto</button>
+      <button class="chip" data-reg="realistico" id="regReal">Realistico</button>
+      <button class="chip" data-reg="poetico" id="regPoet">Poetico</button>
+      <button class="chip" data-reg="analitico" id="regAnal">Analitico</button>
+    </div>
+    <div class="small" id="registroHint">Se scegli "Auto", il server decide il registro in base alla domanda e al micro-profilo.</div>
+  </div>
+
   <!-- Question -->
   <div class="card center">
     <h3 class="label" id="qLabel">La tua domanda</h3>
@@ -98,7 +108,7 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
       <button class="btn primary" id="goBtn" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
       <button class="btn ghost" id="clearBtn">Svuota</button>
     </div>
-    <div class="small" id="tipNote" style="margin-top:8px">Tip: puoi cambiare stile e periodo sopra; colori e tono si adattano.</div>
+    <div class="small" id="tipNote" style="margin-top:8px">Tip: puoi cambiare stile, registro e periodo sopra; colori e tono si adattano.</div>
   </div>
 
   <!-- Micro-domande (MULTIPLE CHOICE) -->
@@ -175,9 +185,12 @@ const I18N = {
     periodPast:"Passato", periodFuture:"Futuro",
     whatif:"What if (realistico)", wtf:"What the F (demenziale)",
     hintWhatif:"Stile <b>What if</b>: tono caldo e realistico, immagini quotidiane, chiusura riflessiva breve.",
-    hintWTF:"Stile <b>What the F</b>: <b>sarcasmo demenziale</b>, ritmo alto, oggetti che “pensano”, <b>doppia punchline finale</b> “— … — …”.",
+    hintWTF:"Stile <b>What the F</b>: <b>sarcasmo demenziale</b>, oggetti che “reagiscono”, <b>doppia punchline</b> possibile.",
+    regLabel:"Registro (solo What if)",
+    regHint:'Se scegli "Auto", il server sceglie il registro usando domanda e micro-profilo.',
+    regAuto:"Auto", regReal:"Realistico", regPoet:"Poetico", regAnal:"Analitico",
     yourq:"La tua domanda", gen:"✨ Genera risposta", clear:"Svuota",
-    tip:"Tip: puoi cambiare stile e periodo sopra; colori e tono si adattano.",
+    tip:"Tip: puoi cambiare stile, registro e periodo sopra; colori e tono si adattano.",
     free:(l,d)=>`Crediti oggi: ${l}/${d}`, proOn:"PRO attivo", proOff:"PRO non attivo",
     microT:"▼ Micro-domande di oggi", microHint:"(una volta al giorno)",
     microSaveBtn:"💾 Salva micro-profilo",
@@ -196,9 +209,12 @@ const I18N = {
     periodPast:"Past", periodFuture:"Future",
     whatif:"What if (realistic)", wtf:"What the F (goofy)",
     hintWhatif:"<b>What if</b>: warm and realistic, everyday images, short reflective ending.",
-    hintWTF:"<b>What the F</b>: <b>goofy sarcasm</b>, fast pace, “thinking objects”, <b>double punchline</b> at the end “— … — …”.",
+    hintWTF:"<b>What the F</b>: <b>goofy sarcasm</b>, “reacting objects”, possible <b>double punchline</b>.",
+    regLabel:"Register (What if only)",
+    regHint:'If you pick "Auto", the server chooses the register from the question and micro-profile.',
+    regAuto:"Auto", regReal:"Realistic", regPoet:"Poetic", regAnal:"Analytical",
     yourq:"Your question", gen:"✨ Generate answer", clear:"Clear",
-    tip:"Tip: switch style and period above; tone & colors adapt.",
+    tip:"Tip: switch style, register and period above; tone & colors adapt.",
     free:(l,d)=>`Credits today: ${l}/${d}`, proOn:"PRO active", proOff:"PRO not active",
     microT:"▼ Today’s micro-questions", microHint:"(once per day)",
     microSaveBtn:"💾 Save micro-profile",
@@ -222,8 +238,7 @@ document.documentElement.lang=lang;
 function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
 function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
 function todayStr(){return new Date().toISOString().slice(0,10);}
-
-let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
+let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false,registro:'auto'});
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
 // ===== UI text =====
@@ -242,18 +257,25 @@ document.getElementById('moodTitle').textContent    = T.qMood;
 document.getElementById('anchorTitle').textContent  = T.qAnchor;
 document.getElementById('decideTitle').textContent  = T.qDecide;
 document.getElementById('zodiacTitle').textContent  = T.qZodiac;
+document.getElementById('regLabel').textContent     = (lang==='en'? I18N.en.regLabel : I18N.it.regLabel);
+document.getElementById('registroHint').textContent = (lang==='en'? I18N.en.regHint : I18N.it.regHint);
+document.getElementById('regAuto').textContent= (lang==='en'? I18N.en.regAuto : I18N.it.regAuto);
+document.getElementById('regReal').textContent= (lang==='en'? I18N.en.regReal : I18N.it.regReal);
+document.getElementById('regPoet').textContent= (lang==='en'? I18N.en.regPoet : I18N.it.regPoet);
+document.getElementById('regAnal').textContent= (lang==='en'? I18N.en.regAnal : I18N.it.regAnal);
 
 // style & period badges
 function renderBadges(){
   document.getElementById('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past'? (lang==='en'?'Past':'Passato') : (lang==='en'?'Future':'Futuro'));
   document.getElementById('styleBadge').textContent   = "🎭 " + (prefs.stile==='wtf'? 'What the F' : 'What if');
   document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
-  // hint dinamico per lo stile
-  document.getElementById('styleHint').innerHTML = (prefs.stile==='wtf') ? T.hintWTF : T.hintWhatif;
+  document.getElementById('styleHint').innerHTML = (prefs.stile==='wtf') ? (lang==='en'?I18N.en.hintWTF:I18N.it.hintWTF) : (lang==='en'?I18N.en.hintWhatif:I18N.it.hintWhatif);
+  const rc=document.getElementById('registroCard'); rc.style.display = (prefs.stile==='whatif')?'block':'none';
+  document.querySelectorAll('#registroChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.reg === (prefs.registro||'auto')));
 }
 renderBadges();
 
-// ===== Crediti (solo visual: 3 free / 10 pro / ∞ admin) =====
+// ===== Crediti (visual) =====
 function userIsAdmin(){ return !!LS.getItem('admin_token'); }
 function capForUser(){ return userIsAdmin() ? Infinity : (prefs.pro ? 10 : 3); }
 function ensureCredits(){
@@ -279,9 +301,9 @@ ensureCredits();
 renderCreditsBadge();
 
 // ===== PRO badge =====
-document.getElementById('proBadge').textContent = prefs.pro? (lang==='en'?'PRO active':'PRO attivo') : (lang==='en'?'PRO not active':'PRO non attivo');
+document.getElementById('proBadge').textContent = prefs.pro? (lang==='en'?I18N.en.proOn:I18N.it.proOn) : (lang==='en'?I18N.en.proOff:I18N.it.proOff);
 
-// ===== nav =====
+// ===== Nav =====
 document.getElementById('backBtn').onclick=()=>history.back();
 document.getElementById('homeBtn').onclick=()=>location.href='index.html';
 document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
@@ -292,6 +314,11 @@ document.getElementById('styleChips').addEventListener('click',(e)=>{
   const b=e.target.closest('.chip'); if(!b) return;
   prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs);
   document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+  renderBadges();
+});
+document.getElementById('registroChips').addEventListener('click',(e)=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  prefs.registro=b.dataset.reg; writeJSON('whatif_prefs',prefs);
   renderBadges();
 });
 
@@ -307,26 +334,27 @@ function trySubmit(){
   const c=readJSON('whatif_credits',{date:todayStr(),used:0});
   if(!userIsAdmin()){
     const cap=capForUser();
-    if((c.used||0)>=cap){ alert(T.outOfCredits); return; }
+    if((c.used||0)>=cap){ alert((lang==='en'?I18N.en.outOfCredits:I18N.it.outOfCredits)); return; }
     c.used=(c.used||0)+1;
     writeJSON('whatif_credits',c);
     renderCreditsBadge();
   }
   const micro = readJSON('micro_profile', {});
+  const extra = (prefs.stile==='whatif' && prefs.registro && prefs.registro!=='auto')
+    ? `preferisci registro=${prefs.registro}` : '';
   writeJSON('whatif_prefs', prefs);
   LS.setItem('domanda',domanda);
-  writeJSON('whatif_request',{ domanda, stile:prefs.stile, lang, extra:"", micro, fantasy_mode:false, periodo:prefs.periodo });
+  writeJSON('whatif_request',{ domanda, stile:prefs.stile, lang, extra, micro, fantasy_mode:false, periodo:prefs.periodo });
   location.href='fifth.html';
 }
-
 document.getElementById('goBtn').onclick=trySubmit;
 document.getElementById('clearBtn').onclick=()=>{ qEl.value=""; qEl.focus(); };
-// Ctrl/⌘+Invio
 qEl.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
 // ===== Micro-questions (multiple choice) =====
 const microCard=document.getElementById('microCard');
 const microSaved=readJSON('micro_saved',{date:"",ok:false});
+
 function rngForDay(seedStr){ let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
 function todayIso(){return new Date().toISOString().slice(0,10);}
 function pickDaily(list, n, rnd){
@@ -355,6 +383,7 @@ function renderOptions(containerId, options, key){
     wrap.appendChild(b);
   });
 }
+
 function renderMicro(){
   if(microSaved.date===todayIso()){
     microCard.classList.add('collapsed');
@@ -439,7 +468,7 @@ function renderNext(){
     const left=document.createElement('div');
     left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.q||'—'}</div><div class="meta">${fmtDate(item.ts)}</div>`;
     const right=document.createElement('div'); right.className='row';
-    const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=(lang==='en'? 'Use' : 'Usa');
+    const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=(lang==='en'? (I18N.en.use) : (I18N.it.use));
     useBtn.onclick=()=>{ qEl.value=item.q||""; window.scrollTo({top:0,behavior:'smooth'}); };
     const play=document.createElement('button'); play.className='play'; play.textContent='▶';
     play.onclick=()=>{ LS.setItem('domanda', item.q||""); writeJSON('whatif_request',{ domanda:item.q||"", stile:prefs.stile, lang, extra:"", micro:readJSON('micro_profile',{}), fantasy_mode:false, periodo:prefs.periodo }); location.href='fifth.html'; };
