@@ -5,23 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f — Home</title>
 
-  <!-- PWA base -->
+  <!-- PWA -->
   <meta name="theme-color" content="#0B0B0C" />
-  <meta name="application-name" content="What?f" />
   <link rel="manifest" href="/manifest.json" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192.png" />
+
+  <!-- 🔸 ICONS / FAVICON (aggiunte) -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <!-- 🔸 fine aggiunte -->
+
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-  <!-- Favicon / Icons -->
-  <link rel="icon" href="/favicon.ico" sizes="any">
-  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
-  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
-
-  <!-- Preload hero (PNG + eventuale WebP) -->
   <link rel="preload" as="image" href="/home-hero.png" />
-  <link rel="preload" as="image" href="/home-hero.webp" imagesrcset="/home-hero.webp" imagesizes="100vw" />
 
   <style>
     /* ===== THEME SYSTEM (palette ufficiali) ===== */
@@ -153,7 +150,7 @@
 <body>
   <!-- Selettore lingua -->
   <div class="lang-fab" id="langFab">
-    <button class="lang-btn" id="langToggle" aria-haspopup="true" aria-expanded="false" aria-label="Cambia lingua">🌐 <span id="langCode">IT</span></button>
+    <button class="lang-btn" id="langToggle" aria-haspopup="true" aria-expanded="false" aria-label="Change language">🌐 <span id="langCode">IT</span></button>
     <div class="lang-menu" id="langMenu" role="menu" aria-label="language">
       <button data-lang="it">Italiano</button>
       <button data-lang="en">English</button>
@@ -161,8 +158,8 @@
   </div>
 
   <main>
-    <!-- ✅ src di default; width/height per evitare CLS (modifica le dimensioni secondo il tuo file reale) -->
-    <img id="hero" class="hero-img" src="/home-hero.png" alt="Porta luminosa What?f" loading="eager" decoding="async" width="1120" height="700" />
+    <!-- ✅ src di default così l’immagine si vede subito -->
+    <img id="hero" class="hero-img" src="/home-hero.png" alt="Porta luminosa What?f" loading="eager" decoding="async" />
 
     <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
 
@@ -273,8 +270,6 @@
       const d = DICT[L] || DICT.it;
       document.documentElement.lang = L;
       $('#langCode').textContent = L.toUpperCase();
-      // aria-label dinamico per accessibilità
-      $('#langToggle').setAttribute('aria-label', L === 'en' ? 'Change language' : 'Cambia lingua');
       // testi
       $$('[data-i18n]').forEach(el=>{
         const k = el.getAttribute('data-i18n');
@@ -422,7 +417,7 @@
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(()=>{});
+        navigator.serviceWorker.register("/sw.js").catch(()=>{});
       });
     }
   </script>
