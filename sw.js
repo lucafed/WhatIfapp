@@ -22,11 +22,16 @@ const PRECACHE_URLS = [
   '/about.html',
   '/privacy.html',
   '/terms.html',
+
+  // Manifest + hero
   '/manifest.json',
   '/home-hero.png',
-  // icone PWA comuni: aggiungi solo quelle che hai realmente
+
+  // Icone PWA effettive
   '/icons/icon-192.png',
-  '/icons/icon-512.png'
+  '/icons/icon-512.png',
+  '/icons/icon-192-maskable.png',
+  '/icons/icon-512-maskable.png'
 ];
 
 // Offline fallback HTML minimale (inline, zero dipendenze)
@@ -49,7 +54,7 @@ const OFFLINE_HTML = `
 </style></head>
 <body><main><div class="card">
 <h1>Sei offline</h1>
-<p>Non riesco a raggiungere la rete. Puoi tornare alla <a href="/index.html">Home</a> o riprovare a caricarti quando ritorna la connessione.</p>
+<p>Non riesco a raggiungere la rete. Puoi tornare alla <a href="/index.html">Home</a> o riprovare quando torna la connessione.</p>
 <div class="row">
   <button class="btn" onclick="location.reload()">Riprova</button>
   <button class="btn ghost" onclick="location.href='index.html'">Home</button>
@@ -119,23 +124,21 @@ async function enforceImageCacheLimit(maxEntries = 60) {
   const cache = await caches.open(IMG_CACHE);
   const keys = await cache.keys();
   if (keys.length <= maxEntries) return;
-  // elimina le più vecchie
   const toDelete = keys.slice(0, keys.length - maxEntries);
   await Promise.all(toDelete.map(k => cache.delete(k)));
 }
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = new URL(request.url);
 
-  // Bypass: richieste cross-origin (CDN esterni) → prova SWR ma senza rompere
+  // Bypass: cross-origin → SWR senza rompere
   if (!isSameOrigin(request.url)) {
-    if (request.method !== 'GET') return; // non interferire con POST esterni
+    if (request.method !== 'GET') return;
     event.respondWith(staleWhileRevalidate(request, RUNTIME_CACHE));
     return;
   }
 
-  // API: sempre rete, no cache (streaming SSE ecc.)
+  // API: sempre rete, no cache
   if (isAPIRequest(request)) {
     if (request.method !== 'GET') {
       event.respondWith(
@@ -148,7 +151,6 @@ self.addEventListener('fetch', (event) => {
       );
       return;
     }
-    // API GET (se mai servisse): network-first senza cache
     event.respondWith(
       fromNetworkWithTimeout(request, 8000).catch(() =>
         new Response(JSON.stringify({ error: 'offline' }), {
@@ -165,12 +167,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith((async () => {
       try {
         const res = await fromNetworkWithTimeout(request, 6000);
-        // opzionalmente aggiorna cache shell su successo
         const cache = await caches.open(STATIC_CACHE);
         cache.put(request, res.clone());
         return res;
       } catch {
-        // prova cache
         const cache = await caches.open(STATIC_CACHE);
         const cached = await cache.match(request) || await cache.match('/index.html');
         if (cached) return cached;
@@ -194,7 +194,6 @@ self.addEventListener('fetch', (event) => {
         }
         return res;
       } catch {
-        // fallback se davvero serve (nessuna immagine di riserva: 404 “soft”)
         return new Response('', { status: 404 });
       }
     })());
