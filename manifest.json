@@ -17,10 +17,10 @@
   "categories": ["lifestyle", "productivity", "entertainment", "creative"],
 
   "icons": [
-    { "src": "/icons/icon-192.png",          "sizes": "192x192",  "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-512.png",          "sizes": "512x512",  "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-192-maskable.png", "sizes": "192x192",  "type": "image/png", "purpose": "maskable" },
-    { "src": "/icons/icon-512-maskable.png", "sizes": "512x512",  "type": "image/png", "purpose": "maskable" }
+    { "src": "/icon-192.png",          "sizes": "192x192",  "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png",          "sizes": "512x512",  "type": "image/png", "purpose": "any" },
+    { "src": "/icon-192-maskable.png", "sizes": "192x192",  "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-512-maskable.png", "sizes": "512x512",  "type": "image/png", "purpose": "maskable" }
   ],
 
   "shortcuts": [
@@ -29,27 +29,27 @@
       "short_name": "Scenario",
       "description": "Inizia una nuova domanda",
       "url": "/index.html",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Profilo rapido",
       "short_name": "Profilo",
       "description": "Aggiorna i tuoi dati per risposte più personali",
       "url": "/second.html",
-      "icons": [{ "src": "/icons/icon-192-maskable.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/icon-192-maskable.png", "sizes": "192x192", "type": "image/png" }]
     }
   ],
 
   "screenshots": [
     {
-      "src": "/screenshots/whatif-home.png",
+      "src": "/whatif-home.png",
       "type": "image/png",
       "sizes": "1080x1920",
       "form_factor": "narrow",
       "label": "La scelta è l’inizio di ogni universo."
     },
     {
-      "src": "/screenshots/whatif-desktop.png",
+      "src": "/whatif-desktop.png",
       "type": "image/png",
       "sizes": "1920x1080",
       "form_factor": "wide",
