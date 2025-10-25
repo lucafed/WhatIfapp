@@ -8,9 +8,7 @@
   <!-- PWA -->
   <meta name="theme-color" content="#0B0B0C" />
   <link rel="manifest" href="/manifest.json" />
-  <!-- Favicon + Apple (aggiunto) -->
-  <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-192.png" />
-  <link rel="apple-touch-icon" href="/icons/icon-512.png" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
@@ -146,7 +144,7 @@
 <body>
   <!-- Selettore lingua -->
   <div class="lang-fab" id="langFab">
-    <button class="lang-btn" id="langToggle" aria-haspopup="true" aria-expanded="false" aria-label="Change language">🌐</button>
+    <button class="lang-btn" id="langToggle" aria-haspopup="true" aria-expanded="false" aria-label="Change language">🌐 <span id="langCode">IT</span></button>
     <div class="lang-menu" id="langMenu" role="menu" aria-label="language">
       <button data-lang="it">Italiano</button>
       <button data-lang="en">English</button>
@@ -154,7 +152,8 @@
   </div>
 
   <main>
-    <img id="hero" class="hero-img" alt="Porta luminosa What?f" loading="eager" decoding="async" />
+    <!-- ✅ src di default così l’immagine si vede subito -->
+    <img id="hero" class="hero-img" src="/home-hero.png" alt="Porta luminosa What?f" loading="eager" decoding="async" />
 
     <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
 
@@ -184,12 +183,11 @@
     </div>
   </footer>
 
-  <!-- Hero robust loader -->
+  <!-- Hero robust loader (fallback se /home-hero.png non esiste) -->
   <script>
     (function loadHero(){
       const hero = document.getElementById('hero');
-      // PATCH: /public non va usato a runtime su Vercel
-      const DIRS  = ["", "/assets", "/img", "/images"];
+      const DIRS  = ["", "/public", "/assets", "/img", "/images"];
       const NAMES = ["home-hero.webp","home-hero.png","home_hero.webp","home_hero.png"];
       const cacheBust = () => `?v=${Math.floor(Date.now()/60000)}`;
 
@@ -212,12 +210,13 @@
             if (ok){ hero.src = ok; hero.alt = "Porta luminosa What?f"; return; }
           }
         }
-        hero.style.display = "none";
+        // se nessuna immagine è trovata, lascia quella di default o nascondi
+        if(!hero.getAttribute('src')) hero.style.display = "none";
       })();
     })();
   </script>
 
-  <!-- i18n + theme + selections -->
+  <!-- i18n + theme + selections + SWITCH LINGUA FUNZIONANTE -->
   <script>
     (function initTheme(){
       try{
@@ -248,26 +247,58 @@
     const $  = s => document.querySelector(s);
     const $$ = s => document.querySelectorAll(s);
 
-    function getLang(){ return LS.getItem('lang') || 'it'; }
-    function setLang(l){ LS.setItem('lang', l); applyLang(); }
-
+    // ---- lingua
+    function detectBrowserLang(){
+      const n = (navigator.language || 'it').toLowerCase();
+      return n.startsWith('en') ? 'en' : 'it';
+    }
+    function getLang(){
+      return (LS.getItem('lang') || detectBrowserLang());
+    }
+    function setLang(l){
+      LS.setItem('lang', l);
+      applyLang();
+    }
     function applyLang(){
-      const L = getLang(), d = (DICT[L]||DICT.it);
+      const L = getLang();
+      const d = DICT[L] || DICT.it;
       document.documentElement.lang = L;
+      $('#langCode').textContent = L.toUpperCase();
+      // testi
       $$('[data-i18n]').forEach(el=>{
         const k = el.getAttribute('data-i18n');
-        if (k === 'lead') return;
-        if (d[k]) el.textContent = d[k];
+        if (k === 'lead'){ $('#leadText').innerHTML = d.lead; }
+        else if (d[k]) el.textContent = d[k];
       });
-      $('#leadText').innerHTML = d.lead;
+      // attivi nel menu
       document.querySelectorAll('#langMenu button').forEach(b=>{
         b.classList.toggle('active', b.dataset.lang === L);
       });
     }
 
-    if(!LS.getItem('lang')) LS.setItem('lang','it');
+    if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang());
     applyLang();
 
+    // ---- wiring menu lingua
+    (function wireLangMenu(){
+      const btn  = $('#langToggle');
+      const menu = $('#langMenu');
+      btn.addEventListener('click', ()=>{
+        const open = menu.style.display === 'block';
+        menu.style.display = open ? 'none' : 'block';
+        btn.setAttribute('aria-expanded', String(!open));
+      });
+      menu.addEventListener('click', (e)=>{
+        const b = e.target.closest('button[data-lang]'); if(!b) return;
+        setLang(b.dataset.lang);
+        menu.style.display='none';
+      });
+      document.addEventListener('click', (e)=>{
+        if(!menu.contains(e.target) && e.target!==btn) menu.style.display='none';
+      });
+    })();
+
+    // ---- selections / tema
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
     const go    = document.getElementById('go');
 
@@ -313,9 +344,13 @@
     (function(){
       const title = document.getElementById('appTitle') || document.querySelector('h1');
       const pastBtn = document.querySelector('button[data-val="past"]');
+
       if(!title || !pastBtn) return;
 
-      let tapTitle = 0, tapPast = 0, stage = 0, timer = null;
+      let tapTitle = 0;
+      let tapPast = 0;
+      let stage = 0; // 0 = non iniziato, 1 = attesa 5 tap su "Passato"
+      let timer = null;
 
       function resetAll(){
         tapTitle = 0; tapPast = 0; stage = 0;
@@ -355,6 +390,7 @@
           stage = 1;
           tapTitle = 0;
           flashScreen();
+          // feedback sul bottone "Passato"
           pastBtn.classList.add("unlocking");
           pastBtn.style.boxShadow = "0 0 0 2px rgba(255,255,255,.15) inset, 0 0 22px rgba(255,255,255,.12)";
           setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); }, 2500);
