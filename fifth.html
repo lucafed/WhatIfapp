@@ -129,6 +129,7 @@ const LS=localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
 const style = prefs.stile || 'whatif';
 const periodo = prefs.periodo || 'future';
+const registro = prefs.registro || 'auto';
 const lang  = (LS.getItem('lang') || 'it').toLowerCase();
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 
@@ -148,17 +149,17 @@ const I18N={
       share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
       copied:"Copiato!", error:"[errore server]",
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-      meta:(st,p)=> st==='wtf'
-        ? `Stile: What the F · 6–9 frasi · paragrafo unico · 3+ stoccate interne · doppia punchline · modalità: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if · 8–11 frasi · paragrafo unico · niente elenchi/domande/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.`},
+      meta:(st,p,reg)=> st==='wtf'
+        ? `Stile: What the F · 6–9 frasi · paragrafo unico · tono demenziale affettuoso · modalità: ${p==='past'?'Passato':'Futuro'}.`
+        : `Stile: What if · 8–11 frasi · paragrafo unico · registro: ${reg==='auto'?'Auto':reg[0].toUpperCase()+reg.slice(1)} · modalità: ${p==='past'?'Passato':'Futuro'}.`},
   en:{tWTF:"⚡ What the F — Result", tWHF:"💡 What if — Result",
       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
       share:"📤 Share / Copy", again:"🔁 Ask another",
       copied:"Copied!", error:"[server error]",
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-      meta:(st,p)=> st==='wtf'
-        ? `Style: What the F · 6–9 sentences · single paragraph · 3+ inside jabs · double punchline · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if · 8–11 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`}
+      meta:(st,p,reg)=> st==='wtf'
+        ? `Style: What the F · 6–9 sentences · single paragraph · goofy, affectionate tone · mode: ${p==='past'?'Past':'Future'}.`
+        : `Style: What if · 8–11 sentences · single paragraph · register: ${reg==='auto'?'Auto':(reg==='analitico'?'Analytical':(reg==='realistico'?'Realistic':(reg==='poetico'?'Poetic':reg)))} · mode: ${p==='past'?'Past':'Future'}.`}
 }[lang];
 
 document.getElementById('langBtn').textContent=lang.toUpperCase();
@@ -172,7 +173,8 @@ document.getElementById('againBtn').textContent=I18N.again;
 document.getElementById('styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
 
 function normalizeOneParagraph(s=""){
-  return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
+  return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ")
+    .replace(/\s+([.,;:!?])/g, "$1").trim();
 }
 
 /* LEADS */
@@ -209,8 +211,6 @@ const LEADS = {
   }
 };
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
-function hashStr(s=""){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i); h=h|0; } return Math.abs(h); }
-function stablePick(arr, seedStr){ if(!arr?.length) return ""; if(!seedStr?.trim()) return pick(arr); const h=hashStr(seedStr); return arr[h%arr.length]; }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
 
 const params=new URLSearchParams(location.search);
@@ -221,11 +221,10 @@ function setTitles(q){
   document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
   document.getElementById('subtitle').textContent = I18N.sub(q);
   document.getElementById('styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
-  const bank = LEADS[lang]?.[style] || LEADS['it']['whatif'];
-  const seed = `${(q||"").toLowerCase().trim()}|${style}|${lang}`;
-  const line = oneSentence(stablePick(bank, seed));
+  const bank = (LEADS[lang]||LEADS.it)[style] || (LEADS.it.whatif);
+  const line = oneSentence(pick(bank));
   document.getElementById('lead').textContent = line;
-  document.getElementById('metaInfo').textContent = I18N.meta(style, periodo);
+  document.getElementById('metaInfo').textContent = I18N.meta(style, periodo, registro);
 }
 
 // evidenzia parentesi tra em-dash “— … — …”
@@ -266,7 +265,7 @@ if(isReplay){
   setTitles(domanda);
   document.getElementById('qView').textContent = domanda || '—';
 
-  // ===== NEW: leggi sex dal profilo (fallback da gender) =====
+  // ===== leggi sex dal profilo (fallback da gender) =====
   const profile = JSON.parse(LS.getItem('whatif_profile') || '{}');
   const sex = (profile.sex) ? String(profile.sex).toLowerCase()
             : mapGenderToSex(profile.gender || '');
@@ -279,16 +278,17 @@ if(isReplay){
       const adminToken = localStorage.getItem("admin_token");
       if (adminToken) headers["x-admin-token"] = adminToken;
 
+      const extra = (style==='whatif' && registro && registro!=='auto') ? `preferisci registro=${registro}` : '';
       const r = await fetch("/api/ask",{
         method:"POST", headers,
         body:JSON.stringify({
           domanda,
           lang,
           stile:style,
-          extra:"",
+          extra,
           micro:req.micro||{},
           periodo,
-          sex // <-- PASSA IL SESSO NORMALIZZATO
+          sex // <-- passa sesso normalizzato
         })
       });
 
@@ -324,7 +324,7 @@ if(isReplay){
 }
 
 document.getElementById('shareBtn').onclick=async()=>{
-  const full = `What?f — ${style==='wtf'?'What the F':'What if'}\n(${periodo})\n\nQ: ${domanda}\n\n${answerText}`;
+  const full = `What?f — ${style==='wtf'?'What the F':'What if'}\n(${periodo}${style==='whatif'?`, registro=${registro}`:''})\n\nQ: ${domanda}\n\n${answerText}`;
   try{
     if(navigator.share){
       await navigator.share({ title: "What?f", text: full });
