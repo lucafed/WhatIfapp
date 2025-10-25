@@ -8,7 +8,9 @@
   <!-- PWA -->
   <meta name="theme-color" content="#0B0B0C" />
   <link rel="manifest" href="/manifest.json" />
-  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <!-- Favicon + Apple (aggiunto) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="/icons/icon-512.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
@@ -186,7 +188,8 @@
   <script>
     (function loadHero(){
       const hero = document.getElementById('hero');
-      const DIRS  = ["", "/public", "/assets", "/img", "/images"];
+      // PATCH: /public non va usato a runtime su Vercel
+      const DIRS  = ["", "/assets", "/img", "/images"];
       const NAMES = ["home-hero.webp","home-hero.png","home_hero.webp","home_hero.png"];
       const cacheBust = () => `?v=${Math.floor(Date.now()/60000)}`;
 
@@ -310,13 +313,9 @@
     (function(){
       const title = document.getElementById('appTitle') || document.querySelector('h1');
       const pastBtn = document.querySelector('button[data-val="past"]');
-
       if(!title || !pastBtn) return;
 
-      let tapTitle = 0;
-      let tapPast = 0;
-      let stage = 0; // 0 = non iniziato, 1 = attesa 5 tap su "Passato"
-      let timer = null;
+      let tapTitle = 0, tapPast = 0, stage = 0, timer = null;
 
       function resetAll(){
         tapTitle = 0; tapPast = 0; stage = 0;
@@ -356,7 +355,6 @@
           stage = 1;
           tapTitle = 0;
           flashScreen();
-          // feedback sul bottone "Passato"
           pastBtn.classList.add("unlocking");
           pastBtn.style.boxShadow = "0 0 0 2px rgba(255,255,255,.15) inset, 0 0 22px rgba(255,255,255,.12)";
           setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); }, 2500);
