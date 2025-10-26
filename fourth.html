@@ -27,23 +27,28 @@ main{max-width:980px;margin:auto;padding:18px}
 .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
 .btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--line)}
 .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none;white-space:nowrap}
-.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:14px;margin:10px 0}
-h1{font-size:clamp(22px,5vw,30px);margin:8px 0;color:var(--acc2);text-align:center}
+.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:center}
 .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
+.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:18px}
 .center{max-width:760px;margin:0 auto}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
+.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:10px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
 .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
 
-/* Micro-domande (banner 1/dì) */
+/* Micro-domande */
 .qblock{border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0;background:rgba(255,255,255,.04)}
 .qtitle{display:flex;align-items:center;gap:8px;font-weight:800;color:#E7F2EE;margin-bottom:8px}
 .optset{display:flex;flex-wrap:wrap;gap:8px}
 .opt{background:var(--chip);border:1px solid var(--line);color:#EAF3EE;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer}
 .opt.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-.hidden{display:none !important}
+
+/* domanda centrale */
+.question-wrap{display:grid;gap:12px}
+.question-wrap .input{font-size:20px}
+.title-row{display:flex;justify-content:center}
 .small{font-size:12px;color:var(--muted)}
+.hidden{display:none !important}
 </style>
 </head>
 <body>
@@ -58,66 +63,67 @@ h1{font-size:clamp(22px,5vw,30px);margin:8px 0;color:var(--acc2);text-align:cent
     <div class="row">
       <span class="badge" id="periodoBadge">🕰️ —</span>
       <span class="badge" id="styleBadge">🎭 —</span>
-      <span class="badge" id="freeBadge">—</span>
+      <span class="badge" id="freeBadge" title="">—</span>
       <button class="btn" id="langBtn">IT</button>
     </div>
   </div>
 
-  <h1 id="titleH1">Imposta la tua domanda</h1>
+  <div class="title-row"><h1 id="titleH1">Imposta la tua domanda</h1></div>
 
-  <!-- Scelta stile + tono (box più piccolo, senza descrizioni) -->
+  <!-- Style + Tone -->
   <div class="card center">
     <div class="row" style="justify-content:space-between;align-items:center">
       <div class="chips" id="styleChips">
         <button class="chip" data-style="whatif" id="chipWhatIf">What if</button>
         <button class="chip" data-style="wtf" id="chipWTF">What the F</button>
       </div>
-      <span class="badge" id="proBadge">—</span>
-    </div>
-    <!-- Tono SOLO per What if -->
-    <div class="row" id="toneRow" style="margin-top:10px">
-      <span class="label" style="margin:0">Tono</span>
-      <div class="chips" id="toneChips">
-        <button class="chip" data-tone="real" id="toneReal">Reale</button>
-        <button class="chip" data-tone="analytical" id="toneAnalytical">Analitico</button>
-        <button class="chip" data-tone="poetic" id="tonePoetic">Poetico</button>
+      <div class="row">
+        <span class="badge" id="proBadge">—</span>
       </div>
     </div>
+
+    <!-- Tono (solo What if) -->
+    <div id="toneRow" class="row" style="margin-top:10px;display:none">
+      <div class="chips" id="toneChips">
+        <button class="chip" data-tone="reale">Reale</button>
+        <button class="chip" data-tone="analitico">Analitico</button>
+        <button class="chip" data-tone="poetico">Poetico</button>
+      </div>
+      <span class="small" id="toneHint" style="margin-left:auto"></span>
+    </div>
   </div>
 
-  <!-- Domanda (placeholder “E se…”) -->
+  <!-- Question -->
   <div class="card center">
-    <h3 class="label" id="qLabel">La tua domanda</h3>
-    <textarea id="qInput" rows="3" class="input" placeholder="E se…" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
-    <div class="row" style="margin-top:12px;justify-content:space-between">
-      <button class="btn primary" id="goBtn" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
-      <button class="btn ghost" id="clearBtn">Svuota</button>
+    <div class="question-wrap">
+      <h3 class="label" id="qLabel">La tua domanda</h3>
+      <textarea id="qInput" rows="3" class="input" placeholder="E se…" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
+      <div class="row" style="justify-content:space-between">
+        <button class="btn primary" id="goBtn" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
+        <button class="btn ghost" id="clearBtn">Svuota</button>
+      </div>
+      <div class="small" id="tipNote">Tip: puoi cambiare stile e periodo sopra.</div>
     </div>
-    <div class="small" id="tipNote" style="margin-top:6px">Tip: puoi cambiare stile, periodo e tono; colori e voce si adattano.</div>
   </div>
 
-  <!-- Micro-domande (banner: compare solo 1 volta al giorno) -->
+  <!-- Micro-domande (una volta al giorno) -->
   <div class="card center" id="microCard">
-    <div class="row" style="justify-content:space-between;align-items:center">
+    <div class="row" style="justify-content:space-between">
       <div class="label" id="microTitle">▼ Micro-domande di oggi</div>
-      <div class="small" id="microHint">(una sola volta al giorno)</div>
+      <div class="small" id="microHint">(una volta al giorno)</div>
     </div>
-    <div class="body" id="microBody" style="margin-top:8px">
-      <div id="qMood" class="qblock">
-        <div class="qtitle">🙂 Oggi come ti senti?</div>
+    <div class="body" id="microBody" style="margin-top:10px">
+      <div id="qMood"   class="qblock">
+        <div class="qtitle"><span id="moodIcon">🙂</span><span id="moodTitle">Oggi come ti senti?</span></div>
         <div class="optset" id="moodOpts"></div>
       </div>
       <div id="qAnchor" class="qblock">
-        <div class="qtitle">🧭 Cosa ti tiene qui ultimamente?</div>
+        <div class="qtitle"><span id="anchorIcon">🧭</span><span id="anchorTitle">Cosa ti tiene qui ultimamente?</span></div>
         <div class="optset" id="anchorOpts"></div>
       </div>
       <div id="qDecide" class="qblock">
-        <div class="qtitle">⚙️ Come decidi di solito?</div>
+        <div class="qtitle"><span id="decideIcon">⚙️</span><span id="decideTitle">Come decidi di solito?</span></div>
         <div class="optset" id="decideOpts"></div>
-      </div>
-      <div id="qJung" class="qblock">
-        <div class="qtitle">🧠 Stile (Jung):</div>
-        <div class="optset" id="jungOpts"></div>
       </div>
       <div class="row" style="margin-top:6px">
         <button class="btn primary" id="saveMicroBtn">💾 Salva micro-profilo</button>
@@ -126,140 +132,139 @@ h1{font-size:clamp(22px,5vw,30px);margin:8px 0;color:var(--acc2);text-align:cent
     </div>
   </div>
 
-  <!-- Salvati -->
-  <div class="card center hidden" id="savedCard">
-    <div class="row" style="justify-content:space-between">
-      <div class="label" id="nextLabel">▶ Domande salvate</div>
-      <button class="btn ghost" id="clearSavedBtn">🗑️ Svuota</button>
-    </div>
-    <div id="nextList"></div>
-  </div>
-
-  <!-- Cronologia -->
-  <div class="card center hidden" id="histCard">
-    <div class="row" style="justify-content:space-between">
-      <div class="label" id="storiesLabel">▶ Cronologia</div>
-      <button class="btn ghost" id="clearHistoryBtn">🗑️ Svuota</button>
-    </div>
-    <div id="storyList"></div>
-  </div>
-
 </main>
 
 <script>
-/* ===== Setup base ===== */
 const LS=localStorage;
+// lingua
 const lang=(LS.getItem('lang')||'it').toLowerCase();
-const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{"stile":"whatif","periodo":"future","pro":false,"tone":"real"}');
+document.getElementById('langBtn').textContent=lang.toUpperCase();
+document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang', lang==='it'?'en':'it'); location.reload(); };
+// prefs
+let prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
+if(!prefs.stile) prefs.stile='whatif';
+if(!prefs.periodo) prefs.periodo='future';
+if(!prefs.tone) prefs.tone='reale';
+LS.setItem('whatif_prefs', JSON.stringify(prefs));
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-/* Topbar */
-const setBadges=()=>{
-  document.getElementById('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past' ? 'Passato' : 'Futuro');
-  document.getElementById('styleBadge').textContent   = "🎭 " + (prefs.stile==='wtf' ? 'What the F' : 'What if');
+// badge
+function renderBadges(){
+  document.getElementById('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past'? (lang==='en'?'Past':'Passato') : (lang==='en'?'Future':'Futuro'));
+  document.getElementById('styleBadge').textContent   = "🎭 " + (prefs.stile==='wtf'? 'What the F' : 'What if');
+}
+renderBadges();
+
+// style chips
+function syncStyleUI(){
+  document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel', c.dataset.style===prefs.stile));
+  const toneRow = document.getElementById('toneRow');
+  toneRow.style.display = (prefs.stile==='whatif') ? 'flex' : 'none';
+  renderBadges();
+}
+document.getElementById('styleChips').addEventListener('click',(e)=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  prefs.stile=b.dataset.style; LS.setItem('whatif_prefs', JSON.stringify(prefs));
+  document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+  syncStyleUI();
+});
+syncStyleUI();
+
+// tone chips (solo What if)
+function syncToneUI(){
+  document.querySelectorAll('#toneChips .chip').forEach(c=>c.classList.toggle('sel', c.dataset.tone===prefs.tone));
+  document.getElementById('toneHint').textContent = (lang==='en'?'Tone: ':'Tono: ') + prefs.tone;
+}
+document.getElementById('toneChips').addEventListener('click',(e)=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  prefs.tone=b.dataset.tone;
+  LS.setItem('whatif_prefs', JSON.stringify(prefs));
+  syncToneUI();
+});
+syncToneUI();
+
+// periodo toggle sul badge
+document.getElementById('periodoBadge').onclick=()=>{
+  prefs.periodo = (prefs.periodo==='past'?'future':'past');
+  LS.setItem('whatif_prefs', JSON.stringify(prefs));
+  renderBadges();
 };
-setBadges();
-document.getElementById('langBtn').textContent=lang.toUpperCase();
-document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
+
+// nav
 document.getElementById('backBtn').onclick=()=>history.back();
 document.getElementById('homeBtn').onclick=()=>location.href='index.html';
-document.getElementById('periodoBadge').onclick=()=>{ prefs.periodo = (prefs.periodo==='past'?'future':'past'); LS.setItem('whatif_prefs',JSON.stringify(prefs)); setBadges(); };
 
-/* Stile */
-function paintChips(){
-  document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel', c.dataset.style===prefs.stile));
-  document.querySelectorAll('#toneChips .chip').forEach(c=>c.classList.toggle('sel', c.dataset.tone===prefs.tone));
-  document.getElementById('toneRow').style.display = (prefs.stile==='whatif') ? 'flex' : 'none';
-}
-document.getElementById('styleChips').addEventListener('click',e=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  prefs.stile=b.dataset.style; LS.setItem('whatif_prefs',JSON.stringify(prefs));
-  document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-  setBadges(); paintChips();
-});
-document.getElementById('toneChips').addEventListener('click',e=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  prefs.tone=b.dataset.tone; LS.setItem('whatif_prefs',JSON.stringify(prefs));
-  paintChips();
-});
-paintChips();
-
-/* Crediti (solo display locale) */
-function today(){return new Date().toISOString().slice(0,10);}
-function userIsAdmin(){ return !!LS.getItem('admin_token'); }
-function cap(){ return userIsAdmin()?Infinity:(prefs.pro?10:3); }
-function ensureCredits(){ let c=JSON.parse(LS.getItem('whatif_credits')||'{"date":"","used":0}'); if(c.date!==today()){c.date=today();c.used=0;} LS.setItem('whatif_credits',JSON.stringify(c)); }
-ensureCredits();
-function renderCredits(){
-  const c=JSON.parse(LS.getItem('whatif_credits')||'{"date":"","used":0}');
-  const left = cap()===Infinity ? '∞' : Math.max(0, cap()-(c.used||0));
-  document.getElementById('freeBadge').textContent = `Crediti: ${left}/${cap()===Infinity?'∞':cap()}`;
-}
-renderCredits();
-document.getElementById('proBadge').textContent = prefs.pro ? 'PRO attivo' : 'PRO non attivo';
-
-/* Domanda */
-const qEl=document.getElementById('qInput'); qEl.autofocus=true;
-
-/* Invio */
+// domanda
+const qEl = document.getElementById('qInput');
+qEl.placeholder = (lang==='en' ? "What if…" : "E se…");
 function trySubmit(){
   const domanda=(qEl.value||"").trim();
   if(!domanda){ qEl.focus(); return; }
-  const c=JSON.parse(LS.getItem('whatif_credits')||'{"date":"","used":0}');
-  if(!userIsAdmin()){
-    if((c.used||0) >= (cap()===Infinity?1e9:cap())){ alert('Hai finito i crediti di oggi.'); return; }
-    c.used=(c.used||0)+1; LS.setItem('whatif_credits',JSON.stringify(c)); renderCredits();
+  // crediti lato UI
+  const cap = (prefs.pro ? 10 : 3);
+  const key = 'whatif_credits';
+  let c = JSON.parse(LS.getItem(key)||'{"date":"","used":0}');
+  const today = new Date().toISOString().slice(0,10);
+  if(c.date!==today){ c.date=today; c.used=0; }
+  if(!LS.getItem('admin_token')){
+    if(c.used>=cap){ alert(lang==='en'?'You’ve used today’s credits.':'Hai finito i crediti di oggi.'); return; }
+    c.used++; LS.setItem(key, JSON.stringify(c));
   }
   const micro = JSON.parse(LS.getItem('micro_profile')||'{}');
   LS.setItem('domanda',domanda);
-  LS.setItem('whatif_prefs', JSON.stringify(prefs));
-  LS.setItem('whatif_request', JSON.stringify({ domanda, stile:prefs.stile, lang, extra:"", micro, fantasy_mode:false, periodo:prefs.periodo, tone:prefs.tone }));
+  // persist request + tone
+  LS.setItem('whatif_request', JSON.stringify({
+    domanda, stile:prefs.stile, lang, extra:"", micro, fantasy_mode:false, periodo:prefs.periodo, tone: (prefs.stile==='whatif'? (prefs.tone||'reale') : '')
+  }));
   location.href='fifth.html';
 }
 document.getElementById('goBtn').onclick=trySubmit;
 document.getElementById('clearBtn').onclick=()=>{ qEl.value=""; qEl.focus(); };
-qEl.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
+qEl.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
-/* Micro-domande — una volta al giorno */
-const microCard=document.getElementById('microCard');
+// micro (una volta al giorno)
+function todayIso(){return new Date().toISOString().slice(0,10);}
 const microSaved=JSON.parse(LS.getItem('micro_saved')||'{"date":"","ok":false}');
 function rng(seed){ let s=[...seed].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
-function pick(pool,n,r){ const out=[],seen=new Set(); while(out.length<n && seen.size<pool.length){ const i=Math.floor(r()*pool.length); if(seen.has(i)) continue; seen.add(i); out.push(pool[i]); } return out; }
-
+function pickDaily(list, n, rnd){ const seen=new Set(), out=[]; while(out.length<n && seen.size<list.length){ const i=Math.floor(rnd()*list.length); if(seen.has(i)) continue; seen.add(i); out.push(list[i]); } return out; }
+function renderOptions(containerId, options, key){
+  const wrap=document.getElementById(containerId);
+  wrap.innerHTML='';
+  const saved=JSON.parse(LS.getItem('micro_profile')||'{}');
+  options.forEach(text=>{
+    const b=document.createElement('button');
+    b.className='opt'; b.textContent=text;
+    if(saved[key]===text) b.classList.add('sel');
+    b.onclick=()=>{
+      wrap.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');
+      const cur=JSON.parse(LS.getItem('micro_profile')||'{}');
+      cur[key]=text; LS.setItem('micro_profile', JSON.stringify(cur));
+    };
+    wrap.appendChild(b);
+  });
+}
 function renderMicro(){
-  const todayIso=today();
-  if(microSaved.date===todayIso){ microCard.classList.add('hidden'); return; } // già fatto oggi → nascondi
-  const rnd=rng(todayIso);
-  const moodPool   = ["Calmo in modalità aereo","Carico come una presa","Appannato ma ok","Astronauta irrequieto","Leggero e chiacchierone","Solido e in silenzio"];
-  const anchorPool = ["Le persone che amo","Soldi & bollette","Una routine che funziona","Una promessa a me stessə","Paura di cambiare","Curiosità per ciò che c’è"];
-  const decidePool = ["Pancia prima","Liste pro/contro","Chiedo a un amico","Decide la scadenza","Tiro la moneta","Caffè + passeggiata"];
-  const jungPool   = ["realista","analitico","idealista","esploratore"];
-
-  function mount(id, arr, key){
-    const wrap=document.getElementById(id); wrap.innerHTML="";
-    const saved=JSON.parse(LS.getItem('micro_profile')||'{}');
-    pick(arr, Math.min(5,arr.length), rnd).forEach(text=>{
-      const b=document.createElement('button'); b.className='opt'; b.textContent=text;
-      if(saved[key]===text) b.classList.add('sel');
-      b.onclick=()=>{ wrap.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); const cur=JSON.parse(LS.getItem('micro_profile')||'{}'); cur[key]=text; LS.setItem('micro_profile',JSON.stringify(cur)); };
-      wrap.appendChild(b);
-    });
-  }
-  mount('moodOpts',   moodPool,   'mood');
-  mount('anchorOpts', anchorPool, 'anchor');
-  mount('decideOpts', decidePool, 'decide');
-  mount('jungOpts',   jungPool,   'jung');
+  const card = document.getElementById('microCard');
+  if(microSaved.date===todayIso()){ card.classList.add('hidden'); return; }
+  const rand = rng(todayIso());
+  const moodPool   = (lang==='en'?["Calm","Charged","Foggy","Restless","Light","Quiet","Chaotic-fun"]:["Calmo","Carico","Appannato","Irrequieto","Leggero","Silenzioso","Caotico-divertito"]);
+  const anchorPool = (lang==='en'?["People","Money & bills","Routine","Promise","Fear","Curiosity"]:["Persone","Soldi & bollette","Routine","Promessa","Paura","Curiosità"]);
+  const decidePool = (lang==='en'?["Gut","Lists","Ask a friend","Deadline","Coin flip","Coffee + walk"]:["Pancia","Liste","Chiedo a un amico","Scadenza","Moneta","Caffè + passeggiata"]);
+  document.getElementById('moodIcon').textContent   = ["🙂","😌","⚡","🌤️","🤘","🧊","🧩"][Math.floor(rand()*7)];
+  document.getElementById('anchorIcon').textContent = ["🧭","⚓","🏠","🧱","🪴","📌"][Math.floor(rand()*6)];
+  document.getElementById('decideIcon').textContent = ["⚙️","🧠","🎯","🪙","📋","⏳","☕"][Math.floor(rand()*7)];
+  renderOptions('moodOpts',   pickDaily(moodPool,   5, rand), 'mood');
+  renderOptions('anchorOpts', pickDaily(anchorPool, 5, rand), 'anchor');
+  renderOptions('decideOpts', pickDaily(decidePool, 5, rand), 'decide');
 }
 renderMicro();
-
 document.getElementById('saveMicroBtn').onclick=()=>{
-  const todayIso=today();
-  if(microSaved.date===todayIso){ document.getElementById('microSavedMsg').textContent="Già salvato oggi."; return; }
+  if(microSaved.date===todayIso()){ return; }
   const cur = JSON.parse(LS.getItem('micro_profile')||'{}');
   LS.setItem('micro_profile', JSON.stringify(cur));
-  LS.setItem('micro_saved', JSON.stringify({date:todayIso,ok:true}));
-  document.getElementById('microSavedMsg').textContent="Micro-profilo salvato per oggi.";
-  microCard.classList.add('hidden'); // sparisce dopo il salvataggio
+  LS.setItem('micro_saved', JSON.stringify({date:todayIso(),ok:true}));
+  document.getElementById('microCard').classList.add('hidden');
 };
 </script>
 </body>
