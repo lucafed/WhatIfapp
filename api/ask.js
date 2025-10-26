@@ -1,9 +1,4 @@
-// /api/ask.js — What?f Engine (2025 FINAL)
-// Stili: whatif (realismo lucido) · wtf (sarcasmo demenziale affettuoso, alcol, oggetti, "bestemmia" narrata)
-// IT/EN — paragrafo singolo, niente liste/domande/emoji
-// Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
-// Log su Redis SENZA contenuto della domanda (solo metadati + hash non reversibile)
-
+// /api/ask.js — What?f Engine (2025 FINAL • tuned)
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
@@ -32,8 +27,7 @@ const ALLOWED_ORIGINS = [
 ];
 function cors(req, res) {
   const origin = String(req.headers.origin || "");
-  if (!origin) res.setHeader("Access-Control-Allow-Origin", "*");
-  else if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
+  if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token, x-pro");
@@ -83,8 +77,10 @@ function stripQuestionEcho(domanda, text) {
   return t;
 }
 function ensureSpicyButSafeWTF(t) {
-  // Chiude e garantisce “imprecazione narrata” già presente
+  // chiusura + una sola imprecazione narrata (no letterale)
   let out = String(t || "").trim();
+  // togli (raro) doppie “imprecazioni”
+  out = out.replace(/\b(bestemmione|sacramentata|imprecazione|invettiva colorita|tuono da cantina)\b([^\.!?]*)([\.!?]).*?\b\1\b/gi, "$1$2$3");
   if (!/[.!?…]$/.test(out)) out += ".";
   return out;
 }
@@ -117,91 +113,86 @@ function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
   const en = isEn(lang);
   if (String(periodo || "").toLowerCase() === "past") {
     return en
-      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Use past conditional throughout ("you would have...", "it would have..."). No present-tense summaries. Show how it unfolded. No lists/questions/echo. Keep ${style.toUpperCase()} voice.`
-      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Usa il condizionale passato e trapassato in modo coerente (“avresti…”, “sarebbe…”). Evita il presente. Mostra come si sarebbe svolto. Niente elenchi/domande/eco. Mantieni la voce ${style.toUpperCase()}.`;
+      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Use conditional/past (“you would have… it would have…”) as if it already happened. Keep exact ${style.toUpperCase()} voice.`
+      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Usa condizionale/passato (“avresti… sarebbe…”) come se fosse già successo. Mantieni la voce ${style.toUpperCase()}.`;
   }
   return en
-    ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Describe a plausible near-future as if entering it now. No lists, no questions, no echo. Keep ${style.toUpperCase()} voice.`
-    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi un prossimo futuro plausibile come se ci entrassi adesso. Niente elenchi, domande o eco. Mantieni la voce ${style.toUpperCase()}.`;
+    ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Plausible near-future, step into it now.`
+    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Prossimo futuro plausibile, come se ci entrassi adesso.`;
 }
 
 /* ---------- Personas (voci) ---------- */
 function personaSystem(style, lang, sex = "") {
   const SEX = String(sex || "").toLowerCase(); // "m" | "f" | "nb" | ""
   const genderNickIT = (SEX === "f")
-    ? ["sirena di rovine", "capitana del caos", "regina del carrello storto", "signora dei forse", "asso di briscola", "fenomena da bancone", "stella del giro tondo"]
+    ? ["regina del casino","fenomena","capitana del caos","sirena urbana","signora dei forse","rockstar coi tacchi comodi"]
     : (SEX === "m")
-      ? ["poeta del bar", "campione di parcheggi obliqui", "capitano del caos", "fenomeno con le tasche vuote", "asso", "sumo dei forse", "cowboy del marciapiede"]
-      : ["leggenda", "icon* in ciabatte", "astronauta del dubbio", "asso universale", "cap* del caos", "rockstar del forse"];
+      ? ["capitano del caos","poeta del bar","fenomeno","asso","sumo dei forse","rockstar con le tasche vuote"]
+      : ["leggenda","asso universale","cap* del caos","astronauta del dubbio","icona in tuta"];
   const genderNickEN = (SEX === "f")
     ? ["queen of chaos","captain of detours","legend in sneakers","ace of maybe"]
     : (SEX === "m")
-      ? ["champ","legend","captain of chaos","bar poet"]
+      ? ["champ","captain of chaos","bar poet","ace"]
       : ["icon","legend","ace","captain of chaos"];
 
   if (style === "wtf") {
-    // ===== WHAT THE F: identico nello stile, aggiornato con sarcasmo full + imprecazione variabile/narrata (anche da oggetti) =====
     const SYS = (isEn(lang)
       ? `
-You are “What the F” — the loud, loving drunk-wise friend.
-ONE paragraph, 6–8 sentences (≈125–165 words). Second person. Colloquial.
-Open ONLY with a single nickname (no verbs). Nickname must vary run-to-run (use the pool).
-Through the whole paragraph keep tight sarcasm and affectionate roasting.
-Include exactly ONE late surprise profanity moment, but ONLY as narration (never write the slur), and it must be organically triggered by the scene; it may “burst out” from the user, an object, the room, or a bystander (e.g., “the moka coughs and a profanity bursts out of it”).
-Alcohol beats OK, reacting objects OK (relevant, not random).
-End warm and teasing. STRICT: no lists, no questions, no emojis, no moralizing. Respect TEMPORAL MODE.
-Nicknames (EN): ${genderNickEN.join(", ")}.
+You are “What the F” — the loud, loving friend who roasts with affection.
+SECOND PERSON. ONE paragraph, 6–8 sentences (~125–165 words). Simple, colloquial.
+OPEN ONLY with a made-up nickname (invent a fresh one every time).
+Keep booze beats and “reacting objects” when relevant.
+Place exactly ONE brief, narrated curse near the END, after a “everything seems fine” beat.
+Use rotating synonyms like “colorful outburst”, “sacramental growl”, “cellar thunder” — never write religious slurs literally.
+The spark can come from an object, the place, or someone else (not forced).
+No lists, no questions, no preaching. Warm, sarcastic, affectionate.
+NEVER say the curse “starts” or “partes”: it simply “comes out / breaks loose”.
 `.trim()
       : `
 Sei “What the F” — l’amico saggio e sbronzo che ti prende in giro con affetto.
-UN solo paragrafo, 6–8 frasi (≈125–165 parole). Seconda persona. Linguaggio colloquiale.
-Apri SOLO con un nomignolo (senza verbi). Il nomignolo deve variare ogni volta (usa il pool).
-Tieni il sarcasmo e la presa in giro dall’inizio alla fine, sempre affettuosi.
-Inserisci UNA SOLA imprecazione a sorpresa sul finale, solo narrata (mai scritta), scatenata da un fatto plausibile; può “uscire” da te, da un oggetto, dall’ambiente o da un passante (es. “la moka tossisce e da dentro le scappa un’imprecazione”).
-Alcol OK, oggetti che reagiscono OK (solo se hanno senso).
-Chiudi caldo e canzonatorio. RIGIDO: niente elenchi, niente domande, niente emoji, niente prediche. Rispetta la MODALITÀ TEMPORALE.
-Nomignoli (IT): ${genderNickIT.join(", ")}.
+SECONDA PERSONA. UN paragrafo, 6–8 frasi (~125–165 parole). Linguaggio semplice.
+APERTURA SOLO con un nomignolo inventato ogni volta.
+Alcol ok, oggetti che reagiscono solo se servono.
+Metti esattamente UNA imprecazione narrata verso la FINE, dopo un momento in cui “sembra andare tutto bene”.
+Sinonimi variabili: “imprecazione”, “sacramentata”, “invettiva colorita”, “tuono da cantina”, mai scritte letteralmente.
+Il grilletto può venire da un oggetto, dal posto o da un’altra persona (mai gratuito).
+Niente liste, niente domande, tono sarcastico ma affettuoso.
+NON dire che “parte la bestemmia”: semplicemente “ti esce / scappa / sbotta”.
 `.trim());
 
-    // fewshots: identici allo stile originario, ma con imprecazione narrata tardi
     const FEWSHOTS = [
       { role: "system", content:
 `ESEMPIO IT • Tornare all’Aquila (futuro)
-Pellegrino del ritorno, arrivi con la valigia che scricchiola dignità e il vento ti pettina i pensieri come sedie del bar allineate; il marciapiede riconosce il tuo passo e ti fa lo sconto sull’ansia, al bancone la tazzina ti guarda “ma guarda chi si rivede” e tu fai il duro da Nord ma ti sciogli come grappino alle undici, sbagli parcheggio con l’orgoglio di chi vuole soffrire bene e il parchimetro ti fischia, tutto fila quasi liscio finché la moka decide di sputare sul piattino e dal vapore esce un’imprecazione che fa tremare i bicchieri, il lampione fa finta di non sentire e tu ridi perché la città ti punge solo per controllare se sei vivo.` },
+Viandante con le tasche storte, scendi dal treno e la valigia fa rumore di piatti del nonno; la piazza ti misura come un sarto e il barista ti serve senza chiedere, fai il duro ma il primo bicchiere è un abbraccio di arrosticini liquidi, cammini e tutto fila — finché la moka del bar decide di starnutire caffè sul tuo maglione nuovo, ti esce una sacramentata che fa vibrare i cucchiaini e il campanile fa finta di tossire, poi ridi perché certe città ti prendono per i lacci delle scarpe per ricordarti come ti chiami.` },
       { role: "system", content:
-`ESEMPIO IT • Mettersi in proprio (futuro)
-Capitano del caos, presenti il business plan sul retro di un tovagliolo e l’Excel ti guarda come un cameriere stanco; il registratore tossisce come scooter in salita ma tre facce tornano e la vetrina si raddrizza da sola, stappi la bottiglia “buona” ed è quasi aceto: brucia onesto, ti benedice l’errore, tieni botta tutto il giorno e proprio quando pensi “oh, sta andando”, il POS si blocca a zero e dall’altoparlante gli scappa un’imprecazione raccontata che fa vibrare il bancone, voi scoppiate a ridere e capisci che non stai conquistando il mondo: stai tenendo in piedi te, ed è parecchio redditizio.` },
+`ESEMPIO IT • Cambiare lavoro (passato)
+Fenomeno in capo, ti saresti presentato con un CV piegato come una tovaglietta e l’ufficio ti avrebbe guardato di traverso; avresti tenuto botta, avresti imparato i trucchi sporchi e quelli puliti, tutto bene — finché la stampante non ti avrebbe mangiato il contratto proprio davanti al capo: ti sarebbe scappata un’imprecazione che avrebbe fatto tremare i portapenne, e la macchina del caffè avrebbe applaudito con due sputi di robusta, poi avresti riso e avrebbero riso pure loro.` },
       { role: "system", content:
-`EXAMPLE EN • Moving city (future)
-Champ, you land like a limited-series pilot and the buzzer rolls its eyes; the fridge hums good luck, streetlights do wardrobe tests, you walk too far just to tire the nerves and a tiny beer forgives your accent; everything behaves until the elevator decides to groan and a narrated profanity leaks from the shaft, the mailbox pretends it didn’t hear, you laugh and realize you’re not conquering a city — you’re landing your life.` },
+`EXAMPLE EN • New city (future)
+Chaos captain, you arrive like a limited-series pilot, the buzzer side-eyes you; first beer forgives your accent and the street maps stop testing you, all smooth — until the mailbox bites your finger and you let out a cellar-thunder that rattles the glasses, the scooter across the street nods like “fair”, and you laugh because that’s the exact second the city learns your name.` },
     ];
     return { sys: SYS, fewshots: FEWSHOTS };
   }
 
-  // WHAT IF: invariato (niente nomignoli)
   const SYS_WHATIF = (isEn(lang)
     ? `
-You are "What If" — a lucid, kind, slightly ironic friend.
-SECOND PERSON. One paragraph, 8–11 sentences (~115–160 words).
-Warm, grounded, simple; ordinary images (keys, streetlights, notebooks, hands, air).
-Small truths; no heroics, no melancholy. No lists, no questions, no emojis.
-End with a short reflective line (not advice).
+You are "What If" — lucid, kind, slightly ironic.
+SECOND PERSON. One paragraph, 8–11 sentences. Everyday images. End with a short reflective line.
+NO nicknames.
 `.trim()
     : `
-Sei "What If" — un amico lucido e affettuoso, col sorriso pratico.
-SECONDA PERSONA. Un paragrafo, 8–11 frasi (~115–160 parole).
-Immagini quotidiane (chiavi, lampioni, taccuini, mani, aria).
-Verità piccole e vere; niente eroismi, niente malinconia.
-Niente elenchi o domande o emoji. Chiudi con una riga riflessiva breve (non un consiglio).
+Sei "What If" — lucido, affettuoso, leggermente ironico.
+SECONDA PERSONA. Un paragrafo, 8–11 frasi. Immagini quotidiane. Chiudi con una riga riflessiva.
+Niente nomignoli.
 `.trim());
 
   const FEWSHOTS = [
     { role: "system", content:
 `ESEMPIO IT • Tornare all’Aquila
-Tornare non sarebbe un passo indietro ma un passo fatto meglio. Ti stupirebbe la memoria delle strade: tengono il ritmo anche quando tu lo perdi. All’inizio la lentezza graffia, poi capiresti che ti rimette in orario. I volti sembrerebbero uguali, ma li guarderesti con occhi più larghi. Le chiavi tornerebbero sul piattino giusto, la spesa nel negozio che sa il tuo nome. La nostalgia, se non la insegui, si siede accanto e tace. Non servirebbe ricominciare da zero: basterebbe ricominciare da te.` },
+Tornare non sarebbe un passo indietro ma un passo fatto meglio. Ti stupirebbe la memoria delle strade: tengono il ritmo anche quando tu lo perdi. All’inizio la lentezza graffia, poi capisci che ti rimette in orario. I volti sembrano uguali, ma li guardi con occhi più larghi. Le chiavi tornano sul piattino giusto, la spesa nel negozio che sa il tuo nome. La nostalgia, se non la insegui, si siede accanto e tace. Non serve ricominciare da zero: basta ricominciare da te.` },
     { role: "system", content:
 `EXAMPLE EN • Move city
-You’ll feel like a guest, then your hands learn the new keys. You’ll walk not to think better but to tire the noise. By the third grocery you’ll know which aisle is yours. Evenings soften and ask less proof. You’ll miss some things, not all at once. The rest finds its place. And you notice that beneath the noise something of yours was already there.` },
+You’ll feel like a guest, then your hands learn the new keys. You’ll walk to tire the noise. By the third grocery you’ll know your aisle. Evenings soften and ask less proof. You’ll miss some things, not all at once. The rest finds its place. Beneath the noise something of yours was already there.` },
   ];
 
   return { sys: SYS_WHATIF, fewshots: FEWSHOTS };
@@ -220,9 +211,14 @@ export default async function handler(req, res) {
     const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
       .toString().split(",")[0].trim();
 
+    // DEV / LOCAL bypass (niente 402 in prova)
+    const host = String(req.headers.host || "");
+    const isLocalHost = /(^localhost:|^127\.0\.0\.1:|^::1)/i.test(host) || ip === "::1" || ip === "127.0.0.1";
+    const isDevEnv = String(process.env.NODE_ENV || "").toLowerCase() !== "production";
+
     // Admin bypass (rate+crediti)
     const admin = await isAdmin(req, ip);
-    const bypass = admin === true;
+    const bypass = admin === true || isLocalHost || isDevEnv;
 
     // PRO header (UI locale): x-pro: "1"
     const isPro = String(req.headers["x-pro"] || "").trim() === "1";
@@ -233,7 +229,7 @@ export default async function handler(req, res) {
       if (!success) return res.status(429).json({ error: "rate_limited_minute" });
     }
 
-    // Crediti giornalieri: Admin ∞, PRO 10, Free 3
+    // Crediti giornalieri: Admin/Dev/Local ∞, PRO 10, Free 3
     let used = 0, dailyCap = isPro ? 10 : 3;
     if (!bypass) {
       const today = new Date().toISOString().slice(0, 10);
@@ -272,12 +268,12 @@ export default async function handler(req, res) {
     const extraTemporalHint =
       stile === "wtf" && String(periodo).toLowerCase() === "past"
         ? (isEn(lang)
-          ? "Write entirely in past or conditional, as if it already happened, keeping the upbeat roasting tone."
-          : "Scrivi tutto al passato/condizionale, come se fosse già successo, mantenendo il tono pungente.")
+          ? "Write entirely in conditional/past, upbeat roasting tone."
+          : "Scrivi tutto al condizionale/passato, tono pungente e affettuoso.")
         : "";
 
     const userPrompt = isEn(lang)
-      ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Persona must adapt to user sex="${resolvedSex||"unknown"}". Keep exact persona voice. INTERNAL SEED: ${seedNum}.`
+      ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Persona must adapt to user sex="${resolvedSex||"unknown"}". Keep the exact persona voice. INTERNAL SEED: ${seedNum}.`
       : `Domanda (NON ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Adatta la voce al sesso utente="${resolvedSex||"unknown"}". Mantieni esattamente la voce della persona. SEED INTERNO: ${seedNum}.`;
 
     const messages = [
@@ -286,8 +282,8 @@ export default async function handler(req, res) {
       ...(extraTemporalHint ? [{ role: "system", content: extraTemporalHint }] : []),
       ...(fewshots || []),
       { role: "system", content: isEn(lang)
-          ? `Hard WTF rules: EXACTLY one late narrated profanity (never literal), sarcasm throughout, alcohol/object beats only if relevant, open with nickname only.`
-          : `Regole dure WTF: UNA sola imprecazione narrata sul finale (mai letterale), sarcasmo continuo, alcol/oggetti solo se servono, apertura solo con nomignolo.` },
+          ? `Hard WTF rules: one narrated late-stage curse (never literal), can come from object/place/other; alcohol beats ok; reacting objects only when relevant; open ONLY with a fresh nickname; What If must NEVER use nicknames.`
+          : `Regole dure WTF: una imprecazione narrata verso la fine (mai letterale), può nascere da oggetto/luogo/altri; alcol ok; oggetti che reagiscono solo se servono; apertura SOLO con nomignolo nuovo; What If NON usa nomignoli.` },
       { role: "user", content: userPrompt },
     ];
 
@@ -310,12 +306,12 @@ export default async function handler(req, res) {
     answer = clampWords(answer, stile === "wtf" ? 165 : 160);
     answer = normalizeOneParagraph(answer);
     if (stile === "wtf") {
-      answer = ensureSpicyButSafeWTF(answer, lang);
+      answer = ensureSpicyButSafeWTF(answer);
     } else {
       if (!/[.!?…]$/.test(answer)) answer += ".";
     }
 
-    // --- LOG persistente (no testo domanda) ---
+    // --- LOG (senza testo domanda) ---
     try {
       const entry = {
         ts: Date.now(),
@@ -328,7 +324,7 @@ export default async function handler(req, res) {
         domanda_hash: tinyHash(domanda || ""),
         answer_chars: (answer || "").length,
         admin: !!admin,
-        user_type: bypass ? "admin" : (isPro ? "pro" : "free"),
+        user_type: bypass ? "admin/dev" : (isPro ? "pro" : "free"),
       };
       await redis.lpush("logs:ask", JSON.stringify(entry));
       await redis.ltrim("logs:ask", 0, 9999);
@@ -353,7 +349,7 @@ export default async function handler(req, res) {
       model: MODEL,
       admin,
       pro: isPro,
-      credits: bypass ? null : { used, dailyCap },
+      credits: (bypass ? null : { used, dailyCap }),
     });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
