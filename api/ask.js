@@ -1,9 +1,9 @@
-// /api/ask.js — What?f Engine (2025 FINAL—rev Sarcasmo + Controfattuale + Nicknames)
-// Stili: whatif (realismo lucido, NO nomignoli) · wtf (sarcasmo demenziale affettuoso, nomignolo sì, 1 imprecazione narrata finale)
+// /api/ask.js — What?f Engine (2025 FINAL — coherent WTF, strict counterfactual, polished UI rules)
+// Stili: whatif (realismo lucido, NO nomignoli) · wtf (sarcasmo affettuoso, nomignolo iniziale + 1 imprecazione narrata coerente, verso la fine)
 // IT/EN — paragrafo singolo, niente liste/domande/emoji
-// Controfattuale IT: condizionale passato / trapassato (“avresti fatto”, “sarebbe successo”)
+// Controfattuale IT: condizionale passato/trapassato (“avresti fatto…”, “sarebbe successo…”)
 // Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
-// Log su Redis SENZA contenuto della domanda (solo metadati + hash non reversibile)
+// Log: Redis, SOLO metadati (mai il testo della domanda)
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -82,15 +82,16 @@ function tinyHash(s = "") {
   return (h >>> 0).toString(36);
 }
 
-/* ---------- WTF helpers (nickname + imprecazione narrata finale) ---------- */
+/* ---------- WTF extras ---------- */
+// nomignoli (generati randomicamente a rotazione)
 const NICKS_IT = [
-  "astronauta del bar", "sciamano del lunedì", "fenomeno in tuta", "poeta del caffè freddo",
-  "capitano dei forse", "macchinista dei drammi minori", "re delle chiavi perse",
-  "sirena del carrello della spesa", "campione del rinvio creativo", "pilota di rotonde"
+  "astronauta del bar","poeta del caffè freddo","capitano dei forse","macchinista dei drammi minori",
+  "re delle chiavi perse","sirena del carrello","campione del rinvio creativo","pilota di rotonde",
+  "ministro degli snack","cowboy del lunedì", "sciamano del ‘poi vediamo’"
 ];
 const NICKS_EN = [
-  "duke of detours","queen of late plans","captain of almost","bar philosopher",
-  "legend in slippers","pilot of roundabouts","ace of maybe","minister of snacks"
+  "bar philosopher","captain of almost","duke of detours","legend in slippers","pilot of roundabouts",
+  "ace of maybe","minister of snacks","cowboy of Mondays","wizard of ‘we’ll see’"
 ];
 const IMPRECATION_IT = [
   "ti esce un’imprecazione che fa tremare i bicchieri",
@@ -104,35 +105,51 @@ const IMPRECATION_EN = [
   "you let out a blasphemous mutter that rattles the glasses",
   "a sacrilegious grumble escapes and the streetlight pretends it didn’t hear",
   "a theatrical curse slips out and the counter slow-claps",
-  "you drop a holy-scorch mutter and the mailbox goes silent",
-  "a proud heretic hiccup pops and the coffee cup vibrates"
+  "you drop a holy-scorch mutter and the cup starts humming",
+  "a proud heretic hiccup pops and the buzzer goes quiet"
+];
+function pick(arr, seed) {
+  return arr[(seed >>> 0) % arr.length];
+}
+
+// ganci d’evento NATURALI (coerenti con oggetti/frasi presenti)
+const HOOKS_IT = [
+  {k:/tazzin|caff|cucchiain|bar|bancone/i, h:"la tazzina vibra e il cucchiaino batte come un metronomo, "},
+  {k:/sedia|scricchiol|tavolo/i,             h:"la sedia scricchiola e ti tradisce davanti a tutti, "},
+  {k:/port(a|one)|citofon|campanell/i,       h:"il citofono gracchia proprio sul momento buono, "},
+  {k:/bus|autobus|tram|strada|marciapied/i,  h:"passa un bus e spruzza la scarpa nuova, "},
+  {k:/vento|scontrin|pos|telefono|cell/i,    h:"una folata ti rovescia lo scontrino sul cappuccino, "},
+  {k:/.*/,                                   h:"il bicchiere suda e ti scivola mezzo dalle dita, "}
+];
+const HOOKS_EN = [
+  {k:/cup|coffee|spoon|bar|counter/i,   h:"the cup rattles and the spoon ticks like a metronome, "},
+  {k:/chair|table|seat/i,               h:"the chair squeaks and betrays you, "},
+  {k:/door|buzzer|bell/i,               h:"the buzzer croaks exactly on the soft moment, "},
+  {k:/bus|tram|street/i,                h:"a bus splashes your fresh shoes, "},
+  {k:/wind|receipt|phone/i,             h:"a breeze flips the receipt into your drink, "},
+  {k:/.*/,                              h:"the glass sweats and slips a little, "}
 ];
 
-function pick(arr, seed) {
-  if (!arr?.length) return "";
-  return arr[seed % arr.length];
+function bestHookFor(text, lang, seed){
+  const hooks = isEn(lang) ? HOOKS_EN : HOOKS_IT;
+  for (const h of hooks) if (h.k.test(text)) return h.h;
+  return pick(hooks, seed).h;
 }
 function ensureOpeningNickname(answer, lang, seed) {
-  // Only for WTF: enforce that the text **starts** with a nickname alone.
   const n = pick(isEn(lang) ? NICKS_EN : NICKS_IT, seed);
   const a = String(answer || "").trim();
-  // Se inizia già con una singola breve frase senza verbo, lasciala; altrimenti prepend
   const first = a.split(/[.!?…]/)[0] || "";
-  const looksLikeNick = first.split(/\s+/).length <= 5 && !/\b(sono|sei|era|eri|sarai|avresti|fossi|andavi|vai|sto|stai|was|were|are|am|be|have|would)\b/i.test(first);
-  return looksLikeNick ? a : `${n}. ${a}`;
+  const looksNick = first.split(/\s+/).length <= 6 && !/\b(sono|sei|era|eri|sarai|am|are|is|was|were|have|had)\b/i.test(first);
+  return looksNick ? a : `${n}. ${a}`;
 }
 function ensureSingleLateImprecation(answer, lang, seed) {
-  // If no narrated-imprecation is present, append one LAST, tied to a mini-event hook.
   const rx = /\b(imprecaz|moccolo|sacrileg|bestemmi|improperio|holy|blasphem|curse|heretic)\b/i;
   let out = String(answer || "").trim();
-  if (rx.test(out)) return out; // già presente
-  const IMP = pick(isEn(lang) ? IMPRECATION_EN : IMPRECATION_IT, seed + 7);
-  // Inserisco un gancio d’evento plausibile prima della chiusura
-  const hook = isEn(lang)
-    ? " then the receipt printer jams with a victory beep, "
-    : " poi il POS decide di suonare vittoria e si blocca, ";
+  if (rx.test(out)) return out;
+  const IMP = pick(isEn(lang) ? IMPRECATION_EN : IMPRECATION_IT, seed + 11);
+  const hook = bestHookFor(out, lang, seed + 5);
   if (!/[.!?…]$/.test(out)) out += ".";
-  return out.replace(/[.!?…]$/, m => `${hook}${IMP}${m}`);
+  return out.replace(/[.!?…]$/, m => ` ${hook}${IMP}${m}`);
 }
 
 /* ---------- Admin check ---------- */
@@ -153,57 +170,45 @@ function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
   const en = isEn(lang);
   const isPast = String(periodo || "").toLowerCase() === "past";
   if (isPast) {
-    // **Controfattuale**: IT -> condizionale passato / trapassato; EN -> past conditional
     return en
-      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Use past conditional forms (“would have …”, “might have …”) consistently; no present narration. Speak as if the choice had been made and unfolded. One paragraph, no lists, no questions. Keep exact ${style.toUpperCase()} voice.`
-      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Usa **condizionale passato / trapassato** con coerenza (“avresti fatto…”, “sarebbe successo…”). Evita il presente. Racconta come se la scelta fosse stata fatta e si fosse svolta. Un solo paragrafo, niente elenchi o domande. Mantieni la voce ${style.toUpperCase()}.`;
+      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Use past conditional (“would have…”, “might have…”) consistently; no present narration. One paragraph; keep exact ${style.toUpperCase()} voice.`
+      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Usa **condizionale passato / trapassato** in modo coerente (“avresti…”, “sarebbe…”), evita il presente. Un paragrafo; mantieni la voce ${style.toUpperCase()}.`;
   }
   return en
-    ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Describe a plausible near-future unfolding as if stepping into it now. No lists, no questions, no echo. Keep exact ${style.toUpperCase()} voice.`
-    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi un prossimo futuro plausibile come se ci entrassi adesso. Niente elenchi, niente domande, niente eco. Mantieni la voce ${style.toUpperCase()}.`;
+    ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Describe a plausible near-future unfolding. No lists, no questions, no echo.`
+    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi un prossimo futuro plausibile. Niente elenchi, niente domande, niente eco.`;
 }
 
 /* ---------- Personas ---------- */
-function personaSystem(style, lang, sex = "") {
-  const SEX = String(sex || "").toLowerCase(); // "m" | "f" | "nb" | ""
+function personaSystem(style, lang) {
   if (style === "wtf") {
-    // What the F — sarcasmo + nomignolo + imprecazione narrata (evento naturale)
     const SYS = isEn(lang) ? `
-You are “What the F” — the loud, loving drunk-wise friend who roasts with affection.
-SECOND PERSON. ONE paragraph, 6–8 sentences (~125–165 words). Colloquial.
-OPEN with ONLY a surreal nickname (no verbs). Keep sarcasm flowing throughout.
-Build a scene that seems to go fine, then a small, natural mishap happens near the end; from that mishap, include exactly ONE brief narrated blasphemy (never literal).
-Examples of narrated forms: “you let out a blasphemous mutter that rattles the glasses”, “a sacrilegious grumble escapes…”. Never write literal religious slurs.
-Reacting objects are allowed but only when relevant. Alcohol beats ok. Close warm and cheeky.
+You are “What the F” — drunk-wise, sarcastic, affectionate.
+SECOND PERSON. ONE paragraph, 6–8 sentences (125–165 words).
+OPEN with ONLY a surreal nickname (no verbs).
+Keep the roast playful but constant. Build a scene that seems to go fine; near the end a small natural mishap happens and from that mishap you include exactly ONE brief narrated blasphemy (never literal).
+Reacting objects only if relevant; alcohol beats ok. Close warm and cheeky.
 No lists, no questions, no emojis. Respect TEMPORAL MODE strictly.
 `.trim() : `
-Sei “What the F” — l’amico saggio e sbronzo che ti prende in giro con affetto.
-SECONDA PERSONA. UN paragrafo, 6–8 frasi (~125–165 parole). Linguaggio colloquiale.
-APRI con **solo un nomignolo surreale** (senza verbi). Sarcasmo costante lungo tutto il pezzo.
-Costruisci una scena che sembra andare bene; verso la fine succede un piccolo intoppo naturale e da lì nasce **una sola** imprecazione narrata (mai letterale).
-Esempi di forma narrata: “ti esce un’imprecazione che fa tremare i bicchieri”, “ti parte un borbottio sacrilego…”. Mai scrivere bestemmie letterali.
-Oggetti che reagiscono solo se servono; alcol va bene. Chiudi caldo e pungente.
-Niente elenchi, niente domande, niente emoji. Rispetta con rigore la MODALITÀ TEMPORALE.
+Sei “What the F” — saggio e sbronzo, sarcastico ma affettuoso.
+SECONDA PERSONA. UN paragrafo, 6–8 frasi (125–165 parole).
+APRI con solo un nomignolo surreale (senza verbi).
+Tieni il sarcasmo costante: la scena fila, verso la fine un intoppo naturale e da lì una sola imprecazione narrata (mai letterale).
+Oggetti che reagiscono solo se servono; alcol ok. Chiudi caldo e pungente.
+Niente elenchi, niente domande, niente emoji. Rispetta la MODALITÀ TEMPORALE con rigore.
 `.trim();
-    const FEWSHOTS = []; // il tono è tutto nel system
-    return { sys: SYS, fewshots: FEWSHOTS, wtf: true };
+    return { sys: SYS, wtf: true };
   }
-
-  // What If — reale/poetico lucido, **senza nomignoli**
   const SYS = isEn(lang) ? `
 You are "What If" — lucid, kind, grounded. NO nicknames.
-SECOND PERSON. One paragraph, 8–11 sentences (~115–160 words). Warm, simple, grounded.
-Use ordinary images (keys, streetlights, hands, notebooks, air). Small truths; no heroics, no melancholy.
-Close with a short reflective line (not advice). No lists, no questions, no emojis.
-If TEMPORAL MODE is PAST (counterfactual), keep strict past-conditional (“would have…”). 
+SECOND PERSON. One paragraph, 8–11 sentences (115–160 words). Small true images. Close with a short reflective line (not advice).
+If TEMPORAL MODE is PAST, keep strict past conditional (“would have…”).
 `.trim() : `
 Sei "What If" — lucido, affettuoso, concreto. **Nessun nomignolo**.
-SECONDA PERSONA. Un paragrafo, 8–11 frasi (~115–160 parole). Tono caldo, semplice e reale.
-Immagini quotidiane (chiavi, lampioni, mani, taccuini, aria). Verità piccole; niente eroismi o malinconia.
-Chiudi con una riga riflessiva breve (non un consiglio). Niente elenchi, niente domande, niente emoji.
-Se la MODALITÀ è PASSATO (controfattuale), usa sempre il **condizionale passato**.
+SECONDA PERSONA. Un paragrafo, 8–11 frasi (115–160 parole). Immagini quotidiane vere. Chiusura riflessiva breve (non un consiglio).
+Se in PASSATO, usa sempre il **condizionale passato**.
 `.trim();
-  return { sys: SYS, fewshots: [], wtf: false };
+  return { sys: SYS, wtf: false };
 }
 
 /* ---------- API Handler ---------- */
@@ -252,23 +257,19 @@ export default async function handler(req, res) {
     if (!domanda || typeof domanda !== "string")
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
-    const resolvedSex = String(sex || micro?.sex || "").toLowerCase();
-
-    // Personas + Temporal mode
-    const { sys, fewshots, wtf } = personaSystem(stile, lang, resolvedSex);
+    const { sys, wtf } = personaSystem(stile, lang);
     const temporal = temporalSystem(periodo, lang, stile);
 
     // Seed deterministico
-    const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${lang}|${resolvedSex}|${periodo}`), 36) % 1000000;
+    const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${lang}|${sex||micro?.sex||""}|${periodo}`), 36) % 1000000;
 
     const userPrompt = isEn(lang)
-      ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Keep exact persona voice. INTERNAL SEED: ${seedNum}.`
-      : `Domanda (NON ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Mantieni esattamente la voce scelta. SEED INTERNO: ${seedNum}.`;
+      ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Keep the exact persona voice.`
+      : `Domanda (NON ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Mantieni esattamente la voce della persona.`;
 
     const messages = [
       { role: "system", content: sys },
       { role: "system", content: temporal },
-      ...fewshots,
       { role: "user", content: userPrompt },
     ];
 
@@ -287,27 +288,21 @@ export default async function handler(req, res) {
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // No echo; one paragraph polish
     answer = stripQuestionEcho(domanda, answer);
     answer = tightenSentences(answer, wtf ? 8 : 11);
     answer = clampWords(answer, wtf ? 165 : 160);
     answer = normalizeOneParagraph(answer);
 
-    // WTF: forza apertura con nomignolo e imprecazione narrata finale (se assente)
     if (wtf) {
       answer = ensureOpeningNickname(answer, lang, seedNum);
       answer = ensureSingleLateImprecation(answer, lang, seedNum);
-      if (!/[.!?…]$/.test(answer)) answer += ".";
-    } else {
-      // What If: mai nomignoli artificiali
-      if (!/[.!?…]$/.test(answer)) answer += ".";
     }
+    if (!/[.!?…]$/.test(answer)) answer += ".";
 
-    // Log metadati (no testo domanda)
+    // Log metadati (privacy-safe)
     try {
       const entry = {
         ts: Date.now(), ip, style: stile, lang, periodo,
-        sex: resolvedSex || null,
         domanda_len: String(domanda || "").length,
         domanda_hash: tinyHash(domanda || ""),
         answer_chars: (answer || "").length,
@@ -320,17 +315,15 @@ export default async function handler(req, res) {
       await redis.hincrby("stats:style", stile, 1);
       await redis.hincrby("stats:lang", lang, 1);
       await redis.hincrby("stats:periodo", String(periodo || "future"), 1);
-      if (resolvedSex) await redis.hincrby("stats:sex", resolvedSex, 1);
       await redis.hincrby("stats:user_type", entry.user_type, 1);
       const dayKey = `stats:day:${new Date().toISOString().slice(0, 10)}`;
       await redis.hincrby(dayKey, `${stile}:${periodo}`, 1);
       await redis.expire(dayKey, 90 * 24 * 60 * 60);
-    } catch (e) {
-      console.warn("log failure (non-bloccante)", e);
-    }
+    } catch {}
 
     return res.status(200).json({
-      answer, style: stile, lang, periodo, model: MODEL, admin, pro: isPro,
+      answer, style: stile, lang, periodo, model: MODEL,
+      admin, pro: isPro,
       credits: bypass ? null : { used, dailyCap }
     });
   } catch (err) {
