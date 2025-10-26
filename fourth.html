@@ -14,35 +14,42 @@
 }
 html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
 *{box-sizing:border-box}
-html,body{ margin:0; background:radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%,var(--bg) 60%); color:var(--fg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+html,body{
+  margin:0;
+  background:radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%,var(--bg) 60%);
+  color:var(--fg);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
 main{max-width:980px;margin:auto;padding:18px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
 .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
 .btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--line)}
 .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none;white-space:nowrap}
-.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
-h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:center}
+.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:14px;margin:10px 0}
+h1{font-size:clamp(22px,5vw,30px);margin:8px 0;color:var(--acc2);text-align:center}
 .label{color:var(--acc);font-weight:800;margin:0 0 8px}
 .input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
 .center{max-width:760px;margin:0 auto}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
 .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
+
+/* Micro-domande (banner 1/dì) */
 .qblock{border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0;background:rgba(255,255,255,.04)}
 .qtitle{display:flex;align-items:center;gap:8px;font-weight:800;color:#E7F2EE;margin-bottom:8px}
 .optset{display:flex;flex-wrap:wrap;gap:8px}
 .opt{background:var(--chip);border:1px solid var(--line);color:#EAF3EE;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer}
 .opt.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-.toggle{cursor:pointer;user-select:none}
-.collapsed>.body{display:none}
+.hidden{display:none !important}
 .small{font-size:12px;color:var(--muted)}
-.hidden{display:none!important}
-.summaryline{font-size:13px;color:#cfe7ff;margin-top:10px}
 </style>
 </head>
 <body>
 <main>
+
+  <!-- Topbar -->
   <div class="row" style="justify-content:space-between">
     <div class="row">
       <button class="btn" id="backBtn">←</button>
@@ -51,69 +58,65 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
     <div class="row">
       <span class="badge" id="periodoBadge">🕰️ —</span>
       <span class="badge" id="styleBadge">🎭 —</span>
-      <span class="badge" id="freeBadge" title="">—</span>
+      <span class="badge" id="freeBadge">—</span>
       <button class="btn" id="langBtn">IT</button>
     </div>
   </div>
 
   <h1 id="titleH1">Imposta la tua domanda</h1>
 
-  <!-- Style -->
+  <!-- Scelta stile + tono (box più piccolo, senza descrizioni) -->
   <div class="card center">
     <div class="row" style="justify-content:space-between;align-items:center">
       <div class="chips" id="styleChips">
-        <button class="chip" data-style="whatif" id="chipWhatIf">What if (realistico)</button>
-        <button class="chip" data-style="wtf" id="chipWTF">What the F (demenziale)</button>
+        <button class="chip" data-style="whatif" id="chipWhatIf">What if</button>
+        <button class="chip" data-style="wtf" id="chipWTF">What the F</button>
       </div>
-      <div class="row" style="gap:8px">
-        <div id="toneWrap" class="chips hidden">
-          <button class="chip" data-tone="reale" id="toneReal">Reale</button>
-          <button class="chip" data-tone="poetico" id="tonePoet">Poetico</button>
-          <button class="chip" data-tone="analitico" id="toneAnal">Analitico</button>
-        </div>
-        <span class="badge" id="proBadge">—</span>
+      <span class="badge" id="proBadge">—</span>
+    </div>
+    <!-- Tono SOLO per What if -->
+    <div class="row" id="toneRow" style="margin-top:10px">
+      <span class="label" style="margin:0">Tono</span>
+      <div class="chips" id="toneChips">
+        <button class="chip" data-tone="real" id="toneReal">Reale</button>
+        <button class="chip" data-tone="analytical" id="toneAnalytical">Analitico</button>
+        <button class="chip" data-tone="poetic" id="tonePoetic">Poetico</button>
       </div>
     </div>
-    <div id="styleHint" class="small"></div>
   </div>
 
-  <!-- Question -->
+  <!-- Domanda (placeholder “E se…”) -->
   <div class="card center">
     <h3 class="label" id="qLabel">La tua domanda</h3>
-    <textarea id="qInput" rows="3" class="input" placeholder="E se tornassi a vivere all’Aquila?" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
-    <div id="microSummary" class="summaryline hidden">—</div>
+    <textarea id="qInput" rows="3" class="input" placeholder="E se…" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
     <div class="row" style="margin-top:12px;justify-content:space-between">
       <button class="btn primary" id="goBtn" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
       <button class="btn ghost" id="clearBtn">Svuota</button>
     </div>
-    <div class="small" id="tipNote" style="margin-top:8px">Tip: puoi cambiare stile, periodo e tono; colori e voce si adattano.</div>
+    <div class="small" id="tipNote" style="margin-top:6px">Tip: puoi cambiare stile, periodo e tono; colori e voce si adattano.</div>
   </div>
 
-  <!-- Micro + Jung (UNICO BANNER, una volta al giorno) -->
+  <!-- Micro-domande (banner: compare solo 1 volta al giorno) -->
   <div class="card center" id="microCard">
-    <div class="row toggle" id="microHead" style="justify-content:space-between">
+    <div class="row" style="justify-content:space-between;align-items:center">
       <div class="label" id="microTitle">▼ Micro-domande di oggi</div>
-      <div class="small" id="microHint">(una volta al giorno)</div>
+      <div class="small" id="microHint">(una sola volta al giorno)</div>
     </div>
-    <div class="body" id="microBody" style="margin-top:10px">
-      <div class="qblock">
+    <div class="body" id="microBody" style="margin-top:8px">
+      <div id="qMood" class="qblock">
         <div class="qtitle">🙂 Oggi come ti senti?</div>
         <div class="optset" id="moodOpts"></div>
       </div>
-      <div class="qblock">
+      <div id="qAnchor" class="qblock">
         <div class="qtitle">🧭 Cosa ti tiene qui ultimamente?</div>
         <div class="optset" id="anchorOpts"></div>
       </div>
-      <div class="qblock">
+      <div id="qDecide" class="qblock">
         <div class="qtitle">⚙️ Come decidi di solito?</div>
         <div class="optset" id="decideOpts"></div>
       </div>
-      <div class="qblock">
-        <div class="qtitle">♈ Segno o portafortuna (se vuoi)</div>
-        <div class="optset" id="zodiacOpts"></div>
-      </div>
-      <div class="qblock">
-        <div class="qtitle">🧭 Stile (alla Jung): cosa ti assomiglia?</div>
+      <div id="qJung" class="qblock">
+        <div class="qtitle">🧠 Stile (Jung):</div>
         <div class="optset" id="jungOpts"></div>
       </div>
       <div class="row" style="margin-top:6px">
@@ -123,212 +126,141 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
     </div>
   </div>
 
+  <!-- Salvati -->
+  <div class="card center hidden" id="savedCard">
+    <div class="row" style="justify-content:space-between">
+      <div class="label" id="nextLabel">▶ Domande salvate</div>
+      <button class="btn ghost" id="clearSavedBtn">🗑️ Svuota</button>
+    </div>
+    <div id="nextList"></div>
+  </div>
+
+  <!-- Cronologia -->
+  <div class="card center hidden" id="histCard">
+    <div class="row" style="justify-content:space-between">
+      <div class="label" id="storiesLabel">▶ Cronologia</div>
+      <button class="btn ghost" id="clearHistoryBtn">🗑️ Svuota</button>
+    </div>
+    <div id="storyList"></div>
+  </div>
+
 </main>
 
 <script>
+/* ===== Setup base ===== */
 const LS=localStorage;
 const lang=(LS.getItem('lang')||'it').toLowerCase();
-document.documentElement.lang=lang;
-function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
-function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
-function todayStr(){return new Date().toISOString().slice(0,10);}
-
-let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false, tono:'reale'});
+const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{"stile":"whatif","periodo":"future","pro":false,"tone":"real"}');
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-document.getElementById('titleH1').textContent=(lang==='en'?'Set your question':'Imposta la tua domanda');
-document.getElementById('qLabel').textContent=(lang==='en'?'Your question':'La tua domanda');
-document.getElementById('chipWhatIf').textContent=(lang==='en'?'What if (realistic)':'What if (realistico)');
-document.getElementById('chipWTF').textContent=(lang==='en'?'What the F (goofy)':'What the F (demenziale)');
-document.getElementById('tipNote').textContent=(lang==='en'?'Tip: you can change style, period and tone; colors & voice adapt.':'Tip: puoi cambiare stile, periodo e tono; colori e voce si adattano.');
-document.getElementById('langBtn').textContent=(LS.getItem('lang')||'it').toUpperCase();
-
-function renderBadges(){
-  document.getElementById('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past'? (lang==='en'?'Past':'Passato') : (lang==='en'?'Future':'Futuro'));
-  document.getElementById('styleBadge').textContent   = "🎭 " + (prefs.stile==='wtf'? 'What the F' : 'What if');
-  document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
-  // hint
-  document.getElementById('styleHint').innerHTML = (prefs.stile==='wtf')
-    ? (lang==='en'
-        ? 'Goofy sarcasm, fast pace, reacting objects only if helpful, single narrated blasphemy tied to an event.'
-        : 'Sarcasmo demenziale, ritmo alto, oggetti reattivi solo se servono, una bestemmia narrata legata a un evento.')
-    : (lang==='en'
-        ? 'Warm, realistic voice. Choose tone: Real / Poetic / Analytical.'
-        : 'Voce realistica e calda. Scegli il tono: Reale / Poetico / Analitico.');
-  // tone chips visibility
-  document.getElementById('toneWrap').classList.toggle('hidden', prefs.stile!=='whatif');
-  document.querySelectorAll('#toneWrap .chip').forEach(c=> c.classList.toggle('sel', c.dataset.tone===prefs.tono));
-}
-renderBadges();
-
-document.getElementById('periodoBadge').onclick=()=>{ prefs.periodo = (prefs.periodo==='past'?'future':'past'); writeJSON('whatif_prefs',prefs); renderBadges(); };
-document.getElementById('styleChips').addEventListener('click',(e)=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs);
-  document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-  renderBadges();
-});
-document.getElementById('toneWrap').addEventListener('click',(e)=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  prefs.tono=b.dataset.tone; writeJSON('whatif_prefs',prefs);
-  renderBadges();
-});
-document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang', lang==='it'?'en':'it'); location.reload(); };
+/* Topbar */
+const setBadges=()=>{
+  document.getElementById('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past' ? 'Passato' : 'Futuro');
+  document.getElementById('styleBadge').textContent   = "🎭 " + (prefs.stile==='wtf' ? 'What the F' : 'What if');
+};
+setBadges();
+document.getElementById('langBtn').textContent=lang.toUpperCase();
+document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
 document.getElementById('backBtn').onclick=()=>history.back();
 document.getElementById('homeBtn').onclick=()=>location.href='index.html';
+document.getElementById('periodoBadge').onclick=()=>{ prefs.periodo = (prefs.periodo==='past'?'future':'past'); LS.setItem('whatif_prefs',JSON.stringify(prefs)); setBadges(); };
 
-const qEl = document.getElementById('qInput');
-qEl.placeholder = (lang==='en' ? "What if I moved back to L’Aquila?" : "E se tornassi a vivere all’Aquila?");
+/* Stile */
+function paintChips(){
+  document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel', c.dataset.style===prefs.stile));
+  document.querySelectorAll('#toneChips .chip').forEach(c=>c.classList.toggle('sel', c.dataset.tone===prefs.tone));
+  document.getElementById('toneRow').style.display = (prefs.stile==='whatif') ? 'flex' : 'none';
+}
+document.getElementById('styleChips').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  prefs.stile=b.dataset.style; LS.setItem('whatif_prefs',JSON.stringify(prefs));
+  document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+  setBadges(); paintChips();
+});
+document.getElementById('toneChips').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  prefs.tone=b.dataset.tone; LS.setItem('whatif_prefs',JSON.stringify(prefs));
+  paintChips();
+});
+paintChips();
 
-// credits (client-only visual)
-function capForUser(){ return !!LS.getItem('admin_token') ? Infinity : (prefs.pro ? 10 : 3); }
-function ensureCredits(){
-  const c=readJSON('whatif_credits',{date:todayStr(),used:0});
-  if(c.date!==todayStr()){ c.date=todayStr(); c.used=0; }
-  writeJSON('whatif_credits',c);
+/* Crediti (solo display locale) */
+function today(){return new Date().toISOString().slice(0,10);}
+function userIsAdmin(){ return !!LS.getItem('admin_token'); }
+function cap(){ return userIsAdmin()?Infinity:(prefs.pro?10:3); }
+function ensureCredits(){ let c=JSON.parse(LS.getItem('whatif_credits')||'{"date":"","used":0}'); if(c.date!==today()){c.date=today();c.used=0;} LS.setItem('whatif_credits',JSON.stringify(c)); }
+ensureCredits();
+function renderCredits(){
+  const c=JSON.parse(LS.getItem('whatif_credits')||'{"date":"","used":0}');
+  const left = cap()===Infinity ? '∞' : Math.max(0, cap()-(c.used||0));
+  document.getElementById('freeBadge').textContent = `Crediti: ${left}/${cap()===Infinity?'∞':cap()}`;
 }
-function leftCredits(){
-  const c=readJSON('whatif_credits',{date:todayStr(),used:0});
-  const cap=capForUser();
-  return cap===Infinity ? "∞" : Math.max(0, cap-(c.used||0));
-}
-function renderCreditsBadge(){
-  const cap=capForUser(); const left=leftCredits();
-  document.getElementById('freeBadge').textContent = (cap===Infinity)
-    ? (lang==='en' ? 'Credits: ∞' : 'Crediti: ∞')
-    : (lang==='en' ? `Credits: ${left}/${cap}` : `Crediti: ${left}/${cap}`);
-}
-ensureCredits(); renderCreditsBadge();
+renderCredits();
+document.getElementById('proBadge').textContent = prefs.pro ? 'PRO attivo' : 'PRO non attivo';
 
-function showMicroSummary(){
-  const cur = readJSON('micro_profile',{});
-  const parts=[];
-  if(cur.mood) parts.push(cur.mood);
-  if(cur.anchor) parts.push(cur.anchor);
-  if(cur.decide) parts.push(cur.decide);
-  if(cur.zodiac) parts.push(cur.zodiac);
-  if(cur.jung) parts.push(`Jung:${cur.jung}`);
-  const line = parts.length ? (lang==='en'?'Today: ':'Oggi: ') + parts.join(" · ") : "";
-  const el = document.getElementById('microSummary');
-  if(line){ el.textContent=line; el.classList.remove('hidden'); } else el.classList.add('hidden');
-}
+/* Domanda */
+const qEl=document.getElementById('qInput'); qEl.autofocus=true;
 
+/* Invio */
 function trySubmit(){
   const domanda=(qEl.value||"").trim();
   if(!domanda){ qEl.focus(); return; }
-  const c=readJSON('whatif_credits',{date:todayStr(),used:0});
-  if(!LS.getItem('admin_token')){
-    const cap=capForUser();
-    if((c.used||0)>=cap){ alert(lang==='en'?'You’ve used today’s credits.':'Hai finito i crediti di oggi.'); return; }
-    c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderCreditsBadge();
+  const c=JSON.parse(LS.getItem('whatif_credits')||'{"date":"","used":0}');
+  if(!userIsAdmin()){
+    if((c.used||0) >= (cap()===Infinity?1e9:cap())){ alert('Hai finito i crediti di oggi.'); return; }
+    c.used=(c.used||0)+1; LS.setItem('whatif_credits',JSON.stringify(c)); renderCredits();
   }
-  const micro = readJSON('micro_profile', {});
-  writeJSON('whatif_prefs', prefs);
+  const micro = JSON.parse(LS.getItem('micro_profile')||'{}');
   LS.setItem('domanda',domanda);
-  writeJSON('whatif_request',{ domanda, stile:prefs.stile, lang, extra:"", micro, periodo:prefs.periodo, tono:prefs.tono });
+  LS.setItem('whatif_prefs', JSON.stringify(prefs));
+  LS.setItem('whatif_request', JSON.stringify({ domanda, stile:prefs.stile, lang, extra:"", micro, fantasy_mode:false, periodo:prefs.periodo, tone:prefs.tone }));
   location.href='fifth.html';
 }
 document.getElementById('goBtn').onclick=trySubmit;
 document.getElementById('clearBtn').onclick=()=>{ qEl.value=""; qEl.focus(); };
-qEl.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
+qEl.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
-// ===== Micro (unico banner, una volta al giorno, sparisce dopo salvataggio) =====
+/* Micro-domande — una volta al giorno */
 const microCard=document.getElementById('microCard');
-const microSaved=readJSON('micro_saved',{date:"",ok:false});
-function rng(seedStr){ let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
-const today=todayStr(); const rnd=rng(today);
-
-function renderOptions(containerId, options, key){
-  const wrap=document.getElementById(containerId); wrap.innerHTML='';
-  const saved=readJSON('micro_profile',{});
-  options.forEach(text=>{
-    const b=document.createElement('button');
-    b.className='opt'; b.textContent=text;
-    if(saved[key]===text) b.classList.add('sel');
-    b.onclick=()=>{
-      wrap.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));
-      b.classList.add('sel');
-      const cur=readJSON('micro_profile',{}); cur[key]=text; writeJSON('micro_profile',cur);
-      showMicroSummary();
-    };
-    wrap.appendChild(b);
-  });
-}
-
-function pickDaily(list, n){
-  const seen=new Set(), out=[];
-  while(out.length<n && seen.size<list.length){
-    const i=Math.floor(rnd()*list.length);
-    if(seen.has(i)) continue; seen.add(i); out.push(list[i]);
-  }
-  return out;
-}
+const microSaved=JSON.parse(LS.getItem('micro_saved')||'{"date":"","ok":false}');
+function rng(seed){ let s=[...seed].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
+function pick(pool,n,r){ const out=[],seen=new Set(); while(out.length<n && seen.size<pool.length){ const i=Math.floor(r()*pool.length); if(seen.has(i)) continue; seen.add(i); out.push(pool[i]); } return out; }
 
 function renderMicro(){
-  // se già salvate oggi: non mostrare proprio
-  if(microSaved.date===today && microSaved.ok){ microCard.classList.add('hidden'); return; }
+  const todayIso=today();
+  if(microSaved.date===todayIso){ microCard.classList.add('hidden'); return; } // già fatto oggi → nascondi
+  const rnd=rng(todayIso);
+  const moodPool   = ["Calmo in modalità aereo","Carico come una presa","Appannato ma ok","Astronauta irrequieto","Leggero e chiacchierone","Solido e in silenzio"];
+  const anchorPool = ["Le persone che amo","Soldi & bollette","Una routine che funziona","Una promessa a me stessə","Paura di cambiare","Curiosità per ciò che c’è"];
+  const decidePool = ["Pancia prima","Liste pro/contro","Chiedo a un amico","Decide la scadenza","Tiro la moneta","Caffè + passeggiata"];
+  const jungPool   = ["realista","analitico","idealista","esploratore"];
 
-  const moodPool = (lang==='en'
-    ? ["Calm like airplane mode","Charged like a socket","Foggy but fine","Restless astronaut","Light and chatty","Solid and quiet","Bit chaotic, funny"]
-    : ["Calmo in modalità aereo","Carico come una presa","Appannato ma ok","Astronauta irrequieto","Leggero e chiacchierone","Solido e in silenzio","Un po’ caotico ma divertito"]);
-  const anchorPool = (lang==='en'
-    ? ["People I love","Money & bills","A routine that works","A promise to myself","Fear of changing","Curiosity about what’s here"]
-    : ["Le persone che amo","Soldi & bollette","Una routine che funziona","Una promessa a me stesso/a","Paura di cambiare","Curiosità per ciò che c’è"]);
-  const decidePool = (lang==='en'
-    ? ["Gut first","Lists & pros/cons","Ask a friend","Deadline decides","Flip a coin","Coffee + walk"]
-    : ["Pancia prima","Liste pro/contro","Chiedo a un amico","Decide la scadenza","Tiro la moneta","Caffè + passeggiata"]);
-  const zodiacPool = (lang==='en'
-    ? ["Aries/Taurus/Gemini","Cancer/Leo/Virgo","Libra/Scorpio/Sag","Capricorn/Aquarius/Pisces","No sign, just vibes","Lucky habit: same socks"]
-    : ["Ariete/Toro/Gemelli","Cancro/Leone/Vergine","Bilancia/Scorpione/Sag","Capricorno/Acquario/Pesci","Niente segno, solo vibrazioni","Portafortuna: stesse calze"]);
-  const jungPool = (lang==='en'
-    ? ["S","N","T","F"]
-    : ["S","N","T","F"]);
-
-  renderOptions('moodOpts',   pickDaily(moodPool,   5), 'mood');
-  renderOptions('anchorOpts', pickDaily(anchorPool, 5), 'anchor');
-  renderOptions('decideOpts', pickDaily(decidePool, 5), 'decide');
-  renderOptions('zodiacOpts', pickDaily(zodiacPool, 4), 'zodiac');
-
-  // Jung buttons
-  const wrap=document.getElementById('jungOpts'); wrap.innerHTML='';
-  const saved=readJSON('micro_profile',{});
-  const labels = (lang==='en')
-    ? {S:"S – Sensing",N:"N – Intuition",T:"T – Thinking",F:"F – Feeling"}
-    : {S:"S – Sensazione",N:"N – Intuizione",T:"T – Pensiero",F:"F – Sentimento"};
-  jungPool.forEach(k=>{
-    const b=document.createElement('button');
-    b.className='opt'; b.textContent=labels[k];
-    if(saved.jung===k) b.classList.add('sel');
-    b.onclick=()=>{
-      wrap.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));
-      b.classList.add('sel');
-      const cur=readJSON('micro_profile',{}); cur.jung=k; writeJSON('micro_profile',cur);
-      showMicroSummary();
-    };
-    wrap.appendChild(b);
-  });
-
-  // prima apertura del giorno → espandi
-  const key='banner_shown_day';
-  const prev=LS.getItem(key)||'';
-  if(prev!==today){ microCard.classList.remove('collapsed'); LS.setItem(key,today); }
+  function mount(id, arr, key){
+    const wrap=document.getElementById(id); wrap.innerHTML="";
+    const saved=JSON.parse(LS.getItem('micro_profile')||'{}');
+    pick(arr, Math.min(5,arr.length), rnd).forEach(text=>{
+      const b=document.createElement('button'); b.className='opt'; b.textContent=text;
+      if(saved[key]===text) b.classList.add('sel');
+      b.onclick=()=>{ wrap.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); const cur=JSON.parse(LS.getItem('micro_profile')||'{}'); cur[key]=text; LS.setItem('micro_profile',JSON.stringify(cur)); };
+      wrap.appendChild(b);
+    });
+  }
+  mount('moodOpts',   moodPool,   'mood');
+  mount('anchorOpts', anchorPool, 'anchor');
+  mount('decideOpts', decidePool, 'decide');
+  mount('jungOpts',   jungPool,   'jung');
 }
 renderMicro();
-showMicroSummary();
 
-document.getElementById('microHead').onclick=()=>{ microCard.classList.toggle('collapsed'); };
 document.getElementById('saveMicroBtn').onclick=()=>{
-  writeJSON('micro_saved', {date:today, ok:true});
-  document.getElementById('microSavedMsg').textContent=(lang==='en'?"Saved for today.":"Salvato per oggi.");
-  // sparisci subito
-  setTimeout(()=>{ document.getElementById('microCard').classList.add('hidden'); }, 300);
+  const todayIso=today();
+  if(microSaved.date===todayIso){ document.getElementById('microSavedMsg').textContent="Già salvato oggi."; return; }
+  const cur = JSON.parse(LS.getItem('micro_profile')||'{}');
+  LS.setItem('micro_profile', JSON.stringify(cur));
+  LS.setItem('micro_saved', JSON.stringify({date:todayIso,ok:true}));
+  document.getElementById('microSavedMsg').textContent="Micro-profilo salvato per oggi.";
+  microCard.classList.add('hidden'); // sparisce dopo il salvataggio
 };
-
-document.getElementById('goBtn').textContent=(lang==='en'?'✨ Generate answer':'✨ Genera risposta');
-document.getElementById('clearBtn').textContent=(lang==='en'?'Clear':'Svuota');
-
-// share credits badge
-function renderCreditsBadge(){ /* già sopra */ }
 </script>
 </body>
 </html>
