@@ -1,5 +1,5 @@
-// /api/ask.js — What?f Engine (2025 FINAL, persona-aware + memoria + imprecazioni contestuali)
-// Stili: whatif (reale/poetico/analitico) · wtf (sarcasmo demenziale affettuoso, “bestemmia” narrata in-scena)
+// /api/ask.js — What?f Engine (2025 FINAL, refined)
+// Stili: whatif (realismo lucido) · wtf (roast affettuoso con imprecazione narrata)
 // IT/EN — paragrafo singolo, niente liste/domande/emoji
 // Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
 // Log su Redis SENZA contenuto della domanda (solo metadati + hash non reversibile)
@@ -8,16 +8,23 @@ import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
 
+// ---------- OpenAI ----------
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = "gpt-4o-mini";
 
+// ---------- Upstash ----------
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-const rl = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "1 m") });
+// rate limit: 10 req/min per IP (bypass SOLO per admin)
+const rl = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "1 m"),
+});
 
+// ---------- CORS ----------
 const ALLOWED_ORIGINS = [
   "https://what-ifapp.vercel.app",
   "http://localhost:3000",
@@ -40,13 +47,13 @@ function normLine(s = "") {
 }
 function tightenSentences(text, maxSentences) {
   const parts = String(text || "").replace(/\n+/g, " ")
-    .split(/(?<=[.!?])\s+/).map((x) => x.trim()).filter(Boolean);
+    .split(/(?<=[.!?…])\s+/).map((x) => x.trim()).filter(Boolean);
   const out = []; const seen = new Set();
   for (const p of parts) {
     const n = normLine(p);
     if (!n || seen.has(n)) continue;
     const wc = p.split(/\s+/).length;
-    if (wc <= 3 && !/[.!?]$/.test(p)) continue;
+    if (wc <= 3 && !/[.!?…]$/.test(p)) continue;
     out.push(p); seen.add(n);
     if (out.length >= maxSentences) break;
   }
@@ -58,12 +65,12 @@ function clampWords(text, maxWords) {
   const w = String(text || "").split(/\s+/);
   if (w.length <= maxWords) return text;
   const slice = w.slice(0, maxWords).join(" ");
-  const m = slice.match(/([\s\S]*?[.!?])(?![\s\S]*[.!?])/);
+  const m = slice.match(/([\s\S]*?[.!?…])(?![\s\S]*[.!?…])/);
   return m ? m[1] : slice + "…";
 }
 function normalizeOneParagraph(s = "") {
   return String(s).replace(/\s*\n+\s*/g, " ").replace(/\s{2,}/g, " ")
-    .replace(/\s+([.,;:!?])/g, "$1").trim();
+    .replace(/\s+([.,;:!?…])/g, "$1").trim();
 }
 function stripQuestionEcho(domanda, text) {
   const d = String(domanda || "").replace(/[“”"']/g, "").trim().toLowerCase();
@@ -80,16 +87,200 @@ function tinyHash(s = "") {
   return (h >>> 0).toString(36);
 }
 
-async function isAdmin(req, requesterIp) {
-  const token = String(req.headers["x-admin-token"] || "").trim();
-  if (!token) return false;
-  try {
-    const data = await redis.hgetall(`admin:token:${token}`);
-    if (!data) return false;
-    const LOCK_IP = String(process.env.ADMIN_LOCK_IP || "false").toLowerCase() === "true";
-    if (LOCK_IP) return data.ip && data.ip === requesterIp;
-    return true;
-  } catch { return false; }
+// ---------- Italian micro-fix & sentence utils ----------
+function microFixIt(text){
+  return String(text||"")
+    .replace(/\bLe la\b/gi, "La")
+    .replace(/\bIl la\b/gi, "La")
+    .replace(/\bLo la\b/gi, "La")
+    .replace(/\bLe il\b/gi, "Il")
+    .replace(/\bUn uno\b/gi, "Un")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([.,;:!?…])/g, "$1")
+    .trim();
+}
+function splitSentences(t){
+  return String(t||"").replace(/\n+/g," ")
+    .split(/(?<=[.!?…])\s+/).map(s => s.trim()).filter(Boolean);
+}
+function joinSentences(arr){
+  let t = arr.join(" ");
+  if(!/[.!?…]$/.test(t)) t += ".";
+  return t;
+}
+
+// ---------- Lexicon shake (WhatIf, leggero) ----------
+function varyLexiconWhatIf(t, lang="it"){
+  let out = String(t||"");
+  const swapsIt = [
+    [/chiavi\b/gi, () => ["chiavi","chiavini","mazzo di chiavi","metallo che suona"].at(seedPick(4))],
+    [/strade\b/gi, () => ["strade","vie","vicoli","asfalti"].at(seedPick(4))],
+    [/silenzio\b/gi, () => ["silenzio","quieto","quiete","aria che tace"].at(seedPick(4))],
+  ];
+  const swapsEn = [
+    [/keys\b/gi, () => ["keys","keyring","metal jingles","house keys"].at(seedPick(4))],
+    [/streets\b/gi, () => ["streets","lanes","side roads","alleys"].at(seedPick(4))],
+    [/quiet\b/gi, () => ["quiet","stillness","soft hush","air that listens"].at(seedPick(4))],
+  ];
+  const apply = (lang.startsWith("en")? swapsEn : swapsIt);
+  for(const [rx,fn] of apply){ out = out.replace(rx, fn); }
+  return out;
+}
+function seedPick(n){ return Math.floor(Math.random()*n); }
+
+// ---------- Event-driven narrated imprecation ----------
+const IMPRECATION_BANK = {
+  it: {
+    parcheggio: [
+      "ti scappa una bestemmia teatrale che mette in riga pure i cerchioni",
+      "spari una bestemmia d’arte che fa vibrare gli specchietti",
+      "ti parte un’imprecazione epica e il sensore parcheggio si zittisce",
+    ],
+    cucina: [
+      "sbotti con una bestemmia d’operetta e la moka fa finta di niente",
+      "ti esce una bestemmia corale: il cucchiaino si mette sull’attenti",
+      "sganci una bestemmia in stereo e il caffè decide di perdonarti",
+    ],
+    burocrazia: [
+      "ti scappa una bestemmia con timbro in rilievo e lo sportello sospira",
+      "esplode una bestemmia da ufficio e la penna smette di incepparsi",
+      "butti lì una bestemmia scenica e il numerino avanza di tre",
+    ],
+    trasporti: [
+      "ti scappa una bestemmia di stazione e il semaforo prende paura",
+      "parti con una bestemmia da capolinea: l’autobus si vergogna del ritardo",
+      "spari una bestemmia con eco e la palina si rabbuia",
+    ],
+    cantiere: [
+      "ti esce una bestemmia da cantiere e la betoniera abbassa il volume",
+      "scatta una bestemmia panoramica e la rete arancione applaude",
+      "lanci una bestemmia storica e il cartello 'fine lavori' arrossisce",
+    ],
+    strada: [
+      "ti scappa una bestemmia barocca che mette sull’attenti i lampioni",
+      "ti parte una bestemmia lirica e i piccioni cambiano corsia",
+      "sbotti con una bestemmia d’annata e il vento porta via il fumo",
+    ],
+  },
+  en: {
+    parking: [
+      "you let out a theatrical curse that straightens the hubcaps",
+      "a museum-grade curse bursts out and the sensors go quiet",
+      "you drop an operatic curse and the curb pretends it didn’t see",
+    ],
+    kitchen: [
+      "you fire off a kitchen-table curse and the moka plays dead",
+      "a stereo curse escapes you and the spoon salutes",
+      "you unload an epic curse and the coffee decides to forgive you",
+    ],
+    paperwork: [
+      "a stamped, office-grade curse escapes you and the counter sighs",
+      "you drop a scenic curse and the queue jumps two numbers",
+      "you let out a bureaucratic curse and the pen finally writes",
+    ],
+    transit: [
+      "you launch a terminal-level curse and the light turns shy",
+      "a platform curse erupts and the bus feels guilty",
+      "you bark an echoing curse and the stop sign looks away",
+    ],
+    site: [
+      "you release a hard-hat curse and the mixer lowers the volume",
+      "a panoramic curse pops out and the orange net applauds",
+      "you throw a historic curse and the 'end of works' sign blushes",
+    ],
+    street: [
+      "you burst out with a baroque curse and the streetlights stand still",
+      "a lyrical curse slips out and the pigeons switch lanes",
+      "you spill a vintage curse and the wind takes the smoke away",
+    ],
+  }
+};
+function detectTrigger(domanda, text, lang="it"){
+  const t = (domanda + " " + text).toLowerCase();
+  const mapIt = [
+    ["parcheggio", /(parchegg|posteggi|striscia|retromarcia)/],
+    ["cucina", /(moka|caff[eè]|cucchiain|fornello|cucina)/],
+    ["burocrazia", /(burocrazi|sportello|modulo|timbro|ufficio|anagrafe)/],
+    ["trasporti", /(autobus|bus|palina|semaforo|tram|ritardo)/],
+    ["cantiere", /(cantiere|betoniera|reti arancioni|fine lavori)/],
+    ["strada", /(strada|marciapiede|lampioni|vento|piccioni)/],
+  ];
+  const mapEn = [
+    ["parking", /(park|parking|curb|spot|reverse)/],
+    ["kitchen", /(moka|coffee|kitchen|spoon|stove)/],
+    ["paperwork", /(bureaucr|paper|office|stamp|counter|form)/],
+    ["transit", /(bus|tram|traffic|light|stop)/],
+    ["site", /(site|construction|mixer|fence)/],
+    ["street", /(street|sidewalk|lamp|wind|pigeon)/],
+  ];
+  const bank = lang.startsWith("en") ? mapEn : mapIt;
+  for(const [k,rx] of bank){ if(rx.test(t)) return k; }
+  return lang.startsWith("en") ? "street" : "strada";
+}
+function pickFrom(arr, seed=0){ return arr[(seed + Math.floor(Math.random()*arr.length)) % arr.length]; }
+
+function ensureSpicyButSafeWTF(t, lang, seed=0, domanda="") {
+  let out = String(t || "").trim();
+  if (!out) return out;
+  const already = /(bestemmi|curse|maledizion)/i.test(out);
+  if (already) return microFixIt(out);
+
+  const trigger = detectTrigger(domanda, out, (lang||"it").toLowerCase());
+  const localeKey = (String(lang).toLowerCase().startsWith("en")) ? "en" : "it";
+  const bank = IMPRECATION_BANK[localeKey][trigger] || IMPRECATION_BANK[localeKey].street;
+  const line = pickFrom(bank, seed % 991);
+  if (!line) return microFixIt(out);
+
+  const sents = splitSentences(out);
+  const keyRx = localeKey === "en"
+    ? (trigger==="parking"?/park|spot|curb|reverse/i:
+       trigger==="kitchen"?/moka|coffee|kitchen|spoon|stove/i:
+       trigger==="paperwork"?/paper|bureaucr|office|stamp|counter|form/i:
+       trigger==="transit"?/bus|tram|traffic|light|stop/i:
+       trigger==="site"?/site|construction|mixer|fence/i:
+       /street|lane|lamp|wind|pigeon/i)
+    : (trigger==="parcheggio"?/parchegg|posteggi|striscia|retromarcia/i:
+       trigger==="cucina"?/moka|cucchiain|caff[èe]|fornello|cucina/i:
+       trigger==="burocrazia"?/burocrazi|sportello|modulo|timbro|ufficio|anagrafe/i:
+       trigger==="trasporti"?/autobus|bus|palina|semaforo|tram|ritardo/i:
+       trigger==="cantiere"?/cantiere|betoniera|reti arancioni|fine lavori/i:
+       /strada|marciapiede|lampion|vento|piccion/i);
+
+  let injected = false;
+  for (let i=0;i<sents.length;i++){
+    if (keyRx.test(sents[i])){
+      sents.splice(i+1, 0, line.charAt(0).toUpperCase() + line.slice(1));
+      injected = true; break;
+    }
+  }
+  if (!injected) sents.splice(1,0, line.charAt(0).toUpperCase() + line.slice(1));
+  return microFixIt(joinSentences(sents));
+}
+
+// ---------- Copy-edit pass (IT/EN) ----------
+async function polishPass(rawText, { lang="it", stile="whatif" } = {}){
+  const sys = (String(lang).toLowerCase().startsWith("en"))
+    ? `You are a professional copy editor. Perfect grammar, syntax and cohesion. Keep meaning, tone and length. Single paragraph. Do NOT add or remove the narrated curse if present.`
+    : `Sei un correttore di bozze professionista. Sistema grammatica, sintassi e coesione. Mantieni senso, tono e lunghezza. Un solo paragrafo. Non aggiungere né togliere l’imprecazione narrata se presente.`;
+  const user = (String(lang).toLowerCase().startsWith("en"))
+    ? `Polish this ${stile.toUpperCase()} paragraph without changing style: ${rawText}`
+    : `Rifinisci questo paragrafo ${stile.toUpperCase()} senza cambiare stile: ${rawText}`;
+
+  try{
+    const resp = await client.chat.completions.create({
+      model: MODEL,
+      temperature: 0.1,
+      max_tokens: 420,
+      messages: [
+        { role: "system", content: sys },
+        { role: "user", content: user }
+      ]
+    });
+    const txt = resp?.choices?.[0]?.message?.content?.trim() || rawText;
+    return microFixIt(normalizeOneParagraph(txt));
+  }catch{
+    return microFixIt(normalizeOneParagraph(rawText));
+  }
 }
 
 /* ---------- Modalità temporale ---------- */
@@ -97,21 +288,21 @@ function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
   const en = isEn(lang);
   if (String(periodo || "").toLowerCase() === "past") {
     return en
-      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Speak as if the choice had been made back then and show how it likely unfolded. Prefer past/conditional, quick present flashes. No lists, no questions, no echo. Keep exact ${style.toUpperCase()} voice.`
-      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Parla come se la scelta fosse stata fatta allora e mostra come sarebbe andata. Preferisci passato/condizionale con lampi di presente. Niente liste, niente domande, niente eco. Mantieni la voce ${style.toUpperCase()}.`;
+      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Speak as if the choice had been made back then and show how it likely unfolded. Prefer past/conditional, with quick present flashes. No lists, no questions, no echo. Keep exact ${style.toUpperCase()} voice.`
+      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Parla come se la scelta fosse stata fatta allora e mostra come sarebbe verosimilmente andata. Preferisci passato/condizionale con lampi di presente. Niente liste, niente domande, niente eco. Mantieni la voce ${style.toUpperCase()}.`;
   }
   return en
-    ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Describe a plausible near-future unfolding now. No lists, no questions, no echo. Keep exact ${style.toUpperCase()} voice.`
+    ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Describe a plausible near-future unfolding as if stepping into it now. No lists, no questions, no echo. Keep exact ${style.toUpperCase()} voice.`
     : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi un prossimo futuro plausibile come se ci entrassi adesso. Niente liste, niente domande, niente eco. Mantieni la voce ${style.toUpperCase()}.`;
 }
 
 /* ---------- Personas (voci) ---------- */
-function personaSystem(style, lang, sex = "", tono = "") {
+function personaSystem(style, lang, sex = "") {
   const SEX = String(sex || "").toLowerCase();
   const genderNickIT = (SEX === "f")
     ? ["regina del casino","fenomena","asso di briscola","capitana del caos","sirena urbana","signora dei forse","rockstar con tacchi comodi"]
     : (SEX === "m")
-      ? ["campione","fenomeno","asso","capitano del caos","sumo dei forse","rockstar con le tasche vuote","poeta del bar"]
+      ? ["campione","fenomeno","asso","capitano del caos","rockstar con le tasche vuote","poeta del bar"]
       : ["leggenda","fenomen*","asso universale","cap* del caos","rockstar del forse","astronauta del dubbio"];
   const genderNickEN = (SEX === "f")
     ? ["queen of chaos","ace of ‘maybe’","legend in sneakers","captain of detours"]
@@ -122,222 +313,63 @@ function personaSystem(style, lang, sex = "", tono = "") {
   if (style === "wtf") {
     const SYS = (isEn(lang)
       ? `
-You are “What the F” — the loud, loving friend who roasts with affection.
-SECOND PERSON. ONE paragraph, 6–8 sentences (~125–165 words). Colloquial.
+You are “What the F” — loud, loving, a bit annoyed but on my side.
+SECOND PERSON. ONE paragraph, 6–8 sentences (125–165 words). Colloquial, tight rhythm.
 OPEN with ONLY a rotating nickname (no verbs).
-Keep quips flowing (3–5 short jabs) but earned by the scene; use “reacting objects” only when relevant.
-Include exactly one brief, narrated blasphemy tied to a concrete event (parking, moka, paperwork, bus, site, street). Never literal religious slurs.
-STRICT: no lists, no questions, no emojis, no preaching. Respect TEMPORAL MODE. Close warm + funny.
+Keep earned jabs; “reacting objects” only if they support the gag.
+Exactly ONE narrated curse must burst from a concrete event (parking, moka, paperwork, bus, site, street). Never literal slurs; action line, no brackets.
+No lists, no questions, no emojis. Respect TEMPORAL MODE. Close warm and funny.
 Nicknames (EN): ${genderNickEN.join(", ")}.
 `.trim()
       : `
-Sei “What the F” — amico rumoroso, affettuoso e pungente.
-SECONDA PERSONA. UN paragrafo, 6–8 frasi (~125–165 parole). Colloquiale.
-Apertura SOLO con un nomignolo (senza verbi).
-BATTUTE continue ma motivate (3–5 stoccate brevi); “oggetti che reagiscono” solo se servono alla scena.
-Una sola bestemmia narrata, legata a un evento preciso (parcheggio, moka, sportello, autobus, cantiere, strada). Mai letterale.
-RIGIDO: niente elenchi, niente domande, niente emoji, niente prediche. Rispetta la MODALITÀ TEMPORALE. Chiudi caldo e divertente.
+Sei “What the F” — rumoroso, affettuoso, un filo scocciato ma dalla sua parte.
+SECONDA PERSONA. UN paragrafo, 6–8 frasi (125–165 parole). Colloquiale, ritmo serrato.
+Apertura SOLO con un nomignolo (senza verbi). Stoccate motivate; oggetti che reagiscono solo se servono.
+Una sola bestemmia narrata deve scoppiare da un evento (parcheggio, moka, burocrazia, autobus, cantiere, strada). Mai letterale, riga d’azione, senza parentesi.
+Niente liste, domande o emoji. Rispetta la MODALITÀ TEMPORALE. Chiudi caldo e divertente.
 Nomignoli (IT): ${genderNickIT.join(", ")}.
 `.trim());
 
     const FEWSHOTS = [
       { role: "system", content:
-`ESEMPIO IT • Rientro in città (futuro)
-Pellegrino del ritorno, scendi con la valigia che scricchiola dignità, il marciapiede ti riconosce e ti fa lo sconto sul dubbio; al bar la tazzina fa spallucce “di nuovo?”, il parcheggio è una coreografia sbagliata e quando centri il marciapiede per la terza volta ti scappa una bestemmia teatrale che mette in riga i piccioni, la saracinesca finge di non aver sentito e due facce ti chiamano per nome: non stai tornando indietro, stai tornando intero.` },
+`ESEMPIO IT • Tornare all’Aquila (futuro)
+Pellegrino del ritorno, scendi con la valigia che scricchiola dignità e il vento ti sistema i pensieri come sedie al bar; il marciapiede riconosce il tuo passo e ti fa lo sconto sul dubbio, al bancone la tazzina ti guarda “di nuovo?” e tu, che fai il duro da metropoli, ti addolcisci come grappino alle undici, sbagli parcheggio con la sicurezza di uno che vuole soffrire bene, ti scappa una bestemmia teatrale che fa tremare i bicchieri e il lampione finge di non sentire, poi due facce ti chiamano per nome e scopri che non stai tornando indietro ma tornando intero, con le crepe lucidate a festa, e ridi perché la città punge solo per controllare se sei vivo.` },
       { role: "system", content:
-`EXAMPLE EN • New flat (future)
-Champ, the intercom rolls its eyes, the fridge hums “good luck”, the box cutter opens like a small miracle; you take a victory lap with the trash, miss the recycling chute twice, you drop a theatrical curse that rattles the glasses and even the hallway coughs politely, then the lamp finds the angle and the room decides you’re allowed.` },
+`ESEMPIO IT • Mettersi in proprio (futuro)
+Capitano del caos, arrivi col piano che sembra un tovagliolo firmato e l’Excel ti guarda come un cameriere stanco; il registratore di cassa tossisce come scooter in salita ma tre facce tornano e la vetrina si raddrizza da sola, stappi la bottiglia “buona” ed è aceto balsamico: brucia onesto, benedice l’errore, ti scappa una bestemmia che scuote i bicchieri e il bancone risponde “anche oggi imprenditore”, alla sera conti spicci e sorrisi e capisci che non stai vincendo il mondo, stai reggendo te — che è molto più redditizio del previsto.` },
+      { role: "system", content:
+`EXAMPLE EN • Moving city (future)
+Champ, you arrive like a limited series pilot and the buzzer rolls its eyes; the fridge hums “good luck” while the streetlights do wardrobe tests, you walk too far just to tire the nerves and a tiny beer forgives your accent, you clip the curb and you let out a theatrical curse that rattles the glasses, the mailbox pretends it didn’t hear, by grocery three you find your aisle and your pace — you’re not conquering a city, you’re landing your life.` },
     ];
     return { sys: SYS, fewshots: FEWSHOTS };
   }
 
-  // WHAT IF — tre toni
-  const tone = String(tono || "").toLowerCase(); // "reale" | "poetico" | "analitico"
   const SYS_WHATIF = (isEn(lang)
     ? `
-You are "What If" — a lucid, kind, slightly ironic friend. SECOND PERSON.
-One paragraph, 8–11 sentences (~115–160 words). No lists, no questions, no emojis.
-TONE=${tone||'reale'}:
-- reale: grounded, ordinary details (keys, streetlights, notebooks, hands, air), warm, concrete, close with a short reflective line.
-- poetico: light imagery, soft cadence, no purple prose, end with a delicate noticing.
-- analitico: compact causal links, criteria/impact language inline (no bullets), still human, brief reflective close.
+You are "What If" — a lucid, kind friend.
+SECOND PERSON. One paragraph, 8–11 sentences (~115–160 words).
+Warm, grounded, everyday images (keys, streetlights, notebooks, hands).
+Small truthful lines; no heroics, no melancholy. No lists, no questions, no emojis.
+End with a short reflective line (not advice).
 `.trim()
     : `
-Sei "What If" — un amico lucido e affettuoso. SECONDA PERSONA.
-Un paragrafo, 8–11 frasi (~115–160 parole). Niente elenchi, niente domande, niente emoji.
-TONO=${tone||'reale'}:
-- reale: dettagli quotidiani (chiavi, lampioni, taccuini, mani, aria), caldo e concreto, chiusa riflessiva breve.
-- poetico: immagini leggere, ritmo morbido, zero zucchero, chiusa come constatazione quieta.
-- analitico: nessi causa-effetto, lessico da criteri/impatti dentro al flusso (no bullet), umano, chiusa breve.
+Sei "What If" — un amico lucido e affettuoso.
+SECONDA PERSONA. Un paragrafo, 8–11 frasi (~115–160 parole).
+Immagini quotidiane (chiavi, lampioni, taccuini, mani).
+Verità piccole e vere; niente eroismi, niente malinconia.
+Niente elenchi o domande o emoji. Chiudi con una riga riflessiva breve (non un consiglio).
 `.trim());
 
   const FEWSHOTS = [
     { role: "system", content:
-`ESEMPIO IT • Reale
-Metti le chiavi sul piattino e ti sembra di rimettere a posto una parte tua. La strada conosce ancora i tuoi passi, anche se i negozi hanno cambiato tende. All’inizio la lentezza punge, poi si mette a lavorare per te: toglie rumore, lascia ritmo. I volti sono simili, lo sguardo no: sai cosa ti pesa e cosa tiene in piedi le giornate. Torni a comprare il pane dove ti chiamano per nome e non è nostalgia, è manutenzione. La sera l’aria è più netta: senti quello che conta senza doverlo spiegare. Non serve ripartire da zero: basta ripartire da dove sei rimasto.` },
+`ESEMPIO IT • Tornare all’Aquila
+Tornare non sarebbe un passo indietro ma un passo fatto meglio. Ti stupirebbe la memoria delle strade: tengono il ritmo anche quando tu lo perdi. All’inizio la lentezza graffia, poi capisci che ti rimette in orario. I volti sembrano uguali, ma li guardi con occhi più larghi. Le chiavi tornano sul piattino giusto, la spesa nel negozio che sa il tuo nome. La nostalgia, se non la insegui, si siede accanto e tace. Non serve ricominciare da zero: basta ricominciare da te.` },
     { role: "system", content:
-`ESEMPIO IT • Poetico
-La città ti aspetta senza fretta, come un tavolo sparecchiato che conserva il calore. I lampioni si accendono uno alla volta, come se provassero a ricordarti il percorso. Le mani imparano di nuovo le chiavi, il quaderno di cucina recupera appunti che non sapevi di avere. Le montagne tengono il posto al silenzio, tu ci entri piano e il respiro prende misura. Il resto scivola in fondo alla stanza: rimane ciò che serve, con un nome semplice.` },
-    { role: "system", content:
-`ESEMPIO IT • Analitico
-Restare qui avrebbe ottimizzato supporto familiare e tempo logistico, ma ridotto occasioni forti di crescita. Tu conosci già strade e abitudini: la curva di adattamento sarebbe stata corta, il costo mentale più basso. I bambini avrebbero guadagnato prossimità coi nonni, tu margini di calma. In cambio, meno stimoli e reti nuove. Avresti compensato con scelte precise: orari, routine, due luoghi stabili. Alla sera la città ti avrebbe restituito chiarezza: non migliore in assoluto, migliore per quello che volevi tenere.` },
+`EXAMPLE EN • Move city
+You’ll feel like a guest, then your hands learn the new keys. You’ll walk not to think better but to tire the noise. By the third grocery you’ll know which aisle is yours. Evenings soften and ask less proof. You’ll miss some things, not all at once. The rest finds its place. And you notice that beneath the noise something of yours was already there.` },
   ];
 
   return { sys: SYS_WHATIF, fewshots: FEWSHOTS };
-}
-
-/* ---------- IMPRECATION ENGINE (WTF) ---------- */
-const IMPRECATION_BANK = {
-  it: {
-    parcheggio: [
-      "ti scappa una bestemmia teatrale che mette in riga i piccioni",
-      "sbotti con una bestemmia d’arte che fa vibrare i vetri del bar",
-      "lasci andare una maledizione poetica che si incastra tra i sampietrini",
-      "spari una bestemmia con dignità e il lampione fa finta di non sentire",
-      "ti vien giù una bestemmia corale e il marciapiede si scansa di mezzo passo"
-    ],
-    cucina: [
-      "ti scappa una bestemmia d’arte che rimbalza tra i pensili",
-      "parte una maledizione domestica e la moka arrossisce",
-      "ti esce una bestemmia teatrale che sveglia la calamita del frigo",
-      "tiri fuori una bestemmia elegante e il cucchiaino si mette in posa",
-      "butti lì una bestemmia con la schiuma del caffè ancora viva"
-    ],
-    burocrazia: [
-      "sputi una bestemmia amministrativa e il timbro fa straordinari",
-      "ti scappa un’imprecazione con ricevuta e il modulo smette di ridere",
-      "parte una bestemmia protocollata e il numerino finge di avanzare",
-      "esce una bestemmia sindacale e la penna firma da sola",
-      "molli una bestemmia in triplice copia e il faldone ti saluta"
-    ],
-    trasporti: [
-      "ti scappa un urlo sacro e l’autobus fa finta di arrivare prima",
-      "molli una bestemmia a tutto petto e la palina arrossisce",
-      "esplode una maledizione feriale e i piccioni applaudono",
-      "ti esce una bestemmia da capolinea e il parabrezza scricchiola",
-      "sospiri un’imprecazione e il semaforo diventa timido"
-    ],
-    cantiere: [
-      "srotoli una bestemmia geologica e la rete arancione applaude",
-      "lanci una bestemmia di cantiere e il casco ti fa l’inchino",
-      "ti scappa un’imprecazione in muratura e la betoniera si impunta",
-      "molli una bestemmia a norma UNI e il cartello 'fine lavori' prende ferie",
-      "tiri fuori una maledizione con i guanti e la cazzuola fa ciao"
-    ],
-    strada: [
-      "ti scappa una bestemmia teatrale e il vento fa finta di non sentire",
-      "lanci una maledizione poetica e il marciapiede si sposta",
-      "ti esce una bestemmia con educazione e la città alza le spalle",
-      "borbotti una bestemmia antica e l’eco te la rimanda firmata",
-      "parte una bestemmia di quartiere e il cestino fischia"
-    ],
-  },
-  en: {
-    parking: [
-      "you drop a theatrical curse that makes the pigeons line up",
-      "you fire a crafted curse and the café windows hum",
-      "a poetic malediction gets stuck between cobblestones and laughs",
-      "a full-chested oath lands and the streetlight pretends not to hear",
-      "you unload a chorus-level curse and the curb shifts aside"
-    ],
-    kitchen: [
-      "a craftsman’s curse ricochets off the cabinets",
-      "a domestic malediction pops and the moka blushes",
-      "a stage-blasphemy wakes the fridge magnet",
-      "a literary curse drops and the spoon takes a bow",
-      "you let out a bark of a curse and the coffee stands at attention"
-    ],
-    paperwork: [
-      "you spit a bureaucratic curse and the stamp does overtime",
-      "a receipt-level curse and the form stops smirking",
-      "a protocol malediction erupts and the ticket number pretends to move",
-      "a union-grade curse signs the page for you",
-      "you launch a three-copy curse and the folder salutes"
-    ],
-    transit: [
-      "you let out a sacred bark and the bus pretends to come early",
-      "an artisan curse pops and the stop pole glows with shame",
-      "a weekday malediction flutters the pigeons like applause",
-      "a chesty curse makes the windshield creak",
-      "you sigh a curse and the light goes pink with guilt"
-    ],
-    site: [
-      "you unroll a geologic curse that shakes dust from three contracts",
-      "a masonry oath drops and the hard hat tips back",
-      "a cast-concrete curse rumbles and the mixer stalls",
-      "a standards-compliant blasphemy lands and the sign reschedules",
-      "a glove-ready curse and the trowel waves"
-    ],
-    street: [
-      "a theatrical curse slips out and the wind pretends not to hear",
-      "you toss a poetic malediction and the curb shifts a half step",
-      "a dignified oath leaves your mouth and the lamp plays secular priest",
-      "a postcard blasphemy echoes back with your name on it",
-      "an ancient grumble-curse and the city answers with a shrug"
-    ],
-  }
-};
-function pickFrom(arr, seed=0){ if(!arr?.length) return ""; const idx=Math.abs(seed)%arr.length; return arr[idx]; }
-function detectTrigger(domanda, outText, lang){
-  const t=(domanda+" "+outText).toLowerCase();
-  if (lang.startsWith("en")) {
-    if (/(parking|parallel|car park|spot)/.test(t)) return "parking";
-    if (/(coffee|moka|kitchen|spoon|cup)/.test(t)) return "kitchen";
-    if (/(paperwork|bureaucracy|office|stamp|counter)/.test(t)) return "paperwork";
-    if (/(bus|tram|stop|traffic light|red light)/.test(t)) return "transit";
-    if (/(site|works|construction|fence)/.test(t)) return "site";
-    return "street";
-  } else {
-    if (/(parchegg|striscia|posteggi|retromarcia)/.test(t)) return "parcheggio";
-    if (/(moka|cucchiaino|cucina|caff[èe]|pentola|fornello)/.test(t)) return "cucina";
-    if (/(burocrazi|sportello|modulo|timbro|ufficio|anagrafe)/.test(t)) return "burocrazia";
-    if (/(autobus|palina|semaforo|corse|ritardo|tram)/.test(t)) return "trasporti";
-    if (/(cantiere|betoniera|reti arancioni|fine lavori)/.test(t)) return "cantiere";
-    return "strada";
-  }
-}
-function injectImprecationInline(text, imp){
-  const rx = /([.!?…—,])\s/;
-  const m = rx.exec(text);
-  if(!m) return `${text} ${imp}.`;
-  const idx = m.index + m[0].length;
-  const before = text.slice(0, idx);
-  const after  = text.slice(idx);
-  return `${before}${imp.charAt(0).toUpperCase()}${imp.slice(1)}. ${after}`;
-}
-function ensureSpicyButSafeWTF(t, lang, seed=0, domanda="") {
-  // Fallback SOLO se il modello non ha già prodotto la bestemmia narrata
-  let out = String(t || "").trim();
-  if (!out) return out;
-  const already = /(bestemmi|maledizion|sacro|curse|oath|maledict)/i.test(out);
-  if (!already) {
-    const trigger = detectTrigger(domanda, out, (lang||"it").toLowerCase());
-    const localeKey = (String(lang).toLowerCase().startsWith("en")) ? "en" : "it";
-    const bank = IMPRECATION_BANK[localeKey][trigger] || IMPRECATION_BANK[localeKey].street;
-    const imp = pickFrom(bank, seed % 999);
-    out = injectImprecationInline(out, imp);
-  }
-  if (!/[.!?…]$/.test(out)) out += ".";
-  return out;
-}
-
-/* ---------- Lessico (What If) ---------- */
-function varyLexiconWhatIf(text, lang="it"){
-  let t = String(text||"");
-  const swaps_it = [
-    [/chiavi\b/gi, ()=>["chiavi","il mazzo","metallo freddo","il mazzo in tasca","la chiave grande"][Math.floor(Math.random()*5)]],
-    [/lampioni\b/gi, ()=>["lampioni","pali della luce","luci di strada","lampade in fila"][Math.floor(Math.random()*4)]],
-    [/taccuini?\b/gi, ()=>["taccuino","quaderno","notes","foglio piegato"][Math.floor(Math.random()*4)]],
-    [/aria\b/gi, ()=>["aria","respiro","fiato","odore di casa"][Math.floor(Math.random()*4)]],
-  ];
-  const swaps_en = [
-    [/keys\b/gi, ()=>["keys","keyring","cold metal","that ring in your palm"][Math.floor(Math.random()*4)]],
-    [/streetlights\b/gi, ()=>["streetlights","lamps","poles","evening lights"][Math.floor(Math.random()*4)]],
-    [/notebooks?\b/gi, ()=>["notebook","journal","pad","folded page"][Math.floor(Math.random()*4)]],
-    [/air\b/gi, ()=>["air","breath","quiet","home-smell"][Math.floor(Math.random()*4)]],
-  ];
-  for(const [rx,fn] of (lang.startsWith("en")?swaps_en:swaps_it)) t = t.replace(rx, fn());
-  return t;
 }
 
 /* ---------- API Handler ---------- */
@@ -349,18 +381,24 @@ export default async function handler(req, res) {
   try {
     if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: "missing_api_key" });
 
+    // IP richiedente
     const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
       .toString().split(",")[0].trim();
 
+    // Admin bypass (rate+crediti)
     const admin = await isAdmin(req, ip);
     const bypass = admin === true;
+
+    // PRO header (UI locale): x-pro: "1"
     const isPro = String(req.headers["x-pro"] || "").trim() === "1";
 
+    // Rate limit 10/min (se non bypass)
     if (!bypass) {
       const { success } = await rl.limit(`ask:${ip}`);
       if (!success) return res.status(429).json({ error: "rate_limited_minute" });
     }
 
+    // Crediti giornalieri: Admin ∞, PRO 10, Free 3
     let used = 0, dailyCap = isPro ? 10 : 3;
     if (!bypass) {
       const today = new Date().toISOString().slice(0, 10);
@@ -372,6 +410,7 @@ export default async function handler(req, res) {
       }
     }
 
+    // Body
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const {
       domanda = "",
@@ -380,81 +419,52 @@ export default async function handler(req, res) {
       extra = "",
       periodo = "future",
       sex = "",
-      micro = {},
-      tono = ""  // <-- NEW: "reale" | "poetico" | "analitico" (solo per whatif)
+      micro = {}
     } = body;
 
     if (!domanda || typeof domanda !== "string")
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
     const resolvedSex = String(sex || micro?.sex || "").toLowerCase();
-    const resolvedTono = String(tono || micro?.tono || "").toLowerCase();
 
-    // Personas + Temporal + Tone
-    const { sys, fewshots } = personaSystem(stile, lang, resolvedSex, resolvedTono);
+    // Personas + Temporal mode
+    const { sys, fewshots } = personaSystem(stile, lang, resolvedSex);
     const temporal = temporalSystem(periodo, lang, stile);
 
-    // Jung (influenza invisibile)
-    const jung = String(micro?.jung || "").toUpperCase();
-    const jungHint = (!jung) ? "" : (isEn(lang) ? ({
-      S:"Favor concrete sensory details, routines, here-and-now precision.",
-      N:"Favor light imagery and possibilities.",
-      T:"Favor crisp causal links and criteria.",
-      F:"Favor warm atmosphere, values, people cues."
-    }[jung]) : {
-      S:"Preferisci dettagli concreti, routine e precisione dell’adesso.",
-      N:"Preferisci immagini leggere e possibilità.",
-      T:"Preferisci nessi chiari e criteri essenziali.",
-      F:"Preferisci atmosfera calda, valori e segnali delle persone."
-    }[jung]);
+    // Deterministic seed
+    const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${lang}|${resolvedSex}`), 36) % 1000000;
 
-    const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${lang}|${resolvedSex}|${jung||""}|${resolvedTono||""}`), 36) % 1000000;
+    const extraTemporalHint =
+      stile === "wtf" && String(periodo).toLowerCase() === "past"
+        ? (isEn(lang)
+          ? "Write entirely in past or conditional, as if it already happened, keeping the upbeat roasting tone."
+          : "Scrivi tutto al passato o al condizionale, come se fosse già successo, mantenendo il tono allegro e pungente.")
+        : "";
 
     const userPrompt = isEn(lang)
-      ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Persona must adapt to user sex="${resolvedSex||"unknown"}" and tone="${resolvedTono||"reale"}". INTERNAL SEED: ${seedNum}.`
-      : `Domanda (NON ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Adatta la voce al sesso utente="${resolvedSex||"unknown"}" e tono="${resolvedTono||"reale"}". SEED INTERNO: ${seedNum}.`;
-
-    // Memoria lunga (hint non visibile)
-    let memObj = {};
-    try {
-      const raw = await redis.get(`mem:${ip}:v2`);
-      memObj = raw ? JSON.parse(raw) : {};
-    } catch {}
-
-    const memoryHint = (() => {
-      if (!memObj || typeof memObj !== "object") return "";
-      const items = [];
-      if (memObj.lastStyle) items.push(isEn(lang) ? `prev style: ${memObj.lastStyle}` : `stile precedente: ${memObj.lastStyle}`);
-      if (memObj.lastLang) items.push(isEn(lang) ? `prev lang: ${memObj.lastLang}` : `lingua precedente: ${memObj.lastLang}`);
-      if (memObj.lastPeriodo) items.push(isEn(lang) ? `prev temporal: ${memObj.lastPeriodo}` : `modalità precedente: ${memObj.lastPeriodo}`);
-      if (memObj.lastTono) items.push(isEn(lang) ? `prev tone: ${memObj.lastTono}` : `tono precedente: ${memObj.lastTono}`);
-      if (memObj.lastSex) items.push(isEn(lang) ? `sex hint: ${memObj.lastSex}` : `sesso: ${memObj.lastSex}`);
-      if (memObj.lastJung) items.push(isEn(lang) ? `Jung: ${memObj.lastJung}` : `Jung: ${memObj.lastJung}`);
-      return items.length ? (isEn(lang) ? `Memory: ${items.join(" · ")}.` : `Memoria: ${items.join(" · ")}.`) : "";
-    })();
+      ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Persona must adapt to user sex="${resolvedSex||"unknown"}". Keep the exact persona voice. INTERNAL SEED: ${seedNum}.`
+      : `Domanda (NON ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Adatta la voce al sesso utente="${resolvedSex||"unknown"}". Mantieni esattamente la voce della persona. SEED INTERNO: ${seedNum}.`;
 
     const messages = [
-      ...(jungHint ? [{ role:"system", content: jungHint }] : []),
-      ...(memoryHint ? [{ role:"system", content: memoryHint }] : []),
       { role: "system", content: sys },
       { role: "system", content: temporal },
+      ...(extraTemporalHint ? [{ role: "system", content: extraTemporalHint }] : []),
       ...(fewshots || []),
-      { role: "system", content: isEn(lang)
-          ? `WTF rules: one narrated blasphemy tied to an event; quips 3–5; reacting objects only if helpful; opening ONLY a nickname.`
-          : `Regole WTF: una bestemmia narrata legata a un evento; 3–5 stoccate; oggetti reattivi solo se servono; apertura SOLO un nomignolo.` },
       { role: "user", content: userPrompt },
     ];
 
+    // OpenAI
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.98 : (resolvedTono==="analitico" ? 0.70 : 0.82),
+      temperature: stile === "wtf" ? 0.98 : 0.82,
       top_p: 0.92,
-      max_tokens: 380,
-      frequency_penalty: stile === "wtf" ? 0.4 : 0.12,
-      presence_penalty: stile === "wtf" ? 0.25 : 0.05,
+      max_tokens: 360,
+      frequency_penalty: stile === "wtf" ? 0.4 : 0.1,
+      presence_penalty: stile === "wtf" ? 0.2 : 0.0,
       messages,
     });
 
+    // Post-process
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
     answer = stripQuestionEcho(domanda, answer);
@@ -469,6 +479,10 @@ export default async function handler(req, res) {
       if (!/[.!?…]$/.test(answer)) answer += ".";
     }
 
+    // Copy-edit pass (pulizia grammaticale/sintattica)
+    answer = await polishPass(answer, { lang, stile });
+
+    // --- LOG persistente (privacy-safe: niente testo domanda) ---
     try {
       const entry = {
         ts: Date.now(),
@@ -476,11 +490,11 @@ export default async function handler(req, res) {
         style: stile,
         lang,
         periodo,
-        tono: resolvedTono || null,
         sex: resolvedSex || null,
         domanda_len: String(domanda || "").length,
         domanda_hash: tinyHash(domanda || ""),
         answer_chars: (answer || "").length,
+        admin: !!admin,
         user_type: bypass ? "admin" : (isPro ? "pro" : "free"),
       };
       await redis.lpush("logs:ask", JSON.stringify(entry));
@@ -489,31 +503,22 @@ export default async function handler(req, res) {
       await redis.hincrby("stats:style", stile, 1);
       await redis.hincrby("stats:lang", lang, 1);
       await redis.hincrby("stats:periodo", String(periodo || "future"), 1);
-      if (resolvedSex)  await redis.hincrby("stats:sex", resolvedSex, 1);
-      if (resolvedTono) await redis.hincrby("stats:tono", resolvedTono, 1);
+      if (resolvedSex) await redis.hincrby("stats:sex", resolvedSex, 1);
+      await redis.hincrby("stats:user_type", entry.user_type, 1);
       const dayKey = `stats:day:${new Date().toISOString().slice(0, 10)}`;
       await redis.hincrby(dayKey, `${stile}:${periodo}`, 1);
       await redis.expire(dayKey, 90 * 24 * 60 * 60);
-    } catch {}
-
-    // Memoria v2 (30 giorni)
-    try {
-      const snap = {
-        lastStyle: stile,
-        lastLang: lang,
-        lastPeriodo: periodo,
-        lastTono: resolvedTono || null,
-        lastSex: resolvedSex || null,
-        lastJung: jung || null,
-        lastSeed: seedNum
-      };
-      await redis.set(`mem:${ip}:v2`, JSON.stringify(snap), { ex: 60 * 60 * 24 * 30 });
-    } catch {}
+    } catch (e) {
+      console.warn("log failure (non-bloccante)", e);
+    }
 
     return res.status(200).json({
-      answer, style: stile, lang, periodo, tono: resolvedTono || null,
+      answer,
+      style: stile,
+      lang,
+      periodo,
       model: MODEL,
-      admin: bypass,
+      admin,
       pro: isPro,
       credits: bypass ? null : { used, dailyCap },
     });
