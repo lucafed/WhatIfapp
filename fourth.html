@@ -11,7 +11,8 @@
       --chip:#121A26; --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
     }
     html[data-theme="wtf"]{ --bg:#0B0B0C; --bg2:#101414; --fg:#EEF5F0; --muted:#A6B6AD; --card:rgba(16,22,20,.55); --line:rgba(255,255,255,.10); --chip:#0F1714; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; }
-    *{box-sizing:border-box} html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
     main{min-height:100%;display:flex;flex-direction:column;align-items:center;padding:16px}
     .wrap{width:min(92vw,880px)}
     h1{margin:8px 0 12px;font-size:clamp(24px,5vw,36px);color:var(--accent)}
@@ -28,11 +29,6 @@
   </style>
 </head>
 <body>
-  <script>
-    // opzionale: override endpoint, es. <script>window.ASK_API="https://api.tuo.com/ask"</script>
-    const API = window.ASK_API || "/api/ask";
-  </script>
-
   <main>
     <div class="wrap">
       <h1 id="title">La tua domanda</h1>
@@ -66,8 +62,8 @@
   </main>
 
   <script>
+    // ===== Prefs / tema
     const LS = localStorage;
-    const $ = s => document.querySelector(s);
     const st = JSON.parse(LS.getItem("whatif_prefs")||"{}");
     if(!st.stile) st.stile = "whatif";
     if(!st.periodo) st.periodo = "future";
@@ -75,11 +71,12 @@
     LS.setItem("whatif_prefs", JSON.stringify(st));
     document.documentElement.setAttribute("data-theme", st.stile==="wtf"?"wtf":"whatif");
 
+    // ===== i18n
     const DICT = {
       it:{ title:"La tua domanda", q:"La tua domanda", ph:"E se…", clear:"Svuota", gen:"✨ Genera risposta", hint:"Scrivi una sola frase. La voce e il periodo li scegli sopra.", tabs:{whatif:"What if",wtf:"What the F",past:"Passato",future:"Futuro",it:"IT",en:"EN"} },
       en:{ title:"Your question", q:"Your question", ph:"What if…", clear:"Clear", gen:"✨ Generate answer", hint:"Write one sentence. Voice & time above.", tabs:{whatif:"What if",wtf:"What the F",past:"Past",future:"Future",it:"IT",en:"EN"} },
     };
-
+    function $(s){return document.querySelector(s);}
     function applyLang(){
       const d = DICT[st.lang]||DICT.it;
       document.documentElement.lang = st.lang;
@@ -104,37 +101,47 @@
       document.documentElement.setAttribute("data-theme", st.stile==="wtf"?"wtf":"whatif");
     }
 
-    // init
     applyLang(); syncChips();
 
-    $("#tabs").addEventListener("click", (e)=>{
+    $("#tabs").addEventListener("click",(e)=>{
       const b = e.target.closest(".chip"); if(!b) return;
-      const {key, val} = b.dataset;
+      const {key,val}=b.dataset;
       document.querySelectorAll(`.chip[data-key="${key}"]`).forEach(x=>x.classList.remove("selected"));
       b.classList.add("selected");
-      st[key] = val;
+      st[key]=val;
       if(key==="lang") LS.setItem("lang", val);
       LS.setItem("whatif_prefs", JSON.stringify(st));
       applyLang(); syncChips();
     });
 
     $("#clear").addEventListener("click", ()=>{
-      $("#q").value=""; $("#out").style.display="none"; $("#out").textContent="";
+      $("#q").value=""; const out=$("#out"); out.style.display="none"; out.textContent="";
     });
+
+    // ===== Endpoint robusto (FIX “API is not defined”)
+    function getEndpoint(){
+      try{
+        if (typeof window!=="undefined" && typeof window.ASK_API==="string" && window.ASK_API.trim()){
+          return window.ASK_API.trim();
+        }
+      }catch{}
+      return "/api/ask";
+    }
 
     async function ask(){
       const domanda = ($("#q").value||"").trim();
       if(!domanda) return;
       const out = $("#out"); out.style.display="block"; out.textContent = "…";
+      const endpoint = getEndpoint();
       try{
-        const r = await fetch(API, {
+        const r = await fetch(endpoint, {
           method:"POST",
           headers:{ "Content-Type":"application/json", "x-pro": (LS.getItem("pro")==="1"?"1":"0") },
           body: JSON.stringify({ domanda, stile: st.stile, lang: st.lang, periodo: st.periodo })
         });
         if(!r.ok) throw new Error("HTTP "+r.status);
         const data = await r.json();
-        out.textContent = data?.answer || "Errore: nessuna risposta.";
+        out.textContent = data?.answer || ((st.lang==="en")?"Error: empty response.":"Errore: risposta vuota.");
       }catch(err){
         out.textContent = (st.lang==="en")
           ? `Error: API request failed (${String(err.message||err)}).`
