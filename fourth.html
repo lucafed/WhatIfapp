@@ -3,87 +3,64 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f — La tua domanda</title>
-  <meta name="theme-color" content="#0B0B0C" />
+  <title>What?f — La domanda</title>
   <style>
     :root{
-      --bg:#0C0F14; --fg:#EAF2F6; --muted:#A0B2BA;
-      --card:rgba(20,26,34,.55); --line:rgba(255,255,255,.12);
-      --chip:#121A26; --acc:#1C57A0; --acc2:#FFEC01; --ink:#0A0E12;
+      --bg:#0B1018; --bg2:#0E1724; --fg:#F4F7FB; --muted:#A7B3C2;
+      --card:rgba(14,20,28,.55); --line:rgba(255,255,255,.12);
+      --chip:#121A26; --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
     }
-    html[data-theme="wtf"]{ --acc:#3A6B56; --acc2:#5A8C75; }
-    *{box-sizing:border-box}
-    body{
-      margin:0; background:radial-gradient(900px 700px at 25% 20%, #0E1724 0%, var(--bg) 60%);
-      color:var(--fg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
-    }
-    main{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:16px}
-    .wrap{width:min(92vw,860px)}
-    h1{margin:2px 0 8px;font-size:clamp(24px,5.5vw,36px)}
-
-    .top{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
-    .tabs{display:flex;gap:8px;flex-wrap:wrap}
-    .chip{
-      appearance:none;border:1px solid var(--line);background:var(--chip);color:#e8f2ec;
-      padding:10px 14px;border-radius:14px;font-weight:800;cursor:pointer;
-      transition:transform .08s ease, background .16s ease, box-shadow .16s ease;
-    }
-    .chip:active{transform:translateY(1px)}
-    .chip.selected{
-      background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);
-      box-shadow:0 0 0 1px rgba(0,0,0,.15) inset;
-    }
-
-    .qbox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px}
-    label{font-weight:900;display:block;margin:0 0 8px}
-    textarea{
-      width:100%; min-height:120px; background:#0E1620; color:var(--fg);
-      border:1px solid var(--line); border-radius:12px; padding:12px; font-size:16px;
-    }
-    .row{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
-    .btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer}
-    .btn.ghost{background:#17222c;color:#dceaf0;border:1px solid var(--line)}
-    .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink)}
-    .hint{color:var(--muted);font-size:13px;margin-top:6px}
-    #out{white-space:pre-wrap;line-height:1.45}
+    html[data-theme="wtf"]{ --bg:#0B0B0C; --bg2:#101414; --fg:#EEF5F0; --muted:#A6B6AD; --card:rgba(16,22,20,.55); --line:rgba(255,255,255,.10); --chip:#0F1714; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; }
+    *{box-sizing:border-box} html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+    main{min-height:100%;display:flex;flex-direction:column;align-items:center;padding:16px}
+    .wrap{width:min(92vw,880px)}
+    h1{margin:8px 0 12px;font-size:clamp(24px,5vw,36px);color:var(--accent)}
+    .panel{background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:16px;padding:14px}
+    .group{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}
+    .chip{appearance:none;border:1px solid var(--line);background:var(--chip);color:#eaf2ff;padding:10px 14px;border-radius:14px;font-weight:800;cursor:pointer}
+    .chip.selected{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);box-shadow:0 0 0 1px rgba(255,255,255,.14) inset}
+    textarea{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:14px;padding:14px;font-size:18px;min-height:110px}
+    .row{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
+    .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:12px;font-weight:900;padding:12px 16px;cursor:pointer}
+    .btn.primary{border:none;background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink)}
+    .muted{color:var(--muted);font-size:13px}
+    .out{display:none;margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--chip);white-space:pre-wrap}
   </style>
 </head>
 <body>
   <script>
-    (function(){
-      try{
-        const p=JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-        document.documentElement.setAttribute('data-theme', p.stile==='wtf'?'wtf':'whatif');
-      }catch{document.documentElement.setAttribute('data-theme','whatif');}
-    })();
+    // opzionale: override endpoint, es. <script>window.ASK_API="https://api.tuo.com/ask"</script>
+    const API = window.ASK_API || "/api/ask";
   </script>
 
   <main>
     <div class="wrap">
-      <div class="top">
-        <div class="tabs" id="tabs">
+      <h1 id="title">La tua domanda</h1>
+
+      <div class="panel" id="tabs">
+        <div class="group">
           <button class="chip" data-key="stile" data-val="whatif">What if</button>
           <button class="chip" data-key="stile" data-val="wtf">What the F</button>
+        </div>
+        <div class="group">
           <button class="chip" data-key="periodo" data-val="past">Passato</button>
           <button class="chip" data-key="periodo" data-val="future">Futuro</button>
+        </div>
+        <div class="group">
           <button class="chip" data-key="lang" data-val="it">IT</button>
           <button class="chip" data-key="lang" data-val="en">EN</button>
         </div>
       </div>
 
-      <div class="qbox">
-        <label for="q">La tua domanda</label>
+      <div class="panel" style="margin-top:10px">
+        <label for="q" id="qlab">La tua domanda</label>
         <textarea id="q" placeholder="E se…"></textarea>
         <div class="row">
-          <button id="clear" class="btn ghost">Svuota</button>
-          <button id="go" class="btn primary">✨ Genera risposta</button>
+          <button class="btn" id="clear">Svuota</button>
+          <span class="muted" id="hint">Scrivi una sola frase. Stile e periodo li scegli sopra.</span>
+          <button class="btn primary" id="go">✨ Genera risposta</button>
         </div>
-        <div class="hint">Scrivi una sola frase. La voce e il periodo li scegli sopra.</div>
-      </div>
-
-      <div id="outWrap" class="qbox" style="display:none">
-        <div id="out"></div>
+        <div class="out" id="out"></div>
       </div>
     </div>
   </main>
@@ -91,51 +68,80 @@
   <script>
     const LS = localStorage;
     const $ = s => document.querySelector(s);
+    const st = JSON.parse(LS.getItem("whatif_prefs")||"{}");
+    if(!st.stile) st.stile = "whatif";
+    if(!st.periodo) st.periodo = "future";
+    if(!st.lang) st.lang = (LS.getItem("lang")||"it");
+    LS.setItem("whatif_prefs", JSON.stringify(st));
+    document.documentElement.setAttribute("data-theme", st.stile==="wtf"?"wtf":"whatif");
 
-    // stato con persistenza
-    const st = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-    if(!st.stile)   st.stile   = 'whatif';
-    if(!st.lang)    st.lang    = 'it';
-    if(!st.periodo) st.periodo = 'future';
-    LS.setItem('whatif_prefs', JSON.stringify(st));
+    const DICT = {
+      it:{ title:"La tua domanda", q:"La tua domanda", ph:"E se…", clear:"Svuota", gen:"✨ Genera risposta", hint:"Scrivi una sola frase. La voce e il periodo li scegli sopra.", tabs:{whatif:"What if",wtf:"What the F",past:"Passato",future:"Futuro",it:"IT",en:"EN"} },
+      en:{ title:"Your question", q:"Your question", ph:"What if…", clear:"Clear", gen:"✨ Generate answer", hint:"Write one sentence. Voice & time above.", tabs:{whatif:"What if",wtf:"What the F",past:"Past",future:"Future",it:"IT",en:"EN"} },
+    };
+
+    function applyLang(){
+      const d = DICT[st.lang]||DICT.it;
+      document.documentElement.lang = st.lang;
+      $("#title").textContent = d.title;
+      $("#qlab").textContent = d.q;
+      $("#q").placeholder = d.ph;
+      $("#clear").textContent = d.clear;
+      $("#go").textContent = d.gen;
+      $("#hint").textContent = d.hint;
+      document.querySelector(`.chip[data-key="stile"][data-val="whatif"]`).textContent = d.tabs.whatif;
+      document.querySelector(`.chip[data-key="stile"][data-val="wtf"]`).textContent   = d.tabs.wtf;
+      document.querySelector(`.chip[data-key="periodo"][data-val="past"]`).textContent   = d.tabs.past;
+      document.querySelector(`.chip[data-key="periodo"][data-val="future"]`).textContent = d.tabs.future;
+      document.querySelector(`.chip[data-key="lang"][data-val="it"]`).textContent = d.tabs.it;
+      document.querySelector(`.chip[data-key="lang"][data-val="en"]`).textContent = d.tabs.en;
+    }
 
     function syncChips(){
-      document.querySelectorAll('.chip').forEach(b=>{
-        const k=b.dataset.key, v=b.dataset.val;
-        b.classList.toggle('selected', st[k]===v);
+      document.querySelectorAll(".chip").forEach(b=>{
+        b.classList.toggle("selected", st[b.dataset.key]===b.dataset.val);
       });
-      document.documentElement.setAttribute('data-theme', st.stile==='wtf'?'wtf':'whatif');
+      document.documentElement.setAttribute("data-theme", st.stile==="wtf"?"wtf":"whatif");
     }
-    syncChips();
 
-    // selezione esclusiva per ogni key
-    $('#tabs').addEventListener('click', (e)=>{
-      const b=e.target.closest('.chip'); if(!b) return;
-      const k=b.dataset.key, v=b.dataset.val;
-      document.querySelectorAll(`.chip[data-key="${k}"]`).forEach(x=>x.classList.remove('selected'));
-      b.classList.add('selected');
-      st[k]=v; LS.setItem('whatif_prefs', JSON.stringify(st));
-      if(k==='stile'){ document.documentElement.setAttribute('data-theme', v==='wtf'?'wtf':'whatif'); }
+    // init
+    applyLang(); syncChips();
+
+    $("#tabs").addEventListener("click", (e)=>{
+      const b = e.target.closest(".chip"); if(!b) return;
+      const {key, val} = b.dataset;
+      document.querySelectorAll(`.chip[data-key="${key}"]`).forEach(x=>x.classList.remove("selected"));
+      b.classList.add("selected");
+      st[key] = val;
+      if(key==="lang") LS.setItem("lang", val);
+      LS.setItem("whatif_prefs", JSON.stringify(st));
+      applyLang(); syncChips();
     });
 
-    $('#clear').addEventListener('click', ()=>{
-      $('#q').value=''; $('#outWrap').style.display='none'; $('#out').textContent='';
+    $("#clear").addEventListener("click", ()=>{
+      $("#q").value=""; $("#out").style.display="none"; $("#out").textContent="";
     });
 
     async function ask(){
-      const domanda = ($('#q').value||'').trim();
+      const domanda = ($("#q").value||"").trim();
       if(!domanda) return;
-      $('#outWrap').style.display='block';
-      $('#out').textContent='…';
-      const payload = { domanda, stile: st.stile, lang: st.lang, periodo: st.periodo, extra: '' };
-      const r = await fetch('/api/ask', {
-        method:'POST',
-        headers:{'Content-Type':'application/json','x-pro': (LS.getItem('pro')==='1'?'1':'0')},
-        body: JSON.stringify(payload)
-      }).then(r=>r.json()).catch(()=>({error:'net'}));
-      $('#out').textContent = r?.answer || 'Errore: riprova.';
+      const out = $("#out"); out.style.display="block"; out.textContent = "…";
+      try{
+        const r = await fetch(API, {
+          method:"POST",
+          headers:{ "Content-Type":"application/json", "x-pro": (LS.getItem("pro")==="1"?"1":"0") },
+          body: JSON.stringify({ domanda, stile: st.stile, lang: st.lang, periodo: st.periodo })
+        });
+        if(!r.ok) throw new Error("HTTP "+r.status);
+        const data = await r.json();
+        out.textContent = data?.answer || "Errore: nessuna risposta.";
+      }catch(err){
+        out.textContent = (st.lang==="en")
+          ? `Error: API request failed (${String(err.message||err)}).`
+          : `Errore: richiesta API fallita (${String(err.message||err)}).`;
+      }
     }
-    $('#go').addEventListener('click', ask);
+    $("#go").addEventListener("click", ask);
   </script>
 </body>
 </html>
