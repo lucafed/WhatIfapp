@@ -6,38 +6,97 @@
 <title>What?f — Risultato</title>
 <meta name="theme-color" content="#0B0B0C"/>
 <style>
-:root{ --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA; --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12; --glow: rgba(255,236,1,.22); }
+:root{
+  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
+  --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;
+  --glow: rgba(255, 236, 1, .22);
+}
 html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
 *{box-sizing:border-box}
-html,body{ margin:0; background:radial-gradient(900px 700px at 20% 18%, var(--bg2) 0%, var(--bg) 60%), radial-gradient(600px 480px at 80% 12%, rgba(255,236,1,.06), transparent 60%), radial-gradient(700px 560px at 50% 90%, rgba(28,87,160,.10), transparent 65%); color:var(--fg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; -webkit-font-smoothing:antialiased; }
-main{max-width:860px;margin:auto;padding:22px}
-h1{ font-size:clamp(22px,5vw,30px); color:var(--acc2); text-align:center; margin:12px 0 6px; text-shadow:0 0 18px var(--glow); }
-.sub{color:var(--muted);text-align:center;margin:0 0 8px}
-.card{ background:rgba(20,28,34,.92); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:18px; backdrop-filter:blur(10px); margin-top:16px; box-shadow:0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06); }
+html,body{
+  margin:0;
+  background:
+    radial-gradient(900px 700px at 20% 18%, var(--bg2) 0%, var(--bg) 60%),
+    radial-gradient(600px 480px at 80% 12%, rgba(255,236,1,.06), transparent 60%),
+    radial-gradient(700px 560px at 50% 90%, rgba(28,87,160,.10), transparent 65%);
+  color:var(--fg);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+main{max-width:860px;margin:auto;padding:16px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+h1{
+  font-size:clamp(20px,4.2vw,28px);
+  color:var(--acc2);
+  text-align:center;
+  margin:8px 0 4px;
+  text-shadow: 0 0 18px var(--glow);
+}
+.sub{color:var(--muted);text-align:center;margin:0 0 6px}
+.card{
+  background:rgba(20,28,34,.92);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:16px;
+  padding:16px;
+  backdrop-filter:blur(10px);
+  margin-top:12px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
+}
 .label{color:var(--acc);font-weight:800;margin-bottom:8px}
-.input{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px; }
-.story{ white-space:normal; line-height:1.68; font-size:18px; letter-spacing:.1px; text-wrap:pretty; }
+.input{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;
+  padding:10px;
+}
+.story{
+  white-space:normal;
+  line-height:1.68;
+  font-size:18px;
+  letter-spacing:.1px;
+  text-wrap:pretty;
+}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
-.btn.primary{ background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink); box-shadow:0 6px 18px rgba(0,0,0,.35), 0 0 28px var(--glow); }
-.btn.ghost{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:#fff }
+.btn.primary{
+  background:linear-gradient(180deg,var(--acc),var(--acc2));
+  color:var(--ink);
+  box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 28px var(--glow);
+}
+.btn.ghost{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  color:#fff
+}
 .small{font-size:12px;color:var(--muted)}
 .hr{height:1px;background:rgba(255,255,255,.10);margin:12px 0}
-.badge{ display:inline-flex;align-items:center;gap:8px; font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 10px; }
-.lead{ color:#E7F2EE;font-size:14px;line-height:1.45;opacity:.86;margin:2px 0 10px; }
-.embit{ padding:0 .08em; box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset; text-shadow:0 0 12px rgba(255,255,255,.08); border-radius:4px; }
+.badge{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 10px;
+}
+.lead{
+  color:#E7F2EE;font-size:14px;line-height:1.45;opacity:.86;margin:0 0 10px;
+}
+
+/* Em-dash decorator per gag visuali */
+.embit {
+  padding: 0 .08em;
+  box-shadow: 0 -4px 0 0 rgba(255,255,255,.05) inset;
+  text-shadow: 0 0 12px rgba(255,255,255,.08);
+  border-radius: 4px;
+}
 </style>
 </head>
 <body>
 <main>
-  <div class="row" style="justify-content:space-between">
+  <div class="topbar">
     <div class="row">
       <button class="btn ghost" id="backBtn">←</button>
       <button class="btn ghost" id="homeBtn">🏠</button>
     </div>
     <div class="row" style="gap:8px">
       <span class="badge" id="styleBadge">🎭 —</span>
-      <span class="badge" id="toneBadge"  >🎚️ —</span>
       <span class="badge" id="proBadge" title="" style="display:none">🧪 TEST · ⭐ PRO</span>
       <button class="btn ghost" id="langBtn">IT</button>
     </div>
@@ -48,7 +107,7 @@ h1{ font-size:clamp(22px,5vw,30px); color:var(--acc2); text-align:center; margin
 
   <div class="card">
     <div class="label" id="lblQ">La tua domanda</div>
-    <div class="input" id="qView" style="min-height:46px"></div>
+    <div class="input" id="qView" style="min-height:42px;text-align:center;font-size:18px"></div>
   </div>
 
   <div class="card">
@@ -69,7 +128,6 @@ const LS=localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
 const style = prefs.stile || 'whatif';
 const periodo = prefs.periodo || 'future';
-const tono = prefs.tono || 'reale';
 const lang  = (LS.getItem('lang') || 'it').toLowerCase();
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 
@@ -78,7 +136,7 @@ document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'w
   const hasToken = !!LS.getItem('admin_token');
   if (hasToken || prefs.pro === true){
     el.style.display = 'inline-flex';
-    el.textContent = '🧪 TEST · ⭐ PRO';
+    el.textContent = (lang === 'en') ? '🧪 TEST · ⭐ PRO' : '🧪 TEST · ⭐ PRO';
     el.title = (lang === 'en') ? 'Test mode active' : 'Modalità test attiva';
   }
 })();
@@ -89,19 +147,13 @@ const I18N={
       share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
       copied:"Copiato!", error:"[errore server]",
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-      tone:(t)=>`🎚️ ${t==='poetico'?'Poetico':t==='analitico'?'Analitico':'Reale'}`,
-      meta:(st,p,t)=> st==='wtf'
-        ? `Stile: What the F · 6–9 frasi · paragrafo unico · 3–5 stoccate · bestemmia narrata legata a evento · modalità: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if · tono ${t} · 8–11 frasi · paragrafo unico · nessuna lista/domanda/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.`},
+      meta:(st,p)=> (p==='past'?'Passato':'Futuro')},
   en:{tWTF:"⚡ What the F — Result", tWHF:"💡 What if — Result",
       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
       share:"📤 Share / Copy", again:"🔁 Ask another",
       copied:"Copied!", error:"[server error]",
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-      tone:(t)=>`🎚️ ${t==='poetico'?'Poetic':t==='analitico'?'Analytical':'Real'}`,
-      meta:(st,p,t)=> st==='wtf'
-        ? `Style: What the F · 6–9 sentences · single paragraph · 3–5 jabs · narrated curse tied to event · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if · tone ${t} · 8–11 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`}
+      meta:(st,p)=> (p==='past'?'Past':'Future')}
 }[lang];
 
 document.getElementById('langBtn').textContent=lang.toUpperCase();
@@ -110,44 +162,81 @@ document.getElementById('homeBtn').onclick=()=>location.href='index.html';
 document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
 document.getElementById('lblQ').textContent=I18N.q;
 document.getElementById('lblA').textContent=I18N.a;
+document.getElementById('shareBtn').textContent=I18N.share;
+document.getElementById('againBtn').textContent=I18N.again;
 document.getElementById('styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
-document.getElementById('toneBadge').textContent  = (style==='whatif') ? I18N.tone(tono) : '🎚️ —';
 
 function normalizeOneParagraph(s=""){
   return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
 }
 
+/* Lead breve, senza claim sullo stile */
 const LEADS = {
   it:{
     wtf:[
-      "Entri piano, il caos ti riconosce ma oggi ti lascia passare.",
-      "Respiri e lasci che sia il destino a inciampare per primo.",
-      "La scena è già in corso: tu ci metti il rumore buono."
+      "La scena è già in corso: tu ci metti il rumore buono.",
+      "Respiri e lasci che inciampi prima il destino.",
+      "Oggi entri come sei, il resto si adegua."
     ],
     whatif:[
-      "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.",
-      "La stanza è la stessa, lo sguardo no: è già un inizio.",
-      "Respiri come chi ha tempo, e il tempo ti crede."
+      "Metti giù le chiavi e lascia spazio al silenzio.",
+      "Stessa stanza, sguardo nuovo.",
+      "Respira: c’è tempo."
     ]
   },
   en:{
-    wtf:[ "You step in slowly; chaos recognizes you and lets you through." ],
-    whatif:[ "Set the keys down and let the quiet that doesn’t judge go first." ]
+    wtf:[
+      "The scene is rolling; you bring the good noise.",
+      "You breathe and let fate trip first."
+    ],
+    whatif:[
+      "Set the keys down and let the quiet lead.",
+      "Same room, different gaze."
+    ]
   }
 };
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+function hashStr(s=""){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i); h=h|0; } return Math.abs(h); }
+function stablePick(arr, seedStr){ if(!arr?.length) return ""; if(!seedStr?.trim()) return pick(arr); const h=hashStr(seedStr); return arr[h%arr.length]; }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
-
-let domanda=""; let answerText="";
-function setTitles(q){
-  document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
-  document.getElementById('subtitle').textContent = I18N.sub(q);
-  document.getElementById('metaInfo').textContent = I18N.meta(style, periodo, tono);
-  document.getElementById('lead').textContent = oneSentence(pick(LEADS[lang]?.[style]||LEADS['it']['whatif']));
-}
 
 const params=new URLSearchParams(location.search);
 const isReplay = params.get('view')==='replay';
+let domanda=""; let answerText="";
+
+function setTitles(q){
+  document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
+  document.getElementById('subtitle').textContent = I18N.sub(q);
+  document.getElementById('styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
+  const bank = LEADS[lang]?.[style] || LEADS['it']['whatif'];
+  const seed = `${(q||"").toLowerCase().trim()}|${style}|${lang}`;
+  const line = oneSentence(stablePick(bank, seed));
+  document.getElementById('lead').textContent = line;
+  document.getElementById('metaInfo').textContent = I18N.meta(style, periodo);
+}
+
+// evidenzia parentesi tra em-dash “— … — …”
+function decorateEmBits(el){
+  const raw = el.textContent;
+  if(!raw.includes("—")) return;
+  const parts = raw.split("—");
+  let html = "";
+  for(let i=0;i<parts.length;i++){
+    const seg = parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    if(i%2===1) html += `<span class="embit">— ${seg} </span>`;
+    else html += (i===0 ? seg : `—${seg}`);
+  }
+  el.innerHTML = html;
+}
+
+function mapGenderToSex(g){
+  switch(String(g||'').toLowerCase()){
+    case 'uomo': return 'm';
+    case 'donna': return 'f';
+    case 'altro': return 'nb';
+    default: return '';
+  }
+}
 
 if(isReplay){
   const r = JSON.parse(LS.getItem('replay_story')||'{}');
@@ -155,18 +244,22 @@ if(isReplay){
   answerText = normalizeOneParagraph(r.answer || "");
   setTitles(domanda);
   document.getElementById('qView').textContent = domanda || '—';
-  document.getElementById('answer').textContent = answerText || '—';
+  const node = document.getElementById('answer');
+  node.textContent = answerText || '—';
+  decorateEmBits(node);
 } else {
   const req = JSON.parse(LS.getItem('whatif_request')||'{}');
   domanda = req.domanda || LS.getItem('domanda') || "";
   setTitles(domanda);
   document.getElementById('qView').textContent = domanda || '—';
 
+  // sesso dal profilo (se presente)
   const profile = JSON.parse(LS.getItem('whatif_profile') || '{}');
   const sex = (profile.sex) ? String(profile.sex).toLowerCase()
-            : (function mapGenderToSex(g){ switch(String(g||'').toLowerCase()){ case 'uomo':return'm'; case 'donna':return'f'; case 'altro':return'nb'; default:return''; } })(profile.gender);
+            : mapGenderToSex(profile.gender || '');
 
   (async ()=>{
+    navigator.sendBeacon?.("/api/track") || fetch("/api/track",{method:"POST",keepalive:true}).catch(()=>{});
     try{
       const headers = { "Content-Type": "application/json" };
       if (prefs.pro === true) headers["x-pro"] = "1";
@@ -176,20 +269,26 @@ if(isReplay){
       const r = await fetch("/api/ask",{
         method:"POST", headers,
         body:JSON.stringify({
-          domanda, lang, stile:style, extra:"",
-          micro:req.micro||{}, periodo, sex, tono // <-- passiamo anche il TONO
+          domanda,
+          lang,
+          stile:style,
+          extra:"",
+          micro:req.micro||{},
+          periodo,
+          sex
         })
       });
 
       if(r.status===429){
-        document.getElementById('answer').textContent = (lang==='en'?"Too many requests. Try again later.":"Troppo traffico, riprova più tardi.");
+        document.getElementById('answer').textContent =
+          lang==='en'?"Too many requests. Try again later.":"Troppo traffico, riprova più tardi.";
         return;
       }
       if(r.status===402){
         const d=await r.json().catch(()=>({}));
         document.getElementById('answer').textContent =
-          (lang==='en'?`You used today's free credits (${d?.used||"?"}/${d?.dailyCap||3}).`
-                      :`Hai usato i crediti gratuiti di oggi (${d?.used||"?"}/${d?.dailyCap||3}).`);
+          lang==='en'?`You used today's free credits (${d?.used||"?"}/${d?.dailyCap||3}).`
+                     :`Hai usato i crediti gratuiti di oggi (${d?.used||"?"}/${d?.dailyCap||3}).`;
         return;
       }
 
@@ -197,27 +296,29 @@ if(isReplay){
       if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
       answerText = normalizeOneParagraph((data.answer||"").trim());
       if(!/[.!?…]$/.test(answerText)) answerText += ".";
-      document.getElementById('answer').textContent = answerText;
+      const node = document.getElementById('answer');
+      node.textContent = answerText;
+      decorateEmBits(node);
 
       const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-      hist.push({ domanda, risposta:answerText, stile:style, periodo, tono, ts:Date.now() });
+      hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
       LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
     }catch(e){
-      document.getElementById('answer').textContent = I18N.error;
+      document.getElementById('answer').textContent = (lang==='en'?'[server error]':'[errore server]');
       console.error(e);
     }
   })();
 }
 
 document.getElementById('shareBtn').onclick=async()=>{
-  const full = `What?f — ${style==='wtf'?'What the F':'What if'} [${periodo}${style==='whatif'?`, tono ${tono}`:''}]\n\nQ: ${domanda}\n\n${answerText}`;
+  const full = `What?f — ${style==='wtf'?'What the F':'What if'}\n(${periodo})\n\nQ: ${domanda}\n\n${answerText}`;
   try{
     if(navigator.share){
       await navigator.share({ title: "What?f", text: full });
     }else{
       await navigator.clipboard.writeText(full);
       const b=document.getElementById('shareBtn');
-      b.textContent = (lang==='en'?'Copied!':'Copiato!'); setTimeout(()=>b.textContent=(lang==='en'?'📤 Share / Copy':'📤 Condividi / Copia'),1200);
+      b.textContent = I18N.copied; setTimeout(()=>b.textContent=I18N.share,1200);
     }
   }catch{}
 };
