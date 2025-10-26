@@ -6,80 +6,31 @@
 <title>What?f — Risultato</title>
 <meta name="theme-color" content="#0B0B0C"/>
 <style>
-:root{
-  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
-  --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;
-  --glow: rgba(255, 236, 1, .22);
-}
+:root{ --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA; --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12; --glow: rgba(255,236,1,.22);}
 html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
 *{box-sizing:border-box}
-html,body{
-  margin:0;
-  background:
+html,body{ margin:0; background:
     radial-gradient(900px 700px at 20% 18%, var(--bg2) 0%, var(--bg) 60%),
     radial-gradient(600px 480px at 80% 12%, rgba(255,236,1,.06), transparent 60%),
     radial-gradient(700px 560px at 50% 90%, rgba(28,87,160,.10), transparent 65%);
-  color:var(--fg);
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  -webkit-font-smoothing:antialiased;
-}
+  color:var(--fg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; -webkit-font-smoothing:antialiased;}
 main{max-width:860px;margin:auto;padding:22px}
-h1{
-  font-size:clamp(22px,5vw,30px);
-  color:var(--acc2);
-  text-align:center;
-  margin:12px 0 6px;
-  text-shadow: 0 0 18px var(--glow);
-}
+h1{font-size:clamp(22px,5vw,30px); color:var(--acc2); text-align:center; margin:12px 0 6px; text-shadow:0 0 18px var(--glow)}
 .sub{color:var(--muted);text-align:center;margin:0 0 8px}
-.card{
-  background:rgba(20,28,34,.92);
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:16px;
-  padding:18px;
-  backdrop-filter:blur(10px);
-  margin-top:16px;
-  box-shadow: 0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
-}
+.card{background:rgba(20,28,34,.92); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:18px; backdrop-filter:blur(10px); margin-top:16px; box-shadow:0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06)}
 .label{color:var(--acc);font-weight:800;margin-bottom:8px}
-.input{
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:12px;
-  padding:10px;
-}
-.story{
-  white-space:normal;
-  line-height:1.68;
-  font-size:18px;
-  letter-spacing:.1px;
-  text-wrap:pretty;
-}
+.input{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px}
+.story{white-space:normal; line-height:1.68; font-size:18px; letter-spacing:.1px; text-wrap:pretty}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
-.btn.primary{
-  background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink);
-  box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 28px var(--glow);
-}
-.btn.ghost{
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.12);
-  color:#fff
-}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink); box-shadow:0 6px 18px rgba(0,0,0,.35), 0 0 28px var(--glow)}
+.btn.ghost{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:#fff}
 .small{font-size:12px;color:var(--muted)}
 .hr{height:1px;background:rgba(255,255,255,.10);margin:12px 0}
-.badge{
-  display:inline-flex;align-items:center;gap:8px;
-  font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 10px;
-}
-.lead{
-  color:#E7F2EE;font-size:14px;line-height:1.45;opacity:.86;margin:2px 0 10px;
-}
-.fade-in{animation:fade .35s ease-out both}
-@keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
-.embit { padding:0 .08em; box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset; text-shadow:0 0 12px rgba(255,255,255,.08); border-radius:4px;}
+.badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 10px}
+.lead{color:#E7F2EE;font-size:14px;line-height:1.45;opacity:.86;margin:2px 0 10px}
+.fade-in{animation:fade .35s ease-out both}@keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
+.embit{padding:0 .08em; box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset; text-shadow:0 0 12px rgba(255,255,255,.08); border-radius:4px}
 </style>
 </head>
 <body>
@@ -145,7 +96,7 @@ const I18N={
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
       reg:(r)=>`🧭 Registro: ${r}`,
       meta:(st,p,r)=> st==='wtf'
-        ? `Stile: What the F · 6–8 frasi · paragrafo unico · 1 interiezione “gritty” · modalità: ${p==='past'?'Passato':'Futuro'}.`
+        ? `Stile: What the F · 6–8 frasi · paragrafo unico · una sola esplosione teatrale · modalità: ${p==='past'?'Passato':'Futuro'}.`
         : `Stile: What if (${r||'auto'}) · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`},
   en:{tWTF:"⚡ What the F — Result", tWHF:"💡 What if — Result",
       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
@@ -154,73 +105,39 @@ const I18N={
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
       reg:(r)=>`🧭 Register: ${r}`,
       meta:(st,p,r)=> st==='wtf'
-        ? `Style: What the F · 6–8 sentences · single paragraph · 1 “gritty” interjection · mode: ${p==='past'?'Past':'Future'}.`
+        ? `Style: What the F · 6–8 sentences · single paragraph · one theatrical outburst · mode: ${p==='past'?'Past':'Future'}.`
         : `Style: What if (${r||'auto'}) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`}
 }[lang];
-
-document.getElementById('langBtn').textContent=lang.toUpperCase();
-document.getElementById('backBtn').onclick=()=>history.back();
-document.getElementById('homeBtn').onclick=()=>location.href='index.html';
-document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
-document.getElementById('lblQ').textContent=I18N.q;
-document.getElementById('lblA').textContent=I18N.a;
-document.getElementById('shareBtn').textContent=I18N.share;
-document.getElementById('againBtn').textContent=I18N.again;
-document.getElementById('styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
 
 function normalizeOneParagraph(s=""){
   return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
 }
-
-/* LEADS */
-const LEADS = {
-  it:{
-    wtf:[
-      "Entri piano, il caos ti riconosce ma oggi ti lascia passare.",
-      "Respiri e lasci che sia il destino a inciampare per primo.",
-      "Ti presenti al futuro con la faccia di adesso e la pazienza di domani.",
-      "La scena è già in corso: tu ci metti il rumore buono.",
-      "Non chiedi permesso al dubbio, gli siedi accanto.",
-      "Stai un secondo fermo e la verità ti prende la misura."
-    ],
-    whatif:[
-      "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.",
-      "Ti siedi un attimo e scopri che la calma ha memoria lunga.",
-      "La stanza è la stessa, lo sguardo no: è già un inizio.",
-      "Tieniti stretto ciò che funziona e lascia che il resto perda importanza.",
-      "Respiri come chi ha tempo, e il tempo ti crede."
-    ]
-  },
-  en:{
-    wtf:[
-      "You step in slowly; chaos recognizes you and lets you through.",
-      "You breathe and let fate be the one who trips first.",
-      "You bring today’s face and tomorrow’s patience to the door.",
-      "The scene is already rolling; you supply the good noise."
-    ],
-    whatif:[
-      "Set the keys down and let the quiet that doesn’t judge go first.",
-      "Same room, different gaze — that’s already a start.",
-      "Breathe like someone with time, and time believes you."
-    ]
-  }
-};
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
-function hashStr(s=""){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i); h=h|0; } return Math.abs(h); }
-function stablePick(arr, seedStr){ if(!arr?.length) return ""; if(!seedStr?.trim()) return pick(arr); const h=hashStr(seedStr); return arr[h%arr.length]; }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
 
-const params=new URLSearchParams(location.search);
-const isReplay = params.get('view')==='replay';
-let domanda=""; let answerText=""; let serverRegister=null;
+const LEADS = { it:{ wtf:[
+  "Entri piano, il caos ti riconosce e ti fa passare.",
+  "Respiri e lasci al destino l’onere del primo inciampo.",
+  "La scena è già in corso: tu ci metti il rumore buono.",
+  "Non chiedi permesso al dubbio: gli siedi accanto."
+], whatif:[
+  "Metti giù le chiavi e lasci parlare il silenzio che non giudica.",
+  "La stanza è la stessa, lo sguardo no: è già un inizio.",
+  "Respiri come chi ha tempo, e il tempo ci crede."
+]}, en:{ wtf:[
+  "You step in slowly; chaos recognizes you and lets you through.",
+  "You breathe and let fate trip first.",
+  "The scene is already rolling; you supply the good noise."
+], whatif:[
+  "Set the keys down and let the quiet that doesn’t judge go first.",
+  "Same room, different gaze — that’s already a start."
+] }};
 
 function setTitles(q){
   document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
   document.getElementById('subtitle').textContent = I18N.sub(q);
   document.getElementById('styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
-  const bank = LEADS[lang]?.[style] || LEADS['it']['whatif'];
-  const seed = `${(q||"").toLowerCase().trim()}|${style}|${lang}`;
-  const line = oneSentence(stablePick(bank, seed));
+  const line = oneSentence(pick(LEADS[lang]?.[style] || LEADS['it']['whatif']));
   document.getElementById('lead').textContent = line;
   if(style==='whatif'){
     document.getElementById('regBadge').style.display='inline-flex';
@@ -231,36 +148,37 @@ function setTitles(q){
   document.getElementById('metaInfo').textContent = I18N.meta(style, periodo, registroPref);
 }
 
-// evidenzia parentesi tra em-dash “— … — …”
 function decorateEmBits(el){
-  const raw = el.textContent;
-  if(!raw.includes("—")) return;
-  const parts = raw.split("—");
-  let html = "";
+  const raw = el.textContent; if(!raw.includes("—")) return;
+  const parts = raw.split("—"); let html="";
   for(let i=0;i<parts.length;i++){
     const seg = parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;");
     if(i%2===1) html += `<span class="embit">— ${seg} </span>`;
     else html += (i===0 ? seg : `—${seg}`);
   }
-  el.innerHTML = html;
+  el.innerHTML=html;
 }
 
-function mapGenderToSex(g){
-  switch(String(g||'').toLowerCase()){
-    case 'uomo': return 'm';
-    case 'donna': return 'f';
-    case 'altro': return 'nb';
-    default: return '';
-  }
-}
+document.getElementById('langBtn').textContent=lang.toUpperCase();
+document.getElementById('backBtn').onclick=()=>history.back();
+document.getElementById('homeBtn').onclick=()=>location.href='index.html';
+document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
+document.getElementById('lblQ').textContent=I18N.q;
+document.getElementById('lblA').textContent=I18N.a;
+document.getElementById('shareBtn').textContent=I18N.share;
+document.getElementById('againBtn').textContent=I18N.again;
+
+const params=new URLSearchParams(location.search);
+const isReplay = params.get('view')==='replay';
+let domanda=""; let answerText=""; let serverRegister=null;
 
 if(isReplay){
   const r = JSON.parse(LS.getItem('replay_story')||'{}');
   domanda = r.domanda || LS.getItem('domanda') || "";
-  answerText = normalizeOneParagraph(r.answer || "");
   setTitles(domanda);
   document.getElementById('qView').textContent = domanda || '—';
   const node = document.getElementById('answer');
+  answerText = normalizeOneParagraph(r.answer || "");
   node.textContent = answerText || '—';
   decorateEmBits(node);
 } else {
@@ -269,10 +187,10 @@ if(isReplay){
   setTitles(domanda);
   document.getElementById('qView').textContent = domanda || '—';
 
-  // profilo sesso
+  // sesso profilo
   const profile = JSON.parse(LS.getItem('whatif_profile') || '{}');
   const sex = (profile.sex) ? String(profile.sex).toLowerCase()
-            : mapGenderToSex(profile.gender || '');
+            : (String(profile.gender||'').toLowerCase()==='uomo'?'m':String(profile.gender||'').toLowerCase()==='donna'?'f':String(profile.gender||'').toLowerCase()==='altro'?'nb':'');
 
   (async ()=>{
     navigator.sendBeacon?.("/api/track") || fetch("/api/track",{method:"POST",keepalive:true}).catch(()=>{});
@@ -285,13 +203,8 @@ if(isReplay){
       const r = await fetch("/api/ask",{
         method:"POST", headers,
         body:JSON.stringify({
-          domanda,
-          lang,
-          stile:style,
-          extra:"",
-          micro:req.micro||{},
-          periodo,
-          sex,
+          domanda, lang, stile:style, extra:"",
+          micro:req.micro||{}, periodo, sex,
           registro: (style==='whatif' ? (registroPref || 'realistico') : "")
         })
       });
@@ -318,7 +231,6 @@ if(isReplay){
       node.textContent = answerText;
       decorateEmBits(node);
 
-      // mostra registro restituito dal server (se presente)
       serverRegister = data.registro || null;
       if (style==='whatif' && serverRegister) {
         document.getElementById('regBadge').style.display='inline-flex';
