@@ -5,57 +5,39 @@
   "description": "Esplora scenari personali: il passato che poteva essere e il futuro che potresti scegliere.",
   "lang": "it-IT",
   "dir": "ltr",
-
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "any",
-
   "background_color": "#0A0F14",
   "theme_color": "#00E0FF",
   "categories": ["lifestyle", "productivity", "entertainment", "creative"],
-
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/public/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/public/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/public/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/public/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
-
   "shortcuts": [
     {
       "name": "Nuovo scenario",
       "short_name": "Scenario",
       "description": "Inizia una nuova domanda",
       "url": "/index.html",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/public/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Profilo rapido",
       "short_name": "Profilo",
       "description": "Aggiorna i tuoi dati per risposte più personali",
       "url": "/second.html",
-      "icons": [{ "src": "/icon-192-maskable.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/public/icon-192-maskable.png", "sizes": "192x192", "type": "image/png" }]
     }
   ],
-
   "screenshots": [
-    {
-      "src": "/whatif-home.png",
-      "type": "image/png",
-      "sizes": "1080x1920",
-      "form_factor": "narrow",
-      "label": "La scelta è l’inizio di ogni universo."
-    },
-    {
-      "src": "/whatif-desktop.png",
-      "type": "image/png",
-      "sizes": "1920x1080",
-      "form_factor": "wide",
-      "label": "La scelta è l’inizio di ogni universo."
-    }
+    { "src": "/public/home-hero.png",  "type": "image/png", "sizes": "1080x1920", "form_factor": "narrow", "label": "La scelta è l’inizio di ogni universo." },
+    { "src": "/public/third-hero.png", "type": "image/png", "sizes": "1920x1080", "form_factor": "wide",   "label": "La scelta è l’inizio di ogni universo." }
   ],
-
   "prefer_related_applications": false
 }
