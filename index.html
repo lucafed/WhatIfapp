@@ -7,9 +7,12 @@
 
   <!-- PWA -->
   <meta name="theme-color" content="#0B0B0C" />
-  <link rel="manifest" href="/public/manifest.json" />
+  <link rel="manifest" href="/manifest.json" />
   <link rel="icon" type="image/png" sizes="32x32" href="/public/icon-192.png" />
   <link rel="apple-touch-icon" href="/public/icon-512.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <!-- Hero -->
   <link rel="preload" as="image" href="/public/home-hero.png" />
@@ -67,12 +70,12 @@
   </div>
 
   <main>
-    <!-- src di default per mostrare subito l'immagine -->
+    <!-- immagine subito visibile -->
     <img id="hero" class="hero-img" src="/public/home-hero.png" alt="Porta luminosa What?f" loading="eager" decoding="async" />
 
     <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
 
-    <!-- Fallback testuale sempre visibile -->
+    <!-- Fallback testo (poi sovrascritto da i18n) -->
     <p class="lead" id="leadText">
       Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro.
       <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili.
@@ -102,7 +105,7 @@
     </div>
   </footer>
 
-  <!-- Hero robust loader (priorità a /public) -->
+  <!-- Hero loader (cerca anche varianti) -->
   <script>
     (function loadHero(){
       const hero = document.getElementById('hero');
@@ -140,18 +143,12 @@
     })();
 
     const DICT = {
-      it:{
-        title:"Scopri il tuo What?f",
+      it:{ title:"Scopri il tuo What?f",
         lead:"Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro. <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili. <strong>What the F</strong> ti fa vivere visioni ironiche, creative e imprevedibili.",
-        past:"Passato", future:"Futuro", whatif:"What if", wtf:"What the F",
-        next:"Avanti", privacy:"Privacy", terms:"Termini", info:"Info"
-      },
-      en:{
-        title:"Discover your What?f",
+        past:"Passato", future:"Futuro", whatif:"What if", wtf:"What the F", next:"Avanti", privacy:"Privacy", terms:"Termini", info:"Info" },
+      en:{ title:"Discover your What?f",
         lead:"Imagine the choice you didn’t make… and the one you could make. Choose whether to look to the past or the future. <strong>What if</strong> explores realistic, reflective scenarios based on plausible choices. <strong>What the F</strong> lets you experience ironic, creative and unpredictable visions.",
-        past:"Past", future:"Future", whatif:"What if", wtf:"What the F",
-        next:"Next", privacy:"Privacy", terms:"Terms", info:"Info"
-      }
+        past:"Past", future:"Future", whatif:"What if", wtf:"What the F", next:"Next", privacy:"Privacy", terms:"Terms", info:"Info" }
     };
 
     const LS = localStorage, $ = s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
@@ -207,7 +204,7 @@
 
     go.addEventListener('click', ()=>{ if(!go.disabled) location.href='second.html'; });
 
-    // Admin segreto
+    // Easter egg admin
     (function(){
       const title = document.getElementById('appTitle'); const pastBtn = document.querySelector('button[data-val="past"]');
       if(!title || !pastBtn) return;
@@ -215,12 +212,14 @@
       function reset(){ tapTitle=0; tapPast=0; stage=0; if(timer) clearTimeout(timer); timer=null; pastBtn.classList.remove("unlocking"); }
       function flash(){ const f=document.createElement("div"); f.style.position="fixed";f.style.inset="0";f.style.background="rgba(255,255,255,0.05)";f.style.backdropFilter="blur(2px)";f.style.transition="opacity .6s";f.style.opacity="1";f.style.zIndex="9999";document.body.appendChild(f);setTimeout(()=>f.style.opacity="0",150);setTimeout(()=>f.remove(),800); }
       function success(){ reset(); const pin=prompt("PIN amministratore:"); if(!pin) return; try{ sessionStorage.setItem("pending_admin_pin", pin);}catch{} location.href="admin.html"; }
-      title.addEventListener('click', ()=>{ tapTitle++; if(timer) clearTimeout(timer); timer=setTimeout(reset,2000); if(tapTitle>=3){ stage=1; tapTitle=0; flash(); pastBtn.classList.add("unlocking"); pastBtn.style.boxShadow="0 0 0 2px rgba(255,255,255,.15) inset, 0 0 22px rgba(255,255,255,.12)"; setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);} });
-      pastBtn.addEventListener('click', ()=>{ if(stage!==1) return; tapPast++; if(timer) clearTimeout(timer); timer=setTimeout(reset,2500); if(tapPast>=5) success(); });
+      title.addEventListener('click', ()=>{ if(++tapTitle>=3){ stage=1; tapTitle=0; flash(); pastBtn.classList.add("unlocking"); pastBtn.style.boxShadow="0 0 0 2px rgba(255,255,255,.15) inset, 0 0 22px rgba(255,255,255,.12)"; setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);} if(timer) clearTimeout(timer); timer=setTimeout(reset,2000); });
+      pastBtn.addEventListener('click', ()=>{ if(stage!==1) return; if(++tapPast>=5) success(); if(timer) clearTimeout(timer); timer=setTimeout(reset,2500); });
     })();
 
     // Service Worker
-    if("serviceWorker" in navigator){ window.addEventListener("load", ()=>{ navigator.serviceWorker.register("/sw.js").catch(()=>{}); }); }
+    if("serviceWorker" in navigator){
+      window.addEventListener("load", ()=>{ navigator.serviceWorker.register("/sw.js").catch(()=>{}); });
+    }
   </script>
 </body>
 </html>
