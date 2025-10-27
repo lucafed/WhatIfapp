@@ -175,7 +175,7 @@ const I18N = {
     periodPast:"Passato", periodFuture:"Futuro",
     whatif:"What if (realistico)", wtf:"What the F (demenziale)",
     hintWhatif:"Stile <b>What if</b>: tono caldo e realistico, immagini quotidiane, chiusura riflessiva breve.",
-    hintWTF:"Stile <b>What the F</b>: <b>sarcasmo demenziale</b>, ritmo alto, oggetti che “pensano”, <b>doppia punchline finale</b> “— … — …”.",
+    hintWTF:"Stile <b>What the F</b>: <b>sarcasmo demenziale</b>, ritmo alto, oggetti che “pensano”, <b>esplosione comica a metà</b> e doppia risata.",
     yourq:"La tua domanda", gen:"✨ Genera risposta", clear:"Svuota",
     tip:"Tip: puoi cambiare stile e periodo sopra; colori e tono si adattano.",
     free:(l,d)=>`Crediti oggi: ${l}/${d}`, proOn:"PRO attivo", proOff:"PRO non attivo",
@@ -196,7 +196,7 @@ const I18N = {
     periodPast:"Past", periodFuture:"Future",
     whatif:"What if (realistic)", wtf:"What the F (goofy)",
     hintWhatif:"<b>What if</b>: warm and realistic, everyday images, short reflective ending.",
-    hintWTF:"<b>What the F</b>: <b>goofy sarcasm</b>, fast pace, “thinking objects”, <b>double punchline</b> at the end “— … — …”.",
+    hintWTF:"<b>What the F</b>: <b>goofy sarcasm</b>, fast pace, “reacting objects”, <b>mid-scene comic outburst</b> and double laugh.",
     yourq:"Your question", gen:"✨ Generate answer", clear:"Clear",
     tip:"Tip: switch style and period above; tone & colors adapt.",
     free:(l,d)=>`Credits today: ${l}/${d}`, proOn:"PRO active", proOff:"PRO not active",
@@ -252,7 +252,7 @@ function renderBadges(){
 }
 renderBadges();
 
-// ===== Crediti (solo visual: 3 free / 10 pro / ∞ admin) =====
+// ===== Crediti (solo visual) =====
 function userIsAdmin(){ return !!LS.getItem('admin_token'); }
 function capForUser(){ return userIsAdmin() ? Infinity : (prefs.pro ? 10 : 3); }
 function ensureCredits(){
@@ -299,7 +299,6 @@ const qEl = document.getElementById('qInput');
 qEl.placeholder = (lang==='en' ? "What if I moved back to L’Aquila?" : "E se tornassi a vivere all’Aquila?");
 qEl.autofocus = true;
 
-// submit helpers
 function trySubmit(){
   const domanda=(qEl.value||"").trim();
   if(!domanda){ qEl.focus(); return; }
@@ -322,7 +321,7 @@ document.getElementById('goBtn').onclick=trySubmit;
 document.getElementById('clearBtn').onclick=()=>{ qEl.value=""; qEl.focus(); };
 qEl.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
-// ===== Micro-questions =====
+// ===== Micro-questions (multiple choice) =====
 const microCard=document.getElementById('microCard');
 const microSaved=readJSON('micro_saved',{date:"",ok:false});
 function rngForDay(seedStr){ let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
