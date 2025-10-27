@@ -1,341 +1,241 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Risultato</title>
-<meta name="theme-color" content="#0B0B0C"/>
-<style>
-:root{
-  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
-  --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;
-  --glow: rgba(255, 236, 1, .22);
-}
-html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
-*{box-sizing:border-box}
-html,body{
-  margin:0;
-  background:
-    radial-gradient(900px 700px at 20% 18%, var(--bg2) 0%, var(--bg) 60%),
-    radial-gradient(600px 480px at 80% 12%, rgba(255,236,1,.06), transparent 60%),
-    radial-gradient(700px 560px at 50% 90%, rgba(28,87,160,.10), transparent 65%);
-  color:var(--fg);
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  -webkit-font-smoothing:antialiased;
-}
-main{max-width:860px;margin:auto;padding:22px}
-h1{
-  font-size:clamp(22px,5vw,30px);
-  color:var(--acc2);
-  text-align:center;
-  margin:12px 0 6px;
-  text-shadow: 0 0 18px var(--glow);
-}
-.sub{color:var(--muted);text-align:center;margin:0 0 8px}
-.card{
-  background:rgba(20,28,34,.92);
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:16px;
-  padding:18px;
-  backdrop-filter:blur(10px);
-  margin-top:16px;
-  box-shadow: 0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
-}
-.label{color:var(--acc);font-weight:800;margin-bottom:8px}
-.input{
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:12px;
-  padding:10px;
-}
-.story{
-  white-space:normal;
-  line-height:1.68;
-  font-size:18px;
-  letter-spacing:.1px;
-  text-wrap:pretty;
-}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
-.btn.primary{
-  background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink);
-  box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 28px var(--glow);
-}
-.btn.ghost{
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.12);
-  color:#fff
-}
-.small{font-size:12px;color:var(--muted)}
-.hr{height:1px;background:rgba(255,255,255,.10);margin:12px 0}
-.badge{
-  display:inline-flex;align-items:center;gap:8px;
-  font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 10px;
-}
-.lead{
-  color:#E7F2EE;font-size:14px;line-height:1.45;opacity:.86;margin:2px 0 10px;
-}
-.fade-in{animation:fade .35s ease-out both}
-@keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>What?f — Risposta</title>
+  <meta name="theme-color" content="#0B0B0C"/>
+  <style>
+    :root{
+      --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
+      --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75;
+      --card:rgba(20,28,34,.92); --line:rgba(255,255,255,.12);
+      --chip:#121A26; --ink:#0A0E12; --shadow:rgba(0,0,0,.35);
+    }
+    html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
 
-/* evidenzia le parentesi comiche tra em-dash senza toccare il testo */
-.embit {
-  padding: 0 .08em;
-  box-shadow: 0 -4px 0 0 rgba(255,255,255,.05) inset;
-  text-shadow: 0 0 12px rgba(255,255,255,.08);
-  border-radius: 4px;
-}
-</style>
+    *{box-sizing:border-box}
+    html,body{
+      margin:0; min-height:100%;
+      background:radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%,var(--bg) 60%);
+      color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    .wrap{max-width:980px;margin:0 auto;padding:18px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .btn{
+      appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);
+      padding:10px 14px;border-radius:12px;cursor:pointer
+    }
+    .btn.primary{
+      background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;
+      box-shadow:0 6px 18px var(--shadow)
+    }
+    .btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--line)}
+    .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none}
+
+    .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:18px;margin:14px 0}
+
+    h1{font-size:clamp(22px,4.5vw,30px);margin:4px 0 2px;color:var(--acc2);text-align:center}
+    .q{font-size:14px;color:var(--muted);text-align:center;margin-bottom:8px}
+
+    .answer{font-size:18px;line-height:1.6;white-space:pre-wrap}
+    .muted{font-size:12px;color:var(--muted);text-align:center}
+
+    .cta-row{display:flex;gap:10px;justify-content:center;margin:10px 0 6px;flex-wrap:wrap}
+    .sep{opacity:.4}
+
+    .toast{
+      position:fixed;left:50%;transform:translateX(-50%);
+      bottom:20px;background:rgba(0,0,0,.7);color:#fff;padding:10px 14px;border-radius:10px;
+      font-size:14px;display:none
+    }
+  </style>
 </head>
 <body>
-<main>
-  <div class="row" style="justify-content:space-between">
-    <div class="row">
-      <button class="btn ghost" id="backBtn">←</button>
-      <button class="btn ghost" id="homeBtn">🏠</button>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="row">
+        <button class="btn" id="backBtn">←</button>
+        <button class="btn" id="homeBtn">🏠</button>
+      </div>
+      <div class="row">
+        <span class="badge" id="styleBadge">🎭 —</span>
+        <span class="badge" id="periodoBadge">🕰️ —</span>
+        <span class="badge" id="variantBadge">🧩 —</span>
+        <button class="btn" id="langBtn">IT</button>
+      </div>
     </div>
-    <div class="row" style="gap:8px">
-      <span class="badge" id="styleBadge">🎭 —</span>
-      <span class="badge" id="proBadge" title="" style="display:none">🧪 TEST · ⭐ PRO</span>
-      <button class="btn ghost" id="langBtn">IT</button>
+
+    <h1 id="titleH1">Risultato</h1>
+    <div class="q" id="qEcho">—</div>
+
+    <div class="card">
+      <div class="answer" id="answerBox">…</div>
     </div>
+
+    <div class="cta-row">
+      <button class="btn" id="shareBtn">🔗 Condividi</button>
+      <button class="btn ghost" id="copyBtn">📋 Copia</button>
+      <span class="sep">·</span>
+      <button class="btn ghost" id="regenBtn">↻ Rigenera</button>
+      <button class="btn primary" id="newBtn">+ Nuova domanda</button>
+      <button class="btn" id="saveBtn">⭐ Salva</button>
+    </div>
+
+    <div class="muted" id="footNote"></div>
   </div>
 
-  <h1 id="title">Risultato</h1>
-  <p class="sub" id="subtitle">—</p>
+  <div class="toast" id="toast"></div>
 
-  <div class="card">
-    <div class="label" id="lblQ">La tua domanda</div>
-    <div class="input" id="qView" style="min-height:46px"></div>
-  </div>
+  <script>
+    // ===== I18N =====
+    const I18N = {
+      it:{
+        title:"Risultato", share:"Condividi", copy:"Copia", regen:"↻ Rigenera", newq:"+ Nuova domanda", save:"⭐ Salva",
+        copied:"Testo copiato", sharedOk:"Condiviso", saved:"Salvato nei preferiti",
+        styleLabel:(s)=> s==='wtf'?'What the F':'What if',
+        variant:(v)=> v==='poetico'?'Poetico':'Analitico',
+        foot:"Puoi tornare indietro per cambiare stile, periodo o variante."
+      },
+      en:{
+        title:"Result", share:"Share", copy:"Copy", regen:"↻ Regenerate", newq:"+ New question", save:"⭐ Save",
+        copied:"Copied", sharedOk:"Shared", saved:"Saved to favorites",
+        styleLabel:(s)=> s==='wtf'?'What the F':'What if',
+        variant:(v)=> v==='poetico'?'Poetic':'Analytical',
+        foot:"You can go back to tweak style, period or variant."
+      }
+    };
 
-  <div class="card">
-    <div class="label" id="lblA">Risposta</div>
-    <div id="lead" class="lead fade-in">—</div>
-    <div id="answer" class="story">⏳ …</div>
-    <div class="hr"></div>
-    <div class="row">
-      <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
-      <button class="btn ghost" id="againBtn">🔁 Fai un’altra domanda</button>
-    </div>
-    <p class="small" id="metaInfo"></p>
-  </div>
-</main>
+    // ===== Helpers =====
+    const LS = localStorage;
+    const $  = s => document.querySelector(s);
+    const detectLang = ()=> (LS.getItem('lang') || (navigator.language||'it')).toLowerCase().startsWith('en') ? 'en' : 'it';
+    const lang = detectLang(); document.documentElement.lang = lang;
+    const T = I18N[lang];
 
-<script>
-const LS=localStorage;
-const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
-const style = prefs.stile || 'whatif';
-const periodo = prefs.periodo || 'future';
-const lang  = (LS.getItem('lang') || 'it').toLowerCase();
-document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
+    function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
+    function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
+    function toast(msg){
+      const t=$('#toast'); t.textContent=msg; t.style.display='block';
+      setTimeout(()=> t.style.display='none', 1400);
+    }
 
-(function showProBadge(){
-  const el = document.getElementById('proBadge');
-  const hasToken = !!LS.getItem('admin_token');
-  if (hasToken || prefs.pro === true){
-    el.style.display = 'inline-flex';
-    el.textContent = (lang === 'en') ? '🧪 TEST · ⭐ PRO' : '🧪 TEST · ⭐ PRO';
-    el.title = (lang === 'en') ? 'Test mode active' : 'Modalità test attiva';
-  }
-})();
+    // Stato
+    let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',variant:'analitico'});
+    document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-const I18N={
-  it:{tWTF:"⚡ What the F — Risultato", tWHF:"💡 What if — Risultato",
-      sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
-      share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
-      copied:"Copiato!", error:"[errore server]",
-      styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-      meta:(st,p)=> st==='wtf'
-        ? `Stile: What the F · 6–9 frasi · paragrafo unico · 3+ stoccate interne · doppia punchline · modalità: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if · 8–11 frasi · paragrafo unico · niente elenchi/domande/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.`},
-  en:{tWTF:"⚡ What the F — Result", tWHF:"💡 What if — Result",
-      sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-      share:"📤 Share / Copy", again:"🔁 Ask another",
-      copied:"Copied!", error:"[server error]",
-      styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-      meta:(st,p)=> st==='wtf'
-        ? `Style: What the F · 6–9 sentences · single paragraph · 3+ inside jabs · double punchline · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if · 8–11 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`}
-}[lang];
+    // UI text
+    $('#titleH1').textContent = T.title;
+    $('#langBtn').textContent = (LS.getItem('lang')||'it').toUpperCase();
+    $('#footNote').textContent = T.foot;
+    $('#styleBadge').textContent   = '🎭 ' + T.styleLabel(prefs.stile);
+    $('#periodoBadge').textContent = '🕰️ ' + (prefs.periodo==='past' ? (lang==='en'?'Past':'Passato') : (lang==='en'?'Future':'Futuro'));
+    $('#variantBadge').textContent = '🧩 ' + (prefs.stile==='whatif' ? T.variant(prefs.variant) : (lang==='en'?'—':'—'));
 
-document.getElementById('langBtn').textContent=lang.toUpperCase();
-document.getElementById('backBtn').onclick=()=>history.back();
-document.getElementById('homeBtn').onclick=()=>location.href='index.html';
-document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
-document.getElementById('lblQ').textContent=I18N.q;
-document.getElementById('lblA').textContent=I18N.a;
-document.getElementById('shareBtn').textContent=I18N.share;
-document.getElementById('againBtn').textContent=I18N.again;
-document.getElementById('styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
+    // Nav
+    $('#backBtn').onclick = ()=> history.back();
+    $('#homeBtn').onclick = ()=> location.href='index.html';
+    $('#langBtn').onclick = ()=>{
+      const cur = (LS.getItem('lang')||lang).toLowerCase().startsWith('en') ? 'it' : 'en';
+      LS.setItem('lang', cur);
+      location.reload();
+    };
 
-function normalizeOneParagraph(s=""){
-  return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
-}
+    // Request
+    const req = readJSON('whatif_request', null);
+    const domanda = LS.getItem('domanda') || '';
+    $('#qEcho').textContent = domanda ? `“${domanda}”` : '';
 
-/* LEADS */
-const LEADS = {
-  it:{
-    wtf:[
-      "Entri piano, il caos ti riconosce ma oggi ti lascia passare.",
-      "Respiri e lasci che sia il destino a inciampare per primo.",
-      "Ti presenti al futuro con la faccia di adesso e la pazienza di domani.",
-      "La scena è già in corso: tu ci metti il rumore buono.",
-      "Non chiedi permesso al dubbio, gli siedi accanto.",
-      "Stai un secondo fermo e la verità ti prende la misura."
-    ],
-    whatif:[
-      "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.",
-      "Ti siedi un attimo e scopri che la calma ha memoria lunga.",
-      "La stanza è la stessa, lo sguardo no: è già un inizio.",
-      "Tieniti stretto ciò che funziona e lascia che il resto perda importanza.",
-      "Respiri come chi ha tempo, e il tempo ti crede."
-    ]
-  },
-  en:{
-    wtf:[
-      "You step in slowly; chaos recognizes you and lets you through.",
-      "You breathe and let fate be the one who trips first.",
-      "You bring today’s face and tomorrow’s patience to the door.",
-      "The scene is already rolling; you supply the good noise."
-    ],
-    whatif:[
-      "Set the keys down and let the quiet that doesn’t judge go first.",
-      "Same room, different gaze — that’s already a start.",
-      "Breathe like someone with time, and time believes you."
-    ]
-  }
-};
-function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
-function hashStr(s=""){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i); h=h|0; } return Math.abs(h); }
-function stablePick(arr, seedStr){ if(!arr?.length) return ""; if(!seedStr?.trim()) return pick(arr); const h=hashStr(seedStr); return arr[h%arr.length]; }
-function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
+    // Fetch answer
+    async function callAPI(r){
+      const headers = {'Content-Type':'application/json'};
+      // opzionale: PRO o admin
+      if(LS.getItem('admin_token')) headers['x-admin-token'] = LS.getItem('admin_token');
+      if(prefs.pro) headers['x-pro'] = '1';
 
-const params=new URLSearchParams(location.search);
-const isReplay = params.get('view')==='replay';
-let domanda=""; let answerText="";
+      const body = {
+        domanda: r.domanda,
+        stile:   r.stile,
+        lang:    r.lang,
+        extra:   r.extra || "",
+        periodo: r.periodo || 'future',
+        micro:   r.micro || {},
+        variant: r.variant // solo per whatif
+      };
 
-function setTitles(q){
-  document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
-  document.getElementById('subtitle').textContent = I18N.sub(q);
-  document.getElementById('styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
-  const bank = LEADS[lang]?.[style] || LEADS['it']['whatif'];
-  const seed = `${(q||"").toLowerCase().trim()}|${style}|${lang}`;
-  const line = oneSentence(stablePick(bank, seed));
-  document.getElementById('lead').textContent = line;
-  document.getElementById('metaInfo').textContent = I18N.meta(style, periodo);
-}
+      const res = await fetch('/api/ask', { method:'POST', headers, body: JSON.stringify(body) });
+      if(!res.ok){
+        const e = await res.json().catch(()=>({error:'server_error'}));
+        throw new Error(e.error || 'server_error');
+      }
+      return await res.json();
+    }
 
-// evidenzia parentesi tra em-dash “— … — …”
-function decorateEmBits(el){
-  const raw = el.textContent;
-  if(!raw.includes("—")) return;
-  const parts = raw.split("—");
-  let html = "";
-  for(let i=0;i<parts.length;i++){
-    const seg = parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;");
-    if(i%2===1) html += `<span class="embit">— ${seg} </span>`;
-    else html += (i===0 ? seg : `—${seg}`);
-  }
-  el.innerHTML = html;
-}
-
-function mapGenderToSex(g){
-  switch(String(g||'').toLowerCase()){
-    case 'uomo': return 'm';
-    case 'donna': return 'f';
-    case 'altro': return 'nb';
-    default: return '';
-  }
-}
-
-if(isReplay){
-  const r = JSON.parse(LS.getItem('replay_story')||'{}');
-  domanda = r.domanda || LS.getItem('domanda') || "";
-  answerText = normalizeOneParagraph(r.answer || "");
-  setTitles(domanda);
-  document.getElementById('qView').textContent = domanda || '—';
-  const node = document.getElementById('answer');
-  node.textContent = answerText || '—';
-  decorateEmBits(node);
-} else {
-  const req = JSON.parse(LS.getItem('whatif_request')||'{}');
-  domanda = req.domanda || LS.getItem('domanda') || "";
-  setTitles(domanda);
-  document.getElementById('qView').textContent = domanda || '—';
-
-  // ===== NEW: leggi sex dal profilo (fallback da gender) =====
-  const profile = JSON.parse(LS.getItem('whatif_profile') || '{}');
-  const sex = (profile.sex) ? String(profile.sex).toLowerCase()
-            : mapGenderToSex(profile.gender || '');
-
-  (async ()=>{
-    navigator.sendBeacon?.("/api/track") || fetch("/api/track",{method:"POST",keepalive:true}).catch(()=>{});
-    try{
-      const headers = { "Content-Type": "application/json" };
-      if (prefs.pro === true) headers["x-pro"] = "1";
-      const adminToken = localStorage.getItem("admin_token");
-      if (adminToken) headers["x-admin-token"] = adminToken;
-
-      const r = await fetch("/api/ask",{
-        method:"POST", headers,
-        body:JSON.stringify({
-          domanda,
-          lang,
-          stile:style,
-          extra:"",
-          micro:req.micro||{},
-          periodo,
-          sex // <-- PASSA IL SESSO NORMALIZZATO
-        })
-      });
-
-      if(r.status===429){
-        document.getElementById('answer').textContent =
-          lang==='en'?"Too many requests. Try again later.":"Troppo traffico, riprova più tardi.";
+    async function render(){
+      if(!req || !req.domanda){
+        $('#answerBox').textContent = lang==='en' ? 'No question provided.' : 'Nessuna domanda impostata.';
         return;
       }
-      if(r.status===402){
-        const d=await r.json().catch(()=>({}));
-        document.getElementById('answer').textContent =
-          lang==='en'?`You used today's free credits (${d?.used||"?"}/${d?.dailyCap||3}).`
-                     :`Hai usato i crediti gratuiti di oggi (${d?.used||"?"}/${d?.dailyCap||3}).`;
-        return;
+      try{
+        $('#answerBox').textContent = '…';
+        const data = await callAPI(req);
+        const ans = String(data.answer||'').trim();
+        $('#answerBox').textContent = ans || (lang==='en'?'(empty)':'(vuoto)');
+
+        // salva in cronologia
+        const hist = readJSON('cronologia',[]);
+        hist.push({ ts: Date.now(), domanda: req.domanda, risposta: ans, stile: req.stile, periodo: req.periodo, variant: req.variant });
+        writeJSON('cronologia', hist);
+      }catch(err){
+        $('#answerBox').textContent = (lang==='en'?'Server error.':'Errore server.');
       }
-
-      const data = await r.json();
-      if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
-      answerText = normalizeOneParagraph((data.answer||"").trim());
-      if(!/[.!?…]$/.test(answerText)) answerText += ".";
-      const node = document.getElementById('answer');
-      node.textContent = answerText;
-      decorateEmBits(node);
-
-      const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-      hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
-      LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-    }catch(e){
-      document.getElementById('answer').textContent = I18N.error;
-      console.error(e);
     }
-  })();
-}
+    render();
 
-document.getElementById('shareBtn').onclick=async()=>{
-  const full = `What?f — ${style==='wtf'?'What the F':'What if'}\n(${periodo})\n\nQ: ${domanda}\n\n${answerText}`;
-  try{
-    if(navigator.share){
-      await navigator.share({ title: "What?f", text: full });
-    }else{
-      await navigator.clipboard.writeText(full);
-      const b=document.getElementById('shareBtn');
-      b.textContent = I18N.copied; setTimeout(()=>b.textContent=I18N.share,1200);
+    // Share
+    function buildShareText(){
+      const style = T.styleLabel(prefs.stile);
+      const v = (prefs.stile==='whatif') ? ` · ${T.variant(prefs.variant)}` : '';
+      const head = `${style}${v} — ${prefs.periodo==='past' ? (lang==='en'?'Past':'Passato') : (lang==='en'?'Future':'Futuro')}`;
+      const q = domanda ? `Q: ${domanda}\n` : '';
+      const a = $('#answerBox').textContent || '';
+      return `${head}\n${q}\n${a}`;
     }
-  }catch{}
-};
-document.getElementById('againBtn').onclick=()=>{ location.href='fourth.html'; };
-</script>
+    $('#shareBtn').textContent = (lang==='en'? 'Share' : 'Condividi');
+    $('#copyBtn').textContent  = (lang==='en'? 'Copy'  : 'Copia');
+    $('#regenBtn').textContent = (lang==='en'? '↻ Regenerate' : '↻ Rigenera');
+    $('#newBtn').textContent   = (lang==='en'? '+ New question' : '+ Nuova domanda');
+    $('#saveBtn').textContent  = (lang==='en'? '⭐ Save' : '⭐ Salva');
+
+    $('#shareBtn').onclick = async ()=>{
+      const text = buildShareText();
+      if(navigator.share){
+        try{ await navigator.share({ text }); toast(T.sharedOk); } catch{}
+      }else{
+        try{ await navigator.clipboard.writeText(text); toast(T.copied); }catch{}
+      }
+    };
+    $('#copyBtn').onclick = async ()=>{
+      try{ await navigator.clipboard.writeText(buildShareText()); toast(T.copied); }catch{}
+    };
+
+    // Rigenera (stessa richiesta)
+    $('#regenBtn').onclick = ()=> render();
+
+    // Nuova domanda
+    $('#newBtn').onclick = ()=> location.href='fourth.html';
+
+    // Salva domanda per dopo
+    $('#saveBtn').onclick = ()=>{
+      const list = readJSON('next_prompts',[]);
+      list.unshift({ q: domanda, ts: Date.now() });
+      writeJSON('next_prompts', list.slice(0,50));
+      toast(T.saved);
+    };
+  </script>
 </body>
 </html>
