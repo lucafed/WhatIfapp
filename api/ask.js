@@ -1,148 +1,357 @@
-// /api/ask.js — Next.js Route Handler completo
-// Richiede: process.env.OPENAI_API_KEY
-// La UI (fourth/fifth) passa: { domanda, lang, stile, periodo, micro, sex, profile, whatif_variant }
+// /api/ask.js — What?f Engine (2025 FINAL)
+// Stili: whatif (realismo lucido) · wtf (sarcasmo demenziale affettuoso, alcol, oggetti, “bestemmia” narrata)
+// IT/EN — paragrafo singolo, niente liste/domande/emoji
+// Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
+// Log su Redis SENZA testo della domanda (solo metadati + hash non reversibile)
 
-export const runtime = "nodejs";
+import OpenAI from "openai";
+import { Redis } from "@upstash/redis";
+import { Ratelimit } from "@upstash/ratelimit";
 
-function normSex(x = "") {
-  const s = String(x || "").toLowerCase();
-  if (["m","male","uomo"].includes(s)) return "m";
-  if (["f","female","donna"].includes(s)) return "f";
-  return "nb";
-}
+// ---------- OpenAI ----------
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const MODEL = "gpt-4o-mini";
 
-/* =========================
-   FEW-SHOT — WHAT THE F
-   (imprecazioni dentro la narrazione + 2 reazioni)
-   ========================= */
-const FEWSHOT_WTF = [
-  {
-    user: "E se comprassi una moto?",
-    assistant:
-      "Ah, Luca mio, la moto — già ti vedo col giubbotto lucido e l’orgoglio che fa attrito. Accendi e romba come un drago epilettico, ti senti immortale; poi un piccione ti taglia la strada e ti esce un “porca di quella frizione ubriaca e maledetta!” che rimbalza sui muri. Un passante applaude, un cane ulula in do maggiore, e il semaforo si gira dall’altra parte per la vergogna. Riparti come se niente fosse, ma il cavalletto resta giù e ti tradisce con un “mannaggia al ferro storto che t’ha creato!”. Ti fermi al bar, Negroni di conforto, il barista aggiunge due dita “per compassione”. Ridi, brontoli ancora piano, e capisci che la moto non era per scappare: era solo un modo elegante di cadere in grande stile."
-  },
-  {
-    user: "E se aprissi un bar?",
-    assistant:
-      "Ah, ma guarda un po’, Luca… il genio dell’espresso che si sveglia imprenditore. Grembiule nuovo, sorriso da spot; la moka sibila come un nonno stanco. Il primo cliente vuole un cappuccino “senza schiuma ma caldo, però freddo dentro” e parte la pressione. Tentando l’impossibile ti bruci un dito, sbotti: “porca di quella schiuma sorda e bastarda!” — le tazzine tremano e il cucchiaino va in sciopero. Il frigo rantola, la macchina del caffè fa un ruttino di protesta, una nonna ti guarda come se avessi bestemmiato in latino. Tu versi grappa nel caffè e pensi: almeno oggi ho aperto un locale che fa ridere pure i mobili. Chiudi la sera, il bancone sussurra “ce la rifacciamo domani, capo?” — tu annuisci: fegato in disarmo, morale alto."
-  },
-  {
-    user: "E se mi innamorassi di nuovo?",
-    assistant:
-      "Ah, eccoci qua, Luca. L’amore di nuovo, eh? Tu e Cupido siete come due ubriachi che continuano a chiamarsi dopo mezzanotte. Giuri “stavolta vado piano”, ma dopo due messaggi stai già scrivendo poesie con l’ortografia di un vino da tre euro. Lei risponde un’ora dopo con un “ahaha” e tu ci leggi il destino. Ti scappa un “porca di quella luna sbronza e bugiarda!” così potente che la tenda vibra e il gatto abbandona casa per protesta; il bicchiere fa un tintinnio tipo applauso lento e Alexa finge “fare un respiro profondo”. Tu invece apri un Amarone e filosofeggi sulla differenza tra “tinder” e “tremore esistenziale”. Alla fine ridi, sbotti di nuovo ma con affetto, e capisci che forse innamorarsi non è una punizione — è solo il modo più rumoroso di sentirsi vivi."
-  },
-  {
-    user: "E se mi innamorassi di nuovo? (femminile)",
-    assistant:
-      "Ah, Luisa… di nuovo tu, eh? Ogni volta che dici “stavolta ci penso bene”, un prosecco da qualche parte si stappa da solo. Ti vedo: messaggi che cancelli e riscrivi come un trattato di pace. Lui visualizza e non risponde — ti parte un “porca di quella chat maledetta e dell’algoritmo suo zio!” che fa tremare la lampada e il gatto si rifugia dietro la lavatrice; il calice si riempie da solo per compassione. Sospiri, bestemmi piano con eleganza da signora disperata, e ti dici: almeno sapevo dove andavo a schiantarmi. All’ultimo sorso ridi: innamorarsi è come un aperitivo, sai che finirà male, ma ci vai lo stesso — perché finché dura è vita vera."
-  },
-  {
-    user: "E se tornassi a vivere all’Aquila?",
-    assistant:
-      "Oh, L’Aquila… torni e la città ti punzecchia per vedere se sei vivo. Cammini e la pietra ti fa memoria addosso; al bar ordini l’espresso e sbotti un “per la madonna del cucchiaino storto!” quando ti scotti, i bicchieri applaudono in coro e il lampione finge di non sentire. Due facce ti chiamano per nome, la panchina scricchiola tipo risata; tu brindisino delle undici “per ambientarti”. Capisci che non stai tornando indietro ma tornando intero: le crepe lucidate a festa, e il vento che ti sistema i pensieri come sedie al bar."
-  }
+// ---------- Upstash ----------
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
+
+// rate limit: 10 req/min per IP (bypass SOLO per admin)
+const rl = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "1 m"),
+});
+
+// ---------- CORS ----------
+const ALLOWED_ORIGINS = [
+  "https://what-ifapp.vercel.app",
+  "http://localhost:3000",
+  "http://127.0.0.1:5500",
 ];
-
-/* =========================
-   FEW-SHOT — WHAT IF
-   (due stili: analitico & poetico)
-   ========================= */
-const FEWSHOT_WHATIF_ANALITICO = {
-  user: "E se tornassi a vivere all’Aquila? (analitico)",
-  assistant:
-    "Sai Luca, questa domanda era nell’aria da un po’, vero? Tornare a L’Aquila oggi significherebbe ritrovarti in una città che ha cambiato pelle ma non respiro. Negli ultimi anni la ricostruzione ha rimesso in moto l’economia, ma a ritmo lento: più imprese locali, meno industria; una PA più presente e reti corte. Il costo della vita è sotto al Nord — e lo sono anche gli stipendi: qui si guadagna meno, ma si spende con più senso. Scuola e servizi sono vicini, i tragitti più brevi; il lavoro chiede flessibilità (ibrido, consulenze, pubblico-privato). A volte ti mancherà il rumore veneto, ma scoprirai che la quiete non è silenzio: è spazio per respirare e coltivare relazioni. Se cerchi scalabilità veloce resta dura; se cerchi qualità di vita e comunità, è un sì onesto."
-};
-
-const FEWSHOT_WHATIF_POETICO = {
-  user: "E se tornassi a vivere all’Aquila? (poetico)",
-  assistant:
-    "Bella questa, Luca — la tenevi lì da tempo. Immagina di riaprire le finestre e sentire quell’aria fredda che sa di legna e memoria. Le strade ti riconoscono al passo, le montagne ti guardano come se non te ne fossi mai andato. Il bar sotto casa serve il caffè corto e ruvido, e la gente ti chiama per nome come se il tempo fosse rimasto in attesa. I tuoi figli imparano il ritmo delle stagioni, la lentezza che non spreca i giorni. Ogni sera, quando chiudi le imposte, non torni indietro: torni dove la tua vita aveva smesso di correre."
-};
-
-/* =========================
-   Frase magica (istruzioni minime e tassative)
-   ========================= */
-function buildSystem({ lang="it", stile="wtf", variant="poetico" }) {
-  const it = lang.toLowerCase()==="it";
-  if (stile === "wtf") {
-    return (it
-      ? "Parla ESATTAMENTE come negli esempi What the F: sarcastico da bar, ubriaco brillante ma affettuoso; un solo paragrafo 6–9 frasi; dentro la narrazione almeno un’imprecazione grezza e comica (mai odio), con 2 reazioni attorno (oggetti/persone). Niente elenchi, niente meta-spiegazioni. Scrivi in italiano. Continua a parlare così."
-      : "Speak EXACTLY like the What the F samples: sarcastic bar-friend, tipsy but kind; single paragraph 6–9 sentences; include at least one coarse funny outburst with two reactions; no lists, no meta. Write in English.");
-  }
-  // WHAT IF
-  return (it
-    ? `Parla ESATTAMENTE come negli esempi What if. Apri con una frase confidenziale breve. Poi rispondi ${variant==="analitico"?"analitico (economia/servizi/qualità di vita, concreto)":"poetico (immagini quotidiane, dolci ma nitide)"} in un solo paragrafo da 6–9 frasi. Niente elenchi, niente meta-spiegazioni. Scrivi in italiano. Continua a parlare così.`
-    : `Speak EXACTLY like the What if samples. Open with a short intimate line. Then answer ${variant==="analitico"?"analytical":"poetic"} in a single 6–9 sentence paragraph. No lists, no meta. Write in English.`);
+function cors(req, res) {
+  const origin = String(req.headers.origin || "");
+  if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token, x-pro");
 }
 
-function buildMessages({ domanda, lang, stile, variant }) {
-  const messages = [{ role:"system", content: buildSystem({ lang, stile, variant }) }];
+/* ---------- Helpers ---------- */
+const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
-  if (stile === "wtf") {
-    FEWSHOT_WTF.forEach(s => {
-      messages.push({ role:"user", content:s.user });
-      messages.push({ role:"assistant", content:s.assistant });
-    });
-  } else {
-    messages.push({ role:"user", content:FEWSHOT_WHATIF_ANALITICO.user });
-    messages.push({ role:"assistant", content:FEWSHOT_WHATIF_ANALITICO.assistant });
-    messages.push({ role:"user", content:FEWSHOT_WHATIF_POETICO.user });
-    messages.push({ role:"assistant", content:FEWSHOT_WHATIF_POETICO.assistant });
+function normLine(s = "") {
+  return String(s).toLowerCase().replace(/[“”"']/g, "").replace(/\s+/g, " ")
+    .replace(/[.,;:!?()\[\]\-—]+$/g, "").trim();
+}
+function tightenSentences(text, maxSentences) {
+  const parts = String(text || "").replace(/\n+/g, " ")
+    .split(/(?<=[.!?])\s+/).map((x) => x.trim()).filter(Boolean);
+  const out = []; const seen = new Set();
+  for (const p of parts) {
+    const n = normLine(p);
+    if (!n || seen.has(n)) continue;
+    const wc = p.split(/\s+/).length;
+    if (wc <= 3 && !/[.!?]$/.test(p)) continue;
+    out.push(p); seen.add(n);
+    if (out.length >= maxSentences) break;
   }
-
-  // domanda finale (con tag variante per il few-shot)
-  let q = String(domanda||"").trim();
-  if (stile==="whatif") q += variant==="analitico" ? " (analitico)" : " (poetico)";
-  messages.push({ role:"user", content:q });
-
-  return messages;
+  let t = out.join(" ");
+  if (!/[.!?…]$/.test(t)) t += ".";
+  return t;
+}
+function clampWords(text, maxWords) {
+  const w = String(text || "").split(/\s+/);
+  if (w.length <= maxWords) return text;
+  const slice = w.slice(0, maxWords).join(" ");
+  const m = slice.match(/([\s\S]*?[.!?])(?![\s\S]*[.!?])/);
+  return m ? m[1] : slice + "…";
+}
+function normalizeOneParagraph(s = "") {
+  return String(s).replace(/\s*\n+\s*/g, " ").replace(/\s{2,}/g, " ")
+    .replace(/\s+([.,;:!?])/g, "$1").trim();
+}
+function stripQuestionEcho(domanda, text) {
+  const d = String(domanda || "").replace(/[“”"']/g, "").trim().toLowerCase();
+  let t = String(text || "");
+  const lead = t.slice(0, Math.min(t.length, d.length + 12)).toLowerCase().replace(/[“”"']/g, "").trim();
+  const echoRx = /^(?:e\s*se|what\s*if|domanda:|q:)[^.!?…]*[.!?…]\s+/i;
+  if (lead.startsWith(d)) { const cut = t.indexOf("."); if (cut > -1) t = t.slice(cut + 1).trim(); }
+  t = t.replace(echoRx, "");
+  return t;
+}
+function ensureSpicyButSafeWTF(t) {
+  // Garantisce chiusura e singolo paragrafo; non inserisce mai insulti religiosi letterali
+  let out = String(t || "").trim();
+  if (!/[.!?…]$/.test(out)) out += ".";
+  return out;
+}
+function tinyHash(s = "") {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0).toString(36);
 }
 
-export async function POST(req) {
+/* ---------- Admin check ---------- */
+async function isAdmin(req, requesterIp) {
+  const token = String(req.headers["x-admin-token"] || "").trim();
+  if (!token) return false;
   try {
-    const body = await req.json();
+    const data = await redis.hgetall(`admin:token:${token}`); // { ip, ua }
+    if (!data) return false;
+    const LOCK_IP = String(process.env.ADMIN_LOCK_IP || "false").toLowerCase() === "true";
+    if (LOCK_IP) {
+      if (!data.ip) return false;
+      return data.ip === requesterIp;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/* ---------- Modalità temporale ---------- */
+function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
+  const en = isEn(lang);
+  if (String(periodo || "").toLowerCase() === "past") {
+    return en
+      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Speak as if the choice had been made back then and show how it likely unfolded. Prefer past/conditional with a few present flashes. No lists, no questions, no echo. Keep exact ${style.toUpperCase()} voice.`
+      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Parla come se la scelta fosse stata fatta allora e mostra come sarebbe verosimilmente andata. Preferisci passato/condizionale con lampi di presente. Niente liste, niente domande, niente eco. Mantieni la voce ${style.toUpperCase()}.`;
+  }
+  return en
+    ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Describe a plausible near-future unfolding as if stepping into it now. No lists, no questions, no echo. Keep exact ${style.toUpperCase()} voice.`
+    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi un prossimo futuro plausibile come se ci entrassi adesso. Niente liste, niente domande, niente eco. Mantieni la voce ${style.toUpperCase()}.`;
+}
+
+/* ---------- Persona & “frase magica” ---------- */
+function personaSystem(style, lang, sex = "") {
+  const SEX = String(sex || "").toLowerCase(); // "m" | "f" | "nb" | ""
+  const genderNickIT = (SEX === "f")
+    ? ["regina del casino","fenomena","capitana del caos","sirena urbana","signora dei forse","rockstar coi tacchi comodi"]
+    : (SEX === "m")
+      ? ["campione","fenomeno","capitano del caos","poeta del bar","barone del forse","rockstar con le tasche vuote"]
+      : ["leggenda","asso universale","cap* del caos","astronauta del dubbio"];
+  const genderNickEN = (SEX === "f")
+    ? ["queen of chaos","ace of maybe","captain of detours","legend in boots"]
+    : (SEX === "m")
+      ? ["champ","captain of chaos","bar poet","legend in denim"]
+      : ["icon","ace","captain of chaos"];
+
+  // WHAT THE F
+  if (style === "wtf") {
+    const SYS = (isEn(lang)
+      ? `
+Speak EXACTLY like the samples below. You are “What the F”: a loud, loving bar-friend who roasts with affection.
+SECOND PERSON. ONE paragraph, 6–8 sentences (~125–165 words). Simple, colloquial.
+OPEN with ONLY a rotating nickname (no verbs). Use boozy beats and, when relevant, “objects reacting”.
+Include exactly ONE brief, narrated blasphemy (never literal religious slurs), e.g., “you let out a blasphemy that rattles the glasses”.
+Insults stay affectionate; end warm and funny. No lists. No questions. No emojis. Keep the same rhythm.
+Nicknames (EN): ${genderNickEN.join(", ")}. Keep speaking like this.
+`.trim()
+      : `
+Parla ESATTAMENTE come gli esempi qui sotto. Sei “What the F”: amico di bar, rumoroso, affettuoso e sarcastico.
+SECONDA PERSONA. UN paragrafo, 6–8 frasi (~125–165 parole). Linguaggio semplice e colloquiale.
+APRI SOLO con un nomignolo (senza verbi). Usa battute alcoliche e, quando serve, “oggetti che reagiscono”.
+Inserisci una SOLA bestemmia narrata (mai scritta letteralmente), tipo “ti esce una bestemmia che fa tremare i bicchieri”.
+Le prese in giro restano affettuose; chiudi caldo e divertente. Niente elenchi. Niente domande. Niente emoji. Stesso ritmo.
+Nomignoli (IT): ${genderNickIT.join(", ")}. Continua a parlare così.
+`.trim());
+
+    // FEW-SHOT definitivi (gli esempi che hai approvato)
+    const FEWSHOTS = [
+      { role: "system", content:
+`ESEMPIO IT • Tornare all’Aquila (futuro)
+Pellegrino del ritorno, scendi con la valigia che scricchiola dignità e il vento ti sistema i pensieri come sedie al bar; il marciapiede riconosce il tuo passo e ti fa lo sconto sul dubbio, al bancone la tazzina ti guarda “di nuovo?” e tu, che fai il duro da metropoli, ti addolcisci come grappino alle undici, sbagli parcheggio con la sicurezza di uno che vuole soffrire bene, ti esce una bestemmia che fa tremare i bicchieri e il lampione finge di non sentire, poi due facce ti chiamano per nome e scopri che non stai tornando indietro ma tornando intero, con le crepe lucidate a festa, e ridi perché la città ti punge solo per controllare se sei vivo.` },
+      { role: "system", content:
+`ESEMPIO IT • Mettersi in proprio (futuro)
+Capitano del caos, arrivi col piano che sembra un tovagliolo firmato e l’Excel ti guarda come un cameriere stanco; il registratore di cassa tossisce come scooter in salita ma tre facce tornano e la vetrina si raddrizza da sola, stappi la bottiglia “buona” ed è aceto balsamico: brucia onesto, benedice l’errore, ti esce una bestemmia che scuote i bicchieri e il bancone risponde “anche oggi imprenditore”, alla sera conti spicci e sorrisi e capisci che non stai vincendo il mondo, stai reggendo te — che è molto più redditizio del previsto.` },
+      { role: "system", content:
+`ESEMPIO IT • Innamorarsi (maschile)
+Ah, eccoci qua, Luca. L’amore di nuovo, eh? Tu e Cupido come due ubriachi che vi chiamate dopo mezzanotte; giuri “vado piano” e dopo due messaggi scrivi poesie con l’ortografia di un vino da tre euro. Lei risponde “ahaha” e tu ci leggi il destino; ti scappa una bestemmia che fa vibrare la tenda e il gatto trasloca sotto il letto, il bicchiere fa un applauso lento e Alexa finge di consolare. Apri l’Amarone, filosofeggi tra “tinder” e “tremore esistenziale”, poi ridi: innamorarsi non è una punizione, è solo il modo più rumoroso di sentirsi vivi.` },
+      { role: "system", content:
+`ESEMPIO IT • Innamorarsi (femminile)
+Ah, Luisa… ogni volta che dici “stavolta ci penso”, da qualche parte si stappa un prosecco da solo. Messaggi che cancelli e riscrivi come un trattato di pace; lui visualizza e non risponde, ti scappa una bestemmia che fa tremare la lampada e il gatto emigra dietro la lavatrice, il calice si riempie per compassione. Sospiri, ti rimetti il rossetto del coraggio e ridi: l’amore è un aperitivo — sai che finirà male, ma fino all’ultimo sorso è vita vera.` },
+      { role: "system", content:
+`EXAMPLE EN • Moving city
+Champ, you arrive like a limited-series pilot and the buzzer rolls its eyes; the fridge hums “good luck” while the streetlights do wardrobe tests, you walk too far just to tire the nerves and a tiny beer forgives your accent, you let out a blasphemy that rattles the glasses and the mailbox pretends it didn’t hear, by grocery three you find your aisle and your pace, and the map stops asking for proof — you’re not conquering a city, you’re landing your life.` },
+    ];
+    return { sys: SYS, fewshots: FEWSHOTS };
+  }
+
+  // WHAT IF
+  const SYS_WHATIF = (isEn(lang)
+    ? `
+Speak EXACTLY like the samples below. You are “What If”: lucid, kind, slightly ironic.
+SECOND PERSON. One paragraph, 8–11 sentences (~115–160 words). Ordinary images (keys, streetlights, notebooks, hands, air). Small truths; no heroics, no melancholy. No lists. No questions. No emojis. End with a short reflective line. Keep speaking like this.
+`.trim()
+    : `
+Parla ESATTAMENTE come gli esempi qui sotto. Sei “What If”: lucido, affettuoso, un filo ironico.
+SECONDA PERSONA. Un paragrafo, 8–11 frasi (~115–160 parole). Immagini quotidiane (chiavi, lampioni, taccuini, mani, aria). Verità piccole e vere; niente eroismi o malinconia. Niente elenchi o domande o emoji. Chiudi con una riga riflessiva. Continua a parlare così.
+`.trim());
+
+  const FEWSHOTS = [
+    { role: "system", content:
+`ESEMPIO IT • Tornare all’Aquila
+Tornare non sarebbe un passo indietro ma un passo fatto meglio. Ti stupirebbe la memoria delle strade: tengono il ritmo anche quando tu lo perdi. All’inizio la lentezza graffia, poi capisci che ti rimette in orario. I volti sembrano uguali, ma li guardi con occhi più larghi. Le chiavi tornano sul piattino giusto, la spesa nel negozio che sa il tuo nome. La nostalgia, se non la insegui, si siede accanto e tace. Non serve ricominciare da zero: basta ricominciare da te.` },
+    { role: "system", content:
+`ESEMPIO IT • Variante analitica
+Se tornassi oggi, troveresti una città che ha cambiato pelle ma non respiro: ricostruzione lenta ma solida, reti corte, servizi vicini, stipendi più bassi del Nord ma costi anche; lavoro ibrido e pubblico-privato mescolati, tempi di spostamento brevi che regalano ore. Ti mancherà a tratti il rumore efficiente, ma scoprirai che la quiete non è silenzio: è spazio per respirare e tenere insieme relazioni e lavoro. Non tutto accelera: quello che conta, sì.` },
+    { role: "system", content:
+`EXAMPLE EN • Move city
+You’ll feel like a guest, then your hands learn the new keys. You’ll walk not to think better but to tire the noise. By the third grocery you’ll know which aisle is yours. Evenings soften and ask less proof. You’ll miss some things, not all at once. The rest finds its place. And you notice that beneath the noise something of yours was already there.` },
+  ];
+
+  return { sys: SYS_WHATIF, fewshots: FEWSHOTS };
+}
+
+/* ---------- API Handler ---------- */
+export default async function handler(req, res) {
+  cors(req, res);
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
+
+  try {
+    if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: "missing_api_key" });
+
+    // IP richiedente
+    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
+      .toString().split(",")[0].trim();
+
+    // Admin bypass (rate+crediti)
+    const admin = await isAdmin(req, ip);
+    const bypass = admin === true;
+
+    // PRO header (UI locale): x-pro: "1"
+    const isPro = String(req.headers["x-pro"] || "").trim() === "1";
+
+    // Rate limit 10/min (se non bypass)
+    if (!bypass) {
+      const { success } = await rl.limit(`ask:${ip}`);
+      if (!success) return res.status(429).json({ error: "rate_limited_minute" });
+    }
+
+    // Crediti giornalieri: Admin ∞, PRO 10, Free 3
+    let used = 0, dailyCap = isPro ? 10 : 3;
+    if (!bypass) {
+      const today = new Date().toISOString().slice(0, 10);
+      const key = `credits:${ip}:${today}`;
+      used = (await redis.incr(key)) ?? 1;
+      if (used === 1) await redis.expire(key, 60 * 60 * 24);
+      if (used > dailyCap) {
+        return res.status(402).json({ error: "daily_credits_exhausted", used, dailyCap });
+      }
+    }
+
+    // Body
+    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const {
-      domanda, lang="it", stile="whatif", periodo="future",
-      micro={}, sex:rawSex="", profile={}, whatif_variant="poetico"
-    } = body || {};
+      domanda = "",
+      stile = "whatif",
+      lang = "it",
+      extra = "",
+      periodo = "future",
+      sex = "",          // top-level sex ("m" | "f" | "nb")
+      micro = {}         // micro-profile (può includere micro.sex)
+    } = body;
 
-    if (!domanda) {
-      return new Response(JSON.stringify({ detail:"domanda_missing" }), { status:400 });
-    }
+    if (!domanda || typeof domanda !== "string")
+      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
-    const sex = normSex(rawSex || profile.sex || profile.gender);
-    const variant = (String(whatif_variant).toLowerCase()==="analitico") ? "analitico" : "poetico";
+    const resolvedSex = String(sex || micro?.sex || "").toLowerCase();
 
-    const messages = buildMessages({ domanda, lang, stile, variant });
+    // Personas + Temporal mode
+    const { sys, fewshots } = personaSystem(stile, lang, resolvedSex);
+    const temporal = temporalSystem(periodo, lang, stile);
 
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
-      method:"POST",
-      headers:{
-        "Authorization":`Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type":"application/json"
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        temperature: stile==="wtf" ? 0.9 : 0.7,
-        top_p: 1,
-        presence_penalty: stile==="wtf" ? 0.6 : 0.2,
-        frequency_penalty: 0.2,
-        messages
-      })
+    // Seed deterministico
+    const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${lang}|${resolvedSex}`), 36) % 1000000;
+
+    const extraTemporalHint =
+      stile === "wtf" && String(periodo).toLowerCase() === "past"
+        ? (isEn(lang)
+          ? "Write entirely in past or conditional, as if it already happened, keeping the upbeat roasting tone."
+          : "Scrivi tutto al passato o al condizionale, come se fosse già successo, mantenendo il tono allegro e pungente.")
+        : "";
+
+    const userPrompt = isEn(lang)
+      ? `User question (do NOT restate it). Persona must adapt to user sex="${resolvedSex||"unknown"}". Context: "${String(extra||"").trim()}". Keep EXACT persona voice from the samples. INTERNAL SEED: ${seedNum}.`
+      : `Domanda (NON ripeterla). Adatta la voce al sesso utente="${resolvedSex||"unknown"}". Contesto: "${String(extra||"").trim()}". Mantieni ESATTAMENTE la voce degli esempi. SEED INTERNO: ${seedNum}.`;
+
+    const messages = [
+      { role: "system", content: sys },           // << frase magica (persona)
+      { role: "system", content: temporal },      // << modalità temporale
+      ...(extraTemporalHint ? [{ role: "system", content: extraTemporalHint }] : []),
+      ...(fewshots || []),                        // << esempi approvati
+      { role: "system", content: isEn(lang)
+          ? `HARD RULES (WTF only): one narrated blasphemy (never literal), alcohol beats ok, reacting objects only when relevant, open ONLY with a nickname (no verbs).`
+          : `REGOLE DURE (WTF): una sola bestemmia narrata (mai letterale), alcol ok, oggetti che reagiscono solo quando serve, apertura SOLO con nomignolo (senza verbi).` },
+      { role: "user", content: userPrompt },
+    ];
+
+    // OpenAI
+    const completion = await client.chat.completions.create({
+      model: MODEL,
+      temperature: stile === "wtf" ? 0.98 : 0.82,
+      top_p: 0.92,
+      max_tokens: 360,
+      frequency_penalty: stile === "wtf" ? 0.4 : 0.1,
+      presence_penalty: stile === "wtf" ? 0.2 : 0.0,
+      messages,
     });
 
-    if (!r.ok) {
-      const t = await r.text().catch(()=> "");
-      return new Response(JSON.stringify({ detail:"upstream_error", upstream:t }), { status:502 });
+    // Post-process
+    let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
+    if (!answer) throw new Error("empty_model_response");
+    answer = stripQuestionEcho(domanda, answer);
+    answer = tightenSentences(answer, stile === "wtf" ? 8 : 11);
+    answer = clampWords(answer, stile === "wtf" ? 165 : 160);
+    answer = normalizeOneParagraph(answer);
+    if (stile === "wtf") answer = ensureSpicyButSafeWTF(answer);
+    else if (!/[.!?…]$/.test(answer)) answer += ".";
+
+    // --- LOG persistente (privacy-safe: niente testo domanda) ---
+    try {
+      const entry = {
+        ts: Date.now(),
+        ip,
+        style: stile,
+        lang,
+        periodo,
+        sex: resolvedSex || null,
+        domanda_len: String(domanda || "").length,
+        domanda_hash: tinyHash(domanda || ""),
+        answer_chars: (answer || "").length,
+        admin: !!admin,
+        user_type: bypass ? "admin" : (isPro ? "pro" : "free"),
+      };
+      await redis.lpush("logs:ask", JSON.stringify(entry));
+      await redis.ltrim("logs:ask", 0, 9999);
+      await redis.incr("stats:total");
+      await redis.hincrby("stats:style", stile, 1);
+      await redis.hincrby("stats:lang", lang, 1);
+      await redis.hincrby("stats:periodo", String(periodo || "future"), 1);
+      if (resolvedSex) await redis.hincrby("stats:sex", resolvedSex, 1);
+      await redis.hincrby("stats:user_type", entry.user_type, 1);
+      const dayKey = `stats:day:${new Date().toISOString().slice(0, 10)}`;
+      await redis.hincrby(dayKey, `${stile}:${periodo}`, 1);
+      await redis.expire(dayKey, 90 * 24 * 60 * 60);
+    } catch (e) {
+      console.warn("log failure (non-bloccante)", e);
     }
 
-    const data = await r.json();
-    const answer = (data.choices?.[0]?.message?.content || "").trim();
-
-    return new Response(JSON.stringify({ answer }), {
-      status:200, headers:{ "Content-Type":"application/json" }
+    return res.status(200).json({
+      answer,
+      style: stile,
+      lang,
+      periodo,
+      model: MODEL,
+      admin,
+      pro: isPro,
+      credits: bypass ? null : { used, dailyCap },
     });
-  } catch (e) {
-    return new Response(JSON.stringify({ detail:"server_error", error:String(e?.message||e) }), { status:500 });
+  } catch (err) {
+    console.error("❌ [/api/ask] error:", err);
+    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
 }
