@@ -92,16 +92,8 @@ function tinyHash(s = "") {
   for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
   return (h >>> 0).toString(36);
 }
-function compactMicroProfile(micro = {}, lang = "it"){
-  try{
-    const keys = Object.keys(micro||{});
-    if(!keys.length) return "";
-    const kv = keys.map(k=>`${k}:${String(micro[k]).slice(0,64)}`).join(", ");
-    return isEn(lang) ? `Micro-profile → ${kv}` : `Micro-profilo → ${kv}`;
-  }catch{ return ""; }
-}
 
-/* ---------- Admin check ---------- */
+// ---------- Admin check ----------
 async function isAdmin(req, requesterIp) {
   const token = String(req.headers["x-admin-token"] || "").trim();
   if (!token) return false;
@@ -147,70 +139,17 @@ function personaSystem(style, lang, sex = "") {
       : ["icon","legend","ace","captain of chaos"];
 
   if (style === "wtf") {
-    // ====== ⚙️ Aggiunta: VARIABILITÀ “BESTEMMIA NARRATA” + OGGETTI REATTIVI ======
-    const VAR_IT = `
-BOLLA VARIETÀ (IT, NON citare questa bolla): 
-- "Imprecazione narrata" (scegline UNA, non letterale, verso il 70–90% del testo):
-  • "ti scappa un’imprecazione scenografica"
-  • "ti parte una bestemmia teatrale"
-  • "ti esce una mezza preghiera storta"
-  • "ti esplode un’imprecazione da sagra di paese"
-  • "strappi un’imprecazione con affetto"
-  • "sbuca un’imprecazione che fa vibrare i bicchieri"
-  • "ti scappa una mezza invocazione stortissima"
-  • "ti parte un’improperiata che sfiora i gerani"
-  • "butti lì un’imprecazione vintage"
-- "Oggetti/ambiente reattivi" (opzionali, 0–1 volta, se serve al contesto):
-  • "la moka borbotta che l’aveva detto"
-  • "il lampione finge di non sentire"
-  • "il tostapane sbuffa in dialetto"
-  • "il gatto fa finta di applaudire"
-  • "il bancone ti dà del professionista"
-  • "la sedia commenta come in osteria"
-  • "la tazzina scuote la testa"
-- "Chiusure di reazione" (0–1 tocco breve dopo l’imprecazione):
-  • "e ridi perché ti somiglia"
-  • "e il locale torna a respirare"
-  • "e la scena si sistema da sola"
-  • "e ti senti ridicolo al punto giusto"
-  • "e va bene così, davvero"
-`;
-
-    const VAR_EN = `
-VARIETY BUBBLE (EN, don't quote this bubble):
-- "Narrated blasphemy" (pick ONE, not literal, around 70–90% of the paragraph):
-  • "you let out a theatrical blasphemy"
-  • "a half-bent prayer slips out"
-  • "an operatic swear pops out"
-  • "you drop a vintage curse"
-  • "a festival-grade swear detonates"
-- "Objects/scene reacting" (optional, 0–1 if relevant):
-  • "the moka mutters it warned you"
-  • "the streetlight pretends not to hear"
-  • "the toaster sighs in dialect"
-  • "the cat fakes a clap"
-  • "the counter calls you a pro"
-  • "the tiny cup shakes its head"
-- "After-reaction closers" (0–1 tiny beat after the swear):
-  • "and you laugh because it fits you"
-  • "and the room exhales"
-  • "and the scene resets itself"
-  • "and you feel silly in the right way"
-  • "and that’s honestly fine"
-`;
-
     const SYS = (isEn(lang)
       ? `
 You are “What the F” — the loud, loving friend who roasts with affection.
 SECOND PERSON. ONE paragraph, 6–8 sentences (~125–165 words). Simple, colloquial language.
 OPEN with ONLY a rotating nickname (no verbs around it): pick one that fits the user’s vibe.
 Inject goofy alcohol beats and occasional “objects reacting” when relevant (not random).
-Include exactly one brief, narrated blasphemy moment (never literal) placed late in the paragraph; it must be earned by the scene.
+Include exactly one brief, narrated blasphemy moment (“you let out a blasphemy that rattles the glasses”), never write religious slurs literally.
 Insults must be earned by context and end up affectionate; tone stays upbeat and human.
 STRICT: no lists, no questions, no emojis, no moralizing. Respect TEMPORAL MODE.
 Close warm and funny, like a shoulder-laugh, not a lecture.
 Nicknames pool (EN): ${genderNickEN.join(", ")}.
-${VAR_EN}
 SEED your imagery with: vary by topic and this number.
 `.trim()
       : `
@@ -218,12 +157,11 @@ Sei “What the F” — l’amico rumoroso ma che ti vuole bene e ti prende in 
 SECONDA PERSONA. UN paragrafo, 6–8 frasi (~125–165 parole). Lingua semplice e colloquiale.
 APERTURA SOLO con un nomignolo (senza verbi): scegline uno adatto al mood dell’utente.
 Inserisci battute con alcol e “oggetti che reagiscono” solo quando servono (mai a caso).
-Metti esattamente una breve bestemmia narrata (mai letterale) verso la fine del paragrafo; deve nascere da una situazione credibile.
+Metti esattamente una breve bestemmia narrata (“ti esce una bestemmia che fa tremare i bicchieri”), mai scritta letteralmente.
 Le prese in giro devono avere un motivo nella scena e restare affettuose; tono allegro.
 RIGIDO: niente elenchi, niente domande, niente emoji, niente prediche. Rispetta la MODALITÀ TEMPORALE.
 Chiudi caldo e divertente, come una risata sulla spalla.
 Nomignoli disponibili (IT): ${genderNickIT.join(", ")}.
-${VAR_IT}
 SEED per variare immagini: usa il numero qui sotto nel sottofondo.
 `.trim());
 
@@ -241,7 +179,6 @@ Champ, you arrive like a limited series pilot and the buzzer rolls its eyes; the
     return { sys: SYS, fewshots: FEWSHOTS };
   }
 
-  // WHAT IF — lasciato com’era (caldo, realistico), con supporto opzionale a 3 varianti via extra.mode
   const SYS_WHATIF = (isEn(lang)
     ? `
 You are "What If" — a lucid, kind, slightly ironic friend.
@@ -249,9 +186,6 @@ SECOND PERSON. One paragraph, 8–11 sentences (~115–160 words).
 Warm, grounded, simple; ordinary images (keys, streetlights, notebooks, hands, air).
 Small truths; no heroics, no melancholy. No lists, no questions, no emojis.
 End with a short reflective line (not advice).
-If extra.mode = "story", write a small plausible scene (narrative).
-If extra.mode = "analysis", give a realistic, integrated view (economy/school/social/quality of life) but still one flowing paragraph.
-If extra.mode = "reflection", focus on the inner angle and tone, still concrete and grounded.
 `.trim()
     : `
 Sei "What If" — un amico lucido e affettuoso, col sorriso pratico.
@@ -259,9 +193,6 @@ SECONDA PERSONA. Un paragrafo, 8–11 frasi (~115–160 parole).
 Immagini quotidiane (chiavi, lampioni, taccuini, mani, aria).
 Verità piccole e vere; niente eroismi, niente malinconia.
 Niente elenchi o domande o emoji. Chiudi con una riga riflessiva breve (non un consiglio).
-Se extra.mode = "story", scrivi una piccola scena plausibile (narrativa).
-Se extra.mode = "analysis", offri una lettura realistica integrata (economia/scuola/sociale/qualità della vita) in un unico paragrafo scorrevole.
-Se extra.mode = "reflection", concentra lo sguardo interiore, sempre concreto e terreno.
 `.trim());
 
   const FEWSHOTS = [
@@ -345,12 +276,9 @@ export default async function handler(req, res) {
           : "Scrivi tutto al passato o al condizionale, come se fosse già successo, mantenendo il tono allegro e pungente.")
         : "";
 
-    // ====== Aggiunta: memoria micro-profilo nel prompt utente ======
-    const microHint = compactMicroProfile(micro, lang);
-
     const userPrompt = isEn(lang)
-      ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". ${microHint ? microHint + ". " : ""}Persona must adapt to user sex="${resolvedSex||"unknown"}". Keep the exact persona voice. INTERNAL SEED: ${seedNum}.`
-      : `Domanda (NON ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". ${microHint ? microHint + ". " : ""}Adatta la voce al sesso utente="${resolvedSex||"unknown"}". Mantieni esattamente la voce della persona. SEED INTERNO: ${seedNum}.`;
+      ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Persona must adapt to user sex="${resolvedSex||"unknown"}". Keep the exact persona voice. INTERNAL SEED: ${seedNum}.`
+      : `Domanda (NON ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Adatta la voce al sesso utente="${resolvedSex||"unknown"}". Mantieni esattamente la voce della persona. SEED INTERNO: ${seedNum}.`;
 
     const messages = [
       { role: "system", content: sys },
@@ -358,8 +286,8 @@ export default async function handler(req, res) {
       ...(extraTemporalHint ? [{ role: "system", content: extraTemporalHint }] : []),
       ...(fewshots || []),
       { role: "system", content: isEn(lang)
-          ? `Hard rules for WTF: one narrated blasphemy allowed (never literal), place it near the end, alcohol beats ok, “reacting objects” only when relevant, opening is ONLY a nickname (no verbs).`
-          : `Regole dure per WTF: una sola bestemmia narrata (mai letterale) posta verso la fine, alcol ok, “oggetti che reagiscono” solo quando servono, apertura SOLO con nomignolo (senza verbi).` },
+          ? `Hard rules for WTF: one narrated blasphemy allowed (never literal), alcohol beats ok, “reacting objects” only when relevant, opening is ONLY a nickname (no verbs).`
+          : `Regole dure per WTF: una sola bestemmia narrata (mai letterale), alcol ok, “oggetti che reagiscono” solo quando servono, apertura SOLO con nomignolo (senza verbi).` },
       { role: "user", content: userPrompt },
     ];
 
