@@ -147,16 +147,16 @@ const I18N={
       copied:"Copiato!", error:"[errore server]",
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
       meta:(st,p)=> st==='wtf'
-        ? `Stile: What the F · 6–9 frasi · paragrafo unico · 3+ stoccate interne · doppia punchline · modalità: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if · 8–11 frasi · paragrafo unico · niente elenchi/domande/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.`},
+        ? `Stile: What the F · 7–9 frasi · paragrafo unico · roasts confidenziali · esplosione comica a metà · modalità: ${p==='past'?'Passato (controfattuale)':'Futuro (prospettico)'}.`
+        : `Stile: What if · 8–11 frasi · paragrafo unico · chiusura riflessiva breve · modalità: ${p==='past'?'Passato (controfattuale)':'Futuro (prospettico)'}.`},
   en:{tWTF:"⚡ What the F — Result", tWHF:"💡 What if — Result",
       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
       share:"📤 Share / Copy", again:"🔁 Ask another",
       copied:"Copied!", error:"[server error]",
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
       meta:(st,p)=> st==='wtf'
-        ? `Style: What the F · 6–9 sentences · single paragraph · 3+ inside jabs · double punchline · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if · 8–11 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`}
+        ? `Style: What the F · 7–9 sentences · single paragraph · confidential roasts · mid-scene comic outburst · mode: ${p==='past'?'Past (counterfactual)':'Future (prospective)'}.`
+        : `Style: What if · 8–11 sentences · single paragraph · short reflective close · mode: ${p==='past'?'Past (counterfactual)':'Future (prospective)'}.`}
 }[lang];
 
 document.getElementById('langBtn').textContent=lang.toUpperCase();
@@ -173,31 +173,30 @@ function normalizeOneParagraph(s=""){
   return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
 }
 
-/* LEADS */
+/* LEADS (aperture confidenziali) */
 const LEADS = {
   it:{
     wtf:[
-      "Ehi oggi non scherzi, barone del rimando, entri coi gomiti avanti e la faccia dritta.",
-      "Oggi la grappa ti ha messo il mantello, ninja della pausa, e sembri quasi credibile.",
-      "Tranquillo capitano del caos, il bancone ti riconosce e fa finta di niente.",
-      "Respira maestro del quasi: il destino oggi inciampa per primo e noi guardiamo."
+      "Ehi, oggi non scherzi: entri con il fiato da spritz e il futuro ti fa spazio al bancone.",
+      "Oh, guarda chi torna: porti la faccia da decisioni e l’odore di moka nervosa.",
+      "Calma e coraggio, in pari: i lampioni fanno la ola, tu ordini un presente lungo."
     ],
     whatif:[
       "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.",
-      "Ti siedi un attimo e scopri che la calma ha memoria lunga.",
-      "La stanza è la stessa, lo sguardo no: è già un inizio.",
+      "La stanza è la stessa, lo sguardo no: già questo basta.",
       "Respiri come chi ha tempo, e il tempo ti crede."
     ]
   },
   en:{
     wtf:[
-      "Easy today, duke of maybe — you arrive with elbows first and a straight face.",
-      "Grappa gave you a cape, spritz coach; you look almost credible.",
-      "Breathe, captain of chaos; the counter recognizes you and politely looks away."
+      "Hey, not kidding today: you bring spritz-breath and the future opens a stool.",
+      "Look who’s back: decision-face with a nervous moka in the background.",
+      "Calm and courage in a tie: the streetlights wave while you order a long present."
     ],
     whatif:[
       "Set the keys down and let the quiet that doesn’t judge go first.",
-      "Same room, different gaze — that’s already a start."
+      "Same room, different gaze — that’s already a start.",
+      "Breathe like someone with time, and time believes you."
     ]
   }
 };
@@ -205,6 +204,21 @@ function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 function hashStr(s=""){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i); h=h|0; } return Math.abs(h); }
 function stablePick(arr, seedStr){ if(!arr?.length) return ""; if(!seedStr?.trim()) return pick(arr); const h=hashStr(seedStr); return arr[h%arr.length]; }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
+
+const params=new URLSearchParams(location.search);
+const isReplay = params.get('view')==='replay';
+let domanda=""; let answerText="";
+
+function setTitles(q){
+  document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
+  document.getElementById('subtitle').textContent = I18N.sub(q);
+  document.getElementById('styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
+  const bank = LEADS[lang]?.[style] || LEADS['it']['whatif'];
+  const seed = `${(q||"").toLowerCase().trim()}|${style}|${lang}|${periodo}`;
+  const line = oneSentence(stablePick(bank, seed));
+  document.getElementById('lead').textContent = line;
+  document.getElementById('metaInfo').textContent = I18N.meta(style, periodo);
+}
 
 // evidenzia parentesi tra em-dash “— … — …”
 function decorateEmBits(el){
@@ -229,52 +243,6 @@ function mapGenderToSex(g){
   }
 }
 
-// --- Nickname history (banlist) ---
-function readNickHistory(){
-  try { return JSON.parse(localStorage.getItem('wtf_nick_history')||'[]'); } catch { return []; }
-}
-function writeNickHistory(arr){
-  localStorage.setItem('wtf_nick_history', JSON.stringify(arr.slice(-20)));
-}
-function extractNicknameFromAnswer(text=""){
-  const first = (text.split(/[.!?]/)[0] || "").trim();
-  const m = first.match(/^([^,]{2,40}),\s/);
-  if (m) return m[1].trim();
-  return first.split(/\s+/).slice(0,4).join(" ").trim();
-}
-
-const params=new URLSearchParams(location.search);
-const isReplay = params.get('view')==='replay';
-let domanda=""; let answerText="";
-
-function setTitles(q){
-  document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
-  document.getElementById('subtitle').textContent = I18N.sub(q);
-  document.getElementById('styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
-  const bank = LEADS[lang]?.[style] || LEADS['it']['whatif'];
-  const seed = `${(q||"").toLowerCase().trim()}|${style}|${lang}`;
-  const line = oneSentence(stablePick(bank, seed));
-  document.getElementById('lead').textContent = line;
-  document.getElementById('metaInfo').textContent = I18N.meta(style, periodo);
-}
-
-// SHARE
-async function shareOrCopy(text){
-  const payload = `${document.getElementById('qView').textContent}\n\n${text}`;
-  try{
-    if (navigator.share) {
-      await navigator.share({ text: payload });
-      return;
-    }
-  }catch(_){}
-  try{
-    await navigator.clipboard.writeText(payload);
-    const btn = document.getElementById('shareBtn');
-    const old = btn.textContent; btn.textContent = I18N.copied;
-    setTimeout(()=>btn.textContent=old, 1200);
-  }catch(_){}
-}
-
 if(isReplay){
   const r = JSON.parse(LS.getItem('replay_story')||'{}');
   domanda = r.domanda || LS.getItem('domanda') || "";
@@ -290,6 +258,7 @@ if(isReplay){
   setTitles(domanda);
   document.getElementById('qView').textContent = domanda || '—';
 
+  // profilo (sex)
   const profile = JSON.parse(LS.getItem('whatif_profile') || '{}');
   const sex = (profile.sex) ? String(profile.sex).toLowerCase()
             : mapGenderToSex(profile.gender || '');
@@ -302,15 +271,16 @@ if(isReplay){
       const adminToken = localStorage.getItem("admin_token");
       if (adminToken) headers["x-admin-token"] = adminToken;
 
-      // Passa banlist dei nomignoli
-      const nickban = readNickHistory();
-
       const r = await fetch("/api/ask",{
         method:"POST", headers,
         body:JSON.stringify({
-          domanda, lang, stile:style, extra:"",
-          micro:{ ...(req.micro||{}), nickban },
-          periodo, sex
+          domanda,
+          lang,
+          stile:style,
+          extra:"",
+          micro:req.micro||{},
+          periodo,
+          sex
         })
       });
 
@@ -335,27 +305,37 @@ if(isReplay){
       node.textContent = answerText;
       decorateEmBits(node);
 
-      // Update history
       const hist = JSON.parse(LS.getItem('cronologia')||'[]');
       hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
       LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-
-      // Aggiorna banlist nomignoli se WTF
-      if (style === 'wtf') {
-        const nick = extractNicknameFromAnswer(answerText);
-        if (nick && nick.length >= 2) {
-          const nh = readNickHistory();
-          if (!nh.includes(nick)) nh.push(nick);
-          writeNickHistory(nh);
-        }
-      }
     }catch(e){
       document.getElementById('answer').textContent = I18N.error;
     }
   })();
 }
 
-document.getElementById('shareBtn').onclick=()=>shareOrCopy(answerText||"");
+// Share / Copy
+document.getElementById('shareBtn').onclick = async ()=>{
+  const q = document.getElementById('qView').textContent.trim();
+  const a = document.getElementById('answer').textContent.trim();
+  const text = `${q}\n\n${a}\n\n— What?f`;
+  try{
+    if (navigator.share){
+      await navigator.share({ title:"What?f", text });
+    } else if (navigator.clipboard){
+      await navigator.clipboard.writeText(text);
+      const b=document.getElementById('shareBtn'); const old=b.textContent;
+      b.textContent = I18N.copied; setTimeout(()=>b.textContent=old,900);
+    } else {
+      // fallback textarea
+      const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+      const b=document.getElementById('shareBtn'); const old=b.textContent;
+      b.textContent = I18N.copied; setTimeout(()=>b.textContent=old,900);
+    }
+  }catch{}
+};
+
 document.getElementById('againBtn').onclick=()=>{ location.href='fourth.html'; };
 </script>
 </body>
