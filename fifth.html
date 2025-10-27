@@ -1,95 +1,306 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Risultato</title>
-<style>
-  :root{--line:rgba(255,255,255,.12)}
-  body{margin:0;background:#0B0B0C;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:860px;margin:auto;padding:22px}
-  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
-  .btn{padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;cursor:pointer}
-  .btn.primary{background:linear-gradient(180deg,#1C57A0,#FFEC01);border:none;color:#0A0E12;font-weight:800}
-  .card{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:14px}
-  .label{color:#FFEC01;font-weight:800;margin-bottom:8px}
-  .input{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;padding:10px}
-  .lead{opacity:.86;margin:0 0 8px}
-  .story{line-height:1.65;font-size:18px;text-wrap:pretty}
-  .badge{border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;background:rgba(255,255,255,.06)}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>What?f — Risultato</title>
+  <meta name="theme-color" content="#0B0B0C"/>
+  <style>
+    :root{
+      --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
+      --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75;
+      --card:rgba(20,28,34,.92); --line:rgba(255,255,255,.12);
+      --chip:#121A26; --ink:#0A0E12; --shadow:rgba(0,0,0,.35);
+      --ok:#37c37a; --warn:#ffcf5a; --err:#ff7a7a;
+    }
+    html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;
+      background:radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%,var(--bg) 60%);
+      color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;
+    }
+    main{max-width:980px;margin:auto;padding:18px}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);
+      padding:10px 14px;border-radius:12px;cursor:pointer}
+    .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
+    .btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--line)}
+    .btn[disabled]{opacity:.55;cursor:not-allowed}
+    .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none;white-space:nowrap}
+    .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+    h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:center}
+    .label{color:var(--acc);font-weight:800;margin:0 0 8px}
+    .q{font-size:18px;line-height:1.5;color:#e8f1f6}
+    .a{font-size:20px;line-height:1.7}
+    .muted{color:var(--muted)}
+    .sep{opacity:.6}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between}
+    .notice{border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:12px;padding:10px;font-size:13px}
+    .ok{border-color:rgba(55,195,122,.35)}
+    .warn{border-color:rgba(255,207,90,.35)}
+    .err{border-color:rgba(255,122,122,.35)}
+    .small{font-size:12px;color:var(--muted)}
+    .topbar .badge{font-weight:700}
+  </style>
 </head>
 <body>
-<main>
-  <div class="row">
-    <div class="row">
-      <button class="btn" onclick="history.back()">←</button>
-      <button class="btn" onclick="location.href='index.html'">🏠</button>
+  <main>
+    <!-- Topbar -->
+    <div class="row topbar" style="justify-content:space-between">
+      <div class="row">
+        <button class="btn" id="backBtn">←</button>
+        <button class="btn" id="homeBtn">🏠</button>
+      </div>
+      <div class="row">
+        <span class="badge" id="periodoBadge">🕰️ —</span>
+        <span class="badge" id="styleBadge">🎭 —</span>
+        <span class="badge" id="freeBadge">—</span>
+        <button class="btn" id="langBtn">IT</button>
+      </div>
     </div>
-    <div class="row">
-      <span id="styleBadge" class="badge">—</span>
-      <span id="langBadge" class="badge">IT</span>
+
+    <h1 id="titleH1">Risposta</h1>
+
+    <!-- Domanda -->
+    <div class="card">
+      <div class="label" id="qTitle">La tua domanda</div>
+      <div class="q" id="qText">—</div>
     </div>
-  </div>
 
-  <h2 id="title">Risultato</h2>
-  <p id="subtitle" class="lead">—</p>
-
-  <div class="card">
-    <div class="label">La tua domanda</div>
-    <div id="qView" class="input" style="min-height:44px"></div>
-  </div>
-
-  <div class="card">
-    <div class="label">Risposta</div>
-    <div id="answer" class="story">⏳ …</div>
-    <div class="row" style="margin-top:12px">
-      <button class="btn primary" id="copyBtn">📤 Condividi / Copia</button>
-      <button class="btn" onclick="location.href='fourth.html'">🔁 Fai un’altra domanda</button>
+    <!-- Risposta -->
+    <div class="card" id="answerCard">
+      <div class="label">Risposta</div>
+      <div class="a" id="answerArea" style="min-height:80px">…</div>
+      <div class="small" id="subLead" style="margin-top:8px"></div>
     </div>
-  </div>
-</main>
 
-<script>
-  const LS = localStorage;
-  const req = JSON.parse(LS.getItem('whatif_request')||'{}');
-  const domanda = req.domanda || LS.getItem('domanda') || "";
-  const lang = (req.lang || LS.getItem('lang') || 'it').toLowerCase();
-  const stile = req.stile || 'whatif';
-  const variant = req.whatif_variant || 'poetico';
+    <!-- Azioni -->
+    <div class="card">
+      <div class="actions">
+        <div class="row">
+          <button class="btn primary" id="genBtn">✨ Genera di nuovo</button>
+          <button class="btn" id="copyBtn">📋 Copia</button>
+          <button class="btn" id="saveBtn">💾 Salva domanda</button>
+        </div>
+        <div class="row">
+          <span class="badge" id="statusBadge">—</span>
+        </div>
+      </div>
+      <div id="msg" class="notice" style="margin-top:10px;display:none"></div>
+    </div>
 
-  document.documentElement.lang = lang;
-  document.getElementById('langBadge').textContent = lang.toUpperCase();
-  document.getElementById('styleBadge').textContent = (stile==='wtf' ? 'What the F' : `What if · ${variant}`);
-  document.getElementById('qView').textContent = domanda || '—';
-  document.getElementById('subtitle').textContent = (lang==='en' ? `Question: “${domanda}”` : `Domanda: “${domanda}”`);
+    <div class="small" id="footNote"></div>
+  </main>
 
-  async function run(){
-    try{
-      const r = await fetch("/api/ask", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify(req)
-      });
-      if(!r.ok){
-        const t = await r.text().catch(()=> "");
-        document.getElementById('answer').textContent = (lang==='en'?'[server error]':'[errore server]') + ' ' + t;
-        return;
+  <script>
+    // ===== I18N =====
+    const I18N = {
+      it:{
+        title:"Risposta",
+        yourq:"La tua domanda",
+        gen:"✨ Genera di nuovo",
+        copy:"📋 Copia",
+        save:"💾 Salva domanda",
+        credits:(l,d)=> (d===Infinity ? "Crediti: ∞" : `Crediti: ${l}/${d}`),
+        thinking:"Sto pensando…",
+        ready:"Pronto",
+        copied:"Testo copiato.",
+        saved:"Domanda salvata.",
+        err402:"Hai finito i crediti di oggi.",
+        err429:"Stai andando troppo veloce: riprova tra poco.",
+        err500:"Errore del server. Riprova.",
+        tip:"Entri piano, il caos finge di tifare.",
+        question:"La tua domanda",
+        res:"Risposta",
+        styleWTF:"What the F",
+        styleWhatIf:"What if",
+        past:"Passato", future:"Futuro"
+      },
+      en:{
+        title:"Answer",
+        yourq:"Your question",
+        gen:"✨ Generate again",
+        copy:"📋 Copy",
+        save:"💾 Save question",
+        credits:(l,d)=> (d===Infinity ? "Credits: ∞" : `Credits: ${l}/${d}`),
+        thinking:"Thinking…",
+        ready:"Ready",
+        copied:"Copied.",
+        saved:"Saved.",
+        err402:"You’ve used today’s credits.",
+        err429:"Too fast: try again in a moment.",
+        err500:"Server error. Try again.",
+        tip:"Enter softly; the chaos pretends to cheer.",
+        question:"Your question",
+        res:"Answer",
+        styleWTF:"What the F",
+        styleWhatIf:"What if",
+        past:"Past", future:"Future"
       }
-      const data = await r.json();
-      let txt = String(data.answer||'').trim();
-      if(!/[.!?…]$/.test(txt)) txt += ".";
-      document.getElementById('answer').textContent = txt;
-    }catch(e){
-      document.getElementById('answer').textContent = (lang==='en'?'[server error]':'[errore server]');
-    }
-  }
-  run();
+    };
 
-  document.getElementById('copyBtn').onclick = async ()=>{
-    const txt = document.getElementById('answer').textContent || '';
-    try{ await navigator.clipboard.writeText(txt); }catch{}
-  };
-</script>
+    const LS = localStorage;
+    function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
+    function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
+    function today(){ return new Date().toISOString().slice(0,10); }
+
+    // lingua
+    let lang = (LS.getItem('lang')||'it').toLowerCase();
+    const T = I18N[lang] || I18N.it;
+    document.documentElement.lang = lang;
+
+    // preferenze
+    let prefs = readJSON('whatif_prefs', { stile:'whatif', periodo:'future', pro:false });
+    document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+
+    // request
+    const req = readJSON('whatif_request', null) || { domanda: (LS.getItem('domanda')||"").trim(), stile: prefs.stile, lang, periodo: prefs.periodo };
+
+    // UI binding
+    const qText   = document.getElementById('qText');
+    const ansArea = document.getElementById('answerArea');
+    const genBtn  = document.getElementById('genBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const statusB = document.getElementById('statusBadge');
+    const msgBox  = document.getElementById('msg');
+
+    // static labels
+    document.getElementById('titleH1').textContent = T.title;
+    document.getElementById('qTitle').textContent  = T.yourq;
+    genBtn.textContent  = T.gen;
+    copyBtn.textContent = T.copy;
+    saveBtn.textContent = T.save;
+    document.getElementById('subLead').textContent = T.tip;
+
+    // topbar
+    function capForUser(){ return LS.getItem('admin_token') ? Infinity : (prefs.pro ? 10 : 3); }
+    function creditsLeft(){
+      const c = readJSON('whatif_credits',{date:today(),used:0});
+      if(c.date!==today()) return capForUser();
+      const cap = capForUser();
+      return cap===Infinity ? Infinity : Math.max(0, cap-(c.used||0));
+    }
+    function renderBadges(){
+      document.getElementById('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past' ? T.past : T.future);
+      document.getElementById('styleBadge').textContent   = "🎭 " + (prefs.stile==='wtf' ? T.styleWTF : T.styleWhatIf);
+      const left = creditsLeft();
+      const cap  = capForUser();
+      document.getElementById('freeBadge').textContent = T.credits(left, cap);
+      document.getElementById('langBtn').textContent = lang.toUpperCase();
+    }
+    renderBadges();
+
+    // nav
+    document.getElementById('backBtn').onclick=()=>history.back();
+    document.getElementById('homeBtn').onclick=()=>location.href='index.html';
+    document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang', lang==='it'?'en':'it'); location.reload(); };
+
+    // domanda
+    qText.textContent = (req.domanda||"—");
+
+    // replay mode
+    const url = new URL(location.href);
+    if (url.searchParams.get('view') === 'replay') {
+      const r = readJSON('replay_story', null);
+      if (r) {
+        ansArea.textContent = r.answer || r.risposta || "—";
+        document.getElementById('statusBadge').textContent = T.ready;
+      }
+    } else {
+      // se non c'è ancora risposta, generiamo subito
+      ask();
+    }
+
+    // --- network ---
+    async function ask(){
+      const domanda = (req.domanda||"").trim();
+      if(!domanda){ ansArea.textContent = "—"; return; }
+
+      // crediti client-side (visual)
+      const c=readJSON('whatif_credits',{date:today(),used:0});
+      if(!LS.getItem('admin_token')){
+        const cap = capForUser();
+        if (c.date!==today()){ c.date=today(); c.used=0; }
+        if ((c.used||0)>=cap){ showErr(T.err402); return; }
+        c.used=(c.used||0)+1; writeJSON('whatif_credits',c);
+        renderBadges();
+      }
+
+      setBusy(true);
+      clearMsg();
+
+      try{
+        const res = await fetch('/api/ask', {
+          method:'POST',
+          headers:{
+            'Content-Type':'application/json',
+            'x-pro': prefs.pro ? '1' : '0'
+          },
+          body: JSON.stringify({
+            domanda,
+            stile: req.stile || prefs.stile,
+            periodo: req.periodo || prefs.periodo,
+            lang: lang,
+            sex: req.sex || (readJSON('micro_profile',{}).sex || ""),
+            micro: readJSON('micro_profile',{})
+          })
+        });
+
+        if(!res.ok){
+          if(res.status===402){ showErr(T.err402); return; }
+          if(res.status===429){ showErr(T.err429); return; }
+          showErr(T.err500 + (res.status?` (${res.status})`:""));
+          return;
+        }
+
+        const data = await res.json();
+        const answer = (data.answer||"").trim();
+        ansArea.textContent = answer || "—";
+        statusB.textContent = T.ready;
+
+        // salva in cronologia
+        const chron = readJSON('cronologia',[]);
+        chron.push({ ts: Date.now(), domanda, risposta: answer, stile: (req.stile||prefs.stile), periodo:(req.periodo||prefs.periodo), lang });
+        writeJSON('cronologia', chron.slice(-200));
+
+      }catch(e){
+        showErr(T.err500);
+      }finally{
+        setBusy(false);
+      }
+    }
+
+    // UI helpers
+    function setBusy(b){
+      genBtn.disabled = b;
+      genBtn.textContent = b ? T.thinking : T.gen;
+      statusB.textContent = b ? T.thinking : T.ready;
+    }
+    function showMsg(text, type='ok'){
+      msgBox.className = 'notice ' + (type==='ok'?'ok':type==='warn'?'warn':'err');
+      msgBox.textContent = text; msgBox.style.display='block';
+    }
+    function clearMsg(){ msgBox.style.display='none'; }
+    function showErr(t){ showMsg(t, 'err'); }
+
+    // actions
+    genBtn.onclick = ask;
+    copyBtn.onclick = async ()=>{
+      try{
+        await navigator.clipboard.writeText(ansArea.textContent||"");
+        showMsg(T.copied,'ok');
+      }catch{ /* ignore */ }
+    };
+    saveBtn.onclick = ()=>{
+      const arr = readJSON('next_prompts',[]);
+      arr.unshift({ q:req.domanda||"", ts:Date.now() });
+      writeJSON('next_prompts', arr.slice(0,50));
+      showMsg(T.saved,'ok');
+    };
+  </script>
 </body>
 </html>
