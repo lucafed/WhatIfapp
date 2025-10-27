@@ -1,161 +1,231 @@
-// /api/ask.js — FEW-SHOT ONLY DRIVER (2025-10)
-// Replica lo stile ESATTO degli esempi; niente istruzioni lunghe.
-// Tieni solo il minimo tecnico: rate, crediti, CORS.
+// /api/ask.js
+// Handler a singolo endpoint che costruisce prompt few-shot "bloccato"
+// per far parlare l'AI ESATTAMENTE come negli esempi concordati.
+// Compatibile con la tua UI (fourth/fifth). Nessuna dipendenza extra.
 
-import OpenAI from "openai";
-import { Redis } from "@upstash/redis";
-import { Ratelimit } from "@upstash/ratelimit";
-
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const MODEL = "gpt-4o-mini";
-
-// ---------- infra ----------
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
-const rl = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "1 m") });
-
-const ORIGINS = ["http://localhost:3000","http://127.0.0.1:5500","https://what-ifapp.vercel.app"];
-function cors(req,res){
-  const o = String(req.headers.origin||"");
-  if (ORIGINS.includes(o)) res.setHeader("Access-Control-Allow-Origin", o);
-  res.setHeader("Vary","Origin");
-  res.setHeader("Access-Control-Allow-Methods","POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers","Content-Type, Authorization, x-admin-token, x-pro");
-}
-
-// ---------- tiny utils ----------
-const isEn = (lang) => String(lang||"it").toLowerCase().startsWith("en");
-const onePara = s => String(s||"").replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").trim();
-const tinyHash = (s="") => { let h=2166136261>>>0; for (let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619);} return (h>>>0).toString(36); };
-
-// ---------- STYLE EXAMPLES (THE SOURCE OF TRUTH) ----------
-/** What If — ANALITICO (IT) */
-const WI_ANAL_IT = `Sai Luca, questa domanda era nell’aria da un po’, vero? Tornare a L’Aquila oggi significherebbe ritrovarti in una città che ha cambiato pelle ma non respiro. La ricostruzione ha rimesso in moto l’economia, a ritmo lento ma tenace: più imprese locali, meno industria pesante, servizi che crescono intorno all’università e alla sanità. Il costo della vita rimane più basso del Nord, ma anche gli stipendi lo sono: qui si guadagna meno, si spende con più senso, ci si appoggia di più alla rete di persone. Il tempo si dilata, le relazioni contano più dei contatti, e la montagna torna bussola quotidiana. Ci sono giorni in cui ti mancherà l’efficienza veneta; in cambio troverai una qualità di vita fatta di distanze brevi, volti noti, bambini che crescono tra stagioni vere. Non è un passo indietro: è un ritmo diverso. E nella quiete scopri che non è silenzio — è spazio per respirare davvero.`;
-
-/** What If — POETICO (IT) */
-const WI_POET_IT = `Bella questa, Luca — lo sapevo che prima o poi te la saresti fatta. Riapri le finestre e l’aria fredda sa di legna e memoria; le strade ti riconoscono al passo e le montagne ti guardano come se non fossi mai andato via. Il bar sotto casa serve ancora il caffè corto e ruvido, e qualcuno ti chiama per nome come se il tempo fosse rimasto in attesa davanti alla porta. I tuoi figli imparano il calendario dalle nuvole: neve, erba alta, vento buono. La sera chiudi le imposte e senti il silenzio che non fa rumore ma compagnia. Non stai tornando indietro: stai tornando dove la vita aveva smesso di correre, con un pezzo di te che finalmente rientra al suo posto.`;
-
-/** What the F — Esempio “moto” (IT) */
-const WTF_MOTO_IT = `Eh Luca, la moto eh? Arrivi con coraggio da bancone e il casco che si crede cinema; l’aria applaude e ti senti gigante, poi un moscerino sceglie il tuo dente come pista e ti scappa un “porca grappa fulminata” che fa clac al visierino. Il semaforo finge innocenza, la sedia del bar sbuffa di risatina, tu ordini un Negroni “per rimettere la dignità in bolla” e il conto ti guarda come un giudice severo. Riparti più piano ma più largo di sorriso: non sei diventato veloce, sei diventato vivo — che alla fine è molto più svelto.`;
-
-/** What the F — Esempio “bar” (IT) */
-const WTF_BAR_IT = `Va bene, campione di schiuma: te lo immagini lucido e tuo. Primo cliente chiede un cappuccino tiepido con schiuma fredda e il vapore ti risponde male; ti scappa un “maledetta moka isterica” così sincero che il cucchiaino batte l’applauso e la cassa tossisce da scooter. Alle nove e venti versi “controllo qualità” per pareggiare i conti col destino, un vecchietto annuisce come arbitro imparziale, e a fine giornata sei ricco di storie e corto di spicci — che, guarda caso, è esattamente il punto di un bar fatto bene.`;
-
-// (Volendo, puoi aggiungere anche esempi EN qui sotto)
-const EX = {
-  it: {
-    whatif: { analitico: WI_ANAL_IT, poetico: WI_POET_IT },
-    wtf: { moto: WTF_MOTO_IT, bar: WTF_BAR_IT }
-  }
-};
-
-// ---------- PROMPT BUILDER (few-shot only) ----------
-function buildMessages({stile, whatifFlavor, domanda, lang, periodo, userName, micro}){
-  const en = isEn(lang);
-  const nameNote = userName ? (en?`Use their first name “${userName}” in the opening if natural.`:`Se naturale, usa il nome “${userName}” all’apertura.`) : "";
-  const temporal = (String(periodo).toLowerCase()==="past")
-    ? (en?`Write as if it already happened.`:`Scrivi come se fosse già successo.`)
-    : (en?`Write as a near future unfolding.`:`Scrivi come un prossimo futuro plausibile.`);
-
-  // System rule minimalissima
-  const SYS = en
-    ? `Replicate the style, rhythm and voice of the EXAMPLES EXACTLY. One single paragraph. No lists. No emojis. Keep it inside the narration of the user's question. ${temporal} ${nameNote}`
-    : `Replica ESATTAMENTE stile, ritmo e voce degli ESEMPI. Un solo paragrafo. Niente elenchi. Niente emoji. Tieni tutto dentro la narrazione della domanda. ${temporal} ${nameNote}`;
-
-  const few = [];
-
-  if (stile === "whatif"){
-    const sample = (EX.it.whatif[whatifFlavor] || WI_POET_IT);
-    few.push({ role:"system", content: `ESEMPIO WHAT IF (${whatifFlavor.toUpperCase()} IT):\n${sample}` });
-  } else {
-    // WTF: forziamo due esempi per imitazione forte
-    few.push({ role:"system", content: `ESEMPIO WHAT THE F (IT — Moto):\n${WTF_MOTO_IT}` });
-    few.push({ role:"system", content: `ESEMPIO WHAT THE F (IT — Bar):\n${WTF_BAR_IT}` });
-    // Nota brevissima sulle imprecazioni non religiose
-    few.push({ role:"system", content: `Usa una sola imprecazione forte ma NON religiosa in mezzo alla scena (es. “porca grappa fulminata”, “maledetta moka isterica”, “maremma bullone storto”). Oggetti/persone possono reagire (tazzina trema, panchina sbuffa).` });
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ detail: "Method not allowed" });
   }
 
-  const context = en
-    ? `Question: "${domanda}". Micro-profile: ${JSON.stringify(micro||{})}.`
-    : `Domanda: "${domanda}". Micro-prof.: ${JSON.stringify(micro||{})}.`;
-
-  return [
-    { role:"system", content: SYS },
-    ...few,
-    { role:"user", content: context }
-  ];
-}
-
-// ---------- handler ----------
-export default async function handler(req,res){
-  cors(req,res);
-  if(req.method==="OPTIONS") return res.status(200).end();
-  if(req.method!=="POST") return res.status(405).json({ error:"method_not_allowed" });
-
-  try{
-    if(!process.env.OPENAI_API_KEY) return res.status(500).json({ error:"missing_api_key" });
-
-    const ip=(req.headers["x-forwarded-for"]||req.socket?.remoteAddress||"").toString().split(",")[0].trim();
-    const adminToken=String(req.headers["x-admin-token"]||"");
-    const admin = !!adminToken && !!(await redis.hgetall(`admin:token:${adminToken}`));
-
-    if(!admin){
-      const { success } = await rl.limit(`ask:${ip}`);
-      if(!success) return res.status(429).json({ error:"rate_limited_minute" });
-    }
-
-    const isPro = String(req.headers["x-pro"]||"") === "1";
-    let used=0, dailyCap=isPro?10:3;
-    if(!admin){
-      const today=new Date().toISOString().slice(0,10);
-      const key=`credits:${ip}:${today}`;
-      used=(await redis.incr(key))??1;
-      if(used===1) await redis.expire(key,86400);
-      if(used>dailyCap) return res.status(402).json({ error:"daily_credits_exhausted", used, dailyCap });
-    }
-
-    const body = typeof req.body==="string" ? JSON.parse(req.body||"{}") : (req.body||{});
+  try {
+    // ===== INPUT DALLA UI =====
     const {
-      domanda="", stile="whatif", lang="it", periodo="future",
-      whatifFlavor="poetico", userName="", micro={}
-    } = body;
-    if(!domanda) return res.status(400).json({ error:"domanda_required" });
+      domanda = "",
+      lang = "it",
+      stile = "whatif",         // 'whatif' | 'wtf'
+      periodo = "future",       // 'past' | 'future' (solo meta)
+      micro = {},               // micro-profile (umore, ancore, ecc.)
+      extra = {},               // in fourth passa whatif_mode qui dentro
+      sex = "",                 // 'm' | 'f' | 'nb' | ''
+      whatif_mode,              // opzionale: 'analitico' | 'poetico'
+      profile = {}              // opzionale: { name }
+    } = safeParse(req.body);
 
-    const messages = buildMessages({stile, whatifFlavor, domanda, lang, periodo, userName, micro});
+    // Deduce il nome utente (solo se presente)
+    const rawName =
+      (profile && (profile.name || profile.firstName)) ||
+      (micro && micro.name) ||
+      "";
+    const firstName = String(rawName || "").trim().split(" ")[0] || "";
 
-    const completion = await client.chat.completions.create({
-      model: MODEL,
-      messages,
-      temperature: stile==="wtf" ? 0.98 : 0.85,
-      top_p: 0.92,
-      max_tokens: 380,
-      presence_penalty: 0.1,
-      frequency_penalty: 0.3,
-      user: tinyHash(ip)
-    });
+    // Fourth: può passare il mode dentro extra o a livello root.
+    const mode =
+      (extra && (extra.whatif_mode || extra.mode)) ||
+      whatif_mode ||
+      "analitico";
 
-    let answer = onePara(completion?.choices?.[0]?.message?.content || "");
-    if(!/[.!?…]$/.test(answer)) answer+=".";
+    // ===== FEW-SHOT BANK (ITALIANO) =====
+    // NOTA: niente regole astratte; solo ESEMPI.
+    // Il modello viene istruito a "continuare la serie con la stessa voce".
+    const FEWSHOT_WHATIF_ANALITICO = [
+      {
+        role: "system",
+        content:
+          "Stai per rispondere in stile WHAT IF (analitico, realistico, sociale). Parla in un paragrafo, tono confidente e concreto. Niente elenchi, niente emoji. Se è presente un nome, puoi salutarlo all'inizio. Continua esattamente questa voce."
+      },
+      {
+        role: "user",
+        content: "E se tornassi a vivere all’Aquila?"
+      },
+      {
+        role: "assistant",
+        content:
+          "Sai Luca, questa domanda era nell’aria da un po’, vero? Tornare a L’Aquila oggi significherebbe ritrovarti in una città che ha cambiato pelle ma non respiro. Negli ultimi anni la ricostruzione ha rimesso in moto l’economia, ma a ritmo lento: più imprese locali, meno industria, molti giovani che restano per scelta, non più per mancanza di alternative. Il costo della vita è più basso del Nord, e anche gli stipendi lo sono: qui si guadagna meno, ma si spende con più senso. Il tempo si dilata, le relazioni contano più dei contatti, e la montagna torna bussola. A volte ti mancherebbe il rumore del Veneto — ma scoprirai che la quiete non è silenzio: è spazio per respirare davvero."
+      }
+    ];
 
-    // log leggero
-    try{
-      await redis.lpush("logs:ask", JSON.stringify({
-        ts:Date.now(), iphash: tinyHash(ip), stile, lang, periodo, whatifFlavor,
-        qh: tinyHash(domanda), len: answer.length
-      }));
-      await redis.ltrim("logs:ask",0,5000);
-    }catch{}
+    const FEWSHOT_WHATIF_POETICO = [
+      {
+        role: "system",
+        content:
+          "Stai per rispondere in stile WHAT IF (poetico, emotivo). Parla in un paragrafo, immagini quotidiane, chiusura morbida. Niente elenchi, niente emoji. Se è presente un nome, puoi salutarlo all'inizio. Continua esattamente questa voce."
+      },
+      {
+        role: "user",
+        content: "E se tornassi a vivere all’Aquila?"
+      },
+      {
+        role: "assistant",
+        content:
+          "Bella questa, Luca — lo sentivi da tempo, vero? Riapri le finestre e ti viene incontro un’aria fredda che sa di legna e memoria. Le strade ti riconoscono al passo, le montagne ti guardano come se non te ne fossi mai andato. Il bar sotto casa serve ancora un caffè corto e ruvido, e la gente ti chiama per nome come se il tempo fosse rimasto ad aspettare. I tuoi figli imparano il ritmo delle stagioni, la lentezza che non spreca i giorni. Ogni sera, quando chiudi le imposte, non stai tornando indietro: stai tornando dove la tua vita aveva smesso di correre."
+      }
+    ];
 
-    return res.status(200).json({
-      answer, style:stile, lang, periodo, whatifFlavor,
-      model: MODEL,
-      credits: admin? null : { used, dailyCap }
-    });
+    // WHAT THE F: sarcasmo da bar, immagini fisiche, imprecazioni comiche organiche
+    // (senza termini offensivi verso gruppi/credenze; solo “sacramenti” laici & coloriti)
+    const FEWSHOT_WTF = [
+      {
+        role: "system",
+        content:
+          "Stai per rispondere in stile WHAT THE F (demenziale, sarcastico da bar, ritmo alto). Un paragrafo unico, presa in giro affettuosa dell’utente e della domanda, oggetti che reagiscono, 1–2 imprecazioni colorite integrate nella narrazione (mai gratuite), con reazioni comiche dell’ambiente. Niente elenchi, niente emoji. Continua esattamente questa voce."
+      },
+      {
+        role: "user",
+        content: "E se comprassi una moto?"
+      },
+      {
+        role: "assistant",
+        content:
+          "Ah, la moto: già ti vedo filosofo della velocità con la giacca nuova e la paura di graffiarla. Parti fiero, curva stretta, sorriso largo… poi un moscerino sceglie il tuo incisivo come pista d’atterraggio e ti scappa un “porca di quella grappa fulminata”, il casco vibra offeso e il semaforo ride con tre rossi di fila. Al bar ordini un Negroni per lavare l’orgoglio, il conto ti guarda storto e tu annuisci come chi ha capito la vita a rate. Torni a casa con più vento che chilometri e pensi che forse non serviva scappare: bastava ricordarsi come si respira forte."
+      },
+      {
+        role: "user",
+        content: "E se mi innamorassi di nuovo?"
+      },
+      {
+        role: "assistant",
+        content:
+          "Certo che sì, romantico di professione: dici “vado piano” e già al secondo sguardo sei telenovela ambulante. Scrivi, cancelli, inoltri sul gruppo sbagliato e ti parte un “maledetta la porcaccia dell’ansia” così rotondo che il bicchiere vibra e fa l’applauso. Il barista sospira, ti raddrizza il cuore con un giro della casa e ti placa con due olive come se fossero terapia. Finisce che ridi di te stesso, e in quella risata capisci che tornare a rischiare è l’unica rivoluzione che funziona."
+      }
+    ];
 
-  }catch(e){
-    console.error("api/ask error", e);
-    return res.status(500).json({ error:"server_error", detail:String(e?.message||e) });
+    // ===== COSTRUZIONE MESSAGGI =====
+    const userHeader =
+      lang === "it"
+        ? [
+            firstName
+              ? `Ciao ${firstName}.`
+              : "Ciao.",
+            "Continua nella stessa voce degli esempi.",
+            "Rispondi in un solo paragrafo."
+          ].join(" ")
+        : [
+            firstName ? `Hi ${firstName}.` : "Hi.",
+            "Continue in the exact voice of the examples.",
+            "One single paragraph."
+          ].join(" ");
+
+    const messages = [];
+
+    // Scegli il blocco few-shot
+    if (stile === "whatif") {
+      const bank =
+        (mode || "").toLowerCase() === "poetico"
+          ? FEWSHOT_WHATIF_POETICO
+          : FEWSHOT_WHATIF_ANALITICO;
+      messages.push(...bank);
+    } else {
+      messages.push(...FEWSHOT_WTF);
+    }
+
+    // Prompt utente effettivo (con meta utili ma leggere)
+    const metaBits = [];
+    if (periodo) metaBits.push(`periodo:${periodo}`);
+    if (sex) metaBits.push(`sex:${sex}`);
+    if (micro && typeof micro === "object") {
+      try {
+        const mview = summarizeMicro(micro);
+        if (mview) metaBits.push(`micro:${mview}`);
+      } catch {}
+    }
+
+    const finalUserPrompt =
+      `${userHeader} Domanda: ${normalize(domanda)}.` +
+      (metaBits.length ? ` [${metaBits.join(" · ")}]` : "");
+
+    messages.push({ role: "user", content: finalUserPrompt });
+
+    // ===== CHIAMATA MODELLO =====
+    const answer = await callOpenAI(messages, stile);
+
+    // Normalizza a un paragrafo e chiudi il punto.
+    const clean = oneParagraph(answer);
+
+    return res.status(200).json({ answer: clean });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ detail: "server_error" });
   }
+}
+
+/* ================== UTILS ================== */
+
+function safeParse(body) {
+  if (typeof body === "string") {
+    try {
+      return JSON.parse(body);
+    } catch {
+      return {};
+    }
+  }
+  return body || {};
+}
+
+function normalize(s = "") {
+  return String(s).trim().replace(/\s+/g, " ");
+}
+
+function oneParagraph(s = "") {
+  const t = normalize(s).replace(/\s*\n+\s*/g, " ");
+  return /[.!?…]$/.test(t) ? t : t + ".";
+}
+
+function summarizeMicro(m = {}) {
+  const keys = ["mood", "anchor", "decide", "zodiac"];
+  const parts = [];
+  keys.forEach((k) => {
+    if (m[k]) parts.push(`${k}:${String(m[k]).trim()}`);
+  });
+  return parts.join(",");
+}
+
+/**
+ * Chiama OpenAI con impostazioni diverse per stile:
+ * - whatif: temperatura bassa, più coesione
+ * - wtf: temperatura medio-alta, più verve
+ */
+async function callOpenAI(messages, stile) {
+  const apiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_AZURE;
+  if (!apiKey) {
+    // Fallback per sviluppo offline
+    return "(Dev) Nessuna chiave API configurata.";
+  }
+
+  const temperature = stile === "wtf" ? 0.9 : 0.5;
+  const max_tokens = 380; // sufficiente per un paragrafo pieno
+
+  const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      temperature,
+      max_tokens,
+      messages
+    })
+  });
+
+  const data = await r.json();
+  if (!r.ok) {
+    console.error("OpenAI error:", data);
+    throw new Error(data?.error?.message || "openai_error");
+  }
+  const txt =
+    data?.choices?.[0]?.message?.content?.trim() ||
+    "[errore generazione testo]";
+  return txt;
 }
