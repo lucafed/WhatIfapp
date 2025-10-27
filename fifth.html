@@ -79,7 +79,13 @@ h1{
 }
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
-.embit{padding:0 .08em;box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset;text-shadow:0 0 12px rgba(255,255,255,.08);border-radius:4px}
+/* evidenzia le parentesi comiche tra em-dash senza toccare il testo */
+.embit {
+  padding: 0 .08em;
+  box-shadow: 0 -4px 0 0 rgba(255,255,255,.05) inset;
+  text-shadow: 0 0 12px rgba(255,255,255,.08);
+  border-radius: 4px;
+}
 </style>
 </head>
 <body>
@@ -118,6 +124,7 @@ h1{
 </main>
 
 <script>
+/* ===== Boot ===== */
 const LS=localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
 const style = prefs.stile || 'whatif';
@@ -125,6 +132,7 @@ const periodo = prefs.periodo || 'future';
 const lang  = (LS.getItem('lang') || 'it').toLowerCase();
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 
+/* PRO badge */
 (function showProBadge(){
   const el = document.getElementById('proBadge');
   const hasToken = !!LS.getItem('admin_token');
@@ -135,6 +143,7 @@ document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'w
   }
 })();
 
+/* I18N */
 const I18N={
   it:{tWTF:"⚡ What the F — Risultato", tWHF:"💡 What if — Risultato",
       sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
@@ -164,11 +173,11 @@ document.getElementById('shareBtn').textContent=I18N.share;
 document.getElementById('againBtn').textContent=I18N.again;
 document.getElementById('styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
 
+/* Utils */
 function normalizeOneParagraph(s=""){
   return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
 }
-
-/* LEADS */
+/* Leads */
 const LEADS = {
   it:{
     wtf:[
@@ -206,10 +215,7 @@ function hashStr(s=""){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.
 function stablePick(arr, seedStr){ if(!arr?.length) return ""; if(!seedStr?.trim()) return pick(arr); const h=hashStr(seedStr); return arr[h%arr.length]; }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
 
-const params=new URLSearchParams(location.search);
-const isReplay = params.get('view')==='replay';
-let domanda=""; let answerText="";
-
+/* Titles */
 function setTitles(q){
   document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
   document.getElementById('subtitle').textContent = I18N.sub(q);
@@ -221,6 +227,7 @@ function setTitles(q){
   document.getElementById('metaInfo').textContent = I18N.meta(style, periodo);
 }
 
+/* Em-dash highlight */
 function decorateEmBits(el){
   const raw = el.textContent;
   if(!raw.includes("—")) return;
@@ -234,6 +241,7 @@ function decorateEmBits(el){
   el.innerHTML = html;
 }
 
+/* Gender -> sex mapping */
 function mapGenderToSex(g){
   switch(String(g||'').toLowerCase()){
     case 'uomo': return 'm';
@@ -243,26 +251,10 @@ function mapGenderToSex(g){
   }
 }
 
-async function shareNow(q, a){
-  const text = `${q}\n\n${a}\n\n— via What?f`;
-  try{
-    if (navigator.share){
-      await navigator.share({ text, title: 'What?f' });
-      return true;
-    }
-  }catch(e){}
-  try{
-    await navigator.clipboard.writeText(text);
-    alert(I18N.copied);
-    return true;
-  }catch(e){
-    // fallback ultra-basico
-    const ta=document.createElement('textarea');
-    ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
-    alert(I18N.copied);
-    return true;
-  }
-}
+/* Replay / Live */
+const params=new URLSearchParams(location.search);
+const isReplay = params.get('view')==='replay';
+let domanda=""; let answerText="";
 
 if(isReplay){
   const r = JSON.parse(LS.getItem('replay_story')||'{}');
@@ -273,12 +265,13 @@ if(isReplay){
   const node = document.getElementById('answer');
   node.textContent = answerText || '—';
   decorateEmBits(node);
-}else{
+} else {
   const req = JSON.parse(LS.getItem('whatif_request')||'{}');
   domanda = req.domanda || LS.getItem('domanda') || "";
   setTitles(domanda);
   document.getElementById('qView').textContent = domanda || '—';
 
+  // sex dal profilo (fallback da gender)
   const profile = JSON.parse(LS.getItem('whatif_profile') || '{}');
   const sex = (profile.sex) ? String(profile.sex).toLowerCase()
             : mapGenderToSex(profile.gender || '');
@@ -328,15 +321,43 @@ if(isReplay){
       const hist = JSON.parse(LS.getItem('cronologia')||'[]');
       hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
       LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-    }catch(e){
-      document.getElementById('answer').textContent = I18N.error;
+    } catch(e){
+      console.error(e);
+      const node = document.getElementById('answer');
+      node.textContent = I18N.error;
     }
   })();
 }
 
-// buttons
-document.getElementById('againBtn').onclick=()=>location.href='fourth.html';
-document.getElementById('shareBtn').onclick=()=>shareNow(domanda, document.getElementById('answer').textContent);
+/* Share */
+async function doShare() {
+  const q = document.getElementById('qView').textContent.trim();
+  const a = document.getElementById('answer').textContent.trim();
+  const text = `${I18N.sub(q)}\n\n${a}`;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: 'What?f', text });
+    } else {
+      await navigator.clipboard.writeText(text);
+      const btn = document.getElementById('shareBtn');
+      const old = btn.textContent;
+      btn.textContent = I18N.copied;
+      setTimeout(()=> btn.textContent = old, 1200);
+    }
+  } catch (_) {
+    try {
+      await navigator.clipboard.writeText(text);
+      const btn = document.getElementById('shareBtn');
+      const old = btn.textContent;
+      btn.textContent = I18N.copied;
+      setTimeout(()=> btn.textContent = old, 1200);
+    } catch {}
+  }
+}
+document.getElementById('shareBtn').onclick = doShare;
+
+/* Again */
+document.getElementById('againBtn').onclick = () => { location.href = 'fourth.html'; };
 </script>
 </body>
 </html>
