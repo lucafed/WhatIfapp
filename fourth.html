@@ -248,7 +248,6 @@ function renderBadges(){
   document.getElementById('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past'? (lang==='en'?'Past':'Passato') : (lang==='en'?'Future':'Futuro'));
   document.getElementById('styleBadge').textContent   = "🎭 " + (prefs.stile==='wtf'? 'What the F' : 'What if');
   document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
-  // hint dinamico per lo stile
   document.getElementById('styleHint').innerHTML = (prefs.stile==='wtf') ? T.hintWTF : T.hintWhatif;
 }
 renderBadges();
@@ -321,10 +320,9 @@ function trySubmit(){
 
 document.getElementById('goBtn').onclick=trySubmit;
 document.getElementById('clearBtn').onclick=()=>{ qEl.value=""; qEl.focus(); };
-// Ctrl/⌘+Invio
 qEl.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
-// ===== Micro-questions (multiple choice) =====
+// ===== Micro-questions =====
 const microCard=document.getElementById('microCard');
 const microSaved=readJSON('micro_saved',{date:"",ok:false});
 function rngForDay(seedStr){ let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
@@ -409,8 +407,7 @@ document.getElementById('hintsNote').textContent=(lang==='en'?'Click a hint to f
 
 const HINT_POOL_IT=[ "E se cambiassi lavoro?","E se cambiassi città?","E se provassi a mettermi in proprio?","E se tornassi a studiare?","E se mollassi tutto e partissi per il Giappone?","E se aprissi un chiringuito in Islanda?","E se parlassi con il me di 10 anni fa?","E se imparassi una lingua strana?","E se mi svegliassi ogni giorno all’alba per un mese?","E se facessi pace con una persona?","E se vivessi 30 giorni senza social?","E se provassi a cambiare routine per una settimana?","E se prendessi un cane?","E se mettessi da parte ogni giorno 5 euro?","E se provassi a suonare la chitarra?","E se organizzassi un viaggio da solo?","E se chiedessi un aumento?","E se facessi volontariato?","E se provassi a scrivere un libro?","E se aprissi un canale di qualcosa che ami?" ];
 const HINT_POOL_EN=[ "What if I changed jobs?","What if I moved city?","What if I started my own thing?","What if I went back to study?","What if I dropped everything and moved to Japan?","What if I opened a beach bar in Iceland?","What if I talked to my 10-years-ago self?","What if I learned a weird language?","What if I woke up at dawn for a month?","What if I made peace with someone?","What if I lived 30 days without social media?","What if I changed my routine for a week?","What if I adopted a dog?","What if I saved 5 euros a day?","What if I learned guitar?","What if I traveled alone?","What if I asked for a raise?","What if I volunteered?","What if I wrote a book?","What if I launched a channel about what I love?" ];
-function rngForDay2(seedStr){ let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; };
-}
+function rngForDay2(seedStr){ let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
 function todayStr2(){return new Date().toISOString().slice(0,10); }
 function dailyHints(pool, n=4){ const seed=todayStr2(); const rnd=rngForDay2(seed); const seen=new Set(); const out=[]; while(out.length<n && seen.size<pool.length){ const idx=Math.floor(rnd()*pool.length); if(seen.has(idx)) continue; seen.add(idx); out.push(pool[idx]); } return out; }
 const hintsWrap=document.getElementById('hintsChips');
