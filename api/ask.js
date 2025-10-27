@@ -1,13 +1,14 @@
-// /api/ask.js — What?f Engine (2025 ULTRA)
-// Stili: whatif_lucido · whatif_pratico · whatif_poetico · wtf (demenziale++)
+// /api/ask.js — What?f Engine (2025 FINAL, patched)
+// Stili: whatif (realismo lucido) · wtf (sarcasmo demenziale affettuoso, alcol, oggetti, “scoppio” comico narrato)
 // IT/EN — paragrafo singolo, niente liste/domande/emoji
 // Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
-// Log su Redis SENZA contenuto della domanda (solo metadati + hash non reversibile)
+// Log su Redis SENZA testo della domanda (solo metadati + hash non reversibile)
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
 
+// ---------- OpenAI ----------
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = "gpt-4o-mini";
 
@@ -81,6 +82,7 @@ function stripQuestionEcho(domanda, text) {
   return t;
 }
 function ensureSpicyButSafeWTF(t) {
+  // Garantisce chiusura sentita + evita output vuoto (il modello già evita la parola "bestemmia")
   let out = String(t || "").trim();
   if (!/[.!?…]$/.test(out)) out += ".";
   return out;
@@ -91,7 +93,45 @@ function tinyHash(s = "") {
   return (h >>> 0).toString(36);
 }
 
-// ---------- Admin check ----------
+/* ---------- Clause & opener helpers ---------- */
+function toClause(domanda = "") {
+  // Trasforma "E se tornassi a vivere all’Aquila?" -> "se tornassi a vivere all’Aquila"
+  const d = String(domanda).trim()
+    .replace(/[“”"']/g, "")
+    .replace(/^\s*e\s+se\s+/i, "se ")
+    .replace(/^\s*what\s*if\s+/i, "if ")
+    .replace(/[?!.…\s]+$/,"")
+    .trim();
+  return d || (isEn("en") ? "if it really happened" : "se succedesse davvero");
+}
+
+/* ---------- Nicknames (riutilizzati ovunque) ---------- */
+const NICKS_IT = {
+  f: ["contessa del forse","zebra dello slalom mentale","barista dei ripensamenti","sirena del ‘ma anche no’","capitana dei piani B","duchessa del procrastino"],
+  m: ["barone dell’idea mezza cotta","sommelier del disastro buono","cavaliere del forse","sultano delle decisioni a metà","capitano delle scuse creative","duca del rinvio elegante"],
+  nb:["leggenda carburata a caffè","emiro del ‘vediamo’","astronauta del ni","regnante delle diagonali","folletto dei piani B","regista dell’improvviso"]
+};
+const NICKS_EN = {
+  f: ["duchess of maybe","barista of second thoughts","captain of plan B","siren of ‘not today’","queen of detours"],
+  m: ["baron of half-ideas","sommelier of good disasters","captain of ‘we’ll see’","sultan of elegant delays","duke of plan B"],
+  nb:["legend on espresso","emperor of ‘meh’","astronaut of maybe","director of detours","icon of sideways plans"]
+};
+function pickNick(lang, sex, seedNum=0){
+  const s = String(sex||"nb").toLowerCase();
+  const bank = isEn(lang) ? (NICKS_EN[s]||NICKS_EN.nb) : (NICKS_IT[s]||NICKS_IT.nb);
+  return bank[(seedNum % bank.length + bank.length) % bank.length];
+}
+function buildContextOpener(lang, nick, domanda, periodo, stile){
+  const clause = toClause(domanda);
+  if (isEn(lang)) {
+    if (stile==="wtf") return `Hey, ${nick} — ${clause}, it would roll like this:`;
+    return `Alright ${nick}, ${clause}, here’s how it would likely feel.`;
+  }
+  if (stile==="wtf") return `Ehi, ${nick} — ${clause}, andrebbe così:`;
+  return `Va bene ${nick}, ${clause}, probabilmente suonerebbe così.`;
+}
+
+/* ---------- Admin check ---------- */
 async function isAdmin(req, requesterIp) {
   const token = String(req.headers["x-admin-token"] || "").trim();
   if (!token) return false;
@@ -109,178 +149,86 @@ async function isAdmin(req, requesterIp) {
   }
 }
 
-/* ---------- Modalità temporale (con grammatica) ---------- */
+/* ---------- Modalità temporale ---------- */
 function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
   const en = isEn(lang);
-  const isPast = String(periodo || "").toLowerCase() === "past";
-  if (en) {
-    return isPast
-      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Write as if it already happened (simple past + conditional "would have" where needed). Keep continuity; no lists/questions/emojis. Keep exact ${style.toUpperCase()} voice.`
-      : `TEMPORAL MODE: FUTURE / PROSPECTIVE. Write as if stepping into a near future now (present→near-future, some simple future). No lists/questions/emojis. Keep exact ${style.toUpperCase()} voice.`;
+  if (String(periodo || "").toLowerCase() === "past") {
+    return en
+      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Speak as if the choice had been made back then and show how it likely unfolded. Prefer past/conditional, with quick present flashes. No lists, no questions, no echo. Keep exact ${style.toUpperCase()} voice.`
+      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Parla come se la scelta fosse stata fatta allora e mostra come sarebbe verosimilmente andata. Preferisci passato/condizionale con lampi di presente. Niente liste, niente domande, niente eco. Mantieni la voce ${style.toUpperCase()}.`;
   }
-  return isPast
-    ? `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Scrivi come se fosse già successo (passato + condizionale "avresti" dove serve). Mantieni continuità; niente elenchi/domande/emoji. Voce ${style.toUpperCase()}.`
-    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Scrivi come se entrassi adesso nel prossimo futuro (presente→futuro prossimo, qualche futuro semplice). Niente elenchi/domande/emoji. Voce ${style.toUpperCase()}.`;
+  return en
+    ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Describe a plausible near-future unfolding as if stepping into it now. No lists, no questions, no echo. Keep exact ${style.toUpperCase()} voice.`
+    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi un prossimo futuro plausibile come se ci entrassi adesso. Niente liste, niente domande, niente eco. Mantieni la voce ${style.toUpperCase()}.`;
 }
 
 /* ---------- Personas (voci) ---------- */
 function personaSystem(style, lang, sex = "") {
-  const SEX = String(sex || "").toLowerCase(); // "m" | "f" | "nb" | ""
-  // nomignoli demenziali non ripetitivi
-  const nickIT_f = [
-    "contessa del forse","regina del rimando","sirena del ‘ci penso domani’",
-    "granata di spritz","capitana del caos tenero","barista dell’anima in ciabatte",
-    "zanzara della motivazione","duchessa del quasi","sultana del ‘poi’"
-  ];
-  const nickIT_m = [
-    "duca del forse","campione del rinvio creativo","poeta del bar col POS scarico",
-    "capitano del casino buono","fenomeno del ‘vediamo’","barone della mezz’idea brillante",
-    "sommelier delle scuse lucide","conte del ‘dopo l’aperitivo’","zar del rimando elastico"
-  ];
-  const nickIT_nb = [
-    "leggenda del forse","icona del caos gentile","astronauta del dubbio effervescente",
-    "asso del ‘poi’ luminoso","mostro sacro del ‘intanto beviamo’","orbita dei rimandi stellari",
-    "mito del ‘tranqui domani’","mascotte del forse brillante","governatorə del quasi"
-  ];
-  const genderNickIT = SEX === "f" ? nickIT_f : (SEX === "m" ? nickIT_m : nickIT_nb);
+  const SEX = String(sex || "nb").toLowerCase(); // "m" | "f" | "nb"
+  const genderNickIT = (SEX === "f") ? NICKS_IT.f : (SEX === "m" ? NICKS_IT.m : NICKS_IT.nb);
+  const genderNickEN = (SEX === "f") ? NICKS_EN.f : (SEX === "m" ? NICKS_EN.m : NICKS_EN.nb);
 
-  const nickEN_f = [
-    "queen of maybe","captain of soft chaos","duchess of later",
-    "bar poet in sneakers","pilot of ‘we’ll see’","legend of sparkly detours"
-  ];
-  const nickEN_m = [
-    "duke of maybe","captain of soft chaos","bar poet with a dashboard",
-    "champ of ‘we’ll see’","lord of almost","legend of shiny detours"
-  ];
-  const nickEN_nb = [
-    "icon of maybe","captain of soft chaos","legend of later",
-    "ace of sparkly detours","orbit of gentle mess","myth of ‘we’ll see’"
-  ];
-  const genderNickEN = SEX === "f" ? nickEN_f : (SEX === "m" ? nickEN_m : nickEN_nb);
-
-  // Aperture confidenziali con nomignolo
-  const openersIT = [
-    "Ehi, oggi non scherzi, {nick}: entri col fiato da spritz e la faccia da decisioni.",
-    "Oh guarda chi si presenta, {nick}: profumi di coraggio shakerato e dubbio con scorza.",
-    "Calma, {nick}: il bar ha lucidato i bicchieri per vederti tentare la vita.",
-    "Dai {nick}, il destino ha scaldato la moka: tu porta il ghiaccio.",
-    "Oggi fai sul serio, {nick}: tazzina in piedi e coraggio frizzante, via."
-  ];
-  const openersEN = [
-    "Hey, not kidding today, {nick}: decision-face and spritz-breath, nice combo.",
-    "Look who showed up, {nick}: courage on the rocks with doubt for garnish.",
-    "Easy, {nick}: the bar polished glasses just to watch you try life.",
-    "Come on, {nick}; fate warmed the moka, you bring the ice.",
-    "Serious mood, {nick}: upright espresso and fizzy courage, go."
-  ];
-
-  // LESSICO ESPLOSIONE: sinonimi + oggetti/passanti (safety: niente insulti religiosi letterali)
-  const outburstPoolIT = [
-    "ti parte una bestemmia che fa tremare i bicchieri",
-    "ti esce un’imprecazione col retrogusto di grappino e i cucchiaini applaudono",
-    "ti scappa una maledizione teatrale e il lampione finge di tossire",
-    "ti esplode un’invocazione poco catechistica e la moka guarda il soffitto",
-    "il citofono lascia andare una bestemmia educata e il corrimano si copre gli occhi",
-    "il registratore di cassa mormora una bestemmia buffa e lo scontrino si arriccia",
-    "un passante sussurra una mezza bestemmia col sorriso e il marciapiede cambia argomento",
-    "il semaforo molla una bestemmia strozzata e il vento alza le spalle",
-    "ti scappa un’invettiva da bar e il cartello ‘aperto’ ti dà ragione",
-    "il frigorifero spara una quasi-bestemmia e le bottiglie tintinnano in solidarietà"
-  ];
-  const outburstPoolEN = [
-    "you let out a church-unfriendly word that rattles the glasses",
-    "a half-catechism-safe curse slips out and the counter clears its throat",
-    "a theatrical malediction pops and the streetlight pretends to cough",
-    "the moka blurts a forbidden mutter and the spoons applaud",
-    "the buzzer releases a polite blasphemy and the handrail covers its eyes",
-    "the cash drawer mutters a spicy oath and the receipt curls from embarrassment",
-    "a passerby whispers a blasphemy-lite and the sidewalk changes topic"
-  ];
-
-  // ---------------- WTF persona (demenziale++) ----------------
   if (style === "wtf") {
-    const pool = isEn(lang) ? outburstPoolEN : outburstPoolIT;
-    const poolJoined = pool.join(" • ");
     const SYS = (isEn(lang)
       ? `
-You are “What the F” — the loud, loving bar-friend who roasts with affection.
-SECOND PERSON. ONE paragraph, 7–9 sentences (~130–175 words). Simple, colloquial.
-OPEN CONFIDENTIAL: start with a boozy tease + nickname, then 2–3 playful roasts about the user’s vibe and question.
-MID-SCENE OUTBURST: embed exactly ONE comic outburst triggered by a tiny mishap (stain, crooked parking, alarm, dripping hose, pigeon, receipt jam). The outburst may come from the user OR an object/bystander. Rotate synonyms from: ${poolJoined}. Pick ONE only.
-Alcohol beats OK; reacting objects only when relevant; keep it warm, never mean.
-STRICT: no lists, no questions, no emojis. Respect TEMPORAL MODE grammar.
-Nicknames (EN): ${genderNickEN.join(", ")}.
-Openers (EN): ${openersEN.join(" | ")}.
-SEED: vary imagery with the seed number.
-`.trim()
+You are “What the F” — loud, loving, tipsy-smart friend who roasts with affection.
+SECOND PERSON. ONE paragraph, 7–9 sentences (125–170 words). Colloquial, visual, simple.
+OPEN this way: a friendly hook + a nickname, then IMMEDIATELY anchor to the user’s question via a contextual clause (an opener string will be provided).
+HUMOR: playful jabs, drinks, and “reacting objects” ONLY when relevant; sound like a friend who knows them.
+Exactly ONE comic outburst (a *colorful exclamation*, never a literal religious slur). Choose a synonym such as: “bar-counter oath”, “saint-free squawk”, “under-breath curse”, “garage-grade yelp”, “kitchen-sink yowl”. It must explode *inside the narrative* because of a mishap (parking, bill, door, inbox…) and nearby people/objects react absurdly.
+NEVER write the word “blasphemy”.
+STRICT: no lists, no questions, no emojis, no moralizing. Respect TEMPORAL MODE.
+Close warm and funny.`
       : `
-Sei “What the F” — l’amico di bar rumoroso e affettuoso che ti prende in giro bene.
-SECONDA PERSONA. UN paragrafo, 7–9 frasi (~130–175 parole). Linguaggio semplice.
-APERTURA CONFIDENZIALE: presa da bar + nomignolo, poi 2–3 roasts affettuose su vibe e domanda.
-ESPLOSIONE A METÀ: inserisci ESATTAMENTE UNA esplosione comica innescata da un micro-disastro (macchia, parcheggio storto, allarme, tubo che gocciola, piccione, scontrino che si inceppa). L’esplosione può venire da te o da un oggetto/passante. Ruota i sinonimi da: ${poolJoined}. Scegline UNO.
-Alcol ok; oggetti “che reagiscono” solo se servono; tono caldo, mai cattivo.
-RIGIDO: niente elenchi, niente domande, niente emoji. Rispetta la MODALITÀ TEMPORALE.
-Nomignoli (IT): ${genderNickIT.join(", ")}.
-Aperture (IT): ${openersIT.join(" | ")}.
-SEED: usa il seed per variare le immagini.
-`.trim());
+Sei “What the F” — amico affettuoso, un po’ brillo e molto sveglio.
+SECONDA PERSONA. UN paragrafo, 7–9 frasi (125–170 parole). Colloquiale, per immagini, semplice.
+APERTURA: aggancio confidenziale + nomignolo, poi AGGANCIO IMMEDIATO alla domanda tramite una clausola contestuale (ti verrà fornita).
+UMORISMO: prese in giro buone, sbronze e “oggetti che reagiscono” SOLO se servono; suoni come chi conosce davvero l’utente.
+Un solo scoppio comico (una *imprecazione colorita*, mai letterale). Scegli sinonimi come: “giuramento da bancone”, “squittio senza santi”, “maledizione sotto voce”, “urletto da officina”, “strillo da vecchia moka”. Deve detonare *dentro la scena* per un imprevisto (parcheggio, scontrino, porta, bolletta…) e attorno oggetti/persone reagiscono in modo assurdo.
+NON scrivere mai la parola “bestemmia”.
+RIGIDO: niente elenchi, niente domande, niente emoji, niente prediche. Rispetta la MODALITÀ TEMPORALE.
+Chiudi caldo e divertente.`).trim();
 
     const FEWSHOTS = [
       { role: "system", content:
-`ESEMPIO IT • Rientro in città (futuro)
-Ehi, oggi non scherzi, contessa del forse: entri con valigia scenografica e sorriso da “faccio l’adulto domani”, il bar ti riconosce e la tazzina si mette in tiro; cammini come chi ha promesso alla nonna e al navigatore di non perdersi più, fai il duro ma odori di pizzetta e dignità stirata; al primo incrocio parcheggi con l’orgoglio leggermente obliquo e il sensore fa la sirena del Titanic, ti scappa un’invocazione poco catechistica e il lampione finge di tossire, poi il panettiere ti chiama per nome, la porta di casa si prende le tue misure e la lentezza ti regala una taglia comoda: non torni indietro, torni intero.` },
+`ESEMPIO IT • Tornare all’Aquila (futuro)
+Ehi, barone dell’idea mezza cotta — se tornassi a vivere all’Aquila, andrebbe così: atterri convinto e la città ti riconosce dal rumore delle chiavi; i vicoli fanno finta di niente ma rallentano per venirti incontro, e tu ti atteggi come se il cuore non fosse in tasca. Il primo mese prendi caffè promettendo di restare e i tavolini ridacchiano “vediamo”, poi cerchi parcheggio con la fiducia di un santo di gesso, strusci il marciapiede e dal cruscotto esplode un giuramento da bancone così sincero che il semaforo arrossisce e il cestino fischia. Passata la scena, le facce tornano, i bambini imparano i nomi delle pietre: non torni indietro, torni intero.` },
       { role: "system", content:
-`ESEMPIO IT • Aprire un bar (passato controfattuale)
-Oh guarda chi si presentava, barone della mezz’idea brillante: arrivavi col business plan sul tovagliolo e la macchina del caffè faceva le presentazioni; lucidavi il bancone come fosse un curriculum, il frigo faceva il timido, poi la lavastoviglie decideva il bagno di folla e spruzzava platea e corridoio: ti partiva una bestemmia buffa e i cucchiaini applaudivano, sistemavi tubo e sogni con lo scotch e due sorrisi di riserva, chiudevi contando spicci e nomi e capivi che qui non vendevi solo da bere: vendevi minuti in cui la gente tornava simpatica.` },
+`ESEMPIO IT • Mettersi in proprio (futuro)
+Sommelier del disastro buono — se aprissi il tuo studio, succederebbe che il registratore di cassa tossisce ma tre clienti tornano, stappi “la buona” ed è aceto: brucia onesto, benedice l’errore, ti scappa un urletto da officina e il bancone commenta “oggi imprenditore davvero”; la sera conti spicci e sorrisi e capisci che non vinci il mondo, stai reggendo te.` },
       { role: "system", content:
-`EXAMPLE EN • Buying a motorbike (future)
-Hey, not kidding today, captain of soft chaos: you strut in like a mid-season pilot while the helmet winks; the dealer pours specs like warm prosecco and you nod as if torque were an uncle; then a pigeon signs the tank from the skylight, the alarm sings an aria, you let out a church-unfriendly word that rattles the glasses while the kickstand coughs politely, you sign a less poetic but very-you estimate, and the wind deletes three useless curves from the map.` },
+`EXAMPLE EN • Moving city (future)
+Hey, baron of half-ideas — if you moved to the new city, it would go like this: you land with rented courage, the buzzer rolls its eyes, the fridge hums “good luck”; at the third grocery you find your aisle, then a parking sensor screams and a saint-free squawk bursts out of you so hard the streetlight applauds; after the circus, your pace fits the map.` },
     ];
-    return { sys: SYS, fewshots: FEWSHOTS };
+    return { sys: SYS, fewshots: FEWSHOTS, nickPoolIT: genderNickIT, nickPoolEN: genderNickEN };
   }
 
-  // ---------------- WHAT IF — 3 sotto-stili ----------------
-  const baseIT = `
-SEI "WHAT IF" — amico lucido e affettuoso. SECONDA PERSONA. Un paragrafo, 8–11 frasi (~115–160 parole).
-Niente elenchi/domande/emoji. Chiudi con una riga riflessiva breve (non un consiglio).
-Rispetta MODALITÀ TEMPORALE e grammatica (passato controfattuale vs futuro prospettico).
-`.trim();
+  const SYS_WHATIF = (isEn(lang)
+    ? `
+You are "What If" — a lucid, kind, slightly ironic friend.
+SECOND PERSON. One paragraph, 8–11 sentences (~115–160 words).
+Warm, grounded, simple; ordinary images (keys, streetlights, notebooks, hands, air).
+Small truths; no heroics, no melancholy. No lists, no questions, no emojis.
+End with a short reflective line (not advice).
+`.trim()
+    : `
+Sei "What If" — un amico lucido e affettuoso, col sorriso pratico.
+SECONDA PERSONA. Un paragrafo, 8–11 frasi (~115–160 parole).
+Immagini quotidiane (chiavi, lampioni, taccuini, mani, aria).
+Verità piccole e vere; niente eroismi, niente malinconia.
+Niente elenchi o domande o emoji. Chiudi con una riga riflessiva breve (non un consiglio).
+`.trim());
 
-  const baseEN = `
-You are "What If" — lucid, kind friend. SECOND PERSON. One paragraph, 8–11 sentences (~115–160 words).
-No lists/questions/emojis. End with a short reflective line (not advice).
-Respect TEMPORAL MODE and grammar (counterfactual past vs prospective future).
-`.trim();
-
-  const SYS_WHATIF_LUCIDO = isEn(lang)
-    ? `${baseEN}\nTone: warm, slightly ironic, everyday images (keys, streetlights, notebooks).`
-    : `${baseIT}\nTono: caldo, leggermente ironico, immagini quotidiane (chiavi, lampioni, taccuini).`;
-
-  const SYS_WHATIF_PRATICO = isEn(lang)
-    ? `${baseEN}\nTone: practical and grounded; add 2–3 concrete, small-life beats (timing, groceries, commute).`
-    : `${baseIT}\nTono: pratico e terreno; inserisci 2–3 dettagli concreti di vita (orari, spesa, tragitto).`;
-
-  const SYS_WHATIF_POETICO = isEn(lang)
-    ? `${baseEN}\nTone: light-poetic but clear; small metaphors from ordinary objects; no purple prose.`
-    : `${baseIT}\nTono: leggermente poetico ma chiaro; piccole metafore da oggetti comuni; niente barocchismi.`;
-
-  const FEWSHOTS_WHATIF = [
+  const FEWSHOTS = [
     { role: "system", content:
-`ESEMPIO IT • (lucido) Tornare all’Aquila — futuro
-Ti sveglierà la luce larga delle montagne. Le strade terranno il ritmo anche quando tu lo perdi. All’inizio la lentezza graffierà l’orgoglio, poi ti rimette in orario. I volti sembreranno uguali, ma li guarderai con occhi più larghi. Le chiavi torneranno sul piattino giusto e il bar sotto casa saprà il tuo nome. La nostalgia, se non la insegui, si siederà accanto e tacerà. Non servirà ricominciare da zero: basterà ricominciare da te.` },
+`ESEMPIO IT • Tornare all’Aquila
+Se tornassi, non sarebbe un passo indietro ma un passo fatto meglio. Le strade tengono il ritmo anche quando tu lo perdi. All’inizio la lentezza graffia, poi ti rimette in orario. Le chiavi tornano sul piattino giusto e la spesa nel negozio che sa il tuo nome. La nostalgia, se non la insegui, si siede accanto e tace. Non serve ricominciare da zero: basta ricominciare da te.` },
     { role: "system", content:
-`ESEMPIO IT • (pratico) Cambiare lavoro — futuro
-Ricontrollerai la sveglia due volte e uscirai cinque minuti prima. Il tragitto farà meno rumore. Al terzo giorno avrai già un posto per la tazza e una lista corta di cose sensate. L’ansia terrà il cappotto in mano, senza insistere. Lo stipendio non farà magie, ma i margini cominceranno a rispondere. Scoprirai che ti stanca meglio. È un buon segno.` },
-    { role: "system", content:
-`ESEMPIO IT • (poetico) Trasloco — passato controfattuale
-Avresti lasciato impronte di nastro sulle dita e briciole di strade nei cartoni. Le finestre nuove avrebbero preso misura del tuo respiro. Le sere avrebbero tolto volume alle prove e tenuto accesa la parte che serve. Avresti riconosciuto la tua calma al suono delle chiavi. E sotto il rumore, ti saresti già trovato.` },
+`EXAMPLE EN • Move city
+You’ll feel like a guest, then your hands learn the new keys. You walk to tire the noise. By the third grocery you know your aisle. Evenings soften and ask less proof. You miss some things, not all at once. The rest finds its place. And beneath the noise something of yours was already there.` },
   ];
 
-  let sys = SYS_WHATIF_LUCIDO;
-  if (style === "whatif_pratico") sys = SYS_WHATIF_PRATICO;
-  if (style === "whatif_poetico") sys = SYS_WHATIF_POETICO;
-
-  return { sys, fewshots: FEWSHOTS_WHATIF };
+  return { sys: SYS_WHATIF, fewshots: FEWSHOTS, nickPoolIT: genderNickIT, nickPoolEN: genderNickEN };
 }
 
 /* ---------- API Handler ---------- */
@@ -325,58 +273,65 @@ export default async function handler(req, res) {
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const {
       domanda = "",
-      stile = "whatif_lucido",  // default: sotto-stile
+      stile = "whatif",
       lang = "it",
       extra = "",
       periodo = "future",
       sex = "",          // "m" | "f" | "nb"
-      micro = {}
+      micro = {}         // optional micro-profile
     } = body;
 
     if (!domanda || typeof domanda !== "string")
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
-    const resolvedSex = String(sex || micro?.sex || "").toLowerCase();
+    const resolvedSex = String(sex || micro?.sex || "nb").toLowerCase();
 
     // Personas + Temporal mode
-    const { sys, fewshots } = personaSystem(stile, lang, resolvedSex);
+    const { sys, fewshots, nickPoolIT, nickPoolEN } = personaSystem(stile, lang, resolvedSex);
     const temporal = temporalSystem(periodo, lang, stile);
 
-    // Seed
-    const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${lang}|${resolvedSex}|${periodo}`), 36) % 1000000;
+    // Deterministic seed
+    const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${lang}|${resolvedSex}`), 36) % 1000000;
 
     const extraTemporalHint =
-      (String(periodo).toLowerCase() === "past")
+      stile === "wtf" && String(periodo).toLowerCase() === "past"
         ? (isEn(lang)
-          ? "GRAMMAR GUARD (EN): Use simple past + would/would have where needed (counterfactual)."
-          : "GUARDIA GRAMMATICALE (IT): Usa passato + condizionale (controfattuale).")
-        : (isEn(lang)
-          ? "GRAMMAR GUARD (EN): Present→near-future; sprinkle simple future sparingly."
-          : "GUARDIA GRAMMATICALE (IT): Presente→futuro prossimo; qualche futuro semplice.");
+          ? "Write entirely in past or conditional, as if it already happened, keeping the upbeat roasting tone."
+          : "Scrivi tutto al passato o al condizionale, come se fosse già successo, mantenendo il tono allegro e pungente.")
+        : "";
+
+    // Nickname deterministico e opener contestuale
+    const nick = isEn(lang)
+      ? (nickPoolEN ? nickPoolEN[seedNum % nickPoolEN.length] : pickNick(lang, resolvedSex, seedNum))
+      : (nickPoolIT ? nickPoolIT[seedNum % nickPoolIT.length] : pickNick(lang, resolvedSex, seedNum));
+    const opener = buildContextOpener(lang, nick, domanda, periodo, stile);
 
     const userPrompt = isEn(lang)
-      ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Adapt to user sex="${resolvedSex||"unknown"}". Keep persona voice. INTERNAL SEED: ${seedNum}.`
-      : `Domanda (NON ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Adatta la voce al sesso utente="${resolvedSex||"unknown"}". Mantieni la voce. SEED INTERNO: ${seedNum}.`;
+      ? `Question: "${domanda}". Context: "${String(extra||"").trim()}". Micro: ${JSON.stringify(micro||{})}. Use the provided opener EXACTLY once: "${opener}" and continue naturally from it; keep the roast playful and kind. INTERNAL SEED: ${seedNum}.`
+      : `Domanda: "${domanda}". Contesto: "${String(extra||"").trim()}". Micro: ${JSON.stringify(micro||{})}. Usa l'incipit fornito UNA sola volta: "${opener}" e prosegui naturale; presa in giro affettuosa. SEED INTERNO: ${seedNum}.`;
 
     const messages = [
-      { role: "system", content: sys },
-      { role: "system", content: temporal },
-      { role: "system", content: extraTemporalHint },
+      { role:"system", content: sys },
+      { role:"system", content: temporal },
+      ...(extraTemporalHint ? [{ role:"system", content: extraTemporalHint }] : []),
       ...(fewshots || []),
-      { role: "system", content: isEn(lang)
-          ? `WTF hard rules: confidential opener + nickname; exactly ONE mid-scene outburst using a rotated synonym (sometimes from an object/bystander); alcohol beats OK; reacting objects only when relevant; no lists, no questions, no emojis.`
-          : `Regole dure WTF: apertura confidenziale + nomignolo; ESATTAMENTE UNA esplosione a metà scena con sinonimo (a volte da oggetto/passante); alcol ok; oggetti reattivi solo se servono; niente elenchi/domande/emoji.` },
-      { role: "user", content: userPrompt },
+      { role:"system", content: isEn(lang)
+          ? `WTF hard rules: one narrative outburst (synonym, not literal), triggered by a mishap; reacting objects/people; friendly roast.`
+          : `Regole dure WTF: un solo scoppio narrativo (sinonimo, non letterale) innescato da un imprevisto; oggetti/persone reagiscono; presa in giro affettuosa.` },
+      { role:"user", content: userPrompt },
+      { role:"system", content: isEn(lang)
+          ? `After writing, silently revise verb tenses to match TEMPORAL MODE, fix agreements and commas; keep voice and length; do not add ideas.`
+          : `Dopo la stesura, rivedi in silenzio i tempi per rispettare la MODALITÀ TEMPORALE, sistema concordanze e virgole; mantieni voce e lunghezza; non aggiungere idee.` }
     ];
 
     // OpenAI
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile.startsWith("whatif") ? 0.82 : 0.99,
+      temperature: stile === "wtf" ? 0.98 : 0.82,
       top_p: 0.92,
-      max_tokens: 430,
-      frequency_penalty: stile === "wtf" ? 0.35 : 0.1,
-      presence_penalty: stile === "wtf" ? 0.25 : 0.0,
+      max_tokens: 360,
+      frequency_penalty: stile === "wtf" ? 0.4 : 0.1,
+      presence_penalty: stile === "wtf" ? 0.2 : 0.0,
       messages,
     });
 
@@ -385,12 +340,23 @@ export default async function handler(req, res) {
     if (!answer) throw new Error("empty_model_response");
     answer = stripQuestionEcho(domanda, answer);
     answer = tightenSentences(answer, stile === "wtf" ? 9 : 11);
-    answer = clampWords(answer, stile === "wtf" ? 175 : 165);
+    answer = clampWords(answer, stile === "wtf" ? 170 : 160);
     answer = normalizeOneParagraph(answer);
-    if (stile === "wtf") answer = ensureSpicyButSafeWTF(answer);
-    else if (!/[.!?…]$/.test(answer)) answer += ".";
 
-    // --- LOG persistente (privacy-safe) ---
+    // Assicura che inizi davvero con l’opener
+    if (answer && opener && !answer.toLowerCase().startsWith(opener.toLowerCase().slice(0, Math.min(opener.length, 18)))) {
+      answer = opener + " " + answer;
+    }
+
+    if (stile === "wtf") {
+      // Non pronunciare mai la parola “bestemmia” (ulteriore salvaguardia)
+      answer = answer.replace(/\bbestemmia\b/gi, isEn(lang) ? "colorful outburst" : "imprecazione colorita");
+      answer = ensureSpicyButSafeWTF(answer);
+    } else {
+      if (!/[.!?…]$/.test(answer)) answer += ".";
+    }
+
+    // --- LOG persistente (privacy-safe: niente testo domanda) ---
     try {
       const entry = {
         ts: Date.now(),
@@ -409,7 +375,7 @@ export default async function handler(req, res) {
       await redis.ltrim("logs:ask", 0, 9999);
       await redis.incr("stats:total");
       await redis.hincrby("stats:style", stile, 1);
-      await redis.hincrby("stats:lang", 1, 1);
+      await redis.hincrby("stats:lang", lang, 1);
       await redis.hincrby("stats:periodo", String(periodo || "future"), 1);
       if (resolvedSex) await redis.hincrby("stats:sex", resolvedSex, 1);
       await redis.hincrby("stats:user_type", entry.user_type, 1);
