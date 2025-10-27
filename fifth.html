@@ -79,7 +79,6 @@ h1{
 }
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
-/* evidenzia le parentesi comiche tra em-dash senza toccare il testo */
 .embit {
   padding: 0 .08em;
   box-shadow: 0 -4px 0 0 rgba(255,255,255,.05) inset;
@@ -124,7 +123,6 @@ h1{
 </main>
 
 <script>
-/* ===== Boot ===== */
 const LS=localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
 const style = prefs.stile || 'whatif';
@@ -132,7 +130,6 @@ const periodo = prefs.periodo || 'future';
 const lang  = (LS.getItem('lang') || 'it').toLowerCase();
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 
-/* PRO badge */
 (function showProBadge(){
   const el = document.getElementById('proBadge');
   const hasToken = !!LS.getItem('admin_token');
@@ -143,7 +140,6 @@ document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'w
   }
 })();
 
-/* I18N */
 const I18N={
   it:{tWTF:"⚡ What the F — Risultato", tWHF:"💡 What if — Risultato",
       sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
@@ -173,40 +169,35 @@ document.getElementById('shareBtn').textContent=I18N.share;
 document.getElementById('againBtn').textContent=I18N.again;
 document.getElementById('styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
 
-/* Utils */
 function normalizeOneParagraph(s=""){
   return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
 }
-/* Leads */
+
+/* LEADS */
 const LEADS = {
   it:{
     wtf:[
-      "Entri piano, il caos ti riconosce ma oggi ti lascia passare.",
-      "Respiri e lasci che sia il destino a inciampare per primo.",
-      "Ti presenti al futuro con la faccia di adesso e la pazienza di domani.",
-      "La scena è già in corso: tu ci metti il rumore buono.",
-      "Non chiedi permesso al dubbio, gli siedi accanto.",
-      "Stai un secondo fermo e la verità ti prende la misura."
+      "Ehi oggi non scherzi, barone del rimando, entri coi gomiti avanti e la faccia dritta.",
+      "Oggi la grappa ti ha messo il mantello, ninja della pausa, e sembri quasi credibile.",
+      "Tranquillo capitano del caos, il bancone ti riconosce e fa finta di niente.",
+      "Respira maestro del quasi: il destino oggi inciampa per primo e noi guardiamo."
     ],
     whatif:[
       "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.",
       "Ti siedi un attimo e scopri che la calma ha memoria lunga.",
       "La stanza è la stessa, lo sguardo no: è già un inizio.",
-      "Tieniti stretto ciò che funziona e lascia che il resto perda importanza.",
       "Respiri come chi ha tempo, e il tempo ti crede."
     ]
   },
   en:{
     wtf:[
-      "You step in slowly; chaos recognizes you and lets you through.",
-      "You breathe and let fate be the one who trips first.",
-      "You bring today’s face and tomorrow’s patience to the door.",
-      "The scene is already rolling; you supply the good noise."
+      "Easy today, duke of maybe — you arrive with elbows first and a straight face.",
+      "Grappa gave you a cape, spritz coach; you look almost credible.",
+      "Breathe, captain of chaos; the counter recognizes you and politely looks away."
     ],
     whatif:[
       "Set the keys down and let the quiet that doesn’t judge go first.",
-      "Same room, different gaze — that’s already a start.",
-      "Breathe like someone with time, and time believes you."
+      "Same room, different gaze — that’s already a start."
     ]
   }
 };
@@ -215,19 +206,7 @@ function hashStr(s=""){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.
 function stablePick(arr, seedStr){ if(!arr?.length) return ""; if(!seedStr?.trim()) return pick(arr); const h=hashStr(seedStr); return arr[h%arr.length]; }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
 
-/* Titles */
-function setTitles(q){
-  document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
-  document.getElementById('subtitle').textContent = I18N.sub(q);
-  document.getElementById('styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
-  const bank = LEADS[lang]?.[style] || LEADS['it']['whatif'];
-  const seed = `${(q||"").toLowerCase().trim()}|${style}|${lang}`;
-  const line = oneSentence(stablePick(bank, seed));
-  document.getElementById('lead').textContent = line;
-  document.getElementById('metaInfo').textContent = I18N.meta(style, periodo);
-}
-
-/* Em-dash highlight */
+// evidenzia parentesi tra em-dash “— … — …”
 function decorateEmBits(el){
   const raw = el.textContent;
   if(!raw.includes("—")) return;
@@ -241,7 +220,6 @@ function decorateEmBits(el){
   el.innerHTML = html;
 }
 
-/* Gender -> sex mapping */
 function mapGenderToSex(g){
   switch(String(g||'').toLowerCase()){
     case 'uomo': return 'm';
@@ -251,10 +229,51 @@ function mapGenderToSex(g){
   }
 }
 
-/* Replay / Live */
+// --- Nickname history (banlist) ---
+function readNickHistory(){
+  try { return JSON.parse(localStorage.getItem('wtf_nick_history')||'[]'); } catch { return []; }
+}
+function writeNickHistory(arr){
+  localStorage.setItem('wtf_nick_history', JSON.stringify(arr.slice(-20)));
+}
+function extractNicknameFromAnswer(text=""){
+  const first = (text.split(/[.!?]/)[0] || "").trim();
+  const m = first.match(/^([^,]{2,40}),\s/);
+  if (m) return m[1].trim();
+  return first.split(/\s+/).slice(0,4).join(" ").trim();
+}
+
 const params=new URLSearchParams(location.search);
 const isReplay = params.get('view')==='replay';
 let domanda=""; let answerText="";
+
+function setTitles(q){
+  document.getElementById('title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
+  document.getElementById('subtitle').textContent = I18N.sub(q);
+  document.getElementById('styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
+  const bank = LEADS[lang]?.[style] || LEADS['it']['whatif'];
+  const seed = `${(q||"").toLowerCase().trim()}|${style}|${lang}`;
+  const line = oneSentence(stablePick(bank, seed));
+  document.getElementById('lead').textContent = line;
+  document.getElementById('metaInfo').textContent = I18N.meta(style, periodo);
+}
+
+// SHARE
+async function shareOrCopy(text){
+  const payload = `${document.getElementById('qView').textContent}\n\n${text}`;
+  try{
+    if (navigator.share) {
+      await navigator.share({ text: payload });
+      return;
+    }
+  }catch(_){}
+  try{
+    await navigator.clipboard.writeText(payload);
+    const btn = document.getElementById('shareBtn');
+    const old = btn.textContent; btn.textContent = I18N.copied;
+    setTimeout(()=>btn.textContent=old, 1200);
+  }catch(_){}
+}
 
 if(isReplay){
   const r = JSON.parse(LS.getItem('replay_story')||'{}');
@@ -271,7 +290,6 @@ if(isReplay){
   setTitles(domanda);
   document.getElementById('qView').textContent = domanda || '—';
 
-  // sex dal profilo (fallback da gender)
   const profile = JSON.parse(LS.getItem('whatif_profile') || '{}');
   const sex = (profile.sex) ? String(profile.sex).toLowerCase()
             : mapGenderToSex(profile.gender || '');
@@ -284,16 +302,15 @@ if(isReplay){
       const adminToken = localStorage.getItem("admin_token");
       if (adminToken) headers["x-admin-token"] = adminToken;
 
+      // Passa banlist dei nomignoli
+      const nickban = readNickHistory();
+
       const r = await fetch("/api/ask",{
         method:"POST", headers,
         body:JSON.stringify({
-          domanda,
-          lang,
-          stile:style,
-          extra:"",
-          micro:req.micro||{},
-          periodo,
-          sex
+          domanda, lang, stile:style, extra:"",
+          micro:{ ...(req.micro||{}), nickban },
+          periodo, sex
         })
       });
 
@@ -318,46 +335,28 @@ if(isReplay){
       node.textContent = answerText;
       decorateEmBits(node);
 
+      // Update history
       const hist = JSON.parse(LS.getItem('cronologia')||'[]');
       hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
       LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-    } catch(e){
-      console.error(e);
-      const node = document.getElementById('answer');
-      node.textContent = I18N.error;
+
+      // Aggiorna banlist nomignoli se WTF
+      if (style === 'wtf') {
+        const nick = extractNicknameFromAnswer(answerText);
+        if (nick && nick.length >= 2) {
+          const nh = readNickHistory();
+          if (!nh.includes(nick)) nh.push(nick);
+          writeNickHistory(nh);
+        }
+      }
+    }catch(e){
+      document.getElementById('answer').textContent = I18N.error;
     }
   })();
 }
 
-/* Share */
-async function doShare() {
-  const q = document.getElementById('qView').textContent.trim();
-  const a = document.getElementById('answer').textContent.trim();
-  const text = `${I18N.sub(q)}\n\n${a}`;
-  try {
-    if (navigator.share) {
-      await navigator.share({ title: 'What?f', text });
-    } else {
-      await navigator.clipboard.writeText(text);
-      const btn = document.getElementById('shareBtn');
-      const old = btn.textContent;
-      btn.textContent = I18N.copied;
-      setTimeout(()=> btn.textContent = old, 1200);
-    }
-  } catch (_) {
-    try {
-      await navigator.clipboard.writeText(text);
-      const btn = document.getElementById('shareBtn');
-      const old = btn.textContent;
-      btn.textContent = I18N.copied;
-      setTimeout(()=> btn.textContent = old, 1200);
-    } catch {}
-  }
-}
-document.getElementById('shareBtn').onclick = doShare;
-
-/* Again */
-document.getElementById('againBtn').onclick = () => { location.href = 'fourth.html'; };
+document.getElementById('shareBtn').onclick=()=>shareOrCopy(answerText||"");
+document.getElementById('againBtn').onclick=()=>{ location.href='fourth.html'; };
 </script>
 </body>
 </html>
