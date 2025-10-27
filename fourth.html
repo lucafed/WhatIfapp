@@ -16,9 +16,7 @@ html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
 *{box-sizing:border-box}
 html,body{
   margin:0;
-  background:
-    radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%,var(--bg) 60%),
-    radial-gradient(700px 500px at 80% 10%, rgba(255,236,1,.06), transparent 60%);
+  background:radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%,var(--bg) 60%);
   color:var(--fg);
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
   -webkit-font-smoothing:antialiased;
@@ -28,110 +26,205 @@ main{max-width:980px;margin:auto;padding:18px}
 .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
 .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
 .btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--line)}
-.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px}
+.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none;white-space:nowrap}
 .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
 h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:center}
 .label{color:var(--acc);font-weight:800;margin:0 0 8px}
 .input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
-.center{max-width:760px;margin:0 auto}
-.small{font-size:12px;color:var(--muted)}
-.chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.center{max-width:720px;margin:0 auto}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
 .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-.subchips{display:flex;gap:6px;justify-content:center;margin-top:8px}
-.subchip{background:rgba(255,255,255,.06);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer}
-.subchip.sel{background:rgba(255,255,255,.14);font-weight:700}
-.hidden{display:none!important}
+.subchips{display:flex;gap:8px;justify-content:center;margin-top:10px}
+.subchip{background:rgba(255,255,255,.06);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
+.subchip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
+.small{font-size:12px;color:var(--muted);text-align:center}
+.topbar{display:flex;justify-content:space-between;align-items:center}
+.compact{max-width:680px;margin:0 auto}
+.hide{display:none !important}
 </style>
 </head>
 <body>
 <main>
 
   <!-- Topbar -->
-  <div class="row" style="justify-content:space-between">
+  <div class="topbar">
     <div class="row">
       <button class="btn" id="backBtn">←</button>
       <button class="btn" id="homeBtn">🏠</button>
     </div>
     <div class="row">
-      <span class="badge" id="periodoBadge">🕰️ —</span>
+      <span class="badge" id="periodoBadge">🕰️ Futuro</span>
+      <span class="badge" id="styleBadge">🎭 What if</span>
+      <span class="badge" id="freeBadge">Crediti: —</span>
       <button class="btn" id="langBtn">IT</button>
     </div>
   </div>
 
-  <h1 id="titleH1">Imposta la tua domanda</h1>
+  <h1>Imposta la tua domanda</h1>
 
-  <!-- Style + substyle -->
-  <div class="card center">
-    <div class="chips">
-      <button class="chip" data-style="whatif" id="chipWhatIf">What if</button>
+  <!-- Style (compatto e centrale) -->
+  <div class="card compact">
+    <div class="chips" id="styleChips">
+      <button class="chip sel" data-style="whatif" id="chipWhatIf">What if</button>
       <button class="chip" data-style="wtf" id="chipWTF">What the F</button>
     </div>
-    <div id="subWhatIf" class="subchips">
-      <button class="subchip" data-mode="poetico" id="subPoetico">Poetico (AI decide)</button>
-      <button class="subchip" data-mode="analitico" id="subAnalitico">Analitico (reale)</button>
+    <!-- Sub-stile per What if -->
+    <div class="subchips" id="whatifModeWrap">
+      <button class="subchip sel" data-mode="analitico" id="mAnalitico">Analitico</button>
+      <button class="subchip" data-mode="poetico" id="mPoetico">Poetico</button>
+    </div>
+    <div class="subchips hide" id="wtfNote">
+      <span class="small">Sarcasmo confidenziale da bar, sbronze e una sola imprecazione “organica”.</span>
     </div>
   </div>
 
   <!-- Question -->
   <div class="card center">
-    <h3 class="label" id="qLabel">La tua domanda</h3>
+    <h3 class="label">La tua domanda</h3>
     <textarea id="qInput" rows="3" class="input" placeholder="E se…" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
     <div class="row" style="margin-top:12px;justify-content:space-between">
-      <button class="btn primary" id="goBtn" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
-      <button class="btn ghost" id="clearBtn">Svuota</button>
+      <div class="row" style="gap:8px">
+        <input id="nameInput" class="input" style="width:260px" placeholder="Nome (opzionale)"/>
+        <button class="btn" id="togglePeriodo">↔ Passa a Passato</button>
+      </div>
+      <div class="row" style="gap:8px">
+        <button class="btn primary" id="goBtn" title="Ctrl/⌘+Invio">✨ Genera</button>
+        <button class="btn ghost" id="clearBtn">Svuota</button>
+      </div>
     </div>
-    <div class="small" id="tipNote" style="margin-top:8px">Stile e periodo sopra; il tono si adatta.</div>
+    <p class="small" id="tipNote">Suggerimento: scegli stile e periodo; la risposta si adatta.</p>
+  </div>
+
+  <!-- Salvati -->
+  <div class="card center">
+    <div class="row" style="justify-content:space-between">
+      <div class="label">Domande salvate</div>
+      <button class="btn ghost" id="clearSavedBtn">🗑️ Svuota</button>
+    </div>
+    <div id="savedList" class="row" style="flex-direction:column;gap:8px"></div>
+    <p class="small" id="noSaved">— Nessuna domanda salvata.</p>
   </div>
 
 </main>
 
 <script>
-const LS=localStorage;
+const LS = localStorage;
+const lang = (LS.getItem('lang') || 'it').toLowerCase();
+document.getElementById('langBtn').textContent = lang.toUpperCase();
+
 function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
 function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
-const lang=(LS.getItem('lang')||'it').toLowerCase();
+function todayStr(){ return new Date().toISOString().slice(0,10); }
 
-let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false, whatif_mode:'poetico'});
+let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false,whatifMode:'analitico'});
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-document.getElementById('titleH1').textContent = (lang==='en'?'Set your question':'Imposta la tua domanda');
-document.getElementById('qLabel').textContent  = (lang==='en'?'Your question':'La tua domanda');
-document.getElementById('langBtn').textContent = lang.toUpperCase();
-document.getElementById('periodoBadge').textContent="🕰️ "+(prefs.periodo==='past'?(lang==='en'?'Past':'Passato'):(lang==='en'?'Future':'Futuro'));
+const qEl = document.getElementById('qInput');
+const nameEl = document.getElementById('nameInput');
+document.getElementById('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past'?'Passato':'Futuro');
+document.getElementById('styleBadge').textContent = "🎭 " + (prefs.stile==='wtf'?'What the F':'What if');
 
-function syncChips(){
-  document.getElementById('chipWhatIf').classList.toggle('sel', prefs.stile==='whatif');
-  document.getElementById('chipWTF').classList.toggle('sel', prefs.stile==='wtf');
-  document.getElementById('subWhatIf').classList.toggle('hidden', prefs.stile!=='whatif');
-  document.getElementById('subPoetico').classList.toggle('sel', prefs.whatif_mode==='poetico');
-  document.getElementById('subAnalitico').classList.toggle('sel', prefs.whatif_mode==='analitico');
+function renderStyle(){
+  document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
+  document.getElementById('styleBadge').textContent = "🎭 " + (prefs.stile==='wtf'?'What the F':'What if');
+  document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+  document.getElementById('whatifModeWrap').classList.toggle('hide', prefs.stile!=='whatif');
+  document.getElementById('wtfNote').classList.toggle('hide', prefs.stile!=='wtf');
 }
-syncChips();
+renderStyle();
 
-document.getElementById('chipWhatIf').onclick=()=>{ prefs.stile='whatif'; writeJSON('whatif_prefs',prefs); document.documentElement.setAttribute('data-theme','whatif'); syncChips(); };
-document.getElementById('chipWTF').onclick =()=>{ prefs.stile='wtf';    writeJSON('whatif_prefs',prefs); document.documentElement.setAttribute('data-theme','wtf');    syncChips(); };
-document.getElementById('subPoetico').onclick   =()=>{ prefs.whatif_mode='poetico';   writeJSON('whatif_prefs',prefs); syncChips(); };
-document.getElementById('subAnalitico').onclick =()=>{ prefs.whatif_mode='analitico'; writeJSON('whatif_prefs',prefs); syncChips(); };
+function renderMode(){
+  document.querySelectorAll('#whatifModeWrap .subchip').forEach(s=> s.classList.toggle('sel', s.dataset.mode===prefs.whatifMode));
+}
+renderMode();
 
-document.getElementById('periodoBadge').onclick=()=>{ prefs.periodo=(prefs.periodo==='past'?'future':'past'); writeJSON('whatif_prefs',prefs); document.getElementById('periodoBadge').textContent="🕰️ "+(prefs.periodo==='past'?(lang==='en'?'Past':'Passato'):(lang==='en'?'Future':'Futuro')); };
-document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
+document.getElementById('styleChips').addEventListener('click',(e)=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs); renderStyle();
+});
+
+document.getElementById('whatifModeWrap').addEventListener('click',(e)=>{
+  const b=e.target.closest('.subchip'); if(!b) return;
+  prefs.whatifMode=b.dataset.mode; writeJSON('whatif_prefs',prefs); renderMode();
+});
+
+document.getElementById('togglePeriodo').onclick=()=>{
+  prefs.periodo = (prefs.periodo==='past'?'future':'past');
+  writeJSON('whatif_prefs',prefs);
+  document.getElementById('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past'?'Passato':'Futuro');
+  document.getElementById('togglePeriodo').textContent = prefs.periodo==='past' ? '↔ Passa a Futuro' : '↔ Passa a Passato';
+};
+
 document.getElementById('backBtn').onclick=()=>history.back();
 document.getElementById('homeBtn').onclick=()=>location.href='index.html';
+document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
 
-const qEl=document.getElementById('qInput'); qEl.placeholder=(lang==='en'?'What if…':'E se…'); qEl.autofocus=true;
+// Crediti (solo visual)
+function userIsAdmin(){ return !!LS.getItem('admin_token'); }
+function capForUser(){ return userIsAdmin() ? Infinity : (prefs.pro ? 10 : 3); }
+function ensureCredits(){
+  const c=readJSON('whatif_credits',{date:todayStr(),used:0});
+  if(c.date!==todayStr()){ c.date=todayStr(); c.used=0; }
+  writeJSON('whatif_credits',c);
+}
+function leftCredits(){
+  const c=readJSON('whatif_credits',{date:todayStr(),used:0});
+  const cap=capForUser();
+  return cap===Infinity ? "∞" : Math.max(0, cap-(c.used||0));
+}
+function renderCreditsBadge(){
+  const fb=document.getElementById('freeBadge');
+  const cap=capForUser(); const left=leftCredits();
+  fb.textContent = (cap===Infinity) ? 'Crediti: ∞' : `Crediti: ${left}/${cap}`;
+}
+ensureCredits(); renderCreditsBadge();
 
-function trySubmit(){
-  const domanda=(qEl.value||"").trim(); if(!domanda){ qEl.focus(); return; }
-  const micro = readJSON('micro_profile', {});
+// Saved questions
+function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString('it-IT',{hour12:false}); }
+function renderSaved(){
+  const listEl=document.getElementById('savedList');
+  const empty=document.getElementById('noSaved');
+  const arr=readJSON('next_prompts',[]);
+  listEl.innerHTML='';
+  if(!arr.length){ empty.style.display='block'; return; }
+  empty.style.display='none';
+  arr.slice(0,10).forEach(item=>{
+    const row=document.createElement('div'); row.className='row'; row.style.justifyContent='space-between';
+    const left=document.createElement('div'); left.style.maxWidth='520px'; left.style.fontWeight='700'; left.textContent=item.q||'—';
+    const right=document.createElement('div');
+    const use=document.createElement('button'); use.className='btn'; use.textContent='Usa';
+    use.onclick=()=>{ qEl.value=item.q||""; window.scrollTo({top:0,behavior:'smooth'}); };
+    const play=document.createElement('button'); play.className='btn'; play.textContent='▶';
+    play.onclick=()=>{ go(item.q||""); };
+    right.appendChild(use); right.appendChild(play);
+    row.appendChild(left); row.appendChild(right);
+    listEl.appendChild(row);
+  });
+}
+renderSaved();
+document.getElementById('clearSavedBtn').onclick=()=>{ LS.removeItem('next_prompts'); renderSaved(); };
+
+// Submit
+function go(qOverride){
+  const domanda=(qOverride!==undefined ? qOverride : (qEl.value||"").trim());
+  if(!domanda){ qEl.focus(); return; }
+  const c=readJSON('whatif_credits',{date:todayStr(),used:0});
+  if(!userIsAdmin()){
+    const cap=capForUser();
+    if((c.used||0)>=cap){ alert('Hai finito i crediti di oggi.'); return; }
+    c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderCreditsBadge();
+  }
+  const name=(nameEl.value||"").trim();
   writeJSON('whatif_prefs', prefs);
-  writeJSON('whatif_request',{ domanda, stile:prefs.stile, lang, extra:"", micro, periodo:prefs.periodo, whatif_mode:prefs.whatif_mode });
   LS.setItem('domanda',domanda);
+  const payload={ domanda, stile:prefs.stile, lang, extra:"", micro:{ name }, fantasy_mode:false, periodo:prefs.periodo, whatifMode:prefs.whatifMode, name };
+  writeJSON('whatif_request', payload);
   location.href='fifth.html';
 }
-document.getElementById('goBtn').onclick=trySubmit;
+document.getElementById('goBtn').onclick=()=>go();
 document.getElementById('clearBtn').onclick=()=>{ qEl.value=""; qEl.focus(); };
-qEl.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
+qEl.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); go(); }});
 </script>
 </body>
 </html>
