@@ -4,101 +4,141 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>What?f — Domanda</title>
-<meta name="theme-color" content="#0B0B0C"/>
 <style>
-:root{--bg:#0B0B0C;--bg2:#101414;--fg:#FFF;--muted:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01;--wtf1:#3A6B56;--wtf2:#5A8C75;--card:rgba(20,28,34,.92);--line:rgba(255,255,255,.12);--chip:#121A26;--ink:#0A0E12;--shadow:rgba(0,0,0,.35)}
-*{box-sizing:border-box}html,body{margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
-main{max-width:880px;margin:auto;padding:20px}
-h1{font-size:clamp(22px,5vw,30px);margin:10px 0 6px;color:var(--acc2);text-align:center}
-.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
-.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:14px;padding:16px;font-size:18px}
-.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
-.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
-.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none;white-space:nowrap}
-.segment{display:flex;gap:6px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;padding:6px}
-.seg{padding:8px 12px;border-radius:999px;cursor:pointer}
-.seg.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12;font-weight:800}
-.small{font-size:12px;color:var(--muted);text-align:center}
+  :root{--bg:#0B0B0C;--fg:#FFF;--line:rgba(255,255,255,.14);--chip:#121A26;--acc:#1C57A0;--acc2:#FFEC01}
+  body{margin:0;background:#0B0B0C;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{max-width:920px;margin:auto;padding:18px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .badge{border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;background:rgba(255,255,255,.06)}
+  .card{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:8px 12px;cursor:pointer}
+  .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12;font-weight:800}
+  .label{color:var(--acc2);font-weight:800;margin-bottom:6px}
+  textarea,.input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;color:#EAF3EE;padding:12px;font-size:16px}
+  .btn{appearance:none;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;border-radius:12px;padding:10px 14px;cursor:pointer}
+  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12;font-weight:800;border:none}
+  .grid{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:start}
+  @media (max-width:720px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <main>
-  <div class="row" style="justify-content:space-between">
-    <div class="row"><button class="btn" id="backBtn">←</button><button class="btn" id="homeBtn">🏠</button></div>
-    <div class="row"><span class="badge" id="periodoBadge">🕰️ Futuro</span><button class="btn" id="langBtn">IT</button></div>
+  <div class="bar">
+    <div class="row">
+      <button class="btn" onclick="history.back()">←</button>
+      <button class="btn" onclick="location.href='index.html'">🏠</button>
+    </div>
+    <div class="row">
+      <span id="langBadge" class="badge">IT</span>
+    </div>
   </div>
 
-  <h1>Imposta la tua domanda</h1>
+  <h2 style="margin:0 0 6px">Imposta la domanda</h2>
+
+  <!-- Riga compatta: stile + variante + lingua -->
+  <div class="card">
+    <div class="grid">
+      <div>
+        <div class="label">Stile</div>
+        <div id="styleChips" class="chips">
+          <button class="chip sel" data-style="whatif">What if</button>
+          <button class="chip" data-style="wtf">What the F</button>
+        </div>
+      </div>
+
+      <div id="variantBox">
+        <div class="label">Variante</div>
+        <div class="chips">
+          <button class="chip sel" data-var="poetico" id="vPoetico">Poetico</button>
+          <button class="chip" data-var="analitico" id="vAnalitico">Analitico</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="label">Lingua</div>
+        <div class="chips">
+          <button class="chip" id="itBtn">IT</button>
+          <button class="chip" id="enBtn">EN</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Domanda centrale -->
-  <div class="card" style="max-width:720px;margin:12px auto">
-    <textarea id="qInput" rows="3" class="input" placeholder="E se…" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
-    <div class="row" style="margin-top:12px">
-      <button class="btn primary" id="goBtn" title="Ctrl/⌘+Invio">✨ Genera</button>
-      <button class="btn" id="clearBtn">Svuota</button>
-    </div>
-    <p class="small">Scegli sotto lo stile. Il resto lo capiamo noi.</p>
+  <div class="card">
+    <div class="label">La tua domanda</div>
+    <textarea id="qInput" rows="3" placeholder="E se…"></textarea>
   </div>
 
-  <!-- Stile compatto -->
-  <div class="card" style="max-width:720px;margin:12px auto">
-    <div class="row">
-      <div class="segment" id="styleSeg">
-        <div class="seg sel" data-style="whatif">What if</div>
-        <div class="seg" data-style="wtf">What the F</div>
-      </div>
-    </div>
-    <div class="row" id="whatifModes">
-      <div class="segment">
-        <div class="seg sel" data-mode="analitico">Analitico</div>
-        <div class="seg" data-mode="poetico">Poetico</div>
-      </div>
+  <!-- Genera in fondo -->
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <span></span>
+      <button class="btn primary" id="goBtn">✨ Genera risposta</button>
     </div>
   </div>
 </main>
 
 <script>
-const LS=localStorage;
-const lang=(LS.getItem('lang')||'it').toLowerCase();
-document.getElementById('langBtn').textContent=lang.toUpperCase();
-document.getElementById('backBtn').onclick=()=>history.back();
-document.getElementById('homeBtn').onclick=()=>location.href='index.html';
-document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
+  const LS = localStorage;
+  const lang = (LS.getItem('lang') || 'it').toLowerCase();
+  let stile   = (JSON.parse(LS.getItem('whatif_prefs')||'{}').stile) || 'whatif';
+  let variante = LS.getItem('whatif_variant') || 'poetico';
 
-let periodo = (LS.getItem('periodo')||'future');
-const perEl=document.getElementById('periodoBadge');
-function renderPer(){ perEl.textContent="🕰️ "+(periodo==='past'?(lang==='en'?'Past':'Passato'):(lang==='en'?'Future':'Futuro')); }
-renderPer();
-perEl.onclick=()=>{ periodo=(periodo==='past'?'future':'past'); LS.setItem('periodo',periodo); renderPer(); };
+  // UI init
+  document.getElementById('langBadge').textContent = lang.toUpperCase();
+  document.getElementById('qInput').placeholder = (lang==='en' ? "What if…" : "E se…");
 
-let style='whatif', whatif_mode='analitico';
-document.getElementById('styleSeg').onclick=(e)=>{
-  const b=e.target.closest('.seg'); if(!b) return;
-  document.querySelectorAll('#styleSeg .seg').forEach(x=>x.classList.remove('sel'));
-  b.classList.add('sel'); style=b.dataset.style;
-  document.getElementById('whatifModes').style.display = (style==='whatif')?'flex':'none';
-};
-document.getElementById('whatifModes').onclick=(e)=>{
-  const b=e.target.closest('.seg'); if(!b) return;
-  document.querySelectorAll('#whatifModes .seg').forEach(x=>x.classList.remove('sel'));
-  b.classList.add('sel'); whatif_mode=b.dataset.mode;
-};
+  // Lingua chips
+  const itBtn = document.getElementById('itBtn');
+  const enBtn = document.getElementById('enBtn');
+  function syncLangChips() {
+    itBtn.classList.toggle('sel', (localStorage.getItem('lang')||'it')==='it');
+    enBtn.classList.toggle('sel', (localStorage.getItem('lang')||'it')==='en');
+  }
+  itBtn.onclick = ()=>{ LS.setItem('lang','it'); document.getElementById('langBadge').textContent='IT'; syncLangChips(); };
+  enBtn.onclick = ()=>{ LS.setItem('lang','en'); document.getElementById('langBadge').textContent='EN'; syncLangChips(); };
+  syncLangChips();
 
-const qEl=document.getElementById('qInput'); qEl.autofocus=true;
+  // Stile
+  document.getElementById('styleChips').addEventListener('click', (e)=>{
+    const b = e.target.closest('.chip'); if(!b) return;
+    stile = b.dataset.style;
+    document.querySelectorAll('#styleChips .chip').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel');
+    // mostra/nasconde variante solo per What if
+    document.getElementById('variantBox').style.display = (stile==='whatif') ? 'block' : 'none';
+  });
+  document.getElementById('variantBox').style.display = (stile==='whatif') ? 'block' : 'none';
 
-function trySubmit(){
-  const domanda=(qEl.value||"").trim();
-  if(!domanda){ qEl.focus(); return; }
-  const prefs = { stile:style, periodo, whatif_mode };
-  LS.setItem('whatif_prefs', JSON.stringify(prefs));
-  const req = { domanda, stile:style, lang, extra:"", micro:{}, periodo, name:(LS.getItem('name')||""), whatif_mode };
-  LS.setItem('whatif_request', JSON.stringify(req));
-  location.href='fifth.html';
-}
-document.getElementById('goBtn').onclick=trySubmit;
-document.getElementById('clearBtn').onclick=()=>{ qEl.value=""; qEl.focus(); };
-qEl.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
+  // Variante
+  document.getElementById('vPoetico').onclick = ()=>{ variante='poetico'; LS.setItem('whatif_variant','poetico'); document.getElementById('vPoetico').classList.add('sel'); document.getElementById('vAnalitico').classList.remove('sel'); };
+  document.getElementById('vAnalitico').onclick = ()=>{ variante='analitico'; LS.setItem('whatif_variant','analitico'); document.getElementById('vAnalitico').classList.add('sel'); document.getElementById('vPoetico').classList.remove('sel'); };
+  if (variante==='analitico') { document.getElementById('vAnalitico').click(); }
+
+  // Genera
+  document.getElementById('goBtn').onclick = ()=>{
+    const domanda = (document.getElementById('qInput').value||"").trim();
+    if(!domanda){ document.getElementById('qInput').focus(); return; }
+    const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
+    prefs.stile = stile;
+    LS.setItem('whatif_prefs', JSON.stringify(prefs));
+
+    LS.setItem('domanda', domanda);
+    const req = {
+      domanda,
+      lang: (LS.getItem('lang')||'it').toLowerCase(),
+      stile,
+      periodo: prefs.periodo || 'future',
+      micro: JSON.parse(LS.getItem('micro_profile')||'{}'),
+      sex: (JSON.parse(LS.getItem('whatif_profile')||'{}').sex||''),
+      whatif_variant: (stile==='whatif') ? (variante||'poetico') : undefined
+    };
+    LS.setItem('whatif_request', JSON.stringify(req));
+    location.href='fifth.html';
+  };
 </script>
 </body>
 </html>
