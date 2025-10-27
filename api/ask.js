@@ -1,4 +1,4 @@
-// /api/ask.js — What?f Engine (2025 FINAL)
+// /api/ask.js — What?f Engine (2025 FINAL) + MEMORY (per IP, senza userId)
 // Stili: whatif (realismo lucido) · wtf (sarcasmo demenziale affettuoso, alcol, oggetti, "bestemmia" narrata)
 // IT/EN — paragrafo singolo, niente liste/domande/emoji
 // Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
@@ -10,7 +10,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 
 // ---------- OpenAI ----------
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const MODEL = "gpt-4o-mini";
+const MODEL = process.env.WHATF_MODEL || "gpt-4o-mini";
 
 // ---------- Upstash ----------
 const redis = new Redis({
@@ -36,6 +36,7 @@ function cors(req, res) {
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token, x-pro");
+  res.setHeader("Access-Control-Max-Age", "86400");
 }
 
 /* ---------- Helpers ---------- */
@@ -81,9 +82,10 @@ function stripQuestionEcho(domanda, text) {
   t = t.replace(echoRx, "");
   return t;
 }
-function ensureSpicyButSafeWTF(t, lang) {
-  // Garantisce chiusura sentita + evita output vuoto; NON inserisce mai bestemmie letterali
+function ensureSpicyButSafeWTF(t) {
   let out = String(t || "").trim();
+  // oscura eventuali varianti letterali indesiderate
+  out = out.replace(/\b(beste[mn]{1,2}[a-z]*)\b/gi, "*");
   if (!/[.!?…]$/.test(out)) out += ".";
   return out;
 }
@@ -207,10 +209,110 @@ You’ll feel like a guest, then your hands learn the new keys. You’ll walk no
   return { sys: SYS_WHATIF, fewshots: FEWSHOTS };
 }
 
+/* ---------- MEMORIA (per IP) ---------- */
+const QA_MAX = 200;
+const MICRO_MAX = 90;
+const RETENTION_SECONDS = 90 * 24 * 60 * 60; // 90 giorni
+
+function keysFor(ip) {
+  const base = `mem:${ip}`;
+  return {
+    qa: `${base}:qa`,            // list JSON {ts, domanda, answer, stile, periodo, lang}
+    micro: `${base}:micro`,      // list JSON {date, mood, decide, anchor, jung}
+  };
+}
+
+async function saveQA(ip, item) {
+  const k = keysFor(ip).qa;
+  await redis.lpush(k, JSON.stringify(item));
+  await redis.ltrim(k, 0, QA_MAX - 1);
+  await redis.expire(k, RETENTION_SECONDS);
+}
+
+async function saveMicro(ip, micro) {
+  if (!micro || typeof micro !== "object") return;
+  // salva solo se ha una data del giorno o campi popolati
+  const hasUseful = micro.date || micro.mood || micro.decide || micro.anchor || micro.jung;
+  if (!hasUseful) return;
+  const k = keysFor(ip).micro;
+  await redis.lpush(k, JSON.stringify(micro));
+  await redis.ltrim(k, 0, MICRO_MAX - 1);
+  await redis.expire(k, RETENTION_SECONDS);
+}
+
+async function loadMemory(ip, limitQA = 15, limitMicro = 30) {
+  const ks = keysFor(ip);
+  const [qaRaw, microRaw] = await Promise.all([
+    redis.lrange(ks.qa, 0, limitQA - 1),
+    redis.lrange(ks.micro, 0, limitMicro - 1),
+  ]);
+  const qa = (qaRaw || []).map(s => { try { return JSON.parse(s); } catch { return null; } }).filter(Boolean);
+  const micro = (microRaw || []).map(s => { try { return JSON.parse(s); } catch { return null; } }).filter(Boolean);
+  return { qa, micro };
+}
+
+function synthesizeProfile(microList = []) {
+  if (!Array.isArray(microList) || microList.length === 0) return null;
+  const freq = (arr, key) => arr.reduce((m, x) => {
+    const v = (x && x[key]) ? String(x[key]) : "";
+    if (!v) return m;
+    m[v] = (m[v] || 0) + 1;
+    return m;
+  }, {});
+  const pickTop = (obj) => {
+    let bestKey = "", bestVal = 0;
+    for (const [k, v] of Object.entries(obj)) if (v > bestVal) { bestKey = k; bestVal = v; }
+    return bestKey || "";
+  };
+
+  const last = microList[0]; // più recente
+  const moodTop = pickTop(freq(microList, "mood"));
+  const decideTop = pickTop(freq(microList, "decide"));
+  const anchorTop = pickTop(freq(microList, "anchor"));
+  const jungTop = pickTop(freq(microList, "jung"));
+
+  return {
+    lastDate: last?.date || null,
+    lastMood: last?.mood || null,
+    moodTop,
+    decideTop,
+    anchorTop,
+    jungTop,
+  };
+}
+
+function buildMemorySystemPrompt(memProfile, qaRecent, lang = "it") {
+  if (!memProfile && (!qaRecent || qaRecent.length === 0)) return "";
+  const en = isEn(lang);
+
+  // micro sintesi
+  const microLine = memProfile
+    ? (en
+        ? `USER PROFILE: last mood "${memProfile.lastMood||"-"}", dominant Jung "${memProfile.jungTop||"-"}", decision style "${memProfile.decideTop||"-"}", anchor "${memProfile.anchorTop||"-"}".`
+        : `PROFILO UTENTE: ultimo umore "${memProfile.lastMood||"-"}", Jung prevalente "${memProfile.jungTop||"-"}", stile decisione "${memProfile.decideTop||"-"}", ancoraggio "${memProfile.anchorTop||"-"}".`)
+    : "";
+
+  // trend minimal delle ultime risposte: preferenze su stile/periodo (solo come hint)
+  let trendLine = "";
+  if (qaRecent && qaRecent.length > 0) {
+    const countBy = (k) => qaRecent.reduce((m, x) => { m[x[k]] = (m[x[k]]||0)+1; return m; }, {});
+    const topOf = (o) => Object.entries(o).sort((a,b)=>b[1]-a[1])[0]?.[0];
+    const favStyle = topOf(countBy("stile"));
+    const favPeriod = topOf(countBy("periodo"));
+    trendLine = en
+      ? `HABITS: prefers style "${favStyle||"-"}", period "${favPeriod||"-"}" lately.`
+      : `ABITUDINI: recentemente preferisce stile "${favStyle||"-"}", periodo "${favPeriod||"-"}".`;
+  }
+
+  // Non includiamo testi completi di Q/A nel prompt per non “intasare”; bastano hint di abitudini.
+  const header = en ? "MEMORY CONTEXT:" : "CONTESTO MEMORIA:";
+  return [header, microLine, trendLine].filter(Boolean).join(" ");
+}
+
 /* ---------- API Handler ---------- */
 export default async function handler(req, res) {
   cors(req, res);
-  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
   try {
@@ -224,7 +326,7 @@ export default async function handler(req, res) {
     const admin = await isAdmin(req, ip);
     const bypass = admin === true;
 
-    // PRO header (UI locale): x-pro: "1"
+    // PRO header (UI locale): x-pro: "1" (non validiamo, come richiesto)
     const isPro = String(req.headers["x-pro"] || "").trim() === "1";
 
     // Rate limit 10/min (se non bypass)
@@ -253,8 +355,9 @@ export default async function handler(req, res) {
       lang = "it",
       extra = "",
       periodo = "future",
-      sex = "",          // <-- NEW: top-level sex (from second page) "m" | "f" | "nb"
-      micro = {}         // optional micro-profile; may include micro.sex too
+      sex = "",          // "m" | "f" | "nb" | ""
+      micro = {},        // opzionale: { date, mood, decide, anchor, jung }
+      remember = true    // se vuoi poter disattivare da client, usa false
     } = body;
 
     if (!domanda || typeof domanda !== "string")
@@ -262,11 +365,16 @@ export default async function handler(req, res) {
 
     const resolvedSex = String(sex || micro?.sex || "").toLowerCase(); // prefer top-level
 
+    // ---- Carica memoria esistente (per personalizzare) ----
+    const { qa: qaRecent, micro: microList } = await loadMemory(ip, 15, 30);
+    const memProfile = synthesizeProfile(microList);
+    const memoryPrompt = buildMemorySystemPrompt(memProfile, qaRecent, lang);
+
     // Personas + Temporal mode
     const { sys, fewshots } = personaSystem(stile, lang, resolvedSex);
     const temporal = temporalSystem(periodo, lang, stile);
 
-    // A tiny deterministic seed (helps variety while keeping brand tone)
+    // Seed deterministico
     const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${lang}|${resolvedSex}`), 36) % 1000000;
 
     const extraTemporalHint =
@@ -283,6 +391,7 @@ export default async function handler(req, res) {
     const messages = [
       { role: "system", content: sys },
       { role: "system", content: temporal },
+      ...(memoryPrompt ? [{ role: "system", content: memoryPrompt }] : []),
       ...(extraTemporalHint ? [{ role: "system", content: extraTemporalHint }] : []),
       ...(fewshots || []),
       { role: "system", content: isEn(lang)
@@ -345,6 +454,31 @@ export default async function handler(req, res) {
       console.warn("log failure (non-bloccante)", e);
     }
 
+    // --- MEMORIA: salvataggio Q/A e micro (se richiesto) ---
+    let memSaved = { qa: 0, micro: 0 };
+    if (remember) {
+      try {
+        await saveQA(ip, { ts: Date.now(), domanda, answer, stile, periodo, lang });
+        memSaved.qa = 1;
+        await saveMicro(ip, micro);
+        // se micro ha campi, lo salviamo e contiamo
+        memSaved.micro = (micro && (micro.date || micro.mood || micro.decide || micro.anchor || micro.jung)) ? 1 : 0;
+      } catch (e) {
+        console.warn("memory save failure (non-bloccante)", e);
+      }
+    }
+
+    // Conta attuale in memoria (solo lunghezze, read non pesante)
+    let counts = { qa: 0, micro: 0 };
+    try {
+      const ks = keysFor(ip);
+      const [qaLen, microLen] = await Promise.all([
+        redis.llen(ks.qa),
+        redis.llen(ks.micro)
+      ]);
+      counts = { qa: qaLen || 0, micro: microLen || 0 };
+    } catch {}
+
     return res.status(200).json({
       answer,
       style: stile,
@@ -354,9 +488,12 @@ export default async function handler(req, res) {
       admin,
       pro: isPro,
       credits: bypass ? null : { used, dailyCap },
+      memory: { saved: remember === true, savedNow: memSaved, counts, profile: memProfile || null }
     });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
-    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
+    const msg = String(err?.message || err);
+    const transient = /timeout|rate|overloaded|ECONNRESET|ENOTFOUND/i.test(msg);
+    return res.status(transient ? 503 : 500).json({ error: transient ? "upstream_unavailable" : "server_error", detail: msg });
   }
 }
