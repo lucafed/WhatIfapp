@@ -1,5 +1,5 @@
-// /api/ask.js — What?f Engine (2025 FINAL) + MEMORY + STYLES v2
-// Stili: whatif (toni: real | poetic) · wtf (sarcasmo smodato, oggetti che reagiscono, “bestemmia” narrata non letterale)
+// /api/ask.js — What?f Engine (2025 FINAL) + MEMORY + WHATIF TONES + WTF VARIANTS
+// Stili: whatif (toni: real | poetic) · wtf (sarcasmo alto, oggetti reattivi, “scoppio” comico variabile, non letterale)
 // IT/EN — paragrafo singolo, niente liste/domande/emoji
 // Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
 // Log su Redis SENZA contenuto della domanda (solo metadati + hash non reversibile)
@@ -18,7 +18,7 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-// rate limit: 10 req/min per IP (bypass SOLO per admin)
+// ---------- Rate limit ----------
 const rl = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "1 m") });
 
 // ---------- CORS ----------
@@ -79,7 +79,8 @@ function stripQuestionEcho(domanda, text) {
 }
 function ensureSpicyButSafeWTF(t) {
   let out = String(t || "").trim();
-  out = out.replace(/\b(beste[mn]{1,2}[a-z]*)\b/gi, "*"); // oscuramento extra
+  // oscuramento ulteriore evenienze casuali
+  out = out.replace(/\b(beste[mn]{1,2}[a-z]*)\b/gi, "*");
   if (!/[.!?…]$/.test(out)) out += ".";
   return out;
 }
@@ -94,7 +95,7 @@ async function isAdmin(req, requesterIp) {
   const token = String(req.headers["x-admin-token"] || "").trim();
   if (!token) return false;
   try {
-    const data = await redis.hgetall(`admin:token:${token}`); // { ip, ua }
+    const data = await redis.hgetall(`admin:token:${token}`);
     if (!data) return false;
     const LOCK_IP = String(process.env.ADMIN_LOCK_IP || "false").toLowerCase() === "true";
     if (LOCK_IP) {
@@ -107,12 +108,12 @@ async function isAdmin(req, requesterIp) {
   }
 }
 
-/* ---------- STYLE GUARDIANS (formato e tono) ---------- */
+/* ---------- STYLE GUARDIANS ---------- */
 const EMOJI_RX = /[\p{Extended_Pictographic}\uFE0F]/gu;
 const LIST_RX  = /^[\-\•\–\—\*]\s+/gm;
 function stripEmoji(s=""){ return String(s).replace(EMOJI_RX, ""); }
 function stripLists(s=""){ return String(s).replace(LIST_RX, ""); }
-function banQuestions(s=""){ return String(s).replace(/\?/g, "."); } // niente domande
+function banQuestions(s=""){ return String(s).replace(/\?/g, "."); }
 function oneParagraph(s=""){ return s.replace(/\s*\n+\s*/g, " "); }
 function sentenceSplit(s=""){
   return s.replace(/\s+/g," ")
@@ -125,7 +126,7 @@ function joinSentences(arr){
   return t;
 }
 
-// nomignoli (deterministici con seed)
+// nomignoli
 const NICKS = {
   it: {
     f: ["regina del casino","fenomena","capitana del caos","sirena urbana","signora dei forse","rockstar con tacchi comodi"],
@@ -146,186 +147,179 @@ function pickNick(seed, lang="it", sex=""){
   return pool[n];
 }
 
-// linee di “oggetti che reagiscono” (safe)
+/* ---------- WTF Explosion Variants (varietà sicura) ---------- */
+const WTF_EXPLETIVES_IT = [
+  "imprecazione mitologica","turpiloquio siderale","invocazione impropria",
+  "vaffa cosmico narrato","grido iconoclasta da cartone","esclamazione da cometa",
+  "anatema elasticizzato","romanzesco “non si dice”","urlo apocrifo",
+  "latrato teologico non pervenuto","improperio barocco","urletto agnostico deluxe"
+];
+const WTF_EXPLETIVES_EN = [
+  "mythic expletive","sidereal swear (narrated)","improper invocation",
+  "cosmic vaffa (cleaned)","iconoclast cartoon yell","comet-class outcry",
+  "elastic anathema","novelistic ‘not to be said’","apocryphal roar",
+  "agnostic yelp deluxe","baroque outburst","low-church thunderclap"
+];
 const OBJ_REACTIONS_IT = [
-  "il lampione finge di tossire educato",
-  "la tazzina vibra come un cellulare geloso",
-  "le sedie del bar applaudono in legno",
-  "il citofono sussurra “ma guarda te”",
-  "il semaforo si prende una pausa per ridere",
+  "il lampione si copre la faccia","la tazzina vibra come un telefono geloso",
+  "le sedie del bar battono in legno","il citofono finge di non averti sentito",
+  "il semaforo resta giallo per solidarietà","il neon starnutisce luce",
+  "il cucchiaino fischia come un treno","la moka risponde a vapore",
+  "il POS vibra da standing ovation","la porta automatica si apre solo per applaudire",
+  "lo scontrino si arriccia indignato","la pianta cambia lato per non arrossire"
 ];
 const OBJ_REACTIONS_EN = [
-  "the mailbox pretends to clear its throat",
-  "the coffee cup buzzes like a jealous phone",
-  "the chairs clap in wood",
-  "the buzzer whispers “well, well”",
-  "the traffic light takes a break to laugh",
+  "the streetlight covers its face","the coffee cup buzzes like a jealous phone",
+  "the chairs clap in wood","the buzzer pretends it heard nothing",
+  "the traffic light stays yellow in solidarity","the neon sneezes light",
+  "the teaspoon whistles like a train","the moka replies in steam",
+  "the card reader hums a standing ovation","the sliding door opens just to clap",
+  "the receipt curls up in protest","the office plant turns away to blush"
 ];
+const CROWD_REACTIONS_IT = [
+  "il barista trattiene una risata professionale","due signori alzano il sopracciglio sincronizzato",
+  "il vicino annuisce: rito di quartiere","tre ragazzi ridono a catena",
+  "il giornalaio piega il quotidiano per nascondere la risata",
+  "il cane del vicino applaude con la coda","la sala finge niente ma gode",
+  "qualcuno mormora “finalmente” e torna al cappuccino"
+];
+const CROWD_REACTIONS_EN = [
+  "the barista stifles a professional laugh","two neighbors raise a synchronized eyebrow",
+  "someone nods: local ritual","three teens laugh in relay",
+  "the newsstand guy hides a smile behind the paper",
+  "the dog applauds with its tail","the room pretends not to notice but enjoys",
+  "someone whispers “finally” and sips their cappuccino"
+];
+function pickFrom(pool, seed, salt=0){
+  const n = Math.abs(parseInt(tinyHash(String(seed)+":"+salt),36));
+  return pool[n % pool.length];
+}
+function ensureWTFBeats(sentences, lang="it", seed=0){
+  const L = isEn(lang) ? "en" : "it";
+  const EXPL = L==="en" ? WTF_EXPLETIVES_EN : WTF_EXPLETIVES_IT;
+  const OBJ  = L==="en" ? OBJ_REACTIONS_EN  : OBJ_REACTIONS_IT;
+  const PPL  = L==="en" ? CROWD_REACTIONS_EN: CROWD_REACTIONS_IT;
 
-function ensureWTFBeats(sentences, lang="it"){
-  // Garantisce: 1 “bestemmia narrata” + 1 reazione oggetti
-  let hasBlasp = sentences.some(s => /bestemmi/i.test(s));
-  let hasObj   = sentences.some(s => /(lampione|tazzina|sedia|citofono|semaforo|mailbox|coffee cup|traffic light|buzzer)/i.test(s));
-  if (!hasBlasp){
+  const hasBlast = sentences.some(s => /imprecazione|turpiloquio|invocazione impropria|vaffa|iconoclast|cometa|anatema|apocrif|agnostic|barocc|expletive|swear|anathema|apocryphal|outburst/i.test(s));
+  const hasObj   = sentences.some(s => /(lampione|tazzina|sedia|citofono|semaforo|neon|cucchiaino|moka|POS|porta|scontrino|pianta|streetlight|coffee cup|chairs|buzzer|traffic light|card reader|sliding door|receipt|plant)/i.test(s));
+
+  if (!hasBlast){
+    const e = pickFrom(EXPL, seed, 1);
+    const o = pickFrom(OBJ,  seed, 2);
+    const c = pickFrom(PPL,  seed, 3);
     const line = isEn(lang)
-      ? "you let out a blasphemy that rattles the glasses"
-      : "ti esce una bestemmia che fa tremare i bicchieri";
-    sentences.splice(Math.min(3, sentences.length), 0, line + ".");
+      ? `you drop a ${e} that rattles the glasses, ${o}, and ${c}.`
+      : `ti scappa un’${/^[aeiouàèéìòù]/i.test(e) ? e : (" " + e)} che fa tremare i bicchieri, ${o}, e ${c}.`;
+    sentences.splice(Math.min(3, sentences.length), 0, line);
+  } else if (!hasObj){
+    const o = pickFrom(OBJ,  seed, 4);
+    sentences.splice(Math.min(4, sentences.length), 0, `${o}.`);
   }
-  if (!hasObj){
-    const pool = isEn(lang) ? OBJ_REACTIONS_EN : OBJ_REACTIONS_IT;
-    const line = pool[(Date.now() / 1000 | 0) % pool.length];
-    sentences.splice(Math.min(4, sentences.length), 0, line + ".");
-  }
-  return sentences;
+  return sentences.map(s => /[.!?…]$/.test(s) ? s : (s + "."));
 }
 
+/* ---------- WHATIF/WTF formatters ---------- */
 function enforceWTF(answer, lang="it", sex="", seed=0){
   let t = oneParagraph(stripEmoji(stripLists(banQuestions(answer))));
   let S = sentenceSplit(t);
-  // forza 6–8 frasi
-  if (S.length < 6){
-    const stub = isEn(lang) ? "you hold the scene together" : "tieni in piedi la scena";
-    while (S.length < 6) S.push(stub + ".");
-  }
+  if (S.length < 6){ const stub = isEn(lang) ? "you hold the scene together" : "tieni in piedi la scena"; while (S.length < 6) S.push(stub + "."); }
   if (S.length > 8) S = S.slice(0,8);
-
-  // apertura SOLO nomignolo
   const nick = pickNick(seed, lang, sex);
-  S[0] = ""; // svuota prima frase
-  S.unshift(nick + ".");
-
-  // garantisci i beats richiesti
-  S = ensureWTFBeats(S, lang);
-
+  S[0] = ""; S.unshift(nick + ".");
+  S = ensureWTFBeats(S, lang, seed);
   t = joinSentences(S);
-  t = t.replace(/\b(beste[mn]{1,2}[a-z]*)\b/gi, "*");
   return ensureSpicyButSafeWTF(t);
 }
-
 function enforceWHATIF(answer, tone="real"){
   let t = oneParagraph(stripEmoji(stripLists(banQuestions(answer))));
   let S = sentenceSplit(t);
-
   const min = tone==="poetic" ? 9 : 8;
   const max = tone==="poetic" ? 12 : 11;
-
-  if (S.length < min){
-    const stub = tone==="poetic" ? "E l’aria fa spazio a quello che resta" : "E le cose trovano posto";
-    while (S.length < min) S.push(stub + ".");
-  }
+  if (S.length < min){ const stub = tone==="poetic" ? "E l’aria fa spazio a quello che resta" : "E le cose trovano posto"; while (S.length < min) S.push(stub + "."); }
   if (S.length > max) S = S.slice(0, max);
-
-  // chiusura breve riflessiva (<= 9 parole)
   let last = S[S.length-1] || "";
   const wc = (last.match(/\S+/g)||[]).length;
-  if (wc > 9){
-    const cut = last.split(/\s+/).slice(0,9).join(" ");
-    S[S.length-1] = /[.!?…]$/.test(cut) ? cut : (cut + ".");
-  }
+  if (wc > 9){ const cut = last.split(/\s+/).slice(0,9).join(" "); S[S.length-1] = /[.!?…]$/.test(cut) ? cut : (cut + "."); }
   t = joinSentences(S);
   if (!/[.!?…]$/.test(t)) t+=".";
   return t;
 }
 
-/* ---------- Modalità temporale ---------- */
+/* ---------- Temporal mode ---------- */
 function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
   const en = isEn(lang);
   if (String(periodo || "").toLowerCase() === "past") {
     return en
-      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Speak as if the choice had been made back then and show how it likely unfolded. Prefer past/conditional, quick present flashes. No lists, no questions, no echo. Keep exact ${style.toUpperCase()} voice.`
-      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Parla come se la scelta fosse stata fatta allora e mostra come sarebbe andata. Preferisci passato/condizionale con lampi di presente. Niente liste, niente domande, niente eco. Mantieni la voce ${style.toUpperCase()}.`;
+      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Speak as if the choice had been made then and show how it unfolded. Prefer past/conditional. No lists, no questions, no echo. Keep exact ${style.toUpperCase()} voice.`
+      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Parla come se la scelta fosse stata fatta allora e mostra come sarebbe andata. Preferisci passato/condizionale. Niente elenchi, domande, eco. Mantieni la voce ${style.toUpperCase()}.`;
   }
   return en
     ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Describe a plausible near-future unfolding as if stepping into it now. No lists, no questions, no echo. Keep exact ${style.toUpperCase()} voice.`
-    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi un prossimo futuro plausibile come se ci entrassi adesso. Niente liste, niente domande, niente eco. Mantieni la voce ${style.toUpperCase()}.`;
+    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi un prossimo futuro plausibile come se ci entrassi adesso. Niente elenchi, domande, eco. Mantieni la voce ${style.toUpperCase()}.`;
 }
 
-/* ---------- Personas (voci) con toni ---------- */
+/* ---------- Personas (whatif: two tones; wtf: comic beats) ---------- */
 function personaSystem(style, lang, sex = "", whatif_tone = "real") {
   const en = isEn(lang);
-  const SEX = String(sex || "").toLowerCase(); // "m" | "f" | "nb" | ""
-
   if (style === "wtf") {
     const SYS = (en ? `
-You are “What the F” — the loud, loving friend who roasts with affection.
+You are “What the F” — loud, loving, more sarcastic toward the end too.
 SECOND PERSON. ONE paragraph, 6–8 sentences.
-Open with ONLY a nickname (no verbs). Keep joke density high till the end.
-Exactly one brief, narrated blasphemy (never literal); make NEARBY OBJECTS react absurdly.
-No lists, no questions, no emojis, no moralizing. Respect TEMPORAL MODE.
+Open ONLY with a nickname (no verbs). Keep jokes dense till the end.
+Exactly one brief, narrated blasphemy (never literal); make nearby OBJECTS react absurdly and crowd respond.
+No lists, no questions, no emojis. Respect TEMPORAL MODE.
 ` : `
-Sei “What the F” — l’amico rumoroso e affettuoso che ti prende in giro.
+Sei “What the F” — rumoroso, affettuoso e più sarcastico fino alla fine.
 SECONDA PERSONA. UN paragrafo, 6–8 frasi.
-Apri SOLO con un nomignolo (senza verbi). Densità di battute alta fino alla fine.
-Una sola breve bestemmia narrata (mai letterale); fai reagire gli OGGETTI attorno in modo assurdo.
-Niente elenchi, niente domande, niente emoji, niente prediche. Rispetta la MODALITÀ TEMPORALE.
+Apri SOLO con un nomignolo (senza verbi). Densità di battute alta fino alla chiusura.
+Una breve bestemmia narrata (mai letterale); gli OGGETTI reagiscono e le persone fanno da spalla.
+Niente elenchi, niente domande, niente emoji. Rispetta la MODALITÀ TEMPORALE.
 `).trim();
 
-    const FEWSHOTS = [
+    const FEW = [
       { role: "system", content:
-(en ? `EXAMPLE EN • Moving city (future)
-Champ. You land with a plan written on a napkin and the buzzer rolls its eyes; the fridge hums “good luck” while the streetlights rehearse costumes; you walk too far just to tire the noise, you let out a blasphemy that rattles the glasses and the mailbox pretends it didn’t hear, the coffee cup buzzes like a jealous phone, and somehow the map stops asking for proof — you’re not conquering a city, you’re landing your life.` :
-`ESEMPIO IT • Mettersi in proprio (futuro)
-Campione. Arrivi col piano sul tovagliolo e l’Excel ti guarda come un cameriere stanco; il registratore di cassa tossisce come scooter in salita, ti esce una bestemmia che fa tremare i bicchieri e il lampione finge di tossire educato, poi due facce tornano e la vetrina si raddrizza da sola: non stai vincendo il mondo, stai vincendo tu.`)} ) ];
-    return { sys: SYS, fewshots: FEWSHOTS };
+(en ? `EXAMPLE EN • Moving city
+Champ. You land with a napkin-plan, the buzzer rolls its eyes; you walk too far just to tire the noise, you drop a mythic expletive that rattles the glasses, the coffee cup buzzes like a jealous phone, someone whispers “finally” and sips their cappuccino; you’re not conquering a city, you’re landing your life.` :
+`ESEMPIO IT • Mettersi in proprio
+Campione. Arrivi col piano sul tovagliolo e l’Excel ti guarda stanco; ti scappa un’imprecazione mitologica che fa tremare i bicchieri, il lampione si copre la faccia e il barista trattiene una risata professionale; non stai vincendo il mondo, stai tenendo in piedi te.`)} ],
+    ];
+    return { sys: SYS, fewshots: FEW };
   }
 
-  // WHAT IF — due toni: real | poetic
+  // whatif — two tones
   const SYS_REAL = (en ? `
-You are "What If" — lucid, kind, grounded.
-SECOND PERSON. One paragraph, 8–11 sentences (~115–160 words).
-Plain images (keys, streetlights, notebooks, hands, air). Small truths, no heroics.
-No lists, no questions, no emojis. End with one short reflective line (not advice).
+You are "What If" — lucid, kind, grounded. SECOND PERSON. One paragraph, 8–11 sentences.
+Plain images (keys, streetlights, notebooks, hands). Small truths. End with a short reflective line.
+No lists, no questions, no emojis.
 ` : `
-Sei "What If" — lucido, affettuoso, concreto.
-SECONDA PERSONA. Un paragrafo, 8–11 frasi (~115–160 parole).
-Immagini quotidiane (chiavi, lampioni, taccuini, mani, aria). Verità piccole.
-Niente elenchi, niente domande, niente emoji. Chiudi con una riga breve riflessiva (non un consiglio).
+Sei "What If" — lucido, affettuoso, concreto. SECONDA PERSONA. Un paragrafo, 8–11 frasi.
+Immagini quotidiane (chiavi, lampioni, taccuini, mani). Verità piccole. Chiudi con una riga riflessiva breve.
+Niente elenchi, domande, emoji.
 `).trim();
 
   const SYS_POETIC = (en ? `
-You are "What If" — narrative-poetic, intimate and clear.
-SECOND PERSON. One paragraph, 9–12 sentences (~120–170 words).
-Warm imagery, gentle cadence, present-tense drift; no purple excess.
-No lists, no questions, no emojis. End with a short reflective line (≤ 9 words).
+You are "What If" — narrative-poetic, intimate yet clear. SECOND PERSON. One paragraph, 9–12 sentences.
+Warm imagery, gentle cadence, present-tense drift. End with a short reflective line (≤ 9 words). No purple.
+No lists, no questions, no emojis.
 ` : `
-Sei "What If" — narrativo-poetico, intimo ma limpido.
-SECONDA PERSONA. Un paragrafo, 9–12 frasi (~120–170 parole).
-Immagini calde, cadenza dolce, presente che scivola; poesia sobria.
-Niente elenchi, niente domande, niente emoji. Chiudi con una riga riflessiva breve (≤ 9 parole).
+Sei "What If" — narrativo-poetico, intimo ma limpido. SECONDA PERSONA. Un paragrafo, 9–12 frasi.
+Immagini calde, cadenza dolce, presente che scivola. Chiudi con una riga breve (≤ 9 parole). Senza eccessi.
+Niente elenchi, domande, emoji.
 `).trim();
 
-  const FEWSHOTS_REAL = [
-    { role: "system", content:
-(en ? `EXAMPLE EN • Move city (real)
-You feel like a guest, then your hands learn the new keys. You walk to tire the noise. By the third grocery you know your aisle. Evenings ask less proof. You miss some things, not all at once. The rest finds its place. Beneath the noise, something of yours was already there. And you keep that line.` :
-`ESEMPIO IT • Tornare (real)
-Tornare non è indietro, è un passo fatto meglio. Le strade tengono il ritmo anche quando lo perdi. All’inizio la lentezza graffia, poi rimette in orario. Le chiavi tornano sul piattino giusto. La nostalgia, se non la insegui, smette di parlare. Ti accorgi che sotto il rumore c’era già qualcosa di tuo. E te lo tieni.`)} ],
-  ];
-
-  const FEWSHOTS_POETIC = [
-    { role: "system", content:
-(en ? `EXAMPLE EN • Staying home (poetic)
-You wake to a blue light that rinses the walls. The street knows your step and gives you a small discount on doubt. Friends survive like old trees, saying your name the way a key remembers a lock. The day moves in ordinary miracles: a receipt folded like a sail, a window that learns your breath. Nights close softly and don’t ask for proof. You didn’t go back; you arrived. And that’s enough for now.` :
-`ESEMPIO IT • Restare all’Aquila (poetico)
-Ti svegli in una luce azzurra che scende dalle montagne. Le strade conoscono il tuo passo e ti fanno lo sconto sul dubbio. Due amici tengono il tuo nome come alberi in un vento lieve. Le mani imparano di nuovo le chiavi, la spesa trova l’angolo buono, un bar ti chiama come una volta. La città non è la stessa, e nemmeno tu: è così che si somiglia. La sera chiude piano, senza chiedere prove. Non sei tornata indietro: sei arrivata. E per oggi basta così.`)} ],
-  ];
-
-  const tone = String(whatif_tone || "real").toLowerCase() === "poetic" ? "poetic" : "real";
-  return (tone === "poetic")
-    ? { sys: SYS_POETIC, fewshots: FEWSHOTS_POETIC }
-    : { sys: SYS_REAL,   fewshots: FEWSHOTS_REAL };
+  const tone = String(whatif_tone||"real").toLowerCase()==="poetic" ? "poetic" : "real";
+  return { sys: tone==="poetic" ? SYS_POETIC : SYS_REAL, fewshots: [] };
 }
 
 /* ---------- MEMORIA (per IP) ---------- */
 const QA_MAX = 200;
 const MICRO_MAX = 90;
-const RETENTION_SECONDS = 90 * 24 * 60 * 60; // 90 giorni
+const RETENTION_SECONDS = 90 * 24 * 60 * 60;
 function keysFor(ip) {
   const base = `mem:${ip}`;
   return {
-    qa: `${base}:qa`,            // list JSON {ts, domanda, answer, stile, periodo, lang}
-    micro: `${base}:micro`,      // list JSON {date, mood, decide, anchor, jung}
+    qa: `${base}:qa`,
+    micro: `${base}:micro`,
   };
 }
 async function saveQA(ip, item) {
@@ -355,23 +349,17 @@ async function loadMemory(ip, limitQA = 15, limitMicro = 30) {
 }
 function synthesizeProfile(microList = []) {
   if (!Array.isArray(microList) || microList.length === 0) return null;
-  const freq = (arr, key) => arr.reduce((m, x) => {
-    const v = (x && x[key]) ? String(x[key]) : "";
-    if (!v) return m;
-    m[v] = (m[v] || 0) + 1;
-    return m;
-  }, {});
-  const pickTop = (obj) => {
-    let bestKey = "", bestVal = 0;
-    for (const [k, v] of Object.entries(obj)) if (v > bestVal) { bestKey = k; bestVal = v; }
-    return bestKey || "";
+  const freq = (arr, key) => arr.reduce((m, x) => { const v = (x && x[key]) ? String(x[key]) : ""; if (!v) return m; m[v] = (m[v] || 0) + 1; return m; }, {});
+  const pickTop = (obj) => Object.entries(obj).sort((a,b)=>b[1]-a[1])[0]?.[0] || "";
+  const last = microList[0];
+  return {
+    lastDate: last?.date || null,
+    lastMood: last?.mood || null,
+    moodTop: pickTop(freq(microList, "mood")),
+    decideTop: pickTop(freq(microList, "decide")),
+    anchorTop: pickTop(freq(microList, "anchor")),
+    jungTop: pickTop(freq(microList, "jung"))
   };
-  const last = microList[0]; // più recente
-  const moodTop = pickTop(freq(microList, "mood"));
-  const decideTop = pickTop(freq(microList, "decide"));
-  const anchorTop = pickTop(freq(microList, "anchor"));
-  const jungTop = pickTop(freq(microList, "jung"));
-  return { lastDate: last?.date || null, lastMood: last?.mood || null, moodTop, decideTop, anchorTop, jungTop };
 }
 function buildMemorySystemPrompt(memProfile, qaRecent, lang = "it") {
   if (!memProfile && (!qaRecent || qaRecent.length === 0)) return "";
@@ -412,25 +400,23 @@ export default async function handler(req, res) {
     const admin = await isAdmin(req, ip);
     const bypass = admin === true;
 
-    // PRO header (UI locale): x-pro: "1"
+    // PRO header
     const isPro = String(req.headers["x-pro"] || "").trim() === "1";
 
-    // Rate limit 10/min (se non bypass)
+    // Rate limit
     if (!bypass) {
       const { success } = await rl.limit(`ask:${ip}`);
       if (!success) return res.status(429).json({ error: "rate_limited_minute" });
     }
 
-    // Crediti giornalieri: Admin ∞, PRO 10, Free 3
+    // Crediti
     let used = 0, dailyCap = isPro ? 10 : 3;
     if (!bypass) {
       const today = new Date().toISOString().slice(0, 10);
       const key = `credits:${ip}:${today}`;
       used = (await redis.incr(key)) ?? 1;
       if (used === 1) await redis.expire(key, 60 * 60 * 24);
-      if (used > dailyCap) {
-        return res.status(402).json({ error: "daily_credits_exhausted", used, dailyCap });
-      }
+      if (used > dailyCap) return res.status(402).json({ error: "daily_credits_exhausted", used, dailyCap });
     }
 
     // Body
@@ -441,10 +427,10 @@ export default async function handler(req, res) {
       lang = "it",
       extra = "",
       periodo = "future",
-      sex = "",             // "m" | "f" | "nb" | ""
-      micro = {},           // { date, mood, decide, anchor, jung }
-      remember = true,      // salva memoria
-      whatif_tone = "real"  // "real" | "poetic"   <-- NUOVO
+      sex = "",
+      micro = {},
+      remember = true,
+      whatif_tone = "real"
     } = body;
 
     if (!domanda || typeof domanda !== "string")
@@ -452,34 +438,26 @@ export default async function handler(req, res) {
 
     const resolvedSex = String(sex || micro?.sex || "").toLowerCase();
 
-    // ---- Carica memoria (personalizzazione) ----
+    // Memoria (per personalizzare)
     const { qa: qaRecent, micro: microList } = await loadMemory(ip, 15, 30);
     const memProfile = synthesizeProfile(microList);
     const memoryPrompt = buildMemorySystemPrompt(memProfile, qaRecent, lang);
 
-    // Personas + Temporal mode
+    // Persona + temporale
     const { sys, fewshots } = personaSystem(stile, lang, resolvedSex, whatif_tone);
     const temporal = temporalSystem(periodo, lang, stile);
 
-    // Seed deterministico
+    // Seed
     const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${lang}|${resolvedSex}|${whatif_tone}`), 36) % 1000000;
 
-    const extraTemporalHint =
-      stile === "wtf" && String(periodo).toLowerCase() === "past"
-        ? (isEn(lang)
-          ? "Write entirely in past or conditional, as if it already happened, keeping the upbeat roasting tone."
-          : "Scrivi tutto al passato o al condizionale, come se fosse già successo, mantenendo il tono allegro e pungente.")
-        : "";
-
     const userPrompt = isEn(lang)
-      ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Persona must adapt to user sex="${resolvedSex||"unknown"}". WHATIF_TONE="${whatif_tone}". Keep the persona voice. INTERNAL SEED: ${seedNum}.`
-      : `Domanda (NON ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Adatta la voce al sesso utente="${resolvedSex||"unknown"}". WHATIF_TONE="${whatif_tone}". Mantieni esattamente la voce. SEED INTERNO: ${seedNum}.`;
+      ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Persona adapts to user sex="${resolvedSex||"unknown"}". WHATIF_TONE="${whatif_tone}". Keep persona voice. INTERNAL SEED: ${seedNum}.`
+      : `Domanda (NON ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Adatta la voce al sesso utente="${resolvedSex||"unknown"}". WHATIF_TONE="${whatif_tone}". Mantieni la voce. SEED INTERNO: ${seedNum}.`;
 
     const messages = [
       { role: "system", content: sys },
       { role: "system", content: temporal },
       ...(memoryPrompt ? [{ role: "system", content: memoryPrompt }] : []),
-      ...(extraTemporalHint ? [{ role: "system", content: extraTemporalHint }] : []),
       ...(fewshots || []),
       { role: "system", content: isEn(lang)
           ? `Hard rules: one paragraph only, no lists, no questions, no emojis.`
@@ -490,7 +468,7 @@ export default async function handler(req, res) {
     // OpenAI
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.98 : (whatif_tone === "poetic" ? 0.9 : 0.82),
+      temperature: stile === "wtf" ? 0.98 : (String(whatif_tone).toLowerCase()==="poetic" ? 0.9 : 0.82),
       top_p: 0.92,
       max_tokens: 380,
       frequency_penalty: stile === "wtf" ? 0.4 : 0.1,
@@ -498,7 +476,7 @@ export default async function handler(req, res) {
       messages,
     });
 
-    // --- POST-PROCESS ---
+    // Post-process
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
     answer = stripQuestionEcho(domanda, answer);
@@ -515,7 +493,7 @@ export default async function handler(req, res) {
       answer = clampWords(answer, tone === "poetic" ? 170 : 160);
     }
 
-    // --- LOG persistente (privacy-safe: niente testo domanda) ---
+    // Log (privacy-safe)
     try {
       const entry = {
         ts: Date.now(),
@@ -542,25 +520,18 @@ export default async function handler(req, res) {
       if (entry.whatif_tone) await redis.hincrby("stats:whatif_tone", entry.whatif_tone, 1);
       const dayKey = `stats:day:${new Date().toISOString().slice(0, 10)}`;
       await redis.hincrby(dayKey, `${stile}:${periodo}:${entry.whatif_tone||"na"}`, 1);
-      await redis.expire(dayKey, 90 * 24 * 60 * 60);
-    } catch (e) {
-      console.warn("log failure (non-bloccante)", e);
-    }
+      await redis.expire(dayKey, RETENTION_SECONDS);
+    } catch(e){}
 
-    // --- MEMORIA: salvataggio Q/A e micro (se richiesto) ---
-    let memSaved = { qa: 0, micro: 0 };
+    // Memoria
     if (remember) {
       try {
         await saveQA(ip, { ts: Date.now(), domanda, answer, stile, periodo, lang, whatif_tone: (stile==="whatif"?whatif_tone:null) });
-        memSaved.qa = 1;
         await saveMicro(ip, micro);
-        memSaved.micro = (micro && (micro.date || micro.mood || micro.decide || micro.anchor || micro.jung)) ? 1 : 0;
-      } catch (e) {
-        console.warn("memory save failure (non-bloccante)", e);
-      }
+      } catch(e){}
     }
 
-    // Conta attuale in memoria
+    // counts
     let counts = { qa: 0, micro: 0 };
     try {
       const ks = keysFor(ip);
@@ -577,7 +548,7 @@ export default async function handler(req, res) {
       admin,
       pro: isPro,
       credits: bypass ? null : { used, dailyCap },
-      memory: { saved: remember === true, savedNow: memSaved, counts, profile: memProfile || null },
+      memory: { counts, profile: synthesizeProfile((await loadMemory(ip,1,30)).micro) || null },
       whatif_tone: (stile==="whatif" ? String(whatif_tone||"real") : null)
     });
   } catch (err) {
@@ -586,4 +557,4 @@ export default async function handler(req, res) {
     const transient = /timeout|rate|overloaded|ECONNRESET|ENOTFOUND/i.test(msg);
     return res.status(transient ? 503 : 500).json({ error: transient ? "upstream_unavailable" : "server_error", detail: msg });
   }
-      }
+}
