@@ -1,17 +1,18 @@
-// /api/ask.js — What?f Engine (robust 2025)
-// Stili: whatif (realismo/poetico) · wtf (sarcasmo con “bestemmia narrata” variabile)
-// Log privacy-safe (senza testo domanda) + memoria light per IP
+// /api/ask.js — What?f Engine (2025 FINAL + fixes)
+// Stili: whatif (realismo lucido) · wtf (sarcasmo demenziale affettuoso, alcol, oggetti, "bestemmia" narrata)
+// IT/EN — paragrafo singolo, niente liste/domande/emoji
+// Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
+// Log su Redis SENZA contenuto della domanda (solo metadati + hash non reversibile)
 
 import OpenAI from "openai";
 import { Redis as UpstashRedis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
 
-/* ---------- OpenAI ---------- */
-if (!process.env.OPENAI_API_KEY) console.warn("[ask] OPENAI_API_KEY assente");
+// ---------- OpenAI ----------
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = "gpt-4o-mini";
 
-/* ---------- Redis (robusto) ---------- */
+// ---------- Redis (robusto: Upstash o shim in-memory) ----------
 const useUpstash = !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
 const redis = useUpstash
   ? new UpstashRedis({
@@ -19,42 +20,43 @@ const redis = useUpstash
       token: process.env.UPSTASH_REDIS_REST_TOKEN,
     })
   : {
-      // Shim minimo in-memory per DEV (no persistenza, no TTL reali)
+      // shim minimale in-memory per DEV (no TTL reali)
       _m: new Map(),
       async lpush(k, v){ const a=this._m.get(k)||[]; a.unshift(v); this._m.set(k,a); },
       async ltrim(k, s, e){ const a=this._m.get(k)||[]; this._m.set(k, a.slice(s, e+1)); },
       async incr(k){ const v=Number(this._m.get(k)||0)+1; this._m.set(k,String(v)); return v; },
       async expire(){},
-      async hgetall(){ return null; },
       async hincrby(k,f,i){ const o=JSON.parse(this._m.get(k)||"{}"); o[f]=(o[f]||0)+i; this._m.set(k,JSON.stringify(o)); },
+      async hgetall(){ return null; }
     };
 
-// Rate limit: se Redis non c’è, usa un limiter in-memory
-const rl = useUpstash
-  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "1 m") })
-  : null;
+// rate limit: 10 req/min per IP (bypass SOLO per admin)
+const rl = useUpstash ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "1 m") }) : null;
+// fallback rate limit in-memory per DEV
 const memRL = new Map();
 
-/* ---------- CORS ---------- */
-const ALLOWED_ORIGINS =
-  process.env.NODE_ENV === "production"
-    ? ["https://what-ifapp.vercel.app"]
-    : ["*"]; // in dev consenti tutto
-
+// ---------- CORS ----------
+const ALLOWED_ORIGINS_PROD = [
+  "https://what-ifapp.vercel.app",
+  "http://localhost:3000",
+  "http://127.0.0.1:5500",
+];
 function cors(req, res) {
-  const origin = String(req.headers.origin || "*");
+  const origin = String(req.headers.origin || "");
+  const isProd = process.env.NODE_ENV === "production";
   const allow =
-    ALLOWED_ORIGINS.includes("*") ? origin :
-    (ALLOWED_ORIGINS.includes(origin) ? origin : "https://what-ifapp.vercel.app");
+    !isProd ? (origin || "*")
+    : (ALLOWED_ORIGINS_PROD.includes(origin) ? origin : ALLOWED_ORIGINS_PROD[0]);
+  if (allow) res.setHeader("Access-Control-Allow-Origin", allow);
   res.setHeader("Vary", "Origin");
-  res.setHeader("Access-Control-Allow-Origin", allow);
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token, x-pro");
   res.setHeader("Access-Control-Max-Age", "86400");
 }
 
-/* ---------- Utils ---------- */
+/* ---------- Helpers ---------- */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
+
 function normLine(s = "") {
   return String(s).toLowerCase().replace(/[“”"']/g, "").replace(/\s+/g, " ")
     .replace(/[.,;:!?()\[\]\-—]+$/g, "").trim();
@@ -95,22 +97,27 @@ function stripQuestionEcho(domanda, text) {
   t = t.replace(echoRx, "");
   return t;
 }
+function ensureSpicyButSafeWTF(t) {
+  let out = String(t || "").trim();
+  if (!/[.!?…]$/.test(out)) out += ".";
+  return out;
+}
 function tinyHash(s = "") {
   let h = 2166136261 >>> 0;
   for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
   return (h >>> 0).toString(36);
 }
 
-/* ---------- “Bestemmia narrata” variabile ---------- */
-function wtfBlasphemyCue(seed, lang) {
+/* ---------- Bestemmia narrata variabile ---------- */
+function wtfCue(seed, lang) {
   const it = [
     "ti scappa una bestemmia narrata che fa tintinnare i bicchieri",
     "ti parte una bestemmia in voice-over e il lampione finge di tossire",
     "ti esce una bestemmia teatrale e la moka applaude piano",
-    "butti lì una bestemmia di cartone animato e il cestino si tappa le orecchie",
-    "lanci una bestemmia in slow-motion e il semaforo cambia colore per imbarazzo",
-    "sussurri una bestemmia in confidenza e il bancone fa finta di non averti sentito",
-    "ti esplode una bestemmia con coriandoli e la tazzina vibra solidale",
+    "butti lì una bestemmia da cartone e il cestino si tappa le orecchie",
+    "lanci una bestemmia in slow-motion e il semaforo arrossisce",
+    "sussurri una bestemmia di confidenza e il bancone fa finta di niente",
+    "ti esplode una bestemmia coi coriandoli e la tazzina vibra solidale",
   ];
   const en = [
     "you let out a narrated blasphemy that rattles the glasses",
@@ -120,8 +127,26 @@ function wtfBlasphemyCue(seed, lang) {
     "you whisper a confessional blasphemy and the counter pretends not to hear",
     "a confetti blasphemy pops and the cup vibrates in sympathy",
   ];
-  const pool = lang?.toLowerCase().startsWith("en") ? en : it;
+  const pool = isEn(lang) ? en : it;
   return pool[seed % pool.length];
+}
+
+// ---------- Admin check ----------
+async function isAdmin(req, requesterIp) {
+  const token = String(req.headers["x-admin-token"] || "").trim();
+  if (!token) return false;
+  try {
+    const data = await redis.hgetall(`admin:token:${token}`); // { ip, ua }
+    if (!data) return false;
+    const LOCK_IP = String(process.env.ADMIN_LOCK_IP || "false").toLowerCase() === "true";
+    if (LOCK_IP) {
+      if (!data.ip) return false;
+      return data.ip === requesterIp;
+    }
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /* ---------- Modalità temporale ---------- */
@@ -138,14 +163,13 @@ function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
 }
 
 /* ---------- Personas (voci) ---------- */
-function personaSystem(style, lang, sex = "", opts = {}) {
-  const { seed = 1, whatif_tone = "real" } = opts;
-  const SEX = String(sex || "").toLowerCase();
+function personaSystem(style, lang, sex = "", seedNum = 1) {
+  const SEX = String(sex || "").toLowerCase(); // "m" | "f" | "nb" | ""
   const genderNickIT = (SEX === "f")
-    ? ["regina del casino","fenomena","asso di briscola","capitana del caos","sirena urbana","signora dei forse","rockstar con tacchi comodi"]
+    ? ["regina del casino", "fenomena", "asso di briscola", "capitana del caos", "sirena urbana", "signora dei forse", "rockstar con tacchi comodi"]
     : (SEX === "m")
-      ? ["campione","fenomeno","asso","capitano del caos","sumo dei forse","rockstar con le tasche vuote","poeta del bar"]
-      : ["leggenda","fenomen*","asso universale","cap* del caos","rockstar del forse","astronauta del dubbio"];
+      ? ["campione", "fenomeno", "asso", "capitano del caos", "sumo dei forse", "rockstar con le tasche vuote", "poeta del bar"]
+      : ["leggenda", "fenomen*", "asso universale", "cap* del caos", "rockstar del forse", "astronauta del dubbio"];
   const genderNickEN = (SEX === "f")
     ? ["queen of chaos","ace of ‘maybe’","legend in sneakers","captain of detours"]
     : (SEX === "m")
@@ -153,87 +177,102 @@ function personaSystem(style, lang, sex = "", opts = {}) {
       : ["icon","legend","ace","captain of chaos"];
 
   if (style === "wtf") {
-    const cue = wtfBlasphemyCue(seed, lang);
+    const cue = wtfCue(seedNum, lang);
     const SYS = (isEn(lang)
       ? `
 You are “What the F” — the loud, loving friend who roasts with affection.
 SECOND PERSON. ONE paragraph, 6–8 sentences (~125–165 words). Simple, colloquial language.
-OPEN with ONLY a rotating nickname (no verbs around it).
-Alcohol beats OK. Use “reacting objects” when relevant.
-Include exactly one brief, narrated blasphemy; vary its wording every time, e.g. “${cue}”. Never write religious slurs literally.
-Affectionate roasting, upbeat tone, no moralizing. No lists, no questions, no emojis. Respect TEMPORAL MODE.
-End warm and funny, like a shoulder-laugh.
-Nicknames (EN): ${genderNickEN.join(", ")}.
-SEED: ${seed}.
+OPEN with ONLY a rotating nickname (no verbs around it): pick one that fits the user’s vibe.
+Inject goofy alcohol beats and occasional “objects reacting” when relevant (not random).
+Include exactly one brief, narrated blasphemy; vary its wording (e.g. “${cue}”). Never write religious slurs literally.
+Insults must be earned by context and end up affectionate; tone stays upbeat and human.
+STRICT: no lists, no questions, no emojis, no moralizing. Respect TEMPORAL MODE.
+Close warm and funny, like a shoulder-laugh, not a lecture.
+Nicknames pool (EN): ${genderNickEN.join(", ")}.
+SEED your imagery with: vary by topic and this number.
 `.trim()
       : `
-Sei “What the F” — l’amico rumoroso che punzecchia con affetto.
+Sei “What the F” — l’amico rumoroso ma che ti vuole bene e ti prende in giro con affetto.
 SECONDA PERSONA. UN paragrafo, 6–8 frasi (~125–165 parole). Lingua semplice e colloquiale.
-APERTURA: solo un nomignolo (senza verbi).
-Alcol ok. “Oggetti che reagiscono” quando ha senso.
-Inserisci esattamente una “bestemmia narrata” con formula variabile, tipo: “${cue}”. Mai bestemmie letterali.
-Presa in giro affettuosa, tono alto, zero prediche. Niente liste, niente domande, niente emoji. Rispetta la MODALITÀ TEMPORALE.
-Chiudi caldo e comico.
-Nomignoli (IT): ${genderNickIT.join(", ")}.
-SEED: ${seed}.
+APERTURA SOLO con un nomignolo (senza verbi): scegline uno adatto al mood dell’utente.
+Inserisci battute con alcol e “oggetti che reagiscono” solo quando servono (mai a caso).
+Metti esattamente una breve bestemmia narrata con formula variabile (es. “${cue}”). Mai scrivere bestemmie letterali.
+Le prese in giro devono avere un motivo nella scena e restare affettuose; tono allegro.
+RIGIDO: niente elenchi, niente domande, niente emoji, niente prediche. Rispetta la MODALITÀ TEMPORALE.
+Chiudi caldo e divertente, come una risata sulla spalla.
+Nomignoli disponibili (IT): ${genderNickIT.join(", ")}.
+SEED per variare immagini: usa il numero qui sotto nel sottofondo.
 `.trim());
-    return { sys: SYS, fewshots: [] };
+
+    const FEWSHOTS = [
+      { role: "system", content:
+`ESEMPIO IT • Tornare all’Aquila (futuro)
+Pellegrino del ritorno, scendi con la valigia che scricchiola dignità e il vento ti sistema i pensieri come sedie al bar; il marciapiede riconosce il tuo passo e ti fa lo sconto sul dubbio, al bancone la tazzina ti guarda “di nuovo?” e tu, che fai il duro da metropoli, ti addolcisci come grappino alle undici, sbagli parcheggio con la sicurezza di uno che vuole soffrire bene, ti esce una bestemmia che fa tremare i bicchieri e il lampione finge di non sentire, poi due facce ti chiamano per nome e scopri che non stai tornando indietro ma tornando intero, con le crepe lucidate a festa, e ridi perché la città ti punge solo per controllare se sei vivo.` },
+      { role: "system", content:
+`ESEMPIO IT • Mettersi in proprio (futuro)
+Capitano del caos, arrivi col piano che sembra un tovagliolo firmato e l’Excel ti guarda come un cameriere stanco; il registratore di cassa tossisce come scooter in salita ma tre facce tornano e la vetrina si raddrizza da sola, stappi la bottiglia “buona” ed è aceto balsamico: brucia onesto, benedice l’errore, ti esce una bestemmia che scuote i bicchieri e il bancone risponde “anche oggi imprenditore”, alla sera conti spicci e sorrisi e capisci che non stai vincendo il mondo, stai reggendo te — che è molto più redditizio del previsto.` },
+      { role: "system", content:
+`EXAMPLE EN • Moving city (future)
+Champ, you arrive like a limited series pilot and the buzzer rolls its eyes; the fridge hums “good luck” while the streetlights do wardrobe tests, you walk too far just to tire the nerves and a tiny beer forgives your accent, you let out a blasphemy that rattles the glasses and the mailbox pretends it didn’t hear, by grocery three you find your aisle and your pace, and the map stops asking for proof — you’re not conquering a city, you’re landing your life.` },
+    ];
+    return { sys: SYS, fewshots: FEWSHOTS };
   }
 
-  // WHATIF — 2 toni: real | poet
   const SYS_WHATIF = (isEn(lang)
-    ? (whatif_tone === "poet"
-        ? `You are "What If" — lucid and tender, with a lightly poetic voice (everyday images, soft rhythm). SECOND PERSON. One paragraph, 8–11 sentences (~115–160 words). Grounded but lyrical. No lists, no questions, no emojis. End with a short reflective line (not advice).`
-        : `You are "What If" — a lucid, kind, slightly ironic friend. SECOND PERSON. One paragraph, 8–11 sentences (~115–160 words). Warm, concrete, everyday images. No lists, no questions, no emojis. End with a short reflective line (not advice).`)
-    : (whatif_tone === "poet"
-        ? `Sei "What If" — lucido e affettuoso, con una voce lievemente poetica (immagini quotidiane, ritmo morbido). SECONDA PERSONA. Un paragrafo, 8–11 frasi (~115–160 parole). Concreto ma lirico. Niente elenchi o domande o emoji. Chiudi con una riga riflessiva breve (non un consiglio).`
-        : `Sei "What If" — un amico lucido e affettuoso, col sorriso pratico. SECONDA PERSONA. Un paragrafo, 8–11 frasi (~115–160 parole). Immagini quotidiane. Niente elenchi o domande o emoji. Chiudi con una riga riflessiva breve (non un consiglio).`));
-  return { sys: SYS_WHATIF, fewshots: [] };
+    ? `
+You are "What If" — a lucid, kind, slightly ironic friend.
+SECOND PERSON. One paragraph, 8–11 sentences (~115–160 words).
+Warm, grounded, simple; ordinary images (keys, streetlights, notebooks, hands, air).
+Small truths; no heroics, no melancholy. No lists, no questions, no emojis.
+End with a short reflective line (not advice).
+`.trim()
+    : `
+Sei "What If" — un amico lucido e affettuoso, col sorriso pratico.
+SECONDA PERSONA. Un paragrafo, 8–11 frasi (~115–160 parole).
+Immagini quotidiane (chiavi, lampioni, taccuini, mani, aria).
+Verità piccole e vere; niente eroismi, niente malinconia.
+Niente elenchi o domande o emoji. Chiudi con una riga riflessiva breve (non un consiglio).
+`.trim());
+
+  const FEWSHOTS = [
+    { role: "system", content:
+`ESEMPIO IT • Tornare all’Aquila
+Tornare non sarebbe un passo indietro ma un passo fatto meglio. Ti stupirebbe la memoria delle strade: tengono il ritmo anche quando tu lo perdi. All’inizio la lentezza graffia, poi capisci che ti rimette in orario. I volti sembrano uguali, ma li guardi con occhi più larghi. Le chiavi tornano sul piattino giusto, la spesa nel negozio che sa il tuo nome. La nostalgia, se non la insegui, si siede accanto e tace. Non serve ricominciare da zero: basta ricominciare da te.` },
+    { role: "system", content:
+`EXAMPLE EN • Move city
+You’ll feel like a guest, then your hands learn the new keys. You’ll walk not to think better but to tire the noise. By the third grocery you’ll know which aisle is yours. Evenings soften and ask less proof. You’ll miss some things, not all at once. The rest finds its place. And you notice that beneath the noise something of yours was already there.` },
+  ];
+
+  return { sys: SYS_WHATIF, fewshots: FEWSHOTS };
 }
 
-/* ---------- Admin check ---------- */
-async function isAdmin(req, requesterIp) {
-  const token = String(req.headers["x-admin-token"] || "").trim();
-  if (!token) return false;
-  try {
-    const data = await redis.hgetall?.(`admin:token:${token}`);
-    if (!data) return false;
-    const LOCK_IP = String(process.env.ADMIN_LOCK_IP || "false").toLowerCase() === "true";
-    if (LOCK_IP) {
-      if (!data.ip) return false;
-      return data.ip === requesterIp;
-    }
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/* ---------- Handler ---------- */
+/* ---------- API Handler ---------- */
 export default async function handler(req, res) {
   cors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ error: "missing_api_key" });
-    }
+    if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: "missing_api_key" });
 
+    // IP richiedente
     const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
       .toString().split(",")[0].trim();
 
-    // Admin / PRO
+    // Admin bypass (rate+crediti)
     const admin = await isAdmin(req, ip);
     const bypass = admin === true;
+
+    // PRO header (UI locale): x-pro: "1"
     const isPro = String(req.headers["x-pro"] || "").trim() === "1";
 
-    // Rate limit (Upstash o in-memory)
+    // Rate limit 10/min (se non bypass)
     if (!bypass) {
       if (rl) {
         const { success } = await rl.limit(`ask:${ip}`);
         if (!success) return res.status(429).json({ error: "rate_limited_minute" });
       } else {
+        // limiter in-memory per DEV
         const key = `memrl:${ip}:${Math.floor(Date.now()/60000)}`;
         const n = (memRL.get(key) || 0) + 1;
         memRL.set(key, n);
@@ -241,7 +280,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // Crediti giornalieri
+    // Crediti giornalieri: Admin ∞, PRO 10, Free 3
     let used = 0, dailyCap = isPro ? 10 : 3;
     if (!bypass) {
       const today = new Date().toISOString().slice(0, 10);
@@ -261,27 +300,25 @@ export default async function handler(req, res) {
       lang = "it",
       extra = "",
       periodo = "future",
-      sex = "",
-      micro = {},
-      whatif_tone = "real", // "real" | "poet"
-      remember = true,       // salva memoria light per IP
+      sex = "",          // top-level sex "m" | "f" | "nb"
+      micro = {}         // optional micro-profile; may include micro.sex too
     } = body;
 
     if (!domanda || typeof domanda !== "string")
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
-    const resolvedSex = String(sex || micro?.sex || "").toLowerCase();
-    const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${lang}|${resolvedSex}`), 36) % 1000000;
+    const resolvedSex = String(sex || micro?.sex || "").toLowerCase(); // prefer top-level
 
-    // Personas + temporal mode
-    const { sys, fewshots } = personaSystem(stile, lang, resolvedSex, { seed: seedNum, whatif_tone });
+    // Personas + Temporal mode
+    const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${lang}|${resolvedSex}`), 36) % 1000000;
+    const { sys, fewshots } = personaSystem(stile, lang, resolvedSex, seedNum);
     const temporal = temporalSystem(periodo, lang, stile);
 
     const extraTemporalHint =
       stile === "wtf" && String(periodo).toLowerCase() === "past"
         ? (isEn(lang)
-          ? "Write entirely in past or conditional, as if it already happened, with upbeat roasting."
-          : "Scrivi tutto al passato o al condizionale, come se fosse già successo, tono allegro.")
+          ? "Write entirely in past or conditional, as if it already happened, keeping the upbeat roasting tone."
+          : "Scrivi tutto al passato o al condizionale, come se fosse già successo, mantenendo il tono allegro e pungente.")
         : "";
 
     const userPrompt = isEn(lang)
@@ -294,17 +331,17 @@ export default async function handler(req, res) {
       ...(extraTemporalHint ? [{ role: "system", content: extraTemporalHint }] : []),
       ...(fewshots || []),
       { role: "system", content: isEn(lang)
-          ? `Hard rules for WTF: one narrated blasphemy (varied wording), alcohol beats ok, reacting objects when relevant, opening is ONLY a nickname.`
-          : `Regole dure per WTF: una sola “bestemmia narrata” (formula variabile), alcol ok, oggetti che reagiscono quando serve, apertura SOLO con nomignolo.` },
+          ? `Hard rules for WTF: one narrated blasphemy allowed (never literal) with varied wording, alcohol beats ok, “reacting objects” only when relevant, opening is ONLY a nickname (no verbs).`
+          : `Regole dure per WTF: una sola bestemmia narrata (mai letterale) con formula variabile, alcol ok, “oggetti che reagiscono” solo quando servono, apertura SOLO con nomignolo (senza verbi).` },
       { role: "user", content: userPrompt },
     ];
 
     // OpenAI
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.98 : (whatif_tone === "poet" ? 0.9 : 0.82),
+      temperature: stile === "wtf" ? 0.98 : 0.82,
       top_p: 0.92,
-      max_tokens: 380,
+      max_tokens: 360,
       frequency_penalty: stile === "wtf" ? 0.4 : 0.1,
       presence_penalty: stile === "wtf" ? 0.2 : 0.0,
       messages,
@@ -317,46 +354,50 @@ export default async function handler(req, res) {
     answer = tightenSentences(answer, stile === "wtf" ? 8 : 11);
     answer = clampWords(answer, stile === "wtf" ? 165 : 160);
     answer = normalizeOneParagraph(answer);
-    if (!/[.!?…]$/.test(answer)) answer += ".";
-
-    // Memoria light per IP (senza testo domanda)
-    if (remember) {
-      try {
-        const memKey = `mem:ask:${ip}`;
-        const memEntry = {
-          ts: Date.now(),
-          domanda_hash: tinyHash(domanda),
-          domanda_len: String(domanda||"").length,
-          style: stile, lang, periodo,
-          sex: resolvedSex || null,
-          micro: micro && typeof micro === "object" ? Object.keys(micro).slice(0,6) : [],
-          answer_chars: (answer||"").length,
-        };
-        await redis.lpush(memKey, JSON.stringify(memEntry));
-        await redis.ltrim(memKey, 0, 49); // ultime 50
-      } catch {}
+    if (stile === "wtf") {
+      answer = ensureSpicyButSafeWTF(answer);
+    } else {
+      if (!/[.!?…]$/.test(answer)) answer += ".";
     }
 
-    // Log aggregati
+    // --- LOG persistente (privacy-safe: niente testo domanda) ---
     try {
-      await redis.lpush("logs:ask", JSON.stringify({
-        ts: Date.now(), ip, style: stile, lang, periodo, sex: resolvedSex || null,
-        domanda_len: String(domanda||"").length, domanda_hash: tinyHash(domanda||""),
-        answer_chars: (answer||"").length, admin: !!admin,
+      const entry = {
+        ts: Date.now(),
+        ip,
+        style: stile,
+        lang,
+        periodo,
+        sex: resolvedSex || null,
+        domanda_len: String(domanda || "").length,
+        domanda_hash: tinyHash(domanda || ""),
+        answer_chars: (answer || "").length,
+        admin: !!admin,
         user_type: bypass ? "admin" : (isPro ? "pro" : "free"),
-      }));
+      };
+      await redis.lpush("logs:ask", JSON.stringify(entry));
       await redis.ltrim("logs:ask", 0, 9999);
+      await redis.incr("stats:total");
       await redis.hincrby("stats:style", stile, 1);
       await redis.hincrby("stats:lang", lang, 1);
-      await redis.hincrby("stats:periodo", String(periodo||"future"), 1);
+      await redis.hincrby("stats:periodo", String(periodo || "future"), 1);
       if (resolvedSex) await redis.hincrby("stats:sex", resolvedSex, 1);
-    } catch {}
+      const dayKey = `stats:day:${new Date().toISOString().slice(0, 10)}`;
+      await redis.hincrby(dayKey, `${stile}:${periodo}`, 1);
+      await redis.expire(dayKey, 90 * 24 * 60 * 60);
+    } catch (e) {
+      console.warn("log failure (non-bloccante)", e);
+    }
 
     return res.status(200).json({
-      answer, style: stile, lang, periodo, model: MODEL,
-      admin, pro: isPro, whatif_tone,
+      answer,
+      style: stile,
+      lang,
+      periodo,
+      model: MODEL,
+      admin,
+      pro: isPro,
       credits: bypass ? null : { used, dailyCap },
-      dev: useUpstash ? undefined : "dev_redis_shim",
     });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
@@ -365,9 +406,6 @@ export default async function handler(req, res) {
     const detail =
       (!process.env.OPENAI_API_KEY) ? "missing_api_key" :
       (!useUpstash ? "dev_redis_shim" : msg);
-    return res.status(transient ? 503 : 500).json({
-      error: transient ? "upstream_unavailable" : "server_error",
-      detail,
-    });
+    return res.status(transient ? 503 : 500).json({ error: transient ? "upstream_unavailable" : "server_error", detail });
   }
 }
