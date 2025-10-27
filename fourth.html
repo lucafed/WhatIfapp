@@ -28,7 +28,7 @@ main{max-width:980px;margin:auto;padding:18px}
 .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
 .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
 .btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--line)}
-.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none;white-space:nowrap}
+.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px}
 .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
 h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:center}
 .label{color:var(--acc);font-weight:800;margin:0 0 8px}
@@ -38,15 +38,10 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
 .chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
 .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-.compact{display:flex;justify-content:center;gap:8px;align-items:center}
-
-/* Micro-domande (banner giornaliero autoscomparsa) */
-.qblock{border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0;background:rgba(255,255,255,.04)}
-.qtitle{display:flex;align-items:center;gap:8px;font-weight:800;color:#E7F2EE;margin-bottom:8px}
-.optset{display:flex;flex-wrap:wrap;gap:8px}
-.opt{background:var(--chip);border:1px solid var(--line);color:#EAF3EE;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer}
-.opt.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-.hidden{display:none !important}
+.subchips{display:flex;gap:6px;justify-content:center;margin-top:8px}
+.subchip{background:rgba(255,255,255,.06);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer}
+.subchip.sel{background:rgba(255,255,255,.14);font-weight:700}
+.hidden{display:none!important}
 </style>
 </head>
 <body>
@@ -58,17 +53,27 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
       <button class="btn" id="backBtn">←</button>
       <button class="btn" id="homeBtn">🏠</button>
     </div>
-    <div class="row compact">
+    <div class="row">
       <span class="badge" id="periodoBadge">🕰️ —</span>
-      <button class="chip" data-style="whatif" id="chipWhatIf">What if</button>
-      <button class="chip" data-style="wtf" id="chipWTF">What the F</button>
       <button class="btn" id="langBtn">IT</button>
     </div>
   </div>
 
   <h1 id="titleH1">Imposta la tua domanda</h1>
 
-  <!-- Question (centrale) -->
+  <!-- Style + substyle -->
+  <div class="card center">
+    <div class="chips">
+      <button class="chip" data-style="whatif" id="chipWhatIf">What if</button>
+      <button class="chip" data-style="wtf" id="chipWTF">What the F</button>
+    </div>
+    <div id="subWhatIf" class="subchips">
+      <button class="subchip" data-mode="poetico" id="subPoetico">Poetico (AI decide)</button>
+      <button class="subchip" data-mode="analitico" id="subAnalitico">Analitico (reale)</button>
+    </div>
+  </div>
+
+  <!-- Question -->
   <div class="card center">
     <h3 class="label" id="qLabel">La tua domanda</h3>
     <textarea id="qInput" rows="3" class="input" placeholder="E se…" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
@@ -76,146 +81,57 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
       <button class="btn primary" id="goBtn" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
       <button class="btn ghost" id="clearBtn">Svuota</button>
     </div>
-    <div class="small" id="tipNote" style="margin-top:8px">Puoi cambiare stile e periodo sopra.</div>
-  </div>
-
-  <!-- Micro-domande (banner che scompare dopo salvataggio) -->
-  <div class="card center" id="microCard">
-    <div class="qblock">
-      <div class="qtitle"><span>🧭</span><span id="microTitle">Micro-domande di oggi</span><span class="small" id="microHint" style="margin-left:auto">(una volta al giorno)</span></div>
-      <div class="optset" id="moodOpts"></div>
-      <div class="optset" id="anchorOpts"></div>
-      <div class="optset" id="decideOpts"></div>
-      <div class="optset" id="zodiacOpts"></div>
-      <div class="row" style="margin-top:6px">
-        <button class="btn primary" id="saveMicroBtn">💾 Salva</button>
-        <span class="small" id="microSavedMsg"></span>
-      </div>
-    </div>
+    <div class="small" id="tipNote" style="margin-top:8px">Stile e periodo sopra; il tono si adatta.</div>
   </div>
 
 </main>
 
 <script>
 const LS=localStorage;
-const I18N = {
-  it:{
-    title:"Imposta la tua domanda",
-    yourq:"La tua domanda",
-    gen:"✨ Genera risposta", clear:"Svuota",
-    tip:"Puoi cambiare stile e periodo sopra.",
-    microT:"Micro-domande di oggi", microHint:"(una volta al giorno)",
-    microSaved:"Salvate per oggi.", microOnce:"Già salvate oggi.",
-  },
-  en:{
-    title:"Set your question",
-    yourq:"Your question",
-    gen:"✨ Generate answer", clear:"Clear",
-    tip:"You can switch style and time above.",
-    microT:"Today’s micro-questions", microHint:"(once per day)",
-    microSaved:"Saved for today.", microOnce:"Already saved today.",
-  }
-};
-const lang=(LS.getItem('lang')||'it').toLowerCase();
-const T=I18N[lang]||I18N.it;
-document.documentElement.lang=lang;
-
-let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
-document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-
 function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
 function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
-function today(){return new Date().toISOString().slice(0,10);}
+const lang=(LS.getItem('lang')||'it').toLowerCase();
 
-document.getElementById('titleH1').textContent=T.title;
-document.getElementById('qLabel').textContent=T.yourq;
-document.getElementById('goBtn').textContent=T.gen;
-document.getElementById('clearBtn').textContent=T.clear;
-document.getElementById('tipNote').textContent=T.tip;
-document.getElementById('langBtn').textContent=lang.toUpperCase();
-document.getElementById('periodoBadge').textContent="🕰️ " + (prefs.periodo==='past'?(lang==='en'?'Past':'Passato'):(lang==='en'?'Future':'Futuro'));
-document.getElementById('chipWhatIf').classList.toggle('sel', prefs.stile==='whatif');
-document.getElementById('chipWTF').classList.toggle('sel', prefs.stile==='wtf');
+let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false, whatif_mode:'poetico'});
+document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
+document.getElementById('titleH1').textContent = (lang==='en'?'Set your question':'Imposta la tua domanda');
+document.getElementById('qLabel').textContent  = (lang==='en'?'Your question':'La tua domanda');
+document.getElementById('langBtn').textContent = lang.toUpperCase();
+document.getElementById('periodoBadge').textContent="🕰️ "+(prefs.periodo==='past'?(lang==='en'?'Past':'Passato'):(lang==='en'?'Future':'Futuro'));
+
+function syncChips(){
+  document.getElementById('chipWhatIf').classList.toggle('sel', prefs.stile==='whatif');
+  document.getElementById('chipWTF').classList.toggle('sel', prefs.stile==='wtf');
+  document.getElementById('subWhatIf').classList.toggle('hidden', prefs.stile!=='whatif');
+  document.getElementById('subPoetico').classList.toggle('sel', prefs.whatif_mode==='poetico');
+  document.getElementById('subAnalitico').classList.toggle('sel', prefs.whatif_mode==='analitico');
+}
+syncChips();
+
+document.getElementById('chipWhatIf').onclick=()=>{ prefs.stile='whatif'; writeJSON('whatif_prefs',prefs); document.documentElement.setAttribute('data-theme','whatif'); syncChips(); };
+document.getElementById('chipWTF').onclick =()=>{ prefs.stile='wtf';    writeJSON('whatif_prefs',prefs); document.documentElement.setAttribute('data-theme','wtf');    syncChips(); };
+document.getElementById('subPoetico').onclick   =()=>{ prefs.whatif_mode='poetico';   writeJSON('whatif_prefs',prefs); syncChips(); };
+document.getElementById('subAnalitico').onclick =()=>{ prefs.whatif_mode='analitico'; writeJSON('whatif_prefs',prefs); syncChips(); };
+
+document.getElementById('periodoBadge').onclick=()=>{ prefs.periodo=(prefs.periodo==='past'?'future':'past'); writeJSON('whatif_prefs',prefs); document.getElementById('periodoBadge').textContent="🕰️ "+(prefs.periodo==='past'?(lang==='en'?'Past':'Passato'):(lang==='en'?'Future':'Futuro')); };
 document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
 document.getElementById('backBtn').onclick=()=>history.back();
 document.getElementById('homeBtn').onclick=()=>location.href='index.html';
-document.getElementById('periodoBadge').onclick=()=>{ prefs.periodo = (prefs.periodo==='past'?'future':'past'); writeJSON('whatif_prefs',prefs); document.getElementById('periodoBadge').textContent="🕰️ " + (prefs.periodo==='past'?(lang==='en'?'Past':'Passato'):(lang==='en'?'Future':'Futuro')); };
 
-document.getElementById('chipWhatIf').onclick=()=>{ prefs.stile='whatif'; writeJSON('whatif_prefs',prefs); document.documentElement.setAttribute('data-theme','whatif'); document.getElementById('chipWhatIf').classList.add('sel'); document.getElementById('chipWTF').classList.remove('sel'); };
-document.getElementById('chipWTF').onclick =()=>{ prefs.stile='wtf';    writeJSON('whatif_prefs',prefs); document.documentElement.setAttribute('data-theme','wtf');    document.getElementById('chipWTF').classList.add('sel');  document.getElementById('chipWhatIf').classList.remove('sel'); };
-
-const qEl = document.getElementById('qInput');
-qEl.placeholder = (lang==='en' ? "What if…" : "E se…");
-qEl.autofocus = true;
+const qEl=document.getElementById('qInput'); qEl.placeholder=(lang==='en'?'What if…':'E se…'); qEl.autofocus=true;
 
 function trySubmit(){
-  const domanda=(qEl.value||"").trim();
-  if(!domanda){ qEl.focus(); return; }
+  const domanda=(qEl.value||"").trim(); if(!domanda){ qEl.focus(); return; }
   const micro = readJSON('micro_profile', {});
   writeJSON('whatif_prefs', prefs);
+  writeJSON('whatif_request',{ domanda, stile:prefs.stile, lang, extra:"", micro, periodo:prefs.periodo, whatif_mode:prefs.whatif_mode });
   LS.setItem('domanda',domanda);
-  writeJSON('whatif_request',{ domanda, stile:prefs.stile, lang, extra:"", micro, fantasy_mode:false, periodo:prefs.periodo });
   location.href='fifth.html';
 }
 document.getElementById('goBtn').onclick=trySubmit;
 document.getElementById('clearBtn').onclick=()=>{ qEl.value=""; qEl.focus(); };
 qEl.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
-
-// --- Micro (daily, autoscompare dopo salvataggio)
-document.getElementById('microTitle').textContent=T.microT;
-document.getElementById('microHint').textContent=T.microHint;
-
-const microSaved=readJSON('micro_saved',{date:"",ok:false});
-if(microSaved.date===today()){
-  document.getElementById('microCard').classList.add('hidden');
-} else {
-  renderMicro();
-}
-function rng(seed){ let s=[...seed].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
-function pickDaily(list, n, r){ const out=[], seen=new Set(); while(out.length<n && seen.size<list.length){ const i=Math.floor(r()*list.length); if(seen.has(i)) continue; seen.add(i); out.push(list[i]); } return out; }
-function renderSet(id, list, key){
-  const wrap=document.getElementById(id); wrap.innerHTML='';
-  const saved=readJSON('micro_profile',{});
-  pickDaily(list,5,rng(today())).forEach(text=>{
-    const b=document.createElement('button'); b.className='opt'; b.textContent=text;
-    if(saved[key]===text) b.classList.add('sel');
-    b.onclick=()=>{ wrap.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); const cur=readJSON('micro_profile',{}); cur[key]=text; writeJSON('micro_profile',cur);};
-    wrap.appendChild(b);
-  });
-}
-function renderMicro(){
-  const moodPool = (lang==='en'
-    ? ["Calm like airplane mode","Charged like a socket","Foggy but fine","Restless astronaut","Light and chatty","Solid and quiet","Bit chaotic, funny"]
-    : ["Calmo in modalità aereo","Carico come una presa","Appannato ma ok","Astronauta irrequieto","Leggero e chiacchierone","Solido e in silenzio","Un po’ caotico ma divertito"]);
-  const anchorPool = (lang==='en'
-    ? ["People I love","Money & bills","A routine that works","A promise to myself","Fear of changing","Curiosity about what’s here"]
-    : ["Le persone che amo","Soldi & bollette","Una routine che funziona","Una promessa a me stesso/a","Paura di cambiare","Curiosità per ciò che c’è"]);
-  const decidePool = (lang==='en'
-    ? ["Gut first","Lists & pros/cons","Ask a friend","Deadline decides","Flip a coin","Coffee + walk"]
-    : ["Pancia prima","Liste pro/contro","Chiedo a un amico","Decide la scadenza","Tiro la moneta","Caffè + passeggiata"]);
-  const zodiacPool = (lang==='en'
-    ? ["Aries/Taurus/Gemini","Cancer/Leo/Virgo","Libra/Scorpio/Sag","Capricorn/Aquarius/Pisces","No sign, just vibes","Lucky habit: same socks"]
-    : ["Ariete/Toro/Gemelli","Cancro/Leone/Vergine","Bilancia/Scorpione/Sag","Capricorno/Acquario/Pesci","Niente segno, solo vibrazioni","Portafortuna: stesse calze"]);
-
-  renderSet('moodOpts',   moodPool,   'mood');
-  renderSet('anchorOpts', anchorPool, 'anchor');
-  renderSet('decideOpts', decidePool, 'decide');
-  renderSet('zodiacOpts', zodiacPool, 'zodiac');
-}
-
-document.getElementById('saveMicroBtn').onclick=()=>{
-  if(microSaved.date===today()){
-    document.getElementById('microSavedMsg').textContent = (lang==='en' ? "Already saved today." : "Già salvate oggi.");
-    return;
-  }
-  const cur = readJSON('micro_profile',{});
-  writeJSON('micro_profile', cur);
-  writeJSON('micro_saved', {date:today(),ok:true});
-  document.getElementById('microSavedMsg').textContent=(lang==='en'?"Saved for today.":"Salvate per oggi.");
-  // autoscompare
-  setTimeout(()=>document.getElementById('microCard').classList.add('hidden'), 350);
-};
 </script>
 </body>
 </html>
