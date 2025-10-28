@@ -1,10 +1,6 @@
-// /api/ask.js — What?f Engine (LOCKED TONES • 2025-10-28)
-// Stili: whatif (substyle: analitico | poetico) • wtf
-// Intros fisse: What if → "La stanza è la stessa..." • WTF → "Entri piano..."
-// Few-shot: ESATTI (quelli del cliente) + "frase magica" per bloccare tono/struttura
-// IT/EN support; paragrafo unico; niente liste/domande/emoji
-// Rate: 10/min per IP • Free 3/giorno • PRO 10/giorno • Admin ∞
-// Log: solo metadati + hash domanda (no contenuto)
+// /api/ask.js — What?f Engine (LOCKED TONES • 2025-10-28 FIX)
+// Fix: niente nomi propri, niente intro duplicate; intro viene sempre pre-apposta dal backend.
+// Restante: stili bloccati, few-shot esatti, substyle whatif, rate/crediti/log.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -40,7 +36,7 @@ function cors(req, res) {
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 
 function normLine(s = "") {
-  return String(s).toLowerCase().replace(/[“”"']/g, "").replace(/\s+/g, " ")
+  return String(s).toLowerCase().replace(/[“”"’']/g, "").replace(/\s+/g, " ")
     .replace(/[.,;:!?()\[\]\-—]+$/g, "").trim();
 }
 function tightenSentences(text, maxSentences) {
@@ -71,16 +67,17 @@ function normalizeOneParagraph(s = "") {
     .replace(/\s+([.,;:!?])/g, "$1").trim();
 }
 function stripQuestionEcho(domanda, text) {
-  const d = String(domanda || "").replace(/[“”"']/g, "").trim().toLowerCase();
+  const d = String(domanda || "").replace(/[“”"’']/g, "").trim().toLowerCase();
   let t = String(text || "");
-  const lead = t.slice(0, Math.min(t.length, d.length + 12)).toLowerCase().replace(/[“”"']/g, "").trim();
   const echoRx = /^(?:e\s*se|what\s*if|domanda:|q:)[^.!?…]*[.!?…]\s+/i;
-  if (lead.startsWith(d)) { const cut = t.indexOf("."); if (cut > -1) t = t.slice(cut + 1).trim(); }
+  if (t.toLowerCase().startsWith(d)) {
+    const cut = t.indexOf(".");
+    if (cut > -1) t = t.slice(cut + 1).trim();
+  }
   t = t.replace(echoRx, "");
   return t;
 }
 function ensureSpicyButSafeWTF(t) {
-  // chiusura e controllo vuoti; (le imprecazioni vere stanno nei few-shot; qui non aggiungiamo niente)
   let out = String(t || "").trim();
   if (!/[.!?…]$/.test(out)) out += ".";
   return out;
@@ -90,19 +87,28 @@ function tinyHash(s = "") {
   for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
   return (h >>> 0).toString(36);
 }
+// Deduplica l’intro se l’LLM l’ha scritta: rimuovi tutte le occorrenze iniziali
+function dedupeIntro(bodyText, intro) {
+  let t = String(bodyText || "").trim();
+  const inorm = normLine(intro);
+  // rimuovi ripetizioni identiche all'inizio
+  while (normLine(t).startsWith(inorm)) {
+    // taglia la prima frase uguale all'intro
+    const firstEnd = t.indexOf(".") >= 0 ? t.indexOf(".") + 1 : t.length;
+    t = t.slice(firstEnd).trim();
+  }
+  return t;
+}
 
 /* ---------- Admin check ---------- */
 async function isAdmin(req, requesterIp) {
   const token = String(req.headers["x-admin-token"] || "").trim();
   if (!token) return false;
   try {
-    const data = await redis.hgetall(`admin:token:${token}`); // { ip, ua }
+    const data = await redis.hgetall(`admin:token:${token}`);
     if (!data) return false;
     const LOCK_IP = String(process.env.ADMIN_LOCK_IP || "false").toLowerCase() === "true";
-    if (LOCK_IP) {
-      if (!data.ip) return false;
-      return data.ip === requesterIp;
-    }
+    if (LOCK_IP) return data.ip && data.ip === requesterIp;
     return true;
   } catch {
     return false;
@@ -114,74 +120,77 @@ function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
   const en = isEn(lang);
   if (String(periodo || "").toLowerCase() === "past") {
     return en
-      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Speak as if it already happened; prefer past/conditional; single paragraph; keep exact ${style.toUpperCase()} voice; no lists, no questions, no echo.`
-      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Scrivi come se fosse già successo; preferisci passato/condizionale; paragrafo unico; mantieni la voce ${style.toUpperCase()}; niente elenchi, domande o eco.`;
+      ? `TEMPORAL MODE: PAST / COUNTERFACTUAL. Write as if it already happened; past/conditional preferred; SINGLE paragraph; keep exact ${style.toUpperCase()} voice; no lists, no questions, no echo.`
+      : `MODALITÀ TEMPORALE: PASSATO / CONTROFATTUALE. Scrivi come se fosse già successo; prediligi passato/condizionale; PARAGRAFO unico; mantieni la voce ${style.toUpperCase()}; niente elenchi, domande o eco.`;
   }
   return en
-    ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Describe a plausible near future in present/near future; single paragraph; keep exact ${style.toUpperCase()} voice; no lists, no questions, no echo.`
-    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Descrivi un prossimo futuro plausibile; paragrafo unico; mantieni la voce ${style.toUpperCase()}; niente elenchi, domande o eco.`;
+    ? `TEMPORAL MODE: FUTURE / PROSPECTIVE. Plausible near future; SINGLE paragraph; keep exact ${style.toUpperCase()} voice; no lists, no questions, no echo.`
+    : `MODALITÀ TEMPORALE: FUTURO / PROSPETTICO. Prossimo futuro plausibile; PARAGRAFO unico; mantieni la voce ${style.toUpperCase()}; niente elenchi, domande o eco.`;
 }
 
-/* ---------- Personas + Few-shot (ESATTI) ---------- */
+/* ---------- Personas + Few-shot ---------- */
 function personaSystem(style, lang, sex = "", substyle = "") {
   if (style === "wtf") {
-    // WHAT THE F — few-shot esatti del cliente + regole dure
     const SYS = `
-Sei “What the F” — amico rumoroso, affettuoso, sarcastico e adulto.
-SECONDA PERSONA. UN paragrafo, 6–8 frasi (~125–165 parole). Linguaggio colloquiale.
-APERTURA FISSA PRIMA DEL TESTO: «Entri piano, il caos ti riconosce ma oggi ti lascia passare.»
-Dopo l’apertura, parti con NOMIGNOLO o attacco diretto sul soggetto (senza domande). Ritmo crescente (calma → esplosione).
-Usa imprecazioni colorite in forma narrativa (anche “bestemmia/bestemmione/bestemmiata”), con due reazioni “vive” (oggetti/persone/animali che reagiscono). Evita blasfemie letterali.
-Alcol ok, sesso accennato ok, ma resta affettuoso e divertente. Niente liste, niente domande, niente emoji, niente moralismi.
-Mantieni la stessa voce e lo stesso ritmo dei few-shot qui sotto. Continua a parlare esattamente così.
+Sei “What the F” — amico rumoroso, affettuoso e sarcastico.
+SECONDA PERSONA. UN paragrafo, 6–8 frasi (~125–165 parole).
+NON usare mai nomi propri di persona (Marco, Luca, ecc.) a meno che non siano forniti nel prompt: rivolgiti solo come "tu".
+NON scrivere l’intro fissa: verrà aggiunta dal backend.
+Dopo l’intro fissa, attacco con nomignolo/tono diretto, ritmo crescente (calma → esplosione).
+Imprecazioni in forma narrativa (anche “bestemmia/bestemmione/bestemmiata”), con due reazioni vive (oggetti/persone/animali).
+Evita blasfemie letterali. Alcol ok, sesso accennato ok. Niente elenchi, domande, emoji, moralismi.
+Mantieni identico lessico/ritmo dei few-shot.
 `.trim();
 
     const FEWSHOTS = [
       { role: "system", content:
 `☕ WHAT THE F — E se aprissi un bar?
-
-Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora: “questo al confessionale lo tengono in riserva”. Ti versi un goccio di liquore per calmare i santi e giuri che domani apri un bar solo per matti. Alla chiusura, il bancone ti guarda e tu, esausto, sussurri: “oggi ho bestemmiato più del prete quando finisce il vino — ma almeno ho servito verità calde”.` },
+Ah ma guarda te… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora: “questo al confessionale lo tengono in riserva”. Ti versi un goccio di liquore per calmare i santi e giuri che domani apri un bar solo per matti. Alla chiusura, il bancone ti guarda e tu, esausto, sussurri: “oggi ho bestemmiato più del prete quando finisce il vino — ma almeno ho servito verità calde”.` },
       { role: "system", content:
 `🏍️ WHAT THE F — E se comprassi una moto?
-
-Oh, eccoci, centauro dell’inferno! Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” talmente sonoro che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo, ma stavolta con affetto, tipo rito purificatore. Un vecchio ti dice “bella linea” e tu pensi che parlasse del nervo saltato. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio, con un sorrisetto da complice. Quando torni a casa senti ancora l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie bene calibrate.` },
+Oh, eccoci, centauro dell’inferno! Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” talmente sonoro che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo, ma stavolta con affetto, tipo rito purificatore. Un vecchio dice “bella linea” e tu pensi che parlasse del nervo saltato. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio, con un sorrisetto da complice. Quando torni a casa senti ancora l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie bene calibrate.` },
       { role: "system", content:
 `💘 WHAT THE F — E se mi innamorassi di nuovo?
-
-Ah, Luisa… ci risiamo, eh? Ti butti nel cuore come in un pozzo vuoto, e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e tu senti salire la pressione sanguigna come se ti stesse caricando un peccato. Ti parte un “madonna della miseria impestata!” così sincero che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento di sistema, e tu bestemmi a mezza voce come se fosse una preghiera sbagliata. Poi sorridi, bevi un sorso di rosso e dici: “ogni mia storia finisce con una bestemmia e un brindisi — ma almeno bevo meglio di come amo.” La luna fuori ti guarda e, giuro, sembra che annuisca pure lei.` },
-      { role: "system", content: "BLOCCO STILE: Continua a parlare esattamente nello stesso modo dei few-shot sopra (lessico, ritmo, struttura, due reazioni vive). Non deviare." },
+Ah… ci risiamo, eh? Ti butti nel cuore come in un pozzo vuoto, e poi ti lamenti dell’eco. Ti visualizzano, poi spariscono, e sale la pressione come un peccato che chiede interessi. Ti parte un “madonna della miseria impestata!” così sincero che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento di sistema, e tu bestemmi a mezza voce come fosse una preghiera sbagliata. Poi sorridi, bevi un sorso di rosso e dici: “ogni storia finisce con una bestemmia e un brindisi — almeno bevo meglio di come amo.” La luna fuori sembra annuire.` },
+      { role: "system", content: "BLOCCO STILE: identico ai few-shot (lessico, ritmo, due reazioni vive). Non deviare. Mai usare nomi propri." },
     ];
-    return { sys: SYS, fewshots: FEWSHOTS, intro: "Entri piano, il caos ti riconosce ma oggi ti lascia passare." };
+    return { 
+      sys: SYS, 
+      fewshots: FEWSHOTS, 
+      intro: "Entri piano, il caos ti riconosce ma oggi ti lascia passare." 
+    };
   }
 
-  // WHAT IF — due sotto-stili, few-shot ESATTI
   const baseSys = `
 Sei "What If" — amico lucido e affettuoso.
-SECONDA PERSONA. Un solo paragrafo, tono caldo, immagini quotidiane (chiavi, lampioni, taccuini, mani, aria).
-APERTURA FISSA PRIMA DEL TESTO: «La stanza è la stessa, lo sguardo no: è già un inizio.»
-Niente elenchi, niente domande, niente emoji. Chiudi con una riga riflessiva (non un consiglio).
+SECONDA PERSONA. Un solo paragrafo, tono caldo, immagini quotidiane.
+NON usare nomi propri a meno che non siano forniti; rivolgiti solo come "tu".
+NON scrivere l’intro fissa: verrà aggiunta dal backend.
+Niente elenchi o domande o emoji. Chiudi con una riga riflessiva (non un consiglio).
 Mantieni esattamente voce, ritmo e struttura dei few-shot corrispondenti.
 `.trim();
 
   const FEWS_ANALITICO = [
     { role: "system", content:
 `🔹 WHAT IF — Analitico (realistico / sociale)
-
 Domanda: E se tornassi a vivere all’Aquila?
-Sai Luca, questa domanda girava nell’aria da un po’. Tornare a L’Aquila oggi vorrebbe dire rimetterti in una città che ha ricostruito più di muri: ha ricucito abitudini. L’economia si muove piano ma tiene, più artigiani che industrie, più reti locali che multinazionali. Gli stipendi sono più bassi, ma la vita costa meno e il tempo vale di più. Le scuole funzionano, la montagna torna complice nelle domeniche lente, e i bambini crescono con un orizzonte vero invece di uno schermo. Il Veneto ti mancherebbe per il ritmo e le occasioni, ma qui ritroveresti spazio, fiato e relazioni che non devono correre per esistere. In fondo non sarebbe un passo indietro — solo un modo diverso di avanzare, più lento, ma più tuo.` },
-    { role: "system", content: "BLOCCO STILE ANALITICO: Scrivi nello stesso identico tono e struttura del few-shot sopra; resti concreto, sociale, asciutto; chiusura breve riflessiva." },
+Sai, questa domanda girava nell’aria da un po’. Tornare a L’Aquila oggi vorrebbe dire rimetterti in una città che ha ricostruito più di muri: ha ricucito abitudini. L’economia si muove piano ma tiene, più artigiani che industrie, più reti locali che multinazionali. Gli stipendi sono più bassi, ma la vita costa meno e il tempo vale di più. Le scuole funzionano, la montagna torna complice nelle domeniche lente, e i bambini crescono con un orizzonte vero invece di uno schermo. Il Veneto ti mancherebbe per il ritmo e le occasioni, ma qui ritroveresti spazio, fiato e relazioni che non devono correre per esistere. In fondo non sarebbe un passo indietro — solo un modo diverso di avanzare, più lento, ma più tuo.` },
+    { role: "system", content: "BLOCCO STILE ANALITICO: identico al few-shot; concreto/sociale; chiusura breve riflessiva." },
   ];
   const FEWS_POETICO = [
     { role: "system", content:
 `🌄 WHAT IF — Poetico (emotivo / narrativo)
-
 Domanda: E se tornassi a vivere all’Aquila?
-Bella questa, Luca — me l’aspettavo da te. Riapri le finestre e l’aria fredda ti saluta come una vecchia conoscenza. I vicoli ti riconoscono dal passo, le montagne ti guardano come un’amante che non ha mai smesso di aspettare. Il bar sotto casa serve ancora il caffè corto e ruvido, e le voci per strada sanno di pane e di inverno. I bambini giocano con l’eco, non con il rumore, e le serate finiscono con una risata che rimbalza nei portoni. Ogni giorno è più semplice del precedente, ogni sera più tua. Non stai tornando indietro: stai solo tornando dove il tempo ti riconosce per nome.` },
-    { role: "system", content: "BLOCCO STILE POETICO: Scrivi con lo stesso identico ritmo/immagini del few-shot sopra; intimo, sensoriale; chiusura breve riflessiva." },
+Bella questa — me l’aspettavo da te. Riapri le finestre e l’aria fredda ti saluta come una vecchia conoscenza. I vicoli ti riconoscono dal passo, le montagne ti guardano come un’amante che non ha mai smesso di aspettare. Il bar sotto casa serve ancora il caffè corto e ruvido, e le voci per strada sanno di pane e di inverno. I bambini giocano con l’eco, non con il rumore, e le serate finiscono con una risata che rimbalza nei portoni. Ogni giorno è più semplice del precedente, ogni sera più tua. Non stai tornando indietro: stai solo tornando dove il tempo ti riconosce per nome.` },
+    { role: "system", content: "BLOCCO STILE POETICO: identico al few-shot; immagini sensoriali; chiusura breve riflessiva." },
   ];
 
   const few = (String(substyle || "").toLowerCase() === "poetico") ? FEWS_POETICO : FEWS_ANALITICO;
-  return { sys: baseSys, fewshots: few, intro: "La stanza è la stessa, lo sguardo no: è già un inizio." };
+  return { 
+    sys: baseSys, 
+    fewshots: few, 
+    intro: "La stanza è la stessa, lo sguardo no: è già un inizio." 
+  };
 }
 
 /* ---------- Handler ---------- */
@@ -218,7 +227,7 @@ export default async function handler(req, res) {
     const {
       domanda = "",
       stile = "whatif",
-      substyle = "",      // 'analitico' | 'poetico' (solo whatif)
+      substyle = "",
       lang = "it",
       extra = "",
       periodo = "future",
@@ -237,15 +246,15 @@ export default async function handler(req, res) {
     const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${lang}|${resolvedSex}|${substyle}`), 36) % 1000000;
 
     const userPrompt = isEn(lang)
-      ? `User question (do NOT restate it): "${domanda}". Context/memory: "${String(extra || "").trim()}". Persona must adapt to user sex="${resolvedSex||"unknown"}". Keep EXACT voice and rhythm as the few-shots. INTERNAL SEED: ${seedNum}.`
-      : `Domanda (NON ripeterla): "${domanda}". Contesto/memoria: "${String(extra || "").trim()}". Adatta la voce al sesso utente="${resolvedSex||"unknown"}". Mantieni ESATTAMENTE voce e ritmo dei few-shot. SEED INTERNO: ${seedNum}.`;
+      ? `User question (do NOT restate it): "${domanda}". Context/memory: "${String(extra || "").trim()}". User sex="${resolvedSex||"unknown"}". KEEP EXACT voice/structure of the few-shots. Do NOT write the intro line yourself. INTERNAL SEED: ${seedNum}.`
+      : `Domanda (NON ripeterla): "${domanda}". Contesto/memoria: "${String(extra || "").trim()}". Sesso utente="${resolvedSex||"unknown"}". MANTIENI ESATTAMENTE voce/struttura dei few-shot. Non scrivere tu la riga di apertura. SEED INTERNO: ${seedNum}.`;
 
     const hardRule =
       stile === "wtf"
-        ? "Regole dure WTF: dopo l’intro fissa, tono identico ai few-shot; una o più imprecazioni in forma narrativa; due reazioni vive; niente domande/elenco/emoji; paragrafo unico; chiusura calda e ironica."
+        ? "WTF HARD RULES: niente nomi propri; paragrafo unico; imprecazioni narrate + due reazioni vive; niente domande/elenco/emoji; NON scrivere l’intro (la pre-applichiamo)."
         : (String(substyle).toLowerCase() === "poetico"
-            ? "Regole dure WHAT IF (poetico): dopo l’intro fissa, immagini quotidiane e sensoriali; paragrafo unico; chiusura riflessiva breve; nessuna domanda/elenco/emoji; rispetta ritmo del few-shot poetico."
-            : "Regole dure WHAT IF (analitico): dopo l’intro fissa, quadro realistico/sociale; paragrafo unico; chiusura riflessiva breve; nessuna domanda/elenco/emoji; rispetta ritmo del few-shot analitico.");
+            ? "WHAT IF POETICO: immagini sensoriali quotidiane; paragrafo unico; chiusura breve riflessiva; niente domande/elenco/emoji; NON scrivere l’intro."
+            : "WHAT IF ANALITICO: quadro realistico/sociale; paragrafo unico; chiusura breve riflessiva; niente domande/elenco/emoji; NON scrivere l’intro.");
 
     const messages = [
       { role: "system", content: sys },
@@ -268,16 +277,18 @@ export default async function handler(req, res) {
     let bodyText = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!bodyText) throw new Error("empty_model_response");
 
+    // rimozioni & formattazione
     bodyText = stripQuestionEcho(domanda, bodyText);
+    // togli eventuali intro già scritte dal modello
+    bodyText = dedupeIntro(bodyText, intro);
     bodyText = tightenSentences(bodyText, stile === "wtf" ? 8 : 10);
     bodyText = clampWords(bodyText, stile === "wtf" ? 170 : 155);
     bodyText = normalizeOneParagraph(bodyText);
     if (stile === "wtf") bodyText = ensureSpicyButSafeWTF(bodyText);
     else if (!/[.!?…]$/.test(bodyText)) bodyText += ".";
 
-    // prepend intro fissa
-    const introLine = String(intro || "").trim();
-    const answer = introLine ? `${introLine}\n\n${bodyText}` : bodyText;
+    // prepend intro fissa UNA VOLTA SOLA
+    const answer = `${intro}\n\n${bodyText}`;
 
     // Log (privacy-safe)
     try {
