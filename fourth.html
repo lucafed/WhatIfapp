@@ -1,16 +1,15 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f — Domanda</title>
-  <meta name="theme-color" content="#0B0B0C"/>
+  <meta name="theme-color" content="#0B0B0C" />
   <style>
     :root{
       --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
-      --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75;
-      --card:rgba(20,28,34,.92); --line:rgba(255,255,255,.12);
-      --chip:#121A26; --ink:#0A0E12; --shadow:rgba(0,0,0,.35);
+      --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;
+      --card:rgba(20,28,34,.92); --line:rgba(255,255,255,.12); --chip:#121A26;
     }
     html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
     *{box-sizing:border-box}
@@ -24,297 +23,167 @@
     main{max-width:980px;margin:auto;padding:18px}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
-    .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
-    .btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--line)}
-    .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none;white-space:nowrap}
+    .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none}
+    .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee}
     .card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
-    h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:center}
-    .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-    .input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
-    .center{max-width:760px;margin:0 auto}
+    h1{font-size:clamp(22px,5vw,30px);margin:6px 0 12px;color:var(--acc2);text-align:center}
     .chips{display:flex;flex-wrap:wrap;gap:8px}
     .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
     .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
-
-    /* Barra scelte in alto (sempre visibile) */
-    .top-choices{position:sticky;top:0;z-index:2;background:linear-gradient(180deg,rgba(10,15,20,.96),rgba(10,15,20,0));padding:10px 0 8px;margin:-6px 0 6px}
-    .choices-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-    .choices-left{display:flex;gap:8px;flex-wrap:wrap}
-    .choices-right{display:flex;gap:8px;align-items:center}
-
-    /* Box domanda centrale */
-    .qwrap{display:grid;gap:12px;max-width:900px;margin:0 auto}
-    .qbox{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:16px;padding:16px}
-    .hint{font-size:13px;color:#cfe7ff;margin-top:10px}
-    .small{font-size:12px;color:var(--muted)}
+    .center{max-width:760px;margin:0 auto}
+    .label{color:var(--acc);font-weight:800;margin:8px 0}
+    textarea{width:100%;min-height:120px;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:14px;padding:16px;font-size:18px;text-align:center}
+    .hint{font-size:13px;color:#cfe7ff;margin-top:10px;text-align:center}
+    .footer-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
   </style>
 </head>
 <body>
   <main>
-    <!-- NAV + LINGUA -->
+    <!-- topbar -->
     <div class="row" style="justify-content:space-between">
       <div class="row">
         <button class="btn" id="backBtn">←</button>
         <button class="btn" id="homeBtn">🏠</button>
       </div>
       <div class="row">
-        <span class="badge" id="periodoBadge">🕰️ —</span>
-        <span class="badge" id="styleBadge">🎭 —</span>
-        <span class="badge" id="freeBadge">—</span>
+        <span class="badge" id="badgePeriod">🕰️ —</span>
+        <span class="badge" id="badgeStyle">🎭 —</span>
         <button class="btn" id="langBtn">IT</button>
       </div>
     </div>
 
-    <!-- SCELTE IN ALTO -->
-    <div class="top-choices">
-      <div class="choices-row">
-        <div class="choices-left">
-          <div class="chips" id="periodChips">
-            <button class="chip" data-period="past" id="chipPast">Passato</button>
-            <button class="chip" data-period="future" id="chipFuture">Futuro</button>
-          </div>
-          <div class="chips" id="styleChips">
-            <button class="chip" data-style="whatif" id="chipWhatIf">What if (realistico)</button>
-            <button class="chip" data-style="wtf" id="chipWTF">What the F (demenziale)</button>
-          </div>
-        </div>
-        <div class="choices-right">
-          <span class="badge" id="proBadge">—</span>
+    <h1 id="titleH1">Imposta la tua domanda</h1>
+
+    <!-- Scelte in alto -->
+    <div class="card center">
+      <div class="label">Periodo</div>
+      <div class="chips" id="chipsPeriod">
+        <button class="chip" data-val="past">Passato</button>
+        <button class="chip" data-val="future">Futuro</button>
+      </div>
+
+      <div class="label" style="margin-top:12px">Stile</div>
+      <div class="chips" id="chipsStyle">
+        <button class="chip" data-val="whatif">What if</button>
+        <button class="chip" data-val="wtf">What the F</button>
+      </div>
+
+      <!-- Sottotono visibile solo se What if -->
+      <div id="toneWrap" style="display:none">
+        <div class="label" style="margin-top:12px">Sottotono (What if)</div>
+        <div class="chips" id="chipsTone">
+          <button class="chip" data-val="analitica">Analitica</button>
+          <button class="chip" data-val="poetica">Poetica</button>
         </div>
       </div>
     </div>
 
-    <!-- DOMANDA CENTRALE -->
-    <h1 id="titleH1">Imposta la tua domanda</h1>
-
-    <div class="qwrap center">
-      <div class="qbox">
-        <div class="label" id="qLabel">La tua domanda</div>
-        <textarea id="qInput" rows="3" class="input" placeholder="E se…"></textarea>
-        <div class="row" style="margin-top:12px;justify-content:space-between">
-          <button class="btn primary" id="goBtn" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
-          <button class="btn ghost" id="clearBtn">Svuota</button>
-        </div>
-        <div class="small" id="tipNote" style="margin-top:8px">Tip: puoi cambiare stile e periodo sopra; colori e tono si adattano.</div>
-      </div>
-
-      <!-- Spunti rapidi (collassabile) -->
-      <div class="card collapsed" id="hintsCard">
-        <div class="row" id="hintsHeader" style="justify-content:space-between">
-          <div class="label" id="hintsTitle">▶ Spunti rapidi “E se…”</div>
-        </div>
-        <div class="body" id="hintsBody" style="margin-top:8px">
-          <div class="chips" id="hintsChips"></div>
-          <div class="small" id="hintsNote" style="margin-top:8px"></div>
-        </div>
-      </div>
-
-      <!-- Salvati + Cronologia (collassabili) -->
-      <div class="card collapsed" id="savedCard">
-        <div class="row" id="savedHeader" style="justify-content:space-between">
-          <div class="label" id="nextLabel">▶ Domande salvate</div>
-          <button class="btn ghost" id="clearSavedBtn">🗑️ Svuota</button>
-        </div>
-        <div class="body"><div id="nextList" class="list"></div></div>
-      </div>
-
-      <div class="card collapsed" id="histCard">
-        <div class="row" id="histHeader" style="justify-content:space-between">
-          <div class="label" id="storiesLabel">▶ Cronologia</div>
-          <button class="btn ghost" id="clearHistoryBtn">🗑️ Svuota</button>
-        </div>
-        <div class="body"><div id="storyList" class="list"></div></div>
+    <!-- Domanda al centro -->
+    <div class="card center">
+      <div class="label">La tua domanda</div>
+      <textarea id="qInput" placeholder="E se tornassi a vivere all’Aquila?" autocomplete="off" spellcheck="false"></textarea>
+      <div class="hint">Suggerimento: scegli stile/periodo sopra. Il tono si adatta automaticamente.</div>
+      <div class="footer-actions">
+        <button class="btn primary" id="genBtn">✨ Genera</button>
+        <button class="btn" id="clearBtn">Svuota</button>
       </div>
     </div>
   </main>
 
   <script>
-    // ===== I18N =====
-    const I18N = {
-      it:{
-        title:"Imposta la tua domanda",
-        periodPast:"Passato", periodFuture:"Futuro",
-        whatif:"What if (realistico)", wtf:"What the F (demenziale)",
-        yourq:"La tua domanda", gen:"✨ Genera risposta", clear:"Svuota",
-        tip:"Tip: puoi cambiare stile e periodo sopra; colori e tono si adattano.",
-        quick:"▶ Spunti rapidi “E se…”", quickNote:"Clicca uno spunto per riempire la domanda.",
-        saved:"▶ Domande salvate", stories:"▶ Cronologia",
-        use:"Usa", play:"▶",
-        emptyNext:"— Nessuna domanda salvata.", emptyStories:"— Nessuna storia.",
-        outOfCredits:"Hai finito i crediti di oggi.",
-        credits:(l,c)=>`Crediti: ${l}/${c}`, proOn:"PRO attivo", proOff:"PRO non attivo"
-      },
-      en:{
-        title:"Set your question",
-        periodPast:"Past", periodFuture:"Future",
-        whatif:"What if (realistic)", wtf:"What the F (goofy)",
-        yourq:"Your question", gen:"✨ Generate answer", clear:"Clear",
-        tip:"Tip: switch style and period above; tone & colors adapt.",
-        quick:"▶ Quick “What if…”", quickNote:"Click a hint to fill the question.",
-        saved:"▶ Saved questions", stories:"▶ History",
-        use:"Use", play:"▶",
-        emptyNext:"— No saved questions.", emptyStories:"— No history.",
-        outOfCredits:"You’ve used today’s credits.",
-        credits:(l,c)=>`Credits: ${l}/${c}`, proOn:"PRO active", proOff:"PRO not active"
-      }
-    };
+    const LS = localStorage;
+    const $ = s=>document.querySelector(s);
+    const $$ = s=>document.querySelectorAll(s);
 
-    const LS=localStorage;
-    const lang=(LS.getItem('lang')||'it').toLowerCase();
-    const T=I18N[lang]||I18N.it;
-
-    // ===== Stato base
-    function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
-    function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
-    function today(){return new Date().toISOString().slice(0,10);}
-    let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
-
+    // lingua
+    const lang = (LS.getItem('lang')||'it').toLowerCase();
     document.documentElement.lang = lang;
-    document.documentElement.setAttribute('data-theme', prefs.stile==='wtf' ? 'wtf' : 'whatif');
 
-    // ===== UI copy
-    document.getElementById('titleH1').textContent=T.title;
-    document.getElementById('qLabel').textContent=T.yourq;
-    document.getElementById('goBtn').textContent=T.gen;
-    document.getElementById('clearBtn').textContent=T.clear;
-    document.getElementById('tipNote').textContent=T.tip;
-    document.getElementById('chipWhatIf').textContent=T.whatif;
-    document.getElementById('chipWTF').textContent=T.wtf;
-    document.getElementById('chipPast').textContent=T.periodPast;
-    document.getElementById('chipFuture').textContent=T.periodFuture;
-    document.getElementById('langBtn').textContent=lang.toUpperCase();
+    // prefs
+    let prefs = {};
+    try { prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}'); } catch { prefs = {}; }
+    if (!prefs.stile) prefs.stile = 'whatif';
+    if (!prefs.periodo) prefs.periodo = 'future';
+    if (!prefs.whatif_tone) prefs.whatif_tone = 'analitica';
 
-    // ===== Nav
-    document.getElementById('backBtn').onclick=()=>history.back();
-    document.getElementById('homeBtn').onclick=()=>location.href='index.html';
-    document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang',lang==='it'?'en':'it'); location.reload(); };
+    document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-    // ===== Badges
-    function cap(){ return LS.getItem('admin_token') ? Infinity : (prefs.pro?10:3); }
-    function creditsLeft(){
-      const c=readJSON('whatif_credits',{date:today(),used:0});
-      return cap()===Infinity ? "∞" : Math.max(0,(cap()-(c.used||0)));
+    // UI wiring
+    function selectChip(container, value){
+      container.querySelectorAll('.chip').forEach(c=>c.classList.toggle('sel', c.dataset.val===value));
     }
-    function ensureCredits(){
-      const c=readJSON('whatif_credits',{date:today(),used:0});
-      if(c.date!==today()){ c.date=today(); c.used=0; }
-      writeJSON('whatif_credits',c);
-    }
-    function renderBadges(){
-      document.getElementById('periodoBadge').textContent = "🕰️ "+(prefs.periodo==='past'?(lang==='en'?'Past':'Passato'):(lang==='en'?'Future':'Futuro'));
-      document.getElementById('styleBadge').textContent   = "🎭 "+(prefs.stile==='wtf'?'What the F':'What if');
-      document.getElementById('proBadge').textContent     = prefs.pro ? T.proOn : T.proOff;
-      const fb = document.getElementById('freeBadge');
-      fb.textContent = cap()===Infinity ? (lang==='en'?'Credits: ∞':'Crediti: ∞') : T.credits(creditsLeft(), cap());
-      // evidenzia chip selezionati
-      document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel', c.dataset.style===prefs.stile));
-      document.querySelectorAll('#periodChips .chip').forEach(c=>c.classList.toggle('sel', c.dataset.period===prefs.periodo));
-    }
-    ensureCredits(); renderBadges();
 
-    // ===== Cambi stile/periodo
-    document.getElementById('styleChips').addEventListener('click',(e)=>{
-      const b=e.target.closest('.chip'); if(!b) return;
-      prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs);
+    function render(){
+      selectChip($('#chipsPeriod'), prefs.periodo);
+      selectChip($('#chipsStyle'), prefs.stile);
       document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-      renderBadges();
-    });
-    document.getElementById('periodChips').addEventListener('click',(e)=>{
-      const b=e.target.closest('.chip'); if(!b) return;
-      prefs.periodo=b.dataset.period; writeJSON('whatif_prefs',prefs);
-      renderBadges();
-    });
+      $('#badgePeriod').textContent = '🕰️ ' + (prefs.periodo==='past' ? (lang==='en'?'Past':'Passato') : (lang==='en'?'Future':'Futuro'));
+      $('#badgeStyle').textContent  = '🎭 ' + (prefs.stile==='wtf' ? 'What the F' : 'What if');
 
-    // ===== Domanda
-    const qEl=document.getElementById('qInput');
-    qEl.placeholder = (lang==='en' ? "What if…" : "E se…");
-    qEl.autofocus = true;
-
-    function submit(){
-      const domanda=(qEl.value||"").trim();
-      if(!domanda){ qEl.focus(); return; }
-      const c=readJSON('whatif_credits',{date:today(),used:0});
-      if(!LS.getItem('admin_token')){
-        if((c.used||0)>=cap()){ alert(T.outOfCredits); return; }
-        c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderBadges();
+      // sottotono What if
+      $('#toneWrap').style.display = (prefs.stile==='whatif') ? 'block' : 'none';
+      if (prefs.stile==='whatif'){
+        selectChip($('#chipsTone'), prefs.whatif_tone);
       }
-      const micro = readJSON('micro_profile',{});
-      writeJSON('whatif_prefs', prefs);
-      LS.setItem('domanda',domanda);
-      writeJSON('whatif_request',{ domanda, stile:prefs.stile, lang, extra:"", micro, fantasy_mode:false, periodo:prefs.periodo });
-      location.href='fifth.html';
     }
-    document.getElementById('goBtn').onclick=submit;
-    document.getElementById('clearBtn').onclick=()=>{ qEl.value=""; qEl.focus(); };
-    qEl.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); submit(); }});
+    render();
 
-    // ===== Spunti rapidi
-    const hintsCard=document.getElementById('hintsCard');
-    const hintsHeader=document.getElementById('hintsHeader');
-    const hintsChips=document.getElementById('hintsChips');
-    const hintsTitle=document.getElementById('hintsTitle');
-    const hintsNote=document.getElementById('hintsNote');
-
-    hintsTitle.textContent = (lang==='en'? T.quick.replace('▶','▶') : T.quick);
-    hintsNote.textContent  = T.quickNote;
-
-    const HINTS_IT=[ "E se cambiassi lavoro?","E se cambiassi città?","E se provassi a mettermi in proprio?","E se tornassi a studiare?","E se mollassi tutto e partissi per il Giappone?","E se aprissi un bar?","E se mi innamorassi di nuovo?","E se comprassi una moto?","E se chiedessi un aumento?","E se tornassi a vivere all’Aquila?" ];
-    const HINTS_EN=[ "What if I changed jobs?","What if I moved city?","What if I started my own thing?","What if I went back to study?","What if I dropped everything and moved to Japan?","What if I opened a bar?","What if I fell in love again?","What if I bought a motorbike?","What if I asked for a raise?","What if I moved back to L’Aquila?" ];
-    (lang==='en'?HINTS_EN:HINTS_IT).forEach(h=>{
-      const b=document.createElement('button');
-      b.className='chip'; b.textContent=h;
-      b.onclick=()=>{ qEl.value=h; window.scrollTo({top:0,behavior:'smooth'}); };
-      hintsChips.appendChild(b);
+    // period
+    $('#chipsPeriod').addEventListener('click', e=>{
+      const b = e.target.closest('.chip'); if(!b) return;
+      prefs.periodo = b.dataset.val;
+      LS.setItem('whatif_prefs', JSON.stringify(prefs));
+      render();
     });
 
-    // Toggle sezioni
-    const savedCard=document.getElementById('savedCard');
-    const histCard=document.getElementById('histCard');
-    document.getElementById('savedHeader').onclick=()=> savedCard.classList.toggle('collapsed');
-    document.getElementById('histHeader').onclick=()=> histCard.classList.toggle('collapsed');
-    hintsHeader.onclick=()=> hintsCard.classList.toggle('collapsed');
+    // style
+    $('#chipsStyle').addEventListener('click', e=>{
+      const b = e.target.closest('.chip'); if(!b) return;
+      prefs.stile = b.dataset.val;
+      LS.setItem('whatif_prefs', JSON.stringify(prefs));
+      render();
+    });
 
-    // Liste salvati/cronologia
-    const nextList=document.getElementById('nextList');
-    const storyList=document.getElementById('storyList');
-    function fmt(ts){ return new Date(ts).toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
-    function renderNext(){
-      nextList.innerHTML='';
-      const arr=readJSON('next_prompts',[]);
-      if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=(lang==='en'?T.emptyNext:T.emptyNext); nextList.appendChild(p); return; }
-      arr.slice(0,12).forEach(item=>{
-        const row=document.createElement('div'); row.className='story';
-        row.style.cssText='display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04);margin:6px 0';
-        const left=document.createElement('div');
-        left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.q||'—'}</div><div class="small">${fmt(item.ts)}</div>`;
-        const right=document.createElement('div'); right.className='row';
-        const use=document.createElement('button'); use.className='btn'; use.textContent=(lang==='en'?T.use:T.use);
-        use.onclick=()=>{ qEl.value=item.q||""; window.scrollTo({top:0,behavior:'smooth'}); };
-        const play=document.createElement('button'); play.className='btn'; play.textContent='▶';
-        play.onclick=()=>{ LS.setItem('domanda', item.q||""); writeJSON('whatif_request',{ domanda:item.q||"", stile:prefs.stile, lang, extra:"", micro:readJSON('micro_profile',{}), fantasy_mode:false, periodo:prefs.periodo }); location.href='fifth.html'; };
-        right.appendChild(use); right.appendChild(play);
-        row.appendChild(left); row.appendChild(right);
-        nextList.appendChild(row);
-      });
-    }
-    function renderStories(){
-      storyList.innerHTML='';
-      const arr=readJSON('cronologia',[]);
-      if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=(lang==='en'?T.emptyStories:T.emptyStories); storyList.appendChild(p); return; }
-      arr.slice(-12).reverse().forEach(item=>{
-        const row=document.createElement('div'); row.className='story';
-        row.style.cssText='display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04);margin:6px 0';
-        const left=document.createElement('div');
-        left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.domanda||'—'}</div><div class="small">${fmt(item.ts)} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
-        const play=document.createElement('button'); play.className='btn'; play.textContent='▶';
-        play.onclick=()=>{ writeJSON('replay_story',{ domanda:item.domanda, answer:item.risposta||item.answer||"", stile:item.stile||'whatif' }); location.href='fifth.html?view=replay'; };
-        row.appendChild(left); row.appendChild(play);
-        storyList.appendChild(row);
-      });
-    }
-    renderNext(); renderStories();
-    document.getElementById('clearSavedBtn').onclick=()=>{ LS.removeItem('next_prompts'); renderNext(); };
-    document.getElementById('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
+    // tone
+    $('#chipsTone')?.addEventListener('click', e=>{
+      const b = e.target.closest('.chip'); if(!b) return;
+      prefs.whatif_tone = b.dataset.val;
+      LS.setItem('whatif_prefs', JSON.stringify(prefs));
+      render();
+    });
+
+    // nav
+    $('#backBtn').onclick = ()=>history.back();
+    $('#homeBtn').onclick = ()=>location.href='index.html';
+    $('#langBtn').textContent = lang.toUpperCase();
+    $('#langBtn').onclick = ()=>{ LS.setItem('lang', lang==='it'?'en':'it'); location.reload(); };
+
+    // input
+    const qEl = $('#qInput');
+    $('#clearBtn').onclick = ()=>{ qEl.value=''; qEl.focus(); };
+    qEl.addEventListener('keydown', e=>{
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); $('#genBtn').click(); }
+    });
+
+    // genera
+    $('#genBtn').onclick = ()=>{
+      const domanda = (qEl.value||'').trim();
+      if (!domanda){ qEl.focus(); return; }
+
+      // Prepara request per fifth
+      const extraTone = (prefs.stile==='whatif') ? `[WHATIF_TONE=${prefs.whatif_tone}]` : "";
+      LS.setItem('domanda', domanda);
+      const req = {
+        domanda,
+        stile: prefs.stile,
+        periodo: prefs.periodo,
+        lang,
+        extra: extraTone,
+        micro: JSON.parse(LS.getItem('micro_profile')||'{}')
+      };
+      LS.setItem('whatif_request', JSON.stringify(req));
+      location.href = 'fifth.html';
+    };
   </script>
 </body>
 </html>
