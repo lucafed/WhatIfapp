@@ -1,274 +1,191 @@
-// /api/ask.js — What?f Engine (CLEAN COPY MODE)
-// Nessuna personalità o descrizione di tono. Solo: regole tecniche + esempi da imitare.
-// Stili supportati: whatif (mode: analitico | reale) · wtf
-// IT/EN — paragrafo singolo, niente liste/domande/emoji
-// Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
-// Log su Redis senza contenuto domanda (solo metadati + hash)
+// /api/ask.js — CLEAN COPY MODE (no personas, only example-templates)
+// IT/EN — singolo paragrafo. Vietato eco della domanda.
+// What If: incipit obbligatori. WTF: nickname secco + 1 sola bestemmia narrata (non letterale).
 
 import OpenAI from "openai";
-import { Redis } from "@upstash/redis";
-import { Ratelimit } from "@upstash/ratelimit";
 
-/* ========= OpenAI ========= */
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+const MODEL = "gpt-4o-mini";
 
-/* ========= Redis & Rate ========= */
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
-const rl = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(10, "1 m"),
-});
+/* ------------------ Utils ------------------ */
+function oneParagraph(s=""){
+  return String(s).replace(/\s*\n+\s*/g," ")
+    .replace(/\s{2,}/g," ").replace(/\s+([.,;:!?…])/g,"$1").trim();
+}
+function stripEcho(q, t){
+  const dq = String(q||"").toLowerCase().replace(/[“”"']/g,"").trim();
+  let out = String(t||"");
+  const lead = out.slice(0, Math.min(out.length, dq.length+12)).toLowerCase().replace(/[“”"']/g,"").trim();
+  if (lead.startsWith(dq)) {
+    const cut = out.indexOf(".");
+    if (cut>-1) out = out.slice(cut+1).trim();
+  }
+  out = out.replace(/^(?:e\s*se|what\s*if|domanda:|q:)[^.!?…]*[.!?…]\s+/i,"");
+  return out;
+}
+function clampSentences(t, minS, maxS){
+  const parts = t.split(/(?<=[.!?…])\s+/).map(x=>x.trim()).filter(Boolean);
+  const sliced = parts.slice(0, Math.max(minS, Math.min(maxS, parts.length)));
+  let out = sliced.join(" ");
+  if(!/[.!?…]$/.test(out)) out += ".";
+  return out;
+}
+function ensureOneBlasphemyNarrated(text){
+  // inserisce SE MANCANTE una “bestemmia” narrata non letterale
+  const has = /\b(bestemmi\w*|bestemmia|bestemmiata|bestemmione)\b/i.test(text);
+  if (has) return text;
+  const add = " ti scappa una bestemmiata che fa vibrare i bicchieri";
+  // prova a inserirla verso la 3ª–4ª frase
+  const parts = text.split(/(?<=[.!?…])\s+/);
+  const idx = Math.min(3, Math.max(1, parts.length-2));
+  parts[idx] = (parts[idx]||"").replace(/[.!?…]$/, "") + "," + add + ".";
+  return parts.join(" ");
+}
+function forceWhatIfOpening(text, mode, lang){
+  const incipitIT = mode==="analitico"
+    ? ["Sai Luca, questa domanda girava nell’aria da un po’.",
+       "Te la stavi chiedendo da tempo, e ora ci metti ordine.",
+       "Messa così, è semplice: guardi i fatti e ti ascolti."]
+    : ["Bella questa, Luca — me l’aspettavo da te.",
+       "Riapri le finestre e l’aria ti saluta come una vecchia conoscenza.",
+       "Ti fermi un attimo: la città ti riconosce dal passo."];
+  const incipitEN = mode==="analitico"
+    ? ["You’ve been circling this for a while.",
+       "Put it plainly: look at facts and listen to yourself.",
+       "It’s been in the air; now you line it up."]
+    : ["Nice one — I saw this coming.",
+       "You open the windows and the air nods back.",
+       "You pause: the city remembers your step."];
+  const bank = (lang||"it").startsWith("en") ? incipitEN : incipitIT;
+  const first = bank[(Math.random()*bank.length)|0];
+  // se già inizia bene, lascia; altrimenti premetti
+  const startsGood = new RegExp("^(" + bank.map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|") + ")").test(text);
+  return startsGood ? text : `${first} ${text}`;
+}
+function forceWTFOpeningWithNickname(text, lang){
+  const poolIT = ["campione", "leggenda", "capitano del caos", "fenomeno", "poeta del bar", "asso"];
+  const poolEN = ["champ", "legend", "captain of chaos", "ace", "icon"];
+  const nick = (lang||"it").startsWith("en")
+    ? poolEN[(Math.random()*poolEN.length)|0]
+    : poolIT[(Math.random()*poolIT.length)|0];
+  // se già inizia con parola singola + virgola, lascia
+  const ok = /^[A-Za-zÀ-ÿ'’`]+(?:\s+[A-Za-zÀ-ÿ'’`]+)*,/.test(text);
+  return ok ? text : `${nick}, ${text.charAt(0).toLowerCase()}${text.slice(1)}`;
+}
+function reactingObjectsHint(lang){
+  return (lang||"it").startsWith("en")
+    ? "Add 1–2 quick ‘reacting objects’ beats only if they fit the scene (e.g., the lamp flickers, the glasses rattle)."
+    : "Aggiungi 1–2 ‘oggetti che reagiscono’ solo se servono davvero alla scena (es. il lampione sfarfalla, i bicchieri tremano).";
+}
 
-/* ========= CORS ========= */
-const ALLOWED_ORIGINS = [
-  "https://what-ifapp.vercel.app",
-  "http://localhost:3000",
-  "http://127.0.0.1:5500",
+/* ------------------ Few-shot packs (SOLO esempi) ------------------ */
+// What If — Analitico (il tuo)
+const WHF_ANALITICO_IT = `Domanda: E se tornassi a vivere all’Aquila?
+Sai Luca, questa domanda girava nell’aria da un po’. Tornare a L’Aquila oggi vorrebbe dire rimetterti in una città che ha ricostruito più di muri: ha ricucito abitudini. L’economia si muove piano ma tiene, più artigiani che industrie, più reti locali che multinazionali. Gli stipendi sono più bassi, ma la vita costa meno e il tempo vale di più. Le scuole funzionano, la montagna torna complice nelle domeniche lente, e i bambini crescono con un orizzonte vero invece di uno schermo. Il Veneto ti mancherebbe per il ritmo e le occasioni, ma qui ritroveresti spazio, fiato e relazioni che non devono correre per esistere. In fondo non sarebbe un passo indietro — solo un modo diverso di avanzare, più lento, ma più tuo.`;
+
+// What If — Reale/Poetico (il tuo definitivo)
+const WHF_REALE_IT = `Domanda: E se tornassi a vivere all’Aquila?
+Bella questa, Luca — me l’aspettavo da te. Riapri le finestre e l’aria fredda ti saluta come una vecchia conoscenza. I vicoli ti riconoscono dal passo, le montagne ti guardano come un’amante che non ha mai smesso di aspettare. Il bar sotto casa serve ancora il caffè corto e ruvido, e le voci per strada sanno di pane e di inverno. I bambini giocano con l’eco, non con il rumore, e le serate finiscono con una risata che rimbalza nei portoni. Ogni giorno è più semplice del precedente, ogni sera più tua. Non stai tornando indietro: stai solo tornando dove il tempo ti riconosce per nome.`;
+
+// WTF — tre esempi tuoi (bar/moto/amore)
+const WTF_IT = [
+`☕ E se aprissi un bar?
+Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale, la macchina del caffè sputa vendetta e il frigorifero tossisce. Ti versi un goccio di liquore per calmare i santi e giuri che domani apri un bar solo per matti; alla chiusura il bancone ti guarda e tu sussurri: oggi ho bestemmiato più del prete quando finisce il vino — ma almeno ho servito verità calde.`,
+`🏍️ E se comprassi una moto?
+Oh, eccoci, centauro dell’inferno! Casco lucido, cuore impavido, orgoglio pronto all’incidente. Parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino, e ti scappa un “bestemmione che spacca l’aria!”; il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo ma con affetto, rito purificatore; al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio, complice. Torni a casa con l’eco del motore e della tua voce — sinfonia di libertà e bestemmie ben calibrate.`,
+`💘 E se mi innamorassi di nuovo?
+Ah, Luisa… ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e ti sale un “madonna della miseria impestata!” che fa sfarfallare la lampada e applaudire il bicchiere. Il gatto scappa, Alexa finge un aggiornamento, e tu bestemmi a mezza voce come fosse una preghiera sbagliata. Poi un sorso di rosso e la confessione: ogni storia finisce con una bestemmia e un brindisi — ma almeno bevo meglio di come amo.`
 ];
-function cors(req, res) {
-  const origin = String(req.headers.origin || "");
-  if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
-  res.setHeader("Vary", "Origin");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token, x-pro");
-}
 
-/* ========= Helpers ========= */
-const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
-function tinyHash(s = ""){ let h = 2166136261 >>> 0; for (let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h,16777619);} return (h>>>0).toString(36); }
-function normLine(s=""){ return String(s).toLowerCase().replace(/[“”"']/g,"").replace(/\s+/g," ").replace(/[.,;:!?()\[\]\-—]+$/g,"").trim(); }
-function tightenSentences(text, maxSentences){
-  const parts = String(text||"").replace(/\n+/g," ").split(/(?<=[.!?])\s+/).map(x=>x.trim()).filter(Boolean);
-  const out=[], seen=new Set();
-  for(const p of parts){ const n=normLine(p); if(!n||seen.has(n)) continue; if(p.split(/\s+/).length<=3 && !/[.!?]$/.test(p)) continue; out.push(p); seen.add(n); if(out.length>=maxSentences) break; }
-  let t=out.join(" "); if(!/[.!?…]$/.test(t)) t+="."; return t;
-}
-function clampWords(text,maxWords){
-  const w=String(text||"").split(/\s+/); if(w.length<=maxWords) return text;
-  const slice=w.slice(0,maxWords).join(" "); const m=slice.match(/([\s\S]*?[.!?])(?![\s\S]*[.!?])/);
-  return m?m[1]:slice+"…";
-}
-function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim(); }
-function stripQuestionEcho(domanda,text){
-  const d=String(domanda||"").replace(/[“”"']/g,"").trim().toLowerCase(); let t=String(text||"");
-  const lead=t.slice(0,Math.min(t.length,d.length+12)).toLowerCase().replace(/[“”"']/g,"").trim();
-  const rx=/^(?:e\\s*se|what\\s*if|domanda:|q:)[^.!?…]*[.!?…]\\s+/i;
-  if(lead.startsWith(d)){ const cut=t.indexOf("."); if(cut>-1) t=t.slice(cut+1).trim(); }
-  t=t.replace(rx,""); return t;
-}
-
-/* ========= Admin check ========= */
-async function isAdmin(req, requesterIp){
-  const token = String(req.headers["x-admin-token"] || "").trim();
-  if(!token) return false;
-  try{
-    const data = await redis.hgetall(`admin:token:${token}`); // { ip, ua }
-    if(!data) return false;
-    const LOCK_IP = String(process.env.ADMIN_LOCK_IP || "false").toLowerCase() === "true";
-    if(LOCK_IP){ if(!data.ip) return false; return data.ip===requesterIp; }
-    return true;
-  }catch{ return false; }
-}
-
-/* ========= Modalità temporale (solo istruzione tecnica, neutra) ========= */
-function temporalInstruction(periodo="future", lang="it"){
-  const en = isEn(lang);
-  if(String(periodo).toLowerCase()==="past"){
-    return en
-      ? "Write as if it already happened (past/conditional allowed)."
-      : "Scrivi come se fosse già successo (passato/condizionale consentiti).";
-  }
-  return en
-    ? "Write as a near-future unfolding starting now."
-    : "Scrivi come un prossimo futuro che inizia ora.";
-}
-
-/* ========= ESEMPI (la sola “guida” stilistica) ========= */
-// WHAT IF — Analitico
-const EX_WHATIF_ANALITICO_IT = `Sai Luca, questa domanda girava nell’aria da un po’. Tornare a L’Aquila oggi vorrebbe dire rimetterti in una città che ha ricostruito più di muri: ha ricucito abitudini. L’economia si muove piano ma tiene, più artigiani che industrie, più reti locali che multinazionali. Gli stipendi sono più bassi, ma la vita costa meno e il tempo vale di più. Le scuole funzionano, la montagna torna complice nelle domeniche lente, e i bambini crescono con un orizzonte vero invece di uno schermo. Il Veneto ti mancherebbe per il ritmo e le occasioni, ma qui ritroveresti spazio, fiato e relazioni che non devono correre per esistere. In fondo non sarebbe un passo indietro — solo un modo diverso di avanzare, più lento, ma più tuo.`;
-const EX_WHATIF_ANALYTIC_EN = `You’ll feel like a guest, then your hands learn the new keys. You’ll walk not to think better but to tire the noise. By the third grocery you’ll know which aisle is yours. Evenings soften and ask less proof. You’ll miss some things, not all at once. The rest finds its place. And you notice that beneath the noise something of yours was already there.`;
-
-// WHAT IF — Reale/Poetico
-const EX_WHATIF_REALE_IT = `Bella questa, Luca — me l’aspettavo da te. Riapri le finestre e l’aria fredda ti saluta come una vecchia conoscenza. I vicoli ti riconoscono dal passo, le montagne ti guardano come un’amante che non ha mai smesso di aspettare. Il bar sotto casa serve ancora il caffè corto e ruvido, e le voci per strada sanno di pane e di inverno. I bambini giocano con l’eco, non con il rumore, e le serate finiscono con una risata che rimbalza nei portoni. Ogni giorno è più semplice del precedente, ogni sera più tua. Non stai tornando indietro: stai solo tornando dove il tempo ti riconosce per nome.`;
-
-// WTF — Bar
-const EX_WTF_BAR_IT = `Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora: “questo al confessionale lo tengono in riserva”. Ti versi un goccio di liquore per calmare i santi e giuri che domani apri un bar solo per matti. Alla chiusura, il bancone ti guarda e tu, esausto, sussurri: “oggi ho bestemmiato più del prete quando finisce il vino — ma almeno ho servito verità calde”.`;
-// WTF — Moto
-const EX_WTF_MOTO_IT = `Oh, eccoci, centauro dell’inferno! Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” talmente sonoro che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo, ma stavolta con affetto, tipo rito purificatore. Un vecchio ti dice “bella linea” e tu pensi che parlasse del nervo saltato. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio, con un sorrisetto da complice. Quando torni a casa senti ancora l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie bene calibrate.`;
-// WTF — Amore
-const EX_WTF_AMORE_IT = `Ah, Luisa… ci risiamo, eh? Ti butti nel cuore come in un pozzo vuoto, e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e tu senti salire la pressione sanguigna come se ti stesse caricando un peccato. Ti parte un “madonna della miseria impestata!” così sincero che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento di sistema, e tu bestemmi a mezza voce come se fosse una preghiera sbagliata. Poi sorridi, bevi un sorso di rosso e dici: “ogni mia storia finisce con una bestemmia e un brindisi — ma almeno bevo meglio di come amo.” La luna fuori ti guarda e, giuro, sembra che annuisca pure lei.`;
-// WTF — EN sample
-const EX_WTF_EN = `Champ, you arrive like a limited series pilot and the buzzer rolls its eyes; the fridge hums “good luck” while the streetlights do wardrobe tests, you walk too far just to tire the nerves and a tiny beer forgives your accent, you let out a blasphemy that rattles the glasses and the mailbox pretends it didn’t hear, by grocery three you find your aisle and your pace, and the map stops asking for proof — you’re not conquering a city, you’re landing your life.`;
-
-/* ========= Prompt builder (solo regole tecniche + imitazione esempi) ========= */
-function buildMessages({ domanda, lang, periodo, stile, mode }){
-  const en = isEn(lang);
-
-  const TECH_RULES = en
-    ? `RULES (technical only):
-- Single paragraph. 115–160 words for WHATIF; 125–165 for WTF.
-- No lists. No questions. No emojis. Do not restate the user question.
-- Open, develop, and close exactly like the EXAMPLES: same structure/arc, new wording.
-- Language: ${lang.toUpperCase()}.
-- Keep it clean of literal religious insults. If needed, use a narrated “blasphemy” with invented morphological variants (e.g., bestemmiotta/bestemmione/bestemmiuccia) without writing any real slur. Exactly once.
-- End with a short closing line matching the examples.`
-    : `REGOLE (solo tecniche):
-- Un solo paragrafo. 115–160 parole per WHATIF; 125–165 per WTF.
-- Niente elenchi. Niente domande. Niente emoji. NON ripetere la domanda.
-- Apri, sviluppa e chiudi esattamente come negli ESEMPI: stessa architettura/ritmo, parole nuove.
-- Lingua: ${lang.toUpperCase()}.
-- Nessun insulto religioso letterale. Se serve, usa una “bestemmia” narrata con varianti morfologiche inventate (es. bestemmiotta/bestemmione/bestemmiuccia) senza riportare alcun termine reale. Una volta sola.
-- Chiudi con una riga finale breve coerente con gli esempi.`;
-
-  const TEMPORAL = temporalInstruction(periodo, lang);
-
-  // Scegli blocco esempi
-  const msgs = [
-    { role: "system", content: TECH_RULES },
-    { role: "system", content: TEMPORAL },
-  ];
-
-  if (stile === "wtf") {
-    msgs.push(
-      { role: "system", content: `ESEMPIO · WTF (IT) · Bar\n${EX_WTF_BAR_IT}` },
-      { role: "system", content: `ESEMPIO · WTF (IT) · Moto\n${EX_WTF_MOTO_IT}` },
-      { role: "system", content: `ESEMPIO · WTF (IT) · Amore\n${EX_WTF_AMORE_IT}` },
-      { role: "system", content: `EXAMPLE · WTF (EN)\n${EX_WTF_EN}` },
-    );
-  } else {
-    if (mode === "analitico") {
-      msgs.push(
-        { role: "system", content: `ESEMPIO · WHAT IF (IT) · Analitico\n${EX_WHATIF_ANALITICO_IT}` },
-        { role: "system", content: `EXAMPLE · WHAT IF (EN) · Analytic\n${EX_WHATIF_ANALYTIC_EN}` },
-      );
-    } else {
-      msgs.push(
-        { role: "system", content: `ESEMPIO · WHAT IF (IT) · Reale\n${EX_WHATIF_REALE_IT}` },
-      );
-    }
-  }
-
-  const USER = en
-    ? `User question (do NOT restate it): "${domanda}". Produce one single-paragraph answer in ${lang.toUpperCase()}.`
-    : `Domanda (NON ripeterla): "${domanda}". Genera UNA risposta in ${lang.toUpperCase()} a paragrafo unico.`;
-
-  msgs.push({ role: "user", content: USER });
-  return msgs;
-}
-
-/* ========= Handler ========= */
-export default async function handler(req, res){
-  cors(req, res);
+/* ------------------ Handler ------------------ */
+export default async function handler(req,res){
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
+  if (req.method !== "POST")   return res.status(405).json({ error:"method_not_allowed" });
+  if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error:"missing_api_key" });
 
   try{
-    if(!process.env.OPENAI_API_KEY) return res.status(500).json({ error:"missing_api_key" });
+    const body = typeof req.body === "string" ? JSON.parse(req.body||"{}") : (req.body||{});
+    const { domanda="", stile="whatif", mode="reale", periodo="future", lang="it", micro={} } = body;
+    if (!domanda) return res.status(400).json({ error:"bad_request", detail:"domanda_required" });
 
-    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").toString().split(",")[0].trim();
-    const admin = await isAdmin(req, ip);
-    const bypass = admin === true;
-    const isPro = String(req.headers["x-pro"] || "").trim() === "1";
+    // Selezione pacchetto esempi
+    const messages = [];
+    const baseRule = (lang||"it").startsWith("en")
+      ? `COPY THE EXAMPLES’ SHAPE ONLY. Start like the examples, develop like them, end like them. One paragraph. No lists, no questions, no emojis. Do NOT restate the question. Use fresh wording.`
+      : `COPIA SOLO LA FORMA DEGLI ESEMPI. Inizia come negli esempi, sviluppa come negli esempi, chiudi come negli esempi. Un solo paragrafo. Niente elenchi, niente domande, niente emoji. NON ripetere la domanda. Usa parole/frasi nuove.`;
+    messages.push({ role:"system", content: baseRule });
 
-    if(!bypass){
-      const { success } = await rl.limit(`ask:${ip}`);
-      if(!success) return res.status(429).json({ error:"rate_limited_minute" });
-    }
-
-    let used=0, dailyCap = isPro ? 10 : 3;
-    if(!bypass){
-      const today = new Date().toISOString().slice(0,10);
-      const key = `credits:${ip}:${today}`;
-      used = (await redis.incr(key)) ?? 1;
-      if(used === 1) await redis.expire(key, 60*60*24);
-      if(used > dailyCap){
-        return res.status(402).json({ error:"daily_credits_exhausted", used, dailyCap });
+    if (stile === "whatif") {
+      // carica few-shot giusto in base al sotto-stile
+      if (mode === "analitico") {
+        messages.push({ role:"system", content: WHF_ANALITICO_IT });
+      } else {
+        messages.push({ role:"system", content: WHF_REALE_IT });
       }
+    } else {
+      // WTF: mettiamo tutti e tre gli esempi
+      WTF_IT.forEach(ex => messages.push({ role:"system", content: ex }));
+      messages.push({ role:"system", content: reactingObjectsHint(lang) });
+      messages.push({ role:"system", content:
+        (lang||"it").startsWith("en")
+          ? `Include exactly one brief, narrated blasphemy (never literal), with playful morphology (e.g., "mini-blasphemy").`
+          : `Inserisci esattamente UNA breve bestemmia narrata (mai letterale), con morfologia giocosa (“bestemmietta”, “bestemmiata”, “bestemmione”).`
+      });
+      messages.push({ role:"system", content:
+        (lang||"it").startsWith("en")
+          ? `OPENING MUST BE ONLY a short nickname (e.g., "champ, …").`
+          : `L'APERTURA DEVE ESSERE SOLO un soprannome secco (es. "campione, …").`
+      });
     }
 
-    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-    const {
-      domanda = "",
-      stile = "whatif",   // "whatif" | "wtf"
-      mode  = "reale",    // per whatif: "analitico" | "reale"
-      lang  = "it",
-      periodo = "future",
-    } = body;
-
-    if(!domanda || typeof domanda !== "string")
-      return res.status(400).json({ error:"bad_request", detail:"domanda_required" });
-
-    const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${mode}|${lang}|${periodo}`), 36) % 1000000;
-
-    const messages = buildMessages({ domanda, lang, periodo, stile, mode });
+    // Prompt utente “vuoto” (non chiediamo tono o ruoli)
+    const up = (lang||"it").startsWith("en")
+      ? `Question (do not restate): "${domanda}". Context (you may use lightly): ${JSON.stringify(micro)}.`
+      : `Domanda (non ripeterla): "${domanda}". Contesto (usalo se serve): ${JSON.stringify(micro)}.`;
+    messages.push({ role:"user", content: up });
 
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.98 : 0.82,
-      top_p: 0.92,
-      max_tokens: 380,
-      frequency_penalty: 0.1,
-      presence_penalty: 0.0,
-      messages,
-      // seed non ufficiale: solo per variare lato nostro
-      // (il modello non usa davvero seed ma lo teniamo nei log)
+      temperature: stile==="wtf" ? 0.95 : 0.75,
+      top_p: 0.9,
+      max_tokens: 360,
+      messages
     });
 
-    let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
-    if(!answer) throw new Error("empty_model_response");
+    let out = completion?.choices?.[0]?.message?.content || "";
+    out = stripEcho(domanda, out);
+    out = oneParagraph(out);
 
-    // Post-process tecnico
-    answer = stripQuestionEcho(domanda, answer);
-    answer = stile === "wtf" ? tightenSentences(answer, 8) : tightenSentences(answer, 11);
-    answer = clampWords(answer, stile === "wtf" ? 168 : 162);
-    answer = normalizeOneParagraph(answer);
-    if(!/[.!?…]$/.test(answer)) answer += ".";
-
-    // Log privacy-safe
-    try{
-      const entry = {
-        ts: Date.now(),
-        ip,
-        style: stile,
-        mode,
-        lang,
-        periodo,
-        domanda_len: String(domanda||"").length,
-        domanda_hash: tinyHash(domanda||""),
-        answer_chars: (answer||"").length,
-        admin: !!admin,
-        user_type: bypass ? "admin" : (isPro ? "pro" : "free"),
-        seed: seedNum,
-      };
-      await redis.lpush("logs:ask", JSON.stringify(entry));
-      await redis.ltrim("logs:ask", 0, 9999);
-      await redis.incr("stats:total");
-      await redis.hincrby("stats:style", stile, 1);
-      await redis.hincrby("stats:lang", lang, 1);
-      await redis.hincrby("stats:periodo", String(periodo||"future"), 1);
-      await redis.hincrby("stats:user_type", entry.user_type, 1);
-      const dayKey = `stats:day:${new Date().toISOString().slice(0,10)}`;
-      await redis.hincrby(dayKey, `${stile}:${periodo}`, 1);
-      await redis.expire(dayKey, 90*24*60*60);
-    }catch(e){ console.warn("log failure (non-bloccante)", e); }
+    if (stile === "whatif") {
+      // incipit obbligatorio + 8–11 frasi
+      out = forceWhatIfOpening(out, mode, lang);
+      out = clampSentences(out, 8, 11);
+      if(!/[.!?…]$/.test(out)) out += ".";
+    } else {
+      // nickname secco + 6–8 frasi + una sola bestemmia narrata
+      out = forceWTFOpeningWithNickname(out, lang);
+      out = ensureOneBlasphemyNarrated(out);
+      // rimuovi eventuali seconde bestemmie
+      out = out.replace(/\b(bestemmi\w*|bestemmia|bestemmiata|bestemmione)\b/ig, (m, offset, str) => {
+        // mantiene SOLO la prima occorrenza
+        const first = str.toLowerCase().indexOf(m.toLowerCase());
+        return (offset===first) ? m : "sospirone";
+      });
+      out = clampSentences(out, 6, 8);
+      if(!/[.!?…]$/.test(out)) out += ".";
+    }
 
     return res.status(200).json({
-      answer,
+      answer: out,
       style: stile,
       mode,
       lang,
       periodo,
-      model: MODEL,
-      admin,
-      pro: isPro,
-      credits: bypass ? null : { used, dailyCap },
+      model: MODEL
     });
+
   }catch(err){
-    console.error("❌ [/api/ask] error:", err);
+    console.error("ask error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
 }
