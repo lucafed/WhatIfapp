@@ -88,14 +88,14 @@ function temporalInstruction(periodo="future", lang="it"){
 }
 
 /* ========= ESEMPI (unica guida stilistica) ========= */
-// WHAT IF — Analitico
+// WHAT IF — Analitico (IT) + Analytic (EN)
 const EX_WHATIF_ANALITICO_IT = `Sai Luca, questa domanda girava nell’aria da un po’. Tornare a L’Aquila oggi vorrebbe dire rimetterti in una città che ha ricostruito più di muri: ha ricucito abitudini. L’economia si muove piano ma tiene, più artigiani che industrie, più reti locali che multinazionali. Gli stipendi sono più bassi, ma la vita costa meno e il tempo vale di più. Le scuole funzionano, la montagna torna complice nelle domeniche lente, e i bambini crescono con un orizzonte vero invece di uno schermo. Il Veneto ti mancherebbe per il ritmo e le occasioni, ma qui ritroveresti spazio, fiato e relazioni che non devono correre per esistere. In fondo non sarebbe un passo indietro — solo un modo diverso di avanzare, più lento, ma più tuo.`;
 const EX_WHATIF_ANALYTIC_EN = `You’ll feel like a guest, then your hands learn the new keys. You’ll walk not to think better but to tire the noise. By the third grocery you’ll know which aisle is yours. Evenings soften and ask less proof. You’ll miss some things, not all at once. The rest finds its place. And you notice that beneath the noise something of yours was already there.`;
 
-// WHAT IF — Reale/Poetico
+// WHAT IF — Reale/Poetico (IT)
 const EX_WHATIF_REALE_IT = `Bella questa, Luca — me l’aspettavo da te. Riapri le finestre e l’aria fredda ti saluta come una vecchia conoscenza. I vicoli ti riconoscono dal passo, le montagne ti guardano come un’amante che non ha mai smesso di aspettare. Il bar sotto casa serve ancora il caffè corto e ruvido, e le voci per strada sanno di pane e di inverno. I bambini giocano con l’eco, non con il rumore, e le serate finiscono con una risata che rimbalza nei portoni. Ogni giorno è più semplice del precedente, ogni sera più tua. Non stai tornando indietro: stai solo tornando dove il tempo ti riconosce per nome.`;
 
-// WTF — IT (3 esempi forti + EN)
+// WTF — IT (3 esempi forti) + EN
 const EX_WTF_BAR_IT = `Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora: “questo al confessionale lo tengono in riserva”. Ti versi un goccio di liquore per calmare i santi e giuri che domani apri un bar solo per matti. Alla chiusura, il bancone ti guarda e tu, esausto, sussurri: “oggi ho bestemmiato più del prete quando finisce il vino — ma almeno ho servito verità calde”.`;
 const EX_WTF_MOTO_IT = `Oh, eccoci, centauro dell’inferno! Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” talmente sonoro che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo, ma stavolta con affetto, tipo rito purificatore. Un vecchio ti dice “bella linea” e tu pensi che parlasse del nervo saltato. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio, con un sorrisetto da complice. Quando torni a casa senti ancora l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie bene calibrate.`;
 const EX_WTF_AMORE_IT = `Ah, Luisa… ci risiamo, eh? Ti butti nel cuore come in un pozzo vuoto, e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e tu senti salire la pressione sanguigna come se ti stesse caricando un peccato. Ti parte un “madonna della miseria impestata!” così sincero che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento di sistema, e tu bestemmi a mezza voce come se fosse una preghiera sbagliata. Poi sorridi, bevi un sorso di rosso e dici: “ogni mia storia finisce con una bestemmia e un brindisi — ma almeno bevo meglio di come amo.” La luna fuori ti guarda e, giuro, sembra che annuisca pure lei.`;
@@ -112,26 +112,20 @@ const TECH_RULES_BASE = (lang) => isEn(lang)
 
 /* ========= Regole aggiuntive SOLO per WTF (copiatura fedele degli esempi) ========= */
 const WTF_STRICT = (lang) => isEn(lang)
-  ? `WTF OUTPUT MUST IMITATE THE EXAMPLES’ SHAPE EXACTLY (new wording):
-OPENING: use one of these shapes (rotate, never repeat verbatim): 
-- "Ah, look at you, …"
-- "Oh, here we are, …"
-- "Ah, [name]… here we go again, eh?"
-Immediately after the first beat, include ONE narrated oath (never literal slur). Use an invented variant like: blasphemietta, blasphemione, blasphemiuccia, pseudo-blasphemy, near-blasphemy. Write it as narration, e.g., “you let out a blasphemiotta that rattles the glasses”.
-RIGHT AFTER the oath, add 2–3 quick, funny, highly-visual reactions by objects/ambient (e.g., lamp flickers, cups applaud, mailbox pretends not to hear). They must be tight and comedic.
-Include one short alcohol beat (sip, tiny beer, gulp) after the reactions, not before.
-SECOND PERSON ONLY (“you/ti”). No first person narration.
-CLOSE with a warm, funny line that relaxes the scene, like in the examples.`
+  ? `WTF MUST COPY THE EXAMPLES’ SHAPE (new wording only):
+OPENING: vary among shapes like “Ah, look at you…”, “Oh, here we are…”, “Ah, [name]… here we go again, eh?”.
+Then ONE narrated outburst (never literal slur). Use SYNONYMS instead of repeating “blasphemy”: e.g., “imprecation”, “curse”, “near-sacred outburst”, “misplaced invocation”, “sacrilegious vent”. Write as narration (“you let out an imprecation that rattles the glasses”).
+IMMEDIATELY AFTER the outburst add 2–3 fast, funny, highly visual object/ambient reactions (lamp flickers, cups applaud, mailbox pretends not to hear, fridge coughs, traffic light blushes).
+Include a short alcohol beat (sip/beer/shot) AFTER reactions.
+SECOND PERSON ONLY (“you”). No first person.
+END with a warm, witty closing like in examples.`
   : `WTF DEVE COPIARE LA FORMA DEGLI ESEMPI (parole nuove):
-APERTURA: usa una di queste sagome (ruota, non ripetere identica):
-- "Ah ma guarda te, …"
-- "Oh, eccoci, …"
-- "Ah, [nome]… ci risiamo, eh?"
-SUBITO DOPO inserisci UNA imprecazione narrata (mai letterale). Usa una variante inventata tipo: bestemmiotta, bestemmiONE, bestemmiuccia, quasi-bestemmia, para-bestemmia. Scrivila come narrazione, es.: “ti scappa una bestemmiotta che fa vibrare i bicchieri”.
-IMMEDIATAMENTE DOPO l’imprecazione, aggiungi 2–3 reazioni comiche e visive di oggetti/ambiente (lampada che sfarfalla, bicchieri che applaudono, campanello che finge di non sentire). Devono essere secche e far ridere.
-Inserisci un accenno di sbronza/alcool BREVE dopo le reazioni (sorso, grappino, bicchierino), non prima.
-SECONDA PERSONA SOLA (“tu/ti”). Evita la prima persona.
-CHIUDI con una riga calda e ironica, come negli esempi.`;
+APERTURA: varia su sagome tipo “Ah ma guarda te…”, “Oh, eccoci…”, “Ah, [nome]… ci risiamo, eh?”.
+Poi UNA imprecazione narrata (mai letterale). Usa SINONIMI senza ripetere “bestemmia”: “imprecazione”, “maledizione”, “invocazione fuori posto”, “sfiato sacrilego”, “scatto da oratorio”. Scrivila come narrazione (“ti scappa un’imprecazione che fa vibrare i bicchieri”).
+SUBITO DOPO inserisci 2–3 reazioni comiche e visive di oggetti/ambiente (lampada che sfarfalla, bicchieri che applaudono, campanello che finge di non sentire, frigo che tossisce, semaforo che arrossisce).
+Inserisci un accenno di sbronza/alcool breve DOPO le reazioni.
+SOLO seconda persona (“tu/ti”). Mai prima persona.
+CHIUDI con riga calda e ironica, come negli esempi.`;
 
 /* ========= Prompt builder ========= */
 function buildMessages({ domanda, lang, periodo, stile, mode }){
@@ -168,6 +162,18 @@ function buildMessages({ domanda, lang, periodo, stile, mode }){
 
   msgs.push({ role: "user", content: USER });
   return msgs;
+}
+
+/* ========= Heuristics per WTF (polish) ========= */
+function hasFirstPersonIT(s){
+  return /\b(io|sono|mi|me|mio|mia|noi|nostr[oaie])\b/i.test(s);
+}
+function hasReactionsIT(s){
+  // qualche verbo/immagine tipica
+  return /(sfarfall|applaud|finge|toss|trema|rimbalz|arross|cambia marciapiede|si gira|fa eco)/i.test(s);
+}
+function hasAlcoholIT(s){
+  return /(birra|vino|grapp|liquor|amaro|rum|whisky|bicchier|sorso|shot)/i.test(s);
 }
 
 /* ========= Handler ========= */
@@ -215,9 +221,9 @@ export default async function handler(req, res){
 
     const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${mode}|${lang}|${periodo}`), 36) % 1000000;
 
+    // 1) Prima generazione
     const messages = buildMessages({ domanda, lang, periodo, stile, mode });
-
-    const completion = await client.chat.completions.create({
+    let completion = await client.chat.completions.create({
       model: MODEL,
       temperature: stile === "wtf" ? 0.98 : 0.82,
       top_p: 0.92,
@@ -230,17 +236,46 @@ export default async function handler(req, res){
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if(!answer) throw new Error("empty_model_response");
 
-    // Post-process tecnico
+    // 2) Post-process tecnico
     answer = stripQuestionEcho(domanda, answer);
     answer = stile === "wtf" ? tightenSentences(answer, 8) : tightenSentences(answer, 11);
     answer = clampWords(answer, stile === "wtf" ? 168 : 162);
     answer = normalizeOneParagraph(answer);
     if(!/[.!?…]$/.test(answer)) answer += ".";
 
-    // Piccolo guard-rail: evita prima persona nel WTF
-    if (stile === "wtf" && /\bio\b|\bsono\b|\bmi\b/gi.test(answer)) {
-      // Non riscrivo, ma appendo una micro-correzione implicita forzando 2a persona in output successivi via log (solo diagnostica).
-      // Lascio il testo com'è per non rovinarne la fluidità.
+    // 3) Polish automatico per WTF (seconda persona + reazioni + sbronza)
+    if (stile === "wtf" && !isEn(lang)) {
+      const need2nd = hasFirstPersonIT(answer);
+      const needReact = !hasReactionsIT(answer);
+      const needAlc = !hasAlcoholIT(answer);
+
+      if (need2nd || needReact || needAlc) {
+        const fixMsgs = [
+          { role: "system", content: TECH_RULES_BASE(lang) },
+          { role: "system", content: WTF_STRICT(lang) },
+          { role: "system", content:
+`RISCRIVI il testo seguente mantenendo:
+- stessa struttura degli esempi (apertura → imprecazione narrata → 2–3 reazioni visive → breve alcol → chiusa calda),
+- stessa lunghezza (±10%),
+- NIENTE prima persona (solo seconda persona).
+Se mancano reazioni o alcol, aggiungile in 1–2 battute secche dopo l’imprecazione.
+Non aggiungere emoji, non fare liste, non ripetere la domanda. Testo da riscrivere:` },
+          { role: "user", content: answer }
+        ];
+        const fix = await client.chat.completions.create({
+          model: MODEL,
+          temperature: 0.7,
+          top_p: 0.9,
+          max_tokens: 420,
+          messages: fixMsgs,
+        });
+        let fixed = fix?.choices?.[0]?.message?.content?.trim() || answer;
+        fixed = tightenSentences(fixed, 8);
+        fixed = clampWords(fixed, 168);
+        fixed = normalizeOneParagraph(fixed);
+        if(!/[.!?…]$/.test(fixed)) fixed += ".";
+        answer = fixed;
+      }
     }
 
     // Log privacy-safe
