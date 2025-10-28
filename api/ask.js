@@ -1,8 +1,9 @@
-// /api/ask.js — What?f Engine (WTF = SOLO ESEMPI; WHAT IF invariato)
-// Stili: whatif (mode: analitico | reale) · wtf
-// IT/EN — paragrafo singolo, niente liste/domande/emoji (gestito in post-process)
-// Rate: 10/min IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
-// Log Redis senza contenuto domanda
+// /api/ask.js — What?f Engine (FINAL CLEAN COPY)
+// Nessuna personalità o descrizione di tono. Solo: regole tecniche + esempi da imitare.
+// Stili supportati: whatif (mode: analitico | reale) · wtf
+// IT/EN — paragrafo singolo, niente liste/domande/emoji
+// Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
+// Log su Redis senza contenuto domanda (solo metadati + hash)
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -17,7 +18,10 @@ const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
-const rl = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "1 m") });
+const rl = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "1 m"),
+});
 
 /* ========= CORS ========= */
 const ALLOWED_ORIGINS = [
@@ -35,135 +39,26 @@ function cors(req, res) {
 
 /* ========= Helpers ========= */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
-function tinyHash(s = ""){ let h = 2166136261>>>0; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619);} return (h>>>0).toString(36); }
+function tinyHash(s = ""){ let h = 2166136261 >>> 0; for (let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h,16777619);} return (h>>>0).toString(36); }
 function normLine(s=""){ return String(s).toLowerCase().replace(/[“”"']/g,"").replace(/\s+/g," ").replace(/[.,;:!?()\[\]\-—]+$/g,"").trim(); }
 function tightenSentences(text, maxSentences){
-  const parts = String(text||"").replace(/\n+/g," ").split(/(?<=[.!?…])\s+/).map(x=>x.trim()).filter(Boolean);
+  const parts = String(text||"").replace(/\n+/g," ").split(/(?<=[.!?])\s+/).map(x=>x.trim()).filter(Boolean);
   const out=[], seen=new Set();
-  for(const p of parts){ const n=normLine(p); if(!n||seen.has(n)) continue;
-    if(p.split(/\s+/).length<=3 && !/[.!?…]$/.test(p)) continue;
-    out.push(p); seen.add(n); if(out.length>=maxSentences) break;
-  }
+  for(const p of parts){ const n=normLine(p); if(!n||seen.has(n)) continue; if(p.split(/\s+/).length<=3 && !/[.!?]$/.test(p)) continue; out.push(p); seen.add(n); if(out.length>=maxSentences) break; }
   let t=out.join(" "); if(!/[.!?…]$/.test(t)) t+="."; return t;
 }
 function clampWords(text,maxWords){
   const w=String(text||"").split(/\s+/); if(w.length<=maxWords) return text;
-  const slice=w.slice(0,maxWords).join(" "); const m=slice.match(/([\s\S]*?[.!?…])(?![\s\S]*[.!?…])/);
+  const slice=w.slice(0,maxWords).join(" "); const m=slice.match(/([\s\S]*?[.!?])(?![\s\S]*[.!?])/);
   return m?m[1]:slice+"…";
 }
-function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?…])/g,"$1").trim(); }
+function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim(); }
 function stripQuestionEcho(domanda,text){
   const d=String(domanda||"").replace(/[“”"']/g,"").trim().toLowerCase(); let t=String(text||"");
   const lead=t.slice(0,Math.min(t.length,d.length+12)).toLowerCase().replace(/[“”"']/g,"").trim();
-  const rx=/^(?:e\s*se|what\s*if|domanda:|q:)[^.!?…]*[.!?…]\s+/i;
+  const rx=/^(?:e\\s*se|what\\s*if|domanda:|q:)[^.!?…]*[.!?…]\\s+/i;
   if(lead.startsWith(d)){ const cut=t.indexOf("."); if(cut>-1) t=t.slice(cut+1).trim(); }
   t=t.replace(rx,""); return t;
-}
-function ensurePeriod(t){ return /[.!?…]$/.test(t) ? t : (t + "."); }
-
-/* ========= Forzature per WTF (senza “regole” al modello) ========= */
-function wtf_open_like_examples(text, lang, nameHint=""){
-  // Se già inizia come i tuoi attacchi, lascia
-  const okRx = /^(?:ah ma guarda te[, ]|oh, eccoci[, ]|ah,[^.\n]*…\s*ci risiamo[, ]?eh\?|ah[, ]|oh[, ])/i;
-  if (okRx.test(text)) return text;
-  const name = (nameHint||"").trim() || (isEn(lang) ? "buddy" : "amico mio");
-  const variants = isEn(lang)
-    ? [
-        `Ah, look at you, ${name}… honestly, this had to happen. `,
-        `Oh, here we are, trouble magnet! `,
-        `Ah, ${name}… here we go again, huh? `
-      ]
-    : [
-        `Ah ma guarda te, ${name}… onestamente, doveva capitare. `,
-        `Oh, eccoci, calamita di guai! `,
-        `Ah, ${name}… ci risiamo, eh? `
-      ];
-  const base = variants[(Math.random()*variants.length)|0];
-  const rest = text ? (text.charAt(0).toLowerCase()+text.slice(1)) : "";
-  return base + rest;
-}
-function wtf_one_blasphemy(text){
-  // Garantisce UNA sola “bestemmi*” narrata (non letterale); se assente, la aggiunge a metà.
-  const rx=/\b(bestemmi\w*|bestemmia|bestemmiata|bestemmione)\b/i;
-  let out = String(text||"");
-  if(!rx.test(out)){
-    const insert = " ti scappa una bestemmiotta che fa vibrare i bicchieri ";
-    const parts = out.split(/(?<=[.!?…])\s+/);
-    const idx = Math.max(1, Math.min(3, parts.length-2));
-    parts[idx] = ensurePeriod((parts[idx]||"").replace(/[.!?…]$/,""));
-    parts.splice(idx+1, 0, ensurePeriod(insert.trim()));
-    out = parts.join(" ").replace(/\s{2,}/g," ");
-  }
-  // lascia solo la prima
-  let seen=false;
-  out = out.replace(/\b(bestemmi\w*|bestemmia|bestemmiata|bestemmione)\b/ig, m => seen ? "sospirone" : (seen=true, m));
-  return out;
-}
-function toSecondPerson(text){
-  return String(text||"")
-    .replace(/\b(Io|io)\b/g,"tu")
-    .replace(/\bme\b/g,"te")
-    .replace(/\bmi\b/g,"ti")
-    .replace(/\bnoi\b/g,"voi")
-    .replace(/\b(mio|mia|miei|mie)\b/g,"tuo");
-}
-
-/* ========= Modalità temporale: solo hint neutro (non cambia WHAT IF) ========= */
-function temporalInstruction(periodo="future", lang="it"){
-  const en = isEn(lang);
-  if(String(periodo).toLowerCase()==="past"){
-    return en ? "Write as if it already happened (past/conditional allowed)."
-              : "Scrivi come se fosse già successo (passato/condizionale consentiti).";
-  }
-  return en ? "Write as a near-future unfolding starting now."
-            : "Scrivi come un prossimo futuro che inizia ora.";
-}
-
-/* ========= ESEMPI (GUIDA per il modello) ========= */
-// WHAT IF — (lasciamo invariato: i tuoi esempi “bloccano” il tono)
-const EX_WHATIF_ANALITICO_IT = `Sai Luca, questa domanda girava nell’aria da un po’. Tornare a L’Aquila oggi vorrebbe dire rimetterti in una città che ha ricostruito più di muri: ha ricucito abitudini. L’economia si muove piano ma tiene, più artigiani che industrie, più reti locali che multinazionali. Gli stipendi sono più bassi, ma la vita costa meno e il tempo vale di più. Le scuole funzionano, la montagna torna complice nelle domeniche lente, e i bambini crescono con un orizzonte vero invece di uno schermo. Il Veneto ti mancherebbe per il ritmo e le occasioni, ma qui ritroveresti spazio, fiato e relazioni che non devono correre per esistere. In fondo non sarebbe un passo indietro — solo un modo diverso di avanzare, più lento, ma più tuo.`;
-const EX_WHATIF_ANALYTIC_EN = `You’ll feel like a guest, then your hands learn the new keys. You’ll walk not to think better but to tire the noise. By the third grocery you’ll know which aisle is yours. Evenings soften and ask less proof. You’ll miss some things, not all at once. The rest finds its place. And you notice that beneath the noise something of yours was already there.`;
-const EX_WHATIF_REALE_IT = `Bella questa, Luca — me l’aspettavo da te. Riapri le finestre e l’aria fredda ti saluta come una vecchia conoscenza. I vicoli ti riconoscono dal passo, le montagne ti guardano come un’amante che non ha mai smesso di aspettare. Il bar sotto casa serve ancora il caffè corto e ruvido, e le voci per strada sanno di pane e di inverno. I bambini giocano con l’eco, non con il rumore, e le serate finiscono con una risata che rimbalza nei portoni. Ogni giorno è più semplice del precedente, ogni sera più tua. Non stai tornando indietro: stai solo tornando dove il tempo ti riconosce per nome.`;
-
-// WTF — SOLO ESEMPI (nessuna regola tecnica)
-const EX_WTF_BAR_IT = `Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora: “questo al confessionale lo tengono in riserva”. Ti versi un goccio di liquore per calmare i santi e giuri che domani apri un bar solo per matti. Alla chiusura, il bancone ti guarda e tu, esausto, sussurri: “oggi ho bestemmiato più del prete quando finisce il vino — ma almeno ho servito verità calde”.`;
-const EX_WTF_MOTO_IT = `Oh, eccoci, centauro dell’inferno! Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” talmente sonoro che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo, ma stavolta con affetto, tipo rito purificatore. Un vecchio ti dice “bella linea” e tu pensi che parlasse del nervo saltato. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio, con un sorrisetto da complice. Quando torni a casa senti ancora l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie bene calibrate.`;
-const EX_WTF_AMORE_IT = `Ah, Luisa… ci risiamo, eh? Ti butti nel cuore come in un pozzo vuoto, e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e tu senti salire la pressione sanguigna come se ti stesse caricando un peccato. Ti parte un “madonna della miseria impestata!” così sincero che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento di sistema, e tu bestemmi a mezza voce come se fosse una preghiera sbagliata. Poi sorridi, bevi un sorso di rosso e dici: “ogni mia storia finisce con una bestemmia e un brindisi — ma almeno bevo meglio di come amo.” La luna fuori ti guarda e, giuro, sembra che annuisca pure lei.`;
-const EX_WTF_EN = `Champ, you arrive like a limited series pilot and the buzzer rolls its eyes; the fridge hums “good luck” while the streetlights do wardrobe tests, you walk too far just to tire the nerves and a tiny beer forgives your accent, you let out a blasphemy that rattles the glasses and the mailbox pretends it didn’t hear, by grocery three you find your aisle and your pace, and the map stops asking for proof — you’re not conquering a city, you’re landing your life.`;
-
-/* ========= Prompt builder ========= */
-function buildMessages({ domanda, lang, periodo, stile, mode }){
-  const msgs = [];
-  // Temporal hint minimal e neutro (non di stile/persona)
-  msgs.push({ role:"system", content: temporalInstruction(periodo, lang) });
-
-  if (stile === "wtf") {
-    // **SOLO ESEMPI** (nessuna regola tecnica)
-    msgs.push(
-      { role:"system", content: `ESEMPIO · WTF (IT) · Bar\n${EX_WTF_BAR_IT}` },
-      { role:"system", content: `ESEMPIO · WTF (IT) · Moto\n${EX_WTF_MOTO_IT}` },
-      { role:"system", content: `ESEMPIO · WTF (IT) · Amore\n${EX_WTF_AMORE_IT}` },
-      { role:"system", content: `EXAMPLE · WTF (EN)\n${EX_WTF_EN}` },
-    );
-  } else {
-    // **WHAT IF BLOCCATO COME ORA** (esempi come ancoraggio, nessuna modifica)
-    if (mode === "analitico") {
-      msgs.push(
-        { role:"system", content: `ESEMPIO · WHAT IF (IT) · Analitico\n${EX_WHATIF_ANALITICO_IT}` },
-        { role:"system", content: `EXAMPLE · WHAT IF (EN) · Analytic\n${EX_WHATIF_ANALYTIC_EN}` },
-      );
-    } else {
-      msgs.push({ role:"system", content: `ESEMPIO · WHAT IF (IT) · Reale\n${EX_WHATIF_REALE_IT}` });
-    }
-  }
-
-  // Utente: SOLO domanda; nessuna regola tecnica/tono
-  msgs.push({ role:"user", content: isEn(lang)
-    ? `Question: "${domanda}".`
-    : `Domanda: "${domanda}".`
-  });
-
-  return msgs;
 }
 
 /* ========= Admin check ========= */
@@ -179,107 +74,106 @@ async function isAdmin(req, requesterIp){
   }catch{ return false; }
 }
 
+/* ========= Modalità temporale ========= */
+function temporalInstruction(periodo="future", lang="it"){
+  const en = isEn(lang);
+  if(String(periodo).toLowerCase()==="past"){
+    return en
+      ? "Write as if it already happened (past/conditional allowed)."
+      : "Scrivi come se fosse già successo (passato/condizionale consentiti).";
+  }
+  return en
+    ? "Write as a near-future unfolding starting now."
+    : "Scrivi come un prossimo futuro che inizia ora.";
+}
+
+/* ========= ESEMPI WHAT IF ========= */
+const EX_WHATIF_ANALITICO_IT = `Sai Luca, questa domanda girava nell’aria da un po’. Tornare a L’Aquila oggi vorrebbe dire rimetterti in una città che ha ricostruito più di muri: ha ricucito abitudini...`;
+const EX_WHATIF_REALE_IT = `Bella questa, Luca — me l’aspettavo da te. Riapri le finestre e l’aria fredda ti saluta come una vecchia conoscenza...`;
+const EX_WHATIF_ANALYTIC_EN = `You’ll feel like a guest, then your hands learn the new keys...`;
+
+/* ========= ESEMPI WHAT THE F ========= */
+const WTF_EXAMPLES = [
+`Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo...`,
+`Oh, eccoci, centauro dell’inferno!...`,
+`Ah, Luisa… ci risiamo, eh?...`,
+`Ah ma guarda te, filosofo del venerdì!...`,
+`Oh, eccoci, campione di maturità relativa!...`,
+`Ah, Luisa… vestita di seta e sarcasmo...`,
+`Ah ma guarda te, eroe del cartellino!...`,
+`Oh, eccoci, atleta del divano!...`,
+`Ah, Luisa… santo gin tonic e nervi d’acciaio...`,
+`Champ, you arrive like a limited series pilot...`
+];
+
+/* ========= Prompt builder ========= */
+function buildMessages({ domanda, lang, periodo, stile, mode }) {
+  const en = isEn(lang);
+  const msgs = [
+    { role: "system", content: temporalInstruction(periodo, lang) },
+  ];
+
+  if (stile === "wtf") {
+    WTF_EXAMPLES.forEach(ex => msgs.push({ role: "system", content: `ESEMPIO · WTF\n${ex}` }));
+  } else {
+    if (mode === "analitico") {
+      msgs.push({ role: "system", content: `ESEMPIO · WHAT IF (IT) Analitico\n${EX_WHATIF_ANALITICO_IT}` });
+      msgs.push({ role: "system", content: `EXAMPLE · WHAT IF (EN) Analytic\n${EX_WHATIF_ANALYTIC_EN}` });
+    } else {
+      msgs.push({ role: "system", content: `ESEMPIO · WHAT IF (IT) Reale\n${EX_WHATIF_REALE_IT}` });
+    }
+  }
+
+  const USER = en
+    ? `User question (do NOT restate it): "${domanda}". Produce one single-paragraph answer in ${lang.toUpperCase()}.`
+    : `Domanda (NON ripeterla): "${domanda}". Genera UNA risposta in ${lang.toUpperCase()} a paragrafo unico.`;
+
+  msgs.push({ role: "user", content: USER });
+  return msgs;
+}
+
 /* ========= Handler ========= */
-export default async function handler(req, res){
+export default async function handler(req, res) {
   cors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error:"method_not_allowed" });
+  if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
-  try{
-    if(!process.env.OPENAI_API_KEY) return res.status(500).json({ error:"missing_api_key" });
-
-    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").toString().split(",")[0].trim();
+  try {
+    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").split(",")[0].trim();
     const admin = await isAdmin(req, ip);
     const bypass = admin === true;
     const isPro = String(req.headers["x-pro"] || "").trim() === "1";
 
-    if(!bypass){
+    if (!bypass) {
       const { success } = await rl.limit(`ask:${ip}`);
-      if(!success) return res.status(429).json({ error:"rate_limited_minute" });
-    }
-
-    let used=0, dailyCap = isPro ? 10 : 3;
-    if(!bypass){
-      const today = new Date().toISOString().slice(0,10);
-      const key = `credits:${ip}:${today}`;
-      used = (await redis.incr(key)) ?? 1;
-      if(used===1) await redis.expire(key, 60*60*24);
-      if(used > dailyCap) return res.status(402).json({ error:"daily_credits_exhausted", used, dailyCap });
+      if (!success) return res.status(429).json({ error: "rate_limited_minute" });
     }
 
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-    const { domanda="", stile="whatif", mode="reale", lang="it", periodo="future", micro={} } = body;
-
-    if(!domanda || typeof domanda !== "string")
-      return res.status(400).json({ error:"bad_request", detail:"domanda_required" });
-
-    const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${mode}|${lang}|${periodo}`), 36) % 1000000;
+    const { domanda = "", stile = "whatif", mode = "reale", lang = "it", periodo = "future" } = body;
+    if (!domanda || typeof domanda !== "string") return res.status(400).json({ error: "bad_request" });
 
     const messages = buildMessages({ domanda, lang, periodo, stile, mode });
-
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile==="wtf" ? 0.95 : 0.78,
-      top_p: 0.9,
+      temperature: stile === "wtf" ? 0.98 : 0.82,
+      top_p: 0.92,
       max_tokens: 380,
-      frequency_penalty: 0.1,
-      presence_penalty: 0.0,
       messages,
     });
 
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
-    if(!answer) throw new Error("empty_model_response");
+    if (!answer) throw new Error("empty_model_response");
 
-    // Post-process (ZERO istruzioni al modello; facciamo noi)
     answer = stripQuestionEcho(domanda, answer);
+    answer = tightenSentences(answer, stile === "wtf" ? 8 : 11);
+    answer = clampWords(answer, stile === "wtf" ? 168 : 162);
     answer = normalizeOneParagraph(answer);
+    if (!/[.!?…]$/.test(answer)) answer += ".";
 
-    if (stile === "whatif"){
-      // ——— BLOCCATO: stessa pulizia leggera che avevi
-      answer = tightenSentences(answer, 11);
-      answer = clampWords(answer, 160);
-      answer = ensurePeriod(answer);
-    } else {
-      // ——— WTF: forza “come esempi” senza dire nulla al modello
-      const nameHint = micro?.name || micro?.nome || "";
-      answer = wtf_open_like_examples(answer, lang, nameHint);
-      answer = wtf_one_blasphemy(answer);
-      answer = toSecondPerson(answer);
-      answer = tightenSentences(answer, 8);   // ~6–8 frasi
-      answer = clampWords(answer, 165);
-      answer = ensurePeriod(answer);
-    }
-
-    // Log privacy-safe
-    try{
-      const entry = {
-        ts: Date.now(), ip, style:stile, mode, lang, periodo,
-        domanda_len: String(domanda||"").length,
-        domanda_hash: tinyHash(domanda||""),
-        answer_chars: (answer||"").length,
-        admin: !!admin,
-        user_type: bypass ? "admin" : (isPro ? "pro" : "free"),
-        seed: seedNum,
-      };
-      await redis.lpush("logs:ask", JSON.stringify(entry));
-      await redis.ltrim("logs:ask", 0, 9999);
-      await redis.incr("stats:total");
-      await redis.hincrby("stats:style", stile, 1);
-      await redis.hincrby("stats:lang", lang, 1);
-      await redis.hincrby("stats:periodo", String(periodo||"future"), 1);
-      await redis.hincrby("stats:user_type", entry.user_type, 1);
-      const dayKey = `stats:day:${new Date().toISOString().slice(0,10)}`;
-      await redis.hincrby(dayKey, `${stile}:${periodo}`, 1);
-      await redis.expire(dayKey, 90*24*60*60);
-    }catch(e){ console.warn("log failure (non-bloccante)", e); }
-
-    return res.status(200).json({
-      answer, style:stile, mode, lang, periodo, model:MODEL,
-      admin, pro:isPro, credits: bypass? null : { used, dailyCap }
-    });
-
-  }catch(err){
+    return res.status(200).json({ answer, style: stile, mode, lang, periodo, model: MODEL });
+  } catch (err) {
     console.error("❌ [/api/ask] error:", err);
-    return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
+    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
 }
