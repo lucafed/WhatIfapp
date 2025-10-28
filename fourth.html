@@ -35,6 +35,7 @@
     .chips{display:flex;flex-wrap:wrap;gap:8px}
     .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
     .chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
+
     /* Collapsibles & lists */
     .toggle{cursor:pointer;user-select:none}
     .collapsed>.body{display:none}
@@ -46,8 +47,18 @@
     .optset{display:flex;flex-wrap:wrap;gap:8px}
     .opt{background:var(--chip);border:1px solid var(--line);color:#EAF3EE;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer}
     .opt.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
+
     /* Minimal top badges */
     .top-badges .badge{padding:5px 9px}
+
+    /* LIST & ITEMS (Saved / History) */
+    .list{display:flex;flex-direction:column;gap:10px}
+    .story{
+      display:flex;justify-content:space-between;align-items:center;
+      border:1px solid var(--line);border-radius:14px;padding:12px 14px;
+      background:rgba(255,255,255,.04)
+    }
+    .meta{font-size:12px;color:var(--muted)}
   </style>
 </head>
 <body>
@@ -274,7 +285,7 @@ function renderBadges(){
   document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
   document.getElementById('styleHint').innerHTML = (prefs.stile==='wtf') ? T.hintWTF : T.hintWhatif;
 
-  // Substyle visibility
+  // Substyle visibility + selection
   const subCard = document.getElementById('substyleCard');
   subCard.style.display = (prefs.stile==='whatif') ? 'block' : 'none';
   document.querySelectorAll('#substyleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.substyle===prefs.substyle));
@@ -334,7 +345,7 @@ qEl.placeholder = (lang==='en' ? "What if I moved back to L’Aquila?" : "E se t
 qEl.autofocus = true;
 
 /* ===== Long-term memory helpers ===== */
-// ltm_profile: { jung:{EI:'E'|'I', SN:'S'|'N', TF:'T'|'F', JP:'J'|'P'}, mood, anchor, decide, zodiac, lastUpdated, usage:{topic:count} }
+// ltm_profile: { jung:{EI:'E'|'I', SN:'S'|'N', TF:'T'|'F', JP:'J'|'P', sex?:'m'|'f'|'nb'}, mood, anchor, decide, zodiac, lastUpdated, usage:{topic:count} }
 function getLTM(){ return readJSON('ltm_profile', { jung:{}, usage:{} }); }
 function setLTM(p){ writeJSON('ltm_profile', Object.assign({}, getLTM(), p, { lastUpdated: Date.now() })); }
 function bumpUsageFromQuestion(q){
@@ -348,7 +359,7 @@ function buildMemoryContext(domanda){
   const micro = readJSON('micro_profile', {});
   const hist = readJSON('cronologia', []).slice(-6).map(x=>x.domanda).filter(Boolean);
   const j = ltm.jung || {};
-  const jungStr = (j.EI||j.ei?`E/I:${j.EI||j.ei}`:'') + ' ' + (j.SN||j.sn?`S/N:${j.SN||j.sn}`:'') + ' ' + (j.TF||j.tf?`T/F:${j.TF||j.tf}`:'') + ' ' + (j.JP||j.jp?`J/P:${j.JP||j.jp}`:'');
+  const jungStr = (j.EI?`E/I:${j.EI}`:'') + ' ' + (j.SN?`S/N:${j.SN}`:'') + ' ' + (j.TF?`T/F:${j.TF}`:'') + ' ' + (j.JP?`J/P:${j.JP}`:'');
   const microStr = [
     micro.mood?`Mood:${micro.mood}`:'',
     micro.anchor?`Anchor:${micro.anchor}`:'',
@@ -356,11 +367,7 @@ function buildMemoryContext(domanda){
     micro.zodiac?`Zodiac:${micro.zodiac}`:''
   ].filter(Boolean).join(' · ');
   const recentQ = hist.length? `Recent Q: ${hist.join(" | ")}` : '';
-  return [
-    jungStr.trim()?`Jung:${jungStr.trim()}`:'',
-    microStr,
-    recentQ
-  ].filter(Boolean).join(' || ');
+  return [ jungStr.trim()?`Jung:${jungStr.trim()}`:'', microStr, recentQ ].filter(Boolean).join(' || ');
 }
 
 /* ===== submit ===== */
@@ -380,18 +387,25 @@ function trySubmit(){
   const memoryContext = buildMemoryContext(domanda);
 
   const micro = readJSON('micro_profile', {});
+  const ltm   = getLTM();
+  // deduci sesso: priorità micro.sex -> ltm.jung.sex -> ""
+  const sex = (micro.sex || (ltm.jung && ltm.jung.sex) || "").toString().toLowerCase(); // "m" | "f" | "nb" | ""
+
   writeJSON('whatif_prefs', prefs);
   LS.setItem('domanda',domanda);
+
   writeJSON('whatif_request',{
     domanda,
-    stile:prefs.stile,
+    stile: prefs.stile,
     substyle: prefs.stile==='whatif' ? (prefs.substyle||'analitico') : '',
     lang,
-    extra: memoryContext,            // <<< MEMORIA A LUNGO TERMINE PASSATA AL BACKEND
-    micro,
+    extra: memoryContext,     // LTM compatta
+    micro,                    // profilo giornaliero
+    sex,                      // <<<<< TOP-LEVEL sex per l’API
     fantasy_mode:false,
     periodo:prefs.periodo
   });
+
   location.href='fifth.html';
 }
 document.getElementById('goBtn').onclick=trySubmit;
@@ -473,7 +487,7 @@ function renderMicro(){
 function renderJungPair(containerId, key, labels){
   const wrap=document.getElementById(containerId);
   wrap.innerHTML='';
-  const cur = getLTM().jung || {};
+  const cur = (getLTM().jung || {});
   [
     { val: key==='EI'?'E': key==='SN'?'S': key==='TF'?'T':'J', label: labels[0] },
     { val: key==='EI'?'I': key==='SN'?'N': key==='TF'?'F':'P', label: labels[1] },
@@ -484,10 +498,6 @@ function renderJungPair(containerId, key, labels){
     const selected = (cur[key]===opt.val);
     if(selected) b.classList.add('sel');
     b.onclick=()=>{
-      wrap.parentElement.querySelectorAll('.optset .opt').forEach(x=>{
-        const group = x.closest('.optset');
-        if(group===wrap){ /* noop for single group */ }
-      });
       wrap.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));
       b.classList.add('sel');
       const ltm = getLTM();
@@ -561,7 +571,21 @@ function renderNext(){
     const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=(lang==='en'? 'Use' : 'Usa');
     useBtn.onclick=()=>{ qEl.value=item.q||""; window.scrollTo({top:0,behavior:'smooth'}); };
     const play=document.createElement('button'); play.className='btn'; play.textContent='▶';
-    play.onclick=()=>{ LS.setItem('domanda', item.q||""); writeJSON('whatif_request',{ domanda:item.q||"", stile:prefs.stile, substyle:prefs.substyle||'', lang, extra:buildMemoryContext(item.q||""), micro:readJSON('micro_profile',{}), fantasy_mode:false, periodo:prefs.periodo }); location.href='fifth.html'; };
+    play.onclick=()=>{
+      const question = item.q||"";
+      writeJSON('whatif_request',{
+        domanda: question,
+        stile: prefs.stile,
+        substyle: prefs.stile==='whatif' ? (prefs.substyle||'analitico') : '',
+        lang,
+        extra: buildMemoryContext(question),
+        micro: readJSON('micro_profile',{}),
+        sex: (readJSON('micro_profile',{}).sex || (getLTM().jung||{}).sex || ""),
+        fantasy_mode:false,
+        periodo: prefs.periodo
+      });
+      location.href='fifth.html';
+    };
     right.appendChild(useBtn); right.appendChild(play);
     row.appendChild(left); row.appendChild(right);
     box.appendChild(row);
@@ -576,7 +600,10 @@ function renderStories(){
     const left=document.createElement('div');
     left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.domanda||'—'}</div><div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
     const play=document.createElement('button'); play.className='btn'; play.textContent='▶';
-    play.onclick=()=>{ writeJSON('replay_story', { domanda:item.domanda, answer:item.risposta||item.answer||"", stile:item.stile||'whatif' }); location.href='fifth.html?view=replay'; };
+    play.onclick=()=>{
+      writeJSON('replay_story', { domanda:item.domanda, answer:item.risposta||item.answer||"", stile:item.stile||'whatif' });
+      location.href='fifth.html?view=replay';
+    };
     row.appendChild(left); row.appendChild(play); box.appendChild(row);
   });
 }
