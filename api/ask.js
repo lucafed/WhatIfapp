@@ -1,9 +1,9 @@
-// /api/ask.js — What?f Engine (CLEAN COPY MODE • FINAL ROTATION)
-// Niente "personalità". Solo: regole tecniche + ESEMPI da imitare.
+// /api/ask.js — What?f Engine (CLEAN COPY MODE • FINAL)
+// Nessuna personalità/character. Solo: regole tecniche + ESEMPI da imitare.
 // Stili: whatif (mode: analitico | reale) · wtf
-// IT/EN — paragrafo singolo, niente liste/domande/emoji, 2a persona obbligatoria
+// IT/EN — paragrafo singolo, niente liste/domande/emoji
 // Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
-// Log privacy-safe: no testo della domanda, solo metadati + hash.
+// Log privacy-safe (no testo domanda)
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -40,8 +40,6 @@ function cors(req, res) {
 /* ========= Helpers ========= */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 function tinyHash(s = ""){ let h = 2166136261 >>> 0; for (let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h,16777619);} return (h>>>0).toString(36); }
-function pickRot(arr, seedStr){ if(!arr?.length) return ""; let n=parseInt(tinyHash(seedStr),36); return arr[n % arr.length]; }
-
 function normLine(s=""){ return String(s).toLowerCase().replace(/[“”"']/g,"").replace(/\s+/g," ").replace(/[.,;:!?()\[\]\-—]+$/g,"").trim(); }
 function tightenSentences(text, maxSentences){
   const parts = String(text||"").replace(/\n+/g," ").split(/(?<=[.!?])\s+/).map(x=>x.trim()).filter(Boolean);
@@ -62,10 +60,18 @@ function stripQuestionEcho(domanda,text){
   if(lead.startsWith(d)){ const cut=t.indexOf("."); if(cut>-1) t=t.slice(cut+1).trim(); }
   t=t.replace(rx,""); return t;
 }
-function containsFirstPerson(text, lang="it"){
-  const it = /\b(io|mi|me|mio|mia|sono|noi|ci|nostro|nostri)\b/i;
-  const en = /\b(I|me|my|mine|we|us|our|ours|I'm|I’m)\b/;
-  return (isEn(lang) ? en : it).test(text);
+
+/* ========= Admin check ========= */
+async function isAdmin(req, requesterIp){
+  const token = String(req.headers["x-admin-token"] || "").trim();
+  if(!token) return false;
+  try{
+    const data = await redis.hgetall(`admin:token:${token}`); // { ip, ua }
+    if(!data) return false;
+    const LOCK_IP = String(process.env.ADMIN_LOCK_IP || "false").toLowerCase() === "true";
+    if(LOCK_IP){ if(!data.ip) return false; return data.ip===requesterIp; }
+    return true;
+  }catch{ return false; }
 }
 
 /* ========= Modalità temporale (istruzione neutra) ========= */
@@ -81,7 +87,7 @@ function temporalInstruction(periodo="future", lang="it"){
     : "Scrivi come un prossimo futuro che inizia ora.";
 }
 
-/* ========= ESEMPI (guida stilistica) ========= */
+/* ========= ESEMPI (unica guida stilistica) ========= */
 // WHAT IF — Analitico
 const EX_WHATIF_ANALITICO_IT = `Sai Luca, questa domanda girava nell’aria da un po’. Tornare a L’Aquila oggi vorrebbe dire rimetterti in una città che ha ricostruito più di muri: ha ricucito abitudini. L’economia si muove piano ma tiene, più artigiani che industrie, più reti locali che multinazionali. Gli stipendi sono più bassi, ma la vita costa meno e il tempo vale di più. Le scuole funzionano, la montagna torna complice nelle domeniche lente, e i bambini crescono con un orizzonte vero invece di uno schermo. Il Veneto ti mancherebbe per il ritmo e le occasioni, ma qui ritroveresti spazio, fiato e relazioni che non devono correre per esistere. In fondo non sarebbe un passo indietro — solo un modo diverso di avanzare, più lento, ma più tuo.`;
 const EX_WHATIF_ANALYTIC_EN = `You’ll feel like a guest, then your hands learn the new keys. You’ll walk not to think better but to tire the noise. By the third grocery you’ll know which aisle is yours. Evenings soften and ask less proof. You’ll miss some things, not all at once. The rest finds its place. And you notice that beneath the noise something of yours was already there.`;
@@ -89,140 +95,59 @@ const EX_WHATIF_ANALYTIC_EN = `You’ll feel like a guest, then your hands learn
 // WHAT IF — Reale/Poetico
 const EX_WHATIF_REALE_IT = `Bella questa, Luca — me l’aspettavo da te. Riapri le finestre e l’aria fredda ti saluta come una vecchia conoscenza. I vicoli ti riconoscono dal passo, le montagne ti guardano come un’amante che non ha mai smesso di aspettare. Il bar sotto casa serve ancora il caffè corto e ruvido, e le voci per strada sanno di pane e di inverno. I bambini giocano con l’eco, non con il rumore, e le serate finiscono con una risata che rimbalza nei portoni. Ogni giorno è più semplice del precedente, ogni sera più tua. Non stai tornando indietro: stai solo tornando dove il tempo ti riconosce per nome.`;
 
-// WTF — IT (3 esempi) + EN
+// WTF — IT (3 esempi forti + EN)
 const EX_WTF_BAR_IT = `Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora: “questo al confessionale lo tengono in riserva”. Ti versi un goccio di liquore per calmare i santi e giuri che domani apri un bar solo per matti. Alla chiusura, il bancone ti guarda e tu, esausto, sussurri: “oggi ho bestemmiato più del prete quando finisce il vino — ma almeno ho servito verità calde”.`;
 const EX_WTF_MOTO_IT = `Oh, eccoci, centauro dell’inferno! Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” talmente sonoro che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo, ma stavolta con affetto, tipo rito purificatore. Un vecchio ti dice “bella linea” e tu pensi che parlasse del nervo saltato. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio, con un sorrisetto da complice. Quando torni a casa senti ancora l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie bene calibrate.`;
 const EX_WTF_AMORE_IT = `Ah, Luisa… ci risiamo, eh? Ti butti nel cuore come in un pozzo vuoto, e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e tu senti salire la pressione sanguigna come se ti stesse caricando un peccato. Ti parte un “madonna della miseria impestata!” così sincero che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento di sistema, e tu bestemmi a mezza voce come se fosse una preghiera sbagliata. Poi sorridi, bevi un sorso di rosso e dici: “ogni mia storia finisce con una bestemmia e un brindisi — ma almeno bevo meglio di come amo.” La luna fuori ti guarda e, giuro, sembra che annuisca pure lei.`;
 const EX_WTF_EN = `Champ, you arrive like a limited series pilot and the buzzer rolls its eyes; the fridge hums “good luck” while the streetlights do wardrobe tests, you walk too far just to tire the nerves and a tiny beer forgives your accent, you let out a blasphemy that rattles the glasses and the mailbox pretends it didn’t hear, by grocery three you find your aisle and your pace, and the map stops asking for proof — you’re not conquering a city, you’re landing your life.`;
 
-/* ========= Rotazioni incipit/chiusa (10 varianti) ========= */
-const OPEN_WHATIF_ANALITICO = [
-  "Sai Luca, questa domanda girava nell’aria da un po’.",
-  "Luca, questa la covavi da tempo, ammettilo.",
-  "È una domanda che ti cammina accanto da settimane.",
-  "Te la porti dietro da un po’, senza dirla ad alta voce.",
-  "Ti torna su ogni sera, come un promemoria testardo.",
-  "Sotto sotto lo sai: era questione di tempo.",
-  "Non è un colpo di testa: è un pensiero che ha messo radici.",
-  "A forza di tacerla, questa domanda è diventata chiara.",
-  "Non arriva all’improvviso: è una decisione che matura.",
-  "Hai fatto i conti: ora ti serve un quadro pulito."
-];
-const CLOSE_WHATIF_ANALITICO = [
-  "Non è un passo indietro: è un passo al tuo ritmo.",
-  "Avanzare non è solo correre: è scegliere la propria andatura.",
-  "Il risultato? Meno rumore, più sostanza.",
-  "Ti sposti di poco sulla mappa, ma parecchio nel respiro.",
-  "Non cambi il mondo: cambi come ci stai dentro.",
-  "Più semplice non vuol dire meno: vuol dire meglio per te.",
-  "Il conto finale torna: tempo tuo, non preso a prestito.",
-  "La direzione non è nuova: è tua da prima.",
-  "Riduci il superfluo, tieni l’essenziale: ti conviene.",
-  "Alla fine scopri che avanzare è riconoscersi."
-];
-
-const OPEN_WHATIF_POETICO = [
-  "Bella questa, Luca — me l’aspettavo da te.",
-  "Ti fermi un attimo e il silenzio ti guarda come un amico.",
-  "Spalanchi le finestre e l’aria ti riconosce per nome.",
-  "Sorridi piano: la città ti ricorda senza chiederti nulla.",
-  "Sfiori le chiavi, e la casa ti risponde sottovoce.",
-  "Appoggi lo zaino e la stanza prende il tuo respiro.",
-  "Giri l’angolo, e il vicolo ti saluta come uno di casa.",
-  "Il mattino ti fa cenno: è già pronto per te.",
-  "Una risata bassa rompe la polvere e fa spazio.",
-  "Ti siedi, e il tavolo antico ti tiene compagnia."
-];
-const CLOSE_WHATIF_POETICO = [
-  "Non torni indietro: torni dove il tempo ti riconosce.",
-  "È lo stesso posto di sempre, ma ora ti assomiglia.",
-  "La sera scende piano, e finalmente ti somma.",
-  "Qui il giorno ti ascolta, e tu gli rispondi.",
-  "Non è nostalgia: è un presente che ti sta bene addosso.",
-  "Resti un attimo fermo, poi ti accorgi che sei a casa.",
-  "Ogni notte finisce con il tuo nome detto giusto.",
-  "Il mondo non cambia: cambi tu, e basta.",
-  "Anche il buio qui ti parla senza alzare la voce.",
-  "È una strada breve per arrivare lontano."
-];
-
-const OPEN_WTF = [
-  "Ah ma guarda te, …",
-  "Oh, eccoci, …",
-  "Ah, Luca… ci risiamo, eh?",
-  "Ma che spettacolo, …",
-  "Oh bellezza, …",
-  "Ah, campione, …",
-  "Guarda chi arriva, …",
-  "Oh sì, proprio tu, …",
-  "Ah, fenomeno, …",
-  "Ma senti questa, …"
-];
-const CLOSE_WTF = [
-  "E ridi pure: certe giornate vogliono essere prese di petto.",
-  "Alla fine lo sai: vivi meglio se la prendi di traverso.",
-  "Si chiude così: con un respiro e due passi avanti.",
-  "E domani, giuro, ci ricadi — ma con stile.",
-  "Te la cavi, come sempre, con un brindisi e un sorriso.",
-  "Finisce che ci stai dentro, però a modo tuo.",
-  "E per una volta, è la vita a pagare il conto.",
-  "Ridi forte: il mondo oggi ti sta al gioco.",
-  "Tanto lo sai: ci fai pace a modo tuo.",
-  "Si va, va bene così: esci intero e un po’ più leggero."
-];
-
-/* Sinonimi/varianti per la “bestemmia” (una sola per testo, mai insulti reali) */
-const OATH_VARIANTS_IT = [
-  "bestemmiotta", "bestemmione", "bestemmiuccia",
-  "imprecazione piena", "sbotto sacrale", "sacramentata",
-  "urlo di santi", "scarica di santi", "strappo al cielo",
-  "anatema di pancia"
-];
-const OATH_VARIANTS_EN = [
-  "tiny blasphemy", "big blasphemy", "half-blasphemy",
-  "sacral outburst", "saints volley", "sky-tear oath",
-  "guttural curse", "belly-oath", "sacred flare",
-  "comic anathema"
-];
-
-/* ========= Regole tecniche sintetiche ========= */
+/* ========= Regole tecniche (nessuna “personalità”) ========= */
 const TECH_RULES_BASE = (lang) => isEn(lang)
   ? `RULES:
-- Single paragraph. WHATIF: 120–155 words. WTF: 135–170 words.
-- No lists. No questions. No emojis. Do NOT restate the user question.
-- Second person only. Do NOT use first-person pronouns.`
+- Single paragraph, no bullets, no emojis, do NOT restate the question.
+- TENSE: near-future unfolding starting now.
+- PERSON: Use only second person ("you"). Never first person narrator.
+- NAMES: Do not invent names. If the question contains a name, use exactly that string; otherwise avoid names.
+- LENGTH TARGETS: WHATIF ≈ 135–155 words. WTF ≈ 145–165 words. Keep it tight and vivid.`
   : `REGOLE:
-- Un solo paragrafo. WHATIF: 120–155 parole. WTF: 135–170 parole.
-- Niente elenchi. Niente domande. Niente emoji. NON ripetere la domanda.
-- Solo seconda persona. Vietata la prima persona.`;
+- Un solo paragrafo, niente elenchi, niente emoji, NON ripetere la domanda.
+- TEMPO: prossimo futuro che inizia ora.
+- PERSONA: Usa solo la seconda persona ("tu"). Mai la prima persona narrante.
+- NOMI: Non inventare nomi. Se la domanda contiene un nome, usa esattamente quello; altrimenti evita qualsiasi nome.
+- LUNGHEZZA: WHATIF ≈ 135–155 parole. WTF ≈ 145–165 parole. Sintesi, immagini precise.`;
 
-/* ========= Regole extra — What the F (sequenza obbligatoria) ========= */
-const WTF_SEQUENCE = (lang, seed) => {
-  const oath = isEn(lang) ? pickRot(OATH_VARIANTS_EN, seed) : pickRot(OATH_VARIANTS_IT, seed);
-  const open = pickRot(OPEN_WTF, seed);
-  const close = pickRot(CLOSE_WTF, seed + "|close");
-  return isEn(lang)
-    ? `WTF SHAPE (copy examples, new wording):
-OPEN with this vibe (adapt it to context): "${open}"
-Then: gentle roast of the user (2–3 lines) → a small incident that escalates → EXACTLY ONE narrated oath using this variant: "${oath}" (no real slurs, just this word).
-Immediately AFTER the oath, add 2–3 ultra-visual funny object reactions (lamp flickers, glasses clap, mailbox pretends, etc.).
-THEN a booze beat (sip/shot/beer), not before.
-THEN answer the question with 2–3 concrete future/counterfactual lines (what likely happens).
-CLOSE with a warm witty line echoing: "${close}"
-Keep second person ONLY.`
-    : `FORMA WTF (copia gli esempi, parole nuove):
-APERTURA con questa energia (adattala al contesto): "${open}"
-Poi: presa in giro affettuosa (2–3 righe) → evento che degenera → UNA SOLA imprecazione narrata usando questa variante: "${oath}" (niente insulti reali, usa proprio questa parola).
-SUBITO DOPO l’imprecazione, 2–3 reazioni esilaranti e visive degli oggetti (lampada sfarfalla, bicchieri applaudono, campanello finge, ecc.).
-POI accenno di sbronza (sorso/shot/birra), non prima.
-POI rispondi davvero alla domanda con 2–3 righe concrete sul futuro/controfattuale (cosa succede).
-CHIUDI con una riga calda e arguta sul tono: "${close}"
-Solo seconda persona.`;
-};
+/* ========= Regole aggiuntive SOLO per WTF ========= */
+const WTF_STRICT = (lang) => isEn(lang)
+  ? `WTF MUST COPY THE EXAMPLES' SHAPE:
+1) WIND-UP (2–3 playful roasting lines).
+2) MINI-ESCALATION: exactly 3 tiny mishaps in a row.
+3) VISCERAL OUTBURST: one invented blasphemy-synonym (no real slur), narrated (e.g., "you let out a sacramentata that shakes the cups").
+   Allowed: sacramentata, imprecazionona, bestemmione, bestemmietta, para-blasphemy, metaphorical blasphemy, holy patience exploded!, madonna of misery!, barrage of anathemas!
+4) DISPROPORTIONATE REACTIONS (2–3 theatrical object/people reactions).
+5) ALCOHOL BEAT (a real drink; "elegant bender" allowed if fits).
+6) COUNTERFACTUAL/FORECAST (answer the question with a concrete near-future outcome).
+7) CALLBACK (witty closure recalling the opening detail).
+SECOND PERSON ONLY.`
+  : `WTF DEVE COPIARE LA FORMA DEGLI ESEMPI:
+1) PRESA IN GIRO (2–3 frasi).
+2) MINI-ESCALATION: 3 micro-imprevisti in fila.
+3) SFOGO VISCERALE: UNA sola imprecazione narrata (mai letterale).
+   Lessico consentito: sacramentata, imprecazionona, bestemmione, bestemmietta, para-bestemmia, bestemmia metaforica, "madonna della miseria!", "santa pazienza esplosa!", "anatema a raffica!".
+4) REAZIONI SPROPORZIONATE (2–3).
+5) ALCOL (anche “sbronza elegante” se serve).
+6) RISPOSTA/PROFEZIA concreta a breve termine.
+7) CALLBACK finale.
+SOLO SECONDA PERSONA.`;
+
+/* ========= Lessico sfogo (rinforzo) ========= */
+const LEX_SFOGO_IT = `Sinonimi ammessi per lo sfogo (usane UNO a testo, mai più di uno): sacramentata, imprecazionona, bestemmione, bestemmietta, para-bestemmia, bestemmia metaforica, madonna della miseria!, santa pazienza esplosa!, anatema a raffica!`;
+
+/* ========= WHAT IF — istruzioni di stile ========= */
+const WHATIF_ANALITICO_STYLE_IT = `Tono concreto e sobrio: cornice economica/sociale, vincoli e scambi reali. Evita slogan. Usa "tu". Incipit nello stile "Sai, questa domanda girava nell’aria da un po’." Varianti equivalenti ammesse. Chiudi con una riga che sintetizza lo scambio vero. 135–155 parole.`;
+const WHATIF_REALE_STYLE_IT = `Tono sensoriale/poetico asciutto. Usa "tu". Incipit nello stile "Bella questa — me l’aspettavo da te." (evita nomi se non presenti nella domanda). Chiudi riconoscendo tempo e luogo come alleati. 135–155 parole.`;
 
 /* ========= Prompt builder ========= */
 function buildMessages({ domanda, lang, periodo, stile, mode }){
-  const seed = `${domanda}|${stile}|${mode}|${lang}|${periodo}`;
   const msgs = [
     { role: "system", content: TECH_RULES_BASE(lang) },
     { role: "system", content: temporalInstruction(periodo, lang) },
@@ -230,37 +155,32 @@ function buildMessages({ domanda, lang, periodo, stile, mode }){
 
   if (stile === "wtf") {
     msgs.push(
-      { role: "system", content: WTF_SEQUENCE(lang, seed) },
+      { role: "system", content: WTF_STRICT(lang) },
+      { role: "system", content: LEX_SFOGO_IT },
       { role: "system", content: `ESEMPIO · WTF (IT) · Bar\n${EX_WTF_BAR_IT}` },
       { role: "system", content: `ESEMPIO · WTF (IT) · Moto\n${EX_WTF_MOTO_IT}` },
       { role: "system", content: `ESEMPIO · WTF (IT) · Amore\n${EX_WTF_AMORE_IT}` },
       { role: "system", content: `EXAMPLE · WTF (EN)\n${EX_WTF_EN}` },
     );
   } else {
-    // WHAT IF: incipit/chiusa rotanti ma struttura identica agli esempi
     if (mode === "analitico") {
-      const open = pickRot(OPEN_WHATIF_ANALITICO, seed);
-      const close = pickRot(CLOSE_WHATIF_ANALITICO, seed + "|close");
       msgs.push(
-        { role: "system", content: `Usa questo INCIPIT (adattalo lievemente ma mantieni il passo): "${open}"` },
-        { role: "system", content: `Chiudi con una riga sintetica coerente tipo: "${close}"` },
+        { role: "system", content: WHATIF_ANALITICO_STYLE_IT },
         { role: "system", content: `ESEMPIO · WHAT IF (IT) · Analitico\n${EX_WHATIF_ANALITICO_IT}` },
         { role: "system", content: `EXAMPLE · WHAT IF (EN) · Analytic\n${EX_WHATIF_ANALYTIC_EN}` },
       );
     } else {
-      const open = pickRot(OPEN_WHATIF_POETICO, seed);
-      const close = pickRot(CLOSE_WHATIF_POETICO, seed + "|close");
       msgs.push(
-        { role: "system", content: `Apri nello stile poetico con: "${open}" (adattato al contesto).` },
-        { role: "system", content: `Chiudi con una riga breve su questo tono: "${close}"` },
+        { role: "system", content: WHATIF_REALE_STYLE_IT },
         { role: "system", content: `ESEMPIO · WHAT IF (IT) · Reale\n${EX_WHATIF_REALE_IT}` },
       );
     }
   }
 
   const USER = isEn(lang)
-    ? `User question (do NOT restate it): "${domanda}". Output ONE single-paragraph answer in ${lang.toUpperCase()}.`
+    ? `User question (do NOT restate it): "${domanda}". Produce ONE single-paragraph answer in ${lang.toUpperCase()}.`
     : `Domanda (NON ripeterla): "${domanda}". Genera UNA risposta in ${lang.toUpperCase()} a paragrafo unico.`;
+
   msgs.push({ role: "user", content: USER });
   return msgs;
 }
@@ -302,20 +222,21 @@ export default async function handler(req, res){
       mode  = "reale",    // per whatif: "analitico" | "reale"
       lang  = "it",
       periodo = "future",
+      micro = {}
     } = body;
 
     if(!domanda || typeof domanda !== "string")
       return res.status(400).json({ error:"bad_request", detail:"domanda_required" });
 
-    const seedStr = `${domanda}|${stile}|${mode}|${lang}|${periodo}`;
+    const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${mode}|${lang}|${periodo}`), 36) % 1000000;
+
     const messages = buildMessages({ domanda, lang, periodo, stile, mode });
 
-    // Prima generazione
     const completion = await client.chat.completions.create({
       model: MODEL,
       temperature: stile === "wtf" ? 0.98 : 0.82,
       top_p: 0.92,
-      max_tokens: 450,
+      max_tokens: 420,
       frequency_penalty: 0.1,
       presence_penalty: 0.0,
       messages,
@@ -327,25 +248,24 @@ export default async function handler(req, res){
     // Post-process tecnico
     answer = stripQuestionEcho(domanda, answer);
     answer = stile === "wtf" ? tightenSentences(answer, 8) : tightenSentences(answer, 11);
-    answer = clampWords(answer, stile === "wtf" ? 170 : 155);
+    answer = clampWords(answer, stile === "wtf" ? 168 : 160);
     answer = normalizeOneParagraph(answer);
     if(!/[.!?…]$/.test(answer)) answer += ".";
 
-    // Se rilevo prima persona, seconda chiamata per riscrivere in 2a persona
-    if (containsFirstPerson(answer, lang)) {
-      const fix = await client.chat.completions.create({
-        model: MODEL,
-        temperature: 0.2,
-        max_tokens: 480,
-        messages: [
-          { role: "system", content: "Rewrite in strict second person only, keep structure, order and length ~identical, same language, single paragraph, no lists/questions/emojis." },
-          { role: "user", content: answer }
-        ]
-      });
-      const alt = fix?.choices?.[0]?.message?.content?.trim();
-      if (alt) answer = normalizeOneParagraph(alt);
-      if(!/[.!?…]$/.test(answer)) answer += ".";
+    // Guard-rail lingua: niente prima persona in entrambi gli stili
+    if (/\b(io|sono|mi|noi|me|ho|abbiamo)\b/gi.test(answer)) {
+      // non riscriviamo, ma il vincolo è impostato lato prompt; qui lasciamo pass-through per non degradare stile
     }
+
+    // Guard-rail nomi: non introdurre nomi non presenti nella domanda
+    (function(){
+      const d = String(domanda||"");
+      const nameRx = /\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
+      const inQuestion = new Set((d.match(nameRx)||[]));
+      answer = answer.replace(nameRx, (m)=>{
+        return inQuestion.has(m) ? m : (["Ah","Oh","Ehi","Ehm","Sai","Bella"].includes(m) ? m : m.toLowerCase());
+      });
+    })();
 
     // Log privacy-safe
     try{
@@ -361,6 +281,7 @@ export default async function handler(req, res){
         answer_chars: (answer||"").length,
         admin: !!admin,
         user_type: bypass ? "admin" : (isPro ? "pro" : "free"),
+        seed: seedNum,
       };
       await redis.lpush("logs:ask", JSON.stringify(entry));
       await redis.ltrim("logs:ask", 0, 9999);
