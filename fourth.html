@@ -6,103 +6,62 @@
 <title>What?f — Domanda</title>
 <meta name="theme-color" content="#0A0F14"/>
 <style>
-/* ====== PALETTE WHAT?F (tuoi colori) ====== */
+/* ===== PALETTE UFFICIALE ===== */
 :root{
-  --bg:#0A0F14;           /* background (dark) */
-  --surface:#141C22;      /* surface cards */
-  --fg:#FFFFFF;           /* text primary */
-  --muted:#A0B2BA;        /* text secondary */
-  --acc:#00E0FF;          /* primary/accent */
-  --acc2:#00B5CC;         /* primary variant */
-  --hi:#1AFFD5;           /* highlight */
-  --line:rgba(255,255,255,.10);
+  --bg:#0A0F14;      /* background scuro */
+  --surface:#141C22; /* card/surface */
+  --fg:#FFFFFF;      /* testo principale */
+  --muted:#A0B2BA;   /* testo secondario */
+  --acc:#00E0FF;     /* primario */
+  --acc2:#00B5CC;    /* primario var */
+  --hi:#1AFFD5;      /* highlight */
+  --line:rgba(255,255,255,.12);
   --chip:#0F1720;
   --ink:#0A0F14;
-  --shadow:rgba(0,0,0,.42);
-  --success:#14d1a7;
-}
-html[data-theme="wtf"]{
-  /* per WTF sfumo leggermente verso l’highlight senza cambiare brand */
-  --acc:#1AFFD5;
-  --acc2:#00E0FF;
+  --shadow:rgba(0,0,0,.45);
 }
 *{box-sizing:border-box}
 html,body{
-  margin:0;
-  min-height:100%;
-  background:
-    radial-gradient(900px 700px at 25% 20%, #0D131A 0%, var(--bg) 60%);
+  margin:0;min-height:100%;
+  background:radial-gradient(900px 700px at 25% 20%, #0E1319 0%, var(--bg) 60%);
   color:var(--fg);
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
   -webkit-font-smoothing:antialiased;
 }
 main{max-width:980px;margin:auto;padding:18px}
 
-/* ====== Basics ====== */
+/* UI */
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.btn{
-  appearance:none;border:1px solid var(--line);background:var(--chip);
-  color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer
-}
-.btn.primary{
-  background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)
-}
+.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
 .btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--line)}
-.badge{
-  background:var(--chip);border:1px solid var(--line);border-radius:999px;
-  padding:6px 10px;font-size:12px;color:#EAF3EE;user-select:none;white-space:nowrap
-}
-.card{
-  background:var(--surface);backdrop-filter:blur(10px);
-  border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0
-}
-h1{
-  font-size:clamp(22px,4.8vw,30px);margin:12px 0;color:var(--acc);
-  text-align:center;letter-spacing:.2px
-}
-.label{color:var(--acc2);font-weight:800;margin:0 0 8px}
+.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#EAF3EE;user-select:none;white-space:nowrap}
+.card{background:var(--surface);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+.card.compact{padding:12px;border-radius:14px}
+h1{font-size:clamp(22px,4.8vw,30px);margin:12px 0;color:var(--acc);text-align:center;letter-spacing:.2px}
 .center{max-width:720px;margin:0 auto}
-.input,textarea{
-  width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;
-  border:1px solid var(--line);border-radius:14px;padding:16px;font-size:20px
-}
-textarea::placeholder{color:#90b7c3;opacity:.95;text-align:center}
+.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:14px;padding:16px;font-size:20px}
+textarea::placeholder{color:#9DCFE0;opacity:.95;text-align:center}
+.label{height:0;overflow:hidden;margin:0} /* niente testi sopra la textarea */
 
-/* ====== Chips ====== */
+/* Chips */
 .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-.chip{
-  background:var(--chip);border:1px solid var(--line);color:#eaf3ee;
-  border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap
-}
-.chip.sel{
-  background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800
-}
+.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
+.chip.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
 
-/* ====== Collapsible ====== */
+/* Collapsibles */
 .toggle{cursor:pointer;user-select:none}
 .collapsed>.body{display:none}
 .small{font-size:12px;color:var(--muted)}
 .list{display:flex;flex-direction:column;gap:10px}
-.story{
-  display:flex;justify-content:space-between;align-items:center;
-  border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)
-}
-.play{
-  border:none;background:var(--chip);border:1px solid var(--line);
-  width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px
-}
+.story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
+.play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
 
-/* ====== Micro overlay (solo 1ª volta del giorno) ====== */
-.overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.56);
-  display:none;align-items:center;justify-content:center;padding:18px;z-index:50
-}
+/* Overlay micro (una volta al giorno) */
+.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
 .overlay.show{display:flex}
-.modal{
-  width:min(860px,94vw);background:var(--surface);border:1px solid var(--line);
-  border-radius:18px;box-shadow:0 18px 36px var(--shadow);padding:18px
-}
+.overlay::before{content:"";position:absolute;inset:0;background:rgba(0,0,0,.56);backdrop-filter:blur(2px)}
+.modal{position:relative;width:min(860px,94vw);background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 36px var(--shadow);padding:18px;z-index:1}
 .modal h2{margin:0 0 6px;font-size:18px;color:var(--hi);text-align:center}
 .qblock{border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0;background:rgba(255,255,255,.04)}
 .qtitle{display:flex;align-items:center;gap:8px;font-weight:800;color:#E7F2EE;margin-bottom:8px}
@@ -110,10 +69,8 @@ textarea::placeholder{color:#90b7c3;opacity:.95;text-align:center}
 .opt{background:var(--chip);border:1px solid var(--line);color:#EAF3EE;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer}
 .opt.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
 
-/* ====== Compact cards below ====== */
-.card.compact{padding:12px;border-radius:14px}
-.card.compact .label{font-weight:700;color:#a6eaff}
-.card .hint{display:none} /* richiesto: niente testi di spiegazione */
+/* Nessun cambio palette in tema WTF (resta brand) */
+html[data-theme="wtf"] :root{}
 </style>
 </head>
 <body>
@@ -132,16 +89,15 @@ textarea::placeholder{color:#90b7c3;opacity:.95;text-align:center}
     </div>
   </div>
 
-  <!-- Titolo minimal -->
-  <h1 id="titleH1">What?f</h1>
+  <h1>What?f</h1>
 
-  <!-- Style + Period (compatti e senza testi extra) -->
+  <!-- Style + Period -->
   <div class="card center compact" id="styleCard">
     <div class="chips" id="styleChips">
       <button class="chip" data-style="whatif" id="chipWhatIf">What if</button>
       <button class="chip" data-style="wtf" id="chipWTF">What the F</button>
     </div>
-    <div id="whatifSubMode" class="chips" style="margin-top:10px">
+    <div id="whatifSubMode" class="chips" style="margin-top:8px">
       <button class="chip" data-mode="analitico" id="chipAnalitico">Analitico</button>
       <button class="chip" data-mode="reale" id="chipReale">Poetico</button>
     </div>
@@ -151,9 +107,9 @@ textarea::placeholder{color:#90b7c3;opacity:.95;text-align:center}
     </div>
   </div>
 
-  <!-- Domanda (CENTRO) -->
+  <!-- Domanda -->
   <div class="card center" id="qCard" style="padding:18px">
-    <div class="label" id="qLabel"> </div>
+    <div class="label" aria-hidden="true"></div>
     <textarea id="qInput" rows="3" class="input" placeholder="E se…?" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
     <div class="row" style="margin-top:12px;justify-content:center;gap:10px">
       <button class="btn primary" id="goBtn" title="Ctrl/⌘+Invio">✨</button>
@@ -161,20 +117,20 @@ textarea::placeholder{color:#90b7c3;opacity:.95;text-align:center}
     </div>
   </div>
 
-  <!-- Spunti rapidi (collassabile, molto compatto) -->
+  <!-- Spunti -->
   <div class="card center compact collapsed" id="hintsCard">
     <div class="row toggle" id="hintsHeader" style="justify-content:space-between">
-      <div class="label" id="hintsTitle">▶ Spunti rapidi</div>
+      <div class="small" id="hintsTitle">▶ Spunti</div>
     </div>
-    <div class="body" id="hintsBody" style="margin-top:8px">
+    <div class="body" id="hintsBody" style="margin-top:6px">
       <div class="chips" id="hintsChips"></div>
     </div>
   </div>
 
-  <!-- Salvate (collassabile) -->
+  <!-- Salvate -->
   <div class="card center compact collapsed" id="savedCard">
     <div class="row toggle" id="savedHeader" style="justify-content:space-between">
-      <div class="label" id="nextLabel">▶ Salvate</div>
+      <div class="small" id="nextLabel">▶ Salvate</div>
       <button class="btn ghost" id="clearSavedBtn">🗑️</button>
     </div>
     <div class="body" id="savedBody">
@@ -182,10 +138,10 @@ textarea::placeholder{color:#90b7c3;opacity:.95;text-align:center}
     </div>
   </div>
 
-  <!-- Cronologia (collassabile) -->
+  <!-- Cronologia -->
   <div class="card center compact collapsed" id="histCard">
     <div class="row toggle" id="histHeader" style="justify-content:space-between">
-      <div class="label" id="storiesLabel">▶ Cronologia</div>
+      <div class="small" id="storiesLabel">▶ Cronologia</div>
       <button class="btn ghost" id="clearHistoryBtn">🗑️</button>
     </div>
     <div class="body">
@@ -194,9 +150,9 @@ textarea::placeholder{color:#90b7c3;opacity:.95;text-align:center}
   </div>
 </main>
 
-<!-- ===== Micro overlay ===== -->
-<div class="overlay" id="microOverlay">
-  <div class="modal">
+<!-- Overlay Micro (prima volta del giorno) -->
+<div class="overlay" id="microOverlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true">
     <h2 id="microTitle">Micro-domande di oggi</h2>
     <div id="qMood" class="qblock">
       <div class="qtitle"><span id="moodIcon">🙂</span><span id="moodTitle">Oggi come ti senti?</span></div>
@@ -218,7 +174,7 @@ textarea::placeholder{color:#90b7c3;opacity:.95;text-align:center}
 </div>
 
 <script>
-/* ===== State & Lang ===== */
+/* ===== Lang & storage ===== */
 const LS = localStorage;
 const lang = (LS.getItem('lang')||'it').toLowerCase();
 document.documentElement.lang = lang;
@@ -230,12 +186,14 @@ function todayISO(){ return new Date().toISOString().slice(0,10); }
 /* ===== Prefs ===== */
 let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false,mode:'analitico'});
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+const qEl = document.getElementById('qInput');
+qEl.placeholder = (lang==='en' ? "What if…?" : "E se…?");
+qEl.autofocus = true;
 
-/* ===== Minimal badges ===== */
+/* ===== Badges & chips ===== */
 function renderBadges(){
   document.getElementById('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past' ? (lang==='en'?'Past':'Passato') : (lang==='en'?'Future':'Futuro'));
   document.getElementById('styleBadge').textContent = "🎭 " + (prefs.stile==='wtf' ? 'What the F' : 'What if');
-  // chips
   document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
   document.getElementById('whatifSubMode').style.display = (prefs.stile==='whatif') ? 'flex' : 'none';
   document.getElementById('chipAnalitico').classList.toggle('sel', prefs.mode==='analitico');
@@ -245,7 +203,7 @@ function renderBadges(){
 }
 renderBadges();
 
-/* ===== Credits minimal (solo badge numerico) ===== */
+/* ===== Credits badge ===== */
 function userIsAdmin(){ return !!LS.getItem('admin_token'); }
 function capForUser(){ return userIsAdmin() ? Infinity : (prefs.pro ? 10 : 3); }
 function ensureCredits(){
@@ -255,80 +213,57 @@ function ensureCredits(){
 }
 function leftCredits(){
   const c=readJSON('whatif_credits',{date:todayISO(),used:0});
-  const cap=capForUser();
-  return cap===Infinity ? "∞" : Math.max(0, cap-(c.used||0));
+  const cap=capForUser(); return cap===Infinity ? "∞" : Math.max(0, cap-(c.used||0));
 }
 function renderCreditsBadge(){
   const fb=document.getElementById('freeBadge');
   const cap=capForUser(); const left=leftCredits();
-  fb.textContent = (cap===Infinity) ? (lang==='en'?'Credits: ∞':'Crediti: ∞')
-    : (lang==='en'?`Credits: ${left}/${cap}`:`Crediti: ${left}/${cap}`);
+  fb.textContent = (cap===Infinity) ? (lang==='en'?'Credits: ∞':'Crediti: ∞') : (lang==='en'?`Credits: ${left}/${cap}`:`Crediti: ${left}/${cap}`);
 }
 ensureCredits(); renderCreditsBadge();
 
-/* ===== Nav & toggles ===== */
+/* ===== Nav + switches ===== */
 document.getElementById('backBtn').onclick=()=>history.back();
 document.getElementById('homeBtn').onclick=()=>location.href='index.html';
 document.getElementById('langBtn').onclick=()=>{ LS.setItem('lang', lang==='it'?'en':'it'); location.reload(); };
 document.getElementById('periodoBadge').onclick=()=>{ prefs.periodo = (prefs.periodo==='past'?'future':'past'); writeJSON('whatif_prefs',prefs); renderBadges(); };
-
 document.getElementById('styleChips').addEventListener('click',(e)=>{
   const b=e.target.closest('.chip'); if(!b) return;
-  prefs.stile=b.dataset.style;
-  if(prefs.stile==='whatif' && !prefs.mode) prefs.mode='analitico';
-  writeJSON('whatif_prefs',prefs);
-  document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-  renderBadges();
+  prefs.stile=b.dataset.style; if(prefs.stile==='whatif' && !prefs.mode) prefs.mode='analitico';
+  writeJSON('whatif_prefs',prefs); document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif'); renderBadges();
 });
 document.getElementById('whatifSubMode').addEventListener('click',(e)=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  prefs.mode=b.dataset.mode; writeJSON('whatif_prefs',prefs); renderBadges();
+  const b=e.target.closest('.chip'); if(!b) return; prefs.mode=b.dataset.mode; writeJSON('whatif_prefs',prefs); renderBadges();
 });
 document.getElementById('periodChips').addEventListener('click',(e)=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  prefs.periodo=b.dataset.period; writeJSON('whatif_prefs',prefs); renderBadges();
+  const b=e.target.closest('.chip'); if(!b) return; prefs.periodo=b.dataset.period; writeJSON('whatif_prefs',prefs); renderBadges();
 });
 
-/* ===== Question center ===== */
-const qEl=document.getElementById('qInput');
-qEl.placeholder = (lang==='en' ? "What if…?" : "E se…?");
-qEl.autofocus=true;
-
+/* ===== Submit ===== */
 function trySubmit(){
-  const domanda=(qEl.value||"").trim();
-  if(!domanda){ qEl.focus(); return; }
+  const domanda=(qEl.value||"").trim(); if(!domanda){ qEl.focus(); return; }
   const c=readJSON('whatif_credits',{date:todayISO(),used:0});
   if(!userIsAdmin()){
-    const cap=capForUser();
-    if((c.used||0)>=cap){ alert(lang==='en'?'You’ve used today’s credits.':'Hai finito i crediti di oggi.'); return; }
+    const cap=capForUser(); if((c.used||0)>=cap){ alert(lang==='en'?'You’ve used today’s credits.':'Hai finito i crediti di oggi.'); return; }
     c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderCreditsBadge();
   }
   const micro = readJSON('micro_profile', {});
-  writeJSON('whatif_prefs', prefs);
-  LS.setItem('domanda',domanda);
-  const req = { domanda, stile:prefs.stile, mode:(prefs.stile==='whatif'?(prefs.mode||'analitico'):undefined), lang, extra:"", micro, fantasy_mode:false, periodo:prefs.periodo };
-  writeJSON('whatif_request', req);
+  writeJSON('whatif_prefs', prefs); LS.setItem('domanda',domanda);
+  writeJSON('whatif_request',{ domanda, stile:prefs.stile, mode:(prefs.stile==='whatif'?(prefs.mode||'analitico'):undefined), lang, extra:"", micro, fantasy_mode:false, periodo:prefs.periodo });
   location.href='fifth.html';
 }
 document.getElementById('goBtn').onclick=trySubmit;
 document.getElementById('clearBtn').onclick=()=>{ qEl.value=""; qEl.focus(); };
 qEl.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
-/* ===== Hints (compatti) ===== */
-const hintsCard=document.getElementById('hintsCard');
-const hintsHeader=document.getElementById('hintsHeader');
-const hintsChips=document.getElementById('hintsChips');
-hintsHeader.onclick=()=>{ hintsCard.classList.toggle('collapsed'); };
-const HINT_IT=[ "E se cambiassi lavoro?","E se cambiassi città?","E se tornassi a studiare?","E se aprissi qualcosa di tuo?","E se chiedessi un aumento?","E se viaggiassi da solo/a?" ];
+/* ===== Hints ===== */
+const HINT_IT=[ "E se cambiassi lavoro?","E se cambiassi città?","E se tornassi a studiare?","E se aprissi qualcosa di tuo?","E se chiedessi un aumento?","E se partissi da solo/a?" ];
 const HINT_EN=[ "What if I changed jobs?","What if I moved city?","What if I went back to study?","What if I started my own thing?","What if I asked for a raise?","What if I traveled solo?" ];
-(HINT_EN && HINT_IT); // keep both
-(HINT_IT && (lang==='en'?HINT_EN:HINT_IT)).slice(0,4).forEach(h=>{
-  const b=document.createElement('button'); b.className='chip'; b.textContent=h;
-  b.onclick=()=>{ qEl.value=h; window.scrollTo({top:0,behavior:'smooth'}); };
-  hintsChips.appendChild(b);
-});
+const hintsCard=document.getElementById('hintsCard'); const hintsHeader=document.getElementById('hintsHeader'); const hintsChips=document.getElementById('hintsChips');
+hintsHeader.onclick=()=>{ hintsCard.classList.toggle('collapsed'); };
+((lang==='en'?HINT_EN:HINT_IT)).slice(0,4).forEach(h=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=h; b.onclick=()=>{ qEl.value=h; window.scrollTo({top:0,behavior:'smooth'}); }; hintsChips.appendChild(b); });
 
-/* ===== Saved & History (collassabili e funzionanti) ===== */
+/* ===== Saved & History ===== */
 function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
 document.getElementById('savedHeader').onclick=()=>{ document.getElementById('savedCard').classList.toggle('collapsed'); };
 document.getElementById('histHeader').onclick =()=>{ document.getElementById('histCard').classList.toggle('collapsed'); };
@@ -366,21 +301,16 @@ function renderStories(){
   });
 }
 renderNext(); renderStories();
-
 document.getElementById('clearSavedBtn').onclick=()=>{ LS.removeItem('next_prompts'); renderNext(); };
 document.getElementById('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
 
-/* ===== Micro overlay: solo la prima volta del giorno ===== */
+/* ===== Micro overlay (prima volta al giorno, non blocca) ===== */
 const microOverlay = document.getElementById('microOverlay');
 const microSeen = readJSON('micro_seen',{date:""});
-if(microSeen.date !== todayISO()){
-  // mostra banner/overlay
-  microOverlay.classList.add('show');
-} else {
-  microOverlay.classList.remove('show');
-}
+const showMicro = microSeen.date !== todayISO();
+if(showMicro){ microOverlay.classList.add('show'); }
+window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ microOverlay.classList.remove('show'); writeJSON('micro_seen',{date:todayISO()}); }});
 
-/* micro pools + rendering compatti */
 function rng(seed){ let s=[...seed].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
 function pickN(pool,n,random){ const seen=new Set(), out=[]; while(out.length<n && seen.size<pool.length){ const i=Math.floor(random()*pool.length); if(seen.has(i)) continue; seen.add(i); out.push(pool[i]); } return out; }
 function renderOptions(containerId, options, key){
@@ -397,7 +327,7 @@ function renderOptions(containerId, options, key){
     wrap.appendChild(b);
   });
 }
-function renderMicroOverlay(){
+(function renderMicro(){
   const r=rng(todayISO()+"-micro");
   const moodPool=(lang==='en'
     ? ["Calm airplane mode","Charged socket","Foggy but fine","Restless astronaut","Light & chatty","Solid & quiet","A bit chaotic, funny"]
@@ -414,18 +344,9 @@ function renderMicroOverlay(){
   renderOptions('moodOpts',   pickN(moodPool,   5, r), 'mood');
   renderOptions('anchorOpts', pickN(anchorPool, 5, r), 'anchor');
   renderOptions('decideOpts', pickN(decidePool, 5, r), 'decide');
-}
-renderMicroOverlay();
-
-document.getElementById('saveMicroBtn').onclick=()=>{
-  writeJSON('micro_seen',{date:todayISO()}); // non ripresentare oggi
-  const cur=readJSON('micro_profile',{}); writeJSON('micro_profile',cur);
-  microOverlay.classList.remove('show');
-};
-document.getElementById('microDismissBtn').onclick=()=>{
-  writeJSON('micro_seen',{date:todayISO()}); // anche chiudendo non torna fino a domani
-  microOverlay.classList.remove('show');
-};
+})();
+document.getElementById('saveMicroBtn').onclick=()=>{ writeJSON('micro_seen',{date:todayISO()}); const cur=readJSON('micro_profile',{}); writeJSON('micro_profile',cur); microOverlay.classList.remove('show'); };
+document.getElementById('microDismissBtn').onclick=()=>{ writeJSON('micro_seen',{date:todayISO()}); microOverlay.classList.remove('show'); };
 </script>
 </body>
 </html>
