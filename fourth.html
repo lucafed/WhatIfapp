@@ -27,10 +27,14 @@ main{max-width:980px;margin:auto;padding:18px}
 .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800;border:none;box-shadow:0 6px 18px var(--shadow)}
 .btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--line)}
 .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#eaf3ee;user-select:none;white-space:nowrap}
-.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:0;margin:14px 0;overflow:hidden}
+.card .head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.card .head .label{margin:0;color:var(--acc);font-weight:800}
+.card .body{padding:16px}
+.card.collapsed .body{display:none}
 h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:center}
 .label{color:var(--acc);font-weight:800;margin:0 0 8px}
-.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
+.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:18px}
 .center{max-width:760px;margin:0 auto}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
@@ -43,9 +47,7 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
 .opt{background:var(--chip);border:1px solid var(--line);color:#EAF3EE;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer}
 .opt.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:800}
 
-/* Toggles & lists */
-.toggle{cursor:pointer;user-select:none}
-.collapsed>.body{display:none}
+/* Misc */
 .list{display:flex;flex-direction:column;gap:10px}
 .story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
 .play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
@@ -53,7 +55,12 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
 .small{font-size:12px;color:var(--muted)}
 .hint{font-size:13px;color:#cfe7ff;margin-top:10px}
 .hint b{color:var(--acc2)}
-.hidden{display:none !important}
+.hidden{display:none!important}
+
+/* Domanda centrata */
+#qSection .body{display:flex;flex-direction:column;align-items:center}
+#qLabel{text-align:center;width:100%}
+#qInput{text-align:center;min-height:96px}
 
 /* Sub-mode box */
 .submode{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
@@ -78,45 +85,60 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
 
   <h1 id="titleH1">Imposta la tua domanda</h1>
 
-  <!-- Style -->
-  <div class="card center">
-    <div class="row" style="justify-content:space-between;align-items:center">
-      <div class="chips" id="styleChips">
-        <button class="chip" data-style="whatif" id="chipWhatIf">What if (realistico)</button>
-        <button class="chip" data-style="wtf" id="chipWTF">What the F (demenziale)</button>
-      </div>
-      <div class="row">
-        <span class="badge" id="proBadge">—</span>
-      </div>
+  <!-- Style (collassabile) -->
+  <div class="card center" id="styleCard">
+    <div class="head" id="styleHead">
+      <div class="label">Stile</div>
+      <div class="small">clicca per apri/chiudi</div>
     </div>
-    <div id="styleHint" class="hint"></div>
+    <div class="body">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div class="chips" id="styleChips">
+          <button class="chip" data-style="whatif" id="chipWhatIf">What if (realistico)</button>
+          <button class="chip" data-style="wtf" id="chipWTF">What the F (demenziale)</button>
+        </div>
+        <div class="row">
+          <span class="badge" id="proBadge">—</span>
+        </div>
+      </div>
+      <div id="styleHint" class="hint"></div>
 
-    <!-- SUB-MODE: visibile solo se stile = whatif -->
-    <div id="whatifSubMode" class="submode">
-      <button class="chip" data-mode="analitico" id="chipAnalitico">What if — Analitico</button>
-      <button class="chip" data-mode="reale" id="chipReale">What if — Reale/Poetico</button>
+      <!-- SUB-MODE: visibile solo se stile = whatif -->
+      <div id="whatifSubMode" class="submode">
+        <button class="chip" data-mode="analitico" id="chipAnalitico">What if — Analitico</button>
+        <button class="chip" data-mode="reale" id="chipReale">What if — Reale/Poetico</button>
+      </div>
+      <div id="subModeNote" class="subnote"></div>
     </div>
-    <div id="subModeNote" class="subnote"></div>
   </div>
 
-  <!-- Question -->
-  <div class="card center">
-    <h3 class="label" id="qLabel">La tua domanda</h3>
-    <textarea id="qInput" rows="3" class="input" placeholder="E se tornassi a vivere all’Aquila?" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
-    <div class="row" style="margin-top:12px;justify-content:space-between">
-      <button class="btn primary" id="goBtn" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
-      <button class="btn ghost" id="clearBtn">Svuota</button>
+  <!-- Question (collassabile) -->
+  <div class="card center" id="qSection">
+    <div class="head" id="qHead">
+      <div class="label" id="qHeadLabel">La tua domanda</div>
+      <div class="small">clicca per apri/chiudi</div>
     </div>
-    <div class="small" id="tipNote" style="margin-top:8px">Tip: puoi cambiare stile e periodo sopra; colori e tono si adattano.</div>
+    <div class="body">
+      <h3 class="label" id="qLabel">La tua domanda</h3>
+      <textarea id="qInput" rows="3" class="input" placeholder="E se…"
+        autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
+      <div class="row" style="margin-top:12px;justify-content:space-between;max-width:520px;width:100%">
+        <button class="btn primary" id="goBtn" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
+        <button class="btn ghost" id="clearBtn">Svuota</button>
+      </div>
+      <div class="small" id="tipNote" style="margin-top:8px">
+        Tip: puoi cambiare stile e periodo sopra; colori e tono si adattano.
+      </div>
+    </div>
   </div>
 
-  <!-- Micro-domande (MULTIPLE CHOICE) -->
+  <!-- Micro-domande (collassabile) -->
   <div class="card center" id="microCard">
-    <div class="row toggle" id="microHead" style="justify-content:space-between">
+    <div class="head" id="microHead">
       <div class="label" id="microTitle">▼ Micro-domande di oggi</div>
       <div class="small" id="microHint">(una volta al giorno)</div>
     </div>
-    <div class="body" id="microBody" style="margin-top:10px">
+    <div class="body" id="microBody">
       <div id="qMood" class="qblock">
         <div class="qtitle"><span id="moodIcon">🙂</span><span id="moodTitle">Oggi come ti senti?</span></div>
         <div class="optset" id="moodOpts"></div>
@@ -150,20 +172,21 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
     </div>
   </div>
 
-  <!-- Spunti rapidi -->
+  <!-- Spunti rapidi (collassabile) -->
   <div class="card center collapsed" id="hintsCard">
-    <div class="row toggle" id="hintsHeader" style="justify-content:space-between">
+    <div class="head" id="hintsHeader">
       <div class="label" id="hintsTitle">▶ Spunti rapidi “E se…”</div>
+      <div class="small">clicca per apri/chiudi</div>
     </div>
-    <div class="body" id="hintsBody" style="margin-top:8px">
+    <div class="body" id="hintsBody">
       <div class="chips" id="hintsChips"></div>
       <div class="small" id="hintsNote" style="margin-top:8px"></div>
     </div>
   </div>
 
-  <!-- Salvati -->
+  <!-- Salvati (collassabile) -->
   <div class="card center collapsed" id="savedCard">
-    <div class="row toggle" id="savedHeader" style="justify-content:space-between">
+    <div class="head" id="savedHeader">
       <div class="label" id="nextLabel">▶ Domande salvate</div>
       <button class="btn ghost" id="clearSavedBtn">🗑️ Svuota</button>
     </div>
@@ -172,9 +195,9 @@ h1{font-size:clamp(22px,5vw,30px);margin:12px 0;color:var(--acc2);text-align:cen
     </div>
   </div>
 
-  <!-- Cronologia -->
+  <!-- Cronologia (collassabile) -->
   <div class="card center collapsed" id="histCard">
-    <div class="row toggle" id="histHeader" style="justify-content:space-between">
+    <div class="head" id="histHeader">
       <div class="label" id="storiesLabel">▶ Cronologia</div>
       <button class="btn ghost" id="clearHistoryBtn">🗑️ Svuota</button>
     </div>
@@ -251,7 +274,6 @@ document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'w
 
 /* ===== UI text ===== */
 document.getElementById('titleH1').textContent=T.title;
-document.getElementById('qLabel').textContent=T.yourq;
 document.getElementById('goBtn').textContent=T.gen;
 document.getElementById('clearBtn').textContent=T.clear;
 document.getElementById('tipNote').textContent=T.tip;
@@ -266,6 +288,8 @@ document.getElementById('anchorTitle').textContent  = T.qAnchor;
 document.getElementById('decideTitle').textContent  = T.qDecide;
 document.getElementById('jungTitle').textContent    = T.qJung;
 document.getElementById('zodiacTitle').textContent  = T.qZodiac;
+document.getElementById('qHeadLabel').textContent   = T.yourq;
+document.getElementById('qLabel').textContent       = T.yourq;
 
 /* ===== style & period badges ===== */
 function renderBadges(){
@@ -322,7 +346,6 @@ document.getElementById('periodoBadge').onclick=()=>{ prefs.periodo = (prefs.per
 document.getElementById('styleChips').addEventListener('click',(e)=>{
   const b=e.target.closest('.chip'); if(!b) return;
   prefs.stile=b.dataset.style;
-  // default sub-mode if switching back to whatif
   if(prefs.stile==='whatif' && !prefs.mode) prefs.mode='reale';
   writeJSON('whatif_prefs',prefs);
   document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
@@ -338,7 +361,7 @@ document.getElementById('whatifSubMode').addEventListener('click',(e)=>{
 
 /* ===== Question ===== */
 const qEl = document.getElementById('qInput');
-qEl.placeholder = (lang==='en' ? "What if I moved back to L’Aquila?" : "E se tornassi a vivere all’Aquila?");
+qEl.placeholder = (lang==='en' ? "What if…" : "E se…");
 qEl.autofocus = true;
 
 function trySubmit(){
@@ -347,7 +370,7 @@ function trySubmit(){
   const c=readJSON('whatif_credits',{date:todayStr(),used:0});
   if(!userIsAdmin()){
     const cap=capForUser();
-    if((c.used||0)>=cap){ alert(T.outOfCredits); return; }
+    if((c.used||0)>=cap){ alert((lang==='en'? I18N.en.outOfCredits : I18N.it.outOfCredits)); return; }
     c.used=(c.used||0)+1;
     writeJSON('whatif_credits',c);
     renderCreditsBadge();
@@ -355,15 +378,23 @@ function trySubmit(){
   const micro = readJSON('micro_profile', {});
   writeJSON('whatif_prefs', prefs);
   LS.setItem('domanda',domanda);
-  // salva anche mode per la quinta
   const req = { domanda, stile: prefs.stile, mode: (prefs.stile==='whatif' ? (prefs.mode||'reale') : undefined), lang, extra:"", micro, fantasy_mode:false, periodo:prefs.periodo };
   writeJSON('whatif_request', req);
   location.href='fifth.html';
 }
-
 document.getElementById('goBtn').onclick=trySubmit;
 document.getElementById('clearBtn').onclick=()=>{ qEl.value=""; qEl.focus(); };
 qEl.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
+
+/* ===== Collassabili: toggles per tutte le card ===== */
+function toggleCard(cardId, headId, defaultCollapsed=false){
+  const card=document.getElementById(cardId);
+  const head=document.getElementById(headId);
+  if(defaultCollapsed) card.classList.add('collapsed'); else card.classList.remove('collapsed');
+  head.onclick=()=>{ card.classList.toggle('collapsed'); };
+}
+toggleCard('styleCard','styleHead',false);
+toggleCard('qSection','qHead',false);
 
 /* ===== Micro-questions ===== */
 const microCard=document.getElementById('microCard');
@@ -389,11 +420,6 @@ function renderOptions(containerId, options, key){
   });
 }
 function renderMicro(){
-  if(microSaved.date===todayIso()){
-    microCard.classList.add('collapsed');
-    document.getElementById('microSavedMsg').textContent=(lang==='en'? I18N.en.microSaved : I18N.it.microSaved);
-    return;
-  }
   const rand = rngForDay(todayIso());
   const moodPool = (lang==='en'
     ? ["Calm like airplane mode","Charged like a socket","Foggy but fine","Restless astronaut","Light and chatty","Solid and quiet","Bit chaotic, funny"]
@@ -422,9 +448,8 @@ function renderMicro(){
   renderOptions('moodOpts',   pickDaily(moodPool,   5, rand), 'mood');
   renderOptions('anchorOpts', pickDaily(anchorPool, 5, rand), 'anchor');
   renderOptions('decideOpts', pickDaily(decidePool, 5, rand), 'decide');
-  renderOptions('zodiacOpts', pickDaily(zodiacPool, 4, rand), 'zodiac');
+  renderOptions('zodiacOpts', pickDaily(zodiacPool, 4, rand));
 
-  // Jung groups — single choice each, keys: jung_attitude / jung_rational / jung_perception
   (function renderJung(){
     const wrapA = document.getElementById('jungAttitude');
     const wrapR = document.getElementById('jungRational');
@@ -451,9 +476,8 @@ function renderMicro(){
 }
 renderMicro();
 
-document.getElementById('microHead').onclick=()=>{ if(microSaved.date===todayIso()) return; microCard.classList.toggle('collapsed'); };
+document.getElementById('microHead').onclick=()=>{ microCard.classList.toggle('collapsed'); };
 document.getElementById('saveMicroBtn').onclick=()=>{
-  if(microSaved.date===todayIso()){ document.getElementById('microSavedMsg').textContent=(lang==='en'? I18N.en.microOnce : I18N.it.microOnce); return; }
   const cur = readJSON('micro_profile',{});
   writeJSON('micro_profile', cur);
   writeJSON('micro_saved', {date:todayIso(),ok:true});
