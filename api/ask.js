@@ -1,7 +1,6 @@
-// /api/ask.js — What?f Engine (FINAL BALANCED EDITION • FIXED WTF SEQUENCE)
-// Basato sul tuo script funzionante; aggiunti solo i vincoli di stile richiesti.
+// /api/ask.js — What?f Engine (FINAL BALANCED • WTF = “bestemmia narrata” power-up)
 // Stili: whatif (analitico | reale) · wtf
-// Un paragrafo, seconda persona, niente elenchi, niente nomi inventati.
+// Regole: 1 paragrafo, seconda persona, niente elenchi, niente emoji, no eco della domanda, nessun nome inventato.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -9,17 +8,14 @@ import { Ratelimit } from "@upstash/ratelimit";
 
 /* ========= OpenAI ========= */
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+const MODEL  = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
 /* ========= Redis & Rate ========= */
 const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
+  url:   process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
-const rl = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(10, "1 m"),
-});
+const rl = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "1 m") });
 
 /* ========= CORS ========= */
 const ALLOWED_ORIGINS = [
@@ -27,19 +23,19 @@ const ALLOWED_ORIGINS = [
   "http://localhost:3000",
   "http://127.0.0.1:5500",
 ];
-function cors(req, res) {
+function cors(req, res){
   const origin = String(req.headers.origin || "");
   if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
-  res.setHeader("Vary", "Origin");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token, x-pro");
+  res.setHeader("Vary","Origin");
+  res.setHeader("Access-Control-Allow-Methods","POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers","Content-Type, Authorization, x-admin-token, x-pro");
 }
 
 /* ========= Helpers ========= */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
 function normLine(s=""){ return String(s).toLowerCase().replace(/[“”"']/g,"").replace(/\s+/g," ").replace(/[.,;:!?()\[\]\-—]+$/g,"").trim(); }
 function tightenSentences(text, maxSentences){
-  const parts = String(text||"").replace(/\n+/g," ").split(/(?<=[.!?])\s+/).map(x=>x.trim()).filter(Boolean);
+  const parts=String(text||"").replace(/\n+/g," ").split(/(?<=[.!?])\s+/).map(x=>x.trim()).filter(Boolean);
   const out=[], seen=new Set();
   for(const p of parts){ const n=normLine(p); if(!n||seen.has(n)) continue; if(p.split(/\s+/).length<=3 && !/[.!?]$/.test(p)) continue; out.push(p); seen.add(n); if(out.length>=maxSentences) break; }
   let t=out.join(" "); if(!/[.!?…]$/.test(t)) t+="."; return t;
@@ -51,16 +47,19 @@ function clampWords(text,maxWords){
 }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim(); }
 function stripQuestionEcho(domanda,text){
-  const d=String(domanda||"").replace(/[“”"']/g,"").trim().toLowerCase(); let t=String(text||"");
+  const d=String(domanda||"").replace(/[“”"']/g,"").trim().toLowerCase();
+  let t=String(text||"");
   const lead=t.slice(0,Math.min(t.length,d.length+12)).toLowerCase().replace(/[“”"']/g,"").trim();
   const rx=/^(?:e\s*se|what\s*if|domanda:|q:)[^.!?…]*[.!?…]\s+/i;
   if(lead.startsWith(d)){ const cut=t.indexOf("."); if(cut>-1) t=t.slice(cut+1).trim(); }
-  t=t.replace(rx,""); return t;
+  t=t.replace(rx,"");
+  return t;
 }
+function tinyHash(s=""){ let h=2166136261>>>0; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619);} return (h>>>0).toString(36); }
 
 /* ========= Modalità temporale ========= */
 function temporalInstruction(periodo="future", lang="it"){
-  const en = isEn(lang);
+  const en=isEn(lang);
   if(String(periodo).toLowerCase()==="past"){
     return en
       ? "Write as if it already happened (past/conditional allowed)."
@@ -71,64 +70,73 @@ function temporalInstruction(periodo="future", lang="it"){
     : "Scrivi come un prossimo futuro che inizia ora.";
 }
 
-/* ========= WHAT IF — esempi e stile (INCIPIT FISSI) ========= */
-const EX_WHATIF_ANALITICO_IT = `Sai, questa domanda girava nell’aria da un po’. Tornare a L’Aquila oggi vorrebbe dire rimetterti in una città che ha ricostruito più di muri: ha ricucito abitudini. L’economia si muove piano ma tiene, più artigiani che industrie, più reti locali che multinazionali. Gli stipendi sono più bassi, ma la vita costa meno e il tempo vale di più. Le scuole funzionano, la montagna torna complice nelle domeniche lente, e i bambini crescono con un orizzonte vero invece di uno schermo. Il Veneto ti mancherebbe per il ritmo e le occasioni, ma qui ritroveresti spazio, fiato e relazioni che non devono correre per esistere. In fondo non sarebbe un passo indietro — solo un modo diverso di avanzare, più lento, ma più tuo.`;
-const EX_WHATIF_REALE_IT = `Bella questa — me l’aspettavo da te. Riapri le finestre e l’aria fredda ti saluta come una vecchia conoscenza. I vicoli ti riconoscono dal passo, le montagne ti guardano come un’amante che non ha mai smesso di aspettare. Il bar sotto casa serve ancora il caffè corto e ruvido, e le voci per strada sanno di pane e di inverno. I bambini giocano con l’eco, non con il rumore, e le serate finiscono con una risata che rimbalza nei portoni. Ogni giorno è più semplice del precedente, ogni sera più tua. Non stai tornando indietro: stai solo tornando dove il tempo ti riconosce per nome.`;
-
-// Istruzioni WHAT IF (niente personalità, solo forma + incipit)
+/* ========= WHAT IF — stile generico (niente incipit fissi) ========= */
 const WHATIF_ANALITICO_STYLE_IT = `WHAT IF Analitico:
-- Inizia nello stile di “Sai, questa domanda girava nell’aria da un po’.” (o variante coerente).
+- Apertura sobria e generica (nessuna frase fissa). 
 - Tono concreto: scambi reali, costi/benefici, routine, qualità della vita.
-- Chiudi con una sintesi calma nello stile dell’esempio.
-- 135–155 parole. Seconda persona soltanto.`;
+- Micro-dettagli quotidiani, niente eroismi.
+- Chiudi con una riga riflessiva breve e pacata.
+- 135–155 parole. Solo seconda persona.`;
+
 const WHATIF_REALE_STYLE_IT = `WHAT IF Reale/Poetico:
-- Inizia nello stile di “Bella questa — me l’aspettavo da te.” (o variante coerente).
-- Tono sensoriale asciutto, immagini quotidiane.
-- Chiudi riconoscendo luogo e tempo come alleati.
-- 135–155 parole. Seconda persona soltanto.`;
+- Apertura sensoriale generica (nessuna frase fissa).
+- Immagini quotidiane asciutte (chiavi, aria, passi, luce), ritmo calmo.
+- Riconciliazione con luogo/tempo verso la chiusa.
+- 135–155 parole. Solo seconda persona.`;
 
-/* ========= WTF — vincoli SEQUENZA + banche lessicali ========= */
-const WTF_SFOGO_BANK = [
-  "bestemmione corazzato",
-  "imprecazionona a detonazione",
-  "sacramentata a ciel sereno",
-  "urlo liturgico strozzato",
-  "para-bestemmia esplosiva",
-  "madonna della miseria urlata",
-  "anatema a grandinata",
-  "embolata sacrilega",
-  "santa pazienza implosa",
-  "vulcano d’anatemi",
-  "tromba d’aria di improperi",
-  "scoppio teologico a catena"
+/* ========= WTF — “bestemmia narrata” + reazioni comiche ========= */
+/* Sfoghi: nessun riferimento religioso; usa la parola “bestemmia” come etichetta narrativa, comica, iperbolica */
+const SFOGO_RIDICOLO_BANK = [
+  "una bestemmia narrata che sembra sparata da un compressore emozionale in fiamme",
+  "una bestemmia narrata talmente pressurizzata che piega una cannuccia metallica al passaggio",
+  "una bestemmia narrata formato jet che lascia scie luminose di frustrazione nell’aria",
+  "una bestemmia narrata così potente da far rimbalzare una briciola di pane in slow-motion",
+  "una bestemmia narrata a onde concentriche che riarreda i pensieri come un terremoto gentile",
+  "una bestemmia narrata a grandinata fonetica che stira le rughe al silenzio",
+  "una bestemmia narrata supersonica che fa cadere un magnete dal frigo per lo spavento",
+  "una bestemmia narrata in Dolby Surround che convince il vento a girare al contrario",
+  "una bestemmia narrata elastica che si allunga, schiocca e torna indietro più educata",
+  "una bestemmia narrata pirotecnica, tutta scintille e consonanti esplose",
+  "una bestemmia narrata a vapore che fischia come una moka in crisi identitaria",
+  "una bestemmia narrata a rullo compressore che appiattisce un dubbio di tre dimensioni",
+  "una bestemmia narrata centrifuga che fa il ciclo rapido all’ansia",
+  "una bestemmia narrata a effetto domino che fa cadere due pensieri e alzare il terzo",
+  "una bestemmia narrata che pare un drago allergico alla pazienza",
 ];
 
-const WTF_REACTIONS_BANK = [
-  "la lampada sfarfalla in Morse come se capisse tutto",
-  "il campanile tossisce un amen stonato",
-  "i bicchieri applaudono in cristallo e chiedono il bis",
-  "la tapparella si abbassa per imbarazzo e poi risale curiosa",
-  "Alexa finge un aggiornamento e scappa in ‘non disturbare’",
-  "il POS recita un rosario di errori e si benedice da solo",
-  "la moka fischia una standing ovation",
-  "il ventilatore gira al contrario per reverenza",
-  "la statua all’angolo si copre gli occhi e sbircia tra le dita",
-  "il citofono fa uno squillo di solidarietà e poi si pente",
-  "il frigorifero si spegne per compassione",
-  "la porta automatica si apre da sola e poi si vergogna"
+/* Reazioni comiche: oggetti che reagiscono, senza esagerare con la scena 'teatrino', ma visive e secche */
+const REACTIONS_BANK = [
+  "la moka applaude a vapore e poi finge di non essere stata lei",
+  "il frigo fa luce una volta sola come per dire basta così",
+  "il ventilatore gira due colpi al contrario e si arrende",
+  "la sedia scricchiola in autodifesa e poi si quieta",
+  "Alexa va in silenzioso per rispetto e poi sospira da umana",
+  "la porta si apre da sola di un dito, poi ci ripensa",
+  "il bicchiere suda condensa come dopo una corsa",
+  "la pianta finta vibra come se avesse fatto troppo yoga",
+  "il citofono fa un beep di solidarietà e si vergogna",
+  "la ciabatta multipresa lampeggia come una seduta spiritica",
+  "lo specchio restituisce un pollice-verso minimalista",
+  "il POS tossisce una ricevuta bianca e chiede scusa",
+  "la tapparella scatta un dente e torna al suo posto",
+  "la lampada sfarfalla in Morse: «ok, ricevuto»",
+  "la lavatrice aggiunge due giri brevi per scaramanzia",
 ];
 
-// Istruzione WTF: **forma rigida**, sfogo descritto (mai letterale), reazioni
-const WTF_STRICT_IT = `WHAT THE F (demenziale, ma rispondi davvero):
-Sequenza OBBLIGATORIA in un solo paragrafo (145–165 parole):
-1) Presa in giro affettuosa del protagonista (2 frasi).
-2) Micro-imprevisti realistici legati al contesto (senza elencarli come lista).
-3) “Ti trattieni… provi… riprovi…” e poi esplode UNO sfogo viscerale (scegline UNO soltanto) dai seguenti: ${WTF_SFOGO_BANK.join(", ")}. Non riportare parole offensive: descrivi l’evento senza citarne il testo (es.: “ti scappa una bestemmia che fa tremare i bicchieri”).
-4) Subito dopo inserisci 2–3 reazioni comiche coerenti al contesto, scelte da: ${WTF_REACTIONS_BANK.join(" · ")}.
-5) Accenno d’alcol (sorso/doppio amaro/sbronza elegante).
-6) Rispondi davvero con una previsione/controfattuale concreta (1–2 frasi).
-7) Chiudi con una riga ironica (“morale”) che richiama l’apertura.
-Vincoli: seconda persona soltanto; niente nomi inventati; non ripetere la domanda.`;
+/* Istruzione WTF: sequenza snella con “bestemmia narrata” */
+const WTF_STRICT_IT = `WHAT THE F (sarcastico, demenziale, affettuoso):
+Struttura OBBLIGATORIA in un paragrafo (145–165 parole):
+1) Apertura con UN nomignolo secco (nessun verbo attaccato), poi due prese in giro affettuose.
+2) Tensione che sale (2–3 micro inciampi realistici, secchi).
+3) Esplode UNA “bestemmia narrata” (usa proprio la parola “bestemmia”) scegliendo uno stile iperbolico dal pool fornito. Niente riferimenti religiosi.
+4) SUBITO DOPO inserisci 2–3 reazioni comiche di oggetti (dal pool fornito).
+5) Accenno d’alcol (sorso, amaro, gin microscopico).
+6) Rispondi davvero alla domanda con una previsione/controfattuale concreta (1–2 frasi).
+7) Chiudi con una riga ironica che richiama l’apertura.
+Vincoli: solo seconda persona; niente elenchi; niente emoji; non ripetere la domanda; nessun nome inventato.
+Banche disponibili (varia liberamente senza citarle esplicitamente nel testo):
+- Bestemmia narrata: ${SFOGO_RIDICOLO_BANK.join(" · ")}.
+- Reazioni: ${REACTIONS_BANK.join(" · ")}.`;
 
 /* ========= Prompt builder ========= */
 function buildMessages({ domanda, lang, periodo, stile, mode }){
@@ -142,28 +150,31 @@ function buildMessages({ domanda, lang, periodo, stile, mode }){
   if (stile === "wtf") {
     msgs.push(
       { role: "system", content: WTF_STRICT_IT },
-      // >>> NUOVO ESEMPIO WTF (senza "4 colpi bassi", bestemmia descritta, oggetti che reagiscono)
       { role: "system", content:
-`ESEMPIO · WTF (forma guida, tono e sequenza)
-Oh ma certo, campione del “stavolta la vita me la piego come una crêpe”. Parti tutto gonfio di buone intenzioni, respiri profondo come se stessi per risolvere l’universo, poi inciampi nell’aria, sbatti contro un destino che scricchiola e fai finta di niente come un attore che entra in scena col microfono spento. Ci provi, riprovi, fai quello zen col sorriso da monaco in affitto… poi ti sale dal diaframma un fulmine nero e ti scappa una bestemmia talmente potente che pure i santi chiedono la domenica libera. La moka si mette a fischiare come allo stadio, la lampada lampeggia in codice panico, la tapparella si chiude da sola tipo “non ho visto niente”. Ti versi un amaro corto per rimettere l’universo in orizzontale e, mentre torni a respirare, capisci che sì: fai caos, sbagli, esplodi, ma così ti stai costruendo davvero. Morale: sei disordinato, rumoroso, eppure guarda come continui ad avanzare.` }
+`ESEMPIO WTF (forma & tono, IT):
+Campione, ti presenti come se avessi un tutorial in tasca e invece hai il Wi-Fi dell’autostima a una tacca; fai il serio, ma i passi inciampano sul primo pensiero storto e la tasca decide che oggi le chiavi suoneranno jazz. Resisti, conti fino a cinque, ci provi a passare elegante… poi ti parte **una bestemmia narrata che sembra sparata da un compressore emozionale in fiamme**, rimbalza sui muri, piega una cannuccia metallica e rimette in riga l’aria. La moka applaude a vapore, il frigo fa una sola luce come a dire basta così, il ventilatore gira due colpi al contrario e molla. Butti giù un dito d’amaro da manutenzione e, nel silenzio appena lucido, ammetti che sì: se lo fai davvero, domani scricchiola uguale ma con più mestiere. Morale: sei un casino adorabile, però funzionante.` }
     );
   } else {
     if (mode === "analitico") {
       msgs.push(
         { role: "system", content: WHATIF_ANALITICO_STYLE_IT },
-        { role: "system", content: `ESEMPIO · WHAT IF (Analitico)\n${EX_WHATIF_ANALITICO_IT}` },
+        { role: "system", content:
+`ESEMPIO WHAT IF (Analitico, IT):
+La questione è concreta e non chiede eroi: chiede passi corti. Ti accorgi che il ritmo cambia il rumore nella testa: spese, tempi, persone; il bilancio non è solo soldi ma aria e sonno. Scambi veri, margini stretti, ma routine che torna mansueta quando smetti di inseguirla. Ti muovi tra alternative che non brillano, però reggono: meno vetrina, più sostanza. A fine giornata la somma non fa spettacolo, fa solidità. E ti somiglia.` }
       );
     } else {
       msgs.push(
         { role: "system", content: WHATIF_REALE_STYLE_IT },
-        { role: "system", content: `ESEMPIO · WHAT IF (Reale/Poetico)\n${EX_WHATIF_REALE_IT}` },
+        { role: "system", content:
+`ESEMPIO WHAT IF (Reale/Poetico, IT):
+Apri la finestra e l’aria ti mette in ordine i bordi. Cammini finché i passi imparano il marciapiede. Le mani ritrovano le chiavi senza cercarle e la luce di un lampione ti tiene il posto. Le cose non diventano facili: diventano tue, lentamente. E quel poco che basta, basta.` }
       );
     }
   }
 
   msgs.push({
     role: "user",
-    content: `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ${lang.toUpperCase()} a paragrafo unico.`
+    content: `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ${String(lang||"it").toUpperCase()} a paragrafo unico.`
   });
   return msgs;
 }
@@ -215,27 +226,20 @@ export default async function handler(req, res){
     answer = normalizeOneParagraph(answer);
     if(!/[.!?…]$/.test(answer)) answer += ".";
 
-    // Guard-rail lingua: niente prima persona
+    // Guard-rail lingua: rimuovi prima persona esplicita
     answer = answer.replace(/\b(io|sono|mi|noi|me|ho|abbiamo)\b/gi, "");
 
-    // Guard-rail nomi: non introdurre nomi non presenti nella domanda
+    // Guard-rail nomi: non introdurre nomi assenti nella domanda
     (function(){
       const d = String(domanda||"");
       const nameRx = /\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
       const inQuestion = new Set((d.match(nameRx)||[]));
       answer = answer.replace(nameRx, (m)=>{
-        return inQuestion.has(m) ? m : (["Ah","Oh","Ehi","Bella","Sai"].includes(m) ? m : m.toLowerCase());
+        return inQuestion.has(m) ? m : (["Ah","Oh","Ehi","Bella","Sai","Campione","Campionessa","Leggenda"].includes(m) ? m : m.toLowerCase());
       });
     })();
 
-    return res.status(200).json({
-      answer,
-      style: stile,
-      mode,
-      lang,
-      periodo,
-      model: MODEL
-    });
+    return res.status(200).json({ answer, style: stile, mode, lang, periodo, model: MODEL });
   }catch(err){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
