@@ -42,12 +42,31 @@ h1{
   box-shadow: 0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
 }
 .label{color:var(--acc);font-weight:800;margin-bottom:8px}
-.input{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px}
-.story{white-space:normal;line-height:1.68;font-size:18px;letter-spacing:.1px;text-wrap:pretty}
+.input{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;
+  padding:10px;
+}
+.story{
+  white-space:normal;
+  line-height:1.68;
+  font-size:18px;
+  letter-spacing:.1px;
+  text-wrap:pretty;
+}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
-.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 28px var(--glow);}
-.btn.ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff}
+.btn.primary{
+  background:linear-gradient(180deg,var(--acc),var(--acc2));
+  color:var(--ink);
+  box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 28px var(--glow);
+}
+.btn.ghost{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  color:#fff
+}
 .small{font-size:12px;color:var(--muted)}
 .hr{height:1px;background:rgba(255,255,255,.10);margin:12px 0}
 .badge{
@@ -55,10 +74,19 @@ h1{
   font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);
   border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 10px;
 }
-.lead{color:#E7F2EE;font-size:14px;line-height:1.45;opacity:.86;margin:2px 0 10px}
+.lead{
+  color:#E7F2EE;font-size:14px;line-height:1.45;opacity:.86;margin:2px 0 10px;
+}
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
-.embit {padding: 0 .08em; box-shadow: 0 -4px 0 0 rgba(255,255,255,.05) inset; text-shadow: 0 0 12px rgba(255,255,255,.08); border-radius: 4px;}
+
+/* evidenzia le parentesi comiche tra em-dash senza toccare il testo */
+.embit {
+  padding: 0 .08em;
+  box-shadow: 0 -4px 0 0 rgba(255,255,255,.05) inset;
+  text-shadow: 0 0 12px rgba(255,255,255,.08);
+  border-radius: 4px;
+}
 </style>
 </head>
 <body>
@@ -95,12 +123,12 @@ h1{
     <p class="small" id="metaInfo"></p>
   </div>
 </main>
+
 <script>
 const LS=localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
 const style = prefs.stile || 'whatif';
 const periodo = prefs.periodo || 'future';
-const mode   = (style==='whatif' ? (prefs.mode || 'reale') : undefined); // <-- IMPORTANTE
 const lang  = (LS.getItem('lang') || 'it').toLowerCase();
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 
@@ -120,17 +148,17 @@ const I18N={
       share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
       copied:"Copiato!", error:"[errore server]",
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-      meta:(st,p,m)=> st==='wtf'
-        ? `Stile: What the F · paragrafo unico · “bestemmia” narrata (diminutivi/maggiorativi inventati) · modalità: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if (${m==='analitico'?'Analitico':'Reale/Poetico'}) · paragrafo unico · struttura identica agli esempi · modalità: ${p==='past'?'Passato':'Futuro'}.`},
+      meta:(st,p)=> st==='wtf'
+        ? `Stile: What the F · 6–9 frasi · paragrafo unico · 3+ stoccate interne · doppia punchline · modalità: ${p==='past'?'Passato':'Futuro'}.`
+        : `Stile: What if · 8–11 frasi · paragrafo unico · niente elenchi/domande/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.`},
   en:{tWTF:"⚡ What the F — Result", tWHF:"💡 What if — Result",
       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
       share:"📤 Share / Copy", again:"🔁 Ask another",
       copied:"Copied!", error:"[server error]",
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-      meta:(st,p,m)=> st==='wtf'
-        ? `Style: What the F · single paragraph · narrated “blasphemy” (invented morphology) · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if (${m==='analitico'?'Analytic':'Real/Poetic'}) · single paragraph · mirrors examples · mode: ${p==='past'?'Past':'Future'}.`}
+      meta:(st,p)=> st==='wtf'
+        ? `Style: What the F · 6–9 sentences · single paragraph · 3+ inside jabs · double punchline · mode: ${p==='past'?'Past':'Future'}.`
+        : `Style: What if · 8–11 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`}
 }[lang];
 
 document.getElementById('langBtn').textContent=lang.toUpperCase();
@@ -147,7 +175,7 @@ function normalizeOneParagraph(s=""){
   return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
 }
 
-/* LEADS (uguali alla tua versione) */
+/* LEADS */
 const LEADS = {
   it:{
     wtf:[
@@ -197,7 +225,7 @@ function setTitles(q){
   const seed = `${(q||"").toLowerCase().trim()}|${style}|${lang}`;
   const line = oneSentence(stablePick(bank, seed));
   document.getElementById('lead').textContent = line;
-  document.getElementById('metaInfo').textContent = I18N.meta(style, periodo, mode);
+  document.getElementById('metaInfo').textContent = I18N.meta(style, periodo);
 }
 
 // evidenzia parentesi tra em-dash “— … — …”
@@ -212,6 +240,15 @@ function decorateEmBits(el){
     else html += (i===0 ? seg : `—${seg}`);
   }
   el.innerHTML = html;
+}
+
+function mapGenderToSex(g){
+  switch(String(g||'').toLowerCase()){
+    case 'uomo': return 'm';
+    case 'donna': return 'f';
+    case 'altro': return 'nb';
+    default: return '';
+  }
 }
 
 if(isReplay){
@@ -229,6 +266,11 @@ if(isReplay){
   setTitles(domanda);
   document.getElementById('qView').textContent = domanda || '—';
 
+  // ===== NEW: leggi sex dal profilo (fallback da gender) =====
+  const profile = JSON.parse(LS.getItem('whatif_profile') || '{}');
+  const sex = (profile.sex) ? String(profile.sex).toLowerCase()
+            : mapGenderToSex(profile.gender || '');
+
   (async ()=>{
     navigator.sendBeacon?.("/api/track") || fetch("/api/track",{method:"POST",keepalive:true}).catch(()=>{});
     try{
@@ -237,19 +279,16 @@ if(isReplay){
       const adminToken = localStorage.getItem("admin_token");
       if (adminToken) headers["x-admin-token"] = adminToken;
 
-      // Passiamo anche MODE e MICRO (e li mostriamo solo al backend; niente toni in chiaro)
-      const micro = JSON.parse(LS.getItem('micro_profile') || '{}');
-
       const r = await fetch("/api/ask",{
-        method:"POST",
-        headers,
+        method:"POST", headers,
         body:JSON.stringify({
           domanda,
           lang,
-          stile: style,          // "whatif" | "wtf"
-          mode:  mode,           // "analitico" | "reale" (solo per whatif)
-          periodo,               // "future" | "past"
-          micro                  // mood, anchor, decide, jung_*, zodiac...
+          stile:style,
+          extra:"",
+          micro:req.micro||{},
+          periodo,
+          sex // <-- PASSA IL SESSO NORMALIZZATO
         })
       });
 
@@ -275,24 +314,25 @@ if(isReplay){
       decorateEmBits(node);
 
       const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-      hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), mode });
+      hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
       LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
     }catch(e){
-      document.getElementById('answer').textContent = (lang==='en'?'[server error]':'[errore server]');
+      document.getElementById('answer').textContent = I18N.error;
       console.error(e);
     }
   })();
 }
 
-document.getElementById('shareBtn').onclick=async ()=>{
-  const q = document.getElementById('qView').textContent.trim();
-  const a = document.getElementById('answer').textContent.trim();
-  const blob = new Blob([`Q: ${q}\n\nA: ${a}\n`],{type:"text/plain"});
-  const f = new File([blob], "whatif.txt", { type:"text/plain" });
-  try{ await navigator.share?.({ title:"What?f", text:`${q}\n\n${a}` }); }catch{}
+document.getElementById('shareBtn').onclick=async()=>{
+  const full = `What?f — ${style==='wtf'?'What the F':'What if'}\n(${periodo})\n\nQ: ${domanda}\n\n${answerText}`;
   try{
-    await navigator.clipboard.writeText(`${q}\n\n${a}`);
-    alert(I18N.copied);
+    if(navigator.share){
+      await navigator.share({ title: "What?f", text: full });
+    }else{
+      await navigator.clipboard.writeText(full);
+      const b=document.getElementById('shareBtn');
+      b.textContent = I18N.copied; setTimeout(()=>b.textContent=I18N.share,1200);
+    }
   }catch{}
 };
 document.getElementById('againBtn').onclick=()=>{ location.href='fourth.html'; };
