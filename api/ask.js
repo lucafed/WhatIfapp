@@ -1,5 +1,4 @@
-// /api/ask.js — What?f Engine (FINAL BALANCED EDITION • WTF “COSÌ” con variante A/B)
-// Basato sul tuo script funzionante; sostituito SOLO il blocco WTF con lo stile degli esempi.
+// /api/ask.js — What?f Engine (FINAL BALANCED EDITION • WTF persona fixed IT/EN)
 // Stili: whatif (analitico | reale) · wtf
 // Un paragrafo, seconda persona, niente elenchi, niente nomi inventati.
 
@@ -57,8 +56,6 @@ function stripQuestionEcho(domanda,text){
   if(lead.startsWith(d)){ const cut=t.indexOf("."); if(cut>-1) t=t.slice(cut+1).trim(); }
   t=t.replace(rx,""); return t;
 }
-// seed minimo per variazioni stabili
-function tinyHash(s=""){ let h=2166136261>>>0; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619);} return (h>>>0).toString(36); }
 
 /* ========= Modalità temporale ========= */
 function temporalInstruction(periodo="future", lang="it"){
@@ -77,7 +74,7 @@ function temporalInstruction(periodo="future", lang="it"){
 const EX_WHATIF_ANALITICO_IT = `Sai, questa domanda girava nell’aria da un po’. Tornare a L’Aquila oggi vorrebbe dire rimetterti in una città che ha ricostruito più di muri: ha ricucito abitudini. L’economia si muove piano ma tiene, più artigiani che industrie, più reti locali che multinazionali. Gli stipendi sono più bassi, ma la vita costa meno e il tempo vale di più. Le scuole funzionano, la montagna torna complice nelle domeniche lente, e i bambini crescono con un orizzonte vero invece di uno schermo. Il Veneto ti mancherebbe per il ritmo e le occasioni, ma qui ritroveresti spazio, fiato e relazioni che non devono correre per esistere. In fondo non sarebbe un passo indietro — solo un modo diverso di avanzare, più lento, ma più tuo.`;
 const EX_WHATIF_REALE_IT = `Bella questa — me l’aspettavo da te. Riapri le finestre e l’aria fredda ti saluta come una vecchia conoscenza. I vicoli ti riconoscono dal passo, le montagne ti guardano come un’amante che non ha mai smesso di aspettare. Il bar sotto casa serve ancora il caffè corto e ruvido, e le voci per strada sanno di pane e di inverno. I bambini giocano con l’eco, non con il rumore, e le serate finiscono con una risata che rimbalza nei portoni. Ogni giorno è più semplice del precedente, ogni sera più tua. Non stai tornando indietro: stai solo tornando dove il tempo ti riconosce per nome.`;
 
-// Istruzioni WHAT IF (niente personalità, solo forma + incipit)
+// Istruzioni WHAT IF
 const WHATIF_ANALITICO_STYLE_IT = `WHAT IF Analitico:
 - Inizia nello stile di “Sai, questa domanda girava nell’aria da un po’.” (o variante coerente).
 - Tono concreto: scambi reali, costi/benefici, routine, qualità della vita.
@@ -89,57 +86,57 @@ const WHATIF_REALE_STYLE_IT = `WHAT IF Reale/Poetico:
 - Chiudi riconoscendo luogo e tempo come alleati.
 - 135–155 parole. Seconda persona soltanto.`;
 
-/* ========= WTF — NUOVO STILE “COSÌ” con variante A/B ========= */
-// Base comune (IT/EN)
-const WTF_BASE_IT = `
-Sei “What the F”: roast affettuoso in SECONDA PERSONA. UN paragrafo, 6–8 frasi (~125–165 parole).
-Apertura SOLO con un nomignolo (senza verbi). Inserisci UNA sola bestemmia narrata (“ti esce una bestemmia che fa tremare i bicchieri”) — mai letterale.
-Oggetti che reagiscono solo se servono alla scena. Accenno d’alcol consentito. Niente elenchi, niente domande, niente emoji, niente prediche.
-Chiudi caldo e divertente, come una risata sulla spalla. Rispetta la modalità temporale.`;
-const WTF_BASE_EN = `
-You are “What the F”: affectionate roast in SECOND PERSON. ONE paragraph, 6–8 sentences (~125–165 words).
-OPEN with ONLY a nickname (no verbs). Include exactly ONE narrated blasphemy (“you let out a blasphemy that rattles the glasses”) — never literal.
-Use “reacting objects” only when relevant. A small alcohol beat is fine. No lists, no questions, no emojis, no moralizing.
-Close warm and funny; respect temporal mode.`;
-
-// Variante A: roast + oggetti coerenti (2–3 max)
-const WTF_VAR_A_IT = `VARIANTE A — Spingi sul roast affettuoso, usa 2–3 oggetti che reagiscono coerenti al luogo (bar → moka/POS, strada → lampione/portone, casa → tapparella/lampada). Mantieni ritmo secco e umano.`;
-const WTF_VAR_A_EN = `VARIANT A — Lean into affectionate roast, use 2–3 place-coherent reacting objects (bar → moka/POS, street → streetlight/door, home → blinds/lamp). Keep it punchy and human.`;
-
-// Variante B: eventi a scorrere (3–4 micro-imprevisti distribuiti)
-const WTF_VAR_B_IT = `VARIANTE B — Scena a scorrere: distribuisci 3–4 micro-imprevisti lungo il paragrafo (“intanto”, “poi”, “mentre provi…”), poi una bestemmia narrata; un accenno d’alcol; chiusura calda e ironica.`;
-const WTF_VAR_B_EN = `VARIANT B — Flowing scene: spread 3–4 tiny mishaps through the paragraph (“meanwhile”, “then”, “as you try…”), then one narrated blasphemy; one alcohol beat; warm, funny close.`;
-
-// Esempio aggiornato (mostrato solo come few-shot guida)
-const WTF_EX_IT = `ESEMPIO · WTF (guida tono/forma)
-Pellegrino del ritorno, scendi con la valigia che scricchiola dignità; il marciapiede riconosce il tuo passo e al bancone la tazzina fa “di nuovo?”, addolcisci l’orgoglio con un grappino da undici e ti esce una bestemmia che fa tremare i bicchieri mentre il lampione finge di non sentire; due facce ti chiamano per nome e capisci che non stai tornando indietro ma tornando intero, con le crepe lucidate a festa.`;
-const WTF_EX_EN = `EXAMPLE · WTF (tone/shape)
-Champ, suitcase squeaking dignity; the sidewalk recognizes your step and the cup goes “again?”, a tiny beer forgives your pride and you let out a blasphemy that rattles the glasses while the streetlight pretends it didn’t hear; two faces say your name and you realize you’re not going back but landing whole, cracks polished for the party.`;
+/* ========= WTF — PERSONA FIXED (IT/EN) ========= */
+function WTF_PERSONA(lang="it"){
+  if(isEn(lang)){
+    return {
+      sys: `
+You are “What the F” — the loud, loving friend who roasts with affection.
+SECOND PERSON. ONE paragraph, 6–8 sentences (~125–165 words). Simple, colloquial language.
+OPEN with ONLY a playful nickname (no verbs).
+Use one brief narrated blasphemy (“you let out a blasphemy that rattles the glasses”), never literal.
+Alcohol beats OK; “reacting objects” only if relevant to the place.
+Keep it upbeat, goofy, and warm; no lists, no questions, no emojis; respect temporal instruction.
+Close with a warm, funny line.
+`.trim(),
+      fewshots: [
+        { role:"system", content:
+`EXAMPLE • Move back (future)
+Legend, you step off like a limited-series finale and the sidewalk remembers your weight; the buzzer rolls its eyes “again?”, the bar glass sizes you up and forgives you with a tiny grappa, you walk two streets too far just to tire the nerves, you let out a blasphemy that rattles the glasses and the streetlight pretends it didn’t hear, then two familiar faces steal your pace back and you realize you’re not going back — you’re landing where your name already fits.` }
+      ]
+    };
+  }
+  // IT
+  return {
+    sys: `
+Sei “What the F” — l’amico rumoroso che ti vuole bene e ti prende in giro con affetto.
+SECONDA PERSONA. UN paragrafo, 6–8 frasi (~125–165 parole). Linguaggio semplice, colloquiale.
+APRI solo con un nomignolo (senza verbi).
+Una sola bestemmia narrata (“ti esce una bestemmia che fa tremare i bicchieri”), mai letterale.
+Alcol consentito; “oggetti che reagiscono” solo se coerenti col luogo.
+Tono allegro, demenziale ma caldo; niente elenchi, niente domande, niente emoji; rispetta l’istruzione temporale.
+Chiudi con una riga divertente e affettuosa.
+`.trim(),
+    fewshots: [
+      { role:"system", content:
+`ESEMPIO • Tornare a casa (futuro)
+Fenomeno, scendi con la valigia che scricchiola dignità e il marciapiede ti riconosce; al bancone il bicchiere ti fa l’occhiolino, ti concedi un dito di grappino “solo per raddrizzare il GPS interiore”, inciampi nel primo sanpietrino e ti esce una bestemmia che fa tremare i bicchieri, il lampione finge di non sentire, due facce ti chiamano per nome, capisci che non stai tornando indietro: stai rientrando dove il tuo passo torna rotondo.` }
+    ]
+  };
+}
 
 /* ========= Prompt builder ========= */
 function buildMessages({ domanda, lang, periodo, stile, mode }){
   const msgs = [
     { role: "system", content: isEn(lang)
-        ? `RULES: one paragraph, no bullets, no emojis, do NOT restate the question. Near-future. Second person only. No invented names. Length: WHATIF 135–155, WTF 145–165.`
-        : `REGOLE: un solo paragrafo, niente elenchi, niente emoji, NON ripetere la domanda. Prossimo futuro. Solo seconda persona. Niente nomi inventati. Lunghezza: WHATIF 135–155, WTF 145–165.` },
+        ? `RULES: one paragraph, no bullets, no emojis, do NOT restate the question. Near-future. Second person only. No invented names. Length: WHATIF 135–155, WTF 125–165.`
+        : `REGOLE: un solo paragrafo, niente elenchi, niente emoji, NON ripetere la domanda. Prossimo futuro. Solo seconda persona. Niente nomi inventati. Lunghezza: WHATIF 135–155, WTF 125–165.` },
     { role: "system", content: temporalInstruction(periodo, lang) },
   ];
 
-  // pick variante A/B in modo stabile per domanda
-  const seed = tinyHash(domanda);
-  const variantAB = parseInt(seed,36) % 2 === 0 ? "A" : "B";
-
   if (stile === "wtf") {
-    const base = isEn(lang) ? WTF_BASE_EN : WTF_BASE_IT;
-    const varA  = isEn(lang) ? WTF_VAR_A_EN : WTF_VAR_A_IT;
-    const varB  = isEn(lang) ? WTF_VAR_B_EN : WTF_VAR_B_IT;
-    const example = isEn(lang) ? WTF_EX_EN : WTF_EX_IT;
-
-    msgs.push(
-      { role: "system", content: base.trim() },
-      { role: "system", content: (variantAB === "A" ? varA : varB).trim() },
-      { role: "system", content: example }
-    );
+    const { sys, fewshots } = WTF_PERSONA(lang);
+    msgs.push({ role:"system", content: sys }, ...(fewshots||[]));
   } else {
     if (mode === "analitico") {
       msgs.push(
@@ -193,7 +190,7 @@ export default async function handler(req, res){
       temperature: stile === "wtf" ? 0.98 : 0.82,
       top_p: 0.92,
       max_tokens: 480,
-      frequency_penalty: stile === "wtf" ? 0.35 : 0.1,   // un filo più “croccante” sul WTF
+      frequency_penalty: stile === "wtf" ? 0.4 : 0.1,
       presence_penalty: stile === "wtf" ? 0.2 : 0.0,
       messages,
     });
@@ -203,8 +200,8 @@ export default async function handler(req, res){
 
     // Post-process
     answer = stripQuestionEcho(domanda, answer);
-    answer = tightenSentences(answer, stile === "wtf" ? 8 : 11);     // 6–8 frasi target
-    answer = clampWords(answer, stile === "wtf" ? 165 : 160);        // ~125–165 parole WTF
+    answer = tightenSentences(answer, stile === "wtf" ? 8 : 11);
+    answer = clampWords(answer, stile === "wtf" ? 165 : 160);
     answer = normalizeOneParagraph(answer);
     if(!/[.!?…]$/.test(answer)) answer += ".";
 
@@ -217,18 +214,11 @@ export default async function handler(req, res){
       const nameRx = /\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
       const inQuestion = new Set((d.match(nameRx)||[]));
       answer = answer.replace(nameRx, (m)=>{
-        return inQuestion.has(m) ? m : (["Ah","Oh","Ehi","Bella","Sai"].includes(m) ? m : m.toLowerCase());
+        return inQuestion.has(m) ? m : (["Ah","Oh","Ehi","Bella","Sai","Legend","Champ"].includes(m) ? m : m.toLowerCase());
       });
     })();
 
-    return res.status(200).json({
-      answer,
-      style: stile,
-      mode,
-      lang,
-      periodo,
-      model: MODEL
-    });
+    return res.status(200).json({ answer, style: stile, mode, lang, periodo, model: MODEL });
   }catch(err){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
