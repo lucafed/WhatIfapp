@@ -1,4 +1,3 @@
-
 // /api/ask.js — What?f Engine (FINAL BALANCED EDITION • FIXED WTF SEQUENCE)
 // Basato sul tuo script funzionante; aggiunti solo i vincoli di stile richiesti.
 // Stili: whatif (analitico | reale) · wtf
@@ -245,3 +244,7 @@ export default async function handler(req, res){
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
 }
+
+
+
+
