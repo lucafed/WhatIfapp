@@ -1,5 +1,8 @@
-// /api/ask.js — What?f Engine (FINAL BALANCED EDITION • FIXED WTF SEQUENCE • SARCASM BOOST)
-// Basato sul tuo script funzionante; aggiunti SOLO booster di sarcasmo & varietà per WTF.
+// /api/ask.js — What?f Engine (FINAL BALANCED EDITION • FIXED WTF SEQUENCE • SARCASM BOOST • VARIETY ROTATION)
+// Basato sul tuo script funzionante; aggiunti SOLO:
+// 1) eventi a scorrere nella scena WTF
+// 2) booster sarcasmo (pulito)
+// 3) rotazione di sfogo & reazioni con Redis per evitare ripetizioni
 // Stili: whatif (analitico | reale) · wtf
 // Un paragrafo, seconda persona, niente elenchi, niente nomi inventati.
 
@@ -41,12 +44,19 @@ function normLine(s=""){ return String(s).toLowerCase().replace(/[“”"']/g,""
 function tightenSentences(text, maxSentences){
   const parts = String(text||"").replace(/\n+/g," ").split(/(?<=[.!?])\s+/).map(x=>x.trim()).filter(Boolean);
   const out=[], seen=new Set();
-  for(const p of parts){ const n=normLine(p); if(!n||seen.has(n)) continue; if(p.split(/\s+/).length<=3 && !/[.!?]$/.test(p)) continue; out.push(p); seen.add(n); if(out.length>=maxSentences) break; }
-  let t=out.join(" "); if(!/[.!?…]$/.test(t)) t+="."; return t;
+  for(const p of parts){ const n=normLine(p); if(!n||seen.has(n)) continue;
+    if(p.split(/\s+/).length<=3 && !/[.!?]$/.test(p)) continue;
+    out.push(p); seen.add(n); if(out.length>=maxSentences) break;
+  }
+  let t=out.join(" ");
+  if(!/[.!?…]$/.test(t)) t+=".";
+  return t;
 }
 function clampWords(text,maxWords){
-  const w=String(text||"").split(/\s+/); if(w.length<=maxWords) return text;
-  const slice=w.slice(0,maxWords).join(" "); const m=slice.match(/([\s\S]*?[.!?])(?![\s\S]*[.!?])/);
+  const w=String(text||"").split(/\s+/);
+  if(w.length<=maxWords) return text;
+  const slice=w.slice(0,maxWords).join(" ");
+  const m=slice.match(/([\s\S]*?[.!?])(?![\s\S]*[.!?])/);
   return m?m[1]:slice+"…";
 }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim(); }
@@ -131,11 +141,11 @@ const SARCASTIC_SPICE_IT = `BOOSTER DI SARCASMO (solo per WTF):
 - Mantieni la seconda persona, niente insulti reali né volgarità; il bersaglio sei “tu” in chiave autoironica.
 - Le reazioni degli oggetti devono essere coerenti con il luogo/azione della scena (bar → moka/pos; strada → semaforo/vetrine; casa → tapparella/lampada, ecc.).`;
 
-// Istruzione WTF: **forma rigida** (immutata) + info su pertinenza contesto
+/* ========= WTF — forma rigida con eventi “a scorrere” ========= */
 const WTF_STRICT_IT = `WHAT THE F (demenziale, ma rispondi davvero):
 Sequenza OBBLIGATORIA in un solo paragrafo (145–165 parole):
 1) Presa in giro affettuosa del protagonista (2 frasi, ironia alta).
-2) 4 micro-imprevisti realistici legati al CONTENUTO della domanda (stesso contesto: non inserire oggetti estranei).
+2) 4 micro-imprevisti realistici legati al CONTENUTO della domanda, DISTRIBUITI nello scorrere della scena (non in blocco). Usa micro-transizioni (“intanto”, “poi”, “mentre provi a salvare la situazione…”) per intrecciarli.
 3) “Ti trattieni… provi… riprovi…” e POI esplode UNO sfogo viscerale (scegline UNO, non più di uno) dai seguenti: ${WTF_SFOGO_BANK.join(", ")}. Scrivilo come narrazione (non insulto letterale).
 4) SUBITO DOPO inserisci 2–3 reazioni esilaranti coerenti al contesto, scelte da: ${WTF_REACTIONS_BANK.join(" · ")}.
 5) Accenno di alcol (sip/doppio amaro/sbronza elegante) pertinente alla scena.
@@ -154,8 +164,8 @@ function buildMessages({ domanda, lang, periodo, stile, mode }){
 
   if (stile === "wtf") {
     msgs.push(
-      { role: "system", content: SARCASTIC_SPICE_IT },       // <— Booster sarcasmo
-      { role: "system", content: WTF_STRICT_IT },            // <— Sequenza fissa + pertinenza
+      { role: "system", content: SARCASTIC_SPICE_IT },
+      { role: "system", content: WTF_STRICT_IT },
       { role: "system", content: `ESEMPIO · WTF (forma guida, tono e sequenza)` +
         `\nAh ma guarda te… sempre convinto che la moka risolva i traumi. Ti vedi già al bancone, musica jazz, sorrisi, caffè perfetti. ` +
         `Poi arrivano quattro colpi bassi: il macinino tossisce, il latte impazzisce, il POS fa una novena e il vicino ordina “cappuccino tiepido che non sa di latte”. ` +
@@ -183,6 +193,50 @@ function buildMessages({ domanda, lang, periodo, stile, mode }){
     content: `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ${lang.toUpperCase()} a paragrafo unico.`
   });
   return msgs;
+}
+
+/* ========= Rotazione/varietà per WTF ========= */
+async function rotatePick(redisKey, pool, count=1){
+  try{
+    const usedRaw = await redis.lrange(redisKey, 0, 19);
+    const used = new Set(usedRaw||[]);
+    const fresh = pool.filter(x=>!used.has(x));
+    const pickFrom = fresh.length ? fresh : pool;
+    const out = [];
+    const bag = [...pickFrom];
+    for(let i=0;i<count && bag.length;i++){
+      const idx = Math.floor(Math.random()*bag.length);
+      out.push(bag.splice(idx,1)[0]);
+    }
+    for(const x of out) await redis.lpush(redisKey, x);
+    await redis.ltrim(redisKey, 0, 19);
+    await redis.expire(redisKey, 60*60*24);
+    return out;
+  }catch{
+    const out=[]; const bag=[...pool];
+    for(let i=0;i<count && bag.length;i++){
+      const idx=Math.floor(Math.random()*bag.length);
+      out.push(bag.splice(idx,1)[0]);
+    }
+    return out;
+  }
+}
+
+function detectSfogo(text, bank){
+  const lower = text.toLowerCase();
+  for(const term of bank){
+    if(lower.includes(term.toLowerCase())) return term;
+  }
+  return null;
+}
+
+function injectReactionsAfterSfogo(text, reactions){
+  const rx = /([^.?!]*?(?:bestemmione|imprecazionona|sacramentata|urlo liturgico|para-bestemmia|madonna della miseria|anatema|embolata|pazienza implosa|anatemi|improperi|teologico)[^.?!]*[.?!])/i;
+  const m = text.match(rx);
+  if(!m) return text;
+  const insert = " " + reactions.join(", ") + ".";
+  const idx = m.index + m[0].length;
+  return text.slice(0, idx) + insert + text.slice(idx);
 }
 
 /* ========= HANDLER ========= */
@@ -225,12 +279,42 @@ export default async function handler(req, res){
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if(!answer) throw new Error("empty_model_response");
 
-    // Post-process
+    // Post-process base
     answer = stripQuestionEcho(domanda, answer);
     answer = tightenSentences(answer, stile === "wtf" ? 9 : 11);
     answer = clampWords(answer, stile === "wtf" ? 168 : 160);
     answer = normalizeOneParagraph(answer);
     if(!/[.!?…]$/.test(answer)) answer += ".";
+
+    // ——— Varietà obbligatoria per WTF (senza cambiare i tuoi toni) ———
+    if (stile === "wtf") {
+      const ipKey = `rot:${ip || 'unk'}`;
+
+      // 1) Sfogo presente e diverso dall'ultimo
+      let found = detectSfogo(answer, WTF_SFOGO_BANK);
+      const [nextSfogo] = await rotatePick(`${ipKey}:sfogo`, WTF_SFOGO_BANK, 1);
+      if (!found) {
+        answer += ` Ti parte una ${nextSfogo} che vibra nell’aria come un diapason stanco.`;
+        found = nextSfogo;
+      } else {
+        const lastUsedArr = await redis.lrange(`${ipKey}:sfogo`, 0, 0);
+        const lastUsed = lastUsedArr?.[0];
+        if (lastUsed && found.toLowerCase() === lastUsed.toLowerCase()) {
+          const repl = nextSfogo;
+          const rx = new RegExp(found.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+          answer = answer.replace(rx, repl);
+          // found = repl; // non serve riassegnare oltre
+        } else {
+          await redis.lpush(`${ipKey}:sfogo`, found);
+          await redis.ltrim(`${ipKey}:sfogo`, 0, 19);
+          await redis.expire(`${ipKey}:sfogo`, 60*60*24);
+        }
+      }
+
+      // 2) 2–3 reazioni coerenti e varie (iniettate subito dopo la frase di sfogo)
+      const reactionsToAdd = await rotatePick(`${ipKey}:reax`, WTF_REACTIONS_BANK, 2 + Math.floor(Math.random()*2)); // 2–3
+      answer = injectReactionsAfterSfogo(answer, reactionsToAdd);
+    }
 
     // Guard-rail lingua: niente prima persona
     answer = answer.replace(/\b(io|sono|mi|noi|me|ho|abbiamo)\b/gi, "");
