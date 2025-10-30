@@ -118,53 +118,30 @@ const WTF_REACTIONS_BANK = [
   "la porta automatica si apre da sola e poi si vergogna"
 ];
 
-const WTF_OPENINGS = [
-  "Ah ma guarda te, …",
-  "Oh, eccoci, …",
-  "Ti presenti elegante e il destino in ciabatte, …",
-  "Giornata da manuale, capitolo imprevisti, …",
-  "Hai studiato tutto, tranne il caos, …",
-  "Sembra facile finché non tocca a te, …"
-];
-
-/* ========= REGOLE ========= */
-const TECH_RULES_BASE = (lang)=>`REGOLE:
-- Un solo paragrafo. Niente elenchi, niente emoji.
-- Tempo: prossimo futuro. Solo seconda persona ("tu").
-- Lunghezza: WHATIF ≈145 parole, WTF ≈165 parole.
-- Non inventare nomi. Se la domanda non contiene nomi, evitali.`;
-
-const WTF_STRICT_IT = (openingShape)=>`WTF:
-1) Inizia esattamente con «${openingShape}».
-2) 2–3 frasi di presa in giro (roasting).
-3) 4 micro-imprevisti comici e realistici (pertinenti al contesto della domanda).
-4) Esplosione viscerale (una sola): scegli da ${WTF_SFOGO_BANK.join(", ")}.
-5) Subito dopo 3–5 reazioni esilaranti tratte dal bank (pertinenti al contesto).
-6) Alcol o sbronza visibile.
-7) Rispondi davvero alla domanda con una previsione/controfattuale concreta.
-8) Chiusa ironica o poetica che richiama l’inizio.
-Solo seconda persona.`;
-
-/* ========= Aperture variabili ========= */
-async function pickRotating(list, key){
-  try{ const n=await redis.incr(key); if(n===1)await redis.expire(key,86400); return list[(n-1)%list.length]; }
-  catch{ return list[Math.floor(Math.random()*list.length)]; }
-}
+// Istruzione WTF: **forma rigida**, sinonimi & reazioni dentro
+const WTF_STRICT_IT = `WHAT THE F (demenziale, ma rispondi davvero):
+Sequenza OBBLIGATORIA in un solo paragrafo (145–165 parole):
+1) Presa in giro affettuosa del protagonista (2 frasi).
+2) 4 micro-imprevisti realistici legati al contesto della domanda.
+3) “Ti trattieni… provi… riprovi…” e POI esplode UNO sfogo viscerale (scegline UNO, non più di uno) dai seguenti: ${WTF_SFOGO_BANK.join(", ")}. Scrivilo come narrazione (non insulto letterale).
+4) SUBITO DOPO inserisci 2–3 reazioni esilaranti coerenti al contesto, scelte da: ${WTF_REACTIONS_BANK.join(" · ")}.
+5) Accenno di alcol (sip/doppio amaro/sbronza elegante).
+6) Rispondi davvero alla domanda con una previsione/controfattuale concreta (1–2 frasi).
+7) Chiudi con una riga ironica (“morale”) che richiama l’apertura.
+Vincoli: seconda persona soltanto; niente nomi inventati; non ripetere la domanda.`;
 
 /* ========= Prompt builder ========= */
 function buildMessages({ domanda, lang, periodo, stile, mode }){
   const msgs = [
     { role: "system", content: isEn(lang)
-        ? `REGOLE: un solo paragrafo, niente elenchi, niente emoji, NON ripetere la domanda. Prossimo futuro. Solo seconda persona. Niente nomi inventati. Lunghezza: WHATIF 135–155, WTF 145–165.`
+        ? `RULES: one paragraph, no bullets, no emojis, do NOT restate the question. Near-future. Second person only. No invented names. Length: WHATIF 135–155, WTF 145–165.`
         : `REGOLE: un solo paragrafo, niente elenchi, niente emoji, NON ripetere la domanda. Prossimo futuro. Solo seconda persona. Niente nomi inventati. Lunghezza: WHATIF 135–155, WTF 145–165.` },
     { role: "system", content: temporalInstruction(periodo, lang) },
   ];
 
   if (stile === "wtf") {
-    // Apertura fissa resa altrove? Se vuoi tenerla random, sostituisci con pickRotating lato server.
-    const opening = WTF_OPENINGS[0];
     msgs.push(
-      { role: "system", content: WTF_STRICT_IT(opening) },
+      { role: "system", content: WTF_STRICT_IT },
       { role: "system", content: `ESEMPIO · WTF (forma guida, tono e sequenza)` +
         `\nAh ma guarda te… sempre convinto che la moka risolva i traumi. Ti vedi già al bancone, musica jazz, sorrisi, caffè perfetti. ` +
         `Poi arrivano quattro colpi bassi: il macinino tossisce, il latte impazzisce, il POS fa una novena e il vicino ordina “cappuccino tiepido che non sa di latte”. ` +
