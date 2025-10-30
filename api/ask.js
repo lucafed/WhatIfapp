@@ -1,4 +1,4 @@
-// /api/ask.js — What?f Engine (LOCKED OPENINGS + TOPIC WTF)
+// /api/ask.js — What?f Engine (FINAL BALANCED EDITION • OPENINGS LOCKED)
 // Stili: whatif (analitico | reale) · wtf
 // Un paragrafo, seconda persona, niente elenchi, niente nomi inventati.
 
@@ -36,8 +36,7 @@ function cors(req, res) {
 
 /* ========= Helpers ========= */
 const isEn = (lang) => String(lang || "it").toLowerCase().startsWith("en");
-function randPick(a){ return a[Math.floor(Math.random()*a.length)]; }
-function cap(s){ return s.replace(/(^|\.\s+)([a-zà-ÿ])/g,(_,p,m)=>p+m.toUpperCase()); }
+const pick = (arr) => arr[Math.floor(Math.random()*arr.length)];
 function normLine(s=""){ return String(s).toLowerCase().replace(/[“”"']/g,"").replace(/\s+/g," ").replace(/[.,;:!?()\[\]\-—]+$/g,"").trim(); }
 function tightenSentences(text, maxSentences){
   const parts = String(text||"").replace(/\n+/g," ").split(/(?<=[.!?])\s+/).map(x=>x.trim()).filter(Boolean);
@@ -58,6 +57,7 @@ function stripQuestionEcho(domanda,text){
   if(lead.startsWith(d)){ const cut=t.indexOf("."); if(cut>-1) t=t.slice(cut+1).trim(); }
   t=t.replace(rx,""); return t;
 }
+function capStart(s){ return s.replace(/(^|\.\s+)([a-zà-ÿ])/g,(_,p,m)=>p+m.toUpperCase()); }
 
 /* ========= Modalità temporale ========= */
 function temporalInstruction(periodo="future", lang="it"){
@@ -72,7 +72,7 @@ function temporalInstruction(periodo="future", lang="it"){
     : "Scrivi come un prossimo futuro che inizia ora.";
 }
 
-/* ========= WHAT IF — incipit generico obbligatorio ========= */
+/* ========= WHAT IF — incipit generico ========= */
 const WHATIF_OPENINGS_IT = [
   "Ti avvicini senza fretta e metti in fila i pezzi.",
   "Oggi guardi la cosa da vicino e lasci spazio all’aria.",
@@ -80,24 +80,31 @@ const WHATIF_OPENINGS_IT = [
   "Togli rumore, tieni l’essenziale, ascolti il passo."
 ];
 const WHATIF_ANALITICO_STYLE_IT = `WHAT IF Analitico:
-- Incipit generico (già fornito dal sistema).
+- Incipit generico (fornito dal sistema).
 - Tono concreto: routine, costi/benefici, qualità della vita.
 - Chiudi con una sintesi calma.
 - 135–155 parole. Seconda persona.`;
 const WHATIF_REALE_STYLE_IT = `WHAT IF Reale/Poetico:
-- Incipit generico (già fornito dal sistema).
-- Immagini quotidiane asciutte, respiro narrativo breve.
+- Incipit generico (fornito dal sistema).
+- Immagini quotidiane asciutte; respiro narrativo breve.
 - Chiudi riconciliando luogo e tempo.
 - 135–155 parole. Seconda persona.`;
 
-/* ========= WTF — aperture, sfoghi iperbolici, reazioni per tema ========= */
+/* ========= WTF — aperture, sfoghi iperbolici, reazioni tematiche ========= */
 const WTF_OPENINGS = ["Ah ma guarda te,","Oh, eccoci,","Eccoti qui,","Ah, sì, certo,","Ma figurati,"];
-const WTF_ROAST_GENERIC = [
-  "sempre convinto che basti l’entusiasmo e due graffette.",
-  "col casco delle grandi occasioni e la pazienza in prestito.",
-  "con l’ottimismo a manetta e il manuale perso da tempo."
-];
-
+function detectTopic(q=""){
+  const s = String(q).toLowerCase();
+  if (/(bar|caff|bancone|moka)/i.test(s)) return "bar";
+  if (/(moto|motorin|casco|centauro)/i.test(s)) return "moto";
+  if (/(innam|amore|relaz|cuore|fidanz)/i.test(s)) return "love";
+  return "generic";
+}
+function roastForTopic(topic){
+  if (topic==="bar")  return "barista di vocazione e contabile per necessità, con il sorriso da apertura e il registratore in modalità speranza.";
+  if (topic==="moto") return "centauro improvvisato con l’ego a folle e il battito che vuole il rettilineo.";
+  if (topic==="love") return "specialista del tuffo senza acqua, con l’orgoglio che trattiene il fiato e il cuore che fa straordinari.";
+  return "sempre convinto che basti l’entusiasmo e due graffette.";
+}
 const WTF_SFOGHI = [
   "ti parte una bestemmia a sirena che lucida i bicchieri e piega l’aria in diagonale",
   "sganci una bestemmia compressa che rimbalza sulle piastrelle come una biglia impazzita",
@@ -110,22 +117,20 @@ const WTF_SFOGHI = [
   "sguscia una bestemmia a frusta che sgrana l’aria e mette in fila i pensieri",
   "ti esce una bestemmia a rullo che stende la scena e poi la spiana con garbo criminale"
 ];
-
-// Reazioni per tema
 const REACT_GENERIC = [
   "la lampada sfarfalla in Morse come se volesse offrirti un tutorial",
   "la tapparella si abbassa per imbarazzo e poi risale curiosa",
   "i bicchieri fanno tintinnìo di approvazione da orchestra da camera",
   "la porta automatica si apre da sola e poi si vergogna",
-  "Alexa prende nota e archivia sotto ‘momenti educativi’"
+  "Alexa prende nota e archivia sotto “momenti educativi”"
 ];
 const REACT_BAR = [
   "la moka ti applaude con un fischio da capocomico",
-  "il POS fa finta di aggiornarsi e si mette in modalità timido",
+  "il POS finge un aggiornamento e passa in modalità timido",
   "il frigorifero sospira e decide di diventare minimalista"
 ];
 const REACT_MOTO = [
-  "il semaforo ci pensa e resta rosso per rispetto",
+  "il semaforo resta rosso per rispetto",
   "il casco scricchiola come se volesse consigliare prudenza",
   "un cane attraversa da solo, deciso a darti ragione"
 ];
@@ -134,64 +139,14 @@ const REACT_LOVE = [
   "il gatto valuta il trasloco e poi resta a giudicarti con affetto",
   "il telefono vibra a vuoto come un attore che dimentica la battuta"
 ];
-
-function detectTopic(q=""){
-  const s = String(q).toLowerCase();
-  if (/(bar|caff|locale|bancone|moka)/i.test(s)) return "bar";
-  if (/(moto|motorin|casco|centauro)/i.test(s)) return "moto";
-  if (/(innam|amore|fidanz|relaz|cuore)/i.test(s)) return "love";
-  return "generic";
-}
-function roastForTopic(topic){
-  if (topic==="bar") return "barista di vocazione e contabile per necessità, con il sorriso da apertura e il registratore in modalità speranza.";
-  if (topic==="moto") return "centauro improvvisato con l’ego a folle e il battito in accelerazione controllata.";
-  if (topic==="love") return "specialista del tuffo senza acqua, con l’orgoglio che trattiene il fiato e il cuore che fa turni extra.";
-  return randPick(WTF_ROAST_GENERIC);
-}
 function reactionsForTopic(topic){
-  if (topic==="bar") return [...REACT_BAR, ...REACT_GENERIC];
+  if (topic==="bar")  return [...REACT_BAR, ...REACT_GENERIC];
   if (topic==="moto") return [...REACT_MOTO, ...REACT_GENERIC];
   if (topic==="love") return [...REACT_LOVE, ...REACT_GENERIC];
   return REACT_GENERIC;
 }
 
-function forceWtfParagraph(core, domanda){
-  const topic = detectTopic(domanda);
-  const open = randPick(WTF_OPENINGS);
-  const roast = roastForTopic(topic);
-  const sfogo = randPick(WTF_SFOGHI);
-  const reacts = reactionsForTopic(topic);
-  let r1 = randPick(reacts), r2 = randPick(reacts), guard=0;
-  while(r2===r1 && guard++<5) r2 = randPick(reacts);
-
-  // prendi 1–2 frasi “di contenuto” dal core
-  const parts = String(core||"").split(/(?<=[.!?])\s+/).filter(Boolean);
-  const content = parts.slice(-2).join(" ");
-
-  let out = `${open} ${roast} ${sfogo}. ${r1}, ${r2}. ` +
-            `Bevi un sorso corto e onesto, che riposiziona i pensieri senza chiedere permesso. ` +
-            (content ? content + " " : "") +
-            `Morale: se il caos non si educa, gli offri da bere e si comporta meglio.`;
-
-  out = normalizeOneParagraph(out);
-  out = tightenSentences(out, 9);
-  out = clampWords(out, 165);
-  if(!/[.!?…]$/.test(out)) out+=".";
-  // garantisci la parola “bestemmia”
-  if(!/bestemmi\w*/i.test(out)){
-    out = out.replace(/Morale:/, "Ti scappa pure un’ultima bestemmia sottovoce e nessuno fa finta di niente. Morale:");
-  }
-  return cap(out);
-}
-
-/* ========= What If guide ========= */
-const WHATIF_RULES_IT = `WHAT IF — un paragrafo, seconda persona, 135–155 parole.
-- Segui l’incipit generico dato dal sistema.
-- Analitico: concreto, routine, costi/benefici. Reale: immagini quotidiane asciutte.
-- Nessuna domanda/elenco/nomi inventati.
-- Chiudi con riga breve, riflessiva, non un consiglio.`;
-
-/* ========= WTF — few-shots con i TUOI esempi per tono ========= */
+/* ========= WTF — few-shots coi TUOI esempi ========= */
 const WTF_FEWSHOTS_IT = [
   { role:"system", content:
 `ESEMPIO WTF • Bar
@@ -215,14 +170,12 @@ function buildMessages({ domanda, lang, periodo, stile, mode }){
 
   if (stile === "wtf") {
     msgs.push(
-      { role: "system", content: `WHAT THE F — tono rude, ironico, adulto. Usa “bestemmia/bestemmione/bestemmie” come parola fisica e comica, senza riferimenti religiosi.` },
+      { role:"system", content:`WHAT THE F — tono rude, ironico, adulto. Usa la parola “bestemmia/bestemmione/bestemmie” come oggetto fisico e comico (nessun riferimento religioso). Un paragrafo.` },
       ...WTF_FEWSHOTS_IT
     );
   } else {
-    msgs.push({ role: "system", content: WHATIF_RULES_IT });
-    msgs.push({ role: "system", content: mode==="analitico" ? WHATIF_ANALITICO_STYLE_IT : WHATIF_REALE_STYLE_IT });
-    // Forzo l’incipit generico come prima frase
-    msgs.push({ role: "system", content: `INIZIO OBBLIGATORIO: "${randPick(WHATIF_OPENINGS_IT)}"` });
+    msgs.push({ role:"system", content: mode==="analitico" ? WHATIF_ANALITICO_STYLE_IT : WHATIF_REALE_STYLE_IT });
+    msgs.push({ role:"system", content:`INIZIO OBBLIGATORIO: "${pick(WHATIF_OPENINGS_IT)}"` });
   }
 
   msgs.push({
@@ -230,6 +183,35 @@ function buildMessages({ domanda, lang, periodo, stile, mode }){
     content: `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ${lang.toUpperCase()} a paragrafo unico.`
   });
   return msgs;
+}
+
+/* ========= Compositore WTF lato server (assicura incipit+sfogo+reazioni) ========= */
+function forceWtfParagraph(core, domanda){
+  const topic = detectTopic(domanda);
+  const opening = pick(WTF_OPENINGS);
+  const roast   = roastForTopic(topic);
+  const sfogo   = pick(WTF_SFOGHI);
+  const reacts  = reactionsForTopic(topic);
+  let r1 = pick(reacts), r2 = pick(reacts), guard=0;
+  while(r2===r1 && guard++<5) r2 = pick(reacts);
+
+  // prendi 1–2 frasi sensate dal core per “rispondere davvero”
+  const parts = String(core||"").split(/(?<=[.!?])\s+/).filter(Boolean);
+  const content = parts.slice(-2).join(" ");
+
+  let out = `${opening} ${roast} ${sfogo}. ${r1}, ${r2}. ` +
+            `Bevi un sorso corto e onesto, che rimette a posto i pensieri. ` +
+            (content ? content + " " : "") +
+            `Morale: se il caos non si educa, gli offri da bere e si comporta meglio.`;
+
+  out = normalizeOneParagraph(out);
+  out = tightenSentences(out, 9);
+  out = clampWords(out, 165);
+  if(!/[.!?…]$/.test(out)) out+=".";
+  if(!/bestemmi\w*/i.test(out)){
+    out = out.replace(/Morale:/, "Ti scappa pure un’ultima bestemmia sottovoce e nessuno finge di niente. Morale:");
+  }
+  return capStart(out);
 }
 
 /* ========= HANDLER ========= */
@@ -259,9 +241,10 @@ export default async function handler(req, res){
 
     const messages = buildMessages({ domanda, lang, periodo, stile, mode });
 
-    const completion = await client.chat.chat.completions.create({
+    // ✅ API call corretta
+    const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.7 : 0.82,
+      temperature: stile === "wtf" ? 0.72 : 0.82,
       top_p: 0.9,
       max_tokens: 480,
       frequency_penalty: 0.15,
@@ -272,7 +255,6 @@ export default async function handler(req, res){
     let core = completion?.choices?.[0]?.message?.content?.trim() || "";
     if(!core) throw new Error("empty_model_response");
 
-    // Pulizia base
     core = stripQuestionEcho(domanda, core);
     core = normalizeOneParagraph(core);
 
@@ -283,12 +265,9 @@ export default async function handler(req, res){
       answer = tightenSentences(core, 11);
       answer = clampWords(answer, 155);
       if(!/[.!?…]$/.test(answer)) answer += ".";
-      // garantisci l'incipit generico in prima frase (se il modello l'ha ignorato)
-      const inc = WHATIF_OPENINGS_IT.find(op => answer.toLowerCase().startsWith(op.toLowerCase()));
-      if(!inc){
-        answer = `${randPick(WHATIF_OPENINGS_IT)} ${answer}`;
-      }
-      answer = cap(answer);
+      const hasOpening = WHATIF_OPENINGS_IT.some(op => answer.toLowerCase().startsWith(op.toLowerCase()));
+      if(!hasOpening) answer = `${pick(WHATIF_OPENINGS_IT)} ${answer}`;
+      answer = capStart(answer);
     }
 
     // Guard-rail: niente prima persona
