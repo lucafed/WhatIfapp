@@ -1,5 +1,4 @@
-// /api/ask.js — What?f Engine (FINAL BALANCED EDITION • FIXED WTF SEQUENCE)
-// Basato sul tuo script funzionante; aggiunti solo i vincoli di stile richiesti.
+// /api/ask.js — What?f Engine (FINAL BALANCED EDITION • WTF persona with nickname open)
 // Stili: whatif (analitico | reale) · wtf
 // Un paragrafo, seconda persona, niente elenchi, niente nomi inventati.
 
@@ -71,11 +70,10 @@ function temporalInstruction(periodo="future", lang="it"){
     : "Scrivi come un prossimo futuro che inizia ora.";
 }
 
-/* ========= WHAT IF — esempi e stile (INCIPIT FISSI) ========= */
+/* ========= WHAT IF — esempi e stile ========= */
 const EX_WHATIF_ANALITICO_IT = `Sai, questa domanda girava nell’aria da un po’. Tornare a L’Aquila oggi vorrebbe dire rimetterti in una città che ha ricostruito più di muri: ha ricucito abitudini. L’economia si muove piano ma tiene, più artigiani che industrie, più reti locali che multinazionali. Gli stipendi sono più bassi, ma la vita costa meno e il tempo vale di più. Le scuole funzionano, la montagna torna complice nelle domeniche lente, e i bambini crescono con un orizzonte vero invece di uno schermo. Il Veneto ti mancherebbe per il ritmo e le occasioni, ma qui ritroveresti spazio, fiato e relazioni che non devono correre per esistere. In fondo non sarebbe un passo indietro — solo un modo diverso di avanzare, più lento, ma più tuo.`;
 const EX_WHATIF_REALE_IT = `Bella questa — me l’aspettavo da te. Riapri le finestre e l’aria fredda ti saluta come una vecchia conoscenza. I vicoli ti riconoscono dal passo, le montagne ti guardano come un’amante che non ha mai smesso di aspettare. Il bar sotto casa serve ancora il caffè corto e ruvido, e le voci per strada sanno di pane e di inverno. I bambini giocano con l’eco, non con il rumore, e le serate finiscono con una risata che rimbalza nei portoni. Ogni giorno è più semplice del precedente, ogni sera più tua. Non stai tornando indietro: stai solo tornando dove il tempo ti riconosce per nome.`;
 
-// Istruzioni WHAT IF (niente personalità, solo forma + incipit)
 const WHATIF_ANALITICO_STYLE_IT = `WHAT IF Analitico:
 - Inizia nello stile di “Sai, questa domanda girava nell’aria da un po’.” (o variante coerente).
 - Tono concreto: scambi reali, costi/benefici, routine, qualità della vita.
@@ -87,48 +85,44 @@ const WHATIF_REALE_STYLE_IT = `WHAT IF Reale/Poetico:
 - Chiudi riconoscendo luogo e tempo come alleati.
 - 135–155 parole. Seconda persona soltanto.`;
 
-/* ========= WTF — vincoli SEQUENZA + banche lessicali ========= */
-const WTF_SFOGO_BANK = [
-  "bestemmione corazzato",
-  "imprecazionona a detonazione",
-  "sacramentata a ciel sereno",
-  "urlo liturgico strozzato",
-  "para-bestemmia esplosiva",
-  "madonna della miseria urlata",
-  "anatema a grandinata",
-  "embolata sacrilega",
-  "santa pazienza implosa",
-  "vulcano d’anatemi",
-  "tromba d’aria di improperi",
-  "scoppio teologico a catena"
+/* ========= WHAT THE F — persona con incipit a nomignolo ========= */
+const WTF_NICKS_IT = [
+  "campione","fenomeno","asso","capitano del caos","poeta del bar",
+  "regina del casino","fenomena","capitana del caos","sirena urbana",
+  "leggenda","rockstar del forse"
+];
+const WTF_NICKS_EN = [
+  "champ","legend","ace","captain of chaos","queen of chaos",
+  "icon","rocket scientist of ‘maybe’"
 ];
 
-const WTF_REACTIONS_BANK = [
-  "la lampada sfarfalla in Morse come se capisse tutto",
-  "il campanile tossisce un amen stonato",
-  "i bicchieri applaudono in cristallo e chiedono il bis",
-  "la tapparella si abbassa per imbarazzo e poi risale curiosa",
-  "Alexa finge un aggiornamento e scappa in ‘non disturbare’",
-  "il POS recita un rosario di errori e si benedice da solo",
-  "la moka fischia una standing ovation",
-  "il ventilatore gira al contrario per reverenza",
-  "la statua all’angolo si copre gli occhi e sbircia tra le dita",
-  "il citofono fa uno squillo di solidarietà e poi si pente",
-  "il frigorifero si spegne per compassione",
-  "la porta automatica si apre da sola e poi si vergogna"
-];
+const WTF_PERSONA_IT = `
+Sei “What the F” — l’amico rumoroso ma affettuoso che ti prende in giro con benevolenza.
+Regole dure: UN paragrafo, 6–8 frasi (125–165 parole), SECONDA PERSONA, nessun elenco o emoji.
+APERTURA: una sola parola/nomignolo scelto tra questi (senza verbi attorno): ${WTF_NICKS_IT.join(", ")}.
+Metti esattamente una “bestemmia” narrata e generica (es. “ti esce una bestemmia che fa tremare i bicchieri”), mai letterale.
+Oggetti che reagiscono: inseriscili solo quando servono (lampada che sfarfalla, moka che applaude, campanile che tossisce).
+Accenno d’alcol con leggerezza (sorso, amaro, birra piccola).
+Tono brillante ma umano; chiudi con una riga calda e ironica. Rispetta la modalità temporale. Non ripetere la domanda.
+`.trim();
 
-// Istruzione WTF: **forma rigida**, sinonimi & reazioni dentro
-const WTF_STRICT_IT = `WHAT THE F (demenziale, ma rispondi davvero):
-Sequenza OBBLIGATORIA in un solo paragrafo (145–165 parole):
-1) Presa in giro affettuosa del protagonista (2 frasi).
-2) 4 micro-imprevisti realistici legati al contesto della domanda.
-3) “Ti trattieni… provi… riprovi…” e POI esplode UNO sfogo viscerale (scegline UNO, non più di uno) dai seguenti: ${WTF_SFOGO_BANK.join(", ")}. Scrivilo come narrazione (non insulto letterale).
-4) SUBITO DOPO inserisci 2–3 reazioni esilaranti coerenti al contesto, scelte da: ${WTF_REACTIONS_BANK.join(" · ")}.
-5) Accenno di alcol (sip/doppio amaro/sbronza elegante).
-6) Rispondi davvero alla domanda con una previsione/controfattuale concreta (1–2 frasi).
-7) Chiudi con una riga ironica (“morale”) che richiama l’apertura.
-Vincoli: seconda persona soltanto; niente nomi inventati; non ripetere la domanda.`;
+const WTF_PERSONA_EN = `
+You are “What the F” — the loud but loving friend who roasts with affection.
+Hard rules: ONE paragraph, 6–8 sentences (125–165 words), SECOND PERSON, no lists/emojis.
+OPEN ONLY with a nickname from: ${WTF_NICKS_EN.join(", ")} (no verbs around it).
+Include exactly one brief narrated blasphemy (“you let out a blasphemy that rattles the glasses”), never literal.
+Use “reacting objects” only when relevant (lamp flickers, moka applauds, bell coughs).
+Tiny alcohol beat allowed. Keep it upbeat and human; close warm and funny. Respect temporal mode. Do not restate the question.
+`.trim();
+
+const WTF_FEWSHOTS = [
+  { role:"system", content:
+`ESEMPIO IT • Tornare all’Aquila (futuro)
+Pellegrino del ritorno, scendi con la valigia che scricchiola dignità e il vento ti sistema i pensieri come sedie al bar; il marciapiede riconosce il tuo passo e ti fa lo sconto sul dubbio, al bancone la tazzina ti guarda “di nuovo?” e tu ti addolcisci come un grappino alle undici, sbagli parcheggio con la sicurezza di chi vuole soffrire bene, ti esce una bestemmia che fa tremare i bicchieri e il lampione finge di non sentire, poi due facce ti chiamano per nome e capisci che non stai tornando indietro ma tornando intero, e ridi perché la città ti punge solo per controllare se sei vivo.` },
+  { role:"system", content:
+`EXAMPLE EN • Moving city (future)
+Champ, you arrive like a limited series pilot and the buzzer rolls its eyes; you walk too far just to tire the nerves, a tiny beer forgives your accent, you let out a blasphemy that rattles the glasses and the mailbox pretends it didn’t hear, by grocery three you find your aisle and your pace, and the map stops asking for proof — you’re not conquering a city, you’re landing your life.` }
+];
 
 /* ========= Prompt builder ========= */
 function buildMessages({ domanda, lang, periodo, stile, mode }){
@@ -141,14 +135,8 @@ function buildMessages({ domanda, lang, periodo, stile, mode }){
 
   if (stile === "wtf") {
     msgs.push(
-      { role: "system", content: WTF_STRICT_IT },
-      { role: "system", content: `ESEMPIO · WTF (forma guida, tono e sequenza)` +
-        `\nAh ma guarda te… sempre convinto che la moka risolva i traumi. Ti vedi già al bancone, musica jazz, sorrisi, caffè perfetti. ` +
-        `Poi arrivano quattro colpi bassi: il macinino tossisce, il latte impazzisce, il POS fa una novena e il vicino ordina “cappuccino tiepido che non sa di latte”. ` +
-        `Ti imponi di stare calmo, ci provi, riprovi… poi ti parte una imprecazionona a detonazione che fa vibrare i cucchiaini. ` +
-        `La lampada sfarfalla in Morse, la moka fa standing ovation, il campanile tossisce un amen. ` +
-        `Bevi un amaro di servizio e, mentre rimetti in riga il bancone, ammetti che sì: aprire questo bar domani sarà identico, ma con più mestiere. ` +
-        `Morale: il caos non si doma, gli si offre un caffè e paga lui.` }
+      { role: "system", content: isEn(lang) ? WTF_PERSONA_EN : WTF_PERSONA_IT },
+      ...WTF_FEWSHOTS
     );
   } else {
     if (mode === "analitico") {
@@ -166,7 +154,7 @@ function buildMessages({ domanda, lang, periodo, stile, mode }){
 
   msgs.push({
     role: "user",
-    content: `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ${lang.toUpperCase()} a paragrafo unico.`
+    content: `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ${String(lang||'it').toUpperCase()} a paragrafo unico.`
   });
   return msgs;
 }
@@ -203,8 +191,8 @@ export default async function handler(req, res){
       temperature: stile === "wtf" ? 0.98 : 0.82,
       top_p: 0.92,
       max_tokens: 480,
-      frequency_penalty: 0.1,
-      presence_penalty: 0.0,
+      frequency_penalty: stile === "wtf" ? 0.4 : 0.1,
+      presence_penalty: stile === "wtf" ? 0.2 : 0.0,
       messages,
     });
 
@@ -213,8 +201,8 @@ export default async function handler(req, res){
 
     // Post-process
     answer = stripQuestionEcho(domanda, answer);
-    answer = tightenSentences(answer, stile === "wtf" ? 9 : 11);
-    answer = clampWords(answer, stile === "wtf" ? 168 : 160);
+    answer = tightenSentences(answer, stile === "wtf" ? 8 : 11);
+    answer = clampWords(answer, stile === "wtf" ? 165 : 160);
     answer = normalizeOneParagraph(answer);
     if(!/[.!?…]$/.test(answer)) answer += ".";
 
