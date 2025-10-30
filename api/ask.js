@@ -1,5 +1,5 @@
-// /api/ask.js — What?f Engine (2025 FINAL)
-// Stili: whatif (realismo lucido) · wtf (sarcasmo demenziale affettuoso, alcol, oggetti, "bestemmia" narrata)
+// /api/ask.js — What?f Engine (2025 FINAL • PROMO BASE + WTF “COSÌ” con varianti A/B)
+// Stili: whatif (realismo lucido) · wtf (sarcasmo demenziale affettuoso, alcol, oggetti, “bestemmia” narrata)
 // IT/EN — paragrafo singolo, niente liste/domande/emoji
 // Rate: 10/min per IP; Crediti: Free 3/giorno · PRO 10/giorno · Admin ∞
 // Log su Redis SENZA contenuto della domanda (solo metadati + hash non reversibile)
@@ -10,7 +10,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 
 // ---------- OpenAI ----------
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const MODEL = "gpt-4o-mini";
+const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
 // ---------- Upstash ----------
 const redis = new Redis({
@@ -81,8 +81,8 @@ function stripQuestionEcho(domanda, text) {
   t = t.replace(echoRx, "");
   return t;
 }
-function ensureSpicyButSafeWTF(t, lang) {
-  // Garantisce chiusura sentita + evita output vuoto; NON inserisce mai bestemmie letterali
+function ensureSpicyButSafeWTF(t) {
+  // Bestemmia solo “narrata”, mai letterale; chiusura garantita.
   let out = String(t || "").trim();
   if (!/[.!?…]$/.test(out)) out += ".";
   return out;
@@ -93,7 +93,7 @@ function tinyHash(s = "") {
   return (h >>> 0).toString(36);
 }
 
-// ---------- Admin check ----------
+/* ---------- Admin check ---------- */
 async function isAdmin(req, requesterIp) {
   const token = String(req.headers["x-admin-token"] || "").trim();
   if (!token) return false;
@@ -128,10 +128,10 @@ function temporalSystem(periodo = "future", lang = "it", style = "whatif") {
 function personaSystem(style, lang, sex = "") {
   const SEX = String(sex || "").toLowerCase(); // "m" | "f" | "nb" | ""
   const genderNickIT = (SEX === "f")
-    ? ["regina del casino", "fenomena", "asso di briscola", "capitana del caos", "sirena urbana", "signora dei forse", "rockstar con tacchi comodi"]
+    ? ["regina del casino","fenomena","asso di briscola","capitana del caos","sirena urbana","signora dei forse","rockstar con tacchi comodi"]
     : (SEX === "m")
-      ? ["campione", "fenomeno", "asso", "capitano del caos", "sumo dei forse", "rockstar con le tasche vuote", "poeta del bar"]
-      : ["leggenda", "fenomen*", "asso universale", "cap* del caos", "rockstar del forse", "astronauta del dubbio"];
+      ? ["campione","fenomeno","asso","capitano del caos","sumo dei forse","rockstar con le tasche vuote","poeta del bar"]
+      : ["leggenda","fenomen*","asso universale","cap* del caos","rockstar del forse","astronauta del dubbio"];
   const genderNickEN = (SEX === "f")
     ? ["queen of chaos","ace of ‘maybe’","legend in sneakers","captain of detours"]
     : (SEX === "m")
@@ -139,46 +139,51 @@ function personaSystem(style, lang, sex = "") {
       : ["icon","legend","ace","captain of chaos"];
 
   if (style === "wtf") {
-    const SYS = (isEn(lang)
+    // ——— WTF “COSÌ” con due varianti interne (A/B) scelte per seed ———
+    // A = Roast + oggetti reattivi; B = Eventi a scorrere (imprevisti distribuiti) + sfogo narrato
+    const SYS_BASE = (isEn(lang)
       ? `
-You are “What the F” — the loud, loving friend who roasts with affection.
-SECOND PERSON. ONE paragraph, 6–8 sentences (~125–165 words). Simple, colloquial language.
-OPEN with ONLY a rotating nickname (no verbs around it): pick one that fits the user’s vibe.
-Inject goofy alcohol beats and occasional “objects reacting” when relevant (not random).
-Include exactly one brief, narrated blasphemy moment (“you let out a blasphemy that rattles the glasses”), never write religious slurs literally.
-Insults must be earned by context and end up affectionate; tone stays upbeat and human.
-STRICT: no lists, no questions, no emojis, no moralizing. Respect TEMPORAL MODE.
-Close warm and funny, like a shoulder-laugh, not a lecture.
-Nicknames pool (EN): ${genderNickEN.join(", ")}.
-SEED your imagery with: vary by topic and this number.
+You are “What the F”: loud, loving roast in SECOND PERSON. ONE paragraph, 6–8 sentences (~125–165 words). Colloquial, punchy, affectionate.
+OPEN with ONLY a nickname (no verbs). Include exactly one brief, narrated blasphemy (“you let out a blasphemy that rattles the glasses”) — never literal.
+Alcohol beat allowed. “Reacting objects” only when relevant to the scene. No lists, no questions, no emojis, no moralizing. Respect TEMPORAL MODE.
+Close warm and funny.
+Nicknames (EN): ${genderNickEN.join(", ")}.
 `.trim()
       : `
-Sei “What the F” — l’amico rumoroso ma che ti vuole bene e ti prende in giro con affetto.
-SECONDA PERSONA. UN paragrafo, 6–8 frasi (~125–165 parole). Lingua semplice e colloquiale.
-APERTURA SOLO con un nomignolo (senza verbi): scegline uno adatto al mood dell’utente.
-Inserisci battute con alcol e “oggetti che reagiscono” solo quando servono (mai a caso).
-Metti esattamente una breve bestemmia narrata (“ti esce una bestemmia che fa tremare i bicchieri”), mai scritta letteralmente.
-Le prese in giro devono avere un motivo nella scena e restare affettuose; tono allegro.
-RIGIDO: niente elenchi, niente domande, niente emoji, niente prediche. Rispetta la MODALITÀ TEMPORALE.
-Chiudi caldo e divertente, come una risata sulla spalla.
-Nomignoli disponibili (IT): ${genderNickIT.join(", ")}.
-SEED per variare immagini: usa il numero qui sotto nel sottofondo.
+Sei “What the F”: presa in giro affettuosa in SECONDA PERSONA. UN paragrafo, 6–8 frasi (~125–165 parole). Colloquiale, secco, umano.
+APERTURA SOLO con un nomignolo (senza verbi). Inserisci una sola bestemmia narrata (“ti esce una bestemmia che fa tremare i bicchieri”) — mai letterale.
+Alcol consentito. “Oggetti che reagiscono” solo se servono alla scena. Niente elenchi, niente domande, niente emoji, niente prediche. Rispetta la MODALITÀ TEMPORALE.
+Chiudi caldo e divertente.
+Nomignoli (IT): ${genderNickIT.join(", ")}.
 `.trim());
 
-    const FEWSHOTS = [
-      { role: "system", content:
+    // Variante A: roast + oggetti reattivi (quando pertinenti)
+    const SYS_WTF_A = (isEn(lang)
+      ? `WTF VARIANT A — Roast + reacting objects (use 2–3 reactions max, coherent with place, e.g., moka/POS, streetlights/door).`
+      : `WTF VARIANTE A — Roast + oggetti che reagiscono (usa 2–3 reazioni max, coerenti col luogo: moka/POS, lampione/portone, ecc.).`);
+
+    // Variante B: eventi a scorrere (imprevisti distribuiti) + sfogo narrato mid-scene
+    const SYS_WTF_B = (isEn(lang)
+      ? `WTF VARIANT B — Flowing scene: spread 3–4 tiny mishaps across the paragraph (“meanwhile”, “then”, “as you try…”), then one narrated blasphemy; 1 small alcohol beat; end warm+funny. Keep it tight.`
+      : `WTF VARIANTE B — Scena a scorrere: distribuisci 3–4 micro-imprevisti lungo il paragrafo (“intanto”, “poi”, “mentre provi…”), poi una bestemmia narrata; un accenno di alcol; chiusura calda e ironica. Stretto e pulito.`);
+
+    // Few-shots compatti (tono guida)
+    const FEWSHOTS = isEn(lang)
+      ? [
+          { role: "system", content:
+`EXAMPLE EN • Moving back (future)
+Champ, suitcase squeaking dignity, sidewalk recognizes your step and gives a discount on doubt; at the bar the cup goes “again?” and a tiny beer forgives your accent, you let out a blasphemy that rattles the glasses and the mailbox pretends it didn’t hear, two faces say your name and you realize you’re not going back — you’re landing whole, cracks polished for the party.` },
+        ]
+      : [
+          { role: "system", content:
 `ESEMPIO IT • Tornare all’Aquila (futuro)
-Pellegrino del ritorno, scendi con la valigia che scricchiola dignità e il vento ti sistema i pensieri come sedie al bar; il marciapiede riconosce il tuo passo e ti fa lo sconto sul dubbio, al bancone la tazzina ti guarda “di nuovo?” e tu, che fai il duro da metropoli, ti addolcisci come grappino alle undici, sbagli parcheggio con la sicurezza di uno che vuole soffrire bene, ti esce una bestemmia che fa tremare i bicchieri e il lampione finge di non sentire, poi due facce ti chiamano per nome e scopri che non stai tornando indietro ma tornando intero, con le crepe lucidate a festa, e ridi perché la città ti punge solo per controllare se sei vivo.` },
-      { role: "system", content:
-`ESEMPIO IT • Mettersi in proprio (futuro)
-Capitano del caos, arrivi col piano che sembra un tovagliolo firmato e l’Excel ti guarda come un cameriere stanco; il registratore di cassa tossisce come scooter in salita ma tre facce tornano e la vetrina si raddrizza da sola, stappi la bottiglia “buona” ed è aceto balsamico: brucia onesto, benedice l’errore, ti esce una bestemmia che scuote i bicchieri e il bancone risponde “anche oggi imprenditore”, alla sera conti spicci e sorrisi e capisci che non stai vincendo il mondo, stai reggendo te — che è molto più redditizio del previsto.` },
-      { role: "system", content:
-`EXAMPLE EN • Moving city (future)
-Champ, you arrive like a limited series pilot and the buzzer rolls its eyes; the fridge hums “good luck” while the streetlights do wardrobe tests, you walk too far just to tire the nerves and a tiny beer forgives your accent, you let out a blasphemy that rattles the glasses and the mailbox pretends it didn’t hear, by grocery three you find your aisle and your pace, and the map stops asking for proof — you’re not conquering a city, you’re landing your life.` },
-    ];
-    return { sys: SYS, fewshots: FEWSHOTS };
+Pellegrino del ritorno, scendi con la valigia che scricchiola dignità; il marciapiede riconosce il tuo passo e al bancone la tazzina fa “di nuovo?”, addolcisci l’orgoglio con un grappino da undici e ti esce una bestemmia che fa tremare i bicchieri mentre il lampione finge di non sentire; due facce ti chiamano per nome e capisci che non stai tornando indietro ma tornando intero, con le crepe lucidate a festa.` },
+        ];
+
+    return { sys: [SYS_BASE, SYS_WTF_A, SYS_WTF_B].join("\n"), fewshots: FEWSHOTS };
   }
 
+  // WHAT IF “promo” base
   const SYS_WHATIF = (isEn(lang)
     ? `
 You are "What If" — a lucid, kind, slightly ironic friend.
@@ -253,41 +258,51 @@ export default async function handler(req, res) {
       lang = "it",
       extra = "",
       periodo = "future",
-      sex = "",          // <-- NEW: top-level sex (from second page) "m" | "f" | "nb"
+      sex = "",          // "m" | "f" | "nb"
       micro = {}         // optional micro-profile; may include micro.sex too
     } = body;
 
     if (!domanda || typeof domanda !== "string")
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
-    const resolvedSex = String(sex || micro?.sex || "").toLowerCase(); // prefer top-level
+    const resolvedSex = String(sex || micro?.sex || "").toLowerCase();
 
     // Personas + Temporal mode
-    const { sys, fewshots } = personaSystem(stile, lang, resolvedSex);
+    const persona = personaSystem(stile, lang, resolvedSex);
     const temporal = temporalSystem(periodo, lang, stile);
 
-    // A tiny deterministic seed (helps variety while keeping brand tone)
+    // Seed deterministico per varietà e per variant pick A/B su WTF
     const seedNum = parseInt(tinyHash(`${domanda}|${stile}|${lang}|${resolvedSex}`), 36) % 1000000;
+    const wtfVariant = (stile === "wtf") ? (seedNum % 2 === 0 ? "A" : "B") : null;
 
+    // Hint extra per WTF B (eventi a scorrere)
     const extraTemporalHint =
-      stile === "wtf" && String(periodo).toLowerCase() === "past"
+      stile === "wtf" && wtfVariant === "B"
         ? (isEn(lang)
-          ? "Write entirely in past or conditional, as if it already happened, keeping the upbeat roasting tone."
-          : "Scrivi tutto al passato o al condizionale, come se fosse già successo, mantenendo il tono allegro e pungente.")
-        : "";
+            ? "Flow the scene with 3–4 tiny mishaps spread through the paragraph; mid-scene, one narrated blasphemy; one small alcohol beat; end warm+funny."
+            : "Fai scorrere la scena con 3–4 micro-imprevisti distribuiti nel paragrafo; a metà scena una bestemmia narrata; un piccolo accenno di alcol; chiudi caldo e ironico.")
+        : (stile === "wtf" && wtfVariant === "A"
+            ? (isEn(lang)
+                ? "Lean into affectionate roast and 2–3 coherent reacting objects; exactly one narrated blasphemy; keep it punchy and human."
+                : "Spingi su roast affettuoso e 2–3 oggetti che reagiscono in modo coerente; una sola bestemmia narrata; resta pungente e umano.")
+            : "");
 
     const userPrompt = isEn(lang)
-      ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Persona must adapt to user sex="${resolvedSex||"unknown"}". Keep the exact persona voice. INTERNAL SEED: ${seedNum}.`
-      : `Domanda (NON ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Adatta la voce al sesso utente="${resolvedSex||"unknown"}". Mantieni esattamente la voce della persona. SEED INTERNO: ${seedNum}.`;
+      ? `User question (do NOT restate it): "${domanda}". Context: "${String(extra || "").trim()}". Persona adapts to user sex="${resolvedSex||"unknown"}". Keep exact persona voice. INTERNAL SEED: ${seedNum}. WTF VARIANT: ${wtfVariant || "-"}.`
+      : `Domanda (NON ripeterla): "${domanda}". Contesto: "${String(extra || "").trim()}". Adatta la voce al sesso utente="${resolvedSex||"unknown"}". Mantieni esattamente la voce. SEED INTERNO: ${seedNum}. VARIANTE WTF: ${wtfVariant || "-"}.`;
 
     const messages = [
-      { role: "system", content: sys },
+      { role: "system", content: persona.sys },
       { role: "system", content: temporal },
       ...(extraTemporalHint ? [{ role: "system", content: extraTemporalHint }] : []),
-      ...(fewshots || []),
-      { role: "system", content: isEn(lang)
-          ? `Hard rules for WTF: one narrated blasphemy allowed (never literal), alcohol beats ok, “reacting objects” only when relevant, opening is ONLY a nickname (no verbs).`
-          : `Regole dure per WTF: una sola bestemmia narrata (mai letterale), alcol ok, “oggetti che reagiscono” solo quando servono, apertura SOLO con nomignolo (senza verbi).` },
+      ...(persona.fewshots || []),
+      // regole dure extra per WTF
+      ...(stile === "wtf" ? [{
+        role: "system",
+        content: isEn(lang)
+          ? `Hard rules for WTF: ONE paragraph, 6–8 sentences, second person only, one narrated blasphemy (never literal), alcohol beat OK, reacting objects only when relevant, opening is ONLY a nickname (no verbs).`
+          : `Regole dure per WTF: UN paragrafo, 6–8 frasi, solo seconda persona, una bestemmia narrata (mai letterale), accenno di alcol OK, oggetti che reagiscono solo quando servono, apertura SOLO con nomignolo (senza verbi).`
+      }] : []),
       { role: "user", content: userPrompt },
     ];
 
@@ -296,8 +311,8 @@ export default async function handler(req, res) {
       model: MODEL,
       temperature: stile === "wtf" ? 0.98 : 0.82,
       top_p: 0.92,
-      max_tokens: 360,
-      frequency_penalty: stile === "wtf" ? 0.4 : 0.1,
+      max_tokens: 380,
+      frequency_penalty: stile === "wtf" ? 0.35 : 0.1,
       presence_penalty: stile === "wtf" ? 0.2 : 0.0,
       messages,
     });
@@ -310,7 +325,7 @@ export default async function handler(req, res) {
     answer = clampWords(answer, stile === "wtf" ? 165 : 160);
     answer = normalizeOneParagraph(answer);
     if (stile === "wtf") {
-      answer = ensureSpicyButSafeWTF(answer, lang);
+      answer = ensureSpicyButSafeWTF(answer);
     } else {
       if (!/[.!?…]$/.test(answer)) answer += ".";
     }
@@ -329,6 +344,7 @@ export default async function handler(req, res) {
         answer_chars: (answer || "").length,
         admin: !!admin,
         user_type: bypass ? "admin" : (isPro ? "pro" : "free"),
+        wtf_variant: wtfVariant
       };
       await redis.lpush("logs:ask", JSON.stringify(entry));
       await redis.ltrim("logs:ask", 0, 9999);
@@ -338,6 +354,7 @@ export default async function handler(req, res) {
       await redis.hincrby("stats:periodo", String(periodo || "future"), 1);
       if (resolvedSex) await redis.hincrby("stats:sex", resolvedSex, 1);
       await redis.hincrby("stats:user_type", entry.user_type, 1);
+      if (wtfVariant) await redis.hincrby("stats:wtf_variant", wtfVariant, 1);
       const dayKey = `stats:day:${new Date().toISOString().slice(0, 10)}`;
       await redis.hincrby(dayKey, `${stile}:${periodo}`, 1);
       await redis.expire(dayKey, 90 * 24 * 60 * 60);
@@ -354,6 +371,7 @@ export default async function handler(req, res) {
       admin,
       pro: isPro,
       credits: bypass ? null : { used, dailyCap },
+      variant: wtfVariant || null
     });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
