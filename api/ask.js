@@ -1,3 +1,4 @@
+
 // /api/ask.js — What?f Engine (FINAL BALANCED EDITION • FIXED WTF SEQUENCE)
 // Basato sul tuo script funzionante; aggiunti solo i vincoli di stile richiesti.
 // Stili: whatif (analitico | reale) · wtf
