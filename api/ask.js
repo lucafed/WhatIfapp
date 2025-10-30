@@ -1,5 +1,5 @@
-// /api/ask.js — What?f Engine (FINAL BALANCED EDITION • FIXED WTF SEQUENCE)
-// Basato sul tuo script funzionante; aggiunti solo i vincoli di stile richiesti.
+// /api/ask.js — What?f Engine (FINAL BALANCED EDITION • FIXED WTF SEQUENCE • SARCASM BOOST)
+// Basato sul tuo script funzionante; aggiunti SOLO booster di sarcasmo & varietà per WTF.
 // Stili: whatif (analitico | reale) · wtf
 // Un paragrafo, seconda persona, niente elenchi, niente nomi inventati.
 
@@ -87,7 +87,7 @@ const WHATIF_REALE_STYLE_IT = `WHAT IF Reale/Poetico:
 - Chiudi riconoscendo luogo e tempo come alleati.
 - 135–155 parole. Seconda persona soltanto.`;
 
-/* ========= WTF — vincoli SEQUENZA + banche lessicali ========= */
+/* ========= WTF — banche lessicali & booster ========= */
 const WTF_SFOGO_BANK = [
   "bestemmione corazzato",
   "imprecazionona a detonazione",
@@ -100,7 +100,9 @@ const WTF_SFOGO_BANK = [
   "santa pazienza implosa",
   "vulcano d’anatemi",
   "tromba d’aria di improperi",
-  "scoppio teologico a catena"
+  "scoppio teologico a catena",
+  "ruggito parableastemico",
+  "tuono di scomuniche metaforiche"
 ];
 
 const WTF_REACTIONS_BANK = [
@@ -115,17 +117,28 @@ const WTF_REACTIONS_BANK = [
   "la statua all’angolo si copre gli occhi e sbircia tra le dita",
   "il citofono fa uno squillo di solidarietà e poi si pente",
   "il frigorifero si spegne per compassione",
-  "la porta automatica si apre da sola e poi si vergogna"
+  "la porta automatica si apre da sola e poi si vergogna",
+  "il cartello d’uscita cambia idea e indica ‘forza e coraggio’",
+  "la seggiola scricchiola come un giudizio universale in miniatura",
+  "il semaforo passa al rosso per rispetto e poi si fa il segno della croce"
 ];
 
-// Istruzione WTF: **forma rigida**, sinonimi & reazioni dentro
+/* Booster di sarcasmo: pungente ma pulito, sempre in seconda persona */
+const SARCASTIC_SPICE_IT = `BOOSTER DI SARCASMO (solo per WTF):
+- Aumenta la presa in giro iniziale con ironia affettuosa e iperboli visive.
+- Inserisci metafore/comparazioni che esagerano il contrasto tra aspettativa e realtà.
+- Usa doppi sensi leggeri e micro-barzellette legate al contesto (ambiente/oggetti/azione).
+- Mantieni la seconda persona, niente insulti reali né volgarità; il bersaglio sei “tu” in chiave autoironica.
+- Le reazioni degli oggetti devono essere coerenti con il luogo/azione della scena (bar → moka/pos; strada → semaforo/vetrine; casa → tapparella/lampada, ecc.).`;
+
+// Istruzione WTF: **forma rigida** (immutata) + info su pertinenza contesto
 const WTF_STRICT_IT = `WHAT THE F (demenziale, ma rispondi davvero):
 Sequenza OBBLIGATORIA in un solo paragrafo (145–165 parole):
-1) Presa in giro affettuosa del protagonista (2 frasi).
-2) 4 micro-imprevisti realistici legati al contesto della domanda.
+1) Presa in giro affettuosa del protagonista (2 frasi, ironia alta).
+2) 4 micro-imprevisti realistici legati al CONTENUTO della domanda (stesso contesto: non inserire oggetti estranei).
 3) “Ti trattieni… provi… riprovi…” e POI esplode UNO sfogo viscerale (scegline UNO, non più di uno) dai seguenti: ${WTF_SFOGO_BANK.join(", ")}. Scrivilo come narrazione (non insulto letterale).
 4) SUBITO DOPO inserisci 2–3 reazioni esilaranti coerenti al contesto, scelte da: ${WTF_REACTIONS_BANK.join(" · ")}.
-5) Accenno di alcol (sip/doppio amaro/sbronza elegante).
+5) Accenno di alcol (sip/doppio amaro/sbronza elegante) pertinente alla scena.
 6) Rispondi davvero alla domanda con una previsione/controfattuale concreta (1–2 frasi).
 7) Chiudi con una riga ironica (“morale”) che richiama l’apertura.
 Vincoli: seconda persona soltanto; niente nomi inventati; non ripetere la domanda.`;
@@ -141,7 +154,8 @@ function buildMessages({ domanda, lang, periodo, stile, mode }){
 
   if (stile === "wtf") {
     msgs.push(
-      { role: "system", content: WTF_STRICT_IT },
+      { role: "system", content: SARCASTIC_SPICE_IT },       // <— Booster sarcasmo
+      { role: "system", content: WTF_STRICT_IT },            // <— Sequenza fissa + pertinenza
       { role: "system", content: `ESEMPIO · WTF (forma guida, tono e sequenza)` +
         `\nAh ma guarda te… sempre convinto che la moka risolva i traumi. Ti vedi già al bancone, musica jazz, sorrisi, caffè perfetti. ` +
         `Poi arrivano quattro colpi bassi: il macinino tossisce, il latte impazzisce, il POS fa una novena e il vicino ordina “cappuccino tiepido che non sa di latte”. ` +
