@@ -84,26 +84,138 @@ h1{font-size:clamp(24px,5vw,34px);margin:16px 0 6px;color:var(--acc);text-align:
   </div>
 
   <!-- Stile & periodo -->
-  <div class="card center" id="styleCard">
-    <div class="headerRow">
-      <div class="label">Stile & periodo</div>
-      <div class="small" id="styleSmall">—</div>
-    </div>
-    <div class="body">
-      <div class="chips" id="styleChips">
-        <button class="chip" data-style="whatif" id="chipWhatIf">What if</button>
-        <button class="chip" data-style="wtf" id="chipWTF">What the F</button>
-      </div>
-      <div id="whatifSubMode" class="chips" style="margin-top:6px">
-        <button class="chip" data-mode="analitico" id="chipAnalitico">Analitico</button>
-        <button class="chip" data-mode="reale" id="chipReale">Reale/Poetico</button>
-      </div>
-      <div class="chips" id="periodChips" style="margin-top:6px">
-        <button class="chip" data-period="future" id="chipFuture">Futuro</button>
-        <button class="chip" data-period="past" id="chipPast">Passato</button>
-      </div>
-    </div>
-  </div>
+  <style>
+:root{
+  /* What?f palette */
+  --primary:#00E0FF;        /* turchese luminoso */
+  --primary-dark:#00B5CC;   /* turchese più scuro */
+  --highlight:#1AFFD5;      /* verde acqua per micro/hover */
+  --bg:#0A0F14;             /* quasi nero bluastro */
+  --surface:#141C22;        /* grigio antracite scuro */
+  --fg:#FFFFFF;             /* testo principale */
+  --muted:#A0B2BA;          /* testo secondario */
+
+  /* derived */
+  --card:rgba(20,28,34,.92);
+  --line:rgba(255,255,255,.10);
+  --chip:#0F1720;
+  --ink:#081218;
+  --shadow:rgba(0,0,0,.45);
+
+  /* legacy aliases (per il resto del CSS) */
+  --acc:var(--primary);
+  --acc2:var(--primary-dark);
+  --bg2:#0B1118;
+}
+
+/* tema alternativo per “What the F”: leggermente più acceso */
+html[data-theme="wtf"]{
+  --acc:var(--highlight);
+  --acc2:#12D6B7;
+}
+
+/* base */
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  background:
+    radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+  color:var(--fg);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+main{max-width:980px;margin:auto;padding:20px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* buttons */
+.btn{
+  appearance:none;border:1px solid var(--line);
+  background:var(--chip);color:var(--fg);
+  padding:10px 14px;border-radius:12px;cursor:pointer
+}
+.btn.primary{
+  background:linear-gradient(180deg,var(--acc),var(--acc2));
+  color:#061016;font-weight:800;border:none;
+  box-shadow:0 8px 24px var(--shadow), inset 0 0 0 1px rgba(255,255,255,.06)
+}
+.btn.ghost{background:rgba(255,255,255,.05);border:1px solid var(--line)}
+.btn:focus-visible{outline:2px solid var(--highlight);outline-offset:2px}
+
+/* badges & chips */
+.badge{
+  background:var(--chip);border:1px solid var(--line);
+  border-radius:999px;padding:6px 10px;font-size:12px;
+  color:var(--muted);user-select:none;white-space:nowrap
+}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  background:#0E151C;border:1px solid var(--line);color:#EAF3EE;
+  border-radius:999px;padding:9px 13px;font-size:13px;cursor:pointer;white-space:nowrap
+}
+.chip.sel{
+  background:linear-gradient(180deg,var(--acc),var(--acc2));
+  color:#061016;font-weight:800
+}
+
+/* cards */
+.card{
+  background:var(--card);backdrop-filter:blur(12px);
+  border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0
+}
+.card hr{border:0;border-top:1px solid var(--line);margin:10px 0}
+
+/* headings */
+h1{
+  font-size:clamp(24px,5vw,34px);
+  margin:16px 0 6px;color:var(--acc);text-align:center;letter-spacing:.2px
+}
+.lead{color:var(--muted);text-align:center;margin-top:0;font-size:14px}
+.label{color:var(--acc);font-weight:800;margin:0 0 8px}
+
+/* inputs */
+.input,textarea{
+  width:100%;background:rgba(255,255,255,.06);
+  color:#EAF3EE;border:1px solid var(--line);
+  border-radius:14px;padding:16px;font-size:18px
+}
+.qwrap{position:relative}
+.qwrap .input{font-size:20px;text-align:center}
+.qwrap .input::placeholder{color:#8FB8C6;opacity:.9}
+
+/* option pills & sets */
+.optset{display:flex;flex-wrap:wrap;gap:8px}
+.opt{
+  background:#0E151C;border:1px solid var(--line);color:#EAF3EE;
+  border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer
+}
+.opt.sel{
+  background:linear-gradient(180deg,var(--acc),var(--acc2));
+  color:#061016;font-weight:800
+}
+
+/* lists */
+.list{display:flex;flex-direction:column;gap:10px}
+.story{
+  display:flex;justify-content:space-between;align-items:center;
+  border:1px solid var(--line);border-radius:14px;
+  padding:12px 14px;background:rgba(255,255,255,.04)
+}
+.play{border:none;background:var(--chip);border:1px solid var(--line);
+  width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
+
+/* collapsible & misc */
+.toggle{cursor:pointer;user-select:none}
+.headerRow{display:flex;justify-content:space-between;align-items:center}
+.headerRow .label{margin:0}
+.collapsed>.body{display:none}
+.small,.meta{font-size:12px;color:var(--muted)}
+.hint{font-size:13px;color:#9BEBDD;margin-top:8px}
+.hidden{display:none !important}
+
+/* submode & period rows */
+.submode,.period{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.subnote{font-size:12px;color:var(--muted);margin-top:6px;text-align:center}
+  </style>
 
   <!-- Spunti rapidi -->
   <div class="card center collapsed" id="hintsCard">
