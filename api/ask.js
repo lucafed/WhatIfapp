@@ -1,4 +1,4 @@
-// /api/ask.js — What?f Engine (Multilang • Friendly-WTF with section tags • Poetic incipit hard-guard)
+// /api/ask.js — What?f Engine (Multilang • Context-WTF • Poetic hard-guard)
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -58,8 +58,7 @@ function tightenSentences(text, maxSentences) {
     .split(/(?<=[.!?])\s+/)
     .map((x) => x.trim())
     .filter(Boolean);
-  const out = [],
-    seen = new Set();
+  const out = [], seen = new Set();
   for (const p of parts) {
     const n = normLine(p);
     if (!n || seen.has(n)) continue;
@@ -96,10 +95,7 @@ function finalPunct(s = "") {
   return /[.!?…]$/.test(s) ? s : s + ".";
 }
 function stripQuestionEcho(domanda, text) {
-  const d = String(domanda || "")
-    .replace(/[“”"']/g, "")
-    .trim()
-    .toLowerCase();
+  const d = String(domanda || "").replace(/[“”"']/g, "").trim().toLowerCase();
   let t = String(text || "");
   const lead = t
     .slice(0, Math.min(t.length, d.length + 12))
@@ -130,7 +126,6 @@ function temporalInstruction(periodo = "future", lang = "it") {
 
 /* ========= WHAT IF — ESEMPI VINCOLANTI (IT) ========= */
 const WHATIF_ANALITICO_RX = `Sai Luca, tornare a L’Aquila oggi vorrebbe dire rimetterti in una città che ha ricostruito più di muri: ha ricucito abitudini. L’economia si muove piano ma tiene, più artigiani che industrie, più reti locali che multinazionali. Gli stipendi sono più bassi, ma la vita costa meno e il tempo vale di più. Le scuole funzionano, la montagna torna complice nelle domeniche lente, e i bambini crescono con un orizzonte vero invece di uno schermo. Il Veneto ti mancherebbe per il ritmo e le occasioni, ma qui ritroveresti spazio, fiato e relazioni che non devono correre per esistere. In fondo non sarebbe un passo indietro — solo un modo diverso di avanzare, più lento, ma più tuo.`;
-
 const WHATIF_POETICO_RX = `Bella questa, Luca. Riapri le finestre e l’aria fredda ti saluta come una vecchia conoscenza. I vicoli ti riconoscono dal passo, le montagne ti guardano come un’amante che non ha mai smesso di aspettare. Il bar sotto casa serve ancora il caffè corto e ruvido, e le voci per strada sanno di pane e di inverno. I bambini giocano con l’eco, non con il rumore, e le serate finiscono con una risata che rimbalza nei portoni. Ogni giorno è più semplice del precedente, ogni sera più tua. Non stai tornando indietro: stai solo tornando dove il tempo ti riconosce per nome.`;
 
 /* ========= WTF — few-shots (IT) vincolanti di tono ========= */
@@ -140,94 +135,66 @@ const FEWSHOT_WTF_IT = [
   `Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.`,
 ];
 
-/* ========= WTF — banche “friendly” (IT + EN) ========= */
-const WTF_BANKS_IT = {
-  openings: [
-    "Ah ma guarda te, {nick}… sempre in trattativa col destino a colpi di caffè.",
-    "Oh eccoci, {nick}: campione mondiale di complicarsi la vita con stile.",
-    "Bella mossa, {nick}: ti piace vincere facile, eh? Con i controvento in omaggio.",
-    "Uè {nick}, specialista in problemi artigianali fatti a mano.",
-  ],
-  jabs: [
-    "testa dura, cuore tenero, timing discutibile",
-    "coraggio a secchiate e manuale d’istruzioni perso",
-    "piano perfetto, viti avanzate, sorriso incluso",
-    "eroe del quotidiano con mantello steso ad asciugare",
-  ],
-  imprecations: [
-    "ti scappa una bestemmia a fisarmonica che entra ed esce come aria d’altura",
-    "ti parte un bestemmione da cartone animato che vibra come un basso funk",
-    "lasci andare una bestemmiata elastica che rimbalza sui muri e torna educata",
-    "srotoli una bestemmia in slow-motion, tutta coreografia e zero veleno",
-    "ti esce una bestemmia frizzante che fa le bollicine come l’acqua tonica",
-    "scocca una bestemmia da manuale, con manuale incluso e firma in calce",
-  ],
-  reactions: [
-    "la lampada sfarfalla in Morse e pare dirti «ricevuto»",
-    "il frigorifero sospira e decide di diventare minimalista",
-    "la tapparella si abbassa per imbarazzo e poi sbircia",
-    "il POS finge un aggiornamento e si mette in «timido»",
-    "la moka fa una standing ovation a vapore",
-    "il citofono squilla per solidarietà e poi si pente",
-    "il ventilatore gira al contrario per educazione",
-    "la sedia scricchiola come se volesse applaudire piano",
-  ],
-  drinks: [
-    "ti versi un goccio di rosso e rimetti a posto i pensieri",
-    "scegli un sorso corto di amaro, il mondo si raddrizza",
-    "alzi un calice piccolo: brindisi di manutenzione",
-    "bevi un dito di grappa e respiri più largo",
-  ],
-  morales: [
-    "Morale: il caos non si doma, gli si dà del tu.",
-    "Morale: se non si allinea, lo porti a bere e poi si convince.",
-    "Morale: quando ridi per primo, il resto si aggiusta.",
-    "Morale: metà fortuna, metà mestiere, zero rancore.",
-  ],
+/* ========= REACTIONS per TEMA (IT/EN) ========= */
+const REACT_IT = {
+  money: ["il POS finge un aggiornamento e ti guarda storto", "lo scontrino si arrotola come per non vedere", "l’app della banca tossisce e poi fa finta di niente", "il salvadanaio vibra come un vecchio autoradio"],
+  work: ["il file Excel apre da solo una colonna “speranze”", "la stampante starnutisce carta e ti dà del lei", "il badge lampeggia come una lucciola giudicante", "la macchinetta del caffè fa una standing ovation a vapore"],
+  travel: ["il trolley fa le ruote nervose sul pavimento", "il tabellone partenze cambia idea due volte per solidarietà", "il navigatore fa finta di non conoscerti ma ti ricalcola la vita"],
+  city: ["il cartello del paese ti strizza l’occhio", "le chiavi tintinnano come campanelli di benvenuto", "la serranda ti saluta con uno sbadiglio lucido"],
+  love: ["il telefono vibra come un cuore timido", "la playlist mette da sola la vostra canzone sbagliata", "le notifiche fanno la ola e poi si vergognano"],
+  study: ["l’evidenziatore s’illumina da solo", "la penna scatta in avanti come per firmare il destino", "il quaderno si mette in riga meglio di te"],
+  home: ["la sedia scricchiola come se volesse applaudire piano", "la tapparella si abbassa per imbarazzo e poi sbircia", "la moka ti fa l’applauso in dialetto"],
+  motor: ["il casco ti guarda come una madre preoccupata", "il semaforo passa al rosso solo per darti la scena"],
+  tech: ["il router lampeggia come in discoteca", "lo schermo fa un refresh di incoraggiamento", "il cloud si schiarisce la voce"],
+  kitchen: ["il frigo sospira e diventa minimalista", "il timer del forno fa un inchino", "il mestolo si mette sull’attenti"],
+  nature: ["le foglie ti fanno un applauso opaco", "il vento stira la giacca come una nonna", "il sentiero ti pare allungare la mano"],
+  fitness: ["le scarpe ti fanno ciao con i lacci", "il tappetino si srotola come un invito", "la borraccia suona come un brindisi d’allenamento"],
 };
-const WTF_BANKS_EN = {
-  openings: [
-    "Well, look at you, {nick}—negotiating with fate over a coffee.",
-    "Here we go, {nick}: world champ of complicating life with style.",
-    "Bold move, {nick}. You like winning uphill with a grin.",
-    "Hey {nick}, artisan of hand-crafted problems.",
-  ],
-  jabs: [
-    "stubborn head, soft heart, questionable timing",
-    "courage by the bucket, lost manual",
-    "perfect plan, extra screws, cheerful smile",
-    "everyday hero with cape in the laundry",
-  ],
-  imprecations: [
-    "a cartoon-grade ‘swear’ that wobbles like a funk bass",
-    "a concertina ‘swear’ that breathes in and out politely",
-    "a slow-motion ‘swear’—all choreography, zero venom",
-    "a sparkling ‘swear’ that bubbles like tonic water",
-    "a handbook ‘swear’, signed and stamped for the archives",
-  ],
-  reactions: [
-    "the lamp blinks in Morse like it got the memo",
-    "the fridge sighs and goes minimalist",
-    "the shutter lowers in embarrassment, then peeks",
-    "the card reader pretends to update and turns shy",
-    "the moka pot gives a tiny standing ovation",
-    "the door buzzer rings in solidarity and regrets it",
-    "the fan spins backward out of respect",
-    "the chair creaks as if clapping quietly",
-  ],
-  drinks: [
-    "you pour a small glass of red and line up your thoughts",
-    "you choose a short sip of amaro and the world straightens",
-    "you raise a tiny glass: maintenance toast",
-    "you drink a finger of grappa and breathe wider",
-  ],
-  morales: [
-    "Moral: you don’t tame chaos—you call it by name.",
-    "Moral: if it won’t align, buy it a drink and it might.",
-    "Moral: laugh first; the rest falls in line.",
-    "Moral: half luck, half craft, zero grudges.",
-  ],
+const REACT_EN = {
+  money: ["the card reader pretends to update and glares", "the receipt curls up not to look", "the banking app coughs and moves on", "the piggy bank hums like an old radio"],
+  work: ["Excel opens a new column called “hopes”", "the printer sneezes paper and calls you sir", "the badge blinks like a judgmental firefly", "the coffee machine gives a tiny ovation"],
+  travel: ["the trolley taps its wheels like a drummer", "the departures board changes twice in solidarity", "the GPS acts coy and recalculates your life"],
+  city: ["the town sign winks", "your keys jingle like tiny bells", "the shutter yawns and welcomes you"],
+  love: ["the phone buzzes like a shy heart", "the playlist picks the wrong song on purpose", "notifications do a wave then blush"],
+  study: ["the highlighter glows on its own", "the pen lunges forward to sign destiny", "the notebook straightens up better than you"],
+  home: ["the chair creaks a polite clap", "the blind lowers then peeks", "the moka pot whistles applause"],
+  motor: ["the helmet eyes you like a worried aunt", "the light turns red just to give you the stage"],
+  tech: ["the router blinks like a nightclub", "the screen refreshes with encouragement", "the cloud clears its throat"],
+  kitchen: ["the fridge sighs and goes minimalist", "the oven timer bows", "the ladle stands at attention"],
+  nature: ["the leaves give a muffled applause", "the wind irons your jacket like a grandma", "the path seems to hold out a hand"],
+  fitness: ["the shoes wave with their laces", "the mat unrolls like an invitation", "the bottle pings like a workout toast"],
 };
+
+/* Tema dalla domanda */
+function classifyTopic(q) {
+  const s = String(q || "").toLowerCase();
+  const has = (rx) => rx.test(s);
+  if (has(/affitto|bollett|soldi|budget|spesa|risparmi|mutuo|debito|conto|banca|prezzo/)) return "money";
+  if (has(/lavor|ufficio|collega|azienda|cv|colloquio|aumento/)) return "work";
+  if (has(/viagg|partire|trasfer|città|citta|trasloco|muover|cambiare citt/)) return "travel";
+  if (has(/aquila|l'aquila|quartiere|paese|città|citta/)) return "city";
+  if (has(/amore|relazione|partner|fidanz|cuore|appuntamento/)) return "love";
+  if (has(/studio|esame|universit|laurea|scuola|corsi?/)) return "study";
+  if (has(/casa|divano|letto|cucina|balcone|pulire|trasloco/)) return "home";
+  if (has(/moto|motore|casco|auto|macchina|scooter/)) return "motor";
+  if (has(/app|telefono|smart|internet|pc|computer|router|cloud|software/)) return "tech";
+  if (has(/forno|frigo|ricetta|cucin|mestolo|padella/)) return "kitchen";
+  if (has(/montagna|bosco|mare|vento|sentiero|natura|parco/)) return "nature";
+  if (has(/palestra|correre|allen|yoga|peso|fitness/)) return "fitness";
+  return "home";
+}
+function topicReactions(lang, topic) {
+  const bank = normLang(lang) === "it" ? REACT_IT : REACT_EN;
+  const arr = bank[topic] || bank.home;
+  // prendi 2 diverse
+  const used = new Set(), out = [];
+  while (out.length < 2 && used.size < arr.length) {
+    const i = Math.floor(Math.random() * arr.length);
+    if (used.has(i)) continue;
+    used.add(i); out.push(arr[i]);
+  }
+  return out;
+}
 
 /* ========= Linguistic rules ========= */
 function baseRules(lang) {
@@ -245,40 +212,33 @@ function whatIfAnaliticoRule(lang) {
 function whatIfPoeticoRule(lang) {
   const en = isEnLike(lang);
   return en
-    ? `WHAT IF Real/Poetic: start with a gentle incipit (e.g., “Nice one, Luca.”) and keep sober sensory images—streets, light, small gestures. Ban analytic terms (economy, budgets, KPIs, costs/benefits, rents, salaries). 8–10 sentences; reconciled closing.`
-    : `WHAT IF Reale/Poetico: apri con un incipit dolce (es. “Bella questa, Luca.”) e usa immagini sensoriali sobrie — strade, luce, gesti piccoli. Vietato lessico analitico (economia, budget, KPI, costi/benefici, affitti, stipendi). 8–10 frasi; chiusura riconciliata.`;
+    ? `WHAT IF Real/Poetic: begin with “Nice one, Luca.” Keep short sentences (6–12 words). Sensory images (light, air, streets, hands, coffee). STRICT BAN: numbers, prices, budgets, economy, rents, salaries, KPIs, “significherebbe/it would mean”, “context/contesto”, “initiatives/iniziative”. No metrics. Present-tense or near-future. Reconciled closing.`
+    : `WHAT IF Reale/Poetico: apri con “Bella questa, Luca.” Frasi brevi (6–12 parole). Immagini sensoriali (luce, aria, vicoli, mani, caffè). DIVIETO: numeri, prezzi, budget, economia, affitti, stipendi, KPI, “significherebbe/contesto/iniziative”. Niente metriche. Presente o futuro vicino. Chiusura riconciliata.`;
 }
 function wtfFriendlyRule(lang) {
   const en = isEnLike(lang);
-  // Sezioni marcate per garantire l’ordine (poi rimosse).
   return en
-    ? `WHAT THE F (friendly). Be funny, never aggressive. STRICT ORDER with tags: [OPEN] playful tease (≤2 sentences). [MISHAPS] 2–3 tiny mishaps. [IMPRECAZIONE] EXACTLY ONE theatrical ‘swear’ (from IMPRECATION), never against people. [REACTIONS] 2 object reactions (from REACTIONS). [DRINK] a small alcoholic sip (from DRINK). [ANSWER] 1–2 useful lines that truly answer the user's question. [MORALE] warm ironic moral (from MORAL). Output ONE paragraph that contains all tags in that order so they can be removed. Max 6–8 sentences total. Ban insults to people; ≤2 exclamation marks total.`
-    : `WHAT THE F (amichevole). Fai ridere, mai aggressivo. ORDINE STRETTO con tag: [OPEN] presa in giro affettuosa (≤2 frasi). [MISHAPS] 2–3 micro-imprevisti. [IMPRECAZIONE] ESATTAMENTE UNA imprecazione teatrale (da IMPRECAZIONE), mai contro persone. [REACTIONS] 2 reazioni di oggetti (da REACTIONS). [DRINK] un sorso alcolico piccolo (da DRINK). [ANSWER] 1–2 frasi che rispondono davvero alla domanda. [MORALE] morale calda e ironica (da MORAL). Produci UN paragrafo che contenga tutti i tag in quest’ordine per poi rimuoverli. Totale 6–8 frasi. Vietati insulti a persone; massimo 2 “!”.`;
+    ? `WHAT THE F (friendly). Be funny, never aggressive. STRICT ORDER with tags: [OPEN] playful tease (≤2 sentences) + ONE absurd simile. [MISHAPS] 2–3 tiny mishaps. [IMPRECAZIONE] EXACTLY ONE theatrical ‘swear’ (from IMPRECATION). [REACTIONS] 2 object reactions RELEVANT TO THE USER’S TOPIC (use REACTIONS provided). [DRINK] a small alcoholic sip (from DRINK). [ANSWER] 1–2 helpful lines that answer the question. [MORALE] warm ironic punchline. One paragraph, 6–8 sentences.`
+    : `WHAT THE F (amichevole). Fai ridere, mai aggressivo. ORDINE STRETTO con tag: [OPEN] presa in giro affettuosa (≤2 frasi) + UNA similitudine assurda. [MISHAPS] 2–3 micro-imprevisti. [IMPRECAZIONE] ESATTAMENTE UNA imprecazione teatrale (da IMPRECAZIONE). [REACTIONS] 2 reazioni di oggetti PERTINENTI AL TEMA dell’utente (usa REACTIONS fornito). [DRINK] un sorso alcolico (da DRINK). [ANSWER] 1–2 frasi davvero utili. [MORALE] chiusa ironica calda. Un paragrafo, 6–8 frasi.`;
 }
 
 /* ========= Random seeds per WTF ========= */
 function pick(arr, n = 1) {
-  const out = [];
-  const used = new Set();
+  const out = []; const used = new Set();
   while (out.length < n && used.size < arr.length) {
     const i = Math.floor(Math.random() * arr.length);
     if (used.has(i)) continue;
-    used.add(i);
-    out.push(arr[i]);
+    used.add(i); out.push(arr[i]);
   }
   return out;
 }
 function wtfSeeds(lang, domanda, micro = {}) {
+  const topic = classifyTopic(domanda);
+  const reacts = topicReactions(lang, topic);
   const L = normLang(lang) === "it" ? WTF_BANKS_IT : WTF_BANKS_EN;
-  const nick =
-    (micro?.nickname && String(micro.nickname).slice(0, 20)) ||
-    (normLang(lang) === "it" ? "campione" : "champion");
-
-  const opening =
-    pick(L.openings, 1)[0].replace("{nick}", nick) +
-    (Math.random() < 0.7 ? `: ${pick(L.jabs, 1)[0]}.` : "");
+  const nick = (micro?.nickname && String(micro.nickname).slice(0, 20)) || (normLang(lang) === "it" ? "campione" : "champion");
+  const opening = pick(L.openings, 1)[0].replace("{nick}", nick) + (Math.random() < 0.7 ? `: ${pick(L.jabs, 1)[0]}.` : "");
   const impre = pick(L.imprecations, 1)[0];
-  const reacts = pick(L.reactions, 2);
   const drink = pick(L.drinks, 1)[0];
   const moral = pick(L.morales, 1)[0];
 
@@ -298,7 +258,6 @@ function buildMessages({ domanda, lang, periodo, stile, mode, micro }) {
     { role: "system", content: baseRules(lang) },
     { role: "system", content: temporalInstruction(periodo, lang) },
   ];
-
   if (stile === "wtf") {
     msgs.push(
       ...wtfSeeds(lang, domanda, micro),
@@ -308,12 +267,12 @@ function buildMessages({ domanda, lang, periodo, stile, mode, micro }) {
     if (mode === "analitico") {
       msgs.push(
         { role: "system", content: whatIfAnaliticoRule(lang) },
-        { role: "system", content: `ESEMPIO (IT):\n${WHATIF_ANALITICO_RX}` }
+        { role: "system", content: `ESEMPIO (IT):\n${WHATIF_ANALITICO_RX}` },
       );
     } else {
       msgs.push(
         { role: "system", content: whatIfPoeticoRule(lang) },
-        { role: "system", content: `ESEMPIO (IT):\n${WHATIF_POETICO_RX}` }
+        { role: "system", content: `ESEMPIO (IT):\n${WHATIF_POETICO_RX}` },
       );
     }
   }
@@ -329,13 +288,11 @@ function buildMessages({ domanda, lang, periodo, stile, mode, micro }) {
       : L === "fr"
       ? `Question (ne la répète pas) : « ${domanda} ». Donne UNE réponse en FRANÇAIS, un seul paragraphe.`
       : `Frage (nicht wiederholen): „${domanda}“. Gib EINE Antwort auf DEUTSCH, ein einziger Absatz.`;
-
   msgs.push({ role: "user", content: ask });
-
   return msgs;
 }
 
-/* ========= WTF post-process (ordina sezioni & pulisce tag) ========= */
+/* ========= WTF post-process (sezioni & tag) ========= */
 const SECTION_ORDER = ["[OPEN]", "[MISHAPS]", "[IMPRECAZIONE]", "[REACTIONS]", "[DRINK]", "[ANSWER]", "[MORALE]"];
 function extractSections(answer) {
   const map = {};
@@ -350,27 +307,29 @@ function assembleByOrder(map) {
   const parts = SECTION_ORDER.map((t) => (map[t] ? map[t] : "")).filter(Boolean);
   return parts.join(" ");
 }
-function stripAllTags(s) {
-  return s.replace(/\[(OPEN|MISHAPS|IMPRECAZIONE|REACTIONS|DRINK|ANSWER|MORALE)\]/gi, "").trim();
-}
+const STRIP_TAGS_RX = /\[(OPEN|MISHAPS|IMPRECAZIONE|REACTIONS|DRINK|ANSWER|MORALE)\]/gi;
+function stripAllTags(s) { return s.replace(STRIP_TAGS_RX, "").trim(); }
+
 /* ========= Poetic safeguards ========= */
-const ANALYTIC_WORDS_RX = /\b(costi|benefici|costo|beneficio|budget|kpi|percentuali?|margini?|economia|pil|inflazione|affitti?|stipendi?|benchmark|metriche|analisi|trade[- ]?off)\b/gi;
+const ANALYTIC_WORDS_RX = /\b(costi|benefici|costo|beneficio|budget|kpi|percentuali?|margini?|economia|pil|inflazione|affitti?|stipendi?|benchmark|metriche|analisi|trade[- ]?off|significher(?:e|ebbe)|contesto|iniziative?)\b/gi;
 function softenAnalyticLexicon(s) {
   return s.replace(ANALYTIC_WORDS_RX, (m) => {
-    const repl = {
-      "costi":"spigoli", "benefici":"comodità", "budget":"misura",
-      "kpi":"misure", "percentuale":"parte", "percentuali":"parti",
-      "margini":"bordi", "economia":"ritmo della città",
-      "affitti":"case", "stipendi":"paghe",
-      "analisi":"sguardo", "trade-off":"scambio",
-    }[m.toLowerCase()] || "misura";
-    return repl;
+    const map = {
+      costi:"spigoli", benefici:"comodità", costo:"spigolo", beneficio:"comodità",
+      budget:"misura", kpi:"misure", percentuale:"parte", percentuali:"parti",
+      margini:"bordi", economia:"ritmo della città", pil:"ritmo del paese",
+      inflazione:"fiato corto dei prezzi", affitti:"case", stipendi:"paghe",
+      benchmark:"paragoni", metriche:"misure", analisi:"sguardo", "trade-off":"scambio",
+      significhere:"vorrebbe dire", significherebbe:"vorrebbe dire",
+      contesto:"intorno", iniziativa:"gesto", iniziative:"gesti"
+    };
+    return map[m.toLowerCase()] || "misura";
   });
 }
 function ensurePoeticIncipit(lang, text) {
   const L = normLang(lang);
   const want = L === "it" ? "Bella questa, Luca." : "Nice one, Luca.";
-  const already = new RegExp(`^\\s*(Bella questa|Nice one)`, "i").test(text);
+  const already = new RegExp(`^\\s*(Bella questa, Luca\\.|Nice one, Luca\\.)`, "i").test(text);
   return already ? text : `${want} ${text}`;
 }
 
@@ -378,39 +337,20 @@ function ensurePoeticIncipit(lang, text) {
 export default async function handler(req, res) {
   cors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "method_not_allowed" });
+  if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
   try {
-    if (!process.env.OPENAI_API_KEY)
-      return res.status(500).json({ error: "missing_api_key" });
+    if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: "missing_api_key" });
 
-    const ip = (
-      req.headers["x-forwarded-for"] ||
-      req.socket?.remoteAddress ||
-      "unknown"
-    )
-      .toString()
-      .split(",")[0]
-      .trim();
+    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").toString().split(",")[0].trim();
     const { success } = await rl.limit(`ask:${ip}`);
     if (!success) return res.status(429).json({ error: "rate_limited_minute" });
 
-    const body =
-      typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
-    const {
-      domanda = "",
-      stile = "whatif",        // "whatif" | "wtf"
-      mode = "analitico",      // per whatif: "analitico" | "reale"
-      lang = "it",
-      periodo = "future",
-      micro = {},
-    } = body;
+    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
+    const { domanda = "", stile = "whatif", mode = "analitico", lang = "it", periodo = "future", micro = {} } = body;
 
     if (!domanda || typeof domanda !== "string")
-      return res
-        .status(400)
-        .json({ error: "bad_request", detail: "domanda_required" });
+      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
     const messages = buildMessages({ domanda, lang, periodo, stile, mode, micro });
 
@@ -430,7 +370,6 @@ export default async function handler(req, res) {
     // Post-process comune
     answer = stripQuestionEcho(domanda, answer);
     if (stile === "wtf") {
-      // Ordina sezioni marcate e rimuovi tag
       const sections = extractSections(answer);
       if (Object.keys(sections).length) {
         answer = assembleByOrder(sections);
@@ -444,19 +383,20 @@ export default async function handler(req, res) {
     answer = finalPunct(answer);
 
     if (stile === "wtf") {
-      // Limiti e toni (senza smorzare la comicità)
-      answer = answer.replace(/!{3,}/g, "!!");
-      const bad = /\b(cazzo|cazzata|stronzo|idiota|cretino|imbecille)\b/gi;
-      answer = answer.replace(bad, normLang(lang) === "it" ? "accidente" : "heck");
-      // Deve esserci un drink alcolico
+      // niente insulti diretti, max due !
+      answer = answer.replace(/!{3,}/g, "!!")
+        .replace(/\b(cazzo|cazzata|stronzo|idiota|cretino|imbecille)\b/gi, normLang(lang) === "it" ? "accidente" : "heck");
+      // drink alcolico garantito
       if (!/\b(grappa|amaro|rosso|vino|calice|goccio|dito|brindisi)\b/i.test(answer)) {
         const L = normLang(lang) === "it" ? WTF_BANKS_IT : WTF_BANKS_EN;
         answer = finalPunct(answer) + " " + ensureSentenceCase(pick(L.drinks,1)[0]) + ".";
       }
     } else if (mode !== "analitico") {
-      // Poetic/Real guard: incipit + lessico non analitico
+      // Poetic guard
       answer = ensurePoeticIncipit(lang, answer);
       answer = softenAnalyticLexicon(answer);
+      // vieta numeri espliciti
+      answer = answer.replace(/\b\d+([.,]\d+)?\b/g, "qualche");
     }
 
     // Evita nomi non presenti nella domanda (solo IT)
@@ -466,22 +406,14 @@ export default async function handler(req, res) {
         const nameRx = /\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
         const inQuestion = new Set(d.match(nameRx) || []);
         answer = answer.replace(nameRx, (m) =>
-          inQuestion.has(m)
-            ? m
-            : ["Ah", "Oh", "Ehi", "Bella", "Sai"].includes(m)
-            ? m
-            : m.toLowerCase()
+          inQuestion.has(m) ? m : ["Ah","Oh","Ehi","Bella","Sai","Nice"].includes(m) ? m : m.toLowerCase()
         );
       })();
     }
 
-    return res
-      .status(200)
-      .json({ answer, style: stile, mode, lang: normLang(lang), periodo, model: MODEL });
+    return res.status(200).json({ answer, style: stile, mode, lang: normLang(lang), periodo, model: MODEL });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
-    return res
-      .status(500)
-      .json({ error: "server_error", detail: String(err?.message || err) });
+    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
 }
