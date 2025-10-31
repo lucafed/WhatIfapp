@@ -1,4 +1,4 @@
-// /api/ask.js — What?f Engine (STRICT STYLES • CONTEXT REACTIONS • NO WATER)
+// /api/ask.js — What?f Engine (ULTRA SPLIT WHATIF • HYSTERICAL WTF REACTIONS • NO WATER)
 // Stili: whatif (analitico | reale) · wtf
 // Un paragrafo, seconda persona, niente elenchi/emoji, no eco domanda, no nomi inventati.
 
@@ -69,7 +69,7 @@ function temporalInstruction(periodo="future"){
   return "Scrivi come un prossimo futuro che inizia ora.";
 }
 
-/* ========= ESEMPI VINCOLANTI — TUOI ========= */
+/* ========= ESEMPI VINCOLANTI — tuoi ========= */
 const WHATIF_ANALITICO_RX = `Sai Luca, tornare a L’Aquila oggi vorrebbe dire rimetterti in una città che ha ricostruito più di muri: ha ricucito abitudini. L’economia si muove piano ma tiene, più artigiani che industrie, più reti locali che multinazionali. Gli stipendi sono più bassi, ma la vita costa meno e il tempo vale di più. Le scuole funzionano, la montagna torna complice nelle domeniche lente, e i bambini crescono con un orizzonte vero invece di uno schermo. Il Veneto ti mancherebbe per il ritmo e le occasioni, ma qui ritroveresti spazio, fiato e relazioni che non devono correre per esistere. In fondo non sarebbe un passo indietro — solo un modo diverso di avanzare, più lento, ma più tuo.`;
 const WHATIF_POETICO_RX = `Bella questa, Luca. Riapri le finestre e l’aria fredda ti saluta come una vecchia conoscenza. I vicoli ti riconoscono dal passo, le montagne ti guardano come un’amante che non ha mai smesso di aspettare. Il bar sotto casa serve ancora il caffè corto e ruvido, e le voci per strada sanno di pane e di inverno. I bambini giocano con l’eco, non con il rumore, e le serate finiscono con una risata che rimbalza nei portoni. Ogni giorno è più semplice del precedente, ogni sera più tua. Non stai tornando indietro: stai solo tornando dove il tempo ti riconosce per nome.`;
 
@@ -80,67 +80,66 @@ const FEWSHOT_WTF_IT = [
   `Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.`,
 ];
 
-/* ========= WTF — banche per reazioni DEMENZIALI contestuali ========= */
+/* ========= WTF — reazioni DEMENZIALI contestuali (2–3 max) ========= */
 const REACTIONS_BY_CONTEXT = {
   bar: [
-    "la lampada del bancone sfarfalla in Morse e ordina un espresso",
-    "la moka fa una standing ovation a vapore",
-    "il POS finge un aggiornamento e passa a modalità timida",
-    "i bicchieri applaudono in cristallo e chiedono il bis",
-    "il frigo sospira e decide di diventare minimalista"
+    "la lampada del bancone sfarfalla in Morse e ordina un ristretto col tuo nome",
+    "il POS finge la Cresima e si mette in ‘pentito’",
+    "la moka fa una standing ovation a vapore e ti propone sindaco del caffè",
+    "i bicchieri applaudono in cristallo e si mettono in fila per un autografo",
+    "il frigo sospira e congela il senso di colpa"
   ],
   moto: [
-    "il semaforo passa al rosso per rispetto",
-    "il casco ti annuisce da solo come un saggio di plastica",
-    "il cane sull’angolo cambia marciapiede per prudenza",
-    "lo specchietto si gira dall’altra parte per pudore"
+    "il semaforo passa al rosso per rispetto e ti fa l’inchino",
+    "il casco annuisce da solo come un maestro zen in policarbonato",
+    "il cane all’angolo cambia marciapiede e ti augura buona strada",
+    "lo specchietto si gira dall’altra parte per non vedere il peccato veniale"
   ],
   amore: [
-    "la lampada sfarfalla come se capisse il dramma",
-    "il bicchiere applaude da solo e poi si riempie",
-    "Alexa finge un aggiornamento e scappa in ‘non disturbare’",
-    "la tenda si chiude da sola per discrezione"
+    "la lampada fa luce dramatica e chiede i diritti d’autore sulla scena",
+    "il bicchiere applaude da solo e si rimpinza per compagnia",
+    "Alexa finge un aggiornamento a vita e si mette in clausura digitale",
+    "la tenda si chiude da sola e lascia un buco per spiare"
   ],
   ufficio: [
-    "la stampante tossisce un fax del ’98",
-    "l’ascensore apre le porte e poi ci ripensa",
-    "il badge fa bip tre volte in segno di lutto",
-    "la macchinetta del caffè batte scontrino di consolazione"
+    "la stampante sputa un fax del ’98 con scritto «coraggio»",
+    "il badge fa tre bip in latino e ti assolve",
+    "l’ascensore apre le porte, ti giudica e richiude con tatto",
+    "la macchinetta del caffè batte uno scontrino di consolazione"
   ],
   casa: [
-    "la tapparella si abbassa per imbarazzo e poi sbircia",
-    "il citofono squilla in solidarietà e poi si pente",
-    "la sedia scricchiola come se applaudisse piano",
-    "la pianta grassa annuisce con foglie perplesse"
+    "la tapparella si abbassa per imbarazzo e poi risale per spettegolare",
+    "il citofono suona in do minore e poi ti chiede scusa",
+    "la sedia scricchiola come applausi educati di teatro serale",
+    "la pianta grassa annuisce e ti promuove a giardiniere onorario"
   ],
   cucina: [
-    "il tostapane fa un inchino e sputa briciole a tempo",
-    "la pentola fischia un’ovazione",
-    "il frigorifero si spegne per compassione"
+    "il tostapane fa un inchino e spara coriandoli di pane",
+    "la pentola fischia l’inno nazionale del sugo",
+    "il frigorifero si spegne per empatia e poi si riaccende per fame"
   ],
   montagna: [
-    "la seggiovia tossisce un amen stonato",
-    "il rifugio lampeggia ‘occupato’ per empatia",
-    "il campanile del paese anticipa la mezz’ora per incoraggiarti"
+    "la seggiovia tossisce un amen stonato e ti benedice il ginocchio",
+    "il rifugio lampeggia ‘occupato’ per darti importanza",
+    "il campanile anticipa la mezz’ora e la dedica a te"
   ],
   mare: [
-    "l’ombrellone si chiude da solo e poi riapre curioso",
-    "il bagnasciuga fa applausi a onde corte",
-    "il chiosco del lungomare stappa da sé e brinda"
+    "l’ombrellone si chiude da solo e riapre solo se prometti di stare calmo",
+    "il bagnasciuga fa applausi a onde corte e poi firma il selfie",
+    "il chiosco del lungomare stappa da sé e brinda al tuo destino"
   ],
   default: [
     "la lampada sfarfalla in Morse e pare dirti «ricevuto»",
-    "la tapparella si abbassa e poi sbircia",
-    "il ventilatore gira al contrario per rispetto",
-    "il campanello suona in do minore e si commuove"
+    "il ventilatore gira al contrario solo per rispetto",
+    "il campanello suona in fa diesis e poi arrossisce"
   ]
 };
 const WTF_IMPRECATIONS = [
   "bestemmione corazzato",
   "imprecazionona a detonazione",
   "sacramentata a ciel sereno",
-  "srotoli una bestemmia in slow-motion, tutta coreografia e zero veleno",
-  "ti esce una bestemmia frizzante che fa le bollicine come l’acqua tonica"
+  "vulcano d’anatemi con effetto eco",
+  "tromba d’aria di improperi a norma CE"
 ];
 const WTF_DRINKS = [
   "ti versi un goccio di liquore e rimetti a posto i pensieri",
@@ -150,8 +149,8 @@ const WTF_DRINKS = [
   "butti giù uno shot educato e torni in traiettoria"
 ];
 const WTF_MORALES = [
-  "Morale: il caos non si doma, gli dai del tu.",
   "Morale: ridi tu per primo e il resto si arrangia.",
+  "Morale: il caos non si doma, gli dai del tu.",
   "Morale: se non si allinea, lo porti a bere e si convince.",
   "Morale: metà fortuna, metà mestiere, zero rancore."
 ];
@@ -160,19 +159,19 @@ const WTF_MORALES = [
 const BASE_RULES = `REGOLE GENERALI:
 - Un solo paragrafo. Niente elenchi. Niente emoji. NON ripetere la domanda.
 - Solo seconda persona. Nessun nome proprio non presente nella domanda.
-- Matcha esattamente tono, cadenza e respiro degli esempi.`;
+- Copia esattamente tono, cadenza e respiro degli esempi.`;
 
 const WHATIF_ANALITICO_RULE = `WHAT IF Analitico (vincolante):
-- INCIPIT OBBLIGATORIO: “Sai Luca,” (o variante coerente).
-- Lessico concreto: routine, orari, bollette, affitto, stipendi, chilometri, servizi, reti locali, artigiani, scambi reali.
-- VIETATO: immagini liriche/sensoriali; niente “eco”, “montagne che guardano”, “risate che rimbalzano”, ecc.
-- Cadenza e lessico identici all’esempio analitico. 135–155 parole. Chiusura calma.`;
+- INCIPIT OBBLIGATORIO: “Sai Luca,” (o variante coerente: “Sai, questa domanda…”).
+- Lessico SOLO concreto: routine, orari, affitti, bollette, stipendi, chilometri, servizi, reti locali, artigiani, scambi reali.
+- VIETATO: immagini/figure poetiche (eco, vicoli che guardano, montagne-amanti, risate che rimbalzano, profumi/vento).
+- Cadenza dell’esempio analitico. 135–155 parole. Chiusura calma.`;
 
 const WHATIF_POETICO_RULE = `WHAT IF Reale/Poetico (vincolante):
 - INCIPIT OBBLIGATORIO: “Bella questa, Luca.” (o variante strettissima).
-- Lessico sensoriale quotidiano: aria, luce, vicoli, finestre, passi, mani, caffè corto e ruvido, voci, risate, inverno/vento, orizzonte vero.
-- VIETATO: gergo analitico (costi/benefici, budget, KPI, efficienza, trade-off).
-- Cadenza e immagini identiche all’esempio poetico. 135–155 parole. Chiusura riconciliata.`;
+- Lessico SOLO sensoriale sobrio: aria, luce, vicoli, finestre, passi, mani, caffè corto e ruvido, voci, risate, inverno/vento, orizzonte vero.
+- VIETATO: gergo analitico (costi/benefici, budget, KPI, ottimizzazione, affitto/bollette/ stipendi).
+- Cadenza dell’esempio poetico. 135–155 parole. Chiusura riconciliata.`;
 
 /* ========= Costruzione WTF con reazioni contestuali ========= */
 function pick(arr, n=1){
@@ -187,7 +186,7 @@ function detectContext(domanda=""){
   const d = domanda.toLowerCase();
   if(/bar|caff[eè]|bancone|moka|pos|latte/.test(d)) return "bar";
   if(/moto|casco|motore|strada|sem[af]oro/.test(d)) return "moto";
-  if(/amore|relazione|cuore|lui|lei|partner|messaggi/.test(d)) return "amore";
+  if(/amore|relazione|cuore|lui|lei|partner|messaggi|ghost/.test(d)) return "amore";
   if(/ufficio|badge|stampante|riunione|colleghi|manager/.test(d)) return "ufficio";
   if(/casa|divano|citofono|tapparella|sedia|pianta/.test(d)) return "casa";
   if(/cucina|fornelli|tostapane|frigo|pentola/.test(d)) return "cucina";
@@ -195,11 +194,10 @@ function detectContext(domanda=""){
   if(/mare|spiaggia|chiosco|ombrellone|bagnasciuga/.test(d)) return "mare";
   return "default";
 }
-function wtfSeeds(domanda, micro={}){
+function wtfSeeds(domanda){
   const ctx = detectContext(domanda);
-  const reactionsPool = REACTIONS_BY_CONTEXT[ctx] || REACTIONS_BY_CONTEXT.default;
-  const reactCount = 2 + Math.floor(Math.random()*2); // 2 o 3
-  const reacts = pick(reactionsPool, reactCount);
+  const pool = REACTIONS_BY_CONTEXT[ctx] || REACTIONS_BY_CONTEXT.default;
+  const reacts = pick(pool, 2 + Math.floor(Math.random()*2)); // 2–3
   const opening = pick([
     "Ah ma guarda te… contrattando col destino a colpi di caffè",
     "Oh eccoti: campione mondiale di complicarti la vita con stile",
@@ -210,23 +208,21 @@ function wtfSeeds(domanda, micro={}){
   const drink = pick(WTF_DRINKS,1)[0];
   const moral = pick(WTF_MORALES,1)[0];
   return [
-    { role:"system", content: `WHAT THE F (amichevole, comico):
-Struttura OBBLIGATORIA (6–8 frasi, un paragrafo).
-Apertura (presa in giro ≤2 frasi) → 2–3 micro-imprevisti → ESATTAMENTE UNA imprecazione teatrale (non contro persone) → SUBITO 2–3 reazioni di oggetti coerenti al contesto → accenno alcolico → 1–2 frasi che rispondono davvero → morale calda.
-Niente acqua. Max due “!”. Matcha gli esempi.` },
-    { role:"system", content: `OPENING: ${opening}` },
-    { role:"system", content: `IMPRECATION: ${impre}` },
-    { role:"system", content: `REACTIONS:\n- ${reacts.join("\n- ")}` },
-    { role:"system", content: `DRINK: ${drink}` },
-    { role:"system", content: `MORAL: ${moral}` },
-    { role:"system", content: `ESEMPI VINCOLANTI (tono/ritmo):\n- ${FEWSHOT_WTF_IT[0]}\n- ${FEWSHOT_WTF_IT[1]}\n- ${FEWSHOT_WTF_IT[2]}` },
+    { role:"system", content:`WHAT THE F (amichevole, comico):
+OBBLIGO forma (6–8 frasi, un paragrafo): apertura ≤2 frasi → 2–3 micro-imprevisti → UNA imprecazione teatrale (non contro persone) → SUBITO 2–3 reazioni di oggetti coerenti al contesto → accenno alcolico → 1–2 frasi che rispondono davvero → morale. Niente acqua. Max due “!”. Matcha gli esempi.` },
+    { role:"system", content:`OPENING: ${opening}` },
+    { role:"system", content:`IMPRECATION: ${impre}` },
+    { role:"system", content:`REACTIONS:\n- ${reacts.join("\n- ")}` },
+    { role:"system", content:`DRINK: ${drink}` },
+    { role:"system", content:`MORAL: ${moral}` },
+    { role:"system", content:`ESEMPI VINCOLANTI (tono/ritmo):\n- ${FEWSHOT_WTF_IT[0]}\n- ${FEWSHOT_WTF_IT[1]}\n- ${FEWSHOT_WTF_IT[2]}` },
   ];
 }
 
 /* ========= Prompt builder ========= */
 function buildMessages({ domanda, periodo, stile, mode }){
   const msgs = [
-    { role:"system", content: BASE_RULES },
+    { role:"system", content: `REGOLE GENERALI: un solo paragrafo, senza elenchi/emoji, NON ripetere la domanda; seconda persona; no nomi inventati. Lunghezza: WHATIF 135–155, WTF 145–165.` },
     { role:"system", content: temporalInstruction(periodo) },
   ];
   if (stile === "wtf") {
@@ -242,33 +238,41 @@ function buildMessages({ domanda, periodo, stile, mode }){
       { role:"system", content: `ESEMPIO POETICO (VINCOLANTE):\n${WHATIF_POETICO_RX}` },
     );
   }
-  msgs.push({
-    role:"user",
-    content:`Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO, un solo paragrafo.`
-  });
+  msgs.push({ role:"user", content:`Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO, un solo paragrafo.` });
   return msgs;
 }
 
 /* ========= Post-process ========= */
 function keepSingleImprecazione(answer){
-  const rx=/\bbestemmi\w*|imprecazion\w*|sacrament\w*|anatema\w*/gi;
-  let c=0; return answer.replace(rx, m => (++c===1? m : "imprecazione a mezza voce"));
+  const rx=/\bbestemmi\w*|imprecazion\w*|sacrament\w*|anatema\w*|improper/i;
+  let seen=false;
+  return answer.replace(new RegExp(rx,'gi'), m => seen ? "imprecazione a mezza voce" : (seen=true, m));
 }
 function ensureDrink(answer){
-  if(/\b(grappa|amaro|rosso|vino|spritz|negroni|whisky|rum|birra|calice|miniuscolo|goccio|dito|brindisi|liquore|shot)\b/i.test(answer)) return answer;
+  if(/\b(grappa|amaro|rosso|vino|spritz|negroni|whisky|rum|birra|calice|goccio|dito|brindisi|liquore|shot)\b/i.test(answer)) return answer;
   return finalPunct(answer)+" Ti versi un goccio di liquore e il mondo si rimette in riga.";
 }
 function limitExclamations(s){ return s.replace(/!{3,}/g,"!!"); }
 function forbidInsults(s){ return s.replace(/\b(cazzo|cazzata|stronzo|idiota|cretino|imbecille)\b/gi,"accidente"); }
 
-function forceAnaliticoIncipt(answer){
-  if(/^Sai Luca, /i.test(answer)) return answer;
-  return "Sai Luca, " + answer.replace(/^([A-ZÀ-Ýa-zà-ÿ]+,?\s*)/,"");
+/* ——— What if: anti-contaminazione dura ——— */
+const LIRICO_BAN = /\b(eco|profumo|odore|vento|brezza|neve|montagn[ae]|amante che|risata che rimbalza|voci che sanno|orizzonte vero|vicoli che|finestre che|mani che|luce che)\b/gi;
+const ANALISI_BAN = /\b(costi|benefici|budget|kpi|metriche|efficienza|performance|ottimizzazione|trade[- ]?off|affitto|bollett(e|a)|stipend[iio]|rete(?:\s+locale)?|artigiani|chilometr[io]|serviz[io]i?)\b/gi;
+
+function forceAnalitico(answer){
+  if(!/^Sai Luca, /i.test(answer)) answer = "Sai Luca, " + answer.replace(/^([A-ZÀ-Ýa-zà-ÿ]+,?\s*)/,"");
+  // rimuovi lirismi
+  answer = answer.replace(LIRICO_BAN, "routine");
+  return answer;
 }
-function forcePoeticoIncipit(answer){
-  if(/^Bella questa, Luca\./i.test(answer)) return answer;
-  if(/^Bella questa, /i.test(answer)) return answer.replace(/^Bella questa, /,"Bella questa, Luca. ");
-  return "Bella questa, Luca. " + answer;
+function forcePoetico(answer){
+  if(/^Bella questa, Luca\./i.test(answer)===false){
+    if(/^Bella questa, /i.test(answer)) answer = answer.replace(/^Bella questa, /,"Bella questa, Luca. ");
+    else answer = "Bella questa, Luca. " + answer;
+  }
+  // rimuovi gergo analitico
+  answer = answer.replace(ANALISI_BAN, "respiro");
+  return answer;
 }
 
 /* ========= HANDLER ========= */
@@ -284,14 +288,8 @@ export default async function handler(req,res){
     const { success } = await rl.limit(`ask:${ip}`);
     if(!success) return res.status(429).json({ error:"rate_limited_minute" });
 
-    const body =
-      typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-    const {
-      domanda = "",
-      stile   = "whatif",   // "whatif" | "wtf"
-      mode    = "reale",    // "analitico" | "reale"
-      periodo = "future"
-    } = body;
+    const body = typeof req.body==="string" ? JSON.parse(req.body||"{}") : (req.body||{});
+    const { domanda="", stile="whatif", mode="reale", periodo="future" } = body;
 
     if(!domanda || typeof domanda!=="string")
       return res.status(400).json({ error:"bad_request", detail:"domanda_required" });
@@ -311,7 +309,7 @@ export default async function handler(req,res){
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if(!answer) throw new Error("empty_model_response");
 
-    // Post-process comune
+    // Post-process
     answer = stripQuestionEcho(domanda, answer);
     answer = tightenSentences(answer, stile==="wtf" ? 8 : 10);
     answer = clampWords(answer, stile==="wtf" ? 170 : 155);
@@ -325,18 +323,8 @@ export default async function handler(req,res){
       answer = limitExclamations(answer);
       answer = ensureDrink(answer);
     }else{
-      if(mode==="analitico"){
-        // forza incipit analitico e bandisce lirico
-        answer = forceAnaliticoIncipt(answer);
-        answer = answer
-          .replace(/\b(eco|profumo|odore|vento|neve|montagn[ae]|risata che rimbalza|voci che sanno|amante che aspetta|orizzonte vero)\b/gi, "routine")
-          .replace(/\b(incanto|magia|poesia|sospiri)\b/gi,"ritmo");
-      }else{
-        // forza incipit poetico e bandisce gergo analitico
-        answer = forcePoeticoIncipit(answer);
-        answer = answer
-          .replace(/\b(costi|benefici|budget|kpi|metriche|efficienza|performance|trade[- ]?off|ottimizzazione|scambi concreti|stipend[iio]|affitto|bollette|rientrare nei conti)\b/gi, "respiro");
-      }
+      if(mode==="analitico") answer = forceAnalitico(answer);
+      else answer = forcePoetico(answer);
     }
 
     // No prima persona forte
@@ -353,4 +341,4 @@ export default async function handler(req,res){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
-    }
+}
