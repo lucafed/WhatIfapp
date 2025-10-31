@@ -6,171 +6,282 @@
 <title>What?f — Domanda</title>
 <meta name="theme-color" content="#0B0B0C"/>
 <style>
-:root{ --bg:#0B0B0C; --fg:#fff; --muted:#A0B2BA; --card:#141C22; --bd:rgba(255,255,255,.12); --acc:#1C57A0; --wtf:#3A6B56; }
-body{margin:0;background:#0B0B0C;color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-main{max-width:860px;margin:auto;padding:22px}
-h1{margin:8px 0 2px;font-size:clamp(22px,5vw,30px)}
-.sub{color:var(--muted);margin:0 0 12px}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+:root{
+  --bg:#0B0B0C; --fg:#fff; --muted:#A0B2BA; --card:#141C22; --bd:rgba(255,255,255,.12);
+  --acc:#1C57A0; --acc2:#4ca3ff; --wtf:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:#0B0B0C;color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:880px;margin:auto;padding:22px}
+h1{margin:8px 0 4px;font-size:clamp(22px,5vw,30px)}
+.sub{color:var(--muted);margin:0 0 14px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);border:1px solid var(--bd);border-radius:999px;padding:6px 10px}
 .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
-.btn.primary{background:linear-gradient(180deg,#1C57A0,#4ca3ff);color:#0a0e12}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.btn.wtf{background:linear-gradient(180deg,var(--wtf),var(--wtf2));color:#08110d;box-shadow:0 6px 18px rgba(0,0,0,.35)}
 .btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--bd);color:#fff}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-top:14px}
-.input{width:100%;padding:12px;border-radius:12px;border:1px solid var(--bd);background:rgba(255,255,255,.06);color:#fff}
-.badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);border:1px solid var(--bd);border-radius:999px;padding:6px 10px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
-.tip{background:rgba(255,255,255,.06);border:1px solid var(--bd);border-radius:12px;padding:10px;cursor:pointer}
-.tip.open{background:rgba(255,255,255,.09)}
+label{display:block;font-weight:800;margin-bottom:8px;color:#8bd0ff}
+.input, textarea, select{width:100%;padding:12px;border-radius:12px;border:1px solid var(--bd);background:rgba(255,255,255,.06);color:#fff}
+textarea{min-height:90px;resize:vertical}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.tip{background:rgba(255,255,255,.06);border:1px solid var(--bd);border-radius:12px;padding:10px;cursor:pointer;user-select:none}
+.tip.open{background:rgba(255,255,255,.10)}
 .tip .title{font-weight:800;margin:0 0 6px}
 .tip .body{display:none;color:#cfe7ff}
 .tip.open .body{display:block}
-select{background:rgba(255,255,255,.06);border:1px solid var(--bd);color:#fff;border-radius:10px;padding:8px 10px}
+small.hint{display:block;color:#93aaba;margin-top:8px}
+hr.sep{height:1px;background:rgba(255,255,255,.10);border:0;margin:14px 0}
+select.lang{width:auto}
 </style>
 </head>
 <body>
 <main>
+  <!-- HEADER -->
   <div class="row" style="justify-content:space-between">
     <div class="row">
       <span class="badge" id="styleBadge">💡 What if 60/40</span>
-      <button class="btn ghost" id="switchStyle">⚡ WTF</button>
+      <button class="btn wtf" id="switchStyle">⚡ What the F</button>
     </div>
     <div class="row">
-      <select id="langSel" aria-label="Language">
+      <select id="langSel" class="lang" aria-label="Language">
         <option value="it">Italiano (IT)</option>
         <option value="en">English (EN)</option>
         <option value="es">Español (ES)</option>
         <option value="fr">Français (FR)</option>
         <option value="de">Deutsch (DE)</option>
       </select>
+      <button class="btn ghost" id="homeBtn">🏠</button>
     </div>
   </div>
 
   <h1 id="title">Fai la tua domanda</h1>
   <p class="sub" id="subtitle">Scrivi in modo semplice. Scegli tra What if 60/40 o What the F.</p>
 
+  <!-- DOMANDA -->
   <div class="card">
     <label for="q" id="lblQ">Domanda</label>
-    <textarea id="q" class="input" rows="3" placeholder="E se aprissi un micro e-commerce?"></textarea>
-    <div class="row" style="margin-top:10px">
-      <button class="btn primary" id="goBtn">🚀 Vai</button>
-      <button class="btn ghost" id="rndBtn">🎲 Sorprendimi</button>
+    <textarea id="q" placeholder="E se aprissi un micro e-commerce?"></textarea>
+
+    <div class="row" style="margin-top:12px;justify-content:space-between">
+      <div class="row">
+        <button class="btn primary" id="goBtn">🚀 Vai</button>
+        <button class="btn ghost" id="rndBtn">🎲 Sorprendimi</button>
+      </div>
+      <div class="row">
+        <select id="periodSel" class="lang" aria-label="Time mode">
+          <option value="future">Prossimo futuro</option>
+          <option value="past">Come se fosse già successo</option>
+        </select>
+      </div>
     </div>
+
+    <small class="hint" id="hint">
+      Un paragrafo, niente elenchi/emoji. Se scegli WTF: 2–3 micro-imprevisti + 1 imprecazione teatrale + reazioni assurde + sorso.
+    </small>
   </div>
 
+  <!-- SPUNTI -->
   <div class="card">
     <div style="font-weight:800;margin-bottom:8px" id="lblTips">Spunti rapidi</div>
     <div class="grid" id="tips"></div>
   </div>
+
+  <!-- MICRO PROFILO (facoltativo, già pronto per il futuro) -->
+  <div class="card">
+    <div style="font-weight:800;margin-bottom:8px" id="lblMicro">Dettagli facoltativi</div>
+    <div class="row">
+      <input class="input" id="nick" placeholder="Soprannome (es. campione)"/>
+      <select id="sex" class="lang">
+        <option value="na">Sesso (facoltativo)</option>
+        <option value="m">Uomo</option>
+        <option value="f">Donna</option>
+        <option value="nb">Altro/Non binario</option>
+      </select>
+    </div>
+    <small class="hint" id="hintMicro">Questi dati possono influenzare solo piccoli dettagli del tono.</small>
+  </div>
 </main>
 
 <script>
+/* ===== Stato base ===== */
 const LS = localStorage;
 const SUP = ["it","en","es","fr","de"];
-let lang = (LS.getItem('lang')||'it').slice(0,2).toLowerCase();
-if(!SUP.includes(lang)) lang = 'it';
-let stile = (LS.getItem('stile')||'whatif');
+let lang = (LS.getItem('lang')||'it').slice(0,2).toLowerCase(); if(!SUP.includes(lang)) lang='it';
+let stile = LS.getItem('stile') || 'whatif'; // 'whatif' | 'wtf'
+let periodo = (LS.getItem('periodo') || 'future').toLowerCase();
 
+/* ===== I18N ===== */
 const I18N = {
   it:{ title:"Fai la tua domanda", sub:"Scrivi in modo semplice. Scegli tra What if 60/40 o What the F.",
        q:"Domanda", go:"🚀 Vai", rnd:"🎲 Sorprendimi",
-       tips:"Spunti rapidi", styleIf:"💡 What if 60/40", wtfBtn:"⚡ WTF", ifBtn:"💡 What if 60/40" },
+       tips:"Spunti rapidi", micro:"Dettagli facoltativi",
+       hint:"Un paragrafo, niente elenchi/emoji. Se scegli WTF: 2–3 micro-imprevisti + 1 imprecazione teatrale + reazioni assurde + sorso.",
+       hintMicro:"Questi dati possono influenzare solo piccoli dettagli del tono.",
+       styleIf:"💡 What if 60/40", btnToWTF:"⚡ What the F", btnToIF:"💡 What if 60/40",
+       periodFuture:"Prossimo futuro", periodPast:"Come se fosse già successo" },
   en:{ title:"Ask your question", sub:"Keep it simple. Choose What if 60/40 or What the F.",
        q:"Question", go:"🚀 Go", rnd:"🎲 Surprise me",
-       tips:"Quick prompts", styleIf:"💡 What if 60/40", wtfBtn:"⚡ WTF", ifBtn:"💡 What if 60/40" },
+       tips:"Quick prompts", micro:"Optional details",
+       hint:"One paragraph, no lists/emojis. WTF: 2–3 tiny mishaps + 1 theatrical swear + absurd reactions + a sip.",
+       hintMicro:"These can slightly tune the tone.",
+       styleIf:"💡 What if 60/40", btnToWTF:"⚡ What the F", btnToIF:"💡 What if 60/40",
+       periodFuture:"Near future", periodPast:"As if it already happened" },
   es:{ title:"Haz tu pregunta", sub:"Sé simple. Elige What if 60/40 o What the F.",
        q:"Pregunta", go:"🚀 Ir", rnd:"🎲 Sorpréndeme",
-       tips:"Ideas rápidas", styleIf:"💡 What if 60/40", wtfBtn:"⚡ WTF", ifBtn:"💡 What if 60/40" },
+       tips:"Ideas rápidas", micro:"Detalles opcionales",
+       hint:"Un párrafo, sin listas/emojis. WTF: 2–3 contratiempos + 1 juramento teatral + reacciones absurdas + un sorbo.",
+       hintMicro:"Solo matiza ligeramente el tono.",
+       styleIf:"💡 What if 60/40", btnToWTF:"⚡ What the F", btnToIF:"💡 What if 60/40",
+       periodFuture:"Futuro cercano", periodPast:"Como si ya hubiera pasado" },
   fr:{ title:"Pose ta question", sub:"Simple. Choisis What if 60/40 ou What the F.",
        q:"Question", go:"🚀 Valider", rnd:"🎲 Surprends-moi",
-       tips:"Pistes rapides", styleIf:"💡 What if 60/40", wtfBtn:"⚡ WTF", ifBtn:"💡 What if 60/40" },
+       tips:"Pistes rapides", micro:"Détails optionnels",
+       hint:"Un paragraphe, pas de listes/emoji. WTF : 2–3 pépins + 1 juron théâtral + réactions absurdes + une gorgée.",
+       hintMicro:"Ajuste fin du ton, facultatif.",
+       styleIf:"💡 What if 60/40", btnToWTF:"⚡ What the F", btnToIF:"💡 What if 60/40",
+       periodFuture:"Futur proche", periodPast:"Comme si c’était déjà arrivé" },
   de:{ title:"Stell deine Frage", sub:"Schreib einfach. Wähle What if 60/40 oder What the F.",
-       q:"Frage", go:"🚀 Los", rnd:"🎲 Überrasche mich",
-       tips:"Schnelle Ideen", styleIf:"💡 What if 60/40", wtfBtn:"⚡ WTF", ifBtn:"💡 What if 60/40" }
+       q:"Frage", go:"🚀 Los", rnd:"🎲 Überrasch mich",
+       tips:"Schnelle Ideen", micro:"Optionale Details",
+       hint:"Ein Absatz, keine Listen/Emojis. WTF: 2–3 kleine Pannen + 1 theatralischer Fluch + absurde Reaktionen + ein Schluck.",
+       hintMicro:"Feintuning des Tons, optional.",
+       styleIf:"💡 What if 60/40", btnToWTF:"⚡ What the F", btnToIF:"💡 What if 60/40",
+       periodFuture:"Nahe Zukunft", periodPast:"Als wäre es schon passiert" }
 };
-const T = I18N[lang];
+function T(){ return I18N[lang] || I18N.it; }
 
-document.getElementById('title').textContent = T.title;
-document.getElementById('subtitle').textContent = T.sub;
-document.getElementById('lblQ').textContent = T.q;
-document.getElementById('goBtn').textContent = T.go;
-document.getElementById('rndBtn').textContent = T.rnd;
-document.getElementById('lblTips').textContent = T.tips;
-document.getElementById('styleBadge').textContent = (stile==='wtf') ? '⚡ What the F' : T.styleIf;
-document.getElementById('switchStyle').textContent = (stile==='wtf') ? T.ifBtn : T.wtfBtn;
+/* ===== UI text ===== */
+function setTexts(){
+  document.getElementById('title').textContent = T().title;
+  document.getElementById('subtitle').textContent = T().sub;
+  document.getElementById('lblQ').textContent = T().q;
+  document.getElementById('goBtn').textContent = T().go;
+  document.getElementById('rndBtn').textContent = T().rnd;
+  document.getElementById('lblTips').textContent = T().tips;
+  document.getElementById('lblMicro').textContent = T().micro;
+  document.getElementById('hint').textContent = T().hint;
+  document.getElementById('hintMicro').textContent = T().hintMicro;
+  document.getElementById('periodSel').options[0].text = T().periodFuture;
+  document.getElementById('periodSel').options[1].text = T().periodPast;
+  document.getElementById('styleBadge').textContent = (stile==='wtf') ? '⚡ What the F' : T().styleIf;
+  document.getElementById('switchStyle').textContent = (stile==='wtf') ? T().btnToIF : T().btnToWTF;
+  // placeholder adeguato
+  const ph = {
+    it:"E se aprissi un micro e-commerce?",
+    en:"What if you started a tiny niche e-commerce?",
+    es:"¿Y si abres un micro e-commerce de nicho?",
+    fr:"Et si tu lançais un micro e-commerce de niche ?",
+    de:"Was wäre, wenn du einen Mini-Nischenshop startest?"
+  }[lang] || "What if...";
+  document.getElementById('q').placeholder = ph;
+}
+
+/* ===== Lingua iniziale + stile/periodo ===== */
 document.getElementById('langSel').value = lang;
+document.getElementById('periodSel').value = periodo;
+setTexts();
 
+/* ===== Switch lingua (aggiorna TUTTO e anche gli spunti) ===== */
 document.getElementById('langSel').onchange = (e)=>{
-  lang = e.target.value; LS.setItem('lang',lang); location.reload();
+  lang = e.target.value; LS.setItem('lang',lang); buildTips(); setTexts();
 };
+
+/* ===== Switch stile ===== */
 document.getElementById('switchStyle').onclick = ()=>{
   stile = (stile==='wtf') ? 'whatif' : 'wtf';
-  LS.setItem('stile',stile); document.getElementById('styleBadge').textContent = (stile==='wtf') ? '⚡ What the F' : T.styleIf;
-  document.getElementById('switchStyle').textContent = (stile==='wtf') ? T.ifBtn : T.wtfBtn;
+  LS.setItem('stile', stile);
+  setTexts();
 };
 
-/* Spunti rapidi */
+/* ===== Periodo ===== */
+document.getElementById('periodSel').onchange = (e)=>{
+  periodo = e.target.value; LS.setItem('periodo', periodo);
+};
+
+/* ===== Spunti rapidi ===== */
 const BANK = {
   it:[
     ["Aprire un micro e-commerce di nicchia","Prodotti fatti a mano, logistica leggera, marketing locale: ha senso?"],
-    ["Tornare a vivere in una città più piccola","Costi, qualità della vita, reti sociali: come cambia la giornata?"],
+    ["Tornare in una città più piccola","Costi, qualità della vita, reti sociali: come cambia la giornata?"],
     ["Ricominciare da freelance","Clienti, prezzi, fiscalità, routine sostenibile: da dove parti?"],
-    ["Studiare all’estero per 6 mesi","Budget, visti, alloggi, opportunità al rientro: conviene davvero?"],
-    ["Cambiare settore a 35+","Formazione mirata, rebranding, rete: percorso realistico?"]
+    ["Studiare all’estero 6 mesi","Budget, visti, alloggi, opportunità al rientro: conviene?"],
+    ["Cambiare settore a 35+","Formazione mirata, rebranding, network: percorso realistico?"]
   ],
   en:[
     ["Open a tiny niche e-commerce","Handmade, light logistics, local marketing: does it make sense?"],
     ["Move back to a smaller city","Costs, quality of life, networks: how does your day change?"],
     ["Restart as a freelancer","Clients, pricing, taxes, routine: where to begin?"],
-    ["Study abroad for 6 months","Budget, visas, housing, return opportunities: worth it?"],
+    ["Study abroad for 6 months","Budget, visas, housing, return prospects: worth it?"],
     ["Switch industry after 35","Targeted training, rebranding, network: realistic path?"]
   ],
   es:[
     ["Abrir un micro e-commerce de nicho","Hecho a mano, logística ligera, marketing local: ¿tiene sentido?"],
     ["Volver a una ciudad pequeña","Costes, calidad de vida, redes: ¿cómo cambia tu día?"],
     ["Empezar como freelance","Clientes, precios, impuestos, rutina: ¿por dónde empezar?"],
-    ["Estudiar fuera 6 meses","Presupuesto, visados, vivienda: ¿merece la pena?"],
+    ["Estudiar fuera 6 meses","Presupuesto, visados, vivienda, retorno: ¿merece la pena?"],
     ["Cambiar de sector con 35+","Formación, rebranding, red: ¿camino realista?"]
   ],
   fr:[
     ["Ouvrir un micro e-commerce de niche","Fait main, logistique légère, marketing local : pertinent ?"],
     ["Revenir dans une petite ville","Coûts, qualité de vie, réseaux : que change ta journée ?"],
     ["Repartir en freelance","Clients, tarifs, fiscalité, routine : on commence où ?"],
-    ["Étudier à l’étranger 6 mois","Budget, visas, logement : est-ce rentable ?"],
+    ["Étudier à l’étranger 6 mois","Budget, visas, logement, retour : rentable ?"],
     ["Changer de secteur après 35 ans","Formation ciblée, rebranding, réseau : trajectoire réaliste ?"]
   ],
   de:[
     ["Winzigen Nischen-Shop starten","Handgemacht, leichte Logistik, lokal vermarkten: sinnvoll?"],
     ["Zurück in eine kleinere Stadt ziehen","Kosten, Lebensqualität, Netzwerke: wie ändert sich dein Alltag?"],
     ["Als Freelancer neu starten","Kunden, Preise, Steuern, Routine: wo beginnen?"],
-    ["Sechs Monate im Ausland studieren","Budget, Visa, Wohnen: lohnt sich das?"],
+    ["Sechs Monate im Ausland studieren","Budget, Visa, Wohnen, Rückkehrchancen: lohnt es sich?"],
     ["Branchenwechsel mit 35+","Weiterbildung, Rebranding, Netzwerk: realistischer Weg?"]
   ]
-}[lang] || [];
-
-const tipsEl = document.getElementById('tips');
-BANK.forEach(([t, b])=>{
-  const div = document.createElement('div'); div.className = 'tip';
-  div.innerHTML = `<div class="title">${t}</div><div class="body">${b}</div>`;
-  div.onclick = ()=>{ div.classList.toggle('open'); document.getElementById('q').value = t; };
-  tipsEl.appendChild(div);
-});
-
-document.getElementById('rndBtn').onclick = ()=>{
-  const i = Math.floor(Math.random()*BANK.length);
-  const t = BANK[i][0]; document.getElementById('q').value = t;
 };
 
+function buildTips(){
+  const tipsEl = document.getElementById('tips');
+  tipsEl.innerHTML = "";
+  (BANK[lang]||[]).forEach(([t,b])=>{
+    const div = document.createElement('div'); div.className='tip';
+    div.innerHTML = `<div class="title">${t}</div><div class="body">${b}</div>`;
+    div.addEventListener('click', ()=>{
+      div.classList.toggle('open');
+      // se si apre, riempi la domanda
+      if(div.classList.contains('open')) document.getElementById('q').value = t;
+    });
+    tipsEl.appendChild(div);
+  });
+}
+buildTips();
+
+/* ===== Random prompt ===== */
+document.getElementById('rndBtn').onclick = ()=>{
+  const arr = BANK[lang]||[]; if(!arr.length) return;
+  const i = Math.floor(Math.random()*arr.length);
+  document.getElementById('q').value = arr[i][0];
+};
+
+/* ===== Home ===== */
+document.getElementById('homeBtn').onclick = ()=> location.href='index.html';
+
+/* ===== Vai → Fifth ===== */
 document.getElementById('goBtn').onclick = ()=>{
   const domanda = document.getElementById('q').value.trim();
-  if(!domanda) return;
-  LS.setItem('domanda', domanda);
+  const nick = document.getElementById('nick').value.trim();
+  const sex = document.getElementById('sex').value; // m|f|nb|na
+  if(!domanda) { document.getElementById('q').focus(); return; }
+
+  // salva preferenze
+  LS.setItem('lang', lang);
   LS.setItem('stile', stile);
-  // pass prefs to fifth
-  const prefs = { stile, periodo:"future", pro:false };
-  LS.setItem('whatif_prefs', JSON.stringify(prefs));
-  // request payload seed
-  LS.setItem('whatif_request', JSON.stringify({ domanda, micro:{}, periodo:"future" }));
-  location.href = 'fifth.html';
+  LS.setItem('periodo', periodo);
+  LS.setItem('domanda', domanda);
+  LS.setItem('whatif_prefs', JSON.stringify({ stile, periodo }));
+  LS.setItem('whatif_profile', JSON.stringify({ nickname:nick||"", sex:(sex==='na'?"":sex) }));
+  LS.setItem('whatif_request', JSON.stringify({ domanda, micro:{ nickname:nick||"" }, periodo }));
+
+  location.href='fifth.html';
 };
 </script>
 </body>
