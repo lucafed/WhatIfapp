@@ -1,5 +1,5 @@
-// /api/ask.js — What?f Engine (Examples-Driven • Multilang • Friendly-WTF • Fixed Openings)
-// matches user's reference tone exactly — Luca edition
+// /api/ask.js — What?f Engine (Multilang • Friendly-WTF • Strong Answers • Clean Poetic)
+// Luca edition — openings enforced, WTF answers early+late, Poetic de-Excel-ized
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -128,19 +128,19 @@ function temporalInstruction(periodo = "future", lang = "it") {
     : "Scrivi come un prossimo futuro che inizia ora.";
 }
 
-/* ========= WHAT IF — ESEMPI VINCOLANTI (IT) ========= */
+/* ========= WHAT IF — ESEMPI (IT) ========= */
 const WHATIF_ANALITICO_RX = `Sai Luca, tornare a L’Aquila oggi vorrebbe dire rimetterti in una città che ha ricostruito più di muri: ha ricucito abitudini. L’economia si muove piano ma tiene, più artigiani che industrie, più reti locali che multinazionali. Gli stipendi sono più bassi, ma la vita costa meno e il tempo vale di più. Le scuole funzionano, la montagna torna complice nelle domeniche lente, e i bambini crescono con un orizzonte vero invece di uno schermo. Il Veneto ti mancherebbe per il ritmo e le occasioni, ma qui ritroveresti spazio, fiato e relazioni che non devono correre per esistere. In fondo non sarebbe un passo indietro — solo un modo diverso di avanzare, più lento, ma più tuo.`;
 
 const WHATIF_POETICO_RX = `Bella questa, Luca. Riapri le finestre e l’aria fredda ti saluta come una vecchia conoscenza. I vicoli ti riconoscono dal passo, le montagne ti guardano come un’amante che non ha mai smesso di aspettare. Il bar sotto casa serve ancora il caffè corto e ruvido, e le voci per strada sanno di pane e di inverno. I bambini giocano con l’eco, non con il rumore, e le serate finiscono con una risata che rimbalza nei portoni. Ogni giorno è più semplice del precedente, ogni sera più tua. Non stai tornando indietro: stai solo tornando dove il tempo ti riconosce per nome.`;
 
-/* ========= WTF — few-shots (IT) vincolanti di tono ========= */
+/* ========= WTF — few-shots (IT) ========= */
 const FEWSHOT_WTF_IT = [
   `Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora che al confessionale ti tengono in riserva. Ti versi un goccio di liquore, rimetti in riga il bancone e giuri che domani apri solo per matti. Alla chiusura, ti guardi intorno e sussurri che oggi hai bestemmiato più del prete quando finisce il vino — ma almeno hai servito verità calde.`,
   `Oh, eccoci, centauro dell’inferno. Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” così netto che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo ma quasi con affetto, come un rito che rimette a fuoco. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio con un sorrisetto complice. Torni a casa con l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie ben calibrate.`,
   `Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.`,
 ];
 
-/* ========= WTF — banche “friendly” (IT + EN) ========= */
+/* ========= WTF — banche (IT + EN) ========= */
 const WTF_BANKS_IT = {
   openings: [
     "Ah ma guarda te, {nick}… sempre in trattativa col destino a colpi di caffè.",
@@ -239,20 +239,20 @@ function baseRules(lang) {
 function whatIfAnaliticoRule(lang) {
   const en = isEnLike(lang);
   return en
-    ? `WHAT IF Analytic: concrete tradeoffs, routine, cost/benefit. Match the cadence of the Italian sample. 8–10 sentences; calm closing. Start with: "Sai Luca, ..." (if user name unavailable, still use "Sai Luca, ...").`
+    ? `WHAT IF Analytic: concrete tradeoffs, routine, cost/benefit. Match the cadence of the Italian sample. 8–10 sentences; calm closing. Start with: "Sai Luca, ...".`
     : `WHAT IF Analitico: scambi concreti, routine, costi/benefici. Stessa cadenza dell’esempio. 8–10 frasi; chiusura calma. Inizia con: "Sai Luca, ...".`;
 }
 function whatIfPoeticoRule(lang) {
   const en = isEnLike(lang);
   return en
-    ? `WHAT IF Real/Poetic: quiet, sensory images; domestic details; reconciled ending. 8–10 sentences. BAN: numbers, costs, budgets, "pros/cons", corporate words. Start with: "Bella questa, Luca."`
-    : `WHAT IF Reale/Poetico: immagini sobrie e quotidiane; dettagli domestici; chiusura riconciliata. 8–10 frasi. DIVIETI: numeri, costi, budget, "pro/contro", parole aziendalesi. Inizia con: "Bella questa, Luca."`;
+    ? `WHAT IF Real/Poetic: quiet domestic images; reconciled ending; no analysis. BAN strongly: numbers, costs, budgets, pros/cons, economy, salary, efficiency, optimization, KPI. 8–10 sentences. Start with: "Bella questa, Luca."`
+    : `WHAT IF Reale/Poetico: immagini domestiche e sobrie; chiusura riconciliata; zero analisi. BANDO forte: numeri, costi, budget, pro/contro, economia, stipendi, efficienza, ottimizzazione, KPI. 8–10 frasi. Inizia con: "Bella questa, Luca."`;
 }
 function wtfFriendlyRule(lang) {
   const en = isEnLike(lang);
   return en
-    ? `WHAT THE F (friendly). Be funny, never aggressive. STRICT STRUCTURE (one paragraph): OPENING (playful tease, ≤2 sentences) → 2–3 tiny mishaps → EXACTLY ONE theatrical ‘swear’ (use IMPRECATION; never against people) → THEN 2 OBJECT REACTIONS → DRINK (ALCOHOLIC) → 1–2 useful lines that truly answer → WARM IRONIC MORAL. 6–8 sentences total. Bans: insults to people, anger, >2 “!”.`
-    : `WHAT THE F (amichevole). Fai ridere, mai aggressivo. STRUTTURA OBBLIGATORIA (un paragrafo): APERTURA (presa in giro affettuosa, ≤2 frasi) → 2–3 micro-imprevisti → ESATTAMENTE UNA “imprecazione” teatrale (usa IMPRECAZIONE; mai contro persone) → POI 2 REAZIONI DI OGGETTI → DRINK (ALCOLICO) → 1–2 frasi che rispondono davvero → MORALE CALDA E IRONICA. Totale 6–8 frasi. Divieti: insulti a persone, rabbia, più di due “!”.`;
+    ? `WHAT THE F (friendly). Be funny, never aggressive. STRICT SHAPE (one paragraph, 6–8 sentences): OPENING (playful tease ≤2) → ANSWER_EARLY (1 clear actionable line addressing the user's topic) → 2–3 tiny mishaps → EXACTLY ONE theatrical ‘swear’ (use IMPRECATION; never against people) → 2 OBJECT REACTIONS → DRINK (ALCOHOLIC) → ANSWER_LATE (1 distilled suggestion) → WARM IRONIC MORAL.`
+    : `WHAT THE F (amichevole). Forma rigida (un paragrafo, 6–8 frasi): APERTURA (presa in giro ≤2) → RISPOSTA_PRESTO (1 riga chiara e pratica sul tema dell’utente) → 2–3 micro-imprevisti → ESATTAMENTE UNA IMPRECAZIONE (da IMPRECAZIONE; mai contro persone) → 2 REAZIONI DI OGGETTI → DRINK (ALCOLICO) → RISPOSTA_TARDI (1 suggerimento distillato) → MORALE CALDA.`;
 }
 
 /* ========= Random seeds per WTF ========= */
@@ -336,18 +336,16 @@ function buildMessages({ domanda, lang, periodo, stile, mode, micro }) {
 
 /* ========= Openings enforcer (IT) ========= */
 function ensureWhatIfOpening(answer, stile, mode, micro) {
-  // Applica SOLO in italiano (dove gli esempi sono canonici)
   const name = (micro?.nickname && String(micro.nickname).trim()) || "Luca";
   if (stile === "whatif") {
     if (mode === "analitico") {
       const want = `Sai ${name},`;
-      if (!answer.startsWith("Sai ")) {
+      if (!/^Sai\s+/i.test(answer)) {
         return `${want} ${answer.charAt(0).toLowerCase()}${answer.slice(1)}`;
       }
     } else {
       const want = `Bella questa, ${name}.`;
-      const rx = /^Bella questa, /i;
-      if (!rx.test(answer)) {
+      if (!/^Bella questa, /i.test(answer)) {
         return `${want} ${answer}`;
       }
     }
@@ -365,14 +363,11 @@ function keepSingleImprecazione(answer, lang) {
   });
 }
 function ensureDrink(answer, seedsObj) {
-  // Deve essere alcolico
-  const hasDrink = /\b(amaro|whisky|rosso|grappa|vino|liquore|shot|neat|sip of whisky|glass of red|grappa|amaro)\b/i.test(answer);
+  const hasDrink = /\b(amaro|whisky|whiskey|rosso|grappa|vino|liquore|shot|neat)\b/i.test(answer);
   if (hasDrink) return answer;
   const drinkLine = ensureSentenceCase(seedsObj?.drink || "ti versi un goccio di amaro e rimetti a posto i pensieri") + ".";
   const moraleRx = /(Morale:|Moral:)/i;
-  if (moraleRx.test(answer)) {
-    return answer.replace(moraleRx, `${drinkLine} $1`);
-  }
+  if (moraleRx.test(answer)) return answer.replace(moraleRx, `${drinkLine} $1`);
   return finalPunct(answer) + " " + drinkLine;
 }
 function limitExclamations(answer) { return answer.replace(/!{3,}/g, "!!"); }
@@ -380,12 +375,37 @@ function forbidInsults(answer, lang) {
   const bad = /\b(cazzo|cazzata|stronzo|idiota|cretino|imbecille)\b/gi;
   return answer.replace(bad, normLang(lang) === "it" ? "accidente" : "heck");
 }
+/* Assicura che ci sia una riga di RISPOSTA presto e una tardi */
+function ensureWtfAnswers(answer, domanda, lang) {
+  const en = isEnLike(lang);
+  const earlyRx = en ? /\b(so|do|try|start|choose|ask|stop|plan)\b/i
+                     : /\b(prova|inizia|scegli|chiedi|smetti|metti|fissa|porta|scrivi|chiama)\b/i;
+  const lateCue = en ? "Moral:" : "Morale:";
+  let out = answer;
 
-/* ========= WHAT IF anti-analitichese per il POETICO ========= */
-function softenPoetico(answer) {
-  // via parole “analitiche”
-  const ban = /\b(costi?|budget|numeri|stipendi|pro\s*\/?\s*contro|kpi|roadmap|deliverable|milestone|efficienza|ottimizzazione|ROI)\b/gi;
-  return answer.replace(ban, "respiro");
+  if (!earlyRx.test(out)) {
+    const early = en
+      ? "First move: pick one tiny step and put it on your calendar."
+      : "Prima mossa: scegli un passo minuscolo e mettilo in agenda.";
+    out = out.replace(/(^[^.]+\.)(.*)$/s, `$1 ${early} $2`);
+  }
+  if (!out.includes(lateCue)) {
+    const late = en
+      ? "Do this once, then repeat tomorrow—small, same hour."
+      : "Fallo una volta, poi ripeti domani—piccolo, alla stessa ora.";
+    out = `${out} ${late}`;
+  }
+  return out;
+}
+
+/* ========= WHAT IF Poetic: anti-analitico ========= */
+function purgeAnalitichesePoetico(answer) {
+  // togli numeri/percentuali e parole da Excel
+  const banned = /\b(costi?|costo|budget|bilancio|pro\s*\/?\s*contro|kpi|roadmap|milestone|efficienza|ottimizzazione|ottimizzare|economia|stipendi?|salari|percentuali?|ROI|ricavi|spese|tasse|mercato)\b/gi;
+  let out = answer.replace(banned, "respiro");
+  out = out.replace(/\b\d+([.,]\d+)?\s*%/g, "qualche volta");
+  out = out.replace(/\b\d+([.,]\d+)?\b/g, "qualche");
+  return out;
 }
 
 /* ========= HANDLER ========= */
@@ -451,7 +471,7 @@ export default async function handler(req, res) {
     answer = ensureSentenceCase(answer);
     answer = finalPunct(answer);
 
-    // Openings fissi come negli esempi (IT)
+    // Openings fissi (IT)
     if (normLang(lang) === "it") {
       answer = ensureWhatIfOpening(answer, stile, mode, micro);
     }
@@ -460,30 +480,31 @@ export default async function handler(req, res) {
       answer = keepSingleImprecazione(answer, lang);
       answer = limitExclamations(answer);
       answer = forbidInsults(answer, lang);
-      // Assicura DRINK alcolico presente
+      // risposte chiare presto e tardi
+      answer = ensureWtfAnswers(answer, domanda, lang);
+      // drink alcolico presente
       const L = normLang(lang) === "it" ? WTF_BANKS_IT : WTF_BANKS_EN;
       const drink = pick(L.drinks, 1)[0];
       answer = ensureDrink(answer, { drink });
     } else if (mode === "reale") {
-      // poetico: evita scivolate analitiche
-      answer = softenPoetico(answer);
+      // poetico: pulizia antianalitica forte
+      answer = purgeAnalitichesePoetico(answer);
     }
 
-    // Evita nomi non presenti nella domanda (solo IT) — ma NON rimuovere l’incipit che abbiamo appena aggiunto
+    // Evita nomi non presenti nella domanda (IT), preservando incipit
     if (normLang(lang) === "it") {
       (function () {
         const d = String(domanda || "");
         const nameRx = /\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
         const inQuestion = new Set(d.match(nameRx) || []);
-        // proteggi l'incipit “Sai Luca,” / “Bella questa, Luca.”
-        const keepHead = answer.slice(0, 26);
-        let tail = answer.slice(26);
+        const headKeep = answer.slice(0, 28);
+        let tail = answer.slice(28);
         tail = tail.replace(nameRx, (m) =>
           inQuestion.has(m)
             ? m
             : ["Ah","Oh","Ehi","Bella","Sai"].includes(m) ? m : m.toLowerCase()
         );
-        answer = keepHead + tail;
+        answer = headKeep + tail;
       })();
     }
 
