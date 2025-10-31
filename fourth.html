@@ -1,351 +1,517 @@
 <!DOCTYPE html>
 <html lang="it" data-theme="whatif">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Domanda</title>
-<meta name="theme-color" content="#0A0F14"/>
-<style>
-:root{--bg:#0C0F14;--bg2:#0E1724;--card:#121820;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#1C57A0;--accent2:#FFEC01;--ink:#001f26;--chip:#0f1820;--line:#1b2a34}
-html[data-theme="whatif"]{--bg:#0B1018;--bg2:#0E1724;--card:#141C22;--fg:#F4F7FB;--muted:#A7B3C2;--accent:#1C57A0;--accent2:#FFEC01;--ink:#11110A;--chip:#0f1820;--line:#1b2a34}
-html[data-theme="wtf"]{--bg:#0B0B0C;--bg2:#101414;--card:#111713;--fg:#EEF5F0;--muted:#A6B6AD;--accent:#3A6B56;--accent2:#5A8C75;--ink:#06110B;--chip:#0F1714;--line:#21322A}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2) 0%,var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-@media (prefers-reduced-motion:no-preference){
-  body{animation:bgShift 18s ease-in-out infinite alternate}
-  @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
-}
-.topbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))}
-.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
-.btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35)}
-.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap}
-main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
-.wrap{width:min(100%,980px)}
-h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
-.label{color:var(--accent2);font-weight:800;margin:0 0 8px}
-.card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(12px);border-radius:16px;padding:16px;margin:10px 0}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
-.chip.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800}
-.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
-.center{max-width:760px;margin:0 auto}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.small{font-size:12px;color:var(--muted)}
-.toggle{cursor:pointer;user-select:none}
-.collapsed>.body{display:none}
-.list{display:flex;flex-direction:column;gap:10px}
-.story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
-.play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
-.meta{font-size:12px;color:var(--muted)}
-.first-session{display:none;background:#0e1a23;border:1px solid var(--line);color:#daf0f6;border-radius:14px;padding:12px;margin-bottom:8px}
-.qblock{border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0;background:rgba(255,255,255,.04)}
-.qtitle{display:flex;align-items:center;gap:8px;font-weight:800;color:#DDF6FF;margin-bottom:8px}
-.optset{display:flex;flex-wrap:wrap;gap:8px}
-.opt{background:var(--chip);border:1px solid var(--line);color:#EAF3EE;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer}
-.opt.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800}
-.submode{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-select{appearance:none;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-weight:700}
-</style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>What?f — Domanda</title>
+  <meta name="theme-color" content="#0A0F14"/>
+  <style>
+    /* ===== THEME SYSTEM – palette ufficiali ===== */
+    :root{
+      /* Fallback / What if */
+      --bg:#0C0F14; --bg2:#0E1724;
+      --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
+      --accent:#1C57A0; --accent2:#FFEC01; /* Blu/Giallo Verona */
+      --ink:#001f26;
+      --chip:#0f1820; --line:#1b2a34;
+    }
+    html[data-theme="whatif"]{
+      --bg:#0B1018; --bg2:#0E1724;
+      --card:#141C22; --fg:#F4F7FB; --muted:#A7B3C2;
+      --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
+      --chip:#0f1820; --line:#1b2a34;
+    }
+    html[data-theme="wtf"]{
+      --bg:#0B0B0C; --bg2:#101414;
+      --card:#111713; --fg:#EEF5F0; --muted:#A6B6AD;
+      --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; /* Verde speranza */
+      --chip:#0F1714; --line:#21322A;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+      color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+    @media (prefers-reduced-motion:no-preference){
+      body{animation:bgShift 18s ease-in-out infinite alternate}
+      @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
+    }
+
+    /* Top */
+    .topbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;
+      padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))}
+    .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);
+      border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
+    .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35)}
+    .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap}
+
+    .lang-select{appearance:none;background:var(--chip);border:1px solid var(--line);color:var(--fg);
+      border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
+
+    main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
+    .wrap{width:min(100%,980px)}
+    h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
+    .label{color:var(--accent2);font-weight:800;margin:0 0 8px}
+
+    /* Cards & chips */
+    .card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(12px);
+      border-radius:16px;padding:16px;margin:10px 0}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
+    .chip.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800}
+
+    /* Input */
+    .input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
+    .center{max-width:760px;margin:0 auto}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .small{font-size:12px;color:var(--muted)}
+
+    /* Collapsible */
+    .toggle{cursor:pointer;user-select:none}
+    .collapsed>.body{display:none}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);
+      border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
+    .play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
+    .meta{font-size:12px;color:var(--muted)}
+
+    /* Micro-domande */
+    .banner{display:none;background:#0b151d;border:1px dashed var(--line);color:#dff6fb;border-radius:14px;padding:12px;margin-bottom:8px}
+    .banner strong{color:var(--accent2)}
+    .first-session{display:none;background:#0e1a23;border:1px solid var(--line);color:#daf0f6;border-radius:14px;padding:12px;margin-bottom:8px}
+    .qblock{border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0;background:rgba(255,255,255,.04)}
+    .qtitle{display:flex;align-items:center;gap:8px;font-weight:800;color:#DDF6FF;margin-bottom:8px}
+    .optset{display:flex;flex-wrap:wrap;gap:8px}
+    .opt{background:var(--chip);border:1px solid var(--line);color:#EAF3EE;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer}
+    .opt.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800}
+
+    /* Sub-mode */
+    .submode{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  </style>
 </head>
 <body>
-<div class="topbar">
-  <div class="row">
-    <button class="btn" id="backBtn">←</button>
-    <button class="btn" id="homeBtn">🏠</button>
+  <div class="topbar">
+    <div class="row">
+      <button class="btn" id="backBtn">←</button>
+      <button class="btn" id="homeBtn">🏠</button>
+    </div>
+    <div class="row">
+      <span class="badge" id="styleBadge">🎭 —</span>
+      <span class="badge" id="periodoBadge">🕰️ —</span>
+      <span class="badge" id="freeBadge">—</span>
+      <span class="badge" id="proBadge">FREE</span>
+      <select class="lang-select" id="langSelect" aria-label="Language">
+        <option value="it">IT</option>
+        <option value="en">EN</option>
+        <option value="es">ES</option>
+        <option value="fr">FR</option>
+        <option value="de">DE</option>
+      </select>
+    </div>
   </div>
-  <div class="row">
-    <span class="badge" id="styleBadge">🎭 —</span>
-    <span class="badge" id="periodoBadge">🕰️ —</span>
-    <span class="badge" id="freeBadge">—</span>
-    <span class="badge" id="proBadge">FREE</span>
-    <!-- Tendina lingue -->
-    <select id="langSelect" title="Language">
-      <option value="it">IT</option><option value="en">EN</option>
-      <option value="es">ES</option><option value="fr">FR</option>
-      <option value="de">DE</option>
-    </select>
-  </div>
-</div>
 
-<main>
-  <div class="wrap">
-    <h1 id="titleH1">Imposta la tua domanda</h1>
+  <main>
+    <div class="wrap">
+      <h1 id="titleH1">Imposta la tua domanda</h1>
 
-    <!-- STILI + PERIODO -->
-    <div class="card">
-      <div class="row" style="justify-content:space-between;align-items:center;gap:8px">
-        <div class="chips" id="styleChips">
-          <button class="chip" data-style="whatif" id="chipWhatIf">What if</button>
-          <button class="chip" data-style="wtf" id="chipWTF">What the F</button>
+      <!-- STILI + PERIODO -->
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center;gap:8px">
+          <div class="chips" id="styleChips">
+            <button class="chip" data-style="whatif" id="chipWhatIf">What if</button>
+            <button class="chip" data-style="wtf" id="chipWTF">What the F</button>
+          </div>
+          <div class="chips" id="periodoChips">
+            <button class="chip" data-periodo="future" id="chipFuture">Futuro</button>
+            <button class="chip" data-periodo="past"   id="chipPast">Passato</button>
+          </div>
         </div>
-        <div class="chips" id="periodoChips">
-          <button class="chip" data-periodo="future" id="chipFuture">Futuro</button>
-          <button class="chip" data-periodo="past"   id="chipPast">Passato</button>
+        <!-- Sub-mode What if -->
+        <div id="whatifSubMode" class="submode">
+          <button class="chip" data-mode="analitico" id="chipAnalitico">Analitico</button>
+          <button class="chip" data-mode="reale"     id="chipReale">Reale/Poetico</button>
         </div>
       </div>
-      <div id="whatifSubMode" class="submode">
-        <button class="chip" data-mode="analitico" id="chipAnalitico">Analitico</button>
-        <button class="chip" data-mode="reale"     id="chipReale">Reale/Poetico</button>
+
+      <!-- DOMANDA -->
+      <div class="card center">
+        <h3 class="label" id="qLabel">E se…</h3>
+        <textarea id="qInput" rows="3" class="input" placeholder="E se…" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
+        <div class="row" style="margin-top:12px;justify-content:space-between">
+          <button class="btn primary" id="goBtn" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
+          <button class="btn" id="clearBtn">Svuota</button>
+        </div>
+        <div class="small" id="tipNote" style="margin-top:8px"></div>
+      </div>
+
+      <!-- MICRO-DOMANDE (Banner prima sessione del giorno) -->
+      <div class="first-session" id="firstSessionBanner">
+        <strong>Micro-domande di oggi</strong> — rispondi adesso, poi spariscono fino a domani.
+      </div>
+      <div class="card center collapsed" id="microCard">
+        <div class="row toggle" id="microHead" style="justify-content:space-between">
+          <div class="label" id="microTitle">▼ Micro-domande di oggi</div>
+          <div class="small" id="microHint">(una volta al giorno)</div>
+        </div>
+        <div class="body" id="microBody" style="margin-top:10px">
+          <div id="qMood" class="qblock">
+            <div class="qtitle"><span id="moodIcon">🙂</span><span id="moodTitle">Oggi come ti senti?</span></div>
+            <div class="optset" id="moodOpts"></div>
+          </div>
+          <div id="qAnchor" class="qblock">
+            <div class="qtitle"><span id="anchorIcon">🧭</span><span id="anchorTitle">Cosa ti tiene qui ultimamente?</span></div>
+            <div class="optset" id="anchorOpts"></div>
+          </div>
+          <div id="qDecide" class="qblock">
+            <div class="qtitle"><span id="decideIcon">⚙️</span><span id="decideTitle">Come decidi di solito?</span></div>
+            <div class="optset" id="decideOpts"></div>
+          </div>
+          <!-- Jung -->
+          <div id="qJung" class="qblock">
+            <div class="qtitle"><span id="jungIcon">🧠</span><span id="jungTitle">Tipo psicologico (Jung)</span></div>
+            <div class="optset" id="jungAttitude"></div>
+            <div class="optset" id="jungRational"></div>
+            <div class="optset" id="jungPerception"></div>
+          </div>
+          <div id="qZodiac" class="qblock">
+            <div class="qtitle"><span id="zodiacIcon">♈</span><span id="zodiacTitle">Segno o portafortuna (se vuoi)</span></div>
+            <div class="optset" id="zodiacOpts"></div>
+          </div>
+          <div class="row" style="margin-top:6px">
+            <button class="btn primary" id="saveMicroBtn">💾 Salva micro-profilo</button>
+          </div>
+          <div class="small" id="microSavedMsg" style="margin-top:6px"></div>
+        </div>
+      </div>
+
+      <!-- SPUNTI -->
+      <div class="card center" id="hintsCard">
+        <div class="row toggle" id="hintsHeader" style="justify-content:space-between">
+          <div class="label" id="hintsTitle">▶ Spunti rapidi “E se…”</div>
+        </div>
+        <div class="body" id="hintsBody" style="margin-top:8px">
+          <div class="chips" id="hintsChips"></div>
+          <div class="small" id="hintsNote" style="margin-top:8px"></div>
+        </div>
+      </div>
+
+      <!-- SALVATI -->
+      <div class="card center collapsed" id="savedCard">
+        <div class="row toggle" id="savedHeader" style="justify-content:space-between">
+          <div class="label" id="nextLabel">▶ Domande salvate</div>
+          <button class="btn" id="clearSavedBtn">🗑️ Svuota</button>
+        </div>
+        <div class="body" id="savedBody">
+          <div id="nextList" class="list"></div>
+        </div>
+      </div>
+
+      <!-- CRONOLOGIA -->
+      <div class="card center collapsed" id="histCard">
+        <div class="row toggle" id="histHeader" style="justify-content:space-between">
+          <div class="label" id="storiesLabel">▶ Cronologia</div>
+          <button class="btn" id="clearHistoryBtn">🗑️ Svuota</button>
+        </div>
+        <div class="body">
+          <div id="storyList" class="list"></div>
+        </div>
       </div>
     </div>
+  </main>
 
-    <!-- DOMANDA -->
-    <div class="card center">
-      <h3 class="label" id="qLabel">E se…</h3>
-      <textarea id="qInput" rows="3" class="input" placeholder="E se…" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
-      <div class="row" style="margin-top:12px;justify-content:space-between">
-        <button class="btn primary" id="goBtn" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
-        <button class="btn" id="clearBtn">Svuota</button>
-      </div>
-      <div class="small" id="tipNote" style="margin-top:8px"></div>
-    </div>
+  <script>
+    /* ===== Lingue ===== */
+    const SUPPORTED_LANGS=["it","en","es","fr","de"]; const LS=localStorage;
+    let lang=(LS.getItem('lang')||'it').toLowerCase(); if(!SUPPORTED_LANGS.includes(lang)) lang="it";
+    document.documentElement.lang=lang;
 
-    <!-- MICRO-DOMANDE (banner) -->
-    <div class="first-session" id="firstSessionBanner"></div>
+    /* I18N (ES/FR/DE fallback su EN) */
+    const I18N={
+      it:{title:"Imposta la tua domanda", yourq:"E se…", gen:"✨ Genera risposta", clear:"Svuota",
+          microT:"▼ Micro-domande di oggi", microHint:"(una volta al giorno)",
+          microSaveBtn:"💾 Salva micro-profilo", microSaved:"Micro-profilo salvato per oggi.", microOnce:"Già salvato oggi.",
+          qMood:"Oggi come ti senti?", qAnchor:"Cosa ti tiene qui ultimamente?", qDecide:"Come decidi di solito?",
+          qJung:"Tipo psicologico (Jung)", qZodiac:"Segno o portafortuna (se vuoi)",
+          saved:"▶ Domande salvate", stories:"▶ Cronologia", use:"Usa", play:"▶",
+          emptyNext:"— Nessuna domanda salvata.", emptyStories:"— Nessuna storia.",
+          clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota", outOfCredits:"Hai finito i crediti di oggi.",
+          firstSession:"Micro-domande di oggi — rispondi adesso, poi spariscono fino a domani.",
+          hintsT:"▶ Spunti rapidi “E se…”", hintsNote:"Clicca uno spunto per riempire la domanda."},
+      en:{title:"Set your question", yourq:"What if…", gen:"✨ Generate answer", clear:"Clear",
+          microT:"▼ Today’s micro-questions", microHint:"(once per day)",
+          microSaveBtn:"💾 Save micro-profile", microSaved:"Micro-profile saved for today.", microOnce:"Already saved today.",
+          qMood:"How do you feel today?", qAnchor:"What’s keeping you here lately?", qDecide:"How do you usually decide?",
+          qJung:"Psychological type (Jung)", qZodiac:"Sign or lucky habit (optional)",
+          saved:"▶ Saved questions", stories:"▶ History", use:"Use", play:"▶",
+          emptyNext:"— No saved questions.", emptyStories:"— No history.",
+          clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear", outOfCredits:"You’ve used today’s credits.",
+          firstSession:"Today’s micro-questions — answer now, then they hide until tomorrow.",
+          hintsT:"▶ Quick ‘What if…’", hintsNote:"Click a hint to fill the question."}
+    }; I18N.es=I18N.en; I18N.fr=I18N.en; I18N.de=I18N.en;
+    const T=I18N[lang];
 
-    <!-- SPUNTI RAPIDI -->
-    <div class="card center collapsed" id="hintsCard">
-      <div class="row toggle" id="hintsHeader" style="justify-content:space-between">
-        <div class="label" id="hintsTitle">▶ Spunti rapidi “E se…”</div>
-      </div>
-      <div class="body" id="hintsBody" style="margin-top:8px">
-        <div class="chips" id="hintsChips"></div>
-        <div class="small" id="hintsNote" style="margin-top:8px"></div>
-      </div>
-    </div>
+    // Stato
+    function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def} }
+    function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
+    function today(){return new Date().toISOString().slice(0,10);}
+    let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false,mode:'reale'});
 
-    <!-- SALVATI -->
-    <div class="card center collapsed" id="savedCard">
-      <div class="row toggle" id="savedHeader" style="justify-content:space-between">
-        <div class="label" id="nextLabel">▶ Domande salvate</div>
-        <button class="btn" id="clearSavedBtn">🗑️ Svuota</button>
-      </div>
-      <div class="body" id="savedBody"><div id="nextList" class="list"></div></div>
-    </div>
+    // UI init
+    const langSelect=document.getElementById('langSelect');
+    langSelect.value=lang;
+    document.getElementById('titleH1').textContent=T.title;
+    document.getElementById('qLabel').textContent=T.yourq;
 
-    <!-- CRONOLOGIA -->
-    <div class="card center collapsed" id="histCard">
-      <div class="row toggle" id="histHeader" style="justify-content:space-between">
-        <div class="label" id="storiesLabel">▶ Cronologia</div>
-        <button class="btn" id="clearHistoryBtn">🗑️ Svuota</button>
-      </div>
-      <div class="body"><div id="storyList" class="list"></div></div>
-    </div>
-  </div>
-</main>
+    // Home / Back
+    document.getElementById('homeBtn').onclick=()=>location.href='index.html';
+    document.getElementById('backBtn').onclick=()=>{ if(history.length>1) history.back(); else location.href='index.html'; };
 
-<script>
-/* ===== Stato & i18n ===== */
-const SUPPORTED_LANGS=["it","en","es","fr","de"];
-const LS=localStorage;
-let lang=(LS.getItem('lang')||'it').toLowerCase(); if(!SUPPORTED_LANGS.includes(lang)) lang="it";
-document.documentElement.lang=lang;
-document.getElementById('langSelect').value=lang;
+    // Crediti / PRO
+    function userIsAdmin(){ return !!LS.getItem('admin_token'); }
+    function capForUser(){ return userIsAdmin()?Infinity:(prefs.pro?10:3); }
+    function ensureCredits(){ const c=readJSON('whatif_credits',{date:today(),used:0}); if(c.date!==today()){c.date=today();c.used=0;} writeJSON('whatif_credits',c); }
+    function leftCredits(){ const c=readJSON('whatif_credits',{date:today(),used:0}); const cap=capForUser(); return cap===Infinity?"∞":Math.max(0,cap-(c.used||0)); }
+    function renderCreditsBadge(){ const cap=capForUser(), left=leftCredits();
+      document.getElementById('freeBadge').textContent=(cap===Infinity)?(lang==='en'?'Credits: ∞':'Crediti: ∞'):(lang==='en'?`Credits: ${left}/${cap}`:`Crediti: ${left}/${cap}`);
+      document.getElementById('proBadge').textContent=prefs.pro?'PRO':'FREE'; }
+    ensureCredits(); renderCreditsBadge();
 
-/* I18N minimo */
-const I18N={
-  it:{title:"Imposta la tua domanda", yourq:"E se…", gen:"✨ Genera risposta", clear:"Svuota",
-      hintsT:"▶ Spunti rapidi “E se…”", hintsNote:"Clicca uno spunto per riempire la domanda.",
-      firstSession:"Micro-domande di oggi — rispondi adesso, poi spariscono fino a domani.",
-      saved:"▶ Domande salvate", stories:"▶ Cronologia", emptyNext:"— Nessuna domanda salvata.", emptyStories:"— Nessuna storia.",
-      credits:"Crediti", clearBtn:"🗑️ Svuota"},
-  en:{title:"Set your question", yourq:"What if…", gen:"✨ Generate answer", clear:"Clear",
-      hintsT:"▶ Quick “What if…”", hintsNote:"Click a hint to fill the question.",
-      firstSession:"Today’s micro-questions — answer now, then they hide until tomorrow.",
-      saved:"▶ Saved questions", stories:"▶ History", emptyNext:"— No saved questions.", emptyStories:"— No history.",
-      credits:"Credits", clearBtn:"🗑️ Clear"}
-};
-I18N.es=I18N.en; I18N.fr=I18N.en; I18N.de=I18N.en;
-const T=I18N[lang];
+    // Tema per stile
+    document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-/* Prefs persistenti */
-function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}}
-function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
-let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false,mode:'reale'});
+    function renderBadges(){
+      document.getElementById('styleBadge').textContent = "🎭 " + (prefs.stile==='wtf'?'What the F':'What if');
+      document.getElementById('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past'?(lang==='en'?'Past':'Passato'):(lang==='en'?'Future':'Futuro'));
+      document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
+      document.querySelectorAll('#periodoChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.periodo===prefs.periodo));
+      document.getElementById('whatifSubMode').style.display=(prefs.stile==='whatif')?'flex':'none';
+      document.getElementById('chipAnalitico').classList.toggle('sel', prefs.mode==='analitico');
+      document.getElementById('chipReale').classList.toggle('sel', prefs.mode!=='analitico');
+    }
+    renderBadges();
 
-/* UI init */
-document.getElementById('titleH1').textContent=T.title;
-document.getElementById('qLabel').textContent=T.yourq;
-document.getElementById('hintsTitle').textContent=T.hintsT;
-document.getElementById('hintsNote').textContent=T.hintsNote;
+    document.getElementById('styleChips').addEventListener('click',(e)=>{
+      const b=e.target.closest('.chip'); if(!b) return; prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs);
+      document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif'); renderBadges();
+    });
+    document.getElementById('periodoChips').addEventListener('click',(e)=>{
+      const b=e.target.closest('.chip'); if(!b) return; prefs.periodo=b.dataset.periodo; writeJSON('whatif_prefs',prefs); renderBadges();
+    });
+    document.getElementById('whatifSubMode').addEventListener('click',(e)=>{
+      const b=e.target.closest('.chip'); if(!b) return; prefs.mode=b.dataset.mode; writeJSON('whatif_prefs',prefs); renderBadges();
+    });
 
-/* Topbar nav */
-document.getElementById('homeBtn').onclick=()=>location.href='index.html';
-document.getElementById('backBtn').onclick=()=>{ if(history.length>1) history.back(); else location.href='index.html'; };
+    // Lingua: tendina, applica al volo TUTTO
+    langSelect.onchange=(e)=>{
+      lang=e.target.value.toLowerCase(); LS.setItem('lang',lang); document.documentElement.lang=lang;
+      const TT=I18N[lang]||I18N.en;
+      document.getElementById('titleH1').textContent=TT.title;
+      document.getElementById('qLabel').textContent=TT.yourq;
+      document.getElementById('microTitle').textContent=TT.microT;
+      document.getElementById('microHint').textContent=TT.microHint;
+      document.getElementById('saveMicroBtn').textContent=TT.microSaveBtn;
+      document.getElementById('hintsTitle').textContent=TT.hintsT;
+      document.getElementById('hintsNote').textContent=TT.hintsNote;
+      document.getElementById('goBtn').textContent=TT.gen;
+      document.getElementById('clearBtn').textContent=TT.clear;
+      document.getElementById('nextLabel').textContent=TT.saved;
+      document.getElementById('storiesLabel').textContent=TT.stories;
+      document.getElementById('clearSavedBtn').textContent=TT.clearSaved;
+      document.getElementById('clearHistoryBtn').textContent=TT.clearHist;
+      qEl.placeholder=(lang==='it'?"E se…":"What if…");
+      // re-render pools localizzati
+      renderMicro(true); renderHints(); renderNext(); renderStories(); renderCreditsBadge();
+    };
 
-/* Crediti (semplice) */
-function today(){return new Date().toISOString().slice(0,10);}
-function userIsAdmin(){ return !!LS.getItem('admin_token'); }
-function capForUser(){ return userIsAdmin()?Infinity:(prefs.pro?10:3); }
-function ensureCredits(){ const c=readJSON('whatif_credits',{date:today(),used:0}); if(c.date!==today()){c.date=today();c.used=0;} writeJSON('whatif_credits',c); }
-function leftCredits(){ const c=readJSON('whatif_credits',{date:today(),used:0}); const cap=capForUser(); return cap===Infinity?"∞":Math.max(0,cap-(c.used||0)); }
-function renderCreditsBadge(){
-  const cap=capForUser(), left=leftCredits();
-  document.getElementById('freeBadge').textContent = (cap===Infinity) ? `${T.credits}: ∞` : `${T.credits}: ${left}/${cap}`;
-  document.getElementById('proBadge').textContent = prefs.pro ? 'PRO' : 'FREE';
-}
-ensureCredits(); renderCreditsBadge();
+    // Testi interfaccia extra
+    document.getElementById('microTitle').textContent=T.microT;
+    document.getElementById('microHint').textContent=T.microHint;
+    document.getElementById('saveMicroBtn').textContent=T.microSaveBtn;
 
-/* Tema + badges */
-function renderBadges(){
-  document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-  document.getElementById('styleBadge').textContent = "🎭 " + (prefs.stile==='wtf'?'What the F':'What if');
-  document.getElementById('periodoBadge').textContent = "🕰️ " + (prefs.periodo==='past'?(lang==='en'?'Past':'Passato'):(lang==='en'?'Future':'Futuro'));
-  document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
-  document.querySelectorAll('#periodoChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.periodo===prefs.periodo));
-  document.getElementById('whatifSubMode').style.display = (prefs.stile==='whatif') ? 'flex' : 'none';
-  document.getElementById('chipAnalitico').classList.toggle('sel', prefs.mode==='analitico');
-  document.getElementById('chipReale').classList.toggle('sel', prefs.mode!=='analitico');
-}
-renderBadges();
+    // Domanda
+    const qEl=document.getElementById('qInput');
+    qEl.placeholder=(lang==='it'?"E se…":"What if…");
+    document.getElementById('goBtn').textContent=T.gen;
+    document.getElementById('clearBtn').textContent=T.clear;
+    document.getElementById('tipNote').textContent="";
 
-/* Interazioni chips */
-document.getElementById('styleChips').addEventListener('click',(e)=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs); renderBadges();
-});
-document.getElementById('periodoChips').addEventListener('click',(e)=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  prefs.periodo=b.dataset.periodo; writeJSON('whatif_prefs',prefs); renderBadges();
-});
-document.getElementById('whatifSubMode').addEventListener('click',(e)=>{
-  const b=e.target.closest('.chip'); if(!b) return;
-  prefs.mode=b.dataset.mode; writeJSON('whatif_prefs',prefs); renderBadges();
-});
+    function trySubmit(){
+      const domanda=(qEl.value||"").trim(); if(!domanda){ qEl.focus(); return; }
+      const c=readJSON('whatif_credits',{date:today(),used:0});
+      if(!userIsAdmin()){
+        const cap=capForUser(); if((c.used||0)>=cap){ alert(T.outOfCredits); return; }
+        c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderCreditsBadge();
+      }
+      const micro=readJSON('micro_profile',{});
+      LS.setItem('domanda',domanda);
+      const req={ domanda, stile:prefs.stile, mode:(prefs.stile==='whatif'?(prefs.mode||'reale'):undefined), lang:(LS.getItem('lang')||'it'), extra:"", micro, fantasy_mode:false, periodo:prefs.periodo };
+      writeJSON('whatif_request',req);
+      location.href='fifth.html';
+    }
+    document.getElementById('goBtn').onclick=trySubmit;
+    document.getElementById('clearBtn').onclick=()=>{ qEl.value=""; qEl.focus(); };
+    qEl.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
-/* Tendina lingue */
-document.getElementById('langSelect').onchange=(e)=>{
-  lang = e.target.value; LS.setItem('lang', lang); location.reload();
-};
+    /* Micro-domande — banner prima sessione del giorno */
+    const FS_KEY='first_session_seen';
+    const fs=readJSON(FS_KEY,{date:"",seen:false});
+    const todayISO=today();
+    const firstBanner=document.getElementById('firstSessionBanner');
+    const microCard=document.getElementById('microCard');
+    if(fs.date!==todayISO){ firstBanner.style.display='block'; microCard.classList.remove('collapsed'); }
+    else { firstBanner.style.display='none'; microCard.classList.add('collapsed'); }
+    firstBanner.textContent=T.firstSession;
 
-/* Domanda */
-const qEl=document.getElementById('qInput');
-qEl.placeholder = (lang==='it' ? "E se…" : "What if…");
-document.getElementById('goBtn').textContent=T.gen;
-document.getElementById('clearBtn').textContent=T.clear;
+    /* Pool opzioni e render */
+    function rng(seedStr){ let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
+    function pickDaily(list, n, rnd){ const seen=new Set(), out=[]; while(out.length<n && seen.size<list.length){ const i=Math.floor(rnd()*list.length); if(seen.has(i)) continue; seen.add(i); out.push(list[i]); } return out; }
+    function renderOptions(containerId, options, key){
+      const wrap=document.getElementById(containerId); wrap.innerHTML='';
+      const saved=readJSON('micro_profile',{});
+      options.forEach(text=>{
+        const b=document.createElement('button'); b.className='opt'; b.textContent=text;
+        if(saved[key]===text) b.classList.add('sel');
+        b.onclick=()=>{ wrap.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); const cur=readJSON('micro_profile',{}); cur[key]=text; writeJSON('micro_profile',cur); };
+        wrap.appendChild(b);
+      });
+    }
 
-/* Hints — tanti e reali */
-const HINT_IT = [
-  "E se cambiassi lavoro?",
-  "E se cambiassi città?",
-  "E se tornassi all’Aquila?",
-  "E se aprissi un bar con 20 tavoli?",
-  "E se lavorassi 4 giorni a settimana?",
-  "E se mettessi da parte 300€ al mese?",
-  "E se facessi pace con una persona?",
-  "E se mollassi i social per 30 giorni?",
-  "E se mi svegliassi all’alba per una settimana?",
-  "E se studiassi inglese 20 minuti al giorno?",
-  "E se provassi a vivere senza auto?",
-  "E se aprissi P.IVA?",
-  "E se chiedessi un aumento?",
-  "E se adottassi un cane?",
-  "E se tornassi a studiare?",
-  "E se imparassi a suonare la chitarra?",
-  "E se andassi tre mesi all’estero?",
-  "E se lavorassi da remoto in montagna?",
-  "E se riducessi le spese del 20%?",
-  "E se scrivessi un libro di 30 pagine?",
-  "E se aprissi un canale su ciò che amo?",
-  "E se provassi il digiuno digitale la domenica?",
-  "E se facessi volontariato il sabato?",
-  "E se ricominciassi a correre?",
-  "E se pianificassi un anno sabbatico?"
-];
-const HINT_EN = [
-  "What if I changed jobs?","What if I moved city?","What if I went back to L’Aquila?",
-  "What if I opened a 20-table café?","What if I worked 4 days a week?","What if I saved €300 monthly?",
-  "What if I made peace with someone?","What if I quit social for 30 days?","What if I woke up at dawn for a week?",
-  "What if I studied English 20 min/day?","What if I lived without a car?","What if I went freelance?",
-  "What if I asked for a raise?","What if I adopted a dog?","What if I went back to study?",
-  "What if I learned guitar?","What if I spent 3 months abroad?","What if I worked remote in the mountains?",
-  "What if I cut expenses by 20%?","What if I wrote a 30-page book?","What if I launched a channel?",
-  "What if I did a digital fast on Sundays?","What if I volunteered on Saturdays?","What if I started running again?",
-  "What if I planned a sabbatical year?"
-];
-const hintsPool = (lang==='it'?HINT_IT:HINT_EN);
-const hintsWrap=document.getElementById('hintsChips');
-hintsPool.forEach(h=>{
-  const b=document.createElement('button'); b.className='chip'; b.textContent=h;
-  b.onclick=()=>{ qEl.value=h; window.scrollTo({top:0,behavior:'smooth'}); };
-  hintsWrap.appendChild(b);
-});
-/* Collapsible spunti */
-const hintsCard=document.getElementById('hintsCard');
-const hintsState=readJSON('ui_hints_state',{collapsed:true});
-if(hintsState.collapsed) hintsCard.classList.add('collapsed');
-document.getElementById('hintsHeader').onclick=()=>{
-  hintsCard.classList.toggle('collapsed');
-  hintsState.collapsed=hintsCard.classList.contains('collapsed');
-  writeJSON('ui_hints_state',hintsState);
-};
+    function renderMicro(force=false){
+      const rnd=rng(todayISO + (lang||''));
+      const moodPool=(lang==='en'?[
+        "Calm like airplane mode","Charged like a socket","Foggy but fine","Restless astronaut","Light and chatty","Solid and quiet","Bit chaotic, funny","Focused but human","Stressed with style","Quietly hopeful"
+      ]:[
+        "Calmo in modalità aereo","Carico come una presa","Appannato ma ok","Astronauta irrequieto","Leggero e chiacchierone","Solido e in silenzio","Un po’ caotico ma divertito","Concentrato ma umano","Stressato con stile","Silenziosamente fiducioso"
+      ]);
+      const anchorPool=(lang==='en'?[
+        "People I love","Money & bills","A routine that works","A promise to myself","Fear of changing","Curiosity about what’s here","Health first","Kids and family","A project I believe in"
+      ]:[
+        "Le persone che amo","Soldi & bollette","Una routine che funziona","Una promessa a me stesso/a","Paura di cambiare","Curiosità per ciò che c’è","La salute prima","Figli e famiglia","Un progetto in cui credo"
+      ]);
+      const decidePool=(lang==='en'?[
+        "Gut first","Lists & pros/cons","Ask a friend","Deadline decides","Flip a coin","Coffee + walk","Data then gut","Sleep on it"
+      ]:[
+        "Pancia prima","Liste pro/contro","Chiedo a un amico","Decide la scadenza","Tiro la moneta","Caffè + passeggiata","Dati poi pancia","Ci dormo su"
+      ]);
+      const zodiacPool=(lang==='en'?["Aries/Taurus/Gemini","Cancer/Leo/Virgo","Libra/Scorpio/Sag","Capricorn/Aquarius/Pisces","No sign, just vibes","Lucky habit: same socks"]:["Ariete/Toro/Gemelli","Cancro/Leone/Vergine","Bilancia/Scorpione/Sag","Capricorno/Acquario/Pesci","Niente segno, solo vibrazioni","Portafortuna: stesse calze"]);
+      const jungAtt=(lang==='en'?["Extraversion","Introversion"]:["Estroversione","Introversione"]);
+      const jungRat=(lang==='en'?["Thinking (T)","Feeling (F)"]:["Pensiero (T)","Sentimento (F)"]);
+      const jungPer=(lang==='en'?["Sensing (S)","Intuition (N)"]:["Sensazione (S)","Intuizione (N)"]);
 
-/* Submit */
-function trySubmit(){
-  const domanda=(qEl.value||"").trim(); if(!domanda){ qEl.focus(); return; }
-  const c=readJSON('whatif_credits',{date:today(),used:0});
-  if(!userIsAdmin()){
-    const cap=capForUser();
-    if((c.used||0)>=cap){ alert(lang==='en'?'You’ve used today’s credits.':'Hai finito i crediti di oggi.'); return; }
-    c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderCreditsBadge();
-  }
-  const req={
-    domanda,
-    stile: prefs.stile,
-    mode: (prefs.stile==='whatif' ? (prefs.mode || 'reale') : undefined),
-    lang, periodo: prefs.periodo,
-    extra:"", micro: readJSON('micro_profile',{}), fantasy_mode:false
-  };
-  console.log("ASK →", req); // debug: verifica mode
-  writeJSON('whatif_request', req);
-  location.href='fifth.html';
-}
-document.getElementById('goBtn').onclick=trySubmit;
-document.getElementById('clearBtn').onclick=()=>{ qEl.value=""; qEl.focus(); };
-qEl.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
+      document.getElementById('moodIcon').textContent=["🙂","😌","⚡","🌤️","🤘","🧊","🧩"][Math.floor(rnd()*7)];
+      document.getElementById('anchorIcon').textContent=["🧭","⚓","🏠","🧱","🪴","📌"][Math.floor(rnd()*6)];
+      document.getElementById('decideIcon').textContent=["⚙️","🧠","🎯","🪙","📋","⏳","☕"][Math.floor(rnd()*7)];
+      document.getElementById('zodiacIcon').textContent=["♈","♉","♊","♋","♌","♍","✨"][Math.floor(rnd()*7)];
+      document.getElementById('jungIcon').textContent=["🧠","🔎","🎛️","🧭"][Math.floor(rnd()*4)];
 
-/* Saved & History (collassati) */
-const savedState=readJSON('ui_saved_state',{collapsed:true});
-const histState =readJSON('ui_hist_state',{collapsed:true});
-if(savedState.collapsed) document.getElementById('savedCard').classList.add('collapsed');
-if(histState.collapsed)  document.getElementById('histCard').classList.add('collapsed');
-document.getElementById('savedHeader').onclick=()=>{ const c=document.getElementById('savedCard'); c.classList.toggle('collapsed'); savedState.collapsed=c.classList.contains('collapsed'); writeJSON('ui_saved_state',savedState); };
-document.getElementById('histHeader').onclick =()=>{ const c=document.getElementById('histCard');  c.classList.toggle('collapsed'); histState.collapsed=c.classList.contains('collapsed'); writeJSON('ui_hist_state',histState); };
+      renderOptions('moodOpts',pickDaily(moodPool,5,rnd),'mood');
+      renderOptions('anchorOpts',pickDaily(anchorPool,5,rnd),'anchor');
+      renderOptions('decideOpts',pickDaily(decidePool,5,rnd),'decide');
+      renderOptions('zodiacOpts',pickDaily(zodiacPool,4,rnd),'zodiac');
+      // Jung
+      (function(){
+        const wrapA=document.getElementById('jungAttitude');
+        const wrapR=document.getElementById('jungRational');
+        const wrapP=document.getElementById('jungPerception');
+        function group(wrap,list,key){ wrap.innerHTML=''; const saved=readJSON('micro_profile',{});
+          list.forEach(text=>{ const b=document.createElement('button'); b.className='opt'; b.textContent=text; if(saved[key]===text) b.classList.add('sel');
+            b.onclick=()=>{ wrap.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); const cur=readJSON('micro_profile',{}); cur[key]=text; writeJSON('micro_profile',cur); };
+            wrap.appendChild(b); }); }
+        group(wrapA,jungAtt,'jung_attitude');
+        group(wrapR,jungRat,'jung_rational');
+        group(wrapP,jungPer,'jung_perception');
+      })();
+    }
+    renderMicro();
 
-function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
-function renderNext(){
-  const box=document.getElementById('nextList'); box.innerHTML='';
-  const arr=readJSON('next_prompts',[]);
-  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=T.emptyNext; box.appendChild(p); return; }
-  arr.slice(0,12).forEach(item=>{
-    const row=document.createElement('div'); row.className='story';
-    const left=document.createElement('div');
-    left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.q||'—'}</div><div class="meta">${fmtDate(item.ts)}</div>`;
-    const right=document.createElement('div'); right.className='row';
-    const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=(lang==='en'?'Use':'Usa');
-    useBtn.onclick=()=>{ qEl.value=item.q||""; window.scrollTo({top:0,behavior:'smooth'}); };
-    const play=document.createElement('button'); play.className='play'; play.textContent='▶';
-    play.onclick=()=>{ LS.setItem('domanda', item.q||""); writeJSON('whatif_request',{ domanda:item.q||"", stile:prefs.stile, mode:(prefs.stile==='whatif'?(prefs.mode||'reale'):undefined), lang, extra:"", micro:readJSON('micro_profile',{}), fantasy_mode:false, periodo:prefs.periodo }); location.href='fifth.html'; };
-    right.appendChild(useBtn); right.appendChild(play);
-    row.appendChild(left); row.appendChild(right);
-    box.appendChild(row);
-  });
-}
-function renderStories(){
-  const box=document.getElementById('storyList'); box.innerHTML='';
-  const arr=readJSON('cronologia',[]);
-  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=T.emptyStories; box.appendChild(p); return; }
-  arr.slice(-12).reverse().forEach(item=>{
-    const row=document.createElement('div'); row.className='story';
-    const left=document.createElement('div');
-    left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.domanda||'—'}</div><div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
-    const play=document.createElement('button'); play.className='play'; play.textContent='▶';
-    play.onclick=()=>{ writeJSON('replay_story', { domanda:item.domanda, answer:item.risposta||item.answer||"", stile:item.stile||'whatif' }); location.href='fifth.html?view=replay'; };
-    row.appendChild(left); row.appendChild(play);
-    box.appendChild(row);
-  });
-}
-renderNext(); renderStories();
-</script>
+    /* Apertura/chiusura Micro */
+    document.getElementById('microHead').onclick=()=>{
+      const saved=readJSON('micro_saved',{date:"",ok:false});
+      if(saved.date===todayISO) return; // già salvato oggi
+      document.getElementById('microCard').classList.toggle('collapsed');
+    };
+    document.getElementById('saveMicroBtn').onclick=()=>{
+      const cur=readJSON('micro_profile',{}); writeJSON('micro_profile',cur);
+      writeJSON('micro_saved',{date:todayISO,ok:true}); writeJSON('first_session_seen',{date:todayISO,seen:true});
+      document.getElementById('firstSessionBanner').style.display='none';
+      document.getElementById('microCard').classList.add('collapsed');
+      document.getElementById('microSavedMsg').textContent=T.microSaved;
+    };
+
+    /* Hints */
+    const hintsCard=document.getElementById('hintsCard');
+    const hintsWrap=document.getElementById('hintsChips');
+    document.getElementById('hintsHeader').onclick=()=>{ hintsCard.classList.toggle('collapsed'); };
+    document.getElementById('hintsTitle').textContent=T.hintsT;
+    document.getElementById('hintsNote').textContent=T.hintsNote;
+
+    const HINT_IT=[
+      "E se cambiassi lavoro?","E se cambiassi città?","E se aprissi un bar?","E se tornassi a L’Aquila?","E se provassi a mettermi in proprio?","E se tornassi a studiare?",
+      "E se imparassi l’inglese davvero?","E se chiedessi un aumento?","E se lavorassi 4 giorni a settimana?","E se provassi a vivere al mare?","E se prendessi un cane?","E se vendessi tutto e viaggiassi 6 mesi?",
+      "E se smettessi i social per 30 giorni?","E se scrivessi un libro?","E se aprissi un canale su quello che amo?","E se organizzassi un viaggio da solo?","E se facessi volontariato?","E se facessi pace con una persona?",
+      "E se cambiassi orari per un mese?","E se mettessi 5€ al giorno da parte?","E se provassi a correre ogni mattina?","E se aprissi una palestra low-cost?","E se riprendessi la chitarra?","E se cambiassi macchina?",
+      "E se investissi piccole cifre ogni mese?","E se imparassi a cucinare bene 10 piatti?","E se aprissi un B&B?","E se iniziassi terapia?","E se cambiassi squadra di lavoro?","E se provassi un anno all’estero?",
+      "E se ristrutturassi casa?","E se tornassi in montagna la domenica?","E se imparassi a dire di no?","E se lanciassi un side project?","E se provassi a fare il docente?","E se imparassi a nuotare bene?",
+      "E se facessi un orto?","E se riducessi le spese inutili?","E se provassi meditazione?","E se usassi la bici per tutto?","E se aprissi un chiosco in città?","E se mi alzassi all’alba per 30 giorni?"
+    ];
+    const HINT_EN=[
+      "What if I changed jobs?","What if I moved city?","What if I opened a bar?","What if I went back to L’Aquila?","What if I started my own thing?","What if I went back to study?",
+      "What if I finally learned English?","What if I asked for a raise?","What if I worked 4 days a week?","What if I lived by the sea?","What if I adopted a dog?","What if I sold everything and travelled 6 months?",
+      "What if I quit social media for 30 days?","What if I wrote a book?","What if I launched a channel about what I love?","What if I travelled solo?","What if I volunteered?","What if I made peace with someone?",
+      "What if I changed my schedule for a month?","What if I saved €5 a day?","What if I ran every morning?","What if I opened a budget gym?","What if I picked up guitar again?","What if I changed car?",
+      "What if I invested small amounts monthly?","What if I mastered 10 recipes?","What if I opened a B&B?","What if I started therapy?","What if I changed team at work?","What if I tried a year abroad?",
+      "What if I renovated my place?","What if I spent Sundays in the mountains?","What if I learned to say no?","What if I launched a side project?","What if I tried teaching?","What if I learned to swim well?",
+      "What if I grew a garden?","What if I cut useless expenses?","What if I tried meditation?","What if I used my bike for everything?","What if I opened a street kiosk?","What if I woke up at dawn for 30 days?"
+    ];
+
+    function rng2(seedStr){ let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
+    function daily(pool,n=8){ const rnd=rng2(todayISO+lang); const seen=new Set(), out=[]; while(out.length<n && seen.size<pool.length){ const i=Math.floor(rnd()*pool.length); if(seen.has(i)) continue; seen.add(i); out.push(pool[i]); } return out; }
+    function renderHints(){
+      hintsWrap.innerHTML='';
+      const pool=(lang==='it'?HINT_IT:HINT_EN);
+      daily(pool,10).forEach(h=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=h; b.onclick=()=>{ qEl.value=h; window.scrollTo({top:0,behavior:'smooth'}); }; hintsWrap.appendChild(b); });
+      document.getElementById('hintsNote').textContent=(lang==='en'?I18N.en.hintsNote:I18N.it.hintsNote);
+    }
+    renderHints();
+
+    /* Salvati & Cronologia */
+    const savedState=readJSON('ui_saved_state',{collapsed:true});
+    const histState=readJSON('ui_hist_state',{collapsed:true});
+    if(savedState.collapsed) document.getElementById('savedCard').classList.add('collapsed');
+    if(histState.collapsed)  document.getElementById('histCard').classList.add('collapsed');
+    document.getElementById('savedHeader').onclick=()=>{ const c=document.getElementById('savedCard'); c.classList.toggle('collapsed'); savedState.collapsed=c.classList.contains('collapsed'); writeJSON('ui_saved_state',savedState); };
+    document.getElementById('histHeader').onclick =()=>{ const c=document.getElementById('histCard'); c.classList.toggle('collapsed'); histState.collapsed=c.classList.contains('collapsed'); writeJSON('ui_hist_state',histState); };
+
+    function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
+    function renderNext(){ const box=document.getElementById('nextList'); box.innerHTML=''; const arr=readJSON('next_prompts',[]);
+      const empty=(lang==='en'?I18N.en.emptyNext:I18N.it.emptyNext);
+      if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=empty; box.appendChild(p); return; }
+      arr.slice(0,12).forEach(item=>{ const row=document.createElement('div'); row.className='story';
+        const left=document.createElement('div'); left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.q||'—'}</div><div class="meta">${fmtDate(item.ts)}</div>`;
+        const right=document.createElement('div'); right.className='row';
+        const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=(lang==='en'?I18N.en.use:I18N.it.use);
+        useBtn.onclick=()=>{ qEl.value=item.q||""; window.scrollTo({top:0,behavior:'smooth'}); };
+        const play=document.createElement('button'); play.className='play'; play.textContent='▶';
+        play.onclick=()=>{ LS.setItem('domanda', item.q||""); writeJSON('whatif_request',{ domanda:item.q||"", stile:prefs.stile, mode:(prefs.stile==='whatif'?(prefs.mode||'reale'):undefined), lang:(LS.getItem('lang')||'it'), extra:"", micro:readJSON('micro_profile',{}), fantasy_mode:false, periodo:prefs.periodo }); location.href='fifth.html'; };
+        right.appendChild(useBtn); right.appendChild(play);
+        row.appendChild(left); row.appendChild(right); box.appendChild(row);
+      }); }
+    function renderStories(){ const box=document.getElementById('storyList'); box.innerHTML=''; const arr=readJSON('cronologia',[]);
+      const empty=(lang==='en'?I18N.en.emptyStories:I18N.it.emptyStories);
+      if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=empty; box.appendChild(p); return; }
+      arr.slice(-12).reverse().forEach(item=>{ const row=document.createElement('div'); row.className='story';
+        const left=document.createElement('div'); left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.domanda||'—'}</div><div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
+        const play=document.createElement('button'); play.className='play'; play.textContent='▶';
+        play.onclick=()=>{ writeJSON('replay_story', { domanda:item.domanda, answer:item.risposta||item.answer||"", stile:item.stile||'whatif' }); location.href='fifth.html?view=replay'; };
+        row.appendChild(left); row.appendChild(play); box.appendChild(row);
+      }); }
+    renderNext(); renderStories();
+
+    // Clear
+    document.getElementById('clearSavedBtn').textContent=(lang==='en'?I18N.en.clearSaved:I18N.it.clearSaved);
+    document.getElementById('clearHistoryBtn').textContent=(lang==='en'?I18N.en.clearHist:I18N.it.clearHist);
+    document.getElementById('clearSavedBtn').onclick=()=>{ LS.removeItem('next_prompts'); renderNext(); };
+    document.getElementById('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
+  </script>
 </body>
 </html>
