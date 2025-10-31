@@ -1,7 +1,6 @@
-// /api/ask.js — What?f Engine (HARD-LOCKED STYLE • EXACTLY MATCH EXAMPLES)
+// /api/ask.js — What?f Engine (HARD-LOCKED STYLE • EXACTLY MATCH EXAMPLES • FIXED)
 // Stili: whatif (analitico | reale) · wtf
-// Regole: un paragrafo, seconda persona, niente elenchi, niente emoji, NO eco della domanda, NO nomi inventati.
-// Incipit obbligatori (WhatIf): Analitico → "Sai, ..."; Reale/Poetico → "Bella questa, ..."
+// Un paragrafo, seconda persona, niente elenchi, niente emoji, no eco domanda, no nomi inventati.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -81,7 +80,7 @@ const FEWSHOT_WTF_IT = [
   `Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.`,
 ];
 
-/* ========= Banche WTF (reazioni demenziali, drink, morali) ========= */
+/* ========= Banche WTF ========= */
 const WTF_BANKS_IT = {
   openings: [
     "Ah ma guarda te… contrattando col destino a colpi di caffè",
@@ -127,24 +126,23 @@ const WTF_BANKS_IT = {
   ],
 };
 
-/* ========= Regole dure: COPIA STILE E INCIPIT ========= */
+/* ========= Regole dure ========= */
 const BASE_RULES = `REGOLE GENERALI:
 - Un solo paragrafo. Niente elenchi. Niente emoji. NON ripetere la domanda.
 - Solo seconda persona. Nessun nome proprio non presente nella domanda.
-- MATCH_EXAMPLES_EXACTLY: copia tono, cadenza, lunghezza frasi, registro, immagini e dispositivi degli esempi.
-- Evita sinonimi “tecnici” quando il modello poetico è attivo.`;
+- MATCH_EXAMPLES_EXACTLY: copia tono, cadenza, lunghezza frasi, registro, immagini e dispositivi degli esempi.`;
 
 const WHATIF_ANALITICO_RULE = `WHAT IF Analitico:
 - INCIPIT OBBLIGATORIO: inizia con "Sai," (es.: "Sai, questa domanda girava nell’aria da un po’.").
-- Tono concreto, scambi reali, costi/benefici, routine, qualità della vita.
-- Cadenza e lessico allineati all’esempio ANALITICO qui sotto.
-- 135–155 parole. Chiusura calma in stile esempio.`;
+- Tono concreto: scambi reali, costi/benefici, routine, qualità della vita.
+- Cadenza e lessico allineati all’esempio ANALITICO.
+- 135–155 parole. Chiusura calma.`;
 
 const WHATIF_POETICO_RULE = `WHAT IF Reale/Poetico:
 - INCIPIT OBBLIGATORIO: inizia con "Bella questa," (es.: "Bella questa, Luca.").
-- Immagini sobrie, sensoriali e quotidiane; ritmo arioso; NESSUN gergo analitico.
-- Cadenza e lessico allineati all’esempio POETICO qui sotto.
-- 135–155 parole. Chiusura riconciliata come l’esempio.`;
+- Immagini sensoriali quotidiane; ritmo arioso; NESSUN gergo analitico.
+- Cadenza e lessico allineati all’esempio POETICO.
+- 135–155 parole. Chiusura riconciliata.`;
 
 const WTF_RULE = `WHAT THE F (amichevole, comico):
 - Struttura OBBLIGATORIA (6–8 frasi): presa in giro affettuosa (≤2) → 2–3 micro-imprevisti → EXACTLY ONE imprecazione teatrale (IMPRECATION) → SUBITO 2–3 reazioni di oggetti (REACTIONS) → DRINK alcolico (DRINK) → 1–2 frasi che rispondono davvero → morale calda (MORAL).
@@ -162,14 +160,15 @@ function pick(arr, n=1){
 function wtfSeeds(domanda, micro={}){
   const L = WTF_BANKS_IT;
   const nick = (micro?.nickname && String(micro.nickname).slice(0,20)) || "campione";
-  const opening = pick(L.openings,1)[0] + (Math.random()<0.7? `: ${pick(L.jabs,1)[0]}.` : ".");
+  const opening = (pick(L.openings,1)[0] + (Math.random()<0.7? `: ${pick(L.jabs,1)[0]}.` : ".")).replace("campione", nick);
   const impre = pick(L.imprecations,1)[0];
-  const reacts = pick(L.reactions, 2 + Math.floor(Math.random()*2)); // 2 o 3
+  const reactCount = 2 + Math.floor(Math.random()*2); // 2 o 3
+  const reacts = pick(L.reactions, reactCount);
   const drink  = pick(L.drinks,1)[0];
   const moral  = pick(L.morales,1)[0];
   return [
     { role:"system", content: WTF_RULE },
-    { role:"system", content: `OPENING: ${opening.replace("campione", nick)}` },
+    { role:"system", content: `OPENING: ${opening}` },
     { role:"system", content: `IMPRECATION: ${impre}` },
     { role:"system", content: `REACTIONS:\n- ${reacts.join("\n- ")}` },
     { role:"system", content: `DRINK: ${drink}` },
@@ -231,7 +230,9 @@ export default async function handler(req,res){
     const { success } = await rl.limit(`ask:${ip}`);
     if(!success) return res.status(429).json({ error:"rate_limited_minute" });
 
-    const body=typeof req.body==="string"? JSON.parse(req.body||"{}") : (req.body||{});
+    const bodyRaw = typeof req.body === "string" ? req.body : (req.body ? JSON.stringify(req.body) : "{}");
+    const body = JSON.parse(bodyRaw || "{}");
+
     const {
       domanda = "",
       stile   = "whatif",   // "whatif" | "wtf"
@@ -272,18 +273,17 @@ export default async function handler(req,res){
       answer = limitExclamations(answer);
       answer = ensureDrink(answer);
     }else{
-      // Forza incipit corretti
+      // Forza incipit corretti (senza duplicare se già presenti)
       if(mode==="analitico" && !/^Sai[, ]/i.test(answer)){
-        answer = "Sai, "+answer.replace(/^([A-ZÀ-Ýa-zà-ÿ]+,?\s*)/,"");
+        answer = "Sai, " + answer.replace(/^([A-ZÀ-Ýa-zà-ÿ]+,?\s*)/,"");
       }
       if(mode!=="analitico" && !/^Bella questa[, ]/i.test(answer)){
-        answer = "Bella questa, "+answer.replace(/^([A-ZÀ-Ýa-zà-ÿ]+,?\s*)/,"");
+        answer = "Bella questa, " + answer.replace(/^([A-ZÀ-Ýa-zà-ÿ]+,?\s*)/,"");
       }
-      // Rimozione lessico analitico nel poetico
+      // Ripulisci gergo analitico dal poetico
       if(mode!=="analitico"){
         answer = answer
-          .replace(/\b(costi|benefici|trade[- ]?off|budget|KPI|metriche|ottimizzazione|efficienza|performance)\b/gi,"respiro")
-          .replace(/\b(pro/gi,"pro")
+          .replace(/\b(costi|benefici|trade[- ]?off|budget|KPI|metriche|ottimizzazione|efficienza|performance)\b/gi, "respiro");
       }
     }
 
@@ -301,4 +301,4 @@ export default async function handler(req,res){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
-}
+  }
