@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="it" data-theme="whatif">
+<html lang="it">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Risultato</title>
+<title>What?f — Result</title>
 <meta name="theme-color" content="#0B0B0C"/>
 <style>
 :root{
@@ -79,21 +79,26 @@ h1{
 }
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
+.embit { padding:0 .08em; box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset; text-shadow:0 0 12px rgba(255,255,255,.08); border-radius:4px; }
 
-/* evidenzia le parentesi comiche tra em-dash senza toccare il testo */
-.embit {
-  padding: 0 .08em;
-  box-shadow: 0 -4px 0 0 rgba(255,255,255,.05) inset;
-  text-shadow: 0 0 12px rgba(255,255,255,.08);
-  border-radius: 4px;
+/* popover traduzione */
+.pop{
+  position:relative;
 }
-
-/* Select */
-.select{
-  background:rgba(255,255,255,.06);
+.menu{
+  position:absolute; right:0; top:calc(100% + 6px);
+  background:rgba(25,33,40,.98);
   border:1px solid rgba(255,255,255,.12);
-  color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer;
+  border-radius:12px; padding:6px;
+  display:none; min-width:180px; z-index:5;
+  box-shadow:0 10px 24px rgba(0,0,0,.35);
 }
+.menu.open{ display:block; }
+.menu button{
+  width:100%; text-align:left; padding:8px 10px; border-radius:10px;
+  background:transparent; color:#fff; border:none; cursor:pointer;
+}
+.menu button:hover{ background:rgba(255,255,255,.08); }
 </style>
 </head>
 <body>
@@ -106,13 +111,8 @@ h1{
     <div class="row" style="gap:8px">
       <span class="badge" id="styleBadge">🎭 —</span>
       <span class="badge" id="proBadge" title="" style="display:none">🧪 TEST · ⭐ PRO</span>
-      <select id="langSelect" class="select" aria-label="Language">
-        <option value="it">IT · Italiano</option>
-        <option value="en">EN · English</option>
-        <option value="es">ES · Español</option>
-        <option value="fr">FR · Français</option>
-        <option value="de">DE · Deutsch</option>
-      </select>
+      <!-- badge lingua (solo display) -->
+      <span class="badge" id="langBadge">🌐 IT</span>
     </div>
   </div>
 
@@ -131,6 +131,19 @@ h1{
     <div class="hr"></div>
     <div class="row">
       <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
+      <button class="btn ghost" id="ttsBtn">🔊 Ascolta</button>
+
+      <div class="pop">
+        <button class="btn ghost" id="translateBtn">🌐 Traduci</button>
+        <div class="menu" id="translateMenu" aria-hidden="true">
+          <button data-lang="it">Italiano (IT)</button>
+          <button data-lang="en">English (EN)</button>
+          <button data-lang="es">Español (ES)</button>
+          <button data-lang="fr">Français (FR)</button>
+          <button data-lang="de">Deutsch (DE)</button>
+        </div>
+      </div>
+
       <button class="btn ghost" id="againBtn">🔁 Fai un’altra domanda</button>
     </div>
     <p class="small" id="metaInfo"></p>
@@ -138,177 +151,116 @@ h1{
 </main>
 
 <script>
-/* ==== State ==== */
-const LS = localStorage;
+/* ===== Helpers / Stato ===== */
+const LS=localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
 const style = prefs.stile || 'whatif';
 const periodo = prefs.periodo || 'future';
 let lang  = (LS.getItem('lang') || 'it').toLowerCase();
-if(!['it','en','es','fr','de'].includes(lang)) lang = 'it';
-
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 document.documentElement.lang = lang;
 
-/* ==== PRO badge ==== */
-(function showProBadge(){
-  const el = document.getElementById('proBadge');
-  const hasToken = !!LS.getItem('admin_token');
-  if (hasToken || prefs.pro === true){
-    el.style.display = 'inline-flex';
-    el.textContent = '🧪 TEST · ⭐ PRO';
-    el.title = (lang === 'en') ? 'Test mode active' : (
-               lang === 'es') ? 'Modo de prueba activo' : (
-               lang === 'fr') ? 'Mode test actif' :
-               (lang === 'de') ? 'Testmodus aktiv' : 'Modalità test attiva';
-  }
-})();
-
-/* ==== I18N ==== */
-const I18N = {
-  it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
-       sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
-       share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
-       copied:"Copiato!", error:"[errore server]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Stile: What the F · 6–9 frasi · paragrafo unico · 2–3 reazioni demenziali · doppia punchline · modalità: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · nessun elenco/domanda/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.`,
-       back:"← Indietro", home:"🏠 Home" },
-  en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
-       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-       share:"📤 Share / Copy", again:"🔁 Ask another",
-       copied:"Copied!", error:"[server error]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Style: What the F · 6–9 sentences · single paragraph · 2–3 absurd object reactions · double punchline · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`,
-       back:"← Back", home:"🏠 Home" },
-  es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
-       sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
-       share:"📤 Compartir / Copiar", again:"🔁 Hacer otra pregunta",
-       copied:"¡Copiado!", error:"[error del servidor]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Estilo: What the F · 6–9 frases · un solo párrafo · 2–3 reacciones absurdas · doble remate · modo: ${p==='past'?'Pasado':'Futuro'}.`
-        : `Estilo: What if (60% análisis, 40% real) · 8–11 frases · un solo párrafo · sin listas/preguntas/emojis · modo: ${p==='past'?'Pasado':'Futuro'}.`,
-       back:"← Atrás", home:"🏠 Inicio" },
-  fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
-       sub:(q)=>`Question : « ${q} »`, q:"Votre question", a:"Réponse",
-       share:"📤 Partager / Copier", again:"🔁 Poser une autre question",
-       copied:"Copié !", error:"[erreur serveur]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Style : What the F · 6–9 phrases · un paragraphe · 2–3 réactions absurdes · double chute · mode : ${p==='past'?'Passé':'Futur'}.`
-        : `Style : What if (60 % analyse, 40 % réel) · 8–11 phrases · un paragraphe · pas de listes/questions/emojis · mode : ${p==='past'?'Passé':'Futur'}.`,
-       back:"← Retour", home:"🏠 Accueil" },
-  de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
-       sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
-       share:"📤 Teilen / Kopieren", again:"🔁 Weitere Frage stellen",
-       copied:"Kopiert!", error:"[Serverfehler]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Stil: What the F · 6–9 Sätze · ein Absatz · 2–3 absurde Objektreaktionen · doppelte Pointe · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
-        : `Stil: What if (60 % Analyse, 40 % real) · 8–11 Sätze · ein Absatz · keine Listen/Fragen/Emojis · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
-       back:"← Zurück", home:"🏠 Start" },
+const I18N_ALL={
+  it:{tWTF:"⚡ What the F — Risultato", tWHF:"💡 What if — Risultato",
+      sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
+      share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
+      tts:"🔊 Ascolta", translate:"🌐 Traduci", copied:"Copiato!", error:"[errore server]",
+      styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+      meta:(st,p)=> st==='wtf'
+        ? `Stile: What the F · 6–9 frasi · paragrafo unico · 3+ stoccate interne · doppia punchline · modalità: ${p==='past'?'Passato':'Futuro'}.`
+        : `Stile: What if · 8–11 frasi · paragrafo unico · niente elenchi/domande/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.`,
+      lead:{wtf:[
+        "Entri piano, il caos ti riconosce e ti fa passare.",
+        "Respiri e lasci che sia il destino a inciampare per primo.",
+        "Ti presenti al futuro con la faccia di adesso e la pazienza di domani."
+      ], whatif:[
+        "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.",
+        "La stanza è la stessa, lo sguardo no: è già un inizio.",
+        "Respiri come chi ha tempo, e il tempo ti crede."
+      ]}},
+  en:{tWTF:"⚡ What the F — Result", tWHF:"💡 What if — Result",
+      sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
+      share:"📤 Share / Copy", again:"🔁 Ask another",
+      tts:"🔊 Listen", translate:"🌐 Translate", copied:"Copied!", error:"[server error]",
+      styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+      meta:(st,p)=> st==='wtf'
+        ? `Style: What the F · 6–9 sentences · single paragraph · 3+ inside jabs · double punchline · mode: ${p==='past'?'Past':'Future'}.`
+        : `Style: What if · 8–11 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`,
+      lead:{wtf:[
+        "You step in slowly; chaos recognizes you and lets you through.",
+        "You breathe and let fate be the one who trips first."
+      ], whatif:[
+        "Set the keys down and let the quiet that doesn’t judge go first.",
+        "Same room, different gaze — that’s already a start."
+      ]}},
+  es:{tWTF:"⚡ What the F — Resultado", tWHF:"💡 What if — Resultado",
+      sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
+      share:"📤 Compartir / Copiar", again:"🔁 Hacer otra",
+      tts:"🔊 Escuchar", translate:"🌐 Traducir", copied:"¡Copiado!", error:"[error del servidor]",
+      styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+      meta:(st,p)=> st==='wtf'
+        ? `Estilo: What the F · 6–9 frases · un solo párrafo · 3+ pullitas internas · doble remate · modo: ${p==='past'?'Pasado':'Futuro'}.`
+        : `Estilo: What if · 8–11 frases · un solo párrafo · sin listas/preguntas/emojis · modo: ${p==='past'?'Futuro':'Futuro'}.`,
+      lead:{wtf:["Respiras y dejas que se tropiece el destino."], whatif:["Deja las llaves y deja hablar al silencio."]}},
+  fr:{tWTF:"⚡ What the F — Résultat", tWHF:"💡 What if — Résultat",
+      sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
+      share:"📤 Partager / Copier", again:"🔁 Poser une autre",
+      tts:"🔊 Écouter", translate:"🌐 Traduire", copied:"Copié !", error:"[erreur serveur]",
+      styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+      meta:(st,p)=> st==='wtf'
+        ? `Style : What the F · 6–9 phrases · paragraphe unique · 3+ piques internes · double chute · mode : ${p==='past'?'Passé':'Futur'}.`
+        : `Style : What if · 8–11 phrases · paragraphe unique · pas de listes/questions/émojis · mode : ${p==='past'?'Passé':'Futur'}.`,
+      lead:{wtf:["Tu respires et la scène te laisse passer."], whatif:["Pose les clés et laisse parler le silence."]}},
+  de:{tWTF:"⚡ What the F — Ergebnis", tWHF:"💡 What if — Ergebnis",
+      sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
+      share:"📤 Teilen / Kopieren", again:"🔁 Neue Frage",
+      tts:"🔊 Anhören", translate:"🌐 Übersetzen", copied:"Kopiert!", error:"[Serverfehler]",
+      styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+      meta:(st,p)=> st==='wtf'
+        ? `Stil: What the F · 6–9 Sätze · ein Absatz · 3+ Seitenhiebe · Doppelpointe · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
+        : `Stil: What if · 8–11 Sätze · ein Absatz · keine Listen/Fragen/Emojis · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
+      lead:{wtf:["Du atmest, das Chaos nickt und lässt dich durch."], whatif:["Lege die Schlüssel ab und lass die Stille vor." ]}}
 };
+const I18N = I18N_ALL[lang] || I18N_ALL.it;
 
-/* ==== Leads per lingua/stile ==== */
-const LEADS = {
-  it:{
-    wtf:[
-      "Entri piano, il caos ti riconosce e oggi ti lascia passare.",
-      "Respiri e lasci che sia il destino a inciampare per primo.",
-      "Ti presenti al futuro con la faccia di adesso e la pazienza di domani.",
-      "La scena è già in corso: tu ci metti il rumore buono.",
-      "Non chiedi permesso al dubbio: gli siedi accanto."
-    ],
-    whatif:[
-      "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.",
-      "Ti siedi un attimo e scopri che la calma ha memoria lunga.",
-      "La stanza è la stessa, lo sguardo no: è già un inizio.",
-      "Tieniti stretto ciò che funziona e lascia che il resto perda importanza.",
-      "Respiri come chi ha tempo, e il tempo ti crede."
-    ]
-  },
-  en:{
-    wtf:[
-      "You step in slowly; chaos recognizes you and lets you through.",
-      "You breathe and let fate be the one who trips first.",
-      "You bring today’s face and tomorrow’s patience to the door.",
-      "The scene’s already rolling; you supply the good noise."
-    ],
-    whatif:[
-      "Set the keys down and let the quiet that doesn’t judge go first.",
-      "Same room, different gaze — that’s a start already.",
-      "Breathe like someone with time, and time believes you.",
-      "Keep what works and let the rest lose importance."
-    ]
-  },
-  es:{
-    wtf:[
-      "Entras despacio; el caos te reconoce y hoy te deja pasar.",
-      "Respiras y dejas que el destino sea quien tropiece primero.",
-      "Traes la cara de hoy y la paciencia de mañana a la puerta."
-    ],
-    whatif:[
-      "Dejas las llaves y permites que hable el silencio que no juzga.",
-      "Misma habitación, otra mirada: ya es un comienzo."
-    ]
-  },
-  fr:{
-    wtf:[
-      "Tu entres doucement; le chaos te reconnaît et te laisse passer.",
-      "Tu respires et laisses le destin trébucher le premier."
-    ],
-    whatif:[
-      "Tu poses les clés et laisses parler le silence qui ne juge pas.",
-      "Même pièce, autre regard — c’est déjà un début."
-    ]
-  },
-  de:{
-    wtf:[
-      "Du trittst langsam ein; das Chaos erkennt dich und lässt dich durch.",
-      "Du atmest und lässt das Schicksal zuerst stolpern."
-    ],
-    whatif:[
-      "Du legst die Schlüssel ab und lässt die stille, die nicht urteilt, sprechen.",
-      "Gleicher Raum, anderer Blick — schon ein Anfang."
-    ]
-  }
-};
+/* ===== UI base ===== */
+const $ = (q)=>document.querySelector(q);
+$('#backBtn').onclick=()=>history.back();
+$('#homeBtn').onclick=()=>location.href='index.html';
+$('#lblQ').textContent=I18N.q;
+$('#lblA').textContent=I18N.a;
+$('#shareBtn').textContent=I18N.share;
+$('#againBtn').textContent=I18N.again;
+$('#ttsBtn').textContent=I18N.tts;
+$('#translateBtn').textContent=I18N.translate;
+$('#styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
+$('#langBadge').textContent = `🌐 ${lang.toUpperCase()}`;
 
-/* ==== UI Hooks ==== */
-const qs = (sel)=>document.querySelector(sel);
-const setText = (id, txt)=>{ const el=qs(id); if(el) el.textContent = txt; };
-
-const backBtn  = qs('#backBtn');
-const homeBtn  = qs('#homeBtn');
-const langSel  = qs('#langSelect');
-const titleH1  = qs('#title');
-const subtitle = qs('#subtitle');
-const lblQ     = qs('#lblQ');
-const lblA     = qs('#lblA');
-const qView    = qs('#qView');
-const leadNode = qs('#lead');
-const answerEl = qs('#answer');
-const shareBtn = qs('#shareBtn');
-const againBtn = qs('#againBtn');
-const metaInfo = qs('#metaInfo');
-const styleBadge = qs('#styleBadge');
-
-/* ==== Helpers ==== */
-function normalizeOneParagraph(s=""){
-  return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
-}
+/* ===== Lead & meta ===== */
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 function hashStr(s=""){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i); h=h|0; } return Math.abs(h); }
 function stablePick(arr, seedStr){ if(!arr?.length) return ""; if(!seedStr?.trim()) return pick(arr); const h=hashStr(seedStr); return arr[h%arr.length]; }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
 
-/* Evidenzia testo tra em-dash */
+const prefsData = JSON.parse(LS.getItem('whatif_request')||'{}');
+let domanda = prefsData.domanda || LS.getItem('domanda') || "";
+function setTitles(q){
+  $('#title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
+  $('#subtitle').textContent = I18N.sub(q);
+  $('#styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
+  const bank = (I18N.lead?.[style]) || (I18N_ALL['it'].lead.whatif);
+  const seed = `${(q||"").toLowerCase().trim()}|${style}|${lang}`;
+  const line = oneSentence(stablePick(bank, seed));
+  $('#lead').textContent = line;
+  $('#metaInfo').textContent = I18N.meta(style, periodo);
+}
+setTitles(domanda);
+$('#qView').textContent = domanda || '—';
+
+/* ===== Decorazioni “— … —” ===== */
 function decorateEmBits(el){
   const raw = el.textContent;
-  if(!raw || !raw.includes("—")) return;
+  if(!raw.includes("—")) return;
   const parts = raw.split("—");
   let html = "";
   for(let i=0;i<parts.length;i++){
@@ -318,143 +270,127 @@ function decorateEmBits(el){
   }
   el.innerHTML = html;
 }
-
-/* ==== Load state from LS ==== */
-const params = new URLSearchParams(location.search);
-const isReplay = params.get('view')==='replay';
-let domanda = "";
-let answerText = "";
-
-/* ==== Language init ==== */
-langSel.value = lang;
-
-/* ==== UI render ==== */
-function setTitlesAndTexts(q){
-  const T = I18N[lang] || I18N.it;
-  setText('#title', style==='wtf' ? T.titleWTF : T.titleWHF);
-  subtitle.textContent = T.sub(q || '—');
-  lblQ.textContent = T.q;
-  lblA.textContent = T.a;
-  shareBtn.textContent = T.share;
-  againBtn.textContent = T.again;
-  styleBadge.textContent = (style==='wtf') ? T.styleWTF : T.styleWHF;
-  metaInfo.textContent = T.meta(style, periodo);
-
-  const bank = (LEADS[lang] && LEADS[lang][style]) ? LEADS[lang][style]
-               : (LEADS.it[style] || LEADS.it.whatif);
-  const seed = `${(q||"").toLowerCase().trim()}|${style}|${lang}`;
-  const line = oneSentence(stablePick(bank, seed) || '');
-  leadNode.textContent = line || '—';
+function normalizeOneParagraph(s=""){
+  return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
 }
 
-/* ==== Buttons ==== */
-backBtn.onclick = ()=> history.length > 1 ? history.back() : location.replace('index.html');
-homeBtn.onclick = ()=> location.href='index.html';
-langSel.onchange = ()=>{
-  lang = langSel.value;
-  LS.setItem('lang', lang);
-  document.documentElement.lang = lang;
-  // Re-render all static texts
-  setTitlesAndTexts(domanda);
-  // Repaint pro badge tooltip
-  const el = document.getElementById('proBadge');
-  if(el.style.display !== 'none'){
-    el.title = (lang === 'en') ? 'Test mode active' : (
-               lang === 'es') ? 'Modo de prueba activo' : (
-               lang === 'fr') ? 'Mode test actif' :
-               (lang === 'de') ? 'Testmodus aktiv' : 'Modalità test attiva';
-  }
-  // (Facoltativo) non richiamiamo l’API per non bruciare crediti: cambiamo solo UI.
-};
-
-shareBtn.onclick = async()=>{
-  const T = I18N[lang] || I18N.it;
-  const full = `What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n\nQ: ${domanda}\n\n${answerText}`;
+/* ===== Fetch risposta ===== */
+let answerText="";
+async function fetchAnswer(targetLang){
   try{
-    if(navigator.share){
-      await navigator.share({ title: "What?f", text: full });
-    }else{
+    const headers = { "Content-Type": "application/json" };
+    if (prefs.pro === true) headers["x-pro"] = "1";
+    const adminToken = localStorage.getItem("admin_token");
+    if (adminToken) headers["x-admin-token"] = adminToken;
+
+    const body = {
+      domanda,
+      lang: targetLang || lang,
+      stile: style,
+      extra: "",
+      micro: prefsData.micro || {},
+      periodo
+    };
+    const r = await fetch("/api/ask",{ method:"POST", headers, body:JSON.stringify(body) });
+    const data = await r.json();
+    if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
+    answerText = normalizeOneParagraph(String(data.answer||"").trim());
+    if(!/[.!?…]$/.test(answerText)) answerText += ".";
+    const node = $('#answer');
+    node.textContent = answerText;
+    decorateEmBits(node);
+    // aggiorna lingua attiva su badge se abbiamo tradotto
+    if(targetLang){
+      lang = targetLang;
+      LS.setItem('lang', lang);
+      document.documentElement.lang = lang;
+      $('#langBadge').textContent = `🌐 ${lang.toUpperCase()}`;
+      // rinfresca etichette UI alla nuova lingua
+      const I2 = I18N_ALL[lang] || I18N_ALL.it;
+      $('#lblQ').textContent=I2.q; $('#lblA').textContent=I2.a;
+      $('#shareBtn').textContent=I2.share; $('#againBtn').textContent=I2.again;
+      $('#ttsBtn').textContent=I2.tts; $('#translateBtn').textContent=I2.translate;
+      $('#title').textContent = (style==='wtf'? I2.tWTF : I2.tWHF);
+      $('#subtitle').textContent = I2.sub(domanda);
+      $('#styleBadge').textContent = (style==='wtf') ? I2.styleWTF : I2.styleWHF;
+      $('#metaInfo').textContent = I2.meta(style, periodo);
+      // aggiorna lead
+      const bank = (I2.lead?.[style]) || (I18N_ALL['it'].lead.whatif);
+      $('#lead').textContent = oneSentence(stablePick(bank, `${(domanda||"")}|${style}|${lang}`));
+    }
+  }catch(e){
+    console.error(e);
+    $('#answer').textContent = (I18N_ALL[lang]||I18N_ALL.it).error;
+  }
+}
+fetchAnswer(); // prima render nella lingua corrente
+
+/* ===== Share ===== */
+$('#shareBtn').onclick=async()=>{
+  const full = `What?f — ${style==='wtf'?'What the F':'What if'}\n(${periodo})\n\nQ: ${domanda}\n\n${answerText}`;
+  const I2 = I18N_ALL[lang]||I18N_ALL.it;
+  try{
+    if(navigator.share){ await navigator.share({ title: "What?f", text: full }); }
+    else{
       await navigator.clipboard.writeText(full);
-      const b=shareBtn;
-      b.textContent = T.copied; setTimeout(()=>b.textContent=T.share,1200);
+      const b=$('#shareBtn'); b.textContent = I2.copied; setTimeout(()=>b.textContent=I2.share,1200);
     }
   }catch{}
 };
 
-againBtn.onclick = ()=>{ location.href='fourth.html'; };
+/* ===== TTS ===== */
+const TTS_MAP={ it:"it-IT", en:"en-US", es:"es-ES", fr:"fr-FR", de:"de-DE" };
+function speak(text, langCode){
+  if(!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  const target = TTS_MAP[langCode] || "en-US";
+  const pickVoice=()=> {
+    const vs = window.speechSynthesis.getVoices()||[];
+    const v = vs.find(v=>v.lang === target) || vs.find(v=>v.lang.startsWith(target.split('-')[0])) || vs[0];
+    if(v) utter.voice=v;
+    utter.lang = v?.lang || target;
+    utter.rate = 1.0; utter.pitch=1.0; utter.volume=1.0;
+    window.speechSynthesis.speak(utter);
+  };
+  if(window.speechSynthesis.getVoices().length===0){
+    // chrome needs async load
+    window.speechSynthesis.onvoiceschanged = ()=>{ pickVoice(); };
+  } else pickVoice();
+}
+$('#ttsBtn').onclick=()=> speak(answerText, lang);
 
-/* ==== Fetch / Render ==== */
-function mapGenderToSex(g){
-  switch(String(g||'').toLowerCase()){
-    case 'uomo': return 'm';
-    case 'donna': return 'f';
-    case 'altro': return 'nb';
-    default: return '';
+/* ===== Translate popover ===== */
+const menu = $('#translateMenu');
+$('#translateBtn').onclick=(e)=>{
+  e.stopPropagation();
+  menu.classList.toggle('open');
+  menu.setAttribute('aria-hidden', menu.classList.contains('open') ? 'false' : 'true');
+};
+menu.addEventListener('click', (e)=>{
+  const b = e.target.closest('button'); if(!b) return;
+  const targetLang = b.dataset.lang;
+  if(!targetLang || targetLang===lang){ menu.classList.remove('open'); return; }
+  fetchAnswer(targetLang); // rigenera nella lingua scelta
+  menu.classList.remove('open');
+});
+document.addEventListener('click', (e)=>{
+  if(!menu.contains(e.target) && e.target!==$('#translateBtn')) menu.classList.remove('open');
+});
+
+/* ===== Again ===== */
+$('#againBtn').onclick=()=>{ location.href='fourth.html'; };
+
+/* ===== PRO badge ===== */
+(function showProBadge(){
+  const el = document.getElementById('proBadge');
+  const hasToken = !!LS.getItem('admin_token');
+  if (hasToken || prefs.pro === true){
+    el.style.display = 'inline-flex';
+    el.textContent = '🧪 TEST · ⭐ PRO';
+    el.title = (lang === 'en') ? 'Test mode active' : 'Modalità test attiva';
   }
-}
-
-if(isReplay){
-  const r = JSON.parse(LS.getItem('replay_story')||'{}');
-  domanda = r.domanda || LS.getItem('domanda') || "";
-  answerText = normalizeOneParagraph(r.answer || "");
-  setTitlesAndTexts(domanda);
-  qView.textContent = domanda || '—';
-  answerEl.textContent = answerText || '—';
-  decorateEmBits(answerEl);
-}else{
-  const req = JSON.parse(LS.getItem('whatif_request')||'{}');
-  domanda = req.domanda || LS.getItem('domanda') || "";
-  setTitlesAndTexts(domanda);
-  qView.textContent = domanda || '—';
-
-  // profilo (sesso) dal LS
-  const profile = JSON.parse(LS.getItem('whatif_profile') || '{}');
-  const sex = (profile.sex) ? String(profile.sex).toLowerCase()
-            : mapGenderToSex(profile.gender || '');
-
-  (async ()=>{
-    navigator.sendBeacon?.("/api/track") || fetch("/api/track",{method:"POST",keepalive:true}).catch(()=>{});
-    try{
-      const headers = { "Content-Type": "application/json" };
-      if (prefs.pro === true) headers["x-pro"] = "1";
-      const adminToken = localStorage.getItem("admin_token");
-      if (adminToken) headers["x-admin-token"] = adminToken;
-
-      const r = await fetch("/api/ask",{
-        method:"POST",
-        headers,
-        body:JSON.stringify({
-          domanda,
-          lang,                // <-- lingua selezionata
-          stile: style,        // whatif | wtf
-          periodo,             // future | past
-          extra:"",
-          micro:req.micro||{},
-          sex
-        })
-      });
-
-      if(r.status===429){
-        answerEl.textContent = (I18N[lang]||I18N.it).error;
-        return;
-      }
-      const data = await r.json().catch(()=>null);
-      if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
-
-      answerText = normalizeOneParagraph((data.answer||"").trim());
-      if(!/[.!?…]$/.test(answerText)) answerText += ".";
-      answerEl.textContent = answerText;
-      decorateEmBits(answerEl);
-
-      const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-      hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
-      LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-    }catch(e){
-      answerEl.textContent = (I18N[lang]||I18N.it).error;
-      console.error(e);
-    }
-  })();
-}
+})();
 </script>
 </body>
 </html>
