@@ -6,16 +6,27 @@
 <title>What?f — Risultato</title>
 <meta name="theme-color" content="#0B0B0C"/>
 <style>
-:root{ --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA; --acc:#1C57A0; --acc2:#FFEC01; --ink:#0A0E12; --card:rgba(20,28,34,.92); --bd:rgba(255,255,255,.12); --glow: rgba(255,236,1,.22); }
+:root{
+  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
+  --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;
+  --glow: rgba(255, 236, 1, .22); --card:#141C22; --bd:rgba(255,255,255,.12);
+}
 *{box-sizing:border-box}
-html,body{margin:0;background:#0B0B0C;color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+html,body{
+  margin:0;
+  background:
+    radial-gradient(900px 700px at 20% 18%, var(--bg2) 0%, var(--bg) 60%),
+    radial-gradient(600px 480px at 80% 12%, rgba(255,236,1,.06), transparent 60%),
+    radial-gradient(700px 560px at 50% 90%, rgba(28,87,160,.10), transparent 65%);
+  color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased
+}
 main{max-width:860px;margin:auto;padding:22px}
 h1{font-size:clamp(22px,5vw,30px);color:var(--acc2);text-align:center;margin:12px 0 6px;text-shadow:0 0 18px var(--glow)}
 .sub{color:var(--muted);text-align:center;margin:0 0 8px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:18px;backdrop-filter:blur(10px);margin-top:16px;box-shadow:0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06)}
 .label{color:#8bd0ff;font-weight:800;margin-bottom:8px}
 .input{background:rgba(255,255,255,.06);border:1px solid var(--bd);border-radius:12px;padding:10px}
-.story{line-height:1.68;font-size:18px;letter-spacing:.1px;text-wrap:pretty}
+.story{white-space:normal;line-height:1.68;font-size:18px;letter-spacing:.1px;text-wrap:pretty}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
 .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.35),0 0 28px var(--glow)}
@@ -24,10 +35,10 @@ h1{font-size:clamp(22px,5vw,30px);color:var(--acc2);text-align:center;margin:12p
 .hr{height:1px;background:rgba(255,255,255,.10);margin:12px 0}
 .badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);border:1px solid var(--bd);border-radius:999px;padding:6px 10px}
 .lead{color:#E7F2EE;font-size:14px;line-height:1.45;opacity:.86;margin:2px 0 10px}
-.menu{position:fixed;display:none;min-width:220px;z-index:9999;background:rgba(20,28,34,.98);border:1px solid rgba(255,255,255,.14);border-radius:12px;box-shadow:0 16px 40px rgba(0,0,0,.55);padding:6px}
-.menu button{display:block;width:100%;text-align:left;background:transparent;border:none;color:#fff;padding:12px 14px;border-radius:10px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.menu button:hover,.menu button:active{background:rgba(255,255,255,.10)}
-.embit{padding:0 .08em;box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset;text-shadow:0 0 12px rgba(255,255,255,.08);border-radius:4px}
+.menu{position:absolute;min-width:180px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:6px;box-shadow:0 12px 28px rgba(0,0,0,.45);display:none;z-index:9}
+.menu button{display:block;width:100%;text-align:left;background:transparent;border:none;color:#fff;padding:8px 10px;border-radius:10px;cursor:pointer}
+.menu button:hover{background:rgba(255,255,255,.06)}
+.fade-in{animation:fade .35s ease-out both}@keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -40,7 +51,6 @@ h1{font-size:clamp(22px,5vw,30px);color:var(--acc2);text-align:center;margin:12p
     <div class="row" style="gap:8px">
       <span class="badge" id="styleBadge">🎭 —</span>
       <span class="badge" id="proBadge" style="display:none">🧪 TEST · ⭐ PRO</span>
-      <button class="btn ghost" id="translateBtn">🌍 Traduci</button>
     </div>
   </div>
 
@@ -54,160 +64,162 @@ h1{font-size:clamp(22px,5vw,30px);color:var(--acc2);text-align:center;margin:12p
 
   <div class="card">
     <div class="label" id="lblA">Risposta</div>
-    <div id="lead" class="lead">—</div>
+    <div id="lead" class="lead fade-in">—</div>
     <div id="answer" class="story">⏳ …</div>
     <div class="hr"></div>
     <div class="row">
       <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
+      <button class="btn ghost" id="listenBtn">🔊 Ascolta</button>
       <button class="btn ghost" id="againBtn">🔁 Fai un’altra domanda</button>
-      <button class="btn ghost" id="audioBtn">🔊 Ascolta</button>
-      <button class="btn ghost" id="translateBtn2">🌍 Traduci</button>
+      <button class="btn ghost" id="translateBtn">🌐 Traduci</button>
+      <div id="langMenu" class="menu" role="menu" aria-label="Translate">
+        <button data-lang="it">Italiano (IT)</button>
+        <button data-lang="en">English (EN)</button>
+        <button data-lang="es">Español (ES)</button>
+        <button data-lang="fr">Français (FR)</button>
+        <button data-lang="de">Deutsch (DE)</button>
+      </div>
     </div>
     <p class="small" id="metaInfo"></p>
-  </div>
-
-  <!-- menu lingue -->
-  <div class="menu" id="langMenu">
-    <button data-lang="it">Italiano (IT)</button>
-    <button data-lang="en">English (EN)</button>
-    <button data-lang="es">Español (ES)</button>
-    <button data-lang="fr">Français (FR)</button>
-    <button data-lang="de">Deutsch (DE)</button>
   </div>
 </main>
 
 <script>
-const LS=localStorage, SUP=["it","en","es","fr","de"];
-let lang = (LS.getItem('lang')||'it').slice(0,2).toLowerCase(); if(!SUP.includes(lang)) lang='it';
+const LS=localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
-const style = prefs.stile || LS.getItem('stile') || 'whatif';
+const style = prefs.stile || 'whatif';
 const periodo = prefs.periodo || 'future';
+let lang  = (LS.getItem('lang') || 'it').toLowerCase();
+document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 
+function showPro(){
+  const el=document.getElementById('proBadge');
+  const has=!!LS.getItem('admin_token') || prefs.pro===true;
+  if(has){ el.style.display='inline-flex'; el.textContent='🧪 TEST · ⭐ PRO'; }
+}
+showPro();
+
+const I18N={
+  it:{tWTF:"⚡ What the F — Risultato", tWHF:"💡 What if — Risultato",
+      sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
+      share:"📤 Condividi / Copia", listen:"🔊 Ascolta", again:"🔁 Fai un’altra domanda", translate:"🌐 Traduci",
+      copied:"Copiato!", error:"[errore server]",
+      styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+      meta:(st,p)=> st==='wtf'
+        ? `Stile: What the F · 6–9 frasi · paragrafo unico · reazioni demenziali 2–3 · modalità: ${p==='past'?'Passato':'Futuro'}.`
+        : `Stile: What if 60/40 · 8–11 frasi · paragrafo unico · niente elenchi/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.`,
+      leads:{wtf:["Entri piano, il caos ti riconosce e ti fa passare.","Respiri e lasci che inciampi per primo il destino."],
+             whatif:["Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.","La stanza è la stessa, lo sguardo no: è già un inizio."]}},
+  en:{tWTF:"⚡ What the F — Result", tWHF:"💡 What if — Result",
+      sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
+      share:"📤 Share / Copy", listen:"🔊 Listen", again:"🔁 Ask another", translate:"🌐 Translate",
+      copied:"Copied!", error:"[server error]",
+      styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+      meta:(st,p)=> st==='wtf'
+        ? `Style: What the F · 6–9 sentences · single paragraph · 2–3 absurd reactions · mode: ${p==='past'?'Past':'Future'}.`
+        : `Style: What if 60/40 · 8–11 sentences · single paragraph · no lists/emojis · mode: ${p==='past'?'Past':'Future'}.`,
+      leads:{wtf:["You step in slowly; chaos recognizes you and lets you through.","You breathe and let fate trip first."],
+             whatif:["Set the keys down and let the quiet that doesn’t judge go first.","Same room, different gaze — already a start."]}},
+  es:{tWTF:"⚡ What the F — Resultado", tWHF:"💡 What if — Resultado",
+      sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
+      share:"📤 Compartir / Copiar", listen:"🔊 Escuchar", again:"🔁 Haz otra pregunta", translate:"🌐 Traducir",
+      copied:"¡Copiado!", error:"[error del servidor]",
+      styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+      meta:(st,p)=> st==='wtf'
+        ? `Estilo: What the F · 6–9 frases · un párrafo · 2–3 reacciones absurdas · modo: ${p==='past'?'Pasado':'Futuro'}.`
+        : `Estilo: What if 60/40 · 8–11 frases · un párrafo · sin listas/emojis · modo: ${p==='past'?'Pasado':'Futuro'}.`,
+      leads:{wtf:["Entras despacio; el caos te reconoce y te deja pasar."],
+             whatif:["Deja las llaves y deja hablar al silencio que no juzga."]}},
+  fr:{tWTF:"⚡ What the F — Résultat", tWHF:"💡 What if — Résultat",
+      sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
+      share:"📤 Partager / Copier", listen:"🔊 Écouter", again:"🔁 Poser une autre question", translate:"🌐 Traduire",
+      copied:"Copié !", error:"[erreur serveur]",
+      styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+      meta:(st,p)=> st==='wtf'
+        ? `Style : What the F · 6–9 phrases · un paragraphe · 2–3 réactions absurdes · mode : ${p==='past'?'Passé':'Futur'}.`
+        : `Style : What if 60/40 · 8–11 phrases · un paragraphe · pas de listes/emoji · mode : ${p==='past'?'Passé':'Futur'}.`,
+      leads:{wtf:["Tu avances doucement ; le chaos te reconnaît et te laisse passer."],
+             whatif:["Pose les clés et laisse parler le calme qui ne juge pas."]}},
+  de:{tWTF:"⚡ What the F — Ergebnis", tWHF:"💡 What if — Ergebnis",
+      sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
+      share:"📤 Teilen / Kopieren", listen:"🔊 Anhören", again:"🔁 Neue Frage", translate:"🌐 Übersetzen",
+      copied:"Kopiert!", error:"[Serverfehler]",
+      styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+      meta:(st,p)=> st==='wtf'
+        ? `Stil: What the F · 6–9 Sätze · ein Absatz · 2–3 absurde Reaktionen · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
+        : `Stil: What if 60/40 · 8–11 Sätze · ein Absatz · keine Listen/Emojis · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
+      leads:{wtf:["Du trittst langsam ein; das Chaos erkennt dich und lässt dich durch."],
+             whatif:["Lege die Schlüssel ab und lass die urteilsfreie Ruhe sprechen."]}}
+};
+
+function T(){return I18N[lang]||I18N.it;}
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function oneSentence(s){let t=String(s).trim();const m=t.match(/^([\s\S]*?[.!?…])\s/);if(m)t=m[1];if(!/[.!?…]$/.test(t))t+='.';return t;}
+
+const domanda = (JSON.parse(LS.getItem('whatif_request')||'{}').domanda) || LS.getItem('domanda') || "";
+const style = (JSON.parse(LS.getItem('whatif_prefs')||'{}').stile)||'whatif';
+const periodo = (JSON.parse(LS.getItem('whatif_prefs')||'{}').periodo)||'future';
+
+function renderChrome(){
+  document.getElementById('styleBadge').textContent = (style==='wtf')?T().styleWTF:T().styleWHF;
+  document.getElementById('title').textContent = (style==='wtf')?T().tWTF:T().tWHF;
+  document.getElementById('subtitle').textContent = T().sub(domanda);
+  document.getElementById('lblQ').textContent=T().q;
+  document.getElementById('lblA').textContent=T().a;
+  document.getElementById('shareBtn').textContent=T().share;
+  document.getElementById('listenBtn').textContent=T().listen;
+  document.getElementById('againBtn').textContent=T().again;
+  document.getElementById('translateBtn').textContent=T().translate;
+  document.getElementById('metaInfo').textContent=T().meta(style,periodo);
+  document.getElementById('qView').textContent = domanda || '—';
+  const leads = T().leads[style==='wtf'?'wtf':'whatif'];
+  document.getElementById('lead').textContent = oneSentence(pick(leads));
+}
+renderChrome();
+
+/* Menu Traduci */
+const langBtn=document.getElementById('translateBtn');
+const menu=document.getElementById('langMenu');
+langBtn.addEventListener('click',(e)=>{
+  const r=langBtn.getBoundingClientRect();
+  menu.style.left=(r.left)+'px'; menu.style.top=(r.bottom+6)+'px';
+  menu.style.display = (menu.style.display==='block')?'none':'block';
+});
+menu.querySelectorAll('button').forEach(b=>{
+  b.addEventListener('click',()=>{ lang=b.dataset.lang; LS.setItem('lang',lang); menu.style.display='none'; renderChrome(); /* non rilancio chiamate; cambio solo interfaccia */ });
+});
+window.addEventListener('click',(e)=>{ if(!menu.contains(e.target) && e.target!==langBtn){ menu.style.display='none'; }});
+
+/* Navigazione */
 document.getElementById('backBtn').onclick=()=>history.back();
 document.getElementById('homeBtn').onclick=()=>location.href='index.html';
+document.getElementById('againBtn').onclick=()=>{ location.href='fourth.html'; };
 
-const I18NBank = {
-  it:{tWTF:"⚡ What the F — Risultato", tWHF:"💡 What if — Risultato", sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda", listen:"🔊 Ascolta", trans:"🌍 Traduci", copied:"Copiato!", error:"[errore server]", styleWTF:"🎭 What the F", styleWHF:"🎭 What if", meta:(st,p)=> st==='wtf'?`Stile: What the F · 6–9 frasi · paragrafo unico · 2–3 reazioni · modalità: ${p==='past'?'Passato':'Futuro'}.`:`Stile: What if 60/40 · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`},
-  en:{tWTF:"⚡ What the F — Result", tWHF:"💡 What if — Result", sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer", share:"📤 Share / Copy", again:"🔁 Ask another", listen:"🔊 Listen", trans:"🌍 Translate", copied:"Copied!", error:"[server error]", styleWTF:"🎭 What the F", styleWHF:"🎭 What if", meta:(st,p)=> st==='wtf'?`Style: What the F · 6–9 sentences · single paragraph · 2–3 reactions · mode: ${p==='past'?'Past':'Future'}.`:`Style: What if 60/40 · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`},
-  es:{tWTF:"⚡ What the F — Resultado", tWHF:"💡 What if — Resultado", sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra", listen:"🔊 Escuchar", trans:"🌍 Traducir", copied:"¡Copiado!", error:"[error del servidor]", styleWTF:"🎭 What the F", styleWHF:"🎭 What if", meta:(st,p)=> st==='wtf'?`Estilo: What the F · 6–9 frases · un párrafo · 2–3 reacciones · modo: ${p==='past'?'Pasado':'Futuro'}.`:`Estilo: What if 60/40 · 8–11 frases · un párrafo · modo: ${p==='past'?'Pasado':'Futuro'}.`},
-  fr:{tWTF:"⚡ What the F — Résultat", tWHF:"💡 What if — Résultat", sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse", share:"📤 Partager / Copier", again:"🔁 Poser une autre", listen:"🔊 Écouter", trans:"🌍 Traduire", copied:"Copié !", error:"[erreur serveur]", styleWTF:"🎭 What the F", styleWHF:"🎭 What if", meta:(st,p)=> st==='wtf'?`Style : What the F · 6–9 phrases · un paragraphe · 2–3 réactions · mode : ${p==='past'?'Passé':'Futur'}.`:`Style : What if 60/40 · 8–11 phrases · un paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`},
-  de:{tWTF:"⚡ What the F — Ergebnis", tWHF:"💡 What if — Ergebnis", sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort", share:"📤 Teilen / Kopieren", again:"🔁 Neue Frage", listen:"🔊 Anhören", trans:"🌍 Übersetzen", copied:"Kopiert!", error:"[Serverfehler]", styleWTF:"🎭 What the F", styleWHF:"🎭 What if", meta:(st,p)=> st==='wtf'?`Stil: What the F · 6–9 Sätze · ein Absatz · 2–3 Reaktionen · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`:`Stil: What if 60/40 · 8–11 Sätze · ein Absatz · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`}
-};
-function T(){ return I18NBank[lang] || I18NBank.it; }
-
-function setStaticTexts(q){
-  document.getElementById('title').textContent = (style==='wtf'? T().tWTF : T().tWHF);
-  document.getElementById('subtitle').textContent = T().sub(q);
-  document.getElementById('lblQ').textContent = T().q;
-  document.getElementById('lblA').textContent = T().a;
-  document.getElementById('shareBtn').textContent = T().share;
-  document.getElementById('againBtn').textContent = T().again;
-  document.getElementById('audioBtn').textContent = T().listen;
-  document.getElementById('translateBtn').textContent = T().trans;
-  document.getElementById('translateBtn2').textContent = T().trans;
-  document.getElementById('styleBadge').textContent = (style==='wtf') ? T().styleWTF : T().styleWHF;
-  document.getElementById('metaInfo').textContent = T().meta(style, periodo);
-}
-
-const domanda = (LS.getItem('domanda')||'').trim();
-document.getElementById('qView').textContent = domanda || '—';
-setStaticTexts(domanda);
-
-/* Lead */
-const LEADS = {
-  it:{ wtf:["Entri piano, il caos ti riconosce e ti lascia passare.","Respiri e lasci che inciampi per primo il destino."],
-       whatif:["Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.","La stanza è la stessa, lo sguardo no: è già un inizio."] },
-  en:{ wtf:["You step in slowly; chaos recognizes you and lets you through.","You breathe and let fate trip first."],
-       whatif:["Set the keys down and let the quiet go first.","Same room, different gaze — that’s a start."] },
-  es:{ wtf:["Entras despacio; el caos te reconoce y te deja pasar."],
-       whatif:["Deja las llaves y deja hablar al silencio."] },
-  fr:{ wtf:["Tu entres doucement; le chaos te reconnaît et te laisse passer."],
-       whatif:["Pose les clés et laisse parler le silence."] },
-  de:{ wtf:["Du trittst leise ein; das Chaos erkennt dich und lässt dich durch."],
-       whatif:["Leg die Schlüssel hin und lass die Ruhe vor." ] }
-};
-function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
-document.getElementById('lead').textContent = pick(LEADS[lang]?.[style] || LEADS.it.whatif);
-
-/* Fetch answer */
-async function fetchAnswer(){
+/* Fetch risposta */
+(async ()=>{
   try{
-    const headers = { "Content-Type":"application/json" };
-    const r = await fetch("/api/ask",{
-      method:"POST", headers,
-      body: JSON.stringify({ domanda, lang, stile:style, periodo })
-    });
-    const data = await r.json();
-    if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
-    const txt = String(data.answer||"").trim();
-    const node = document.getElementById('answer');
-    node.textContent = txt; decorateEmBits(node);
-  }catch(e){
-    document.getElementById('answer').textContent = T().error;
-    console.error(e);
-  }
-}
-function decorateEmBits(el){
-  const raw = el.textContent; if(!raw.includes("—")) return;
-  const parts = raw.split("—"); let html="";
-  for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2===1)? `<span class="embit">— ${seg} </span>` : (i===0? seg : `—${seg}`); }
-  el.innerHTML = html;
-}
-fetchAnswer();
+    const headers={"Content-Type":"application/json"};
+    const r=await fetch("/api/ask",{method:"POST",headers,body:JSON.stringify({
+      domanda, lang, stile:style, periodo,
+      micro:(JSON.parse(LS.getItem('whatif_request')||'{}').micro)||{}
+    })});
+    const data=await r.json();
+    const node=document.getElementById('answer');
+    if(!r.ok||!data.answer){ node.textContent=T().error; return; }
+    let answer=data.answer.trim(); if(!/[.!?…]$/.test(answer)) answer+='.';
+    node.textContent=answer;
+  }catch(e){ document.getElementById('answer').textContent=T().error; }
+})();
 
-/* Share / Again / Audio */
+/* Condividi / Ascolta */
 document.getElementById('shareBtn').onclick=async()=>{
-  const full = `What?f — ${(style==='wtf')?'What the F':'What if 60/40'}\n(${periodo})\n\nQ: ${domanda}\n\n${document.getElementById('answer').innerText}`;
+  const text=`What?f — ${(style==='wtf')?'What the F':'What if 60/40'}\n(${periodo})\n\nQ: ${domanda}\n\n${document.getElementById('answer').textContent}`;
   try{
-    if(navigator.share){ await navigator.share({ title:"What?f", text: full }); }
-    else{ await navigator.clipboard.writeText(full); const b=document.getElementById('shareBtn'); b.textContent=T().copied; setTimeout(()=>b.textContent=T().share,1200); }
+    if(navigator.share){ await navigator.share({title:"What?f",text}); }
+    else{ await navigator.clipboard.writeText(text); const b=document.getElementById('shareBtn'); b.textContent=T().copied; setTimeout(()=>b.textContent=T().share,1200); }
   }catch{}
 };
-document.getElementById('againBtn').onclick=()=> location.href='fourth.html';
-document.getElementById('audioBtn').onclick=()=>{
-  const u = new SpeechSynthesisUtterance(document.getElementById('answer').innerText);
-  u.lang = lang; speechSynthesis.speak(u);
-};
-
-/* Traduci (menu mobile-safe) */
-const translateBtn = document.getElementById('translateBtn');
-const translateBtn2 = document.getElementById('translateBtn2');
-const langMenu = document.getElementById('langMenu');
-function placeMenuNear(btn){
-  const r = btn.getBoundingClientRect(), gap=8, mw=240;
-  let left=Math.min(Math.max(8, r.left+(r.width-mw)/2), window.innerWidth-mw-8);
-  let top=r.bottom+gap+window.scrollY;
-  if(top+220>window.scrollY+window.innerHeight) top=r.top-gap-220+window.scrollY;
-  langMenu.style.left=left+"px"; langMenu.style.top=top+"px";
-}
-function openMenu(btn){ placeMenuNear(btn); langMenu.style.display="block"; setTimeout(()=>placeMenuNear(btn),0); }
-function closeMenu(){ langMenu.style.display="none"; }
-function toggleMenu(e){ e.stopPropagation(); if(langMenu.style.display==="block") closeMenu(); else openMenu(e.currentTarget); }
-[translateBtn,translateBtn2].forEach(b=>{
-  b.addEventListener('click', toggleMenu, {passive:false});
-  b.addEventListener('touchstart', toggleMenu, {passive:false});
-});
-document.addEventListener('click',(e)=>{ if(!langMenu.contains(e.target)) closeMenu(); }, {passive:true});
-document.addEventListener('touchstart',(e)=>{ if(!langMenu.contains(e.target)) closeMenu(); }, {passive:true});
-document.addEventListener('scroll',()=>{ if(langMenu.style.display==="block") placeMenuNear(translateBtn); }, {passive:true});
-
-langMenu.querySelectorAll('button').forEach(b=>{
-  const onPick = async ()=>{
-    const newLang = b.dataset.lang;
-    closeMenu(); if(newLang===lang) return;
-    lang = newLang; LS.setItem('lang',lang);
-    setStaticTexts(domanda); document.getElementById('lead').textContent = pick(LEADS[lang]?.[style] || LEADS.it.whatif);
-    await fetchAnswer();
-  };
-  b.addEventListener('click', onPick);
-  b.addEventListener('touchstart', (e)=>{ e.preventDefault(); onPick(); }, {passive:false});
-});
-
-/* PRO badge */
-(function(){
-  const el=document.getElementById('proBadge');
-  const has = !!LS.getItem('admin_token'); if(has || prefs.pro===true){ el.style.display='inline-flex'; }
-})();
+document.getElementById('listenBtn').onclick=()=>{ /* placeholder TTS */ alert('TTS coming soon'); };
 </script>
 </body>
 </html>
