@@ -84,8 +84,17 @@ function normalizeOneParagraph(s = "") {
   return String(s)
     .replace(/\s*\n+\s*/g, " ")
     .replace(/\s{2,}/g, " ")
+    .replace(/\.\.\.+/g, "…")
     .replace(/\s+([.,;:!?])/g, "$1")
     .trim();
+}
+function ensureSentenceCase(s = "") {
+  const t = s.trim();
+  if (!t) return s;
+  return t[0].toUpperCase() + t.slice(1);
+}
+function finalPunct(s = "") {
+  return /[.!?…]$/.test(s) ? s : s + ".";
 }
 function stripQuestionEcho(domanda, text) {
   const d = String(domanda || "")
@@ -247,8 +256,8 @@ function whatIfPoeticoRule(lang) {
 function wtfFriendlyRule(lang) {
   const en = isEnLike(lang);
   return en
-    ? `WHAT THE F (friendly). Be funny, never aggressive. 6–8 sentences, one paragraph. Opening: playful tease (max 2 sentences). 2–3 mini mishaps. Exactly ONE theatrical “swear” (use the provided IMPRECATION), never against people. THEN 2 object reactions, a quick drink, 1–2 useful lines answering the question, warm ironic moral. Bans: insults to people, anger, more than two “!”.`
-    : `WHAT THE F (amichevole). Fai ridere, mai aggressivo. 6–8 frasi in un paragrafo. Apertura: presa in giro affettuosa (max 2 frasi). 2–3 micro-imprevisti. Esattamente UNA “imprecazione” teatrale (usa l’IMPRECAZIONE indicata), mai contro persone. SUBITO 2 reazioni di oggetti, un sorso, 1–2 frasi che rispondono davvero, chiusura ironica calda. Divieti: insulti a persone, rabbia, più di due “!”.`;
+    ? `WHAT THE F (friendly). Be funny, never aggressive. STRICT STRUCTURE (one paragraph): OPENING (playful tease, ≤2 sentences) → 2–3 tiny mishaps → EXACTLY ONE theatrical ‘swear’ (use IMPRECATION; never against people) → THEN 2 OBJECT REACTIONS → DRINK → 1–2 useful lines that truly answer → WARM IRONIC MORAL. 6–8 sentences total. Bans: insults to people, anger, >2 “!”.`
+    : `WHAT THE F (amichevole). Fai ridere, mai aggressivo. STRUTTURA OBBLIGATORIA (un paragrafo): APERTURA (presa in giro affettuosa, ≤2 frasi) → 2–3 micro-imprevisti → ESATTAMENTE UNA “imprecazione” teatrale (usa IMPRECAZIONE; mai contro persone) → POI 2 REAZIONI DI OGGETTI → DRINK → 1–2 frasi che rispondono davvero → MORALE CALDA E IRONICA. Totale 6–8 frasi. Divieti: insulti a persone, rabbia, più di due “!”.`;
 }
 
 /* ========= Random seeds per WTF ========= */
@@ -297,7 +306,6 @@ function buildMessages({ domanda, lang, periodo, stile, mode, micro }) {
   if (stile === "wtf") {
     msgs.push(
       ...wtfSeeds(lang, domanda, micro),
-      // Few-shots italiani per ancorare l'umorismo
       { role: "system", content: `ESEMPI VINCOLANTI (tono/ritmo IT):\n- ${FEWSHOT_WTF_IT[0]}\n- ${FEWSHOT_WTF_IT[1]}\n- ${FEWSHOT_WTF_IT[2]}` }
     );
   } else {
@@ -314,7 +322,6 @@ function buildMessages({ domanda, lang, periodo, stile, mode, micro }) {
     }
   }
 
-  // Istruzione finale utente nella lingua richiesta
   const L = normLang(lang);
   const ask =
     L === "it"
@@ -330,6 +337,37 @@ function buildMessages({ domanda, lang, periodo, stile, mode, micro }) {
   msgs.push({ role: "user", content: ask });
 
   return msgs;
+}
+
+/* ========= Post-process specifico WTF ========= */
+function keepSingleImprecazione(answer, lang) {
+  const rx = normLang(lang) === "it" ? /\bbestemmi\w*/gi : /\bswear\w*/gi;
+  let count = 0;
+  return answer.replace(rx, (m) => {
+    count += 1;
+    return count === 1 ? m : (normLang(lang) === "it" ? "imprecazione a mezza voce" : "a half-whispered swear");
+  });
+}
+function ensureDrink(answer, seedsObj) {
+  const hasDrink =
+    /\b(sorso|calice|goccio|dito|brindisi|bere|drink|glass|sip|toast)\b/i.test(
+      answer
+    );
+  if (hasDrink) return answer;
+  // Se manca il drink, aggiungo la frase del seed prima della morale (o in coda).
+  const drinkLine = ensureSentenceCase(seedsObj?.drink || "ti versi un goccio onesto e rimetti a posto i pensieri") + ".";
+  const moraleRx = /(Morale:|Moral:)/i;
+  if (moraleRx.test(answer)) {
+    return answer.replace(moraleRx, `${drinkLine} $1`);
+  }
+  return finalPunct(answer) + " " + drinkLine;
+}
+function limitExclamations(answer) {
+  return answer.replace(/!{3,}/g, "!!");
+}
+function forbidInsults(answer, lang) {
+  const bad = /\b(cazzo|cazzata|stronzo|idiota|cretino|imbecille)\b/gi;
+  return answer.replace(bad, normLang(lang) === "it" ? "accidente" : "heck");
 }
 
 /* ========= HANDLER ========= */
@@ -392,22 +430,27 @@ export default async function handler(req, res) {
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // Post-process
+    // Post-process comune
     answer = stripQuestionEcho(domanda, answer);
     answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);
     answer = clampWords(answer, stile === "wtf" ? 170 : 165);
     answer = normalizeOneParagraph(answer);
-    if (!/[.!?…]$/.test(answer)) answer += ".";
+    answer = ensureSentenceCase(answer);
+    answer = finalPunct(answer);
 
-    // Anti-aggressivo soft filter
-    answer = answer
-      .replace(/\b(urlo|urli|urlare|furia|rabbia|odio|furioso)\b/gi, "slancio")
-      .replace(/!{3,}/g, "!!")
-      .replace(/\b(cazzo|cazzata|stronzo|idiota)\b/gi, "accidente");
-
-    // No prima persona forte (in IT) — leggero
-    if (normLang(lang) === "it") {
-      answer = answer.replace(/\b(io|sono|mi|noi|me|ho|abbiamo)\b/gi, "");
+    if (stile === "wtf") {
+      // Conserva comicità: niente filtri che spengono il tono
+      answer = keepSingleImprecazione(answer, lang);
+      answer = limitExclamations(answer);
+      answer = forbidInsults(answer, lang);
+      // Assicura DRINK presente
+      // NB: ricreo seeds per recuperare la riga drink usata nel prompt
+      const L = normLang(lang) === "it" ? WTF_BANKS_IT : WTF_BANKS_EN;
+      const drink = pick(L.drinks, 1)[0];
+      answer = ensureDrink(answer, { drink });
+    } else {
+      // WHAT IF: solo pulizia fine
+      answer = limitExclamations(answer);
     }
 
     // Evita nomi non presenti nella domanda (solo IT)
