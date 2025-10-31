@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Result</title>
+<title>What?f — Risultato</title>
 <meta name="theme-color" content="#0B0B0C"/>
 <style>
 :root{
@@ -79,26 +79,26 @@ h1{
 }
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
-.embit { padding:0 .08em; box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset; text-shadow:0 0 12px rgba(255,255,255,.08); border-radius:4px; }
 
-/* popover traduzione */
-.pop{
-  position:relative;
-}
+/* Traduci: dropdown */
 .menu{
-  position:absolute; right:0; top:calc(100% + 6px);
-  background:rgba(25,33,40,.98);
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:12px; padding:6px;
-  display:none; min-width:180px; z-index:5;
-  box-shadow:0 10px 24px rgba(0,0,0,.35);
+  position:absolute; display:none; min-width:200px; z-index:50;
+  background:rgba(20,28,34,.98); border:1px solid rgba(255,255,255,.14);
+  border-radius:12px; box-shadow:0 12px 28px rgba(0,0,0,.45); padding:6px;
 }
-.menu.open{ display:block; }
 .menu button{
-  width:100%; text-align:left; padding:8px 10px; border-radius:10px;
-  background:transparent; color:#fff; border:none; cursor:pointer;
+  display:block; width:100%; text-align:left; background:transparent; border:none; color:#fff;
+  padding:10px 12px; border-radius:10px; font-weight:700; cursor:pointer;
 }
 .menu button:hover{ background:rgba(255,255,255,.08); }
+
+/* evidenzia parentesi comiche tra em-dash */
+.embit {
+  padding: 0 .08em;
+  box-shadow: 0 -4px 0 0 rgba(255,255,255,.05) inset;
+  text-shadow: 0 0 12px rgba(255,255,255,.08);
+  border-radius: 4px;
+}
 </style>
 </head>
 <body>
@@ -111,8 +111,6 @@ h1{
     <div class="row" style="gap:8px">
       <span class="badge" id="styleBadge">🎭 —</span>
       <span class="badge" id="proBadge" title="" style="display:none">🧪 TEST · ⭐ PRO</span>
-      <!-- badge lingua (solo display) -->
-      <span class="badge" id="langBadge">🌐 IT</span>
     </div>
   </div>
 
@@ -131,11 +129,10 @@ h1{
     <div class="hr"></div>
     <div class="row">
       <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
-      <button class="btn ghost" id="ttsBtn">🔊 Ascolta</button>
-
-      <div class="pop">
+      <button class="btn ghost" id="listenBtn">🔊 Ascolta</button>
+      <div style="position:relative">
         <button class="btn ghost" id="translateBtn">🌐 Traduci</button>
-        <div class="menu" id="translateMenu" aria-hidden="true">
+        <div class="menu" id="langMenu" role="menu" aria-labelledby="translateBtn">
           <button data-lang="it">Italiano (IT)</button>
           <button data-lang="en">English (EN)</button>
           <button data-lang="es">Español (ES)</button>
@@ -143,7 +140,6 @@ h1{
           <button data-lang="de">Deutsch (DE)</button>
         </div>
       </div>
-
       <button class="btn ghost" id="againBtn">🔁 Fai un’altra domanda</button>
     </div>
     <p class="small" id="metaInfo"></p>
@@ -151,113 +147,158 @@ h1{
 </main>
 
 <script>
-/* ===== Helpers / Stato ===== */
+/* ====== Prefs & stato ====== */
 const LS=localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
 const style = prefs.stile || 'whatif';
 const periodo = prefs.periodo || 'future';
-let lang  = (LS.getItem('lang') || 'it').toLowerCase();
+let lang  = (LS.getItem('lang') || (navigator.language||'it').slice(0,2)).toLowerCase();
+if(!['it','en','es','fr','de'].includes(lang)) lang = 'it';
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
-document.documentElement.lang = lang;
 
-const I18N_ALL={
+(function showProBadge(){
+  const el = document.getElementById('proBadge');
+  const hasToken = !!LS.getItem('admin_token');
+  if (hasToken || prefs.pro === true){
+    el.style.display = 'inline-flex';
+    el.textContent = '🧪 TEST · ⭐ PRO';
+    el.title = (lang === 'en') ? 'Test mode active' : 'Modalità test attiva';
+  }
+})();
+
+/* ====== I18N ====== */
+const I18N_ALL = {
   it:{tWTF:"⚡ What the F — Risultato", tWHF:"💡 What if — Risultato",
       sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
-      share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
-      tts:"🔊 Ascolta", translate:"🌐 Traduci", copied:"Copiato!", error:"[errore server]",
+      share:"📤 Condividi / Copia", listen:"🔊 Ascolta", translate:"🌐 Traduci", again:"🔁 Fai un’altra domanda",
+      copied:"Copiato!", copying:"Copio…", error:"[errore server]",
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
       meta:(st,p)=> st==='wtf'
-        ? `Stile: What the F · 6–9 frasi · paragrafo unico · 3+ stoccate interne · doppia punchline · modalità: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if · 8–11 frasi · paragrafo unico · niente elenchi/domande/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.`,
-      lead:{wtf:[
-        "Entri piano, il caos ti riconosce e ti fa passare.",
-        "Respiri e lasci che sia il destino a inciampare per primo.",
-        "Ti presenti al futuro con la faccia di adesso e la pazienza di domani."
-      ], whatif:[
-        "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.",
-        "La stanza è la stessa, lo sguardo no: è già un inizio.",
-        "Respiri come chi ha tempo, e il tempo ti crede."
-      ]}},
+        ? `Stile: What the F · 6–9 frasi · paragrafo unico · reazioni demenziali · modalità: ${p==='past'?'Passato':'Futuro'}.`
+        : `Stile: What if 60/40 · 8–11 frasi · paragrafo unico · analisi+immagini sobrie · modalità: ${p==='past'?'Passato':'Futuro'}.`,
+      leads:{
+        wtf:[
+          "Entri piano, il caos ti riconosce e ti fa passare.",
+          "Respiri e lasci che inciampi per primo il destino.",
+          "La scena è già in corso: tu ci metti il rumore buono."
+        ],
+        whatif:[
+          "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.",
+          "Ti siedi un attimo e scopri che la calma ha memoria lunga.",
+          "La stanza è la stessa, lo sguardo no: è già un inizio."
+        ]
+      }},
   en:{tWTF:"⚡ What the F — Result", tWHF:"💡 What if — Result",
       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-      share:"📤 Share / Copy", again:"🔁 Ask another",
-      tts:"🔊 Listen", translate:"🌐 Translate", copied:"Copied!", error:"[server error]",
+      share:"📤 Share / Copy", listen:"🔊 Listen", translate:"🌐 Translate", again:"🔁 Ask another",
+      copied:"Copied!", copying:"Copying…", error:"[server error]",
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
       meta:(st,p)=> st==='wtf'
-        ? `Style: What the F · 6–9 sentences · single paragraph · 3+ inside jabs · double punchline · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if · 8–11 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`,
-      lead:{wtf:[
-        "You step in slowly; chaos recognizes you and lets you through.",
-        "You breathe and let fate be the one who trips first."
-      ], whatif:[
-        "Set the keys down and let the quiet that doesn’t judge go first.",
-        "Same room, different gaze — that’s already a start."
-      ]}},
+        ? `Style: What the F · 6–9 sentences · single paragraph · absurd object reactions · mode: ${p==='past'?'Past':'Future'}.`
+        : `Style: What if 60/40 · 8–11 sentences · single paragraph · analysis + sober imagery · mode: ${p==='past'?'Past':'Future'}.`,
+      leads:{
+        wtf:[
+          "You step in slowly; chaos recognizes you and lets you through.",
+          "You breathe and let fate be the one who trips first.",
+          "The scene is already rolling; you bring the good noise."
+        ],
+        whatif:[
+          "Set the keys down and let the quiet that doesn’t judge go first.",
+          "Same room, different gaze — that’s already a start.",
+          "Breathe like someone with time, and time believes you."
+        ]
+      }},
   es:{tWTF:"⚡ What the F — Resultado", tWHF:"💡 What if — Resultado",
-      sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
-      share:"📤 Compartir / Copiar", again:"🔁 Hacer otra",
-      tts:"🔊 Escuchar", translate:"🌐 Traducir", copied:"¡Copiado!", error:"[error del servidor]",
+      sub:(q)=>`Pregunta: «${q}»`, q:"Tu pregunta", a:"Respuesta",
+      share:"📤 Compartir / Copiar", listen:"🔊 Escuchar", translate:"🌐 Traducir", again:"🔁 Hacer otra pregunta",
+      copied:"¡Copiado!", copying:"Copiando…", error:"[error del servidor]",
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
       meta:(st,p)=> st==='wtf'
-        ? `Estilo: What the F · 6–9 frases · un solo párrafo · 3+ pullitas internas · doble remate · modo: ${p==='past'?'Pasado':'Futuro'}.`
-        : `Estilo: What if · 8–11 frases · un solo párrafo · sin listas/preguntas/emojis · modo: ${p==='past'?'Futuro':'Futuro'}.`,
-      lead:{wtf:["Respiras y dejas que se tropiece el destino."], whatif:["Deja las llaves y deja hablar al silencio."]}},
+        ? `Estilo: What the F · 6–9 frases · un párrafo · reacciones absurdas de objetos · modo: ${p==='past'?'Pasado':'Futuro'}.`
+        : `Estilo: What if 60/40 · 8–11 frases · un párrafo · análisis + imágenes sobrias · modo: ${p==='past'?'Pasado':'Futuro'}.`,
+      leads:{
+        wtf:["Entras despacio; el caos te reconoce y te deja pasar."],
+        whatif:["Deja las llaves y permite que hable el silencio que no juzga."]
+      }},
   fr:{tWTF:"⚡ What the F — Résultat", tWHF:"💡 What if — Résultat",
-      sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
-      share:"📤 Partager / Copier", again:"🔁 Poser une autre",
-      tts:"🔊 Écouter", translate:"🌐 Traduire", copied:"Copié !", error:"[erreur serveur]",
+      sub:(q)=>`Question : « ${q} »`, q:"Votre question", a:"Réponse",
+      share:"📤 Partager / Copier", listen:"🔊 Écouter", translate:"🌐 Traduire", again:"🔁 Poser une autre question",
+      copied:"Copié !", copying:"Copie…", error:"[erreur serveur]",
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
       meta:(st,p)=> st==='wtf'
-        ? `Style : What the F · 6–9 phrases · paragraphe unique · 3+ piques internes · double chute · mode : ${p==='past'?'Passé':'Futur'}.`
-        : `Style : What if · 8–11 phrases · paragraphe unique · pas de listes/questions/émojis · mode : ${p==='past'?'Passé':'Futur'}.`,
-      lead:{wtf:["Tu respires et la scène te laisse passer."], whatif:["Pose les clés et laisse parler le silence."]}},
+        ? `Style : What the F · 6–9 phrases · un seul paragraphe · réactions d’objets absurdes · mode : ${p==='past'?'Passé':'Futur'}.`
+        : `Style : What if 60/40 · 8–11 phrases · un seul paragraphe · analyse + images sobres · mode : ${p==='past'?'Passé':'Futur'}.`,
+      leads:{
+        wtf:["Tu entres doucement ; le chaos te reconnaît et te laisse passer."],
+        whatif:["Pose les clés et laisse parler le silence qui ne juge pas."]
+      }},
   de:{tWTF:"⚡ What the F — Ergebnis", tWHF:"💡 What if — Ergebnis",
       sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
-      share:"📤 Teilen / Kopieren", again:"🔁 Neue Frage",
-      tts:"🔊 Anhören", translate:"🌐 Übersetzen", copied:"Kopiert!", error:"[Serverfehler]",
+      share:"📤 Teilen / Kopieren", listen:"🔊 Anhören", translate:"🌐 Übersetzen", again:"🔁 Weitere Frage stellen",
+      copied:"Kopiert!", copying:"Kopiere…", error:"[Serverfehler]",
       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
       meta:(st,p)=> st==='wtf'
-        ? `Stil: What the F · 6–9 Sätze · ein Absatz · 3+ Seitenhiebe · Doppelpointe · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
-        : `Stil: What if · 8–11 Sätze · ein Absatz · keine Listen/Fragen/Emojis · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
-      lead:{wtf:["Du atmest, das Chaos nickt und lässt dich durch."], whatif:["Lege die Schlüssel ab und lass die Stille vor." ]}}
+        ? `Stil: What the F · 6–9 Sätze · ein Absatz · absurde Objektreaktionen · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
+        : `Stil: What if 60/40 · 8–11 Sätze · ein Absatz · Analyse + schlichte Bilder · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
+      leads:{
+        wtf:["Du trittst langsam ein; das Chaos erkennt dich und lässt dich durch."],
+        whatif:["Leg die Schlüssel ab und lass die stille Stimme sprechen, die nicht urteilt."]
+      }}
 };
-const I18N = I18N_ALL[lang] || I18N_ALL.it;
+function T(){ return I18N_ALL[lang] || I18N_ALL.it; }
 
-/* ===== UI base ===== */
-const $ = (q)=>document.querySelector(q);
-$('#backBtn').onclick=()=>history.back();
-$('#homeBtn').onclick=()=>location.href='index.html';
-$('#lblQ').textContent=I18N.q;
-$('#lblA').textContent=I18N.a;
-$('#shareBtn').textContent=I18N.share;
-$('#againBtn').textContent=I18N.again;
-$('#ttsBtn').textContent=I18N.tts;
-$('#translateBtn').textContent=I18N.translate;
-$('#styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
-$('#langBadge').textContent = `🌐 ${lang.toUpperCase()}`;
-
-/* ===== Lead & meta ===== */
+/* ====== Utils ====== */
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 function hashStr(s=""){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i); h=h|0; } return Math.abs(h); }
-function stablePick(arr, seedStr){ if(!arr?.length) return ""; if(!seedStr?.trim()) return pick(arr); const h=hashStr(seedStr); return arr[h%arr.length]; }
+function stablePick(arr, seed){ if(!arr?.length) return ""; if(!seed?.trim()) return pick(arr); return arr[hashStr(seed)%arr.length]; }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
+function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?…])/g,"$1").trim(); }
 
-const prefsData = JSON.parse(LS.getItem('whatif_request')||'{}');
-let domanda = prefsData.domanda || LS.getItem('domanda') || "";
-function setTitles(q){
-  $('#title').textContent = (style==='wtf'? I18N.tWTF : I18N.tWHF);
-  $('#subtitle').textContent = I18N.sub(q);
-  $('#styleBadge').textContent = (style==='wtf') ? I18N.styleWTF : I18N.styleWHF;
-  const bank = (I18N.lead?.[style]) || (I18N_ALL['it'].lead.whatif);
+/* ====== DOM refs ====== */
+const backBtn=document.getElementById('backBtn');
+const homeBtn=document.getElementById('homeBtn');
+const styleBadge=document.getElementById('styleBadge');
+const titleEl=document.getElementById('title');
+const subtitleEl=document.getElementById('subtitle');
+const lblQ=document.getElementById('lblQ');
+const lblA=document.getElementById('lblA');
+const qView=document.getElementById('qView');
+const leadEl=document.getElementById('lead');
+const answerEl=document.getElementById('answer');
+const shareBtn=document.getElementById('shareBtn');
+const listenBtn=document.getElementById('listenBtn');
+const translateBtn=document.getElementById('translateBtn');
+const langMenu=document.getElementById('langMenu');
+const againBtn=document.getElementById('againBtn');
+const metaInfo=document.getElementById('metaInfo');
+
+/* ====== Navigazione ====== */
+backBtn.onclick=()=>history.back();
+homeBtn.onclick=()=>location.href='index.html';
+againBtn.onclick=()=>{ location.href='fourth.html'; };
+
+/* ====== Domanda / Replay ====== */
+const params=new URLSearchParams(location.search);
+const isReplay = params.get('view')==='replay';
+let domanda=""; let answerText="";
+
+function setStaticTexts(q){
+  titleEl.textContent = (style==='wtf'? T().tWTF : T().tWHF);
+  subtitleEl.textContent = T().sub(q);
+  styleBadge.textContent = (style==='wtf') ? T().styleWTF : T().styleWHF;
+  lblQ.textContent = T().q;
+  lblA.textContent = T().a;
+  shareBtn.textContent = T().share;
+  listenBtn.textContent = T().listen;
+  translateBtn.textContent = T().translate;
+  againBtn.textContent = T().again;
+  metaInfo.textContent = T().meta(style, periodo);
+
+  const bank = T().leads?.[style] || T().leads?.whatif || [];
   const seed = `${(q||"").toLowerCase().trim()}|${style}|${lang}`;
-  const line = oneSentence(stablePick(bank, seed));
-  $('#lead').textContent = line;
-  $('#metaInfo').textContent = I18N.meta(style, periodo);
+  leadEl.textContent = oneSentence(stablePick(bank, seed));
 }
-setTitles(domanda);
-$('#qView').textContent = domanda || '—';
 
-/* ===== Decorazioni “— … —” ===== */
 function decorateEmBits(el){
   const raw = el.textContent;
   if(!raw.includes("—")) return;
@@ -270,127 +311,99 @@ function decorateEmBits(el){
   }
   el.innerHTML = html;
 }
-function normalizeOneParagraph(s=""){
-  return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
-}
 
-/* ===== Fetch risposta ===== */
-let answerText="";
-async function fetchAnswer(targetLang){
+/* ====== Fetch risposta ====== */
+async function fetchAnswer(){
   try{
-    const headers = { "Content-Type": "application/json" };
+    answerEl.textContent = '⏳ …';
+    const headers = { "Content-Type":"application/json" };
     if (prefs.pro === true) headers["x-pro"] = "1";
     const adminToken = localStorage.getItem("admin_token");
     if (adminToken) headers["x-admin-token"] = adminToken;
 
-    const body = {
-      domanda,
-      lang: targetLang || lang,
-      stile: style,
-      extra: "",
-      micro: prefsData.micro || {},
-      periodo
-    };
-    const r = await fetch("/api/ask",{ method:"POST", headers, body:JSON.stringify(body) });
-    const data = await r.json();
-    if(!r.ok || !data.answer) throw new Error(data.detail||"bad_response");
-    answerText = normalizeOneParagraph(String(data.answer||"").trim());
-    if(!/[.!?…]$/.test(answerText)) answerText += ".";
-    const node = $('#answer');
-    node.textContent = answerText;
-    decorateEmBits(node);
-    // aggiorna lingua attiva su badge se abbiamo tradotto
-    if(targetLang){
-      lang = targetLang;
-      LS.setItem('lang', lang);
-      document.documentElement.lang = lang;
-      $('#langBadge').textContent = `🌐 ${lang.toUpperCase()}`;
-      // rinfresca etichette UI alla nuova lingua
-      const I2 = I18N_ALL[lang] || I18N_ALL.it;
-      $('#lblQ').textContent=I2.q; $('#lblA').textContent=I2.a;
-      $('#shareBtn').textContent=I2.share; $('#againBtn').textContent=I2.again;
-      $('#ttsBtn').textContent=I2.tts; $('#translateBtn').textContent=I2.translate;
-      $('#title').textContent = (style==='wtf'? I2.tWTF : I2.tWHF);
-      $('#subtitle').textContent = I2.sub(domanda);
-      $('#styleBadge').textContent = (style==='wtf') ? I2.styleWTF : I2.styleWHF;
-      $('#metaInfo').textContent = I2.meta(style, periodo);
-      // aggiorna lead
-      const bank = (I2.lead?.[style]) || (I18N_ALL['it'].lead.whatif);
-      $('#lead').textContent = oneSentence(stablePick(bank, `${(domanda||"")}|${style}|${lang}`));
+    const r = await fetch("/api/ask",{
+      method:"POST", headers,
+      body:JSON.stringify({ domanda, lang, stile:style, periodo })
+    });
+    if(!r.ok){
+      const d=await r.json().catch(()=>({}));
+      throw new Error(d.detail||`http_${r.status}`);
     }
+    const data = await r.json();
+    answerText = normalizeOneParagraph((data.answer||"").trim());
+    if(!/[.!?…]$/.test(answerText)) answerText += ".";
+    answerEl.textContent = answerText;
+    decorateEmBits(answerEl);
   }catch(e){
     console.error(e);
-    $('#answer').textContent = (I18N_ALL[lang]||I18N_ALL.it).error;
+    answerEl.textContent = T().error;
   }
 }
-fetchAnswer(); // prima render nella lingua corrente
 
-/* ===== Share ===== */
-$('#shareBtn').onclick=async()=>{
-  const full = `What?f — ${style==='wtf'?'What the F':'What if'}\n(${periodo})\n\nQ: ${domanda}\n\n${answerText}`;
-  const I2 = I18N_ALL[lang]||I18N_ALL.it;
+/* ====== Traduci (dropdown) ====== */
+function openMenu(){
+  const rect = translateBtn.getBoundingClientRect();
+  langMenu.style.left = (rect.left) + "px";
+  langMenu.style.top  = (rect.bottom + 8 + window.scrollY) + "px";
+  langMenu.style.display = "block";
+}
+function closeMenu(){ langMenu.style.display = "none"; }
+translateBtn.onclick=(e)=>{ e.stopPropagation(); langMenu.style.display==="block" ? closeMenu() : openMenu(); };
+document.addEventListener('click', (e)=>{ if(!langMenu.contains(e.target) && e.target!==translateBtn) closeMenu(); });
+
+langMenu.querySelectorAll('button').forEach(b=>{
+  b.addEventListener('click', async ()=>{
+    const newLang = b.dataset.lang;
+    closeMenu();
+    if(newLang===lang) return;
+    lang = newLang;
+    localStorage.setItem('lang', lang);
+    setStaticTexts(domanda);
+    await fetchAnswer();
+  });
+});
+
+/* ====== Condivisione & TTS ====== */
+shareBtn.onclick=async()=>{
+  const full = `What?f — ${style==='wtf'?'What the F':'What if'}\n(${periodo}, ${lang.toUpperCase()})\n\nQ: ${domanda}\n\n${answerText}`;
   try{
-    if(navigator.share){ await navigator.share({ title: "What?f", text: full }); }
-    else{
+    if(navigator.share){
+      await navigator.share({ title:"What?f", text:full });
+    }else{
+      shareBtn.textContent = T().copying;
       await navigator.clipboard.writeText(full);
-      const b=$('#shareBtn'); b.textContent = I2.copied; setTimeout(()=>b.textContent=I2.share,1200);
+      shareBtn.textContent = T().copied;
+      setTimeout(()=>shareBtn.textContent=T().share,1200);
     }
   }catch{}
 };
 
-/* ===== TTS ===== */
-const TTS_MAP={ it:"it-IT", en:"en-US", es:"es-ES", fr:"fr-FR", de:"de-DE" };
-function speak(text, langCode){
-  if(!('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  const target = TTS_MAP[langCode] || "en-US";
-  const pickVoice=()=> {
-    const vs = window.speechSynthesis.getVoices()||[];
-    const v = vs.find(v=>v.lang === target) || vs.find(v=>v.lang.startsWith(target.split('-')[0])) || vs[0];
-    if(v) utter.voice=v;
-    utter.lang = v?.lang || target;
-    utter.rate = 1.0; utter.pitch=1.0; utter.volume=1.0;
-    window.speechSynthesis.speak(utter);
-  };
-  if(window.speechSynthesis.getVoices().length===0){
-    // chrome needs async load
-    window.speechSynthesis.onvoiceschanged = ()=>{ pickVoice(); };
-  } else pickVoice();
-}
-$('#ttsBtn').onclick=()=> speak(answerText, lang);
-
-/* ===== Translate popover ===== */
-const menu = $('#translateMenu');
-$('#translateBtn').onclick=(e)=>{
-  e.stopPropagation();
-  menu.classList.toggle('open');
-  menu.setAttribute('aria-hidden', menu.classList.contains('open') ? 'false' : 'true');
+listenBtn.onclick=()=>{
+  try{
+    const uttr = new SpeechSynthesisUtterance(`${T().a}. ${answerText}`);
+    const map = { it:"it-IT", en:"en-US", es:"es-ES", fr:"fr-FR", de:"de-DE" };
+    uttr.lang = map[lang] || "it-IT";
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(uttr);
+  }catch{}
 };
-menu.addEventListener('click', (e)=>{
-  const b = e.target.closest('button'); if(!b) return;
-  const targetLang = b.dataset.lang;
-  if(!targetLang || targetLang===lang){ menu.classList.remove('open'); return; }
-  fetchAnswer(targetLang); // rigenera nella lingua scelta
-  menu.classList.remove('open');
-});
-document.addEventListener('click', (e)=>{
-  if(!menu.contains(e.target) && e.target!==$('#translateBtn')) menu.classList.remove('open');
-});
 
-/* ===== Again ===== */
-$('#againBtn').onclick=()=>{ location.href='fourth.html'; };
-
-/* ===== PRO badge ===== */
-(function showProBadge(){
-  const el = document.getElementById('proBadge');
-  const hasToken = !!LS.getItem('admin_token');
-  if (hasToken || prefs.pro === true){
-    el.style.display = 'inline-flex';
-    el.textContent = '🧪 TEST · ⭐ PRO';
-    el.title = (lang === 'en') ? 'Test mode active' : 'Modalità test attiva';
-  }
-})();
+/* ====== Init ====== */
+if(isReplay){
+  const r = JSON.parse(LS.getItem('replay_story')||'{}');
+  domanda = r.domanda || LS.getItem('domanda') || "";
+  setStaticTexts(domanda);
+  qView.textContent = domanda || '—';
+  answerText = normalizeOneParagraph(r.answer || "");
+  answerEl.textContent = answerText || '—';
+  decorateEmBits(answerEl);
+}else{
+  const req = JSON.parse(LS.getItem('whatif_request')||'{}');
+  domanda = req.domanda || LS.getItem('domanda') || "";
+  setStaticTexts(domanda);
+  qView.textContent = domanda || '—';
+  fetchAnswer();
+}
 </script>
 </body>
 </html>
