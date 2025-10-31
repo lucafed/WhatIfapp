@@ -1,5 +1,3 @@
-Ask
-
 // /api/ask.js — What?f Engine (Examples-Driven Edition • matches user style)
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
