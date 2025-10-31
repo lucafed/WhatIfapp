@@ -27,8 +27,5 @@
     }
   ],
   "redirects": [],
-  "rewrites": [],
-  "crons": [
-    { "path": "/api/keepalive", "schedule": "0 */6 * * *" }
-  ]
+  "rewrites": []
 }
