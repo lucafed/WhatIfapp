@@ -1,4 +1,4 @@
-// /api/ask.js — What?f Engine (Examples-Driven • Multilang • Friendly-WTF)
+// /api/ask.js — What?f Engine (Examples-Driven • Multilang • Friendly-WTF • Poetic-Fix)
 // by ChatGPT (matches user's reference style exactly)
 
 import OpenAI from "openai";
@@ -59,8 +59,7 @@ function tightenSentences(text, maxSentences) {
     .split(/(?<=[.!?])\s+/)
     .map((x) => x.trim())
     .filter(Boolean);
-  const out = [],
-    seen = new Set();
+  const out = [], seen = new Set();
   for (const p of parts) {
     const n = normLine(p);
     if (!n || seen.has(n)) continue;
@@ -246,13 +245,16 @@ function whatIfAnaliticoRule(lang) {
     : `WHAT IF Analitico: scambi concreti, routine, costi/benefici. Stessa cadenza dell’esempio. 8–10 frasi; chiusura calma.`;
 }
 
+/* >>>>>> NUOVA REGOLA POETICA (vincolante, anti-analitico) <<<<<< */
 function whatIfPoeticoRule(lang) {
   const en = isEnLike(lang);
-  return en
-    ? `WHAT IF Real/Poetic: sober sensory images; same breathing as the sample. 8–10 sentences; reconciled closing.`
-    : `WHAT IF Reale/Poetico: immagini sobrie e quotidiane; stesso respiro dell’esempio. 8–10 frasi; chiusura riconciliata.`;
+  if (en) {
+    return `WHAT IF Real/Poetic (EN): quiet second-person vignette, sensory images, humble verbs, no metrics/percentages/lists. 8–10 short sentences (≤18 words), soft punctuation, reconciled closing. BAN: “cost/benefit, budget, KPI, routine, trade-off, percentage, benchmark, deadlines, ROI, pro/con, schedule, industry”. Start gently (e.g., “Nice one.” / “Look at that.”). Match the breathing of the Italian sample.`;
+  }
+  return `WHAT IF Reale/Poetico (IT): vignetta in seconda persona, immagini sensoriali quotidiane, verbi umili, niente numeri/percentuali/elenco. 8–10 frasi brevi (≤18 parole), punteggiatura morbida, chiusura riconciliata. VIETATO: “costi/benefici, budget, KPI, routine (in senso tecnico), trade-off, percentuale, benchmark, scadenze, ROI, pro/contro, pianificazione, industria”. Incipit morbido (es. “Bella questa.” / “Sai.”). Mantieni IL RESPIRO dell’esempio italiano.`;
 }
 
+/* ========= WTF (friendly) ========= */
 function wtfFriendlyRule(lang) {
   const en = isEnLike(lang);
   return en
@@ -354,7 +356,6 @@ function ensureDrink(answer, seedsObj) {
       answer
     );
   if (hasDrink) return answer;
-  // Se manca il drink, aggiungo la frase del seed prima della morale (o in coda).
   const drinkLine = ensureSentenceCase(seedsObj?.drink || "ti versi un goccio onesto e rimetti a posto i pensieri") + ".";
   const moraleRx = /(Morale:|Moral:)/i;
   if (moraleRx.test(answer)) {
@@ -368,6 +369,46 @@ function limitExclamations(answer) {
 function forbidInsults(answer, lang) {
   const bad = /\b(cazzo|cazzata|stronzo|idiota|cretino|imbecille)\b/gi;
   return answer.replace(bad, normLang(lang) === "it" ? "accidente" : "heck");
+}
+
+/* ========= Post-process POETICO (anti-analitico + grammatica IT) ========= */
+const ANALITICHESE_RX = /\b(costi|benefici|costo[- ]beneficio|budget|kpi|benchmark|percentuali?|trade[- ]?off|pro\s*\/?\s*contro|pro e contro|scadenze|pianificazione|roadmap|obiettivi smart|roi|capex|opex|industria|routine|processi|metriche)\b/gi;
+
+function deAnalyticPoeticoItalian(s) {
+  // sostituzioni morbide
+  let t = s.replace(ANALITICHESE_RX, (m) => {
+    const map = {
+      "costi":"pensieri contati","benefici":"piccoli vantaggi","budget":"portafoglio",
+      "kpi":"segnali","benchmark":"paragoni","percentuale":"numero", "percentuali":"numeri",
+      "trade-off":"scambio", "pro / contro":"ombre e luci", "pro e contro":"ombre e luci",
+      "scadenze":"scadenze dolci", "pianificazione":"idea in tasca", "roadmap":"strada a piede nudo",
+      "obiettivi smart":"mete appese al frigo", "roi":"ritorno che senti", "capex":"spesa grossa",
+      "opex":"spesa di tutti i giorni", "industria":"mondo di fabbriche", "routine":"abitudine",
+      "processi":"giri di giornata", "metriche":"misure a righello"
+    };
+    const k = m.toLowerCase();
+    return map[k] || "parole grosse";
+  });
+
+  // incipit morbido se manca
+  if (!/^(Bella questa|Sai|Guarda che)/i.test(t)) {
+    t = "Bella questa. " + t.trim();
+  }
+
+  // frasi troppo lunghe → spezza con punteggiatura morbida
+  t = t.replace(/([^.!?]{120,}?)(,|\s)\s+/g, "$1. ");
+
+  // pulizie di grammatica comuni
+  t = t
+    .replace(/\bun'altro\b/gi, "un altro")
+    .replace(/\bqual'è\b/gi, "qual è")
+    .replace(/\s+([.,;:!?…])/g, "$1")
+    .replace(/\s{2,}/g, " ");
+
+  // niente tono assertivo da consulente
+  t = t.replace(/\b(in sintesi|in conclusione|pertanto|di conseguenza)\b/gi, "alla fine");
+
+  return t.trim();
 }
 
 /* ========= HANDLER ========= */
@@ -396,26 +437,17 @@ export default async function handler(req, res) {
       typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
     const {
       domanda = "",
-      stile = "whatif", // "whatif" | "wtf"
+      stile = "whatif",   // "whatif" | "wtf"
       mode = "analitico", // per whatif: "analitico" | "reale"
       lang = "it",
       periodo = "future",
-      micro = {}, // micro-profili dalla fourth
+      micro = {},         // micro-profili dalla fourth
     } = body;
 
     if (!domanda || typeof domanda !== "string")
-      return res
-        .status(400)
-        .json({ error: "bad_request", detail: "domanda_required" });
+      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
-    const messages = buildMessages({
-      domanda,
-      lang,
-      periodo,
-      stile,
-      mode,
-      micro,
-    });
+    const messages = buildMessages({ domanda, lang, periodo, stile, mode, micro });
 
     const completion = await client.chat.completions.create({
       model: MODEL,
@@ -439,17 +471,18 @@ export default async function handler(req, res) {
     answer = finalPunct(answer);
 
     if (stile === "wtf") {
-      // Conserva comicità: niente filtri che spengono il tono
+      // WTF: preserva comicità
       answer = keepSingleImprecazione(answer, lang);
       answer = limitExclamations(answer);
       answer = forbidInsults(answer, lang);
-      // Assicura DRINK presente
-      // NB: ricreo seeds per recuperare la riga drink usata nel prompt
+      // Assicura DRINK
       const L = normLang(lang) === "it" ? WTF_BANKS_IT : WTF_BANKS_EN;
       const drink = pick(L.drinks, 1)[0];
       answer = ensureDrink(answer, { drink });
-    } else {
-      // WHAT IF: solo pulizia fine
+    } else if (mode !== "analitico" && normLang(lang) === "it") {
+      // WHAT IF — Reale/Poetico: anti-analitico + grammatica morbida
+      answer = deAnalyticPoeticoItalian(answer);
+      // mantieni fraseggio breve (8–10 brevi) già limitato da tighten + clamp
       answer = limitExclamations(answer);
     }
 
@@ -474,8 +507,6 @@ export default async function handler(req, res) {
       .json({ answer, style: stile, mode, lang: normLang(lang), periodo, model: MODEL });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
-    return res
-      .status(500)
-      .json({ error: "server_error", detail: String(err?.message || err) });
+    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
 }
