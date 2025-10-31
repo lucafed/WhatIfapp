@@ -1,4 +1,4 @@
-// /api/ask.js — Luca FINAL++
+// /api/ask.js — Luca FINAL++ (vFINAL)
 // What if Analitico ≠ Poetico (incipit obbligati) • WTF con maiuscole dopo i punti
 // Reazioni demenziali cinematografiche (2–3, pertinenti), alcol obbligatorio (no acqua)
 
@@ -68,7 +68,7 @@ function stripQuestionEcho(q,t){
   return s.replace(rx,"");
 }
 
-/* Maiuscola dopo . ! ? …  + inizio riga */
+/* Maiuscole dopo . ! ? …  + inizio riga */
 function capAfterStopsIt(s=""){
   return s
     .replace(/(^\s*[a-zà-ÿ])|([.!?…]\s+[a-zà-ÿ])/g, m => m.toUpperCase())
@@ -96,7 +96,7 @@ const FEWSHOT_WTF_IT = [
   `Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.`,
 ];
 
-/* ========= Reazioni demenziali “ingigantite” ========= */
+/* ========= Reazioni demenziali ========= */
 const REACT_BASE = [
   "la moka esplode in una standing ovation a vapore e ti fa una ola di schiuma",
   "il POS si fa la cresima da solo, emette ricevute benedette e va in modalità «pentito»",
@@ -115,172 +115,149 @@ const REACT_BASE = [
 ];
 
 function pick(arr,n){ const a=[...arr], out=[]; while(out.length<n && a.length){ out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]); } return out; }
-
-function contextReactions(domanda){
-  const d=String(domanda||"");
+function contextReactions(d){
+  d=String(d||"");
   if(/bar|caff[eè]|moka|bancone|tazza|pos/i.test(d)) return pick(REACT_BASE.filter(x=>/(moka|POS|bicchieri|lampada|tapparella|frigorifero)/i.test(x)),3);
   if(/moto|scooter|casco|strada|semaforo/i.test(d))  return pick(REACT_BASE.filter(x=>/(casco|scooter|campanile|ventilatore|citofono)/i.test(x)),3);
   if(/ufficio|pc|laptop|riunion/i.test(d))           return pick(REACT_BASE.filter(x=>/(mouse|lampada|tapparella|frigorifero|divano)/i.test(x)),3);
   return pick(REACT_BASE,3);
 }
 
-/* ========= Regole stile ========= */
-const WHATIF_ANALITICO_RULE =
-`WHAT IF Analitico (OBBLIGATORIO):
-• Inizia ESATTAMENTE con: "Sai Luca,"
-• Linguaggio concreto: affitti, bollette, stipendi, trasporti, servizi, routine, orari, artigiani/multinazionali.
-• Vietate immagini liriche (aria, vicoli, montagna, profumi, risate, portoni…).
-• 8–10 frasi, chiusura calma come nell’esempio.`;
-
-const WHATIF_POETICO_RULE =
-`WHAT IF Reale/Poetico (OBBLIGATORIO):
-• Inizia ESATTAMENTE con: "Bella questa, Luca."
-• Immagini sensoriali quotidiane (aria, vicoli, bar, risate, portoni, montagna, luce).
-• Vietate parole da “Excel” (affitti, bollette, budget, costi/benefici, trasporti).
-• 8–10 frasi, chiusura riconciliata come nell’esempio.`;
-
-/* ========= WTF Rules ========= */
-function wtfPrompt(domanda){
-  const reacts = contextReactions(domanda);
-  const RULE =
-`WHAT THE F — COPIA il tono dei TRE ESEMPI (ironico, adulto, mai cattivo).
-Struttura (un paragrafo, 6–8 frasi):
-1) Presa in giro affettuosa (1–2 frasi).
-2) 2–3 micro-imprevisti del contesto.
-3) Esplode UNA sola bestemmia teatrale (mai contro persone).
-4) SUBITO 2–3 reazioni demenziali, ipercinetiche e cinematografiche: ${reacts.join(" · ")}.
-5) Drink ALCOLICO obbligatorio (grappa/amaro/rosso/shot). Vietata l’acqua.
-6) 1–2 frasi che rispondono davvero alla domanda.
-7) Chiusura ironica calda (no moraline).`;
-  return [
-    { role:"system", content:RULE },
-    { role:"system", content:`ESEMPI VINCOLANTI:\n- ${FEWSHOT_WTF_IT[0]}\n- ${FEWSHOT_WTF_IT[1]}\n- ${FEWSHOT_WTF_IT[2]}` },
-    { role:"system", content:`REACTIONS_SEED: ${reacts.join(" | ")}` }
-  ];
-}
+/* ========= HARD separation lexicons ========= */
+const BAN_POETICO = /(affitt|bollett|stipend|budget|costi?|benefic|trasport|serviz|routine|orari|multinazional|artigian|spesa)/i;
+const BAN_ANALITICO = /(aria|luce|vicol|profum|risat|porton|montagn|eco|amante|orizzont|inverno|ambrat|sussurr|silenzio)/i;
+const purgeByLexicon = (t,rx)=>{const s=t.split(/(?<=[.!?…])\s+/).filter(x=>!rx.test(x));return (s.length?s:t).join(" ");};
 
 /* ========= Prompt builder ========= */
 function buildMessages({ domanda, periodo, stile, mode }){
+  const STYLE_TAG = mode==="analitico"?"ANALITICO":"POETICO";
   const msgs=[
     { role:"system", content:"REGOLE: paragrafo unico; niente elenchi/emoji; non ripetere la domanda; seconda persona." },
     { role:"system", content: temporalInstruction(periodo) },
+    { role:"system", content:`FORMATO DI USCITA: usa SOLO [[[OUT ${STYLE_TAG}]]] ... [[[ /OUT ]]]` }
   ];
   if(stile==="wtf"){
-    msgs.push(...wtfPrompt(domanda));
-  }else if(mode==="analitico"){
+    const reacts=contextReactions(domanda);
+    msgs.push(
+      { role:"system", content:`WHAT THE F — tono ESATTO esempi, 1 bestemmia teatrale, 2–3 reazioni: ${reacts.join(" · ")}` },
+      { role:"system", content:`ESEMPI:\n- ${FEWSHOT_WTF_IT[0]}\n- ${FEWSHOT_WTF_IT[1]}\n- ${FEWSHOT_WTF_IT[2]}` },
+      { role:"system", content:`REACTIONS_SEED: ${reacts.join(" | ")}` }
+    );
+  } else if(mode==="analitico"){
     msgs.push(
       { role:"system", content: WHATIF_ANALITICO_RULE },
-      { role:"system", content: `ESEMPIO VINCOLANTE:\n${WHATIF_ANALITICO_RX}` }
+      { role:"system", content:`ESEMPIO:\n${WHATIF_ANALITICO_RX}` },
+      { role:"system", content:"DIVIETO: immagini poetiche. Solo concreto." }
     );
-  }else{
+  } else {
     msgs.push(
       { role:"system", content: WHATIF_POETICO_RULE },
-      { role:"system", content: `ESEMPIO VINCOLANTE:\n${WHATIF_POETICO_RX}` }
+      { role:"system", content:`ESEMPIO:\n${WHATIF_POETICO_RX}` },
+      { role:"system", content:"DIVIETO: parole economiche/Excel." }
     );
   }
-  msgs.push({ role:"user", content:`Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO.` });
+  msgs.push({ role:"user", content:`Domanda: "${domanda}". Rispondi in ITALIANO.` });
   return msgs;
 }
 
-/* ========= Enforcers ========= */
+/* ========= Extract ========= */
+const extract = t=>{
+  const m=t.match(/\[\[\[OUT (ANALITICO|POETICO)\]\]\]([\s\S]*?)\[\[\[\/OUT\]\]\]/);
+  return m?m[2].trim():t;
+};
+
+/* ========= Post rules ========= */
+const ensureIncipit = (t,mode)=>{
+  if(mode==="analitico"){
+    t=t.replace(/^Bella questa, Luca\.\s*/i,"");
+    if(!/^Sai Luca,/.test(t)) t="Sai Luca, "+t.replace(/^Sai Luca,\s*/,"");
+  } else {
+    t=t.replace(/^Sai Luca,\s*/i,"");
+    if(!/^Bella questa, Luca\./.test(t)) t="Bella questa, Luca. "+t;
+  }
+  return t;
+};
+
 function enforceAnalitico(t){
-  // Incipit fisso
-  t = t.replace(/^Bella questa, Luca\.\s*/i,"");
-  if(!/^Sai Luca,/.test(t)) t = "Sai Luca, " + t.replace(/^Sai Luca,\s*/,"");
-  // Se troppo poetico, sostituisci con blocco concreto
-  const poet=(t.match(/\b(aria|luce|vicoli|profumo|risate|portoni|montagn|eco|amante|orizzonte|inverno)\b/gi)||[]).length;
+  t = purgeByLexicon(t, BAN_ANALITICO);
+  const poet=(t.match(/\b(aria|luce|vicol|profum|risat|porton|montagn|eco|amante|orizzont|inverno)\b/gi)||[]).length;
   const conc=(t.match(/\b(affitt|bollett|stipend|trasport|serviz|routine|orari|spesa|artigian|multinazional)\b/gi)||[]).length;
   if(poet>conc){
-    t = "Sai Luca, qui le scelte si misurano in cose semplici: affitti ancora umani, bollette che respirano, spesa che non divora lo stipendio. I trasporti sono prevedibili e gli orari si incastrano con la vita. Il lavoro appoggia più alle reti locali e agli artigiani che alle multinazionali: meno scala, più relazione. Guadagni forse più bassi, ma guadagni tempo e continuità. Non devi correre per esistere: la routine si assesta, i fine settimana hanno un bordo pulito e non vivi a rincorsa. Il compromesso è chiaro: meno occasioni grandi, più stabilità piccola. Se cerchi ritmo sostenibile e facce note, è un avanzare lento ma tuo.";
+    return "Sai Luca, qui le scelte si misurano in cose semplici: affitti ancora umani, bollette che respirano, spesa che non divora lo stipendio. I trasporti sono prevedibili e gli orari si incastrano con la vita. Il lavoro appoggia più alle reti locali e agli artigiani che alle multinazionali: meno scala, più relazione. Guadagni forse più bassi, ma guadagni tempo e continuità. Non devi correre per esistere: la routine si assesta, i fine settimana hanno un bordo pulito e non vivi a rincorsa. Il compromesso è chiaro: meno occasioni grandi, più stabilità piccola. Se cerchi ritmo sostenibile e facce note, è un avanzare lento ma tuo.";
   }
   return t;
 }
-function enforcePoetico(t){
-  // Incipit fisso
-  t = t.replace(/^Sai Luca,\s*/i,"");
-  if(!/^Bella questa, Luca\./.test(t)) t = "Bella questa, Luca. " + t;
-  // rimuovi parole “Excel”
-  return t.replace(/\b(affitt[oi]|bollett[ea]e?|stipend[iio]|budget|costi|benefici|trasport[oi]|serviz[iio]|routine|orari|multinazional[ei]|artigian[oi]|spesa)\b/gi,"silenzio");
-}
 
-/* ========= WTF guards ========= */
-function keepSingleImprecazione(answer){
+const enforcePoetico = t=>purgeByLexicon(t,BAN_POETICO)
+  .replace(/\b(affitt|bollett|stipend|budget|costi|benefici|trasport|serviz|routine|orari|multinazional|artigian|spesa)\b/gi,"silenzio");
+
+/* ========= WTF fix ========= */
+const keepOne = ans=>{
   const rx=/\b(bestemmi\w+|maledett[ao]|\bporca\b.*?\bmisera\b|anatema|sacramentat\w+|urlo liturgico|imprecazion\w+)\b/gi;
-  let seen=false; return answer.replace(rx,m=>{ if(seen) return "imprecazione a mezza voce"; seen=true; return m; });
-}
-function ensureAlcohol(answer){
-  answer=answer.replace(/\b(acqua (frizzante|naturale)|bicchiere d'acqua)\b/gi,"un dito di grappa");
-  if(!/\b(grappa|amaro|rosso|vino|whisky|gin|birra|spritz|shot)\b/i.test(answer)){
-    answer = answer.replace(/([.!?…])\s*$/,". Ti versi uno shot onesto e rimetti in fila i pensieri$1");
-  }
-  return answer;
-}
-function ensureReactions(answer, seed){
-  const arr=(seed||"").split(/\s*\|\s*/).filter(Boolean);
-  const used=arr.filter(k=>answer.toLowerCase().includes(k.split(" ")[1]?.toLowerCase()||""));
-  if(used.length>=2) return answer;
-  const add = pick(arr, Math.max(0,2-used.length)).join(" e ");
-  return add ? answer.replace(/([.!?…])\s*$/i, `. Intorno succede l’impossibile: ${add}$1`) : answer;
-}
-const limitExcl = s=>s.replace(/!{3,}/g,"!!");
-const forbidInsults = s=>s.replace(/\b(cazzo|cazzata|stronzo|idiota|imbecille)\b/gi,"accidente");
+  let seen=false;return ans.replace(rx,m=>(seen?"imprecazione a mezza voce":(seen=true,m)));
+};
+const ensureAlcohol = ans=>{
+  ans=ans.replace(/\b(acqua (frizz|naturale)|bicchiere d'acqua)\b/gi,"un dito di grappa");
+  return /\b(grappa|amaro|rosso|vino|whisky|gin|birra|spritz|shot)\b/i.test(ans)?ans:ans+". Ti versi uno shot onesto e rimetti in fila i pensieri";
+};
+const enforceReacts = (ans,seed)=>{
+  const arr=seed.split(/\s*\|\s*/).filter(Boolean);
+  const used=arr.filter(k=>ans.toLowerCase().includes(k.split(" ")[1]?.toLowerCase()||""));
+  if(used.length>=2) return ans;
+  const add=pick(arr,2-used.length).join(" e ");
+  return ans+". Intorno succede l’impossibile: "+add;
+};
 
 /* ========= HANDLER ========= */
 export default async function handler(req,res){
   cors(req,res);
   if(req.method==="OPTIONS") return res.status(200).end();
   if(req.method!=="POST") return res.status(405).json({ error:"method_not_allowed" });
+
   try{
-    if(!process.env.OPENAI_API_KEY) return res.status(500).json({ error:"missing_api_key" });
-    const ip=(req.headers["x-forwarded-for"]||req.socket?.remoteAddress||"unknown").toString().split(",")[0].trim();
-    const { success } = await rl.limit(`ask:${ip}`); if(!success) return res.status(429).json({ error:"rate_limited_minute" });
+    const ip=(req.headers["x-forwarded-for"]||req.socket?.remoteAddress||"").toString().split(",")[0].trim();
+    if(!(await rl.limit(`ask:${ip}`)).success) return res.status(429).json({ error:"rate_limited_minute" });
 
     const body = typeof req.body==="string" ? JSON.parse(req.body||"{}") : (req.body||{});
-    const { domanda="", stile="whatif", mode="reale", periodo="future" } = body;
-    if(!domanda || typeof domanda!=="string") return res.status(400).json({ error:"bad_request", detail:"domanda_required" });
+    let { domanda="", stile="whatif", mode="reale", periodo="future" } = body;
+    if(!domanda) return res.status(400).json({ error:"domanda_required" });
+    mode = /analit/i.test(mode)?"analitico":"reale";
 
     const messages = buildMessages({ domanda, periodo, stile, mode });
     const completion = await client.chat.completions.create({
-      model: MODEL, temperature: stile==="wtf"?0.98:0.82, top_p:0.92,
-      max_tokens: 520, frequency_penalty:0.1, presence_penalty:0.0, messages
+      model: MODEL,
+      temperature: stile==="wtf"?0.98:(mode==="analitico"?0.45:0.95),
+      top_p:0.92, max_tokens:520,
+      frequency_penalty:0.1, presence_penalty:0.0,
+      messages
     });
 
-    let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
-    if(!answer) throw new Error("empty_model_response");
-
-    // Common post-process
+    let answer = extract(completion?.choices?.[0]?.message?.content?.trim()||"");
     answer = stripQuestionEcho(domanda, answer);
     answer = tightenSentences(answer, stile==="wtf"?8:10);
     answer = clampWords(answer, stile==="wtf"?180:165);
     answer = normalizeOneParagraph(answer);
 
     if(stile==="wtf"){
-      const seed = (messages.find(m=>m.role==="system" && String(m.content).startsWith("REACTIONS_SEED"))?.content||"").replace("REACTIONS_SEED: ","");
-      answer = keepSingleImprecazione(answer);
+      const seed = messages.find(m=>String(m.content).startsWith("REACTIONS_SEED"))?.content.replace("REACTIONS_SEED: ","")||"";
+      answer = keepOne(answer);
       answer = ensureAlcohol(answer);
-      answer = ensureReactions(answer, seed);
-      answer = limitExcl(answer);
-      answer = forbidInsults(answer);
-    }else{
-      answer = (mode==="analitico") ? enforceAnalitico(answer) : enforcePoetico(answer);
+      answer = enforceReacts(answer, seed);
+    } else {
+      answer = ensureIncipit(answer, mode);
+      answer = mode==="analitico" ? enforceAnalitico(answer) : enforcePoetico(answer);
     }
 
-    // Maiuscole dopo ogni punto/… (vale anche per WTF)
     answer = capAfterStopsIt(answer);
-    if(!/[.!?…]$/.test(answer)) answer += ".";
-
-    // Evita prima persona forte
+    if(!/[.!?…]$/.test(answer)) answer+=".";
     answer = answer.replace(/\b(io|sono|mi|noi|me|ho|abbiamo)\b/gi,"");
 
-    // Evita nomi non presenti nella domanda
-    (function(){
-      const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g; const inQ=new Set((String(domanda).match(nameRx)||[]));
-      answer = answer.replace(nameRx,(m)=> inQ.has(m) ? m : (["Ah","Oh","Ehi","Bella","Sai"].includes(m) ? m : m.toLowerCase()));
-    })();
+    const names=new Set((String(domanda).match(/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g)||[]));
+    answer = answer.replace(/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g,m=>names.has(m)?m:(["Ah","Oh","Ehi","Bella","Sai"].includes(m)?m:m.toLowerCase()));
 
-    return res.status(200).json({ answer, style:stile, mode, periodo, model:MODEL });
-  }catch(err){
-    console.error("❌ [/api/ask] error:", err);
-    return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
+    res.status(200).json({ answer, mode, stile });
+  }catch(e){
+    console.error(e);
+    res.status(500).json({ error:"server_error", detail:e.message });
   }
-        }
+  }
