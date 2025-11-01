@@ -199,6 +199,22 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   document.documentElement.lang=lang;
   let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
 
+  /* ===== Guard: profilo necessario ===== */
+  const profile = readJSON('whatif_profile', null);
+  if(!profile || !profile.sex || !profile.age || !profile.phase || !profile.name || !profile.city || !profile.role || !profile.goal){
+    // se non c'è il profilo base, rimanda alla seconda pagina per compilarlo
+    try{ location.replace('second.html'); }catch{}
+  }
+
+  /* ===== Grammatica per l'AI ===== */
+  function buildGrammar(sex){
+    const s=(sex||'').toLowerCase();
+    if(s==='f' || s==='donna') return { pronome:'lei', articolo:'la', aggettivo_suff:'a', participio_suff:'a' };
+    if(s==='m' || s==='uomo')  return { pronome:'lui', articolo:'il', aggettivo_suff:'o', participio_suff:'o' };
+    return { pronome:'loro', articolo:'lo/la', aggettivo_suff:'*', participio_suff:'*' };
+  }
+  const gram = profile?.gram || buildGrammar(profile?.sex);
+
   /* ===== I18N ===== */
   const I18N={
     it:{title:"Imposta la tua domanda", yourq:"E se…", gen:"✨ Genera risposta", clear:"Svuota",
@@ -293,100 +309,61 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   const SURPRISE_POOLS = {
     it: {
       future: [
-        "E se cambiassi lavoro?",
-        "E se mi trasferissi all’estero?",
-        "E se aprissi una piccola attività?",
-        "E se imparassi davvero l’inglese?",
-        "E se facessi un master?",
-        "E se riducessi i social per 30 giorni?",
-        "E se iniziassi a correre 3 volte a settimana?",
-        "E se provassi a lavorare 4 giorni su 5?"
+        "E se cambiassi lavoro?","E se mi trasferissi all’estero?","E se aprissi una piccola attività?",
+        "E se imparassi davvero l’inglese?","E se facessi un master?","E se riducessi i social per 30 giorni?",
+        "E se iniziassi a correre 3 volte a settimana?","E se provassi a lavorare 4 giorni su 5?"
       ],
       past: [
-        "E se avessi cambiato lavoro nel 2022?",
-        "E se mi fossi trasferito all’estero dopo la laurea?",
-        "E se avessi aperto quella piccola attività nel 2020?",
-        "E se avessi studiato inglese con costanza l’anno scorso?",
-        "E se avessi fatto un master nel 2019?",
-        "E se avessi staccato dai social il mese scorso?",
-        "E se avessi ricominciato a correre l’estate scorsa?",
-        "E se avessi provato la settimana corta l’anno scorso?"
+        "E se avessi cambiato lavoro nel 2022?","E se mi fossi trasferito all’estero dopo la laurea?",
+        "E se avessi aperto quella piccola attività nel 2020?","E se avessi studiato inglese con costanza l’anno scorso?",
+        "E se avessi fatto un master nel 2019?","E se avessi staccato dai social il mese scorso?",
+        "E se avessi ricominciato a correre l’estate scorsa?","E se avessi provato la settimana corta l’anno scorso?"
       ]
     },
     en: {
       future: [
-        "What if I changed jobs?",
-        "What if I moved abroad?",
-        "What if I started a small business?",
-        "What if I mastered English?",
-        "What if I did a master’s degree?",
-        "What if I cut social media for 30 days?",
-        "What if I ran three times a week?",
-        "What if I tried a 4-day workweek?"
+        "What if I changed jobs?","What if I moved abroad?","What if I started a small business?",
+        "What if I mastered English?","What if I did a master’s degree?","What if I cut social media for 30 days?",
+        "What if I ran three times a week?","What if I tried a 4-day workweek?"
       ],
       past: [
-        "What if I had changed jobs in 2022?",
-        "What if I had moved abroad after graduation?",
-        "What if I had started that small business in 2020?",
-        "What if I had practiced English consistently last year?",
-        "What if I had done a master’s in 2019?",
-        "What if I had quit social media last month?",
-        "What if I had started running last summer?",
-        "What if I had tried a 4-day week last year?"
+        "What if I had changed jobs in 2022?","What if I had moved abroad after graduation?",
+        "What if I had started that small business in 2020?","What if I had practiced English consistently last year?",
+        "What if I had done a master’s in 2019?","What if I had quit social media last month?",
+        "What if I had started running last summer?","What if I had tried a 4-day week last year?"
       ]
     },
     es: {
       future: [
-        "¿Y si cambiara de trabajo?",
-        "¿Y si me mudara al extranjero?",
-        "¿Y si abriera un pequeño negocio?",
-        "¿Y si dominara el inglés?",
-        "¿Y si hiciera un máster?",
-        "¿Y si dejara las redes 30 días?"
+        "¿Y si cambiara de trabajo?","¿Y si me mudara al extranjero?","¿Y si abriera un pequeño negocio?",
+        "¿Y si dominara el inglés?","¿Y si hiciera un máster?","¿Y si dejara las redes 30 días?"
       ],
       past: [
-        "¿Y si hubiera cambiado de trabajo en 2022?",
-        "¿Y si me hubiera mudado al extranjero tras graduarme?",
-        "¿Y si hubiera abierto ese pequeño negocio en 2020?",
-        "¿Y si hubiera practicado inglés con constancia el año pasado?",
-        "¿Y si hubiera hecho un máster en 2019?",
-        "¿Y si hubiera dejado las redes el mes pasado?"
+        "¿Y si hubiera cambiado de trabajo en 2022?","¿Y si me hubiera mudado al extranjero tras graduarme?",
+        "¿Y si hubiera abierto ese pequeño negocio en 2020?","¿Y si hubiera practicado inglés con constancia el año pasado?",
+        "¿Y si hubiera hecho un máster en 2019?","¿Y si hubiera dejado las redes el mes pasado?"
       ]
     },
     fr: {
       future: [
-        "Et si je changeais de travail ?",
-        "Et si je m’installais à l’étranger ?",
-        "Et si je lançais une petite activité ?",
-        "Et si je maîtrisais l’anglais ?",
-        "Et si je faisais un master ?",
-        "Et si je coupais les réseaux 30 jours ?"
+        "Et si je changeais de travail ?","Et si je m’installais à l’étranger ?","Et si je lançais une petite activité ?",
+        "Et si je maîtrisais l’anglais ?","Et si je faisais un master ?","Et si je coupais les réseaux 30 jours ?"
       ],
       past: [
-        "Et si j’avais changé de travail en 2022 ?",
-        "Et si je m’étais installé à l’étranger après le diplôme ?",
-        "Et si j’avais lancé cette petite activité en 2020 ?",
-        "Et si j’avais travaillé mon anglais l’an dernier ?",
-        "Et si j’avais fait un master en 2019 ?",
-        "Et si j’avais coupé les réseaux le mois dernier ?"
+        "Et si j’avais changé de travail en 2022 ?","Et si je m’étais installé à l’étranger après le diplôme ?",
+        "Et si j’avais lancé cette petite activité en 2020 ?","Et si j’avais travaillé mon anglais l’an dernier ?",
+        "Et si j’avais fait un master en 2019 ?","Et si j’avais coupé les réseaux le mois dernier ?"
       ]
     },
     de: {
       future: [
-        "Was, wenn ich den Job wechselte?",
-        "Was, wenn ich ins Ausland zog?",
-        "Was, wenn ich ein kleines Geschäft startete?",
-        "Was, wenn ich Englisch wirklich meisterte?",
-        "Was, wenn ich einen Master machte?",
-        "Was, wenn ich 30 Tage ohne Social Media lebte?"
+        "Was, wenn ich den Job wechselte?","Was, wenn ich ins Ausland zog?","Was, wenn ich ein kleines Geschäft startete?",
+        "Was, wenn ich Englisch wirklich meisterte?","Was, wenn ich einen Master machte?","Was, wenn ich 30 Tage ohne Social Media lebte?"
       ],
       past: [
-        "Was, wenn ich 2022 den Job gewechselt hätte?",
-        "Was, wenn ich nach dem Abschluss ins Ausland gezogen wäre?",
-        "Was, wenn ich 2020 das kleine Geschäft gestartet hätte?",
-        "Was, wenn ich letztes Jahr konsequent Englisch geübt hätte?",
-        "Was, wenn ich 2019 einen Master gemacht hätte?",
-        "Was, wenn ich letzten Monat Social Media pausiert hätte?"
+        "Was, wenn ich 2022 den Job gewechselt hätte?","Was, wenn ich nach dem Abschluss ins Ausland gezogen wäre?",
+        "Was, wenn ich 2020 das kleine Geschäft gestartet hätte?","Was, wenn ich letztes Jahr konsequent Englisch geübt hätte?",
+        "Was, wenn ich 2019 einen Master gemacht hätte?","Was, wenn ich letzten Monat Social Media pausiert hätte?"
       ]
     }
   };
@@ -441,6 +418,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     renderCreditsBadge();
     renderMicroTexts();
     renderHints();
+    renderTipNote(); // nuovo: tip personalizzazione/grammatica
   }
 
   /* ===== Navigazione ===== */
@@ -492,6 +470,17 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     prefs.periodo=b.dataset.periodo; writeJSON('whatif_prefs',prefs); renderBadges();
   });
 
+  /* ===== Tip personalizzazione ===== */
+  function renderTipNote(){
+    try{
+      if(!profile) return;
+      const g = gram?.pronome ? `· pronome: ${gram.pronome}, art.: ${gram.articolo}` : '';
+      const who = profile.role ? ` · ruolo: ${profile.role}` : '';
+      const city = profile.city ? ` · città: ${profile.city}` : '';
+      $('tipNote').textContent = `Personalizzazione attiva — ${profile.name || ''} (${profile.gender || ''})${who}${city} ${g}`.trim();
+    }catch{}
+  }
+
   /* ===== Domanda / Invio alla quinta ===== */
   function trySubmit(){
     try{
@@ -504,7 +493,19 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       }
       const micro=readJSON('micro_profile',{});
       LS.setItem('domanda',domanda);
-      const req={ domanda, stile:prefs.stile, lang, extra:'', micro, fantasy_mode:false, periodo:prefs.periodo };
+
+      // >>> Passiamo anche profilo e grammatica alla 5ª
+      const req={
+        domanda,
+        stile:prefs.stile,
+        lang,
+        extra: profile?.about || '',
+        micro,
+        fantasy_mode:false,
+        periodo:prefs.periodo,
+        profile,          // profilo completo (name, city, gender, sex, age, phase, role, goal, about, gram)
+        gram              // pronome/articolo/suffissi per adattare grammatica
+      };
       writeJSON('whatif_request',req);
       location.href='fifth.html';
     }catch(e){
@@ -512,14 +513,14 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       alert('Error: cannot proceed. Check console.');
     }
   }
-  goBtn.onclick=trySubmit;
-  clearBtn.onclick=()=>{ qInput.value=''; qInput.focus(); };
-  qInput.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); } });
+  $('goBtn').onclick=trySubmit;
+  $('clearBtn').onclick=()=>{ qInput.value=''; qInput.focus(); };
+  $('qInput').addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); } });
 
   /* ===== Sorprendimi (rispetta periodo + lingua) ===== */
   function getLang(){ return (LS.getItem('lang')||'it').toLowerCase(); }
   function getPrefs(){ try{ return JSON.parse(LS.getItem('whatif_prefs')||'{}'); }catch{return {}} }
-  surpriseBtn.onclick=()=>{
+  $('surpriseBtn').onclick=()=>{
     const L = getLang();
     const P = getPrefs();
     const periodo = (P.periodo === 'past') ? 'past' : 'future';
@@ -530,7 +531,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     qInput.focus();
   };
 
-  /* ===== Prima sessione ===== */
+  /* ===== Prima sessione (micro) ===== */
   const FS_KEY='first_session_seen';
   const fs=readJSON(FS_KEY,{date:'',seen:false});
   if(fs.date!==today()){
@@ -547,7 +548,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     $('microCard').classList.toggle('collapsed');
   };
   $('saveMicroBtn').onclick=()=>{
-    const cur=readJSON('micro_profile',{}); writeJSON('micro_profile',cur);
+    const cur=readJSON('micro_profile',{});
+    writeJSON('micro_profile',cur);
     writeJSON('micro_saved',{date:today(),ok:true});
     writeJSON('first_session_seen',{date:today(),seen:true});
     $('firstSessionBanner').style.display='none';
@@ -664,7 +666,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.type='button'; useBtn.textContent=T('use');
       useBtn.onclick=()=>{ qInput.value=item.q||''; window.scrollTo({top:0,behavior:'smooth'}); };
       const play=document.createElement('button'); play.className='play'; play.type='button'; play.textContent='▶';
-      play.onclick=()=>{ LS.setItem('domanda', item.q||''); writeJSON('whatif_request',{ domanda:item.q||'', stile:prefs.stile, lang, extra:'', micro:readJSON('micro_profile',{}), fantasy_mode:false, periodo:prefs.periodo }); location.href='fifth.html'; };
+      play.onclick=()=>{ LS.setItem('domanda', item.q||''); writeJSON('whatif_request',{ domanda:item.q||'', stile:prefs.stile, lang, extra:'', micro:readJSON('micro_profile',{}), fantasy_mode:false, periodo:prefs.periodo, profile, gram }); location.href='fifth.html'; };
       right.appendChild(useBtn); right.appendChild(play); row.appendChild(left); row.appendChild(right); box.appendChild(row);
     });
   }
