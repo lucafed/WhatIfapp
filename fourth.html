@@ -57,6 +57,14 @@ h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
 .opt{background:var(--chip);border:1px solid var(--line);color:#EAF3EE;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer}
 .opt.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800}
 
+/* Surprise Dock (sotto la textarea) */
+#surpriseDock{margin-top:12px}
+#surpriseHeader{display:none;align-items:center;gap:8px;margin:6px 0 6px}
+.badge-kind{border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:11px}
+.kind-personal{background:rgba(0,255,200,.08)}
+.kind-generic{background:rgba(255,255,255,.05)}
+.kind-absurd{background:rgba(255,200,0,.08)}
+
 /* Footer */
 footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 </style>
@@ -111,6 +119,18 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
           </div>
           <button class="btn" id="clearBtn" type="button">Svuota</button>
         </div>
+
+        <!-- Surprise Dock: sotto la textarea -->
+        <div id="surpriseDock">
+          <div id="surpriseHeader">
+            <span class="small" id="surpriseTitle">Suggeriti per te (60/30/10)</span>
+            <span class="badge-kind kind-personal" id="keyPersonal">Personalizzate</span>
+            <span class="badge-kind kind-generic" id="keyGeneric">Generiche</span>
+            <span class="badge-kind kind-absurd" id="keyAbsurd">Assurde</span>
+          </div>
+          <div id="surpriseChips" class="chips"></div>
+        </div>
+
         <div class="small" id="tipNote" style="margin-top:8px"></div>
       </div>
 
@@ -235,7 +255,9 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostTitle:"▶ Boost personalizzazione", boostHint:"(opzionale)",
         boostSave:"💾 Salva Boost", boostClear:"Svuota",
         boostPH:'Scrivi qualcosa su di te o su cosa vuoi esplorare. Esempi: "sto pensando di cambiare città", "lavoro su turni", "ho poco tempo la sera"…',
-        boostSaved:"Boost salvato."
+        boostSaved:"Boost salvato.",
+        sugTitle:"Suggeriti per te (60/30/10)",
+        keyPers:"Personalizzate", keyGen:"Generiche", keyAbs:"Assurde"
     },
     en:{title:"Set your question", yourq:"What if…", gen:"✨ Generate answer", clear:"Clear",
         surprise:"Surprise me",
@@ -256,7 +278,9 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostTitle:"▶ Personalization boost", boostHint:"(optional)",
         boostSave:"💾 Save Boost", boostClear:"Clear",
         boostPH:"Write anything about you or what you want to explore…",
-        boostSaved:"Boost saved."
+        boostSaved:"Boost saved.",
+        sugTitle:"Suggested for you (60/30/10)",
+        keyPers:"Personalized", keyGen:"Generic", keyAbs:"Absurd"
     },
     es:{title:"Configura tu pregunta", yourq:"¿Y si…?", gen:"✨ Generar respuesta", clear:"Limpiar",
         surprise:"Sorpréndeme",
@@ -277,7 +301,9 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostTitle:"▶ Impulso de personalización", boostHint:"(opcional)",
         boostSave:"💾 Guardar Boost", boostClear:"Vaciar",
         boostPH:"Escribe algo sobre ti o lo que quieres explorar…",
-        boostSaved:"Boost guardado."
+        boostSaved:"Boost guardado.",
+        sugTitle:"Sugeridos para ti (60/30/10)",
+        keyPers:"Personalizadas", keyGen:"Genéricas", keyAbs:"Absurdas"
     },
     fr:{title:"Définis ta question", yourq:"Et si…", gen:"✨ Générer la réponse", clear:"Effacer",
         surprise:"Surprends-moi",
@@ -298,7 +324,9 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostTitle:"▶ Boost de personnalisation", boostHint:"(optionnel)",
         boostSave:"💾 Enregistrer le Boost", boostClear:"Vider",
         boostPH:"Écris quelque chose sur toi ou ce que tu veux explorer…",
-        boostSaved:"Boost enregistré."
+        boostSaved:"Boost enregistré.",
+        sugTitle:"Suggerés pour toi (60/30/10)",
+        keyPers:"Personnalisées", keyGen:"Génériques", keyAbs:"Absurdes"
     },
     de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", gen:"✨ Antwort erzeugen", clear:"Leeren",
         surprise:"Überrasche mich",
@@ -319,7 +347,9 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostTitle:"▶ Personalisierungs-Boost", boostHint:"(optional)",
         boostSave:"💾 Boost speichern", boostClear:"Leeren",
         boostPH:"Schreibe etwas über dich oder was du erkunden willst…",
-        boostSaved:"Boost gespeichert."
+        boostSaved:"Boost gespeichert.",
+        sugTitle:"Vorgeschlagen für dich (60/30/10)",
+        keyPers:"Personalisiert", keyGen:"Generisch", keyAbs:"Absurde"
     }
   };
   function T(key){return (I18N[lang]&&I18N[lang][key])||I18N.en[key]||key}
@@ -345,12 +375,12 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   const HINT_DE=[ "Was, wenn du den Job wechselst?","Was, wenn du in eine andere Stadt ziehst?","Was, wenn du freiberuflich arbeitest?","Was, wenn du wieder studierst?","Was, wenn du eine 4-Tage-Woche probierst?","Was, wenn du um eine Gehaltserhöhung bittest?","Was, wenn du einen Monat Pause machst?","Was, wenn du 30 Tage ohne Social Media lebst?","Was, wenn du ohne Auto lebst?","Was, wenn du Programmieren lernst?","Was, wenn du wieder ins Gym gehst?","Was, wenn du 3× pro Woche läufst?","Was, wenn du einen Hund adoptierst?","Was, wenn du in Familiätnähe wohnst?","Was, wenn du monatlich 10 % sparst?" ];
 
   function pickHintPool(){ if(lang==='it') return HINT_IT; if(lang==='es') return HINT_ES; if(lang==='fr') return HINT_FR; if(lang==='de') return HINT_DE; return HINT_EN; }
-  function randomFrom(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 
   /* ===== DOM refs ===== */
   const backBtn=$('backBtn'), homeBtn=$('homeBtn'), langSelect=$('langSelect');
   const styleChips=$('styleChips'), periodoChips=$('periodoChips');
   const goBtn=$('goBtn'), clearBtn=$('clearBtn'), qInput=$('qInput'), surpriseBtn=$('surpriseBtn');
+  const surpriseHeader=$('surpriseHeader'), surpriseChips=$('surpriseChips');
 
   /* ===== Render testuale ===== */
   function applyTexts(){
@@ -375,6 +405,12 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     $('boostTitle').textContent=T('boostTitle'); $('boostHint').textContent=T('boostHint');
     $('boostSaveBtn').textContent=T('boostSave'); $('boostClearBtn').textContent=T('boostClear');
     $('boostInput').placeholder=T('boostPH');
+    // Surprise legend
+    $('surpriseTitle').textContent = T('sugTitle');
+    $('keyPersonal').textContent = T('keyPers');
+    $('keyGeneric').textContent = T('keyGen');
+    $('keyAbsurd').textContent = T('keyAbs');
+
     document.documentElement.lang=lang;
     qInput.placeholder = (lang==='it' ? 'E se…'
                         : lang==='es' ? '¿Y si…?'
@@ -462,26 +498,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   clearBtn.onclick=()=>{ qInput.value=''; qInput.focus(); };
   qInput.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); } });
 
-  /* ===== Surprise (60/30/10) + Probabilità in meta ===== */
+  /* ===== Surprise (60/30/10) in dock + Probabilità in meta ===== */
   let SURPRISE_CURRENT_META = [];
-  function ensureSurpriseBoxInHints(texts){
-    const wrap=$('hintsChips'); wrap.innerHTML='';
-    texts.forEach((txt,idx)=>{
-      const b=document.createElement('button');
-      b.type='button'; b.className='chip'; b.textContent = txt;
-      b.onclick = ()=>{
-        qInput.value = txt;
-        const meta = SURPRISE_CURRENT_META[idx] || null;
-        if (meta){ LS.setItem('whatif_surprise_meta', JSON.stringify(meta)); }
-        else { LS.removeItem('whatif_surprise_meta'); }
-        window.scrollTo({top:0,behavior:'smooth'});
-      };
-      wrap.appendChild(b);
-    });
-    $('hintsTitle').textContent = (lang==='it'?'▼ Suggeriti per te (60/30/10)':'▼ Suggested for you (60/30/10)');
-    $('hintsCard').classList.remove('collapsed');
-    $('hintsCard').scrollIntoView({behavior:'smooth',block:'center'});
-  }
 
   function getBoost(){ try{ return (LS.getItem('whatif_boost')||'').trim(); }catch{ return '' } }
   function setBoost(txt){
@@ -490,7 +508,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       LS.setItem('whatif_boost_saved_date', todayISO());
       $('boostSavedMsg').textContent = T('boostSaved');
       setTimeout(()=> $('boostSavedMsg').textContent='', 1600);
-      // nascondi Boost fino a domani
       initBoostVisibility();
     }catch(e){ console.warn('Boost save error', e); }
   }
@@ -580,6 +597,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
           :`Was, wenn du „${micro.indicatore}“ 2 Wochen lang wirklich trackst?`)
       );
     }
+    const topics = extractTopics(boost);
     topics.forEach(tp=>{
       add(past
         ? (lang==='it'?`E se avessi iniziato con ${tp} l’estate scorsa?`
@@ -674,6 +692,31 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     return 5 + Math.floor(Math.random()*21); // absurd: 5–25
   }
 
+  function renderSurpriseDock(items){
+    surpriseChips.innerHTML='';
+    items.forEach((txt,idx)=>{
+      const meta = SURPRISE_CURRENT_META[idx] || {};
+      const b=document.createElement('button');
+      b.className='chip';
+      // mini-etag per tipologia
+      const tag=document.createElement('span');
+      tag.className='badge-kind ' + (meta.kind==='personalized'?'kind-personal':meta.kind==='generic'?'kind-generic':'kind-absurd');
+      tag.style.marginRight='6px';
+      tag.textContent = meta.kind==='personalized'?T('keyPers'):meta.kind==='generic'?T('keyGen'):T('keyAbs');
+      const label=document.createElement('span');
+      label.textContent = txt;
+      b.appendChild(tag); b.appendChild(label);
+      b.onclick=()=>{
+        qInput.value = txt;
+        if (meta){ LS.setItem('whatif_surprise_meta', JSON.stringify(meta)); }
+        else { LS.removeItem('whatif_surprise_meta'); }
+        window.scrollTo({top:0,behavior:'smooth'});
+      };
+      surpriseChips.appendChild(b);
+    });
+    surpriseHeader.style.display = items.length ? 'flex' : 'none';
+  }
+
   $('surpriseBtn').onclick=()=>{
     const L = (LS.getItem('lang')||'it').toLowerCase();
     const periodo = (prefs.periodo==='past')?'past':'future';
@@ -682,11 +725,11 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     const generic      = buildGenericPoolByLang(L, periodo);
     const absurd       = buildAbsurdPool(L, periodo);
 
-    const chosenPers = sampleN(personalized, Math.min(6, personalized.length));
-    const chosenGen  = sampleN(generic,      Math.min(3,  generic.length));
-    const chosenAbs  = sampleN(absurd,       1);
+    let chosenPers = sampleN(personalized, Math.min(6, personalized.length));
+    let chosenGen  = sampleN(generic,      Math.min(3,  generic.length));
+    let chosenAbs  = sampleN(absurd,       1);
 
-    // backfill con generiche se non arrivo a 10
+    // backfill con generiche per arrivare a 10
     const goal=10;
     const leftovers = generic.filter(x=>!chosenGen.includes(x));
     while ((chosenPers.length + chosenGen.length + chosenAbs.length) < goal && leftovers.length){
@@ -699,7 +742,9 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     chosenGen.forEach(x=>{ out.push(x); SURPRISE_CURRENT_META.push({kind:'generic', prob:probForKind('generic')}); });
     if (chosenAbs[0]){ out.push(chosenAbs[0]); SURPRISE_CURRENT_META.push({kind:'absurd', prob:probForKind('absurd')}); }
 
-    ensureSurpriseBoxInHints(out);
+    renderSurpriseDock(out);
+    // porta in vista la dock se siamo in mobile
+    document.getElementById('surpriseDock').scrollIntoView({behavior:'smooth', block:'nearest'});
   };
 
   /* ===== Prima sessione ===== */
@@ -855,7 +900,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 
   /* ===== Init ===== */
   try{
-    // tema
     try{
       const p = JSON.parse(LS.getItem('whatif_prefs')||'{}');
       document.documentElement.setAttribute('data-theme', p.stile==='wtf'?'wtf':'whatif');
