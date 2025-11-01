@@ -131,7 +131,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         </div>
       </div>
 
-      <!-- MICRO-DOMANDE (prima sessione) -->
+      <!-- MICRO-DOMANDE -->
       <div class="first-session" id="firstSessionBanner"></div>
       <div class="card center collapsed" id="microCard">
         <div class="row toggle" id="microHead" style="justify-content:space-between">
@@ -203,7 +203,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 
 <script>
 (function(){
-  /* ===== Util ===== */
   const LS=localStorage;
   const SUPPORTED_LANGS=["it","en","es","fr","de"];
   const $=id=>document.getElementById(id);
@@ -211,7 +210,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
   function todayISO(){const d=new Date();return d.toISOString().slice(0,10);}
 
-  /* ===== Stato ===== */
   let lang=(LS.getItem('lang')||'it').toLowerCase(); if(!SUPPORTED_LANGS.includes(lang)) lang="it";
   document.documentElement.lang=lang;
   let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
@@ -234,7 +232,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         hintsTitle:"▶ Spunti rapidi “E se…”", hintsNote:"Clicca uno spunto per riempire la domanda.",
         credits:"Crediti", free:"FREE", pro:"PRO",
         footer:"© What?f — FREE · crediti giornalieri attivi",
-        // Boost
         boostTitle:"▶ Boost personalizzazione", boostHint:"(opzionale)",
         boostSave:"💾 Salva Boost", boostClear:"Svuota",
         boostPH:'Scrivi qualcosa su di te o su cosa vuoi esplorare. Esempi: "sto pensando di cambiare città", "lavoro su turni", "ho poco tempo la sera"…',
@@ -329,8 +326,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 
   /* ===== Surprise & Hints pools ===== */
   const SURPRISE_POOLS = {
-    it:{ future:["E se cambiassi lavoro?","E se mi trasferissi all’estero?","E se aprissi una piccola attività?","E se imparassi davvero l’inglese?","E se facessi un master?","E se riducessi i social per 30 giorni?","E se iniziassi a correre 3 volte a settimana?","E se provassi a lavorare 4 giorni su 5?"],
-         past:["E se avessi cambiato lavoro nel 2022?","E se mi fossi trasferito all’estero dopo la laurea?","E se avessi aperto quella piccola attività nel 2020?","E se avessi studiato inglese con costanza l’anno scorso?","E se avessi fatto un master nel 2019?","E se avessi staccato dai social il mese scorso?","E se avessi ricominciato a correre l’estate scorsa?","E se avessi provato la settimana corta l’anno scorso?"]},
+    it:{ future:["E se cambiassi lavoro?","E se ti trasferissi all’estero?","E se aprissi una piccola attività?","E se imparassi davvero l’inglese?","E se facessi un master?","E se riducessi i social per 30 giorni?","E se iniziassi a correre 3 volte a settimana?","E se provassi a lavorare 4 giorni su 5?"],
+         past:["E se avessi cambiato lavoro nel 2022?","E se ti fossi trasferito/a all’estero dopo la laurea?","E se avessi aperto quella piccola attività nel 2020?","E se avessi studiato inglese con costanza l’anno scorso?","E se avessi fatto un master nel 2019?","E se avessi staccato dai social il mese scorso?","E se avessi ricominciato a correre l’estate scorsa?","E se avessi provato la settimana corta l’anno scorso?"]},
     en:{ future:["What if you changed jobs?","What if you moved abroad?","What if you started a small business?","What if you mastered English?","What if you did a master’s degree?","What if you cut social media for 30 days?","What if you ran three times a week?","What if you tried a 4-day workweek?"],
          past:["What if you had changed jobs in 2022?","What if you had moved abroad after graduation?","What if you had started that small business in 2020?","What if you had practiced English consistently last year?","What if you had done a master’s in 2019?","What if you had quit social media last month?","What if you had started running last summer?","What if you had tried a 4-day week last year?"]},
     es:{ future:["¿Y si cambias de trabajo?","¿Y si te mudas al extranjero?","¿Y si abres un pequeño negocio?","¿Y si dominas el inglés?","¿Y si haces un máster?","¿Y si dejas las redes 30 días?"],
@@ -388,12 +385,12 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     renderCreditsBadge();
     renderMicroTexts();
     renderHints();
-    initBoostVisibility(); // nuova logica visibilità giornaliera
+    initBoostVisibility();
   }
 
   /* ===== Navigazione ===== */
-  homeBtn.onclick=()=>{ try{ location.href='index.html'; }catch(e){ console.error(e); } };
-  backBtn.onclick=()=>{ try{ if(history.length>1) history.back(); else location.href='index.html'; }catch(e){ console.error(e); } };
+  homeBtn.onclick=()=>{ try{ location.href='index.html'; }catch(e){} };
+  backBtn.onclick=()=>{ try{ if(history.length>1) history.back(); else location.href='index.html'; }catch(e){} };
 
   /* ===== Lingua tendina ===== */
   langSelect.value=lang;
@@ -467,15 +464,23 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 
   /* ===== Surprise (60/30/10) + Probabilità in meta ===== */
   let SURPRISE_CURRENT_META = [];
-  let surpriseListBox = null;
-  function ensureSurpriseBox(){
-    if (surpriseListBox) return surpriseListBox;
-    surpriseListBox = document.createElement('div');
-    surpriseListBox.id = 'surpriseList';
-    surpriseListBox.className = 'chips';
-    surpriseListBox.style.marginTop = '10px';
-    document.querySelector('.card.center')?.appendChild(surpriseListBox);
-    return surpriseListBox;
+  function ensureSurpriseBoxInHints(texts){
+    const wrap=$('hintsChips'); wrap.innerHTML='';
+    texts.forEach((txt,idx)=>{
+      const b=document.createElement('button');
+      b.type='button'; b.className='chip'; b.textContent = txt;
+      b.onclick = ()=>{
+        qInput.value = txt;
+        const meta = SURPRISE_CURRENT_META[idx] || null;
+        if (meta){ LS.setItem('whatif_surprise_meta', JSON.stringify(meta)); }
+        else { LS.removeItem('whatif_surprise_meta'); }
+        window.scrollTo({top:0,behavior:'smooth'});
+      };
+      wrap.appendChild(b);
+    });
+    $('hintsTitle').textContent = (lang==='it'?'▼ Suggeriti per te (60/30/10)':'▼ Suggested for you (60/30/10)');
+    $('hintsCard').classList.remove('collapsed');
+    $('hintsCard').scrollIntoView({behavior:'smooth',block:'center'});
   }
 
   function getBoost(){ try{ return (LS.getItem('whatif_boost')||'').trim(); }catch{ return '' } }
@@ -517,10 +522,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     const past = (periodo==='past');
 
     const out = [];
-
     function add(s){ if(s) out.push(s.replace(/\s+/g,' ').trim()); }
 
-    // Ruolo
     if (profile.role){
       add(past
         ? (lang==='it'?`E se avessi cambiato da ${profile.role} un anno fa?`
@@ -535,7 +538,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
           :`Was, wenn du deine ${profile.role}-Karriere auf ein neues Level hebst?`)
       );
     }
-    // Città
     if (profile.city){
       add(past
         ? (lang==='it'?`E se fossi rimasto/a a ${profile.city} e avessi cambiato ritmo prima?`
@@ -547,10 +549,9 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
           :lang==='en'?`What if you stayed in ${profile.city} but changed your routine for 30 days?`
           :lang==='es'?`¿Y si te quedas en ${profile.city} pero cambias la rutina 30 días?`
           :lang==='fr'?`Et si tu restais à ${profile.city} en changeant ta routine 30 jours ?`
-          :`Was, wenn du in ${profile.city} bleibst, aber 30 Tage die Routine änderst?`)
+          :`Was, wenn du in ${profile.city} bleibst, aber 30 Tage la routine änderst?`)
       );
     }
-    // Obiettivo
     if (profile.goal){
       add(past
         ? (lang==='it'?`E se avessi reso “${profile.goal}” misurabile l’anno scorso?`
@@ -565,7 +566,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
           :`Was, wenn du wöchentliche Schritte für „${profile.goal}“ festlegst?`)
       );
     }
-    // Micro: indicatore
     if (micro.indicatore){
       add(past
         ? (lang==='it'?`E se avessi tracciato “${micro.indicatore}” prima?`
@@ -580,7 +580,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
           :`Was, wenn du „${micro.indicatore}“ 2 Wochen lang wirklich trackst?`)
       );
     }
-    // Boost topics — forza almeno 3 spunti se ci sono temi
     topics.forEach(tp=>{
       add(past
         ? (lang==='it'?`E se avessi iniziato con ${tp} l’estate scorsa?`
@@ -596,7 +595,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       );
     });
 
-    // se c'è Boost ma meno di 3 personalizzate dai temi ⇒ duplica con varianti
     if (topics.length && out.length < 3){
       topics.slice(0,3).forEach(tp=>{
         add(past
@@ -613,16 +611,13 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         );
       });
     }
-
-    // dedup e limita
     return Array.from(new Set(out)).slice(0,24);
   }
 
   function buildGenericPoolByLang(lang, periodo){
     const poolsForLang = SURPRISE_POOLS[lang] || SURPRISE_POOLS.it;
     const pool = poolsForLang[periodo] || poolsForLang.future || SURPRISE_POOLS.it.future;
-    // usa sempre "tu"
-    return pool.map(s=>s.replace(/\bI\b|je\b|yo\b|ich\b/gi,'you'));
+    return pool.slice();
   }
 
   function buildAbsurdPool(lang, periodo){
@@ -655,7 +650,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       "Et si demain ton frigo te répondait avec un menu ?",
       "Et si tu devenais le coach officieux de ton immeuble ?"
     ];
-    // de
     return F?[
       "Was, wenn du gelernt hättest, mit deinem Kühlschrank zu sprechen?",
       "Was, wenn du letztes Jahr der inoffizielle Coach deines Hauses geworden wärst?"
@@ -680,24 +674,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     return 5 + Math.floor(Math.random()*21); // absurd: 5–25
   }
 
-  function renderSurpriseList(items){
-    const box = ensureSurpriseBox();
-    box.innerHTML = '';
-    items.forEach((txt,idx)=>{
-      const b = document.createElement('button');
-      b.type='button'; b.className='chip'; b.textContent = txt;
-      b.onclick = ()=>{
-        qInput.value = txt;
-        const meta = SURPRISE_CURRENT_META[idx] || null;
-        if (meta){ LS.setItem('whatif_surprise_meta', JSON.stringify(meta)); }
-        else { LS.removeItem('whatif_surprise_meta'); }
-        window.scrollTo({top:0,behavior:'smooth'});
-      };
-      box.appendChild(b);
-    });
-  }
-
-  surpriseBtn.onclick=()=>{
+  $('surpriseBtn').onclick=()=>{
     const L = (LS.getItem('lang')||'it').toLowerCase();
     const periodo = (prefs.periodo==='past')?'past':'future';
 
@@ -705,15 +682,12 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     const generic      = buildGenericPoolByLang(L, periodo);
     const absurd       = buildAbsurdPool(L, periodo);
 
-    // target 10 (6/3/1) con fallback se mancano
-    let needPers = 6, needGen = 3, needAbs = 1;
-    const chosenPers = sampleN(personalized, Math.min(needPers, personalized.length));
-    const chosenGen  = sampleN(generic,      Math.min(needGen,  generic.length));
-    const chosenAbs  = sampleN(absurd,       Math.min(needAbs,  absurd.length));
+    const chosenPers = sampleN(personalized, Math.min(6, personalized.length));
+    const chosenGen  = sampleN(generic,      Math.min(3,  generic.length));
+    const chosenAbs  = sampleN(absurd,       1);
 
-    // se personalizzate poche, ribilancia con generiche
-    const total = chosenPers.length + chosenGen.length + chosenAbs.length;
-    const goal = 10;
+    // backfill con generiche se non arrivo a 10
+    const goal=10;
     const leftovers = generic.filter(x=>!chosenGen.includes(x));
     while ((chosenPers.length + chosenGen.length + chosenAbs.length) < goal && leftovers.length){
       chosenGen.push(leftovers.shift());
@@ -725,7 +699,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     chosenGen.forEach(x=>{ out.push(x); SURPRISE_CURRENT_META.push({kind:'generic', prob:probForKind('generic')}); });
     if (chosenAbs[0]){ out.push(chosenAbs[0]); SURPRISE_CURRENT_META.push({kind:'absurd', prob:probForKind('absurd')}); }
 
-    renderSurpriseList(out);
+    ensureSurpriseBoxInHints(out);
   };
 
   /* ===== Prima sessione ===== */
@@ -806,7 +780,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     renderOptions('decideOpts',decidePool,'decide');
     renderOptions('zodiacOpts',zodiacPool,'zodiac');
 
-    // Jung
     const jungAtt=(lang==='en'?["Extraversion","Introversion"]
                    :lang==='es'?["Extroversión","Introversión"]
                    :lang==='fr'?["Extraversion","Introversion"]
@@ -883,19 +856,14 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   /* ===== Init ===== */
   try{
     // tema
-    (function(){
-      try{
-        const p = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-        document.documentElement.setAttribute('data-theme', p.stile==='wtf'?'wtf':'whatif');
-      }catch{}
-    })();
-
+    try{
+      const p = JSON.parse(LS.getItem('whatif_prefs')||'{}');
+      document.documentElement.setAttribute('data-theme', p.stile==='wtf'?'wtf':'whatif');
+    }catch{}
     applyTexts();
     renderMicro();
     renderNext();
     renderStories();
-
-    // wire boost placeholder at first render
     $('boostInput').value = getBoost();
   }catch(e){ console.error('Init error:', e); }
 })();
