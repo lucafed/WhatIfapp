@@ -289,6 +289,108 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   };
   function T(key){return (I18N[lang]&&I18N[lang][key])||I18N.en[key]||key}
 
+  /* ===== Surprise pools per lingua & periodo ===== */
+  const SURPRISE_POOLS = {
+    it: {
+      future: [
+        "E se cambiassi lavoro?",
+        "E se mi trasferissi all’estero?",
+        "E se aprissi una piccola attività?",
+        "E se imparassi davvero l’inglese?",
+        "E se facessi un master?",
+        "E se riducessi i social per 30 giorni?",
+        "E se iniziassi a correre 3 volte a settimana?",
+        "E se provassi a lavorare 4 giorni su 5?"
+      ],
+      past: [
+        "E se avessi cambiato lavoro nel 2022?",
+        "E se mi fossi trasferito all’estero dopo la laurea?",
+        "E se avessi aperto quella piccola attività nel 2020?",
+        "E se avessi studiato inglese con costanza l’anno scorso?",
+        "E se avessi fatto un master nel 2019?",
+        "E se avessi staccato dai social il mese scorso?",
+        "E se avessi ricominciato a correre l’estate scorsa?",
+        "E se avessi provato la settimana corta l’anno scorso?"
+      ]
+    },
+    en: {
+      future: [
+        "What if I changed jobs?",
+        "What if I moved abroad?",
+        "What if I started a small business?",
+        "What if I mastered English?",
+        "What if I did a master’s degree?",
+        "What if I cut social media for 30 days?",
+        "What if I ran three times a week?",
+        "What if I tried a 4-day workweek?"
+      ],
+      past: [
+        "What if I had changed jobs in 2022?",
+        "What if I had moved abroad after graduation?",
+        "What if I had started that small business in 2020?",
+        "What if I had practiced English consistently last year?",
+        "What if I had done a master’s in 2019?",
+        "What if I had quit social media last month?",
+        "What if I had started running last summer?",
+        "What if I had tried a 4-day week last year?"
+      ]
+    },
+    es: {
+      future: [
+        "¿Y si cambiara de trabajo?",
+        "¿Y si me mudara al extranjero?",
+        "¿Y si abriera un pequeño negocio?",
+        "¿Y si dominara el inglés?",
+        "¿Y si hiciera un máster?",
+        "¿Y si dejara las redes 30 días?"
+      ],
+      past: [
+        "¿Y si hubiera cambiado de trabajo en 2022?",
+        "¿Y si me hubiera mudado al extranjero tras graduarme?",
+        "¿Y si hubiera abierto ese pequeño negocio en 2020?",
+        "¿Y si hubiera practicado inglés con constancia el año pasado?",
+        "¿Y si hubiera hecho un máster en 2019?",
+        "¿Y si hubiera dejado las redes el mes pasado?"
+      ]
+    },
+    fr: {
+      future: [
+        "Et si je changeais de travail ?",
+        "Et si je m’installais à l’étranger ?",
+        "Et si je lançais une petite activité ?",
+        "Et si je maîtrisais l’anglais ?",
+        "Et si je faisais un master ?",
+        "Et si je coupais les réseaux 30 jours ?"
+      ],
+      past: [
+        "Et si j’avais changé de travail en 2022 ?",
+        "Et si je m’étais installé à l’étranger après le diplôme ?",
+        "Et si j’avais lancé cette petite activité en 2020 ?",
+        "Et si j’avais travaillé mon anglais l’an dernier ?",
+        "Et si j’avais fait un master en 2019 ?",
+        "Et si j’avais coupé les réseaux le mois dernier ?"
+      ]
+    },
+    de: {
+      future: [
+        "Was, wenn ich den Job wechselte?",
+        "Was, wenn ich ins Ausland zog?",
+        "Was, wenn ich ein kleines Geschäft startete?",
+        "Was, wenn ich Englisch wirklich meisterte?",
+        "Was, wenn ich einen Master machte?",
+        "Was, wenn ich 30 Tage ohne Social Media lebte?"
+      ],
+      past: [
+        "Was, wenn ich 2022 den Job gewechselt hätte?",
+        "Was, wenn ich nach dem Abschluss ins Ausland gezogen wäre?",
+        "Was, wenn ich 2020 das kleine Geschäft gestartet hätte?",
+        "Was, wenn ich letztes Jahr konsequent Englisch geübt hätte?",
+        "Was, wenn ich 2019 einen Master gemacht hätte?",
+        "Was, wenn ich letzten Monat Social Media pausiert hätte?"
+      ]
+    }
+  };
+
   /* ===== Hints pools (localizzati) ===== */
   const HINT_IT=[ "E se cambiassi lavoro?","E se cambiassi città?","E se aprissi partita IVA?","E se tornassi a studiare?","E se lavorassi 4 giorni su 5?","E se chiedessi un aumento?","E se mi prendessi un mese sabbatico?","E se riducessi i social per 30 giorni?","E se vivessi senza auto?","E se imparassi a programmare?","E se ricominciassi palestra?","E se corressi 3 volte a settimana?","E se adottassi un cane?","E se vivessi vicino ai miei?","E se investissi il 10% al mese?","E se imparassi bene l’inglese?","E se andassi all’estero 6 mesi?","E se lasciassi un progetto che non ami?","E se facessi volontariato?","E se riscrivessi il CV oggi?","E se provassi terapia?","E se cucinassi a casa 30 giorni?","E se aprissi un micro e-commerce?","E se studiassi 1h al giorno?","E se spegnessi il telefono alle 22?","E se facessi pace con qualcuno?","E se risparmiassi sul serio?","E se provassi vita da nomade digitale?","E se imparassi public speaking?","E se tagliassi fumo/alcol 30 giorni?" ];
   const HINT_EN=[ "What if I changed jobs?","What if I moved city?","What if I went freelance?","What if I went back to study?","What if I tried a 4-day week?","What if I asked for a raise?","What if I took a month off?","What if I cut social media for 30 days?","What if I lived without a car?","What if I learned to code?","What if I hit the gym again?","What if I ran 3 times a week?","What if I adopted a dog?","What if I lived near my family?","What if I invested 10% monthly?","What if I mastered English?","What if I moved abroad for 6 months?","What if I dropped a project I don’t love?","What if I tried volunteering?","What if I rewrote my résumé today?","What if I tried therapy?","What if I cooked at home for 30 days?","What if I opened a tiny e-commerce?","What if I studied 1h daily?","What if I turned my phone off at 10pm?","What if I made peace with someone?","What if I saved seriously?","What if I tried digital nomad life?","What if I learned public speaking?","What if I cut smoking/alcohol 30 days?" ];
@@ -414,10 +516,16 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   clearBtn.onclick=()=>{ qInput.value=''; qInput.focus(); };
   qInput.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); } });
 
-  /* Sorprendimi: prende uno spunto random dal pool della lingua corrente */
+  /* ===== Sorprendimi (rispetta periodo + lingua) ===== */
+  function getLang(){ return (LS.getItem('lang')||'it').toLowerCase(); }
+  function getPrefs(){ try{ return JSON.parse(LS.getItem('whatif_prefs')||'{}'); }catch{return {}} }
   surpriseBtn.onclick=()=>{
-    const pool = pickHintPool();
-    const idea = randomFrom(pool);
+    const L = getLang();
+    const P = getPrefs();
+    const periodo = (P.periodo === 'past') ? 'past' : 'future';
+    const poolsForLang = SURPRISE_POOLS[L] || SURPRISE_POOLS.it;
+    const pool = poolsForLang[periodo] || poolsForLang.future || SURPRISE_POOLS.it.future;
+    const idea = pool[Math.floor(Math.random()*pool.length)];
     qInput.value = idea;
     qInput.focus();
   };
