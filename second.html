@@ -5,109 +5,106 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f — Profilo</title>
 
+  <!-- PWA -->
   <meta name="theme-color" content="#0B0B0C" />
   <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/public/icon-192.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <style>
     :root{
-      --bg:#0C0F14; --bg2:#0E1724; --fg:#E6F2F5; --muted:#A0B2BA;
-      --card:#121820; --line:#1b2a34; --chip:#0f1820;
-      --accent:#1C57A0; --accent2:#FFEC01; --ink:#0A0E12;
+      --bg:#0C0F14; --bg2:#0E1724; --card:#141C22; --fg:#F4F7FB; --muted:#A0B2BA;
+      --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A; --chip:#0f1820; --line:#1b2a34;
     }
-    html[data-theme="whatif"]{ --bg:#0B1018; --bg2:#0E1724; --fg:#F4F7FB; --muted:#A7B3C2; --card:#141C22; --line:#1b2a34; --chip:#121a26; --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A; }
-    html[data-theme="wtf"]{ --bg:#0B0B0C; --bg2:#101414; --fg:#EEF5F0; --muted:#A6B6AD; --card:#111713; --line:#21322A; --chip:#0F1714; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; }
-
+    html[data-theme="wtf"]{
+      --bg:#0B0B0C; --bg2:#101414; --card:#111713; --fg:#EEF5F0; --muted:#A6B6AD;
+      --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; --chip:#0F1714; --line:#21322A;
+    }
     *{box-sizing:border-box}
-    html,body{
-      height:100%;margin:0;
-      background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-      color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
-    }
+    html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
     @media (prefers-reduced-motion:no-preference){
       body{animation:bgShift 18s ease-in-out infinite alternate}
       @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
     }
-
-    .topbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))}
+    .topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))}
     .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
-    .lang{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
-
-    main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:10px 14px 26px}
-    .wrap{width:min(100%,880px)}
-    h1{margin:10px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
-    .blurb{color:#d7e8ec;margin:0 0 14px;font-size:clamp(14px,4vw,18px);line-height:1.45}
-
-    .card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(10px);border-radius:16px;padding:16px;margin-top:8px}
-    .row{display:grid;gap:12px}
-    @media (min-width:640px){ .two{grid-template-columns:1fr 1fr} .three{grid-template-columns:1fr 1fr 1fr} }
-
-    label{font-weight:800;margin-bottom:6px;display:block}
-    input,select,textarea{width:100%;background:var(--chip);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--fg);font-size:16px}
-    textarea{min-height:96px;resize:vertical}
-    .muted{color:var(--muted);font-size:13px}
-    .actions{display:flex;gap:10px;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
     .btn.primary{border:none;background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);box-shadow:0 10px 26px rgba(0,0,0,.35)}
+    main{min-height:100%;display:flex;flex-direction:column;align-items:center;padding:10px 14px 28px}
+    .wrap{width:min(100%,920px)}
+    h1{margin:8px 0 4px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
+    .lead{color:#d7e8ec;margin:0 0 12px;font-size:clamp(14px,4vw,18px);line-height:1.45}
+    .card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(10px);border-radius:16px;padding:16px;margin-top:10px}
+    label{display:block;font-weight:800;margin:0 0 6px}
+    .row{display:grid;gap:12px}
+    @media (min-width:640px){ .row.two{grid-template-columns:1fr 1fr} .row.three{grid-template-columns:1fr 1fr 1fr} }
+    input,select,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:16px}
+    .actions{display:flex;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap}
+    .muted{color:var(--muted);font-size:12px}
     .error{color:#ffb3b3;background:#3a1414;border:1px solid #5a2222;border-radius:10px;padding:10px 12px;display:none;margin-top:10px}
     .error.show{display:block}
-
-    /* invalid highlight */
-    .invalid{outline:2px solid #ff7a7a; outline-offset:2px}
+    .lang-fab{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);right:14px;z-index:50}
+    .lang-menu{position:absolute;top:46px;right:0;background:rgba(20,28,34,.9);border:1px solid var(--line);border-radius:12px;padding:8px;display:none;min-width:170px;box-shadow:0 12px 28px rgba(0,0,0,.45);backdrop-filter:blur(10px)}
+    .lang-menu button{display:block;width:100%;text-align:left;background:transparent;border:none;color:#E6F2F5;padding:10px;border-radius:10px;cursor:pointer}
+    .lang-menu button.active{background:rgba(255,255,255,.06)}
+    .req::after{content:" *"; color:#FFB4B4; font-weight:900}
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn" id="backTop">←</button>
-      <button class="btn" id="homeTop">🏠</button>
+  <!-- Lingue -->
+  <div class="lang-fab" id="langFab">
+    <button class="btn" id="langToggle" aria-haspopup="true" aria-expanded="false">🌐 <span id="langCode">IT</span></button>
+    <div class="lang-menu" id="langMenu" role="menu" aria-label="language">
+      <button data-lang="it">Italiano</button>
+      <button data-lang="en">English</button>
+      <button data-lang="es">Español</button>
+      <button data-lang="fr">Français</button>
+      <button data-lang="de">Deutsch</button>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <select id="langSelect" class="lang" aria-label="Language">
-        <option value="it">IT</option>
-        <option value="en">EN</option>
-        <option value="es">ES</option>
-        <option value="fr">FR</option>
-        <option value="de">DE</option>
-      </select>
-      <button class="btn" id="resetBtn">♻️</button>
+  </div>
+
+  <div class="topbar">
+    <div style="display:flex;gap:8px">
+      <button class="btn" id="homeBtn">🏠</button>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" id="resetBtn">♻️ Reset profilo</button>
     </div>
   </div>
 
   <main>
     <div class="wrap">
       <h1 id="title">Parlami di te</h1>
-      <p class="blurb" id="blurb">Compila tutti i campi. Li usiamo per personalizzare le risposte della AI.</p>
+      <p class="lead" id="lead">Questi dati servono all’AI per adeguare grammatica e consigli. Compila tutto: sono obbligatori.</p>
 
       <div class="card">
-        <form id="profileForm" novalidate>
+        <form id="form" novalidate>
           <div class="row two">
             <div>
-              <label for="name" id="name_lbl">Nome e cognome</label>
-              <input id="name" type="text" autocomplete="name" placeholder="Es. Mario Rossi" required />
+              <label for="name" class="req" id="name_lbl">Nome</label>
+              <input id="name" type="text" placeholder="Nome" required />
             </div>
             <div>
-              <label for="city" id="city_lbl">Città</label>
-              <input id="city" type="text" autocomplete="address-level2" placeholder="Es. Roma" required />
+              <label for="city" class="req" id="city_lbl">Città</label>
+              <input id="city" type="text" placeholder="Città" required />
             </div>
           </div>
 
           <div class="row three">
             <div>
-              <label for="gender" id="gender_lbl">Sesso</label>
+              <label for="gender" class="req" id="gender_lbl">Sesso</label>
               <select id="gender" required>
-                <option value="" id="choose_g">Seleziona…</option>
-                <option value="uomo"  id="gender_m">Uomo</option>
-                <option value="donna" id="gender_f">Donna</option>
-                <option value="altro" id="gender_o">Altro</option>
-                <option value="non_specificato" id="gender_n">Preferisco non dirlo</option>
+                <option value="" id="g_choose">Seleziona…</option>
+                <option value="uomo"  id="g_m">Uomo</option>
+                <option value="donna" id="g_f">Donna</option>
+                <option value="altro" id="g_nb">Altro</option>
+                <option value="non_specificato" id="g_ns">Preferisco non dirlo</option>
               </select>
             </div>
             <div>
-              <label for="age" id="age_lbl">Età</label>
+              <label for="age" class="req" id="age_lbl">Età</label>
               <select id="age" required>
-                <option value="" id="choose_a">Seleziona…</option>
+                <option value="" id="a_choose">Seleziona…</option>
                 <option value="under18">-18</option>
                 <option value="18_24">18–24</option>
                 <option value="25_34">25–34</option>
@@ -118,228 +115,214 @@
               </select>
             </div>
             <div>
-              <label for="role" id="role_lbl">Professione / Ruolo</label>
-              <input id="role" type="text" placeholder="Es. Ingegnere di produzione" required />
+              <label for="phase" class="req" id="phase_lbl">Fase attuale</label>
+              <select id="phase" required>
+                <option value="" id="p_choose">Seleziona…</option>
+                <option value="studio" id="p_study">Studio</option>
+                <option value="lavoro" id="p_work">Lavoro</option>
+                <option value="cambio" id="p_change">Cambio/Transizione</option>
+                <option value="altro" id="p_other">Altro</option>
+              </select>
             </div>
           </div>
 
-          <div class="row">
+          <div class="row two">
             <div>
-              <label for="goal" id="goal_lbl">Obiettivo principale</label>
-              <input id="goal" type="text" placeholder="Es. cambiare lavoro entro 6 mesi" required />
+              <label for="role" class="req" id="role_lbl">Chi sei? (Ruolo/Prof.)</label>
+              <input id="role" type="text" placeholder="Es. tecnico farmaceutico, ingegnere" required />
             </div>
-          </div>
-
-          <div class="row">
             <div>
-              <label for="more" id="more_lbl">Informazioni utili per risposte migliori <span id="more_hint" class="muted"></span></label>
-              <textarea id="more" placeholder="Contesto, vincoli, preferenze… (min. 10 caratteri)" required minlength="10"></textarea>
+              <label for="goal" class="req" id="goal_lbl">Obiettivo</label>
+              <input id="goal" type="text" placeholder="Es. più equilibrio, cambio lavoro…" required />
             </div>
           </div>
 
-          <div id="errorBox" class="error"></div>
+          <div id="error" class="error"></div>
 
           <div class="actions">
-            <button type="button" class="btn" id="backBtn">← <span id="back_txt">Indietro</span></button>
-            <button type="submit" class="btn primary" id="nextBtn"><span id="next_txt">Continua</span> →</button>
+            <button type="button" class="btn" id="backBtn">Indietro</button>
+            <button type="submit" class="btn primary" id="saveBtn">Salva e continua</button>
           </div>
         </form>
       </div>
+
+      <p class="muted" id="privacyNote">I dati restano sul tuo dispositivo (localStorage) e vengono passati alla pagina successiva per personalizzare le risposte.</p>
     </div>
   </main>
 
   <script>
-    // ==== Theme from prefs
+    /* ===== Tema ===== */
     (function(){
       try{
         const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-        document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-      }catch{ document.documentElement.setAttribute('data-theme','whatif'); }
+        document.documentElement.setAttribute('data-theme', prefs.stile==='wtf' ? 'wtf' : 'whatif');
+      }catch{}
     })();
 
-    const LS = localStorage;
-    const $  = s=>document.querySelector(s);
-
-    // ==== I18N
-    const I18N = {
-      it:{ title:"Parlami di te",
-           blurb:"Compila tutti i campi. Li usiamo per personalizzare le risposte della AI.",
-           name:"Nome e cognome", city:"Città",
-           gender:"Sesso", choose:"Seleziona…", m:"Uomo", f:"Donna", o:"Altro", n:"Preferisco non dirlo",
-           age:"Età", role:"Professione / Ruolo",
-           goal:"Obiettivo principale",
-           more:"Informazioni utili per risposte migliori", more_hint:"",
-           back:"Indietro", next:"Continua",
-           err_missing:"Compila tutti i campi richiesti.",
-           err_more:"Aggiungi almeno 10 caratteri nelle informazioni utili." },
-      en:{ title:"Tell me about you",
-           blurb:"Fill in all fields. We use them to tailor the AI answers.",
-           name:"Full name", city:"City",
-           gender:"Sex", choose:"Choose…", m:"Male", f:"Female", o:"Other", n:"Prefer not to say",
-           age:"Age", role:"Profession / Role",
-           goal:"Main goal",
-           more:"Useful details for better answers", more_hint:"",
-           back:"Back", next:"Continue",
-           err_missing:"Please complete all required fields.",
-           err_more:"Please write at least 10 characters in the details." },
-      es:{ title:"Háblame de ti",
-           blurb:"Completa todos los campos. Los usamos para personalizar las respuestas de la IA.",
-           name:"Nombre y apellido", city:"Ciudad",
-           gender:"Sexo", choose:"Elige…", m:"Hombre", f:"Mujer", o:"Otro", n:"Prefiero no decirlo",
-           age:"Edad", role:"Profesión / Rol",
-           goal:"Objetivo principal",
-           more:"Detalles útiles para mejores respuestas", more_hint:"",
-           back:"Atrás", next:"Continuar",
-           err_missing:"Completa todos los campos obligatorios.",
-           err_more:"Escribe al menos 10 caracteres en los detalles." },
-      fr:{ title:"Parle-moi de toi",
-           blurb:"Renseigne tous les champs. Ils servent à personnaliser les réponses de l’IA.",
-           name:"Nom et prénom", city:"Ville",
-           gender:"Sexe", choose:"Choisir…", m:"Homme", f:"Femme", o:"Autre", n:"Préfère ne pas dire",
-           age:"Âge", role:"Profession / Rôle",
-           goal:"Objectif principal",
-           more:"Détails utiles pour de meilleures réponses", more_hint:"",
-           back:"Retour", next:"Continuer",
-           err_missing:"Complète tous les champs requis.",
-           err_more:"Ajoute au moins 10 caractères dans les détails." },
-      de:{ title:"Erzähl mir von dir",
-           blurb:"Bitte alle Felder ausfüllen. Wir nutzen sie für personalisierte KI-Antworten.",
-           name:"Vor- und Nachname", city:"Stadt",
-           gender:"Geschlecht", choose:"Wählen…", m:"Mann", f:"Frau", o:"Andere", n:"Möchte ich nicht sagen",
-           age:"Alter", role:"Beruf / Rolle",
-           goal:"Hauptziel",
-           more:"Nützliche Angaben für bessere Antworten", more_hint:"",
-           back:"Zurück", next:"Weiter",
-           err_missing:"Bitte alle Pflichtfelder ausfüllen.",
-           err_more:"Bitte mindestens 10 Zeichen bei den Angaben schreiben." }
+    /* ===== I18N ===== */
+    const I18N={
+      it:{title:"Parlami di te", lead:"Questi dati servono all’AI per adeguare grammatica e consigli. Compila tutto: sono obbligatori.",
+          home:"Home", reset:"Reset profilo", back:"Indietro", save:"Salva e continua",
+          name:"Nome", city:"Città", gender:"Sesso", choose:"Seleziona…",
+          g_m:"Uomo", g_f:"Donna", g_nb:"Altro", g_ns:"Preferisco non dirlo",
+          age:"Età", phase:"Fase attuale", p_study:"Studio", p_work:"Lavoro", p_change:"Cambio/Transizione", p_other:"Altro",
+          role:"Chi sei? (Ruolo/Prof.)", goal:"Obiettivo",
+          err:"Compila tutti i campi obbligatori.",
+          placeholders:{name:"Nome", city:"Città", role:"Es. tecnico farmaceutico, ingegnere", goal:"Es. più equilibrio, cambio lavoro…"},
+          privacy:"I dati restano sul tuo dispositivo (localStorage) e vengono passati alla pagina successiva per personalizzare le risposte."
+      },
+      en:{title:"Tell me about you", lead:"These fields let the AI adapt grammar and advice. Fill everything: all are required.",
+          home:"Home", reset:"Reset profile", back:"Back", save:"Save and continue",
+          name:"Name", city:"City", gender:"Gender", choose:"Choose…",
+          g_m:"Male", g_f:"Female", g_nb:"Other", g_ns:"Prefer not to say",
+          age:"Age", phase:"Current phase", p_study:"Studying", p_work:"Working", p_change:"Changing/Transition", p_other:"Other",
+          role:"Who are you? (Role)", goal:"Goal",
+          err:"Please complete all required fields.",
+          placeholders:{name:"Name", city:"City", role:"e.g., pharmacist tech, engineer", goal:"e.g., better balance, job change…"},
+          privacy:"Data stays on your device (localStorage) and is passed to the next page to personalize responses."
+      }
     };
+    I18N.es=I18N.en; I18N.fr=I18N.en; I18N.de=I18N.en;
+
+    const LS=localStorage;
+    const $=s=>document.querySelector(s);
 
     function getLang(){ return (LS.getItem('lang') || (navigator.language||'it').slice(0,2)).toLowerCase(); }
-    function setLang(l){ LS.setItem('lang', l); applyI18N(); }
+    function setLang(l){ LS.setItem('lang',l); applyI18N(); }
+
     function applyI18N(){
       const L = I18N[getLang()] || I18N.it;
       document.documentElement.lang = getLang();
+      $('#title').textContent=L.title;
+      $('#lead').textContent=L.lead;
+      $('#homeBtn').textContent='🏠';
+      $('#resetBtn').textContent='♻️ ' + (L.reset || 'Reset profilo');
+      $('#backBtn').textContent=L.back;
+      $('#saveBtn').textContent=L.save;
 
-      $('#title').textContent = L.title;
-      $('#blurb').textContent = L.blurb;
+      $('#name_lbl').textContent=L.name; $('#city_lbl').textContent=L.city;
+      $('#gender_lbl').textContent=L.gender; $('#g_choose').textContent=L.choose;
+      $('#g_m').textContent=L.g_m; $('#g_f').textContent=L.g_f; $('#g_nb').textContent=L.g_nb; $('#g_ns').textContent=L.g_ns;
+      $('#age_lbl').textContent=L.age; $('#a_choose').textContent=L.choose;
+      $('#phase_lbl').textContent=L.phase; $('#p_choose').textContent=L.choose;
+      $('#p_study').textContent=L.p_study; $('#p_work').textContent=L.p_work; $('#p_change').textContent=L.p_change; $('#p_other').textContent=L.p_other;
+      $('#role_lbl').textContent=L.role; $('#goal_lbl').textContent=L.goal;
+      $('#privacyNote').textContent=L.privacy;
 
-      $('#name_lbl').textContent = L.name;
-      $('#city_lbl').textContent = L.city;
-      $('#gender_lbl').textContent = L.gender;
-      $('#choose_g').textContent = L.choose;
-      $('#gender_m').textContent = L.m;
-      $('#gender_f').textContent = L.f;
-      $('#gender_o').textContent = L.o;
-      $('#gender_n').textContent = L.n;
+      const ph=L.placeholders||I18N.it.placeholders;
+      $('#name').placeholder=ph.name; $('#city').placeholder=ph.city; $('#role').placeholder=ph.role; $('#goal').placeholder=ph.goal;
 
-      $('#age_lbl').textContent = L.age;
-      $('#choose_a').textContent = L.choose;
-
-      $('#role_lbl').textContent = L.role;
-      $('#goal_lbl').textContent = L.goal;
-
-      $('#more_lbl').childNodes[0].nodeValue = L.more + ' ';
-      $('#more_hint').textContent = L.more_hint;
-
-      $('#backBtn').innerHTML = '← ' + L.back;
-      $('#nextBtn').innerHTML = L.next + ' →';
-
-      const err = $('#errorBox');
-      err.dataset.errMissing = L.err_missing;
-      err.dataset.errMore = L.err_more;
+      $('#langCode').textContent=getLang().toUpperCase();
+      document.querySelectorAll('#langMenu button').forEach(b=>b.classList.toggle('active', b.dataset.lang===getLang()));
     }
 
-    // init language select + apply
+    // init lang
+    if(!LS.getItem('lang')) LS.setItem('lang', getLang());
+    applyI18N();
+
+    // lang menu
     (function(){
-      const sel = $('#langSelect');
-      const cur = getLang();
-      sel.value = ['it','en','es','fr','de'].includes(cur) ? cur : 'it';
-      sel.addEventListener('change', ()=> setLang(sel.value));
-      if(!LS.getItem('lang')) LS.setItem('lang', sel.value);
-      applyI18N();
+      const btn=$('#langToggle'), menu=$('#langMenu');
+      btn.addEventListener('click', ()=>{ const open=menu.style.display==='block'; menu.style.display=open?'none':'block'; btn.setAttribute('aria-expanded', String(!open));});
+      menu.addEventListener('click', e=>{ const b=e.target.closest('button[data-lang]'); if(!b) return; setLang(b.dataset.lang); menu.style.display='none';});
+      document.addEventListener('click', e=>{ if(!menu.contains(e.target) && e.target!==btn) menu.style.display='none';});
     })();
 
-    // topbar
-    $('#backTop').addEventListener('click', ()=> history.back());
-    $('#homeTop').addEventListener('click', ()=> location.href='index.html');
-    $('#resetBtn').addEventListener('click', ()=>{
-      if(!confirm('Reset profilo?')) return;
-      ['whatif_profile','whatif_onboarding_done','whatif_last_update','whatif_profile_date'].forEach(k=>LS.removeItem(k));
-      alert('Profilo azzerato.');
-      location.reload();
-    });
+    // nav buttons
+    $('#homeBtn').onclick=()=>location.href='index.html';
+    $('#backBtn').onclick=()=>{ if(history.length>1) history.back(); else location.href='index.html'; };
 
-    // mapping gender -> sex normalizzato
+    // mapping gender -> sex
     function mapGenderToSex(g){
-      const v = String(g||'').toLowerCase();
-      if(v==='uomo' || v==='male' || v==='mann') return 'm';
-      if(v==='donna' || v==='female' || v==='frau') return 'f';
-      if(v==='altro' || v==='other' ) return 'nb';
-      return '';
+      switch(String(g||'').toLowerCase()){
+        case 'uomo': case 'male': return 'm';
+        case 'donna': case 'female': return 'f';
+        case 'altro': case 'other': return 'nb';
+        default: return '';
+      }
     }
 
-    // helper evidenzia invalidi
-    function markInvalid(el){ el.classList.add('invalid'); setTimeout(()=>el.classList.remove('invalid'), 1800); }
-
-    // submit
-    $('#profileForm').addEventListener('submit', (e)=>{
-      e.preventDefault();
-      const err = $('#errorBox');
-      err.classList.remove('show'); err.textContent='';
-
-      const name  = $('#name');
-      const city  = $('#city');
-      const gender= $('#gender');
-      const age   = $('#age');
-      const role  = $('#role');
-      const goal  = $('#goal');
-      const more  = $('#more');
-
-      const req = [name, city, gender, age, role, goal, more];
-      let ok = true;
-      req.forEach(el=>{
-        const v = (el.tagName==='SELECT') ? el.value.trim() : el.value.trim();
-        if(!v){ ok=false; markInvalid(el); }
-      });
-      if (more.value.trim().length < 10){ ok=false; markInvalid(more); }
-
-      if(!ok){
-        err.textContent = err.dataset.errMissing || 'Compila tutti i campi richiesti.';
-        if(more.value.trim().length < 10){
-          err.textContent = (err.dataset.errMore || 'Aggiungi almeno 10 caratteri nelle informazioni utili.');
+    // preload form if profile exists
+    (function preload(){
+      try{
+        const p=JSON.parse(LS.getItem('whatif_profile')||'{}');
+        if(p && Object.keys(p).length){
+          if(p.name)  $('#name').value=p.name;
+          if(p.city)  $('#city').value=p.city;
+          if(p.gender)$('#gender').value=p.gender;
+          if(p.age)   $('#age').value=p.age;
+          if(p.phase) $('#phase').value=p.phase;
+          if(p.role)  $('#role').value=p.role;
+          if(p.goal)  $('#goal').value=p.goal;
         }
-        err.classList.add('show'); return;
+      }catch{}
+    })();
+
+    // if already completed and consistent -> skip to fourth
+    (function skipIfReady(){
+      try{
+        const p=JSON.parse(LS.getItem('whatif_profile')||'{}');
+        const ok = p && p.name && p.city && (p.gender || p.sex) && p.age && p.phase && p.role && p.goal;
+        const done = LS.getItem('whatif_onboarding_done')==='1';
+        if(ok && done){ location.replace('fourth.html'); }
+      }catch{}
+    })();
+
+    // reset
+    $('#resetBtn').onclick=()=>{
+      if(!confirm('Reset profilo salvato?')) return;
+      ['whatif_profile','whatif_onboarding_done','whatif_profile_date','whatif_last_update'].forEach(k=>LS.removeItem(k));
+      location.reload();
+    };
+
+    // save
+    const errBox = $('#error');
+    $('#form').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const L = I18N[getLang()] || I18N.it;
+
+      const name  = $('#name').value.trim();
+      const city  = $('#city').value.trim();
+      const gender= $('#gender').value.trim();
+      const age   = $('#age').value.trim();
+      const phase = $('#phase').value.trim();
+      const role  = $('#role').value.trim();
+      const goal  = $('#goal').value.trim();
+
+      if(!name || !city || !gender || !age || !phase || !role || !goal){
+        errBox.textContent = L.err;
+        errBox.classList.add('show');
+        return;
+      }
+      errBox.classList.remove('show');
+
+      const sex = mapGenderToSex(gender);
+      const profile = { name, city, gender, sex, age, phase, role, goal };
+
+      try{
+        LS.setItem('whatif_profile', JSON.stringify(profile));
+        const today = new Date(); const iso = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+        if(!LS.getItem('whatif_profile_date')) LS.setItem('whatif_profile_date', iso);
+        LS.setItem('whatif_last_update', iso);
+        LS.setItem('whatif_onboarding_done','1');
+      }catch(err){
+        alert('Errore salvataggio profilo. Spazio browser pieno?');
+        return;
       }
 
-      const profile = {
-        name: name.value.trim(),
-        city: city.value.trim(),
-        gender: gender.value.trim(),
-        sex: mapGenderToSex(gender.value.trim()), // 'm' | 'f' | 'nb' | ''
-        age: age.value.trim(),
-        role: role.value.trim(),
-        goal: goal.value.trim(),
-        more: more.value.trim()
-      };
-      LS.setItem('whatif_profile', JSON.stringify(profile));
-
-      const today = new Date(); const iso = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-      LS.setItem('whatif_last_update', iso);
-      if(!LS.getItem('whatif_profile_date')) LS.setItem('whatif_profile_date', iso);
-      LS.setItem('whatif_onboarding_done','1');
-
-      // vai alla pagina delle domande
-      location.href = 'fourth.html';
+      // vai direttamente alla pagina 4
+      location.href='fourth.html';
     });
 
-    // back (in fondo)
-    $('#backBtn').addEventListener('click', ()=> history.back());
+    // keep i18n fresh on tab return
+    window.addEventListener('storage', (e)=>{ if(e.key==='lang') applyI18N(); });
+    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) applyI18N(); });
   </script>
 
-  <!-- SW (facoltativo) -->
+  <!-- SW -->
   <script>
     if ("serviceWorker" in navigator) {
-      window.addEventListener("load", ()=> {
+      window.addEventListener("load", () => {
         navigator.serviceWorker.register("/sw.js").catch(()=>{});
       });
     }
