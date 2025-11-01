@@ -34,14 +34,12 @@ h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
 .chip.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800}
-.chip.small{font-size:12px;padding:6px 10px}
 
 /* Input */
 .input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
 .center{max-width:760px;margin:0 auto}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .small{font-size:12px;color:var(--muted)}
-.muted{color:var(--muted)}
 
 /* Collapsible */
 .toggle{cursor:pointer;user-select:none}
@@ -58,14 +56,6 @@ h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
 .optset{display:flex;flex-wrap:wrap;gap:8px}
 .opt{background:var(--chip);border:1px solid var(--line);color:#EAF3EE;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer}
 .opt.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800}
-
-/* Surprise Dock (sotto la textarea) */
-#surpriseDock{margin-top:12px}
-#surpriseHeader{display:flex;align-items:center;gap:8px;margin:6px 0 6px}
-.badge-kind{border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:11px}
-.kind-personal{background:rgba(0,255,200,.08)}
-.kind-generic{background:rgba(255,255,255,.05)}
-.kind-absurd{background:rgba(255,200,0,.08)}
 
 /* Footer */
 footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
@@ -121,18 +111,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
           </div>
           <button class="btn" id="clearBtn" type="button">Svuota</button>
         </div>
-
-        <!-- Surprise Dock: vicino alla domanda -->
-        <div id="surpriseDock">
-          <div id="surpriseHeader" class="muted" style="display:none;">
-            <span id="surpriseTitle" class="small">Suggeriti per te (60/30/10)</span>
-            <span class="badge-kind kind-personal" id="keyPersonal">Personalizzate</span>
-            <span class="badge-kind kind-generic" id="keyGeneric">Generiche</span>
-            <span class="badge-kind kind-absurd" id="keyAbsurd">Assurde</span>
-          </div>
-          <div id="surpriseChips" class="chips"></div>
-        </div>
-
         <div class="small" id="tipNote" style="margin-top:8px"></div>
       </div>
 
@@ -190,7 +168,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         </div>
       </div>
 
-      <!-- SPUNTI (restano, ma opzionali) -->
+      <!-- SPUNTI -->
       <div class="card center" id="hintsCard">
         <div class="row toggle" id="hintsHeader" style="justify-content:space-between">
           <div class="label" id="hintsTitle">▶ Spunti rapidi “E se…”</div>
@@ -225,7 +203,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 
 <script>
 (function(){
-  /* ===== Util ===== */
   const LS=localStorage;
   const SUPPORTED_LANGS=["it","en","es","fr","de"];
   const $=id=>document.getElementById(id);
@@ -233,7 +210,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
   function todayISO(){const d=new Date();return d.toISOString().slice(0,10);}
 
-  /* ===== Stato ===== */
   let lang=(LS.getItem('lang')||'it').toLowerCase(); if(!SUPPORTED_LANGS.includes(lang)) lang="it";
   document.documentElement.lang=lang;
   let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
@@ -256,14 +232,10 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         hintsTitle:"▶ Spunti rapidi “E se…”", hintsNote:"Clicca uno spunto per riempire la domanda.",
         credits:"Crediti", free:"FREE", pro:"PRO",
         footer:"© What?f — FREE · crediti giornalieri attivi",
-        // Boost
         boostTitle:"▶ Boost personalizzazione", boostHint:"(opzionale)",
         boostSave:"💾 Salva Boost", boostClear:"Svuota",
         boostPH:'Scrivi qualcosa su di te o su cosa vuoi esplorare. Esempi: "sto pensando di cambiare città", "lavoro su turni", "ho poco tempo la sera"…',
-        boostSaved:"Boost salvato.",
-        // Surprise legend
-        sugTitle:"Suggeriti per te (60/30/10)",
-        keyPers:"Personalizzate", keyGen:"Generiche", keyAbs:"Assurde"
+        boostSaved:"Boost salvato."
     },
     en:{title:"Set your question", yourq:"What if…", gen:"✨ Generate answer", clear:"Clear",
         surprise:"Surprise me",
@@ -284,9 +256,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostTitle:"▶ Personalization boost", boostHint:"(optional)",
         boostSave:"💾 Save Boost", boostClear:"Clear",
         boostPH:"Write anything about you or what you want to explore…",
-        boostSaved:"Boost saved.",
-        sugTitle:"Suggested for you (60/30/10)",
-        keyPers:"Personalized", keyGen:"Generic", keyAbs:"Absurd"
+        boostSaved:"Boost saved."
     },
     es:{title:"Configura tu pregunta", yourq:"¿Y si…?", gen:"✨ Generar respuesta", clear:"Limpiar",
         surprise:"Sorpréndeme",
@@ -307,9 +277,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostTitle:"▶ Impulso de personalización", boostHint:"(opcional)",
         boostSave:"💾 Guardar Boost", boostClear:"Vaciar",
         boostPH:"Escribe algo sobre ti o lo que quieres explorar…",
-        boostSaved:"Boost guardado.",
-        sugTitle:"Sugeridos para ti (60/30/10)",
-        keyPers:"Personalizadas", keyGen:"Genéricas", keyAbs:"Absurdas"
+        boostSaved:"Boost guardado."
     },
     fr:{title:"Définis ta question", yourq:"Et si…", gen:"✨ Générer la réponse", clear:"Effacer",
         surprise:"Surprends-moi",
@@ -330,9 +298,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostTitle:"▶ Boost de personnalisation", boostHint:"(optionnel)",
         boostSave:"💾 Enregistrer le Boost", boostClear:"Vider",
         boostPH:"Écris quelque chose sur toi ou ce que tu veux explorer…",
-        boostSaved:"Boost enregistré.",
-        sugTitle:"Suggerés pour toi (60/30/10)",
-        keyPers:"Personnalisées", keyGen:"Génériques", keyAbs:"Absurdes"
+        boostSaved:"Boost enregistré."
     },
     de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", gen:"✨ Antwort erzeugen", clear:"Leeren",
         surprise:"Überrasche mich",
@@ -353,9 +319,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostTitle:"▶ Personalisierungs-Boost", boostHint:"(optional)",
         boostSave:"💾 Boost speichern", boostClear:"Leeren",
         boostPH:"Schreibe etwas über dich oder was du erkunden willst…",
-        boostSaved:"Boost gespeichert.",
-        sugTitle:"Vorgeschlagen für dich (60/30/10)",
-        keyPers:"Personalisiert", keyGen:"Generisch", keyAbs:"Absurde"
+        boostSaved:"Boost gespeichert."
     }
   };
   function T(key){return (I18N[lang]&&I18N[lang][key])||I18N.en[key]||key}
@@ -387,7 +351,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   const backBtn=$('backBtn'), homeBtn=$('homeBtn'), langSelect=$('langSelect');
   const styleChips=$('styleChips'), periodoChips=$('periodoChips');
   const goBtn=$('goBtn'), clearBtn=$('clearBtn'), qInput=$('qInput'), surpriseBtn=$('surpriseBtn');
-  const surpriseHeader=$('surpriseHeader'), surpriseTitle=$('surpriseTitle'), surpriseChips=$('surpriseChips');
 
   /* ===== Render testuale ===== */
   function applyTexts(){
@@ -412,14 +375,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     $('boostTitle').textContent=T('boostTitle'); $('boostHint').textContent=T('boostHint');
     $('boostSaveBtn').textContent=T('boostSave'); $('boostClearBtn').textContent=T('boostClear');
     $('boostInput').placeholder=T('boostPH');
-    // Surprise legend
-    surpriseTitle.textContent = T('sugTitle');
-    $('keyPersonal').textContent = T('keyPers');
-    $('keyGeneric').textContent = T('keyGen');
-    $('keyAbsurd').textContent = T('keyAbs');
-
     document.documentElement.lang=lang;
-    $('qInput').placeholder = (lang==='it' ? 'E se…'
+    qInput.placeholder = (lang==='it' ? 'E se…'
                         : lang==='es' ? '¿Y si…?'
                         : lang==='fr' ? 'Et si…'
                         : lang==='de' ? 'Was wäre, wenn…'
@@ -428,7 +385,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     renderCreditsBadge();
     renderMicroTexts();
     renderHints();
-    initBoostVisibility(); // logica giornaliera
+    initBoostVisibility();
   }
 
   /* ===== Navigazione ===== */
@@ -483,7 +440,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   /* ===== Domanda / Invio alla quinta ===== */
   function trySubmit(){
     try{
-      const domanda=($('qInput').value||'').trim(); if(!domanda){ $('qInput').focus(); return; }
+      const domanda=(qInput.value||'').trim(); if(!domanda){ qInput.focus(); return; }
       const c=readJSON('whatif_credits',{date:todayISO(),used:0});
       if(!userIsAdmin()){
         const cap=capForUser();
@@ -501,12 +458,31 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       alert('Error: cannot proceed. Check console.');
     }
   }
-  $('goBtn').onclick=trySubmit;
-  $('clearBtn').onclick=()=>{ $('qInput').value=''; $('qInput').focus(); };
-  $('qInput').addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); } });
+  goBtn.onclick=trySubmit;
+  clearBtn.onclick=()=>{ qInput.value=''; qInput.focus(); };
+  qInput.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); } });
 
-  /* ===== Surprise (60/30/10) ===== */
+  /* ===== Surprise (60/30/10) + Probabilità in meta ===== */
   let SURPRISE_CURRENT_META = [];
+  function ensureSurpriseBoxInHints(texts){
+    const wrap=$('hintsChips'); wrap.innerHTML='';
+    texts.forEach((txt,idx)=>{
+      const b=document.createElement('button');
+      b.type='button'; b.className='chip'; b.textContent = txt;
+      b.onclick = ()=>{
+        qInput.value = txt;
+        const meta = SURPRISE_CURRENT_META[idx] || null;
+        if (meta){ LS.setItem('whatif_surprise_meta', JSON.stringify(meta)); }
+        else { LS.removeItem('whatif_surprise_meta'); }
+        window.scrollTo({top:0,behavior:'smooth'});
+      };
+      wrap.appendChild(b);
+    });
+    $('hintsTitle').textContent = (lang==='it'?'▼ Suggeriti per te (60/30/10)':'▼ Suggested for you (60/30/10)');
+    $('hintsCard').classList.remove('collapsed');
+    $('hintsCard').scrollIntoView({behavior:'smooth',block:'center'});
+  }
+
   function getBoost(){ try{ return (LS.getItem('whatif_boost')||'').trim(); }catch{ return '' } }
   function setBoost(txt){
     try{
@@ -514,6 +490,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       LS.setItem('whatif_boost_saved_date', todayISO());
       $('boostSavedMsg').textContent = T('boostSaved');
       setTimeout(()=> $('boostSavedMsg').textContent='', 1600);
+      // nascondi Boost fino a domani
       initBoostVisibility();
     }catch(e){ console.warn('Boost save error', e); }
   }
@@ -543,8 +520,9 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     const boost   = getBoost();
     const topics  = extractTopics(boost);
     const past = (periodo==='past');
+
     const out = [];
-    const add = s => { if(s) out.push(s.replace(/\s+/g,' ').trim()); };
+    function add(s){ if(s) out.push(s.replace(/\s+/g,' ').trim()); }
 
     if (profile.role){
       add(past
@@ -602,7 +580,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
           :`Was, wenn du „${micro.indicatore}“ 2 Wochen lang wirklich trackst?`)
       );
     }
-    const topics = extractTopics(boost);
     topics.forEach(tp=>{
       add(past
         ? (lang==='it'?`E se avessi iniziato con ${tp} l’estate scorsa?`
@@ -692,34 +669,9 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   }
 
   function probForKind(kind){
-    if (kind==='personalized') return 55 + Math.floor(Math.random()*31); // 55–85 (usato solo come meta per 5ª pagina)
+    if (kind==='personalized') return 55 + Math.floor(Math.random()*31); // 55–85
     if (kind==='generic')      return 35 + Math.floor(Math.random()*31); // 35–65
-    return 5 + Math.floor(Math.random()*21); // 5–25
-  }
-
-  function renderSurpriseList(items){
-    surpriseChips.innerHTML='';
-    items.forEach((txt,idx)=>{
-      const meta = SURPRISE_CURRENT_META[idx] || {};
-      const b=document.createElement('button');
-      b.className='chip';
-      // tag visivo di tipo
-      const span=document.createElement('span');
-      span.className='badge-kind ' + (meta.kind==='personalized'?'kind-personal':meta.kind==='generic'?'kind-generic':'kind-absurd');
-      span.style.marginRight='6px';
-      span.textContent = meta.kind==='personalized'?T('keyPers'):meta.kind==='generic'?T('keyGen'):T('keyAbs');
-      const inner=document.createElement('span');
-      inner.textContent = txt;
-      b.appendChild(span); b.appendChild(inner);
-      b.onclick=()=>{
-        $('qInput').value = txt;
-        if (meta){ LS.setItem('whatif_surprise_meta', JSON.stringify(meta)); }
-        else { LS.removeItem('whatif_surprise_meta'); }
-        window.scrollTo({top:0,behavior:'smooth'});
-      };
-      surpriseChips.appendChild(b);
-    });
-    surpriseHeader.style.display = items.length ? 'flex' : 'none';
+    return 5 + Math.floor(Math.random()*21); // absurd: 5–25
   }
 
   $('surpriseBtn').onclick=()=>{
@@ -730,9 +682,9 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     const generic      = buildGenericPoolByLang(L, periodo);
     const absurd       = buildAbsurdPool(L, periodo);
 
-    let chosenPers = sampleN(personalized, Math.min(6, personalized.length));
-    let chosenGen  = sampleN(generic,      Math.min(3,  generic.length));
-    let chosenAbs  = sampleN(absurd,       1);
+    const chosenPers = sampleN(personalized, Math.min(6, personalized.length));
+    const chosenGen  = sampleN(generic,      Math.min(3,  generic.length));
+    const chosenAbs  = sampleN(absurd,       1);
 
     // backfill con generiche se non arrivo a 10
     const goal=10;
@@ -747,9 +699,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     chosenGen.forEach(x=>{ out.push(x); SURPRISE_CURRENT_META.push({kind:'generic', prob:probForKind('generic')}); });
     if (chosenAbs[0]){ out.push(chosenAbs[0]); SURPRISE_CURRENT_META.push({kind:'absurd', prob:probForKind('absurd')}); }
 
-    renderSurpriseList(out);
-    // porta in vista la dock se siamo in mobile
-    document.getElementById('surpriseDock').scrollIntoView({behavior:'smooth', block:'nearest'});
+    ensureSurpriseBoxInHints(out);
   };
 
   /* ===== Prima sessione ===== */
@@ -781,10 +731,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   function renderOptions(containerId, options, key){
     const wrap=$(containerId); if(!wrap) return; wrap.innerHTML='';
     const saved=readJSON('micro_profile',{});
-    // variazione giornaliera: ruota la lista in base alla data
-    const seed=[...todayISO()].reduce((a,c)=>a+c.charCodeAt(0),0)%options.length;
-    const rotated=[...options.slice(seed),...options.slice(0,seed)];
-    rotated.forEach(text=>{
+    options.forEach(text=>{
       const b=document.createElement('button');
       b.className='opt'; b.type='button'; b.textContent=text;
       if(saved[key]===text) b.classList.add('sel');
@@ -867,7 +814,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     }
     out.forEach(txt=>{
       const b=document.createElement('button'); b.className='chip'; b.type='button'; b.textContent=txt;
-      b.onclick=()=>{ $('qInput').value=txt; window.scrollTo({top:0,behavior:'smooth'}); };
+      b.onclick=()=>{ qInput.value=txt; window.scrollTo({top:0,behavior:'smooth'}); };
       wrap.appendChild(b);
     });
     $('hintsCard').classList.remove('collapsed');
@@ -886,7 +833,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.q||'—'}</div><div class="meta">${fmtDate(item.ts)}</div>`;
       const right=document.createElement('div'); right.className='row';
       const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.type='button'; useBtn.textContent=T('use');
-      useBtn.onclick=()=>{ $('qInput').value=item.q||''; window.scrollTo({top:0,behavior:'smooth'}); };
+      useBtn.onclick=()=>{ qInput.value=item.q||''; window.scrollTo({top:0,behavior:'smooth'}); };
       const play=document.createElement('button'); play.className='play'; play.type='button'; play.textContent='▶';
       play.onclick=()=>{ LS.setItem('domanda', item.q||''); writeJSON('whatif_request',{ domanda:item.q||'', stile:prefs.stile, lang, extra:'', micro:readJSON('micro_profile',{}), fantasy_mode:false, periodo:prefs.periodo, boost:getBoost() }); location.href='fifth.html'; };
       right.appendChild(useBtn); right.appendChild(play); row.appendChild(left); row.appendChild(right); box.appendChild(row);
@@ -905,12 +852,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       row.appendChild(left); row.appendChild(play); box.appendChild(row);
     });
   }
-  // svuota liste
-  $('clearSavedBtn').onclick=()=>{ writeJSON('next_prompts',[]); renderNext(); };
-  $('clearHistoryBtn').onclick=()=>{ writeJSON('cronologia',[]); renderStories(); };
-  // toggle card
-  $('savedHeader').onclick=()=>{ $('savedCard').classList.toggle('collapsed'); };
-  $('histHeader').onclick =()=>{ $('histCard').classList.toggle('collapsed'); };
 
   /* ===== Init ===== */
   try{
