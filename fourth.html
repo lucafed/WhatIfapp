@@ -30,9 +30,9 @@ h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
 .label{color:var(--accent2);font-weight:800;margin:0 0 8px}
 
 /* Cards & chips */
-.card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(12px);border-radius:16px;padding:16px;margin:10px 0}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer;white-space:nowrap}
+.card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(12px);border-radius:16px;padding:16px;margin:10px 0;overflow:hidden}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .chip.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800}
 
 /* Input */
@@ -431,12 +431,14 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   qInput.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); } });
 
   /* ===== Surprise RANDOM 60/30/10 ===== */
+  const MIX_WEIGHTS = { personalized:60, generic:30, absurd:10 };
+
   function sampleOne(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
   function buildPersonalizedPool(L, periodo){
     const profile = readJSON('whatif_profile', {});
     const micro   = readJSON('micro_profile', {});
     const boost   = getBoost();
-    const topics  = extractTopics(boost);
     const past = (periodo==='past');
 
     const out = [];
@@ -498,7 +500,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
           :`Was, wenn du „${micro.indicatore}“ 2 Wochen lang wirklich trackst?`)
       );
     }
-    extractTopics(boost).forEach(tp=>{
+    extractTopics(getBoost()).forEach(tp=>{
       out.push(
         past
           ? (L==='it'?`E se avessi iniziato con ${tp} l’estate scorsa?`
@@ -515,11 +517,13 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     });
     return Array.from(new Set(out)).slice(0,24);
   }
+
   function buildGenericPoolByLang(L, periodo){
     const poolsForLang = SURPRISE_POOLS[L] || SURPRISE_POOLS.it;
     const pool = poolsForLang[periodo] || poolsForLang.future || SURPRISE_POOLS.it.future;
     return pool.slice();
   }
+
   function buildAbsurdPool(L, periodo){
     const F=(periodo==='past');
     if (L==='it') return F?[
@@ -558,6 +562,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       "Was, wenn du der inoffizielle Coach deines Hauses wirst?"
     ];
   }
+
   function extractTopics(txt){
     if(!txt) return [];
     const stop = new Set(['e','di','a','da','in','con','su','per','tra','fra','il','la','lo','gli','le','un','una','uno','che','del','della','dei','delle','mi','ti','si','io','tu','loro','noi','voi','non','più','meno','molto','poco','anche','ma','o','se','the','and','of','to','for','con','por','y','de','le','les','des','und','der','die','das']);
@@ -582,10 +587,10 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 
     // choose bucket by probability
     const r = Math.random();
-    let bucket='personalized', prob=60;
-    if (r<0.6){ bucket='personalized'; prob=60; }
-    else if (r<0.9){ bucket='generic'; prob=30; }
-    else { bucket='absurd'; prob=10; }
+    let bucket='personalized', prob=MIX_WEIGHTS.personalized;
+    if (r<0.6){ bucket='personalized'; prob=MIX_WEIGHTS.personalized; }
+    else if (r<0.9){ bucket='generic'; prob=MIX_WEIGHTS.generic; }
+    else { bucket='absurd'; prob=MIX_WEIGHTS.absurd; }
 
     // pick one, with graceful fallbacks if empty
     let text=null, kind=bucket;
@@ -594,25 +599,37 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     else if (bucket==='absurd' && abs.length) text = sampleOne(abs);
 
     if (!text){
-      if (gen.length){ kind='generic'; prob=30; text=sampleOne(gen); }
-      else if (pers.length){ kind='personalized'; prob=60; text=sampleOne(pers); }
-      else if (abs.length){ kind='absurd'; prob=10; text=sampleOne(abs); }
-      else { text = (L==='it'?'E se cambiassi qualcosa questa settimana?':'What if you changed something this week?'); kind='generic'; prob=30; }
+      if (gen.length){ kind='generic'; prob=MIX_WEIGHTS.generic; text=sampleOne(gen); }
+      else if (pers.length){ kind='personalized'; prob=MIX_WEIGHTS.personalized; text=sampleOne(pers); }
+      else if (abs.length){ kind='absurd'; prob=MIX_WEIGHTS.absurd; text=sampleOne(abs); }
+      else { text = (L==='it'?'E se cambiassi qualcosa questa settimana?':'What if you changed something this week?'); kind='generic'; prob=MIX_WEIGHTS.generic; }
     }
 
-    return { text, kind, prob };
+    return { text, kind, prob, weights:MIX_WEIGHTS };
   }
 
   $('surpriseBtn').onclick=()=>{
-    const idea = pickWeightedIdea();
-    // scrive nel campo domanda
-    const pre = qInput.value.trim();
+    let idea = pickWeightedIdea();
+    // evita di ripetere esattamente il testo già presente
+    const pre = (qInput.value||'').trim();
+    let guard=0;
+    while(pre && idea.text===pre && guard<3){ idea=pickWeightedIdea(); guard++; }
+
     qInput.value = idea.text;
-    // salva meta per quinta pagina
-    LS.setItem('whatif_surprise_meta', JSON.stringify({kind:idea.kind, prob:idea.prob}));
-    // mostra mini feedback + spiegazione mix (già in tipNote)
-    // breve highlight del campo
+
+    // Salva meta per quinta pagina: includo kind, prob scelta, pesi completi, lingua, periodo e timestamp
+    LS.setItem('whatif_surprise_meta', JSON.stringify({
+      kind: idea.kind,
+      prob: idea.prob,
+      weights: idea.weights,
+      lang: (LS.getItem('lang')||'it'),
+      periodo: (prefs.periodo||'future'),
+      ts: Date.now()
+    }));
+
+    // highlight rapido
     qInput.animate([{outline:'2px solid transparent'},{outline:'2px solid var(--accent2)'},{outline:'2px solid transparent'}],{duration:900});
+
     // scroll su
     window.scrollTo({top:0,behavior:'smooth'});
   };
