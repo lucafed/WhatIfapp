@@ -375,6 +375,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   const HINT_DE=[ "Was, wenn du den Job wechselst?","Was, wenn du in eine andere Stadt ziehst?","Was, wenn du freiberuflich arbeitest?","Was, wenn du wieder studierst?","Was, wenn du eine 4-Tage-Woche probierst?","Was, wenn du um eine Gehaltserhöhung bittest?","Was, wenn du einen Monat Pause machst?","Was, wenn du 30 Tage ohne Social Media lebst?","Was, wenn du ohne Auto lebst?","Was, wenn du Programmieren lernst?","Was, wenn du wieder ins Gym gehst?","Was, wenn du 3× pro Woche läufst?","Was, wenn du einen Hund adoptierst?","Was, wenn du in Familiätnähe wohnst?","Was, wenn du monatlich 10 % sparst?" ];
 
   function pickHintPool(){ if(lang==='it') return HINT_IT; if(lang==='es') return HINT_ES; if(lang==='fr') return HINT_FR; if(lang==='de') return HINT_DE; return HINT_EN; }
+  function randomFrom(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 
   /* ===== DOM refs ===== */
   const backBtn=$('backBtn'), homeBtn=$('homeBtn'), langSelect=$('langSelect');
@@ -698,7 +699,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       const meta = SURPRISE_CURRENT_META[idx] || {};
       const b=document.createElement('button');
       b.className='chip';
-      // mini-etag per tipologia
       const tag=document.createElement('span');
       tag.className='badge-kind ' + (meta.kind==='personalized'?'kind-personal':meta.kind==='generic'?'kind-generic':'kind-absurd');
       tag.style.marginRight='6px';
@@ -743,7 +743,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     if (chosenAbs[0]){ out.push(chosenAbs[0]); SURPRISE_CURRENT_META.push({kind:'absurd', prob:probForKind('absurd')}); }
 
     renderSurpriseDock(out);
-    // porta in vista la dock se siamo in mobile
     document.getElementById('surpriseDock').scrollIntoView({behavior:'smooth', block:'nearest'});
   };
 
@@ -880,7 +879,11 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.type='button'; useBtn.textContent=T('use');
       useBtn.onclick=()=>{ qInput.value=item.q||''; window.scrollTo({top:0,behavior:'smooth'}); };
       const play=document.createElement('button'); play.className='play'; play.type='button'; play.textContent='▶';
-      play.onclick=()=>{ LS.setItem('domanda', item.q||''); writeJSON('whatif_request',{ domanda:item.q||'', stile:prefs.stile, lang, extra:'', micro:readJSON('micro_profile',{}), fantasy_mode:false, periodo:prefs.periodo, boost:getBoost() }); location.href='fifth.html'; };
+      play.onclick=()=>{
+        LS.setItem('domanda', item.q||'');
+        writeJSON('whatif_request',{ domanda:item.q||'', stile:prefs.stile, lang, extra:'', micro:readJSON('micro_profile',{}), fantasy_mode:false, periodo:prefs.periodo, boost:getBoost() });
+        location.href='fifth.html';
+      };
       right.appendChild(useBtn); right.appendChild(play); row.appendChild(left); row.appendChild(right); box.appendChild(row);
     });
   }
@@ -898,8 +901,21 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     });
   }
 
+  // Toggle pannelli SALVATI / CRONOLOGIA + svuota
+  $('savedHeader').onclick=()=>{ $('savedCard').classList.toggle('collapsed'); };
+  $('histHeader').onclick=()=>{ $('histCard').classList.toggle('collapsed'); };
+  $('clearSavedBtn').onclick=()=>{
+    writeJSON('next_prompts',[]);
+    renderNext();
+  };
+  $('clearHistoryBtn').onclick=()=>{
+    writeJSON('cronologia',[]);
+    renderStories();
+  };
+
   /* ===== Init ===== */
   try{
+    // tema
     try{
       const p = JSON.parse(LS.getItem('whatif_prefs')||'{}');
       document.documentElement.setAttribute('data-theme', p.stile==='wtf'?'wtf':'whatif');
