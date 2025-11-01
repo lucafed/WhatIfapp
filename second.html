@@ -75,6 +75,7 @@
       width:100%;background:var(--chip);color:var(--fg);
       border:1px solid var(--line);border-radius:12px;padding:12px;font-size:16px
     }
+    textarea{min-height:110px;resize:vertical}
     input::placeholder, textarea::placeholder{color:#98aab5}
 
     .actions{display:flex;gap:10px;justify-content:space-between;margin-top:10px;flex-wrap:wrap}
@@ -88,8 +89,8 @@
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="left">
-      <button id="backTop" class="btn" type="button">←</button>
-      <button id="homeTop" class="btn" type="button">🏠</button>
+      <button id="backTop" class="btn" type="button" aria-label="Back">←</button>
+      <button id="homeTop" class="btn" type="button" aria-label="Home">🏠</button>
     </div>
     <div class="right">
       <select id="langSelect" class="lang" aria-label="Language">
@@ -99,7 +100,7 @@
         <option value="fr">FR</option>
         <option value="de">DE</option>
       </select>
-      <button id="resetBtn" class="btn" type="button">♻️</button>
+      <button id="resetBtn" class="btn" type="button" title="Reset">♻️</button>
     </div>
   </div>
 
@@ -110,6 +111,7 @@
 
       <div class="card">
         <form id="aboutForm" novalidate>
+          <!-- Base obbligatoria -->
           <div class="row two">
             <div>
               <label for="name" id="name_lbl">Nome</label>
@@ -168,10 +170,18 @@
             </div>
           </div>
 
+          <!-- Opzionale: Parla di te -->
+          <div class="row">
+            <div>
+              <label for="about" id="about_lbl">Parla di te <span id="about_opt">(opzionale)</span></label>
+              <textarea id="about" placeholder="Es. che lavoro fai nello specifico, interessi, vincoli, routine, famiglia, orari…"></textarea>
+            </div>
+          </div>
+
           <div id="errorBox" class="error"></div>
 
           <div class="actions">
-            <button type="button" id="backBtn" class="btn">← <span data-i18n="back">Indietro</span></button>
+            <button type="button" id="backBtn" class="btn">← Indietro</button>
             <button type="submit" id="nextBtn" class="btn primary">Continua →</button>
           </div>
         </form>
@@ -205,6 +215,8 @@
            who_lbl:"Ruolo/Professione", goal_lbl:"Obiettivo",
            who_ph:"Es. ingegnere, infermiera, studente…",
            goal_ph:"Es. miglior equilibrio lavoro-vita",
+           about_lbl:"Parla di te", about_opt:"(opzionale)",
+           about_ph:"Es. che lavoro fai nello specifico, interessi, vincoli, routine, famiglia, orari…",
            err_required:"Compila tutti i campi obbligatori (Nome, Città, Sesso, Età, Fase, Ruolo, Obiettivo).",
            next:"Continua →"
       },
@@ -219,6 +231,8 @@
            who_lbl:"Role/Profession", goal_lbl:"Goal",
            who_ph:"e.g. engineer, nurse, student…",
            goal_ph:"e.g. better work-life balance",
+           about_lbl:"Tell us more about you", about_opt:"(optional)",
+           about_ph:"e.g. specifics of your work, interests, constraints, routines, family, hours…",
            err_required:"Please fill all required fields (Name, City, Gender, Age, Phase, Role, Goal).",
            next:"Continue →"
       },
@@ -233,6 +247,8 @@
            who_lbl:"Rol/Profesión", goal_lbl:"Objetivo",
            who_ph:"p. ej., ingeniero, enfermera, estudiante…",
            goal_ph:"p. ej., mejor equilibrio vida-trabajo",
+           about_lbl:"Cuéntanos más de ti", about_opt:"(opcional)",
+           about_ph:"p. ej., trabajo específico, intereses, restricciones, rutinas, familia, horarios…",
            err_required:"Completa todos los campos obligatorios (Nombre, Ciudad, Sexo, Edad, Fase, Rol, Objetivo).",
            next:"Continuar →"
       },
@@ -247,6 +263,8 @@
            who_lbl:"Rôle/Profession", goal_lbl:"Objectif",
            who_ph:"ex. ingénieur, infirmière, étudiant…",
            goal_ph:"ex. meilleur équilibre vie-travail",
+           about_lbl:"Parle de toi", about_opt:"(optionnel)",
+           about_ph:"ex. ton travail précis, centres d’intérêt, contraintes, routines, famille, horaires…",
            err_required:"Renseigne tous les champs obligatoires (Prénom, Ville, Sexe, Âge, Phase, Rôle, Objectif).",
            next:"Continuer →"
       },
@@ -261,6 +279,8 @@
            who_lbl:"Rolle/Beruf", goal_lbl:"Ziel",
            who_ph:"z. B. Ingenieur, Krankenschwester, Student…",
            goal_ph:"z. B. bessere Work-Life-Balance",
+           about_lbl:"Erzähl mehr über dich", about_opt:"(optional)",
+           about_ph:"z. B. genaue Tätigkeit, Interessen, Einschränkungen, Routinen, Familie, Zeiten…",
            err_required:"Bitte alle Pflichtfelder ausfüllen (Name, Stadt, Geschlecht, Alter, Phase, Rolle, Ziel).",
            next:"Weiter →"
       }
@@ -283,7 +303,6 @@
       $('#title').textContent = d.title;
       $('#blurb').textContent = d.blurb;
 
-      // topbar (icone restano, testo pulsanti form sotto)
       $('#name_lbl').textContent = d.name_lbl;
       $('#city_lbl').textContent = d.city_lbl;
       $('#name').placeholder = d.name_ph;
@@ -312,9 +331,17 @@
       $('#who').placeholder = d.who_ph;
       $('#goal').placeholder = d.goal_ph;
 
-      $('#nextBtn').textContent = d.next;
-      $('#aboutForm').dataset.err = d.err_required;
+      // Scheda opzionale
+      $('#about_lbl').firstChild.textContent = d.about_lbl + ' ';
+      $('#about_opt').textContent = d.about_opt;
+      $('#about').placeholder = d.about_ph;
 
+      // CTA
+      $('#nextBtn').textContent = d.next;
+      // **FIX**: bottone Indietro in basso tradotto
+      $('#backBtn').textContent = '← ' + d.back;
+
+      // set selettore lingua
       const sel = document.getElementById('langSelect');
       if (sel) sel.value = L;
     }
@@ -371,7 +398,6 @@
 
     /* ===== Utilità grammaticali per l’AI ===== */
     function buildGrammar(sex){
-      // minikit per concordanza italiana (usato dall’AI)
       const s = (sex||'').toLowerCase();
       if (s==='f' || s==='donna') {
         return { pronome:'lei', articolo:'la', aggettivo_suff:'a', participio_suff:'a' };
@@ -379,7 +405,7 @@
       if (s==='m' || s==='uomo') {
         return { pronome:'lui', articolo:'il', aggettivo_suff:'o', participio_suff:'o' };
       }
-      return { pronome:'loro', articolo:'lo/la', aggettivo_suff:'*', participio_suff:'*' }; // neutro
+      return { pronome:'loro', articolo:'lo/la', aggettivo_suff:'*', participio_suff:'*' };
     }
     function mapGenderToSex(g){
       const x = String(g||'').toLowerCase();
@@ -409,6 +435,7 @@
       const phase = document.getElementById('phase').value.trim();
       const role  = document.getElementById('who').value.trim();
       const goal  = document.getElementById('goal').value.trim();
+      const about = document.getElementById('about').value.trim(); // opzionale
 
       if(!name || !city || !gender || !age || !phase || !role || !goal){
         errBox.textContent = form.dataset.err || d.err_required;
@@ -420,6 +447,7 @@
       const sex = mapGenderToSex(gender);
       const profile = {
         name, city, gender, sex, age, phase, role, goal,
+        about: about || '',
         gram: buildGrammar(sex)
       };
 
