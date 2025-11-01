@@ -57,12 +57,7 @@ h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
 .opt{background:var(--chip);border:1px solid var(--line);color:#EAF3EE;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer}
 .opt.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800}
 
-/* Absurd like bar */
-.abs-bar{display:none;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px}
-.abs-bar.show{display:flex}
-.abs-btn{border:1px solid var(--line);background:var(--chip);color:#EAF3EE;border-radius:999px;padding:8px 12px;font-weight:800;cursor:pointer}
-.abs-good{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);border:none}
-
+/* Footer */
 footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 </style>
 </head>
@@ -114,28 +109,34 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
             <button class="btn primary" id="goBtn" type="button" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
             <button class="btn" id="surpriseBtn" type="button">🎲 Sorprendimi</button>
           </div>
-          <button class="btn" id="clearBtn" type="button">Svuota</button>
-        </div>
-        <!-- Barra feedback assurde -->
-        <div class="abs-bar" id="absBar">
-          <span id="absLabel" class="small">Domanda folle: ti piace?</span>
-          <button class="abs-btn abs-good" id="absLike">😂 Mi piace</button>
-          <button class="abs-btn" id="absSkip">Passa</button>
-          <span id="absPct" class="small"></span>
+          <div class="row" style="gap:10px">
+            <button class="btn" id="saveBtn" type="button">⭐ Salva domanda</button>
+            <button class="btn" id="clearBtn" type="button">Svuota</button>
+          </div>
         </div>
         <div class="small" id="tipNote" style="margin-top:8px"></div>
       </div>
 
-      <!-- MICRO-DOMANDE (variano ogni giorno, spariscono dopo il salvataggio) -->
+      <!-- MICRO-DOMANDE -->
       <div class="first-session" id="firstSessionBanner"></div>
       <div class="card center collapsed" id="microCard">
         <div class="row toggle" id="microHead" style="justify-content:space-between">
-          <div class="label" id="microTitle">▼ Micro-domande di oggi</div>
+          <div class="label" id="microTitle">▶ Micro-domande di oggi</div>
           <div class="small" id="microHint">(una volta al giorno)</div>
         </div>
         <div class="body" id="microBody" style="margin-top:10px">
-          <!-- Verranno generate daily -->
-          <div id="microWrap"></div>
+          <div id="qMood" class="qblock">
+            <div class="qtitle"><span id="moodIcon">🙂</span><span id="moodTitle">Oggi come ti senti?</span></div>
+            <div class="optset" id="moodOpts"></div>
+          </div>
+          <div id="qAnchor" class="qblock">
+            <div class="qtitle"><span id="anchorIcon">🧭</span><span id="anchorTitle">Cosa ti tiene qui ultimamente?</span></div>
+            <div class="optset" id="anchorOpts"></div>
+          </div>
+          <div id="qDecide" class="qblock">
+            <div class="qtitle"><span id="decideIcon">⚙️</span><span id="decideTitle">Come decidi di solito?</span></div>
+            <div class="optset" id="decideOpts"></div>
+          </div>
           <div class="row" style="margin-top:6px">
             <button class="btn primary" id="saveMicroBtn" type="button">💾 Salva micro-profilo</button>
           </div>
@@ -144,7 +145,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       </div>
 
       <!-- SPUNTI -->
-      <div class="card center" id="hintsCard">
+      <div class="card center collapsed" id="hintsCard">
         <div class="row toggle" id="hintsHeader" style="justify-content:space-between">
           <div class="label" id="hintsTitle">▶ Spunti rapidi “E se…”</div>
         </div>
@@ -185,9 +186,9 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def} }
   function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
   function today(){return new Date().toISOString().slice(0,10);}
-  function clamp(n,a,b){return Math.max(a,Math.min(b,n));}
+  function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
 
-  /* ===== Stato base ===== */
+  /* ===== Stato ===== */
   let lang=(LS.getItem('lang')||'it').toLowerCase(); if(!SUPPORTED_LANGS.includes(lang)) lang="it";
   document.documentElement.lang=lang;
   let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
@@ -195,115 +196,99 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   /* ===== I18N ===== */
   const I18N={
     it:{title:"Imposta la tua domanda", yourq:"E se…", gen:"✨ Genera risposta", clear:"Svuota",
-        surprise:"Sorprendimi",
-        microT:"▼ Micro-domande di oggi", microHint:"(una volta al giorno)",
+        surprise:"Sorprendimi", saveQ:"⭐ Salva domanda",
+        microT:"▶ Micro-domande di oggi", microHint:"(una volta al giorno)",
         microSaveBtn:"💾 Salva micro-profilo", microSaved:"Micro-profilo salvato per oggi.", microOnce:"Già salvato oggi.",
+        qMood:"Oggi come ti senti?", qAnchor:"Cosa ti tiene qui ultimamente?", qDecide:"Come decidi di solito?",
         saved:"▶ Domande salvate", stories:"▶ Cronologia", use:"Usa", play:"▶",
         emptyNext:"— Nessuna domanda salvata.", emptyStories:"— Nessuna storia.",
         clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota",
         outOfCredits:"Hai finito i crediti di oggi.",
-        firstSession:"Micro-domande di oggi — rispondi adesso, poi spariscono fino a domani.",
+        firstSession:"Micro-domande di oggi — rispondi adesso, poi tornano domani.",
         styleWF:"What if", styleWTF:"What the F",
         fut:"Futuro", past:"Passato",
         hintsTitle:"▶ Spunti rapidi “E se…”", hintsNote:"Clicca uno spunto per riempire la domanda.",
         credits:"Crediti", free:"FREE", pro:"PRO",
         footer:"© What?f — FREE · crediti giornalieri attivi",
-        absurdBar:"Domanda folle: ti piace?",
-        like:"😂 Mi piace", pass:"Passa",
-        pct:"Frequenza assurde: ",
-        // Micro labels
-        qMood:"Oggi come ti senti?", qAnchor:"Cosa ti tiene qui ultimamente?", qDecide:"Come decidi di solito?",
-        qJung:"Tipo psicologico (Jung)", qZodiac:"Segno o portafortuna (se vuoi)",
+        like:"mi piace"
     },
     en:{title:"Set your question", yourq:"What if…", gen:"✨ Generate answer", clear:"Clear",
-        surprise:"Surprise me",
-        microT:"▼ Today’s micro-questions", microHint:"(once per day)",
+        surprise:"Surprise me", saveQ:"⭐ Save question",
+        microT:"▶ Today’s micro-questions", microHint:"(once per day)",
         microSaveBtn:"💾 Save micro-profile", microSaved:"Micro-profile saved for today.", microOnce:"Already saved today.",
+        qMood:"How do you feel today?", qAnchor:"What’s keeping you here lately?", qDecide:"How do you usually decide?",
         saved:"▶ Saved questions", stories:"▶ History", use:"Use", play:"▶",
         emptyNext:"— No saved questions.", emptyStories:"— No history.",
         clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear",
         outOfCredits:"You’ve used today’s credits.",
-        firstSession:"Today’s micro-questions — answer now, then they hide until tomorrow.",
+        firstSession:"Today’s micro-questions — answer now, they’ll be back tomorrow.",
         styleWF:"What if", styleWTF:"What the F",
         fut:"Future", past:"Past",
         hintsTitle:"▶ Quick “What if…”", hintsNote:"Click a hint to fill the question.",
         credits:"Credits", free:"FREE", pro:"PRO",
         footer:"© What?f — FREE · daily credits active",
-        absurdBar:"Crazy prompt: like it?",
-        like:"😂 Like it", pass:"Skip",
-        pct:"Absurd frequency: ",
-        qMood:"How do you feel today?", qAnchor:"What’s keeping you here lately?", qDecide:"How do you usually decide?",
-        qJung:"Psychological type (Jung)", qZodiac:"Zodiac or lucky habit (optional)",
+        like:"I like it"
     },
     es:{title:"Configura tu pregunta", yourq:"¿Y si…?", gen:"✨ Generar respuesta", clear:"Limpiar",
-        surprise:"Sorpréndeme",
-        microT:"▼ Micro-preguntas de hoy", microHint:"(una vez al día)",
+        surprise:"Sorpréndeme", saveQ:"⭐ Guardar pregunta",
+        microT:"▶ Micro-preguntas de hoy", microHint:"(una vez al día)",
         microSaveBtn:"💾 Guardar micro-perfil", microSaved:"Micro-perfil guardado para hoy.", microOnce:"Ya guardado hoy.",
+        qMood:"¿Cómo te sientes hoy?", qAnchor:"¿Qué te mantiene aquí últimamente?", qDecide:"¿Cómo sueles decidir?",
         saved:"▶ Preguntas guardadas", stories:"▶ Historial", use:"Usar", play:"▶",
         emptyNext:"— No hay preguntas guardadas.", emptyStories:"— Sin historial.",
         clearSaved:"🗑️ Vaciar", clearHist:"🗑️ Vaciar",
         outOfCredits:"Has usado los créditos de hoy.",
-        firstSession:"Micro-preguntas de hoy — responde ahora y volverán mañana.",
+        firstSession:"Micro-preguntas de hoy — responde ahora, vuelven mañana.",
         styleWF:"What if", styleWTF:"What the F",
         fut:"Futuro", past:"Pasado",
         hintsTitle:"▶ Ideas rápidas «¿Y si…?»", hintsNote:"Pulsa una idea para rellenar la pregunta.",
         credits:"Créditos", free:"FREE", pro:"PRO",
         footer:"© What?f — FREE · créditos diarios activos",
-        absurdBar:"Pregunta loca: ¿te gusta?",
-        like:"😂 Me gusta", pass:"Saltar",
-        pct:"Frecuencia absurdas: ",
-        qMood:"¿Cómo te sientes hoy?", qAnchor:"¿Qué te mantiene aquí últimamente?", qDecide:"¿Cómo sueles decidir?",
-        qJung:"Tipo psicológico (Jung)", qZodiac:"Signo o amuleto (opcional)",
+        like:"me gusta"
     },
     fr:{title:"Définis ta question", yourq:"Et si…", gen:"✨ Générer la réponse", clear:"Effacer",
-        surprise:"Surprends-moi",
-        microT:"▼ Micro-questions du jour", microHint:"(une fois par jour)",
+        surprise:"Surprends-moi", saveQ:"⭐ Enregistrer la question",
+        microT:"▶ Micro-questions du jour", microHint:"(une fois par jour)",
         microSaveBtn:"💾 Enregistrer le micro-profil", microSaved:"Micro-profil enregistré pour aujourd’hui.", microOnce:"Déjà enregistré aujourd’hui.",
+        qMood:"Comment te sens-tu aujourd’hui ?", qAnchor:"Qu’est-ce qui te retient ici en ce moment ?", qDecide:"Comment décides-tu d’habitude ?",
         saved:"▶ Questions enregistrées", stories:"▶ Historique", use:"Utiliser", play:"▶",
         emptyNext:"— Aucune question enregistrée.", emptyStories:"— Aucun historique.",
         clearSaved:"🗑️ Vider", clearHist:"🗑️ Vider",
         outOfCredits:"Tu as utilisé tes crédits du jour.",
-        firstSession:"Micro-questions du jour — réponds maintenant, elles reviendront demain.",
+        firstSession:"Micro-questions du jour — réponds maintenant, elles reviennent demain.",
         styleWF:"What if", styleWTF:"What the F",
         fut:"Futur", past:"Passé",
         hintsTitle:"▶ Idées rapides « Et si… »", hintsNote:"Clique une idée pour remplir la question.",
         credits:"Crédits", free:"FREE", pro:"PRO",
         footer:"© What?f — FREE · crédits quotidiens actifs",
-        absurdBar:"Question folle : tu aimes ?",
-        like:"😂 J’aime", pass:"Passer",
-        pct:"Fréquence absurdes : ",
-        qMood:"Comment te sens-tu aujourd’hui ?", qAnchor:"Qu’est-ce qui te retient ici en ce moment ?", qDecide:"Comment décides-tu d’habitude ?",
-        qJung:"Type psychologique (Jung)", qZodiac:"Signe ou porte-bonheur (optionnel)",
+        like:"j’aime"
     },
     de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", gen:"✨ Antwort erzeugen", clear:"Leeren",
-        surprise:"Überrasche mich",
-        microT:"▼ Heutige Mikro-Fragen", microHint:"(einmal pro Tag)",
+        surprise:"Überrasche mich", saveQ:"⭐ Frage speichern",
+        microT:"▶ Heutige Mikro-Fragen", microHint:"(einmal pro Tag)",
         microSaveBtn:"💾 Mikro-Profil speichern", microSaved:"Mikro-Profil für heute gespeichert.", microOnce:"Heute bereits gespeichert.",
+        qMood:"Wie fühlst du dich heute?", qAnchor:"Was hält dich derzeit hier?", qDecide:"Wie triffst du üblicherweise Entscheidungen?",
         saved:"▶ Gespeicherte Fragen", stories:"▶ Verlauf", use:"Verwenden", play:"▶",
         emptyNext:"— Keine gespeicherten Fragen.", emptyStories:"— Kein Verlauf.",
         clearSaved:"🗑️ Leeren", clearHist:"🗑️ Leeren",
         outOfCredits:"Du hast die heutigen Credits verbraucht.",
-        firstSession:"Heutige Mikro-Fragen — jetzt beantworten, dann bis morgen verborgen.",
+        firstSession:"Heutige Mikro-Fragen — jetzt beantworten, morgen wieder da.",
         styleWF:"What if", styleWTF:"What the F",
         fut:"Zukunft", past:"Vergangenheit",
         hintsTitle:"▶ Schnelle „Was wäre, wenn…“-Ideen", hintsNote:"Klicke eine Idee, um die Frage zu füllen.",
         credits:"Credits", free:"FREE", pro:"PRO",
         footer:"© What?f — FREE · tägliche Credits aktiv",
-        absurdBar:"Verrückte Frage: Gefällt dir das?",
-        like:"😂 Gefällt mir", pass:"Überspringen",
-        pct:"Absurde Häufigkeit: ",
-        qMood:"Wie fühlst du dich heute?", qAnchor:"Was hält dich derzeit hier?", qDecide:"Wie triffst du üblicherweise Entscheidungen?",
-        qJung:"Psychologischer Typ (Jung)", qZodiac:"Sternzeichen oder Glücksritual (optional)",
+        like:"gefällt mir"
     }
   };
   function T(key){return (I18N[lang]&&I18N[lang][key])||I18N.en[key]||key}
 
   /* ===== Hints pools (localizzati) ===== */
-  const HINT_IT=[ "E se cambiassi lavoro?","E se cambiassi città?","E se aprissi partita IVA?","E se tornassi a studiare?","E se lavorassi 4 giorni su 5?","E se chiedessi un aumento?","E se mi prendessi un mese sabbatico?","E se riducessi i social per 30 giorni?","E se vivessi senza auto?","E se imparassi a programmare?","E se ricominciassi palestra?","E se corressi 3 volte a settimana?","E se adottassi un cane?","E se vivessi vicino ai miei?","E se investissi il 10% al mese?","E se imparassi bene l’inglese?","E se andassi all’estero 6 mesi?","E se lasciassi un progetto che non ami?","E se facessi volontariato?","E se riscrivessi il CV oggi?","E se provassi terapia?","E se cucinassi a casa 30 giorni?","E se aprissi un micro e-commerce?","E se studiassi 1h al giorno?","E se spegnessi il telefono alle 22?","E se facessi pace con qualcuno?","E se risparmiassi sul serio?","E se provassi vita da nomade digitale?","E se imparassi public speaking?","E se tagliassi fumo/alcol 30 giorni?" ];
-  const HINT_EN=[ "What if I changed jobs?","What if I moved city?","What if I went freelance?","What if I went back to study?","What if I tried a 4-day week?","What if I asked for a raise?","What if I took a month off?","What if I cut social media for 30 days?","What if I lived without a car?","What if I learned to code?","What if I hit the gym again?","What if I ran 3 times a week?","What if I adopted a dog?","What if I lived near my family?","What if I invested 10% monthly?","What if I mastered English?","What if I moved abroad for 6 months?","What if I dropped a project I don’t love?","What if I tried volunteering?","What if I rewrote my résumé today?","What if I tried therapy?","What if I cooked at home for 30 days?","What if I opened a tiny e-commerce?","What if I studied 1h daily?","What if I turned my phone off at 10pm?","What if I made peace with someone?","What if I saved seriously?","What if I tried digital nomad life?","What if I learned public speaking?","What if I cut smoking/alcohol 30 days?" ];
-  const HINT_ES=[ "¿Y si cambiara de trabajo?","¿Y si me mudara de ciudad?","¿Y si me hiciera autónomo?","¿Y si volviera a estudiar?","¿Y si probara semana de 4 días?","¿Y si pidiera un aumento?","¿Y si tomara un mes libre?","¿Y si dejara redes 30 días?","¿Y si viviera sin coche?","¿Y si aprendiera a programar?","¿Y si volviera al gimnasio?","¿Y si corriera 3 veces por semana?","¿Y si adoptara un perro?","¿Y si viviera cerca de mi familia?","¿Y si invirtiera 10% al mes?","¿Y si dominara el inglés?","¿Y si me fuera 6 meses al extranjero?","¿Y si dejara un proyecto que no amo?","¿Y si hiciera voluntariado?","¿Y si reescribiera mi currículum hoy?" ];
-  const HINT_FR=[ "Et si je changeais de travail ?","Et si je déménageais ?","Et si je me mettais en freelance ?","Et si je reprenais des études ?","Et si j’essayais la semaine de 4 jours ?","Et si je demandais une augmentation ?","Et si je prenais un mois off ?","Et si je coupais les réseaux 30 jours ?","Et si je vivais sans voiture ?","Et si j’apprenais à coder ?","Et si je retournais à la salle ?","Et si je courais 3 fois par semaine ?","Et si j’adoptais un chien ?","Et si je vivais près de ma famille ?","Et si j’investissais 10 % par mois ?","Et si je maîtrisais l’anglais ?" ];
-  const HINT_DE=[ "Was, wenn ich den Job wechselte?","Was, wenn ich in eine andere Stadt zöge?","Was, wenn ich freiberuflich arbeitete?","Was, wenn ich wieder studierte?","Was, wenn ich eine 4-Tage-Woche probierte?","Was, wenn ich um eine Gehaltserhöhung bäte?","Was, wenn ich einen Monat Pause machte?","Was, wenn ich 30 Tage ohne Social Media lebte?","Was, wenn ich ohne Auto lebte?","Was, wenn ich Programmieren lernte?","Was, wenn ich wieder ins Gym ginge?","Was, wenn ich 3× pro Woche liefe?","Was, wenn ich einen Hund adoptierte?","Was, wenn ich in Familiätnähe wohnte?","Was, wenn ich monatlich 10 % sparte?" ];
+  const HINT_IT=[ "E se cambiassi lavoro?","E se cambiassi città?","E se aprissi partita IVA?","E se tornassi a studiare?","E se lavorassi 4 giorni su 5?","E se chiedessi un aumento?","E se mi prendessi un mese sabbatico?","E se riducessi i social per 30 giorni?","E se vivessi senza auto?","E se imparassi a programmare?","E se ricominciassi palestra?","E se corressi 3 volte a settimana?","E se adottassi un cane?","E se vivessi vicino alla tua famiglia?","E se investissi il 10% al mese?","E se imparassi bene l’inglese?","E se andassi all’estero 6 mesi?","E se lasciassi un progetto che non ami?","E se facessi volontariato?","E se riscrivessi il CV oggi?","E se provassi terapia?","E se cucinassi a casa 30 giorni?","E se aprissi un micro e-commerce?","E se studiassi 1h al giorno?","E se spegnessi il telefono alle 22?","E se facessi pace con qualcuno?","E se risparmiassi sul serio?","E se provassi vita da nomade digitale?","E se imparassi public speaking?","E se tagliassi fumo/alcol 30 giorni?" ];
+  const HINT_EN=[ "What if you changed jobs?","What if you moved city?","What if you went freelance?","What if you went back to study?","What if you tried a 4-day week?","What if you asked for a raise?","What if you took a month off?","What if you cut social media for 30 days?","What if you lived without a car?","What if you learned to code?","What if you hit the gym again?","What if you ran 3 times a week?","What if you adopted a dog?","What if you lived near your family?","What if you invested 10% monthly?","What if you mastered English?","What if you moved abroad for 6 months?","What if you dropped a project you don’t love?","What if you tried volunteering?","What if you rewrote your résumé today?","What if you tried therapy?","What if you cooked at home for 30 days?","What if you opened a tiny e-commerce?","What if you studied 1h daily?","What if you turned your phone off at 10pm?","What if you made peace with someone?","What if you saved seriously?","What if you tried digital nomad life?","What if you learned public speaking?","What if you cut smoking/alcohol 30 days?" ];
+  const HINT_ES=[ "¿Y si cambiaras de trabajo?","¿Y si te mudaras de ciudad?","¿Y si te hicieras autónomo?","¿Y si volvieras a estudiar?","¿Y si probaras semana de 4 días?","¿Y si pidieras un aumento?","¿Y si tomaras un mes libre?","¿Y si dejaras redes 30 días?","¿Y si vivieras sin coche?","¿Y si aprendieras a programar?","¿Y si volvieras al gimnasio?","¿Y si corrieras 3 veces por semana?","¿Y si adoptaras un perro?","¿Y si vivieras cerca de tu familia?","¿Y si invirtieras 10% al mes?","¿Y si dominaras el inglés?","¿Y si te fueras 6 meses al extranjero?","¿Y si dejaras un proyecto que no amas?","¿Y si hicieras voluntariado?","¿Y si reescribieras tu currículum hoy?" ];
+  const HINT_FR=[ "Et si tu changeais de travail ?","Et si tu déménageais ?","Et si tu te mettais en freelance ?","Et si tu reprenais des études ?","Et si tu essayais la semaine de 4 jours ?","Et si tu demandais une augmentation ?","Et si tu prenais un mois off ?","Et si tu coupais les réseaux 30 jours ?","Et si tu vivais sans voiture ?","Et si tu apprenais à coder ?","Et si tu retournais à la salle ?","Et si tu courais 3 fois par semaine ?","Et si tu adoptais un chien ?","Et si tu vivais près de ta famille ?","Et si tu investissais 10 % par mois ?","Et si tu maîtrisais l’anglais ?" ];
+  const HINT_DE=[ "Was, wenn du den Job wechselst?","Was, wenn du in eine andere Stadt ziehst?","Was, wenn du freiberuflich arbeitest?","Was, wenn du wieder studierst?","Was, wenn du eine 4-Tage-Woche probierst?","Was, wenn du um eine Gehaltserhöhung bittest?","Was, wenn du 30 Tage Social Media pausierst?","Was, wenn du ohne Auto lebst?","Was, wenn du Programmieren lernst?","Was, wenn du wieder ins Gym gehst?","Was, wenn du 3× pro Woche läufst?","Was, wenn du einen Hund adoptierst?","Was, wenn du in Familiennähe wohnst?","Was, wenn du monatlich 10 % investierst?" ];
 
   function pickHintPool(){
     if(lang==='it') return HINT_IT;
@@ -312,21 +297,13 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     if(lang==='de') return HINT_DE;
     return HINT_EN;
   }
-  function seededShuffle(arr, seed){
-    // deterministic daily shuffle (xorshift-ish)
-    let s = seed|0; if(!s) s = 1234567;
-    function rnd(){ s ^= s<<13; s ^= s>>>17; s ^= s<<5; return (s>>>0)/4294967295; }
-    const a = arr.slice();
-    for (let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
-    return a;
-  }
+  function randomInt(a,b){ return a+Math.floor(Math.random()*(b-a+1)); }
   function randomFrom(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 
   /* ===== DOM refs ===== */
   const backBtn=$('backBtn'), homeBtn=$('homeBtn'), langSelect=$('langSelect');
   const styleChips=$('styleChips'), periodoChips=$('periodoChips');
-  const goBtn=$('goBtn'), clearBtn=$('clearBtn'), qInput=$('qInput'), surpriseBtn=$('surpriseBtn');
-  const absBar=$('absBar'), absLike=$('absLike'), absSkip=$('absSkip'), absLabel=$('absLabel'), absPct=$('absPct');
+  const goBtn=$('goBtn'), clearBtn=$('clearBtn'), saveBtn=$('saveBtn'), qInput=$('qInput'), surpriseBtn=$('surpriseBtn');
 
   /* ===== Render testuale ===== */
   function applyTexts(){
@@ -338,6 +315,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     $('qLabel').textContent=T('yourq');
     goBtn.textContent=T('gen');
     clearBtn.textContent=T('clear');
+    saveBtn.textContent=T('saveQ');
     surpriseBtn.textContent = '🎲 ' + T('surprise');
     $('microTitle').textContent=T('microT'); $('microHint').textContent=T('microHint');
     $('saveMicroBtn').textContent=T('microSaveBtn');
@@ -347,9 +325,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     $('firstSessionBanner').textContent=T('firstSession'); $('footerNote').textContent=T('footer');
     $('chipWhatIf').textContent=T('styleWF'); $('chipWTF').textContent=T('styleWTF');
     $('chipFuture').textContent=T('fut'); $('chipPast').textContent=T('past');
-    absLabel.textContent = T('absurdBar');
-    absLike.textContent = T('like');
-    absSkip.textContent = T('pass');
     document.documentElement.lang=lang;
     qInput.placeholder = (lang==='it' ? 'E se…'
                         : lang==='es' ? '¿Y si…?'
@@ -360,8 +335,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     renderCreditsBadge();
     renderMicroTexts();
     renderHints();
-    renderAbsurdPct();
-    renderSaved();
+    renderNext();
     renderStories();
   }
 
@@ -375,7 +349,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     try{
       lang = langSelect.value;
       LS.setItem('lang',lang);
-      applyTexts(); // aggiorna tutto
+      applyTexts();
     }catch(e){ console.error('Lang switch error:', e); }
   };
 
@@ -414,23 +388,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     prefs.periodo=b.dataset.periodo; writeJSON('whatif_prefs',prefs); renderBadges();
   });
 
-  /* ===== Persistenza Saved / History ===== */
-  function pushSaved(q){
-    if(!q) return;
-    const arr=readJSON('next_prompts',[]);
-    arr.unshift({q,ts:Date.now()});
-    writeJSON('next_prompts',arr.slice(0,60));
-    renderSaved();
-  }
-  function pushHistory(domanda){
-    if(!domanda) return;
-    const arr=readJSON('cronologia',[]);
-    arr.push({domanda,stile:prefs.stile,ts:Date.now()});
-    writeJSON('cronologia',arr.slice(-200));
-    renderStories();
-  }
-
-  /* ===== Domanda / Invio alla quinta ===== */
+  /* ===== Submit to fifth ===== */
   function trySubmit(){
     try{
       const domanda=(qInput.value||'').trim(); if(!domanda){ qInput.focus(); return; }
@@ -444,7 +402,10 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       LS.setItem('domanda',domanda);
       const req={ domanda, stile:prefs.stile, lang, extra:'', micro, fantasy_mode:false, periodo:prefs.periodo };
       writeJSON('whatif_request',req);
-      pushHistory(domanda);
+      // aggiorna cronologia
+      const hist=readJSON('cronologia',[]);
+      hist.push({ts:Date.now(),domanda,stile:prefs.stile});
+      writeJSON('cronologia',hist.slice(-200));
       location.href='fifth.html';
     }catch(e){
       console.error('Submit error:', e);
@@ -452,390 +413,269 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     }
   }
   goBtn.onclick=trySubmit;
-  clearBtn.onclick=()=>{ qInput.value=''; absBar.classList.remove('show'); qInput.focus(); };
+  clearBtn.onclick=()=>{ qInput.value=''; qInput.focus(); };
+  saveBtn.onclick=()=>{
+    const q=(qInput.value||'').trim(); if(!q) return;
+    const arr=readJSON('next_prompts',[]);
+    arr.unshift({q,ts:Date.now()});
+    writeJSON('next_prompts',arr.slice(0,50));
+    renderNext();
+  };
   qInput.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); } });
 
-  /* ===== Non ripetere prompt tra sessioni ===== */
-  function keySeen(){ return `prompt_seen_${lang}_${prefs.periodo==='past'?'past':'future'}`; }
-  function markSeen(text){
-    const k=keySeen();
-    const set=new Set(readJSON(k,[]));
-    set.add(text);
-    const arr=[...set].slice(-400);
-    writeJSON(k,arr);
-  }
-  function alreadySeen(text){
-    const set=new Set(readJSON(keySeen(),[]));
-    return set.has(text);
+  /* ===== Surprise pools ===== */
+  function profOrFallback(){
+    const p=readJSON('whatif_profile',{});
+    const city = p.city || (lang==='en'?'your city':lang==='es'?'tu ciudad':lang==='fr'?'ta ville':lang==='de'?'deiner Stadt':'la tua città');
+    const role = p.role || (lang==='en'?'your role':lang==='es'?'tu rol':lang==='fr'?'ton rôle':lang==='de'?'deine Rolle':'il tuo ruolo');
+    const goal = p.goal || (lang==='en'?'your goal':lang==='es'?'tu objetivo':lang==='fr'?'ton objectif':lang==='de'?'dein Ziel':'il tuo obiettivo');
+    return {city,role,goal};
   }
 
-  /* ===== Personalized / Creative / Absurd pools ===== */
-  // Helper per frasi corrette (molto semplici, safe in tutte le lingue)
-  function buildPersonalized(){
-    const prof = readJSON('whatif_profile',{});
-    const name = prof.name || (lang==='en'?'You':lang==='es'?'Tú':lang==='fr'?'Toi':lang==='de'?'Du':'Tu');
-    const city = prof.city || (lang==='en'?'your city':lang==='es'?'tu ciudad':lang==='fr'?'ta ville':lang==='de'?'deiner Stadt':'la tua città');
-    const role = prof.role || (lang==='en'?'your role':lang==='es'?'tu rol':lang==='fr'?'ton rôle':lang==='de'?'deine Rolle':'il tuo ruolo');
-    const goal = prof.goal || (lang==='en'?'your goal':lang==='es'?'tu objetivo':lang==='fr'?'ton objectif':lang==='de'?'dein Ziel':'il tuo obiettivo');
+  // 2nd-person personalized (both tenses)
+  function personalizedPool(){
+    const {city,role,goal}=profOrFallback();
     const isPast = (prefs.periodo==='past');
-
-    const P = []; // restituisce un array
+    const P=[];
     if(lang==='it'){
       if(isPast){
-        P.push(`E se ${name} avesse puntato a ${goal} quando era a ${city}?`);
-        P.push(`E se, da ${role}, avessi cambiato direzione un anno fa?`);
-        P.push(`E se ti fossi spostato/a da ${city} per crescere nel ruolo?`);
-        P.push(`E se avessi scelto un passo piccolo al posto di uno enorme?`);
-      }else{
-        P.push(`E se ${name} provasse a raggiungere ${goal} restando a ${city}?`);
-        P.push(`E se, da ${role}, facessi un esperimento di 30 giorni?`);
-        P.push(`E se spostassi la tua base da ${city} per avvicinarti al tuo obiettivo?`);
+        P.push(`E se avessi puntato a ${goal} quando vivevi a ${city}?`);
+        P.push(`E se, da ${role}, avessi cambiato direzione l’anno scorso?`);
+        P.push(`E se ti fossi trasferito/a da ${city} per crescere nel ruolo?`);
+        P.push(`E se avessi iniziato con un passo piccolo invece di un salto enorme?`);
+      } else {
+        P.push(`E se provassi a raggiungere ${goal} restando a ${city}?`);
+        P.push(`E se, da ${role}, testassi un esperimento di 30 giorni?`);
+        P.push(`E se ti spostassi da ${city} per avvicinarti al tuo obiettivo?`);
         P.push(`E se iniziassi con un micro-passo verso ${goal} questa settimana?`);
       }
     } else if(lang==='en'){
       if(isPast){
-        P.push(`What if ${name} had aimed for ${goal} while in ${city}?`);
-        P.push(`What if, as ${role}, you had changed direction a year ago?`);
+        P.push(`What if you had aimed for ${goal} while living in ${city}?`);
+        P.push(`What if, as ${role}, you had changed direction last year?`);
         P.push(`What if you had moved from ${city} to grow in your role?`);
-        P.push(`What if you had chosen one small step instead of a huge leap?`);
-      }else{
-        P.push(`What if ${name} tried to reach ${goal} while staying in ${city}?`);
+        P.push(`What if you had started with one small step instead of a huge leap?`);
+      } else {
+        P.push(`What if you tried to reach ${goal} while staying in ${city}?`);
         P.push(`What if, as ${role}, you ran a 30-day experiment?`);
         P.push(`What if you moved from ${city} to get closer to your goal?`);
-        P.push(`What if you started with one tiny step toward ${goal} this week?`);
+        P.push(`What if you started with a tiny step toward ${goal} this week?`);
       }
     } else if(lang==='es'){
       if(isPast){
-        P.push(`¿Y si ${name} hubiera apuntado a ${goal} cuando estaba en ${city}?`);
-        P.push(`¿Y si, como ${role}, hubieras cambiado de rumbo hace un año?`);
+        P.push(`¿Y si hubieras apuntado a ${goal} cuando vivías en ${city}?`);
+        P.push(`¿Y si, como ${role}, hubieras cambiado de rumbo el año pasado?`);
         P.push(`¿Y si te hubieras mudado de ${city} para crecer en tu rol?`);
-        P.push(`¿Y si hubieras elegido un paso pequeño en vez de un salto enorme?`);
-      }else{
-        P.push(`¿Y si ${name} intentara alcanzar ${goal} quedándose en ${city}?`);
+        P.push(`¿Y si hubieras empezado con un paso pequeño en lugar de un gran salto?`);
+      } else {
+        P.push(`¿Y si intentaras alcanzar ${goal} quedándote en ${city}?`);
         P.push(`¿Y si, como ${role}, hicieras un experimento de 30 días?`);
         P.push(`¿Y si te mudaras de ${city} para acercarte a tu objetivo?`);
         P.push(`¿Y si empezaras con un micro-paso hacia ${goal} esta semana?`);
       }
     } else if(lang==='fr'){
       if(isPast){
-        P.push(`Et si ${name} avait visé ${goal} quand tu étais à ${city} ?`);
-        P.push(`Et si, en tant que ${role}, tu avais changé de cap il y a un an ?`);
+        P.push(`Et si tu avais visé ${goal} quand tu vivais à ${city} ?`);
+        P.push(`Et si, en tant que ${role}, tu avais changé de cap l’an dernier ?`);
         P.push(`Et si tu avais quitté ${city} pour évoluer dans ton rôle ?`);
-        P.push(`Et si tu avais choisi un petit pas plutôt qu’un grand saut ?`);
-      }else{
-        P.push(`Et si ${name} tentait d’atteindre ${goal} en restant à ${city} ?`);
+        P.push(`Et si tu avais commencé par un petit pas plutôt qu’un grand saut ?`);
+      } else {
+        P.push(`Et si tu essayais d’atteindre ${goal} en restant à ${city} ?`);
         P.push(`Et si, en tant que ${role}, tu faisais un test de 30 jours ?`);
         P.push(`Et si tu quittais ${city} pour te rapprocher de ton objectif ?`);
         P.push(`Et si tu commençais par un micro-pas vers ${goal} cette semaine ?`);
       }
     } else { // de
       if(isPast){
-        P.push(`Was, wenn ${name} ${goal} angestrebt hätte, als du in ${city} warst?`);
-        P.push(`Was, wenn du als ${role} vor einem Jahr die Richtung geändert hättest?`);
+        P.push(`Was, wenn du ${goal} angestrebt hättest, als du in ${city} gewohnt hast?`);
+        P.push(`Was, wenn du als ${role} letztes Jahr die Richtung geändert hättest?`);
         P.push(`Was, wenn du ${city} verlassen hättest, um in deiner Rolle zu wachsen?`);
-        P.push(`Was, wenn du einen kleinen Schritt statt eines großen Sprungs gewählt hättest?`);
-      }else{
-        P.push(`Was, wenn ${name} ${goal} anstreben würde und in ${city} bliebe?`);
+        P.push(`Was, wenn du mit einem kleinen Schritt statt einem großen Sprung begonnen hättest?`);
+      } else {
+        P.push(`Was, wenn du ${goal} anstrebst und in ${city} bleibst?`);
         P.push(`Was, wenn du als ${role} ein 30-Tage-Experiment startest?`);
         P.push(`Was, wenn du ${city} verlässt, um deinem Ziel näher zu kommen?`);
-        P.push(`Was, wenn du diese Woche mit einem Mikro-Schritt Richtung ${goal} beginnst?`);
+        P.push(`Was, wenn du diese Woche mit einem Mini-Schritt Richtung ${goal} beginnst?`);
       }
     }
     return P;
   }
 
-  const CREATIVE = {
-    it:{
-      future:[
-        "E se provassi una settimana senza notifiche dopo le 20?",
-        "E se chiedessi feedback onesto a 3 persone che stimi?",
-        "E se calendarizzassi 2 ore a settimana solo per progetti tuoi?"
-      ],
-      past:[
-        "E se avessi detto un sì in meno e un no in più l’anno scorso?",
-        "E se avessi chiesto aiuto a qualcuno, prima di mollare?",
-        "E se avessi difeso 2 ore a settimana solo per te?"
-      ]
+  // Neutral (not personalized), second person
+  const NEUTRAL_POOLS = {
+    it: {
+      future: ["E se cambiassi lavoro?","E se ti trasferissi in un’altra città?","E se provassi la settimana corta?","E se chiedessi un aumento?","E se imparassi bene l’inglese?"],
+      past:   ["E se avessi cambiato lavoro nel 2022?","E se ti fossi trasferito/a dopo la laurea?","E se avessi provato la settimana corta l’anno scorso?","E se avessi chiesto l’aumento prima?"]
     },
-    en:{
-      future:[
-        "What if you muted notifications after 8 pm for a week?",
-        "What if you asked 3 people you trust for blunt feedback?",
-        "What if you blocked 2 hours weekly just for your projects?"
-      ],
-      past:[
-        "What if you had said one fewer yes and one more no last year?",
-        "What if you had asked for help before giving up?",
-        "What if you had protected 2 hours a week just for you?"
-      ]
+    en: {
+      future: ["What if you changed jobs?","What if you moved to another city?","What if you tried a 4-day week?","What if you asked for a raise?","What if you mastered English?"],
+      past:   ["What if you had changed jobs in 2022?","What if you had moved after graduation?","What if you had tried a 4-day week last year?","What if you had asked for that raise earlier?"]
     },
-    es:{
-      future:[
-        "¿Y si silencias notificaciones después de las 20 una semana?",
-        "¿Y si pides feedback sincero a 3 personas de confianza?",
-        "¿Y si reservas 2 horas semanales solo para tus proyectos?"
-      ],
-      past:[
-        "¿Y si el año pasado hubieras dicho un sí menos y un no más?",
-        "¿Y si hubieras pedido ayuda antes de rendirte?",
-        "¿Y si hubieras protegido 2 horas semanales solo para ti?"
-      ]
+    es: {
+      future: ["¿Y si cambiaras de trabajo?","¿Y si te mudaras de ciudad?","¿Y si probaras semana de 4 días?","¿Y si pidieras un aumento?"],
+      past:   ["¿Y si hubieras cambiado de trabajo en 2022?","¿Y si te hubieras mudado tras graduarte?","¿Y si hubieras probado la semana de 4 días el año pasado?"]
     },
-    fr:{
-      future:[
-        "Et si tu coupais les notifications après 20h pendant une semaine ?",
-        "Et si tu demandais un feedback franc à 3 personnes de confiance ?",
-        "Et si tu bloquais 2h par semaine juste pour tes projets ?"
-      ],
-      past:[
-        "Et si tu avais dit un oui de moins et un non de plus l’an dernier ?",
-        "Et si tu avais demandé de l’aide avant d’abandonner ?",
-        "Et si tu avais protégé 2h par semaine rien que pour toi ?"
-      ]
+    fr: {
+      future: ["Et si tu changeais de travail ?","Et si tu déménageais ?","Et si tu essayais la semaine de 4 jours ?","Et si tu demandais une augmentation ?"],
+      past:   ["Et si tu avais changé de travail en 2022 ?","Et si tu t’étais installé ailleurs après le diplôme ?","Et si tu avais tenté la semaine de 4 jours l’an dernier ?"]
     },
-    de:{
-      future:[
-        "Was, wenn du eine Woche nach 20 Uhr alle Benachrichtigungen stumm schaltest?",
-        "Was, wenn du 3 Vertraute um ehrliches Feedback bittest?",
-        "Was, wenn du wöchentlich 2 Stunden nur für eigene Projekte blockst?"
-      ],
-      past:[
-        "Was, wenn du letztes Jahr ein Ja weniger und ein Nein mehr gesagt hättest?",
-        "Was, wenn du um Hilfe gebeten hättest, bevor du aufgegeben hast?",
-        "Was, wenn du 2 Stunden pro Woche nur für dich geschützt hättest?"
-      ]
+    de: {
+      future: ["Was, wenn du den Job wechselst?","Was, wenn du in eine andere Stadt ziehst?","Was, wenn du eine 4-Tage-Woche probierst?","Was, wenn du um eine Gehaltserhöhung bittest?"],
+      past:   ["Was, wenn du 2022 den Job gewechselt hättest?","Was, wenn du nach dem Abschluss umgezogen wärst?","Was, wenn du letztes Jahr die 4-Tage-Woche getestet hättest?"]
     }
   };
 
-  const ABSURD = {
-    it:{
-      future:[
-        "E se facessi scegliere al tuo frigorifero il prossimo lavoro?",
-        "E se cambiassi città in base al miglior cappuccino entro 500 m?"
-      ],
-      past:[
-        "E se avessi deciso la carriera lanciando una moneta gigante?",
-        "E se avessi scelto casa seguendo solo la direzione del vento?"
-      ]
-    },
-    en:{
-      future:[
-        "What if your fridge chose your next job?",
-        "What if you picked a city by the best cappuccino within 500 m?"
-      ],
-      past:[
-        "What if you had chosen your career by flipping a giant coin?",
-        "What if you had picked a home by following only the wind?"
-      ]
-    },
-    es:{
-      future:[
-        "¿Y si tu nevera eligiera tu próximo trabajo?",
-        "¿Y si eliges ciudad por el mejor cappuccino en 500 m?"
-      ],
-      past:[
-        "¿Y si hubieras elegido tu carrera lanzando una moneda gigante?",
-        "¿Y si hubieras elegido casa siguiendo solo el viento?"
-      ]
-    },
-    fr:{
-      future:[
-        "Et si ton frigo choisissait ton prochain job ?",
-        "Et si tu choisissais ta ville au meilleur cappuccino à 500 m ?"
-      ],
-      past:[
-        "Et si tu avais choisi ta carrière en lançant une pièce géante ?",
-        "Et si tu avais choisi ton logement en suivant seulement le vent ?"
-      ]
-    },
-    de:{
-      future:[
-        "Was, wenn dein Kühlschrank deinen nächsten Job wählt?",
-        "Was, wenn du die Stadt nach dem besten Cappuccino im 500-m-Radius wählst?"
-      ],
-      past:[
-        "Was, wenn du deine Karriere mit einer Riesenmünze entschieden hättest?",
-        "Was, wenn du dein Zuhause nur nach dem Wind gewählt hättest?"
-      ]
+  // Absurd (second person) + like%
+  function absurdPool(){
+    const likeWord = T('like');
+    const S = (txt)=> `${txt} — ${likeWord} ${randomInt(61,97)}%`;
+    if(lang==='it'){
+      return (prefs.periodo==='past')
+        ? [S("E se avessi negoziato con un piccione per scegliere il tuo destino?"),
+           S("E se avessi imparato a parlare con le piante per farti coraggio?")]
+        : [S("E se adottassi una pianta come coach motivazionale per 7 giorni?"),
+           S("E se scrivessi il tuo CV in versi per vedere che succede?")];
+    } else if(lang==='en'){
+      return (prefs.periodo==='past')
+        ? [S("What if you had asked a traffic light to decide your career path?"),
+           S("What if you had learned plant-whispering to boost courage?")]
+        : [S("What if you let a houseplant be your coach for a week?"),
+           S("What if you rewrote your résumé as a poem just to test reactions?")];
+    } else if(lang==='es'){
+      return (prefs.periodo==='past')
+        ? [S("¿Y si hubieras dejado que un semáforo eligiera tu carrera?"),
+           S("¿Y si hubieras aprendido a susurrar a las plantas para tener valor?")]
+        : [S("¿Y si una planta fuera tu coach una semana?"),
+           S("¿Y si reescribieras tu currículum como un poema a ver qué pasa?")];
+    } else if(lang==='fr'){
+      return (prefs.periodo==='past')
+        ? [S("Et si tu avais laissé un feu rouge décider ta carrière ?"),
+           S("Et si tu avais appris à chuchoter aux plantes pour te donner du courage ?")]
+        : [S("Et si une plante devenait ton coach pendant une semaine ?"),
+           S("Et si tu réécrivais ton CV en poésie pour voir l’effet ?")];
+    } else { // de
+      return (prefs.periodo==='past')
+        ? [S("Was, wenn eine Ampel über deinen Karriereweg entschieden hätte?"),
+           S("Was, wenn du Pflanzenflüstern gelernt hättest, um mutiger zu sein?")]
+        : [S("Was, wenn eine Zimmerpflanze eine Woche lang dein Coach wäre?"),
+           S("Was, wenn du deinen Lebenslauf als Gedicht schreibst – nur zum Test?")];
     }
-  };
-
-  /* ===== Ponderazioni con feedback utente per assurde ===== */
-  function getAbsurdBase(){ return readJSON('absurd_pref',{boost:0}).boost||0; } // -1..+1
-  function absurdPct(){
-    // 10% base, +5 se like, -5 se skip, clamp 5..20
-    const boost = getAbsurdBase(); // -1/0/1
-    const base = 10 + 5*boost;
-    return clamp(base,5,20);
-  }
-  function renderAbsurdPct(){ absPct.textContent = `${T('pct')}${absurdPct()}%`; }
-
-  /* ===== Sorprendimi (60/30/10 con memoria) ===== */
-  function pickNonRepeating(pool){
-    const shuffled = seededShuffle(pool, Date.now() & 0xffff);
-    for(const p of shuffled){ if(!alreadySeen(p)) return p; }
-    // se le abbiamo viste tutte, pulisci metà memoria e prendi random
-    const k=keySeen(); const seen=readJSON(k,[]);
-    writeJSON(k, seen.slice(Math.floor(seen.length/2))); // dimezza
-    return shuffled[0] || pool[0];
-  }
-  function surpriseOnce(){
-    const isPast = (prefs.periodo==='past');
-    const PERS = buildPersonalized();
-    const CRE = (CREATIVE[lang]||CREATIVE.en)[isPast?'past':'future'];
-    const ABS = (ABSURD[lang]||ABSURD.en)[isPast?'past':'future'];
-
-    const ap = absurdPct();
-    const cp = 30; // creative
-    const pp = 100 - cp - ap; // personalized
-
-    const r = Math.random()*100;
-    let chosen, kind='personal';
-
-    if(r < pp && PERS.length){ chosen = pickNonRepeating(PERS); kind='personal'; }
-    else if(r < pp+cp && CRE.length){ chosen = pickNonRepeating(CRE); kind='creative'; }
-    else { chosen = pickNonRepeating(ABS); kind='absurd'; }
-
-    qInput.value = chosen;
-    qInput.focus();
-
-    // salva nei "salvati"
-    pushSaved(chosen);
-    // marca come visto per non ripetere
-    markSeen(chosen);
-
-    // mostra barra feedback solo se assurda
-    if(kind==='absurd'){ absBar.classList.add('show'); } else { absBar.classList.remove('show'); }
-
-    return {text:chosen, kind};
   }
 
+  // Daily rotation memory for Surprise “seen”
+  function seenKey(){ return `prompt_seen_${lang}_${prefs.periodo}`; }
+  function getSeen(){ return readJSON(seenKey(),[]); }
+  function pushSeen(txt){
+    const s=new Set(getSeen()); s.add(txt);
+    // reset next day
+    const kday=`${seenKey()}_day`;
+    const day=LS.getItem(kday); if(day!==today()){ LS.setItem(kday,today()); writeJSON(seenKey(),[]); return; }
+    writeJSON(seenKey(),[...s].slice(-200));
+  }
+
+  function pickWithWeights(){
+    const r=Math.random();
+    let pool=[];
+    if(r<0.60) pool = personalizedPool();
+    else if(r<0.90) pool = (NEUTRAL_POOLS[lang]||NEUTRAL_POOLS.it)[prefs.periodo==='past'?'past':'future'];
+    else pool = absurdPool();
+
+    // filter already seen today
+    const seen=new Set(getSeen());
+    const fresh = pool.filter(p=>!seen.has(p));
+    const pick = (fresh.length?randomFrom(fresh):randomFrom(pool));
+    pushSeen(pick);
+    return pick;
+  }
+
+  // Sorprendimi
   surpriseBtn.onclick=()=>{
-    const res = surpriseOnce();
-    // aggiorna label % ogni volta
-    renderAbsurdPct();
-  };
-  absLike.onclick=()=>{
-    writeJSON('absurd_pref',{boost:1});
-    absBar.classList.remove('show');
-    renderAbsurdPct();
-  };
-  absSkip.onclick=()=>{
-    writeJSON('absurd_pref',{boost:-1});
-    absBar.classList.remove('show');
-    renderAbsurdPct();
+    const idea = pickWithWeights();
+    qInput.value = idea;
+    qInput.focus();
   };
 
-  /* ===== Micro-domande (daily, variano, spariscono dopo salvataggio) ===== */
-  function microDailyPool(){
-    // definiamo 6 possibili micro-domande, ne mostriamo 3 ogni giorno (seed = date)
-    const base = [
-      {key:'mood',      labelKey:'qMood',    opts:(lng)=>(
-        lng==='en'?["Calm like airplane mode","Charged like a socket","Foggy but fine","Restless astronaut","Light and chatty","Solid and quiet","Bit chaotic, funny"]
-      : lng==='es'?["Tranquilo en modo avión","Cargado como un enchufe","Nublado pero bien","Astronauta inquieto","Ligero y hablador","Sólido y callado","Un poco caótico, divertido"]
-      : lng==='fr'?["Calme en mode avion","Chargé comme une prise","Brumeux mais ok","Astronaute agité","Léger et bavard","Solide et discret","Un peu chaotique, amusé"]
-      : lng==='de'?["Ruhig wie Flugmodus","Geladen wie eine Steckdose","Neblig aber okay","Unruhiger Astronaut","Leicht & gesprächig","Stabil & ruhig","Etwas chaotisch, witzig"]
-      : ["Calmo in modalità aereo","Carico come una presa","Appannato ma ok","Astronauta irrequieto","Leggero e chiacchierone","Solido e in silenzio","Un po’ caotico ma divertito"])},
-      {key:'anchor',    labelKey:'qAnchor',  opts:(lng)=>(
-        lng==='en'?["People I love","Money & bills","A routine that works","A promise to myself","Fear of changing","Curiosity about what’s here","Health first","Building something long-term"]
-      : lng==='es'?["Gente que amo","Dinero y facturas","Una rutina que funciona","Promesa conmigo mismo","Miedo a cambiar","Curiosidad por lo que hay","Salud primero","Construir algo a largo plazo"]
-      : lng==='fr'?["Les gens que j’aime","Argent & factures","Une routine qui marche","Une promesse à moi-même","Peur de changer","Curiosité pour ce qu’il y a ici","La santé d’abord","Construire du long terme"]
-      : lng==='de'?["Menschen, die ich liebe","Geld & Rechnungen","Eine funktionierende Routine","Ein Versprechen an mich","Angst vor Veränderung","Neugier auf das Hier","Gesundheit zuerst","Langfristig etwas aufbauen"]
-      : ["Le persone che ami","Soldi & bollette","Una routine che funziona","Una promessa a te stesso/a","Paura di cambiare","Curiosità per ciò che c’è","Salute prima","Costruire qualcosa di lungo"])},
-      {key:'decide',    labelKey:'qDecide',  opts:(lng)=>(
-        lng==='en'?["Gut first","Lists & pros/cons","Ask a friend","Deadline decides","Flip a coin","Coffee + walk","Sleep on it"]
-      : lng==='es'?["Tripas primero","Listas pro/contra","Preguntar a un amigo","Decide la fecha límite","Cara o cruz","Café + paseo","Dormirlo"]
-      : lng==='fr'?["L’instinct d’abord","Listes pour/contre","Demander à un ami","La deadline décide","Pile ou face","Café + marche","Laisser une nuit"]
-      : lng==='de'?["Bauch zuerst","Listen Pro/Contra","Freund fragen","Deadline entscheidet","Münzwurf","Kaffee + Spaziergang","Drüber schlafen"]
-      : ["Pancia prima","Liste pro/contro","Chiedi a un amico","Decide la scadenza","Tira la moneta","Caffè + passeggiata","Ci dormi su"])},
-      {key:'jung_att',  labelKey:'qJung',    opts:(lng)=>(
-        lng==='en'?["Extraversion","Introversion"]
-      : lng==='es'?["Extroversión","Introversión"]
-      : lng==='fr'?["Extraversion","Introversion"]
-      : lng==='de'?["Extraversion","Introversion"]
-      : ["Estroversione","Introversione"])},
-      {key:'jung_rat',  labelKey:'qJung',    opts:(lng)=>(
-        lng==='en'?["Thinking (T)","Feeling (F)"]
-      : lng==='es'?["Pensamiento (T)","Sentimiento (F)"]
-      : lng==='fr'?["Pensée (T)","Sentiment (F)"]
-      : lng==='de'?["Denken (T)","Fühlen (F)"]
-      : ["Pensiero (T)","Sentimento (F)"])},
-      {key:'jung_per',  labelKey:'qJung',    opts:(lng)=>(
-        lng==='en'?["Sensing (S)","Intuition (N)"]
-      : lng==='es'?["Sensación (S)","Intuición (N)"]
-      : lng==='fr'?["Sensation (S)","Intuition (N)"]
-      : lng==='de'?["Empfinden (S)","Intuition (N)"]
-      : ["Sensazione (S)","Intuizione (N)"])}
-    ];
-    return base;
-  }
-
-  function renderMicroTexts(){
-    $('moodTitle')?.remove();
-    $('anchorTitle')?.remove();
-    $('decideTitle')?.remove();
-    $('zodiacTitle')?.remove();
-    $('jungTitle')?.remove();
-    // i titoli saranno dentro i blocchi generati dinamicamente
-  }
-
-  function renderDailyMicro(){
+  /* ===== Prima sessione / Micro ===== */
+  const FS_KEY='first_session_seen';
+  const fs=readJSON(FS_KEY,{date:'',seen:false});
+  function shouldShowMicroNow(){
     const saved=readJSON('micro_saved',{date:'',ok:false});
-    const wrap=$('microWrap'); wrap.innerHTML='';
-    const todayIso = today();
-    const d = I18N[lang]||I18N.it;
-
-    // Se già salvato oggi → nascondi
-    if(saved.date===todayIso && saved.ok){
-      $('microCard').classList.add('collapsed');
+    return saved.date!==today(); // visibile solo se non salvate oggi
+  }
+  function showOrHideMicro(){
+    if(shouldShowMicroNow()){
+      $('firstSessionBanner').textContent=T('firstSession');
+      $('firstSessionBanner').style.display='block';
+      $('microCard').classList.remove('collapsed');
+    } else {
       $('firstSessionBanner').style.display='none';
-      return;
+      $('microCard').classList.add('collapsed');
     }
+  }
+  showOrHideMicro();
 
-    const pool = microDailyPool();
-    // seed dal giorno per scelta 3 blocchi
-    const seed = parseInt(todayIso.replace(/-/g,''),10) ^ (lang.charCodeAt(0)<<8);
-    const picked = seededShuffle(pool, seed).slice(0,3);
+  $('microHead').onclick=()=>{
+    if(!shouldShowMicroNow()) return;
+    $('microCard').classList.toggle('collapsed');
+  };
+  $('saveMicroBtn').onclick=()=>{
+    // mark saved for today
+    writeJSON('micro_saved',{date:today(),ok:true});
+    // persist selections (already written in renderOptions onclick)
+    $('firstSessionBanner').style.display='none';
+    $('microCard').classList.add('collapsed');
+    $('microSavedMsg').textContent=T('microSaved');
+  };
 
-    // genera tre blocchi con opzioni
-    picked.forEach(item=>{
-      const qblock=document.createElement('div'); qblock.className='qblock';
-      const title=document.createElement('div'); title.className='qtitle';
-      title.innerHTML=`<span>🧩</span><span>${d[item.labelKey]}</span>`;
-      const optset=document.createElement('div'); optset.className='optset';
-      const optsArr=item.opts(lang);
-      optsArr.forEach(txt=>{
-        const b=document.createElement('button'); b.className='opt'; b.type='button'; b.textContent=txt;
-        b.onclick=()=>{
-          optset.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));
-          b.classList.add('sel');
-          const cur=readJSON('micro_profile',{}); cur[item.key]=txt; writeJSON('micro_profile',cur);
-        };
-        optset.appendChild(b);
-      });
-      qblock.appendChild(title); qblock.appendChild(optset); wrap.appendChild(qblock);
+  function renderOptions(containerId, options, key){
+    const wrap=$(containerId); if(!wrap) return; wrap.innerHTML='';
+    const saved=readJSON('micro_profile',{});
+    options.forEach(text=>{
+      const b=document.createElement('button');
+      b.className='opt'; b.type='button'; b.textContent=text;
+      if(saved[key]===text) b.classList.add('sel');
+      b.onclick=()=>{
+        wrap.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));
+        b.classList.add('sel');
+        const cur=readJSON('micro_profile',{}); cur[key]=text; writeJSON('micro_profile',cur);
+      };
+      wrap.appendChild(b);
     });
+  }
+  function renderMicroTexts(){
+    $('moodTitle').textContent=(lang==='it'?'Oggi come ti senti?':lang==='es'?'¿Cómo te sientes hoy?':lang==='fr'?'Comment te sens-tu aujourd’hui ?':lang==='de'?'Wie fühlst du dich heute?':'How do you feel today?');
+    $('anchorTitle').textContent=(lang==='it'?'Cosa ti tiene qui ultimamente?':lang==='es'?'¿Qué te mantiene aquí últimamente?':lang==='fr'?'Qu’est-ce qui te retient ici en ce moment ?':lang==='de'?'Was hält dich derzeit hier?':"What’s keeping you here lately?");
+    $('decideTitle').textContent=(lang==='it'?'Come decidi di solito?':lang==='es'?'¿Cómo sueles decidir?':lang==='fr'?'Comment décides-tu d’habitude ?':lang==='de'?'Wie triffst du üblicherweise Entscheidungen?':"How do you usually decide?");
+    // pools (rotate daily with seed)
+    let s=[...today()].reduce((a,c)=>a+c.charCodeAt(0),0);
+    function rnd(){ s=(s*9301+49297)%233280; return s/233280; }
+    function pickN(pool,n){ const out=[], used=new Set(); while(out.length<n && used.size<pool.length){ const i=Math.floor(rnd()*pool.length); if(used.has(i)) continue; used.add(i); out.push(pool[i]); } return out; }
 
-    $('microCard').classList.remove('collapsed');
-    $('firstSessionBanner').style.display='block';
-    $('firstSessionBanner').textContent = T('firstSession');
+    const moodPool=(lang==='en'?["Calm, airplane mode","Energised","A bit foggy","Restless astronaut","Light & chatty","Solid & quiet","Playful chaos"]
+                             :lang==='es'?["Tranquilo","Con energía","Nublado pero bien","Astronauta inquieto","Ligero y hablador","Sólido y callado","Caos divertido"]
+                             :lang==='fr'?["Calme mode avion","Chargé d’énergie","Brumeux mais ok","Astronaute agité","Léger et bavard","Solide et discret","Un peu chaotique"]
+                             :lang==='de'?["Ruhig wie Flugmodus","Voller Energie","Neblig aber ok","Unruhiger Astronaut","Leicht & gesprächig","Stabil & ruhig","Etwas chaotisch"]
+                             :["Calmo","Carico","Appannato ma ok","Astronauta irrequieto","Leggero e chiacchierone","Solido e in silenzio","Un po’ caotico"]);
+    const anchorPool=(lang==='en'?["People you love","Money & bills","A routine that works","A promise to yourself","Fear of change","Curiosity","Health first","Building long-term"]
+                              :lang==='es'?["Tu gente","Dinero y facturas","Rutina que funciona","Promesa contigo","Miedo a cambiar","Curiosidad","Salud primero","Construir a largo plazo"]
+                              :lang==='fr'?["Les tiens","Argent & factures","Routine qui marche","Promesse à toi-même","Peur du changement","Curiosité","La santé d’abord","Construire le long terme"]
+                              :lang==='de'?["Menschen die du liebst","Geld & Rechnungen","Routine die funktioniert","Versprechen an dich","Angst vor Veränderung","Neugier","Gesundheit zuerst","Langfristig aufbauen"]
+                              :["Le persone che ami","Soldi & bollette","Routine che funziona","Promessa a te stesso/a","Paura di cambiare","Curiosità","Salute prima","Costruire lungo termine"]);
+    const decidePool=(lang==='en'?["Gut first","Pros/cons list","Ask a friend","Deadline decides","Flip a coin","Coffee + walk","Sleep on it"]
+                              :lang==='es'?["Instinto","Pros/Contras","Pedir consejo","Decide la fecha límite","Cara o cruz","Café + paseo","Dormirlo"]
+                              :lang==='fr'?["À l’instinct","Liste pour/contre","Demander un avis","La deadline tranche","Pile ou face","Café + marche","Laisser une nuit"]
+                              :lang==='de'?["Bauchgefühl","Pro/Contra-Liste","Freund fragen","Deadline entscheidet","Münzwurf","Kaffee + Spaziergang","Drüber schlafen"]
+                              :["Pancia","Lista pro/contro","Chiedi a un amico","Decide la scadenza","Tira la moneta","Caffè + passeggiata","Ci dormi su"]);
 
-    $('saveMicroBtn').onclick=()=>{
-      // ensure at least one selection?
-      const cur=readJSON('micro_profile',{});
-      writeJSON('micro_profile',cur);
-      writeJSON('micro_saved',{date:todayIso,ok:true});
-      $('microSavedMsg').textContent=T('microSaved');
-      $('microCard').classList.add('collapsed');
-      $('firstSessionBanner').style.display='none';
-    };
+    renderOptions('moodOpts', pickN(moodPool,7), 'mood');
+    renderOptions('anchorOpts', pickN(anchorPool,8), 'anchor');
+    renderOptions('decideOpts', pickN(decidePool,7), 'decide');
   }
 
   /* ===== Hints ===== */
   function renderHints(){
     const wrap=$('hintsChips'); wrap.innerHTML='';
     const pool = pickHintPool().slice();
-    // seed per giorno
     let s=[...today()].reduce((a,c)=>a+c.charCodeAt(0),0);
     function rnd(){ s=(s*9301+49297)%233280; return s/233280; }
     const out=[]; const used=new Set();
@@ -848,17 +688,15 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       b.onclick=()=>{ qInput.value=txt; window.scrollTo({top:0,behavior:'smooth'}); };
       wrap.appendChild(b);
     });
-    $('hintsCard').classList.remove('collapsed');
   }
   $('hintsHeader').onclick=()=>{ $('hintsCard').classList.toggle('collapsed'); };
 
   /* ===== Saved & History ===== */
-  function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
-  function renderSaved(){
+  function renderNext(){
     const box=$('nextList'); box.innerHTML='';
     const arr=readJSON('next_prompts',[]);
     if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=T('emptyNext'); box.appendChild(p); return; }
-    arr.slice(0,24).forEach(item=>{
+    arr.slice(0,12).forEach(item=>{
       const row=document.createElement('div'); row.className='story';
       const left=document.createElement('div');
       left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.q||'—'}</div><div class="meta">${fmtDate(item.ts)}</div>`;
@@ -866,7 +704,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.type='button'; useBtn.textContent=T('use');
       useBtn.onclick=()=>{ qInput.value=item.q||''; window.scrollTo({top:0,behavior:'smooth'}); };
       const play=document.createElement('button'); play.className='play'; play.type='button'; play.textContent='▶';
-      play.onclick=()=>{ LS.setItem('domanda', item.q||''); writeJSON('whatif_request',{ domanda:item.q||'', stile:prefs.stile, lang, extra:'', micro:readJSON('micro_profile',{}), fantasy_mode:false, periodo:prefs.periodo }); pushHistory(item.q||''); location.href='fifth.html'; };
+      play.onclick=()=>{ LS.setItem('domanda', item.q||''); writeJSON('whatif_request',{ domanda:item.q||'', stile:prefs.stile, lang, extra:'', micro:readJSON('micro_profile',{}), fantasy_mode:false, periodo:prefs.periodo }); location.href='fifth.html'; };
       right.appendChild(useBtn); right.appendChild(play); row.appendChild(left); row.appendChild(right); box.appendChild(row);
     });
   }
@@ -874,7 +712,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     const box=$('storyList'); box.innerHTML='';
     const arr=readJSON('cronologia',[]);
     if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=T('emptyStories'); box.appendChild(p); return; }
-    arr.slice(-20).reverse().forEach(item=>{
+    arr.slice(-12).reverse().forEach(item=>{
       const row=document.createElement('div'); row.className='story';
       const left=document.createElement('div');
       left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.domanda||'—'}</div><div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
@@ -885,13 +723,12 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   }
   $('savedHeader').onclick=()=>{ $('savedCard').classList.toggle('collapsed'); };
   $('histHeader').onclick=()=>{ $('histCard').classList.toggle('collapsed'); };
-  $('clearSavedBtn').onclick=()=>{ writeJSON('next_prompts',[]); renderSaved(); };
-  $('clearHistoryBtn').onclick=()=>{ writeJSON('cronologia',[]); renderStories(); };
+  $('clearSavedBtn').onclick=()=>{ if(confirm('Svuotare le domande salvate?')){ writeJSON('next_prompts',[]); renderNext(); } };
+  $('clearHistoryBtn').onclick=()=>{ if(confirm('Svuotare la cronologia?')){ writeJSON('cronologia',[]); renderStories(); } };
 
   /* ===== Init ===== */
   try{
     applyTexts();
-    renderDailyMicro();
   }catch(e){ console.error('Init error:', e); }
 })();
 </script>
