@@ -1,43 +1,29 @@
 <!doctype html>
-<html lang="it">
+<html lang="it" data-theme="whatif">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f – About you</title>
+  <title>What?f — Profilo</title>
 
-  <!-- PWA -->
   <meta name="theme-color" content="#0B0B0C" />
   <link rel="manifest" href="/manifest.json" />
-  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <style>
     :root{
-      --bg:#0C0F14; --bg2:#0E1724;
-      --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
-      --accent:#1C57A0; --accent2:#FFEC01; --ink:#001f26;
-      --chip:#0f1820; --line:#1b2a34;
+      --bg:#0C0F14; --bg2:#0E1724; --fg:#E6F2F5; --muted:#A0B2BA;
+      --card:#121820; --line:#1b2a34; --chip:#0f1820;
+      --accent:#1C57A0; --accent2:#FFEC01; --ink:#0A0E12;
     }
-    html[data-theme="whatif"]{
-      --bg:#0B1018; --bg2:#0E1724;
-      --card:#141C22; --fg:#F4F7FB; --muted:#A7B3C2;
-      --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
-      --chip:#0f1820; --line:#1b2a34;
-    }
-    html[data-theme="wtf"]{
-      --bg:#0B0B0C; --bg2:#101414;
-      --card:#111713; --fg:#EEF5F0; --muted:#A6B6AD;
-      --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;
-      --chip:#0F1714; --line:#21322A;
-    }
+    html[data-theme="whatif"]{ --bg:#0B1018; --bg2:#0E1724; --fg:#F4F7FB; --muted:#A7B3C2; --card:#141C22; --line:#1b2a34; --chip:#121a26; --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A; }
+    html[data-theme="wtf"]{ --bg:#0B0B0C; --bg2:#101414; --fg:#EEF5F0; --muted:#A6B6AD; --card:#111713; --line:#21322A; --chip:#0F1714; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; }
 
     *{box-sizing:border-box}
     html,body{
       height:100%;margin:0;
       background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-      color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
     }
     @media (prefers-reduced-motion:no-preference){
@@ -45,635 +31,290 @@
       @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
     }
 
-    .topbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:8px;
-      padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))}
-    .back-btn,.home-btn,.reset-btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);
-      border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
-    .lang-select{appearance:none;background:var(--chip);border:1px solid var(--line);color:var(--fg);
-      border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
+    .topbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))}
+    .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
+    .lang{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
 
-    main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
-    .wrap{width:min(100%,980px)}
-    h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
+    main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:10px 14px 26px}
+    .wrap{width:min(100%,880px)}
+    h1{margin:10px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
     .blurb{color:#d7e8ec;margin:0 0 14px;font-size:clamp(14px,4vw,18px);line-height:1.45}
 
-    .banner{display:none;background:#0b151d;border:1px dashed var(--line);color:#dff6fb;border-radius:14px;padding:12px;margin-bottom:8px}
-    .first-session{display:none;background:#0e1a23;border:1px solid var(--line);color:#daf0f6;border-radius:14px;padding:12px;margin-bottom:8px}
-
-    form{background:#0c141b;border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:12px;margin-top:10px}
-    label{font-weight:700;margin-bottom:6px;display:block}
+    .card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(10px);border-radius:16px;padding:16px;margin-top:8px}
     .row{display:grid;gap:12px}
-    @media (min-width:640px){ .row.two{grid-template-columns:1fr 1fr} .row.three{grid-template-columns:1fr 1fr 1fr} }
-    select,input[type="text"],textarea{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:16px}
-    textarea{min-height:110px;resize:vertical}
+    @media (min-width:640px){ .two{grid-template-columns:1fr 1fr} .three{grid-template-columns:1fr 1fr 1fr} }
+
+    label{font-weight:800;margin-bottom:6px;display:block}
+    input,select,textarea{width:100%;background:var(--chip);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--fg);font-size:16px}
+    textarea{min-height:96px;resize:vertical}
     .muted{color:var(--muted);font-size:13px}
-
-    .divider{height:1px;background:var(--line);opacity:.7;margin:6px 0 2px}
-
-    .actions{display:flex;gap:10px;justify-content:space-between;margin-top:10px;flex-wrap:wrap}
-    .btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer;border:1px solid var(--line);background:var(--chip);color:#cfe6eb}
-    .btn.ghost{background:#152029}
-    .btn.primary{border:none;background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink)}
-    .btn[disabled]{background:#2a3b45;color:#7f98a2;cursor:not-allowed}
-
-    .error{color:#ffb3b3;background:#3a1414;border:1px solid #5a2222;border-radius:10px;padding:10px 12px;display:none}
+    .actions{display:flex;gap:10px;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
+    .btn.primary{border:none;background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);box-shadow:0 10px 26px rgba(0,0,0,.35)}
+    .error{color:#ffb3b3;background:#3a1414;border:1px solid #5a2222;border-radius:10px;padding:10px 12px;display:none;margin-top:10px}
     .error.show{display:block}
-
-    .micro{display:none;background:#0c141b;border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:10px}
-    .micro-q{margin:10px 0}
-    .micro-q label{display:block;margin:0 0 6px}
-    .micro-q input, .micro-q select{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px}
   </style>
 </head>
 <body>
   <div class="topbar">
     <div style="display:flex;gap:8px;align-items:center">
-      <button id="backTop" class="back-btn">←</button>
-      <button id="homeTop" class="home-btn">🏠</button>
+      <button class="btn" id="backTop">←</button>
+      <button class="btn" id="homeTop">🏠</button>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
-      <select id="langSelect" class="lang-select" aria-label="Language">
+      <select id="langSelect" class="lang" aria-label="Language">
         <option value="it">IT</option>
         <option value="en">EN</option>
         <option value="es">ES</option>
         <option value="fr">FR</option>
         <option value="de">DE</option>
       </select>
-      <button id="resetBtn" class="reset-btn">♻️ Reset profilo</button>
+      <button class="btn" id="resetBtn">♻️</button>
     </div>
   </div>
 
   <main>
     <div class="wrap">
-      <div id="dailyBanner" class="banner"></div>
-      <div id="firstSessionBanner" class="first-session"></div>
-
       <h1 id="title">Parlami di te</h1>
-      <p class="blurb" id="blurb"></p>
+      <p class="blurb" id="blurb">Basta un profilo base. Il sesso è fondamentale per personalizzare le risposte.</p>
 
-      <div id="errorBox" class="error"></div>
+      <div class="card">
+        <form id="profileForm" novalidate>
+          <div class="row two">
+            <div>
+              <label for="name" id="name_lbl">Nome (opzionale)</label>
+              <input id="name" type="text" autocomplete="name" placeholder="Es. Luca" />
+            </div>
+            <div>
+              <label for="city" id="city_lbl">Città (opzionale)</label>
+              <input id="city" type="text" autocomplete="address-level2" placeholder="Es. L’Aquila / Verona" />
+            </div>
+          </div>
 
-      <!-- ================== FORM PRINCIPALE ================== -->
-      <form id="aboutForm" novalidate>
-        <!-- Identità & contesto -->
-        <div class="row two">
-          <div>
-            <label for="name" id="name_lbl">Nome</label>
-            <input id="name" type="text" placeholder="Es. Luca" />
+          <div class="row three">
+            <div>
+              <label for="gender" id="gender_lbl">Sesso</label>
+              <select id="gender" required>
+                <option value="" id="choose_g">Seleziona…</option>
+                <option value="uomo"  id="gender_m">Uomo</option>
+                <option value="donna" id="gender_f">Donna</option>
+                <option value="altro" id="gender_o">Altro</option>
+                <option value="non_specificato" id="gender_n">Preferisco non dirlo</option>
+              </select>
+            </div>
+            <div>
+              <label for="age" id="age_lbl">Età (opzionale)</label>
+              <select id="age">
+                <option value="" id="choose_a">Seleziona…</option>
+                <option value="under18">-18</option>
+                <option value="18_24">18–24</option>
+                <option value="25_34">25–34</option>
+                <option value="35_44">35–44</option>
+                <option value="45_54">45–54</option>
+                <option value="55_64">55–64</option>
+                <option value="65_plus">65+</option>
+              </select>
+            </div>
+            <div>
+              <label for="role" id="role_lbl">Chi sei? (opz.)</label>
+              <input id="role" type="text" placeholder="Professione / Ruolo" />
+            </div>
           </div>
-          <div>
-            <label for="city" id="city_lbl">Città</label>
-            <input id="city" type="text" placeholder="Es. L’Aquila / Verona" />
-          </div>
-        </div>
 
-        <div class="row three">
-          <div>
-            <label for="gender" id="gender_lbl">Sesso</label>
-            <select id="gender" required>
-              <option value="" id="sel_choose">Seleziona…</option>
-              <option value="uomo" id="gender_m">Uomo</option>
-              <option value="donna" id="gender_f">Donna</option>
-              <option value="altro" id="gender_o">Altro</option>
-              <option value="non_specificato" id="gender_n">Preferisco non dirlo</option>
-            </select>
+          <div class="row">
+            <div>
+              <label for="goal" id="goal_lbl">Obiettivo principale (opz.)</label>
+              <input id="goal" type="text" placeholder="Es. più equilibrio lavoro-vita" />
+            </div>
           </div>
-          <div>
-            <label for="age" id="age_lbl">Età</label>
-            <select id="age" required>
-              <option value="" id="sel_choose2">Seleziona…</option>
-              <option value="under18" id="age_u18">-18</option>
-              <option value="18_24">18–24</option>
-              <option value="25_34">25–34</option>
-              <option value="35_44">35–44</option>
-              <option value="45_54">45–54</option>
-              <option value="55_64">55–64</option>
-              <option value="65_plus">65+</option>
-            </select>
-          </div>
-          <div>
-            <label for="phase" id="phase_lbl">Fase attuale</label>
-            <select id="phase" required>
-              <option value="" id="sel_choose3">Seleziona…</option>
-              <option value="studio" id="phase_study">Studio</option>
-              <option value="lavoro" id="phase_work">Lavoro</option>
-              <option value="cambio" id="phase_change">Cambio/Transizione</option>
-              <option value="altro" id="phase_other">Altro</option>
-            </select>
-          </div>
-        </div>
 
-        <div class="row two">
-          <div>
-            <label for="who" id="who_lbl">Chi sei?</label>
-            <input id="who" type="text" placeholder="Professione / Ruolo" />
+          <div class="row">
+            <div>
+              <label for="more" id="more_lbl">Note utili per risposte migliori <span id="more_hint" class="muted">(opzionale)</span></label>
+              <textarea id="more" placeholder=""></textarea>
+            </div>
           </div>
-          <div>
-            <label for="goal" id="goal_lbl">Obiettivo</label>
-            <input id="goal" type="text" placeholder="Es. più equilibrio lavoro-vita" />
-          </div>
-        </div>
 
-        <!-- Preferenze utili alla generazione -->
-        <div class="divider"></div>
-        <div class="row two">
-          <div>
-            <label for="time_window" id="tw_lbl">Finestra decisionale reale</label>
-            <select id="time_window">
-              <option value="">Seleziona…</option>
-              <option value="this_month">Questo mese</option>
-              <option value="3_6_months">3–6 mesi</option>
-              <option value="12_months">~12 mesi</option>
-            </select>
-          </div>
-          <div>
-            <label for="success_indicator" id="si_lbl">Indicatore di successo</label>
-            <input id="success_indicator" type="text" placeholder="Es. +€500/mese, 6h/sett. libere, primo cliente…" />
-          </div>
-        </div>
+          <div id="errorBox" class="error"></div>
 
-        <div class="row two">
-          <div>
-            <label for="risk_tolerance" id="rt_lbl">Tolleranza al rischio</label>
-            <select id="risk_tolerance">
-              <option value="">Seleziona…</option>
-              <option value="low">Bassa</option>
-              <option value="medium">Media</option>
-              <option value="high">Alta</option>
-            </select>
+          <div class="actions">
+            <button type="button" class="btn" id="backBtn">← <span id="back_txt">Indietro</span></button>
+            <button type="submit" class="btn primary" id="nextBtn"><span id="next_txt">Continua</span> →</button>
           </div>
-          <div>
-            <label for="landmark" id="lm_lbl">Luogo/persona di riferimento</label>
-            <input id="landmark" type="text" placeholder="Es. Stazione, Piazza, quartiere, collega chiave…" />
-          </div>
-        </div>
-
-        <!-- Domanda “relax” (solo pre-onboarding) -->
-        <div id="unwindBox" class="micro" style="display:none">
-          <div class="micro-q">
-            <label for="unwindSel" id="unwind_lbl">Quando vuoi rilassarti dopo una giornata intensa, cosa preferisci fare?</label>
-            <select id="unwindSel">
-              <option value="" id="uw_opt_choose">Seleziona…</option>
-              <option value="workout" id="uw_opt_workout">Allenarmi</option>
-              <option value="friends" id="uw_opt_friends">Uscire con amici</option>
-              <option value="series" id="uw_opt_series">Guardare una serie</option>
-              <option value="drink" id="uw_opt_drink">Godermi un drink</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label for="more" id="more_lbl">
-            Vuoi raccontarci qualcosa di più su di te?
-            <span class="muted" id="more_hint">(opzionale – aiuta l’AI a darti risposte più accurate)</span>
-          </label>
-          <textarea id="more" placeholder=""></textarea>
-        </div>
-
-        <!-- ===== Micro-domande giornaliere (dal giorno dopo) ===== -->
-        <div id="microBox" class="micro">
-          <h3 style="margin:6px 0" id="micro_title">3 micro-domande di oggi</h3>
-          <div class="micro-q">
-            <label for="mq1" id="mq1_lbl">Qual è il vincolo più concreto nelle prossime 2 settimane?</label>
-            <input id="mq1" type="text" />
-          </div>
-          <div class="micro-q">
-            <label for="mq2" id="mq2_lbl">Che segnale ti dice che sei sulla strada giusta?</label>
-            <input id="mq2" type="text" />
-          </div>
-          <div class="micro-q">
-            <label for="mq3" id="mq3_lbl">Una persona/luogo che conta nel tuo scenario?</label>
-            <input id="mq3" type="text" />
-          </div>
-          <div class="actions" style="justify-content:flex-end">
-            <button type="button" class="btn ghost" id="microSkip">Salta</button>
-            <button type="button" class="btn primary" id="microSave">Salva micro-dati</button>
-          </div>
-        </div>
-
-        <!-- Azioni -->
-        <div class="actions">
-          <button type="button" class="btn ghost" id="backBtn">Indietro</button>
-          <div style="display:flex;gap:8px">
-            <button type="button" class="btn ghost" id="skipBtn">Salta → domanda</button>
-            <button type="submit" class="btn primary" id="nextBtn">Continua</button>
-          </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   </main>
 
   <script>
-    /* ===== Tema dal prefs ===== */
+    // ==== Theme from prefs
     (function(){
       try{
         const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-        const theme = prefs.stile === 'wtf' ? 'wtf' : 'whatif';
-        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
       }catch{ document.documentElement.setAttribute('data-theme','whatif'); }
     })();
-  </script>
-
-  <script>
-    /* ================= I18N (IT/EN/ES/FR/DE) ================= */
-    const I18N = {
-      it:{ title:"Parlami di te",
-        blurb:"Ogni risposta e ogni micro-test aiutano What?f a conoscerti meglio.<br>Più condividi, più le sue risposte saranno davvero tue.",
-        back:"Indietro", home:"Home",
-        name_lbl:"Nome", city_lbl:"Città",
-        gender_lbl:"Sesso", choose:"Seleziona…", gender_m:"Uomo", gender_f:"Donna", gender_o:"Altro", gender_n:"Preferisco non dirlo",
-        age_lbl:"Età", age_u18:"-18",
-        phase_lbl:"Fase attuale", phase_study:"Studio", phase_work:"Lavoro", phase_change:"Cambio/Transizione", phase_other:"Altro",
-        who_lbl:"Chi sei?", goal_lbl:"Obiettivo",
-        more_lbl:"Vuoi raccontarci qualcosa di più su di te?", more_hint:"(opzionale – aiuta l’AI a darti risposte più accurate)",
-        more_ph:"Esempio: lavoro nel digitale, sto pensando di cambiare città, ho due figli…",
-        banner:"<strong>Giorno dopo giorno</strong>, tre micro-domande arricchiscono il tuo profilo.",
-        micro_title:"3 micro-domande di oggi",
-        mq1:"Qual è il vincolo più concreto nelle prossime 2 settimane?",
-        mq2:"Che segnale ti dice che sei sulla strada giusta?",
-        mq3:"Una persona/luogo che conta nel tuo scenario?",
-        micro_save:"Salva micro-dati", micro_skip:"Salta",
-        backBtn:"Indietro", next:"Continua", skip:"Salta → domanda",
-        err_required:"Per continuare seleziona Sesso, Età e Fase.",
-        // relax
-        unwind_lbl:"Quando vuoi rilassarti dopo una giornata intensa, cosa preferisci fare?",
-        uw_opt_choose:"Seleziona…", uw_opt_workout:"Allenarmi", uw_opt_friends:"Uscire con amici", uw_opt_series:"Guardare una serie", uw_opt_drink:"Godermi un drink",
-        // predict
-        tw_lbl:"Finestra decisionale reale", si_lbl:"Indicatore di successo", rt_lbl:"Tolleranza al rischio", lm_lbl:"Luogo/persona di riferimento"
-      },
-      en:{ title:"Tell me about you",
-        blurb:"Every answer and micro-test helps What?f understand you better.<br>The more you share, the more its answers become truly yours.",
-        back:"Back", home:"Home",
-        name_lbl:"Name", city_lbl:"City",
-        gender_lbl:"Gender", choose:"Choose…", gender_m:"Male", gender_f:"Female", gender_o:"Other", gender_n:"Prefer not to say",
-        age_lbl:"Age", age_u18:"-18",
-        phase_lbl:"Current phase", phase_study:"Studying", phase_work:"Working", phase_change:"Changing/Transition", phase_other:"Other",
-        who_lbl:"Who are you?", goal_lbl:"Goal",
-        more_lbl:"Want to tell us more about you?", more_hint:"(optional – helps the AI give more accurate answers)",
-        more_ph:"Example: I work in digital, I’m considering moving city, I have two kids…",
-        banner:"<strong>Day by day</strong>, three micro-questions enrich your profile.",
-        micro_title:"Today’s 3 micro-questions",
-        mq1:"What’s the most concrete constraint in the next 2 weeks?",
-        mq2:"Which signal tells you you’re on the right track?",
-        mq3:"One person/place that matters in your scenario?",
-        micro_save:"Save micro-data", micro_skip:"Skip",
-        backBtn:"Back", next:"Continue", skip:"Skip → question",
-        err_required:"To continue please select Gender, Age and Phase.",
-        unwind_lbl:"When you need to unwind after a long day, what do you usually do?",
-        uw_opt_choose:"Choose…", uw_opt_workout:"Work out", uw_opt_friends:"Go out with friends", uw_opt_series:"Watch a show", uw_opt_drink:"Enjoy a drink",
-        tw_lbl:"Real decision window", si_lbl:"Success indicator", rt_lbl:"Risk tolerance", lm_lbl:"Reference place/person"
-      },
-      es:{ title:"Háblame de ti",
-        blurb:"Cada respuesta y micro-test ayuda a What?f a conocerte mejor.<br>Cuanto más compartes, más propias serán sus respuestas.",
-        back:"Atrás", home:"Inicio",
-        name_lbl:"Nombre", city_lbl:"Ciudad",
-        gender_lbl:"Género", choose:"Elige…", gender_m:"Hombre", gender_f:"Mujer", gender_o:"Otro", gender_n:"Prefiero no decirlo",
-        age_lbl:"Edad", age_u18:"-18",
-        phase_lbl:"Fase actual", phase_study:"Estudiando", phase_work:"Trabajando", phase_change:"Cambio/Transición", phase_other:"Otro",
-        who_lbl:"¿Quién eres?", goal_lbl:"Objetivo",
-        more_lbl:"¿Quieres contarnos algo más sobre ti?", more_hint:"(opcional – ayuda a respuestas más precisas)",
-        more_ph:"Ej.: trabajo en digital, pienso mudarme de ciudad, tengo dos hijos…",
-        banner:"<strong>Día a día</strong>, tres micro-preguntas enriquecen tu perfil.",
-        micro_title:"3 micro-preguntas de hoy",
-        mq1:"¿Cuál es la restricción más concreta en las próximas 2 semanas?",
-        mq2:"¿Qué señal te dice que vas por buen camino?",
-        mq3:"¿Una persona/lugar clave en tu escenario?",
-        micro_save:"Guardar micro-datos", micro_skip:"Saltar",
-        backBtn:"Atrás", next:"Continuar", skip:"Saltar → pregunta",
-        err_required:"Para continuar elige Género, Edad y Fase.",
-        unwind_lbl:"Cuando quieres relajarte tras un día intenso, ¿qué sueles hacer?",
-        uw_opt_choose:"Elegir…", uw_opt_workout:"Entrenar", uw_opt_friends:"Salir con amigos", uw_opt_series:"Ver una serie", uw_opt_drink:"Tomar una bebida",
-        tw_lbl:"Ventana real de decisión", si_lbl:"Indicador de éxito", rt_lbl:"Tolerancia al riesgo", lm_lbl:"Lugar/persona de referencia"
-      },
-      fr:{ title:"Parle-moi de toi",
-        blurb:"Chaque réponse et micro-test aide What?f à mieux te comprendre.<br>Plus tu partages, plus ses réponses te ressemblent.",
-        back:"Retour", home:"Accueil",
-        name_lbl:"Prénom", city_lbl:"Ville",
-        gender_lbl:"Genre", choose:"Choisir…", gender_m:"Homme", gender_f:"Femme", gender_o:"Autre", gender_n:"Je préfère ne pas dire",
-        age_lbl:"Âge", age_u18:"-18",
-        phase_lbl:"Phase actuelle", phase_study:"Études", phase_work:"Travail", phase_change:"Changement/Transition", phase_other:"Autre",
-        who_lbl:"Qui es-tu ?", goal_lbl:"Objectif",
-        more_lbl:"Tu veux nous en dire plus sur toi ?", more_hint:"(optionnel – aide l’IA à être plus précise)",
-        more_ph:"Ex. : je travaille dans le digital, j’envisage de changer de ville, j’ai deux enfants…",
-        banner:"<strong>Jour après jour</strong>, trois micro-questions enrichissent ton profil.",
-        micro_title:"3 micro-questions du jour",
-        mq1:"La contrainte la plus concrète dans les 2 prochaines semaines ?",
-        mq2:"Quel signal te dit que tu es sur la bonne voie ?",
-        mq3:"Une personne/un lieu clé dans ton scénario ?",
-        micro_save:"Enregistrer micro-données", micro_skip:"Passer",
-        backBtn:"Retour", next:"Continuer", skip:"Passer → question",
-        err_required:"Pour continuer, sélectionne Genre, Âge et Phase.",
-        unwind_lbl:"Pour te détendre après une grosse journée, tu fais quoi d’habitude ?",
-        uw_opt_choose:"Choisir…", uw_opt_workout:"Sport", uw_opt_friends:"Sortir avec des amis", uw_opt_series:"Regarder une série", uw_opt_drink:"Prendre un verre",
-        tw_lbl:"Fenêtre réelle de décision", si_lbl:"Indicateur de succès", rt_lbl:"Tolérance au risque", lm_lbl:"Lieu/personne de référence"
-      },
-      de:{ title:"Erzähl mir von dir",
-        blurb:"Jede Antwort und jeder Mikro-Test hilft What?f, dich besser zu verstehen.<br>Je mehr du teilst, desto passender werden die Antworten.",
-        back:"Zurück", home:"Start",
-        name_lbl:"Name", city_lbl:"Stadt",
-        gender_lbl:"Geschlecht", choose:"Wählen…", gender_m:"Männlich", gender_f:"Weiblich", gender_o:"Anderes", gender_n:"Keine Angabe",
-        age_lbl:"Alter", age_u18:"-18",
-        phase_lbl:"Aktuelle Phase", phase_study:"Studium", phase_work:"Arbeit", phase_change:"Wechsel/Übergang", phase_other:"Sonstiges",
-        who_lbl:"Wer bist du?", goal_lbl:"Ziel",
-        more_lbl:"Möchtest du noch etwas erzählen?", more_hint:"(optional – hilft der KI für präzisere Antworten)",
-        more_ph:"Beispiel: arbeite im Digitalbereich, überlege Umzug, habe zwei Kinder…",
-        banner:"<strong>Tag für Tag</strong> bereichern drei Mikro-Fragen dein Profil.",
-        micro_title:"Heutige 3 Mikro-Fragen",
-        mq1:"Was ist die konkreteste Einschränkung in den nächsten 2 Wochen?",
-        mq2:"Welches Signal zeigt dir, dass du auf Kurs bist?",
-        mq3:"Eine Person/ein Ort, der wichtig ist?",
-        micro_save:"Mikro-Daten speichern", micro_skip:"Überspringen",
-        backBtn:"Zurück", next:"Weiter", skip:"Überspringen → Frage",
-        err_required:"Bitte wähle Geschlecht, Alter und Phase.",
-        unwind_lbl:"Wie entspannst du dich nach einem anstrengenden Tag?",
-        uw_opt_choose:"Wählen…", uw_opt_workout:"Training", uw_opt_friends:"Mit Freunden ausgehen", uw_opt_series:"Serie schauen", uw_opt_drink:"Getränk genießen",
-        tw_lbl:"Reales Entscheidungsfenster", si_lbl:"Erfolgsindikator", rt_lbl:"Risikotoleranz", lm_lbl:"Bezugsperson/-ort"
-      }
-    };
 
     const LS = localStorage;
-    const $ = s => document.querySelector(s);
+    const $  = s=>document.querySelector(s);
+
+    // ==== I18N
+    const I18N = {
+      it:{ title:"Parlami di te", blurb:"Basta un profilo base. Il sesso è fondamentale per personalizzare le risposte.",
+           name:"Nome (opzionale)", city:"Città (opzionale)", gender:"Sesso", choose:"Seleziona…",
+           m:"Uomo", f:"Donna", o:"Altro", n:"Preferisco non dirlo",
+           age:"Età (opzionale)", role:"Chi sei? (opz.)", goal:"Obiettivo principale (opz.)",
+           more:"Note utili per risposte migliori", more_hint:"(opzionale)",
+           back:"Indietro", next:"Continua",
+           err:"Seleziona il sesso per continuare." },
+      en:{ title:"Tell me about you", blurb:"A minimal profile is enough. Sex is important to tailor answers.",
+           name:"Name (optional)", city:"City (optional)", gender:"Sex", choose:"Choose…",
+           m:"Male", f:"Female", o:"Other", n:"Prefer not to say",
+           age:"Age (optional)", role:"Who are you? (opt.)", goal:"Main goal (opt.)",
+           more:"Notes to improve answers", more_hint:"(optional)",
+           back:"Back", next:"Continue",
+           err:"Please select your sex to continue." },
+      es:{ title:"Háblame de ti", blurb:"Basta un perfil básico. El sexo es importante para personalizar respuestas.",
+           name:"Nombre (opcional)", city:"Ciudad (opcional)", gender:"Sexo", choose:"Elige…",
+           m:"Hombre", f:"Mujer", o:"Otro", n:"Prefiero no decirlo",
+           age:"Edad (opcional)", role:"¿Quién eres? (opc.)", goal:"Objetivo principal (opc.)",
+           more:"Notas para mejorar respuestas", more_hint:"(opcional)",
+           back:"Atrás", next:"Continuar",
+           err:"Selecciona tu sexo para continuar." },
+      fr:{ title:"Parle-moi de toi", blurb:"Un profil basique suffit. Le sexe aide à personnaliser les réponses.",
+           name:"Prénom (optionnel)", city:"Ville (optionnel)", gender:"Sexe", choose:"Choisir…",
+           m:"Homme", f:"Femme", o:"Autre", n:"Préfère ne pas dire",
+           age:"Âge (optionnel)", role:"Qui es-tu ? (opt.)", goal:"Objectif principal (opt.)",
+           more:"Notes pour de meilleures réponses", more_hint:"(optionnel)",
+           back:"Retour", next:"Continuer",
+           err:"Sélectionne ton sexe pour continuer." },
+      de:{ title:"Erzähl mir von dir", blurb:"Ein Basisprofil genügt. Das Geschlecht ist wichtig für passende Antworten.",
+           name:"Name (optional)", city:"Stadt (optional)", gender:"Geschlecht", choose:"Wählen…",
+           m:"Mann", f:"Frau", o:"Andere", n:"Möchte ich nicht sagen",
+           age:"Alter (optional)", role:"Wer bist du? (opt.)", goal:"Hauptziel (opt.)",
+           more:"Notizen für bessere Antworten", more_hint:"(optional)",
+           back:"Zurück", next:"Weiter",
+           err:"Bitte Geschlecht auswählen." }
+    };
+
     function getLang(){ return (LS.getItem('lang') || (navigator.language||'it').slice(0,2)).toLowerCase(); }
     function setLang(l){ LS.setItem('lang', l); applyI18N(); }
-
     function applyI18N(){
-      const d = I18N[getLang()] || I18N.it;
+      const L = I18N[getLang()] || I18N.it;
       document.documentElement.lang = getLang();
 
-      $('#title').textContent = d.title;
-      $('#blurb').innerHTML = d.blurb;
+      $('#title').textContent = L.title;
+      $('#blurb').textContent = L.blurb;
 
-      // topbar
-      $('#backTop').textContent = '← ' + d.back;
-      $('#homeTop').textContent = '🏠 ' + d.home;
+      $('#name_lbl').textContent = L.name;
+      $('#city_lbl').textContent = L.city;
+      $('#gender_lbl').textContent = L.gender;
+      $('#choose_g').textContent = L.choose;
+      $('#gender_m').textContent = L.m;
+      $('#gender_f').textContent = L.f;
+      $('#gender_o').textContent = L.o;
+      $('#gender_n').textContent = L.n;
 
-      // labels
-      $('#name_lbl').textContent = d.name_lbl;
-      $('#city_lbl').textContent = d.city_lbl;
+      $('#age_lbl').textContent = L.age;
+      $('#choose_a').textContent = L.choose;
 
-      $('#gender_lbl').textContent = d.gender_lbl;
-      $('#sel_choose').textContent = d.choose;
-      $('#gender_m').textContent = d.gender_m;
-      $('#gender_f').textContent = d.gender_f;
-      $('#gender_o').textContent = d.gender_o;
-      $('#gender_n').textContent = d.gender_n;
+      $('#role_lbl').textContent = L.role;
+      $('#goal_lbl').textContent = L.goal;
 
-      $('#age_lbl').textContent = d.age_lbl;
-      $('#sel_choose2').textContent = d.choose;
-      $('#age_u18').textContent = d.age_u18;
+      $('#more_lbl').childNodes[0].nodeValue = L.more + ' ';
+      $('#more_hint').textContent = L.more_hint;
 
-      $('#phase_lbl').textContent = d.phase_lbl;
-      $('#sel_choose3').textContent = d.choose;
-      $('#phase_study').textContent = d.phase_study;
-      $('#phase_work').textContent = d.phase_work;
-      $('#phase_change').textContent = d.phase_change;
-      $('#phase_other').textContent = d.phase_other;
+      $('#backTxt')?.remove(); // safety
+      $('#backBtn').innerHTML = '← ' + L.back;
+      $('#nextBtn').innerHTML = L.next + ' →';
 
-      $('#who_lbl').textContent = d.who_lbl;
-      $('#goal_lbl').textContent = d.goal_lbl;
-
-      // predittivo
-      $('#tw_lbl').textContent = d.tw_lbl;
-      $('#si_lbl').textContent = d.si_lbl;
-      $('#rt_lbl').textContent = d.rt_lbl;
-      $('#lm_lbl').textContent = d.lm_lbl;
-
-      // blocco “more”
-      $('#more_lbl').firstChild.textContent = d.more_lbl + ' ';
-      $('#more_hint').textContent = d.more_hint;
-      document.getElementById('more').placeholder = d.more_ph;
-
-      // banner + micro
-      $('#dailyBanner').innerHTML = d.banner;
-
-      $('#micro_title').textContent = d.micro_title;
-      $('#mq1_lbl').textContent = d.mq1;
-      $('#mq2_lbl').textContent = d.mq2;
-      $('#mq3_lbl').textContent = d.mq3;
-      $('#microSave').textContent = d.micro_save;
-      $('#microSkip').textContent = d.micro_skip;
-
-      $('#backBtn').textContent = d.backBtn;
-      $('#nextBtn').textContent = d.next;
-      $('#skipBtn').textContent = d.skip;
-
-      // error
-      $('#aboutForm').dataset.err = d.err_required;
+      $('#errorBox').dataset.err = L.err;
     }
 
-    // init lingua + tema
-    if (!LS.getItem('lang')) LS.setItem('lang', getLang());
-    document.getElementById('langSelect').value = getLang();
-    document.getElementById('langSelect').addEventListener('change', e=> setLang(e.target.value));
-    applyI18N();
-
+    // init language select + apply
     (function(){
-      try{
-        const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-        const theme = prefs.stile === 'wtf' ? 'wtf' : 'whatif';
-        document.documentElement.setAttribute('data-theme', theme);
-      }catch{}
+      const sel = $('#langSelect');
+      const cur = getLang();
+      sel.value = ['it','en','es','fr','de'].includes(cur) ? cur : 'it';
+      sel.addEventListener('change', ()=> setLang(sel.value));
+      if(!LS.getItem('lang')) LS.setItem('lang', sel.value);
+      applyI18N();
     })();
-
-    // ===== Onboarding skip se già presente profilo base
-    const KEY_ONBOARD = 'whatif_onboarding_done';
-    function baseProfilePresent(){
-      try{ const p = JSON.parse(LS.getItem('whatif_profile')||'{}'); return !!(p && (p.gender || p.sex) && p.age && p.phase); }catch{return false}
-    }
-    if (LS.getItem(KEY_ONBOARD)==='1' && baseProfilePresent()){
-      location.replace('fourth.html');
-    }
 
     // topbar
-    document.getElementById('backTop').addEventListener('click', ()=> history.back());
-    document.getElementById('homeTop').addEventListener('click', ()=> location.href='index.html');
-
-    // Reset profilo
-    document.getElementById('resetBtn').addEventListener('click', ()=>{
-      if(!confirm('Reset profilo e dati giornalieri?')) return;
-      const keys = [
-        'whatif_profile','whatif_micro','whatif_micro_log','whatif_last_update',
-        'whatif_onboarding_done','whatif_daily_seen','whatif_clarify',
-        'whatif_first_session_seen','whatif_profile_date'
-      ];
-      keys.forEach(k=>localStorage.removeItem(k));
-      location.href='second.html';
+    $('#backTop').addEventListener('click', ()=> history.back());
+    $('#homeTop').addEventListener('click', ()=> location.href='index.html');
+    $('#resetBtn').addEventListener('click', ()=>{
+      if(!confirm('Reset profilo?')) return;
+      ['whatif_profile','whatif_onboarding_done','whatif_last_update','whatif_profile_date'].forEach(k=>LS.removeItem(k));
+      alert('Profilo azzerato.');
+      location.reload();
     });
 
-    // Helpers
-    function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-    const KEY_DAY = 'whatif_daily_seen';
-    const today   = todayStr();
-
-    function readJSON(k,def={}){ try{ return JSON.parse(LS.getItem(k)||JSON.stringify(def)); }catch{ return def; } }
-    function daysBetween(iso1, iso2){
-      if(!iso1||!iso2) return 999;
-      const a=new Date(iso1), b=new Date(iso2);
-      return Math.round((b-a)/(1000*60*60*24));
-    }
-
-    // Banner/micro: SOLO dal giorno dopo
-    (function setupDailyBlocks(){
-      const profDate = LS.getItem('whatif_profile_date');
-      const onboard = LS.getItem(KEY_ONBOARD)==='1';
-      const showDaily = (() => {
-        if (!onboard || !profDate) return false;
-        const gap = daysBetween(profDate, today);
-        return gap >= 1;
-      })();
-
-      if (showDaily){
-        document.getElementById('dailyBanner').style.display = 'block';
-        document.getElementById('microBox').style.display = 'block';
-        if (LS.getItem(KEY_DAY) === today){
-          document.getElementById('dailyBanner').style.display = 'none';
-        }
-      } else {
-        document.getElementById('dailyBanner').style.display = 'none';
-        document.getElementById('microBox').style.display = 'none';
-      }
-
-      // relax solo pre-onboarding
-      if (LS.getItem(KEY_ONBOARD)!=='1'){
-        const uwBox = document.getElementById('unwindBox');
-        if (uwBox) uwBox.style.display = 'block';
-      }
-    })();
-
-    // micro actions
-    document.getElementById('microSkip').addEventListener('click', ()=>{
-      document.getElementById('dailyBanner').style.display='none';
-      document.getElementById('microBox').style.display='none';
-      LS.setItem(KEY_DAY, today);
-    });
-
-    document.getElementById('microSave').addEventListener('click', ()=>{
-      const patch = {};
-      const v1 = document.getElementById('mq1').value.trim(); if (v1) patch['vincolo_2w'] = v1;
-      const v2 = document.getElementById('mq2').value.trim(); if (v2) patch['indicatore'] = v2;
-      const v3 = document.getElementById('mq3').value.trim(); if (v3) patch['punto_riferimento'] = v3;
-
-      const micro = readJSON('whatif_micro');
-      Object.assign(micro, patch);
-      LS.setItem('whatif_micro', JSON.stringify(micro));
-
-      const log = readJSON('whatif_micro_log',[]);
-      if (!log.includes(today)) log.push(today);
-      LS.setItem('whatif_micro_log', JSON.stringify(log));
-      LS.setItem('whatif_last_update', today);
-
-      document.getElementById('dailyBanner').style.display='none';
-      document.getElementById('microBox').style.display='none';
-      LS.setItem(KEY_DAY, today);
-    });
-
-    // back / skip
-    document.getElementById('backBtn').addEventListener('click', ()=> history.back());
-    document.getElementById('skipBtn').addEventListener('click', ()=>{
-      const base = JSON.parse(LS.getItem('whatif_profile')||'{}');
-      if (!(base.gender || base.sex) || !base.age || !base.phase) {
-        alert(getLang()==='en'
-          ? 'Fill basic profile once before skipping.'
-          : (getLang()==='es' ? 'Completa el perfil básico una vez antes de saltar.'
-          : (getLang()==='fr' ? 'Renseigne le profil de base au moins une fois.'
-          : (getLang()==='de' ? 'Bitte fülle einmal das Basisprofil aus.'
-          : 'Compila una volta il profilo base prima di saltare.'))));
-        return;
-      }
-      const firstDone = LS.getItem('whatif_quiz5_done') === '1';
-      location.href = firstDone ? 'fourth.html' : 'third.html';
-    });
-
-    // Preload form
+    // preload se già esiste
     (function preload(){
       try{
         const p = JSON.parse(LS.getItem('whatif_profile')||'{}');
-        if (!p) return;
-        let gval = p.gender || "";
-        if (!gval && p.sex){
-          if (p.sex === 'm') gval = 'uomo';
-          else if (p.sex === 'f') gval = 'donna';
-          else if (p.sex === 'nb') gval = 'altro';
-          else gval = 'non_specificato';
-        }
-        if (p.name) $('#name').value = p.name;
-        if (p.city) $('#city').value = p.city;
-        if (gval)   $('#gender').value = gval;
-        if (p.age)  $('#age').value = p.age;
-        if (p.phase)$('#phase').value = p.phase;
-        if (p.role) $('#who').value = p.role;
-        if (p.goal) $('#goal').value = p.goal;
-        if (p.more) $('#more').value = p.more;
-        if (p.time_window)       $('#time_window').value = p.time_window;
-        if (p.success_indicator) $('#success_indicator').value = p.success_indicator;
-        if (p.risk_tolerance)    $('#risk_tolerance').value = p.risk_tolerance;
-        if (p.landmark)          $('#landmark').value = p.landmark;
-        if (p.unwind)            $('#unwindSel').value = p.unwind;
-      }catch(e){}
+        if(!p) return;
+        if(p.name) $('#name').value = p.name;
+        if(p.city) $('#city').value = p.city;
+        if(p.gender) $('#gender').value = p.gender;
+        if(p.age) $('#age').value = p.age;
+        if(p.role) $('#role').value = p.role;
+        if(p.goal) $('#goal').value = p.goal;
+        if(p.more) $('#more').value = p.more;
+      }catch{}
     })();
 
-    // submit
-    const form = document.getElementById('aboutForm');
-    const errBox = document.getElementById('errorBox');
-
+    // mapping gender -> sex normalizzato
     function mapGenderToSex(g){
-      switch(String(g||'').toLowerCase()){
-        case 'uomo': return 'm';
-        case 'donna': return 'f';
-        case 'altro': return 'nb';
-        default: return '';
-      }
+      const v = String(g||'').toLowerCase();
+      if(v==='uomo' || v==='male' || v==='mann') return 'm';
+      if(v==='donna' || v==='female' || v==='frau') return 'f';
+      if(v==='altro' || v==='other' ) return 'nb';
+      return '';
     }
-    function todayIso(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
-    form.addEventListener('submit', (e)=>{
+    // submit
+    $('#profileForm').addEventListener('submit', (e)=>{
       e.preventDefault();
+      const err = $('#errorBox');
       const gender = $('#gender').value.trim();
-      const age    = $('#age').value.trim();
-      const phase  = $('#phase').value.trim();
-      if(!gender || !age || !phase){
-        errBox.textContent = form.dataset.err;
-        errBox.classList.add('show'); return;
+      if(!gender){
+        err.textContent = err.dataset.err || 'Seleziona il sesso.';
+        err.classList.add('show');
+        return;
       }
-      errBox.classList.remove('show');
-
-      const sex = mapGenderToSex(gender);
+      err.classList.remove('show');
 
       const profile = {
         name: $('#name').value.trim(),
         city: $('#city').value.trim(),
-        gender, sex, age, phase,
-        role: $('#who').value.trim(),
+        gender,
+        sex: mapGenderToSex(gender), // 'm' | 'f' | 'nb' | ''
+        age: $('#age').value.trim(),
+        role: $('#role').value.trim(),
         goal: $('#goal').value.trim(),
-        unwind: $('#unwindSel').value.trim(),
-        drinks_pref: ($('#unwindSel').value === 'drink') ? 'yes' : 'no',
-        time_window: $('#time_window').value.trim(),
-        success_indicator: $('#success_indicator').value.trim(),
-        risk_tolerance: $('#risk_tolerance').value.trim(),
-        landmark: $('#landmark').value.trim(),
         more: $('#more').value.trim()
       };
-
       LS.setItem('whatif_profile', JSON.stringify(profile));
 
-      const t = todayIso();
-      LS.setItem('whatif_last_update', t);
-      if (!LS.getItem('whatif_profile_date')) LS.setItem('whatif_profile_date', t);
+      const today = new Date(); const iso = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+      LS.setItem('whatif_last_update', iso);
+      if(!LS.getItem('whatif_profile_date')) LS.setItem('whatif_profile_date', iso);
       LS.setItem('whatif_onboarding_done','1');
 
-      const firstDone = LS.getItem('whatif_quiz5_done') === '1';
-      location.href = firstDone ? 'fourth.html' : 'third.html';
+      // vai alla quarta pagina (domanda)
+      location.href = 'fourth.html';
     });
 
-    // sync lingua
-    window.addEventListener('storage', (e)=>{ if(e.key==='lang'){ applyI18N(); }});
-    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ applyI18N(); }});
+    // anche i bottoni in fondo form
+    $('#backBtn').addEventListener('click', ()=> history.back());
   </script>
 
-  <!-- SW -->
+  <!-- SW (facoltativo) -->
   <script>
     if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
+      window.addEventListener("load", ()=> {
         navigator.serviceWorker.register("/sw.js").catch(()=>{});
       });
     }
