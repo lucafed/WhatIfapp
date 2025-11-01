@@ -339,7 +339,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 
   const HINT_IT=[ "E se cambiassi lavoro?","E se cambiassi città?","E se aprissi partita IVA?","E se tornassi a studiare?","E se lavorassi 4 giorni su 5?","E se chiedessi un aumento?","E se mi prendessi un mese sabbatico?","E se riducessi i social per 30 giorni?","E se vivessi senza auto?","E se imparassi a programmare?","E se ricominciassi palestra?","E se corressi 3 volte a settimana?","E se adottassi un cane?","E se vivessi vicino ai miei?","E se investissi il 10% al mese?","E se imparassi bene l’inglese?","E se andassi all’estero 6 mesi?","E se lasciassi un progetto che non ami?","E se facessi volontariato?","E se riscrivessi il CV oggi?","E se provassi terapia?","E se cucinassi a casa 30 giorni?","E se aprissi un micro e-commerce?","E se studiassi 1h al giorno?","E se spegnessi il telefono alle 22?","E se facessi pace con qualcuno?","E se risparmiassi sul serio?","E se provassi vita da nomade digitale?","E se imparassi public speaking?","E se tagliassi fumo/alcol 30 giorni?" ];
   const HINT_EN=[ "What if you changed jobs?","What if you moved city?","What if you went freelance?","What if you went back to study?","What if you tried a 4-day week?","What if you asked for a raise?","What if you took a month off?","What if you cut social media for 30 days?","What if you lived without a car?","What if you learned to code?","What if you hit the gym again?","What if you ran 3 times a week?","What if you adopted a dog?","What if you lived near your family?","What if you invested 10% monthly?","What if you mastered English?","What if you moved abroad for 6 months?","What if you dropped a project you don’t love?","What if you tried volunteering?","What if you rewrote your résumé today?","What if you tried therapy?","What if you cooked at home for 30 days?","What if you opened a tiny e-commerce?","What if you studied 1h daily?","What if you turned your phone off at 10pm?","What if you made peace with someone?","What if you saved seriously?","What if you tried digital nomad life?","What if you learned public speaking?","What if you cut smoking/alcohol 30 days?" ];
-  const HINT_ES=[ "¿Y si cambiaras de trabajo?","¿Y si te mudaras de ciudad?","¿Y si te hicieras autónomo?","¿Y si volvieras a estudiar?","¿Y si probaras semana de 4 días?","¿Y si pidieras un aumento?","¿Y si tomaras un mes libre?","¿Y si dejaras redes 30 días?","¿Y si vivieras sin coche?","¿Y si aprendieras a programar?","¿Y si volvieras al gimnasio?","¿Y si corrieras 3 veces por semana?","¿Y si adoptaras un perro?","¿Y si vivieras cerca de tu familia?","¿Y si invirtieras 10% al mes?","¿Y si dominaras el inglés?","¿Y si te fueras 6 meses al extranjero?","¿Y si dejaras un proyecto que no amas?","¿Y si hicieras voluntariado?","¿Y si reescribieras tu currículum hoy?" ];
+  const HINT_ES=[ "¿Y si cambiaras de trabajo?","¿Y si te mudaras de ciudad?","¿Y si te hicieras autónomo?","¿Y si volvieras a estudiar?","¿Y si probaras semana de 4 días?","¿Y si pidieras un aumento?","¿Y si tomaras un mes libre?","¿Y si dejaras redes 30 días?","¿Y si vivieras sin coche?","¿Y si aprendieras a programar?","¿Y si volvieras al gimnasio?","¿Y si corrieras 3 veces por semana?","¿Y si adoptaras un perro?","¿Y si vivieras cerca de tu familia?","¿Y si invirtieras 10 % al mes?","¿Y si dominaras el inglés?","¿Y si te fueras 6 meses al extranjero?","¿Y si dejaras un proyecto que no amas?","¿Y si hicieras voluntariado?","¿Y si reescribieras tu currículum hoy?" ];
   const HINT_FR=[ "Et si tu changeais de travail ?","Et si tu déménageais ?","Et si tu te mettais en freelance ?","Et si tu reprenais des études ?","Et si tu essayais la semaine de 4 jours ?","Et si tu demandais une augmentation ?","Et si tu prenais un mois off ?","Et si tu coupais les réseaux 30 jours ?","Et si tu vivais sans voiture ?","Et si tu apprenais à coder ?","Et si tu retournais à la salle ?","Et si tu courais 3 fois par semaine ?","Et si tu adoptais un chien ?","Et si tu vivais près de ta famille ?","Et si tu investissais 10 % par mois ?","Et si tu maîtrisais l’anglais ?" ];
   const HINT_DE=[ "Was, wenn du den Job wechselst?","Was, wenn du in eine andere Stadt ziehst?","Was, wenn du freiberuflich arbeitest?","Was, wenn du wieder studierst?","Was, wenn du eine 4-Tage-Woche probierst?","Was, wenn du um eine Gehaltserhöhung bittest?","Was, wenn du einen Monat Pause machst?","Was, wenn du 30 Tage ohne Social Media lebst?","Was, wenn du ohne Auto lebst?","Was, wenn du Programmieren lernst?","Was, wenn du wieder ins Gym gehst?","Was, wenn du 3× pro Woche läufst?","Was, wenn du einen Hund adoptierst?","Was, wenn du in Familiätnähe wohnst?","Was, wenn du monatlich 10 % sparst?" ];
 
@@ -567,7 +567,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     if(!txt) return [];
     const stop = new Set(['e','di','a','da','in','con','su','per','tra','fra','il','la','lo','gli','le','un','una','uno','che','del','della','dei','delle','mi','ti','si','io','tu','loro','noi','voi','non','più','meno','molto','poco','anche','ma','o','se','the','and','of','to','for','con','por','y','de','le','les','des','und','der','die','das']);
     return txt.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,' ')
-      .split(/\s+/).filter(w=>w.length>2 && !stop.has(w)).slice(0,10);
+      .split(/\s+/).filter(w=>w.length>2 && !stop.has(w) && !/^\d+$/.test(w)).slice(0,10);
   }
 
   function getBoost(){ try{ return (LS.getItem('whatif_boost')||'').trim(); }catch{ return '' } }
@@ -577,7 +577,47 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   $('boostSaveBtn').onclick=()=> setBoost($('boostInput').value);
   $('boostClearBtn').onclick=()=>{ $('boostInput').value=''; setBoost(''); };
 
-  // Weighted random: 60% personalized, 30% generic, 10% absurd (fallbacks included)
+  // >>> SURPRISE FIX — helpers per pulizia grammaticale e anti-doppioni
+  function polishQuestion(q, L){
+    let t=String(q||"").replace(/\s+/g," ").trim();
+    if(!t) return t;
+    // rimuovi doppie punteggiature
+    t=t.replace(/[?？]+$/,"").replace(/\s*\?+\s*$/,"").trim();
+    // Maiuscola iniziale
+    t=t.charAt(0).toUpperCase()+t.slice(1);
+    // Aggiungi punto interrogativo finale (e capovolta per ES)
+    if(L==="es"){
+      // se manca ¿ all’inizio, aggiungila
+      t = (t.startsWith("¿") ? t : "¿"+t);
+      t = t + "?";
+    }else{
+      t = t + "?";
+    }
+    return t;
+  }
+  function seemsValidQuestion(q){
+    const t=String(q||"").trim();
+    const words=t.split(/\s+/).filter(Boolean);
+    // almeno 4 parole e almeno 1 “verbo probabile” (heuristica semplice)
+    const hasVerb=/\b(essere|fare|avere|andare|potrei|potresti|potremmo|posso|possiamo|cambiare|aprire|imparare|provare|vivere|studiare|correre|lavorare|move|change|start|learn|try|live|study|work|run|ir|ser|estar|hacer|poder|changer|apprendre|essayer|vivre|étudier|arbeiten|lernen|versuchen|leben|studieren)\b/i.test(t);
+    return words.length>=4 && hasVerb;
+  }
+  function readHistory(){
+    const key='surprise_history_'+todayISO();
+    return readJSON(key,[]);
+  }
+  function writeHistory(arr){
+    const key='surprise_history_'+todayISO();
+    writeJSON(key, arr.slice(-20));
+  }
+  function notRecentlyUsed(q){
+    const hist=readHistory();
+    const last5=new Set(hist.slice(-5));
+    return !last5.has(q);
+  }
+  // <<< SURPRISE FIX
+
+  // Weighted random: 60% personalized, 30% generic, 10% absurd (fallbacks incluse)
   function pickWeightedIdea(){
     const L=(LS.getItem('lang')||'it').toLowerCase();
     const periodo=(prefs.periodo==='past')?'past':'future';
@@ -587,10 +627,10 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 
     // choose bucket by probability
     const r = Math.random();
-    let bucket='personalized', prob=MIX_WEIGHTS.personalized;
-    if (r<0.6){ bucket='personalized'; prob=MIX_WEIGHTS.personalized; }
-    else if (r<0.9){ bucket='generic'; prob=MIX_WEIGHTS.generic; }
-    else { bucket='absurd'; prob=MIX_WEIGHTS.absurd; }
+    let bucket='personalized', prob=60;
+    if (r<0.6){ bucket='personalized'; prob=60; }
+    else if (r<0.9){ bucket='generic'; prob=30; }
+    else { bucket='absurd'; prob=10; }
 
     // pick one, with graceful fallbacks if empty
     let text=null, kind=bucket;
@@ -599,40 +639,71 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     else if (bucket==='absurd' && abs.length) text = sampleOne(abs);
 
     if (!text){
-      if (gen.length){ kind='generic'; prob=MIX_WEIGHTS.generic; text=sampleOne(gen); }
-      else if (pers.length){ kind='personalized'; prob=MIX_WEIGHTS.personalized; text=sampleOne(pers); }
-      else if (abs.length){ kind='absurd'; prob=MIX_WEIGHTS.absurd; text=sampleOne(abs); }
-      else { text = (L==='it'?'E se cambiassi qualcosa questa settimana?':'What if you changed something this week?'); kind='generic'; prob=MIX_WEIGHTS.generic; }
+      if (gen.length){ kind='generic'; prob=30; text=sampleOne(gen); }
+      else if (pers.length){ kind='personalized'; prob=60; text=sampleOne(pers); }
+      else if (abs.length){ kind='absurd'; prob=10; text=sampleOne(abs); }
+      else { text = (L==='it'?'E se cambiassi qualcosa questa settimana':'What if you changed something this week'); kind='generic'; prob=30; }
     }
 
-    return { text, kind, prob, weights:MIX_WEIGHTS };
+    return { text, kind, prob, weights:{personalized:60,generic:30,absurd:10} };
   }
 
+  // >>> SURPRISE FIX — handler migliorato
   $('surpriseBtn').onclick=()=>{
-    let idea = pickWeightedIdea();
-    // evita di ripetere esattamente il testo già presente
-    const pre = (qInput.value||'').trim();
-    let guard=0;
-    while(pre && idea.text===pre && guard<3){ idea=pickWeightedIdea(); guard++; }
+    const L=(LS.getItem('lang')||'it').toLowerCase();
+    const stileAtPick = (readJSON('whatif_prefs',{}).stile || 'whatif');
 
+    let idea, tries=0;
+    const MAX_TRIES=6;
+
+    do{
+      idea = pickWeightedIdea();
+      idea.text = polishQuestion(idea.text, L);
+      tries++;
+      // Se troppo corta o senza verbo, riprova
+      if(!seemsValidQuestion(idea.text)) continue;
+      // Evita ripetizioni recenti
+      if(!notRecentlyUsed(idea.text)) continue;
+      break;
+    } while(tries<MAX_TRIES);
+
+    // Fallback sicuro in caso estremo
+    if(!seemsValidQuestion(idea.text)){
+      idea.text = L==='it' ? "E se cambiassi lavoro quest’anno?" :
+                 L==='es' ? "¿Y si cambias de trabajo este año?" :
+                 L==='fr' ? "Et si tu changeais de travail cette année ?" :
+                 L==='de' ? "Was, wenn du dieses Jahr den Job wechselst?" :
+                            "What if you changed jobs this year?";
+      idea.text = polishQuestion(idea.text, L);
+      idea.kind = "generic"; idea.prob = 30;
+    }
+
+    // Scrivi nel campo domanda
+    const pre = (qInput.value||'').trim();
     qInput.value = idea.text;
 
-    // Salva meta per quinta pagina: includo kind, prob scelta, pesi completi, lingua, periodo e timestamp
+    // Aggiorna history anti-doppione
+    const hist = readHistory();
+    hist.push(idea.text);
+    writeHistory(hist);
+
+    // Salva meta per quinta pagina (incluso mix percentuali)
     LS.setItem('whatif_surprise_meta', JSON.stringify({
-      kind: idea.kind,
-      prob: idea.prob,
-      weights: idea.weights,
-      lang: (LS.getItem('lang')||'it'),
+      kind: idea.kind,          // personalized | generic | absurd
+      prob: idea.prob,          // 60 | 30 | 10 (bucket selezionato)
+      weights: idea.weights,    // {personalized:60,generic:30,absurd:10}
+      lang: L,
       periodo: (prefs.periodo||'future'),
+      stile: stileAtPick,
       ts: Date.now()
     }));
 
     // highlight rapido
     qInput.animate([{outline:'2px solid transparent'},{outline:'2px solid var(--accent2)'},{outline:'2px solid transparent'}],{duration:900});
-
     // scroll su
     window.scrollTo({top:0,behavior:'smooth'});
   };
+  // <<< SURPRISE FIX
 
   /* ===== Prima sessione ===== */
   const FS_KEY='first_session_seen';
