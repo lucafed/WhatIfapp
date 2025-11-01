@@ -13,13 +13,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <style>
-    /* ===== THEME SYSTEM – palette ufficiali ===== */
     :root{
-      /* Fallback / What if */
       --bg:#0C0F14; --bg2:#0E1724;
       --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
-      --accent:#1C57A0; --accent2:#FFEC01; /* Blu/Giallo Verona */
-      --ink:#001f26;
+      --accent:#1C57A0; --accent2:#FFEC01; --ink:#001f26;
       --chip:#0f1820; --line:#1b2a34;
     }
     html[data-theme="whatif"]{
@@ -31,7 +28,7 @@
     html[data-theme="wtf"]{
       --bg:#0B0B0C; --bg2:#101414;
       --card:#111713; --fg:#EEF5F0; --muted:#A6B6AD;
-      --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; /* Verde speranza */
+      --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;
       --chip:#0F1714; --line:#21322A;
     }
 
@@ -48,30 +45,21 @@
       @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
     }
 
-    .topbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;
+    .topbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:8px;
       padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))}
     .back-btn,.home-btn,.reset-btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);
       border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
-    .reset-btn{opacity:.85}
+    .lang-select{appearance:none;background:var(--chip);border:1px solid var(--line);color:var(--fg);
+      border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
+
     main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
     .wrap{width:min(100%,980px)}
     h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
     .blurb{color:#d7e8ec;margin:0 0 14px;font-size:clamp(14px,4vw,18px);line-height:1.45}
 
     .banner{display:none;background:#0b151d;border:1px dashed var(--line);color:#dff6fb;border-radius:14px;padding:12px;margin-bottom:8px}
-    .banner strong{color:var(--accent2)}
     .first-session{display:none;background:#0e1a23;border:1px solid var(--line);color:#daf0f6;border-radius:14px;padding:12px;margin-bottom:8px}
 
-    /* ===== Indicatore conoscenza ===== */
-    .know{background:#0c141b;border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:6px}
-    .know-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-    .meter{position:relative;height:12px;background:var(--chip);border:1px solid var(--line);border-radius:999px;overflow:hidden}
-    .meter-fill{height:100%;width:0;background:linear-gradient(180deg,var(--accent),var(--accent2))}
-    .know-score{font-weight:800;color:var(--accent)}
-    .miss{margin-top:8px;color:#cfe6e9;font-size:13px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-    .chip{background:var(--chip);border:1px solid var(--line);color:#cfe3e7;border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer}
-
-    /* Form & micro */
     form{background:#0c141b;border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:12px;margin-top:10px}
     label{font-weight:700;margin-bottom:6px;display:block}
     .row{display:grid;gap:12px}
@@ -95,9 +83,6 @@
     .micro-q{margin:10px 0}
     .micro-q label{display:block;margin:0 0 6px}
     .micro-q input, .micro-q select{width:100%;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px}
-
-    /* CTA pill bottom */
-    .cta-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}
   </style>
 </head>
 <body>
@@ -107,6 +92,13 @@
       <button id="homeTop" class="home-btn">🏠</button>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
+      <select id="langSelect" class="lang-select" aria-label="Language">
+        <option value="it">IT</option>
+        <option value="en">EN</option>
+        <option value="es">ES</option>
+        <option value="fr">FR</option>
+        <option value="de">DE</option>
+      </select>
       <button id="resetBtn" class="reset-btn">♻️ Reset profilo</button>
     </div>
   </div>
@@ -118,17 +110,6 @@
 
       <h1 id="title">Parlami di te</h1>
       <p class="blurb" id="blurb"></p>
-
-      <!-- ===== Indicatore di personalizzazione ===== -->
-      <div class="know" id="knowBox">
-        <div class="know-head">
-          <div><span id="knowLabel" class="know-score">Personalizzazione</span> <span id="knowValue">0/100</span></div>
-          <div class="meter" style="width:min(60vw,360px)"><div id="knowFill" class="meter-fill"></div></div>
-        </div>
-        <div class="miss" id="missRow">
-          <span id="missLabel">Mancano:</span>
-        </div>
-      </div>
 
       <div id="errorBox" class="error"></div>
 
@@ -193,7 +174,7 @@
           </div>
         </div>
 
-        <!-- ===== Predittivo ===== -->
+        <!-- Preferenze utili alla generazione -->
         <div class="divider"></div>
         <div class="row two">
           <div>
@@ -227,7 +208,7 @@
           </div>
         </div>
 
-        <!-- Domanda “mascherata” relax (prima dell’onboarding) -->
+        <!-- Domanda “relax” (solo pre-onboarding) -->
         <div id="unwindBox" class="micro" style="display:none">
           <div class="micro-q">
             <label for="unwindSel" id="unwind_lbl">Quando vuoi rilassarti dopo una giornata intensa, cosa preferisci fare?</label>
@@ -249,7 +230,7 @@
           <textarea id="more" placeholder=""></textarea>
         </div>
 
-        <!-- ===== Micro-domande giornaliere (solo dal giorno dopo) ===== -->
+        <!-- ===== Micro-domande giornaliere (dal giorno dopo) ===== -->
         <div id="microBox" class="micro">
           <h3 style="margin:6px 0" id="micro_title">3 micro-domande di oggi</h3>
           <div class="micro-q">
@@ -279,37 +260,26 @@
           </div>
         </div>
       </form>
-
-      <!-- CTA in fondo pagina -->
-      <div class="cta-row">
-        <button type="button" class="btn" id="improveBtn">✨ Migliora profilo (30s)</button>
-        <button type="button" class="btn" id="fullBtn">🕰️ Test completo (5 min)</button>
-      </div>
     </div>
   </main>
 
   <script>
-    /* ===== Apply theme from prefs (What if / WTF) ===== */
+    /* ===== Tema dal prefs ===== */
     (function(){
       try{
         const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
         const theme = prefs.stile === 'wtf' ? 'wtf' : 'whatif';
         document.documentElement.setAttribute('data-theme', theme);
-      }catch(e){
-        document.documentElement.setAttribute('data-theme','whatif');
-      }
+      }catch{ document.documentElement.setAttribute('data-theme','whatif'); }
     })();
   </script>
 
   <script>
-    /* ================= I18N ================= */
+    /* ================= I18N (IT/EN/ES/FR/DE) ================= */
     const I18N = {
-      it:{
-        title:"Parlami di te",
+      it:{ title:"Parlami di te",
         blurb:"Ogni risposta e ogni micro-test aiutano What?f a conoscerti meglio.<br>Più condividi, più le sue risposte saranno davvero tue.",
         back:"Indietro", home:"Home",
-        improve:"✨ Migliora profilo (30s)",
-        full:"🕰️ Test completo (5 min)",
         name_lbl:"Nome", city_lbl:"Città",
         gender_lbl:"Sesso", choose:"Seleziona…", gender_m:"Uomo", gender_f:"Donna", gender_o:"Altro", gender_n:"Preferisco non dirlo",
         age_lbl:"Età", age_u18:"-18",
@@ -317,7 +287,7 @@
         who_lbl:"Chi sei?", goal_lbl:"Obiettivo",
         more_lbl:"Vuoi raccontarci qualcosa di più su di te?", more_hint:"(opzionale – aiuta l’AI a darti risposte più accurate)",
         more_ph:"Esempio: lavoro nel digitale, sto pensando di cambiare città, ho due figli…",
-        banner:"<strong>Giorno dopo giorno</strong>, tre micro-domande arricchiscono il tuo profilo finché dirai: <strong>“Potrei essere io.”</strong>",
+        banner:"<strong>Giorno dopo giorno</strong>, tre micro-domande arricchiscono il tuo profilo.",
         micro_title:"3 micro-domande di oggi",
         mq1:"Qual è il vincolo più concreto nelle prossime 2 settimane?",
         mq2:"Che segnale ti dice che sei sulla strada giusta?",
@@ -325,30 +295,15 @@
         micro_save:"Salva micro-dati", micro_skip:"Salta",
         backBtn:"Indietro", next:"Continua", skip:"Salta → domanda",
         err_required:"Per continuare seleziona Sesso, Età e Fase.",
-        know:"Personalizzazione", missing:"Mancano:", miss_identity:"Identità/ruolo", miss_routine:"Routine/indicatori",
-        miss_constraints:"Vincoli", miss_goals:"Obiettivi", miss_places:"Luoghi", miss_relations:"Relazioni", miss_risk:"Rischio",
-        bar_hint:"Più dettagli → più scenari plausibili. Le chip ti portano al punto giusto.",
-        // Domanda mascherata
+        // relax
         unwind_lbl:"Quando vuoi rilassarti dopo una giornata intensa, cosa preferisci fare?",
-        uw_opt_choose:"Seleziona…",
-        uw_opt_workout:"Allenarmi",
-        uw_opt_friends:"Uscire con amici",
-        uw_opt_series:"Guardare una serie",
-        uw_opt_drink:"Godermi un drink",
-        // Prima sessione
-        first_session:"Ciao! Oggi iniziamo a conoscerci meglio.",
-        // Predittivo
-        tw:"Finestra decisionale reale",
-        si:"Indicatore di successo",
-        rt:"Tolleranza al rischio",
-        lm:"Luogo/persona di riferimento"
+        uw_opt_choose:"Seleziona…", uw_opt_workout:"Allenarmi", uw_opt_friends:"Uscire con amici", uw_opt_series:"Guardare una serie", uw_opt_drink:"Godermi un drink",
+        // predict
+        tw_lbl:"Finestra decisionale reale", si_lbl:"Indicatore di successo", rt_lbl:"Tolleranza al rischio", lm_lbl:"Luogo/persona di riferimento"
       },
-      en:{
-        title:"Tell me about you",
+      en:{ title:"Tell me about you",
         blurb:"Every answer and micro-test helps What?f understand you better.<br>The more you share, the more its answers become truly yours.",
         back:"Back", home:"Home",
-        improve:"✨ Improve profile (30s)",
-        full:"🕰️ Full test (5 min)",
         name_lbl:"Name", city_lbl:"City",
         gender_lbl:"Gender", choose:"Choose…", gender_m:"Male", gender_f:"Female", gender_o:"Other", gender_n:"Prefer not to say",
         age_lbl:"Age", age_u18:"-18",
@@ -356,7 +311,7 @@
         who_lbl:"Who are you?", goal_lbl:"Goal",
         more_lbl:"Want to tell us more about you?", more_hint:"(optional – helps the AI give more accurate answers)",
         more_ph:"Example: I work in digital, I’m considering moving city, I have two kids…",
-        banner:"<strong>Day by day</strong>, three micro-questions enrich your profile until you’ll say: <strong>“That could be me.”</strong>",
+        banner:"<strong>Day by day</strong>, three micro-questions enrich your profile.",
         micro_title:"Today’s 3 micro-questions",
         mq1:"What’s the most concrete constraint in the next 2 weeks?",
         mq2:"Which signal tells you you’re on the right track?",
@@ -364,29 +319,82 @@
         micro_save:"Save micro-data", micro_skip:"Skip",
         backBtn:"Back", next:"Continue", skip:"Skip → question",
         err_required:"To continue please select Gender, Age and Phase.",
-        know:"Personalization", missing:"Missing:", miss_identity:"Identity/role", miss_routine:"Routine/indicators",
-        miss_constraints:"Constraints", miss_goals:"Goals", miss_places:"Places", miss_relations:"Relationships", miss_risk:"Risk",
-        bar_hint:"More detail → more plausible scenarios. Chips take you to the right field.",
-        // Masked q
         unwind_lbl:"When you need to unwind after a long day, what do you usually do?",
-        uw_opt_choose:"Choose…",
-        uw_opt_workout:"Work out",
-        uw_opt_friends:"Go out with friends",
-        uw_opt_series:"Watch a show",
-        uw_opt_drink:"Enjoy a drink",
-        first_session:"Hey there! Today we start getting to know each other.",
-        // Predictive
-        tw:"Real decision window",
-        si:"Success indicator",
-        rt:"Risk tolerance",
-        lm:"Reference place/person"
+        uw_opt_choose:"Choose…", uw_opt_workout:"Work out", uw_opt_friends:"Go out with friends", uw_opt_series:"Watch a show", uw_opt_drink:"Enjoy a drink",
+        tw_lbl:"Real decision window", si_lbl:"Success indicator", rt_lbl:"Risk tolerance", lm_lbl:"Reference place/person"
+      },
+      es:{ title:"Háblame de ti",
+        blurb:"Cada respuesta y micro-test ayuda a What?f a conocerte mejor.<br>Cuanto más compartes, más propias serán sus respuestas.",
+        back:"Atrás", home:"Inicio",
+        name_lbl:"Nombre", city_lbl:"Ciudad",
+        gender_lbl:"Género", choose:"Elige…", gender_m:"Hombre", gender_f:"Mujer", gender_o:"Otro", gender_n:"Prefiero no decirlo",
+        age_lbl:"Edad", age_u18:"-18",
+        phase_lbl:"Fase actual", phase_study:"Estudiando", phase_work:"Trabajando", phase_change:"Cambio/Transición", phase_other:"Otro",
+        who_lbl:"¿Quién eres?", goal_lbl:"Objetivo",
+        more_lbl:"¿Quieres contarnos algo más sobre ti?", more_hint:"(opcional – ayuda a respuestas más precisas)",
+        more_ph:"Ej.: trabajo en digital, pienso mudarme de ciudad, tengo dos hijos…",
+        banner:"<strong>Día a día</strong>, tres micro-preguntas enriquecen tu perfil.",
+        micro_title:"3 micro-preguntas de hoy",
+        mq1:"¿Cuál es la restricción más concreta en las próximas 2 semanas?",
+        mq2:"¿Qué señal te dice que vas por buen camino?",
+        mq3:"¿Una persona/lugar clave en tu escenario?",
+        micro_save:"Guardar micro-datos", micro_skip:"Saltar",
+        backBtn:"Atrás", next:"Continuar", skip:"Saltar → pregunta",
+        err_required:"Para continuar elige Género, Edad y Fase.",
+        unwind_lbl:"Cuando quieres relajarte tras un día intenso, ¿qué sueles hacer?",
+        uw_opt_choose:"Elegir…", uw_opt_workout:"Entrenar", uw_opt_friends:"Salir con amigos", uw_opt_series:"Ver una serie", uw_opt_drink:"Tomar una bebida",
+        tw_lbl:"Ventana real de decisión", si_lbl:"Indicador de éxito", rt_lbl:"Tolerancia al riesgo", lm_lbl:"Lugar/persona de referencia"
+      },
+      fr:{ title:"Parle-moi de toi",
+        blurb:"Chaque réponse et micro-test aide What?f à mieux te comprendre.<br>Plus tu partages, plus ses réponses te ressemblent.",
+        back:"Retour", home:"Accueil",
+        name_lbl:"Prénom", city_lbl:"Ville",
+        gender_lbl:"Genre", choose:"Choisir…", gender_m:"Homme", gender_f:"Femme", gender_o:"Autre", gender_n:"Je préfère ne pas dire",
+        age_lbl:"Âge", age_u18:"-18",
+        phase_lbl:"Phase actuelle", phase_study:"Études", phase_work:"Travail", phase_change:"Changement/Transition", phase_other:"Autre",
+        who_lbl:"Qui es-tu ?", goal_lbl:"Objectif",
+        more_lbl:"Tu veux nous en dire plus sur toi ?", more_hint:"(optionnel – aide l’IA à être plus précise)",
+        more_ph:"Ex. : je travaille dans le digital, j’envisage de changer de ville, j’ai deux enfants…",
+        banner:"<strong>Jour après jour</strong>, trois micro-questions enrichissent ton profil.",
+        micro_title:"3 micro-questions du jour",
+        mq1:"La contrainte la plus concrète dans les 2 prochaines semaines ?",
+        mq2:"Quel signal te dit que tu es sur la bonne voie ?",
+        mq3:"Une personne/un lieu clé dans ton scénario ?",
+        micro_save:"Enregistrer micro-données", micro_skip:"Passer",
+        backBtn:"Retour", next:"Continuer", skip:"Passer → question",
+        err_required:"Pour continuer, sélectionne Genre, Âge et Phase.",
+        unwind_lbl:"Pour te détendre après une grosse journée, tu fais quoi d’habitude ?",
+        uw_opt_choose:"Choisir…", uw_opt_workout:"Sport", uw_opt_friends:"Sortir avec des amis", uw_opt_series:"Regarder une série", uw_opt_drink:"Prendre un verre",
+        tw_lbl:"Fenêtre réelle de décision", si_lbl:"Indicateur de succès", rt_lbl:"Tolérance au risque", lm_lbl:"Lieu/personne de référence"
+      },
+      de:{ title:"Erzähl mir von dir",
+        blurb:"Jede Antwort und jeder Mikro-Test hilft What?f, dich besser zu verstehen.<br>Je mehr du teilst, desto passender werden die Antworten.",
+        back:"Zurück", home:"Start",
+        name_lbl:"Name", city_lbl:"Stadt",
+        gender_lbl:"Geschlecht", choose:"Wählen…", gender_m:"Männlich", gender_f:"Weiblich", gender_o:"Anderes", gender_n:"Keine Angabe",
+        age_lbl:"Alter", age_u18:"-18",
+        phase_lbl:"Aktuelle Phase", phase_study:"Studium", phase_work:"Arbeit", phase_change:"Wechsel/Übergang", phase_other:"Sonstiges",
+        who_lbl:"Wer bist du?", goal_lbl:"Ziel",
+        more_lbl:"Möchtest du noch etwas erzählen?", more_hint:"(optional – hilft der KI für präzisere Antworten)",
+        more_ph:"Beispiel: arbeite im Digitalbereich, überlege Umzug, habe zwei Kinder…",
+        banner:"<strong>Tag für Tag</strong> bereichern drei Mikro-Fragen dein Profil.",
+        micro_title:"Heutige 3 Mikro-Fragen",
+        mq1:"Was ist die konkreteste Einschränkung in den nächsten 2 Wochen?",
+        mq2:"Welches Signal zeigt dir, dass du auf Kurs bist?",
+        mq3:"Eine Person/ein Ort, der wichtig ist?",
+        micro_save:"Mikro-Daten speichern", micro_skip:"Überspringen",
+        backBtn:"Zurück", next:"Weiter", skip:"Überspringen → Frage",
+        err_required:"Bitte wähle Geschlecht, Alter und Phase.",
+        unwind_lbl:"Wie entspannst du dich nach einem anstrengenden Tag?",
+        uw_opt_choose:"Wählen…", uw_opt_workout:"Training", uw_opt_friends:"Mit Freunden ausgehen", uw_opt_series:"Serie schauen", uw_opt_drink:"Getränk genießen",
+        tw_lbl:"Reales Entscheidungsfenster", si_lbl:"Erfolgsindikator", rt_lbl:"Risikotoleranz", lm_lbl:"Bezugsperson/-ort"
       }
     };
 
     const LS = localStorage;
-    function getLang(){ return (LS.getItem('lang') || (navigator.language||'it').slice(0,2)).toLowerCase(); }
-    function setLang(l){ LS.setItem('lang', l); applyI18N(); renderKnowledge(); }
     const $ = s => document.querySelector(s);
+    function getLang(){ return (LS.getItem('lang') || (navigator.language||'it').slice(0,2)).toLowerCase(); }
+    function setLang(l){ LS.setItem('lang', l); applyI18N(); }
 
     function applyI18N(){
       const d = I18N[getLang()] || I18N.it;
@@ -398,10 +406,6 @@
       // topbar
       $('#backTop').textContent = '← ' + d.back;
       $('#homeTop').textContent = '🏠 ' + d.home;
-
-      // CTA bottom
-      $('#improveBtn').textContent = d.improve;
-      $('#fullBtn').textContent = d.full;
 
       // labels
       $('#name_lbl').textContent = d.name_lbl;
@@ -429,10 +433,10 @@
       $('#goal_lbl').textContent = d.goal_lbl;
 
       // predittivo
-      $('#tw_lbl').textContent = d.tw;
-      $('#si_lbl').textContent = d.si;
-      $('#rt_lbl').textContent = d.rt;
-      $('#lm_lbl').textContent = d.lm;
+      $('#tw_lbl').textContent = d.tw_lbl;
+      $('#si_lbl').textContent = d.si_lbl;
+      $('#rt_lbl').textContent = d.rt_lbl;
+      $('#lm_lbl').textContent = d.lm_lbl;
 
       // blocco “more”
       $('#more_lbl').firstChild.textContent = d.more_lbl + ' ';
@@ -453,33 +457,16 @@
       $('#nextBtn').textContent = d.next;
       $('#skipBtn').textContent = d.skip;
 
-      // Indicatore labels
-      $('#knowLabel').textContent = d.know;
-      $('#missLabel').textContent = d.missing;
-      $('#knowBox').title = d.bar_hint;
-
-      // error bind
+      // error
       $('#aboutForm').dataset.err = d.err_required;
-
-      // I18N domanda mascherata
-      if (document.getElementById('unwind_lbl')){
-        document.getElementById('unwind_lbl').textContent = d.unwind_lbl;
-        document.getElementById('uw_opt_choose').textContent = d.uw_opt_choose;
-        document.getElementById('uw_opt_workout').textContent = d.uw_opt_workout;
-        document.getElementById('uw_opt_friends').textContent = d.uw_opt_friends;
-        document.getElementById('uw_opt_series').textContent  = d.uw_opt_series;
-        document.getElementById('uw_opt_drink').textContent   = d.uw_opt_drink;
-      }
-
-      // Banner prima sessione
-      $('#firstSessionBanner').textContent = d.first_session;
     }
 
-    // init lang
+    // init lingua + tema
     if (!LS.getItem('lang')) LS.setItem('lang', getLang());
+    document.getElementById('langSelect').value = getLang();
+    document.getElementById('langSelect').addEventListener('change', e=> setLang(e.target.value));
     applyI18N();
 
-    // Theme from prefs
     (function(){
       try{
         const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
@@ -488,25 +475,16 @@
       }catch{}
     })();
 
-    // ===== Only once: se onboarding già fatto e profilo base presente, salta pagina
+    // ===== Onboarding skip se già presente profilo base
     const KEY_ONBOARD = 'whatif_onboarding_done';
     function baseProfilePresent(){
       try{ const p = JSON.parse(LS.getItem('whatif_profile')||'{}'); return !!(p && (p.gender || p.sex) && p.age && p.phase); }catch{return false}
     }
-
-    // Prima sessione banner (solo pre-onboarding)
-    if (LS.getItem(KEY_ONBOARD)!=='1' && LS.getItem('whatif_first_session_seen')!=='1'){
-      const b = document.getElementById('firstSessionBanner');
-      b.style.display = 'block';
-      LS.setItem('whatif_first_session_seen','1');
-    }
-
-    // Se già fatto, salta a quarta pagina
     if (LS.getItem(KEY_ONBOARD)==='1' && baseProfilePresent()){
       location.replace('fourth.html');
     }
 
-    // topbar buttons
+    // topbar
     document.getElementById('backTop').addEventListener('click', ()=> history.back());
     document.getElementById('homeTop').addEventListener('click', ()=> location.href='index.html');
 
@@ -522,14 +500,6 @@
       location.href='second.html';
     });
 
-    // CTA bottom
-    document.getElementById('improveBtn').addEventListener('click', ()=> location.href='third.html');
-    (function handleFullTestCTA(){
-      const done = LS.getItem('whatif_quiz5_done') === '1';
-      if (done) document.getElementById('fullBtn').style.display = 'none';
-      document.getElementById('fullBtn').addEventListener('click', ()=> location.href='fulltest.html');
-    })();
-
     // Helpers
     function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
     const KEY_DAY = 'whatif_daily_seen';
@@ -541,25 +511,21 @@
       const a=new Date(iso1), b=new Date(iso2);
       return Math.round((b-a)/(1000*60*60*24));
     }
-    function last(arr){ return Array.isArray(arr) && arr.length ? arr[arr.length-1] : null; }
 
-    // ===== Banner/micro: SOLO dal giorno dopo la prima compilazione
+    // Banner/micro: SOLO dal giorno dopo
     (function setupDailyBlocks(){
       const profDate = LS.getItem('whatif_profile_date');
       const onboard = LS.getItem(KEY_ONBOARD)==='1';
       const showDaily = (() => {
-        if (!onboard || !profDate) return false; // prima volta: NON mostrare micro
+        if (!onboard || !profDate) return false;
         const gap = daysBetween(profDate, today);
-        return gap >= 1; // dal giorno dopo
+        return gap >= 1;
       })();
 
       if (showDaily){
         document.getElementById('dailyBanner').style.display = 'block';
         document.getElementById('microBox').style.display = 'block';
-        // limita a una volta per giorno
-        const seenDay = LS.getItem(KEY_DAY);
-        if (seenDay === today){
-          // già interagito oggi → nascondi solo il banner
+        if (LS.getItem(KEY_DAY) === today){
           document.getElementById('dailyBanner').style.display = 'none';
         }
       } else {
@@ -567,128 +533,18 @@
         document.getElementById('microBox').style.display = 'none';
       }
 
-      // domanda mascherata relax SOLO prima dell’onboarding
+      // relax solo pre-onboarding
       if (LS.getItem(KEY_ONBOARD)!=='1'){
         const uwBox = document.getElementById('unwindBox');
         if (uwBox) uwBox.style.display = 'block';
       }
     })();
 
-    // ====== Indicatore di conoscenza ======
-    function computeKnowledge(){
-      const profile = readJSON('whatif_profile',{});
-      const micro   = readJSON('whatif_micro',{});
-      const microLog= readJSON('whatif_micro_log',[]);
-      const lastUpd = LS.getItem('whatif_last_update');
-
-      let cover = 0;
-      const miss = [];
-
-      const hasIdentity = !!(profile.name || profile.role);
-      cover += hasIdentity ? 8 : 0; if(!hasIdentity) miss.push('identity');
-
-      const hasRoutine = !!(micro.indicatore);
-      cover += hasRoutine ? 8 : 0; if(!hasRoutine) miss.push('routine');
-
-      const hasConstraints = !!(micro.vincolo_2w);
-      cover += hasConstraints ? 8 : 0; if(!hasConstraints) miss.push('constraints');
-
-      const hasGoals = !!(profile.goal);
-      cover += hasGoals ? 8 : 0; if(!hasGoals) miss.push('goals');
-
-      const hasPlaces = !!(profile.city || micro.punto_riferimento);
-      cover += hasPlaces ? 8 : 0; if(!hasPlaces) miss.push('places');
-
-      const hasRelations = !!(micro.persona_chiave);
-      cover += hasRelations ? 8 : 0; if(!hasRelations) miss.push('relations');
-
-      const hasRisk = !!(micro.rischio || micro.tolleranza_rischio || profile.risk_tolerance);
-      cover += hasRisk ? 7 : 0; if(!hasRisk) miss.push('risk');
-
-      // qualità segnali
-      const vals = Object.values(profile).concat(Object.values(micro)).filter(v=>typeof v==='string');
-      let usable = 0;
-      const numRe = /\b\d+([.,]\d+)?\b/;
-      const timeRe= /\b(\d{1,2}[:.]\d{2}|mattina|pomeriggio|sera|am|pm)\b/i;
-      const locRe = /\b(centro|stazione|ufficio|palestra|bar|parco|centro storico|piazza|quartiere)\b/i;
-      vals.forEach(v=>{ if (usable>=10) return; if (numRe.test(v) || timeRe.test(v) || locRe.test(v)) usable++; });
-      let quality = Math.min(10, usable);
-
-      // bonus se micro oggi
-      const microLogArr = Array.isArray(microLog)?microLog:[];
-      if (microLogArr.includes(today)) quality += 5;
-      quality = Math.min(25, quality);
-
-      // freschezza dati
-      let streak=0;
-      if (microLogArr.length){
-        let d = new Date(today);
-        for(;;){
-          const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-          if (microLogArr.includes(iso)){ streak++; d.setDate(d.getDate()-1); } else break;
-        }
-      }
-      const streakPts = Math.min(10, streak);
-
-      const lastDay = lastUpd || last(microLogArr);
-      let recencyPts = 0;
-      if (lastDay){
-        const gap = Math.max(0, daysBetween(lastDay, today));
-        if (gap<=2) recencyPts=10;
-        else if (gap<=5) recencyPts=8;
-        else if (gap<=8) recencyPts=6;
-        else if (gap<=11) recencyPts=4;
-        else if (gap<=14) recencyPts=2;
-        else recencyPts=0;
-      }
-      const fresh = Math.min(20, streakPts + recencyPts);
-
-      let total = Math.max(0, Math.min(100, Math.round(cover + quality + fresh)));
-      return { total, miss };
-    }
-
-    function renderKnowledge(){
-      const d = I18N[getLang()] || I18N.it;
-      const k = computeKnowledge();
-      document.getElementById('knowValue').textContent = `${k.total}/100`;
-      document.getElementById('knowFill').style.width = `${k.total}%`;
-      const map = {
-        identity: d.miss_identity, routine: d.miss_routine, constraints: d.miss_constraints,
-        goals: d.miss_goals, places: d.miss_places, relations: d.miss_relations, risk: d.miss_risk
-      };
-      const missRow = document.getElementById('missRow');
-      [...missRow.querySelectorAll('.chip')].forEach(n=>n.remove());
-      k.miss.forEach(key=>{
-        const b = document.createElement('button');
-        b.type='button'; b.className='chip'; b.textContent = map[key]||key;
-        b.addEventListener('click', ()=> jumpToKey(key));
-        missRow.appendChild(b);
-      });
-    }
-
-    function jumpToKey(key){
-      if (key==='identity'){ document.getElementById('name').focus(); scrollIntoView('#name'); return; }
-      if (key==='goals'){ document.getElementById('goal').focus(); scrollIntoView('#goal'); return; }
-      if (key==='places'){ document.getElementById('city').focus(); scrollIntoView('#city'); return; }
-      if (key==='constraints' || key==='routine' || key==='relations' || key==='risk'){
-        document.getElementById('microBox').style.display = 'block';
-        scrollIntoView('#microBox');
-        if (key==='constraints') document.getElementById('mq1').focus();
-        if (key==='routine') document.getElementById('mq2').focus();
-        if (key==='relations') document.getElementById('mq3').focus();
-      }
-    }
-    function scrollIntoView(sel){
-      const el=document.querySelector(sel); if(!el) return;
-      el.scrollIntoView({behavior:'smooth', block:'center'});
-    }
-
     // micro actions
     document.getElementById('microSkip').addEventListener('click', ()=>{
       document.getElementById('dailyBanner').style.display='none';
       document.getElementById('microBox').style.display='none';
       LS.setItem(KEY_DAY, today);
-      renderKnowledge();
     });
 
     document.getElementById('microSave').addEventListener('click', ()=>{
@@ -709,8 +565,6 @@
       document.getElementById('dailyBanner').style.display='none';
       document.getElementById('microBox').style.display='none';
       LS.setItem(KEY_DAY, today);
-
-      renderKnowledge();
     });
 
     // back / skip
@@ -720,20 +574,21 @@
       if (!(base.gender || base.sex) || !base.age || !base.phase) {
         alert(getLang()==='en'
           ? 'Fill basic profile once before skipping.'
-          : 'Compila una volta il profilo base prima di saltare.');
+          : (getLang()==='es' ? 'Completa el perfil básico una vez antes de saltar.'
+          : (getLang()==='fr' ? 'Renseigne le profil de base au moins une fois.'
+          : (getLang()==='de' ? 'Bitte fülle einmal das Basisprofil aus.'
+          : 'Compila una volta il profilo base prima di saltare.'))));
         return;
       }
       const firstDone = LS.getItem('whatif_quiz5_done') === '1';
       location.href = firstDone ? 'fourth.html' : 'third.html';
     });
 
-    // ======= Preload form dai dati salvati (con mapping sex<->gender) =======
+    // Preload form
     (function preload(){
       try{
         const p = JSON.parse(LS.getItem('whatif_profile')||'{}');
         if (!p) return;
-
-        // preferisci p.sex per risettare <select id="gender">
         let gval = p.gender || "";
         if (!gval && p.sex){
           if (p.sex === 'm') gval = 'uomo';
@@ -741,28 +596,23 @@
           else if (p.sex === 'nb') gval = 'altro';
           else gval = 'non_specificato';
         }
-
-        if (p.name) document.getElementById('name').value = p.name;
-        if (p.city) document.getElementById('city').value = p.city;
-        if (gval) document.getElementById('gender').value = gval;
-        if (p.age) document.getElementById('age').value = p.age;
-        if (p.phase) document.getElementById('phase').value = p.phase;
-        if (p.role) document.getElementById('who').value = p.role;
-        if (p.goal) document.getElementById('goal').value = p.goal;
-        if (p.more) document.getElementById('more').value = p.more;
-
-        // predittivo
-        if (p.time_window) document.getElementById('time_window').value = p.time_window;
-        if (p.success_indicator) document.getElementById('success_indicator').value = p.success_indicator;
-        if (p.risk_tolerance) document.getElementById('risk_tolerance').value = p.risk_tolerance;
-        if (p.landmark) document.getElementById('landmark').value = p.landmark;
-
-        if (p.unwind) document.getElementById('unwindSel').value = p.unwind;
+        if (p.name) $('#name').value = p.name;
+        if (p.city) $('#city').value = p.city;
+        if (gval)   $('#gender').value = gval;
+        if (p.age)  $('#age').value = p.age;
+        if (p.phase)$('#phase').value = p.phase;
+        if (p.role) $('#who').value = p.role;
+        if (p.goal) $('#goal').value = p.goal;
+        if (p.more) $('#more').value = p.more;
+        if (p.time_window)       $('#time_window').value = p.time_window;
+        if (p.success_indicator) $('#success_indicator').value = p.success_indicator;
+        if (p.risk_tolerance)    $('#risk_tolerance').value = p.risk_tolerance;
+        if (p.landmark)          $('#landmark').value = p.landmark;
+        if (p.unwind)            $('#unwindSel').value = p.unwind;
       }catch(e){}
-      renderKnowledge();
     })();
 
-    // ===== submit: salva anche sex normalizzato =====
+    // submit
     const form = document.getElementById('aboutForm');
     const errBox = document.getElementById('errorBox');
 
@@ -774,13 +624,13 @@
         default: return '';
       }
     }
-    function todayStr2(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+    function todayIso(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
     form.addEventListener('submit', (e)=>{
       e.preventDefault();
-      const gender = document.getElementById('gender').value.trim();
-      const age    = document.getElementById('age').value.trim();
-      const phase  = document.getElementById('phase').value.trim();
+      const gender = $('#gender').value.trim();
+      const age    = $('#age').value.trim();
+      const phase  = $('#phase').value.trim();
       if(!gender || !age || !phase){
         errBox.textContent = form.dataset.err;
         errBox.classList.add('show'); return;
@@ -790,40 +640,34 @@
       const sex = mapGenderToSex(gender);
 
       const profile = {
-        name: document.getElementById('name').value.trim(),
-        city: document.getElementById('city').value.trim(),
-        gender,         // human-readable
-        sex,            // normalizzato: 'm' | 'f' | 'nb' | ''
-        age, phase,
-        role: document.getElementById('who').value.trim(),
-        goal: document.getElementById('goal').value.trim(),
-        // relax info
-        unwind: document.getElementById('unwindSel').value.trim(),
-        drinks_pref: (document.getElementById('unwindSel').value === 'drink') ? 'yes' : 'no',
-        // predittivo
-        time_window: document.getElementById('time_window').value.trim(),
-        success_indicator: document.getElementById('success_indicator').value.trim(),
-        risk_tolerance: document.getElementById('risk_tolerance').value.trim(),
-        landmark: document.getElementById('landmark').value.trim()
+        name: $('#name').value.trim(),
+        city: $('#city').value.trim(),
+        gender, sex, age, phase,
+        role: $('#who').value.trim(),
+        goal: $('#goal').value.trim(),
+        unwind: $('#unwindSel').value.trim(),
+        drinks_pref: ($('#unwindSel').value === 'drink') ? 'yes' : 'no',
+        time_window: $('#time_window').value.trim(),
+        success_indicator: $('#success_indicator').value.trim(),
+        risk_tolerance: $('#risk_tolerance').value.trim(),
+        landmark: $('#landmark').value.trim(),
+        more: $('#more').value.trim()
       };
 
       LS.setItem('whatif_profile', JSON.stringify(profile));
 
-      const todayIso = todayStr2();
-      LS.setItem('whatif_last_update', todayIso);
-      if (!LS.getItem('whatif_profile_date')) LS.setItem('whatif_profile_date', todayIso);
+      const t = todayIso();
+      LS.setItem('whatif_last_update', t);
+      if (!LS.getItem('whatif_profile_date')) LS.setItem('whatif_profile_date', t);
       LS.setItem('whatif_onboarding_done','1');
 
-      renderKnowledge();
-
-      // prima volta -> third.html, poi sempre fourth.html
       const firstDone = LS.getItem('whatif_quiz5_done') === '1';
       location.href = firstDone ? 'fourth.html' : 'third.html';
     });
 
-    // sync su cambio lingua
-    window.addEventListener('storage', (e)=>{ if(e.key==='lang'){ applyI18N(); renderKnowledge(); }});
-    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ applyI18N(); renderKnowledge(); }});
+    // sync lingua
+    window.addEventListener('storage', (e)=>{ if(e.key==='lang'){ applyI18N(); }});
+    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ applyI18N(); }});
   </script>
 
   <!-- SW -->
