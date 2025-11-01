@@ -1,8 +1,8 @@
-// /api/ask.js — What?f Engine (Stable Hybrid WHATIF + Friendly-WTF Demenziale)
-// - WHATIF: stile unico 60% analisi / 40% immagini sobrie. Incipit analitico (no “Bella Luca”).
-// - WTF: come da tuoi esempi, 2–3 reazioni DEMENZIALI, una sola “imprecazione” teatrale, sorso alcolico, risposta vera, morale.
-// - Maiuscole sistemate post-process dopo punto / “…”.
-// - Un paragrafo, niente elenchi, niente eco della domanda.
+// /api/ask.js — What?f Engine (WHATIF realistico + WTF naturale variabile)
+// - WHATIF: 70% analisi concreta / 30% immagini minime, tono adulto e asciutto.
+// - WTF: ironico/sarcastico, 3–4 micro-gag variabili, UNA imprecazione teatrale descritta,
+//        un sorso alcolico, risposta vera, morale calda. Ordine dei blocchi leggermente mescolato.
+// - Un paragrafo, niente elenchi, niente eco della domanda. Maiuscole sistemate post-process.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -61,49 +61,58 @@ function stripQuestionEcho(domanda,text){
   t=t.replace(rx,""); return t;
 }
 function sentenceCaseAll(s=""){
-  // Metti maiuscola dopo (. ? ! …) + gestione virgolette semplici
   return s.replace(/(^|[.!?…]\s+)([a-zà-ÿ])/g, (m,prefix,chr)=> prefix + chr.toUpperCase());
 }
 function finalPunct(s=""){ return /[.!?…]$/.test(s)?s:s+"."; }
 
-/* ========= WHAT IF – stile 60/40 (analitico + immagini sobrie) ========= */
-const WHATIF_HYBRID_EX_IT = `Sai, questa non è una domanda leggera. Guardi i numeri, poi guardi le abitudini: costi più bassi da una parte, occasioni più larghe dall’altra. La qualità della vita non è un grafico, è una routine: tempi di spostamento, servizi che funzionano, persone che senti vicine. Se stringi, il portafoglio respira un po’ di più; in cambio accetti un ritmo meno veloce e meno “vetrine” da inseguire. Le giornate si accorciano di frenesia e si allungano di fiato: un caffè fatto bene, una strada che conosci, un’aria che sa di casa. Non è una fuga né un eroismo: è ingegneria quotidiana, spostare pesi tra tempo, denaro e relazioni. A conti fatti, potresti guadagnare spazio mentale e perdere solo rumore. E quando la sera chiudi la porta, non senti il rimpianto bussare: senti il tuo passo tornare al suo passo.`;
-
-const WHATIF_RULE_IT = `WHAT IF HYBRID (italiano): 60% analisi concreta (costi/benefici, routine, qualità di vita), 40% immagini sobrie della quotidianità. Incipit analitico nello stile: “Sai, questa non è una domanda leggera.” Vietato iniziare con “Bella questa”. 8–10 frasi. Seconda persona. Una sola risposta a paragrafo unico. Niente eco della domanda.`;
-
-/* ========= WTF — banche demenziali ========= */
-const WTF_IMPRE = [
-  "bestemmione corazzato",
-  "imprecazionona a detonazione",
-  "sacramentata a ciel sereno",
-  "vulcano d’anatemi",
-  "tromba d’aria di improperi",
-];
-const WTF_REACT = [
-  "la moka ti fa una standing ovation e chiede l’autografo",
-  "il POS entra in modalità testimone di nozze e benedice la carta",
-  "la tapparella si abbassa per pudore e poi sbircia curiosa",
-  "la lampada lampeggia in Morse “ti capisco”",
-  "Alexa finge un aggiornamento e scappa in modalità monaco",
-  "il frigorifero sospira e decide di diventare minimalista",
-  "il campanello suona da solo per solidarietà e poi si pente",
-  "la pianta applaude con le foglie e ti chiede un drink",
-  "il ventilatore gira al contrario “per rispetto”",
-  "il citofono fa un trillo come un amen stonato",
-];
-const WTF_DRINK = [
-  "ti versi un amaro doppio e metti in riga i pensieri",
-  "fai un sorso corto e il mondo rientra nei bordi",
-  "alzi un bicchiere piccolo: brindisi di manutenzione",
-  "bevi un dito di coraggio e respiri più largo",
-];
+/* ========= Style Profiles ========= */
+const STYLE = {
+  whatif: {
+    rules_it: `WHATIF REALISTICO: tono analitico, adulto, concreto. 70% ragionamento (costi/benefici, tempo, routine, relazioni), 30% immagini minime e reali (mai poetiche). Vietato motivazionale e vago. Nessuna eco della domanda. Seconda persona. 7–10 frasi, un unico paragrafo. Chiusura asciutta.`,
+    example_it: `Sai, questa non è una decisione leggera. Metti in fila costi abitativi, tempi di spostamento e qualità dei servizi; poi guardi chi puoi vedere senza organizzare un trasloco ogni weekend. Il portafoglio respira se tagli gli extra fissi, ma il ritmo diventa meno brillante e più regolare. La routine guadagna stabilità: minuti che smetti di bruciare in traffico, margini per allenarti o seguire una pratica senza rincorrere l’orologio. In cambio rinunci a qualche opportunità “di vetrina” e metti più valore nella continuità. Se lo scambio ti dà più testa libera che FOMO, è un affare. È ingegneria quotidiana: spostare peso da stress e spesa a tempo utile. A fine giornata la domanda è una: ti senti più te stesso dove chiudi la porta?`,
+    seedTemp: 0.78,
+    maxSentences: 10,
+    maxWords: 180,
+    freqPenalty: 0.15
+  },
+  wtf: {
+    rules_it: `WHAT THE F NATURALE: ironico/sarcastico ma affettuoso. Usa 3–4 micro-gag a rotazione (oggetti che reagiscono, mini-imprevisti), UNA “imprecazione teatrale” descritta (mai insulto a persone), un sorso alcolico, poi 1–2 frasi davvero utili e una morale calda e pungente. Non seguire sempre la stessa sequenza: mescola leggermente l’ordine. 6–8 frasi, un paragrafo, niente emoji, niente eco della domanda.`,
+    impre: [
+      "bestemmione in surround",
+      "imprecazione barocca",
+      "sacramentata che fa vibrare i bicchieri",
+      "anatema da sagra di paese"
+    ],
+    react: [
+      "la moka fischia come se avessi vinto il Giro",
+      "la tapparella si cala per vergogna e poi spià",
+      "Alexa finge un aggiornamento e sparisce",
+      "il frigorifero sospira e decide il minimalismo",
+      "il campanello suona da solo e si scusa",
+      "la pianta applaude con le foglie e chiede un drink"
+    ],
+    drink: [
+      "un amaro secco che raddrizza la giornata",
+      "un dito di rosso di manutenzione",
+      "un sorso corto che rimette i bordi",
+      "un cicchetto educato ma risolutivo"
+    ],
+    seedTemp: 0.95,
+    maxSentences: 8,
+    maxWords: 170,
+    freqPenalty: 0.0
+  }
+};
 
 /* ========= Prompt builder ========= */
 function buildMessages({ domanda, lang, periodo, stile }){
   const L = normLang(lang);
-  const baseRules = L==="en"
+  const S = STYLE[stile === "wtf" ? "wtf" : "whatif"];
+
+  const baseRules = (L==="en")
     ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Second person only.`
     : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona.`;
+
   const temporal = String(periodo).toLowerCase()==="past"
     ? (L==="en" ? "Write as if it already happened." : "Scrivi come se fosse già successo.")
     : (L==="en" ? "Write as a near-future unfolding starting now." : "Scrivi come un prossimo futuro che inizia ora.");
@@ -114,50 +123,41 @@ function buildMessages({ domanda, lang, periodo, stile }){
   ];
 
   if(stile==="wtf"){
-    // Costruisci semi casuali deterministicamente sulla domanda (per varietà)
+    // Variazione naturale deterministica sulla domanda
     let seed=[...String(domanda)].reduce((a,c)=>a+c.charCodeAt(0),0);
     function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; }
-    const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
-    // 2–3 reazioni demenziali coerenti
-    const shuffled=[...WTF_REACT].sort(()=>rnd()-0.5);
-    const react = shuffled.slice(0, 2 + Math.floor(rnd()*2)); // 2 o 3
-    const drink = WTF_DRINK[Math.floor(rnd()*WTF_DRINK.length)];
 
-    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile). Struttura OBBLIGATORIA: presa in giro affettuosa (max 2 frasi) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”, come narrazione, mai insulto a persone) → SUBITO ${react.length} reazioni di oggetti esilaranti → drink (“${drink}”) → 1–2 frasi che rispondono davvero → morale calda e ironica. Tono da barista affettuoso sbronzo-elegante, mai aggressivo. 6–8 frasi.`;
-    const WTF_RULE_EN = `WHAT THE F (friendly, absurd but helpful). STRICT sequence: playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical “${impre}” (narrated, never insulting people) → THEN ${react.length} absurd object reactions → drink (“${drink}”) → 1–2 lines that truly answer → warm ironic moral. 6–8 sentences.`;
+    const impre = S.impre[Math.floor(rnd()*S.impre.length)];
+    const reactPool = [...S.react].sort(()=>rnd()-0.5).slice(0, 3 - (rnd()>0.6?1:0)); // 2–3 reazioni
+    const drink = S.drink[Math.floor(rnd()*S.drink.length)];
+
+    // Ordine flessibile dei blocchi (mescolato ma coerente)
+    const blocks = ["tease","mishaps","imprecation","reactions","drink","answer","moral"];
+    const softShuffle = [...blocks].sort(()=>rnd()-0.5);
+
+    const flexRule = `VARIAZIONE: segui quest’ordine morbido (ma naturale, senza forzature): ${softShuffle.join(" → ")}. Inserisci UNA imprecazione teatrale (“${impre}”), reazioni oggetti (${reactPool.join("; ")}), e un drink (“${drink}”). Tieni 6–8 frasi e chiudi con una morale pungente ma calda.`;
 
     msgs.push(
-      { role: "system", content: L==="en" ? WTF_RULE_EN : WTF_RULE_IT },
-      { role: "system", content: `IMPRECATION: ${impre}` },
-      { role: "system", content: `REACTIONS:\n- ${react.join("\n- ")}` },
-      { role: "system", content: `DRINK: ${drink}` },
-      // ESEMPI IT (àncora di tono)
-      { role: "system", content:
-`ESEMPI VINCOLANTI (tono/ritmo IT):
-- Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora che al confessionale ti tengono in riserva. Ti versi un goccio di liquore, rimetti in riga il bancone e giuri che domani apri solo per matti. Alla chiusura, ti guardi intorno e sussurri che oggi hai bestemmiato più del prete quando finisce il vino — ma almeno hai servito verità calde.
-- Oh, eccoci, centauro dell’inferno. Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” così netto che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo ma quasi con affetto, come un rito che rimette a fuoco. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio con un sorrisetto complice. Torni a casa con l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie ben calibrate.
-- Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
+      { role: "system", content: S.rules_it },
+      { role: "system", content: flexRule }
     );
   } else {
-    // WHATIF ibrido unico, con incipit analitico e divieto “Bella…”
-    msgs.push(
-      { role: "system", content: WHATIF_RULE_IT },
-      { role: "system", content: `ESEMPIO (respiro e tono):\n${WHATIF_HYBRID_EX_IT}` }
-    );
+    msgs.push({ role: "system", content: S.rules_it });
+    if (S.example_it) msgs.push({ role: "system", content: `ESEMPIO (tono/respiro): ${S.example_it}` });
   }
 
-  // Utente finale
-  const ask = (L==="en")
-    ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`
-    : (L==="it")
+  // Istruzione finale all'assistente (no eco)
+  const ask = (L==="it")
     ? `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO. Paragrafo unico.`
+    : (L==="en")
+    ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`
     : (L==="es")
     ? `Pregunta (no la repitas): "${domanda}". Escribe UNA respuesta en ESPAÑOL, un solo párrafo.`
     : (L==="fr")
     ? `Question (ne la répète pas) : « ${domanda} ». Donne UNE réponse en FRANÇAIS, un seul paragraphe.`
     : `Frage (nicht wiederholen): „${domanda}“. Gib EINE Antwort auf DEUTSCH, ein einziger Absatz.`;
-  msgs.push({ role: "user", content: ask });
 
+  msgs.push({ role: "user", content: ask });
   return msgs;
 }
 
@@ -188,12 +188,13 @@ export default async function handler(req, res){
 
     const messages = buildMessages({ domanda, lang, periodo, stile, micro });
 
+    const S = STYLE[stile === "wtf" ? "wtf" : "whatif"];
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.98 : 0.82,
+      temperature: S.seedTemp,
       top_p: 0.92,
-      max_tokens: 480,
-      frequency_penalty: 0.1,
+      max_tokens: 520,
+      frequency_penalty: S.freqPenalty,
       presence_penalty: 0.0,
       messages,
     });
@@ -203,15 +204,14 @@ export default async function handler(req, res){
 
     // Post-process
     answer = stripQuestionEcho(domanda, answer);
-    answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);
-    answer = clampWords(answer, stile === "wtf" ? 170 : 165);
+    answer = tightenSentences(answer, S.maxSentences);
+    answer = clampWords(answer, S.maxWords);
     answer = normalizeOneParagraph(answer);
     answer = sentenceCaseAll(answer);
     answer = finalPunct(answer);
 
-    // Moderazioni leggere (non spegnere l'umorismo)
+    // Moderazioni leggere IT: evita nomi propri non presenti nella domanda
     if(normLang(lang)==="it"){
-      // evita nomi non presenti nella domanda
       (function(){
         const d=String(domanda||"");
         const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
