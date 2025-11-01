@@ -52,6 +52,9 @@
     .btn.primary{border:none;background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);box-shadow:0 10px 26px rgba(0,0,0,.35)}
     .error{color:#ffb3b3;background:#3a1414;border:1px solid #5a2222;border-radius:10px;padding:10px 12px;display:none;margin-top:10px}
     .error.show{display:block}
+
+    /* invalid highlight */
+    .invalid{outline:2px solid #ff7a7a; outline-offset:2px}
   </style>
 </head>
 <body>
@@ -75,18 +78,18 @@
   <main>
     <div class="wrap">
       <h1 id="title">Parlami di te</h1>
-      <p class="blurb" id="blurb">Basta un profilo base. Il sesso è fondamentale per personalizzare le risposte.</p>
+      <p class="blurb" id="blurb">Compila tutti i campi. Li usiamo per personalizzare le risposte della AI.</p>
 
       <div class="card">
         <form id="profileForm" novalidate>
           <div class="row two">
             <div>
-              <label for="name" id="name_lbl">Nome (opzionale)</label>
-              <input id="name" type="text" autocomplete="name" placeholder="Es. Luca" />
+              <label for="name" id="name_lbl">Nome e cognome</label>
+              <input id="name" type="text" autocomplete="name" placeholder="Es. Mario Rossi" required />
             </div>
             <div>
-              <label for="city" id="city_lbl">Città (opzionale)</label>
-              <input id="city" type="text" autocomplete="address-level2" placeholder="Es. L’Aquila / Verona" />
+              <label for="city" id="city_lbl">Città</label>
+              <input id="city" type="text" autocomplete="address-level2" placeholder="Es. Roma" required />
             </div>
           </div>
 
@@ -102,8 +105,8 @@
               </select>
             </div>
             <div>
-              <label for="age" id="age_lbl">Età (opzionale)</label>
-              <select id="age">
+              <label for="age" id="age_lbl">Età</label>
+              <select id="age" required>
                 <option value="" id="choose_a">Seleziona…</option>
                 <option value="under18">-18</option>
                 <option value="18_24">18–24</option>
@@ -115,22 +118,22 @@
               </select>
             </div>
             <div>
-              <label for="role" id="role_lbl">Chi sei? (opz.)</label>
-              <input id="role" type="text" placeholder="Professione / Ruolo" />
+              <label for="role" id="role_lbl">Professione / Ruolo</label>
+              <input id="role" type="text" placeholder="Es. Ingegnere di produzione" required />
             </div>
           </div>
 
           <div class="row">
             <div>
-              <label for="goal" id="goal_lbl">Obiettivo principale (opz.)</label>
-              <input id="goal" type="text" placeholder="Es. più equilibrio lavoro-vita" />
+              <label for="goal" id="goal_lbl">Obiettivo principale</label>
+              <input id="goal" type="text" placeholder="Es. cambiare lavoro entro 6 mesi" required />
             </div>
           </div>
 
           <div class="row">
             <div>
-              <label for="more" id="more_lbl">Note utili per risposte migliori <span id="more_hint" class="muted">(opzionale)</span></label>
-              <textarea id="more" placeholder=""></textarea>
+              <label for="more" id="more_lbl">Informazioni utili per risposte migliori <span id="more_hint" class="muted"></span></label>
+              <textarea id="more" placeholder="Contesto, vincoli, preferenze… (min. 10 caratteri)" required minlength="10"></textarea>
             </div>
           </div>
 
@@ -159,41 +162,56 @@
 
     // ==== I18N
     const I18N = {
-      it:{ title:"Parlami di te", blurb:"Basta un profilo base. Il sesso è fondamentale per personalizzare le risposte.",
-           name:"Nome (opzionale)", city:"Città (opzionale)", gender:"Sesso", choose:"Seleziona…",
-           m:"Uomo", f:"Donna", o:"Altro", n:"Preferisco non dirlo",
-           age:"Età (opzionale)", role:"Chi sei? (opz.)", goal:"Obiettivo principale (opz.)",
-           more:"Note utili per risposte migliori", more_hint:"(opzionale)",
+      it:{ title:"Parlami di te",
+           blurb:"Compila tutti i campi. Li usiamo per personalizzare le risposte della AI.",
+           name:"Nome e cognome", city:"Città",
+           gender:"Sesso", choose:"Seleziona…", m:"Uomo", f:"Donna", o:"Altro", n:"Preferisco non dirlo",
+           age:"Età", role:"Professione / Ruolo",
+           goal:"Obiettivo principale",
+           more:"Informazioni utili per risposte migliori", more_hint:"",
            back:"Indietro", next:"Continua",
-           err:"Seleziona il sesso per continuare." },
-      en:{ title:"Tell me about you", blurb:"A minimal profile is enough. Sex is important to tailor answers.",
-           name:"Name (optional)", city:"City (optional)", gender:"Sex", choose:"Choose…",
-           m:"Male", f:"Female", o:"Other", n:"Prefer not to say",
-           age:"Age (optional)", role:"Who are you? (opt.)", goal:"Main goal (opt.)",
-           more:"Notes to improve answers", more_hint:"(optional)",
+           err_missing:"Compila tutti i campi richiesti.",
+           err_more:"Aggiungi almeno 10 caratteri nelle informazioni utili." },
+      en:{ title:"Tell me about you",
+           blurb:"Fill in all fields. We use them to tailor the AI answers.",
+           name:"Full name", city:"City",
+           gender:"Sex", choose:"Choose…", m:"Male", f:"Female", o:"Other", n:"Prefer not to say",
+           age:"Age", role:"Profession / Role",
+           goal:"Main goal",
+           more:"Useful details for better answers", more_hint:"",
            back:"Back", next:"Continue",
-           err:"Please select your sex to continue." },
-      es:{ title:"Háblame de ti", blurb:"Basta un perfil básico. El sexo es importante para personalizar respuestas.",
-           name:"Nombre (opcional)", city:"Ciudad (opcional)", gender:"Sexo", choose:"Elige…",
-           m:"Hombre", f:"Mujer", o:"Otro", n:"Prefiero no decirlo",
-           age:"Edad (opcional)", role:"¿Quién eres? (opc.)", goal:"Objetivo principal (opc.)",
-           more:"Notas para mejorar respuestas", more_hint:"(opcional)",
+           err_missing:"Please complete all required fields.",
+           err_more:"Please write at least 10 characters in the details." },
+      es:{ title:"Háblame de ti",
+           blurb:"Completa todos los campos. Los usamos para personalizar las respuestas de la IA.",
+           name:"Nombre y apellido", city:"Ciudad",
+           gender:"Sexo", choose:"Elige…", m:"Hombre", f:"Mujer", o:"Otro", n:"Prefiero no decirlo",
+           age:"Edad", role:"Profesión / Rol",
+           goal:"Objetivo principal",
+           more:"Detalles útiles para mejores respuestas", more_hint:"",
            back:"Atrás", next:"Continuar",
-           err:"Selecciona tu sexo para continuar." },
-      fr:{ title:"Parle-moi de toi", blurb:"Un profil basique suffit. Le sexe aide à personnaliser les réponses.",
-           name:"Prénom (optionnel)", city:"Ville (optionnel)", gender:"Sexe", choose:"Choisir…",
-           m:"Homme", f:"Femme", o:"Autre", n:"Préfère ne pas dire",
-           age:"Âge (optionnel)", role:"Qui es-tu ? (opt.)", goal:"Objectif principal (opt.)",
-           more:"Notes pour de meilleures réponses", more_hint:"(optionnel)",
+           err_missing:"Completa todos los campos obligatorios.",
+           err_more:"Escribe al menos 10 caracteres en los detalles." },
+      fr:{ title:"Parle-moi de toi",
+           blurb:"Renseigne tous les champs. Ils servent à personnaliser les réponses de l’IA.",
+           name:"Nom et prénom", city:"Ville",
+           gender:"Sexe", choose:"Choisir…", m:"Homme", f:"Femme", o:"Autre", n:"Préfère ne pas dire",
+           age:"Âge", role:"Profession / Rôle",
+           goal:"Objectif principal",
+           more:"Détails utiles pour de meilleures réponses", more_hint:"",
            back:"Retour", next:"Continuer",
-           err:"Sélectionne ton sexe pour continuer." },
-      de:{ title:"Erzähl mir von dir", blurb:"Ein Basisprofil genügt. Das Geschlecht ist wichtig für passende Antworten.",
-           name:"Name (optional)", city:"Stadt (optional)", gender:"Geschlecht", choose:"Wählen…",
-           m:"Mann", f:"Frau", o:"Andere", n:"Möchte ich nicht sagen",
-           age:"Alter (optional)", role:"Wer bist du? (opt.)", goal:"Hauptziel (opt.)",
-           more:"Notizen für bessere Antworten", more_hint:"(optional)",
+           err_missing:"Complète tous les champs requis.",
+           err_more:"Ajoute au moins 10 caractères dans les détails." },
+      de:{ title:"Erzähl mir von dir",
+           blurb:"Bitte alle Felder ausfüllen. Wir nutzen sie für personalisierte KI-Antworten.",
+           name:"Vor- und Nachname", city:"Stadt",
+           gender:"Geschlecht", choose:"Wählen…", m:"Mann", f:"Frau", o:"Andere", n:"Möchte ich nicht sagen",
+           age:"Alter", role:"Beruf / Rolle",
+           goal:"Hauptziel",
+           more:"Nützliche Angaben für bessere Antworten", more_hint:"",
            back:"Zurück", next:"Weiter",
-           err:"Bitte Geschlecht auswählen." }
+           err_missing:"Bitte alle Pflichtfelder ausfüllen.",
+           err_more:"Bitte mindestens 10 Zeichen bei den Angaben schreiben." }
     };
 
     function getLang(){ return (LS.getItem('lang') || (navigator.language||'it').slice(0,2)).toLowerCase(); }
@@ -223,11 +241,12 @@
       $('#more_lbl').childNodes[0].nodeValue = L.more + ' ';
       $('#more_hint').textContent = L.more_hint;
 
-      $('#backTxt')?.remove(); // safety
       $('#backBtn').innerHTML = '← ' + L.back;
       $('#nextBtn').innerHTML = L.next + ' →';
 
-      $('#errorBox').dataset.err = L.err;
+      const err = $('#errorBox');
+      err.dataset.errMissing = L.err_missing;
+      err.dataset.errMore = L.err_more;
     }
 
     // init language select + apply
@@ -250,21 +269,6 @@
       location.reload();
     });
 
-    // preload se già esiste
-    (function preload(){
-      try{
-        const p = JSON.parse(LS.getItem('whatif_profile')||'{}');
-        if(!p) return;
-        if(p.name) $('#name').value = p.name;
-        if(p.city) $('#city').value = p.city;
-        if(p.gender) $('#gender').value = p.gender;
-        if(p.age) $('#age').value = p.age;
-        if(p.role) $('#role').value = p.role;
-        if(p.goal) $('#goal').value = p.goal;
-        if(p.more) $('#more').value = p.more;
-      }catch{}
-    })();
-
     // mapping gender -> sex normalizzato
     function mapGenderToSex(g){
       const v = String(g||'').toLowerCase();
@@ -274,27 +278,48 @@
       return '';
     }
 
+    // helper evidenzia invalidi
+    function markInvalid(el){ el.classList.add('invalid'); setTimeout(()=>el.classList.remove('invalid'), 1800); }
+
     // submit
     $('#profileForm').addEventListener('submit', (e)=>{
       e.preventDefault();
       const err = $('#errorBox');
-      const gender = $('#gender').value.trim();
-      if(!gender){
-        err.textContent = err.dataset.err || 'Seleziona il sesso.';
-        err.classList.add('show');
-        return;
+      err.classList.remove('show'); err.textContent='';
+
+      const name  = $('#name');
+      const city  = $('#city');
+      const gender= $('#gender');
+      const age   = $('#age');
+      const role  = $('#role');
+      const goal  = $('#goal');
+      const more  = $('#more');
+
+      const req = [name, city, gender, age, role, goal, more];
+      let ok = true;
+      req.forEach(el=>{
+        const v = (el.tagName==='SELECT') ? el.value.trim() : el.value.trim();
+        if(!v){ ok=false; markInvalid(el); }
+      });
+      if (more.value.trim().length < 10){ ok=false; markInvalid(more); }
+
+      if(!ok){
+        err.textContent = err.dataset.errMissing || 'Compila tutti i campi richiesti.';
+        if(more.value.trim().length < 10){
+          err.textContent = (err.dataset.errMore || 'Aggiungi almeno 10 caratteri nelle informazioni utili.');
+        }
+        err.classList.add('show'); return;
       }
-      err.classList.remove('show');
 
       const profile = {
-        name: $('#name').value.trim(),
-        city: $('#city').value.trim(),
-        gender,
-        sex: mapGenderToSex(gender), // 'm' | 'f' | 'nb' | ''
-        age: $('#age').value.trim(),
-        role: $('#role').value.trim(),
-        goal: $('#goal').value.trim(),
-        more: $('#more').value.trim()
+        name: name.value.trim(),
+        city: city.value.trim(),
+        gender: gender.value.trim(),
+        sex: mapGenderToSex(gender.value.trim()), // 'm' | 'f' | 'nb' | ''
+        age: age.value.trim(),
+        role: role.value.trim(),
+        goal: goal.value.trim(),
+        more: more.value.trim()
       };
       LS.setItem('whatif_profile', JSON.stringify(profile));
 
@@ -303,11 +328,11 @@
       if(!LS.getItem('whatif_profile_date')) LS.setItem('whatif_profile_date', iso);
       LS.setItem('whatif_onboarding_done','1');
 
-      // vai alla quarta pagina (domanda)
+      // vai alla pagina delle domande
       location.href = 'fourth.html';
     });
 
-    // anche i bottoni in fondo form
+    // back (in fondo)
     $('#backBtn').addEventListener('click', ()=> history.back());
   </script>
 
