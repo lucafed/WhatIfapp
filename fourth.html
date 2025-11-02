@@ -15,27 +15,38 @@ html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 25% 20%
   body{animation:bgShift 18s ease-in-out infinite alternate}
   @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
 }
+
 /* Topbar */
-.topbar{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))}
+.topbar{position:sticky;top:0;z-index:6;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))}
 .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
 .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35)}
 .btn.ghost{background:transparent;border:1px dashed var(--line)}
 .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap}
 select{appearance:none;background:var(--chip);border:1px solid var(--line);color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:700;cursor:pointer}
+
+/* Sticky dock card under topbar */
+.dock{position:sticky; top:54px; z-index:5; margin:0 10px 6px; }
+.dock .dock-card{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;overflow:auto;padding:10px;background:rgba(20,28,34,.85);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.dock .dock-card>*{flex:0 0 auto}
+
+/* Layout */
 main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
 .wrap{width:min(100%,980px)}
 h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
 .label{color:var(--accent2);font-weight:800;margin:0 0 8px}
+
 /* Cards & chips */
 .card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(12px);border-radius:16px;padding:16px;margin:10px 0;overflow:hidden}
 .chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .chip.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800}
+
 /* Input */
 .input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
 .center{max-width:760px;margin:0 auto}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .small{font-size:12px;color:var(--muted)}
+
 /* Collapsible */
 .toggle{cursor:pointer;user-select:none}
 .collapsed>.body{display:none}
@@ -43,8 +54,10 @@ h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
 .story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
 .play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
 .meta{font-size:12px;color:var(--muted)}
+
 /* Footer */
 footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
+
 /* Micro UI (locale) */
 .airow{display:flex;align-items:center;gap:10px;margin-top:8px}
 .dot{width:10px;height:10px;border-radius:50%;background:#1fb57a;border:1px solid #0d6a47;display:inline-block}
@@ -59,7 +72,11 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       <button class="btn" id="backBtn" type="button">←</button>
       <button class="btn" id="homeBtn" type="button">🏠</button>
     </div>
-    <div class="row">
+  </div>
+
+  <!-- STICKY DOCK -->
+  <div class="dock">
+    <div class="dock-card">
       <span class="badge" id="styleBadge">🎭 —</span>
       <span class="badge" id="periodoBadge">🕰️ —</span>
       <span class="badge" id="freeBadge">—</span>
@@ -169,8 +186,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 <script>
 (function(){
   /* ====== CONFIG ====== */
-  const RESULTS_PAGE = 'fifth.html';   // <-- cambia se la quinta ha un nome diverso
-  const HOME_FALLBACK = 'index.html';  // destinazione del Reset se disponibile
+  const RESULTS_PAGE = 'fifth.html';
+  const HOME_FALLBACK = 'index.html';
 
   /* ===== SAFE STORAGE ===== */
   const mem={}, LS={ getItem(k){try{return localStorage.getItem(k)}catch(e){return (k in mem)?mem[k]:null}},
@@ -186,7 +203,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   const $=id=>document.getElementById(id);
   const normalizeSpaces=t=>t.replace(/\s+/g,' ').replace(/\s+([?!.,;:%])/g,'$1').trim();
   let UNICODE_OK=true; try{ new RegExp("\\p{L}","u"); }catch{ UNICODE_OK=false; }
-  const WORD_RE = UNICODE_OK ? /[\\p{L}\\p{N}’']+/gu : /[A-Za-z0-9']+/g;
 
   /* ===== STATE ===== */
   let lang=(LS.getItem('lang')||'it').toLowerCase(); if(!SUPPORTED_LANGS.includes(lang)) lang="it";
@@ -204,8 +220,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostTitle:"▶ Boost personalizzazione", boostHint:"(opzionale, usato da “Sorprendimi”)",
         boostSave:"💾 Salva Boost", boostClear:"Svuota",
         boostPH:"Scrivi qualcosa su di te o su cosa vuoi esplorare…",
-        boostSaved:"Boost salvato.",
-        sUse:"Usa"},
+        boostSaved:"Boost salvato.", sUse:"Usa"},
     en:{title:"Set your question", yourq:"What if…", gen:"✨ Generate answer", clear:"Clear",
         surprise:"Surprise me", saved:"▶ Saved questions", stories:"▶ History",
         styleWF:"What if", styleWTF:"What the F", fut:"Future", past:"Past",
@@ -249,7 +264,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   };
 
   /* ===== HINTS (solo generali) ===== */
-  const HINTS={
+  const HINTS={ /* identico alla tua lista, solo generiche */ 
     it:["E se cambiassi lavoro?","E se cambiassi città?","E se aprissi partita IVA?","E se tornassi a studiare?","E se lavorassi 4 giorni su 5?","E se chiedessi un aumento?","E se mi prendessi un mese sabbatico?","E se riducessi i social per 30 giorni?","E se vivessi senza auto?","E se imparassi bene l’inglese?","E se ricominciassi palestra?","E se corressi 3 volte a settimana?","E se aprissi un micro e-commerce?","E se studiassi 1h al giorno?","E se investissi il 10% ogni mese?","E se andassi all’estero 6 mesi?","E se lasciassi un progetto che non ami?","E se cucinassi a casa 30 giorni?"],
     en:["What if you changed jobs?","What if you moved city?","What if you went freelance?","What if you went back to study?","What if you tried a 4-day week?","What if you asked for a raise?","What if you took a month off?","What if you cut social media for 30 days?","What if you lived without a car?","What if you mastered English?","What if you returned to the gym?","What if you ran three times a week?","What if you opened a tiny e-commerce?","What if you studied 1h daily?","What if you invested 10% monthly?","What if you lived abroad for 6 months?","What if you dropped a project you don’t love?","What if you cooked at home for 30 days?"],
     es:["¿Y si cambiaras de trabajo?","¿Y si te mudaras de ciudad?","¿Y si te hicieras autónomo?","¿Y si volvieras a estudiar?","¿Y si probaras una semana de 4 días?","¿Y si pidieras un aumento?","¿Y si tomaras un mes libre?","¿Y si dejaras redes 30 días?","¿Y si vivieras sin coche?","¿Y si dominaras el inglés?","¿Y si volvieras al gimnasio?","¿Y si corrieras 3 veces por semana?","¿Y si abrieras un micro e-commerce?","¿Y si estudiaras 1h al día?","¿Y si invirtieras el 10% mensual?","¿Y si vivieras 6 meses en el extranjero?","¿Y si dejaras un proyecto que no amas?","¿Y si cocinaras en casa 30 días?"],
@@ -289,11 +304,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   /* ===== RESET ===== */
   $('resetBtn').onclick=()=>{
     try{ localStorage.clear(); }catch{}
-    // fallback per mem
     ['whatif_prefs','whatif_credits','whatif_boost','cronologia','next_prompts','domanda','whatif_request'].forEach(k=>LS.removeItem(k));
-    // prova index.html, altrimenti root
-    const tryGo=(url)=>{ try{ location.href=url; }catch{ location.href='/'; } };
-    tryGo(HOME_FALLBACK);
+    try{ location.href=HOME_FALLBACK; }catch{ location.href='/'; }
   };
 
   /* ===== LANG ===== */
@@ -344,7 +356,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   $('boostSaveBtn').onclick=()=>{ saveBoost(($('boostInput')||{}).value||''); renderHints(true); $('boostCard').style.display='none'; };
   $('boostClearBtn').onclick=()=>{ const i=$('boostInput'); if(i) i.value=''; saveBoost(''); renderHints(true); $('boostCard').classList.remove('collapsed'); };
 
-  /* ===== Hints: SOLO generali ===== */
+  /* ===== Hints (solo generali) ===== */
   function renderHints(forceOpen=false){
     const wrap=$('hintsChips'); if(!wrap) return; wrap.innerHTML='';
     (HINTS[lang]||HINTS.it).slice(0,12).forEach(txt=>{
@@ -400,27 +412,16 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
                  lang==='de'?'Alles klar! Ich bereite eine maßgeschneiderte Frage vor…':
                  'Got it! Crafting a tailored question…');
     $('qInput').value = Lmsg;
-
-    // Salva richiesta per la quinta: la AI creerà DOMANDA + RISPOSTA usando il Boost
     const req = {
-      domanda: '',                 // la genererà la quinta
-      stile: prefs.stile,
-      lang,
-      extra: '',
-      micro: {},
-      fantasy_mode: false,
-      periodo: prefs.periodo,
-      boost: getBoost(),
-      mode: 'surprise'            // <-- flag utile in quinta
+      domanda:'', stile:prefs.stile, lang, extra:'', micro:{}, fantasy_mode:false,
+      periodo:prefs.periodo, boost:getBoost(), mode:'surprise'
     };
     writeJSON('whatif_request', req);
-
-    // Naviga alla quinta
     location.href = RESULTS_PAGE;
   }
   $('surpriseBtn').onclick=surpriseAndGo;
 
-  /* ===== Submit manuale (rimane) ===== */
+  /* ===== Submit manuale ===== */
   function trySubmit(){
     const domanda=($('qInput').value||'').trim(); if(!domanda){ $('qInput').focus(); return; }
     const c=readJSON('whatif_credits',{date:todayISO(),used:0});
@@ -448,7 +449,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     renderHints(false);
     renderNext(); renderStories();
     $('boostInput').value=getBoost();
-    $('aiTime').textContent='⏱ '+nowFmt(); // pallino verde (locale)
+    $('aiTime').textContent='⏱ '+nowFmt();
   }catch(e){ console.error('Init error:',e); }
 })();
 </script>
