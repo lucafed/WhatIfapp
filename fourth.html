@@ -489,3 +489,171 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 </script>
 </body>
 </html>
+// server.js
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import OpenAI from 'openai';
+
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// Utility: clamp & sanitize counts
+function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+// Prompt per le IDEE (multilingua, con regole forti su grammatica e formattazione)
+function buildIdeasSystemPrompt(){
+  return `You are an expert copywriter who writes short, well-formed "What if...?" questions for a personal decision app.
+Your goals:
+- Write QUESTIONS only (no extra text), in the target LANGUAGE provided.
+- Respect CONTEXT (style=whatif/wtf, period=future/past, and optional user BOOST).
+- Produce a JSON object with three arrays: { "personalized":[], "generic":[], "absurd":[] }.
+- Counts are provided in input; never exceed them.
+- Ensure grammar & punctuation are correct for the target language:
+  * IT: start with "E se…" and end with "?".
+  * ES: must use leading "¿" and trailing "?".
+  * FR: include thin space before "?" (\\u202F), e.g. "… \\u202F?".
+  * DE/EN: standard "?" ending.
+- Keep each question under 120 characters.
+- For "past" versions, use the correct past hypothetical form (e.g., IT: "E se avessi…", EN: "What if you had…").
+- For "wtf" absurd items: keep them playful but safe, still grammatical.
+- Do not repeat or echo the instructions. Output VALID JSON only.`;
+}
+
+function buildIdeasUserPrompt({lang, periodo, style, boost, counts}){
+  const langName = ({it:'Italian', en:'English', es:'Spanish', fr:'French', de:'German'})[lang] || 'Italian';
+  const periodTag = (periodo==='past') ? 'past' : 'future';
+  const styleTag = (style==='wtf') ? 'wtf' : 'whatif';
+
+  const boostLine = boost?.trim()
+    ? `User BOOST (free text, use as themes, not verbatim quotes): """${boost.trim()}""".`
+    : `User BOOST: (none).`;
+
+  return `LANGUAGE: ${langName}
+STYLE: ${styleTag}   PERIOD: ${periodTag}
+COUNTS: personalized=${counts.personalized} generic=${counts.generic} absurd=${counts.absurd}
+${boostLine}
+
+Constraints & examples:
+- PERSONALIZED: tie to plausible user life/choices derived from BOOST (topics, goals, constraints). No private data; no quoting BOOST literally.
+- GENERIC: broadly useful decisions (career, study, habits), still in target language.
+- ABSURD: 10% playful/whimsical, but grammatical and safe.
+
+Output JSON only:
+{
+  "personalized": ["...", "..."],
+  "generic": ["...", "..."],
+  "absurd": ["...", "..."]
+}`;
+}
+
+function safeParseJSON(text){
+  try{
+    // Try direct
+    return JSON.parse(text);
+  }catch{
+    // Try to extract JSON block
+    const m = text.match(/\{[\s\S]*\}$/);
+    if(m){
+      try{ return JSON.parse(m[0]); }catch{ /* ignore */ }
+    }
+  }
+  return null;
+}
+
+app.post('/api/ideas', async (req, res) => {
+  try{
+    const { lang='it', periodo='future', style='whatif', boost='', counts } = req.body || {};
+    const want = {
+      personalized: clamp((counts?.personalized ?? 14), 4, 24),
+      generic:      clamp((counts?.generic ?? 7), 2, 16),
+      absurd:       clamp((counts?.absurd ?? 3), 1, 10),
+    };
+
+    const system = buildIdeasSystemPrompt();
+    const user = buildIdeasUserPrompt({lang, periodo, style, boost, counts: want});
+
+    const chat = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0.8,
+      max_tokens: 800,
+      messages: [
+        {role:'system', content: system},
+        {role:'user', content: user}
+      ]
+    });
+
+    const raw = chat.choices?.[0]?.message?.content?.trim() || '';
+    const parsed = safeParseJSON(raw);
+
+    if(!parsed || !Array.isArray(parsed.personalized) || !Array.isArray(parsed.generic) || !Array.isArray(parsed.absurd)){
+      // Fallback minimal: costruisci qualcosa sensato
+      const fallback = {
+        personalized: [],
+        generic: [
+          'What if you changed jobs this year?',
+          'What if you studied 1h every day?',
+          'What if you tried a 4-day week?',
+          'What if you asked for a raise?'
+        ],
+        absurd: ['What if your fridge picked your life menu?']
+      };
+      return res.json(fallback);
+    }
+
+    // Trim & clamp counts
+    const out = {
+      personalized: parsed.personalized.slice(0, want.personalized),
+      generic:      parsed.generic.slice(0, want.generic),
+      absurd:       parsed.absurd.slice(0, want.absurd),
+    };
+    return res.json(out);
+  }catch(err){
+    console.error('ideas error', err);
+    return res.status(500).json({error:'ideas_failed'});
+  }
+});
+
+app.post('/api/ask', async (req, res) => {
+  try{
+    const { domanda, stile='whatif', lang='it', extra='', periodo='future', boost='' } = req.body || {};
+    const system = `You are the ${stile==='wtf'?'playful, bold':'empathetic, pragmatic'} voice of the What?f app. Answer in ${lang}. Be concise, structured, and helpful.`;
+    const user = `QUESTION: ${domanda}\nCONTEXT: period=${periodo}, boost="${boost}" ${extra?('extra="'+extra+'"'):''}`;
+
+    const chat = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0.7,
+      max_tokens: 900,
+      messages: [
+        {role:'system', content: system},
+        {role:'user', content: user}
+      ]
+    });
+
+    const content = chat.choices?.[0]?.message?.content?.trim() || '';
+    res.json({ answer: content });
+  }catch(err){
+    console.error('ask error', err);
+    res.status(500).json({error:'ask_failed'});
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, ()=> console.log('What?f API running on :'+PORT)
+{
+  "name": "whatif-api",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "openai": "^4.58.0"
+  }
+});
