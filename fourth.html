@@ -51,7 +51,7 @@ h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
 /* Footer */
 footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 
-/* Surprise Dock */
+/* Surprise Dock (NEW) */
 .surprise-dock{position:fixed;inset:0;z-index:4;display:none}
 .surprise-dock.open{display:block}
 .surprise-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px)}
@@ -226,7 +226,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       </div>
       <div class="surprise-grid" id="surpriseGrid"></div>
       <div class="s-footer">
-        <span class="small" id="surpriseHint">Suggerimento: clicca “Usa” per riempire la domanda o “Salva”.</span>
+        <span class="small" id="surpriseHint">Suggerimento: clicca “Usa” per riempire la domanda o “Salva” per tenerla tra i preferiti.</span>
         <div class="row">
           <button class="btn ghost" id="surpriseAbsurdOnly" type="button">🤪 Solo assurde</button>
           <button class="btn primary" id="surpriseDone" type="button">Fatto</button>
@@ -247,10 +247,9 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   let lang=(LS.getItem('lang')||'it').toLowerCase(); if(!SUPPORTED_LANGS.includes(lang)) lang="it";
   document.documentElement.lang=lang;
   let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
-  let styleLocked=false; // blocco stile se assurda scelta/immessa
 
-  /* ===== I18N ===== */
-  const I18N={ /* (uguale al tuo, completo) */
+  /* ===== I18N COMPLETO ===== */
+  const I18N={
     it:{title:"Imposta la tua domanda", yourq:"E se…", gen:"✨ Genera risposta", clear:"Svuota",
         surprise:"Sorprendimi",
         microT:"▼ Micro-domande di oggi", microHint:"(una volta al giorno)",
@@ -273,7 +272,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostSaved:"Boost salvato.",
         mixExpl:"Le idee casuali seguono un mix 60/30/10: 60% personalizzate, 30% generiche, 10% assurde.",
         sKind:{personal:"Personalizzata", generic:"Generica", absurd:"Assurda"},
-        sUse:"Usa", sSave:"Salva", sSaved:"Salvata.", sEmpty:"Nessuna idea trovata. Prova ↻."},
+        sUse:"Usa", sSave:"Salva", sSaved:"Salvata.", sEmpty:"Nessuna idea trovata. Prova '↻ Nuove carte'."
+    },
     en:{title:"Set your question", yourq:"What if…", gen:"✨ Generate answer", clear:"Clear",
         surprise:"Surprise me",
         microT:"▼ Today’s micro-questions", microHint:"(once per day)",
@@ -296,7 +296,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostSaved:"Boost saved.",
         mixExpl:"Random ideas use a 60/30/10 mix: 60% personalized, 30% generic, 10% absurd.",
         sKind:{personal:"Personalized", generic:"Generic", absurd:"Absurd"},
-        sUse:"Use", sSave:"Save", sSaved:"Saved.", sEmpty:"No ideas. Try ↻."},
+        sUse:"Use", sSave:"Save", sSaved:"Saved.", sEmpty:"No ideas. Try ↻ Refresh."
+    },
     es:{title:"Configura tu pregunta", yourq:"¿Y si…?", gen:"✨ Generar respuesta", clear:"Limpiar",
         surprise:"Sorpréndeme",
         microT:"▼ Micro-preguntas de hoy", microHint:"(una vez al día)",
@@ -319,7 +320,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostSaved:"Boost guardado.",
         mixExpl:"Las ideas aleatorias siguen una mezcla 60/30/10: 60% personalizadas, 30% genéricas, 10% absurdas.",
         sKind:{personal:"Personalizada", generic:"Genérica", absurd:"Absurda"},
-        sUse:"Usar", sSave:"Guardar", sSaved:"Guardada.", sEmpty:"Sin ideas. Pulsa ↻."},
+        sUse:"Usar", sSave:"Guardar", sSaved:"Guardada.", sEmpty:"Sin ideas. Pulsa ↻."
+    },
     fr:{title:"Définis ta question", yourq:"Et si…", gen:"✨ Générer la réponse", clear:"Effacer",
         surprise:"Surprends-moi",
         microT:"▼ Micro-questions du jour", microHint:"(une fois par jour)",
@@ -342,7 +344,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostSaved:"Boost enregistré.",
         mixExpl:"Les idées aléatoires suivent un mix 60/30/10 : 60% personnalisées, 30% génériques, 10% absurdes.",
         sKind:{personal:"Personnalisée", generic:"Générique", absurd:"Absurde"},
-        sUse:"Utiliser", sSave:"Enregistrer", sSaved:"Enregistrée.", sEmpty:"Aucune idée. Essaie ↻."},
+        sUse:"Utiliser", sSave:"Enregistrer", sSaved:"Enregistrée.", sEmpty:"Aucune idée. Essaie ↻."
+    },
     de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", gen:"✨ Antwort erzeugen", clear:"Leeren",
         surprise:"Überrasche mich",
         microT:"▼ Heutige Mikro-Fragen", microHint:"(einmal pro Tag)",
@@ -365,21 +368,22 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostSaved:"Boost gespeichert.",
         mixExpl:"Zufällige Ideen nutzen einen 60/30/10-Mix: 60% personalisiert, 30% generisch, 10% absurd.",
         sKind:{personal:"Personalisiert", generic:"Generisch", absurd:"Absurde"},
-        sUse:"Verwenden", sSave:"Speichern", sSaved:"Gespeichert.", sEmpty:"Keine Ideen. ↻ versuchen."}
+        sUse:"Verwenden", sSave:"Speichern", sSaved:"Gespeichert.", sEmpty:"Keine Ideen. ↻ versuchen."
+    }
   };
 
-  /* ===== Pools ===== */
+  /* ===== Surprise & Hints pools ===== */
   const SURPRISE_POOLS = {
     it:{ future:["E se cambiassi lavoro?","E se ti trasferissi all’estero?","E se aprissi una piccola attività?","E se imparassi davvero l’inglese?","E se facessi un master?","E se riducessi i social per 30 giorni?","E se iniziassi a correre 3 volte a settimana?","E se provassi a lavorare 4 giorni su 5?","E se andassi a vivere al mare?","E se vendessi il superfluo e viaggiassi leggeri?"],
          past:["E se avessi cambiato lavoro nel 2022?","E se ti fossi trasferito/a all’estero dopo la laurea?","E se avessi aperto quella piccola attività nel 2020?","E se avessi studiato inglese con costanza l’anno scorso?","E se avessi fatto un master nel 2019?","E se avessi staccato dai social il mese scorso?","E se avessi ricominciato a correre l’estate scorsa?","E se avessi provato la settimana corta l’anno scorso?"]},
-    en:{ future:["What if you changed jobs?","What if you moved abroad?","What if you started a small business?","What if you mastered English?","What if you did a master’s degree?","What if you cut social media for 30 days?","What if you ran three times a week?","What if you tried a 4-day workweek?","What if you lived by the sea?","What if you sold what you don’t use and traveled light?"],
+    en:{ future:["What if you changed jobs?","What if you moved abroad?","What if you started a small business?","What if you mastered English?","What if you did a master’s degree?","What if you cut social media for 30 days?","What if you ran three times a week?","What if you tried a 4-day workweek?"],
          past:["What if you had changed jobs in 2022?","What if you had moved abroad after graduation?","What if you had started that small business in 2020?","What if you had practiced English consistently last year?","What if you had done a master’s in 2019?","What if you had quit social media last month?","What if you had started running last summer?","What if you had tried a 4-day week last year?"]},
-    es:{ future:["¿Y si cambias de trabajo?","¿Y si te mudas al extranjero?","¿Y si abres un pequeño negocio?","¿Y si dominas el inglés?","¿Y si haces un máster?","¿Y si dejas las redes 30 días?","¿Y si corres 3 veces por semana?","¿Y si pruebas semana de 4 días?"],
-         past:["¿Y si hubieras cambiado de trabajo en 2022?","¿Y si te hubieras mudado al extranjero tras graduarte?","¿Y si hubieras abierto ese negocio en 2020?","¿Y si hubieras practicado inglés el año pasado?","¿Y si hubieras hecho un máster en 2019?","¿Y si hubieras dejado las redes el mes pasado?","¿Y si hubieras empezado a correr el verano pasado?","¿Y si hubieras probado la semana de 4 días el año pasado?"]},
-    fr:{ future:["Et si tu changeais de travail ?","Et si tu partais à l’étranger ?","Et si tu lançais une petite activité ?","Et si tu maîtrisais l’anglais ?","Et si tu faisais un master ?","Et si tu coupais les réseaux 30 jours ?","Et si tu courais 3 fois par semaine ?","Et si tu essayais la semaine de 4 jours ?"],
-         past:["Et si tu avais changé de travail en 2022 ?","Et si tu t’étais installé à l’étranger après le diplôme ?","Et si tu avais lancé cette petite activité en 2020 ?","Et si tu avais travaillé ton anglais l’an dernier ?","Et si tu avais fait un master en 2019 ?","Et si tu avais coupé les réseaux le mois dernier ?","Et si tu avais commencé à courir l’été dernier ?","Et si tu avais tenté la semaine de 4 jours l’an dernier ?"]},
-    de:{ future:["Was, wenn du den Job wechselst?","Was, wenn du ins Ausland ziehst?","Was, wenn du ein kleines Business startest?","Was, wenn du wirklich Englisch meisterst?","Was, wenn du einen Master machst?","Was, wenn du 30 Tage ohne Social Media lebst?","Was, wenn du 3× pro Woche läufst?","Was, wenn du eine 4-Tage-Woche probierst?"],
-         past:["Was, wenn du 2022 den Job gewechselt hättest?","Was, wenn du nach dem Abschluss ins Ausland gezogen wärst?","Was, wenn du 2020 das kleine Geschäft gestartet hättest?","Was, wenn du letztes Jahr konsequent Englisch geübt hättest?","Was, wenn du 2019 einen Master gemacht hättest?","Was, wenn du letzten Monat Social Media pausiert hättest?","Was, wenn du letzten Sommer mit dem Laufen angefangen hättest?","Was, wenn du letztes Jahr die 4-Tage-Woche probiert hättest?"]}
+    es:{ future:["¿Y si cambias de trabajo?","¿Y si te mudas al extranjero?","¿Y si abres un pequeño negocio?","¿Y si dominas el inglés?","¿Y si haces un máster?","¿Y si dejas las redes 30 días?"],
+         past:["¿Y si hubieras cambiado de trabajo en 2022?","¿Y si te hubieras mudado al extranjero tras graduarte?","¿Y si hubieras abierto ese pequeño negocio en 2020?","¿Y si hubieras practicado inglés el año pasado?","¿Y si hubieras hecho un máster en 2019?","¿Y si hubieras dejado las redes el mes pasado?"]},
+    fr:{ future:["Et si tu changeais de travail ?","Et si tu partais à l’étranger ?","Et si tu lançais une petite activité ?","Et si tu maîtrisais l’anglais ?","Et si tu faisais un master ?","Et si tu coupais les réseaux 30 jours ?"],
+         past:["Et si tu avais changé de travail en 2022 ?","Et si tu t’étais installé à l’étranger après le diplôme ?","Et si tu avais lancé cette petite activité en 2020 ?","Et si tu avais travaillé ton anglais l’an dernier ?","Et si tu avais fait un master en 2019 ?","Et si tu avais coupé les réseaux le mois dernier ?"]},
+    de:{ future:["Was, wenn du den Job wechselst?","Was, wenn du ins Ausland ziehst?","Was, wenn du ein kleines Business startest?","Was, wenn du wirklich Englisch meisterst?","Was, wenn du einen Master machst?","Was, wenn du 30 Tage ohne Social Media lebst?"],
+         past:["Was, wenn du 2022 den Job gewechselt hättest?","Was, wenn du nach dem Abschluss ins Ausland gezogen wärst?","Was, wenn du 2020 das kleine Geschäft gestartet hättest?","Was, wenn du letztes Jahr konsequent Englisch geübt hättest?","Was, wenn du 2019 einen Master gemacht hättest?","Was, wenn du letzten Monat Social Media pausiert hättest?"]}
   };
 
   const HINT_IT=["E se cambiassi lavoro?","E se cambiassi città?","E se aprissi partita IVA?","E se tornassi a studiare?","E se lavorassi 4 giorni su 5?","E se chiedessi un aumento?","E se mi prendessi un mese sabbatico?","E se riducessi i social per 30 giorni?","E se vivessi senza auto?","E se imparassi a programmare?","E se ricominciassi palestra?","E se corressi 3 volte a settimana?","E se adottassi un cane?","E se vivessi vicino ai miei?","E se investissi il 10% al mese?","E se imparassi bene l’inglese?","E se andassi all’estero 6 mesi?","E se lasciassi un progetto che non ami?","E se facessi volontariato?","E se riscrivessi il CV oggi?","E se provassi terapia?","E se cucinassi a casa 30 giorni?","E se aprissi un micro e-commerce?","E se studiassi 1h al giorno?","E se spegnessi il telefono alle 22?","E se facessi pace con qualcuno?","E se risparmiassi sul serio?","E se provassi vita da nomade digitale?","E se imparassi public speaking?","E se tagliassi fumo/alcol 30 giorni?" ];
@@ -396,34 +400,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   const goBtn=$('goBtn'), clearBtn=$('clearBtn'), qInput=$('qInput'), surpriseBtn=$('surpriseBtn');
   const tipNote=$('tipNote');
 
-  /* ===== Helpers ===== */
-  function polishQuestion(q, L){
-    let t=String(q||"").replace(/\s+/g," ").trim();
-    if(!t) return t;
-    t=t.replace(/[?؟？！]+$/,"").trim();
-    if(L==="es"){ t = (t.startsWith("¿") ? t : "¿"+t) + "?"; }
-    else { t = t + "?"; }
-    return t;
-  }
-  function extractTopics(txt){
-    if(!txt) return [];
-    const stop = new Set(['e','di','a','da','in','con','su','per','tra','fra','il','la','lo','gli','le','un','una','uno','che','del','della','dei','delle','mi','ti','si','io','tu','loro','noi','voi','non','più','meno','molto','poco','anche','ma','o','se','the','and','of','to','for','por','y','de','le','les','des','und','der','die','das']);
-    return txt.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,' ')
-      .split(/\s+/).filter(w=>w.length>2 && !stop.has(w) && !/^\d+$/.test(w)).slice(0,10);
-  }
-  function seemsValidQuestion(q){
-    const t=String(q||"").trim();
-    const words=t.split(/\s+/).filter(Boolean);
-    const hasVerb=/\b(essere|fare|avere|andare|potrei|potresti|potremmo|posso|possiamo|cambiare|aprire|imparare|provare|vivere|studiare|correre|lavorare|investire|risparmiare|allenare|costruire|scrivere|creare|move|change|start|learn|try|live|study|work|run|invest|save|ir|ser|estar|hacer|poder|changer|apprendre|essayer|vivre|étudier|arbeiten|lernen|versuchen|leben|studieren)\b/i.test(t);
-    return words.length>=4 && hasVerb;
-  }
-  function isAbsurdQuestion(q){
-    return /🤪|frigorif|pigeon|cuscini gonfiabili|inflatable|gatti.*riunion|canned.*air|aria.*lattina/i.test(q||'');
-  }
-
-  /* ===== Language + texts ===== */
+  /* ===== Render testuale ===== */
   function applyTexts(){
-    document.documentElement.lang=lang;
     document.title = (lang==='it' ? 'What?f — Domanda' :
                      (lang==='es' ? 'What?f — Pregunta' :
                      (lang==='fr' ? 'What?f — Question' :
@@ -445,13 +423,11 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     $('boostTitle').textContent=I18N[lang].boostTitle; $('boostHint').textContent=I18N[lang].boostHint;
     $('boostSaveBtn').textContent=I18N[lang].boostSave; $('boostClearBtn').textContent=I18N[lang].boostClear;
     $('boostInput').placeholder=I18N[lang].boostPH;
-
     qInput.placeholder = (lang==='it' ? 'E se…' : lang==='es' ? '¿Y si…?' : lang==='fr' ? 'Et si…' : lang==='de' ? 'Was wäre, wenn…' : 'What if…');
+
     tipNote.textContent = I18N[lang].mixExpl;
 
-    renderBadges(); renderCreditsBadge(); renderMicroTexts(); renderHints();
-    // se la dock è aperta, rigenera con la lingua corrente
-    if (dock.classList.contains('open')) generateBatch();
+    renderBadges(); renderCreditsBadge(); renderMicroTexts(); renderHints(); initBoostVisibility();
   }
 
   /* ===== Navigazione ===== */
@@ -480,10 +456,190 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   }
   renderBadges();
 
-  styleChips.addEventListener('click',(e)=>{ if(styleLocked) return; const b=e.target.closest('.chip'); if(!b) return; prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs); renderBadges(); });
-  periodoChips.addEventListener('click',(e)=>{ const b=e.target.closest('.chip'); if(!b) return; prefs.periodo=b.dataset.periodo; writeJSON('whatif_prefs',prefs); renderBadges(); if (dock.classList.contains('open')) generateBatch(); });
+  styleChips.addEventListener('click',(e)=>{ const b=e.target.closest('.chip'); if(!b) return; prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs); renderBadges(); });
+  periodoChips.addEventListener('click',(e)=>{ const b=e.target.closest('.chip'); if(!b) return; prefs.periodo=b.dataset.periodo; writeJSON('whatif_prefs',prefs); renderBadges(); });
 
-  /* ===== Profile/Boost ===== */
+  /* ===== Submit ===== */
+  function trySubmit(){
+    const domanda=(qInput.value||'').trim(); if(!domanda){ qInput.focus(); return; }
+    const c=readJSON('whatif_credits',{date:todayISO(),used:0});
+    if(!userIsAdmin()){
+      const cap=capForUser();
+      if((c.used||0)>=cap){ alert(I18N[lang].outOfCredits); return; }
+      c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderCreditsBadge();
+    }
+    const micro=readJSON('micro_profile',{}); const boost=getBoost();
+    LS.setItem('domanda',domanda);
+    const req={ domanda, stile:prefs.stile, lang, extra:'', micro, fantasy_mode:false, periodo:prefs.periodo, boost };
+    writeJSON('whatif_request',req);
+    location.href='fifth.html';
+  }
+  goBtn.onclick=trySubmit;
+  clearBtn.onclick=()=>{ qInput.value=''; qInput.focus(); };
+  qInput.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); } });
+
+  /* ===== Surprise engine (uguale, ma il bottone riempie il campo) ===== */
+  const MIX_WEIGHTS = { personalized:60, generic:30, absurd:10 };
+
+  function sampleOne(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function buildPersonalizedPool(L, periodo){
+    const profile = readJSON('whatif_profile', {});
+    const micro   = readJSON('micro_profile', {});
+    const past = (periodo==='past');
+    const boost = getBoost();
+
+    const out = [];
+    const add = s => { if(s) out.push(String(s).replace(/\s+/g,' ').trim()); };
+
+    if (profile.role){
+      add(past
+        ? (L==='it'?`E se avessi cambiato da ${profile.role} un anno fa?`
+          :L==='en'?`What if you had switched from ${profile.role} a year ago?`
+          :L==='es'?`¿Y si hubieras cambiado de ${profile.role} hace un año?`
+          :L==='fr'?`Et si tu avais quitté ${profile.role} il y a un an ?`
+          :`Was, wenn du vor einem Jahr von ${profile.role} gewechselt hättest?`)
+        : (L==='it'?`E se portassi la tua carriera da ${profile.role} al livello successivo?`
+          :L==='en'?`What if you took your ${profile.role} career to the next level?`
+          :L==='es'?`¿Y si llevas tu carrera de ${profile.role} al siguiente nivel?`
+          :L==='fr'?`Et si tu faisais passer ta carrière de ${profile.role} au niveau supérieur ?`
+          :`Was, wenn du deine ${profile.role}-Karriere auf ein neues Level hebst?`)
+      );
+    }
+    if (profile.city){
+      add(past
+        ? (L==='it'?`E se fossi rimasto/a a ${profile.city} e avessi cambiato ritmo prima?`
+          :L==='en'?`What if you had stayed in ${profile.city} and changed pace earlier?`
+          :L==='es'?`¿Y si te hubieras quedado en ${profile.city} y cambiado el ritmo antes?`
+          :L==='fr'?`Et si tu étais resté à ${profile.city} et avais changé de rythme plus tôt ?`
+          :`Was, wenn du in ${profile.city} geblieben wärst und früher das Tempo geändert hättest?`)
+        : (L==='it'?`E se restassi a ${profile.city} ma cambiassi routine per 30 giorni?`
+          :L==='en'?`What if you stayed in ${profile.city} but changed your routine for 30 days?`
+          :L==='es'?`¿Y si te quedas en ${profile.city} pero cambias la rutina 30 días?`
+          :L==='fr'?`Et si tu restais à ${profile.city} en changeant ta routine 30 jours ?`
+          :`Was, wenn du in ${profile.city} bleibst, aber 30 Tage la routine änderst?`)
+      );
+    }
+    if (profile.goal){
+      add(past
+        ? (L==='it'?`E se avessi reso “${profile.goal}” misurabile l’anno scorso?`
+          :L==='en'?`What if you had made “${profile.goal}” measurable last year?`
+          :L==='es'?`¿Y si hubieras hecho “${profile.goal}” medible el año pasado?`
+          :L==='fr'?`Et si tu avais rendu “${profile.goal}” mesurable l’an dernier ?`
+          :`Was, wenn du „${profile.goal}“ letztes Jahr messbar gemacht hättest?`)
+        : (L==='it'?`E se impostassi passi settimanali verso “${profile.goal}”?`
+          :L==='en'?`What if you set weekly steps toward “${profile.goal}”?`
+          :L==='es'?`¿Y si pones pasos semanales hacia “${profile.goal}”?`
+          :L==='fr'?`Et si tu posais des étapes hebdo vers “${profile.goal}” ?`
+          :`Was, wenn du wöchentliche Schritte für „${profile.goal}“ festlegst?`)
+      );
+    }
+    if (micro.indicatore){
+      add(past
+        ? (L==='it'?`E se avessi tracciato “${micro.indicatore}” prima?`
+          :L==='en'?`What if you had tracked “${micro.indicatore}” earlier?`
+          :L==='es'?`¿Y si hubieras medido “${micro.indicatore}” antes?`
+          :L==='fr'?`Et si tu avais suivi “${micro.indicatore}” plus tôt ?`
+          :`Was, wenn du „${micro.indicatore}“ früher getrackt hättest?`)
+        : (L==='it'?`E se monitorassi davvero “${micro.indicatore}” per 2 settimane?`
+          :L==='en'?`What if you truly tracked “${micro.indicatore}” for 2 weeks?`
+          :L==='es'?`¿Y si mides de verdad “${micro.indicatore}” por 2 semanas?`
+          :L==='fr'?`Et si tu suivais vraiment “${micro.indicatore}” pendant 2 semaines ?`
+          :`Was, wenn du „${micro.indicatore}“ 2 Wochen lang wirklich trackst?`)
+      );
+    }
+
+    extractTopics(getBoost()).forEach(tp=>{
+      out.push(
+        (periodo==='past')
+          ? (L==='it'?`E se avessi iniziato con ${tp} l’estate scorsa?`
+            :L==='en'?`What if you had started ${tp} last summer?`
+            :L==='es'?`¿Y si hubieras empezado ${tp} el verano pasado?`
+            :L==='fr'?`Et si tu avais commencé ${tp} l’été dernier ?`
+            :`Was, wenn du ${tp} letzten Sommer begonnen hättest?`)
+          : (L==='it'?`E se esplorassi ${tp} con un esperimento rapido di 7 giorni?`
+            :L==='en'?`What if you explored ${tp} with a 7-day quick experiment?`
+            :L==='es'?`¿Y si exploras ${tp} con un experimento de 7 días?`
+            :L==='fr'?`Et si tu explorais ${tp} avec une expérience de 7 jours ?`
+            :`Was, wenn du ${tp} mit einem 7-Tage-Experiment testest?`)
+      );
+    });
+
+    return Array.from(new Set(out)).slice(0,48);
+  }
+
+  function buildGenericPoolByLang(L, periodo){
+    const poolsForLang = SURPRISE_POOLS[L] || SURPRISE_POOLS.it;
+    const pool = poolsForLang[periodo] || poolsForLang.future || SURPRISE_POOLS.it.future;
+    return pool.slice();
+  }
+
+  function buildAbsurdPool(L, periodo){
+    const F=(periodo==='past');
+    let it = F?[
+      "E se avessi imparato a parlare col tuo frigorifero",
+      "E se l’anno scorso fossi diventato/a l’allenatore non ufficiale del condominio",
+      "E se avessi fondato una start-up che vende aria di montagna in lattina",
+      "E se i piccioni del tuo quartiere avessero fatto un sindacato"
+    ]:[
+      "E se domani il tuo frigorifero ti rispondesse con un menù",
+      "E se diventassi l’allenatore non ufficiale del tuo condominio",
+      "E se aprissi una scuola per gatti che odiano le riunioni",
+      "E se allenassi una squadra di cuscini gonfiabili la sera"
+    ];
+    let en = F?[
+      "What if you had learned to talk to your fridge",
+      "What if last year you had become your building’s unofficial coach",
+      "What if you had founded a startup selling canned mountain air",
+      "What if local pigeons had formed a union"
+    ]:[
+      "What if tomorrow your fridge answered back with a menu",
+      "What if you became your building’s unofficial coach",
+      "What if you opened a school for cats who hate meetings",
+      "What if you coached an inflatable-pillow team at night"
+    ];
+    let es = F?[
+      "¿Y si hubieras aprendido a hablar con tu nevera",
+      "¿Y si el año pasado te hubieras vuelto el coach del edificio",
+      "¿Y si hubieras vendido aire de montaña enlatado",
+      "¿Y si las palomas del barrio hubieran hecho un sindicato"
+    ]:[
+      "¿Y si mañana tu nevera te contesta con un menú",
+      "¿Y si te vuelves el coach no oficial del edificio",
+      "¿Y si abres una escuela para gatos que odian reuniones",
+      "¿Y si diriges un equipo de almohadas inflables por la noche"
+    ];
+    let fr = F?[
+      "Et si tu avais appris à parler avec ton frigo",
+      "Et si l’an dernier tu étais devenu le coach officieux de ton immeuble",
+      "Et si tu avais vendu de l’air de montagne en boîte",
+      "Et si les pigeons du quartier avaient monté un syndicat"
+    ]:[
+      "Et si demain ton frigo te répondait avec un menu",
+      "Et si tu devenais le coach officieux de ton immeuble",
+      "Et si tu ouvrais une école pour chats anti-réunions",
+      "Et si tu entraînais une équipe d’oreillers gonflables la nuit"
+    ];
+    let de = F?[
+      "Was, wenn du gelernt hättest, mit deinem Kühlschrank zu sprechen",
+      "Was, wenn du letztes Jahr der inoffizielle Coach deines Hauses geworden wärst",
+      "Was, wenn du Dosen-Bergluft verkauft hättest",
+      "Was, wenn die Tauben im Viertel eine Gewerkschaft gegründet hätten"
+    ]:[
+      "Was, wenn dir morgen dein Kühlschrank mit einem Menü antwortet",
+      "Was, wenn du der inoffizielle Coach deines Hauses wirst",
+      "Was, wenn du eine Schule für katzenhafte Meeting-Hasser eröffnest",
+      "Was, wenn du nachts ein Team aus Luftkissen trainierst"
+    ];
+    if (L==='it') return it; if (L==='es') return es; if (L==='fr') return fr; if (L==='de') return de; return en;
+  }
+
+  function extractTopics(txt){
+    if(!txt) return [];
+    const stop = new Set(['e','di','a','da','in','con','su','per','tra','fra','il','la','lo','gli','le','un','una','uno','che','del','della','dei','delle','mi','ti','si','io','tu','loro','noi','voi','non','più','meno','molto','poco','anche','ma','o','se','the','and','of','to','for','con','por','y','de','le','les','des','und','der','die','das']);
+    return txt.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,' ')
+      .split(/\s+/).filter(w=>w.length>2 && !stop.has(w) && !/^\d+$/.test(w)).slice(0,10);
+  }
   function getBoost(){ try{ return (LS.getItem('whatif_boost')||'').trim(); }catch{ return '' } }
   function setBoost(txt){ LS.setItem('whatif_boost', String(txt||'')); LS.setItem('whatif_boost_saved_date', todayISO()); $('boostSavedMsg').textContent=I18N[lang].boostSaved; setTimeout(()=> $('boostSavedMsg').textContent='', 1600); initBoostVisibility(); }
   function initBoostVisibility(){ const last=LS.getItem('whatif_boost_saved_date'); $('boostCard').style.display=(last===todayISO())?'none':'block'; $('boostInput').value=getBoost(); }
@@ -491,167 +647,62 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   $('boostSaveBtn').onclick=()=> setBoost($('boostInput').value);
   $('boostClearBtn').onclick=()=>{ $('boostInput').value=''; setBoost(''); };
 
-  /* ===== Surprise helpers ===== */
-  const MIX_WEIGHTS = { personalized:60, generic:30, absurd:10 };
-  function sampleOne(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  // Helpers grammaticali
+  function polishQuestion(q, L){
+    let t=String(q||"").replace(/\s+/g," ").trim();
+    if(!t) return t;
+    t=t.replace(/[?？]+$/," ").trim();
+    t=t.charAt(0).toUpperCase()+t.slice(1);
+    if(L==="es"){ t = (t.startsWith("¿") ? t : "¿"+t); t = t + "?"; }
+    else { t = t + "?"; }
+    return t;
+  }
+  function seemsValidQuestion(q){
+    const t=String(q||"").trim();
+    const words=t.split(/\s+/).filter(Boolean);
+    const hasVerb=/\b(essere|fare|avere|andare|potrei|potresti|potremmo|posso|possiamo|cambiare|aprire|imparare|provare|vivere|studiare|correre|lavorare|move|change|start|learn|try|live|study|work|run|ir|ser|estar|hacer|poder|changer|apprendre|essayer|vivre|étudier|arbeiten|lernen|versuchen|leben|studieren)\b/i.test(t);
+    return words.length>=4 && hasVerb;
+  }
 
+  // History anti-doppioni giornaliera
   function readHistory(){ const key='surprise_history_'+todayISO(); return readJSON(key,[]); }
-  function writeHistory(arr){ const key='surprise_history_'+todayISO(); writeJSON(key, arr.slice(-80)); }
-  function notRecentlyUsed(q){ const hist=readHistory(); const last12=new Set(hist.slice(-12)); return !last12.has(q); }
+  function writeHistory(arr){ const key='surprise_history_'+todayISO(); writeJSON(key, arr.slice(-50)); }
+  function notRecentlyUsed(q){ const hist=readHistory(); const last8=new Set(hist.slice(-8)); return !last8.has(q); }
 
-  function buildPersonalizedPool(L, periodo){
-    const profile = readJSON('whatif_profile', {});
-    const micro   = readJSON('micro_profile', {});
-    const past = (periodo==='past');
-    const topics = extractTopics(getBoost());
-    const out = [];
-    const add = s => { if(s) out.push(String(s).replace(/\s+/g,' ').trim()); };
-
-    if (profile.role){
-      add((past?
-          (L==='it'?`🎯 E se un anno fa avessi spinto la tua carriera da ${profile.role}`:
-           L==='en'?`🎯 What if a year ago you had pushed your ${profile.role} career`:
-           L==='es'?`🎯 ¿Y si hace un año hubieras impulsado tu carrera de ${profile.role}`:
-           L==='fr'?`🎯 Et si l’an dernier tu avais poussé ta carrière de ${profile.role}`:
-           `🎯 Was, wenn du letztes Jahr deine ${profile.role}-Karriere gepusht hättest`) :
-          (L==='it'?`🎯 E se nelle prossime 2 settimane mostrassi un progetto visibile da ${profile.role}`:
-           L==='en'?`🎯 What if in the next 2 weeks you shipped a visible ${profile.role} project`:
-           L==='es'?`🎯 ¿Y si en 2 semanas publicas un proyecto visible como ${profile.role}`:
-           L==='fr'?`🎯 Et si, d’ici 2 semaines, tu publiais un projet visible en ${profile.role}`:
-           `🎯 Was, wenn du in 2 Wochen ein sichtbares ${profile.role}-Projekt lieferst`))));
-    }
-    if (profile.goal){
-      add(past?
-        (L==='it'?`🎯 E se l’anno scorso avessi reso “${profile.goal}” misurabile`:
-         L==='en'?`🎯 What if last year you had made “${profile.goal}” measurable`:
-         L==='es'?`🎯 ¿Y si el año pasado hubieras hecho “${profile.goal}” medible`:
-         L==='fr'?`🎯 Et si l’an dernier tu avais rendu « ${profile.goal} » mesurable`:
-         `🎯 Was, wenn du „${profile.goal}“ letztes Jahr messbar gemacht hättest`) :
-        (L==='it'?`🎯 E se fissassi passi settimanali verso “${profile.goal}”`:
-         L==='en'?`🎯 What if you set weekly steps toward “${profile.goal}”`:
-         L==='es'?`🎯 ¿Y si pones pasos semanales hacia “${profile.goal}”`:
-         L==='fr'?`🎯 Et si tu posais des étapes hebdo vers « ${profile.goal} »`:
-         `🎯 Was, wenn du wöchentliche Schritte für „${profile.goal}“ festlegst`)));
-    }
-    if (micro.mood){
-      add(L==='it'?`🎯 E se adattassi la giornata al tuo umore di oggi (“${micro.mood}”)`:
-          L==='en'?`🎯 What if you shaped your day around today’s mood (“${micro.mood}”)`:
-          L==='es'?`🎯 ¿Y si adaptas el día a tu ánimo de hoy (“${micro.mood}”)`:
-          L==='fr'?`🎯 Et si tu adaptais ta journée à ton humeur du jour (« ${micro.mood} »)`:
-          `🎯 Was, wenn du deinen Tag an deine heutige Stimmung („${micro.mood}“) anpasst`);
-    }
-    topics.forEach(tp=>{
-      add(past
-        ? (L==='it'?`🎯 E se l’estate scorsa avessi iniziato ${tp}`:
-           L==='en'?`🎯 What if last summer you had started ${tp}`:
-           L==='es'?`🎯 ¿Y si el verano pasado hubieras empezado ${tp}`:
-           L==='fr'?`🎯 Et si l’été dernier tu avais commencé ${tp}`:
-           `🎯 Was, wenn du letzten Sommer mit ${tp} begonnen hättest`)
-        : (L==='it'?`🎯 E se provassi ${tp} per 7 giorni`:
-           L==='en'?`🎯 What if you tried ${tp} for 7 days`:
-           L==='es'?`🎯 ¿Y si pruebas ${tp} durante 7 días`:
-           L==='fr'?`🎯 Et si tu testais ${tp} pendant 7 jours`:
-           `🎯 Was, wenn du ${tp} 7 Tage lang ausprobierst`));
-    });
-
-    return Array.from(new Set(out)).slice(0,60);
-  }
-  function buildGenericPoolByLang(L, periodo){
-    const poolsForLang = SURPRISE_POOLS[L] || SURPRISE_POOLS.it;
-    const pool = poolsForLang[periodo] || poolsForLang.future || SURPRISE_POOLS.it.future;
-    // aggiungi 🌍 all'output
-    return pool.map(t=>`🌍 ${t}`);
-  }
-  function buildAbsurdPool(L, periodo){
-    const F=(periodo==='past');
-    let it = F?[
-      "🤪 E se i piccioni del quartiere avessero fatto un sindacato",
-      "🤪 E se avessi venduto aria di montagna in lattina",
-      "🤪 E se l’anno scorso allenavi una squadra di cuscini gonfiabili"
-    ]:[
-      "🤪 E se domani il frigorifero ti rispondesse con un menù",
-      "🤪 E se aprissi una scuola per gatti che odiano le riunioni",
-      "🤪 E se allenassi una squadra di cuscini gonfiabili la sera"
-    ];
-    let en = F?[
-      "🤪 What if local pigeons had formed a union",
-      "🤪 What if you had sold canned mountain air",
-      "🤪 What if last year you coached an inflatable-pillow team"
-    ]:[
-      "🤪 What if tomorrow your fridge replied with a menu",
-      "🤪 What if you opened a school for cats who hate meetings",
-      "🤪 What if you coached an inflatable-pillow team at night"
-    ];
-    let es = F?[
-      "🤪 ¿Y si las palomas del barrio hubieran hecho un sindicato",
-      "🤪 ¿Y si hubieras vendido aire de montaña enlatado",
-      "🤪 ¿Y si el año pasado entrenaste un equipo de almohadas inflables"
-    ]:[
-      "🤪 ¿Y si mañana tu nevera te contesta con un menú",
-      "🤪 ¿Y si abres una escuela para gatos que odian reuniones",
-      "🤪 ¿Y si diriges un equipo de almohadas inflables por la noche"
-    ];
-    let fr = F?[
-      "🤪 Et si les pigeons du quartier avaient monté un syndicat",
-      "🤪 Et si tu avais vendu de l’air de montagne en boîte",
-      "🤪 Et si l’an dernier tu entraînais une équipe d’oreillers gonflables"
-    ]:[
-      "🤪 Et si demain ton frigo te répondait avec un menu",
-      "🤪 Et si tu ouvrais une école pour chats anti-réunions",
-      "🤪 Et si tu entraînais une équipe d’oreillers gonflables la nuit"
-    ];
-    let de = F?[
-      "🤪 Was, wenn die Tauben im Viertel eine Gewerkschaft gegründet hätten",
-      "🤪 Was, wenn du Dosen-Bergluft verkauft hättest",
-      "🤪 Was, wenn du letztes Jahr ein Luftkissen-Team trainiert hättest"
-    ]:[
-      "🤪 Was, wenn dir morgen dein Kühlschrank mit einem Menü antwortet",
-      "🤪 Was, wenn du eine Schule für katzenhafte Meeting-Hasser eröffnest",
-      "🤪 Was, wenn du nachts ein Luftkissen-Team trainierst"
-    ];
-    if (L==='it') return it; if (L==='es') return es; if (L==='fr') return fr; if (L==='de') return de; return en;
+  // Crea una carta sorpresa
+  function makeCard(text, kind){
+    const card=document.createElement('div'); card.className='s-card';
+    const k=document.createElement('div'); k.className='s-kind'; k.textContent=(I18N[lang].sKind[kind]||kind);
+    const t=document.createElement('div'); t.className='s-text'; t.textContent=polishQuestion(text, lang);
+    const actions=document.createElement('div'); actions.className='s-actions';
+    const use=document.createElement('button'); use.className='btn primary'; use.type='button'; use.textContent=I18N[lang].sUse; use.onclick=()=>{ qInput.value=t.textContent; qInput.animate([{outline:'2px solid transparent'},{outline:'2px solid var(--accent2)'},{outline:'2px solid transparent'}],{duration:900}); };
+    const save=document.createElement('button'); save.className='btn'; save.type='button'; save.textContent=I18N[lang].sSave; save.onclick=()=>{ const arr=readJSON('next_prompts',[]); arr.unshift({q:t.textContent, ts:Date.now()}); writeJSON('next_prompts',arr.slice(0,50)); renderNext(); save.textContent=I18N[lang].sSaved; setTimeout(()=>save.textContent=I18N[lang].sSave,800); };
+    actions.appendChild(use); actions.appendChild(save);
+    card.appendChild(k); card.appendChild(t); card.appendChild(actions);
+    return card;
   }
 
   function weightedPick(weights){
     const r=Math.random()*100; let acc=0; for(const [k,v] of Object.entries(weights)){ acc+=v; if(r<acc) return k; } return 'generic';
   }
 
-  function makeCard(text, kind){
-    const card=document.createElement('div'); card.className='s-card'; card.dataset.kind=kind;
-    const k=document.createElement('div'); k.className='s-kind'; k.textContent=(I18N[lang].sKind[kind]||kind);
-    const t=document.createElement('div'); t.className='s-text'; t.textContent=polishQuestion(text, lang);
-    const actions=document.createElement('div'); actions.className='s-actions';
-    const use=document.createElement('button'); use.className='btn primary'; use.type='button'; use.textContent=I18N[lang].sUse;
-    use.onclick=()=>{
-      const txt=t.textContent;
-      // auto-switch stile se assurda
-      if (kind==='absurd' || isAbsurdQuestion(txt)){ prefs.stile='wtf'; styleLocked=true; writeJSON('whatif_prefs',prefs); renderBadges(); }
-      qInput.value=txt;
-      qInput.animate([{outline:'2px solid transparent'},{outline:'2px solid var(--accent2)'},{outline:'2px solid transparent'}],{duration:900});
-      closeDock();
-      window.scrollTo({top:0,behavior:'smooth'});
-    };
-    const save=document.createElement('button'); save.className='btn'; save.type='button'; save.textContent=I18N[lang].sSave;
-    save.onclick=()=>{ const arr=readJSON('next_prompts',[]); arr.unshift({q:t.textContent, ts:Date.now()}); writeJSON('next_prompts',arr.slice(0,60)); renderNext(); save.textContent=I18N[lang].sSaved; setTimeout(()=>save.textContent=I18N[lang].sSave,900); };
-    actions.appendChild(use); actions.appendChild(save);
-    card.appendChild(k); card.appendChild(t); card.appendChild(actions);
-    return card;
-  }
-
-  function pickFromBuckets(L, periodo, buckets){
+  function pickOneFromBuckets(L, periodo, buckets){
+    // buckets = {personalized:[...], generic:[...], absurd:[...]}
     let bucket = weightedPick(MIX_WEIGHTS);
-    if(!buckets[bucket]?.length){ bucket = ['personalized','generic','absurd'].find(k=>buckets[k]?.length) || 'generic'; }
+    if(!buckets[bucket]?.length){ // fallback
+      bucket = ['personalized','generic','absurd'].find(k=>buckets[k]?.length) || 'generic';
+    }
     if(!buckets[bucket]?.length) return null;
-    let tries=0;
-    while(tries<10){
-      const arr=buckets[bucket];
-      const text = polishQuestion(sampleOne(arr), L);
-      if(seemsValidQuestion(text) && notRecentlyUsed(text)){
-        return {text, kind:bucket};
-      }
+    const pool=buckets[bucket];
+    let tries=0, text=null;
+    while(tries<8){
+      text = sampleOne(pool);
+      text = polishQuestion(text, L);
+      if(seemsValidQuestion(text) && notRecentlyUsed(text)) break;
       tries++;
     }
-    return null;
+    if(!text) return null;
+    return {text, kind:bucket};
   }
 
   function generateBatch(opts={absurdOnly:false}){
@@ -663,37 +714,51 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     const buckets = opts.absurdOnly? {personalized:[], generic:[], absurd:abs}: {personalized:pers, generic:gen, absurd:abs};
 
     const grid=$('surpriseGrid'); grid.innerHTML='';
-    const want = opts.absurdOnly? 8 : 12;
+
+    const want = opts.absurdOnly? 8 : 12; // 12 carte (7/3/2 approx via pesi)
     const made=[]; const used=new Set();
     let guard=0;
-
-    while(made.length<want && guard<300){
-      const pick = pickFromBuckets(L, periodo, buckets);
+    while(made.length<want && guard<200){
+      const pick = pickOneFromBuckets(L, periodo, buckets);
       guard++;
       if(!pick) break;
       if(used.has(pick.text)) continue;
       used.add(pick.text); made.push(pick);
     }
 
-    // Fallback: riempi con generiche finché arrivi a want
-    let gi=0;
-    while(made.length<want && gi<gen.length){
-      const t = polishQuestion(gen[gi++], L);
-      if(!used.has(t)){ used.add(t); made.push({text:t, kind:'generic'}); }
-    }
-
     if(!made.length){
       const emp=document.createElement('div'); emp.className='small'; emp.textContent=I18N[lang].sEmpty; grid.appendChild(emp); return;
     }
 
+    // scrivi history anti-doppione
     const hist=readHistory(); hist.push(...made.map(x=>x.text)); writeHistory(hist);
+
     made.forEach(({text,kind})=> grid.appendChild(makeCard(text,kind)));
   }
 
-  /* ===== Surprise dock wiring ===== */
+  // ====== QUI: handler che RIEMPIE DIRETTAMENTE IL CAMPO ======
+  function generateOneIntoField(){
+    const L=(LS.getItem('lang')||'it').toLowerCase();
+    const periodo=(prefs.periodo==='past')?'past':'future';
+    const pers = buildPersonalizedPool(L, periodo);
+    const gen  = buildGenericPoolByLang(L, periodo);
+    const abs  = buildAbsurdPool(L, periodo);
+    const pick = pickOneFromBuckets(L, periodo, {personalized:pers, generic:gen, absurd:abs});
+    const fallback = (L==='it'?'E se cambiassi lavoro quest’anno?':
+                     L==='es'?'¿Y si cambias de trabajo este año?':
+                     L==='fr'?'Et si tu changeais de travail cette année ?':
+                     L==='de'?'Was, wenn du dieses Jahr den Job wechselst?':'What if you changed jobs this year?');
+    const text = (pick && pick.text) || fallback;
+    qInput.value = text;
+    qInput.animate([{outline:'2px solid transparent'},{outline:'2px solid var(--accent2)'},{outline:'2px solid transparent'}],{duration:900});
+    const hist=readHistory(); hist.push(text); writeHistory(hist);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  // SURPRISE dock wiring (rimane, ma il bottone principale ora riempie il campo)
   const dock=$('surpriseDock');
   const refreshSurprise=$('refreshSurprise');
-  const closeSurpriseBtn=$('closeSurprise');
+  const closeSurprise=$('closeSurprise');
   const surpriseDone=$('surpriseDone');
   const surpriseBackdrop=$('surpriseBackdrop');
   const absurdOnlyBtn=$('surpriseAbsurdOnly');
@@ -701,40 +766,23 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   function openDock(){ dock.classList.add('open'); generateBatch(); }
   function closeDock(){ dock.classList.remove('open'); }
 
-  // 🎯 QUI: il bottone apre la dock con 12 carte
-  surpriseBtn.onclick=openDock;
+  // 🔴 CAMBIATO: prima apriva il dock, adesso riempie il campo
+  surpriseBtn.onclick=generateOneIntoField;
+
   refreshSurprise.onclick=()=>generateBatch();
   absurdOnlyBtn.onclick=()=>generateBatch({absurdOnly:true});
-  closeSurpriseBtn.onclick=closeDock; surpriseDone.onclick=closeDock; surpriseBackdrop.onclick=closeDock;
+  closeSurprise.onclick=closeDock; surpriseDone.onclick=closeDock; surpriseBackdrop.onclick=closeDock;
   window.addEventListener('keydown',e=>{ if(e.key==='Escape' && dock.classList.contains('open')) closeDock(); });
 
-  /* ===== Submit ===== */
-  function trySubmit(){
-    let domanda=(qInput.value||'').trim(); if(!domanda){ qInput.focus(); return; }
+  // ===== Prima sessione =====
+  const FS_KEY='first_session_seen';
+  const fs=readJSON(FS_KEY,{date:'',seen:false});
+  if(fs.date!==todayISO()){ $('firstSessionBanner').textContent=I18N[lang].firstSession; $('firstSessionBanner').style.display='block'; $('microCard').classList.remove('collapsed'); }
+  else { $('firstSessionBanner').style.display='none'; $('microCard').classList.add('collapsed'); }
+  $('microHead').onclick=()=>{ const saved=readJSON('micro_saved',{date:'',ok:false}); if(saved.date===todayISO()) return; $('microCard').classList.toggle('collapsed'); };
+  $('saveMicroBtn').onclick=()=>{ const cur=readJSON('micro_profile',{}); writeJSON('micro_profile',cur); writeJSON('micro_saved',{date:todayISO(),ok:true}); writeJSON('first_session_seen',{date:todayISO(),seen:true}); $('firstSessionBanner').style.display='none'; $('microCard').classList.add('collapsed'); $('microSavedMsg').textContent=I18N[lang].microSaved; };
 
-    // forza stile WTF se domanda assurda
-    if (isAbsurdQuestion(domanda)){ prefs.stile='wtf'; styleLocked=true; writeJSON('whatif_prefs',prefs); renderBadges(); }
-
-    const c=readJSON('whatif_credits',{date:todayISO(),used:0});
-    if(!userIsAdmin()){
-      const cap=capForUser();
-      if((c.used||0)>=cap){ alert(I18N[lang].outOfCredits); return; }
-      c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderCreditsBadge();
-    }
-    const micro=readJSON('micro_profile',{}); const boost=getBoost();
-
-    LS.setItem('domanda',domanda);
-    const req={ domanda, stile:prefs.stile, lang, extra:'', micro, fantasy_mode:false, periodo:prefs.periodo, boost };
-    writeJSON('whatif_request',req);
-
-    styleLocked=false; // sblocca dopo invio
-    location.href='fifth.html';
-  }
-  goBtn.onclick=trySubmit;
-  clearBtn.onclick=()=>{ qInput.value=''; styleLocked=false; renderBadges(); qInput.focus(); };
-  qInput.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); } });
-
-  /* ===== Micro ===== */
+  /* ===== Micro-domande ===== */
   function renderOptions(containerId, options, key){
     const wrap=$(containerId); if(!wrap) return; wrap.innerHTML='';
     const saved=readJSON('micro_profile',{});
@@ -855,6 +903,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     });
   }
 
+  // Clear lists handlers
   $('savedHeader').onclick=()=>{ $('savedCard').classList.toggle('collapsed'); };
   $('histHeader').onclick=()=>{ $('histCard').classList.toggle('collapsed'); };
   $('clearSavedBtn').onclick=()=>{ writeJSON('next_prompts',[]); renderNext(); };
@@ -864,6 +913,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   try{
     try{ const p = JSON.parse(LS.getItem('whatif_prefs')||'{}'); document.documentElement.setAttribute('data-theme', p.stile==='wtf'?'wtf':'whatif'); }catch{}
     applyTexts(); renderMicro(); renderNext(); renderStories(); $('boostInput').value=getBoost();
+    // opzionale: se vuoi popolare il dock quando lo apri manualmente
+    // generateBatch();
   }catch(e){ console.error('Init error:', e); }
 })();
 </script>
