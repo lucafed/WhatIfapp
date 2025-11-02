@@ -9,7 +9,6 @@
 :root{ --bg:#0C0F14; --bg2:#0E1724; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA; --accent:#1C57A0; --accent2:#FFEC01; --ink:#001f26; --chip:#0f1820; --line:#1b2a34; }
 html[data-theme="whatif"]{ --bg:#0B1018; --bg2:#0E1724; --card:#141C22; --fg:#F4F7FB; --muted:#A7B3C2; --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A; --chip:#0f1820; --line:#1b2a34; }
 html[data-theme="wtf"]{ --bg:#0B0B0C; --bg2:#101414; --card:#111713; --fg:#EEF5F0; --muted:#A6B6AD; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; --chip:#0F1714; --line:#21322A; }
-
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 @media (prefers-reduced-motion:no-preference){
@@ -52,10 +51,6 @@ h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
 
 /* Footer */
 footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
-
-/* Loader line */
-.loader{height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width .25s ease}
-.loader.active{width:100%}
 </style>
 </head>
 <body>
@@ -78,8 +73,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       </select>
     </div>
   </div>
-
-  <div class="loader" id="topLoader"></div>
 
   <main>
     <div class="wrap">
@@ -113,30 +106,26 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         <div class="small" id="tipNote" style="margin-top:8px">Le idee casuali seguono un mix 60/30/10: 60% personalizzate 🧩, 30% generiche 🌐, 10% assurde 🤪.</div>
       </div>
 
-      <!-- BOOST PERSONALIZZAZIONE (collassabile + lock giornaliero) -->
-      <div class="card center collapsed" id="boostCard">
+      <!-- BOOST PERSONALIZZAZIONE (collassabile e giornaliero) -->
+      <div class="card center" id="boostCard">
         <div class="row toggle" id="boostHeader" style="justify-content:space-between">
           <div class="label" id="boostTitle">▶ Boost personalizzazione</div>
-          <div class="small" id="boostHint">(opzionale — si chiude fino a domani dopo il salvataggio)</div>
+          <div class="small" id="boostHint">(opzionale)</div>
         </div>
         <div class="body" id="boostBody" style="margin-top:8px">
           <textarea id="boostInput" class="input" rows="3" placeholder="Scrivi qualcosa su di te o su cosa vuoi esplorare. Es: 'cambiare città', 'inglese B2', 'partita IVA', 'poco tempo la sera'…"></textarea>
-          <div class="row" style="margin-top:10px;justify-content:space-between;gap:8px">
-            <div class="small" id="boostLockMsg"></div>
-            <div class="row" style="gap:8px">
-              <button class="btn" id="boostClearBtn" type="button">Svuota</button>
-              <button class="btn primary" id="boostSaveBtn" type="button">💾 Salva & genera idee</button>
-            </div>
+          <div class="row" style="margin-top:10px;justify-content:flex-end;gap:8px">
+            <button class="btn" id="boostClearBtn" type="button">Svuota</button>
+            <button class="btn primary" id="boostSaveBtn" type="button">💾 Salva Boost</button>
           </div>
           <div class="small" id="boostSavedMsg" style="margin-top:6px"></div>
         </div>
       </div>
 
-      <!-- SPUNTI (collassabile) -->
+      <!-- SPUNTI (collassabili) -->
       <div class="card center collapsed" id="hintsCard">
         <div class="row toggle" id="hintsHeader" style="justify-content:space-between">
           <div class="label" id="hintsTitle">▶ Spunti rapidi “E se…”</div>
-          <div class="small" id="hintsCount">(—)</div>
         </div>
         <div class="body" id="hintsBody" style="margin-top:8px">
           <div class="chips" id="hintsChips"></div>
@@ -168,136 +157,116 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 
 <script>
 (function(){
-  /* ========= CONFIG ========= */
-  const AI_ENDPOINT = '/api/questions'; // Cambia se serve
-  const IDEAS_PER_DAY = 24;             // quante idee AI salviamo al giorno
-  const MIX_TARGET = {personalized:14, generic:7, absurd:3}; // totale 24
-  const CACHE_KEY = 'whatif_ai_ideas_v2';
-  const CACHE_META_KEY = 'whatif_ai_ideas_meta_v2'; // {date, lang, stile, periodo, boostHash}
-  const BOOST_KEY = 'whatif_boost';
-  const BOOST_DATE_KEY = 'whatif_boost_saved_date';
-  const PREFS_KEY = 'whatif_prefs';     // {stile,periodo,pro}
-  const CREDITS_KEY = 'whatif_credits'; // {date,used}
-  const NEXT_KEY = 'next_prompts';
-  const HISTORY_KEY = 'cronologia';
-
-  /* ========= SAFE STORAGE ========= */
-  const mem={}; let STORAGE_OK=true;
-  const LS={
-    getItem(k){ try{return localStorage.getItem(k);}catch(e){STORAGE_OK=false; return (k in mem)?mem[k]:null; } },
-    setItem(k,v){ try{localStorage.setItem(k,v);}catch(e){STORAGE_OK=false; mem[k]=String(v);} },
-    removeItem(k){ try{localStorage.removeItem(k);}catch(e){STORAGE_OK=false; delete mem[k];} }
+  /* ===== SAFE STORAGE ===== */
+  const mem={};
+  let STORAGE_OK=true;
+  const SafeStorage={
+    getItem(k){ try{ return localStorage.getItem(k);}catch(e){STORAGE_OK=false; return (k in mem)?mem[k]:null;}},
+    setItem(k,v){ try{ localStorage.setItem(k,v);}catch(e){STORAGE_OK=false; mem[k]=String(v);} },
+    removeItem(k){ try{ localStorage.removeItem(k);}catch(e){STORAGE_OK=false; delete mem[k];} }
   };
-
-  /* ========= UTILS ========= */
-  const SUPPORTED_LANGS = ["it","en","es","fr","de"];
+  const LS=SafeStorage;
   const $=id=>document.getElementById(id);
-  function todayISO(){ const d=new Date(); return d.toISOString().slice(0,10); }
+  const SUPPORTED_LANGS=["it","en","es","fr","de"];
+  function writeJSON(k,v){ try{ LS.setItem(k, JSON.stringify(v)); }catch{} }
   function readJSON(k,def){ try{ return JSON.parse(LS.getItem(k)||JSON.stringify(def)); }catch{ return def; } }
-  function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
-  function safeGo(url){ try{ if(url) location.href=url; }catch{} }
-  function hashString(s){ // semplice hash non-crypto per invalidare cache quando cambia boost
-    let h=0; for(let i=0;i<s.length;i++){ h=((h<<5)-h)+s.charCodeAt(i); h|=0; } return String(h);
-  }
-  function setLoader(on){ $('topLoader').classList.toggle('active', !!on); }
+  function todayISO(){ const d=new Date(); return d.toISOString().slice(0,10); }
+  function normalizeSpaces(t){ return t.replace(/\s+/g,' ').replace(/\s+([?!.,;:%])/g,'$1').trim(); }
 
-  /* ========= STATE ========= */
-  let lang=(LS.getItem('lang')||'it').toLowerCase(); if(!SUPPORTED_LANGS.includes(lang)) lang='it';
-  document.documentElement.lang = lang;
-  let prefs=readJSON(PREFS_KEY,{stile:'whatif',periodo:'future',pro:false});
-
-  /* ========= I18N ========= */
-  const I18N={
-    it:{title:"Imposta la tua domanda", yourq:"E se…", gen:"✨ Genera risposta", clear:"Svuota", surprise:"Sorprendimi",
-        hintsTitle:"▶ Spunti rapidi “E se…”", hintsNote:"Clicca uno spunto per riempire la domanda.",
-        credits:"Crediti", free:"FREE", pro:"PRO", footer:"© What?f — FREE · crediti giornalieri attivi",
-        styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Passato",
-        boostTitle:"▶ Boost personalizzazione", boostHint:"(opzionale — si chiude fino a domani dopo il salvataggio)",
-        boostPH:"Scrivi qualcosa su di te o su cosa vuoi esplorare…", boostSave:"💾 Salva & genera idee", boostClear:"Svuota",
-        boostSaved:"Boost salvato. Idee aggiornate 👍", boostLocked:"Boost bloccato fino a domani.", noIdeas:"Nessuna idea pronta. Salva il Boost per generarne di personalizzate.",
-        saved:"▶ Domande salvate", stories:"▶ Cronologia", use:"Usa", savedOne:"Salvata.", noneSaved:"— Nessuna domanda salvata.", noneHist:"— Nessuna storia.",
-        outOfCredits:"Hai finito i crediti di oggi.", count:"{n} spunti"}
-    ,
-    en:{title:"Set your question", yourq:"What if…", gen:"✨ Generate answer", clear:"Clear", surprise:"Surprise me",
-        hintsTitle:"▶ Quick “What if…”", hintsNote:"Click a hint to fill the question.",
-        credits:"Credits", free:"FREE", pro:"PRO", footer:"© What?f — FREE · daily credits active",
-        styleWF:"What if", styleWTF:"What the F", fut:"Future", past:"Past",
-        boostTitle:"▶ Personalization boost", boostHint:"(optional — locks until tomorrow after you save)",
-        boostPH:"Write anything about you or what you want to explore…", boostSave:"💾 Save & generate ideas", boostClear:"Clear",
-        boostSaved:"Boost saved. Ideas updated 👍", boostLocked:"Boost locked until tomorrow.", noIdeas:"No ideas yet. Save the Boost to generate personalized ones.",
-        saved:"▶ Saved questions", stories:"▶ History", use:"Use", savedOne:"Saved.", noneSaved:"— No saved questions.", noneHist:"— No history.",
-        outOfCredits:"You’ve used today’s credits.", count:"{n} hints"}
-    ,
-    es:{title:"Configura tu pregunta", yourq:"¿Y si…?", gen:"✨ Generar respuesta", clear:"Limpiar", surprise:"Sorpréndeme",
-        hintsTitle:"▶ Ideas rápidas «¿Y si…?»", hintsNote:"Pulsa una idea para rellenar la pregunta.",
-        credits:"Créditos", free:"FREE", pro:"PRO", footer:"© What?f — FREE · créditos diarios activos",
-        styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Pasado",
-        boostTitle:"▶ Impulso de personalización", boostHint:"(opcional — bloqueado hasta mañana tras guardar)",
-        boostPH:"Escribe algo sobre ti o lo que quieres explorar…", boostSave:"💾 Guardar y generar ideas", boostClear:"Limpiar",
-        boostSaved:"Boost guardado. Ideas actualizadas 👍", boostLocked:"Boost bloqueado hasta mañana.", noIdeas:"Aún no hay ideas. Guarda el Boost para generar personalizadas.",
-        saved:"▶ Preguntas guardadas", stories:"▶ Historial", use:"Usar", savedOne:"Guardada.", noneSaved:"— No hay preguntas guardadas.", noneHist:"— Sin historial.",
-        outOfCredits:"Has usado los créditos de hoy.", count:"{n} ideas"}
-    ,
-    fr:{title:"Définis ta question", yourq:"Et si…", gen:"✨ Générer la réponse", clear:"Effacer", surprise:"Surprends-moi",
-        hintsTitle:"▶ Idées rapides « Et si… »", hintsNote:"Clique une idée pour remplir la question.",
-        credits:"Crédits", free:"FREE", pro:"PRO", footer:"© What?f — FREE · crédits quotidiens actifs",
-        styleWF:"What if", styleWTF:"What the F", fut:"Futur", past:"Passé",
-        boostTitle:"▶ Boost de personnalisation", boostHint:"(optionnel — verrouillé jusqu’à demain après l’enregistrement)",
-        boostPH:"Écris quelque chose sur toi ou ce que tu veux explorer…", boostSave:"💾 Enregistrer & générer des idées", boostClear:"Effacer",
-        boostSaved:"Boost enregistré. Idées mises à jour 👍", boostLocked:"Boost verrouillé jusqu’à demain.", noIdeas:"Aucune idée pour l’instant. Enregistre le Boost pour en générer des personnalisées.",
-        saved:"▶ Questions enregistrées", stories:"▶ Historique", use:"Utiliser", savedOne:"Enregistrée.", noneSaved:"— Aucune question enregistrée.", noneHist:"— Aucun historique.",
-        outOfCredits:"Crédits du jour épuisés.", count:"{n} idées"}
-    ,
-    de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", gen:"✨ Antwort erzeugen", clear:"Leeren", surprise:"Überrasche mich",
-        hintsTitle:"▶ Schnelle „Was wäre, wenn…“-Ideen", hintsNote:"Klicke eine Idee, um die Frage zu füllen.",
-        credits:"Credits", free:"FREE", pro:"PRO", footer:"© What?f — FREE · tägliche Credits aktiv",
-        styleWF:"What if", styleWTF:"What the F", fut:"Zukunft", past:"Vergangenheit",
-        boostTitle:"▶ Personalisierungs-Boost", boostHint:"(optional — bis morgen gesperrt nach dem Speichern)",
-        boostPH:"Schreibe etwas über dich oder was du erkunden willst…", boostSave:"💾 Speichern & Ideen erzeugen", boostClear:"Leeren",
-        boostSaved:"Boost gespeichert. Ideen aktualisiert 👍", boostLocked:"Boost bis morgen gesperrt.", noIdeas:"Noch keine Ideen. Speichere den Boost, um personalisierte zu erzeugen.",
-        saved:"▶ Gespeicherte Fragen", stories:"▶ Verlauf", use:"Verwenden", savedOne:"Gespeichert.", noneSaved:"— Keine gespeicherten Fragen.", noneHist:"— Kein Verlauf.",
-        outOfCredits:"Tagescredits verbraucht.", count:"{n} Ideen"}
-  };
-
-  // Regex support per parole
-  let UNICODE_OK=true; try{ new RegExp("\\p{L}","u"); }catch{ UNICODE_OK=false; }
+  // Unicode regex fallback
+  let UNICODE_OK=true;
+  try{ new RegExp("\\p{L}","u"); }catch{ UNICODE_OK=false; }
   const WORD_RE = UNICODE_OK ? /[\p{L}\p{N}’']+/gu : /[A-Za-z0-9']+/g;
 
-  /* ========= TEXT POLISH ========= */
-  function normalizeSpaces(t){ return t.replace(/\s+/g,' ').replace(/\s+([?!.,;:%])/g,'$1').trim(); }
-  function polishQuestion(q, L){
-    let t=String(q||"").replace(/[?？]+$/,'').trim();
-    if(!t) return '';
-    // Maiuscola rispettando cap inversi
-    const first=t[0];
-    if(first !== '¿' && first !== '¡'){ t = t.charAt(0).toUpperCase()+t.slice(1); }
-    t = normalizeSpaces(t);
-    if(L==="es"){
-      if(!t.startsWith('¿')) t='¿'+t;
-      if(!t.endsWith('?')) t=t+'?';
-      return t;
-    }
-    if(L==="fr"){
-      if(!t.endsWith('?')) t = t + ' ?';
-      t = t.replace(/\s*\?$/,'\u202F?'); // espace fine insécable
-      return t;
-    }
-    if(!/\?$/.test(t)) t = t+'?';
-    return t;
-  }
-  function seemsValidQuestion(q){
-    const t=String(q||"").trim();
-    const words=(t.match(WORD_RE)||[]);
-    const hasVerb=/\b(essere|fare|avere|andare|potrei|potresti|posso|cambiare|aprire|imparare|provare|vivere|studiare|correre|lavorare|organizzare|iniziare|testare|valutare|delegare|spegnere|ridurre|chiedere|investire|risparmiare|partire|tornare|esplorare|allenare|proteggere|impostare|cambiar|aprender|estudiar|trabajar|probar|vivir|planear|testear|reducir|preguntar|invertir|ahorrar|entrenar|move|change|start|learn|try|study|work|plan|test|reduce|ask|invest|save|delegate)\b/i.test(t);
-    return words.length>=4 && hasVerb;
-  }
+  /* ===== STATE ===== */
+  let lang=(LS.getItem('lang')||'it').toLowerCase(); if(!SUPPORTED_LANGS.includes(lang)) lang="it";
+  document.documentElement.lang=lang;
+  let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
 
-  /* ========= UI APPLY ========= */
-  const backBtn=$('backBtn'), homeBtn=$('homeBtn'), langSelect=$('langSelect');
-  const styleChips=$('styleChips'), periodoChips=$('periodoChips');
-  const goBtn=$('goBtn'), clearBtn=$('clearBtn'), qInput=$('qInput'), surpriseBtn=$('surpriseBtn');
-  const tipNote=$('tipNote');
+  /* ===== I18N ===== */
+  const I18N={ /* (stesso set completo che mi hai dato) */
+    it:{title:"Imposta la tua domanda", yourq:"E se…", gen:"✨ Genera risposta", clear:"Svuota",
+        surprise:"Sorprendimi", saved:"▶ Domande salvate", stories:"▶ Cronologia",
+        styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Passato",
+        hintsTitle:"▶ Spunti rapidi “E se…”", hintsNote:"Clicca uno spunto per riempire la domanda.",
+        credits:"Crediti", free:"FREE", pro:"PRO",
+        footer:"© What?f — FREE · crediti giornalieri attivi",
+        boostTitle:"▶ Boost personalizzazione", boostHint:"(opzionale)",
+        boostSave:"💾 Salva Boost", boostClear:"Svuota",
+        boostPH:"Scrivi qualcosa su di te o su cosa vuoi esplorare…",
+        boostSaved:"Boost salvato.",
+        mixExpl:"Le idee casuali seguono un mix 60/30/10: 60% personalizzate 🧩, 30% generiche 🌐, 10% assurde 🤪.",
+        sUse:"Usa"
+    },
+    en:{title:"Set your question", yourq:"What if…", gen:"✨ Generate answer", clear:"Clear",
+        surprise:"Surprise me", saved:"▶ Saved questions", stories:"▶ History",
+        styleWF:"What if", styleWTF:"What the F", fut:"Future", past:"Past",
+        hintsTitle:"▶ Quick “What if…”", hintsNote:"Click a hint to fill the question.",
+        credits:"Credits", free:"FREE", pro:"PRO",
+        footer:"© What?f — FREE · daily credits active",
+        boostTitle:"▶ Personalization boost", boostHint:"(optional)",
+        boostSave:"💾 Save Boost", boostClear:"Clear",
+        boostPH:"Write anything about you or what you want to explore…",
+        boostSaved:"Boost saved.",
+        mixExpl:"Random ideas use a 60/30/10 mix: 60% personalized 🧩, 30% generic 🌐, 10% absurd 🤪.",
+        sUse:"Use"
+    },
+    es:{title:"Configura tu pregunta", yourq:"¿Y si…?", gen:"✨ Generar respuesta", clear:"Limpiar",
+        surprise:"Sorpréndeme", saved:"▶ Preguntas guardadas", stories:"▶ Historial",
+        styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Pasado",
+        hintsTitle:"▶ Ideas rápidas «¿Y si…?»", hintsNote:"Pulsa una idea para rellenar la pregunta.",
+        credits:"Créditos", free:"FREE", pro:"PRO",
+        footer:"© What?f — FREE · créditos diarios activos",
+        boostTitle:"▶ Impulso de personalización", boostHint:"(opcional)",
+        boostSave:"💾 Guardar Boost", boostClear:"Limpiar",
+        boostPH:"Escribe algo sobre ti o lo que quieres explorar…",
+        boostSaved:"Boost guardado.",
+        mixExpl:"Las ideas aleatorias siguen un mix 60/30/10: 60% personalizadas 🧩, 30% genéricas 🌐, 10% absurdas 🤪.",
+        sUse:"Usar"
+    },
+    fr:{title:"Définis ta question", yourq:"Et si…", gen:"✨ Générer la réponse", clear:"Effacer",
+        surprise:"Surprends-moi", saved:"▶ Questions enregistrées", stories:"▶ Historique",
+        styleWF:"What if", styleWTF:"What the F", fut:"Futur", past:"Passé",
+        hintsTitle:"▶ Idées rapides « Et si… »", hintsNote:"Clique une idée pour remplir la question.",
+        credits:"Crédits", free:"FREE", pro:"PRO",
+        footer:"© What?f — FREE · crédits quotidiens actifs",
+        boostTitle:"▶ Boost de personnalisation", boostHint:"(optionnel)",
+        boostSave:"💾 Enregistrer le Boost", boostClear:"Effacer",
+        boostPH:"Écris quelque chose sur toi ou ce que tu veux explorer…",
+        boostSaved:"Boost enregistré.",
+        mixExpl:"Les idées aléatoires suivent un mix 60/30/10 : 60% personnalisées 🧩, 30% génériques 🌐, 10% absurdes 🤪.",
+        sUse:"Utiliser"
+    },
+    de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", gen:"✨ Antwort erzeugen", clear:"Leeren",
+        surprise:"Überrasche mich", saved:"▶ Gespeicherte Fragen", stories:"▶ Verlauf",
+        styleWF:"What if", styleWTF:"What the F", fut:"Zukunft", past:"Vergangenheit",
+        hintsTitle:"▶ Schnelle „Was wäre, wenn…“-Ideen", hintsNote:"Klicke eine Idee, um die Frage zu füllen.",
+        credits:"Credits", free:"FREE", pro:"PRO",
+        footer:"© What?f — FREE · tägliche Credits aktiv",
+        boostTitle:"▶ Personalisierungs-Boost", boostHint:"(optional)",
+        boostSave:"💾 Boost speichern", boostClear:"Leeren",
+        boostPH:"Schreibe etwas über dich oder was du erkunden willst…",
+        boostSaved:"Boost gespeichert.",
+        mixExpl:"Zufällige Ideen nutzen einen 60/30/10-Mix: 60% personalisiert 🧩, 30% generisch 🌐, 10% absurd 🤪.",
+        sUse:"Verwenden"
+    }
+  };
 
+  /* ===== Static hints (fallback se il server non risponde) ===== */
+  const STATIC_HINTS={
+    it:["E se cambiassi lavoro?","E se cambiassi città?","E se aprissi partita IVA?","E se tornassi a studiare?","E se lavorassi 4 giorni su 5?","E se chiedessi un aumento?","E se vivessi senza auto?","E se imparassi bene l’inglese?"],
+    en:["What if you changed jobs?","What if you moved city?","What if you went freelance?","What if you went back to study?","What if you tried a 4-day week?","What if you asked for a raise?","What if you lived without a car?","What if you mastered English?"],
+    es:["¿Y si cambiaras de trabajo?","¿Y si te mudaras de ciudad?","¿Y si te hicieras autónomo?","¿Y si volvieras a estudiar?","¿Y si probaras una semana de 4 días?","¿Y si pidieras un aumento?","¿Y si vivieras sin coche?","¿Y si dominaras el inglés?"],
+    fr:["Et si tu changeais de travail ?","Et si tu déménageais ?","Et si tu te mettais en freelance ?","Et si tu reprenais des études ?","Et si tu essayais la semaine de 4 jours ?","Et si tu demandais une augmentation ?","Et si tu vivais sans voiture ?","Et si tu maîtrisais l’anglais ?"],
+    de:["Was, wenn du den Job wechselst?","Was, wenn du in eine andere Stadt ziehst?","Was, wenn du freiberuflich arbeitest?","Was, wenn du wieder studierst?","Was, wenn du eine 4-Tage-Woche probierst?","Was, wenn du um eine Gehaltserhöhung bittest?","Was, wenn du ohne Auto lebst?","Was, wenn du Englisch meisterst?"]
+  };
+
+  /* ===== NAV ===== */
+  function safeReload(){ try{ location.reload(); }catch(e){} }
+  $('homeBtn').onclick = safeReload;
+  $('backBtn').onclick = ()=>{ try{ if(history.length>1) history.back(); }catch(e){} };
+
+  /* ===== LANG ===== */
   function applyTexts(){
     const L = I18N[lang]||I18N.en;
     document.title = (lang==='it' ? 'What?f — Domanda'
@@ -306,29 +275,34 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
                    : lang==='de' ? 'What?f — Frage' : 'What?f — Question');
     $('titleH1').textContent=L.title;
     $('qLabel').textContent=L.yourq;
-    goBtn.textContent=L.gen;
-    clearBtn.textContent=L.clear;
-    surpriseBtn.textContent='🎲 '+L.surprise;
-    $('hintsTitle').textContent=L.hintsTitle; $('hintsNote').textContent=L.hintsNote;
-    $('nextLabel').textContent=L.saved; $('storiesLabel').textContent=L.stories;
+    $('goBtn').textContent=L.gen;
+    $('clearBtn').textContent=L.clear;
+    $('surpriseBtn').textContent='🎲 '+L.surprise;
+    $('hintsTitle').textContent=L.hintsTitle;
+    $('hintsNote').textContent=L.hintsNote;
+    $('nextLabel').textContent=L.saved;
+    $('storiesLabel').textContent=L.stories;
     $('footerNote').textContent=L.footer;
     $('chipWhatIf').textContent=L.styleWF; $('chipWTF').textContent=L.styleWTF;
     $('chipFuture').textContent=L.fut; $('chipPast').textContent=L.past;
-
     $('boostTitle').textContent=L.boostTitle; $('boostHint').textContent=L.boostHint;
     $('boostSaveBtn').textContent=L.boostSave; $('boostClearBtn').textContent=L.boostClear;
     $('boostInput').placeholder=L.boostPH;
-
-    renderBadges(); renderCreditsBadge(); renderHintsFromCache(); renderSaved(); renderHistory(); updateBoostLockUI();
+    $('tipNote').textContent = L.mixExpl;
+    renderBadges(); renderCreditsBadge();
   }
+  $('langSelect').value=lang;
+  $('langSelect').onchange=()=>{ lang = $('langSelect').value; LS.setItem('lang',lang); applyTexts(); refreshIdeasIfNeeded(true); };
 
-  /* ========= NAV ========= */
-  homeBtn.onclick=()=> safeGo('index.html');
-  backBtn.onclick=()=>{ try{ if(history.length>1) history.back(); else safeGo('index.html'); }catch{} };
-  langSelect.value=lang;
-  langSelect.onchange=()=>{ lang = langSelect.value; LS.setItem('lang',lang); applyTexts(); };
+  /* ===== CREDITS (solo badge locale) ===== */
+  function userIsAdmin(){ try{ return !!LS.getItem('admin_token'); }catch{ return false; } }
+  function capForUser(){ return userIsAdmin()?Infinity:(prefs.pro?10:3); }
+  function ensureCredits(){ const c=readJSON('whatif_credits',{date:todayISO(),used:0}); if(c.date!==todayISO()){ c.date=todayISO(); c.used=0; } writeJSON('whatif_credits',c); }
+  function leftCredits(){ const c=readJSON('whatif_credits',{date:todayISO(),used:0}); const cap=capForUser(); return cap===Infinity?'∞':Math.max(0,cap-(c.used||0)); }
+  function renderCreditsBadge(){ const L=I18N[lang]||I18N.en; const cap=capForUser(), left=leftCredits(); $('freeBadge').textContent=(cap===Infinity)?`${L.credits}: ∞`:`${L.credits}: ${left}/${cap}`; $('proBadge').textContent=prefs.pro?(L.pro):(L.free); }
+  ensureCredits(); renderCreditsBadge();
 
-  /* ========= PREFS / THEME ========= */
+  /* ===== THEME / BADGES ===== */
   function renderBadges(){
     const L=I18N[lang]||I18N.en;
     document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
@@ -337,338 +311,179 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
     document.querySelectorAll('#periodoChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.periodo===prefs.periodo));
   }
-  styleChips.addEventListener('click',(e)=>{ const b=e.target.closest('.chip'); if(!b) return; prefs.stile=b.dataset.style; writeJSON(PREFS_KEY,prefs); renderBadges(); });
-  periodoChips.addEventListener('click',(e)=>{ const b=e.target.closest('.chip'); if(!b) return; prefs.periodo=b.dataset.periodo; writeJSON(PREFS_KEY,prefs); renderBadges(); });
+  document.getElementById('styleChips').addEventListener('click',(e)=>{ const b=e.target.closest('.chip'); if(!b) return; prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs); renderBadges(); });
+  document.getElementById('periodoChips').addEventListener('click',(e)=>{ const b=e.target.closest('.chip'); if(!b) return; prefs.periodo=b.dataset.periodo; writeJSON('whatif_prefs',prefs); renderBadges(); refreshIdeasIfNeeded(true); });
 
-  /* ========= CREDITS ========= */
-  function userIsAdmin(){ try{ return !!LS.getItem('admin_token'); }catch{ return false; } }
-  function capForUser(){ return userIsAdmin()?Infinity:(prefs.pro?10:3); }
-  function ensureCredits(){ const c=readJSON(CREDITS_KEY,{date:todayISO(),used:0}); if(c.date!==todayISO()){ c.date=todayISO(); c.used=0; } writeJSON(CREDITS_KEY,c); }
-  function leftCredits(){ const c=readJSON(CREDITS_KEY,{date:todayISO(),used:0}); const cap=capForUser(); return cap===Infinity?'∞':Math.max(0,cap-(c.used||0)); }
-  function renderCreditsBadge(){ const L=I18N[lang]||I18N.en; const cap=capForUser(), left=leftCredits(); $('freeBadge').textContent=(cap===Infinity)?`${L.credits}: ∞`:`${L.credits}: ${left}/${cap}`; $('proBadge').textContent=prefs.pro?(L.pro):(L.free); }
-  ensureCredits(); renderCreditsBadge();
+  /* ===== Grammar helpers ===== */
+  function polishQuestion(q, Lcode){
+    let t=String(q||"").replace(/[?？]+$/,'').trim();
+    if(!t) return '';
+    t = t.charAt(0).toUpperCase()+t.slice(1);
+    t = normalizeSpaces(t);
+    if(Lcode==="es"){ if(!t.startsWith('¿')) t='¿'+t; if(!t.endsWith('?')) t=t+'?'; return t; }
+    if(Lcode==="fr"){ if(!t.endsWith('?')) t=t+' ?'; t=t.replace(/\s*\?$/,' \u202F?'); return t; }
+    if(!/\?$/.test(t)) t=t+'?';
+    return t;
+  }
 
-  /* ========= COLLAPSIBLES ========= */
-  $('hintsHeader').onclick=()=>{ $('hintsCard').classList.toggle('collapsed'); };
-  $('savedHeader').onclick=()=>{ $('savedCard').classList.toggle('collapsed'); };
-  $('histHeader').onclick=()=>{ $('histCard').classList.toggle('collapsed'); };
+  /* ===== BOOST (giornaliero e trigger idee) ===== */
+  function getBoost(){ try{ return (LS.getItem('whatif_boost')||'').trim(); }catch{ return '' } }
+  function setBoost(txt){
+    LS.setItem('whatif_boost', String(txt||''));
+    LS.setItem('whatif_boost_saved_date', todayISO());
+    const L=I18N[lang]||I18N.en;
+    const msg=$('boostSavedMsg'); if(msg){ msg.textContent=L.boostSaved; setTimeout(()=> msg.textContent='',1600); }
+  }
+  function initBoostVisibility(){
+    const last=LS.getItem('whatif_boost_saved_date');
+    const card=$('boostCard');
+    card.style.display = (last===todayISO()) ? 'none' : 'block';
+    const bi=$('boostInput'); if(bi) bi.value=getBoost();
+  }
   $('boostHeader').onclick=()=>{ $('boostCard').classList.toggle('collapsed'); };
-
-  /* ========= BOOST ========= */
-  function getBoost(){ return (LS.getItem(BOOST_KEY)||'').trim(); }
-  function setBoost(txt){ LS.setItem(BOOST_KEY, String(txt||'')); LS.setItem(BOOST_DATE_KEY, todayISO()); }
-  function boostLockedToday(){ return (LS.getItem(BOOST_DATE_KEY)||'')===todayISO(); }
-  function updateBoostLockUI(){
-    const L = I18N[lang]||I18N.en;
-    const lock = boostLockedToday();
-    const msg = lock ? L.boostLocked : '';
-    $('boostLockMsg').textContent = msg;
-    $('boostInput').disabled = lock;
-    $('boostSaveBtn').disabled = lock;
-    $('boostClearBtn').disabled = lock;
-    if(lock){ $('boostCard').classList.add('collapsed'); }
-  }
-
-  $('boostClearBtn').onclick=()=>{ if(boostLockedToday()) return; $('boostInput').value=''; setBoost(''); };
   $('boostSaveBtn').onclick=async ()=>{
-    if(boostLockedToday()) return;
-    const raw = $('boostInput').value||'';
-    setBoost(raw);
-    setLoader(true);
-    const ok = await generateIdeasWithAI({force:true}); // forza chiamata AI oggi
-    setLoader(false);
-    $('boostSavedMsg').textContent=(I18N[lang]||I18N.en).boostSaved;
-    setTimeout(()=>$('boostSavedMsg').textContent='',1600);
-    updateBoostLockUI();
-    renderHintsFromCache();
-    window.scrollTo({top:0,behavior:'smooth'});
+    setBoost(($('boostInput')||{}).value||'');
+    await refreshIdeasFromServer(true); // genera batch e aggiorna spunti
+    $('boostCard').style.display='none'; // chiudi fino a domani
+  };
+  $('boostClearBtn').onclick=async ()=>{
+    const i=$('boostInput'); if(i) i.value='';
+    setBoost('');
+    await refreshIdeasFromServer(true);
+    $('boostCard').classList.remove('collapsed');
   };
 
-  /* ========= AI IDEAS (1 chiamata al giorno) ========= */
-  async function generateIdeasWithAI({force=false}={}){
+  /* ===== IDEAS CACHE ===== */
+  function ideasCacheKey(){ return 'ideas_'+todayISO()+'_'+lang+'_'+prefs.periodo; }
+  function saveIdeasToCache(payload){
+    writeJSON(ideasCacheKey(), payload);
+  }
+  function loadIdeasFromCache(){
+    return readJSON(ideasCacheKey(), null);
+  }
+
+  /* ===== RENDER SPUNTI ===== */
+  function renderHintsFromIdeas(ideas, forceOpen=false){
+    const wrap=$('hintsChips'); if(!wrap) return;
+    wrap.innerHTML='';
     const L = I18N[lang]||I18N.en;
-    const meta = readJSON(CACHE_META_KEY, {date:'',lang:'',stile:'',periodo:'',boostHash:''});
-    const boost = getBoost();
-    const need = force || meta.date!==todayISO() || meta.lang!==lang || meta.stile!==prefs.stile || meta.periodo!==prefs.periodo || meta.boostHash!==hashString(boost);
 
-    if(!need) return true; // già fresco
+    const personalized = (ideas?.personalized||[]);
+    const generic = (ideas?.generic||[]);
+    const absurd = (ideas?.absurd||[]);
 
-    // limita crediti (solo per utenti non admin)
-    if(!userIsAdmin()){
-      const c=readJSON(CREDITS_KEY,{date:todayISO(),used:0});
-      const cap=capForUser();
-      if((c.used||0)>=cap){ alert(L.outOfCredits); return false; }
-      c.used=(c.used||0)+1; writeJSON(CREDITS_KEY,c); renderCreditsBadge();
-    }
+    const mix = [
+      ...personalized.slice(0,6),
+      ...generic.slice(0,4),
+      ...absurd.slice(0,2),
+    ].filter(Boolean).slice(0,8);
 
-    // chiamata
+    const fallback = STATIC_HINTS[lang]||STATIC_HINTS.it;
+    const list = mix.length? mix : fallback;
+
+    list.forEach(txt=>{
+      const b=document.createElement('button');
+      b.className='chip';
+      b.type='button';
+      b.textContent=polishQuestion(txt, lang);
+      b.onclick=()=>{ $('qInput').value=polishQuestion(txt,lang); window.scrollTo({top:0,behavior:'smooth'}); };
+      wrap.appendChild(b);
+    });
+
+    $('hintsNote').textContent = L.hintsNote;
+    const hc=$('hintsCard');
+    if(forceOpen){ hc.classList.remove('collapsed'); }
+  }
+
+  /* ===== FETCH IDEAS dal server (una volta al giorno) ===== */
+  async function refreshIdeasFromServer(forceOpen=false){
     try{
-      const payload = {
-        lang, style: prefs.stile, period: prefs.periodo,
-        boost, count: IDEAS_PER_DAY, mix: MIX_TARGET
+      const body={
+        lang,
+        periodo: prefs.periodo, // 'future' | 'past'
+        style: prefs.stile,     // 'whatif' | 'wtf'
+        boost: getBoost(),
+        counts:{ personalized:14, generic:7, absurd:3 }
       };
-      const res = await fetch(AI_ENDPOINT, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
-      });
-      if(!res.ok) throw new Error('Bad status '+res.status);
+      const res = await fetch('/api/ideas',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      if(!res.ok) throw new Error('Bad response');
       const data = await res.json();
-      const ideas = Array.isArray(data?.ideas)? data.ideas : [];
-
-      const cleaned = postProcessIdeas(ideas, lang);
-      if(!cleaned.length) throw new Error('Empty ideas');
-
-      writeJSON(CACHE_KEY, cleaned);
-      writeJSON(CACHE_META_KEY, {date:todayISO(),lang,stile:prefs.stile,periodo:prefs.periodo,boostHash:hashString(boost)});
-      return true;
+      saveIdeasToCache(data);
+      renderHintsFromIdeas(data, forceOpen);
     }catch(e){
-      // fallback locale (non consuma altri crediti)
-      const local = fallbackLocalIdeas(lang, prefs.periodo, prefs.stile, getBoost(), IDEAS_PER_DAY);
-      writeJSON(CACHE_KEY, local);
-      writeJSON(CACHE_META_KEY, {date:todayISO(),lang,stile:prefs.stile,periodo:prefs.periodo,boostHash:hashString(boost)});
-      return local.length>0;
+      // fallback: usa eventuale cache di oggi, altrimenti statiche
+      const cached = loadIdeasFromCache();
+      if(cached){ renderHintsFromIdeas(cached, forceOpen); }
+      else{ renderHintsFromIdeas(null, forceOpen); }
     }
   }
 
-  function postProcessIdeas(rawIdeas, Lcode){
-    // normalizza struttura, deduplica, polish grammaticale, filtra non valide
-    const seen=new Set(), out=[];
-    (rawIdeas||[]).forEach(it=>{
-      const text = polishQuestion(String(it?.text||'').trim(), Lcode);
-      const kind = (it?.kind==='absurd'?'absurd': it?.kind==='personalized'?'personalized':'generic');
-      if(!text || !seemsValidQuestion(text)) return;
-      if(seen.has(text)) return;
-      seen.add(text); out.push({text,kind});
-    });
-    // garantisci mix minimo se possibile (riordina)
-    const P = out.filter(x=>x.kind==='personalized');
-    const G = out.filter(x=>x.kind==='generic');
-    const A = out.filter(x=>x.kind==='absurd');
-    const pick=(arr,n)=>arr.slice(0,n);
-    const merged=[...pick(P,MIX_TARGET.personalized),...pick(G,MIX_TARGET.generic),...pick(A,MIX_TARGET.absurd)];
-    // se mancano elementi, completa con il resto
-    const rest = out.filter(x=>!merged.includes(x));
-    while(merged.length<IDEAS_PER_DAY && rest.length) merged.push(rest.shift());
-    return merged.slice(0,IDEAS_PER_DAY);
+  async function refreshIdeasIfNeeded(forceOpen=false){
+    const cached = loadIdeasFromCache();
+    if(cached){ renderHintsFromIdeas(cached, forceOpen); }
+    else{ await refreshIdeasFromServer(forceOpen); }
   }
 
-  function fallbackLocalIdeas(Lcode, periodo, stile, boost, count){
-    // mini generatore locale pulito (personalizzate dal boost + generiche + assurde)
-    const gen = baseGenerics(Lcode, periodo).map(t=>({text:polishQuestion(t,Lcode),kind:'generic'}));
-    const abs = baseAbsurd(Lcode, periodo).map(t=>({text:polishQuestion(t,Lcode),kind:'absurd'}));
-    const pers = topicsFromBoost(boost).map(t => makeTopicSentence(Lcode, periodo, t))
-                  .map(t=>polishQuestion(t,Lcode)).filter(seemsValidQuestion)
-                  .map(t=>({text:t,kind:'personalized'}));
-    const sel=[];
-    sel.push(...pers.slice(0,MIX_TARGET.personalized));
-    sel.push(...gen.slice(0,MIX_TARGET.generic));
-    sel.push(...abs.slice(0,MIX_TARGET.absurd));
-    const pool=[...pers.slice(sel.filter(x=>x.kind==='personalized').length),
-                ...gen.slice(sel.filter(x=>x.kind==='generic').length),
-                ...abs.slice(sel.filter(x=>x.kind==='absurd').length)];
-    while(sel.length<count && pool.length){ sel.push(pool.shift()); }
-    return dedupIdeas(sel).slice(0,count);
-  }
-  function dedupIdeas(arr){
-    const seen=new Set(); const out=[];
-    for(const it of arr){ if(!it?.text) continue; if(seen.has(it.text)) continue; seen.add(it.text); out.push(it); }
-    return out;
-  }
-
-  /* ========= LOCAL POOLS & BOOST TOPICS ========= */
-  const BASE = {
-    it:{genFuture:["E se cambiassi lavoro quest’anno?","E se impostassi davvero un piano per l’inglese B2?","E se provassi la settimana corta per un mese?","E se delegassi una cosa che ti pesa ogni settimana?","E se organizzassi un esperimento di 7 giorni su un’abitudine che rimandi?"],
-        genPast:["E se avessi cambiato lavoro nel 2022?","E se l’anno scorso avessi studiato inglese con costanza?","E se avessi imparato prima a dire qualche “no” utile?"],
-        absurdF:["E se domani il frigorifero ti suggerisse il menù della vita?","E se aprissi una scuola per gatti allergici alle riunioni?","E se diventassi l’allenatore non ufficiale del condominio?"],
-        absurdP:["E se l’estate scorsa avessi fondato la startup dell’aria in lattina?"]},
-    en:{genFuture:["What if you changed jobs this year?","What if you actually planned English B2?","What if you tried a 4-day workweek for a month?","What if you delegated one draining task each week?","What if you ran a 7-day experiment on a habit you keep delaying?"],
-        genPast:["What if you had changed jobs in 2022?","What if you had studied English consistently last year?"],
-        absurdF:["What if tomorrow your fridge pitched you a life menu?","What if you opened a school for cats who hate meetings?"],
-        absurdP:["What if last summer you had sold canned mountain air?"]},
-    es:{genFuture:["¿Y si cambias de trabajo este año?","¿Y si planearas de verdad un B2 de inglés?","¿Y si probaras una semana laboral de 4 días durante un mes?","¿Y si delegaras cada semana una tarea que te drena?"],
-        genPast:["¿Y si hubieras cambiado de trabajo en 2022?","¿Y si hubieras estudiado inglés con constancia el año pasado?"],
-        absurdF:["¿Y si mañana tu nevera te diera el menú de tu vida?"],
-        absurdP:["¿Y si el verano pasado hubieras vendido aire enlatado de montaña?"]},
-    fr:{genFuture:["Et si tu changeais de travail cette année ?","Et si tu préparais vraiment un niveau B2 d’anglais ?","Et si tu testais la semaine de 4 jours pendant un mois ?","Et si tu déléguais chaque semaine une tâche qui te vide ?"],
-        genPast:["Et si tu avais changé de travail en 2022 ?","Et si tu avais travaillé ton anglais l’an dernier ?"],
-        absurdF:["Et si demain ton frigo te proposait le menu de ta vie ?"],
-        absurdP:["Et si l’été dernier tu avais vendu de l’air de montagne en boîte ?"]},
-    de:{genFuture:["Was, wenn du dieses Jahr den Job wechselst?","Was, wenn du wirklich B2-Englisch planst?","Was, wenn du eine 4-Tage-Woche für einen Monat testest?","Was, wenn du jede Woche eine zehrende Aufgabe delegierst?"],
-        genPast:["Was, wenn du 2022 den Job gewechselt hättest?","Was, wenn du letztes Jahr konsequent Englisch gelernt hättest?"],
-        absurdF:["Was, wenn dir morgen dein Kühlschrank den Lebens-Speiseplan vorschlägt?"],
-        absurdP:["Was, wenn du letzten Sommer Dosen-Bergluft verkauft hättest?"]}
-  };
-  function baseGenerics(Lcode, periodo){
-    const P=BASE[Lcode]||BASE.it;
-    const arr = periodo==='past' ? (P.genPast||P.genFuture) : (P.genFuture||[]);
-    return arr.slice();
-  }
-  function baseAbsurd(Lcode, periodo){
-    const P=BASE[Lcode]||BASE.it;
-    const arr = periodo==='past' ? (P.absurdP||P.absurdF) : (P.absurdF||[]);
-    return arr.slice();
-  }
-
-  // topics dal Boost
-  function sanitizeBoost(raw){
-    let t = (raw||'').toString().normalize('NFKC')
-      .replace(UNICODE_OK?/[^\p{L}\p{N}\s,'’.:-]/gu:/[^A-Za-z0-9\s,'’.:-]/g,' ')
-      .replace(/[\u200B-\u200D\uFEFF]/g,' ')
-      .replace(/\s+/g,' ').trim().toLowerCase();
-    const stop = new Set(['mi','mia','mio','mie','miei','tuo','tua','tuoi','tue','suo','sua','suoi','sue','nostro','nostra','vostro','vostra','loro','io','tu','noi','voi','il','lo','la','i','gli','le','un','una','uno','di','a','da','in','con','su','per','tra','fra','che','del','della','dei','delle','degli','al','alla','allo','alle','my','your','his','her','its','our','their','the','a','an','and','or','to','of','for','with','on','in','at','by','mi','mis','tu','tus','su','sus','el','la','los','las','y','o','de','del','para','con','en','al','a','mon','ma','mes','ton','ta','tes','son','sa','ses','le','les','des','de','du','et','ou','pour','avec','dans','en','au','aux','mein','meine','dein','deine','sein','seine','ihr','ihre','der','die','das','ein','eine','und','oder','für','mit','in','auf','am','im','etc','ok']);
-    const toks = t.split(/[\s,;:.-]+/).filter(w => w && !stop.has(w) && !/^\d+$/.test(w) && (UNICODE_OK?/^[\p{L}\p{N}’']+$/u.test(w):/^[A-Za-z0-9'’]+$/.test(w)));
-    return toks;
-  }
-  function topicsFromTokens(tokens){
-    const out=[];
-    for(let n of [3,2,1]){
-      for(let i=0;i<=tokens.length-n;i++){
-        const phrase=tokens.slice(i,i+n).join(' ');
-        if(phrase.length<3) continue;
-        out.push(phrase);
-      }
-      if(out.length>=12) break;
-    }
-    return Array.from(new Set(out)).slice(0,12);
-  }
-  function topicsFromBoost(txt){ return topicsFromTokens(sanitizeBoost(txt)); }
-
-  function makeTopicSentence(Lcode, periodo, tp){
-    const it = (Lcode==='it');
-    const isVerbIT = /[aà]re$|ere$|ire$/i.test(tp);
-    if(it){
-      return (periodo==='past')
-        ? (isVerbIT?`E se avessi iniziato a ${tp} l’estate scorsa`:`E se avessi fatto un esperimento su ${tp} l’estate scorsa`)
-        : (isVerbIT?`E se iniziassi a ${tp} per 7 giorni`:`E se esplorassi ${tp} con un esperimento di 7 giorni`);
-    }
-    if(Lcode==='es'){ return (periodo==='past')?`¿Y si hubieras probado ${tp} con un experimento de 7 días el verano pasado`:`¿Y si pruebas ${tp} con un experimento de 7 días`; }
-    if(Lcode==='fr'){ return (periodo==='past')?`Et si tu avais testé ${tp} avec une expérience de 7 jours l’été dernier`:`Et si tu testais ${tp} avec une expérience de 7 jours`; }
-    if(Lcode==='de'){ return (periodo==='past')?`Was, wenn du letzten Sommer ${tp} in einem 7-Tage-Experiment ausprobiert hättest`:`Was, wenn du ${tp} in einem 7-Tage-Experiment testest`; }
-    return (periodo==='past')?`What if you had run a 7-day experiment on ${tp} last summer`:`What if you tried a 7-day experiment on ${tp}`;
-  }
-
-  /* ========= HINTS RENDER ========= */
-  function renderHintsFromCache(){
-    const L = I18N[lang]||I18N.en;
-    const chips=$('hintsChips'); chips.innerHTML='';
-    const ideas = readJSON(CACHE_KEY,[]);
-    if(!ideas.length){
-      const p=document.createElement('div'); p.className='small'; p.textContent=L.noIdeas;
-      chips.appendChild(p);
-      $('hintsCount').textContent='(—)';
-      return;
-    }
-    // Scegli 8 suggerimenti del giorno (seed per data)
-    const day=todayISO(); let s=[...day].reduce((a,c)=>a+c.charCodeAt(0),0);
-    function rnd(){ s=(s*9301+49297)%233280; return s/233280; }
-    const idx=ideas.map((_,i)=>i);
-    for(let i=idx.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [idx[i],idx[j]]=[idx[j],idx[i]]; }
-    const pick=idx.slice(0,Math.min(8,ideas.length)).map(i=>ideas[i]);
-
-    pick.forEach(it=>{
-      const b=document.createElement('button'); b.className='chip'; b.type='button'; b.textContent=it.text;
-      b.onclick=()=>{ $('qInput').value = it.text; $('qInput').focus(); window.scrollTo({top:0,behavior:'smooth'}); };
-      chips.appendChild(b);
-    });
-    $('hintsCount').textContent = '('+ (I18N[lang]?.count||'{n} hints').replace('{n}', ideas.length) +')';
-    $('hintsCard').classList.remove('collapsed');
-  }
-
-  /* ========= SAVED & HISTORY ========= */
-  function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
-  function renderSaved(){
-    const L=I18N[lang]||I18N.en;
-    const box=$('nextList'); box.innerHTML='';
-    const arr=readJSON(NEXT_KEY,[]);
-    if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=L.noneSaved; box.appendChild(p); return; }
-    arr.slice(0,12).forEach(item=>{
-      const row=document.createElement('div'); row.className='story';
-      const left=document.createElement('div');
-      left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.q||'—'}</div><div class="meta">${fmtDate(item.ts)}</div>`;
-      const right=document.createElement('div'); right.className='row';
-      const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.type='button'; useBtn.textContent=L.use;
-      useBtn.onclick=()=>{ $('qInput').value=item.q||''; window.scrollTo({top:0,behavior:'smooth'}); };
-      const play=document.createElement('button'); play.className='play'; play.type='button'; play.textContent='▶';
-      play.onclick=()=>{ LS.setItem('domanda', item.q||''); writeJSON('whatif_request',{ domanda:item.q||'', stile:prefs.stile, lang, extra:'', micro:{}, fantasy_mode:false, periodo:prefs.periodo, boost:getBoost() }); safeGo('fifth.html'); };
-      right.appendChild(useBtn); right.appendChild(play); row.appendChild(left); row.appendChild(right); box.appendChild(row);
-    });
-  }
-  function renderHistory(){
-    const L=I18N[lang]||I18N.en;
-    const box=$('storyList'); box.innerHTML='';
-    const arr=readJSON(HISTORY_KEY,[]);
-    if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=L.noneHist; box.appendChild(p); return; }
-    arr.slice(-12).reverse().forEach(item=>{
-      const row=document.createElement('div'); row.className='story';
-      const left=document.createElement('div');
-      left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.domanda||'—'}</div><div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
-      const play=document.createElement('button'); play.className='play'; play.type='button'; play.textContent='▶';
-      play.onclick=()=>{ writeJSON('replay_story', { domanda:item.domanda, answer:item.risposta||item.answer||'', stile:item.stile||'whatif' }); safeGo('fifth.html?view=replay'); };
-      row.appendChild(left); row.appendChild(play); box.appendChild(row);
-    });
-  }
-  $('clearSavedBtn').onclick=()=>{ writeJSON(NEXT_KEY,[]); renderSaved(); };
-  $('clearHistoryBtn').onclick=()=>{ writeJSON(HISTORY_KEY,[]); renderHistory(); };
-
-  /* ========= SUBMIT ========= */
+  /* ===== SUBMIT ===== */
   function trySubmit(){
-    const domanda=(qInput.value||'').trim();
-    if(!domanda){ qInput.focus(); return; }
-    const L=I18N[lang]||I18N.en;
-    const c=readJSON(CREDITS_KEY,{date:todayISO(),used:0});
+    const domanda=( $('qInput').value || '' ).trim();
+    if(!domanda){ $('qInput').focus(); return; }
+    // badge crediti locale
+    const c=readJSON('whatif_credits',{date:todayISO(),used:0});
     if(!userIsAdmin()){
       const cap=capForUser();
-      if((c.used||0)>=cap){ alert(L.outOfCredits); return; }
-      c.used=(c.used||0)+1; writeJSON(CREDITS_KEY,c); renderCreditsBadge();
+      if((c.used||0)>=cap){
+        alert(lang==='it'?'Hai finito i crediti di oggi.':lang==='es'?'Has usado los créditos de hoy.':lang==='fr'?'Crédits du jour épuisés.':lang==='de'?'Tagescredits verbraucht.':'You’ve used today’s credits.');
+        return;
+      }
+      c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderCreditsBadge();
     }
     const domandaClean = polishQuestion(domanda, lang);
-    qInput.value = domandaClean;
+    $('qInput').value = domandaClean;
     LS.setItem('domanda',domandaClean);
-    writeJSON('whatif_request',{ domanda:domandaClean, stile:prefs.stile, lang, extra:'', micro:{}, fantasy_mode:false, periodo:prefs.periodo, boost:getBoost() });
-    safeGo('fifth.html');
+    const req={ domanda:domandaClean, stile:prefs.stile, lang, extra:'', micro:{}, fantasy_mode:false, periodo:prefs.periodo, boost:getBoost() };
+    writeJSON('whatif_request',req);
+    // la Quinta pagina leggerà whatif_request e 'domanda'
   }
-  goBtn.onclick=trySubmit;
-  clearBtn.onclick=()=>{ qInput.value=''; qInput.focus(); };
-  qInput.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); } });
+  $('goBtn').onclick=trySubmit;
+  $('clearBtn').onclick=()=>{ $('qInput').value=''; $('qInput').focus(); };
+  $('qInput').addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); } });
 
-  /* ========= “SORPRENDIMI” ========= */
-  surpriseBtn.onclick=async ()=>{
-    // se cache vuota o scaduta (tema/lingua/boost cambiati), prova a rigenerare silently (non consuma crediti se la cache è di oggi e solo parametri secondari)
-    const meta = readJSON(CACHE_META_KEY, {date:'',lang:'',stile:'',periodo:'',boostHash:''});
-    const boost = getBoost();
-    const need = meta.date!==todayISO() || meta.lang!==lang || meta.stile!==prefs.stile || meta.periodo!==prefs.periodo || meta.boostHash!==hashString(boost);
-    if(need && boost){
-      setLoader(true);
-      await generateIdeasWithAI({force:true}); // chiamata 1/giorno
-      setLoader(false);
-    }
-    const ideas = readJSON(CACHE_KEY,[]);
-    if(!ideas.length){
-      // niente boost o API non disponibile → fallback locale
-      const local = fallbackLocalIdeas(lang, prefs.periodo, prefs.stile, boost, IDEAS_PER_DAY);
-      writeJSON(CACHE_KEY, local);
-    }
-    // pesca un’idea casuale coerente con lo stile
-    const finalIdeas = readJSON(CACHE_KEY,[]);
-    const pool = (prefs.stile==='wtf') ? finalIdeas.filter(x=>x.kind==='absurd').concat(finalIdeas) : finalIdeas.filter(x=>x.kind!=='absurd').concat(finalIdeas);
-    if(!pool.length) return;
-    const pick = pool[Math.floor(Math.random()*pool.length)];
-    $('qInput').value = pick.text;
-    $('qInput').animate([{outline:'2px solid transparent'},{outline:'2px solid var(--accent2)'},{outline:'2px solid transparent'}],{duration:900});
-    window.scrollTo({top:0,behavior:'smooth'});
-  };
-
-  /* ========= INIT ========= */
+  /* ===== INIT ===== */
   try{
-    try{ const p = JSON.parse(LS.getItem(PREFS_KEY)||'{}'); document.documentElement.setAttribute('data-theme', p.stile==='wtf'?'wtf':'whatif'); }catch{}
+    try{ const p = JSON.parse(LS.getItem('whatif_prefs')||'{}'); document.documentElement.setAttribute('data-theme', p.stile==='wtf'?'wtf':'whatif'); }catch{}
+    // inizializza testi + badge
     applyTexts();
-    // se oggi non abbiamo cache ma esiste un boost → genera subito senza obbligare l’utente a cliccare
-    if(getBoost() && readJSON(CACHE_META_KEY,{date:''}).date!==todayISO()){
-      setLoader(true);
-      await generateIdeasWithAI({force:true});
-      setLoader(false);
-      renderHintsFromCache();
-    }
+    // mostra/nascondi boost (giornaliero)
+    initBoostVisibility();
+    // carica/rigenera idee
+    await refreshIdeasIfNeeded(false);
+    // liste salvate/storie (se le usi)
+    (function renderNext(){
+      const L=I18N[lang]||I18N.en;
+      const box=$('nextList'); box.innerHTML='';
+      const arr=readJSON('next_prompts',[]);
+      if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=(lang==='it'?'— Nessuna domanda salvata.':lang==='es'?'— No hay preguntas guardadas.':lang==='fr'?'— Aucune question enregistrée.':lang==='de'?'— Keine gespeicherten Fragen.':'— No saved questions.'); box.appendChild(p); return; }
+      arr.slice(0,12).forEach(item=>{
+        const row=document.createElement('div'); row.className='story';
+        const left=document.createElement('div');
+        const d=new Date(item.ts); const when=d.toLocaleString(document.documentElement.lang||'it-IT',{hour12:false});
+        left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.q||'—'}</div><div class="meta">${when}</div>`;
+        const right=document.createElement('div'); right.className='row';
+        const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.type='button'; useBtn.textContent=L.sUse;
+        useBtn.onclick=()=>{ $('qInput').value=item.q||''; window.scrollTo({top:0,behavior:'smooth'}); };
+        const play=document.createElement('button'); play.className='play'; play.type='button'; play.textContent='▶';
+        play.onclick=()=>{ LS.setItem('domanda', item.q||''); writeJSON('whatif_request',{ domanda:item.q||'', stile:prefs.stile, lang, extra:'', micro:{}, fantasy_mode:false, periodo:prefs.periodo, boost:getBoost() }); };
+        right.appendChild(useBtn); right.appendChild(play); row.appendChild(left); row.appendChild(right); box.appendChild(row);
+      });
+    })();
+    (function wireLists(){
+      $('savedHeader').onclick=()=>{ $('savedCard').classList.toggle('collapsed'); };
+      $('histHeader').onclick=()=>{ $('histCard').classList.toggle('collapsed'); };
+      $('clearSavedBtn').onclick=()=>{ writeJSON('next_prompts',[]); location.reload(); };
+      $('clearHistoryBtn').onclick=()=>{ writeJSON('cronologia',[]); location.reload(); };
+      $('hintsHeader').onclick=()=>{ $('hintsCard').classList.toggle('collapsed'); };
+    })();
   }catch(e){ console.error('Init error:', e); }
 })();
 </script>
