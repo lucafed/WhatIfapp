@@ -8,11 +8,12 @@
 <style>
 :root{ --bg:#0C0F14; --bg2:#0E1724; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA; --accent:#1C57A0; --accent2:#FFEC01; --ink:#001f26; --chip:#0f1820; --line:#1b2a34; }
 html[data-theme="whatif"]{ --bg:#0B1018; --bg2:#0E1724; --card:#141C22; --fg:#F4F7FB; --muted:#A7B3C2; --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A; --chip:#0f1820; --line:#1b2a34; }
-html[data-theme="wtf"]{ --bg:#0B0B0C; --bg2:#101414; --card:#111713; --fg:#EEF5F0; --muted:#A6B6AD; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; --chip:#0F1714; --line:#21322A; }  *{box-sizing:border-box}
+html[data-theme="wtf"]{ --bg:#0B0B0C; --bg2:#101414; --card:#111713; --fg:#EEF5F0; --muted:#A6B6AD; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; --chip:#0F1714; --line:#21322A; }
+*{box-sizing:border-box}
 html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 @media (prefers-reduced-motion:no-preference){
-body{animation:bgShift 18s ease-in-out infinite alternate}
-@keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
+  body{animation:bgShift 18s ease-in-out infinite alternate}
+  @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
 }
 
 /* Topbar */
@@ -51,7 +52,7 @@ h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
 /* Footer */
 footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 
-/* Surprise Dock (NEW) */
+/* Surprise Dock */
 .surprise-dock{position:fixed;inset:0;z-index:4;display:none}
 .surprise-dock.open{display:block}
 .surprise-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px)}
@@ -140,7 +141,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         </div>
       </div>
 
-      <!-- MICRO-DOMANDE -->
+      <!-- MICRO-DOMANDE (SOLO 3, DIVERSE OGNI GIORNO) -->
       <div class="first-session" id="firstSessionBanner"></div>
       <div class="card center collapsed" id="microCard">
         <div class="row toggle" id="microHead" style="justify-content:space-between">
@@ -148,28 +149,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
           <div class="small" id="microHint">(una volta al giorno)</div>
         </div>
         <div class="body" id="microBody" style="margin-top:10px">
-          <div id="qMood" class="qblock">
-            <div class="qtitle"><span id="moodIcon">🙂</span><span id="moodTitle">Oggi come ti senti?</span></div>
-            <div class="optset" id="moodOpts"></div>
-          </div>
-          <div id="qAnchor" class="qblock">
-            <div class="qtitle"><span id="anchorIcon">🧭</span><span id="anchorTitle">Cosa ti tiene qui ultimamente?</span></div>
-            <div class="optset" id="anchorOpts"></div>
-          </div>
-          <div id="qDecide" class="qblock">
-            <div class="qtitle"><span id="decideIcon">⚙️</span><span id="decideTitle">Come decidi di solito?</span></div>
-            <div class="optset" id="decideOpts"></div>
-          </div>
-          <div id="qJung" class="qblock">
-            <div class="qtitle"><span id="jungIcon">🧠</span><span id="jungTitle">Tipo psicologico (Jung)</span></div>
-            <div class="optset" id="jungAttitude"></div>
-            <div class="optset" id="jungRational"></div>
-            <div class="optset" id="jungPerception"></div>
-          </div>
-          <div id="qZodiac" class="qblock">
-            <div class="qtitle"><span id="zodiacIcon">♈</span><span id="zodiacTitle">Segno o portafortuna (se vuoi)</span></div>
-            <div class="optset" id="zodiacOpts"></div>
-          </div>
+          <!-- Verrà popolato dinamicamente con 3 blocchi -->
           <div class="row" style="margin-top:6px">
             <button class="btn primary" id="saveMicroBtn" type="button">💾 Salva micro-profilo</button>
           </div>
@@ -210,7 +190,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     </div>
   </main>
 
-  <!-- Surprise Dock -->
+  <!-- Surprise Dock (presente ma il bottone riempie il campo) -->
   <div class="surprise-dock" id="surpriseDock" aria-hidden="true">
     <div class="surprise-backdrop" id="surpriseBackdrop"></div>
     <div class="surprise-panel" role="dialog" aria-modal="true" aria-labelledby="surpriseTitle">
@@ -242,20 +222,18 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   const $=id=>document.getElementById(id);
   function readJSON(k,def){ try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def} }
   function writeJSON(k,v){ LS.setItem(k, JSON.stringify(v)); }
-  function todayISO(){const d=new Date();return d.toISOString().slice(0,10);}  
+  function todayISO(){const d=new Date();return d.toISOString().slice(0,10);}
 
   let lang=(LS.getItem('lang')||'it').toLowerCase(); if(!SUPPORTED_LANGS.includes(lang)) lang="it";
   document.documentElement.lang=lang;
   let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
 
-  /* ===== I18N COMPLETO ===== */
+  /* ===== I18N ===== */
   const I18N={
     it:{title:"Imposta la tua domanda", yourq:"E se…", gen:"✨ Genera risposta", clear:"Svuota",
         surprise:"Sorprendimi",
         microT:"▼ Micro-domande di oggi", microHint:"(una volta al giorno)",
         microSaveBtn:"💾 Salva micro-profilo", microSaved:"Micro-profilo salvato per oggi.", microOnce:"Già salvato oggi.",
-        qMood:"Oggi come ti senti?", qAnchor:"Cosa ti tiene qui ultimamente?", qDecide:"Come decidi di solito?",
-        qJung:"Tipo psicologico (Jung)", qZodiac:"Segno o portafortuna (se vuoi)",
         saved:"▶ Domande salvate", stories:"▶ Cronologia", use:"Usa", play:"▶",
         emptyNext:"— Nessuna domanda salvata.", emptyStories:"— Nessuna storia.",
         clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota",
@@ -278,8 +256,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         surprise:"Surprise me",
         microT:"▼ Today’s micro-questions", microHint:"(once per day)",
         microSaveBtn:"💾 Save micro-profile", microSaved:"Micro-profile saved for today.", microOnce:"Already saved today.",
-        qMood:"How do you feel today?", qAnchor:"What’s keeping you here lately?", qDecide:"How do you usually decide?",
-        qJung:"Psychological type (Jung)", qZodiac:"Zodiac or lucky habit (optional)",
         saved:"▶ Saved questions", stories:"▶ History", use:"Use", play:"▶",
         emptyNext:"— No saved questions.", emptyStories:"— No history.",
         clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear",
@@ -302,8 +278,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         surprise:"Sorpréndeme",
         microT:"▼ Micro-preguntas de hoy", microHint:"(una vez al día)",
         microSaveBtn:"💾 Guardar micro-perfil", microSaved:"Micro-perfil guardado para hoy.", microOnce:"Ya guardado hoy.",
-        qMood:"¿Cómo te sientes hoy?", qAnchor:"¿Qué te mantiene aquí últimamente?", qDecide:"¿Cómo sueles decidir?",
-        qJung:"Tipo psicológico (Jung)", qZodiac:"Signo o amuleto (opcional)",
         saved:"▶ Preguntas guardadas", stories:"▶ Historial", use:"Usar", play:"▶",
         emptyNext:"— No hay preguntas guardadas.", emptyStories:"— Sin historial.",
         clearSaved:"🗑️ Vaciar", clearHist:"🗑️ Vaciar",
@@ -326,8 +300,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         surprise:"Surprends-moi",
         microT:"▼ Micro-questions du jour", microHint:"(une fois par jour)",
         microSaveBtn:"💾 Enregistrer le micro-profil", microSaved:"Micro-profil enregistré pour aujourd’hui.", microOnce:"Déjà enregistré aujourd’hui.",
-        qMood:"Comment te sens-tu aujourd’hui ?", qAnchor:"Qu’est-ce qui te retient ici en ce moment ?", qDecide:"Comment décides-tu d’habitude ?",
-        qJung:"Type psychologique (Jung)", qZodiac:"Signe ou porte-bonheur (optionnel)",
         saved:"▶ Questions enregistrées", stories:"▶ Historique", use:"Utiliser", play:"▶",
         emptyNext:"— Aucune question enregistrée.", emptyStories:"— Aucun historique.",
         clearSaved:"🗑️ Vider", clearHist:"🗑️ Vider",
@@ -350,8 +322,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         surprise:"Überrasche mich",
         microT:"▼ Heutige Mikro-Fragen", microHint:"(einmal pro Tag)",
         microSaveBtn:"💾 Mikro-Profil speichern", microSaved:"Mikro-Profil für heute gespeichert.", microOnce:"Heute bereits gespeichert.",
-        qMood:"Wie fühlst du dich heute?", qAnchor:"Was hält dich derzeit hier?", qDecide:"Wie triffst du üblicherweise Entscheidungen?",
-        qJung:"Psychologischer Typ (Jung)", qZodiac:"Sternzeichen oder Glücksritual (optional)",
         saved:"▶ Gespeicherte Fragen", stories:"▶ Verlauf", use:"Verwenden", play:"▶",
         emptyNext:"— Keine gespeicherten Fragen.", emptyStories:"— Kein Verlauf.",
         clearSaved:"🗑️ Leeren", clearHist:"🗑️ Leeren",
@@ -427,7 +397,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 
     tipNote.textContent = I18N[lang].mixExpl;
 
-    renderBadges(); renderCreditsBadge(); renderMicroTexts(); renderHints(); initBoostVisibility();
+    renderBadges(); renderCreditsBadge(); renderHints(); initBoostVisibility();
+    renderMicro(); // re-render anche le micro (3 al giorno) quando cambi lingua
   }
 
   /* ===== Navigazione ===== */
@@ -478,19 +449,16 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   clearBtn.onclick=()=>{ qInput.value=''; qInput.focus(); };
   qInput.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); } });
 
-  /* ===== Surprise engine (uguale, ma il bottone riempie il campo) ===== */
+  /* ===== Surprise engine (bottone riempie il campo) ===== */
   const MIX_WEIGHTS = { personalized:60, generic:30, absurd:10 };
-
   function sampleOne(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
   function buildPersonalizedPool(L, periodo){
     const profile = readJSON('whatif_profile', {});
     const micro   = readJSON('micro_profile', {});
     const past = (periodo==='past');
-    const boost = getBoost();
-
-    const out = [];
-    const add = s => { if(s) out.push(String(s).replace(/\s+/g,' ').trim()); };
+    const addToOut = [];
+    const add = s => { if(s) addToOut.push(String(s).replace(/\s+/g,' ').trim()); };
 
     if (profile.role){
       add(past
@@ -549,23 +517,23 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       );
     }
 
-    extractTopics(getBoost()).forEach(tp=>{
-      out.push(
-        (periodo==='past')
-          ? (L==='it'?`E se avessi iniziato con ${tp} l’estate scorsa?`
-            :L==='en'?`What if you had started ${tp} last summer?`
-            :L==='es'?`¿Y si hubieras empezado ${tp} el verano pasado?`
-            :L==='fr'?`Et si tu avais commencé ${tp} l’été dernier ?`
-            :`Was, wenn du ${tp} letzten Sommer begonnen hättest?`)
-          : (L==='it'?`E se esplorassi ${tp} con un esperimento rapido di 7 giorni?`
-            :L==='en'?`What if you explored ${tp} with a 7-day quick experiment?`
-            :L==='es'?`¿Y si exploras ${tp} con un experimento de 7 días?`
-            :L==='fr'?`Et si tu explorais ${tp} avec une expérience de 7 jours ?`
-            :`Was, wenn du ${tp} mit einem 7-Tage-Experiment testest?`)
+    // Boost topics (semplici keyword)
+    (getBoostTopics()||[]).forEach(tp=>{
+      add((prefs.periodo==='past')
+        ? (L==='it'?`E se avessi iniziato con ${tp} l’estate scorsa?`
+          :L==='en'?`What if you had started ${tp} last summer?`
+          :L==='es'?`¿Y si hubieras empezado ${tp} el verano pasado?`
+          :L==='fr'?`Et si tu avais commencé ${tp} l’été dernier ?`
+          :`Was, wenn du ${tp} letzten Sommer begonnen hättest?`)
+        : (L==='it'?`E se esplorassi ${tp} con un esperimento rapido di 7 giorni?`
+          :L==='en'?`What if you explored ${tp} with a 7-day quick experiment?`
+          :L==='es'?`¿Y si exploras ${tp} con un experimento de 7 días?`
+          :L==='fr'?`Et si tu explorais ${tp} avec une expérience de 7 jours ?`
+          :`Was, wenn du ${tp} mit einem 7-Tage-Experiment testest?`)
       );
     });
 
-    return Array.from(new Set(out)).slice(0,48);
+    return Array.from(new Set(addToOut)).slice(0,48);
   }
 
   function buildGenericPoolByLang(L, periodo){
@@ -641,6 +609,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       .split(/\s+/).filter(w=>w.length>2 && !stop.has(w) && !/^\d+$/.test(w)).slice(0,10);
   }
   function getBoost(){ try{ return (LS.getItem('whatif_boost')||'').trim(); }catch{ return '' } }
+  function getBoostTopics(){ const t=getBoost(); if(!t) return []; return extractTopics(t); }
   function setBoost(txt){ LS.setItem('whatif_boost', String(txt||'')); LS.setItem('whatif_boost_saved_date', todayISO()); $('boostSavedMsg').textContent=I18N[lang].boostSaved; setTimeout(()=> $('boostSavedMsg').textContent='', 1600); initBoostVisibility(); }
   function initBoostVisibility(){ const last=LS.getItem('whatif_boost_saved_date'); $('boostCard').style.display=(last===todayISO())?'none':'block'; $('boostInput').value=getBoost(); }
   $('boostHeader').onclick=()=>{ $('boostCard').classList.toggle('collapsed'); };
@@ -685,13 +654,9 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   function weightedPick(weights){
     const r=Math.random()*100; let acc=0; for(const [k,v] of Object.entries(weights)){ acc+=v; if(r<acc) return k; } return 'generic';
   }
-
   function pickOneFromBuckets(L, periodo, buckets){
-    // buckets = {personalized:[...], generic:[...], absurd:[...]}
     let bucket = weightedPick(MIX_WEIGHTS);
-    if(!buckets[bucket]?.length){ // fallback
-      bucket = ['personalized','generic','absurd'].find(k=>buckets[k]?.length) || 'generic';
-    }
+    if(!buckets[bucket]?.length){ bucket = ['personalized','generic','absurd'].find(k=>buckets[k]?.length) || 'generic'; }
     if(!buckets[bucket]?.length) return null;
     const pool=buckets[bucket];
     let tries=0, text=null;
@@ -704,7 +669,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     if(!text) return null;
     return {text, kind:bucket};
   }
-
   function generateBatch(opts={absurdOnly:false}){
     const L=(LS.getItem('lang')||'it').toLowerCase();
     const periodo=(prefs.periodo==='past')?'past':'future';
@@ -712,10 +676,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     const gen  = buildGenericPoolByLang(L, periodo);
     const abs  = buildAbsurdPool(L, periodo);
     const buckets = opts.absurdOnly? {personalized:[], generic:[], absurd:abs}: {personalized:pers, generic:gen, absurd:abs};
-
     const grid=$('surpriseGrid'); grid.innerHTML='';
-
-    const want = opts.absurdOnly? 8 : 12; // 12 carte (7/3/2 approx via pesi)
+    const want = opts.absurdOnly? 8 : 12;
     const made=[]; const used=new Set();
     let guard=0;
     while(made.length<want && guard<200){
@@ -725,18 +687,12 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       if(used.has(pick.text)) continue;
       used.add(pick.text); made.push(pick);
     }
-
     if(!made.length){
       const emp=document.createElement('div'); emp.className='small'; emp.textContent=I18N[lang].sEmpty; grid.appendChild(emp); return;
     }
-
-    // scrivi history anti-doppione
     const hist=readHistory(); hist.push(...made.map(x=>x.text)); writeHistory(hist);
-
     made.forEach(({text,kind})=> grid.appendChild(makeCard(text,kind)));
   }
-
-  // ====== QUI: handler che RIEMPIE DIRETTAMENTE IL CAMPO ======
   function generateOneIntoField(){
     const L=(LS.getItem('lang')||'it').toLowerCase();
     const periodo=(prefs.periodo==='past')?'past':'future';
@@ -755,101 +711,147 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     window.scrollTo({top:0,behavior:'smooth'});
   }
 
-  // SURPRISE dock wiring (rimane, ma il bottone principale ora riempie il campo)
+  // Surprise wiring (bottone = riempie campo)
   const dock=$('surpriseDock');
   const refreshSurprise=$('refreshSurprise');
   const closeSurprise=$('closeSurprise');
   const surpriseDone=$('surpriseDone');
   const surpriseBackdrop=$('surpriseBackdrop');
   const absurdOnlyBtn=$('surpriseAbsurdOnly');
-
   function openDock(){ dock.classList.add('open'); generateBatch(); }
   function closeDock(){ dock.classList.remove('open'); }
-
-  // 🔴 CAMBIATO: prima apriva il dock, adesso riempie il campo
   surpriseBtn.onclick=generateOneIntoField;
-
   refreshSurprise.onclick=()=>generateBatch();
   absurdOnlyBtn.onclick=()=>generateBatch({absurdOnly:true});
   closeSurprise.onclick=closeDock; surpriseDone.onclick=closeDock; surpriseBackdrop.onclick=closeDock;
   window.addEventListener('keydown',e=>{ if(e.key==='Escape' && dock.classList.contains('open')) closeDock(); });
 
-  // ===== Prima sessione =====
-  const FS_KEY='first_session_seen';
-  const fs=readJSON(FS_KEY,{date:'',seen:false});
-  if(fs.date!==todayISO()){ $('firstSessionBanner').textContent=I18N[lang].firstSession; $('firstSessionBanner').style.display='block'; $('microCard').classList.remove('collapsed'); }
-  else { $('firstSessionBanner').style.display='none'; $('microCard').classList.add('collapsed'); }
-  $('microHead').onclick=()=>{ const saved=readJSON('micro_saved',{date:'',ok:false}); if(saved.date===todayISO()) return; $('microCard').classList.toggle('collapsed'); };
-  $('saveMicroBtn').onclick=()=>{ const cur=readJSON('micro_profile',{}); writeJSON('micro_profile',cur); writeJSON('micro_saved',{date:todayISO(),ok:true}); writeJSON('first_session_seen',{date:todayISO(),seen:true}); $('firstSessionBanner').style.display='none'; $('microCard').classList.add('collapsed'); $('microSavedMsg').textContent=I18N[lang].microSaved; };
+  /* ===== Micro-domande: SOLO 3, diverse ogni giorno ===== */
+  // Pool di possibili micro-domande per lingua (più di 3 per poter ruotare)
+  const MICRO_POOLS = {
+    it: [
+      { id:'mood',     icon:'🙂', title:'Oggi come ti senti?', opts:["Calmo/a","Carico/a","Appannato/a ma ok","Irrequieto/a","Leggero/a e loquace","Solido/a e in silenzio","Un po’ caotico/a"] },
+      { id:'anchor',   icon:'🧭', title:'Cosa ti tiene qui ultimamente?', opts:["Le persone che amo","Soldi & bollette","Una routine che funziona","Una promessa a me stesso/a","Paura di cambiare","Curiosità su cosa c’è qui","Salute prima di tutto"] },
+      { id:'decide',   icon:'⚙️', title:'Come decidi di solito?', opts:["Pancia prima","Lista pro/contro","Chiedo a un amico","Decide la scadenza","Testa o croce","Caffè + passeggiata","Ci dormo su"] },
+      { id:'energy',   icon:'🔋', title:'Energia questa settimana?', opts:["Bassa","Media","Alta","Rollercoaster"] },
+      { id:'focus',    icon:'🎯', title:'Cosa vuoi proteggere oggi?', opts:["Tempo","Concentrazione","Umore","Relazioni","Salute"] },
+      { id:'risk',     icon:'🎲', title:'Che rischio ti va di prendere?', opts:["Zero","Piccolo","Moderato","Grande (controllato)"] }
+    ],
+    en: [
+      { id:'mood',   icon:'🙂', title:'How do you feel today?', opts:["Calm","Charged","Foggy but fine","Restless","Light & chatty","Solid & quiet","Bit chaotic"] },
+      { id:'anchor', icon:'🧭', title:'What’s keeping you here lately?', opts:["People I love","Money & bills","A routine that works","A promise to myself","Fear of changing","Curiosity here","Health first"] },
+      { id:'decide', icon:'⚙️', title:'How do you usually decide?', opts:["Gut first","Pros/cons list","Ask a friend","Deadline decides","Flip a coin","Coffee + walk","Sleep on it"] },
+      { id:'energy', icon:'🔋', title:'Energy this week?', opts:["Low","Medium","High","Rollercoaster"] },
+      { id:'focus',  icon:'🎯', title:'What do you want to protect today?', opts:["Time","Focus","Mood","Relationships","Health"] },
+      { id:'risk',   icon:'🎲', title:'What risk do you want to take?', opts:["None","Small","Moderate","Big (managed)"] }
+    ],
+    es: [
+      { id:'mood',   icon:'🙂', title:'¿Cómo te sientes hoy?', opts:["Tranquilo/a","Cargado/a","Nublado pero bien","Inquieto/a","Ligero/a y hablador/a","Sólido/a y callado/a","Algo caótico/a"] },
+      { id:'anchor', icon:'🧭', title:'¿Qué te mantiene aquí últimamente?', opts:["Gente que amo","Dinero y facturas","Rutina que funciona","Promesa a mí","Miedo a cambiar","Curiosidad aquí","Salud primero"] },
+      { id:'decide', icon:'⚙️', title:'¿Cómo sueles decidir?', opts:["Tripas primero","Lista pros/contras","Pregunto a un amigo","Decide la fecha límite","Cara o cruz","Café + paseo","Dormirlo"] },
+      { id:'energy', icon:'🔋', title:'¿Energía esta semana?', opts:["Baja","Media","Alta","Montaña rusa"] },
+      { id:'focus',  icon:'🎯', title:'¿Qué quieres proteger hoy?', opts:["Tiempo","Enfoque","Ánimo","Relaciones","Salud"] },
+      { id:'risk',   icon:'🎲', title:'¿Qué riesgo quieres tomar?', opts:["Ninguno","Pequeño","Moderado","Grande (controlado)"] }
+    ],
+    fr: [
+      { id:'mood',   icon:'🙂', title:'Comment te sens-tu aujourd’hui ?', opts:["Calme","Chargé","Brumeux mais ok","Agité","Léger & bavard","Solide & discret","Un peu chaotique"] },
+      { id:'anchor', icon:'🧭', title:'Qu’est-ce qui te retient ici en ce moment ?', opts:["Les gens que j’aime","Argent & factures","Routine qui marche","Promesse à moi","Peur de changer","Curiosité ici","Santé d’abord"] },
+      { id:'decide', icon:'⚙️', title:'Comment décides-tu d’habitude ?', opts:["Instinct d’abord","Liste pour/contre","Demander à un ami","La deadline décide","Pile ou face","Café + marche","Une nuit dessus"] },
+      { id:'energy', icon:'🔋', title:'Énergie cette semaine ?', opts:["Basse","Moyenne","Haute","Montagnes russes"] },
+      { id:'focus',  icon:'🎯', title:'Que veux-tu protéger aujourd’hui ?', opts:["Temps","Focus","Humeur","Relations","Santé"] },
+      { id:'risk',   icon:'🎲', title:'Quel risque veux-tu prendre ?', opts:["Aucun","Petit","Modéré","Grand (maîtrisé)"] }
+    ],
+    de: [
+      { id:'mood',   icon:'🙂', title:'Wie fühlst du dich heute?', opts:["Ruhig","Geladen","Neblig aber ok","Unruhig","Leicht & gesprächig","Stabil & ruhig","Etwas chaotisch"] },
+      { id:'anchor', icon:'🧭', title:'Was hält dich derzeit hier?', opts:["Menschen, die ich liebe","Geld & Rechnungen","Routine, die funktioniert","Versprechen an mich","Angst vor Veränderung","Neugier hier","Gesundheit zuerst"] },
+      { id:'decide', icon:'⚙️', title:'Wie triffst du üblicherweise Entscheidungen?', opts:["Bauch zuerst","Pro/Contra-Liste","Freund fragen","Deadline entscheidet","Münzwurf","Kaffee + Spaziergang","Drüber schlafen"] },
+      { id:'energy', icon:'🔋', title:'Energie diese Woche?', opts:["Niedrig","Mittel","Hoch","Achterbahn"] },
+      { id:'focus',  icon:'🎯', title:'Was willst du heute schützen?', opts:["Zeit","Fokus","Stimmung","Beziehungen","Gesundheit"] },
+      { id:'risk',   icon:'🎲', title:'Welches Risiko willst du eingehen?', opts:["Keins","Klein","Mittel","Groß (gesteuert)"] }
+    ]
+  };
 
-  /* ===== Micro-domande ===== */
-  function renderOptions(containerId, options, key){
-    const wrap=$(containerId); if(!wrap) return; wrap.innerHTML='';
+  // RNG deterministico basato sulla data => cambia ogni giorno, ma è stabile nello stesso giorno
+  function seededRand(seed){ // seed: string (YYYY-MM-DD)
+    let s=[...seed].reduce((a,c)=>a+c.charCodeAt(0),0) || 1;
+    return function(){ s=(s*1664525+1013904223)>>>0; return (s&0xffffff)/0x1000000; };
+  }
+
+  function pickDailyMicro(langCode){
+    const pool = MICRO_POOLS[langCode] || MICRO_POOLS.it;
+    const rand = seededRand(todayISO());
+    const indices = pool.map((_,i)=>i);
+    // Fisher-Yates con RNG seeded
+    for(let i=indices.length-1;i>0;i--){
+      const j=Math.floor(rand()*(i+1));
+      [indices[i],indices[j]]=[indices[j],indices[i]];
+    }
+    // Prendi le prime 3 diverse
+    return [pool[indices[0]], pool[indices[1]], pool[indices[2]]];
+  }
+
+  function renderOptions(containerEl, options, stateKey){
+    containerEl.innerHTML='';
     const saved=readJSON('micro_profile',{});
     options.forEach(text=>{
       const b=document.createElement('button'); b.className='opt'; b.type='button'; b.textContent=text;
-      if(saved[key]===text) b.classList.add('sel');
-      b.onclick=()=>{ wrap.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); const cur=readJSON('micro_profile',{}); cur[key]=text; writeJSON('micro_profile',cur); };
-      wrap.appendChild(b);
+      if(saved[stateKey]===text) b.classList.add('sel');
+      b.onclick=()=>{ containerEl.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); const cur=readJSON('micro_profile',{}); cur[stateKey]=text; writeJSON('micro_profile',cur); };
+      containerEl.appendChild(b);
     });
   }
-  function renderMicroTexts(){
-    $('moodTitle').textContent=(lang==='it'?'Oggi come ti senti?':lang==='es'?'¿Cómo te sientes hoy?':lang==='fr'?'Comment te sens-tu aujourd’hui ?':lang==='de'?'Wie fühlst du dich heute?':'How do you feel today?');
-    $('anchorTitle').textContent=(lang==='it'?'Cosa ti tiene qui ultimamente?':lang==='es'?'¿Qué te mantiene aquí últimamente?':lang==='fr'?'Qu’est-ce qui te retient ici en ce moment ?':lang==='de'?'Was hält dich derzeit hier?':"What’s keeping you here lately?");
-    $('decideTitle').textContent=(lang==='it'?'Come decidi di solito?':lang==='es'?'¿Cómo sueles decidir?':lang==='fr'?'Comment décides-tu d’habitude ?':lang==='de'?'Wie triffst du üblicherweise Entscheidungen?':"How do you usually decide?");
-    $('zodiacTitle').textContent=(lang==='it'?'Segno o portafortuna (se vuoi)':lang==='es'?'Signo o amuleto (opcional)':lang==='fr'?'Signe ou porte-bonheur (optionnel)':lang==='de'?'Sternzeichen oder Glücksritual (optional)':'Zodiac or lucky habit (optional)');
-    $('jungTitle').textContent=(lang==='it'?'Tipo psicologico (Jung)':lang==='es'?'Tipo psicológico (Jung)':lang==='fr'?'Type psychologique (Jung)':lang==='de'?'Psychologischer Typ (Jung)':'Psychological type (Jung)');
-  }
+
   function renderMicro(){
-    const moodPool=(lang==='en'?["Calm like airplane mode","Charged like a socket","Foggy but fine","Restless astronaut","Light and chatty","Solid and quiet","Bit chaotic, funny"]
-                             :lang==='es'?["Tranquilo en modo avión","Cargado como un enchufe","Nublado pero bien","Astronauta inquieto","Ligero y hablador","Sólido y callado","Un poco caótico, divertido"]
-                             :lang==='fr'?["Calme en mode avion","Chargé comme une prise","Brumeux mais ok","Astronaute agité","Léger et bavard","Solide et discret","Un peu chaotique, amusé"]
-                             :lang==='de'?["Ruhig wie Flugmodus","Geladen wie eine Steckdose","Neblig aber okay","Unruhiger Astronaut","Leicht & gesprächig","Stabil & ruhig","Etwas chaotisch, witzig"]
-                             :["Calmo in modalità aereo","Carico come una presa","Appannato ma ok","Astronauta irrequieto","Leggero e chiacchierone","Solido e in silenzio","Un po’ caotico ma divertito"]);
-    const anchorPool=(lang==='en'?["People I love","Money & bills","A routine that works","A promise to myself","Fear of changing","Curiosity about what’s here","Health first","Building something long-term"]
-                              :lang==='es'?["Gente que amo","Dinero y facturas","Una rutina que funciona","Promesa conmigo mismo","Miedo a cambiar","Curiosidad por lo que hay","Salud primero","Construir algo a largo plazo"]
-                              :lang==='fr'?["Les gens que j’aime","Argent & factures","Une routine qui marche","Une promesse à moi-même","Peur de changer","Curiosité pour ce qu’il y a ici","La santé d’abord","Construire du long terme"]
-                              :lang==='de'?["Menschen, die ich liebe","Geld & Rechnungen","Eine funktionierende Routine","Ein Versprechen an mich","Angst vor Veränderung","Neugier auf das Hier","Gesundheit zuerst","Langfristig etwas aufbauen"]
-                              :["Le persone che ami","Soldi & bollette","Una routine che funziona","Una promessa a te stesso/a","Paura di cambiare","Curiosità per ciò che c’è","Salute prima","Costruire qualcosa di lungo"]);
-    const decidePool=(lang==='en'?["Gut first","Lists & pros/cons","Ask a friend","Deadline decides","Flip a coin","Coffee + walk","Sleep on it"]
-                              :lang==='es'?["Tripas primero","Listas pro/contra","Preguntar a un amigo","Decide la fecha límite","Cara o cruz","Café + paseo","Dormirlo"]
-                              :lang==='fr'?["L’instinct d’abord","Listes pour/contre","Demander à un ami","La deadline décide","Pile ou face","Café + marche","Laisser une nuit"]
-                              :lang==='de'?["Bauch zuerst","Listen Pro/Contra","Freund fragen","Deadline entscheidet","Münzwurf","Kaffee + Spaziergang","Drüber schlafen"]
-                              :["Pancia prima","Liste pro/contro","Chiedi a un amico","Decide la scadenza","Tira la moneta","Caffè + passeggiata","Ci dormi su"]);
-    const zodiacPool=(lang==='en'?["Aries/Taurus/Gemini","Cancer/Leo/Virgo","Libra/Scorpio/Sag","Capricorn/Aquarius/Pisces","No sign, just vibes","Lucky habit: same socks"]
-                              :lang==='es'?["Aries/Tauro/Géminis","Cáncer/Leo/Virgo","Libra/Escorpio/Sagitario","Capricornio/Acuario/Piscis","Sin signo, solo vibes","Ritual: mismos calcetines"]
-                              :lang==='fr'?["Bélier/Taureau/Gémeaux","Cancer/Lion/Vierge","Balance/Scorpion/Sagittaire","Capricorne/Verseau/Poissons","Pas de signe, que des vibes","Porte-bonheur : mêmes chaussettes"]
-                              :lang==='de'?["Widder/Stier/Zwillinge","Krebs/Löwe/Jungfrau","Waage/Skorpion/Schütze","Steinbock/Wassermann/Fische","Kein Sternzeichen, nur Vibes","Glücksritual: gleiche Socken"]
-                              :["Ariete/Toro/Gemelli","Cancro/Leone/Vergine","Bilancia/Scorpione/Sag","Capricorno/Acquario/Pesci","Niente segno, solo vibrazioni","Portafortuna: stesse calze"]);
+    const microBody = $('microBody');
+    // mantieni i bottoni Salva e il messaggio, ripulendo prima eventuali blocchi precedenti
+    const saveBtn = $('saveMicroBtn');
+    const savedMsg= $('microSavedMsg');
+    microBody.innerHTML='';
+    const blocksWrap = document.createElement('div');
+    microBody.appendChild(blocksWrap);
+    const rowActions = document.createElement('div'); rowActions.className='row'; rowActions.style.marginTop='6px';
+    const saveBtn2 = document.createElement('button'); saveBtn2.className='btn primary'; saveBtn2.id='saveMicroBtn'; saveBtn2.type='button'; saveBtn2.textContent=I18N[lang].microSaveBtn;
+    rowActions.appendChild(saveBtn2);
+    const savedMsg2 = document.createElement('div'); savedMsg2.className='small'; savedMsg2.id='microSavedMsg'; savedMsg2.style.marginTop='6px';
 
-    $('moodIcon').textContent="🙂"; $('anchorIcon').textContent="🧭"; $('decideIcon').textContent="⚙️";
-    $('zodiacIcon').textContent="♈"; $('jungIcon').textContent="🧠";
+    const todays = pickDailyMicro(lang);
+    todays.forEach(q=>{
+      const block = document.createElement('div');
+      block.className='qblock';
+      block.style.marginBottom='10px';
+      block.innerHTML = `<div class="qtitle"><span>${q.icon}</span> <span style="margin-left:4px">${q.title}</span></div><div class="optset"></div>`;
+      blocksWrap.appendChild(block);
+      const optsWrap = block.querySelector('.optset');
+      renderOptions(optsWrap, q.opts, q.id);
+    });
 
-    renderOptions('moodOpts',moodPool,'mood');
-    renderOptions('anchorOpts',anchorPool,'anchor');
-    renderOptions('decideOpts',decidePool,'decide');
-    renderOptions('zodiacOpts',zodiacPool,'zodiac');
+    microBody.appendChild(rowActions);
+    microBody.appendChild(savedMsg2);
 
-    const jungAtt=(lang==='en'?["Extraversion","Introversion"]
-                   :lang==='es'?["Extroversión","Introversión"]
-                   :lang==='fr'?["Extraversion","Introversion"]
-                   :lang==='de'?["Extraversion","Introversion"]
-                   :["Estroversione","Introversione"]);
-    const jungRat=(lang==='en'?["Thinking (T)","Feeling (F)"]
-                   :lang==='es'?["Pensamiento (T)","Sentimiento (F)"]
-                   :lang==='fr'?["Pensée (T)","Sentiment (F)"]
-                   :lang==='de'?["Denken (T)","Fühlen (F)"]
-                   :["Pensiero (T)","Sentimento (F)"]);
-    const jungPer=(lang==='en'?["Sensing (S)","Intuition (N)"]
-                   :lang==='es'?["Sensación (S)","Intuición (N)"]
-                   :lang==='fr'?["Sensation (S)","Intuition (N)"]
-                   :lang==='de'?["Empfinden (S)","Intuition (N)"]
-                   :["Sensazione (S)","Intuizione (N)"]);
-    ['jungAttitude','jungRational','jungPerception'].forEach(id=>$(id).innerHTML="");
-    jungAtt.forEach(v=>{ const b=document.createElement('button'); b.className='opt'; b.type='button'; b.textContent=v; b.onclick=()=>{ const cur=readJSON('micro_profile',{}); cur.jung_attitude=v; writeJSON('micro_profile',cur); }; $('jungAttitude').appendChild(b); });
-    jungRat.forEach(v=>{ const b=document.createElement('button'); b.className='opt'; b.type='button'; b.textContent=v; b.onclick=()=>{ const cur=readJSON('micro_profile',{}); cur.jung_rational=v; writeJSON('micro_profile',cur); }; $('jungRational').appendChild(b); });
-    jungPer.forEach(v=>{ const b=document.createElement('button'); b.className='opt'; b.type='button'; b.textContent=v; b.onclick=()=>{ const cur=readJSON('micro_profile',{}); cur.jung_perception=v; writeJSON('micro_profile',cur); }; $('jungPerception').appendChild(b); });
+    // handlers salva
+    saveBtn2.onclick=()=>{
+      const cur=readJSON('micro_profile',{});
+      writeJSON('micro_profile',cur);
+      writeJSON('micro_saved',{date:todayISO(),ok:true});
+      writeJSON('first_session_seen',{date:todayISO(),seen:true});
+      $('firstSessionBanner').style.display='none';
+      $('microCard').classList.add('collapsed');
+      $('microSavedMsg').textContent=I18N[lang].microSaved;
+    };
   }
+
+  // Prima sessione (apre micro il primo giorno o se non salvato)
+  const FS_KEY='first_session_seen';
+  const fs=readJSON(FS_KEY,{date:'',seen:false});
+  if(fs.date!==todayISO()){
+    $('firstSessionBanner').textContent=I18N[lang].firstSession;
+    $('firstSessionBanner').style.display='block';
+    $('microCard').classList.remove('collapsed');
+  } else {
+    $('firstSessionBanner').style.display='none';
+    $('microCard').classList.add('collapsed');
+  }
+  $('microHead').onclick=()=>{ const saved=readJSON('micro_saved',{date:'',ok:false}); if(saved.date===todayISO()) return; $('microCard').classList.toggle('collapsed'); };
 
   /* ===== Hints ===== */
   function renderHints(){
@@ -894,6 +896,11 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     const arr=readJSON('cronologia',[]);
     if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=I18N[lang].emptyStories; box.appendChild(p); return; }
     arr.slice(-12).reverse().forEach(item=>{
+      const row=document.createElement='div';
+    });
+    // (teniamo la versione stabile usata in precedenza)
+    box.innerHTML='';
+    readJSON('cronologia',[]).slice(-12).reverse().forEach(item=>{
       const row=document.createElement('div'); row.className='story';
       const left=document.createElement('div');
       left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.domanda||'—'}</div><div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
@@ -912,9 +919,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   /* ===== Init ===== */
   try{
     try{ const p = JSON.parse(LS.getItem('whatif_prefs')||'{}'); document.documentElement.setAttribute('data-theme', p.stile==='wtf'?'wtf':'whatif'); }catch{}
-    applyTexts(); renderMicro(); renderNext(); renderStories(); $('boostInput').value=getBoost();
-    // opzionale: se vuoi popolare il dock quando lo apri manualmente
-    // generateBatch();
+    applyTexts(); renderNext(); renderStories(); $('boostInput').value=getBoost();
   }catch(e){ console.error('Init error:', e); }
 })();
 </script>
