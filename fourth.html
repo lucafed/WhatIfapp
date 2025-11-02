@@ -239,7 +239,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   document.documentElement.lang=lang;
   let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
 
-  /* ===== I18N completo (IT/EN/ES/FR/DE) ===== */
+  /* ===== I18N completo ===== */
   const I18N={
     it:{title:"Imposta la tua domanda", yourq:"E se…", gen:"✨ Genera risposta", clear:"Svuota",
         surprise:"Sorprendimi",
@@ -332,10 +332,11 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   const HINTS={
     it:["E se cambiassi lavoro?","E se cambiassi città?","E se aprissi partita IVA?","E se tornassi a studiare?","E se lavorassi 4 giorni su 5?","E se chiedessi un aumento?","E se mi prendessi un mese sabbatico?","E se riducessi i social per 30 giorni?","E se vivessi senza auto?","E se imparassi bene l’inglese?","E se ricominciassi palestra?","E se corressi 3 volte a settimana?","E se aprissi un micro e-commerce?","E se studiassi 1h al giorno?","E se investissi il 10% ogni mese?","E se andassi all’estero 6 mesi?","E se lasciassi un progetto che non ami?","E se cucinassi a casa 30 giorni?"],
     en:["What if you changed jobs?","What if you moved city?","What if you went freelance?","What if you went back to study?","What if you tried a 4-day week?","What if you asked for a raise?","What if you took a month off?","What if you cut social media for 30 days?","What if you lived without a car?","What if you mastered English?","What if you returned to the gym?","What if you ran three times a week?","What if you opened a tiny e-commerce?","What if you studied 1h daily?","What if you invested 10% monthly?","What if you lived abroad for 6 months?","What if you dropped a project you don’t love?","What if you cooked at home for 30 days?"],
-    es:["¿Y si cambiaras de trabajo?","¿Y si te mudaras de ciudad?","¿Y si te hicieras autónomo?","¿Y si volvieras a estudiar?","¿Y si probaras una semana de 4 días?","¿Y si pidieras un aumento?","¿Y si tomaras un mes libre?","¿Y si dejaras redes 30 días?","¿Y si vivieras sin coche?","¿Y si dominaras el inglés?","¿Y si volvieras al gimnasio?","¿Y si corrieras 3 veces por semana?","¿Y si abrieras un micro e-commerce?","¿Y si estudiaras 1h al día?","¿Y si invirtieras el 10% mensual?","¿Y si vivieras 6 meses en el extranjero?","¿Y si dejaras un proyecto que no amas?","¿Y si cocinaras en casa 30 días?"],
+    es:["¿Y si cambiaras de trabajo?","¿Y si te mudaras de ciudad?","¿Y si te hicieras autónomo?","¿Y si volvieras a estudiar?","¿Y si probaras una semana de 4 días?","¿Y si pidieras un aumento?","¿Y si tomaras un mes libre?","¿Y si dejaras redes 30 días?","¿Y si vivieras sin coche?","¿Y si dominaras el inglés?","¿Y si volvieras al gimnasio?","¿Y si corrieras 3 veces por semana?","¿Y si abrieras un micro e-commerce?","¿Y si estudiarás 1h al día?","¿Y si invirtieras el 10% mensual?","¿Y si vivieras 6 meses en el extranjero?","¿Y si dejaras un proyecto que no amas?","¿Y si cocinaras en casa 30 días?"],
     fr:["Et si tu changeais de travail ?","Et si tu déménageais ?","Et si tu te mettais en freelance ?","Et si tu reprenais des études ?","Et si tu essayais la semaine de 4 jours ?","Et si tu demandais une augmentation ?","Et si tu prenais un mois off ?","Et si tu coupais les réseaux 30 jours ?","Et si tu vivais sans voiture ?","Et si tu maîtrisais l’anglais ?","Et si tu retournais à la salle ?","Et si tu courais 3× par semaine ?","Et si tu ouvrais un micro-e-commerce ?","Et si tu étudiais 1h par jour ?","Et si tu investissais 10 % par mois ?","Et si tu vivais 6 mois à l’étranger ?","Et si tu lâchais un projet que tu n’aimes pas ?","Et si tu cuisinais à la maison 30 jours ?"],
     de:["Was, wenn du den Job wechselst?","Was, wenn du in eine andere Stadt ziehst?","Was, wenn du freiberuflich arbeitest?","Was, wenn du wieder studierst?","Was, wenn du eine 4-Tage-Woche probierst?","Was, wenn du um eine Gehaltserhöhung bittest?","Was, wenn du einen Monat Pause machst?","Was, wenn du 30 Tage ohne Social Media lebst?","Was, wenn du ohne Auto lebst?","Was, wenn du Englisch meisterst?","Was, wenn du wieder ins Gym gehst?","Was, wenn du 3× pro Woche läufst?","Was, wenn du einen Micro-Shop startest?","Was, wenn du 1h täglich lernst?","Was, wenn du 10 % monatlich investierst?","Was, wenn du 6 Monate im Ausland lebst?","Was, wenn du ein Projekt loslässt?","Was, wenn du 30 Tage zuhause kochst?"]
   };
+
   const SURPRISE_POOLS = {
     it:{
       future:[
@@ -511,7 +512,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 
   /* ===== Lingua ===== */
   langSelect.value=lang;
-  langSelect.onchange=()=>{ lang = langSelect.value; LS.setItem('lang',lang); applyTexts(); };
+  langSelect.onchange=()=>{ lang = langSelect.value; LS.setItem('lang',lang); document.documentElement.lang=lang; applyTexts(); };
 
   /* ===== Crediti locali (no AI) ===== */
   function userIsAdmin(){ return !!LS.getItem('admin_token'); }
@@ -541,7 +542,10 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     const c=readJSON('whatif_credits',{date:todayISO(),used:0});
     if(!userIsAdmin()){
       const cap=capForUser();
-      if((c.used||0)>=cap){ alert((I18N[lang]||I18N.en).mixExpl.replace(/^.+?:\s*/,'').includes('🧩') ? (lang==='it'?'Hai finito i crediti di oggi.':'You’ve used today’s credits.') : (lang==='it'?'Hai finito i crediti di oggi.':'You’ve used today’s credits.')); return; }
+      if((c.used||0)>=cap){
+        alert(lang==='it'?'Hai finito i crediti di oggi.':lang==='es'?'Has usado los créditos de hoy.':lang==='fr'?'Crédits du jour épuisés.':lang==='de'?'Tagescredits verbraucht.':'You’ve used today’s credits.');
+        return;
+      }
       c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderCreditsBadge();
     }
     const micro=readJSON('micro_profile',{}); const boost=getBoost();
@@ -554,7 +558,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   clearBtn.onclick=()=>{ qInput.value=''; qInput.focus(); };
   qInput.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); } });
 
-  /* ===== BOOST robusto: pulizia + topic ===== */
+  /* ===== BOOST robusto: pulizia + topic + riconoscimento luoghi ===== */
   function sanitizeBoost(raw){
     let t = (raw||'').toString().normalize('NFKC')
       .replace(/[^\p{L}\p{N}\s,'’.:-]/gu,' ')
@@ -562,17 +566,19 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       .replace(/\s+/g,' ').trim().toLowerCase();
 
     const stop = new Set([
-      // IT
+      // IT pronomi/articoli/comuni
       'mi','mia','mio','mie','miei','tuo','tua','tuoi','tue','suo','sua','suoi','sue','nostro','nostra','vostro','vostra','loro',
-      'io','tu','noi','voi','il','lo','la','i','gli','le','un','una','uno','di','a','da','in','con','su','per','tra','fra','che','del','della','dei','delle','degli','al','alla','allo','alle',
+      'io','tu','noi','voi','il','lo','la','i','gli','le','un','una','uno','di','a','da','in','con','su','per','tra','fra','che','del','della','dei','delle','degli','al','alla','allo','alle','agli','nel','nella','nello','nelle','negli','dell',
+      // verbi/comuni da escludere
+      'vivo','abito','risiedo','sto','sono','nato','nata','vive','vivere','essere','stare',
       // EN
       'my','your','his','her','its','our','their','the','a','an','and','or','to','of','for','with','on','in','at','by',
       // ES
-      'mi','mis','tu','tus','su','sus','el','la','los','las','y','o','de','del','para','con','en','al','a',
+      'mi','mis','tu','tus','su','sus','el','la','los','las','y','o','de','del','para','con','en','al','a','soy','vivo','nací',
       // FR
-      'mon','ma','mes','ton','ta','tes','son','sa','ses','le','la','les','des','de','du','et','ou','pour','avec','dans','en','au','aux',
+      'mon','ma','mes','ton','ta','tes','son','sa','ses','le','la','les','des','de','du','et','ou','pour','avec','dans','en','au','aux','je','suis','né',
       // DE
-      'mein','meine','dein','deine','sein','seine','ihr','ihre','der','die','das','ein','eine','und','oder','für','mit','in','auf','am','im',
+      'mein','meine','dein','deine','sein','seine','ihr','ihre','der','die','das','ein','eine','und','oder','für','mit','in','auf','am','im','ich','bin','geboren',
       // misc
       'etc','ok'
     ]);
@@ -582,11 +588,16 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     );
     return toks;
   }
+
+  // n-gram di fallback
   function topicsFromTokens(tokens){
     const out=[];
+    const badSingles = new Set(['vivo','abito','sono','nato','nata']);
     for(let n of [3,2,1]){
       for(let i=0;i<=tokens.length-n;i++){
-        const phrase=tokens.slice(i,i+n).join(' ');
+        const chunk=tokens.slice(i,i+n);
+        if(n===1 && badSingles.has(chunk[0])) continue;
+        const phrase=chunk.join(' ');
         if(phrase.length<3) continue;
         out.push(phrase);
       }
@@ -594,7 +605,40 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     }
     return Array.from(new Set(out)).slice(0,12);
   }
-  function extractTopics(txt){ return topicsFromTokens(sanitizeBoost(txt)); }
+
+  // estrazione intelligente dei LUOGHI dal testo Boost
+  function extractTopics(raw){
+    const txt = (raw||'').toString().normalize('NFKC');
+
+    // 1) cattura pattern tipo "vivo/abito/sono di/nato a/vengo da ..."
+    const locs=[];
+    const locRegex = /\b(?:vivo|abito|risiedo|sto|sono\s+di|vengo\s+da|nato\s+(?:a|in)|nata\s+(?:a|in)|sono\s+nato\s+(?:a|in)|sono\s+nata\s+(?:a|in))\s+(?:a|in|nel|nella|nello|alla|allo|al|l['’])?\s*([a-zà-ùA-ZÀ-ÖÙ-][a-zà-ùA-ZÀ-ÖÙ-'’\s]{1,40})/giu;
+    let m;
+    while((m = locRegex.exec(txt)) !== null){
+      let place = m[1].trim()
+        .replace(/^(?:il|lo|la|l['’]|i|gli|le)\s+/i,'')
+        .replace(/\s+/g,' ');
+      locs.push(place);
+    }
+
+    // 2) Title Case (gestisce L’/L')
+    const titleCase = s => s.split(/\s+/).map(w=>{
+      if(/^l['’][a-z]/.test(w)) return w[0].toUpperCase()+w[1]+w[2].toUpperCase()+w.slice(3);
+      return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase();
+    }).join(' ');
+
+    const cleanedLocs = Array.from(new Set(
+      locs.map(p=>titleCase(p.replace(/\s+$/,'').replace(/[,.;:!?]+$/,'')))
+    )).filter(Boolean);
+
+    // 3) aggiungi i topic classici
+    const toks = sanitizeBoost(txt);
+    const gramTopics = topicsFromTokens(toks);
+
+    // 4) luoghi in testa
+    return [...cleanedLocs, ...gramTopics].slice(0,12);
+  }
+
   function getBoost(){ try{ return (LS.getItem('whatif_boost')||'').trim(); }catch{ return '' } }
   function setBoost(txt){ LS.setItem('whatif_boost', String(txt||'')); LS.setItem('whatif_boost_saved_date', todayISO()); $('boostSavedMsg').textContent=(I18N[lang]||I18N.en).boostSaved; setTimeout(()=> $('boostSavedMsg').textContent='', 1600); initBoostVisibility(); }
   function initBoostVisibility(){ const last=LS.getItem('whatif_boost_saved_date'); $('boostCard').style.display=(last===todayISO())?'none':'block'; $('boostInput').value=getBoost(); }
@@ -615,7 +659,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   function seemsValidQuestion(q){
     const t=String(q||"").trim();
     const words=t.split(/\s+/).filter(Boolean);
-    const hasVerb=/\b(essere|fare|avere|andare|potrei|potresti|posso|cambiare|aprire|imparare|provare|vivere|studiare|correre|lavorare|organizzare|iniziare|testare|valutare|delegare|spegnere|muovere|spostare|ridurre|chiedere|investire|risparmiare|partire|tornare|switch|move|change|start|learn|try|study|work|run|delegate|plan|test|reduce|ask|invest|save)\b/i.test(t);
+    const hasVerb=/\b(essere|fare|avere|andare|potrei|potresti|posso|cambiare|aprire|imparare|provare|vivere|studiare|correre|lavorare|organizzare|iniziare|testare|valutare|delegare|spegnere|muovere|spostare|ridurre|chiedere|investire|risparmiare|partire|tornare|switch|move|change|start|learn|try|study|work|run|delegate|plan|test|reduce|ask|invest|save|explore|drop)\b/i.test(t);
     return words.length>=4 && hasVerb;
   }
 
@@ -625,8 +669,17 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 
   function makeTopicSentence(Lcode, periodo, tp){
     const isIT = (Lcode==='it');
+
+    // è un luogo? (1–3 parole capitalizzate, niente cifre)
+    const looksPlace = /^[A-ZÀ-Ö][\p{L}'’\-]+(?:\s+[A-ZÀ-Ö][\p{L}'’\-]+){0,2}$/u.test(tp);
     const isVerbIT = /[aà]re$|ere$|ire$/i.test(tp);
+
     if(isIT){
+      if(looksPlace){
+        return (periodo==='past')
+          ? `E se avessi esplorato ${tp} l’estate scorsa?`
+          : `E se esplorassi ${tp} con un esperimento di 7 giorni?`;
+      }
       if(periodo==='past'){
         return isVerbIT
           ? `E se avessi iniziato a ${tp} l’estate scorsa?`
@@ -637,25 +690,18 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
           : `E se esplorassi ${tp} con un esperimento di 7 giorni?`;
       }
     }
-    if(Lcode==='es'){
-      return (periodo==='past')
-        ? `¿Y si hubieras probado ${tp} con un experimento de 7 días el verano pasado?`
-        : `¿Y si pruebas ${tp} con un experimento de 7 días?`;
+
+    if(looksPlace){
+      if(Lcode==='es') return (periodo==='past') ? `¿Y si hubieras explorado ${tp} el verano pasado?` : `¿Y si exploras ${tp} con un experimento de 7 días?`;
+      if(Lcode==='fr') return (periodo==='past') ? `Et si tu avais exploré ${tp} l’été dernier ?` : `Et si tu explorais ${tp} avec une expérience de 7 jours ?`;
+      if(Lcode==='de') return (periodo==='past') ? `Was, wenn du ${tp} letzten Sommer erkundet hättest?` : `Was, wenn du ${tp} in einem 7-Tage-Experiment erkundest?`;
+      return (periodo==='past') ? `What if you had explored ${tp} last summer?` : `What if you explored ${tp} with a 7-day experiment?`;
     }
-    if(Lcode==='fr'){
-      return (periodo==='past')
-        ? `Et si tu avais testé ${tp} avec une expérience de 7 jours l’été dernier ?`
-        : `Et si tu testais ${tp} avec une expérience de 7 jours ?`;
-    }
-    if(Lcode==='de'){
-      return (periodo==='past')
-        ? `Was, wenn du letzten Sommer ${tp} in einem 7-Tage-Experiment ausprobiert hättest?`
-        : `Was, wenn du ${tp} in einem 7-Tage-Experiment testest?`;
-    }
-    // EN default
-    return (periodo==='past')
-      ? `What if you had run a 7-day experiment on ${tp} last summer?`
-      : `What if you tried a 7-day experiment on ${tp}?`;
+
+    if(Lcode==='es') return (periodo==='past') ? `¿Y si hubieras hecho un experimento de 7 días sobre ${tp} el verano pasado?` : `¿Y si pruebas ${tp} con un experimento de 7 días?`;
+    if(Lcode==='fr') return (periodo==='past') ? `Et si tu avais fait une expérience de 7 jours sur ${tp} l’été dernier ?` : `Et si tu testais ${tp} avec une expérience de 7 jours ?`;
+    if(Lcode==='de') return (periodo==='past') ? `Was, wenn du letzten Sommer ein 7-Tage-Experiment zu ${tp} gemacht hättest?` : `Was, wenn du ${tp} in einem 7-Tage-Experiment testest?`;
+    return (periodo==='past') ? `What if you had run a 7-day experiment on ${tp} last summer?` : `What if you tried a 7-day experiment on ${tp}?`;
   }
 
   function buildPersonalizedPool(Lcode, periodo){
@@ -666,7 +712,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     const out = [];
     const add = s => { if(s) out.push(String(s).replace(/\s+/g,' ').trim()); };
 
-    // profilo base
     if (profile.role){
       add( periodo==='past'
         ? (Lcode==='it'?`E se avessi cambiato ruolo da ${profile.role} un anno fa?`:
@@ -717,7 +762,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
                         : `What if you planned your week around feeling “${micro.mood}”?`);
     }
 
-    // topics dal Boost robusto
+    // topics dal Boost robusto (con luoghi)
     const topics = extractTopics(boost);
     topics.forEach(tp=> add( makeTopicSentence(Lcode, periodo, tp) ));
 
@@ -821,14 +866,14 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   function openDock(){ dock.classList.add('open'); generateBatch(); }
   function closeDock(){ dock.classList.remove('open'); }
 
-  // Il bottone principale riempie il campo (niente dock di default)
+  // Il bottone principale riempie il campo (dock disattivata di default)
   surpriseBtn.onclick=generateOneIntoField;
   refreshSurprise.onclick=()=>generateBatch();
   absurdOnlyBtn.onclick=()=>generateBatch({absurdOnly:true});
   closeSurprise.onclick=closeDock; surpriseDone.onclick=closeDock; surpriseBackdrop.onclick=closeDock;
   window.addEventListener('keydown',e=>{ if(e.key==='Escape' && dock.classList.contains('open')) closeDock(); });
 
-  /* ===== Micro-domande — solo 3, opzioni giornaliere diverse ===== */
+  /* ===== Micro-domande — solo 3, opzioni diverse ogni giorno ===== */
   function rngSeeded(seed){ let s=seed%2147483647; return ()=> (s = s*16807 % 2147483647)/2147483647; }
   function pickDaily(list, n, seedStr){
     const seed=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0);
@@ -849,7 +894,6 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   }
 
   function renderMicroTexts(){
-    const L=I18N[lang]||I18N.en;
     $('moodTitle').textContent=(lang==='it'?'Oggi come ti senti?':lang==='es'?'¿Cómo te sientes hoy?':lang==='fr'?'Comment te sens-tu aujourd’hui ?':lang==='de'?'Wie fühlst du dich heute?':"How do you feel today?");
     $('anchorTitle').textContent=(lang==='it'?'Cosa ti tiene qui ultimamente?':lang==='es'?'¿Qué te mantiene aquí últimamente?':lang==='fr'?'Qu’est-ce qui te retient ici en ce moment ?':lang==='de'?'Was hält dich derzeit hier?':"What’s keeping you here lately?");
     $('decideTitle').textContent=(lang==='it'?'Come decidi di solito?':lang==='es'?'¿Cómo sueles decidir?':lang==='fr'?'Comment décides-tu d’habitude ?':lang==='de'?'Wie triffst du üblicherweise Entscheidungen?':"How do you usually decide?");
