@@ -319,7 +319,49 @@ function decorateEmBits(el){
   el.innerHTML = html;
 }
 
-/* ==== Load state ==== */
+/* ==== Build local question for fallback (Surprise) ==== */
+function buildLocalQuestion(curLang, boost, periodo){
+  const base = {
+    it: [
+      "E se cambiassi lavoro?","E se cambiassi città?","E se tornassi a studiare?",
+      "E se lavorassi 4 giorni su 5?","E se aprissi un micro e-commerce?","E se imparassi bene l’inglese?"
+    ],
+    en: [
+      "What if you changed jobs?","What if you moved city?","What if you went back to study?",
+      "What if you tried a 4-day week?","What if you opened a tiny e-commerce?","What if you mastered English?"
+    ],
+    es: [
+      "¿Y si cambiaras de trabajo?","¿Y si te mudaras de ciudad?","¿Y si volvieras a estudiar?",
+      "¿Y si probaras una semana de 4 días?","¿Y si abrieras un micro e-commerce?","¿Y si dominaras el inglés?"
+    ],
+    fr: [
+      "Et si tu changeais de travail ?","Et si tu déménageais ?","Et si tu reprenais des études ?",
+      "Et si tu essayais la semaine de 4 jours ?","Et si tu ouvrais un micro-e-commerce ?","Et si tu maîtrisais l’anglais ?"
+    ],
+    de: [
+      "Was, wenn du den Job wechselst?","Was, wenn du in eine andere Stadt ziehst?","Was, wenn du wieder studierst?",
+      "Was, wenn du eine 4-Tage-Woche probierst?","Was, wenn du einen Micro-Shop startest?","Was, wenn du Englisch meisterst?"
+    ]
+  };
+  let q = pick(base[curLang] || base.it);
+  const b = String(boost||"").toLowerCase();
+  if (b.includes("inglese") || b.includes("english")) {
+    q = (curLang==='it')?"E se imparassi bene l’inglese?":
+        (curLang==='es')?"¿Y si dominaras el inglés?":
+        (curLang==='fr')?"Et si tu maîtrisais l’anglais ?":
+        (curLang==='de')?"Was, wenn du Englisch meisterst?":
+        "What if you mastered English?";
+  } else if (b.includes("startup") || b.includes("impresa") || b.includes("business")) {
+    q = (curLang==='it')?"E se aprissi una startup?":
+        (curLang==='es')?"¿Y si abrieras una startup?":
+        (curLang==='fr')?"Et si tu lançais une startup ?":
+        (curLang==='de')?"Was, wenn du ein Startup gründest?":
+        "What if you launched a startup?";
+  }
+  return q; // neutra rispetto a periodo, UI mostra già passato/futuro
+}
+
+/* ==== Load state from LS ==== */
 const params = new URLSearchParams(location.search);
 const isReplay = params.get('view')==='replay';
 let domanda = "";
@@ -328,7 +370,7 @@ let answerText = "";
 /* ==== Language init ==== */
 langSel.value = lang;
 
-/* ==== Titles/Text render ==== */
+/* ==== UI render ==== */
 function setTitlesAndTexts(q){
   const T = I18N[lang] || I18N.it;
   setText('#title', style==='wtf' ? T.titleWTF : T.titleWHF);
@@ -354,7 +396,6 @@ langSel.onchange = ()=>{
   lang = langSel.value;
   LS.setItem('lang', lang);
   document.documentElement.lang = lang;
-  // Re-render static UI only
   setTitlesAndTexts(domanda);
   const el = document.getElementById('proBadge');
   if(el.style.display !== 'none'){
@@ -381,7 +422,7 @@ shareBtn.onclick = async()=>{
 
 againBtn.onclick = ()=>{ location.href='fourth.html'; };
 
-/* ==== Helpers ==== */
+/* ==== Misc helpers ==== */
 function mapGenderToSex(g){
   switch(String(g||'').toLowerCase()){
     case 'uomo': return 'm';
@@ -391,7 +432,7 @@ function mapGenderToSex(g){
   }
 }
 
-/* ==== Flow ==== */
+/* ==== Fetch / Render ==== */
 if(isReplay){
   const r = JSON.parse(LS.getItem('replay_story')||'{}');
   domanda = r.domanda || LS.getItem('domanda') || "";
@@ -402,121 +443,84 @@ if(isReplay){
   decorateEmBits(answerEl);
 }else{
   const req = JSON.parse(LS.getItem('whatif_request')||'{}');
-  const isSurprise = req.mode === 'surprise';
-  const boost = req.boost || LS.getItem('whatif_boost') || "";
-  // Profilo (sesso)
+  const mode = req.mode || 'manual';
+  domanda = (mode==='manual') ? (req.domanda || LS.getItem('domanda') || "") : "";
+
+  setTitlesAndTexts(domanda);
+  qView.textContent = domanda || '—';
+
   const profile = JSON.parse(LS.getItem('whatif_profile') || '{}');
   const sex = (profile.sex) ? String(profile.sex).toLowerCase()
             : mapGenderToSex(profile.gender || '');
 
-  if(isSurprise){
-    // NON usare la vecchia domanda dal LS: lasciamo vuoto, sarà generata dall'AI
-    domanda = "";
-    setTitlesAndTexts(domanda);
-    qView.textContent = '—';
+  (async ()=>{
+    navigator.sendBeacon?.("/api/track") || fetch("/api/track",{method:"POST",keepalive:true}).catch(()=>{});
+    try{
+      const headers = { "Content-Type": "application/json" };
+      if (prefs.pro === true) headers["x-pro"] = "1";
+      const adminToken = localStorage.getItem("admin_token");
+      if (adminToken) headers["x-admin-token"] = adminToken;
 
-    (async ()=>{
-      navigator.sendBeacon?.("/api/track") || fetch("/api/track",{method:"POST",keepalive:true}).catch(()=>{});
-      try{
-        const headers = { "Content-Type": "application/json" };
-        if (prefs.pro === true) headers["x-pro"] = "1";
-        const adminToken = localStorage.getItem("admin_token");
-        if (adminToken) headers["x-admin-token"] = adminToken;
+      // Corpo richiesta: manual vs surprise
+      let body = {
+        lang, stile: style, periodo,
+        extra: "", micro: req.micro || {}, sex,
+        boost: req.boost || ""
+      };
 
-        const r = await fetch("/api/ask",{
-          method:"POST",
-          headers,
-          body:JSON.stringify({
-            domanda:"",         // vuota: la genera il backend
-            mode:"surprise",    // IMPORTANTE: segnala al backend di creare la domanda
-            boost,              // passa il boost salvato in quarta
-            lang,
-            stile: style,
-            periodo,
-            extra:"",
-            micro:req.micro||{},
-            sex
-          })
-        });
+      if (mode === 'surprise') {
+        // chiediamo all'API di generare la domanda
+        body.surprise = true;
+      } else {
+        body.domanda = domanda;
+      }
 
-        if(r.status===429){ answerEl.textContent = (I18N[lang]||I18N.it).error; return; }
-        const data = await r.json().catch(()=>null);
-        if(!r.ok || !data) throw new Error(data?.detail||"bad_response");
+      let r = await fetch("/api/ask",{
+        method:"POST",
+        headers,
+        body: JSON.stringify(body)
+      });
 
-        // Accetta sia {question, answer} sia {domanda, answer}
-        const qAI = normalizeOneParagraph((data.question || data.domanda || "").trim());
-        const aAI = normalizeOneParagraph((data.answer || "").trim());
-        if(!qAI || !aAI) throw new Error("missing_fields");
-
-        domanda = qAI;
+      // Fallback: se surprise viene rifiutata, generiamo una domanda locale e riproviamo
+      if (!r.ok && mode === 'surprise') {
+        domanda = buildLocalQuestion(lang, body.boost, periodo);
         setTitlesAndTexts(domanda);
         qView.textContent = domanda;
+        body = { ...body, surprise:false, domanda };
+        r = await fetch("/api/ask",{ method:"POST", headers, body:JSON.stringify(body) });
+      }
 
-        answerText = /[.!?…]$/.test(aAI) ? aAI : (aAI + ".");
-        answerEl.textContent = answerText;
-        decorateEmBits(answerEl);
+      if(r.status===429){
+        answerEl.textContent = (I18N[lang]||I18N.it).error;
+        return;
+      }
+      const data = await r.json().catch(()=>null);
+      if(!r.ok || !data) throw new Error(data?.detail||"bad_response");
 
-        // Salva cronologia
-        const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-        hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
-        LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-
-        // (opzionale) memorizza anche la domanda corrente
+      // Se l’API in surprise restituisce anche la domanda generata
+      if (mode==='surprise' && data.question) {
+        domanda = String(data.question||"").trim();
+        setTitlesAndTexts(domanda);
+        qView.textContent = domanda || '—';
         LS.setItem('domanda', domanda);
-      }catch(e){
-        console.error(e);
-        answerEl.textContent = (I18N[lang]||I18N.it).error;
+      } else if (mode==='surprise' && domanda) {
+        // abbiamo usato il fallback locale → salviamo comunque
+        LS.setItem('domanda', domanda);
       }
-    })();
 
-  }else{
-    // Modalità manuale: qui sì che leggiamo la domanda salvata
-    domanda = req.domanda || LS.getItem('domanda') || "";
-    setTitlesAndTexts(domanda);
-    qView.textContent = domanda || '—';
+      answerText = normalizeOneParagraph(String(data.answer||"").trim());
+      if(!/[.!?…]$/.test(answerText)) answerText += ".";
+      answerEl.textContent = answerText;
+      decorateEmBits(answerEl);
 
-    (async ()=>{
-      navigator.sendBeacon?.("/api/track") || fetch("/api/track",{method:"POST",keepalive:true}).catch(()=>{});
-      try{
-        const headers = { "Content-Type": "application/json" };
-        if (prefs.pro === true) headers["x-pro"] = "1";
-        const adminToken = localStorage.getItem("admin_token");
-        if (adminToken) headers["x-admin-token"] = adminToken;
-
-        const r = await fetch("/api/ask",{
-          method:"POST",
-          headers,
-          body:JSON.stringify({
-            domanda,
-            mode:"manual",
-            boost,
-            lang,
-            stile: style,
-            periodo,
-            extra:"",
-            micro:req.micro||{},
-            sex
-          })
-        });
-
-        if(r.status===429){ answerEl.textContent = (I18N[lang]||I18N.it).error; return; }
-        const data = await r.json().catch(()=>null);
-        if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
-
-        answerText = normalizeOneParagraph((data.answer||"").trim());
-        if(!/[.!?…]$/.test(answerText)) answerText += ".";
-        answerEl.textContent = answerText;
-        decorateEmBits(answerEl);
-
-        const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-        hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
-        LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-      }catch(e){
-        console.error(e);
-        answerEl.textContent = (I18N[lang]||I18N.it).error;
-      }
-    })();
-  }
+      const hist = JSON.parse(LS.getItem('cronologia')||'[]');
+      hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
+      LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
+    }catch(e){
+      answerEl.textContent = (I18N[lang]||I18N.it).error;
+      console.error(e);
+    }
+  })();
 }
 </script>
 </body>
