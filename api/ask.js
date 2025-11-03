@@ -1,6 +1,6 @@
 // /api/ask.js — What?f Engine (tono naturale, vario, personale, non ripetitivo)
-// WHATIF: 60% analisi concreta / 40% immagini sobrie, con possibile micro-apertura personale (configurabile).
-// WTF: invariato nello spirito (demenziale controllato) con finale utile.
+// WHATIF: 60% analisi concreta / 40% immagini sobrie, micro-apertura personale possibile (una riga).
+// WTF: invariato (demenziale controllato) con finale utile.
 // Un solo paragrafo, niente elenchi, niente eco della domanda.
 
 import OpenAI from "openai";
@@ -39,7 +39,13 @@ function cors(req, res) {
 const SUP_LANGS = ["it","en","es","fr","de"];
 function normLang(l="it"){ const s=String(l||"it").toLowerCase().slice(0,2); return SUP_LANGS.includes(s)?s:"it"; }
 
-function normLine(s=""){ return String(s).toLowerCase().replace(/[“”"']/g,"").replace(/\s+/g," ").replace(/[.,;:!?()\[\]\-—]+$/g,"").trim(); }
+function normLine(s=""){
+  return String(s).toLowerCase()
+    .replace(/[“”"']/g,"")
+    .replace(/\s+/g," ")
+    .replace(/[.,;:!?()[\]\-—]+$/g,"")
+    .trim();
+}
 function tightenSentences(text, maxSentences){
   const parts=String(text||"").replace(/\n+/g," ").split(/(?<=[.!?…])\s+/).map(x=>x.trim()).filter(Boolean);
   const out=[], seen=new Set();
@@ -47,33 +53,61 @@ function tightenSentences(text, maxSentences){
   let t=out.join(" "); if(!/[.!?…]$/.test(t)) t+="."; return t;
 }
 function clampWords(text, maxWords){
-  const w=String(text||"").split(/\s+/); if(w.length<=maxWords) return text;
-  const slice=w.slice(0,maxWords).join(" "); const m=slice.match(/([\s\S]*?[.!?…])(?![\s\S]*[.!?…])/);
+  const w=String(text||"").split(/\s+/).filter(Boolean);
+  if(w.length<=maxWords) return text;
+  const slice=w.slice(0,maxWords).join(" ");
+  const m=slice.match(/([\s\S]*?[.!?…])(?![\s\S]*[.!?…])/);
   return m?m[1]:slice+"…";
 }
-function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\.\.\.+/g,"…").replace(/\s+([.,;:!?])/g,"$1").trim(); }
+function normalizeOneParagraph(s=""){
+  return String(s)
+    .replace(/\s*\n+\s*/g," ")
+    .replace(/\s{2,}/g," ")
+    .replace(/\.{3,}/g,"…")
+    .replace(/\s+([.,;:!?…])/g,"$1")
+    .trim();
+}
 function stripQuestionEcho(domanda,text){
-  const d=String(domanda||"").replace(/[“”"']/g,"").trim().toLowerCase(); let t=String(text||"");
+  const d=String(domanda||"").replace(/[“”"']/g,"").trim().toLowerCase();
+  let t=String(text||"");
   const lead=t.slice(0,Math.min(t.length,d.length+12)).toLowerCase().replace(/[“”"']/g,"").trim();
   const rx=/^(?:e\s*se|what\s*if|domanda:|q:)[^.!?…]*[.!?…]\s+/i;
   if(lead.startsWith(d)){ const cut=t.indexOf("."); if(cut>-1) t=t.slice(cut+1).trim(); }
-  t=t.replace(rx,""); return t;
+  t=t.replace(rx,"");
+  return t;
 }
+
+/* === Capitalizzazione robusta === */
 function sentenceCaseAll(s=""){
-  // Maiuscola dopo (. ? ! …) + gestione lettere accentate
-  return s.replace(/(^|[.!?…]\s+)([a-zà-ÿ])/g, (m,prefix,chr)=> prefix + chr.toUpperCase());
+  let t = String(s).trim();
+  // Prima lettera (gestisce virgolette/apici)
+  t = t.replace(/(^\s*[“"']?\s*)([a-zà-ÿ])/i, (_m,prefix,chr)=> prefix + chr.toUpperCase());
+  // Dopo .?!…
+  t = t.replace(/([.!?…]\s+[“"']?\s*)([a-zà-ÿ])/g, (_m,sep,chr)=> sep + chr.toUpperCase());
+  // Dopo eventuali newline residui
+  t = t.replace(/(\n+\s*[“"']?\s*)([a-zà-ÿ])/g, (_m,sep,chr)=> sep + chr.toUpperCase());
+  return t;
 }
 function finalPunct(s=""){ return /[.!?…]$/.test(s)?s:s+"."; }
 
-/* ========= Seeding & variazioni ========= */
+/* === RNG deterministico per varietà (seme dalla domanda) === */
 function seedFrom(str=""){ return [...String(str)].reduce((a,c)=> (a + c.charCodeAt(0)) >>> 0, 0) || 1; }
 function seededRand(seed){ let s = seed >>> 0; return () => { s = (s*1664525+1013904223)>>>0; return s/2**32; }; }
 
+/* === Anti-cliché (solo WHATIF) === */
+function killClicheOpeners(s=""){
+  let t = String(s).trim();
+  // rimuove incipit stereotipati se sfuggono
+  t = t.replace(/^(provo a stringere|parto dal concreto|metti sul tavolo|guardiamo come suona|togliamo il rumore|questa non è una domanda leggera)[.:–-]?\s*/i, "");
+  t = t.replace(/^(ti\s+leggo\s+così|ti\s+conosco\s+abbastanza|lascia\s+che\s+te\s+lo\s+dica)\s*[:,-]?\s*/i, "");
+  return t;
+}
+
 /* ========= Rilevazione luoghi (grezza ma utile) ========= */
-const CITY_WORDS_IT = /\b(roma|milano|napoli|torino|bologna|firenze|genova|bari|palermo|catania|l'aquila|aquila|parigi|londra|berlino|madrid|lisbona|new york|los angeles|tokyo|berkeley|zurigo|lugano|amsterdam|dublino|vienna|praga|varsavia|atene|istanbul)\b/i;
+const CITY_WORDS_IT = /\b(roma|milano|napoli|torino|bologna|firenze|genova|bari|palermo|catania|l'aquila|aquila|parigi|londra|berlino|madrid|lisbona|new york|los angeles|tokyo|amsterdam|dublino|vienna|praga|varsavia|atene|istanbul)\b/i;
 function mentionsPlace(q=""){ return CITY_WORDS_IT.test(String(q)); }
 
-/* ========= Micro-persona (opzionale) ========= */
+/* ========= Micro-persona (facoltativa) ========= */
 function microPersonaNotes(micro={}, L="it"){ if(!micro || typeof micro !== "object") return "";
   const hints=[];
   if(micro.name) hints.push(L==="it"?`L'utente si chiama ${micro.name}.`:`User name: ${micro.name}.`);
@@ -84,44 +118,24 @@ function microPersonaNotes(micro={}, L="it"){ if(!micro || typeof micro !== "obj
   return hints.join(" ");
 }
 
-/* ========= Aperture personali (una riga, sobrie) ========= */
-const WARM_OPENERS_IT = [
-  "Ti conosco abbastanza per sapere che quando qualcosa ti sta stretto non cerchi fughe: cerchi spazio vero.",
-  "So che quando ci ragioni a lungo non è un capriccio: è una svolta che bussa.",
-  "Mi pare di sentirti: vuoi chiarezza senza fronzoli e un passo che ti somigli di più.",
-  "Se ti leggo bene, non cerchi conferme: vuoi conseguenze chiare e libertà di scegliere.",
-  "Quando inizi a pensarci così di solito è perché stai per fare sul serio, non per sognarla e basta.",
-];
-function maybeWarmOpener(domanda, L="it", micro={}, openerMode="auto"){
-  if(L!=="it") return "";
-  if(openerMode==="never") return "";
-  const seed = seedFrom(domanda + JSON.stringify(micro));
-  const rnd = seededRand(seed);
-  const use = openerMode==="always" ? true : rnd() > 0.40; // ~60% se auto
-  if(!use) return "";
-  const idx = Math.floor(rnd() * WARM_OPENERS_IT.length);
-  return WARM_OPENERS_IT[idx];
-}
-
-/* ========= WHAT IF – regole aggiornate ========= */
+/* ========= WHAT IF – regole ========= */
 const WHATIF_RULE_IT = [
   "WHAT IF HYBRID (italiano): 60% analisi concreta (costi/benefici, routine, tempo, relazioni), 40% immagini sobrie della quotidianità.",
-  "Incipit analitico, con POSSIBILE riga personale (max 1).",
-  "Se la domanda cita un luogo, apri con 2–3 frasi sul contesto reale e su come si sta evolvendo (servizi, ritmo, opportunità) prima di parlare dell'utente.",
-  "8–10 frasi, paragrafo unico, seconda persona, niente elenchi, niente emoji, non ripetere la domanda.",
-  "Tono: naturale, adulto, concreto, mai guru, mai melodramma, mai frasi prefabbricate.",
-  "Varietà lessicale/ritmica: evita ripetizioni ravvicinate, alterna periodi brevi e medi.",
+  "Apri con un'idea di incipit breve (4–7 parole), naturale e diverso ogni volta. NON usare letteralmente le frasi: “Provo a stringere”, “Parto dal concreto”, “Metti sul tavolo”, “Guardiamo come suona”, “Togliamo il rumore”, “Questa non è una domanda leggera”.",
+  "Se la domanda cita un luogo, inserisci 2–3 frasi sul contesto reale e su come si sta evolvendo (servizi, ritmo, spostamenti) prima di passare a “come lo vivi tu”.",
+  "Consenti UNA sola riga di apertura personale se aggiunge calore (es. una frase breve di 6–10 parole).",
+  "8–10 frasi, paragrafo unico, seconda persona, niente elenchi/emoji, non ripetere la domanda. Tono naturale, adulto, concreto, mai guru."
 ].join(" ");
 
-const WHATIF_OPENERS_IT = [
-  "Se guardi i fatti prima delle sensazioni, il quadro si fa più nitido.",
-  "Provo a stringere dati e abitudini in un quadro che abbia senso.",
-  "Metti sul tavolo numeri, tempo e relazioni: da lì si capisce.",
-  "Se ti basi su routine e costi reali, la scelta diventa più pulita.",
-  "Questa non è una domanda leggera e lo sai.",
+const WHATIF_OPENER_INTENTS = [
+  "Inizia con una messa a fuoco pratica",
+  "Inizia con un invito a guardare i fatti",
+  "Inizia con un respiro che toglie il superfluo",
+  "Inizia ancorando a tempo, costi e relazioni",
+  "Inizia con uno sguardo alla routine reale"
 ];
 
-/* ========= WTF — demenziale controllato ========= */
+/* ========= WTF — demenziale controllato (INVARIATO) ========= */
 const WTF_IMPRE = [
   "bestemmione corazzato",
   "imprecazionona a detonazione",
@@ -156,22 +170,21 @@ function buildMessages({ domanda, lang, periodo, stile, micro, openerMode }){
     : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona.`;
   const temporal = String(periodo).toLowerCase()==="past"
     ? (L==="en" ? "Write as if it already happened." : "Scrivi come se fosse già successo.")
-    : (L==="en" ? "Write as a near-future unfolding starting now." : "Scrivi come un prossimo futuro che inizia ora.");
+    : (L==="en" ? "Write as a near-future unfolding starting now." : "Scrivi come un prossimo futuro che inizia ora.`");
 
   const msgs = [
     { role: "system", content: baseRules },
     { role: "system", content: temporal },
     { role: "system", content: L==="it"
-        ? "Parla come se conoscessi davvero l'utente: familiare ma sobrio, senza riferimenti privati specifici. Mostra rispetto, calore e intelligenza pratica. Mai paternalista."
+        ? "Parla come se conoscessi davvero l'utente: familiare ma sobrio. Mostra rispetto, calore e intelligenza pratica. Mai paternalista."
         : "Speak as if you truly know the user: familiar yet discreet. Warmth and practical intelligence. Never patronizing." },
   ];
 
-  // Micro persona contestuale (se fornita)
   const persona = microPersonaNotes(micro, L);
-  if(persona) msgs.push({ role: "system", content: L==="it" ? `CONTESTO UTENTE (sommario sobrio): ${persona}` : `USER CONTEXT (concise): ${persona}` });
+  if(persona) msgs.push({ role: "system", content: L==="it" ? `CONTESTO UTENTE (sintesi): ${persona}` : `USER CONTEXT: ${persona}` });
 
   if(stile === "wtf"){
-    // Variazioni deterministiche
+    // INVARIATO
     let seed=seedFrom(domanda);
     const rnd = seededRand(seed);
     const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
@@ -179,35 +192,37 @@ function buildMessages({ domanda, lang, periodo, stile, micro, openerMode }){
     const react = shuffled.slice(0, 2 + Math.floor(rnd()*2));
     const drink = WTF_DRINK[Math.floor(rnd()*WTF_DRINK.length)];
 
-    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile). Sequenza: presa in giro affettuosa (≤2 frasi) → 2–3 micro-imprevisti → UNA sola “${impre}” teatrale (narrata, mai insulto) → SUBITO ${react.length} reazioni di oggetti → drink (“${drink}”) → 1–2 frasi utili reali → morale calda e ironica. 6–8 frasi.`;
-    const WTF_RULE_EN = `WHAT THE F (friendly, absurd but helpful). Sequence: playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical “${impre}” (narrated, never insulting) → THEN ${react.length} object reactions → drink (“${drink}”) → 1–2 real useful lines → warm ironic moral. 6–8 sentences.`;
+    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile). Sequenza: presa in giro affettuosa (≤2) → 2–3 micro-imprevisti → UNA “${impre}” teatrale (narrata, mai insulto) → SUBITO ${react.length} reazioni di oggetti → drink (“${drink}”) → 1–2 frasi utili reali → morale calda e ironica. 6–8 frasi.`;
+    const WTF_RULE_EN = `WHAT THE F (friendly, absurd but helpful). Sequence: playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical “${impre}” → THEN ${react.length} object reactions → drink (“${drink}”) → 1–2 real useful lines → warm ironic moral. 6–8 sentences.`;
 
     msgs.push(
       { role: "system", content: L==="en" ? WTF_RULE_EN : WTF_RULE_IT },
       { role: "system", content: `IMPRECATION: ${impre}` },
       { role: "system", content: `REACTIONS:\n- ${react.join("\n- ")}` },
       { role: "system", content: `DRINK: ${drink}` },
-      { role: "system", content: L==="it" ? `ESEMPI (tono/ritmo). Mantieni utilità finale.` : `Keep absurd but land with real advice.` }
+      { role: "system", content: L==="it" ? `Mantieni l'utilità finale.` : `Land with practical advice.` }
     );
   } else {
-    // WHATIF aggiornato con luogo/contesto e warm opener opzionale
     const seed=seedFrom(domanda);
-    const opIdx = Math.floor(seededRand(seed)()*WHATIF_OPENERS_IT.length);
-    const opener = WHATIF_OPENERS_IT[opIdx];
-    const warm = maybeWarmOpener(domanda, L, micro, openerMode);
+    const opIntent = WHATIF_OPENER_INTENTS[Math.floor(seededRand(seed)()*WHATIF_OPENER_INTENTS.length)];
+    const warmUse = (openerMode==="always") || (openerMode!=="never" && seededRand(seed)()>0.40);
+    const warm = warmUse ? (L==="it"
+      ? "Se aggiunge calore, usa UNA sola riga personale iniziale (6–10 parole)."
+      : "If it adds warmth, use ONE short personal opening line (6–10 words)."
+    ) : "";
+
     const placeHint = mentionsPlace(domanda) ? (L==="it"
-      ? "Se la domanda cita un luogo, apri con 2–3 frasi sul contesto reale e su come si sta evolvendo prima di parlare dell'utente."
-      : "If a place is mentioned, open with 2–3 sentences on current context and evolution before speaking about the user.") : "";
+      ? "La domanda cita un luogo: inserisci 2–3 frasi sul contesto reale e sulla sua evoluzione (servizi, ritmo, spostamenti) prima di passare a come lo vive l’utente."
+      : "Place mentioned: add 2–3 sentences of real context/evolution before the user perspective.") : "";
 
     msgs.push(
       { role: "system", content: WHATIF_RULE_IT },
-      { role: "system", content: L==="it" ? `Incipit suggerito (non obbligatorio): ${opener}` : `Suggested incipit (not mandatory): ${opener}` },
-      ...(warm ? [{ role: "system", content: L==="it" ? `Una riga personale se utile: ${warm}` : `One warm opener if useful: ${warm}` }] : []),
+      { role: "system", content: L==="it" ? `IDEA DI INCIPIT: ${opIntent}. Non usare le frasi vietate né ripeterle alla lettera.` : `OPENING IDEA: ${opIntent}. Do not copy literal example phrases.` },
+      ...(warm ? [{ role: "system", content: warm }] : []),
       ...(placeHint ? [{ role: "system", content: placeHint }] : []),
     );
   }
 
-  // Istruzione utente finale
   const ask = (L==="en")
     ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`
     : (L==="it")
@@ -219,19 +234,12 @@ function buildMessages({ domanda, lang, periodo, stile, micro, openerMode }){
     : `Frage (nicht wiederholen): „${domanda}“. Gib EINE Antwort auf DEUTSCH, ein einziger Absatz.`;
 
   msgs.push({ role: "user", content: ask });
-
   return msgs;
 }
 
 /* ========= Micro-memoria (opzionale) ========= */
-// Salva preferenze leggere e non sensibili (tono, openerMode, città) su Redis.
-// Chiave basata su ip (grezzo) + lang per scopi demo. Puoi sostituire con un authId.
-async function loadPrefs(key){
-  try{ return (await redis.get(key)) || null; } catch { return null; }
-}
-async function savePrefs(key, prefs){
-  try{ await redis.set(key, prefs, { ex: 60*60*24*7 }); } catch {}
-}
+async function loadPrefs(key){ try{ return (await redis.get(key)) || null; } catch { return null; } }
+async function savePrefs(key, prefs){ try{ await redis.set(key, prefs, { ex: 60*60*24*7 }); } catch {} }
 
 /* ========= HANDLER ========= */
 export default async function handler(req, res){
@@ -249,24 +257,22 @@ export default async function handler(req, res){
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const {
       domanda = "",
-      stile = "whatif",      // "whatif" | "wtf"
+      stile = "whatif",
       lang  = "it",
       periodo = "future",
-      micro = {},            // { name?, energy?, style?, goals?, city? }
-      openerMode = "auto",   // "auto" | "always" | "never"
-      preferenze = null      // { openerMode?, micro? } per salvare in memoria
+      micro = {},
+      openerMode = "auto",
+      preferenze = null
     } = body;
 
     if(!domanda || typeof domanda !== "string")
       return res.status(400).json({ error:"bad_request", detail:"domanda_required" });
 
-    // Micro-memoria: carica preferenze salvate, poi merge con body
     const memKey = `prefs:${ip}:${normLang(lang)}`;
     const saved = await loadPrefs(memKey);
     const effOpener = openerMode || saved?.openerMode || "auto";
     const effMicro  = { ...(saved?.micro || {}), ...(micro || {}) };
 
-    // Se arrivano nuove preferenze, salvale
     if (preferenze && typeof preferenze === "object") {
       const toSave = {
         openerMode: preferenze.openerMode || effOpener,
@@ -283,10 +289,10 @@ export default async function handler(req, res){
 
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.98 : 0.85,  // più varietà naturale
+      temperature: stile === "wtf" ? 0.98 : 0.85,
       top_p: 0.92,
       max_tokens: 520,
-      frequency_penalty: 0.2,  // contro ripetizioni
+      frequency_penalty: 0.2,
       presence_penalty: 0.1,
       messages,
     });
@@ -299,10 +305,11 @@ export default async function handler(req, res){
     answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);
     answer = clampWords(answer, stile === "wtf" ? 180 : 175);
     answer = normalizeOneParagraph(answer);
-    answer = sentenceCaseAll(answer);
-    answer = finalPunct(answer);
+    answer = killClicheOpeners(answer);       // rimuove eventuali incipit vietati
+    answer = sentenceCaseAll(answer);         // maiuscole robuste
+    answer = finalPunct(answer);              // punto finale
 
-    // Moderazioni leggere: niente nomi inventati se non presenti nella domanda (IT)
+    // Moderazioni leggere (IT): niente nomi inventati
     if(normLang(lang)==="it"){
       (function(){
         const d=String(domanda||"");
