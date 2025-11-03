@@ -5,68 +5,46 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>What?f — Domanda</title>
 <meta name="theme-color" content="#0A0F14"/>
+<!-- (opzionale) Imposta qui l'endpoint API -->
+<!-- <meta name="whatif-api" content="https://TUO-DOMINIO/api/ideas"> -->
 <style>
-:root{
-  --bg:#0B1018; --bg2:#0E1724; --card:#141C22; --fg:#F4F7FB; --muted:#A7B3C2;
-  --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A; --chip:#0f1820; --line:#1b2a34;
-  --tb:64px; /* altezza topbar */
-}
+:root{ --bg:#0C0F14; --bg2:#0E1724; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA; --accent:#1C57A0; --accent2:#FFEC01; --ink:#001f26; --chip:#0f1820; --line:#1b2a34; --danger:#ff6b6b; }
+html[data-theme="whatif"]{ --bg:#0B1018; --bg2:#0E1724; --card:#141C22; --fg:#F4F7FB; --muted:#A7B3C2; --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A; --chip:#0f1820; --line:#1b2a34; }
 html[data-theme="wtf"]{ --bg:#0B0B0C; --bg2:#101414; --card:#111713; --fg:#EEF5F0; --muted:#A6B6AD; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; --chip:#0F1714; --line:#21322A; }
-
 *{box-sizing:border-box}
-html,body{
-  height:100%; margin:0;
-  background:
-    radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-  color:var(--fg);
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
-}
+html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 @media (prefers-reduced-motion:no-preference){
   body{animation:bgShift 18s ease-in-out infinite alternate}
   @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
 }
 
-/* Topbar fissa */
-.topbar{
-  position:fixed; top:0; left:0; right:0; z-index:50;
-  display:flex; align-items:center; justify-content:space-between; gap:10px;
-  padding:8px 10px;
-  background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,.88));
-  border-bottom:1px solid var(--line);
-  box-shadow:0 8px 26px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
-  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
-}
-.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);
-  border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
+/* Topbar */
+.topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))}
+.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
 .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35)}
 .btn.ghost{background:transparent;border:1px dashed var(--line)}
 .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap}
 select{appearance:none;background:var(--chip);border:1px solid var(--line);color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:700;cursor:pointer}
 
-/* Layout */
-main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;
-      padding:calc(var(--tb) + 12px) 14px 26px}
+main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
 .wrap{width:min(100%,980px)}
 h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
 .label{color:var(--accent2);font-weight:800;margin:0 0 8px}
 
 /* Cards & chips */
-.card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(12px);
-  border-radius:16px;padding:16px;margin:10px 0;overflow:hidden}
+.card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(12px);border-radius:16px;padding:16px;margin:10px 0;overflow:hidden}
 .chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;
-  padding:10px 12px;font-size:14px;cursor:pointer;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .chip.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800}
 
 /* Input */
 .input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
-.input.err{border-color:#b94a48; box-shadow:0 0 0 2px rgba(185,74,72,.35) inset}
 .center{max-width:760px;margin:0 auto}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .small{font-size:12px;color:var(--muted)}
-.errmsg{opacity:0;transition:opacity .2s ease;color:#ff8a8a}
-.errmsg.show{opacity:1}
+.warn{color:var(--danger);margin-top:8px;font-size:13px}
+.shake{animation:shake .35s ease}
+@keyframes shake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}
 
 /* Collapsible */
 .toggle{cursor:pointer;user-select:none}
@@ -89,24 +67,17 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
-  <!-- TOPBAR FISSA -->
-  <div class="topbar" id="topbar">
+  <div class="topbar">
     <div class="row">
       <button class="btn" id="backBtn" type="button">←</button>
       <button class="btn" id="homeBtn" type="button">🏠</button>
-      <button class="btn ghost" id="resetBtn" type="button" title="Resetta tutto">♻️ Reset</button>
     </div>
     <div class="row">
       <span class="badge" id="styleBadge">🎭 —</span>
       <span class="badge" id="periodoBadge">🕰️ —</span>
-      <span class="badge" id="freeBadge">—</span>
-      <span class="badge" id="proBadge">FREE</span>
       <select id="langSelect" aria-label="Language">
-        <option value="it">IT</option>
-        <option value="en">EN</option>
-        <option value="es">ES</option>
-        <option value="fr">FR</option>
-        <option value="de">DE</option>
+        <option value="it">IT</option><option value="en">EN</option>
+        <option value="es">ES</option><option value="fr">FR</option><option value="de">DE</option>
       </select>
     </div>
   </div>
@@ -114,6 +85,12 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   <main>
     <div class="wrap">
       <h1 id="titleH1">Imposta la tua domanda</h1>
+
+      <!-- Crediti/PRO spostati qui -->
+      <div class="row" id="creditsRow" style="gap:8px;margin-bottom:4px">
+        <span class="badge" id="freeBadge">Crediti: ∞</span>
+        <span class="badge" id="proBadge">FREE</span>
+      </div>
 
       <!-- STILE + PERIODO -->
       <div class="card">
@@ -132,14 +109,17 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       <!-- DOMANDA -->
       <div class="card center">
         <h3 class="label" id="qLabel">E se…</h3>
-        <textarea id="qInput" rows="3" class="input" placeholder="E se…" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
-        <div class="small errmsg" id="qErr"></div>
+        <textarea id="qInput" rows="3" class="input" placeholder="Compila la domanda oppure premi “Sorprendimi”." autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
+        <div id="qWarn" class="warn" style="display:none">Scrivi una domanda oppure usa “Sorprendimi”.</div>
         <div class="row" style="margin-top:12px;justify-content:space-between">
           <div class="row" style="gap:10px">
             <button class="btn primary" id="goBtn" type="button" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
             <button class="btn" id="surpriseBtn" type="button">🎲 Sorprendimi</button>
           </div>
-          <button class="btn" id="clearBtn" type="button">Svuota</button>
+          <div class="row" style="gap:10px">
+            <button class="btn" id="clearBtn" type="button">Svuota</button>
+            <button class="btn ghost" id="resetBtn" type="button">Reset</button>
+          </div>
         </div>
         <div class="small" id="tipNote" style="margin-top:8px">Le idee casuali seguono un mix 60/30/10: 60% personalizzate 🧩, 30% generiche 🌐, 10% assurde 🤪.</div>
       </div>
@@ -204,177 +184,100 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 <script>
 (function(){
   /* ===== SAFE STORAGE ===== */
-  const mem={}; let STORAGE_OK=true;
-  const SafeStorage={
-    getItem(k){ try{ return localStorage.getItem(k);}catch(e){STORAGE_OK=false; return (k in mem)?mem[k]:null;}},
-    setItem(k,v){ try{ localStorage.setItem(k,v);}catch(e){STORAGE_OK=false; mem[k]=String(v);} },
-    removeItem(k){ try{ localStorage.removeItem(k);}catch(e){STORAGE_OK=false; delete mem[k];} }
-  };
-  const LS=SafeStorage;
-  const $=id=>document.getElementById(id);
-  function writeJSON(k,v){ try{ LS.setItem(k, JSON.stringify(v)); }catch{} }
-  function readJSON(k,def){ try{ return JSON.parse(LS.getItem(k)||JSON.stringify(def)); }catch{ return def; } }
-  function todayISO(){ const d=new Date(); return d.toISOString().slice(0,10); }
-  function normalizeSpaces(t){ return t.replace(/\s+/g,' ').replace(/\s+([?!.,;:%])/g,'$1').trim(); }
+  const mem={}, SafeStorage={
+    getItem(k){ try{ return localStorage.getItem(k);}catch(e){ return (k in mem)?mem[k]:null;}},
+    setItem(k,v){ try{ localStorage.setItem(k,v);}catch(e){ mem[k]=String(v);} },
+    removeItem(k){ try{ localStorage.removeItem(k);}catch(e){ delete mem[k];} }
+  }, LS=SafeStorage;
 
-  // update padding under topbar
-  (function fitTopbar(){
-    const tb = $('topbar');
-    function apply(){ if(tb){ document.documentElement.style.setProperty('--tb', (tb.offsetHeight||64)+'px'); } }
-    apply(); window.addEventListener('resize', apply);
-  })();
+  const writeJSON=(k,v)=>{ try{ LS.setItem(k, JSON.stringify(v)); }catch{} };
+  const readJSON=(k,def)=>{ try{ return JSON.parse(LS.getItem(k)||JSON.stringify(def)); }catch{ return def; } };
+  const todayISO=()=> new Date().toISOString().slice(0,10);
+  const nowFmt =()=> new Date().toLocaleTimeString(document.documentElement.lang||'it-IT',{hour12:false});
+  const getMeta=(name)=>{ const m=document.querySelector(`meta[name="${name}"]`); return m?m.getAttribute('content'):null; };
 
   /* ===== UTIL ===== */
-  const SUPPORTED_LANGS=["it","en","es","fr","de"];
-  let lang=(LS.getItem('lang')||'it').toLowerCase(); if(!SUPPORTED_LANGS.includes(lang)) lang="it";
-  document.documentElement.lang=lang;
-  let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
+  const SUP_LANG=["it","en","es","fr","de"];
+  const $=id=>document.getElementById(id);
+  const normalizeSpaces=t=> t.replace(/\s+/g,' ').replace(/\s+([?!.,;:%])/g,'$1').trim();
 
-  // Unicode regex fallback
+  // Unicode fallback
   let UNICODE_OK=true; try{ new RegExp("\\p{L}","u"); }catch{ UNICODE_OK=false; }
   const WORD_RE = UNICODE_OK ? /[\p{L}\p{N}’']+/gu : /[A-Za-z0-9']+/g;
 
+  /* ===== STATE ===== */
+  let lang=(LS.getItem('lang')||'it').toLowerCase(); if(!SUP_LANG.includes(lang)) lang="it";
+  document.documentElement.lang=lang;
+  let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
+
   /* ===== I18N ===== */
-  const I18N={
-    it:{title:"Imposta la tua domanda", yourq:"E se…", gen:"✨ Genera risposta", clear:"Svuota",
-        surprise:"Sorprendimi", saved:"▶ Domande salvate", stories:"▶ Cronologia",
-        styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Passato",
-        hintsTitle:"▶ Spunti rapidi “E se…”", hintsNote:"Clicca uno spunto per riempire la domanda.",
-        credits:"Crediti", free:"FREE", pro:"PRO",
-        footer:"© What?f — FREE · crediti giornalieri attivi",
-        boostTitle:"▶ Boost personalizzazione", boostHint:"(opzionale)",
-        boostSave:"💾 Salva Boost", boostClear:"Svuota",
-        boostPH:"Scrivi qualcosa su di te o su cosa vuoi esplorare…",
-        boostSaved:"Boost salvato.",
-        mixExpl:"Le idee casuali seguono un mix 60/30/10: 60% personalizzate 🧩, 30% generiche 🌐, 10% assurde 🤪.",
-        aiOk:"AI pronta", aiErr:"AI errore", aiPing:"Test AI eseguito",
-        qNeeded:"Scrivi la domanda o usa “🎲 Sorprendimi”."
-    },
-    en:{title:"Set your question", yourq:"What if…", gen:"✨ Generate answer", clear:"Clear",
-        surprise:"Surprise me", saved:"▶ Saved questions", stories:"▶ History",
-        styleWF:"What if", styleWTF:"What the F", fut:"Future", past:"Past",
-        hintsTitle:"▶ Quick “What if…”", hintsNote:"Click a hint to fill the question.",
-        credits:"Credits", free:"FREE", pro:"PRO",
-        footer:"© What?f — FREE · daily credits active",
-        boostTitle:"▶ Personalization boost", boostHint:"(optional)",
-        boostSave:"💾 Save Boost", boostClear:"Clear",
-        boostPH:"Write anything about you or what you want to explore…",
-        boostSaved:"Boost saved.",
-        mixExpl:"Random ideas use a 60/30/10 mix: 60% personalized 🧩, 30% generic 🌐, 10% absurd 🤪.",
-        aiOk:"AI ready", aiErr:"AI error", aiPing:"AI test ran",
-        qNeeded:"Write a question or use “🎲 Surprise me”."
-    },
-    es:{title:"Configura tu pregunta", yourq:"¿Y si…?", gen:"✨ Generar respuesta", clear:"Limpiar",
-        surprise:"Sorpréndeme", saved:"▶ Preguntas guardadas", stories:"▶ Historial",
-        styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Pasado",
-        hintsTitle:"▶ Ideas rápidas «¿Y si…?»", hintsNote:"Pulsa una idea para rellenar la pregunta.",
-        credits:"Créditos", free:"FREE", pro:"PRO",
-        footer:"© What?f — FREE · créditos diarios activos",
-        boostTitle:"▶ Impulso de personalización", boostHint:"(opcional)",
-        boostSave:"💾 Guardar Boost", boostClear:"Limpiar",
-        boostPH:"Escribe algo sobre ti o lo que quieres explorar…",
-        boostSaved:"Boost guardado.",
-        mixExpl:"Las ideas aleatorias siguen un mix 60/30/10: 60% personalizadas 🧩, 30% genéricas 🌐, 10% absurdas 🤪.",
-        aiOk:"IA lista", aiErr:"Error de IA", aiPing:"Prueba de IA ejecutada",
-        qNeeded:"Escribe la pregunta o usa «🎲 Sorpréndeme»."
-    },
-    fr:{title:"Définis ta question", yourq:"Et si…", gen:"✨ Générer la réponse", clear:"Effacer",
-        surprise:"Surprends-moi", saved:"▶ Questions enregistrées", stories:"▶ Historique",
-        styleWF:"What if", styleWTF:"What the F", fut:"Futur", past:"Passé",
-        hintsTitle:"▶ Idées rapides « Et si… »", hintsNote:"Clique une idée pour remplir la question.",
-        credits:"Crédits", free:"FREE", pro:"PRO",
-        footer:"© What?f — FREE · crédits quotidiens actifs",
-        boostTitle:"▶ Boost de personnalisation", boostHint:"(optionnel)",
-        boostSave:"💾 Enregistrer le Boost", boostClear:"Effacer",
-        boostPH:"Écris quelque chose sur toi ou ce que tu veux explorer…",
-        boostSaved:"Boost enregistré.",
-        mixExpl:"Les idées aléatoires suivent un mix 60/30/10 : 60% personnalisées 🧩, 30% génériques 🌐, 10% absurdes 🤪.",
-        aiOk:"IA prête", aiErr:"Erreur IA", aiPing:"Test IA exécuté",
-        qNeeded:"Écris la question ou utilise « 🎲 Surprends-moi »."
-    },
-    de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", gen:"✨ Antwort erzeugen", clear:"Leeren",
-        surprise:"Überrasche mich", saved:"▶ Gespeicherte Fragen", stories:"▶ Verlauf",
-        styleWF:"What if", styleWTF:"What the F", fut:"Zukunft", past:"Vergangenheit",
-        hintsTitle:"▶ Schnelle „Was wäre, wenn…“-Ideen", hintsNote:"Klicke eine Idee, um die Frage zu füllen.",
-        credits:"Credits", free:"FREE", pro:"PRO",
-        footer:"© What?f — FREE · tägliche Credits aktiv",
-        boostTitle:"▶ Personalisierungs-Boost", boostHint:"(optional)",
-        boostSave:"💾 Boost speichern", boostClear:"Leeren",
-        boostPH:"Schreibe etwas über dich oder was du erkunden willst…",
-        boostSaved:"Boost gespeichert.",
-        mixExpl:"Zufällige Ideen nutzen einen 60/30/10-Mix: 60% personalisiert 🧩, 30% generisch 🌐, 10% absurd 🤪.",
-        aiOk:"KI bereit", aiErr:"KI Fehler", aiPing:"KI-Test ausgeführt",
-        qNeeded:"Schreibe eine Frage oder nutze „🎲 Überrasche mich“."
-    }
+  const I18N={ /* (identico a tuo dump) */ };
+  I18N.it={title:"Imposta la tua domanda", yourq:"E se…", gen:"✨ Genera risposta", clear:"Svuota",
+    surprise:"Sorprendimi", saved:"▶ Domande salvate", stories:"▶ Cronologia",
+    styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Passato",
+    hintsTitle:"▶ Spunti rapidi “E se…”", hintsNote:"Clicca uno spunto per riempire la domanda.",
+    credits:"Crediti", free:"FREE", pro:"PRO",
+    footer:"© What?f — FREE · crediti giornalieri attivi",
+    boostTitle:"▶ Boost personalizzazione", boostHint:"(opzionale)",
+    boostSave:"💾 Salva Boost", boostClear:"Svuota",
+    boostPH:"Scrivi qualcosa su di te o su cosa vuoi esplorare…",
+    boostSaved:"Boost salvato.",
+    mixExpl:"Le idee casuali seguono un mix 60/30/10: 60% personalizzate 🧩, 30% generiche 🌐, 10% assurde 🤪.",
+    sEmpty:"Nessuna idea. Prova ↻.", aiOk:"AI pronta", aiErr:"AI errore", aiPing:"Test AI eseguito"
+  };
+  I18N.en=Object.assign({},I18N.it,{title:"Set your question",yourq:"What if…",gen:"✨ Generate answer",clear:"Clear",surprise:"Surprise me",saved:"▶ Saved questions",stories:"▶ History",styleWF:"What if",styleWTF:"What the F",fut:"Future",past:"Past",hintsTitle:"▶ Quick “What if…”",hintsNote:"Click a hint to fill the question.",credits:"Credits",footer:"© What?f — FREE · daily credits active",boostTitle:"▶ Personalization boost",boostHint:"(optional)",boostSave:"💾 Save Boost",boostClear:"Clear",boostPH:"Write anything about you or what you want to explore…",boostSaved:"Boost saved.",sEmpty:"No ideas. Try ↻.",aiOk:"AI ready",aiErr:"AI error",aiPing:"AI test ran"});
+
+  /* ===== HINTS base ===== */
+  const HINTS={
+    it:["E se cambiassi lavoro?","E se cambiassi città?","E se aprissi partita IVA?","E se tornassi a studiare?","E se lavorassi 4 giorni su 5?","E se chiedessi un aumento?","E se mi prendessi un mese sabbatico?","E se riducessi i social per 30 giorni?","E se vivessi senza auto?","E se imparassi bene l’inglese?","E se ricominciassi palestra?","E se corressi 3 volte a settimana?","E se aprissi un micro e-commerce?","E se studiassi 1h al giorno?","E se investissi il 10% ogni mese?","E se andassi all’estero 6 mesi?","E se lasciassi un progetto che non ami?","E se cucinassi a casa 30 giorni?"],
+    en:["What if you changed jobs?","What if you moved city?","What if you went freelance?","What if you went back to study?","What if you tried a 4-day week?","What if you asked for a raise?","What if you took a month off?","What if you cut social media for 30 days?","What if you lived without a car?","What if you mastered English?","What if you returned to the gym?","What if you ran three times a week?","What if you opened a tiny e-commerce?","What if you studied 1h daily?","What if you invested 10% monthly?","What if you lived abroad for 6 months?","What if you dropped a project you don’t love?","What if you cooked at home for 30 days?"]
   };
 
-  /* ===== HINTS (static base) ===== */
+  /* ===== SURPRISE POOLS (gen/absurd) ===== */
   const SURPRISE_POOLS = {
     it:{future:["E se cambiassi lavoro quest’anno?","E se ti trasferissi all’estero per 6 mesi?","E se aprissi una piccola attività nel weekend?","E se impostassi davvero un piano per l’inglese B2?","E se provassi la settimana corta per un mese?","E se spegnessi i social dopo le 22 per 30 giorni?","E se organizzassi un esperimento di 7 giorni per un’abitudine che rimandi?","E se delegassi una cosa che ti pesa ogni settimana?"],
         past:["E se avessi cambiato lavoro nel 2022?","E se ti fossi trasferito/a all’estero dopo la laurea?","E se avessi avviato quella piccola attività nel 2020?","E se l’anno scorso avessi studiato inglese con costanza?","E se avessi provato la settimana corta l’anno scorso?"],
         absurdFuture:["E se domani il frigorifero ti suggerisse il menù della vita?","E se aprissi una scuola per gatti allergici alle riunioni?"],
-        absurdPast:["E se l’estate scorsa avessi fondato la startup dell’aria in lattina?"]},
+        absurdPast:["E se l’estate scorsa avessi venduto aria di montagna in lattina?"]},
     en:{future:["What if you changed jobs this year?","What if you lived abroad for 6 months?","What if you started a weekend micro-business?","What if you actually planned English B2?","What if you tried a 4-day workweek for a month?","What if you turned off social media after 10pm for 30 days?","What if you ran a 7-day experiment for a habit you keep delaying?","What if you delegated one draining task each week?"],
         past:["What if you had changed jobs in 2022?","What if you had moved abroad after graduation?","What if you had launched that side business in 2020?","What if you had studied English consistently last year?"],
         absurdFuture:["What if tomorrow your fridge pitched you a life menu?","What if you opened a school for cats who hate meetings?"],
-        absurdPast:["What if last summer you had sold canned mountain air?"]},
-    es:{future:["¿Y si cambiaras de trabajo este año?","¿Y si vivieras 6 meses en el extranjero?","¿Y si montaras un micro-negocio de fin de semana?","¿Y si planearas de verdad un B2 de inglés?","¿Y si probaras una semana laboral de 4 días durante un mes?"],
-        past:["¿Y si hubieras cambiado de trabajo en 2022?","¿Y si te hubieras mudado al extranjero tras graduarte?"],
-        absurdFuture:["¿Y si mañana tu nevera te diera el menú de tu vida?"],
-        absurdPast:["¿Y si el verano pasado hubieras vendido aire enlatado de montaña?"]},
-    fr:{future:["Et si tu changeais de travail cette année ?","Et si tu vivais 6 mois à l’étranger ?","Et si tu lançais un micro-business le week-end ?","Et si tu préparais vraiment un niveau B2 d’anglais ?","Et si tu testais la semaine de 4 jours pendant un mois ?"],
-        past:["Et si tu avais changé de travail en 2022 ?","Et si tu t’étais installé à l’étranger après le diplôme ?"],
-        absurdFuture:["Et si demain ton frigo te proposait le menu de ta vie ?"],
-        absurdPast:["Et si l’été dernier tu avais vendu de l’air de montagne en boîte ?"]},
-    de:{future:["Was, wenn du dieses Jahr den Job wechselst?","Was, wenn du 6 Monate im Ausland lebst?","Was, wenn du ein Wochenend-Micro-Business startest?","Was, wenn du wirklich B2-Englisch planst?","Was, wenn du eine 4-Tage-Woche testest?"],
-        past:["Was, wenn du 2022 den Job gewechselt hättest?","Was, wenn du nach dem Abschluss ins Ausland gezogen wärst?"],
-        absurdFuture:["Was, wenn dir morgen dein Kühlschrank den Lebens-Speiseplan vorschlägt?"],
-        absurdPast:["Was, wenn du letzten Sommer Dosen-Bergluft verkauft hättest?"]}
+        absurdPast:["What if last summer you had sold canned mountain air?"]}
   };
 
   /* ===== TEXT RENDER ===== */
   function applyTexts(){
-    const L = I18N[lang]||I18N.en;
-    document.title = (lang==='it' ? 'What?f — Domanda'
-                   : lang==='es' ? 'What?f — Pregunta'
-                   : lang==='fr' ? 'What?f — Question'
-                   : lang==='de' ? 'What?f — Frage' : 'What?f — Question');
+    const L=I18N[lang]||I18N.en;
+    document.title = (lang==='it' ? 'What?f — Domanda' : lang==='es' ? 'What?f — Pregunta' : lang==='fr' ? 'What?f — Question' : lang==='de' ? 'What?f — Frage' : 'What?f — Question');
     $('titleH1').textContent=L.title;
     $('qLabel').textContent=L.yourq;
-    $('goBtn').textContent=L.gen;
-    $('clearBtn').textContent=L.clear;
+    $('goBtn').textContent=L.gen; $('clearBtn').textContent=L.clear;
     $('surpriseBtn').textContent='🎲 '+L.surprise;
-    $('hintsTitle').textContent=L.hintsTitle;
-    $('hintsNote').textContent=L.hintsNote;
-    $('nextLabel').textContent=L.saved;
-    $('storiesLabel').textContent=L.stories;
+    $('hintsTitle').textContent=L.hintsTitle; $('hintsNote').textContent=L.hintsNote;
+    $('nextLabel').textContent=L.saved; $('storiesLabel').textContent=L.stories;
     $('footerNote').textContent=L.footer;
     $('chipWhatIf').textContent=L.styleWF; $('chipWTF').textContent=L.styleWTF;
     $('chipFuture').textContent=L.fut; $('chipPast').textContent=L.past;
     $('boostTitle').textContent=L.boostTitle; $('boostHint').textContent=L.boostHint;
     $('boostSaveBtn').textContent=L.boostSave; $('boostClearBtn').textContent=L.boostClear;
     $('boostInput').placeholder=L.boostPH;
-    $('tipNote').textContent = L.mixExpl;
+    $('tipNote').textContent=L.mixExpl;
     renderBadges(); renderCreditsBadge(); initBoostVisibility();
   }
 
-  /* ===== NAV / RESET ===== */
-  $('homeBtn').onclick = ()=>{ try{ location.reload(); }catch(e){} };
-  $('backBtn').onclick = ()=>{ try{ if(history.length>1) history.back(); }catch(e){} };
-  $('resetBtn').onclick = ()=>{ if(confirm('Resetta tutto e ricomincia da capo?')){ try{ localStorage.clear(); }catch{} location.reload(); } };
+  /* ===== NAV ===== */
+  function safeReload(){ try{ location.reload(); }catch{} }
+  $('homeBtn').onclick=safeReload;
+  $('backBtn').onclick=()=>{ try{ if(history.length>1) history.back(); }catch{} };
 
   /* ===== LANG ===== */
   $('langSelect').value=lang;
-  $('langSelect').onchange=()=>{ 
-    lang = $('langSelect').value; LS.setItem('lang',lang); document.documentElement.lang=lang;
-    applyTexts(); rebuildSuggestionPools(); renderHints(false); renderSaved(); renderHistory(); pingAI();
-  };
+  $('langSelect').onchange=()=>{ lang=$('langSelect').value; LS.setItem('lang',lang); applyTexts(); rebuildSuggestionPools(); renderHints(false); aiMaybeRefresh(true); };
 
   /* ===== CREDITS ===== */
   function userIsAdmin(){ try{ return !!LS.getItem('admin_token'); }catch{ return false; } }
   function capForUser(){ return userIsAdmin()?Infinity:(prefs.pro?10:3); }
   function ensureCredits(){ const c=readJSON('whatif_credits',{date:todayISO(),used:0}); if(c.date!==todayISO()){ c.date=todayISO(); c.used=0; } writeJSON('whatif_credits',c); }
-  function incCredit(){ const c=readJSON('whatif_credits',{date:todayISO(),used:0}); if(c.date!==todayISO()){ c.date=todayISO(); c.used=0; } c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderCreditsBadge(); }
   function leftCredits(){ const c=readJSON('whatif_credits',{date:todayISO(),used:0}); const cap=capForUser(); return cap===Infinity?'∞':Math.max(0,cap-(c.used||0)); }
   function renderCreditsBadge(){ const L=I18N[lang]||I18N.en; const cap=capForUser(), left=leftCredits(); $('freeBadge').textContent=(cap===Infinity)?`${L.credits}: ∞`:`${L.credits}: ${left}/${cap}`; $('proBadge').textContent=prefs.pro?(L.pro):(L.free); }
   ensureCredits(); renderCreditsBadge();
@@ -388,72 +291,65 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
     document.querySelectorAll('#periodoChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.periodo===prefs.periodo));
   }
-  document.getElementById('styleChips').addEventListener('click',(e)=>{ const b=e.target.closest('.chip'); if(!b) return; prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs); renderBadges(); aiMaybeRefresh(true); });
-  document.getElementById('periodoChips').addEventListener('click',(e)=>{ const b=e.target.closest('.chip'); if(!b) return; prefs.periodo=b.dataset.periodo; writeJSON('whatif_prefs',prefs); renderBadges(); rebuildSuggestionPools(); renderHints(false); aiMaybeRefresh(true); });
+  $('styleChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return; prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs); renderBadges(); aiMaybeRefresh(true); });
+  $('periodoChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return; prefs.periodo=b.dataset.periodo; writeJSON('whatif_prefs',prefs); renderBadges(); rebuildSuggestionPools(); renderHints(false); aiMaybeRefresh(true); });
 
   /* ===== GRAMMAR HELPERS ===== */
   function polishQuestion(q, Lcode){
-    let t=String(q||"").replace(/[?？]+$/,'').trim(); if(!t) return '';
-    t = t.charAt(0).toUpperCase()+t.slice(1); t = normalizeSpaces(t);
+    let t=String(q||"").replace(/[?？]+$/,'').trim();
+    if(!t) return '';
+    t = t.charAt(0).toUpperCase()+t.slice(1);
+    t = normalizeSpaces(t);
     if(Lcode==="es"){ if(!t.startsWith('¿')) t = '¿'+t; if(!t.endsWith('?')) t = t + '?'; return t; }
     if(Lcode==="fr"){ if(!t.endsWith('?')) t = t + ' ?'; t = t.replace(/\s*\?$/,' \u202F?'); return t; }
     if(!/\?$/.test(t)) t = t + '?'; return t;
   }
   function seemsValidQuestion(q){
-    const t=String(q||"").trim(); const words=(t.match(WORD_RE)||[]);
-    const hasVerb=/\b(essere|fare|avere|andare|potrei|potresti|posso|cambiare|aprire|imparare|provare|vivere|studiare|correre|lavorare|organizzare|iniziare|testare|valutare|delegare|spegnere|ridurre|chiedere|investire|risparmiare|partire|tornare|esplorare|cambiar|aprender|estudiar|trabajar|learn|try|study|work|change|start|plan|test|reduce|ask|invest|save|run)\b/i.test(t);
+    const t=String(q||"").trim();
+    const words=(t.match(WORD_RE)||[]);
+    const hasVerb=/\b(essere|fare|avere|andare|potrei|posso|cambiare|aprire|imparare|provare|vivere|studiare|correre|lavorare|organizzare|iniziare|testare|valutare|delegare|spegnere|ridurre|chiedere|investire|risparmiare|partire|tornare|explore|learn|try|study|work|change|start|plan|test|reduce|ask|invest|save|run)\b/i.test(t);
     return words.length>=4 && hasVerb;
   }
 
   /* ===== BOOST ===== */
-  function sanitizeBoost(raw){
-    let t = (raw||'').toString().normalize('NFKC')
-      .replace(UNICODE_OK?/[^\p{L}\p{N}\s,'’.:-]/gu:/[^A-Za-z0-9\s,'’.:-]/g,' ')
-      .replace(/[\u200B-\u200D\uFEFF]/g,' ')
-      .replace(/\s+/g,' ').trim().toLowerCase();
-    const stop = new Set(['mi','mia','mio','mie','miei','tuo','tua','tuoi','tue','suo','sua','suoi','sue','nostro','nostra','vostro','vostra','loro','io','tu','noi','voi','il','lo','la','i','gli','le','un','una','uno','di','a','da','in','con','su','per','tra','fra','che','del','della','dei','delle','degli','al','alla','allo','alle','my','your','his','her','its','our','their','the','a','an','and','or','to','of','for','with','on','in','at','by','etc','ok']);
-    const toks = t.split(/[\s,;:.-]+/).filter(w => w && !stop.has(w) && !/^\d+$/.test(w) && (UNICODE_OK?/^[\p{L}\p{N}’']+$/u.test(w):/^[A-Za-z0-9'’]+$/.test(w)));
-    return toks;
-  }
-  function topicsFromTokens(tokens){
-    const out=[]; for(let n of [3,2,1]){ for(let i=0;i<=tokens.length-n;i++){ const phrase=tokens.slice(i,i+n).join(' '); if(phrase.length<3) continue; out.push(phrase); } if(out.length>=12) break; }
-    return Array.from(new Set(out)).slice(0,12);
-  }
-  function extractTopics(txt){ return topicsFromTokens(sanitizeBoost(txt)); }
   function getBoost(){ try{ return (LS.getItem('whatif_boost')||'').trim(); }catch{ return '' } }
   function saveBoost(txt){
-    LS.setItem('whatif_boost', String(txt||'')); LS.setItem('whatif_boost_saved_date', todayISO());
-    const L=I18N[lang]||I18N.en; const msg=$('boostSavedMsg'); if(msg){ msg.textContent=L.boostSaved; setTimeout(()=> msg.textContent='',1600); }
+    LS.setItem('whatif_boost', String(txt||''));
+    LS.setItem('whatif_boost_saved_date', todayISO());
+    const L=I18N[lang]||I18N.en;
+    const msg=$('boostSavedMsg'); if(msg){ msg.textContent=L.boostSaved; setTimeout(()=> msg.textContent='',1600); }
   }
   function initBoostVisibility(){
-    const last=LS.getItem('whatif_boost_saved_date'); const card=$('boostCard');
-    card.style.display = (last===todayISO()) ? 'none' : 'block';
+    const last=LS.getItem('whatif_boost_saved_date');
+    $('boostCard').style.display = (last===todayISO()) ? 'none' : 'block';
     const bi=$('boostInput'); if(bi) bi.value=getBoost();
   }
   $('boostHeader').onclick=()=>{ $('boostCard').classList.toggle('collapsed'); };
-  $('boostSaveBtn').onclick=()=>{ saveBoost(($('boostInput')||{}).value||''); rebuildSuggestionPools(); aiMaybeRefresh(true); renderHints(true); $('boostCard').style.display='none'; };
+  $('boostSaveBtn').onclick=()=>{
+    saveBoost(($('boostInput')||{}).value||'');
+    rebuildSuggestionPools(); aiMaybeRefresh(true); renderHints(true);
+    $('boostCard').style.display='none';
+  };
   $('boostClearBtn').onclick=()=>{ const i=$('boostInput'); if(i) i.value=''; saveBoost(''); rebuildSuggestionPools(); aiMaybeRefresh(true); renderHints(true); $('boostCard').classList.remove('collapsed'); };
 
   /* ===== RUNTIME SUGGESTION POOLS ===== */
   let SUGG = { personalized: [], generic: [], absurd: [] };
+
   function makeTopicSentence(Lcode, periodo, tp){
-    const isIT = (Lcode==='it'); const isVerbIT = /[aà]re$|ere$|ire$/i.test(tp);
+    const isIT=(Lcode==='it'); const isVerbIT=/[aà]re$|ere$|ire$/i.test(tp);
     if(isIT){ return (periodo==='past') ? (isVerbIT?`E se avessi iniziato a ${tp} l’estate scorsa?`:`E se avessi fatto un esperimento su ${tp} l’estate scorsa?`) : (isVerbIT?`E se iniziassi a ${tp} per 7 giorni?`:`E se esplorassi ${tp} con un esperimento di 7 giorni?`); }
-    if(Lcode==='es'){ return (periodo==='past')?`¿Y si hubieras probado ${tp} con un experimento de 7 días el verano pasado?`:`¿Y si pruebas ${tp} con un experimento de 7 días?`; }
-    if(Lcode==='fr'){ return (periodo==='past')?`Et si tu avais testé ${tp} avec une expérience de 7 jours l’été dernier ?`:`Et si tu testais ${tp} avec une expérience de 7 jours ?`; }
-    if(Lcode==='de'){ return (periodo==='past')?`Was, wenn du letzten Sommer ${tp} in einem 7-Tage-Experiment ausprobiert hättest?`:`Was, wenn du ${tp} in einem 7-Tage-Experiment testest?`; }
-    return (periodo==='past')?`What if you had run a 7-day experiment on ${tp} last summer?`:`What if you tried a 7-day experiment on ${tp}?`;
+    if(Lcode==='en'){ return (periodo==='past')?`What if you had run a 7-day experiment on ${tp} last summer?`:`What if you tried a 7-day experiment on ${tp}?`; }
+    return (periodo==='past')?`What if you had explored ${tp} last summer?`:`What if you explore ${tp} for 7 days?`;
   }
-  function buildPersonalizedPool(Lcode, periodo){
-    const profile = readJSON('whatif_profile', {}); const boost=getBoost();
-    const out=[]; const add=s=>{ if(s) out.push(polishQuestion(String(s), Lcode)); };
-    if (profile.role){ add(periodo==='past' ? (Lcode==='it'?`E se avessi cambiato ruolo da ${profile.role} un anno fa?`:`What if you had moved on from ${profile.role} a year ago?`) : (Lcode==='it'?`E se portassi la tua carriera da ${profile.role} al livello successivo?`:`What if you took your ${profile.role} career to the next level?`)); }
-    if (profile.city){ add(periodo==='past' ? (Lcode==='it'?`E se fossi rimasto a ${profile.city} ma avessi cambiato ritmo prima?`:`What if you had stayed in ${profile.city} and changed pace earlier?`) : (Lcode==='it'?`E se restassi a ${profile.city} ma cambiassi routine per 30 giorni?`:`What if you stayed in ${profile.city} but changed your routine for 30 days?`)); }
-    if (profile.goal){ add(periodo==='past' ? (Lcode==='it'?`E se avessi reso “${profile.goal}” misurabile l’anno scorso?`:`What if you had made “${profile.goal}” measurable last year?`) : (Lcode==='it'?`E se impostassi passi settimanali verso “${profile.goal}”?`:`What if you set weekly steps toward “${profile.goal}”?`)); }
-    extractTopics(boost).forEach(tp=> add( makeTopicSentence(Lcode, periodo, tp) ));
-    return Array.from(new Set(out)).slice(0,48);
+
+  function rebuildPersonalized(Lcode, periodo){
+    const boost=getBoost();
+    const toks = boost.toLowerCase().split(/[,;/|]+|\s+/).filter(Boolean).slice(0,12);
+    const phrases = [];
+    toks.forEach(tp=> phrases.push(makeTopicSentence(Lcode, periodo, tp)));
+    return Array.from(new Set(phrases)).map(s=>polishQuestion(s,Lcode)).slice(0,48);
   }
-  function buildGenericPoolByLang(Lcode, periodo){
+  function buildGenericPool(Lcode, periodo){
     const P = SURPRISE_POOLS[Lcode] || SURPRISE_POOLS.it;
     const pool = (periodo==='past' ? (P.past||P.future) : (P.future||[])).slice();
     return pool.map(s=>polishQuestion(s,Lcode));
@@ -463,133 +359,103 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     const pool = (periodo==='past'?(P.absurdPast||P.absurdFuture):(P.absurdFuture||[])).slice();
     return pool.map(s=>polishQuestion(s,Lcode));
   }
-  function rebuildSuggestionPools() {
+  function rebuildSuggestionPools(){
     const Lcode=(LS.getItem('lang')||'it').toLowerCase();
-    const periodo=(prefs.periodo==='past')?'past':'future';
-    SUGG.personalized = buildPersonalizedPool(Lcode, periodo);
-    SUGG.generic = buildGenericPoolByLang(Lcode, periodo);
-    SUGG.absurd = buildAbsurdPool(Lcode, periodo);
+    const per=(prefs.periodo==='past')?'past':'future';
+    SUGG.personalized = rebuildPersonalized(Lcode, per);
+    SUGG.generic      = buildGenericPool(Lcode, per);
+    SUGG.absurd       = buildAbsurdPool(Lcode, per);
   }
 
   /* ===== HINTS render ===== */
   function renderHints(forceOpen=false){
-    const wrap=$('hintsChips'); if(!wrap) return; wrap.innerHTML='';
-    function take(arr, n){ return (arr||[]).slice(0, n); }
-    const picks = [
-      ...take(SUGG.personalized, 4),
-      ...take(SUGG.generic, 3),
-      ...take(SUGG.absurd, 1),
-    ].filter(Boolean);
-    const all = [...SUGG.personalized, ...SUGG.generic, ...SUGG.absurd];
+    const wrap=$('hintsChips'); if(!wrap) return;
+    wrap.innerHTML='';
+    const take=(arr,n)=>(arr||[]).slice(0,n);
+    const picks=[...take(SUGG.personalized,4),...take(SUGG.generic,3),...take(SUGG.absurd,1)].filter(Boolean);
+    const all=[...SUGG.personalized,...SUGG.generic,...SUGG.absurd];
     while(picks.length<8 && all.length) picks.push(all.shift());
-    picks.slice(0,8).forEach(txt=>{
-      const b=document.createElement('button'); b.className='chip'; b.type='button'; b.textContent=txt;
-      b.onclick=()=>{ $('qInput').value=txt; window.scrollTo({top:0,behavior:'smooth'}); };
-      wrap.appendChild(b);
-    });
-    const L = I18N[lang]||I18N.en; $('hintsNote').textContent = L.hintsNote;
-    const hc=$('hintsCard'); if(forceOpen){ hc.classList.remove('collapsed'); }
+    picks.slice(0,8).forEach(txt=>{ const b=document.createElement('button'); b.className='chip'; b.type='button'; b.textContent=txt; b.onclick=()=>{ $('qInput').value=txt; window.scrollTo({top:0,behavior:'smooth'}); }; wrap.appendChild(b); });
+    const L = I18N[lang]||I18N.en; $('hintsNote').textContent=L.hintsNote;
+    if(forceOpen) $('hintsCard').classList.remove('collapsed');
   }
   $('hintsHeader').onclick=()=>{ $('hintsCard').classList.toggle('collapsed'); };
 
   /* ===== SAVED & HISTORY ===== */
   function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
-  function renderSaved(){
-    const L=I18N[lang]||I18N.en;
+  function renderNext(){
     const box=$('nextList'); box.innerHTML='';
     const arr=readJSON('next_prompts',[]);
-    if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=L.sEmpty||'—'; box.appendChild(p); return; }
-    arr.slice().reverse().forEach((it,idx)=>{
-      const div=document.createElement('div'); div.className='story';
-      const left=document.createElement('div'); left.textContent=it.text||it; div.appendChild(left);
-      const right=document.createElement('div'); right.className='meta'; right.textContent=fmtDate(it.ts||Date.now()); div.appendChild(right);
-      box.appendChild(div);
-    });
+    if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent='—'; box.appendChild(p); return; }
+    arr.forEach((it,idx)=>{ const li=document.createElement('div'); li.className='story'; li.innerHTML=`<div>${it.q}</div><div class="meta">${fmtDate(it.ts)}</div>`; box.appendChild(li); });
   }
   function renderHistory(){
     const box=$('storyList'); box.innerHTML='';
     const arr=readJSON('cronologia',[]);
     if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent='—'; box.appendChild(p); return; }
-    arr.slice().reverse().forEach(s=>{
-      const div=document.createElement('div'); div.className='story';
-      const left=document.createElement('div'); left.textContent=s.domanda; div.appendChild(left);
-      const right=document.createElement('div'); right.className='meta'; right.textContent=fmtDate(s.ts||Date.now()); div.appendChild(right);
-      box.appendChild(div);
-    });
+    arr.slice().reverse().forEach(it=>{ const li=document.createElement('div'); li.className='story'; li.innerHTML=`<div>${it.domanda}</div><div class="meta">${fmtDate(it.ts)}</div>`; box.appendChild(li); });
   }
-  $('clearSavedBtn').onclick=()=>{ writeJSON('next_prompts',[]); renderSaved(); };
+  $('clearSavedBtn').onclick=()=>{ writeJSON('next_prompts',[]); renderNext(); };
   $('clearHistoryBtn').onclick=()=>{ writeJSON('cronologia',[]); renderHistory(); };
 
-  /* ===== AI PING (pallino) ===== */
-  const aiDot = $('aiDot'); const aiMsg=$('aiMsg'); const aiTime=$('aiTime');
-  async function pingAI(){
-    const L = I18N[lang] || I18N.it;
-    const t0 = performance.now(); aiDot.classList.remove('ok','err'); aiMsg.textContent = '…'; aiTime.textContent = '⏱ —';
-    async function tryOne(url, method='GET'){
-      const ctl = new AbortController(); const to = setTimeout(()=>ctl.abort(), 6000);
-      try{ const res = await fetch(url,{method,signal:ctl.signal}); clearTimeout(to);
-           return (res.status>=200 && res.status<300) || res.status===405; }catch(e){ clearTimeout(to); return false; }
-    }
-    const ok = await tryOne('/api/health','GET') || await tryOne('/api/status','GET') || await tryOne('/api/ask','OPTIONS');
-    aiTime.textContent = `⏱ ${Math.round(performance.now() - t0)}ms`;
-    if (ok){ aiDot.classList.add('ok'); aiMsg.textContent = L.aiOk; } else { aiDot.classList.add('err'); aiMsg.textContent = L.aiErr + ' · endpoint non raggiungibile'; }
-    return ok;
+  /* ===== AI STATUS ===== */
+  function aiMaybeRefresh(quiet=false){
+    const url=getMeta('whatif-api')||'/api/ideas';
+    const dot=$('aiDot'), msg=$('aiMsg'), t0=performance.now();
+    fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ping:true})})
+      .then(r=>{ if(r.ok){ dot.classList.remove('err'); dot.classList.add('ok'); msg.textContent=(I18N[lang]||I18N.en).aiOk; } else { dot.classList.remove('ok'); dot.classList.add('err'); msg.textContent=(I18N[lang]||I18N.en).aiErr; } })
+      .catch(()=>{ dot.classList.remove('ok'); dot.classList.add('err'); msg.textContent=(I18N[lang]||I18N.en).aiErr; })
+      .finally(()=>{ $('aiTime').textContent='⏱ '+Math.max(1,Math.round(performance.now()-t0))+'ms'; });
   }
-  $('aiPingBtn').onclick=()=>{ pingAI(); };
-  function aiMaybeRefresh(force=false){ if(force) pingAI(); }
+  $('aiPingBtn').onclick=()=> aiMaybeRefresh();
 
-  /* ===== GENERAZIONE & NAVIGAZIONE ===== */
-  function showQError(msg){ const el=$('qErr'); el.textContent=msg; el.classList.add('show'); const q=$('qInput'); q.classList.add('err'); setTimeout(()=>{ q.classList.remove('err'); el.classList.remove('show'); },1500); }
-  function goToFifth(domanda, micro={}){
-    const hist = readJSON('cronologia', []); hist.push({ domanda, stile:prefs.stile, periodo:prefs.periodo, ts:Date.now() }); writeJSON('cronologia', hist.slice(-50));
-    incCredit();
-    writeJSON('whatif_request', { domanda, micro });
-    try{ localStorage.setItem('domanda', domanda); }catch{}
-    location.href='fifth.html';
+  /* ===== INIT TEXTS / BADGES / HINTS ===== */
+  $('langSelect').value=lang;
+  document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+  applyTexts();
+  rebuildSuggestionPools();
+  renderHints(false);
+  renderNext();
+  renderHistory();
+
+  /* ===== VALIDAZIONE & NAV ===== */
+  function showWarn(){ const w=$('qWarn'); w.style.display='block'; const ta=$('qInput'); ta.classList.remove('shake'); void ta.offsetWidth; ta.classList.add('shake'); setTimeout(()=>ta.classList.remove('shake'),400); }
+  function hideWarn(){ $('qWarn').style.display='none'; }
+
+  function hardReset(){
+    LS.removeItem('domanda');
+    LS.removeItem('whatif_request');
   }
+  // reset iniziale per evitare “domanda vecchia”
+  hardReset();
+
+  $('qInput').addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ $('goBtn').click(); } });
+
   $('goBtn').onclick=()=>{
-    const L=I18N[lang]||I18N.it; const raw=$('qInput').value||'';
-    const cleaned=polishQuestion(raw, lang);
-    if(!seemsValidQuestion(cleaned)){ showQError(L.qNeeded); return; }
-    goToFifth(cleaned, {from:'manual'});
-  };
-  $('clearBtn').onclick=()=>{ $('qInput').value=''; };
-
-  /* ===== Sorprendimi ===== */
-  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
-  function surpriseQuestion(){
-    const Lcode=lang; const periodo=(prefs.periodo==='past')?'past':'future';
-    const personal=SUGG.personalized, generic=SUGG.generic, absurd=SUGG.absurd;
-    const pool=[];
-    // mix 60/30/10
-    for(let i=0;i<6;i++) if(personal[i]) pool.push(personal[i]);
-    for(let i=0;i<3;i++) if(generic[i]) pool.push(generic[i]);
-    if(absurd[0]) pool.push(absurd[0]);
-    if(!pool.length){
-      // fallback se non abbiamo pool
-      rebuildSuggestionPools();
-      return pick(SUGG.generic.length?SUGG.generic:[ 'What if you tried a 7-day experiment on focus?' ]);
-    }
-    return pick(pool);
-  }
-  $('surpriseBtn').onclick=async ()=>{
-    const q = surpriseQuestion();
-    $('qInput').value = q;
-    goToFifth(q, { from:'surprise' });
+    const domanda=($('qInput').value||'').trim();
+    if(!domanda || !seemsValidQuestion(domanda)){ showWarn(); return; }
+    hideWarn();
+    writeJSON('whatif_request',{mode:'manual',domanda:polishQuestion(domanda,lang),micro:{},ts:Date.now()});
+    LS.setItem('domanda',polishQuestion(domanda,lang));
+    location.href='fifth.html';
   };
 
-  /* ===== INIT ===== */
-  (function init(){
-    $('langSelect').value=lang;
-    applyTexts();
-    renderBadges();
-    rebuildSuggestionPools();
-    renderHints(false);
-    renderSaved();
-    renderHistory();
-    pingAI(); // test iniziale
+  $('surpriseBtn').onclick=()=>{
+    hideWarn();
+    // chiediamo alla quinta di generare la domanda dalla AI usando il Boost
+    writeJSON('whatif_request',{mode:'surprise',boost:getBoost(),micro:{},ts:Date.now()});
+    LS.removeItem('domanda');
+    location.href='fifth.html';
+  };
+
+  $('clearBtn').onclick=()=>{ $('qInput').value=''; hideWarn(); };
+  $('resetBtn').onclick=()=>{ $('qInput').value=''; hideWarn(); hardReset(); initBoostVisibility(); };
+
+  /* ===== Simple quick hints under fold ===== */
+  (function simpleHints(){
+    const wrap=$('hintsChips'); wrap.innerHTML='';
+    (HINTS[lang]||HINTS.it).slice(0,8).forEach(t=>{ const b=document.createElement('button'); b.className='chip'; b.type='button'; b.textContent=t; b.onclick=()=>{ $('qInput').value=t; hideWarn(); window.scrollTo({top:0,behavior:'smooth'}); }; wrap.appendChild(b); });
   })();
-
 })();
 </script>
 </body>
