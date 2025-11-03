@@ -2,388 +2,227 @@
 <html lang="it" data-theme="whatif">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<title>What?f — Domanda</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>What?f — Domanda (clean)</title>
 <meta name="theme-color" content="#0A0F14"/>
 <style>
 :root{
-  --bg:#0C0F14; --bg2:#0E1724; --card:#141C22; --fg:#F4F7FB; --muted:#A7B3C2;
-  --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A; --chip:#0f1820; --line:#1b2a34;
-  --barh:56px;
-}
-html[data-theme="wtf"]{
-  --bg:#0B0B0C; --bg2:#101414; --card:#111713; --fg:#EEF5F0; --muted:#A6B6AD;
-  --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; --chip:#0F1714; --line:#21322A;
+  --bg:#0B1018; --bg2:#0E1724; --card:#141C22; --fg:#F4F7FB; --muted:#A7B3C2;
+  --accent:#1C57A0; --accent2:#FFEC01; --line:#1b2a34; --chip:#0f1820;
+  --topbarH:48px; --qbarTop:140px; --qbarH:64px;
 }
 *{box-sizing:border-box}
-html,body{
-  height:100%; margin:0;
-  background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-  color:var(--fg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility
-}
+html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2),var(--bg));color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 @media (prefers-reduced-motion:no-preference){
   body{animation:bgShift 18s ease-in-out infinite alternate}
   @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
 }
 
-/* Topbar (ripristinata) */
-.topbar{
-  position:sticky; top:0; z-index:10;
-  display:flex; align-items:center; justify-content:space-between; gap:10px;
-  height:var(--barh);
-  padding: calc(env(safe-area-inset-top,0px) + 8px) 10px 8px 10px;
-  background:linear-gradient(180deg,rgba(10,15,20,.98),rgba(10,15,20,.9));
-  box-shadow:0 8px 24px rgba(0,0,0,.25);
-  backdrop-filter: blur(10px);
-}
-.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer}
-.topbar .btn{padding:6px 10px}
-.btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35)}
+/* Topbar + Dock */
+.topbar{position:sticky;top:0;z-index:30;display:flex;gap:8px;align-items:center;padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))}
+.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.btn .txt{display:inline}
+.btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#0b0e10;border:none;box-shadow:0 10px 26px rgba(0,0,0,.35)}
 .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap}
-select{appearance:none;background:var(--chip);border:1px solid var(--line);color:var(--fg);padding:6px 10px;border-radius:12px;font-weight:700;cursor:pointer}
+.dock{position:sticky;top:calc(var(--topbarH));z-index:25;margin:0 10px 8px}
+.dock .wrap{display:flex;gap:8px;flex-wrap:nowrap;overflow:auto;padding:10px;background:rgba(20,28,34,.85);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+select{appearance:none;background:var(--chip);border:1px solid var(--line);color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:700;cursor:pointer}
 
-main{
-  min-height:100%;
-  display:flex; flex-direction:column; align-items:center; gap:14px;
-  padding: calc(var(--barh) + env(safe-area-inset-top,0px) + 8px) 14px 28px;
+/* Q-BAR (fissa) */
+.qspacer{height:calc(var(--qbarH) + 12px)}
+.qbar{
+  position:sticky; top:var(--qbarTop); z-index:22; margin:0 10px 10px; padding:10px;
+  border:1px solid var(--line); border-radius:14px; background:linear-gradient(180deg,rgba(20,28,34,.92),rgba(20,28,34,.82)); backdrop-filter:blur(8px); box-shadow:0 10px 24px rgba(0,0,0,.25)
 }
+.qrow{display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center}
+.qlabel{font-weight:800;color:var(--accent2);padding:0 10px;white-space:nowrap;border:1px solid var(--line);background:var(--chip);border-radius:12px;height:42px;display:flex;align-items:center}
+.qinput{
+  width:100%; height:42px; background:rgba(255,255,255,.06); color:#EAF3EE;
+  border:1px solid var(--line); border-radius:12px; padding:8px 12px; font-size:16px;
+  white-space:nowrap; overflow-x:auto; overflow-y:hidden
+}
+.qbtns{display:flex;gap:8px;flex-wrap:wrap}
+.qbtns .btn{height:42px}
+.qhelp{margin-top:6px; font-size:12px; color:var(--muted); background:transparent}
+.qbar.focus .qhelp{opacity:1}
+@media (max-width:460px){
+  .qrow{grid-template-columns:auto 1fr}
+  .qbtns{grid-column:1 / -1}
+}
+/* Nasconde il testo dei bottoni solo su schermi molto stretti */
+@media (max-width:360px){ .btn .txt{display:none} }
+
+/* Layout contenuti */
+main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
 .wrap{width:min(100%,980px)}
 h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
-.label{color:var(--accent2);font-weight:800;margin:0 0 8px}
-
-/* Cards & chips */
-.card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(12px);border-radius:16px;padding:16px;margin:10px 0}
-.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
-.chip.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800}
-
-/* Input + helper */
-.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
-.center{max-width:760px;margin:0 auto}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.small{font-size:12px;color:var(--muted)}
-.warn{margin-top:8px;font-size:13px;color:#ffb3b3}
-
-/* Helper writer */
-.helper{margin-top:10px;border:1px dashed var(--line);border-radius:12px;padding:10px;background:rgba(255,255,255,.04)}
-.helper .h-title{font-size:13px;font-weight:800;margin:0 0 8px;color:var(--accent2)}
-.helper .chips{gap:6px}
-
-/* Slot */
-.slot{min-height:22px;font-weight:800;letter-spacing:.5px;opacity:.9}
-
-/* Lists */
-.toggle{cursor:pointer;user-select:none}
-.collapsed>.body{display:none}
-.list{display:flex;flex-direction:column;gap:10px}
-.story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
-.play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
-.meta{font-size:12px;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(12px);border-radius:16px;padding:16px;margin:10px 0;overflow:hidden}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer;white-space:nowrap}
 footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
-  <div class="topbar">
+  <!-- TOP -->
+  <div class="topbar" id="topbar">
     <div class="row">
-      <button class="btn" id="backBtn" type="button">←</button>
-      <button class="btn" id="homeBtn" type="button">🏠</button>
-      <button class="btn" id="resetBtn" type="button" title="Reset">♻️</button>
-    </div>
-    <div class="row">
-      <span class="badge" id="styleBadge">🎭 —</span>
-      <span class="badge" id="periodoBadge">🕰️ —</span>
-      <span class="badge" id="freeBadge">—</span>
-      <span class="badge" id="proBadge">FREE</span>
-      <select id="langSelect" aria-label="Language">
-        <option value="it">IT</option><option value="en">EN</option>
-        <option value="es">ES</option><option value="fr">FR</option><option value="de">DE</option>
-      </select>
+      <button class="btn" id="backBtn" type="button">← <span class="txt">Indietro</span></button>
+      <button class="btn" id="homeBtn" type="button">🏠 <span class="txt">Home</span></button>
     </div>
   </div>
 
+  <!-- DOCK -->
+  <div class="dock" id="dock">
+    <div class="wrap">
+      <span class="badge" id="badgeStyle">🎭 What if</span>
+      <span class="badge" id="badgeTime">🕰️ Futuro</span>
+      <span class="badge" id="badgeCredits">Crediti: 0/3</span>
+      <select id="langSelect" aria-label="Lingua">
+        <option value="it">IT</option><option value="en">EN</option><option value="es">ES</option><option value="fr">FR</option><option value="de">DE</option>
+      </select>
+      <button class="btn" id="resetBtn" type="button">♻️ <span class="txt">Reset</span></button>
+    </div>
+  </div>
+
+  <!-- Q BAR (FISSA) -->
+  <div id="qBar" class="qbar">
+    <div class="qrow">
+      <div class="qlabel">E se…</div>
+      <input id="qInput" class="qinput" type="text" placeholder="Scrivi qui la domanda" autocomplete="off" autocapitalize="sentences" spellcheck="false"/>
+      <div class="qbtns">
+        <button class="btn primary" id="goBtn" type="button">✨ <span class="txt">Genera</span></button>
+        <button class="btn" id="surpriseBtn" type="button">🎲 <span class="txt">Sorprendimi</span></button>
+        <button class="btn" id="clearBtn" type="button">🧹 <span class="txt">Svuota</span></button>
+      </div>
+    </div>
+    <div class="qhelp" id="qHelp">
+      Suggerimento: scrivi “E se… ?” in modo concreto (luogo, orizzonte di tempo, vincoli). Esempi rapidi: “E se mi trasferissi a L’Aquila per 6 mesi?” · “E se chiedessi un aumento del 12% dopo il progetto X?” · “E se passassi alla settimana di 4 giorni?”. Più dettagli = risposta più utile.
+    </div>
+  </div>
+  <div class="qspacer" id="qSpacer"></div>
+
+  <!-- CONTENUTO -->
   <main>
     <div class="wrap">
-      <h1 id="titleH1">Imposta la tua domanda</h1>
+      <h1>Imposta la tua domanda</h1>
 
-      <!-- DOMANDA -->
-      <div class="card center">
-        <h3 class="label" id="qLabel">E se…</h3>
-        <textarea id="qInput" rows="3" class="input" placeholder="E se…" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
-        <div id="qWarn" class="warn" role="alert" style="display:none"></div>
-
-        <!-- Suggerimenti per scrivere meglio -->
-        <div class="helper" id="helperBox">
-          <div class="h-title">Per risposte migliori, aggiungi:</div>
-          <div class="chips" id="helperChips"></div>
-          <div class="small" id="helperHint">Esempio: “E se cambiare città **entro 6 mesi**, con **budget 1.200€**, per **avere più opportunità**, ma **restando vicino all’Aquila**?”</div>
+      <!-- Stile / Periodo -->
+      <div class="card">
+        <div class="chips" id="styleChips">
+          <button class="chip" data-style="whatif">What if</button>
+          <button class="chip" data-style="wtf">What the F</button>
         </div>
-
-        <div class="row" style="margin-top:12px;justify-content:space-between">
-          <div class="row" style="gap:10px">
-            <button class="btn primary" id="goBtn" type="button" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
-            <button class="btn" id="surpriseBtn" type="button">🎲 Sorprendimi</button>
-          </div>
-          <button class="btn" id="clearBtn" type="button">Svuota</button>
-        </div>
-        <div class="small" style="margin-top:6px">
-          <span class="slot" id="slotText"></span>
+        <div class="chips" id="periodChips" style="margin-top:8px">
+          <button class="chip" data-periodo="future">Futuro</button>
+          <button class="chip" data-periodo="past">Passato</button>
         </div>
       </div>
 
-      <!-- SPUNTI -->
-      <div class="card center" id="hintsCard">
-        <div class="row toggle" id="hintsHeader" style="justify-content:space-between">
-          <div class="label" id="hintsTitle">▶ Spunti rapidi “E se…”</div>
-        </div>
-        <div class="body" id="hintsBody" style="margin-top:8px">
-          <div class="chips" id="hintsChips"></div>
-          <div class="small" id="hintsNote" style="margin-top:8px"></div>
-        </div>
+      <!-- Spunti rapidi -->
+      <div class="card">
+        <div style="font-weight:800;color:var(--accent2);margin-bottom:8px">Spunti rapidi “E se…”</div>
+        <div class="chips" id="hintsChips"></div>
       </div>
 
-      <!-- SALVATI -->
-      <div class="card center collapsed" id="savedCard">
-        <div class="row toggle" id="savedHeader" style="justify-content:space-between">
-          <div class="label" id="nextLabel">▶ Domande salvate</div>
-          <button class="btn" id="clearSavedBtn" type="button">🗑️ Svuota</button>
-        </div>
-        <div class="body" id="savedBody"><div id="nextList" class="list"></div></div>
-      </div>
-
-      <!-- CRONOLOGIA -->
-      <div class="card center collapsed" id="histCard">
-        <div class="row toggle" id="histHeader" style="justify-content:space-between">
-          <div class="label" id="storiesLabel">▶ Cronologia</div>
-          <button class="btn" id="clearHistoryBtn" type="button">🗑️ Svuota</button>
-        </div>
-        <div class="body"><div id="storyList" class="list"></div></div>
-      </div>
-
-      <footer id="footerNote">© What?f — FREE · crediti giornalieri attivi</footer>
+      <footer>© What?f — FREE</footer>
     </div>
   </main>
 
 <script>
 (function(){
-  /* ===== Storage & utils ===== */
-  const mem={}; let STORAGE_OK=true;
-  const SafeStorage={
-    getItem(k){ try{ return localStorage.getItem(k);}catch(e){STORAGE_OK=false; return (k in mem)?mem[k]:null;}},
-    setItem(k,v){ try{ localStorage.setItem(k,v);}catch(e){STORAGE_OK=false; mem[k]=String(v);} },
-    removeItem(k){ try{ localStorage.removeItem(k);}catch(e){STORAGE_OK=false; delete mem[k];} }
-  };
-  const LS=SafeStorage, $=id=>document.getElementById(id);
-  const SUPPORTED_LANGS=["it","en","es","fr","de"];
-  const readJSON=(k,def)=>{ try{ return JSON.parse(LS.getItem(k)||JSON.stringify(def)); }catch{ return def; } };
-  const writeJSON=(k,v)=>{ try{ LS.setItem(k, JSON.stringify(v)); }catch{} };
-  const todayISO=()=>new Date().toISOString().slice(0,10);
+  /* ==== MINI STATE ==== */
+  const $=id=>document.getElementById(id);
+  const LS={ get:k=>{try{return localStorage.getItem(k)}catch{return null}}, set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}, del:k=>{try{localStorage.removeItem(k)}catch{}} };
+  const RESULTS_PAGE='fifth.html';
+  const HINTS_IT=["E se cambiassi lavoro?","E se cambiassi città?","E se aprissi partita IVA?","E se chiedessi un aumento?","E se tornassi a studiare?","E se lavorassi 4 giorni su 5?","E se mi trasferissi a L’Aquila per 6 mesi?","E se riducessi i social per 30 giorni?","E se vivessi senza auto?","E se imparassi bene l’inglese?","E se investissi il 10% ogni mese?","E se andassi all’estero 6 mesi?"];
 
-  /* ===== State ===== */
-  let lang=(LS.getItem('lang')||'it').toLowerCase(); if(!SUPPORTED_LANGS.includes(lang)) lang="it";
-  document.documentElement.lang=lang;
-  let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
+  /* ==== POSIZIONAMENTO QBAR ==== */
+  function placeBars(){
+    const root = document.documentElement;
+    const topH = ($('topbar')?.offsetHeight)||48;
+    const dockH = ($('dock')?.offsetHeight)||64;
+    const top = topH + dockH + 8;
+    root.style.setProperty('--qbarTop', top+'px');
 
-  /* ===== I18N (essentials) ===== */
-  const I18N={
-    it:{title:"Imposta la tua domanda", yourq:"E se…", gen:"✨ Genera risposta", clear:"Svuota",
-        surprise:"Sorprendimi", hintsTitle:"▶ Spunti rapidi “E se…”", hintsNote:"Clicca uno spunto per riempire la domanda.",
-        saved:"▶ Domande salvate", stories:"▶ Cronologia", credits:"Crediti", free:"FREE", pro:"PRO",
-        footer:"© What?f — FREE · crediti giornalieri attivi",
-        aiOk:"AI pronta", aiErr:"AI errore", warnNoQ:"Compila la domanda.",
-        add:"Aggiungi:", wf:"What if", wtf:"What the F", fut:"Futuro", past:"Passato"
-    },
-    en:{title:"Set your question", yourq:"What if…", gen:"✨ Generate answer", clear:"Clear",
-        surprise:"Surprise me", hintsTitle:"▶ Quick “What if…”", hintsNote:"Click a hint to fill the question.",
-        saved:"▶ Saved questions", stories:"▶ History", credits:"Credits", free:"FREE", pro:"PRO",
-        footer:"© What?f — FREE · daily credits active",
-        aiOk:"AI ready", aiErr:"AI error", warnNoQ:"Type a question.",
-        add:"Add:", wf:"What if", wtf:"What the F", fut:"Future", past:"Past"
-    }
-  };
-  const T=(k)=> (I18N[lang]&&I18N[lang][k]) || I18N.en[k] || k;
-
-  /* ===== Hints (incl. assurdismi) ===== */
-  const HINTS_BASE={
-    it:[
-      "E se chiedessi un aumento entro 60 giorni?",
-      "E se cambiassi città restando in Abruzzo?",
-      "E se aprissi partita IVA con budget 1.000€?",
-      "E se studiassi inglese B2 per 30 minuti al giorno per 90 giorni?",
-      "E se lavorassi 4 giorni su 5 per un mese?",
-      "E se riducessi i social dopo le 22 per 30 giorni?",
-      // assurde/surreali:
-      "E se il mio frigorifero diventasse il mio coach nutrizionale?",
-      "E se fondassi una startup che vende aria dell’Appennino in lattina?",
-      "E se allenassi una squadra di cuscini gonfiabili il mercoledì sera?"
-    ],
-    en:[
-      "What if you negotiated a raise within 60 days?",
-      "What if you moved within the same region?",
-      "What if you opened a sole proprietorship with €1,000 budget?",
-      "What if you studied English B2 for 30 minutes daily for 90 days?",
-      "What if you tried a 4-day week for a month?",
-      "What if you cut social after 10pm for 30 days?",
-      // absurd
-      "What if your fridge became your nutrition coach?",
-      "What if you sold canned mountain air?",
-      "What if you coached an inflatable-pillow team on Wednesdays?"
-    ]
-  };
-  const pool=()=> (HINTS_BASE[lang]||HINTS_BASE.en);
-
-  /* ===== UI text ===== */
-  function applyTexts(){
-    document.title = (lang==='it'?'What?f — Domanda': (lang==='es'?'What?f — Pregunta': (lang==='fr'?'What?f — Question': (lang==='de'?'What?f — Frage':'What?f — Question'))));
-    $('titleH1').textContent=T('title');
-    $('qLabel').textContent=T('yourq');
-    $('goBtn').textContent=T('gen');
-    $('clearBtn').textContent=T('clear');
-    $('surpriseBtn').textContent='🎲 '+T('surprise');
-    $('hintsTitle').textContent=T('hintsTitle');
-    $('hintsNote').textContent=T('hintsNote');
-    $('nextLabel').textContent=T('saved');
-    $('storiesLabel').textContent=T('stories');
-    $('footerNote').textContent=T('footer');
-    $('styleBadge').textContent='🎭 '+(prefs.stile==='wtf'?T('wtf'):T('wf'));
-    $('periodoBadge').textContent='🕰️ '+(prefs.periodo==='past'?T('past'):T('fut'));
-    $('langSelect').value=lang;
-    renderCreditsBadge();
-  }
-
-  /* ===== Credits ===== */
-  function userIsAdmin(){ try{ return !!LS.getItem('admin_token'); }catch{ return false; } }
-  function capForUser(){ return userIsAdmin()?Infinity:(prefs.pro?10:3); }
-  function ensureCredits(){ const c=readJSON('whatif_credits',{date:todayISO(),used:0}); if(c.date!==todayISO()){ c.date=todayISO(); c.used=0; } writeJSON('whatif_credits',c); }
-  function leftCredits(){ const c=readJSON('whatif_credits',{date:todayISO(),used:0}); const cap=capForUser(); return cap===Infinity?'∞':Math.max(0,cap-(c.used||0)); }
-  function renderCreditsBadge(){ const cap=capForUser(), left=leftCredits(); $('freeBadge').textContent=(cap===Infinity)?`${T('credits')}: ∞`:`${T('credits')}: ${left}/${cap}`; $('proBadge').textContent=prefs.pro?'PRO':'FREE'; }
-  ensureCredits(); renderCreditsBadge();
-
-  /* ===== Lang switch ===== */
-  $('langSelect').onchange=()=>{ lang=$('langSelect').value; LS.setItem('lang',lang); document.documentElement.lang=lang; applyTexts(); renderHints(true); rebuildHelper(); };
-
-  /* ===== Nav buttons ===== */
-  $('homeBtn').onclick=()=>{ try{ location.href='index.html'; }catch{} };
-  $('backBtn').onclick=()=>{ try{ history.length>1?history.back():location.href='index.html'; }catch{} };
-  $('resetBtn').onclick=()=>{ try{ localStorage.clear(); }catch{}; location.reload(); };
-
-  /* ===== Hints list ===== */
-  function renderHints(forceOpen=false){
-    const wrap=$('hintsChips'); wrap.innerHTML='';
-    pool().slice(0,12).forEach(txt=>{
-      const b=document.createElement('button'); b.className='chip'; b.type='button'; b.textContent=txt;
-      b.onclick=()=>{ $('qInput').value=txt; $('qWarn').style.display='none'; };
-      wrap.appendChild(b);
-    });
-    if(forceOpen) $('hintsCard').classList.remove('collapsed');
-  }
-  $('hintsHeader').onclick=()=>{ $('hintsCard').classList.toggle('collapsed'); };
-
-  /* ===== Helper chips (dinamiche) ===== */
-  const helperDefs = [
-    {k:'orizzonte', txt:'orizzonte (quando)', add:' entro 3/6/12 mesi'},
-    {k:'obiettivo', txt:'obiettivo', add:' per ottenere ___'},
-    {k:'vincoli', txt:'vincoli', add:' con questi vincoli: ___'},
-    {k:'luogo', txt:'luogo', add:' restando vicino a ___'},
-    {k:'budget', txt:'budget', add:' con budget max ___€'},
-    {k:'tempo', txt:'tempo disponibile', add:' ho solo ___ ore/sett.'},
-    {k:'motivazione', txt:'motivazione', add:' perché ___ è importante'},
-    {k:'successo', txt:'criteri di successo', add:' considererò “ok” se ___'}
-  ];
-  function rebuildHelper(){
-    const box=$('helperChips'); box.innerHTML='';
-    const q=String(($('qInput').value||'').toLowerCase());
-    helperDefs.forEach(h=>{
-      // Mostra la chip se manca la parola chiave collegata
-      const shouldShow = !new RegExp(h.k).test(q);
-      if(shouldShow){
-        const b=document.createElement('button');
-        b.className='chip'; b.type='button';
-        b.textContent=`${T('add')} ${h.txt}`;
-        b.title=h.add;
-        b.onclick=()=>{
-          const t=$('qInput'); const addText = h.add.replace('___','…');
-          t.value = (t.value.trim() + (t.value.trim().endsWith('?')?'':'') ).replace(/\?+$/,'') + addText + '?';
-          t.focus();
-        };
-        box.appendChild(b);
-      }
+    requestAnimationFrame(()=>{
+      const qh = ($('qBar')?.offsetHeight)||64;
+      root.style.setProperty('--qbarH', qh+'px');
+      if($('qSpacer')) $('qSpacer').style.height = (qh+12)+'px';
     });
   }
-  $('qInput').addEventListener('input', rebuildHelper);
+  window.addEventListener('resize', placeBars);
+  window.addEventListener('orientationchange', placeBars);
 
-  /* ===== Submit ===== */
-  function goWithQuestion(){
-    const domanda = ($('qInput').value||'').trim();
-    if(!domanda){ const w=$('qWarn'); w.textContent=T('warnNoQ'); w.style.display='block'; return; }
-    $('qWarn').style.display='none';
-    // normalizza: assicurati che inizi con "E se / What if ..."
-    const opener = (lang==='it'?'E se':lang==='es'?'¿Y si':lang==='fr'?'Et si':lang==='de'?'Was, wenn':'What if');
-    let q = domanda.replace(/[“”"«»]/g,'').trim();
-    if(!new RegExp('^'+opener.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\$&')+'\\b','i').test(q)){
-      q = opener + ' ' + q.replace(/^(e se|what if|et si|¿\s*y si|was,\s*wenn)\b[\s,:-]*/i,'');
-    }
-    q = q.replace(/[?？]*$/,'?');
+  // focus helper: mostra aiuto solo quando si scrive
+  (function(){
+    const qb=$('qBar');
+    qb.addEventListener('focusin', ()=> qb.classList.add('focus'));
+    qb.addEventListener('focusout', ()=> qb.classList.remove('focus'));
+  })();
 
-    const req={domanda:q, lang, stile:prefs.stile, periodo:prefs.periodo, ts:Date.now()};
-    LS.setItem('domanda', q);
-    LS.setItem('whatif_request', JSON.stringify(req));
-    location.href='fifth.html';
+  /* ==== UI BASICS ==== */
+  $('homeBtn').onclick=()=>{ try{location.href='index.html'}catch{location.reload()} };
+  $('backBtn').onclick = ()=>{ try{history.back()}catch{} };
+  $('resetBtn').onclick=()=>{ try{ localStorage.clear(); location.reload(); }catch{} };
+
+  /* ==== HINTS ==== */
+  function polishQuestion(q){
+    let t=String(q||'').replace(/[?？]+$/,'').trim();
+    if(!t) return '';
+    t=t.charAt(0).toUpperCase()+t.slice(1);
+    if(!/\?$/.test(t)) t+='?';
+    return t;
   }
-  $('goBtn').onclick=goWithQuestion;
-  document.addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter') $('goBtn').click(); });
-  $('clearBtn').onclick=()=>{ $('qInput').value=''; $('qWarn').style.display='none'; rebuildHelper(); };
+  function renderHints(){
+    const box=$('hintsChips'); box.innerHTML='';
+    HINTS_IT.forEach(h=>{
+      const b=document.createElement('button');
+      b.className='chip'; b.textContent=polishQuestion(h);
+      b.onclick=()=>{ const el=$('qInput'); el.value=polishQuestion(h); el.scrollLeft=el.scrollWidth; el.focus(); };
+      box.appendChild(b);
+    });
+  }
 
-  /* ===== Sorprendimi: mini slot + riempi il campo (no redirect) ===== */
+  /* ==== STILE / PERIODO ==== */
+  const prefs = JSON.parse(LS.get('prefs')||'{"stile":"whatif","periodo":"future"}');
+  function renderBadges(){
+    $('badgeStyle').textContent = (prefs.stile==='wtf'?'🎭 What the F':'🎭 What if');
+    $('badgeTime').textContent = (prefs.periodo==='past'?'🕰️ Passato':'🕰️ Futuro');
+    document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
+    document.querySelectorAll('#periodChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.periodo===prefs.periodo));
+    document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+  }
+  $('styleChips').addEventListener('click', (e)=>{ const b=e.target.closest('.chip'); if(!b) return; prefs.stile=b.dataset.style; LS.set('prefs', JSON.stringify(prefs)); renderBadges(); });
+  $('periodChips').addEventListener('click', (e)=>{ const b=e.target.closest('.chip'); if(!b) return; prefs.periodo=b.dataset.periodo; LS.set('prefs', JSON.stringify(prefs)); renderBadges(); });
+
+  /* ==== SUBMIT ==== */
+  function submitManual(){
+    const q=polishQuestion($('qInput').value);
+    if(!q){ $('qInput').focus(); return; }
+    LS.set('domanda', q);
+    const req={domanda:q,stile:prefs.stile,lang:'it',extra:'',micro:{},fantasy_mode:false,periodo:prefs.periodo,boost:(LS.get('whatif_boost')||''),mode:'manual'};
+    LS.set('whatif_request', JSON.stringify(req));
+    location.href=RESULTS_PAGE;
+  }
+  $('goBtn').onclick=submitManual;
+  $('qInput').addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); submitManual(); } });
+
+  /* ==== SORPRENDIMI (multi) ==== */
   $('surpriseBtn').onclick=()=>{
-    const slot=$('slotText');
-    const ideas=pool();
-    let i=0, ticks=0, max=18+Math.floor(Math.random()*6);
-    const spin=setInterval(()=>{
-      slot.textContent=ideas[i%ideas.length];
-      i++; ticks++;
-      if(ticks>max){ clearInterval(spin);
-        const pick=ideas[(i-1)%ideas.length];
-        $('qInput').value=pick;
-        rebuildHelper();
-      }
-    }, 60);
+    const req={domanda:'',stile:prefs.stile,lang:'it',extra:'',micro:{},fantasy_mode:false,periodo:prefs.periodo,boost:(LS.get('whatif_boost')||''),mode:'surprise',surprise_multi:true,surprise_count:5};
+    LS.set('whatif_request', JSON.stringify(req));
+    location.href=RESULTS_PAGE;
   };
 
-  /* ===== Saved & History (unchanged) ===== */
-  function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
-  function renderSaved(){
-    const box=$('nextList'); box.innerHTML='';
-    const arr=readJSON('next_prompts',[]);
-    if(!arr.length){ box.innerHTML='<div class="small">—</div>'; return; }
-    arr.forEach(q=>{
-      const row=document.createElement('div'); row.className='story';
-      row.innerHTML=`<span>${q}</span><div class="row"><button class="btn play" title="Usa">▶</button></div>`;
-      row.querySelector('.play').onclick=()=>{ $('qInput').value=q; rebuildHelper(); window.scrollTo({top:0,behavior:'smooth'}); };
-      box.appendChild(row);
-    });
-  }
-  function renderHistory(){
-    const box=$('storyList'); box.innerHTML='';
-    const arr=readJSON('cronologia',[]);
-    if(!arr.length){ box.innerHTML='<div class="small">—</div>'; return; }
-    arr.slice().reverse().forEach(it=>{
-      const row=document.createElement('div'); row.className='story';
-      row.innerHTML=`<div><div class="small">${fmtDate(it.ts)}</div><div>${it.domanda||'-'}</div></div><button class="btn play" title="Riapri">▶</button>`;
-      row.querySelector('.play').onclick=()=>{ LS.setItem('replay_story', JSON.stringify({domanda:it.domanda,answer:it.risposta})); location.href='fifth.html?view=replay'; };
-      box.appendChild(row);
-    });
-  }
-  $('clearSavedBtn').onclick=()=>{ writeJSON('next_prompts',[]); renderSaved(); };
-  $('clearHistoryBtn').onclick=()=>{ writeJSON('cronologia',[]); renderHistory(); };
+  /* ==== CLEAR ==== */
+  $('clearBtn').onclick=()=>{ const el=$('qInput'); el.value=''; el.focus(); };
 
-  /* ===== Init ===== */
-  applyTexts();
-  renderHints(false);
-  renderSaved();
-  renderHistory();
-  document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-  rebuildHelper();
+  /* ==== INIT ==== */
+  try{
+    renderHints();
+    renderBadges();
+    placeBars();
+  }catch(e){ console.error(e); }
 })();
 </script>
 </body>
