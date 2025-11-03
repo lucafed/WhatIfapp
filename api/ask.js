@@ -1,20 +1,18 @@
 // /api/ask.js — What?f Engine (Stable Hybrid WHATIF + Friendly-WTF Demenziale)
-// - WHATIF: 60% analisi / 40% immagini sobrie. Tono concreto-umano, frasi più brevi.
-//   Se c’è un luogo: apri con 2–3 frasi di contesto reale; poi “come lo vivi tu”.
+// - WHATIF: 60% analisi / 40% immagini sobrie. Tono concreto-umano, frasi brevi.
+//   Se c’è un luogo: 2–3 frasi di contesto reale → poi “come lo vivi tu”.
 //   Vietate formule fisse (“Ti leggo così”, ecc.). Niente eco della domanda.
 // - WTF: INVARIATO (2–3 reazioni demenziali, UNA “imprecazione” teatrale, drink, verità, morale).
-// - Post-process: capitalizzazione robusta, killer dei cliché, opener naturale se manca.
+// - Post-process: killer cliché → opener naturale (se manca) → capitalizzazione robusta → punto finale.
 // - Output: paragrafo unico.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
 
-/* ========= OpenAI ========= */
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
-/* ========= Redis & Rate ========= */
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
@@ -24,7 +22,6 @@ const rl = new Ratelimit({
   limiter: Ratelimit.slidingWindow(10, "1 m"),
 });
 
-/* ========= CORS ========= */
 const ALLOWED_ORIGINS = [
   "https://what-ifapp.vercel.app",
   "http://localhost:3000",
@@ -79,16 +76,26 @@ function stripQuestionEcho(domanda,text){
   t=t.replace(rx,"");
   return t;
 }
+
+/* === Capitalizzazione robusta === */
 function sentenceCaseAll(s=""){
-  // Maiuscola all’inizio e dopo . ? ! … (tiene conto di virgolette/apici)
-  let t = String(s);
-  t = t.replace(/(^\s*[“"']?\s*)([a-zà-ÿ])/gi, (_m,prefix,chr)=> prefix + chr.toUpperCase());
-  t = t.replace(/([.!?…]\s+[“"']?\s*)([a-zà-ÿ])/gi, (_m,sep,chr)=> sep + chr.toUpperCase());
+  // Maiuscola all’inizio e dopo . ? ! … e dopo newline “accidentali”.
+  let t = String(s).trim();
+
+  // Prima lettera (gestione virgolette/apici)
+  t = t.replace(/(^\s*[“"']?\s*)([a-zà-ÿ])/i, (_m,prefix,chr)=> prefix + chr.toUpperCase());
+
+  // Dopo punteggiatura forte
+  t = t.replace(/([.!?…]\s+[“"']?\s*)([a-zà-ÿ])/g, (_m,sep,chr)=> sep + chr.toUpperCase());
+
+  // Dopo newline rimasto (se mai ce ne fossero)
+  t = t.replace(/(\n+\s*[“"']?\s*)([a-zà-ÿ])/g, (_m,sep,chr)=> sep + chr.toUpperCase());
+
   return t;
 }
 function finalPunct(s=""){ return /[.!?…]$/.test(s)?s:s+"."; }
 
-/* ========= Anti-cliché & opener naturale (solo WHATIF) ========= */
+/* === Anti-cliché & opener naturale (solo WHATIF) === */
 function killClicheOpeners(s=""){
   let t = String(s).trim();
   t = t.replace(/^(ti\s+leggo\s+così|ti\s+conosco\s+abbastanza|lascia\s+che\s+te\s+lo\s+dica)\s*[:,-]?\s*/i, "");
@@ -102,13 +109,12 @@ function ensureNaturalOpener(text, stile="whatif"){
   return "Parto dal concreto. " + t;
 }
 
-/* ========= WHAT IF – stile 60/40 (analitico + immagini sobrie) ========= */
-// Tono richiesto: concreto, umano, immagini quotidiane, frasi più brevi.
+/* ========= WHAT IF – 60/40 ========= */
 const WHATIF_HYBRID_EX_IT = `Parto dal concreto. Se c’è un luogo in gioco, guardi com’è oggi: servizi che funzionano, centro più vivo o ritmi più calmi, spostamenti che non ti mangiano energie. Poi guardi te: quanto spazio mentale recuperi, quanta fatica in meno senti addosso, che tipo di persone ti stanno intorno. La produttività non è solo deliverable: è testa che non ronza e corpo che non corre sempre. In cambio rinunci a un po’ di rumore buono e a qualche vetrina, ma guadagni routine che regge e tempo che torna tuo. Non è una prova romantica: è vedere come suona la tua giornata quando togli il superfluo. Se dopo poco ti senti più lucido e meno rumoroso, hai già una risposta più vera di mille ipotesi.`;
 
-const WHATIF_RULE_IT = `WHAT IF HYBRID (italiano): 60% analisi concreta (costi/benefici, routine, tempo, relazioni), 40% immagini sobrie della quotidianità. Se la domanda cita un luogo, apri con 2–3 frasi di contesto reale (servizi, ritmo, spostamenti) e poi passa a “come lo vivi tu” (energia, tempo, relazioni). Frasi più brevi, tono naturale e adulto, evita burocratese (“analizzando/valutare/considerare” usali poco). Vietate formule fisse tipo “Ti leggo così”. 8–10 frasi, paragrafo unico, seconda persona, niente eco della domanda, niente guru o melodramma.`;
+const WHATIF_RULE_IT = `WHAT IF HYBRID (italiano): 60% analisi concreta (costi/benefici, routine, tempo, relazioni), 40% immagini sobrie della quotidianità. Se la domanda cita un luogo, apri con 2–3 frasi di contesto reale (servizi, ritmo, spostamenti) e poi passa a “come lo vivi tu” (energia, tempo, relazioni). Frasi più brevi, tono naturale e adulto, evita burocratese. Vietate formule fisse tipo “Ti leggo così”. 8–10 frasi, paragrafo unico, seconda persona, niente eco della domanda.`;
 
-/* ========= WTF — banche demenziali (INVARIATO) ========= */
+/* ========= WTF — DEMENZIALE (INVARIATO) ========= */
 const WTF_IMPRE = [
   "bestemmione corazzato",
   "imprecazionona a detonazione",
@@ -151,12 +157,12 @@ function buildMessages({ domanda, lang, periodo, stile }){
   ];
 
   if(stile==="wtf"){
-    // INVARIATO: costruzione semi e regole WTF
+    // INVARIATO
     let seed=[...String(domanda)].reduce((a,c)=>a+c.charCodeAt(0),0);
     function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; }
     const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
     const shuffled=[...WTF_REACT].sort(()=>rnd()-0.5);
-    const react = shuffled.slice(0, 2 + Math.floor(rnd()*2)); // 2 o 3
+    const react = shuffled.slice(0, 2 + Math.floor(rnd()*2));
     const drink = WTF_DRINK[Math.floor(rnd()*WTF_DRINK.length)];
 
     const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile). Struttura OBBLIGATORIA: presa in giro affettuosa (max 2 frasi) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”, come narrazione, mai insulto a persone) → SUBITO ${react.length} reazioni di oggetti esilaranti → drink (“${drink}”) → 1–2 frasi che rispondono davvero → morale calda e ironica. Tono da barista affettuoso sbronzo-elegante, mai aggressivo. 6–8 frasi.`;
@@ -174,14 +180,12 @@ function buildMessages({ domanda, lang, periodo, stile }){
 - Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
     );
   } else {
-    // WHATIF ibrido: incipit analitico + contesto luogo, ritmo naturale, no formule fisse
     msgs.push(
       { role: "system", content: WHATIF_RULE_IT },
       { role: "system", content: `ESEMPIO (tono e respiro, non copiare alla lettera):\n${WHATIF_HYBRID_EX_IT}` }
     );
   }
 
-  // Utente finale
   const ask = (L==="en")
     ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`
     : (L==="it")
@@ -210,13 +214,7 @@ export default async function handler(req, res){
     if(!success) return res.status(429).json({ error:"rate_limited_minute" });
 
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-    const {
-      domanda = "",
-      stile = "whatif",   // "whatif" | "wtf"
-      lang  = "it",
-      periodo = "future",
-      micro = {}
-    } = body;
+    const { domanda="", stile="whatif", lang="it", periodo="future", micro={} } = body;
 
     if(!domanda || typeof domanda !== "string")
       return res.status(400).json({ error:"bad_request", detail:"domanda_required" });
@@ -225,7 +223,7 @@ export default async function handler(req, res){
 
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.98 : 0.84,   // whatif un filo più caldo
+      temperature: stile === "wtf" ? 0.98 : 0.84,
       top_p: 0.92,
       max_tokens: 480,
       frequency_penalty: 0.18,
@@ -236,17 +234,17 @@ export default async function handler(req, res){
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if(!answer) throw new Error("empty_model_response");
 
-    // Post-process
+    // Post-process (ordine FIXATO per le maiuscole dell’incipit)
     answer = stripQuestionEcho(domanda, answer);
     answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);
     answer = clampWords(answer, stile === "wtf" ? 170 : 165);
     answer = normalizeOneParagraph(answer);
-    answer = killClicheOpeners(answer);          // evita incipit stereotipati
-    answer = sentenceCaseAll(answer);            // maiuscole robuste
-    answer = ensureNaturalOpener(answer, stile); // aggiunge opener sobrio se manca
-    answer = finalPunct(answer);
+    answer = killClicheOpeners(answer);          // 1) togli cliché
+    answer = ensureNaturalOpener(answer, stile); // 2) aggiungi opener se manca
+    answer = sentenceCaseAll(answer);            // 3) capitalizza dopo che l’opener è presente
+    answer = finalPunct(answer);                 // 4) chiudi con punteggiatura
 
-    // Moderazioni leggere (non spegnere l'umorismo)
+    // Moderazioni leggere
     if(normLang(lang)==="it"){
       (function(){
         const d=String(domanda||"");
