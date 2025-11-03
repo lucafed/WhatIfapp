@@ -79,16 +79,12 @@ h1{
 }
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
-
-/* evidenzia le parentesi comiche tra em-dash senza toccare il testo */
 .embit {
   padding: 0 .08em;
   box-shadow: 0 -4px 0 0 rgba(255,255,255,.05) inset;
   text-shadow: 0 0 12px rgba(255,255,255,.08);
   border-radius: 4px;
 }
-
-/* Select */
 .select{
   background:rgba(255,255,255,.06);
   border:1px solid rgba(255,255,255,.12);
@@ -169,6 +165,7 @@ const I18N = {
        sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
        share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
        copied:"Copiato!", error:"[errore server]",
+       noQ:"Per continuare compila la domanda in quarta o usa «Sorprendimi».",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Stile: What the F · 6–9 frasi · paragrafo unico · 2–3 reazioni demenziali · doppia punchline · modalità: ${p==='past'?'Passato':'Futuro'}.`
@@ -178,6 +175,7 @@ const I18N = {
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
        share:"📤 Share / Copy", again:"🔁 Ask another",
        copied:"Copied!", error:"[server error]",
+       noQ:"To continue, fill the question on page four or use “Surprise me”.",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Style: What the F · 6–9 sentences · single paragraph · 2–3 absurd object reactions · double punchline · mode: ${p==='past'?'Past':'Future'}.`
@@ -187,6 +185,7 @@ const I18N = {
        sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
        share:"📤 Compartir / Copiar", again:"🔁 Hacer otra pregunta",
        copied:"¡Copiado!", error:"[error del servidor]",
+       noQ:"Para continuar, completa la pregunta en la cuarta o usa «Sorpréndeme».",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Estilo: What the F · 6–9 frases · un solo párrafo · 2–3 reacciones absurdas · doble remate · modo: ${p==='past'?'Pasado':'Futuro'}.`
@@ -196,6 +195,7 @@ const I18N = {
        sub:(q)=>`Question : « ${q} »`, q:"Votre question", a:"Réponse",
        share:"📤 Partager / Copier", again:"🔁 Poser une autre question",
        copied:"Copié !", error:"[erreur serveur]",
+       noQ:"Pour continuer, remplissez la question en quatrième ou utilisez « Surprise-moi ».",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Style : What the F · 6–9 phrases · un paragraphe · 2–3 réactions absurdes · double chute · mode : ${p==='past'?'Passé':'Futur'}.`
@@ -205,6 +205,7 @@ const I18N = {
        sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
        share:"📤 Teilen / Kopieren", again:"🔁 Weitere Frage stellen",
        copied:"Kopiert!", error:"[Serverfehler]",
+       noQ:"Zum Fortfahren Frage auf Seite vier ausfüllen oder „Überrasche mich“ nutzen.",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Stil: What the F · 6–9 Sätze · ein Absatz · 2–3 absurde Objektreaktionen · doppelte Pointe · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
@@ -214,67 +215,37 @@ const I18N = {
 
 /* ==== Leads per lingua/stile ==== */
 const LEADS = {
-  it:{
-    wtf:[
-      "Entri piano, il caos ti riconosce e oggi ti lascia passare.",
-      "Respiri e lasci che sia il destino a inciampare per primo.",
-      "Ti presenti al futuro con la faccia di adesso e la pazienza di domani.",
-      "La scena è già in corso: tu ci metti il rumore buono.",
-      "Non chiedi permesso al dubbio: gli siedi accanto."
-    ],
-    whatif:[
-      "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.",
-      "Ti siedi un attimo e scopri che la calma ha memoria lunga.",
-      "La stanza è la stessa, lo sguardo no: è già un inizio.",
-      "Tieniti stretto ciò che funziona e lascia che il resto perda importanza.",
-      "Respiri come chi ha tempo, e il tempo ti crede."
-    ]
-  },
-  en:{
-    wtf:[
-      "You step in slowly; chaos recognizes you and lets you through.",
-      "You breathe and let fate be the one who trips first.",
-      "You bring today’s face and tomorrow’s patience to the door.",
-      "The scene’s already rolling; you supply the good noise."
-    ],
-    whatif:[
-      "Set the keys down and let the quiet that doesn’t judge go first.",
-      "Same room, different gaze — that’s a start already.",
-      "Breathe like someone with time, and time believes you.",
-      "Keep what works and let the rest lose importance."
-    ]
-  },
-  es:{
-    wtf:[
-      "Entras despacio; el caos te reconoce y hoy te deja pasar.",
-      "Respiras y dejas que el destino sea quien tropiece primero.",
-      "Traes la cara de hoy y la paciencia de mañana a la puerta."
-    ],
-    whatif:[
-      "Dejas las llaves y permites que hable el silencio que no juzga.",
-      "Misma habitación, otra mirada: ya es un comienzo."
-    ]
-  },
-  fr:{
-    wtf:[
-      "Tu entres doucement; le chaos te reconnaît et te laisse passer.",
-      "Tu respires et laisses le destin trébucher le premier."
-    ],
-    whatif:[
-      "Tu poses les clés et laisses parler le silence qui ne juge pas.",
-      "Même pièce, autre regard — c’est déjà un début."
-    ]
-  },
-  de:{
-    wtf:[
-      "Du trittst langsam ein; das Chaos erkennt dich und lässt dich durch.",
-      "Du atmest und lässt das Schicksal zuerst stolpern."
-    ],
-    whatif:[
-      "Du legst die Schlüssel ab und lässt die stille, die nicht urteilt, sprechen.",
-      "Gleicher Raum, anderer Blick — schon ein Anfang."
-    ]
-  }
+  it:{ wtf:[ "Entri piano, il caos ti riconosce e oggi ti lascia passare.",
+             "Respiri e lasci che sia il destino a inciampare per primo.",
+             "Ti presenti al futuro con la faccia di adesso e la pazienza di domani.",
+             "La scena è già in corso: tu ci metti il rumore buono.",
+             "Non chiedi permesso al dubbio: gli siedi accanto." ],
+        whatif:[ "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.",
+                 "Ti siedi un attimo e scopri che la calma ha memoria lunga.",
+                 "La stanza è la stessa, lo sguardo no: è già un inizio.",
+                 "Tieniti stretto ciò che funziona e lascia che il resto perda importanza.",
+                 "Respiri come chi ha tempo, e il tempo ti crede." ] },
+  en:{ wtf:[ "You step in slowly; chaos recognizes you and lets you through.",
+             "You breathe and let fate be the one who trips first.",
+             "You bring today’s face and tomorrow’s patience to the door.",
+             "The scene’s already rolling; you supply the good noise." ],
+        whatif:[ "Set the keys down and let the quiet that doesn’t judge go first.",
+                 "Same room, different gaze — that’s a start already.",
+                 "Breathe like someone with time, and time believes you.",
+                 "Keep what works and let the rest lose importance." ] },
+  es:{ wtf:[ "Entras despacio; el caos te reconoce y hoy te deja pasar.",
+             "Respiras y dejas que el destino sea quien tropiece primero.",
+             "Traes la cara de hoy y la paciencia de mañana a la puerta." ],
+        whatif:[ "Dejas las llaves y permites que hable el silencio que no juzga.",
+                 "Misma habitación, otra mirada: ya es un comienzo." ] },
+  fr:{ wtf:[ "Tu entres doucement; le chaos te reconnaît et te laisse passer.",
+             "Tu respires et laisses le destin trébucher le premier." ],
+        whatif:[ "Tu poses les clés et laisses parler le silence qui ne juge pas.",
+                 "Même pièce, autre regard — c’est déjà un début." ] },
+  de:{ wtf:[ "Du trittst langsam ein; das Chaos erkennt dich und lässt dich durch.",
+             "Du atmest und lässt das Schicksal zuerst stolpern." ],
+        whatif:[ "Du legst die Schlüssel ab und lässt die stille, die nicht urteilt, sprechen.",
+                 "Gleicher Raum, anderer Blick — schon ein Anfang." ] }
 };
 
 /* ==== UI Hooks ==== */
@@ -304,8 +275,6 @@ function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 function hashStr(s=""){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i); h=h|0; } return Math.abs(h); }
 function stablePick(arr, seedStr){ if(!arr?.length) return ""; if(!seedStr?.trim()) return pick(arr); const h=hashStr(seedStr); return arr[h%arr.length]; }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
-
-/* Evidenzia testo tra em-dash */
 function decorateEmBits(el){
   const raw = el.textContent;
   if(!raw || !raw.includes("—")) return;
@@ -318,11 +287,14 @@ function decorateEmBits(el){
   }
   el.innerHTML = html;
 }
+function getBoost(){ return (localStorage.getItem('whatif_boost')||'').trim(); }
 
 /* ==== Load state from LS ==== */
 const params = new URLSearchParams(location.search);
 const isReplay = params.get('view')==='replay';
-let domanda = "";
+const req = JSON.parse(LS.getItem('whatif_request')||'{}');
+const mode = req.mode || 'manual';
+let domanda = (req.domanda || LS.getItem('domanda') || '').trim();
 let answerText = "";
 
 /* ==== Language init ==== */
@@ -354,9 +326,7 @@ langSel.onchange = ()=>{
   lang = langSel.value;
   LS.setItem('lang', lang);
   document.documentElement.lang = lang;
-  // Re-render all static texts
   setTitlesAndTexts(domanda);
-  // Repaint pro badge tooltip
   const el = document.getElementById('proBadge');
   if(el.style.display !== 'none'){
     el.title = (lang === 'en') ? 'Test mode active' : (
@@ -364,9 +334,7 @@ langSel.onchange = ()=>{
                lang === 'fr') ? 'Mode test actif' :
                (lang === 'de') ? 'Testmodus aktiv' : 'Modalità test attiva';
   }
-  // (Facoltativo) non richiamiamo l’API per non bruciare crediti: cambiamo solo UI.
 };
-
 shareBtn.onclick = async()=>{
   const T = I18N[lang] || I18N.it;
   const full = `What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n\nQ: ${domanda}\n\n${answerText}`;
@@ -380,8 +348,17 @@ shareBtn.onclick = async()=>{
     }
   }catch{}
 };
-
 againBtn.onclick = ()=>{ location.href='fourth.html'; };
+
+/* ==== Guard di accesso (richiesta) ==== */
+/* Regola: non si può stare in quinta senza domanda, a meno che mode === 'surprise'. */
+if(!isReplay){
+  const hasQuestion = domanda.length>0;
+  if(mode !== 'surprise' && !hasQuestion){
+    // niente alert invadente: torniamo in quarta in silenzio
+    location.replace('fourth.html');
+  }
+}
 
 /* ==== Fetch / Render ==== */
 function mapGenderToSex(g){
@@ -393,20 +370,26 @@ function mapGenderToSex(g){
   }
 }
 
-if(isReplay){
-  const r = JSON.parse(LS.getItem('replay_story')||'{}');
-  domanda = r.domanda || LS.getItem('domanda') || "";
-  answerText = normalizeOneParagraph(r.answer || "");
+function pushHistory(domanda, risposta){
+  const hist = JSON.parse(LS.getItem('cronologia')||'[]');
+  hist.push({ domanda, risposta, stile:style, periodo, ts:Date.now() });
+  LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
+}
+
+function renderAll(){
   setTitlesAndTexts(domanda);
   qView.textContent = domanda || '—';
   answerEl.textContent = answerText || '—';
   decorateEmBits(answerEl);
-}else{
-  const req = JSON.parse(LS.getItem('whatif_request')||'{}');
-  domanda = req.domanda || LS.getItem('domanda') || "";
-  setTitlesAndTexts(domanda);
-  qView.textContent = domanda || '—';
+}
 
+/* === REPLAY === */
+if(isReplay){
+  const r = JSON.parse(LS.getItem('replay_story')||'{}');
+  domanda = (r.domanda || LS.getItem('domanda') || "").trim();
+  answerText = normalizeOneParagraph(r.answer || "");
+  renderAll();
+}else{
   // profilo (sesso) dal LS
   const profile = JSON.parse(LS.getItem('whatif_profile') || '{}');
   const sex = (profile.sex) ? String(profile.sex).toLowerCase()
@@ -420,35 +403,67 @@ if(isReplay){
       const adminToken = localStorage.getItem("admin_token");
       if (adminToken) headers["x-admin-token"] = adminToken;
 
-      const r = await fetch("/api/ask",{
-        method:"POST",
-        headers,
-        body:JSON.stringify({
-          domanda,
-          lang,                // <-- lingua selezionata
-          stile: style,        // whatif | wtf
-          periodo,             // future | past
-          extra:"",
-          micro:req.micro||{},
-          sex
-        })
-      });
+      // MODE SWITCH
+      if(mode === 'surprise'){
+        // La domanda non c'è: la crea l’AI in quinta usando boost + stile/periodo/lang
+        const r = await fetch("/api/ask",{
+          method:"POST",
+          headers,
+          body:JSON.stringify({
+            action:"surprise",     // <-- suggerisce al backend la modalità
+            domanda:"",            // vuota: deve generarla il server
+            boost: req.boost || getBoost() || "",
+            lang,
+            stile: style,
+            periodo,
+            extra:"",
+            micro:req.micro||{},
+            sex
+          })
+        });
 
-      if(r.status===429){
-        answerEl.textContent = (I18N[lang]||I18N.it).error;
-        return;
+        if(r.status===429){ answerEl.textContent = (I18N[lang]||I18N.it).error; return; }
+        const data = await r.json().catch(()=>null);
+        if(!r.ok || !data || (!data.answer && !data.risposta))
+          throw new Error(data?.detail||"bad_response");
+
+        // Accetta sia {question, answer} sia {domanda, risposta}
+        domanda = String(data.question || data.domanda || "").trim();
+        if(!domanda) domanda = "—"; // fallback visivo (ma in pratica il backend manda sempre la domanda)
+        LS.setItem('domanda', domanda);
+
+        answerText = normalizeOneParagraph((data.answer || data.risposta || "").trim());
+        if(!/[.!?…]$/.test(answerText)) answerText += ".";
+        renderAll();
+        pushHistory(domanda, answerText);
+      }else{
+        // MODE MANUALE: domanda deve già esserci (guard ha già bloccato accessi vuoti)
+        setTitlesAndTexts(domanda);
+        qView.textContent = domanda || '—';
+
+        const r = await fetch("/api/ask",{
+          method:"POST",
+          headers,
+          body:JSON.stringify({
+            domanda,
+            lang,
+            stile: style,
+            periodo,
+            extra:"",
+            micro:req.micro||{},
+            sex
+          })
+        });
+
+        if(r.status===429){ answerEl.textContent = (I18N[lang]||I18N.it).error; return; }
+        const data = await r.json().catch(()=>null);
+        if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
+
+        answerText = normalizeOneParagraph((data.answer||"").trim());
+        if(!/[.!?…]$/.test(answerText)) answerText += ".";
+        renderAll();
+        pushHistory(domanda, answerText);
       }
-      const data = await r.json().catch(()=>null);
-      if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
-
-      answerText = normalizeOneParagraph((data.answer||"").trim());
-      if(!/[.!?…]$/.test(answerText)) answerText += ".";
-      answerEl.textContent = answerText;
-      decorateEmBits(answerEl);
-
-      const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-      hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
-      LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
     }catch(e){
       answerEl.textContent = (I18N[lang]||I18N.it).error;
       console.error(e);
