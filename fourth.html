@@ -64,6 +64,23 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 .dot.err{background:#b94a48;border-color:#5f2a29}
 .kv{display:inline-flex;gap:6px;align-items:center}
 .mini{font-size:11px;color:var(--muted)}
+
+/* Toast + shake */
+.toast{
+  position:fixed; left:50%; bottom:14px; transform:translateX(-50%) translateY(18px);
+  background:var(--chip); border:1px solid var(--line); color:var(--fg);
+  padding:10px 14px; border-radius:12px; box-shadow:0 8px 26px rgba(0,0,0,.35);
+  opacity:0; transition:transform .22s ease, opacity .22s ease; z-index:60; pointer-events:none;
+  font-weight:700; font-size:14px;
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0) }
+.shake{ animation:shake .28s linear 1 }
+@keyframes shake{
+  10%,90%{ transform:translateX(-1px) }
+  20%,80%{ transform:translateX(2px) }
+  30%,50%,70%{ transform:translateX(-4px) }
+  40%,60%{ transform:translateX(4px) }
+}
 </style>
 </head>
 <body>
@@ -183,6 +200,9 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
     </div>
   </main>
 
+  <!-- Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
 <script>
 (function(){
   /* ====== CONFIG ====== */
@@ -220,7 +240,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostTitle:"▶ Boost personalizzazione", boostHint:"(opzionale, usato da “Sorprendimi”)",
         boostSave:"💾 Salva Boost", boostClear:"Svuota",
         boostPH:"Scrivi qualcosa su di te o su cosa vuoi esplorare…",
-        boostSaved:"Boost salvato.", sUse:"Usa"},
+        boostSaved:"Boost salvato.", sUse:"Usa",
+        needQ:"Compila la domanda oppure usa «Sorprendimi» per farla creare alla AI."},
     en:{title:"Set your question", yourq:"What if…", gen:"✨ Generate answer", clear:"Clear",
         surprise:"Surprise me", saved:"▶ Saved questions", stories:"▶ History",
         styleWF:"What if", styleWTF:"What the F", fut:"Future", past:"Past",
@@ -230,7 +251,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostTitle:"▶ Personalization boost", boostHint:"(optional, used by “Surprise me”)",
         boostSave:"💾 Save Boost", boostClear:"Clear",
         boostPH:"Write anything about you or what you want to explore…",
-        boostSaved:"Boost saved.", sUse:"Use"},
+        boostSaved:"Boost saved.", sUse:"Use",
+        needQ:"Write your question or use “Surprise me” to let the AI create it."},
     es:{title:"Configura tu pregunta", yourq:"¿Y si…?", gen:"✨ Generar respuesta", clear:"Limpiar",
         surprise:"Sorpréndeme", saved:"▶ Preguntas guardadas", stories:"▶ Historial",
         styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Pasado",
@@ -240,7 +262,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostTitle:"▶ Impulso de personalización", boostHint:"(opcional, usado por «Sorpréndeme»)",
         boostSave:"💾 Guardar Boost", boostClear:"Limpiar",
         boostPH:"Escribe algo sobre ti o lo que quieres explorar…",
-        boostSaved:"Boost guardado.", sUse:"Usar"},
+        boostSaved:"Boost guardado.", sUse:"Usar",
+        needQ:"Escribe tu pregunta o usa «Sorpréndeme» para que la IA la cree."},
     fr:{title:"Définis ta question", yourq:"Et si…", gen:"✨ Générer la réponse", clear:"Effacer",
         surprise:"Surprends-moi", saved:"▶ Questions enregistrées", stories:"▶ Historique",
         styleWF:"What if", styleWTF:"What the F", fut:"Futur", past:"Passé",
@@ -250,7 +273,8 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostTitle:"▶ Boost de personnalisation", boostHint:"(optionnel, utilisé par « Surprise-moi »)",
         boostSave:"💾 Enregistrer le Boost", boostClear:"Effacer",
         boostPH:"Écris quelque chose sur toi ou ce que tu veux explorer…",
-        boostSaved:"Boost enregistré.", sUse:"Utiliser"},
+        boostSaved:"Boost enregistré.", sUse:"Utiliser",
+        needQ:"Écris ta question ou utilise « Surprise-moi » pour la générer via l’IA."},
     de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", gen:"✨ Antwort erzeugen", clear:"Leeren",
         surprise:"Überrasche mich", saved:"▶ Gespeicherte Fragen", stories:"▶ Verlauf",
         styleWF:"What if", styleWTF:"What the F", fut:"Zukunft", past:"Vergangenheit",
@@ -260,11 +284,12 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
         boostTitle:"▶ Personalisierungs-Boost", boostHint:"(optional, von „Überrasche mich“ genutzt)",
         boostSave:"💾 Boost speichern", boostClear:"Leeren",
         boostPH:"Schreibe etwas über dich oder was du erkunden willst…",
-        boostSaved:"Boost gespeichert.", sUse:"Verwenden"}
+        boostSaved:"Boost gespeichert.", sUse:"Verwenden",
+        needQ:"Schreibe deine Frage oder nutze „Überrasche mich“, damit die KI sie erstellt."}
   };
 
   /* ===== HINTS (solo generali) ===== */
-  const HINTS={ /* identico alla tua lista, solo generiche */ 
+  const HINTS={
     it:["E se cambiassi lavoro?","E se cambiassi città?","E se aprissi partita IVA?","E se tornassi a studiare?","E se lavorassi 4 giorni su 5?","E se chiedessi un aumento?","E se mi prendessi un mese sabbatico?","E se riducessi i social per 30 giorni?","E se vivessi senza auto?","E se imparassi bene l’inglese?","E se ricominciassi palestra?","E se corressi 3 volte a settimana?","E se aprissi un micro e-commerce?","E se studiassi 1h al giorno?","E se investissi il 10% ogni mese?","E se andassi all’estero 6 mesi?","E se lasciassi un progetto che non ami?","E se cucinassi a casa 30 giorni?"],
     en:["What if you changed jobs?","What if you moved city?","What if you went freelance?","What if you went back to study?","What if you tried a 4-day week?","What if you asked for a raise?","What if you took a month off?","What if you cut social media for 30 days?","What if you lived without a car?","What if you mastered English?","What if you returned to the gym?","What if you ran three times a week?","What if you opened a tiny e-commerce?","What if you studied 1h daily?","What if you invested 10% monthly?","What if you lived abroad for 6 months?","What if you dropped a project you don’t love?","What if you cooked at home for 30 days?"],
     es:["¿Y si cambiaras de trabajo?","¿Y si te mudaras de ciudad?","¿Y si te hicieras autónomo?","¿Y si volvieras a estudiar?","¿Y si probaras una semana de 4 días?","¿Y si pidieras un aumento?","¿Y si tomaras un mes libre?","¿Y si dejaras redes 30 días?","¿Y si vivieras sin coche?","¿Y si dominaras el inglés?","¿Y si volvieras al gimnasio?","¿Y si corrieras 3 veces por semana?","¿Y si abrieras un micro e-commerce?","¿Y si estudiaras 1h al día?","¿Y si invirtieras el 10% mensual?","¿Y si vivieras 6 meses en el extranjero?","¿Y si dejaras un proyecto que no amas?","¿Y si cocinaras en casa 30 días?"],
@@ -334,11 +359,23 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
 
   /* ===== GRAMMAR ===== */
   function polishQuestion(q,Lcode){
-    let t=String(q||"").replace(/[?？]+$/,'').trim(); if(!t) return '';
+    let t=String(q||"").replace(/[?؟？]+$/,'').trim(); if(!t) return '';
     t=t.charAt(0).toUpperCase()+t.slice(1); t=normalizeSpaces(t);
     if(Lcode==="es"){ if(!t.startsWith('¿')) t='¿'+t; if(!t.endsWith('?')) t+='?'; return t; }
     if(Lcode==="fr"){ if(!t.endsWith('?')) t+=' ?'; t=t.replace(/\s*\?$/,'\u202F?'); return t; }
     if(!/\?$/.test(t)) t+='?'; return t;
+  }
+
+  /* ===== Toast helpers ===== */
+  function showToast(msg){
+    const t=$('toast'); if(!t) return;
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(showToast._t); showToast._t=setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+  function flashShake(el){
+    if(!el) return;
+    el.classList.remove('shake'); void el.offsetWidth;
+    el.classList.add('shake'); setTimeout(()=>el.classList.remove('shake'), 320);
   }
 
   /* ===== BOOST ===== */
@@ -404,7 +441,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   /* ===== Refresh locale ===== */
   $('aiPingBtn').onclick=()=>{ renderHints(true); $('aiTime').textContent='⏱ '+nowFmt(); };
 
-  /* ===== Surprise → quinta con Boost ===== */
+  /* ===== Surprise → quinta con Boost (AI genera domanda+risposta) ===== */
   function surpriseAndGo(){
     const Lmsg = (lang==='it'?'Ok! Preparo una domanda su misura…':
                  lang==='es'?'¡Vamos! Preparando una pregunta a tu medida…':
@@ -421,9 +458,19 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
   }
   $('surpriseBtn').onclick=surpriseAndGo;
 
-  /* ===== Submit manuale ===== */
+  /* ===== Submit manuale (blocco se vuoto con toast) ===== */
   function trySubmit(){
-    const domanda=($('qInput').value||'').trim(); if(!domanda){ $('qInput').focus(); return; }
+    const domandaRaw = ($('qInput').value||'').trim();
+
+    if(!domandaRaw){
+      const L = I18N[lang] || I18N.en;
+      showToast(L.needQ || "Write your question or use Surprise me.");
+      flashShake($('qInput'));
+      const sb=$('surpriseBtn'); if(sb){ sb.animate([{outline:'2px solid var(--accent2)'},{outline:'0'}],{duration:550}); }
+      $('qInput').focus();
+      return;
+    }
+
     const c=readJSON('whatif_credits',{date:todayISO(),used:0});
     if(!userIsAdmin()){
       const cap=capForUser();
@@ -433,7 +480,7 @@ footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
       }
       c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderCreditsBadge();
     }
-    const cleaned=polishQuestion(domanda, lang); $('qInput').value=cleaned; LS.setItem('domanda',cleaned);
+    const cleaned=polishQuestion(domandaRaw, lang); $('qInput').value=cleaned; LS.setItem('domanda',cleaned);
     const req={domanda:cleaned,stile:prefs.stile,lang,extra:'',micro:{},fantasy_mode:false,periodo:prefs.periodo,boost:getBoost(), mode:'manual'};
     writeJSON('whatif_request',req);
     location.href = RESULTS_PAGE;
