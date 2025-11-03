@@ -3,391 +3,620 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Domanda (multilang + surprise XL)</title>
+<title>What?f — Domanda</title>
 <meta name="theme-color" content="#0A0F14"/>
 <style>
 :root{
-  --bg:#0B1018; --bg2:#0E1724; --card:#141C22; --fg:#F4F7FB; --muted:#A7B3C2;
-  --accent:#1C57A0; --accent2:#FFEC01; --line:#1b2a34; --chip:#0f1820;
-  --topbarH:48px; --qbarTop:140px; --qbarH:64px;
+  --bg:#0C0F14; --bg2:#0E1724; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
+  --accent:#1C57A0; --accent2:#FFEC01; --ink:#001f26; --chip:#0f1820; --line:#1b2a34;
+  --topbarH: 52px;
+  --danger:#ff6b6b; --dangerBorder: rgba(255,107,107,.55); --dangerBg: rgba(255,107,107,.08);
 }
+html[data-theme="whatif"]{ --bg:#0B1018; --bg2:#0E1724; --card:#141C22; --fg:#F4F7FB; --muted:#A7B3C2; --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A; --chip:#0f1820; --line:#1b2a34; }
+html[data-theme="wtf"]{ --bg:#0B0B0C; --bg2:#101414; --card:#111713; --fg:#EEF5F0; --muted:#A6B6AD; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; --chip:#0F1714; --line:#21322A; }
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 25% 20%,var(--bg2),var(--bg));color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+html,body{
+  height:100%; margin:0;
+  background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+  color:var(--fg);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility
+}
 @media (prefers-reduced-motion:no-preference){
   body{animation:bgShift 18s ease-in-out infinite alternate}
   @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
 }
 
-/* Topbar + Dock */
-.topbar{position:sticky;top:0;z-index:30;display:flex;gap:8px;align-items:center;padding:8px 10px;background:linear-gradient(180deg,rgba(10,15,20,.95),rgba(10,15,20,0))}
-.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
-.btn .txt{display:inline}
-.btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#0b0e10;border:none;box-shadow:0 10px 26px rgba(0,0,0,.35)}
-.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap}
-.dock{position:sticky;top:calc(var(--topbarH));z-index:25;margin:0 10px 8px}
-.dock .wrap{display:flex;gap:8px;flex-wrap:nowrap;overflow:auto;padding:10px;background:rgba(20,28,34,.85);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.25)}
-select{appearance:none;background:var(--chip);border:1px solid var(--line);color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:700;cursor:pointer}
+/* Topbar: fissa e con spazio di riserva */
+.topbar{
+  position:sticky; top:0; z-index:1000;
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:8px 10px;
+  height:var(--topbarH);
+  background:rgba(10,15,20,.98);
+  backdrop-filter: blur(6px);
+  border-bottom:1px solid var(--line);
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
+}
 
-/* Q-BAR (fissa) */
-.qspacer{height:calc(var(--qbarH) + 12px)}
-.qbar{
-  position:sticky; top:var(--qbarTop); z-index:22; margin:0 10px 10px; padding:10px;
-  border:1px solid var(--line); border-radius:14px; background:linear-gradient(180deg,rgba(20,28,34,.92),rgba(20,28,34,.82)); backdrop-filter:blur(8px); box-shadow:0 10px 24px rgba(0,0,0,.25)
+/* Dock SCORRE con la pagina (non sticky, non copre le schede) */
+.dock{position:static; margin:8px 10px 6px;}
+.dock .dock-card{
+  display:flex; align-items:center; gap:10px; flex-wrap:nowrap; overflow:auto;
+  padding:10px; background:rgba(20,28,34,.95); backdrop-filter:blur(8px);
+  border:1px solid var(--line); border-radius:14px; box-shadow:0 10px 24px rgba(0,0,0,.25)
 }
-.qrow{display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center}
-.qlabel{font-weight:800;color:var(--accent2);padding:0 10px;white-space:nowrap;border:1px solid var(--line);background:var(--chip);border-radius:12px;height:42px;display:flex;align-items:center}
-.qinput{
-  width:100%; height:42px; background:rgba(255,255,255,.06); color:#EAF3EE;
-  border:1px solid var(--line); border-radius:12px; padding:8px 12px; font-size:16px;
-  white-space:nowrap; overflow-x:auto; overflow-y:hidden
-}
-.qbtns{display:flex;gap:8px;flex-wrap:wrap}
-.qbtns .btn{height:42px}
-.qhelp{margin-top:6px; font-size:12px; color:var(--muted)}
-.qbar.focus .qhelp{opacity:1}
-@media (max-width:460px){
-  .qrow{grid-template-columns:auto 1fr}
-  .qbtns{grid-column:1 / -1}
-}
-@media (max-width:360px){ .btn .txt{display:none} }
+.dock .dock-card > * {flex:0 0 auto}
 
-/* Layout contenuti */
-main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
+/* Layout */
+main{
+  min-height:100%;
+  display:flex; flex-direction:column; align-items:center; gap:14px;
+  padding:calc(var(--topbarH) + 12px) 14px 26px; /* spinta sotto la topbar */
+}
 .wrap{width:min(100%,980px)}
 h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
+.label{color:var(--accent2);font-weight:800;margin:0 0 8px}
+
+/* Cards & chips */
 .card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(12px);border-radius:16px;padding:16px;margin:10px 0;overflow:hidden}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer;white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:10px 12px;font-size:14px;cursor:pointer;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.chip.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800}
+
+/* Buttons, badges, select */
+.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
+.btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.btn.ghost{background:transparent;border:1px dashed var(--line)}
+.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap}
+select{appearance:none;background:var(--chip);border:1px solid var(--line);color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:700;cursor:pointer}
+
+/* Input & help */
+.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
+.center{max-width:760px;margin:0 auto}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.small{font-size:12px;color:var(--muted)}
+.help{margin-top:8px; line-height:1.5}
+.help b{color:var(--accent2)}
+.help ul{margin:6px 0 0 18px; padding:0}
+
+/* Collapsible */
+.toggle{cursor:pointer;user-select:none}
+.collapsed>.body{display:none}
+.list{display:flex;flex-direction:column;gap:10px}
+.story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
+.play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
+.meta{font-size:12px;color:var(--muted)}
+
+/* Footer */
 footer{margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px}
+
+/* Micro UI (locale) */
+.airow{display:flex;align-items:center;gap:10px;margin-top:8px}
+.dot{width:10px;height:10px;border-radius:50%;background:#1fb57a;border:1px solid #0d6a47;display:inline-block}
+.dot.err{background:#b94a48;border-color:#5f2a29}
+.kv{display:inline-flex;gap:6px;align-items:center}
+.mini{font-size:11px;color:var(--muted)}
+
+/* Error inline nel campo domanda */
+#qWrap{position:relative}
+.infield-msg{
+  position:absolute; top:10px; left:12px; right:12px;
+  background:linear-gradient(180deg, rgba(20,28,34,.95), rgba(20,28,34,.75));
+  border:1px solid var(--dangerBorder);
+  color:#ffdede; border-radius:10px;
+  padding:6px 10px; font-size:13px; font-weight:700;
+  pointer-events:none; opacity:0; transform:translateY(-6px);
+  transition:opacity .18s ease, transform .18s ease;
+}
+.infield-msg.show{opacity:1; transform:none;}
+.input.error{border-color:var(--dangerBorder)!important; box-shadow:0 0 0 2px var(--dangerBg) inset, 0 0 0 2px var(--dangerBg);}
+.shake{animation:shake .28s ease}
+@keyframes shake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}
+
+/* Slot FX sul textarea */
+#qInput.slotting{filter:contrast(1.2) saturate(1.1); animation:slotFlash .12s linear infinite}
+@keyframes slotFlash{0%{box-shadow:0 0 0 rgba(255,236,1,.0)}50%{box-shadow:0 0 18px rgba(255,236,1,.2)}100%{box-shadow:0 0 0 rgba(255,236,1,.0)}}
+
+/* === Tabs categorie spunti === */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.tab{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);
+  border-radius:999px;padding:6px 10px;font-size:13px;cursor:pointer}
+.tab.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800;border:none}
+.cat-grid{display:block}
+.cat-grid[hidden]{display:none}
+.count{opacity:.8;font-weight:700;margin-left:6px;font-size:11px}
 </style>
 </head>
 <body>
-  <!-- TOP -->
-  <div class="topbar" id="topbar">
+  <!-- TOPBAR -->
+  <div class="topbar">
     <div class="row">
-      <button class="btn" id="backBtn" type="button">← <span class="txt">Indietro</span></button>
-      <button class="btn" id="homeBtn" type="button">🏠 <span class="txt">Home</span></button>
+      <button class="btn" id="backBtn" type="button">←</button>
+      <button class="btn" id="homeBtn" type="button">🏠</button>
     </div>
   </div>
 
-  <!-- DOCK -->
-  <div class="dock" id="dock">
-    <div class="wrap">
-      <span class="badge" id="badgeStyle">🎭 What if</span>
-      <span class="badge" id="badgeTime">🕰️ Futuro</span>
-      <span class="badge" id="badgeCredits">Crediti: 0/3</span>
+  <!-- DOCK che scorre -->
+  <div class="dock">
+    <div class="dock-card">
+      <span class="badge" id="styleBadge">🎭 —</span>
+      <span class="badge" id="periodoBadge">🕰️ —</span>
+      <span class="badge" id="freeBadge">—</span>
+      <span class="badge" id="proBadge">FREE</span>
       <select id="langSelect" aria-label="Language">
-        <option value="it">IT • Italiano</option>
-        <option value="en">EN • English</option>
-        <option value="es">ES • Español</option>
-        <option value="fr">FR • Français</option>
-        <option value="de">DE • Deutsch</option>
+        <option value="it">IT</option><option value="en">EN</option><option value="es">ES</option><option value="fr">FR</option><option value="de">DE</option>
       </select>
-      <button class="btn" id="resetBtn" type="button">♻️ <span class="txt">Reset</span></button>
+      <button class="btn ghost" id="resetBtn" type="button" title="Reset app">♻️ Reset</button>
     </div>
   </div>
 
-  <!-- Q BAR (FISSA) -->
-  <div id="qBar" class="qbar">
-    <div class="qrow">
-      <div class="qlabel" id="qLabel">E se…</div>
-      <input id="qInput" class="qinput" type="text" placeholder="Scrivi qui la domanda" autocomplete="off" autocapitalize="sentences" spellcheck="false"/>
-      <div class="qbtns">
-        <button class="btn primary" id="goBtn" type="button">✨ <span class="txt" id="goTxt">Genera</span></button>
-        <button class="btn" id="surpriseBtn" type="button">🎲 <span class="txt" id="surpriseTxt">Sorprendimi</span></button>
-        <button class="btn" id="clearBtn" type="button">🧹 <span class="txt" id="clearTxt">Svuota</span></button>
-      </div>
-    </div>
-    <div class="qhelp" id="qHelp">
-      Suggerimento: scrivi “E se… ?” in modo concreto (luogo, orizzonte di tempo, vincoli). Esempi: “E se mi trasferissi a L’Aquila per 6 mesi?” · “E se chiedessi un aumento del 12% dopo il progetto X?” · “E se passassi alla settimana di 4 giorni?”. Più dettagli = risposta più utile.
-    </div>
-  </div>
-  <div class="qspacer" id="qSpacer"></div>
-
-  <!-- CONTENUTO -->
   <main>
     <div class="wrap">
       <h1 id="titleH1">Imposta la tua domanda</h1>
 
-      <!-- Stile / Periodo -->
+      <!-- STILE + PERIODO -->
       <div class="card">
-        <div class="chips" id="styleChips">
-          <button class="chip" data-style="whatif" id="chipWhatIf">What if</button>
-          <button class="chip" data-style="wtf" id="chipWTF">What the F</button>
-        </div>
-        <div class="chips" id="periodChips" style="margin-top:8px">
-          <button class="chip" data-periodo="future" id="chipFuture">Futuro</button>
-          <button class="chip" data-periodo="past" id="chipPast">Passato</button>
+        <div class="row" style="justify-content:space-between;align-items:center;gap:8px">
+          <div class="chips" id="styleChips">
+            <button class="chip" data-style="whatif" id="chipWhatIf" type="button">What if</button>
+            <button class="chip" data-style="wtf" id="chipWTF" type="button">What the F</button>
+          </div>
+          <div class="chips" id="periodoChips">
+            <button class="chip" data-periodo="future" id="chipFuture" type="button">Futuro</button>
+            <button class="chip" data-periodo="past" id="chipPast" type="button">Passato</button>
+          </div>
         </div>
       </div>
 
-      <!-- Spunti rapidi -->
-      <div class="card">
-        <div style="font-weight:800;color:var(--accent2);margin-bottom:8px" id="hintsTitle">Spunti rapidi “E se…”</div>
-        <div class="chips" id="hintsChips"></div>
-        <div class="small" id="hintsNote" style="margin-top:8px;color:var(--muted)"></div>
+      <!-- DOMANDA -->
+      <div class="card center">
+        <h3 class="label" id="qLabel">E se…</h3>
+
+        <div id="qWrap" aria-live="polite">
+          <textarea id="qInput" rows="3" class="input" placeholder="E se…" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
+          <div id="qError" class="infield-msg" aria-live="polite">Scrivi una domanda, scegli uno spunto, oppure usa “Sorprendimi”.</div>
+        </div>
+
+        <!-- Guida -->
+        <div class="small help" id="qHelp">
+          <b>Consigli per risposte più accurate:</b>
+          <ul>
+            <li>Indica <b>obiettivo</b> e <b>contesto</b> (lavoro, studio, salute).</li>
+            <li>Aggiungi <b>vincoli</b> / <b>preferenze</b> (budget, tempo, strumenti).</li>
+            <li>Specifica un <b>orizzonte</b> (domani, 30 giorni, 3 mesi).</li>
+            <li>Scrivi 2–3 righe di <b>dettagli rilevanti</b>.</li>
+          </ul>
+        </div>
+
+        <div class="row" style="margin-top:12px;justify-content:space-between">
+          <div class="row" style="gap:10px">
+            <button class="btn primary" id="goBtn" type="button" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
+            <button class="btn" id="surpriseBtn" type="button" title="Sorprendimi in base alla categoria selezionata">🎲 Sorprendimi</button>
+          </div>
+          <button class="btn" id="clearBtn" type="button">Svuota</button>
+        </div>
+        <div class="small" id="tipNote" style="margin-top:8px">
+          Scegli la categoria negli spunti: <b>Personalizzate</b> usa profilo/boost, <b>Generiche</b> è neutra, <b>Assurde</b> attiva la slot.
+        </div>
       </div>
 
-      <footer id="footerNote">© What?f — FREE · daily credits active</footer>
+      <!-- BOOST -->
+      <div class="card center" id="boostCard">
+        <div class="row toggle" id="boostHeader" style="justify-content:space-between">
+          <div class="label" id="boostTitle">▶ Boost personalizzazione</div>
+          <div class="small" id="boostHint">(opzionale; utile per le risposte e gli spunti personalizzati)</div>
+        </div>
+        <div class="body" id="boostBody" style="margin-top:8px">
+          <textarea id="boostInput" class="input" rows="3" placeholder="Scrivi qualcosa su di te o su cosa vuoi esplorare…"></textarea>
+          <div class="row" style="margin-top:10px;justify-content:flex-end;gap:8px">
+            <button class="btn" id="boostClearBtn" type="button">Svuota</button>
+            <button class="btn primary" id="boostSaveBtn" type="button">💾 Salva Boost</button>
+          </div>
+          <div class="small" id="boostSavedMsg" style="margin-top:6px"></div>
+
+          <!-- Micro UI -->
+          <div class="airow mini">
+            <span id="aiDot" class="dot" title="Stato locale"></span>
+            <span id="aiMsg">Profilo/Boost letti per spunti personalizzati.</span>
+            <span id="aiTime" class="kv">⏱ —</span>
+            <button class="btn" id="aiPingBtn" type="button" title="Aggiorna spunti">↻ Refresh</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SPUNTI (categorie: Personalizzate / Generiche / Assurde) -->
+      <div class="card center" id="hintsCard">
+        <div class="row toggle" id="hintsHeader" style="justify-content:space-between">
+          <div class="label" id="hintsTitle">▶ Spunti rapidi “E se…”</div>
+        </div>
+        <div class="body" id="hintsBody" style="margin-top:8px">
+          <div class="tabs" id="hintTabs">
+            <button class="tab sel" data-cat="personal" id="tabPersonal">Personalizzate <span class="count" id="cntPersonal">0</span></button>
+            <button class="tab" data-cat="generic" id="tabGeneric">Generiche <span class="count" id="cntGeneric">0</span></button>
+            <button class="tab" data-cat="absurd" id="tabAbsurd">Assurde <span class="count" id="cntAbsurd">0</span></button>
+          </div>
+
+          <div class="cat-grid" id="boxPersonal"><div class="chips" id="chipsPersonal"></div></div>
+          <div class="cat-grid" id="boxGeneric" hidden><div class="chips" id="chipsGeneric"></div></div>
+          <div class="cat-grid" id="boxAbsurd" hidden><div class="chips" id="chipsAbsurd"></div></div>
+
+          <div class="small" id="hintsNote" style="margin-top:8px">
+            “Sorprendimi” usa la <b>categoria selezionata</b>. Con <b>Assurde</b> parte la slot. Se stile = <b>What If</b> e domanda assurda, in quinta aggiungiamo il <b>finale a percentuali</b>.
+          </div>
+        </div>
+      </div>
+
+      <!-- SALVATI -->
+      <div class="card center collapsed" id="savedCard">
+        <div class="row toggle" id="savedHeader" style="justify-content:space-between">
+          <div class="label" id="nextLabel">▶ Domande salvate</div>
+          <button class="btn" id="clearSavedBtn" type="button">🗑️ Svuota</button>
+        </div>
+        <div class="body" id="savedBody"><div id="nextList" class="list"></div></div>
+      </div>
+
+      <!-- CRONOLOGIA -->
+      <div class="card center collapsed" id="histCard">
+        <div class="row toggle" id="histHeader" style="justify-content:space-between">
+          <div class="label" id="storiesLabel">▶ Cronologia</div>
+          <button class="btn" id="clearHistoryBtn" type="button">🗑️ Svuota</button>
+        </div>
+        <div class="body"><div id="storyList" class="list"></div></div>
+      </div>
+
+      <footer id="footerNote">© What?f — FREE · crediti giornalieri attivi</footer>
     </div>
   </main>
 
 <script>
 (function(){
-  /* ====== SAFE STORAGE ====== */
+  /* ====== CONFIG ====== */
+  const RESULTS_PAGE = 'fifth.html';
+  const HOME_FALLBACK = 'index.html';
+
+  /* ===== SAFE STORAGE ===== */
   const mem={}, LS={ getItem(k){try{return localStorage.getItem(k)}catch(e){return (k in mem)?mem[k]:null}},
                      setItem(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=String(v)}},
                      removeItem(k){try{localStorage.removeItem(k)}catch(e){delete mem[k]}} };
   const writeJSON=(k,v)=>{try{LS.setItem(k,JSON.stringify(v))}catch{}};
   const readJSON=(k,def)=>{try{return JSON.parse(LS.getItem(k)||JSON.stringify(def))}catch{return def}};
+  const todayISO=()=>new Date().toISOString().slice(0,10);
+  const nowFmt =()=>new Date().toLocaleTimeString(document.documentElement.lang||'it-IT',{hour12:false});
 
-  /* ====== I18N ====== */
-  const I18N={
-    it:{title:"Imposta la tua domanda", qlabel:"E se…", ph:"Scrivi qui la domanda",
-        gen:"Genera", surpr:"Sorprendimi", clear:"Svuota",
-        hintsTitle:"Spunti rapidi “E se…”",
-        hintsNote:"Scegli uno spunto generale oppure scrivi il tuo. Più dettagli (luogo, tempo, vincoli) → risposta più utile.",
-        styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Passato",
-        credits:"Crediti", footer:"© What?f — FREE · crediti giornalieri attivi",
-        tip:`Suggerimento: scrivi “E se… ?” in modo concreto (luogo, tempo, vincoli). Esempi: “E se mi trasferissi a L’Aquila per 6 mesi?”, “E se chiedessi un aumento del 12% dopo il progetto X?”, “E se facessi settimana di 4 giorni?”.`},
-    en:{title:"Set your question", qlabel:"What if…", ph:"Type your question here",
-        gen:"Generate", surpr:"Surprise me", clear:"Clear",
-        hintsTitle:"Quick “What if…” ideas",
-        hintsNote:"Pick a general hint or write your own. More context (place, time, constraints) → better answer.",
-        styleWF:"What if", styleWTF:"What the F", fut:"Future", past:"Past",
-        credits:"Credits", footer:"© What?f — FREE · daily credits active",
-        tip:`Tip: be concrete (place, time, constraints). Examples: “What if I moved to Berlin for 6 months?”, “What if I asked for a 12% raise after project X?”, “What if I tried a 4-day week?”.`},
-    es:{title:"Configura tu pregunta", qlabel:"¿Y si…?", ph:"Escribe tu pregunta aquí",
-        gen:"Generar", surpr:"Sorpréndeme", clear:"Limpiar",
-        hintsTitle:"Ideas rápidas «¿Y si…?»",
-        hintsNote:"Elige una idea general o escribe la tuya. Más contexto (lugar, tiempo, límites) → mejor respuesta.",
-        styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Pasado",
-        credits:"Créditos", footer:"© What?f — FREE · créditos diarios activos",
-        tip:`Consejo: sé concreto (lugar, tiempo, límites). Ej.: «¿Y si me mudara a Madrid 6 meses?», «¿Y si pidiera un 12% de aumento tras el proyecto X?», «¿Y si probara semana de 4 días?».`},
-    fr:{title:"Définis ta question", qlabel:"Et si…", ph:"Écris ta question ici",
-        gen:"Générer", surpr:"Surprends-moi", clear:"Effacer",
-        hintsTitle:"Idées « Et si… »",
-        hintsNote:"Choisis une idée générale ou écris la tienne. Plus de contexte (lieu, temps, contraintes) → meilleure réponse.",
-        styleWF:"What if", styleWTF:"What the F", fut:"Futur", past:"Passé",
-        credits:"Crédits", footer:"© What?f — FREE · crédits quotidiens actifs",
-        tip:`Astuce : sois concret (lieu, temps, contraintes). Ex.: « Et si je déménageais à Paris 6 mois ? », « Et si je demandais +12% après le projet X ? », « Et si j’essayais la semaine de 4 jours ? ».`},
-    de:{title:"Stelle deine Frage", qlabel:"Was wäre, wenn…", ph:"Schreibe hier deine Frage",
-        gen:"Erzeugen", surpr:"Überrasche mich", clear:"Leeren",
-        hintsTitle:"Schnelle „Was wäre, wenn…“-Ideen",
-        hintsNote:"Wähle eine Idee oder schreibe deine eigene. Mehr Kontext (Ort, Zeit, Vorgaben) → bessere Antwort.",
-        styleWF:"What if", styleWTF:"What the F", fut:"Zukunft", past:"Vergangenheit",
-        credits:"Credits", footer:"© What?f — FREE · tägliche Credits aktiv",
-        tip:`Tipp: sei konkret (Ort, Zeit, Vorgaben). Bsp.: „Was, wenn ich 6 Monate nach Wien ziehe?“, „Was, wenn ich nach Projekt X +12 % verlange?“, „Was, wenn ich 4-Tage-Woche teste?“.`}
-  };
+  /* ===== UTIL ===== */
+  const SUPPORTED_LANGS=["it","en","es","fr","de"];
+  const $=id=>document.getElementById(id);
+  const normalizeSpaces=t=>t.replace(/\s+/g,' ').replace(/\s+([?!.,;:%])/g,'$1').trim();
 
-  /* ====== HINTS PER LINGUA (12 visibili) ====== */
-  const HINTS={
-    it:["E se cambiassi lavoro?","E se cambiassi città?","E se aprissi partita IVA?","E se chiedessi un aumento?","E se tornassi a studiare?","E se lavorassi 4 giorni su 5?","E se mi trasferissi a L’Aquila per 6 mesi?","E se riducessi i social per 30 giorni?","E se vivessi senza auto?","E se imparassi bene l’inglese?","E se investissi il 10% ogni mese?","E se andassi all’estero 6 mesi?"],
-    en:["What if you changed jobs?","What if you moved city?","What if you went freelance?","What if you asked for a raise?","What if you went back to study?","What if you tried a 4-day week?","What if you moved to Berlin for 6 months?","What if you cut social media for 30 days?","What if you lived without a car?","What if you mastered English?","What if you invested 10% monthly?","What if you lived abroad for 6 months?"],
-    es:["¿Y si cambiaras de trabajo?","¿Y si te mudaras de ciudad?","¿Y si te hicieras autónomo?","¿Y si pidieras un aumento?","¿Y si volvieras a estudiar?","¿Y si probaras semana de 4 días?","¿Y si vivieras en Madrid 6 meses?","¿Y si dejaras redes 30 días?","¿Y si vivieras sin coche?","¿Y si dominaras el inglés?","¿Y si invirtieras 10% al mes?","¿Y si vivieras fuera 6 meses?"],
-    fr:["Et si tu changeais de travail ?","Et si tu déménageais ?","Et si tu te mettais en freelance ?","Et si tu demandais une augmentation ?","Et si tu reprenais des études ?","Et si tu testais 4 jours ?","Et si tu vivais 6 mois à Paris ?","Et si tu coupais les réseaux 30 jours ?","Et si tu vivais sans voiture ?","Et si tu maîtrisais l’anglais ?","Et si tu investissais 10 % / mois ?","Et si tu partais 6 mois à l’étranger ?"],
-    de:["Was, wenn du den Job wechselst?","Was, wenn du umziehst?","Was, wenn du freiberuflich wirst?","Was, wenn du mehr Gehalt forderst?","Was, wenn du wieder studierst?","Was, wenn du 4-Tage-Woche testest?","Was, wenn du 6 Monate nach Wien ziehst?","Was, wenn du 30 Tage ohne Social Media lebst?","Was, wenn du ohne Auto lebst?","Was, wenn du Englisch meisterst?","Was, wenn du 10 % monatlich investierst?","Was, wenn du 6 Monate im Ausland lebst?"]
-  };
-
-  /* ====== SURPRISE POOLS (grandi + con “assurde”) ====== */
-  const POOLS = {
-    it: {
-      lavoro:[
-        "E se lasciassi il ruolo attuale per un’azienda più piccola ma più veloce?",
-        "E se chiedessi smart working 3 giorni a settimana per 3 mesi?",
-        "E se mi candidassi all’estero per un progetto di 6 mesi?",
-        "E se proponessi di guidare un mini-team per il prossimo trimestre?"
-      ],
-      studio:[
-        "E se studiassi 45 minuti al giorno per una certificazione tecnica?",
-        "E se seguissi un master serale per 1 anno?",
-        "E se imparassi Python con un progetto pratico in 30 giorni?"
-      ],
-      soldi:[
-        "E se accantonassi il 15% fisso per 6 mesi?",
-        "E se riducessi spese ricorrenti del 20% entro 60 giorni?",
-        "E se testassi un micro e-commerce con budget 200€?"
-      ],
-      vita:[
-        "E se mi trasferissi in una città più piccola per 6 mesi?",
-        "E se facessi settimana di 4 giorni e un giorno creativo?",
-        "E se spegnessi le notifiche social per 30 giorni?"
-      ],
-      salute:[
-        "E se camminassi 8.000 passi al giorno per 8 settimane?",
-        "E se eliminassi zuccheri aggiunti per 30 giorni?",
-        "E se tornassi in palestra 3 volte a settimana?"
-      ],
-      relazioni:[
-        "E se organizzassi una cena al mese con amici che non vedo mai?",
-        "E se bloccassi l’agenda per un’ora di qualità ogni sera?"
-      ],
-      viaggio:[
-        "E se vivessi a Lisbona 3 mesi in remote?",
-        "E se facessi un mese sabbatico in montagna?"
-      ],
-      tech:[
-        "E se costruissi un bot Telegram che mi manda 3 alert utili al giorno?",
-        "E se automatizzassi le mie finanze con un foglio smart?"
-      ],
-      side:[
-        "E se lanciassi una newsletter settimanale su un tema di nicchia?",
-        "E se aprissi un canale YouTube per 12 video in 12 settimane?"
-      ],
-      green:[
-        "E se provassi 30 giorni senza auto?",
-        "E se riducessi la plastica monouso dell’80% nel mese prossimo?"
-      ],
-      assurde:[
-        "E se intervistassi mio futuro me con domande scomode e seguissi i consigli?",
-        "E se vivessi 7 giorni con smartphone in bianco e nero?",
-        "E se cambiassi mano dominante per una settimana?",
-        "E se scrivessi 10 righe al giorno su ciò che non farò più?",
-        "E se facessi colazione all’aperto ogni mattina per 14 giorni, qualunque tempo?"
-      ]
-    },
-    /* EN/ES/FR/DE pools abbreviated but rich enough */
-    en:{/* similar categories with English items */},
-    es:{}, fr:{}, de:{}
-  };
-  /* For brevity, fallback: if non-IT language lacks pool, we use IT text translated-ish by hints; still varied. */
-
-  /* ====== DOM ====== */
-  const $ = (id)=>document.getElementById(id);
-  const RESULTS_PAGE='fifth.html';
-  const SUP_LANGS=["it","en","es","fr","de"];
-  let lang=(localStorage.getItem('lang')||'it').toLowerCase(); if(!SUP_LANGS.includes(lang)) lang='it';
+  /* ===== STATE ===== */
+  let lang=(LS.getItem('lang')||'it').toLowerCase(); if(!SUPPORTED_LANGS.includes(lang)) lang="it";
   document.documentElement.lang=lang;
+  let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
 
-  /* ====== UI APPLY ====== */
+  /* ===== I18N (ridotto) ===== */
+  const I18N={
+    it:{title:"Imposta la tua domanda", yourq:"E se…", gen:"✨ Genera risposta", clear:"Svuota",
+        surprise:"Sorprendimi", saved:"▶ Domande salvate", stories:"▶ Cronologia",
+        styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Passato",
+        hintsTitle:"▶ Spunti rapidi “E se…”", hintsNote:"Scegli una categoria e uno spunto.",
+        credits:"Crediti", free:"FREE", pro:"PRO",
+        footer:"© What?f — FREE · crediti giornalieri attivi",
+        boostTitle:"▶ Boost personalizzazione", boostHint:"(opzionale; utile per le risposte e gli spunti personalizzati)",
+        boostSave:"💾 Salva Boost", boostClear:"Svuota",
+        boostPH:"Scrivi qualcosa su di te o su cosa vuoi esplorare…",
+        boostSaved:"Boost salvato.", sUse:"Usa"}
+  };
+
+  /* ===== POOL SERIO & ASSURDO ===== */
+  const HINTS_BASE_IT = [
+    "E se cambiassi lavoro?","E se cambiassi città?","E se aprissi partita IVA?","E se tornassi a studiare?",
+    "E se lavorassi 4 giorni su 5?","E se chiedessi un aumento?","E se riducessi i social per 30 giorni?",
+    "E se vivessi senza auto?","E se imparassi bene l’inglese?","E se ricominciassi palestra?",
+    "E se corressi 3 volte a settimana?","E se aprissi un micro e-commerce?","E se studiassi 1h al giorno?",
+    "E se investissi il 10% ogni mese?","E se lasciassi un progetto che non ami?","E se cucinassi a casa 30 giorni?"
+  ];
+  const ABSURD_IT = [
+    "E se addestrassi un piccione a consegnarmi il caffè ogni mattina?",
+    "E se vivessi 24 ore seguendo solo lanci di una moneta?",
+    "E se parlassi in rime per un'intera riunione di lavoro?",
+    "E se creassi un club segreto per gente che odia i club segreti?",
+    "E se imparassi a cucinare usando solo un ferro da stiro?",
+    "E se fondassi una startup che vende aria motivazionale in barattolo?",
+    "E se indossassi un mantello per una settimana per aumentare la produttività?",
+    "E se cambiassi tutte le password in «password» per sentirmi pericoloso?",
+    "E se cronoprogrammassi i miei sbagli per farli in orario?"
+  ];
+
+  /* ===== Helpers ===== */
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+  function polishQuestion(q,Lcode=lang){
+    let t=String(q||"").replace(/[?？]+$/,'').trim(); if(!t) return '';
+    t=t.charAt(0).toUpperCase()+t.slice(1); t=normalizeSpaces(t);
+    if(Lcode==="fr"){ if(!t.endsWith('?')) t+=' ?'; t=t.replace(/\s*\?$/,'\u202F?'); return t; }
+    if(!/\?$/.test(t)) t+='?'; return t;
+  }
+  function getBoost(){ return (LS.getItem('whatif_boost')||'').trim(); }
+  function getProfile(){
+    const raw = LS.getItem('whatif_profile') || LS.getItem('profilePage2') || '';
+    try { return JSON.parse(raw); } catch { return { text: raw }; }
+  }
+  function keywordsFrom(text){
+    return Array.from(new Set(
+      String(text||'').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,' ')
+        .split(/\s+/).filter(w=>w.length>3 && w.length<20)
+    ));
+  }
+
+  /* ===== i18n apply ===== */
   function applyTexts(){
-    const L=I18N[lang];
+    const L=I18N[lang]||I18N.it;
+    document.title='What?f — Domanda';
     $('titleH1').textContent=L.title;
-    $('qLabel').textContent=L.qlabel;
-    $('qInput').placeholder=L.ph;
-    $('goTxt').textContent=L.gen;
-    $('surpriseTxt').textContent=L.surpr;
-    $('clearTxt').textContent=L.clear;
+    $('qLabel').textContent=L.yourq;
+    $('goBtn').textContent=L.gen;
+    $('clearBtn').textContent=L.clear;
+    $('surpriseBtn').textContent='🎲 '+L.surprise;
     $('hintsTitle').textContent=L.hintsTitle;
     $('hintsNote').textContent=L.hintsNote;
+    $('nextLabel').textContent=L.saved;
+    $('storiesLabel').textContent=L.stories;
     $('footerNote').textContent=L.footer;
     $('chipWhatIf').textContent=L.styleWF; $('chipWTF').textContent=L.styleWTF;
     $('chipFuture').textContent=L.fut; $('chipPast').textContent=L.past;
-    $('badgeTime').textContent = '🕰️ '+(prefs.periodo==='past'?L.past:L.fut);
-    $('qHelp').textContent = L.tip;
-    $('langSelect').value=lang;
+    $('boostTitle').textContent=L.boostTitle; $('boostHint').textContent=L.boostHint;
+    $('boostSaveBtn').textContent=L.boostSave; $('boostClearBtn').textContent=L.boostClear;
+    $('boostInput').placeholder=L.boostPH;
+    $('aiMsg').textContent = 'Profilo/Boost letti per spunti personalizzati.';
+    $('aiTime').textContent='⏱ '+nowFmt();
+    renderBadges(); renderCreditsBadge(); initBoostVisibility();
   }
 
-  /* ====== LAYOUT BAR ====== */
-  function placeBars(){
-    const root = document.documentElement;
-    const topH = ($('topbar')?.offsetHeight)||48;
-    const dockH = ($('dock')?.offsetHeight)||64;
-    const top = topH + dockH + 8;
-    root.style.setProperty('--qbarTop', top+'px');
-    requestAnimationFrame(()=>{
-      const qh = ($('qBar')?.offsetHeight)||64;
-      root.style.setProperty('--qbarH', qh+'px');
-      if($('qSpacer')) $('qSpacer').style.height = (qh+12)+'px';
-    });
-  }
-  window.addEventListener('resize', placeBars);
-  window.addEventListener('orientationchange', placeBars);
-  (function(){const qb=$('qBar'); qb.addEventListener('focusin', ()=> qb.classList.add('focus')); qb.addEventListener('focusout', ()=> qb.classList.remove('focus'));})();
-
-  /* ====== PREFS (stile/periodo) ====== */
-  const prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future'});
-  function renderBadges(){
-    const L=I18N[lang];
-    $('badgeStyle').textContent = (prefs.stile==='wtf'?'🎭 '+L.styleWTF:'🎭 '+L.styleWF);
-    $('badgeTime').textContent = '🕰️ '+(prefs.periodo==='past'?L.past:L.fut);
-    document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
-    document.querySelectorAll('#periodChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.periodo===prefs.periodo));
-    document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-  }
-  $('styleChips').addEventListener('click', (e)=>{ const b=e.target.closest('.chip'); if(!b)return; prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs); renderBadges(); });
-  $('periodChips').addEventListener('click', (e)=>{ const b=e.target.closest('.chip'); if(!b)return; prefs.periodo=b.dataset.periodo; writeJSON('whatif_prefs',prefs); renderBadges(); });
-
-  /* ====== HINTS ====== */
-  function polishQuestion(q){
-    let t=String(q||'').replace(/[?？]+$/,'').trim();
-    if(!t) return '';
-    t=t.charAt(0).toUpperCase()+t.slice(1);
-    if(!/\?$/.test(t)) t+='?';
-    return t;
-  }
-  function renderHints(){
-    const arr=(HINTS[lang]||HINTS.it);
-    const box=$('hintsChips'); box.innerHTML='';
-    arr.forEach(txt=>{
-      const b=document.createElement('button');
-      b.className='chip'; b.type='button'; b.textContent=polishQuestion(txt);
-      b.onclick=()=>{ const el=$('qInput'); el.value=polishQuestion(txt); el.scrollLeft=el.scrollWidth; el.focus(); };
-      box.appendChild(b);
-    });
-  }
-
-  /* ====== NAV + LANG ====== */
-  $('homeBtn').onclick=()=>{ try{location.href='index.html'}catch{location.reload()} };
-  $('backBtn').onclick=()=>{ try{history.back()}catch{} };
-  $('resetBtn').onclick=()=>{ try{ localStorage.clear(); location.reload(); }catch{} };
-  $('langSelect').onchange=()=>{ lang=$('langSelect').value; localStorage.setItem('lang',lang); applyTexts(); renderHints(); renderBadges(); placeBars(); };
-
-  /* ====== SUBMIT ====== */
-  function submitManual(){
-    const q=polishQuestion($('qInput').value);
-    if(!q){ $('qInput').focus(); return; }
-    LS.setItem('domanda', q);
-    const req={domanda:q,stile:prefs.stile,lang,extra:'',micro:{},fantasy_mode:false,periodo:prefs.periodo,boost:(LS.getItem('whatif_boost')||''),mode:'manual'};
-    writeJSON('whatif_request',req);
-    location.href=RESULTS_PAGE;
-  }
-  $('goBtn').onclick=submitManual;
-  $('qInput').addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); submitManual(); } });
-
-  /* ====== SORPRISMI XXL ====== */
-  function pickSurprises(count=5){
-    const bag=[];
-    const p=(POOLS[lang]&&Object.keys(POOLS[lang]).length)?POOLS[lang]:POOLS.it;
-    const cats=Object.keys(p);
-    // riempi da più categorie
-    for(const c of cats){ bag.push(...p[c]); }
-    // bonus: variazioni template generiche
-    const city = (lang==='it'?'L’Aquila':'Berlin');
-    const bonus = {
-      it:[`E se provassi 90 giorni senza social, tranne messaggi?`,`E se imparassi a dire “no” a 3 cose a settimana?`,`E se vivessi 3 mesi a ${city} lavorando da remoto?`,`E se chiedessi feedback brutale a 3 persone e lo applicassi?`,`E se registrassi 1 pensiero al giorno per 100 giorni?`],
-      en:[`What if you lived 3 months in ${city} while working remote?`,`What if you said “no” to 3 things a week?`,`What if you logged one thought a day for 100 days?`,`What if you asked 3 brutal feedbacks and applied them?`,`What if you quit one bad habit per week for 6 weeks?`],
-      es:[`¿Y si vivieras 3 meses en ${city} trabajando remoto?`,`¿Y si dijeras “no” a 3 cosas por semana?`,`¿Y si pidieras 3 feedbacks brutales y los aplicaras?`,`¿Y si registraras una idea al día por 100 días?`,`¿Y si abandonaras un mal hábito por semana 6 semanas?`],
-      fr:[`Et si tu vivais 3 mois à ${city} en remote?`,`Et si tu disais “non” à 3 choses par semaine?`,`Et si tu demandais 3 feedbacks brutaux et les appliquais?`,`Et si tu notais une idée par jour pendant 100 jours?`,`Et si tu quittais une mauvaise habitude par semaine (6 semaines)?`],
-      de:[`Was, wenn du 3 Monate in ${city} remote arbeitest?`,`Was, wenn du 3× pro Woche „Nein“ sagst?`,`Was, wenn du 3 brutale Feedbacks einholst und umsetzt?`,`Was, wenn du 100 Tage lang jeden Tag einen Gedanken notierst?`,`Was, wenn du 6 Wochen lang jede Woche eine schlechte Gewohnheit beendest?`]
-    }[lang]||[];
-    bag.push(...bonus);
-
-    // Shuffle e dedup
-    const seen=new Set(); const dedup=[];
-    for(const x of bag.sort(()=>Math.random()-0.5)){
-      const k=x.toLowerCase();
-      if(!seen.has(k)){ seen.add(k); dedup.push(x); }
-    }
-    return dedup.slice(0, count).map(polishQuestion);
-  }
-
-  $('surpriseBtn').onclick=()=>{
-    const qs = pickSurprises(7); // più di 5, pagina 2 ne userà 5
-    const req={domanda:'',stile:prefs.stile,lang,extra:'',micro:{},fantasy_mode:false,periodo:prefs.periodo,boost:(LS.getItem('whatif_boost')||''),mode:'surprise',surprise_multi:true,surprise_count:qs.length, surprise_list:qs};
-    writeJSON('whatif_request',req);
-    location.href=RESULTS_PAGE;
+  /* ===== NAV ===== */
+  const safeReload=()=>{try{location.reload()}catch{}};
+  $('homeBtn').onclick=safeReload;
+  $('backBtn').onclick=()=>{try{if(history.length>1)history.back()}catch{}};
+  $('resetBtn').onclick=()=>{
+    try{ localStorage.clear(); }catch{}
+    ['whatif_prefs','whatif_credits','whatif_boost','cronologia','next_prompts','domanda','whatif_request','domanda_results'].forEach(k=>LS.removeItem(k));
+    try{ location.href=HOME_FALLBACK; }catch{ location.href='/'; }
   };
+  $('langSelect').value=lang;
+  $('langSelect').onchange=()=>{ lang=$('langSelect').value; LS.setItem('lang',lang); applyTexts(); renderHintsCategorized(); };
 
-  /* ====== CLEAR ====== */
-  $('clearBtn').onclick=()=>{ const el=$('qInput'); el.value=''; el.focus(); };
+  /* ===== CREDITS (light) ===== */
+  function userIsAdmin(){ try{ return !!LS.getItem('admin_token'); }catch{ return false; } }
+  function capForUser(){ return userIsAdmin()?Infinity:(prefs.pro?10:3); }
+  function ensureCredits(){ const c=readJSON('whatif_credits',{date:todayISO(),used:0}); if(c.date!==todayISO()){c.date=todayISO();c.used=0} writeJSON('whatif_credits',c); }
+  function leftCredits(){ const c=readJSON('whatif_credits',{date:todayISO(),used:0}); const cap=capForUser(); return cap===Infinity?'∞':Math.max(0,(cap-(c.used||0))); }
+  function renderCreditsBadge(){ const L=I18N[lang]||I18N.it; const cap=capForUser(), left=leftCredits(); $('freeBadge').textContent=(cap===Infinity)?`${L.credits}: ∞`:`${L.credits}: ${left}/${cap}`; $('proBadge').textContent=prefs.pro?('PRO'):('FREE'); }
+  ensureCredits(); renderCreditsBadge();
 
-  /* ====== INIT ====== */
+  /* ===== THEME / BADGES ===== */
+  function renderBadges(){
+    const L=I18N[lang]||I18N.it;
+    document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+    $('styleBadge').textContent='🎭 '+(prefs.stile==='wtf'?L.styleWTF:L.styleWF);
+    $('periodoBadge').textContent='🕰️ '+(prefs.periodo==='past'?L.past:L.fut);
+    document.querySelectorAll('#styleChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.style===prefs.stile));
+    document.querySelectorAll('#periodoChips .chip').forEach(c=>c.classList.toggle('sel',c.dataset.periodo===prefs.periodo));
+  }
+  $('styleChips').addEventListener('click',(e)=>{const b=e.target.closest('.chip'); if(!b)return; prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs); renderBadges();});
+  $('periodoChips').addEventListener('click',(e)=>{const b=e.target.closest('.chip'); if(!b)return; prefs.periodo=b.dataset.periodo; writeJSON('whatif_prefs',prefs); renderBadges(); });
+
+  /* ===== BOOST ===== */
+  const getBoostLS=()=>{try{return (LS.getItem('whatif_boost')||'').trim()}catch{return ''}};
+  function saveBoost(txt){
+    LS.setItem('whatif_boost', String(txt||'')); LS.setItem('whatif_boost_saved_date', todayISO());
+    const L=I18N[lang]||I18N.it; const msg=$('boostSavedMsg'); if(msg){ msg.textContent=(L.boostSaved||'Saved.'); setTimeout(()=> msg.textContent='',1600); }
+  }
+  function initBoostVisibility(){
+    const last=LS.getItem('whatif_boost_saved_date'); const card=$('boostCard');
+    card.style.display=(last===todayISO())?'none':'block';
+    const bi=$('boostInput'); if(bi) bi.value=getBoostLS();
+  }
+  $('boostHeader').onclick=()=>{ $('boostCard').classList.toggle('collapsed'); };
+  $('boostSaveBtn').onclick=()=>{ saveBoost(($('boostInput')||{}).value||''); renderHintsCategorized(); $('boostCard').style.display='none'; };
+  $('boostClearBtn').onclick=()=>{ const i=$('boostInput'); if(i) i.value=''; saveBoost(''); renderHintsCategorized(); $('boostCard').classList.remove('collapsed'); };
+
+  /* ===== Error inline helpers ===== */
+  function showQError(){
+    const el=$('qInput'), msg=$('qError'); if(!el||!msg) return;
+    el.classList.add('error','shake'); msg.classList.add('show'); el.setAttribute('aria-invalid','true');
+    setTimeout(()=> el.classList.remove('shake'), 320); el.focus();
+  }
+  function clearQError(){
+    const el=$('qInput'), msg=$('qError'); if(!el||!msg) return;
+    el.classList.remove('error'); msg.classList.remove('show'); el.removeAttribute('aria-invalid');
+  }
+  ['input','change','paste'].forEach(ev=> $('qInput').addEventListener(ev, clearQError));
+
+  /* ===== PROFILO & LISTE ===== */
+  function getProfileKeywords(){
+    const p=getProfile();
+    const src = [p?.text, p?.bio, p?.job, ...(p?.goals||[]), ...(p?.tags||[]), getBoostLS()].filter(Boolean).join(' ');
+    return keywordsFrom(src).slice(0,6);
+  }
+  function buildPersonalizedList(){
+    const keys = getProfileKeywords();
+    const extras = [];
+    keys.slice(0,3).forEach(k=> extras.push(`E se in 30 giorni migliorassi ${k} con un piano semplice?`));
+    if(keys[3]) extras.push(`E se dedicassi 20 minuti al giorno a ${keys[3]} per 4 settimane?`);
+    if(keys[4]) extras.push(`E se automatizzassi parti di ${keys[4]} con strumenti gratuiti?`);
+    const base = HINTS_BASE_IT.slice(0,10);
+    const merged = [...new Set([...extras, ...base])];
+
+    const best = extras.slice(0,2);
+    const pooled = merged.filter(x=>!best.includes(x));
+    for(let i=pooled.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pooled[i],pooled[j]]=[pooled[j],pooled[i]]; }
+    const final = [...pooled.slice(0,10), ...best].map(q=>polishQuestion(q));
+    return final.slice(0,12);
+  }
+  function buildGenericList(){ return HINTS_BASE_IT.slice(0,12).map(q=>polishQuestion(q)); }
+  function buildAbsurdList(){ return ABSURD_IT.slice(0,12).map(q=>polishQuestion(q)); }
+
+  /* ===== RENDER CATEGORIE ===== */
+  let CURRENT_CAT = 'personal'; // default
+
+  function renderChips(list, mountId){
+    const wrap = $(mountId); if(!wrap) return; wrap.innerHTML = '';
+    list.forEach(txt=>{
+      const b=document.createElement('button');
+      b.className='chip'; b.type='button'; b.textContent=txt;
+      b.onclick=()=>{ $('qInput').value=txt; window.scrollTo({top:0,behavior:'smooth'}); };
+      wrap.appendChild(b);
+    });
+  }
+
+  function renderHintsCategorized(){
+    const personal = buildPersonalizedList();
+    const generic  = buildGenericList();
+    const absurd   = buildAbsurdList();
+
+    renderChips(personal, 'chipsPersonal');
+    renderChips(generic,  'chipsGeneric');
+    renderChips(absurd,   'chipsAbsurd');
+
+    $('cntPersonal').textContent = personal.length;
+    $('cntGeneric').textContent  = generic.length;
+    $('cntAbsurd').textContent   = absurd.length;
+
+    // salva “ultima SERIA” utile (preferisci personal > generic) per compatibilità se serve
+    const seriousLast = (personal[personal.length-1] || generic[generic.length-1] || 'E se studiassi 1h al giorno?');
+    LS.setItem('domanda_results', seriousLast);
+
+    CURRENT_CAT = personal.length ? 'personal' : 'generic';
+    selectTab(CURRENT_CAT);
+  }
+
+  function selectTab(cat){
+    CURRENT_CAT = cat;
+    document.querySelectorAll('#hintTabs .tab').forEach(t=> t.classList.toggle('sel', t.dataset.cat===cat));
+    $('boxPersonal').hidden = (cat!=='personal');
+    $('boxGeneric').hidden  = (cat!=='generic');
+    $('boxAbsurd').hidden   = (cat!=='absurd');
+  }
+
+  $('tabPersonal')?.addEventListener('click', ()=>selectTab('personal'));
+  $('tabGeneric') ?.addEventListener('click', ()=>selectTab('generic'));
+  $('tabAbsurd')  ?.addEventListener('click', ()=>selectTab('absurd'));
+
+  /* ===== CREDITI (consumo semplice) ===== */
+  function consumeOneCredit(){
+    if(userIsAdmin()) return true;
+    const c=readJSON('whatif_credits',{date:todayISO(),used:0});
+    const cap=capForUser();
+    if((c.used||0)>=cap){
+      alert('Hai finito i crediti di oggi.');
+      return false;
+    }
+    c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderCreditsBadge();
+    return true;
+  }
+
+  /* ===== SLOT per categoria ASSURDE ===== */
+  function runSlotAbsurd(onDone){
+    const qEl = $('qInput'); if(!qEl) return onDone('');
+    const source = ABSURD_IT;
+    let i=0;
+    qEl.classList.add('slotting');
+    const iv=setInterval(()=>{ qEl.value = source[i % source.length]; i++; }, 90);
+    const duration = 1200 + Math.random()*600;
+    setTimeout(()=>{
+      clearInterval(iv);
+      qEl.classList.remove('slotting');
+      const finalQ = pick(source);
+      qEl.value = finalQ;
+      onDone(finalQ);
+    }, duration);
+  }
+
+  /* ===== Sorprendimi: usa categoria + stile ===== */
+  function surpriseByCategory(){
+    if(!consumeOneCredit()) return;
+
+    const seriousLast = LS.getItem('domanda_results') || 'E se studiassi 1h al giorno?';
+    const theStyle = prefs.stile; // 'whatif' | 'wtf'
+    const theBoost = getBoostLS();
+
+    const goResults = (question, flags)=>{
+      const req = {
+        domanda: question,                      // domanda passata alla quinta
+        original_question: question,            // esplicito
+        serious_question: (flags.useSeriousFallback ? seriousLast : ''), // compatibilità
+        stile: theStyle, lang,
+        extra:'', micro:{}, fantasy_mode:false,
+        periodo: prefs.periodo, boost: theBoost,
+        absurd_prompt: !!flags.absurd_prompt,
+        absurd_but_serious: !!flags.absurd_but_serious, // il caso speciale What If + domanda assurda
+        mode: 'surprise_by_cat:'+CURRENT_CAT
+      };
+      writeJSON('whatif_request', req);
+      LS.setItem('domanda', question);
+      location.href = RESULTS_PAGE;
+    };
+
+    if(CURRENT_CAT === 'absurd'){
+      // Slot + domanda assurda
+      runSlotAbsurd((absurdQ)=>{
+        if(theStyle === 'whatif'){
+          // Caso richiesto: domanda assurda ma risposta seria con finale percentuali
+          goResults(absurdQ, { absurd_prompt:true, absurd_but_serious:true, useSeriousFallback:false });
+        }else{
+          // Stile What the F: risposta assurda con percentuali
+          goResults(absurdQ, { absurd_prompt:true, absurd_but_serious:false, useSeriousFallback:false });
+        }
+      });
+    } else if(CURRENT_CAT === 'personal'){
+      const q = pick(buildPersonalizedList());
+      $('qInput').value = q;
+      goResults(q, { absurd_prompt:false, absurd_but_serious:false, useSeriousFallback:false });
+    } else {
+      const q = pick(buildGenericList());
+      $('qInput').value = q;
+      goResults(q, { absurd_prompt:false, absurd_but_serious:false, useSeriousFallback:false });
+    }
+  }
+  $('surpriseBtn').onclick=surpriseByCategory;
+
+  /* ===== Submit manuale ===== */
+  function trySubmit(){
+    const domanda=($('qInput').value||'').trim();
+    if(!domanda){ showQError(); return; }
+
+    if(!userIsAdmin()){
+      const c=readJSON('whatif_credits',{date:todayISO(),used:0});
+      const cap=capForUser();
+      if((c.used||0)>=cap){ alert('Hai finito i crediti di oggi.'); return; }
+      c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderCreditsBadge();
+    }
+    const cleaned=polishQuestion(domanda, lang);
+    $('qInput').value=cleaned; LS.setItem('domanda',cleaned);
+    const req={domanda:cleaned,original_question:cleaned,serious_question:'',stile:prefs.stile,lang,extra:'',micro:{},fantasy_mode:false,periodo:prefs.periodo,boost:getBoostLS(),absurd_prompt:false,absurd_but_serious:false,mode:'manual'};
+    writeJSON('whatif_request',req);
+    location.href = RESULTS_PAGE;
+  }
+  $('goBtn').onclick=trySubmit;
+  $('clearBtn').onclick=()=>{$('qInput').value=''; clearQError(); $('qInput').focus();};
+  $('qInput').addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); } });
+
+  /* ===== Misura dinamicamente l'altezza della topbar → aggiorna --topbarH ===== */
+  function syncTopbarHeight(){
+    const tb=document.querySelector('.topbar');
+    if(!tb) return;
+    const h=tb.offsetHeight;
+    document.documentElement.style.setProperty('--topbarH', h+'px');
+  }
+  window.addEventListener('resize', syncTopbarHeight);
+  window.addEventListener('load', syncTopbarHeight);
+
+  /* ===== INIT ===== */
   try{
+    try{ const p=JSON.parse(LS.getItem('whatif_prefs')||'{}'); document.documentElement.setAttribute('data-theme', p.stile==='wtf'?'wtf':'whatif'); }catch{}
     applyTexts();
-    renderHints();
-    renderBadges();
-    placeBars();
+    renderHintsCategorized();
+    $('aiTime').textContent='⏱ '+nowFmt();
+    syncTopbarHeight();
   }catch(e){ console.error('Init error:',e); }
 })();
 </script>
