@@ -173,7 +173,10 @@ const I18N = {
        meta:(st,p)=> st==='wtf'
         ? `Stile: What the F · 6–9 frasi · paragrafo unico · 2–3 reazioni demenziali · doppia punchline · modalità: ${p==='past'?'Passato':'Futuro'}.`
         : `Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · nessun elenco/domanda/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.`,
-       back:"← Indietro", home:"🏠 Home" },
+       back:"← Indietro", home:"🏠 Home",
+       fbWTF: (q)=>`Ti giri, fai l’occhiolino alla vita e le dici che ${q.toLowerCase().replace(/^e se\s*/i,'forse ')}. Poi succede una roba che manco il microonde: rientri con più fame di prima, ma finalmente del pezzo giusto.`,
+       fbWHF:  (q)=>`Risposta breve: puoi. Quella lunga: puoi se riduci l’attrito, misuri i passi e accetti che il ritmo conti più della velocità. Inizia oggi: ${q}.`
+     },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
        share:"📤 Share / Copy", again:"🔁 Ask another",
@@ -182,7 +185,10 @@ const I18N = {
        meta:(st,p)=> st==='wtf'
         ? `Style: What the F · 6–9 sentences · single paragraph · 2–3 absurd object reactions · double punchline · mode: ${p==='past'?'Past':'Future'}.`
         : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`,
-       back:"← Back", home:"🏠 Home" },
+       back:"← Back", home:"🏠 Home",
+       fbWTF:(q)=>`You wink at life and tell it that ${q.toLowerCase().replace(/^what if\s*/i,'maybe ')}, then something happens that even the microwave can’t explain: you come back hungrier, but for the right slice.`,
+       fbWHF:(q)=>`Short answer: yes. Long one: yes, if you lower friction, measure steps and accept that pace beats speed. Start today: ${q}.`
+     },
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
        sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
        share:"📤 Compartir / Copiar", again:"🔁 Hacer otra pregunta",
@@ -191,7 +197,10 @@ const I18N = {
        meta:(st,p)=> st==='wtf'
         ? `Estilo: What the F · 6–9 frases · un solo párrafo · 2–3 reacciones absurdas · doble remate · modo: ${p==='past'?'Pasado':'Futuro'}.`
         : `Estilo: What if (60% análisis, 40% real) · 8–11 frases · un solo párrafo · sin listas/preguntas/emojis · modo: ${p==='past'?'Pasado':'Futuro'}.`,
-       back:"← Atrás", home:"🏠 Inicio" },
+       back:"← Atrás", home:"🏠 Inicio",
+       fbWTF:(q)=>`Le guiñas al caos y le dices que ${q.toLowerCase().replace(/^¿y si\s*/i,'quizá ')}, y pasa algo que ni el microondas entiende: vuelves con más hambre, pero de lo correcto.`,
+       fbWHF:(q)=>`Respuesta corta: sí. Larga: sí, si bajas fricción, mides pasos y aceptas que el ritmo vence a la velocidad. Empieza hoy: ${q}.`
+     },
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
        sub:(q)=>`Question : « ${q} »`, q:"Votre question", a:"Réponse",
        share:"📤 Partager / Copier", again:"🔁 Poser une autre question",
@@ -200,7 +209,10 @@ const I18N = {
        meta:(st,p)=> st==='wtf'
         ? `Style : What the F · 6–9 phrases · un paragraphe · 2–3 réactions absurdes · double chute · mode : ${p==='past'?'Passé':'Futur'}.`
         : `Style : What if (60 % analyse, 40 % réel) · 8–11 phrases · un paragraphe · pas de listes/questions/emojis · mode : ${p==='past'?'Passé':'Futur'}.`,
-       back:"← Retour", home:"🏠 Accueil" },
+       back:"← Retour", home:"🏠 Accueil",
+       fbWTF:(q)=>`Tu fais un clin d’œil à la vie et tu lui dis que ${q.toLowerCase().replace(/^et si\s*/i,'peut-être ')}, puis il se passe un truc que même le micro-ondes ne comprend pas.`,
+       fbWHF:(q)=>`Réponse courte : oui. Longue : oui, si tu réduis les frottements, mesures les pas et acceptes que le rythme bat la vitesse. Commence aujourd’hui : ${q}.`
+     },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
        sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
        share:"📤 Teilen / Kopieren", again:"🔁 Weitere Frage stellen",
@@ -209,13 +221,15 @@ const I18N = {
        meta:(st,p)=> st==='wtf'
         ? `Stil: What the F · 6–9 Sätze · ein Absatz · 2–3 absurde Objektreaktionen · doppelte Pointe · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
         : `Stil: What if (60 % Analyse, 40 % real) · 8–11 Sätze · ein Absatz · keine Listen/Fragen/Emojis · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
-       back:"← Zurück", home:"🏠 Start" },
+       back:"← Zurück", home:"🏠 Start",
+       fbWTF:(q)=>`Du zwinkerst dem Leben zu und sagst, dass ${q.toLowerCase().replace(/^was wäre, wenn\s*/i,'vielleicht ')}, und dann passiert etwas, das nicht mal die Mikrowelle versteht.`,
+       fbWHF:(q)=>`Kurz: ja. Lang: ja, wenn du Reibung senkst, Schritte misst und akzeptierst, dass Tempo wichtiger ist als Geschwindigkeit. Starte heute: ${q}.`
+     },
 };
 
 /* ==== Leads per lingua/stile ==== */
 const LEADS = {
-  it:{
-    wtf:[
+  it:{ wtf:[
       "Entri piano, il caos ti riconosce e oggi ti lascia passare.",
       "Respiri e lasci che sia il destino a inciampare per primo.",
       "Ti presenti al futuro con la faccia di adesso e la pazienza di domani.",
@@ -228,10 +242,8 @@ const LEADS = {
       "La stanza è la stessa, lo sguardo no: è già un inizio.",
       "Tieniti stretto ciò che funziona e lascia che il resto perda importanza.",
       "Respiri come chi ha tempo, e il tempo ti crede."
-    ]
-  },
-  en:{
-    wtf:[
+    ]},
+  en:{ wtf:[
       "You step in slowly; chaos recognizes you and lets you through.",
       "You breathe and let fate be the one who trips first.",
       "You bring today’s face and tomorrow’s patience to the door.",
@@ -242,10 +254,8 @@ const LEADS = {
       "Same room, different gaze — that’s a start already.",
       "Breathe like someone with time, and time believes you.",
       "Keep what works and let the rest lose importance."
-    ]
-  },
-  es:{
-    wtf:[
+    ]},
+  es:{ wtf:[
       "Entras despacio; el caos te reconoce y hoy te deja pasar.",
       "Respiras y dejas que el destino sea quien tropiece primero.",
       "Traes la cara de hoy y la paciencia de mañana a la puerta."
@@ -253,28 +263,23 @@ const LEADS = {
     whatif:[
       "Dejas las llaves y permites que hable el silencio que no juzga.",
       "Misma habitación, otra mirada: ya es un comienzo."
-    ]
-  },
-  fr:{
-    wtf:[
+    ]},
+  fr:{ wtf:[
       "Tu entres doucement; le chaos te reconnaît et te laisse passer.",
       "Tu respires et laisses le destin trébucher le premier."
     ],
     whatif:[
       "Tu poses les clés et laisses parler le silence qui ne juge pas.",
       "Même pièce, autre regard — c’est déjà un début."
-    ]
-  },
-  de:{
-    wtf:[
+    ]},
+  de:{ wtf:[
       "Du trittst langsam ein; das Chaos erkennt dich und lässt dich durch.",
       "Du atmest und lässt das Schicksal zuerst stolpern."
     ],
     whatif:[
       "Du legst die Schlüssel ab und lässt die stille, die nicht urteilt, sprechen.",
       "Gleicher Raum, anderer Blick — schon ein Anfang."
-    ]
-  }
+    ]}
 };
 
 /* ==== UI Hooks ==== */
@@ -319,58 +324,61 @@ function decorateEmBits(el){
   el.innerHTML = html;
 }
 
-/* ==== Build local question for fallback (Surprise) ==== */
-function buildLocalQuestion(curLang, boost, periodo){
-  const base = {
-    it: [
-      "E se cambiassi lavoro?","E se cambiassi città?","E se tornassi a studiare?",
-      "E se lavorassi 4 giorni su 5?","E se aprissi un micro e-commerce?","E se imparassi bene l’inglese?"
-    ],
-    en: [
-      "What if you changed jobs?","What if you moved city?","What if you went back to study?",
-      "What if you tried a 4-day week?","What if you opened a tiny e-commerce?","What if you mastered English?"
-    ],
-    es: [
-      "¿Y si cambiaras de trabajo?","¿Y si te mudaras de ciudad?","¿Y si volvieras a estudiar?",
-      "¿Y si probaras una semana de 4 días?","¿Y si abrieras un micro e-commerce?","¿Y si dominaras el inglés?"
-    ],
-    fr: [
-      "Et si tu changeais de travail ?","Et si tu déménageais ?","Et si tu reprenais des études ?",
-      "Et si tu essayais la semaine de 4 jours ?","Et si tu ouvrais un micro-e-commerce ?","Et si tu maîtrisais l’anglais ?"
-    ],
-    de: [
-      "Was, wenn du den Job wechselst?","Was, wenn du in eine andere Stadt ziehst?","Was, wenn du wieder studierst?",
-      "Was, wenn du eine 4-Tage-Woche probierst?","Was, wenn du einen Micro-Shop startest?","Was, wenn du Englisch meisterst?"
-    ]
-  };
-  let q = pick(base[curLang] || base.it);
-  const b = String(boost||"").toLowerCase();
-  if (b.includes("inglese") || b.includes("english")) {
-    q = (curLang==='it')?"E se imparassi bene l’inglese?":
-        (curLang==='es')?"¿Y si dominaras el inglés?":
-        (curLang==='fr')?"Et si tu maîtrisais l’anglais ?":
-        (curLang==='de')?"Was, wenn du Englisch meisterst?":
-        "What if you mastered English?";
-  } else if (b.includes("startup") || b.includes("impresa") || b.includes("business")) {
-    q = (curLang==='it')?"E se aprissi una startup?":
-        (curLang==='es')?"¿Y si abrieras una startup?":
-        (curLang==='fr')?"Et si tu lançais une startup ?":
-        (curLang==='de')?"Was, wenn du ein Startup gründest?":
-        "What if you launched a startup?";
-  }
-  return q; // neutra rispetto a periodo, UI mostra già passato/futuro
+/* ===== Surprise helpers (solo Boost) ===== */
+let UNICODE_OK=true; try{ new RegExp("\\p{L}","u"); }catch{ UNICODE_OK=false; }
+function sanitizeBoost(raw){
+  let t=(raw||'').toString().normalize('NFKC')
+    .replace(UNICODE_OK?/[^\p{L}\p{N}\s,'’.:-]/gu:/[^A-Za-z0-9\s,'’.:-]/g,' ')
+    .replace(/[\u200B-\u200D\uFEFF]/g,' ')
+    .replace(/\s+/g,' ').trim().toLowerCase();
+  return t;
 }
-
-/* ==== Load state from LS ==== */
-const params = new URLSearchParams(location.search);
-const isReplay = params.get('view')==='replay';
-let domanda = "";
-let answerText = "";
+function extractTokens(t){
+  const stop = new Set(['e','ed','di','da','a','al','alla','alle','con','per','su','tra','fra','il','lo','la','i','gli','le','un','uno','una','che','del','della','dei','delle','degli','mi','mio','mia','miei','mie','tuo','tua','tuoi','tue','suo','sua','suoi','sue','nostro','vostro','loro','and','or','the','to','of','for','with','on','in','at','de','le','la','les','du','des','y','o','el','los','las','der','die','das','und','oder','im','am']);
+  return t.split(/[\s,;:.!-]+/).filter(w=>w && !stop.has(w) && !/^\d+$/.test(w));
+}
+function topicsFromTokens(tokens){
+  const out=[];
+  for(let n of [3,2,1]){
+    for(let i=0;i<=tokens.length-n;i++){
+      const phr=tokens.slice(i,i+n).join(' ');
+      if(phr.length>2) out.push(phr);
+    }
+    if(out.length>=12) break;
+  }
+  return Array.from(new Set(out)).slice(0,12);
+}
+function polishQuestion(q,Lcode){
+  let t=String(q||"").replace(/[?？]+$/,'').trim();
+  if(!t) return '';
+  t=t.charAt(0).toUpperCase()+t.slice(1);
+  t=t.replace(/\s+([?!.,;:%])/g,'$1').trim();
+  if(Lcode==="es"){ if(!t.startsWith('¿')) t='¿'+t; if(!t.endsWith('?')) t+='?'; return t; }
+  if(Lcode==="fr"){ if(!t.endsWith('?')) t+=' ?'; t=t.replace(/\s*\?$/,'\u202F?'); return t; }
+  if(!/\?$/.test(t)) t+='?'; return t;
+}
+function sentenceFromTopic(lang, periodo, tp){
+  if(lang==='it') return (periodo==='past')
+    ? (/re$|are$|ere$|ire$/i.test(tp)?`E se avessi iniziato a ${tp} l’estate scorsa?`:`E se avessi fatto un esperimento su ${tp} l’estate scorsa?`)
+    : (/re$|are$|ere$|ire$/i.test(tp)?`E se iniziassi a ${tp} per 7 giorni?`:`E se esplorassi ${tp} con un esperimento di 7 giorni?`);
+  if(lang==='en') return (periodo==='past')?`What if you had run a 7-day experiment on ${tp} last summer?`:`What if you tried a 7-day experiment on ${tp}?`;
+  if(lang==='es') return (periodo==='past')?`¿Y si hubieras probado ${tp} con un experimento de 7 días el verano pasado?`:`¿Y si pruebas ${tp} con un experimento de 7 días?`;
+  if(lang==='fr') return (periodo==='past')?`Et si tu avais testé ${tp} avec une expérience de 7 jours l’été dernier ?`:`Et si tu testais ${tp} avec une expérience de 7 jours ?`;
+  if(lang==='de') return (periodo==='past')?`Was, wenn du letzten Sommer ${tp} in einem 7-Tage-Experiment ausprobiert hättest?`:`Was, wenn du ${tp} in einem 7-Tage-Experiment testest?`;
+  return `What if you tried a 7-day experiment on ${tp}?`;
+}
+function buildQuestionFromBoost(boost, lang, periodo){
+  const tokens = extractTokens(sanitizeBoost(boost));
+  const topics = topicsFromTokens(tokens);
+  const base = topics.length ? topics[0] : (boost||'').trim();
+  const q = sentenceFromTopic(lang, periodo, base);
+  return polishQuestion(q, lang);
+}
 
 /* ==== Language init ==== */
 langSel.value = lang;
 
-/* ==== UI render ==== */
+/* ==== Titles ==== */
 function setTitlesAndTexts(q){
   const T = I18N[lang] || I18N.it;
   setText('#title', style==='wtf' ? T.titleWTF : T.titleWHF);
@@ -406,6 +414,7 @@ langSel.onchange = ()=>{
   }
 };
 
+let answerText = "";
 shareBtn.onclick = async()=>{
   const T = I18N[lang] || I18N.it;
   const full = `What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n\nQ: ${domanda}\n\n${answerText}`;
@@ -422,7 +431,13 @@ shareBtn.onclick = async()=>{
 
 againBtn.onclick = ()=>{ location.href='fourth.html'; };
 
-/* ==== Misc helpers ==== */
+/* ==== Load + Render ==== */
+const params = new URLSearchParams(location.search);
+const isReplay = params.get('view')==='replay';
+let domanda = "";
+
+/* profilo (sesso) dal LS */
+const profile = JSON.parse(LS.getItem('whatif_profile') || '{}');
 function mapGenderToSex(g){
   switch(String(g||'').toLowerCase()){
     case 'uomo': return 'm';
@@ -431,27 +446,53 @@ function mapGenderToSex(g){
     default: return '';
   }
 }
+const sex = (profile.sex) ? String(profile.sex).toLowerCase()
+          : mapGenderToSex(profile.gender || '');
 
-/* ==== Fetch / Render ==== */
+function decorateAndShowAnswer(text){
+  answerText = normalizeOneParagraph((text||"").trim());
+  if(!/[.!?…]$/.test(answerText)) answerText += ".";
+  answerEl.textContent = answerText || (I18N[lang]||I18N.it).error;
+  decorateEmBits(answerEl);
+  const hist = JSON.parse(LS.getItem('cronologia')||'[]');
+  hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
+  LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
+}
+
+/* ==== Fallback locale se API fallisce ==== */
+function localFallback(q){
+  const T = I18N[lang] || I18N.it;
+  const gen = (style==='wtf') ? T.fbWTF(q) : T.fbWHF(q);
+  decorateAndShowAnswer(gen);
+}
+
+/* ==== Main flow ==== */
 if(isReplay){
   const r = JSON.parse(LS.getItem('replay_story')||'{}');
   domanda = r.domanda || LS.getItem('domanda') || "";
-  answerText = normalizeOneParagraph(r.answer || "");
   setTitlesAndTexts(domanda);
   qView.textContent = domanda || '—';
-  answerEl.textContent = answerText || '—';
-  decorateEmBits(answerEl);
+  decorateAndShowAnswer(r.answer || "—");
 }else{
   const req = JSON.parse(LS.getItem('whatif_request')||'{}');
   const mode = req.mode || 'manual';
-  domanda = (mode==='manual') ? (req.domanda || LS.getItem('domanda') || "") : "";
+  const boost = (LS.getItem('whatif_boost')||'').trim();
+  domanda = req.domanda || LS.getItem('domanda') || "";
+
+  // Se arrivo da "Sorprendimi" senza domanda → genera SOLO dal Boost
+  if(mode === 'surprise' && !domanda){
+    if(boost){
+      domanda = buildQuestionFromBoost(boost, lang, periodo);
+      LS.setItem('domanda', domanda);
+    }else{
+      // safety: se manca boost, mostra un placeholder chiaro
+      const T = I18N[lang]||I18N.it;
+      domanda = (lang==='en'?'Please add a Boost on the previous page.':'Aggiungi un Boost nella pagina precedente.');
+    }
+  }
 
   setTitlesAndTexts(domanda);
   qView.textContent = domanda || '—';
-
-  const profile = JSON.parse(LS.getItem('whatif_profile') || '{}');
-  const sex = (profile.sex) ? String(profile.sex).toLowerCase()
-            : mapGenderToSex(profile.gender || '');
 
   (async ()=>{
     navigator.sendBeacon?.("/api/track") || fetch("/api/track",{method:"POST",keepalive:true}).catch(()=>{});
@@ -461,67 +502,41 @@ if(isReplay){
       const adminToken = localStorage.getItem("admin_token");
       if (adminToken) headers["x-admin-token"] = adminToken;
 
-      // Corpo richiesta: manual vs surprise
-      let body = {
-        lang, stile: style, periodo,
-        extra: "", micro: req.micro || {}, sex,
-        boost: req.boost || ""
-      };
-
-      if (mode === 'surprise') {
-        // chiediamo all'API di generare la domanda
-        body.surprise = true;
-      } else {
-        body.domanda = domanda;
-      }
-
-      let r = await fetch("/api/ask",{
+      const r = await fetch("/api/ask",{
         method:"POST",
         headers,
-        body: JSON.stringify(body)
+        body:JSON.stringify({
+          domanda,
+          lang,                // lingua selezionata
+          stile: style,        // whatif | wtf
+          periodo,             // future | past
+          extra:"",
+          micro:req.micro||{},
+          sex,
+          boost                // <-- passa il Boost al server
+        })
       });
 
-      // Fallback: se surprise viene rifiutata, generiamo una domanda locale e riproviamo
-      if (!r.ok && mode === 'surprise') {
-        domanda = buildLocalQuestion(lang, body.boost, periodo);
-        setTitlesAndTexts(domanda);
-        qView.textContent = domanda;
-        body = { ...body, surprise:false, domanda };
-        r = await fetch("/api/ask",{ method:"POST", headers, body:JSON.stringify(body) });
-      }
-
-      if(r.status===429){
-        answerEl.textContent = (I18N[lang]||I18N.it).error;
-        return;
-      }
+      if(r.status===429){ throw new Error("rate_limited"); }
       const data = await r.json().catch(()=>null);
-      if(!r.ok || !data) throw new Error(data?.detail||"bad_response");
+      if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
 
-      // Se l’API in surprise restituisce anche la domanda generata
-      if (mode==='surprise' && data.question) {
-        domanda = String(data.question||"").trim();
-        setTitlesAndTexts(domanda);
-        qView.textContent = domanda || '—';
-        LS.setItem('domanda', domanda);
-      } else if (mode==='surprise' && domanda) {
-        // abbiamo usato il fallback locale → salviamo comunque
-        LS.setItem('domanda', domanda);
-      }
-
-      answerText = normalizeOneParagraph(String(data.answer||"").trim());
-      if(!/[.!?…]$/.test(answerText)) answerText += ".";
-      answerEl.textContent = answerText;
-      decorateEmBits(answerEl);
-
-      const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-      hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
-      LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
+      decorateAndShowAnswer(data.answer);
     }catch(e){
-      answerEl.textContent = (I18N[lang]||I18N.it).error;
+      // fallback elegante, no schermata morta
+      localFallback(domanda);
       console.error(e);
     }
   })();
 }
+
+/* ==== Decorate lead after titles ==== */
+function refreshLead(){ /* già fatto in setTitlesAndTexts */ }
+
+/* ==== decorate after content set ==== */
+function setTitlesAndTextsAndDecorate(q){ setTitlesAndTexts(q); }
+
+/* ==== finalize ==== */
 </script>
 </body>
 </html>
