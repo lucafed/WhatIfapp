@@ -1,7 +1,7 @@
-// /api/ask.js — What?f Engine (tono naturale, vario, personale, non ripetitivo)
-// WHATIF: 60% analisi concreta / 40% immagini sobrie, con possibile micro-apertura personale (configurabile).
-// WTF: invariato nello spirito (demenziale controllato) con finale utile.
-// Un solo paragrafo, niente elenchi, niente eco della domanda.
+// /api/ask.js — What?f Engine (preset “equilibrato con calore umano”)
+// WHATIF: 60% analisi concreta / 40% immagini sobrie, con micro-apertura personale intelligente (auto).
+// WTF: incluso (demenziale controllato) ma disattivo di default.
+// Un solo paragrafo, niente elenchi, niente eco della domanda. Tono naturale, vario, mai banale.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -253,7 +253,7 @@ export default async function handler(req, res){
       lang  = "it",
       periodo = "future",
       micro = {},            // { name?, energy?, style?, goals?, city? }
-      openerMode = "auto",   // "auto" | "always" | "never"
+      openerMode = "auto",   // "auto" | "always" | "never"  ← default “auto” per utente medio
       preferenze = null      // { openerMode?, micro? } per salvare in memoria
     } = body;
 
@@ -283,7 +283,7 @@ export default async function handler(req, res){
 
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.98 : 0.85,  // più varietà naturale
+      temperature: stile === "wtf" ? 0.98 : 0.85,  // varietà naturale senza scadere nel caos
       top_p: 0.92,
       max_tokens: 520,
       frequency_penalty: 0.2,  // contro ripetizioni
