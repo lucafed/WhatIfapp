@@ -29,17 +29,22 @@ body{animation:bgShift 18s ease-in-out infinite alternate}
 @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
 }
 
-/* Topbar: sempre sopra e con spazio di riserva */
+/* Topbar: fissa, opaca e con spazio di riserva */
 .topbar{
-position:sticky; top:0; z-index:20;
+position:sticky; top:0; z-index:1000;
 display:flex; align-items:center; justify-content:space-between; gap:10px;
 padding:8px 10px;
 height:var(--topbarH);
-background:linear-gradient(180deg,rgba(10,15,20,.98),rgba(10,15,20,.0));
+background:rgba(10,15,20,0.98);
 backdrop-filter: blur(6px);
+border-bottom:1px solid var(--line);
+box-shadow:0 6px 18px rgba(0,0,0,.25);
 }
 /* spingi il contenuto sotto la topbar per evitare sovrapposizioni */
 main{ padding-top: calc(var(--topbarH) + 10px); }
+
+/* Evita che gli anchor/target finiscano sotto la topbar */
+:target, h1, .card { scroll-margin-top: calc(var(--topbarH) + 14px); }
 
 .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
 .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35)}
@@ -48,10 +53,10 @@ main{ padding-top: calc(var(--topbarH) + 10px); }
 select{appearance:none;background:var(--chip);border:1px solid var(--line);color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:700;cursor:pointer}
 
 /* Sticky dock subito sotto la topbar */
-.dock{position:sticky; top:calc(var(--topbarH) + 6px); z-index:15; margin:0 10px 6px;}
+.dock{position:sticky; top:calc(var(--topbarH) + 6px); z-index:900; margin:0 10px 6px;}
 .dock .dock-card{
 display:flex; align-items:center; gap:10px; flex-wrap:nowrap; overflow:auto;
-padding:10px; background:rgba(20,28,34,.85); backdrop-filter:blur(8px);
+padding:10px; background:rgba(20,28,34,.95); backdrop-filter:blur(8px);
 border:1px solid var(--line); border-radius:14px; box-shadow:0 10px 24px rgba(0,0,0,.25)
 }
 .dock .dock-card>{flex:0 0 auto}
@@ -61,7 +66,6 @@ main{
 min-height:100%;
 display:flex; flex-direction:column; align-items:center; gap:14px;
 padding:6px 14px 26px;
-scroll-margin-top:calc(var(--topbarH) + 14px);
 }
 .wrap{width:min(100%,980px)}
 h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
@@ -78,6 +82,9 @@ h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
 .center{max-width:760px;margin:0 auto}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .small{font-size:12px;color:var(--muted)}
+.help{margin-top:8px; line-height:1.5}
+.help b{color:var(--accent2)}
+.help ul{margin:6px 0 0 18px; padding:0}
 
 /* Collapsible */
 .toggle{cursor:pointer;user-select:none}
@@ -170,15 +177,26 @@ transition:opacity .18s ease, transform .18s ease;
           <div id="qError" class="infield-msg" aria-live="polite">Scrivi una domanda, scegli uno spunto, oppure usa “Sorprendimi”.</div>
         </div>
 
+        <!-- Guida sotto al campo domanda -->
+        <div class="small help" id="qHelp">
+          <b>Consigli per risposte più accurate:</b>
+          <ul>
+            <li>Indica <b>obiettivo</b> e <b>contesto</b> (es. lavoro, studio, salute).</li>
+            <li>Aggiungi <b>vincoli</b> o <b>preferenze</b> (budget, tempo, strumenti).</li>
+            <li>Specificare un <b>orizzonte</b> (domani, 30 giorni, 3 mesi) aiuta.</li>
+            <li>Se vuoi, incolla 2–3 righe di <b>dettagli rilevanti</b>.</li>
+          </ul>
+        </div>
+
         <div class="row" style="margin-top:12px;justify-content:space-between">
           <div class="row" style="gap:10px">
             <button class="btn primary" id="goBtn" type="button" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
-            <button class="btn" id="surpriseBtn" type="button" title="Usa il Boost per una proposta su misura">🎲 Sorprendimi</button>
+            <button class="btn" id="surpriseBtn" type="button" title="Domanda generica casuale">🎲 Sorprendimi</button>
           </div>
           <button class="btn" id="clearBtn" type="button">Svuota</button>
         </div>
         <div class="small" id="tipNote" style="margin-top:8px">
-          Le idee casuali in quinta useranno lo stile scelto e il tuo Boost 🧩.
+          Le idee casuali in quinta useranno solo lo stile e il periodo selezionati.
         </div>
       </div>
 
@@ -186,7 +204,7 @@ transition:opacity .18s ease, transform .18s ease;
       <div class="card center" id="boostCard">
         <div class="row toggle" id="boostHeader" style="justify-content:space-between">
           <div class="label" id="boostTitle">▶ Boost personalizzazione</div>
-          <div class="small" id="boostHint">(opzionale, usato da “Sorprendimi”)</div>
+          <div class="small" id="boostHint">(opzionale; non usato da “Sorprendimi”, ma utile per le risposte)</div>
         </div>
         <div class="body" id="boostBody" style="margin-top:8px">
           <textarea id="boostInput" class="input" rows="3" placeholder="Scrivi qualcosa su di te o su cosa vuoi esplorare…"></textarea>
@@ -199,7 +217,7 @@ transition:opacity .18s ease, transform .18s ease;
           <!-- Micro UI (solo locale) -->
           <div class="airow mini">
             <span id="aiDot" class="dot" title="Stato locale"></span>
-            <span id="aiMsg">Boost collegato a “Sorprendimi”.</span>
+            <span id="aiMsg">Boost collegato alle risposte manuali.</span>
             <span id="aiTime" class="kv">⏱ —</span>
             <button class="btn" id="aiPingBtn" type="button" title="Aggiorna spunti">↻ Refresh</button>
           </div>
@@ -273,7 +291,7 @@ transition:opacity .18s ease, transform .18s ease;
         hintsTitle:"▶ Spunti rapidi “E se…”", hintsNote:"Scegli uno spunto generale per riempire la domanda.",
         credits:"Crediti", free:"FREE", pro:"PRO",
         footer:"© What?f — FREE · crediti giornalieri attivi",
-        boostTitle:"▶ Boost personalizzazione", boostHint:"(opzionale, usato da “Sorprendimi”)",
+        boostTitle:"▶ Boost personalizzazione", boostHint:"(opzionale; utile per le risposte)",
         boostSave:"💾 Salva Boost", boostClear:"Svuota",
         boostPH:"Scrivi qualcosa su di te o su cosa vuoi esplorare…",
         boostSaved:"Boost salvato.", sUse:"Usa"},
@@ -283,7 +301,7 @@ transition:opacity .18s ease, transform .18s ease;
         hintsTitle:"▶ Quick “What if…”", hintsNote:"Pick a general hint to fill the question.",
         credits:"Credits", free:"FREE", pro:"PRO",
         footer:"© What?f — FREE · daily credits active",
-        boostTitle:"▶ Personalization boost", boostHint:"(optional, used by “Surprise me”)",
+        boostTitle:"▶ Personalization boost", boostHint:"(optional; helpful for answers)",
         boostSave:"💾 Save Boost", boostClear:"Clear",
         boostPH:"Write anything about you or what you want to explore…",
         boostSaved:"Boost saved.", sUse:"Use"},
@@ -293,7 +311,7 @@ transition:opacity .18s ease, transform .18s ease;
         hintsTitle:"▶ Ideas rápidas «¿Y si…?»", hintsNote:"Elige una idea general para completar la pregunta.",
         credits:"Créditos", free:"FREE", pro:"PRO",
         footer:"© What?f — FREE · créditos diarios activos",
-        boostTitle:"▶ Impulso de personalización", boostHint:"(opcional, usado por «Sorpréndeme»)",
+        boostTitle:"▶ Impulso de personalización", boostHint:"(opcional; útil para respuestas)",
         boostSave:"💾 Guardar Boost", boostClear:"Limpiar",
         boostPH:"Escribe algo sobre ti o lo que quieres explorar…",
         boostSaved:"Boost guardado.", sUse:"Usar"},
@@ -303,7 +321,7 @@ transition:opacity .18s ease, transform .18s ease;
         hintsTitle:"▶ Idées rapides « Et si… »", hintsNote:"Choisis une idée générale pour remplir la question.",
         credits:"Crédits", free:"FREE", pro:"PRO",
         footer:"© What?f — FREE · crédits quotidiens actifs",
-        boostTitle:"▶ Boost de personnalisation", boostHint:"(optionnel, utilisé par « Surprise-moi »)",
+        boostTitle:"▶ Boost de personnalisation", boostHint:"(optionnel; utile pour les réponses)",
         boostSave:"💾 Enregistrer le Boost", boostClear:"Effacer",
         boostPH:"Écris quelque chose sur toi ou ce que tu veux explorer…",
         boostSaved:"Boost enregistré.", sUse:"Utiliser"},
@@ -313,7 +331,7 @@ transition:opacity .18s ease, transform .18s ease;
         hintsTitle:"▶ Schnelle „Was wäre, wenn…“-Ideen", hintsNote:"Wähle eine allgemeine Idee, um die Frage zu füllen.",
         credits:"Credits", free:"FREE", pro:"PRO",
         footer:"© What?f — FREE · tägliche Credits aktiv",
-        boostTitle:"▶ Personalisierungs-Boost", boostHint:"(optional, von „Überrasche mich“ genutzt)",
+        boostTitle:"▶ Personalisierungs-Boost", boostHint:"(optional; hilfreich für Antworten)",
         boostSave:"💾 Boost speichern", boostClear:"Leeren",
         boostPH:"Schreibe etwas über dich oder was du erkunden willst…",
         boostSaved:"Boost gespeichert.", sUse:"Verwenden"}
@@ -347,7 +365,7 @@ transition:opacity .18s ease, transform .18s ease;
     $('boostTitle').textContent=L.boostTitle; $('boostHint').textContent=L.boostHint;
     $('boostSaveBtn').textContent=L.boostSave; $('boostClearBtn').textContent=L.boostClear;
     $('boostInput').placeholder=L.boostPH;
-    $('aiMsg').textContent = (lang==='it'?'Boost collegato a “Sorprendimi”.':lang==='es'?'Boost conectado a «Sorpréndeme».':lang==='fr'?'Boost relié à « Surprise-moi ».':lang==='de'?'Boost mit „Überrasche mich“ verbunden.':'Boost linked to “Surprise me”.');
+    $('aiMsg').textContent = (lang==='it'?'Boost collegato alle risposte manuali.':lang==='es'?'Boost conectado a las respuestas manuales.':lang==='fr'?'Boost relié aux réponses manuelles.':lang==='de'?'Boost mit manuellen Antworten verbunden.':'Boost linked to manual answers.');
     $('aiTime').textContent='⏱ '+nowFmt();
     renderBadges(); renderCreditsBadge(); initBoostVisibility();
   }
@@ -477,31 +495,19 @@ transition:opacity .18s ease, transform .18s ease;
   /* ===== Refresh locale ===== */
   $('aiPingBtn').onclick=()=>{ renderHints(true); $('aiTime').textContent='⏱ '+nowFmt(); };
 
-  /* ===== Surprise → domanda personalizzata con Boost ===== */
+  /* ===== Surprise → domande GENERICHE (ignora Boost) ===== */
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-  function keywordsFromBoost(boost){
-    const txt=(boost||'').toLowerCase();
-    const words=txt.replace(/[^\p{L}\p{N}\s]/gu,' ').split(/\s+/).filter(w=>w.length>2);
-    return Array.from(new Set(words)).slice(0,6);
-  }
-  function buildSurpriseQuestion(boost, stile, periodo, L){
-    const keys=keywordsFromBoost(boost);
-    const topic = keys[0] || (HINTS[lang]||HINTS.it)[0].replace(/^[^a-zà-ÿ]+/i,'');
-    const futurizers = {
-      it:[`E se nei prossimi 90 giorni puntassi su ${topic} con piccoli esperimenti?`,`E se progettassi un piano di 4 settimane per migliorare ${topic}?`,`E se domani iniziassi a cambiare ${topic} con una micro-abitudine?`],
-      en:[`What if over the next 90 days you focused on ${topic} with tiny experiments?`,`What if you drafted a 4-week plan to improve ${topic}?`,`What if you started changing ${topic} tomorrow with a micro-habit?`]
-    };
-    const passers = {
-      it:[`E se rileggessi gli ultimi 6 mesi su ${topic} per capire cosa ha funzionato?`,`E se smontassi ${topic} per capire cosa tenere e cosa lasciare?`],
-      en:[`What if you reviewed the last 6 months about ${topic} to see what worked?`,`What if you deconstructed ${topic} to decide what to keep or drop?`]
-    };
-    const pack = periodo==='past'?passers:futurizers;
-    let q = pick(pack[lang] || pack.it);
-    if(stile==='wtf'){
-      // Spezia il tono "What the F" senza volgarità
-      q = (lang==='it') ? q.replace(/^E se /,'E se cavolo ') : q;
+  function genericQuestion(stile, periodo){
+    const base = (HINTS[lang]||HINTS.it);
+    let q = pick(base);
+    // Adatta a periodo/stile senza usare Boost
+    if(periodo==='future' && q.toLowerCase().startsWith('e se ')) {
+      // già ok in IT; tieni com'è
     }
-    return polishQuestion(q, lang);
+    if(stile==='wtf' && lang==='it'){
+      q = q.replace(/^E se /,'E se cavolo ');
+    }
+    return q;
   }
 
   function consumeOneCredit(){
@@ -519,18 +525,17 @@ transition:opacity .18s ease, transform .18s ease;
   function surpriseAndGo(){
     clearQError();
     if(!consumeOneCredit()) return;
-    const Lmsg = (lang==='it'?'Ok! Preparo una domanda su misura…':
-                 lang==='es'?'¡Vamos! Preparando una pregunta a tu medida…':
-                 lang==='fr'?'Top ! Je prépare une question sur mesure…':
-                 lang==='de'?'Alles klar! Ich bereite eine maßgeschneiderte Frage vor…':
-                 'Got it! Crafting a tailored question…');
-    const boost=getBoost();
-    const q=buildSurpriseQuestion(boost, prefs.stile, prefs.periodo, I18N[lang]||I18N.it);
+    const Lmsg = (lang==='it'?'Ok! Preparo una domanda…':
+                 lang==='es'?'¡Vamos! Preparando una pregunta…':
+                 lang==='fr'?'Top ! Je prépare une question…':
+                 lang==='de'?'Alles klar! Ich bereite eine Frage vor…':
+                 'Got it! Crafting a question…');
+    const q = genericQuestion(prefs.stile, prefs.periodo);
     $('qInput').value = q || Lmsg;
     const req = {
       domanda:q,
       stile:prefs.stile, lang, extra:'', micro:{}, fantasy_mode:false,
-      periodo:prefs.periodo, boost, mode:'surprise'
+      periodo:prefs.periodo, boost:getBoost(), mode:'surprise'  // boost NON usato per creare q, ma lo passo per la pagina successiva se serve
     };
     writeJSON('whatif_request', req);
     LS.setItem('domanda', q);
@@ -560,6 +565,7 @@ transition:opacity .18s ease, transform .18s ease;
   }
   $('goBtn').onclick=trySubmit;
   $('clearBtn').onclick=()=>{$('qInput').value=''; clearQError(); $('qInput').focus();};
+
   $('qInput').addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); } });
 
   /* ===== Misura dinamicamente l'altezza della topbar → aggiorna --topbarH ===== */
@@ -569,8 +575,8 @@ transition:opacity .18s ease, transform .18s ease;
     const h=tb.offsetHeight;
     document.documentElement.style.setProperty('--topbarH', h+'px');
   }
-  window.addEventListener('resize', ()=>{ syncTopbarHeight(); });
-  window.addEventListener('load', ()=>{ syncTopbarHeight(); });
+  window.addEventListener('resize', syncTopbarHeight);
+  window.addEventListener('load', syncTopbarHeight);
 
   /* ===== INIT ===== */
   try{
