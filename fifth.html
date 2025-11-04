@@ -136,7 +136,7 @@ h1{
 
     <!-- BLOCCO PROBABILITÀ -->
     <div class="hr"></div>
-    <div class="label" id="lblP">Probabilità & perché</div>
+    <div class="label" id="lblP">Probabilità</div>
     <div id="probBlock" class="prob-wrap"></div>
 
     <div class="hr"></div>
@@ -178,7 +178,7 @@ document.documentElement.lang = lang;
 const I18N = {
   it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
        sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
-       p:"Probabilità & perché", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
+       p:"Probabilità", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
        copied:"Copiato!", error:"[errore server]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
@@ -187,7 +187,7 @@ const I18N = {
        back:"← Indietro", home:"🏠 Home" },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-       p:"Probabilities & why", share:"📤 Share / Copy", again:"🔁 Ask another",
+       p:"Probability", share:"📤 Share / Copy", again:"🔁 Ask another",
        copied:"Copied!", error:"[server error]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
@@ -276,7 +276,6 @@ function setTitlesAndTexts(q){
 function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
 function genProbabilities({style, absurd, domanda}){
-  const t = (I18N[lang]||I18N.it);
   const out = [];
 
   if(style==='whatif' && !absurd){
@@ -301,34 +300,34 @@ function genProbabilities({style, absurd, domanda}){
   }
 
   if(style==='whatif' && absurd){
-    // ASSURDO: fino a 5000%, motivazioni assurde ma “quasi plausibili”
+    // ASSURDO: fino a 5000%, motivazioni assurde ma “quasi plausibili” (senza "perché/because")
     const caps = [rndInt(120,900), rndInt(500,5000), rndInt(90,777)];
     const reasons = lang==='it'
       ? [
-        "Perché l’universo premia chi porta brioche ai piccioni.",
+        "L’universo premia chi porta brioche ai piccioni.",
         "Statistica segreta: 1 idea folle su 0,2 conquista il condominio.",
-        "Il destino ha il senso dell’umorismo e oggi ha il microfono."
+        "Il destino oggi ha il microfono e ride dalla tua parte."
       ]
       : [
-        "Because the universe tips whoever brings croissants to pigeons.",
+        "The universe tips whoever brings croissants to pigeons.",
         "Secret stat: 1 out of 0.2 wild ideas wins the building.",
-        "Fate’s in a goofy mood and holding the mic."
+        "Fate grabbed the mic and it’s laughing with you."
       ];
     return caps.map((p,i)=>({ pct: p+"%", text: reasons[i] }));
   }
 
-  // WTF: alcolico, terra terra, sarcastico
+  // WTF: alcolico, terra terra, sarcastico (frasi semplici)
   const caps = [rndInt(80,220), rndInt(120,380), rndInt(200,800)];
   const reasons = lang==='it'
     ? [
-      "Con due spritz fila tutto liscio.",
-      "Birra fredda, coraggio caldo: si fa.",
-      "Domani mal di testa, ma oggi spingi."
+      "Due spritz e fila tutto.",
+      "Birra fredda, coraggio caldo.",
+      "Stasera spingi, domattina ghiaccio in testa."
     ]
     : [
       "Two spritz and it goes.",
-      "Cold beer, warm courage: do it.",
-      "Tomorrow hangover, today push."
+      "Cold beer, warm courage.",
+      "Push tonight, ice on the head tomorrow."
     ];
   return caps.map((p,i)=>({ pct: p+"%", text: reasons[i] }));
 }
