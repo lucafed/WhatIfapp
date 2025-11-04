@@ -87,12 +87,12 @@ h1{
 .prob-label{font-size:12px;color:var(--muted);white-space:nowrap}
 .top-pct{
   display:inline-flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:14px;min-width:64px; padding:6px 10px; /* più piccola */
+  font-weight:900;font-size:14px;min-width:64px;padding:6px 10px; /* pill più piccola */
   background:linear-gradient(180deg,var(--acc),var(--acc2));
   color:var(--ink); border-radius:10px; box-shadow:0 8px 22px rgba(0,0,0,.32), 0 0 22px var(--glow);
 }
 
-/* === MOTIVAZIONI DEMENZIALI === */
+/* === MOTIVAZIONI (serie) === */
 .mot-wrap{display:flex;flex-direction:column;gap:10px;margin-top:10px}
 .mot{
   display:flex;gap:10px;align-items:flex-start;
@@ -100,7 +100,7 @@ h1{
   border:1px solid rgba(255,255,255,.10);
   border-radius:12px;padding:10px 12px;
 }
-.mot .who{font-weight:800;min-width:210px}
+.mot .who{font-weight:800;min-width:230px}
 .mot .txt{line-height:1.5}
 .mot .cap{font-size:12px;color:var(--muted);margin-top:2px}
 </style>
@@ -145,7 +145,7 @@ h1{
     <div id="answer" class="story">⏳ …</div>
 
     <div class="hr"></div>
-    <div class="label" id="lblP">Motivazioni (demenziali)</div>
+    <div class="label" id="lblP">Motivazioni</div>
     <div id="motBlock" class="mot-wrap"></div>
 
     <div class="hr"></div>
@@ -187,22 +187,22 @@ document.documentElement.lang = lang;
 const I18N = {
   it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
        sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
-       ptop:"% probabilità che accada", p:"Motivazioni (demenziali)",
+       ptop:"% probabilità che accada", p:"Motivazioni",
        share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
        copied:"Copiato!", error:"[errore server]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
-        ? `Stile: What the F · 6–9 frasi · paragrafo unico · 2–3 reazioni demenziali · doppia punchline · modalità: ${p==='past'?'Passato':'Futuro'}.`
+        ? `Stile: What the F · 6–9 frasi · paragrafo unico · 2–3 reazioni libere · doppia punchline · modalità: ${p==='past'?'Passato':'Futuro'}.`
         : `Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · nessun elenco/domanda/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.`,
        back:"← Indietro", home:"🏠 Home" },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-       ptop:"% probability it happens", p:"Deranged reasons",
+       ptop:"% probability it happens", p:"Rationales",
        share:"📤 Share / Copy", again:"🔁 Ask another",
        copied:"Copied!", error:"[server error]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
-        ? `Style: What the F · 6–9 sentences · single paragraph · 2–3 absurd object reactions · double punchline · mode: ${p==='past'?'Past':'Future'}.`
+        ? `Style: What the F · 6–9 sentences · single paragraph · playful tone · double punchline · mode: ${p==='past'?'Past':'Future'}.`
         : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`,
        back:"← Back", home:"🏠 Home" }
 };
@@ -236,7 +236,6 @@ const againBtn = qs('#againBtn');
 const metaInfo = qs('#metaInfo');
 const styleBadge = qs('#styleBadge');
 const motBlock = qs('#motBlock');
-const lblP = qs('#lblP');
 const topPct = qs('#topPct');
 const probTopLabel = qs('#probTopLabel');
 
@@ -245,7 +244,7 @@ function normalizeOneParagraph(s=""){
   return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
 }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
-function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s/S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
+function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
 
 /* Decorazione em-dash */
 function decorateEmBits(el){
@@ -296,67 +295,35 @@ function extractTopic(sA, sB){
   return (long[0] || words[0] || 'il progetto');
 }
 
-/* ==== Motivazioni demenziali collegate a topic ==== */
-function buildDumbReasons(topic){
-  // niente parola "perché"
-  const items = [
+/* ==== Motivazioni SERIE con votanti casuali ==== */
+function buildSeriousReasons(topic){
+  const r1fav = rndInt(20,120), r1con = rndInt(5,80), r1ast = rndInt(0,30);
+  const r2fav = rndInt(15,100), r2con = rndInt(3,60), r2ast = rndInt(0,25);
+
+  const blocks = [
     {
-      who: "Piccioni favorevoli al progetto",
-      gen: ()=> {
-        const fav = rndInt(1,7), contra = rndInt(40,180);
-        return {
-          who: `Piccioni favorevoli al progetto: ${fav} · contrari: ${contra}`,
-          text: `i pro hanno fiuto per briciole legate a “${topic}”; i contro temono che il drone rubi il pane del parchetto.`
-        };
-      }
+      who: `Fattibilità operativa — favorevoli ${r1fav} · contrari ${r1con} · astenuti ${r1ast}`,
+      text: `risorse e tempistiche allineate a «${topic}»; sequenza in tre step già impostabile senza blocchi strutturali.`,
+      cap: '· Valutazione interna'
     },
     {
-      who: "Comitato Nonne di Quartiere",
-      gen: ()=> {
-        const fav = rndInt(3,12), contra = rndInt(0,5);
-        return {
-          who: `Comitato Nonne: favorevoli ${fav} · contrari ${contra}`,
-          text: `ok ${topic} se metti il maglione e mangi; dissenso minimo: orario pisolino intoccabile.`
-        };
-      }
-    },
-    {
-      who: "Gatto del condominio",
-      gen: ()=> {
-        const fav = rndInt(0,1), contra = rndInt(0,1);
-        const side = fav>=contra ? "favorevole" : "contrario";
-        return {
-          who: `Gatto del condominio: ${side}`,
-          text: `muso alto su “${topic}”; approvazione valida finché la ciotola resta piena.`
-        };
-      }
-    },
-    {
-      who: "Ufficio Sbadigli & Motivazione",
-      gen: ()=> {
-        const sbad = rndInt(4,18), hype = rndInt(20,95);
-        return {
-          who: `Sbadigli ${sbad}/h · Hype ${hype}%`,
-          text: `curva energia a zig-zag; finestre migliori: minuti 12–27 e 41–49 dell’ora su ${topic}.`
-        };
-      }
+      who: `Contesto esterno — favorevoli ${r2fav} · contrari ${r2con} · astenuti ${r2ast}`,
+      text: `segnali di domanda moderata su «${topic}»; rischi principali monitorabili: costi inattesi e inerzia esecutiva.`,
+      cap: '· Scenario di riferimento'
     }
   ];
-  // scegli 3 diversi
-  const pickIdx = new Set();
-  while (pickIdx.size < 3) pickIdx.add(rndInt(0, items.length-1));
-  return [...pickIdx].map(i => items[i].gen());
+  return blocks;
 }
 
 function renderReasons(blocks){
   const wrap = document.getElementById('motBlock');
   wrap.innerHTML = '';
-  blocks.forEach((b,idx)=>{
+  blocks.forEach(b=>{
     const row = document.createElement('div');
     row.className = 'mot';
     row.innerHTML = `
       <div class="who">${b.who}</div>
-      <div class="txt">${b.text}<div class="cap">${idx===0?'· Primo parere':'· Parere extra'}</div></div>
+      <div class="txt">${b.text}<div class="cap">${b.cap||''}</div></div>
     `;
     wrap.appendChild(row);
   });
@@ -398,10 +365,9 @@ function renderReasons(blocks){
     answerEl.textContent = answerText;
     decorateEmBits(answerEl);
 
-    // motivazioni collegate a topic
+    // motivazioni collegate a topic (serie, 2 righe, votanti casuali)
     const topic = extractTopic(domanda, answerText);
-    const reasons = buildDumbReasons(topic);
-    renderReasons(reasons);
+    renderReasons(buildSeriousReasons(topic));
 
     // storia
     const hist = JSON.parse(LS.getItem('cronologia')||'[]');
