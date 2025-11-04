@@ -9,7 +9,9 @@
 :root{
   --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
   --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;
-  --glow: rgba(255, 236, 1, .22);
+  --line: rgba(255,255,255,.12);
+  --panel: rgba(20,28,34,.92);
+  --glow: rgba(255,236,1,.22);
 }
 html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
 *{box-sizing:border-box}
@@ -33,8 +35,8 @@ h1{
 }
 .sub{color:var(--muted);text-align:center;margin:0 0 8px}
 .card{
-  background:rgba(20,28,34,.92);
-  border:1px solid rgba(255,255,255,.12);
+  background:var(--panel);
+  border:1px solid var(--line);
   border-radius:16px;
   padding:18px;
   backdrop-filter:blur(10px);
@@ -44,7 +46,7 @@ h1{
 .label{color:var(--acc);font-weight:800;margin-bottom:8px}
 .input{
   background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.12);
+  border:1px solid var(--line);
   border-radius:12px;
   padding:10px;
 }
@@ -64,7 +66,7 @@ h1{
 }
 .btn.ghost{
   background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.12);
+  border:1px solid var(--line);
   color:#fff
 }
 .small{font-size:12px;color:var(--muted)}
@@ -72,37 +74,39 @@ h1{
 .badge{
   display:inline-flex;align-items:center;gap:8px;
   font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 10px;
+  border:1px solid var(--line);border-radius:999px;padding:6px 10px;
 }
 .lead{
   color:#E7F2EE;font-size:14px;line-height:1.45;opacity:.86;margin:2px 0 10px;
 }
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
-.embit { padding:0 .08em; box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset; text-shadow:0 0 12px rgba(255,255,255,.08); border-radius:4px; }
-.select{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer; }
 
-/* === TOP PROB (label + pill) === */
-.prob-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 6px}
-.prob-label{font-size:12px;color:var(--muted);white-space:nowrap}
+.embit { padding:0 .08em; box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset; text-shadow:0 0 12px rgba(255,255,255,.08); border-radius:4px; }
+.select{ background:rgba(255,255,255,.06); border:1px solid var(--line); color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer; }
+
+/* === TOP PERCENT ROW === */
+.pct-row{display:flex;align-items:center;gap:10px;margin:2px 0 8px}
+.pct-label{font-size:12px;color:var(--muted)}
 .top-pct{
   display:inline-flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:14px;min-width:64px;padding:6px 10px; /* pill più piccola */
+  font-weight:900;font-size:18px;min-width:72px; padding:6px 10px;
   background:linear-gradient(180deg,var(--acc),var(--acc2));
   color:var(--ink); border-radius:10px; box-shadow:0 8px 22px rgba(0,0,0,.32), 0 0 22px var(--glow);
 }
 
-/* === MOTIVAZIONI (serie) === */
+/* === MOTIVI (2 righe, con icone e voti) === */
 .mot-wrap{display:flex;flex-direction:column;gap:10px;margin-top:10px}
 .mot{
-  display:flex;gap:10px;align-items:flex-start;
+  display:grid;grid-template-columns:auto 1fr;gap:10px;
   background:rgba(255,255,255,.04);
   border:1px solid rgba(255,255,255,.10);
   border-radius:12px;padding:10px 12px;
 }
-.mot .who{font-weight:800;min-width:230px}
-.mot .txt{line-height:1.5}
-.mot .cap{font-size:12px;color:var(--muted);margin-top:2px}
+.mot .ico{font-size:18px;line-height:1.2}
+.mot .txt{line-height:1.45}
+.mot .name{font-weight:800}
+.mot .meta{font-size:12px;color:var(--muted);margin-top:2px}
 </style>
 </head>
 <body>
@@ -134,18 +138,19 @@ h1{
   </div>
 
   <div class="card">
-    <!-- % IN ALTO con etichetta -->
-    <div class="prob-top">
-      <span class="prob-label" id="probTopLabel">% probabilità che accada</span>
-      <span id="topPct" class="top-pct" aria-live="polite">—</span>
+    <div class="label" id="lblA">Risposta</div>
+
+    <!-- % IN ALTO -->
+    <div class="pct-row">
+      <span class="pct-label" id="pctLabel">% probabilità che accada</span>
+      <div id="topPct" class="top-pct" aria-live="polite">—</div>
     </div>
 
-    <div class="label" id="lblA">Risposta</div>
     <div id="lead" class="lead fade-in">—</div>
     <div id="answer" class="story">⏳ …</div>
 
     <div class="hr"></div>
-    <div class="label" id="lblP">Motivazioni</div>
+    <div class="label" id="lblP">Motivazioni (votanti & note)</div>
     <div id="motBlock" class="mot-wrap"></div>
 
     <div class="hr"></div>
@@ -187,23 +192,23 @@ document.documentElement.lang = lang;
 const I18N = {
   it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
        sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
-       ptop:"% probabilità che accada", p:"Motivazioni",
-       share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
+       p:"Motivazioni (votanti & note)", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
        copied:"Copiato!", error:"[errore server]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
-        ? `Stile: What the F · 6–9 frasi · paragrafo unico · 2–3 reazioni libere · doppia punchline · modalità: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · nessun elenco/domanda/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.`,
+        ? `Stile: What the F · 6–9 frasi · paragrafo unico · tono asciutto · modalità: ${p==='past'?'Passato':'Futuro'}.`
+        : `Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`,
+       pctLabel:"% probabilità che accada",
        back:"← Indietro", home:"🏠 Home" },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-       ptop:"% probability it happens", p:"Rationales",
-       share:"📤 Share / Copy", again:"🔁 Ask another",
+       p:"Rationales (voters & notes)", share:"📤 Share / Copy", again:"🔁 Ask another",
        copied:"Copied!", error:"[server error]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
-        ? `Style: What the F · 6–9 sentences · single paragraph · playful tone · double punchline · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`,
+        ? `Style: What the F · 6–9 sentences · single paragraph · dry tone · mode: ${p==='past'?'Past':'Future'}.`
+        : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,
+       pctLabel:"% probability it happens",
        back:"← Back", home:"🏠 Home" }
 };
 I18N.es=I18N.en; I18N.fr=I18N.en; I18N.de=I18N.en;
@@ -222,12 +227,73 @@ const LEADS = {
        whatif:["Set the keys down and let the quiet that doesn’t judge go first."]}
 };
 
+/* ==== Categories (no 'Paranormale & Universale') ==== */
+const CATEGORIES = [
+  // Psicologia & Caos umano
+  { ico:"🧠", name_it:"Comitato dei Pensieri Sotto la Doccia",          name_en:"Shower-Thoughts Committee",
+    notes_it:["Illuminazione logistica durante shampoo.","Decisione nata a temperatura tiepida."],
+    notes_en:["Logistics epiphany mid-shampoo.","Decision made at lukewarm clarity."] },
+  { ico:"📞", name_it:"Autorità delle Telefonate Fuori Tempo",            name_en:"Off-Timing Calls Authority",
+    notes_it:["Consiglio pervenuto alle 07:12.","Parere espresso durante squillo prolungato."],
+    notes_en:["Advice arrived at 07:12.","Opinion issued during a long ring."] },
+  { ico:"📊", name_it:"Ordine degli Ottimisti Moderati",                  name_en:"Order of Moderate Optimists",
+    notes_it:["Aspettative contenute, calendario severo.","Risultato atteso: discreto."],
+    notes_en:["Contained expectations, strict calendar.","Expected outcome: decent."] },
+
+  // Natura & Fauna giudicante
+  { ico:"🕊️", name_it:"Assemblea dei Piccioni con Opinioni Forti",       name_en:"Assembly of Strong-Opinion Pigeons",
+    notes_it:["Sorveglianza attiva sulle panchine.","Consenso rumoroso in piazza."],
+    notes_en:["Active bench surveillance.","Loud piazza consensus."] },
+  { ico:"🦊", name_it:"Lobby delle Volpi Opportuniste",                    name_en:"Opportunistic Foxes Lobby",
+    notes_it:["Favorevoli se conviene subito.","Richiesto tornaconto rapido."],
+    notes_en:["In favor if payoff is instant.","Quick upside requested."] },
+  { ico:"🐙", name_it:"Federazione dei Polpi Strategici",                  name_en:"Federation of Strategic Octopuses",
+    notes_it:["Otto step avanti, due indietro.","Tattica flessibile, presa salda."],
+    notes_en:["Eight steps ahead, two back.","Flexible tactics, firm grip."] },
+  { ico:"🦥", name_it:"Consiglio dei Bradipi Riflessivi",                  name_en:"Council of Reflective Sloths",
+    notes_it:["Decisione lenta ma convinta.","Deadline percepita: 2038."],
+    notes_en:["Slow but resolute decision.","Perceived deadline: 2038."] },
+
+  // Vita sociale & follia umana
+  { ico:"🥃", name_it:"Circolo Bar Notturno dei Consiglieri",              name_en:"Late-Bar Counsel Circle",
+    notes_it:["Coraggio liquido, piani semplici.","Entusiasmo verificato al bancone."],
+    notes_en:["Liquid courage, simple plans.","Enthusiasm verified at the counter."] },
+  { ico:"🍕", name_it:"Associazione Snack Notturni e Idee",                name_en:"Night Snacks & Ideas Association",
+    notes_it:["Carboidrati a supporto del piano.","Briefing alle 23:47."],
+    notes_en:["Carbs support the plan.","Briefing at 23:47."] },
+  { ico:"💬", name_it:"Conferenza degli Amici Che Gasano",                 name_en:"Conference of Hype Friends",
+    notes_it:["Clima motivazionale alto.","Applauso non richiesto."],
+    notes_en:["High motivational climate.","Applause unprompted."] },
+  { ico:"🎤", name_it:"Sindacato delle Idee da Karaoke",                   name_en:"Karaoke Ideas Union",
+    notes_it:["Proposta nata al ritornello.","Volume sopra la ragione."],
+    notes_en:["Proposal born on the chorus.","Volume over reason."] },
+
+  // Mistico-Burocratico
+  { ico:"📎", name_it:"Ufficio Complicazioni Semplici",                    name_en:"Office of Simple Complications",
+    notes_it:["Modulistica tripla ma fattibile.","File approvato con graffetta d’oro."],
+    notes_en:["Triple forms but feasible.","Dossier approved with a golden clip."] },
+  { ico:"📜", name_it:"Accademia degli Oracoli Part-Time",                 name_en:"Part-Time Oracles Academy",
+    notes_it:["Verdetto in pausa pranzo.","Profetizzato in 160 caratteri."],
+    notes_en:["Verdict at lunch break.","Prophesied in 160 chars."] },
+  { ico:"🕯️", name_it:"Confraternita dei Segni Incomprensibili",          name_en:"Brotherhood of Unreadable Signs",
+    notes_it:["Messaggio criptico ma positivo.","Segnale visto tre volte."],
+    notes_en:["Cryptic yet positive message.","Signal seen thrice."] },
+  { ico:"⏳", name_it:"Autorità delle Tempistiche Perfettamente Sbagliate", name_en:"Authority of Perfectly Wrong Timings",
+    notes_it:["Tempismo pessimo, effetto ottimo.","Arrivo tardi strategico."],
+    notes_en:["Awful timing, great effect.","Late on purpose, effective."] },
+];
+
 /* ==== UI refs ==== */
 const qs = (sel)=>document.querySelector(sel);
 const setText = (id, txt)=>{ const el=qs(id); if(el) el.textContent = txt; };
 
+const backBtn  = qs('#backBtn');
+const homeBtn  = qs('#homeBtn');
+const langSel  = qs('#langSelect');
 const titleH1  = qs('#title');
 const subtitle = qs('#subtitle');
+const lblQ     = qs('#lblQ');
+const lblA     = qs('#lblA');
 const qView    = qs('#qView');
 const leadNode = qs('#lead');
 const answerEl = qs('#answer');
@@ -236,8 +302,9 @@ const againBtn = qs('#againBtn');
 const metaInfo = qs('#metaInfo');
 const styleBadge = qs('#styleBadge');
 const motBlock = qs('#motBlock');
+const lblP = qs('#lblP');
 const topPct = qs('#topPct');
-const probTopLabel = qs('#probTopLabel');
+const pctLabel = qs('#pctLabel');
 
 /* ==== Helpers ==== */
 function normalizeOneParagraph(s=""){
@@ -245,6 +312,7 @@ function normalizeOneParagraph(s=""){
 }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
+function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
 /* Decorazione em-dash */
 function decorateEmBits(el){
@@ -260,72 +328,75 @@ function decorateEmBits(el){
   el.innerHTML = html;
 }
 
-/* ==== Titles ==== */
+/* ==== Titles & UI text ==== */
 function setTitlesAndTexts(q){
   const T = I18N[lang] || I18N.it;
-  titleH1.textContent = (style==='wtf') ? T.titleWTF : T.titleWHF;
+  setText('#title', style==='wtf' ? T.titleWTF : T.titleWHF);
   subtitle.textContent = T.sub(q || '—');
-  setText('#lblQ', T.q);
-  setText('#lblA', T.a);
-  setText('#lblP', T.p);
-  probTopLabel.textContent = T.ptop;
+  lblQ.textContent = T.q;
+  lblA.textContent = T.a;
+  lblP.textContent = T.p;
   shareBtn.textContent = T.share;
   againBtn.textContent = T.again;
   styleBadge.textContent = (style==='wtf') ? T.styleWTF : T.styleWHF;
   metaInfo.textContent = T.meta(style, periodo);
+  pctLabel.textContent = T.pctLabel;
 
   const bank = (LEADS[lang] && LEADS[lang][style]) ? LEADS[lang][style]
                : (LEADS.it[style] || LEADS.it.whatif);
-  leadNode.textContent = oneSentence(pick(bank) || '') || '—';
+  const line = oneSentence(pick(bank) || '');
+  leadNode.textContent = line || '—';
 }
 
-/* ==== Probabilità (singola) ==== */
-function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
-function computeSinglePct({style, absurd}){
-  if(style==='whatif' && !absurd) return rndInt(45,85);
-  if(style==='whatif' && absurd)  return rndInt(120,1200); // volutamente fuori scala
-  return rndInt(90,600); // wtf
+/* ==== Percentuale primaria ==== */
+function buildPrimaryPct({style, absurd}){
+  if(style==='whatif' && !absurd) return rndInt(55,85) + "%";
+  if(style==='whatif' && absurd)  return rndInt(150,1200) + "%";
+  return rndInt(120,600) + "%"; // wtf
 }
+function renderTopPct(pct){ topPct.textContent = pct || "—"; }
 
-/* ==== Topic helpers ==== */
-function extractTopic(sA, sB){
-  const s = (sA||'') + ' ' + (sB||'');
-  const words = String(s).toLowerCase().match(/[a-zà-ù0-9]+/gi) || [];
-  const long = words.filter(w=>w.length>=5);
-  return (long[0] || words[0] || 'il progetto');
+/* ==== Motivazioni: 2 righe con voti assurdi e nota breve ==== */
+function randVotes(){
+  const fav = rndInt(2, 2500);
+  const con = rndInt(0, Math.max(0, Math.floor(fav*0.4)));
+  const ast = rndInt(0, Math.max(0, Math.floor((fav+con)*0.2)));
+  return {fav, con, ast};
 }
+function buildMotivations(answerText){
+  // prendi 2 categorie distinte
+  const a = pick(CATEGORIES);
+  let b = pick(CATEGORIES);
+  let safety=0;
+  while(b === a && safety++ < 10) b = pick(CATEGORIES);
 
-/* ==== Motivazioni SERIE con votanti casuali ==== */
-function buildSeriousReasons(topic){
-  const r1fav = rndInt(20,120), r1con = rndInt(5,80), r1ast = rndInt(0,30);
-  const r2fav = rndInt(15,100), r2con = rndInt(3,60), r2ast = rndInt(0,25);
-
-  const blocks = [
-    {
-      who: `Fattibilità operativa — favorevoli ${r1fav} · contrari ${r1con} · astenuti ${r1ast}`,
-      text: `risorse e tempistiche allineate a «${topic}»; sequenza in tre step già impostabile senza blocchi strutturali.`,
-      cap: '· Valutazione interna'
-    },
-    {
-      who: `Contesto esterno — favorevoli ${r2fav} · contrari ${r2con} · astenuti ${r2ast}`,
-      text: `segnali di domanda moderata su «${topic}»; rischi principali monitorabili: costi inattesi e inerzia esecutiva.`,
-      cap: '· Scenario di riferimento'
-    }
-  ];
-  return blocks;
+  const items = [a,b].map(cat=>{
+    const notePool = (lang==='it') ? (cat.notes_it||[]) : (cat.notes_en||[]);
+    const note = pick(notePool.length?notePool:["Nota non disponibile."]);
+    const votes = randVotes();
+    return {
+      ico: cat.ico,
+      name: (lang==='it') ? cat.name_it : cat.name_en,
+      votes,
+      note
+    };
+  });
+  return items;
 }
-
-function renderReasons(blocks){
-  const wrap = document.getElementById('motBlock');
-  wrap.innerHTML = '';
-  blocks.forEach(b=>{
+function renderMotivations(list){
+  motBlock.innerHTML = '';
+  list.forEach(item=>{
     const row = document.createElement('div');
     row.className = 'mot';
     row.innerHTML = `
-      <div class="who">${b.who}</div>
-      <div class="txt">${b.text}<div class="cap">${b.cap||''}</div></div>
+      <div class="ico">${item.ico}</div>
+      <div class="txt">
+        <div class="name">${item.name}</div>
+        <div class="meta">favorevoli ${item.votes.fav} · contrari ${item.votes.con} · astenuti ${item.votes.ast}</div>
+        <div class="meta">${item.note}</div>
+      </div>
     `;
-    wrap.appendChild(row);
+    motBlock.appendChild(row);
   });
 }
 
@@ -339,10 +410,6 @@ function renderReasons(blocks){
   setTitlesAndTexts(domanda);
   qs('#qView').textContent = domanda || '—';
 
-  // percentuale top
-  const pct = computeSinglePct({style, absurd:absurdFlag});
-  topPct.textContent = pct + "%";
-
   // fetch risposta
   try{
     const headers = { "Content-Type": "application/json" };
@@ -353,28 +420,29 @@ function renderReasons(blocks){
     const r = await fetch("/api/ask",{
       method:"POST",
       headers,
-      body:JSON.stringify({
-        domanda, lang, stile: style, periodo, extra:"", micro:req.micro||{}
-      })
+      body:JSON.stringify({ domanda, lang, stile: style, periodo, extra:"", micro:req.micro||{} })
     });
     const data = await r.json().catch(()=>null);
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
 
     let answerText = normalizeOneParagraph((data.answer||"").trim());
     if(!/[.!?…]$/.test(answerText)) answerText += ".";
-    answerEl.textContent = answerText;
-    decorateEmBits(answerEl);
+    qs('#answer').textContent = answerText;
+    decorateEmBits(qs('#answer'));
 
-    // motivazioni collegate a topic (serie, 2 righe, votanti casuali)
-    const topic = extractTopic(domanda, answerText);
-    renderReasons(buildSeriousReasons(topic));
+    // >>> % in alto
+    renderTopPct(buildPrimaryPct({style, absurd:absurdFlag}));
+
+    // >>> Motivazioni (2)
+    const moti = buildMotivations(answerText);
+    renderMotivations(moti);
 
     // storia
     const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, risposta:answerText, stile:style, periodo, pct, ts:Date.now() });
+    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
   }catch(e){
-    answerEl.textContent = (I18N[lang]||I18N.it).error;
+    qs('#answer').textContent = (I18N[lang]||I18N.it).error;
     console.error(e);
   }
 })();
@@ -390,7 +458,7 @@ qs('#langSelect').onchange = ()=>{
 };
 qs('#shareBtn').onclick = async()=>{
   const T = I18N[lang] || I18N.it;
-  const full = `What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n${T.ptop}: ${qs('#topPct').textContent}\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
+  const full = `What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
   try{
     if(navigator.share){ await navigator.share({ title: "What?f", text: full }); }
     else{
