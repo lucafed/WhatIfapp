@@ -79,29 +79,27 @@ h1{
 }
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
-
 .embit { padding:0 .08em; box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset; text-shadow:0 0 12px rgba(255,255,255,.08); border-radius:4px; }
 .select{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer; }
 
-/* === TOP PERCENT === */
-.top-pct{
+/* ===== Probabilità (in alto) ===== */
+.prob-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.prob-label{
+  font-size:12px;color:var(--muted);white-space:nowrap;
+}
+.pct-pill{
   display:inline-flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:20px;min-width:96px; padding:8px 14px;
+  min-width:58px; /* più piccola */
+  font-weight:900; font-size:14px; line-height:1;
   background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink); border-radius:12px; box-shadow:0 10px 28px rgba(0,0,0,.35), 0 0 28px var(--glow);
-  margin:2px 0 10px;
+  color:var(--ink); border-radius:10px; padding:6px 10px;
+  box-shadow:0 6px 18px rgba(0,0,0,.28), 0 0 18px var(--glow);
 }
 
-/* Motivazioni (solo testo, niente %) */
-.mot-wrap{display:flex;flex-direction:column;gap:10px;margin-top:10px}
-.mot{
-  display:flex;gap:10px;align-items:flex-start;
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:12px;padding:10px 12px;
-}
-.mot .txt{line-height:1.45}
-.mot .cap{font-size:12px;color:var(--muted);margin-top:2px}
+/* ===== Suggerimento ironico ===== */
+.sug-wrap{display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:10px 12px}
+.sug-emoji{font-size:18px}
+.sug-text{line-height:1.5}
 </style>
 </head>
 <body>
@@ -133,17 +131,26 @@ h1{
   </div>
 
   <div class="card">
+    <!-- PROBABILITÀ IN ALTO -->
+    <div class="prob-top" id="probTop">
+      <span class="prob-label" id="probTopLabel">% probabilità che accada</span>
+      <span class="pct-pill" id="pctTop">—</span>
+    </div>
+
+    <div class="hr"></div>
+
     <div class="label" id="lblA">Risposta</div>
-
-    <!-- % IN ALTO -->
-    <div id="topPct" class="top-pct" aria-live="polite">—</div>
-
     <div id="lead" class="lead fade-in">—</div>
     <div id="answer" class="story">⏳ …</div>
 
     <div class="hr"></div>
-    <div class="label" id="lblP">Motivi al volo</div>
-    <div id="motBlock" class="mot-wrap"></div>
+
+    <!-- SUGGERIMENTO IRONICO -->
+    <div class="label" id="lblSug">Suggerimento (ironico)</div>
+    <div class="sug-wrap">
+      <div class="sug-emoji" id="sugEmoji">🎲</div>
+      <div class="sug-text" id="sugText">—</div>
+    </div>
 
     <div class="hr"></div>
     <div class="row">
@@ -184,7 +191,8 @@ document.documentElement.lang = lang;
 const I18N = {
   it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
        sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
-       p:"Motivi al volo", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
+       ptop:"% probabilità che accada", sug:"Suggerimento (ironico)",
+       share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
        copied:"Copiato!", error:"[errore server]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
@@ -193,7 +201,8 @@ const I18N = {
        back:"← Indietro", home:"🏠 Home" },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-       p:"Quick reasons", share:"📤 Share / Copy", again:"🔁 Ask another",
+       ptop:"% probability it happens", sug:"(Ironic) suggestion",
+       share:"📤 Share / Copy", again:"🔁 Ask another",
        copied:"Copied!", error:"[server error]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
@@ -221,13 +230,8 @@ const LEADS = {
 const qs = (sel)=>document.querySelector(sel);
 const setText = (id, txt)=>{ const el=qs(id); if(el) el.textContent = txt; };
 
-const backBtn  = qs('#backBtn');
-const homeBtn  = qs('#homeBtn');
-const langSel  = qs('#langSelect');
 const titleH1  = qs('#title');
 const subtitle = qs('#subtitle');
-const lblQ     = qs('#lblQ');
-const lblA     = qs('#lblA');
 const qView    = qs('#qView');
 const leadNode = qs('#lead');
 const answerEl = qs('#answer');
@@ -235,9 +239,13 @@ const shareBtn = qs('#shareBtn');
 const againBtn = qs('#againBtn');
 const metaInfo = qs('#metaInfo');
 const styleBadge = qs('#styleBadge');
-const motBlock = qs('#motBlock');
-const lblP = qs('#lblP');
-const topPct = qs('#topPct');
+
+const pctTop = qs('#pctTop');
+const probTopLabel = qs('#probTopLabel');
+
+const lblSug = qs('#lblSug');
+const sugEmoji = qs('#sugEmoji');
+const sugText = qs('#sugText');
 
 /* ==== Helpers ==== */
 function normalizeOneParagraph(s=""){
@@ -263,11 +271,12 @@ function decorateEmBits(el){
 /* ==== Titles ==== */
 function setTitlesAndTexts(q){
   const T = I18N[lang] || I18N.it;
-  setText('#title', style==='wtf' ? T.titleWTF : T.titleWHF);
+  titleH1.textContent = (style==='wtf') ? T.titleWTF : T.titleWHF;
   subtitle.textContent = T.sub(q || '—');
-  lblQ.textContent = T.q;
-  lblA.textContent = T.a;
-  lblP.textContent = T.p;
+  setText('#lblQ', T.q);
+  setText('#lblA', T.a);
+  probTopLabel.textContent = T.ptop;
+  lblSug.textContent = T.sug;
   shareBtn.textContent = T.share;
   againBtn.textContent = T.again;
   styleBadge.textContent = (style==='wtf') ? T.styleWTF : T.styleWHF;
@@ -275,52 +284,40 @@ function setTitlesAndTexts(q){
 
   const bank = (LEADS[lang] && LEADS[lang][style]) ? LEADS[lang][style]
                : (LEADS.it[style] || LEADS.it.whatif);
-  const line = oneSentence(pick(bank) || '');
-  leadNode.textContent = line || '—';
+  leadNode.textContent = oneSentence(pick(bank) || '') || '—';
 }
 
-/* ==== Probabilities / reasons ==== */
+/* ==== Probabilità (singola) ==== */
 function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
-
-// Restituisce {primaryPct, reasons[]}
-function buildPctAndReasons({style, absurd}){
-  // Motivazioni più terra terra, sarcastiche e demenziali
-  if(style==='whatif' && !absurd){
-    const primary = rndInt(55,85);
-    const reasons = (lang==='it')
-      ? ["Mezza attrezzatura già in casa.", "Il resto è calendario e caffeina.", "Se salti due giorni non esplode niente."]
-      : ["You already own half the gear.", "The rest is calendar and caffeine.", "Skip two days and nothing explodes."];
-    return { primaryPct: primary+"%", reasons };
-  }
-  if(style==='whatif' && absurd){
-    const primary = rndInt(150,1200);
-    const reasons = (lang==='it')
-      ? ["Piccioni favorevoli al progetto.", "Moneta dell’universo truccata a tuo favore.", "Momento storico: il caso ha sonno."]
-      : ["Pigeons backing the project.", "Universe’s coin slightly rigged for you.", "Historic moment: randomness is sleepy."];
-    return { primaryPct: primary+"%", reasons };
-  }
-  // WTF
-  const primary = rndInt(120,600);
-  const reasons = (lang==='it')
-    ? ["Due spritz e zero scuse.", "Gruppo WhatsApp già carico di ‘facciamo?’.", "Domattina ghiaccio in fronte, stasera gloria."]
-    : ["Two spritz, zero excuses.", "Group chat already spamming ‘we do this?’.", "Ice on forehead tomorrow, glory tonight."];
-  return { primaryPct: primary+"%", reasons };
+function computeSinglePct({style, absurd}){
+  if(style==='whatif' && !absurd) return rndInt(45,75);
+  if(style==='whatif' && absurd)  return rndInt(90,777); // volutamente eccessivo
+  return rndInt(80,220); // wtf
 }
 
-function renderTopPct(pct){
-  topPct.textContent = pct || "—";
+/* ==== Suggerimento (ironico) collegato a domanda/risposta ==== */
+function extractTopic(s){
+  const words = String(s||'').toLowerCase().match(/[a-zà-ù0-9]+/gi) || [];
+  const long = words.filter(w=>w.length>=5);
+  return (long[0] || words[0] || 'la cosa');
 }
-function renderReasons(list){
-  motBlock.innerHTML = '';
-  list.forEach((txt,idx)=>{
-    const row = document.createElement('div');
-    row.className = 'mot';
-    row.innerHTML = `
-      <div class="txt">${txt}</div>
-      <div class="cap">${idx===0?'· Primo colpo':'· Extra spinta'}</div>
-    `;
-    motBlock.appendChild(row);
-  });
+function buildIronicSuggestion(topic){
+  const packs = {
+    it: [
+      {emoji:"🎲", t: (x)=>`Tira un dado: se esce pari, inizi ${x} domattina; se esce dispari, inizi lo stesso ma con gli occhiali da sole in casa.`},
+      {emoji:"🧃", t: (x)=>`Power-up da bar: succo di frutta e playlist epica, poi ${x} come se il vicino facesse il tifo dal balcone.`},
+      {emoji:"🧯", t: (x)=>`Piano anti-panico: 10 minuti di ${x}, 2 minuti di camminata “importante” in corridoio, ripeti finché ti senti CEO del salotto.`},
+      {emoji:"🧠", t: (x)=>`Trucco mentale: chiama ${x} “missione di 25 minuti”, metti il timer e fai finta che scada il mondo se lo ignori.`},
+      {emoji:"🧤", t: (x)=>`Modalità “guanti da forno”: tocchi solo ciò che serve a ${x}. Se apri social, guanto di richiamo sonoro (tipo papera).`}
+    ],
+    en: [
+      {emoji:"🎲", t: (x)=>`Roll a die: even = start ${x} now; odd = start anyway, but with sunglasses indoors.`},
+      {emoji:"🧃", t: (x)=>`Bar power-up: juice + epic playlist, then ${x} like your neighbor is cheering from the window.`}
+    ]
+  };
+  const bank = packs[lang] || packs.it;
+  const item = pick(bank);
+  return item || {emoji:"🎲", t:(x)=>`Lancia una moneta: testa ${x}, croce… ${x} ma con stile.`};
 }
 
 /* ==== Load & fetch ==== */
@@ -333,6 +330,10 @@ function renderReasons(list){
   setTitlesAndTexts(domanda);
   qs('#qView').textContent = domanda || '—';
 
+  // percentuale (in alto)
+  const pct = computeSinglePct({style, absurd:absurdFlag});
+  pctTop.textContent = pct + "%";
+
   // fetch risposta
   try{
     const headers = { "Content-Type": "application/json" };
@@ -343,27 +344,31 @@ function renderReasons(list){
     const r = await fetch("/api/ask",{
       method:"POST",
       headers,
-      body:JSON.stringify({ domanda, lang, stile: style, periodo, extra:"", micro:req.micro||{} })
+      body:JSON.stringify({
+        domanda, lang, stile: style, periodo, extra:"", micro:req.micro||{}
+      })
     });
     const data = await r.json().catch(()=>null);
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
 
     let answerText = normalizeOneParagraph((data.answer||"").trim());
     if(!/[.!?…]$/.test(answerText)) answerText += ".";
-    qs('#answer').textContent = answerText;
-    decorateEmBits(qs('#answer'));
+    answerEl.textContent = answerText;
+    decorateEmBits(answerEl);
 
-    // >>> % IN ALTO + MOTIVI SOTTO <<<
-    const { primaryPct, reasons } = buildPctAndReasons({style, absurd:absurdFlag});
-    renderTopPct(primaryPct);
-    renderReasons(reasons);
+    // >>> SUGGERIMENTO IRONICO <<<
+    const topic = extractTopic(domanda || answerText);
+    const sugPack = buildIronicSuggestion(topic);
+    sugEmoji.textContent = sugPack.emoji;
+    // evita la parola "perché": i testi non la usano
+    sugText.textContent = sugPack.t(topic);
 
     // storia
     const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
+    hist.push({ domanda, risposta:answerText, stile:style, periodo, pct, ts:Date.now() });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
   }catch(e){
-    qs('#answer').textContent = (I18N[lang]||I18N.it).error;
+    answerEl.textContent = (I18N[lang]||I18N.it).error;
     console.error(e);
   }
 })();
@@ -379,7 +384,7 @@ qs('#langSelect').onchange = ()=>{
 };
 qs('#shareBtn').onclick = async()=>{
   const T = I18N[lang] || I18N.it;
-  const full = `What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
+  const full = `What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n${T.ptop}: ${qs('#pctTop').textContent}\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}\n\n– ${qs('#lblSug').textContent}: ${qs('#sugText').textContent}`;
   try{
     if(navigator.share){ await navigator.share({ title: "What?f", text: full }); }
     else{
