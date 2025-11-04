@@ -81,7 +81,6 @@ h1{
 }
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
-
 .embit{padding:0 .08em;box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset;text-shadow:0 0 12px rgba(255,255,255,.08);border-radius:4px}
 .select{background:rgba(255,255,255,.06);border:1px solid var(--line);color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
 
@@ -252,9 +251,6 @@ const I18N = {
        p:"Outcome & rationales", share:"📤 Share / Copy", again:"🔁 Ask another",
        copied:"Copied!", error:"[server error]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Style: What the F · 6–9 sentences · single paragraph · dry tone · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,
        pctLabel:"% probability it happens",
        back:"← Back", home:"🏠 Home",
        votersTitle:"Committee" }
@@ -316,18 +312,12 @@ const CATEGORIES = [
 const qs = (sel)=>document.querySelector(sel);
 const setText = (id, txt)=>{ const el=qs(id); if(el) el.textContent = txt; };
 
-const titleH1  = qs('#title');
-const subtitle = qs('#subtitle');
-const lblQ     = qs('#lblQ');
-const lblA     = qs('#lblA');
 const qView    = qs('#qView');
 const leadNode = qs('#lead');
-const answerEl = qs('#answer');
 const shareBtn = qs('#shareBtn');
 const againBtn = qs('#againBtn');
 const metaInfo = qs('#metaInfo');
 const styleBadge = qs('#styleBadge');
-const lblP = qs('#lblP');
 
 const topPct = qs('#topPct');
 const bottomPct = qs('#bottomPct');
@@ -353,9 +343,9 @@ function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
 /* Decorazione em-dash */
 function decorateEmBits(el){
-  const raw = el.textContent;
-  if(!raw || !raw.includes("—")) return;
-  const parts = raw split ? raw.split("—") : [];
+  const raw = el.textContent || "";
+  if(!raw.includes("—")) return;
+  const parts = raw.split("—");
   let html = "";
   for(let i=0;i<parts.length;i++){
     const seg = parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -368,11 +358,11 @@ function decorateEmBits(el){
 /* ==== UI text ==== */
 function setTitlesAndTexts(q){
   const T = I18N[lang] || I18N.it;
-  setText('#title', style==='wtf' ? T.titleWTF : T.titleWHF);
-  subtitle.textContent = T.sub(q || '—');
-  lblQ.textContent = T.q;
-  lblA.textContent = T.a;
-  lblP.textContent = T.p;
+  document.querySelector('#title').textContent = style==='wtf' ? T.titleWTF : T.titleWHF;
+  document.querySelector('#subtitle').textContent = T.sub(q || '—');
+  document.querySelector('#lblQ').textContent = T.q;
+  document.querySelector('#lblA').textContent = T.a;
+  document.querySelector('#lblP').textContent = T.p;
   shareBtn.textContent = T.share;
   againBtn.textContent = T.again;
   styleBadge.textContent = (style==='wtf') ? T.styleWTF : T.styleWHF;
@@ -384,24 +374,31 @@ function setTitlesAndTexts(q){
   leadNode.textContent = oneSentence(pick(bank) || '') || '—';
 }
 
-/* ==== Percentuale (con “assurda” per Sorprendimi) ==== */
+/* ==== Origine (robusta) ==== */
+function getOriginFlags(req){
+  const lsOrigin = (LS.getItem('origin') || LS.getItem('source') || '').toLowerCase();
+  const microSource = (req?.micro?.source || '').toLowerCase();
+  const isSurprise =
+    req?.micro?.surprise === true ||
+    microSource === 'surprise' || microSource === 'sorprendimi' ||
+    LS.getItem('surprise_mode') === '1' ||
+    lsOrigin === 'surprise' || lsOrigin === 'sorprendimi' ||
+    LS.getItem('from_surprise') === '1';
+
+  const isManual = req?.micro?.manual === true || LS.getItem('manual_mode')==='1';
+  const isQuick  = req?.micro?.quick  === true || LS.getItem('quick_mode')==='1';
+  return { isSurprise, isManual, isQuick };
+}
+
+/* ==== Percentuale (assurda per Sorprendimi) ==== */
 function buildPrimaryPct({ isSurprise }){
-  if (isSurprise) return rndInt(150,1200) + "%";     // percentuale assurda
-  if (style==='whatif') return rndInt(55,85) + "%";  // seria What if
-  return rndInt(120,600) + "%";                      // WTF default
+  if (isSurprise) return rndInt(150,1200) + "%"; // assurda
+  if (style==='whatif') return rndInt(55,85) + "%";
+  return rndInt(120,600) + "%";
 }
 function renderPctAll(pct){
   topPct.textContent = pct || "—";
   bottomPct.textContent = pct || "—";
-}
-
-/* ==== Origine ==== */
-function getOriginFlags(req){
-  return {
-    isSurprise: !!(req?.micro?.surprise || LS.getItem('surprise_mode')==='1'),
-    isManual:   !!(req?.micro?.manual   || LS.getItem('manual_mode')==='1'),
-    isQuick:    !!(req?.micro?.quick    || LS.getItem('quick_mode')==='1'),
-  };
 }
 
 /* ==== Nota seria breve (quando niente comitato) ==== */
@@ -435,7 +432,6 @@ function renderCommittee(item){
   committeeTitle.textContent = `${item.ico} ${T.votersTitle}: ${item.name}`;
   motWrap.style.display = 'grid';
   noteOnly.style.display = 'none';
-
   motIco.textContent  = item.ico;
   motName.textContent = item.name;
   chipFav.textContent = `favorevoli ${item.votes.fav}`;
@@ -451,7 +447,7 @@ function renderCommittee(item){
 
   const domanda = req.domanda || LS.getItem('domanda') || "";
   setTitlesAndTexts(domanda);
-  qs('#qView').textContent = domanda || '—';
+  qView.textContent = domanda || '—';
 
   try{
     const headers = { "Content-Type": "application/json" };
@@ -469,17 +465,15 @@ function renderCommittee(item){
 
     let answerText = normalizeOneParagraph((data.answer||"").trim());
     if(!/[.!?…]$/.test(answerText)) answerText += ".";
-    qs('#answer').textContent = answerText;
-    decorateEmBits(qs('#answer'));
+    document.querySelector('#answer').textContent = answerText;
+    decorateEmBits(document.querySelector('#answer'));
 
-    // Percentuali (assurda per Sorprendimi)
+    // percentuale (assurda se Sorprendimi)
     const pct = buildPrimaryPct({ isSurprise });
     renderPctAll(pct);
 
-    // Visibilità comitato: SOLO Sorprendimi
-    const shouldShowCommittee = isSurprise;
-
-    if (shouldShowCommittee){
+    // comitato solo se Sorprendimi
+    if (isSurprise){
       renderCommittee(buildCommittee());
     } else {
       committeeTitle.textContent = "—";
@@ -492,32 +486,32 @@ function renderCommittee(item){
     hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
   }catch(e){
-    qs('#answer').textContent = (I18N[lang]||I18N.it).error;
+    document.querySelector('#answer').textContent = (I18N[lang]||I18N.it).error;
     console.error(e);
   }
 })();
 
 /* ==== Nav / lingua ==== */
-qs('#backBtn').onclick = ()=> history.length > 1 ? history.back() : location.replace('index.html');
-qs('#homeBtn').onclick = ()=> location.href='index.html';
-qs('#langSelect').onchange = ()=>{
-  lang = qs('#langSelect').value;
+document.querySelector('#backBtn').onclick = ()=> history.length > 1 ? history.back() : location.replace('index.html');
+document.querySelector('#homeBtn').onclick = ()=> location.href='index.html';
+document.querySelector('#langSelect').onchange = ()=>{
+  lang = document.querySelector('#langSelect').value;
   LS.setItem('lang', lang);
   document.documentElement.lang = lang;
   location.reload();
 };
-qs('#shareBtn').onclick = async()=>{
+document.querySelector('#shareBtn').onclick = async()=>{
   const T = I18N[lang] || I18N.it;
-  const full = `What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
+  const full = `What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${document.querySelector('#answer').textContent}`;
   try{
     if(navigator.share){ await navigator.share({ title: "What?f", text: full }); }
     else{
       await navigator.clipboard.writeText(full);
-      const b=qs('#shareBtn'); b.textContent=T.copied; setTimeout(()=>b.textContent=T.share,1200);
+      const b=document.querySelector('#shareBtn'); b.textContent=T.copied; setTimeout(()=>b.textContent=T.share,1200);
     }
   }catch{}
 };
-qs('#againBtn').onclick = ()=>{ location.href='fourth.html'; };
+document.querySelector('#againBtn').onclick = ()=>{ location.href='fourth.html'; };
 </script>
 </body>
 </html>
