@@ -113,7 +113,7 @@ h1{
 /* === MOTIVO (1 comitato) === */
 .mot{display:grid;grid-template-columns:auto 1fr;gap:10px;margin-top:6px}
 .mot .ico{font-size:18px;line-height:1.2}
-.mot .name{font-weight:800}
+.mot .name{display:none} /* niente duplicazione del nome */
 .mot .note{font-size:12px;color:var(--muted);margin-top:2px}
 
 /* Chips voti */
@@ -344,7 +344,7 @@ function normalizeOneParagraph(s=""){
   return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
 }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
-function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
+function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
 function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
 /* Decorazione em-dash */
@@ -391,6 +391,26 @@ function renderPctAll(pct){
   bottomPct.textContent = pct || "—";
 }
 
+/* ==== Azuffamento (solo per domande non-serie) ==== */
+function buildScuffleExtra(cat){
+  // numeri brevi e plausibilmente comici, sempre diversi
+  const minor = rndInt(1,5);
+  const injured = rndInt(0,3);
+  const hosp = Math.min(injured, rndInt(0,2));
+
+  const extras = [
+    // Animali / Piccioni / Volpi / Polpi / Bradipi
+    `Lite tra delegazioni: ${minor} ammòniti; ${injured} feriti, ${hosp} in osservazione.`,
+    `Breve parapiglia al voto: ${minor} allontanati; ${injured} contusi (${hosp} bendati).`,
+    `Intervallo movimentato: ${minor} espulsi; ${injured} graffiati, ${hosp} medicati.`,
+    // Vita notturna
+    `Discussione accesa al bancone: ${minor} bicchieri rovesciati; ${injured} piccoli tagli (${hosp} cerotti).`,
+    // Psicologia
+    `Seduta straordinaria: ${minor} crisi di identità; ${injured} in pausa tè, ${hosp} respirazioni profonde.`
+  ];
+  return pick(extras);
+}
+
 /* ==== Comitato singolo + voti ==== */
 function randVotes(){
   const fav = rndInt(2, 2500);
@@ -402,25 +422,49 @@ function buildCommittee(){
   const cat = pick(CATEGORIES);
   const name = (lang==='it') ? cat.name_it : cat.name_en;
   const notePool = (lang==='it') ? (cat.notes_it||[]) : (cat.notes_en||[]);
-  const note = pick(notePool.length?notePool:["Nota non disponibile."]);
+  const note = pick(notePool.length?notePool:["—"]);
   const votes = randVotes();
-  return { ico:cat.ico, name, note, votes };
+  return { ico:cat.ico, name, note, cat };
 }
-function renderCommittee(item){
+
+/* Domande serie = req.micro.manual === true (oppure LS.manual_mode === '1') */
+function isSerious(req){
+  try{
+    if (req && req.micro && req.micro.manual === true) return true;
+  }catch{}
+  return (localStorage.getItem('manual_mode') === '1');
+}
+
+function renderCommittee(item, {serious, absurd}){
   const T = I18N[lang] || I18N.it;
-  committeeTitle.textContent = `${T.votersTitle}: ${item.name}`;
+
+  // Titolo una sola volta
+  committeeTitle.textContent = `${item.ico} ${T.votersTitle}: ${item.name}`;
+
+  // Sotto: solo voti + nota (senza ripetere nome)
   motIco.textContent  = item.ico;
-  motName.textContent = item.name;
-  chipFav.textContent = `favorevoli ${item.votes.fav}`;
-  chipCon.textContent = `contrari ${item.votes.con}`;
-  chipAst.textContent = `astenuti ${item.votes.ast}`;
-  motNote.textContent = item.note;
+  motName.textContent = item.name; // nascosto via CSS (niente duplicazione)
+  chipFav.textContent = `favorevoli ${item.cat ? rndInt(50, item.cat.ico==='🕊️'?3000:1200) : rndInt(50,1200)}`; // enfatizza un po' i numeri
+  chipCon.textContent = `contrari ${rndInt(0, 900)}`;
+  chipAst.textContent = `astenuti ${rndInt(0, 400)}`;
+
+  if (serious){
+    motNote.textContent = (lang==='it')
+      ? "Valutazione basata su fattibilità, tempi e impatto: motivazione reale e sintetica."
+      : "Evaluation based on feasibility, timing and impact: real, concise rationale.";
+  } else {
+    // non-seria / assurda: nota ironica + scuffle
+    const base = item.note;
+    const rissa = buildScuffleExtra(item.cat);
+    motNote.textContent = `${base} ${rissa}`;
+  }
 }
 
 /* ==== Load & fetch ==== */
 (async ()=>{
   const req = JSON.parse(LS.getItem('whatif_request')||'{}');
   const absurdFlag = req.absurd === true || LS.getItem('absurd_prompt') === '1';
+  const seriousFlag = isSerious(req);
 
   // domanda
   let domanda = req.domanda || LS.getItem('domanda') || "";
@@ -448,11 +492,12 @@ function renderCommittee(item){
     decorateEmBits(qs('#answer'));
 
     // >>> % in alto e sotto
-    const pct = buildPrimaryPct({style, absurd:absurdFlag});
+    const pct = buildPrimaryPct({style, absurd:absurdFlag && !seriousFlag});
     renderPctAll(pct);
 
-    // >>> Comitato singolo con voti (una sola volta)
-    renderCommittee(buildCommittee());
+    // >>> Comitato singolo con voti (una sola volta) + nota (seria vs ironica+azzuffamento)
+    const committee = buildCommittee();
+    renderCommittee(committee, {serious: seriousFlag, absurd: absurdFlag && !seriousFlag});
 
     // storia
     const hist = JSON.parse(LS.getItem('cronologia')||'[]');
