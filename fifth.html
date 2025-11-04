@@ -81,7 +81,6 @@ h1{
 }
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
-
 .embit{padding:0 .08em;box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset;text-shadow:0 0 12px rgba(255,255,255,.08);border-radius:4px}
 .select{background:rgba(255,255,255,.06);border:1px solid var(--line);color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
 
@@ -92,7 +91,7 @@ h1{
   display:inline-flex;align-items:center;justify-content:center;
   font-weight:900;font-size:18px;min-width:72px;padding:6px 10px;
   background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink);border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.32),0 0 22px var(--glow);
+  color:var(--ink);border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.32),0 0 22px rgba(255,236,1,.22);
 }
 
 /* === RISULTATI SOTTO (percentuale + sezione motivazione) === */
@@ -106,11 +105,11 @@ h1{
   display:inline-flex;align-items:center;justify-content:center;
   font-weight:900;font-size:18px;min-width:72px;padding:6px 10px;
   background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink);border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.32),0 0 22px var(--glow);
+  color:var(--ink);border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.32),0 0 22px rgba(255,236,1,.22);
 }
 .result-title{font-weight:900}
 
-/* === BLOCCO MOTIVAZIONE: ironica (comitato) o seria (testo) === */
+/* === BLOCCO MOTIVAZIONE: versione ironica (comitato) o seria (testo) === */
 .mot{display:grid;grid-template-columns:auto 1fr;gap:10px;margin-top:6px}
 .mot .ico{font-size:18px;line-height:1.2}
 .mot .name{font-weight:800}
@@ -315,9 +314,6 @@ const CATEGORIES = [
 const qs = (sel)=>document.querySelector(sel);
 const setText = (id, txt)=>{ const el=qs(id); if(el) el.textContent = txt; };
 
-const backBtn  = qs('#backBtn');
-const homeBtn  = qs('#homeBtn');
-const langSel  = qs('#langSelect');
 const titleH1  = qs('#title');
 const subtitle = qs('#subtitle');
 const lblQ     = qs('#lblQ');
@@ -420,8 +416,9 @@ function setTitlesAndTexts(q){
 /* ==== Percentuali ==== */
 function buildPct({surprise, style}){
   if (surprise){
-    // percentuali assurde in Sorprendimi per entrambi gli stili
+    // percentuali assurde in Sorprendimi (richiesta esplicita per What if)
     if (style==='whatif') return rndInt(150,1200) + "%";
+    // per WTF restiamo molto alti/ironici
     return rndInt(120,600) + "%";
   } else {
     // percentuali normali per Manuale/Spunti
@@ -454,13 +451,14 @@ function buildCommittee(){
   const cat = pick(CATEGORIES);
   const name = (lang==='it') ? cat.name_it : cat.name_en;
   const notePool = (lang==='it') ? (cat.notes_it||[]) : (cat.notes_en||[]);
-  const note = `${pick(notePool.length?notePool:["Nota non disponibile."])} ${buildScuffles()}`;
+  const baseNote = pick(notePool.length?notePool:["Nota non disponibile."]);
   const votes = randVotes();
+  const note = `${baseNote} ${buildScuffles()}`; // motivazione + zuffa
   return { ico:cat.ico, name, note, votes };
 }
 function renderCommittee(item){
   const T = I18N[lang] || I18N.it;
-  committeeTitle.textContent = T.votersTitle; // titolo secco; il nome è sotto
+  committeeTitle.textContent = `${T.votersTitle}: ${item.name}`;
   motIco.textContent  = item.ico;
   motName.textContent = item.name;
   chipFav.textContent = `favorevoli ${item.votes.fav}`;
@@ -517,7 +515,7 @@ function buildExtraDryNoteWTF(note){
     console.error(e);
   }
 
-  // Origine (sorpresa vs manuale/spunti)
+  // Origine
   const surprise = isSurprise(req);
   const manualOrQuick = isManualOrQuick(req);
 
@@ -525,16 +523,16 @@ function buildExtraDryNoteWTF(note){
   const pct = buildPct({surprise, style});
   renderPctAll(pct);
 
-  // Motivazioni (solo una variante visibile)
+  // Motivazioni
   if (surprise){
-    // IRONICA per entrambi gli stili
+    // IRONICA per entrambi gli stili: comitato + zuffa
     motSerious.style.display = 'none';
     motIronic.style.display  = 'grid';
     renderCommittee(buildCommittee());
-    // reset one-shot per evitare sticky sorpresa
+    // reset one-shot per evitare sticky
     LS.removeItem('surprise_mode');
   } else {
-    // SERIA per Manuale/Spunti; in WTF versione super-seria (extra-dry)
+    // SERIA per Manuale/Spunti; in WTF extra-dry
     const Tloc = I18N[lang] || I18N.it;
     const baseNote = buildSeriousRationale(answerText);
     committeeTitle.textContent = Tloc.seriousTitle;
