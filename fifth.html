@@ -82,39 +82,36 @@ h1{
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
 
-.embit { padding:0 .08em; box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset; text-shadow:0 0 12px rgba(255,255,255,.08); border-radius:4px; }
-.select{ background:rgba(255,255,255,.06); border:1px solid var(--line); color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer; }
+.embit{padding:0 .08em;box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset;text-shadow:0 0 12px rgba(255,255,255,.08);border-radius:4px}
+.select{background:rgba(255,255,255,.06);border:1px solid var(--line);color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
 
 /* === TOP PERCENT ROW === */
 .pct-row{display:flex;align-items:center;gap:10px;margin:2px 0 8px}
 .pct-label{font-size:12px;color:var(--muted)}
 .top-pct{
   display:inline-flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:18px;min-width:72px; padding:6px 10px;
+  font-weight:900;font-size:18px;min-width:72px;padding:6px 10px;
   background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink); border-radius:10px; box-shadow:0 8px 22px rgba(0,0,0,.32), 0 0 22px var(--glow);
+  color:var(--ink);border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.32),0 0 22px var(--glow);
 }
 
 /* === RISULTATI SOTTO (percentuale + comitato) === */
 .result-box{
   background:rgba(255,255,255,.04);
   border:1px solid rgba(255,255,255,.10);
-  border-radius:12px; padding:12px;
+  border-radius:12px;padding:12px;
 }
 .result-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-.result-pct{ /* percentuale in risalto anche sotto */
+.result-pct{
   display:inline-flex;align-items:center;justify-content:center;
   font-weight:900;font-size:18px;min-width:72px;padding:6px 10px;
   background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink); border-radius:10px; box-shadow:0 8px 22px rgba(0,0,0,.32), 0 0 22px var(--glow);
+  color:var(--ink);border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.32),0 0 22px var(--glow);
 }
 .result-title{font-weight:900}
 
 /* === MOTIVO (1 comitato) === */
-.mot{
-  display:grid;grid-template-columns:auto 1fr;gap:10px;
-  margin-top:6px;
-}
+.mot{display:grid;grid-template-columns:auto 1fr;gap:10px;margin-top:6px}
 .mot .ico{font-size:18px;line-height:1.2}
 .mot .name{font-weight:800}
 .mot .note{font-size:12px;color:var(--muted);margin-top:2px}
@@ -122,8 +119,8 @@ h1{
 /* Chips voti */
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .chip{
-  font-size:12px;font-weight:900; padding:4px 8px; border-radius:999px;
-  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+  font-size:12px;font-weight:900;padding:4px 8px;border-radius:999px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
 }
 </style>
 </head>
@@ -268,32 +265,46 @@ const LEADS = {
        whatif:["Set the keys down and let the quiet that doesn’t judge go first."]}
 };
 
-/* ==== Categories ==== */
+/* ==== Categories: SOLO Psicologia, Vita notturna, Animali ==== */
 const CATEGORIES = [
-  { ico:"🕊️", name_it:"Assemblea dei Piccioni con Opinioni Forti", name_en:"Assembly of Strong-Opinion Pigeons",
-    notes_it:["Sorveglianza attiva sulle panchine.","Consenso rumoroso in piazza."],
-    notes_en:["Active bench surveillance.","Loud piazza consensus."] },
-  { ico:"🦊", name_it:"Lobby delle Volpi Opportuniste", name_en:"Opportunistic Foxes Lobby",
-    notes_it:["Favorevoli se conviene subito.","Richiesto tornaconto rapido."],
-    notes_en:["In favor if payoff is instant.","Quick upside requested."] },
-  { ico:"🐙", name_it:"Federazione dei Polpi Strategici", name_en:"Federation of Strategic Octopuses",
-    notes_it:["Otto step avanti, due indietro.","Tattica flessibile, presa salda."],
-    notes_en:["Eight steps ahead, two back.","Flexible tactics, firm grip."] },
-  { ico:"🦥", name_it:"Consiglio dei Bradipi Riflessivi", name_en:"Council of Reflective Sloths",
-    notes_it:["Decisione lenta ma convinta.","Deadline percepita: 2038."],
-    notes_en:["Slow but resolute decision.","Perceived deadline: 2038."] },
+  // Psicologia
+  { ico:"🧠", name_it:"Comitato dei Pensieri Sotto la Doccia", name_en:"Shower-Thoughts Committee",
+    notes_it:["Illuminazione logistica a shampoo.","Decisione nata a 38°C."],
+    notes_en:["Logistics epiphany mid-shampoo.","Decision made at 38°C."] },
+  { ico:"📊", name_it:"Ordine degli Ottimisti Moderati", name_en:"Order of Moderate Optimists",
+    notes_it:["Aspettative sobrie, calendario stretto."],
+    notes_en:["Sober expectations, tight schedule."] },
+  { ico:"📞", name_it:"Autorità delle Telefonate Fuori Tempo", name_en:"Off-Timing Calls Authority",
+    notes_it:["Parere arrivato alle 07:12.","Consiglio durante squillo prolungato."],
+    notes_en:["Opinion at 07:12.","Advice during a long ring."] },
+
+  // Vita notturna
+  { ico:"🥃", name_it:"Circolo Bar Notturno dei Consiglieri", name_en:"Late-Bar Counsel Circle",
+    notes_it:["Coraggio liquido, piani semplici."],
+    notes_en:["Liquid courage, simple plans."] },
   { ico:"🍕", name_it:"Associazione Snack Notturni e Idee", name_en:"Night Snacks & Ideas Association",
-    notes_it:["Carboidrati a supporto del piano.","Briefing alle 23:47."],
-    notes_en:["Carbs support the plan.","Briefing at 23:47."] },
+    notes_it:["Briefing alle 23:47.","Carboidrati a supporto."],
+    notes_en:["Briefing at 23:47.","Carbs backing the plan."] },
+  { ico:"🎤", name_it:"Sindacato delle Idee da Karaoke", name_en:"Karaoke Ideas Union",
+    notes_it:["Proposta al ritornello.","Volume > ragione."],
+    notes_en:["Proposal on the chorus.","Volume > reason."] },
   { ico:"💬", name_it:"Conferenza degli Amici Che Gasano", name_en:"Conference of Hype Friends",
-    notes_it:["Clima motivazionale alto.","Applauso non richiesto."],
-    notes_en:["High motivational climate.","Applause unprompted."] },
-  { ico:"📎", name_it:"Ufficio Complicazioni Semplici", name_en:"Office of Simple Complications",
-    notes_it:["Modulistica tripla ma fattibile.","File approvato con graffetta d’oro."],
-    notes_en:["Triple forms but feasible.","Dossier approved with a golden clip."] },
-  { ico:"⏳", name_it:"Autorità delle Tempistiche Perfettamente Sbagliate", name_en:"Authority of Perfectly Wrong Timings",
-    notes_it:["Tempismo pessimo, effetto ottimo.","Arrivo tardi strategico."],
-    notes_en:["Awful timing, great effect.","Late on purpose, effective."] },
+    notes_it:["Clima motivazionale alto."],
+    notes_en:["High motivational climate."] },
+
+  // Animali
+  { ico:"🕊️", name_it:"Assemblea dei Piccioni con Opinioni Forti", name_en:"Assembly of Strong-Opinion Pigeons",
+    notes_it:["Consenso rumoroso in piazza."],
+    notes_en:["Loud piazza consensus."] },
+  { ico:"🦊", name_it:"Lobby delle Volpi Opportuniste", name_en:"Opportunistic Foxes Lobby",
+    notes_it:["Favorevoli se conviene subito."],
+    notes_en:["In favor if payoff is instant."] },
+  { ico:"🐙", name_it:"Federazione dei Polpi Strategici", name_en:"Federation of Strategic Octopuses",
+    notes_it:["Otto mosse avanti, presa salda."],
+    notes_en:["Eight moves ahead, firm grip."] },
+  { ico:"🦥", name_it:"Consiglio dei Bradipi Riflessivi", name_en:"Council of Reflective Sloths",
+    notes_it:["Decisione lenta ma convinta."],
+    notes_en:["Slow yet resolute decision."] },
 ];
 
 /* ==== UI refs ==== */
@@ -333,7 +344,7 @@ function normalizeOneParagraph(s=""){
   return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
 }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
-function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
+function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
 function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
 /* Decorazione em-dash */
@@ -440,7 +451,7 @@ function renderCommittee(item){
     const pct = buildPrimaryPct({style, absurd:absurdFlag});
     renderPctAll(pct);
 
-    // >>> Comitato singolo con voti
+    // >>> Comitato singolo con voti (una sola volta)
     renderCommittee(buildCommittee());
 
     // storia
