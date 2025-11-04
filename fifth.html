@@ -356,6 +356,20 @@ function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
 function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
+/* Decorazione em-dash */
+function decorateEmBits(el){
+  const raw = el.textContent;
+  if(!raw || !raw.includes("—")) return;
+  const parts = raw.split("—");
+  let html = "";
+  for(let i=0;i<parts.length;i++){
+    const seg = parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    if(i%2===1) html += `<span class="embit">— ${seg} </span>`;
+    else html += (i===0 ? seg : `—${seg}`);
+  }
+  el.innerHTML = html;
+}
+
 /* ==== Origine: Sorprendimi / Manuale / Spunti ==== */
 function isSurprise(req){
   return !!(req?.micro?.surprise === true || LS.getItem('surprise_mode')==='1');
@@ -478,6 +492,7 @@ function buildExtraDryNoteWTF(note){
     answerText = normalizeOneParagraph((data.answer||"").trim());
     if(!/[.!?…]$/.test(answerText)) answerText += ".";
     answerEl.textContent = answerText;
+    decorateEmBits(answerEl);
   }catch(e){
     answerEl.textContent = (I18N[lang]||I18N.it).error;
     console.error(e);
@@ -497,6 +512,8 @@ function buildExtraDryNoteWTF(note){
     motSerious.style.display = 'none';
     motIronic.style.display  = 'grid';
     renderCommittee(buildCommittee());
+    // Reset one-shot per evitare "sticky" sorpresa su domanda successiva
+    LS.removeItem('surprise_mode');
   } else {
     // SERIA per manuale/spunti in entrambi gli stili
     const Tloc = I18N[lang] || I18N.it;
