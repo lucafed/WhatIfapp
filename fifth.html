@@ -175,7 +175,7 @@ h1{
         <span class="result-title" id="committeeTitle">—</span>
       </div>
 
-      <!-- Variante ironica (predefinita) -->
+      <!-- Variante ironica (sorprendimi) -->
       <div class="mot" id="motIronic" style="display:none">
         <div class="ico" id="motIco">—</div>
         <div>
@@ -189,7 +189,7 @@ h1{
         </div>
       </div>
 
-      <!-- Variante seria (per domande manuali) -->
+      <!-- Variante seria (manuale/spunti) -->
       <div class="mot mot--seria" id="motSerious" style="display:none">
         <div class="name" id="seriousTitle">Motivazione</div>
         <div class="note" id="seriousNote">—</div>
@@ -274,9 +274,8 @@ const LEADS = {
        whatif:["Set the keys down and let the quiet that doesn’t judge go first."]}
 };
 
-/* ==== Categories (ironiche): psicologia, vita notturna, animali ==== */
+/* ==== Categories (ironiche) ==== */
 const CATEGORIES = [
-  // Psicologia
   { ico:"🧠", name_it:"Comitato dei Pensieri Sotto la Doccia", name_en:"Shower-Thoughts Committee",
     notes_it:["Illuminazione logistica a shampoo.","Decisione nata a 38°C."],
     notes_en:["Logistics epiphany mid-shampoo.","Decision made at 38°C."] },
@@ -286,7 +285,6 @@ const CATEGORIES = [
   { ico:"📞", name_it:"Autorità delle Telefonate Fuori Tempo", name_en:"Off-Timing Calls Authority",
     notes_it:["Parere arrivato alle 07:12.","Consiglio durante squillo prolungato."],
     notes_en:["Opinion at 07:12.","Advice during a long ring."] },
-  // Vita notturna
   { ico:"🥃", name_it:"Circolo Bar Notturno dei Consiglieri", name_en:"Late-Bar Counsel Circle",
     notes_it:["Coraggio liquido, piani semplici."],
     notes_en:["Liquid courage, simple plans."] },
@@ -299,7 +297,6 @@ const CATEGORIES = [
   { ico:"💬", name_it:"Conferenza degli Amici Che Gasano", name_en:"Conference of Hype Friends",
     notes_it:["Clima motivazionale alto."],
     notes_en:["High motivational climate."] },
-  // Animali
   { ico:"🕊️", name_it:"Assemblea dei Piccioni con Opinioni Forti", name_en:"Assembly of Strong-Opinion Pigeons",
     notes_it:["Consenso rumoroso in piazza."],
     notes_en:["Loud piazza consensus."] },
@@ -359,27 +356,14 @@ function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
 function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
-/* Mode detection: manual/seria */
-function isManualMode(req, params){
-  return (req?.micro?.source === 'manual') ||
-         (req?.micro?.manual === true)    ||
-         (req?.manual === true)           ||
-         (params.get('src') === 'manual') ||
-         (localStorage.getItem('manual_mode') === '1');
+/* ==== Origine: Sorprendimi / Manuale / Spunti ==== */
+function isSurprise(req){
+  return !!(req?.micro?.surprise === true || LS.getItem('surprise_mode')==='1');
 }
-
-/* Decorazione em-dash */
-function decorateEmBits(el){
-  const raw = el.textContent;
-  if(!raw || !raw.includes("—")) return;
-  const parts = raw.split("—");
-  let html = "";
-  for(let i=0;i<parts.length;i++){
-    const seg = parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;");
-    if(i%2===1) html += `<span class="embit">— ${seg} </span>`;
-    else html += (i===0 ? seg : `—${seg}`);
-  }
-  el.innerHTML = html;
+function isManualOrQuick(req, params){
+  const quick  = !!(req?.micro?.quick === true || LS.getItem('quick_mode')==='1');
+  const manual = !!(req?.micro?.manual === true || req?.micro?.source==='manual' || LS.getItem('manual_mode')==='1' || params.get('src')==='manual');
+  return manual || quick;
 }
 
 /* ==== Titles & UI text ==== */
@@ -401,29 +385,42 @@ function setTitlesAndTexts(q){
   leadNode.textContent = oneSentence(pick(bank) || '') || '—';
 }
 
-/* ==== Percentuale primaria ==== */
-function buildPrimaryPct({style, absurd}){
-  if(style==='whatif' && !absurd) return rndInt(55,85) + "%";
-  if(style==='whatif' && absurd)  return rndInt(150,1200) + "%";
-  return rndInt(120,600) + "%"; // wtf
+/* ==== Percentuale primaria (assurda/seria) ==== */
+function buildPct({surprise, style}){
+  if (surprise){
+    if (style==='whatif') return rndInt(150,1200) + "%"; // assurda What if
+    return rndInt(120,600) + "%";                        // assurda What the F
+  } else {
+    if (style==='whatif') return rndInt(55,85) + "%";    // seria What if
+    return rndInt(48,78) + "%";                          // seria What the F (più rigida)
+  }
 }
 function renderPctAll(pct){
   topPct.textContent = pct || "—";
   bottomPct.textContent = pct || "—";
 }
 
-/* ==== Motivazione IRONICA: comitato + voti ==== */
+/* ==== Motivazione IRONICA: comitato + voti + zuffe ==== */
 function randVotes(){
-  const fav = rndInt(2, 2500);
-  const con = rndInt(0, Math.max(0, Math.floor(fav*0.4)));
-  const ast = rndInt(0, Math.max(0, Math.floor((fav+con)*0.2)));
+  const fav = rndInt(30, 2500);
+  const con = rndInt(0, Math.max(0, Math.floor(fav*0.45)));
+  const ast = rndInt(0, Math.max(0, Math.floor((fav+con)*0.25)));
   return {fav, con, ast};
+}
+function buildScuffles(){
+  const minor = rndInt(1,5), injured = rndInt(0,3), hosp = Math.min(injured, rndInt(0,2));
+  const extras = [
+    `Breve parapiglia al voto: ${minor} allontanati; ${injured} contusi (${hosp} bendati).`,
+    `Discussione accesa: ${minor} espulsi; ${injured} graffiati, ${hosp} medicati.`,
+    `Intervallo movimentato: ${minor} bicchieri rovesciati; ${injured} piccoli tagli (${hosp} cerotti).`
+  ];
+  return pick(extras);
 }
 function buildCommittee(){
   const cat = pick(CATEGORIES);
   const name = (lang==='it') ? cat.name_it : cat.name_en;
   const notePool = (lang==='it') ? (cat.notes_it||[]) : (cat.notes_en||[]);
-  const note = pick(notePool.length?notePool:["Nota non disponibile."]);
+  const note = `${pick(notePool.length?notePool:["Nota non disponibile."])} ${buildScuffles()}`;
   const votes = randVotes();
   return { ico:cat.ico, name, note, votes };
 }
@@ -438,36 +435,32 @@ function renderCommittee(item){
   motNote.textContent = item.note;
 }
 
-/* ==== Motivazione SERIA: testo breve basato sulla risposta ==== */
+/* ==== Motivazione SERIA ==== */
 function buildSeriousRationale(answer){
-  const base = answer.toLowerCase();
+  const base = String(answer||"").toLowerCase();
   let key = "allineamento tra risorse disponibili e tempi fattibili";
-  if (base.includes("budget") || base.includes("costi")) key = "sostenibilità economica con budget e costi sotto controllo";
-  else if (base.includes("temp") || base.includes("scaden")) key = "tempistiche realistiche e milestones verificabili";
+  if (base.includes("budget") || base.includes("costi")) key = "sostenibilità economica con budget/costi sotto controllo";
+  else if (base.includes("temp") || base.includes("scaden")) key = "tempistiche realistiche e milestone verificabili";
   else if (base.includes("risch") || base.includes("critic")) key = "rischi principali identificati e mitigazioni pronte";
   else if (base.includes("team") || base.includes("persone")) key = "competenze del team adeguate e ruoli chiari";
   else if (base.includes("dati") || base.includes("analisi")) key = "evidenze e dati coerenti con l'obiettivo";
-  const second = "vincoli noti, piano d’azione sintetico e misurabile";
-  return { title: (I18N[lang]||I18N.it).seriousTitle, note: `Motivo: ${key}; ${second}.` };
+  const baseNote = `Motivo: ${key}; vincoli noti, piano d’azione sintetico e misurabile.`;
+  return baseNote;
 }
-function renderSerious({title, note}){
-  seriousTitle.textContent = title || (I18N[lang]||I18N.it).seriousTitle;
-  seriousNote.textContent  = note || "";
+function buildExtraDryNoteWTF(note){
+  return `Valutazione rigorosa. ${note} Ipotesi ridotte, priorità nette, esecuzione essenziale.`;
 }
 
 /* ==== Load & fetch ==== */
 (async ()=>{
   const params = new URLSearchParams(location.search);
   const req = JSON.parse(LS.getItem('whatif_request')||'{}');
-  const manual = isManualMode(req, params);
-  const absurdFlag = req.absurd === true || LS.getItem('absurd_prompt') === '1';
 
-  // domanda
-  let domanda = req.domanda || LS.getItem('domanda') || "";
+  const domanda = req.domanda || LS.getItem('domanda') || "";
   setTitlesAndTexts(domanda);
-  qs('#qView').textContent = domanda || '—';
+  qView.textContent = domanda || '—';
 
-  // fetch risposta
+  let answerText = "";
   try{
     const headers = { "Content-Type": "application/json" };
     if (prefs.pro === true) headers["x-pro"] = "1";
@@ -482,35 +475,44 @@ function renderSerious({title, note}){
     const data = await r.json().catch(()=>null);
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
 
-    let answerText = normalizeOneParagraph((data.answer||"").trim());
+    answerText = normalizeOneParagraph((data.answer||"").trim());
     if(!/[.!?…]$/.test(answerText)) answerText += ".";
-    qs('#answer').textContent = answerText;
-    decorateEmBits(qs('#answer'));
-
-    // >>> % in alto e sotto
-    const pct = buildPrimaryPct({style, absurd:absurdFlag});
-    renderPctAll(pct);
-
-    // >>> Motivazione: SERIA se manuale, altrimenti comitato ironico
-    if (manual){
-      committeeTitle.textContent = (I18N[lang]||I18N.it).seriousTitle;
-      motIronic.style.display = 'none';
-      motSerious.style.display = 'block';
-      renderSerious(buildSeriousRationale(answerText));
-    }else{
-      motSerious.style.display = 'none';
-      motIronic.style.display = 'grid';
-      renderCommittee(buildCommittee());
-    }
-
-    // storia
-    const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), manual });
-    LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
+    answerEl.textContent = answerText;
   }catch(e){
-    qs('#answer').textContent = (I18N[lang]||I18N.it).error;
+    answerEl.textContent = (I18N[lang]||I18N.it).error;
     console.error(e);
   }
+
+  // Origine
+  const surprise = isSurprise(req);
+  const manualOrQuick = isManualOrQuick(req, params);
+
+  // Percentuale
+  const pct = buildPct({surprise, style});
+  renderPctAll(pct);
+
+  // Visualizzazione motivazioni (SOLO una variante)
+  if (surprise){
+    // IRONICA per entrambi gli stili
+    motSerious.style.display = 'none';
+    motIronic.style.display  = 'grid';
+    renderCommittee(buildCommittee());
+  } else {
+    // SERIA per manuale/spunti in entrambi gli stili
+    const Tloc = I18N[lang] || I18N.it;
+    const baseNote = buildSeriousRationale(answerText);
+    committeeTitle.textContent = Tloc.seriousTitle;
+    seriousTitle.textContent   = Tloc.seriousTitle;
+    seriousNote.textContent    = (style==='wtf') ? buildExtraDryNoteWTF(baseNote) : baseNote;
+
+    motIronic.style.display  = 'none';
+    motSerious.style.display = 'block';
+  }
+
+  // Storia
+  const hist = JSON.parse(LS.getItem('cronologia')||'[]');
+  hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, manualOrQuick });
+  LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
 })();
 
 /* ==== Nav / lingua ==== */
