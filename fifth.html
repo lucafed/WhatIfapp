@@ -81,6 +81,7 @@ h1{
 }
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
+
 .embit{padding:0 .08em;box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset;text-shadow:0 0 12px rgba(255,255,255,.08);border-radius:4px}
 .select{background:rgba(255,255,255,.06);border:1px solid var(--line);color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
 
@@ -91,7 +92,7 @@ h1{
   display:inline-flex;align-items:center;justify-content:center;
   font-weight:900;font-size:18px;min-width:72px;padding:6px 10px;
   background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink);border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.32),0 0 22px rgba(255,236,1,.22);
+  color:var(--ink);border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.32),0 0 22px var(--glow);
 }
 
 /* === RISULTATI SOTTO (percentuale + sezione motivazione) === */
@@ -105,7 +106,7 @@ h1{
   display:inline-flex;align-items:center;justify-content:center;
   font-weight:900;font-size:18px;min-width:72px;padding:6px 10px;
   background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink);border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.32),0 0 22px rgba(255,236,1,.22);
+  color:var(--ink);border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.32),0 0 22px var(--glow);
 }
 .result-title{font-weight:900}
 
@@ -174,7 +175,7 @@ h1{
         <span class="result-title" id="committeeTitle">—</span>
       </div>
 
-      <!-- Variante ironica (Sorprendimi) -->
+      <!-- Variante ironica (sorprendimi) -->
       <div class="mot" id="motIronic" style="display:none">
         <div class="ico" id="motIco">—</div>
         <div>
@@ -188,7 +189,7 @@ h1{
         </div>
       </div>
 
-      <!-- Variante seria (Manuale/Spunti) -->
+      <!-- Variante seria (manuale/spunti) -->
       <div class="mot mot--seria" id="motSerious" style="display:none">
         <div class="name" id="seriousTitle">Motivazione</div>
         <div class="note" id="seriousNote">—</div>
@@ -208,7 +209,7 @@ h1{
 /* ==== Base state ==== */
 const LS = localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
-const style = prefs.stile || 'whatif';          // 'whatif' | 'wtf'
+const style = prefs.stile || 'whatif';
 const periodo = prefs.periodo || 'future';
 let lang  = (LS.getItem('lang') || 'it').toLowerCase();
 if(!['it','en','es','fr','de'].includes(lang)) lang = 'it';
@@ -314,6 +315,9 @@ const CATEGORIES = [
 const qs = (sel)=>document.querySelector(sel);
 const setText = (id, txt)=>{ const el=qs(id); if(el) el.textContent = txt; };
 
+const backBtn  = qs('#backBtn');
+const homeBtn  = qs('#homeBtn');
+const langSel  = qs('#langSelect');
 const titleH1  = qs('#title');
 const subtitle = qs('#subtitle');
 const lblQ     = qs('#lblQ');
@@ -352,46 +356,14 @@ function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
 function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
-/* Em–dash highlight */
-function decorateEmBits(el){
-  const raw = el.textContent;
-  if(!raw || !raw.includes("—")) return;
-  const parts = raw.split("—");
-  let html = "";
-  for(let i=0;i<parts.length;i++){
-    const seg = parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;");
-    if(i%2===1) html += `<span class="embit">— ${seg} </span>`;
-    else html += (i===0 ? seg : `—${seg}`);
-  }
-  el.innerHTML = html;
-}
-
 /* ==== Origine: Sorprendimi / Manuale / Spunti ==== */
 function isSurprise(req){
-  const params = new URLSearchParams(location.search);
-  return Boolean(
-    req?.surprise === true ||
-    req?.source === 'surprise' ||
-    req?.micro?.surprise === true ||
-    req?.micro?.source === 'surprise' ||
-    params.get('src') === 'surprise' ||
-    LS.getItem('surprise_mode') === '1'
-  );
+  return !!(req?.micro?.surprise === true || LS.getItem('surprise_mode')==='1');
 }
-function isManualOrQuick(req){
-  const params = new URLSearchParams(location.search);
-  return Boolean(
-    req?.manual === true ||
-    req?.source === 'manual' ||
-    req?.micro?.manual === true ||
-    req?.micro?.quick === true ||
-    req?.micro?.source === 'manual' ||
-    req?.micro?.source === 'quick' ||
-    LS.getItem('manual_mode') === '1' ||
-    LS.getItem('quick_mode') === '1' ||
-    params.get('src') === 'manual' ||
-    params.get('src') === 'quick'
-  );
+function isManualOrQuick(req, params){
+  const quick  = !!(req?.micro?.quick === true || LS.getItem('quick_mode')==='1');
+  const manual = !!(req?.micro?.manual === true || req?.micro?.source==='manual' || LS.getItem('manual_mode')==='1' || params.get('src')==='manual');
+  return manual || quick;
 }
 
 /* ==== Titles & UI text ==== */
@@ -413,17 +385,14 @@ function setTitlesAndTexts(q){
   leadNode.textContent = oneSentence(pick(bank) || '') || '—';
 }
 
-/* ==== Percentuali ==== */
+/* ==== Percentuale primaria (assurda/seria) ==== */
 function buildPct({surprise, style}){
   if (surprise){
-    // percentuali assurde in Sorprendimi (richiesta esplicita per What if)
-    if (style==='whatif') return rndInt(150,1200) + "%";
-    // per WTF restiamo molto alti/ironici
-    return rndInt(120,600) + "%";
+    if (style==='whatif') return rndInt(150,1200) + "%"; // assurda What if
+    return rndInt(120,600) + "%";                        // assurda What the F
   } else {
-    // percentuali normali per Manuale/Spunti
-    if (style==='whatif') return rndInt(55,85) + "%";
-    return rndInt(48,78) + "%"; // WTF più rigido
+    if (style==='whatif') return rndInt(55,85) + "%";    // seria What if
+    return rndInt(48,78) + "%";                          // seria What the F (più rigida)
   }
 }
 function renderPctAll(pct){
@@ -451,9 +420,8 @@ function buildCommittee(){
   const cat = pick(CATEGORIES);
   const name = (lang==='it') ? cat.name_it : cat.name_en;
   const notePool = (lang==='it') ? (cat.notes_it||[]) : (cat.notes_en||[]);
-  const baseNote = pick(notePool.length?notePool:["Nota non disponibile."]);
+  const note = `${pick(notePool.length?notePool:["Nota non disponibile."])} ${buildScuffles()}`;
   const votes = randVotes();
-  const note = `${baseNote} ${buildScuffles()}`; // motivazione + zuffa
   return { ico:cat.ico, name, note, votes };
 }
 function renderCommittee(item){
@@ -467,7 +435,7 @@ function renderCommittee(item){
   motNote.textContent = item.note;
 }
 
-/* ==== Motivazioni SERIE ==== */
+/* ==== Motivazione SERIA ==== */
 function buildSeriousRationale(answer){
   const base = String(answer||"").toLowerCase();
   let key = "allineamento tra risorse disponibili e tempi fattibili";
@@ -485,6 +453,7 @@ function buildExtraDryNoteWTF(note){
 
 /* ==== Load & fetch ==== */
 (async ()=>{
+  const params = new URLSearchParams(location.search);
   const req = JSON.parse(LS.getItem('whatif_request')||'{}');
 
   const domanda = req.domanda || LS.getItem('domanda') || "";
@@ -509,7 +478,6 @@ function buildExtraDryNoteWTF(note){
     answerText = normalizeOneParagraph((data.answer||"").trim());
     if(!/[.!?…]$/.test(answerText)) answerText += ".";
     answerEl.textContent = answerText;
-    decorateEmBits(answerEl);
   }catch(e){
     answerEl.textContent = (I18N[lang]||I18N.it).error;
     console.error(e);
@@ -517,22 +485,20 @@ function buildExtraDryNoteWTF(note){
 
   // Origine
   const surprise = isSurprise(req);
-  const manualOrQuick = isManualOrQuick(req);
+  const manualOrQuick = isManualOrQuick(req, params);
 
   // Percentuale
   const pct = buildPct({surprise, style});
   renderPctAll(pct);
 
-  // Motivazioni
+  // Visualizzazione motivazioni (SOLO una variante)
   if (surprise){
-    // IRONICA per entrambi gli stili: comitato + zuffa
+    // IRONICA per entrambi gli stili
     motSerious.style.display = 'none';
     motIronic.style.display  = 'grid';
     renderCommittee(buildCommittee());
-    // reset one-shot per evitare sticky
-    LS.removeItem('surprise_mode');
   } else {
-    // SERIA per Manuale/Spunti; in WTF extra-dry
+    // SERIA per manuale/spunti in entrambi gli stili
     const Tloc = I18N[lang] || I18N.it;
     const baseNote = buildSeriousRationale(answerText);
     committeeTitle.textContent = Tloc.seriousTitle;
