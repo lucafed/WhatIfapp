@@ -1,237 +1,207 @@
-<!DOCTYPE html>
-<html lang="it" data-theme="whatif">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Risultato</title>
-<meta name="theme-color" content="#0B0B0C"/>
-<style>
-:root{
-  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
-  --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;
-  --glow: rgba(255, 236, 1, .22);
-}
-html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
-*{box-sizing:border-box}
-html,body{
-  margin:0;
-  background:
-    radial-gradient(900px 700px at 20% 18%, var(--bg2) 0%, var(--bg) 60%),
-    radial-gradient(600px 480px at 80% 12%, rgba(255,236,1,.06), transparent 60%),
-    radial-gradient(700px 560px at 50% 90%, rgba(28,87,160,.10), transparent 65%);
-  color:var(--fg);
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  -webkit-font-smoothing:antialiased;
-}
-main{max-width:860px;margin:auto;padding:22px}
-h1{
-  font-size:clamp(22px,5vw,30px);
-  color:var(--acc2);
-  text-align:center;
-  margin:12px 0 6px;
-  text-shadow: 0 0 18px var(--glow);
-}
-.sub{color:var(--muted);text-align:center;margin:0 0 8px}
-.card{
-  background:rgba(20,28,34,.92);
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:16px;
-  padding:18px;
-  backdrop-filter:blur(10px);
-  margin-top:16px;
-  box-shadow: 0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
-}
-.label{color:var(--acc);font-weight:800;margin-bottom:8px}
-.input{
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:12px;
-  padding:10px;
-}
-.story{
-  white-space:normal;
-  line-height:1.68;
-  font-size:18px;
-  letter-spacing:.1px;
-  text-wrap:pretty;
-}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
-.btn.primary{
-  background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink);
-  box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 28px var(--glow);
-}
-.btn.ghost{
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.12);
-  color:#fff
-}
-.small{font-size:12px;color:var(--muted)}
-.hr{height:1px;background:rgba(255,255,255,.10);margin:12px 0}
-.badge{
-  display:inline-flex;align-items:center;gap:8px;
-  font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 10px;
-}
-.lead{
-  color:#E7F2EE;font-size:14px;line-height:1.45;opacity:.86;margin:2px 0 10px;
-}
-.fade-in{animation:fade .35s ease-out both}
-@keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
-.embit { padding:0 .08em; box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset; text-shadow:0 0 12px rgba(255,255,255,.08); border-radius:4px; }
-.select{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer; }
-
-/* ===== Probabilità (in alto) ===== */
-.prob-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.prob-label{
-  font-size:12px;color:var(--muted);white-space:nowrap;
+<!DOCTYPE html>  <html lang="it" data-theme="whatif">    <head>    
+<meta charset="UTF-8"/>    
+<meta name="viewport" content="width=device-width,initial-scale=1"/>    
+<title>What?f — Risultato</title>    
+<meta name="theme-color" content="#0B0B0C"/>    
+<style>    
+:root{    
+  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;    
+  --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;    
+  --glow: rgba(255, 236, 1, .22);    
+}    
+html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }    
+*{box-sizing:border-box}    
+html,body{    
+  margin:0;    
+  background:    
+    radial-gradient(900px 700px at 20% 18%, var(--bg2) 0%, var(--bg) 60%),    
+    radial-gradient(600px 480px at 80% 12%, rgba(255,236,1,.06), transparent 60%),    
+    radial-gradient(700px 560px at 50% 90%, rgba(28,87,160,.10), transparent 65%);    
+  color:var(--fg);    
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;    
+  -webkit-font-smoothing:antialiased;    
+}    
+main{max-width:860px;margin:auto;padding:22px}    
+h1{    
+  font-size:clamp(22px,5vw,30px);    
+  color:var(--acc2);    
+  text-align:center;    
+  margin:12px 0 6px;    
+  text-shadow: 0 0 18px var(--glow);    
+}    
+.sub{color:var(--muted);text-align:center;margin:0 0 8px}    
+.card{    
+  background:rgba(20,28,34,.92);    
+  border:1px solid rgba(255,255,255,.12);    
+  border-radius:16px;    
+  padding:18px;    
+  backdrop-filter:blur(10px);    
+  margin-top:16px;    
+  box-shadow: 0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);    
+}    
+.label{color:var(--acc);font-weight:800;margin-bottom:8px}    
+.input{    
+  background:rgba(255,255,255,.06);    
+  border:1px solid rgba(255,255,255,.12);    
+  border-radius:12px;    
+  padding:10px;    
+}    
+.story{    
+  white-space:normal;    
+  line-height:1.68;    
+  font-size:18px;    
+  letter-spacing:.1px;    
+  text-wrap:pretty;    
+}    
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}    
+.btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}    
+.btn.primary{    
+  background:linear-gradient(180deg,var(--acc),var(--acc2));    
+  color:var(--ink);    
+  box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 28px var(--glow);    
+}    
+.btn.ghost{    
+  background:rgba(255,255,255,.06);    
+  border:1px solid rgba(255,255,255,.12);    
+  color:#fff    
+}    
+.small{font-size:12px;color:var(--muted)}    
+.hr{height:1px;background:rgba(255,255,255,.10);margin:12px 0}    
+.badge{    
+  display:inline-flex;align-items:center;gap:8px;    
+  font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);    
+  border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 10px;    
+}    
+.lead{    
+  color:#E7F2EE;font-size:14px;line-height:1.45;opacity:.86;margin:2px 0 10px;    
+}    
+.fade-in{animation:fade .35s ease-out both}    
+@keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}  .embit { padding:0 .08em; box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset; text-shadow:0 0 12px rgba(255,255,255,.08); border-radius:4px; }  
+.select{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer; }  /* Probabilità */
+.prob-wrap{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.prob{
+display:flex;gap:10px;align-items:flex-start;
+background:rgba(255,255,255,.04);
+border:1px solid rgba(255,255,255,.10);
+border-radius:12px;padding:10px 12px;
 }
 .pct-pill{
-  display:inline-flex;align-items:center;justify-content:center;
-  min-width:58px; /* più piccola */
-  font-weight:900; font-size:14px; line-height:1;
-  background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink); border-radius:10px; padding:6px 10px;
-  box-shadow:0 6px 18px rgba(0,0,0,.28), 0 0 18px var(--glow);
+min-width:78px;text-align:center;font-weight:900;
+background:linear-gradient(180deg,var(--acc),var(--acc2));
+color:var(--ink); border-radius:10px; padding:6px 10px;
+box-shadow:0 6px 18px rgba(0,0,0,.28), 0 0 18px var(--glow);
 }
-
-/* ===== Suggerimento ironico ===== */
-.sug-wrap{display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:10px 12px}
-.sug-emoji{font-size:18px}
-.sug-text{line-height:1.5}
+.prob .txt{line-height:1.45}
+.prob .cap{font-size:12px;color:var(--muted);margin-top:2px}
 </style>
-</head>
-<body>
-<main>
-  <div class="row" style="justify-content:space-between">
-    <div class="row">
-      <button class="btn ghost" id="backBtn">←</button>
-      <button class="btn ghost" id="homeBtn">🏠</button>
-    </div>
-    <div class="row" style="gap:8px">
-      <span class="badge" id="styleBadge">🎭 —</span>
-      <span class="badge" id="proBadge" title="" style="display:none">🧪 TEST · ⭐ PRO</span>
-      <select id="langSelect" class="select" aria-label="Language">
-        <option value="it">IT · Italiano</option>
-        <option value="en">EN · English</option>
-        <option value="es">ES · Español</option>
-        <option value="fr">FR · Français</option>
-        <option value="de">DE · Deutsch</option>
-      </select>
-    </div>
-  </div>
 
-  <h1 id="title">Risultato</h1>
-  <p class="sub" id="subtitle">—</p>
-
-  <div class="card">
-    <div class="label" id="lblQ">La tua domanda</div>
-    <div class="input" id="qView" style="min-height:46px"></div>
-  </div>
-
-  <div class="card">
-    <!-- PROBABILITÀ IN ALTO -->
-    <div class="prob-top" id="probTop">
-      <span class="prob-label" id="probTopLabel">% probabilità che accada</span>
-      <span class="pct-pill" id="pctTop">—</span>
-    </div>
-
-    <div class="hr"></div>
-
-    <div class="label" id="lblA">Risposta</div>
-    <div id="lead" class="lead fade-in">—</div>
-    <div id="answer" class="story">⏳ …</div>
-
-    <div class="hr"></div>
-
-    <!-- SUGGERIMENTO IRONICO -->
-    <div class="label" id="lblSug">Suggerimento (ironico)</div>
-    <div class="sug-wrap">
-      <div class="sug-emoji" id="sugEmoji">🎲</div>
-      <div class="sug-text" id="sugText">—</div>
-    </div>
-
-    <div class="hr"></div>
-    <div class="row">
-      <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
-      <button class="btn ghost" id="againBtn">🔁 Fai un’altra domanda</button>
-    </div>
-    <p class="small" id="metaInfo"></p>
-  </div>
-</main>
-
-<script>
-/* ==== Base state ==== */
-const LS = localStorage;
-const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
-const style = prefs.stile || 'whatif';
-const periodo = prefs.periodo || 'future';
-let lang  = (LS.getItem('lang') || 'it').toLowerCase();
-if(!['it','en','es','fr','de'].includes(lang)) lang = 'it';
-
-document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
+</head>    
+<body>    
+<main>    
+  <div class="row" style="justify-content:space-between">    
+    <div class="row">    
+      <button class="btn ghost" id="backBtn">←</button>    
+      <button class="btn ghost" id="homeBtn">🏠</button>    
+    </div>    
+    <div class="row" style="gap:8px">    
+      <span class="badge" id="styleBadge">🎭 —</span>    
+      <span class="badge" id="proBadge" title="" style="display:none">🧪 TEST · ⭐ PRO</span>    
+      <select id="langSelect" class="select" aria-label="Language">    
+        <option value="it">IT · Italiano</option>    
+        <option value="en">EN · English</option>    
+        <option value="es">ES · Español</option>    
+        <option value="fr">FR · Français</option>    
+        <option value="de">DE · Deutsch</option>    
+      </select>    
+    </div>    
+  </div>    <h1 id="title">Risultato</h1>    
+  <p class="sub" id="subtitle">—</p>    <div class="card">    
+    <div class="label" id="lblQ">La tua domanda</div>    
+    <div class="input" id="qView" style="min-height:46px"></div>    
+  </div>    <div class="card">    
+    <div class="label" id="lblA">Risposta</div>    
+    <div id="lead" class="lead fade-in">—</div>    
+    <div id="answer" class="story">⏳ …</div>  <!-- BLOCCO PROBABILITÀ -->    
+<div class="hr"></div>    
+<div class="label" id="lblP">Probabilità</div>    
+<div id="probBlock" class="prob-wrap"></div>    <div class="hr"></div>    
+<div class="row">    
+  <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>    
+  <button class="btn ghost" id="againBtn">🔁 Fai un’altra domanda</button>    
+</div>    
+<p class="small" id="metaInfo"></p>    </div>    
+</main>  <script>    
+/* ==== Base state ==== */    
+const LS = localStorage;    
+const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');    
+const style = prefs.stile || 'whatif';    
+const periodo = prefs.periodo || 'future';    
+let lang  = (LS.getItem('lang') || 'it').toLowerCase();    
+if(!['it','en','es','fr','de'].includes(lang)) lang = 'it';    document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 document.documentElement.lang = lang;
 
 /* ==== PRO badge ==== */
 (function showProBadge(){
-  const el = document.getElementById('proBadge');
-  const hasToken = !!LS.getItem('admin_token');
-  if (hasToken || prefs.pro === true){
-    el.style.display = 'inline-flex';
-    el.textContent = '🧪 TEST · ⭐ PRO';
-    el.title = (lang === 'en') ? 'Test mode active' : (
-               lang === 'es') ? 'Modo de prueba activo' : (
-               lang === 'fr') ? 'Mode test actif' :
-               (lang === 'de') ? 'Testmodus aktiv' : 'Modalità test attiva';
-  }
+const el = document.getElementById('proBadge');
+const hasToken = !!LS.getItem('admin_token');
+if (hasToken || prefs.pro === true){
+el.style.display = 'inline-flex';
+el.textContent = '🧪 TEST · ⭐ PRO';
+el.title = (lang === 'en') ? 'Test mode active' : (
+lang === 'es') ? 'Modo de prueba activo' : (
+lang === 'fr') ? 'Mode test actif' :
+(lang === 'de') ? 'Testmodus aktiv' : 'Modalità test attiva';
+}
 })();
 
 /* ==== I18N (UI) ==== */
 const I18N = {
-  it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
-       sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
-       ptop:"% probabilità che accada", sug:"Suggerimento (ironico)",
-       share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
-       copied:"Copiato!", error:"[errore server]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Stile: What the F · 6–9 frasi · paragrafo unico · 2–3 reazioni demenziali · doppia punchline · modalità: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · nessun elenco/domanda/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.`,
-       back:"← Indietro", home:"🏠 Home" },
-  en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
-       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-       ptop:"% probability it happens", sug:"(Ironic) suggestion",
-       share:"📤 Share / Copy", again:"🔁 Ask another",
-       copied:"Copied!", error:"[server error]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Style: What the F · 6–9 sentences · single paragraph · 2–3 absurd object reactions · double punchline · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`,
-       back:"← Back", home:"🏠 Home" }
+it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
+sub:(q)=>Domanda: “${q}”, q:"La tua domanda", a:"Risposta",
+p:"Probabilità", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
+copied:"Copiato!", error:"[errore server]",
+styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+meta:(st,p)=> st==='wtf'
+? Stile: What the F · 6–9 frasi · paragrafo unico · 2–3 reazioni demenziali · doppia punchline · modalità: ${p==='past'?'Passato':'Futuro'}.
+: Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · nessun elenco/domanda/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.,
+back:"← Indietro", home:"🏠 Home" },
+en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
+sub:(q)=>Question: “${q}”, q:"Your question", a:"Answer",
+p:"Probability", share:"📤 Share / Copy", again:"🔁 Ask another",
+copied:"Copied!", error:"[server error]",
+styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+meta:(st,p)=> st==='wtf'
+? Style: What the F · 6–9 sentences · single paragraph · 2–3 absurd object reactions · double punchline · mode: ${p==='past'?'Past':'Future'}.
+: Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.,
+back:"← Back", home:"🏠 Home" }
 };
 I18N.es=I18N.en; I18N.fr=I18N.en; I18N.de=I18N.en;
 
 /* ==== Leads ==== */
 const LEADS = {
-  it:{ wtf:[
-      "Entri piano, il caos ti riconosce e oggi ti lascia passare.",
-      "Respiri e lasci che sia il destino a inciampare per primo."
-    ],
-    whatif:[
-      "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.",
-      "La stanza è la stessa, lo sguardo no: è già un inizio."
-    ]},
-  en:{ wtf:["You step in slowly; chaos recognizes you and lets you through."],
-       whatif:["Set the keys down and let the quiet that doesn’t judge go first."]}
+it:{ wtf:[
+"Entri piano, il caos ti riconosce e oggi ti lascia passare.",
+"Respiri e lasci che sia il destino a inciampare per primo."
+],
+whatif:[
+"Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.",
+"La stanza è la stessa, lo sguardo no: è già un inizio."
+]},
+en:{ wtf:["You step in slowly; chaos recognizes you and lets you through."],
+whatif:["Set the keys down and let the quiet that doesn’t judge go first."]}
 };
 
 /* ==== UI refs ==== */
 const qs = (sel)=>document.querySelector(sel);
 const setText = (id, txt)=>{ const el=qs(id); if(el) el.textContent = txt; };
 
+const backBtn  = qs('#backBtn');
+const homeBtn  = qs('#homeBtn');
+const langSel  = qs('#langSelect');
 const titleH1  = qs('#title');
 const subtitle = qs('#subtitle');
+const lblQ     = qs('#lblQ');
+const lblA     = qs('#lblA');
 const qView    = qs('#qView');
 const leadNode = qs('#lead');
 const answerEl = qs('#answer');
@@ -239,161 +209,189 @@ const shareBtn = qs('#shareBtn');
 const againBtn = qs('#againBtn');
 const metaInfo = qs('#metaInfo');
 const styleBadge = qs('#styleBadge');
+const probBlock = qs('#probBlock');
+const lblP = qs('#lblP');
 
-const pctTop = qs('#pctTop');
-const probTopLabel = qs('#probTopLabel');
-
-const lblSug = qs('#lblSug');
-const sugEmoji = qs('#sugEmoji');
-const sugText = qs('#sugText');
-
-/* ==== Helpers ==== */
+/* ==== Helpers ==== /
 function normalizeOneParagraph(s=""){
-  return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
+return String(s).replace(/\s\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
 }
-function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
-function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
+function pick(arr){ return arr[Math.floor(Math.random()arr.length)] }
+function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
 
 /* Decorazione em-dash */
 function decorateEmBits(el){
-  const raw = el.textContent;
-  if(!raw || !raw.includes("—")) return;
-  const parts = raw.split("—");
-  let html = "";
-  for(let i=0;i<parts.length;i++){
-    const seg = parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;");
-    if(i%2===1) html += `<span class="embit">— ${seg} </span>`;
-    else html += (i===0 ? seg : `—${seg}`);
-  }
-  el.innerHTML = html;
+const raw = el.textContent;
+if(!raw || !raw.includes("—")) return;
+const parts = raw.split("—");
+let html = "";
+for(let i=0;i<parts.length;i++){
+const seg = parts[i].replace(/</g,"<").replace(/>/g,">");
+if(i%2===1) html += <span class="embit">— ${seg} </span>;
+else html += (i===0 ? seg : —${seg});
+}
+el.innerHTML = html;
 }
 
 /* ==== Titles ==== */
 function setTitlesAndTexts(q){
-  const T = I18N[lang] || I18N.it;
-  titleH1.textContent = (style==='wtf') ? T.titleWTF : T.titleWHF;
-  subtitle.textContent = T.sub(q || '—');
-  setText('#lblQ', T.q);
-  setText('#lblA', T.a);
-  probTopLabel.textContent = T.ptop;
-  lblSug.textContent = T.sug;
-  shareBtn.textContent = T.share;
-  againBtn.textContent = T.again;
-  styleBadge.textContent = (style==='wtf') ? T.styleWTF : T.styleWHF;
-  metaInfo.textContent = T.meta(style, periodo);
+const T = I18N[lang] || I18N.it;
+setText('#title', style==='wtf' ? T.titleWTF : T.titleWHF);
+subtitle.textContent = T.sub(q || '—');
+lblQ.textContent = T.q;
+lblA.textContent = T.a;
+lblP.textContent = T.p;
+shareBtn.textContent = T.share;
+againBtn.textContent = T.again;
+styleBadge.textContent = (style==='wtf') ? T.styleWTF : T.styleWHF;
+metaInfo.textContent = T.meta(style, periodo);
 
-  const bank = (LEADS[lang] && LEADS[lang][style]) ? LEADS[lang][style]
-               : (LEADS.it[style] || LEADS.it.whatif);
-  leadNode.textContent = oneSentence(pick(bank) || '') || '—';
+const bank = (LEADS[lang] && LEADS[lang][style]) ? LEADS[lang][style]
+: (LEADS.it[style] || LEADS.it.whatif);
+const line = oneSentence(pick(bank) || '');
+leadNode.textContent = line || '—';
 }
 
-/* ==== Probabilità (singola) ==== */
-function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
-function computeSinglePct({style, absurd}){
-  if(style==='whatif' && !absurd) return rndInt(45,75);
-  if(style==='whatif' && absurd)  return rndInt(90,777); // volutamente eccessivo
-  return rndInt(80,220); // wtf
+/* ==== Probabilities engine ==== /
+function rndInt(min,max){ return Math.floor(Math.random()(max-min+1))+min; }
+
+function genProbabilities({style, absurd, domanda}){
+const out = [];
+
+if(style==='whatif' && !absurd){
+// SERIO: 3 percentuali sobrie, motivazioni concise (no ironia)
+const ranges = [[45,75],[30,60],[60,90]];
+const reasons = lang==='it'
+? [
+"Tempistiche realistiche e margine di manovra.",
+"Ostacoli noti, risorse alla portata.",
+"Dati e abitudini coerenti con l’obiettivo."
+]
+: [
+"Realistic timing and wiggle room.",
+"Known hurdles, available resources.",
+"Habits and data align with the goal."
+];
+for(let i=0;i<3;i++){
+const [a,b]=ranges[i%ranges.length];
+out.push({ pct: rndInt(a,b)+"%", text: reasons[i] });
+}
+return out;
 }
 
-/* ==== Suggerimento (ironico) collegato a domanda/risposta ==== */
-function extractTopic(s){
-  const words = String(s||'').toLowerCase().match(/[a-zà-ù0-9]+/gi) || [];
-  const long = words.filter(w=>w.length>=5);
-  return (long[0] || words[0] || 'la cosa');
+if(style==='whatif' && absurd){
+// ASSURDO: fino a 5000%, motivazioni assurde ma “quasi plausibili” (senza "perché/because")
+const caps = [rndInt(120,900), rndInt(500,5000), rndInt(90,777)];
+const reasons = lang==='it'
+? [
+"L’universo premia chi porta brioche ai piccioni.",
+"Statistica segreta: 1 idea folle su 0,2 conquista il condominio.",
+"Il destino oggi ha il microfono e ride dalla tua parte."
+]
+: [
+"The universe tips whoever brings croissants to pigeons.",
+"Secret stat: 1 out of 0.2 wild ideas wins the building.",
+"Fate grabbed the mic and it’s laughing with you."
+];
+return caps.map((p,i)=>({ pct: p+"%", text: reasons[i] }));
 }
-function buildIronicSuggestion(topic){
-  const packs = {
-    it: [
-      {emoji:"🎲", t: (x)=>`Tira un dado: se esce pari, inizi ${x} domattina; se esce dispari, inizi lo stesso ma con gli occhiali da sole in casa.`},
-      {emoji:"🧃", t: (x)=>`Power-up da bar: succo di frutta e playlist epica, poi ${x} come se il vicino facesse il tifo dal balcone.`},
-      {emoji:"🧯", t: (x)=>`Piano anti-panico: 10 minuti di ${x}, 2 minuti di camminata “importante” in corridoio, ripeti finché ti senti CEO del salotto.`},
-      {emoji:"🧠", t: (x)=>`Trucco mentale: chiama ${x} “missione di 25 minuti”, metti il timer e fai finta che scada il mondo se lo ignori.`},
-      {emoji:"🧤", t: (x)=>`Modalità “guanti da forno”: tocchi solo ciò che serve a ${x}. Se apri social, guanto di richiamo sonoro (tipo papera).`}
-    ],
-    en: [
-      {emoji:"🎲", t: (x)=>`Roll a die: even = start ${x} now; odd = start anyway, but with sunglasses indoors.`},
-      {emoji:"🧃", t: (x)=>`Bar power-up: juice + epic playlist, then ${x} like your neighbor is cheering from the window.`}
-    ]
-  };
-  const bank = packs[lang] || packs.it;
-  const item = pick(bank);
-  return item || {emoji:"🎲", t:(x)=>`Lancia una moneta: testa ${x}, croce… ${x} ma con stile.`};
+
+// WTF: alcolico, terra terra, sarcastico (frasi semplici)
+const caps = [rndInt(80,220), rndInt(120,380), rndInt(200,800)];
+const reasons = lang==='it'
+? [
+"Due spritz e fila tutto.",
+"Birra fredda, coraggio caldo.",
+"Stasera spingi, domattina ghiaccio in testa."
+]
+: [
+"Two spritz and it goes.",
+"Cold beer, warm courage.",
+"Push tonight, ice on the head tomorrow."
+];
+return caps.map((p,i)=>({ pct: p+"%", text: reasons[i] }));
+}
+
+function renderProbabilities(list){
+probBlock.innerHTML = '';
+list.forEach((item,idx)=>{
+const row = document.createElement('div');
+row.className = 'prob';
+row.innerHTML =     <div class="pct-pill">${item.pct}</div>     <div class="txt">     <div>${item.text}</div>     <div class="cap">${idx===0?'· Primo colpo':'· Extra chance'}</div>     </div>    ;
+probBlock.appendChild(row);
+});
 }
 
 /* ==== Load & fetch ==== */
+const params = new URLSearchParams(location.search);
+
 (async ()=>{
-  const req = JSON.parse(LS.getItem('whatif_request')||'{}');
-  const absurdFlag = req.absurd === true || LS.getItem('absurd_prompt') === '1';
+const req = JSON.parse(LS.getItem('whatif_request')||'{}');
+const absurdFlag = req.absurd === true || LS.getItem('absurd_prompt') === '1';
 
-  // domanda
-  let domanda = req.domanda || LS.getItem('domanda') || "";
-  setTitlesAndTexts(domanda);
-  qs('#qView').textContent = domanda || '—';
+// domanda
+let domanda = req.domanda || LS.getItem('domanda') || "";
+setTitlesAndTexts(domanda);
+qs('#qView').textContent = domanda || '—';
 
-  // percentuale (in alto)
-  const pct = computeSinglePct({style, absurd:absurdFlag});
-  pctTop.textContent = pct + "%";
+// fetch risposta
+try{
+const headers = { "Content-Type": "application/json" };
+if (prefs.pro === true) headers["x-pro"] = "1";
+const adminToken = localStorage.getItem("admin_token");
+if (adminToken) headers["x-admin-token"] = adminToken;
 
-  // fetch risposta
-  try{
-    const headers = { "Content-Type": "application/json" };
-    if (prefs.pro === true) headers["x-pro"] = "1";
-    const adminToken = localStorage.getItem("admin_token");
-    if (adminToken) headers["x-admin-token"] = adminToken;
+const r = await fetch("/api/ask",{    
+  method:"POST",    
+  headers,    
+  body:JSON.stringify({    
+    domanda, lang, stile: style, periodo, extra:"", micro:req.micro||{}    
+  })    
+});    
+const data = await r.json().catch(()=>null);    
+if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");    
 
-    const r = await fetch("/api/ask",{
-      method:"POST",
-      headers,
-      body:JSON.stringify({
-        domanda, lang, stile: style, periodo, extra:"", micro:req.micro||{}
-      })
-    });
-    const data = await r.json().catch(()=>null);
-    if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
+let answerText = normalizeOneParagraph((data.answer||"").trim());    
+if(!/[.!?…]$/.test(answerText)) answerText += ".";    
+qs('#answer').textContent = answerText;    
+decorateEmBits(qs('#answer'));    
 
-    let answerText = normalizeOneParagraph((data.answer||"").trim());
-    if(!/[.!?…]$/.test(answerText)) answerText += ".";
-    answerEl.textContent = answerText;
-    decorateEmBits(answerEl);
+// >>> PROBABILITÀ <<<    
+const probs = genProbabilities({style, absurd:absurdFlag, domanda});    
+renderProbabilities(probs);    
 
-    // >>> SUGGERIMENTO IRONICO <<<
-    const topic = extractTopic(domanda || answerText);
-    const sugPack = buildIronicSuggestion(topic);
-    sugEmoji.textContent = sugPack.emoji;
-    // evita la parola "perché": i testi non la usano
-    sugText.textContent = sugPack.t(topic);
+// storia    
+const hist = JSON.parse(LS.getItem('cronologia')||'[]');    
+hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });    
+LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
 
-    // storia
-    const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, risposta:answerText, stile:style, periodo, pct, ts:Date.now() });
-    LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-  }catch(e){
-    answerEl.textContent = (I18N[lang]||I18N.it).error;
-    console.error(e);
-  }
+}catch(e){
+qs('#answer').textContent = (I18N[lang]||I18N.it).error;
+console.error(e);
+}
 })();
 
 /* ==== Nav / lingua ==== */
 qs('#backBtn').onclick = ()=> history.length > 1 ? history.back() : location.replace('index.html');
 qs('#homeBtn').onclick = ()=> location.href='index.html';
 qs('#langSelect').onchange = ()=>{
-  lang = qs('#langSelect').value;
-  LS.setItem('lang', lang);
-  document.documentElement.lang = lang;
-  location.reload();
+lang = qs('#langSelect').value;
+LS.setItem('lang', lang);
+document.documentElement.lang = lang;
+location.reload();
 };
 qs('#shareBtn').onclick = async()=>{
-  const T = I18N[lang] || I18N.it;
-  const full = `What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n${T.ptop}: ${qs('#pctTop').textContent}\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}\n\n– ${qs('#lblSug').textContent}: ${qs('#sugText').textContent}`;
-  try{
-    if(navigator.share){ await navigator.share({ title: "What?f", text: full }); }
-    else{
-      await navigator.clipboard.writeText(full);
-      const b=qs('#shareBtn'); b.textContent=T.copied; setTimeout(()=>b.textContent=T.share,1200);
-    }
-  }catch{}
+const T = I18N[lang] || I18N.it;
+const full = What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent};
+try{
+if(navigator.share){ await navigator.share({ title: "What?f", text: full }); }
+else{
+await navigator.clipboard.writeText(full);
+const b=qs('#shareBtn'); b.textContent=T.copied; setTimeout(()=>b.textContent=T.share,1200);
+}
+}catch{}
 };
 qs('#againBtn').onclick = ()=>{ location.href='fourth.html'; };
-</script>
-</body>
+</script>  </body>
+
 </html>
