@@ -95,18 +95,36 @@ h1{
   color:var(--ink); border-radius:10px; box-shadow:0 8px 22px rgba(0,0,0,.32), 0 0 22px var(--glow);
 }
 
-/* === MOTIVI (2 righe, con icone e voti) === */
-.mot-wrap{display:flex;flex-direction:column;gap:10px;margin-top:10px}
-.mot{
-  display:grid;grid-template-columns:auto 1fr;gap:10px;
+/* === RISULTATI SOTTO (percentuale + comitato) === */
+.result-box{
   background:rgba(255,255,255,.04);
   border:1px solid rgba(255,255,255,.10);
-  border-radius:12px;padding:10px 12px;
+  border-radius:12px; padding:12px;
+}
+.result-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.result-pct{ /* percentuale in risalto anche sotto */
+  display:inline-flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:18px;min-width:72px;padding:6px 10px;
+  background:linear-gradient(180deg,var(--acc),var(--acc2));
+  color:var(--ink); border-radius:10px; box-shadow:0 8px 22px rgba(0,0,0,.32), 0 0 22px var(--glow);
+}
+.result-title{font-weight:900}
+
+/* === MOTIVO (1 comitato) === */
+.mot{
+  display:grid;grid-template-columns:auto 1fr;gap:10px;
+  margin-top:6px;
 }
 .mot .ico{font-size:18px;line-height:1.2}
-.mot .txt{line-height:1.45}
 .mot .name{font-weight:800}
-.mot .meta{font-size:12px;color:var(--muted);margin-top:2px}
+.mot .note{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* Chips voti */
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{
+  font-size:12px;font-weight:900; padding:4px 8px; border-radius:999px;
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+}
 </style>
 </head>
 <body>
@@ -150,8 +168,29 @@ h1{
     <div id="answer" class="story">⏳ …</div>
 
     <div class="hr"></div>
-    <div class="label" id="lblP">Motivazioni (votanti & note)</div>
-    <div id="motBlock" class="mot-wrap"></div>
+    <div class="label" id="lblP">Esito & motivazioni</div>
+
+    <!-- RISULTATI IN RISALTO: % + comitato + voti -->
+    <div class="result-box" id="resultBox">
+      <div class="result-head">
+        <span class="pct-label">% probabilità che accada</span>
+        <div id="bottomPct" class="result-pct">—</div>
+        <span class="result-title" id="committeeTitle">—</span>
+      </div>
+
+      <div class="mot" id="motOne">
+        <div class="ico" id="motIco">—</div>
+        <div>
+          <div class="name" id="motName">—</div>
+          <div class="chips">
+            <span class="chip" id="chipFav">favorevoli 0</span>
+            <span class="chip" id="chipCon">contrari 0</span>
+            <span class="chip" id="chipAst">astenuti 0</span>
+          </div>
+          <div class="note" id="motNote">—</div>
+        </div>
+      </div>
+    </div>
 
     <div class="hr"></div>
     <div class="row">
@@ -192,24 +231,26 @@ document.documentElement.lang = lang;
 const I18N = {
   it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
        sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
-       p:"Motivazioni (votanti & note)", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
+       p:"Esito & motivazioni", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
        copied:"Copiato!", error:"[errore server]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Stile: What the F · 6–9 frasi · paragrafo unico · tono asciutto · modalità: ${p==='past'?'Passato':'Futuro'}.`
         : `Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`,
        pctLabel:"% probabilità che accada",
-       back:"← Indietro", home:"🏠 Home" },
+       back:"← Indietro", home:"🏠 Home",
+       votersTitle:"Comitato" },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-       p:"Rationales (voters & notes)", share:"📤 Share / Copy", again:"🔁 Ask another",
+       p:"Outcome & rationales", share:"📤 Share / Copy", again:"🔁 Ask another",
        copied:"Copied!", error:"[server error]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Style: What the F · 6–9 sentences · single paragraph · dry tone · mode: ${p==='past'?'Past':'Future'}.`
         : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,
        pctLabel:"% probability it happens",
-       back:"← Back", home:"🏠 Home" }
+       back:"← Back", home:"🏠 Home",
+       votersTitle:"Committee" }
 };
 I18N.es=I18N.en; I18N.fr=I18N.en; I18N.de=I18N.en;
 
@@ -227,57 +268,29 @@ const LEADS = {
        whatif:["Set the keys down and let the quiet that doesn’t judge go first."]}
 };
 
-/* ==== Categories (no 'Paranormale & Universale') ==== */
+/* ==== Categories ==== */
 const CATEGORIES = [
-  // Psicologia & Caos umano
-  { ico:"🧠", name_it:"Comitato dei Pensieri Sotto la Doccia",          name_en:"Shower-Thoughts Committee",
-    notes_it:["Illuminazione logistica durante shampoo.","Decisione nata a temperatura tiepida."],
-    notes_en:["Logistics epiphany mid-shampoo.","Decision made at lukewarm clarity."] },
-  { ico:"📞", name_it:"Autorità delle Telefonate Fuori Tempo",            name_en:"Off-Timing Calls Authority",
-    notes_it:["Consiglio pervenuto alle 07:12.","Parere espresso durante squillo prolungato."],
-    notes_en:["Advice arrived at 07:12.","Opinion issued during a long ring."] },
-  { ico:"📊", name_it:"Ordine degli Ottimisti Moderati",                  name_en:"Order of Moderate Optimists",
-    notes_it:["Aspettative contenute, calendario severo.","Risultato atteso: discreto."],
-    notes_en:["Contained expectations, strict calendar.","Expected outcome: decent."] },
-
-  // Natura & Fauna giudicante
-  { ico:"🕊️", name_it:"Assemblea dei Piccioni con Opinioni Forti",       name_en:"Assembly of Strong-Opinion Pigeons",
+  { ico:"🕊️", name_it:"Assemblea dei Piccioni con Opinioni Forti", name_en:"Assembly of Strong-Opinion Pigeons",
     notes_it:["Sorveglianza attiva sulle panchine.","Consenso rumoroso in piazza."],
     notes_en:["Active bench surveillance.","Loud piazza consensus."] },
-  { ico:"🦊", name_it:"Lobby delle Volpi Opportuniste",                    name_en:"Opportunistic Foxes Lobby",
+  { ico:"🦊", name_it:"Lobby delle Volpi Opportuniste", name_en:"Opportunistic Foxes Lobby",
     notes_it:["Favorevoli se conviene subito.","Richiesto tornaconto rapido."],
     notes_en:["In favor if payoff is instant.","Quick upside requested."] },
-  { ico:"🐙", name_it:"Federazione dei Polpi Strategici",                  name_en:"Federation of Strategic Octopuses",
+  { ico:"🐙", name_it:"Federazione dei Polpi Strategici", name_en:"Federation of Strategic Octopuses",
     notes_it:["Otto step avanti, due indietro.","Tattica flessibile, presa salda."],
     notes_en:["Eight steps ahead, two back.","Flexible tactics, firm grip."] },
-  { ico:"🦥", name_it:"Consiglio dei Bradipi Riflessivi",                  name_en:"Council of Reflective Sloths",
+  { ico:"🦥", name_it:"Consiglio dei Bradipi Riflessivi", name_en:"Council of Reflective Sloths",
     notes_it:["Decisione lenta ma convinta.","Deadline percepita: 2038."],
     notes_en:["Slow but resolute decision.","Perceived deadline: 2038."] },
-
-  // Vita sociale & follia umana
-  { ico:"🥃", name_it:"Circolo Bar Notturno dei Consiglieri",              name_en:"Late-Bar Counsel Circle",
-    notes_it:["Coraggio liquido, piani semplici.","Entusiasmo verificato al bancone."],
-    notes_en:["Liquid courage, simple plans.","Enthusiasm verified at the counter."] },
-  { ico:"🍕", name_it:"Associazione Snack Notturni e Idee",                name_en:"Night Snacks & Ideas Association",
+  { ico:"🍕", name_it:"Associazione Snack Notturni e Idee", name_en:"Night Snacks & Ideas Association",
     notes_it:["Carboidrati a supporto del piano.","Briefing alle 23:47."],
     notes_en:["Carbs support the plan.","Briefing at 23:47."] },
-  { ico:"💬", name_it:"Conferenza degli Amici Che Gasano",                 name_en:"Conference of Hype Friends",
+  { ico:"💬", name_it:"Conferenza degli Amici Che Gasano", name_en:"Conference of Hype Friends",
     notes_it:["Clima motivazionale alto.","Applauso non richiesto."],
     notes_en:["High motivational climate.","Applause unprompted."] },
-  { ico:"🎤", name_it:"Sindacato delle Idee da Karaoke",                   name_en:"Karaoke Ideas Union",
-    notes_it:["Proposta nata al ritornello.","Volume sopra la ragione."],
-    notes_en:["Proposal born on the chorus.","Volume over reason."] },
-
-  // Mistico-Burocratico
-  { ico:"📎", name_it:"Ufficio Complicazioni Semplici",                    name_en:"Office of Simple Complications",
+  { ico:"📎", name_it:"Ufficio Complicazioni Semplici", name_en:"Office of Simple Complications",
     notes_it:["Modulistica tripla ma fattibile.","File approvato con graffetta d’oro."],
     notes_en:["Triple forms but feasible.","Dossier approved with a golden clip."] },
-  { ico:"📜", name_it:"Accademia degli Oracoli Part-Time",                 name_en:"Part-Time Oracles Academy",
-    notes_it:["Verdetto in pausa pranzo.","Profetizzato in 160 caratteri."],
-    notes_en:["Verdict at lunch break.","Prophesied in 160 chars."] },
-  { ico:"🕯️", name_it:"Confraternita dei Segni Incomprensibili",          name_en:"Brotherhood of Unreadable Signs",
-    notes_it:["Messaggio criptico ma positivo.","Segnale visto tre volte."],
-    notes_en:["Cryptic yet positive message.","Signal seen thrice."] },
   { ico:"⏳", name_it:"Autorità delle Tempistiche Perfettamente Sbagliate", name_en:"Authority of Perfectly Wrong Timings",
     notes_it:["Tempismo pessimo, effetto ottimo.","Arrivo tardi strategico."],
     notes_en:["Awful timing, great effect.","Late on purpose, effective."] },
@@ -301,10 +314,19 @@ const shareBtn = qs('#shareBtn');
 const againBtn = qs('#againBtn');
 const metaInfo = qs('#metaInfo');
 const styleBadge = qs('#styleBadge');
-const motBlock = qs('#motBlock');
 const lblP = qs('#lblP');
+
 const topPct = qs('#topPct');
-const pctLabel = qs('#pctLabel');
+const bottomPct = qs('#bottomPct');
+const pctLabelTop = qs('#pctLabel');
+
+const committeeTitle = qs('#committeeTitle');
+const motIco  = qs('#motIco');
+const motName = qs('#motName');
+const chipFav = qs('#chipFav');
+const chipCon = qs('#chipCon');
+const chipAst = qs('#chipAst');
+const motNote = qs('#motNote');
 
 /* ==== Helpers ==== */
 function normalizeOneParagraph(s=""){
@@ -340,12 +362,11 @@ function setTitlesAndTexts(q){
   againBtn.textContent = T.again;
   styleBadge.textContent = (style==='wtf') ? T.styleWTF : T.styleWHF;
   metaInfo.textContent = T.meta(style, periodo);
-  pctLabel.textContent = T.pctLabel;
+  pctLabelTop.textContent = T.pctLabel;
 
   const bank = (LEADS[lang] && LEADS[lang][style]) ? LEADS[lang][style]
                : (LEADS.it[style] || LEADS.it.whatif);
-  const line = oneSentence(pick(bank) || '');
-  leadNode.textContent = line || '—';
+  leadNode.textContent = oneSentence(pick(bank) || '') || '—';
 }
 
 /* ==== Percentuale primaria ==== */
@@ -354,50 +375,35 @@ function buildPrimaryPct({style, absurd}){
   if(style==='whatif' && absurd)  return rndInt(150,1200) + "%";
   return rndInt(120,600) + "%"; // wtf
 }
-function renderTopPct(pct){ topPct.textContent = pct || "—"; }
+function renderPctAll(pct){
+  topPct.textContent = pct || "—";
+  bottomPct.textContent = pct || "—";
+}
 
-/* ==== Motivazioni: 2 righe con voti assurdi e nota breve ==== */
+/* ==== Comitato singolo + voti ==== */
 function randVotes(){
   const fav = rndInt(2, 2500);
   const con = rndInt(0, Math.max(0, Math.floor(fav*0.4)));
   const ast = rndInt(0, Math.max(0, Math.floor((fav+con)*0.2)));
   return {fav, con, ast};
 }
-function buildMotivations(answerText){
-  // prendi 2 categorie distinte
-  const a = pick(CATEGORIES);
-  let b = pick(CATEGORIES);
-  let safety=0;
-  while(b === a && safety++ < 10) b = pick(CATEGORIES);
-
-  const items = [a,b].map(cat=>{
-    const notePool = (lang==='it') ? (cat.notes_it||[]) : (cat.notes_en||[]);
-    const note = pick(notePool.length?notePool:["Nota non disponibile."]);
-    const votes = randVotes();
-    return {
-      ico: cat.ico,
-      name: (lang==='it') ? cat.name_it : cat.name_en,
-      votes,
-      note
-    };
-  });
-  return items;
+function buildCommittee(){
+  const cat = pick(CATEGORIES);
+  const name = (lang==='it') ? cat.name_it : cat.name_en;
+  const notePool = (lang==='it') ? (cat.notes_it||[]) : (cat.notes_en||[]);
+  const note = pick(notePool.length?notePool:["Nota non disponibile."]);
+  const votes = randVotes();
+  return { ico:cat.ico, name, note, votes };
 }
-function renderMotivations(list){
-  motBlock.innerHTML = '';
-  list.forEach(item=>{
-    const row = document.createElement('div');
-    row.className = 'mot';
-    row.innerHTML = `
-      <div class="ico">${item.ico}</div>
-      <div class="txt">
-        <div class="name">${item.name}</div>
-        <div class="meta">favorevoli ${item.votes.fav} · contrari ${item.votes.con} · astenuti ${item.votes.ast}</div>
-        <div class="meta">${item.note}</div>
-      </div>
-    `;
-    motBlock.appendChild(row);
-  });
+function renderCommittee(item){
+  const T = I18N[lang] || I18N.it;
+  committeeTitle.textContent = `${T.votersTitle}: ${item.name}`;
+  motIco.textContent  = item.ico;
+  motName.textContent = item.name;
+  chipFav.textContent = `favorevoli ${item.votes.fav}`;
+  chipCon.textContent = `contrari ${item.votes.con}`;
+  chipAst.textContent = `astenuti ${item.votes.ast}`;
+  motNote.textContent = item.note;
 }
 
 /* ==== Load & fetch ==== */
@@ -430,12 +436,12 @@ function renderMotivations(list){
     qs('#answer').textContent = answerText;
     decorateEmBits(qs('#answer'));
 
-    // >>> % in alto
-    renderTopPct(buildPrimaryPct({style, absurd:absurdFlag}));
+    // >>> % in alto e sotto
+    const pct = buildPrimaryPct({style, absurd:absurdFlag});
+    renderPctAll(pct);
 
-    // >>> Motivazioni (2)
-    const moti = buildMotivations(answerText);
-    renderMotivations(moti);
+    // >>> Comitato singolo con voti
+    renderCommittee(buildCommittee());
 
     // storia
     const hist = JSON.parse(LS.getItem('cronologia')||'[]');
