@@ -79,20 +79,20 @@ h1{
 }
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
-
 .embit { padding:0 .08em; box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset; text-shadow:0 0 12px rgba(255,255,255,.08); border-radius:4px; }
 .select{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer; }
 
-/* === TOP PERCENT === */
+/* === TOP PROB (label + pill) === */
+.prob-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 6px}
+.prob-label{font-size:12px;color:var(--muted);white-space:nowrap}
 .top-pct{
   display:inline-flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:20px;min-width:96px; padding:8px 14px;
+  font-weight:900;font-size:14px;min-width:64px; padding:6px 10px; /* più piccola */
   background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink); border-radius:12px; box-shadow:0 10px 28px rgba(0,0,0,.35), 0 0 28px var(--glow);
-  margin:2px 0 10px;
+  color:var(--ink); border-radius:10px; box-shadow:0 8px 22px rgba(0,0,0,.32), 0 0 22px var(--glow);
 }
 
-/* Motivazioni (solo testo, niente %) */
+/* === MOTIVAZIONI DEMENZIALI === */
 .mot-wrap{display:flex;flex-direction:column;gap:10px;margin-top:10px}
 .mot{
   display:flex;gap:10px;align-items:flex-start;
@@ -100,7 +100,8 @@ h1{
   border:1px solid rgba(255,255,255,.10);
   border-radius:12px;padding:10px 12px;
 }
-.mot .txt{line-height:1.45}
+.mot .who{font-weight:800;min-width:210px}
+.mot .txt{line-height:1.5}
 .mot .cap{font-size:12px;color:var(--muted);margin-top:2px}
 </style>
 </head>
@@ -133,16 +134,18 @@ h1{
   </div>
 
   <div class="card">
+    <!-- % IN ALTO con etichetta -->
+    <div class="prob-top">
+      <span class="prob-label" id="probTopLabel">% probabilità che accada</span>
+      <span id="topPct" class="top-pct" aria-live="polite">—</span>
+    </div>
+
     <div class="label" id="lblA">Risposta</div>
-
-    <!-- % IN ALTO -->
-    <div id="topPct" class="top-pct" aria-live="polite">—</div>
-
     <div id="lead" class="lead fade-in">—</div>
     <div id="answer" class="story">⏳ …</div>
 
     <div class="hr"></div>
-    <div class="label" id="lblP">Motivi al volo</div>
+    <div class="label" id="lblP">Motivazioni (demenziali)</div>
     <div id="motBlock" class="mot-wrap"></div>
 
     <div class="hr"></div>
@@ -184,7 +187,8 @@ document.documentElement.lang = lang;
 const I18N = {
   it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
        sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
-       p:"Motivi al volo", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
+       ptop:"% probabilità che accada", p:"Motivazioni (demenziali)",
+       share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
        copied:"Copiato!", error:"[errore server]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
@@ -193,7 +197,8 @@ const I18N = {
        back:"← Indietro", home:"🏠 Home" },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-       p:"Quick reasons", share:"📤 Share / Copy", again:"🔁 Ask another",
+       ptop:"% probability it happens", p:"Deranged reasons",
+       share:"📤 Share / Copy", again:"🔁 Ask another",
        copied:"Copied!", error:"[server error]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
@@ -221,13 +226,8 @@ const LEADS = {
 const qs = (sel)=>document.querySelector(sel);
 const setText = (id, txt)=>{ const el=qs(id); if(el) el.textContent = txt; };
 
-const backBtn  = qs('#backBtn');
-const homeBtn  = qs('#homeBtn');
-const langSel  = qs('#langSelect');
 const titleH1  = qs('#title');
 const subtitle = qs('#subtitle');
-const lblQ     = qs('#lblQ');
-const lblA     = qs('#lblA');
 const qView    = qs('#qView');
 const leadNode = qs('#lead');
 const answerEl = qs('#answer');
@@ -238,13 +238,14 @@ const styleBadge = qs('#styleBadge');
 const motBlock = qs('#motBlock');
 const lblP = qs('#lblP');
 const topPct = qs('#topPct');
+const probTopLabel = qs('#probTopLabel');
 
 /* ==== Helpers ==== */
 function normalizeOneParagraph(s=""){
   return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim();
 }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
-function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
+function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s/S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
 
 /* Decorazione em-dash */
 function decorateEmBits(el){
@@ -263,11 +264,12 @@ function decorateEmBits(el){
 /* ==== Titles ==== */
 function setTitlesAndTexts(q){
   const T = I18N[lang] || I18N.it;
-  setText('#title', style==='wtf' ? T.titleWTF : T.titleWHF);
+  titleH1.textContent = (style==='wtf') ? T.titleWTF : T.titleWHF;
   subtitle.textContent = T.sub(q || '—');
-  lblQ.textContent = T.q;
-  lblA.textContent = T.a;
-  lblP.textContent = T.p;
+  setText('#lblQ', T.q);
+  setText('#lblA', T.a);
+  setText('#lblP', T.p);
+  probTopLabel.textContent = T.ptop;
   shareBtn.textContent = T.share;
   againBtn.textContent = T.again;
   styleBadge.textContent = (style==='wtf') ? T.styleWTF : T.styleWHF;
@@ -275,51 +277,88 @@ function setTitlesAndTexts(q){
 
   const bank = (LEADS[lang] && LEADS[lang][style]) ? LEADS[lang][style]
                : (LEADS.it[style] || LEADS.it.whatif);
-  const line = oneSentence(pick(bank) || '');
-  leadNode.textContent = line || '—';
+  leadNode.textContent = oneSentence(pick(bank) || '') || '—';
 }
 
-/* ==== Probabilities / reasons ==== */
+/* ==== Probabilità (singola) ==== */
 function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
-
-// Restituisce {primaryPct, reasons[]}
-function buildPctAndReasons({style, absurd}){
-  // Motivazioni più terra terra, sarcastiche e demenziali
-  if(style==='whatif' && !absurd){
-    const primary = rndInt(55,85);
-    const reasons = (lang==='it')
-      ? ["Mezza attrezzatura già in casa.", "Il resto è calendario e caffeina.", "Se salti due giorni non esplode niente."]
-      : ["You already own half the gear.", "The rest is calendar and caffeine.", "Skip two days and nothing explodes."];
-    return { primaryPct: primary+"%", reasons };
-  }
-  if(style==='whatif' && absurd){
-    const primary = rndInt(150,1200);
-    const reasons = (lang==='it')
-      ? ["Piccioni favorevoli al progetto.", "Moneta dell’universo truccata a tuo favore.", "Momento storico: il caso ha sonno."]
-      : ["Pigeons backing the project.", "Universe’s coin slightly rigged for you.", "Historic moment: randomness is sleepy."];
-    return { primaryPct: primary+"%", reasons };
-  }
-  // WTF
-  const primary = rndInt(120,600);
-  const reasons = (lang==='it')
-    ? ["Due spritz e zero scuse.", "Gruppo WhatsApp già carico di ‘facciamo?’.", "Domattina ghiaccio in fronte, stasera gloria."]
-    : ["Two spritz, zero excuses.", "Group chat already spamming ‘we do this?’.", "Ice on forehead tomorrow, glory tonight."];
-  return { primaryPct: primary+"%", reasons };
+function computeSinglePct({style, absurd}){
+  if(style==='whatif' && !absurd) return rndInt(45,85);
+  if(style==='whatif' && absurd)  return rndInt(120,1200); // volutamente fuori scala
+  return rndInt(90,600); // wtf
 }
 
-function renderTopPct(pct){
-  topPct.textContent = pct || "—";
+/* ==== Topic helpers ==== */
+function extractTopic(sA, sB){
+  const s = (sA||'') + ' ' + (sB||'');
+  const words = String(s).toLowerCase().match(/[a-zà-ù0-9]+/gi) || [];
+  const long = words.filter(w=>w.length>=5);
+  return (long[0] || words[0] || 'il progetto');
 }
-function renderReasons(list){
-  motBlock.innerHTML = '';
-  list.forEach((txt,idx)=>{
+
+/* ==== Motivazioni demenziali collegate a topic ==== */
+function buildDumbReasons(topic){
+  // niente parola "perché"
+  const items = [
+    {
+      who: "Piccioni favorevoli al progetto",
+      gen: ()=> {
+        const fav = rndInt(1,7), contra = rndInt(40,180);
+        return {
+          who: `Piccioni favorevoli al progetto: ${fav} · contrari: ${contra}`,
+          text: `i pro hanno fiuto per briciole legate a “${topic}”; i contro temono che il drone rubi il pane del parchetto.`
+        };
+      }
+    },
+    {
+      who: "Comitato Nonne di Quartiere",
+      gen: ()=> {
+        const fav = rndInt(3,12), contra = rndInt(0,5);
+        return {
+          who: `Comitato Nonne: favorevoli ${fav} · contrari ${contra}`,
+          text: `ok ${topic} se metti il maglione e mangi; dissenso minimo: orario pisolino intoccabile.`
+        };
+      }
+    },
+    {
+      who: "Gatto del condominio",
+      gen: ()=> {
+        const fav = rndInt(0,1), contra = rndInt(0,1);
+        const side = fav>=contra ? "favorevole" : "contrario";
+        return {
+          who: `Gatto del condominio: ${side}`,
+          text: `muso alto su “${topic}”; approvazione valida finché la ciotola resta piena.`
+        };
+      }
+    },
+    {
+      who: "Ufficio Sbadigli & Motivazione",
+      gen: ()=> {
+        const sbad = rndInt(4,18), hype = rndInt(20,95);
+        return {
+          who: `Sbadigli ${sbad}/h · Hype ${hype}%`,
+          text: `curva energia a zig-zag; finestre migliori: minuti 12–27 e 41–49 dell’ora su ${topic}.`
+        };
+      }
+    }
+  ];
+  // scegli 3 diversi
+  const pickIdx = new Set();
+  while (pickIdx.size < 3) pickIdx.add(rndInt(0, items.length-1));
+  return [...pickIdx].map(i => items[i].gen());
+}
+
+function renderReasons(blocks){
+  const wrap = document.getElementById('motBlock');
+  wrap.innerHTML = '';
+  blocks.forEach((b,idx)=>{
     const row = document.createElement('div');
     row.className = 'mot';
     row.innerHTML = `
-      <div class="txt">${txt}</div>
-      <div class="cap">${idx===0?'· Primo colpo':'· Extra spinta'}</div>
+      <div class="who">${b.who}</div>
+      <div class="txt">${b.text}<div class="cap">${idx===0?'· Primo parere':'· Parere extra'}</div></div>
     `;
-    motBlock.appendChild(row);
+    wrap.appendChild(row);
   });
 }
 
@@ -333,6 +372,10 @@ function renderReasons(list){
   setTitlesAndTexts(domanda);
   qs('#qView').textContent = domanda || '—';
 
+  // percentuale top
+  const pct = computeSinglePct({style, absurd:absurdFlag});
+  topPct.textContent = pct + "%";
+
   // fetch risposta
   try{
     const headers = { "Content-Type": "application/json" };
@@ -343,27 +386,29 @@ function renderReasons(list){
     const r = await fetch("/api/ask",{
       method:"POST",
       headers,
-      body:JSON.stringify({ domanda, lang, stile: style, periodo, extra:"", micro:req.micro||{} })
+      body:JSON.stringify({
+        domanda, lang, stile: style, periodo, extra:"", micro:req.micro||{}
+      })
     });
     const data = await r.json().catch(()=>null);
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
 
     let answerText = normalizeOneParagraph((data.answer||"").trim());
     if(!/[.!?…]$/.test(answerText)) answerText += ".";
-    qs('#answer').textContent = answerText;
-    decorateEmBits(qs('#answer'));
+    answerEl.textContent = answerText;
+    decorateEmBits(answerEl);
 
-    // >>> % IN ALTO + MOTIVI SOTTO <<<
-    const { primaryPct, reasons } = buildPctAndReasons({style, absurd:absurdFlag});
-    renderTopPct(primaryPct);
+    // motivazioni collegate a topic
+    const topic = extractTopic(domanda, answerText);
+    const reasons = buildDumbReasons(topic);
     renderReasons(reasons);
 
     // storia
     const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
+    hist.push({ domanda, risposta:answerText, stile:style, periodo, pct, ts:Date.now() });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
   }catch(e){
-    qs('#answer').textContent = (I18N[lang]||I18N.it).error;
+    answerEl.textContent = (I18N[lang]||I18N.it).error;
     console.error(e);
   }
 })();
@@ -379,7 +424,7 @@ qs('#langSelect').onchange = ()=>{
 };
 qs('#shareBtn').onclick = async()=>{
   const T = I18N[lang] || I18N.it;
-  const full = `What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
+  const full = `What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n${T.ptop}: ${qs('#topPct').textContent}\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
   try{
     if(navigator.share){ await navigator.share({ title: "What?f", text: full }); }
     else{
