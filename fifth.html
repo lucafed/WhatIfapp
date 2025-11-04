@@ -355,7 +355,7 @@ function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 function decorateEmBits(el){
   const raw = el.textContent;
   if(!raw || !raw.includes("—")) return;
-  const parts = raw.split("—");
+  const parts = raw split ? raw.split("—") : [];
   let html = "";
   for(let i=0;i<parts.length;i++){
     const seg = parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -384,10 +384,11 @@ function setTitlesAndTexts(q){
   leadNode.textContent = oneSentence(pick(bank) || '') || '—';
 }
 
-/* ==== Percentuale ==== */
-function buildPrimaryPct(){
-  if(style==='whatif') return rndInt(55,85) + "%";
-  return rndInt(120,600) + "%"; // wtf
+/* ==== Percentuale (con “assurda” per Sorprendimi) ==== */
+function buildPrimaryPct({ isSurprise }){
+  if (isSurprise) return rndInt(150,1200) + "%";     // percentuale assurda
+  if (style==='whatif') return rndInt(55,85) + "%";  // seria What if
+  return rndInt(120,600) + "%";                      // WTF default
 }
 function renderPctAll(pct){
   topPct.textContent = pct || "—";
@@ -471,14 +472,12 @@ function renderCommittee(item){
     qs('#answer').textContent = answerText;
     decorateEmBits(qs('#answer'));
 
-    const pct = buildPrimaryPct();
+    // Percentuali (assurda per Sorprendimi)
+    const pct = buildPrimaryPct({ isSurprise });
     renderPctAll(pct);
 
-    /* >>> REGOLE VISIBILITÀ COMITATO
-       - Deve uscire SOLO quando ho premuto "Sorprendimi" (qualsiasi stile/tempo)
-       - In tutti gli altri casi: NIENTE comitato, solo percentuali + nota breve seria
-    */
-    const shouldShowCommittee = isSurprise;  // <— regola unica richiesta
+    // Visibilità comitato: SOLO Sorprendimi
+    const shouldShowCommittee = isSurprise;
 
     if (shouldShowCommittee){
       renderCommittee(buildCommittee());
