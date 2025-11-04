@@ -438,7 +438,7 @@ function renderCommittee(item){
   motNote.textContent = `${item.note} ${rissa}`;
 }
 
-/* ==== Motivazioni serie (per modalità normale) ==== */
+/* ==== Motivazione seria (per What if normale) ==== */
 function buildSeriousRationale(answer, style){
   const base = (answer||"").toLowerCase();
   let key = (lang==='it')
@@ -457,15 +457,61 @@ function buildSeriousRationale(answer, style){
     key = (lang==='it')?"evidenze coerenti con l'obiettivo":"evidence consistent with the goal";
 
   if(style==='wtf'){
-    // versione “scientificamente provata”
+    // This branch is normally not used here (WTF scientific branch is below),
+    // kept for safety fallback
     return (lang==='it')
-      ? `Valutazione scientificamente fondata: criteri di replicabilità, dimensione dell'effetto stimata, intervalli di confidenza e controllo degli errori (p < 0,05 quando applicabile). Focus su ${key}.`
-      : `Scientifically grounded evaluation: replicability criteria, estimated effect size, confidence intervals and error control (p < 0.05 where applicable). Focus on ${key}.`;
+      ? `Valutazione scientificamente fondata: focus su ${key}.`
+      : `Scientifically grounded evaluation: focus on ${key}.`;
   }
   // whatif serio
   return (lang==='it')
     ? `Motivo: ${key}; vincoli noti e piano d’azione sintetico e misurabile.`
     : `Reason: ${key}; known constraints and a concise, measurable action plan.`;
+}
+
+/* ==== Motivazioni scientifiche assurde e brevi (What the F manual/spunti) ==== */
+const SCI_MOTIVATIONS = {
+  it: [
+    "Studio CEDSA (Centro Europeo di Dinamiche Surreali e Alcol): 312 soggetti, 2 cavie sbronze, 4 assetti clinici. Conclusione: aumento statistico del 87% (p≈0.02).",
+    "Protocollo PignaLab, Università Improbabile di Pisa-Marte: test su 98 partecipanti + 1 piccione. Risultato replicato, intervallo di confidenza sorprendente.",
+    "Istituto Svizzero Formaggi & Motivazione: RCT su 120 persone; gruppo con formaggio ha +72% successo. Condotto con 3 ricercatori post-apéritif.",
+    "Dip. Neuro-Motivazionale, Accademia Internazionale dell'Assurdo: 11 ingegneri, 2 cani, modello calibrato — effetto robusto, replicabile su scala ridotta.",
+    "Laboratorio di Bio-Psicostatistica di Bologna-Follia: 4921 casi + 7 piccioni determinati; azione immediata = +1220% output esistenziale (valore esagerato, verificato internamente)."
+  ],
+  en: [
+    "CEDSA Study (Center for European Delirious and Spirits Analysis): 312 subjects, 2 drunken guinea-animals, 4 clinical arms. Outcome: 87% effect (p≈0.02).",
+    "PineCone Protocol, Improbable University of Pisa-Mars: 98 participants + 1 pigeon. Replicated result with surprising CI.",
+    "Swiss Institute of Cheese & Motivation: RCT on 120 people; cheese group +72% success. Conducted by 3 post-apéritif researchers.",
+    "Dept. of Neuro-Motivation, International Academy of Absurdity: 11 engineers, 2 dogs — calibrated model; robust small-scale effect.",
+    "Bio-Psycho-Stat Lab, Bologna-Folly: 4921 human cases + 7 determined pigeons; immediate action => +1220% existential output (internally verified)."
+  ],
+  es: [
+    "Estudio CEDSA (Centro Europeo de Dinámicas Surreales y Alcohol): 312 sujetos, 2 cobayas ebrias, 4 brazos clínicos. Resultado: efecto 87% (p≈0.02).",
+    "Protocolo Piña, Universidad Improbable de Pisa-Marte: 98 participantes + 1 paloma. Resultado replicado, IC sorprendente.",
+    "Instituto Suizo de Queso y Motivación: ECA con 120 personas; grupo queso +72% éxito. Conductores: 3 investigadores post-aperitivo.",
+    "Dept. Neuro-Motivacional, Academia Internacional del Absurdo: 11 ingenieros, 2 perros — modelo calibrado; efecto robusto en pequeña escala.",
+    "Lab Bio-Psico-Estadístico de Bolonia-Locura: 4921 casos humanos + 7 palomas; acción inmediata => +1220% output existencial (verificado internamente)."
+  ],
+  fr: [
+    "Étude CEDSA (Centre Européen de Dynamiques Surréalistes & Apéritif): 312 sujets, 2 cobayes ivres, 4 bras cliniques. Effet: 87% (p≈0.02).",
+    "Protocole Pigne, Université Improbable de Pise-Mars: 98 participants + 1 pigeon. Résultat reproduit, IC surprenant.",
+    "Institut Suisse du Fromage & Motivation: ECA sur 120 personnes; groupe fromage +72% de réussite. Réalisé par 3 chercheurs post-apéro.",
+    "Dept. Neuro-Motivation, Académie Internationale de l'Absurde: 11 ingénieurs, 2 chiens — modèle calibré; effet robuste à petite échelle.",
+    "Lab Bio-Psycho-Stat, Bologne-Folie: 4921 cas humains + 7 pigeons; action immédiate => +1220% d'output existentiel (vérifié en interne)."
+  ],
+  de: [
+    "CEDSA-Studie (Zentrum für Europäische Surreale Dynamik & Schnaps): 312 Probanden, 2 betrunkene Versuchstiere, 4 klinische Arme. Effekt: 87% (p≈0.02).",
+    "Protokoll Zapfen, Unwahrscheinliche Universität Pisa-Mars: 98 Teilnehmende + 1 Taube. Repliziertes Ergebnis, überraschendes KI.",
+    "Schweizer Institut für Käse & Motivation: RCT mit 120 Personen; Käse-Gruppe +72% Erfolg. Durchgeführt von 3 post-Apéritif Forschern.",
+    "Dept. Neuro-Motivation, Internationale Akademie des Absurden: 11 Ingenieure, 2 Hunde — kalibriertes Modell; robuster Effekt in Kleinserie.",
+    "Bio-Psycho-Stat Labor Bologna-Wahnsinn: 4921 Fälle + 7 entschlossene Tauben; sofortige Aktion => +1220% existenzieller Output (intern geprüft)."
+  ]
+};
+
+/* pick a short scientific motivation (multilang) */
+function pickScientificMotivation(){
+  const list = SCI_MOTIVATIONS[lang] || SCI_MOTIVATIONS.it;
+  return pick(list);
 }
 
 /* ==== Surprise detector ==== */
@@ -474,7 +520,8 @@ function isSurprise(req){
   return params.get('src')==='surprise'
       || LS.getItem('surprise_mode')==='1'
       || req?.surprise === true
-      || req?.micro?.surprise === true;
+      || req?.micro?.surprise === true
+      || LS.getItem('absurd_prompt')==='1';
 }
 
 /* ==== Load & fetch ==== */
@@ -515,9 +562,11 @@ function isSurprise(req){
     const T = I18N[lang] || I18N.it;
 
     if (surprise){
-      // Mostra COMITATO con zuffa
+      // Mostra COMITATO con zuffa e voti (Sorprendimi)
+      motIco.style.display = ''; // show icon
       chipsWrap.style.display = 'flex';
       renderCommittee(buildCommittee());
+      committeeTitle.textContent = committeeTitle.textContent || (T.votersTitle || 'Comitato');
     } else {
       // Modalità NORMALE: NIENTE comitato, SOLO motivazione seria
       const title = (style==='wtf') ? T.scientificTitle : T.seriousTitle;
@@ -525,8 +574,14 @@ function isSurprise(req){
       // nascondi elementi di comitato
       motIco.style.display = 'none';
       chipsWrap.style.display = 'none';
-      // motivazione seria (o scientificamente fondata per WTF)
-      motNote.textContent = buildSeriousRationale(answerText, style);
+      // motivazione:
+      if (style==='wtf'){
+        // scientificamente "esagerata" e breve, multilingua
+        motNote.textContent = pickScientificMotivation();
+      } else {
+        // whatif serio, breve
+        motNote.textContent = buildSeriousRationale(answerText, style);
+      }
     }
 
     // storia
