@@ -289,6 +289,10 @@ $('homeBtn').onclick=()=>location.href='index.html';
 $('backBtn').onclick=()=>{ if(history.length>1) history.back(); else location.href='index.html'; };
 $('resetBtn').onclick=()=>{ try{localStorage.clear();}catch{} location.href='index.html'; };
 
+/* ===== STATO "ASSURDA" ===== */
+let isAbsurd=false;                         // default: no
+LS.setItem('absurd_prompt','0');           // reset all'avvio
+
 /* ===== HINTS (solo realistici, daily) ===== */
 const HINTS={
   it:["E se cambiassi lavoro?","E se cambiassi città?","E se tornassi a studiare?","E se vivessi 30 giorni senza social?","E se chiedessi un aumento?","E se organizzassi un viaggio da solo?","E se imparassi bene l’inglese?","E se aprissi un micro e-commerce?","E se corressi 3 volte a settimana?","E se cucinassi a casa 30 giorni?"],
@@ -313,7 +317,7 @@ function renderHints(){
   const list=daily(base,8);                         // cambiano ogni giorno
   hintsWrap.innerHTML='';
   list.forEach(h=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=h;
-    b.onclick=()=>{ $('qInput').value=h; window.scrollTo({top:0,behavior:'smooth'}); };
+    b.onclick=()=>{ $('qInput').value=h; isAbsurd=false; LS.setItem('absurd_prompt','0'); window.scrollTo({top:0,behavior:'smooth'}); };
     hintsWrap.appendChild(b);
   });
   const T=I18N[lang]||I18N.it;
@@ -341,7 +345,7 @@ function renderNext(){
     const left=document.createElement('div'); left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.q||'—'}</div><div class="meta">${fmtDate(item.ts)}</div>`;
     const right=document.createElement('div'); right.className='row';
     const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=T.use;
-    useBtn.onclick=()=>{ $('qInput').value=item.q||''; window.scrollTo({top:0,behavior:'smooth'}); };
+    useBtn.onclick=()=>{ $('qInput').value=item.q||''; isAbsurd=false; LS.setItem('absurd_prompt','0'); window.scrollTo({top:0,behavior:'smooth'}); };
     right.appendChild(useBtn); row.appendChild(left); row.appendChild(right); box.appendChild(row);
   });
 }
@@ -375,16 +379,22 @@ function trySubmit(){
   if(!domanda) { $('qInput').focus(); return; }
   if(!consumeOneCredit()) return;
   LS.setItem('domanda',domanda);
-  const req={domanda, stile:prefs.stile, lang, extra:'', micro:{}, fantasy_mode:false, periodo:prefs.periodo};
+  // passa il flag assurdo sia nel request che nel LS separato
+  const req={domanda, stile:prefs.stile, lang, extra:'', micro:{}, fantasy_mode:false, periodo:prefs.periodo, absurd:isAbsurd};
   writeJSON('whatif_request',req);
+  LS.setItem('absurd_prompt', isAbsurd ? '1' : '0');
   addHistory(domanda, prefs.stile);
   location.href='fifth.html';
 }
 $('goBtn').onclick=trySubmit;
-$('clearBtn').onclick=()=>{$('qInput').value=''; $('qInput').focus();};
+
+// se l'utente scrive a mano → non assurdo
+$('qInput').addEventListener('input', ()=>{ isAbsurd=false; LS.setItem('absurd_prompt','0'); });
+
+$('clearBtn').onclick=()=>{$('qInput').value=''; isAbsurd=false; LS.setItem('absurd_prompt','0'); $('qInput').focus();};
 $('qInput').addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
-/* ===== SORPRENDIMI: limite giornaliero (FREE=1, PRO=5) e slot solo ASSURDE ===== */
+/* ===== SORPRENDIMI: limite giornaliero (FREE=1, PRO=5) e slot solo ASSURDE (daily) ===== */
 function spinCap(){ return userIsAdmin()?Infinity:(prefs.pro?5:1); }
 function ensureSpins(){
   const s=readJSON('surprise_spins',{date:todayISO(),used:0});
@@ -413,13 +423,14 @@ renderSpinButton();
 
 function slotSurprise(){
   if(!consumeOneSpin()) return;          // rispetta limite
-  const absurd=ABS[lang]||ABS.it;
-  if(!absurd.length) return;
+  const absurdAll=ABS[lang]||ABS.it;
+  if(!absurdAll.length) return;
+  const absurdDaily = daily(absurdAll, 8);   // subset giornaliero
 
   const el=$('qInput'); el.classList.add('slotting');
   let i=0;
   const iv=setInterval(()=>{
-    el.value = absurd[i % absurd.length];      // SOLO assurde
+    el.value = absurdDaily[i % absurdDaily.length];   // SOLO assurde del giorno
     const s = Math.random()<.5 ? 'whatif' : 'wtf';
     const p = Math.random()<.5 ? 'future' : 'past';
     prefs.stile=s; prefs.periodo=p; writeJSON('whatif_prefs',prefs);
@@ -427,7 +438,11 @@ function slotSurprise(){
     renderBadges(); i++;
   },90);
 
-  setTimeout(()=>{ clearInterval(iv); el.classList.remove('slotting'); }, 1200 + Math.random()*600);
+  // stop e set flag assurdo
+  setTimeout(()=>{ 
+    clearInterval(iv); el.classList.remove('slotting');
+    isAbsurd=true; LS.setItem('absurd_prompt','1');
+  }, 1200 + Math.random()*600);
 }
 $('surpriseBtn').onclick=slotSurprise;
 </script>
