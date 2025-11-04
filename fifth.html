@@ -110,7 +110,7 @@ h1{
 }
 .result-title{font-weight:900}
 
-/* === BLOCCO MOTIVAZIONE: versione ironica (comitato) o seria (testo) === */
+/* === BLOCCO MOTIVAZIONE: ironica (comitato) o seria (testo) === */
 .mot{display:grid;grid-template-columns:auto 1fr;gap:10px;margin-top:6px}
 .mot .ico{font-size:18px;line-height:1.2}
 .mot .name{font-weight:800}
@@ -360,7 +360,7 @@ function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 function decorateEmBits(el){
   const raw = el.textContent;
   if(!raw || !raw.includes("—")) return;
-  const parts = raw.split("—");
+  const parts = raw split("—");
   let html = "";
   for(let i=0;i<parts.length;i++){
     const seg = parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -506,16 +506,16 @@ function buildExtraDryNoteWTF(note){
   const pct = buildPct({surprise, style});
   renderPctAll(pct);
 
-  // Visualizzazione motivazioni (SOLO una variante)
+  // Motivazioni (SOLO una variante in pagina)
   if (surprise){
     // IRONICA per entrambi gli stili
     motSerious.style.display = 'none';
     motIronic.style.display  = 'grid';
     renderCommittee(buildCommittee());
-    // Reset one-shot per evitare "sticky" sorpresa su domanda successiva
+    // reset one-shot per evitare sticky sorpresa
     LS.removeItem('surprise_mode');
   } else {
-    // SERIA per manuale/spunti in entrambi gli stili
+    // SERIA per manuale/spunti; in WTF versione extra-dry
     const Tloc = I18N[lang] || I18N.it;
     const baseNote = buildSeriousRationale(answerText);
     committeeTitle.textContent = Tloc.seriousTitle;
