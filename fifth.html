@@ -95,7 +95,7 @@ h1{
   color:var(--ink);border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.32),0 0 22px var(--glow);
 }
 
-/* === RISULTATI SOTTO (percentuale + comitato) === */
+/* === RISULTATI SOTTO === */
 .result-box{
   background:rgba(255,255,255,.04);
   border:1px solid rgba(255,255,255,.10);
@@ -110,18 +110,19 @@ h1{
 }
 .result-title{font-weight:900}
 
-/* === MOTIVO (1 comitato) === */
+/* === Blocco comitato (solo per WTF) === */
 .mot{display:grid;grid-template-columns:auto 1fr;gap:10px;margin-top:6px}
 .mot .ico{font-size:18px;line-height:1.2}
-.mot .name{display:none} /* niente duplicazione del nome */
+.mot .name{display:none}
 .mot .note{font-size:12px;color:var(--muted);margin-top:2px}
-
-/* Chips voti */
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .chip{
   font-size:12px;font-weight:900;padding:4px 8px;border-radius:999px;
   background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
 }
+
+/* === Commento serio (solo WHAT IF) === */
+.note-only{font-size:12px;color:var(--muted);margin-top:4px}
 </style>
 </head>
 <body>
@@ -167,7 +168,7 @@ h1{
     <div class="hr"></div>
     <div class="label" id="lblP">Esito & motivazioni</div>
 
-    <!-- RISULTATI IN RISALTO: % + comitato + voti -->
+    <!-- BOX RISULTATO -->
     <div class="result-box" id="resultBox">
       <div class="result-head">
         <span class="pct-label">% probabilità che accada</span>
@@ -175,7 +176,8 @@ h1{
         <span class="result-title" id="committeeTitle">—</span>
       </div>
 
-      <div class="mot" id="motOne">
+      <!-- Comitato (WTF) -->
+      <div class="mot" id="motOne" style="display:none">
         <div class="ico" id="motIco">—</div>
         <div>
           <div class="name" id="motName">—</div>
@@ -187,6 +189,9 @@ h1{
           <div class="note" id="motNote">—</div>
         </div>
       </div>
+
+      <!-- Commento serio (WHAT IF) -->
+      <div id="noteOnly" class="note-only" style="display:none">—</div>
     </div>
 
     <div class="hr"></div>
@@ -236,7 +241,8 @@ const I18N = {
         : `Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`,
        pctLabel:"% probabilità che accada",
        back:"← Indietro", home:"🏠 Home",
-       votersTitle:"Comitato" },
+       votersTitle:"Comitato",
+       noteTitle:"Commento" },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
        p:"Outcome & rationales", share:"📤 Share / Copy", again:"🔁 Ask another",
@@ -247,7 +253,8 @@ const I18N = {
         : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,
        pctLabel:"% probability it happens",
        back:"← Back", home:"🏠 Home",
-       votersTitle:"Committee" }
+       votersTitle:"Committee",
+       noteTitle:"Comment" }
 };
 I18N.es=I18N.en; I18N.fr=I18N.en; I18N.de=I18N.en;
 
@@ -265,55 +272,25 @@ const LEADS = {
        whatif:["Set the keys down and let the quiet that doesn’t judge go first."]}
 };
 
-/* ==== Categories: SOLO Psicologia, Vita notturna, Animali ==== */
+/* ==== Categories limitate (Psicologia, Vita notturna, Animali) ==== */
 const CATEGORIES = [
-  // Psicologia
-  { ico:"🧠", name_it:"Comitato dei Pensieri Sotto la Doccia", name_en:"Shower-Thoughts Committee",
-    notes_it:["Illuminazione logistica a shampoo.","Decisione nata a 38°C."],
-    notes_en:["Logistics epiphany mid-shampoo.","Decision made at 38°C."] },
-  { ico:"📊", name_it:"Ordine degli Ottimisti Moderati", name_en:"Order of Moderate Optimists",
-    notes_it:["Aspettative sobrie, calendario stretto."],
-    notes_en:["Sober expectations, tight schedule."] },
-  { ico:"📞", name_it:"Autorità delle Telefonate Fuori Tempo", name_en:"Off-Timing Calls Authority",
-    notes_it:["Parere arrivato alle 07:12.","Consiglio durante squillo prolungato."],
-    notes_en:["Opinion at 07:12.","Advice during a long ring."] },
-
-  // Vita notturna
-  { ico:"🥃", name_it:"Circolo Bar Notturno dei Consiglieri", name_en:"Late-Bar Counsel Circle",
-    notes_it:["Coraggio liquido, piani semplici."],
-    notes_en:["Liquid courage, simple plans."] },
-  { ico:"🍕", name_it:"Associazione Snack Notturni e Idee", name_en:"Night Snacks & Ideas Association",
-    notes_it:["Briefing alle 23:47.","Carboidrati a supporto."],
-    notes_en:["Briefing at 23:47.","Carbs backing the plan."] },
-  { ico:"🎤", name_it:"Sindacato delle Idee da Karaoke", name_en:"Karaoke Ideas Union",
-    notes_it:["Proposta al ritornello.","Volume > ragione."],
-    notes_en:["Proposal on the chorus.","Volume > reason."] },
-  { ico:"💬", name_it:"Conferenza degli Amici Che Gasano", name_en:"Conference of Hype Friends",
-    notes_it:["Clima motivazionale alto."],
-    notes_en:["High motivational climate."] },
-
-  // Animali
-  { ico:"🕊️", name_it:"Assemblea dei Piccioni con Opinioni Forti", name_en:"Assembly of Strong-Opinion Pigeons",
-    notes_it:["Consenso rumoroso in piazza."],
-    notes_en:["Loud piazza consensus."] },
-  { ico:"🦊", name_it:"Lobby delle Volpi Opportuniste", name_en:"Opportunistic Foxes Lobby",
-    notes_it:["Favorevoli se conviene subito."],
-    notes_en:["In favor if payoff is instant."] },
-  { ico:"🐙", name_it:"Federazione dei Polpi Strategici", name_en:"Federation of Strategic Octopuses",
-    notes_it:["Otto mosse avanti, presa salda."],
-    notes_en:["Eight moves ahead, firm grip."] },
-  { ico:"🦥", name_it:"Consiglio dei Bradipi Riflessivi", name_en:"Council of Reflective Sloths",
-    notes_it:["Decisione lenta ma convinta."],
-    notes_en:["Slow yet resolute decision."] },
+  { ico:"🧠", name_it:"Comitato dei Pensieri Sotto la Doccia", name_en:"Shower-Thoughts Committee" },
+  { ico:"📊", name_it:"Ordine degli Ottimisti Moderati", name_en:"Order of Moderate Optimists" },
+  { ico:"📞", name_it:"Autorità delle Telefonate Fuori Tempo", name_en:"Off-Timing Calls Authority" },
+  { ico:"🥃", name_it:"Circolo Bar Notturno dei Consiglieri", name_en:"Late-Bar Counsel Circle" },
+  { ico:"🍕", name_it:"Associazione Snack Notturni e Idee", name_en:"Night Snacks & Ideas Association" },
+  { ico:"🎤", name_it:"Sindacato delle Idee da Karaoke", name_en:"Karaoke Ideas Union" },
+  { ico:"💬", name_it:"Conferenza degli Amici Che Gasano", name_en:"Conference of Hype Friends" },
+  { ico:"🕊️", name_it:"Assemblea dei Piccioni con Opinioni Forti", name_en:"Assembly of Strong-Opinion Pigeons" },
+  { ico:"🦊", name_it:"Lobby delle Volpi Opportuniste", name_en:"Opportunistic Foxes Lobby" },
+  { ico:"🐙", name_it:"Federazione dei Polpi Strategici", name_en:"Federation of Strategic Octopuses" },
+  { ico:"🦥", name_it:"Consiglio dei Bradipi Riflessivi", name_en:"Council of Reflective Sloths" },
 ];
 
 /* ==== UI refs ==== */
 const qs = (sel)=>document.querySelector(sel);
 const setText = (id, txt)=>{ const el=qs(id); if(el) el.textContent = txt; };
 
-const backBtn  = qs('#backBtn');
-const homeBtn  = qs('#homeBtn');
-const langSel  = qs('#langSelect');
 const titleH1  = qs('#title');
 const subtitle = qs('#subtitle');
 const lblQ     = qs('#lblQ');
@@ -332,12 +309,15 @@ const bottomPct = qs('#bottomPct');
 const pctLabelTop = qs('#pctLabel');
 
 const committeeTitle = qs('#committeeTitle');
+const motOne  = qs('#motOne');
 const motIco  = qs('#motIco');
 const motName = qs('#motName');
 const chipFav = qs('#chipFav');
 const chipCon = qs('#chipCon');
 const chipAst = qs('#chipAst');
 const motNote = qs('#motNote');
+
+const noteOnly = qs('#noteOnly');
 
 /* ==== Helpers ==== */
 function normalizeOneParagraph(s=""){
@@ -347,7 +327,7 @@ function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
 function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
-/* Decorazione em-dash */
+/* Em-dash decoration */
 function decorateEmBits(el){
   const raw = el.textContent;
   if(!raw || !raw.includes("—")) return;
@@ -382,134 +362,75 @@ function setTitlesAndTexts(q){
 
 /* ==== Percentuale primaria ==== */
 function buildPrimaryPct({style, absurd}){
-  if(style==='whatif' && !absurd) return rndInt(55,85) + "%";
-  if(style==='whatif' && absurd)  return rndInt(150,1200) + "%";
-  return rndInt(120,600) + "%"; // wtf
+  if(style==='whatif') return rndInt(55,85) + "%";
+  return absurd ? rndInt(150,1200) + "%" : rndInt(120,600) + "%"; // WTF
 }
 function renderPctAll(pct){
   topPct.textContent = pct || "—";
   bottomPct.textContent = pct || "—";
 }
 
-/* ==== Note serie (per WHAT IF) ==== */
-function buildSeriousNote(cat){
-  const byCat = {
-    "🧠":[
-      "Coerenza con abitudini attuali e curva d’impegno sostenibile.",
-      "Chiarezza obiettivi e micro-step misurabili."
-    ],
-    "📊":[
-      "Finestra temporale favorevole e risorse disponibili.",
-      "Rischi noti con mitigazioni semplici."
-    ],
-    "📞":[
-      "Stakeholder informali già allineati.",
-      "Tempistiche compatibili con vincoli personali."
-    ],
-    "🥃":[
-      "Network attivo e supporto operativo nelle prime fasi.",
-      "Decisione rapida possibile con basso costo d’errore."
-    ],
-    "🍕":[
-      "Logistica leggera e facilità di coordinamento.",
-      "Benefici rapidi percepibili che sostengono la motivazione."
-    ],
-    "🎤":[
-      "Contesto sociale favorevole al testing.",
-      "Feedback immediato per iterare."
-    ],
-    "💬":[
-      "Supporto motivazionale stabile.",
-      "Allineamento del gruppo su priorità pragmatiche."
-    ],
-    "🕊️":[
-      "Ambiente urbano ricettivo e pochi vincoli regolatori.",
-      "Tempistica stagionale favorevole."
-    ],
-    "🦊":[
-      "Opportunità a breve termine identificata.",
-      "Costo d’ingresso contenuto rispetto al potenziale."
-    ],
-    "🐙":[
-      "Flessibilità d’esecuzione e piani B disponibili.",
-      "Coordinamento semplice tra più task."
-    ],
-    "🦥":[
-      "Obiettivo a prova di ritardi fisiologici.",
-      "Stabilità del contesto nel medio periodo."
-    ],
-  };
-  const pool = byCat[cat.ico] || ["Fattibilità elevata e rischi contenuti."];
-  return pick(pool);
+/* ==== Commento serio (WHAT IF) ==== */
+function buildSeriousNote(){
+  const pools = [
+    "Valutazione basata su fattibilità, tempistiche e risorse disponibili.",
+    "Scenario favorevole: passi chiari, costi contenuti, impatto concreto.",
+    "Rischi noti e gestibili; beneficio percepibile nel breve periodo.",
+    "Allineamento tra obiettivo, abitudini attuali e vincoli reali."
+  ];
+  return pick(pools);
 }
 
-/* ==== Azuffamento (solo per WTF) ==== */
+/* ==== Comitato + voti (solo WTF) ==== */
+function randVotes(){ const fav=rndInt(2,2500), con=rndInt(0,Math.floor(fav*0.4)), ast=rndInt(0,Math.floor((fav+con)*0.2)); return {fav,con,ast}; }
+function buildCommittee(){
+  const cat = pick(CATEGORIES);
+  const name = (lang==='it') ? cat.name_it : cat.name_en;
+  return { ico:cat.ico, name, votes:randVotes() };
+}
 function buildScuffleExtra(){
-  const minor = rndInt(1,5);
-  const injured = rndInt(0,3);
-  const hosp = Math.min(injured, rndInt(0,2));
-  const extras = [
-    `Breve parapiglia al voto: ${minor} allontanati; ${injured} contusi (${hosp} bendati).`,
-    `Discussione accesa: ${minor} espulsi; ${injured} graffiati, ${hosp} medicati.`,
-    `Intervallo movimentato: ${minor} bicchieri rovesciati; ${injured} piccoli tagli (${hosp} cerotti).`
+  const minor=rndInt(1,5), inj=rndInt(0,3), hosp=Math.min(inj,rndInt(0,2));
+  const extras=[
+    `Breve parapiglia al voto: ${minor} allontanati; ${inj} contusi (${hosp} bendati).`,
+    `Discussione accesa: ${minor} espulsi; ${inj} graffiati, ${hosp} medicati.`,
+    `Intervallo movimentato: ${minor} bicchieri rovesciati; ${inj} piccoli tagli (${hosp} cerotti).`
   ];
   return pick(extras);
 }
 
-/* ==== Comitato singolo + voti ==== */
-function randVotes(){
-  const fav = rndInt(2, 2500);
-  const con = rndInt(0, Math.max(0, Math.floor(fav*0.4)));
-  const ast = rndInt(0, Math.max(0, Math.floor((fav+con)*0.2)));
-  return {fav, con, ast};
-}
-function buildCommittee(){
-  const cat = pick(CATEGORIES);
-  const name = (lang==='it') ? cat.name_it : cat.name_en;
-  const votes = randVotes();
-  // prendiamo una nota base (neutra) per il titolo ironico WTF
-  const baseNote = (lang==='it' ? (cat.notes_it||[]) : (cat.notes_en||[]));
-  return { ico:cat.ico, name, baseNote, cat, votes };
-}
-
-/* Forziamo: WHAT IF = serio sempre */
-function computeSeriousFlag(){
-  return (style === 'whatif'); // indipendente da micro/manual/absurd
-}
-
-function renderCommittee(item){
+/* ==== Render outcome ==== */
+function renderOutcome(){
   const T = I18N[lang] || I18N.it;
-  const serious = computeSeriousFlag();
 
-  // Titolo una sola volta
-  committeeTitle.textContent = `${item.ico} ${T.votersTitle}: ${item.name}`;
-
-  // Sotto: solo voti + nota
-  motIco.textContent  = item.ico;
-  motName.textContent = item.name; // nascosto via CSS
-  chipFav.textContent = `favorevoli ${item.votes.fav}`;
-  chipCon.textContent = `contrari ${item.votes.con}`;
-  chipAst.textContent = `astenuti ${item.votes.ast}`;
-
-  if (serious){
-    motNote.textContent = buildSeriousNote(item.cat);
+  if (style === 'whatif'){
+    // SOLO percentuale + commento serio
+    committeeTitle.textContent = `${T.noteTitle}`;
+    motOne.style.display = 'none';
+    noteOnly.style.display = 'block';
+    noteOnly.textContent = buildSeriousNote();
   } else {
-    const base = (item.baseNote && item.baseNote.length) ? pick(item.baseNote) : "Consenso alto.";
-    motNote.textContent = `${base} ${buildScuffleExtra()}`;
+    // WTF: mostra comitato + voti + nota ironica breve
+    const c = buildCommittee();
+    committeeTitle.textContent = `${c.ico} ${T.votersTitle}: ${c.name}`;
+    motOne.style.display = 'grid';
+    noteOnly.style.display = 'none';
+    qs('#motIco').textContent = c.ico;
+    qs('#motName').textContent = c.name;
+    chipFav.textContent = `favorevoli ${c.votes.fav}`;
+    chipCon.textContent = `contrari ${c.votes.con}`;
+    chipAst.textContent = `astenuti ${c.votes.ast}`;
+    motNote.textContent = buildScuffleExtra();
   }
 }
 
 /* ==== Load & fetch ==== */
 (async ()=>{
   const req = JSON.parse(LS.getItem('whatif_request')||'{}');
-  const absurdFlag = req.absurd === true || LS.getItem('absurd_prompt') === '1';
-
   // domanda
   let domanda = req.domanda || LS.getItem('domanda') || "";
   setTitlesAndTexts(domanda);
   qs('#qView').textContent = domanda || '—';
 
-  // fetch risposta
   try{
     const headers = { "Content-Type": "application/json" };
     if (prefs.pro === true) headers["x-pro"] = "1";
@@ -526,48 +447,47 @@ function renderCommittee(item){
 
     let answerText = normalizeOneParagraph((data.answer||"").trim());
     if(!/[.!?…]$/.test(answerText)) answerText += ".";
-    qs('#answer').textContent = answerText;
-    decorateEmBits(qs('#answer'));
+    answerEl.textContent = answerText;
+    decorateEmBits(answerEl);
 
-    // >>> % in alto e sotto
-    // nelle WHAT IF ignoriamo eventuale absurd flag
-    const pct = buildPrimaryPct({style, absurd: (style==='wtf') && absurdFlag});
+    // Percentuali
+    const pct = buildPrimaryPct({style, absurd:false});
     renderPctAll(pct);
 
-    // >>> Comitato singolo con voti (nota seria per WHAT IF; ironica+azzuffamento per WTF)
-    renderCommittee(buildCommittee());
+    // Esito (solo commento serio in WHAT IF; comitato in WTF)
+    renderOutcome();
 
-    // storia
+    // Storia locale
     const hist = JSON.parse(LS.getItem('cronologia')||'[]');
     hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
   }catch(e){
-    qs('#answer').textContent = (I18N[lang]||I18N.it).error;
+    answerEl.textContent = (I18N[lang]||I18N.it).error;
     console.error(e);
   }
 })();
 
 /* ==== Nav / lingua ==== */
-qs('#backBtn').onclick = ()=> history.length > 1 ? history.back() : location.replace('index.html');
-qs('#homeBtn').onclick = ()=> location.href='index.html';
-qs('#langSelect').onchange = ()=>{
-  lang = qs('#langSelect').value;
+document.querySelector('#backBtn').onclick = ()=> history.length > 1 ? history.back() : location.replace('index.html');
+document.querySelector('#homeBtn').onclick = ()=> location.href='index.html';
+document.querySelector('#langSelect').onchange = ()=>{
+  lang = document.querySelector('#langSelect').value;
   LS.setItem('lang', lang);
   document.documentElement.lang = lang;
   location.reload();
 };
-qs('#shareBtn').onclick = async()=>{
+document.querySelector('#shareBtn').onclick = async()=>{
   const T = I18N[lang] || I18N.it;
-  const full = `What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
+  const full = `What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${document.querySelector('#answer').textContent}`;
   try{
     if(navigator.share){ await navigator.share({ title: "What?f", text: full }); }
     else{
       await navigator.clipboard.writeText(full);
-      const b=qs('#shareBtn'); b.textContent=T.copied; setTimeout(()=>b.textContent=T.share,1200);
+      const b=document.querySelector('#shareBtn'); b.textContent=T.copied; setTimeout(()=>b.textContent=T.share,1200);
     }
   }catch{}
 };
-qs('#againBtn').onclick = ()=>{ location.href='fourth.html'; };
+document.querySelector('#againBtn').onclick = ()=>{ location.href='fourth.html'; };
 </script>
 </body>
 </html>
