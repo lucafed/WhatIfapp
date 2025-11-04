@@ -46,7 +46,7 @@ h1{
   background:rgba(255,255,255,.06);
   border:1px solid rgba(255,255,255,.12);
   border-radius:12px;
-  padding:10px;
+  padding:10px;min-height:46px
 }
 .story{
   white-space:normal;
@@ -79,27 +79,26 @@ h1{
 }
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
-
 .embit { padding:0 .08em; box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset; text-shadow:0 0 12px rgba(255,255,255,.08); border-radius:4px; }
 .select{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer; }
 
-/* Percentuale in alto */
-.pct-top{display:flex;justify-content:center;margin:6px 0 12px}
-.pct-pill{
-  min-width:88px;text-align:center;font-weight:900;
+/* PERCENTUALE (sopra la risposta) */
+.pill-wrap{text-align:center;margin:10px 0 14px}
+.pill{
+  display:inline-block;padding:10px 18px;border-radius:14px;
   background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink); border-radius:12px; padding:8px 12px;
-  box-shadow:0 6px 18px rgba(0,0,0,.28), 0 0 18px var(--glow);
-  font-size:18px;
+  color:var(--ink);font-weight:900;font-size:19px;
+  box-shadow:0 6px 18px rgba(0,0,0,.35),0 0 28px var(--glow);
 }
 
-/* Motivazioni sotto */
-.reasons-wrap{display:flex;flex-direction:column;gap:10px;margin-top:8px}
-.reason{
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:12px;padding:10px 12px;line-height:1.45
-}
+/* Selettore stile motivazione */
+.modes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:6px 0 2px}
+.mode{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer}
+.mode.sel{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);font-weight:900}
+
+/* MOTIVO sotto la risposta */
+.reason{font-size:14px;color:var(--muted);margin-top:12px;line-height:1.5;text-align:center}
 </style>
 </head>
 <body>
@@ -127,22 +126,28 @@ h1{
 
   <div class="card">
     <div class="label" id="lblQ">La tua domanda</div>
-    <div class="input" id="qView" style="min-height:46px"></div>
+    <div class="input" id="qView"></div>
   </div>
 
   <div class="card">
     <div class="label" id="lblA">Risposta</div>
 
-    <!-- Percentuale in alto -->
-    <div class="pct-top"><div id="topPct" class="pct-pill">—</div></div>
+    <!-- Percentuale PRIMA -->
+    <div class="pill-wrap"><span id="probPill" class="pill">—</span></div>
 
-    <div id="lead" class="lead fade-in">—</div>
     <div id="answer" class="story">⏳ …</div>
 
-    <!-- MOTIVAZIONI sotto -->
-    <div class="hr"></div>
-    <div class="label" id="lblP">Motivazioni</div>
-    <div id="probBlock" class="reasons-wrap"></div>
+    <!-- Selettore modalità motivazione -->
+    <div class="modes" id="modes">
+      <button class="mode" data-mode="cosmico">🚀 Assurdo cosmico</button>
+      <button class="mode" data-mode="sagre">🍻 Ubriaco da sagre</button>
+      <button class="mode" data-mode="tamarro">🚗💨 Tamarro romano</button>
+      <button class="mode" data-mode="zen">🧘‍♂️ Zen scemo</button>
+      <button class="mode" data-mode="shuffle" title="Random">🎲</button>
+    </div>
+
+    <!-- Motivo DOPO -->
+    <div id="reason" class="reason"> </div>
 
     <div class="hr"></div>
     <div class="row">
@@ -161,7 +166,6 @@ const style = prefs.stile || 'whatif';
 const periodo = prefs.periodo || 'future';
 let lang  = (LS.getItem('lang') || 'it').toLowerCase();
 if(!['it','en','es','fr','de'].includes(lang)) lang = 'it';
-
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 document.documentElement.lang = lang;
 
@@ -172,9 +176,9 @@ document.documentElement.lang = lang;
   if (hasToken || prefs.pro === true){
     el.style.display = 'inline-flex';
     el.textContent = '🧪 TEST · ⭐ PRO';
-    el.title = (lang === 'en') ? 'Test mode active' : (
-               lang === 'es') ? 'Modo de prueba activo' : (
-               lang === 'fr') ? 'Mode test actif' :
+    el.title = (lang === 'en') ? 'Test mode active' :
+               (lang === 'es') ? 'Modo de prueba activo' :
+               (lang === 'fr') ? 'Mode test actif' :
                (lang === 'de') ? 'Testmodus aktiv' : 'Modalità test attiva';
   }
 })();
@@ -183,22 +187,20 @@ document.documentElement.lang = lang;
 const I18N = {
   it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
        sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
-       p:"Motivazioni", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
+       p:"Probabilità", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
        copied:"Copiato!", error:"[errore server]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Stile: What the F · 6–9 frasi · paragrafo unico · 2–3 reazioni demenziali · doppia punchline · modalità: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · nessun elenco/domanda/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.`,
-       back:"← Indietro", home:"🏠 Home" },
+        : `Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · nessun elenco/domanda/emoji · modalità: ${p==='past'?'Passato':'Futuro'}.` },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-       p:"Reasons", share:"📤 Share / Copy", again:"🔁 Ask another",
+       p:"Probability", share:"📤 Share / Copy", again:"🔁 Ask another",
        copied:"Copied!", error:"[server error]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Style: What the F · 6–9 sentences · single paragraph · 2–3 absurd object reactions · double punchline · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.`,
-       back:"← Back", home:"🏠 Home" }
+        : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · no lists/questions/emojis · mode: ${p==='past'?'Past':'Future'}.` }
 };
 I18N.es=I18N.en; I18N.fr=I18N.en; I18N.de=I18N.en;
 
@@ -222,14 +224,12 @@ const setText = (id, txt)=>{ const el=qs(id); if(el) el.textContent = txt; };
 
 const titleH1  = qs('#title');
 const subtitle = qs('#subtitle');
-const lblQ     = qs('#lblQ');
-const lblA     = qs('#lblA');
 const qView    = qs('#qView');
-const leadNode = qs('#lead');
 const answerEl = qs('#answer');
+const probPill = qs('#probPill');
+const reasonEl = qs('#reason');
 const styleBadge = qs('#styleBadge');
-const probBlock = qs('#probBlock');
-const lblP = qs('#lblP');
+const metaInfo = qs('#metaInfo');
 
 /* ==== Helpers ==== */
 function normalizeOneParagraph(s=""){
@@ -252,152 +252,108 @@ function decorateEmBits(el){
   el.innerHTML = html;
 }
 
-/* ==== Titles ==== */
-const periodo = prefs.periodo || 'future';
+/* Titles */
 function setTitlesAndTexts(q){
   const T = I18N[lang] || I18N.it;
   setText('#title', style==='wtf' ? T.titleWTF : T.titleWHF);
   subtitle.textContent = T.sub(q || '—');
-  lblQ.textContent = T.q;
-  lblA.textContent = T.a;
-  lblP.textContent = T.p;
+  setText('#lblQ', T.q); setText('#lblA', T.a); setText('#shareBtn', T.share); setText('#againBtn', T.again);
   styleBadge.textContent = (style==='wtf') ? T.styleWTF : T.styleWHF;
-  qs('#metaInfo').textContent = T.meta(style, periodo);
-
-  const bank = (LEADS[lang] && LEADS[lang][style]) ? LEADS[lang][style]
-               : (LEADS.it[style] || LEADS.it.whatif);
+  metaInfo.textContent = T.meta(style, periodo);
+  const bank = (LEADS[lang] && LEADS[lang][style]) ? LEADS[lang][style] : (LEADS.it[style] || LEADS.it.whatif);
   const line = oneSentence(pick(bank) || '');
-  leadNode.textContent = line || '—';
+  qs('#lead')?.textContent = line || '—';
 }
 
-/* ==== Variazione & Topic Extraction (no “perché”) ==== */
-function seedRNG(seedStr){
-  let s=[...String(seedStr||'')].reduce((a,c)=>a+c.charCodeAt(0),0) || Date.now()%1e6;
-  return ()=>{ s=(s*9301+49297)%233280; return s/233280; };
-}
-function shuffle(arr, rnd=Math.random){ const a=[...arr]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-function pickN(arr,n,rnd=Math.random){ return shuffle(arr,rnd).slice(0,Math.max(0,Math.min(n,arr.length))); }
-
-const STOP = {
-  it: new Set("e ed che di del della delle dei degli da in con su per tra fra a al alla allo agli alle un una uno il lo la i gli le mi ti si ci vi o ma se non più meno come così anche già poi solo almeno quasi invece tipo tempo giorno giorni mese mesi anni anno oggi domani ieri molto tanto quasi davvero".split(" ")),
-  en: new Set("the a an and or but so of to in on at for with from by as is are was were be been being have has had do does did not no yes more less like just very really already only also then today tomorrow yesterday".split(" ")),
-  es: new Set("y o pero de del la el los las un una uno unas unos en con por para desde hasta como ya solo tambien muy mas menos hoy manana ayer".split(" ")),
-  fr: new Set("et ou mais de du des la le les un une en avec pour par comme deja seulement aussi tres plus moins aujourd'hui demain hier".split(" ")),
-  de: new Set("und oder aber der die das den dem des ein eine einer einem einen zu von mit fur aus nach bei wie schon nur auch sehr mehr weniger heute morgen gestern".split(" "))
-};
-
-function extractTopics(txt, lang){
-  const words = String(txt||"").toLowerCase()
-    .normalize('NFKD').replace(/[^\p{L}\p{N}\s]/gu," ")
-    .split(/\s+/).filter(w=>w.length>3 && !STOP[lang]?.has(w));
-  const bigrams=[];
-  for(let i=0;i<words.length-1;i++){
-    if(words[i]!==words[i+1]) bigrams.push(words[i]+" "+words[i+1]);
-  }
-  const counts=new Map();
-  [...words, ...bigrams].forEach(w=>counts.set(w,(counts.get(w)||0)+1));
-  const ranked=[...counts.entries()].sort((a,b)=>b[1]-a[1]).map(([w])=>w);
-  return ranked.slice(0,6);
+/* ==== Percentuale ==== */
+const rndInt=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+function getScore(style,absurd){
+  if(style==='whatif' && !absurd) return rndInt(50,90);
+  if(style==='whatif' && absurd)  return rndInt(200,5000);
+  return rndInt(80,800); // wtf
 }
 
-/* ==== Costruzione % e motivazioni collegate alla risposta ==== */
-function buildPctAndReasons({style, absurd, lang, domanda, answerText}){
-  const seed = `${Date.now()}|${domanda}|${answerText}|${style}|${absurd}|${lang}`;
-  const rnd = seedRNG(seed);
-  const topics = extractTopics(answerText || domanda || "", lang);
-  const topic = (topics[0] || (lang==='it'?'il piano':'the plan'));
-  const topic2 = (topics[1] || (lang==='it'?'la routine':'the routine'));
+/* ==== Aggancio semantico alla risposta ==== */
+function extractTopicHints(text){
+  const s = (text||'').toLowerCase();
+  const hits = [];
+  if(/amore|cuore|relaz|partner|flirt/.test(s)) hits.push('love');
+  if(/sold|euro|budget|prezz|stipend|invest|profit|denar/.test(s)) hits.push('money');
+  if(/lavor|capo|colleg|carrier|ufficio|cv|colloqu/.test(s)) hits.push('work');
+  if(/corr|palestra|dieta|salut|stress|sonno|allen/.test(s)) hits.push('health');
+  if(/viagg|citt|trasfer|volo|treno|mare|mont/.test(s)) hits.push('travel');
+  if(/tempo|oggi|domani|settim|mesi|deadline|scaden/.test(s)) hits.push('time');
+  if(!hits.length) hits.push('vibes');
+  return hits;
+}
 
-  function T(arr){ return pickN(arr,3,rnd); }
+/* ==== Quattro modalità di motivazione ==== */
+function reasonByMode(mode, style, absurd, answer){
+  const topic = pick(extractTopicHints(answer));
+  // snippet tematico breve
+  const byTopic = {
+    love:   ["cuori in folle","abbracci che bussano","messaggi doppi spunta blu","sorrisi che partono da soli"],
+    money:  ["conti che tornano","portafogli che frusciano","excel che applaude","scontrini che non fanno paura"],
+    work:   ["badge che bippa","capo distratto al momento giusto","task che si allineano","riunioni che evaporano"],
+    health: ["passi che battono","fiato che regge","muscoli in sciopero al contrario","sonno che dice ok"],
+    travel: ["valigia già pronta","mappe che si spalmano","treni che arrivano","vento in corsia preferenziale"],
+    time:   ["orologio complice","deadline che sbadiglia","30 giorni che scivolano","mattine più larghe"],
+    vibes:  ["aria elettrica","giro giusto al semaforo","karma in ciabatte","intuizione sul comodino"]
+  };
 
-  if(style==='whatif' && !absurd){
-    const primary = Math.floor(55 + rnd()*30); // 55–85%
-    const stock_it = [
-      `strumenti già pronti: ${topic}`,
-      `slot in agenda trovati, il resto è esecuzione`,
-      `rischio basso: salti un giorno e non crolla niente`,
-      `segnali misurabili su ${topic2}`,
-      `dipendenze corte e chiare`
+  const bit = pick(byTopic[topic]);
+
+  if(mode==='cosmico'){
+    const lines = [
+      `stelle in fila indiana, ${bit}.`,
+      `galassia con il pollice alzato, ${bit}.`,
+      `multiverso che fa il tifo, ${bit}.`,
+      `cometa che lampeggia due volte, ${bit}.`
     ];
-    const stock_en = [
-      `tools already set: ${topic}`,
-      `calendar slots found, rest is execution`,
-      `low risk: skip a day, nothing breaks`,
-      `measurable early signals on ${topic2}`,
-      `short, clear dependencies`
-    ];
-    const reasons = (lang==='it') ? T(stock_it) : T(stock_en);
-    return { primaryPct: primary+"%", reasons };
+    return pick(lines);
   }
-
-  if(style==='whatif' && absurd){
-    const primary = Math.floor(150 + rnd()*1100); // 150–1250%
-    const stock_it = [
-      `piccioni favorevoli a ${topic}`,
-      `alea ubriaca: moneta che cade dal tuo lato`,
-      `momento propizio: il caso ha sonno`,
-      `universo in modalità “ti apro la porta”`,
-      `karma in promo su ${topic2}`
+  if(mode==='sagre'){
+    const lines = [
+      `due spritz e ${bit}. Fidati.`,
+      `griglia accesa, dj che pompa, ${bit}.`,
+      `birra ghiacciata e coraggio tiepido, ${bit}.`,
+      `sagra in piazza: applauso lungo, ${bit}.`
     ];
-    const stock_en = [
-      `pigeons backing ${topic}`,
-      `drunk luck: coin leaning your way`,
-      `window of nonsense: randomness is sleepy`,
-      `universe in “door opens for you” mode`,
-      `karma discount on ${topic2}`
-    ];
-    const reasons = (lang==='it') ? T(stock_it) : T(stock_en);
-    return { primaryPct: primary+"%", reasons };
+    return pick(lines);
   }
-
-  // WTF
-  const primary = Math.floor(120 + rnd()*480); // 120–600%
-  const stock_it = [
-    `due spritz e zero scuse su ${topic}`,
-    `gruppo WhatsApp già caldo: “facciamo?”`,
-    `stasera spingi, domattina ghiaccio in fronte`,
-    `budget da bar, risultati da palco`,
-    `playlist giusta, testa leggera, ${topic2} parte`
+  if(mode==='tamarro'){
+    const lines = [
+      `se spigne, ${bit}. Freccia a destra e via.`,
+      `er destino t’ha fatto i fari, ${bit}.`,
+      `alza er volume, entra secco: ${bit}.`,
+      `stacce: corsia libera, ${bit}.`
+    ];
+    return pick(lines);
+  }
+  // zen
+  const lines = [
+    `inspira, espira, ${bit}. Campanella contenta.`,
+    `foglia che cade dritta, ${bit}.`,
+    `acqua che non spinge e arriva, ${bit}.`,
+    `sasso caldo, mente leggera, ${bit}.`
   ];
-  const stock_en = [
-    `two spritz, zero excuses on ${topic}`,
-    `group chat already yelling “we doing this?”`,
-    `push tonight, ice pack tomorrow`,
-    `bar budget, stage results`,
-    `right playlist, light head, ${topic2} starts`
-  ];
-  const reasons = (lang==='it') ? T(stock_it) : T(stock_en);
-  return { primaryPct: primary+"%", reasons };
+  return pick(lines);
 }
 
-/* ==== Renderers ==== */
-function renderTopPct(pct){
-  const el = document.getElementById('topPct');
-  el.textContent = pct || '—';
-}
-function renderReasons(reasons){
-  probBlock.innerHTML = '';
-  (reasons||[]).forEach(txt=>{
-    const row = document.createElement('div');
-    row.className = 'reason';
-    row.textContent = txt;
-    probBlock.appendChild(row);
-  });
-}
+/* Stato motivazione */
+const modesEl = document.getElementById('modes');
+const modeBtns = [...modesEl.querySelectorAll('.mode')];
+const MODES = ['cosmico','sagre','tamarro','zen'];
+let currentMode = pick(MODES);
 
 /* ==== Load & fetch ==== */
-const params = new URLSearchParams(location.search);
-
 (async ()=>{
   const req = JSON.parse(LS.getItem('whatif_request')||'{}');
   const absurdFlag = req.absurd === true || LS.getItem('absurd_prompt') === '1';
-
-  // domanda
-  let domanda = req.domanda || LS.getItem('domanda') || "";
+  const domanda = req.domanda || LS.getItem('domanda') || "";
   setTitlesAndTexts(domanda);
-  qs('#qView').textContent = domanda || '—';
+  qView.textContent = domanda || '—';
 
-  // fetch risposta
   try{
     const headers = { "Content-Type": "application/json" };
     if (prefs.pro === true) headers["x-pro"] = "1";
@@ -405,40 +361,48 @@ const params = new URLSearchParams(location.search);
     if (adminToken) headers["x-admin-token"] = adminToken;
 
     const r = await fetch("/api/ask",{
-      method:"POST",
-      headers,
-      body:JSON.stringify({
-        domanda, lang, stile: style, periodo, extra:"", micro:req.micro||{}
-      })
+      method:"POST", headers,
+      body:JSON.stringify({ domanda, lang, stile: style, periodo, extra:"", micro:req.micro||{} })
     });
     const data = await r.json().catch(()=>null);
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
 
-    let answerText = normalizeOneParagraph((data.answer||"").trim());
-    if(!/[.!?…]$/.test(answerText)) answerText += ".";
-    qs('#answer').textContent = answerText;
-    decorateEmBits(qs('#answer'));
+    const ans = normalizeOneParagraph((data.answer||"").trim());
+    const finalAns = /[.!?…]$/.test(ans) ? ans : ans + ".";
+    answerEl.textContent = finalAns;
+    decorateEmBits(answerEl);
 
-    // >>> % in alto + motivazioni sotto (dinamici, legati alla risposta)
-    const { primaryPct, reasons } = buildPctAndReasons({
-      style,
-      absurd: absurdFlag,
-      lang,
-      domanda,
-      answerText
-    });
-    renderTopPct(primaryPct);
-    renderReasons(reasons);
+    // Percentuale sopra
+    probPill.textContent = getScore(style, absurdFlag) + "%";
 
-    // storia
+    // Motivazione iniziale (random fra le 4)
+    highlightMode(currentMode);
+    reasonEl.textContent = reasonByMode(currentMode, style, absurdFlag, finalAns);
+
+    // Salva in cronologia
     const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now() });
+    hist.push({ domanda, risposta:finalAns, stile:style, periodo, ts:Date.now() });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
   }catch(e){
-    qs('#answer').textContent = (I18N[lang]||I18N.it).error;
+    answerEl.textContent = (I18N[lang]||I18N.it).error;
     console.error(e);
   }
 })();
+
+/* Selettore modalità motivazione */
+function highlightMode(mode){
+  modeBtns.forEach(b=>b.classList.toggle('sel', b.dataset.mode===mode));
+}
+modesEl.addEventListener('click', (e)=>{
+  const b = e.target.closest('.mode'); if(!b) return;
+  if(b.dataset.mode==='shuffle'){ currentMode = pick(MODES); }
+  else { currentMode = b.dataset.mode; }
+  highlightMode(currentMode);
+  // ricalcola motivazione con stessa risposta
+  const ans = answerEl.textContent||'';
+  // niente "perché"
+  reasonEl.textContent = reasonByMode(currentMode, style, LS.getItem('absurd_prompt')==='1', ans);
+});
 
 /* ==== Nav / lingua ==== */
 qs('#backBtn').onclick = ()=> history.length > 1 ? history.back() : location.replace('index.html');
@@ -450,8 +414,8 @@ qs('#langSelect').onchange = ()=>{
   location.reload();
 };
 qs('#shareBtn').onclick = async()=>{
-  const T = I18N[lang] || I18N.it;
-  const full = `What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
+  const T = (I18N[lang]||I18N.it);
+  const full = `What?f — ${(style==='wtf')?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}\n\n${qs('#probPill').textContent} · ${qs('#reason').textContent}`;
   try{
     if(navigator.share){ await navigator.share({ title: "What?f", text: full }); }
     else{
