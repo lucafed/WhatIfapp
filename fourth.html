@@ -11,42 +11,61 @@
   --accent:#1C57A0; --accent2:#FFEC01; --ink:#001f26; --chip:#0f1820; --line:#1b2a34; }
 html[data-theme="whatif"]{ --bg:#0B1018; --bg2:#0E1724; --card:#141C22; --fg:#F4F7FB; --muted:#A7B3C2; --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A; --chip:#0f1820; --line:#1b2a34; }
 html[data-theme="wtf"]{ --bg:#0B0B0C; --bg2:#101414; --card:#111713; --fg:#EEF5F0; --muted:#A6B6AD; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; --chip:#0F1714; --line:#21322A; }
+
 *{box-sizing:border-box}
-html,body{ height:100%;margin:0; background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-  color:var(--fg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+html,body{
+  height:100%;margin:0;
+  background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+  color:var(--fg);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
 @media (prefers-reduced-motion:no-preference){
   body{animation:bgShift 18s ease-in-out infinite alternate}
   @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
 }
+
 /* Topbar */
-.topbar{ position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between;
-  gap:10px; padding:8px 10px; background:rgba(10,15,20,.96); backdrop-filter:blur(6px); border-bottom:1px solid var(--line)}
-.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg); border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
+.topbar{
+  position:sticky; top:0; z-index:2;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:10px; padding:8px 10px;
+  background:rgba(10,15,20,.96); backdrop-filter:blur(6px); border-bottom:1px solid var(--line)
+}
+.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);
+  border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
 .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35)}
 .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap}
 select{appearance:none;background:var(--chip);border:1px solid var(--line);color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:700;cursor:pointer}
+
 /* Layout */
 main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
 .wrap{width:min(100%,980px)}
 h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
 .label{color:var(--accent2);font-weight:800;margin:0 0 8px}
+
 /* Cards & chips */
-.card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(12px); border-radius:16px;padding:16px;margin:10px 0}
+.card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(12px);
+  border-radius:16px;padding:16px;margin:10px 0}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
 .chip.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800}
+
 /* Input */
 .input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
 .center{max-width:760px;margin:0 auto}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .small{font-size:12px;color:var(--muted)}
+
 /* Collapsible */
 .toggle{cursor:pointer;user-select:none}
 .collapsed>.body{display:none}
 .list{display:flex;flex-direction:column;gap:10px}
-.story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line); border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
+.story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);
+  border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
 .play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
 .meta{font-size:12px;color:var(--muted)}
+
 /* Slot fx */
 #qInput.slotting{filter:contrast(1.2) saturate(1.1); animation:slotFlash .12s linear infinite}
 @keyframes slotFlash{0%{box-shadow:0 0 0 rgba(255,236,1,.0)}50%{box-shadow:0 0 18px rgba(255,236,1,.2)}100%{box-shadow:0 0 0 rgba(255,236,1,.0)}}
@@ -101,7 +120,7 @@ h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
         <div class="row" style="margin-top:12px;justify-content:space-between">
           <div class="row">
             <button class="btn primary" id="goBtn" type="button" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
-            <button class="btn" id="surpriseBtn" type="button" title="Slot casuale">🎲 Sorprendimi</button>
+            <button class="btn" id="surpriseBtn" type="button" title="Slot assurdo">🎲 Sorprendimi</button>
           </div>
           <div class="row">
             <button class="btn" id="saveBtn" type="button">⭐ Salva</button>
@@ -110,7 +129,7 @@ h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
         </div>
       </div>
 
-      <!-- SPUNTI -->
+      <!-- SPUNTI (solo realistici) -->
       <div class="card center collapsed" id="hintsCard">
         <div class="row toggle" id="hintsHeader" style="justify-content:space-between">
           <div class="label" id="hintsTitle">▶ Spunti rapidi “E se…”</div>
@@ -156,39 +175,54 @@ document.documentElement.lang=lang; $('langSelect').value=lang;
 $('langSelect').onchange=()=>{ const v=$('langSelect').value; LS.setItem('lang',v); location.reload(); };
 
 const I18N={
-  it:{title:"Imposta la tua domanda", yourq:"E se…", ph:"E se…", help:"Scrivi obiettivo + contesto in 1 riga. Aggiungi vincoli o orizzonte (es. 30 giorni).",
-      gen:"✨ Genera risposta", clear:"Svuota", surprise:"Sorprendimi",
+  it:{title:"Imposta la tua domanda", yourq:"E se…", ph:"E se…",
+      help:"Scrivi obiettivo + contesto in 1 riga. Aggiungi vincoli o orizzonte (es. 30 giorni).",
+      gen:"✨ Genera risposta", clear:"Svuota",
+      surprise:"Sorprendimi (assurdo)", spins:"Tiri rimasti oggi", noSpins:"Tiri esauriti per oggi.",
       saved:"▶ Domande salvate", stories:"▶ Cronologia",
       styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Passato",
-      hintsTitle:"▶ Spunti rapidi “E se…”", hintsNote:"Clicca uno spunto per riempire la domanda. Con “Sorprendimi” parte la slot (stile e tempo casuali).",
+      hintsTitle:"▶ Spunti rapidi “E se…”",
+      hintsNote:"Spunti = idee realistiche (cambiano ogni giorno). “Sorprendimi” lancia la slot con idee assurde (stile & tempo casuali).",
       credits:"Crediti", emptyNext:"— Nessuna domanda salvata.", emptyHist:"— Nessuna storia.", use:"Usa",
       save:"Salva", clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota"},
-  en:{title:"Set your question", yourq:"What if…", ph:"What if…", help:"Write goal + context in one line. Add constraints or horizon (e.g. 30 days).",
-      gen:"✨ Generate answer", clear:"Clear", surprise:"Surprise me",
+  en:{title:"Set your question", yourq:"What if…", ph:"What if…",
+      help:"Write goal + context in one line. Add constraints or horizon (e.g. 30 days).",
+      gen:"✨ Generate answer", clear:"Clear",
+      surprise:"Surprise me (absurd)", spins:"Spins left today", noSpins:"No spins left for today.",
       saved:"▶ Saved questions", stories:"▶ History",
       styleWF:"What if", styleWTF:"What the F", fut:"Future", past:"Past",
-      hintsTitle:"▶ Quick “What if…”", hintsNote:"Click a hint to fill the question. “Surprise me” runs the slot (random style & time).",
+      hintsTitle:"▶ Quick “What if…”",
+      hintsNote:"Hints = realistic ideas (refresh daily). “Surprise me” runs the absurd slot (random style & time).",
       credits:"Credits", emptyNext:"— No saved questions.", emptyHist:"— No history.", use:"Use",
       save:"Save", clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear"},
-  es:{title:"Configura tu pregunta", yourq:"¿Y si…?", ph:"¿Y si…?", help:"Escribe objetivo + contexto en una línea. Añade límites u horizonte (p. ej., 30 días).",
-      gen:"✨ Generar respuesta", clear:"Limpiar", surprise:"Sorpréndeme",
+  es:{title:"Configura tu pregunta", yourq:"¿Y si…?", ph:"¿Y si…?",
+      help:"Escribe objetivo + contexto en una línea. Añade límites u horizonte (p. ej., 30 días).",
+      gen:"✨ Generar respuesta", clear:"Limpiar",
+      surprise:"Sorpréndeme (absurdo)", spins:"Tiradas restantes hoy", noSpins:"Sin tiradas por hoy.",
       saved:"▶ Preguntas guardadas", stories:"▶ Historial",
       styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Pasado",
-      hintsTitle:"▶ Ideas rápidas «¿Y si…?»", hintsNote:"Haz clic en una idea para completar la pregunta. «Sorpréndeme» inicia la tragaperras (estilo y tiempo aleatorios).",
+      hintsTitle:"▶ Ideas rápidas «¿Y si…?»",
+      hintsNote:"Ideas = realistas (cambian a diario). «Sorpréndeme» lanza la tragaperras absurda (estilo y tiempo aleatorios).",
       credits:"Créditos", emptyNext:"— No hay preguntas guardadas.", emptyHist:"— Sin historial.", use:"Usar",
       save:"Guardar", clearSaved:"🗑️ Vaciar", clearHist:"🗑️ Vaciar"},
-  fr:{title:"Définis ta question", yourq:"Et si…", ph:"Et si…", help:"Écris objectif + contexte en une ligne. Ajoute contraintes ou horizon (ex. 30 jours).",
-      gen:"✨ Générer la réponse", clear:"Effacer", surprise:"Surprends-moi",
+  fr:{title:"Définis ta question", yourq:"Et si…", ph:"Et si…",
+      help:"Écris objectif + contexte en une ligne. Ajoute contraintes ou horizon (ex. 30 jours).",
+      gen:"✨ Générer la réponse", clear:"Effacer",
+      surprise:"Surprends-moi (absurde)", spins:"Tirs restants aujourd’hui", noSpins:"Plus de tirs pour aujourd’hui.",
       saved:"▶ Questions enregistrées", stories:"▶ Historique",
       styleWF:"What if", styleWTF:"What the F", fut:"Futur", past:"Passé",
-      hintsTitle:"▶ Idées rapides « Et si… »", hintsNote:"Clique une idée pour remplir la question. « Surprends-moi » lance la machine (style & temps aléatoires).",
+      hintsTitle:"▶ Idées rapides « Et si… »",
+      hintsNote:"Idées = réalistes (renouvelées chaque jour). « Surprends-moi » lance le slot absurde (style & temps aléatoires).",
       credits:"Crédits", emptyNext:"— Aucune question enregistrée.", emptyHist:"— Aucun historique.", use:"Utiliser",
       save:"Enregistrer", clearSaved:"🗑️ Vider", clearHist:"🗑️ Vider"},
-  de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", ph:"Was wäre, wenn…", help:"Schreibe Ziel + Kontext in einer Zeile. Füge Einschränkungen oder Horizont hinzu (z. B. 30 Tage).",
-      gen:"✨ Antwort erzeugen", clear:"Leeren", surprise:"Überrasche mich",
+  de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", ph:"Was wäre, wenn…",
+      help:"Schreibe Ziel + Kontext in einer Zeile. Füge Einschränkungen oder Horizont hinzu (z. B. 30 Tage).",
+      gen:"✨ Antwort erzeugen", clear:"Leeren",
+      surprise:"Überrasche mich (absurd)", spins:"Verbleibende Spins heute", noSpins:"Heute keine Spins mehr.",
       saved:"▶ Gespeicherte Fragen", stories:"▶ Verlauf",
       styleWF:"What if", styleWTF:"What the F", fut:"Zukunft", past:"Vergangenheit",
-      hintsTitle:"▶ Schnelle „Was wäre, wenn…“-Ideen", hintsNote:"Klicke eine Idee, um die Frage zu füllen. „Überrasche mich“ startet den Slot (zufälliger Stil & Zeit).",
+      hintsTitle:"▶ Schnelle „Was wäre, wenn…“-Ideen",
+      hintsNote:"Ideen = realistisch (täglich neu). „Überrasche mich“ startet den absurden Slot (Stil & Zeit zufällig).",
       credits:"Credits", emptyNext:"— Keine gespeicherten Fragen.", emptyHist:"— Kein Verlauf.", use:"Verwenden",
       save:"Speichern", clearSaved:"🗑️ Leeren", clearHist:"🗑️ Leeren"}
 };
@@ -255,7 +289,7 @@ $('homeBtn').onclick=()=>location.href='index.html';
 $('backBtn').onclick=()=>{ if(history.length>1) history.back(); else location.href='index.html'; };
 $('resetBtn').onclick=()=>{ try{localStorage.clear();}catch{} location.href='index.html'; };
 
-/* ===== HINTS (localizzati) ===== */
+/* ===== HINTS (solo realistici, daily) ===== */
 const HINTS={
   it:["E se cambiassi lavoro?","E se cambiassi città?","E se tornassi a studiare?","E se vivessi 30 giorni senza social?","E se chiedessi un aumento?","E se organizzassi un viaggio da solo?","E se imparassi bene l’inglese?","E se aprissi un micro e-commerce?","E se corressi 3 volte a settimana?","E se cucinassi a casa 30 giorni?"],
   en:["What if I changed jobs?","What if I moved city?","What if I went back to study?","What if I lived 30 days without social media?","What if I asked for a raise?","What if I travelled solo?","What if I mastered English?","What if I opened a tiny e-commerce?","What if I ran 3× a week?","What if I cooked at home for 30 days?"],
@@ -263,7 +297,7 @@ const HINTS={
   fr:["Et si je changeais de travail ?","Et si je déménageais ?","Et si je reprenais des études ?","Et si je passais 30 jours sans réseaux ?","Et si je demandais une augmentation ?","Et si je partais voyager seul(e) ?","Et si je maîtrisais l’anglais ?","Et si j’ouvrais un micro e-commerce ?","Et si je courais 3× par semaine ?","Et si je cuisinais à la maison 30 jours ?"],
   de:["Was, wenn ich den Job wechsle?","Was, wenn ich in eine andere Stadt ziehe?","Was, wenn ich wieder studiere?","Was, wenn ich 30 Tage ohne Social Media lebe?","Was, wenn ich eine Gehaltserhöhung verlange?","Was, wenn ich allein reise?","Was, wenn ich Englisch richtig beherrsche?","Was, wenn ich einen Micro-Shop starte?","Was, wenn ich 3× pro Woche laufe?","Was, wenn ich 30 Tage zuhause koche?"]
 };
-const ABS={
+const ABS={ /* solo per Sorprendimi */
   it:["E se addestrassi un piccione per portarmi il caffè?","E se decidessi tutto a testa o croce per 24h?","E se parlassi in rima in riunione?","E se vendessi aria motivazionale in barattolo?","E se indossassi un mantello per una settimana?"],
   en:["What if I trained a pigeon to deliver coffee?","What if I flipped a coin for 24h?","What if I spoke in rhymes at work?","What if I sold motivational air in jars?","What if I wore a cape for a week?"],
   es:["¿Y si entrenara una paloma para traer café?","¿Y si decidiera todo con una moneda por 24h?","¿Y si hablara en rimas en la reunión?","¿Y si vendiera aire motivacional en frascos?","¿Y si llevara capa una semana?"],
@@ -273,11 +307,10 @@ const ABS={
 
 const hintsWrap=$('hintsChips');
 function rng(seedStr){ let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
-function daily(pool,n=6){ const rnd=rng(todayISO()); const seen=new Set(), out=[]; while(out.length<n && seen.size<pool.length){ const i=Math.floor(rnd()*pool.length); if(seen.has(i)) continue; seen.add(i); out.push(pool[i]); } return out; }
+function daily(pool,n=8){ const rnd=rng(todayISO()); const seen=new Set(), out=[]; while(out.length<n && seen.size<pool.length){ const i=Math.floor(rnd()*pool.length); if(seen.has(i)) continue; seen.add(i); out.push(pool[i]); } return out; }
 function renderHints(){
-  const base=HINTS[lang]||HINTS.it;
-  const absurd=ABS[lang]||ABS.it;
-  const list=[...daily(base,6), ...daily(absurd,4)];
+  const base=HINTS[lang]||HINTS.it;                 // solo realistiche
+  const list=daily(base,8);                         // cambiano ogni giorno
   hintsWrap.innerHTML='';
   list.forEach(h=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=h;
     b.onclick=()=>{ $('qInput').value=h; window.scrollTo({top:0,behavior:'smooth'}); };
@@ -351,19 +384,49 @@ $('goBtn').onclick=trySubmit;
 $('clearBtn').onclick=()=>{$('qInput').value=''; $('qInput').focus();};
 $('qInput').addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
-/* ===== SORPRENDIMI (slot random stile+periodo+testo) ===== */
+/* ===== SORPRENDIMI: limite giornaliero (FREE=1, PRO=5) e slot solo ASSURDE ===== */
+function spinCap(){ return userIsAdmin()?Infinity:(prefs.pro?5:1); }
+function ensureSpins(){
+  const s=readJSON('surprise_spins',{date:todayISO(),used:0});
+  if(s.date!==todayISO()){ s.date=todayISO(); s.used=0; }
+  writeJSON('surprise_spins',s);
+  return s;
+}
+function spinsLeft(){ const s=ensureSpins(); const cap=spinCap(); return cap===Infinity?Infinity:Math.max(0,cap-(s.used||0)); }
+function renderSpinButton(){
+  const T=I18N[lang]||I18N.it;
+  const cap=spinCap(); const left=spinsLeft();
+  const suffix = (cap===Infinity)?' (∞)':` (${left}/${cap})`;
+  $('surpriseBtn').textContent='🎲 '+T.surprise + suffix;
+  $('surpriseBtn').title = `${T.spins}: ${cap===Infinity?'∞':left+'/'+cap}`;
+}
+function consumeOneSpin(){
+  if(userIsAdmin()) return true;
+  const s=ensureSpins(); const cap=spinCap();
+  if(cap!==Infinity && (s.used||0)>=cap){
+    alert((I18N[lang]||I18N.it).noSpins);
+    return false;
+  }
+  s.used=(s.used||0)+1; writeJSON('surprise_spins',s); renderSpinButton(); return true;
+}
+renderSpinButton();
+
 function slotSurprise(){
-  const base=HINTS[lang]||HINTS.it, absurd=ABS[lang]||ABS.it, pool=[...base,...absurd];
-  if(!pool.length) return;
+  if(!consumeOneSpin()) return;          // rispetta limite
+  const absurd=ABS[lang]||ABS.it;
+  if(!absurd.length) return;
+
   const el=$('qInput'); el.classList.add('slotting');
-  let i=0; const iv=setInterval(()=>{
-    el.value = pool[i % pool.length];
+  let i=0;
+  const iv=setInterval(()=>{
+    el.value = absurd[i % absurd.length];      // SOLO assurde
     const s = Math.random()<.5 ? 'whatif' : 'wtf';
     const p = Math.random()<.5 ? 'future' : 'past';
     prefs.stile=s; prefs.periodo=p; writeJSON('whatif_prefs',prefs);
     document.documentElement.setAttribute('data-theme', s==='wtf'?'wtf':'whatif');
     renderBadges(); i++;
   },90);
+
   setTimeout(()=>{ clearInterval(iv); el.classList.remove('slotting'); }, 1200 + Math.random()*600);
 }
 $('surpriseBtn').onclick=slotSurprise;
