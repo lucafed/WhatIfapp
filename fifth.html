@@ -128,6 +128,33 @@ h1{
   margin-top:6px;font-size:13px;color:#cfe3ff;background:rgba(255,255,255,.04);
   border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:10px 12px;
 }
+
+/* === FAB "Sorprendimi" super in risalto === */
+.fab-surprise{
+  position:fixed; right:18px; bottom:18px; z-index:999;
+  border:none; cursor:pointer; font-weight:900;
+  padding:14px 18px; border-radius:16px;
+  color:#0b0b0c;
+  background:linear-gradient(90deg, #00E0FF, #1AFFD5, #FFEC01);
+  box-shadow:0 10px 28px rgba(0,0,0,.45), 0 0 28px rgba(26,255,213,.25), inset 0 0 0 1px rgba(0,0,0,.15);
+  background-size:300% 100%;
+  animation:surpriseGradient 6s ease infinite, surpriseWiggle 2.8s ease-in-out infinite;
+}
+.fab-surprise span{filter:drop-shadow(0 2px 8px rgba(0,0,0,.35))}
+@keyframes surpriseGradient{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+@keyframes surpriseWiggle{
+  0%,100%{ transform:translateY(0) rotate(0deg) }
+  20%{ transform:translateY(-2px) rotate(-1.2deg) }
+  40%{ transform:translateY(0) rotate(0.6deg) }
+  60%{ transform:translateY(-1px) rotate(-0.6deg) }
+  80%{ transform:translateY(0) rotate(0.4deg) }
+}
+.fab-surprise:focus-visible{ outline:3px solid #FFEC01; outline-offset:4px }
+.fab-surprise .subtxt{ display:block; font-size:11px; opacity:.9 }
 </style>
 </head>
 <body>
@@ -208,6 +235,12 @@ h1{
   </div>
 </main>
 
+<!-- FAB Sorprendimi -->
+<button class="fab-surprise" id="surpriseFab" aria-label="Sorprendimi">
+  <span>✨ Sorprendimi</span>
+  <span class="subtxt">con comitato & zuffe</span>
+</button>
+
 <script>
 /* ==== Base state ==== */
 const LS = localStorage;
@@ -275,7 +308,7 @@ const LEADS = {
        whatif:["Set the keys down and let the quiet that doesn’t judge go first."]}
 };
 
-/* ==== Categories: SOLO Psicologia, Vita notturna, Animali ==== */
+/* ==== Categories (Psicologia, Vita notturna, Animali) ==== */
 const CATEGORIES = [
   // Psicologia
   { ico:"🧠", name_it:"Comitato dei Pensieri Sotto la Doccia", name_en:"Shower-Thoughts Committee",
@@ -287,7 +320,6 @@ const CATEGORIES = [
   { ico:"📞", name_it:"Autorità delle Telefonate Fuori Tempo", name_en:"Off-Timing Calls Authority",
     notes_it:["Stakeholder informali allineati.","Tempistiche compatibili con vincoli."],
     notes_en:["Informal stakeholders aligned.","Timing fits constraints."] },
-
   // Vita notturna
   { ico:"🥃", name_it:"Circolo Bar Notturno dei Consiglieri", name_en:"Late-Bar Counsel Circle",
     notes_it:["Network attivo nelle prime fasi.","Decisione rapida a basso costo d’errore."],
@@ -301,7 +333,6 @@ const CATEGORIES = [
   { ico:"💬", name_it:"Conferenza degli Amici Che Gasano", name_en:"Conference of Hype Friends",
     notes_it:["Supporto motivazionale stabile.","Allineamento del gruppo sulle priorità."],
     notes_en:["Stable motivational support.","Group aligned on priorities."] },
-
   // Animali
   { ico:"🕊️", name_it:"Assemblea dei Piccioni con Opinioni Forti", name_en:"Assembly of Strong-Opinion Pigeons",
     notes_it:["Ambiente urbano ricettivo, pochi vincoli.","Tempistica stagionale favorevole."],
@@ -405,14 +436,17 @@ function renderPctAll(pct){
 
 /* ==== Origine domanda ==== */
 function getOriginFlags(req){
-  return {
-    isSurprise: !!(req?.micro?.surprise || LS.getItem('surprise_mode')==='1'),
-    isManual:   !!(req?.micro?.manual   || LS.getItem('manual_mode')==='1'),
-    isQuick:    !!(req?.micro?.quick    || LS.getItem('quick_mode')==='1'),
+  const flags = {
+    isSurprise: !!(req?.micro?.surprise === true || LS.getItem('surprise_mode')==='1' || req?.origin==='surprise'),
+    isManual:   !!(req?.micro?.manual   === true || LS.getItem('manual_mode')==='1'),
+    isQuick:    !!(req?.micro?.quick    === true || LS.getItem('quick_mode')==='1'),
   };
+  // one-shot reset per evitare "sticky"
+  if (LS.getItem('surprise_mode')==='1') LS.setItem('surprise_mode','0');
+  return flags;
 }
 
-/* ==== Note serie (quando niente comitato) ==== */
+/* ==== Nota seria (quando niente comitato) ==== */
 function buildSeriousNote(){
   const pools = [
     "Valutazione basata su fattibilità, tempi e impatto complessivo.",
@@ -423,7 +457,21 @@ function buildSeriousNote(){
   return pick(pools);
 }
 
-/* ==== Comitato (solo quando richiesto) ==== */
+/* ==== Zuffe (per comitato quando visibile) ==== */
+function buildScuffleExtra(){
+  const minor = rndInt(1,5);
+  const injured = rndInt(0,3);
+  const hosp = Math.min(injured, rndInt(0,2));
+  const extras = [
+    `Breve parapiglia al voto: ${minor} allontanati; ${injured} contusi (${hosp} bendati).`,
+    `Discussione accesa: ${minor} espulsi; ${injured} graffiati, ${hosp} medicati.`,
+    `Intervallo movimentato: ${minor} bicchieri rovesciati; ${injured} piccoli tagli (${hosp} cerotti).`,
+    `Tra i piccioni: ${minor} voli bassi, ${injured} contusi, ${hosp} in osservazione.`
+  ];
+  return pick(extras);
+}
+
+/* ==== Comitato ==== */
 function randVotes(){
   const fav = rndInt(50, 2000);
   const con = rndInt(0,  Math.floor(fav*0.4));
@@ -434,11 +482,11 @@ function buildCommittee(){
   const cat = pick(CATEGORIES);
   const name = (lang==='it') ? cat.name_it : cat.name_en;
   const notePool = (lang==='it') ? (cat.notes_it||[]) : (cat.notes_en||[]);
-  const note = pick(notePool.length?notePool:["Consenso moderato."]);
+  const base = pick(notePool.length?notePool:["Consenso moderato."]);
   const votes = randVotes();
-  return { ico:cat.ico, name, note, votes };
+  return { ico:cat.ico, name, base, votes };
 }
-function renderCommittee(item){
+function renderCommittee(item, {withScuffle=false}={}){
   const T = I18N[lang] || I18N.it;
   committeeTitle.textContent = `${item.ico} ${T.votersTitle}: ${item.name}`;
   motWrap.style.display = 'grid';
@@ -449,8 +497,17 @@ function renderCommittee(item){
   chipFav.textContent = `favorevoli ${item.votes.fav}`;
   chipCon.textContent = `contrari ${item.votes.con}`;
   chipAst.textContent = `astenuti ${item.votes.ast}`;
-  motNote.textContent = item.note;
+  motNote.textContent = withScuffle ? `${item.base} ${buildScuffleExtra()}` : item.base;
 }
+
+/* ==== Surprise seeds ==== */
+const SURPRISE_SEEDS = [
+  "E se cambiassi lavoro entro sei mesi?",
+  "Mi trasferisco in un’altra città quest’anno?",
+  "Riuscirò a lanciare un side project profittevole?",
+  "Inizio a correre 10 km regolari entro tre mesi?",
+  "Il gruppo accetterà il mio nuovo progetto?"
+];
 
 /* ==== Load & fetch ==== */
 (async ()=>{
@@ -487,14 +544,13 @@ function renderCommittee(item){
     renderPctAll(pct);
 
     // >>> Regole visibilità comitato
-    const shouldShowCommittee =
-      isSurprise                    // sempre con Sorprendimi
-      || (style === 'wtf');         // in WTF lo mostriamo anche non-sorpresa
-
-    if (shouldShowCommittee){
-      renderCommittee(buildCommittee());
+    // WHAT IF: mostra comitato SOLO se è "Sorprendimi"
+    // WTF: mostra comitato sempre
+    const showCommittee = (style === 'wtf') || (style === 'whatif' && isSurprise && !isManual && !isQuick);
+    if (showCommittee){
+      renderCommittee(buildCommittee(), { withScuffle: true });
     } else {
-      // Niente comitato: mostra solo nota seria breve
+      // niente comitato → nota seria
       committeeTitle.textContent = "—";
       motWrap.style.display = 'none';
       noteOnly.textContent = buildSeriousNote();
@@ -532,6 +588,16 @@ qs('#shareBtn').onclick = async()=>{
   }catch{}
 };
 qs('#againBtn').onclick = ()=>{ location.href='fourth.html'; };
+
+/* ==== FAB Sorprendimi: genera domanda e ricarica con flag ==== */
+qs('#surpriseFab').onclick = ()=>{
+  const domanda = pick(SURPRISE_SEEDS);
+  const req = { domanda, lang, stile: style, periodo, micro:{ surprise:true } };
+  LS.setItem('whatif_request', JSON.stringify(req));
+  LS.setItem('domanda', domanda);
+  LS.setItem('surprise_mode','1'); // one-shot
+  location.reload();
+};
 </script>
 </body>
 </html>
