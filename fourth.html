@@ -161,31 +161,36 @@ const I18N={
       saved:"▶ Domande salvate", stories:"▶ Cronologia",
       styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Passato",
       hintsTitle:"▶ Spunti rapidi “E se…”", hintsNote:"Clicca uno spunto per riempire la domanda. Con “Sorprendimi” parte la slot (stile e tempo casuali).",
-      credits:"Crediti", emptyNext:"— Nessuna domanda salvata.", emptyHist:"— Nessuna storia.", use:"Usa"},
+      credits:"Crediti", emptyNext:"— Nessuna domanda salvata.", emptyHist:"— Nessuna storia.", use:"Usa",
+      save:"Salva", clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota"},
   en:{title:"Set your question", yourq:"What if…", ph:"What if…", help:"Write goal + context in one line. Add constraints or horizon (e.g. 30 days).",
       gen:"✨ Generate answer", clear:"Clear", surprise:"Surprise me",
       saved:"▶ Saved questions", stories:"▶ History",
       styleWF:"What if", styleWTF:"What the F", fut:"Future", past:"Past",
       hintsTitle:"▶ Quick “What if…”", hintsNote:"Click a hint to fill the question. “Surprise me” runs the slot (random style & time).",
-      credits:"Credits", emptyNext:"— No saved questions.", emptyHist:"— No history.", use:"Use"},
+      credits:"Credits", emptyNext:"— No saved questions.", emptyHist:"— No history.", use:"Use",
+      save:"Save", clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear"},
   es:{title:"Configura tu pregunta", yourq:"¿Y si…?", ph:"¿Y si…?", help:"Escribe objetivo + contexto en una línea. Añade límites u horizonte (p. ej., 30 días).",
       gen:"✨ Generar respuesta", clear:"Limpiar", surprise:"Sorpréndeme",
       saved:"▶ Preguntas guardadas", stories:"▶ Historial",
       styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Pasado",
       hintsTitle:"▶ Ideas rápidas «¿Y si…?»", hintsNote:"Haz clic en una idea para completar la pregunta. «Sorpréndeme» inicia la tragaperras (estilo y tiempo aleatorios).",
-      credits:"Créditos", emptyNext:"— No hay preguntas guardadas.", emptyHist:"— Sin historial.", use:"Usar"},
+      credits:"Créditos", emptyNext:"— No hay preguntas guardadas.", emptyHist:"— Sin historial.", use:"Usar",
+      save:"Guardar", clearSaved:"🗑️ Vaciar", clearHist:"🗑️ Vaciar"},
   fr:{title:"Définis ta question", yourq:"Et si…", ph:"Et si…", help:"Écris objectif + contexte en une ligne. Ajoute contraintes ou horizon (ex. 30 jours).",
       gen:"✨ Générer la réponse", clear:"Effacer", surprise:"Surprends-moi",
       saved:"▶ Questions enregistrées", stories:"▶ Historique",
       styleWF:"What if", styleWTF:"What the F", fut:"Futur", past:"Passé",
       hintsTitle:"▶ Idées rapides « Et si… »", hintsNote:"Clique une idée pour remplir la question. « Surprends-moi » lance la machine (style & temps aléatoires).",
-      credits:"Crédits", emptyNext:"— Aucune question enregistrée.", emptyHist:"— Aucun historique.", use:"Utiliser"},
+      credits:"Crédits", emptyNext:"— Aucune question enregistrée.", emptyHist:"— Aucun historique.", use:"Utiliser",
+      save:"Enregistrer", clearSaved:"🗑️ Vider", clearHist:"🗑️ Vider"},
   de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", ph:"Was wäre, wenn…", help:"Schreibe Ziel + Kontext in einer Zeile. Füge Einschränkungen oder Horizont hinzu (z. B. 30 Tage).",
       gen:"✨ Antwort erzeugen", clear:"Leeren", surprise:"Überrasche mich",
       saved:"▶ Gespeicherte Fragen", stories:"▶ Verlauf",
       styleWF:"What if", styleWTF:"What the F", fut:"Zukunft", past:"Vergangenheit",
       hintsTitle:"▶ Schnelle „Was wäre, wenn…“-Ideen", hintsNote:"Klicke eine Idee, um die Frage zu füllen. „Überrasche mich“ startet den Slot (zufälliger Stil & Zeit).",
-      credits:"Credits", emptyNext:"— Keine gespeicherten Fragen.", emptyHist:"— Kein Verlauf.", use:"Verwenden"}
+      credits:"Credits", emptyNext:"— Keine gespeicherten Fragen.", emptyHist:"— Kein Verlauf.", use:"Verwenden",
+      save:"Speichern", clearSaved:"🗑️ Leeren", clearHist:"🗑️ Leeren"}
 };
 
 /* Apply texts */
@@ -204,6 +209,9 @@ const I18N={
   $('hintsNote').textContent=T.hintsNote;
   $('chipWhatIf').textContent=T.styleWF; $('chipWTF').textContent=T.styleWTF;
   $('chipFuture').textContent=T.fut; $('chipPast').textContent=T.past;
+  $('saveBtn').textContent='⭐ '+T.save;
+  $('clearSavedBtn').textContent=T.clearSaved;
+  $('clearHistoryBtn').textContent=T.clearHist;
 })();
 
 /* ===== PREFS / THEME / CREDITS ===== */
@@ -275,7 +283,6 @@ function renderHints(){
     b.onclick=()=>{ $('qInput').value=h; window.scrollTo({top:0,behavior:'smooth'}); };
     hintsWrap.appendChild(b);
   });
-  // update localized smalls/badges each time (in case of manual LS flip)
   const T=I18N[lang]||I18N.it;
   $('hintsNote').textContent=T.hintsNote;
   renderCredits(); renderBadges();
