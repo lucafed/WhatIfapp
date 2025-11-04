@@ -202,7 +202,7 @@ const I18N={
       saved:"▶ Preguntas guardadas", stories:"▶ Historial",
       styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Pasado",
       hintsTitle:"▶ Ideas rápidas «¿Y si…?»",
-      hintsNote:"Ideas = realistas (cambian a diario). «Sorpréndeme» lanza la tragaperras absurda (estilo y tiempo aleatorios).",
+      hintsNote:"Ideas = realistas (cambian a diario). «Sorpréndeme» lanza la tragaperras absurda (style & tiempo aleatorio).",
       credits:"Créditos", emptyNext:"— No hay preguntas guardadas.", emptyHist:"— Sin historial.", use:"Usar",
       save:"Guardar", clearSaved:"🗑️ Vaciar", clearHist:"🗑️ Vaciar"},
   fr:{title:"Définis ta question", yourq:"Et si…", ph:"Et si…",
@@ -289,9 +289,10 @@ $('homeBtn').onclick=()=>location.href='index.html';
 $('backBtn').onclick=()=>{ if(history.length>1) history.back(); else location.href='index.html'; };
 $('resetBtn').onclick=()=>{ try{localStorage.clear();}catch{} location.href='index.html'; };
 
-/* ===== STATO "ASSURDA" ===== */
-let isAbsurd=false;                         // default: no
-LS.setItem('absurd_prompt','0');           // reset all'avvio
+/* ===== STATO "ASSURDA" / "SORPRENDIMI" ===== */
+let isAbsurd=false;                         
+LS.setItem('absurd_prompt','0');            // reset
+LS.setItem('surprise_mode','0');            // reset
 
 /* ===== HINTS (solo realistici, daily) ===== */
 const HINTS={
@@ -301,7 +302,7 @@ const HINTS={
   fr:["Et si je changeais de travail ?","Et si je déménageais ?","Et si je reprenais des études ?","Et si je passais 30 jours sans réseaux ?","Et si je demandais une augmentation ?","Et si je partais voyager seul(e) ?","Et si je maîtrisais l’anglais ?","Et si j’ouvrais un micro e-commerce ?","Et si je courais 3× par semaine ?","Et si je cuisinais à la maison 30 jours ?"],
   de:["Was, wenn ich den Job wechsle?","Was, wenn ich in eine andere Stadt ziehe?","Was, wenn ich wieder studiere?","Was, wenn ich 30 Tage ohne Social Media lebe?","Was, wenn ich eine Gehaltserhöhung verlange?","Was, wenn ich allein reise?","Was, wenn ich Englisch richtig beherrsche?","Was, wenn ich einen Micro-Shop starte?","Was, wenn ich 3× pro Woche laufe?","Was, wenn ich 30 Tage zuhause koche?"]
 };
-const ABS={ /* solo per Sorprendimi */
+const ABS={
   it:["E se addestrassi un piccione per portarmi il caffè?","E se decidessi tutto a testa o croce per 24h?","E se parlassi in rima in riunione?","E se vendessi aria motivazionale in barattolo?","E se indossassi un mantello per una settimana?"],
   en:["What if I trained a pigeon to deliver coffee?","What if I flipped a coin for 24h?","What if I spoke in rhymes at work?","What if I sold motivational air in jars?","What if I wore a cape for a week?"],
   es:["¿Y si entrenara una paloma para traer café?","¿Y si decidiera todo con una moneda por 24h?","¿Y si hablara en rimas en la reunión?","¿Y si vendiera aire motivacional en frascos?","¿Y si llevara capa una semana?"],
@@ -313,11 +314,11 @@ const hintsWrap=$('hintsChips');
 function rng(seedStr){ let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
 function daily(pool,n=8){ const rnd=rng(todayISO()); const seen=new Set(), out=[]; while(out.length<n && seen.size<pool.length){ const i=Math.floor(rnd()*pool.length); if(seen.has(i)) continue; seen.add(i); out.push(pool[i]); } return out; }
 function renderHints(){
-  const base=HINTS[lang]||HINTS.it;                 // solo realistiche
-  const list=daily(base,8);                         // cambiano ogni giorno
+  const base=HINTS[lang]||HINTS.it;
+  const list=daily(base,8);
   hintsWrap.innerHTML='';
   list.forEach(h=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=h;
-    b.onclick=()=>{ $('qInput').value=h; isAbsurd=false; LS.setItem('absurd_prompt','0'); window.scrollTo({top:0,behavior:'smooth'}); };
+    b.onclick=()=>{ $('qInput').value=h; isAbsurd=false; LS.setItem('absurd_prompt','0'); LS.setItem('surprise_mode','0'); window.scrollTo({top:0,behavior:'smooth'}); };
     hintsWrap.appendChild(b);
   });
   const T=I18N[lang]||I18N.it;
@@ -345,7 +346,7 @@ function renderNext(){
     const left=document.createElement('div'); left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.q||'—'}</div><div class="meta">${fmtDate(item.ts)}</div>`;
     const right=document.createElement('div'); right.className='row';
     const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=T.use;
-    useBtn.onclick=()=>{ $('qInput').value=item.q||''; isAbsurd=false; LS.setItem('absurd_prompt','0'); window.scrollTo({top:0,behavior:'smooth'}); };
+    useBtn.onclick=()=>{ $('qInput').value=item.q||''; isAbsurd=false; LS.setItem('absurd_prompt','0'); LS.setItem('surprise_mode','0'); window.scrollTo({top:0,behavior:'smooth'}); };
     right.appendChild(useBtn); row.appendChild(left); row.appendChild(right); box.appendChild(row);
   });
 }
@@ -374,27 +375,56 @@ function consumeOneCredit(){
   if((c.used||0)>=cap){ alert((I18N[lang]||I18N.it).credits+': '+(lang==='en'?'limit reached':'limite raggiunto')); return false; }
   c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderCredits(); return true;
 }
+
+/* 🔗 submit verso fifth: collega surprise + absurd ai flag letti dallo script risultato */
 function trySubmit(){
   const domanda=($('qInput').value||'').trim();
   if(!domanda) { $('qInput').focus(); return; }
   if(!consumeOneCredit()) return;
-  LS.setItem('domanda',domanda);
-  // passa il flag assurdo sia nel request che nel LS separato
-  const req={domanda, stile:prefs.stile, lang, extra:'', micro:{}, fantasy_mode:false, periodo:prefs.periodo, absurd:isAbsurd};
+
+  const req={
+    domanda,
+    stile:prefs.stile,
+    lang,
+    extra:'',
+    fantasy_mode:false,
+    periodo:prefs.periodo,
+    absurd:isAbsurd,
+    // >>> flag per fifth.html:
+    surprise:isAbsurd,
+    source: isAbsurd ? 'surprise' : 'manual',
+    micro:{ surprise:isAbsurd, source:isAbsurd?'surprise':'manual' }
+  };
+
   writeJSON('whatif_request',req);
+  LS.setItem('domanda',domanda);
   LS.setItem('absurd_prompt', isAbsurd ? '1' : '0');
+  LS.setItem('surprise_mode', isAbsurd ? '1' : '0');   // usato da fifth per mostrare comitato
+
   addHistory(domanda, prefs.stile);
-  location.href='fifth.html';
+
+  // Usa query per compatibilità totale con fifth
+  location.href = isAbsurd ? 'fifth.html?src=surprise' : 'fifth.html';
 }
 $('goBtn').onclick=trySubmit;
 
-// se l'utente scrive a mano → non assurdo
-$('qInput').addEventListener('input', ()=>{ isAbsurd=false; LS.setItem('absurd_prompt','0'); });
+// se l'utente scrive a mano → disattiva surprise/absurd
+$('qInput').addEventListener('input', ()=>{
+  isAbsurd=false;
+  LS.setItem('absurd_prompt','0');
+  LS.setItem('surprise_mode','0');
+});
 
-$('clearBtn').onclick=()=>{$('qInput').value=''; isAbsurd=false; LS.setItem('absurd_prompt','0'); $('qInput').focus();};
+$('clearBtn').onclick=()=>{
+  $('qInput').value='';
+  isAbsurd=false;
+  LS.setItem('absurd_prompt','0');
+  LS.setItem('surprise_mode','0');
+  $('qInput').focus();
+};
 $('qInput').addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
-/* ===== SORPRENDIMI: limite giornaliero (FREE=1, PRO=5) e slot solo ASSURDE (daily) ===== */
+/* ===== SORPRENDIMI ===== */
 function spinCap(){ return userIsAdmin()?Infinity:(prefs.pro?5:1); }
 function ensureSpins(){
   const s=readJSON('surprise_spins',{date:todayISO(),used:0});
@@ -422,15 +452,15 @@ function consumeOneSpin(){
 renderSpinButton();
 
 function slotSurprise(){
-  if(!consumeOneSpin()) return;          // rispetta limite
+  if(!consumeOneSpin()) return;
   const absurdAll=ABS[lang]||ABS.it;
   if(!absurdAll.length) return;
-  const absurdDaily = daily(absurdAll, 8);   // subset giornaliero
+  const absurdDaily = daily(absurdAll, 8);
 
   const el=$('qInput'); el.classList.add('slotting');
   let i=0;
   const iv=setInterval(()=>{
-    el.value = absurdDaily[i % absurdDaily.length];   // SOLO assurde del giorno
+    el.value = absurdDaily[i % absurdDaily.length];
     const s = Math.random()<.5 ? 'whatif' : 'wtf';
     const p = Math.random()<.5 ? 'future' : 'past';
     prefs.stile=s; prefs.periodo=p; writeJSON('whatif_prefs',prefs);
@@ -438,13 +468,45 @@ function slotSurprise(){
     renderBadges(); i++;
   },90);
 
-  // stop e set flag assurdo
   setTimeout(()=>{ 
     clearInterval(iv); el.classList.remove('slotting');
-    isAbsurd=true; LS.setItem('absurd_prompt','1');
+    isAbsurd=true;
+    LS.setItem('absurd_prompt','1');
+    LS.setItem('surprise_mode','1');     // <<< attiva modalità sorprendi per fifth
   }, 1200 + Math.random()*600);
 }
 $('surpriseBtn').onclick=slotSurprise;
+
+/* ===== LISTE ===== */
+function renderNext(){
+  const T=I18N[lang]||I18N.it;
+  const box=$('nextList'); box.innerHTML=''; const arr=readJSON('next_prompts',[]);
+  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=T.emptyNext; box.appendChild(p); return; }
+  arr.slice(0,12).forEach(item=>{
+    const row=document.createElement('div'); row.className='story';
+    const left=document.createElement('div'); left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.q||'—'}</div><div class="meta">${new Date(item.ts).toLocaleString()}</div>`;
+    const right=document.createElement('div'); right.className='row';
+    const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=T.use;
+    useBtn.onclick=()=>{ $('qInput').value=item.q||''; isAbsurd=false; LS.setItem('absurd_prompt','0'); LS.setItem('surprise_mode','0'); window.scrollTo({top:0,behavior:'smooth'}); };
+    right.appendChild(useBtn); row.appendChild(left); row.appendChild(right); box.appendChild(row);
+  });
+}
+function renderStories(){
+  const T=I18N[lang]||I18N.it;
+  const box=$('storyList'); box.innerHTML=''; const arr=readJSON('cronologia',[]);
+  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=T.emptyHist; box.appendChild(p); return; }
+  arr.slice(-12).reverse().forEach(item=>{
+    const row=document.createElement('div'); row.className='story';
+    const left=document.createElement('div'); left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.domanda||'—'}</div><div class="meta">${new Date(item.ts).toLocaleString()} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
+    const play=document.createElement('button'); play.className='play'; play.textContent='▶';
+    play.onclick=()=>{ writeJSON('replay_story',{domanda:item.domanda,answer:item.risposta||item.answer||'',stile:item.stile||'whatif'}); location.href='fifth.html'; };
+    row.appendChild(left); row.appendChild(play); box.appendChild(row);
+  });
+}
+renderNext(); renderStories();
+$('clearSavedBtn').onclick=()=>{ LS.removeItem('next_prompts'); renderNext(); };
+$('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
+$('saveBtn').onclick=()=>{ const q=($('qInput').value||'').trim(); if(!q) return; addSaved(q); };
 </script>
 </body>
 </html>
