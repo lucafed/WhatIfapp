@@ -391,67 +391,22 @@ function renderPctAll(pct){
   bottomPct.textContent = pct || "—";
 }
 
-/* ==== Note serie (per WHAT IF) ==== */
-function buildSeriousNote(cat){
-  const byCat = {
-    "🧠":[
-      "Coerenza con abitudini attuali e curva d’impegno sostenibile.",
-      "Chiarezza obiettivi e micro-step misurabili."
-    ],
-    "📊":[
-      "Finestra temporale favorevole e risorse disponibili.",
-      "Rischi noti con mitigazioni semplici."
-    ],
-    "📞":[
-      "Stakeholder informali già allineati.",
-      "Tempistiche compatibili con vincoli personali."
-    ],
-    "🥃":[
-      "Network attivo e supporto operativo nelle prime fasi.",
-      "Decisione rapida possibile con basso costo d’errore."
-    ],
-    "🍕":[
-      "Logistica leggera e facilità di coordinamento.",
-      "Benefici rapidi percepibili che sostengono la motivazione."
-    ],
-    "🎤":[
-      "Contesto sociale favorevole al testing.",
-      "Feedback immediato per iterare."
-    ],
-    "💬":[
-      "Supporto motivazionale stabile.",
-      "Allineamento del gruppo su priorità pragmatiche."
-    ],
-    "🕊️":[
-      "Ambiente urbano ricettivo e pochi vincoli regolatori.",
-      "Tempistica stagionale favorevole."
-    ],
-    "🦊":[
-      "Opportunità a breve termine identificata.",
-      "Costo d’ingresso contenuto rispetto al potenziale."
-    ],
-    "🐙":[
-      "Flessibilità d’esecuzione e piani B disponibili.",
-      "Coordinamento semplice tra più task."
-    ],
-    "🦥":[
-      "Obiettivo a prova di ritardi fisiologici.",
-      "Stabilità del contesto nel medio periodo."
-    ],
-  };
-  const pool = byCat[cat.ico] || ["Fattibilità elevata e rischi contenuti."];
-  return pick(pool);
-}
-
-/* ==== Azuffamento (solo per WTF) ==== */
-function buildScuffleExtra(){
+/* ==== Azuffamento (solo per domande non-serie) ==== */
+function buildScuffleExtra(cat){
+  // numeri brevi e plausibilmente comici, sempre diversi
   const minor = rndInt(1,5);
   const injured = rndInt(0,3);
   const hosp = Math.min(injured, rndInt(0,2));
+
   const extras = [
+    // Animali / Piccioni / Volpi / Polpi / Bradipi
+    `Lite tra delegazioni: ${minor} ammòniti; ${injured} feriti, ${hosp} in osservazione.`,
     `Breve parapiglia al voto: ${minor} allontanati; ${injured} contusi (${hosp} bendati).`,
-    `Discussione accesa: ${minor} espulsi; ${injured} graffiati, ${hosp} medicati.`,
-    `Intervallo movimentato: ${minor} bicchieri rovesciati; ${injured} piccoli tagli (${hosp} cerotti).`
+    `Intervallo movimentato: ${minor} espulsi; ${injured} graffiati, ${hosp} medicati.`,
+    // Vita notturna
+    `Discussione accesa al bancone: ${minor} bicchieri rovesciati; ${injured} piccoli tagli (${hosp} cerotti).`,
+    // Psicologia
+    `Seduta straordinaria: ${minor} crisi di identità; ${injured} in pausa tè, ${hosp} respirazioni profonde.`
   ];
   return pick(extras);
 }
@@ -466,36 +421,42 @@ function randVotes(){
 function buildCommittee(){
   const cat = pick(CATEGORIES);
   const name = (lang==='it') ? cat.name_it : cat.name_en;
+  const notePool = (lang==='it') ? (cat.notes_it||[]) : (cat.notes_en||[]);
+  const note = pick(notePool.length?notePool:["—"]);
   const votes = randVotes();
-  // prendiamo una nota base (neutra) per il titolo ironico WTF
-  const baseNote = (lang==='it' ? (cat.notes_it||[]) : (cat.notes_en||[]));
-  return { ico:cat.ico, name, baseNote, cat, votes };
+  return { ico:cat.ico, name, note, cat };
 }
 
-/* Forziamo: WHAT IF = serio sempre */
-function computeSeriousFlag(){
-  return (style === 'whatif'); // indipendente da micro/manual/absurd
+/* Domande serie = req.micro.manual === true (oppure LS.manual_mode === '1') */
+function isSerious(req){
+  try{
+    if (req && req.micro && req.micro.manual === true) return true;
+  }catch{}
+  return (localStorage.getItem('manual_mode') === '1');
 }
 
-function renderCommittee(item){
+function renderCommittee(item, {serious, absurd}){
   const T = I18N[lang] || I18N.it;
-  const serious = computeSeriousFlag();
 
   // Titolo una sola volta
   committeeTitle.textContent = `${item.ico} ${T.votersTitle}: ${item.name}`;
 
-  // Sotto: solo voti + nota
+  // Sotto: solo voti + nota (senza ripetere nome)
   motIco.textContent  = item.ico;
-  motName.textContent = item.name; // nascosto via CSS
-  chipFav.textContent = `favorevoli ${item.votes.fav}`;
-  chipCon.textContent = `contrari ${item.votes.con}`;
-  chipAst.textContent = `astenuti ${item.votes.ast}`;
+  motName.textContent = item.name; // nascosto via CSS (niente duplicazione)
+  chipFav.textContent = `favorevoli ${item.cat ? rndInt(50, item.cat.ico==='🕊️'?3000:1200) : rndInt(50,1200)}`; // enfatizza un po' i numeri
+  chipCon.textContent = `contrari ${rndInt(0, 900)}`;
+  chipAst.textContent = `astenuti ${rndInt(0, 400)}`;
 
   if (serious){
-    motNote.textContent = buildSeriousNote(item.cat);
+    motNote.textContent = (lang==='it')
+      ? "Valutazione basata su fattibilità, tempi e impatto: motivazione reale e sintetica."
+      : "Evaluation based on feasibility, timing and impact: real, concise rationale.";
   } else {
-    const base = (item.baseNote && item.baseNote.length) ? pick(item.baseNote) : "Consenso alto.";
-    motNote.textContent = `${base} ${buildScuffleExtra()}`;
+    // non-seria / assurda: nota ironica + scuffle
+    const base = item.note;
+    const rissa = buildScuffleExtra(item.cat);
+    motNote.textContent = `${base} ${rissa}`;
   }
 }
 
@@ -503,6 +464,7 @@ function renderCommittee(item){
 (async ()=>{
   const req = JSON.parse(LS.getItem('whatif_request')||'{}');
   const absurdFlag = req.absurd === true || LS.getItem('absurd_prompt') === '1';
+  const seriousFlag = isSerious(req);
 
   // domanda
   let domanda = req.domanda || LS.getItem('domanda') || "";
@@ -530,12 +492,12 @@ function renderCommittee(item){
     decorateEmBits(qs('#answer'));
 
     // >>> % in alto e sotto
-    // nelle WHAT IF ignoriamo eventuale absurd flag
-    const pct = buildPrimaryPct({style, absurd: (style==='wtf') && absurdFlag});
+    const pct = buildPrimaryPct({style, absurd:absurdFlag && !seriousFlag});
     renderPctAll(pct);
 
-    // >>> Comitato singolo con voti (nota seria per WHAT IF; ironica+azzuffamento per WTF)
-    renderCommittee(buildCommittee());
+    // >>> Comitato singolo con voti (una sola volta) + nota (seria vs ironica+azzuffamento)
+    const committee = buildCommittee();
+    renderCommittee(committee, {serious: seriousFlag, absurd: absurdFlag && !seriousFlag});
 
     // storia
     const hist = JSON.parse(LS.getItem('cronologia')||'[]');
