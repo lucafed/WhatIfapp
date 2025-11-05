@@ -24,11 +24,10 @@
     .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12}
     .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
     .badge{
-      display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);
+      display:inline-block;padding:6px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.14);
       background:rgba(255,255,255,.06);font-size:12px;line-height:1.2;word-break:break-word;white-space:normal
     }
     .kv{display:flex;flex-wrap:wrap;gap:8px}
-    .kv .badge{border-radius:12px}
     table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;table-layout:auto}
     thead th{position:sticky;top:0;background:rgba(19,25,30,.96);backdrop-filter:blur(4px);z-index:1}
     th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
@@ -154,11 +153,7 @@ function maskIpStr(ip){
   if(ip.includes(":")){ const parts=ip.split(":"); return parts.slice(0,4).join(":")+"::xxxx"; }
   return ip;
 }
-function todayYMD(d=new Date()){ return d.toISOString().slice(0,10); }
-const fmtKV = (obj)=> {
-  if(!obj || !Object.keys(obj).length) return "—";
-  return Object.entries(obj).map(([k,v])=>`${k}: ${v}`).join(" · ");
-};
+const fmtKV = (obj)=>!obj||!Object.keys(obj).length? "—" : Object.entries(obj).map(([k,v])=>`${k}: ${v}`).join(" · ");
 
 /* ===== Admin check ===== */
 async function adminCheck(){
@@ -196,7 +191,8 @@ function drawTable(items){
     if(fl && x.lang!==fl) return false;
     if(fp && x.periodo!==fp) return false;
     if(fu && x.user_type!==fu) return false;
-    if(q && !String(x.domanda||"").toLowerCase().includes(q)) return false;
+    const domanda = (x.domanda ?? x.q ?? x.question ?? x.prompt ?? "");
+    if(q && !String(domanda).toLowerCase().includes(q)) return false;
     return true;
   }).slice(0,win);
 
@@ -215,7 +211,8 @@ function drawTable(items){
     const tdPeriodo=document.createElement("td"); tdPeriodo.textContent = it.periodo || "";
     const tdLen=document.createElement("td"); tdLen.textContent = String(it.answer_chars || 0);
     const tdDomanda=document.createElement("td");
-    tdDomanda.textContent = (String(it.domanda||"").trim() || "(vuota)").replace(/\s+/g," ").slice(0,500);
+    const domanda = (it.domanda ?? it.q ?? it.question ?? it.prompt ?? "").toString().trim();
+    tdDomanda.textContent = (domanda || "(mascherata)").replace(/\s+/g," ").slice(0,500);
     tr.append(tdQuando, tdIp, tdTipo, tdStile, tdLang, tdPeriodo, tdLen, tdDomanda);
     tb.appendChild(tr);
   }
@@ -224,9 +221,9 @@ function drawTable(items){
 /* ===== Stats fallback ===== */
 function computeStatsClient(items){
   const total = items.length;
-  const ymdToday = todayYMD();
+  const todayYMD = new Date().toISOString().slice(0,10);
   const last7cut = Date.now()-7*86400000;
-  const today = items.filter(x=> (new Date(x.ts)).toISOString().slice(0,10)===ymdToday ).length;
+  const today = items.filter(x=> (new Date(x.ts)).toISOString().slice(0,10)===todayYMD ).length;
   const last7 = items.filter(x=> (x.ts||0)>=last7cut ).length;
   const countBy = (key)=> items.reduce((acc,x)=>{ const k=x[key]||""; acc[k]=(acc[k]||0)+1; return acc; },{});
   return {
@@ -248,6 +245,27 @@ function updateStatsUI(S){
   if(S.trend) renderTrend(S.trend);
 }
 
+/* ===== Fetch robusto con fallback mask ===== */
+async function fetchLogsRobust(limit, preferMask0=true){
+  const headers={ "x-admin-token": getTok() };
+  const tryOnce = async (m)=> {
+    const r = await fetch(`/api/admin-logs?limit=${limit}&mask=${m?1:0}`,{ headers });
+    const d = await r.json().catch(()=>({}));
+    let arr = [];
+    if(Array.isArray(d)) arr = d;
+    else if(Array.isArray(d.items)) arr = d.items;
+    else if(Array.isArray(d.logs)) arr = d.logs;
+    else if(Array.isArray(d.data)) arr = d.data;
+    return arr;
+  };
+  let items = await tryOnce(preferMask0?0:1);
+  if(!items || items.length===0){
+    // retry con parametro opposto
+    items = await tryOnce(preferMask0?1:0);
+  }
+  return items||[];
+}
+
 /* ===== Loader ===== */
 async function loadAll(){
   qs("#ts").textContent="Aggiornamento…";
@@ -255,19 +273,15 @@ async function loadAll(){
   const days =qs("#trend").value || "10";
   const headers={ "x-admin-token": getTok() };
 
-  let stats=null, items=[];
+  let stats=null;
   try{
     const s = await fetch(`/api/admin-stats?days=${days}`,{ headers });
     if(s.ok){ stats = await s.json(); }
   }catch{}
 
-  // IMPORTANTISSIMO: mask=0 per ricevere sempre la domanda dal server
-  try{
-    const r = await fetch(`/api/admin-logs?limit=${limit}&mask=0`,{ headers });
-    const d = await r.json().catch(()=>({}));
-    items = Array.isArray(d.items) ? d.items : (Array.isArray(d) ? d : []);
-  }catch(e){ console.error("admin-logs error", e); items=[]; }
-
+  // preferisco mask=0, ma se il server non restituisce nulla passo a mask=1
+  const preferMask0 = true;
+  const items = await fetchLogsRobust(limit, preferMask0);
   LAST_ITEMS = items;
 
   if(!stats || typeof stats !== "object" || Object.keys(stats).length===0){
@@ -322,8 +336,11 @@ qs("#btnAuto").onclick = ()=>{
   if(auto){ clearInterval(auto); auto=null; qs("#btnAuto").textContent="Auto-refresh"; }
   else { auto=setInterval(loadAll, 5000); qs("#btnAuto").textContent="Stop auto"; }
 };
-for(const id of ["fStyle","fLang","fPeriod","fUser","q","limitSel","maskIp","win","trend"])
+/* Filtri che prima non rifacevano la fetch */
+for(const id of ["fStyle","fLang","fPeriod","fUser","q","win"])
   qs("#"+id).addEventListener("input", ()=>drawTable(LAST_ITEMS));
+for(const id of ["limitSel","maskIp","trend"])
+  qs("#"+id).addEventListener("input", ()=>loadAll());
 
 /* ===== Init ===== */
 (async function init(){
