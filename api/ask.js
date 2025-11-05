@@ -1,8 +1,8 @@
 // /api/ask.js — What?f Engine (WhatIf naturale + WTF demenziale)
-// - WHATIF: voce calma, empatica, concreta. Paragrafo unico, 8–11 frasi, micro-narrazione “prime settimane” + outlook 3–6 mesi,
-//           micro-azione di test + criterio interno per decidere. Varia il taglio in base al tema (città/lavoro/relazioni/soldi/crescita).
-// - WTF: come da tuoi esempi, 2–3 reazioni DEMENZIALI, una sola “imprecazione” teatrale, sorso alcolico, risposta vera, morale.
-// - Post-process: maiuscole dopo . ? ! … ; un paragrafo; niente eco della domanda; clamp frasi/parole.
+// - WHATIF: voce calma, empatica, concreta. 1 paragrafo, 8–11 frasi, micro-narrazione (prime settimane) + outlook 3–6 mesi,
+//           micro-azione di test + criterio interno per decidere. Varia per tema (città/lavoro/relazioni/soldi/crescita).
+// - WTF: come da esempi, 2–3 reazioni demenziali, 1 “imprecazione” teatrale, sorso alcolico, risposta vera, morale.
+// - Post-process: maiuscole robuste, un paragrafo, niente eco della domanda, clamp frasi/parole, fix “L’Aquila”.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -53,18 +53,28 @@ function clampWords(text, maxWords){
   return m?m[1]:slice+"…";
 }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\.\.\.+/g,"…").replace(/\s+([.,;:!?])/g,"$1").trim(); }
-function stripQuestionEcho(domanda,text){
-  const d=String(domanda||"").replace(/[“”"']/g,"").trim().toLowerCase(); let t=String(text||"");
-  const lead=t.slice(0,Math.min(t.length,d.length+12)).toLowerCase().replace(/[“”"']/g,"").trim();
-  const rx=/^(?:e\s*se|what\s*if|domanda:|q:)[^.!?…]*[.!?…]\s+/i;
-  if(lead.startsWith(d)){ const cut=t.indexOf("."); if(cut>-1) t=t.slice(cut+1).trim(); }
-  t=t.replace(rx,""); return t;
-}
+
+/* ——— Maiuscole robuste + fix inizio frase ——— */
 function sentenceCaseAll(s=""){
-  // Metti maiuscola dopo (. ? ! …) + gestione virgolette semplici
-  return s.replace(/(^|[.!?…]\s+)([a-zà-ÿ])/g, (m,prefix,chr)=> prefix + chr.toUpperCase());
+  let t=String(s).trim();
+  // Maiuscola assoluta sul primissimo carattere alfabetico
+  t=t.replace(/^\s*([a-zà-ÿ])/u, (m,c)=>c.toUpperCase());
+  // Maiuscola dopo . ? ! … + spazio
+  t=t.replace(/(^|[.!?…]\s+)([a-zà-ÿ])/gu, (m,prefix,chr)=> prefix + chr.toUpperCase());
+  return t;
 }
 function finalPunct(s=""){ return /[.!?…]$/.test(s)?s:s+"."; }
+
+/* ——— Fix nomi/propri italiani comuni ——— */
+function fixItalianProperNouns(s=""){
+  // L’Aquila / all’Aquila
+  let t=String(s);
+  t=t.replace(/\bl['’]aquila\b/gi, "L’Aquila");
+  t=t.replace(/\ball['’]aquila\b/gi, "all’Aquila");
+  // In caso di apostrofo "L' " -> “L’ ”
+  t=t.replace(/L'aquila/g, "L’Aquila");
+  return t;
+}
 
 /* ========= WHAT IF — tono definitivo breve + previsione narrativa ========= */
 /* IT */
@@ -147,7 +157,7 @@ function buildMessages({ domanda, lang, periodo, stile }){
     : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona.`;
   const temporal = String(periodo).toLowerCase()==="past"
     ? (L==="en" ? "Write as if it already happened." : "Scrivi come se fosse già successo.")
-    : (L==="en" ? "Write as a near-future unfolding starting now." : "Scrivi come un prossimo futuro che inizia ora.");
+    : (L==="en" ? "Write as a near-future unfolding starting now." : "Scrivi come un prossimo futuro che inizia ora.`");
 
   const msgs = [
     { role: "system", content: baseRules },
@@ -159,7 +169,6 @@ function buildMessages({ domanda, lang, periodo, stile }){
     let seed=[...String(domanda)].reduce((a,c)=>a+c.charCodeAt(0),0);
     function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; }
     const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
-    // 2–3 reazioni demenziali coerenti
     const shuffled=[...WTF_REACT].sort(()=>rnd()-0.5);
     const react = shuffled.slice(0, 2 + Math.floor(rnd()*2)); // 2 o 3
     const drink = WTF_DRINK[Math.floor(rnd()*WTF_DRINK.length)];
@@ -172,7 +181,6 @@ function buildMessages({ domanda, lang, periodo, stile }){
       { role: "system", content: `IMPRECATION: ${impre}` },
       { role: "system", content: `REACTIONS:\n- ${react.join("\n- ")}` },
       { role: "system", content: `DRINK: ${drink}` },
-      // ESEMPI IT (àncora di tono)
       { role: "system", content:
 `ESEMPI VINCOLANTI (tono/ritmo IT):
 - Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora che al confessionale ti tengono in riserva. Ti versi un goccio di liquore, rimetti in riga il bancone e giuri che domani apri solo per matti. Alla chiusura, ti guardi intorno e sussurri che oggi hai bestemmiato più del prete quando finisce il vino — ma almeno hai servito verità calde.
@@ -180,10 +188,9 @@ function buildMessages({ domanda, lang, periodo, stile }){
 - Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
     );
   } else {
-    // WHATIF definitivo: breve, naturale, con previsione narrativa e variazione per tema
+    // WHATIF definitivo
     const rule = (L === "it") ? WHATIF_RULE_IT : WHATIF_RULE_EN;
     const ex   = (L === "it") ? WHATIF_EXAMPLE_IT : WHATIF_EXAMPLE_EN;
-
     msgs.push(
       { role: "system", content: rule },
       { role: "system", content: `Esempio/Example (tone & pacing):\n${ex}` },
@@ -200,9 +207,9 @@ ADATTAMENTO PER TEMA (se applicabile):
 
   // Utente finale
   const ask = (L==="en")
-    ? `Question (do NOT repeat it). Write ONE SINGLE PARAGRAPH (8–11 sentences). Keep it natural and concise. "${domanda}"`
+    ? `Do NOT repeat the question. One single paragraph (8–11 sentences), natural and concise. "${domanda}"`
     : (L==="it")
-    ? `Non ripetere la domanda. Scrivi UN SOLO PARAGRAFO (8–11 frasi), naturale e conciso. "${domanda}"`
+    ? `Non ripetere la domanda. Un solo paragrafo (8–11 frasi), naturale e conciso. "${domanda}"`
     : (L==="es")
     ? `No repitas la pregunta. Un solo párrafo (8–11 frases), natural y conciso. "${domanda}"`
     : (L==="fr")
@@ -255,21 +262,19 @@ export default async function handler(req, res){
 
     // Post-process
     answer = stripQuestionEcho(domanda, answer);
-    answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);         // WhatIf 8–11 → clamp a 10 frasi max
-    answer = clampWords(answer, stile === "wtf" ? 170 : 165);            // parolaio contenuto
+    answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);    // WhatIf 8–11 → clamp max 10
+    answer = clampWords(answer, stile === "wtf" ? 170 : 165);
     answer = normalizeOneParagraph(answer);
-    answer = sentenceCaseAll(answer);
+    answer = sentenceCaseAll(answer);                               // maiuscole robuste
+    answer = fixItalianProperNouns(answer);                         // L’Aquila, all’Aquila, ecc.
     answer = finalPunct(answer);
 
-    // Moderazioni leggere (non spegnere l'umorismo)
+    // Moderazione leggera IT: evita nomi propri non presenti nella domanda
     if(normLang(lang)==="it"){
-      // evita nomi propri non presenti nella domanda (salva interiezioni utili)
-      (function(){
-        const d=String(domanda||"");
-        const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
-        const inQuestion=new Set((d.match(nameRx)||[]));
-        answer=answer.replace(nameRx,(m)=> inQuestion.has(m) ? m : (["Ah","Oh","Ehi","Sai"].includes(m) ? m : m.toLowerCase()));
-      })();
+      const d=String(domanda||"");
+      const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
+      const inQuestion=new Set((d.match(nameRx)||[]));
+      answer=answer.replace(nameRx,(m)=> inQuestion.has(m) ? m : (["Ah","Oh","Ehi","Sai","La","L’","L'"].includes(m) ? m : m.toLowerCase()));
     }
 
     return res.status(200).json({ answer, style: stile, lang: normLang(lang), periodo, model: MODEL });
