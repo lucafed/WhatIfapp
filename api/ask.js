@@ -1,8 +1,8 @@
-// /api/ask.js — What?f Engine (Stable Hybrid WHATIF + Friendly-WTF Demenziale)
-// - WHATIF: stile unico 60% analisi / 40% immagini sobrie. Incipit analitico (no “Bella Luca”).
+// /api/ask.js — What?f Engine (WhatIf naturale + WTF demenziale)
+// - WHATIF: voce calma, empatica, concreta. Paragrafo unico, 8–11 frasi, micro-narrazione “prime settimane” + outlook 3–6 mesi,
+//           micro-azione di test + criterio interno per decidere. Varia il taglio in base al tema (città/lavoro/relazioni/soldi/crescita).
 // - WTF: come da tuoi esempi, 2–3 reazioni DEMENZIALI, una sola “imprecazione” teatrale, sorso alcolico, risposta vera, morale.
-// - Maiuscole sistemate post-process dopo punto / “…”.
-// - Un paragrafo, niente elenchi, niente eco della domanda.
+// - Post-process: maiuscole dopo . ? ! … ; un paragrafo; niente eco della domanda; clamp frasi/parole.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -66,10 +66,51 @@ function sentenceCaseAll(s=""){
 }
 function finalPunct(s=""){ return /[.!?…]$/.test(s)?s:s+"."; }
 
-/* ========= WHAT IF – stile 60/40 (analitico + immagini sobrie) ========= */
-const WHATIF_HYBRID_EX_IT = `Sai, questa non è una domanda leggera. Guardi i numeri, poi guardi le abitudini: costi più bassi da una parte, occasioni più larghe dall’altra. La qualità della vita non è un grafico, è una routine: tempi di spostamento, servizi che funzionano, persone che senti vicine. Se stringi, il portafoglio respira un po’ di più; in cambio accetti un ritmo meno veloce e meno “vetrine” da inseguire. Le giornate si accorciano di frenesia e si allungano di fiato: un caffè fatto bene, una strada che conosci, un’aria che sa di casa. Non è una fuga né un eroismo: è ingegneria quotidiana, spostare pesi tra tempo, denaro e relazioni. A conti fatti, potresti guadagnare spazio mentale e perdere solo rumore. E quando la sera chiudi la porta, non senti il rimpianto bussare: senti il tuo passo tornare al suo passo.`;
+/* ========= WHAT IF — tono definitivo breve + previsione narrativa ========= */
+/* IT */
+const WHATIF_RULE_IT = `
+SEI "What If": voce calma, empatica, concreta. Scrivi in ITALIANO.
+Obiettivo: lascia all’utente 1 sensazione, 1 idea concreta, 1 micro-azione, 1 criterio interno.
+OBBLIGATORIO: paragrafo unico, 8–11 frasi, niente elenchi, niente emoji, NON ripetere la domanda.
+Stile: semplice e adulto, zero toni “guru”; immagini quotidiane brevi (non poetiche).
+Contenuto (sequenza):
+1) riconosci la radice emotiva della domanda;
+2) chiarisci la posta in gioco (perché conta adesso);
+3) micro-scenario delle PRIME SETTIMANE (sensazioni realistiche);
+4) scenario a 3–6 MESI (lato positivo + sfida);
+5) realtà pratica (costi/tempo/energia/contesto);
+6) rileggi da dove nasce il desiderio;
+7) micro-azione/test per verificarlo;
+8) segnale interno per decidere (criterio di verità).
+Adatta il taglio al tema implicito (città/lavoro/relazioni/soldi/crescita). Sii sicuro anche quando mostri i dubbi. Linguaggio naturale.
+`.trim();
 
-const WHATIF_RULE_IT = `WHAT IF HYBRID (italiano): 60% analisi concreta (costi/benefici, routine, qualità di vita), 40% immagini sobrie della quotidianità. Incipit analitico nello stile: “Sai, questa non è una domanda leggera.” Vietato iniziare con “Bella questa”. 8–10 frasi. Seconda persona. Una sola risposta a paragrafo unico. Niente eco della domanda.`;
+/* EN — base per EN/ES/FR/DE (il modello scrive nella lingua utente) */
+const WHATIF_RULE_EN = `
+You are "What If": calm, empathetic, practical. Write in the USER'S LANGUAGE.
+Goal: leave 1 feeling, 1 concrete idea, 1 micro-action, 1 inner criterion.
+MANDATORY: single paragraph, 8–11 sentences, no lists, no emojis, do not restate the question.
+Style: simple, mature, no guru vibe; short everyday imagery only.
+Content (sequence):
+1) acknowledge the emotional root;
+2) clarify what's at stake now;
+3) micro-scenario of the FIRST WEEKS (realistic sensations);
+4) 3–6 MONTH outlook (upside + challenge);
+5) practical reality (costs/time/energy/context);
+6) reflect on the origin of the desire;
+7) micro-action/test to verify it;
+8) inner signal to decide (truth criterion).
+Adapt to the implied topic (city/relat./career/money/growth). Be confident, even when showing uncertainty.
+`.trim();
+
+/* Esempi àncora (tono/ritmo) */
+const WHATIF_EXAMPLE_IT = `
+Questa domanda nasce quando una parte di te chiede un ritmo più tuo. Le prime settimane avrebbero un sapore familiare e strano insieme: luoghi che riconosci e la testa che corre meno. Dopo un mese arriva la prova vera: confrontarti con chi eri e chi sei adesso, capire se quella differenza ti allarga o ti stringe. Nel concreto guadagni spazio mentale e routine più sane, ma perdi un po’ di vibrazione quotidiana. Se lo vivi come passo in avanti e non ritorno al passato, in sei mesi puoi sentirti più stabile e presente; se ti sembra di rientrare in una versione più piccola di te, tornerà presto voglia di ripartire. Fai un test di due settimane “come se fosse già così”: orari, luoghi, lavoro. Se ti svegli più leggero e non senti di mettere la vita in pausa, non stai tornando: stai iniziando da lì.
+`.trim();
+
+const WHATIF_EXAMPLE_EN = `
+This question appears when part of you asks for a rhythm that feels more like you. The first weeks feel familiar and odd at once; a month in, the real test is who you were vs who you are now. Practically you gain mental space and steadier routines, but lose some everyday buzz. If you live it as a step forward (not a return), in six months you feel more stable and present; if it shrinks you, the urge to move on returns. Run a two-week “as if already true” test: hours, places, work. If you wake up lighter and don’t feel on pause, you’re not going back — you’re starting from there.
+`.trim();
 
 /* ========= WTF — banche demenziali ========= */
 const WTF_IMPRE = [
@@ -139,23 +180,34 @@ function buildMessages({ domanda, lang, periodo, stile }){
 - Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
     );
   } else {
-    // WHATIF ibrido unico, con incipit analitico e divieto “Bella…”
+    // WHATIF definitivo: breve, naturale, con previsione narrativa e variazione per tema
+    const rule = (L === "it") ? WHATIF_RULE_IT : WHATIF_RULE_EN;
+    const ex   = (L === "it") ? WHATIF_EXAMPLE_IT : WHATIF_EXAMPLE_EN;
+
     msgs.push(
-      { role: "system", content: WHATIF_RULE_IT },
-      { role: "system", content: `ESEMPIO (respiro e tono):\n${WHATIF_HYBRID_EX_IT}` }
+      { role: "system", content: rule },
+      { role: "system", content: `Esempio/Example (tone & pacing):\n${ex}` },
+      { role: "system", content: `
+ADATTAMENTO PER TEMA (se applicabile):
+- CITTÀ/RELOCATION: routine, rete, costi, identità; scenario prime settimane + 3–6 mesi.
+- LAVORO/CARRIERA: crescita vs fuga, struttura, pipeline contatti, micro-progetto, outlook 90 giorni.
+- RELAZIONI: dinamiche nuove vs ruoli vecchi, confini, comunicazione, check onesto 4–6 settimane.
+- SOLDI/RISCHIO: tempo prima dei soldi, unità di prova, soglia di uscita, scenario 30–45 giorni.
+- CRESCITA PERSONALE: abitudini minime, energia, criteri interni, feedback settimanale, scenario 6–8 settimane.
+` }
     );
   }
 
   // Utente finale
   const ask = (L==="en")
-    ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`
+    ? `Question (do NOT repeat it). Write ONE SINGLE PARAGRAPH (8–11 sentences). Keep it natural and concise. "${domanda}"`
     : (L==="it")
-    ? `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO. Paragrafo unico.`
+    ? `Non ripetere la domanda. Scrivi UN SOLO PARAGRAFO (8–11 frasi), naturale e conciso. "${domanda}"`
     : (L==="es")
-    ? `Pregunta (no la repitas): "${domanda}". Escribe UNA respuesta en ESPAÑOL, un solo párrafo.`
+    ? `No repitas la pregunta. Un solo párrafo (8–11 frases), natural y conciso. "${domanda}"`
     : (L==="fr")
-    ? `Question (ne la répète pas) : « ${domanda} ». Donne UNE réponse en FRANÇAIS, un seul paragraphe.`
-    : `Frage (nicht wiederholen): „${domanda}“. Gib EINE Antwort auf DEUTSCH, ein einziger Absatz.`;
+    ? `Ne répète pas la question. Un seul paragraphe (8–11 phrases), naturel et concis. « ${domanda} »`
+    : `Wiederhole die Frage nicht. Ein einziger Absatz (8–11 Sätze), natürlich und knapp. „${domanda}“`;
   msgs.push({ role: "user", content: ask });
 
   return msgs;
@@ -203,15 +255,15 @@ export default async function handler(req, res){
 
     // Post-process
     answer = stripQuestionEcho(domanda, answer);
-    answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);
-    answer = clampWords(answer, stile === "wtf" ? 170 : 165);
+    answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);         // WhatIf 8–11 → clamp a 10 frasi max
+    answer = clampWords(answer, stile === "wtf" ? 170 : 165);            // parolaio contenuto
     answer = normalizeOneParagraph(answer);
     answer = sentenceCaseAll(answer);
     answer = finalPunct(answer);
 
     // Moderazioni leggere (non spegnere l'umorismo)
     if(normLang(lang)==="it"){
-      // evita nomi non presenti nella domanda
+      // evita nomi propri non presenti nella domanda (salva interiezioni utili)
       (function(){
         const d=String(domanda||"");
         const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
