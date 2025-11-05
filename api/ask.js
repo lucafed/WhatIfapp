@@ -86,7 +86,7 @@ Ein Absatz, 8–11 Sätze, keine Listen/Emojis, Frage NICHT wiederholen. Folge d
 const WHATIF_EXAMPLES = {
   it:`Questa domanda nasce quando una parte di te chiede un ritmo più tuo. Le prime settimane avrebbero un sapore familiare e strano insieme: luoghi che riconosci e la testa che corre meno. Dopo un mese arriva la prova vera: confrontarti con chi eri e chi sei adesso, capire se quella differenza ti allarga o ti stringe. Nel concreto guadagni spazio mentale e routine più sane, ma perdi un po’ di vibrazione quotidiana. Se lo vivi come passo in avanti e non ritorno al passato, in sei mesi puoi sentirti più stabile e presente; se ti sembra di rientrare in una versione più piccola di te, tornerà presto voglia di ripartire. Fai un test di due settimane “come se fosse già così”: orari, luoghi, lavoro. Se ti svegli più leggero e non senti di mettere la vita in pausa, non stai tornando: stai iniziando da lì.`,
   en:`This question appears when part of you asks for a rhythm that feels more like you. The first weeks feel familiar and odd at once; a month in, the real test is who you were vs who you are now. You gain mental space and steadier routines, but lose some everyday buzz. If it’s a step forward (not a return), in six months you feel more stable and present; if it shrinks you, the urge to move on returns. Run a two-week “as if already true” test: hours, places, work. If you wake up lighter and don’t feel on pause, you’re not going back — you’re starting from there.`,
-  es:`Esta pregunta aparece cuando una parte de ti pide un ritmo más tuyo…`,
+  es:`Esta pregunta aparece cuando una parte di ti pide un ritmo más tuyo…`,
   fr:`Cette question arrive quand une part de toi demande un rythme plus à toi…`,
   de:`Diese Frage taucht auf, wenn ein Teil von dir nach einem eigenen Rhythmus ruft…`
 };
@@ -105,11 +105,16 @@ const WTF_REACT = [
   "il ventilatore gira al contrario “per rispetto”",
   "il citofono fa un trillo come un amen stonato",
 ];
+/* >>>>> MOD: sbronza “galattica” + più breve <<<<< */
 const WTF_DRINK = [
-  "ti versi un amaro doppio e metti in riga i pensieri",
-  "fai un sorso corto e il mondo rientra nei bordi",
-  "alzi un bicchiere piccolo: brindisi di manutenzione",
-  "bevi un dito di coraggio e respiri più largo",
+  "stappi la bottiglia e varano il Titanic dentro al bicchiere",
+  "tequila orbitale a secchiate, brindisi alle costellazioni",
+  "rum fino a vedere i giorni della settimana in 3D",
+  "spritz formato catino con salvataggio del barman",
+  "vino a cascata: applausi dei vetri, ovazione del parquet",
+  "grappa che parla lingue antiche e ti dà del tu",
+  "negroni da cataclisma, triplo giro senza mani",
+  "birra a pluviometro: allerta meteo in salotto"
 ];
 
 /* ========= Prompt builder ========= */
@@ -133,14 +138,27 @@ function buildMessages({ domanda, lang, periodo, stile }){
     const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
     const shuffled=[...WTF_REACT].sort(()=>rnd()-0.5);
     const react = shuffled.slice(0, 2 + Math.floor(rnd()*2));
-    const drink = WTF_DRINK[Math.floor(rnd()*WTF_DRINK.length)];
-    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile). Struttura OBBLIGATORIA: presa in giro affettuosa (≤2 frasi) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”, narrato, mai verso persone) → SUBITO ${react.length} reazioni di oggetti esilaranti → drink (“${drink}”) → 1–2 frasi utili → morale calda. 6–8 frasi.`;
-    const WTF_RULE_EN = `WHAT THE F (friendly, absurd but helpful). STRICT: playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical “${impre}” → THEN ${react.length} absurd object reactions → drink (“${drink}”) → 1–2 true answers → warm moral. 6–8 sentences.`;
+    // 1–2 drink scelti random (spesso 2)
+    const drinksCount = 1 + (rnd() < 0.7 ? 1 : 0);
+    const drinks = [...WTF_DRINK].sort(()=>rnd()-0.5).slice(0, drinksCount);
+
+    // Regola WTF più corta (5–7 frasi) e con “sbronza galattica”
+    const wtfRules = (L=>{
+      const drinksList = drinks.map(d=>`“${d}”`).join(" + ");
+      const reactN = react.length;
+      const IT = `WHAT THE F (amichevole, demenziale ma utile). Schema flessibile: presa in giro affettuosa (≤2) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”, narrato, mai verso persone) → SUBITO ${reactN} oggetti parlanti → ${drinks.length} giri di sbronza galattica (${drinksList}) → **3 frasi che rispondono davvero alla domanda** → **CHIUSURA BREVE**: morale ironica + consiglio scemo attinente. Totale 5–7 frasi, paragrafo unico, niente emoji, NON ripetere la domanda.`;
+      const EN = `WHAT THE F (friendly, absurd yet helpful). Loose pattern: playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical burst (“${impre}”, narrated, never at people) → THEN ${reactN} talking objects → ${drinks.length} rounds of galactic booze (${drinksList}) → **3 sentences that truly answer the question** → **BRIEF END**: ironic moral + silly on-topic tip. Total 5–7 sentences, single paragraph, no emojis, do NOT restate the question.`;
+      const ES = `WHAT THE F (amable, absurdo pero útil). Patrón suelto: broma cariñosa (≤2) → 2–3 micro-contratiempos → UN estallido teatral (“${impre}”) → LUEGO ${reactN} objetos que hablan → ${drinks.length} rondas de borrachera galáctica (${drinksList}) → **3 frases que sí responden** → **CIERRE BREVE**: moraleja irónica + consejo tonto pertinente. Total 5–7 frases, un párrafo, sin emojis.`;
+      const FR = `WHAT THE F (amical, absurde mais utile). Trame souple : taquinerie (≤2) → 2–3 micro-couacs → UNE explosion théâtrale (« ${impre} ») → PUIS ${reactN} objets parlants → ${drinks.length} tournées d’ivresse galactique (${drinksList}) → **3 phrases qui répondent vraiment** → **FIN BRÈVE** : morale ironique + conseil idiot pertinent. Total 5–7 phrases, un seul paragraphe.`;
+      const DE = `WHAT THE F (freundlich, absurd und hilfreich). Locker: necken (≤2) → 2–3 kleine Pannen → EINE theatralische Entladung („${impre}“) → DANN ${reactN} sprechende Objekte → ${drinks.length} Runden galaktischer Rausch (${drinksList}) → **3 Sätze echte Antwort** → **KURZER SCHLUSS**: ironische Moral + dummer passender Tipp. Insgesamt 5–7 Sätze, ein Absatz.`;
+      return { it:IT, en:EN, es:ES, fr:FR, de:DE }[L] || IT;
+    })(L);
+
     msgs.push(
-      { role:"system", content: L==="en"?WTF_RULE_EN:WTF_RULE_IT },
+      { role:"system", content: wtfRules },
       { role:"system", content:`IMPRECATION: ${impre}` },
       { role:"system", content:`REACTIONS:\n- ${react.join("\n- ")}` },
-      { role:"system", content:`DRINK: ${drink}` },
+      { role:"system", content:`DRINKS:\n- ${drinks.join("\n- ")}` },
     );
   } else {
     msgs.push(
@@ -194,8 +212,8 @@ export default async function handler(req, res){
 
     // ===== Post-process =====
     answer = stripQuestionEcho(domanda, answer);
-    answer = tightenSentences(answer, stile === "wtf" ? 8 : 11);
-    answer = clampWords(answer, stile === "wtf" ? 170 : 165);
+    answer = tightenSentences(answer, stile === "wtf" ? 7 : 11); // MOD: meno frasi per WTF
+    answer = clampWords(answer, stile === "wtf" ? 150 : 165);    // MOD: un po' più corto per WTF
     answer = normalizeOneParagraph(answer);
     answer = sentenceCaseAll(answer);
     answer = finalPunct(answer);
@@ -207,12 +225,9 @@ export default async function handler(req, res){
       const inQuestion=new Set((d.match(nameRx)||[]));
 
       answer = answer.replace(nameRx, (m, _g1, offset, str)=>{
-        // non toccare: inizio stringa
-        if(offset===0) return m;
-        // non toccare: subito dopo fine frase (.?!…) + eventuali virgolette/parentesi + spazio
+        if(offset===0) return m; // inizio stringa
         const before = str.slice(0, offset);
-        if(/[.!?…]["'”)\]]?\s*$/.test(before)) return m;
-        // ok: se NON è nella domanda e NON è interiezione whitelisted, abbassa
+        if(/[.!?…]["'”)\]]?\s*$/.test(before)) return m; // subito dopo fine frase
         return inQuestion.has(m) || ["Ah","Oh","Ehi","Sai"].includes(m) ? m : m.toLowerCase();
       });
 
