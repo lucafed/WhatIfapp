@@ -254,10 +254,10 @@ const I18N = {
         ? `Stile: What the F · 6–9 frasi · paragrafo unico · tono asciutto · modalità: ${p==='past'?'Passato':'Futuro'}.`
         : `Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`,
        pctLabel:"% probabilità che accada",
-       back:"← Indietro", home:"🏠 Home",
        votersTitle:"Comitato",
        seriousTitle:"Motivazione",
        scientificTitle:"Motivazione (scientificamente provata)" },
+
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
        p:"Outcome & rationales", share:"📤 Share / Copy", again:"🔁 Ask another",
@@ -267,12 +267,49 @@ const I18N = {
         ? `Style: What the F · 6–9 sentences · single paragraph · dry tone · mode: ${p==='past'?'Past':'Future'}.`
         : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,
        pctLabel:"% probability it happens",
-       back:"← Back", home:"🏠 Home",
        votersTitle:"Committee",
        seriousTitle:"Rationale",
-       scientificTitle:"Rationale (scientifically grounded)" }
+       scientificTitle:"Rationale (scientifically grounded)" },
+
+  es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
+       sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
+       p:"Resultado y motivaciones", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra pregunta",
+       copied:"¡Copiado!", error:"[error del servidor]",
+       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       meta:(st,p)=> st==='wtf'
+        ? `Estilo: What the F · 6–9 frases · un párrafo · tono seco · modo: ${p==='past'?'Pasado':'Futuro'}.`
+        : `Estilo: What if (60% análisis, 40% real) · 8–11 frases · un párrafo · modo: ${p==='past'?'Pasado':'Futuro'}.`,
+       pctLabel:"% probabilidad de que ocurra",
+       votersTitle:"Comité",
+       seriousTitle:"Motivación",
+       scientificTitle:"Motivación (con base científica)" },
+
+  fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
+       sub:(q)=>`Question : « ${q} »`, q:"Votre question", a:"Réponse",
+       p:"Résultat & motivations", share:"📤 Partager / Copier", again:"🔁 Poser une autre question",
+       copied:"Copié !", error:"[erreur serveur]",
+       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       meta:(st,p)=> st==='wtf'
+        ? `Style : What the F · 6–9 phrases · un seul paragraphe · ton sec · mode : ${p==='past'?'Passé':'Futur'}.`
+        : `Style : What if (60% analyse, 40% réel) · 8–11 phrases · un seul paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`,
+       pctLabel:"% probabilité que cela arrive",
+       votersTitle:"Comité",
+       seriousTitle:"Justification",
+       scientificTitle:"Justification (fondée scientifiquement)" },
+
+  de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
+       sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
+       p:"Ergebnis & Begründungen", share:"📤 Teilen / Kopieren", again:"🔁 Neue Frage stellen",
+       copied:"Kopiert!", error:"[Serverfehler]",
+       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       meta:(st,p)=> st==='wtf'
+        ? `Stil: What the F · 6–9 Sätze · ein Absatz · nüchterner Ton · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
+        : `Stil: What if (60% Analyse, 40% real) · 8–11 Sätze · ein Absatz · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
+       pctLabel:"% Wahrscheinlichkeit, dass es passiert",
+       votersTitle:"Komitee",
+       seriousTitle:"Begründung",
+       scientificTitle:"Begründung (wissenschaftlich untermauert)" }
 };
-I18N.es=I18N.en; I18N.fr=I18N.en; I18N.de=I18N.en;
 
 /* ==== Leads ==== */
 const LEADS = {
@@ -284,45 +321,147 @@ const LEADS = {
       "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.",
       "La stanza è la stessa, lo sguardo no: è già un inizio."
     ]},
-  en:{ wtf:["You step in slowly; chaos recognizes you and lets you through."],
-       whatif:["Set the keys down and let the quiet that doesn’t judge go first."]}
+  en:{ wtf:["You step in slowly; chaos recognizes you and lets you through.",
+            "Breathe; let chance trip before you do."],
+       whatif:["Set the keys down and let the quiet that doesn’t judge go first.",
+               "Same room, different gaze — that’s already a start."]},
+  es:{ wtf:["Entras despacio; el caos te reconoce y hoy te deja pasar.",
+            "Respiras y dejas que el azar tropiece primero."],
+       whatif:["Deja las llaves y permite que hable el silencio que no juzga.",
+               "La habitación es la misma; tu mirada ya no — y eso basta."]},
+  fr:{ wtf:["Tu entres doucement ; le chaos te reconnaît et te laisse passer.",
+            "Respire, laisse le hasard trébucher avant toi."],
+       whatif:["Pose les clés et laisse parler le silence qui ne juge pas.",
+               "La pièce est la même, ton regard non — c’est déjà un début."]},
+  de:{ wtf:["Du trittst leise ein; das Chaos erkennt dich und lässt dich durch.",
+            "Atme — vielleicht stolpert der Zufall zuerst."],
+       whatif:["Leg die Schlüssel ab und lass die Stille ohne Urteil sprechen.",
+               "Gleicher Raum, neuer Blick — ein Anfang."]}
 };
 
 /* ==== Categories per COMITATO (sorpresa) ==== */
 const CATEGORIES = [
-  { ico:"🧠", name_it:"Comitato dei Pensieri Sotto la Doccia", name_en:"Shower-Thoughts Committee",
+  { ico:"🧠",
+    name_it:"Comitato dei Pensieri Sotto la Doccia",
+    name_en:"Shower-Thoughts Committee",
+    name_es:"Comité de Ideas de Ducha",
+    name_fr:"Comité des Idées sous la Douche",
+    name_de:"Komitee der Duschgedanken",
     notes_it:["Illuminazione logistica a shampoo.","Decisione nata a 38°C."],
-    notes_en:["Logistics epiphany mid-shampoo.","Decision made at 38°C."] },
-  { ico:"📊", name_it:"Ordine degli Ottimisti Moderati", name_en:"Order of Moderate Optimists",
+    notes_en:["Logistics epiphany mid-shampoo.","Decision made at 38°C."],
+    notes_es:["Epifanía logística con champú.","Decisión tomada a 38 °C."],
+    notes_fr:["Épiphanie logistique sous le shampoing.","Décision née à 38 °C."],
+    notes_de:["Logistik-Erleuchtung beim Shampoonieren.","Entscheidung bei 38 °C gefallen."] },
+  { ico:"📊",
+    name_it:"Ordine degli Ottimisti Moderati",
+    name_en:"Order of Moderate Optimists",
+    name_es:"Orden de los Optimistas Moderados",
+    name_fr:"Ordre des Optimistes Modérés",
+    name_de:"Orden der Mäßigen Optimisten",
     notes_it:["Aspettative sobrie, calendario stretto."],
-    notes_en:["Sober expectations, tight schedule."] },
-  { ico:"📞", name_it:"Autorità delle Telefonate Fuori Tempo", name_en:"Off-Timing Calls Authority",
+    notes_en:["Sober expectations, tight schedule."],
+    notes_es:["Expectativas sobrias, calendario apretado."],
+    notes_fr:["Attentes sobres, calendrier serré."],
+    notes_de:["Nüchterne Erwartungen, enger Zeitplan."] },
+  { ico:"📞",
+    name_it:"Autorità delle Telefonate Fuori Tempo",
+    name_en:"Off-Timing Calls Authority",
+    name_es:"Autoridad de Llamadas Fuera de Hora",
+    name_fr:"Autorité des Appels Hors-Timing",
+    name_de:"Behörde für Anrufe zur Unzeit",
     notes_it:["Parere arrivato alle 07:12.","Consiglio durante squillo prolungato."],
-    notes_en:["Opinion at 07:12.","Advice during a long ring."] },
-  { ico:"🥃", name_it:"Circolo Bar Notturno dei Consiglieri", name_en:"Late-Bar Counsel Circle",
+    notes_en:["Opinion at 07:12.","Advice during a long ring."],
+    notes_es:["Opinión a las 07:12.","Consejo durante tono largo."],
+    notes_fr:["Avis à 07 h 12.","Conseil pendant une sonnerie prolongée."],
+    notes_de:["Meinung um 07:12.","Rat während des Dauerklingelns."] },
+  { ico:"🥃",
+    name_it:"Circolo Bar Notturno dei Consiglieri",
+    name_en:"Late-Bar Counsel Circle",
+    name_es:"Círculo Nocturno de Consejeros de Bar",
+    name_fr:"Cercle Nocturne des Conseillers de Bar",
+    name_de:"Nachtbar-Ratszirkel",
     notes_it:["Coraggio liquido, piani semplici."],
-    notes_en:["Liquid courage, simple plans."] },
-  { ico:"🍕", name_it:"Associazione Snack Notturni e Idee", name_en:"Night Snacks & Ideas Association",
+    notes_en:["Liquid courage, simple plans."],
+    notes_es:["Coraje líquido, planes simples."],
+    notes_fr:["Courage liquide, plans simples."],
+    notes_de:["Flüssiger Mut, einfache Pläne."] },
+  { ico:"🍕",
+    name_it:"Associazione Snack Notturni e Idee",
+    name_en:"Night Snacks & Ideas Association",
+    name_es:"Asociación de Snacks Nocturnos e Ideas",
+    name_fr:"Association des En-Cas Nocturnes & Idées",
+    name_de:"Verein für Mitternachtssnacks & Ideen",
     notes_it:["Briefing alle 23:47.","Carboidrati a supporto."],
-    notes_en:["Briefing at 23:47.","Carbs backing the plan."] },
-  { ico:"🎤", name_it:"Sindacato delle Idee da Karaoke", name_en:"Karaoke Ideas Union",
+    notes_en:["Briefing at 23:47.","Carbs backing the plan."],
+    notes_es:["Briefing a las 23:47.","Carbos apoyando el plan."],
+    notes_fr:["Briefing à 23 h 47.","Les glucides soutiennent le plan."],
+    notes_de:["Briefing um 23:47.","Kohlenhydrate stützen den Plan."] },
+  { ico:"🎤",
+    name_it:"Sindacato delle Idee da Karaoke",
+    name_en:"Karaoke Ideas Union",
+    name_es:"Sindicato de Ideas de Karaoke",
+    name_fr:"Syndicat des Idées de Karaoké",
+    name_de:"Gewerkschaft der Karaoke-Ideen",
     notes_it:["Proposta al ritornello.","Volume > ragione."],
-    notes_en:["Proposal on the chorus.","Volume > reason."] },
-  { ico:"💬", name_it:"Conferenza degli Amici Che Gasano", name_en:"Conference of Hype Friends",
+    notes_en:["Proposal on the chorus.","Volume > reason."],
+    notes_es:["Propuesta en el estribillo.","Volumen > razón."],
+    notes_fr:["Proposition au refrain.","Volume > raison."],
+    notes_de:["Vorschlag im Refrain.","Lautstärke > Vernunft."] },
+  { ico:"💬",
+    name_it:"Conferenza degli Amici Che Gasano",
+    name_en:"Conference of Hype Friends",
+    name_es:"Conferencia de Amigos que Animan",
+    name_fr:"Conférence des Amis qui Motivent",
+    name_de:"Konferenz der anfeuernden Freunde",
     notes_it:["Clima motivazionale alto."],
-    notes_en:["High motivational climate."] },
-  { ico:"🕊️", name_it:"Assemblea dei Piccioni con Opinioni Forti", name_en:"Assembly of Strong-Opinion Pigeons",
+    notes_en:["High motivational climate."],
+    notes_es:["Alto clima motivacional."],
+    notes_fr:["Climat motivationnel élevé."],
+    notes_de:["Hohes Motivationsklima."] },
+  { ico:"🕊️",
+    name_it:"Assemblea dei Piccioni con Opinioni Forti",
+    name_en:"Assembly of Strong-Opinion Pigeons",
+    name_es:"Asamblea de Palomas con Opiniones Firmes",
+    name_fr:"Assemblée des Pigeons à Fortes Opinions",
+    name_de:"Versammlung der meinungsstarken Tauben",
     notes_it:["Consenso rumoroso in piazza."],
-    notes_en:["Loud piazza consensus."] },
-  { ico:"🦊", name_it:"Lobby delle Volpi Opportuniste", name_en:"Opportunistic Foxes Lobby",
+    notes_en:["Loud piazza consensus."],
+    notes_es:["Consenso ruidoso en la plaza."],
+    notes_fr:["Consensus bruyant sur la place."],
+    notes_de:["Lauter Konsens auf dem Platz."] },
+  { ico:"🦊",
+    name_it:"Lobby delle Volpi Opportuniste",
+    name_en:"Opportunistic Foxes Lobby",
+    name_es:"Lobby de Zorros Oportunistas",
+    name_fr:"Lobby des Renards Opportunistes",
+    name_de:"Lobby der opportunistischen Füchse",
     notes_it:["Favorevoli se conviene subito."],
-    notes_en:["In favor if payoff is instant."] },
-  { ico:"🐙", name_it:"Federazione dei Polpi Strategici", name_en:"Federation of Strategic Octopuses",
+    notes_en:["In favor if payoff is instant."],
+    notes_es:["A favor si el beneficio es inmediato."],
+    notes_fr:["Pour si le gain est immédiat."],
+    notes_de:["Dafür, wenn der Nutzen sofort ist."] },
+  { ico:"🐙",
+    name_it:"Federazione dei Polpi Strategici",
+    name_en:"Federation of Strategic Octopuses",
+    name_es:"Federación de Pulpos Estratégicos",
+    name_fr:"Fédération des Pieuvres Stratégiques",
+    name_de:"Föderation strategischer Oktopusse",
     notes_it:["Otto mosse avanti, presa salda."],
-    notes_en:["Eight moves ahead, firm grip."] },
-  { ico:"🦥", name_it:"Consiglio dei Bradipi Riflessivi", name_en:"Council of Reflective Sloths",
+    notes_en:["Eight moves ahead, firm grip."],
+    notes_es:["Ocho jugadas por delante, agarre firme."],
+    notes_fr:["Huit coups d’avance, prise ferme."],
+    notes_de:["Acht Züge voraus, fester Griff."] },
+  { ico:"🦥",
+    name_it:"Consiglio dei Bradipi Riflessivi",
+    name_en:"Council of Reflective Sloths",
+    name_es:"Consejo de Perezosos Reflexivos",
+    name_fr:"Conseil des Paresseux Réfléchis",
+    name_de:"Rat der nachdenklichen Faultiere",
     notes_it:["Decisione lenta ma convinta."],
-    notes_en:["Slow yet resolute decision."] },
+    notes_en:["Slow yet resolute decision."],
+    notes_es:["Decisión lenta pero firme."],
+    notes_fr:["Décision lente mais résolue."],
+    notes_de:["Langsam, aber entschlossen."] }
 ];
 
 /* ==== UI refs ==== */
@@ -648,8 +787,19 @@ function buildScuffleExtra(){
 }
 function buildCommittee(){
   const cat = pick(CATEGORIES);
-  const name = (lang==='it') ? cat.name_it : cat.name_en;
-  const notePool = (lang==='it') ? (cat.notes_it||[]) : (cat.notes_en||[]);
+  const name =
+    (lang==='it') ? cat.name_it :
+    (lang==='es') ? cat.name_es :
+    (lang==='fr') ? cat.name_fr :
+    (lang==='de') ? cat.name_de : cat.name_en;
+
+  const notePool =
+    (lang==='it') ? (cat.notes_it||[]) :
+    (lang==='es') ? (cat.notes_es||[]) :
+    (lang==='fr') ? (cat.notes_fr||[]) :
+    (lang==='de') ? (cat.notes_de||[]) :
+    (cat.notes_en||[]);
+
   const note = pick(notePool.length?notePool:["—"]);
   return { ico:cat.ico, name, note };
 }
@@ -677,6 +827,21 @@ const SCI_MOTIVATIONS = {
     "CEDSA study: 312 subjects + 2 tipsy guinea animals; estimated effect 87% (p≈0.02).",
     "PineCone protocol: 98 participants + 1 pigeon; replicated result, surprising CI.",
     "Swiss Institute of Cheese & Motivation: RCT (n=120); cheese group +72% success."
+  ],
+  es:[
+    "Estudio CEDSA: 312 sujetos + 2 cobayas alegres; efecto estimado 87% (p≈0,02).",
+    "Protocolo PiñaLab: 98 participantes + 1 paloma; resultado replicado, IC sorprendente.",
+    "Instituto Suizo de Queso y Motivación: ECA (n=120); grupo queso +72% de éxito."
+  ],
+  fr:[
+    "Étude CEDSA : 312 sujets + 2 cobayes éméchés ; effet estimé à 87 % (p≈0,02).",
+    "Protocole PigneLab : 98 participants + 1 pigeon ; résultat reproduit, IC surprenant.",
+    "Institut Suisse Fromage & Motivation : ECR (n=120) ; groupe fromage +72 % de réussite."
+  ],
+  de:[
+    "CEDSA-Studie: 312 Probanden + 2 angeheiterte Versuchstiere; Effekt ≈87 % (p≈0,02).",
+    "Kiefernkern-Protokoll: 98 Teilnehmende + 1 Taube; Ergebnis repliziert, überraschendes KI.",
+    "Schweizer Institut für Käse & Motivation: RCT (n=120); Käse-Gruppe +72 % Erfolg."
   ]
 };
 function pickScientificMotivation(){
@@ -739,7 +904,7 @@ function isSurprise(req){
       chipsWrap.style.display = 'flex';
       renderCommittee(buildCommittee());
       committeeTitle.textContent = committeeTitle.textContent || (T.votersTitle || 'Comitato');
-      // N.B. teniamo la % dalla stessa engine (non random)
+      // % mantiene l'engine deterministica
     } else {
       // NORMALE: niente comitato, SOLO motivazione
       const title = (style==='wtf') ? T.scientificTitle : T.seriousTitle;
