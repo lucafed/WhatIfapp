@@ -31,7 +31,10 @@ function cors(req, res) {
 
 /* ========= Helpers ========= */
 const SUP_LANGS = ["it","en","es","fr","de"];
-const normLang = (l="it") => SUP_LANGS.includes(String(l||"it").toLowerCase().slice(0,2)) ? String(l).toLowerCase().slice(0,2) : "it";
+const normLang = (l="it") =>
+  SUP_LANGS.includes(String(l||"it").toLowerCase().slice(0,2))
+    ? String(l).toLowerCase().slice(0,2)
+    : "it";
 
 const normLine = (s="") => String(s).toLowerCase()
   .replace(/[“”"']/g,"").replace(/\s+/g," ")
@@ -48,8 +51,14 @@ function clampWords(text, maxWords){
   const slice=w.slice(0,maxWords).join(" "); const m=slice.match(/([\s\S]*?[.!?…])(?![\s\S]*[.!?…])/);
   return m?m[1]:slice+"…";
 }
-function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\.\.\.+/g,"…").replace(/\s+([.,;:!?])/g,"$1").trim(); }
-
+function normalizeOneParagraph(s=""){
+  return String(s)
+    .replace(/\s*\n+\s*/g," ")
+    .replace(/\s{2,}/g," ")
+    .replace(/\.\.\.+/g,"…")
+    .replace(/\s+([.,;:!?])/g,"$1")
+    .trim();
+}
 function stripQuestionEcho(domanda,text){
   let t=String(text||"");
   const d=String(domanda||"").replace(/[“”"']/g,"").trim().toLowerCase();
@@ -105,11 +114,15 @@ const WTF_REACT = [
   "il ventilatore gira al contrario “per rispetto”",
   "il citofono fa un trillo come un amen stonato",
 ];
+// 🔥 “Sbronza GALATTICA” (massiccia, non delicata) + breve
 const WTF_DRINK = [
-  "ti versi un amaro doppio e metti in riga i pensieri",
-  "fai un sorso corto e il mondo rientra nei bordi",
-  "alzi un bicchiere piccolo: brindisi di manutenzione",
-  "bevi un dito di coraggio e respiri più largo",
+  "tequila orbitale a secchiate: brucia l’atmosfera",
+  "negroni apocalittico in brocca da condominio",
+  "rum interstellare a colonna: blackout emozionale",
+  "grappa quantistica: spacchi i verbi e il tempo",
+  "spritz marino formato vasca con scialuppa",
+  "birra a idrante: sirene in cucina",
+  "vino a cascata, standing ovation del parquet"
 ];
 
 /* ========= Prompt builder ========= */
@@ -131,16 +144,27 @@ function buildMessages({ domanda, lang, periodo, stile }){
     let seed=[...String(domanda)].reduce((a,c)=>a+c.charCodeAt(0),0);
     const rnd=()=>{ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; };
     const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
-    const shuffled=[...WTF_REACT].sort(()=>rnd()-0.5);
-    const react = shuffled.slice(0, 2 + Math.floor(rnd()*2));
-    const drink = WTF_DRINK[Math.floor(rnd()*WTF_DRINK.length)];
-    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile). Struttura OBBLIGATORIA: presa in giro affettuosa (≤2 frasi) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”, narrato, mai verso persone) → SUBITO ${react.length} reazioni di oggetti esilaranti → drink (“${drink}”) → 1–2 frasi utili → morale calda. 6–8 frasi.`;
-    const WTF_RULE_EN = `WHAT THE F (friendly, absurd but helpful). STRICT: playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical “${impre}” → THEN ${react.length} absurd object reactions → drink (“${drink}”) → 1–2 true answers → warm moral. 6–8 sentences.`;
+    const react = [...WTF_REACT].sort(()=>rnd()-0.5).slice(0, 2 + Math.floor(rnd()*2));
+    const drinks = [...WTF_DRINK].sort(()=>rnd()-0.5).slice(0, 2 + (rnd()<0.5?1:0)); // 2–3 giri
+
+    const drinksList = drinks.map(d=>`“${d}”`).join(" + ");
+    const reactN = react.length;
+
+    // ⚡ Tono “What the F”: amichevole all’inizio, più corto, sbronza galattica
+    const wtfRules = (()=>{
+      const IT = `WHAT THE F (amichevole, irriverente, utile). Schema LIBERO e CORTO: presa in giro affettuosa (≤2) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”, mai verso persone) → SUBITO ${reactN} oggetti parlanti → ${drinks.length} GIRI DI SBRONZA GALATTICA (${drinksList}) → **2–3 frasi che rispondono davvero alla domanda** → CHIUSURA LAMPO: morale ironica + consiglio scemo attinente. Totale 4–6 frasi.`;
+      const EN = `WHAT THE F (friendly, irreverent, helpful). FREE & SHORT: playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical burst (“${impre}”, never at people) → THEN ${reactN} talking objects → ${drinks.length} ROUNDS OF GALACTIC BOOZE (${drinksList}) → **2–3 sentences that truly answer** → FLASH END: ironic moral + silly on-topic tip. Total 4–6 sentences.`;
+      const ES = `WHAT THE F (amable, irreverente, útil). LIBRE y CORTO: broma cariñosa (≤2) → 2–3 contratiempos → UN estallido (“${impre}”) → ${reactN} objetos que hablan → ${drinks.length} RONDAS DE BORRACHERA GALÁCTICA (${drinksList}) → **2–3 frases que sí responden** → CIERRE FLASH: moraleja irónica + consejo tonto. 4–6 frases.`;
+      const FR = `WHAT THE F (amical, irrévérencieux, utile). LIBRE & COURT : taquinerie (≤2) → 2–3 couacs → UNE explosion (« ${impre} ») → ${reactN} objets parlants → ${drinks.length} TOURNÉES D’IVRESSE GALACTIQUE (${drinksList}) → **2–3 phrases qui répondent** → FIN ÉCLAIR : morale ironique + conseil idiot. 4–6 phrases.`;
+      const DE = `WHAT THE F (freundlich, frech, hilfreich). FREI & KURZ: necken (≤2) → 2–3 Pannen → EINE theatralische Entladung („${impre}“) → ${reactN} sprechende Objekte → ${drinks.length} RUNDEN GALAKTISCHER RAUSCH (${drinksList}) → **2–3 echte Antwortsätze** → KURZES ENDE: ironische Moral + dummer Tipp. 4–6 Sätze.`;
+      return { it:IT, en:EN, es:ES, fr:FR, de:DE }[L] || IT;
+    })();
+
     msgs.push(
-      { role:"system", content: L==="en"?WTF_RULE_EN:WTF_RULE_IT },
+      { role:"system", content: wtfRules },
       { role:"system", content:`IMPRECATION: ${impre}` },
       { role:"system", content:`REACTIONS:\n- ${react.join("\n- ")}` },
-      { role:"system", content:`DRINK: ${drink}` },
+      { role:"system", content:`DRINKS:\n- ${drinks.join("\n- ")}` },
     );
   } else {
     msgs.push(
@@ -192,27 +216,24 @@ export default async function handler(req, res){
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if(!answer) throw new Error("empty_model_response");
 
-    // ===== Post-process =====
+    // ===== Post-process (WTF più corto) =====
     answer = stripQuestionEcho(domanda, answer);
-    answer = tightenSentences(answer, stile === "wtf" ? 8 : 11);
-    answer = clampWords(answer, stile === "wtf" ? 170 : 165);
+    answer = tightenSentences(answer, stile === "wtf" ? 6 : 11);   // 4–6 frasi target
+    answer = clampWords(answer, stile === "wtf" ? 120 : 165);      // parole ridotte per WTF
     answer = normalizeOneParagraph(answer);
     answer = sentenceCaseAll(answer);
     answer = finalPunct(answer);
 
-    // ===== IT normalizzazioni sicure (NON toccare prima parola / post-punteggiatura) =====
+    // ===== IT normalizzazioni sicure =====
     if(normLang(lang)==="it"){
       const d=String(domanda||"");
       const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
       const inQuestion=new Set((d.match(nameRx)||[]));
 
       answer = answer.replace(nameRx, (m, _g1, offset, str)=>{
-        // non toccare: inizio stringa
         if(offset===0) return m;
-        // non toccare: subito dopo fine frase (.?!…) + eventuali virgolette/parentesi + spazio
         const before = str.slice(0, offset);
         if(/[.!?…]["'”)\]]?\s*$/.test(before)) return m;
-        // ok: se NON è nella domanda e NON è interiezione whitelisted, abbassa
         return inQuestion.has(m) || ["Ah","Oh","Ehi","Sai"].includes(m) ? m : m.toLowerCase();
       });
 
@@ -220,7 +241,7 @@ export default async function handler(req, res){
       answer = answer.replace(/\ball’aquila\b/g, "all’Aquila");
     }
 
-    // ===== Forza MAIUSCOLA iniziale come ultimo step assoluto =====
+    // ===== MAIUSCOLA iniziale =====
     answer = answer.replace(/^\s*([a-zà-ÿ])/u, (m,c)=>c.toUpperCase());
 
     return res.status(200).json({ answer, style: stile, lang: normLang(lang), periodo, model: MODEL });
