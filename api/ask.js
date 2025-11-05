@@ -92,15 +92,15 @@ const WHATIF_EXAMPLES = {
 };
 
 /* ========= WTF ========= */
-/* --- Banks to dynamically compose unique openers & object reactions each request --- */
+/* --- Banks with variability (oggetti, prese in giro, SBRONZA COLOSSALE, finale emotivo) --- */
 const BANK = {
   it: {
     teasers: [
       "Ok, respira: sembri pronto a negoziare con il destino usando uno scontrino.",
       "Ehi, tranquillo: oggi facciamo pace con il caos e gli rubiamo pure il telecomando.",
-      "Allora campione, hai portato il coraggio o l’hai lasciato in lavatrice con i calzini spaiati?",
-      "D’accordo, genio del fine settimana: proviamo a non incendiare anche il lunedì.",
-      "Respira: si può sbagliare forte, ma almeno fallo con stile e ricevuta fiscale."
+      "Allora campione, hai portato il coraggio o l’hai lasciato in lavatrice coi calzini spaiati?",
+      "D’accordo, genio del weekend: proviamo a non incendiare anche il lunedì.",
+      "Respira: puoi sbagliare forte, ma almeno fallo con stile e ricevuta."
     ],
     scenes: [
       "il salotto che fa l’eco ai pensieri",
@@ -114,13 +114,13 @@ const BANK = {
     twists: ["perché sa già come va a finire","per solidarietà sindacale","‘per rispetto’","per non vedere il disastro annunciato","perché anche lui ha dei limiti"],
     impre: ["bestemmione corazzato","imprecazionona a detonazione","sacramentata a ciel sereno","vulcano d’anatemi","tromba d’aria di improperi"],
     booze: [
-      "negroni apocalittici serviti in secchio",
-      "tequila orbitale a secchiate",
-      "rum interstellare in tanica da campeggio",
-      "grappa quantistica a litri",
-      "spritz oceanici formato vasca",
-      "birra a idrante, luci blu comprese",
-      "vino a cascata con standing ovation del parquet"
+      "NEGRONI APOCALITTICI A SECCHIATE",
+      "TEQUILA ORBITALE A CASCATE",
+      "RUM INTERSTELLARE IN TANICA",
+      "GRAPPA QUANTISTICA A LITRI",
+      "SPRITZ OCEANICI IN VASCA",
+      "BIRRA A IDRANTE, SIRENE INCLUSE",
+      "VINO A PIENA CASCATA CON OVAZIONI DEL PARQUET"
     ],
     morals: [
       "Morale: il caos ride se ridi prima tu.",
@@ -128,9 +128,14 @@ const BANK = {
       "Morale: fai pace col casino e usalo come benzina."
     ],
     dumbTips: [
-      "Consiglio scemo: metti il timer nel freezer, almeno lo apri per qualcosa.",
+      "Consiglio scemo: metti il timer nel freezer, così lo apri per qualcosa.",
       "Consiglio scemo: scrivi il piano su uno scontrino e timbralo.",
       "Consiglio scemo: prometti alla moka un aumento se parte al primo colpo."
+    ],
+    emoEnd: [
+      "E sì: sotto tutto questo rumore, tu ci tieni davvero.",
+      "E in fondo lo sai: non vuoi perfetto, vuoi tuo.",
+      "E guarda che si vede: vuoi provarci sul serio."
     ]
   },
   en: {
@@ -141,48 +146,61 @@ const BANK = {
       "Deep breath: failing loudly is allowed, just do it with taste.",
       "Cool your jets: even your to-do list needs a helmet."
     ],
-    scenes: [
-      "the couch echoing your thoughts","the fridge silently judging",
-      "a desk that thinks it’s a shrine","the plant auditing your soul",
-      "the doorbell ringing only when epiphanies appear"
-    ],
+    scenes: ["the couch echoing your thoughts","the fridge silently judging","a desk that thinks it’s a shrine","the plant auditing your soul","the doorbell ringing at epiphany o’clock"],
     objects: ["coffee maker","fan","blind","lamp","Alexa","fridge","doorbell","plant","microwave","printer","remote","vacuum"],
     verbs: ["cheers","boo","goes on strike","puts you on mute","files a complaint","switches to airplane mode","ghosts you","self-diagnoses"],
     twists: ["because it knows how this ends","out of professional courtesy","‘out of respect’","to avoid witnessing the mess","because even it has limits"],
-    impre: ["armored expletive","detonating cuss","thunderous gasp of blasphemy","volcano of curses","tornado of swears"],
+    impre: ["armored expletive","detonating cuss","sky-splitting sacrament","volcano of curses","tornado of swears"],
     booze: [
-      "apocalyptic Negronis by the bucket","orbital tequila by the gallon",
-      "interstellar rum in a jerrycan","quantum grappa by the liter",
-      "oceanic spritzes served in a tub","hydrant beer with sirens",
-      "waterfalls of wine applauded by the floorboards"
+      "APOCALYPTIC NEGRONIS BY THE BUCKET",
+      "ORBITAL TEQUILA IN WATERFALLS",
+      "INTERSTELLAR RUM IN JERRYCANS",
+      "QUANTUM GRAPPA BY THE LITER",
+      "OCEANIC SPRITZ SERVED IN A TUB",
+      "HYDRANT-PRESSURE BEER WITH SIRENS",
+      "WATERFALLS OF WINE WITH STANDING OVATION"
     ],
     morals: [
       "Moral: laugh first, chaos follows.",
       "Moral: excuses expire, action doesn’t.",
-      "Moral: make peace with mess and spend it like fuel."
+      "Moral: befriend the mess, spend it as fuel."
     ],
     dumbTips: [
-      "Dumb tip: put your timer in the freezer so you open it for a reason.",
+      "Dumb tip: park your timer in the freezer so you open it for a reason.",
       "Dumb tip: write the plan on a receipt and stamp it.",
-      "Dumb tip: promise the coffee maker a raise if it starts at first try."
+      "Dumb tip: promise the coffee maker a raise if it starts first try."
+    ],
+    emoEnd: [
+      "And yes: beneath the noise, you actually care.",
+      "Truth is: you don’t want perfect, you want yours.",
+      "Look at you: you’re ready to try for real."
     ]
   },
   es: {
     teasers: [
-      "Vale, respira: vas a regatear con el destino usando un ticket del súper.",
+      "Vale, respira: vas a regatear con el destino con un ticket del súper.",
       "Tranki, crack: hoy domamos el caos y le robamos el mando.",
-      "Oye genio: intentemos no incendiar el lunes otra vez.",
-      "Inhala: fallar fuerte se permite, pero con estilo.",
+      "Oye, mago: intentemos no incendiar el lunes otra vez.",
+      "Inhala: fallar a lo grande se permite, pero con estilo.",
       "Calma: tu lista de tareas pide casco."
     ],
-    scenes: ["el sofá que hace eco","la nevera que juzga","el escritorio-altar","la planta auditora","el timbre oportunista"],
+    scenes: ["el sofá con eco","la nevera que juzga","el escritorio-altar","la planta auditora","el timbre oportunista"],
     objects: ["cafetera","ventilador","persiana","lámpara","Alexa","nevera","timbre","planta","microondas","impresora","mando","aspiradora"],
-    verbs: ["aplaude","abuchea","se pone en huelga","te pone en silencio","te manda una queja","activa modo avión","te hace ghosting","se autodiagnostica"],
-    twists: ["porque ya sabe cómo acaba","por cortesía profesional","“por respeto”","para no ver el desastre","porque también tiene límites"],
-    impre: ["blasfemia blindada","improperio detonante","sacramentazo a cielo abierto","volcán de maldiciones","tromba de juramentos"],
-    booze: ["negronis apocalípticos en cubo","tequila orbital a lo bestia","ron interestelar en bidón","grappa cuántica a litros","spritz oceánicos en bañera","cerveza a hidrante","cascadas de vino con ovación"],
-    morals: ["Moral: ríe tú primero y manda el caos a la banca.","Moral: las excusas caducan, el movimiento no.","Moral: hazte amigo del lío y úsalo de combustible."],
-    dumbTips: ["Tip tonto: mete el temporizador en el congelador.","Tip tonto: escríbelo en un ticket y ponle sello.","Tip tonto: prométele a la cafetera un bonus."]
+    verbs: ["aplaude","abuchea","se pone en huelga","te silencia","presenta queja","activa modo avión","te hace ghosting","se autodiagnostica"],
+    twists: ["porque ya sabe cómo acaba","por cortesía profesional","«por respeto»","para no ver el desastre","porque también tiene límites"],
+    impre: ["blasfemia blindada","improperio detonante","sacramento a cielo abierto","volcán de maldiciones","tromba de juramentos"],
+    booze: [
+      "NEGRONIS APOCALÍPTICOS EN CUBO",
+      "TEQUILA ORBITAL A CASCADAS",
+      "RON INTERESTELAR EN BIDÓN",
+      "GRAPPA CUÁNTICA A LITROS",
+      "SPRITZ OCEÁNICOS EN BAÑERA",
+      "CERVEZA A HIDRANTE CON SIRENAS",
+      "CASCADAS DE VINO CON OVACIÓN"
+    ],
+    morals: ["Moral: ríe primero y el caos obedece.","Moral: las excusas caducan, moverte no.","Moral: hazte amigo del lío y quémalo como combustible."],
+    dumbTips: ["Tip tonto: mete el temporizador en el congelador.","Tip tonto: escríbelo en un ticket y ponle sello.","Tip tonto: prométele a la cafetera un bonus."],
+    emoEnd: ["Y sí: debajo del ruido, te importa de verdad.","En el fondo: no quieres perfecto, quieres tuyo.","Mírate: listo para intentarlo de verdad."]
   },
   fr: {
     teasers: [
@@ -192,48 +210,58 @@ const BANK = {
       "Inspire : rater fort est autorisé, mais avec panache.",
       "Calme : même ta to-do exige un casque."
     ],
-    scenes: ["le canapé qui résonne","le frigo juge muet","le bureau-autel","la plante commissaire aux comptes","la sonnette prophétique"],
+    scenes: ["le canapé qui résonne","le frigo juge muet","le bureau-autel","la plante commissaire","la sonnette prophétique"],
     objects: ["cafetière","ventilateur","store","lampe","Alexa","frigo","sonnette","plante","micro-ondes","imprimante","télécommande","aspirateur"],
-    verbs: ["applaudit","hue","se met en grève","te met en silencieux","dépose une plainte","passe en mode avion","te ghoste","s’auto-diagnostique"],
-    twists: ["parce qu’il sait déjà la fin","par courtoisie pro","« par respect »","pour ne pas voir le bazar","car lui aussi a des limites"],
+    verbs: ["applaudit","hue","se met en grève","te met en silencieux","dépose plainte","passe en mode avion","te ghoste","s’auto-diagnostique"],
+    twists: ["car il connaît déjà la fin","par courtoisie pro","« par respect »","pour ne pas voir le bazar","car lui aussi a des limites"],
     impre: ["gros juron blindé","imprécation détonante","sacre en plein ciel","volcan de jurons","tornade d’insultes"],
-    booze: ["Negronis apocalyptiques au seau","tequila orbitale à la louche","rhum interstellaire en jerrican","grappa quantique au litre","spritz océaniques dans la baignoire","bière à l’hydrant","cascades de vin applaudies par le parquet"],
-    morals: ["Morale : ris d’abord, le chaos suit.","Morale : les excuses périment, l’action non.","Morale : fais la paix avec le bazar et brûle-le comme carburant."],
-    dumbTips: ["Astuce bête : mets le minuteur au congélo.","Astuce bête : écris le plan sur un ticket et tamponne.","Astuce bête : promets une prime à la cafetière."]
+    booze: [
+      "NEGRONIS APOCALYPTIQUES AU SEAU",
+      "TEQUILA ORBITALE EN CASCADES",
+      "RHUM INTERSTELLAIRE EN JERRICAN",
+      "GRAPPA QUANTIQUE AU LITRE",
+      "SPRITZ OCÉANIQUES DANS LA BAIGNOIRE",
+      "BIÈRE À HYDRANT AVEC SIRÈNES",
+      "CASCADES DE VIN AVEC OVATION"
+    ],
+    morals: ["Morale : ris d’abord, le chaos suit.","Morale : les excuses périment, l’action non.","Morale : fais la paix avec le bazar et brûle-le en carburant."],
+    dumbTips: ["Astuce bête : minuteur au congélo.","Astuce bête : écris le plan sur un ticket et tamponne.","Astuce bête : promets une prime à la cafetière."],
+    emoEnd: ["Et oui : sous le bruit, tu y tiens vraiment.","Au fond : tu ne veux pas parfait, tu veux à toi.","Regarde-toi : prêt à essayer pour de vrai."]
   },
   de: {
     teasers: [
       "Okay, atme: du willst mit dem Schicksal mit einem Kassenbon feilschen.",
-      "Locker, Chef: wir zähmen heute das Chaos und klauen die Fernbedienung.",
-      "Alles klar, Zauberer: bitte heute kein Montagsfeuer.",
+      "Locker, Chef: wir zähmen das Chaos und klauen die Fernbedienung.",
+      "Alles klar, Zauberer: heute kein Montagsfeuer.",
       "Tief einatmen: laut scheitern ist erlaubt, aber mit Stil.",
-      "Beruhig dich: selbst deine To-do will einen Helm."
+      "Beruhig dich: selbst deine To-do braucht einen Helm."
     ],
-    scenes: ["das Sofa mit Echo","der still urteilende Kühlschrank","der Schreibtisch-Altar","die prüfende Pflanze","die hellsehende Klingel"],
+    scenes: ["das Sofa mit Echo","der stumm urteilende Kühlschrank","der Schreibtisch-Altar","die prüfende Pflanze","die hellsehende Klingel"],
     objects: ["Kaffeemaschine","Ventilator","Rollladen","Lampe","Alexa","Kühlschrank","Klingel","Pflanze","Mikrowelle","Drucker","Fernbedienung","Staubsauger"],
-    verbs: ["applaudiert","buht","streikt","schaltet dich stumm","reicht Beschwerde ein","schaltet in Flugmodus","ghostet dich","selbstdiagnostiziert"],
-    twists: ["weil es das Ende kennt","aus Kollegialität","„aus Respekt“","um das Chaos nicht ansehen zu müssen","weil auch es Grenzen hat"],
-    impre: ["gepanzertes Fluchen","detonierender Fluch","Sakralschrei aus heiterem Himmel","Vulkan der Schimpfwörter","Tornado der Verwünschungen"],
-    booze: ["apokalyptische Negronis im Eimer","orbitale Tequila-Ladungen","interstellarer Rum im Kanister","Quantengrappa literweise","ozeanische Spritz in der Wanne","Hydranten-Bier mit Sirenen","Weinwasserfälle mit Parkett-Ovationen"],
-    morals: ["Moral: lach zuerst, dann stolpert das Chaos.","Moral: Ausreden verfallen, Aktion nicht.","Moral: friede mit dem Durcheinander, nutz es als Treibstoff."],
-    dumbTips: ["Blöder Tipp: Timer ins Gefrierfach.","Blöder Tipp: Plan auf Bon schreiben und stempeln.","Blöder Tipp: Kaffeemaschine auf Prämie setzen."]
+    verbs: ["applaudiert","buht","streikt","schaltet dich stumm","reicht Beschwerde ein","schaltet in Flugmodus","ghostet dich","diagnostiziert sich selbst"],
+    twists: ["weil es das Ende kennt","aus Kollegialität","„aus Respekt“","um das Chaos nicht anzusehen","weil auch es Grenzen hat"],
+    impre: ["gepanzertes Fluchen","detonierender Fluch","Himmels-Sakralschrei","Vulkan der Schimpfwörter","Tornado der Verwünschungen"],
+    booze: [
+      "APOKALYPTISCHE NEGRONIS IM EIMER",
+      "ORBITALE TEQUILA ALS WASSERFALL",
+      "INTERSTELLARER RUM IM KANISTER",
+      "QUANTEN-GRAPPA LITERWEISE",
+      "OZEANISCHE SPRITZ IN DER WANNE",
+      "HYDRANTEN-BIER MIT SIRENEN",
+      "WEINWASSERFÄLLE MIT OVATION"
+    ],
+    morals: ["Moral: lach zuerst, dann stolpert das Chaos.","Moral: Ausreden verfallen, Aktion nicht.","Moral: Freund dich mit dem Durcheinander an, nutz es als Treibstoff."],
+    dumbTips: ["Blöder Tipp: Timer ins Gefrierfach.","Blöder Tipp: Plan auf Bon schreiben und stempeln.","Blöder Tipp: Prämie für die Kaffeemaschine versprechen."],
+    emoEnd: ["Und ja: unter dem Lärm liegt es dir wirklich am Herzen.","Eigentlich willst du nicht perfekt, sondern deins.","Sieh dich an: bereit, es wirklich zu versuchen."]
   }
 };
 
-/* small utilities for variability */
+/* ===== Variability utils ===== */
 function hash32(s){ return createHash("sha1").update(s).digest().readUInt32BE(0); }
-function makePRNG(seed){
-  let x = seed >>> 0;
-  return ()=>{ x = (x*1664525+1013904223)>>>0; return x/2**32; };
-}
+function makePRNG(seed){ let x = seed >>> 0; return ()=>{ x=(x*1664525+1013904223)>>>0; return x/2**32; }; }
 function pick(prng, arr){ return arr[Math.floor(prng()*arr.length)] }
-function pickMany(prng, arr, k){
-  const a=[...arr]; const out=[];
-  for(let i=0;i<Math.max(0,Math.min(k,a.length));i++){
-    const idx=Math.floor(prng()*a.length); out.push(a.splice(idx,1)[0]);
-  }
-  return out;
-}
+function pickMany(prng, arr, k){ const a=[...arr]; const out=[]; for(let i=0;i<Math.max(0,Math.min(k,a.length));i++){ const idx=Math.floor(prng()*a.length); out.push(a.splice(idx,1)[0]); } return out; }
+
 function buildOpener(L, domanda){
   const b=BANK[L]||BANK.it;
   const prng = makePRNG(hash32(domanda) ^ randomBytes(4).readUInt32BE(0));
@@ -244,12 +272,11 @@ function buildOpener(L, domanda){
 function buildObjectReactions(L, domanda, prng, n=3){
   const b=BANK[L]||BANK.it;
   const objs = pickMany(prng, b.objects, n);
-  const lines = objs.map(o=>{
+  return objs.map(o=>{
     const v = pick(prng, b.verbs);
     const tw = pick(prng, b.twists);
     return `${o} ${v} ${tw}`;
   });
-  return lines;
 }
 
 /* ========= Prompt builder ========= */
@@ -277,31 +304,32 @@ function buildMessages({ domanda, lang, periodo, stile }){
   ];
 
   if(stile==="wtf"){
-    // per-request variability with salt
     const seed = hash32(domanda) ^ randomBytes(4).readUInt32BE(0);
     const rnd = makePRNG(seed);
     const b = BANK[L] || BANK.it;
 
     const opener = buildOpener(L, domanda);
     const impre = pick(rnd, b.impre);
-    const reactLines = buildObjectReactions(L, domanda, rnd, 2 + Math.floor(rnd()*2)); // 2–3 oggetti
-    const drinks = pickMany(rnd, b.booze, 2 + (rnd()<0.5?1:0)); // 2–3 giri
+    const reactLines = buildObjectReactions(L, domanda, rnd, 2 + Math.floor(rnd()*2)); // 2–3 oggetti/objetos/etc.
+    const drinks = pickMany(rnd, b.booze, 2 + (rnd()<0.5?1:0)); // 2–3 “sbronza colossale” rounds
     const moral = pick(rnd, b.morals);
     const dumb = pick(rnd, b.dumbTips);
+    const emo  = pick(rnd, b.emoEnd);
 
     const wtfRule =
-      L==="en" ? `WHAT THE F (friendly, light sarcasm, useful). ALWAYS start with a personalized tease. Keep 4–6 sentences total. Flow: tease → 2–3 tiny mishaps → ONE theatrical outburst (“${impre}”, never at people) → ${reactLines.length} talking-object reactions → ${drinks.length} GALACTIC BOOZE rounds (${drinks.join(" + ")}) → **2–3 sentences that actually answer the question** → ultra-short end: ironic moral + silly on-topic tip. Sarcasm in EVERY sentence, never mean.`
-      : L==="es" ? `WHAT THE F (amable, sarcasmo ligero, útil). Empieza SIEMPRE con burla cariñosa. 4–6 frases. Flujo: burla → 2–3 contratiempos → UN estallido («${impre}») → ${reactLines.length} objetos parlantes → ${drinks.length} RONDAS GALÁCTICAS (${drinks.join(" + ")}) → **2–3 frases que responden** → cierre ultra-corto: moraleja irónica + consejo tonto. Sarcasmo en TODAS las frases, sin mala leche.`
-      : L==="fr" ? `WHAT THE F (amical, sarcasme léger, utile). Commence TOUJOURS par une taquinerie perso. 4–6 phrases. Enchaînement : taquinerie → 2–3 couacs → UNE explosion (« ${impre} ») → ${reactLines.length} objets parlants → ${drinks.length} TOURNÉES GALACTIQUES (${drinks.join(" + ")}) → **2–3 phrases qui répondent vraiment** → fin ultra-courte : morale ironique + conseil idiot. Sarcasme partout, jamais méchant.`
-      : L==="de" ? `WHAT THE F (freundlich, leichter Sarkasmus, hilfreich). Starte IMMER mit persönlichem Necken. 4–6 Sätze. Ablauf: Necken → 2–3 Pannen → EINE theatralische Entladung („${impre}“) → ${reactLines.length} sprechende Objekte → ${drinks.length} GALAKTISCHE RUNDEN (${drinks.join(" + ")}) → **2–3 echte Antwortsätze** → ultrakurzes Ende: ironische Moral + dummer Tipp. Leichter Sarkasmus in jedem Satz, nie gemein.`
-      : `WHAT THE F (amichevole, sarcasmo leggero, utile). APRI SEMPRE con presa in giro personale. Totale 4–6 frasi. Flusso: presa in giro → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”) → ${reactLines.length} oggetti parlanti → ${drinks.length} GIRI DI SBRONZA GALATTICA (${drinks.join(" + ")}) → **2–3 frasi che rispondono davvero** → chiusura lampo: morale ironica + consiglio scemo. Sarcasmo in OGNI frase, mai cattivo.`;
+      L==="en" ? `WHAT THE F (friendly, sharp sarcasm, helpful). Always open with a personalized tease. Keep 5–7 sentences. Flow: tease → 2–3 tiny mishaps → ONE theatrical outburst (“${impre}”, never at people) → ${reactLines.length} talking-object reactions (vary each time) → **COLOSSAL BOOZE ROUNDS**: ${drinks.join(" + ")} → **2–3 sentences that actually answer the question** → micro-ending: ironic moral + silly on-topic tip + brief emotional beat.`
+      : L==="es" ? `WHAT THE F (amable, sarcasmo afilado, útil). Abre con burla personal. 5–7 frases. Flujo: burla → 2–3 contratiempos → UN estallido («${impre}») → ${reactLines.length} objetos parlantes (siempre distintos) → **SOBERANA BORRACHERA**: ${drinks.join(" + ")} → **2–3 frases que sí responden** → cierre: moraleja irónica + consejo tonto + toque emocional.`
+      : L==="fr" ? `WHAT THE F (amical, sarcasme piquant, utile). Commence par une taquinerie perso. 5–7 phrases. Enchaînement : taquinerie → 2–3 couacs → UNE explosion (« ${impre} ») → ${reactLines.length} objets parlants (variés) → **BITURE COLOSSALE** : ${drinks.join(" + ")} → **2–3 phrases qui répondent vraiment** → fin : morale ironique + astuce débile + note émotive.`
+      : L==="de" ? `WHAT THE F (freundlich, spitzer Sarkasmus, hilfreich). Starte mit persönlichem Necken. 5–7 Sätze. Ablauf: Necken → 2–3 Pannen → EINE theatralische Entladung („${impre}“) → ${reactLines.length} sprechende Objekte (abwechslungsreich) → **KOSMISCHE SAUFTOUR**: ${drinks.join(" + ")} → **2–3 echte Antwortsätze** → Schluss: ironische Moral + dummer Tipp + kurzer Gefühlsmoment.`
+      : `WHAT THE F (amichevole, sarcasmo affilato, utile). APRI con presa in giro personale. 5–7 frasi. Flusso: presa in giro → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”) → ${reactLines.length} oggetti parlanti (sempre diversi) → **SBRONZA COLOSSALE**: ${drinks.join(" + ")} → **2–3 frasi che rispondono davvero** → chiusura: morale ironica + consiglio scemo + colpo emotivo breve.`;
 
     msgs.push(
       { role:"system", content: wtfRule },
       { role:"system", content:`OPENING_EXAMPLE: ${opener}` },
       { role:"system", content:`OBJECT_REACTIONS:\n- ${reactLines.join("\n- ")}` },
       { role:"system", content:`MORAL: ${moral}` },
-      { role:"system", content:`SILLY_TIP: ${dumb}` }
+      { role:"system", content:`SILLY_TIP: ${dumb}` },
+      { role:"system", content:`EMO_END: ${emo}` }
     );
   } else {
     msgs.push(
@@ -353,10 +381,10 @@ export default async function handler(req, res){
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if(!answer) throw new Error("empty_model_response");
 
-    // ===== Post-process (WTF ancora più corto) =====
+    // ===== Post-process (WTF leggermente più lungo per finale emotivo) =====
     answer = stripQuestionEcho(domanda, answer);
-    answer = tightenSentences(answer, stile === "wtf" ? 6 : 11);   // 4–6 target per WTF
-    answer = clampWords(answer, stile === "wtf" ? 120 : 165);
+    answer = tightenSentences(answer, stile === "wtf" ? 7 : 11);   // 6–7 frasi per WTF (una riga in più)
+    answer = clampWords(answer, stile === "wtf" ? 135 : 165);
     answer = normalizeOneParagraph(answer);
     answer = sentenceCaseAll(answer);
     answer = finalPunct(answer);
