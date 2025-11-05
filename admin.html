@@ -23,9 +23,14 @@
     button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
     .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12}
     .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
-    .badge{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:12px}
-    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
-    thead th{position:sticky;top:0;background:rgba(19,25,30,.96);backdrop-filter:blur(4px)}
+    .badge{
+      display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);font-size:12px;line-height:1.2;word-break:break-word;white-space:normal
+    }
+    .kv{display:flex;flex-wrap:wrap;gap:8px}
+    .kv .badge{border-radius:12px}
+    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;table-layout:auto}
+    thead th{position:sticky;top:0;background:rgba(19,25,30,.96);backdrop-filter:blur(4px);z-index:1}
     th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
     .ok{color:var(--ok)} .bad{color:var(--bad)} .muted{color:var(--muted)}
     .nowrap{white-space:nowrap}
@@ -87,14 +92,16 @@
   <!-- Statistiche -->
   <div class="card" style="margin-top:12px">
     <h3>Statistiche globali (finestra caricata)</h3>
-    <div class="row">
+    <div class="kv">
       <span class="badge">Totale: <b id="stTotal">—</b></span>
       <span class="badge">Oggi: <b id="stToday">—</b></span>
       <span class="badge">Ultimi 7 g: <b id="stLast7">—</b></span>
-      <span class="badge">Per stile: <b id="stStyle">{}</b></span>
-      <span class="badge">Per lingua: <b id="stLang">{}</b></span>
-      <span class="badge">Per tempo: <b id="stPeriod">{}</b></span>
-      <span class="badge">User types: <b id="stUsers">{}</b></span>
+    </div>
+    <div class="kv" style="margin-top:8px">
+      <span class="badge" id="stStyleBox">Per stile: <b id="stStyle">—</b></span>
+      <span class="badge" id="stLangBox">Per lingua: <b id="stLang">—</b></span>
+      <span class="badge" id="stPeriodBox">Per tempo: <b id="stPeriod">—</b></span>
+      <span class="badge" id="stUsersBox">User types: <b id="stUsers">—</b></span>
     </div>
     <div style="margin-top:10px"><canvas id="trendChart" height="110" aria-label="Trend richieste" role="img"></canvas></div>
   </div>
@@ -131,10 +138,10 @@
 </main>
 
 <script>
-/* ========== Utils & stato ========== */
+/* ===== Utils & stato ===== */
 const LS=localStorage, TKEY="admin_token", PROKEY="whatif_prefs";
 const qs = (sel)=>document.querySelector(sel);
-let chart=null, auto=null, LAST_ITEMS=[]; // cache ultimo fetch
+let chart=null, auto=null, LAST_ITEMS=[];
 
 function setBadge(id, text){ const el=qs("#"+id); if(el) el.textContent = text; }
 function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(); }
@@ -143,18 +150,17 @@ function setTok(t){ if(t) LS.setItem(TKEY,t); else LS.removeItem(TKEY); setBadge
 function setProUI(){ try{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); setBadge("usertype", p.pro?"pro":"free"); }catch{} }
 function maskIpStr(ip){
   if(!ip) return "";
-  if(ip.includes(".")){ // IPv4
-    const p=ip.split(".");
-    if(p.length===4){ p[3]="xxx"; return p.join("."); }
-  }
-  if(ip.includes(":")){ // IPv6
-    const parts=ip.split(":"); return parts.slice(0,4).join(":")+"::xxxx";
-  }
+  if(ip.includes(".")){ const p=ip.split("."); if(p.length===4){ p[3]="xxx"; return p.join("."); } }
+  if(ip.includes(":")){ const parts=ip.split(":"); return parts.slice(0,4).join(":")+"::xxxx"; }
   return ip;
 }
 function todayYMD(d=new Date()){ return d.toISOString().slice(0,10); }
+const fmtKV = (obj)=> {
+  if(!obj || !Object.keys(obj).length) return "—";
+  return Object.entries(obj).map(([k,v])=>`${k}: ${v}`).join(" · ");
+};
 
-/* ========== Admin check ========== */
+/* ===== Admin check ===== */
 async function adminCheck(){
   try{
     const r = await fetch("/api/admin-token",{ headers:{ "x-admin-token": getTok() }});
@@ -164,12 +170,10 @@ async function adminCheck(){
     setBadge("myIp", d?.ip || "—");
     setBadge("credits", yes?"∞": (JSON.parse(LS.getItem("whatif_credits")||"{}").used||0)+"/(3/10)");
     return yes;
-  }catch(e){
-    setBadge("adminState","no"); return false;
-  }
+  }catch{ setBadge("adminState","no"); return false; }
 }
 
-/* ========== Trend chart ========== */
+/* ===== Trend chart ===== */
 function renderTrend(tr){
   const ctx=qs("#trendChart").getContext("2d");
   if(chart) chart.destroy();
@@ -180,12 +184,11 @@ function renderTrend(tr){
   });
 }
 
-/* ========== Tabelle & filtri ========== */
+/* ===== Tabella ===== */
 function drawTable(items){
   const fs=qs("#fStyle").value, fl=qs("#fLang").value, fp=qs("#fPeriod").value, fu=qs("#fUser").value,
         q=(qs("#q").value||"").toLowerCase(), mask=qs("#maskIp").checked, win=parseInt(qs("#win").value||"200",10);
 
-  // Ordina per ts desc
   const sorted=[...(items||[])].sort((a,b)=>(b.ts||0)-(a.ts||0));
 
   const rows=sorted.filter(x=>{
@@ -198,14 +201,12 @@ function drawTable(items){
   }).slice(0,win);
 
   const tb=qs("#tbl tbody");
-  if(!tb) return;
   tb.innerHTML="";
   if(rows.length===0){ qs("#empty").style.display="block"; return; }
   qs("#empty").style.display="none";
 
   for(const it of rows){
     const tr=document.createElement("tr");
-
     const tdQuando=document.createElement("td"); tdQuando.textContent = fmtDate(it.ts); tdQuando.className="nowrap";
     const tdIp=document.createElement("td"); tdIp.textContent = mask ? maskIpStr(it.ip||"") : (it.ip||"");
     const tdTipo=document.createElement("td"); tdTipo.textContent = it.user_type || "";
@@ -214,21 +215,19 @@ function drawTable(items){
     const tdPeriodo=document.createElement("td"); tdPeriodo.textContent = it.periodo || "";
     const tdLen=document.createElement("td"); tdLen.textContent = String(it.answer_chars || 0);
     const tdDomanda=document.createElement("td");
-    tdDomanda.textContent = String(it.domanda || "").replace(/\s+/g," ").slice(0,400);
-
+    tdDomanda.textContent = (String(it.domanda||"").trim() || "(vuota)").replace(/\s+/g," ").slice(0,500);
     tr.append(tdQuando, tdIp, tdTipo, tdStile, tdLang, tdPeriodo, tdLen, tdDomanda);
     tb.appendChild(tr);
   }
 }
 
-/* ========== Statistiche: server -> fallback client ========== */
+/* ===== Stats fallback ===== */
 function computeStatsClient(items){
   const total = items.length;
   const ymdToday = todayYMD();
   const last7cut = Date.now()-7*86400000;
   const today = items.filter(x=> (new Date(x.ts)).toISOString().slice(0,10)===ymdToday ).length;
   const last7 = items.filter(x=> (x.ts||0)>=last7cut ).length;
-
   const countBy = (key)=> items.reduce((acc,x)=>{ const k=x[key]||""; acc[k]=(acc[k]||0)+1; return acc; },{});
   return {
     total, today, last7,
@@ -238,19 +237,18 @@ function computeStatsClient(items){
     byUserType: countBy("user_type")
   };
 }
-
 function updateStatsUI(S){
   setBadge("stTotal", S.total??"0");
   setBadge("stToday", S.today??"0");
   setBadge("stLast7", S.last7??"0");
-  setBadge("stStyle", JSON.stringify(S.byStyle||{}));
-  setBadge("stLang", JSON.stringify(S.byLang||{}));
-  setBadge("stPeriod", JSON.stringify(S.byPeriod||{}));
-  setBadge("stUsers", JSON.stringify(S.byUserType||{}));
+  qs("#stStyle").textContent  = fmtKV(S.byStyle||{});
+  qs("#stLang").textContent   = fmtKV(S.byLang||{});
+  qs("#stPeriod").textContent = fmtKV(S.byPeriod||{});
+  qs("#stUsers").textContent  = fmtKV(S.byUserType||{});
   if(S.trend) renderTrend(S.trend);
 }
 
-/* ========== Loader ========== */
+/* ===== Loader ===== */
 async function loadAll(){
   qs("#ts").textContent="Aggiornamento…";
   const limit=qs("#limitSel").value || "200";
@@ -258,27 +256,23 @@ async function loadAll(){
   const headers={ "x-admin-token": getTok() };
 
   let stats=null, items=[];
-  // 1) prova stats server
   try{
     const s = await fetch(`/api/admin-stats?days=${days}`,{ headers });
     if(s.ok){ stats = await s.json(); }
-  }catch(e){ /* noop */ }
+  }catch{}
 
-  // 2) logs (senza mask lato server: mascheriamo noi in client)
+  // IMPORTANTISSIMO: mask=0 per ricevere sempre la domanda dal server
   try{
-    const r = await fetch(`/api/admin-logs?limit=${limit}`,{ headers });
+    const r = await fetch(`/api/admin-logs?limit=${limit}&mask=0`,{ headers });
     const d = await r.json().catch(()=>({}));
     items = Array.isArray(d.items) ? d.items : (Array.isArray(d) ? d : []);
-  }catch(e){
-    console.error("admin-logs error", e);
-    items = [];
-  }
+  }catch(e){ console.error("admin-logs error", e); items=[]; }
 
   LAST_ITEMS = items;
-  // fallback stats se server non le dà
+
   if(!stats || typeof stats !== "object" || Object.keys(stats).length===0){
     const cStats = computeStatsClient(items);
-    // trend locale: ultimi N giorni
+    // trend locale
     const N=parseInt(days,10)||10;
     const map=new Map();
     for(let i=N-1;i>=0;i--){
@@ -299,17 +293,17 @@ async function loadAll(){
   qs("#ts").textContent="Aggiornato: "+new Date().toLocaleString();
 }
 
-/* ========== Eventi UI ========== */
+/* ===== Eventi ===== */
 qs("#enter").onclick = async ()=>{
   const pin = qs("#pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
   const r = await fetch("/api/admin-token",{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ pin })});
   const d = await r.json().catch(()=>({}));
-  if(r.ok && (d.ok||d.token)){ setTok(d.token||d.t||""); qs("#hint").textContent="Login ok. Token legato al tuo IP per ~7gg."; await adminCheck(); loadAll(); }
+  if(r.ok && (d.ok||d.token)){ setTok(d.token||""); qs("#hint").textContent="Login ok. Token legato al tuo IP per ~7gg."; await adminCheck(); loadAll(); }
   else { alert("PIN errato o errore server"); }
 };
 qs("#renew").onclick = async ()=>{
   const r = await fetch("/api/admin-token?action=renew",{ method:"POST", headers:{ "x-admin-token": getTok() }});
-  if(r.ok) alert("Rinnovato per 7gg"); else alert("Errore rinnovo");
+  alert(r.ok? "Rinnovato per 7gg" : "Errore rinnovo");
 };
 qs("#revoke").onclick = async ()=>{
   await fetch("/api/admin-token?action=revoke",{ method:"POST", headers:{ "x-admin-token": getTok() }});
@@ -322,16 +316,16 @@ qs("#btnRefresh").onclick = loadAll;
 qs("#btnClear").onclick = async ()=>{
   if(!confirm("Svuotare i log?")) return;
   const r = await fetch("/api/admin-logs",{ method:"DELETE", headers:{ "x-admin-token": getTok() }});
-  if(r.ok){ loadAll(); } else { alert("Errore nel pulire i log"); }
+  if(r.ok) loadAll(); else alert("Errore nel pulire i log");
 };
 qs("#btnAuto").onclick = ()=>{
   if(auto){ clearInterval(auto); auto=null; qs("#btnAuto").textContent="Auto-refresh"; }
   else { auto=setInterval(loadAll, 5000); qs("#btnAuto").textContent="Stop auto"; }
 };
 for(const id of ["fStyle","fLang","fPeriod","fUser","q","limitSel","maskIp","win","trend"])
-  qs("#"+id).addEventListener("input", ()=>loadAll());
+  qs("#"+id).addEventListener("input", ()=>drawTable(LAST_ITEMS));
 
-/* ========== Init ========== */
+/* ===== Init ===== */
 (async function init(){
   setProUI();
   setTok(getTok());
