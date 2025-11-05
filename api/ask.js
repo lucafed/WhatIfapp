@@ -1,4 +1,4 @@
-// /api/ask.js — What?f Engine (WhatIf naturale + WTF demenziale — MULTILINGUA)
+// /api/ask.js — What?f Engine (WhatIf naturale + WTF demenziale — MULTILINGUA, chiusura breve)
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -130,7 +130,7 @@ const WHATIF_EXAMPLES = {
   de: `Diese Frage taucht auf, wenn ein Teil von dir nach einem eigenen Rhythmus ruft…`
 };
 
-/* ========= WTF (come prima, ma risponde di più + più sbronza) ========= */
+/* ========= WTF banks ========= */
 const WTF_IMPRE = [
   "bestemmione corazzato",
   "imprecazionona a detonazione",
@@ -159,6 +159,39 @@ const WTF_DRINK = [
   "bevi un dito di coraggio e respiri più largo"
 ];
 
+/* ========= WTF rules (MULTILINGUA, chiusura breve) ========= */
+function wtfRules(L, impre, react, drinks){
+  const drinksList = drinks.map(d=>`“${d}”`).join(" + ");
+  const reactN = react.length;
+
+  const IT = `
+WHAT THE F (amichevole, demenziale ma utile). Struttura:
+presa in giro affettuosa (≤2) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”, narrato, mai verso persone) → SUBITO ${reactN} reazioni di oggetti → ${drinks.length} drink (${drinksList}) → **3–4 frasi che rispondono davvero** (mosse/criterio/risco) → **chiusura brevissima** (max 8 parole). Totale 6–8 frasi, paragrafo unico, niente emoji, NON ripetere la domanda.
+`.trim();
+
+  const EN = `
+WHAT THE F (friendly, absurd yet helpful). Structure:
+playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical burst (“${impre}”, narrated, never at people) → THEN ${reactN} talking objects → ${drinks.length} drinks (${drinksList}) → **3–4 sentences that truly answer** (steps/criterion/risk) → **very short closer** (max 8 words). 6–8 sentences, single paragraph, no emojis, do NOT restate the question.
+`.trim();
+
+  const ES = `
+WHAT THE F (amable, absurdo pero útil). Estructura:
+broma cariñosa (≤2) → 2–3 micro-contratiempos → UN estallido teatral (“${impre}”, narrado, nunca a personas) → LUEGO ${reactN} objetos que hablan → ${drinks.length} tragos (${drinksList}) → **3–4 frases que sí responden** (pasos/criterio/riesgo) → **cierre brevísimo** (máx. 8 palabras). 6–8 frases, un párrafo, sin emojis, NO repitas la pregunta.
+`.trim();
+
+  const FR = `
+WHAT THE F (amical, absurde mais utile). Structure :
+taquinerie bienveillante (≤2) → 2–3 micro-couacs → UNE explosion théâtrale (« ${impre} », narrée, jamais contre des personnes) → PUIS ${reactN} objets parlants → ${drinks.length} verres (${drinksList}) → **3–4 phrases qui répondent vraiment** (étapes/critère/risque) → **clôture très brève** (8 mots max). 6–8 phrases, un paragraphe, pas d’emojis, ne répète pas la question.
+`.trim();
+
+  const DE = `
+WHAT THE F (freundlich, absurd und hilfreich). Struktur:
+liebevolles Necken (≤2) → 2–3 kleine Pannen → EINE theatralische Entladung („${impre}“, erzählt, nie gegen Menschen) → DANN ${reactN} sprechende Objekte → ${drinks.length} Drinks (${drinksList}) → **3–4 Sätze mit echter Antwort** (Schritte/Kriterium/Risiko) → **sehr kurzer Schluss** (max. 8 Wörter). 6–8 Sätze, ein Absatz, keine Emojis, Frage NICHT wiederholen.
+`.trim();
+
+  return { it:IT, en:EN, es:ES, fr:FR, de:DE }[L] || IT;
+}
+
 /* ========= Prompt builder ========= */
 function buildMessages({ domanda, lang, periodo, stile }){
   const L = normLang(lang);
@@ -185,43 +218,18 @@ function buildMessages({ domanda, lang, periodo, stile }){
   ];
 
   if(stile === "wtf"){
-    // Manteniamo lo schema "di prima", ma: +risposta e +sbronza
+    // come prima, ma risponde un po' di più + sbronza maggiore, e CHIUSURA BREVE
     let seed = [...String(domanda)].reduce((a,c)=>a+c.charCodeAt(0),0);
     const rnd = ()=>{ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; };
 
     const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
     const shuffled = [...WTF_REACT].sort(()=>rnd()-0.5);
     const react = shuffled.slice(0, 2 + Math.floor(rnd()*2)); // 2–3 oggetti
-    const drinksCount = 1 + (rnd() < 0.5 ? 0 : 1); // 1–2 drink
+    const drinksCount = 1 + (rnd() < 0.65 ? 1 : 0); // 1–2 drink, più spesso 2
     const drinks = [...WTF_DRINK].sort(()=>rnd()-0.5).slice(0, drinksCount);
 
-    const WTF_RULE_IT = `
-WHAT THE F (amichevole, demenziale ma utile). Segui QUESTA STRUTTURA:
-1) presa in giro affettuosa (≤2 frasi);
-2) 2–3 micro-imprevisti;
-3) UNO sfogo teatrale (“${impre}”, narrato, mai verso persone);
-4) SUBITO ${react.length} reazioni di oggetti esilaranti;
-5) ${drinksCount} drink (${drinks.map(d=>`“${d}”`).join(" + ")});
-6) **3–4 frasi che rispondono davvero** (mosse, criterio, rischio reale);
-7) morale calda.
-Totale: 6–8 frasi, paragrafo unico, niente emoji, NON ripetere la domanda.
-`.trim();
-
-    const WTF_RULE_EN = `
-WHAT THE F (friendly, absurd yet helpful). Use THIS STRUCTURE:
-1) playful tease (≤2);
-2) 2–3 tiny mishaps;
-3) ONE theatrical burst (“${impre}”, narrated, never at people);
-4) THEN ${react.length} absurd object reactions;
-5) ${drinksCount} drinks (${drinks.map(d=>`“${d}”`).join(" + ")});
-6) **3–4 sentences that truly answer** (moves, criterion, real risk);
-7) warm moral.
-Total: 6–8 sentences, single paragraph, no emojis, do NOT restate the question.
-`.trim();
-
-    // Reazioni e drink passati come "materiale" facoltativo
     msgs.push(
-      { role:"system", content: L==="en" ? WTF_RULE_EN : WTF_RULE_IT },
+      { role:"system", content: wtfRules(L, impre, react, drinks) },
       { role:"system", content: `IMPRECATION: ${impre}` },
       { role:"system", content: `REACTIONS:\n- ${react.join("\n- ")}` },
       { role:"system", content: `DRINKS:\n- ${drinks.join("\n- ")}` }
