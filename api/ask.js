@@ -43,12 +43,18 @@ const normLine = (s="") => String(s).toLowerCase()
 function tightenSentences(text, maxSentences){
   const parts=String(text||"").replace(/\n+/g," ").split(/(?<=[.!?…])\s+/).map(x=>x.trim()).filter(Boolean);
   const out=[], seen=new Set();
-  for(const p of parts){ const n=normLine(p); if(!n||seen.has(n)) continue; out.push(p); if(out.length>=maxSentences) break; }
-  let t=out.join(" "); if(!/[.!?…]$/.test(t)) t+="."; return t;
+  for(const p of parts){ const n=normLine(p); if(!n||seen.has(n)) continue;
+    out.push(p); if(out.length>=maxSentences) break;
+  }
+  let t=out.join(" ");
+  if(!/[.!?…]$/.test(t)) t+=".";
+  return t;
 }
 function clampWords(text, maxWords){
-  const w=String(text||"").split(/\s+/); if(w.length<=maxWords) return text;
-  const slice=w.slice(0,maxWords).join(" "); const m=slice.match(/([\s\S]*?[.!?…])(?![\s\S]*[.!?…])/);
+  const w=String(text||"").split(/\s+/);
+  if(w.length<=maxWords) return text;
+  const slice=w.slice(0,maxWords).join(" ");
+  const m=slice.match(/([\s\S]*?[.!?…])(?![\s\S]*[.!?…])/);
   return m?m[1]:slice+"…";
 }
 function normalizeOneParagraph(s=""){
@@ -59,6 +65,7 @@ function normalizeOneParagraph(s=""){
     .replace(/\s+([.,;:!?])/g,"$1")
     .trim();
 }
+
 function stripQuestionEcho(domanda,text){
   let t=String(text||"");
   const d=String(domanda||"").replace(/[“”"']/g,"").trim().toLowerCase();
@@ -69,7 +76,8 @@ function stripQuestionEcho(domanda,text){
   const rx=/^(?:\s*(?:e\s*se|what\s*if|domanda:|q:)\s*[^.!?…]*[.!?…]\s+)/i;
   return t.replace(rx,"").trim();
 }
-const sentenceCaseAll = (s="") => s.replace(/(^|[.!?…]\s+)([a-zà-ÿ])/gu,(m,p,c)=>p+c.toUpperCase());
+const sentenceCaseAll = (s="") =>
+  s.replace(/(^|[.!?…]\s+)([a-zà-ÿ])/gu,(m,p,c)=>p+c.toUpperCase());
 const finalPunct = (s="") => /[.!?…]$/.test(s)?s:s+".";
 
 /* ========= WHAT IF ========= */
@@ -101,7 +109,36 @@ const WHATIF_EXAMPLES = {
 };
 
 /* ========= WTF ========= */
-const WTF_IMPRE = ["bestemmione corazzato","imprecazionona a detonazione","sacramentata a ciel sereno","vulcano d’anatemi","tromba d’aria di improperi"];
+
+/** Aperture amichevoli (ancora “di casa”) — garantisce l’INIZIO What the F **/
+const WTF_OPENERS = {
+  it: [
+    "Ok, respira: non sei il primo a far partire un rodeo in salotto.",
+    "Ehi, tranquillo: oggi guidiamo noi il caos, con le cinture allacciate."
+  ],
+  en: [
+    "Alright, breathe: you’re not the first to start a rodeo in the living room.",
+    "Hey, easy: we’ll drive the chaos today, seatbelts on."
+  ],
+  es: [
+    "Vale, respira: no eres el primero en montar un rodeo en el salón.",
+    "Ey, tranquilo: hoy conducimos el caos con cinturón puesto."
+  ],
+  fr: [
+    "Ok, respire : tu n’es pas le premier à lancer un rodéo dans le salon.",
+    "Hé, du calme : aujourd’hui on pilote le chaos, ceinture bouclée."
+  ],
+  de: [
+    "Okay, atme: Du bist nicht der Erste, der ein Wohnzimmer-Rodeo startet.",
+    "Hey, locker: Heute fahren wir das Chaos, Anschnallen nicht vergessen."
+  ]
+};
+
+const WTF_IMPRE = [
+  "bestemmione corazzato","imprecazionona a detonazione","sacramentata a ciel sereno",
+  "vulcano d’anatemi","tromba d’aria di improperi"
+];
+
 const WTF_REACT = [
   "la moka ti fa una standing ovation e chiede l’autografo",
   "il POS entra in modalità testimone di nozze e benedice la carta",
@@ -112,17 +149,18 @@ const WTF_REACT = [
   "il campanello suona da solo per solidarietà e poi si pente",
   "la pianta applaude con le foglie e ti chiede un drink",
   "il ventilatore gira al contrario “per rispetto”",
-  "il citofono fa un trillo come un amen stonato",
+  "il citofono fa un trillo come un amen stonato"
 ];
-// 🔥 “Sbronza GALATTICA” (massiccia, non delicata) + breve
+
+/* 🔥 SBRONZA GALATTICA (massiccia, non “un dito”) + breve */
 const WTF_DRINK = [
   "tequila orbitale a secchiate: brucia l’atmosfera",
   "negroni apocalittico in brocca da condominio",
   "rum interstellare a colonna: blackout emozionale",
   "grappa quantistica: spacchi i verbi e il tempo",
-  "spritz marino formato vasca con scialuppa",
+  "spritz oceanico formato vasca con scialuppa",
   "birra a idrante: sirene in cucina",
-  "vino a cascata, standing ovation del parquet"
+  "vino a cascata: standing ovation del parquet"
 ];
 
 /* ========= Prompt builder ========= */
@@ -132,8 +170,16 @@ function buildMessages({ domanda, lang, periodo, stile }){
     ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Second person only.`
     : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona.`;
   const temporal = String(periodo).toLowerCase()==="past"
-    ? (L==="en" ? "Write as if it already happened." : L==="es" ? "Escribe como si ya hubiera pasado." : L==="fr" ? "Écris comme si c’était déjà arrivé." : L==="de" ? "Schreibe, als wäre es bereits geschehen." : "Scrivi come se fosse già successo.")
-    : (L==="en" ? "Write as a near-future unfolding starting now." : L==="es" ? "Escribe como un futuro cercano que empieza ahora." : L==="fr" ? "Écris comme un futur proche qui commence maintenant." : L==="de" ? "Schreibe als nahe Zukunft, die jetzt beginnt." : "Scrivi come un prossimo futuro che inizia ora.");
+    ? (L==="en" ? "Write as if it already happened." :
+       L==="es" ? "Escribe como si ya hubiera pasado." :
+       L==="fr" ? "Écris comme si c’était déjà arrivé." :
+       L==="de" ? "Schreibe, als wäre es bereits geschehen." :
+                  "Scrivi come se fosse già successo.")
+    : (L==="en" ? "Write as a near-future unfolding starting now." :
+       L==="es" ? "Escribe como un futuro cercano que empieza ahora." :
+       L==="fr" ? "Écris comme un futur proche qui commence maintenant." :
+       L==="de" ? "Schreibe als nahe Zukunft, die jetzt beginnt." :
+                  "Scrivi come un prossimo futuro che inizia ora.");
 
   const msgs = [
     { role: "system", content: baseRules },
@@ -141,30 +187,50 @@ function buildMessages({ domanda, lang, periodo, stile }){
   ];
 
   if(stile==="wtf"){
+    // seed pseudo-random ma deterministico
     let seed=[...String(domanda)].reduce((a,c)=>a+c.charCodeAt(0),0);
     const rnd=()=>{ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; };
+
+    const opener = (WTF_OPENERS[L] || WTF_OPENERS.it)[Math.floor(rnd()*(WTF_OPENERS[L]||WTF_OPENERS.it).length)];
     const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
-    const react = [...WTF_REACT].sort(()=>rnd()-0.5).slice(0, 2 + Math.floor(rnd()*2));
-    const drinks = [...WTF_DRINK].sort(()=>rnd()-0.5).slice(0, 2 + (rnd()<0.5?1:0)); // 2–3 giri
-
-    const drinksList = drinks.map(d=>`“${d}”`).join(" + ");
+    const react = [...WTF_REACT].sort(()=>rnd()-0.5).slice(0, 2 + Math.floor(rnd()*2)); // 2–3 oggetti
+    const drinks = [...WTF_DRINK].sort(()=>rnd()-0.5).slice(0, 2 + (rnd()<0.5?1:0));    // 2–3 giri
     const reactN = react.length;
+    const drinksList = drinks.map(d=>`“${d}”`).join(" + ");
 
-    // ⚡ Tono “What the F”: amichevole all’inizio, più corto, sbronza galattica
-    const wtfRules = (()=>{
-      const IT = `WHAT THE F (amichevole, irriverente, utile). Schema LIBERO e CORTO: presa in giro affettuosa (≤2) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”, mai verso persone) → SUBITO ${reactN} oggetti parlanti → ${drinks.length} GIRI DI SBRONZA GALATTICA (${drinksList}) → **2–3 frasi che rispondono davvero alla domanda** → CHIUSURA LAMPO: morale ironica + consiglio scemo attinente. Totale 4–6 frasi.`;
-      const EN = `WHAT THE F (friendly, irreverent, helpful). FREE & SHORT: playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical burst (“${impre}”, never at people) → THEN ${reactN} talking objects → ${drinks.length} ROUNDS OF GALACTIC BOOZE (${drinksList}) → **2–3 sentences that truly answer** → FLASH END: ironic moral + silly on-topic tip. Total 4–6 sentences.`;
-      const ES = `WHAT THE F (amable, irreverente, útil). LIBRE y CORTO: broma cariñosa (≤2) → 2–3 contratiempos → UN estallido (“${impre}”) → ${reactN} objetos que hablan → ${drinks.length} RONDAS DE BORRACHERA GALÁCTICA (${drinksList}) → **2–3 frases que sí responden** → CIERRE FLASH: moraleja irónica + consejo tonto. 4–6 frases.`;
-      const FR = `WHAT THE F (amical, irrévérencieux, utile). LIBRE & COURT : taquinerie (≤2) → 2–3 couacs → UNE explosion (« ${impre} ») → ${reactN} objets parlants → ${drinks.length} TOURNÉES D’IVRESSE GALACTIQUE (${drinksList}) → **2–3 phrases qui répondent** → FIN ÉCLAIR : morale ironique + conseil idiot. 4–6 phrases.`;
-      const DE = `WHAT THE F (freundlich, frech, hilfreich). FREI & KURZ: necken (≤2) → 2–3 Pannen → EINE theatralische Entladung („${impre}“) → ${reactN} sprechende Objekte → ${drinks.length} RUNDEN GALAKTISCHER RAUSCH (${drinksList}) → **2–3 echte Antwortsätze** → KURZES ENDE: ironische Moral + dummer Tipp. 4–6 Sätze.`;
-      return { it:IT, en:EN, es:ES, fr:FR, de:DE }[L] || IT;
-    })();
+    // Regole per TUTTE LE LINGUE con sarcasmo leggero costante e apertura fissa
+    const wtfRulesByLang = {
+      it: `WHAT THE F (amichevole, sarcastico leggero, utile). APRI SEMPRE con: «${opener}».
+Schema LIBERO e CORTO: 1) presa in giro affettuosa → 2) 2–3 micro-imprevisti →
+3) UNO sfogo teatrale (“${impre}”, mai verso persone) → 4) SUBITO ${reactN} oggetti parlanti →
+5) ${drinks.length} GIRI DI SBRONZA GALATTICA (${drinksList}) →
+6) **2–3 frasi che rispondono davvero alla domanda** →
+7) CHIUSURA LAMPO: morale ironica + consiglio scemo attinente. Totale 4–6 frasi. Mantieni il sarcasmo in OGNI frase, mai cattivo.`,
+      en: `WHAT THE F (friendly, light sarcasm, helpful). ALWAYS START with: “${opener}”.
+FREE & SHORT: tease → 2–3 tiny mishaps → ONE theatrical burst (“${impre}”, never at people) →
+THEN ${reactN} talking objects → ${drinks.length} ROUNDS OF GALACTIC BOOZE (${drinksList}) →
+**2–3 sentences that truly answer the question** → FLASH END: ironic moral + silly on-topic tip. Total 4–6 sentences. Keep light sarcasm in EVERY sentence, never mean.`,
+      es: `WHAT THE F (amable, sarcasmo ligero, útil). EMPIEZA SIEMPRE con: «${opener}».
+LIBRE y CORTO: broma → 2–3 contratiempos → UN estallido («${impre}») →
+${reactN} objetos parlantes → ${drinks.length} RONDAS DE BORRACHERA GALÁCTICA (${drinksList}) →
+**2–3 frases que sí responden** → CIERRE FLASH: moraleja irónica + consejo tonto relacionado. 4–6 frases. Sarcasmo ligero en TODAS las frases, sin mala leche.`,
+      fr: `WHAT THE F (amical, sarcasme léger, utile). COMMENCE TOUJOURS par : « ${opener} ».
+LIBRE & COURT : taquinerie → 2–3 couacs → UNE explosion (« ${impre} ») →
+${reactN} objets parlants → ${drinks.length} TOURNÉES D’IVRESSE GALACTIQUE (${drinksList}) →
+**2–3 phrases qui répondent vraiment** → FIN ÉCLAIR : morale ironique + conseil idiot raccord. 4–6 phrases. Sarcasme léger partout, jamais méchant.`,
+      de: `WHAT THE F (freundlich, leichter Sarkasmus, hilfreich). STARTE IMMER mit: „${opener}“.
+FREI & KURZ: necken → 2–3 Pannen → EINE theatralische Entladung („${impre}“) →
+${reactN} sprechende Objekte → ${drinks.length} RUNDEN GALAKTISCHER RAUSCH (${drinksList}) →
+**2–3 echte Antwortsätze** → KURZES ENDE: ironische Moral + dummer, passender Tipp. Insgesamt 4–6 Sätze. Leichter Sarkasmus in JEDEM Satz, nie verletzend.`
+    };
 
     msgs.push(
-      { role:"system", content: wtfRules },
+      { role:"system", content: wtfRulesByLang[L] || wtfRulesByLang.it },
+      { role:"system", content:`OPENING: ${opener}` },
       { role:"system", content:`IMPRECATION: ${impre}` },
       { role:"system", content:`REACTIONS:\n- ${react.join("\n- ")}` },
       { role:"system", content:`DRINKS:\n- ${drinks.join("\n- ")}` },
+      { role:"system", content:`TONE_GUARDRAILS: friendly first line, light sarcasm in all lines, never insult people, punch up at objects/situations.` }
     );
   } else {
     msgs.push(
@@ -194,13 +260,15 @@ export default async function handler(req, res){
   try{
     if(!process.env.OPENAI_API_KEY) return res.status(500).json({ error:"missing_api_key" });
 
-    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").toString().split(",")[0].trim();
+    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
+      .toString().split(",")[0].trim();
     const { success } = await rl.limit(`ask:${ip}`);
     if(!success) return res.status(429).json({ error:"rate_limited_minute" });
 
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const { domanda = "", stile = "whatif", lang = "it", periodo = "future", micro = {} } = body;
-    if(!domanda || typeof domanda !== "string") return res.status(400).json({ error:"bad_request", detail:"domanda_required" });
+    if(!domanda || typeof domanda !== "string")
+      return res.status(400).json({ error:"bad_request", detail:"domanda_required" });
 
     const messages = buildMessages({ domanda, lang, periodo, stile, micro });
     const completion = await client.chat.completions.create({
