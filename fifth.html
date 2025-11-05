@@ -94,7 +94,7 @@ h1{
   padding:5px 10px;
   background:linear-gradient(180deg,var(--acc),var(--acc2));
   color:var(--ink);border-radius:12px;
-  box-shadow:0 6px 16px rgba(0,0,0,.28),0 0 18px var(--glow);
+  box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px var(--glow);
 }
 
 /* === RISULTATI SOTTO === */
@@ -114,7 +114,7 @@ h1{
   font-weight:900;font-size:16px;
   min-width:64px; padding:5px 10px; border-radius:12px;
   background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink);box-shadow:0 6px 16px rgba(0,0,0,.28),0 0 18px var(--glow);
+  color:var(--ink);box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px var(--glow);
 }
 .result-title{font-weight:900;font-size:15px;letter-spacing:.2px}
 
@@ -189,7 +189,7 @@ h1{
     <!-- BOX RISULTATI -->
     <div class="result-box" id="resultBox">
       <div class="result-head">
-        <span class="pct-label">% probabilità che accada</span>
+        <span class="pct-label" id="pctLabelBottom">% probabilità che accada</span>
         <div id="bottomPct" class="result-pct">—</div>
         <span class="result-title" id="committeeTitle">—</span>
       </div>
@@ -199,9 +199,9 @@ h1{
         <div>
           <div class="name" id="motName">—</div>
           <div class="chips" id="chipsWrap">
-            <span class="chip" id="chipFav">favorevoli 0</span>
-            <span class="chip" id="chipCon">contrari 0</span>
-            <span class="chip" id="chipAst">astenuti 0</span>
+            <span class="chip" id="chipFav">—</span>
+            <span class="chip" id="chipCon">—</span>
+            <span class="chip" id="chipAst">—</span>
           </div>
           <div class="note" id="motNote">—</div>
         </div>
@@ -243,7 +243,7 @@ document.documentElement.lang = lang;
   }
 })();
 
-/* ==== I18N (UI) ==== */
+/* ==== I18N (UI + chips) ==== */
 const I18N = {
   it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
        sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
@@ -256,7 +256,8 @@ const I18N = {
        pctLabel:"% probabilità che accada",
        votersTitle:"Comitato",
        seriousTitle:"Motivazione",
-       scientificTitle:"Motivazione (scientificamente provata)" },
+       scientificTitle:"Motivazione (scientificamente provata)",
+       chipsFav:"favorevoli", chipsCon:"contrari", chipsAst:"astenuti" },
 
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
@@ -269,7 +270,8 @@ const I18N = {
        pctLabel:"% probability it happens",
        votersTitle:"Committee",
        seriousTitle:"Rationale",
-       scientificTitle:"Rationale (scientifically grounded)" },
+       scientificTitle:"Rationale (scientifically grounded)",
+       chipsFav:"in favour", chipsCon:"against", chipsAst:"abstained" },
 
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
        sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
@@ -282,7 +284,8 @@ const I18N = {
        pctLabel:"% probabilidad de que ocurra",
        votersTitle:"Comité",
        seriousTitle:"Motivación",
-       scientificTitle:"Motivación (con base científica)" },
+       scientificTitle:"Motivación (con base científica)",
+       chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones" },
 
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
        sub:(q)=>`Question : « ${q} »`, q:"Votre question", a:"Réponse",
@@ -295,7 +298,8 @@ const I18N = {
        pctLabel:"% probabilité que cela arrive",
        votersTitle:"Comité",
        seriousTitle:"Justification",
-       scientificTitle:"Justification (fondée scientifiquement)" },
+       scientificTitle:"Justification (fondée scientifiquement)",
+       chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions" },
 
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
        sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
@@ -308,7 +312,8 @@ const I18N = {
        pctLabel:"% Wahrscheinlichkeit, dass es passiert",
        votersTitle:"Komitee",
        seriousTitle:"Begründung",
-       scientificTitle:"Begründung (wissenschaftlich untermauert)" }
+       scientificTitle:"Begründung (wissenschaftlich untermauert)",
+       chipsFav:"dafür", chipsCon:"dagegen", chipsAst:"Enthaltungen" }
 };
 
 /* ==== Leads ==== */
@@ -486,6 +491,7 @@ const lblP = qs('#lblP');
 const topPct = qs('#topPct');
 const bottomPct = qs('#bottomPct');
 const pctLabelTop = qs('#pctLabel');
+const pctLabelBottom = qs('#pctLabelBottom');
 
 const committeeTitle = qs('#committeeTitle');
 const motIco  = qs('#motIco');
@@ -529,6 +535,7 @@ function setTitlesAndTexts(q){
   styleBadge.textContent = (style==='wtf') ? T.styleWTF : T.styleWHF;
   metaInfo.textContent = T.meta(style, periodo);
   pctLabelTop.textContent = T.pctLabel;
+  if(pctLabelBottom) pctLabelBottom.textContent = T.pctLabel;
 
   const bank = (LEADS[lang] && LEADS[lang][style]) ? LEADS[lang][style]
                : (LEADS.it[style] || LEADS.it.whatif);
@@ -536,7 +543,7 @@ function setTitlesAndTexts(q){
 }
 
 /* ======== 🎯 MOTIVATION ENGINE (serio) ======== */
-/* 1) Classificazione domanda -> categoria */
+/* (come nella tua versione: detectCategory, extractFeatures, computeProbability, MOTIVES, rotateIndex, buildSeriousMotivation) */
 const CAT_RX = [
   {cat:'lavoro',     rx:[/lavor/i,/linkedin/i,/cv\b/i,/colloqu/i,/team/i,/azienda/i,/remot/i,/assunz/i,/promoz/i]},
   {cat:'studio',     rx:[/studio/i,/universit/i,/esame/i,/tesi/i,/corso/i,/certific/i,/impar/i,/inglese/i]},
@@ -555,8 +562,6 @@ function detectCategory(q){
   if(/\b(\d+)\s?(km|k|€|euro|%|giorni|settimane|mesi)\b/i.test(t)) return 'soldi';
   return 'lavoro';
 }
-
-/* 2) Feature extraction per la % */
 function extractFeatures(q){
   const t=(q||'').toLowerCase();
   const hasTime = /(30|7|14|21|60|90)\s*(giorn|gg)|settim|mesi?|this week|in \d+ (days?|weeks?|months?)/i.test(t);
@@ -567,8 +572,6 @@ function extractFeatures(q){
   const vague = /(forse|provare|vedere|magari|un po')/i.test(t);
   return {hasTime,hasNumber,hasBudget,hasConstraint,hasActionVerb,vague};
 }
-
-/* 3) Percentuale (deterministica + jitter e taratura per stile/categoria) */
 function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
 function computeProbability(q){
   const cat = detectCategory(q);
@@ -581,171 +584,43 @@ function computeProbability(q){
   if(f.hasActionVerb) score += 6;
   if(f.vague)         score -= 8;
   if(!f.hasTime && !f.hasNumber) score -= 6;
-
   const catAdj = { lavoro:+4, studio:+5, soldi:+3, sport:+2, relazioni:+1,
                    viaggi:+2, tech:+5, business:+3, salute:+2, casa:+1 }[cat] || 0;
   score += catAdj;
-
-  // stile: wtf abbassa leggermente; whatif alza leggermente
   score += (style==='wtf' ? -4 : +2);
-
-  // jitter minimo stabile
   const seed = Array.from(cat + JSON.stringify(f)).reduce((a,c)=>a+c.charCodeAt(0),0);
   score += (seed % 7) - 3;
-
   return { pct: clamp(Math.round(score), 25, 92), cat, f };
 }
-
-/* 4) Banco motivazioni per categoria + rotazione */
-const MOTIVES = {
-  lavoro: {
-    why: [
-      "impatto diretto su reddito e crescita professionale",
-      "benefici rapidi misurabili in colloqui e opportunità",
-      "processo con passi chiari e ripetibili",
-      "network attivabile subito con azioni a basso costo",
-      "feedback frequente che accelera l’apprendimento"
-    ],
-    constraints: [
-      "tempo di preparazione CV/portfolio",
-      "outreach quotidiano costante",
-      "coerenza tra ruolo target e competenze attuali",
-      "qualità delle candidature inviate"
-    ]
-  },
-  studio: {
-    why: [
-      "curriculum modulare che favorisce micro-progressi",
-      "obiettivi misurabili (quiz, pagine, ore)",
-      "materiali accessibili e gratuiti",
-      "ritmi brevi che riducono la frizione all’avvio"
-    ],
-    constraints:[
-      "slot giornalieri fissi",
-      "ambiente senza distrazioni",
-      "piano di revisione settimanale"
-    ]
-  },
-  soldi: {
-    why:[
-      "risultati visibili su numeri e grafici",
-      "interventi a basso costo con effetto immediato",
-      "regole semplici da automatizzare"
-    ],
-    constraints:[
-      "tracciamento spese puntuale",
-      "disciplina su categorie ‘trigger’",
-      "cuscinetto per imprevisti mensili"
-    ]
-  },
-  sport: {
-    why:[
-      "protocollo progressivo e sostenibile",
-      "recupero previsto che limita gli infortuni",
-      "ricompense rapide su energia e sonno"
-    ],
-    constraints:[
-      "calendario coerente con orari di lavoro",
-      "attrezzatura minima disponibile",
-      "monitoraggio del carico"
-    ]
-  },
-  relazioni: {
-    why:[
-      "azioni piccole ma ad alta leva emotiva",
-      "ritualità settimanali che consolidano abitudini",
-      "feedback immediato delle persone coinvolte"
-    ],
-    constraints:[
-      "confini di tempo chiari",
-      "aspettative condivise",
-      "rispetto dei ritmi altrui"
-    ]
-  },
-  viaggi: {
-    why:[
-      "piano a vincoli noti (budget, date, tratte)",
-      "tolleranza agli imprevisti con alternative",
-      "benefici emotivi che rinforzano l’aderenza"
-    ],
-    constraints:[
-      "finestre di prenotazione realistiche",
-      "gestione dei costi variabili",
-      "documenti e logistica pronti"
-    ]
-  },
-  tech: {
-    why:[
-      "tool disponibili subito e spesso gratuiti",
-      "processi automatizzabili con poche integrazioni",
-      "metriche chiare di successo (tempo risparmiato)"
-    ],
-    constraints:[
-      "qualità dei dati in ingresso",
-      "sicurezza/permessi",
-      "manutenzione dello script"
-    ]
-  },
-  business: {
-    why:[
-      "validazione veloce con esperimenti piccoli",
-      "ciclo build-measure-learn rapido",
-      "canali di acquisizione testabili a budget ridotto"
-    ],
-    constraints:[
-      "ipotesi di valore/fatturazione chiare",
-      "campione clienti sufficiente",
-      "tempo dedicato a iterazioni"
-    ]
-  },
-  salute: {
-    why:[
-      "protocollo semplice con tracciamento",
-      "rinforzi positivi già dalla prima settimana",
-      "riduzione dello stress come co-beneficio"
-    ],
-    constraints:[
-      "aderenza a pasti e sonno",
-      "progressione graduale",
-      "attenzione a condizioni pregresse"
-    ]
-  },
-  casa: {
-    why:[
-      "progetto finito con milestone visibili",
-      "regole pratiche di decluttering",
-      "benefici immediati su comfort e concentrazione"
-    ],
-    constraints:[
-      "tempo dedicato per stanze/blocchi",
-      "materiali e attrezzatura disponibili",
-      "smaltimento oggetti pianificato"
-    ]
-  }
+const MOTIVES = { /* (uguale alla tua versione, già in italiano) */ 
+  lavoro:{why:["impatto diretto su reddito e crescita professionale","benefici rapidi misurabili in colloqui e opportunità","processo con passi chiari e ripetibili","network attivabile subito con azioni a basso costo","feedback frequente che accelera l’apprendimento"],constraints:["tempo di preparazione CV/portfolio","outreach quotidiano costante","coerenza tra ruolo target e competenze attuali","qualità delle candidature inviate"]},
+  studio:{why:["curriculum modulare che favorisce micro-progressi","obiettivi misurabili (quiz, pagine, ore)","materiali accessibili e gratuiti","ritmi brevi che riducono la frizione all’avvio"],constraints:["slot giornalieri fissi","ambiente senza distrazioni","piano di revisione settimanale"]},
+  soldi:{why:["risultati visibili su numeri e grafici","interventi a basso costo con effetto immediato","regole semplici da automatizzare"],constraints:["tracciamento spese puntuale","disciplina su categorie ‘trigger’","cuscinetto per imprevisti mensili"]},
+  sport:{why:["protocollo progressivo e sostenibile","recupero previsto che limita gli infortuni","ricompense rapide su energia e sonno"],constraints:["calendario coerente con orari di lavoro","attrezzatura minima disponibile","monitoraggio del carico"]},
+  relazioni:{why:["azioni piccole ma ad alta leva emotiva","ritualità settimanali che consolidano abitudini","feedback immediato delle persone coinvolte"],constraints:["confini di tempo chiari","aspettative condivise","rispetto dei ritmi altrui"]},
+  viaggi:{why:["piano a vincoli noti (budget, date, tratte)","tolleranza agli imprevisti con alternative","benefici emotivi che rinforzano l’aderenza"],constraints:["finestre di prenotazione realistiche","gestione dei costi variabili","documenti e logistica pronti"]},
+  tech:{why:["tool disponibili subito e spesso gratuiti","processi automatizzabili con poche integrazioni","metriche chiare di successo (tempo risparmiato)"],constraints:["qualità dei dati in ingresso","sicurezza/permessi","manutenzione dello script"]},
+  business:{why:["validazione veloce con esperimenti piccoli","ciclo build-measure-learn rapido","canali di acquisizione testabili a budget ridotto"],constraints:["ipotesi di valore/fatturazione chiare","campione clienti sufficiente","tempo dedicato a iterazioni"]},
+  salute:{why:["protocollo semplice con tracciamento","rinforzi positivi già dalla prima settimana","riduzione dello stress come co-beneficio"],constraints:["aderenza a pasti e sonno","progressione graduale","attenzione a condizioni pregresse"]},
+  casa:{why:["progetto finito con milestone visibili","regole pratiche di decluttering","benefici immediati su comfort e concentrazione"],constraints:["tempo dedicato per stanze/blocchi","materiali e attrezzatura disponibili","smaltimento oggetti pianificato"]}
 };
-
 function rotateIndex(key, max){
   const i = ((+LS.getItem(key)||0)+1)%max;
   LS.setItem(key, String(i));
   return i;
 }
-
 function buildSeriousMotivation(question){
   const { pct, cat, f } = computeProbability(question);
   const bank = MOTIVES[cat] || MOTIVES.lavoro;
-
   const lead = pick(["Motivo","Motivazione","Perché può funzionare","Perché è credibile"]);
   const lead2 = pick(["Vincoli chiave","Condizioni di riuscita","Attenzioni/limiti","Dipende da"]);
   const join = pick([", ", "; ", " — "]);
-
   const iWhy = rotateIndex("mot_w_"+cat, bank.why.length);
   const iCon = rotateIndex("mot_c_"+cat, bank.constraints.length);
-
   const reason1 = bank.why[iWhy];
   const reason2 = pick(bank.why.filter((_,k)=>k!==iWhy));
   const cons1 = bank.constraints[iCon];
   const cons2 = pick(bank.constraints.filter((_,k)=>k!==iCon));
-
   const horizonHint = f.hasTime ? pick([
     "il time-box riduce la procrastinazione",
     "l’orizzonte chiaro aumenta l’aderenza",
@@ -755,12 +630,9 @@ function buildSeriousMotivation(question){
     "definire una scadenza rende il piano più solido",
     "un orizzonte esplicito aiuterebbe il follow-through"
   ]);
-
   const text =
     `${lead}: ${reason1}${join}${reason2}. `+
     `${lead2}: ${cons1}${join}${cons2}; ${horizonHint}.`;
-
-  // anti repeat su domande simili
   const key = (question||'').toLowerCase().replace(/\s+/g,' ').slice(0,120);
   const recent = JSON.parse(LS.getItem('mot_recent')||'[]');
   if(recent.includes(key)){
@@ -810,9 +682,9 @@ function renderCommittee(item){
   motName.textContent = item.name;
   chipsWrap.style.display = 'flex';
   const r=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-  chipFav.textContent = `favorevoli ${r(120, 1200)}`;
-  chipCon.textContent = `contrari ${r(0, 900)}`;
-  chipAst.textContent = `astenuti ${r(0, 400)}`;
+  chipFav.textContent = `${T.chipsFav} ${r(120,1200)}`;
+  chipCon.textContent = `${T.chipsCon} ${r(0,900)}`;
+  chipAst.textContent = `${T.chipsAst} ${r(0,400)}`;
   motNote.textContent = `${item.note} ${buildScuffleExtra()}`;
 }
 
@@ -866,9 +738,6 @@ function isSurprise(req){
 
   // domanda
   let domanda = req.domanda || LS.getItem('domanda') || "";
-  // Titles/UI
-  const T = I18N[lang] || I18N.it;
-  setText('#title', style==='wtf' ? T.titleWTF : T.titleWHF);
   setTitlesAndTexts(domanda);
   qs('#qView').textContent = domanda || '—';
 
@@ -898,15 +767,14 @@ function isSurprise(req){
     topPct.textContent = pctStr;
     bottomPct.textContent = pctStr;
 
+    const T = I18N[lang] || I18N.it;
+
     if (surprise){
-      // COMITATO (sorpresa)
       motIco.style.display = '';
       chipsWrap.style.display = 'flex';
       renderCommittee(buildCommittee());
       committeeTitle.textContent = committeeTitle.textContent || (T.votersTitle || 'Comitato');
-      // % mantiene l'engine deterministica
     } else {
-      // NORMALE: niente comitato, SOLO motivazione
       const title = (style==='wtf') ? T.scientificTitle : T.seriousTitle;
       committeeTitle.textContent = title;
       motIco.style.display = 'none';
