@@ -1,4 +1,4 @@
-<!DOCTYPE html>  <html lang="it" data-theme="whatif">  
+ <!DOCTYPE html>  <html lang="it" data-theme="whatif">  
 <head>  
 <meta charset="UTF-8"/>  
 <meta name="viewport" content="width=device-width,initial-scale=1"/>  
@@ -566,13 +566,15 @@ const bank = (LEADS[lang] && LEADS[lang][style]) ? LEADS[lang][style]
 : (LEADS.it[style] || LEADS.it.whatif);
 leadNode.textContent = oneSentence(pick(bank) || '') || '—';
 
-// placeholder chips
+// placeholder chips localizzati
 chipFav.textContent = ${T.chipsFav} 0;
 chipCon.textContent = ${T.chipsCon} 0;
 chipAst.textContent = ${T.chipsAst} 0;
 }
 
-/* ======== 🎯 MOTIVATION ENGINE (serio) ======== /
+/* ======== 🎯 MOTIVATION ENGINE (serio) — COMPLETAMENTE LOCALIZZATA ======== */
+
+/* 1) Classificazione domanda -> categoria */
 const CAT_RX = [
 {cat:'lavoro',     rx:[/lavor/i,/linkedin/i,/cv\b/i,/colloqu/i,/team/i,/azienda/i,/remot/i,/assunz/i,/promoz/i]},
 {cat:'studio',     rx:[/studio/i,/universit/i,/esame/i,/tesi/i,/corso/i,/certific/i,/impar/i,/inglese/i]},
@@ -591,6 +593,8 @@ for(const row of CAT_RX){ if(row.rx.some(r=>r.test(t))) return row.cat; }
 if(/\b(\d+)\s?(km|k|€|euro|%|giorni|settimane|mesi)\b/i.test(t)) return 'soldi';
 return 'lavoro';
 }
+
+/* 2) Feature extraction per la % /
 function extractFeatures(q){
 const t=(q||'').toLowerCase();
 const hasTime = /(30|7|14|21|60|90)\s(giorn|gg)|settim|mesi?|this week|in \d+ (days?|weeks?|months?)/i.test(t);
@@ -601,6 +605,8 @@ const hasActionVerb = /(lancia(re)?|apri(re)?|impara(re)?|scrivi(re)?|chiedi(re)
 const vague = /(forse|provare|vedere|magari|un po')/i.test(t);
 return {hasTime,hasNumber,hasBudget,hasConstraint,hasActionVerb,vague};
 }
+
+/* 3) Percentuale (deterministica + jitter e taratura per stile/categoria) */
 function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
 function computeProbability(q){
 const cat = detectCategory(q);
@@ -621,7 +627,10 @@ const seed = Array.from(cat + JSON.stringify(f)).reduce((a,c)=>a+c.charCodeAt(0)
 score += (seed % 7) - 3;
 return { pct: clamp(Math.round(score), 25, 92), cat, f };
 }
-const MOTIVES = {
+
+/* 4) MOTIVES localizzate (why/constraints per categoria) /
+const MOTIVES_L10N = {
+it:{
 lavoro:{why:["impatto diretto su reddito e crescita professionale","benefici rapidi misurabili in colloqui e opportunità","processo con passi chiari e ripetibili","network attivabile subito con azioni a basso costo","feedback frequente che accelera l’apprendimento"],constraints:["tempo di preparazione CV/portfolio","outreach quotidiano costante","coerenza tra ruolo target e competenze attuali","qualità delle candidature inviate"]},
 studio:{why:["curriculum modulare che favorisce micro-progressi","obiettivi misurabili (quiz, pagine, ore)","materiali accessibili e gratuiti","ritmi brevi che riducono la frizione all’avvio"],constraints:["slot giornalieri fissi","ambiente senza distrazioni","piano di revisione settimanale"]},
 soldi:{why:["risultati visibili su numeri e grafici","interventi a basso costo con effetto immediato","regole semplici da automatizzare"],constraints:["tracciamento spese puntuale","disciplina su categorie ‘trigger’","cuscinetto per imprevisti mensili"]},
@@ -632,44 +641,165 @@ tech:{why:["tool disponibili subito e spesso gratuiti","processi automatizzabili
 business:{why:["validazione veloce con esperimenti piccoli","ciclo build-measure-learn rapido","canali di acquisizione testabili a budget ridotto"],constraints:["ipotesi di valore/fatturazione chiare","campione clienti sufficiente","tempo dedicato a iterazioni"]},
 salute:{why:["protocollo semplice con tracciamento","rinforzi positivi già dalla prima settimana","riduzione dello stress come co-beneficio"],constraints:["aderenza a pasti e sonno","progressione graduale","attenzione a condizioni pregresse"]},
 casa:{why:["progetto finito con milestone visibili","regole pratiche di decluttering","benefici immediati su comfort e concentrazione"],constraints:["tempo dedicato per stanze/blocchi","materiali e attrezzatura disponibili","smaltimento oggetti pianificato"]}
+},
+en:{
+lavoro:{why:["direct impact on income and career growth","fast, measurable gains in interviews and opportunities","clear, repeatable steps","network can be activated with low-cost actions","frequent feedback accelerates learning"],constraints:["time to prepare CV/portfolio","consistent daily outreach","fit between target role and current skills","quality of applications sent"]},
+studio:{why:["modular curriculum enables micro-progress","measurable goals (quizzes, pages, hours)","accessible, often free materials","short rhythms reduce start friction"],constraints:["fixed daily slots","distraction-free environment","weekly review plan"]},
+soldi:{why:["results visible in numbers and charts","low-cost interventions with immediate effect","simple rules to automate"],constraints:["diligent expense tracking","discipline on trigger categories","buffer for monthly contingencies"]},
+sport:{why:["progressive, sustainable protocol","planned recovery limits injuries","quick rewards in energy and sleep"],constraints:["schedule coherent with work hours","minimal equipment available","load monitoring"]},
+relazioni:{why:["small actions with high emotional leverage","weekly rituals that cement habits","immediate feedback from people involved"],constraints:["clear time boundaries","shared expectations","respect for others’ pace"]},
+viaggi:{why:["plan with known constraints (budget, dates, routes)","tolerance to setbacks with alternatives","emotional benefits reinforce adherence"],constraints:["realistic booking windows","management of variable costs","documents and logistics ready"]},
+tech:{why:["tools available immediately and often free","processes can be automated with few integrations","clear success metrics (time saved)"],constraints:["input data quality","security/permissions","script maintenance"]},
+business:{why:["fast validation via small experiments","rapid build-measure-learn cycle","acquisition channels testable at low budget"],constraints:["clear value/billing hypothesis","sufficient customer sample","time devoted to iterations"]},
+salute:{why:["simple protocol with tracking","positive reinforcement from week one","stress reduction as co-benefit"],constraints:["adherence to meals and sleep","gradual progression","attention to pre-existing conditions"]},
+casa:{why:["finite project with visible milestones","practical decluttering rules","immediate comfort and focus gains"],constraints:["time blocks per room/area","materials and tools available","planned disposal of items"]}
+},
+es:{
+lavoro:{why:["impacto directo en ingresos y crecimiento profesional","beneficios rápidos medibles en entrevistas y oportunidades","pasos claros y repetibles","red activable con acciones de bajo costo","feedback frecuente acelera el aprendizaje"],constraints:["tiempo para preparar CV/portfolio","contacto diario constante","coherencia entre rol objetivo y habilidades actuales","calidad de las candidaturas enviadas"]},
+studio:{why:["currículo modular que favorece micro-avances","objetivos medibles (tests, páginas, horas)","materiales accesibles y gratuitos","ritmos cortos reducen la fricción inicial"],constraints:["bloques diarios fijos","entorno sin distracciones","plan de revisión semanal"]},
+soldi:{why:["resultados visibles en números y gráficos","intervenciones de bajo costo con efecto inmediato","reglas simples para automatizar"],constraints:["registro riguroso de gastos","disciplina en categorías ‘trigger’","colchón para imprevistos mensuales"]},
+sport:{why:["protocolo progresivo y sostenible","recuperación planificada limita lesiones","recompensas rápidas en energía y sueño"],constraints:["horario coherente con el trabajo","equipamiento mínimo disponible","monitorización de carga"]},
+relazioni:{why:["acciones pequeñas con alta palanca emocional","rituales semanales que consolidan hábitos","feedback inmediato de los implicados"],constraints:["límites claros de tiempo","expectativas compartidas","respeto por los ritmos ajenos"]},
+viaggi:{why:["plan con restricciones conocidas (presupuesto, fechas, rutas)","tolerancia a imprevistos con alternativas","beneficios emocionales refuerzan la adherencia"],constraints:["ventanas de reserva realistas","gestión de costes variables","documentos y logística listos"]},
+tech:{why:["herramientas disponibles de inmediato y a menudo gratis","procesos automatizables con pocas integraciones","métricas claras de éxito (tiempo ahorrado)"],constraints:["calidad de los datos de entrada","seguridad/permisos","mantenimiento del script"]},
+business:{why:["validación rápida con pequeños experimentos","ciclo construir-medir-aprender ágil","canales de adquisición probables con bajo presupuesto"],constraints:["hipótesis de valor/facturación clara","muestra de clientes suficiente","tiempo dedicado a iteraciones"]},
+salute:{why:["protocolo simple con seguimiento","refuerzos positivos desde la primera semana","reducción del estrés como co-beneficio"],constraints:["adhesión a comidas y sueño","progresión gradual","atención a condiciones previas"]},
+casa:{why:["proyecto finito con hitos visibles","reglas prácticas de declutter","beneficios inmediatos en confort y concentración"],constraints:["tiempo dedicado por zonas","materiales y herramientas disponibles","plan de desecho de objetos"]}
+},
+fr:{
+lavoro:{why:["impact direct sur revenus et progression de carrière","bénéfices rapides mesurables en entretiens et opportunités","étapes claires et répétables","réseau activable par des actions à faible coût","retours fréquents qui accélèrent l’apprentissage"],constraints:["temps de préparation CV/portfolio","prospection quotidienne régulière","adéquation rôle cible / compétences","qualité des candidatures envoyées"]},
+studio:{why:["programme modulaire propice aux micro-progrès","objectifs mesurables (quiz, pages, heures)","supports accessibles et souvent gratuits","rythmes courts réduisant la friction au démarrage"],constraints:["créneaux quotidiens fixes","environnement sans distractions","plan de révision hebdomadaire"]},
+soldi:{why:["résultats visibles sur chiffres et graphiques","interventions à faible coût à effet immédiat","règles simples à automatiser"],constraints:["suivi rigoureux des dépenses","discipline sur catégories déclencheuses","matelas pour imprévus mensuels"]},
+sport:{why:["protocole progressif et durable","récupération prévue limitant les blessures","récompenses rapides sur énergie et sommeil"],constraints:["calendrier cohérent avec horaires de travail","équipement minimal disponible","suivi de la charge"]},
+relazioni:{why:["petites actions à fort levier émotionnel","rituels hebdomadaires qui ancrent les habitudes","retour immédiat des personnes impliquées"],constraints:["limites de temps claires","attentes partagées","respect du rythme des autres"]},
+viaggi:{why:["plan à contraintes connues (budget, dates, trajets)","tolérance aux imprévus avec alternatives","bénéfices émotionnels renforçant l’adhérence"],constraints:["fenêtres de réservation réalistes","gestion des coûts variables","documents et logistique prêts"]},
+tech:{why:["outils disponibles immédiatement et souvent gratuits","processus automatisables avec peu d’intégrations","indicateurs clairs de succès (temps gagné)"],constraints:["qualité des données d’entrée","sécurité/autorisations","maintenance du script"]},
+business:{why:["validation rapide via de petites expériences","cycle build-measure-learn rapide","canaux d’acquisition testables à faible budget"],constraints:["hypothèse de valeur/facturation claire","échantillon clients suffisant","temps dédié aux itérations"]},
+salute:{why:["protocole simple avec suivi","renforcements positifs dès la 1re semaine","réduction du stress comme co-bénéfice"],constraints:["adhérence aux repas et au sommeil","progression graduelle","attention aux conditions pré-existantes"]},
+casa:{why:["projet fini avec jalons visibles","règles pratiques de désencombrement","bénéfices immédiats sur confort et concentration"],constraints:["temps dédié par pièce/zone","matériels et outils disponibles","plan d’évacuation des objets"]}
+},
+de:{
+lavoro:{why:["direkter Einfluss auf Einkommen und Karrierewachstum","schnelle, messbare Vorteile bei Interviews und Chancen","klare, wiederholbare Schritte","Netzwerk sofort mit kostengünstigen Aktionen aktivierbar","häufiges Feedback beschleunigt das Lernen"],constraints:["Zeit für CV/Portfolio-Vorbereitung","konsequente tägliche Ansprache","Passung zwischen Zielrolle und Skills","Qualität der Bewerbungen"]},
+studio:{why:["modulares Curriculum fördert MikrofFortschritte","messbare Ziele (Quiz, Seiten, Stunden)","leicht zugängliche, oft kostenlose Materialien","kurze Rhythmen verringern Startreibung"],constraints:["feste tägliche Zeitfenster","ablenkungsfreie Umgebung","wöchentlicher Review-Plan"]},
+soldi:{why:["Ergebnisse sichtbar in Zahlen und Charts","günstige Maßnahmen mit sofortiger Wirkung","einfache Regeln zur Automatisierung"],constraints:["genaues Ausgaben-Tracking","Disziplin bei Trigger-Kategorien","Puffer für monatliche Unwägbarkeiten"]},
+sport:{why:["progressives, nachhaltiges Protokoll","geplante Regeneration begrenzt Verletzungen","schnelle Belohnungen bei Energie und Schlaf"],constraints:["Zeitplan passend zur Arbeit","Mindestausrüstung verfügbar","Belastungsmonitoring"]},
+relazioni:{why:["kleine Aktionen mit hoher emotionaler Hebelwirkung","wöchentliche Rituale festigen Gewohnheiten","sofortiges Feedback der Beteiligten"],constraints:["klare Zeitgrenzen","geteilte Erwartungen","Respekt für das Tempo anderer"]},
+viaggi:{why:["Plan mit bekannten Zwängen (Budget, Daten, Routen)","Toleranz gegenüber Pannen durch Alternativen","emotionale Vorteile stärken die Adhärenz"],constraints:["realistische Buchungsfenster","Steuerung variabler Kosten","Dokumente und Logistik bereit"]},
+tech:{why:["Tools sofort verfügbar und oft kostenlos","Prozesse mit wenigen Integrationen automatisierbar","klare Erfolgsmetriken (Zeitersparnis)"],constraints:["Qualität der Eingangsdaten","Sicherheit/Berechtigungen","Script-Wartung"]},
+business:{why:["schnelle Validierung über kleine Experimente","rascher Build-Measure-Learn-Zyklus","Akquisekanäle mit kleinem Budget testbar"],constraints:["klare Value-/Billing-Hypothese","ausreichende Kundinnenstichprobe","Zeit für Iterationen"]},
+salute:{why:["einfaches Protokoll mit Tracking","positive Verstärkung ab Woche 1","Stressreduktion als Co-Benefit"],constraints:["Einhaltung bei Mahlzeiten und Schlaf","schrittweise Progression","Beachtung bestehender Bedingungen"]},
+casa:{why:["abgeschlossenes Projekt mit sichtbaren Meilensteinen","praktische Entrümpelungsregeln","sofortige Zugewinne bei Komfort und Fokus"],constraints:["Zeitblöcke pro Raum/Bereich","Materialien und Werkzeuge verfügbar","geplante Entsorgung von Gegenständen"]}
+}
 };
+
+/* Frasi guida e hint localizzati */
+const MOTIVE_LEADS = {
+it:{ lead:["Motivo","Motivazione","Perché può funzionare","Perché è credibile"],
+lead2:["Vincoli chiave","Condizioni di riuscita","Attenzioni/limiti","Dipende da"],
+hasTime:["il time-box riduce la procrastinazione","l’orizzonte chiaro aumenta l’aderenza","scadenze esplicite facilitano il completamento"],
+noTime:["aggiungere un time-box può aumentare le chance","definire una scadenza rende il piano più solido","un orizzonte esplicito aiuterebbe il follow-through"] },
+en:{ lead:["Reason","Rationale","Why it can work","Why it’s credible"],
+lead2:["Key constraints","Success conditions","Watchouts/limits","It depends on"],
+hasTime:["time-boxing reduces procrastination","a clear horizon increases adherence","explicit deadlines facilitate completion"],
+noTime:["adding a time-box can increase odds","defining a deadline makes the plan sturdier","an explicit horizon would help follow-through"] },
+es:{ lead:["Motivo","Motivación","Por qué puede funcionar","Por qué es creíble"],
+lead2:["Restricciones clave","Condiciones de éxito","Alertas/límites","Depende de"],
+hasTime:["el time-box reduce la postergación","un horizonte claro aumenta la adherencia","plazos explícitos facilitan el cierre"],
+noTime:["añadir un time-box puede subir las probabilidades","definir un plazo refuerza el plan","un horizonte explícito ayuda al seguimiento"] },
+fr:{ lead:["Motif","Justification","Pourquoi ça peut marcher","Pourquoi c’est crédible"],
+lead2:["Contraintes clés","Conditions de réussite","Points d’attention/limites","Cela dépend de"],
+hasTime:["le time-boxing réduit la procrastination","un horizon clair augmente l’adhérence","des échéances explicites facilitent l’achèvement"],
+noTime:["ajouter un time-boxing peut augmenter les chances","définir une échéance solidifie le plan","un horizon explicite aiderait le suivi"] },
+de:{ lead:["Grund","Begründung","Warum es funktionieren kann","Warum es glaubwürdig ist"],
+lead2:["Schlüsselbeschränkungen","Erfolgsbedingungen","Hinweise/Grenzen","Es hängt ab von"],
+hasTime:["Time-Boxing reduziert Prokrastination","ein klares Ziel erhöht die Adhärenz","explizite Deadlines erleichtern den Abschluss"],
+noTime:["eine Time-Box kann die Chancen erhöhen","eine Frist macht den Plan robuster","ein expliziter Zeithorizont unterstützt die Umsetzung"] }
+};
+function l10nPack(){
+return MOTIVE_LEADS[lang] || MOTIVE_LEADS.it;
+}
+function motivesBankFor(cat){
+const tryLang = MOTIVES_L10N[lang]?.[cat];
+if(tryLang) return tryLang;
+return MOTIVES_L10N.it[cat] || MOTIVES_L10N.en[cat];
+}
+
 function rotateIndex(key, max){
 const i = ((+LS.getItem(key)||0)+1)%max;
 LS.setItem(key, String(i));
 return i;
 }
+
 function buildSeriousMotivation(question){
 const { pct, cat, f } = computeProbability(question);
-const bank = MOTIVES[cat] || MOTIVES.lavoro;
-const lead = pick(["Motivo","Motivazione","Perché può funzionare","Perché è credibile"]);
-const lead2 = pick(["Vincoli chiave","Condizioni di riuscita","Attenzioni/limiti","Dipende da"]);
+const bank = motivesBankFor(cat);
+const L = l10nPack();
+
+const lead = pick(L.lead);
+const lead2 = pick(L.lead2);
 const join = pick([", ", "; ", " — "]);
+
 const iWhy = rotateIndex("mot_w_"+cat, bank.why.length);
 const iCon = rotateIndex("mot_c_"+cat, bank.constraints.length);
+
 const reason1 = bank.why[iWhy];
 const reason2 = pick(bank.why.filter((,k)=>k!==iWhy));
 const cons1 = bank.constraints[iCon];
 const cons2 = pick(bank.constraints.filter((,k)=>k!==iCon));
-const horizonHint = f.hasTime ? pick([
-"il time-box riduce la procrastinazione",
-"l’orizzonte chiaro aumenta l’aderenza",
-"scadenze esplicite facilitano il completamento"
-]) : pick([
-"aggiungere un time-box può aumentare le chance",
-"definire una scadenza rende il piano più solido",
-"un orizzonte esplicito aiuterebbe il follow-through"
-]);
+
+const horizonHint = f.hasTime ? pick(L.hasTime) : pick(L.noTime);
+
 const text =
 ${lead}: ${reason1}${join}${reason2}. +
 ${lead2}: ${cons1}${join}${cons2}; ${horizonHint}.;
+
+// anti repeat su domande simili
 const key = (question||'').toLowerCase().replace(/\s+/g,' ').slice(0,120);
 const recent = JSON.parse(LS.getItem('mot_recent')||'[]');
 if(recent.includes(key)){
-return { pct, text: text.replace(/.$/,' — variazione consigliata: micro-esperimento e checkpoint settimanale.') };
+const tweak = (lang==='en') ? " — suggested variation: micro-experiment and weekly checkpoint."
+: (lang==='es') ? " — variación sugerida: micro-experimento y control semanal."
+: (lang==='fr') ? " — variation suggérée : micro-expérience et point hebdo."
+: (lang==='de') ? " — empfohlene Variation: Mikro-Experiment und Wochen-Checkpoint."
+: " — variazione consigliata: micro-esperimento e checkpoint settimanale.";
+return { pct, text: text.replace(/.$/, tweak) };
 }
 recent.unshift(key);
 LS.setItem('mot_recent', JSON.stringify(recent.slice(0,30)));
 return { pct, text };
+}
+
+/* ==== Motivazioni pseudo-scientifiche (WT F) multi-lingua già presenti ==== */
+const SCI_MOTIVATIONS = {
+it:[
+"Studio CEDSA: 312 soggetti + 2 cavie alticce; effetto stimato all’87% (p≈0,02).",
+"Protocollo PignaLab: 98 partecipanti + 1 piccione; risultato replicato, CI sorprendente.",
+"Istituto Svizzero Formaggi & Motivazione: RCT (n=120); gruppo formaggio +72% successo."
+],
+en:[
+"CEDSA study: 312 subjects + 2 tipsy guinea animals; estimated effect 87% (p≈0.02).",
+"PineCone protocol: 98 participants + 1 pigeon; replicated result, surprising CI.",
+"Swiss Institute of Cheese & Motivation: RCT (n=120); cheese group +72% success."
+],
+es:[
+"Estudio CEDSA: 312 sujetos + 2 cobayas alegres; efecto estimado 87% (p≈0,02).",
+"Protocolo PiñaLab: 98 participantes + 1 paloma; resultado replicado, IC sorprendente.",
+"Instituto Suizo de Queso y Motivación: ECA (n=120); grupo queso +72% de éxito."
+],
+fr:[
+"Étude CEDSA : 312 sujets + 2 cobayes éméchés ; effet estimé à 87 % (p≈0,02).",
+"Protocole PigneLab : 98 participants + 1 pigeon ; résultat reproduit, IC surprenant.",
+"Institut Suisse Fromage & Motivation : ECR (n=120) ; groupe fromage +72 % de réussite."
+],
+de:[
+"CEDSA-Studie: 312 Probanden + 2 angeheiterte Versuchstiere; Effekt ≈87 % (p≈0,02).",
+"Kiefernkern-Protokoll: 98 Teilnehmende + 1 Taube; Ergebnis repliziert, überraschendes KI.",
+"Schweizer Institut für Käse & Motivation: RCT (n=120); Käse-Gruppe +72 % Erfolg."
+]
+};
+function pickScientificMotivation(){
+const list = SCI_MOTIVATIONS[lang] || SCI_MOTIVATIONS.it;
+return pick(list);
 }
 
 /* ======== 😈 Modalità “Sorprendimi” (comitato) ======== */
@@ -678,11 +808,16 @@ const minor = rndInt(1,5);
 const injured = rndInt(0,3);
 const hosp = Math.min(injured, rndInt(0,2));
 const extras = [
+(lang==='en')?Minor scuffle: ${minor} cautioned; ${injured} injured, ${hosp} observed.:
+(lang==='es')?Pequeño altercado: ${minor} amonestados; ${injured} heridos, ${hosp} en observación.:
+(lang==='fr')?Échauffourée: ${minor} avertis; ${injured} blessés, ${hosp} en observation.:
+(lang==='de')?Kleine Rangelei: ${minor} verwarnt; ${injured} verletzt, ${hosp} unter Beobachtung.:
 Lite tra delegazioni: ${minor} ammoniti; ${injured} feriti, ${hosp} in osservazione.,
-Breve parapiglia al voto: ${minor} allontanati; ${injured} contusi (${hosp} bendati).,
-Intervallo movimentato: ${minor} espulsi; ${injured} graffiati, ${hosp} medicati.,
-Discussione accesa al bancone: ${minor} bicchieri rovesciati; ${injured} piccoli tagli (${hosp} cerotti).,
-Seduta straordinaria: ${minor} crisi di identità; ${injured} in pausa tè, ${hosp} respirazioni profonde.
+(lang==='en')?Brief tussle at vote: ${minor} removed; ${injured} bruised (${hosp} bandaged).:
+(lang==='es')?Tira y afloja en votación: ${minor} retirados; ${injured} contusos (${hosp} vendados).:
+(lang==='fr')?Court grabuge au vote: ${minor} évacués; ${injured} contusions (${hosp} bandés).:
+(lang==='de')?Kurzes Gerangel: ${minor} entfernt; ${injured} Prellungen (${hosp} verbunden).:
+Breve parapiglia al voto: ${minor} allontanati; ${injured} contusi (${hosp} bendati).
 ];
 return pick(extras);
 }
@@ -715,39 +850,6 @@ chipFav.textContent = ${T.chipsFav} ${r(120,1200)};
 chipCon.textContent = ${T.chipsCon} ${r(0,900)};
 chipAst.textContent = ${T.chipsAst} ${r(0,400)};
 motNote.textContent = ${item.note} ${buildScuffleExtra()};
-}
-
-/* ==== Motivazioni pseudo-scientifiche brevi (WT F normale) ==== */
-const SCI_MOTIVATIONS = {
-it:[
-"Studio CEDSA: 312 soggetti + 2 cavie alticce; effetto stimato all’87% (p≈0,02).",
-"Protocollo PignaLab: 98 partecipanti + 1 piccione; risultato replicato, CI sorprendente.",
-"Istituto Svizzero Formaggi & Motivazione: RCT (n=120); gruppo formaggio +72% successo."
-],
-en:[
-"CEDSA study: 312 subjects + 2 tipsy guinea animals; estimated effect 87% (p≈0.02).",
-"PineCone protocol: 98 participants + 1 pigeon; replicated result, surprising CI.",
-"Swiss Institute of Cheese & Motivation: RCT (n=120); cheese group +72% success."
-],
-es:[
-"Estudio CEDSA: 312 sujetos + 2 cobayas alegres; efecto estimado 87% (p≈0,02).",
-"Protocolo PiñaLab: 98 participantes + 1 paloma; resultado replicado, IC sorprendente.",
-"Instituto Suizo de Queso y Motivación: ECA (n=120); grupo queso +72% de éxito."
-],
-fr:[
-"Étude CEDSA : 312 sujets + 2 cobayes éméchés ; effet estimé à 87 % (p≈0,02).",
-"Protocole PigneLab : 98 participants + 1 pigeon ; résultat reproduit, IC surprenant.",
-"Institut Suisse Fromage & Motivation : ECR (n=120) ; groupe fromage +72 % de réussite."
-],
-de:[
-"CEDSA-Studie: 312 Probanden + 2 angeheiterte Versuchstiere; Effekt ≈87 % (p≈0,02).",
-"Kiefernkern-Protokoll: 98 Teilnehmende + 1 Taube; Ergebnis repliziert, überraschendes KI.",
-"Schweizer Institut für Käse & Motivation: RCT (n=120); Käse-Gruppe +72 % Erfolg."
-]
-};
-function pickScientificMotivation(){
-const list = SCI_MOTIVATIONS[lang] || SCI_MOTIVATIONS.it;
-return pick(list);
 }
 
 /* ==== Surprise detector ==== */
@@ -851,4 +953,4 @@ qs('#againBtn').onclick = ()=>{ location.href='fourth.html'; };
 </script>
 
 </body>  
-</html>
+ </html>
