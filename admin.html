@@ -24,6 +24,7 @@
     table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
     th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
     .ok{color:var(--ok)} .bad{color:var(--bad)} .muted{color:var(--muted)}
+    .right{margin-left:auto}
     @media(min-width:900px){ .cols-2{grid-template-columns:1fr 1fr} }
   </style>
 </head>
@@ -38,22 +39,26 @@
       <div class="row">
         <button id="btnRefresh" class="primary">Aggiorna</button>
         <button id="btnAuto" class="ghost">Auto-refresh</button>
-        <button id="btnClear" class="ghost">Svuota log</button>
+        <button id="btnClear" class="ghost">Svuota log (server)</button>
+        <button id="btnExport" class="ghost right">Export CSV</button>
       </div>
       <div class="row" style="margin-top:8px">
         <label class="row"><input type="checkbox" id="maskIp" checked/> IP mascherati</label>
-        <label>Window log:
-          <select id="win">
-            <option>100</option><option selected>200</option><option>400</option><option>800</option>
-          </select>
-        </label>
         <label>Trend giorni:
           <select id="trend">
             <option>7</option><option selected>10</option><option>14</option><option>30</option>
           </select>
         </label>
+        <label>Limite:
+          <select id="limitSel">
+            <option value="100">ultimi 100</option>
+            <option value="200" selected>ultimi 200</option>
+            <option value="400">ultimi 400</option>
+          </select>
+        </label>
         <span class="muted" id="ts"></span>
       </div>
+      <p class="muted" id="statusLine"></p>
     </div>
 
     <div class="card">
@@ -96,20 +101,13 @@
   <div class="card" style="margin-top:12px">
     <div class="row" style="justify-content:space-between">
       <h3 style="margin:0">Log richieste</h3>
-      <label>
-        <select id="limitSel">
-          <option value="100">ultimi 100</option>
-          <option value="200" selected>ultimi 200</option>
-          <option value="400">ultimi 400</option>
-        </select>
-      </label>
-    </div>
-    <div class="row" style="margin-top:6px">
-      <select id="fStyle"><option value="">Stile: tutti</option><option>whatif</option><option>wtf</option></select>
-      <select id="fLang"><option value="">Lingua: tutte</option><option>it</option><option>en</option></select>
-      <select id="fPeriod"><option value="">Tempo: tutti</option><option>past</option><option>future</option></select>
-      <select id="fUser"><option value="">Tipo utente: tutti</option><option>free</option><option>pro</option><option>admin</option></select>
-      <input id="q" placeholder="Cerca nella domanda…" style="min-width:220px"/>
+      <div class="row">
+        <select id="fStyle"><option value="">Stile: tutti</option><option>whatif</option><option>wtf</option></select>
+        <select id="fLang"><option value="">Lingua: tutte</option><option>it</option><option>en</option><option>es</option><option>fr</option><option>de</option></select>
+        <select id="fPeriod"><option value="">Tempo: tutti</option><option>past</option><option>future</option></select>
+        <select id="fUser"><option value="">Tipo utente: tutti</option><option>free</option><option>pro</option><option>admin</option></select>
+        <input id="q" placeholder="Cerca nella domanda…" style="min-width:220px"/>
+      </div>
     </div>
     <table id="tbl">
       <thead><tr><th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th></tr></thead>
@@ -120,22 +118,33 @@
 
 <script>
 const LS=localStorage, TKEY="admin_token", PROKEY="whatif_prefs";
-let chart=null, auto=null;
+let chart=null, auto=null, lastItems=[];
 
 function setBadge(id, text){ document.getElementById(id).textContent = text; }
-function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(); }
+function fmtDate(ts){ const d=new Date(ts||Date.now()); return d.toLocaleString(); }
 function getTok(){ return LS.getItem(TKEY)||""; }
 function setTok(t){ if(t) LS.setItem(TKEY,t); else LS.removeItem(TKEY); setBadge("tok", t? t.slice(0,6)+"…"+t.slice(-4): "—"); }
 function setProUI(){ try{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); setBadge("usertype", p.pro?"pro":"free"); }catch{} }
+function setStatus(msg, good=null){
+  const el=document.getElementById("statusLine");
+  el.textContent = msg || "";
+  el.className = "muted" + (good===true?" ok": good===false?" bad":"");
+}
 
 async function adminCheck(){
-  const r = await fetch("/api/admin-token",{ headers:{ "x-admin-token": getTok() }});
-  const d = await r.json().catch(()=>({}));
-  const yes = !!(d && (d.ok ? (d.admin ?? d.ok) : d.admin)); // compat varianti API
-  setBadge("adminState", yes?"yes":"no");
-  setBadge("myIp", d?.ip || "—");
-  setBadge("credits", yes?"∞": (JSON.parse(LS.getItem("whatif_credits")||"{}").used||0)+"/(3/10)");
-  return yes;
+  try{
+    const r = await fetch("/api/admin-token",{ headers:{ "x-admin-token": getTok() }});
+    const d = await r.json().catch(()=>({}));
+    const yes = !!(d && (d.ok ? (d.admin ?? d.ok) : d.admin));
+    setBadge("adminState", yes?"yes":"no");
+    setBadge("myIp", d?.ip || "—");
+    setBadge("credits", yes?"∞": (JSON.parse(LS.getItem("whatif_credits")||"{}").used||0)+"/(3/10)");
+    return yes;
+  }catch(e){
+    setBadge("adminState","no");
+    setBadge("myIp","—");
+    return false;
+  }
 }
 
 function renderTrend(tr){
@@ -145,13 +154,14 @@ function renderTrend(tr){
     options:{ responsive:true, plugins:{ legend:{ display:false }}}});
 }
 
-/* ############ FIX: uso di textContent per mostrare SEMPRE le domande ############ */
+/* ---------- TABLE DRAW (server items) ---------- */
 function drawTable(items){
+  lastItems = items||[];
   const fs=document.getElementById("fStyle").value, fl=document.getElementById("fLang").value,
         fp=document.getElementById("fPeriod").value, fu=document.getElementById("fUser").value,
         q=document.getElementById("q").value.toLowerCase();
 
-  const rows=(items||[]).filter(x=>{
+  const rows=lastItems.filter(x=>{
     if(fs && x.style!==fs) return false;
     if(fl && x.lang!==fl) return false;
     if(fp && x.periodo!==fp) return false;
@@ -164,7 +174,6 @@ function drawTable(items){
   tb.innerHTML="";
   for(const it of rows){
     const tr=document.createElement("tr");
-
     const tdQuando=document.createElement("td"); tdQuando.textContent = fmtDate(it.ts);
     const tdIp=document.createElement("td"); tdIp.textContent = it.ip || "";
     const tdTipo=document.createElement("td"); tdTipo.textContent = it.user_type || "";
@@ -174,38 +183,94 @@ function drawTable(items){
     const tdLen=document.createElement("td"); tdLen.textContent = String(it.answer_chars || 0);
     const tdDomanda=document.createElement("td");
     tdDomanda.textContent = String(it.domanda || "").replace(/\s+/g," ").slice(0,250);
-
     tr.append(tdQuando, tdIp, tdTipo, tdStile, tdLang, tdPeriodo, tdLen, tdDomanda);
     tb.appendChild(tr);
   }
 }
 
+/* ---------- LOCAL FALLBACK (reads localStorage.cronologia) ---------- */
+function readLocalHistory(){
+  try{ return JSON.parse(LS.getItem("cronologia")||"[]")||[]; }catch{ return []; }
+}
+function normalizeLocalToItems(arr){
+  // mappa la struttura di fifth.html -> struttura tabella admin
+  return (arr||[]).map(x=>({
+    ts: x.ts || Date.now(),
+    ip: "(local)",
+    user_type: (JSON.parse(LS.getItem(PROKEY)||"{}").pro?"pro":"free"),
+    style: x.stile || "",
+    lang: x.lang || document.documentElement.lang || "it",
+    periodo: x.periodo || "",
+    answer_chars: (x.risposta||"").length,
+    domanda: x.domanda || ""
+  })).reverse(); // più recenti in alto
+}
+function drawLocalFallback(){
+  const localItems = normalizeLocalToItems(readLocalHistory());
+  setStatus("Modalità locale: mostro la cronologia dal browser (API non disponibili).", false);
+  // reset stats basic
+  setBadge("stTotal", String(localItems.length));
+  setBadge("stToday", "—"); setBadge("stLast7","—");
+  setBadge("stStyle","{}"); setBadge("stLang","{}"); setBadge("stPeriod","{}"); setBadge("stUsers","{}");
+  renderTrend({labels:[],data:[]});
+  drawTable(localItems);
+}
+
+/* ---------- LOAD FROM SERVER (with graceful fallback) ---------- */
 async function loadAll(){
   document.getElementById("ts").textContent=new Date().toLocaleString();
   const mask=document.getElementById("maskIp").checked ? "1":"0";
   const limit=document.getElementById("limitSel").value || "200";
   const days=document.getElementById("trend").value || "10";
 
-  // stats
-  const s = await fetch(`/api/admin-stats?days=${days}`,{ headers:{ "x-admin-token": getTok() }});
-  const S = await s.json().catch(()=>({}));
-  setBadge("stTotal", S.total??"0"); setBadge("stToday", S.today??"0"); setBadge("stLast7", S.last7??"0");
-  setBadge("stStyle", JSON.stringify(S.byStyle||{})); setBadge("stLang", JSON.stringify(S.byLang||{}));
-  setBadge("stPeriod", JSON.stringify(S.byPeriod||{})); setBadge("stUsers", JSON.stringify(S.byUserType||{}));
-  if(S.trend) renderTrend(S.trend);
+  try{
+    // stats
+    const s = await fetch(`/api/admin-stats?days=${days}`,{ headers:{ "x-admin-token": getTok() }});
+    if(!s.ok) throw new Error("stats "+s.status);
+    const S = await s.json().catch(()=>({}));
+    setBadge("stTotal", S.total??"0"); setBadge("stToday", S.today??"0"); setBadge("stLast7", S.last7??"0");
+    setBadge("stStyle", JSON.stringify(S.byStyle||{})); setBadge("stLang", JSON.stringify(S.byLang||{}));
+    setBadge("stPeriod", JSON.stringify(S.byPeriod||{})); setBadge("stUsers", JSON.stringify(S.byUserType||{}));
+    if(S.trend) renderTrend(S.trend); else renderTrend({labels:[],data:[]});
 
-  // logs
-  const r = await fetch(`/api/admin-logs?limit=${limit}&mask=${mask}`,{ headers:{ "x-admin-token": getTok() }});
-  const d = await r.json().catch(()=>({}));
-  drawTable(d.items||[]);
+    // logs
+    const r = await fetch(`/api/admin-logs?limit=${limit}&mask=${mask}`,{ headers:{ "x-admin-token": getTok() }});
+    if(!r.ok) throw new Error("logs "+r.status);
+    const d = await r.json().catch(()=>({}));
+    drawTable(d.items||[]);
+    setStatus("Dati server caricati.", true);
+  }catch(e){
+    // fallback locale
+    drawLocalFallback();
+  }
 }
 
-// eventi
+/* ---------- CSV EXPORT (server items se presenti, altrimenti locale) ---------- */
+function toCSV(items){
+  const head = ['timestamp','ip','user_type','style','lang','periodo','answer_chars','domanda'];
+  const esc = v => `"${String(v??'').replace(/"/g,'""')}"`;
+  const lines = [head.join(',')].concat(items.map(r=>[
+    r.ts, r.ip||'', r.user_type||'', r.style||'', r.lang||'', r.periodo||'',
+    (r.answer_chars!=null?r.answer_chars:''), r.domanda||''
+  ].map(esc).join(',')));
+  return lines.join('\n');
+}
+function exportCSV(){
+  const items = lastItems.length ? lastItems : normalizeLocalToItems(readLocalHistory());
+  const csv = toCSV(items);
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'whatif_admin_export.csv';
+  a.click();
+}
+
+/* ---------- EVENTS ---------- */
 document.getElementById("enter").onclick = async ()=>{
   const pin = document.getElementById("pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
   const r = await fetch("/api/admin-token",{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ pin })});
   const d = await r.json().catch(()=>({}));
-  if(r.ok && d.ok){ setTok(d.token); document.getElementById("hint").textContent="Login ok. Token legato al tuo IP per ~7gg."; await adminCheck(); loadAll(); }
+  if(r.ok && (d.ok||d.token)){ setTok(d.token || d?.data?.token || ""); document.getElementById("hint").textContent="Login ok. Token legato al tuo IP per ~7gg."; await adminCheck(); loadAll(); }
   else { alert("PIN errato o errore server"); }
 };
 document.getElementById("renew").onclick = async ()=>{
@@ -214,23 +279,26 @@ document.getElementById("renew").onclick = async ()=>{
 };
 document.getElementById("revoke").onclick = async ()=>{
   await fetch("/api/admin-token?action=revoke",{ method:"POST", headers:{ "x-admin-token": getTok() }});
-  setTok(""); await adminCheck();
+  setTok(""); await adminCheck(); setStatus("Token revocato.", false); drawLocalFallback();
 };
 document.getElementById("proOn").onclick = ()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); p.pro=true; LS.setItem(PROKEY,JSON.stringify(p)); setProUI(); };
 document.getElementById("proOff").onclick = ()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); delete p.pro; LS.setItem(PROKEY,JSON.stringify(p)); setProUI(); };
 
 document.getElementById("btnRefresh").onclick = loadAll;
 document.getElementById("btnClear").onclick = async ()=>{
-  if(!confirm("Svuotare i log?")) return;
+  if(!confirm("Svuotare i log sul server?")) return;
   await fetch("/api/admin-logs",{ method:"DELETE", headers:{ "x-admin-token": getTok() }});
   loadAll();
 };
 document.getElementById("btnAuto").onclick = ()=>{
-  if(auto){ clearInterval(auto); auto=null; document.getElementById("btnAuto").textContent="Auto-refresh"; }
-  else { auto=setInterval(loadAll, 5000); document.getElementById("btnAuto").textContent="Stop auto"; }
+  if(auto){ clearInterval(auto); auto=null; document.getElementById("btnAuto").textContent="Auto-refresh"; setStatus("Auto-refresh OFF"); }
+  else { auto=setInterval(loadAll, 5000); document.getElementById("btnAuto").textContent="Stop auto"; setStatus("Auto-refresh ogni 5s…"); }
 };
-for(const id of ["fStyle","fLang","fPeriod","fUser","q","limitSel","maskIp","win","trend"])
-  document.getElementById(id).addEventListener("input", ()=>loadAll());
+document.getElementById("btnExport").onclick = exportCSV;
+["fStyle","fLang","fPeriod","fUser","q","limitSel","maskIp","trend"].forEach(id=>{
+  const el=document.getElementById(id);
+  el.addEventListener("input", ()=> drawTable(lastItems.length?lastItems:normalizeLocalToItems(readLocalHistory())));
+});
 
 (async function init(){
   setProUI();
