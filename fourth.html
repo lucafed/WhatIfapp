@@ -302,6 +302,7 @@ const HINTS={
   fr:["Et si je changeais de travail ?","Et si je déménageais ?","Et si je reprenais des études ?","Et si je passais 30 jours sans réseaux ?","Et si je demandais une augmentation ?","Et si je partais voyager seul(e) ?","Et si je maîtrisais l’anglais ?","Et si j’ouvrais un micro e-commerce ?","Et si je courais 3× par semaine ?","Et si je cuisinais à la maison 30 jours ?"],
   de:["Was, wenn ich den Job wechsle?","Was, wenn ich in eine andere Stadt ziehe?","Was, wenn ich wieder studiere?","Was, wenn ich 30 Tage ohne Social Media lebe?","Was, wenn ich eine Gehaltserhöhung verlange?","Was, wenn ich allein reise?","Was, wenn ich Englisch richtig beherrsche?","Was, wenn ich einen Micro-Shop starte?","Was, wenn ich 3× pro Woche laufe?","Was, wenn ich 30 Tage zuhause koche?"]
 };
+/* Seed assurdi legacy (fallback) */
 const ABS={
   it:["E se addestrassi un piccione per portarmi il caffè?","E se decidessi tutto a testa o croce per 24h?","E se parlassi in rima in riunione?","E se vendessi aria motivazionale in barattolo?","E se indossassi un mantello per una settimana?"],
   en:["What if I trained a pigeon to deliver coffee?","What if I flipped a coin for 24h?","What if I spoke in rhymes at work?","What if I sold motivational air in jars?","What if I wore a cape for a week?"],
@@ -424,6 +425,186 @@ $('clearBtn').onclick=()=>{
 };
 $('qInput').addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
+
+/* ======== 🔮 NUOVO SORPRENDIMI: Reale + Assurdo, preferenze, anti-ripetizione ======== */
+
+/* 1) Categorie & frasari (multilingua) */
+const GEN = {
+  // obiettivi/azioni realistiche per categorie
+  real: {
+    it: {
+      lavoro:["cambiassi lavoro","aprissi un profilo LinkedIn serio","chiedessi un aumento","passassi al remoto per 30 giorni","lanciassi un side-project"],
+      studio:["riprendessi l’università","preparassi 1 esame in 30 giorni","studiassi inglese 20 min/die","facessi un corso gratuito su IA","scrivessi la tesi 1 pagina al giorno"],
+      soldi:["seguissi un budget 30 giorni","tagliassi 3 spese inutili","mettessi da parte 5€/giorno","aprissi un fondo emergenze","vendessi 5 cose inutili"],
+      sport:["corressi 3× a settimana","facessi 30 giorni di camminate","provassi il nuoto all’alba","facessi stretching 10 min/die","chiudessi gli anelli ogni giorno"],
+      relazioni:["uscissi da solo/a a un evento","chiamassi un amico a settimana","organizzassi una cena a casa","mettessi confini chiari al lavoro","facessi 1 giorno digitale detox con partner"],
+      viaggi:["organizzassi un weekend low-cost","facessi un viaggio da solo/a","scoprissi 5 posti nella tua città","imparassi 20 frasi in una lingua locale","prenotassi con regola 24 ore"],
+      tech:["automatizzassi una noia con AI","creassi un micro-sito in 1 sera","digitalizzassi ricevute","provassi un’app Pomodoro 7 giorni","usassi shortcut per email"],
+      business:["aprissi un micro e-commerce","testassi un’idea con landing","facessi 10 interviste clienti","lanciassi newsletter settimanale","preparassi pitch da 3 slide"]
+    },
+    en: {
+      work:["changed jobs","fixed my LinkedIn","asked for a raise","tested 30 days remote","launched a side project"],
+      study:["went back to uni","passed 1 exam in 30 days","studied English 20 min/day","took a free AI course","wrote 1 thesis page/day"],
+      money:["kept a budget 30 days","cut 3 useless expenses","saved $5/day","built an emergency fund","sold 5 unused items"],
+      sport:["ran 3× a week","walked daily for 30 days","swam at dawn","stretched 10 min/day","closed rings every day"],
+      relations:["went to an event alone","called one friend/week","hosted a dinner","set boundaries at work","did one no-screen day with partner"],
+      travel:["planned a low-cost weekend","traveled solo","discovered 5 spots in my city","learned 20 local phrases","booked with 24h rule"],
+      tech:["automated a chore with AI","built a micro-site in a night","digitized receipts","used a Pomodoro app 7 days","mastered email shortcuts"],
+      business:["opened a micro e-commerce","tested an idea with a landing","did 10 customer interviews","launched a weekly newsletter","made a 3-slide pitch"]
+    }
+  },
+  // assurdi corti (molti più di prima)
+  wtf: {
+    it:[
+      "eleggessi un piccione come coach motivazionale",
+      "decidessi tutto a dadi per 24 ore",
+      "parlassi solo in rima in riunione",
+      "aprissi una start-up che vende aria motivazionale in barattolo",
+      "indossassi il mantello della produttività per 7 giorni",
+      "facessi domanda al Ministero dell’Assurdo per una borsa di studio",
+      "creassi un curriculum in geroglifici ma ben impaginato",
+      "scrivessi la tesi su perché procrastino domani",
+      "usassi il tapis roulant solo per ricaricare il telefono",
+      "fossi seguito da un cameraman invisibile per motivarmi"
+    ],
+    en:[
+      "elected a pigeon as my coach",
+      "rolled dice for every choice for 24h",
+      "spoke only in rhyme at work",
+      "launched a start-up selling motivational air in jars",
+      "wore a productivity cape for 7 days",
+      "applied to the Ministry of Absurd for a grant",
+      "wrote a CV in hieroglyphs but well formatted",
+      "wrote my thesis on why I’ll do it tomorrow",
+      "used the treadmill only to charge the phone",
+      "hired an imaginary cameraman to keep me going"
+    ],
+    es:[
+      "eligiera a una paloma como coach",
+      "decidiera todo con dados 24h",
+      "hablara en rimas en la reunión",
+      "abriera una startup de aire motivacional",
+      "llevara capa de productividad 7 días",
+      "pidiera una beca al Ministerio del Absurdo"
+    ],
+    fr:[
+      "élisais un pigeon comme coach",
+      "décidais tout aux dés 24 h",
+      "parlais en rimes en réunion",
+      "lançais une start-up d’air motivationnel en bocaux",
+      "portais une cape de productivité 7 jours"
+    ],
+    de:[
+      "eine Taube zu meinem Coach wählte",
+      "24 Std. alles mit Würfeln entschiede",
+      "im Meeting nur in Reimen sprach",
+      "ein Start-up für Motivations-Luft gründete",
+      "eine Produktivitäts-Umhang eine Woche trüge"
+    ]
+  }
+};
+
+/* 2) Inferenza preferenze utente (dalla cronologia/salvati) */
+function inferUserPrefs(){
+  // parole chiave -> categoria
+  const map = {
+    lavoro:["lavor","job","linkedin","remoto","cv","colloquio"],
+    studio:["studio","universit","esame","tesi","inglese","course","exam"],
+    soldi:["spesa","budget","soldi","money","rispar","save","fund"],
+    sport:["corri","sport","palestra","nuoto","cammina","run","walk","stretch"],
+    relazioni:["amico","amica","partner","relaz","social","confini","boundar"],
+    viaggi:["viagg","citt","weekend","volo","hotel","travel"],
+    tech:["ai","app","sito","site","automat","shortcut","email"],
+    business:["e-commerce","ecommerce","newsletter","client","pitch","landing","startup"]
+  };
+  const buckets = Object.fromEntries(Object.keys(map).map(k=>[k,0]));
+  const corpora = (readJSON('cronologia',[]).map(x=>x.domanda||'').join(' ') + ' ' + readJSON('next_prompts',[]).map(x=>x.q||'').join(' ')).toLowerCase();
+  for(const [cat,keys] of Object.entries(map)){
+    keys.forEach(kw=>{ if(corpora.includes(kw)) buckets[cat]+=1; });
+  }
+  // normalizza a pesi 1..5 (min 1)
+  const out = {};
+  const vals = Object.values(buckets);
+  const max = Math.max(1, ...vals);
+  for(const [k,v] of Object.entries(buckets)){
+    out[k] = 1 + Math.round((v/max)*4);
+  }
+  return out; // es: {lavoro:5, studio:3, ...}
+}
+
+/* 3) Generatori frasi */
+function capFirst(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function genRealPrompt(langCode, prefsWeights){
+  const bank = GEN.real[langCode] || GEN.real.en;
+  const cats = Object.keys(bank);
+
+  // scelta categoria pesata su preferenze
+  const weighted = [];
+  cats.forEach(c=>{
+    const w = (prefsWeights[c]||1);
+    for(let i=0;i<w;i++) weighted.push(c);
+  });
+  const cat = rand(weighted.length?weighted:cats);
+  const action = rand(bank[cat]);
+
+  const horizons = {
+    it:["in 30 giorni","questa settimana","per 90 giorni","senza scuse per 7 giorni","partendo da domani mattina"],
+    en:["in 30 days","this week","for 90 days","no excuses for 7 days","starting tomorrow morning"],
+    es:["en 30 días","esta semana","por 90 días","sin excusas 7 días","desde mañana por la mañana"],
+    fr:["en 30 jours","cette semaine","pendant 90 jours","sans excuses 7 jours","dès demain matin"],
+    de:["in 30 Tagen","diese Woche","für 90 Tage","7 Tage ohne Ausreden","ab morgen früh"]
+  };
+  const starters = {
+    it:"E se ",
+    en:"What if I ",
+    es:"¿Y si ",
+    fr:"Et si je ",
+    de:"Was, wenn ich "
+  };
+  const enders = { it:"?", en:"?", es:"?", fr:" ?", de:"?" };
+
+  return starters[langCode] + action + " " + rand(horizons[langCode]||horizons.en) + enders[langCode];
+}
+
+function genAbsurdPrompt(langCode){
+  const pool = GEN.wtf[langCode] || GEN.wtf.en;
+  const starters = { it:"E se ", en:"What if I ", es:"¿Y si ", fr:"Et si je ", de:"Was, wenn ich " };
+  const enders   = { it:"?",   en:"?",           es:"?",      fr:" ?",        de:"?" };
+  return starters[langCode] + rand(pool) + enders[langCode];
+}
+
+/* 4) Anti-ripetizione & rotazione */
+function getRecentSet(){
+  const arr = readJSON('surprise_recent',[]);
+  return new Set(arr);
+}
+function rememberPrompt(p){
+  const arr = readJSON('surprise_recent',[]);
+  arr.unshift(p);
+  writeJSON('surprise_recent', arr.slice(0,60));
+}
+
+/* 5) Motore di scelta (real vs wtf) */
+function makeSurpriseList(n=12){
+  const list=[];
+  const prefsWeights = inferUserPrefs();
+  const recent = getRecentSet();
+
+  const biasReal = (prefs.stile==='whatif') ? 0.7 : 0.3; // What if → più reale
+  for(let i=0;i<n*2 && list.length<n;i++){
+    const pickReal = Math.random()<biasReal;
+    const candidate = pickReal ? genRealPrompt(lang, prefsWeights)
+                               : (GEN.wtf[lang]?.length? genAbsurdPrompt(lang) : (ABS[lang]||ABS.it)[Math.floor(Math.random()* (ABS[lang]||ABS.it).length)]);
+    if(!recent.has(candidate)){
+      list.push(candidate);
+      recent.add(candidate);
+    }
+  }
+  return list.length?n?list.slice(0,n):list:list;
+}
+
 /* ===== SORPRENDIMI ===== */
 function spinCap(){ return userIsAdmin()?Infinity:(prefs.pro?5:1); }
 function ensureSpins(){
@@ -453,14 +634,15 @@ renderSpinButton();
 
 function slotSurprise(){
   if(!consumeOneSpin()) return;
-  const absurdAll=ABS[lang]||ABS.it;
-  if(!absurdAll.length) return;
-  const absurdDaily = daily(absurdAll, 8);
+
+  // prepara lista dinamica (reale+assurdo) con preferenze e senza ripetizioni
+  const rollingList = makeSurpriseList(14);
 
   const el=$('qInput'); el.classList.add('slotting');
   let i=0;
   const iv=setInterval(()=>{
-    el.value = absurdDaily[i % absurdDaily.length];
+    el.value = rollingList[i % rollingList.length];
+    // randomizza anche stile e periodo durante lo slot
     const s = Math.random()<.5 ? 'whatif' : 'wtf';
     const p = Math.random()<.5 ? 'future' : 'past';
     prefs.stile=s; prefs.periodo=p; writeJSON('whatif_prefs',prefs);
@@ -470,9 +652,16 @@ function slotSurprise(){
 
   setTimeout(()=>{ 
     clearInterval(iv); el.classList.remove('slotting');
+    // ferma su un prompt coerente con lo stile scelto al termine
+    const finalList = makeSurpriseList(10);
+    const finalPrompt = finalList[Math.floor(Math.random()*finalList.length)];
+    $('qInput').value = finalPrompt;
+    rememberPrompt(finalPrompt);
+
+    // Flagga come "sorpresa" (anche se reale → comitato e zuffa in fifth)
     isAbsurd=true;
     LS.setItem('absurd_prompt','1');
-    LS.setItem('surprise_mode','1');     // <<< attiva modalità sorprendi per fifth
+    LS.setItem('surprise_mode','1');
   }, 1200 + Math.random()*600);
 }
 $('surpriseBtn').onclick=slotSurprise;
