@@ -86,58 +86,58 @@ h1{
 
 /* === TOP PERCENT ROW === */
 .pct-row{display:flex;align-items:center;gap:10px;margin:2px 0 8px}
-.pct-label{font-size:13px;color:var(--muted)} /* +1px per leggibilità */
+.pct-label{font-size:13px;color:var(--muted)}
 .top-pct{
   display:inline-flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:16px; /* 18 -> 16 */
-  min-width:64px;                /* 72 -> 64 */
-  padding:5px 10px;              /* 6x10 -> 5x10 */
+  font-weight:900;font-size:16px;
+  min-width:64px;
+  padding:5px 10px;
   background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink);border-radius:12px; /* 10 -> 12 */
+  color:var(--ink);border-radius:12px;
   box-shadow:0 6px 16px rgba(0,0,0,.28),0 0 18px var(--glow);
 }
 
-/* === RISULTATI SOTTO (percentuale + comitato/motivazione) === */
+/* === RISULTATI SOTTO === */
 .result-box{
   background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
   border:1px solid var(--line);
   border-radius:16px;
-  padding:16px 14px; /* 12 -> 16/14 */
+  padding:16px 14px;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 22px rgba(0,0,0,.28);
 }
 .result-head{
-  display:flex;align-items:center;gap:12px;flex-wrap:wrap; /* wrap pulito su mobile */
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
   margin-bottom:8px;
 }
 .result-pct{
   display:inline-flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:16px; /* 18 -> 16 */
+  font-weight:900;font-size:16px;
   min-width:64px; padding:5px 10px; border-radius:12px;
   background:linear-gradient(180deg,var(--acc),var(--acc2));
   color:var(--ink);box-shadow:0 6px 16px rgba(0,0,0,.28),0 0 18px var(--glow);
 }
 .result-title{font-weight:900;font-size:15px;letter-spacing:.2px}
 
-/* === MOTIVO (1 comitato) === */
+/* === MOTIVO === */
 .mot{display:grid;grid-template-columns:auto 1fr;gap:10px;margin-top:10px}
 .mot .ico{font-size:18px;line-height:1.2}
-.mot .name{display:none} /* niente duplicazione del nome */
+.mot .name{display:none}
 .mot .note{
-  font-size:15px;              /* 12 -> 15: più leggibile */
+  font-size:15px;
   line-height:1.6;
-  color:var(--fg);             /* più contrasto */
+  color:var(--fg);
   opacity:.92;
 }
 
 /* Chips voti */
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;opacity:.9}
 .chip{
-  font-size:11px;              /* 12 -> 11 */
+  font-size:11px;
   font-weight:900;padding:3px 7px;border-radius:999px;
   background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);
 }
 
-/* Mobile fine-tuning */
+/* Mobile */
 @media (max-width:420px){
   .result-pct,.top-pct{font-size:15px;min-width:56px;padding:4px 8px}
   .result-title{font-size:14px}
@@ -186,7 +186,7 @@ h1{
     <div class="hr"></div>
     <div class="label" id="lblP">Esito & motivazioni</div>
 
-    <!-- RISULTATI: % + (comitato con zuffa SE sorprendi) / (solo motivazione SE normale) -->
+    <!-- BOX RISULTATI -->
     <div class="result-box" id="resultBox">
       <div class="result-head">
         <span class="pct-label">% probabilità che accada</span>
@@ -288,9 +288,8 @@ const LEADS = {
        whatif:["Set the keys down and let the quiet that doesn’t judge go first."]}
 };
 
-/* ==== Categories: SOLO Psicologia, Vita notturna, Animali ==== */
+/* ==== Categories per COMITATO (sorpresa) ==== */
 const CATEGORIES = [
-  // Psicologia
   { ico:"🧠", name_it:"Comitato dei Pensieri Sotto la Doccia", name_en:"Shower-Thoughts Committee",
     notes_it:["Illuminazione logistica a shampoo.","Decisione nata a 38°C."],
     notes_en:["Logistics epiphany mid-shampoo.","Decision made at 38°C."] },
@@ -300,8 +299,6 @@ const CATEGORIES = [
   { ico:"📞", name_it:"Autorità delle Telefonate Fuori Tempo", name_en:"Off-Timing Calls Authority",
     notes_it:["Parere arrivato alle 07:12.","Consiglio durante squillo prolungato."],
     notes_en:["Opinion at 07:12.","Advice during a long ring."] },
-
-  // Vita notturna
   { ico:"🥃", name_it:"Circolo Bar Notturno dei Consiglieri", name_en:"Late-Bar Counsel Circle",
     notes_it:["Coraggio liquido, piani semplici."],
     notes_en:["Liquid courage, simple plans."] },
@@ -314,8 +311,6 @@ const CATEGORIES = [
   { ico:"💬", name_it:"Conferenza degli Amici Che Gasano", name_en:"Conference of Hype Friends",
     notes_it:["Clima motivazionale alto."],
     notes_en:["High motivational climate."] },
-
-  // Animali
   { ico:"🕊️", name_it:"Assemblea dei Piccioni con Opinioni Forti", name_en:"Assembly of Strong-Opinion Pigeons",
     notes_it:["Consenso rumoroso in piazza."],
     notes_en:["Loud piazza consensus."] },
@@ -337,7 +332,6 @@ const setText = (id, txt)=>{ const el=qs(id); if(el) el.textContent = txt; };
 const backBtn  = qs('#backBtn');
 const homeBtn  = qs('#homeBtn');
 const langSel  = qs('#langSelect');
-const titleH1  = qs('#title');
 const subtitle = qs('#subtitle');
 const lblQ     = qs('#lblQ');
 const lblA     = qs('#lblA');
@@ -370,8 +364,6 @@ function normalizeOneParagraph(s=""){
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
 function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
-
-/* Decorazione em-dash */
 function decorateEmBits(el){
   const raw = el.textContent;
   if(!raw || !raw.includes("—")) return;
@@ -404,19 +396,244 @@ function setTitlesAndTexts(q){
   leadNode.textContent = oneSentence(pick(bank) || '') || '—';
 }
 
-/* ==== Percentuale primaria ==== */
-function buildPrimaryPct({style, surprise}){
-  if(style==='whatif' && surprise) return rndInt(150,1200) + "%";
-  if(style==='whatif' && !surprise) return rndInt(55,85) + "%";
-  return rndInt(120,600) + "%";
-}
-function renderPctAll(pct){
-  topPct.textContent = pct || "—";
-  bottomPct.textContent = pct || "—";
+/* ======== 🎯 MOTIVATION ENGINE (serio) ======== */
+/* 1) Classificazione domanda -> categoria */
+const CAT_RX = [
+  {cat:'lavoro',     rx:[/lavor/i,/linkedin/i,/cv\b/i,/colloqu/i,/team/i,/azienda/i,/remot/i,/assunz/i,/promoz/i]},
+  {cat:'studio',     rx:[/studio/i,/universit/i,/esame/i,/tesi/i,/corso/i,/certific/i,/impar/i,/inglese/i]},
+  {cat:'soldi',      rx:[/budget/i,/spes/i,/rispar/i,/sold/i,/debito/i,/invest/i,/entrate|uscite|prezzo/i]},
+  {cat:'sport',      rx:[/correr/i,/palestra/i,/allen/i,/nuot/i,/bic/i,/passi/i,/yoga/i,/stretch/i]},
+  {cat:'relazioni',  rx:[/partner/i,/amic/i,/famiglia/i,/relaz/i,/confini/i,/social/i,/rete/i]},
+  {cat:'viaggi',     rx:[/viagg/i,/volo/i,/hotel/i,/citt[aà]/i,/weekend/i,/itiner/i]},
+  {cat:'tech',       rx:[/\bai\b/i,/app/i,/sito/i,/automation|automatizz/i,/script/i,/notion/i,/prompt/i,/email/i]},
+  {cat:'business',   rx:[/e-?commerce/i,/client/i,/newsletter/i,/landing/i,/pitch/i,/startup/i,/fatturat/i]},
+  {cat:'salute',     rx:[/sonno/i,/medit/i,/stress/i,/aliment/i,/dieta/i,/peso/i,/salut/i]},
+  {cat:'casa',       rx:[/trasl/i,/arred/i,/ristrutt/i,/puliz/i,/organizz/i,/declutter/i]}
+];
+function detectCategory(q){
+  const t=(q||'').toLowerCase();
+  for(const row of CAT_RX){ if(row.rx.some(r=>r.test(t))) return row.cat; }
+  if(/\b(\d+)\s?(km|k|€|euro|%|giorni|settimane|mesi)\b/i.test(t)) return 'soldi';
+  return 'lavoro';
 }
 
-/* ==== Azuffamento (solo per Sorprendimi) ==== */
-function buildScuffleExtra(cat){
+/* 2) Feature extraction per la % */
+function extractFeatures(q){
+  const t=(q||'').toLowerCase();
+  const hasTime = /(30|7|14|21|60|90)\s*(giorn|gg)|settim|mesi?|this week|in \d+ (days?|weeks?|months?)/i.test(t);
+  const hasNumber = /\b\d+([.,]\d+)?\b/.test(t);
+  const hasBudget = /(budget|€|euro|spesa|max|sotto)/i.test(t);
+  const hasConstraint = /(senza|solo|al massimo|minimo|entro|prima delle|dalle|ogni|per)/i.test(t);
+  const hasActionVerb = /(lancia(re)?|apri(re)?|impara(re)?|scrivi(re)?|chiedi(re)?|corri(re)?|studia(re)?|automatizza(re)?|testa(re)?)/i.test(t);
+  const vague = /(forse|provare|vedere|magari|un po')/i.test(t);
+  return {hasTime,hasNumber,hasBudget,hasConstraint,hasActionVerb,vague};
+}
+
+/* 3) Percentuale (deterministica + jitter e taratura per stile/categoria) */
+function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+function computeProbability(q){
+  const cat = detectCategory(q);
+  const f = extractFeatures(q);
+  let score = 50;
+  if(f.hasTime)       score += 12;
+  if(f.hasNumber)     score += 8;
+  if(f.hasBudget)     score += 6;
+  if(f.hasConstraint) score += 8;
+  if(f.hasActionVerb) score += 6;
+  if(f.vague)         score -= 8;
+  if(!f.hasTime && !f.hasNumber) score -= 6;
+
+  const catAdj = { lavoro:+4, studio:+5, soldi:+3, sport:+2, relazioni:+1,
+                   viaggi:+2, tech:+5, business:+3, salute:+2, casa:+1 }[cat] || 0;
+  score += catAdj;
+
+  // stile: wtf abbassa leggermente; whatif alza leggermente
+  score += (style==='wtf' ? -4 : +2);
+
+  // jitter minimo stabile
+  const seed = Array.from(cat + JSON.stringify(f)).reduce((a,c)=>a+c.charCodeAt(0),0);
+  score += (seed % 7) - 3;
+
+  return { pct: clamp(Math.round(score), 25, 92), cat, f };
+}
+
+/* 4) Banco motivazioni per categoria + rotazione */
+const MOTIVES = {
+  lavoro: {
+    why: [
+      "impatto diretto su reddito e crescita professionale",
+      "benefici rapidi misurabili in colloqui e opportunità",
+      "processo con passi chiari e ripetibili",
+      "network attivabile subito con azioni a basso costo",
+      "feedback frequente che accelera l’apprendimento"
+    ],
+    constraints: [
+      "tempo di preparazione CV/portfolio",
+      "outreach quotidiano costante",
+      "coerenza tra ruolo target e competenze attuali",
+      "qualità delle candidature inviate"
+    ]
+  },
+  studio: {
+    why: [
+      "curriculum modulare che favorisce micro-progressi",
+      "obiettivi misurabili (quiz, pagine, ore)",
+      "materiali accessibili e gratuiti",
+      "ritmi brevi che riducono la frizione all’avvio"
+    ],
+    constraints:[
+      "slot giornalieri fissi",
+      "ambiente senza distrazioni",
+      "piano di revisione settimanale"
+    ]
+  },
+  soldi: {
+    why:[
+      "risultati visibili su numeri e grafici",
+      "interventi a basso costo con effetto immediato",
+      "regole semplici da automatizzare"
+    ],
+    constraints:[
+      "tracciamento spese puntuale",
+      "disciplina su categorie ‘trigger’",
+      "cuscinetto per imprevisti mensili"
+    ]
+  },
+  sport: {
+    why:[
+      "protocollo progressivo e sostenibile",
+      "recupero previsto che limita gli infortuni",
+      "ricompense rapide su energia e sonno"
+    ],
+    constraints:[
+      "calendario coerente con orari di lavoro",
+      "attrezzatura minima disponibile",
+      "monitoraggio del carico"
+    ]
+  },
+  relazioni: {
+    why:[
+      "azioni piccole ma ad alta leva emotiva",
+      "ritualità settimanali che consolidano abitudini",
+      "feedback immediato delle persone coinvolte"
+    ],
+    constraints:[
+      "confini di tempo chiari",
+      "aspettative condivise",
+      "rispetto dei ritmi altrui"
+    ]
+  },
+  viaggi: {
+    why:[
+      "piano a vincoli noti (budget, date, tratte)",
+      "tolleranza agli imprevisti con alternative",
+      "benefici emotivi che rinforzano l’aderenza"
+    ],
+    constraints:[
+      "finestre di prenotazione realistiche",
+      "gestione dei costi variabili",
+      "documenti e logistica pronti"
+    ]
+  },
+  tech: {
+    why:[
+      "tool disponibili subito e spesso gratuiti",
+      "processi automatizzabili con poche integrazioni",
+      "metriche chiare di successo (tempo risparmiato)"
+    ],
+    constraints:[
+      "qualità dei dati in ingresso",
+      "sicurezza/permessi",
+      "manutenzione dello script"
+    ]
+  },
+  business: {
+    why:[
+      "validazione veloce con esperimenti piccoli",
+      "ciclo build-measure-learn rapido",
+      "canali di acquisizione testabili a budget ridotto"
+    ],
+    constraints:[
+      "ipotesi di valore/fatturazione chiare",
+      "campione clienti sufficiente",
+      "tempo dedicato a iterazioni"
+    ]
+  },
+  salute: {
+    why:[
+      "protocollo semplice con tracciamento",
+      "rinforzi positivi già dalla prima settimana",
+      "riduzione dello stress come co-beneficio"
+    ],
+    constraints:[
+      "aderenza a pasti e sonno",
+      "progressione graduale",
+      "attenzione a condizioni pregresse"
+    ]
+  },
+  casa: {
+    why:[
+      "progetto finito con milestone visibili",
+      "regole pratiche di decluttering",
+      "benefici immediati su comfort e concentrazione"
+    ],
+    constraints:[
+      "tempo dedicato per stanze/blocchi",
+      "materiali e attrezzatura disponibili",
+      "smaltimento oggetti pianificato"
+    ]
+  }
+};
+
+function rotateIndex(key, max){
+  const i = ((+LS.getItem(key)||0)+1)%max;
+  LS.setItem(key, String(i));
+  return i;
+}
+
+function buildSeriousMotivation(question){
+  const { pct, cat, f } = computeProbability(question);
+  const bank = MOTIVES[cat] || MOTIVES.lavoro;
+
+  const lead = pick(["Motivo","Motivazione","Perché può funzionare","Perché è credibile"]);
+  const lead2 = pick(["Vincoli chiave","Condizioni di riuscita","Attenzioni/limiti","Dipende da"]);
+  const join = pick([", ", "; ", " — "]);
+
+  const iWhy = rotateIndex("mot_w_"+cat, bank.why.length);
+  const iCon = rotateIndex("mot_c_"+cat, bank.constraints.length);
+
+  const reason1 = bank.why[iWhy];
+  const reason2 = pick(bank.why.filter((_,k)=>k!==iWhy));
+  const cons1 = bank.constraints[iCon];
+  const cons2 = pick(bank.constraints.filter((_,k)=>k!==iCon));
+
+  const horizonHint = f.hasTime ? pick([
+    "il time-box riduce la procrastinazione",
+    "l’orizzonte chiaro aumenta l’aderenza",
+    "scadenze esplicite facilitano il completamento"
+  ]) : pick([
+    "aggiungere un time-box può aumentare le chance",
+    "definire una scadenza rende il piano più solido",
+    "un orizzonte esplicito aiuterebbe il follow-through"
+  ]);
+
+  const text =
+    `${lead}: ${reason1}${join}${reason2}. `+
+    `${lead2}: ${cons1}${join}${cons2}; ${horizonHint}.`;
+
+  // anti repeat su domande simili
+  const key = (question||'').toLowerCase().replace(/\s+/g,' ').slice(0,120);
+  const recent = JSON.parse(LS.getItem('mot_recent')||'[]');
+  if(recent.includes(key)){
+    return { pct, text: text.replace(/\.$/,' — variazione consigliata: micro-esperimento e checkpoint settimanale.') };
+  }
+  recent.unshift(key);
+  LS.setItem('mot_recent', JSON.stringify(recent.slice(0,30)));
+  return { pct, text };
+}
+
+/* ======== 😈 Modalità “Sorprendimi” (comitato) ======== */
+function buildScuffleExtra(){
   const minor = rndInt(1,5);
   const injured = rndInt(0,3);
   const hosp = Math.min(injured, rndInt(0,2));
@@ -429,14 +646,12 @@ function buildScuffleExtra(cat){
   ];
   return pick(extras);
 }
-
-/* ==== Comitato singolo + voti (per Sorprendimi) ==== */
 function buildCommittee(){
   const cat = pick(CATEGORIES);
   const name = (lang==='it') ? cat.name_it : cat.name_en;
   const notePool = (lang==='it') ? (cat.notes_it||[]) : (cat.notes_en||[]);
   const note = pick(notePool.length?notePool:["—"]);
-  return { ico:cat.ico, name, note, cat };
+  return { ico:cat.ico, name, note };
 }
 function renderCommittee(item){
   const T = I18N[lang] || I18N.it;
@@ -444,78 +659,24 @@ function renderCommittee(item){
   motIco.textContent  = item.ico;
   motName.textContent = item.name;
   chipsWrap.style.display = 'flex';
-  const rndInt=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-  chipFav.textContent = `favorevoli ${rndInt(50, item.cat.ico==='🕊️'?3000:1200)}`;
-  chipCon.textContent = `contrari ${rndInt(0, 900)}`;
-  chipAst.textContent = `astenuti ${rndInt(0, 400)}`;
-  const rissa = buildScuffleExtra(item.cat);
-  motNote.textContent = `${item.note} ${rissa}`;
+  const r=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+  chipFav.textContent = `favorevoli ${r(120, 1200)}`;
+  chipCon.textContent = `contrari ${r(0, 900)}`;
+  chipAst.textContent = `astenuti ${r(0, 400)}`;
+  motNote.textContent = `${item.note} ${buildScuffleExtra()}`;
 }
 
-/* ==== Motivazione seria (per What if normale) ==== */
-function buildSeriousRationale(answer, style){
-  const base = (answer||"").toLowerCase();
-  let key = (lang==='it')
-    ? "allineamento tra risorse, tempi e impatto"
-    : "alignment of resources, timing and impact";
-
-  if(/budget|costi|cost|budget/i.test(base))
-    key = (lang==='it')?"sostenibilità economica e controllo costi":"economic sustainability and cost control";
-  else if(/temp|scaden|deadlin|tim(e|ing)/i.test(base))
-    key = (lang==='it')?"tempistiche realistiche e milestones verificabili":"realistic timelines and verifiable milestones";
-  else if(/risch|critic|risk|issue/i.test(base))
-    key = (lang==='it')?"rischi principali e mitigazioni pronte":"key risks with ready mitigations";
-  else if(/team|persone|people/i.test(base))
-    key = (lang==='it')?"competenze adeguate e ruoli chiari":"adequate skills and clear roles";
-  else if(/dati|analisi|data|evidence/i.test(base))
-    key = (lang==='it')?"evidenze coerenti con l'obiettivo":"evidence consistent with the goal";
-
-  if(style==='wtf'){
-    return (lang==='it')
-      ? `Valutazione scientificamente fondata: focus su ${key}.`
-      : `Scientifically grounded evaluation: focus on ${key}.`;
-  }
-  return (lang==='it')
-    ? `Motivo: ${key}; vincoli noti e piano d’azione sintetico e misurabile.`
-    : `Reason: ${key}; known constraints and a concise, measurable action plan.`;
-}
-
-/* ==== Motivazioni scientifiche assurde e brevi (What the F manual/spunti) ==== */
+/* ==== Motivazioni pseudo-scientifiche brevi (WT F normale) ==== */
 const SCI_MOTIVATIONS = {
-  it: [
-    "Studio CEDSA (Centro Europeo di Dinamiche Surreali e Alcol): 312 soggetti, 2 cavie sbronze, 4 assetti clinici. Conclusione: aumento statistico del 87% (p≈0.02).",
-    "Protocollo PignaLab, Università Improbabile di Pisa-Marte: test su 98 partecipanti + 1 piccione. Risultato replicato, intervallo di confidenza sorprendente.",
-    "Istituto Svizzero Formaggi & Motivazione: RCT su 120 persone; gruppo con formaggio ha +72% successo. Condotto con 3 ricercatori post-apéritif.",
-    "Dip. Neuro-Motivazionale, Accademia Internazionale dell'Assurdo: 11 ingegneri, 2 cani, modello calibrato — effetto robusto, replicabile su scala ridotta.",
-    "Laboratorio di Bio-Psicostatistica di Bologna-Follia: 4921 casi + 7 piccioni determinati; azione immediata = +1220% output esistenziale (valore esagerato, verificato internamente)."
+  it:[
+    "Studio CEDSA: 312 soggetti + 2 cavie alticce; effetto stimato all’87% (p≈0,02).",
+    "Protocollo PignaLab: 98 partecipanti + 1 piccione; risultato replicato, CI sorprendente.",
+    "Istituto Svizzero Formaggi & Motivazione: RCT (n=120); gruppo formaggio +72% successo."
   ],
-  en: [
-    "CEDSA Study (Center for European Delirious and Spirits Analysis): 312 subjects, 2 drunken guinea-animals, 4 clinical arms. Outcome: 87% effect (p≈0.02).",
-    "PineCone Protocol, Improbable University of Pisa-Mars: 98 participants + 1 pigeon. Replicated result with surprising CI.",
-    "Swiss Institute of Cheese & Motivation: RCT on 120 people; cheese group +72% success. Conducted by 3 post-apéritif researchers.",
-    "Dept. of Neuro-Motivation, International Academy of Absurdity: 11 engineers, 2 dogs — calibrated model; robust small-scale effect.",
-    "Bio-Psycho-Stat Lab, Bologna-Folly: 4921 human cases + 7 determined pigeons; immediate action => +1220% existential output (internally verified)."
-  ],
-  es: [
-    "Estudio CEDSA (Centro Europeo de Dinámicas Surreales y Alcohol): 312 sujetos, 2 cobayas ebrias, 4 brazos clínicos. Resultado: efecto 87% (p≈0.02).",
-    "Protocolo Piña, Universidad Improbable de Pisa-Marte: 98 participantes + 1 paloma. Resultado replicado, IC sorprendente.",
-    "Instituto Suizo de Queso y Motivación: ECA con 120 personas; grupo queso +72% éxito. Conductores: 3 investigadores post-aperitivo.",
-    "Dept. Neuro-Motivacional, Academia Internacional del Absurdo: 11 ingenieros, 2 perros — modelo calibrado; efecto robusto en pequeña escala.",
-    "Lab Bio-Psico-Estadístico de Bolonia-Locura: 4921 casos humanos + 7 palomas; acción inmediata => +1220% output existencial (verificado internamente)."
-  ],
-  fr: [
-    "Étude CEDSA (Centre Européen de Dynamiques Surréalistes & Apéritif): 312 sujets, 2 cobayes ivres, 4 bras cliniques. Effet: 87% (p≈0.02).",
-    "Protocole Pigne, Université Improbable de Pise-Mars: 98 participants + 1 pigeon. Résultat reproduit, IC surprenant.",
-    "Institut Suisse du Fromage & Motivation: ECA sur 120 personnes; groupe fromage +72% de réussite. Réalisé par 3 chercheurs post-apéro.",
-    "Dept. Neuro-Motivation, Académie Internationale de l'Absurde: 11 ingénieurs, 2 chiens — modèle calibré; effet robuste à petite échelle.",
-    "Lab Bio-Psycho-Stat, Bologne-Folie: 4921 cas humains + 7 pigeons; action immédiate => +1220% d'output existentiel (vérifié en interne)."
-  ],
-  de: [
-    "CEDSA-Studie (Zentrum für Europäische Surreale Dynamik & Schnaps): 312 Probanden, 2 betrunkene Versuchstiere, 4 klinische Arme. Effekt: 87% (p≈0.02).",
-    "Protokoll Zapfen, Unwahrscheinliche Universität Pisa-Mars: 98 Teilnehmende + 1 Taube. Repliziertes Ergebnis, überraschendes KI.",
-    "Schweizer Institut für Käse & Motivation: RCT mit 120 Personen; Käse-Gruppe +72% Erfolg. Durchgeführt von 3 post-Apéritif Forschern.",
-    "Dept. Neuro-Motivation, Internationale Akademie des Absurden: 11 Ingenieure, 2 Hunde — kalibriertes Modell; robuster Effekt in Kleinserie.",
-    "Bio-Psycho-Stat Labor Bologna-Wahnsinn: 4921 Fälle + 7 entschlossene Tauben; sofortige Aktion => +1220% existenzieller Output (intern geprüft)."
+  en:[
+    "CEDSA study: 312 subjects + 2 tipsy guinea animals; estimated effect 87% (p≈0.02).",
+    "PineCone protocol: 98 participants + 1 pigeon; replicated result, surprising CI.",
+    "Swiss Institute of Cheese & Motivation: RCT (n=120); cheese group +72% success."
   ]
 };
 function pickScientificMotivation(){
@@ -533,13 +694,16 @@ function isSurprise(req){
       || LS.getItem('absurd_prompt')==='1';
 }
 
-/* ==== Load & fetch ==== */
+/* ==== Load & render ==== */
 (async ()=>{
   const req = JSON.parse(LS.getItem('whatif_request')||'{}');
   const surprise = isSurprise(req);
 
   // domanda
   let domanda = req.domanda || LS.getItem('domanda') || "";
+  // Titles/UI
+  const T = I18N[lang] || I18N.it;
+  setText('#title', style==='wtf' ? T.titleWTF : T.titleWHF);
   setTitlesAndTexts(domanda);
   qs('#qView').textContent = domanda || '—';
 
@@ -563,35 +727,31 @@ function isSurprise(req){
     qs('#answer').textContent = answerText;
     decorateEmBits(qs('#answer'));
 
-    // >>> % in alto e sotto
-    const pct = buildPrimaryPct({style, surprise});
-    renderPctAll(pct);
-
-    // >>> Vista risultato:
-    const T = I18N[lang] || I18N.it;
+    // === Motivazione & %
+    const mot = buildSeriousMotivation(domanda);
+    const pctStr = mot.pct + "%";
+    topPct.textContent = pctStr;
+    bottomPct.textContent = pctStr;
 
     if (surprise){
-      // Mostra COMITATO con zuffa e voti (Sorprendimi)
+      // COMITATO (sorpresa)
       motIco.style.display = '';
       chipsWrap.style.display = 'flex';
       renderCommittee(buildCommittee());
       committeeTitle.textContent = committeeTitle.textContent || (T.votersTitle || 'Comitato');
+      // N.B. teniamo la % dalla stessa engine (non random)
     } else {
-      // Modalità NORMALE: NIENTE comitato, SOLO motivazione
+      // NORMALE: niente comitato, SOLO motivazione
       const title = (style==='wtf') ? T.scientificTitle : T.seriousTitle;
       committeeTitle.textContent = title;
       motIco.style.display = 'none';
       chipsWrap.style.display = 'none';
-      if (style==='wtf'){
-        motNote.textContent = pickScientificMotivation();   // scientifica breve, multi-lingua
-      } else {
-        motNote.textContent = buildSeriousRationale(answerText, style); // what-if serio
-      }
+      motNote.textContent = (style==='wtf') ? pickScientificMotivation() : mot.text;
     }
 
     // storia
     const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise });
+    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:mot.pct, motivazione: (style==='wtf')? undefined : mot.text });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
   }catch(e){
     qs('#answer').textContent = (I18N[lang]||I18N.it).error;
