@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>What?f — Admin Dashboard v2</title>
   <meta name="theme-color" content="#0A0F14"/>
   <link rel="preconnect" href="https://cdn.jsdelivr.net"/>
@@ -16,9 +16,10 @@
       --shadow:0 0 14px rgba(0,0,0,.35);
     }
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Roboto,Arial,sans-serif}
     h1,h2,h3{margin:0 0 10px}
-    main{max-width:1200px;margin:auto;padding:18px}
+    main{max-width:1200px;margin:auto;padding:18px;padding-bottom:calc(120px + env(safe-area-inset-bottom,0px))}
     .grid{display:grid;gap:14px}
     @media(min-width:900px){.cols-2{grid-template-columns:1fr 1fr}}
     .card{
@@ -32,23 +33,34 @@
     .ok{color:var(--ok)} .bad{color:var(--danger)}
 
     button,input,select{
-      border:none;border-radius:10px;padding:10px 12px;font-size:14px;color:#fff;appearance:none
+      border:none;border-radius:12px;padding:12px 14px;font-size:15px;color:#fff;appearance:none
     }
-    button{cursor:pointer;font-weight:700}
+    button{cursor:pointer;font-weight:800}
     .primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#001014}
-    .ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12)}
+    .ghost{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
     .danger{background:var(--danger)}
 
     table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
-    th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.09);text-align:left;vertical-align:top}
+    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.09);text-align:left;vertical-align:top}
     th{font-weight:700}
     input::placeholder{color:#b9c4c9}
 
-    /* Mobile tap target */
-    @media(max-width:480px){
-      button,input,select{padding:12px 14px;font-size:16px}
-      th,td{padding:10px}
+    /* Mobile friendliness */
+    .table-wrap{overflow:auto;-webkit-overflow-scrolling:touch}
+    .filters-sticky{position:sticky;top:0;z-index:5;background:var(--glass);padding:8px 0}
+
+    /* Sticky bottom action bar */
+    .actions-sticky{
+      position:fixed;left:0;right:0;bottom:0;z-index:50;
+      padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));
+      background:linear-gradient(180deg,rgba(10,15,20,0),rgba(10,15,20,.85) 35%,rgba(10,15,20,.95));
+      border-top:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(10px)
     }
+    .actions-sticky .bar{
+      display:flex;gap:10px;flex-wrap:wrap;justify-content:center
+    }
+    .actions-sticky button{min-width:130px}
   </style>
 </head>
 <body>
@@ -73,7 +85,7 @@
       <div class="row"><span class="muted">Token:</span> <span id="tok" class="badge">—</span> <span class="muted">Tipo:</span> <span id="usertype" class="badge">free</span></div>
       <div class="row"><span class="muted">Crediti oggi:</span> <span id="credits" class="badge">—</span></div>
       <div class="row" style="margin-top:6px">
-        <input id="pin" type="password" placeholder="PIN admin" autocomplete="current-password"/>
+        <input id="pin" type="password" placeholder="PIN admin" autocomplete="current-password" style="flex:1;min-width:200px"/>
         <button id="enter" class="primary">Entra admin</button>
       </div>
       <div class="row" style="margin-top:6px">
@@ -93,7 +105,7 @@
       <button id="btnAuto" class="ghost">Auto-refresh</button>
       <button id="btnClear" class="ghost">Svuota log server</button>
       <button id="btnExport" class="ghost">Export CSV</button>
-      <button id="btnReset" class="danger right">Reset totale</button>
+      <label class="row right" style="gap:6px"><input type="checkbox" id="maskIp" checked/> <span class="muted">IP mascherati</span></label>
     </div>
     <div class="row" style="margin-top:8px">
       <label>Trend giorni:
@@ -106,7 +118,6 @@
           <option value="100">100</option><option value="200" selected>200</option><option value="400">400</option>
         </select>
       </label>
-      <label class="row"><input type="checkbox" id="maskIp" checked/> <span class="muted">IP mascherati</span></label>
       <span class="muted right" id="ts"></span>
     </div>
   </div>
@@ -129,43 +140,56 @@
   <!-- Domande di oggi -->
   <div class="card" style="margin-top:14px">
     <h3>Domande di oggi</h3>
-    <table id="tblToday">
-      <thead><tr><th>Ora</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th></tr></thead>
-      <tbody></tbody>
-    </table>
+    <div class="table-wrap">
+      <table id="tblToday">
+        <thead><tr><th>Ora</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Log completo -->
   <div class="card" style="margin-top:14px">
-    <div class="row" style="justify-content:space-between">
-      <h3>Log richieste</h3>
-      <div class="row">
-        <select id="fStyle"><option value="">Stile: tutti</option><option>whatif</option><option>wtf</option></select>
-        <select id="fLang"><option value="">Lingua: tutte</option><option>it</option><option>en</option><option>es</option><option>fr</option><option>de</option></select>
-        <select id="fPeriod"><option value="">Tempo: tutti</option><option>past</option><option>future</option></select>
-        <select id="fUser"><option value="">Utente: tutti</option><option>free</option><option>pro</option><option>admin</option></select>
-        <input id="q" placeholder="Cerca nella domanda…" style="min-width:220px"/>
+    <div class="filters-sticky">
+      <div class="row" style="justify-content:space-between">
+        <h3 style="margin:0">Log richieste</h3>
+        <div class="row">
+          <select id="fStyle"><option value="">Stile: tutti</option><option>whatif</option><option>wtf</option></select>
+          <select id="fLang"><option value="">Lingua: tutte</option><option>it</option><option>en</option><option>es</option><option>fr</option><option>de</option></select>
+          <select id="fPeriod"><option value="">Tempo: tutti</option><option>past</option><option>future</option></select>
+          <select id="fUser"><option value="">Utente: tutti</option><option>free</option><option>pro</option><option>admin</option></select>
+          <input id="q" placeholder="Cerca nella domanda…" style="min-width:220px"/>
+        </div>
       </div>
     </div>
-    <table id="tbl">
-      <thead><tr><th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th></tr></thead>
-      <tbody></tbody>
-    </table>
+    <div class="table-wrap">
+      <table id="tbl">
+        <thead><tr><th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 </main>
 
+<!-- Sticky bottom action bar (sempre visibile) -->
+<div class="actions-sticky">
+  <div class="bar">
+    <button id="bAuto" class="ghost">Auto</button>
+    <button id="bRefresh" class="primary">Aggiorna</button>
+    <button id="bExport" class="ghost">Export</button>
+    <button id="bClear" class="ghost">Svuota</button>
+    <button id="bReset" class="danger">Reset</button>
+  </div>
+</div>
+
 <script>
-/* ====== Costanti / stato ====== */
-const LS = localStorage, TKEY="admin_token", PROKEY="whatif_prefs";
+/*** ===== BASE ===== ***/
+const LS=localStorage, TKEY="admin_token", PROKEY="whatif_prefs";
 let chart=null, auto=null, lastItems=[];
 
-/* ====== Utils UI ====== */
-const $=s=>document.querySelector(s);
-function setBadge(id,v){ const el=document.getElementById(id); if(el) el.textContent=v; }
-function fmtDate(ts){
-  const d=new Date(ts||Date.now());
-  return d.toLocaleString('it-IT',{ day:'2-digit',month:'2-digit', hour:'2-digit', minute:'2-digit' });
-}
+const $ = sel => document.querySelector(sel);
+function setBadge(id, text){ const el=document.getElementById(id); if(el) el.textContent = text; }
+function fmtDate(ts){ const d=new Date(ts||Date.now()); return d.toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
 function getTok(){ return LS.getItem(TKEY)||""; }
 function setTok(t){ if(t) LS.setItem(TKEY,t); else LS.removeItem(TKEY); setBadge("tok", t? t.slice(0,6)+"…"+t.slice(-4): "—"); }
 function setProUI(){ try{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); setBadge("usertype", p.pro?"pro":"free"); }catch{} }
@@ -175,12 +199,11 @@ function setStatus(msg, good=null){
 }
 function prettyKV(obj){
   if(!obj) return "—";
-  return Object.entries(obj)
-    .sort((a,b)=>String(b[1]).localeCompare(String(a[1]),undefined,{numeric:true}))
+  return Object.entries(obj).sort((a,b)=>String(b[1]).localeCompare(String(a[1]),undefined,{numeric:true}))
     .map(([k,v])=>`${k}:${v}`).join(" · ");
 }
 
-/* ====== Admin & server ====== */
+/*** ===== ADMIN CHECK ===== ***/
 async function adminCheck(){
   try{
     const start = performance.now();
@@ -198,7 +221,20 @@ async function adminCheck(){
   }catch{ setBadge("srvStatus","offline"); return false; }
 }
 
-/* ====== Normalizzazione ====== */
+/*** ===== GRAFICO ===== ***/
+function renderTrend(tr){
+  const ctx=$("#trendChart").getContext("2d");
+  if(chart) chart.destroy();
+  chart=new Chart(ctx,{type:"line",
+    data:{labels: tr.labels||[],
+      datasets:[
+        {label:"What If",data:tr.whatif||[],borderColor:"#00E0FF",tension:.3},
+        {label:"What the F",data:tr.wtf||[],borderColor:"#1AFFD5",tension:.3}
+      ]},
+    options:{responsive:true,plugins:{legend:{labels:{color:"#A0B2BA"}}},scales:{x:{ticks:{color:"#A0B2BA"}},y:{ticks:{color:"#A0B2BA"}}}}});
+}
+
+/*** ===== NORMALIZZAZIONE ===== ***/
 function normItem(raw){
   const dom = raw.domanda ?? raw.question ?? raw.q ?? raw.input ?? "";
   const txt = (typeof dom === "string") ? dom : JSON.stringify(dom);
@@ -216,12 +252,12 @@ function normItem(raw){
 }
 function normalizeArray(arr){ return (arr||[]).map(normItem); }
 
-/* ====== Tabelle ====== */
+/*** ===== TABELLE ===== ***/
 function drawTable(items){
   lastItems = items||[];
   const fs=$("#fStyle").value, fl=$("#fLang").value,
         fp=$("#fPeriod").value, fu=$("#fUser").value,
-        q=$("#q").value.toLowerCase();
+        q=($("#q").value||"").toLowerCase();
 
   const rows=lastItems.filter(x=>{
     if(fs && x.style!==fs) return false;
@@ -235,54 +271,32 @@ function drawTable(items){
   const tb=$("#tbl tbody"); tb.innerHTML="";
   for(const it of rows){
     const tr=document.createElement("tr");
-    const cell = (t)=>{const td=document.createElement("td"); td.textContent=t; return td;};
+    const c = (t)=>{const td=document.createElement("td"); td.textContent=t; return td;};
     tr.append(
-      cell(fmtDate(it.ts)), cell(it.ip||""), cell(it.user_type||""), cell(it.style||""),
-      cell(it.lang||""), cell(it.periodo||""), cell(String(it.answer_chars||0)),
-      cell(String(it.domanda||"").slice(0,250))
+      c(fmtDate(it.ts)), c(it.ip||""), c(it.user_type||""), c(it.style||""),
+      c(it.lang||""), c(it.periodo||""), c(String(it.answer_chars||0)),
+      c(String(it.domanda||"").slice(0,250))
     );
     tb.appendChild(tr);
   }
 
-  // today table
   const today = new Date().toISOString().slice(0,10);
   const tb2=$("#tblToday tbody"); tb2.innerHTML="";
   for(const it of rows){
     const d=new Date(it.ts); const day=d.toISOString().slice(0,10);
     if(day!==today) continue;
     const tr=document.createElement("tr");
-    const cell = (t)=>{const td=document.createElement("td"); td.textContent=t; return td;};
+    const c = (t)=>{const td=document.createElement("td"); td.textContent=t; return td;};
     tr.append(
-      cell(d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})),
-      cell(it.ip||""), cell(it.user_type||""), cell(it.style||""), cell(it.lang||""), cell(it.periodo||""),
-      cell(String(it.answer_chars||0)), cell(String(it.domanda||"").slice(0,250))
+      c(d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})),
+      c(it.ip||""), c(it.user_type||""), c(it.style||""), c(it.lang||""), c(it.periodo||""),
+      c(String(it.answer_chars||0)), c(String(it.domanda||"").slice(0,250))
     );
     tb2.appendChild(tr);
   }
 }
 
-/* ====== Grafico ====== */
-function renderTrend(tr){
-  const ctx=$("#trendChart").getContext("2d");
-  if(chart) chart.destroy();
-  const labels = tr.labels || [];
-  const whatif = tr.whatif || tr.dataWhatIf || [];
-  const wtf    = tr.wtf    || tr.dataWtf    || [];
-  chart=new Chart(ctx,{
-    type:"line",
-    data:{ labels, datasets:[
-      { label:"What If", data: whatif, borderColor:"#00E0FF", tension:.3 },
-      { label:"What the F", data: wtf, borderColor:"#1AFFD5", tension:.3 }
-    ]},
-    options:{
-      responsive:true,
-      plugins:{ legend:{ labels:{ color:"#A0B2BA" } } },
-      scales:{ x:{ ticks:{ color:"#A0B2BA"} }, y:{ ticks:{ color:"#A0B2BA"} } }
-    }
-  });
-}
-
-/* ====== Fallback locale ====== */
+/*** ===== FALLBACK LOCALE ===== ***/
 function readLocalHistory(){ try{ return JSON.parse(LS.getItem("cronologia")||"[]")||[]; }catch{ return []; } }
 function localToItems(arr){
   return (arr||[]).map(x=>({
@@ -302,7 +316,7 @@ function drawLocalFallback(){
   drawTable(items);
 }
 
-/* ====== Load ====== */
+/*** ===== LOAD ===== ***/
 async function loadAll(){
   $("#ts").textContent="Aggiornato: "+new Date().toLocaleTimeString();
   const mask=$("#maskIp").checked ? "1":"0";
@@ -310,7 +324,6 @@ async function loadAll(){
   const days=$("#trend").value || "10";
 
   try{
-    // stats
     const s = await fetch(`/api/admin-stats?days=${days}`,{ headers:{ "x-admin-token": getTok() }});
     if(!s.ok) throw new Error("stats "+s.status);
     const S = await s.json().catch(()=>({}));
@@ -323,7 +336,6 @@ async function loadAll(){
     $("#stUsers").textContent = prettyKV(S.byUserType||{});
     renderTrend(S.trend||{labels:[],whatif:[],wtf:[]});
 
-    // logs
     const r = await fetch(`/api/admin-logs?limit=${limit}&mask=${mask}`,{ headers:{ "x-admin-token": getTok() }});
     if(!r.ok) throw new Error("logs "+r.status);
     const d = await r.json().catch(()=>({}));
@@ -335,7 +347,7 @@ async function loadAll(){
   }
 }
 
-/* ====== CSV / Reset ====== */
+/*** ===== CSV / Reset ===== ***/
 function toCSV(items){
   const head = ['timestamp','ip','user_type','style','lang','periodo','answer_chars','domanda'];
   const esc = v => `"${String(v??'').replace(/"/g,'""')}"`;
@@ -346,28 +358,20 @@ function toCSV(items){
   return lines.join('\n');
 }
 function exportCSV(){
-  const fallback = localToItems(readLocalHistory());
-  const items = lastItems.length ? lastItems : fallback;
-  const csv = toCSV(items);
-  const blob = new Blob([csv], {type:'text/csv'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'whatif_admin_export.csv';
-  a.click();
+  const items = lastItems.length ? lastItems : localToItems(readLocalHistory());
+  const blob = new Blob([toCSV(items)], {type:'text/csv'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'whatif_admin_export.csv'; a.click();
 }
 async function resetAll(){
   if(!confirm("Reset totale? (localStorage + log server)")) return;
-  try{
-    await fetch("/api/admin-logs",{ method:"DELETE", headers:{ "x-admin-token": getTok() }});
-  }catch{}
-  LS.clear();
-  setTok(""); setProUI();
-  drawLocalFallback();
-  setStatus("Reset completato.", true);
+  try{ await fetch("/api/admin-logs",{ method:"DELETE", headers:{ "x-admin-token": getTok() }}); }catch{}
+  LS.clear(); setTok(""); setProUI(); drawLocalFallback(); setStatus("Reset completato.", true);
 }
 
-/* ====== Eventi ====== */
+/*** ===== Eventi ===== ***/
 function bindEvents(){
+  // Pulsanti nel contenuto
   $("#enter").onclick = async ()=>{
     const pin = $("#pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
     const r = await fetch("/api/admin-token",{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ pin })});
@@ -381,25 +385,24 @@ function bindEvents(){
   $("#proOff").onclick = ()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); delete p.pro; LS.setItem(PROKEY,JSON.stringify(p)); setProUI(); };
 
   $("#btnRefresh").onclick = loadAll;
-  $("#btnClear").onclick = async ()=>{
-    if(!confirm("Svuotare i log sul server?")) return;
-    await fetch("/api/admin-logs",{ method:"DELETE", headers:{ "x-admin-token": getTok() }});
-    loadAll();
-  };
+  $("#btnAuto").onclick = ()=>{ if(auto){ clearInterval(auto); auto=null; $("#btnAuto").textContent="Auto-refresh"; setStatus("Auto OFF"); } else { auto=setInterval(loadAll,30000); $("#btnAuto").textContent="Stop auto"; setStatus("Auto ogni 30s…"); } };
   $("#btnExport").onclick = exportCSV;
+  $("#btnClear").onclick = async ()=>{ if(!confirm("Svuotare i log sul server?")) return; await fetch("/api/admin-logs",{ method:"DELETE", headers:{ "x-admin-token": getTok() }}); loadAll(); };
   $("#btnReset").onclick = resetAll;
 
-  $("#btnAuto").onclick = ()=>{
-    if(auto){ clearInterval(auto); auto=null; $("#btnAuto").textContent="Auto-refresh"; setStatus("Auto-refresh OFF"); }
-    else { auto=setInterval(loadAll, 30000); $("#btnAuto").textContent="Stop auto"; setStatus("Auto-refresh ogni 30s…"); }
-  };
+  // Pulsanti nella barra sticky (clonano le azioni principali)
+  $("#bRefresh").onclick = ()=>$("#btnRefresh").click();
+  $("#bAuto").onclick    = ()=>$("#btnAuto").click();
+  $("#bExport").onclick  = ()=>$("#btnExport").click();
+  $("#bClear").onclick   = ()=>$("#btnClear").click();
+  $("#bReset").onclick   = ()=>$("#btnReset").click();
 
   ["fStyle","fLang","fPeriod","fUser","q","limitSel","maskIp","trend"].forEach(id=>{
     document.getElementById(id).addEventListener("input", ()=> drawTable(lastItems));
   });
 }
 
-/* ====== Init ====== */
+/*** ===== Init ===== ***/
 (async function init(){
   setProUI();
   setTok(getTok());
