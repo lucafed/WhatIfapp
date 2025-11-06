@@ -16,11 +16,10 @@
   "theme_color": "#0066FF",
   "categories": ["lifestyle", "entertainment", "creative"],
   "prefer_related_applications": false,
-  "related_applications": [],
 
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/public/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/public/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
 
   "shortcuts": [
@@ -29,46 +28,26 @@
       "short_name": "Scenario",
       "description": "Inizia una nuova domanda",
       "url": "/index.html",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/public/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Profilo rapido",
       "short_name": "Profilo",
       "description": "Aggiorna i tuoi dati per risposte più personali",
       "url": "/second.html",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/public/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Scelte creative",
       "short_name": "Creativo",
       "description": "Scopri la parte più folle del tuo What the F",
       "url": "/fourth.html",
-      "icons": [{ "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }]
+      "icons": [{ "src": "/public/icon-512.png", "sizes": "512x512", "type": "image/png" }]
     }
   ],
 
   "screenshots": [
-    {
-      "src": "/home-hero.png",
-      "type": "image/png",
-      "sizes": "1080x1920",
-      "form_factor": "narrow",
-      "label": "La scelta è l’inizio di ogni universo."
-    },
-    {
-      "src": "/third-hero.png",
-      "type": "image/png",
-      "sizes": "1920x1080",
-      "form_factor": "wide",
-      "label": "La scelta è l’inizio di ogni universo."
-    }
-  ],
-
-  "launch_handler": {
-    "client_mode": "navigate-existing"
-  },
-
-  "edge_side_panel": {
-    "preferred_width": 400
-  }
+    { "src": "/public/home-hero.png",  "type": "image/png", "sizes": "1080x1920", "form_factor": "narrow", "label": "La scelta è l’inizio di ogni universo." },
+    { "src": "/public/third-hero.png", "type": "image/png", "sizes": "1920x1080", "form_factor": "wide",   "label": "La scelta è l’inizio di ogni universo." }
+  ]
 }
