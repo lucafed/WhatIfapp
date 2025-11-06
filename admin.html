@@ -3,353 +3,255 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>What?f — Admin (dashboard)</title>
-  <meta name="theme-color" content="#0B0B0C"/>
+  <title>What?f — Admin Dashboard v2</title>
+  <meta name="theme-color" content="#0A0F14"/>
   <link rel="preconnect" href="https://cdn.jsdelivr.net"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     :root{
-      --bg:#0B0B0C;--card:#13191E;--fg:#EAF2EE;--muted:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01;
-      --ok:#11c46f;--bad:#e85b5b;--line:rgba(255,255,255,.10)
+      --bg:#0A0F14;--surface:#141C22;--accent:#00E0FF;--accent2:#1AFFD5;
+      --text:#FFFFFF;--muted:#A0B2BA;--danger:#e85b5b;--ok:#11c46f;
+      --shadow:0 0 14px rgba(0,0,0,.3);
     }
     *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{max-width:1100px;margin:auto;padding:18px}
-    h1{margin:8px 0 14px;font-size:28px}
-    .grid{display:grid;gap:12px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    input,select{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px}
-    button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
-    .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12}
-    .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
-    .badge{
-      display:inline-block;padding:6px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.06);font-size:12px;line-height:1.2;word-break:break-word;white-space:normal
-    }
-    .kv{display:flex;flex-wrap:wrap;gap:8px}
-    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;table-layout:auto}
-    thead th{position:sticky;top:0;background:rgba(19,25,30,.96);backdrop-filter:blur(4px);z-index:1}
-    th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
-    .ok{color:var(--ok)} .bad{color:var(--bad)} .muted{color:var(--muted)}
-    .nowrap{white-space:nowrap}
-    @media(min-width:900px){ .cols-2{grid-template-columns:1fr 1fr} }
-    .empty{padding:12px;text-align:center;color:var(--muted)}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Roboto,Arial,sans-serif}
+    h1,h2,h3{margin:0 0 10px}
+    main{max-width:1200px;margin:auto;padding:18px}
+    .grid{display:grid;gap:14px}
+    @media(min-width:900px){.cols-2{grid-template-columns:1fr 1fr}}
+    .card{background:rgba(20,28,34,0.85);backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+    button,input,select{border:none;border-radius:10px;padding:10px 12px;font-size:14px;color:#fff}
+    button{cursor:pointer;font-weight:700}
+    .primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#000}
+    .ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)}
+    .danger{background:var(--danger)}
+    .badge{display:inline-block;background:rgba(255,255,255,.08);border-radius:999px;padding:4px 10px;font-size:12px;margin-right:4px}
+    .muted{color:var(--muted)}
+    .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+    th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left}
+    .ok{color:var(--ok)} .bad{color:var(--danger)}
+    .right{margin-left:auto}
+    #statusLine{margin-top:6px}
   </style>
 </head>
 <body>
 <main>
-  <h1>What?f — <span class="muted">Admin (dashboard)</span></h1>
+  <h1>What?f — <span class="muted">Admin Dashboard v2</span></h1>
 
-  <!-- Stato & azioni -->
+  <!-- Stato sistema -->
   <div class="grid cols-2">
     <div class="card">
-      <h3>Operazioni veloci</h3>
+      <h3>Stato sistema</h3>
       <div class="row">
-        <button id="btnRefresh" class="primary">Aggiorna</button>
-        <button id="btnAuto" class="ghost">Auto-refresh</button>
-        <button id="btnClear" class="ghost">Svuota log</button>
+        <span class="badge">Server: <b id="srvStatus">—</b></span>
+        <span class="badge">Ping: <b id="srvPing">—</b> ms</span>
+        <span class="badge">Uptime: <b id="srvUp">—</b></span>
       </div>
-      <div class="row" style="margin-top:8px">
-        <label class="row" style="gap:6px"><input type="checkbox" id="maskIp" checked/> IP mascherati</label>
-        <label>Mostra righe:
-          <select id="win">
-            <option>100</option><option selected>200</option><option>400</option><option>800</option>
-          </select>
-        </label>
-        <label>Trend giorni:
-          <select id="trend">
-            <option>7</option><option selected>10</option><option>14</option><option>30</option>
-          </select>
-        </label>
-        <span class="muted" id="ts"></span>
-      </div>
-      <p class="muted" id="hintOps"></p>
+      <p class="muted" id="statusLine"></p>
     </div>
 
     <div class="card">
-      <h3>Stato utente & crediti (questo device)</h3>
+      <h3>Utente & crediti</h3>
       <div class="row"><span>Admin:</span> <span id="adminState" class="badge">no</span> <span class="muted">IP:</span> <span id="myIp" class="badge">—</span></div>
-      <div class="row" style="margin-top:6px"><span class="muted">Token:</span> <span id="tok" class="badge">—</span> <span class="muted">Tipo:</span> <span id="usertype" class="badge">free</span></div>
-      <div class="row" style="margin-top:6px"><span class="muted">Crediti oggi:</span> <span id="credits" class="badge">—</span></div>
-      <div class="row" style="margin-top:10px">
-        <input id="pin" type="password" placeholder="PIN admin" style="min-width:180px"/>
+      <div class="row"><span class="muted">Token:</span> <span id="tok" class="badge">—</span> <span class="muted">Tipo:</span> <span id="usertype" class="badge">free</span></div>
+      <div class="row"><span class="muted">Crediti oggi:</span> <span id="credits" class="badge">—</span></div>
+      <div class="row" style="margin-top:6px">
+        <input id="pin" type="password" placeholder="PIN admin"/>
         <button id="enter" class="primary">Entra admin</button>
       </div>
-      <div class="row" style="margin-top:8px">
+      <div class="row" style="margin-top:6px">
         <button id="renew" class="ghost">Rinnova (7gg)</button>
         <button id="revoke" class="ghost">Revoca token</button>
+        <button id="proOn" class="ghost">PRO ON</button>
+        <button id="proOff" class="ghost">PRO OFF</button>
       </div>
-      <div class="row" style="margin-top:8px">
-        <button id="proOn" class="ghost">Attiva PRO locale</button>
-        <button id="proOff" class="ghost">Disattiva PRO</button>
-      </div>
-      <p class="muted" id="hint"></p>
+    </div>
+  </div>
+
+  <!-- Operazioni -->
+  <div class="card" style="margin-top:14px">
+    <h3>Operazioni rapide</h3>
+    <div class="row">
+      <button id="btnRefresh" class="primary">Aggiorna</button>
+      <button id="btnAuto" class="ghost">Auto-refresh</button>
+      <button id="btnClear" class="ghost">Svuota log server</button>
+      <button id="btnReset" class="danger right">Reset totale</button>
+      <button id="btnExport" class="ghost">Export CSV</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label>Trend giorni:
+        <select id="trend"><option>7</option><option selected>10</option><option>14</option><option>30</option></select>
+      </label>
+      <label>Limite:
+        <select id="limitSel"><option value="100">100</option><option value="200" selected>200</option><option value="400">400</option></select>
+      </label>
+      <span class="muted right" id="ts"></span>
     </div>
   </div>
 
   <!-- Statistiche -->
-  <div class="card" style="margin-top:12px">
-    <h3>Statistiche globali (finestra caricata)</h3>
-    <div class="kv">
+  <div class="card" style="margin-top:14px">
+    <h3>Statistiche globali</h3>
+    <div class="row">
       <span class="badge">Totale: <b id="stTotal">—</b></span>
       <span class="badge">Oggi: <b id="stToday">—</b></span>
-      <span class="badge">Ultimi 7 g: <b id="stLast7">—</b></span>
+      <span class="badge">Ultimi 7g: <b id="stLast7">—</b></span>
+      <span class="badge">Per stile: <b id="stStyle">—</b></span>
+      <span class="badge">Lingue: <b id="stLang">—</b></span>
+      <span class="badge">Tempo: <b id="stPeriod">—</b></span>
+      <span class="badge">Utenti: <b id="stUsers">—</b></span>
     </div>
-    <div class="kv" style="margin-top:8px">
-      <span class="badge" id="stStyleBox">Per stile: <b id="stStyle">—</b></span>
-      <span class="badge" id="stLangBox">Per lingua: <b id="stLang">—</b></span>
-      <span class="badge" id="stPeriodBox">Per tempo: <b id="stPeriod">—</b></span>
-      <span class="badge" id="stUsersBox">User types: <b id="stUsers">—</b></span>
-    </div>
-    <div style="margin-top:10px"><canvas id="trendChart" height="110" aria-label="Trend richieste" role="img"></canvas></div>
+    <canvas id="trendChart" height="120" style="margin-top:10px"></canvas>
   </div>
 
-  <!-- Log richieste -->
-  <div class="card" style="margin-top:12px">
-    <div class="row" style="justify-content:space-between">
-      <h3 style="margin:0">Log richieste</h3>
-      <label>
-        <select id="limitSel" title="Limite fetch lato server">
-          <option value="100">scarica 100</option>
-          <option value="200" selected>scarica 200</option>
-          <option value="400">scarica 400</option>
-        </select>
-      </label>
-    </div>
-    <div class="row" style="margin-top:6px">
-      <select id="fStyle"><option value="">Stile: tutti</option><option>whatif</option><option>wtf</option></select>
-      <select id="fLang"><option value="">Lingua: tutte</option><option>it</option><option>en</option><option>es</option><option>fr</option><option>de</option></select>
-      <select id="fPeriod"><option value="">Tempo: tutti</option><option>past</option><option>future</option></select>
-      <select id="fUser"><option value="">Tipo utente: tutti</option><option>free</option><option>pro</option><option>admin</option></select>
-      <input id="q" placeholder="Cerca nella domanda…" style="min-width:220px"/>
-    </div>
-    <table id="tbl">
-      <thead>
-        <tr>
-          <th class="nowrap">Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th>
-        </tr>
-      </thead>
+  <!-- Domande di oggi -->
+  <div class="card" style="margin-top:14px">
+    <h3>Domande di oggi</h3>
+    <table id="tblToday">
+      <thead><tr><th>Ora</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th></tr></thead>
       <tbody></tbody>
     </table>
-    <div id="empty" class="empty" style="display:none">Nessun dato da mostrare.</div>
+  </div>
+
+  <!-- Log completo -->
+  <div class="card" style="margin-top:14px">
+    <div class="row" style="justify-content:space-between">
+      <h3>Log richieste</h3>
+      <div class="row">
+        <select id="fStyle"><option value="">Stile: tutti</option><option>whatif</option><option>wtf</option></select>
+        <select id="fLang"><option value="">Lingua: tutte</option><option>it</option><option>en</option><option>es</option><option>fr</option><option>de</option></select>
+        <select id="fPeriod"><option value="">Tempo: tutti</option><option>past</option><option>future</option></select>
+        <select id="fUser"><option value="">Utente: tutti</option><option>free</option><option>pro</option><option>admin</option></select>
+        <input id="q" placeholder="Cerca nella domanda…" style="min-width:220px"/>
+      </div>
+    </div>
+    <table id="tbl">
+      <thead><tr><th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th>Len</th><th>Domanda</th></tr></thead>
+      <tbody></tbody>
+    </table>
   </div>
 </main>
 
 <script>
-/* ===== Utils & stato ===== */
-const LS=localStorage, TKEY="admin_token", PROKEY="whatif_prefs";
-const qs = (sel)=>document.querySelector(sel);
-let chart=null, auto=null, LAST_ITEMS=[];
+const LS=localStorage,TKEY="admin_token",PROKEY="whatif_prefs";
+let chart=null,auto=null,lastItems=[];
 
-function setBadge(id, text){ const el=qs("#"+id); if(el) el.textContent = text; }
-function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString(); }
-function getTok(){ return LS.getItem(TKEY)||""; }
-function setTok(t){ if(t) LS.setItem(TKEY,t); else LS.removeItem(TKEY); setBadge("tok", t? t.slice(0,6)+"…"+t.slice(-4): "—"); }
-function setProUI(){ try{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); setBadge("usertype", p.pro?"pro":"free"); }catch{} }
-function maskIpStr(ip){
-  if(!ip) return "";
-  if(ip.includes(".")){ const p=ip.split("."); if(p.length===4){ p[3]="xxx"; return p.join("."); } }
-  if(ip.includes(":")){ const parts=ip.split(":"); return parts.slice(0,4).join(":")+"::xxxx"; }
-  return ip;
-}
-const fmtKV = (obj)=>!obj||!Object.keys(obj).length? "—" : Object.entries(obj).map(([k,v])=>`${k}: ${v}`).join(" · ");
+// helpers
+const $=s=>document.querySelector(s);
+function fmtDate(ts){const d=new Date(ts);return d.toLocaleString('it-IT',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'});}
+function getTok(){return LS.getItem(TKEY)||"";}
+function setTok(t){if(t)LS.setItem(TKEY,t);else LS.removeItem(TKEY);$("#tok").textContent=t?t.slice(0,6)+"…"+t.slice(-4):"—";}
+function setBadge(id,v){$("#"+id).textContent=v;}
+function setProUI(){try{const p=JSON.parse(LS.getItem(PROKEY)||"{}");setBadge("usertype",p.pro?"pro":"free");}catch{}}
+function setStatus(msg,ok){const el=$("#statusLine");el.textContent=msg;el.className=ok===true?"ok":ok===false?"bad":"muted";}
 
-/* ===== Admin check ===== */
+// admin check + server
 async function adminCheck(){
   try{
-    const r = await fetch("/api/admin-token",{ headers:{ "x-admin-token": getTok() }});
-    const d = await r.json().catch(()=>({}));
-    const yes = !!(d && (d.ok ? (d.admin ?? d.ok) : d.admin));
-    setBadge("adminState", yes?"yes":"no");
-    setBadge("myIp", d?.ip || "—");
-    setBadge("credits", yes?"∞": (JSON.parse(LS.getItem("whatif_credits")||"{}").used||0)+"/(3/10)");
+    const start=performance.now();
+    const r=await fetch("/api/admin-token",{headers:{"x-admin-token":getTok()}});
+    const ping=Math.round(performance.now()-start);
+    setBadge("srvPing",ping);
+    const d=await r.json().catch(()=>({}));
+    const yes=!!(d.ok||d.admin);
+    setBadge("adminState",yes?"yes":"no");
+    setBadge("myIp",d.ip||"—");
+    setBadge("credits",yes?"∞":(JSON.parse(LS.getItem("whatif_credits")||"{}").used||0)+"/(3/10)");
+    setBadge("srvStatus",r.ok?"online":"errore");
+    setBadge("srvUp",d.uptime||"—");
     return yes;
-  }catch{ setBadge("adminState","no"); return false; }
+  }catch{setBadge("srvStatus","offline");return false;}
 }
 
-/* ===== Trend chart ===== */
+// grafico
 function renderTrend(tr){
-  const ctx=qs("#trendChart").getContext("2d");
-  if(chart) chart.destroy();
-  chart=new Chart(ctx,{
-    type:"bar",
-    data:{ labels: tr.labels||[], datasets:[{ label:"Richieste/giorno", data: tr.data||[] }] },
-    options:{ responsive:true, plugins:{ legend:{ display:false }}, scales:{ x:{ grid:{ display:false }}, y:{ beginAtZero:true }}}
-  });
+  const ctx=$("#trendChart").getContext("2d");
+  if(chart)chart.destroy();
+  chart=new Chart(ctx,{type:"line",
+    data:{labels:tr.labels||[],
+      datasets:[
+        {label:"What If",data:tr.whatif||[],borderColor:"#00E0FF",tension:.3},
+        {label:"What the F",data:tr.wtf||[],borderColor:"#1AFFD5",tension:.3}
+      ]},
+    options:{plugins:{legend:{labels:{color:"#A0B2BA"}}},scales:{x:{ticks:{color:"#A0B2BA"}},y:{ticks:{color:"#A0B2BA"}}}}});
 }
 
-/* ===== Tabella ===== */
-function drawTable(items){
-  const fs=qs("#fStyle").value, fl=qs("#fLang").value, fp=qs("#fPeriod").value, fu=qs("#fUser").value,
-        q=(qs("#q").value||"").toLowerCase(), mask=qs("#maskIp").checked, win=parseInt(qs("#win").value||"200",10);
+// normalizzazione
+function normItem(r){
+  const dom=r.domanda||r.question||r.q||"";const ans=r.answer||"";
+  return{
+    ts:r.ts||r.time||Date.now(),ip:r.ip_masked||r.ip||"",
+    user_type:r.user_type||r.userType||"",style:r.style||"",lang:r.lang||"it",
+    periodo:r.periodo||r.period||"",answer_chars:ans.length,domanda:String(dom).trim()
+  };
+}
+function normalizeArray(a){return(a||[]).map(normItem);}
 
-  const sorted=[...(items||[])].sort((a,b)=>(b.ts||0)-(a.ts||0));
-
-  const rows=sorted.filter(x=>{
-    if(fs && x.style!==fs) return false;
-    if(fl && x.lang!==fl) return false;
-    if(fp && x.periodo!==fp) return false;
-    if(fu && x.user_type!==fu) return false;
-    const domanda = (x.domanda ?? x.q ?? x.question ?? x.prompt ?? "");
-    if(q && !String(domanda).toLowerCase().includes(q)) return false;
-    return true;
-  }).slice(0,win);
-
-  const tb=qs("#tbl tbody");
-  tb.innerHTML="";
-  if(rows.length===0){ qs("#empty").style.display="block"; return; }
-  qs("#empty").style.display="none";
-
-  for(const it of rows){
+// tabelle
+function drawTable(tblId,items,filterToday=false){
+  const now=new Date();const todayStr=now.toISOString().slice(0,10);
+  const tb=$(tblId+" tbody");tb.innerHTML="";
+  for(const it of items){
+    const d=new Date(it.ts);const day=d.toISOString().slice(0,10);
+    if(filterToday&&day!==todayStr)continue;
     const tr=document.createElement("tr");
-    const tdQuando=document.createElement("td"); tdQuando.textContent = fmtDate(it.ts); tdQuando.className="nowrap";
-    const tdIp=document.createElement("td"); tdIp.textContent = mask ? maskIpStr(it.ip||"") : (it.ip||"");
-    const tdTipo=document.createElement("td"); tdTipo.textContent = it.user_type || "";
-    const tdStile=document.createElement("td"); tdStile.textContent = it.style || "";
-    const tdLang=document.createElement("td"); tdLang.textContent = it.lang || "";
-    const tdPeriodo=document.createElement("td"); tdPeriodo.textContent = it.periodo || "";
-    const tdLen=document.createElement("td"); tdLen.textContent = String(it.answer_chars || 0);
-    const tdDomanda=document.createElement("td");
-    const domanda = (it.domanda ?? it.q ?? it.question ?? it.prompt ?? "").toString().trim();
-    tdDomanda.textContent = (domanda || "(mascherata)").replace(/\s+/g," ").slice(0,500);
-    tr.append(tdQuando, tdIp, tdTipo, tdStile, tdLang, tdPeriodo, tdLen, tdDomanda);
+    [fmtDate(it.ts),it.ip,it.user_type,it.style,it.lang,it.periodo,it.answer_chars,it.domanda.slice(0,150)].forEach(t=>{
+      const td=document.createElement("td");td.textContent=t;tr.appendChild(td);
+    });
     tb.appendChild(tr);
   }
 }
 
-/* ===== Stats fallback ===== */
-function computeStatsClient(items){
-  const total = items.length;
-  const todayYMD = new Date().toISOString().slice(0,10);
-  const last7cut = Date.now()-7*86400000;
-  const today = items.filter(x=> (new Date(x.ts)).toISOString().slice(0,10)===todayYMD ).length;
-  const last7 = items.filter(x=> (x.ts||0)>=last7cut ).length;
-  const countBy = (key)=> items.reduce((acc,x)=>{ const k=x[key]||""; acc[k]=(acc[k]||0)+1; return acc; },{});
-  return {
-    total, today, last7,
-    byStyle: countBy("style"),
-    byLang: countBy("lang"),
-    byPeriod: countBy("periodo"),
-    byUserType: countBy("user_type")
-  };
-}
-function updateStatsUI(S){
-  setBadge("stTotal", S.total??"0");
-  setBadge("stToday", S.today??"0");
-  setBadge("stLast7", S.last7??"0");
-  qs("#stStyle").textContent  = fmtKV(S.byStyle||{});
-  qs("#stLang").textContent   = fmtKV(S.byLang||{});
-  qs("#stPeriod").textContent = fmtKV(S.byPeriod||{});
-  qs("#stUsers").textContent  = fmtKV(S.byUserType||{});
-  if(S.trend) renderTrend(S.trend);
-}
-
-/* ===== Fetch robusto con fallback mask ===== */
-async function fetchLogsRobust(limit, preferMask0=true){
-  const headers={ "x-admin-token": getTok() };
-  const tryOnce = async (m)=> {
-    const r = await fetch(`/api/admin-logs?limit=${limit}&mask=${m?1:0}`,{ headers });
-    const d = await r.json().catch(()=>({}));
-    let arr = [];
-    if(Array.isArray(d)) arr = d;
-    else if(Array.isArray(d.items)) arr = d.items;
-    else if(Array.isArray(d.logs)) arr = d.logs;
-    else if(Array.isArray(d.data)) arr = d.data;
-    return arr;
-  };
-  let items = await tryOnce(preferMask0?0:1);
-  if(!items || items.length===0){
-    // retry con parametro opposto
-    items = await tryOnce(preferMask0?1:0);
-  }
-  return items||[];
-}
-
-/* ===== Loader ===== */
+// load data
 async function loadAll(){
-  qs("#ts").textContent="Aggiornamento…";
-  const limit=qs("#limitSel").value || "200";
-  const days =qs("#trend").value || "10";
-  const headers={ "x-admin-token": getTok() };
-
-  let stats=null;
+  $("#ts").textContent="Aggiornato: "+new Date().toLocaleTimeString();
   try{
-    const s = await fetch(`/api/admin-stats?days=${days}`,{ headers });
-    if(s.ok){ stats = await s.json(); }
-  }catch{}
-
-  // preferisco mask=0, ma se il server non restituisce nulla passo a mask=1
-  const preferMask0 = true;
-  const items = await fetchLogsRobust(limit, preferMask0);
-  LAST_ITEMS = items;
-
-  if(!stats || typeof stats !== "object" || Object.keys(stats).length===0){
-    const cStats = computeStatsClient(items);
-    // trend locale
-    const N=parseInt(days,10)||10;
-    const map=new Map();
-    for(let i=N-1;i>=0;i--){
-      const dt=new Date(Date.now()-i*86400000);
-      const ymd=dt.toISOString().slice(0,10); map.set(ymd,0);
-    }
-    for(const it of items){
-      const ymd=(new Date(it.ts)).toISOString().slice(0,10);
-      if(map.has(ymd)) map.set(ymd, map.get(ymd)+1);
-    }
-    cStats.trend={ labels:[...map.keys()], data:[...map.values()] };
-    updateStatsUI(cStats);
-  }else{
-    updateStatsUI(stats);
-  }
-
-  drawTable(items);
-  qs("#ts").textContent="Aggiornato: "+new Date().toLocaleString();
+    const s=await fetch(`/api/admin-stats?days=${$("#trend").value}`,{headers:{"x-admin-token":getTok()}});
+    const S=await s.json();
+    setBadge("stTotal",S.total||"0");
+    setBadge("stToday",S.today||"0");
+    setBadge("stLast7",S.last7||"0");
+    $("#stStyle").textContent=Object.entries(S.byStyle||{}).map(([k,v])=>`${k}:${v}`).join(" · ");
+    $("#stLang").textContent=Object.entries(S.byLang||{}).map(([k,v])=>`${k}:${v}`).join(" · ");
+    $("#stPeriod").textContent=Object.entries(S.byPeriod||{}).map(([k,v])=>`${k}:${v}`).join(" · ");
+    $("#stUsers").textContent=Object.entries(S.byUserType||{}).map(([k,v])=>`${k}:${v}`).join(" · ");
+    renderTrend(S.trend||{});
+    const r=await fetch(`/api/admin-logs?limit=${$("#limitSel").value}`,{headers:{"x-admin-token":getTok()}});
+    const d=await r.json();const items=normalizeArray(d.items||d.logs||[]);
+    lastItems=items;drawTable("#tbl",items,false);drawTable("#tblToday",items,true);
+    setStatus("Dati caricati",true);
+  }catch{setStatus("Errore caricamento dati",false);}
 }
 
-/* ===== Eventi ===== */
-qs("#enter").onclick = async ()=>{
-  const pin = qs("#pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
-  const r = await fetch("/api/admin-token",{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ pin })});
-  const d = await r.json().catch(()=>({}));
-  if(r.ok && (d.ok||d.token)){ setTok(d.token||""); qs("#hint").textContent="Login ok. Token legato al tuo IP per ~7gg."; await adminCheck(); loadAll(); }
-  else { alert("PIN errato o errore server"); }
-};
-qs("#renew").onclick = async ()=>{
-  const r = await fetch("/api/admin-token?action=renew",{ method:"POST", headers:{ "x-admin-token": getTok() }});
-  alert(r.ok? "Rinnovato per 7gg" : "Errore rinnovo");
-};
-qs("#revoke").onclick = async ()=>{
-  await fetch("/api/admin-token?action=revoke",{ method:"POST", headers:{ "x-admin-token": getTok() }});
-  setTok(""); await adminCheck();
-};
-qs("#proOn").onclick = ()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); p.pro=true; LS.setItem(PROKEY,JSON.stringify(p)); setProUI(); };
-qs("#proOff").onclick = ()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); delete p.pro; LS.setItem(PROKEY,JSON.stringify(p)); setProUI(); };
+// CSV + reset
+function toCSV(items){const head=['timestamp','ip','user_type','style','lang','periodo','answer_chars','domanda'];
+  const esc=v=>`"${String(v??'').replace(/"/g,'""')}"`;
+  const lines=[head.join(',')].concat(items.map(r=>[r.ts,r.ip,r.user_type,r.style,r.lang,r.periodo,r.answer_chars,r.domanda].map(esc).join(',')));
+  return lines.join('\n');
+}
+function exportCSV(){const csv=toCSV(lastItems);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='whatif_logs.csv';a.click();}
+async function resetAll(){
+  if(!confirm("Reset totale? (cronologia + log server)"))return;
+  LS.clear();
+  await fetch("/api/admin-logs",{method:"DELETE",headers:{"x-admin-token":getTok()}});
+  setTok("");loadAll();
+}
 
-qs("#btnRefresh").onclick = loadAll;
-qs("#btnClear").onclick = async ()=>{
-  if(!confirm("Svuotare i log?")) return;
-  const r = await fetch("/api/admin-logs",{ method:"DELETE", headers:{ "x-admin-token": getTok() }});
-  if(r.ok) loadAll(); else alert("Errore nel pulire i log");
-};
-qs("#btnAuto").onclick = ()=>{
-  if(auto){ clearInterval(auto); auto=null; qs("#btnAuto").textContent="Auto-refresh"; }
-  else { auto=setInterval(loadAll, 5000); qs("#btnAuto").textContent="Stop auto"; }
-};
-/* Filtri che prima non rifacevano la fetch */
-for(const id of ["fStyle","fLang","fPeriod","fUser","q","win"])
-  qs("#"+id).addEventListener("input", ()=>drawTable(LAST_ITEMS));
-for(const id of ["limitSel","maskIp","trend"])
-  qs("#"+id).addEventListener("input", ()=>loadAll());
-
-/* ===== Init ===== */
-(async function init(){
-  setProUI();
-  setTok(getTok());
-  const ok = await adminCheck();
-  if(!ok){ qs("#hintOps").textContent="Suggerimento: fai login admin per sbloccare stats/log completi."; }
-  loadAll();
-})();
-</script>
-</body>
-</html>
+// eventi
+$("#enter").onclick=async()=>{const pin=$("#pin").value.trim();if(!pin)return alert("Inserisci PIN");
+  const r=await fetch("/api/admin-token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pin})});
+  const d=await r.json().catch(()=>({}));
+  if(r.ok&&(d.ok||d.token)){setTok(d.token||d.data?.token||"");await adminCheck();loadAll();}
+  else alert("PIN errato");};
+$("#renew").onclick=()=>fetch("/api/admin-token?action=renew",{method:"POST",headers:{"x-admin-token":getTok()}});
+$("#revoke").onclick=()=>{fetch("/api/admin-token?action=revoke",{method:"POST",headers:{"x-admin-token":getTok()}});setTok("");};
+$("#proOn").onclick=()=>{const p=JSON.parse(LS.getItem(PROKEY)||"{}");p.pro=true;LS.setItem(PROKEY,JSON.stringify(p));setProUI();};
+$("#proOff").onclick=()=>{const p=JSON.parse(LS.getItem(PROKEY)||"{}");delete p.pro;LS.setItem(PROKEY,JSON.stringify(p));setProUI();};
+$("#btnRefresh").onclick=loadAll;
+$("#btnExport").onclick=exportCSV;
+$("#btnClear").onclick=()=>{if(confirm("Svuotare i log server?"))fetch("/api/admin-logs",{method:"DELETE",headers:{"x-admin-token":getTok()}}).then(loadAll);};
+$("#btnReset").onclick=resetAll;
+$("#btnAuto").onclick=()=>{if(auto){clearInterval(auto);auto=null;setStatus("Auto OFF");$("#btnAuto").textContent="Auto-refresh";}
+  else{auto=setInterval(loadAll,30000);
