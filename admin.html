@@ -3,48 +3,78 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>What?f — Admin (dashboard)</title>
+  <title>What?f — Admin</title>
   <meta name="theme-color" content="#0B0B0C"/>
+  <!-- Chart.js per il grafico trend -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     :root{
-      --bg:#0B0B0C; --card:#13191E; --fg:#EAF2EE; --muted:#A0B2BA;
-      --acc:#1C57A0; --acc2:#FFEC01; --line:rgba(255,255,255,.12);
-      --ok:#11c46f; --bad:#e85b5b;
+      --bg:#0B0B0C; --bg2:#0E1216; --card:#13191E; --surface:#151C22;
+      --fg:#EAF2EE; --muted:#A0B2BA; --ink:#0A0E12;
+      --acc:#1C57A0; --acc2:#FFEC01; --glow:rgba(255,236,1,.18);
+      --line:rgba(255,255,255,.12); --ok:#11c46f; --bad:#e85b5b
     }
     *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    body{
+      margin:0; background:
+        radial-gradient(900px 700px at 20% 18%, var(--bg2) 0%, var(--bg) 60%),
+        radial-gradient(600px 480px at 80% 12%, rgba(255,236,1,.05), transparent 60%),
+        radial-gradient(700px 560px at 50% 90%, rgba(28,87,160,.08), transparent 65%);
+      color:var(--fg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;
+    }
     main{max-width:1100px;margin:auto;padding:18px}
-    h1{margin:8px 0 14px;font-size:28px}
-    .grid{display:grid;gap:12px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+    h1{margin:6px 0 14px;font-size:28px;text-shadow:0 0 22px var(--glow)}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid var(--line); border-radius:16px; padding:14px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.05), 0 10px 28px rgba(0,0,0,.28);
+      backdrop-filter: blur(6px);
+    }
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    input,select{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px}
-    button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
-    .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12}
-    .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
-    .badge{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:13px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
-    .chip{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);font-size:13px;background:rgba(255,255,255,.04);white-space:nowrap}
+    input,select{
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
+      border-radius:12px; color:#fff; padding:10px
+    }
+    button{
+      border:none; border-radius:12px; padding:10px 14px; font-weight:800; cursor:pointer
+    }
+    .primary{
+      background:linear-gradient(180deg,var(--acc),var(--acc2)); color:var(--ink);
+      box-shadow:0 6px 18px rgba(0,0,0,.35), 0 0 28px var(--glow)
+    }
+    .ghost{background:rgba(255,255,255,.06); color:#fff; border:1px solid rgba(255,255,255,.12)}
+    .badge{
+      display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);
+      font-size:13px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis
+    }
+    .chip{
+      display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);font-size:13px;background:rgba(255,255,255,.04);white-space:nowrap
+    }
     .muted{color:var(--muted)}
-    .right{margin-left:auto}
     .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
-    table{width:100%;border-collapse:collapse;font-size:13px;min-width:820px}
+    table{width:100%;border-collapse:collapse;font-size:13px;min-width:780px}
     th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
-    thead th{position:sticky;top:0;background:rgba(19,25,30,.98);backdrop-filter:blur(6px);z-index:1}
+    thead th{position:sticky;top:0;background:rgba(19,25,30,.96);backdrop-filter:blur(6px);z-index:1}
     td.wrap{white-space:normal;word-break:break-word}
-    th.right, td.right{text-align:right}
-    #debug{font-family:ui-monospace,Consolas,monospace;white-space:pre-wrap;background:#0d1117;border:1px solid #24292f;border-radius:10px;padding:10px;color:#c9d1d9;max-height:260px;overflow:auto}
+    .right{text-align:right}
+    #debug{
+      font-family:ui-monospace,Consolas,monospace;white-space:pre-wrap;background:#0d1117;
+      border:1px solid #24292f;border-radius:10px;padding:10px;color:#c9d1d9;max-height:260px;overflow:auto
+    }
     .ok{color:var(--ok)} .bad{color:var(--bad)}
-    @media(min-width:900px){ .cols-2{grid-template-columns:1fr 1fr} }
+    @media(min-width:900px){ .cols-2{display:grid;grid-template-columns:1fr 1fr;gap:12px} }
   </style>
 </head>
 <body>
 <main>
-  <h1>What?f — <span class="muted">Admin (dashboard)</span></h1>
+  <h1>What?f — <span class="muted">Admin</span></h1>
 
-  <!-- Stato & azioni -->
-  <div class="card grid cols-2">
+  <!-- Azioni + Stato -->
+  <div class="card cols-2">
     <div>
       <h3>Operazioni veloci</h3>
       <div class="row">
@@ -67,9 +97,7 @@
         </label>
         <span class="muted" id="ts"></span>
       </div>
-      <p class="muted" id="statusLine"></p>
     </div>
-
     <div>
       <h3>Stato (device)</h3>
       <div class="row"><span>Admin:</span> <span id="adminState" class="badge">no</span> <span class="muted">IP:</span> <span id="myIp" class="badge">—</span></div>
@@ -100,15 +128,15 @@
       <span class="chip">Ultimi 7 g: <b id="stLast7" style="margin-left:6px">—</b></span>
     </div>
     <div class="row" style="margin-top:8px">
-      <span class="badge" id="stStyle">Per stile: —</span>
-      <span class="badge" id="stLang">Per lingua: —</span>
-      <span class="badge" id="stPeriod">Per tempo: —</span>
-      <span class="badge" id="stUsers">User types: —</span>
+      <span class="badge" id="stStyle">{}</span>
+      <span class="badge" id="stLang">{}</span>
+      <span class="badge" id="stPeriod">{}</span>
+      <span class="badge" id="stUsers">{}</span>
     </div>
     <canvas id="trendChart" height="110" style="margin-top:10px"></canvas>
   </div>
 
-  <!-- Log richieste -->
+  <!-- Log -->
   <div class="card" style="margin-top:12px">
     <div class="row" style="justify-content:space-between">
       <h3 style="margin:0">Log richieste</h3>
@@ -124,7 +152,7 @@
     <div class="table-wrap" style="margin-top:8px">
       <table id="tbl">
         <thead><tr>
-          <th>Quanto</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th class="right">Len</th><th>Domanda</th>
+          <th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th class="right">Len</th><th>Domanda</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -134,28 +162,16 @@
 </main>
 
 <script>
-/*** ===== BASE ===== ***/
+/* ========= BASE ========= */
 const LS=localStorage, TKEY="admin_token", PROKEY="whatif_prefs";
-let chart=null, auto=null, LAST_ITEMS=[];
+const $=id=>document.getElementById(id); let chart=null, auto=null, LAST_ITEMS=[];
+const dbg=(...a)=>{ const t=a.map(x=>typeof x==="string"?x:JSON.stringify(x,null,2)).join(" "); const el=$("debug"); el.textContent=(el.textContent?el.textContent+"\n":"")+t; el.scrollTop=el.scrollHeight; };
+const getTok=()=>LS.getItem(TKEY)||""; const setTok=t=>{ if(t)LS.setItem(TKEY,t); else LS.removeItem(TKEY); $("tok").textContent=t? t.slice(0,6)+"…"+t.slice(-4):"—"; };
+const setProUI=()=>{ try{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); $("usertype").textContent=p.pro?"pro":"free"; }catch{} };
+const fmtDate=ts=>{ const d=new Date(ts||Date.now()); return d.toLocaleString(); };
+const maskIpLocal = (ip)=>{ if(!ip) return ""; if(!$("maskIp").checked) return ip; const p=String(ip).split("."); return p.length===4? `${p[0]}.${p[1]}.xx.yy` : String(ip).replace(/:(\w+):(\w+)$/,"::xx:yy"); };
 
-const $ = sel => document.querySelector(sel);
-const setBadge = (id, text)=>{ const el=document.getElementById(id); if(el) el.textContent = text; };
-const fmtDate = ts => { const d=new Date(ts||Date.now()); return d.toLocaleString(); };
-const getTok = () => LS.getItem(TKEY)||"";
-const setTok = t => { if(t) LS.setItem(TKEY,t); else LS.removeItem(TKEY); setBadge("tok", t? t.slice(0,6)+"…"+t.slice(-4): "—"); };
-const setProUI = ()=>{ try{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); setBadge("usertype", p.pro?"pro":"free"); }catch{} };
-const dbg=(...a)=>{ const s=a.map(x=> typeof x==="string"?x:JSON.stringify(x,null,2)).join(" "); const el=$("#debug"); el.textContent = (el.textContent?el.textContent+"\n":"")+s; el.scrollTop=el.scrollHeight; };
-const setStatus=(msg,ok=null)=>{ const el=$("#statusLine"); el.textContent=msg||""; el.className="muted"+(ok===true?" ok": ok===false?" bad":""); };
-
-/*** ===== IP mask locale ===== ***/
-function maskIpLocal(ip){
-  if(!ip) return "";
-  if(!$("#maskIp").checked) return ip;
-  if(ip.includes(".")){ const p=ip.split("."); if(p.length===4) return `${p[0]}.${p[1]}.xx.yy`; }
-  return ip.replace(/:(\w+):(\w+)$/,"::xx:yy");
-}
-
-/*** ===== Endpoint discovery (cache) ===== ***/
+/* ========= ENDPOINT DISCOVERY ========= */
 const CACHE_EP = JSON.parse(LS.getItem("admin_endpoints")||"{}");
 async function discoverEndpoint(key, candidates){
   if(CACHE_EP[key]) return CACHE_EP[key];
@@ -163,52 +179,39 @@ async function discoverEndpoint(key, candidates){
     try{
       const r=await fetch(path,{headers:{"x-admin-token":getTok()}});
       if(r.ok){ CACHE_EP[key]=path; LS.setItem("admin_endpoints",JSON.stringify(CACHE_EP)); dbg("OK endpoint",key,"→",path); return path; }
-    }catch(e){}
+      else dbg("Probe",path,"status",r.status);
+    }catch(e){ dbg("Probe error",path,String(e)); }
   }
   CACHE_EP[key]=candidates[0]; return candidates[0];
 }
 
-/*** ===== Fetch robusto ===== ***/
-async function getJSON(url){
+/* ========= FETCH ROBUSTO ========= */
+async function getText(url){
   try{
     const r=await fetch(url,{headers:{"x-admin-token":getTok()}});
     const raw=await r.text();
-    let data=null; try{ data=JSON.parse(raw); }catch{}
-    if(!r.ok){ dbg("ERR",url,"status",r.status, raw.slice(0,300)); return {ok:false,data:null,raw,status:r.status}; }
-    return {ok:true,data,raw,status:r.status};
-  }catch(e){ dbg("NET ERR",url,String(e)); return {ok:false,data:null,raw:String(e),status:0}; }
+    return { ok:r.ok, status:r.status, raw };
+  }catch(e){ return { ok:false, status:0, raw:String(e) }; }
+}
+async function getJSON(url){
+  const {ok,status,raw}=await getText(url);
+  if(!ok) return {ok:false,status,raw,data:null};
+  try{ return {ok:true,status,raw,data:JSON.parse(raw)}; }catch{ return {ok:true,status,raw,data:null}; }
 }
 const pickArray = d => Array.isArray(d) ? d : (d?.items||d?.logs||d?.data||[]);
 
-/*** ===== Admin check ===== ***/
-async function adminCheck(){
-  const r = await getJSON("/api/admin-token");
-  const d = r.data || {};
-  const yes = !!(d && (d.ok ? (d.admin ?? d.ok) : d.admin));
-  setBadge("adminState", yes?"yes":"no");
-  setBadge("myIp", d?.ip || "—");
-  setBadge("credits", yes ? "∞" : (JSON.parse(LS.getItem("whatif_credits")||"{}").used||0)+"/(3/10)");
-  if(!r.ok) dbg("admin-token fail", r.status, (r.raw||"").slice(0,200));
-  return yes;
+/* ========= PARSER LOG ROBUSTO ========= */
+function parseMaybeJsonOrJsonl(raw){
+  try { return pickArray(JSON.parse(raw)); }
+  catch {
+    // NDJSON/JSONL
+    const rows = String(raw).split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+    const out=[]; for(const line of rows){ try{ out.push(JSON.parse(line)); }catch{} }
+    return out;
+  }
 }
-
-/*** ===== UI helpers ===== ***/
-function prettyKV(obj,label){
-  if(!obj) return `${label}: —`;
-  const ent = Object.entries(obj).sort((a,b)=> String(b[1]).localeCompare(String(a[1]),undefined,{numeric:true}));
-  return `${label}: ` + ent.map(([k,v])=>`${k}: ${v}`).join(" · ");
-}
-function renderTrend(tr){
-  const ctx=$("#trendChart").getContext("2d");
-  if(chart) chart.destroy();
-  chart=new Chart(ctx,{type:"bar", data:{ labels: tr?.labels||[], datasets:[{ label:"Richieste/giorno", data: tr?.data||[] }] },
-    options:{ responsive:true, plugins:{ legend:{ display:false }}}});
-}
-
-/*** ===== Normalize logs ===== ***/
 function normItem(raw){
   const dom = raw.domanda ?? raw.question ?? raw.q ?? raw.input ?? "";
-  const txt = (typeof dom === "string") ? dom : JSON.stringify(dom);
   const ans = raw.answer ?? raw.risposta ?? "";
   return {
     ts: raw.ts ?? raw.time ?? raw.timestamp ?? Date.now(),
@@ -218,14 +221,41 @@ function normItem(raw){
     lang: raw.lang ?? raw.language ?? "it",
     periodo: raw.periodo ?? raw.period ?? raw.timeframe ?? raw.tempo ?? "",
     answer_chars: raw.answer_chars ?? raw.answerLen ?? (typeof ans==="string" ? ans.length : 0),
-    domanda: String(txt).replace(/\s+/g," ").trim()
+    domanda: String(dom||"").replace(/\s+/g," ").trim()
   };
 }
-function normalizeArray(arr){ return (arr||[]).map(normItem); }
+function normalizeLogsArray(arr){ return (arr||[]).map(normItem); }
 
-/*** ===== Tabella ===== ***/
+/* ========= ADMIN CHECK ========= */
+async function adminCheck(){
+  const {ok,data,raw,status}=await getJSON("/api/admin-token");
+  const yes = !!(data && (data.ok ? (data.admin ?? data.ok) : data?.admin));
+  $("adminState").textContent = yes?"yes":"no";
+  $("myIp").textContent = data?.ip || "—";
+  $("credits").textContent = yes?"∞": (JSON.parse(LS.getItem("whatif_credits")||"{}").used||0)+"/(3/10)";
+  if(!ok) dbg("admin-token fail",status,String(raw).slice(0,200));
+  return yes;
+}
+
+/* ========= RENDER ========= */
+function compactMap(obj,label){ if(!obj||typeof obj!=="object") return `${label}: —`; return `${label}: `+Object.entries(obj).map(([k,v])=>`${k}: ${v}`).join(" · "); }
+function renderTrend(tr){
+  const ctx=$("trendChart").getContext("2d");
+  if(chart) chart.destroy();
+  chart=new Chart(ctx,{type:"bar",data:{labels:tr?.labels||[],datasets:[{label:"Richieste/giorno",data:tr?.data||[]}]},options:{plugins:{legend:{display:false}},responsive:true}});
+}
+function drawStats(S){
+  $("stTotal").textContent=S.total??"0";
+  $("stToday").textContent=S.today??"0";
+  $("stLast7").textContent=S.last7??"0";
+  $("stStyle").textContent=compactMap(S.byStyle,"Per stile");
+  $("stLang").textContent =compactMap(S.byLang,"Per lingua");
+  $("stPeriod").textContent=compactMap(S.byPeriod,"Per tempo");
+  $("stUsers").textContent =compactMap(S.byUserType,"User types");
+  renderTrend(S.trend||{labels:[],data:[]});
+}
 function drawTable(items){
-  const fs=$("#fStyle").value, fl=$("#fLang").value, fp=$("#fPeriod").value, fu=$("#fUser").value, q=$("#q").value.toLowerCase();
+  const fs=$("fStyle").value, fl=$("fLang").value, fp=$("fPeriod").value, fu=$("fUser").value, q=$("q").value.toLowerCase();
   const rows=(items||[]).filter(x=>{
     if(fs && x.style!==fs) return false;
     if(fl && x.lang!==fl) return false;
@@ -234,26 +264,26 @@ function drawTable(items){
     if(q && !String(x.domanda||"").toLowerCase().includes(q)) return false;
     return true;
   });
-  const tb=$("#tbl tbody"); tb.innerHTML="";
-  $("#noData").style.display = rows.length ? "none":"block";
+  const tb=$("tbl").querySelector("tbody"); tb.innerHTML="";
+  $("noData").style.display=rows.length? "none":"block";
   for(const it of rows){
     const tr=document.createElement("tr");
-    const td=(t,cls)=>{const x=document.createElement("td"); if(cls) x.className=cls; x.textContent=t; return x;};
+    const cell=(t,cls)=>{const x=document.createElement("td"); if(cls) x.className=cls; x.textContent=t; return x;};
     tr.append(
-      td(fmtDate(it.ts)),
-      td(maskIpLocal(it.ip||"")),
-      td(it.user_type||""),
-      td(it.style||""),
-      td(it.lang||""),
-      td(it.periodo||""),
-      td(String(it.answer_chars||0),"right"),
-      (()=>{const x=td("", "wrap"); x.textContent=String(it.domanda||"").slice(0,500); return x;})()
+      cell(fmtDate(it.ts)),
+      cell(maskIpLocal(it.ip||"")),
+      cell(it.user_type||""),
+      cell(it.style||""),
+      cell(it.lang||""),
+      cell(it.periodo||""),
+      cell(String(it.answer_chars??0),"right"),
+      (()=>{const x=cell("", "wrap"); x.textContent=String(it.domanda||"").replace(/\s+/g," ").trim(); return x;})()
     );
     tb.appendChild(tr);
   }
 }
 
-/*** ===== Fallback locale ===== ***/
+/* ========= FALLBACK LOCALE ========= */
 function readLocalHistory(){ try{ return JSON.parse(LS.getItem("cronologia")||"[]")||[]; }catch{ return []; } }
 function localToItems(arr){
   return (arr||[]).map(x=>({
@@ -264,90 +294,73 @@ function localToItems(arr){
   })).reverse();
 }
 
-/*** ===== LOAD ===== ***/
+/* ========= LOAD ALL ========= */
 let EP_LOGS=null, EP_STATS=null;
 async function loadAll(){
-  $("#ts").textContent=new Date().toLocaleString();
+  $("ts").textContent=new Date().toLocaleString();
 
   if(!EP_STATS) EP_STATS = await discoverEndpoint("stats", ["/api/admin-stats","/api/admin/stats"]);
   if(!EP_LOGS)  EP_LOGS  = await discoverEndpoint("logs",  ["/api/admin-logs","/api/admin/logs"]);
 
   // STATS
-  const days=$("#trendSel").value||"10";
-  const s = await getJSON(`${EP_STATS}?days=${encodeURIComponent(days)}`);
-  if(s.ok){
-    const S=s.data||{};
-    setBadge("stTotal", S.total??"0");
-    setBadge("stToday", S.today??"0");
-    setBadge("stLast7", S.last7??"0");
-    $("#stStyle").textContent = prettyKV(S.byStyle,"Per stile");
-    $("#stLang").textContent  = prettyKV(S.byLang,"Per lingua");
-    $("#stPeriod").textContent= prettyKV(S.byPeriod,"Per tempo");
-    $("#stUsers").textContent = prettyKV(S.byUserType,"User types");
-    renderTrend(S.trend||{labels:[],data:[]});
-  } else {
-    setBadge("stTotal","—"); $("#stStyle").textContent="Per stile: —"; $("#stLang").textContent="Per lingua: —";
-    $("#stPeriod").textContent="Per tempo: —"; $("#stUsers").textContent="User types: —";
-    renderTrend({labels:[],data:[]});
+  const days=$("trendSel").value||"10";
+  const st=await getJSON(`${EP_STATS}?days=${encodeURIComponent(days)}`);
+  if(st.ok && st.data){ drawStats(st.data); } else { drawStats({}); dbg("stats fail",st.status); }
+
+  // LOGS: prendo SEMPRE mask=0 e maschero in locale; supporto JSONL/NDJSON
+  const limit=$("limitSel").value||"200";
+  try{
+    const t = await getText(`${EP_LOGS}?limit=${encodeURIComponent(limit)}&mask=0`);
+    if(!t.ok){ dbg("logs fail", t.status, String(t.raw).slice(0,200)); throw new Error("bad_status"); }
+    const rawItems = parseMaybeJsonOrJsonl(t.raw);
+    let arr = normalizeLogsArray(rawItems);
+    if($("maskIp").checked) arr = arr.map(x=>({...x, ip:maskIpLocal(x.ip)}));
+    LAST_ITEMS = arr;
+    drawTable(arr);
+    dbg(`logs caricati: ${arr.length}`);
+  }catch(e){
+    const local = localToItems(readLocalHistory());
+    LAST_ITEMS = local;
+    drawTable(local);
+    dbg("fallback locale logs:", local.length);
   }
-
-  // LOGS: scarico SEMPRE con mask=0, poi maschero IP in locale
-  const limit=$("#limitSel").value || "200";
-  const r = await getJSON(`${EP_LOGS}?limit=${encodeURIComponent(limit)}&mask=0`);
-  let arr = normalizeArray(pickArray(r.data));
-  if($("#maskIp").checked){ arr = arr.map(x=>({...x, ip:maskIpLocal(x.ip)})); }
-  LAST_ITEMS = arr;
-  drawTable(arr);
-  setStatus(r.ok ? "Dati server caricati." : "Dati locali (fallback).", r.ok);
 }
 
-/*** ===== CSV ===== ***/
+/* ========= CSV ========= */
 function toCSV(items){
-  const esc = v => `"${String(v??'').replace(/"/g,'""')}"`;
-  const head = ['timestamp','ip','user_type','style','lang','periodo','answer_chars','domanda'];
-  const lines = [head.join(',')].concat((items||[]).map(r=>[
-    r.ts, r.ip||'', r.user_type||'', r.style||'', r.lang||'', r.periodo||'',
-    (r.answer_chars!=null?r.answer_chars:''), r.domanda||''
-  ].map(esc).join(',')));
-  return lines.join('\n');
+  const esc=s=>('"'+String(s??"").replace(/"/g,'""')+'"');
+  const head=["quando","ip","tipo","stile","lingua","tempo","len","domanda"];
+  const rows=(items||[]).map(it=>[
+    fmtDate(it.ts), maskIpLocal(it.ip), it.user_type, it.style, it.lang, it.periodo, it.answer_chars,
+    (it.domanda||"").replace(/\s+/g," ").trim()
+  ].map(esc).join(","));
+  return head.join(",")+"\n"+rows.join("\n");
 }
-function exportCSV(){
-  const csv = toCSV(LAST_ITEMS.length?LAST_ITEMS:localToItems(readLocalHistory()));
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-  a.download = 'whatif_admin_export.csv';
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
+function download(name, text){ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type:"text/csv"})); a.download=name; a.click(); URL.revokeObjectURL(a.href); }
 
-/*** ===== Events ===== ***/
-$("#btnRefresh").onclick = loadAll;
-$("#btnAuto").onclick = ()=>{ if(auto){ clearInterval(auto); auto=null; $("#btnAuto").textContent="Auto-refresh"; setStatus("Auto-refresh OFF"); } else { auto=setInterval(loadAll,5000); $("#btnAuto").textContent="Stop auto"; setStatus("Auto-refresh ogni 5s…"); }};
-$("#btnCSV").onclick = exportCSV;
-$("#btnClear").onclick = async ()=>{
-  if(!confirm("Svuotare i log sul server?")) return;
-  await fetch("/api/admin-logs",{ method:"DELETE", headers:{ "x-admin-token": getTok() }});
-  loadAll();
+/* ========= EVENTS ========= */
+$("btnRefresh").onclick=loadAll;
+$("btnAuto").onclick=()=>{ if(auto){ clearInterval(auto); auto=null; $("btnAuto").textContent="Auto-refresh"; } else { auto=setInterval(loadAll,5000); $("btnAuto").textContent="Stop auto"; } };
+$("btnCSV").onclick=()=> download(`logs_${Date.now()}.csv`, toCSV(LAST_ITEMS));
+$("btnClear").onclick=async()=>{ if(!confirm("Svuotare i log?")) return; await fetch("/api/admin-logs",{method:"DELETE",headers:{"x-admin-token":getTok()}}); loadAll(); };
+$("dlSel").onchange=()=>{ $("limitSel").value=$("dlSel").value; loadAll(); };
+for(const id of ["fStyle","fLang","fPeriod","fUser","q","limitSel","trendSel","maskIp"])
+  $(id).addEventListener("input", ()=>drawTable(LAST_ITEMS));
+
+/* login & pro */
+$("enter").onclick=async()=>{
+  const pin=$("pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
+  const r=await fetch("/api/admin-token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pin})});
+  const d=await r.json().catch(()=>({}));
+  if(r.ok && (d.ok||d.token)){ setTok(d.token||""); $("debug").textContent="Login ok. Token legato al tuo IP per ~7gg."; await adminCheck(); loadAll(); }
+  else alert("PIN errato o errore server");
 };
-$("#dlSel").onchange = ()=>{ $("#limitSel").value = $("#dlSel").value; loadAll(); };
-["fStyle","fLang","fPeriod","fUser","q","limitSel","trendSel","maskIp"].forEach(id=>{
-  document.getElementById(id).addEventListener("input", ()=> drawTable(LAST_ITEMS));
-});
+$("renew").onclick=async()=>{ const r=await fetch("/api/admin-token?action=renew",{method:"POST",headers:{"x-admin-token":getTok()}}); alert(r.ok?"Rinnovato per 7gg":"Errore rinnovo"); };
+$("revoke").onclick=async()=>{ await fetch("/api/admin-token?action=revoke",{method:"POST",headers:{"x-admin-token":getTok()}}); setTok(""); await adminCheck(); };
+$("proOn").onclick=()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); p.pro=true; LS.setItem(PROKEY,JSON.stringify(p)); $("usertype").textContent="pro"; };
+$("proOff").onclick=()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); delete p.pro; LS.setItem(PROKEY,JSON.stringify(p)); $("usertype").textContent="free"; };
 
-// login & pro
-$("#enter").onclick = async ()=>{
-  const pin = $("#pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
-  const r = await fetch("/api/admin-token",{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ pin })});
-  const d = await r.json().catch(()=>({}));
-  if(r.ok && (d.ok||d.token)){ setTok(d.token || ""); $("#debug").textContent="Login ok. Token legato al tuo IP per ~7gg."; await adminCheck(); loadAll(); }
-  else { alert("PIN errato o errore server"); }
-};
-$("#renew").onclick = async ()=>{ const r = await fetch("/api/admin-token?action=renew",{ method:"POST", headers:{ "x-admin-token": getTok() }}); alert(r.ok?"Rinnovato per 7gg":"Errore rinnovo"); };
-$("#revoke").onclick = async ()=>{ await fetch("/api/admin-token?action=revoke",{ method:"POST", headers:{ "x-admin-token": getTok() }}); setTok(""); await adminCheck(); setStatus("Token revocato.", false); };
-$("#proOn").onclick = ()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); p.pro=true; LS.setItem(PROKEY,JSON.stringify(p)); setProUI(); };
-$("#proOff").onclick = ()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); delete p.pro; LS.setItem(PROKEY,JSON.stringify(p)); setProUI(); };
-
-/*** ===== Init ===== ***/
+/* ========= INIT ========= */
 (async function init(){
   setProUI();
   setTok(getTok());
