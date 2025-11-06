@@ -161,6 +161,29 @@ function buildMessages({ domanda, lang, periodo, stile }){
   return msgs;
 }
 
+/* ========= Free/Pro: quota giornaliera (Europe/Rome) ========= */
+const DAILY_LIMITS = { free: 3, pro: 10 };
+
+function currentRomeDateKey(){
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone:'Europe/Rome',
+    year:'numeric', month:'2-digit', day:'2-digit'
+  }).formatToParts(new Date());
+  const y=parts.find(x=>x.type==='year').value;
+  const m=parts.find(x=>x.type==='month').value;
+  const d=parts.find(x=>x.type==='day').value;
+  return `${y}-${m}-${d}`;
+}
+function isProUser(req){
+  const hdr = String(req.headers["x-pro"]||"").trim().toLowerCase();
+  if(hdr==="1"||hdr==="true") return true;
+  const cookie = String(req.headers.cookie||"");
+  return /(?:^|;\s*)pro=1(?:;|$)/.test(cookie);
+}
+function dayCounterKey(ip, dateKey, pro){
+  return `ask:quota:${pro?"pro":"free"}:${dateKey}:${ip}`;
+}
+
 /* ========= HANDLER ========= */
 export default async function handler(req, res){
   cors(req, res);
@@ -174,6 +197,26 @@ export default async function handler(req, res){
     const { success } = await rl.limit(`ask:${ip}`);
     if(!success) return res.status(429).json({ error:"rate_limited_minute" });
 
+    // ===== Quota giornaliera Free/Pro per IP =====
+    const dateKey = currentRomeDateKey();
+    const pro = isProUser(req);
+    const qKey = dayCounterKey(ip, dateKey, pro);
+    const used = Number(await redis.get(qKey)) || 0;
+    const limit = pro ? DAILY_LIMITS.pro : DAILY_LIMITS.free;
+    if(used >= limit){
+      return res.status(429).json({
+        error: "rate_limited_daily",
+        detail: pro ? "pro_limit_reached" : "free_limit_reached",
+        date: dateKey,
+        limit,
+        remaining: 0,
+        pro: pro ? 1 : 0
+      });
+    }
+    const nowUsed = await redis.incr(qKey);
+    if(nowUsed === 1) await redis.expire(qKey, 48*60*60); // housekeeping
+
+    // ===== Corpo richiesta / completions =====
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const { domanda = "", stile = "whatif", lang = "it", periodo = "future", micro = {} } = body;
     if(!domanda || typeof domanda !== "string") return res.status(400).json({ error:"bad_request", detail:"domanda_required" });
@@ -207,12 +250,9 @@ export default async function handler(req, res){
       const inQuestion=new Set((d.match(nameRx)||[]));
 
       answer = answer.replace(nameRx, (m, _g1, offset, str)=>{
-        // non toccare: inizio stringa
         if(offset===0) return m;
-        // non toccare: subito dopo fine frase (.?!…) + eventuali virgolette/parentesi + spazio
         const before = str.slice(0, offset);
         if(/[.!?…]["'”)\]]?\s*$/.test(before)) return m;
-        // ok: se NON è nella domanda e NON è interiezione whitelisted, abbassa
         return inQuestion.has(m) || ["Ah","Oh","Ehi","Sai"].includes(m) ? m : m.toLowerCase();
       });
 
@@ -220,7 +260,7 @@ export default async function handler(req, res){
       answer = answer.replace(/\ball’aquila\b/g, "all’Aquila");
     }
 
-    // ===== Forza MAIUSCOLA iniziale come ultimo step assoluto =====
+    // ===== Maiuscola iniziale =====
     answer = answer.replace(/^\s*([a-zà-ÿ])/u, (m,c)=>c.toUpperCase());
 
     return res.status(200).json({ answer, style: stile, lang: normLang(lang), periodo, model: MODEL });
@@ -229,4 +269,4 @@ export default async function handler(req, res){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
-       }
+}
