@@ -3,10 +3,31 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>What?f — Admin Dashboard (hot-fix)</title>
+  <title>What?f — Admin Dashboard</title>
   <meta name="theme-color" content="#0A0F14"/>
   <link rel="preconnect" href="https://cdn.jsdelivr.net"/>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Chart.js: load robusto + fallback -->
+  <script>
+    window.ChartReady = false;
+    (function loadChartJS(){
+      const s = document.createElement('script');
+      s.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js";
+      s.crossOrigin = "anonymous";
+      s.defer = true;
+      s.onload = () => { window.ChartReady = true; };
+      s.onerror = () => {
+        // Fallback CDN
+        const f = document.createElement('script');
+        f.src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js";
+        f.crossOrigin = "anonymous";
+        f.defer = true;
+        f.onload = () => { window.ChartReady = true; };
+        document.head.appendChild(f);
+      };
+      document.head.appendChild(s);
+    })();
+  </script>
+
   <style>
     :root{
       --bg:#0A0F14;--surface:#141C22;--accent:#00E0FF;--accent2:#1AFFD5;
@@ -18,7 +39,7 @@
     html,body{height:100%}
     body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Roboto,Arial,sans-serif}
     h1,h2,h3{margin:0 0 10px}
-    main{max-width:1200px;margin:auto;padding:18px;padding-bottom:24px}
+    main{max-width:1200px;margin:auto;padding:18px 18px 28px}
     .grid{display:grid;gap:14px}
     @media(min-width:900px){.cols-2{grid-template-columns:1fr 1fr}}
     .card{background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--card-border);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
@@ -38,10 +59,16 @@
     input::placeholder{color:#b9c4c9}
     .table-wrap{overflow:auto;-webkit-overflow-scrolling:touch}
     .filters-sticky{position:sticky;top:0;z-index:5;background:var(--glass);padding:8px 0}
-    .toolbar-sticky{position: sticky; top: 0; z-index: 40; margin: 10px 0 14px; background: var(--glass); backdrop-filter: blur(10px); border: 1px solid var(--card-border); border-radius: 16px; box-shadow: var(--shadow)}
+
+    /* Toolbar sticky */
+    .toolbar-sticky{position: sticky; top: 0; z-index: 40; margin: 10px 0 14px;
+      background: var(--glass); backdrop-filter: blur(10px);
+      border: 1px solid var(--card-border); border-radius: 16px; box-shadow: var(--shadow)}
     .toolbar-sticky .bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:10px}
     .toolbar-sticky button{min-width:120px}
-    pre{white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.35;background:rgba(0,0,0,.35);padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.08)}
+
+    pre#dbg{white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.35;background:rgba(0,0,0,.35);padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);max-height:220px;overflow:auto}
+    .hide{display:none}
   </style>
 </head>
 <body>
@@ -162,15 +189,18 @@
     </div>
   </div>
 
-  <!-- Debug -->
-  <div class="card" style="margin-top:14px">
-    <h3>Debug</h3>
-    <pre id="dbg">—</pre>
+  <!-- Debug (collassabile) -->
+  <div class="card">
+    <div class="row" style="width:100%;justify-content:space-between">
+      <h3>Debug</h3>
+      <button id="toggleDbg" class="ghost right">Mostra/Nascondi</button>
+    </div>
+    <pre id="dbg" class="hide">—</pre>
   </div>
 </main>
 
 <script>
-/*** ===== API base (forzata a produzione) ===== ***/
+/*** ===== API base: forza produzione ===== ***/
 const API_BASE = "https://what-ifapp.vercel.app";
 const API = (p) => (p.startsWith("/") ? API_BASE + p : API_BASE + "/" + p);
 
@@ -178,6 +208,7 @@ const API = (p) => (p.startsWith("/") ? API_BASE + p : API_BASE + "/" + p);
 const LS=localStorage, TKEY="admin_token", PROKEY="whatif_prefs";
 let chart=null, auto=null, lastItems=[];
 const $ = sel => document.querySelector(sel);
+
 function setBadge(id, text){ const el=document.getElementById(id); if(el) el.textContent = text; }
 function fmtDate(ts){ const d=new Date(ts||Date.now()); return d.toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
 function getTok(){ return LS.getItem(TKEY)||""; }
@@ -208,6 +239,12 @@ async function adminCheck(){
 
 /*** ===== GRAFICO ===== ***/
 function renderTrend(tr){
+  if(!window.ChartReady || !window.Chart){
+    setStatus("Chart.js non ancora pronto, riprovo…", false);
+    // riprova tra 300ms
+    setTimeout(()=>renderTrend(tr), 300);
+    return;
+  }
   const ctx=$("#trendChart").getContext("2d");
   if(chart) chart.destroy();
   chart=new Chart(ctx,{type:"line",
@@ -217,6 +254,7 @@ function renderTrend(tr){
         {label:"What the F",data:tr.wtf||[],borderColor:"#1AFFD5",tension:.3}
       ]},
     options:{responsive:true,plugins:{legend:{labels:{color:"#A0B2BA"}}},scales:{x:{ticks:{color:"#A0B2BA"}},y:{ticks:{color:"#A0B2BA"}}}}});
+  setStatus("Grafico aggiornato.", true);
 }
 
 /*** ===== NORMALIZZAZIONE ===== ***/
@@ -297,7 +335,7 @@ async function loadAll(){
   const limit=$("#limitSel").value || "200";
   const days=$("#trend").value || "10";
 
-  // 1) Health (senza token)
+  // 1) Health
   try{
     const h = await fetch(API(`/api/admin-stats?health=1`));
     const hj = await h.json().catch(()=>({}));
@@ -325,7 +363,7 @@ async function loadAll(){
     dbg("logs ok, n=", (d.items||[]).length);
     const rawItems = d.items || d.logs || d.data || [];
     drawTable(normalizeArray(rawItems));
-    setStatus(`OK — Origine pagina: ${location.origin}${location.pathname}`, true);
+    setStatus(`OK — Origine: ${location.origin}${location.pathname}`, true);
   }catch(e){ dbg("logs error:", String(e)); setStatus(String(e.message||e), false); return drawLocalFallback(); }
 }
 
@@ -358,6 +396,7 @@ function bindEvents(){
   $("#bExport").onclick  = ()=>$("#btnExport").click();
   $("#bClear").onclick   = ()=>$("#btnClear").click();
   $("#bReset").onclick   = ()=>$("#btnReset").click();
+  $("#toggleDbg").onclick = ()=>{ $("#dbg").classList.toggle("hide"); };
 
   $("#enter").onclick = async ()=>{
     const pin = $("#pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
@@ -383,7 +422,7 @@ function bindEvents(){
   });
 }
 
-/*** ===== Init (pre-flight) ===== ***/
+/*** ===== Init ===== ***/
 (async function init(){
   setProUI();
   setTok(getTok());
