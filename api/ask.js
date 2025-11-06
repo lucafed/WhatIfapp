@@ -49,7 +49,6 @@ function clampWords(text, maxWords){
   return m?m[1]:slice+"…";
 }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\.\.\.+/g,"…").replace(/\s+([.,;:!?])/g,"$1").trim(); }
-
 function stripQuestionEcho(domanda,text){
   let t=String(text||"");
   const d=String(domanda||"").replace(/[“”"']/g,"").trim().toLowerCase();
@@ -65,23 +64,11 @@ const finalPunct = (s="") => /[.!?…]$/.test(s)?s:s+".";
 
 /* ========= WHAT IF ========= */
 const WHATIF_RULES = {
-  it: `Sei "What If": voce calma, empatica, concreta. Scrivi in ITALIANO.
-Paragrafo unico, 8–11 frasi, no elenchi né emoji, NON ripetere la domanda.
-Sequenza: (1) radice emotiva; (2) perché conta ora; (3) prime settimane;
-(4) outlook 3–6 mesi (pro + sfida); (5) realtà pratica (costi/tempo/energia/contesto);
-(6) da dove nasce il desiderio; (7) micro-test; (8) criterio interno per decidere.
-Stile naturale, immagini quotidiane brevi. Adatta al tema (città/lavoro/relazioni/soldi/crescita).`.trim(),
-  en: `You are "What If": calm, empathetic, practical. Write in ENGLISH.
-Single paragraph, 8–11 sentences, no bullets or emojis, do NOT restate the question.
-Sequence: (1) emotional root; (2) why now; (3) first weeks; (4) 3–6 month outlook (upsides + challenge);
-(5) practical reality (cost/time/energy/context); (6) origin of desire; (7) micro-test; (8) inner criterion. Keep it natural.`.trim(),
-  es: `Eres "What If": voz calmada, empática y práctica. Escribe en ESPAÑOL.
-Un solo párrafo, 8–11 frases, sin listas ni emojis, NO repitas la pregunta.
-Secuencia: raíz emocional → por qué ahora → primeras semanas → 3–6 meses (pro + desafío) → realidad práctica → origen del deseo → micro-prueba → criterio interno.`.trim(),
-  fr: `Tu es "What If" : voix calme, empathique et concrète. Écris en FRANÇAIS.
-Un seul paragraphe, 8–11 phrases, pas de listes ni d’emojis, ne répète pas la question. Suis la séquence et reste naturel.`.trim(),
-  de: `Du bist "What If": ruhig, empathisch, pragmatisch. Schreibe auf DEUTSCH.
-Ein Absatz, 8–11 Sätze, keine Listen/Emojis, Frage NICHT wiederholen. Folge der Sequenz, alltagsnah.`.trim()
+  it: `Sei "What If": voce calma, empatica, concreta. Scrivi in ITALIANO. Paragrafo unico, 8–11 frasi, no elenchi né emoji, NON ripetere la domanda. Sequenza: (1) radice emotiva; (2) perché conta ora; (3) prime settimane; (4) outlook 3–6 mesi (pro + sfida); (5) realtà pratica (costi/tempo/energia/contesto); (6) da dove nasce il desiderio; (7) micro-test; (8) criterio interno per decidere. Stile naturale, immagini quotidiane brevi. Adatta al tema (città/lavoro/relazioni/soldi/crescita).`.trim(),
+  en: `You are "What If": calm, empathetic, practical. Write in ENGLISH. Single paragraph, 8–11 sentences, no bullets or emojis, do NOT restate the question. Sequence: (1) emotional root; (2) why now; (3) first weeks; (4) 3–6 month outlook (upsides + challenge); (5) practical reality (cost/time/energy/context); (6) origin of desire; (7) micro-test; (8) inner criterion. Keep it natural.`.trim(),
+  es: `Eres "What If": voz calmada, empática y práctica. Escribe en ESPAÑOL. Un solo párrafo, 8–11 frases, sin listas ni emojis, NO repitas la pregunta. Secuencia: raíz emocional → por qué ahora → primeras semanas → 3–6 meses (pro + desafío) → realidad práctica → origen del deseo → micro-prueba → criterio interno.`.trim(),
+  fr: `Tu es "What If" : voix calme, empathique et concrète. Écris en FRANÇAIS. Un seul paragraphe, 8–11 phrases, pas de listes ni d’emojis, ne répète pas la question. Suis la séquence et reste naturel.`.trim(),
+  de: `Du bist "What If": ruhig, empathisch, pragmatisch. Schreibe auf DEUTSCH. Ein Absatz, 8–11 Sätze, keine Listen/Emojis, Frage NICHT wiederholen. Folge der Sequenz, alltagsnah.`.trim()
 };
 const WHATIF_EXAMPLES = {
   it:`Questa domanda nasce quando una parte di te chiede un ritmo più tuo. Le prime settimane avrebbero un sapore familiare e strano insieme: luoghi che riconosci e la testa che corre meno. Dopo un mese arriva la prova vera: confrontarti con chi eri e chi sei adesso, capire se quella differenza ti allarga o ti stringe. Nel concreto guadagni spazio mentale e routine più sane, ma perdi un po’ di vibrazione quotidiana. Se lo vivi come passo in avanti e non ritorno al passato, in sei mesi puoi sentirti più stabile e presente; se ti sembra di rientrare in una versione più piccola di te, tornerà presto voglia di ripartire. Fai un test di due settimane “come se fosse già così”: orari, luoghi, lavoro. Se ti svegli più leggero e non senti di mettere la vita in pausa, non stai tornando: stai iniziando da lì.`,
@@ -115,12 +102,21 @@ const WTF_DRINK = [
 /* ========= Prompt builder ========= */
 function buildMessages({ domanda, lang, periodo, stile }){
   const L = normLang(lang);
+
   const baseRules = L==="en"
     ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Second person only.`
     : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona.`;
   const temporal = String(periodo).toLowerCase()==="past"
-    ? (L==="en" ? "Write as if it already happened." : L==="es" ? "Escribe como si ya hubiera pasado." : L==="fr" ? "Écris comme si c’était déjà arrivé." : L==="de" ? "Schreibe, als wäre es bereits geschehen." : "Scrivi come se fosse già successo.")
-    : (L==="en" ? "Write as a near-future unfolding starting now." : L==="es" ? "Escribe como un futuro cercano que empieza ahora." : L==="fr" ? "Écris comme un futur proche qui commence maintenant." : L==="de" ? "Schreibe als nahe Zukunft, die jetzt beginnt." : "Scrivi come un prossimo futuro che inizia ora.");
+    ? (L==="en" ? "Write as if it already happened." :
+       L==="es" ? "Escribe como si ya hubiera pasado." :
+       L==="fr" ? "Écris comme si c’était déjà arrivé." :
+       L==="de" ? "Schreibe, als wäre es bereits geschehen." :
+                  "Scrivi come se fosse già successo.")
+    : (L==="en" ? "Write as a near-future unfolding starting now." :
+       L==="es" ? "Escribe como un futuro cercano que empieza ahora." :
+       L==="fr" ? "Écris comme un futur proche qui commence maintenant." :
+       L==="de" ? "Schreibe als nahe Zukunft, die jetzt beginnt." :
+                  "Scrivi come un prossimo futuro che inizia ora.");
 
   const msgs = [
     { role: "system", content: baseRules },
@@ -161,6 +157,23 @@ function buildMessages({ domanda, lang, periodo, stile }){
   return msgs;
 }
 
+/* ========= Limiti giornalieri Free/Pro ========= */
+const DAILY_LIMITS = { free: 3, pro: 10 };
+function currentRomeDateKey(){
+  const p = new Intl.DateTimeFormat('en-CA', { timeZone:'Europe/Rome', year:'numeric', month:'2-digit', day:'2-digit' }).formatToParts(new Date());
+  const y=p.find(x=>x.type==='year').value, m=p.find(x=>x.type==='month').value, d=p.find(x=>x.type==='day').value;
+  return `${y}-${m}-${d}`;
+}
+function isProUser(req){
+  const hdr = String(req.headers["x-pro"]||"").trim().toLowerCase();
+  if(hdr==="1"||hdr==="true") return true;
+  const cookie = String(req.headers.cookie||"");
+  return /(?:^|;\s*)pro=1(?:;|$)/.test(cookie);
+}
+function dayCounterKey(ip, dateKey, pro){
+  return `ask:quota:${pro?"pro":"free"}:${dateKey}:${ip}`;
+}
+
 /* ========= HANDLER ========= */
 export default async function handler(req, res){
   cors(req, res);
@@ -173,6 +186,22 @@ export default async function handler(req, res){
     const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").toString().split(",")[0].trim();
     const { success } = await rl.limit(`ask:${ip}`);
     if(!success) return res.status(429).json({ error:"rate_limited_minute" });
+
+    // === Quota giornaliera Free/Pro (fuso Europe/Rome) ===
+    const dateKey = currentRomeDateKey();
+    const pro = isProUser(req);
+    const qKey = dayCounterKey(ip, dateKey, pro);
+    const used = Number(await redis.get(qKey)) || 0;
+    const limit = pro ? DAILY_LIMITS.pro : DAILY_LIMITS.free;
+    if(used >= limit){
+      return res.status(429).json({
+        error: "rate_limited_daily",
+        detail: pro ? "pro_limit_reached" : "free_limit_reached",
+        date: dateKey, limit, remaining: 0, pro: pro?1:0
+      });
+    }
+    const nowUsed = await redis.incr(qKey);
+    if(nowUsed === 1) await redis.expire(qKey, 48*60*60); // housekeeping
 
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const { domanda = "", stile = "whatif", lang = "it", periodo = "future", micro = {} } = body;
@@ -205,28 +234,21 @@ export default async function handler(req, res){
       const d=String(domanda||"");
       const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
       const inQuestion=new Set((d.match(nameRx)||[]));
-
       answer = answer.replace(nameRx, (m, _g1, offset, str)=>{
-        // non toccare: inizio stringa
         if(offset===0) return m;
-        // non toccare: subito dopo fine frase (.?!…) + eventuali virgolette/parentesi + spazio
         const before = str.slice(0, offset);
         if(/[.!?…]["'”)\]]?\s*$/.test(before)) return m;
-        // ok: se NON è nella domanda e NON è interiezione whitelisted, abbassa
         return inQuestion.has(m) || ["Ah","Oh","Ehi","Sai"].includes(m) ? m : m.toLowerCase();
       });
-
-      // L'Aquila
       answer = answer.replace(/\ball’aquila\b/g, "all’Aquila");
     }
 
-    // ===== Forza MAIUSCOLA iniziale come ultimo step assoluto =====
+    // ===== Forza MAIUSCOLA iniziale =====
     answer = answer.replace(/^\s*([a-zà-ÿ])/u, (m,c)=>c.toUpperCase());
 
     return res.status(200).json({ answer, style: stile, lang: normLang(lang), periodo, model: MODEL });
-
   }catch(err){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
-                            }
+}
