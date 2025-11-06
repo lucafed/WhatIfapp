@@ -1,35 +1,41 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Admin</title>
-<meta name="theme-color" content="#0B0B0C"/>
-<style>
-:root{--bg:#0B0B0C;--card:#13191E;--fg:#EAF2EE;--muted:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01;--line:rgba(255,255,255,.12);--ok:#11c46f;--bad:#e85b5b}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-main{max-width:1100px;margin:auto;padding:18px}
-h1{margin:8px 0 14px;font-size:28px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-input,select{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px}
-button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
-.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12}
-.ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
-.badge{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:13px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
-.chip{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);font-size:13px;background:rgba(255,255,255,.04);white-space:nowrap}
-.muted{color:var(--muted)}
-.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
-table{width:100%;border-collapse:collapse;font-size:13px;min-width:780px}
-th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
-thead th{position:sticky;top:0;background:rgba(19,25,30,.98);backdrop-filter:blur(6px);z-index:1}
-td.wrap{white-space:normal;word-break:break-word}
-.right{text-align:right}
-#debug{font-family:ui-monospace,Consolas,monospace;white-space:pre-wrap;background:#0d1117;border:1px solid #24292f;border-radius:10px;padding:10px;color:#c9d1d9;max-height:260px;overflow:auto}
-.ok{color:var(--ok)} .bad{color:var(--bad)}
-@media(min-width:900px){ .cols-2{display:grid;grid-template-columns:1fr 1fr;gap:12px} }
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>What?f — Admin</title>
+  <meta name="theme-color" content="#0B0B0C"/>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --bg:#0B0B0C;--card:#13191E;--fg:#EAF2EE;--muted:#A0B2BA;
+      --acc:#1C57A0;--acc2:#FFEC01;--line:rgba(255,255,255,.12);
+      --ok:#11c46f;--bad:#e85b5b
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    main{max-width:1100px;margin:auto;padding:18px}
+    h1{margin:8px 0 14px;font-size:28px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    input,select{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px}
+    button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
+    .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:#0A0E12}
+    .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
+    .badge{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:13px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+    .chip{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);font-size:13px;background:rgba(255,255,255,.04);white-space:nowrap}
+    .muted{color:var(--muted)}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+    table{width:100%;border-collapse:collapse;font-size:13px;min-width:780px;table-layout:fixed}
+    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top;word-wrap:break-word}
+    thead th{position:sticky;top:0;background:rgba(19,25,30,.98);backdrop-filter:blur(6px);z-index:1}
+    td.wrap{white-space:normal;word-break:break-word}
+    .right{text-align:right}
+    #debug{font-family:ui-monospace,Consolas,monospace;white-space:pre-wrap;background:#0d1117;border:1px solid #24292f;border-radius:10px;padding:10px;color:#c9d1d9;max-height:260px;overflow:auto}
+    .ok{color:var(--ok)} .bad{color:var(--bad)}
+    @media(min-width:900px){ .cols-2{display:grid;grid-template-columns:1fr 1fr;gap:12px} }
+  </style>
 </head>
 <body>
 <main>
@@ -111,7 +117,7 @@ td.wrap{white-space:normal;word-break:break-word}
     <div class="table-wrap" style="margin-top:8px">
       <table id="tbl">
         <thead><tr>
-          <th>Quando</th><th>IP</th><th>Tipo</th><th>Stile</th><th>Lingua</th><th>Tempo</th><th class="right">Len</th><th>Domanda</th>
+          <th style="width:140px">Quando</th><th style="width:140px">IP</th><th style="width:80px">Tipo</th><th style="width:80px">Stile</th><th style="width:70px">Lingua</th><th style="width:80px">Tempo</th><th class="right" style="width:60px">Len</th><th>Domanda</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -123,14 +129,30 @@ td.wrap{white-space:normal;word-break:break-word}
 <script>
 /* ========= BASE ========= */
 const LS=localStorage, TKEY="admin_token", PROKEY="whatif_prefs";
-const $=id=>document.getElementById(id); let chart=null, auto=null, LAST_ITEMS=[];
+const $=id=>document.getElementById(id);
+let chart=null, auto=null, LAST_ITEMS=[];
 const dbg=(...a)=>{ const t=a.map(x=>typeof x==="string"?x:JSON.stringify(x,null,2)).join(" "); const el=$("debug"); el.textContent=(el.textContent?el.textContent+"\n":"")+t; el.scrollTop=el.scrollHeight; };
-const getTok=()=>LS.getItem(TKEY)||""; const setTok=t=>{ if(t)LS.setItem(TKEY,t); else LS.removeItem(TKEY); $("tok").textContent=t? t.slice(0,6)+"…"+t.slice(-4):"—"; };
+const getTok=()=>LS.getItem(TKEY)||"";
+const setTok=t=>{ if(t)LS.setItem(TKEY,t); else LS.removeItem(TKEY); $("tok").textContent=t? t.slice(0,6)+"…"+t.slice(-4):"—"; };
 const setProUI=()=>{ try{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); $("usertype").textContent=p.pro?"pro":"free"; }catch{} };
-const fmtDate=ts=>{ const d=new Date(ts); return d.toLocaleString(); };
-function maskIp(ip){ if(!ip) return ""; if(!$("maskIp").checked) return ip; const p=ip.split("."); return p.length===4? `${p[0]}.${p[1]}.xx.yy` : ip.replace(/:(\w+):(\w+)$/,"::xx:yy"); }
+const fmtDate=ts=>{ const d=new Date(ts||Date.now()); return d.toLocaleString(); };
 
-/* ========= ENDPOINT DISCOVERY (prova alternative e cacha) ========= */
+/* ==== Mascheramento IP locale (IPv4 & IPv6) ==== */
+function maskIpLocal(ip=""){
+  if(!$("maskIp").checked) return ip||"";
+  if(!ip) return "";
+  if(ip.includes(".")){ // v4
+    const p=ip.split(".");
+    if(p.length===4){ p[2]="**"; p[3]="**"; }
+    return p.join(".");
+  }
+  if(ip.includes(":")){ // v6
+    const p=ip.split(":"); p[p.length-1]="****"; return p.join(":");
+  }
+  return ip;
+}
+
+/* ========= ENDPOINT DISCOVERY ========= */
 const CACHE_EP = JSON.parse(LS.getItem("admin_endpoints")||"{}");
 async function discoverEndpoint(key, candidates){
   if(CACHE_EP[key]) return CACHE_EP[key];
@@ -138,22 +160,19 @@ async function discoverEndpoint(key, candidates){
     try{
       const r=await fetch(path,{headers:{"x-admin-token":getTok()}});
       if(r.ok){ CACHE_EP[key]=path; LS.setItem("admin_endpoints",JSON.stringify(CACHE_EP)); dbg("OK endpoint",key,"→",path); return path; }
-      else dbg("Probe",path,"status",r.status);
     }catch(e){ dbg("Probe error",path,String(e)); }
   }
-  // fallback: primo
-  CACHE_EP[key]=candidates[0]; return candidates[0];
+  CACHE_EP[key]=candidates[0];
+  return candidates[0];
 }
 
 /* ========= FETCH ROBUSTO ========= */
-async function getJSON(url){
+async function getJSON(url, headers={}){
   try{
-    const r=await fetch(url,{headers:{"x-admin-token":getTok()}});
-    const raw=await r.text();
-    let data=null; try{ data=JSON.parse(raw); }catch{ data=null; }
-    if(!r.ok){ dbg("ERR",url,"status",r.status,raw.slice(0,400)); return {ok:false,data:null,raw,status:r.status}; }
-    return {ok:true,data,raw,status:r.status};
-  }catch(e){ dbg("NET ERR",url,String(e)); return {ok:false,data:null,raw:String(e),status:0}; }
+    const r=await fetch(url,{headers:{ "x-admin-token":getTok(), ...headers }});
+    const raw=await r.text(); let data=null; try{ data=JSON.parse(raw); }catch{}
+    return { ok:r.ok, status:r.status, data, raw };
+  }catch(e){ return { ok:false, status:0, data:null, raw:String(e) }; }
 }
 const pickArray = d => Array.isArray(d) ? d : (d?.items||d?.logs||d?.data||[]);
 
@@ -168,15 +187,49 @@ async function adminCheck(){
   return yes;
 }
 
-/* ========= RENDER ========= */
+/* ========= Normalizzazione record ========= */
+function normItem(raw){
+  const domanda = raw.domanda ?? raw.question ?? raw.q ?? raw.input ?? raw.prompt ?? raw.text ?? "";
+  const answer  = raw.answer  ?? raw.risposta ?? "";
+  return {
+    ts: raw.ts ?? raw.time ?? raw.timestamp ?? Date.now(),
+    ip: (raw.ip_masked ?? raw.ip ?? ""),
+    user_type: raw.user_type ?? raw.userType ?? raw.type ?? "",
+    style: raw.style ?? raw.stile ?? "",
+    lang: raw.lang ?? raw.language ?? "it",
+    periodo: raw.periodo ?? raw.period ?? raw.time_mode ?? raw.tempo ?? "",
+    answer_chars: raw.answer_chars ?? raw.answerLen ?? (typeof answer==="string"?answer.length:0),
+    domanda: String(domanda||"").replace(/\s+/g," ").trim()
+  };
+}
+function normalizeArray(arr){ return (arr||[]).map(normItem); }
+
+/* ========= Render ========= */
 function compactMap(obj,label){ if(!obj||typeof obj!=="object") return `${label}: —`; return `${label}: `+Object.entries(obj).map(([k,v])=>`${k}: ${v}`).join(" · "); }
-function renderTrend(tr){ if(!tr) return; const ctx=$("trendChart").getContext("2d"); if(chart) chart.destroy(); chart=new Chart(ctx,{type:"bar",data:{labels:tr.labels||[],datasets:[{label:"Richieste/giorno",data:tr.data||[]}]},options:{plugins:{legend:{display:false}},responsive:true}}); }
-function drawStats(S){ $("stTotal").textContent=S.total??"0"; $("stToday").textContent=S.today??"0"; $("stLast7").textContent=S.last7??"0"; $("stStyle").textContent=compactMap(S.byStyle,"Per stile"); $("stLang").textContent=compactMap(S.byLang,"Per lingua"); $("stPeriod").textContent=compactMap(S.byPeriod,"Per tempo"); $("stUsers").textContent=compactMap(S.byUserType,"User types"); renderTrend(S.trend); }
+function renderTrend(tr){
+  const ctx=$("trendChart").getContext("2d");
+  if(chart) chart.destroy();
+  chart=new Chart(ctx,{type:"bar",data:{labels:tr?.labels||[],datasets:[{label:"Richieste/giorno",data:tr?.data||[]}]},options:{plugins:{legend:{display:false}},responsive:true}});
+}
+function drawStats(S){
+  $("stTotal").textContent=S.total??"0";
+  $("stToday").textContent=S.today??"0";
+  $("stLast7").textContent=S.last7??"0";
+  $("stStyle").textContent=compactMap(S.byStyle,"Per stile");
+  $("stLang").textContent =compactMap(S.byLang,"Per lingua");
+  $("stPeriod").textContent=compactMap(S.byPeriod,"Per tempo");
+  $("stUsers").textContent =compactMap(S.byUserType,"User types");
+  renderTrend(S.trend||{labels:[],data:[]});
+}
 function drawTable(items){
   const fs=$("fStyle").value, fl=$("fLang").value, fp=$("fPeriod").value, fu=$("fUser").value, q=$("q").value.toLowerCase();
   const rows=(items||[]).filter(x=>{
-    if(fs && x.style!==fs) return false; if(fl && x.lang!==fl) return false; if(fp && x.periodo!==fp) return false; if(fu && x.user_type!==fu) return false;
-    if(q && !String(x.domanda||"").toLowerCase().includes(q)) return false; return true;
+    if(fs && x.style!==fs) return false;
+    if(fl && x.lang!==fl) return false;
+    if(fp && x.periodo!==fp) return false;
+    if(fu && x.user_type!==fu) return false;
+    if(q && !String(x.domanda||"").toLowerCase().includes(q)) return false;
+    return true;
   });
   const tb=$("tbl").querySelector("tbody"); tb.innerHTML="";
   $("noData").style.display=rows.length? "none":"block";
@@ -184,49 +237,55 @@ function drawTable(items){
     const tr=document.createElement("tr");
     const td=(t,cls)=>{const x=document.createElement("td"); if(cls) x.className=cls; x.textContent=t; return x;};
     tr.append(
-      td(fmtDate(it.ts||it.time||Date.now())),
-      td(maskIp(it.ip||"")),
+      td(fmtDate(it.ts)),
+      td(maskIpLocal(it.ip||"")),
       td(it.user_type||""),
       td(it.style||""),
       td(it.lang||""),
       td(it.periodo||""),
-      td(String(it.answer_chars??it.len??0),"right"),
-      (()=>{const x=td("", "wrap"); x.textContent=String(it.domanda||"").replace(/\s+/g," ").trim(); return x;})()
+      td(String(it.answer_chars??0),"right"),
+      (()=>{const x=td("", "wrap"); x.textContent=String(it.domanda||""); return x;})()
     );
     tb.appendChild(tr);
   }
 }
 
-/* ========= LOAD ALL ========= */
+/* ========= LOAD ALL (con fallback anti-domande-vuote) ========= */
 let EP_LOGS=null, EP_STATS=null;
 async function loadAll(){
   $("ts").textContent=new Date().toLocaleString();
 
-  // discover endpoints se non c'è cache
   if(!EP_STATS) EP_STATS = await discoverEndpoint("stats", ["/api/admin-stats","/api/admin/stats"]);
   if(!EP_LOGS)  EP_LOGS  = await discoverEndpoint("logs",  ["/api/admin-logs","/api/admin/logs"]);
 
   // stats
   const days=$("trendSel").value||"10";
   const st=await getJSON(`${EP_STATS}?days=${encodeURIComponent(days)}`);
-  if(st.ok){ drawStats(st.data||{}); } else { drawStats({}); dbg("stats fail",st.status); }
+  if(st.ok) drawStats(st.data||{}); else { drawStats({}); dbg("stats fail",st.status); }
 
-  // logs (senza mask lato server)
+  // logs — rispetta spunta IP e recupera domande anche se il server le nasconde con mask=1
   const limit=$("limitSel").value||"200";
-  const lg=await getJSON(`${EP_LOGS}?limit=${encodeURIComponent(limit)}`);
-  let arr = pickArray(lg.data).map(x=>({
-    ts: x.ts ?? x.time ?? Date.now(),
-    ip: x.ip ?? "",
-    user_type: x.user_type ?? x.userType ?? "",
-    style: x.style ?? "",
-    lang: x.lang ?? "",
-    periodo: x.periodo ?? x.time_mode ?? "",
-    answer_chars: x.answer_chars ?? x.len ?? 0,
-    domanda: x.domanda ?? x.q ?? ""
-  }));
-  if(!lg.ok){ dbg("logs fail",lg.status, (lg.raw||"").slice(0,200)); }
-  LAST_ITEMS = arr;
-  drawTable(arr);
+  const wantMask = $("maskIp").checked ? "1" : "0";
+
+  // primo tentativo: come chiesto dalla UI
+  let lg = await getJSON(`${EP_LOGS}?limit=${encodeURIComponent(limit)}&mask=${wantMask}`);
+  let items = normalizeArray(pickArray(lg.data));
+
+  // se con mask=1 più della metà ha domanda vuota, rifacciamo mask=0 e mascheriamo localmente l'IP
+  if (wantMask==="1") {
+    const emptyRatio = items.length ? items.filter(x=>!x.domanda).length/items.length : 1;
+    if (emptyRatio > 0.5) {
+      const lg2 = await getJSON(`${EP_LOGS}?limit=${encodeURIComponent(limit)}&mask=0`);
+      if (lg2.ok) {
+        items = normalizeArray(pickArray(lg2.data)).map(r=>({ ...r, ip: maskIpLocal(r.ip||"") }));
+      }
+    }
+  }
+
+  LAST_ITEMS = items;
+  drawTable(items);
+
+  if(!lg.ok) dbg("logs fail",lg.status,(lg.raw||"").slice(0,200));
 }
 
 /* ========= CSV ========= */
@@ -234,7 +293,7 @@ function toCSV(items){
   const esc=s=>('"'+String(s??"").replace(/"/g,'""')+'"');
   const head=["quando","ip","tipo","stile","lingua","tempo","len","domanda"];
   const rows=items.map(it=>[
-    fmtDate(it.ts), maskIp(it.ip), it.user_type, it.style, it.lang, it.periodo, it.answer_chars, (it.domanda||"").replace(/\s+/g," ").trim()
+    fmtDate(it.ts), maskIpLocal(it.ip), it.user_type||"", it.style||"", it.lang||"", it.periodo||"", it.answer_chars||"", (it.domanda||"").replace(/\s+/g," ").trim()
   ].map(esc).join(","));
   return head.join(",")+"\n"+rows.join("\n");
 }
