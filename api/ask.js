@@ -1,5 +1,6 @@
 // /api/ask.js — What?f Engine (WhatIf naturale + WTF demenziale — MULTILINGUA)
-// Versione: identica alla tua, con WhatIf più breve/emotivo e WTF con oggetti contestuali + sbronza variabile + morale forzata
+// Versione: identica alla tua, con WhatIf più breve/emotivo (+ frase motivante breve) e
+// WTF con oggetti contestuali + sbronza da bar + morale + tono leggermente demotivante
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -33,7 +34,10 @@ function cors(req, res) {
 
 /* ========= Helpers ========= */
 const SUP_LANGS = ["it","en","es","fr","de"];
-const normLang = (l="it") => SUP_LANGS.includes(String(l||"it").toLowerCase().slice(0,2)) ? String(l).toLowerCase().slice(0,2) : "it";
+const normLang = (l="it") =>
+  SUP_LANGS.includes(String(l||"it").toLowerCase().slice(0,2))
+    ? String(l).toLowerCase().slice(0,2)
+    : "it";
 
 const normLine = (s="") => String(s).toLowerCase()
   .replace(/[“”"']/g,"").replace(/\s+/g," ")
@@ -47,10 +51,18 @@ function tightenSentences(text, maxSentences){
 }
 function clampWords(text, maxWords){
   const w=String(text||"").split(/\s+/); if(w.length<=maxWords) return text;
-  const slice=w.slice(0,maxWords).join(" "); const m=slice.match(/([\s\S]*?[.!?…])(?![\s\S]*[.!?…])/);
+  const slice=w.slice(0,maxWords).join(" ");
+  const m=slice.match(/([\s\S]*?[.!?…])(?![\s\S]*[.!?…])/);
   return m?m[1]:slice+"…";
 }
-function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\.\.\.+/g,"…").replace(/\s+([.,;:!?])/g,"$1").trim(); }
+function normalizeOneParagraph(s=""){
+  return String(s)
+    .replace(/\s*\n+\s*/g," ")
+    .replace(/\s{2,}/g," ")
+    .replace(/\.\.\.+/g,"…")
+    .replace(/\s+([.,;:!?])/g,"$1")
+    .trim();
+}
 function stripQuestionEcho(domanda,text){
   let t=String(text||"");
   const d=String(domanda||"").replace(/[“”"']/g,"").trim().toLowerCase();
@@ -65,7 +77,7 @@ const sentenceCaseAll = (s="") => s.replace(/(^|[.!?…]\s+)([a-zà-ÿ])/gu,(m,p
 const finalPunct = (s="") => /[.!?…]$/.test(s)?s:s+".";
 
 /* ========= WHAT IF ========= */
-// ➜ Modifica: 7–9 frasi (prima 8–11) e richiesta di tocco più emotivo
+// ➜ Modifica: 7–9 frasi (prima 8–11) e tono leggermente più emotivo + aggiunta frase motivante breve in post-process
 const WHATIF_RULES = {
   it: `Sei "What If": voce calma, empatica, concreta (sfumatura leggermente più emotiva). Scrivi in ITALIANO.
 Paragrafo unico, 7–9 frasi, no elenchi né emoji, NON ripetere la domanda.
@@ -94,7 +106,7 @@ const WHATIF_EXAMPLES = {
 };
 
 /* ========= WTF ========= */
-/* --- Banche con più varietà (oggetti, prese in giro, SBRONZA variabile, morale forzata) --- */
+/* --- Banche con varietà: oggetti, prese in giro, sbronza da bar (no paroloni), morale forzata --- */
 const BANK = {
   it: {
     teasers: [
@@ -129,27 +141,28 @@ const BANK = {
       "perché oggi si sente sindaco del tuo salotto","perché ha letto la tua scaletta (e ha riso)"
     ],
     impre: ["bestemmione corazzato","imprecazionona a detonazione","sacramentata a ciel sereno","vulcano d’anatemi","tromba d’aria di improperi"],
-    // ➜ Sbronza molto più varia (senza ripetizioni)
     booze: [
-      "NEGRONI APOCALITTICI A SECCHIATE","TEQUILA ORBITALE A CASCATE","RUM INTERSTELLARE IN TANICA","GRAPPA QUANTISTICA A LITRI",
-      "SPRITZ OCEANICI IN VASCA","BIRRA A IDRANTE, SIRENE INCLUSE","VINO A PIENA CASCATA CON OVAZIONI",
-      "MEZCAL COSMICO IN BROCCA","AMARO GALATTICO A DOPPIO GIRO","VERMOUTH TELLURICO IN CARAFFA",
-      "SAKE LUNARE IN CARAFFE","SOJU STRATOSFERICO A RONDINI","CIDER VULCANICO A ONDATE",
-      "WHISKY TIFONICO SENZA GHIACCIO","LIMONCELLO TORNADICO POST-CENA","CAIPIRINHA TROPICALE DA CANTIERE"
+      "negroni grossi come la sete",
+      "tequila a giri di shot",
+      "rum in bicchieri di plastica",
+      "birra media una dietro l’altra",
+      "vino della casa a caraffa",
+      "spritz a raffica dal bancone",
+      "amaro doppio perché ‘fa bene’"
     ],
     morals: [
-      "Morale: il caos ride se ridi prima tu.",
-      "Morale: le scuse scadono, l’azione no.",
-      "Morale: fai pace col casino e usalo come benzina.",
-      "Morale: scegli una micro-mossa e difendila dai drammi.",
-      "Morale: se vuoi cambiare il giorno, inizia dall’ora."
+      "Morale: nessuno viene a salvarti; o ti muovi o resti qui.",
+      "Morale: smetti di negoziare col divano.",
+      "Morale: meno drama, più minuti fatti.",
+      "Morale: la motivazione non arriva, la costruisci in piccolo.",
+      "Morale: scegli una cosa minuscola e falla male, ma falla."
     ],
     dumbTips: [
       "Consiglio scemo: metti il timer nel freezer, così lo apri per qualcosa.",
       "Consiglio scemo: scrivi il piano su uno scontrino e timbralo.",
       "Consiglio scemo: prometti alla moka un aumento se parte al primo colpo.",
-      "Consiglio scemo: cambia password in ‘ho-finito-questa-cosa’ (funziona più del previsto).",
-      "Consiglio scemo: metti le chiavi nel frigo accanto al piano (o non esci o lo fai)."
+      "Consiglio scemo: cambia password in ‘ho-finito-questa-cosa’.",
+      "Consiglio scemo: metti le chiavi nel frigo accanto al piano."
     ],
     emoEnd: [
       "E sì: sotto tutto questo rumore, tu ci tieni davvero.",
@@ -167,21 +180,44 @@ const BANK = {
       "Deep breath: failing loudly is allowed, just do it with taste.",
       "Cool your jets: even your to-do list needs a helmet."
     ],
-    scenes: ["the couch echoing your thoughts","the fridge silently judging","a desk that thinks it’s a shrine","the plant auditing your soul","the doorbell ringing at epiphany o’clock","the hallway pretending to be a red carpet"],
+    scenes: [
+      "the couch echoing your thoughts","the fridge silently judging","a desk that thinks it’s a shrine",
+      "the plant auditing your soul","the doorbell ringing at epiphany o’clock","the hallway pretending to be a red carpet"
+    ],
     objects: ["coffee maker","fan","blind","lamp","Alexa","fridge","doorbell","plant","microwave","printer","remote","vacuum","toaster","stove","swivel chair","bike by the door","backpack on the hook"],
     verbs: ["cheers","boo","goes on strike","puts you on mute","files a complaint","switches to airplane mode","ghosts you","self-diagnoses","opens a ticket","assigns you a sprint","tags you publicly","pretends to update"],
     twists: ["because it knows how this ends","out of professional courtesy","‘out of respect’","to avoid witnessing the mess","because even it has limits","because today it’s mayor of your living room","because it read your checklist (and laughed)"],
     impre: ["armored expletive","detonating cuss","sky-splitting sacrament","volcano of curses","tornado of swears"],
     booze: [
-      "APOCALYPTIC NEGRONIS BY THE BUCKET","ORBITAL TEQUILA IN WATERFALLS","INTERSTELLAR RUM IN JERRYCANS","QUANTUM GRAPPA BY THE LITER",
-      "OCEANIC SPRITZ SERVED IN A TUB","HYDRANT-PRESSURE BEER WITH SIRENS","WATERFALLS OF WINE WITH OVATION",
-      "COSMIC MEZCAL BY THE PITCHER","GALACTIC AMARO DOUBLE ROUND","TECTONIC VERMOUTH IN CARAFE",
-      "LUNAR SAKE IN CARAFES","STRATOSPHERIC SOJU IN SWINGS","VOLCANIC CIDER IN WAVES",
-      "TYPHOON WHISKEY NO ICE","TORNADO LIMONCELLO AFTER DINNER","CONSTRUCTION-SITE CAIPIRINHAS"
+      "Negronis the size of your thirst",
+      "Tequila in shot rounds",
+      "Rum in plastic cups",
+      "Pints back to back",
+      "House wine by the carafe",
+      "Spritz on repeat from the bar",
+      "Double amaro ‘for digestion’"
     ],
-    morals: ["Moral: laugh first, chaos follows.","Moral: excuses expire, action doesn’t.","Moral: befriend the mess, spend it as fuel.","Moral: pick one tiny move and defend it.","Moral: to change a day, start with the hour."],
-    dumbTips: ["Dumb tip: park your timer in the freezer so you open it for a reason.","Dumb tip: write the plan on a receipt and stamp it.","Dumb tip: promise the coffee maker a raise if it starts first try.","Dumb tip: change your password to ‘i-finished-this’.","Dumb tip: put the keys next to the plan in the fridge."],
-    emoEnd: ["And yes: beneath the noise, you actually care.","Truth is: you don’t want perfect, you want yours.","Look at you: you’re ready to try for real.","You know yourself: once you start, you commit.","You deserve a version that smells like now."]
+    morals: [
+      "Moral: no one’s coming; move or stay.",
+      "Moral: stop negotiating with the couch.",
+      "Moral: less drama, more done minutes.",
+      "Moral: motivation doesn’t arrive; you build it small.",
+      "Moral: pick a tiny task and do it badly, but do it."
+    ],
+    dumbTips: [
+      "Dumb tip: park your timer in the freezer so you open it for a reason.",
+      "Dumb tip: write the plan on a receipt and stamp it.",
+      "Dumb tip: promise the coffee maker a raise if it starts first try.",
+      "Dumb tip: change your password to ‘i-finished-this’.",
+      "Dumb tip: put the keys next to the plan in the fridge."
+    ],
+    emoEnd: [
+      "And yes: beneath the noise, you actually care.",
+      "Truth is: you don’t want perfect, you want yours.",
+      "Look at you: you’re ready to try for real.",
+      "You know yourself: once you start, you commit.",
+      "You deserve a version that smells like now."
+    ]
   },
   es: {
     teasers: [
@@ -191,21 +227,44 @@ const BANK = {
       "Inhala: fallar a lo grande se permite, pero con estilo.",
       "Calma: tu lista de tareas pide casco."
     ],
-    scenes: ["el sofá con eco","la nevera que juzga","el escritorio-altar","la planta auditora","el timbre oportunista","el pasillo con alfombra roja imaginaria"],
+    scenes: [
+      "el sofá con eco","la nevera que juzga","el escritorio-altar","la planta auditora",
+      "el timbre oportunista","el pasillo con alfombra roja imaginaria"
+    ],
     objects: ["cafetera","ventilador","persiana","lámpara","Alexa","nevera","timbre","planta","microondas","impresora","mando","aspiradora","tostadora","horno","silla giratoria","bici junto a la puerta","mochila en el perchero"],
     verbs: ["aplaude","abuchea","se pone en huelga","te silencia","presenta queja","activa modo avión","te hace ghosting","se autodiagnostica","abre un ticket","te asigna un sprint","te etiqueta en público","finge una actualización"],
     twists: ["porque ya sabe cómo acaba","por cortesía profesional","«por respeto»","para no ver el desastre","porque también tiene límites","porque hoy es alcalde de tu salón","porque leyó tu lista (y se rió)"],
     impre: ["blasfemia blindada","improperio detonante","sacramento a cielo abierto","volcán de maldiciones","tromba de juramentos"],
     booze: [
-      "NEGRONIS APOCALÍPTICOS EN CUBO","TEQUILA ORBITAL A CASCADAS","RON INTERESTELAR EN BIDÓN","GRAPPA CUÁNTICA A LITROS",
-      "SPRITZ OCEÁNICOS EN BAÑERA","CERVEZA A HIDRANTE CON SIRENAS","CASCADAS DE VINO CON OVACIÓN",
-      "MEZCAL CÓSMICO EN JARRA","AMARO GALÁCTICO DOBLE RONDA","VERMUT TECTÓNICO EN JARRA",
-      "SAKÉ LUNAR EN JARRAS","SOJU ESTRATOSFÉRICO A TIRONES","SIDRA VOLCÁNICA EN OLAS",
-      "WHISKY TIFÓN SIN HIELO","LIMONCELLO TORNADO TRAS CENA","CAIPIRINHA DE OBRA"
+      "negronis del tamaño de tu sed",
+      "tequila a rondas de shots",
+      "ron en vaso de plástico",
+      "cañas una detrás de otra",
+      "vino de la casa en jarra",
+      "spritz en racha desde la barra",
+      "amaro doble ‘porque ayuda’"
     ],
-    morals: ["Moral: ríe primero y el caos obedece.","Moral: las excusas caducan, moverte no.","Moral: hazte amigo del lío y quémalo como combustible.","Moral: elige un micro-paso y protégelo.","Moral: para cambiar el día, cambia la primera hora."],
-    dumbTips: ["Tip tonto: mete el temporizador en el congelador.","Tip tonto: escríbelo en un ticket y ponle sello.","Tip tonto: prométele a la cafetera un bonus.","Tip tonto: cambia la contraseña a ‘lo-terminé’.","Tip tonto: guarda las llaves junto al plan en la nevera."],
-    emoEnd: ["Y sí: debajo del ruido, te importa de verdad.","En el fondo: no quieres perfecto, quieres tuyo.","Mírate: listo para intentarlo de verdad.","Te conoces: si empiezas, te comprometes.","Te mereces una versión que huele a ahora."]
+    morals: [
+      "Moral: nadie viene a salvarte; muévete o te quedas.",
+      "Moral: deja de negociar con el sofá.",
+      "Moral: menos drama, más minutos hechos.",
+      "Moral: la motivación no llega; la fabricas en pequeño.",
+      "Moral: elige algo mínimo y hazlo mal, pero hazlo."
+    ],
+    dumbTips: [
+      "Tip tonto: mete el temporizador en el congelador.",
+      "Tip tonto: escríbelo en un ticket y ponle sello.",
+      "Tip tonto: prométele a la cafetera un bonus.",
+      "Tip tonto: cambia la contraseña a ‘lo-terminé’.",
+      "Tip tonto: guarda las llaves junto al plan en la nevera."
+    ],
+    emoEnd: [
+      "Y sí: debajo del ruido, te importa de verdad.",
+      "En el fondo: no quieres perfecto, quieres tuyo.",
+      "Mírate: listo para intentarlo de verdad.",
+      "Te conoces: si empiezas, te comprometes.",
+      "Te mereces una versión que huele a ahora."
+    ]
   },
   fr: {
     teasers: [
@@ -215,21 +274,44 @@ const BANK = {
       "Inspire : rater fort est autorisé, mais avec panache.",
       "Calme : même ta to-do exige un casque."
     ],
-    scenes: ["le canapé qui résonne","le frigo juge muet","le bureau-autel","la plante commissaire","la sonnette prophétique","le couloir qui se prend pour un tapis rouge"],
+    scenes: [
+      "le canapé qui résonne","le frigo juge muet","le bureau-autel","la plante commissaire",
+      "la sonnette prophétique","le couloir qui se prend pour un tapis rouge"
+    ],
     objects: ["cafetière","ventilateur","store","lampe","Alexa","frigo","sonnette","plante","micro-ondes","imprimante","télécommande","aspirateur","grille-pain","four","chaise pivotante","vélo près de la porte","sac à dos au portemanteau"],
     verbs: ["applaudit","hue","se met en grève","te met en silencieux","dépose plainte","passe en mode avion","te ghoste","s’auto-diagnostique","ouvre un ticket","t’assigne un sprint","te tague en public","fait semblant de se mettre à jour"],
     twists: ["car il connaît déjà la fin","par courtoisie pro","« par respect »","pour ne pas voir le bazar","car lui aussi a des limites","car aujourd’hui il est maire de ton salon","car il a lu ta liste (et a ri)"],
     impre: ["gros juron blindé","imprécation détonante","sacre en plein ciel","volcan de jurons","tornade d’insultes"],
     booze: [
-      "NEGRONIS APOCALYPTIQUES AU SEAU","TEQUILA ORBITALE EN CASCADES","RHUM INTERSTELLAIRE EN JERRICAN","GRAPPA QUANTIQUE AU LITRE",
-      "SPRITZ OCÉANIQUES DANS LA BAIGNOIRE","BIÈRE À HYDRANT AVEC SIRÈNES","CASCADES DE VIN AVEC OVATION",
-      "MEZCAL COSMIQUE EN PICHE","AMARO GALACTIQUE EN DOUBLE TOUR","VERMOUTH TECTONIQUE EN CARAFE",
-      "SAKÉ LUNAIRE EN CARAFES","SOJU STRATOSPHÉRIQUE EN TRAITS","CIDRE VOLCANIQUE EN VAGUES",
-      "WHISKY TYPHON SANS GLACE","LIMONCELLO TORNADO APRÈS REPAS","CAÏPIRINHA DE CHANTIER"
+      "negronis à la taille de ta soif",
+      "tequila en tournées de shots",
+      "rhum en gobelets",
+      "demis à la chaîne",
+      "vin de la maison en carafe",
+      "spritz en série au comptoir",
+      "amaro double ‘c’est pour digérer’"
     ],
-    morals: ["Morale : ris d’abord, le chaos suit.","Morale : les excuses périment, l’action non.","Morale : fais la paix avec le bazar et brûle-le en carburant.","Morale : choisis un micro-pas et protège-le.","Morale : pour changer la journée, change la première heure."],
-    dumbTips: ["Astuce bête : minuteur au congélo.","Astuce bête : écris le plan sur un ticket et tamponne.","Astuce bête : promets une prime à la cafetière.","Astuce bête : change le mot de passe en ‘j-ai-fini-ça’.","Astuce bête : mets les clés près du plan dans le frigo."],
-    emoEnd: ["Et oui : sous le bruit, tu y tiens vraiment.","Au fond : tu ne veux pas parfait, tu veux à toi.","Regarde-toi : prêt à essayer pour de vrai.","Tu te connais : si tu commences, tu t’y mets.","Tu mérites une version qui sent le présent."]
+    morals: [
+      "Morale : personne ne vient te sauver ; bouge ou reste.",
+      "Morale : arrête de négocier avec le canapé.",
+      "Morale : moins de drame, plus de minutes faites.",
+      "Morale : la motivation n’arrive pas ; tu la construis en petit.",
+      "Morale : choisis un minuscule truc et fais-le mal, mais fais-le."
+    ],
+    dumbTips: [
+      "Astuce bête : minuteur au congélo.",
+      "Astuce bête : écris le plan sur un ticket et tamponne.",
+      "Astuce bête : promets une prime à la cafetière.",
+      "Astuce bête : change le mot de passe en ‘j-ai-fini-ça’.",
+      "Astuce bête : mets les clés près du plan dans le frigo."
+    ],
+    emoEnd: [
+      "Et oui : sous le bruit, tu y tiens vraiment.",
+      "Au fond : tu ne veux pas parfait, tu veux à toi.",
+      "Regarde-toi : prêt à essayer pour de vrai.",
+      "Tu te connais : si tu commences, tu t’y mets.",
+      "Tu mérites une version qui sent le présent."
+    ]
   },
   de: {
     teasers: [
@@ -239,21 +321,44 @@ const BANK = {
       "Tief einatmen: laut scheitern ist erlaubt, aber mit Stil.",
       "Beruhig dich: selbst deine To-do braucht einen Helm."
     ],
-    scenes: ["das Sofa mit Echo","der stumm urteilende Kühlschrank","der Schreibtisch-Altar","die prüfende Pflanze","die hellsehende Klingel","der Flur als roter Teppich"],
+    scenes: [
+      "das Sofa mit Echo","der stumm urteilende Kühlschrank","der Schreibtisch-Altar","die prüfende Pflanze",
+      "die hellsehende Klingel","der Flur als roter Teppich"
+    ],
     objects: ["Kaffeemaschine","Ventilator","Rollladen","Lampe","Alexa","Kühlschrank","Klingel","Pflanze","Mikrowelle","Drucker","Fernbedienung","Staubsauger","Toaster","Ofen","Drehstuhl","Rad an der Tür","Rucksack am Haken"],
     verbs: ["applaudiert","buht","streikt","schaltet dich stumm","reicht Beschwerde ein","schaltet in Flugmodus","ghostet dich","diagnostiziert sich selbst","öffnet ein Ticket","ordnet dir einen Sprint zu","taggt dich öffentlich","spielt Update vor"],
     twists: ["weil es das Ende kennt","aus Kollegialität","„aus Respekt“","um das Chaos nicht anzusehen","weil auch es Grenzen hat","weil es heute Bürgermeister deines Wohnzimmers ist","weil es deine Liste gelesen hat (und gelacht)"],
     impre: ["gepanzertes Fluchen","detonierender Fluch","Himmels-Sakralschrei","Vulkan der Schimpfwörter","Tornado der Verwünschungen"],
     booze: [
-      "APOKALYPTISCHE NEGRONIS IM EIMER","ORBITALE TEQUILA ALS WASSERFALL","INTERSTELLARER RUM IM KANISTER","QUANTEN-GRAPPA LITERWEISE",
-      "OZEANISCHE SPRITZ IN DER WANNE","HYDRANTEN-BIER MIT SIRENEN","WEINWASSERFÄLLE MIT OVATION",
-      "KOSMISCHER MEZCAL AUS DEM KRUG","GALAKTISCHER AMARO DOPPELT","TEKTONISCHER WERMUT AUS DER KARAFFE",
-      "LUNARER SAKE IN KARAFFEN","STRATOSPHÄRISCHER SOJU IN ZÜGEN","VULKANISCHER CIDER IN WELLEN",
-      "TYPHON-WHISKY OHNE EIS","TORNADO-LIMONCELLO NACH DEM ESSEN","BAUSTELLEN-CAIPIRINHA"
+      "Negronis so groß wie dein Durst",
+      "Tequila in Shot-Runden",
+      "Rum im Plastikbecher",
+      "Halbe nacheinander",
+      "Hauswein aus der Karaffe",
+      "Spritz in Serie an der Theke",
+      "doppelter Amaro ‘ist ja gesund’"
     ],
-    morals: ["Moral: lach zuerst, dann stolpert das Chaos.","Moral: Ausreden verfallen, Aktion nicht.","Moral: Freund dich mit dem Durcheinander an, nutz es als Treibstoff.","Moral: Wähle eine Mikro-Aktion und beschütze sie.","Moral: Um den Tag zu drehen, dreh die erste Stunde."],
-    dumbTips: ["Blöder Tipp: Timer ins Gefrierfach.","Blöder Tipp: Plan auf Bon schreiben und stempeln.","Blöder Tipp: Prämie für die Kaffeemaschine versprechen.","Blöder Tipp: Passwort zu ‘ich-hab-das-fertig’ ändern.","Blöder Tipp: Schlüssel neben den Plan in den Kühlschrank."],
-    emoEnd: ["Und ja: unter dem Lärm liegt es dir wirklich am Herzen.","Eigentlich willst du nicht perfekt, sondern deins.","Sieh dich an: bereit, es wirklich zu versuchen.","Du kennst dich: Start heißt ernst.","Du verdienst eine Version, die nach Jetzt riecht."]
+    morals: [
+      "Moral: Niemand kommt; beweg dich oder bleib.",
+      "Moral: Hör auf, mit dem Sofa zu verhandeln.",
+      "Moral: Weniger Drama, mehr gemachte Minuten.",
+      "Moral: Motivation kommt nicht; du baust sie klein.",
+      "Moral: Nimm etwas Winziges und mach’s schlecht, aber mach’s."
+    ],
+    dumbTips: [
+      "Blöder Tipp: Timer ins Gefrierfach.",
+      "Blöder Tipp: Plan auf Bon schreiben und stempeln.",
+      "Blöder Tipp: Prämie für die Kaffeemaschine versprechen.",
+      "Blöder Tipp: Passwort zu ‘ich-hab-das-fertig’ ändern.",
+      "Blöder Tipp: Schlüssel neben den Plan in den Kühlschrank."
+    ],
+    emoEnd: [
+      "Und ja: unter dem Lärm liegt es dir wirklich am Herzen.",
+      "Eigentlich willst du nicht perfekt, sondern deins.",
+      "Sieh dich an: bereit, es wirklich zu versuchen.",
+      "Du kennst dich: Start heißt ernst.",
+      "Du verdienst eine Version, die nach Jetzt riecht."
+    ]
   }
 };
 
@@ -261,13 +366,20 @@ const BANK = {
 function hash32(s){ return createHash("sha1").update(s).digest().readUInt32BE(0); }
 function makePRNG(seed){ let x = seed >>> 0; return ()=>{ x=(x*1664525+1013904223)>>>0; return x/2**32; }; }
 function pick(prng, arr){ return arr[Math.floor(prng()*arr.length)] }
-function pickMany(prng, arr, k){ const a=[...arr]; const out=[]; for(let i=0;i<Math.max(0,Math.min(k,a.length));i++){ const idx=Math.floor(prng()*a.length); out.push(a.splice(idx,1)[0]); } return out; }
+function pickMany(prng, arr, k){
+  const a=[...arr];
+  const out=[];
+  for(let i=0;i<Math.max(0,Math.min(k,a.length));i++){
+    const idx=Math.floor(prng()*a.length);
+    out.push(a.splice(idx,1)[0]);
+  }
+  return out;
+}
 
 /* ===== Oggetti contestuali dalla domanda ===== */
-function deriveContextObjects(domanda, L){
+function deriveContextObjects(domanda){
   const d = String(domanda||"").toLowerCase();
   const add = [];
-  // map semplici: parola chiave -> oggetto/entità di scena
   const map = [
     [/citt[aà]/,"mappa piegata"],
     [/trasloc|casa|appart|affitto/,"scatolone col pennarello"],
@@ -281,7 +393,6 @@ function deriveContextObjects(domanda, L){
     [/relaz|amico|partner/,"telefono che vuole essere sincero"]
   ];
   for(const [rx, obj] of map){ if(rx.test(d)) add.push(obj); }
-  // Prendi max 2 oggetti contestuali unici
   return Array.from(new Set(add)).slice(0,2);
 }
 
@@ -294,10 +405,9 @@ function buildOpener(L, domanda){
 }
 function buildObjectReactions(L, domanda, prng, n=3){
   const b=BANK[L]||BANK.it;
-  // unisci banca oggetti + oggetti dal contesto (senza duplicati)
-  const ctx = deriveContextObjects(domanda, L);
+  const ctx = deriveContextObjects(domanda);
   const pool = Array.from(new Set([...(b.objects||[]), ...ctx]));
-  const objs = pickMany(prng, pool, n);
+  const objs = pickMany(prng, pool, n); // 3 oggetti per varietà forte
   return objs.map(o=>{
     const v = pick(prng, b.verbs);
     const tw = pick(prng, b.twists);
@@ -312,17 +422,18 @@ function buildMessages({ domanda, lang, periodo, stile }){
   const baseRules = L==="en"
     ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Second person only.`
     : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona.`;
+
   const temporal = String(periodo).toLowerCase()==="past"
-    ? (L==="en" ? "Write as if it already happened." :
-       L==="es" ? "Escribe como si ya hubiera pasado." :
-       L==="fr" ? "Écris comme si c’était déjà arrivé." :
-       L==="de" ? "Schreibe, als wäre es bereits geschehen." :
-                  "Scrivi come se fosse già successo.")
-    : (L==="en" ? "Write as a near-future unfolding starting now." :
-       L==="es" ? "Escribe como un futuro cercano que empieza ahora." :
-       L==="fr" ? "Écris comme un futur proche qui commence maintenant." :
-       L==="de" ? "Schreibe als nahe Zukunft, die jetzt beginnt." :
-                  "Scrivi come un prossimo futuro che inizia ora.");
+    ? (L==="en" ? "Write as if it already happened."
+       : L==="es" ? "Escribe como si ya hubiera pasado."
+       : L==="fr" ? "Écris comme si c’était déjà arrivé."
+       : L==="de" ? "Schreibe, als wäre es bereits geschehen."
+       : "Scrivi come se fosse già successo.")
+    : (L==="en" ? "Write as a near-future unfolding starting now."
+       : L==="es" ? "Escribe como un futuro cercano que empieza ahora."
+       : L==="fr" ? "Écris comme un futur proche qui commence maintenant."
+       : L==="de" ? "Schreibe als nahe Zukunft, die jetzt beginnt."
+       : "Scrivi come un prossimo futuro che inizia ora.");
 
   const msgs = [
     { role: "system", content: baseRules },
@@ -336,18 +447,22 @@ function buildMessages({ domanda, lang, periodo, stile }){
 
     const opener = buildOpener(L, domanda);
     const impre = pick(rnd, b.impre);
-    const reactLines = buildObjectReactions(L, domanda, rnd, 2 + Math.floor(rnd()*2)); // 2–3 oggetti diversi e contestuali
-    const drinks = pickMany(rnd, b.booze, 2 + (rnd()<0.5?1:0)); // 2–3 giri, sempre vari
+    const reactLines = buildObjectReactions(L, domanda, rnd, 2 + Math.floor(rnd()*2)); // 2–3 reazioni
+    const drinks = pickMany(rnd, b.booze, 2 + (rnd()<0.5?1:0)); // 2–3 giri
     const moral = pick(rnd, b.morals);
     const dumb = pick(rnd, b.dumbTips);
     const emo  = pick(rnd, b.emoEnd);
 
     const wtfRule =
-      L==="en" ? `WHAT THE F (friendly, sharp sarcasm, helpful). Always open with a personalized tease. Keep 5–7 sentences. Flow: tease → 2–3 tiny mishaps → ONE theatrical outburst (“${impre}”, never at people) → ${reactLines.length} talking-object reactions (vary each time; use scene-relevant objects) → **COLOSSAL BOOZE ROUNDS**: ${drinks.join(" + ")} → **2–3 sentences that actually answer the question** → micro-ending: ironic moral + silly on-topic tip + brief emotional beat.`
-      : L==="es" ? `WHAT THE F (amable, sarcasmo afilado, útil). Abre con burla personal. 5–7 frases. Flujo: burla → 2–3 contratiempos → UN estallido («${impre}») → ${reactLines.length} objetos parlantes (siempre distintos y del contexto) → **SOBERANA BORRACHERA**: ${drinks.join(" + ")} → **2–3 frases que sí responden** → cierre: moraleja irónica + consejo tonto + toque emocional.`
-      : L==="fr" ? `WHAT THE F (amical, sarcasme piquant, utile). Commence par une taquinerie perso. 5–7 phrases. Enchaînement : taquinerie → 2–3 couacs → UNE explosion (« ${impre} ») → ${reactLines.length} objets parlants (variés et liés au contexte) → **BITURE COLOSSALE** : ${drinks.join(" + ")} → **2–3 phrases qui répondent vraiment** → fin : morale ironique + astuce débile + note émotive.`
-      : L==="de" ? `WHAT THE F (freundlich, spitzer Sarkasmus, hilfreich). Starte mit persönlichem Necken. 5–7 Sätze. Ablauf: Necken → 2–3 Pannen → EINE theatralische Entladung („${impre}“) → ${reactLines.length} sprechende, kontextbezogene Objekte → **KOSMISCHE SAUFTOUR**: ${drinks.join(" + ")} → **2–3 echte Antwortsätze** → Schluss: ironische Moral + dummer Tipp + kurzer Gefühlsmoment.`
-      : `WHAT THE F (amichevole, sarcasmo affilato, utile). APRI con presa in giro personale. 5–7 frasi. Flusso: presa in giro → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”) → ${reactLines.length} oggetti parlanti (sempre diversi e legati al contesto) → **SBRONZA COLOSSALE**: ${drinks.join(" + ")} → **2–3 frasi che rispondono davvero** → chiusura: morale ironica + consiglio scemo + colpo emotivo breve.`;
+      L==="en"
+        ? `WHAT THE F (friendly, sharp sarcasm, helpful). Always open with a personalized tease. Keep 5–7 sentences. Flow: tease → 2–3 tiny mishaps → ONE theatrical outburst (“${impre}”, never at people) → ${reactLines.length} talking-object reactions (vary each time; scene-relevant) → BOOZE ROUNDS: ${drinks.join(" + ")} → 2–3 sentences that actually answer → close with: ironic moral + silly on-topic tip + brief emotional beat. Tone: slightly demotivating (no pep talk), dry and useful.`
+        : L==="es"
+        ? `WHAT THE F (amable, sarcasmo afilado, útil). Abre con burla personal. 5–7 frases. Flujo: burla → 2–3 contratiempos → UN estallido («${impre}») → ${reactLines.length} objetos parlantes (del contexto) → RONDAS DE BAR: ${drinks.join(" + ")} → 2–3 frases que sí responden → cierre: moraleja irónica + consejo tonto + toque emotivo breve. Tono: ligeramente desmotivante, seco y útil.`
+        : L==="fr"
+        ? `WHAT THE F (amical, sarcasme piquant, utile). Commence par une taquinerie perso. 5–7 phrases. Enchaînement : taquinerie → 2–3 couacs → UNE explosion (« ${impre} ») → ${reactLines.length} objets parlants (contextuels) → TOURNÉES DE BAR : ${drinks.join(" + ")} → 2–3 phrases qui répondent vraiment → fin : morale ironique + astuce débile + note émotive brève. Ton : légèrement démotivant, sec et utile.`
+        : L==="de"
+        ? `WHAT THE F (freundlich, spitzer Sarkasmus, hilfreich). Starte mit persönlichem Necken. 5–7 Sätze. Ablauf: Necken → 2–3 Pannen → EINE theatralische Entladung („${impre}“) → ${reactLines.length} sprechende, kontextbezogene Objekte → BAR-RUNDEN: ${drinks.join(" + ")} → 2–3 echte Antwortsätze → Schluss: ironische Moral + dummer Tipp + kurzer Gefühlsmoment. Ton: leicht demotivierend, trocken und nützlich.`
+        : `WHAT THE F (amichevole, sarcasmo affilato, utile). APRI con presa in giro personale. 5–7 frasi. Flusso: presa in giro → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”) → ${reactLines.length} reazioni di oggetti (sempre diversi e di contesto) → GIRI DA BAR: ${drinks.join(" + ")} → 2–3 frasi che rispondono davvero → chiusura: morale ironica + consiglio scemo + colpo emotivo breve. Tono: leggermente demotivante (niente pep talk), secco e utile.`;
 
     msgs.push(
       { role:"system", content: wtfRule },
@@ -365,7 +480,6 @@ function buildMessages({ domanda, lang, periodo, stile }){
     );
   }
 
-  // ➜ Prompt utente: per WhatIf chiediamo 7–9 frasi; per WTF resta invariato (5–7 frasi verranno imposte dalla rule + post-process)
   const ask =
     stile==="wtf"
       ? (L==="en" ? `Do NOT repeat the question. ONE SINGLE PARAGRAPH. Keep it punchy and helpful. "${domanda}"`
@@ -416,13 +530,34 @@ export default async function handler(req, res){
 
     // ===== Post-process =====
     answer = stripQuestionEcho(domanda, answer);
-    // ➜ WTF: 7 frasi max (come prima). WHAT IF: ora 9 frasi max (prima 11).
+    // WTF: 7 frasi max; WHAT IF: 9 frasi max
     answer = tightenSentences(answer, stile === "wtf" ? 7 : 9);
-    // ➜ WHAT IF leggermente più corto: 140 parole (prima 165)
+    // WHAT IF più corto: ~140 parole; WTF: ~135 parole
     answer = clampWords(answer, stile === "wtf" ? 135 : 140);
     answer = normalizeOneParagraph(answer);
     answer = sentenceCaseAll(answer);
     answer = finalPunct(answer);
+
+    // What If — aggiungi una frase motivante breve (multi-lingua), senza scegliere al posto dell’utente
+    if (stile !== "wtf") {
+      const L = normLang(lang);
+      const MOT_TAIL = {
+        it: "Coraggio: oggi un passo vero.",
+        en: "Courage: one real step today.",
+        es: "Ánimo: un paso real hoy.",
+        fr: "Courage : un vrai pas aujourd’hui.",
+        de: "Mut: heute ein echter Schritt."
+      };
+      const tail = " " + (MOT_TAIL[L] || MOT_TAIL.it);
+      const lower = answer.toLowerCase();
+      if (
+        !lower.includes(MOT_TAIL.it.toLowerCase()) &&
+        !lower.includes((MOT_TAIL[L] || "").toLowerCase())
+      ){
+        answer = finalPunct(answer) + tail;
+      }
+      answer = finalPunct(answer);
+    }
 
     // ===== IT normalizzazioni sicure =====
     if(normLang(lang)==="it"){
@@ -438,7 +573,7 @@ export default async function handler(req, res){
       answer = answer.replace(/\ball’aquila\b/g, "all’Aquila");
     }
 
-    // ===== Maiuscola iniziale =====
+    // Maiuscola iniziale
     answer = answer.replace(/^\s*([a-zà-ÿ])/u, (m,c)=>c.toUpperCase());
 
     return res.status(200).json({ answer, style: stile, lang: normLang(lang), periodo, model: MODEL });
@@ -447,4 +582,4 @@ export default async function handler(req, res){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
-      }
+         }
