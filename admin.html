@@ -11,7 +11,9 @@
     :root{
       --bg:#0A0F14;--surface:#141C22;--accent:#00E0FF;--accent2:#1AFFD5;
       --text:#FFFFFF;--muted:#A0B2BA;--danger:#e85b5b;--ok:#11c46f;
-      --shadow:0 0 14px rgba(0,0,0,.3);
+      --card-border:rgba(255,255,255,.09);
+      --glass:rgba(20,28,34,.85);
+      --shadow:0 0 14px rgba(0,0,0,.35);
     }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Roboto,Arial,sans-serif}
@@ -19,21 +21,34 @@
     main{max-width:1200px;margin:auto;padding:18px}
     .grid{display:grid;gap:14px}
     @media(min-width:900px){.cols-2{grid-template-columns:1fr 1fr}}
-    .card{background:rgba(20,28,34,0.85);backdrop-filter:blur(10px);
-      border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
-    button,input,select{border:none;border-radius:10px;padding:10px 12px;font-size:14px;color:#fff}
-    button{cursor:pointer;font-weight:700}
-    .primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#000}
-    .ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)}
-    .danger{background:var(--danger)}
-    .badge{display:inline-block;background:rgba(255,255,255,.08);border-radius:999px;padding:4px 10px;font-size:12px;margin-right:4px}
-    .muted{color:var(--muted)}
+    .card{
+      background:var(--glass);backdrop-filter:blur(10px);
+      border:1px solid var(--card-border);border-radius:16px;padding:16px;box-shadow:var(--shadow)
+    }
     .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
-    th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left}
-    .ok{color:var(--ok)} .bad{color:var(--danger)}
     .right{margin-left:auto}
-    #statusLine{margin-top:6px}
+    .muted{color:var(--muted)}
+    .badge{display:inline-block;background:rgba(255,255,255,.08);border-radius:999px;padding:4px 10px;font-size:12px;margin-right:4px}
+    .ok{color:var(--ok)} .bad{color:var(--danger)}
+
+    button,input,select{
+      border:none;border-radius:10px;padding:10px 12px;font-size:14px;color:#fff;appearance:none
+    }
+    button{cursor:pointer;font-weight:700}
+    .primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#001014}
+    .ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12)}
+    .danger{background:var(--danger)}
+
+    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+    th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.09);text-align:left;vertical-align:top}
+    th{font-weight:700}
+    input::placeholder{color:#b9c4c9}
+
+    /* Mobile tap target */
+    @media(max-width:480px){
+      button,input,select{padding:12px 14px;font-size:16px}
+      th,td{padding:10px}
+    }
   </style>
 </head>
 <body>
@@ -58,7 +73,7 @@
       <div class="row"><span class="muted">Token:</span> <span id="tok" class="badge">—</span> <span class="muted">Tipo:</span> <span id="usertype" class="badge">free</span></div>
       <div class="row"><span class="muted">Crediti oggi:</span> <span id="credits" class="badge">—</span></div>
       <div class="row" style="margin-top:6px">
-        <input id="pin" type="password" placeholder="PIN admin"/>
+        <input id="pin" type="password" placeholder="PIN admin" autocomplete="current-password"/>
         <button id="enter" class="primary">Entra admin</button>
       </div>
       <div class="row" style="margin-top:6px">
@@ -77,16 +92,21 @@
       <button id="btnRefresh" class="primary">Aggiorna</button>
       <button id="btnAuto" class="ghost">Auto-refresh</button>
       <button id="btnClear" class="ghost">Svuota log server</button>
-      <button id="btnReset" class="danger right">Reset totale</button>
       <button id="btnExport" class="ghost">Export CSV</button>
+      <button id="btnReset" class="danger right">Reset totale</button>
     </div>
     <div class="row" style="margin-top:8px">
       <label>Trend giorni:
-        <select id="trend"><option>7</option><option selected>10</option><option>14</option><option>30</option></select>
+        <select id="trend">
+          <option>7</option><option selected>10</option><option>14</option><option>30</option>
+        </select>
       </label>
       <label>Limite:
-        <select id="limitSel"><option value="100">100</option><option value="200" selected>200</option><option value="400">400</option></select>
+        <select id="limitSel">
+          <option value="100">100</option><option value="200" selected>200</option><option value="400">400</option>
+        </select>
       </label>
+      <label class="row"><input type="checkbox" id="maskIp" checked/> <span class="muted">IP mascherati</span></label>
       <span class="muted right" id="ts"></span>
     </div>
   </div>
@@ -103,7 +123,7 @@
       <span class="badge">Tempo: <b id="stPeriod">—</b></span>
       <span class="badge">Utenti: <b id="stUsers">—</b></span>
     </div>
-    <canvas id="trendChart" height="120" style="margin-top:10px"></canvas>
+    <canvas id="trendChart" height="130" style="margin-top:10px"></canvas>
   </div>
 
   <!-- Domande di oggi -->
@@ -135,123 +155,258 @@
 </main>
 
 <script>
-const LS=localStorage,TKEY="admin_token",PROKEY="whatif_prefs";
-let chart=null,auto=null,lastItems=[];
+/* ====== Costanti / stato ====== */
+const LS = localStorage, TKEY="admin_token", PROKEY="whatif_prefs";
+let chart=null, auto=null, lastItems=[];
 
-// helpers
+/* ====== Utils UI ====== */
 const $=s=>document.querySelector(s);
-function fmtDate(ts){const d=new Date(ts);return d.toLocaleString('it-IT',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'});}
-function getTok(){return LS.getItem(TKEY)||"";}
-function setTok(t){if(t)LS.setItem(TKEY,t);else LS.removeItem(TKEY);$("#tok").textContent=t?t.slice(0,6)+"…"+t.slice(-4):"—";}
-function setBadge(id,v){$("#"+id).textContent=v;}
-function setProUI(){try{const p=JSON.parse(LS.getItem(PROKEY)||"{}");setBadge("usertype",p.pro?"pro":"free");}catch{}}
-function setStatus(msg,ok){const el=$("#statusLine");el.textContent=msg;el.className=ok===true?"ok":ok===false?"bad":"muted";}
+function setBadge(id,v){ const el=document.getElementById(id); if(el) el.textContent=v; }
+function fmtDate(ts){
+  const d=new Date(ts||Date.now());
+  return d.toLocaleString('it-IT',{ day:'2-digit',month:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+function getTok(){ return LS.getItem(TKEY)||""; }
+function setTok(t){ if(t) LS.setItem(TKEY,t); else LS.removeItem(TKEY); setBadge("tok", t? t.slice(0,6)+"…"+t.slice(-4): "—"); }
+function setProUI(){ try{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); setBadge("usertype", p.pro?"pro":"free"); }catch{} }
+function setStatus(msg, good=null){
+  const el=$("#statusLine"); el.textContent = msg || "";
+  el.className = (good===true?"ok": good===false?"bad":"muted");
+}
+function prettyKV(obj){
+  if(!obj) return "—";
+  return Object.entries(obj)
+    .sort((a,b)=>String(b[1]).localeCompare(String(a[1]),undefined,{numeric:true}))
+    .map(([k,v])=>`${k}:${v}`).join(" · ");
+}
 
-// admin check + server
+/* ====== Admin & server ====== */
 async function adminCheck(){
   try{
-    const start=performance.now();
-    const r=await fetch("/api/admin-token",{headers:{"x-admin-token":getTok()}});
-    const ping=Math.round(performance.now()-start);
-    setBadge("srvPing",ping);
-    const d=await r.json().catch(()=>({}));
-    const yes=!!(d.ok||d.admin);
-    setBadge("adminState",yes?"yes":"no");
-    setBadge("myIp",d.ip||"—");
-    setBadge("credits",yes?"∞":(JSON.parse(LS.getItem("whatif_credits")||"{}").used||0)+"/(3/10)");
-    setBadge("srvStatus",r.ok?"online":"errore");
-    setBadge("srvUp",d.uptime||"—");
+    const start = performance.now();
+    const r = await fetch("/api/admin-token",{ headers:{ "x-admin-token": getTok() }});
+    const ping = Math.round(performance.now()-start);
+    setBadge("srvPing", ping);
+    const d = await r.json().catch(()=>({}));
+    const yes = !!(d && (d.ok ? (d.admin ?? d.ok) : d.admin));
+    setBadge("adminState", yes?"yes":"no");
+    setBadge("myIp", d?.ip || "—");
+    setBadge("srvStatus", r.ok?"online":"errore");
+    setBadge("srvUp", d?.uptime || "—");
+    setBadge("credits", yes?"∞": (JSON.parse(LS.getItem("whatif_credits")||"{}").used||0)+"/(3/10)");
     return yes;
-  }catch{setBadge("srvStatus","offline");return false;}
+  }catch{ setBadge("srvStatus","offline"); return false; }
 }
 
-// grafico
-function renderTrend(tr){
-  const ctx=$("#trendChart").getContext("2d");
-  if(chart)chart.destroy();
-  chart=new Chart(ctx,{type:"line",
-    data:{labels:tr.labels||[],
-      datasets:[
-        {label:"What If",data:tr.whatif||[],borderColor:"#00E0FF",tension:.3},
-        {label:"What the F",data:tr.wtf||[],borderColor:"#1AFFD5",tension:.3}
-      ]},
-    options:{plugins:{legend:{labels:{color:"#A0B2BA"}}},scales:{x:{ticks:{color:"#A0B2BA"}},y:{ticks:{color:"#A0B2BA"}}}}});
-}
-
-// normalizzazione
-function normItem(r){
-  const dom=r.domanda||r.question||r.q||"";const ans=r.answer||"";
-  return{
-    ts:r.ts||r.time||Date.now(),ip:r.ip_masked||r.ip||"",
-    user_type:r.user_type||r.userType||"",style:r.style||"",lang:r.lang||"it",
-    periodo:r.periodo||r.period||"",answer_chars:ans.length,domanda:String(dom).trim()
+/* ====== Normalizzazione ====== */
+function normItem(raw){
+  const dom = raw.domanda ?? raw.question ?? raw.q ?? raw.input ?? "";
+  const txt = (typeof dom === "string") ? dom : JSON.stringify(dom);
+  const ans = raw.answer ?? raw.risposta ?? "";
+  return {
+    ts: raw.ts ?? raw.time ?? raw.timestamp ?? Date.now(),
+    ip: raw.ip_masked ?? raw.ip ?? "",
+    user_type: raw.user_type ?? raw.userType ?? raw.type ?? "",
+    style: raw.style ?? raw.stile ?? "",
+    lang: raw.lang ?? raw.language ?? "it",
+    periodo: raw.periodo ?? raw.period ?? raw.timeframe ?? raw.tempo ?? "",
+    answer_chars: raw.answer_chars ?? raw.answerLen ?? (typeof ans==="string" ? ans.length : 0),
+    domanda: String(txt).replace(/\s+/g," ").trim()
   };
 }
-function normalizeArray(a){return(a||[]).map(normItem);}
+function normalizeArray(arr){ return (arr||[]).map(normItem); }
 
-// tabelle
-function drawTable(tblId,items,filterToday=false){
-  const now=new Date();const todayStr=now.toISOString().slice(0,10);
-  const tb=$(tblId+" tbody");tb.innerHTML="";
-  for(const it of items){
-    const d=new Date(it.ts);const day=d.toISOString().slice(0,10);
-    if(filterToday&&day!==todayStr)continue;
+/* ====== Tabelle ====== */
+function drawTable(items){
+  lastItems = items||[];
+  const fs=$("#fStyle").value, fl=$("#fLang").value,
+        fp=$("#fPeriod").value, fu=$("#fUser").value,
+        q=$("#q").value.toLowerCase();
+
+  const rows=lastItems.filter(x=>{
+    if(fs && x.style!==fs) return false;
+    if(fl && x.lang!==fl) return false;
+    if(fp && x.periodo!==fp) return false;
+    if(fu && x.user_type!==fu) return false;
+    if(q && !String(x.domanda||"").toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  const tb=$("#tbl tbody"); tb.innerHTML="";
+  for(const it of rows){
     const tr=document.createElement("tr");
-    [fmtDate(it.ts),it.ip,it.user_type,it.style,it.lang,it.periodo,it.answer_chars,it.domanda.slice(0,150)].forEach(t=>{
-      const td=document.createElement("td");td.textContent=t;tr.appendChild(td);
-    });
+    const cell = (t)=>{const td=document.createElement("td"); td.textContent=t; return td;};
+    tr.append(
+      cell(fmtDate(it.ts)), cell(it.ip||""), cell(it.user_type||""), cell(it.style||""),
+      cell(it.lang||""), cell(it.periodo||""), cell(String(it.answer_chars||0)),
+      cell(String(it.domanda||"").slice(0,250))
+    );
     tb.appendChild(tr);
+  }
+
+  // today table
+  const today = new Date().toISOString().slice(0,10);
+  const tb2=$("#tblToday tbody"); tb2.innerHTML="";
+  for(const it of rows){
+    const d=new Date(it.ts); const day=d.toISOString().slice(0,10);
+    if(day!==today) continue;
+    const tr=document.createElement("tr");
+    const cell = (t)=>{const td=document.createElement("td"); td.textContent=t; return td;};
+    tr.append(
+      cell(d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})),
+      cell(it.ip||""), cell(it.user_type||""), cell(it.style||""), cell(it.lang||""), cell(it.periodo||""),
+      cell(String(it.answer_chars||0)), cell(String(it.domanda||"").slice(0,250))
+    );
+    tb2.appendChild(tr);
   }
 }
 
-// load data
+/* ====== Grafico ====== */
+function renderTrend(tr){
+  const ctx=$("#trendChart").getContext("2d");
+  if(chart) chart.destroy();
+  const labels = tr.labels || [];
+  const whatif = tr.whatif || tr.dataWhatIf || [];
+  const wtf    = tr.wtf    || tr.dataWtf    || [];
+  chart=new Chart(ctx,{
+    type:"line",
+    data:{ labels, datasets:[
+      { label:"What If", data: whatif, borderColor:"#00E0FF", tension:.3 },
+      { label:"What the F", data: wtf, borderColor:"#1AFFD5", tension:.3 }
+    ]},
+    options:{
+      responsive:true,
+      plugins:{ legend:{ labels:{ color:"#A0B2BA" } } },
+      scales:{ x:{ ticks:{ color:"#A0B2BA"} }, y:{ ticks:{ color:"#A0B2BA"} } }
+    }
+  });
+}
+
+/* ====== Fallback locale ====== */
+function readLocalHistory(){ try{ return JSON.parse(LS.getItem("cronologia")||"[]")||[]; }catch{ return []; } }
+function localToItems(arr){
+  return (arr||[]).map(x=>({
+    ts:x.ts||Date.now(), ip:"(local)",
+    user_type:(JSON.parse(LS.getItem(PROKEY)||"{}").pro?"pro":"free"),
+    style:x.stile||"", lang:x.lang||document.documentElement.lang||"it",
+    periodo:x.periodo||"", answer_chars:(x.risposta||"").length, domanda:x.domanda||""
+  })).reverse();
+}
+function drawLocalFallback(){
+  const items = localToItems(readLocalHistory());
+  setStatus("Modalità locale: cronologia dal browser (API non disponibili).", false);
+  setBadge("stTotal", String(items.length));
+  setBadge("stToday","—"); setBadge("stLast7","—");
+  $("#stStyle").textContent="—"; $("#stLang").textContent="—"; $("#stPeriod").textContent="—"; $("#stUsers").textContent="—";
+  renderTrend({labels:[],whatif:[],wtf:[]});
+  drawTable(items);
+}
+
+/* ====== Load ====== */
 async function loadAll(){
   $("#ts").textContent="Aggiornato: "+new Date().toLocaleTimeString();
+  const mask=$("#maskIp").checked ? "1":"0";
+  const limit=$("#limitSel").value || "200";
+  const days=$("#trend").value || "10";
+
   try{
-    const s=await fetch(`/api/admin-stats?days=${$("#trend").value}`,{headers:{"x-admin-token":getTok()}});
-    const S=await s.json();
-    setBadge("stTotal",S.total||"0");
-    setBadge("stToday",S.today||"0");
-    setBadge("stLast7",S.last7||"0");
-    $("#stStyle").textContent=Object.entries(S.byStyle||{}).map(([k,v])=>`${k}:${v}`).join(" · ");
-    $("#stLang").textContent=Object.entries(S.byLang||{}).map(([k,v])=>`${k}:${v}`).join(" · ");
-    $("#stPeriod").textContent=Object.entries(S.byPeriod||{}).map(([k,v])=>`${k}:${v}`).join(" · ");
-    $("#stUsers").textContent=Object.entries(S.byUserType||{}).map(([k,v])=>`${k}:${v}`).join(" · ");
-    renderTrend(S.trend||{});
-    const r=await fetch(`/api/admin-logs?limit=${$("#limitSel").value}`,{headers:{"x-admin-token":getTok()}});
-    const d=await r.json();const items=normalizeArray(d.items||d.logs||[]);
-    lastItems=items;drawTable("#tbl",items,false);drawTable("#tblToday",items,true);
-    setStatus("Dati caricati",true);
-  }catch{setStatus("Errore caricamento dati",false);}
+    // stats
+    const s = await fetch(`/api/admin-stats?days=${days}`,{ headers:{ "x-admin-token": getTok() }});
+    if(!s.ok) throw new Error("stats "+s.status);
+    const S = await s.json().catch(()=>({}));
+    setBadge("stTotal", S.total??"0");
+    setBadge("stToday", S.today??"0");
+    setBadge("stLast7", S.last7??"0");
+    $("#stStyle").textContent = prettyKV(S.byStyle||{});
+    $("#stLang").textContent  = prettyKV(S.byLang||{});
+    $("#stPeriod").textContent= prettyKV(S.byPeriod||{});
+    $("#stUsers").textContent = prettyKV(S.byUserType||{});
+    renderTrend(S.trend||{labels:[],whatif:[],wtf:[]});
+
+    // logs
+    const r = await fetch(`/api/admin-logs?limit=${limit}&mask=${mask}`,{ headers:{ "x-admin-token": getTok() }});
+    if(!r.ok) throw new Error("logs "+r.status);
+    const d = await r.json().catch(()=>({}));
+    const rawItems = d.items || d.logs || d.data || [];
+    drawTable(normalizeArray(rawItems));
+    setStatus("Dati server caricati.", true);
+  }catch(e){
+    drawLocalFallback();
+  }
 }
 
-// CSV + reset
-function toCSV(items){const head=['timestamp','ip','user_type','style','lang','periodo','answer_chars','domanda'];
-  const esc=v=>`"${String(v??'').replace(/"/g,'""')}"`;
-  const lines=[head.join(',')].concat(items.map(r=>[r.ts,r.ip,r.user_type,r.style,r.lang,r.periodo,r.answer_chars,r.domanda].map(esc).join(',')));
+/* ====== CSV / Reset ====== */
+function toCSV(items){
+  const head = ['timestamp','ip','user_type','style','lang','periodo','answer_chars','domanda'];
+  const esc = v => `"${String(v??'').replace(/"/g,'""')}"`;
+  const lines = [head.join(',')].concat(items.map(r=>[
+    r.ts, r.ip||'', r.user_type||'', r.style||'', r.lang||'', r.periodo||'',
+    (r.answer_chars!=null?r.answer_chars:''), r.domanda||''
+  ].map(esc).join(',')));
   return lines.join('\n');
 }
-function exportCSV(){const csv=toCSV(lastItems);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='whatif_logs.csv';a.click();}
+function exportCSV(){
+  const fallback = localToItems(readLocalHistory());
+  const items = lastItems.length ? lastItems : fallback;
+  const csv = toCSV(items);
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'whatif_admin_export.csv';
+  a.click();
+}
 async function resetAll(){
-  if(!confirm("Reset totale? (cronologia + log server)"))return;
+  if(!confirm("Reset totale? (localStorage + log server)")) return;
+  try{
+    await fetch("/api/admin-logs",{ method:"DELETE", headers:{ "x-admin-token": getTok() }});
+  }catch{}
   LS.clear();
-  await fetch("/api/admin-logs",{method:"DELETE",headers:{"x-admin-token":getTok()}});
-  setTok("");loadAll();
+  setTok(""); setProUI();
+  drawLocalFallback();
+  setStatus("Reset completato.", true);
 }
 
-// eventi
-$("#enter").onclick=async()=>{const pin=$("#pin").value.trim();if(!pin)return alert("Inserisci PIN");
-  const r=await fetch("/api/admin-token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pin})});
-  const d=await r.json().catch(()=>({}));
-  if(r.ok&&(d.ok||d.token)){setTok(d.token||d.data?.token||"");await adminCheck();loadAll();}
-  else alert("PIN errato");};
-$("#renew").onclick=()=>fetch("/api/admin-token?action=renew",{method:"POST",headers:{"x-admin-token":getTok()}});
-$("#revoke").onclick=()=>{fetch("/api/admin-token?action=revoke",{method:"POST",headers:{"x-admin-token":getTok()}});setTok("");};
-$("#proOn").onclick=()=>{const p=JSON.parse(LS.getItem(PROKEY)||"{}");p.pro=true;LS.setItem(PROKEY,JSON.stringify(p));setProUI();};
-$("#proOff").onclick=()=>{const p=JSON.parse(LS.getItem(PROKEY)||"{}");delete p.pro;LS.setItem(PROKEY,JSON.stringify(p));setProUI();};
-$("#btnRefresh").onclick=loadAll;
-$("#btnExport").onclick=exportCSV;
-$("#btnClear").onclick=()=>{if(confirm("Svuotare i log server?"))fetch("/api/admin-logs",{method:"DELETE",headers:{"x-admin-token":getTok()}}).then(loadAll);};
-$("#btnReset").onclick=resetAll;
-$("#btnAuto").onclick=()=>{if(auto){clearInterval(auto);auto=null;setStatus("Auto OFF");$("#btnAuto").textContent="Auto-refresh";}
-  else{auto=setInterval(loadAll,30000);
+/* ====== Eventi ====== */
+function bindEvents(){
+  $("#enter").onclick = async ()=>{
+    const pin = $("#pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
+    const r = await fetch("/api/admin-token",{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ pin })});
+    const d = await r.json().catch(()=>({}));
+    if(r.ok && (d.ok||d.token)){ setTok(d.token || d?.data?.token || ""); setStatus("Login ok. Token attivo.", true); await adminCheck(); loadAll(); }
+    else { alert("PIN errato o errore server"); }
+  };
+  $("#renew").onclick = async ()=>{ const r = await fetch("/api/admin-token?action=renew",{ method:"POST", headers:{ "x-admin-token": getTok() }}); alert(r.ok?"Rinnovato per 7gg":"Errore rinnovo"); };
+  $("#revoke").onclick = async ()=>{ await fetch("/api/admin-token?action=revoke",{ method:"POST", headers:{ "x-admin-token": getTok() }}); setTok(""); await adminCheck(); setStatus("Token revocato.", false); drawLocalFallback(); };
+  $("#proOn").onclick = ()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); p.pro=true; LS.setItem(PROKEY,JSON.stringify(p)); setProUI(); };
+  $("#proOff").onclick = ()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); delete p.pro; LS.setItem(PROKEY,JSON.stringify(p)); setProUI(); };
+
+  $("#btnRefresh").onclick = loadAll;
+  $("#btnClear").onclick = async ()=>{
+    if(!confirm("Svuotare i log sul server?")) return;
+    await fetch("/api/admin-logs",{ method:"DELETE", headers:{ "x-admin-token": getTok() }});
+    loadAll();
+  };
+  $("#btnExport").onclick = exportCSV;
+  $("#btnReset").onclick = resetAll;
+
+  $("#btnAuto").onclick = ()=>{
+    if(auto){ clearInterval(auto); auto=null; $("#btnAuto").textContent="Auto-refresh"; setStatus("Auto-refresh OFF"); }
+    else { auto=setInterval(loadAll, 30000); $("#btnAuto").textContent="Stop auto"; setStatus("Auto-refresh ogni 30s…"); }
+  };
+
+  ["fStyle","fLang","fPeriod","fUser","q","limitSel","maskIp","trend"].forEach(id=>{
+    document.getElementById(id).addEventListener("input", ()=> drawTable(lastItems));
+  });
+}
+
+/* ====== Init ====== */
+(async function init(){
+  setProUI();
+  setTok(getTok());
+  bindEvents();
+  await adminCheck();
+  loadAll();
+})();
+</script>
+</body>
+</html>
