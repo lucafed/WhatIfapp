@@ -11,8 +11,7 @@
     :root{
       --bg:#0A0F14;--surface:#141C22;--accent:#00E0FF;--accent2:#1AFFD5;
       --text:#FFFFFF;--muted:#A0B2BA;--danger:#e85b5b;--ok:#11c46f;
-      --card-border:rgba(255,255,255,.09);
-      --glass:rgba(20,28,34,.85);
+      --card-border:rgba(255,255,255,.09);--glass:rgba(20,28,34,.85);
       --shadow:0 0 14px rgba(0,0,0,.35);
     }
     *{box-sizing:border-box}
@@ -31,39 +30,25 @@
     .muted{color:var(--muted)}
     .badge{display:inline-block;background:rgba(255,255,255,.08);border-radius:999px;padding:4px 10px;font-size:12px;margin-right:4px}
     .ok{color:var(--ok)} .bad{color:var(--danger)}
-
-    button,input,select{
-      border:none;border-radius:12px;padding:12px 14px;font-size:15px;color:#fff;appearance:none
-    }
+    button,input,select{border:none;border-radius:12px;padding:12px 14px;font-size:15px;color:#fff;appearance:none}
     button{cursor:pointer;font-weight:800}
     .primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#001014}
     .ghost{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
     .danger{background:var(--danger)}
-
     table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
     th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.09);text-align:left;vertical-align:top}
     th{font-weight:700}
     input::placeholder{color:#b9c4c9}
-
-    /* Mobile friendliness */
     .table-wrap{overflow:auto;-webkit-overflow-scrolling:touch}
     .filters-sticky{position:sticky;top:0;z-index:5;background:var(--glass);padding:8px 0}
 
-    /* Toolbar sticky in alto (sotto il titolo) */
+    /* Toolbar sticky in alto */
     .toolbar-sticky{
-      position: sticky;
-      top: 0;
-      z-index: 40;
-      margin: 10px 0 14px;
-      background: var(--glass);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      box-shadow: var(--shadow);
+      position: sticky; top: 0; z-index: 40; margin: 10px 0 14px;
+      background: var(--glass); backdrop-filter: blur(10px);
+      border: 1px solid var(--card-border); border-radius: 16px; box-shadow: var(--shadow);
     }
-    .toolbar-sticky .bar{
-      display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:10px
-    }
+    .toolbar-sticky .bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:10px}
     .toolbar-sticky button{min-width:120px}
 
     @media(max-width:480px){
@@ -202,15 +187,8 @@ function fmtDate(ts){ const d=new Date(ts||Date.now()); return d.toLocaleString(
 function getTok(){ return LS.getItem(TKEY)||""; }
 function setTok(t){ if(t) LS.setItem(TKEY,t); else LS.removeItem(TKEY); setBadge("tok", t? t.slice(0,6)+"…"+t.slice(-4): "—"); }
 function setProUI(){ try{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); setBadge("usertype", p.pro?"pro":"free"); }catch{} }
-function setStatus(msg, good=null){
-  const el=$("#statusLine"); el.textContent = msg || "";
-  el.className = (good===true?"ok": good===false?"bad":"muted");
-}
-function prettyKV(obj){
-  if(!obj) return "—";
-  return Object.entries(obj).sort((a,b)=>String(b[1]).localeCompare(String(a[1]),undefined,{numeric:true}))
-    .map(([k,v])=>`${k}:${v}`).join(" · ");
-}
+function setStatus(msg, good=null){ const el=$("#statusLine"); el.textContent = msg || ""; el.className = (good===true?"ok": good===false?"bad":"muted"); }
+function prettyKV(obj){ if(!obj) return "—"; return Object.entries(obj).sort((a,b)=>String(b[1]).localeCompare(String(a[1]),undefined,{numeric:true})).map(([k,v])=>`${k}:${v}`).join(" · "); }
 
 /*** ===== ADMIN CHECK ===== ***/
 async function adminCheck(){
@@ -264,9 +242,7 @@ function normalizeArray(arr){ return (arr||[]).map(normItem); }
 /*** ===== TABELLE ===== ***/
 function drawTable(items){
   lastItems = items||[];
-  const fs=$("#fStyle").value, fl=$("#fLang").value,
-        fp=$("#fPeriod").value, fu=$("#fUser").value,
-        q=($("#q").value||"").toLowerCase();
+  const fs=$("#fStyle").value, fl=$("#fLang").value, fp=$("#fPeriod").value, fu=$("#fUser").value, q=($("#q").value||"").toLowerCase();
 
   const rows=lastItems.filter(x=>{
     if(fs && x.style!==fs) return false;
@@ -281,11 +257,7 @@ function drawTable(items){
   for(const it of rows){
     const tr=document.createElement("tr");
     const c = (t)=>{const td=document.createElement("td"); td.textContent=t; return td;};
-    tr.append(
-      c(fmtDate(it.ts)), c(it.ip||""), c(it.user_type||""), c(it.style||""),
-      c(it.lang||""), c(it.periodo||""), c(String(it.answer_chars||0)),
-      c(String(it.domanda||"").slice(0,250))
-    );
+    tr.append(c(fmtDate(it.ts)), c(it.ip||""), c(it.user_type||""), c(it.style||""), c(it.lang||""), c(it.periodo||""), c(String(it.answer_chars||0)), c(String(it.domanda||"").slice(0,250)));
     tb.appendChild(tr);
   }
 
@@ -296,11 +268,7 @@ function drawTable(items){
     if(day!==today) continue;
     const tr=document.createElement("tr");
     const c = (t)=>{const td=document.createElement("td"); td.textContent=t; return td;};
-    tr.append(
-      c(d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})),
-      c(it.ip||""), c(it.user_type||""), c(it.style||""), c(it.lang||""), c(it.periodo||""),
-      c(String(it.answer_chars||0)), c(String(it.domanda||"").slice(0,250))
-    );
+    tr.append(c(d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})), c(it.ip||""), c(it.user_type||""), c(it.style||""), c(it.lang||""), c(it.periodo||""), c(String(it.answer_chars||0)), c(String(it.domanda||"").slice(0,250)));
     tb2.appendChild(tr);
   }
 }
@@ -334,7 +302,10 @@ async function loadAll(){
 
   try{
     const s = await fetch(`/api/admin-stats?days=${days}`,{ headers:{ "x-admin-token": getTok() }});
-    if(!s.ok) throw new Error("stats "+s.status);
+    if(!s.ok){
+      const t = await s.text().catch(()=>"(no body)");
+      throw new Error(`stats ${s.status} ${s.statusText} :: ${t.slice(0,180)}`);
+    }
     const S = await s.json().catch(()=>({}));
     setBadge("stTotal", S.total??"0");
     setBadge("stToday", S.today??"0");
@@ -346,12 +317,16 @@ async function loadAll(){
     renderTrend(S.trend||{labels:[],whatif:[],wtf:[]});
 
     const r = await fetch(`/api/admin-logs?limit=${limit}&mask=${mask}`,{ headers:{ "x-admin-token": getTok() }});
-    if(!r.ok) throw new Error("logs "+r.status);
+    if(!r.ok){
+      const t = await r.text().catch(()=>"(no body)");
+      throw new Error(`logs ${r.status} ${r.statusText} :: ${t.slice(0,180)}`);
+    }
     const d = await r.json().catch(()=>({}));
     const rawItems = d.items || d.logs || d.data || [];
     drawTable(normalizeArray(rawItems));
     setStatus("Dati server caricati.", true);
   }catch(e){
+    setStatus(`Modalità locale: ${String(e.message||e)}`, false);
     drawLocalFallback();
   }
 }
@@ -380,7 +355,7 @@ async function resetAll(){
 
 /*** ===== Eventi ===== ***/
 function bindEvents(){
-  // Mappa toolbar sticky -> pulsanti interni
+  // Toolbar sticky -> pulsanti interni
   $("#bRefresh").onclick = ()=>$("#btnRefresh").click();
   $("#bAuto").onclick    = ()=>$("#btnAuto").click();
   $("#bExport").onclick  = ()=>$("#btnExport").click();
