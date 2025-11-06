@@ -1,77 +1,54 @@
 {
-  "id": "https://what-ifapp.vercel.app/",
-  "name": "What?f (Dual Gate edition)",
+  "id": "com.whatif.app",
+  "name": "What?f",
   "short_name": "What?f",
-  "description": "Esplora scenari personali: il passato che poteva essere e il futuro che potresti scegliere.",
-  "lang": "it-IT",
-  "dir": "ltr",
-
+  "description": "Scopri il tuo What?f — immagina la scelta che non hai fatto e quella che potresti fare.",
   "start_url": "/index.html",
-  "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui", "browser"],
-  "orientation": "portrait",
-
   "background_color": "#0B0B0C",
-  "theme_color": "#1C57A0",
-  "categories": ["lifestyle", "productivity", "entertainment", "creative"],
-  "prefer_related_applications": false,
+  "theme_color": "#0B0B0C",
+  "orientation": "portrait-primary",
 
   "icons": [
-    { "src": "/public/icon-192.png",           "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/public/icon-512.png",           "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/public/icon-192-maskable.png",  "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/public/icon-512-maskable.png",  "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-    /* opzionale, solo se lo aggiungi davvero:
-    { "src": "/public/icon-512-monochrome.png","sizes": "512x512", "type": "image/png", "purpose": "monochrome" }
-    */
-  ],
-
-  "shortcuts": [
     {
-      "name": "Nuovo scenario",
-      "short_name": "Scenario",
-      "description": "Inizia una nuova domanda",
-      "url": "/index.html",
-      "icons": [{ "src": "/public/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "src": "/public/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
     },
     {
-      "name": "Profilo rapido",
-      "short_name": "Profilo",
-      "description": "Aggiorna i tuoi dati per risposte più personali",
-      "url": "/second.html",
-      "icons": [{ "src": "/public/icon-192-maskable.png", "sizes": "192x192", "type": "image/png" }]
+      "src": "/public/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
     },
     {
-      "name": "Scelte creative",
-      "short_name": "Creativo",
-      "description": "Scopri la parte più folle del tuo What the F",
-      "url": "/fourth.html",
-      "icons": [{ "src": "/public/icon-512-maskable.png", "sizes": "512x512", "type": "image/png" }]
+      "src": "/public/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/public/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
 
   "screenshots": [
     {
       "src": "/public/home-hero.png",
-      "type": "image/png",
       "sizes": "1080x1920",
-      "form_factor": "narrow",
-      "label": "La scelta è l’inizio di ogni universo."
+      "type": "image/png"
     },
     {
       "src": "/public/second-hero.png",
-      "type": "image/png",
       "sizes": "1080x1920",
-      "form_factor": "narrow",
-      "label": "Scegli il tuo stile: What if o What the F."
-    },
-    {
-      "src": "/public/third-hero.png",
-      "type": "image/png",
-      "sizes": "1080x1920",
-      "form_factor": "narrow",
-      "label": "Scorri, seleziona, entra."
+      "type": "image/png"
     }
-  ]
+  ],
+
+  "categories": ["lifestyle", "entertainment"],
+  "lang": "it-IT",
+  "dir": "ltr",
+  "scope": "/"
 }
