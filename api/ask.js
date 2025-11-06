@@ -401,3 +401,4 @@ return res.status(200).json({ answer, style: stile, lang: normLang(lang), period
 console.error("❌ [/api/ask] error:", err);
 return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
 }
+  }
