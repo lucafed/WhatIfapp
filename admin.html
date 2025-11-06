@@ -19,7 +19,7 @@
     html,body{height:100%}
     body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Roboto,Arial,sans-serif}
     h1,h2,h3{margin:0 0 10px}
-    main{max-width:1200px;margin:auto;padding:18px;padding-bottom:calc(120px + env(safe-area-inset-bottom,0px))}
+    main{max-width:1200px;margin:auto;padding:18px;padding-bottom:24px}
     .grid{display:grid;gap:14px}
     @media(min-width:900px){.cols-2{grid-template-columns:1fr 1fr}}
     .card{
@@ -49,23 +49,43 @@
     .table-wrap{overflow:auto;-webkit-overflow-scrolling:touch}
     .filters-sticky{position:sticky;top:0;z-index:5;background:var(--glass);padding:8px 0}
 
-    /* Sticky bottom action bar */
-    .actions-sticky{
-      position:fixed;left:0;right:0;bottom:0;z-index:50;
-      padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));
-      background:linear-gradient(180deg,rgba(10,15,20,0),rgba(10,15,20,.85) 35%,rgba(10,15,20,.95));
-      border-top:1px solid rgba(255,255,255,.08);
-      backdrop-filter:blur(10px)
+    /* Toolbar sticky in alto (sotto il titolo) */
+    .toolbar-sticky{
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      margin: 10px 0 14px;
+      background: var(--glass);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
     }
-    .actions-sticky .bar{
-      display:flex;gap:10px;flex-wrap:wrap;justify-content:center
+    .toolbar-sticky .bar{
+      display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:10px
     }
-    .actions-sticky button{min-width:130px}
+    .toolbar-sticky button{min-width:120px}
+
+    @media(max-width:480px){
+      button,input,select{padding:12px 14px;font-size:16px}
+      th,td{padding:10px}
+    }
   </style>
 </head>
 <body>
 <main>
   <h1>What?f — <span class="muted">Admin Dashboard v2</span></h1>
+
+  <!-- Toolbar azioni sticky -->
+  <div class="toolbar-sticky">
+    <div class="bar">
+      <button id="bAuto" class="ghost">Auto</button>
+      <button id="bRefresh" class="primary">Aggiorna</button>
+      <button id="bExport" class="ghost">Export</button>
+      <button id="bClear" class="ghost">Svuota</button>
+      <button id="bReset" class="danger">Reset</button>
+    </div>
+  </div>
 
   <!-- Stato sistema -->
   <div class="grid cols-2">
@@ -170,17 +190,6 @@
     </div>
   </div>
 </main>
-
-<!-- Sticky bottom action bar (sempre visibile) -->
-<div class="actions-sticky">
-  <div class="bar">
-    <button id="bAuto" class="ghost">Auto</button>
-    <button id="bRefresh" class="primary">Aggiorna</button>
-    <button id="bExport" class="ghost">Export</button>
-    <button id="bClear" class="ghost">Svuota</button>
-    <button id="bReset" class="danger">Reset</button>
-  </div>
-</div>
 
 <script>
 /*** ===== BASE ===== ***/
@@ -371,6 +380,13 @@ async function resetAll(){
 
 /*** ===== Eventi ===== ***/
 function bindEvents(){
+  // Mappa toolbar sticky -> pulsanti interni
+  $("#bRefresh").onclick = ()=>$("#btnRefresh").click();
+  $("#bAuto").onclick    = ()=>$("#btnAuto").click();
+  $("#bExport").onclick  = ()=>$("#btnExport").click();
+  $("#bClear").onclick   = ()=>$("#btnClear").click();
+  $("#bReset").onclick   = ()=>$("#btnReset").click();
+
   // Pulsanti nel contenuto
   $("#enter").onclick = async ()=>{
     const pin = $("#pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
@@ -389,13 +405,6 @@ function bindEvents(){
   $("#btnExport").onclick = exportCSV;
   $("#btnClear").onclick = async ()=>{ if(!confirm("Svuotare i log sul server?")) return; await fetch("/api/admin-logs",{ method:"DELETE", headers:{ "x-admin-token": getTok() }}); loadAll(); };
   $("#btnReset").onclick = resetAll;
-
-  // Pulsanti nella barra sticky (clonano le azioni principali)
-  $("#bRefresh").onclick = ()=>$("#btnRefresh").click();
-  $("#bAuto").onclick    = ()=>$("#btnAuto").click();
-  $("#bExport").onclick  = ()=>$("#btnExport").click();
-  $("#bClear").onclick   = ()=>$("#btnClear").click();
-  $("#bReset").onclick   = ()=>$("#btnReset").click();
 
   ["fStyle","fLang","fPeriod","fUser","q","limitSel","maskIp","trend"].forEach(id=>{
     document.getElementById(id).addEventListener("input", ()=> drawTable(lastItems));
