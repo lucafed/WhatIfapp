@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>What?f — Admin Dashboard v2</title>
+  <title>What?f — Admin Dashboard (hot-fix)</title>
   <meta name="theme-color" content="#0A0F14"/>
   <link rel="preconnect" href="https://cdn.jsdelivr.net"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -21,10 +21,7 @@
     main{max-width:1200px;margin:auto;padding:18px;padding-bottom:24px}
     .grid{display:grid;gap:14px}
     @media(min-width:900px){.cols-2{grid-template-columns:1fr 1fr}}
-    .card{
-      background:var(--glass);backdrop-filter:blur(10px);
-      border:1px solid var(--card-border);border-radius:16px;padding:16px;box-shadow:var(--shadow)
-    }
+    .card{background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--card-border);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
     .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
     .right{margin-left:auto}
     .muted{color:var(--muted)}
@@ -41,27 +38,17 @@
     input::placeholder{color:#b9c4c9}
     .table-wrap{overflow:auto;-webkit-overflow-scrolling:touch}
     .filters-sticky{position:sticky;top:0;z-index:5;background:var(--glass);padding:8px 0}
-
-    /* Toolbar sticky in alto */
-    .toolbar-sticky{
-      position: sticky; top: 0; z-index: 40; margin: 10px 0 14px;
-      background: var(--glass); backdrop-filter: blur(10px);
-      border: 1px solid var(--card-border); border-radius: 16px; box-shadow: var(--shadow);
-    }
+    .toolbar-sticky{position: sticky; top: 0; z-index: 40; margin: 10px 0 14px; background: var(--glass); backdrop-filter: blur(10px); border: 1px solid var(--card-border); border-radius: 16px; box-shadow: var(--shadow)}
     .toolbar-sticky .bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:10px}
     .toolbar-sticky button{min-width:120px}
-
-    @media(max-width:480px){
-      button,input,select{padding:12px 14px;font-size:16px}
-      th,td{padding:10px}
-    }
+    pre{white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.35;background:rgba(0,0,0,.35);padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.08)}
   </style>
 </head>
 <body>
 <main>
-  <h1>What?f — <span class="muted">Admin Dashboard v2</span></h1>
+  <h1>What?f — <span class="muted">Admin Dashboard</span></h1>
 
-  <!-- Toolbar azioni sticky -->
+  <!-- Toolbar -->
   <div class="toolbar-sticky">
     <div class="bar">
       <button id="bAuto" class="ghost">Auto</button>
@@ -72,7 +59,7 @@
     </div>
   </div>
 
-  <!-- Stato sistema -->
+  <!-- Stato -->
   <div class="grid cols-2">
     <div class="card">
       <h3>Stato sistema</h3>
@@ -174,17 +161,22 @@
       </table>
     </div>
   </div>
+
+  <!-- Debug -->
+  <div class="card" style="margin-top:14px">
+    <h3>Debug</h3>
+    <pre id="dbg">—</pre>
+  </div>
 </main>
 
 <script>
-/*** ===== API base: forza sempre l'origine di produzione ===== ***/
+/*** ===== API base (forzata a produzione) ===== ***/
 const API_BASE = "https://what-ifapp.vercel.app";
 const API = (p) => (p.startsWith("/") ? API_BASE + p : API_BASE + "/" + p);
 
 /*** ===== BASE ===== ***/
 const LS=localStorage, TKEY="admin_token", PROKEY="whatif_prefs";
 let chart=null, auto=null, lastItems=[];
-
 const $ = sel => document.querySelector(sel);
 function setBadge(id, text){ const el=document.getElementById(id); if(el) el.textContent = text; }
 function fmtDate(ts){ const d=new Date(ts||Date.now()); return d.toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
@@ -193,6 +185,7 @@ function setTok(t){ if(t) LS.setItem(TKEY,t); else LS.removeItem(TKEY); setBadge
 function setProUI(){ try{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); setBadge("usertype", p.pro?"pro":"free"); }catch{} }
 function setStatus(msg, good=null){ const el=$("#statusLine"); el.textContent = msg || ""; el.className = (good===true?"ok": good===false?"bad":"muted"); }
 function prettyKV(obj){ if(!obj) return "—"; return Object.entries(obj).sort((a,b)=>String(b[1]).localeCompare(String(a[1]),undefined,{numeric:true})).map(([k,v])=>`${k}:${v}`).join(" · "); }
+function dbg(...args){ const pre=$("#dbg"); const line=args.map(a=>typeof a==="string"?a:JSON.stringify(a)).join(" "); pre.textContent = (pre.textContent==="—"?"":pre.textContent+"\n")+line; console.log("[ADMIN]",...args); }
 
 /*** ===== ADMIN CHECK ===== ***/
 async function adminCheck(){
@@ -208,8 +201,9 @@ async function adminCheck(){
     setBadge("srvStatus", r.ok?"online":"errore");
     setBadge("srvUp", d?.uptime || "—");
     setBadge("credits", yes?"∞": (JSON.parse(LS.getItem("whatif_credits")||"{}").used||0)+"/(3/10)");
+    dbg("adminCheck:", r.status, d);
     return yes;
-  }catch{ setBadge("srvStatus","offline"); return false; }
+  }catch(e){ setBadge("srvStatus","offline"); dbg("adminCheck error:", String(e)); return false; }
 }
 
 /*** ===== GRAFICO ===== ***/
@@ -289,7 +283,6 @@ function localToItems(arr){
 }
 function drawLocalFallback(){
   const items = localToItems(readLocalHistory());
-  setStatus("Modalità locale: cronologia dal browser (API non disponibili).", false);
   setBadge("stTotal", String(items.length));
   setBadge("stToday","—"); setBadge("stLast7","—");
   $("#stStyle").textContent="—"; $("#stLang").textContent="—"; $("#stPeriod").textContent="—"; $("#stUsers").textContent="—";
@@ -304,35 +297,36 @@ async function loadAll(){
   const limit=$("#limitSel").value || "200";
   const days=$("#trend").value || "10";
 
+  // 1) Health (senza token)
+  try{
+    const h = await fetch(API(`/api/admin-stats?health=1`));
+    const hj = await h.json().catch(()=>({}));
+    dbg("health:", h.status, hj);
+    if(!hj.ok){ setStatus(`Health FAIL: ${JSON.stringify(hj)}`, false); return drawLocalFallback(); }
+  }catch(e){ dbg("health error:", String(e)); setStatus("Health error", false); return drawLocalFallback(); }
+
+  // 2) Stats
   try{
     const s = await fetch(API(`/api/admin-stats?days=${days}`),{ headers:{ "x-admin-token": getTok() }});
-    if(!s.ok){
-      const t = await s.text().catch(()=>"(no body)");
-      throw new Error(`stats ${s.status} ${s.statusText} :: ${t.slice(0,180)}`);
-    }
+    if(!s.ok){ const t = await s.text().catch(()=>"(no body)"); throw new Error(`stats ${s.status} ${s.statusText} :: ${t.slice(0,180)}`); }
     const S = await s.json().catch(()=>({}));
-    setBadge("stTotal", S.total??"0");
-    setBadge("stToday", S.today??"0");
-    setBadge("stLast7", S.last7??"0");
-    $("#stStyle").textContent = prettyKV(S.byStyle||{});
-    $("#stLang").textContent  = prettyKV(S.byLang||{});
-    $("#stPeriod").textContent= prettyKV(S.byPeriod||{});
-    $("#stUsers").textContent = prettyKV(S.byUserType||{});
+    dbg("stats ok:", S);
+    setBadge("stTotal", S.total??"0"); setBadge("stToday", S.today??"0"); setBadge("stLast7", S.last7??"0");
+    $("#stStyle").textContent = prettyKV(S.byStyle||{}); $("#stLang").textContent  = prettyKV(S.byLang||{});
+    $("#stPeriod").textContent= prettyKV(S.byPeriod||{}); $("#stUsers").textContent = prettyKV(S.byUserType||{});
     renderTrend(S.trend||{labels:[],whatif:[],wtf:[]});
+  }catch(e){ dbg("stats error:", String(e)); setStatus(String(e.message||e), false); return drawLocalFallback(); }
 
+  // 3) Logs
+  try{
     const r = await fetch(API(`/api/admin-logs?limit=${limit}&mask=${mask}`),{ headers:{ "x-admin-token": getTok() }});
-    if(!r.ok){
-      const t = await r.text().catch(()=>"(no body)");
-      throw new Error(`logs ${r.status} ${r.statusText} :: ${t.slice(0,180)}`);
-    }
+    if(!r.ok){ const t = await r.text().catch(()=>"(no body)"); throw new Error(`logs ${r.status} ${r.statusText} :: ${t.slice(0,180)}`); }
     const d = await r.json().catch(()=>({}));
+    dbg("logs ok, n=", (d.items||[]).length);
     const rawItems = d.items || d.logs || d.data || [];
     drawTable(normalizeArray(rawItems));
     setStatus(`OK — Origine pagina: ${location.origin}${location.pathname}`, true);
-  }catch(e){
-    setStatus(`Modalità locale: ${String(e.message||e)} — Origine pagina: ${location.origin}${location.pathname}`, false);
-    drawLocalFallback();
-  }
+  }catch(e){ dbg("logs error:", String(e)); setStatus(String(e.message||e), false); return drawLocalFallback(); }
 }
 
 /*** ===== CSV / Reset ===== ***/
@@ -359,18 +353,17 @@ async function resetAll(){
 
 /*** ===== Eventi ===== ***/
 function bindEvents(){
-  // Toolbar sticky -> pulsanti interni
   $("#bRefresh").onclick = ()=>$("#btnRefresh").click();
   $("#bAuto").onclick    = ()=>$("#btnAuto").click();
   $("#bExport").onclick  = ()=>$("#btnExport").click();
   $("#bClear").onclick   = ()=>$("#btnClear").click();
   $("#bReset").onclick   = ()=>$("#btnReset").click();
 
-  // Pulsanti nel contenuto
   $("#enter").onclick = async ()=>{
     const pin = $("#pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
     const r = await fetch(API("/api/admin-token"),{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ pin })});
     const d = await r.json().catch(()=>({}));
+    dbg("login resp:", r.status, d);
     if(r.ok && (d.ok||d.token)){ setTok(d.token || d?.data?.token || ""); setStatus("Login ok. Token attivo.", true); await adminCheck(); loadAll(); }
     else { alert("PIN errato o errore server"); }
   };
@@ -390,13 +383,15 @@ function bindEvents(){
   });
 }
 
-/*** ===== Init ===== ***/
+/*** ===== Init (pre-flight) ===== ***/
 (async function init(){
   setProUI();
   setTok(getTok());
   bindEvents();
-  await adminCheck();
-  loadAll();
+  setStatus(`Avvio… Origine: ${location.origin}${location.pathname}`);
+  const isAdmin = await adminCheck();
+  if(!isAdmin){ setStatus("Non sei admin: inserisci il PIN e premi 'Entra admin'.", false); }
+  await loadAll();
 })();
 </script>
 </body>
