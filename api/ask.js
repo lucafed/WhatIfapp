@@ -173,7 +173,7 @@ const BANK = {
     twists: ["because it knows how this ends","out of professional courtesy","‘out of respect’","to avoid witnessing the mess","because even it has limits","because today it’s mayor of your living room","because it read your checklist (and laughed)"],
     impre: ["armored expletive","detonating cuss","sky-splitting sacrament","volcano of curses","tornado of swears"],
     booze: [
-      "APOCALYPTIC NEGRONIS BY THE BUCKET","ORBITAL TEQUILA IN WATERFALLS","INTERSTELLAR RUM IN JERRYCANS","QUANTUM GRAPPA BY THE LITER",
+      "APOCALYPTIC NEGRONIS BY THE BUCKET","ORBITAL TEQUILA IN WATERFALLS","INTERSTELLAR RUM IN JERRICANS","QUANTUM GRAPPA BY THE LITER",
       "OCEANIC SPRITZ SERVED IN A TUB","HYDRANT-PRESSURE BEER WITH SIRENS","WATERFALLS OF WINE WITH OVATION",
       "COSMIC MEZCAL BY THE PITCHER","GALACTIC AMARO DOUBLE ROUND","TECTONIC VERMOUTH IN CARAFE",
       "LUNAR SAKE IN CARAFES","STRATOSPHERIC SOJU IN SWINGS","VOLCANIC CIDER IN WAVES",
@@ -259,7 +259,8 @@ const BANK = {
 
 /* ===== Variability utils ===== */
 function hash32(s){ return createHash("sha1").update(s).digest().readUInt32BE(0); }
-function makePRNG(seed){ let x = seed >>> 0; return ()=>{ x=(x*1664525+1013904223)>>>0; return x/2**32; }; }
+function makePRNG(seed){ let x = seed >>> 0; return ()=>{ x=(x*1664525+1013904223)>>>0; return x/2**32; };
+}
 function pick(prng, arr){ return arr[Math.floor(prng()*arr.length)] }
 function pickMany(prng, arr, k){ const a=[...arr]; const out=[]; for(let i=0;i<Math.max(0,Math.min(k,a.length));i++){ const idx=Math.floor(prng()*a.length); out.push(a.splice(idx,1)[0]); } return out; }
 
@@ -383,6 +384,23 @@ function buildMessages({ domanda, lang, periodo, stile }){
   return msgs;
 }
 
+/* ========= Limiti giornalieri Free/Pro (aggiunta minimale) ========= */
+const DAILY_LIMITS = { free: 3, pro: 10 };
+function currentRomeDateKey(){
+  const p = new Intl.DateTimeFormat('en-CA', { timeZone:'Europe/Rome', year:'numeric', month:'2-digit', day:'2-digit' }).formatToParts(new Date());
+  const y=p.find(x=>x.type==='year').value, m=p.find(x=>x.type==='month').value, d=p.find(x=>x.type==='day').value;
+  return `${y}-${m}-${d}`;
+}
+function isProUser(req){
+  const hdr = String(req.headers["x-pro"]||"").trim().toLowerCase();
+  if(hdr==="1"||hdr==="true") return true;
+  const cookie = String(req.headers.cookie||"");
+  return /(?:^|;\s*)pro=1(?:;|$)/.test(cookie);
+}
+function dayCounterKey(ip, dateKey, pro){
+  return `ask:quota:${pro?"pro":"free"}:${dateKey}:${ip}`;
+}
+
 /* ========= HANDLER ========= */
 export default async function handler(req, res){
   cors(req, res);
@@ -395,6 +413,22 @@ export default async function handler(req, res){
     const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").toString().split(",")[0].trim();
     const { success } = await rl.limit(`ask:${ip}`);
     if(!success) return res.status(429).json({ error:"rate_limited_minute" });
+
+    /* === Aggiunta minima: quota giornaliera === */
+    const dateKey = currentRomeDateKey();
+    const pro = isProUser(req);
+    const qKey = dayCounterKey(ip, dateKey, pro);
+    const used = Number(await redis.get(qKey)) || 0;
+    const limit = pro ? DAILY_LIMITS.pro : DAILY_LIMITS.free;
+    if(used >= limit){
+      return res.status(429).json({
+        error: "rate_limited_daily",
+        detail: pro ? "pro_limit_reached" : "free_limit_reached",
+        date: dateKey, limit, remaining: 0, pro: pro?1:0
+      });
+    }
+    const nowUsed = await redis.incr(qKey);
+    if(nowUsed === 1) await redis.expire(qKey, 48*60*60); // housekeeping
 
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const { domanda = "", stile = "whatif", lang = "it", periodo = "future", micro = {} } = body;
