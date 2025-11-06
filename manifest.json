@@ -37,12 +37,12 @@
   "screenshots": [
     {
       "src": "/public/home-hero.png",
-      "sizes": "1080x1920",
+      "sizes": "1024x1024",
       "type": "image/png"
     },
     {
       "src": "/public/second-hero.png",
-      "sizes": "1080x1920",
+      "sizes": "1024x1024",
       "type": "image/png"
     }
   ],
