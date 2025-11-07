@@ -39,17 +39,17 @@
 
   "screenshots": [
     {
-      "src": "/screenshot-phone-1080x1920-1.png",
-      "sizes": "1080x1920",
+      "src": "/screenshot-phone-1920x1080-1.png",
+      "sizes": "1920x1080",
       "type": "image/png",
-      "form_factor": "narrow",
+      "form_factor": "wide",
       "label": "Schermata iniziale di What?f"
     },
     {
-      "src": "/screenshot-phone-1080x1920-2.png",
-      "sizes": "1080x1920",
+      "src": "/screenshot-phone-1920x1080-2.png",
+      "sizes": "1920x1080",
       "type": "image/png",
-      "form_factor": "narrow",
+      "form_factor": "wide",
       "label": "Interfaccia dell’app What?f"
     }
   ]
