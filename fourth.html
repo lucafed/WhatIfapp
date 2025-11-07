@@ -6,67 +6,67 @@
     <title>What?f — Domanda</title>
     <meta name="theme-color" content="#0A0F14"/>
     <style>
-/* ===== THEME ===== */
-:root{ --bg:#0C0F14; --bg2:#0E1724; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
-  --accent:#1C57A0; --accent2:#FFEC01; --ink:#001f26; --chip:#0f1820; --line:#1b2a34; }
-html[data-theme="whatif"]{ --bg:#0B1018; --bg2:#0E1724; --card:#141C22; --fg:#F4F7FB; --muted:#A7B3C2; --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A; --chip:#0f1820; --line:#1b2a34; }
-html[data-theme="wtf"]{ --bg:#0B0B0C; --bg2:#101414; --card:#111713; --fg:#EEF5F0; --muted:#A6B6AD; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; --chip:#0F1714; --line:#21322A; }
-*{box-sizing:border-box}
-html,body{
-  height:100%;margin:0;
-  background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-  color:var(--fg);
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
-}
-@media (prefers-reduced-motion:no-preference){
-  body{animation:bgShift 18s ease-in-out infinite alternate}
-  @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
-}
-/* Topbar */
-.topbar{
-  position:sticky; top:0; z-index:2;
-  display:flex; align-items:center; justify-content:space-between;
-  gap:10px; padding:8px 10px;
-  background:rgba(10,15,20,.96); backdrop-filter:blur(6px); border-bottom:1px solid var(--line)
-}
-.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);
-  border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
-.btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35)}
-.badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap}
-select{appearance:none;background:var(--chip);border:1px solid var(--line);color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:700;cursor:pointer}
+    /* ===== THEME ===== */
+    :root{ --bg:#0C0F14; --bg2:#0E1724; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
+      --accent:#1C57A0; --accent2:#FFEC01; --ink:#001f26; --chip:#0f1820; --line:#1b2a34; }
+    html[data-theme="whatif"]{ --bg:#0B1018; --bg2:#0E1724; --card:#141C22; --fg:#F4F7FB; --muted:#A7B3C2; --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A; --chip:#0f1820; --line:#1b2a34; }
+    html[data-theme="wtf"]{ --bg:#0B0B0C; --bg2:#101414; --card:#111713; --fg:#EEF5F0; --muted:#A6B6AD; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; --chip:#0F1714; --line:#21322A; }
+    *{box-sizing:border-box}
+    html,body{
+      height:100%;margin:0;
+      background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+      color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+    }
+    @media (prefers-reduced-motion:no-preference){
+      body{animation:bgShift 18s ease-in-out infinite alternate}
+      @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
+    }
+    /* Topbar */
+    .topbar{
+      position:sticky; top:0; z-index:2;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px; padding:8px 10px;
+      background:rgba(10,15,20,.96); backdrop-filter:blur(6px); border-bottom:1px solid var(--line)
+    }
+    .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);
+      border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
+    .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35)}
+    .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap}
+    select{appearance:none;background:var(--chip);border:1px solid var(--line);color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:700;cursor:pointer}
 
-/* Layout */
-main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
-.wrap{width:min(100%,980px)}
-h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
-.label{color:var(--accent2);font-weight:800;margin:0 0 8px}
+    /* Layout */
+    main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
+    .wrap{width:min(100%,980px)}
+    h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
+    .label{color:var(--accent2);font-weight:800;margin:0 0 8px}
 
-/* Cards & chips */
-.card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(12px);
-  border-radius:16px;padding:16px;margin:10px 0}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
-.chip.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800}
+    /* Cards & chips */
+    .card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(12px);
+    border-radius:16px;padding:16px;margin:10px 0}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
+    .chip.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800}
 
-/* Input */
-.input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
-.center{max-width:760px;margin:0 auto}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.small{font-size:12px;color:var(--muted)}
+    /* Input */
+    .input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
+    .center{max-width:760px;margin:0 auto}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .small{font-size:12px;color:var(--muted)}
 
-/* Collapsible */
-.toggle{cursor:pointer;user-select:none}
-.collapsed>.body{display:none}
-.list{display:flex;flex-direction:column;gap:10px}
-.story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);
-  border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
-.play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
-.meta{font-size:12px;color:var(--muted)}
+    /* Collapsible */
+    .toggle{cursor:pointer;user-select:none}
+    .collapsed>.body{display:none}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);
+    border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
+    .play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
+    .meta{font-size:12px;color:var(--muted)}
 
-/* Slot fx */
-#qInput.slotting{filter:contrast(1.2) saturate(1.1); animation:slotFlash .12s linear infinite}
-@keyframes slotFlash{0%{box-shadow:0 0 0 rgba(255,236,1,.0)}50%{box-shadow:0 0 18px rgba(255,236,1,.2)}100%{box-shadow:0 0 0 rgba(255,236,1,.0)}}
+    /* Slot fx */
+    #qInput.slotting{filter:contrast(1.2) saturate(1.1); animation:slotFlash .12s linear infinite}
+    @keyframes slotFlash{0%{box-shadow:0 0 0 rgba(255,236,1,.0)}50%{box-shadow:0 0 18px rgba(255,236,1,.2)}100%{box-shadow:0 0 0 rgba(255,236,1,.0)}}
     </style>
   </head>
   <body>
@@ -109,6 +109,8 @@ h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
         <div class="card center">
           <h3 class="label" id="qLabel">E se…</h3>
           <textarea id="qInput" rows="3" class="input" placeholder="E se…" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
+
+          <!-- Istruzione breve -->
           <div class="small" id="qHelp" style="margin-top:8px">
             Scrivi obiettivo + contesto in 1 riga. Aggiungi vincoli o orizzonte (es. 30 giorni).
           </div>
@@ -171,56 +173,56 @@ document.documentElement.lang=lang; $('langSelect').value=lang;
 $('langSelect').onchange=()=>{ const v=$('langSelect').value; LS.setItem('lang',v); location.reload(); };
 
 const I18N={
-  it:{title:"Imposta la tua domanda", yourq:"E se…", ph:"E se…",
-    help:"Scrivi obiettivo + contesto in 1 riga. Aggiungi vincoli o orizzonte (es. 30 giorni).",
-    gen:"✨ Genera risposta", clear:"Svuota",
-    surprise:"Sorprendimi (assurdo)", spins:"Tiri rimasti oggi", noSpins:"Tiri esauriti per oggi.",
-    saved:"▶ Domande salvate", stories:"▶ Cronologia",
-    styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Passato",
-    hintsTitle:"▶ Spunti rapidi “E se…”",
-    hintsNote:"Spunti = idee realistiche (cambiano ogni giorno e si personalizzano col tuo uso). “Sorprendimi” propone solo idee assurde (stile & tempo casuali).",
-    credits:"Crediti", emptyNext:"— Nessuna domanda salvata.", emptyHist:"— Nessuna storia.", use:"Usa",
-    save:"Salva", clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota"},
-  en:{title:"Set your question", yourq:"What if…", ph:"What if…",
-    help:"Write goal + context in one line. Add constraints or horizon (e.g. 30 days).",
-    gen:"✨ Generate answer", clear:"Clear",
-    surprise:"Surprise me (absurd)", spins:"Spins left today", noSpins:"No spins left for today.",
-    saved:"▶ Saved questions", stories:"▶ History",
-    styleWF:"What if", styleWTF:"What the F", fut:"Future", past:"Past",
-    hintsTitle:"▶ Quick “What if…”",
-    hintsNote:"Hints = realistic ideas (refresh daily, personalized as you use it). “Surprise me” shows absurd ideas only (random style & time).",
-    credits:"Credits", emptyNext:"— No saved questions.", emptyHist:"— No history.", use:"Use",
-    save:"Save", clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear"},
-  es:{title:"Configura tu pregunta", yourq:"¿Y si…?", ph:"¿Y si…?",
-    help:"Escribe objetivo + contexto en una línea. Añade límites u horizonte (p. ej., 30 días).",
-    gen:"✨ Generar respuesta", clear:"Limpiar",
-    surprise:"Sorpréndeme (absurdo)", spins:"Tiradas restantes hoy", noSpins:"Sin tiradas por hoy.",
-    saved:"▶ Preguntas guardadas", stories:"▶ Historial",
-    styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Pasado",
-    hintsTitle:"▶ Ideas rápidas «¿Y si…?»",
-    hintsNote:"Ideas = realistas (nuevas cada día y personalizadas). «Sorpréndeme» muestra solo ideas absurdas.",
-    credits:"Créditos", emptyNext:"— No hay preguntas guardadas.", emptyHist:"— Sin historial.", use:"Usar",
-    save:"Guardar", clearSaved:"🗑️ Vaciar", clearHist:"🗑️ Vaciar"},
-  fr:{title:"Définis ta question", yourq:"Et si…", ph:"Et si…",
-    help:"Écris objectif + contexte en une ligne. Ajoute contraintes ou horizon (ex. 30 jours).",
-    gen:"✨ Générer la réponse", clear:"Effacer",
-    surprise:"Surprends-moi (absurde)", spins:"Tirs restants aujourd’hui", noSpins:"Plus de tirs pour aujourd’hui.",
-    saved:"▶ Questions enregistrées", stories:"▶ Historique",
-    styleWF:"What if", styleWTF:"What the F", fut:"Futur", past:"Passé",
-    hintsTitle:"▶ Idées rapides « Et si… »",
-    hintsNote:"Idées = réalistes (renouvelées chaque jour et personnalisées). « Surprends-moi » = idées absurdes uniquement.",
-    credits:"Crédits", emptyNext:"— Aucune question enregistrée.", emptyHist:"— Aucun historique.", use:"Utiliser",
-    save:"Enregistrer", clearSaved:"🗑️ Vider", clearHist:"🗑️ Vider"},
-  de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", ph:"Was wäre, wenn…",
-    help:"Schreibe Ziel + Kontext in einer Zeile. Füge Einschränkungen oder Horizont hinzu (z. B. 30 Tage).",
-    gen:"✨ Antwort erzeugen", clear:"Leeren",
-    surprise:"Überrasche mich (absurd)", spins:"Verbleibende Spins heute", noSpins:"Heute keine Spins mehr.",
-    saved:"▶ Gespeicherte Fragen", stories:"▶ Verlauf",
-    styleWF:"What if", styleWTF:"What the F", fut:"Zukunft", past:"Vergangenheit",
-    hintsTitle:"▶ Schnelle „Was wäre, wenn…“-Ideen",
-    hintsNote:"Ideen = realistisch (täglich neu, personalisiert). „Überrasche mich“ = nur absurde Ideen.",
-    credits:"Credits", emptyNext:"— Keine gespeicherten Fragen.", emptyHist:"— Kein Verlauf.", use:"Verwenden",
-    save:"Speichern", clearSaved:"🗑️ Leeren", clearHist:"🗑️ Leeren"}
+it:{title:"Imposta la tua domanda", yourq:"E se…", ph:"E se…",
+help:"Scrivi obiettivo + contesto in 1 riga. Aggiungi vincoli o orizzonte (es. 30 giorni).",
+gen:"✨ Genera risposta", clear:"Svuota",
+surprise:"Sorprendimi (assurdo)", spins:"Tiri rimasti oggi", noSpins:"Tiri esauriti per oggi.",
+saved:"▶ Domande salvate", stories:"▶ Cronologia",
+styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Passato",
+hintsTitle:"▶ Spunti rapidi “E se…”",
+hintsNote:"Spunti = idee realistiche (cambiano ogni giorno e si personalizzano col tuo uso). “Sorprendimi” propone solo idee assurde (stile & tempo casuali).",
+credits:"Crediti", emptyNext:"— Nessuna domanda salvata.", emptyHist:"— Nessuna storia.", use:"Usa",
+save:"Salva", clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota"},
+en:{title:"Set your question", yourq:"What if…", ph:"What if…",
+help:"Write goal + context in one line. Add constraints or horizon (e.g. 30 days).",
+gen:"✨ Generate answer", clear:"Clear",
+surprise:"Surprise me (absurd)", spins:"Spins left today", noSpins:"No spins left for today.",
+saved:"▶ Saved questions", stories:"▶ History",
+styleWF:"What if", styleWTF:"What the F", fut:"Future", past:"Past",
+hintsTitle:"▶ Quick “What if…”",
+hintsNote:"Hints = realistic ideas (refresh daily, personalized as you use it). “Surprise me” shows absurd ideas only (random style & time).",
+credits:"Credits", emptyNext:"— No saved questions.", emptyHist:"— No history.", use:"Use",
+save:"Save", clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear"},
+es:{title:"Configura tu pregunta", yourq:"¿Y si…?", ph:"¿Y si…?",
+help:"Escribe objetivo + contexto en una línea. Añade límites u horizonte (p. ej., 30 días).",
+gen:"✨ Generar respuesta", clear:"Limpiar",
+surprise:"Sorpréndeme (absurdo)", spins:"Tiradas restantes hoy", noSpins:"Sin tiradas por hoy.",
+saved:"▶ Preguntas guardadas", stories:"▶ Historial",
+styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Pasado",
+hintsTitle:"▶ Ideas rápidas «¿Y si…?»",
+hintsNote:"Ideas = realistas (nuevas cada día y personalizadas con tu uso). «Sorpréndeme» muestra solo ideas absurdas.",
+credits:"Créditos", emptyNext:"— No hay preguntas guardadas.", emptyHist:"— Sin historial.", use:"Usar",
+save:"Guardar", clearSaved:"🗑️ Vaciar", clearHist:"🗑️ Vaciar"},
+fr:{title:"Définis ta question", yourq:"Et si…", ph:"Et si…",
+help:"Écris objectif + contexte en une ligne. Ajoute contraintes ou horizon (ex. 30 jours).",
+gen:"✨ Générer la réponse", clear:"Effacer",
+surprise:"Surprends-moi (absurde)", spins:"Tirs restants aujourd’hui", noSpins:"Plus de tirs pour aujourd’hui.",
+saved:"▶ Questions enregistrées", stories:"▶ Historique",
+styleWF:"What if", styleWTF:"What the F", fut:"Futur", past:"Passé",
+hintsTitle:"▶ Idées rapides « Et si… »",
+hintsNote:"Idées = réalistes (renouvelées chaque jour et personnalisées). « Surprends-moi » = idées absurdes uniquement.",
+credits:"Crédits", emptyNext:"— Aucune question enregistrée.", emptyHist:"— Aucun historique.", use:"Utiliser",
+save:"Enregistrer", clearSaved:"🗑️ Vider", clearHist:"🗑️ Vider"},
+de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", ph:"Was wäre, wenn…",
+help:"Schreibe Ziel + Kontext in einer Zeile. Füge Einschränkungen oder Horizont hinzu (z. B. 30 Tage).",
+gen:"✨ Antwort erzeugen", clear:"Leeren",
+surprise:"Überrasche mich (absurd)", spins:"Verbleibende Spins heute", noSpins:"Heute keine Spins mehr.",
+saved:"▶ Gespeicherte Fragen", stories:"▶ Verlauf",
+styleWF:"What if", styleWTF:"What the F", fut:"Zukunft", past:"Vergangenheit",
+hintsTitle:"▶ Schnelle „Was wäre, wenn…“-Ideen",
+hintsNote:"Ideen = realistisch (täglich neu, personalisiert). „Überrasche mich“ = nur absurde Ideen.",
+credits:"Credits", emptyNext:"— Keine gespeicherten Fragen.", emptyHist:"— Kein Verlauf.", use:"Verwenden",
+save:"Speichern", clearSaved:"🗑️ Leeren", clearHist:"🗑️ Leeren"}
 };
 
 /* Apply texts */
@@ -249,21 +251,13 @@ let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
 function userIsAdmin(){ return !!LS.getItem('admin_token'); }
-function capForUser(){ return userIsAdmin()?Infinity:(prefs.pro?10:3); } // 10 Pro, 3 Free
-
-// Credits storage: { date: 'YYYY-MM-DD', used: number }
-function ensureCredits(){
-  const c=readJSON('whatif_credits',{date:todayISO(),used:0});
-  if(c.date!==todayISO()){ c.date=todayISO(); c.used=0; }
-  writeJSON('whatif_credits',c);
-}
-function usedCredits(){ const c=readJSON('whatif_credits',{date:todayISO(),used:0}); return c.used||0; }
+function capForUser(){ return userIsAdmin()?Infinity:(prefs.pro?10:3); }
+function ensureCredits(){ const c=readJSON('whatif_credits',{date:todayISO(),used:0}); if(c.date!==todayISO()){c.date=todayISO();c.used=0} writeJSON('whatif_credits',c); }
+function leftCredits(){ const c=readJSON('whatif_credits',{date:todayISO(),used:0}); const cap=capForUser(); return cap===Infinity?'∞':Math.max(0,cap-(c.used||0)); }
 function renderCredits(){
   const T=I18N[lang]||I18N.it;
-  const cap=capForUser();
-  if(cap===Infinity){ $('freeBadge').textContent=`${T.credits}: ∞`; return; }
-  const used=usedCredits();
-  $('freeBadge').textContent=`${T.credits}: ${used}/${cap}`;
+  const cap=capForUser(), left=leftCredits();
+  $('freeBadge').textContent=(cap===Infinity)?`${T.credits}: ∞`:`${T.credits}: ${left}/${cap}`;
 }
 ensureCredits(); renderCredits();
 
@@ -291,7 +285,20 @@ $('periodoChips').addEventListener('click',e=>{
 /* ===== NAV ===== */
 $('homeBtn').onclick=()=>location.href='index.html';
 $('backBtn').onclick=()=>{ if(history.length>1) history.back(); else location.href='index.html'; };
-$('resetBtn').onclick=()=>{ try{localStorage.clear();}catch{} location.href='index.html'; };
+
+/* ✅ RESET SELETTIVO (preserva crediti e spins) */
+$('resetBtn').onclick=()=>{
+  const PRESERVE = ['whatif_credits','surprise_spins','admin_token','lang'];
+  const keep = Object.fromEntries(PRESERVE.map(k => [k, LS.getItem(k)]));
+  // wipe stato UI e liste
+  [
+    'whatif_prefs','next_prompts','cronologia','replay_story',
+    'surprise_recent','absurd_prompt','surprise_mode','domanda'
+  ].forEach(k => LS.removeItem(k));
+  // ripristina i preservati
+  Object.entries(keep).forEach(([k,v])=>{ if(v!==null) LS.setItem(k,v); });
+  location.href='index.html';
+};
 
 /* ===== STATO "ASSURDA" / "SORPRENDIMI" ===== */
 let isAbsurd=false;
@@ -402,6 +409,7 @@ function inferUserPrefs(){
 }
 
 function personalizedHints(baseList){
+  // aggiunge 2-4 chip realistici derivati dalle categorie più frequenti (solo IT per ora)
   if(lang!=='it') return baseList;
   const prefs = inferUserPrefs();
   const ranked = Object.entries(prefs).sort((a,b)=>b[1]-a[1]).filter(([,v])=>v>0).map(([k])=>k);
@@ -424,8 +432,7 @@ function renderHints(){
   const finalList = personalizedHints(list).slice(0,12);
 
   hintsWrap.innerHTML='';
-  finalList.forEach(h=>{
-    const b=document.createElement('button'); b.className='chip'; b.textContent=h;
+  finalList.forEach(h=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=h;
     b.onclick=()=>{ $('qInput').value=h; isAbsurd=false; LS.setItem('absurd_prompt','0'); LS.setItem('surprise_mode','0'); window.scrollTo({top:0,behavior:'smooth'}); };
     hintsWrap.appendChild(b);
   });
@@ -445,7 +452,6 @@ renderHints();
 function fmtDate(ts){ return new Date(ts).toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
 function addSaved(q){ if(!q) return; const arr=readJSON('next_prompts',[]); arr.unshift({q,ts:Date.now()}); writeJSON('next_prompts',arr.slice(0,50)); renderNext(); }
 function addHistory(domanda, stile){ if(!domanda) return; const arr=readJSON('cronologia',[]); arr.push({domanda, stile, ts:Date.now(), risposta:''}); writeJSON('cronologia', arr.slice(-100)); renderStories(); }
-
 function renderNext(){
   const T=I18N[lang]||I18N.it;
   const box=$('nextList'); box.innerHTML=''; const arr=readJSON('next_prompts',[]);
@@ -481,10 +487,7 @@ function consumeOneCredit(){
   if(userIsAdmin()) return true;
   const c=readJSON('whatif_credits',{date:todayISO(),used:0});
   const cap=capForUser();
-  if((c.used||0)>=cap){
-    alert((I18N[lang]||I18N.it).credits+': '+(lang==='en'?'limit reached':'limite raggiunto'));
-    return false;
-  }
+  if((c.used||0)>=cap){ alert((I18N[lang]||I18N.it).credits+': '+(lang==='en'?'limit reached':'limite raggiunto')); return false; }
   c.used=(c.used||0)+1; writeJSON('whatif_credits',c); renderCredits(); return true;
 }
 
@@ -550,7 +553,7 @@ function makeAbsurdList(n=14){
   return out;
 }
 
-function spinCap(){ return userIsAdmin()?Infinity:(prefs.pro?5:1); } // 5 Pro, 1 Free
+function spinCap(){ return userIsAdmin()?Infinity:(prefs.pro?5:1); }
 function ensureSpins(){
   const s=readJSON('surprise_spins',{date:todayISO(),used:0});
   if(s.date!==todayISO()){ s.date=todayISO(); s.used=0; }
@@ -595,15 +598,42 @@ function slotSurprise(){
     const finalPrompt = finalList[Math.floor(Math.random()*finalList.length)];
     $('qInput').value = finalPrompt;
     rememberPrompt(finalPrompt);
+
     // flag "sorpresa"
     isAbsurd=true;
     LS.setItem('absurd_prompt','1');
     LS.setItem('surprise_mode','1');
+
   }, 1200 + Math.random()*600);
 }
 $('surpriseBtn').onclick=slotSurprise;
 
-/* ===== LISTE (no duplicati) ===== */
+/* ===== LISTE (dup fix) ===== */
+function renderNext(){
+  const T=I18N[lang]||I18N.it;
+  const box=$('nextList'); box.innerHTML=''; const arr=readJSON('next_prompts',[]);
+  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=T.emptyNext; box.appendChild(p); return; }
+  arr.slice(0,12).forEach(item=>{
+    const row=document.createElement('div'); row.className='story';
+    const left=document.createElement('div'); left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.q||'—'}</div><div class="meta">${new Date(item.ts).toLocaleString()}</div>`;
+    const right=document.createElement('div'); right.className='row';
+    const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=T.use;
+    useBtn.onclick=()=>{ $('qInput').value=item.q||''; isAbsurd=false; LS.setItem('absurd_prompt','0'); LS.setItem('surprise_mode','0'); window.scrollTo({top:0,behavior:'smooth'}); };
+    right.appendChild(useBtn); row.appendChild(left); row.appendChild(right); box.appendChild(row);
+  });
+}
+function renderStories(){
+  const T=I18N[lang]||I18N.it;
+  const box=$('storyList'); box.innerHTML=''; const arr=readJSON('cronologia',[]);
+  if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=T.emptyHist; box.appendChild(p); return; }
+  arr.slice(-12).reverse().forEach(item=>{
+    const row=document.createElement('div'); row.className='story';
+    const left=document.createElement('div'); left.innerHTML=`<div style="font-weight:700;max-width:520px">${item.domanda||'—'}</div><div class="meta">${new Date(item.ts).toLocaleString()} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
+    const play=document.createElement('button'); play.className='play'; play.textContent='▶';
+    play.onclick=()=>{ writeJSON('replay_story',{domanda:item.domanda,answer:item.risposta||item.answer||'',stile:item.stile||'whatif'}); location.href='fifth.html'; };
+    row.appendChild(left); row.appendChild(play); box.appendChild(row);
+  });
+}
 renderNext(); renderStories();
 $('clearSavedBtn').onclick=()=>{ LS.removeItem('next_prompts'); renderNext(); };
 $('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
