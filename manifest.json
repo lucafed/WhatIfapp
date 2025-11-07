@@ -40,14 +40,14 @@
   "screenshots": [
     {
       "src": "/screenshot-phone-1080x1920-1.png",
-      "sizes": "1080x1920",
+      "sizes": "1920x1080",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Schermata iniziale di What?f"
     },
     {
       "src": "/screenshot-phone-1080x1920-2.png",
-      "sizes": "1080x1920",
+      "sizes": "1920x1080",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Interfaccia dell’app What?f"
