@@ -1,20 +1,20 @@
-// /api/ask.js — What?f Engine (WhatIf “realismo brillante” + WTF “bar poetico”) — MULTILINGUA
+// /api/ask.js — What?f Engine (What If “realismo brillante” + What the F “bar poetico”) — MULTILINGUA
+// Quote giornaliere: FREE=3/giorno, PRO=10/giorno, ADMIN=illimitato (reset Europa/Roma)
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
-import { Ratelimit } from "@upstash/ratelimit";
+import { Ratelimit } from "@upstash/ratelimit"; // non usato per le quote giornaliere, lasciato per eventuali antiflood futuri
 import { randomBytes, createHash } from "node:crypto";
 
 /* ========= OpenAI ========= */
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
-/* ========= Rate limit ========= */
+/* ========= Redis ========= */
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
-const rl = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "1 m") });
 
 /* ========= CORS ========= */
 const ALLOWED_ORIGINS = [
@@ -27,10 +27,10 @@ function cors(req, res) {
   if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token, x-pro");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token, x-pro, x-pro-sign");
 }
 
-/* ========= Helpers ========= */
+/* ========= Helpers comuni ========= */
 const SUP_LANGS = ["it","en","es","fr","de"];
 const normLang = (l="it") =>
   SUP_LANGS.includes(String(l||"it").toLowerCase().slice(0,2))
@@ -79,8 +79,7 @@ function hash32(s){ return createHash("sha1").update(s).digest().readUInt32BE(0)
 function makePRNG(seed){ let x = seed >>> 0; return ()=>{ x=(x*1664525+1013904223)>>>0; return x/2**32; }; }
 function pick(prng, arr){ return arr[Math.floor(prng()*arr.length)] }
 function pickMany(prng, arr, k){
-  const a=[...arr];
-  const out=[];
+  const a=[...arr]; const out=[];
   for(let i=0;i<Math.max(0,Math.min(k,a.length));i++){
     const idx=Math.floor(prng()*a.length);
     out.push(a.splice(idx,1)[0]);
@@ -88,7 +87,46 @@ function pickMany(prng, arr, k){
   return out;
 }
 
-/* ===== Oggetti contestuali dalla domanda ===== */
+/* ===== Autenticazione piani / Quote giornaliere ===== */
+function boolHeader(v){ return String(v||"").trim()==="1" || String(v||"").toLowerCase()==="true"; }
+
+function getAuthPlan(req){
+  const admin = String(req.headers["x-admin-token"]||"");
+  const proHdr = boolHeader(req.headers["x-pro"]);
+  const proSig = String(req.headers["x-pro-sign"]||"");
+
+  const isAdmin = !!process.env.ADMIN_TOKEN && admin === process.env.ADMIN_TOKEN;
+
+  // Firma opzionale per PRO (leggera)
+  const isSignedPro = !!process.env.PRO_SHARED_SECRET && proSig === createHash("sha256")
+    .update(process.env.PRO_SHARED_SECRET + "|" + (req.headers["origin"]||""))
+    .digest("hex");
+
+  const isPro = proHdr || isSignedPro || isAdmin;
+  const plan = isAdmin ? "admin" : (isPro ? "pro" : "free");
+  return { isAdmin, isPro, plan };
+}
+
+// Data “oggi” in Europa/Roma come yyyymmdd
+function romeYMD(date = new Date()){
+  const parts = new Intl.DateTimeFormat('en-CA',{
+    timeZone:'Europe/Rome', year:'numeric', month:'2-digit', day:'2-digit'
+  }).formatToParts(date).reduce((a,p)=> (a[p.type]=p.value, a), {});
+  return `${parts.year}${parts.month}${parts.day}`;
+}
+// Prossima mezzanotte Roma ISO
+function romeNextMidnightISO(date = new Date()){
+  const nowRomeStr = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Rome', year:'numeric', month:'2-digit', day:'2-digit',
+    hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
+  }).format(date); // es. 2025-11-07, 21:03:04
+  const m = nowRomeStr.match(/(\d{4})-(\d{2})-(\d{2}), (\d{2}):(\d{2}):(\d{2})/);
+  const nowRome = new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}`);
+  const next = new Date(nowRome); next.setDate(next.getDate()+1); next.setHours(0,0,0,0);
+  return next.toISOString();
+}
+
+/* ===== Oggetti contestuali dalla domanda (per WTF) ===== */
 function deriveContextObjects(domanda){
   const d = String(domanda||"").toLowerCase();
   const add = [];
@@ -109,7 +147,6 @@ function deriveContextObjects(domanda){
 }
 
 /* ========= WHAT IF (nuova versione) ========= */
-// Realismo brillante e controfattuale leggero — sistema + esempi IT
 const WHATIF_RULES = {
   it: `Sei “What If” — voce lucida, allegra e curiosa, che immagina come potrebbero andare o essere andate le cose.
 Parla in SECONDA PERSONA, in un paragrafo unico di 6–9 frasi (~100–130 parole).
@@ -118,10 +155,10 @@ Parla come una versione parallela, un “e se…”, realistica ma un po’ più
 Usa immagini quotidiane (treni, chiavi, finestre, risate, vento, tazze di caffè).
 Evita moralismi/consigli/domande; niente liste/emoji.
 Chiudi con una sensazione di apertura o curiosità.`,
-  en:`You are “What If”: lucid, upbeat, curious. Second person, one paragraph, 6–9 sentences (~100–130 words). Everyday imagery. No advice or questions. End open.`,
+  en:`You are “What If”: lucid, upbeat, curious. Second person, one paragraph, 6–9 sentences (~100–130 words). Everyday imagery. No advice/questions. Open ending.`,
   es:`Eres “What If”: voz lúcida y alegre. Segunda persona, un párrafo, 6–9 frases. Imágenes cotidianas. Sin consejos/preguntas. Cierre abierto.`,
   fr:`Tu es “What If” : voix lucide et vive. Deuxième personne, un paragraphe, 6–9 phrases. Pas de conseils/questions. Fin ouverte.`,
-  de:`Du bist “What If”: klar und neugierig. Zweite Person, ein Absatz, 6–9 Sätze. Alltagsbilder. Keine Ratschläge/Fragen. Offenes Ende.`
+  de:`Du bist “What If”: klar & neugierig. Zweite Person, ein Absatz, 6–9 Sätze. Alltagsbilder. Keine Ratschläge/Fragen. Offenes Ende.`
 };
 
 const WHATIF_EXAMPLES = {
@@ -140,26 +177,23 @@ const WHATIF_EXAMPLES = {
 };
 
 /* ========= WTF (nuova versione) ========= */
-/* — Monologo continuo da bar: ironia, sarcasmo, oggetti giudicanti, sbronza accidentale.
-   Niente “Morale:”, niente “Consiglio:”, niente etichette. Linguaggio vivo, leggermente volgare ammesso.
-   5–7 frasi, paragrafo unico. Aperture confidenziali tipo: “Oh senti…”, “Sai che ti dico…”, “Guarda…”, “Oh, allora…”.
-*/
+// Monologo continuo da bar: ironia, sarcasmo, oggetti giudicanti, sbronza accidentale, leggero turpiloquio ammesso.
 const WTF_RULES = {
-  it: `Sei “What the F”: barista affettuoso e sarcastico. Seconda persona, un solo paragrafo, 5–7 frasi.
-Inizia in modo confidenziale (“Oh senti…”, “Sai che ti dico…”, “Guarda…”).
-Usa oggetti/luoghi che commentano o giudicano (moka, tapparella, citofono, frigo, sedia, lampione, playlist).
-Concedi leggero turpiloquio se naturale. Nessuna morale o consigli espliciti, niente elenchi o emoji.
-Tono: ironico, poetico-sporco, sbronza accidentale ma lucida. Rispondi davvero alla domanda, restando concreto.`,
-  en:`You are “What the F”: a sarcastic but caring bartender voice. One paragraph, 5–7 sentences. Conversational opener. Judging objects. Slight swearing allowed. No labels, no lists, no emojis. Answer the question while keeping it gritty and humane.`
+  it: `Sei “What the F”: barista affettuoso e sarcastico. Seconda persona, UN SOLO PARAGRAFO, 5–7 frasi.
+Inizia confidenziale (“Oh senti…”, “Sai che ti dico…”, “Guarda…”).
+Inserisci oggetti/luoghi che commentano o giudicano (moka, tapparella, citofono, frigo, sedia, lampione, playlist).
+Linguaggio vivo, anche un filo volgare se naturale. Niente morale, niente consigli, niente elenchi, niente emoji.
+Tono: ironico, poetico-sporco, sbronza accidentale ma lucida. Rispondi davvero alla domanda (concreto).`,
+  en:`You are “What the F”: sarcastic but caring bartender. One paragraph, 5–7 sentences. Conversational opener. Judging objects. Slight swearing ok. No labels/lists/emojis. Gritty, humane, actually answer the question.`
 };
 
-/* ===== Variabili per oggetti WTF ===== */
+/* ===== Banca minima per variare aperture/oggetti (WTF) ===== */
 const BANK = {
   it: {
     starters: ["Oh senti", "Sai che ti dico", "Guarda", "Oh, allora", "Ehi, parliamoci chiaro"],
     objects: ["moka","tapparella","citofono","frigorifero","sedia girevole","lampione","stampante","ventilatore","telecomando","pianta"],
     moods: ["ti guarda storto","ti mette in muto","applaude per rispetto","fa ghosting","finge un aggiornamento","ti giudica in silenzio"],
-    booze: ["negroni grande","birra media", "rum in plastica", "spritz di troppo", "amaro doppio"]
+    booze: ["negroni grande","birra media","rum in plastica","spritz di troppo","amaro doppio"]
   }
 };
 
@@ -210,26 +244,24 @@ function buildMessages({ domanda, lang, periodo, stile }){
     const b = BANK[L] || BANK.it;
     const prng = makePRNG(hash32(domanda) ^ randomBytes(4).readUInt32BE(0));
     const starter = (b.starters||["Oh senti"])[Math.floor(prng()*(b.starters||["Oh senti"]).length)];
-    const objs = pickMany(prng, b.objects||[], 2 + Math.floor(prng()*2)); // 2–3 oggetti
-    const moods = pickMany(prng, b.moods||[], objs.length);
+    const objs = pickMany(prng, (b.objects||[]).concat(deriveContextObjects(domanda)), 2 + Math.floor(prng()*2)); // 2–3
+    const moods = pickMany(prng, b.moods||[], Math.min(3, objs.length));
     const booze = pickMany(prng, b.booze||[], 1 + (prng()<0.5?1:0));
 
     const wtfRule =
       L==="en"
         ? WTF_RULES.en
         : `${WTF_RULES.it}
-Suggerimenti da intrecciare liberamente (non elenchi, niente etichette):
+Suggerimenti da intrecciare naturalmente (no elenchi, niente etichette):
 - Attacco confidenziale tipo: “${starter}…”.
-- Oggetti di scena: ${objs.join(", ")} (es. “${objs[0]} ${moods[0]}”).
+- Oggetti di scena possibili: ${objs.join(", ")}${moods.length?` (es. “${objs[0]} ${moods[0]}”)`:""}.
 - Sbronza accidentale: ${booze.join(" + ")}.`;
 
     msgs.push({ role:"system", content: wtfRule });
 
   } else {
     // ===== WHAT IF
-    msgs.push(
-      { role:"system", content: WHATIF_RULES[L] || WHATIF_RULES.it }
-    );
+    msgs.push({ role:"system", content: WHATIF_RULES[L] || WHATIF_RULES.it });
     const ex = WHATIF_EXAMPLES?.it;
     if (ex) {
       if (effectivePeriodo === "past" && ex.past) msgs.push({ role:"system", content:`ESEMPI (passato):\n- ${ex.past.join("\n- ")}` });
@@ -240,7 +272,7 @@ Suggerimenti da intrecciare liberamente (non elenchi, niente etichette):
   const ask =
     stile==="wtf"
       ? (L==="en"
-          ? `Do NOT repeat the question. ONE PARAGRAPH (5–7 sentences, ~100–115 words). Continuous, conversational, gritty, slightly drunk. Include judging objects naturally. "${domanda}"`
+          ? `Do NOT repeat the question. ONE PARAGRAPH (5–7 sentences, ~100–115 words). Conversational, gritty, slightly drunk. Include judging objects naturally. "${domanda}"`
           : `Non ripetere la domanda. UN PARAGRAFO (5–7 frasi, ~100–115 parole). Tono confidenziale, continuo, ironico, con oggetti che commentano. Linguaggio vivo, anche un filo volgare se serve. "${domanda}"`)
       : (L==="en"
           ? `Do not restate the question. ONE PARAGRAPH (6–9 sentences, ~100–130 words). Bright, warm, everyday imagery. No advice or questions. "${domanda}"`
@@ -258,21 +290,52 @@ export default async function handler(req, res){
 
   try{
     if(!process.env.OPENAI_API_KEY) return res.status(500).json({ error:"missing_api_key" });
+    if(!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN){
+      return res.status(500).json({ error:"missing_redis_env" });
+    }
 
+    // Piano & quota giornaliera
+    const { isAdmin, isPro, plan } = getAuthPlan(req);
     const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").toString().split(",")[0].trim();
-    const { success } = await rl.limit(`ask:${ip}`);
-    if(!success) return res.status(429).json({ error:"rate_limited_minute" });
+    const FREE_LIMIT = 3;
+    const PRO_LIMIT  = 10;
+    const limit = isAdmin ? Infinity : (isPro ? PRO_LIMIT : FREE_LIMIT);
 
+    const day = romeYMD();
+    const quotaKey = `ask:quota:${plan}:${ip}:${day}`;
+
+    let used = 0;
+    if(!isAdmin){
+      used = await redis.incr(quotaKey);
+      if(used === 1){ await redis.expire(quotaKey, 36*60*60); } // TTL di sicurezza
+      if(used > limit){
+        return res.status(429).json({
+          error: "quota_daily_exceeded",
+          plan,
+          used,
+          limit,
+          reset_at_rome: romeNextMidnightISO(),
+        });
+      }
+    }
+
+    // Body & parametri
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const { domanda = "", stile = "whatif", lang = "it", periodo = "", micro = {} } = body;
     if(!domanda || typeof domanda !== "string") return res.status(400).json({ error:"bad_request", detail:"domanda_required" });
 
     const messages = buildMessages({ domanda, lang, periodo, stile, micro });
+
+    // Risposte: PRO un filo più ricche
+    const MAX_TOKENS = isPro ? 520 : 420;
+    const TEMP_WTF = isPro ? 1.02 : 1.0;
+    const TEMP_WI  = isPro ? 0.70 : 0.68;
+
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 1.0 : 0.68,
+      temperature: stile === "wtf" ? TEMP_WTF : TEMP_WI,
       top_p: 0.92,
-      max_tokens: 420,
+      max_tokens: MAX_TOKENS,
       frequency_penalty: 0.1,
       presence_penalty: 0.0,
       messages,
@@ -283,15 +346,15 @@ export default async function handler(req, res){
 
     // ===== Post-process =====
     answer = stripQuestionEcho(domanda, answer);
-    // WTF: 5–7 frasi max; WHAT IF: 9 frasi max
-    answer = tightenSentences(answer, stile === "wtf" ? 7 : 9);
-    // Limiti parole
-    answer = clampWords(answer, stile === "wtf" ? 115 : 130);
+    const maxSentences = stile === "wtf" ? (isPro ? 7 : 6) : 9;
+    answer = tightenSentences(answer, maxSentences);
+    const maxWords = stile === "wtf" ? (isPro ? 125 : 115) : (isPro ? 140 : 130);
+    answer = clampWords(answer, maxWords);
     answer = normalizeOneParagraph(answer);
     answer = sentenceCaseAll(answer);
     answer = finalPunct(answer);
 
-    // ===== IT normalizzazioni sicure =====
+    // IT normalizzazioni
     if(normLang(lang)==="it"){
       const d=String(domanda||"");
       const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
@@ -300,7 +363,7 @@ export default async function handler(req, res){
         if(offset===0) return m;
         const before = str.slice(0, offset);
         if(/[.!?…]["'”)\]]?\s*$/.test(before)) return m;
-        return inQuestion.has(m) || ["Ah","Oh","Ehi","Sai","Guarda"].includes(m) ? m : m.toLowerCase();
+        return inQuestion.has(m) || ["Ah","Oh","Ehi","Sai","Guarda","Oh, allora"].includes(m) ? m : m.toLowerCase();
       });
       answer = answer.replace(/\ball’aquila\b/g, "all’Aquila");
     }
@@ -308,10 +371,18 @@ export default async function handler(req, res){
     // Maiuscola iniziale
     answer = answer.replace(/^\s*([a-zà-ÿ])/u, (m,c)=>c.toUpperCase());
 
-    return res.status(200).json({ answer, style: stile, lang: normLang(lang), periodo: periodo || detectPeriod(domanda, lang), model: MODEL });
+    return res.status(200).json({
+      answer,
+      style: stile,
+      lang: normLang(lang),
+      periodo: periodo || detectPeriod(domanda, lang),
+      model: MODEL,
+      plan,
+      quota: isAdmin ? null : { used, limit, reset_at_rome: romeNextMidnightISO() }
+    });
 
   }catch(err){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
-}
+      }
