@@ -29,7 +29,8 @@ const VERCEL_PREVIEW_RX = /^https:\/\/[a-z0-9-]+-what-ifapp-[a-z0-9-]+-vercel\.a
 function cors(req, res) {
   const origin = String(req.headers.origin || "");
   const ok =
-    ALLOWED_ORIGINS.includes(origin) || VERCEL_PREVIEW_RX.test(origin);
+    ALLOWED_ORIGINS.some((o) => origin.startsWith(o)) ||
+    VERCEL_PREVIEW_RX.test(origin);
   if (ok) res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -60,14 +61,13 @@ function tightenSentences(text, maxSentences) {
     .split(/(?<=[.!?…])\s+/u)
     .map((x) => x.trim())
     .filter(Boolean);
-  const out = [];
-  const seen = new Set();
+  const out = [],
+    seen = new Set();
   for (const p of parts) {
     const n = normLine(p);
     if (!n || seen.has(n)) continue;
     out.push(p);
     if (out.length >= maxSentences) break;
-    seen.add(n);
   }
   let t = out.join(" ");
   if (!/[.!?…]$/.test(t)) t += ".";
@@ -120,6 +120,18 @@ function makePRNG(seed) {
     return x / 2 ** 32;
   };
 }
+function pick(prng, arr) {
+  return arr[Math.floor(prng() * arr.length)];
+}
+function pickMany(prng, arr, k) {
+  const a = [...arr];
+  const out = [];
+  for (let i = 0; i < Math.max(0, Math.min(k, a.length)); i++) {
+    const idx = Math.floor(prng() * a.length);
+    out.push(a.splice(idx, 1)[0]);
+  }
+  return out;
+}
 
 /* ===== Autenticazione piani / Quote giornaliere ===== */
 function boolHeader(v) {
@@ -158,58 +170,45 @@ function romeYMD(date = new Date()) {
     .reduce((a, p) => ((a[p.type] = p.value), a), {});
   return `${parts.year}${parts.month}${parts.day}`;
 }
-// Prossima mezzanotte Roma ISO (con fallback robusto)
+// Prossima mezzanotte Roma ISO
 function romeNextMidnightISO(date = new Date()) {
-  try {
-    const nowRomeStr = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Europe/Rome",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-    }).format(date);
-    const m = nowRomeStr.match(/(\d{4})-(\d{2})-(\d{2}), (\d{2}):(\d{2}):(\d{2})/);
-    let next;
-    if (m) {
-      const nowRome = new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}`);
-      next = new Date(nowRome);
-    } else {
-      next = new Date();
-    }
-    next.setDate(next.getDate() + 1);
-    next.setHours(0, 0, 0, 0);
-    return next.toISOString();
-  } catch {
-    const next = new Date();
-    next.setDate(next.getDate() + 1);
-    next.setHours(0, 0, 0, 0);
-    return next.toISOString();
-  }
+  const nowRomeStr = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(date);
+  const m = nowRomeStr.match(/(\d{4})-(\d{2})-(\d{2}), (\d{2}):(\d{2}):(\d{2})/);
+  const nowRome = new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}`);
+  const next = new Date(nowRome);
+  next.setDate(next.getDate() + 1);
+  next.setHours(0, 0, 0, 0);
+  return next.toISOString();
 }
 
-/* ===== Oggetti contestuali dalla domanda (per info aggiuntiva, non forzante) ===== */
+/* ===== Oggetti contestuali dalla domanda (per WTF) ===== */
 function deriveContextObjects(domanda) {
   const d = String(domanda || "").toLowerCase();
   const add = [];
   const map = [
-    [/citt[aà]|trasloc|quartiere|metro|bus|treno/, "tabellone dei treni"],
-    [/casa|appart|affitto|mutuo|trasloco/, "chiave che gratta la serratura"],
-    [/lavor|cv|curriculum|colloquio|linkedin|ufficio/, "badge appeso storto"],
-    [/studio|esame|tesi|universit|lezion/, "dispensa spiegazzata"],
-    [/inglese|lingua|course|corso|lezioni/, "quaderno di verbi irregolari"],
-    [/viagg|volo|aereo|hotel|valigia|nave/, "trolley con ruota storta"],
-    [/soldi|budget|spesa|aumento|stipendio|fattura/, "portafoglio che fischia"],
-    [/palestra|corsa|yoga|nuot|allen/, "scarpe che chiedono strada"],
-    [/startup|sito|e[- ]?commerce|shopify|app|dominio/, "laptop con adesivi"],
-    [/relaz|amico|partner|ex|cuore/, "telefono che vibra a vuoto"],
-    [/mare|spiaggia|acqua|onda|sabbia|tuffo/, "infradito impanate"],
-    [/montagna|trek|sentiero|cima|neve/, "giacca che odora di resina"],
-    [/moto|scooter|casco|benzina/, "casco che stringe le idee"],
+    [/citt[aà]/, "mappa piegata"],
+    [/trasloc|casa|appart|affitto/, "scatolone col pennarello"],
+    [/lavor|cv|curriculum|colloquio|linkedin/, "cartellina trasparente"],
+    [/studio|esame|tesi|universit/, "quaderno con orecchie"],
+    [/inglese|lingua|course|corso/, "post-it con verbi irregolari"],
+    [/viagg|treno|volo|aereo|hotel/, "valigia che borbotta"],
+    [/soldi|budget|spesa|aumento/, "calcolatrice stanca"],
+    [/palestra|corsa|yoga|nuot/, "scarpe che chiedono strada"],
+    [/startup|sito|e[- ]?commerce|shopify|app/, "laptop con adesivi motivazionali"],
+    [/relaz|amico|partner/, "telefono che vuole essere sincero"],
   ];
-  for (const [rx, obj] of map) if (rx.test(d)) add.push(obj);
+  for (const [rx, obj] of map) {
+    if (rx.test(d)) add.push(obj);
+  }
   return Array.from(new Set(add)).slice(0, 2);
 }
 
@@ -230,19 +229,48 @@ All’inizio balbetti con le parole, come chi prova una bicicletta troppo alta. 
   en: `You are “What If”: lucid, warm, cinematic second-person voice. ONE PARAGRAPH, 6–9 sentences (~100–130 words). No advice/lists/emojis. Open, sensory ending.`,
 };
 
-/* ========= WTF (definitivo: oggetti dal contesto + micro-morale demenziale) ========= */
+/* ========= WTF (nuova versione) ========= */
 const WTF_RULES = {
-  it: `Sei “What the F”: barista affettuoso e sarcastico. Parla in SECONDA PERSONA, UN SOLO PARAGRAFO, 5–7 frasi (~100–115 parole).
-Apri con un attacco confidenziale (es.: “Oh senti…”, “Sai che ti dico…”, “Guarda…”).
-Linguaggio parlato, ironico, sporco ma umano; lieve volgarità ammessa se naturale.
-Inserisci 2–3 oggetti/luoghi che COMMENTANO o GIUDICANO, scelti **dal contesto della domanda** (elettrodomestici, infissi, mezzi, insegne, mobili, ticket, ecc.). Evita riciclaggi facili (moka/negroni/spritz/citofono/pianta/finestra) se non pertinenti.
-Rispondi davvero alla domanda; niente liste, niente emoji, niente domande retoriche; NON ripetere la domanda.
-CHIUDI con una **micro-morale demenziale**: una riga breve (6–12 parole), ironica e visiva, non un sermone.`,
-  en: `You are “What the F”: a sarcastic, caring bartender. SECOND PERSON, ONE PARAGRAPH, 5–7 sentences (~100–115 words).
-Open conversationally (“Listen…”, “Here’s the thing…”, “Look…”).
-Gritty, colloquial, slightly profane if natural. Include 2–3 judging objects/places **from the prompt’s context**. Avoid reusing the same props unless truly relevant.
-Actually answer the question. No lists, no emojis, no rhetorical questions, do NOT restate the prompt.
-END with a short dumb-wise one-liner (6–12 words), visual and ironic.`,
+  it: `Sei “What the F”: barista affettuoso e sarcastico. SECONDA PERSONA. UN SOLO PARAGRAFO, 5–7 frasi (~100–115 parole).
+Attacco confidenziale (“Oh senti…”, “Sai che ti dico…”, “Guarda…”).
+Inserisci oggetti/luoghi che commentano o giudicano (moka, tapparella, citofono, frigo, sedia, lampione, playlist).
+Linguaggio vivo, anche un filo volgare se naturale. Niente morale, niente consigli, niente elenchi, niente emoji.
+Tono: ironico, poetico-sporco, sbronza accidentale ma lucida. Rispondi davvero alla domanda e CHIUDI con un’immagine secca e visiva (risata amara, vento in faccia, bicchiere che scalda).`,
+  en: `You are “What the F”: sarcastic but caring bartender. ONE PARAGRAPH, 5–7 sentences (~100–115 words). Conversational opener. Judging objects. Slight swearing ok. No lists/emojis/morals. End on a sharp, visual image.`,
+};
+
+/* ===== Banca minima per variare aperture/oggetti (WTF) ===== */
+const BANK = {
+  it: {
+    starters: [
+      "Oh senti",
+      "Sai che ti dico",
+      "Guarda",
+      "Oh, allora",
+      "Ehi, parliamoci chiaro",
+    ],
+    objects: [
+      "moka",
+      "tapparella",
+      "citofono",
+      "frigorifero",
+      "sedia girevole",
+      "lampione",
+      "stampante",
+      "ventilatore",
+      "telecomando",
+      "pianta",
+    ],
+    moods: [
+      "ti guarda storto",
+      "ti mette in muto",
+      "applaude per rispetto",
+      "fa ghosting",
+      "finge un aggiornamento",
+      "ti giudica in silenzio",
+    ],
+    booze: ["negroni grande", "birra media", "rum in plastica", "spritz di troppo", "amaro doppio"],
+  },
 };
 
 /* ===== Periodo auto-detect ===== */
@@ -298,17 +326,43 @@ function buildMessages({ domanda, lang, periodo, stile }) {
   ];
 
   if (stile === "wtf") {
-    // Nessun suggerimento fisso: lascia che il modello scelga i props dal contesto
-    msgs.push({ role: "system", content: WTF_RULES[L] || WTF_RULES.it });
+    // ===== WTF: monologo continuo da bar
+    const b = BANK[L] || BANK.it;
+    const prng = makePRNG(hash32(domanda) ^ randomBytes(4).readUInt32BE(0));
+    const starter =
+      (b.starters || ["Oh senti"])[
+        Math.floor(prng() * (b.starters || ["Oh senti"]).length)
+      ];
+    const objs = pickMany(
+      prng,
+      (b.objects || []).concat(deriveContextObjects(domanda)),
+      2 + Math.floor(prng() * 2)
+    ); // 2–3
+    const moods = pickMany(prng, b.moods || [], Math.min(3, objs.length));
+    const booze = pickMany(prng, b.booze || [], 1 + (prng() < 0.5 ? 1 : 0));
+
+    const wtfRule =
+      L === "en"
+        ? WTF_RULES.en
+        : `${WTF_RULES.it}
+Suggerimenti da intrecciare naturalmente (no elenchi, niente etichette):
+- Attacco confidenziale tipo: “${starter}…”.
+- Oggetti di scena possibili: ${objs.join(", ")}${
+            moods.length ? ` (es. “${objs[0]} ${moods[0]}”)` : ""
+          }.
+- Sbronza accidentale: ${booze.join(" + ")}.`;
+
+    msgs.push({ role: "system", content: wtfRule });
   } else {
+    // ===== WHAT IF
     msgs.push({ role: "system", content: WHATIF_RULES[L] || WHATIF_RULES.it });
   }
 
   const ask =
     stile === "wtf"
       ? L === "en"
-        ? `Do NOT repeat the question. ONE PARAGRAPH (5–7 sentences, ~100–115 words). Conversational, gritty, slightly drunk. Pick judging objects from the context. "${domanda}"`
-        : `Non ripetere la domanda. UN PARAGRAFO (5–7 frasi, ~100–115 parole). Tono confidenziale, continuo, ironico; oggetti che commentano scelti dal contesto. "${domanda}"`
+        ? `Do NOT repeat the question. ONE PARAGRAPH (5–7 sentences, ~100–115 words). Conversational, gritty, slightly drunk. Include judging objects naturally. "${domanda}"`
+        : `Non ripetere la domanda. UN PARAGRAFO (5–7 frasi, ~100–115 parole). Tono confidenziale, continuo, ironico, con oggetti che commentano. Linguaggio vivo, anche un filo volgare se serve. "${domanda}"`
       : L === "en"
       ? `Do not restate the question. ONE PARAGRAPH (6–9 sentences, ~100–130 words). Bright, warm, everyday imagery. No advice or questions. "${domanda}"`
       : `Non ripetere la domanda. UN PARAGRAFO (6–9 frasi, ~100–130 parole). Luminoso, concreto, senza consigli o domande. "${domanda}"`;
@@ -317,19 +371,22 @@ function buildMessages({ domanda, lang, periodo, stile }) {
   return msgs;
 }
 
-/* ========= Chiusure di sicurezza ========= */
+/* ========= Chiusure di sicurezza (WTF/WhatIf) ========= */
 function ensureWtfClosing(text, L) {
-  let t = String(text || "").trim();
-  // Se l'ultima frase è già una one-liner (<=12 parole) e finisce con punteggio, lasciala
-  const sentences = t.split(/(?<=[.!?…])\s+/);
-  const last = sentences[sentences.length - 1] || "";
-  if (/[.!?…]$/.test(t) && last.split(/\s+/).filter(Boolean).length <= 12) return t;
-
+  const t = String(text || "").trim();
+  if (/[.!?…]$/.test(t) && /vento|bicchiere|faccia|sorriso|risata|notte|bar|strada|cuore/i.test(t))
+    return t;
   const add =
     L === "en"
-      ? " And you grin anyway, like a glorious idiot who made it."
-      : " E sorridi comunque, come un cretino glorioso che ce l’ha fatta.";
-  return finalPunct(t.replace(/[.!?…]*$/, "")) + " " + add;
+      ? " And you end up laughing alone, wind in your face and the glass warming your hand."
+      : L === "es"
+      ? " Y te sale una risa torcida, con el viento en la cara y el vaso calentando la mano."
+      : L === "fr"
+      ? " Et tu te surprends à sourire, le vent sur le visage et le verre qui réchauffe la paume."
+      : L === "de"
+      ? " Und du grinst allein, Wind im Gesicht, das Glas wärmt die Hand."
+      : " E ti scappa una risata storta, col vento in faccia e il bicchiere che ti scalda la mano.";
+  return finalPunct(t.replace(/[.!?…]*$/, "")) + add;
 }
 function ensureWhatIfOpen(text, L) {
   const t = String(text || "").trim();
@@ -341,8 +398,14 @@ function ensureWhatIfOpen(text, L) {
   const add =
     L === "en"
       ? " And it doesn’t end there; it keeps moving, softly."
+      : L === "es"
+      ? " Y no termina ahí: sigue, despacio."
+      : L === "fr"
+      ? " Et ça ne s’arrête pas là : ça continue, doucement."
+      : L === "de"
+      ? " Und es endet nicht hier: es geht leise weiter."
       : " E non finisce lì: continua piano, mentre ti muovi.";
-  return finalPunct(t.replace(/[.!?…]*$/, "")) + " " + add;
+  return finalPunct(t.replace(/[.!?…]*$/, "")) + add;
 }
 
 /* ========= OpenAI retry helper ========= */
@@ -398,7 +461,9 @@ export default async function handler(req, res) {
     if (effectivePlanForQuota !== "admin") {
       try {
         used = await redis.incr(quotaKey);
-        if (used === 1) await redis.expire(quotaKey, 36 * 60 * 60); // TTL di sicurezza
+        if (used === 1) {
+          await redis.expire(quotaKey, 36 * 60 * 60); // TTL di sicurezza
+        }
         if (used > limit) {
           return res.status(429).json({
             error: "quota_daily_exceeded",
@@ -414,15 +479,14 @@ export default async function handler(req, res) {
       }
     }
 
-    // Body & parametri (parse robusto)
-    let body = req.body || {};
-    if (typeof body === "string") {
-      try { body = JSON.parse(body || "{}"); }
-      catch { return res.status(400).json({ error: "bad_request", detail: "invalid_json" }); }
-    }
-    const { domanda = "", stile = "whatif", lang = "it", periodo = "", micro = {} } = body || {};
+    // Body & parametri
+    const body =
+      typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
+    const { domanda = "", stile = "whatif", lang = "it", periodo = "", micro = {} } = body;
     if (!domanda || typeof domanda !== "string")
-      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
+      return res
+        .status(400)
+        .json({ error: "bad_request", detail: "domanda_required" });
 
     const messages = buildMessages({ domanda, lang, periodo, stile, micro });
 
@@ -497,4 +561,4 @@ export default async function handler(req, res) {
       .status(500)
       .json({ error: "server_error", detail: String(err?.message || err) });
   }
-                                   }
+}
