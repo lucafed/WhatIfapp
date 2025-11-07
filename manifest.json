@@ -2,7 +2,7 @@
   "name": "What?f",
   "short_name": "What?f",
   "id": "/",
-  "start_url": "/",
+  "start_url": "/index.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -40,14 +40,14 @@
   "screenshots": [
     {
       "src": "/screenshot-phone-1080x1920-1.png",
-      "sizes": "1920x1080",
+      "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Schermata iniziale di What?f"
     },
     {
       "src": "/screenshot-phone-1080x1920-2.png",
-      "sizes": "1920x1080",
+      "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Interfaccia dell’app What?f"
