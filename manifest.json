@@ -3,13 +3,13 @@
   "short_name": "What?f",
   "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0A0F14",
   "theme_color": "#00E0FF",
   "description": "Scopri il tuo What?f — immagina la scelta che non hai fatto e quella che potresti fare.",
   "lang": "it-IT",
-  "scope": "/",
   "categories": ["lifestyle", "entertainment", "psychology"],
 
   "icons": [
