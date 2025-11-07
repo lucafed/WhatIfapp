@@ -1,4 +1,4 @@
-<!-- FILE: fifth.html -->
+<!-- FILE: fifth.html (rev. tone-hard-enforced) -->
 <!DOCTYPE html>
 <html lang="it" data-theme="whatif">
 <head>
@@ -229,7 +229,6 @@ const periodo = prefs.periodo || 'future';
 const SUP_LANG = ['it','en','es','fr','de'];
 const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
-
 function detectLang(text=''){
   const t = (text||'').toLowerCase();
   if(/[¿¡]/.test(t)) return 'es';
@@ -240,21 +239,14 @@ function detectLang(text=''){
     fr:[" quoi"," si "," pourquoi"," quand"," où"," pas "," je "," peux"," si je"," et si"],
     de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
   };
-  const score = {};
-  for(const L of SUP_LANG){ score[L]=0; bank[L].forEach(w=>{ if(t.includes(w)) score[L]++; }); }
-  let best='it', max=-1;
-  for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
-  if(max<=0){
-    const nav = (navigator.language||'it').slice(0,2).toLowerCase();
-    if(SUP_LANG.includes(nav)) return nav;
-  }
+  const score = {}; for(const L of SUP_LANG){ score[L]=0; bank[L].forEach(w=>{ if(t.includes(w)) score[L]++; }); }
+  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
+  if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
   return best;
 }
-
 const manualLang = LS.getItem('lang_manual') === '1';
 let langStored = (LS.getItem('lang') || '').toLowerCase();
-let lang = manualLang ? (SUP_LANG.includes(langStored)?langStored:'it')
-                      : detectLang(domandaEarly);
+let lang = manualLang ? (SUP_LANG.includes(langStored)?langStored:'it') : detectLang(domandaEarly);
 if(!SUP_LANG.includes(lang)) lang = 'it';
 
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
@@ -274,7 +266,7 @@ document.documentElement.lang = lang;
   }
 })();
 
-/* ==== I18N (UI + chips) ==== */
+/* ==== I18N (UI + lead) ==== */
 const I18N = {
   it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
        sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
@@ -283,13 +275,12 @@ const I18N = {
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Stile: What the F · 6–9 frasi · paragrafo unico · tono asciutto · modalità: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`,
+        : `Stile: What if (60% analisi, 40% azione) · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`,
        pctLabel:"% probabilità che accada",
        votersTitle:"Comitato",
        seriousTitle:"Motivazione",
        scientificTitle:"Motivazione (scientificamente provata)",
        chipsFav:"favorevoli", chipsCon:"contrari", chipsAst:"astenuti" },
-
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
        p:"Outcome & rationales", share:"📤 Share / Copy", again:"🔁 Ask another",
@@ -297,13 +288,12 @@ const I18N = {
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Style: What the F · 6–9 sentences · single paragraph · dry tone · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,
+        : `Style: What if (60% analysis, 40% action) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,
        pctLabel:"% probability it happens",
        votersTitle:"Committee",
        seriousTitle:"Rationale",
        scientificTitle:"Rationale (scientifically grounded)",
        chipsFav:"in favour", chipsCon:"against", chipsAst:"abstained" },
-
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
        sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
        p:"Resultado y motivaciones", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra pregunta",
@@ -311,13 +301,12 @@ const I18N = {
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Estilo: What the F · 6–9 frases · un párrafo · tono seco · modo: ${p==='past'?'Pasado':'Futuro'}.`
-        : `Estilo: What if (60% análisis, 40% real) · 8–11 frases · un párrafo · modo: ${p==='past'?'Pasado':'Futuro'}.`,
+        : `Estilo: What if (60% análisis, 40% acción) · 8–11 frases · un párrafo · modo: ${p==='past'?'Pasado':'Futuro'}.`,
        pctLabel:"% probabilidad de que ocurra",
        votersTitle:"Comité",
        seriousTitle:"Motivación",
        scientificTitle:"Motivación (con base científica)",
        chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones" },
-
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
        sub:(q)=>`Question : « ${q} »`, q:"Votre question", a:"Réponse",
        p:"Résultat & motivations", share:"📤 Partager / Copier", again:"🔁 Poser une autre question",
@@ -325,13 +314,12 @@ const I18N = {
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Style : What the F · 6–9 phrases · un seul paragraphe · ton sec · mode : ${p==='past'?'Passé':'Futur'}.`
-        : `Style : What if (60% analyse, 40% réel) · 8–11 phrases · un seul paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`,
+        : `Style : What if (60% analyse, 40% action) · 8–11 phrases · un seul paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`,
        pctLabel:"% probabilité que cela arrive",
        votersTitle:"Comité",
        seriousTitle:"Justification",
        scientificTitle:"Justification (fondée scientifiquement)",
        chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions" },
-
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
        sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
        p:"Ergebnis & Begründungen", share:"📤 Teilen / Kopieren", again:"🔁 Neue Frage stellen",
@@ -339,7 +327,7 @@ const I18N = {
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Stil: What the F · 6–9 Sätze · ein Absatz · nüchterner Ton · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
-        : `Stil: What if (60% Analyse, 40% real) · 8–11 Sätze · ein Absatz · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
+        : `Stil: What if (60% Analyse, 40% Aktion) · 8–11 Sätze · ein Absatz · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
        pctLabel:"% Wahrscheinlichkeit, dass es passiert",
        votersTitle:"Komitee",
        seriousTitle:"Begründung",
@@ -350,195 +338,37 @@ const I18N = {
 /* ==== Leads ==== */
 const LEADS = {
   it:{ wtf:[
-      "Entri piano, il caos ti riconosce e oggi ti lascia passare.",
-      "Respiri e lasci che sia il destino a inciampare per primo."
+      "Entri piano e oggi il caos ti lascia passare.",
+      "Respiri e lasci che inciampi il caso, non tu."
     ],
     whatif:[
-      "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.",
-      "La stanza è la stessa, lo sguardo no: è già un inizio."
+      "Ok: è importante e un po’ scomodo, ma affrontabile.",
+      "Hai margine se trasformi l’idea in passi piccoli e visibili."
     ]},
-  en:{ wtf:["You step in slowly; chaos recognizes you and lets you through.",
-            "Breathe; let chance trip before you do."],
-       whatif:["Set the keys down and let the quiet that doesn’t judge go first.",
-               "Same room, different gaze — that’s already a start."]},
-  es:{ wtf:["Entras despacio; el caos te reconoce y hoy te deja pasar.",
-            "Respiras y dejas que el azar tropiece primero."],
-       whatif:["Deja las llaves y permite que hable el silencio que no juzga.",
-               "La habitación es la misma; tu mirada ya no — y eso basta."]},
-  fr:{ wtf:["Tu entres doucement ; le chaos te reconnaît et te laisse passer.",
-            "Respire, laisse le hasard trébucher avant toi."],
-       whatif:["Pose les clés et laisse parler le silence qui ne juge pas.",
-               "La pièce est la même, ton regard non — c’est déjà un début."]},
-  de:{ wtf:["Du trittst leise ein; das Chaos erkennt dich und lässt dich durch.",
-            "Atme — vielleicht stolpert der Zufall zuerst."],
-       whatif:["Leg die Schlüssel ab und lass die Stille ohne Urteil sprechen.",
-               "Gleicher Raum, neuer Blick — ein Anfang."]}
+  en:{ wtf:["You step in; chaos lets you through today.","Breathe and let chance trip first."],
+       whatif:["It matters and it’s a bit uncomfortable, but tractable.","You gain leverage by breaking it into small visible steps."]},
+  es:{ wtf:["Entras y hoy el caos te deja pasar.","Respira y deja que tropiece el azar."],
+       whatif:["Importa y es incómodo, pero manejable.","Ganas palanca si lo divides en pasos pequeños y visibles."]},
+  fr:{ wtf:["Tu entres; le chaos te laisse passer aujourd’hui.","Respire et laisse trébucher le hasard."],
+       whatif:["C’est important et un peu inconfortable, mais gérable.","Gagne en levier en le découpant en petits pas visibles."]},
+  de:{ wtf:["Du trittst ein; heute lässt dich das Chaos durch.","Atme, der Zufall stolpert zuerst."],
+       whatif:["Wichtig und etwas unbequem, aber machbar.","Mehr Hebel, wenn du es in kleine sichtbare Schritte zerlegst."]}
 };
 
-/* ==== Categories per COMITATO (sorpresa) ==== */
-const CATEGORIES = [
-  { ico:"🧠",
-    name_it:"Comitato dei Pensieri Sotto la Doccia",
-    name_en:"Shower-Thoughts Committee",
-    name_es:"Comité de Ideas de Ducha",
-    name_fr:"Comité des Idées sous la Douche",
-    name_de:"Komitee der Duschgedanken",
-    notes_it:["Illuminazione logistica a shampoo.","Decisione nata a 38°C."],
-    notes_en:["Logistics epiphany mid-shampoo.","Decision made at 38°C."],
-    notes_es:["Epifanía logística con champú.","Decisión tomada a 38 °C."],
-    notes_fr:["Épiphanie logistique sous le shampoing.","Décision née à 38 °C."],
-    notes_de:["Logistik-Erleuchtung beim Shampoonieren.","Entscheidung bei 38 °C gefallen."] },
-  { ico:"📊",
-    name_it:"Ordine degli Ottimisti Moderati",
-    name_en:"Order of Moderate Optimists",
-    name_es:"Orden de los Optimistas Moderados",
-    name_fr:"Ordre des Optimistes Modérés",
-    name_de:"Orden der Mäßigen Optimisten",
-    notes_it:["Aspettative sobrie, calendario stretto."],
-    notes_en:["Sober expectations, tight schedule."],
-    notes_es:["Expectativas sobrias, calendario apretado."],
-    notes_fr:["Attentes sobres, calendrier serré."],
-    notes_de:["Nüchterne Erwartungen, enger Zeitplan."] },
-  { ico:"📞",
-    name_it:"Autorità delle Telefonate Fuori Tempo",
-    name_en:"Off-Timing Calls Authority",
-    name_es:"Autoridad de Llamadas Fuera de Hora",
-    name_fr:"Autorité des Appels Hors-Timing",
-    name_de:"Behörde für Anrufe zur Unzeit",
-    notes_it:["Parere arrivato alle 07:12.","Consiglio durante squillo prolungato."],
-    notes_en:["Opinion at 07:12.","Advice during a long ring."],
-    notes_es:["Opinión a las 07:12.","Consejo durante tono largo."],
-    notes_fr:["Avis à 07 h 12.","Conseil pendant une sonnerie prolongée."],
-    notes_de:["Meinung um 07:12.","Rat während des Dauerklingelns."] },
-  { ico:"🥃",
-    name_it:"Circolo Bar Notturno dei Consiglieri",
-    name_en:"Late-Bar Counsel Circle",
-    name_es:"Círculo Nocturno de Consejeros de Bar",
-    name_fr:"Cercle Nocturne des Conseillers de Bar",
-    name_de:"Nachtbar-Ratszirkel",
-    notes_it:["Coraggio liquido, piani semplici."],
-    notes_en:["Liquid courage, simple plans."],
-    notes_es:["Coraje líquido, planes simples."],
-    notes_fr:["Courage liquide, plans simples."],
-    notes_de:["Flüssiger Mut, einfache Pläne."] },
-  { ico:"🍕",
-    name_it:"Associazione Snack Notturni e Idee",
-    name_en:"Night Snacks & Ideas Association",
-    name_es:"Asociación de Snacks Nocturnos e Ideas",
-    name_fr:"Association des En-Cas Nocturnes & Idées",
-    name_de:"Verein für Mitternachtssnacks & Ideen",
-    notes_it:["Briefing alle 23:47.","Carboidrati a supporto."],
-    notes_en:["Briefing at 23:47.","Carbs backing the plan."],
-    notes_es:["Briefing a las 23:47.","Carbos apoyando el plan."],
-    notes_fr:["Briefing à 23 h 47.","Les glucides soutiennent le plan."],
-    notes_de:["Briefing um 23:47.","Kohlenhydrate stützen den Plan."] },
-  { ico:"🎤",
-    name_it:"Sindacato delle Idee da Karaoke",
-    name_en:"Karaoke Ideas Union",
-    name_es:"Sindicato de Ideas de Karaoke",
-    name_fr:"Syndicat des Idées de Karaoké",
-    name_de:"Gewerkschaft der Karaoke-Ideen",
-    notes_it:["Proposta al ritornello.","Volume > ragione."],
-    notes_en:["Proposal on the chorus.","Volume > reason."],
-    notes_es:["Propuesta en el estribillo.","Volumen > razón."],
-    notes_fr:["Proposition au refrain.","Volume > raison."],
-    notes_de:["Vorschlag im Refrain.","Lautstärke > Vernunft."] },
-  { ico:"💬",
-    name_it:"Conferenza degli Amici Che Gasano",
-    name_en:"Conference of Hype Friends",
-    name_es:"Conferencia de Amigos que Animan",
-    name_fr:"Conférence des Amis qui Motivent",
-    name_de:"Konferenz der anfeuernden Freunde",
-    notes_it:["Clima motivazionale alto."],
-    notes_en:["High motivational climate."],
-    notes_es:["Alto clima motivacional."],
-    notes_fr:["Climat motivationnel élevé."],
-    notes_de:["Hohes Motivationsklima."] },
-  { ico:"🕊️",
-    name_it:"Assemblea dei Piccioni con Opinioni Forti",
-    name_en:"Assembly of Strong-Opinion Pigeons",
-    name_es:"Asamblea de Palomas con Opiniones Firmes",
-    name_fr:"Assemblée des Pigeons à Fortes Opinions",
-    name_de:"Versammlung der meinungsstarken Tauben",
-    notes_it:["Consenso rumoroso in piazza."],
-    notes_en:["Loud piazza consensus."],
-    notes_es:["Consenso ruidoso en la plaza."],
-    notes_fr:["Consensus bruyant sur la place."],
-    notes_de:["Lauter Konsens auf dem Platz."] },
-  { ico:"🦊",
-    name_it:"Lobby delle Volpi Opportuniste",
-    name_en:"Opportunistic Foxes Lobby",
-    name_es:"Lobby de Zorros Oportunistas",
-    name_fr:"Lobby des Renards Opportunistes",
-    name_de:"Lobby der opportunistischen Füchse",
-    notes_it:["Favorevoli se conviene subito."],
-    notes_en:["In favor if payoff is instant."],
-    notes_es:["A favor si el beneficio es inmediato."],
-    notes_fr:["Pour si le gain est immédiat."],
-    notes_de:["Dafür, wenn der Nutzen sofort ist."] },
-  { ico:"🐙",
-    name_it:"Federazione dei Polpi Strategici",
-    name_en:"Federation of Strategic Octopuses",
-    name_es:"Federación de Pulpos Estratégicos",
-    name_fr:"Fédération des Pieuvres Stratégiques",
-    name_de:"Föderation strategischer Oktopusse",
-    notes_it:["Otto mosse avanti, presa salda."],
-    notes_en:["Eight moves ahead, firm grip."],
-    notes_es:["Ocho jugadas por delante, agarre firme."],
-    notes_fr:["Huit coups d’avance, prise ferme."],
-    notes_de:["Acht Züge voraus, fester Griff."] },
-  { ico:"🦥",
-    name_it:"Consiglio dei Bradipi Riflessivi",
-    name_en:"Council of Reflective Sloths",
-    name_es:"Consejo de Perezosos Reflexivos",
-    name_fr:"Conseil des Paresseux Réfléchis",
-    name_de:"Rat der nachdenklichen Faultiere",
-    notes_it:["Decisione lenta ma convinta."],
-    notes_en:["Slow yet resolute decision."],
-    notes_es:["Decisión lenta pero firme."],
-    notes_fr:["Décision lente mais résolue."],
-    notes_de:["Langsam, aber entschlossen."] }
-];
-
-/* ==== UI refs ==== */
-const qs = (sel)=>document.querySelector(sel);
-const setText = (id, txt)=>{ const el=qs(id); if(el) el.textContent = txt; };
-
-const backBtn  = qs('#backBtn');
-const homeBtn  = qs('#homeBtn');
-const langSel  = qs('#langSelect');
-const subtitle = qs('#subtitle');
-const lblQ     = qs('#lblQ');
-const lblA     = qs('#lblA');
-const qView    = qs('#qView');
-const leadNode = qs('#lead');
-const answerEl = qs('#answer');
-const shareBtn = qs('#shareBtn');
-const againBtn = qs('#againBtn');
-const metaInfo = qs('#metaInfo');
-const styleBadge = qs('#styleBadge');
-const lblP = qs('#lblP');
-
-const topPct = qs('#topPct');
-const bottomPct = qs('#bottomPct');
-const pctLabelTop = qs('#pctLabel');
-const pctLabelBottom = qs('#pctLabelBottom');
-
-const committeeTitle = qs('#committeeTitle');
-const motIco  = qs('#motIco');
-const motName = qs('#motName');
-const chipFav = qs('#chipFav');
-const chipCon = qs('#chipCon');
-const chipAst = qs('#chipAst');
-const chipsWrap = qs('#chipsWrap');
-const motNote = qs('#motNote');
-
-/* ==== Helpers ==== */
+/* ==== Helpers (sanitizzazione, split, ecc.) ==== */
 function normalizeOneParagraph(s=""){
-  return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?…])/g,"$1").trim();
+  return String(s)
+    .replace(/[“”«»„”]/g,'"')
+    .replace(/[‘’‚’]/g,"'")
+    .replace(/\s*\n+\s*/g," ")
+    .replace(/\s{2,}/g," ")
+    .replace(/\s+([.,;:!?…])/g,"$1")
+    .trim();
 }
 function splitSentences(text){
-  const t = normalizeOneParagraph(text);
+  const t = normalizeOneParagraph(text)
+    .replace(/["'].*?["']/g,"")
+    .replace(/[?!]{2,}/g,"?");
   const parts = t.split(/(?<=[.!?…])\s+/).map(x=>x.trim()).filter(Boolean);
   return parts.length ? parts : (t? [t] : []);
 }
@@ -546,540 +376,261 @@ function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 function decorateEmBits(el){
-  const raw = el.textContent;
-  if(!raw || !raw.includes("—")) return;
-  const parts = raw.split("—");
-  let html = "";
-  for(let i=0;i<parts.length;i++){
-    const seg = parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;");
-    if(i%2===1) html += `<span class="embit">— ${seg} </span>`;
-    else html += (i===0 ? seg : `—${seg}`);
+  const raw = el.textContent; if(!raw || !raw.includes("—")) return;
+  const parts = raw split("—"); /* NOT USED ANYMORE BUT KEPT FOR COMPAT */
+}
+
+/* === Sanitizzazione forte === */
+function sanitizeAnswer(text){
+  const bans = [
+    /\b(negroni|birra|vino|whisky|bar|sbronza|poesia|liric|metafor|universo|destino)\b/gi,
+    /\b(ventilatore|cameriere|cuscino|frigo|pennetta|piccione)\b/gi,
+    /\s[–—-]\s*/g
+  ];
+  let t = normalizeOneParagraph(text)
+    .replace(/(^|[.?!]\s*)["“”'«»]/g,"$1")
+    .replace(/["“”'«»]([.?!]\s*|$)/g,"$1")
+    .replace(/\([^)]{0,120}\)/g,"")
+    .replace(/^[^.!?]*\?\s*/,""); // no domande retoriche iniziali
+  bans.forEach(rx=> t = t.replace(rx,""));
+  t = t.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu,"");
+  return t.trim();
+}
+
+/* === Estrazione rapida dal testo utente === */
+function extractUserHints(q){
+  const t=(q||"").toLowerCase();
+  const time = (t.match(/\b(\d+)\s*(giorn|gg|settim|mesi|weeks?|days?)\b/)||[])[0]||"";
+  const budget = (t.match(/\b(\d+[\.,]?\d*)\s*(€|euro|eur|€)\b/)||[])[0]||"";
+  return {time, budget};
+}
+
+/* === ENFORCE TONI === */
+function enforceWTF(text){
+  const MAX_LEN = 140;
+  let sents = splitSentences(text).map(s=>s
+      .replace(/\b(forse|magari|un po'|potrebbe|dovresti|vorresti)\b/gi,"")
+      .replace(/\b(ovviamente|chiaramente|naturalmente)\b/gi,"")
+      .replace(/\b(si potrebbe|si può|prova a|cerca di)\b/gi,"fai")
+      .trim());
+  // accorcia
+  sents = sents.map(x=>{
+    if(x.length<=MAX_LEN) return x;
+    const cut = x.slice(0,MAX_LEN).lastIndexOf(",");
+    return (cut>60 ? x.slice(0,cut) : x.slice(0,MAX_LEN)).replace(/[,:;]\s*$/,".") + ".";
+  });
+  // dedup
+  const out=[], seen=new Set();
+  for(const s of sents){
+    const key=s.toLowerCase().replace(/[^a-z0-9àèéìòóùç ]/gi,"").slice(0,60);
+    if(!seen.has(key)){ seen.add(key); out.push(/[.!?…]$/.test(s)?s:s+"."); }
   }
-  el.innerHTML = html;
+  let target = Math.min(Math.max(6, out.length), 9);
+  if(out.length<6){
+    const filler = [
+      "Riduci la scelta a una leva sola.",
+      "Blocca prima il tempo, poi l'obiettivo.",
+      "Chiudi piccolo, ma chiudi.",
+      "Dai un numero a costo e calendario.",
+      "Se dubbi, semplifica ancora."
+    ];
+    while(out.length<6) out.push(pick(filler));
+  }
+  return normalizeOneParagraph(out.slice(0,target).join(" "));
+}
+function enforceWhatIf(text, q){
+  // Costruzione guidata: apertura empatica + analisi (4–6 frasi) + mosse (3–4) + guardrail + micro-step
+  const {time, budget} = extractUserHints(q);
+  const base = splitSentences(text).map(s=>s
+    .replace(/\b(ovviamente|naturalmente|chiaramente)\b/gi,"")
+    .replace(/\b(forse|magari|un po')\b/gi,"")
+    .trim());
+  // Mattoni standardizzati
+  const empath = [
+    "Capito: è importante e scomodo, ma gestibile.",
+    "Ha senso che ti pesi: è complesso, non impossibile.",
+    "Ok, la posta è alta: la affrontiamo per gradi."
+  ];
+  const analysis = [
+    "Definisci l'obiettivo in una riga e cosa NON rientra.",
+    "Scrivi vincoli e leve: tempo, denaro, energia, persone.",
+    `Dichiara una finestra operativa ${time?("("+time+") "):""}con inizio e fine visibili.`,
+    "Stima l'ordine di grandezza: piccolo, medio, grande.",
+    "Identifica un rischio principale e come lo limiterai.",
+    "Fissa un indicatore semplice di progresso settimanale."
+  ];
+  const actions = [
+    "Scomponi in 3 task atomici da <60 minuti ciascuno.",
+    `Blocca ora i primi due slot in calendario${time?(" — "+time):""}.`,
+    `Dai un tetto realistico ${budget||"di budget"} e rispettalo.`,
+    "Chiudi il primo task oggi, anche se imperfetto.",
+    "Metti un checkpoint tra 7 giorni: tieni ciò che ha funzionato, scarta il resto."
+  ];
+  const guard = [
+    "Regola d’ingaggio: prima il tempo, poi la perfezione.",
+    "Se bloccato >10 minuti, riduci il compito a metà.",
+    "Ogni giorno finisci con il prossimo passo già scritto."
+  ];
+  // Costruisci paragrafo
+  const parts = [
+    oneSentence(pick(empath)),
+    oneSentence(pick(analysis)), oneSentence(pick(analysis)), oneSentence(pick(analysis)), oneSentence(pick(analysis)),
+    oneSentence(pick(actions)), oneSentence(pick(actions)), oneSentence(pick(actions)),
+    oneSentence(pick(guard)),
+    "Ora: apri il calendario e piazza il primo slot da 25 minuti."
+  ];
+  // Se il testo base contiene qualcosa di utile e asciutto, infondilo al centro
+  const cleanBase = base.filter(s=>s.length>6 && s.length<160 && !/[“”"']/.test(s)).slice(0,3);
+  if(cleanBase.length){
+    parts.splice(3, Math.min(2, cleanBase.length), ...cleanBase.map(oneSentence));
+  }
+  // Limita a 8–11 frasi
+  const target = rndInt(8,11);
+  return normalizeOneParagraph(parts.slice(0,target).join(" "));
 }
 
 /* ==== Titles & UI text ==== */
+const qs = (sel)=>document.querySelector(sel);
+const setText = (id, txt)=>{ const el=qs(id); if(el) el.textContent = txt; };
+const backBtn  = qs('#backBtn'); const homeBtn  = qs('#homeBtn'); const langSel  = qs('#langSelect');
+const subtitle = qs('#subtitle'); const lblQ = qs('#lblQ'); const lblA = qs('#lblA');
+const qView = qs('#qView'); const leadNode = qs('#lead'); const answerEl = qs('#answer');
+const shareBtn = qs('#shareBtn'); const againBtn = qs('#againBtn'); const metaInfo = qs('#metaInfo'); const styleBadge = qs('#styleBadge'); const lblP = qs('#lblP');
+const topPct = qs('#topPct'); const bottomPct = qs('#bottomPct'); const pctLabelTop = qs('#pctLabel'); const pctLabelBottom = qs('#pctLabelBottom');
+const committeeTitle = qs('#committeeTitle'); const motIco  = qs('#motIco'); const motName = qs('#motName');
+const chipFav = qs('#chipFav'); const chipCon = qs('#chipCon'); const chipAst = qs('#chipAst'); const chipsWrap = qs('#chipsWrap'); const motNote = qs('#motNote');
+
 function setTitlesAndTexts(q){
   const T = I18N[lang] || I18N.it;
   setText('#title', style==='wtf' ? T.titleWTF : T.titleWHF);
   subtitle.textContent = T.sub(q || '—');
-  lblQ.textContent = T.q;
-  lblA.textContent = T.a;
-  lblP.textContent = T.p;
-  shareBtn.textContent = T.share;
-  againBtn.textContent = T.again;
+  lblQ.textContent = T.q; lblA.textContent = T.a; lblP.textContent = T.p;
+  shareBtn.textContent = T.share; againBtn.textContent = T.again;
   styleBadge.textContent = (style==='wtf') ? T.styleWTF : T.styleWHF;
   metaInfo.textContent = T.meta(style, periodo);
-  pctLabelTop.textContent = T.pctLabel;
-  if(pctLabelBottom) pctLabelBottom.textContent = T.pctLabel;
+  pctLabelTop.textContent = T.pctLabel; if(pctLabelBottom) pctLabelBottom.textContent = T.pctLabel;
 
-  const bank = (LEADS[lang] && LEADS[lang][style]) ? LEADS[lang][style]
-               : (LEADS.it[style] || LEADS.it.whatif);
+  const bank = (LEADS[lang] && LEADS[lang][style]) ? LEADS[lang][style] : (LEADS.it[style] || LEADS.it.whatif);
   leadNode.textContent = oneSentence(pick(bank) || '') || '—';
 
-  // placeholder chips localizzati
-  chipFav.textContent = `${T.chipsFav} 0`;
-  chipCon.textContent = `${T.chipsCon} 0`;
-  chipAst.textContent = `${T.chipsAst} 0`;
+  chipFav.textContent = `${T.chipsFav} 0`; chipCon.textContent = `${T.chipsCon} 0`; chipAst.textContent = `${T.chipsAst} 0`;
 }
 
-/* ======== ENFORCE TONE ========
-   Garantisce:
-   - WTF: 6–9 frasi, secche, paragrafo unico, niente prolissità.
-   - WHATIF: 8–11 frasi, bilanciate (≈60% analisi, 40% pratiche). */
-function enforceTone(text, mode){
-  let sents = splitSentences(text);
-  const clamp = (n,min,max)=> Math.max(min, Math.min(max, n));
-  const shorten = (t)=> t.replace(/\((.*?)\)/g,"").replace(/-{2,}/g,"—")
-                         .replace(/[,;:]\s*perché\b/gi,", perché")
-                         .replace(/\bquindi\b/gi,"").trim();
-  const dry = (t)=> t.replace(/\b(in definitiva|in conclusione|alla fine|tutto sommato)\b/gi,"")
-                     .replace(/\bforse|magari|un po'|potrebbe\b/gi,"").trim();
-
-  if(mode==='wtf'){
-    sents = sents.map(x=> dry(shorten(x)));
-    // accorcia le frasi lunghe
-    sents = sents.map(x=> x.length>160 ? x.replace(/,.*?(?=[.!?…])/,".").trim() : x);
-    // target 6–9
-    let target = rndInt(6,9);
-    if(sents.length===0){
-      sents = [
-        "Domanda chiara.",
-        "Taglia il superfluo.",
-        "Un passo al giorno.",
-        "Misura in giorni, non in desideri.",
-        "Se non entra in agenda, non è priorità.",
-        "Agisci ora. Rivedi domani."
-      ];
-    }
-    if(sents.length>target) sents = sents.slice(0,target);
-    if(sents.length<target){
-      const filler = [
-        "Riduci la scelta a una leva sola.",
-        "Blocca il tempo prima delle scuse.",
-        "Chiudi piccolo, ma chiudi.",
-        "Dai un numero a costo e calendario.",
-        "Se dubbi, semplifica ancora."
-      ];
-      while(sents.length<target) sents.push(pick(filler));
-    }
-    sents = sents.map(x=>/[.!?…]$/.test(x)?x:x+".");
-    return normalizeOneParagraph(sents.join(" "));
-  }else{
-    // WHAT IF: 8–11 frasi, 60/40
-    const target = rndInt(8,11);
-    let analysis = [], practical = [];
-    const splitIdx = Math.ceil(target*0.6);
-
-    // se non abbiamo abbastanza, creiamo base
-    if(sents.length<target){
-      const seed = [
-        "Parti dall’esito che puoi misurare.",
-        "Definisci una finestra temporale breve.",
-        "Riduci l’ambizione per aumentare l’aderenza.",
-        "Scegli una leva principale.",
-        "Metti limiti chiari a costo, tempo e qualità.",
-        "Registra il progresso con un indicatore semplice.",
-        "Prepara un’alternativa se la leva non rende.",
-        "Chiudi ogni sessione con il prossimo passo scritto.",
-        "Fai una retrospettiva settimanale.",
-        "Se non avanza, togli attrito o cambia ipotesi."
-      ];
-      while(sents.length<target) sents.push(pick(seed));
-    }
-    sents = sents.slice(0,target).map(x=>/[.!?…]$/.test(x)?x:x+'.');
-
-    analysis = sents.slice(0, splitIdx);
-    practical = sents.slice(splitIdx);
-
-    // raffina toni
-    analysis = analysis.map(x=> x.replace(/\b(ovviamente|naturalmente|chiaramente)\b/gi,"")
-                                 .replace(/\bforse|magari\b/gi,"").trim());
-    practical = practical.map(x=> x.replace(/\bprova a\b/gi,"").trim());
-
-    return normalizeOneParagraph([...analysis, ...practical].join(" "));
-  }
-}
-
-/* ======== 🎯 MOTIVATION ENGINE (serio) — COMPLETAMENTE LOCALIZZATA ======== */
-
-/* 1) Classificazione domanda -> categoria */
-const CAT_RX = [
-  {cat:'lavoro',     rx:[/lavor/i,/linkedin/i,/cv\b/i,/colloqu/i,/team/i,/azienda/i,/remot/i,/assunz/i,/promoz/i]},
-  {cat:'studio',     rx:[/studio/i,/universit/i,/esame/i,/tesi/i,/corso/i,/certific/i,/impar/i,/inglese/i]},
-  {cat:'soldi',      rx:[/budget/i,/spes/i,/rispar/i,/sold/i,/debito/i,/invest/i,/entrate|uscite|prezzo/i]},
-  {cat:'sport',      rx:[/correr/i,/palestra/i,/allen/i,/nuot/i,/bic/i,/passi/i,/yoga/i,/stretch/i]},
-  {cat:'relazioni',  rx:[/partner/i,/amic/i,/famiglia/i,/relaz/i,/confini/i,/social/i,/rete/i]},
-  {cat:'viaggi',     rx:[/viagg/i,/volo/i,/hotel/i,/citt[aà]/i,/weekend/i,/itiner/i]},
-  {cat:'tech',       rx:[/\bai\b/i,/app/i,/sito/i,/(automation|automatizz)/i,/script/i,/notion/i,/prompt/i,/email/i]},
-  {cat:'business',   rx:[/e-?commerce/i,/client/i,/newsletter/i,/landing/i,/pitch/i,/startup/i,/fatturat/i]},
-  {cat:'salute',     rx:[/sonno/i,/medit/i,/stress/i,/aliment/i,/dieta/i,/peso/i,/salut/i]},
-  {cat:'casa',       rx:[/trasl/i,/arred/i,/ristrutt/i,/puliz/i,/organizz/i,/declutter/i]}
-];
+/* ===== Percentuale ===== */
 function detectCategory(q){
   const t=(q||'').toLowerCase();
-  for(const row of CAT_RX){ if(row.rx.some(r=>r.test(t))) return row.cat; }
-  if(/\b(\d+)\s?(km|k|€|euro|%|giorni|settimane|mesi)\b/i.test(t)) return 'soldi';
+  const map = [
+    ['tech',/\b(ai|app|sito|automat|script|email|notion)\b/],
+    ['lavoro',/(lavor|cv\b|colloqu|linkedin|assunz|promoz)/],
+    ['studio',/(studio|universit|esame|corso|inglese|certific)/],
+    ['soldi',/(budget|spes|rispar|sold|prezzo|€|euro)/],
+    ['business',/(e-?commerce|newsletter|landing|client|startup|pitch)/],
+    ['sport',/(correr|allen|nuot|passi|yoga|palestra)/],
+    ['relazioni',/(partner|amic|famiglia|relaz|confini|rete)/],
+  ];
+  for(const [c,rx] of map){ if(rx.test(t)) return c; }
   return 'lavoro';
 }
-
-/* 2) Feature extraction per la % */
-function extractFeatures(q){
+function computeProbability(q){
   const t=(q||'').toLowerCase();
   const hasTime = /(30|7|14|21|60|90)\s*(giorn|gg)|settim|mesi?|this week|in \d+ (days?|weeks?|months?)/i.test(t);
   const hasNumber = /\b\d+([.,]\d+)?\b/.test(t);
   const hasBudget = /(budget|€|euro|spesa|max|sotto)/i.test(t);
   const hasConstraint = /(senza|solo|al massimo|minimo|entro|prima delle|dalle|ogni|per)/i.test(t);
   const hasActionVerb = /(lancia(re)?|apri(re)?|impara(re)?|scrivi(re)?|chiedi(re)?|corri(re)?|studia(re)?|automatizza(re)?|testa(re)?)/i.test(t);
-  const vague = /(forse|provare|vedere|magari|un po')/i.test(t);
-  return {hasTime,hasNumber,hasBudget,hasConstraint,hasActionVerb,vague};
-}
-
-/* 3) Percentuale */
-function clampNum(n,min,max){ return Math.max(min, Math.min(max, n)); }
-function computeProbability(q){
-  const cat = detectCategory(q);
-  const f = extractFeatures(q);
-  let score = 50;
-  if(f.hasTime)       score += 12;
-  if(f.hasNumber)     score += 8;
-  if(f.hasBudget)     score += 6;
-  if(f.hasConstraint) score += 8;
-  if(f.hasActionVerb) score += 6;
-  if(f.vague)         score -= 8;
-  if(!f.hasTime && !f.hasNumber) score -= 6;
-  const catAdj = { lavoro:+4, studio:+5, soldi:+3, sport:+2, relazioni:+1,
-                   viaggi:+2, tech:+5, business:+3, salute:+2, casa:+1 }[cat] || 0;
-  score += catAdj;
+  let score = 50 + (hasTime?12:0)+(hasNumber?8:0)+(hasBudget?6:0)+(hasConstraint?8:0)+(hasActionVerb?6:0) - (!hasTime&&!hasNumber?6:0);
+  score += {lavoro:+4,studio:+5,soldi:+3,sport:+2,relazioni:+1,tech:+5,business:+3}[detectCategory(q)]||0;
   score += (style==='wtf' ? -4 : +2);
-  const seed = Array.from(cat + JSON.stringify(f)).reduce((a,c)=>a+c.charCodeAt(0),0);
-  score += (seed % 7) - 3;
-  return { pct: clampNum(Math.round(score), 25, 92), cat, f };
+  return Math.max(25, Math.min(92, Math.round(score)));
 }
 
-/* 4) MOTIVES localizzate */
-const MOTIVES_L10N = {
-  it:{
-    lavoro:{why:["impatto diretto su reddito e crescita professionale","benefici rapidi misurabili in colloqui e opportunità","processo con passi chiari e ripetibili","network attivabile subito con azioni a basso costo","feedback frequente che accelera l’apprendimento"],constraints:["tempo di preparazione CV/portfolio","outreach quotidiano costante","coerenza tra ruolo target e competenze attuali","qualità delle candidature inviate"]},
-    studio:{why:["curriculum modulare che favorisce micro-progressi","obiettivi misurabili (quiz, pagine, ore)","materiali accessibili e gratuiti","ritmi brevi che riducono la frizione all’avvio"],constraints:["slot giornalieri fissi","ambiente senza distrazioni","piano di revisione settimanale"]},
-    soldi:{why:["risultati visibili su numeri e grafici","interventi a basso costo con effetto immediato","regole semplici da automatizzare"],constraints:["tracciamento spese puntuale","disciplina su categorie ‘trigger’","cuscinetto per imprevisti mensili"]},
-    sport:{why:["protocollo progressivo e sostenibile","recupero previsto che limita gli infortuni","ricompense rapide su energia e sonno"],constraints:["calendario coerente con orari di lavoro","attrezzatura minima disponibile","monitoraggio del carico"]},
-    relazioni:{why:["azioni piccole ma ad alta leva emotiva","ritualità settimanali che consolidano abitudini","feedback immediato delle persone coinvolte"],constraints:["confini di tempo chiari","aspettative condivise","rispetto dei ritmi altrui"]},
-    viaggi:{why:["piano a vincoli noti (budget, date, tratte)","tolleranza agli imprevisti con alternative","benefici emotivi che rinforzano l’aderenza"],constraints:["finestre di prenotazione realistiche","gestione dei costi variabili","documenti e logistica pronti"]},
-    tech:{why:["tool disponibili subito e spesso gratuiti","processi automatizzabili con poche integrazioni","metriche chiare di successo (tempo risparmiato)"],constraints:["qualità dei dati in ingresso","sicurezza/permessi","manutenzione dello script"]},
-    business:{why:["validazione veloce con esperimenti piccoli","ciclo build-measure-learn rapido","canali di acquisizione testabili a budget ridotto"],constraints:["ipotesi di valore/fatturazione chiare","campione clienti sufficiente","tempo dedicato a iterazioni"]},
-    salute:{why:["protocollo semplice con tracciamento","rinforzi positivi già dalla prima settimana","riduzione dello stress come co-beneficio"],constraints:["aderenza a pasti e sonno","progressione graduale","attenzione a condizioni pregresse"]},
-    casa:{why:["progetto finito con milestone visibili","regole pratiche di decluttering","benefici immediati su comfort e concentrazione"],constraints:["tempo dedicato per stanze/blocchi","materiali e attrezzatura disponibili","smaltimento oggetti pianificato"]}
-  },
-  en:{
-    lavoro:{why:["direct impact on income and career growth","fast, measurable gains in interviews and opportunities","clear, repeatable steps","network can be activated with low-cost actions","frequent feedback accelerates learning"],constraints:["time to prepare CV/portfolio","consistent daily outreach","fit between target role and current skills","quality of applications sent"]},
-    studio:{why:["modular curriculum enables micro-progress","measurable goals (quizzes, pages, hours)","accessible, often free materials","short rhythms reduce start friction"],constraints:["fixed daily slots","distraction-free environment","weekly review plan"]},
-    soldi:{why:["results visible in numbers and charts","low-cost interventions with immediate effect","simple rules to automate"],constraints:["diligent expense tracking","discipline on trigger categories","buffer for monthly contingencies"]},
-    sport:{why:["progressive, sustainable protocol","planned recovery limits injuries","quick rewards in energy and sleep"],constraints:["schedule coherent with work hours","minimal equipment available","load monitoring"]},
-    relazioni:{why:["small actions with high emotional leverage","weekly rituals that cement habits","immediate feedback from people involved"],constraints:["clear time boundaries","shared expectations","respect for others’ pace"]},
-    viaggi:{why:["plan with known constraints (budget, dates, routes)","tolerance to setbacks with alternatives","emotional benefits reinforce adherence"],constraints:["realistic booking windows","management of variable costs","documents and logistics ready"]},
-    tech:{why:["tools available immediately and often free","processes can be automated with few integrations","clear success metrics (time saved)"],constraints:["input data quality","security/permissions","script maintenance"]},
-    business:{why:["fast validation via small experiments","rapid build-measure-learn cycle","acquisition channels testable at low budget"],constraints:["clear value/billing hypothesis","sufficient customer sample","time devoted to iterations"]},
-    salute:{why:["simple protocol with tracking","positive reinforcement from week one","stress reduction as co-benefit"],constraints:["adherence to meals and sleep","gradual progression","attention to pre-existing conditions"]},
-    casa:{why:["finite project with visible milestones","practical decluttering rules","immediate comfort and focus gains"],constraints:["time blocks per room/area","materials and tools available","planned disposal of items"]}
-  },
-  es:{
-    lavoro:{why:["impacto directo en ingresos y crecimiento profesional","beneficios rápidos medibles en entrevistas y oportunidades","pasos claros y repetibles","red activable con acciones de bajo costo","feedback frecuente acelera el aprendizaje"],constraints:["tiempo para preparar CV/portfolio","contacto diario constante","coherencia entre rol objetivo y habilidades actuales","calidad de las candidaturas enviadas"]},
-    studio:{why:["currículo modular que favorece micro-avances","objetivos medibles (tests, páginas, horas)","materiales accesibles y gratuitos","ritmos cortos reducen la fricción inicial"],constraints:["bloques diarios fijos","entorno sin distracciones","plan de revisión semanal"]},
-    soldi:{why:["resultados visibles en números y gráficos","intervenciones de bajo costo con efecto inmediato","reglas simples para automatizar"],constraints:["registro riguroso de gastos","disciplina en categorías ‘trigger’","colchón para imprevistos mensuales"]},
-    sport:{why:["protocolo progresivo y sostenible","recuperación planificada limita lesiones","recompensas rápidas en energía y sueño"],constraints:["horario coherente con el trabajo","equipamiento mínimo disponible","monitorización de carga"]},
-    relazioni:{why:["acciones pequeñas con alta palanca emocional","rituales semanales que consolidan hábitos","feedback inmediato de los implicados"],constraints:["límites claros de tiempo","expectativas compartidas","respeto por los ritmos ajenos"]},
-    viaggi:{why:["plan con restricciones conocidas (presupuesto, fechas, rutas)","tolerancia a imprevistos con alternativas","beneficios emocionales refuerzan la adherencia"],constraints:["ventanas de reserva realistas","gestión de costes variables","documentos y logística listos"]},
-    tech:{why:["herramientas disponibles de inmediato y a menudo gratis","procesos automatizables con pocas integraciones","métricas claras de éxito (tiempo ahorrado)"],constraints:["calidad de los datos de entrada","seguridad/permisos","mantenimiento del script"]},
-    business:{why:["validación rápida con pequeños experimentos","ciclo construir-medir-aprender ágil","canales de adquisición probables con bajo presupuesto"],constraints:["hipótesis de valor/facturación clara","muestra de clientes suficiente","tiempo dedicado a iteraciones"]},
-    salute:{why:["protocolo simple con seguimiento","refuerzos positivos desde la primera semana","reducción del estrés como co-beneficio"],constraints:["adhesión a comidas y sueño","progresión gradual","atención a condiciones previas"]},
-    casa:{why:["proyecto finito con hitos visibles","reglas prácticas de declutter","beneficios inmediatos en confort y concentración"],constraints:["tiempo dedicado por zonas","materiales y herramientas disponibles","plan de desecho de objetos"]}
-  },
-  fr:{
-    lavoro:{why:["impact direct sur revenus et progression de carrière","bénéfices rapides mesurables en entretiens et opportunités","étapes claires et répétables","réseau activable par des actions à faible coût","retours fréquents qui accélèrent l’apprentissage"],constraints:["temps de préparation CV/portfolio","prospection quotidienne régulière","adéquation rôle cible / compétences","qualité des candidatures envoyées"]},
-    studio:{why:["programme modulaire propice aux micro-progrès","objectifs mesurables (quiz, pages, heures)","supports accessibles et souvent gratuits","rythmes courts réduisant la friction au démarrage"],constraints:["créneaux quotidiens fixes","environnement sans distractions","plan de révision hebdomadaire"]},
-    soldi:{why:["résultats visibles sur chiffres et graphiques","interventions à faible coût à effet immédiat","règles simples à automatiser"],constraints:["suivi rigoureux des dépenses","discipline sur catégories déclencheuses","matelas pour imprévus mensuels"]},
-    sport:{why:["protocole progressif et durable","récupération prévue limitant les blessures","récompenses rapides sur énergie et sommeil"],constraints:["calendrier cohérent avec horaires de travail","équipement minimal disponible","suivi de la charge"]},
-    relazioni:{why:["petites actions à fort levier émotionnel","rituels hebdomadaires qui ancrent les habitudes","retour immédiat des personnes impliquées"],constraints:["limites de temps claires","attentes partagées","respect du rythme des autres"]},
-    viaggi:{why:["plan à contraintes connues (budget, dates, trajets)","tolérance aux imprévus avec alternatives","bénéfices émotionnels renforçant l’adhérence"],constraints:["fenêtres de réservation réalistes","gestion des coûts variables","documents et logistique prêts"]},
-    tech:{why:["outils disponibles immédiatement et souvent gratuits","processus automatisables avec peu d’intégrations","indicateurs clairs de succès (temps gagné)"],constraints:["qualité des données d’entrée","sécurité/autorisations","maintenance du script"]},
-    business:{why:["validation rapide via de petites expériences","cycle build-measure-learn rapide","canaux d’acquisition testables à faible budget"],constraints:["hypothèse de valeur/facturation claire","échantillon clients suffisant","temps dédié aux itérations"]},
-    salute:{why:["protocole simple avec suivi","renforcements positifs dès la 1re semaine","réduction du stress comme co-bénéfice"],constraints:["adhérence aux repas et au sommeil","progression graduelle","attention aux conditions pré-existantes"]},
-    casa:{why:["projet fini avec jalons visibles","règles pratiques de désencombrement","bénéfices immédiats sur confort et concentration"],constraints:["temps dédié par pièce/zone","matériels et outils disponibles","plan d’évacuation des objets"]}
-  },
-  de:{
-    lavoro:{why:["direkter Einfluss auf Einkommen und Karrierewachstum","schnelle, messbare Vorteile bei Interviews und Chancen","klare, wiederholbare Schritte","Netzwerk sofort mit kostengünstigen Aktionen aktivierbar","häufiges Feedback beschleunigt das Lernen"],constraints:["Zeit für CV/Portfolio-Vorbereitung","konsequente tägliche Ansprache","Passung zwischen Zielrolle und Skills","Qualität der Bewerbungen"]},
-    studio:{why:["modulares Curriculum fördert Mikrofortschritte","messbare Ziele (Quiz, Seiten, Stunden)","leicht zugängliche, oft kostenlose Materialien","kurze Rhythmen verringern Startreibung"],constraints:["feste tägliche Zeitfenster","ablenkungsfreie Umgebung","wöchentlicher Review-Plan"]},
-    soldi:{why:["Ergebnisse sichtbar in Zahlen und Charts","günstige Maßnahmen mit sofortiger Wirkung","einfache Regeln zur Automatisierung"],constraints:["genaues Ausgaben-Tracking","Disziplin bei Trigger-Kategorien","Puffer für monatliche Unwägbarkeiten"]},
-    sport:{why:["progressives, nachhaltiges Protokoll","geplante Regeneration begrenzt Verletzungen","schnelle Belohnungen bei Energie und Schlaf"],constraints:["Zeitplan passend zur Arbeit","Mindestausrüstung verfügbar","Belastungsmonitoring"]},
-    relazioni:{why:["kleine Aktionen mit hoher emotionaler Hebelwirkung","wöchentliche Rituale festigen Gewohnheiten","sofortiges Feedback der Beteiligten"],constraints:["klare Zeitgrenzen","geteilte Erwartungen","Respekt für das Tempo anderer"]},
-    viaggi:{why:["Plan mit bekannten Zwängen (Budget, Daten, Routen)","Toleranz gegenüber Pannen durch Alternativen","emotionale Vorteile stärken die Adhärenz"],constraints:["realistische Buchungsfenster","Steuerung variabler Kosten","Dokumente und Logistik bereit"]},
-    tech:{why:["Tools sofort verfügbar und oft kostenlos","Prozesse mit wenigen Integrationen automatisierbar","klare Erfolgsmetriken (Zeitersparnis)"],constraints:["Qualität der Eingangsdaten","Sicherheit/Berechtigungen","Script-Wartung"]},
-    business:{why:["schnelle Validierung über kleine Experimente","rascher Build-Measure-Learn-Zyklus","Akquisekanäle mit kleinem Budget testbar"],constraints:["klare Value-/Billing-Hypothese","ausreichende Kund*innenstichprobe","Zeit für Iterationen"]},
-    salute:{why:["einfaches Protokoll mit Tracking","positive Verstärkung ab Woche 1","Stressreduktion als Co-Benefit"],constraints:["Einhaltung bei Mahlzeiten und Schlaf","schrittweise Progression","Beachtung bestehender Bedingungen"]},
-    casa:{why:["abgeschlossenes Projekt mit sichtbaren Meilensteinen","praktische Entrümpelungsregeln","sofortige Zugewinne bei Komfort und Fokus"],constraints:["Zeitblöcke pro Raum/Bereich","Materialien und Werkzeuge verfügbar","geplante Entsorgung von Gegenständen"]}
-  }
-};
-
-/* Frasi guida */
-const MOTIVE_LEADS = {
-  it:{ lead:["Motivo","Motivazione","Perché può funzionare","Perché è credibile"],
-       lead2:["Vincoli chiave","Condizioni di riuscita","Attenzioni/limiti","Dipende da"],
-       hasTime:["il time-box riduce la procrastinazione","l’orizzonte chiaro aumenta l’aderenza","scadenze esplicite facilitano il completamento"],
-       noTime:["aggiungere un time-box può aumentare le chance","definire una scadenza rende il piano più solido","un orizzonte esplicito aiuterebbe il follow-through"] },
-  en:{ lead:["Reason","Rationale","Why it can work","Why it’s credible"],
-       lead2:["Key constraints","Success conditions","Watchouts/limits","It depends on"],
-       hasTime:["time-boxing reduces procrastination","a clear horizon increases adherence","explicit deadlines facilitate completion"],
-       noTime:["adding a time-box can increase odds","defining a deadline makes the plan sturdier","an explicit horizon would help follow-through"] },
-  es:{ lead:["Motivo","Motivación","Por qué puede funcionar","Por qué es creíble"],
-       lead2:["Restricciones clave","Condiciones de éxito","Alertas/límites","Depende de"],
-       hasTime:["el time-box reduce la postergación","un horizonte claro aumenta la adherencia","plazos explícitos facilitan el cierre"],
-       noTime:["añadir un time-box puede subir las probabilidades","definir un plazo refuerza el plan","un horizonte explícito ayuda al seguimiento"] },
-  fr:{ lead:["Motif","Justification","Pourquoi ça peut marcher","Pourquoi c’est crédible"],
-       lead2:["Contraintes clés","Conditions de réussite","Points d’attention/limites","Cela dépend de"],
-       hasTime:["le time-boxing réduit la procrastination","un horizon clair augmente l’adhérence","des échéances explicites facilitent l’achèvement"],
-       noTime:["ajouter un time-boxing peut augmenter les chances","définir une échéance solidifie le plan","un horizon explicite aiderait le suivi"] },
-  de:{ lead:["Grund","Begründung","Warum es funktionieren kann","Warum es glaubwürdig ist"],
-       lead2:["Schlüsselbeschränkungen","Erfolgsbedingungen","Hinweise/Grenzen","Es hängt ab von"],
-       hasTime:["Time-Boxing reduziert Prokrastination","ein klares Ziel erhöht die Adhärenz","explizite Deadlines erleichtern den Abschluss"],
-       noTime:["eine Time-Box kann die Chancen erhöhen","eine Frist macht den Plan robuster","ein expliziter Zeithorizont unterstützt die Umsetzung"] }
-};
-function l10nPack(){
-  return MOTIVE_LEADS[lang] || MOTIVE_LEADS.it;
-}
-function motivesBankFor(cat){
-  const tryLang = MOTIVES_L10N[lang]?.[cat];
-  if(tryLang) return tryLang;
-  return MOTIVES_L10N.it[cat] || MOTIVES_L10N.en[cat];
-}
-function rotateIndex(key, max){
-  const i = ((+LS.getItem(key)||0)+1)%max;
-  LS.setItem(key, String(i));
-  return i;
-}
-function buildSeriousMotivation(question){
-  const { pct, cat, f } = computeProbability(question);
-  const bank = motivesBankFor(cat);
-  const L = l10nPack();
-
-  const lead = pick(L.lead);
-  const lead2 = pick(L.lead2);
-  const join = pick([", ", "; ", " — "]);
-
-  const iWhy = rotateIndex("mot_w_"+cat, bank.why.length);
-  const iCon = rotateIndex("mot_c_"+cat, bank.constraints.length);
-
-  const reason1 = bank.why[iWhy];
-  const reason2 = pick(bank.why.filter((_,k)=>k!==iWhy));
-  const cons1 = bank.constraints[iCon];
-  const cons2 = pick(bank.constraints.filter((_,k)=>k!==iCon));
-
-  const horizonHint = f.hasTime ? pick(L.hasTime) : pick(L.noTime);
-
-  const text =
-    `${lead}: ${reason1}${join}${reason2}. `+
-    `${lead2}: ${cons1}${join}${cons2}; ${horizonHint}.`;
-
-  const key = (question||'').toLowerCase().replace(/\s+/g,' ').slice(0,120);
-  const recent = JSON.parse(LS.getItem('mot_recent')||'[]');
-  if(recent.includes(key)){
-    const tweak = (lang==='en') ? " — suggested variation: micro-experiment and weekly checkpoint."
-               : (lang==='es') ? " — variación sugerida: micro-experimento y control semanal."
-               : (lang==='fr') ? " — variation suggérée : micro-expérience et point hebdo."
-               : (lang==='de') ? " — empfohlene Variation: Mikro-Experiment und Wochen-Checkpoint."
-               : " — variazione consigliata: micro-esperimento e checkpoint settimanale.";
-    return { pct, text: text.replace(/\.$/, tweak) };
-  }
-  recent.unshift(key);
-  LS.setItem('mot_recent', JSON.stringify(recent.slice(0,30)));
-  return { pct, text };
-}
-
-/* ==== Motivazioni pseudo-scientifiche (WTF) ==== */
-const SCI_MOTIVATIONS = {
-  it:[
-    "Studio CEDSA: 312 soggetti + 2 cavie alticce; effetto stimato all’87% (p≈0,02).",
-    "Protocollo PignaLab: 98 partecipanti + 1 piccione; risultato replicato, CI sorprendente.",
-    "Istituto Svizzero Formaggi & Motivazione: RCT (n=120); gruppo formaggio +72% successo."
-  ],
-  en:[
-    "CEDSA study: 312 subjects + 2 tipsy guinea animals; estimated effect 87% (p≈0.02).",
-    "PineCone protocol: 98 participants + 1 pigeon; replicated result, surprising CI.",
-    "Swiss Institute of Cheese & Motivation: RCT (n=120); cheese group +72% success."
-  ],
-  es:[
-    "Estudio CEDSA: 312 sujetos + 2 cobayas alegres; efecto estimado 87% (p≈0,02).",
-    "Protocolo PiñaLab: 98 participantes + 1 paloma; resultado replicado, IC sorprendente.",
-    "Instituto Suizo de Queso y Motivación: ECA (n=120); grupo queso +72% de éxito."
-  ],
-  fr:[
-    "Étude CEDSA : 312 sujets + 2 cobayes éméchés ; effet estimé à 87 % (p≈0,02).",
-    "Protocole PigneLab : 98 participants + 1 pigeon ; résultat reproduit, IC surprenant.",
-    "Institut Suisse Fromage & Motivation : ECR (n=120) ; groupe fromage +72 % de réussite."
-  ],
-  de:[
-    "CEDSA-Studie: 312 Probanden + 2 angeheiterte Versuchstiere; Effekt ≈87 % (p≈0,02).",
-    "Kiefernkern-Protokoll: 98 Teilnehmende + 1 Taube; Ergebnis repliziert, überraschendes KI.",
-    "Schweizer Institut für Käse & Motivation: RCT (n=120); Käse-Gruppe +72 % Erfolg."
-  ]
-};
-function pickScientificMotivation(){
-  const list = SCI_MOTIVATIONS[lang] || SCI_MOTIVATIONS.it;
-  return pick(list);
-}
-
-/* ======== 😈 Modalità “Sorprendimi” (comitato) ======== */
-function buildScuffleExtra(){
-  const minor = rndInt(1,5);
-  const injured = rndInt(0,3);
-  const hosp = Math.min(injured, rndInt(0,2));
-  const extras = [
-    (lang==='en')?`Minor scuffle: ${minor} cautioned; ${injured} injured, ${hosp} observed.`:
-    (lang==='es')?`Pequeño altercado: ${minor} amonestados; ${injured} heridos, ${hosp} en observación.`:
-    (lang==='fr')?`Échauffourée: ${minor} avertis; ${injured} blessés, ${hosp} en observation.`:
-    (lang==='de')?`Kleine Rangelei: ${minor} verwarnt; ${injured} verletzt, ${hosp} unter Beobachtung.`:
-    `Lite tra delegazioni: ${minor} ammoniti; ${injured} feriti, ${hosp} in osservazione.`,
-    (lang==='en')?`Brief tussle at vote: ${minor} removed; ${injured} bruised (${hosp} bandaged).`:
-    (lang==='es')?`Tira y afloja en votación: ${minor} retirados; ${injured} contusos (${hosp} vendados).`:
-    (lang==='fr')?`Court grabuge au vote: ${minor} évacués; ${injured} contusions (${hosp} bandés).`:
-    (lang==='de')?`Kurzes Gerangel: ${minor} entfernt; ${injured} Prellungen (${hosp} verbunden).`:
-    `Breve parapiglia al voto: ${minor} allontanati; ${injured} contusi (${hosp} bendati).`
-  ];
-  return pick(extras);
-}
-function buildCommittee(){
-  const cat = pick(CATEGORIES);
-  const name =
-    (lang==='it') ? cat.name_it :
-    (lang==='es') ? cat.name_es :
-    (lang==='fr') ? cat.name_fr :
-    (lang==='de') ? cat.name_de : cat.name_en;
-
-  const notePool =
-    (lang==='it') ? (cat.notes_it||[]) :
-    (lang==='es') ? (cat.notes_es||[]) :
-    (lang==='fr') ? (cat.notes_fr||[]) :
-    (lang==='de') ? (cat.notes_de||[]) :
-    (cat.notes_en||[]);
-
-  const note = pick(notePool.length?notePool:["—"]);
-  return { ico:cat.ico, name, note };
-}
-function renderCommittee(item){
-  const T = I18N[lang] || I18N.it;
-  committeeTitle.textContent = `${item.ico} ${T.votersTitle}: ${item.name}`;
-  motIco.textContent  = item.ico;
-  motName.textContent = item.name;
-  chipsWrap.style.display = 'flex';
-  const r=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-  chipFav.textContent = `${T.chipsFav} ${r(120,1200)}`;
-  chipCon.textContent = `${T.chipsCon} ${r(0,900)}`;
-  chipAst.textContent = `${T.chipsAst} ${r(0,400)}`;
-  motNote.textContent = `${item.note} ${buildScuffleExtra()}`;
-}
-
-/* ==== Surprise detector ==== */
+/* ==== Surprise mode ==== */
 function isSurprise(req){
-  const params = new URLSearchParams(location.search);
-  return params.get('src')==='surprise'
+  const p = new URLSearchParams(location.search);
+  return p.get('src')==='surprise'
       || LS.getItem('surprise_mode')==='1'
       || req?.surprise === true
       || req?.micro?.surprise === true
       || LS.getItem('absurd_prompt')==='1';
 }
 
-/* === Config API + util === */
-const API_BASE = localStorage.getItem('api_base') || '/api';
-function fetchWithTimeout(url, opts={}, ms=12000){
-  return Promise.race([
-    fetch(url, opts),
-    new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')), ms))
-  ]);
-}
-
-/* === Fallback locale: genera risposta nello stile scelto === */
-function localFallback(domanda, style, lang){
-  const base = (domanda||'').trim() || (lang==='en'?'your question':'la tua domanda');
-  if(style==='wtf'){
-    const lines = [
-      `Domanda chiara: ${base}.`,
-      `Vincoli noti, margine d'errore stretto.`,
-      `Leve utili: tempo, focus, una scelta alla volta.`,
-      `Taglia ciò che è accessorio.`,
-      `Misura in giorni, non in desideri.`,
-      `Se non entra nel calendario, non è una priorità.`,
-      `Agisci oggi, rivedi domani.`
-    ];
-    return enforceTone(lines.join(' '), 'wtf');
-  }else{
-    const lines = [
-      `Partiamo da qui: ${base}.`,
-      `Definisci un esito concreto che puoi verificare in poco tempo.`,
-      `Blocca sul calendario due finestre fisse a settimana: proteggono il ritmo.`,
-      `Riduci l’ambizione: metà portata, doppia probabilità di chiudere.`,
-      `Scegli una sola leva principale e una secondaria di backup.`,
-      `Metti un numero su budget, tempo e qualità minima accettabile.`,
-      `Ogni sessione finisce con il passo successivo già scritto.`,
-      `Retrospettiva breve ogni 7 giorni: mantieni ciò che aiuta, elimina il resto.`,
-      `Se dopo due cicli non avanza, semplifica ancora o cambia ipotesi.`
-    ];
-    return enforceTone(lines.join(' '), 'whatif');
-  }
+/* ==== Comitato (solo surprise) ==== */
+const SCI_MOTIVATIONS = {
+  it:[
+    "Studio CEDSA: 312 soggetti; effetto stimato all’87% (p≈0,02).",
+    "Protocollo PignaLab: 98 partecipanti; risultato replicato.",
+    "Istituto Svizzero Formaggi & Motivazione: RCT (n=120); +72% successo."
+  ],
+  en:["CEDSA study: 312 subjects; effect ~87% (p≈0.02).","PineCone protocol: 98 participants; replicated.","Swiss Cheese & Motivation Institute: RCT (n=120); +72% success."]
+};
+function renderCommitteeLike(){
+  const T = I18N[lang]||I18N.it;
+  committeeTitle.textContent = T.votersTitle;
+  motIco.style.display='none';
+  chipsWrap.style.display='none';
+  motNote.textContent = (style==='wtf') ? pick(SCI_MOTIVATIONS[lang]||SCI_MOTIVATIONS.it)
+                                        : "Motivo: vincoli chiari e passi piccoli aumentano le chance. Condizione: slot in calendario e feedback settimanale.";
 }
 
 /* ==== Load & render ==== */
 (async ()=>{
-  // set select to current lang
-  const sel = document.getElementById('langSelect');
-  if(sel) sel.value = lang;
-
+  const sel = document.getElementById('langSelect'); if(sel) sel.value = lang;
   const req = JSON.parse(LS.getItem('whatif_request')||'{}');
   const surprise = isSurprise(req);
 
-  // domanda
   let domanda = req.domanda || LS.getItem('domanda') || "";
   setTitlesAndTexts(domanda);
   qs('#qView').textContent = domanda || '—';
 
-  // prova API, altrimenti fallback
+  const pct = computeProbability(domanda);
+  const pctStr = pct + "%";
+  topPct.textContent = pctStr; bottomPct.textContent = pctStr;
+
+  const T = I18N[lang]||I18N.it;
+
+  // lead
+  const bank = (LEADS[lang] && LEADS[lang][style]) ? LEADS[lang][style] : (LEADS.it[style] || LEADS.it.whatif);
+  qs('#lead').textContent = oneSentence(pick(bank)) || '—';
+
+  // fetch risposta
+  let ok=false;
   try{
     const headers = { "Content-Type": "application/json" };
     if (prefs.pro === true) headers["x-pro"] = "1";
     const adminToken = localStorage.getItem("admin_token");
     if (adminToken) headers["x-admin-token"] = adminToken;
 
-    const r = await fetchWithTimeout(`${API_BASE}/ask`,{
-      method:"POST",
-      headers,
+    const r = await fetch("/api/ask",{ method:"POST", headers,
       body:JSON.stringify({ domanda, lang, stile: style, periodo, extra:"", micro:req.micro||{} })
-    }, 12000);
-
-    let data = null;
-    try{ data = await r.json(); }catch{}
-
-    if(!r.ok) throw new Error(`http_${r.status}`);
-    if(!data || typeof data.answer!=='string' || !data.answer.trim()) throw new Error('bad_payload');
-
-    // risposta OK da server
-    let answerText = normalizeOneParagraph(data.answer.trim());
-    answerText = enforceTone(answerText, style==='wtf' ? 'wtf' : 'whatif');
-    qs('#answer').textContent = answerText;
-    decorateEmBits(qs('#answer'));
-
-    // === Motivazione & %
-    const mot = buildSeriousMotivation(domanda);
-    const pctStr = mot.pct + "%";
-    topPct.textContent = pctStr;
-    bottomPct.textContent = pctStr;
-
-    const T = I18N[lang] || I18N.it;
-    if (surprise){
-      motIco.style.display = '';
-      chipsWrap.style.display = 'flex';
-      renderCommittee(buildCommittee());
-      committeeTitle.textContent = committeeTitle.textContent || (T.votersTitle || 'Comitato');
-    } else {
-      const title = (style==='wtf') ? T.scientificTitle : T.seriousTitle;
-      committeeTitle.textContent = title;
-      motIco.style.display = 'none';
-      chipsWrap.style.display = 'none';
-      motNote.textContent = (style==='wtf') ? pickScientificMotivation() : mot.text;
+    });
+    const data = await r.json().catch(()=>null);
+    if(r.ok && data && data.answer){
+      let answerText = sanitizeAnswer(data.answer||"");
+      answerText = (style==='wtf') ? enforceWTF(answerText) : enforceWhatIf(answerText, domanda);
+      qs('#answer').textContent = answerText;
+      ok=true;
     }
+  }catch(e){ /* fall-through */ }
 
-    // storia
-    const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:mot.pct, motivazione: (style==='wtf')? undefined : mot.text });
-    LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-
-  }catch(e){
-    // Mostra errore tecnico + attiva fallback locale
-    const T = I18N[lang] || I18N.it;
-    const code = (e && e.message) ? e.message : 'unknown';
-    const tech = (lang==='en')?'Server error':'Errore server';
-    qs('#answer').textContent = `${tech} (${code}). Vado in modalità offline.`;
-    // Fallback
-    const offlineAnswer = localFallback(domanda, style, lang);
-    setTimeout(()=>{
-      qs('#answer').textContent = offlineAnswer;
-      decorateEmBits(qs('#answer'));
-      // percentuale e motivazioni anche offline
-      const mot = buildSeriousMotivation(domanda);
-      const pctStr = mot.pct + "%";
-      topPct.textContent = pctStr;
-      bottomPct.textContent = pctStr;
-      const title = (style==='wtf') ? (T.scientificTitle) : (T.seriousTitle);
-      committeeTitle.textContent = title;
-      motIco.style.display = 'none';
-      chipsWrap.style.display = 'none';
-      motNote.textContent = (style==='wtf') ? pickScientificMotivation() : mot.text;
-
-      // salva in cronologia anche in offline
-      const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-      hist.push({ domanda, risposta:offlineAnswer, stile:style, periodo, ts:Date.now(), surprise, pct:mot.pct, motivazione: (style==='wtf')? undefined : mot.text, offline:true });
-      LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-    }, 400);
-    console.error(e);
+  // Fallback locale con tono giusto
+  if(!ok){
+    const seed = domanda.toLowerCase();
+    const base = seed.includes("inglese") ? "Vuoi migliorare l’inglese e avere prove concrete di avanzamento." :
+                 seed.includes("lavor")   ? "Vuoi cambiare lavoro senza perdere momentum." :
+                 seed.includes("ai ")||seed.includes(" ia") ? "Vuoi usare l’AI in modo pratico, non teorico." :
+                 "Vuoi fare un passo chiaro e misurabile.";
+    const localDraft = `${base} Evitiamo poesia e partiamo dal vincolo più stretto: tempo in agenda.`;
+    const offline = (style==='wtf') ? enforceWTF(localDraft) : enforceWhatIf(localDraft, domanda);
+    qs('#answer').textContent = offline;
   }
+
+  // motivazione box
+  renderCommitteeLike();
+
+  // storia
+  const hist = JSON.parse(LS.getItem('cronologia')||'[]');
+  hist.push({ domanda, risposta:qs('#answer').textContent, stile:style, periodo, ts:Date.now(), surprise, pct });
+  LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
 })();
 
 /* ==== Nav / lingua ==== */
@@ -1088,7 +639,7 @@ qs('#homeBtn').onclick = ()=> location.href='index.html';
 qs('#langSelect').onchange = ()=>{
   const v = qs('#langSelect').value;
   LS.setItem('lang', v);
-  LS.setItem('lang_manual','1'); // scelta manuale persistente
+  LS.setItem('lang_manual','1');
   document.documentElement.lang = v;
   location.reload();
 };
