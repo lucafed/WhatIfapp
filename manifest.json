@@ -10,41 +10,15 @@
   "orientation": "portrait-primary",
 
   "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-192-maskable.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/icon-512-maskable.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    { "src": "/public/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/public/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/public/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/public/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
 
   "screenshots": [
-    {
-      "src": "/screenshot-phone-1080x1920-1.png",
-      "sizes": "1080x1920",
-      "type": "image/png"
-    },
-    {
-      "src": "/screenshot-phone-1080x1920-2.png",
-      "sizes": "1080x1920",
-      "type": "image/png"
-    }
+    { "src": "/public/screenshot-phone-1080x1920-1.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow" },
+    { "src": "/public/screenshot-phone-1080x1920-2.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow" }
   ],
 
   "categories": ["lifestyle", "entertainment"],
@@ -52,22 +26,10 @@
   "dir": "ltr",
   "scope": "/",
 
-  "launch_handler": {
-    "client_mode": "navigate-existing"
-  },
+  "launch_handler": { "client_mode": "navigate-existing" },
 
   "shortcuts": [
-    {
-      "name": "Nuovo What?f",
-      "short_name": "Nuovo",
-      "description": "Crea una nuova simulazione",
-      "url": "/index.html"
-    },
-    {
-      "name": "Continua l'ultimo",
-      "short_name": "Continua",
-      "description": "Riprendi dall’ultima risposta",
-      "url": "/fifth.html"
-    }
+    { "name": "Nuovo What?f", "short_name": "Nuovo", "description": "Crea una nuova simulazione", "url": "/index.html" },
+    { "name": "Continua l'ultimo", "short_name": "Continua", "description": "Riprendi dall’ultima risposta", "url": "/fifth.html" }
   ]
 }
