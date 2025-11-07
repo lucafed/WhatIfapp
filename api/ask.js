@@ -77,30 +77,25 @@ const sentenceCaseAll = (s="") => s.replace(/(^|[.!?…]\s+)([a-zà-ÿ])/gu,(m,p
 const finalPunct = (s="") => /[.!?…]$/.test(s)?s:s+".";
 
 /* ========= WHAT IF ========= */
-// ➜ Modifica: 7–9 frasi (prima 8–11) e tono “voce amica di una vita” + aggiunta frase motivante breve in post-process
+// ➜ Tono “voce amica di una vita” forzato + 7–9 frasi + frasi quotidiane + NO poesia/immagina/anima
 const WHATIF_RULES = {
-  it: `Sei "What If": VOCE DA AMICO DI UNA VITA — calma, empatica, concreta, con calore vero (mai robotico). Scrivi in ITALIANO.
+  it: `Sei "What If": VOCE DA AMICO DI UNA VITA — calma, empatica, concreta, colloquiale (mai robot, mai poetico). Scrivi in ITALIANO.
 Paragrafo unico, 7–9 frasi, no elenchi né emoji, NON ripetere la domanda.
-Sequenza: (1) radice emotiva; (2) perché conta ora; (3) prime settimane;
-(4) outlook 3–6 mesi (pro + una sfida credibile); (5) realtà pratica (costi/tempo/energia/contesto);
-(6) da dove nasce il desiderio; (7) micro-test; (8) criterio interno per decidere.
-Stile naturale, frasi con lunghezze diverse, immagini quotidiane sobrie, tono umano e diretto.`.trim(),
-  en: `You are "What If": LIFELONG-FRIEND VOICE — calm, empathetic, practical, human (never robotic). Write in ENGLISH.
-Single paragraph, 7–9 sentences, no bullets or emojis, do NOT restate the question.
-Sequence: emotional root → why now → first weeks → 3–6 month outlook (upsides + one real challenge) → practical reality (cost/time/energy/context) → origin of desire → micro-test → inner criterion. Keep it warm, natural.`.trim(),
-  es: `Eres "What If": VOZ DE AMIGO DE TODA LA VIDA — calma, empática y práctica (nada robótica). Escribe en ESPAÑOL.
-Un solo párrafo, 7–9 frases, sin listas ni emojis, NO repitas la pregunta. Sigue la secuencia indicada; tono humano y natural.`.trim(),
-  fr: `Tu es "What If" : VOIX D’AMI DE TOUJOURS — calme, empathique et concrète (jamais robot). Écris en FRANÇAIS.
-Un seul paragraphe, 7–9 phrases, pas de listes ni d’emojis, ne répète pas la question. Suis la séquence; ton humain, naturel.`.trim(),
-  de: `Du bist "What If": STIMME EINES LEBENSLANGEN FREUNDS — ruhig, empathisch, pragmatisch (nie robotisch). Schreibe auf DEUTSCH.
-Ein Absatz, 7–9 Sätze, keine Listen/Emojis, Frage NICHT wiederholen. Reihenfolge befolgen; Ton menschlich und natürlich.`.trim()
+Sequenza: (1) radice emotiva; (2) perché conta ora; (3) prime settimane; (4) outlook 3–6 mesi (pro + una sfida concreta);
+(5) realtà pratica (costi/tempo/energia/contesto); (6) da dove nasce il desiderio; (7) micro-test semplice; (8) criterio interno per decidere.
+Registro: quotidiano, diretto, misurato. Evita parole e cliché come: “immagina”, “anima”, “danza”, “nostalgia romantica”, “paesaggi dell’anima”, “cuore che…”. Niente metafore zuccherose. Tono: onesto, caldo, essenziale.`,
+  en: `You are "What If": LIFELONG-FRIEND VOICE — calm, empathetic, practical, conversational (never poetic). Single paragraph, 7–9 sentences, no bullets/emojis, do NOT restate the question. Follow the sequence; everyday language; grounded and warm.`,
+  es: `Eres "What If": VOZ DE AMIGO DE TODA LA VIDA — calma, empática y práctica, conversacional (nada poético). Un párrafo, 7–9 frases. Sigue la secuencia, lenguaje cotidiano; cálido y honesto.`,
+  fr: `Tu es "What If" : VOIX D’AMI DE TOUJOURS — calme, empathique, concret, conversationnel (pas de lyrisme). Un paragraphe, 7–9 phrases. Suivre la séquence; langage quotidien; ton humain.`,
+  de: `Du bist "What If": STIMME EINES LEBENSLANGEN FREUNDS — ruhig, empathisch, pragmatisch, umgangssprachlich (nicht poetisch). Ein Absatz, 7–9 Sätze. Reihenfolge einhalten; Alltagssprache; warm und ehrlich.`
 };
+
 const WHATIF_EXAMPLES = {
-  it:`All’inizio tutto ti sembrerà geniale: aria più pulita, meno rumore, la testa che rallenta. Dopo qualche settimana arriva la prova vera: le giornate si somigliano, il silenzio pesa a tratti, e capisci se quella calma ti nutre o ti rimpicciolisce. Nel giro di 3–6 mesi puoi guadagnare spazio mentale e abitudini più sane, ma rinunci a un po’ di scintilla quotidiana e dovrai essere tu a mettere benzina alle opportunità. In concreto risparmi soldi, dormi meglio e recuperi tempo, però serve disciplina per non scivolare nell’inerzia e creare contatti attivi. Questa voglia nasce dal bisogno di respirare e sentirti più tuo, non di scappare. Fai un test di due settimane “come se fosse già così”: orari, luoghi, lavoro e socialità più semplice. Se ti svegli più leggero e non senti di mettere la vita in pausa, è un passo avanti; se ti senti più piccolo, non è il posto giusto adesso.`,
-  en:`At first it feels brilliant: cleaner air, less noise, your mind slowing down. A few weeks in comes the real test: days start to look alike, silence gets heavy, and you learn whether calm feeds you or shrinks you. Over 3–6 months you gain headspace and steadier habits, but trade away some daily spark and must fuel opportunities yourself. Practically you save money, sleep better and reclaim time, yet you’ll need discipline to avoid drift and to build active links. This desire comes from breathing again, not running away. Run a two-week “as if it’s already true” test: hours, places, work and simpler social life. If you wake lighter and don’t feel paused, it’s forward; if you feel smaller, not the place right now.`,
-  es:`Al principio todo parece brillante: más aire y menos ruido; tu mente baja de revoluciones. A las semanas llega la prueba real: los días se parecen, el silencio pesa y ves si esa calma te nutre o te encoge. En 3–6 meses ganas espacio mental y hábitos más sanos, a cambio de menos chispa diaria y de tener que crear tú las oportunidades. En lo práctico ahorras, duermes mejor y recuperas tiempo, pero necesitarás disciplina para no caer en la inercia y cultivar vínculos. Este deseo nace de respirar de nuevo, no de huir. Haz una prueba de dos semanas “como si ya fuera cierto”: horarios, lugares, trabajo y vida social más simple. Si amaneces más ligero y no te sientes en pausa, es hacia adelante; si te sientes más pequeño, no es el lugar ahora.`,
-  fr:`Au début tout paraît génial : air plus clair, moins de bruit, l’esprit qui ralentit. Après quelques semaines vient l’épreuve réelle : les jours se ressemblent, le silence pèse, et tu vois si ce calme te nourrit ou te rétrécit. En 3–6 mois tu gagnes de l’espace mental et des habitudes plus saines, au prix d’un peu d’étincelle quotidienne et d’efforts pour créer toi-même les opportunités. Concrètement tu économises, tu dors mieux et tu reprends du temps, mais il faut de la discipline pour éviter l’inertie et tisser des liens. Ce désir vient de l’envie de respirer, pas de fuir. Fais un test de deux semaines “comme si c’était déjà vrai” : horaires, lieux, travail, sociabilité simple. Si tu te réveilles plus léger sans te sentir en pause, c’est en avant; sinon, ce n’est pas le lieu maintenant.`,
-  de:`Am Anfang wirkt alles genial: klarere Luft, weniger Lärm, dein Kopf wird ruhiger. Nach ein paar Wochen kommt der echte Test: Tage ähneln sich, Stille wird schwer — nährt dich die Ruhe oder macht sie dich kleiner? In 3–6 Monaten gewinnst du Kopf-Freiheit und gesündere Routinen, tauscht aber etwas Alltagsfunken ein und musst Chancen selbst anschieben. Praktisch sparst du Geld, schläfst besser und holst Zeit zurück; Disziplin ist nötig gegen Trägheit und für aktive Kontakte. Der Wunsch kommt vom Durchatmen, nicht vom Weglaufen. Mach einen Zwei-Wochen-Test „als wäre es schon so“: Zeiten, Orte, Arbeit, einfachere Sozialität. Wachst du leichter auf und fühlst dich nicht auf Pause, ist es vorwärts; fühlst du dich kleiner, ist es jetzt nicht der Ort.`
+  it:`All’inizio tutto ti sembrerà geniale: aria più pulita, meno rumore, la testa che rallenta. Dopo qualche settimana arriva la prova vera: le giornate si somigliano, il silenzio pesa a tratti, e capisci se quella calma ti nutre o ti rimpicciolisce. Nel giro di 3–6 mesi puoi guadagnare spazio mentale e abitudini più sane, ma rinunci a un po’ di scintilla quotidiana e dovrai essere tu a mettere benzina alle opportunità. In concreto risparmi soldi, dormi meglio e recuperi tempo, però serve disciplina per non scivolare nell’inerzia e per coltivare contatti vivi. Questa voglia nasce dal bisogno di respirare e sentirti più tuo, non di scappare. Fai un test di due settimane “come se fosse già così”: orari, luoghi, lavoro e socialità più semplice. Se ti svegli più leggero e non senti di mettere la vita in pausa, è un passo avanti; se ti senti più piccolo, non è il posto giusto adesso.`,
+  en:`At first it feels brilliant: cleaner air, less noise, your mind slowing down. A few weeks in comes the real test: days start to look alike, the quiet gets heavy, and you see whether calm feeds you or shrinks you. Over 3–6 months you gain headspace and steadier habits, but you trade some daily spark and must fuel opportunities yourself. Practically you save money, sleep better and reclaim time; you’ll need discipline to avoid drift and keep live connections. This comes from wanting to breathe again, not to run away. Run a two-week “as if it’s already true” test: hours, places, work, simpler social life. If you wake lighter and don’t feel on pause, it’s forward; if you feel smaller, not the place right now.`,
+  es:`Al principio todo parece brillante: más aire, menos ruido, la cabeza baja de revoluciones. A las semanas llega la prueba real: los días se parecen, el silencio pesa, y ves si esa calma te nutre o te encoge. En 3–6 meses ganas espacio mental y hábitos más sanos, pero cedes chispa diaria y tendrás que crear tú las oportunidades. En lo práctico ahorras, duermes mejor y recuperas tiempo; hará falta disciplina para no caer en la inercia y mantener vínculos vivos. Esto nace de querer respirar, no de huir. Haz una prueba de dos semanas “como si ya fuera cierto”. Si amaneces más ligero y no te sientes en pausa, es hacia adelante; si te encoges, no es el sitio ahora.`,
+  fr:`Au début tout paraît plus simple : air plus clair, moins de bruit, l’esprit qui ralentit. Après quelques semaines vient l’épreuve réelle : les jours se ressemblent, le silence pèse, et tu vois si ce calme te nourrit ou te rétrécit. En 3–6 mois tu gagnes de l’espace mental et des routines plus saines, mais tu perds un peu d’étincelle quotidienne et dois créer toi-même les opportunités. Concrètement tu économises, tu dors mieux et tu récupères du temps; discipline requise pour éviter l’inertie et garder des liens vivants. Ce désir vient de l’envie de respirer, pas de fuir. Fais un test de deux semaines “comme si c’était déjà vrai”. Si tu te lèves plus léger sans te sentir en pause, c’est en avant; sinon, pas le lieu maintenant.`,
+  de:`Am Anfang wirkt es brillant: klarere Luft, weniger Lärm, der Kopf wird ruhiger. Nach ein paar Wochen kommt der echte Test: Tage ähneln sich, die Stille wird schwer, und du merkst, ob dich Ruhe nährt oder kleiner macht. In 3–6 Monaten gewinnst du Kopf-Freiheit und gesündere Routinen, gibst aber etwas Alltagsfunken ab und musst Chancen selbst anschieben. Praktisch sparst du Geld, schläfst besser und holst Zeit zurück; Disziplin ist nötig gegen Trägheit und für lebendige Kontakte. Das kommt vom Durchatmen, nicht vom Weglaufen. Mach einen Zwei-Wochen-Test „als wäre es schon so“. Wachst du leichter auf und fühlst dich nicht auf Pause, ist es vorwärts; fühlst du dich kleiner, ist es jetzt nicht der Ort.`
 };
 
 /* ========= WTF ========= */
@@ -495,6 +490,37 @@ function buildMessages({ domanda, lang, periodo, stile }){
   return msgs;
 }
 
+/* ========= Post-process guardrail: voce amica IT ========= */
+function ensureVoceAmicaIT(answer, domanda){
+  let a = String(answer||"").trim();
+
+  // 1) Rimuovi frasi con cliché/poesia zuccherosa
+  const banRx = /\b(immagina|immaginati|anima|danza|nostalgia(?:\s+\w+)?|paesagg[iio] dell'anima|cuore(?:\s+che)?|abbraccio\s+del\s+silenzio|carezza\s+del\s+vento)\b/gi;
+  const sentences = a.split(/(?<=[.!?…])\s+/).filter(Boolean);
+  const filtered = sentences.filter(s => !banRx.test(s));
+  a = (filtered.length ? filtered : sentences).join(" ");
+
+  // 2) Evita aperture tipo “Immagina…”
+  a = a.replace(/^\s*(Immagina|Immaginati)[^.!?…]*[.!?…]\s*/i, "");
+
+  // 3) Se non parte “alla What If”, aggiungi un gancio breve e umano
+  if(!/^(Mah|All’inizio|All'inizio|Sai|Ok|A volte|Onestamente)\b/.test(a)){
+    a = `All’inizio ti sembrerà la scelta giusta. ` + a;
+  }
+
+  // 4) Lessico più quotidiano: piccole pulizie
+  a = a
+    .replace(/\bappartenenza\b/gi, "posto tuo")
+    .replace(/\bprospettiva\b/gi, "prospettiva")
+    .replace(/\briorganizzare\b/gi, "rimettere a posto")
+    .replace(/\bconfortante\b/gi, "che rassicura");
+
+  // 5) Stringi spazi e punto finale
+  a = normalizeOneParagraph(a);
+  a = finalPunct(a);
+  return a;
+}
+
 /* ========= HANDLER ========= */
 export default async function handler(req, res){
   cors(req, res);
@@ -536,9 +562,16 @@ export default async function handler(req, res){
     answer = sentenceCaseAll(answer);
     answer = finalPunct(answer);
 
-    // What If — aggiungi una frase motivante breve (multi-lingua), senza scegliere al posto dell’utente
+    // What If — aggiungi guardrail di tono + frase motivante breve (solo non-WTF)
     if (stile !== "wtf") {
       const L = normLang(lang);
+
+      // Guardrail di tono per IT
+      if (L === "it") {
+        answer = ensureVoceAmicaIT(answer, domanda);
+      }
+
+      // Coda motivante breve (multi-lingua), senza scegliere al posto dell’utente
       const MOT_TAIL = {
         it: "Coraggio: oggi un passo vero.",
         en: "Courage: one real step today.",
@@ -549,8 +582,8 @@ export default async function handler(req, res){
       const tail = " " + (MOT_TAIL[L] || MOT_TAIL.it);
       const lower = answer.toLowerCase();
       if (
-        !lower.includes(MOT_TAIL.it.toLowerCase()) &&
-        !lower.includes((MOT_TAIL[L] || "").toLowerCase())
+        !lower.includes((MOT_TAIL[L] || "").toLowerCase()) &&
+        !lower.includes(MOT_TAIL.it.toLowerCase())
       ){
         answer = finalPunct(answer) + tail;
       }
@@ -580,4 +613,4 @@ export default async function handler(req, res){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
-                                     }
+    }
