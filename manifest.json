@@ -4,35 +4,30 @@
   "short_name": "What?f",
   "description": "Scopri il tuo What?f — immagina la scelta che non hai fatto e quella che potresti fare.",
   "start_url": "/index.html",
-  "scope": "/",
   "display": "standalone",
   "background_color": "#0B0B0C",
   "theme_color": "#0B0B0C",
   "orientation": "portrait-primary",
-  "lang": "it-IT",
-  "dir": "ltr",
-  "categories": ["lifestyle", "entertainment"],
-  "prefer_related_applications": false,
 
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/public/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/public/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     },
     {
-      "src": "/icon-192-maskable.png",
+      "src": "/public/icon-192-maskable.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icon-512-maskable.png",
+      "src": "/public/icon-512-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -41,32 +36,38 @@
 
   "screenshots": [
     {
-      "src": "/screenshot-phone-1080x1920-1.png",
+      "src": "/public/screenshot-phone-1080x1920-1.png",
       "sizes": "1080x1920",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Schermata iniziale di What?f"
+      "type": "image/png"
     },
     {
-      "src": "/screenshot-phone-1080x1920-2.png",
+      "src": "/public/screenshot-phone-1080x1920-2.png",
       "sizes": "1080x1920",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Interfaccia dell’app What?f"
+      "type": "image/png"
+    }
+  ],
+
+  "categories": ["lifestyle", "entertainment"],
+  "lang": "it-IT",
+  "dir": "ltr",
+  "scope": "/",
+
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+
+  "shortcuts": [
+    {
+      "name": "Nuovo What?f",
+      "short_name": "Nuovo",
+      "description": "Crea una nuova simulazione",
+      "url": "/index.html"
     },
     {
-      "src": "/screenshot-wide-1920x1080-1.png",
-      "sizes": "1920x1080",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "What?f in orizzontale"
-    },
-    {
-      "src": "/screenshot-wide-1920x1080-2.png",
-      "sizes": "1920x1080",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Schermata di interazione in landscape"
+      "name": "Continua l'ultimo",
+      "short_name": "Continua",
+      "description": "Riprendi dall’ultima risposta",
+      "url": "/fifth.html"
     }
   ]
 }
