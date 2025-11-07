@@ -12,6 +12,7 @@
   "lang": "it-IT",
   "dir": "ltr",
   "categories": ["lifestyle", "entertainment"],
+  "prefer_related_applications": false,
 
   "icons": [
     {
@@ -52,6 +53,20 @@
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Interfaccia dell’app What?f"
+    },
+    {
+      "src": "/screenshot-wide-1920x1080-1.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "What?f in orizzontale"
+    },
+    {
+      "src": "/screenshot-wide-1920x1080-2.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Schermata di interazione in landscape"
     }
   ]
 }
