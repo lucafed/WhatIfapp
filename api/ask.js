@@ -1,5 +1,5 @@
 // /api/ask.js — What?f Engine (Stable Hybrid WHATIF + Friendly-WTF Demenziale)
-// - WHATIF: stile unico 60% analisi / 40% immagini sobrie. Incipit analitico (no “Bella Luca”).
+// - WHATIF: stile unico 60% analisi / 40% immagini sobrie. Incipit variabile (no “Bella Luca”) + tocco psicologo leggero.
 // - WTF: come da tuoi esempi, 2–3 reazioni DEMENZIALI, una sola “imprecazione” teatrale, sorso alcolico, risposta vera, morale.
 // - Maiuscole sistemate post-process dopo punto / “…”.
 // - Un paragrafo, niente elenchi, niente eco della domanda.
@@ -23,14 +23,20 @@ const rl = new Ratelimit({
 });
 
 /* ========= CORS ========= */
+// Whitelist fissa + preview Vercel (branch builds)
 const ALLOWED_ORIGINS = [
   "https://what-ifapp.vercel.app",
   "http://localhost:3000",
   "http://127.0.0.1:5500",
 ];
+const VERCEL_PREVIEW_RX = /^https:\/\/[a-z0-9-]+-what-ifapp-[a-z0-9-]+-vercel\.app$/i;
+
 function cors(req, res) {
   const origin = String(req.headers.origin || "");
-  if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
+  const ok =
+    ALLOWED_ORIGINS.includes(origin) ||
+    VERCEL_PREVIEW_RX.test(origin);
+  if (ok) res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token, x-pro");
@@ -67,9 +73,25 @@ function sentenceCaseAll(s=""){
 function finalPunct(s=""){ return /[.!?…]$/.test(s)?s:s+"."; }
 
 /* ========= WHAT IF – stile 60/40 (analitico + immagini sobrie) ========= */
+// Incipit variabili coerenti (selezione pseudo-casuale)
+const WHATIF_OPENERS_IT = [
+  "Non è una domanda semplice e lo sai.",
+  "Se guardi bene, qui non c’è solo un sì o un no.",
+  "Prima di tutto: ha senso che tu sia diviso.",
+  "Questa scelta tira da due lati e tu la senti.",
+  "Vale la pena trattarla come un esperimento, non un verdetto."
+];
+
 const WHATIF_HYBRID_EX_IT = `Sai, questa non è una domanda leggera. Guardi i numeri, poi guardi le abitudini: costi più bassi da una parte, occasioni più larghe dall’altra. La qualità della vita non è un grafico, è una routine: tempi di spostamento, servizi che funzionano, persone che senti vicine. Se stringi, il portafoglio respira un po’ di più; in cambio accetti un ritmo meno veloce e meno “vetrine” da inseguire. Le giornate si accorciano di frenesia e si allungano di fiato: un caffè fatto bene, una strada che conosci, un’aria che sa di casa. Non è una fuga né un eroismo: è ingegneria quotidiana, spostare pesi tra tempo, denaro e relazioni. A conti fatti, potresti guadagnare spazio mentale e perdere solo rumore. E quando la sera chiudi la porta, non senti il rimpianto bussare: senti il tuo passo tornare al suo passo.`;
 
-const WHATIF_RULE_IT = `WHAT IF HYBRID (italiano): 60% analisi concreta (costi/benefici, routine, qualità di vita), 40% immagini sobrie della quotidianità. Incipit analitico nello stile: “Sai, questa non è una domanda leggera.” Vietato iniziare con “Bella questa”. 8–10 frasi. Seconda persona. Una sola risposta a paragrafo unico. Niente eco della domanda.`;
+// Psicologo leggero: nomina emozioni/ambivalenze, normalizza, ristruttura senza consigli espliciti
+const WHATIF_RULE_IT = `WHAT IF HYBRID (italiano): 60% analisi concreta (costi/benefici, routine, qualità di vita), 40% immagini sobrie della quotidianità. Incipit analitico VARIABILE scelto tra una lista; vietato iniziare con “Bella questa”. 8–10 frasi. Seconda persona. Paragrafo unico. Niente eco della domanda. Tocco psicologo leggero: nomina l’ambivalenza (paura/curiosità, perdita/guadagno), normalizza la fatica, riformula in termini di scambio tra tempo, denaro, energia e relazioni. Nessun consiglio diretto, solo chiarificazione e immagini concrete.`;
+
+function seededPick(arr, seedStr){
+  let x=[...String(seedStr)].reduce((a,c)=> (a*131 + c.charCodeAt(0))>>>0, 2166136261);
+  x=(x^ (x>>>13))>>>0; const r = (x/2**32);
+  return arr[Math.floor(r*arr.length)];
+}
 
 /* ========= WTF — banche demenziali ========= */
 const WTF_IMPRE = [
@@ -97,6 +119,20 @@ const WTF_DRINK = [
   "alzi un bicchiere piccolo: brindisi di manutenzione",
   "bevi un dito di coraggio e respiri più largo",
 ];
+
+/* ========= OpenAI retry helper (soft) ========= */
+async function askOpenAI(payload) {
+  let lastErr;
+  for (let i = 0; i < 2; i++) {
+    try {
+      return await client.chat.completions.create(payload);
+    } catch (e) {
+      lastErr = e;
+      await new Promise((r) => setTimeout(r, 350 * (i + 1)));
+    }
+  }
+  throw lastErr;
+}
 
 /* ========= Prompt builder ========= */
 function buildMessages({ domanda, lang, periodo, stile }){
@@ -139,9 +175,11 @@ function buildMessages({ domanda, lang, periodo, stile }){
 - Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
     );
   } else {
-    // WHATIF ibrido unico, con incipit analitico e divieto “Bella…”
+    // WHATIF ibrido: INCIPIT VARIABILE + psicologo leggero
+    const opener = seededPick(WHATIF_OPENERS_IT, domanda);
     msgs.push(
       { role: "system", content: WHATIF_RULE_IT },
+      { role: "system", content: `Incipit: scegli uno di questi e adattalo al contesto, senza ripeterlo a pappagallo: “${WHATIF_OPENERS_IT.join("” — “")}”. Preferisci: “${opener}”. Vietato usare “Bella questa”.` },
       { role: "system", content: `ESEMPIO (respiro e tono):\n${WHATIF_HYBRID_EX_IT}` }
     );
   }
@@ -188,7 +226,7 @@ export default async function handler(req, res){
 
     const messages = buildMessages({ domanda, lang, periodo, stile, micro });
 
-    const completion = await client.chat.completions.create({
+    const completion = await askOpenAI({
       model: MODEL,
       temperature: stile === "wtf" ? 0.98 : 0.82,
       top_p: 0.92,
