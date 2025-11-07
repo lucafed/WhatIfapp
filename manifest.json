@@ -12,6 +12,7 @@
   "orientation": "portrait-primary",
   "lang": "it-IT",
   "dir": "ltr",
+  "prefer_related_applications": false,
 
   "icons": [
     { "src": "/public/icon-192.png", "sizes": "192x192", "type": "image/png" },
@@ -25,25 +26,29 @@
       "src": "/public/screenshot-phone-1080x1920-1.png",
       "sizes": "1080x1920",
       "type": "image/png",
-      "form_factor": "narrow"
+      "form_factor": "narrow",
+      "label": "La scelta è l’inizio di ogni universo."
     },
     {
       "src": "/public/screenshot-phone-1080x1920-2.png",
       "sizes": "1080x1920",
       "type": "image/png",
-      "form_factor": "narrow"
+      "form_factor": "narrow",
+      "label": "Esplora What if e What the F."
     },
     {
       "src": "/public/screenshot-wide-1920x1080-1.png",
       "sizes": "1920x1080",
       "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "wide",
+      "label": "Scenari immersivi in orizzontale."
     },
     {
       "src": "/public/screenshot-wide-1920x1080-2.png",
       "sizes": "1920x1080",
       "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "wide",
+      "label": "Due porte. Infinite possibilità."
     }
   ],
 
@@ -66,5 +71,5 @@
 
   "categories": ["lifestyle", "entertainment"],
   "launch_handler": { "client_mode": "navigate-existing" },
-  "iarc_rating_id": ""
+  "iarc_rating_id": null
 }
