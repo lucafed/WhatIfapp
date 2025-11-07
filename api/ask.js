@@ -182,7 +182,6 @@ All’inizio balbetti con le parole, come chi prova una bicicletta troppo alta. 
 };
 
 /* ========= WTF (nuova versione) ========= */
-// Monologo continuo da bar: ironia, sarcasmo, oggetti giudicanti, sbronza accidentale, leggero turpiloquio ammesso.
 const WTF_RULES = {
   it: `Sei “What the F”: barista affettuoso e sarcastico. SECONDA PERSONA. UN SOLO PARAGRAFO, 5–7 frasi (~100–115 parole).
 Attacco confidenziale (“Oh senti…”, “Sai che ti dico…”, “Guarda…”).
@@ -288,8 +287,8 @@ function ensureWtfClosing(text, L){
   if(/[.!?…]$/.test(t) && /vento|bicchiere|faccia|sorriso|risata|notte|bar|strada|cuore/i.test(t)) return t;
   // aggiunta chiusura visiva coerente
   const add =
-    L==="en" ? " E finisci a ridere da solo, con il vento in faccia e il bicchiere che scalda la mano."
-  : L==="es" ? " E ti viene da ridere da solo, col viento en la cara y el vaso que tiende a scaldarsi."
+    L==="en" ? " And you end up laughing alone, wind on your face and the glass warming your hand."
+  : L==="es" ? " Y te ríes solo, con el viento en la cara y el vaso que te calienta la mano."
   : L==="fr" ? " Et tu te surprends à sourire, le vent sur le visage et le verre qui réchauffe la paume."
   : L==="de" ? " Und du grinst allein, Wind im Gesicht und das Glas wärmt die Hand."
   : " E ti scappa una risata storta, col vento in faccia e il bicchiere che ti scalda la mano.";
@@ -321,22 +320,30 @@ export default async function handler(req, res){
 
     // Piano & quota giornaliera
     const { isAdmin, isPro, plan } = getAuthPlan(req);
-    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").toString().split(",")[0].trim();
+
+    // Admin può simulare PRO se invia anche x-pro:1
+    const effectivePlanForQuota = (isAdmin && isPro) ? "pro" : plan;
+
+    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
+      .toString().split(",")[0].trim();
     const FREE_LIMIT = 3;
     const PRO_LIMIT  = 10;
-    const limit = isAdmin ? Infinity : (isPro ? PRO_LIMIT : FREE_LIMIT);
+
+    const limit =
+      effectivePlanForQuota === "admin" ? Infinity :
+      (effectivePlanForQuota === "pro" ? PRO_LIMIT : FREE_LIMIT);
 
     const day = romeYMD();
-    const quotaKey = `ask:quota:${plan}:${ip}:${day}`;
+    const quotaKey = `ask:quota:${effectivePlanForQuota}:${ip}:${day}`;
 
     let used = 0;
-    if(!isAdmin){
+    if(effectivePlanForQuota !== "admin"){
       used = await redis.incr(quotaKey);
       if(used === 1){ await redis.expire(quotaKey, 36*60*60); } // TTL di sicurezza
       if(used > limit){
         return res.status(429).json({
           error: "quota_daily_exceeded",
-          plan,
+          plan: effectivePlanForQuota,
           used,
           limit,
           reset_at_rome: romeNextMidnightISO(),
@@ -352,9 +359,9 @@ export default async function handler(req, res){
     const messages = buildMessages({ domanda, lang, periodo, stile, micro });
 
     // Risposte: PRO un filo più ricche
-    const MAX_TOKENS = isPro ? 520 : 420;
-    const TEMP_WTF = isPro ? 1.02 : 1.0;
-    const TEMP_WI  = isPro ? 0.70 : 0.68;
+    const MAX_TOKENS = effectivePlanForQuota === "pro" ? 520 : 420;
+    const TEMP_WTF = effectivePlanForQuota === "pro" ? 1.02 : 1.0;
+    const TEMP_WI  = effectivePlanForQuota === "pro" ? 0.70 : 0.68;
 
     const completion = await client.chat.completions.create({
       model: MODEL,
@@ -371,9 +378,9 @@ export default async function handler(req, res){
 
     // ===== Post-process =====
     answer = stripQuestionEcho(domanda, answer);
-    const maxSentences = stile === "wtf" ? (isPro ? 7 : 6) : 9;
+    const maxSentences = stile === "wtf" ? (effectivePlanForQuota === "pro" ? 7 : 6) : 9;
     answer = tightenSentences(answer, maxSentences);
-    const maxWords = stile === "wtf" ? (isPro ? 125 : 115) : (isPro ? 140 : 130);
+    const maxWords = stile === "wtf" ? (effectivePlanForQuota === "pro" ? 125 : 115) : (effectivePlanForQuota === "pro" ? 140 : 130);
     answer = clampWords(answer, maxWords);
     answer = normalizeOneParagraph(answer);
     answer = sentenceCaseAll(answer);
@@ -407,8 +414,8 @@ export default async function handler(req, res){
       lang: L,
       periodo: periodo || detectPeriod(domanda, lang),
       model: MODEL,
-      plan,
-      quota: isAdmin ? null : { used, limit, reset_at_rome: romeNextMidnightISO() }
+      plan: effectivePlanForQuota,
+      quota: effectivePlanForQuota === "admin" ? null : { used, limit, reset_at_rome: romeNextMidnightISO() }
     });
 
   }catch(err){
