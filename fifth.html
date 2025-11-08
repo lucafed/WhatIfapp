@@ -89,33 +89,33 @@ h1{
 .pct-row{display:flex;align-items:center;gap:10px;margin:2px 0 8px}
 .pct-label{font-size:13px;color:var(--muted)}
 .top-pct{
-display:inline-flex;align-items:center;justify-content:center;
-font-weight:900;font-size:16px;
-min-width:64px;
-padding:5px 10px;
-background:linear-gradient(180deg,var(--acc),var(--acc2));
-color:var(--ink);border-radius:12px;
-box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px var(--glow);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:16px;
+  min-width:64px;
+  padding:5px 10px;
+  background:linear-gradient(180deg,var(--acc),var(--acc2));
+  color:var(--ink);border-radius:12px;
+  box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px var(--glow);
 }
 
 /* === RISULTATI SOTTO === */
 .result-box{
-background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-border:1px solid var(--line);
-border-radius:16px;
-padding:16px 14px;
-box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 22px rgba(0,0,0,.28);
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:16px 14px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 22px rgba(0,0,0,.28);
 }
 .result-head{
-display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-margin-bottom:8px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  margin-bottom:8px;
 }
 .result-pct{
-display:inline-flex;align-items:center;justify-content:center;
-font-weight:900;font-size:16px;
-min-width:64px; padding:5px 10px; border-radius:12px;
-background:linear-gradient(180deg,var(--acc),var(--acc2));
-color:var(--ink);box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px var(--glow);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:16px;
+  min-width:64px; padding:5px 10px; border-radius:12px;
+  background:linear-gradient(180deg,var(--acc),var(--acc2));
+  color:var(--ink);box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px var(--glow);
 }
 .result-title{font-weight:900;font-size:15px;letter-spacing:.2px}
 
@@ -124,29 +124,39 @@ color:var(--ink);box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px var(--glow);
 .mot .ico{font-size:18px;line-height:1.2}
 .mot .name{display:none}
 .mot .note{
-font-size:15px;
-line-height:1.6;
-color:var(--fg);
-opacity:.92;
+  font-size:15px;
+  line-height:1.6;
+  color:var(--fg);
+  opacity:.92;
 }
 
 /* Chips voti */
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;opacity:.9}
 .chip{
-font-size:11px;
-font-weight:900;padding:3px 7px;border-radius:999px;
-background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);
+  font-size:11px;
+  font-weight:900;padding:3px 7px;border-radius:999px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);
 }
 
 /* Mobile */
 @media (max-width:420px){
-.result-pct,.top-pct{font-size:15px;min-width:56px;padding:4px 8px}
-.result-title{font-size:14px}
-.mot .note{font-size:15.5px;line-height:1.65}
+  .result-pct,.top-pct{font-size:15px;min-width:56px;padding:4px 8px}
+  .result-title{font-size:14px}
+  .mot .note{font-size:15.5px;line-height:1.65}
+}
+
+/* === Overlay (store/rewarded) === */
+#overlay{
+  position:fixed;inset:0;display:none;place-items:center;
+  background:rgba(0,0,0,.6);backdrop-filter:blur(2px);z-index:9999;
+}
+#overlay-frame{
+  width:100%;max-width:520px;height:78vh;border:1px solid var(--line);
+  border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.55);
 }
 </style>
-
 </head>
+
 <body>
 <main>
   <div class="row" style="justify-content:space-between">
@@ -166,14 +176,18 @@ background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);
       </select>
     </div>
   </div>
+
   <h1 id="title">Risultato</h1>
   <p class="sub" id="subtitle">—</p>
+
   <div class="card">
     <div class="label" id="lblQ">La tua domanda</div>
     <div class="input" id="qView" style="min-height:46px"></div>
   </div>
+
   <div class="card">
     <div class="label" id="lblA">Risposta</div>
+
     <!-- % IN ALTO -->
     <div class="pct-row">
       <span class="pct-label" id="pctLabel">% probabilità che accada</span>
@@ -217,12 +231,13 @@ background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);
   </div>
 </main>
 
-<!-- Overlay Store / Rewarded -->
-<div id="overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(4px);z-index:999;align-items:center;justify-content:center">
-  <iframe id="overlay-frame" src="" style="width:100%;max-width:420px;height:70vh;border:none;border-radius:16px;box-shadow:0 0 32px rgba(0,0,0,.5)"></iframe>
+<!-- Overlay per Store / Rewarded -->
+<div id="overlay" aria-hidden="true">
+  <iframe id="overlay-frame" src="about:blank" title="modal"></iframe>
 </div>
-<!-- Contatore crediti -->
-<p class="small" id="creditInfo" style="text-align:center;margin:8px 0 18px"></p>
+
+<!-- Contatore crediti (discreto) -->
+<p class="small" id="creditInfo" style="text-align:center;margin:10px 0 24px"></p>
 
 <script>
 /* ==== Base state ==== */
@@ -230,54 +245,7 @@ const LS = localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
 const style = prefs.stile || 'whatif';
 const periodo = prefs.periodo || 'future';
-
-/* ==== Crediti / Store / Rewarded (admin = infinito) ==== */
-const IS_ADMIN = !!LS.getItem('admin_token');
-
-function getCrediti(){ return IS_ADMIN ? 999999 : parseInt(LS.getItem("crediti")||"3"); }
-function setCrediti(n){ if(IS_ADMIN) return; LS.setItem("crediti", n); updateCreditInfoUI(); }
-function updateCreditInfoUI(){
-  const el=document.querySelector("#creditInfo");
-  if(el) el.textContent = "💰 Crediti: " + getCrediti();
-}
-function openOverlay(url){
-  const ov=document.getElementById("overlay");
-  const fr=document.getElementById("overlay-frame");
-  fr.src=url; ov.style.display="flex";
-}
-function closeOverlay(){
-  const ov=document.getElementById("overlay");
-  ov.style.display="none";
-  const fr=document.getElementById("overlay-frame");
-  if(fr) fr.src="";
-}
-// Usa 1 credito; se finiti apre store e blocca il flusso
-function usaCreditoOApriStore(){
-  if(IS_ADMIN) return true;
-  let n=getCrediti();
-  if(n<=0){
-    openOverlay("/store/credit-store.html");
-    return false;
-  }
-  setCrediti(n-1);
-  return true;
-}
-// Listener messaggi da Store/Rewarded
-window.addEventListener("message", ev=>{
-  const d = ev.data || {};
-  if(d.type === "purchase_completed"){
-    setCrediti(getCrediti() + (d.amount||5));
-    closeOverlay();
-  }
-  if(d.type === "open_rewarded"){
-    openOverlay("/ads/rewarded.html");
-  }
-  if(d.type === "rewarded_completed"){
-    setCrediti(getCrediti() + (d.amount||1));
-    closeOverlay();
-  }
-});
-updateCreditInfoUI();
+const IS_ADMIN = !!LS.getItem('admin_token'); // infinito
 
 /* ==== System Prompts (tono fisso – UI only) ==== */
 const SYSTEM_WTF = `SEI “WHAT THE F”.
@@ -340,7 +308,7 @@ document.documentElement.lang = lang;
   }
 })();
 
-/* ==== I18N (UI + chips) ==== */
+/* ==== I18N ==== */
 const I18N = {
   it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
        sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
@@ -355,7 +323,8 @@ const I18N = {
        seriousTitle:"Motivazione",
        scientificTitle:"Motivazione (scientificamente provata)",
        chipsFav:"favorevoli", chipsCon:"contrari", chipsAst:"astenuti",
-       motFallback:"Motivo: scelta sostenuta da benefici concreti a breve, con vincoli gestibili." },
+       motFallback:"Motivo: scelta sostenuta da benefici concreti a breve, con vincoli gestibili.",
+       credits:(n)=>`💰 Crediti: ${n}` },
 
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
@@ -370,7 +339,8 @@ const I18N = {
        seriousTitle:"Rationale",
        scientificTitle:"Rationale (scientifically grounded)",
        chipsFav:"in favour", chipsCon:"against", chipsAst:"abstained",
-       motFallback:"Reason: short-term, concrete benefits with manageable constraints." },
+       motFallback:"Reason: short-term, concrete benefits with manageable constraints.",
+       credits:(n)=>`💰 Credits: ${n}` },
 
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
        sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
@@ -385,7 +355,8 @@ const I18N = {
        seriousTitle:"Motivación",
        scientificTitle:"Motivación (con base científica)",
        chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones",
-       motFallback:"Motivo: beneficios concretos a corto plazo con límites manejables." },
+       motFallback:"Motivo: beneficios concretos a corto plazo con límites manejables.",
+       credits:(n)=>`💰 Créditos: ${n}` },
 
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
        sub:(q)=>`Question : « ${q} »`, q:"Votre question", a:"Réponse",
@@ -400,7 +371,8 @@ const I18N = {
        seriousTitle:"Justification",
        scientificTitle:"Justification (fondée scientifiquement)",
        chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions",
-       motFallback:"Raison : bénéfices concrets à court terme, contraintes maîtrisables." },
+       motFallback:"Raison : bénéfices concrets à court terme, contraintes maîtrisables.",
+       credits:(n)=>`💰 Crédits : ${n}` },
 
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
        sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
@@ -415,7 +387,8 @@ const I18N = {
        seriousTitle:"Begründung",
        scientificTitle:"Begründung (wissenschaftlich untermauert)",
        chipsFav:"dafür", chipsCon:"dagegen", chipsAst:"Enthaltungen",
-       motFallback:"Grund: kurzfristige, greifbare Vorteile bei handhabbaren Einschränkungen." }
+       motFallback:"Grund: kurzfristige, greifbare Vorteile bei handhabbaren Einschränkungen.",
+       credits:(n)=>`💰 Guthaben: ${n}` }
 };
 
 /* ==== Leads ==== */
@@ -446,142 +419,29 @@ const LEADS = {
                "Gleicher Raum, neuer Blick — ein Anfang."]}
 };
 
-/* ==== Categories per COMITATO (solo “sorpresa”) ==== */
-const CATEGORIES = [
-  { ico:"🧠",
-    name_it:"Comitato dei Pensieri Sotto la Doccia",
-    name_en:"Shower-Thoughts Committee",
-    name_es:"Comité de Ideas de Ducha",
-    name_fr:"Comité des Idées sous la Douche",
-    name_de:"Komitee der Duschgedanken",
-    notes_it:["Illuminazione logistica a shampoo.","Decisione nata a 38°C."],
-    notes_en:["Logistics epiphany mid-shampoo.","Decision made at 38°C."],
-    notes_es:["Epifanía logística con champú.","Decisión tomada a 38 °C."],
-    notes_fr:["Épiphanie logistique sous le shampoing.","Décision née à 38 °C."],
-    notes_de:["Logistik-Erleuchtung beim Shampoonieren.","Entscheidung bei 38 °C gefallen."] },
-  { ico:"📊",
-    name_it:"Ordine degli Ottimisti Moderati",
-    name_en:"Order of Moderate Optimists",
-    name_es:"Orden de los Optimistas Moderados",
-    name_fr:"Ordre des Optimistes Modérés",
-    name_de:"Orden der Mäßigen Optimisten",
-    notes_it:["Aspettative sobrie, calendario stretto."],
-    notes_en:["Sober expectations, tight schedule."],
-    notes_es:["Expectativas sobrias, calendario apretado."],
-    notes_fr:["Attentes sobres, calendrier serré."],
-    notes_de:["Nüchterne Erwartungen, enger Zeitplan."] },
-  { ico:"📞",
-    name_it:"Autorità delle Telefonate Fuori Tempo",
-    name_en:"Off-Timing Calls Authority",
-    name_es:"Autoridad de Llamadas Fuera de Hora",
-    name_fr:"Autorité des Appels Hors-Timing",
-    name_de:"Behörde für Anrufe zur Unzeit",
-    notes_it:["Parere arrivato alle 07:12.","Consiglio durante squillo prolungato."],
-    notes_en:["Opinion at 07:12.","Advice during a long ring."],
-    notes_es:["Opinión a las 07:12.","Consejo durante tono largo."],
-    notes_fr:["Avis à 07 h 12.","Conseil pendant une sonnerie prolongée."],
-    notes_de:["Meinung um 07:12.","Rat während des Dauerklingelns."] },
-  { ico:"🥃",
-    name_it:"Circolo Bar Notturno dei Consiglieri",
-    name_en:"Late-Bar Counsel Circle",
-    name_es:"Círculo Nocturno de Consejeros de Bar",
-    name_fr:"Cercle Nocturne des Conseillers de Bar",
-    name_de:"Nachtbar-Ratszirkel",
-    notes_it:["Coraggio liquido, piani semplici."],
-    notes_en:["Liquid courage, simple plans."],
-    notes_es:["Coraje líquido, planes simples."],
-    notes_fr:["Courage liquide, plans simples."],
-    notes_de:["Flüssiger Mut, einfache Pläne."] },
-  { ico:"🍕",
-    name_it:"Associazione Snack Notturni e Idee",
-    name_en:"Night Snacks & Ideas Association",
-    name_es:"Asociación de Snacks Nocturnos e Ideas",
-    name_fr:"Association des En-Cas Nocturnes & Idées",
-    name_de:"Verein für Mitternachtssnacks & Ideen",
-    notes_it:["Briefing alle 23:47.","Carboidrati a supporto."],
-    notes_en:["Briefing at 23:47.","Carbs backing the plan."],
-    notes_es:["Briefing a las 23:47.","Carbos apoyando el plan."],
-    notes_fr:["Briefing à 23 h 47.","Les glucides soutiennent le plan."],
-    notes_de:["Briefing um 23:47.","Kohlenhydrate stützen den Plan."] },
-  { ico:"🎤",
-    name_it:"Sindacato delle Idee da Karaoke",
-    name_en:"Karaoke Ideas Union",
-    name_es:"Sindicato de Ideas de Karaoke",
-    name_fr:"Syndicat des Idées de Karaoké",
-    name_de:"Gewerkschaft der Karaoke-Ideen",
-    notes_it:["Proposta al ritornello.","Volume > ragione."],
-    notes_en:["Proposal on the chorus.","Volume > reason."],
-    notes_es:["Propuesta en el estribillo.","Volumen > razón."],
-    notes_fr:["Proposition au refrain.","Volume > raison."],
-    notes_de:["Vorschlag im Refrain.","Lautstärke > Vernunft."] },
-  { ico:"💬",
-    name_it:"Conferenza degli Amici Che Gasano",
-    name_en:"Conference of Hype Friends",
-    name_es:"Conferencia de Amigos que Animan",
-    name_fr:"Conférence des Amis qui Motivent",
-    name_de:"Konferenz der anfeuernden Freunde",
-    notes_it:["Clima motivazionale alto."],
-    notes_en:["High motivational climate."],
-    notes_es:["Alto clima motivacional."],
-    notes_fr:["Climat motivationnel élevé."],
-    notes_de:["Hohes Motivationsklima."] },
-  { ico:"🕊️",
-    name_it:"Assemblea dei Piccioni con Opinioni Forti",
-    name_en:"Assembly of Strong-Opinion Pigeons",
-    name_es:"Asamblea de Palomas con Opiniones Firmes",
-    name_fr:"Assemblée des Pigeons à Fortes Opinions",
-    name_de:"Versammlung der meinungsstarken Tauben",
-    notes_it:["Consenso rumoroso in piazza."],
-    notes_en:["Loud piazza consensus."],
-    notes_es:["Consenso ruidoso en la plaza."],
-    notes_fr:["Consensus bruyant sur la place."],
-    notes_de:["Lauter Konsens auf dem Platz."] },
-  { ico:"🦊",
-    name_it:"Lobby delle Volpi Opportuniste",
-    name_en:"Opportunistic Foxes Lobby",
-    name_es:"Lobby de Zorros Oportunistas",
-    name_fr:"Lobby des Renards Opportunistes",
-    name_de:"Lobby der opportunistischen Füchse",
-    notes_it:["Favorevoli se conviene subito."],
-    notes_en:["In favor if payoff is instant."],
-    notes_es:["A favor si el beneficio es inmediato."],
-    notes_fr:["Pour si le gain est immédiat."],
-    notes_de:["Dafür, wenn der Nutzen sofort ist."] },
-  { ico:"🐙",
-    name_it:"Federazione dei Polpi Strategici",
-    name_en:"Federation of Strategic Octopuses",
-    name_es:"Federación de Pulpos Estratégicos",
-    name_fr:"Fédération des Pieuvres Stratégiques",
-    name_de:"Föderation strategischer Oktopusse",
-    notes_it:["Otto mosse avanti, presa salda."],
-    notes_en:["Eight moves ahead, firm grip."],
-    notes_es:["Ocho jugadas por delante, agarre firme."],
-    notes_fr:["Huit coups d’avance, prise ferme."],
-    notes_de:["Acht Züge voraus, fester Griff."] },
-  { ico:"🦥",
-    name_it:"Consiglio dei Bradipi Riflessivi",
-    name_en:"Council of Reflective Sloths",
-    name_es:"Consejo de Perezosos Reflexivos",
-    name_fr:"Conseil des Paresseux Réfléchis",
-    name_de:"Rat der nachdenklichen Faultiere",
-    notes_it:["Decisione lenta ma convinta."],
-    notes_en:["Slow yet resolute decision."],
-    notes_es:["Decisión lenta pero firme."],
-    notes_fr:["Décision lente mais résolue."],
-    notes_de:["Langsam, aber entschlossen."] }
+/* ==== Categories (sorpresa) ==== */
+const CATEGORIES = [/* ——— identico al tuo, omesso qui per brevità? No, lo lascio completo —— */ 
+  { ico:"🧠",name_it:"Comitato dei Pensieri Sotto la Doccia",name_en:"Shower-Thoughts Committee",name_es:"Comité de Ideas de Ducha",name_fr:"Comité des Idées sous la Douche",name_de:"Komitee der Duschgedanken",notes_it:["Illuminazione logistica a shampoo.","Decisione nata a 38°C."],notes_en:["Logistics epiphany mid-shampoo.","Decision made at 38°C."],notes_es:["Epifanía logística con champú.","Decisión tomada a 38 °C."],notes_fr:["Épiphanie logistique sous le shampoing.","Décision née à 38 °C."],notes_de:["Logistik-Erleuchtung beim Shampoonieren.","Entscheidung bei 38 °C gefallen."]},
+  { ico:"📊",name_it:"Ordine degli Ottimisti Moderati",name_en:"Order of Moderate Optimists",name_es:"Orden de los Optimistas Moderados",name_fr:"Ordre des Optimistes Modérés",name_de:"Orden der Mäßigen Optimisten",notes_it:["Aspettative sobrie, calendario stretto."],notes_en:["Sober expectations, tight schedule."],notes_es:["Expectativas sobrias, calendario apretado."],notes_fr:["Attentes sobres, calendrier serré."],notes_de:["Nüchterne Erwartungen, enger Zeitplan."]},
+  { ico:"📞",name_it:"Autorità delle Telefonate Fuori Tempo",name_en:"Off-Timing Calls Authority",name_es:"Autoridad de Llamadas Fuera de Hora",name_fr:"Autorité des Appels Hors-Timing",name_de:"Behörde für Anrufe zur Unzeit",notes_it:["Parere arrivato alle 07:12.","Consiglio durante squillo prolungato."],notes_en:["Opinion at 07:12.","Advice during a long ring."],notes_es:["Opinión a las 07:12.","Consejo durante tono largo."],notes_fr:["Avis à 07 h 12.","Conseil pendant une sonnerie prolongée."],notes_de:["Meinung um 07:12.","Rat während des Dauerklingelns."]},
+  { ico:"🥃",name_it:"Circolo Bar Notturno dei Consiglieri",name_en:"Late-Bar Counsel Circle",name_es:"Círculo Nocturno de Consejeros de Bar",name_fr:"Cercle Nocturne des Conseillers de Bar",name_de:"Nachtbar-Ratszirkel",notes_it:["Coraggio liquido, piani semplici."],notes_en:["Liquid courage, simple plans."],notes_es:["Coraje líquido, planes simples."],notes_fr:["Courage liquide, plans simples."],notes_de:["Flüssiger Mut, einfache Pläne."]},
+  { ico:"🍕",name_it:"Associazione Snack Notturni e Idee",name_en:"Night Snacks & Ideas Association",name_es:"Asociación de Snacks Nocturnos e Ideas",name_fr:"Association des En-Cas Nocturnes & Idées",name_de:"Verein für Mitternachtssnacks & Ideen",notes_it:["Briefing alle 23:47.","Carboidrati a supporto."],notes_en:["Briefing at 23:47.","Carbs backing the plan."],notes_es:["Briefing a las 23:47.","Carbos apoyando el plan."],notes_fr:["Briefing à 23 h 47.","Les glucides soutiennent le plan."],notes_de:["Briefing um 23:47.","Kohlenhydrate stützen den Plan."]},
+  { ico:"🎤",name_it:"Sindacato delle Idee da Karaoke",name_en:"Karaoke Ideas Union",name_es:"Sindicato de Ideas de Karaoke",name_fr:"Syndicat des Idées de Karaoké",name_de:"Gewerkschaft der Karaoke-Ideen",notes_it:["Proposta al ritornello.","Volume > ragione."],notes_en:["Proposal on the chorus.","Volume > reason."],notes_es:["Propuesta en el estribillo.","Volumen > razón."],notes_fr:["Proposition au refrain.","Volume > raison."],notes_de:["Vorschlag im Refrain.","Lautstärke > Vernunft."]},
+  { ico:"💬",name_it:"Conferenza degli Amici Che Gasano",name_en:"Conference of Hype Friends",name_es:"Conferencia de Amigos que Animan",name_fr:"Conférence des Amis qui Motivent",name_de:"Konferenz der anfeuernden Freunde",notes_it:["Clima motivazionale alto."],notes_en:["High motivational climate."],notes_es:["Alto clima motivacional."],notes_fr:["Climat motivationnel élevé."],notes_de:["Hohes Motivationsklima."]},
+  { ico:"🕊️",name_it:"Assemblea dei Piccioni con Opinioni Forti",name_en:"Assembly of Strong-Opinion Pigeons",name_es:"Asamblea de Palomas con Opiniones Firmes",name_fr:"Assemblée des Pigeons à Fortes Opinions",name_de:"Versammlung der meinungsstarken Tauben",notes_it:["Consenso rumoroso in piazza."],notes_en:["Loud piazza consensus."],notes_es:["Consenso ruidoso en la plaza."],notes_fr:["Consensus bruyant sur la place."],notes_de:["Lauter Konsens auf dem Platz."]},
+  { ico:"🦊",name_it:"Lobby delle Volpi Opportuniste",name_en:"Opportunistic Foxes Lobby",name_es:"Lobby de Zorros Oportunistas",name_fr:"Lobby des Renards Opportunistes",name_de:"Lobby der opportunistischen Füchse",notes_it:["Favorevoli se conviene subito."],notes_en:["In favor if payoff is instant."],notes_es:["A favor si el beneficio es inmediato."],notes_fr:["Pour si le gain est immédiat."],notes_de:["Dafür, wenn der Nutzen sofort ist."]},
+  { ico:"🐙",name_it:"Federazione dei Polpi Strategici",name_en:"Federation of Strategic Octopuses",name_es:"Federación de Pulpos Estratégicos",name_fr:"Fédération des Pieuvres Stratégiques",name_de:"Föderation strategischer Oktopusse",notes_it:["Otto mosse avanti, presa salda."],notes_en:["Eight moves ahead, firm grip."],notes_es:["Ocho jugadas por delante, agarre firme."],notes_fr:["Huit coups d’avance, prise ferme."],notes_de:["Acht Züge voraus, fester Griff."]},
+  { ico:"🦥",name_it:"Consiglio dei Bradipi Riflessivi",name_en:"Council of Reflective Sloths",name_es:"Consejo de Perezosos Reflexivos",name_fr:"Conseil des Paresseux Réfléchis",name_de:"Rat der nachdenklichen Faultiere",notes_it:["Decisione lenta ma convinta."],notes_en:["Slow yet resolute decision."],notes_es:["Decisión lenta pero firme."],notes_fr:["Décision lente mais résolue."],notes_de:["Langsam, aber entschlossen."]}
 ];
 
 /* ==== UI refs ==== */
 const qs = (sel)=>document.querySelector(sel);
 const setText = (id, txt)=>{ const el=qs(id); if(el) el.textContent = txt; };
 
-const backBtn  = qs('#backBtn');
-const homeBtn  = qs('#homeBtn');
-const langSel  = qs('#langSelect');
 const subtitle = qs('#subtitle');
-const lblQ     = qs('#lblQ');
-const lblA     = qs('#lblA');
-const qView    = qs('#qView');
+const lblQ = qs('#lblQ');
+const lblA = qs('#lblA');
+const qView = qs('#qView');
 const leadNode = qs('#lead');
 const answerEl = qs('#answer');
 const shareBtn = qs('#shareBtn');
@@ -589,12 +449,10 @@ const againBtn = qs('#againBtn');
 const metaInfo = qs('#metaInfo');
 const styleBadge = qs('#styleBadge');
 const lblP = qs('#lblP');
-
 const topPct = qs('#topPct');
 const bottomPct = qs('#bottomPct');
 const pctLabelTop = qs('#pctLabel');
 const pctLabelBottom = qs('#pctLabelBottom');
-
 const committeeTitle = qs('#committeeTitle');
 const motIco  = qs('#motIco');
 const motName = qs('#motName');
@@ -603,8 +461,54 @@ const chipCon = qs('#chipCon');
 const chipAst = qs('#chipAst');
 const chipsWrap = qs('#chipsWrap');
 const motNote = qs('#motNote');
+const creditInfo = qs('#creditInfo');
 
-/* ==== Helpers ==== */
+/* ==== Overlay helpers ==== */
+const overlay = qs('#overlay');
+const overlayFrame = qs('#overlay-frame');
+function openOverlay(src){
+  overlayFrame.src = src;
+  overlay.style.display = 'grid';
+  overlay.setAttribute('aria-hidden','false');
+}
+function closeOverlay(){
+  overlay.style.display = 'none';
+  overlay.setAttribute('aria-hidden','true');
+  overlayFrame.src = 'about:blank';
+}
+
+/* ==== Credit helpers ==== */
+function getCrediti(){
+  if(IS_ADMIN) return 9999;
+  const raw = LS.getItem('crediti');
+  if(raw==null){
+    LS.setItem('crediti','3'); // seed free
+    return 3;
+  }
+  return parseInt(raw,10)||0;
+}
+function setCrediti(n){
+  if(IS_ADMIN) return updateCreditInfo(9999);
+  n = Math.max(0, parseInt(n,10)||0);
+  LS.setItem('crediti', String(n));
+  updateCreditInfo(n);
+}
+function updateCreditInfo(n=getCrediti()){
+  const T = I18N[lang] || I18N.it;
+  if(creditInfo) creditInfo.textContent = T.credits(n);
+}
+function usaCreditoOApriStore(){
+  if(IS_ADMIN) return true;
+  const n = getCrediti();
+  if(n <= 0){
+    openOverlay("/store/credit-store.html");
+    return false;
+  }
+  setCrediti(n-1);
+  return true;
+}
+
+/* ==== Helpers varie ==== */
 function normalizeOneParagraph(s=""){
   return String(s)
     .replace(/\s*\n+\s*/g," ")
@@ -658,7 +562,7 @@ function setTitlesAndTexts(q){
   chipAst.textContent = `${T.chipsAst} 0`;
 }
 
-/* ======== 🔢 Probabilità (semplice, locale) ======== */
+/* ======== Probabilità (locale) ======== */
 function detectCategory(q){
   const t=(q||'').toLowerCase();
   const CAT_RX = [
@@ -708,9 +612,7 @@ function computeProbability(q){
   return { pct: clamp(Math.round(score), 25, 92), cat, f };
 }
 
-/* ======== 🧠 Motivazione COERENTE e CORTA (estratta dalla risposta) ======== */
-/* Prende 1–2 frasi dalla risposta che suonano come ragione/condizione.
-   Se non trova pattern, sintetizza dalle ultime frasi. Limite ~180 caratteri. */
+/* ======== Motivazioni ======== */
 function shortMotivationFromAnswer(answerText, question){
   const T = I18N[lang] || I18N.it;
   if(!answerText){ return T.motFallback; }
@@ -718,19 +620,15 @@ function shortMotivationFromAnswer(answerText, question){
   const a = String(answerText).replace(/\s*\n+\s*/g,' ').trim();
   const splits = a.split(/(?<=[.!?…])\s+/).map(s=>s.trim()).filter(Boolean);
 
-  // pattern per frase causale/condizionale
   const KW = (lang==='it') ? [/perché/i,/perche/i,/quindi/i,/dunque/i,/se\b/i,/quando\b/i,/equilibrio/i,/rischio/i,/beneficio/i]
           : (lang==='en') ? [/because/i,/so\b/i,/thus/i,/if\b/i,/when\b/i,/balance/i,/risk/i,/benefit/i]
           : (lang==='es') ? [/porque/i,/si\b/i,/cuando\b/i,/equilibrio/i,/riesgo/i,/beneficio/i]
           : (lang==='fr') ? [/parce que/i,/si\b/i,/quand\b/i,/équilibre/i,/risque/i,/bénéfice/i]
           :                 [/weil/i,/wenn\b/i,/wann\b/i,/gleichgewicht|balance/i,/risiko/i,/nutzen|vorteil/i];
 
-  // 1) cerca una frase causale in mezzo al testo
   let pick1 = splits.find(s => KW.some(rx=>rx.test(s))) || splits[splits.length-2] || splits[0];
-  // 2) prova ad aggiungere una seconda frase breve di supporto
   let pick2 = splits.find(s => s!==pick1 && s.length<=120 && /responsabil|sicure|routine|passo|tempo|costi|benef/i.test(s)) || "";
 
-  // Pulisci e compatta
   function clip(s){
     s = s.replace(/\s{2,}/g,' ').trim();
     if(s.length>180){ s = s.slice(0,177).replace(/\s+\S*$/,'')+"…"; }
@@ -740,12 +638,10 @@ function shortMotivationFromAnswer(answerText, question){
   let out = clip(pick1 || '');
   if(pick2 && (out.length + pick2.length + 1) < 190) out += " " + clip(pick2);
 
-  // Fallback se troppo generico
   if(out.length < 24) out = T.motFallback;
   return out;
 }
 
-/* ==== Motivazioni pseudo-scientifiche (solo per WTF, opzionali) ==== */
 const SCI_MOTIVATIONS = {
   it:[
     "Studio CEDSA: 312 soggetti + 2 cavie alticce; effetto stimato all’87% (p≈0,02).",
@@ -778,7 +674,7 @@ function pickScientificMotivation(){
   return pick(list);
 }
 
-/* ======== 😈 Modalità “Sorprendimi” (comitato) ======== */
+/* ======== Comitato (sorpresa) ======== */
 function buildScuffleExtra(){
   const minor = rndInt(1,5);
   const injured = rndInt(0,3);
@@ -838,12 +734,11 @@ function isSurprise(req){
       || LS.getItem('absurd_prompt')==='1';
 }
 
-/* ==== Enforcer formato (1 paragrafo, # frasi) ==== */
+/* ==== Enforcer formato ==== */
 function enforceFormat(text, stile){
   let t = normalizeOneParagraph(text || "");
   t = t.replace(/\b(morale|morale della favola|in conclusione|ricorda che)\b[\s\S]*$/i,"").trim();
   if(!/[.!?…]$/.test(t)) t += ".";
-  const minSent = (stile==='wtf') ? 6 : 8;
   const maxSent = (stile==='wtf') ? 9 : 11;
   let parts = t.split(/(?<=[.!?…])\s+/);
   if(parts.length > maxSent) parts = parts.slice(0, maxSent);
@@ -861,11 +756,12 @@ function enforceFormat(text, stile){
 
   let domanda = req.domanda || LS.getItem('domanda') || "";
   setTitlesAndTexts(domanda);
-  qs('#qView').textContent = domanda || '—';
+  updateCreditInfo(); // mostra crediti
+  qView.textContent = domanda || '—';
 
   try{
-    // ✅ Gate crediti: se 0 apre lo store/rewarded e interrompe
-    if (!usaCreditoOApriStore()) return;
+    // Gating crediti: se finiti, apri Store e interrompi
+    if(!usaCreditoOApriStore()) return;
 
     const headers = { "Content-Type": "application/json" };
     if (prefs.pro === true) headers["x-pro"] = "1";
@@ -882,17 +778,16 @@ function enforceFormat(text, stile){
 
     // Risposta principale
     let answerText = enforceFormat((data.answer||"").trim(), style);
-    qs('#answer').textContent = answerText;
-    decorateEmBits(qs('#answer'));
+    answerEl.textContent = answerText;
+    decorateEmBits(answerEl);
 
-    // === Probabilità & Motivazione (COERENTE e CORTA) ===
+    // Probabilità & motivazione
     const { pct } = computeProbability(domanda);
     const pctStr = pct + "%";
     topPct.textContent = pctStr;
     bottomPct.textContent = pctStr;
 
     const T = I18N[lang] || I18N.it;
-
     if (surprise){
       motIco.style.display = '';
       chipsWrap.style.display = 'flex';
@@ -903,21 +798,36 @@ function enforceFormat(text, stile){
       committeeTitle.textContent = title;
       motIco.style.display = 'none';
       chipsWrap.style.display = 'none';
-      // NUOVO: motivazione estratta dalla risposta (1–2 frasi, ~<=180 char)
       motNote.textContent = (style==='wtf') ? pickScientificMotivation() : shortMotivationFromAnswer(answerText, domanda);
     }
 
     // storia locale
-    const hist = JSON.parse(LS.getItem('cronologia')||'[]);
+    const hist = JSON.parse(LS.getItem('cronologia')||'[]');
     hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct, motivazione: (style==='wtf')? undefined : motNote.textContent });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
   }catch(e){
-    qs('#answer').textContent = (I18N[lang]||I18N.it).error;
+    answerEl.textContent = (I18N[lang]||I18N.it).error;
     console.error(e);
   }
 })();
 
-/* ==== Nav / lingua ==== */
+/* ==== Messaggi da store / rewarded ==== */
+window.addEventListener("message",(ev)=>{
+  const d = ev.data || {};
+  if(d.type === "purchase_completed"){
+    setCrediti(getCrediti() + (parseInt(d.amount,10)||0));
+    closeOverlay();
+  }
+  if(d.type === "open_rewarded"){
+    openOverlay("/ads/rewarded.html");
+  }
+  if(d.type === "rewarded_completed"){
+    setCrediti(getCrediti() + (parseInt(d.amount,10)||1));
+    closeOverlay();
+  }
+});
+
+/* ==== Nav / lingua / share ==== */
 qs('#backBtn').onclick = ()=> history.length > 1 ? history.back() : location.replace('index.html');
 qs('#homeBtn').onclick = ()=> location.href='index.html';
 qs('#langSelect').onchange = ()=>{
