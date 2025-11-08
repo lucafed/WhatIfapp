@@ -1,4 +1,4 @@
-<!-- FILE: fifth.html (rewarded + i18n overlay + fallback garantito) -->
+<!-- FILE: fifth.html (completo: i18n + rewarded robusto) -->
 <!DOCTYPE html>
 <html lang="it" data-theme="whatif">
 <head>
@@ -49,13 +49,11 @@ h1{
 .story{white-space:normal;line-height:1.68;font-size:18px;letter-spacing:.1px;text-wrap:pretty}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
-.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);
-  box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 28px var(--glow)}
+.btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.35), 0 0 28px var(--glow)}
 .btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--line);color:#fff}
 .small{font-size:12px;color:var(--muted)}
 .hr{height:1px;background:rgba(255,255,255,.10);margin:12px 0}
-.badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:#eaf3ee;
-  background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;padding:6px 10px}
+.badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;padding:6px 10px}
 .lead{color:#E7F2EE;font-size:14px;line-height:1.45;opacity:.86;margin:2px 0 10px}
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
@@ -71,29 +69,22 @@ h1{
   background:linear-gradient(180deg,var(--acc),var(--acc2));
   color:var(--ink);box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px var(--glow)
 }
-.result-box{background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-  border:1px solid var(--line);border-radius:16px;padding:16px 14px;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 22px rgba(0,0,0,.28)}
+.result-box{background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));border:1px solid var(--line);border-radius:16px;padding:16px 14px;box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 22px rgba(0,0,0,.28)}
 .result-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
 .result-title{font-weight:900;font-size:15px;letter-spacing:.2px}
 .mot{display:grid;grid-template-columns:auto 1fr;gap:10px;margin-top:10px}
 .mot .note{font-size:15px;line-height:1.6;color:var(--fg);opacity:.92}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;opacity:.9}
-.chip{font-size:11px;font-weight:900;padding:3px 7px;border-radius:999px;
-  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)}
+.chip{font-size:11px;font-weight:900;padding:3px 7px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)}
 @media (max-width:420px){.result-title{font-size:14px} .mot .note{font-size:15.5px;line-height:1.65}}
 
 /* Overlay */
-#overlay{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.6);
-  backdrop-filter:blur(2px);z-index:9999}
-#overlay-frame{width:100%;max-width:520px;height:78vh;border:1px solid var(--line);
-  border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+#overlay{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);z-index:9999}
+#overlay-frame{width:100%;max-width:520px;height:78vh;border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 
 /* Toast */
-.toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
-  background:rgba(20,28,34,.96);border:1px solid var(--line);color:#fff;padding:10px 14px;
-  border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:10000;display:none}
+.toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:rgba(20,28,34,.96);border:1px solid var(--line);color:#fff;padding:10px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:10000;display:none}
 </style>
 </head>
 
@@ -175,30 +166,42 @@ h1{
 <div class="toast" id="toast"></div>
 
 <script>
-/* ==== State/Prefs ==== */
+/* ===================== STATE / PREFS ===================== */
 const LS = localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
 const style = prefs.stile || 'whatif';
 const periodo = prefs.periodo || 'future';
-const IS_ADMIN = !!LS.getItem('admin_token'); // ∞
+const IS_ADMIN = !!LS.getItem('admin_token');
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 
-/* ==== System prompts (UI only) ==== */
-const SYSTEM_WTF = `SEI “WHAT THE F”. ...`;
-const SYSTEM_WHIF = `SEI “WHAT IF”. ...`;
+/* System prompts (usati dal backend; li teniamo completi per chiarezza UI) */
+const SYSTEM_WTF = `SEI “WHAT THE F”.
+Obiettivo: monologo breve, continuo, da bar poetico. Ironia cattiva ma affettuosa. Sarcasmo quotidiano.
+Gli oggetti commentano/giudicano/si ribellano. Linguaggio vivo e diretto, con volgarità leggere e sensate.
+Atmosfera: sbronza improvvisata ma lucida. Nessuna morale esplicita.
+Formato OBBLIGATORIO: 1 solo paragrafo; 6–9 frasi; niente elenco/emoji/titoli; finale con sorriso stanco e vero (sottinteso).
+Stile identico agli esempi originali. Niente consigli, niente morale, ritmo parlato e immagini concrete.`;
 
-/* ==== Lang ==== */
+const SYSTEM_WHIF = `SEI “WHAT IF”.
+Obiettivo: risposta empatica + pragmatica (60% analisi, 40% realtà vissuta). Tono umano.
+Formato OBBLIGATORIO: 1 paragrafo; 8–11 frasi; niente elenco/emoji/titoli; chiudi con micro-spinta operativa.
+Linee guida: nomina vincoli (tempo/budget/energia), 1–2 indicatori misurabili, cicli brevi, revisione ritmica, niente moralismi.`;
+
+/* ===================== LINGUA & I18N ===================== */
 const SUP_LANG = ['it','en','es','fr','de'];
 const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
+
 function detectLang(text=''){
   const t=(text||'').toLowerCase();
   if(/[¿¡]/.test(t)) return 'es';
-  const bank={ it:[" che "," perché"," se "," quando"," dove"," non "," sono "," vorrei"," posso"," e se"," una settimana"," come"],
-               en:[" what "," if "," the "," and "," you "," are "," will "," would "," can "," should "," could "],
-               es:[" qué"," si "," porque"," cuando"," dónde"," no "," soy "," puedo"," quiero","¿"," semana "],
-               fr:[" quoi"," si "," pourquoi"," quand"," où"," pas "," je "," peux"," si je"," et si"],
-               de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]};
+  const bank={
+    it:[" che "," perché"," se "," quando"," dove"," non "," sono "," vorrei"," posso"," e se"," una settimana"," come"],
+    en:[" what "," if "," the "," and "," you "," are "," will "," would "," can "," should "," could "],
+    es:[" qué"," si "," porque"," cuando"," dónde"," no "," soy "," puedo"," quiero","¿"," semana "],
+    fr:[" quoi"," si "," pourquoi"," quand"," où"," pas "," je "," peux"," si je"," et si"],
+    de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
+  };
   const score={}; for(const L of SUP_LANG){ score[L]=0; bank[L]?.forEach(w=>{ if(t.includes(w)) score[L]++; }); }
   let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
   if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
@@ -209,16 +212,14 @@ let lang = manualLang ? (SUP_LANG.includes((LS.getItem('lang')||'').toLowerCase(
 if(!SUP_LANG.includes(lang)) lang='it';
 document.documentElement.lang=lang;
 
-/* ==== I18N ==== */
 const I18N = {
   it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
-       sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
-       p:"Esito & motivazioni", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
-       copied:"Copiato!", error:"[errore server]",
+       sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta", p:"Esito & motivazioni",
+       share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda", copied:"Copiato!", error:"[errore server]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
-        ? `Stile: What the F · 6–9 frasi · paragrafo unico · tono asciutto · modalità: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`,
+          ? `Stile: What the F · 6–9 frasi · paragrafo unico · tono asciutto · modalità: ${p==='past'?'Passato':'Futuro'}.`
+          : `Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`,
        pctLabel:"% probabilità che accada",
        votersTitle:"Comitato", seriousTitle:"Motivazione", scientificTitle:"Motivazione (scientificamente provata)",
        chipsFav:"favorevoli", chipsCon:"contrari", chipsAst:"astenuti",
@@ -228,13 +229,12 @@ const I18N = {
        toastAdded:(n)=>`+${n} credito${n>1?'i':''} aggiunto${n>1?'i':''}` },
 
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
-       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-       p:"Outcome & rationales", share:"📤 Share / Copy", again:"🔁 Ask another",
-       copied:"Copied!", error:"[server error]",
+       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer", p:"Outcome & rationales",
+       share:"📤 Share / Copy", again:"🔁 Ask another", copied:"Copied!", error:"[server error]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
-        ? `Style: What the F · 6–9 sentences · single paragraph · dry tone · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,
+          ? `Style: What the F · 6–9 sentences · single paragraph · dry tone · mode: ${p==='past'?'Past':'Future'}.`
+          : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,
        pctLabel:"% probability it happens",
        votersTitle:"Committee", seriousTitle:"Rationale", scientificTitle:"Rationale (scientifically grounded)",
        chipsFav:"in favour", chipsCon:"against", chipsAst:"abstained",
@@ -244,13 +244,12 @@ const I18N = {
        toastAdded:(n)=>`+${n} credit${n>1?'s':''} added` },
 
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
-       sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
-       p:"Resultado y motivos", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra pregunta",
-       copied:"¡Copiado!", error:"[error del servidor]",
+       sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta", p:"Resultado y motivos",
+       share:"📤 Compartir / Copiar", again:"🔁 Hacer otra pregunta", copied:"¡Copiado!", error:"[error del servidor]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
-        ? `Estilo: What the F · 6–9 frases · un solo párrafo · tono seco · modo: ${p==='past'?'Pasado':'Futuro'}.`
-        : `Estilo: What if (60% análisis, 40% realidad) · 8–11 frases · un solo párrafo · modo: ${p==='past'?'Pasado':'Futuro'}.`,
+          ? `Estilo: What the F · 6–9 frases · un solo párrafo · tono seco · modo: ${p==='past'?'Pasado':'Futuro'}.`
+          : `Estilo: What if (60% análisis, 40% realidad) · 8–11 frases · un solo párrafo · modo: ${p==='past'?'Pasado':'Futuro'}.`,
        pctLabel:"% probabilidad de que ocurra",
        votersTitle:"Comité", seriousTitle:"Motivación", scientificTitle:"Motivación (con base científica)",
        chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones",
@@ -260,13 +259,12 @@ const I18N = {
        toastAdded:(n)=>`+${n} crédito${n>1?'s':''} añadido${n>1?'s':''}` },
 
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
-       sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
-       p:"Issue & motivations", share:"📤 Partager / Copier", again:"🔁 Poser une autre question",
-       copied:"Copié !", error:"[erreur serveur]",
+       sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse", p:"Issue & motivations",
+       share:"📤 Partager / Copier", again:"🔁 Poser une autre question", copied:"Copié !", error:"[erreur serveur]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
-        ? `Style : What the F · 6–9 phrases · un seul paragraphe · ton sec · mode : ${p==='past'?'Passé':'Futur'}.`
-        : `Style : What if (60 % analyse, 40 % réel) · 8–11 phrases · un seul paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`,
+          ? `Style : What the F · 6–9 phrases · un seul paragraphe · ton sec · mode : ${p==='past'?'Passé':'Futur'}.`
+          : `Style : What if (60 % analyse, 40 % réel) · 8–11 phrases · un seul paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`,
        pctLabel:"% de probabilité que cela arrive",
        votersTitle:"Comité", seriousTitle:"Motivation", scientificTitle:"Motivation (fondée scientifiquement)",
        chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions",
@@ -276,13 +274,12 @@ const I18N = {
        toastAdded:(n)=>`+${n} crédit${n>1?'s':''} ajouté${n>1?'s':''}` },
 
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
-       sub:(q)=>`Frage: „${q}”`, q:"Deine Frage", a:"Antwort",
-       p:"Ergebnis & Begründungen", share:"📤 Teilen / Kopieren", again:"🔁 Weitere Frage stellen",
-       copied:"Kopiert!", error:"[Serverfehler]",
+       sub:(q)=>`Frage: „${q}”`, q:"Deine Frage", a:"Antwort", p:"Ergebnis & Begründungen",
+       share:"📤 Teilen / Kopieren", again:"🔁 Weitere Frage stellen", copied:"Kopiert!", error:"[Serverfehler]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
-        ? `Stil: What the F · 6–9 Sätze · ein Absatz · trockener Ton · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
-        : `Stil: What if (60 % Analyse, 40 % real) · 8–11 Sätze · ein Absatz · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
+          ? `Stil: What the F · 6–9 Sätze · ein Absatz · trockener Ton · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
+          : `Stil: What if (60 % Analyse, 40 % real) · 8–11 Sätze · ein Absatz · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
        pctLabel:"% Wahrscheinlichkeit, dass es passiert",
        votersTitle:"Komitee", seriousTitle:"Begründung", scientificTitle:"Begründung (wissenschaftlich fundiert)",
        chipsFav:"dafür", chipsCon:"dagegen", chipsAst:"Enthaltungen",
@@ -292,7 +289,7 @@ const I18N = {
        toastAdded:(n)=>`+${n} Credit${n>1?'s':''} gutgeschrieben` }
 };
 
-/* Leads + motivazioni sintetiche (come prima, omesso qui per brevità) */
+/* Leads & motivazioni brevi (multi-lingua) */
 const LEADS = {
   it:{wtf:["Entri piano, il caos ti riconosce e oggi ti lascia passare."],
       whatif:["Metti giù le chiavi e lasci parlare il silenzio che non ti giudica."]},
@@ -303,14 +300,24 @@ const LEADS = {
   de:{wtf:["Du trittst leise ein; das Chaos lässt dich durch."], whatif:["Leg die Schlüssel hin und lass die Stille sprechen."]}
 };
 const SCI = {
-  it:["Studio CEDSA: 312 soggetti...","Protocollo PignaLab: 98 partecipanti...","Istituto Svizzero..."],
-  en:["CEDSA study: 312 subjects...","PineCone protocol: 98 participants...","Swiss Institute..."],
-  es:["Estudio CEDSA...","Protocolo PineCone...","Instituto Suizo..."],
-  fr:["Étude CEDSA...","Protocole PineCone...","Institut Suisse..."],
-  de:["CEDSA-Studie...","PineCone-Protokoll...","Schweizer Institut..."]
+  it:["Studio CEDSA: 312 soggetti + 2 cavie alticce; effetto stimato all’87% (p≈0,02).",
+      "Protocollo PignaLab: 98 partecipanti + 1 piccione; risultato replicato, CI sorprendente.",
+      "Istituto Svizzero Formaggi & Motivazione: RCT (n=120); gruppo formaggio +72% successo."],
+  en:["CEDSA study: 312 subjects + 2 tipsy guinea animals; estimated effect 87% (p≈0.02).",
+      "PineCone protocol: 98 participants + 1 pigeon; replicated result, surprising CI.",
+      "Swiss Institute of Cheese & Motivation: RCT (n=120); cheese group +72% success."],
+  es:["Estudio CEDSA: 312 sujetos + 2 cobayas alegres; efecto estimado 87% (p≈0,02).",
+      "Protocolo PineCone: 98 participantes + 1 paloma; resultado replicado, IC sorprendente.",
+      "Instituto Suizo de Queso y Motivación: ECA (n=120); grupo queso +72% éxito."],
+  fr:["Étude CEDSA : 312 sujets + 2 cobayes éméchés ; effet estimé 87 % (p≈0,02).",
+      "Protocole PineCone : 98 participants + 1 pigeon ; résultat répliqué, IC surprenante.",
+      "Institut Suisse Fromage & Motivation : ECR (n=120) ; groupe fromage +72 % succès."],
+  de:["CEDSA-Studie: 312 Probanden + 2 beschwipste Meerschweinchen; Effekt 87 % (p≈0,02).",
+      "PineCone-Protokoll: 98 Teilnehmer + 1 Taube; repliziertes Ergebnis, überraschendes KI.",
+      "Schweizer Institut für Käse & Motivation: RCT (n=120); Käsegruppe +72 % Erfolg."]
 };
 
-/* ==== Refs ==== */
+/* ===================== REFS ===================== */
 const qs = (sel)=>document.querySelector(sel);
 const subtitle = qs('#subtitle');
 const lblQ = qs('#lblQ');
@@ -338,7 +345,7 @@ const overlay = qs('#overlay');
 const overlayFrame = qs('#overlay-frame');
 const toast = qs('#toast');
 
-/* ==== Wallet/Credits + legacy ==== */
+/* ===================== WALLET & CREDITI ===================== */
 const WKEY = "whatif_wallet";
 function readWallet(){
   try{ const w=JSON.parse(localStorage.getItem(WKEY)||"{}")||{};
@@ -416,14 +423,13 @@ function showToast(text){
   setTimeout(()=> toast.style.display='none', 1600);
 }
 
-/* ==== UI helpers ==== */
-function setText(id, txt){ const el=qs(id); if(el) el.textContent = txt; }
+/* ===================== HELPERS UI ===================== */
+function t(){ return I18N[lang]||I18N.it; }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+="."; return t; }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim(); }
 
-/* ==== Overlay (store/rewarded) ==== */
-function t(){ return I18N[lang]||I18N.it; }
+/* ===================== OVERLAY / STORE / REWARDED ===================== */
 function storeFallbackHTML(){
   const T=t();
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -447,18 +453,18 @@ let rewardTimer=null, rewardGranted=false;
 function openOverlay(url){
   overlay.style.display='grid'; overlay.setAttribute('aria-hidden','false');
   overlayFrame.removeAttribute('srcdoc');
-  // passa lingua in query
+  // passa lingua
   const sep = url.includes('?') ? '&' : '?';
   overlayFrame.src = `${url}${sep}lang=${encodeURIComponent(lang)}`;
   overlayFrame.setAttribute('srcdoc', storeFallbackHTML());
-  // prova a comunicare la lingua
+  // comunica lingua
   setTimeout(()=>{ try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang}, '*'); }catch{} }, 200);
 }
 function openStore(){ openOverlay("/store/credit-store.html"); }
 function openRewarded(){
   rewardGranted=false;
   openOverlay("/ads/rewarded.html");
-  // Fallback: accredita +1 se l'ad non manda eventi entro 28s
+  // fallback: accredita +1 se niente eventi
   clearTimeout(rewardTimer);
   rewardTimer = setTimeout(()=>{
     if(!rewardGranted){
@@ -472,26 +478,26 @@ function closeOverlay(){
   overlayFrame.src='about:blank'; overlayFrame.removeAttribute('srcdoc');
   clearTimeout(rewardTimer);
 }
-/* Chiudi overlay con Esc o click sfondo */
+/* chiusura comoda */
 overlay.addEventListener('click',e=>{ if(e.target===overlay) closeOverlay(); });
 window.addEventListener('keydown',e=>{ if(e.key==='Escape' && overlay.style.display==='grid') closeOverlay(); });
 
-/* ==== UI texts ==== */
+/* ===================== UI TEXTS ===================== */
 function setTitlesAndTexts(q){
   const T=t();
-  setText('#title', style==='wtf' ? T.titleWTF : T.titleWHF);
+  document.getElementById('title').textContent = style==='wtf' ? T.titleWTF : T.titleWHF;
   subtitle.textContent = T.sub(q || '—');
   lblQ.textContent = T.q; lblA.textContent = T.a; lblP.textContent = T.p;
   shareBtn.textContent = T.share; againBtn.textContent = T.again;
   styleBadge.textContent = (style==='wtf') ? T.styleWTF : T.styleWHF;
   metaInfo.textContent = T.meta(style, periodo);
-  qs('#pctLabel').textContent = T.pctLabel; qs('#pctLabelBottom').textContent = T.pctLabel;
+  pctLabelTop.textContent = T.pctLabel; if(pctLabelBottom) pctLabelBottom.textContent = T.pctLabel;
   const bank = (LEADS[lang] && LEADS[lang][style] && LEADS[lang][style].length) ? LEADS[lang][style] : LEADS.it.whatif;
-  leadNode.textContent = oneSentence(pick(bank)||'') || '—';
+  leadNode.textContent = oneSentence(pick(bank) || '') || '—';
   chipFav.textContent = `${T.chipsFav} 0`; chipCon.textContent = `${T.chipsCon} 0`; chipAst.textContent = `${T.chipsAst} 0`;
 }
 
-/* ==== Probabilità/minimotivi ==== */
+/* ===================== LOGICA RISPOSTA ===================== */
 function computeProbability(q){
   const t=(q||'').toLowerCase(); let score=50;
   if(/\b(7|14|21|30|60|90)\b/.test(t)) score+=12;
@@ -534,23 +540,24 @@ function renderCommitteeLike(surprise){
   }
 }
 
-/* ==== Run ==== */
+/* ===================== RUN ===================== */
 (async ()=>{
   const sel = document.getElementById('langSelect'); if(sel) sel.value = lang;
+
   const req = JSON.parse(LS.getItem('whatif_request')||'{}');
   const surprise = (new URLSearchParams(location.search)).get('src')==='surprise'
-                   || req?.surprise === true || req?.micro?.surprise === true
-                   || LS.getItem('surprise_mode')==='1';
+                || req?.surprise === true || req?.micro?.surprise === true
+                || LS.getItem('surprise_mode')==='1';
 
   const domanda = req.domanda || LS.getItem('domanda') || "";
   setTitlesAndTexts(domanda); updateCreditInfo(); qView.textContent = domanda || '—';
 
-  // Gating crediti prima della chiamata
+  // Crediti prima della chiamata
   if(!IS_ADMIN){
     const left = getAvailable();
     if(!(left===Infinity) && left<=0){ openStore(); answerEl.textContent = t().noCredits; return; }
     if(!consumeOne()){ openStore(); answerEl.textContent = t().noCredits; return; }
-    updateCreditInfo(); // aggiorna subito dopo consumo
+    updateCreditInfo();
   }
 
   try{
@@ -558,8 +565,12 @@ function renderCommitteeLike(surprise){
     if (prefs.pro === true) headers["x-pro"] = "1";
     const adminToken = localStorage.getItem("admin_token"); if (adminToken) headers["x-admin-token"] = adminToken;
 
-    const r = await fetch("/api/ask",{ method:"POST", headers,
-      body:JSON.stringify({ domanda, lang, stile: style, periodo, system: (style==='wtf'?SYSTEM_WTF:SYSTEM_WHIF), extra:"", micro:req.micro||{} }) });
+    const r = await fetch("/api/ask",{
+      method:"POST", headers,
+      body:JSON.stringify({ domanda, lang, stile: style, periodo,
+                            system: (style==='wtf'?SYSTEM_WTF:SYSTEM_WHIF),
+                            extra:"", micro:req.micro||{} })
+    });
     const data = await r.json().catch(()=>null);
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
 
@@ -582,19 +593,16 @@ function renderCommitteeLike(surprise){
   }catch(e){ answerEl.textContent = t().error; console.error(e); }
 })();
 
-/* ==== Messaggi store/rewarded ==== */
+/* ===================== MESSAGGI STORE/REWARDED ===================== */
 window.addEventListener("message",(ev)=>{
   const d = ev.data || {};
   const amt = Number.isFinite(parseInt(d.amount,10)) ? parseInt(d.amount,10) : null;
 
-  // acquisto
   if(d.type === "purchase_completed"){
     addCredits(amt ?? 0); updateCreditInfo(); showToast(t().toastAdded(amt ?? 0)); closeOverlay(); return;
   }
-  // apri rewarded dentro fallback
   if(d.type === "open_rewarded"){ openRewarded(); return; }
 
-  // completamenti rewarded (tutte le varianti note)
   if(["rewarded_completed","rewarded_done","reward_complete","rewarded","ad_finished"].includes(d.type)){
     if(!rewardGranted){
       addCredits(amt ?? 1); updateCreditInfo(); showToast(t().toastAdded(amt ?? 1));
@@ -602,22 +610,20 @@ window.addEventListener("message",(ev)=>{
     }
     return;
   }
-
   if(d.type === "close_overlay"){ closeOverlay(); return; }
 });
 
-/* ==== Sync da altre tab/admin ==== */
+/* ===================== SYNC E NAV ===================== */
 window.addEventListener('storage',(e)=>{
   if(e.key==="whatif_wallet_sync" || e.key==="whatif_credits"){ updateCreditInfo(); }
 });
-
-/* ==== Nav/Lang/Share ==== */
 qs('#backBtn').onclick = ()=> history.length > 1 ? history.back() : location.replace('index.html');
 qs('#homeBtn').onclick = ()=> location.href='index.html';
 qs('#langSelect').onchange = ()=>{
   const v = qs('#langSelect').value;
-  LS.setItem('lang', v); LS.setItem('lang_manual','1'); document.documentElement.lang = v;
-  // se overlay aperto, riaprilo localizzato
+  LS.setItem('lang', v); LS.setItem('lang_manual','1');
+  document.documentElement.lang = v;
+  // se overlay aperto, chiudo e ricarico (così rinasce localizzato)
   const wasOpen = (overlay.style.display==='grid'); closeOverlay(); location.reload();
 };
 qs('#shareBtn').onclick = async()=>{
