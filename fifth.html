@@ -260,7 +260,7 @@ Obiettivo: risposta empatica + pragmatica (60% analisi, 40% realtà vissuta). To
 Formato OBBLIGATORIO: 1 paragrafo; 8–11 frasi; niente elenco/emoji/titoli; chiudi con micro-spinta operativa.
 Linee guida: nomina vincoli (tempo/budget/energia), 1–2 indicatori misurabili, cicli brevi, revisione ritmica, niente moralismi.`;
 
-/* ===== Lingua: auto-detect se non scelta manualmente ===== */
+/* ===== Lingua ===== */
 const SUP_LANG = ['it','en','es','fr','de'];
 const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
@@ -275,17 +275,11 @@ function detectLang(text=''){
     fr:[" quoi"," si "," pourquoi"," quand"," où"," pas "," je "," peux"," si je"," et si"],
     de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
   };
-  const score = {};
-  for(const L of SUP_LANG){ score[L]=0; bank[L].forEach(w=>{ if(t.includes(w)) score[L]++; }); }
-  let best='it', max=-1;
-  for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
-  if(max<=0){
-    const nav = (navigator.language||'it').slice(0,2).toLowerCase();
-    if(SUP_LANG.includes(nav)) return nav;
-  }
+  const score = {}; SUP_LANG.forEach(L=>{score[L]=0; bank[L].forEach(w=>{ if(t.includes(w)) score[L]++; });});
+  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
+  if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
   return best;
 }
-
 const manualLang = LS.getItem('lang_manual') === '1';
 let langStored = (LS.getItem('lang') || '').toLowerCase();
 let lang = manualLang ? (SUP_LANG.includes(langStored)?langStored:'it') : detectLang(domandaEarly);
@@ -325,7 +319,6 @@ const I18N = {
        chipsFav:"favorevoli", chipsCon:"contrari", chipsAst:"astenuti",
        motFallback:"Motivo: scelta sostenuta da benefici concreti a breve, con vincoli gestibili.",
        credits:(n)=>`💰 Crediti: ${n}` },
-
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
        p:"Outcome & rationales", share:"📤 Share / Copy", again:"🔁 Ask another",
@@ -341,7 +334,6 @@ const I18N = {
        chipsFav:"in favour", chipsCon:"against", chipsAst:"abstained",
        motFallback:"Reason: short-term, concrete benefits with manageable constraints.",
        credits:(n)=>`💰 Credits: ${n}` },
-
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
        sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
        p:"Resultado y motivaciones", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra pregunta",
@@ -357,7 +349,6 @@ const I18N = {
        chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones",
        motFallback:"Motivo: beneficios concretos a corto plazo con límites manejables.",
        credits:(n)=>`💰 Créditos: ${n}` },
-
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
        sub:(q)=>`Question : « ${q} »`, q:"Votre question", a:"Réponse",
        p:"Résultat & motivations", share:"📤 Partager / Copier", again:"🔁 Poser une autre question",
@@ -373,7 +364,6 @@ const I18N = {
        chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions",
        motFallback:"Raison : bénéfices concrets à court terme, contraintes maîtrisables.",
        credits:(n)=>`💰 Crédits : ${n}` },
-
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
        sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
        p:"Ergebnis & Begründungen", share:"📤 Teilen / Kopieren", again:"🔁 Neue Frage stellen",
@@ -420,7 +410,7 @@ const LEADS = {
 };
 
 /* ==== Categories (sorpresa) ==== */
-const CATEGORIES = [/* ——— identico al tuo, omesso qui per brevità? No, lo lascio completo —— */ 
+const CATEGORIES = [
   { ico:"🧠",name_it:"Comitato dei Pensieri Sotto la Doccia",name_en:"Shower-Thoughts Committee",name_es:"Comité de Ideas de Ducha",name_fr:"Comité des Idées sous la Douche",name_de:"Komitee der Duschgedanken",notes_it:["Illuminazione logistica a shampoo.","Decisione nata a 38°C."],notes_en:["Logistics epiphany mid-shampoo.","Decision made at 38°C."],notes_es:["Epifanía logística con champú.","Decisión tomada a 38 °C."],notes_fr:["Épiphanie logistique sous le shampoing.","Décision née à 38 °C."],notes_de:["Logistik-Erleuchtung beim Shampoonieren.","Entscheidung bei 38 °C gefallen."]},
   { ico:"📊",name_it:"Ordine degli Ottimisti Moderati",name_en:"Order of Moderate Optimists",name_es:"Orden de los Optimistas Moderados",name_fr:"Ordre des Optimistes Modérés",name_de:"Orden der Mäßigen Optimisten",notes_it:["Aspettative sobrie, calendario stretto."],notes_en:["Sober expectations, tight schedule."],notes_es:["Expectativas sobrias, calendario apretado."],notes_fr:["Attentes sobres, calendrier serré."],notes_de:["Nüchterne Erwartungen, enger Zeitplan."]},
   { ico:"📞",name_it:"Autorità delle Telefonate Fuori Tempo",name_en:"Off-Timing Calls Authority",name_es:"Autoridad de Llamadas Fuera de Hora",name_fr:"Autorité des Appels Hors-Timing",name_de:"Behörde für Anrufe zur Unzeit",notes_it:["Parere arrivato alle 07:12.","Consiglio durante squillo prolungato."],notes_en:["Opinion at 07:12.","Advice during a long ring."],notes_es:["Opinión a las 07:12.","Consejo durante tono largo."],notes_fr:["Avis à 07 h 12.","Conseil pendant une sonnerie prolongée."],notes_de:["Meinung um 07:12.","Rat während des Dauerklingelns."]},
@@ -477,21 +467,66 @@ function closeOverlay(){
   overlayFrame.src = 'about:blank';
 }
 
-/* ==== Credit helpers ==== */
+/* ==== CREDITI — compatibile con admin (whatif_wallet) + fallback 'crediti' ==== */
+const WKEY = 'whatif_wallet';
+function readWallet(){
+  try{
+    const w = JSON.parse(LS.getItem(WKEY) || '{}') || {};
+    const available = Number.isFinite(+w.available) ? +w.available : null;
+    const used      = Number.isFinite(+w.used)      ? +w.used      : 0;
+    const limit     = Number.isFinite(+w.limit)     ? +w.limit     : null;
+    return {available, used, limit};
+  }catch{ return {available:null, used:0, limit:null}; }
+}
+function writeWallet({available, used, limit}){
+  try{
+    const w = readWallet();
+    if(available != null) w.available = Math.max(0, +available);
+    if(used      != null) w.used      = Math.max(0, +used);
+    if(limit     != null) w.limit     = Math.max(0, +limit);
+    // se limit mancante, mantieni coerenza minima
+    if(w.limit == null) w.limit = (w.available||0) + (w.used||0);
+    LS.setItem(WKEY, JSON.stringify(w));
+    LS.setItem('whatif_wallet_sync', String(Date.now())); // notifica altre tab
+  }catch{}
+}
+
+// API locale compatibile con il resto del file
 function getCrediti(){
   if(IS_ADMIN) return 9999;
+  const w = readWallet();
+  if(w.available != null) return Math.max(0, w.available);
+  // fallback legacy key 'crediti'
   const raw = LS.getItem('crediti');
-  if(raw==null){
-    LS.setItem('crediti','3'); // seed free
-    return 3;
-  }
-  return parseInt(raw,10)||0;
+  if(raw==null){ LS.setItem('crediti','3'); return 3; }
+  return Math.max(0, parseInt(raw,10)||0);
 }
 function setCrediti(n){
-  if(IS_ADMIN) return updateCreditInfo(9999);
-  n = Math.max(0, parseInt(n,10)||0);
-  LS.setItem('crediti', String(n));
-  updateCreditInfo(n);
+  if(IS_ADMIN){ updateCreditInfo(9999); return; }
+  const v = Math.max(0, parseInt(n,10)||0);
+  const w = readWallet();
+  if(w.available != null){
+    // mantieni used, aggiorna available, riallinea limit se necessario
+    const newLimit = Math.max(w.limit ?? 0, v + (w.used||0));
+    writeWallet({available:v, used:w.used||0, limit:newLimit});
+  }else{
+    // fallback legacy
+    LS.setItem('crediti', String(v));
+  }
+  updateCreditInfo(v);
+}
+function consumeCredito1(){
+  if(IS_ADMIN) return true;
+  const left = getCrediti();
+  if(left <= 0) return false;
+  const w = readWallet();
+  if(w.available != null){
+    writeWallet({available:left-1, used:(w.used||0)+1, limit:Math.max(w.limit ?? 0, (left-1)+(w.used||0)+1)});
+  }else{
+    LS.setItem('crediti', String(left-1));
+  }
+  updateCreditInfo(left-1);
+  return true;
 }
 function updateCreditInfo(n=getCrediti()){
   const T = I18N[lang] || I18N.it;
@@ -504,9 +539,14 @@ function usaCreditoOApriStore(){
     openOverlay("/store/credit-store.html");
     return false;
   }
-  setCrediti(n-1);
-  return true;
+  return consumeCredito1();
 }
+// aggiorna badge e auto-retry quando i crediti cambiano in altre tab
+window.addEventListener('storage', (e)=>{
+  if(e.key === 'whatif_wallet_sync' || e.key === 'crediti'){
+    updateCreditInfo();
+  }
+});
 
 /* ==== Helpers varie ==== */
 function normalizeOneParagraph(s=""){
@@ -817,6 +857,8 @@ window.addEventListener("message",(ev)=>{
   if(d.type === "purchase_completed"){
     setCrediti(getCrediti() + (parseInt(d.amount,10)||0));
     closeOverlay();
+    // se non abbiamo ancora mostrato la risposta, riprendi ricaricando
+    if((document.getElementById('answer')?.textContent||'').includes('⏳')) location.reload();
   }
   if(d.type === "open_rewarded"){
     openOverlay("/ads/rewarded.html");
@@ -824,12 +866,13 @@ window.addEventListener("message",(ev)=>{
   if(d.type === "rewarded_completed"){
     setCrediti(getCrediti() + (parseInt(d.amount,10)||1));
     closeOverlay();
+    if((document.getElementById('answer')?.textContent||'').includes('⏳')) location.reload();
   }
 });
 
 /* ==== Nav / lingua / share ==== */
 qs('#backBtn').onclick = ()=> history.length > 1 ? history.back() : location.replace('index.html');
-qs('#homeBtn').onclick = ()=> location.href='index.html';
+qs'#homeBtn'?.onclick = ()=> location.href='index.html';
 qs('#langSelect').onchange = ()=>{
   const v = qs('#langSelect').value;
   LS.setItem('lang', v);
