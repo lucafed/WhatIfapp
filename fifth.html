@@ -216,6 +216,72 @@ background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);
 
 <!-- Contatore crediti -->
 <p class="small" id="creditInfo" style="text-align:center;opacity:.85"></p> <script>  
+  <!-- Sistema crediti -->
+<script>
+  // === Flag utente ===
+  const IS_ADMIN = !!localStorage.getItem("admin_token");       // admin = infiniti
+  const IS_PRO   = localStorage.getItem("isPro") === "true";     // opzionale
+
+  // === Storage keys ===
+  const K_CRED   = "crediti";
+  const K_LAST   = "ultimoBonusGiorno";
+
+  // === Utils base ===
+  function getCrediti(){ return IS_ADMIN ? 999999 : parseInt(localStorage.getItem(K_CRED) || "0", 10) || 0; }
+  function setCrediti(n){ if(!IS_ADMIN){ localStorage.setItem(K_CRED, String(Math.max(0, n|0))); } renderCrediti(); }
+  function addCrediti(n){ setCrediti(getCrediti() + (n|0)); }
+
+  // === UI contatore ===
+  function renderCrediti(){
+    const el = document.getElementById("creditInfo");
+    if(!el) return;
+    const n = getCrediti();
+    el.textContent = IS_ADMIN ? "💎 Crediti: ∞ (Admin)" : `💰 Crediti disponibili: ${n}`;
+  }
+
+  // === Inizializzazione (welcome + daily) ===
+  (function initCredits(){
+    if(localStorage.getItem(K_CRED) === null){
+      // Welcome: 10 se PRO, 3 se FREE
+      localStorage.setItem(K_CRED, String(IS_ADMIN ? 999999 : (IS_PRO ? 10 : 3)));
+    }
+    // Daily bonus: +2 PRO, +1 FREE (non cumulativo)
+    const today = new Date(); today.setHours(0,0,0,0);
+    const stamp = String(today.getTime());
+    const last  = localStorage.getItem(K_LAST);
+    if(!IS_ADMIN && stamp !== last){
+      addCrediti(IS_PRO ? 2 : 1);
+      localStorage.setItem(K_LAST, stamp);
+    }
+    renderCrediti();
+  })();
+
+  // === Overlay Store/Rewarded ===
+  const overlay = document.getElementById("overlay");
+  const overlayFrame = document.getElementById("overlay-frame");
+  function openOverlay(src){ overlayFrame.src = src; overlay.style.display = "flex"; }
+  function closeOverlay(){ overlayFrame.src = "about:blank"; overlay.style.display = "none"; }
+
+  // Messaggi da Store/Rewarded
+  window.addEventListener("message",(ev)=>{
+    const d = ev.data || {};
+    if(d.type === "purchase_complete"){ addCrediti(d.amount||0); closeOverlay(); }
+    if(d.type === "open_rewarded"){ openOverlay("/ads/rewarded.html"); }
+    if(d.type === "rewarded_complete"){ addCrediti(d.amount||1); closeOverlay(); }
+  });
+
+  // === Gating semplice ===
+  function usaCreditoOApriStore(){
+    if(IS_ADMIN) return true;
+    const n = getCrediti();
+    if(n <= 0){
+      openOverlay("/store/credit-store.html");
+      return false;
+    }
+    setCrediti(n - 1);
+    return true;
+  }
+</script>
 /* ==== Base state ==== */  
 const LS = localStorage;  
 const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');  
