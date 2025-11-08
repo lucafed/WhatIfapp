@@ -32,7 +32,7 @@
     <div class="row"><span class="k">Admin:</span> <span id="adminFlag" class="pill">no</span></div>
     <div class="row" style="margin-top:6px">
       <span class="k">Token:</span> <span id="tok" class="pill">—</span>
-      <span class="k">Crediti (locali) rimasti oggi:</span> <span id="creditsLeft" class="pill">—</span>
+      <span class="k">Crediti rimasti oggi:</span> <span id="creditsLeft" class="pill">—</span>
     </div>
     <div class="row" style="margin-top:10px">
       <input id="pin" type="password" placeholder="PIN admin" style="min-width:200px"/>
@@ -47,9 +47,10 @@
 
   <!-- CREDITI -->
   <div class="card">
-    <div class="row"><span class="k">Disponibili:</span><span id="cLeft" class="pill">—</span>
+    <div class="row">
+      <span class="k">Disponibili:</span><span id="cLeft" class="pill">—</span>
       <span class="k">Usati:</span><span id="cUsed" class="pill">—</span>
-      <span class="k">Limite:</span><span id="cLimit" class="pill">—</span>
+      <span class="k">Cap:</span><span id="cCap" class="pill">—</span>
     </div>
     <div class="row" style="margin-top:10px">
       <button id="presetFree" class="primary">Reset FREE (3)</button>
@@ -64,94 +65,148 @@
 </main>
 
 <script>
-/* ===== Chiavi compatibili con fourth/fifth ===== */
-const LS=localStorage;
-const TKEY="admin_token";                 // usato da override ∞
-const BKEY="admin_token_backup";          // backup per “torna admin”
-const CKEY="whatif_credits";              // { used, limit } letti da fourth/fifth
+/* ===== Chiavi condivise con fourth/fifth ===== */
+const LS = localStorage;
+const TKEY = "admin_token";        // override ∞
+const BKEY = "admin_token_backup"; // per ripristino
+const PKEY = "whatif_prefs";       // { stile, periodo, pro }
+const CKEY = "whatif_credits";     // { date: 'YYYY-MM-DD', used: number }
 
-/* ===== Helpers UI ===== */
-const $=id=>document.getElementById(id);
-const setTok = (t)=>{ $("tok").textContent = t? t.slice(0,6)+"…"+t.slice(-4) : "—"; };
-function readCred(){
+/* ===== Utils ===== */
+const $ = id => document.getElementById(id);
+const todayISO = () => new Date().toISOString().slice(0,10);
+const setTok = (t)=>{ $("tok").textContent = t ? t.slice(0,6)+"…"+t.slice(-4) : "—"; };
+const bcast = ()=> LS.setItem("whatif_sync", String(Date.now())); // notifica altre tab
+
+function readPrefs(){
+  try{ return JSON.parse(LS.getItem(PKEY) || "{}") || {}; }catch{ return {}; }
+}
+function writePrefs(p){
+  const cur = readPrefs();
+  LS.setItem(PKEY, JSON.stringify({...cur, ...p}));
+}
+
+function readCredits(){
   try{
-    const d=JSON.parse(LS.getItem(CKEY)||"{}");
-    let used = Number.isFinite(d.used)? d.used : 0;
-    let limit= (d.limit===Infinity)? Infinity : (Number.isFinite(d.limit)? d.limit : 3);
-    if(used<0) used=0; if(limit<0) limit=0;
-    return {used,limit};
-  }catch{ return {used:0,limit:3}; }
+    const c = JSON.parse(LS.getItem(CKEY) || "{}") || {};
+    const date = c.date || todayISO();
+    const used = Number.isFinite(+c.used) ? +c.used : 0;
+    return { date, used };
+  }catch{ return { date: todayISO(), used: 0 }; }
 }
-function writeCred({used,limit}){
-  const payload = {used:Math.max(0,used|0), limit: (limit===Infinity? Infinity : Math.max(0,limit|0))};
+function writeCredits(obj){
+  const payload = { date: obj.date || todayISO(), used: Math.max(0, obj.used|0) };
   LS.setItem(CKEY, JSON.stringify(payload));
-  drawCredits();
 }
-function drawCredits(){
-  const c=readCred();
-  const left = (c.limit===Infinity)? "∞" : Math.max(c.limit - c.used, 0);
-  $("cLeft").textContent  = left;
-  $("cUsed").textContent  = c.used;
-  $("cLimit").textContent = (c.limit===Infinity? "∞" : c.limit);
+
+function capForUser(){
+  const isAdmin = !!LS.getItem(TKEY);
+  if(isAdmin) return Infinity;
+  const prefs = readPrefs();
+  return (prefs.pro === true) ? 10 : 3;
+}
+
+function drawCreditsUI(){
+  const { used } = readCredits();
+  const cap = capForUser();
+  const left = cap===Infinity ? "∞" : Math.max(0, cap - used);
+  $("cLeft").textContent = left;
+  $("cUsed").textContent = used;
+  $("cCap").textContent  = cap===Infinity ? "∞" : String(cap);
   $("creditsLeft").textContent = left;
 }
 
-/* ===== Stato admin ===== */
 async function adminCheck(){
-  // prova a chiedere lo stato al backend (se c'è), altrimenti locale
   let isAdmin = !!LS.getItem(TKEY);
   try{
-    const r = await fetch("/api/admin-token",{headers:{"x-admin-token":LS.getItem(TKEY)||""}});
-    if(r.ok){ const d=await r.json().catch(()=>({})); isAdmin = !!(d?.admin||d?.ok); }
-  }catch{} // offline/assenza endpoint: fallback locale
-  $("adminFlag").textContent = isAdmin? "yes" : "no";
+    const r = await fetch("/api/admin-token", { headers: { "x-admin-token": LS.getItem(TKEY)||"" } });
+    if(r.ok){
+      const d = await r.json().catch(()=>({}));
+      isAdmin = !!(d?.admin || d?.ok);
+    }
+  }catch{}
+  $("adminFlag").textContent = isAdmin ? "yes" : "no";
   setTok(LS.getItem(TKEY)||"");
-  drawCredits();
+  drawCreditsUI();
   return isAdmin;
 }
 
+/* ===== Preset coerenti con fourth/fifth ===== */
+function presetFREE(){
+  writePrefs({ pro: false });
+  writeCredits({ date: todayISO(), used: 0 }); // 3/giorno gestiti da fourth via cap
+  bcast(); drawCreditsUI();
+  alert("Preset FREE impostato (3/giorno).");
+}
+function presetPRO(){
+  writePrefs({ pro: true });
+  writeCredits({ date: todayISO(), used: 0 }); // 10/giorno gestiti da fourth via cap
+  bcast(); drawCreditsUI();
+  alert("Preset PRO impostato (10/giorno).");
+}
+function presetDEV(){
+  // DEV = simulazione “molti crediti”: qui teniamo PRO + azzeramento,
+  // e se vuoi ∞ davvero, attiva il token admin.
+  writePrefs({ pro: true });
+  writeCredits({ date: todayISO(), used: 0 });
+  bcast(); drawCreditsUI();
+  alert("Preset DEV impostato. (Per ∞, usa il token admin.)");
+}
+
 /* ===== Pulsanti ===== */
+$("presetFree").onclick = presetFREE;
+$("presetPro").onclick  = presetPRO;
+$("presetDev").onclick  = presetDEV;
+$("zeroUsed").onclick   = ()=>{ const c=readCredits(); writeCredits({ date: todayISO(), used: 0 }); bcast(); drawCreditsUI(); };
+
 $("enter").onclick = async()=>{
-  const pin=$("pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
-  const r=await fetch("/api/admin-token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pin})});
-  const d=await r.json().catch(()=>({}));
-  if(r.ok && (d.token||d.ok)){ const tok=d.token||LS.getItem(TKEY)||""; if(d.token) LS.setItem(TKEY,d.token); setTok(LS.getItem(TKEY)); $("pin").value=""; adminCheck(); alert("Admin attivo."); }
-  else alert("PIN errato o server non disponibile.");
-};
-$("revoke").onclick = async()=>{
-  try{ await fetch("/api/admin-token?action=revoke",{method:"POST",headers:{"x-admin-token":LS.getItem(TKEY)||""}}); }catch{}
-  LS.removeItem(TKEY); setTok(""); adminCheck(); alert("Token revocato su questo device.");
+  const pin = $("pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
+  const r = await fetch("/api/admin-token", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ pin })});
+  const d = await r.json().catch(()=>({}));
+  if(r.ok && (d.token || d.ok)){
+    if(d.token) LS.setItem(TKEY, d.token);
+    setTok(LS.getItem(TKEY));
+    $("pin").value="";
+    await adminCheck();
+    bcast();
+    alert("Admin attivo (override ∞).");
+  }else{
+    alert("PIN errato o server non disponibile.");
+  }
 };
 
-/* Simula utente (disattiva override ∞) */
+$("revoke").onclick = async()=>{
+  try{ await fetch("/api/admin-token?action=revoke", { method:"POST", headers:{ "x-admin-token": LS.getItem(TKEY)||"" } }); }catch{}
+  LS.removeItem(TKEY);
+  setTok("");
+  await adminCheck();
+  bcast();
+  alert("Token revocato su questo device.");
+};
+
 $("simUser").onclick = ()=>{
   const tok = LS.getItem(TKEY)||"";
   if(!tok){ alert("Non sei in admin."); return; }
   LS.setItem(BKEY, tok);
   LS.removeItem(TKEY);
   setTok("");
-  adminCheck();
-  alert("Modalità utente attiva: fourth/fifth ora usano i crediti locali.");
+  adminCheck().then(bcast);
+  alert("Modalità utente attiva: ora i crediti NON sono ∞.");
 };
-/* Torna admin (ripristina token) */
+
 $("restoreAdmin").onclick = ()=>{
   const tok = LS.getItem(BKEY)||"";
   if(!tok){ alert("Nessun token admin salvato."); return; }
   LS.setItem(TKEY, tok);
   LS.removeItem(BKEY);
   setTok(tok);
-  adminCheck();
+  adminCheck().then(bcast);
   alert("Token admin ripristinato. Override ∞ attivo.");
 };
 
-/* Preset crediti */
-$("presetFree").onclick = ()=> writeCred({used:0,limit:3});
-$("presetPro").onclick  = ()=> writeCred({used:0,limit:10});
-$("presetDev").onclick  = ()=> writeCred({used:0,limit:9999});
-$("zeroUsed").onclick   = ()=> { const c=readCred(); writeCred({used:0,limit:c.limit}); };
-
-/* Init */
+/* ===== Init ===== */
 adminCheck();
+drawCreditsUI();
 </script>
 </body>
 </html>
