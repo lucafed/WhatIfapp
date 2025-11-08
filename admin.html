@@ -32,7 +32,7 @@
     <div class="row"><span class="k">Admin:</span> <span id="adminFlag" class="pill">no</span></div>
     <div class="row" style="margin-top:6px">
       <span class="k">Token:</span> <span id="tok" class="pill">—</span>
-      <span class="k">Crediti rimasti oggi:</span> <span id="creditsLeft" class="pill">—</span>
+      <span class="k">Crediti disponibili:</span> <span id="creditsLeft" class="pill">—</span>
     </div>
     <div class="row" style="margin-top:10px">
       <input id="pin" type="password" placeholder="PIN admin" style="min-width:200px"/>
@@ -45,7 +45,7 @@
     </div>
   </div>
 
-  <!-- CREDITI -->
+  <!-- CREDITI (wallet unico) -->
   <div class="card">
     <div class="row">
       <span class="k">Disponibili:</span><span id="cLeft" class="pill">—</span>
@@ -66,42 +66,88 @@
 
 <script>
 /* ===== Chiavi compatibili con fourth/fifth ===== */
-const LS=localStorage;
-const TKEY="admin_token";            // override ∞
-const BKEY="admin_token_backup";     // backup per ripristino
-const CKEY="whatif_credits";         // { used, limit }
+const LS = localStorage;
+const TKEY = "admin_token";           // override ∞
+const BKEY = "admin_token_backup";    // backup per ripristino
+const WKEY = "whatif_wallet";         // {available, used, limit} usato da fourth/fifth
+const LEGACY_CREDITS = "whatif_credits"; // legacy varie
 
 /* ===== Helpers UI ===== */
-const $=id=>document.getElementById(id);
+const $ = id => document.getElementById(id);
 const setTok = (t)=>{ $("tok").textContent = t? t.slice(0,6)+"…"+t.slice(-4) : "—"; };
 
-/* ===== Sync broadcaster ===== */
+/* ===== Sync broadcaster (ping per altri tab) ===== */
 function broadcastSync(reason){
-  try{ localStorage.setItem('whatif_sync', JSON.stringify({ts:Date.now(), reason})); }catch{}
+  try{
+    // ping specifico per wallet + un secondo ping generico
+    LS.setItem("whatif_wallet_sync", String(Date.now()));
+    LS.setItem("whatif_sync", JSON.stringify({ts:Date.now(), reason}));
+  }catch{}
 }
 
-/* ===== Crediti ===== */
-function readCred(){
+/* ===== MIGRAZIONE AUTOMATICA LEGACY -> WALLET =====
+   Accetta due casi legacy:
+   1) {used,limit} (senza date)
+   2) {date,used} con cap implicito (3/10) — qui migriamo conservando i “left”
+*/
+(function migrateLegacy(){
   try{
-    const d=JSON.parse(LS.getItem(CKEY)||"{}");
-    let used = Number.isFinite(d.used)? d.used : 0;
-    let limit= (d.limit===Infinity)? Infinity : (Number.isFinite(d.limit)? d.limit : 3);
-    if(used<0) used=0; if(limit<0) limit=0;
-    return {used,limit};
-  }catch{ return {used:0,limit:3}; }
+    const w = JSON.parse(LS.getItem(WKEY) || "{}");
+    if (w && (w.available!=null || w.limit!=null)) return; // wallet già presente
+
+    const raw = LS.getItem(LEGACY_CREDITS);
+    if(!raw) return;
+    const obj = JSON.parse(raw);
+
+    // Caso 1: schema admin vecchio {used,limit} senza 'date'
+    if (obj && typeof obj.used === "number" && typeof obj.limit !== "undefined" && !obj.date) {
+      const limit = (obj.limit===Infinity)? Infinity : Math.max(0, obj.limit|0);
+      const used  = Math.max(0, obj.used|0);
+      const available = (limit===Infinity)? Infinity : Math.max(0, limit - used);
+      writeWallet({available, used, limit});
+      return;
+    }
+
+    // Caso 2: giornaliero {date, used}; assumiamo cap 3 o 10 in base a prefs.pro (se presente)
+    const prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}");
+    const cap = (prefs && prefs.pro===true) ? 10 : 3;
+    const today = new Date().toISOString().slice(0,10);
+    const used = (obj && obj.date===today) ? (obj.used|0) : 0;
+    const available = Math.max(0, cap - used);
+    writeWallet({available, used, limit:cap});
+  }catch{}
+})();
+
+/* ===== WALLET ===== */
+function readWallet(){
+  try{
+    const w = JSON.parse(LS.getItem(WKEY) || "{}") || {};
+    return {
+      available: (w.available===Infinity)? Infinity :
+                 (Number.isFinite(+w.available) ? +w.available : 0),
+      used:      Number.isFinite(+w.used) ? +w.used : 0,
+      limit:     (w.limit===Infinity)? Infinity :
+                 (Number.isFinite(+w.limit) ? +w.limit : 3)
+    };
+  }catch{ return {available:0, used:0, limit:3}; }
 }
-function writeCred({used,limit}){
-  const payload = {used:Math.max(0,used|0), limit:(limit===Infinity?Infinity:Math.max(0,limit|0))};
-  LS.setItem(CKEY, JSON.stringify(payload));
+function writeWallet({available, used, limit}){
+  const out = {
+    available: (limit===Infinity ? Infinity : Math.max(0, available|0)),
+    used:      Math.max(0, used|0),
+    limit:     (limit===Infinity ? Infinity : Math.max(0, limit|0))
+  };
+  LS.setItem(WKEY, JSON.stringify(out));
   drawCredits();
-  broadcastSync('credits_changed');
+  broadcastSync('wallet_changed');
 }
 function drawCredits(){
-  const c=readCred();
-  const left = (c.limit===Infinity)? "∞" : Math.max(c.limit - c.used, 0);
+  const w = readWallet();
+  const left = (w.limit===Infinity)? "∞" :
+               (w.available===Infinity? "∞" : Math.max(0, w.available));
   $("cLeft").textContent  = left;
-  $("cUsed").textContent  = c.used;
-  $("cLimit").textContent = (c.limit===Infinity? "∞" : c.limit);
+  $("cUsed").textContent  = (w.used===Infinity? "∞" : w.used);
+  $("cLimit").textContent = (w.limit===Infinity? "∞" : w.limit);
   $("creditsLeft").textContent = left;
 }
 
@@ -111,7 +157,7 @@ async function adminCheck(){
   try{
     const r = await fetch("/api/admin-token",{headers:{"x-admin-token":LS.getItem(TKEY)||""}});
     if(r.ok){ const d=await r.json().catch(()=>({})); isAdmin = !!(d?.admin||d?.ok); }
-  }catch{}
+  }catch{} // offline: fallback locale
   $("adminFlag").textContent = isAdmin? "yes" : "no";
   setTok(LS.getItem(TKEY)||"");
   drawCredits();
@@ -121,16 +167,23 @@ async function adminCheck(){
 /* ===== Pulsanti ===== */
 $("enter").onclick = async()=>{
   const pin=$("pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
-  const r=await fetch("/api/admin-token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pin})});
-  const d=await r.json().catch(()=>({}));
-  if(r.ok && (d.token||d.ok)){
-    if(d.token) LS.setItem(TKEY,d.token);
+  let ok=false, tok="";
+  try{
+    const r=await fetch("/api/admin-token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pin})});
+    const d=await r.json().catch(()=>({}));
+    ok = r.ok && (d.token||d.ok);
+    tok = d.token||"";
+  }catch{}
+  if(ok){
+    if(tok) LS.setItem(TKEY,tok);
     setTok(LS.getItem(TKEY)||"");
     $("pin").value="";
     await adminCheck();
     broadcastSync('admin_on');
     alert("Admin attivo.");
-  }else alert("PIN errato o server non disponibile.");
+  }else{
+    alert("PIN errato o server non disponibile.");
+  }
 };
 
 $("revoke").onclick = async()=>{
@@ -164,14 +217,23 @@ $("restoreAdmin").onclick = async()=>{
   alert("Token admin ripristinato. Override ∞ attivo.");
 };
 
-/* Preset crediti */
-$("presetFree").onclick = ()=> writeCred({used:0,limit:3});
-$("presetPro").onclick  = ()=> writeCred({used:0,limit:10});
-$("presetDev").onclick  = ()=> writeCred({used:0,limit:9999});
-$("zeroUsed").onclick   = ()=> { const c=readCred(); writeCred({used:0,limit:c.limit}); };
+/* Preset crediti sul WALLET */
+$("presetFree").onclick = ()=> writeWallet({available:3,    used:0, limit:3});
+$("presetPro").onclick  = ()=> writeWallet({available:10,   used:0, limit:10});
+$("presetDev").onclick  = ()=> writeWallet({available:9999, used:0, limit:9999});
+$("zeroUsed").onclick   = ()=> { const w=readWallet(); writeWallet({available:(w.limit===Infinity?Infinity:w.limit), used:0, limit:w.limit}); };
+
+/* Aggiorna se un altro tab cambia i dati */
+window.addEventListener("storage",(e)=>{
+  if(e.key==="whatif_wallet" || e.key==="whatif_wallet_sync" || e.key==="whatif_sync"){
+    drawCredits();
+    adminCheck();
+  }
+});
 
 /* Init */
 adminCheck();
+drawCredits();
 </script>
 </body>
 </html>
