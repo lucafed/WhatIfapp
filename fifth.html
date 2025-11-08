@@ -853,4 +853,24 @@ function enforceFormat(text, stile){
 /* ==== Nav / lingua ==== */  
 qs('#backBtn').onclick = ()=> history.length > 1 ? history.back() : location.replace('index.html');  
 qs('#homeBtn').onclick = ()=> location.href='index.html';  
-qs('#langSelect')
+qs('#langSelect').onchange = ()=>{  
+  const v = qs('#langSelect').value;  
+  LS.setItem('lang', v);  
+  LS.setItem('lang_manual','1');  
+  document.documentElement.lang = v;  
+  location.reload();  
+};  
+qs('#shareBtn').onclick = async()=>{  
+  const T = I18N[lang] || I18N.it;  
+  const full = `What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;  
+  try{  
+    if(navigator.share){ await navigator.share({ title: "What?f", text: full }); }  
+    else{  
+      await navigator.clipboard.writeText(full);  
+      const b=qs('#shareBtn'); b.textContent=T.copied; setTimeout(()=>b.textContent=T.share,1200);  
+    }  
+  }catch{}  
+};  
+qs('#againBtn').onclick = ()=>{ location.href='fourth.html'; };  
+</script>  </body>  
+</html>
