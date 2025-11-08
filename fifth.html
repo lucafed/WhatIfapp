@@ -873,6 +873,8 @@ function enforceFormat(text, stile){
   qs('#qView').textContent = domanda || '—';  
   
   try{  
+    // Controlla i crediti: se finiti, apri store e ferma
+  if (!usaCreditoOApriStore()) return;
     const headers = { "Content-Type": "application/json" };  
     if (prefs.pro === true) headers["x-pro"] = "1";  
     const adminToken = localStorage.getItem("admin_token");  
