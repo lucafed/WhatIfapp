@@ -1,7 +1,7 @@
 // /api/ask.js — What?f Engine (Stable Hybrid WHATIF + Friendly-WTF Demenziale)
 // - WHATIF: 60% analisi / 40% immagini sobrie, incipit LIBERO (vietato “Bella…”), motivazione breve coerente affidata all’AI.
 // - WTF: tono/struttura invariati (2–3 reazioni demenziali, UNA “imprecazione” teatrale, sorso alcolico, risposta vera, morale).
-// - Free: 3/giorno — Pro: 10/giorno (stesso modello).
+// - Free: 3/24h — Pro: 10/24h (stesso modello).
 // - Maiuscole post-process dopo . ? ! … : e con virgolette/parentesi. Un paragrafo, niente elenchi, niente eco della domanda.
 
 import OpenAI from "openai";
@@ -12,13 +12,14 @@ import { Ratelimit } from "@upstash/ratelimit";
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
-/* ========= Redis & Rate (giornaliero) ========= */
+/* ========= Redis & Rate (24 ore) ========= */
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
-const rlFree = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(3, "1 d") });
-const rlPro  = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "1 d") });
+// Usare "24 h" invece di "1 d" per compatibilità
+const rlFree = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(3, "24 h") });
+const rlPro  = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "24 h") });
 
 /* ========= CORS ========= */
 const ALLOWED_ORIGINS = [
@@ -58,7 +59,7 @@ function stripQuestionEcho(domanda,text){
   if(lead.startsWith(d)){ const cut=t.indexOf("."); if(cut>-1) t=t.slice(cut+1).trim(); }
   t=t.replace(rx,""); return t;
 }
-// Maiuscole robuste: inizio stringa + dopo . ? ! … : e gestione virgolette/parentesi
+// Maiuscole robuste (unicode): inizio stringa + dopo . ? ! … : con virgolette/parentesi
 function sentenceCaseAll(s=""){
   if(!s) return s;
   s = s.replace(/^(\s*[«“"'\(\[]*)([a-zà-ÿ])/u, (m, pre, ch) => pre + ch.toUpperCase());
@@ -118,7 +119,7 @@ function buildMessages({ domanda, lang, periodo, stile }){
   ];
 
   if(stile==="wtf"){
-    // Costruisci semi casuali deterministicamente sulla domanda (varietà, tono invariato)
+    // Varietà deterministica da domanda (tono invariato)
     let seed=[...String(domanda)].reduce((a,c)=>a+c.charCodeAt(0),0);
     function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; }
     const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
@@ -136,11 +137,10 @@ playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical “${impre}” �
     msgs.push({ role: "system", content: `REACTIONS:\n- ${react.join("\n- ")}` });
     msgs.push({ role: "system", content: `DRINK: ${drink}` });
   } else {
-    // WHATIF ibrido: incipit libero (vietato “Bella…”), motivazione breve coerente richiesta esplicita
+    // WHATIF: incipit libero (vietato “Bella…”), motivazione breve coerente
     msgs.push({ role: "system", content: WHATIF_RULE_IT });
   }
 
-  // Utente finale
   const ask = (L==="en")
     ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`
     : (L==="it")
@@ -164,7 +164,7 @@ export default async function handler(req, res){
   try{
     if(!process.env.OPENAI_API_KEY) return res.status(500).json({ error:"missing_api_key" });
 
-    // Free vs Pro — 3/giorno vs 10/giorno
+    // Free vs Pro — 3/24h vs 10/24h
     const isPro =
       String(req.headers["x-pro"] || "").toLowerCase() === "true" ||
       String(req.headers["x-pro"] || "") === "1";
@@ -200,7 +200,7 @@ export default async function handler(req, res){
     let raw = completion?.choices?.[0]?.message?.content?.trim() || "";
     if(!raw) throw new Error("empty_model_response");
 
-    // Estrai motivazione [[MOTIVO]] solo per WHATIF; per WTF niente box serio
+    // Estrai motivazione [[MOTIVO]] solo per WHATIF
     let motive = "";
     if(stile !== "wtf"){
       const m = raw.match(/\[\[\s*MOTIVO\s*\]\]\s*:\s*([\s\S]+)$/i);
@@ -210,7 +210,7 @@ export default async function handler(req, res){
       }
     }
 
-    // Post-process della risposta
+    // Post-process risposta
     let answer = stripQuestionEcho(domanda, raw);
     answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);
     answer = clampWords(answer, stile === "wtf" ? 170 : 165);
@@ -222,7 +222,7 @@ export default async function handler(req, res){
     if(normLang(lang)==="it"){
       (function(){
         const d=String(domanda||"");
-        const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
+        const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/gu;
         const inQuestion=new Set((d.match(nameRx)||[]));
         answer=answer.replace(nameRx,(m)=> inQuestion.has(m) ? m : (["Ah","Oh","Ehi","Sai"].includes(m) ? m : m.toLowerCase()));
       })();
@@ -230,7 +230,7 @@ export default async function handler(req, res){
 
     return res.status(200).json({
       answer,
-      motive,           // stringa breve coerente con la risposta (vuota per WTF)
+      motive,           // breve, coerente (vuota per WTF)
       style: stile,
       lang: normLang(lang),
       periodo,
