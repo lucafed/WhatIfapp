@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>What?f — Admin</title>
   <meta name="theme-color" content="#0B0B0C"/>
-  <!-- Chart.js per il grafico trend -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
@@ -26,6 +25,7 @@
     }
     main{max-width:1100px;margin:auto;padding:18px}
     h1{margin:6px 0 14px;font-size:28px;text-shadow:0 0 22px var(--glow)}
+    h3{margin:0 0 8px}
     .card{
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
       border:1px solid var(--line); border-radius:16px; padding:14px;
@@ -119,6 +119,38 @@
     </div>
   </div>
 
+  <!-- Gestione crediti -->
+  <div class="card" style="margin-top:12px">
+    <h3>Gestione crediti (locale)</h3>
+    <div class="row">
+      <span class="chip">Disponibili: <b id="cLeft" style="margin-left:6px">—</b></span>
+      <span class="chip">Usati: <b id="cUsed" style="margin-left:6px">—</b></span>
+      <span class="chip">Limite: <b id="cLimit" style="margin-left:6px">—</b></span>
+    </div>
+
+    <div class="row" style="margin-top:8px">
+      <button id="cPresetFree" class="ghost">Preset FREE (3)</button>
+      <button id="cPresetPro"  class="ghost">Preset PRO (10)</button>
+      <button id="cPresetDev"  class="ghost">Preset DEV (9999)</button>
+      <button id="cResetUsed"  class="ghost">Azzera usati</button>
+      <button id="cZeroLeft"   class="ghost">Porta disponibili a 0</button>
+    </div>
+
+    <div class="row" style="margin-top:8px">
+      <button id="cGrant1" class="primary">Dona +1</button>
+      <button id="cGrant3" class="primary">Dona +3</button>
+      <button id="cGrant10" class="primary">Dona +10</button>
+      <span class="muted">La “donazione” aumenta i disponibili riducendo gli usati.</span>
+    </div>
+
+    <div class="row" style="margin-top:8px">
+      <input id="cSetLeftVal" type="number" min="0" placeholder="Disponibili…" style="width:140px"/>
+      <button id="cSetLeftBtn" class="ghost">Imposta disponibili</button>
+      <input id="cSetLimitVal" type="number" min="0" placeholder="Limite…" style="width:140px"/>
+      <button id="cSetLimitBtn" class="ghost">Imposta limite</button>
+    </div>
+  </div>
+
   <!-- Statistiche -->
   <div class="card" style="margin-top:12px">
     <h3>Statistiche globali (finestra caricata)</h3>
@@ -163,7 +195,7 @@
 
 <script>
 /* ========= BASE ========= */
-const LS=localStorage, TKEY="admin_token", PROKEY="whatif_prefs";
+const LS=localStorage, TKEY="admin_token", PROKEY="whatif_prefs", CKEY="whatif_credits";
 const $=id=>document.getElementById(id); let chart=null, auto=null, LAST_ITEMS=[];
 const dbg=(...a)=>{ const t=a.map(x=>typeof x==="string"?x:JSON.stringify(x,null,2)).join(" "); const el=$("debug"); el.textContent=(el.textContent?el.textContent+"\n":"")+t; el.scrollTop=el.scrollHeight; };
 const getTok=()=>LS.getItem(TKEY)||""; const setTok=t=>{ if(t)LS.setItem(TKEY,t); else LS.removeItem(TKEY); $("tok").textContent=t? t.slice(0,6)+"…"+t.slice(-4):"—"; };
@@ -204,7 +236,6 @@ const pickArray = d => Array.isArray(d) ? d : (d?.items||d?.logs||d?.data||[]);
 function parseMaybeJsonOrJsonl(raw){
   try { return pickArray(JSON.parse(raw)); }
   catch {
-    // NDJSON/JSONL
     const rows = String(raw).split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
     const out=[]; for(const line of rows){ try{ out.push(JSON.parse(line)); }catch{} }
     return out;
@@ -232,9 +263,34 @@ async function adminCheck(){
   const yes = !!(data && (data.ok ? (data.admin ?? data.ok) : data?.admin));
   $("adminState").textContent = yes?"yes":"no";
   $("myIp").textContent = data?.ip || "—";
-  $("credits").textContent = yes?"∞": (JSON.parse(LS.getItem("whatif_credits")||"{}").used||0)+"/(3/10)";
+  const c = readCred();
+  $("credits").textContent = yes?"∞": `${Math.max(c.limit - c.used,0)}/${c.limit}`;
   if(!ok) dbg("admin-token fail",status,String(raw).slice(0,200));
   return yes;
+}
+
+/* ========= CREDITS (LOCALE) ========= */
+function readCred(){
+  try{
+    const d = JSON.parse(LS.getItem(CKEY)||"{}");
+    let used = Number.isFinite(d.used)? d.used : 0;
+    let limit = (d.limit===Infinity) ? Infinity : (Number.isFinite(d.limit)? d.limit : 3);
+    if(limit<0) limit=0; if(used<0) used=0;
+    return {used, limit};
+  }catch{ return {used:0, limit:3}; }
+}
+function writeCred(obj){
+  const payload = { used: Math.max(0, obj.used|0), limit: obj.limit===Infinity? Infinity : Math.max(0, obj.limit|0) };
+  LS.setItem(CKEY, JSON.stringify(payload));
+  drawCredits();
+  adminCheck();
+}
+function drawCredits(){
+  const c = readCred();
+  const left = (c.limit===Infinity) ? "∞" : Math.max(c.limit - c.used, 0);
+  $("cLeft").textContent  = left;
+  $("cUsed").textContent  = c.used;
+  $("cLimit").textContent = (c.limit===Infinity) ? "∞" : c.limit;
 }
 
 /* ========= RENDER ========= */
@@ -307,7 +363,7 @@ async function loadAll(){
   const st=await getJSON(`${EP_STATS}?days=${encodeURIComponent(days)}`);
   if(st.ok && st.data){ drawStats(st.data); } else { drawStats({}); dbg("stats fail",st.status); }
 
-  // LOGS: prendo SEMPRE mask=0 e maschero in locale; supporto JSONL/NDJSON
+  // LOGS
   const limit=$("limitSel").value||"200";
   try{
     const t = await getText(`${EP_LOGS}?limit=${encodeURIComponent(limit)}&mask=0`);
@@ -360,10 +416,39 @@ $("revoke").onclick=async()=>{ await fetch("/api/admin-token?action=revoke",{met
 $("proOn").onclick=()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); p.pro=true; LS.setItem(PROKEY,JSON.stringify(p)); $("usertype").textContent="pro"; };
 $("proOff").onclick=()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); delete p.pro; LS.setItem(PROKEY,JSON.stringify(p)); $("usertype").textContent="free"; };
 
+/* ====== CREDIT EVENTS ====== */
+$("cPresetFree").onclick = ()=> writeCred({ used:0, limit:3 });
+$("cPresetPro").onclick  = ()=> writeCred({ used:0, limit:10 });
+$("cPresetDev").onclick  = ()=> writeCred({ used:0, limit:9999 });
+$("cResetUsed").onclick  = ()=> { const c=readCred(); writeCred({ used:0, limit:c.limit }); };
+$("cZeroLeft").onclick   = ()=> { const c=readCred(); writeCred({ used:(c.limit===Infinity?0:c.limit), limit:c.limit }); };
+
+$("cGrant1").onclick  = ()=> { const c=readCred(); writeCred({ used: Math.max(0, c.used-1),  limit:c.limit }); };
+$("cGrant3").onclick  = ()=> { const c=readCred(); writeCred({ used: Math.max(0, c.used-3),  limit:c.limit }); };
+$("cGrant10").onclick = ()=> { const c=readCred(); writeCred({ used: Math.max(0, c.used-10), limit:c.limit }); };
+
+$("cSetLeftBtn").onclick  = ()=> {
+  const v = Math.max(0, parseInt($("cSetLeftVal").value||"0",10));
+  const c = readCred();
+  const newUsed = (c.limit===Infinity) ? 0 : Math.max(0, c.limit - v);
+  writeCred({ used:newUsed, limit:c.limit });
+};
+$("cSetLimitBtn").onclick = ()=> {
+  let v = $("cSetLimitVal").value.trim();
+  if(v === "" ) return;
+  if(v.toLowerCase()==="inf" || v==="∞"){ writeCred({ used:0, limit:Infinity }); return; }
+  v = Math.max(0, parseInt(v,10));
+  const c = readCred();
+  const left = Math.max(0, (c.limit===Infinity? v : (c.limit - c.used)));
+  const newUsed = Math.max(0, v - left);
+  writeCred({ used:newUsed, limit:v });
+};
+
 /* ========= INIT ========= */
 (async function init(){
   setProUI();
   setTok(getTok());
+  drawCredits();
   await adminCheck();
   await loadAll();
 })();
