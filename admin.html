@@ -444,6 +444,100 @@ $("cSetLimitBtn").onclick = ()=> {
   writeCred({ used:newUsed, limit:v });
 };
 
+  /* ======== WALLET (crediti locali) ======== */
+const WKEY = "whatif_wallet";
+const PKEY = "whatif_prefs"; // per marcare/ritirare il flag PRO locale
+
+// lettura/scrittura sicura
+function readWallet(){
+  try{
+    const w = JSON.parse(localStorage.getItem(WKEY) || "{}") || {};
+    return {
+      available: Number.isFinite(+w.available) ? +w.available : 0,
+      used:      Number.isFinite(+w.used)      ? +w.used      : 0,
+      limit:     Number.isFinite(+w.limit)     ? +w.limit     : 3,
+    };
+  }catch{ return {available:0, used:0, limit:3}; }
+}
+function writeWallet(w){
+  localStorage.setItem(WKEY, JSON.stringify(w));
+  // notifica alle altre tab (fourth/fifth) – non serve toccarle
+  localStorage.setItem("whatif_wallet_sync", String(Date.now()));
+  updateWalletUI();
+}
+function updateWalletUI(){
+  const w = readWallet();
+  (document.getElementById("wAvail")||{}).textContent = w.available;
+  (document.getElementById("wUsed") ||{}).textContent = w.used;
+  (document.getElementById("wLimit")||{}).textContent = w.limit;
+}
+
+// helper: imposta wallet
+function setWallet({available, used, limit}){
+  const w = readWallet();
+  if(available != null) w.available = Math.max(0, +available);
+  if(used      != null) w.used      = Math.max(0, +used);
+  if(limit     != null) w.limit     = Math.max(0, +limit);
+  writeWallet(w);
+}
+
+// ==== PRESET ====
+function presetFREE(){
+  // utente free (no flag pro), 3 crediti/giorno
+  setWallet({available:3, used:0, limit:3});
+  try{ const p=JSON.parse(localStorage.getItem(PKEY)||"{}"); delete p.pro; localStorage.setItem(PKEY,JSON.stringify(p)); }catch{}
+  alert("Preset FREE impostato (3 crediti).");
+}
+function presetPRO(){
+  // utente pro locale (solo UI), 10 crediti
+  setWallet({available:10, used:0, limit:10});
+  try{ const p=JSON.parse(localStorage.getItem(PKEY)||"{}"); p.pro=true; localStorage.setItem(PKEY,JSON.stringify(p)); }catch{}
+  alert("Preset PRO impostato (10 crediti).");
+}
+function presetDEV(){
+  setWallet({available:9999, used:0, limit:9999});
+  try{ const p=JSON.parse(localStorage.getItem(PKEY)||"{}"); p.pro=true; localStorage.setItem(PKEY,JSON.stringify(p)); }catch{}
+  alert("Preset DEV impostato (9999 crediti).");
+}
+
+// ==== AZIONI RAPIDE ====
+function zeroUsed(){ setWallet({used:0}); }
+function availToZero(){ setWallet({available:0}); }
+function donate(n){
+  const w = readWallet();
+  setWallet({available: w.available + n, used: Math.max(0, w.used - n)});
+}
+
+// ==== WIRE BOTTONI (usa gli ID che vedi in admin) ====
+// contatori (metti questi id nel markup accanto ai numeri)
+updateWalletUI();
+
+// preset
+(document.getElementById("btnPresetFree")||{}).onclick = presetFREE;
+(document.getElementById("btnPresetPro") ||{}).onclick = presetPRO;
+(document.getElementById("btnPresetDev") ||{}).onclick = presetDEV;
+
+// azzera usati / porta a 0 / dona
+(document.getElementById("btnZeroUsed")   ||{}).onclick = zeroUsed;
+(document.getElementById("btnAvailZero")  ||{}).onclick = availToZero;
+(document.getElementById("btnDonate1")    ||{}).onclick = ()=>donate(1);
+(document.getElementById("btnDonate3")    ||{}).onclick = ()=>donate(3);
+(document.getElementById("btnDonate10")   ||{}).onclick = ()=>donate(10);
+
+// “Imposta disponibili” (campo + bottone)
+(function(){
+  const input = document.getElementById("availInput");
+  const btn   = document.getElementById("btnSetAvail");
+  if(btn && input){
+    btn.onclick = ()=>{
+      const n = parseInt(input.value,10);
+      if(Number.isFinite(n) && n>=0){ setWallet({available:n}); input.value=""; }
+    };
+  }
+})();
+
+// inizializza badge tipo utente in alto
+setProUI?.();
 /* ========= INIT ========= */
 (async function init(){
   setProUI();
