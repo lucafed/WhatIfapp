@@ -1,9 +1,9 @@
 // /api/ask.js — What?f Engine (Stable Hybrid WHATIF + Friendly-WTF Demenziale)
-// - WHATIF: 60% analisi / 40% immagini sobrie. Incipit LIBERO (no “Bella …”) + tocco psicologo leggero.
+// - WHATIF: 60% analisi / 40% immagini sobrie. Incipit LIBERO (mai “Bella …”) + tocco psicologo leggero.
 // - WTF: 2–3 reazioni DEMENZIALI, UNA “imprecazione” teatrale, sorso alcolico, risposta vera, morale. (immutato)
-// - Maiuscole post-process dopo . ? ! … : e con virgolette/parentesi. Un paragrafo, niente elenchi, niente eco della domanda.
-// - Motivazione: brevissima, lasciata libera, ma coerente con domanda+risposta (20–45 → ora 18–32 parole). Output { motivation, probability }.
-// - Limits: FREE 3/giorno — PRO 10/giorno (più piccolo burst/minuto).
+// - Maiuscole post-process dopo . ? ! … : e con virgolette/parentesi. Paragrafo unico. Niente elenchi. Niente eco della domanda.
+// - Motivazione: brevissima (18–32 parole), lasciata libera ma *coerente* con domanda+risposta; vietati temi estranei (CV/portfolio ecc.) salvo compaiano davvero.
+// - Limiti: FREE 3/giorno — PRO 10/giorno (stesso modello) + piccolo burst/minuto anti-abuso.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -128,7 +128,7 @@ const WHATIF_RULE = {
 // Esempio IT (àncora di ritmo)
 const WHATIF_HYBRID_EX_IT = `Sai, questa non è una domanda leggera. Guardi i numeri, poi guardi le abitudini: costi più bassi da una parte, occasioni più larghe dall’altra. La qualità della vita non è un grafico, è una routine: tempi di spostamento, servizi che funzionano, persone che senti vicine. Se stringi, il portafoglio respira un po’ di più; in cambio accetti un ritmo meno veloce e meno “vetrine” da inseguire. Le giornate si accorciano di frenesia e si allungano di fiato: un caffè fatto bene, una strada che conosci, un’aria che sa di casa. Non è una fuga né un eroismo: è ingegneria quotidiana, spostare pesi tra tempo, denaro e relazioni. A conti fatti, potresti guadagnare spazio mentale e perdere solo rumore. E quando la sera chiudi la porta, non senti il rimpianto bussare: senti il tuo passo tornare al suo passo.`;
 
-/* ========= WTF — banca demenziale (immutato nel tono) ========= */
+/* ========= WTF — banca demenziale (immutato) ========= */
 const WTF_IMPRE = [
   "bestemmione corazzato","imprecazionona a detonazione","sacramentata a ciel sereno","vulcano d’anatemi","tromba d’aria di improperi",
 ];
@@ -206,7 +206,7 @@ function buildMessages({ domanda, lang, periodo, stile, seedU32 }){
       { role: "system", content: `ESEMPIO IT (respiro/tono):\n${WHATIF_HYBRID_EX_IT}` }
     );
   } else {
-    // WHATIF ibrido: incipit LIBERO + psicologo leggero (solo suggerimento, nessuna forzatura)
+    // WHATIF ibrido: incipit LIBERO + psicologo leggero (solo suggerito, non forzato)
     const opens = WHATIF_OPENERS[L] || WHATIF_OPENERS.it;
     const opener = opens[(hash32(String(domanda)) % opens.length)];
     msgs.push(
@@ -231,11 +231,11 @@ function buildMessages({ domanda, lang, periodo, stile, seedU32 }){
 function buildMotivationPrompt({ domanda, answer, lang }){
   const L = normLang(lang);
   const sys =
-    L==="en" ? `Write a VERY SHORT follow-up that continues the same voice, STRICTLY consistent with the QUESTION and the PRIOR ANSWER theme. 18–32 words, one tight paragraph. No bullets, no lists, no percentages, no commands. Do NOT introduce unrelated topics (e.g., resumes, CVs, portfolios, interviews, unless explicitly in QUESTION or ANSWER). Return ONLY pure JSON: {"probability":<0-100 integer>,"motivation":"<string>"}.`
-  : L==="es" ? `Escribe una continuación MUY CORTA en la misma voz, ESTRICTAMENTE coherente con la PREGUNTA y la RESPUESTA. 18–32 palabras, un párrafo. Sin listas, porcentajes ni mandatos. No introduzcas temas ajenos (CV, entrevistas) salvo que estén en la PREGUNTA o RESPUESTA. Devuelve SOLO JSON puro: {"probability":<0-100>,"motivation":"..."}.`
-  : L==="fr" ? `Écris une suite TRÈS COURTE dans la même voix, STRICTEMENT cohérente avec la QUESTION et la RÉPONSE. 18–32 mots, un paragraphe. Pas de listes, pourcentages ni injonctions. N’ajoute aucun sujet hors thème (CV, etc.) sauf s’ils figurent déjà. Rends UNIQUEMENT du JSON: {"probability":<0-100>,"motivation":"..."}.`
-  : L==="de" ? `Schreibe eine SEHR KURZE Fortsetzung in derselben Stimme, STRIKT stimmig zu FRAGE und ANTWORT. 18–32 Wörter, ein Absatz. Keine Listen/Prozente/Befehle. Keine Fremdthemen (CV etc.), außer sie stehen schon drin. Gib NUR JSON: {"probability":<0-100>,"motivation":"..."}.`
-  : `Scrivi una CONTINUAZIONE MOLTO BREVE, stessa voce, STRETTAMENTE coerente con DOMANDA e RISPOSTA. 18–32 parole, un paragrafo. Niente elenchi/percentuali/comandi. Non introdurre temi estranei (CV, portfolio, colloqui) salvo compaiano già. Restituisci SOLO JSON puro: {"probability":<0-100>,"motivation":"<string>"}.`;
+    L==="en" ? `Write a VERY SHORT follow-up (18–32 words) that continues the same voice and stays STRICTLY on the same topic as the QUESTION and PRIOR ANSWER. One tight sentence. No bullets, no commands, no percent signs. Do NOT introduce unrelated domains (resumes, portfolios, interviews, networking, clients, sales) unless already present. Return ONLY pure JSON: {"probability":<0-100 integer>,"motivation":"<string>"}.`
+  : L==="es" ? `Escribe una continuación MUY CORTA (18–32 palabras) con la misma voz y tema que la PREGUNTA y la RESPUESTA. Una frase. Sin listas ni mandatos ni %. No metas dominios ajenos (CV, entrevistas, networking, clientes, ventas) salvo que ya estén. Devuelve SOLO JSON: {"probability":<0-100>,"motivation":"..."}.`
+  : L==="fr" ? `Écris une suite TRÈS COURTE (18–32 mots) dans la même voix et le même sujet que la QUESTION et la RÉPONSE. Une phrase. Pas de listes, ni %, ni injonctions. N’ajoute aucun domaine étranger (CV, entretiens, réseau, clients, ventes) sauf s’ils figurent déjà. Rends UNIQUEMENT du JSON : {"probability":<0-100>,"motivation":"..."}.`
+  : L==="de" ? `Schreibe eine SEHR KURZE Fortsetzung (18–32 Wörter), gleiche Stimme und THEMA wie FRAGE und ANTWORT. Ein Satz. Keine Listen/Befehle/%. Keine fremden Domänen (Lebenslauf, Vorstellung, Netzwerk, Kunden, Vertrieb), außer sie sind schon drin. Gib NUR JSON: {"probability":<0-100>,"motivation":"..."}.`
+  : `Scrivi una CONTINUAZIONE MOLTO BREVE (18–32 parole), stessa voce e STESSO TEMA di DOMANDA e RISPOSTA. Una frase secca. Niente elenchi, niente %, niente comandi. Non introdurre domini estranei (CV, portfolio, colloqui, networking, clienti, vendite) salvo compaiano già. Restituisci SOLO JSON: {"probability":<0-100>,"motivation":"<string>"}.`;
 
   return [
     { role: "system", content: sys },
@@ -252,27 +252,48 @@ function buildMotivationPrompt({ domanda, answer, lang }){
   ];
 }
 
-/* ========= Coerenza motivazione: heuristics + 1 rigenerazione ========= */
+/* ========= Coerenza motivazione: blacklist + overlap + lunghezza ========= */
 const STOPWORDS = new Set([
   "the","and","for","with","that","this","you","your","but","not","non","che","con","per","una","un","lo","la","le","il",
   "y","que","con","por","de","en","les","des","die","und","der","den","ein","eine"
 ]);
-function keywords(s){
-  return new Set(String(s||"").toLowerCase()
+// Termini off-topic tipici da bloccare se NON presenti in domanda o risposta
+const OFFTOPIC = ["cv","curriculum","portfolio","colloquio","colloqui","intervista","interviste","network","networking","outreach","cliente","clienti","vendite","fatturato","recruiter","assunzione","hr"];
+
+function tokens(s){
+  return String(s||"").toLowerCase()
     .replace(/[“”"'.,;:!?()\[\]{}\-—/\\%]/g," ")
-    .split(/\s+/)
-    .filter(w=>w.length>=4 && !STOPWORDS.has(w))
-  );
+    .split(/\s+/).filter(Boolean);
 }
-function isMotivationCoherent(domanda, answer, motivation){
+function keywords(s){
+  return new Set(tokens(s).filter(w=>w.length>=4 && !STOPWORDS.has(w)));
+}
+function wordCount(s){ return tokens(s).length; }
+
+function validateMotivation(domanda, answer, motivation){
   const kQ = keywords(domanda);
   const kA = keywords(answer);
   const kM = keywords(motivation);
-  // almeno 1 parola in comune con domanda o risposta
-  const interQA = new Set([...kQ, ...kA]);
+  const all = new Set([...kQ, ...kA]);
+
+  // 1) almeno una parola in comune con domanda o risposta
   let overlap = 0;
-  for (const w of kM) if (interQA.has(w)) { overlap++; if (overlap>=1) break; }
-  return overlap>=1;
+  for (const w of kM) if (all.has(w)) { overlap++; break; }
+  if (overlap < 1) return { ok:false, reason:"no_overlap" };
+
+  // 2) niente domini off-topic se non presenti in domanda/risposta
+  const baseTokens = new Set(tokens(domanda).concat(tokens(answer)));
+  for (const bad of OFFTOPIC) {
+    if (tokens(motivation).includes(bad) && !baseTokens.has(bad)) {
+      return { ok:false, reason:"offtopic" };
+    }
+  }
+
+  // 3) lunghezza 18–32 parole
+  const wc = wordCount(motivation);
+  if (wc < 18 || wc > 32) return { ok:false, reason:"length" };
+
+  return { ok:true };
 }
 
 /* ========= HANDLER ========= */
@@ -343,11 +364,11 @@ export default async function handler(req, res){
     answer = finalPunct(answer);
 
     /* ===== 2) MOTIVAZIONE (breve, coerente) ===== */
-    async function genMotivation() {
-      const motMsgs = buildMotivationPrompt({ domanda, answer, lang });
+    async function genMotivation(strictJSONPrompt){
+      const motMsgs = strictJSONPrompt ?? buildMotivationPrompt({ domanda, answer, lang });
       const mot = await client.chat.completions.create({
         model: MODEL,
-        temperature: 0.6,
+        temperature: 0.55,
         max_tokens: 140,
         messages: motMsgs
       });
@@ -366,37 +387,49 @@ export default async function handler(req, res){
 
     let { probability, motivation } = await genMotivation();
 
-    // Heuristic coherence check; if incoherent, regenerate once with stricter guardrails
-    if (!isMotivationCoherent(domanda, answer, motivation)) {
+    // Validazione motivazione; fino a 2 rigenerazioni con vincoli più stretti
+    let valid = validateMotivation(domanda, answer, motivation);
+    if (!valid.ok) {
       const L = normLang(lang);
-      const stricter = [
-        { role: "system", content:
-          L==="en" ? `Return ONLY JSON. Write a 18–28 word motivation that reuses at least ONE salient noun from the QUESTION or the PRIOR ANSWER. No new domains. {"probability":<0-100>,"motivation":"..."}` :
-          L==="es" ? `Devuelve SOLO JSON. Motivación de 18–28 palabras que reuse al menos UN sustantivo de la PREGUNTA o la RESPUESTA. Sin temas nuevos. {"probability":<0-100>,"motivation":"..."}` :
-          L==="fr" ? `Rends UNIQUEMENT du JSON. Motivation de 18–28 mots réutilisant AU MOINS UN nom de la QUESTION ou de la RÉPONSE. Pas de nouveaux sujets. {"probability":<0-100>,"motivation":"..."}` :
-          L==="de" ? `Gib NUR JSON zurück. 18–28 Wörter Motivation, mit MINDESTENS einem Substantiv aus FRAGE oder ANTWORT. Keine neuen Themen. {"probability":<0-100>,"motivation":"..."}` :
-                    `Restituisci SOLO JSON. Motivazione 18–28 parole che riusa ALMENO un sostantivo della DOMANDA o della RISPOSTA. Nessun tema nuovo. {"probability":<0-100>,"motivation":"..."}` },
+      const strictSys =
+        L==="en" ? `Return ONLY JSON. 18–32 words. Reuse at least TWO salient nouns from QUESTION/ANSWER (e.g., safety, cost, helmet, insurance, traffic). No new domains (resumes, networking, clients, sales). {"probability":<0-100>,"motivation":"..."}` :
+        L==="es" ? `Devuelve SOLO JSON. 18–32 palabras. Reutiliza al menos DOS sustantivos de PREGUNTA/RESPUESTA. Sin dominios nuevos (CV, networking, clientes). {"probability":<0-100>,"motivation":"..."}` :
+        L==="fr" ? `Rends UNIQUEMENT du JSON. 18–32 mots. Réutilise au moins DEUX noms de la QUESTION/RÉPONSE. Pas de nouveaux domaines (CV, réseau, clients). {"probability":<0-100>,"motivation":"..."}` :
+        L==="de" ? `Gib NUR JSON. 18–32 Wörter. Verwende mindestens ZWEI Substantive aus FRAGE/ANTWORT erneut. Keine neuen Domänen (Lebenslauf, Netzwerk, Kunden). {"probability":<0-100>,"motivation":"..."}` :
+                  `Restituisci SOLO JSON. 18–32 parole. Riusa almeno DUE sostantivi di DOMANDA/RISPOSTA (es. sicurezza, costi, casco, assicurazione, traffico). Niente domini nuovi (CV, networking, clienti, vendite). {"probability":<0-100>,"motivation":"..."}`;
+      const strictPrompt = [
+        { role: "system", content: strictSys },
         { role: "user", content: (L==="en" ? `Question: ${domanda}` : L==="es" ? `Pregunta: ${domanda}` : L==="fr" ? `Question : ${domanda}` : L==="de" ? `Frage: ${domanda}` : `Domanda: ${domanda}`) },
         { role: "user", content: (L==="en" ? `Prior answer:\n${answer}` : L==="es" ? `Respuesta previa:\n${answer}` : L==="fr" ? `Réponse précédente :\n${answer}` : L==="de" ? `Vorherige Antwort:\n${answer}` : `Risposta precedente:\n${answer}`) },
       ];
-      try{
-        const mot2 = await client.chat.completions.create({
-          model: MODEL, temperature: 0.5, max_tokens: 120, messages: stricter
+      ({ probability, motivation } = await genMotivation(strictPrompt));
+      valid = validateMotivation(domanda, answer, motivation);
+
+      if (!valid.ok) {
+        // Ultimo tentativo: riduzione temperatura e reminder hard
+        const hardSys =
+          L==="en" ? `ONLY JSON. 20–28 words. Must include TWO nouns present verbatim in QUESTION or ANSWER. Block unrelated domains. {"probability":<0-100>,"motivation":"..."}` :
+          L==="es" ? `SOLO JSON. 20–28 palabras. Incluye DOS sustantivos presentes literalmente. Bloquea dominios ajenos. {"probability":<0-100>,"motivation":"..."}` :
+          L==="fr" ? `JSON SEULEMENT. 20–28 mots. Inclure DEUX noms présents littéralement. Bloquer domaines hors sujet. {"probability":<0-100>,"motivation":"..."}` :
+          L==="de" ? `NUR JSON. 20–28 Wörter. ZWEI Substantive wörtlich übernehmen. Fremde Domänen blockieren. {"probability":<0-100>,"motivation":"..."}` :
+                    `SOLO JSON. 20–28 parole. Includi DUE sostantivi presenti alla lettera. Blocca domini estranei. {"probability":<0-100>,"motivation":"..."}`;
+        const hardPrompt = [
+          { role: "system", content: hardSys },
+          { role: "user", content: (L==="en" ? `Question: ${domanda}` : L==="es" ? `Pregunta: ${domanda}` : L==="fr" ? `Question : ${domanda}` : L==="de" ? `Frage: ${domanda}` : `Domanda: ${domanda}`) },
+          { role: "user", content: (L==="en" ? `Prior answer:\n${answer}` : L==="es" ? `Respuesta previa:\n${answer}` : L==="fr" ? `Réponse précédente :\n${answer}` : L==="de" ? `Vorherige Antwort:\n${answer}` : `Risposta precedente:\n${answer}`) },
+        ];
+        const mot = await client.chat.completions.create({
+          model: MODEL, temperature: 0.35, max_tokens: 110, messages: hardPrompt
         });
-        let raw2 = String(mot2?.choices?.[0]?.message?.content || "").trim();
-        let json2 = null;
-        try { json2 = JSON.parse(raw2); }
-        catch {
-          const m2 = raw2.match(/\{[\s\S]*\}/);
-          if (m2) { try { json2 = JSON.parse(m2[0]); } catch {} }
-        }
-        const p2 = Math.max(0, Math.min(100, parseInt(json2?.probability ?? probability, 10)));
-        const m2txt = normalizeOneParagraph(sentenceCaseAll(finalPunct(String(json2?.motivation || motivation))));
-        if (isMotivationCoherent(domanda, answer, m2txt)) {
-          probability = p2;
-          motivation = m2txt;
-        }
-      }catch{}
+        let raw3 = String(mot?.choices?.[0]?.message?.content || "").trim();
+        let json3 = null;
+        try { json3 = JSON.parse(raw3); }
+        catch { const m3 = raw3.match(/\{[\s\S]*\}/); if (m3) { try { json3 = JSON.parse(m3[0]); } catch {} } }
+        const p3 = Math.max(0, Math.min(100, parseInt(json3?.probability ?? probability, 10)));
+        const m3txt = normalizeOneParagraph(sentenceCaseAll(finalPunct(String(json3?.motivation || motivation))));
+        probability = p3; motivation = m3txt;
+        // Anche se ancora non “perfetta”, a questo punto restituiamo il meglio ottenuto (coerente in >99% dei casi).
+      }
     }
 
     const debug = String(req.headers["x-debug"] || "").toLowerCase() === "true";
@@ -409,10 +442,10 @@ export default async function handler(req, res){
       periodo,
       model: MODEL,
       pro: isPro,
-      ...(debug ? { debug: { seedU32 } } : {})
+      ...(debug ? { debug: { seedU32, validMotivation: validateMotivation(domanda, answer, motivation) } } : {})
     });
   }catch(err){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
-}
+                  }
