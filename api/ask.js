@@ -1,8 +1,9 @@
 // /api/ask.js — What?f Engine (Stable Hybrid WHATIF + Friendly-WTF Demenziale)
-// - WHATIF: 60% analisi / 40% immagini sobrie. Incipit VARIABILE obbligatorio (no “Bella …”) + tocco psicologo leggero.
-// - WTF: 2–3 reazioni DEMENZIALI, UNA “imprecazione” teatrale, sorso alcolico, risposta vera, morale.
+// - WHATIF: 60% analisi / 40% immagini sobrie. Incipit LIBERO (no “Bella …”) + tocco psicologo leggero.
+// - WTF: 2–3 reazioni DEMENZIALI, UNA “imprecazione” teatrale, sorso alcolico, risposta vera, morale. (non toccato)
 // - Maiuscole post-process dopo . ? ! … : e con virgolette/parentesi. Un paragrafo, niente elenchi, niente eco della domanda.
 // - Motivazione: brevissima, lasciata libera alla AI (come continuazione). Output: { motivation, probability }.
+// - Rate limit: FREE 3/giorno — PRO 10/giorno.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -14,13 +15,23 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
 /* ========= Redis & Rate ========= */
-// FREE: 3/giorno — PRO: 10/giorno (stesso modello)
+// Burst anti-abuso al minuto (soft), più limite GIORNALIERO custom
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
-const rlFree = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(3, "1 d") });
-const rlPro  = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "1 d") });
+const rlBurst = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "1 m") });
+
+async function checkDailyLimit({ ip, isPro }) {
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const key = `ask:daily:${isPro ? "pro" : "free"}:${ip}:${today}`;
+  const max = isPro ? 10 : 3;
+  const count = await redis.incr(key);
+  if (count === 1) {
+    await redis.expire(key, 86400); // 24h
+  }
+  return { ok: count <= max, remaining: Math.max(0, max - count) };
+}
 
 /* ========= CORS ========= */
 const ALLOWED_ORIGINS = [
@@ -66,8 +77,7 @@ function stripQuestionEcho(domanda,text){
   if(lead.startsWith(d)){ const cut=t.indexOf("."); if(cut>-1) t=t.slice(cut+1).trim(); }
   t=t.replace(rx,""); return t;
 }
-
-// Maiuscole robuste: inizio stringa + dopo . ? ! … : e gestione virgolette/parentesi
+// Maiuscole robuste
 function sentenceCaseAll(s=""){
   if(!s) return s;
   s = s.replace(/^(\s*[«“"'\(\[]*)([a-zà-ÿ])/u, (m, pre, ch) => pre + ch.toUpperCase());
@@ -80,7 +90,6 @@ function finalPunct(s=""){ return /[.!?…]$/.test(s)?s:s+"."; }
 function hash32(str){ let x=2166136261; for(const c of String(str)) x=(x^c.charCodeAt(0))>>>0, x=(x*16777619)>>>0; return x>>>0; }
 function u32fromCrypto(){ try{ return crypto.randomBytes(4).readUInt32BE(0); } catch{ return (Math.random()*2**32)>>>0; } }
 function getRequestSeed(req, extra=""){
-  // Header x-seed (prioritario) -> altrimenti mix crypto + ip + time + Math.random
   const hdr = req?.headers?.["x-seed"];
   if (hdr) return Number(hdr)>>>0;
   const ip = ((req?.headers?.["x-forwarded-for"] || req?.socket?.remoteAddress || "0.0.0.0").toString().split(",")[0] || "").trim();
@@ -93,7 +102,7 @@ function seededPick(arr, seedU32){
   return arr[Math.floor(r*arr.length)];
 }
 
-/* ========= WHAT IF – incipit multilingua estesi ========= */
+/* ========= WHAT IF – incipit multilingua (regole) ========= */
 const WHATIF_OPENERS = {
   it: [
     "Non è una domanda semplice e lo sai.",
@@ -170,17 +179,17 @@ const WHATIF_OPENERS = {
 };
 
 const WHATIF_RULE = {
-  it: `WHAT IF HYBRID (italiano): 60% analisi concreta (costi/benefici, routine, qualità di vita), 40% immagini sobrie della quotidianità. Incipit VARIABILE da lista; vietato iniziare con “Bella”. 8–10 frasi, seconda persona, un paragrafo, no eco. Tocco psicologo leggero.`,
-  en: `WHAT IF HYBRID (English): 60% concrete analysis, 40% sober everyday imagery. Start with a VARIABLE opener; never “Nice one”. 8–10 sentences, second person, one paragraph, no question restatement.`,
-  es: `WHAT IF HYBRID (español): 60% análisis concreto, 40% imágenes sobrias. Inicio VARIABLE; nunca “Qué bonito”. 8–10 frases, segunda persona, un párrafo.`,
-  fr: `WHAT IF HYBRID (français): 60% analyse concrète, 40% images sobres. Ouverture VARIABLE; jamais « Sympa ». 8–10 phrases, deuxième personne, un paragraphe.`,
-  de: `WHAT IF HYBRID (Deutsch): 60% konkrete Analyse, 40% nüchterne Alltagsbilder. Variabler Opener; nie „Na toll“. 8–10 Sätze, zweite Person, ein Absatz.`
+  it: `WHAT IF HYBRID (italiano): 60% analisi concreta (costi/benefici, routine, qualità di vita), 40% immagini sobrie della quotidianità. Incipit LIBERO (mai “Bella”). 8–10 frasi, seconda persona, un paragrafo, no eco. Tocco psicologo leggero.`,
+  en: `WHAT IF HYBRID (English): 60% concrete analysis, 40% sober everyday imagery. FREE opener (never “Nice one”). 8–10 sentences, second person, one paragraph, no question restatement.`,
+  es: `WHAT IF HYBRID (español): 60% análisis concreto, 40% imágenes sobrias. Inicio LIBRE; nunca “Qué bonito”. 8–10 frases, segunda persona, un párrafo.`,
+  fr: `WHAT IF HYBRID (français): 60% analyse concrète, 40% images sobres. Ouverture LIBRE; jamais « Sympa ». 8–10 phrases, deuxième personne, un paragraphe.`,
+  de: `WHAT IF HYBRID (Deutsch): 60% konkrete Analyse, 40% nüchterne Alltagsbilder. Freier Opener; nie „Na toll“. 8–10 Sätze, zweite Person, ein Absatz.`
 };
 
 // Esempio IT (àncora di ritmo)
 const WHATIF_HYBRID_EX_IT = `Sai, questa non è una domanda leggera. Guardi i numeri, poi guardi le abitudini: costi più bassi da una parte, occasioni più larghe dall’altra. La qualità della vita non è un grafico, è una routine: tempi di spostamento, servizi che funzionano, persone che senti vicine. Se stringi, il portafoglio respira un po’ di più; in cambio accetti un ritmo meno veloce e meno “vetrine” da inseguire. Le giornate si accorciano di frenesia e si allungano di fiato: un caffè fatto bene, una strada che conosci, un’aria che sa di casa. Non è una fuga né un eroismo: è ingegneria quotidiana, spostare pesi tra tempo, denaro e relazioni. A conti fatti, potresti guadagnare spazio mentale e perdere solo rumore. E quando la sera chiudi la porta, non senti il rimpianto bussare: senti il tuo passo tornare al suo passo.`;
 
-/* ========= WTF — banca demenziale ========= */
+/* ========= WTF — banca demenziale (immutato) ========= */
 const WTF_IMPRE = [
   "bestemmione corazzato",
   "imprecazionona a detonazione",
@@ -247,7 +256,7 @@ function buildMessages({ domanda, lang, periodo, stile, seedU32 }){
   ];
 
   if(stile==="wtf"){
-    // Random con seedU32
+    // Random con seedU32 (immutato)
     let seed = (seedU32 ?? 0) ^ hash32(String(domanda));
     function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; }
     const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
@@ -271,12 +280,12 @@ function buildMessages({ domanda, lang, periodo, stile, seedU32 }){
       { role: "system", content: `ESEMPIO IT (tono/ritmo):\n${WHATIF_HYBRID_EX_IT}` }
     );
   } else {
-    // WHATIF ibrido: INCIPIT VARIABILE + psicologo leggero (usa SOLO seedU32 passato)
+    // WHATIF ibrido: incipit LIBERO + psicologo leggero (niente iniezione forzata)
     const opens = WHATIF_OPENERS[L] || WHATIF_OPENERS.it;
-    const opener = seededPick(opens, (seedU32 ?? 0) ^ hash32(String(domanda)));
+    const opener = seededPick(opens, (seedU32 ?? 0) ^ hash32(String(domanda))); // solo per “preferisci”, non forziamo
     msgs.push(
       { role: "system", content: WHATIF_RULE[L] || WHATIF_RULE.it },
-      { role: "system", content: `APRIRE OBBLIGATORIAMENTE con un incipit scelto tra: ${opens.join(" | ")}. Preferisci: ${opener}. Vietato usare “Bella”.` },
+      { role: "system", content: `Se vuoi, puoi aprire con uno di questi incipit: ${opens.join(" | ")}. Preferisci: ${opener}. Vietato usare “Bella”. Libertà di apertura consentita.` },
       { role: "system", content: `ESEMPIO (respiro e tono IT):\n${WHATIF_HYBRID_EX_IT}` }
     );
   }
@@ -297,11 +306,11 @@ function buildMessages({ domanda, lang, periodo, stile, seedU32 }){
 function buildMotivationPrompt({ domanda, answer, lang }){
   const L = normLang(lang);
   const sys =
-    L==="en" ? `Write a VERY SHORT continuation that feels like the same voice, consistent with the QUESTION and the PRIOR ANSWER. 20–45 words, one tight paragraph. Output ONLY JSON: {"probability": <0-100>, "motivation": "<text>"}.` :
-    L==="es" ? `Escribe una continuación MUY CORTA, misma voz, coherente con la PREGUNTA y la RESPUESTA. 20–45 palabras, un párrafo. Devuelve SOLO JSON: {"probability": <0-100>, "motivation": "<texto>"}.` :
-    L==="fr" ? `Écris une suite TRÈS COURTE, même voix, cohérente avec la QUESTION et la RÉPONSE. 20–45 mots, un paragraphe. Rends UNIQUEMENT le JSON : {"probability": <0-100>, "motivation": "<texte>"}.` :
-    L==="de" ? `Schreibe eine SEHR KURZE Fortsetzung in derselben Stimme, stimmig zu FRAGE und ANTWORT. 20–45 Wörter, ein Absatz. Gib NUR JSON zurück: {"probability": <0-100>, "motivation": "<text>"}.` :
-              `Scrivi una CONTINUAZIONE MOLTO BREVE, stessa voce, coerente con DOMANDA e RISPOSTA. 20–45 parole, un paragrafo. Restituisci SOLO JSON: {"probability": <0-100>, "motivation": "<testo>"}.`;
+    L==="en" ? `Write a VERY SHORT continuation that feels like the same voice, consistent with the QUESTION and the PRIOR ANSWER. 20–45 words, one tight paragraph. Return ONLY JSON object with keys probability (0-100) and motivation (string).` :
+    L==="es" ? `Escribe una continuación MUY CORTA, misma voz, coherente con la PREGUNTA y la RESPUESTA. 20–45 palabras, un párrafo. Devuelve SOLO un objeto JSON con probability (0-100) y motivation (string).` :
+    L==="fr" ? `Écris une suite TRÈS COURTE, même voix, cohérente avec la QUESTION et la RÉPONSE. 20–45 mots, un paragraphe. Rends UNIQUEMENT un objet JSON avec probability (0-100) et motivation (string).` :
+    L==="de" ? `Schreibe eine SEHR KURZE Fortsetzung in derselben Stimme, stimmig zu FRAGE und ANTWORT. 20–45 Wörter, ein Absatz. Gib NUR ein JSON-Objekt mit probability (0-100) und motivation (string) zurück.` :
+              `Scrivi una CONTINUAZIONE MOLTO BREVE, stessa voce, coerente con DOMANDA e RISPOSTA. 20–45 parole, un paragrafo. Restituisci SOLO un oggetto JSON con probability (0-100) e motivation (string).`;
 
   return [
     { role: "system", content: sys },
@@ -332,8 +341,21 @@ export default async function handler(req, res){
       String(req.headers["x-pro"] || "") === "1";
 
     const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").toString().split(",")[0].trim();
-    const { success } = await (isPro ? rlPro : rlFree).limit(`ask:${ip}:${isPro?"pro":"free"}`);
-    if(!success) return res.status(429).json({ error:"rate_limited_daily", detail:"limite giornaliero raggiunto" });
+
+    // Burst al minuto (soft)
+    const burst = await rlBurst.limit(`ask:burst:${ip}`);
+    if(!burst.success) return res.status(429).json({ error:"rate_limited_minute" });
+
+    // Limite giornaliero
+    const daily = await checkDailyLimit({ ip, isPro });
+    if(!daily.ok) {
+      return res.status(429).json({
+        error:"rate_limited_daily",
+        detail:"limite giornaliero raggiunto",
+        remaining: 0,
+        max: isPro ? 10 : 3
+      });
+    }
 
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const {
@@ -367,16 +389,7 @@ export default async function handler(req, res){
 
     // ===== Post-process risposta =====
     answer = stripQuestionEcho(domanda, answer);
-    if (stile === "whatif") {
-      const L = normLang(lang);
-      const opens = WHATIF_OPENERS[L] || WHATIF_OPENERS.it;
-      const opener = seededPick(opens, (seedU32 ?? 0) ^ hash32(String(domanda) + ":inject"));
-      const firstSlice = answer.slice(0, Math.min(160, answer.length)).toLowerCase();
-      const hasOpener = opens.some((o)=> firstSlice.includes(o.slice(0,12).toLowerCase()));
-      if(!hasOpener){
-        answer = `${opener} ${answer}`;
-      }
-    }
+    // (Niente iniezione forzata di incipit: libertà alla AI)
     answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);
     answer = clampWords(answer, stile === "wtf" ? 170 : 165);
     answer = normalizeOneParagraph(answer);
@@ -390,19 +403,30 @@ export default async function handler(req, res){
       const motMsgs = buildMotivationPrompt({ domanda, answer, lang });
       const mot = await client.chat.completions.create({
         model: MODEL,
-        response_format: { type: "json_object" },
         temperature: 0.6,
         max_tokens: 140, // corto
         messages: motMsgs
       });
-      const parsed = JSON.parse(mot?.choices?.[0]?.message?.content || "{}");
-      probability = Math.max(0, Math.min(100, parseInt(parsed?.probability ?? 50, 10)));
-      motivation = String(parsed?.motivation || "").trim();
+      let raw = String(mot?.choices?.[0]?.message?.content || "").trim();
+
+      // Tenta parse JSON robusto
+      let json = null;
+      try { json = JSON.parse(raw); }
+      catch {
+        const match = raw.match(/\{[\s\S]*\}/);
+        if (match) {
+          try { json = JSON.parse(match[0]); } catch {}
+        }
+      }
+      probability = Math.max(0, Math.min(100, parseInt(json?.probability ?? 50, 10)));
+      motivation = String(json?.motivation || "").trim();
+      if(!motivation) throw new Error("no_motivation");
+
       motivation = normalizeOneParagraph(sentenceCaseAll(finalPunct(motivation)));
     }catch{
       motivation = normLang(lang)==="it"
-        ? "Se proteggi tempo ed energia, i piccoli passi diventano abitudine: meno attrito, più qualità nel quotidiano."
-        : "If you protect time and energy, small steps become habit: less friction, more quality in daily life.";
+        ? "Se proteggi tempo ed energia, i piccoli passi diventano abitudine."
+        : "If you protect time and energy, small steps become a habit.";
       motivation = finalPunct(sentenceCaseAll(motivation));
       probability = 50;
     }
