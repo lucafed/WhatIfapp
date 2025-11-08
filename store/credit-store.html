@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Store Crediti</title>
+  <style>
+    :root{--bg:#0A0F14;--txt:#fff;--accent:#00E0FF;--accent2:#1AFFD5;--ink:#0A0E12;}
+    body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,Roboto,Arial,sans-serif;
+         display:flex;min-height:100vh;align-items:center;justify-content:center}
+    .box{width:100%;max-width:420px;padding:18px}
+    h1{margin:0 0 8px;color:var(--accent2);font-size:22px}
+    p{opacity:.85;margin:0 0 14px}
+    .row{display:grid;gap:10px;margin:12px 0}
+    .btn{padding:12px 14px;border:0;border-radius:12px;font-weight:900;cursor:pointer}
+    .buy{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink)}
+    .ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>💰 Acquista o guadagna crediti</h1>
+    <p>Ogni domanda consuma 1 credito.</p>
+
+    <div class="row">
+      <button class="btn buy"   onclick="buy(5)">+5 Crediti — 0,99€</button>
+      <button class="btn buy"   onclick="buy(10)">+10 Crediti — 1,49€</button>
+      <button class="btn buy"   onclick="buy(20)">+20 Crediti — 2,49€</button>
+      <button class="btn ghost" onclick="rewarded()">🎥 Guarda un video (+1 gratis)</button>
+    </div>
+
+    <p style="font-size:12px;opacity:.7">Demo: i pulsanti accreditano subito i crediti.
+      In seguito collegheremo Stripe/Play Billing.</p>
+  </div>
+
+  <script>
+    function buy(amount){ parent.postMessage({ type:'purchase_complete', amount }, '*'); }
+    function rewarded(){ parent.postMessage({ type:'open_rewarded' }, '*'); }
+  </script>
+</body>
+</html>
