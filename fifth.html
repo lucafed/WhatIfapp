@@ -342,12 +342,12 @@ const I18N = {
        credits:(n)=>`💰 Credits: ${n}`,
        noCredits:"You ran out of credits." },
 
-  es:{ /* ...tagliate per brevità, identiche alla tua versione... */ },
-  fr:{ /* idem */ },
-  de:{ /* idem */ }
+  es:{},
+  fr:{},
+  de:{}
 };
 
-/* ==== Leads (come prima) ==== */
+/* ==== Leads (essenziali) ==== */
 const LEADS = {
   it:{ wtf:[
       "Entri piano, il caos ti riconosce e oggi ti lascia passare.",
@@ -361,11 +361,9 @@ const LEADS = {
             "Breathe; let chance trip before you do."],
        whatif:["Set the keys down and let the quiet that doesn’t judge go first.",
                "Same room, different gaze — that’s already a start."]}
-  // (puoi reinserire tutte le lingue come in precedenza)
 };
 
-/* ==== Categories, sci-motivations, ecc. (come tua versione) ==== */
-const CATEGORIES=[ /* ... (omesso qui per brevità, puoi incollare il tuo elenco completo) ... */ ];
+/* ==== (Placeholder) categorie/motivazioni scientifiche rapide ==== */
 const SCI_MOTIVATIONS={ it:[
   "Studio CEDSA: 312 soggetti + 2 cavie alticce; effetto stimato all’87% (p≈0,02).",
   "Protocollo PignaLab: 98 partecipanti + 1 piccione; risultato replicato, CI sorprendente.",
@@ -438,14 +436,12 @@ h2{margin:4px 0 6px;font-size:18px}
 function openOverlay(url){
   overlay.style.display = 'grid';
   overlay.setAttribute('aria-hidden','false');
-  // prova ad aprire la tua pagina store, ma mettiamo SUBITO anche un fallback inline
   overlayFrame.removeAttribute('srcdoc');
   overlayFrame.src = url || 'about:blank';
-  // fallback garantito (anti-banner bianco)
   overlayFrame.setAttribute('srcdoc', storeFallbackHTML());
 }
 function openStore(){ openOverlay("/store/credit-store.html"); }
-function openRewarded(){ openOverlay("/ads/rewarded.html"); /* anche qui fallback inline già presente */ }
+function openRewarded(){ openOverlay("/ads/rewarded.html"); }
 function closeOverlay(){
   overlay.style.display = 'none';
   overlay.setAttribute('aria-hidden','true');
@@ -473,7 +469,6 @@ function writeWallet(w){
     limit:     (w.limit    !=null)? Math.max(0, +w.limit)     : (cur.limit??0),
   };
   localStorage.setItem(WKEY, JSON.stringify(out));
-  // sync per fourth
   localStorage.setItem("whatif_wallet_sync", String(Date.now()));
   updateCreditInfo();
 }
@@ -481,22 +476,18 @@ function writeWallet(w){
 /* Legacy helpers */
 function legacyCap(){ return (prefs.pro===true)?10:3; }
 function legacyGetLeft(){
-  // 1) wallet.available se c’è
   const w = readWallet();
   if(w.available!=null) return w.available;
-  // 2) legacy giornaliero whatif_credits {date,used}
   try{
     const c = JSON.parse(LS.getItem('whatif_credits')||'{}'); 
     const today=new Date().toISOString().slice(0,10);
     const used = (c.date===today)? (+c.used||0) : 0;
     return Math.max(0, legacyCap()-used);
   }catch{}
-  // 3) legacy "crediti" contatore secco
   const raw = LS.getItem('crediti'); 
   return raw==null? legacyCap() : Math.max(0, parseInt(raw,10)||0);
 }
 function legacyConsumeOne(){
-  // Se wallet non presente, prova con whatif_credits (daily), altrimenti "crediti"
   try{
     const w = readWallet();
     if(w.available!=null){
@@ -505,7 +496,6 @@ function legacyConsumeOne(){
       return true;
     }
   }catch{}
-  // whatif_credits
   try{
     const today=new Date().toISOString().slice(0,10);
     let c = JSON.parse(LS.getItem('whatif_credits')||'{}');
@@ -516,7 +506,6 @@ function legacyConsumeOne(){
     LS.setItem('whatif_credits', JSON.stringify(c));
     return true;
   }catch{}
-  // "crediti"
   let n = parseInt(LS.getItem('crediti')||'0',10)||0;
   if(n<=0) return false;
   LS.setItem('crediti', String(Math.max(0, n-1)));
@@ -533,13 +522,11 @@ function getAvailable(){
 function consumeOne(){
   if(IS_ADMIN) return true;
   const w = readWallet();
-  // se wallet valido
   if(w.available!=null){
     if(w.available<=0) return false;
     writeWallet({available:w.available-1, used:Math.max(0,(w.used||0)+1), limit:(w.limit!=null?w.limit:legacyCap())});
     return true;
   }
-  // fallback legacy
   return legacyConsumeOne();
 }
 function addCredits(n){
@@ -547,7 +534,6 @@ function addCredits(n){
   if(n<=0) return;
   const w = readWallet();
   if(w.available==null){
-    // inizializza wallet da legacy
     const left = legacyGetLeft();
     writeWallet({available:left+n, used:0, limit:legacyCap()});
   }else{
@@ -646,7 +632,6 @@ function renderCommitteeLike(surprise){
     motIco.style.display='';
     chipsWrap.style.display='flex';
     committeeTitle.textContent = `${T.votersTitle||'Comitato'}`;
-    // numeri casuali realistici
     const r=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
     chipFav.textContent = `${T.chipsFav} ${r(120,1200)}`;
     chipCon.textContent = `${T.chipsCon} ${r(0,900)}`;
@@ -661,7 +646,6 @@ function renderCommitteeLike(surprise){
 
 /* ==== Esecuzione principale ==== */
 (async ()=>{
-  // lingua select
   const sel = document.getElementById('langSelect');
   if(sel) sel.value = lang;
 
@@ -673,7 +657,7 @@ function renderCommitteeLike(surprise){
 
   let domanda = req.domanda || LS.getItem('domanda') || "";
   setTitlesAndTexts(domanda);
-  updateCreditInfo(); // mostra crediti correnti
+  updateCreditInfo(); 
   qView.textContent = domanda || '—';
 
   // ✅ Gating crediti PRIMA della chiamata (con fallback sicuro allo Store)
@@ -682,9 +666,8 @@ function renderCommitteeLike(surprise){
     if(!(left===Infinity) && left<=0){
       openStore();
       answerEl.textContent = (I18N[lang]||I18N.it).noCredits || 'Crediti esauriti.';
-      return; // interrompe: l’utente deve acquistare/guardare ad
+      return;
     }
-    // consuma 1 credito
     if(!consumeOne()){
       openStore();
       answerEl.textContent = (I18N[lang]||I18N.it).noCredits || 'Crediti esauriti.';
@@ -708,7 +691,6 @@ function renderCommitteeLike(surprise){
 
     // Risposta principale
     let answerText = normalizeOneParagraph((data.answer||"").trim());
-    // enforce formato
     const maxSent = (style==='wtf') ? 9 : 11;
     let parts = answerText.split(/(?<=[.!?…])\s+/);
     if(parts.length > maxSent) parts = parts.slice(0, maxSent);
@@ -750,11 +732,7 @@ window.addEventListener("message",(ev)=>{
     closeOverlay();
   }
   if(d.type === "open_rewarded"){
-    // apri pagina rewarded (con fallback inline)
     openRewarded();
-    // Se la tua /ads/rewarded.html invia 'rewarded_completed' al termine, ok.
-    // In alternativa, potresti simulare un timer qui e poi:
-    // setTimeout(()=>{ window.postMessage({type:'rewarded_completed', amount:1}, '*'); }, 5000);
   }
   if(d.type === "rewarded_completed"){
     addCredits(parseInt(d.amount,10)||1);
