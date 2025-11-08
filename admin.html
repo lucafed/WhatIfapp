@@ -25,14 +25,16 @@
 </head>
 <body>
 <main>
-  <h1>What?f — <span class="mut">Admin minimal</span></h1>
+  <h1>What?f — <span class="mut">Admin</span></h1>
 
   <!-- STATO -->
   <div class="card" id="boxState">
     <div class="row"><span class="k">Admin:</span> <span id="adminFlag" class="pill">no</span></div>
     <div class="row" style="margin-top:6px">
       <span class="k">Token:</span> <span id="tok" class="pill">—</span>
-      <span class="k">Crediti disponibili:</span> <span id="creditsLeft" class="pill">—</span>
+      <span class="k">Crediti disponibili:</span> <span id="walletAvail" class="pill">—</span>
+      <span class="k">Usati:</span> <span id="walletUsed" class="pill">—</span>
+      <span class="k">Cap:</span> <span id="walletCap" class="pill">—</span>
     </div>
     <div class="row" style="margin-top:10px">
       <input id="pin" type="password" placeholder="PIN admin" style="min-width:200px"/>
@@ -45,195 +47,107 @@
     </div>
   </div>
 
-  <!-- CREDITI (wallet unico) -->
+  <!-- CREDITI -->
   <div class="card">
     <div class="row">
-      <span class="k">Disponibili:</span><span id="cLeft" class="pill">—</span>
-      <span class="k">Usati:</span><span id="cUsed" class="pill">—</span>
-      <span class="k">Cap:</span><span id="cLimit" class="pill">—</span>
-    </div>
-    <div class="row" style="margin-top:10px">
-      <button id="presetFree" class="primary">Reset FREE (3)</button>
-      <button id="presetPro"  class="primary">Reset PRO (10)</button>
+      <button id="presetFree" class="primary">FREE (3)</button>
+      <button id="presetPro"  class="primary">PRO (10)</button>
       <button id="presetDev"  class="ghost">DEV (9999)</button>
+      <button id="addOne"     class="ghost">+1</button>
+      <button id="addFive"    class="ghost">+5</button>
       <button id="zeroUsed"   class="ghost">Azzera usati</button>
+      <button id="wipeAll"    class="ghost">Reset totale (solo wallet)</button>
     </div>
     <p class="mut" style="margin:10px 0 0">
-      Nota: con token admin attivo, fourth/fifth ignorano i crediti e mostrano <span class="big">∞</span>.<br/>Usa “Simula utente” per testare i reset.
+      Sorgente unica: <code>whatif_wallet = {available, used, limit}</code>.<br/>
+      Con token admin attivo, fourth/fifth mostrano <span class="big">∞</span> e NON consumano crediti.
+      Usa “Simula utente” per testare consumo/ricarica.
     </p>
   </div>
 </main>
 
 <script>
-/* ===== Chiavi compatibili con fourth/fifth ===== */
-const LS = localStorage;
-const TKEY = "admin_token";           // override ∞
-const BKEY = "admin_token_backup";    // backup per ripristino
-const WKEY = "whatif_wallet";         // {available, used, limit} usato da fourth/fifth
-const LEGACY_CREDITS = "whatif_credits"; // legacy varie
+/* ===== Chiavi ===== */
+const LS=localStorage;
+const WKEY="whatif_wallet";
+const TKEY="admin_token";
+const BKEY="admin_token_backup";
 
-/* ===== Helpers UI ===== */
-const $ = id => document.getElementById(id);
-const setTok = (t)=>{ $("tok").textContent = t? t.slice(0,6)+"…"+t.slice(-4) : "—"; };
-
-/* ===== Sync broadcaster (ping per altri tab) ===== */
-function broadcastSync(reason){
-  try{
-    // ping specifico per wallet + un secondo ping generico
-    LS.setItem("whatif_wallet_sync", String(Date.now()));
-    LS.setItem("whatif_sync", JSON.stringify({ts:Date.now(), reason}));
-  }catch{}
-}
-
-/* ===== MIGRAZIONE AUTOMATICA LEGACY -> WALLET =====
-   Accetta due casi legacy:
-   1) {used,limit} (senza date)
-   2) {date,used} con cap implicito (3/10) — qui migriamo conservando i “left”
-*/
-(function migrateLegacy(){
-  try{
-    const w = JSON.parse(LS.getItem(WKEY) || "{}");
-    if (w && (w.available!=null || w.limit!=null)) return; // wallet già presente
-
-    const raw = LS.getItem(LEGACY_CREDITS);
-    if(!raw) return;
-    const obj = JSON.parse(raw);
-
-    // Caso 1: schema admin vecchio {used,limit} senza 'date'
-    if (obj && typeof obj.used === "number" && typeof obj.limit !== "undefined" && !obj.date) {
-      const limit = (obj.limit===Infinity)? Infinity : Math.max(0, obj.limit|0);
-      const used  = Math.max(0, obj.used|0);
-      const available = (limit===Infinity)? Infinity : Math.max(0, limit - used);
-      writeWallet({available, used, limit});
-      return;
-    }
-
-    // Caso 2: giornaliero {date, used}; assumiamo cap 3 o 10 in base a prefs.pro (se presente)
-    const prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}");
-    const cap = (prefs && prefs.pro===true) ? 10 : 3;
-    const today = new Date().toISOString().slice(0,10);
-    const used = (obj && obj.date===today) ? (obj.used|0) : 0;
-    const available = Math.max(0, cap - used);
-    writeWallet({available, used, limit:cap});
-  }catch{}
-})();
-
-/* ===== WALLET ===== */
+/* ===== Utils ===== */
+const $=id=>document.getElementById(id);
+const setTok=t=>$("tok").textContent=t? t.slice(0,6)+"…"+t.slice(-4) : "—";
 function readWallet(){
-  try{
-    const w = JSON.parse(LS.getItem(WKEY) || "{}") || {};
-    return {
-      available: (w.available===Infinity)? Infinity :
-                 (Number.isFinite(+w.available) ? +w.available : 0),
-      used:      Number.isFinite(+w.used) ? +w.used : 0,
-      limit:     (w.limit===Infinity)? Infinity :
-                 (Number.isFinite(+w.limit) ? +w.limit : 3)
-    };
-  }catch{ return {available:0, used:0, limit:3}; }
+  try{ return JSON.parse(LS.getItem(WKEY)||"{}")||{}; }catch{ return {}; }
 }
-function writeWallet({available, used, limit}){
-  const out = {
-    available: (limit===Infinity ? Infinity : Math.max(0, available|0)),
-    used:      Math.max(0, used|0),
-    limit:     (limit===Infinity ? Infinity : Math.max(0, limit|0))
+function writeWallet(obj){
+  const cur=readWallet();
+  const out={
+    available: (obj.available!=null)? Math.max(0, +obj.available) : (cur.available??0),
+    used:      (obj.used!=null)?      Math.max(0, +obj.used)      : (cur.used??0),
+    limit:     (obj.limit!=null)?     (+obj.limit===Infinity?Infinity:Math.max(0, +obj.limit)) : (cur.limit??3),
   };
   LS.setItem(WKEY, JSON.stringify(out));
-  drawCredits();
-  broadcastSync('wallet_changed');
+  // ping alle altre pagine
+  LS.setItem("whatif_wallet_sync", String(Date.now()));
+  draw();
 }
-function drawCredits(){
-  const w = readWallet();
-  const left = (w.limit===Infinity)? "∞" :
-               (w.available===Infinity? "∞" : Math.max(0, w.available));
-  $("cLeft").textContent  = left;
-  $("cUsed").textContent  = (w.used===Infinity? "∞" : w.used);
-  $("cLimit").textContent = (w.limit===Infinity? "∞" : w.limit);
-  $("creditsLeft").textContent = left;
+function migrateLegacyOnce(){
+  // Se esiste ancora whatif_credits (legacy), converti in wallet
+  try{
+    const leg = JSON.parse(LS.getItem("whatif_credits")||"{}");
+    if(leg && typeof leg.used==="number" && leg.limit!=null){
+      const lim = (leg.limit===Infinity)?Infinity:Math.max(0, leg.limit|0);
+      const usd = Math.max(0, leg.used|0);
+      const avail = (lim===Infinity)?Infinity:Math.max(0, lim-usd);
+      const w = readWallet();
+      if(w.available==null){ writeWallet({available:avail, used:usd, limit:lim}); }
+    }
+  }catch{}
+}
+function draw(){
+  const w=readWallet();
+  $("walletAvail").textContent = (w.available===Infinity?"∞":(w.available??0));
+  $("walletUsed").textContent  = (w.used??0);
+  $("walletCap").textContent   = (w.limit===Infinity?"∞":(w.limit??3));
+  $("adminFlag").textContent   = LS.getItem(TKEY) ? "yes" : "no";
 }
 
-/* ===== Stato admin ===== */
+/* ===== Admin token ===== */
 async function adminCheck(){
-  let isAdmin = !!LS.getItem(TKEY);
+  let isAdmin=!!LS.getItem(TKEY);
   try{
-    const r = await fetch("/api/admin-token",{headers:{"x-admin-token":LS.getItem(TKEY)||""}});
-    if(r.ok){ const d=await r.json().catch(()=>({})); isAdmin = !!(d?.admin||d?.ok); }
-  }catch{} // offline: fallback locale
-  $("adminFlag").textContent = isAdmin? "yes" : "no";
-  setTok(LS.getItem(TKEY)||"");
-  drawCredits();
-  return isAdmin;
+    const r=await fetch("/api/admin-token",{headers:{"x-admin-token":LS.getItem(TKEY)||""}});
+    if(r.ok){ const d=await r.json().catch(()=>({})); isAdmin=!!(d?.admin||d?.ok); }
+  }catch{}
+  $("adminFlag").textContent=isAdmin?"yes":"no";
+  setTok(LS.getItem(TKEY)||""); draw(); return isAdmin;
 }
 
 /* ===== Pulsanti ===== */
 $("enter").onclick = async()=>{
   const pin=$("pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
-  let ok=false, tok="";
-  try{
-    const r=await fetch("/api/admin-token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pin})});
-    const d=await r.json().catch(()=>({}));
-    ok = r.ok && (d.token||d.ok);
-    tok = d.token||"";
-  }catch{}
-  if(ok){
-    if(tok) LS.setItem(TKEY,tok);
-    setTok(LS.getItem(TKEY)||"");
-    $("pin").value="";
-    await adminCheck();
-    broadcastSync('admin_on');
-    alert("Admin attivo.");
-  }else{
-    alert("PIN errato o server non disponibile.");
-  }
+  const r=await fetch("/api/admin-token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pin})});
+  const d=await r.json().catch(()=>({}));
+  if(r.ok && (d.token||d.ok)){ if(d.token) LS.setItem(TKEY,d.token); $("pin").value=""; setTok(LS.getItem(TKEY)||""); await adminCheck(); alert("Admin attivo."); }
+  else alert("PIN errato o server non disponibile.");
 };
+$("revoke").onclick=async()=>{ try{await fetch("/api/admin-token?action=revoke",{method:"POST",headers:{"x-admin-token":LS.getItem(TKEY)||""}});}catch{} LS.removeItem(TKEY); setTok(""); await adminCheck(); alert("Token revocato."); };
+$("simUser").onclick=()=>{ const t=LS.getItem(TKEY); if(!t){alert("Non sei in admin.");return;} LS.setItem(BKEY,t); LS.removeItem(TKEY); setTok(""); draw(); alert("Modalità utente attiva."); };
+$("restoreAdmin").onclick=()=>{ const t=LS.getItem(BKEY)||""; if(!t){alert("Nessun token salvato.");return;} LS.setItem(TKEY,t); LS.removeItem(BKEY); setTok(t); draw(); alert("Admin ripristinato."); };
 
-$("revoke").onclick = async()=>{
-  try{ await fetch("/api/admin-token?action=revoke",{method:"POST",headers:{"x-admin-token":LS.getItem(TKEY)||""}}); }catch{}
-  LS.removeItem(TKEY);
-  setTok("");
-  await adminCheck();
-  broadcastSync('admin_revoked');
-  alert("Token revocato su questo device.");
-};
-
-$("simUser").onclick = async()=>{
-  const tok = LS.getItem(TKEY)||"";
-  if(!tok){ alert("Non sei in admin."); return; }
-  LS.setItem(BKEY, tok);
-  LS.removeItem(TKEY);
-  setTok("");
-  await adminCheck();
-  broadcastSync('admin_off');
-  alert("Modalità utente attiva: fourth/fifth ora usano i crediti locali.");
-};
-
-$("restoreAdmin").onclick = async()=>{
-  const tok = LS.getItem(BKEY)||"";
-  if(!tok){ alert("Nessun token admin salvato."); return; }
-  LS.setItem(TKEY, tok);
-  LS.removeItem(BKEY);
-  setTok(tok);
-  await adminCheck();
-  broadcastSync('admin_on');
-  alert("Token admin ripristinato. Override ∞ attivo.");
-};
-
-/* Preset crediti sul WALLET */
-$("presetFree").onclick = ()=> writeWallet({available:3,    used:0, limit:3});
-$("presetPro").onclick  = ()=> writeWallet({available:10,   used:0, limit:10});
+/* Preset */
+$("presetFree").onclick = ()=> writeWallet({available:3, used:0, limit:3});
+$("presetPro").onclick  = ()=> writeWallet({available:10, used:0, limit:10});
 $("presetDev").onclick  = ()=> writeWallet({available:9999, used:0, limit:9999});
-$("zeroUsed").onclick   = ()=> { const w=readWallet(); writeWallet({available:(w.limit===Infinity?Infinity:w.limit), used:0, limit:w.limit}); };
-
-/* Aggiorna se un altro tab cambia i dati */
-window.addEventListener("storage",(e)=>{
-  if(e.key==="whatif_wallet" || e.key==="whatif_wallet_sync" || e.key==="whatif_sync"){
-    drawCredits();
-    adminCheck();
-  }
-});
+$("addOne").onclick     = ()=>{ const w=readWallet(); writeWallet({available:(w.available===Infinity?Infinity:(w.available||0)+1)}); };
+$("addFive").onclick    = ()=>{ const w=readWallet(); writeWallet({available:(w.available===Infinity?Infinity:(w.available||0)+5)}); };
+$("zeroUsed").onclick   = ()=>{ const w=readWallet(); writeWallet({used:0}); };
+$("wipeAll").onclick    = ()=>{ LS.removeItem(WKEY); LS.setItem("whatif_wallet_sync", String(Date.now())); draw(); alert("Wallet azzerato."); };
 
 /* Init */
+migrateLegacyOnce();
 adminCheck();
-drawCredits();
+draw();
 </script>
 </body>
 </html>
