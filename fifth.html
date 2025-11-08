@@ -946,6 +946,33 @@ qs('#shareBtn').onclick = async()=>{
     }  
   }catch{}  
 };  
-qs('#againBtn').onclick = ()=>{ location.href='fourth.html'; };  
+qs('#againBtn').onclick = ()=>{ location.href='fourth.html'; }; 
+        // === Gating crediti ===
+function usaCreditoOApriStore(){
+  if (typeof IS_ADMIN !== 'undefined' && IS_ADMIN) return true; // admin illimitato
+  const n = getCrediti();
+  if (n <= 0){
+    openOverlay("/store/credit-store.html");
+    return false;
+  }
+  setCrediti(n - 1);
+  return true;
+}
+
+// Messaggi da store o video rewarded
+window.addEventListener("message", ev => {
+  const d = ev.data || {};
+  if (d.type === "purchase_complete"){
+    setCrediti(getCrediti() + (d.amount || 0));
+    closeOverlay();
+  }
+  if (d.type === "open_rewarded"){
+    openOverlay("/ads/rewarded.html");
+  }
+  if (d.type === "rewarded_complete"){
+    setCrediti(getCrediti() + (d.amount || 1));
+    closeOverlay();
+  }
+});
 </script>  </body>  
 </html>
