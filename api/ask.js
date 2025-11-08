@@ -1,6 +1,7 @@
 // /api/ask.js — What?f Engine (Stable Hybrid WHATIF + Friendly-WTF Demenziale)
 // - WHATIF: 60% analisi / 40% immagini sobrie. Incipit VARIABILE obbligatorio (no “Bella …”) + tocco psicologo leggero.
 // - WTF: 2–3 reazioni DEMENZIALI, UNA “imprecazione” teatrale, sorso alcolico, risposta vera, morale.
+// - Motivazioni: intreccia 2–4 ragioni esplicite e coerenti (cause-effetto) con connettori (“perché”, “dato che”, “quindi”).
 // - Maiuscole post-process dopo . ? ! … : e con virgolette/parentesi. Un paragrafo, niente elenchi, niente eco della domanda.
 
 import OpenAI from "openai";
@@ -22,7 +23,6 @@ const rlFree = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(3, "1 m")
 const rlPro  = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "1 m") });
 
 /* ========= CORS ========= */
-// Whitelist fissa + preview Vercel (branch builds)
 const ALLOWED_ORIGINS = [
   "https://what-ifapp.vercel.app",
   "http://localhost:3000",
@@ -67,7 +67,7 @@ function stripQuestionEcho(domanda,text){
   t=t.replace(rx,""); return t;
 }
 
-// Maiuscole robuste: inizio stringa + dopo . ? ! … : e gestione virgolette/parentesi
+// Maiuscole robuste
 function sentenceCaseAll(s=""){
   if(!s) return s;
   s = s.replace(/^(\s*[«“"'\(\[]*)([a-zà-ÿ])/u, (m, pre, ch) => pre + ch.toUpperCase());
@@ -80,7 +80,6 @@ function finalPunct(s=""){ return /[.!?…]$/.test(s)?s:s+"."; }
 function hash32(str){ let x=2166136261; for(const c of String(str)) x=(x^c.charCodeAt(0))>>>0, x=(x*16777619)>>>0; return x>>>0; }
 function u32fromCrypto(){ try{ return crypto.randomBytes(4).readUInt32BE(0); } catch{ return (Math.random()*2**32)>>>0; } }
 function getRequestSeed(req, extra=""){
-  // Header x-seed (prioritario) -> altrimenti mix crypto + ip + time + Math.random
   const hdr = req?.headers?.["x-seed"];
   if (hdr) return Number(hdr)>>>0;
   const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "0.0.0.0").toString().split(",")[0].trim();
@@ -92,6 +91,15 @@ function seededPick(arr, seedU32){
   const r = seedU32 / 2**32;
   return arr[Math.floor(r*arr.length)];
 }
+
+/* ========= Assi di motivazione (per spingere cause-effetto concrete) ========= */
+const MOTIVE_AXES = {
+  it: ["tempo", "denaro", "energia", "attenzione", "relazioni", "rischio", "apprendimento", "abitudini"],
+  en: ["time", "money", "energy", "attention", "relationships", "risk", "learning", "habits"],
+  es: ["tiempo", "dinero", "energía", "atención", "relaciones", "riesgo", "aprendizaje", "hábitos"],
+  fr: ["temps", "argent", "énergie", "attention", "relations", "risque", "apprentissage", "habitudes"],
+  de: ["Zeit", "Geld", "Energie", "Aufmerksamkeit", "Beziehungen", "Risiko", "Lernen", "Gewohnheiten"],
+};
 
 /* ========= WHAT IF – incipit multilingua estesi ========= */
 const WHATIF_OPENERS = {
@@ -170,17 +178,17 @@ const WHATIF_OPENERS = {
 };
 
 const WHATIF_RULE = {
-  it: `WHAT IF HYBRID (italiano): 60% analisi concreta (costi/benefici, routine, qualità di vita), 40% immagini sobrie della quotidianità. Incipit VARIABILE da lista; vietato iniziare con “Bella”. 8–10 frasi, seconda persona, un paragrafo, no eco. Tocco psicologo leggero.`,
-  en: `WHAT IF HYBRID (English): 60% concrete analysis, 40% sober everyday imagery. Start with a VARIABLE opener; never “Nice one”. 8–10 sentences, second person, one paragraph, no question restatement.`,
-  es: `WHAT IF HYBRID (español): 60% análisis concreto, 40% imágenes sobrias. Inicio VARIABLE; nunca “Qué bonito”. 8–10 frases, segunda persona, un párrafo.`,
-  fr: `WHAT IF HYBRID (français): 60% analyse concrète, 40% images sobres. Ouverture VARIABLE; jamais « Sympa ». 8–10 phrases, deuxième personne, un paragraphe.`,
-  de: `WHAT IF HYBRID (Deutsch): 60% konkrete Analyse, 40% nüchterne Alltagsbilder. Variabler Opener; nie „Na toll“. 8–10 Sätze, zweite Person, ein Absatz.`
+  it: `WHAT IF HYBRID (italiano): 60% analisi concreta (costi/benefici, routine, qualità di vita), 40% immagini sobrie della quotidianità. Incipit VARIABILE da lista; vietato iniziare con “Bella”. 8–10 frasi, seconda persona, un paragrafo, no eco. Tocco psicologo leggero. Integra 2–4 motivazioni esplicite con nessi causa-effetto (“perché”, “dato che”, “quindi”), evitando vaghezze.`,
+  en: `WHAT IF HYBRID (English): 60% concrete analysis, 40% sober imagery. VARIABLE opener; never “Nice one”. 8–10 sentences, second person, one paragraph. Weave in 2–4 explicit reasons with cause–effect links (“because”, “since”, “so”), avoid vagueness.`,
+  es: `WHAT IF HYBRID (español): 60% análisis, 40% imágenes sobrias. Inicio VARIABLE. 8–10 frases, segunda persona, un párrafo. Incluye 2–4 razones explícitas con causa–efecto (“porque”, “ya que”, “así que”).`,
+  fr: `WHAT IF HYBRID (français): 60% analyse, 40% images sobres. Ouverture VARIABLE. 8–10 phrases, deuxième personne, un paragraphe. Insère 2–4 raisons explicites en lien de causalité (“parce que”, “puisque”, “donc”).`,
+  de: `WHAT IF HYBRID (Deutsch): 60% Analyse, 40% nüchterne Bilder. Variabler Opener. 8–10 Sätze, zweite Person, ein Absatz. Füge 2–4 explizite Begründungen mit Ursache–Wirkung ein (“weil”, “da”, “also”).`
 };
 
 // Esempio IT (àncora di ritmo)
 const WHATIF_HYBRID_EX_IT = `Sai, questa non è una domanda leggera. Guardi i numeri, poi guardi le abitudini: costi più bassi da una parte, occasioni più larghe dall’altra. La qualità della vita non è un grafico, è una routine: tempi di spostamento, servizi che funzionano, persone che senti vicine. Se stringi, il portafoglio respira un po’ di più; in cambio accetti un ritmo meno veloce e meno “vetrine” da inseguire. Le giornate si accorciano di frenesia e si allungano di fiato: un caffè fatto bene, una strada che conosci, un’aria che sa di casa. Non è una fuga né un eroismo: è ingegneria quotidiana, spostare pesi tra tempo, denaro e relazioni. A conti fatti, potresti guadagnare spazio mentale e perdere solo rumore. E quando la sera chiudi la porta, non senti il rimpianto bussare: senti il tuo passo tornare al suo passo.`;
 
-/* ========= WTF — banca demenziale ========= */
+/* ========= WTF — banca demenziale (con motivazioni esplicite) ========= */
 const WTF_IMPRE = [
   "bestemmione corazzato",
   "imprecazionona a detonazione",
@@ -220,6 +228,10 @@ async function askOpenAI(payload) {
 /* ========= Prompt builder ========= */
 function buildMessages({ domanda, lang, periodo, stile, seedU32 }){
   const L = normLang(lang);
+  const AXES = MOTIVE_AXES[L] || MOTIVE_AXES.it;
+  // scegli 3 assi come spinta semantica per motivazioni concrete
+  const aSeed = (seedU32 ^ hash32(String(domanda))) >>> 0;
+  const axes = [...AXES].sort(()=>((hash32(String(Math.random())) ^ aSeed) % 3) - 1).slice(0,3);
 
   const baseRules =
     L === "en" ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Second person only.` :
@@ -241,9 +253,21 @@ function buildMessages({ domanda, lang, periodo, stile, seedU32 }){
        L==="de" ? "Schreibe wie eine nahe Zukunft, die jetzt beginnt." :
                   "Scrivi come un prossimo futuro che inizia ora.");
 
+  const coherence =
+    L === "en"
+      ? `COHERENCE & REASONS: Weave 2–4 explicit, relevant reasons using connectors (“because / since / so / therefore”). Map each concrete image to an analytical point (1:1). Avoid vague claims (e.g., “better life quality”) without specifying how—tie it to ${axes.join(", ")}. No internal contradictions.`
+      : L === "es"
+      ? `COHERENCIA Y RAZONES: Integra 2–4 razones explícitas con conectores (“porque / ya que / así que / por tanto”). Cada imagen concreta debe corresponder a un punto analítico (1:1). Evita vaguedades; conéctalo con ${axes.join(", ")}. Sin contradicciones.`
+      : L === "fr"
+      ? `COHÉRENCE & RAISONS : Insère 2–4 raisons explicites avec connecteurs (“parce que / puisque / donc / ainsi”). Chaque image concrète doit correspondre à un point analytique (1:1). Pas de généralités vagues ; ancre sur ${axes.join(", ")}. Aucune contradiction interne.`
+      : L === "de"
+      ? `KOHÄRENZ & GRÜNDE: Füge 2–4 explizite Gründe mit Verbindern (“weil / da / also / daher”) ein. Jedes konkrete Bild muss einem analytischen Punkt entsprechen (1:1). Keine vagen Behauptungen; verankere es in ${axes.join(", ")}. Keine Widersprüche.`
+      : `COERENZA & MOTIVAZIONI: Intreccia 2–4 motivazioni esplicite con connettori (“perché / dato che / quindi / perciò”). Ogni immagine concreta corrisponde a un punto analitico (1:1). Evita frasi vaghe; ancorale a ${axes.join(", ")}. Nessuna contraddizione.`;
+
   const msgs = [
     { role: "system", content: baseRules },
     { role: "system", content: temporal },
+    { role: "system", content: coherence },
   ];
 
   if(stile==="wtf"){
@@ -255,11 +279,11 @@ function buildMessages({ domanda, lang, periodo, stile, seedU32 }){
     const react = shuffled.slice(0, 2 + Math.floor(rnd()*2)); // 2 o 3
     const drink = WTF_DRINK[Math.floor(rnd()*WTF_DRINK.length)];
 
-    const WTF_RULE_EN = `WHAT THE F (friendly, absurd but helpful). STRICT sequence: playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical “${impre}” (narrated, never insulting people) → THEN ${react.length} absurd object reactions → drink (“${drink}”) → 1–2 lines that truly answer → warm ironic moral. 6–8 sentences.`;
-    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile). Struttura OBBLIGATORIA: presa in giro affettuosa (max 2 frasi) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”, come narrazione, mai insulto a persone) → SUBITO ${react.length} reazioni di oggetti esilaranti → drink (“${drink}”) → 1–2 frasi che rispondono davvero → morale calda e ironica. 6–8 frasi.`;
-    const WTF_RULE_ES = `WHAT THE F (amable, absurdo pero útil). Secuencia ESTRICTA: broma cariñosa (≤2) → 2–3 microcontratiempos → UNA “${impre}” teatral → LUEGO ${react.length} reacciones absurdas de objetos → trago (“${drink}”) → 1–2 líneas que sí responden → moraleja cálida e irónica. 6–8 frases.`;
-    const WTF_RULE_FR = `WHAT THE F (amical, absurde mais utile). Séquence STRICTE : taquinerie affectueuse (≤2) → 2–3 micro-couacs → UNE “${impre}” théâtrale → PUIS ${react.length} réactions absurdes d’objets → boisson (“${drink}”) → 1–2 phrases qui répondent vraiment → morale chaleureuse et ironique. 6–8 phrases.`;
-    const WTF_RULE_DE = `WHAT THE F (freundlich, absurd aber hilfreich). STRIKTE Reihenfolge: liebevolles Necken (≤2) → 2–3 Mini-Pannen → EINE theatralische „${impre}“ → DANN ${react.length} absurde Objektreaktionen → Drink („${drink}“) → 1–2 Sätze echte Antwort → warme, ironische Moral. 6–8 Sätze.`;
+    const WTF_RULE_EN = `WHAT THE F (friendly, absurd but helpful). STRICT sequence: playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical “${impre}” → THEN ${react.length} object reactions → drink (“${drink}”) → 1–2 lines that truly answer with at least TWO explicit reasons → warm ironic moral. 6–8 sentences.`;
+    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile). Sequenza OBBLIGATORIA: presa in giro (≤2) → 2–3 micro-imprevisti → UNA “${impre}” → ${react.length} reazioni di oggetti → drink (“${drink}”) → 1–2 frasi che rispondono davvero con almeno DUE motivazioni esplicite → morale calda e ironica. 6–8 frasi.`;
+    const WTF_RULE_ES = `WHAT THE F (amable, absurdo pero útil). Secuencia ESTRICTA… + incluye al menos DOS razones explícitas en la parte de respuesta.`;
+    const WTF_RULE_FR = `WHAT THE F (amical, absurde mais utile). Séquence STRICTE… + au moins DEUX raisons explicites dans la réponse.`;
+    const WTF_RULE_DE = `WHAT THE F (freundlich, absurd aber hilfreich). STRIKTE Reihenfolge… + mind. ZWEI explizite Gründe in der Antwort.`;
 
     msgs.push(
       { role: "system", content:
@@ -268,10 +292,10 @@ function buildMessages({ domanda, lang, periodo, stile, seedU32 }){
       { role: "system", content: `IMPRECATION: ${impre}` },
       { role: "system", content: `REACTIONS:\n- ${react.join("\n- ")}` },
       { role: "system", content: `DRINK: ${drink}` },
-      { role: "system", content: `ESEMPIO IT (tono/ritmo):\n${WHATIF_HYBRID_EX_IT}` }
+      { role: "system", content: `ESEMPIO IT (respiro):\n${WHATIF_HYBRID_EX_IT}` }
     );
   } else {
-    // WHATIF ibrido: INCIPIT VARIABILE + psicologo leggero
+    // WHATIF ibrido: INCIPIT VARIABILE + psicologo leggero + motivazioni coerenti
     const opens = WHATIF_OPENERS[L] || WHATIF_OPENERS.it;
     const opener = seededPick(opens, (seedU32 ^ hash32(String(domanda))));
     msgs.push(
@@ -313,7 +337,7 @@ export default async function handler(req, res){
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const {
       domanda = "",
-      stile = "whatif",   // "whatif" | "wtf"
+      stile = "whatif",
       lang  = "it",
       periodo = "future",
       micro = {}
@@ -322,9 +346,7 @@ export default async function handler(req, res){
     if(!domanda || typeof domanda !== "string")
       return res.status(400).json({ error:"bad_request", detail:"domanda_required" });
 
-    // Seed “fresco” per variare ad ogni chiamata; opzionale x-seed per forzare ripetibilità
     const seedU32 = getRequestSeed(req, stile + ":" + lang);
-
     const messages = buildMessages({ domanda, lang, periodo, stile, seedU32 });
 
     const completion = await askOpenAI({
@@ -343,25 +365,23 @@ export default async function handler(req, res){
     // ===== Post-process =====
     answer = stripQuestionEcho(domanda, answer);
 
-    // Forza incipit WHATIF se manca (tutte le lingue) con seed fresco
+    // Forza incipit WHATIF se manca (tutte le lingue)
     if (stile === "whatif") {
       const L = normLang(lang);
       const opens = WHATIF_OPENERS[L] || WHATIF_OPENERS.it;
       const opener = seededPick(opens, (seedU32 ^ hash32(String(domanda) + ":inject")));
       const firstSlice = answer.slice(0, Math.min(160, answer.length)).toLowerCase();
       const hasOpener = opens.some((o)=> firstSlice.includes(o.slice(0,12).toLowerCase()));
-      if(!hasOpener){
-        answer = `${opener} ${answer}`;
-      }
+      if(!hasOpener){ answer = `${opener} ${answer}`; }
     }
 
     answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);
-    answer = clampWords(answer, stile === "wtf" ? 170 : 165);
+    answer = clampWords(answer, stile === "wtf" ? 170 : 185); // leggermente più spazio per motivazioni
     answer = normalizeOneParagraph(answer);
-    answer = sentenceCaseAll(answer); // include gestione “:”
+    answer = sentenceCaseAll(answer);
     answer = finalPunct(answer);
 
-    // ===== Moderazione leggera IT (non tocca incipit/sentinelle) =====
+    // Moderazione leggera IT (non tocca incipit/sentinelle)
     if(normLang(lang)==="it"){
       (function(){
         const d=String(domanda||"");
@@ -377,11 +397,10 @@ export default async function handler(req, res){
       })();
     }
 
-    // Debug opzionale
     const debug = String(req.headers["x-debug"] || "").toLowerCase() === "true";
     return res.status(200).json({
       answer, style: stile, lang: normLang(lang), periodo, model: MODEL, pro: isPro,
-      ...(debug ? { debug: { seedU32, openerLang: normLang(lang) } } : {})
+      ...(debug ? { debug: { seedU32 } } : {})
     });
   }catch(err){
     console.error("❌ [/api/ask] error:", err);
