@@ -70,7 +70,7 @@ h1{
   border:1px solid var(--line);
   color:#fff
 }
-.small{font-size:12px;color:var(--muted)}
+.small{font-size:12px;color:var(--muted")}
 .hr{height:1px;background:rgba(255,255,255,.10);margin:12px 0}
 .badge{
   display:inline-flex;align-items:center;gap:8px;
@@ -145,6 +145,10 @@ h1{
   .mot .note{font-size:15.5px;line-height:1.65}
 }
 </style>
+
+<!-- ✅ Google Publisher Tag (script ads) -->
+<script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
+<script>window.googletag = window.googletag || { cmd: [] };</script>
 </head>
 <body>
 <main>
@@ -218,7 +222,26 @@ h1{
     </div>
     <p class="small" id="metaInfo"></p>
   </div>
+
+  <!-- ✅ Slot banner pubblicitario (test) -->
+  <div id="ad-slot-bottom" style="width:320px;height:50px;margin:18px auto 0;"></div>
 </main>
+
+<!-- ✅ Inizializzazione banner di test (GAM/GPT) -->
+<script>
+  window.googletag = window.googletag || { cmd: [] };
+  window.googletag.cmd.push(function () {
+    // Unità di TEST ufficiale Google: mostra un annuncio demo (non monetizza).
+    const AD_UNIT_TEST = "/6355419/Travel/Europe";
+
+    googletag.defineSlot(AD_UNIT_TEST, [320, 50], "ad-slot-bottom")
+      .addService(googletag.pubads());
+
+    googletag.pubads().enableSingleRequest();
+    googletag.enableServices();
+    googletag.display("ad-slot-bottom");
+  });
+</script>
 
 <script>
 /* ==== Base state ==== */
@@ -656,29 +679,21 @@ function computeProbability(q){
   return { pct: clamp(Math.round(score), 25, 92), cat, f };
 }
 
-/* ======== 🧠 Motivazione COERENTE e CORTA (estratta dalla risposta) ======== */
-/* Prende 1–2 frasi dalla risposta che suonano come ragione/condizione.
-   Se non trova pattern, sintetizza dalle ultime frasi. Limite ~180 caratteri. */
+/* ======== 🧠 Motivazione COERENTE e CORTA ======== */
 function shortMotivationFromAnswer(answerText, question){
   const T = I18N[lang] || I18N.it;
   if(!answerText){ return T.motFallback; }
-
   const a = String(answerText).replace(/\s*\n+\s*/g,' ').trim();
   const splits = a.split(/(?<=[.!?…])\s+/).map(s=>s.trim()).filter(Boolean);
-
-  // pattern per frase causale/condizionale
   const KW = (lang==='it') ? [/perché/i,/perche/i,/quindi/i,/dunque/i,/se\b/i,/quando\b/i,/equilibrio/i,/rischio/i,/beneficio/i]
           : (lang==='en') ? [/because/i,/so\b/i,/thus/i,/if\b/i,/when\b/i,/balance/i,/risk/i,/benefit/i]
           : (lang==='es') ? [/porque/i,/si\b/i,/cuando\b/i,/equilibrio/i,/riesgo/i,/beneficio/i]
           : (lang==='fr') ? [/parce que/i,/si\b/i,/quand\b/i,/équilibre/i,/risque/i,/bénéfice/i]
           :                 [/weil/i,/wenn\b/i,/wann\b/i,/gleichgewicht|balance/i,/risiko/i,/nutzen|vorteil/i];
 
-  // 1) cerca una frase causale in mezzo al testo
   let pick1 = splits.find(s => KW.some(rx=>rx.test(s))) || splits[splits.length-2] || splits[0];
-  // 2) prova ad aggiungere una seconda frase breve di supporto
   let pick2 = splits.find(s => s!==pick1 && s.length<=120 && /responsabil|sicure|routine|passo|tempo|costi|benef/i.test(s)) || "";
 
-  // Pulisci e compatta
   function clip(s){ 
     s = s.replace(/\s{2,}/g,' ').trim();
     if(s.length>180){ s = s.slice(0,177).replace(/\s+\S*$/,'')+"…"; }
@@ -687,8 +702,6 @@ function shortMotivationFromAnswer(answerText, question){
   }
   let out = clip(pick1 || '');
   if(pick2 && (out.length + pick2.length + 1) < 190) out += " " + clip(pick2);
-
-  // Fallback se troppo generico
   if(out.length < 24) out = T.motFallback;
   return out;
 }
@@ -726,7 +739,7 @@ function pickScientificMotivation(){
   return pick(list);
 }
 
-/* ======== 😈 Modalità “Sorprendimi” (comitato) ======== */
+/* ======== 😈 Modalità “Sorprendimi” ======== */
 function buildScuffleExtra(){
   const minor = rndInt(1,5);
   const injured = rndInt(0,3);
@@ -736,7 +749,7 @@ function buildScuffleExtra(){
     (lang==='es')?`Pequeño altercado: ${minor} amonestados; ${injured} heridos, ${hosp} en observación.`:
     (lang==='fr')?`Échauffourée: ${minor} avertis; ${injured} blessés, ${hosp} en observation.`:
     (lang==='de')?`Kleine Rangelei: ${minor} verwarnt; ${injured} verletzt, ${hosp} unter Beobachtung.`:
-    `Lite tra delegazioni: ${minor} ammoniti; ${injured} feriti, ${hosp} in osservazione.`,
+    `Lite tra delegazioni: ${minor} ammoniti; ${injured} contusi (${hosp} in osservazione).`,
     (lang==='en')?`Brief tussle at vote: ${minor} removed; ${injured} bruised (${hosp} bandaged).`:
     (lang==='es')?`Tira y afloja en votación: ${minor} retirados; ${injured} contusos (${hosp} vendados).`:
     (lang==='fr')?`Court grabuge au vote: ${minor} évacués; ${injured} contusions (${hosp} bandés).`:
@@ -786,7 +799,7 @@ function isSurprise(req){
       || LS.getItem('absurd_prompt')==='1';
 }
 
-/* ==== Enforcer formato (1 paragrafo, # frasi) ==== */
+/* ==== Enforcer formato ==== */
 function enforceFormat(text, stile){
   let t = normalizeOneParagraph(text || "");
   t = t.replace(/\b(morale|morale della favola|in conclusione|ricorda che)\b[\s\S]*$/i,"").trim();
@@ -830,7 +843,7 @@ function enforceFormat(text, stile){
     qs('#answer').textContent = answerText;
     decorateEmBits(qs('#answer'));
 
-    // === Probabilità & Motivazione (COERENTE e CORTA) ===
+    // === Probabilità & Motivazione breve ===
     const { pct } = computeProbability(domanda);
     const pctStr = pct + "%";
     topPct.textContent = pctStr;
@@ -848,7 +861,6 @@ function enforceFormat(text, stile){
       committeeTitle.textContent = title;
       motIco.style.display = 'none';
       chipsWrap.style.display = 'none';
-      // NUOVO: motivazione estratta dalla risposta (1–2 frasi, ~<=180 char)
       motNote.textContent = (style==='wtf') ? pickScientificMotivation() : shortMotivationFromAnswer(answerText, domanda);
     }
 
