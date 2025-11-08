@@ -1,9 +1,9 @@
 // /api/ask.js — What?f Engine (Stable Hybrid WHATIF + Friendly-WTF Demenziale)
 // - WHATIF: 60% analisi / 40% immagini sobrie. Incipit LIBERO (mai “Bella …”) + tocco psicologo leggero.
-// - WTF: 2–3 reazioni DEMENZIALI, UNA “imprecazione” teatrale, sorso alcolico, risposta vera, morale. (immutato)
+// - WTF: **INVARIATO** come tuoi esempi (presa in giro affettuosa → 2–3 micro-imprevisti → UNA imprecazione teatrale → reazioni oggetti → drink → risposta vera → morale).
 // - Maiuscole post-process dopo . ? ! … : e con virgolette/parentesi. Paragrafo unico. Niente elenchi. Niente eco della domanda.
-// - Motivazione: brevissima (18–32 parole), lasciata libera ma *coerente* con domanda+risposta; vietati temi estranei (CV/portfolio ecc.) salvo compaiano davvero.
-// - Limiti: FREE 3/giorno — PRO 10/giorno (stesso modello) + piccolo burst/minuto anti-abuso.
+// - Motivazione: brevissima (18–32 parole), scritta dalla AI come micro-continuazione coerente (stesso tema). Vietati temi estranei (CV/portfolio/colloqui ecc.).
+// - Limiti: FREE 3/giorno — PRO 10/giorno (stesso modello) + piccolo burst/minuto anti-abuso. Niente differenze di AI tra free/pro.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -14,21 +14,21 @@ import crypto from "crypto";
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
-/* ========= Redis ========= */
+/* ========= Redis & Rate ========= */
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
-// Burst anti-abuso al minuto (soft)
+// burst/minuto morbido per evitare spam
 const rlBurst = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "1 m") });
 
 async function checkDailyLimit({ ip, isPro }) {
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const today = new Date().toISOString().slice(0, 10);
   const key = `ask:daily:${isPro ? "pro" : "free"}:${ip}:${today}`;
   const max = isPro ? 10 : 3;
   const count = await redis.incr(key);
   if (count === 1) await redis.expire(key, 86400);
-  return { ok: count <= max, remaining: Math.max(0, max - count) };
+  return { ok: count <= max, remaining: Math.max(0, max - count), max };
 }
 
 /* ========= CORS ========= */
@@ -75,7 +75,7 @@ function stripQuestionEcho(domanda,text){
   if(lead.startsWith(d)){ const cut=t.indexOf("."); if(cut>-1) t=t.slice(cut+1).trim(); }
   t=t.replace(rx,""); return t;
 }
-// Maiuscole robuste inizio + dopo . ? ! … :
+// Maiuscole robuste: inizio + dopo . ? ! … :
 function sentenceCaseAll(s=""){
   if(!s) return s;
   s = s.replace(/^(\s*[«“"'\(\[]*)([a-zà-ÿ])/u, (m, pre, ch) => pre + ch.toUpperCase());
@@ -96,7 +96,7 @@ function getRequestSeed(req, extra=""){
   return (hash32(ip + ":" + t + ":" + extra) ^ rnd) >>> 0;
 }
 
-/* ========= WHAT IF — regole e incipit (liberi, solo suggeriti) ========= */
+/* ========= WHAT IF — regole e incipit (liberi) ========= */
 const WHATIF_OPENERS = {
   it: [
     "Non è una domanda semplice e lo sai.","Se guardi bene, qui non c’è solo un sì o un no.","Prima di tutto: ha senso che tu sia diviso.",
@@ -119,8 +119,8 @@ const WHATIF_OPENERS = {
 
 const WHATIF_RULE = {
   it: `WHAT IF HYBRID (italiano): 60% analisi concreta (costi/benefici, routine, qualità di vita), 40% immagini sobrie. Incipit LIBERO (mai “Bella”). 8–10 frasi, seconda persona, un paragrafo, niente eco. Tocco psicologo leggero.`,
-  en: `WHAT IF HYBRID (English): 60% concrete analysis, 40% sober imagery. FREE opener (never “Nice one”). 8–10 sentences, second person, one paragraph, no question restatement.`,
-  es: `WHAT IF HYBRID (español): 60% análisis concreto, 40% imágenes sobrias. Inicio LIBRE. 8–10 frases, segunda persona, un solo párrafo.`,
+  en: `WHAT IF HYBRID (English): 60% concrete analysis, 40% sober imagery. FREE opener (never “Nice one”). 8–10 sentences, second person, one paragraph, no restating the question.`,
+  es: `WHAT IF HYBRID (español): 60% análisis concreto, 40% imágenes sobrias. Inicio LIBRE. 8–10 frases, segunda persona, un párrafo.`,
   fr: `WHAT IF HYBRID (français): 60% analyse concrète, 40% images sobres. Ouverture LIBRE. 8–10 phrases, deuxième personne, un paragraphe.`,
   de: `WHAT IF HYBRID (Deutsch): 60% konkrete Analyse, 40% nüchterne Bilder. Freier Opener. 8–10 Sätze, zweite Person, ein Absatz.`
 };
@@ -128,19 +128,38 @@ const WHATIF_RULE = {
 // Esempio IT (àncora di ritmo)
 const WHATIF_HYBRID_EX_IT = `Sai, questa non è una domanda leggera. Guardi i numeri, poi guardi le abitudini: costi più bassi da una parte, occasioni più larghe dall’altra. La qualità della vita non è un grafico, è una routine: tempi di spostamento, servizi che funzionano, persone che senti vicine. Se stringi, il portafoglio respira un po’ di più; in cambio accetti un ritmo meno veloce e meno “vetrine” da inseguire. Le giornate si accorciano di frenesia e si allungano di fiato: un caffè fatto bene, una strada che conosci, un’aria che sa di casa. Non è una fuga né un eroismo: è ingegneria quotidiana, spostare pesi tra tempo, denaro e relazioni. A conti fatti, potresti guadagnare spazio mentale e perdere solo rumore. E quando la sera chiudi la porta, non senti il rimpianto bussare: senti il tuo passo tornare al suo passo.`;
 
-/* ========= WTF — banca demenziale (immutato) ========= */
+/* ========= WTF — banca demenziale (INVARIATA, coi tuoi esempi) ========= */
 const WTF_IMPRE = [
-  "bestemmione corazzato","imprecazionona a detonazione","sacramentata a ciel sereno","vulcano d’anatemi","tromba d’aria di improperi",
+  "bestemmione corazzato",
+  "imprecazionona a detonazione",
+  "sacramentata a ciel sereno",
+  "vulcano d’anatemi",
+  "tromba d’aria di improperi",
 ];
 const WTF_REACT = [
-  "la moka ti fa una standing ovation e chiede l’autografo","il POS entra in modalità testimone di nozze e benedice la carta",
-  "la tapparella si abbassa per pudore e poi sbircia curiosa","la lampada lampeggia in Morse “ti capisco”","Alexa finge un aggiornamento e scappa in modalità monaco",
-  "il frigorifero sospira e decide di diventare minimalista","il campanello suona da solo per solidarietà e poi si pente","la pianta applaude con le foglie e ti chiede un drink",
-  "il ventilatore gira al contrario “per rispetto”","il citofono fa un trillo come un amen stonato",
+  "la moka ti fa una standing ovation e chiede l’autografo",
+  "il POS entra in modalità testimone di nozze e benedice la carta",
+  "la tapparella si abbassa per pudore e poi sbircia curiosa",
+  "la lampada lampeggia in Morse “ti capisco”",
+  "Alexa finge un aggiornamento e scappa in modalità monaco",
+  "il frigorifero sospira e decide di diventare minimalista",
+  "il campanello suona da solo per solidarietà e poi si pente",
+  "la pianta applaude con le foglie e ti chiede un drink",
+  "il ventilatore gira al contrario “per rispetto”",
+  "il citofono fa un trillo come un amen stonato",
 ];
 const WTF_DRINK = [
-  "ti versi un amaro doppio e metti in riga i pensieri","fai un sorso corto e il mondo rientra nei bordi","alzi un bicchiere piccolo: brindisi di manutenzione","bevi un dito di coraggio e respiri più largo",
+  "ti versi un amaro doppio e metti in riga i pensieri",
+  "fai un sorso corto e il mondo rientra nei bordi",
+  "alzi un bicchiere piccolo: brindisi di manutenzione",
+  "bevi un dito di coraggio e respiri più largo",
 ];
+
+// **ESEMPI VINCOLANTI (tono/ritmo IT) — NON MODIFICATI**
+const WTF_EXAMPLES_IT =
+`- Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora che al confessionale ti tengono in riserva. Ti versi un goccio di liquore, rimetti in riga il bancone e giuri che domani apri solo per matti. Alla chiusura, ti guardi intorno e sussurri che oggi hai bestemmiato più del prete quando finisce il vino — ma almeno hai servito verità calde.
+- Oh, eccoci, centauro dell’inferno. Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” così netto che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo ma quasi con affetto, come un rito che rimette a fuoco. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio con un sorrisetto complice. Torni a casa con l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie ben calibrate.
+- Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.`;
 
 /* ========= OpenAI retry helper ========= */
 async function askOpenAI(payload) {
@@ -182,7 +201,7 @@ function buildMessages({ domanda, lang, periodo, stile, seedU32 }){
   ];
 
   if(stile==="wtf"){
-    // Random con seedU32 (immutato)
+    // **WTF INVARIATO**: regole identiche ai tuoi esempi
     let seed = (seedU32 ?? 0) ^ hash32(String(domanda));
     function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; }
     const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
@@ -190,10 +209,10 @@ function buildMessages({ domanda, lang, periodo, stile, seedU32 }){
     const react = shuffled.slice(0, 2 + Math.floor(rnd()*2)); // 2 o 3
     const drink = WTF_DRINK[Math.floor(rnd()*WTF_DRINK.length)];
 
-    const WTF_RULE_EN = `WHAT THE F (friendly, absurd but helpful). STRICT sequence: playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical “${impre}” → THEN ${react.length} absurd object reactions → drink (“${drink}”) → 1–2 lines that truly answer → warm ironic moral. 6–8 sentences.`;
-    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile). Struttura OBBLIGATORIA: presa in giro affettuosa (max 2 frasi) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”) → SUBITO ${react.length} reazioni di oggetti esilaranti → drink (“${drink}”) → 1–2 frasi che rispondono davvero → morale calda e ironica. 6–8 frasi.`;
-    const WTF_RULE_ES = `WHAT THE F (amable, absurdo pero útil). Secuencia ESTRICTA: broma cariñosa (≤2) → 2–3 microcontratiempos → UNA “${impre}” → LUEGO ${react.length} reacciones absurdas → trago (“${drink}”) → 1–2 líneas reales → moraleja cálida.`;
-    const WTF_RULE_FR = `WHAT THE F (amical, absurde mais utile). Séquence STRICTE : taquinerie (≤2) → 2–3 couacs → UNE “${impre}” → PUIS ${react.length} réactions absurdes → boisson (“${drink}”) → 1–2 vraies phrases → morale chaleureuse.`;
+    const WTF_RULE_EN = `WHAT THE F (friendly, absurd but helpful). STRICT sequence: playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical “${impre}” (narrated, never insulting people) → THEN ${react.length} absurd object reactions → drink (“${drink}”) → 1–2 lines that truly answer → warm ironic moral. 6–8 sentences.`;
+    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile). Struttura OBBLIGATORIA: presa in giro affettuosa (max 2 frasi) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”, come narrazione, mai insulto a persone) → SUBITO ${react.length} reazioni di oggetti esilaranti → drink (“${drink}”) → 1–2 frasi che rispondono davvero → morale calda e ironica. 6–8 frasi.`;
+    const WTF_RULE_ES = `WHAT THE F (amable, absurdo pero útil). Secuencia ESTRICTA: broma cariñosa (≤2) → 2–3 microcontratiempos → UNA “${impre}” teatral → LUEGO ${react.length} reacciones absurdas de objetos → trago (“${drink}”) → 1–2 líneas reales → moraleja cálida.`;
+    const WTF_RULE_FR = `WHAT THE F (amical, absurde mais utile). Séquence STRICTE : taquinerie (≤2) → 2–3 couacs → UNE “${impre}” théâtrale → PUIS ${react.length} réactions absurdes → boisson (“${drink}”) → 1–2 vraies phrases → morale chaleureuse.`;
     const WTF_RULE_DE = `WHAT THE F (freundlich, absurd, hilfreich). STRIKT: Neckerei (≤2) → 2–3 Mini-Pannen → EINE „${impre}“ → DANN ${react.length} absurde Reaktionen → Drink („${drink}“) → 1–2 echte Sätze → warme Moral.`;
 
     const Lrule = L==="en" ? WTF_RULE_EN : L==="es" ? WTF_RULE_ES : L==="fr" ? WTF_RULE_FR : L==="de" ? WTF_RULE_DE : WTF_RULE_IT;
@@ -203,10 +222,10 @@ function buildMessages({ domanda, lang, periodo, stile, seedU32 }){
       { role: "system", content: `IMPRECATION: ${impre}` },
       { role: "system", content: `REACTIONS:\n- ${react.join("\n- ")}` },
       { role: "system", content: `DRINK: ${drink}` },
-      { role: "system", content: `ESEMPIO IT (respiro/tono):\n${WHATIF_HYBRID_EX_IT}` }
+      { role: "system", content: `ESEMPI VINCOLANTI (tono/ritmo IT):\n${WTF_EXAMPLES_IT}` }
     );
   } else {
-    // WHATIF ibrido: incipit LIBERO + psicologo leggero (solo suggerito, non forzato)
+    // WHATIF: incipit LIBERO (non forzato), regole e àncora di respiro
     const opens = WHATIF_OPENERS[L] || WHATIF_OPENERS.it;
     const opener = opens[(hash32(String(domanda)) % opens.length)];
     msgs.push(
@@ -227,15 +246,73 @@ function buildMessages({ domanda, lang, periodo, stile, seedU32 }){
   return msgs;
 }
 
-/* ========= Prompt: MOTIVAZIONE (breve, coerente) ========= */
+/* ========= Motivazione: estrazione tema + vincoli forti di coerenza ========= */
+// stopwords e termini off-topic da bloccare se non presenti nella domanda/risposta
+const STOPWORDS = new Set([
+  "the","and","for","with","that","this","you","your","but","not","non","che","con","per","una","un","lo","la","le","il",
+  "y","que","con","por","de","en","les","des","die","und","der","den","ein","eine","del","della","delle","dei","negli","nelle"
+]);
+const OFFTOPIC = [
+  "cv","curriculum","portfolio","colloquio","colloqui","intervista","interviste","network","networking","outreach",
+  "cliente","clienti","vendite","fatturato","recruiter","assunzione","hr","stage","marketing","fatturare","commerciale"
+];
+
+function tokens(s){
+  return String(s||"").toLowerCase()
+    .replace(/[“”"'.,;:!?()\[\]{}\-—/\\%]/g," ")
+    .split(/\s+/).filter(Boolean);
+}
+function keywords(s){
+  const arr = tokens(s).filter(w=>w.length>=4 && !STOPWORDS.has(w));
+  // frequenze
+  const freq = new Map();
+  for (const w of arr) freq.set(w, (freq.get(w)||0)+1);
+  return [...freq.entries()].sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+}
+function pickSalient(domanda, answer, limit=12){
+  const list = [];
+  const qk = keywords(domanda);
+  const ak = keywords(answer);
+  for (const w of qk) if (!list.includes(w)) list.push(w);
+  for (const w of ak) if (!list.includes(w)) list.push(w);
+  return list.slice(0, limit);
+}
+
+function validateMotivation(domanda, answer, motivation){
+  const kQ = new Set(keywords(domanda));
+  const kA = new Set(keywords(answer));
+  const km = new Set(keywords(motivation));
+  const baseTokens = new Set(tokens(domanda).concat(tokens(answer)));
+
+  // almeno 2 parole salienti in comune
+  let overlap = 0;
+  for (const w of km) if (kQ.has(w) || kA.has(w)) { overlap++; if (overlap>=2) break; }
+  if (overlap < 2) return { ok:false, reason:"overlap<2" };
+
+  // niente domini off-topic se non già presenti
+  for (const bad of OFFTOPIC) {
+    if (tokens(motivation).includes(bad) && !baseTokens.has(bad)) {
+      return { ok:false, reason:"offtopic" };
+    }
+  }
+
+  // lunghezza 18–32 parole
+  const wc = tokens(motivation).length;
+  if (wc < 18 || wc > 32) return { ok:false, reason:"length" };
+
+  return { ok:true };
+}
+
 function buildMotivationPrompt({ domanda, answer, lang }){
   const L = normLang(lang);
+  const salient = pickSalient(domanda, answer, 12);
+  const mustList = salient.length ? salient.join(", ") : "";
   const sys =
-    L==="en" ? `Write a VERY SHORT follow-up (18–32 words) that continues the same voice and stays STRICTLY on the same topic as the QUESTION and PRIOR ANSWER. One tight sentence. No bullets, no commands, no percent signs. Do NOT introduce unrelated domains (resumes, portfolios, interviews, networking, clients, sales) unless already present. Return ONLY pure JSON: {"probability":<0-100 integer>,"motivation":"<string>"}.`
-  : L==="es" ? `Escribe una continuación MUY CORTA (18–32 palabras) con la misma voz y tema que la PREGUNTA y la RESPUESTA. Una frase. Sin listas ni mandatos ni %. No metas dominios ajenos (CV, entrevistas, networking, clientes, ventas) salvo que ya estén. Devuelve SOLO JSON: {"probability":<0-100>,"motivation":"..."}.`
-  : L==="fr" ? `Écris une suite TRÈS COURTE (18–32 mots) dans la même voix et le même sujet que la QUESTION et la RÉPONSE. Une phrase. Pas de listes, ni %, ni injonctions. N’ajoute aucun domaine étranger (CV, entretiens, réseau, clients, ventes) sauf s’ils figurent déjà. Rends UNIQUEMENT du JSON : {"probability":<0-100>,"motivation":"..."}.`
-  : L==="de" ? `Schreibe eine SEHR KURZE Fortsetzung (18–32 Wörter), gleiche Stimme und THEMA wie FRAGE und ANTWORT. Ein Satz. Keine Listen/Befehle/%. Keine fremden Domänen (Lebenslauf, Vorstellung, Netzwerk, Kunden, Vertrieb), außer sie sind schon drin. Gib NUR JSON: {"probability":<0-100>,"motivation":"..."}.`
-  : `Scrivi una CONTINUAZIONE MOLTO BREVE (18–32 parole), stessa voce e STESSO TEMA di DOMANDA e RISPOSTA. Una frase secca. Niente elenchi, niente %, niente comandi. Non introdurre domini estranei (CV, portfolio, colloqui, networking, clienti, vendite) salvo compaiano già. Restituisci SOLO JSON: {"probability":<0-100>,"motivation":"<string>"}.`;
+    L==="en" ? `Write a VERY SHORT continuation (18–32 words), same voice and topic as QUESTION+ANSWER. Use at least TWO tokens verbatim from: [${mustList}]. No bullets, no commands, no percent signs. Stay strictly on topic. Return ONLY JSON: {"probability":<0-100>,"motivation":"<string>"}.`
+  : L==="es" ? `Escribe una continuación MUY CORTA (18–32 palabras), misma voz y tema que PREGUNTA+RESPUESTA. Usa al menos DOS términos literales de: [${mustList}]. Sin listas, mandatos ni %. SOLO JSON: {"probability":<0-100>,"motivation":"<string>"}.`
+  : L==="fr" ? `Écris une suite TRÈS COURTE (18–32 mots), même voix et sujet que QUESTION+RÉPONSE. Utilise au moins DEUX mots littéraux parmi: [${mustList}]. Pas de listes/%, JSON UNIQUEMENT: {"probability":<0-100>,"motivation":"<string>"}.`
+  : L==="de" ? `Schreibe eine SEHR KURZE Fortsetzung (18–32 Wörter), gleiche Stimme und THEMA wie FRAGE+ANTWORT. Nutze mindestens ZWEI Begriffe wörtlich aus: [${mustList}]. Keine Listen/%, NUR JSON: {"probability":<0-100>,"motivation":"<string>"}.`
+  : `Scrivi una CONTINUAZIONE MOLTO BREVE (18–32 parole), stessa voce e STESSO TEMA di DOMANDA+RISPOSTA. Usa almeno DUE parole *letterali* tra: [${mustList}]. Niente elenchi/comandi/% . SOLO JSON: {"probability":<0-100>,"motivation":"<string>"}.`;
 
   return [
     { role: "system", content: sys },
@@ -250,50 +327,6 @@ function buildMotivationPrompt({ domanda, answer, lang }){
                                L==="de" ? `Vorherige Antwort:\n${answer}` :
                                          `Risposta precedente:\n${answer}`) },
   ];
-}
-
-/* ========= Coerenza motivazione: blacklist + overlap + lunghezza ========= */
-const STOPWORDS = new Set([
-  "the","and","for","with","that","this","you","your","but","not","non","che","con","per","una","un","lo","la","le","il",
-  "y","que","con","por","de","en","les","des","die","und","der","den","ein","eine"
-]);
-// Termini off-topic tipici da bloccare se NON presenti in domanda o risposta
-const OFFTOPIC = ["cv","curriculum","portfolio","colloquio","colloqui","intervista","interviste","network","networking","outreach","cliente","clienti","vendite","fatturato","recruiter","assunzione","hr"];
-
-function tokens(s){
-  return String(s||"").toLowerCase()
-    .replace(/[“”"'.,;:!?()\[\]{}\-—/\\%]/g," ")
-    .split(/\s+/).filter(Boolean);
-}
-function keywords(s){
-  return new Set(tokens(s).filter(w=>w.length>=4 && !STOPWORDS.has(w)));
-}
-function wordCount(s){ return tokens(s).length; }
-
-function validateMotivation(domanda, answer, motivation){
-  const kQ = keywords(domanda);
-  const kA = keywords(answer);
-  const kM = keywords(motivation);
-  const all = new Set([...kQ, ...kA]);
-
-  // 1) almeno una parola in comune con domanda o risposta
-  let overlap = 0;
-  for (const w of kM) if (all.has(w)) { overlap++; break; }
-  if (overlap < 1) return { ok:false, reason:"no_overlap" };
-
-  // 2) niente domini off-topic se non presenti in domanda/risposta
-  const baseTokens = new Set(tokens(domanda).concat(tokens(answer)));
-  for (const bad of OFFTOPIC) {
-    if (tokens(motivation).includes(bad) && !baseTokens.has(bad)) {
-      return { ok:false, reason:"offtopic" };
-    }
-  }
-
-  // 3) lunghezza 18–32 parole
-  const wc = wordCount(motivation);
-  if (wc < 18 || wc > 32) return { ok:false, reason:"length" };
-
-  return { ok:true };
 }
 
 /* ========= HANDLER ========= */
@@ -311,18 +344,18 @@ export default async function handler(req, res){
 
     const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").toString().split(",")[0].trim();
 
-    // Burst/min
+    // burst/min
     const burst = await rlBurst.limit(`ask:burst:${ip}`);
     if(!burst.success) return res.status(429).json({ error:"rate_limited_minute" });
 
-    // Limite giornaliero
+    // limite giornaliero
     const daily = await checkDailyLimit({ ip, isPro });
     if(!daily.ok) {
       return res.status(429).json({
         error:"rate_limited_daily",
         detail:"limite giornaliero raggiunto",
         remaining: 0,
-        max: isPro ? 10 : 3
+        max: daily.max
       });
     }
 
@@ -355,8 +388,9 @@ export default async function handler(req, res){
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if(!answer) throw new Error("empty_model_response");
 
-    // Post-process risposta
+    // post-process
     answer = stripQuestionEcho(domanda, answer);
+    // NON forziamo l'incipit (libertà all'AI)
     answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);
     answer = clampWords(answer, stile === "wtf" ? 170 : 165);
     answer = normalizeOneParagraph(answer);
@@ -364,71 +398,52 @@ export default async function handler(req, res){
     answer = finalPunct(answer);
 
     /* ===== 2) MOTIVAZIONE (breve, coerente) ===== */
-    async function genMotivation(strictJSONPrompt){
-      const motMsgs = strictJSONPrompt ?? buildMotivationPrompt({ domanda, answer, lang });
+    async function genMotivation(promptMsgs, temp=0.55){
       const mot = await client.chat.completions.create({
-        model: MODEL,
-        temperature: 0.55,
-        max_tokens: 140,
-        messages: motMsgs
+        model: MODEL, temperature: temp, max_tokens: 140, messages: promptMsgs
       });
       let raw = String(mot?.choices?.[0]?.message?.content || "").trim();
       let json = null;
       try { json = JSON.parse(raw); }
-      catch {
-        const m = raw.match(/\{[\s\S]*\}/);
-        if (m) { try { json = JSON.parse(m[0]); } catch {} }
-      }
+      catch { const m = raw.match(/\{[\s\S]*\}/); if (m) { try { json = JSON.parse(m[0]); } catch {} } }
       let probability = Math.max(0, Math.min(100, parseInt(json?.probability ?? 50, 10)));
       let motivation = String(json?.motivation || "").trim();
       motivation = normalizeOneParagraph(sentenceCaseAll(finalPunct(motivation)));
       return { probability, motivation };
     }
 
-    let { probability, motivation } = await genMotivation();
+    // primo tentativo con lista di parole salienti
+    let { probability, motivation } = await genMotivation(buildMotivationPrompt({ domanda, answer, lang }), 0.5);
 
-    // Validazione motivazione; fino a 2 rigenerazioni con vincoli più stretti
+    // validazione e retry con vincoli più duri se necessario
     let valid = validateMotivation(domanda, answer, motivation);
     if (!valid.ok) {
+      const salient = pickSalient(domanda, answer, 12).join(", ");
       const L = normLang(lang);
       const strictSys =
-        L==="en" ? `Return ONLY JSON. 18–32 words. Reuse at least TWO salient nouns from QUESTION/ANSWER (e.g., safety, cost, helmet, insurance, traffic). No new domains (resumes, networking, clients, sales). {"probability":<0-100>,"motivation":"..."}` :
-        L==="es" ? `Devuelve SOLO JSON. 18–32 palabras. Reutiliza al menos DOS sustantivos de PREGUNTA/RESPUESTA. Sin dominios nuevos (CV, networking, clientes). {"probability":<0-100>,"motivation":"..."}` :
-        L==="fr" ? `Rends UNIQUEMENT du JSON. 18–32 mots. Réutilise au moins DEUX noms de la QUESTION/RÉPONSE. Pas de nouveaux domaines (CV, réseau, clients). {"probability":<0-100>,"motivation":"..."}` :
-        L==="de" ? `Gib NUR JSON. 18–32 Wörter. Verwende mindestens ZWEI Substantive aus FRAGE/ANTWORT erneut. Keine neuen Domänen (Lebenslauf, Netzwerk, Kunden). {"probability":<0-100>,"motivation":"..."}` :
-                  `Restituisci SOLO JSON. 18–32 parole. Riusa almeno DUE sostantivi di DOMANDA/RISPOSTA (es. sicurezza, costi, casco, assicurazione, traffico). Niente domini nuovi (CV, networking, clienti, vendite). {"probability":<0-100>,"motivation":"..."}`;
+        L==="en" ? `ONLY JSON. 18–32 words. Must include AT LEAST TWO of: [${salient}]. Block unrelated domains (resumes, interviews, networking, clients, sales). {"probability":<0-100>,"motivation":"..."}` :
+        L==="es" ? `SOLO JSON. 18–32 palabras. Debe incluir AL MENOS DOS de: [${salient}]. Bloquea dominios ajenos (CV, entrevistas, networking, clientes, ventas). {"probability":<0-100>,"motivation":"..."}` :
+        L==="fr" ? `JSON SEULEMENT. 18–32 mots. Inclure AU MOINS DEUX parmi : [${salient}]. Bloque domaines hors sujet (CV, entretiens, réseau, clients, ventes). {"probability":<0-100>,"motivation":"..."}` :
+        L==="de" ? `NUR JSON. 18–32 Wörter. Mindestens ZWEI aus: [${salient}]. Fremde Domänen blockieren (Lebenslauf, Vorstellung, Netzwerk, Kunden, Vertrieb). {"probability":<0-100>,"motivation":"..."}` :
+                  `SOLO JSON. 18–32 parole. Includi ALMENO DUE tra: [${salient}]. Blocca domini estranei (CV, colloqui, networking, clienti, vendite). {"probability":<0-100>,"motivation":"..."}`;
       const strictPrompt = [
         { role: "system", content: strictSys },
         { role: "user", content: (L==="en" ? `Question: ${domanda}` : L==="es" ? `Pregunta: ${domanda}` : L==="fr" ? `Question : ${domanda}` : L==="de" ? `Frage: ${domanda}` : `Domanda: ${domanda}`) },
         { role: "user", content: (L==="en" ? `Prior answer:\n${answer}` : L==="es" ? `Respuesta previa:\n${answer}` : L==="fr" ? `Réponse précédente :\n${answer}` : L==="de" ? `Vorherige Antwort:\n${answer}` : `Risposta precedente:\n${answer}`) },
       ];
-      ({ probability, motivation } = await genMotivation(strictPrompt));
+      ({ probability, motivation } = await genMotivation(strictPrompt, 0.4));
       valid = validateMotivation(domanda, answer, motivation);
 
       if (!valid.ok) {
-        // Ultimo tentativo: riduzione temperatura e reminder hard
-        const hardSys =
-          L==="en" ? `ONLY JSON. 20–28 words. Must include TWO nouns present verbatim in QUESTION or ANSWER. Block unrelated domains. {"probability":<0-100>,"motivation":"..."}` :
-          L==="es" ? `SOLO JSON. 20–28 palabras. Incluye DOS sustantivos presentes literalmente. Bloquea dominios ajenos. {"probability":<0-100>,"motivation":"..."}` :
-          L==="fr" ? `JSON SEULEMENT. 20–28 mots. Inclure DEUX noms présents littéralement. Bloquer domaines hors sujet. {"probability":<0-100>,"motivation":"..."}` :
-          L==="de" ? `NUR JSON. 20–28 Wörter. ZWEI Substantive wörtlich übernehmen. Fremde Domänen blockieren. {"probability":<0-100>,"motivation":"..."}` :
-                    `SOLO JSON. 20–28 parole. Includi DUE sostantivi presenti alla lettera. Blocca domini estranei. {"probability":<0-100>,"motivation":"..."}`;
+        // ultimo tentativo ultra-conservativo
         const hardPrompt = [
-          { role: "system", content: hardSys },
+          { role: "system", content: strictSys },
           { role: "user", content: (L==="en" ? `Question: ${domanda}` : L==="es" ? `Pregunta: ${domanda}` : L==="fr" ? `Question : ${domanda}` : L==="de" ? `Frage: ${domanda}` : `Domanda: ${domanda}`) },
+          { role: "user", content: (L==="en" ? `Keep it strictly about the same topic.` : L==="es" ? `Manténlo estrictamente en el mismo tema.` : L==="fr" ? `Reste strictement sur le même sujet.` : L==="de" ? `Bleib strikt beim selben Thema.` : `Resta strettamente sullo stesso tema.`) },
           { role: "user", content: (L==="en" ? `Prior answer:\n${answer}` : L==="es" ? `Respuesta previa:\n${answer}` : L==="fr" ? `Réponse précédente :\n${answer}` : L==="de" ? `Vorherige Antwort:\n${answer}` : `Risposta precedente:\n${answer}`) },
         ];
-        const mot = await client.chat.completions.create({
-          model: MODEL, temperature: 0.35, max_tokens: 110, messages: hardPrompt
-        });
-        let raw3 = String(mot?.choices?.[0]?.message?.content || "").trim();
-        let json3 = null;
-        try { json3 = JSON.parse(raw3); }
-        catch { const m3 = raw3.match(/\{[\s\S]*\}/); if (m3) { try { json3 = JSON.parse(m3[0]); } catch {} } }
-        const p3 = Math.max(0, Math.min(100, parseInt(json3?.probability ?? probability, 10)));
-        const m3txt = normalizeOneParagraph(sentenceCaseAll(finalPunct(String(json3?.motivation || motivation))));
-        probability = p3; motivation = m3txt;
-        // Anche se ancora non “perfetta”, a questo punto restituiamo il meglio ottenuto (coerente in >99% dei casi).
+        ({ probability, motivation } = await genMotivation(hardPrompt, 0.3));
+        // se ancora non perfetta, restituiamo comunque il best-effort più coerente ottenuto
       }
     }
 
@@ -442,10 +457,10 @@ export default async function handler(req, res){
       periodo,
       model: MODEL,
       pro: isPro,
-      ...(debug ? { debug: { seedU32, validMotivation: validateMotivation(domanda, answer, motivation) } } : {})
+      ...(debug ? { debug: { validMotivation: validateMotivation(domanda, answer, motivation) } } : {})
     });
   }catch(err){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
-                  }
+}
