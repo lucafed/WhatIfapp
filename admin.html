@@ -119,36 +119,20 @@
     </div>
   </div>
 
-  <!-- Gestione crediti -->
+  <!-- Gestione crediti: SOLO 2 BOTTONI -->
   <div class="card" style="margin-top:12px">
     <h3>Gestione crediti (locale)</h3>
     <div class="row">
       <span class="chip">Disponibili: <b id="cLeft" style="margin-left:6px">—</b></span>
       <span class="chip">Usati: <b id="cUsed" style="margin-left:6px">—</b></span>
       <span class="chip">Limite: <b id="cLimit" style="margin-left:6px">—</b></span>
+      <span class="chip">Tipo: <b id="cType" style="margin-left:6px">—</b></span>
     </div>
-
-    <div class="row" style="margin-top:8px">
-      <button id="cPresetFree" class="ghost">Preset FREE (3)</button>
-      <button id="cPresetPro"  class="ghost">Preset PRO (10)</button>
-      <button id="cPresetDev"  class="ghost">Preset DEV (9999)</button>
-      <button id="cResetUsed"  class="ghost">Azzera usati</button>
-      <button id="cZeroLeft"   class="ghost">Porta disponibili a 0</button>
+    <div class="row" style="margin-top:10px">
+      <button id="btnResetFREE" class="ghost">Reset FREE (3)</button>
+      <button id="btnResetPRO"  class="primary">Reset PRO (10)</button>
     </div>
-
-    <div class="row" style="margin-top:8px">
-      <button id="cGrant1" class="primary">Dona +1</button>
-      <button id="cGrant3" class="primary">Dona +3</button>
-      <button id="cGrant10" class="primary">Dona +10</button>
-      <span class="muted">La “donazione” aumenta i disponibili riducendo gli usati.</span>
-    </div>
-
-    <div class="row" style="margin-top:8px">
-      <input id="cSetLeftVal" type="number" min="0" placeholder="Disponibili…" style="width:140px"/>
-      <button id="cSetLeftBtn" class="ghost">Imposta disponibili</button>
-      <input id="cSetLimitVal" type="number" min="0" placeholder="Limite…" style="width:140px"/>
-      <button id="cSetLimitBtn" class="ghost">Imposta limite</button>
-    </div>
+    <p class="muted" style="margin-top:8px">Il reset aggiorna <code>whatif_credits</code>, <code>whatif_wallet</code> e il flag PRO in <code>whatif_prefs</code>. Fourth/Fifth si aggiornano da sole.</p>
   </div>
 
   <!-- Statistiche -->
@@ -196,28 +180,26 @@
 <script>
 /* ========= BASE ========= */
 const LS=localStorage, TKEY="admin_token", PROKEY="whatif_prefs", CKEY="whatif_credits";
+const WKEY="whatif_wallet";
 const $=id=>document.getElementById(id); let chart=null, auto=null, LAST_ITEMS=[];
-const dbg=(...a)=>{ const t=a.map(x=>typeof x==="string"?x:JSON.stringify(x,null,2)).join(" "); const el=$("debug"); el.textContent=(el.textContent?el.textContent+"\n":"")+t; el.scrollTop=el.scrollHeight; };
-const getTok=()=>LS.getItem(TKEY)||""; const setTok=t=>{ if(t)LS.setItem(TKEY,t); else LS.removeItem(TKEY); $("tok").textContent=t? t.slice(0,6)+"…"+t.slice(-4):"—"; };
+const dbg=(...a)=>{ const t=a.map(x=>typeof x==="string"?x:JSON.stringify(x,null,2)).join(" "); const el=document.getElementById("debug"); if(!el) return; el.textContent=(el.textContent?el.textContent+"\n":"")+t; el.scrollTop=el.scrollHeight; };
+const getTok=()=>LS.getItem(TKEY)||""; const setTok=t=>{ if(t)LS.setItem(TKEY,t); else LS.removeItem(TKEY); const el=$("tok"); if(el) el.textContent=t? t.slice(0,6)+"…"+t.slice(-4):"—"; };
 const setProUI=()=>{ try{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); $("usertype").textContent=p.pro?"pro":"free"; }catch{} };
 const fmtDate=ts=>{ const d=new Date(ts||Date.now()); return d.toLocaleString(); };
-const maskIpLocal = (ip)=>{ if(!ip) return ""; if(!$("maskIp").checked) return ip; const p=String(ip).split("."); return p.length===4? `${p[0]}.${p[1]}.xx.yy` : String(ip).replace(/:(\w+):(\w+)$/,"::xx:yy"); };
+const maskIpLocal = (ip)=>{ const m=$("maskIp"); if(!ip) return ""; if(!m||!m.checked) return ip; const p=String(ip).split("."); return p.length===4? `${p[0]}.${p[1]}.xx.yy` : String(ip).replace(/:(\w+):(\w+)$/,"::xx:yy"); };
 
-/* ========= ENDPOINT DISCOVERY ========= */
+/* ========= ENDPOINT DISCOVERY / FETCH ========= */
 const CACHE_EP = JSON.parse(LS.getItem("admin_endpoints")||"{}");
 async function discoverEndpoint(key, candidates){
   if(CACHE_EP[key]) return CACHE_EP[key];
   for(const path of candidates){
     try{
       const r=await fetch(path,{headers:{"x-admin-token":getTok()}});
-      if(r.ok){ CACHE_EP[key]=path; LS.setItem("admin_endpoints",JSON.stringify(CACHE_EP)); dbg("OK endpoint",key,"→",path); return path; }
-      else dbg("Probe",path,"status",r.status);
-    }catch(e){ dbg("Probe error",path,String(e)); }
+      if(r.ok){ CACHE_EP[key]=path; LS.setItem("admin_endpoints",JSON.stringify(CACHE_EP)); return path; }
+    }catch{}
   }
   CACHE_EP[key]=candidates[0]; return candidates[0];
 }
-
-/* ========= FETCH ROBUSTO ========= */
 async function getText(url){
   try{
     const r=await fetch(url,{headers:{"x-admin-token":getTok()}});
@@ -232,7 +214,7 @@ async function getJSON(url){
 }
 const pickArray = d => Array.isArray(d) ? d : (d?.items||d?.logs||d?.data||[]);
 
-/* ========= PARSER LOG ROBUSTO ========= */
+/* ========= LOG PARSE ========= */
 function parseMaybeJsonOrJsonl(raw){
   try { return pickArray(JSON.parse(raw)); }
   catch {
@@ -259,31 +241,39 @@ function normalizeLogsArray(arr){ return (arr||[]).map(normItem); }
 
 /* ========= ADMIN CHECK ========= */
 async function adminCheck(){
-  const {ok,data,raw,status}=await getJSON("/api/admin-token");
+  const {ok,data}=await getJSON("/api/admin-token");
   const yes = !!(data && (data.ok ? (data.admin ?? data.ok) : data?.admin));
   $("adminState").textContent = yes?"yes":"no";
   $("myIp").textContent = data?.ip || "—";
   const c = readCred();
   $("credits").textContent = yes?"∞": `${Math.max(c.limit - c.used,0)}/${c.limit}`;
-  if(!ok) dbg("admin-token fail",status,String(raw).slice(0,200));
   return yes;
 }
 
-/* ========= CREDITS (LOCALE) ========= */
+/* ========= CREDITI (compat con entrambe le versioni) ========= */
 function readCred(){
   try{
     const d = JSON.parse(LS.getItem(CKEY)||"{}");
-    let used = Number.isFinite(d.used)? d.used : 0;
+    let used  = Number.isFinite(d.used)? d.used : 0;
     let limit = (d.limit===Infinity) ? Infinity : (Number.isFinite(d.limit)? d.limit : 3);
     if(limit<0) limit=0; if(used<0) used=0;
     return {used, limit};
   }catch{ return {used:0, limit:3}; }
 }
 function writeCred(obj){
-  const payload = { used: Math.max(0, obj.used|0), limit: obj.limit===Infinity? Infinity : Math.max(0, obj.limit|0) };
+  const payload = {
+    used:  Math.max(0, (obj.used|0)),
+    limit: obj.limit===Infinity ? Infinity : Math.max(0, (obj.limit|0))
+  };
   LS.setItem(CKEY, JSON.stringify(payload));
+  // sync per fourth/fifth
+  LS.setItem("whatif_credits_sync", String(Date.now()));
   drawCredits();
   adminCheck();
+}
+function writeWallet(w){
+  LS.setItem(WKEY, JSON.stringify(w));
+  LS.setItem("whatif_wallet_sync", String(Date.now())); // per pagine nuove
 }
 function drawCredits(){
   const c = readCred();
@@ -291,9 +281,30 @@ function drawCredits(){
   $("cLeft").textContent  = left;
   $("cUsed").textContent  = c.used;
   $("cLimit").textContent = (c.limit===Infinity) ? "∞" : c.limit;
+  try{
+    const p=JSON.parse(LS.getItem(PROKEY)||"{}");
+    $("cType").textContent = p.pro ? "pro" : "free";
+  }catch{ $("cType").textContent="free"; }
 }
 
-/* ========= RENDER ========= */
+/* ========= RESET SOLO 2 BOTTONI ========= */
+function resetFREE(){
+  // flag tipo
+  try{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); delete p.pro; LS.setItem(PROKEY,JSON.stringify(p)); }catch{}
+  // vecchio schema (used/limit)
+  writeCred({used:0, limit:3});
+  // nuovo schema (wallet)
+  writeWallet({available:3, used:0, limit:3});
+  alert("Reset FREE completato (3 crediti).");
+}
+function resetPRO(){
+  try{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); p.pro=true; LS.setItem(PROKEY,JSON.stringify(p)); }catch{}
+  writeCred({used:0, limit:10});
+  writeWallet({available:10, used:0, limit:10});
+  alert("Reset PRO completato (10 crediti).");
+}
+
+/* ========= RENDER/STATISTICHE/TABELLA (invariati) ========= */
 function compactMap(obj,label){ if(!obj||typeof obj!=="object") return `${label}: —`; return `${label}: `+Object.entries(obj).map(([k,v])=>`${k}: ${v}`).join(" · "); }
 function renderTrend(tr){
   const ctx=$("trendChart").getContext("2d");
@@ -354,190 +365,58 @@ function localToItems(arr){
 let EP_LOGS=null, EP_STATS=null;
 async function loadAll(){
   $("ts").textContent=new Date().toLocaleString();
-
   if(!EP_STATS) EP_STATS = await discoverEndpoint("stats", ["/api/admin-stats","/api/admin/stats"]);
   if(!EP_LOGS)  EP_LOGS  = await discoverEndpoint("logs",  ["/api/admin-logs","/api/admin/logs"]);
-
-  // STATS
   const days=$("trendSel").value||"10";
   const st=await getJSON(`${EP_STATS}?days=${encodeURIComponent(days)}`);
-  if(st.ok && st.data){ drawStats(st.data); } else { drawStats({}); dbg("stats fail",st.status); }
-
-  // LOGS
+  if(st.ok && st.data){ drawStats(st.data); } else { drawStats({}); }
   const limit=$("limitSel").value||"200";
   try{
     const t = await getText(`${EP_LOGS}?limit=${encodeURIComponent(limit)}&mask=0`);
-    if(!t.ok){ dbg("logs fail", t.status, String(t.raw).slice(0,200)); throw new Error("bad_status"); }
+    if(!t.ok) throw new Error("bad_status");
     const rawItems = parseMaybeJsonOrJsonl(t.raw);
     let arr = normalizeLogsArray(rawItems);
     if($("maskIp").checked) arr = arr.map(x=>({...x, ip:maskIpLocal(x.ip)}));
-    LAST_ITEMS = arr;
-    drawTable(arr);
-    dbg(`logs caricati: ${arr.length}`);
-  }catch(e){
+    LAST_ITEMS = arr; drawTable(arr);
+  }catch{
     const local = localToItems(readLocalHistory());
-    LAST_ITEMS = local;
-    drawTable(local);
-    dbg("fallback locale logs:", local.length);
+    LAST_ITEMS = local; drawTable(local);
   }
 }
-
-/* ========= CSV ========= */
-function toCSV(items){
-  const esc=s=>('"'+String(s??"").replace(/"/g,'""')+'"');
-  const head=["quando","ip","tipo","stile","lingua","tempo","len","domanda"];
-  const rows=(items||[]).map(it=>[
-    fmtDate(it.ts), maskIpLocal(it.ip), it.user_type, it.style, it.lang, it.periodo, it.answer_chars,
-    (it.domanda||"").replace(/\s+/g," ").trim()
-  ].map(esc).join(","));
-  return head.join(",")+"\n"+rows.join("\n");
-}
-function download(name, text){ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type:"text/csv"})); a.download=name; a.click(); URL.revokeObjectURL(a.href); }
 
 /* ========= EVENTS ========= */
 $("btnRefresh").onclick=loadAll;
 $("btnAuto").onclick=()=>{ if(auto){ clearInterval(auto); auto=null; $("btnAuto").textContent="Auto-refresh"; } else { auto=setInterval(loadAll,5000); $("btnAuto").textContent="Stop auto"; } };
-$("btnCSV").onclick=()=> download(`logs_${Date.now()}.csv`, toCSV(LAST_ITEMS));
+$("btnCSV").onclick=()=>{ const esc=s=>('"'+String(s??"").replace(/"/g,'""')+'"');
+  const head=["quando","ip","tipo","stile","lingua","tempo","len","domanda"];
+  const rows=(LAST_ITEMS||[]).map(it=>[
+    fmtDate(it.ts), maskIpLocal(it.ip), it.user_type, it.style, it.lang, it.periodo, it.answer_chars,
+    (it.domanda||"").replace(/\s+/g," ").trim()
+  ].map(esc).join(","));
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([head.join(",")+"\n"+rows.join("\n")],{type:"text/csv"})); a.download=`logs_${Date.now()}.csv`; a.click(); URL.revokeObjectURL(a.href);
+};
 $("btnClear").onclick=async()=>{ if(!confirm("Svuotare i log?")) return; await fetch("/api/admin-logs",{method:"DELETE",headers:{"x-admin-token":getTok()}}); loadAll(); };
 $("dlSel").onchange=()=>{ $("limitSel").value=$("dlSel").value; loadAll(); };
 for(const id of ["fStyle","fLang","fPeriod","fUser","q","limitSel","trendSel","maskIp"])
   $(id).addEventListener("input", ()=>drawTable(LAST_ITEMS));
 
-/* login & pro */
+/* login & pro badge */
 $("enter").onclick=async()=>{
   const pin=$("pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
   const r=await fetch("/api/admin-token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pin})});
   const d=await r.json().catch(()=>({}));
-  if(r.ok && (d.ok||d.token)){ setTok(d.token||""); $("debug").textContent="Login ok. Token legato al tuo IP per ~7gg."; await adminCheck(); loadAll(); }
+  if(r.ok && (d.ok||d.token)){ setTok(d.token||""); await adminCheck(); loadAll(); }
   else alert("PIN errato o errore server");
 };
 $("renew").onclick=async()=>{ const r=await fetch("/api/admin-token?action=renew",{method:"POST",headers:{"x-admin-token":getTok()}}); alert(r.ok?"Rinnovato per 7gg":"Errore rinnovo"); };
 $("revoke").onclick=async()=>{ await fetch("/api/admin-token?action=revoke",{method:"POST",headers:{"x-admin-token":getTok()}}); setTok(""); await adminCheck(); };
-$("proOn").onclick=()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); p.pro=true; LS.setItem(PROKEY,JSON.stringify(p)); $("usertype").textContent="pro"; };
-$("proOff").onclick=()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); delete p.pro; LS.setItem(PROKEY,JSON.stringify(p)); $("usertype").textContent="free"; };
+$("proOn").onclick = ()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); p.pro=true;  LS.setItem(PROKEY,JSON.stringify(p)); setProUI(); };
+$("proOff").onclick= ()=>{ const p=JSON.parse(LS.getItem(PROKEY)||"{}"); delete p.pro; LS.setItem(PROKEY,JSON.stringify(p)); setProUI(); };
 
-/* ====== CREDIT EVENTS ====== */
-$("cPresetFree").onclick = ()=> writeCred({ used:0, limit:3 });
-$("cPresetPro").onclick  = ()=> writeCred({ used:0, limit:10 });
-$("cPresetDev").onclick  = ()=> writeCred({ used:0, limit:9999 });
-$("cResetUsed").onclick  = ()=> { const c=readCred(); writeCred({ used:0, limit:c.limit }); };
-$("cZeroLeft").onclick   = ()=> { const c=readCred(); writeCred({ used:(c.limit===Infinity?0:c.limit), limit:c.limit }); };
+/* bottoni reset */
+$("btnResetFREE").onclick = resetFREE;
+$("btnResetPRO").onclick  = resetPRO;
 
-$("cGrant1").onclick  = ()=> { const c=readCred(); writeCred({ used: Math.max(0, c.used-1),  limit:c.limit }); };
-$("cGrant3").onclick  = ()=> { const c=readCred(); writeCred({ used: Math.max(0, c.used-3),  limit:c.limit }); };
-$("cGrant10").onclick = ()=> { const c=readCred(); writeCred({ used: Math.max(0, c.used-10), limit:c.limit }); };
-
-$("cSetLeftBtn").onclick  = ()=> {
-  const v = Math.max(0, parseInt($("cSetLeftVal").value||"0",10));
-  const c = readCred();
-  const newUsed = (c.limit===Infinity) ? 0 : Math.max(0, c.limit - v);
-  writeCred({ used:newUsed, limit:c.limit });
-};
-$("cSetLimitBtn").onclick = ()=> {
-  let v = $("cSetLimitVal").value.trim();
-  if(v === "" ) return;
-  if(v.toLowerCase()==="inf" || v==="∞"){ writeCred({ used:0, limit:Infinity }); return; }
-  v = Math.max(0, parseInt(v,10));
-  const c = readCred();
-  const left = Math.max(0, (c.limit===Infinity? v : (c.limit - c.used)));
-  const newUsed = Math.max(0, v - left);
-  writeCred({ used:newUsed, limit:v });
-};
-
-  /* ======== WALLET (crediti locali) ======== */
-const WKEY = "whatif_wallet";
-const PKEY = "whatif_prefs"; // per marcare/ritirare il flag PRO locale
-
-// lettura/scrittura sicura
-function readWallet(){
-  try{
-    const w = JSON.parse(localStorage.getItem(WKEY) || "{}") || {};
-    return {
-      available: Number.isFinite(+w.available) ? +w.available : 0,
-      used:      Number.isFinite(+w.used)      ? +w.used      : 0,
-      limit:     Number.isFinite(+w.limit)     ? +w.limit     : 3,
-    };
-  }catch{ return {available:0, used:0, limit:3}; }
-}
-function writeWallet(w){
-  localStorage.setItem(WKEY, JSON.stringify(w));
-  // notifica alle altre tab (fourth/fifth) – non serve toccarle
-  localStorage.setItem("whatif_wallet_sync", String(Date.now()));
-  updateWalletUI();
-}
-function updateWalletUI(){
-  const w = readWallet();
-  (document.getElementById("wAvail")||{}).textContent = w.available;
-  (document.getElementById("wUsed") ||{}).textContent = w.used;
-  (document.getElementById("wLimit")||{}).textContent = w.limit;
-}
-
-// helper: imposta wallet
-function setWallet({available, used, limit}){
-  const w = readWallet();
-  if(available != null) w.available = Math.max(0, +available);
-  if(used      != null) w.used      = Math.max(0, +used);
-  if(limit     != null) w.limit     = Math.max(0, +limit);
-  writeWallet(w);
-}
-
-// ==== PRESET ====
-function presetFREE(){
-  // utente free (no flag pro), 3 crediti/giorno
-  setWallet({available:3, used:0, limit:3});
-  try{ const p=JSON.parse(localStorage.getItem(PKEY)||"{}"); delete p.pro; localStorage.setItem(PKEY,JSON.stringify(p)); }catch{}
-  alert("Preset FREE impostato (3 crediti).");
-}
-function presetPRO(){
-  // utente pro locale (solo UI), 10 crediti
-  setWallet({available:10, used:0, limit:10});
-  try{ const p=JSON.parse(localStorage.getItem(PKEY)||"{}"); p.pro=true; localStorage.setItem(PKEY,JSON.stringify(p)); }catch{}
-  alert("Preset PRO impostato (10 crediti).");
-}
-function presetDEV(){
-  setWallet({available:9999, used:0, limit:9999});
-  try{ const p=JSON.parse(localStorage.getItem(PKEY)||"{}"); p.pro=true; localStorage.setItem(PKEY,JSON.stringify(p)); }catch{}
-  alert("Preset DEV impostato (9999 crediti).");
-}
-
-// ==== AZIONI RAPIDE ====
-function zeroUsed(){ setWallet({used:0}); }
-function availToZero(){ setWallet({available:0}); }
-function donate(n){
-  const w = readWallet();
-  setWallet({available: w.available + n, used: Math.max(0, w.used - n)});
-}
-
-// ==== WIRE BOTTONI (usa gli ID che vedi in admin) ====
-// contatori (metti questi id nel markup accanto ai numeri)
-updateWalletUI();
-
-// preset
-(document.getElementById("btnPresetFree")||{}).onclick = presetFREE;
-(document.getElementById("btnPresetPro") ||{}).onclick = presetPRO;
-(document.getElementById("btnPresetDev") ||{}).onclick = presetDEV;
-
-// azzera usati / porta a 0 / dona
-(document.getElementById("btnZeroUsed")   ||{}).onclick = zeroUsed;
-(document.getElementById("btnAvailZero")  ||{}).onclick = availToZero;
-(document.getElementById("btnDonate1")    ||{}).onclick = ()=>donate(1);
-(document.getElementById("btnDonate3")    ||{}).onclick = ()=>donate(3);
-(document.getElementById("btnDonate10")   ||{}).onclick = ()=>donate(10);
-
-// “Imposta disponibili” (campo + bottone)
-(function(){
-  const input = document.getElementById("availInput");
-  const btn   = document.getElementById("btnSetAvail");
-  if(btn && input){
-    btn.onclick = ()=>{
-      const n = parseInt(input.value,10);
-      if(Number.isFinite(n) && n>=0){ setWallet({available:n}); input.value=""; }
-    };
-  }
-})();
-
-// inizializza badge tipo utente in alto
-setProUI?.();
 /* ========= INIT ========= */
 (async function init(){
   setProUI();
