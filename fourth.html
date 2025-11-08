@@ -66,7 +66,7 @@
 
     /* Slot fx */
     #qInput.slotting{filter:contrast(1.2) saturate(1.1); animation:slotFlash .12s linear infinite}
-    @keyframes slotFlash{0%{box-shadow:0 0 0 rgba(255,236,1,.0)}50%{box-shadow:0 0 18px rgba(255,236,1,.2)}100%{box-shadow:0 0 0 rgba(255,236,1,.0)}}
+    @keyframes slotFlash{0%{box-shadow:0 0 0 rgba(255,236,1,.0)}50%{box-shadow:0 0 18px rgba(255,236,1,.2)}100%{box-shadow:0 0 0 rgba(255,255,255,.0)}}
     </style>
   </head>
   <body>
@@ -250,42 +250,65 @@ save:"Speichern", clearSaved:"🗑️ Leeren", clearHist:"🗑️ Leeren"}
 let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-/* ===== CREDITI (letti da admin) ===== */
-const CKEY='whatif_credits';        // {date, used, limit}
-function userIsAdmin(){ return !!LS.getItem('admin_token'); }
-
-function ensureCreditsShape(){
-  let c = readJSON(CKEY,{date:todayISO(),used:0,limit:(prefs.pro?10:3)});
-  if(c.date!==todayISO()){ c.date=todayISO(); c.used=0; }
-  if(!Number.isFinite(c.used))  c.used = 0;
-  if(!(c.limit===Infinity || Number.isFinite(c.limit))) c.limit = (prefs.pro?10:3);
-  writeJSON(CKEY,c);
-  return c;
+/* ===== CREDITI (WALLET UNIFICATO + fallback legacy) ===== */
+const WKEY = 'whatif_wallet';
+function userIsAdmin(){ return !!localStorage.getItem('admin_token'); }
+function readWallet(){
+  try { return JSON.parse(localStorage.getItem(WKEY)||'{}')||{}; }
+  catch { return {}; }
 }
-function leftCredits(){
-  if(userIsAdmin()) return '∞';
-  const c = ensureCreditsShape();
-  if(c.limit===Infinity) return '∞';
-  return Math.max(0,(c.limit||0)-(c.used||0));
+function getWalletAvailable(){
+  if (userIsAdmin()) return Infinity;
+  const w = readWallet();
+  if (w && w.available != null) return (w.available===Infinity?Infinity:Math.max(0,+w.available));
+  // Fallback legacy: whatif_credits (cap giornaliero) oppure "crediti"
+  try{
+    const c = JSON.parse(localStorage.getItem('whatif_credits')||'{}')||{};
+    const today = new Date().toISOString().slice(0,10);
+    const used = (c.date===today)? (+c.used||0) : 0;
+    const cap  = (c.limit===Infinity)? Infinity : (Number.isFinite(+c.limit)? +c.limit : (prefs.pro?10:3));
+    return cap===Infinity? Infinity : Math.max(0, cap - used);
+  }catch{}
+  const raw = localStorage.getItem('crediti');
+  return raw==null ? (prefs.pro?10:3) : Math.max(0, parseInt(raw,10)||0);
 }
-function capForUser(){
-  if(userIsAdmin()) return '∞';
-  const c = ensureCreditsShape();
-  return (c.limit===Infinity)? '∞' : (c.limit||0);
+function getWalletCap(){
+  if (userIsAdmin()) return Infinity;
+  const w = readWallet();
+  if (w && w.limit != null) return (w.limit===Infinity?Infinity:Math.max(0,+w.limit));
+  // Fallback legacy
+  try{
+    const c = JSON.parse(localStorage.getItem('whatif_credits')||'{}')||{};
+    const cap = (c.limit===Infinity)? Infinity : (Number.isFinite(+c.limit)? +c.limit : (prefs.pro?10:3));
+    return cap;
+  }catch{}
+  return (prefs.pro?10:3);
 }
 function renderCredits(){
-  const T=I18N[lang]||I18N.it;
-  $('freeBadge').textContent = `${T.credits}: ${leftCredits()}/${capForUser()}`;
+  const T = I18N[lang] || I18N.it;
+  const left = getWalletAvailable();
+  const cap  = getWalletCap();
+  const txt  = (cap===Infinity) ? `${T.credits}: ∞` : `${T.credits}: ${left}/${cap}`;
+  const el   = document.getElementById('freeBadge');
+  if (el && el.textContent !== txt) el.textContent = txt;
 }
-ensureCreditsShape(); renderCredits();
-
-/* Aggiorna badge quando admin resetta o cambia token */
-window.addEventListener('storage',(e)=>{
-  if(['whatif_sync','whatif_credits','admin_token'].includes(e.key)){
-    ensureCreditsShape();
+/* Sync aggiornamento badge */
+window.addEventListener('storage', (e)=>{
+  if (e.key==='whatif_wallet_sync' || e.key===WKEY || e.key==='whatif_sync' || e.key==='whatif_credits') {
     renderCredits();
   }
 });
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) renderCredits(); });
+window.addEventListener('pageshow', ()=> renderCredits());
+window.addEventListener('focus',   ()=> renderCredits());
+/* Polling leggero (2s) per stessa tab */
+let __lastSig = localStorage.getItem('whatif_wallet_sync')||'';
+setInterval(()=>{
+  const cur = localStorage.getItem('whatif_wallet_sync')||'';
+  if (cur !== __lastSig){ __lastSig = cur; renderCredits(); }
+}, 2000);
+/* Primo render */
+renderCredits();
 
 /* ===== BADGE STILE/PERIODO ===== */
 function renderBadges(){
@@ -313,9 +336,9 @@ $('periodoChips').addEventListener('click',e=>{
 $('homeBtn').onclick=()=>location.href='index.html';
 $('backBtn').onclick=()=>{ if(history.length>1) history.back(); else location.href='index.html'; };
 
-/* ✅ RESET (preserva crediti e token) */
+/* ✅ RESET (preserva crediti/token/wallet e spins) */
 $('resetBtn').onclick=()=>{
-  const PRESERVE = ['whatif_credits','admin_token','lang','surprise_spins'];
+  const PRESERVE = ['whatif_wallet','whatif_wallet_sync','whatif_credits','admin_token','lang','surprise_spins'];
   const keep = Object.fromEntries(PRESERVE.map(k => [k, LS.getItem(k)]));
   [
     'whatif_prefs','next_prompts','cronologia','replay_story',
@@ -353,7 +376,7 @@ const HINTS={
   es:[
     "¿Y si cambiara de trabajo?","¿Y si me mudara de ciudad?","¿Y si volviera a estudiar?","¿Y si viviera 30 días sin redes?","¿Y si pidiera un aumento?","¿Y si viajara solo/a?","¿Y si dominara bien el inglés?","¿Y si abriera un micro e-commerce?","¿Y si corriera 3 veces por semana?","¿Y si cocinara en casa 30 días?",
     "¿Y si leyera 12 libros en 12 meses?","¿Y si me levantara a las 6 durante 30 días?","¿Y si llevara un diario un mes?","¿Y si dejara el azúcar por 30 días?","¿Y si aprendiera a meditar 10 minutos al día?","¿Y si ordenara mi casa?","¿Y si aprendiera a programar con un curso gratis?",
-    "¿Y si no usara el móvil después de las 20:00 por una semana?","¿Y si aprendiera un instrumento?","¿Y si hiciera voluntariado los sábados?","¿Y si cocinara 5 recetas nuevas?","¿Y si hiciera 10k pasos diarios?","¿Y si invirtiera pequeñas cantidades para aprender?","¿Y si abriera una newsletter?",
+    "¿Y si no usara el móvil después de las 20:00 por una semana?","¿Y si aprendiera un instrumento?","¿Y si hiciera voluntariado los sábados?","¿Y si cocinara 5 nuevas recetas?","¿Y si hiciera 10k pasos diarios?","¿Y si invirtiera pequeñas cantidades para aprender?","¿Y si abriera una newsletter?",
     "¿Y si lanzara un blog personal?","¿Y si mejorara mi sueño por 30 días?","¿Y si aprendiera a hablar en público?","¿Y si hiciera un curso de diseño?","¿Y si dedicara 1 hora diaria a la creatividad?","¿Y si planificara un presupuesto semanal?","¿Y si aprendiera 1000 palabras en inglés?","¿Y si hiciera 2 días de detox digital a la semana?"
   ],
   fr:[
