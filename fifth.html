@@ -1,4 +1,4 @@
-<!-- FILE: fifth.html (rework 100% con fix rewarded) -->
+<!-- FILE: fifth.html (multilingua + crediti fix 100%) -->
 <!DOCTYPE html>
 <html lang="it" data-theme="whatif">
 <head>
@@ -156,9 +156,7 @@ h1{
 }
 
 /* Topbar mini */
-.topbar {
-  display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px
-}
+.topbar { display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px }
 </style>
 </head>
 
@@ -306,7 +304,7 @@ document.documentElement.lang=lang;
   }
 })();
 
-/* ==== I18N ==== */
+/* ==== I18N completo ==== */
 const I18N = {
   it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
        sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
@@ -342,10 +340,59 @@ const I18N = {
        credits:(n)=>`💰 Credits: ${n}`,
        noCredits:"You ran out of credits." },
 
-  es:{}, fr:{}, de:{}
+  es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
+       sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
+       p:"Resultado y motivos", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra pregunta",
+       copied:"¡Copiado!", error:"[error del servidor]",
+       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       meta:(st,p)=> st==='wtf'
+        ? `Estilo: What the F · 6–9 frases · un solo párrafo · tono seco · modo: ${p==='past'?'Pasado':'Futuro'}.`
+        : `Estilo: What if (60% análisis, 40% realidad) · 8–11 frases · un solo párrafo · modo: ${p==='past'?'Pasado':'Futuro'}.`,
+       pctLabel:"% probabilidad de que ocurra",
+       votersTitle:"Comité",
+       seriousTitle:"Motivación",
+       scientificTitle:"Motivación (con base científica)",
+       chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones",
+       motFallback:"Motivo: beneficios concretos a corto plazo y restricciones manejables.",
+       credits:(n)=>`💰 Créditos: ${n}`,
+       noCredits:"Te has quedado sin créditos." },
+
+  fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
+       sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
+       p:"Issue & motivations", share:"📤 Partager / Copier", again:"🔁 Poser une autre question",
+       copied:"Copié !", error:"[erreur serveur]",
+       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       meta:(st,p)=> st==='wtf'
+        ? `Style : What the F · 6–9 phrases · un seul paragraphe · ton sec · mode : ${p==='past'?'Passé':'Futur'}.`
+        : `Style : What if (60 % analyse, 40 % réel) · 8–11 phrases · un seul paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`,
+       pctLabel:"% de probabilité que cela arrive",
+       votersTitle:"Comité",
+       seriousTitle:"Motivation",
+       scientificTitle:"Motivation (fondée scientifiquement)",
+       chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions",
+       motFallback:"Raison : bénéfices concrets à court terme, contraintes gérables.",
+       credits:(n)=>`💰 Crédits : ${n}`,
+       noCredits:"Tu n’as plus de crédits." },
+
+  de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
+       sub:(q)=>`Frage: „${q}”`, q:"Deine Frage", a:"Antwort",
+       p:"Ergebnis & Begründungen", share:"📤 Teilen / Kopieren", again:"🔁 Weitere Frage stellen",
+       copied:"Kopiert!", error:"[Serverfehler]",
+       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       meta:(st,p)=> st==='wtf'
+        ? `Stil: What the F · 6–9 Sätze · ein Absatz · trockener Ton · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
+        : `Stil: What if (60 % Analyse, 40 % real) · 8–11 Sätze · ein Absatz · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
+       pctLabel:"% Wahrscheinlichkeit, dass es passiert",
+       votersTitle:"Komitee",
+       seriousTitle:"Begründung",
+       scientificTitle:"Begründung (wissenschaftlich fundiert)",
+       chipsFav:"dafür", chipsCon:"dagegen", chipsAst:"Enthaltungen",
+       motFallback:"Grund: kurzfristige, konkrete Vorteile bei handhabbaren Einschränkungen.",
+       credits:(n)=>`💰 Credits: ${n}`,
+       noCredits:"Du hast keine Credits mehr." }
 };
 
-/* ==== Leads (essenziali) ==== */
+/* ==== Leads minimi per tutte le lingue ==== */
 const LEADS = {
   it:{ wtf:[
       "Entri piano, il caos ti riconosce e oggi ti lascia passare.",
@@ -358,19 +405,43 @@ const LEADS = {
   en:{ wtf:["You step in slowly; chaos recognizes you and lets you through.",
             "Breathe; let chance trip before you do."],
        whatif:["Set the keys down and let the quiet that doesn’t judge go first.",
-               "Same room, different gaze — that’s already a start."]}
+               "Same room, different gaze — that’s already a start."]},
+  es:{ wtf:["Entras despacio; el caos te reconoce y hoy te deja pasar."],
+       whatif:["Deja las llaves y deja hablar al silencio que no juzga."]},
+  fr:{ wtf:["Tu entres doucement; le chaos te reconnaît et te laisse passer."],
+       whatif:["Pose les clés et laisse parler le silence qui ne juge pas."]},
+  de:{ wtf:["Du trittst leise ein; das Chaos erkennt dich und lässt dich durch."],
+       whatif:["Leg die Schlüssel hin und lass die Stille sprechen, die nicht urteilt."]}
 };
 
-/* ==== (Placeholder) motivazioni scientifiche rapide ==== */
-const SCI_MOTIVATIONS={ it:[
-  "Studio CEDSA: 312 soggetti + 2 cavie alticce; effetto stimato all’87% (p≈0,02).",
-  "Protocollo PignaLab: 98 partecipanti + 1 piccione; risultato replicato, CI sorprendente.",
-  "Istituto Svizzero Formaggi & Motivazione: RCT (n=120); gruppo formaggio +72% successo."
-], en:[
-  "CEDSA study: 312 subjects + 2 tipsy guinea animals; estimated effect 87% (p≈0.02).",
-  "PineCone protocol: 98 participants + 1 pigeon; replicated result, surprising CI.",
-  "Swiss Institute of Cheese & Motivation: RCT (n=120); cheese group +72% success."
-]};
+/* ==== Motivazioni scientifiche sintetiche per tutte le lingue ==== */
+const SCI_MOTIVATIONS={
+  it:[
+    "Studio CEDSA: 312 soggetti + 2 cavie alticce; effetto stimato all’87% (p≈0,02).",
+    "Protocollo PignaLab: 98 partecipanti + 1 piccione; risultato replicato, CI sorprendente.",
+    "Istituto Svizzero Formaggi & Motivazione: RCT (n=120); gruppo formaggio +72% successo."
+  ],
+  en:[
+    "CEDSA study: 312 subjects + 2 tipsy guinea animals; estimated effect 87% (p≈0.02).",
+    "PineCone protocol: 98 participants + 1 pigeon; replicated result, surprising CI.",
+    "Swiss Institute of Cheese & Motivation: RCT (n=120); cheese group +72% success."
+  ],
+  es:[
+    "Estudio CEDSA: 312 sujetos + 2 cobayas achispadas; efecto estimado 87% (p≈0,02).",
+    "Protocolo PineCone: 98 participantes + 1 paloma; resultado replicado, IC sorprendente.",
+    "Instituto Suizo de Queso y Motivación: ECA (n=120); grupo queso +72% éxito."
+  ],
+  fr:[
+    "Étude CEDSA : 312 sujets + 2 cobayes éméchés ; effet estimé à 87 % (p≈0,02).",
+    "Protocole PineCone : 98 participants + 1 pigeon ; résultat répliqué, IC surprenant.",
+    "Institut Suisse du Fromage & de la Motivation : ECR (n=120) ; groupe fromage +72 % de succès."
+  ],
+  de:[
+    "CEDSA-Studie: 312 Probanden + 2 beschwipste Meerschweinchen; geschätzter Effekt 87 % (p≈0,02).",
+    "PineCone-Protokoll: 98 Teilnehmende + 1 Taube; Ergebnis repliziert, überraschendes KI.",
+    "Schweizer Institut für Käse & Motivation: RCT (n=120); Käsegruppe +72 % Erfolg."
+  ]
+};
 
 /* ==== UI refs ==== */
 const qs = (sel)=>document.querySelector(sel);
@@ -393,7 +464,6 @@ const pctLabelTop = qs('#pctLabel');
 const pctLabelBottom = qs('#pctLabelBottom');
 const committeeTitle = qs('#committeeTitle');
 const motIco  = qs('#motIco');
-const motName = qs('#motName');
 const chipFav = qs('#chipFav');
 const chipCon = qs('#chipCon');
 const chipAst = qs('#chipAst');
@@ -401,12 +471,12 @@ const chipsWrap = qs('#chipsWrap');
 const motNote = qs('#motNote');
 const creditInfo = qs('#creditInfo');
 
-/* ==== Overlay helpers + FALLBACKS ==== */
+/* ==== Overlay helpers + Fallback inline store ==== */
 const overlay = qs('#overlay');
 const overlayFrame = qs('#overlay-frame');
 
 function storeFallbackHTML(){
-  const T = I18N[lang]||I18N.it;
+  const T = (I18N[lang] && Object.keys(I18N[lang]).length)? I18N[lang] : I18N.it;
   return `
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
@@ -421,7 +491,7 @@ h2{margin:4px 0 6px;font-size:18px}
 </style></head><body>
 <div class="wrap">
   <div class="card">
-    <h2>Crediti</h2>
+    <h2>${T.credits('')?.replace(/:.*/,'') || 'Crediti'}</h2>
     <p class="small">${T.noCredits || 'Crediti esauriti.'}</p>
     <button class="btn primary" onclick="parent.postMessage({type:'purchase_completed', amount:5}, '*')">Compra +5 crediti (test)</button>
     <button class="btn ghost"   onclick="parent.postMessage({type:'open_rewarded'}, '*')">Guarda pubblicità (+1)</button>
@@ -431,59 +501,15 @@ h2{margin:4px 0 6px;font-size:18px}
 </body></html>`;
 }
 
-function rewardedFallbackHTML(){
-  return `
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#0B0F14;color:#EAF3EE}
-.wrap{max-width:520px;margin:auto;padding:16px}
-.card{background:#141C22;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px;margin-top:10px}
-.btn{display:inline-block;margin:6px 6px 0 0;padding:10px 12px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
-.primary{background:linear-gradient(180deg,#1C57A0,#FFEC01);color:#0A0E12}
-.ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
-.small{color:#A0B2BA;font-size:12px}
-</style></head><body>
-<div class="wrap">
-  <div class="card">
-    <h2 style="margin:4px 0 6px;font-size:18px">Guarda pubblicità</h2>
-    <p class="small">Simulazione: accreditiamo <b>+1 credito</b> al termine.</p>
-    <button class="btn primary" id="watch">▶ Avvia (5s)</button>
-    <button class="btn ghost" id="giveNow">Accredita subito (+1)</button>
-    <button class="btn ghost" id="close">Chiudi</button>
-  </div>
-</div>
-<script>
-const send=(type,amount)=>parent.postMessage({type,amount},'*');
-document.getElementById('watch').onclick=()=>{
-  const b=document.getElementById('watch'); b.disabled=true; b.textContent='In corso…';
-  setTimeout(()=>send('rewarded_completed',1),5000);
-};
-document.getElementById('giveNow').onclick=()=>send('rewarded_completed',1);
-document.getElementById('close').onclick=()=>send('close_overlay');
-<\/script>
-</body></html>`;
-}
-
 function openOverlay(url){
   overlay.style.display = 'grid';
   overlay.setAttribute('aria-hidden','false');
   overlayFrame.removeAttribute('srcdoc');
-  overlayFrame.setAttribute('allow','fullscreen; autoplay; clipboard-read; clipboard-write');
   overlayFrame.src = url || 'about:blank';
-}
-
-function openStore(){
-  openOverlay("/store/credit-store.html");
-  // fallback store
   overlayFrame.setAttribute('srcdoc', storeFallbackHTML());
 }
-
-function openRewarded(){
-  openOverlay("/ads/rewarded.html");
-  // fallback rewarded corretto (PRIMA bug: usava storeFallback)
-  overlayFrame.setAttribute('srcdoc', rewardedFallbackHTML());
-}
-
+function openStore(){ openOverlay("/store/credit-store.html"); }
+function openRewarded(){ openOverlay("/ads/rewarded.html"); }
 function closeOverlay(){
   overlay.style.display = 'none';
   overlay.setAttribute('aria-hidden','true');
@@ -511,7 +537,7 @@ function writeWallet(w){
     limit:     (w.limit    !=null)? Math.max(0, +w.limit)     : (cur.limit??0),
   };
   localStorage.setItem(WKEY, JSON.stringify(out));
-  localStorage.setItem("whatif_wallet_sync", String(Date.now()));  // broadcast per fourth
+  localStorage.setItem("whatif_wallet_sync", String(Date.now())); // broadcast
   updateCreditInfo();
 }
 
@@ -583,7 +609,7 @@ function addCredits(n){
   }
 }
 function updateCreditInfo(n=getAvailable()){
-  const T = I18N[lang] || I18N.it;
+  const T = (I18N[lang] && Object.keys(I18N[lang]).length)? I18N[lang] : I18N.it;
   if(creditInfo) creditInfo.textContent = T.credits(n===Infinity?'∞':n);
 }
 
@@ -618,7 +644,7 @@ function decorateEmBits(el){
 
 /* ==== Titles & UI text ==== */
 function setTitlesAndTexts(q){
-  const T = I18N[lang] || I18N.it;
+  const T = (I18N[lang] && Object.keys(I18N[lang]).length)? I18N[lang] : I18N.it;
   setText('#title', style==='wtf' ? T.titleWTF : T.titleWHF);
   subtitle.textContent = T.sub(q || '—');
   lblQ.textContent = T.q;
@@ -631,7 +657,8 @@ function setTitlesAndTexts(q){
   pctLabelTop.textContent = T.pctLabel;
   if(pctLabelBottom) pctLabelBottom.textContent = T.pctLabel;
 
-  const bank = (LEADS[lang] && LEADS[lang][style]) ? LEADS[lang][style]
+  const bank = (LEADS[lang] && LEADS[lang][style] && LEADS[lang][style].length)
+               ? LEADS[lang][style]
                : (LEADS.it[style] || LEADS.it.whatif);
   leadNode.textContent = oneSentence(pick(bank) || '') || '—';
 
@@ -655,23 +682,22 @@ function computeProbability(q){
   return { pct: Math.max(25, Math.min(92, Math.round(score))) };
 }
 function shortMotivationFromAnswer(answerText){
-  const T = I18N[lang] || I18N.it;
+  const T = (I18N[lang] && Object.keys(I18N[lang]).length)? I18N[lang] : I18N.it;
   const a = String(answerText||'').replace(/\s*\n+\s*/g,' ').trim();
   const parts = a.split(/(?<=[.!?…])\s+/).filter(Boolean);
-  let s = parts.find(x=>/perché|quindi|dunque|se\b|quando\b|equilibrio|rischio|beneficio/i.test(x)) || parts[0] || '';
+  let s = parts.find(x=>/perché|quindi|dunque|se\b|quando\b|equilibrio|rischio|beneficio|because|therefore|hence|risk|benefit|equilibrium|riesgo|beneficio|parce que|donc|weil|deshalb/i.test(x)) || parts[0] || '';
   s = s.replace(/\s{2,}/g,' ').trim();
   if(!/[.!?…]$/.test(s)) s+='.';
   if(s.length<24) s = T.motFallback;
   return s;
 }
 function pickScientificMotivation(){
-  const list = SCI_MOTIVATIONS[lang] || SCI_MOTIVATIONS.it;
+  const list = (SCI_MOTIVATIONS[lang] && SCI_MOTIVATIONS[lang].length) ? SCI_MOTIVATIONS[lang] : SCI_MOTIVATIONS.it;
   return pick(list);
 }
 function renderCommitteeLike(surprise){
-  const T = I18N[lang] || I18N.it;
+  const T = (I18N[lang] && Object.keys(I18N[lang]).length)? I18N[lang] : I18N.it;
   if(surprise){
-    motIco.style.display='';
     chipsWrap.style.display='flex';
     committeeTitle.textContent = `${T.votersTitle||'Comitato'}`;
     const r=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
@@ -681,7 +707,6 @@ function renderCommitteeLike(surprise){
     motNote.textContent = (lang==='en')?`Brief tussle at vote: ${r(1,5)} removed; ${r(0,3)} bruised.`:`Breve parapiglia al voto: ${r(1,5)} allontanati; ${r(0,3)} contusi.`;
   }else{
     committeeTitle.textContent = (style==='wtf') ? (T.scientificTitle||'Motivazione scientifica') : (T.seriousTitle||'Motivazione');
-    motIco.style.display='none';
     chipsWrap.style.display='none';
   }
 }
@@ -702,19 +727,21 @@ function renderCommitteeLike(surprise){
   updateCreditInfo(); 
   qView.textContent = domanda || '—';
 
-  // ✅ Gating crediti
+  // ✅ Gating crediti PRIMA della chiamata (con fallback sicuro allo Store)
   if(!IS_ADMIN){
     const left = getAvailable();
     if(!(left===Infinity) && left<=0){
       openStore();
-      answerEl.textContent = (I18N[lang]||I18N.it).noCredits || 'Crediti esauriti.';
+      answerEl.textContent = ((I18N[lang] && Object.keys(I18N[lang]).length)? I18N[lang] : I18N.it).noCredits || 'Crediti esauriti.';
       return;
     }
     if(!consumeOne()){
       openStore();
-      answerEl.textContent = (I18N[lang]||I18N.it).noCredits || 'Crediti esauriti.';
+      answerEl.textContent = ((I18N[lang] && Object.keys(I18N[lang]).length)? I18N[lang] : I18N.it).noCredits || 'Crediti esauriti.';
       return;
     }
+    // 🔄 aggiorna subito il contatore crediti dopo il consumo
+    updateCreditInfo();
   }
 
   try{
@@ -731,6 +758,7 @@ function renderCommitteeLike(surprise){
     const data = await r.json().catch(()=>null);
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
 
+    // Risposta principale
     let answerText = normalizeOneParagraph((data.answer||"").trim());
     const maxSent = (style==='wtf') ? 9 : 11;
     let parts = answerText.split(/(?<=[.!?…])\s+/);
@@ -740,12 +768,12 @@ function renderCommitteeLike(surprise){
     answerEl.textContent = answerText;
     decorateEmBits(answerEl);
 
+    // Probabilità & motivazione
     const { pct } = computeProbability(domanda);
     const pctStr = pct + "%";
     topPct.textContent = pctStr;
     bottomPct.textContent = pctStr;
 
-    const T = I18N[lang] || I18N.it;
     if (surprise){
       renderCommitteeLike(true);
     } else {
@@ -753,12 +781,13 @@ function renderCommitteeLike(surprise){
       motNote.textContent = (style==='wtf') ? pickScientificMotivation() : shortMotivationFromAnswer(answerText, domanda);
     }
 
+    // storia locale
     const hist = JSON.parse(LS.getItem('cronologia')||'[]');
     hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct, motivazione: (style==='wtf')? undefined : motNote.textContent });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
 
   }catch(e){
-    answerEl.textContent = (I18N[lang]||I18N.it).error;
+    answerEl.textContent = ((I18N[lang] && Object.keys(I18N[lang]).length)? I18N[lang] : I18N.it).error;
     console.error(e);
   }
 })();
@@ -766,19 +795,32 @@ function renderCommitteeLike(surprise){
 /* ==== Messaggi da store / rewarded ==== */
 window.addEventListener("message",(ev)=>{
   const d = ev.data || {};
+  const amt = parseInt(d.amount,10);
+  // acquisto
   if(d.type === "purchase_completed"){
-    addCredits(parseInt(d.amount,10)||0);
+    addCredits(Number.isFinite(amt)? amt : 0);
+    updateCreditInfo();
     closeOverlay();
   }
+  // apri rewarded
   if(d.type === "open_rewarded"){
-    openRewarded(); // apre pagina reale + fallback inline rewarded
+    openRewarded();
   }
-  if(d.type === "rewarded_completed"){
-    addCredits(parseInt(d.amount,10)||1); // +1 al wallet
-    closeOverlay(); // chiudi modale
+  // varianti di completamento rewarded (+1)
+  if(["rewarded_completed","rewarded_done","reward_complete","rewarded","ad_finished"].includes(d.type)){
+    addCredits(Number.isFinite(amt)? amt : 1);
+    updateCreditInfo();
+    closeOverlay();
   }
   if(d.type === "close_overlay"){
     closeOverlay();
+  }
+});
+
+/* ==== Sync esterno dei crediti (altre tab/admin) ==== */
+window.addEventListener('storage',(e)=>{
+  if(e.key==="whatif_wallet_sync" || e.key==="whatif_credits"){
+    updateCreditInfo();
   }
 });
 
@@ -793,7 +835,7 @@ qs('#langSelect').onchange = ()=>{
   location.reload();
 };
 qs('#shareBtn').onclick = async()=>{
-  const T = I18N[lang] || I18N.it;
+  const T = (I18N[lang] && Object.keys(I18N[lang]).length)? I18N[lang] : I18N.it;
   const full = `What?f — ${style==='wtf'?(T.styleWTF||'What the F'):(T.styleWHF||'What if')}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
   try{
     if(navigator.share){ await navigator.share({ title: "What?f", text: full }); }
