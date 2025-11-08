@@ -1,4 +1,4 @@
-<!-- FILE: fifth.html (rework 100%) -->
+<!-- FILE: fifth.html (rework 100% con fix rewarded) -->
 <!DOCTYPE html>
 <html lang="it" data-theme="whatif">
 <head>
@@ -342,9 +342,7 @@ const I18N = {
        credits:(n)=>`💰 Credits: ${n}`,
        noCredits:"You ran out of credits." },
 
-  es:{},
-  fr:{},
-  de:{}
+  es:{}, fr:{}, de:{}
 };
 
 /* ==== Leads (essenziali) ==== */
@@ -363,7 +361,7 @@ const LEADS = {
                "Same room, different gaze — that’s already a start."]}
 };
 
-/* ==== (Placeholder) categorie/motivazioni scientifiche rapide ==== */
+/* ==== (Placeholder) motivazioni scientifiche rapide ==== */
 const SCI_MOTIVATIONS={ it:[
   "Studio CEDSA: 312 soggetti + 2 cavie alticce; effetto stimato all’87% (p≈0,02).",
   "Protocollo PignaLab: 98 partecipanti + 1 piccione; risultato replicato, CI sorprendente.",
@@ -403,7 +401,7 @@ const chipsWrap = qs('#chipsWrap');
 const motNote = qs('#motNote');
 const creditInfo = qs('#creditInfo');
 
-/* ==== Overlay helpers + Fallback inline store ==== */
+/* ==== Overlay helpers + FALLBACKS ==== */
 const overlay = qs('#overlay');
 const overlayFrame = qs('#overlay-frame');
 
@@ -433,15 +431,59 @@ h2{margin:4px 0 6px;font-size:18px}
 </body></html>`;
 }
 
+function rewardedFallbackHTML(){
+  return `
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#0B0F14;color:#EAF3EE}
+.wrap{max-width:520px;margin:auto;padding:16px}
+.card{background:#141C22;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px;margin-top:10px}
+.btn{display:inline-block;margin:6px 6px 0 0;padding:10px 12px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
+.primary{background:linear-gradient(180deg,#1C57A0,#FFEC01);color:#0A0E12}
+.ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
+.small{color:#A0B2BA;font-size:12px}
+</style></head><body>
+<div class="wrap">
+  <div class="card">
+    <h2 style="margin:4px 0 6px;font-size:18px">Guarda pubblicità</h2>
+    <p class="small">Simulazione: accreditiamo <b>+1 credito</b> al termine.</p>
+    <button class="btn primary" id="watch">▶ Avvia (5s)</button>
+    <button class="btn ghost" id="giveNow">Accredita subito (+1)</button>
+    <button class="btn ghost" id="close">Chiudi</button>
+  </div>
+</div>
+<script>
+const send=(type,amount)=>parent.postMessage({type,amount},'*');
+document.getElementById('watch').onclick=()=>{
+  const b=document.getElementById('watch'); b.disabled=true; b.textContent='In corso…';
+  setTimeout(()=>send('rewarded_completed',1),5000);
+};
+document.getElementById('giveNow').onclick=()=>send('rewarded_completed',1);
+document.getElementById('close').onclick=()=>send('close_overlay');
+<\/script>
+</body></html>`;
+}
+
 function openOverlay(url){
   overlay.style.display = 'grid';
   overlay.setAttribute('aria-hidden','false');
   overlayFrame.removeAttribute('srcdoc');
+  overlayFrame.setAttribute('allow','fullscreen; autoplay; clipboard-read; clipboard-write');
   overlayFrame.src = url || 'about:blank';
+}
+
+function openStore(){
+  openOverlay("/store/credit-store.html");
+  // fallback store
   overlayFrame.setAttribute('srcdoc', storeFallbackHTML());
 }
-function openStore(){ openOverlay("/store/credit-store.html"); }
-function openRewarded(){ openOverlay("/ads/rewarded.html"); }
+
+function openRewarded(){
+  openOverlay("/ads/rewarded.html");
+  // fallback rewarded corretto (PRIMA bug: usava storeFallback)
+  overlayFrame.setAttribute('srcdoc', rewardedFallbackHTML());
+}
+
 function closeOverlay(){
   overlay.style.display = 'none';
   overlay.setAttribute('aria-hidden','true');
@@ -469,7 +511,7 @@ function writeWallet(w){
     limit:     (w.limit    !=null)? Math.max(0, +w.limit)     : (cur.limit??0),
   };
   localStorage.setItem(WKEY, JSON.stringify(out));
-  localStorage.setItem("whatif_wallet_sync", String(Date.now()));
+  localStorage.setItem("whatif_wallet_sync", String(Date.now()));  // broadcast per fourth
   updateCreditInfo();
 }
 
@@ -660,7 +702,7 @@ function renderCommitteeLike(surprise){
   updateCreditInfo(); 
   qView.textContent = domanda || '—';
 
-  // ✅ Gating crediti PRIMA della chiamata (con fallback sicuro allo Store)
+  // ✅ Gating crediti
   if(!IS_ADMIN){
     const left = getAvailable();
     if(!(left===Infinity) && left<=0){
@@ -689,7 +731,6 @@ function renderCommitteeLike(surprise){
     const data = await r.json().catch(()=>null);
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
 
-    // Risposta principale
     let answerText = normalizeOneParagraph((data.answer||"").trim());
     const maxSent = (style==='wtf') ? 9 : 11;
     let parts = answerText.split(/(?<=[.!?…])\s+/);
@@ -699,7 +740,6 @@ function renderCommitteeLike(surprise){
     answerEl.textContent = answerText;
     decorateEmBits(answerEl);
 
-    // Probabilità & motivazione
     const { pct } = computeProbability(domanda);
     const pctStr = pct + "%";
     topPct.textContent = pctStr;
@@ -713,7 +753,6 @@ function renderCommitteeLike(surprise){
       motNote.textContent = (style==='wtf') ? pickScientificMotivation() : shortMotivationFromAnswer(answerText, domanda);
     }
 
-    // storia locale
     const hist = JSON.parse(LS.getItem('cronologia')||'[]');
     hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct, motivazione: (style==='wtf')? undefined : motNote.textContent });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
@@ -732,11 +771,11 @@ window.addEventListener("message",(ev)=>{
     closeOverlay();
   }
   if(d.type === "open_rewarded"){
-    openRewarded();
+    openRewarded(); // apre pagina reale + fallback inline rewarded
   }
   if(d.type === "rewarded_completed"){
-    addCredits(parseInt(d.amount,10)||1);
-    closeOverlay();
+    addCredits(parseInt(d.amount,10)||1); // +1 al wallet
+    closeOverlay(); // chiudi modale
   }
   if(d.type === "close_overlay"){
     closeOverlay();
