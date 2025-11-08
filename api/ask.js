@@ -250,9 +250,9 @@ function buildMessages({ domanda, lang, periodo, stile }){
       // Esempi IT come àncora di ritmo
       { role: "system", content:
 `ESEMPI VINCOLANTI (tono/ritmo IT):
-- Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora che al confessionale ti tengono in riserva. Ti versi un goccio di liquore, rimetti in riga il bancone e giuri che domani apri solo per matti. Alla chiusura, ti guardi intorno e sussurri che oggi hai bestemmiato più del prete quando finisce il vino — ma almeno hai servito verità calde.
-- Oh, eccoci, centauro dell’inferno. Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” così netto che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo ma quasi con affetto, come un rito che rimette a fuoco. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio con un sorrisetto complice. Torni a casa con l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie ben calibrate.
-- Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
+- Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. ...
+- Oh, eccoci, centauro dell’inferno. ...
+- Ah, Luisa… ci risiamo. ...` }
     );
   } else {
     // WHATIF ibrido: INCIPIT VARIABILE + psicologo leggero
@@ -265,7 +265,7 @@ function buildMessages({ domanda, lang, periodo, stile }){
     );
   }
 
-  // Istruzione finale all’assistente nella lingua corretta
+  // Istruzione finale nella lingua corretta
   const ask =
     L==="en" ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.` :
     L==="es" ? `Pregunta (no la repitas): "${domanda}". Escribe UNA respuesta en ESPAÑOL, un solo párrafo.` :
@@ -321,7 +321,7 @@ export default async function handler(req, res){
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if(!answer) throw new Error("empty_model_response");
 
-    // Post-process
+    // ===== Post-process =====
     answer = stripQuestionEcho(domanda, answer);
 
     // Forza incipit WHATIF se manca (tutte le lingue)
@@ -332,7 +332,7 @@ export default async function handler(req, res){
       const firstSlice = answer.slice(0, Math.min(160, answer.length)).toLowerCase();
       const hasOpener = openers.some((o)=> firstSlice.includes(o.slice(0,12).toLowerCase()));
       if(!hasOpener){
-        const joiner = /^\s*[.!?…:]/.test(answer) ? " " : " ";
+        const joiner = " ";
         answer = `${opener}${joiner}${answer}`;
       }
     }
@@ -343,13 +343,20 @@ export default async function handler(req, res){
     answer = sentenceCaseAll(answer); // include gestione “:”
     answer = finalPunct(answer);
 
-    // Moderazioni leggere (IT: evita nomi propri non presenti nella domanda)
+    // ===== Moderazione leggera IT (fixata: non tocca incipit/sentinelle) =====
     if(normLang(lang)==="it"){
       (function(){
         const d=String(domanda||"");
-        const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/gu;
+        const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ’']{2,})\b/gu;
         const inQuestion=new Set((d.match(nameRx)||[]));
-        answer=answer.replace(nameRx,(m)=> inQuestion.has(m) ? m : (["Ah","Oh","Ehi","Sai"].includes(m) ? m : m.toLowerCase()));
+        const STARTERS_IT = new Set(["Non","Se","Prima","Questa","Vale","È","E","Ma","Qui","Ora","Quando","Poi","Intanto","Perché","La","Il","Lo","Un","Una","Questo","Quello"]);
+        function prevNonSpace(str, i){ let k=i-1; while(k>=0 && /\s/.test(str[k])) k--; return k>=0?str[k]:""; }
+        answer = answer.replace(nameRx,(m,word,offset,str)=>{
+          // non toccare: a inizio, dopo punteggiatura forte/virgolette/parentesi, starter comuni, parole presenti nella domanda
+          const prev = prevNonSpace(str, offset);
+          const guard = offset===0 || /[.!?…:;(\[«“"']/.test(prev) || STARTERS_IT.has(word) || inQuestion.has(m);
+          return guard ? m : m.toLowerCase();
+        });
       })();
     }
 
