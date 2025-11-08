@@ -1,8 +1,7 @@
 // /api/ask.js — What?f Engine (Stable Hybrid WHATIF + Friendly-WTF Demenziale)
-// - WHATIF: 60% analisi / 40% immagini sobrie. Incipit LIBERO (vietato “Bella …”). Motivazione breve coerente nel tag [[MOTIVO]]: ... (≤160).
-// - WTF: come da tuoi esempi, 2–3 reazioni DEMENZIALI, una sola “imprecazione” teatrale, sorso alcolico, risposta vera, morale.
-// - Maiuscole sistemate post-process dopo . ? ! … : e con virgolette/parentesi.
-// - Un paragrafo, niente elenchi, niente eco della domanda.
+// - WHATIF: 60% analisi / 40% immagini sobrie. Incipit LIBERO; se manca, ne inietto uno (no “Bella …”). Motivazione breve coerente nel tag [[MOTIVO]].
+// - WTF: 2–3 reazioni DEMENZIALI, una sola “imprecazione” teatrale, sorso alcolico, risposta vera, morale.
+// - Maiuscole post-process dopo . ? ! … : e con virgolette/parentesi. Un paragrafo, niente elenchi, niente eco della domanda.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -13,7 +12,7 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
 /* ========= Redis & Rate ========= */
-// Manteniamo il tuo rate a minuto (burst) e AGGIUNGIAMO un contatore giornaliero (FREE 3, PRO 10)
+// Manteniamo burst/minuto + contatore giornaliero FREE=3 / PRO=10
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
@@ -22,29 +21,6 @@ const rl = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(10, "1 m"),
 });
-
-// Daily counter: chiave distinta free/pro
-async function checkDailyLimit(ip, isPro) {
-  try {
-    const bucket = isPro ? "pro" : "free";
-    const limit = isPro ? 10 : 3;
-    const today = new Date();
-    const y = today.getUTCFullYear();
-    const m = String(today.getUTCMonth() + 1).padStart(2, "0");
-    const d = String(today.getUTCDate()).padStart(2, "0");
-    const key = `ask:day:${bucket}:${ip}:${y}${m}${d}`;
-
-    const count = await redis.incr(key);
-    if (count === 1) {
-      await redis.expire(key, 86400); // 24h
-    }
-    return { ok: count <= limit, remaining: Math.max(limit - count, 0), limit, count };
-  } catch (e) {
-    // In caso di problemi Redis, non blocchiamo l’uso ma logghiamo
-    console.error("daily-limit error:", e);
-    return { ok: true, remaining: 1, limit: 0, count: 0 };
-  }
-}
 
 /* ========= CORS ========= */
 const ALLOWED_ORIGINS = [
@@ -84,7 +60,7 @@ function stripQuestionEcho(domanda,text){
   if(lead.startsWith(d)){ const cut=t.indexOf("."); if(cut>-1) t=t.slice(cut+1).trim(); }
   t=t.replace(rx,""); return t;
 }
-// Maiuscole robuste (unicode): inizio + dopo . ? ! … : + virgolette/parentesi
+// Maiuscole robuste (unicode): inizio stringa + dopo . ? ! … : + virgolette/parentesi
 function sentenceCaseAll(s=""){
   if(!s) return s;
   s = s.replace(/^(\s*[«“"'\(\[]*)([a-zà-ÿ])/u, (m, pre, ch) => pre + ch.toUpperCase());
@@ -92,8 +68,49 @@ function sentenceCaseAll(s=""){
   return s;
 }
 function finalPunct(s=""){ return /[.!?…]$/.test(s)?s:s+"."; }
+function hash32(str){ let x=2166136261; for(const c of String(str)) x=(x^c.charCodeAt(0))>>>0, x=(x*16777619)>>>0; return x>>>0; }
+function seededPick(arr, seedU32){ const r = (seedU32>>>0) / 2**32; return arr[Math.floor(r*arr.length)]; }
 
-/* ========= WHAT IF – stile 60/40 ========= */
+/* ========= WHATIF Openers (multilingua) ========= */
+const WHATIF_OPENERS = {
+  it: [
+    "Non è una domanda semplice e lo sai.",
+    "Se guardi bene, qui non c’è solo un sì o un no.",
+    "Prima di tutto: ha senso che tu sia diviso.",
+    "Questa scelta tira da due lati e tu la senti.",
+    "Vale la pena trattarla come un esperimento, non un verdetto.",
+    "Non stai scegliendo tra giusto e sbagliato, ma tra due forme di te.",
+    "È un bivio vero: curiosità da una parte, prudenza dall’altra.",
+    "Qui non serve coraggio cieco: serve misura.",
+    "Quello che temi e quello che desideri stanno seduti allo stesso tavolo.",
+    "La domanda è grande, ma la risposta abita nella routine."
+  ],
+  en: [
+    "This isn’t a simple question and you know it.",
+    "Look closely: it’s not just a yes or a no.",
+    "First things first: it makes sense you’re torn.",
+    "This choice pulls from two sides and you feel it.",
+    "Treat it like an experiment, not a verdict.",
+    "You’re not choosing right vs wrong, but two versions of you."
+  ],
+  es: [
+    "No es una pregunta sencilla y lo sabes.",
+    "Si miras de cerca, no es solo un sí o un no.",
+    "Para empezar: es normal que estés dividido."
+  ],
+  fr: [
+    "Ce n’est pas une question simple et tu le sais.",
+    "Si tu regardes bien, ce n’est ni un oui ni un non.",
+    "D’abord: c’est normal d’être partagé."
+  ],
+  de: [
+    "Das ist keine einfache Frage und das weißt du.",
+    "Genau hinsehen: Es ist nicht nur Ja oder Nein.",
+    "Zuerst: Es ist logisch, dass du hin- und hergerissen bist."
+  ]
+};
+
+/* ========= WHAT IF – esempio/linee guida ========= */
 const WHATIF_HYBRID_EX_IT = `Sai, questa non è una domanda leggera. Guardi i numeri, poi guardi le abitudini: costi più bassi da una parte, occasioni più larghe dall’altra. La qualità della vita non è un grafico, è una routine: tempi di spostamento, servizi che funzionano, persone che senti vicine. Se stringi, il portafoglio respira un po’ di più; in cambio accetti un ritmo meno veloce e meno “vetrine” da inseguire. Le giornate si accorciano di frenesia e si allungano di fiato: un caffè fatto bene, una strada che conosci, un’aria che sa di casa. Non è una fuga né un eroismo: è ingegneria quotidiana, spostare pesi tra tempo, denaro e relazioni. A conti fatti, potresti guadagnare spazio mentale e perdere solo rumore. E quando la sera chiudi la porta, non senti il rimpianto bussare: senti il tuo passo tornare al suo passo.`;
 
 const WHATIF_RULE_IT = `SEI “WHAT IF”.
@@ -130,6 +147,25 @@ const WTF_DRINK = [
   "bevi un dito di coraggio e respiri più largo",
 ];
 
+/* ========= Daily counter ========= */
+async function checkDailyLimit(ip, isPro) {
+  try {
+    const bucket = isPro ? "pro" : "free";
+    const limit = isPro ? 10 : 3;
+    const today = new Date();
+    const y = today.getUTCFullYear();
+    const m = String(today.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(today.getUTCDate()).padStart(2, "0");
+    const key = `ask:day:${bucket}:${ip}:${y}${m}${d}`;
+    const count = await redis.incr(key);
+    if (count === 1) await redis.expire(key, 86400);
+    return { ok: count <= limit, remaining: Math.max(limit - count, 0), limit, count };
+  } catch (e) {
+    console.error("daily-limit error:", e);
+    return { ok: true, remaining: 1, limit: 0, count: 0 };
+  }
+}
+
 /* ========= Prompt builder ========= */
 function buildMessages({ domanda, lang, periodo, stile }){
   const L = normLang(lang);
@@ -146,7 +182,6 @@ function buildMessages({ domanda, lang, periodo, stile }){
   ];
 
   if(stile==="wtf"){
-    // Semi deterministici dalla domanda
     let seed=[...String(domanda)].reduce((a,c)=>a+c.charCodeAt(0),0);
     function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; }
     const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
@@ -164,19 +199,18 @@ function buildMessages({ domanda, lang, periodo, stile }){
       { role: "system", content: `DRINK: ${drink}` },
       { role: "system", content:
 `ESEMPI VINCOLANTI (tono/ritmo IT):
-- Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora che al confessionale ti tengono in riserva. Ti versi un goccio di liquore, rimetti in riga il bancone e giuri che domani apri solo per matti. Alla chiusura, ti guardi intorno e sussurri che oggi hai bestemmiato più del prete quando finisce il vino — ma almeno hai servito verità calde.
-- Oh, eccoci, centauro dell’inferno. Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” così netto che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo ma quasi con affetto, come un rito che rimette a fuoco. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio con un sorrisetto complice. Torni a casa con l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie ben calibrate.
-- Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
+- Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” … 
+- Oh, eccoci, centauro dell’inferno. Casco lucido, cuore impavido … 
+- Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto …` }
     );
   } else {
-    // WHATIF ibrido: incipit LIBERO (vietato “Bella…”) + richiesta motivazione breve [[MOTIVO]]:
+    // WHATIF ibrido: incipit LIBERO + richiesta [[MOTIVO]]
     msgs.push(
       { role: "system", content: WHATIF_RULE_IT },
       { role: "system", content: `ESEMPIO (respiro e tono):\n${WHATIF_HYBRID_EX_IT}` }
     );
   }
 
-  // Utente finale
   const ask = (L==="en")
     ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`
     : (L==="it")
@@ -200,18 +234,17 @@ export default async function handler(req, res){
   try{
     if(!process.env.OPENAI_API_KEY) return res.status(500).json({ error:"missing_api_key" });
 
-    // FREE vs PRO — daily + tuo burst a minuto
     const isPro =
       String(req.headers["x-pro"] || "").toLowerCase() === "true" ||
       String(req.headers["x-pro"] || "") === "1";
 
     const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").toString().split(",")[0].trim();
 
-    // Burst (tuo originale)
+    // Burst/min
     const burst = await rl.limit(`ask:${ip}`);
     if(!burst.success) return res.status(429).json({ error:"rate_limited_minute" });
 
-    // Daily
+    // Daily quota
     const day = await checkDailyLimit(ip, isPro);
     if(!day.ok) return res.status(429).json({ error:"rate_limited_day", detail:{ limit: day.limit } });
 
@@ -242,7 +275,7 @@ export default async function handler(req, res){
     let raw = completion?.choices?.[0]?.message?.content?.trim() || "";
     if(!raw) throw new Error("empty_model_response");
 
-    // Estrai motivazione [[MOTIVO]] (solo WHATIF)
+    // Estrai [[MOTIVO]] (solo WHATIF)
     let motive = "";
     if(stile !== "wtf"){
       const m = raw.match(/\[\[\s*MOTIVO\s*\]\]\s*:\s*([\s\S]+)$/i);
@@ -252,19 +285,33 @@ export default async function handler(req, res){
       }
     }
 
-    // Post-process
+    // ===== Post-process =====
     let answer = stripQuestionEcho(domanda, raw);
+
+    // Incipit WHATIF: se manca, inietto uno degli openers (lingua corretta)
+    if(stile === "whatif"){
+      const L = normLang(lang);
+      const opens = WHATIF_OPENERS[L] || WHATIF_OPENERS.it;
+      const seed = hash32(String(domanda));
+      const opener = seededPick(opens, seed);
+      const firstSlice = answer.slice(0, Math.min(160, answer.length)).toLowerCase();
+      const hasAnyOpener = opens.some(o => firstSlice.includes(o.slice(0, 10).toLowerCase()));
+      if(!hasAnyOpener){
+        answer = `${opener} ${answer}`;
+      }
+    }
+
     answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);
     answer = clampWords(answer, stile === "wtf" ? 170 : 165);
     answer = normalizeOneParagraph(answer);
     answer = sentenceCaseAll(answer);
     answer = finalPunct(answer);
 
-    // Moderazioni leggere (IT): evita nomi propri non in domanda
+    // IT: evita nomi propri non presenti nella domanda
     if(normLang(lang)==="it"){
       (function(){
         const d=String(domanda||"");
-        const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/gu;
+        const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ’']{2,})\b/gu;
         const inQuestion=new Set((d.match(nameRx)||[]));
         answer=answer.replace(nameRx,(m)=> inQuestion.has(m) ? m : (["Ah","Oh","Ehi","Sai"].includes(m) ? m : m.toLowerCase()));
       })();
