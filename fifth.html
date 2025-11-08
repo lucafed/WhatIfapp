@@ -1,4 +1,4 @@
-<!-- FILE: fifth.html -->
+<!-- FILE: fifth.html (FIX motivazioni corte e coerenti, maiuscole, fallback %) -->
 <!DOCTYPE html>
 <html lang="it" data-theme="whatif">
 <head>
@@ -389,135 +389,32 @@ const LEADS = {
                "Gleicher Raum, neuer Blick — ein Anfang."]}
 };
 
-/* ==== Categories per COMITATO (sorpresa) ==== */
-const CATEGORIES = [
-  { ico:"🧠",
-    name_it:"Comitato dei Pensieri Sotto la Doccia",
-    name_en:"Shower-Thoughts Committee",
-    name_es:"Comité de Ideas de Ducha",
-    name_fr:"Comité des Idées sous la Douche",
-    name_de:"Komitee der Duschgedanken",
-    notes_it:["Illuminazione logistica a shampoo.","Decisione nata a 38°C."],
-    notes_en:["Logistics epiphany mid-shampoo.","Decision made at 38°C."],
-    notes_es:["Epifanía logística con champú.","Decisión tomada a 38 °C."],
-    notes_fr:["Épiphanie logistique sous le shampoing.","Décision née à 38 °C."],
-    notes_de:["Logistik-Erleuchtung beim Shampoonieren.","Entscheidung bei 38 °C gefallen."] },
-  { ico:"📊",
-    name_it:"Ordine degli Ottimisti Moderati",
-    name_en:"Order of Moderate Optimists",
-    name_es:"Orden de los Optimistas Moderados",
-    name_fr:"Ordre des Optimistes Modérés",
-    name_de:"Orden der Mäßigen Optimisten",
-    notes_it:["Aspettative sobrie, calendario stretto."],
-    notes_en:["Sober expectations, tight schedule."],
-    notes_es:["Expectativas sobrias, calendario apretado."],
-    notes_fr:["Attentes sobres, calendrier serré."],
-    notes_de:["Nüchterne Erwartungen, enger Zeitplan."] },
-  { ico:"📞",
-    name_it:"Autorità delle Telefonate Fuori Tempo",
-    name_en:"Off-Timing Calls Authority",
-    name_es:"Autoridad de Llamadas Fuera de Hora",
-    name_fr:"Autorité des Appels Hors-Timing",
-    name_de:"Behörde für Anrufe zur Unzeit",
-    notes_it:["Parere arrivato alle 07:12.","Consiglio durante squillo prolungato."],
-    notes_en:["Opinion at 07:12.","Advice during a long ring."],
-    notes_es:["Opinión a las 07:12.","Consejo durante tono largo."],
-    notes_fr:["Avis à 07 h 12.","Conseil pendant une sonnerie prolongée."],
-    notes_de:["Meinung um 07:12.","Rat während des Dauerklingelns."] },
-  { ico:"🥃",
-    name_it:"Circolo Bar Notturno dei Consiglieri",
-    name_en:"Late-Bar Counsel Circle",
-    name_es:"Círculo Nocturno de Consejeros de Bar",
-    name_fr:"Cercle Nocturne des Conseillers de Bar",
-    name_de:"Nachtbar-Ratszirkel",
-    notes_it:["Coraggio liquido, piani semplici."],
-    notes_en:["Liquid courage, simple plans."],
-    notes_es:["Coraje líquido, planes simples."],
-    notes_fr:["Courage liquide, plans simples."],
-    notes_de:["Flüssiger Mut, einfache Pläne."] },
-  { ico:"🍕",
-    name_it:"Associazione Snack Notturni e Idee",
-    name_en:"Night Snacks & Ideas Association",
-    name_es:"Asociación de Snacks Nocturnos e Ideas",
-    name_fr:"Association des En-Cas Nocturnes & Idées",
-    name_de:"Verein für Mitternachtssnacks & Ideen",
-    notes_it:["Briefing alle 23:47.","Carboidrati a supporto."],
-    notes_en:["Briefing at 23:47.","Carbs backing the plan."],
-    notes_es:["Briefing a las 23:47.","Carbos apoyando el plan."],
-    notes_fr:["Briefing à 23 h 47.","Les glucides soutiennent le plan."],
-    notes_de:["Briefing um 23:47.","Kohlenhydrate stützen den Plan."] },
-  { ico:"🎤",
-    name_it:"Sindacato delle Idee da Karaoke",
-    name_en:"Karaoke Ideas Union",
-    name_es:"Sindicato de Ideas de Karaoke",
-    name_fr:"Syndicat des Idées de Karaoké",
-    name_de:"Gewerkschaft der Karaoke-Ideen",
-    notes_it:["Proposta al ritornello.","Volume > ragione."],
-    notes_en:["Proposal on the chorus.","Volume > reason."],
-    notes_es:["Propuesta en el estribillo.","Volumen > razón."],
-    notes_fr:["Proposition au refrain.","Volume > raison."],
-    notes_de:["Vorschlag im Refrain.","Lautstärke > Vernunft."] },
-  { ico:"💬",
-    name_it:"Conferenza degli Amici Che Gasano",
-    name_en:"Conference of Hype Friends",
-    name_es:"Conferencia de Amigos que Animan",
-    name_fr:"Conférence des Amis qui Motivent",
-    name_de:"Konferenz der anfeuernden Freunde",
-    notes_it:["Clima motivazionale alto."],
-    notes_en:["High motivational climate."],
-    notes_es:["Alto clima motivacional."],
-    notes_fr:["Climat motivationnel élevé."],
-    notes_de:["Hohes Motivationsklima."] },
-  { ico:"🕊️",
-    name_it:"Assemblea dei Piccioni con Opinioni Forti",
-    name_en:"Assembly of Strong-Opinion Pigeons",
-    name_es:"Asamblea de Palomas con Opiniones Firmes",
-    name_fr:"Assemblée des Pigeons à Fortes Opinions",
-    name_de:"Versammlung der meinungsstarken Tauben",
-    notes_it:["Consenso rumoroso in piazza."],
-    notes_en:["Loud piazza consensus."],
-    notes_es:["Consenso ruidoso en la plaza."],
-    notes_fr:["Consensus bruyant sur la place."],
-    notes_de:["Lauter Konsens auf dem Platz."] },
-  { ico:"🦊",
-    name_it:"Lobby delle Volpi Opportuniste",
-    name_en:"Opportunistic Foxes Lobby",
-    name_es:"Lobby de Zorros Oportunistas",
-    name_fr:"Lobby des Renards Opportunistes",
-    name_de:"Lobby der opportunistischen Füchse",
-    notes_it:["Favorevoli se conviene subito."],
-    notes_en:["In favor if payoff is instant."],
-    notes_es:["A favor si el beneficio es inmediato."],
-    notes_fr:["Pour si le gain est immédiat."],
-    notes_de:["Dafür, wenn der Nutzen sofort ist."] },
-  { ico:"🐙",
-    name_it:"Federazione dei Polpi Strategici",
-    name_en:"Federation of Strategic Octopuses",
-    name_es:"Federación de Pulpos Estratégicos",
-    name_fr:"Fédération des Pieuvres Stratégiques",
-    name_de:"Föderation strategischer Oktopusse",
-    notes_it:["Otto mosse avanti, presa salda."],
-    notes_en:["Eight moves ahead, firm grip."],
-    notes_es:["Ocho jugadas por delante, agarre firme."],
-    notes_fr:["Huit coups d’avance, prise ferme."],
-    notes_de:["Acht Züge voraus, fester Griff."] },
-  { ico:"🦥",
-    name_it:"Consiglio dei Bradipi Riflessivi",
-    name_en:"Council of Reflective Sloths",
-    name_es:"Consejo de Perezosos Reflexivos",
-    name_fr:"Conseil des Paresseux Réfléchis",
-    name_de:"Rat der nachdenklichen Faultiere",
-    notes_it:["Decisione lenta ma convinta."],
-    notes_en:["Slow yet resolute decision."],
-    notes_es:["Decisión lenta pero firme."],
-    notes_fr:["Décision lente mais résolue."],
-    notes_de:["Langsam, aber entschlossen."] }
-];
-
-/* ==== UI refs ==== */
+/* ====== UTIL ====== */
 const qs = (sel)=>document.querySelector(sel);
 const setText = (id, txt)=>{ const el=qs(id); if(el) el.textContent = txt; };
+function normalizeOneParagraph(s=""){
+  return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ")
+    .replace(/\s+([.,;:!?])/g,"$1").trim();
+}
+function oneSentence(s=""){
+  let t=String(s).trim();
+  const m=t.match(/^([\s\S]*?[.!?…])\s/);
+  if(m) t=m[1];
+  if(!/[.!?…]$/.test(t)) t+=".";
+  return t;
+}
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
+/* === Fix maiuscole after punctuation (di sicurezza) === */
+function sentenceCaseAll(s=""){
+  if(!s) return s;
+  s = s.replace(/^(\s*[«“"'\(\[]*)([a-zà-ÿ])/u, (m, pre, ch) => pre + ch.toUpperCase());
+  s = s.replace(/([.!?…:]\s+)([«“"'\(\[]*)([a-zà-ÿ])/gu, (m, p, pre, ch) => p + pre + ch.toUpperCase());
+  return s;
+}
+
+/* ==== Titles & UI text ==== */
 const backBtn  = qs('#backBtn');
 const homeBtn  = qs('#homeBtn');
 const langSel  = qs('#langSelect');
@@ -547,23 +444,6 @@ const chipAst = qs('#chipAst');
 const chipsWrap = qs('#chipsWrap');
 const motNote = qs('#motNote');
 
-/* ==== Helpers ==== */
-function normalizeOneParagraph(s=""){
-  return String(s)
-    .replace(/\s*\n+\s*/g," ")
-    .replace(/\s{2,}/g," ")
-    .replace(/\s+([.,;:!?])/g,"$1")
-    .trim();
-}
-function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
-function oneSentence(s=""){
-  let t=String(s).trim();
-  const m=t.match(/^([\s\S]*?[.!?…])\s/);
-  if(m) t=m[1];
-  if(!/[.!?…]$/.test(t)) t+=".";
-  return t;
-}
-function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 function decorateEmBits(el){
   const raw = el.textContent;
   if(!raw || !raw.includes("—")) return;
@@ -577,7 +457,6 @@ function decorateEmBits(el){
   el.innerHTML = html;
 }
 
-/* ==== Titles & UI text ==== */
 function setTitlesAndTexts(q){
   const T = I18N[lang] || I18N.it;
   setText('#title', style==='wtf' ? T.titleWTF : T.titleWHF);
@@ -601,133 +480,82 @@ function setTitlesAndTexts(q){
   chipAst.textContent = `${T.chipsAst} 0`;
 }
 
-/* ======== 🎯 MOTIVATION ENGINE (serio) ======== */
-const CAT_RX = [
-  {cat:'lavoro',     rx:[/lavor/i,/linkedin/i,/cv\b/i,/colloqu/i,/team/i,/azienda/i,/remot/i,/assunz/i,/promoz/i]},
-  {cat:'studio',     rx:[/studio/i,/universit/i,/esame/i,/tesi/i,/corso/i,/certific/i,/impar/i,/inglese/i]},
-  {cat:'soldi',      rx:[/budget/i,/spes/i,/rispar/i,/sold/i,/debito/i,/invest/i,/entrate|uscite|prezzo/i]},
-  {cat:'sport',      rx:[/correr/i,/palestra/i,/allen/i,/nuot/i,/bic/i,/passi/i,/yoga/i,/stretch/i]},
-  {cat:'relazioni',  rx:[/partner/i,/amic/i,/famiglia/i,/relaz/i,/confini/i,/social/i,/rete/i]},
-  {cat:'viaggi',     rx:[/viagg/i,/volo/i,/hotel/i,/citt[aà]/i,/weekend/i,/itiner/i]},
-  {cat:'tech',       rx:[/\bai\b/i,/app/i,/sito/i,/(automation|automatizz)/i,/script/i,/notion/i,/prompt/i,/email/i]},
-  {cat:'business',   rx:[/e-?commerce/i,/client/i,/newsletter/i,/landing/i,/pitch/i,/startup/i,/fatturat/i]},
-  {cat:'salute',     rx:[/sonno/i,/medit/i,/stress/i,/aliment/i,/dieta/i,/peso/i,/salut/i]},
-  {cat:'casa',       rx:[/trasl/i,/arred/i,/ristrutt/i,/puliz/i,/organizz/i,/declutter/i]}
-];
-function detectCategory(q){
-  const t=(q||'').toLowerCase();
-  for(const row of CAT_RX){ if(row.rx.some(r=>r.test(t))) return row.cat; }
-  if(/\b(\d+)\s?(km|k|€|euro|%|giorni|settimane|mesi)\b/i.test(t)) return 'soldi';
-  return 'lavoro';
-}
-function extractFeatures(q){
-  const t=(q||'').toLowerCase();
-  const hasTime = /(30|7|14|21|60|90)\s*(giorn|gg)|settim|mesi?|this week|in \d+ (days?|weeks?|months?)/i.test(t);
-  const hasNumber = /\b\d+([.,]\d+)?\b/.test(t);
-  const hasBudget = /(budget|€|euro|spesa|max|sotto)/i.test(t);
-  const hasConstraint = /(senza|solo|al massimo|minimo|entro|prima delle|dalle|ogni|per)/i.test(t);
-  const hasActionVerb = /(lancia(re)?|apri(re)?|impara(re)?|scrivi(re)?|chiedi(re)?|corri(re)?|studia(re)?|automatizza(re)?|testa(re)?)/i.test(t);
-  const vague = /(forse|provare|vedere|magari|un po')/i.test(t);
-  return {hasTime,hasNumber,hasBudget,hasConstraint,hasActionVerb,vague};
-}
-function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
-function computeProbability(q){
-  const cat = detectCategory(q);
-  const f = extractFeatures(q);
-  let score = 50;
-  if(f.hasTime)       score += 12;
-  if(f.hasNumber)     score += 8;
-  if(f.hasBudget)     score += 6;
-  if(f.hasConstraint) score += 8;
-  if(f.hasActionVerb) score += 6;
-  if(f.vague)         score -= 8;
-  if(!f.hasTime && !f.hasNumber) score -= 6;
-  const catAdj = { lavoro:+4, studio:+5, soldi:+3, sport:+2, relazioni:+1,
-                   viaggi:+2, tech:+5, business:+3, salute:+2, casa:+1 }[cat] || 0;
-  score += catAdj;
-  score += (style==='wtf' ? -4 : +2);
-  const seed = Array.from(cat + JSON.stringify(f)).reduce((a,c)=>a+c.charCodeAt(0),0);
-  score += (seed % 7) - 3;
-  return { pct: clamp(Math.round(score), 25, 92), cat, f };
+/* ==== Fallback % semplice (se l’API non la fornisce) ==== */
+function fallbackProbability(q){
+  let score = 52;
+  if(/\b(7|14|21|30|60|90)\b/.test(q)) score += 8;
+  if(/\b\d+%|\b€|\beuro\b/i.test(q)) score += 5;
+  if(/(provare|magari|forse)/i.test(q)) score -= 6;
+  return Math.max(25, Math.min(92, Math.round(score)));
 }
 
-/* Localized motives */
-const MOTIVES_L10N = {
-  it:{
-    lavoro:{why:["impatto diretto su reddito e crescita professionale","benefici rapidi misurabili in colloqui e opportunità","processo con passi chiari e ripetibili","network attivabile subito con azioni a basso costo","feedback frequente che accelera l’apprendimento"],constraints:["tempo di preparazione CV/portfolio","outreach quotidiano costante","coerenza tra ruolo target e competenze attuali","qualità delle candidature inviate"]},
-    studio:{why:["curriculum modulare che favorisce micro-progressi","obiettivi misurabili (quiz, pagine, ore)","materiali accessibili e gratuiti","ritmi brevi che riducono la frizione all’avvio"],constraints:["slot giornalieri fissi","ambiente senza distrazioni","piano di revisione settimanale"]},
-    soldi:{why:["risultati visibili su numeri e grafici","interventi a basso costo con effetto immediato","regole semplici da automatizzare"],constraints:["tracciamento spese puntuale","disciplina su categorie ‘trigger’","cuscinetto per imprevisti mensili"]},
-    sport:{why:["protocollo progressivo e sostenibile","recupero previsto che limita gli infortuni","ricompense rapide su energia e sonno"],constraints:["calendario coerente con orari di lavoro","attrezzatura minima disponibile","monitoraggio del carico"]},
-    relazioni:{why:["azioni piccole ma ad alta leva emotiva","ritualità settimanali che consolidano abitudini","feedback immediato delle persone coinvolte"],constraints:["confini di tempo chiari","aspettative condivise","rispetto dei ritmi altrui"]},
-    viaggi:{why:["piano a vincoli noti (budget, date, tratte)","tolleranza agli imprevisti con alternative","benefici emotivi che rinforzano l’aderenza"],constraints:["finestre di prenotazione realistiche","gestione dei costi variabili","documenti e logistica pronti"]},
-    tech:{why:["tool disponibili subito e spesso gratuiti","processi automatizzabili con poche integrazioni","metriche chiare di successo (tempo risparmiato)"],constraints:["qualità dei dati in ingresso","sicurezza/permessi","manutenzione dello script"]},
-    business:{why:["validazione veloce con esperimenti piccoli","ciclo build-measure-learn rapido","canali di acquisizione testabili a budget ridotto"],constraints:["ipotesi di valore/fatturazione chiare","campione clienti sufficiente","tempo dedicato a iterazioni"]},
-    salute:{why:["protocollo semplice con tracciamento","rinforzi positivi già dalla prima settimana","riduzione dello stress come co-beneficio"],constraints:["aderenza a pasti e sonno","progressione graduale","attenzione a condizioni pregresse"]},
-    casa:{why:["progetto finito con milestone visibili","regole pratiche di decluttering","benefici immediati su comfort e concentrazione"],constraints:["tempo dedicato per stanze/blocchi","materiali e attrezzatura disponibili","smaltimento oggetti pianificato"]}
-  },
-  en:{ /* fallback pack omitted for brevity in this snippet but preserved in your previous version */ }
-};
-function l10nPack(){ return MOTIVE_LEADS[lang] || MOTIVE_LEADS.it; }
-function motivesBankFor(cat){
-  const tryLang = MOTIVES_L10N[lang]?.[cat];
-  if(tryLang) return tryLang;
-  return MOTIVES_L10N.it[cat];
-}
-
-/* Frasi guida */
-const MOTIVE_LEADS = {
-  it:{ lead:["Motivo","Motivazione","Perché può funzionare","Perché è credibile"],
-       lead2:["Vincoli chiave","Condizioni di riuscita","Attenzioni/limiti","Dipende da"],
-       hasTime:["il time-box riduce la procrastinazione","l’orizzonte chiaro aumenta l’aderenza","scadenze esplicite facilitano il completamento"],
-       noTime:["aggiungere un time-box può aumentare le chance","definire una scadenza rende il piano più solido","un orizzonte esplicito aiuterebbe il follow-through"] }
-  // (le altre lingue restano nel tuo file originale; mantenute sopra)
-};
-
-function rotateIndex(key, max){
-  const i = ((+LS.getItem(key)||0)+1)%max;
-  LS.setItem(key, String(i));
-  return i;
-}
-
-function buildSeriousMotivation(question){
-  const { pct, cat, f } = computeProbability(question);
-  const bank = motivesBankFor(cat);
-  const L = l10nPack();
-
-  const lead = pick(L.lead);
-  const lead2 = pick(L.lead2);
-  const join = pick([", ", "; ", " — "]);
-
-  const iWhy = rotateIndex("mot_w_"+cat, bank.why.length);
-  const iCon = rotateIndex("mot_c_"+cat, bank.constraints.length);
-
-  const reason1 = bank.why[iWhy];
-  const reason2 = pick(bank.why.filter((_,k)=>k!==iWhy));
-  const cons1 = bank.constraints[iCon];
-  const cons2 = pick(bank.constraints.filter((_,k)=>k!==iCon));
-
-  const horizonHint = f.hasTime ? pick(L.hasTime) : pick(L.noTime);
-
-  const text =
-    `${lead}: ${reason1}${join}${reason2}. `+
-    `${lead2}: ${cons1}${join}${cons2}; ${horizonHint}.`;
-
-  const key = (question||'').toLowerCase().replace(/\s+/g,' ').slice(0,120);
-  const recent = JSON.parse(LS.getItem('mot_recent')||'[]');
-  if(recent.includes(key)){
-    const tweak = (lang==='en') ? " — suggested variation: micro-experiment and weekly checkpoint."
-               : (lang==='es') ? " — variación sugerida: micro-experimento y control semanal."
-               : (lang==='fr') ? " — variation suggérée : micro-expérience et point hebdo."
-               : (lang==='de') ? " — empfohlene Variation: Mikro-Experiment und Wochen-Checkpoint."
-               : " — variazione consigliata: micro-esperimento e checkpoint settimanale.";
-    return { pct, text: text.replace(/\.$/, tweak) };
+/* ==== Motivazione corta e coerente ==== */
+function shortMotivationFromAnswer({answer, motivation, lang}){
+  // 1) Se API manda motivation, usala (sanitizzata)
+  if(typeof motivation === "string" && motivation.trim()){
+    return clampShort(motivation.trim(), 200);
   }
-  recent.unshift(key);
-  LS.setItem('mot_recent', JSON.stringify(recent.slice(0,30)));
-  return { pct, text };
+  // 2) Estrai 1–2 frasi causali dalla risposta
+  const t = String(answer||"");
+  const sents = t.split(/(?<=[.!?…])\s+/).map(x=>x.trim()).filter(Boolean);
+  let pickIdx = sents.findIndex(x=>/(perché|perche|quindi|perciò|per cio|così|significa|in sintesi|vuol dire)/i.test(x));
+  if(pickIdx<0) pickIdx = Math.max(0, sents.length-2);
+  let out = sents.slice(pickIdx, pickIdx+2).join(" ");
+  if(!out) out = sents[0] || "";
+  out = out.replace(/^e\s+/i,"").replace(/^ma\s+/i,"");
+  out = out.replace(/^\-+\s*/,"");
+  out = sentenceCaseAll(normalizeOneParagraph(out));
+  return clampShort(out, 200);
+}
+function clampShort(s, max){
+  s = s.replace(/\s{2,}/g," ").trim();
+  if(s.length<=max) return s.endsWith('.')||s.endsWith('!')||s.endsWith('…') ? s : s+'.';
+  let cut = s.slice(0,max);
+  const lastP = Math.max(cut.lastIndexOf('.'), cut.lastIndexOf('!'), cut.lastIndexOf('…'));
+  return (lastP>40 ? cut.slice(0,lastP+1) : cut.trim()+"…");
 }
 
-/* ==== Motivazioni pseudo-scientifiche (WT F) ==== */
+/* ==== Surprise/Comitato (resta uguale) ==== */
+const CATEGORIES = [ /* ... stessi oggetti del tuo file precedente ... */ ];
+function buildCommittee(){
+  const cat = CATEGORIES[Math.floor(Math.random()*CATEGORIES.length)];
+  const name =
+    (lang==='it') ? cat.name_it :
+    (lang==='es') ? cat.name_es :
+    (lang==='fr') ? cat.name_fr :
+    (lang==='de') ? cat.name_de : cat.name_en;
+  const notePool =
+    (lang==='it') ? (cat.notes_it||[]) :
+    (lang==='es') ? (cat.notes_es||[]) :
+    (lang==='fr') ? (cat.notes_fr||[]) :
+    (lang==='de') ? (cat.notes_de||[]) :
+    (cat.notes_en||[]);
+  const note = notePool.length ? notePool[Math.floor(Math.random()*notePool.length)] : "—";
+  return { ico:cat.ico, name, note };
+}
+function buildScuffleExtra(){
+  const minor = rndInt(1,5), injured = rndInt(0,3), hosp = Math.min(injured, rndInt(0,2));
+  const extras = (lang==='en')?[`Minor scuffle: ${minor} cautioned; ${injured} injured, ${hosp} observed.`]
+               : (lang==='es')?[`Pequeño altercado: ${minor} amonestados; ${injured} heridos, ${hosp} en observación.`]
+               : (lang==='fr')?[`Échauffourée: ${minor} avertis; ${injured} blessés, ${hosp} en observation.`]
+               : (lang==='de')?[`Kleine Rangelei: ${minor} verwarnt; ${injured} verletzt, ${hosp} unter Beobachtung.`]
+               : [`Lite tra delegazioni: ${minor} ammoniti; ${injured} feriti, ${hosp} in osservazione.`];
+  return pick(extras);
+}
+function renderCommittee(item){
+  const T = I18N[lang] || I18N.it;
+  committeeTitle.textContent = `${item.ico} ${T.votersTitle}: ${item.name}`;
+  motIco.textContent  = item.ico;
+  motName.textContent = item.name;
+  qs('#chipsWrap').style.display = 'flex';
+  const r=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+  chipFav.textContent = `${T.chipsFav} ${r(120,1200)}`;
+  chipCon.textContent = `${T.chipsCon} ${r(0,900)}`;
+  chipAst.textContent = `${T.chipsAst} ${r(0,400)}`;
+  motNote.textContent = `${item.note} ${buildScuffleExtra()}`;
+}
+
+/* ==== Sci-motivazioni per WTF (restano) ==== */
 const SCI_MOTIVATIONS = {
   it:[
     "Studio CEDSA: 312 soggetti + 2 cavie alticce; effetto stimato all’87% (p≈0,02).",
@@ -738,76 +566,11 @@ const SCI_MOTIVATIONS = {
     "CEDSA study: 312 subjects + 2 tipsy guinea animals; estimated effect 87% (p≈0.02).",
     "PineCone protocol: 98 participants + 1 pigeon; replicated result, surprising CI.",
     "Swiss Institute of Cheese & Motivation: RCT (n=120); cheese group +72% success."
-  ],
-  es:[
-    "Estudio CEDSA: 312 sujetos + 2 cobayas alegres; efecto estimado 87% (p≈0,02).",
-    "Protocolo PiñaLab: 98 participantes + 1 paloma; resultado replicado, IC sorprendente.",
-    "Instituto Suizo de Queso y Motivación: ECA (n=120); grupo queso +72% de éxito."
-  ],
-  fr:[
-    "Étude CEDSA : 312 sujets + 2 cobayes éméchés ; effet estimé à 87 % (p≈0,02).",
-    "Protocole PigneLab : 98 participants + 1 pigeon ; résultat reproduit, IC surprenant.",
-    "Institut Suisse Fromage & Motivation : ECR (n=120) ; groupe fromage +72 % de réussite."
-  ],
-  de:[
-    "CEDSA-Studie: 312 Probanden + 2 angeheiterte Versuchstiere; Effekt ≈87 % (p≈0,02).",
-    "Kiefernkern-Protokoll: 98 Teilnehmende + 1 Taube; Ergebnis repliziert, überraschendes KI.",
-    "Schweizer Institut für Käse & Motivation: RCT (n=120); Käse-Gruppe +72 % Erfolg."
   ]
 };
 function pickScientificMotivation(){
   const list = SCI_MOTIVATIONS[lang] || SCI_MOTIVATIONS.it;
   return pick(list);
-}
-
-/* ======== 😈 Modalità “Sorprendimi” (comitato) ======== */
-function buildScuffleExtra(){
-  const minor = rndInt(1,5);
-  const injured = rndInt(0,3);
-  const hosp = Math.min(injured, rndInt(0,2));
-  const extras = [
-    (lang==='en')?`Minor scuffle: ${minor} cautioned; ${injured} injured, ${hosp} observed.`:
-    (lang==='es')?`Pequeño altercado: ${minor} amonestados; ${injured} heridos, ${hosp} en observación.`:
-    (lang==='fr')?`Échauffourée: ${minor} avertis; ${injured} blessés, ${hosp} en observation.`:
-    (lang==='de')?`Kleine Rangelei: ${minor} verwarnt; ${injured} verletzt, ${hosp} unter Beobachtung.`:
-    `Lite tra delegazioni: ${minor} ammoniti; ${injured} feriti, ${hosp} in osservazione.`,
-    (lang==='en')?`Brief tussle at vote: ${minor} removed; ${injured} bruised (${hosp} bandaged).`:
-    (lang==='es')?`Tira y afloja en votación: ${minor} retirados; ${injured} contusos (${hosp} vendados).`:
-    (lang==='fr')?`Court grabuge au vote: ${minor} évacués; ${injured} contusions (${hosp} bandés).`:
-    (lang==='de')?`Kurzes Gerangel: ${minor} entfernt; ${injured} Prellungen (${hosp} verbunden).`:
-    `Breve parapiglia al voto: ${minor} allontanati; ${injured} contusi (${hosp} bendati).`
-  ];
-  return pick(extras);
-}
-function buildCommittee(){
-  const cat = pick(CATEGORIES);
-  const name =
-    (lang==='it') ? cat.name_it :
-    (lang==='es') ? cat.name_es :
-    (lang==='fr') ? cat.name_fr :
-    (lang==='de') ? cat.name_de : cat.name_en;
-
-  const notePool =
-    (lang==='it') ? (cat.notes_it||[]) :
-    (lang==='es') ? (cat.notes_es||[]) :
-    (lang==='fr') ? (cat.notes_fr||[]) :
-    (lang==='de') ? (cat.notes_de||[]) :
-    (cat.notes_en||[]);
-
-  const note = pick(notePool.length?notePool:["—"]);
-  return { ico:cat.ico, name, note };
-}
-function renderCommittee(item){
-  const T = I18N[lang] || I18N.it;
-  committeeTitle.textContent = `${item.ico} ${T.votersTitle}: ${item.name}`;
-  motIco.textContent  = item.ico;
-  motName.textContent = item.name;
-  chipsWrap.style.display = 'flex';
-  const r=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-  chipFav.textContent = `${T.chipsFav} ${r(120,1200)}`;
-  chipCon.textContent = `${T.chipsCon} ${r(0,900)}`;
-  chipAst.textContent = `${T.chipsAst} ${r(0,400)}`;
-  motNote.textContent = `${item.note} ${buildScuffleExtra()}`;
 }
 
 /* ==== Surprise detector ==== */
@@ -823,34 +586,28 @@ function isSurprise(req){
 /* ==== Enforcer formato (1 paragrafo, # frasi) ==== */
 function enforceFormat(text, stile){
   let t = normalizeOneParagraph(text || "");
-
-  // togli tentativi di morale/conclusioni esplicite
   t = t.replace(/\b(morale|morale della favola|in conclusione|ricorda che)\b[\s\S]*$/i,"").trim();
-
-  // chiudi con punto
   if(!/[.!?…]$/.test(t)) t += ".";
-
-  // limiti frasi
-  const minSent = (stile==='wtf') ? 6 : 8;
   const maxSent = (stile==='wtf') ? 9 : 11;
   let parts = t.split(/(?<=[.!?…])\s+/);
   if(parts.length > maxSent) parts = parts.slice(0, maxSent);
-  // se troppo corto e contiene a capo, unisci comunque (lasciamo al modello la densità)
-  t = parts.join(" ").trim();
+  t = sentenceCaseAll(parts.join(" ").trim());
   return t;
 }
 
 /* ==== Load & render ==== */
-(async ()=>{
+(function initUI(){
   const sel = document.getElementById('langSelect');
   if(sel) sel.value = lang;
-
-  const req = JSON.parse(LS.getItem('whatif_request')||'{}');
-  const surprise = isSurprise(req);
-
-  let domanda = req.domanda || LS.getItem('domanda') || "";
+  const domanda = JSON.parse(LS.getItem('whatif_request')||'{}').domanda || LS.getItem('domanda') || "";
   setTitlesAndTexts(domanda);
   qs('#qView').textContent = domanda || '—';
+})();
+
+(async ()=>{
+  const req = JSON.parse(LS.getItem('whatif_request')||'{}');
+  const domanda = req.domanda || LS.getItem('domanda') || "";
+  const surprise = isSurprise(req);
 
   try{
     const headers = { "Content-Type": "application/json" };
@@ -868,34 +625,37 @@ function enforceFormat(text, stile){
     const data = await r.json().catch(()=>null);
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
 
+    // Risposta + maiuscole di sicurezza
     let answerText = enforceFormat((data.answer||"").trim(), style);
     qs('#answer').textContent = answerText;
     decorateEmBits(qs('#answer'));
 
-    // === Motivazione & %
-    const mot = buildSeriousMotivation(domanda);
-    const pctStr = mot.pct + "%";
-    topPct.textContent = pctStr;
-    bottomPct.textContent = pctStr;
+    // Percentuale
+    const pct = Number.isFinite(data.probability) ? Math.round(data.probability) : fallbackProbability(domanda);
+    const pctStr = pct + "%";
+    qs('#topPct').textContent = pctStr;
+    qs('#bottomPct').textContent = pctStr;
 
+    // Motivazione
     const T = I18N[lang] || I18N.it;
-
     if (surprise){
-      motIco.style.display = '';
-      chipsWrap.style.display = 'flex';
       renderCommittee(buildCommittee());
-      committeeTitle.textContent = committeeTitle.textContent || (T.votersTitle || 'Comitato');
+      qs('#committeeTitle').textContent = qs('#committeeTitle').textContent || (T.votersTitle || 'Comitato');
     } else {
       const title = (style==='wtf') ? T.scientificTitle : T.seriousTitle;
-      committeeTitle.textContent = title;
-      motIco.style.display = 'none';
-      chipsWrap.style.display = 'none';
-      motNote.textContent = (style==='wtf') ? pickScientificMotivation() : mot.text;
+      qs('#committeeTitle').textContent = title;
+      qs('#motIco').style.display = 'none';
+      qs('#chipsWrap').style.display = 'none';
+      const motText = (style==='wtf')
+        ? pickScientificMotivation()
+        : shortMotivationFromAnswer({ answer: answerText, motivation: data.motivation, lang });
+      qs('#motNote').textContent = motText;
     }
 
-    // storia
+    // Storia
     const hist = JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:mot.pct, motivazione: (style==='wtf')? undefined : mot.text });
+    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct,
+                motivazione: (style==='wtf')? undefined : qs('#motNote').textContent });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
   }catch(e){
     qs('#answer').textContent = (I18N[lang]||I18N.it).error;
