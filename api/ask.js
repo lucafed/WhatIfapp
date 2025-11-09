@@ -1,7 +1,8 @@
 // /api/ask.js — What?f Engine (Stable Hybrid WHATIF + Friendly-WTF Demenziale)
-// - WHATIF: stile unico 60% analisi / 40% immagini sobrie. Incipit analitico (no “Bella Luca”) + INCIPIT DINAMICO post-process.
-// - WTF: come da tuoi esempi, 2–3 reazioni DEMENZIALI, una sola “imprecazione” teatrale, sorso alcolico, risposta vera, morale.
-// - Aggiunta: seconda chiamata "estrattore" per pct/motivation (WHAT IF) o scientific_report (WTF), senza toccare i prompt principali.
+// - WHATIF: stile unico 60% analisi / 40% immagini sobrie. Incipit analitico (no “Bella Luca”).
+//   MOD: aggiunto INCIPIT DINAMICO post-process (no cambio prompt).
+// - WTF: come da tuoi esempi, 2–3 reazioni DEMENZIALI, una sola “imprecazione” teatrale, sorso alcolico, risposta vera, morale. (INVARIATO)
+// - MOD: seconda chiamata leggera per meta: WHAT IF -> {pct, motivation} ; WTF -> {pct, scientific_report}.
 // - Maiuscole sistemate post-process dopo punto / “…”.
 // - Un paragrafo, niente elenchi, niente eco della domanda.
 
@@ -12,7 +13,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 /* ========= OpenAI ========= */
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
-const MODEL_EXTRACT = process.env.OPENAI_MODEL_EXTRACT || MODEL; // modello per l'estrazione meta
+const MODEL_EXTRACT = process.env.OPENAI_MODEL_EXTRACT || MODEL; // per estrazione meta
 
 /* ========= Redis & Rate ========= */
 const redis = new Redis({
@@ -153,17 +154,16 @@ function addDynamicIntroIfWhatIf({ answer, stile, lang }){
   const bank = INTRO_BANK[L] || INTRO_BANK.it || [];
   if(!bank.length) return answer;
   const intro = pick(bank);
-  // Evita doppioni se già inizia in modo simile
   const first8 = String(answer||"").split(/\s+/).slice(0,8).join(" ").toLowerCase();
   const introLow = intro.toLowerCase();
   const looksDuplicated = first8.includes(introLow.slice(0, Math.min(10, introLow.length)));
   if(looksDuplicated) return answer;
   let out = `${intro} ${answer}`.trim();
-  if(out.length > 1200) out = clampWords(out, 165); // sicurezza
+  if(out.length > 1200) out = clampWords(out, 165);
   return out;
 }
 
-/* ========= Prompt builder ========= */
+/* ========= Prompt builder (TUO, invariato su WTF) ========= */
 function buildMessages({ domanda, lang, periodo, stile }){
   const L = normLang(lang);
   const baseRules = L==="en"
@@ -183,7 +183,6 @@ function buildMessages({ domanda, lang, periodo, stile }){
     let seed=[...String(domanda)].reduce((a,c)=>a+c.charCodeAt(0),0);
     function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; }
     const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
-    // 2–3 reazioni demenziali coerenti
     const shuffled=[...WTF_REACT].sort(()=>rnd()-0.5);
     const react = shuffled.slice(0, 2 + Math.floor(rnd()*2)); // 2 o 3
     const drink = WTF_DRINK[Math.floor(rnd()*WTF_DRINK.length)];
@@ -196,7 +195,6 @@ function buildMessages({ domanda, lang, periodo, stile }){
       { role: "system", content: `IMPRECATION: ${impre}` },
       { role: "system", content: `REACTIONS:\n- ${react.join("\n- ")}` },
       { role: "system", content: `DRINK: ${drink}` },
-      // ESEMPI IT (àncora di tono)
       { role: "system", content:
 `ESEMPI VINCOLANTI (tono/ritmo IT):
 - Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora che al confessionale ti tengono in riserva. Ti versi un goccio di liquore, rimetti in riga il bancone e giuri che domani apri solo per matti. Alla chiusura, ti guardi intorno e sussurri che oggi hai bestemmiato più del prete quando finisce il vino — ma almeno hai servito verità calde.
@@ -204,14 +202,12 @@ function buildMessages({ domanda, lang, periodo, stile }){
 - Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
     );
   } else {
-    // WHATIF ibrido unico, con incipit analitico (l'incipit dinamico lo mettiamo post-process)
     msgs.push(
       { role: "system", content: WHATIF_RULE_IT },
       { role: "system", content: `ESEMPIO (respiro e tono):\n${WHATIF_HYBRID_EX_IT}` }
     );
   }
 
-  // Utente finale
   const ask = (L==="en")
     ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`
     : (L==="it")
@@ -226,7 +222,7 @@ function buildMessages({ domanda, lang, periodo, stile }){
   return msgs;
 }
 
-/* ========= Estrattore meta (seconda chiamata) ========= */
+/* ========= Estrattore meta (seconda chiamata, robusta) ========= */
 async function extractMeta({ domanda, answer, stile, lang }) {
   const L = normLang(lang);
   const sys = (L==="en")
@@ -235,8 +231,8 @@ async function extractMeta({ domanda, answer, stile, lang }) {
 
   const base =
     (L==="en")
-      ? `From the question and the answer, compute a realistic probability 0..100 and a concise rationale paragraph.`
-      : `Dalla domanda e dalla risposta, calcola una percentuale realistica 0..100 e una motivazione concisa in un paragrafo.`;
+      ? `From the question and the answer, compute a realistic probability 0..100 and provide a compact rationale paragraph.`
+      : `Dalla domanda e dalla risposta, calcola una percentuale realistica 0..100 e fornisci un paragrafo conciso di motivazione.`;
 
   const taskIF =
     (L==="en")
@@ -246,7 +242,7 @@ async function extractMeta({ domanda, answer, stile, lang }) {
   const taskWTF =
     (L==="en")
       ? `Return JSON: {"pct": <integer>, "scientific_report": "<one compact scientific-style paragraph in ${L}>"}`
-      : `Restituisci JSON: {"pct": <integer>, "scientific_report": "<paragrafo conciso in stile scientifico in ${L}>"}';
+      : `Restituisci JSON: {"pct": <integer>, "scientific_report": "<paragrafo conciso in stile scientifico in ${L}>"}`;
 
   const userMsg =
     (L==="en")
@@ -275,7 +271,6 @@ async function extractMeta({ domanda, answer, stile, lang }) {
       return { pct, motivation, scientific_report };
     }
   }catch{}
-  // fallback minimale
   return { pct: undefined, motivation: undefined, scientific_report: undefined };
 }
 
@@ -304,7 +299,7 @@ export default async function handler(req, res){
     if(!domanda || typeof domanda !== "string")
       return res.status(400).json({ error:"bad_request", detail:"domanda_required" });
 
-    // 1) Generazione risposta (come da tuo comportamento originale)
+    // 1) Genera risposta (comportamento originale)
     const messages = buildMessages({ domanda, lang, periodo, stile, micro });
 
     const completion = await client.chat.completions.create({
@@ -328,10 +323,10 @@ export default async function handler(req, res){
     answer = sentenceCaseAll(answer);
     answer = finalPunct(answer);
 
-    // 1b) WHAT IF → incipit dinamico (post-process)
+    // Incipit dinamico SOLO per WHAT IF (post-process, non tocco il prompt)
     answer = addDynamicIntroIfWhatIf({ answer, stile, lang });
 
-    // Moderazioni leggere (non spegnere l'umorismo)
+    // Moderazioni leggere IT
     if(normLang(lang)==="it"){
       (function(){
         const d=String(domanda||"");
@@ -341,7 +336,7 @@ export default async function handler(req, res){
       })();
     }
 
-    // 2) Estrazione meta per il riquadro "Motivazioni" (seconda chiamata mini)
+    // 2) Estrazione meta per riquadro motivazioni
     let pct, motivation, scientific_report;
     try{
       const meta = await extractMeta({ domanda, answer, stile, lang });
@@ -349,7 +344,6 @@ export default async function handler(req, res){
       motivation = meta.motivation;
       scientific_report = meta.scientific_report;
     }catch{
-      // se qualcosa va storto, lascio undefined e il front-end farà fallback
       pct = undefined; motivation = undefined; scientific_report = undefined;
     }
 
@@ -359,7 +353,6 @@ export default async function handler(req, res){
       lang: normLang(lang),
       periodo,
       model: MODEL,
-      // nuovi campi per il box motivazioni / percentuale reale
       pct,
       motivation,
       scientific_report
