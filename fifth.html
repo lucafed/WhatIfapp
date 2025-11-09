@@ -371,9 +371,9 @@ const motNote=qs('#motNote'), creditInfo=qs('#creditInfo'), toastEl=qs('#toast')
 /* ==== Toast ==== */
 function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
 
-/* ==== Wallet + legacy ==== */
+/* ==== Wallet + legacy + 🎁 Sorprendimi ==== */
 const WKEY="whatif_wallet";
-const SURPKEY="whatif_surprise"; // 🎁 token separati per Sorprendimi
+const SURPKEY="whatif_surprise"; // token separati per Sorprendimi
 
 function readWallet(){ try{ const w=JSON.parse(LS.getItem(WKEY)||"{}")||{}; return {available:Number.isFinite(+w.available)?+w.available:null, used:Number.isFinite(+w.used)?+w.used:null, limit:Number.isFinite(+w.limit)?+w.limit:null}; }catch{return{available:null,used:null,limit:null}}}
 function writeWallet(w){
@@ -382,24 +382,9 @@ function writeWallet(w){
               used:(w.used!=null)?Math.max(0,+w.used):(cur.used??0),
               limit:(w.limit!=null)?Math.max(0,+w.limit):(cur.limit??0) };
   LS.setItem(WKEY, JSON.stringify(out));
-  // segnale di sync per tutte le tab (fourth incluso)
   LS.setItem("whatif_wallet_sync", String(Date.now()));
   updateCreditInfo();
 }
-
-/* 🎁 Sorprendimi — storage e utilità */
-function readSurprise(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||"0",10)||0); }
-function writeSurprise(n){ n=Math.max(0, parseInt(n,10)||0); LS.setItem(SURPKEY,String(n)); updateCreditInfo();
-  // segnala anche qui per far aggiornare fourth in tempo reale
-  LS.setItem("whatif_wallet_sync", String(Date.now()));
-}
-function addSurprise(n){ writeSurprise(readSurprise() + Math.max(0,parseInt(n,10)||0)); }
-function consumeSurpriseOne(){
-  const cur=readSurprise();
-  if(cur>0){ writeSurprise(cur-1); return true; }
-  return false;
-}
-
 function legacyCap(){ return (prefs.pro===true)?10:3 }
 function legacyGetLeft(){
   const w=readWallet(); if(w.available!=null) return w.available;
@@ -427,6 +412,24 @@ function addCredits(n){ n=Math.max(0,parseInt(n,10)||0); if(n<=0) return;
   if(w.available==null){ const left=legacyGetLeft(); writeWallet({available:left+n, used:0, limit:legacyCap()}); }
   else{ writeWallet({available:(w.available+n), used:Math.max(0,(w.used||0)-n), limit:(w.limit!=null?w.limit:legacyCap())}); }
 }
+
+/* 🎁 Sorprendimi tokens */
+function readSurprise(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||"0",10)||0); }
+function writeSurprise(n){ n=Math.max(0, parseInt(n,10)||0); LS.setItem(SURPKEY,String(n)); updateCreditInfo(); LS.setItem("whatif_wallet_sync", String(Date.now())); }
+function addSurprise(n){ writeSurprise(readSurprise() + Math.max(0,parseInt(n,10)||0)); }
+function consumeSurpriseOne(){
+  const cur=readSurprise();
+  if(cur>0){ writeSurprise(cur-1); return true; }
+  return false;
+}
+function computeSurpriseBonus(amount){
+  const a=parseInt(amount,10)||0;
+  if(a>=20) return 3;
+  if(a>=10) return 2;
+  if(a>=5)  return 1;
+  return 0;
+}
+
 function updateCreditInfo(n=getAvailable()){
   if(!creditInfo) return;
   const surprise = readSurprise();
@@ -488,6 +491,7 @@ function renderCommitteeLike(surprise){
 /* ==== Overlay (store + rewarded) ==== */
 const overlay=qs('#overlay'), overlayFrame=qs('#overlay-frame');
 let overlayLoadTimer=null, rewardTimer=null, rewardGranted=false, awaitingCredit=false, alreadyConsumed=false;
+
 function storeFallbackHTML(){
   const T=t();
   return `
@@ -500,19 +504,25 @@ h2{margin:4px 0 6px;font-size:18px}
 .btn{display:inline-block;margin:6px 6px 0 0;padding:10px 12px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
 .primary{background:linear-gradient(180deg,#1C57A0,#FFEC01);color:#0A0E12}
 .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
-.small{color:#A0B2BA;font-size:12px}
-.grid{display:grid;grid-template-columns:1fr;gap:8px}
+.small{color:#A0B2BA;font-size:12px;line-height:1.5}
+.row{display:flex;flex-wrap:wrap;gap:8px}
 </style></head><body>
 <div class="wrap"><div class="card">
   <h2>${T.storeTitle}</h2>
   <p class="small" id="msg">${T.noCredits}</p>
-  <div class="grid">
+
+  <div class="row">
     <button class="btn primary" onclick="parent.postMessage({type:'purchase_completed', amount:5}, '*')">${T.buy5}</button>
     <button class="btn primary" onclick="parent.postMessage({type:'purchase_completed', amount:10}, '*')">${T.buy10}</button>
     <button class="btn primary" onclick="parent.postMessage({type:'purchase_completed', amount:20}, '*')">${T.buy20}</button>
   </div>
-  <button class="btn ghost" id="adBtn">${T.watchAd}</button>
-  <button class="btn ghost" onclick="parent.postMessage({type:'close_overlay'}, '*')">${T.close}</button>
+
+  <p class="small">🎁 Bonus “Sorprendimi”: +1 con 5 crediti · +2 con 10 · +3 con 20.</p>
+
+  <div class="row">
+    <button class="btn ghost" id="adBtn">${T.watchAd}</button>
+    <button class="btn ghost" onclick="parent.postMessage({type:'close_overlay'}, '*')">${T.close}</button>
+  </div>
 </div></div>
 <script>
   const btn=document.getElementById('adBtn');
@@ -589,46 +599,12 @@ function applyQuestion(){
   return {req, domanda, surprise};
 }
 
-/* ✅ Bonus Sorprendimi SOLO su acquisto: 5→+1, 10→+2, 20→+3 */
-function grantSurpriseBonus(creditsBought){
-  try{
-    let bonus = 0;
-    if(creditsBought >= 20) bonus = 3;
-    else if(creditsBought >= 10) bonus = 2;
-    else if(creditsBought >= 5)  bonus = 1;
-
-    if(bonus > 0){
-      // 1) token persistenti
-      addSurprise(bonus);
-
-      // 2) rendi usabili SUBITO oggi in fourth riducendo gli "used" del contatore giornaliero
-      const today = new Date().toISOString().slice(0,10);
-      const s = JSON.parse(LS.getItem('surprise_spins')||'{}') || {};
-      const cur = (s && s.date===today) ? s : {date:today, used:0};
-      cur.used = Math.max(0, (cur.used||0) - bonus);
-      LS.setItem('surprise_spins', JSON.stringify(cur));
-
-      // 3) segnala alle altre tab di aggiornare badge/bottoni
-      LS.setItem('whatif_wallet_sync', String(Date.now()));
-    }
-    return bonus;
-  }catch{
-    return 0;
-  }
-}
-
 /* ==== Main flow (idempotente) ==== */
 async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
 
-  // ⛔ Rientro post-acquisto senza domanda: torna in fourth per vedere crediti/bonus aggiornati
-  if(!domanda || String(domanda).trim()===""){
-    location.replace('fourth.html');
-    return;
-  }
-
-  // Consumo crediti (priorità al token Sorprendimi se surprise===true)
+  // Consumo crediti: prova prima a usare 1 Sorprendimi quando surprise===true
   if(!IS_ADMIN && !alreadyConsumed){
     if(surprise){
       const okSurp = consumeSurpriseOne();
@@ -654,7 +630,7 @@ async function startFlow(){
       }
       alreadyConsumed=true;
       updateCreditInfo();
-      toast(t().toastMinus(1)); // -1 credito
+      toast(t().toastMinus(1));
     }
   }
 
@@ -679,14 +655,12 @@ async function startFlow(){
     if(!/[.!?…]$/.test(answerText)) answerText+='.';
     answerEl.textContent=answerText; decorateEmBits(answerEl);
 
-    /* Percentuale */
     const apiPct = (data && Number.isFinite(+data.pct)) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : null;
     const usedPct = (apiPct!=null) ? apiPct : computeProbability(domanda).pct;
     const pStr = usedPct + "%";
     topPct.textContent = pStr;
     bottomPct.textContent = pStr;
 
-    /* Motivazioni */
     function scientificFallback(langCode){
       return (langCode==='en')
         ? "Scientific note: small, consistent steps beat sporadic big efforts (habits > willpower). Switching costs explain early friction; feedback loops and simple metrics sustain momentum."
@@ -737,10 +711,14 @@ window.addEventListener("message",(ev)=>{
     const amt=parseInt(d.amount,10)||0;
     if(amt>0){
       addCredits(amt);
-      const bonus = grantSurpriseBonus(amt); // 🎁 5→1, 10→2, 20→3
+      const bonus = computeSurpriseBonus(amt);
+      if(bonus>0){ addSurprise(bonus); }
       updateCreditInfo();
-      if(bonus>0) toast(`${t().toastPlus(amt)} · 🎁 +${bonus} Sorprendimi`);
-      else toast(t().toastPlus(amt));
+      try{
+        const plus = (t().toastPlus||((n)=>`+${n}`));
+        const msg = bonus>0 ? `${plus(amt)} · 🎁 +${bonus} Sorprendimi` : plus(amt);
+        toast(msg);
+      }catch{}
     }
     closeOverlay();
     location.replace('fourth.html');
@@ -751,9 +729,7 @@ window.addEventListener("message",(ev)=>{
 
   if(d.type==="rewarded_completed"){
     const amt=parseInt(d.amount,10)||1;
-    addCredits(amt);            // ✅ crediti
-    // ❌ niente bonus Sorprendimi qui
-    updateCreditInfo(); toast(t().toastPlus(amt));
+    addCredits(amt); updateCreditInfo(); toast(t().toastPlus(amt));
     rewardGranted=true; try{ clearTimeout(rewardTimer); }catch{}
     closeOverlay();
     location.replace('fourth.html');
@@ -762,7 +738,6 @@ window.addEventListener("message",(ev)=>{
 
   if(d.type==="close_overlay"){
     closeOverlay();
-    // se ora abbiamo credito (es. reward fallback), torna in quarta
     if(getAvailable()>0){
       location.replace('fourth.html');
     }
@@ -771,8 +746,8 @@ window.addEventListener("message",(ev)=>{
 });
 
 /* ==== Nav / lingua / share ==== */
-qs('#backBtn').onclick=()=> history.length>1 ? history.back() : location.replace('index.html');
-qs'#homeBtn'.onclick=()=> location.href='index.html';
+qs('#backBtn').onclick=()=> history.length > 1 ? history.back() : location.replace('index.html');
+qs('#homeBtn').onclick=()=> location.href='index.html';
 qs('#langSelect').onchange=()=>{
   const v=qs('#langSelect').value;
   LS.setItem('lang',v);
