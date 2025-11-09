@@ -1,6 +1,7 @@
 // /api/ask.js — What?f Engine (Stable Hybrid WHATIF + Friendly-WTF Demenziale)
-// - WHATIF: stile unico 60% analisi / 40% immagini sobrie. Incipit analitico (no “Bella Luca”).
+// - WHATIF: stile unico 60% analisi / 40% immagini sobrie. Incipit analitico (no “Bella Luca”) + INCIPIT DINAMICO post-process.
 // - WTF: come da tuoi esempi, 2–3 reazioni DEMENZIALI, una sola “imprecazione” teatrale, sorso alcolico, risposta vera, morale.
+// - Aggiunta: seconda chiamata "estrattore" per pct/motivation (WHAT IF) o scientific_report (WTF), senza toccare i prompt principali.
 // - Maiuscole sistemate post-process dopo punto / “…”.
 // - Un paragrafo, niente elenchi, niente eco della domanda.
 
@@ -11,6 +12,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 /* ========= OpenAI ========= */
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+const MODEL_EXTRACT = process.env.OPENAI_MODEL_EXTRACT || MODEL; // modello per l'estrazione meta
 
 /* ========= Redis & Rate ========= */
 const redis = new Redis({
@@ -98,6 +100,69 @@ const WTF_DRINK = [
   "bevi un dito di coraggio e respiri più largo",
 ];
 
+/* ========= WHAT IF — INCIPIT DINAMICI (post-process) ========= */
+const INTRO_BANK = {
+  it: [
+    "La stanza è uguale, ma lo sguardo no.",
+    "Prima respiri, poi scegli il passo.",
+    "Dove guardi cambia ciò che vedi.",
+    "Non serve rumore per muovere l’ago.",
+    "È già un inizio.",
+    "La traiettoria si sposta di un grado.",
+    "Piccolo movimento, grande differenza.",
+    "La calma apre una porta laterale.",
+    "Comincia dove i dubbi fanno spazio.",
+    "Ogni decisione è un prototipo."
+  ],
+  en: [
+    "Same room, different gaze.",
+    "Breathe first, then step.",
+    "Where you look changes what you see.",
+    "No noise needed to move the needle.",
+    "It's already a beginning.",
+    "A one-degree shift changes the route.",
+    "Small move, big difference.",
+    "Calm opens a side door.",
+    "Start where doubt makes space.",
+    "Every decision is a prototype."
+  ],
+  es: [
+    "La habitación es la misma, tu mirada no.",
+    "Respira primero, luego avanza.",
+    "Donde miras cambia lo que ves.",
+    "Ya es un comienzo.",
+    "Un grado cambia el rumbo."
+  ],
+  fr: [
+    "Même pièce, autre regard.",
+    "Respire d’abord, puis avance.",
+    "Là où tu regardes change ce que tu vois.",
+    "C’est déjà un début."
+  ],
+  de: [
+    "Gleicher Raum, anderer Blick.",
+    "Erst atmen, dann Schritt.",
+    "Wohin du siehst, ändert, was du siehst.",
+    "Es ist bereits ein Anfang."
+  ],
+};
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function addDynamicIntroIfWhatIf({ answer, stile, lang }){
+  if(stile !== "whatif") return answer;
+  const L = normLang(lang);
+  const bank = INTRO_BANK[L] || INTRO_BANK.it || [];
+  if(!bank.length) return answer;
+  const intro = pick(bank);
+  // Evita doppioni se già inizia in modo simile
+  const first8 = String(answer||"").split(/\s+/).slice(0,8).join(" ").toLowerCase();
+  const introLow = intro.toLowerCase();
+  const looksDuplicated = first8.includes(introLow.slice(0, Math.min(10, introLow.length)));
+  if(looksDuplicated) return answer;
+  let out = `${intro} ${answer}`.trim();
+  if(out.length > 1200) out = clampWords(out, 165); // sicurezza
+  return out;
+}
+
 /* ========= Prompt builder ========= */
 function buildMessages({ domanda, lang, periodo, stile }){
   const L = normLang(lang);
@@ -139,7 +204,7 @@ function buildMessages({ domanda, lang, periodo, stile }){
 - Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
     );
   } else {
-    // WHATIF ibrido unico, con incipit analitico e divieto “Bella…”
+    // WHATIF ibrido unico, con incipit analitico (l'incipit dinamico lo mettiamo post-process)
     msgs.push(
       { role: "system", content: WHATIF_RULE_IT },
       { role: "system", content: `ESEMPIO (respiro e tono):\n${WHATIF_HYBRID_EX_IT}` }
@@ -159,6 +224,59 @@ function buildMessages({ domanda, lang, periodo, stile }){
   msgs.push({ role: "user", content: ask });
 
   return msgs;
+}
+
+/* ========= Estrattore meta (seconda chiamata) ========= */
+async function extractMeta({ domanda, answer, stile, lang }) {
+  const L = normLang(lang);
+  const sys = (L==="en")
+    ? `You extract concise metadata. Output strictly JSON.`
+    : `Estrai metadati concisi. Produci strettamente JSON.`;
+
+  const base =
+    (L==="en")
+      ? `From the question and the answer, compute a realistic probability 0..100 and a concise rationale paragraph.`
+      : `Dalla domanda e dalla risposta, calcola una percentuale realistica 0..100 e una motivazione concisa in un paragrafo.`;
+
+  const taskIF =
+    (L==="en")
+      ? `Return JSON: {"pct": <integer>, "motivation": "<one compact paragraph in ${L}>"}`
+      : `Restituisci JSON: {"pct": <integer>, "motivation": "<paragrafo conciso in ${L}>"}`;
+
+  const taskWTF =
+    (L==="en")
+      ? `Return JSON: {"pct": <integer>, "scientific_report": "<one compact scientific-style paragraph in ${L}>"}`
+      : `Restituisci JSON: {"pct": <integer>, "scientific_report": "<paragrafo conciso in stile scientifico in ${L}>"}';
+
+  const userMsg =
+    (L==="en")
+      ? `QUESTION: ${domanda}\nANSWER: ${answer}\n${base}\n${stile==="whatif" ? taskIF : taskWTF}\nNo markdown. No commentary.`
+      : `DOMANDA: ${domanda}\nRISPOSTA: ${answer}\n${base}\n${stile==="whatif" ? taskIF : taskWTF}\nSenza markdown. Senza commenti.`;
+
+  const comp = await client.chat.completions.create({
+    model: MODEL_EXTRACT,
+    temperature: 0.2,
+    max_tokens: 220,
+    messages: [
+      { role: "system", content: sys },
+      { role: "user", content: userMsg }
+    ],
+  });
+
+  const raw = comp?.choices?.[0]?.message?.content || "";
+  try{
+    const start = raw.indexOf("{");
+    const end = raw.lastIndexOf("}");
+    if(start>=0 && end>=start){
+      const data = JSON.parse(raw.slice(start, end+1));
+      let pct = Number.isFinite(+data.pct) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : undefined;
+      let motivation = data.motivation ? String(data.motivation).trim() : undefined;
+      let scientific_report = data.scientific_report ? String(data.scientific_report).trim() : undefined;
+      return { pct, motivation, scientific_report };
+    }
+  }catch{}
+  // fallback minimale
+  return { pct: undefined, motivation: undefined, scientific_report: undefined };
 }
 
 /* ========= HANDLER ========= */
@@ -186,6 +304,7 @@ export default async function handler(req, res){
     if(!domanda || typeof domanda !== "string")
       return res.status(400).json({ error:"bad_request", detail:"domanda_required" });
 
+    // 1) Generazione risposta (come da tuo comportamento originale)
     const messages = buildMessages({ domanda, lang, periodo, stile, micro });
 
     const completion = await client.chat.completions.create({
@@ -209,9 +328,11 @@ export default async function handler(req, res){
     answer = sentenceCaseAll(answer);
     answer = finalPunct(answer);
 
+    // 1b) WHAT IF → incipit dinamico (post-process)
+    answer = addDynamicIntroIfWhatIf({ answer, stile, lang });
+
     // Moderazioni leggere (non spegnere l'umorismo)
     if(normLang(lang)==="it"){
-      // evita nomi non presenti nella domanda
       (function(){
         const d=String(domanda||"");
         const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
@@ -220,7 +341,29 @@ export default async function handler(req, res){
       })();
     }
 
-    return res.status(200).json({ answer, style: stile, lang: normLang(lang), periodo, model: MODEL });
+    // 2) Estrazione meta per il riquadro "Motivazioni" (seconda chiamata mini)
+    let pct, motivation, scientific_report;
+    try{
+      const meta = await extractMeta({ domanda, answer, stile, lang });
+      pct = meta.pct;
+      motivation = meta.motivation;
+      scientific_report = meta.scientific_report;
+    }catch{
+      // se qualcosa va storto, lascio undefined e il front-end farà fallback
+      pct = undefined; motivation = undefined; scientific_report = undefined;
+    }
+
+    return res.status(200).json({
+      answer,
+      style: stile,
+      lang: normLang(lang),
+      periodo,
+      model: MODEL,
+      // nuovi campi per il box motivazioni / percentuale reale
+      pct,
+      motivation,
+      scientific_report
+    });
   }catch(err){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
