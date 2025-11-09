@@ -1,41 +1,57 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Store Crediti</title>
-  <style>
-    :root{--bg:#0A0F14;--txt:#fff;--accent:#00E0FF;--accent2:#1AFFD5;--ink:#0A0E12;}
-    body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,Roboto,Arial,sans-serif;
-         display:flex;min-height:100vh;align-items:center;justify-content:center}
-    .box{width:100%;max-width:420px;padding:18px}
-    h1{margin:0 0 8px;color:var(--accent2);font-size:22px}
-    p{opacity:.85;margin:0 0 14px}
-    .row{display:grid;gap:10px;margin:12px 0}
-    .btn{padding:12px 14px;border:0;border-radius:12px;font-weight:900;cursor:pointer}
-    .buy{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink)}
-    .ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Store</title>
+<style>
+  :root{--bg:#0B0F14;--card:#141C22;--line:rgba(255,255,255,.12);--fg:#EAF3EE}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  .wrap{max-width:520px;margin:auto;padding:16px}
+  .card{background:#141C22;border:1px solid var(--line);border-radius:14px;padding:16px}
+  h2{margin:2px 0 8px;font-size:18px}
+  .btn{display:inline-block;margin:6px 6px 0 0;padding:10px 12px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
+  .primary{background:linear-gradient(180deg,#1C57A0,#FFEC01);color:#0A0E12}
+  .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid var(--line)}
+  .small{font-size:12px;opacity:.85}
+</style>
 </head>
 <body>
-  <div class="box">
-    <h1>💰 Acquista o guadagna crediti</h1>
-    <p>Ogni domanda consuma 1 credito.</p>
-
-    <div class="row">
-      <button class="btn buy"   onclick="buy(5)">+5 Crediti — 0,99€</button>
-      <button class="btn buy"   onclick="buy(10)">+10 Crediti — 1,49€</button>
-      <button class="btn buy"   onclick="buy(20)">+20 Crediti — 2,49€</button>
-      <button class="btn ghost" onclick="rewarded()">🎥 Guarda un video (+1 gratis)</button>
-    </div>
-
-    <p style="font-size:12px;opacity:.7">Demo: i pulsanti accreditano subito i crediti.
-      In seguito collegheremo Stripe/Play Billing.</p>
+<div class="wrap">
+  <div class="card">
+    <h2 id="title">Crediti</h2>
+    <p class="small" id="desc">Hai terminato i crediti.</p>
+    <button class="btn primary" id="buy">Compra +5 crediti (test)</button>
+    <button class="btn ghost" id="watch">Guarda pubblicità (+1)</button>
+    <button class="btn ghost" id="close">Chiudi</button>
   </div>
+</div>
 
-  <script>
-    function buy(amount){ parent.postMessage({ type:'purchase_complete', amount }, '*'); }
-    function rewarded(){ parent.postMessage({ type:'open_rewarded' }, '*'); }
-  </script>
+<script>
+const I18N={
+  it:{title:"Crediti", desc:"Hai terminato i crediti.", buy:"Compra +5 crediti (test)", watch:"Guarda pubblicità (+1)", close:"Chiudi"},
+  en:{title:"Credits", desc:"You ran out of credits.", buy:"Buy +5 credits (test)", watch:"Watch ad (+1)", close:"Close"},
+  es:{title:"Créditos", desc:"Se te han acabado los créditos.", buy:"Comprar +5 créditos (test)", watch:"Ver anuncio (+1)", close:"Cerrar"},
+  fr:{title:"Crédits", desc:"Crédits épuisés.", buy:"Acheter +5 crédits (test)", watch:"Regarder une pub (+1)", close:"Fermer"},
+  de:{title:"Credits", desc:"Credits aufgebraucht.", buy:"+5 Credits kaufen (Test)", watch:"Werbung ansehen (+1)", close:"Schließen"}
+};
+function getLang(){
+  const u=new URL(location.href); const q=(u.searchParams.get('lang')||'it').toLowerCase();
+  return I18N[q]?q:'it';
+}
+let lang=getLang();
+function apply(){ const T=I18N[lang]||I18N.it;
+  document.documentElement.lang=lang;
+  title.textContent=T.title; desc.textContent=T.desc; buy.textContent=T.buy; watch.textContent=T.watch; close.textContent=T.close;
+}
+apply();
+/* accetta set_lang dal parent */
+window.addEventListener('message',(ev)=>{ const d=ev.data||{}; if(d.type==='set_lang' && I18N[d.lang]){ lang=d.lang; apply(); }});
+
+/* Messaggi verso il parent */
+buy.onclick  = ()=>{ try{ parent.postMessage({type:'purchase_completed', amount:5}, '*'); }catch{} };
+watch.onclick= ()=>{ try{ parent.postMessage({type:'open_rewarded'}, '*'); }catch{} };
+close.onclick= ()=>{ try{ parent.postMessage({type:'close_overlay'}, '*'); }catch{} };
+</script>
 </body>
 </html>
