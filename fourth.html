@@ -292,20 +292,21 @@ function renderCredits(){
   const el   = document.getElementById('freeBadge');
   if (el && el.textContent !== txt) el.textContent = txt;
 }
-/* Sync aggiornamento badge */
+/* Sync aggiornamento badge + surprise */
 window.addEventListener('storage', (e)=>{
-  if (e.key==='whatif_wallet_sync' || e.key===WKEY || e.key==='whatif_sync' || e.key==='whatif_credits') {
+  if (['whatif_wallet_sync', WKEY, 'whatif_sync', 'whatif_credits', 'surprise_spins'].includes(e.key)) {
     renderCredits();
+    renderSpinButton(); /* <-- aggiorna anche il tasto “Sorprendimi” */
   }
 });
-document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) renderCredits(); });
-window.addEventListener('pageshow', ()=> renderCredits());
-window.addEventListener('focus',   ()=> renderCredits());
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ renderCredits(); renderSpinButton(); }});
+window.addEventListener('pageshow', ()=>{ renderCredits(); renderSpinButton(); });
+window.addEventListener('focus',   ()=>{ renderCredits(); renderSpinButton(); });
 /* Polling leggero (2s) per stessa tab */
 let __lastSig = localStorage.getItem('whatif_wallet_sync')||'';
 setInterval(()=>{
   const cur = localStorage.getItem('whatif_wallet_sync')||'';
-  if (cur !== __lastSig){ __lastSig = cur; renderCredits(); }
+  if (cur !== __lastSig){ __lastSig = cur; renderCredits(); renderSpinButton(); }
 }, 2000);
 /* Primo render */
 renderCredits();
