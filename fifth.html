@@ -604,15 +604,49 @@ async function startFlow(){
     if(!/[.!?…]$/.test(answerText)) answerText+='.';
     answerEl.textContent=answerText; decorateEmBits(answerEl);
 
-    const {pct}=computeProbability(domanda);
-    const pStr=pct+"%";
-    topPct.textContent=pStr; bottomPct.textContent=pStr;
+    /* === Percentuale: usa server se presente, altrimenti fallback === */
+    const apiPct = (data && Number.isFinite(+data.pct)) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : null;
+    const usedPct = (apiPct!=null) ? apiPct : computeProbability(domanda).pct;
+    const pStr = usedPct + "%";
+    topPct.textContent = pStr;
+    bottomPct.textContent = pStr;
 
-    if(surprise){ renderCommitteeLike(true); }
-    else { renderCommitteeLike(false); motNote.textContent=shortMotivationFromAnswer(answerText); }
+    /* === Motivazioni: WHAT IF -> reale ; WTF -> rapporto scientifico === */
+    function scientificFallback(langCode){
+      return (langCode==='en')
+        ? "Scientific note: small, consistent steps beat sporadic big efforts (habits > willpower). Switching costs explain early friction; feedback loops and simple metrics sustain momentum."
+        : "Nota scientifica: i piccoli passi consistenti vincono sui grandi sforzi saltuari (abitudini > forza di volontà). I costi di switch spiegano l’attrito iniziale; cicli di feedback e metriche semplici sostengono lo slancio.";
+    }
+
+    let motivazioneUsata = "";
+    if (surprise) {
+      renderCommitteeLike(true);
+    } else {
+      renderCommitteeLike(false);
+      if (style === 'whatif') {
+        const mot = (data && data.motivation) ? String(data.motivation).trim()
+                    : shortMotivationFromAnswer(answerText);
+        motNote.textContent = mot;
+        motivazioneUsata = mot;
+      } else {
+        const sci = (data && data.scientific) ? String(data.scientific).trim()
+                    : scientificFallback(lang);
+        motNote.textContent = sci;
+        motivazioneUsata = sci;
+      }
+    }
 
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({domanda,risposta:answerText,stile:style,periodo,ts:Date.now(),surprise,pct,motivazione:(style==='wtf')?undefined:motNote.textContent});
+    hist.push({
+      domanda,
+      risposta:answerText,
+      stile:style,
+      periodo,
+      ts:Date.now(),
+      surprise,
+      pct:usedPct,
+      motivazione:(style==='wtf')?motivazioneUsata:motivazioneUsata
+    });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
   }catch(e){
     console.error(e);
