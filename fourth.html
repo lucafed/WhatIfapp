@@ -252,6 +252,7 @@ document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'w
 
 /* ===== CREDITI (WALLET UNIFICATO + fallback legacy) ===== */
 const WKEY = 'whatif_wallet';
+const SURPKEY = 'whatif_surprise'; // 🎁 token persistenti
 function userIsAdmin(){ return !!localStorage.getItem('admin_token'); }
 function readWallet(){
   try { return JSON.parse(localStorage.getItem(WKEY)||'{}')||{}; }
@@ -292,9 +293,13 @@ function renderCredits(){
   const el   = document.getElementById('freeBadge');
   if (el && el.textContent !== txt) el.textContent = txt;
 }
+
+/* ===== 🎁 TOKEN SORPRENDIMI ===== */
+function readSurpriseTokens(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||'0',10)||0); }
+
 /* Sync aggiornamento badge + surprise */
 window.addEventListener('storage', (e)=>{
-  if (['whatif_wallet_sync', WKEY, 'whatif_sync', 'whatif_credits', 'surprise_spins'].includes(e.key)) {
+  if (['whatif_wallet_sync', WKEY, 'whatif_sync', 'whatif_credits', 'surprise_spins', SURPKEY].includes(e.key)) {
     renderCredits();
     renderSpinButton(); /* <-- aggiorna anche il tasto “Sorprendimi” */
   }
@@ -339,7 +344,7 @@ $('backBtn').onclick=()=>{ if(history.length>1) history.back(); else location.hr
 
 /* ✅ RESET (preserva crediti/token/wallet e spins) */
 $('resetBtn').onclick=()=>{
-  const PRESERVE = ['whatif_wallet','whatif_wallet_sync','whatif_credits','admin_token','lang','surprise_spins'];
+  const PRESERVE = ['whatif_wallet','whatif_wallet_sync','whatif_credits','admin_token','lang','surprise_spins','whatif_surprise'];
   const keep = Object.fromEntries(PRESERVE.map(k => [k, LS.getItem(k)]));
   [
     'whatif_prefs','next_prompts','cronologia','replay_story',
@@ -592,23 +597,39 @@ function ensureSpins(){
   writeJSON('surprise_spins',s); return s;
 }
 function spinsLeft(){ const s=ensureSpins(); const cap=spinCap(); return cap===Infinity?Infinity:Math.max(0,cap-(s.used||0)); }
+
+/* 🔄 Mostra sia tiri giornalieri che token 🎁 */
 function renderSpinButton(){
   const T=I18N[lang]||I18N.it;
-  const cap=spinCap(); const left=spinsLeft();
-  const suffix = (cap===Infinity)?' (∞)':` (${left}/${cap})`;
-  $('surpriseBtn').textContent='🎲 '+T.surprise + suffix;
-  $('surpriseBtn').title = `${T.spins}: ${cap===Infinity?'∞':left+'/'+cap}`;
-}
-function consumeOneSpin(){
-  if(userIsAdmin()) return true;
-  const s=ensureSpins(); const cap=spinCap();
-  if(cap!==Infinity && (s.used||0)>=cap){ alert((I18N[lang]||I18N.it).noSpins); return false; }
-  s.used=(s.used||0)+1; writeJSON('surprise_spins',s); renderSpinButton(); return true;
+  const cap=spinCap(); const left=spinsLeft(); const tokens=readSurpriseTokens();
+  const spinsTxt = (cap===Infinity)?'∞':`${left}/${cap}`;
+  const tokenTxt = tokens>0 ? ` · 🎁 ${tokens}` : '';
+  $('surpriseBtn').textContent='🎲 '+T.surprise + ` (${spinsTxt})` + tokenTxt;
+  $('surpriseBtn').title = `${T.spins}: ${spinsTxt}${tokens>0?` · Tokens: ${tokens}`:''}`;
 }
 renderSpinButton();
 
+/* ✅ Consumo: prima un tiro; se 0 ma hai 🎁 token, lasciamo passare (il token verrà scalato in fifth) */
+function consumeOneSpinOrToken(){
+  if(userIsAdmin()) return true;
+  const s=ensureSpins(); const cap=spinCap(); const left=spinsLeft(); const tokens=readSurpriseTokens();
+  if(cap!==Infinity && left<=0){
+    if(tokens>0){
+      // Non tocchiamo s.used: il consumo del token avviene in fifth
+      return true;
+    }
+    alert((I18N[lang]||I18N.it).noSpins); return false;
+  }
+  // Consuma un tiro
+  s.used=(s.used||0)+1; writeJSON('surprise_spins',s);
+  // segnala refresh ad altre tab/pagine
+  LS.setItem('whatif_wallet_sync', String(Date.now()));
+  renderSpinButton(); 
+  return true;
+}
+
 function slotSurprise(){
-  if(!consumeOneSpin()) return;
+  if(!consumeOneSpinOrToken()) return;
 
   const rollingList = makeAbsurdList(14); // SOLO assurde
 
