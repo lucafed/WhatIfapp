@@ -113,7 +113,6 @@ function addDynamicIntroIfWhatIf({ answer, stile, lang, domanda }){
   const bank = INTROS[L] || INTROS.it;
   const intro = pickDet(bank, hashStr(domanda || answer));
   const a = String(answer||"").trim();
-  // Se già inizia con una delle nostre frasi, non duplicare
   const first = (a.match(/^([\s\S]*?[.!?…])/)||[])[1] || a;
   const already = bank.some(s => normLine(first).startsWith(normLine(s)));
   if(already) return a;
@@ -163,7 +162,6 @@ function buildMessages({ domanda, lang, periodo, stile }){
   ];
 
   if(stile==="wtf"){
-    // seed deterministico
     let seed=[...String(domanda)].reduce((a,c)=>a+c.charCodeAt(0),0);
     function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; }
     const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
@@ -192,7 +190,6 @@ function buildMessages({ domanda, lang, periodo, stile }){
     );
   }
 
-  // Utente finale
   const ask = (L==="en")
     ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`
     : (L==="it")
@@ -235,7 +232,6 @@ function shortMotivationFromAnswer(answer, lang="it"){
   return s;
 }
 function scientificReport(domanda, lang="it"){
-  // Brevissimo “rapporto scientifico” generico, niente citazioni specifiche
   const base = (lang==="en")
     ? "Scientific note: small, consistent steps outperform big sporadic efforts (habits > willpower). Planning fallacy and switching costs explain early friction; feedback loops and simple metrics keep momentum."
     : "Nota scientifica: i piccoli passi consistenti superano i grandi sforzi saltuari (abitudini > forza di volontà). La planning fallacy e i costi di switch spiegano l’attrito iniziale; cicli di feedback e metriche semplici sostengono lo slancio.";
@@ -314,7 +310,12 @@ export default async function handler(req, res){
     const L = normLang(lang);
     const pct = computePct(domanda, stile);
     const motivation = (stile==="whatif") ? shortMotivationFromAnswer(answer, L) : undefined;
-    const scientific = (stile==="wtf") ? scientificReport(domanda, L) : undefined;
+
+    // <<< MOSTRA il “rapporto scientifico demenziale” in WTF
+    //     - SEMPRE (anche sugli spunti rapidi/preset)
+    //     - ESCLUSO SOLO in modalità "Sorprendimi" (micro.surprise === true)
+    const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
+    const scientific = (stile==="wtf" && !isSurprise) ? scientificReport(domanda, L) : undefined;
 
     return res.status(200).json({
       answer,
