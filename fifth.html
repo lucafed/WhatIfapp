@@ -244,7 +244,8 @@ const I18N = {
        chipsFav:"favorevoli", chipsCon:"contrari", chipsAst:"astenuti",
        motFallback:"Motivo: benefici concreti a breve, con vincoli gestibili.",
        credits:(n)=>`💰 Crediti: ${n}`, noCredits:"Hai terminato i crediti.",
-       storeTitle:"Crediti", buy5:"Compra +5 crediti (test)", watchAd:"Guarda pubblicità (+1)", close:"Chiudi",
+       storeTitle:"Crediti", buy5:"Compra +5 crediti (test)", buy10:"Compra +10 crediti (test)", buy20:"Compra +20 crediti (test)",
+       watchAd:"Guarda pubblicità (+1)", close:"Chiudi",
        toastPlus:(n)=>`+${n} credito`, toastMinus:(n)=>`-${n} credito`
   },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
@@ -260,7 +261,8 @@ const I18N = {
        chipsFav:"in favour", chipsCon:"against", chipsAst:"abstained",
        motFallback:"Reason: short-term, concrete benefits with manageable constraints.",
        credits:(n)=>`💰 Credits: ${n}`, noCredits:"You ran out of credits.",
-       storeTitle:"Credits", buy5:"Buy +5 credits (test)", watchAd:"Watch ad (+1)", close:"Close",
+       storeTitle:"Credits", buy5:"Buy +5 credits (test)", buy10:"Buy +10 credits (test)", buy20:"Buy +20 credits (test)",
+       watchAd:"Watch ad (+1)", close:"Close",
        toastPlus:(n)=>`+${n} credit`,  toastMinus:(n)=>`-${n} credit`
   },
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
@@ -276,7 +278,8 @@ const I18N = {
        chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones",
        motFallback:"Motivo: beneficios concretos a corto plazo con límites manejables.",
        credits:(n)=>`💰 Créditos: ${n}`, noCredits:"Se te han acabado los créditos.",
-       storeTitle:"Créditos", buy5:"Comprar +5 créditos (test)", watchAd:"Ver anuncio (+1)", close:"Cerrar",
+       storeTitle:"Créditos", buy5:"Comprar +5 créditos (test)", buy10:"Comprar +10 créditos (test)", buy20:"Comprar +20 créditos (test)",
+       watchAd:"Ver anuncio (+1)", close:"Cerrar",
        toastPlus:(n)=>`+${n} crédito`,  toastMinus:(n)=>`-${n} crédito`
   },
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
@@ -292,7 +295,8 @@ const I18N = {
        chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions",
        motFallback:"Raison : bénéfices concrets à court terme, contraintes gérables.",
        credits:(n)=>`💰 Crédits : ${n}`, noCredits:"Crédits épuisés.",
-       storeTitle:"Crédits", buy5:"Acheter +5 crédits (test)", watchAd:"Regarder une pub (+1)", close:"Fermer",
+       storeTitle:"Crédits", buy5:"Acheter +5 crédits (test)", buy10:"Acheter +10 crédits (test)", buy20:"Acheter +20 crédits (test)",
+       watchAd:"Regarder une pub (+1)", close:"Fermer",
        toastPlus:(n)=>`+${n} crédit`,  toastMinus:(n)=>`-${n} crédit`
   },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
@@ -308,7 +312,8 @@ const I18N = {
        chipsFav:"dafür", chipsCon:"dagegen", chipsAst:"enthalten",
        motFallback:"Grund: kurzfristiger, greifbarer Nutzen mit beherrschbaren Einschränkungen.",
        credits:(n)=>`💰 Credits: ${n}`, noCredits:"Credits aufgebraucht.",
-       storeTitle:"Credits", buy5:"+5 Credits kaufen (Test)", watchAd:"Werbung ansehen (+1)", close:"Schließen",
+       storeTitle:"Credits", buy5:"+5 Credits kaufen (Test)", buy10:"+10 Credits kaufen (Test)", buy20:"+20 Credits kaufen (Test)",
+       watchAd:"Werbung ansehen (+1)", close:"Schließen",
        toastPlus:(n)=>`+${n} Credit`,  toastMinus:(n)=>`-${n} Credit`
   }
 };
@@ -366,9 +371,9 @@ const motNote=qs('#motNote'), creditInfo=qs('#creditInfo'), toastEl=qs('#toast')
 /* ==== Toast ==== */
 function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
 
-/* ==== Wallet + legacy ==== */
+/* ==== Wallet + legacy + 🎁 Sorprendimi ==== */
 const WKEY="whatif_wallet";
-const SURPKEY="whatif_surprise"; // 🎁 token separati per Sorprendimi
+const SURPKEY="whatif_surprise"; // token separati per Sorprendimi
 
 function readWallet(){ try{ const w=JSON.parse(LS.getItem(WKEY)||"{}")||{}; return {available:Number.isFinite(+w.available)?+w.available:null, used:Number.isFinite(+w.used)?+w.used:null, limit:Number.isFinite(+w.limit)?+w.limit:null}; }catch{return{available:null,used:null,limit:null}}}
 function writeWallet(w){
@@ -380,17 +385,6 @@ function writeWallet(w){
   LS.setItem("whatif_wallet_sync", String(Date.now()));
   updateCreditInfo();
 }
-
-/* 🎁 Sorprendimi — storage e utilità */
-function readSurprise(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||"0",10)||0); }
-function writeSurprise(n){ n=Math.max(0, parseInt(n,10)||0); LS.setItem(SURPKEY,String(n)); updateCreditInfo(); }
-function addSurprise(n){ writeSurprise(readSurprise() + Math.max(0,parseInt(n,10)||0)); }
-function consumeSurpriseOne(){
-  const cur=readSurprise();
-  if(cur>0){ writeSurprise(cur-1); return true; }
-  return false;
-}
-
 function legacyCap(){ return (prefs.pro===true)?10:3 }
 function legacyGetLeft(){
   const w=readWallet(); if(w.available!=null) return w.available;
@@ -418,6 +412,24 @@ function addCredits(n){ n=Math.max(0,parseInt(n,10)||0); if(n<=0) return;
   if(w.available==null){ const left=legacyGetLeft(); writeWallet({available:left+n, used:0, limit:legacyCap()}); }
   else{ writeWallet({available:(w.available+n), used:Math.max(0,(w.used||0)-n), limit:(w.limit!=null?w.limit:legacyCap())}); }
 }
+
+/* 🎁 Sorprendimi tokens */
+function readSurprise(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||"0",10)||0); }
+function writeSurprise(n){ n=Math.max(0, parseInt(n,10)||0); LS.setItem(SURPKEY,String(n)); updateCreditInfo(); LS.setItem("whatif_wallet_sync", String(Date.now())); }
+function addSurprise(n){ writeSurprise(readSurprise() + Math.max(0,parseInt(n,10)||0)); }
+function consumeSurpriseOne(){
+  const cur=readSurprise();
+  if(cur>0){ writeSurprise(cur-1); return true; }
+  return false;
+}
+function computeSurpriseBonus(amount){
+  const a=parseInt(amount,10)||0;
+  if(a>=20) return 3;
+  if(a>=10) return 2;
+  if(a>=5)  return 1;
+  return 0;
+}
+
 function updateCreditInfo(n=getAvailable()){
   if(!creditInfo) return;
   const surprise = readSurprise();
@@ -479,6 +491,7 @@ function renderCommitteeLike(surprise){
 /* ==== Overlay (store + rewarded) ==== */
 const overlay=qs('#overlay'), overlayFrame=qs('#overlay-frame');
 let overlayLoadTimer=null, rewardTimer=null, rewardGranted=false, awaitingCredit=false, alreadyConsumed=false;
+
 function storeFallbackHTML(){
   const T=t();
   return `
@@ -491,14 +504,25 @@ h2{margin:4px 0 6px;font-size:18px}
 .btn{display:inline-block;margin:6px 6px 0 0;padding:10px 12px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
 .primary{background:linear-gradient(180deg,#1C57A0,#FFEC01);color:#0A0E12}
 .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
-.small{color:#A0B2BA;font-size:12px}
+.small{color:#A0B2BA;font-size:12px;line-height:1.5}
+.row{display:flex;flex-wrap:wrap;gap:8px}
 </style></head><body>
 <div class="wrap"><div class="card">
   <h2>${T.storeTitle}</h2>
   <p class="small" id="msg">${T.noCredits}</p>
-  <button class="btn primary" onclick="parent.postMessage({type:'purchase_completed', amount:5}, '*')">${T.buy5}</button>
-  <button class="btn ghost" id="adBtn">${T.watchAd}</button>
-  <button class="btn ghost" onclick="parent.postMessage({type:'close_overlay'}, '*')">${T.close}</button>
+
+  <div class="row">
+    <button class="btn primary" onclick="parent.postMessage({type:'purchase_completed', amount:5}, '*')">${T.buy5}</button>
+    <button class="btn primary" onclick="parent.postMessage({type:'purchase_completed', amount:10}, '*')">${T.buy10}</button>
+    <button class="btn primary" onclick="parent.postMessage({type:'purchase_completed', amount:20}, '*')">${T.buy20}</button>
+  </div>
+
+  <p class="small">🎁 Bonus “Sorprendimi”: +1 con 5 crediti · +2 con 10 · +3 con 20.</p>
+
+  <div class="row">
+    <button class="btn ghost" id="adBtn">${T.watchAd}</button>
+    <button class="btn ghost" onclick="parent.postMessage({type:'close_overlay'}, '*')">${T.close}</button>
+  </div>
 </div></div>
 <script>
   const btn=document.getElementById('adBtn');
@@ -575,44 +599,10 @@ function applyQuestion(){
   return {req, domanda, surprise};
 }
 
-/* ✅ Bonus Sorprendimi SOLO su acquisto: 5→+1, 10→+2, 20→+3 */
-function grantSurpriseBonus(creditsBought){
-  try{
-    let bonus = 0;
-    if(creditsBought >= 20) bonus = 3;
-    else if(creditsBought >= 10) bonus = 2;
-    else if(creditsBought >= 5)  bonus = 1;
-
-    if(bonus > 0){
-      // 1) token persistenti
-      addSurprise(bonus);
-
-      // 2) rendi usabili SUBITO oggi in fourth riducendo gli "used" del contatore giornaliero
-      const today = new Date().toISOString().slice(0,10);
-      const s = JSON.parse(LS.getItem('surprise_spins')||'{}');
-      const cur = (s && s.date===today) ? s : {date:today, used:0};
-      cur.used = Math.max(0, (cur.used||0) - bonus);
-      LS.setItem('surprise_spins', JSON.stringify(cur));
-
-      // 3) segnala alle altre tab di aggiornare badge/bottoni
-      LS.setItem('whatif_wallet_sync', String(Date.now()));
-    }
-    return bonus;
-  }catch{
-    return 0;
-  }
-}
-
 /* ==== Main flow (idempotente) ==== */
 async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
-
-  // ⛔ Se non c'è domanda (es. rientro post-acquisto) non chiamare l'API
-  if(!domanda || String(domanda).trim()===""){
-    location.replace('fourth.html');
-    return;
-  }
 
   // Consumo crediti: prova prima a usare 1 Sorprendimi quando surprise===true
   if(!IS_ADMIN && !alreadyConsumed){
@@ -640,7 +630,7 @@ async function startFlow(){
       }
       alreadyConsumed=true;
       updateCreditInfo();
-      toast(t().toastMinus(1)); // -1 credito
+      toast(t().toastMinus(1));
     }
   }
 
@@ -665,14 +655,12 @@ async function startFlow(){
     if(!/[.!?…]$/.test(answerText)) answerText+='.';
     answerEl.textContent=answerText; decorateEmBits(answerEl);
 
-    /* === Percentuale: usa server se presente, altrimenti fallback === */
     const apiPct = (data && Number.isFinite(+data.pct)) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : null;
     const usedPct = (apiPct!=null) ? apiPct : computeProbability(domanda).pct;
     const pStr = usedPct + "%";
     topPct.textContent = pStr;
     bottomPct.textContent = pStr;
 
-    /* === Motivazioni: WHAT IF -> reale ; WTF -> rapporto scientifico === */
     function scientificFallback(langCode){
       return (langCode==='en')
         ? "Scientific note: small, consistent steps beat sporadic big efforts (habits > willpower). Switching costs explain early friction; feedback loops and simple metrics sustain momentum."
@@ -723,10 +711,14 @@ window.addEventListener("message",(ev)=>{
     const amt=parseInt(d.amount,10)||0;
     if(amt>0){
       addCredits(amt);
-      const bonus = grantSurpriseBonus(amt); // 🎁 5→1, 10→2, 20→3
+      const bonus = computeSurpriseBonus(amt);
+      if(bonus>0){ addSurprise(bonus); }
       updateCreditInfo();
-      if(bonus>0) toast(`${t().toastPlus(amt)} · 🎁 +${bonus} Sorprendimi`);
-      else toast(t().toastPlus(amt));
+      try{
+        const plus = (t().toastPlus||((n)=>`+${n}`));
+        const msg = bonus>0 ? `${plus(amt)} · 🎁 +${bonus} Sorprendimi` : plus(amt);
+        toast(msg);
+      }catch{}
     }
     closeOverlay();
     location.replace('fourth.html');
@@ -737,9 +729,7 @@ window.addEventListener("message",(ev)=>{
 
   if(d.type==="rewarded_completed"){
     const amt=parseInt(d.amount,10)||1;
-    addCredits(amt);            // ✅ crediti
-    // ❌ niente bonus Sorprendimi qui
-    updateCreditInfo(); toast(t().toastPlus(amt));
+    addCredits(amt); updateCreditInfo(); toast(t().toastPlus(amt));
     rewardGranted=true; try{ clearTimeout(rewardTimer); }catch{}
     closeOverlay();
     location.replace('fourth.html');
@@ -748,7 +738,6 @@ window.addEventListener("message",(ev)=>{
 
   if(d.type==="close_overlay"){
     closeOverlay();
-    // se ora abbiamo credito (es. reward fallback), torna in quarta
     if(getAvailable()>0){
       location.replace('fourth.html');
     }
@@ -757,7 +746,7 @@ window.addEventListener("message",(ev)=>{
 });
 
 /* ==== Nav / lingua / share ==== */
-qs('#backBtn').onclick=()=> history.length>1 ? history.back() : location.replace('index.html');
+qs('#backBtn').onclick=()=> history.length > 1 ? history.back() : location.replace('index.html');
 qs('#homeBtn').onclick=()=> location.href='index.html';
 qs('#langSelect').onchange=()=>{
   const v=qs('#langSelect').value;
