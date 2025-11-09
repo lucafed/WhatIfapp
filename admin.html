@@ -6,21 +6,32 @@
 <title>What?f — Admin</title>
 <meta name="theme-color" content="#0B0B0C"/>
 <style>
-  :root{--bg:#0B0B0C;--panel:#141C22;--line:rgba(255,255,255,.12);--fg:#EAF2EE;--mut:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01;--ink:#0A0E12}
+  :root{
+    --bg:#0B0B0C;--panel:#141C22;--line:rgba(255,255,255,.12);
+    --fg:#EAF2EE;--mut:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01;--ink:#0A0E12
+  }
   *{box-sizing:border-box}
   body{margin:0;background:#0B0B0C;color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:760px;margin:auto;padding:18px}
+  main{max-width:980px;margin:auto;padding:18px}
   h1{margin:6px 0 14px;font-size:26px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px}
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   .k{color:var(--mut)}
-  input{background:rgba(255,255,255,.06);border:1px solid var(--line);color:#fff;border-radius:12px;padding:10px}
+  input,select{
+    background:rgba(255,255,255,.06);border:1px solid var(--line);color:#fff;border-radius:12px;padding:10px
+  }
   button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
   .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink)}
   .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid var(--line)}
   .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.06);font-size:13px}
   .big{font-size:28px;font-weight:900}
   .mut{color:var(--mut)}
+  .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;margin-top:10px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead th{position:sticky;top:0;background:rgba(255,255,255,.06);text-align:left;padding:8px;border-bottom:1px solid var(--line)}
+  tbody td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top}
+  .stat{background:rgba(255,255,255,.06);border:1px solid var(--line);padding:10px 12px;border-radius:12px;font-weight:800;font-size:13px}
+  .grow{flex:1 1 auto}
 </style>
 </head>
 <body>
@@ -44,6 +55,9 @@
     <div class="row" style="margin-top:8px">
       <button id="simUser" class="ghost">🔄 Simula utente (disattiva ∞)</button>
       <button id="restoreAdmin" class="ghost">🛡️ Torna admin</button>
+      <span class="grow"></span>
+      <button id="openFourth" class="ghost">➡️ Vai a fourth.html</button>
+      <button id="openFifth"  class="ghost">➡️ Vai a fifth.html</button>
     </div>
   </div>
 
@@ -64,6 +78,68 @@
       Usa “Simula utente” per testare consumo/ricarica.
     </p>
   </div>
+
+  <!-- STATO PREFERENZE + STATISTICHE RAPIDE -->
+  <div class="card">
+    <div class="row" style="margin-bottom:8px">
+      <span class="stat" id="statLang">Lingua: —</span>
+      <span class="stat" id="statStyle">Stile: —</span>
+      <span class="stat" id="statPeriodo">Periodo: —</span>
+      <span class="stat" id="statTot">Totale domande: —</span>
+    </div>
+    <div class="row" style="margin-bottom:6px">
+      <span class="stat" id="statByStyle">Per stile: —</span>
+      <span class="stat" id="statByPeriodo">Per periodo: —</span>
+    </div>
+    <div class="row">
+      <select id="forceLang">
+        <option value="">— Forza lingua —</option>
+        <option value="it">it · Italiano</option>
+        <option value="en">en · English</option>
+        <option value="es">es · Español</option>
+        <option value="fr">fr · Français</option>
+        <option value="de">de · Deutsch</option>
+      </select>
+      <select id="forceStyle">
+        <option value="">— Forza stile —</option>
+        <option value="whatif">whatif</option>
+        <option value="wtf">wtf</option>
+      </select>
+      <select id="forcePeriodo">
+        <option value="">— Forza periodo —</option>
+        <option value="future">future</option>
+        <option value="past">past</option>
+      </select>
+      <button id="applyPrefs" class="ghost">Applica preferenze</button>
+      <span class="mut"> (scrive in <code>whatif_prefs</code> e “lang/lang_manual”)</span>
+    </div>
+  </div>
+
+  <!-- CRONOLOGIA DOMANDE -->
+  <div class="card">
+    <div class="row">
+      <div class="k">Cronologia locale (<code>cronologia</code>)</div>
+      <span class="grow"></span>
+      <input id="search" placeholder="Cerca testo / stile / periodo…" />
+      <button id="exportCSV" class="ghost">⬇️ Esporta CSV</button>
+      <button id="clearHistory" class="ghost">🧹 Svuota cronologia</button>
+    </div>
+    <div class="table-wrap" style="margin-top:10px">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Data</th>
+            <th>Domanda</th>
+            <th>Stile</th>
+            <th>Periodo</th>
+            <th>%</th>
+          </tr>
+        </thead>
+        <tbody id="rows"><tr><td colspan="6">—</td></tr></tbody>
+      </table>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -76,9 +152,7 @@ const BKEY="admin_token_backup";
 /* ===== Utils ===== */
 const $=id=>document.getElementById(id);
 const setTok=t=>$("tok").textContent=t? t.slice(0,6)+"…"+t.slice(-4) : "—";
-function readWallet(){
-  try{ return JSON.parse(LS.getItem(WKEY)||"{}")||{}; }catch{ return {}; }
-}
+function readWallet(){ try{ return JSON.parse(LS.getItem(WKEY)||"{}")||{}; }catch{ return {}; } }
 function writeWallet(obj){
   const cur=readWallet();
   const out={
@@ -87,12 +161,10 @@ function writeWallet(obj){
     limit:     (obj.limit!=null)?     (+obj.limit===Infinity?Infinity:Math.max(0, +obj.limit)) : (cur.limit??3),
   };
   LS.setItem(WKEY, JSON.stringify(out));
-  // ping alle altre pagine
   LS.setItem("whatif_wallet_sync", String(Date.now()));
-  draw();
+  drawWallet();
 }
 function migrateLegacyOnce(){
-  // Se esiste ancora whatif_credits (legacy), converti in wallet
   try{
     const leg = JSON.parse(LS.getItem("whatif_credits")||"{}");
     if(leg && typeof leg.used==="number" && leg.limit!=null){
@@ -104,12 +176,100 @@ function migrateLegacyOnce(){
     }
   }catch{}
 }
-function draw(){
-  const w=readWallet();
-  $("walletAvail").textContent = (w.available===Infinity?"∞":(w.available??0));
-  $("walletUsed").textContent  = (w.used??0);
-  $("walletCap").textContent   = (w.limit===Infinity?"∞":(w.limit??3));
-  $("adminFlag").textContent   = LS.getItem(TKEY) ? "yes" : "no";
+function formatDate(ts){ try{ return new Date(ts).toLocaleString(); }catch{return '—'} }
+
+/* ===== Cronologia ===== */
+function readHistory(){ try{ return JSON.parse(LS.getItem('cronologia')||'[]')||[]; }catch{return []} }
+function writeHistory(list){ LS.setItem('cronologia', JSON.stringify(Array.isArray(list)?list:[])); }
+
+/* ===== Preferenze ===== */
+function readPrefs(){
+  let prefs={}; try{ prefs=JSON.parse(LS.getItem('whatif_prefs')||'{}')||{}; }catch{}
+  const langManual=LS.getItem('lang_manual')==='1';
+  const lang= (langManual ? (LS.getItem('lang')||'it') : (navigator.language||'it')).slice(0,2).toLowerCase();
+  return {
+    stile: prefs.stile || 'whatif',
+    periodo: prefs.periodo || 'future',
+    lang
+  };
+}
+function applyPrefsUI(){
+  const p=readPrefs();
+  $("statLang").textContent   = `Lingua: ${p.lang.toUpperCase()}`;
+  $("statStyle").textContent  = `Stile: ${p.stile}`;
+  $("statPeriodo").textContent= `Periodo: ${p.periodo}`;
+}
+function forcePrefs({lang,stile,periodo}){
+  const cur=readPrefs();
+  const next={...cur};
+  if(stile)  next.stile=stile;
+  if(periodo)next.periodo=periodo;
+  LS.setItem('whatif_prefs', JSON.stringify({stile:next.stile, periodo:next.periodo}));
+  if(lang){
+    LS.setItem('lang', lang);
+    LS.setItem('lang_manual','1');
+  }
+  applyPrefsUI();
+  alert('Preferenze applicate.');
+}
+
+/* ===== Render cronologia + stats ===== */
+function renderHistory(filter=''){
+  const rows=$("rows");
+  const hist=readHistory();
+  const q = filter.trim().toLowerCase();
+
+  const filtered = q ? hist.filter(x=>{
+    const d=(x.domanda||'').toLowerCase();
+    const s=(x.stile||'').toLowerCase();
+    const p=(x.periodo||'').toLowerCase();
+    return d.includes(q)||s.includes(q)||p.includes(q)||(String(x.pct||'').includes(q));
+  }) : hist;
+
+  // Stats
+  $("statTot").textContent = `Totale domande: ${hist.length}`;
+  const byStyle = hist.reduce((a,x)=> (a[x.stile||'—']=(a[x.stile||'—']||0)+1, a), {});
+  const byPer   = hist.reduce((a,x)=> (a[x.periodo||'—']=(a[x.periodo||'—']||0)+1, a), {});
+  $("statByStyle").textContent  = 'Per stile: ' + Object.entries(byStyle).map(([k,v])=>`${k}:${v}`).join(' · ') || '—';
+  $("statByPeriodo").textContent= 'Per periodo: ' + Object.entries(byPer).map(([k,v])=>`${k}:${v}`).join(' · ') || '—';
+
+  rows.innerHTML='';
+  if(filtered.length===0){ rows.innerHTML='<tr><td colspan="6">Nessun elemento.</td></tr>'; return; }
+
+  filtered.forEach((x,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td>${formatDate(x.ts)}</td>
+      <td>${(x.domanda||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</td>
+      <td>${x.stile||'—'}</td>
+      <td>${x.periodo||'—'}</td>
+      <td>${x.pct!=null?x.pct:'—'}</td>
+    `;
+    rows.appendChild(tr);
+  });
+}
+
+/* ===== Export CSV ===== */
+function exportCSV(){
+  const hist=readHistory();
+  const header=['N','Data','Domanda','Stile','Periodo','Percentuale','Surprise','Motivazione'];
+  const rows=hist.map((x,i)=>[
+    i+1,
+    new Date(x.ts).toISOString().replace('T',' ').slice(0,19),
+    (x.domanda||'').replaceAll('"','""'),
+    x.stile||'',
+    x.periodo||'',
+    (x.pct!=null?x.pct:''),
+    (x.surprise?1:0),
+    (x.motivazione||'').replaceAll('"','""')
+  ]);
+  const csv=[header.join(','), ...rows.map(r=> r.map((v,j)=> (j===2||j===7) ? `"${v}"` : `${v}`).join(','))].join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='whatif_cronologia.csv'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),500);
 }
 
 /* ===== Admin token ===== */
@@ -120,7 +280,16 @@ async function adminCheck(){
     if(r.ok){ const d=await r.json().catch(()=>({})); isAdmin=!!(d?.admin||d?.ok); }
   }catch{}
   $("adminFlag").textContent=isAdmin?"yes":"no";
-  setTok(LS.getItem(TKEY)||""); draw(); return isAdmin;
+  setTok(LS.getItem(TKEY)||"");
+  return isAdmin;
+}
+
+/* ===== Wallet draw ===== */
+function drawWallet(){
+  const w=readWallet();
+  $("walletAvail").textContent = (w.available===Infinity?"∞":(w.available??0));
+  $("walletUsed").textContent  = (w.used??0);
+  $("walletCap").textContent   = (w.limit===Infinity?"∞":(w.limit??3));
 }
 
 /* ===== Pulsanti ===== */
@@ -131,23 +300,62 @@ $("enter").onclick = async()=>{
   if(r.ok && (d.token||d.ok)){ if(d.token) LS.setItem(TKEY,d.token); $("pin").value=""; setTok(LS.getItem(TKEY)||""); await adminCheck(); alert("Admin attivo."); }
   else alert("PIN errato o server non disponibile.");
 };
-$("revoke").onclick=async()=>{ try{await fetch("/api/admin-token?action=revoke",{method:"POST",headers:{"x-admin-token":LS.getItem(TKEY)||""}});}catch{} LS.removeItem(TKEY); setTok(""); await adminCheck(); alert("Token revocato."); };
-$("simUser").onclick=()=>{ const t=LS.getItem(TKEY); if(!t){alert("Non sei in admin.");return;} LS.setItem(BKEY,t); LS.removeItem(TKEY); setTok(""); draw(); alert("Modalità utente attiva."); };
-$("restoreAdmin").onclick=()=>{ const t=LS.getItem(BKEY)||""; if(!t){alert("Nessun token salvato.");return;} LS.setItem(TKEY,t); LS.removeItem(BKEY); setTok(t); draw(); alert("Admin ripristinato."); };
+$("revoke").onclick=async()=>{
+  try{await fetch("/api/admin-token?action=revoke",{method:"POST",headers:{"x-admin-token":LS.getItem(TKEY)||""}});}catch{}
+  LS.removeItem(TKEY); setTok(""); await adminCheck(); alert("Token revocato.");
+};
+$("simUser").onclick=()=>{
+  const t=LS.getItem(TKEY); if(!t){alert("Non sei in admin.");return;}
+  LS.setItem(BKEY,t); LS.removeItem(TKEY); setTok(""); adminCheck(); alert("Modalità utente attiva.");
+};
+$("restoreAdmin").onclick=()=>{
+  const t=LS.getItem(BKEY)||""; if(!t){alert("Nessun token salvato.");return;}
+  LS.setItem(TKEY,t); LS.removeItem(BKEY); setTok(t); adminCheck(); alert("Admin ripristinato.");
+};
+$("openFourth").onclick=()=> location.href='fourth.html';
+$("openFifth").onclick =()=> location.href='fifth.html';
 
-/* Preset */
+/* Preset crediti */
 $("presetFree").onclick = ()=> writeWallet({available:3, used:0, limit:3});
 $("presetPro").onclick  = ()=> writeWallet({available:10, used:0, limit:10});
 $("presetDev").onclick  = ()=> writeWallet({available:9999, used:0, limit:9999});
 $("addOne").onclick     = ()=>{ const w=readWallet(); writeWallet({available:(w.available===Infinity?Infinity:(w.available||0)+1)}); };
 $("addFive").onclick    = ()=>{ const w=readWallet(); writeWallet({available:(w.available===Infinity?Infinity:(w.available||0)+5)}); };
 $("zeroUsed").onclick   = ()=>{ const w=readWallet(); writeWallet({used:0}); };
-$("wipeAll").onclick    = ()=>{ LS.removeItem(WKEY); LS.setItem("whatif_wallet_sync", String(Date.now())); draw(); alert("Wallet azzerato."); };
+$("wipeAll").onclick    = ()=>{ LS.removeItem(WKEY); LS.setItem("whatif_wallet_sync", String(Date.now())); drawWallet(); alert("Wallet azzerato."); };
+
+/* Preferenze – forza/applica */
+$("applyPrefs").onclick=()=>{
+  const lang = $("forceLang").value || null;
+  const stile= $("forceStyle").value || null;
+  const per  = $("forcePeriodo").value || null;
+  forcePrefs({lang,stile,periodo:per});
+};
+
+/* Ricerca cronologia */
+$("search").addEventListener('input', (e)=> renderHistory(e.target.value||''));
+
+/* Esporta / Svuota */
+$("exportCSV").onclick=exportCSV;
+$("clearHistory").onclick=()=>{
+  if(confirm("Sicuro di svuotare la cronologia locale?")){
+    writeHistory([]);
+    renderHistory('');
+  }
+};
+
+/* Sync multi-tab */
+window.addEventListener('storage', (e)=>{
+  if(['whatif_wallet','whatif_wallet_sync','whatif_credits','admin_token','lang','lang_manual','whatif_prefs','cronologia'].includes(e.key||'')){
+    drawWallet();
+    applyPrefsUI();
+    renderHistory($("search").value||'');
+  }
+});
 
 /* Init */
 migrateLegacyOnce();
-adminCheck();
-draw();
+adminCheck().then(()=>{ drawWallet(); applyPrefsUI(); renderHistory(''); });
 </script>
 </body>
 </html>
