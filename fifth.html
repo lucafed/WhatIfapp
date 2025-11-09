@@ -538,9 +538,8 @@ function openRewarded(){
   rewardTimer=setTimeout(()=>{
     if(!rewardGranted){
       addCredits(1); updateCreditInfo(); toast(t().toastPlus(1));
-    rewardGranted=true; closeOverlay();
-    // ritorna alla quarta anche nel fallback
-    location.replace('fourth.html');
+      rewardGranted=true; closeOverlay();
+      location.replace('fourth.html');
     }
   },20000);
 }
@@ -576,10 +575,44 @@ function applyQuestion(){
   return {req, domanda, surprise};
 }
 
+/* ✅ Bonus Sorprendimi SOLO su acquisto: 5→+1, 10→+2, 20→+3 */
+function grantSurpriseBonus(creditsBought){
+  try{
+    let bonus = 0;
+    if(creditsBought >= 20) bonus = 3;
+    else if(creditsBought >= 10) bonus = 2;
+    else if(creditsBought >= 5)  bonus = 1;
+
+    if(bonus > 0){
+      // 1) token persistenti
+      addSurprise(bonus);
+
+      // 2) rendi usabili SUBITO oggi in fourth riducendo gli "used" del contatore giornaliero
+      const today = new Date().toISOString().slice(0,10);
+      const s = JSON.parse(LS.getItem('surprise_spins')||'{}');
+      const cur = (s && s.date===today) ? s : {date:today, used:0};
+      cur.used = Math.max(0, (cur.used||0) - bonus);
+      LS.setItem('surprise_spins', JSON.stringify(cur));
+
+      // 3) segnala alle altre tab di aggiornare badge/bottoni
+      LS.setItem('whatif_wallet_sync', String(Date.now()));
+    }
+    return bonus;
+  }catch{
+    return 0;
+  }
+}
+
 /* ==== Main flow (idempotente) ==== */
 async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
+
+  // ⛔ Se non c'è domanda (es. rientro post-acquisto) non chiamare l'API
+  if(!domanda || String(domanda).trim()===""){
+    location.replace('fourth.html');
+    return;
+  }
 
   // Consumo crediti: prova prima a usare 1 Sorprendimi quando surprise===true
   if(!IS_ADMIN && !alreadyConsumed){
@@ -607,7 +640,7 @@ async function startFlow(){
       }
       alreadyConsumed=true;
       updateCreditInfo();
-      toast(t().toastMinus(1)); // manteniamo il -1 che ti piace
+      toast(t().toastMinus(1)); // -1 credito
     }
   }
 
@@ -673,29 +706,13 @@ async function startFlow(){
       ts:Date.now(),
       surprise,
       pct:usedPct,
-      motivazione:(style==='wtf')?motivazioneUsata:motivazioneUsata
+      motivazione:motivazioneUsata
     });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
   }catch(e){
     console.error(e);
     answerEl.textContent=t().error;
   }
-}
-
-/* === 🎁 Bonus Sorprendimi SOLO su acquisto (5→1, 10→2, 20→3) === */
-function grantSurpriseBonus(creditsBought){
-  try{
-    let bonus = 0;
-    if(creditsBought >= 20) bonus = 3;
-    else if(creditsBought >= 10) bonus = 2;
-    else if(creditsBought >= 5) bonus = 1;
-    if(bonus > 0){
-      addSurprise(bonus);
-      // trigger sync per aggiornare il bottone in fourth.html
-      LS.setItem('whatif_wallet_sync', String(Date.now()));
-    }
-    return bonus;
-  }catch{ return 0; }
 }
 
 /* ==== Messaggi dal modal (ritorno a fourth) ==== */
@@ -706,7 +723,7 @@ window.addEventListener("message",(ev)=>{
     const amt=parseInt(d.amount,10)||0;
     if(amt>0){
       addCredits(amt);
-      const bonus = grantSurpriseBonus(amt); // 🎁 applica i giri in base all’importo
+      const bonus = grantSurpriseBonus(amt); // 🎁 5→1, 10→2, 20→3
       updateCreditInfo();
       if(bonus>0) toast(`${t().toastPlus(amt)} · 🎁 +${bonus} Sorprendimi`);
       else toast(t().toastPlus(amt));
@@ -720,7 +737,9 @@ window.addEventListener("message",(ev)=>{
 
   if(d.type==="rewarded_completed"){
     const amt=parseInt(d.amount,10)||1;
-    addCredits(amt); updateCreditInfo(); toast(t().toastPlus(amt));
+    addCredits(amt);            // ✅ crediti
+    // ❌ niente bonus Sorprendimi qui
+    updateCreditInfo(); toast(t().toastPlus(amt));
     rewardGranted=true; try{ clearTimeout(rewardTimer); }catch{}
     closeOverlay();
     location.replace('fourth.html');
