@@ -1,8 +1,6 @@
 // /api/ask.js — What?f Engine (Stable Hybrid WHATIF + Friendly-WTF Demenziale)
-// - WHATIF: stile unico 60% analisi / 40% immagini sobrie. Incipit analitico (no “Bella Luca”).
-//   MOD: aggiunto INCIPIT DINAMICO post-process (no cambio prompt).
-// - WTF: come da tuoi esempi, 2–3 reazioni DEMENZIALI, una sola “imprecazione” teatrale, sorso alcolico, risposta vera, morale. (INVARIATO)
-// - MOD: seconda chiamata leggera per meta: WHAT IF -> {pct, motivation} ; WTF -> {pct, scientific_report}.
+// - WHATIF: stile unico 60% analisi / 40% immagini sobrie. Incipit VARIABILE (no “Bella …”).
+// - WTF: come da tuoi esempi. Aggiunto solo campo extra 'scientific' nel payload (non nella risposta).
 // - Maiuscole sistemate post-process dopo punto / “…”.
 // - Un paragrafo, niente elenchi, niente eco della domanda.
 
@@ -13,7 +11,6 @@ import { Ratelimit } from "@upstash/ratelimit";
 /* ========= OpenAI ========= */
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
-const MODEL_EXTRACT = process.env.OPENAI_MODEL_EXTRACT || MODEL; // per estrazione meta
 
 /* ========= Redis & Rate ========= */
 const redis = new Redis({
@@ -64,15 +61,64 @@ function stripQuestionEcho(domanda,text){
   t=t.replace(rx,""); return t;
 }
 function sentenceCaseAll(s=""){
-  // Metti maiuscola dopo (. ? ! …) + gestione virgolette semplici
   return s.replace(/(^|[.!?…]\s+)([a-zà-ÿ])/g, (m,prefix,chr)=> prefix + chr.toUpperCase());
 }
 function finalPunct(s=""){ return /[.!?…]$/.test(s)?s:s+"."; }
+function hashStr(str=""){ let h=2166136261>>>0; for(const ch of String(str)){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619)>>>0; } return h>>>0; }
+function pickDet(arr, seed){ return arr[ seed % arr.length ]; }
 
 /* ========= WHAT IF – stile 60/40 (analitico + immagini sobrie) ========= */
 const WHATIF_HYBRID_EX_IT = `Sai, questa non è una domanda leggera. Guardi i numeri, poi guardi le abitudini: costi più bassi da una parte, occasioni più larghe dall’altra. La qualità della vita non è un grafico, è una routine: tempi di spostamento, servizi che funzionano, persone che senti vicine. Se stringi, il portafoglio respira un po’ di più; in cambio accetti un ritmo meno veloce e meno “vetrine” da inseguire. Le giornate si accorciano di frenesia e si allungano di fiato: un caffè fatto bene, una strada che conosci, un’aria che sa di casa. Non è una fuga né un eroismo: è ingegneria quotidiana, spostare pesi tra tempo, denaro e relazioni. A conti fatti, potresti guadagnare spazio mentale e perdere solo rumore. E quando la sera chiudi la porta, non senti il rimpianto bussare: senti il tuo passo tornare al suo passo.`;
 
-const WHATIF_RULE_IT = `WHAT IF HYBRID (italiano): 60% analisi concreta (costi/benefici, routine, qualità di vita), 40% immagini sobrie della quotidianità. Incipit analitico nello stile: “Sai, questa non è una domanda leggera.” Vietato iniziare con “Bella questa”. 8–10 frasi. Seconda persona. Una sola risposta a paragrafo unico. Niente eco della domanda.`;
+const WHATIF_RULE_IT = `WHAT IF HYBRID (italiano): 60% analisi concreta (costi/benefici, routine, qualità di vita), 40% immagini sobrie della quotidianità. Incipit analitico (mai “Bella …”). 8–10 frasi. Seconda persona. Un paragrafo unico. Niente eco della domanda.`;
+
+/* ========= Incipit dinamici WHAT IF ========= */
+const INTROS = {
+  it: [
+    "Piccolo movimento, grande differenza.",
+    "Metti ordine ai dati e poi alle abitudini.",
+    "Qui non basta l’istinto: serve una mappa semplice.",
+    "Parti dal concreto: tempo, denaro, energia.",
+    "Il quadro è pratico, non epico.",
+    "Prima i vincoli, poi le possibilità.",
+    "Riduci il rumore, guarda i costi di transizione.",
+    "La domanda è seria, la risposta deve respirare.",
+  ],
+  en: [
+    "Small move, big leverage.",
+    "Start with numbers, then with habits.",
+    "This needs a simple map, not a slogan.",
+    "Begin with constraints, then possibilities.",
+    "It’s a practical question, not an epic one.",
+  ],
+  es: [
+    "Movimiento pequeño, diferencia grande.",
+    "Empieza por lo concreto: tiempo, dinero, energía.",
+    "Hace falta un mapa sencillo, no un eslogan.",
+  ],
+  fr: [
+    "Petit mouvement, grand effet.",
+    "Commence par le concret : temps, argent, énergie.",
+    "Ici il faut une carte simple, pas un slogan.",
+  ],
+  de: [
+    "Kleiner Schritt, große Wirkung.",
+    "Zuerst Zahlen, dann Gewohnheiten.",
+    "Hier hilft eine einfache Karte, kein Slogan.",
+  ],
+};
+function addDynamicIntroIfWhatIf({ answer, stile, lang, domanda }){
+  if(stile !== "whatif") return answer;
+  const L = normLang(lang);
+  const bank = INTROS[L] || INTROS.it;
+  const intro = pickDet(bank, hashStr(domanda || answer));
+  const a = String(answer||"").trim();
+  // Se già inizia con una delle nostre frasi, non duplicare
+  const first = (a.match(/^([\s\S]*?[.!?…])/)||[])[1] || a;
+  const already = bank.some(s => normLine(first).startsWith(normLine(s)));
+  if(already) return a;
+  return `${intro} ${a}`.trim();
+}
 
 /* ========= WTF — banche demenziali ========= */
 const WTF_IMPRE = [
@@ -101,69 +147,7 @@ const WTF_DRINK = [
   "bevi un dito di coraggio e respiri più largo",
 ];
 
-/* ========= WHAT IF — INCIPIT DINAMICI (post-process) ========= */
-const INTRO_BANK = {
-  it: [
-    "La stanza è uguale, ma lo sguardo no.",
-    "Prima respiri, poi scegli il passo.",
-    "Dove guardi cambia ciò che vedi.",
-    "Non serve rumore per muovere l’ago.",
-    "È già un inizio.",
-    "La traiettoria si sposta di un grado.",
-    "Piccolo movimento, grande differenza.",
-    "La calma apre una porta laterale.",
-    "Comincia dove i dubbi fanno spazio.",
-    "Ogni decisione è un prototipo."
-  ],
-  en: [
-    "Same room, different gaze.",
-    "Breathe first, then step.",
-    "Where you look changes what you see.",
-    "No noise needed to move the needle.",
-    "It's already a beginning.",
-    "A one-degree shift changes the route.",
-    "Small move, big difference.",
-    "Calm opens a side door.",
-    "Start where doubt makes space.",
-    "Every decision is a prototype."
-  ],
-  es: [
-    "La habitación es la misma, tu mirada no.",
-    "Respira primero, luego avanza.",
-    "Donde miras cambia lo que ves.",
-    "Ya es un comienzo.",
-    "Un grado cambia el rumbo."
-  ],
-  fr: [
-    "Même pièce, autre regard.",
-    "Respire d’abord, puis avance.",
-    "Là où tu regardes change ce que tu vois.",
-    "C’est déjà un début."
-  ],
-  de: [
-    "Gleicher Raum, anderer Blick.",
-    "Erst atmen, dann Schritt.",
-    "Wohin du siehst, ändert, was du siehst.",
-    "Es ist bereits ein Anfang."
-  ],
-};
-function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-function addDynamicIntroIfWhatIf({ answer, stile, lang }){
-  if(stile !== "whatif") return answer;
-  const L = normLang(lang);
-  const bank = INTRO_BANK[L] || INTRO_BANK.it || [];
-  if(!bank.length) return answer;
-  const intro = pick(bank);
-  const first8 = String(answer||"").split(/\s+/).slice(0,8).join(" ").toLowerCase();
-  const introLow = intro.toLowerCase();
-  const looksDuplicated = first8.includes(introLow.slice(0, Math.min(10, introLow.length)));
-  if(looksDuplicated) return answer;
-  let out = `${intro} ${answer}`.trim();
-  if(out.length > 1200) out = clampWords(out, 165);
-  return out;
-}
-
-/* ========= Prompt builder (TUO, invariato su WTF) ========= */
+/* ========= Prompt builder ========= */
 function buildMessages({ domanda, lang, periodo, stile }){
   const L = normLang(lang);
   const baseRules = L==="en"
@@ -179,15 +163,15 @@ function buildMessages({ domanda, lang, periodo, stile }){
   ];
 
   if(stile==="wtf"){
-    // Costruisci semi casuali deterministicamente sulla domanda (per varietà)
+    // seed deterministico
     let seed=[...String(domanda)].reduce((a,c)=>a+c.charCodeAt(0),0);
     function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; }
     const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
     const shuffled=[...WTF_REACT].sort(()=>rnd()-0.5);
-    const react = shuffled.slice(0, 2 + Math.floor(rnd()*2)); // 2 o 3
+    const react = shuffled.slice(0, 2 + Math.floor(rnd()*2));
     const drink = WTF_DRINK[Math.floor(rnd()*WTF_DRINK.length)];
 
-    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile). Struttura OBBLIGATORIA: presa in giro affettuosa (max 2 frasi) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”, come narrazione, mai insulto a persone) → SUBITO ${react.length} reazioni di oggetti esilaranti → drink (“${drink}”) → 1–2 frasi che rispondono davvero → morale calda e ironica. Tono da barista affettuoso sbronzo-elegante, mai aggressivo. 6–8 frasi.`;
+    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile). Struttura OBBLIGATORIA: presa in giro affettuosa (max 2 frasi) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”, come narrazione, mai insulto a persone) → SUBITO ${react.length} reazioni di oggetti esilaranti → drink (“${drink}”) → 1–2 frasi che rispondono davvero → morale calda e ironica. 6–8 frasi.`;
     const WTF_RULE_EN = `WHAT THE F (friendly, absurd but helpful). STRICT sequence: playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical “${impre}” (narrated, never insulting people) → THEN ${react.length} absurd object reactions → drink (“${drink}”) → 1–2 lines that truly answer → warm ironic moral. 6–8 sentences.`;
 
     msgs.push(
@@ -208,6 +192,7 @@ function buildMessages({ domanda, lang, periodo, stile }){
     );
   }
 
+  // Utente finale
   const ask = (L==="en")
     ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`
     : (L==="it")
@@ -222,56 +207,39 @@ function buildMessages({ domanda, lang, periodo, stile }){
   return msgs;
 }
 
-/* ========= Estrattore meta (seconda chiamata, robusta) ========= */
-async function extractMeta({ domanda, answer, stile, lang }) {
-  const L = normLang(lang);
-  const sys = (L==="en")
-    ? `You extract concise metadata. Output strictly JSON.`
-    : `Estrai metadati concisi. Produci strettamente JSON.`;
-
-  const base =
-    (L==="en")
-      ? `From the question and the answer, compute a realistic probability 0..100 and provide a compact rationale paragraph.`
-      : `Dalla domanda e dalla risposta, calcola una percentuale realistica 0..100 e fornisci un paragrafo conciso di motivazione.`;
-
-  const taskIF =
-    (L==="en")
-      ? `Return JSON: {"pct": <integer>, "motivation": "<one compact paragraph in ${L}>"}`
-      : `Restituisci JSON: {"pct": <integer>, "motivation": "<paragrafo conciso in ${L}>"}`;
-
-  const taskWTF =
-    (L==="en")
-      ? `Return JSON: {"pct": <integer>, "scientific_report": "<one compact scientific-style paragraph in ${L}>"}`
-      : `Restituisci JSON: {"pct": <integer>, "scientific_report": "<paragrafo conciso in stile scientifico in ${L}>"}`;
-
-  const userMsg =
-    (L==="en")
-      ? `QUESTION: ${domanda}\nANSWER: ${answer}\n${base}\n${stile==="whatif" ? taskIF : taskWTF}\nNo markdown. No commentary.`
-      : `DOMANDA: ${domanda}\nRISPOSTA: ${answer}\n${base}\n${stile==="whatif" ? taskIF : taskWTF}\nSenza markdown. Senza commenti.`;
-
-  const comp = await client.chat.completions.create({
-    model: MODEL_EXTRACT,
-    temperature: 0.2,
-    max_tokens: 220,
-    messages: [
-      { role: "system", content: sys },
-      { role: "user", content: userMsg }
-    ],
-  });
-
-  const raw = comp?.choices?.[0]?.message?.content || "";
-  try{
-    const start = raw.indexOf("{");
-    const end = raw.lastIndexOf("}");
-    if(start>=0 && end>=start){
-      const data = JSON.parse(raw.slice(start, end+1));
-      let pct = Number.isFinite(+data.pct) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : undefined;
-      let motivation = data.motivation ? String(data.motivation).trim() : undefined;
-      let scientific_report = data.scientific_report ? String(data.scientific_report).trim() : undefined;
-      return { pct, motivation, scientific_report };
-    }
-  }catch{}
-  return { pct: undefined, motivation: undefined, scientific_report: undefined };
+/* ========= Server-side PCT + motivazioni ========= */
+function computePct(domanda, stile){
+  const t=String(domanda||"").toLowerCase();
+  let s=50;
+  if(/\b(7|14|21|30|60|90)\b/.test(t)) s+=12;
+  if(/\b\d+([.,]\d+)?\b/.test(t)) s+=8;
+  if(/budget|€|euro|spesa|max|under|sotto/.test(t)) s+=6;
+  if(/senza|solo|al massimo|minimo|entro|prima delle|ogni|per/.test(t)) s+=8;
+  if(/lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa/.test(t)) s+=6;
+  if(/forse|magari|maybe|quizás/.test(t)) s-=8;
+  if(!/\b\d/.test(t)) s-=6;
+  s += (stile==='wtf' ? -4 : +2);
+  const pct = Math.max(25, Math.min(92, Math.round(s)));
+  return pct;
+}
+function shortMotivationFromAnswer(answer, lang="it"){
+  const a=String(answer||"").replace(/\s*\n+\s*/g,' ').trim();
+  const parts=a.split(/(?<=[.!?…])\s+/).filter(Boolean);
+  let s=parts.find(x=>/perché|porque|parce que|weil|so|thus|quindi|dunque|se\b|cuando|quand|wenn|when/i.test(x))||parts[0]||'';
+  s=s.replace(/\s{2,}/g,' ').trim(); if(!/[.!?…]$/.test(s)) s+='.';
+  if(s.length<24){
+    return (lang==="en")
+      ? "Short-term, concrete benefits with manageable constraints."
+      : "Benefici concreti a breve con vincoli gestibili.";
+  }
+  return s;
+}
+function scientificReport(domanda, lang="it"){
+  // Brevissimo “rapporto scientifico” generico, niente citazioni specifiche
+  const base = (lang==="en")
+    ? "Scientific note: small, consistent steps outperform big sporadic efforts (habits > willpower). Planning fallacy and switching costs explain early friction; feedback loops and simple metrics keep momentum."
+    : "Nota scientifica: i piccoli passi consistenti superano i grandi sforzi saltuari (abitudini > forza di volontà). La planning fallacy e i costi di switch spiegano l’attrito iniziale; cicli di feedback e metriche semplici sostengono lo slancio.";
+  return base;
 }
 
 /* ========= HANDLER ========= */
@@ -299,7 +267,6 @@ export default async function handler(req, res){
     if(!domanda || typeof domanda !== "string")
       return res.status(400).json({ error:"bad_request", detail:"domanda_required" });
 
-    // 1) Genera risposta (comportamento originale)
     const messages = buildMessages({ domanda, lang, periodo, stile, micro });
 
     const completion = await client.chat.completions.create({
@@ -315,47 +282,49 @@ export default async function handler(req, res){
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if(!answer) throw new Error("empty_model_response");
 
-    // Post-process
+    // ===== Post-process (ordine CORRETTO) =====
     answer = stripQuestionEcho(domanda, answer);
     answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);
     answer = clampWords(answer, stile === "wtf" ? 170 : 165);
     answer = normalizeOneParagraph(answer);
-    answer = sentenceCaseAll(answer);
-    answer = finalPunct(answer);
 
-    // Incipit dinamico SOLO per WHAT IF (post-process, non tocco il prompt)
-    answer = addDynamicIntroIfWhatIf({ answer, stile, lang });
+    // 1) Incipit dinamico solo WHAT IF
+    answer = addDynamicIntroIfWhatIf({ answer, stile, lang, domanda });
 
-    // Moderazioni leggere IT
+    // 2) Moderazioni leggere IT (prima del ripristino maiuscole)
     if(normLang(lang)==="it"){
       (function(){
         const d=String(domanda||"");
         const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
         const inQuestion=new Set((d.match(nameRx)||[]));
-        answer=answer.replace(nameRx,(m)=> inQuestion.has(m) ? m : (["Ah","Oh","Ehi","Sai"].includes(m) ? m : m.toLowerCase()));
+        answer=answer.replace(nameRx,(m)=>{
+          if (["Ah","Oh","Ehi","Sai"].includes(m)) return m;
+          return inQuestion.has(m) ? m : m.toLowerCase();
+        });
       })();
     }
 
-    // 2) Estrazione meta per riquadro motivazioni
-    let pct, motivation, scientific_report;
-    try{
-      const meta = await extractMeta({ domanda, answer, stile, lang });
-      pct = meta.pct;
-      motivation = meta.motivation;
-      scientific_report = meta.scientific_report;
-    }catch{
-      pct = undefined; motivation = undefined; scientific_report = undefined;
-    }
+    // 3) Ripristina maiuscole
+    answer = sentenceCaseAll(answer);
+
+    // 4) Punteggiatura finale
+    answer = finalPunct(answer);
+
+    // ===== Extra payload =====
+    const L = normLang(lang);
+    const pct = computePct(domanda, stile);
+    const motivation = (stile==="whatif") ? shortMotivationFromAnswer(answer, L) : undefined;
+    const scientific = (stile==="wtf") ? scientificReport(domanda, L) : undefined;
 
     return res.status(200).json({
       answer,
       style: stile,
-      lang: normLang(lang),
+      lang: L,
       periodo,
       model: MODEL,
       pct,
       motivation,
-      scientific_report
+      scientific,
     });
   }catch(err){
     console.error("❌ [/api/ask] error:", err);
