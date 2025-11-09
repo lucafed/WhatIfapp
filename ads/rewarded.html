@@ -1,32 +1,91 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Rewarded Video</title>
-  <style>
-    html,body{height:100%;margin:0;background:#000;color:#fff;font-family:system-ui;
-              display:flex;align-items:center;justify-content:center}
-    video{max-width:100%;max-height:100%}
-    .bar{position:fixed;left:0;right:0;bottom:0;padding:10px 14px;text-align:center;
-         background:rgba(0,0,0,.5);font-weight:600}
-    .btn{display:none;margin-left:10px;background:#FFEC01;color:#111;border:0;border-radius:10px;
-         padding:8px 12px;font-weight:900}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Rewarded</title>
+<style>
+  :root{--bg:#0B0F14;--card:#141C22;--line:rgba(255,255,255,.12);--fg:#EAF3EE}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  .wrap{max-width:520px;margin:auto;padding:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+  h2{margin:2px 0 10px;font-size:18px}
+  video{width:100%;border-radius:12px;outline:none}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .btn{border:0;border-radius:10px;padding:10px 12px;font-weight:800;cursor:pointer}
+  .primary{background:linear-gradient(180deg,#1C57A0,#FFEC01);color:#0A0E12}
+  .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid var(--line)}
+  .small{font-size:12px;opacity:.85}
+</style>
 </head>
 <body>
-  <video id="v" playsinline controls>
-    <!-- Sorgente demo; in futuro sostituire con il provider ads -->
-    <source src="https://cdn.coverr.co/videos/coverr-little-waves-4207/1080p.mp4" type="video/mp4"/>
-  </video>
-  <div class="bar">Guarda fino alla fine per ottenere <b>+1 credito</b>.
-    <button id="claim" class="btn">Riscatta credito</button>
+<div class="wrap">
+  <div class="card">
+    <h2 id="title">Guarda l’annuncio</h2>
+    <p class="small" id="note">Completa il video per ottenere +1 credito.</p>
+
+    <!-- Usa un video locale o placeholder -->
+    <video id="ad" controls playsinline>
+      <source src="/ads/demo.mp4" type="video/mp4"/>
+    </video>
+
+    <div class="row">
+      <button class="btn primary" id="finish">Ho completato (test)</button>
+      <button class="btn ghost" id="close">Chiudi</button>
+    </div>
+    <p class="small" id="status"></p>
   </div>
-  <script>
-    const v = document.getElementById('v');
-    const claim = document.getElementById('claim');
-    v.addEventListener('ended', ()=>{ claim.style.display='inline-block'; });
-    claim.onclick = ()=> parent.postMessage({ type:'rewarded_complete', amount:1 }, '*');
-  </script>
+</div>
+
+<script>
+/* I18N minimale */
+const I18N={
+  it:{title:"Guarda l’annuncio", note:"Completa il video per ottenere +1 credito.",
+      done:"+1 credito aggiunto.", btnTest:"Ho completato (test)", close:"Chiudi"},
+  en:{title:"Watch the ad", note:"Finish the video to get +1 credit.",
+      done:"+1 credit added.", btnTest:"I finished (test)", close:"Close"},
+  es:{title:"Mira el anuncio", note:"Completa el video para obtener +1 crédito.",
+      done:"+1 crédito añadido.", btnTest:"He terminado (test)", close:"Cerrar"},
+  fr:{title:"Regarde la pub", note:"Termine la vidéo pour obtenir +1 crédit.",
+      done:"+1 crédit ajouté.", btnTest:"J’ai terminé (test)", close:"Fermer"},
+  de:{title:"Werbung ansehen", note:"Beende das Video für +1 Credit.",
+      done:"+1 Credit gutgeschrieben.", btnTest:"Fertig (Test)", close:"Schließen"}
+};
+function getLang(){
+  const u=new URL(location.href); const q=(u.searchParams.get('lang')||'it').toLowerCase();
+  return I18N[q]?q:'it';
+}
+let lang=getLang();
+function applyLang(){
+  const T=I18N[lang]||I18N.it;
+  document.documentElement.lang=lang;
+  document.getElementById('title').textContent=T.title;
+  document.getElementById('note').textContent=T.note;
+  document.getElementById('finish').textContent=T.btnTest;
+  document.getElementById('close').textContent=T.close;
+}
+applyLang();
+
+/* Accetta cambio lingua via postMessage */
+window.addEventListener('message',(ev)=>{
+  const d=ev.data||{};
+  if(d.type==='set_lang' && I18N[d.lang]){ lang=d.lang; applyLang(); }
+});
+
+/* Logica rewarded */
+const ad=document.getElementById('ad');
+let granted=false;
+function grant(){
+  if(granted) return;
+  granted=true;
+  try{ parent.postMessage({type:'rewarded_completed', amount:1}, '*'); }catch{}
+  document.getElementById('status').textContent=(I18N[lang]||I18N.it).done;
+}
+ad.addEventListener('ended', grant);
+
+/* Pulsanti */
+document.getElementById('finish').onclick = grant; // test fallback manuale
+document.getElementById('close').onclick  = ()=>{ try{ parent.postMessage({type:'close_overlay'}, '*'); }catch{} };
+</script>
 </body>
 </html>
