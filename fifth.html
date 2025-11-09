@@ -1,4 +1,4 @@
-<!-- FILE: fifth.html -->
+<!-- FILE: fifth.html (ritorno a fourth dopo ad/acquisto) -->
 <!DOCTYPE html>
 <html lang="it" data-theme="whatif">
 <head>
@@ -521,8 +521,9 @@ function openRewarded(){
   rewardTimer=setTimeout(()=>{
     if(!rewardGranted){
       addCredits(1); updateCreditInfo(); toast(t().toastPlus(1));
-      rewardGranted=true; closeOverlay();
-      if(awaitingCredit){ awaitingCredit=false; startFlow(); }
+    rewardGranted=true; closeOverlay();
+    // ritorna alla quarta anche nel fallback
+    location.replace('fourth.html');
     }
   },20000);
 }
@@ -563,7 +564,6 @@ async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
 
-  // se già consumato in questo ciclo, non ri-consumare
   if(!IS_ADMIN && !alreadyConsumed){
     const left=getAvailable();
     if(!(left===Infinity) && left<=0){
@@ -580,7 +580,7 @@ async function startFlow(){
     }
     alreadyConsumed=true;
     updateCreditInfo();
-    toast(t().toastMinus(1));
+    toast(t().toastMinus(1)); // manteniamo il -1 che ti piace
   }
 
   try{
@@ -620,30 +620,36 @@ async function startFlow(){
   }
 }
 
-/* ==== Messaggi dal modal ==== */
+/* ==== Messaggi dal modal (ritorno a fourth) ==== */
 window.addEventListener("message",(ev)=>{
   const d=ev.data||{};
+
   if(d.type==="purchase_completed"){
     const amt=parseInt(d.amount,10)||0;
     if(amt>0){ addCredits(amt); updateCreditInfo(); toast(t().toastPlus(amt)); }
     closeOverlay();
-    if(awaitingCredit){ awaitingCredit=false; startFlow(); }
+    location.replace('fourth.html');
+    return;
   }
-  if(d.type==="open_rewarded"){ openRewarded(); }
+
+  if(d.type==="open_rewarded"){ openRewarded(); return; }
+
   if(d.type==="rewarded_completed"){
     const amt=parseInt(d.amount,10)||1;
     addCredits(amt); updateCreditInfo(); toast(t().toastPlus(amt));
-    rewardGranted=true;
-    try{ clearTimeout(rewardTimer); }catch{}
+    rewardGranted=true; try{ clearTimeout(rewardTimer); }catch{}
     closeOverlay();
-    if(awaitingCredit){ awaitingCredit=false; startFlow(); }
+    location.replace('fourth.html');
+    return;
   }
+
   if(d.type==="close_overlay"){
     closeOverlay();
-    // se eravamo bloccati per crediti ma ora ci sono, riparti
-    if(awaitingCredit && getAvailable()>0){
-      awaitingCredit=false; startFlow();
+    // se ora abbiamo credito (es. reward fallback), torna in quarta
+    if(getAvailable()>0){
+      location.replace('fourth.html');
     }
+    return;
   }
 });
 
@@ -658,7 +664,6 @@ qs('#langSelect').onchange=()=>{
   lang=v;
   applyUI(LS.getItem('domanda')||'');
   updateCreditInfo();
-  // aggiorna overlay se aperto
   try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang:v}, '*'); }catch{}
 };
 qs('#shareBtn').onclick=async()=>{
