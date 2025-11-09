@@ -1,6 +1,6 @@
 // /api/ask.js — What?f Engine (Stable Hybrid WHATIF + Friendly-WTF Demenziale)
 // - WHATIF: stile unico 60% analisi / 40% immagini sobrie. Incipit VARIABILE (no “Bella …”).
-// - WTF: come da tuoi esempi. Aggiunto solo campo extra 'scientific' nel payload (non nella risposta).
+// - WTF: come da tuoi esempi. Aggiunto campo extra 'scientific' nel payload (non nella risposta).
 // - Maiuscole sistemate post-process dopo punto / “…”.
 // - Un paragrafo, niente elenchi, niente eco della domanda.
 
@@ -162,6 +162,7 @@ function buildMessages({ domanda, lang, periodo, stile }){
   ];
 
   if(stile==="wtf"){
+    // seed deterministico
     let seed=[...String(domanda)].reduce((a,c)=>a+c.charCodeAt(0),0);
     function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; }
     const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
@@ -190,6 +191,7 @@ function buildMessages({ domanda, lang, periodo, stile }){
     );
   }
 
+  // Utente finale
   const ask = (L==="en")
     ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`
     : (L==="it")
@@ -204,7 +206,7 @@ function buildMessages({ domanda, lang, periodo, stile }){
   return msgs;
 }
 
-/* ========= Server-side PCT + motivazioni ========= */
+/* ========= Server-side PCT ========= */
 function computePct(domanda, stile){
   const t=String(domanda||"").toLowerCase();
   let s=50;
@@ -219,23 +221,93 @@ function computePct(domanda, stile){
   const pct = Math.max(25, Math.min(92, Math.round(s)));
   return pct;
 }
-function shortMotivationFromAnswer(answer, lang="it"){
-  const a=String(answer||"").replace(/\s*\n+\s*/g,' ').trim();
-  const parts=a.split(/(?<=[.!?…])\s+/).filter(Boolean);
-  let s=parts.find(x=>/perché|porque|parce que|weil|so|thus|quindi|dunque|se\b|cuando|quand|wenn|when/i.test(x))||parts[0]||'';
-  s=s.replace(/\s{2,}/g,' ').trim(); if(!/[.!?…]$/.test(s)) s+='.';
-  if(s.length<24){
-    return (lang==="en")
-      ? "Short-term, concrete benefits with manageable constraints."
-      : "Benefici concreti a breve con vincoli gestibili.";
+
+/* ========= WHAT IF: motivazione sintetica NUOVA ========= */
+function buildWhatIfMotivation(domanda, lang="it", pct=60){
+  const L = (lang||"it").slice(0,2);
+  const t = String(domanda||"").toLowerCase();
+
+  const hasTime = /\b(7|14|21|30|60|90|giorn|settiman|mes|mesi|anni)\b/.test(t);
+  const hasBudget = /(budget|€|euro|spesa|costo|max|under|sotto|caparra)/.test(t);
+  const hasDeadline = /(entro|prima|scadenza|deadline)/.test(t);
+  const action = /(apri|lancia|impara|studia|scrivi|automatizza|testa|cambia|trova|assumi|costruisci|crea)/.test(t);
+  const riskHedging = /(senza|solo|al massimo|minimo|rischio)/.test(t);
+
+  const PFX = (L==="en") ? "Probability" : (L==="es") ? "Probabilidad" : (L==="fr") ? "Probabilité" : (L==="de") ? "Wahrscheinlichkeit" : "Probabilità";
+  const MAIN = (L==="en") ? "Main lever" : (L==="es") ? "Palanca principal" : (L==="fr") ? "Levier principal" : (L==="de") ? "Haupthebel" : "La leva principale";
+  const BOTTL = (L==="en") ? "Bottleneck" : (L==="es") ? "Cuello de botella" : (L==="fr") ? "Goulet d’étranglement" : (L==="de") ? "Engpass" : "Il collo di bottiglia";
+
+  const parts = [];
+  parts.push(`${PFX} ${pct}%:${L==="en"?"":" "}`);
+
+  if(hasTime) parts.push(L==="en" ? "timeline manageable if you distribute effort weekly" : "la timeline è gestibile se distribuisci lo sforzo su base settimanale");
+  else parts.push(L==="en" ? "feasible with steady daily cadence" : "fattibile con cadenza giornaliera costante");
+
+  if(hasBudget) parts.push(L==="en" ? "(costs controlled via deposits/small tools)" : "(costi sotto controllo con caparra/strumenti leggeri)");
+  if(hasDeadline) parts.push(L==="en" ? "locking the key decision early reduces friction" : "bloccare la decisione chiave in anticipo riduce l’attrito");
+  if(action) parts.push(L==="en" ? "focus on one concrete step per day" : "punta a un passo concreto al giorno");
+  if(riskHedging) parts.push(L==="en" ? "and cap risk with simple constraints" : "e metti un tetto al rischio con vincoli semplici");
+
+  const s1 = parts.join(" ").replace(/\s{2,}/g," ").trim();
+
+  let s2 = "";
+  if(hasBudget){
+    s2 = (L==="en")
+      ? `${MAIN}: upfront deposit & recurring small costs. ${BOTTL}: traffic/lead flow.`
+      : `${MAIN}: anticipo e micro-costi ricorrenti. ${BOTTL}: flusso di traffico/lead.`;
+  }else if(hasTime){
+    s2 = (L==="en")
+      ? `${MAIN}: weekly rhythm. ${BOTTL}: context switching.`
+      : `${MAIN}: ritmo settimanale. ${BOTTL}: cambi di contesto.`;
+  }else{
+    s2 = (L==="en")
+      ? `${MAIN}: consistent routine. ${BOTTL}: scope creep.`
+      : `${MAIN}: routine consistente. ${BOTTL}: allargamento dello scope.`;
   }
-  return s;
+
+  return `${s1} ${s2}`.trim().replace(/\s{2,}/g," ");
 }
-function scientificReport(domanda, lang="it"){
-  const base = (lang==="en")
-    ? "Scientific note: small, consistent steps outperform big sporadic efforts (habits > willpower). Planning fallacy and switching costs explain early friction; feedback loops and simple metrics keep momentum."
-    : "Nota scientifica: i piccoli passi consistenti superano i grandi sforzi saltuari (abitudini > forza di volontà). La planning fallacy e i costi di switch spiegano l’attrito iniziale; cicli di feedback e metriche semplici sostengono lo slancio.";
-  return base;
+
+/* ========= WTF: rapporto scientifico demenziale ========= */
+function scientificReportDemenziale(domanda, lang="it"){
+  function h(s=""){ let x=0; for(const c of s) x=(x*131 + c.charCodeAt(0))>>>0; return x>>>0; }
+  const seed = h(domanda||"");
+  const pick = (arr)=> arr[ seed % arr.length ];
+
+  const UNI = [
+    "Dipartimento di Metafisica Applicata – Università di Busto Arsizio Est",
+    "Politecnico delle Scuse Creative",
+    "Istituto Europeo di Scienze Baristiche",
+    "Laboratorio di Statistiche Improbabili",
+    "Centro Studi di Fisica dell’Umore",
+    "Accademia Transalpina delle Decisioni Avventate",
+  ];
+  const JOUR = [
+    "Rivista di Fisica dell’Umore",
+    "Giornale Internazionale di Scuse Quantistiche",
+    "Annali di Metodologie Poco Replicabili",
+    "Quaderni di Ergonomia dell’Anima",
+  ];
+  const EFFECT = [
+    "imprecazione calibrata",
+    "brindisi di manutenzione",
+    "tapparelle giudicanti",
+    "POS in modalità benedizione",
+    "ventilatore che gira al contrario “per rispetto”",
+    "lampada che lampeggia “ti capisco” in Morse",
+  ];
+  const METRIC = ["r=0.82","p=0.047","η²=0.31","β=0.67","AUC=0.73","OR=2.1"];
+
+  const u = pick(UNI);
+  const j = pick(JOUR);
+  const e = pick(EFFECT);
+  const m = pick(METRIC);
+  const n = 30 + (seed % 70);
+
+  if((lang||"it").startsWith("en")){
+    return `Scientific-ish report: ${u} (n=${n}) found that a ${e} improves decision clarity (${m}). Peer-reviewed by ${j}, probably.`;
+  }
+  return `Rapporto scientifico (più o meno): ${u} (n=${n}) rileva che “${e}” migliora la chiarezza decisionale (${m}). Revisione a cura di ${j}, forse.`;
 }
 
 /* ========= HANDLER ========= */
@@ -257,7 +329,8 @@ export default async function handler(req, res){
       stile = "whatif",   // "whatif" | "wtf"
       lang  = "it",
       periodo = "future",
-      micro = {}
+      micro = {},
+      // accetto anche altri campi passati dal client (es. sex) senza usarli
     } = body;
 
     if(!domanda || typeof domanda !== "string")
@@ -309,13 +382,17 @@ export default async function handler(req, res){
     // ===== Extra payload =====
     const L = normLang(lang);
     const pct = computePct(domanda, stile);
-    const motivation = (stile==="whatif") ? shortMotivationFromAnswer(answer, L) : undefined;
 
-    // <<< MOSTRA il “rapporto scientifico demenziale” in WTF
-    //     - SEMPRE (anche sugli spunti rapidi/preset)
-    //     - ESCLUSO SOLO in modalità "Sorprendimi" (micro.surprise === true)
+    // WHAT IF → motivazione nuova (non dal testo)
+    const motivation = (stile==="whatif")
+      ? buildWhatIfMotivation(domanda, L, pct)
+      : undefined;
+
+    // WHAT THE F → rapporto scientifico demenziale (NON in "Sorprendimi")
     const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
-    const scientific = (stile==="wtf" && !isSurprise) ? scientificReport(domanda, L) : undefined;
+    const scientific = (stile==="wtf" && !isSurprise)
+      ? scientificReportDemenziale(domanda, L)
+      : undefined;
 
     return res.status(200).json({
       answer,
@@ -324,8 +401,8 @@ export default async function handler(req, res){
       periodo,
       model: MODEL,
       pct,
-      motivation,
-      scientific,
+      motivation,   // usalo in fifth per riempire il riquadro "Motivazione" in WHAT IF
+      scientific,   // usalo in fifth per il "Rapporto scientifico" in WTF (se presente)
     });
   }catch(err){
     console.error("❌ [/api/ask] error:", err);
