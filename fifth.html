@@ -1,4 +1,4 @@
-<!-- FILE: fifth.html (acquisto-first, auto-ripresa, i18n, rewarded fix) -->
+<!-- FILE: fifth.html -->
 <!DOCTYPE html>
 <html lang="it" data-theme="whatif">
 <head>
@@ -136,6 +136,8 @@ h1{
 #overlay{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);z-index:9999}
 #overlay-frame{width:100%;max-width:520px;height:78vh;border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(20,28,34,.95);border:1px solid var(--line);padding:10px 14px;border-radius:12px;font-weight:700;z-index:10000;opacity:0;transition:opacity .2s,transform .2s}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
 </style>
 </head>
 
@@ -216,18 +218,19 @@ h1{
 </div>
 
 <p class="small" id="creditInfo" style="text-align:center;margin:10px 0 24px"></p>
+<div class="toast" id="toast"></div>
 
 <script>
-/* ===== Base & prefs ===== */
-const LS=localStorage;
-const prefs=JSON.parse(LS.getItem('whatif_prefs')||'{}');
-const style=prefs.stile||'whatif';
-const periodo=prefs.periodo||'future';
-const IS_ADMIN=!!LS.getItem('admin_token');
-document.documentElement.setAttribute('data-theme', style==='wtf'?'wtf':'whatif');
+/* ==== Base & prefs ==== */
+const LS = localStorage;
+const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
+const style = prefs.stile || 'whatif';
+const periodo = prefs.periodo || 'future';
+const IS_ADMIN = !!LS.getItem('admin_token');
+document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 
-/* ===== I18N ===== */
-const I18N={
+/* ==== I18N ==== */
+const I18N = {
   it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
        sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
        p:"Esito & motivazioni", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
@@ -241,7 +244,8 @@ const I18N={
        chipsFav:"favorevoli", chipsCon:"contrari", chipsAst:"astenuti",
        motFallback:"Motivo: benefici concreti a breve, con vincoli gestibili.",
        credits:(n)=>`💰 Crediti: ${n}`, noCredits:"Hai terminato i crediti.",
-       storeTitle:"Crediti", buy5:"Compra +5 crediti (test)", watchAd:"Guarda pubblicità (+1)", close:"Chiudi"
+       storeTitle:"Crediti", buy5:"Compra +5 crediti (test)", watchAd:"Guarda pubblicità (+1)", close:"Chiudi",
+       toastPlus:(n)=>`+${n} credito`, toastMinus:(n)=>`-${n} credito`
   },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
@@ -256,73 +260,88 @@ const I18N={
        chipsFav:"in favour", chipsCon:"against", chipsAst:"abstained",
        motFallback:"Reason: short-term, concrete benefits with manageable constraints.",
        credits:(n)=>`💰 Credits: ${n}`, noCredits:"You ran out of credits.",
-       storeTitle:"Credits", buy5:"Buy +5 credits (test)", watchAd:"Watch ad (+1)", close:"Close"
+       storeTitle:"Credits", buy5:"Buy +5 credits (test)", watchAd:"Watch ad (+1)", close:"Close",
+       toastPlus:(n)=>`+${n} credit`,  toastMinus:(n)=>`-${n} credit`
   },
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
        sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
        p:"Resultado y razones", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra",
        copied:"¡Copiado!", error:"[error del servidor]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       meta:(st,p)=> st==='wtf'
+        ? `Estilo: What the F · 6–9 frases · un párrafo · tono seco · modo: ${p==='past'?'Pasado':'Futuro'}.`
+        : `Estilo: What if (60% análisis, 40% real) · 8–11 frases · un párrafo · modo: ${p==='past'?'Pasado':'Futuro'}.`,
        pctLabel:"% probabilidad de que ocurra",
        votersTitle:"Comité", seriousTitle:"Motivo", scientificTitle:"Motivo (científico)",
        chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones",
-       motFallback:"Motivo: beneficios concretos a corto con límites manejables.",
+       motFallback:"Motivo: beneficios concretos a corto plazo con límites manejables.",
        credits:(n)=>`💰 Créditos: ${n}`, noCredits:"Se te han acabado los créditos.",
-       storeTitle:"Créditos", buy5:"Comprar +5 créditos (test)", watchAd:"Ver anuncio (+1)", close:"Cerrar"
+       storeTitle:"Créditos", buy5:"Comprar +5 créditos (test)", watchAd:"Ver anuncio (+1)", close:"Cerrar",
+       toastPlus:(n)=>`+${n} crédito`,  toastMinus:(n)=>`-${n} crédito`
   },
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
        sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
        p:"Issue & motivations", share:"📤 Partager / Copier", again:"🔁 Poser une autre",
        copied:"Copié !", error:"[erreur serveur]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       pctLabel:"% de probabilité",
+       meta:(st,p)=> st==='wtf'
+        ? `Style : What the F · 6–9 phrases · un paragraphe · ton sec · mode : ${p==='past'?'Passé':'Futur'}.`
+        : `Style : What if (60 % analyse, 40 % réel) · 8–11 phrases · un paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`,
+       pctLabel:"% de probabilité que ça arrive",
        votersTitle:"Comité", seriousTitle:"Motivation", scientificTitle:"Motivation (scientifique)",
        chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions",
        motFallback:"Raison : bénéfices concrets à court terme, contraintes gérables.",
        credits:(n)=>`💰 Crédits : ${n}`, noCredits:"Crédits épuisés.",
-       storeTitle:"Crédits", buy5:"Acheter +5 crédits (test)", watchAd:"Regarder une pub (+1)", close:"Fermer"
+       storeTitle:"Crédits", buy5:"Acheter +5 crédits (test)", watchAd:"Regarder une pub (+1)", close:"Fermer",
+       toastPlus:(n)=>`+${n} crédit`,  toastMinus:(n)=>`-${n} crédit`
   },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
        sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
        p:"Ergebnis & Begründungen", share:"📤 Teilen / Kopieren", again:"🔁 Neue Frage",
        copied:"Kopiert!", error:"[Serverfehler]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       meta:(st,p)=> st==='wtf'
+        ? `Stil: What the F · 6–9 Sätze · ein Absatz · trockener Ton · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
+        : `Stil: What if (60 % Analyse, 40 % Praxis) · 8–11 Sätze · ein Absatz · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
        pctLabel:"% Wahrscheinlichkeit",
        votersTitle:"Gremium", seriousTitle:"Begründung", scientificTitle:"Begründung (wissenschaftlich)",
        chipsFav:"dafür", chipsCon:"dagegen", chipsAst:"enthalten",
-       motFallback:"Grund: kurzfristiger, greifbarer Nutzen mit beherrschbaren Grenzen.",
+       motFallback:"Grund: kurzfristiger, greifbarer Nutzen mit beherrschbaren Einschränkungen.",
        credits:(n)=>`💰 Credits: ${n}`, noCredits:"Credits aufgebraucht.",
-       storeTitle:"Credits", buy5:"+5 Credits kaufen (Test)", watchAd:"Werbung ansehen (+1)", close:"Schließen"
+       storeTitle:"Credits", buy5:"+5 Credits kaufen (Test)", watchAd:"Werbung ansehen (+1)", close:"Schließen",
+       toastPlus:(n)=>`+${n} Credit`,  toastMinus:(n)=>`-${n} Credit`
   }
 };
 const SUP_LANG=['it','en','es','fr','de'];
-const reqEarly=JSON.parse(LS.getItem('whatif_request')||'{}');
-const domandaEarly=reqEarly.domanda||LS.getItem('domanda')||'';
+const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
+const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
 function detectLang(text=''){
   const t=(text||'').toLowerCase();
   if(/[¿¡]/.test(t)) return 'es';
-  const bank={ it:[" che "," perché"," se "," quando"," dove"," non "," sono "," vorrei"," posso"," e se"," una settimana"," come"],
-               en:[" what "," if "," the "," and "," you "," are "," will "," would "," can "," should "," could "],
-               es:[" qué"," si "," porque"," cuando"," dónde"," no "," soy "," puedo"," quiero","¿"," semana "],
-               fr:[" quoi"," si "," pourquoi"," quand"," où"," pas "," je "," peux"," si je"," et si"],
-               de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"] };
+  const bank={
+    it:[" che "," perché"," se "," quando"," dove"," non "," sono "," vorrei"," posso"," e se"," una settimana"," come"],
+    en:[" what "," if "," the "," and "," you "," are "," will "," would "," can "," should "," could "],
+    es:[" qué"," si "," porque"," cuando"," dónde"," no "," soy "," puedo"," quiero","¿"," semana "],
+    fr:[" quoi"," si "," pourquoi"," quand"," où"," pas "," je "," peux"," si je"," et si"],
+    de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
+  };
   const score={}; for(const L of SUP_LANG){ score[L]=0; (bank[L]||[]).forEach(w=>{ if(t.includes(w)) score[L]++; }); }
-  let best='it',max=-1; for(const L of SUP_LANG){ if(score[L]>max){max=score[L]; best=L;} }
+  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
   if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
   return best;
 }
-const manualLang = LS.getItem('lang_manual') === '1';
+const manualLang = LS.getItem('lang_manual')==='1';
 let lang = manualLang ? (SUP_LANG.includes((LS.getItem('lang')||'').toLowerCase()) ? (LS.getItem('lang')||'it').toLowerCase() : 'it') : detectLang(domandaEarly);
 if(!SUP_LANG.includes(lang)) lang='it';
 document.documentElement.lang=lang;
-const T=()=>I18N[lang]||I18N.it;
+const t=()=>I18N[lang]||I18N.it;
 
-/* ===== System prompts (solo UI) ===== */
-const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve, continuo, da bar poetico...`;
-const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica...`;
+/* ==== System prompts (solo UI) ==== */
+const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
+const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica…`;
 
-/* ===== Leads (breve) ===== */
-const LEADS={
+/* ==== Leads ==== */
+const LEADS = {
   it:{ wtf:["Entri piano, il caos ti riconosce e oggi ti lascia passare.","Respiri e lasci che sia il destino a inciampare per primo."],
        whatif:["Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.","La stanza è la stessa, lo sguardo no: è già un inizio."]},
   en:{ wtf:["You step in slowly; chaos recognizes you and lets you through.","Breathe; let chance trip before you do."],
@@ -335,19 +354,21 @@ const LEADS={
        whatif:["Leg die Schlüssel hin und lass erst die Stille sprechen."]}
 };
 
-/* ===== UI refs ===== */
-const $=(s)=>document.querySelector(s);
-const subtitle=$('#subtitle'), lblQ=$('#lblQ'), lblA=$('#lblA'), qView=$('#qView');
-const leadNode=$('#lead'), answerEl=$('#answer'), shareBtn=$('#shareBtn'), againBtn=$('#againBtn');
-const metaInfo=$('#metaInfo'), styleBadge=$('#styleBadge'), topPct=$('#topPct'), bottomPct=$('#bottomPct');
-const pctLabelTop=$('#pctLabel'), pctLabelBottom=$('#pctLabelBottom'), committeeTitle=$('#committeeTitle');
-const motIco=$('#motIco'), chipFav=$('#chipFav'), chipCon=$('#chipCon'), chipAst=$('#chipAst'), chipsWrap=$('#chipsWrap');
-const motNote=$('#motNote'), creditInfo=$('#creditInfo');
-const overlay=$('#overlay'), overlayFrame=$('#overlay-frame');
+/* ==== UI refs ==== */
+const qs=(s)=>document.querySelector(s);
+const subtitle=qs('#subtitle'), lblQ=qs('#lblQ'), lblA=qs('#lblA'), qView=qs('#qView');
+const leadNode=qs('#lead'), answerEl=qs('#answer'), shareBtn=qs('#shareBtn'), againBtn=qs('#againBtn');
+const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct'), bottomPct=qs('#bottomPct');
+const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
+const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
+const motNote=qs('#motNote'), creditInfo=qs('#creditInfo'), toastEl=qs('#toast');
 
-/* ===== Wallet / Credits (con legacy) ===== */
+/* ==== Toast ==== */
+function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
+
+/* ==== Wallet + legacy ==== */
 const WKEY="whatif_wallet";
-function readWallet(){ try{const w=JSON.parse(LS.getItem(WKEY)||"{}")||{}; return {available:Number.isFinite(+w.available)?+w.available:null, used:Number.isFinite(+w.used)?+w.used:null, limit:Number.isFinite(+w.limit)?+w.limit:null}; }catch{return{available:null,used:null,limit:null}}}
+function readWallet(){ try{ const w=JSON.parse(LS.getItem(WKEY)||"{}")||{}; return {available:Number.isFinite(+w.available)?+w.available:null, used:Number.isFinite(+w.used)?+w.used:null, limit:Number.isFinite(+w.limit)?+w.limit:null}; }catch{return{available:null,used:null,limit:null}}}
 function writeWallet(w){
   const cur=readWallet();
   const out={ available:(w.available!=null)?Math.max(0,+w.available):(cur.available??0),
@@ -360,16 +381,12 @@ function writeWallet(w){
 function legacyCap(){ return (prefs.pro===true)?10:3 }
 function legacyGetLeft(){
   const w=readWallet(); if(w.available!=null) return w.available;
-  try{ const c=JSON.parse(LS.getItem('whatif_credits')||'{}'); const today=new Date().toISOString().slice(0,10);
-       const used=(c.date===today)?(+c.used||0):0; return Math.max(0, legacyCap()-used); }catch{}
+  try{ const c=JSON.parse(LS.getItem('whatif_credits')||'{}'); const today=new Date().toISOString().slice(0,10); const used=(c.date===today)?(+c.used||0):0; return Math.max(0, legacyCap()-used); }catch{}
   const raw=LS.getItem('crediti'); return raw==null? legacyCap() : Math.max(0, parseInt(raw,10)||0);
 }
 function legacyConsumeOne(){
-  try{ const w=readWallet(); if(w.available!=null){ if(w.available<=0) return false;
-       writeWallet({available:w.available-1, used:Math.max(0,(w.used||0)+1), limit:(w.limit!=null?w.limit:legacyCap())}); return true; } }catch{}
-  try{ const today=new Date().toISOString().slice(0,10); let c=JSON.parse(LS.getItem('whatif_credits')||'{}');
-       if(c.date!==today) c={date:today,used:0,limit:legacyCap()};
-       if((c.used||0) >= (c.limit||legacyCap())) return false; c.used=(c.used||0)+1; LS.setItem('whatif_credits', JSON.stringify(c)); return true; }catch{}
+  try{ const w=readWallet(); if(w.available!=null){ if(w.available<=0) return false; writeWallet({available:w.available-1, used:Math.max(0,(w.used||0)+1), limit:(w.limit!=null?w.limit:legacyCap())}); return true; } }catch{}
+  try{ const today=new Date().toISOString().slice(0,10); let c=JSON.parse(LS.getItem('whatif_credits')||'{}'); if(c.date!==today) c={date:today,used:0,limit:legacyCap()}; if((c.used||0)>= (c.limit||legacyCap())) return false; c.used=(c.used||0)+1; LS.setItem('whatif_credits', JSON.stringify(c)); return true; }catch{}
   let n=parseInt(LS.getItem('crediti')||'0',10)||0; if(n<=0) return false; LS.setItem('crediti', String(Math.max(0,n-1))); return true;
 }
 function getAvailable(){ if(IS_ADMIN) return Infinity; const w=readWallet(); return (w.available!=null)?w.available:legacyGetLeft() }
@@ -388,30 +405,29 @@ function addCredits(n){ n=Math.max(0,parseInt(n,10)||0); if(n<=0) return;
   if(w.available==null){ const left=legacyGetLeft(); writeWallet({available:left+n, used:0, limit:legacyCap()}); }
   else{ writeWallet({available:(w.available+n), used:Math.max(0,(w.used||0)-n), limit:(w.limit!=null?w.limit:legacyCap())}); }
 }
-function updateCreditInfo(n=getAvailable()){ if(!creditInfo) return; creditInfo.textContent=(I18N[lang]||I18N.it).credits(n===Infinity?'∞':n); }
-
+function updateCreditInfo(n=getAvailable()){ if(!creditInfo) return; creditInfo.textContent = t().credits(n===Infinity?'∞':n); }
 window.addEventListener('storage',(e)=>{ if(['whatif_wallet','whatif_wallet_sync','whatif_credits','admin_token','lang','lang_manual'].includes(e.key)){ updateCreditInfo(); }});
 
-/* ===== Helpers testo ===== */
-function setText(sel,txt){ const el=$(sel); if(el) el.textContent=txt }
+/* ==== Helpers testo ==== */
+function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+='.'; return t }
 function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
 
-/* ===== Titles/Text ===== */
+/* ==== Titles/Text ==== */
 function applyUI(q){
-  const Tx=T();
-  setText('#title', style==='wtf'?Tx.titleWTF:Tx.titleWHF);
-  subtitle.textContent=Tx.sub(q||'—'); lblQ.textContent=Tx.q; lblA.textContent=Tx.a; setText('#lblP', Tx.p);
-  shareBtn.textContent=Tx.share; againBtn.textContent=Tx.again; styleBadge.textContent=(style==='wtf')?Tx.styleWTF:Tx.styleWHF;
-  setText('#pctLabel', Tx.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=Tx.pctLabel; metaInfo.textContent=Tx.meta(style,periodo);
+  const T=t();
+  setText('#title', style==='wtf'?T.titleWTF:T.titleWHF);
+  subtitle.textContent=T.sub(q||'—'); lblQ.textContent=T.q; lblA.textContent=T.a; setText('#lblP', T.p);
+  shareBtn.textContent=T.share; againBtn.textContent=T.again; styleBadge.textContent=(style==='wtf')?T.styleWTF:T.styleWHF;
+  setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; metaInfo.textContent=T.meta(style,periodo);
   const bank=(LEADS[lang]&&LEADS[lang][style])?(LEADS[lang][style]):(LEADS.it[style]||LEADS.it.whatif);
   leadNode.textContent=oneSentence(pick(bank)||'')||'—';
-  chipFav.textContent=`${Tx.chipsFav} 0`; chipCon.textContent=`${Tx.chipsCon} 0`; chipAst.textContent=`${Tx.chipsAst} 0`;
+  chipFav.textContent=`${T.chipsFav} 0`; chipCon.textContent=`${T.chipsCon} 0`; chipAst.textContent=`${T.chipsAst} 0`;
 }
 
-/* ===== Probabilità & motivi ===== */
+/* ==== Probability & motives ==== */
 function computeProbability(q){
   const t=(q||'').toLowerCase(); let s=50;
   if(/\b(7|14|21|30|60|90)\b/.test(t)) s+=12;
@@ -425,27 +441,29 @@ function computeProbability(q){
   return {pct: Math.max(25, Math.min(92, Math.round(s)))}
 }
 function shortMotivationFromAnswer(txt){
-  const Tx=T(); const a=String(txt||'').replace(/\s*\n+\s*/g,' ').trim();
+  const T=t(); const a=String(txt||'').replace(/\s*\n+\s*/g,' ').trim();
   const parts=a.split(/(?<=[.!?…])\s+/).filter(Boolean);
   let s=parts.find(x=>/perché|porque|parce que|weil|so|thus|quindi|dunque|se\b|cuando|quand|wenn|when/i.test(x))||parts[0]||'';
-  s=s.replace(/\s{2,}/g,' ').trim(); if(!/[.!?…]$/.test(s)) s+='.'; if(s.length<24) s=Tx.motFallback; return s;
+  s=s.replace(/\s{2,}/g,' ').trim(); if(!/[.!?…]$/.test(s)) s+='.'; if(s.length<24) s=T.motFallback; return s;
 }
 function renderCommitteeLike(surprise){
-  const Tx=T();
+  const T=t();
   if(surprise){
-    motIco.style.display=''; chipsWrap.style.display='flex'; committeeTitle.textContent=Tx.votersTitle||'Comitato';
+    motIco.style.display=''; chipsWrap.style.display='flex'; committeeTitle.textContent=T.votersTitle||'Comitato';
     const r=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-    chipFav.textContent=`${Tx.chipsFav} ${r(120,1200)}`; chipCon.textContent=`${Tx.chipsCon} ${r(0,900)}`; chipAst.textContent=`${Tx.chipsAst} ${r(0,400)}`;
+    chipFav.textContent=`${T.chipsFav} ${r(120,1200)}`; chipCon.textContent=`${T.chipsCon} ${r(0,900)}`; chipAst.textContent=`${T.chipsAst} ${r(0,400)}`;
     motNote.textContent=(lang==='en')?`Brief tussle at vote: ${r(1,5)} removed; ${r(0,3)} bruised.`:(lang==='es')?`Pequeño lío en la votación: ${r(1,5)} expulsados; ${r(0,3)} contusos.`:(lang==='fr')?`Petit grabuge au vote : ${r(1,5)} évacués ; ${r(0,3)} contusionnés.`:(lang==='de')?`Kurzes Gerangel bei der Abstimmung: ${r(1,5)} entfernt; ${r(0,3)} leicht verletzt.`:`Breve parapiglia al voto: ${r(1,5)} allontanati; ${r(0,3)} contusi.`;
   }else{
-    committeeTitle.textContent = (style==='wtf') ? (T().scientificTitle) : (T().seriousTitle);
+    committeeTitle.textContent = (style==='wtf') ? (t().scientificTitle) : (t().seriousTitle);
     motIco.style.display='none'; chipsWrap.style.display='none';
   }
 }
 
-/* ===== Overlay (store + rewarded) ===== */
+/* ==== Overlay (store + rewarded) ==== */
+const overlay=qs('#overlay'), overlayFrame=qs('#overlay-frame');
+let overlayLoadTimer=null, rewardTimer=null, rewardGranted=false, awaitingCredit=false, alreadyConsumed=false;
 function storeFallbackHTML(){
-  const Tx=T();
+  const T=t();
   return `
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
@@ -459,195 +477,205 @@ h2{margin:4px 0 6px;font-size:18px}
 .small{color:#A0B2BA;font-size:12px}
 </style></head><body>
 <div class="wrap"><div class="card">
-  <h2>${Tx.storeTitle}</h2>
-  <p class="small">${Tx.noCredits}</p>
-  <button class="btn primary" onclick="parent.postMessage({type:'purchase_completed', amount:5}, '*')">${Tx.buy5}</button>
-  <button class="btn ghost" onclick="parent.postMessage({type:'open_rewarded'}, '*')">${Tx.watchAd}</button>
-  <button class="btn ghost" onclick="parent.postMessage({type:'close_overlay'}, '*')">${Tx.close}</button>
-</div></div></body></html>`;
+  <h2>${T.storeTitle}</h2>
+  <p class="small" id="msg">${T.noCredits}</p>
+  <button class="btn primary" onclick="parent.postMessage({type:'purchase_completed', amount:5}, '*')">${T.buy5}</button>
+  <button class="btn ghost" id="adBtn">${T.watchAd}</button>
+  <button class="btn ghost" onclick="parent.postMessage({type:'close_overlay'}, '*')">${T.close}</button>
+</div></div>
+<script>
+  const btn=document.getElementById('adBtn');
+  let ticking=false, left=12, iv=0;
+  btn.onclick=()=>{
+    if(ticking) return;
+    ticking=true; btn.disabled=true;
+    const label=btn.textContent;
+    iv=setInterval(()=>{
+      left--; btn.textContent=label+' ('+left+'s)';
+      if(left<=0){ clearInterval(iv); parent.postMessage({type:'rewarded_completed', amount:1}, '*'); }
+    },1000);
+  };
+<\/script>
+</body></html>`;
 }
-const overlayLoadSafety=1500;
-const overlay=$("#overlay"), overlayFrame=$("#overlay-frame");
-let overlayTimer=null, rewardTimer=null, rewardFlag=false;
 function openOverlay(url){
   overlay.style.display='grid';
   overlay.setAttribute('aria-hidden','false');
   overlayFrame.removeAttribute('srcdoc');
   overlayFrame.src='about:blank';
-  const sep=url.includes('?')?'&':'?';
-  const finalUrl=`${url}${sep}lang=${encodeURIComponent(lang)}`;
+  const sep = url.includes('?')?'&':'?';
+  const finalUrl = `${url}${sep}lang=${encodeURIComponent(lang)}`;
+  overlayFrame.onload = ()=>{ try{ clearTimeout(overlayLoadTimer); }catch{} };
+  overlayFrame.onerror= ()=>{ try{ clearTimeout(overlayLoadTimer); }catch{} };
   overlayFrame.setAttribute('srcdoc', storeFallbackHTML());
-  overlayFrame.src=finalUrl;
-  try{ clearTimeout(overlayTimer); }catch{}
-  overlayTimer=setTimeout(()=>{ try{ overlayFrame.setAttribute('srcdoc', storeFallbackHTML()); }catch{} }, overlayLoadSafety);
+  overlayFrame.src = finalUrl;
+  try{ clearTimeout(overlayLoadTimer); }catch{}
+  overlayLoadTimer=setTimeout(()=>{ try{ overlayFrame.setAttribute('srcdoc', storeFallbackHTML()); }catch{} },1500);
+  setTimeout(()=>{ try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang}, '*'); }catch{} }, 400);
+}
+function openStore(){ openOverlay("/store/credit-store.html"); }
+function openRewarded(){
+  rewardGranted=false;
+  openOverlay("/ads/rewarded.html");
+  clearTimeout(rewardTimer);
+  rewardTimer=setTimeout(()=>{
+    if(!rewardGranted){
+      addCredits(1); updateCreditInfo(); toast(t().toastPlus(1));
+      rewardGranted=true; closeOverlay();
+      if(awaitingCredit){ awaitingCredit=false; startFlow(); }
+    }
+  },20000);
 }
 function closeOverlay(){
   overlay.style.display='none';
   overlay.setAttribute('aria-hidden','true');
   overlayFrame.src='about:blank';
   overlayFrame.removeAttribute('srcdoc');
-  try{ clearTimeout(overlayTimer); }catch{}
+  try{ clearTimeout(overlayLoadTimer); }catch{}
   try{ clearTimeout(rewardTimer); }catch{}
 }
-function openStore(){ openOverlay("/store/credit-store.html"); }
-function openRewarded(){
-  rewardFlag=false;
-  openOverlay("/ads/rewarded.html");
-  try{ clearTimeout(rewardTimer); }catch{}
-  // safety: se la pagina esterna non invia rewarded_completed, accredita +1 dopo 20s
-  rewardTimer=setTimeout(()=>{
-    if(!rewardFlag){ addCredits(1); updateCreditInfo(); rewardFlag=true; closeOverlay(); resumeAfterTopUp(); }
-  }, 20000);
-}
 
-/* ===== Stato runtime per ripresa ===== */
-let __blockedForCredits=false;
-let __answerGenerated=false;
+/* ==== Top init ==== */
+(function initTop(){
+  const hasToken=!!LS.getItem('admin_token');
+  if(hasToken || prefs.pro===true){
+    const el=qs('#proBadge'); el.style.display='inline-flex';
+    el.textContent='🧪 TEST · ⭐ PRO';
+    el.title = {en:'Test mode active',es:'Modo de prueba activo',fr:'Mode test actif',de:'Testmodus aktiv'}[lang] || 'Modalità test attiva';
+  }
+  qs('#langSelect').value=lang;
+})();
 
-/* ===== Flow principale ===== */
+/* ==== Question & UI load ==== */
 function applyQuestion(){
   const req=JSON.parse(LS.getItem('whatif_request')||'{}');
   const domanda=req.domanda || LS.getItem('domanda') || '';
-  // UI
   applyUI(domanda);
-  qView.textContent=domanda||'—';
-  return {
-    req, domanda,
-    surprise: (new URLSearchParams(location.search)).get('src')==='surprise'
-              || req?.surprise===true
-              || req?.micro?.surprise===true
-              || LS.getItem('surprise_mode')==='1'
-  };
+  qView.textContent = domanda || '—';
+  const surprise = (new URLSearchParams(location.search)).get('src')==='surprise'
+                   || req?.surprise===true || req?.micro?.surprise===true
+                   || LS.getItem('surprise_mode')==='1';
+  return {req, domanda, surprise};
 }
-async function generateAnswer(domanda, surprise, req){
-  const headers={"Content-Type":"application/json"};
-  if(prefs.pro===true) headers["x-pro"]="1";
-  const adminToken=LS.getItem("admin_token"); if(adminToken) headers["x-admin-token"]=adminToken;
 
-  const r=await fetch("/api/ask",{method:"POST",headers,body:JSON.stringify({
-    domanda, lang, stile:style, periodo, system:(style==='wtf'?SYSTEM_WTF:SYSTEM_WHIF), extra:"", micro:req.micro||{}
-  })});
-  const data=await r.json().catch(()=>null);
-  if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
-
-  let answerText=normalizeOneParagraph((data.answer||"").trim());
-  const maxSent=(style==='wtf')?9:11;
-  let parts=answerText.split(/(?<=[.!?…])\s+/); if(parts.length>maxSent) parts=parts.slice(0,maxSent);
-  answerText=parts.join(" ").trim(); if(!/[.!?…]$/.test(answerText)) answerText+='.';
-  answerEl.textContent=answerText; decorateEmBits(answerEl);
-
-  const {pct}=computeProbability(domanda); const pStr=pct+"%";
-  topPct.textContent=pStr; bottomPct.textContent=pStr;
-
-  if(surprise){ renderCommitteeLike(true) } else { renderCommitteeLike(false); motNote.textContent=shortMotivationFromAnswer(answerText) }
-
-  const hist=JSON.parse(LS.getItem('cronologia')||'[]');
-  hist.push({domanda,risposta:answerText,stile:style,periodo,ts:Date.now(),surprise,pct,motivazione:(style==='wtf')?undefined:motNote.textContent});
-  LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-
-  __answerGenerated=true;
-  updateCreditInfo();
-}
-async function runFlow(){
-  const {req,domanda,surprise}=applyQuestion();
+/* ==== Main flow (idempotente) ==== */
+async function startFlow(){
+  const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
 
-  if(!IS_ADMIN){
+  // se già consumato in questo ciclo, non ri-consumare
+  if(!IS_ADMIN && !alreadyConsumed){
     const left=getAvailable();
     if(!(left===Infinity) && left<=0){
-      __blockedForCredits=true;
-      answerEl.textContent=T().noCredits;
+      awaitingCredit=true;
+      answerEl.textContent=t().noCredits;
       openStore();
       return;
     }
     if(!consumeOne()){
-      __blockedForCredits=true;
-      answerEl.textContent=T().noCredits;
+      awaitingCredit=true;
+      answerEl.textContent=t().noCredits;
       openStore();
       return;
     }
+    alreadyConsumed=true;
     updateCreditInfo();
+    toast(t().toastMinus(1));
   }
 
-  try{ await generateAnswer(domanda, surprise, req); }
-  catch(e){ answerEl.textContent=T().error; console.error(e); }
-}
-function resumeAfterTopUp(){
-  __blockedForCredits=false;
-  if(!__answerGenerated){ runFlow(); }
+  try{
+    const headers={"Content-Type":"application/json"};
+    if(prefs.pro===true) headers["x-pro"]="1";
+    const adminToken=LS.getItem("admin_token"); if(adminToken) headers["x-admin-token"]=adminToken;
+
+    const r=await fetch("/api/ask",{
+      method:"POST",headers,
+      body:JSON.stringify({ domanda, lang, stile:style, periodo,
+        system:(style==='wtf'?SYSTEM_WTF:SYSTEM_WHIF), extra:"", micro:req.micro||{} })
+    });
+    const data=await r.json().catch(()=>null);
+    if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
+
+    let answerText=normalizeOneParagraph((data.answer||"").trim());
+    const maxSent=(style==='wtf')?9:11;
+    let parts=answerText.split(/(?<=[.!?…])\s+/);
+    if(parts.length>maxSent) parts=parts.slice(0,maxSent);
+    answerText=parts.join(" ").trim();
+    if(!/[.!?…]$/.test(answerText)) answerText+='.';
+    answerEl.textContent=answerText; decorateEmBits(answerEl);
+
+    const {pct}=computeProbability(domanda);
+    const pStr=pct+"%";
+    topPct.textContent=pStr; bottomPct.textContent=pStr;
+
+    if(surprise){ renderCommitteeLike(true); }
+    else { renderCommitteeLike(false); motNote.textContent=shortMotivationFromAnswer(answerText); }
+
+    const hist=JSON.parse(LS.getItem('cronologia')||'[]');
+    hist.push({domanda,risposta:answerText,stile:style,periodo,ts:Date.now(),surprise,pct,motivazione:(style==='wtf')?undefined:motNote.textContent});
+    LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
+  }catch(e){
+    console.error(e);
+    answerEl.textContent=t().error;
+  }
 }
 
-/* ===== Eventi overlay (acquisto/ads) ===== */
+/* ==== Messaggi dal modal ==== */
 window.addEventListener("message",(ev)=>{
   const d=ev.data||{};
   if(d.type==="purchase_completed"){
     const amt=parseInt(d.amount,10)||0;
-    if(amt>0){ addCredits(amt); updateCreditInfo(); }
+    if(amt>0){ addCredits(amt); updateCreditInfo(); toast(t().toastPlus(amt)); }
     closeOverlay();
-    resumeAfterTopUp(); // ← riparte subito: ricontrolla, consuma 1, genera
+    if(awaitingCredit){ awaitingCredit=false; startFlow(); }
   }
   if(d.type==="open_rewarded"){ openRewarded(); }
   if(d.type==="rewarded_completed"){
     const amt=parseInt(d.amount,10)||1;
-    addCredits(amt); updateCreditInfo();
-    rewardFlag=true; try{ clearTimeout(rewardTimer); }catch{}
+    addCredits(amt); updateCreditInfo(); toast(t().toastPlus(amt));
+    rewardGranted=true;
+    try{ clearTimeout(rewardTimer); }catch{}
     closeOverlay();
-    resumeAfterTopUp(); // ← idem dopo la pubblicità
+    if(awaitingCredit){ awaitingCredit=false; startFlow(); }
   }
   if(d.type==="close_overlay"){
-    // Se non hai aggiunto crediti e la risposta non è stata generata, torna in fourth
-    if(__blockedForCredits && !__answerGenerated){
-      closeOverlay();
-      location.href='fourth.html';
-    }else{
-      closeOverlay();
-      if(!__answerGenerated) resumeAfterTopUp();
+    closeOverlay();
+    // se eravamo bloccati per crediti ma ora ci sono, riparti
+    if(awaitingCredit && getAvailable()>0){
+      awaitingCredit=false; startFlow();
     }
   }
 });
 
-/* ===== Nav / lingua / share ===== */
-$('#backBtn').onclick=()=> history.length>1 ? history.back() : location.replace('index.html');
-$('#homeBtn').onclick=()=> location.href='index.html';
-$('#langSelect').value=lang;
-$('#langSelect').onchange=()=>{
-  const v=$('#langSelect').value;
-  LS.setItem('lang',v); LS.setItem('lang_manual','1');
-  document.documentElement.lang=v; lang=v;
-  // Aggiorna testi al volo
-  applyUI(LS.getItem('domanda')||''); updateCreditInfo();
-  // Se overlay aperto, riapri lo store nella lingua nuova
-  if(overlay.style.display==='grid'){ openStore(); }
+/* ==== Nav / lingua / share ==== */
+qs('#backBtn').onclick=()=> history.length>1 ? history.back() : location.replace('index.html');
+qs('#homeBtn').onclick=()=> location.href='index.html';
+qs('#langSelect').onchange=()=>{
+  const v=qs('#langSelect').value;
+  LS.setItem('lang',v);
+  LS.setItem('lang_manual','1');
+  document.documentElement.lang=v;
+  lang=v;
+  applyUI(LS.getItem('domanda')||'');
+  updateCreditInfo();
+  // aggiorna overlay se aperto
+  try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang:v}, '*'); }catch{}
 };
-$('#shareBtn').onclick=async()=>{
-  const Tx=T();
-  const full=`What?f — ${style==='wtf'?(Tx.styleWTF):(Tx.styleWHF)}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${$('#answer').textContent}`;
+qs('#shareBtn').onclick=async()=>{
+  const T=t();
+  const full=`What?f — ${style==='wtf'?(T.styleWTF):(T.styleWHF)}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
   try{
     if(navigator.share){ await navigator.share({title:"What?f",text:full}); }
-    else{ await navigator.clipboard.writeText(full); const b=$('#shareBtn'); b.textContent=Tx.copied; setTimeout(()=>b.textContent=Tx.share,1200); }
+    else{
+      await navigator.clipboard.writeText(full);
+      const b=qs('#shareBtn'); b.textContent=T.copied; setTimeout(()=>b.textContent=T.share,1200);
+    }
   }catch{}
 };
-$('#againBtn').onclick=()=>{ location.href='fourth.html' };
+qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
 
-/* ===== Badge PRO / init ===== */
-(function initTop(){
-  const hasToken=!!LS.getItem('admin_token');
-  if(hasToken || prefs.pro===true){
-    const el=$('#proBadge'); el.style.display='inline-flex';
-    el.textContent='🧪 TEST · ⭐ PRO';
-    el.title = {en:'Test mode active',es:'Modo de prueba activo',fr:'Mode test actif',de:'Testmodus aktiv'}[lang] || 'Modalità test attiva';
-  }
-})();
-
-/* ===== Avvio ===== */
-(function init(){
-  const req=reqEarly;
-  const domanda=req.domanda || LS.getItem('domanda') || '';
-  applyUI(domanda);
-  qView.textContent=domanda||'—';
-  updateCreditInfo();
-  runFlow();
-})();
+/* ==== Avvio ==== */
+startFlow();
 </script>
 </body>
 </html>
