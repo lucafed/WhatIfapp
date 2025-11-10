@@ -539,6 +539,46 @@ h2{margin:4px 0 6px;font-size:18px}
 <\/script>
 </body></html>`;
 }
+  /* === Limitatore pubblicità (max 3 al giorno) === */
+function canWatchAd() {
+  const today = new Date().toISOString().slice(0,10);
+  const rec = JSON.parse(localStorage.getItem("ads_today") || "{}");
+  if (rec.date !== today) return true; // nuova giornata → reset
+  return (rec.count || 0) < 3;
+}
+function recordAdWatched() {
+  const today = new Date().toISOString().slice(0,10);
+  const rec = JSON.parse(localStorage.getItem("ads_today") || "{}");
+  if (rec.date !== today) {
+    localStorage.setItem("ads_today", JSON.stringify({ date: today, count: 1 }));
+  } else {
+    localStorage.setItem("ads_today", JSON.stringify({ date: today, count: (rec.count||0) + 1 }));
+  }
+}
+
+/* Sovrascrive storeFallbackHTML per mostrare blocco pubblicità dopo 3 video */
+const _origStoreFallbackHTML = storeFallbackHTML;
+storeFallbackHTML = function(){
+  const html = _origStoreFallbackHTML();
+  if (!canWatchAd()) {
+    return html.replace(
+      '<button class="btn ghost" id="adBtn">',
+      '<button class="btn ghost" id="adBtn" disabled title="Limite giornaliero raggiunto">'
+    ).replace(
+      'id="msg">',
+      'id="msg">Hai già ottenuto i crediti gratuiti per oggi. Torna domani o acquista altri crediti.<br><br>'
+    );
+  }
+  return html;
+};
+
+/* Quando pubblicità completata → registra */
+window.addEventListener("message",(ev)=>{
+  const d=ev.data||{};
+  if(d.type==="rewarded_completed"){
+    recordAdWatched(); // aggiunta qui
+  }
+});
 function openOverlay(url){
   overlay.style.display='grid';
   overlay.setAttribute('aria-hidden','false');
