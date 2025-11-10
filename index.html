@@ -7,11 +7,9 @@
 
   <!-- PWA -->
   <meta name="theme-color" content="#0B0B0C" />
-  <!-- cache-bust del manifest -->
-  <link rel="manifest" href="/manifest.json?v=7" />
-  <!-- icone coerenti con i file in /public -->
-  <link rel="icon" type="image/png" sizes="192x192" href="/public/icon-192.png" />
-  <link rel="apple-touch-icon" sizes="512x512" href="/public/icon-512.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/public/icon-192.png" />
+  <link rel="apple-touch-icon" href="/public/icon-512.png" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -192,14 +190,19 @@
       const L = getLang(), d = DICT[L] || DICT.it;
       document.documentElement.lang = L;
       $('#langCode').textContent = L.toUpperCase();
+      // title + buttons
       $$('[data-i18n]').forEach(el=>{
         const k=el.getAttribute('data-i18n');
         if(!k) return;
-        if(k==='lead'){ return; }
+        if(k==='lead'){ return; } // lead handled below (innerHTML)
         if(typeof d[k] === 'string'){ el.textContent = d[k]; }
       });
+      // lead supports HTML (strong)
       $('#leadText').innerHTML = d.lead;
+      // highlight active item in menu
       document.querySelectorAll('#langMenu button').forEach(b=>b.classList.toggle('active', b.dataset.lang===L));
+      // keep CTA enabled state intact
+      // (no-op)
     }
 
     if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang());
@@ -264,9 +267,11 @@
       title.addEventListener('click', ()=>{ if(++tapTitle>=3){ stage=1; tapTitle=0; flash(); pastBtn.classList.add("unlocking"); pastBtn.style.boxShadow="0 0 0 2px rgba(255,255,255,.15) inset, 0 0 22px rgba(255,255,255,.12)"; setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);} if(timer) clearTimeout(timer); timer=setTimeout(reset,2000); });
       pastBtn.addEventListener('click', ()=>{ if(stage!==1) return; if(++tapPast>=5) success(); if(timer) clearTimeout(timer); timer=setTimeout(reset,2500); });
     })();
-  </script>
 
-  <!-- 🔔 Gestione update SW + barra "Aggiorna" -->
-  <script src="/sw-update.js"></script>
+    // Service Worker
+    if("serviceWorker" in navigator){
+      window.addEventListener("load", ()=>{ navigator.serviceWorker.register("/sw.js").catch(()=>{}); });
+    }
+  </script>
 </body>
 </html>
