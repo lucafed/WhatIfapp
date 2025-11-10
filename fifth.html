@@ -246,6 +246,7 @@ const I18N = {
        credits:(n)=>`💰 Crediti: ${n}`, noCredits:"Hai terminato i crediti.",
        storeTitle:"Crediti", buy5:"Compra +5 crediti (test)", buy10:"Compra +10 crediti (test)", buy20:"Compra +20 crediti (test)",
        watchAd:"Guarda pubblicità (+1)", close:"Chiudi",
+       comingSoon:"Prossimamente", buySoonNote:"Acquisto crediti non ancora disponibile.",
        toastPlus:(n)=>`+${n} credito`, toastMinus:(n)=>`-${n} credito`
   },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
@@ -263,6 +264,7 @@ const I18N = {
        credits:(n)=>`💰 Credits: ${n}`, noCredits:"You ran out of credits.",
        storeTitle:"Credits", buy5:"Buy +5 credits (test)", buy10:"Buy +10 credits (test)", buy20:"Buy +20 credits (test)",
        watchAd:"Watch ad (+1)", close:"Close",
+       comingSoon:"Coming soon", buySoonNote:"Credit purchases not available yet.",
        toastPlus:(n)=>`+${n} credit`,  toastMinus:(n)=>`-${n} credit`
   },
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
@@ -280,6 +282,7 @@ const I18N = {
        credits:(n)=>`💰 Créditos: ${n}`, noCredits:"Se te han acabado los créditos.",
        storeTitle:"Créditos", buy5:"Comprar +5 créditos (test)", buy10:"Comprar +10 créditos (test)", buy20:"Comprar +20 créditos (test)",
        watchAd:"Ver anuncio (+1)", close:"Cerrar",
+       comingSoon:"Próximamente", buySoonNote:"La compra de créditos aún no está disponible.",
        toastPlus:(n)=>`+${n} crédito`,  toastMinus:(n)=>`-${n} crédito`
   },
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
@@ -297,6 +300,7 @@ const I18N = {
        credits:(n)=>`💰 Crédits : ${n}`, noCredits:"Crédits épuisés.",
        storeTitle:"Crédits", buy5:"Acheter +5 crédits (test)", buy10:"Acheter +10 crédits (test)", buy20:"Acheter +20 crédits (test)",
        watchAd:"Regarder une pub (+1)", close:"Fermer",
+       comingSoon:"Bientôt", buySoonNote:"Achat de crédits pas encore disponible.",
        toastPlus:(n)=>`+${n} crédit`,  toastMinus:(n)=>`-${n} crédit`
   },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
@@ -314,6 +318,7 @@ const I18N = {
        credits:(n)=>`💰 Credits: ${n}`, noCredits:"Credits aufgebraucht.",
        storeTitle:"Credits", buy5:"+5 Credits kaufen (Test)", buy10:"+10 Credits kaufen (Test)", buy20:"+20 Credits kaufen (Test)",
        watchAd:"Werbung ansehen (+1)", close:"Schließen",
+       comingSoon:"Bald verfügbar", buySoonNote:"Kauf von Credits noch nicht verfügbar.",
        toastPlus:(n)=>`+${n} Credit`,  toastMinus:(n)=>`-${n} Credit`
   }
 };
@@ -492,7 +497,7 @@ function renderCommitteeLike(surprise){
 const overlay=qs('#overlay'), overlayFrame=qs('#overlay-frame');
 let overlayLoadTimer=null, rewardTimer=null, rewardGranted=false, awaitingCredit=false, alreadyConsumed=false;
 
-/* SOLO PUBBLICITÀ: rimosse le opzioni di acquisto dal fallback */
+/* SOLO PUBBLICITÀ: rimosse le opzioni di acquisto dal fallback + "Prossimamente" */
 function storeFallbackHTML(){
   const T=t();
   return `
@@ -510,8 +515,8 @@ h2{margin:4px 0 6px;font-size:18px}
 </style></head><body>
 <div class="wrap"><div class="card">
   <h2>${T.storeTitle}</h2>
+  <p class="small" style="margin:6px 0 10px;opacity:.85">🛒 ${T.comingSoon} — ${T.buySoonNote}</p>
   <p class="small" id="msg">${T.noCredits}</p>
-
   <div class="row">
     <!-- SOLO PUBBLICITÀ -->
     <button class="btn ghost" id="adBtn">${T.watchAd}</button>
@@ -534,7 +539,7 @@ h2{margin:4px 0 6px;font-size:18px}
 </body></html>`;
 }
 
-  /* === Limitatore pubblicità (max 3 al giorno) === */
+/* === Limitatore pubblicità (max 3 al giorno) === */
 function canWatchAd() {
   const today = new Date().toISOString().slice(0,10);
   const rec = JSON.parse(localStorage.getItem("ads_today") || "{}");
