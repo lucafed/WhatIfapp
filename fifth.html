@@ -77,9 +77,6 @@ h1{
   font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);
   border:1px solid var(--line);border-radius:999px;padding:6px 10px;
 }
-.lead{
-  color:#E7F2EE;font-size:14px;line-height:1.45;opacity:.86;margin:2px 0 10px;
-}
 .fade-in{animation:fade .35s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
 .embit{padding:0 .08em;box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset;text-shadow:0 0 12px rgba(255,255,255,.08);border-radius:4px}
@@ -192,10 +189,9 @@ h1{
       <div id="topPct" class="top-pct" aria-live="polite">—</div>
     </div>
 
-    <!-- Lead + Oracle -->
+    <!-- SOLO Oracle (niente frasetta lead) -->
     <div class="oracle-wrap">
       <div class="orb" aria-hidden="true"></div>
-      <div id="lead" class="lead">—</div>
       <div id="oracleLine" class="oracle-line">—</div>
     </div>
     <div id="answer" class="story">⏳ …</div>
@@ -375,26 +371,7 @@ const t=()=>I18N[lang]||I18N.it;
 const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
 const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica…`;
 
-/* ==== Leads (senza la frase da rimuovere) ==== */
-const LEADS = {
-  it:{ wtf:[
-        "Entri piano, il caos ti riconosce e oggi ti lascia passare.",
-        "Respiri e lasci che sia il destino a inciampare per primo."
-      ],
-       whatif:[
-        "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica."
-      ]},
-  en:{ wtf:["You step in slowly; chaos recognizes you and lets you through.","Breathe; let chance trip before you do."],
-       whatif:["Set the keys down and let the quiet that doesn’t judge go first."]},
-  es:{ wtf:["Entras despacio; el caos te reconoce y hoy te deja pasar."],
-       whatif:["Deja las llaves y permite que hable el silencio que no juzga."]},
-  fr:{ wtf:["Tu entres doucement ; le chaos te reconnaît et te laisse passer."],
-       whatif:["Pose les clés et laisse parler le silence qui ne juge pas."]},
-  de:{ wtf:["Du trittst leise ein; das Chaos erkennt dich und lässt dich durch."],
-       whatif:["Leg die Schlüssel hin und lass erst die Stille sprechen."]}
-};
-
-/* === ORACLE LINES (varie, misteriose, no ripetizioni fino a esaurimento) === */
+/* === ORACLE LINES (solo attesa, nessun lead statico) === */
 const ORACLE_LINES = {
   it: [
     "Shh… le carte girano piano.",
@@ -491,7 +468,7 @@ const ORACLE_LINES = {
 /* ==== UI refs ==== */
 const qs=(s)=>document.querySelector(s);
 const subtitle=qs('#subtitle'), lblQ=qs('#lblQ'), lblA=qs('#lblA'), qView=qs('#qView');
-const leadNode=qs('#lead'), answerEl=qs('#answer'), shareBtn=qs('#shareBtn'), againBtn=qs('#againBtn');
+const answerEl=qs('#answer'), shareBtn=qs('#shareBtn'), againBtn=qs('#againBtn');
 const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct'), bottomPct=qs('#bottomPct');
 const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
 const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
@@ -557,21 +534,17 @@ window.addEventListener('storage',(e)=>{ if(['whatif_wallet','whatif_wallet_sync
 
 /* ==== Helpers testo ==== */
 function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
-function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
-function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+='.'; return t }
 function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
 
 /* ==== Titles/Text ==== */
 function applyUI(q){
   const T=t();
   setText('#title', style==='wtf'?T.titleWTF:T.titleWHF);
-  subtitle.textContent=T.sub(q||'—'); lblQ.textContent=T.q; lblA.textContent=T.a; setText('#lblP', T.p);
+  subtitle.textContent=T.sub(q||'—'); setText('#lblQ', T.q); setText('#lblA', T.a); setText('#lblP', T.p);
   shareBtn.textContent=T.share; againBtn.textContent=T.again; styleBadge.textContent=(style==='wtf')?T.styleWTF:T.styleWHF;
-  setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; metaInfo.textContent=T.meta(style,periodo);
-  const bank=(LEADS[lang]&&LEADS[lang][style])?(LEADS[lang][style]):(LEADS.it[style]||LEADS.it.whatif);
-  leadNode.textContent=oneSentence(pick(bank)||'')||'—';
-  chipFav.textContent=`${T.chipsFav} 0`; chipCon.textContent=`${T.chipsCon} 0`; chipAst.textContent=`${T.chipsAst} 0`;
+  setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));
+  // Nessuna lead phrase qui.
 }
 
 /* ==== Probability & motives ==== */
@@ -609,8 +582,6 @@ function renderCommitteeLike(surprise){
 /* ==== Overlay (store + rewarded) ==== */
 const overlay=qs('#overlay'), overlayFrame=qs('#overlay-frame');
 let overlayLoadTimer=null, rewardTimer=null, rewardGranted=false, awaitingCredit=false, alreadyConsumed=false;
-
-/* SOLO PUBBLICITÀ: rimosse le opzioni di acquisto dal fallback + "Prossimamente" */
 function storeFallbackHTML(){
   const T=t();
   return `
@@ -650,8 +621,6 @@ h2{margin:4px 0 6px;font-size:18px}
 <\/script>
 </body></html>`;
 }
-
-/* === Limitatore pubblicità (max 3 al giorno) === */
 function canWatchAd() {
   const today = new Date().toISOString().slice(0,10);
   const rec = JSON.parse(localStorage.getItem("ads_today") || "{}");
@@ -751,7 +720,6 @@ let oracleTimerId = null;
 function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
 function buildOracleDeck(){
   const base = (ORACLE_LINES[lang] || ORACLE_LINES.it).slice();
-  // micro-varianti leggere per aumentare varietà senza cambiare tono
   const tails = ["", " …", " ⋯", " —", " ⸺", " …sssh."];
   const deck = [];
   for(const line of base){
