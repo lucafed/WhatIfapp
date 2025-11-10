@@ -192,14 +192,13 @@ h1{
       <div id="topPct" class="top-pct" aria-live="polite">—</div>
     </div>
 
-    <!-- ⬇️ SOSTITUZIONE: lead + answer con rituale oracolare -->
+    <!-- Lead + Oracle -->
     <div class="oracle-wrap">
       <div class="orb" aria-hidden="true"></div>
       <div id="lead" class="lead">—</div>
       <div id="oracleLine" class="oracle-line">—</div>
     </div>
     <div id="answer" class="story">⏳ …</div>
-    <!-- ⬆️ FINE SOSTITUZIONE -->
 
     <div class="hr"></div>
     <div class="label" id="lblP">Esito & motivazioni</div>
@@ -243,7 +242,6 @@ h1{
 
 <!-- 🔔 audio reveal -->
 <audio id="revealDing" preload="auto">
-  <!-- Sostituisci con un tuo file se vuoi: <source src="assets/ding.mp3" type="audio/mpeg"> -->
   <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAA" type="audio/mpeg">
 </audio>
 
@@ -377,12 +375,17 @@ const t=()=>I18N[lang]||I18N.it;
 const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
 const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica…`;
 
-/* ==== Leads ==== */
+/* ==== Leads (senza la frase da rimuovere) ==== */
 const LEADS = {
-  it:{ wtf:["Entri piano, il caos ti riconosce e oggi ti lascia passare.","Respiri e lasci che sia il destino a inciampare per primo."],
-       whatif:["Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.","La stanza è la stessa, lo sguardo no: è già un inizio."]},
+  it:{ wtf:[
+        "Entri piano, il caos ti riconosce e oggi ti lascia passare.",
+        "Respiri e lasci che sia il destino a inciampare per primo."
+      ],
+       whatif:[
+        "Metti giù le chiavi e lasci parlare il silenzio che non ti giudica."
+      ]},
   en:{ wtf:["You step in slowly; chaos recognizes you and lets you through.","Breathe; let chance trip before you do."],
-       whatif:["Set the keys down and let the quiet that doesn’t judge go first.","Same room, different gaze — that’s already a start."]},
+       whatif:["Set the keys down and let the quiet that doesn’t judge go first."]},
   es:{ wtf:["Entras despacio; el caos te reconoce y hoy te deja pasar."],
        whatif:["Deja las llaves y permite que hable el silencio que no juzga."]},
   fr:{ wtf:["Tu entres doucement ; le chaos te reconnaît et te laisse passer."],
@@ -391,19 +394,98 @@ const LEADS = {
        whatif:["Leg die Schlüssel hin und lass erst die Stille sprechen."]}
 };
 
-/* === ORACLE LINES === */
+/* === ORACLE LINES (varie, misteriose, no ripetizioni fino a esaurimento) === */
 const ORACLE_LINES = {
   it: [
     "Shh… le carte girano piano.",
-    "Aspetta: la risposta bussa piano.",
-    "L’aria si fa chiara, arriva.",
-    "Non correre: sta prendendo forma.",
-    "Occhio: il quadro si disegna da solo."
+    "Aspetta: la risposta bussa sottovoce.",
+    "L’aria si fa chiara, sta arrivando.",
+    "Non correre: il disegno prende forma.",
+    "Occhio: il quadro si accende da solo.",
+    "Silenzio un attimo… qualcosa si allinea.",
+    "Senti? C’è un passo che torna nel ritmo.",
+    "Trattieni il fiato: la moneta è a mezz’aria.",
+    "Una piega nella notte, poi luce sottile.",
+    "Le luci interne si accendono una alla volta.",
+    "Ancora un respiro… il filo si tende.",
+    "Eccolo: l’indizio che mancava si mostra.",
+    "Un colpo di vento, poi tutto si ferma.",
+    "Scorri piano: la porta sta socchiudendosi.",
+    "Si sente un sì lontano, ma si avvicina.",
+    "L’oracolo gira la pagina… quasi."
   ],
-  en: ["Hush… it’s forming.","Wait: it’s coming clear.","Don’t rush: it’s shaping up."],
-  es: ["Shh… se está formando.","Espera: llega claro."],
-  fr: ["Chut… ça se forme.","Attends: ça s’éclaircit."],
-  de: ["Leise… es wird klar.","Warte: es nimmt Form an."]
+  en: [
+    "Hush… the cards are turning.",
+    "Wait: the answer knocks softly.",
+    "Air clears; something is arriving.",
+    "Don’t rush—shape is forming.",
+    "Look: the outline lights itself.",
+    "Hold a breath… lines align.",
+    "Hear it? A step returns to rhythm.",
+    "Coin in mid-air; let it fall.",
+    "A fold in the dark, then a thin light.",
+    "Inner lights switch on, one by one.",
+    "Another breath… the wire tightens.",
+    "There it is: the missing hint.",
+    "A gust, then stillness.",
+    "Scroll slowly: a door is ajar.",
+    "A distant yes draws nearer.",
+    "The oracle turns the page… almost."
+  ],
+  es: [
+    "Shh… las cartas giran despacio.",
+    "Espera: la respuesta toca suave.",
+    "El aire se aclara; ya viene.",
+    "No corras: la forma aparece.",
+    "Mira: el contorno se enciende solo.",
+    "Guarda el aliento… todo se alinea.",
+    "¿Lo oyes? Vuelve el paso al ritmo.",
+    "Moneda en el aire; que caiga.",
+    "Un pliegue en la noche, luz fina.",
+    "Luces internas, una por una.",
+    "Otro respiro… el hilo se tensa.",
+    "Ahí está: la pista que faltaba.",
+    "Una ráfaga y luego quietud.",
+    "Desliza lento: se entorna la puerta.",
+    "Un sí lejano se acerca.",
+    "El oráculo pasa página… casi."
+  ],
+  fr: [
+    "Chut… les cartes tournent.",
+    "Attends : la réponse frappe doucement.",
+    "L’air s’éclaircit ; ça arrive.",
+    "Ne te presse pas : la forme vient.",
+    "Regarde : le contour s’allume seul.",
+    "Retiens ton souffle… tout s’aligne.",
+    "Tu entends ? Le pas reprend le tempo.",
+    "Pièce en suspens ; laisse-la tomber.",
+    "Un pli dans la nuit, puis une fine lumière.",
+    "Des lampes intérieures s’allument, une à une.",
+    "Encore un souffle… le fil se tend.",
+    "La voilà : l’indice manquant.",
+    "Un souffle, puis l’immobilité.",
+    "Fais défiler lentement : une porte s’entrouvre.",
+    "Un oui lointain s’approche.",
+    "L’oracle tourne la page… presque."
+  ],
+  de: [
+    "Leise… die Karten wenden sich.",
+    "Warte: die Antwort klopft sanft.",
+    "Die Luft klärt sich; es kommt.",
+    "Nicht eilen: die Form entsteht.",
+    "Schau: die Kontur leuchtet selbst.",
+    "Atem halten… die Linien richten sich.",
+    "Hörst du’s? Der Schritt findet den Takt.",
+    "Münze in der Luft; lass sie fallen.",
+    "Ein Faltenwurf der Nacht, dann dünnes Licht.",
+    "Innere Lichter, eins nach dem andern.",
+    "Noch ein Atem… der Draht spannt sich.",
+    "Da ist es: der fehlende Hinweis.",
+    "Eine Böe, dann Stille.",
+    "Langsam scrollen: die Tür steht einen Spalt offen.",
+    "Ein fernes Ja kommt näher.",
+    "Das Orakel blättert um… fast."
+  ]
 };
 
 /* ==== UI refs ==== */
@@ -420,8 +502,7 @@ function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.class
 
 /* ==== Wallet + legacy + 🎁 Sorprendimi ==== */
 const WKEY="whatif_wallet";
-const SURPKEY="whatif_surprise"; // token separati per Sorprendimi
-
+const SURPKEY="whatif_surprise";
 function readWallet(){ try{ const w=JSON.parse(LS.getItem(WKEY)||"{}")||{}; return {available:Number.isFinite(+w.available)?+w.available:null, used:Number.isFinite(+w.used)?+w.used:null, limit:Number.isFinite(+w.limit)?+w.limit:null}; }catch{return{available:null,used:null,limit:null}}}
 function writeWallet(w){
   const cur=readWallet();
@@ -464,18 +545,8 @@ function addCredits(n){ n=Math.max(0,parseInt(n,10)||0); if(n<=0) return;
 function readSurprise(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||"0",10)||0); }
 function writeSurprise(n){ n=Math.max(0, parseInt(n,10)||0); LS.setItem(SURPKEY,String(n)); updateCreditInfo(); LS.setItem("whatif_wallet_sync", String(Date.now())); }
 function addSurprise(n){ writeSurprise(readSurprise() + Math.max(0,parseInt(n,10)||0)); }
-function consumeSurpriseOne(){
-  const cur=readSurprise();
-  if(cur>0){ writeSurprise(cur-1); return true; }
-  return false;
-}
-function computeSurpriseBonus(amount){
-  const a=parseInt(amount,10)||0;
-  if(a>=20) return 3;
-  if(a>=10) return 2;
-  if(a>=5)  return 1;
-  return 0;
-}
+function consumeSurpriseOne(){ const cur=readSurprise(); if(cur>0){ writeSurprise(cur-1); return true; } return false; }
+function computeSurpriseBonus(amount){ const a=parseInt(amount,10)||0; if(a>=20) return 3; if(a>=10) return 2; if(a>=5)  return 1; return 0; }
 
 function updateCreditInfo(n=getAvailable()){
   if(!creditInfo) return;
@@ -560,7 +631,6 @@ h2{margin:4px 0 6px;font-size:18px}
   <p class="small" style="margin:6px 0 10px;opacity:.85">🛒 ${T.comingSoon} — ${T.buySoonNote}</p>
   <p class="small" id="msg">${T.noCredits}</p>
   <div class="row">
-    <!-- SOLO PUBBLICITÀ -->
     <button class="btn ghost" id="adBtn">${T.watchAd}</button>
     <button class="btn ghost" onclick="parent.postMessage({type:'close_overlay'}, '*')">${T.close}</button>
   </div>
@@ -585,7 +655,7 @@ h2{margin:4px 0 6px;font-size:18px}
 function canWatchAd() {
   const today = new Date().toISOString().slice(0,10);
   const rec = JSON.parse(localStorage.getItem("ads_today") || "{}");
-  if (rec.date !== today) return true; // nuova giornata → reset
+  if (rec.date !== today) return true;
   return (rec.count || 0) < 3;
 }
 function recordAdWatched() {
@@ -597,8 +667,6 @@ function recordAdWatched() {
     localStorage.setItem("ads_today", JSON.stringify({ date: today, count: (rec.count||0) + 1 }));
   }
 }
-
-/* Sovrascrive storeFallbackHTML per mostrare blocco pubblicità dopo 3 video */
 const _origStoreFallbackHTML = storeFallbackHTML;
 storeFallbackHTML = function(){
   const html = _origStoreFallbackHTML();
@@ -613,15 +681,10 @@ storeFallbackHTML = function(){
   }
   return html;
 };
-
-/* Quando pubblicità completata → registra */
 window.addEventListener("message",(ev)=>{
   const d=ev.data||{};
-  if(d.type==="rewarded_completed"){
-    recordAdWatched(); // conteggia la view
-  }
+  if(d.type==="rewarded_completed"){ recordAdWatched(); }
 });
-
 function openOverlay(url){
   overlay.style.display='grid';
   overlay.setAttribute('aria-hidden','false');
@@ -682,21 +745,39 @@ function applyQuestion(){
   return {req, domanda, surprise};
 }
 
-/* === ORACLE helpers === */
+/* === ORACLE helpers: mazzo senza ripetizioni + timing irregolare === */
+let oracleDeck = [];
+let oracleTimerId = null;
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+function buildOracleDeck(){
+  const base = (ORACLE_LINES[lang] || ORACLE_LINES.it).slice();
+  // micro-varianti leggere per aumentare varietà senza cambiare tono
+  const tails = ["", " …", " ⋯", " —", " ⸺", " …sssh."];
+  const deck = [];
+  for(const line of base){
+    const v = Math.random()<0.45 ? (line.replace(/\.$/,"") + tails[Math.floor(Math.random()*tails.length)]) : line;
+    deck.push(v);
+  }
+  return shuffle(deck);
+}
+function nextOracleLine(){
+  if(oracleDeck.length===0) oracleDeck = buildOracleDeck();
+  return oracleDeck.pop();
+}
 function startOracleLoading(){
   document.body.classList.add('loading');
   const lineEl = document.getElementById('oracleLine');
-  const bank = ORACLE_LINES[lang] || ORACLE_LINES.it;
-  let i = 0;
-  lineEl.textContent = bank[i % bank.length];
-  window.__oracleTimer = setInterval(()=>{
-    i++; lineEl.textContent = bank[i % bank.length];
-  }, 1800);
+  const tick = ()=>{
+    lineEl.textContent = nextOracleLine();
+    const jitter = 1200 + Math.floor(Math.random()*1000); // 1200–2200ms
+    oracleTimerId = setTimeout(tick, jitter);
+  };
+  tick();
 }
 function stopOracleLoading(){
   document.body.classList.remove('loading');
+  clearTimeout(oracleTimerId); oracleTimerId=null;
   const lineEl = document.getElementById('oracleLine');
-  clearInterval(window.__oracleTimer); window.__oracleTimer=null;
   setTimeout(()=>{ if(lineEl) lineEl.textContent = " "; }, 350);
 }
 function revealEffect(){
@@ -707,14 +788,13 @@ function revealEffect(){
   setTimeout(()=> wrap.classList.remove('reveal'), 900);
 }
 
-/* ==== Main flow (idempotente) ==== */
+/* ==== Main flow ==== */
 async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
 
-  startOracleLoading(); // ⬅️ avvio rituale d’attesa
+  startOracleLoading();
 
-  // Consumo crediti: prova prima a usare 1 Sorprendimi quando surprise===true
   if(!IS_ADMIN && !alreadyConsumed){
     if(surprise){
       const okSurp = consumeSurpriseOne();
@@ -728,7 +808,7 @@ async function startFlow(){
       const left=getAvailable();
       if(!(left===Infinity) && left<=0){
         awaitingCredit=true;
-        stopOracleLoading(); // ⬅️ ferma loading in caso di store
+        stopOracleLoading();
         answerEl.textContent=t().noCredits;
         openStore();
         return;
@@ -767,8 +847,8 @@ async function startFlow(){
     if(!/[.!?…]$/.test(answerText)) answerText+='.';
     answerEl.textContent=answerText; decorateEmBits(answerEl);
 
-    stopOracleLoading();   // ⬅️ stop animazione
-    revealEffect();        // ⬅️ reveal + ding
+    stopOracleLoading();
+    revealEffect();
 
     const apiPct = (data && Number.isFinite(+data.pct)) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : null;
     const usedPct = (apiPct!=null) ? apiPct : computeProbability(domanda).pct;
@@ -801,33 +881,20 @@ async function startFlow(){
     }
 
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({
-      domanda,
-      risposta:answerText,
-      stile:style,
-      periodo,
-      ts:Date.now(),
-      surprise,
-      pct:usedPct,
-      motivazione:motivazioneUsata
-    });
+    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:usedPct, motivazione:motivazioneUsata });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
   }catch(e){
     console.error(e);
-    stopOracleLoading();   // ⬅️ assicurati di fermare l’animazione anche in errore
+    stopOracleLoading();
     answerEl.textContent=t().error;
   }
 }
 
-/* ==== Messaggi dal modal (ritorno a fourth) ==== */
+/* ==== Messaggi dal modal ==== */
 window.addEventListener("message",(ev)=>{
   const d=ev.data||{};
-
-  // 🔕 acquisti disattivati: ignoriamo eventuali messaggi di acquisto
   if(d.type==="purchase_completed"){ return; }
-
   if(d.type==="open_rewarded"){ openRewarded(); return; }
-
   if(d.type==="rewarded_completed"){
     const amt=parseInt(d.amount,10)||1;
     addCredits(amt); updateCreditInfo(); toast(t().toastPlus(amt));
@@ -836,12 +903,9 @@ window.addEventListener("message",(ev)=>{
     location.replace('fourth.html');
     return;
   }
-
   if(d.type==="close_overlay"){
     closeOverlay();
-    if(getAvailable()>0){
-      location.replace('fourth.html');
-    }
+    if(getAvailable()>0){ location.replace('fourth.html'); }
     return;
   }
 });
