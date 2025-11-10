@@ -16,7 +16,7 @@ const PRECACHE_URLS = [
   '/public/icon-192-maskable.png',
   '/public/icon-512-maskable.png',
 
-  // JS/static not pesanti (se esistono)
+  // JS/static non pesanti (se esistono)
   '/public/i18n.js'
 ];
 
@@ -133,7 +133,13 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(swr(request, RUNTIME_CACHE));
 });
 
-// Facciamo attivare subito la nuova SW (opzionale)
+// --- Messaggi dal client per attivare SUBITO la nuova versione
 self.addEventListener('message', (event) => {
-  if (event.data === 'skipWaiting') self.skipWaiting();
+  // Supporta sia il vecchio formato stringa che il nuovo oggetto { type: 'SKIP_WAITING' }
+  if (!event.data) return;
+  if (event.data === 'skipWaiting') {
+    self.skipWaiting();
+  } else if (event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
