@@ -67,14 +67,12 @@ function sentenceCaseAll(s=""){
 }
 function finalPunct(s=""){ return /[.!?…]$/.test(s)?s:s+"."; }
 function hashStr(str=""){ let h=2166136261>>>0; for(const ch of String(str)){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619)>>>0; } return h>>>0; }
-function pickDet(arr, seed){ return arr[ seed % arr.length ]; }
+function pickDet(arr, seed){ return arr[ arr.length ? (seed % arr.length) : 0 ] || ""; }
 
-/* ========= WHAT IF – esempio di respiro (non usato come testo fisso) ========= */
+/* ========= WHAT IF – esempio di respiro (non fisso) ========= */
 const WHATIF_HYBRID_EX_IT = `Piccolo avviso del cuore, poi il resto: conti alla mano e abitudini in chiaro. Riduci rumore, allunghi fiato: meno frenesia, più spazio mentale. Le giornate diventano più tue — strade note, tempi umani, persone che ti tengono. Non è fuga né eroismo, è manutenzione di vita: sposti peso tra tempo, denaro e relazioni. In cambio della vetrina ottieni consistenza. A fine giornata non senti rimpianto bussare: senti il passo rientrare nel suo passo.`;
 
-/* ======= NUOVE REGOLE WHAT IF ======= */
-/* — Tono “zingara realista”: una riga iniziale intuitiva (sempre), poi analisi concreta + immagini sobrie,
-     chiusura con una sensazione + micro-gancio (“se resti… / se vai…”). Seconda persona. Un paragrafo. */
+/* ======= REGOLE WHAT IF ======= */
 const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO): apri SEMPRE con una riga breve da “zingara realista” (intuitiva, amichevole, senza nomi, 6–14 parole), poi 60% analisi concreta (routine, tempo, costi/benefici, energia, relazioni) + 40% immagini sobrie della quotidianità. Scrivi un futuro vicino che inizia ora: usa futuro/condizionale semplice (“potresti”, “inizierai”, “probabilmente”). Niente certezze assolute, niente dati reali o nomi non forniti. Chiudi con una frase che lasci una sensazione chiara e un piccolo gancio di curiosità (“se lo farai, ti accorgerai che… / e lì capirai che…”). 8–10 frasi, seconda persona, un paragrafo, NON ripetere la domanda. Linguaggio semplice, concreto, coinvolgente.`;
 const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE): apri SEMPRE con una riga breve da “zingara realista”, poi 60% analisi concreta + 40% immagini sobrie. Scrivi in chiave controfattuale: “se avessi…, avresti…”, “ti saresti trovato…”. Usa condizionale composto per l’esito alternativo, niente date/numeri o fatti reali non forniti. Chiudi con sensazione + micro-gancio (“forse oggi sapresti… / e ti verrebbe voglia di…”). 8–10 frasi, seconda persona, un paragrafo, NON ripetere la domanda. Linguaggio semplice, concreto, coinvolgente.`;
 
@@ -85,41 +83,55 @@ const ZINGARA_INTROS = {
     "Fermati un attimo: lo sento nelle dita.",
     "Oh, questa la vedo nitida.",
     "Piano, che qui c’è un segnale pulito.",
-    "Zitto un secondo: qui l’aria dice già tanto.",
+    "Zitto un secondo: l’aria dice già tanto.",
     "Non serve rumore: la risposta bussa piano.",
     "Shh, questa scena arriva dritta.",
     "Occhio: la strada si disegna da sola.",
     "Senti? C’è un passo che torna al suo ritmo.",
     "Eccola: la versione onesta di te."
   ],
-  en: [
-    "Hold on — your gut is loud here.",
-    "Wait: this comes in clear.",
-    "Hush, the picture is sharp.",
-  ],
-  es: [
-    "Espera: esto se ve claro.",
-    "Silencio un segundo: ya se siente.",
-  ],
-  fr: [
-    "Attends: ça arrive net.",
-    "Chut, ça parle tout seul.",
-  ],
-  de: [
-    "Warte kurz: das wird klar.",
-    "Leise, das Bild ist deutlich.",
-  ],
+  en: ["Hold on — your gut is loud here.","Wait: this comes in clear.","Hush, the picture is sharp."],
+  es: ["Espera: esto se ve claro.","Silencio un segundo: ya se siente."],
+  fr: ["Attends: ça arrive net.","Chut, ça parle tout seul."],
+  de: ["Warte kurz: das wird klar.","Leise, das Bild ist deutlich."],
 };
-function addDynamicIntroIfWhatIf({ answer, stile, lang, domanda }){
-  if(stile !== "whatif") return answer;
+
+/* ========= Finali “gancio” — più emozione ma reali ========= */
+const ZINGARA_ENDINGS = {
+  it: {
+    future: [
+      "E lì ti accorgerai che non serve correre: basta scegliere bene.",
+      "E proprio lì capirai che la calma non è rinuncia, è margine.",
+      "Da quel punto sentirai la vita rispondere semplice: poco, ma tuo.",
+      "E quando ti volterai, vedrai che la fatica stava solo aprendo spazio."
+    ],
+    past: [
+      "Forse oggi lo sentiresti nelle ossa: non era destino, era ritmo.",
+      "E ti verrebbe voglia di chiederti un’altra volta: e se lo facessi adesso?",
+      "Ti ritroveresti a pensare che alcune strade restano aperte, anche tardi.",
+      "E capirai che quel rimpianto non morde: invita a provare meglio, adesso."
+    ]
+  },
+  en: {
+    future: ["And there you’ll notice you don’t need speed, just a good angle."],
+    past: ["Maybe you’d feel it in your bones: it wasn’t fate, just timing."]
+  },
+  es: { future: ["Y ahí notarás que no hace falta correr, solo elegir bien."], past: ["Y quizá hoy lo sentirías: no era destino, era ritmo."] },
+  fr: { future: ["Et là tu verras: pas besoin de courir, juste de choisir juste."], past: ["Et peut-être que tu le saurais: ce n’était pas le destin, mais le tempo."] },
+  de: { future: ["Und dort merkst du: Tempo ist egal, der Winkel zählt."], past: ["Vielleicht spürst du heute: kein Schicksal, nur Timing."] },
+};
+function ensureZingaraEnding({ text, lang, periodo, domanda }){
+  let s = String(text||"").trim();
+  const last = (s.match(/([^.!?…]+[.!?…])\s*$/)||[])[1] || s;
+  const alreadyHasHook = /(ti accorgerai|capirai|ti verrà voglia|ti ritroverai|e lì|e proprio lì|da quel punto|forse oggi)/i.test(last);
+  if(alreadyHasHook) return s;
   const L = normLang(lang);
-  const bank = ZINGARA_INTROS[L] || ZINGARA_INTROS.it;
-  const intro = pickDet(bank, hashStr(domanda || answer));
-  const a = String(answer||"").trim();
-  const first = (a.match(/^([\s\S]*?[.!?…])/)||[])[1] || a;
-  const already = bank.some(s => normLine(first).startsWith(normLine(s)));
-  if(already) return a;
-  return `${intro} ${a}`.trim();
+  const pool = ((ZINGARA_ENDINGS[L]||ZINGARA_ENDINGS.it) || {});
+  const bag = String(periodo).toLowerCase()==="past" ? (pool.past||ZINGARA_ENDINGS.it.past) : (pool.future||ZINGARA_ENDINGS.it.future);
+  const addon = pickDet(bag, hashStr((domanda||"")+s));
+  if(!addon) return s;
+  s = s.replace(/[.!?…]+$/,''); // evito doppia punteggiatura
+  return `${s}. ${addon}`;
 }
 
 /* ========= WTF — banche demenziali ========= */
@@ -156,7 +168,6 @@ function buildMessages({ domanda, lang, periodo, stile }){
     ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Second person only.`
     : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona.`;
 
-  // Nota: il vincolo temporale lo spostiamo dentro le regole WHATIF specifiche (past/future)
   const msgs = [
     { role: "system", content: baseRules },
   ];
@@ -185,7 +196,6 @@ function buildMessages({ domanda, lang, periodo, stile }){
 - Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
     );
   } else {
-    // WHAT IF con regole dipendenti dal tempo (e incipit zingara realista)
     const ruleIT = String(periodo).toLowerCase()==="past" ? WHATIF_RULE_PAST_IT : WHATIF_RULE_FUT_IT;
     msgs.push(
       { role: "system", content: ruleIT },
@@ -368,7 +378,7 @@ export default async function handler(req, res){
         const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
         const inQuestion=new Set((d.match(nameRx)||[]));
         answer=answer.replace(nameRx,(m)=>{
-          if (["Ah","Oh","Ehi","Sai","Shh","Occhio","Piano"].includes(m)) return m;
+          if (["Ah","Oh","Ehi","Sai","Shh","Occhio","Piano","Fermati","Aspetta"].includes(m)) return m;
           return inQuestion.has(m) ? m : m.toLowerCase();
         });
       })();
@@ -377,7 +387,12 @@ export default async function handler(req, res){
     // 3) Ripristina maiuscole
     answer = sentenceCaseAll(answer);
 
-    // 4) Punteggiatura finale
+    // 4) Aggiungi (se manca) un finale emozionale breve e realistico
+    if (stile === "whatif") {
+      answer = ensureZingaraEnding({ text: answer, lang, periodo, domanda });
+    }
+
+    // 5) Punteggiatura finale
     answer = finalPunct(answer);
 
     // ===== Extra payload =====
