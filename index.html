@@ -264,12 +264,9 @@
       title.addEventListener('click', ()=>{ if(++tapTitle>=3){ stage=1; tapTitle=0; flash(); pastBtn.classList.add("unlocking"); pastBtn.style.boxShadow="0 0 0 2px rgba(255,255,255,.15) inset, 0 0 22px rgba(255,255,255,.12)"; setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);} if(timer) clearTimeout(timer); timer=setTimeout(reset,2000); });
       pastBtn.addEventListener('click', ()=>{ if(stage!==1) return; if(++tapPast>=5) success(); if(timer) clearTimeout(timer); timer=setTimeout(reset,2500); });
     })();
-
-    // Service Worker
-    if("serviceWorker" in navigator){
-      window.addEventListener("load", ()=>{ navigator.serviceWorker.register("/sw.js").catch(()=>{}); });
-    }
   </script>
+
+  <!-- 🔔 Gestione update SW + barra "Aggiorna" -->
   <script src="/sw-update.js"></script>
 </body>
 </html>
