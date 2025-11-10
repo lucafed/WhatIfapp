@@ -67,10 +67,12 @@ function finalPunct(s=""){ return /[.!?…]$/.test(s)?s:s+"."; }
 function hashStr(str=""){ let h=2166136261>>>0; for(const ch of String(str)){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619)>>>0; } return h>>>0; }
 function pickDet(arr, seed){ return arr[ seed % arr.length ]; }
 
-/* ========= WHAT IF – stile 60/40 (analitico + immagini sobrie) ========= */
+/* ========= WHAT IF – stile 60/40 ========= */
 const WHATIF_HYBRID_EX_IT = `Sai, questa non è una domanda leggera. Guardi i numeri, poi guardi le abitudini: costi più bassi da una parte, occasioni più larghe dall’altra. La qualità della vita non è un grafico, è una routine: tempi di spostamento, servizi che funzionano, persone che senti vicine. Se stringi, il portafoglio respira un po’ di più; in cambio accetti un ritmo meno veloce e meno “vetrine” da inseguire. Le giornate si accorciano di frenesia e si allungano di fiato: un caffè fatto bene, una strada che conosci, un’aria che sa di casa. Non è una fuga né un eroismo: è ingegneria quotidiana, spostare pesi tra tempo, denaro e relazioni. A conti fatti, potresti guadagnare spazio mentale e perdere solo rumore. E quando la sera chiudi la porta, non senti il rimpianto bussare: senti il tuo passo tornare al suo passo.`;
 
-const WHATIF_RULE_IT = `WHAT IF HYBRID (italiano): 60% analisi concreta (costi/benefici, routine, qualità di vita), 40% immagini sobrie della quotidianità. Incipit analitico (mai “Bella …”). 8–10 frasi. Seconda persona. Un paragrafo unico. Niente eco della domanda.`;
+/* ======= NUOVE REGOLE WHAT IF per tempo ======= */
+const WHATIF_RULE_FUT_IT = `WHAT IF HYBRID (italiano, FUTURO): 60% analisi concreta (costi/benefici, routine, qualità di vita), 40% immagini sobrie. Incipit analitico (mai “Bella …”). 8–10 frasi. Seconda persona. Paragrafo unico. Descrivi un “prossimo futuro che inizia ora”: usa futuro/condizionale semplice (potrai/potresti), ipotesi plausibili, niente certezze assolute, niente dati reali specifici o nomi propri non forniti. NON ripetere la domanda.`;
+const WHATIF_RULE_PAST_IT = `WHAT IF HYBRID (italiano, PASSATO CONTROFATTUALE): 60% analisi concreta, 40% immagini sobrie. Incipit analitico. 8–10 frasi. Seconda persona. Paragrafo unico. Scrivi in chiave controfattuale: “se avessi…, avresti… / saresti…”. Usa condizionale composto per l’esito alternativo; evita date, numeri o fatti reali non forniti. Tono pragmatico + immaginazione misurata. NON ripetere la domanda.`;
 
 /* ========= Incipit dinamici WHAT IF ========= */
 const INTROS = {
@@ -185,9 +187,11 @@ function buildMessages({ domanda, lang, periodo, stile }){
 - Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
     );
   } else {
+    // WHAT IF con regole dipendenti dal tempo
+    const ruleIT = String(periodo).toLowerCase()==="past" ? WHATIF_RULE_PAST_IT : WHATIF_RULE_FUT_IT;
     msgs.push(
-      { role: "system", content: WHATIF_RULE_IT },
-      { role: "system", content: `ESEMPIO (respiro e tono):\n${WHATIF_HYBRID_EX_IT}` }
+      { role: "system", content: ruleIT },
+      { role: "system", content: `ESEMPIO (respiro e tono, non vincolante nei contenuti):\n${WHATIF_HYBRID_EX_IT}` }
     );
   }
 
@@ -222,7 +226,7 @@ function computePct(domanda, stile){
   return pct;
 }
 
-/* ========= WHAT IF: motivazione sintetica NUOVA ========= */
+/* ========= WHAT IF: motivazione sintetica ========= */
 function buildWhatIfMotivation(domanda, lang="it", pct=60){
   const L = (lang||"it").slice(0,2);
   const t = String(domanda||"").toLowerCase();
@@ -330,7 +334,6 @@ export default async function handler(req, res){
       lang  = "it",
       periodo = "future",
       micro = {},
-      // accetto anche altri campi passati dal client (es. sex) senza usarli
     } = body;
 
     if(!domanda || typeof domanda !== "string")
@@ -401,8 +404,8 @@ export default async function handler(req, res){
       periodo,
       model: MODEL,
       pct,
-      motivation,   // usalo in fifth per riempire il riquadro "Motivazione" in WHAT IF
-      scientific,   // usalo in fifth per il "Rapporto scientifico" in WTF (se presente)
+      motivation,
+      scientific,
     });
   }catch(err){
     console.error("❌ [/api/ask] error:", err);
