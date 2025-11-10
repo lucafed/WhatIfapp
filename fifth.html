@@ -492,6 +492,7 @@ function renderCommitteeLike(surprise){
 const overlay=qs('#overlay'), overlayFrame=qs('#overlay-frame');
 let overlayLoadTimer=null, rewardTimer=null, rewardGranted=false, awaitingCredit=false, alreadyConsumed=false;
 
+/* SOLO PUBBLICITÀ: rimosse le opzioni di acquisto dal fallback */
 function storeFallbackHTML(){
   const T=t();
   return `
@@ -502,8 +503,8 @@ body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-ser
 .card{background:#141C22;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px;margin-top:10px}
 h2{margin:4px 0 6px;font-size:18px}
 .btn{display:inline-block;margin:6px 6px 0 0;padding:10px 12px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
-.primary{background:linear-gradient(180deg,#1C57A0,#FFEC01);color:#0A0E12}
 .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
+.primary{background:linear-gradient(180deg,#1C57A0,#FFEC01);color:#0A0E12}
 .small{color:#A0B2BA;font-size:12px;line-height:1.5}
 .row{display:flex;flex-wrap:wrap;gap:8px}
 </style></head><body>
@@ -512,14 +513,7 @@ h2{margin:4px 0 6px;font-size:18px}
   <p class="small" id="msg">${T.noCredits}</p>
 
   <div class="row">
-    <button class="btn primary" onclick="parent.postMessage({type:'purchase_completed', amount:5}, '*')">${T.buy5}</button>
-    <button class="btn primary" onclick="parent.postMessage({type:'purchase_completed', amount:10}, '*')">${T.buy10}</button>
-    <button class="btn primary" onclick="parent.postMessage({type:'purchase_completed', amount:20}, '*')">${T.buy20}</button>
-  </div>
-
-  <p class="small">🎁 Bonus “Sorprendimi”: +1 con 5 crediti · +2 con 10 · +3 con 20.</p>
-
-  <div class="row">
+    <!-- SOLO PUBBLICITÀ -->
     <button class="btn ghost" id="adBtn">${T.watchAd}</button>
     <button class="btn ghost" onclick="parent.postMessage({type:'close_overlay'}, '*')">${T.close}</button>
   </div>
@@ -539,6 +533,7 @@ h2{margin:4px 0 6px;font-size:18px}
 <\/script>
 </body></html>`;
 }
+
   /* === Limitatore pubblicità (max 3 al giorno) === */
 function canWatchAd() {
   const today = new Date().toISOString().slice(0,10);
@@ -566,7 +561,7 @@ storeFallbackHTML = function(){
       '<button class="btn ghost" id="adBtn" disabled title="Limite giornaliero raggiunto">'
     ).replace(
       'id="msg">',
-      'id="msg">Hai già ottenuto i crediti gratuiti per oggi. Torna domani o acquista altri crediti.<br><br>'
+      'id="msg">Hai già ottenuto i crediti gratuiti per oggi. Torna domani.<br><br>'
     );
   }
   return html;
@@ -576,9 +571,10 @@ storeFallbackHTML = function(){
 window.addEventListener("message",(ev)=>{
   const d=ev.data||{};
   if(d.type==="rewarded_completed"){
-    recordAdWatched(); // aggiunta qui
+    recordAdWatched(); // conteggia la view
   }
 });
+
 function openOverlay(url){
   overlay.style.display='grid';
   overlay.setAttribute('aria-hidden','false');
@@ -747,23 +743,8 @@ async function startFlow(){
 window.addEventListener("message",(ev)=>{
   const d=ev.data||{};
 
-  if(d.type==="purchase_completed"){
-    const amt=parseInt(d.amount,10)||0;
-    if(amt>0){
-      addCredits(amt);
-      const bonus = computeSurpriseBonus(amt);
-      if(bonus>0){ addSurprise(bonus); }
-      updateCreditInfo();
-      try{
-        const plus = (t().toastPlus||((n)=>`+${n}`));
-        const msg = bonus>0 ? `${plus(amt)} · 🎁 +${bonus} Sorprendimi` : plus(amt);
-        toast(msg);
-      }catch{}
-    }
-    closeOverlay();
-    location.replace('fourth.html');
-    return;
-  }
+  // 🔕 acquisti disattivati: ignoriamo eventuali messaggi di acquisto
+  if(d.type==="purchase_completed"){ return; }
 
   if(d.type==="open_rewarded"){ openRewarded(); return; }
 
