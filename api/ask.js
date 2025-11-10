@@ -1,6 +1,8 @@
-// /api/ask.js — What?f Engine (Stable Hybrid WHATIF + Friendly-WTF Demenziale)
-// - WHATIF: stile unico 60% analisi / 40% immagini sobrie. Incipit VARIABILE (no “Bella …”).
-// - WTF: come da tuoi esempi. Aggiunto campo extra 'scientific' nel payload (non nella risposta).
+// /api/ask.js — What?f Engine (Zingara-Realista WHATIF + Friendly-WTF Demenziale)
+// - WHATIF: tono “zingara realista”: incipit breve e intuitivo (sempre presente, variabile),
+//   60% analisi concreta / 40% immagini sobrie, chiusura che lascia una sensazione + gancio.
+//   Passato → controfattuale (“se avessi…, avresti…”). Futuro → ipotetico vicino (“potresti / inizierai”).
+// - WTF: come da tuoi esempi. Campo extra 'scientific' nel payload (non nella risposta).
 // - Maiuscole sistemate post-process dopo punto / “…”.
 // - Un paragrafo, niente elenchi, niente eco della domanda.
 
@@ -67,52 +69,51 @@ function finalPunct(s=""){ return /[.!?…]$/.test(s)?s:s+"."; }
 function hashStr(str=""){ let h=2166136261>>>0; for(const ch of String(str)){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619)>>>0; } return h>>>0; }
 function pickDet(arr, seed){ return arr[ seed % arr.length ]; }
 
-/* ========= WHAT IF – stile 60/40 ========= */
-const WHATIF_HYBRID_EX_IT = `Sai, questa non è una domanda leggera. Guardi i numeri, poi guardi le abitudini: costi più bassi da una parte, occasioni più larghe dall’altra. La qualità della vita non è un grafico, è una routine: tempi di spostamento, servizi che funzionano, persone che senti vicine. Se stringi, il portafoglio respira un po’ di più; in cambio accetti un ritmo meno veloce e meno “vetrine” da inseguire. Le giornate si accorciano di frenesia e si allungano di fiato: un caffè fatto bene, una strada che conosci, un’aria che sa di casa. Non è una fuga né un eroismo: è ingegneria quotidiana, spostare pesi tra tempo, denaro e relazioni. A conti fatti, potresti guadagnare spazio mentale e perdere solo rumore. E quando la sera chiudi la porta, non senti il rimpianto bussare: senti il tuo passo tornare al suo passo.`;
+/* ========= WHAT IF – esempio di respiro (non usato come testo fisso) ========= */
+const WHATIF_HYBRID_EX_IT = `Piccolo avviso del cuore, poi il resto: conti alla mano e abitudini in chiaro. Riduci rumore, allunghi fiato: meno frenesia, più spazio mentale. Le giornate diventano più tue — strade note, tempi umani, persone che ti tengono. Non è fuga né eroismo, è manutenzione di vita: sposti peso tra tempo, denaro e relazioni. In cambio della vetrina ottieni consistenza. A fine giornata non senti rimpianto bussare: senti il passo rientrare nel suo passo.`;
 
-/* ======= NUOVE REGOLE WHAT IF per tempo ======= */
-const WHATIF_RULE_FUT_IT = `WHAT IF HYBRID (italiano, FUTURO): 60% analisi concreta (costi/benefici, routine, qualità di vita), 40% immagini sobrie. Incipit analitico (mai “Bella …”). 8–10 frasi. Seconda persona. Paragrafo unico. Descrivi un “prossimo futuro che inizia ora”: usa futuro/condizionale semplice (potrai/potresti), ipotesi plausibili, niente certezze assolute, niente dati reali specifici o nomi propri non forniti. NON ripetere la domanda.`;
-const WHATIF_RULE_PAST_IT = `WHAT IF HYBRID (italiano, PASSATO CONTROFATTUALE): 60% analisi concreta, 40% immagini sobrie. Incipit analitico. 8–10 frasi. Seconda persona. Paragrafo unico. Scrivi in chiave controfattuale: “se avessi…, avresti… / saresti…”. Usa condizionale composto per l’esito alternativo; evita date, numeri o fatti reali non forniti. Tono pragmatico + immaginazione misurata. NON ripetere la domanda.`;
+/* ======= NUOVE REGOLE WHAT IF ======= */
+/* — Tono “zingara realista”: una riga iniziale intuitiva (sempre), poi analisi concreta + immagini sobrie,
+     chiusura con una sensazione + micro-gancio (“se resti… / se vai…”). Seconda persona. Un paragrafo. */
+const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO): apri SEMPRE con una riga breve da “zingara realista” (intuitiva, amichevole, senza nomi, 6–14 parole), poi 60% analisi concreta (routine, tempo, costi/benefici, energia, relazioni) + 40% immagini sobrie della quotidianità. Scrivi un futuro vicino che inizia ora: usa futuro/condizionale semplice (“potresti”, “inizierai”, “probabilmente”). Niente certezze assolute, niente dati reali o nomi non forniti. Chiudi con una frase che lasci una sensazione chiara e un piccolo gancio di curiosità (“se lo farai, ti accorgerai che… / e lì capirai che…”). 8–10 frasi, seconda persona, un paragrafo, NON ripetere la domanda. Linguaggio semplice, concreto, coinvolgente.`;
+const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE): apri SEMPRE con una riga breve da “zingara realista”, poi 60% analisi concreta + 40% immagini sobrie. Scrivi in chiave controfattuale: “se avessi…, avresti…”, “ti saresti trovato…”. Usa condizionale composto per l’esito alternativo, niente date/numeri o fatti reali non forniti. Chiudi con sensazione + micro-gancio (“forse oggi sapresti… / e ti verrebbe voglia di…”). 8–10 frasi, seconda persona, un paragrafo, NON ripetere la domanda. Linguaggio semplice, concreto, coinvolgente.`;
 
-/* ========= Incipit dinamici WHAT IF ========= */
-const INTROS = {
+/* ========= Incipit dinamici — “ZINGARA REALISTA” ========= */
+const ZINGARA_INTROS = {
   it: [
-    "Piccolo movimento, grande differenza.",
-    "Metti ordine ai dati e poi alle abitudini.",
-    "Qui non basta l’istinto: serve una mappa semplice.",
-    "Parti dal concreto: tempo, denaro, energia.",
-    "Il quadro è pratico, non epico.",
-    "Prima i vincoli, poi le possibilità.",
-    "Riduci il rumore, guarda i costi di transizione.",
-    "La domanda è seria, la risposta deve respirare.",
+    "Aspetta, che qui il cuore parla chiaro.",
+    "Fermati un attimo: lo sento nelle dita.",
+    "Oh, questa la vedo nitida.",
+    "Piano, che qui c’è un segnale pulito.",
+    "Zitto un secondo: qui l’aria dice già tanto.",
+    "Non serve rumore: la risposta bussa piano.",
+    "Shh, questa scena arriva dritta.",
+    "Occhio: la strada si disegna da sola.",
+    "Senti? C’è un passo che torna al suo ritmo.",
+    "Eccola: la versione onesta di te."
   ],
   en: [
-    "Small move, big leverage.",
-    "Start with numbers, then with habits.",
-    "This needs a simple map, not a slogan.",
-    "Begin with constraints, then possibilities.",
-    "It’s a practical question, not an epic one.",
+    "Hold on — your gut is loud here.",
+    "Wait: this comes in clear.",
+    "Hush, the picture is sharp.",
   ],
   es: [
-    "Movimiento pequeño, diferencia grande.",
-    "Empieza por lo concreto: tiempo, dinero, energía.",
-    "Hace falta un mapa sencillo, no un eslogan.",
+    "Espera: esto se ve claro.",
+    "Silencio un segundo: ya se siente.",
   ],
   fr: [
-    "Petit mouvement, grand effet.",
-    "Commence par le concret : temps, argent, énergie.",
-    "Ici il faut une carte simple, pas un slogan.",
+    "Attends: ça arrive net.",
+    "Chut, ça parle tout seul.",
   ],
   de: [
-    "Kleiner Schritt, große Wirkung.",
-    "Zuerst Zahlen, dann Gewohnheiten.",
-    "Hier hilft eine einfache Karte, kein Slogan.",
+    "Warte kurz: das wird klar.",
+    "Leise, das Bild ist deutlich.",
   ],
 };
 function addDynamicIntroIfWhatIf({ answer, stile, lang, domanda }){
   if(stile !== "whatif") return answer;
   const L = normLang(lang);
-  const bank = INTROS[L] || INTROS.it;
+  const bank = ZINGARA_INTROS[L] || ZINGARA_INTROS.it;
   const intro = pickDet(bank, hashStr(domanda || answer));
   const a = String(answer||"").trim();
   const first = (a.match(/^([\s\S]*?[.!?…])/)||[])[1] || a;
@@ -154,13 +155,10 @@ function buildMessages({ domanda, lang, periodo, stile }){
   const baseRules = L==="en"
     ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Second person only.`
     : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona.`;
-  const temporal = String(periodo).toLowerCase()==="past"
-    ? (L==="en" ? "Write as if it already happened." : "Scrivi come se fosse già successo.")
-    : (L==="en" ? "Write as a near-future unfolding starting now." : "Scrivi come un prossimo futuro che inizia ora.");
 
+  // Nota: il vincolo temporale lo spostiamo dentro le regole WHATIF specifiche (past/future)
   const msgs = [
     { role: "system", content: baseRules },
-    { role: "system", content: temporal },
   ];
 
   if(stile==="wtf"){
@@ -172,7 +170,7 @@ function buildMessages({ domanda, lang, periodo, stile }){
     const react = shuffled.slice(0, 2 + Math.floor(rnd()*2));
     const drink = WTF_DRINK[Math.floor(rnd()*WTF_DRINK.length)];
 
-    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile). Struttura OBBLIGATORIA: presa in giro affettuosa (max 2 frasi) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”, come narrazione, mai insulto a persone) → SUBITO ${react.length} reazioni di oggetti esilaranti → drink (“${drink}”) → 1–2 frasi che rispondono davvero → morale calda e ironica. 6–8 frasi.`;
+    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile). Struttura OBBLIGATORIA: presa in giro affettuosa (max 2 frasi) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”, narrato, mai insulto a persone) → SUBITO ${react.length} reazioni di oggetti esilaranti → drink (“${drink}”) → 1–2 frasi che rispondono davvero → morale calda e ironica. 6–8 frasi.`;
     const WTF_RULE_EN = `WHAT THE F (friendly, absurd but helpful). STRICT sequence: playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical “${impre}” (narrated, never insulting people) → THEN ${react.length} absurd object reactions → drink (“${drink}”) → 1–2 lines that truly answer → warm ironic moral. 6–8 sentences.`;
 
     msgs.push(
@@ -187,7 +185,7 @@ function buildMessages({ domanda, lang, periodo, stile }){
 - Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
     );
   } else {
-    // WHAT IF con regole dipendenti dal tempo
+    // WHAT IF con regole dipendenti dal tempo (e incipit zingara realista)
     const ruleIT = String(periodo).toLowerCase()==="past" ? WHATIF_RULE_PAST_IT : WHATIF_RULE_FUT_IT;
     msgs.push(
       { role: "system", content: ruleIT },
@@ -332,7 +330,7 @@ export default async function handler(req, res){
       domanda = "",
       stile = "whatif",   // "whatif" | "wtf"
       lang  = "it",
-      periodo = "future",
+      periodo = "future", // "future" | "past"
       micro = {},
     } = body;
 
@@ -360,7 +358,7 @@ export default async function handler(req, res){
     answer = clampWords(answer, stile === "wtf" ? 170 : 165);
     answer = normalizeOneParagraph(answer);
 
-    // 1) Incipit dinamico solo WHAT IF
+    // 1) Incipit ZINGARA sempre (solo WHAT IF)
     answer = addDynamicIntroIfWhatIf({ answer, stile, lang, domanda });
 
     // 2) Moderazioni leggere IT (prima del ripristino maiuscole)
@@ -370,7 +368,7 @@ export default async function handler(req, res){
         const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
         const inQuestion=new Set((d.match(nameRx)||[]));
         answer=answer.replace(nameRx,(m)=>{
-          if (["Ah","Oh","Ehi","Sai"].includes(m)) return m;
+          if (["Ah","Oh","Ehi","Sai","Shh","Occhio","Piano"].includes(m)) return m;
           return inQuestion.has(m) ? m : m.toLowerCase();
         });
       })();
