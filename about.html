@@ -13,19 +13,20 @@
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    main{min-height:100%;max-width:980px;margin:0 auto;padding:20px 16px 80px}
+    main{min-height:100%;max-width:980px;margin:0 auto;padding:20px 16px 96px}
     h1{font-size:clamp(26px,5.5vw,40px);margin:14px 0 8px;color:var(--accent)}
     h2{font-size:clamp(18px,4.5vw,24px);margin:26px 0 10px;color:var(--hl)}
-    p,li{color:#d7e8ec; line-height:1.55}
+    p,li{color:#d7e8ec; line-height:1.6}
     .muted{color:var(--muted)}
     .card{background:var(--card); border:1px solid #1d2831; border-radius:16px; padding:16px 14px; margin-top:10px}
     .topbar{position:sticky; top:0; z-index:50; background:linear-gradient(#0A0F14,rgba(10,15,20,.6));
       backdrop-filter: blur(6px); border-bottom:1px solid #121a20; padding:10px 14px; display:flex; gap:10px; align-items:center}
     .back{appearance:none;border:1px solid #20303a;background:#141C22;color:#A0B2BA;border-radius:12px;padding:8px 12px;cursor:pointer}
     .back:hover{filter:brightness(1.1)}
-    .container{padding:8px 2px}
     .footer{color:var(--muted); font-size:12px; margin-top:24px}
     a{color:var(--accent); text-decoration:none}
+    .meta{color:var(--muted);font-size:13px;margin:6px 0 14px}
+    .tag{display:inline-block;background:#0b141b;border:1px solid #1d2831;border-radius:999px;padding:6px 10px;margin-right:8px;font-size:12px;color:#cfe8ef}
   </style>
 </head>
 <body>
@@ -35,80 +36,157 @@
   </div>
 
   <main>
-    <div class="container">
-      <h1 data-i="title">What?f</h1>
-      <p class="card" data-i="desc">
-        What?f è l’app che ti fa esplorare le scelte che non hai fatto — e quelle che potresti fare domani.
-        Un viaggio tra passato e futuro, dove l’intelligenza artificiale costruisce per te scenari realistici,
-        affettuosi o surreali a seconda del tuo stato d’animo.
-      </p>
-
-      <h2 data-i="howTitle">Come funziona</h2>
-      <div class="card">
-        <ul>
-          <li data-i="how1">Scegli se esplorare il <strong>Passato</strong> o il <strong>Futuro</strong>.</li>
-          <li data-i="how2">Seleziona lo stile: <strong>What if</strong> (riflessivo e realistico) o <strong>What the F</strong> (ironico e creativo).</li>
-          <li data-i="how3">L’AI genera per te scenari personali in un unico paragrafo, senza elenchi né domande.</li>
-        </ul>
-      </div>
-
-      <h2 data-i="premiumTitle">Piani e limiti</h2>
-      <p class="card" data-i="premium">
-        La versione <strong>FREE</strong> offre <strong>3</strong> esplorazioni al giorno.  
-        La versione <strong>PRO</strong> sblocca fino a <strong>10</strong> esplorazioni al giorno.  
-        I limiti servono a garantire qualità e disponibilità del servizio.
-      </p>
-
-      <h2 data-i="techTitle">Tecnologia</h2>
-      <p class="card" data-i="tech">
-        Alimentata da <strong>OpenAI GPT-4o-mini</strong>, What?f crea testi personalizzati con un design minimale e immersivo.
-        L’app è ospitata su <strong>GitHub + Vercel</strong>. La condivisione dati per l’addestramento dei modelli è disattivata a livello di piattaforma.
-      </p>
-
-      <p class="footer">
-        © 2025 What?f • <a href="privacy.html">Privacy</a> • <a href="terms.html">Termini</a>
-      </p>
+    <h1 data-i="title">What?f</h1>
+    <div class="meta">
+      <span class="tag" id="appVersion">v1.0.0</span>
+      <span data-i="updated">Ultimo aggiornamento:</span> <span id="updatedDate"></span>
     </div>
+
+    <p class="card" data-i="desc">
+      What?f è l’app che ti fa esplorare le scelte che non hai fatto — e quelle che potresti fare domani.
+      Un viaggio tra passato e futuro, dove l’intelligenza artificiale costruisce per te scenari realistici,
+      affettuosi o surreali a seconda del tuo stato d’animo.
+    </p>
+
+    <h2 data-i="howTitle">Come funziona</h2>
+    <div class="card">
+      <ul>
+        <li data-i="how1">Scegli se esplorare il <strong>Passato</strong> o il <strong>Futuro</strong>.</li>
+        <li data-i="how2">Seleziona lo stile: <strong>What if</strong> (riflessivo e realistico) o <strong>What the F</strong> (ironico e creativo).</li>
+        <li data-i="how3">L’AI genera per te scenari personali in un unico paragrafo, senza elenchi né domande.</li>
+      </ul>
+    </div>
+
+    <h2 data-i="premiumTitle">Piani e limiti</h2>
+    <p class="card" data-i="premium">
+      La versione <strong>FREE</strong> offre <strong>3</strong> esplorazioni al giorno.<br/>
+      La versione <strong>PRO</strong> sblocca fino a <strong>10</strong> esplorazioni al giorno.<br/>
+      I limiti servono a garantire qualità e disponibilità del servizio.
+    </p>
+
+    <h2 data-i="techTitle">Tecnologia</h2>
+    <p class="card" data-i="tech">
+      Alimentata da <strong>OpenAI GPT-4o-mini</strong>, What?f crea testi personalizzati con un design minimale e immersivo.
+      L’app è ospitata su <strong>GitHub + Vercel</strong>. La condivisione dati per l’addestramento dei modelli è disattivata a livello di piattaforma.
+    </p>
+
+    <h2 data-i="linksTitle">Privacy, Termini e contatti</h2>
+    <p class="card" data-i="links">
+      Leggi la <a href="privacy.html">Privacy</a> e i <a href="terms.html">Termini</a>.<br/>
+      Per supporto o segnalazioni: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.
+    </p>
+
+    <p class="footer">
+      © 2025 What?f • <a href="privacy.html">Privacy</a> • <a href="terms.html">Termini</a>
+    </p>
   </main>
 
-  <!-- i18n: lingua da localStorage 'lang' -->
+  <!-- i18n -->
   <script>
     (function(){
       const lang = (localStorage.getItem('lang') || 'it').toLowerCase();
+
       const T = {
         it: {
-          back: "Indietro",
-          title: "What?f",
-          desc: "What?f è l’app che ti fa esplorare le scelte che non hai fatto — e quelle che potresti fare domani. Un viaggio tra passato e futuro, dove l’intelligenza artificiale costruisce per te scenari realistici, affettuosi o surreali a seconda del tuo stato d’animo.",
-          howTitle: "Come funziona",
-          how1: "Scegli se esplorare il Passato o il Futuro.",
-          how2: "Seleziona lo stile: What if (riflessivo e realistico) o What the F (ironico e creativo).",
-          how3: "L’AI genera per te scenari personali in un unico paragrafo, senza elenchi né domande.",
-          premiumTitle: "Piani e limiti",
-          premium: "La versione FREE offre 3 esplorazioni al giorno. La versione PRO sblocca fino a 10 esplorazioni al giorno. I limiti servono a garantire qualità e disponibilità del servizio.",
-          techTitle: "Tecnologia",
-          tech: "Alimentata da OpenAI GPT-4o-mini, What?f crea testi personalizzati con un design minimale e immersivo. L’app è ospitata su GitHub + Vercel. La condivisione dati per l’addestramento dei modelli è disattivata a livello di piattaforma."
+          back:"Indietro",
+          title:"What?f",
+          updated:"Ultimo aggiornamento:",
+          desc:"What?f è l’app che ti fa esplorare le scelte che non hai fatto — e quelle che potresti fare domani. Un viaggio tra passato e futuro, dove l’intelligenza artificiale costruisce per te scenari realistici, affettuosi o surreali a seconda del tuo stato d’animo.",
+          howTitle:"Come funziona",
+          how1:"Scegli se esplorare il Passato o il Futuro.",
+          how2:"Seleziona lo stile: What if (riflessivo e realistico) o What the F (ironico e creativo).",
+          how3:"L’AI genera per te scenari personali in un unico paragrafo, senza elenchi né domande.",
+          premiumTitle:"Piani e limiti",
+          premium:"La versione <strong>FREE</strong> offre <strong>3</strong> esplorazioni al giorno.<br/>La versione <strong>PRO</strong> sblocca fino a <strong>10</strong> esplorazioni al giorno.<br/>I limiti servono a garantire qualità e disponibilità del servizio.",
+          techTitle:"Tecnologia",
+          tech:"Alimentata da <strong>OpenAI GPT-4o-mini</strong>, What?f crea testi personalizzati con un design minimale e immersivo. L’app è ospitata su <strong>GitHub + Vercel</strong>. La condivisione dati per l’addestramento dei modelli è disattivata a livello di piattaforma.",
+          linksTitle:"Privacy, Termini e contatti",
+          links:'Leggi la <a href="privacy.html">Privacy</a> e i <a href="terms.html">Termini</a>.<br/>Per supporto o segnalazioni: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.'
         },
         en: {
-          back: "Back",
-          title: "What?f",
-          desc: "What?f lets you explore the choices you didn’t make — and the ones you still can. A journey between past and future where AI builds realistic, caring or surreal scenarios based on your mood.",
-          howTitle: "How it works",
-          how1: "Choose whether to explore the Past or the Future.",
-          how2: "Pick a style: What if (reflective and realistic) or What the F (ironic and creative).",
-          how3: "AI generates a single-paragraph, personal scenario with no lists or questions.",
-          premiumTitle: "Plans & limits",
-          premium: "The FREE plan offers 3 explorations per day. The PRO plan unlocks up to 10 per day. Limits help ensure service quality and availability.",
-          techTitle: "Technology",
-          tech: "Powered by OpenAI GPT-4o-mini, What?f crafts personal text with a minimal, immersive design. Hosted on GitHub + Vercel. Training data sharing is disabled at the platform level."
+          back:"Back",
+          title:"What?f",
+          updated:"Last updated:",
+          desc:"What?f lets you explore the choices you didn’t make — and the ones you still can. A journey between past and future where AI builds realistic, caring or surreal scenarios based on your mood.",
+          howTitle:"How it works",
+          how1:"Choose whether to explore the Past or the Future.",
+          how2:"Pick a style: What if (reflective and realistic) or What the F (ironic and creative).",
+          how3:"AI generates a single-paragraph, personal scenario with no lists or questions.",
+          premiumTitle:"Plans & limits",
+          premium:"The <strong>FREE</strong> plan offers <strong>3</strong> explorations/day.<br/>The <strong>PRO</strong> plan unlocks up to <strong>10</strong>/day.<br/>Limits help ensure quality and availability.",
+          techTitle:"Technology",
+          tech:"Powered by <strong>OpenAI GPT-4o-mini</strong>, What?f crafts personal text with a minimal, immersive design. Hosted on <strong>GitHub + Vercel</strong>. Training data sharing is disabled at platform level.",
+          linksTitle:"Privacy, Terms & contact",
+          links:'Read our <a href="privacy.html">Privacy</a> and <a href="terms.html">Terms</a>.<br/>Support: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.'
+        },
+        es: {
+          back:"Atrás",
+          title:"What?f",
+          updated:"Última actualización:",
+          desc:"What?f te permite explorar las decisiones que no tomaste — y las que aún puedes tomar. Un viaje entre pasado y futuro donde la IA crea escenarios realistas, afectuosos o surrealistas según tu estado de ánimo.",
+          howTitle:"Cómo funciona",
+          how1:"Elige si explorar el Pasado o el Futuro.",
+          how2:"Selecciona el estilo: What if (reflexivo y realista) o What the F (irónico y creativo).",
+          how3:"La IA genera un escenario personal en un único párrafo, sin listas ni preguntas.",
+          premiumTitle:"Planes y límites",
+          premium:"El plan <strong>FREE</strong> ofrece <strong>3</strong> exploraciones/día.<br/>El plan <strong>PRO</strong> desbloquea hasta <strong>10</strong>/día.<br/>Los límites garantizan calidad y disponibilidad.",
+          techTitle:"Tecnología",
+          tech:"Con <strong>OpenAI GPT-4o-mini</strong>, What?f crea textos personales con diseño minimalista e inmersivo. Alojado en <strong>GitHub + Vercel</strong>. El intercambio de datos para entrenamiento está desactivado a nivel de plataforma.",
+          linksTitle:"Privacidad, Términos y contacto",
+          links:'Consulta la <a href="privacy.html">Privacidad</a> y los <a href="terms.html">Términos</a>.<br/>Soporte: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.'
+        },
+        fr: {
+          back:"Retour",
+          title:"What?f",
+          updated:"Dernière mise à jour :",
+          desc:"What?f vous fait explorer les choix que vous n’avez pas faits — et ceux que vous pouvez encore faire. Un voyage entre passé et futur où l’IA crée des scénarios réalistes, bienveillants ou surréalistes selon votre humeur.",
+          howTitle:"Comment ça marche",
+          how1:"Choisissez d’explorer le Passé ou le Futur.",
+          how2:"Choisissez le style : What if (réfléchi et réaliste) ou What the F (ironique et créatif).",
+          how3:"L’IA génère un scénario personnel en un seul paragraphe, sans listes ni questions.",
+          premiumTitle:"Formules & limites",
+          premium:"La formule <strong>FREE</strong> offre <strong>3</strong> explorations/jour.<br/>La formule <strong>PRO</strong> en débloque jusqu’à <strong>10</strong>/jour.<br/>Les limites garantissent qualité et disponibilité.",
+          techTitle:"Technologie",
+          tech:"Propulsé par <strong>OpenAI GPT-4o-mini</strong>, What?f produit des textes personnels au design minimal et immersif. Hébergé sur <strong>GitHub + Vercel</strong>. Le partage de données d’entraînement est désactivé au niveau de la plateforme.",
+          linksTitle:"Confidentialité, Conditions & contact",
+          links:'Lisez notre <a href="privacy.html">Confidentialité</a> et nos <a href="terms.html">Conditions</a>.<br/>Support : <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.'
+        },
+        de: {
+          back:"Zurück",
+          title:"What?f",
+          updated:"Zuletzt aktualisiert:",
+          desc:"What?f lässt dich die Entscheidungen erkunden, die du nicht getroffen hast — und die du noch treffen kannst. Eine Reise zwischen Vergangenheit und Zukunft, in der KI realistische, warmherzige oder surreale Szenarien erstellt – je nach Stimmung.",
+          howTitle:"So funktioniert’s",
+          how1:"Wähle, ob du Vergangenheit oder Zukunft erkundest.",
+          how2:"Wähle den Stil: What if (reflektiert & realistisch) oder What the F (ironisch & kreativ).",
+          how3:"Die KI erstellt ein persönliches Szenario als einen einzigen Absatz – ohne Listen oder Fragen.",
+          premiumTitle:"Pläne & Limits",
+          premium:"Der <strong>FREE</strong>-Plan bietet <strong>3</strong> Erkundungen/Tag.<br/>Der <strong>PRO</strong>-Plan schaltet bis zu <strong>10</strong>/Tag frei.<br/>Limits sichern Qualität und Verfügbarkeit.",
+          techTitle:"Technik",
+          tech:"Mit <strong>OpenAI GPT-4o-mini</strong> erstellt What?f personalisierte Texte in minimalem, immersivem Design. Gehostet auf <strong>GitHub + Vercel</strong>. Trainings-Datenteilung ist auf Plattformebene deaktiviert.",
+          linksTitle:"Datenschutz, Bedingungen & Kontakt",
+          links:'Siehe <a href="privacy.html">Datenschutz</a> und <a href="terms.html">Bedingungen</a>.<br/>Support: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.'
         }
       };
-      const dict = T[lang] || T.it;
-      document.querySelectorAll("[data-i]").forEach(node=>{
-        const key = node.getAttribute("data-i");
-        if (dict[key]) node.innerHTML = dict[key];
+
+      // Applica lingua
+      const d = T[lang] || T.it;
+      document.querySelectorAll("[data-i]").forEach(n=>{
+        const k = n.getAttribute("data-i");
+        if (d[k]) n.innerHTML = d[k];
       });
-      document.documentElement.lang = (lang === 'en') ? 'en' : 'it';
+      document.documentElement.lang = ['it','en','es','fr','de'].includes(lang) ? lang : 'it';
+
+      // Data aggiornamento (10 novembre 2025)
+      const fmt = new Intl.DateTimeFormat(
+        {it:'it-IT',en:'en-GB',es:'es-ES',fr:'fr-FR',de:'de-DE'}[document.documentElement.lang] || 'it-IT',
+        {day:'numeric',month:'long',year:'numeric'}
+      );
+      document.getElementById('updatedDate').textContent = fmt.format(new Date('2025-11-10'));
+
+      // Versione (eventuale da localStorage)
+      const v = localStorage.getItem('whatif_app_version') || '1.0.0';
+      document.getElementById('appVersion').textContent = 'v' + v;
     })();
   </script>
 </body>
