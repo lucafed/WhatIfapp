@@ -138,6 +138,21 @@ h1{
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(20,28,34,.95);border:1px solid var(--line);padding:10px 14px;border-radius:12px;font-weight:700;z-index:10000;opacity:0;transition:opacity .2s,transform .2s}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+
+/* === ORACLE LOADING + REVEAL === */
+.oracle-wrap{position:relative;min-height:28px;margin:4px 0 8px}
+.oracle-line{font-size:14px;opacity:.86;color:#E7F2EE;transition:opacity .25s ease}
+.orb{
+  position:absolute; left:-10px; top:-8px; width:26px; height:26px;
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, rgba(255,236,1,.7), rgba(255,236,1,.0) 60%);
+  filter:blur(6px); opacity:.0; transform:scale(.7); pointer-events:none;
+  transition:opacity .35s ease, transform .35s ease;
+}
+.reveal .orb{opacity:.8; transform:scale(1)}
+.reveal #answer{animation:fade .45s ease-out both}
+@keyframes shimmer{0%{opacity:.45}50%{opacity:.95}100%{opacity:.45}}
+.loading .oracle-line{animation:shimmer 1.8s ease-in-out infinite}
 </style>
 </head>
 
@@ -177,8 +192,14 @@ h1{
       <div id="topPct" class="top-pct" aria-live="polite">—</div>
     </div>
 
-    <div id="lead" class="lead fade-in">—</div>
+    <!-- ⬇️ SOSTITUZIONE: lead + answer con rituale oracolare -->
+    <div class="oracle-wrap">
+      <div class="orb" aria-hidden="true"></div>
+      <div id="lead" class="lead">—</div>
+      <div id="oracleLine" class="oracle-line">—</div>
+    </div>
     <div id="answer" class="story">⏳ …</div>
+    <!-- ⬆️ FINE SOSTITUZIONE -->
 
     <div class="hr"></div>
     <div class="label" id="lblP">Esito & motivazioni</div>
@@ -219,6 +240,12 @@ h1{
 
 <p class="small" id="creditInfo" style="text-align:center;margin:10px 0 24px"></p>
 <div class="toast" id="toast"></div>
+
+<!-- 🔔 audio reveal -->
+<audio id="revealDing" preload="auto">
+  <!-- Sostituisci con un tuo file se vuoi: <source src="assets/ding.mp3" type="audio/mpeg"> -->
+  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAA" type="audio/mpeg">
+</audio>
 
 <script>
 /* ==== Base & prefs ==== */
@@ -362,6 +389,21 @@ const LEADS = {
        whatif:["Pose les clés et laisse parler le silence qui ne juge pas."]},
   de:{ wtf:["Du trittst leise ein; das Chaos erkennt dich und lässt dich durch."],
        whatif:["Leg die Schlüssel hin und lass erst die Stille sprechen."]}
+};
+
+/* === ORACLE LINES === */
+const ORACLE_LINES = {
+  it: [
+    "Shh… le carte girano piano.",
+    "Aspetta: la risposta bussa piano.",
+    "L’aria si fa chiara, arriva.",
+    "Non correre: sta prendendo forma.",
+    "Occhio: il quadro si disegna da solo."
+  ],
+  en: ["Hush… it’s forming.","Wait: it’s coming clear.","Don’t rush: it’s shaping up."],
+  es: ["Shh… se está formando.","Espera: llega claro."],
+  fr: ["Chut… ça se forme.","Attends: ça s’éclaircit."],
+  de: ["Leise… es wird klar.","Warte: es nimmt Form an."]
 };
 
 /* ==== UI refs ==== */
@@ -640,10 +682,37 @@ function applyQuestion(){
   return {req, domanda, surprise};
 }
 
+/* === ORACLE helpers === */
+function startOracleLoading(){
+  document.body.classList.add('loading');
+  const lineEl = document.getElementById('oracleLine');
+  const bank = ORACLE_LINES[lang] || ORACLE_LINES.it;
+  let i = 0;
+  lineEl.textContent = bank[i % bank.length];
+  window.__oracleTimer = setInterval(()=>{
+    i++; lineEl.textContent = bank[i % bank.length];
+  }, 1800);
+}
+function stopOracleLoading(){
+  document.body.classList.remove('loading');
+  const lineEl = document.getElementById('oracleLine');
+  clearInterval(window.__oracleTimer); window.__oracleTimer=null;
+  setTimeout(()=>{ if(lineEl) lineEl.textContent = " "; }, 350);
+}
+function revealEffect(){
+  const wrap = document.querySelector('.oracle-wrap');
+  if(!wrap) return;
+  wrap.classList.add('reveal');
+  try{ document.getElementById('revealDing')?.play().catch(()=>{}); }catch{}
+  setTimeout(()=> wrap.classList.remove('reveal'), 900);
+}
+
 /* ==== Main flow (idempotente) ==== */
 async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
+
+  startOracleLoading(); // ⬅️ avvio rituale d’attesa
 
   // Consumo crediti: prova prima a usare 1 Sorprendimi quando surprise===true
   if(!IS_ADMIN && !alreadyConsumed){
@@ -659,12 +728,14 @@ async function startFlow(){
       const left=getAvailable();
       if(!(left===Infinity) && left<=0){
         awaitingCredit=true;
+        stopOracleLoading(); // ⬅️ ferma loading in caso di store
         answerEl.textContent=t().noCredits;
         openStore();
         return;
       }
       if(!consumeOne()){
         awaitingCredit=true;
+        stopOracleLoading();
         answerEl.textContent=t().noCredits;
         openStore();
         return;
@@ -695,6 +766,9 @@ async function startFlow(){
     answerText=parts.join(" ").trim();
     if(!/[.!?…]$/.test(answerText)) answerText+='.';
     answerEl.textContent=answerText; decorateEmBits(answerEl);
+
+    stopOracleLoading();   // ⬅️ stop animazione
+    revealEffect();        // ⬅️ reveal + ding
 
     const apiPct = (data && Number.isFinite(+data.pct)) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : null;
     const usedPct = (apiPct!=null) ? apiPct : computeProbability(domanda).pct;
@@ -740,6 +814,7 @@ async function startFlow(){
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
   }catch(e){
     console.error(e);
+    stopOracleLoading();   // ⬅️ assicurati di fermare l’animazione anche in errore
     answerEl.textContent=t().error;
   }
 }
