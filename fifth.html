@@ -122,20 +122,9 @@ h1{
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;opacity:.9}
 .chip{font-size:11px;font-weight:900;padding:3px 7px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)}
 
-/* === Guidance (indicazione rapida) === */
-#guideBox .note{opacity:.95}
-#guideBox .ico{filter:drop-shadow(0 0 8px rgba(255,236,1,.18))}
-
-/* === Sigils (memoria simbolica) === */
-.sigils{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:8px 0 0}
-.sigil{
-  width:10px;height:10px;border-radius:50%;
-  background:radial-gradient(circle at 30% 30%, rgba(255,236,1,.9), rgba(255,236,1,.12) 60%, rgba(255,236,1,.04) 80%);
-  box-shadow:0 0 8px rgba(255,236,1,.25), inset 0 0 0 1px rgba(255,255,255,.08);
-  animation:breath 2.6s ease-in-out infinite;
-}
-.sigil.big{width:12px;height:12px}
-@keyframes breath{0%{transform:scale(.96)}50%{transform:scale(1.04)}100%{transform:scale(.96)}}
+/* === Indicazione rapida (solo WHAT IF non-surprise) === */
+#guideBox{display:none}
+#guideSep{display:none}
 
 /* Mobile */
 @media (max-width:420px){
@@ -204,7 +193,6 @@ h1{
       <div id="topPct" class="top-pct" aria-live="polite">—</div>
     </div>
 
-    <!-- SOLO Oracle (niente frasetta lead) -->
     <div class="oracle-wrap">
       <div class="orb" aria-hidden="true"></div>
       <div id="oracleLine" class="oracle-line">—</div>
@@ -221,7 +209,7 @@ h1{
         <span class="result-title" id="committeeTitle">—</span>
       </div>
 
-      <!-- Blocco motivazione “classico” (mostrato per WTF e per Surprise) -->
+      <!-- Motivazione classica (WTF e Surprise) -->
       <div class="mot" id="motOne">
         <div class="ico" id="motIco" aria-hidden="true">—</div>
         <div>
@@ -235,10 +223,9 @@ h1{
         </div>
       </div>
 
-      <div class="hr" id="guideSep" style="margin:12px 0;display:none"></div>
-
-      <!-- 🧭 Indicazione rapida (diretto) — mostrato SOLO per WHAT IF non-surprise -->
-      <div class="mot" id="guideBox" style="display:none">
+      <!-- Indicazione rapida (solo WHAT IF non-surprise) -->
+      <div class="hr" id="guideSep"></div>
+      <div class="mot" id="guideBox">
         <div class="ico" aria-hidden="true">🧭</div>
         <div class="note" id="guideNote">—</div>
       </div>
@@ -251,10 +238,6 @@ h1{
       <button class="btn ghost" id="againBtn">🔁 Fai un’altra domanda</button>
     </div>
     <p class="small" id="metaInfo"></p>
-
-    <!-- Memoria simbolica + progressione -->
-    <div class="sigils" id="sigilTrail" aria-hidden="true"></div>
-    <p class="small" id="progressHint" style="text-align:center;margin-top:6px;opacity:.9"></p>
   </div>
 </main>
 
@@ -285,8 +268,7 @@ const I18N = {
        sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
        p:"Esito & motivazioni", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
        save:"⭐ Salva le mie visioni", savedOk:"✅ Salvata",
-       guide:"Indicazione rapida", guideFallback:"Scegli una micro-azione concreta entro 24h e calendarizzala in 10 minuti.",
-       progressLead:(k)=>`Le tue visioni parlano spesso di “${k}”. Vuoi vedere il profilo del destino?`,
+       guide:"Indicazione rapida", guideFallback:"Scegli una micro-azione entro 24h e calendarizzala (10′).",
        copied:"Copiato!", error:"[errore server]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
@@ -297,8 +279,7 @@ const I18N = {
        chipsFav:"favorevoli", chipsCon:"contrari", chipsAst:"astenuti",
        motFallback:"Motivo: benefici concreti a breve, con vincoli gestibili.",
        credits:(n)=>`💰 Crediti: ${n}`, noCredits:"Hai terminato i crediti.",
-       storeTitle:"Crediti", buy5:"Compra +5 crediti (test)", buy10:"Compra +10 crediti (test)", buy20:"Compra +20 crediti (test)",
-       watchAd:"Guarda pubblicità (+1)", close:"Chiudi",
+       storeTitle:"Crediti", watchAd:"Guarda pubblicità (+1)", close:"Chiudi",
        comingSoon:"Prossimamente", buySoonNote:"Acquisto crediti non ancora disponibile.",
        toastPlus:(n)=>`+${n} credito`, toastMinus:(n)=>`-${n} credito`
   },
@@ -306,8 +287,7 @@ const I18N = {
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
        p:"Outcome & rationales", share:"📤 Share / Copy", again:"🔁 Ask another",
        save:"⭐ Save my visions", savedOk:"✅ Saved",
-       guide:"Quick guidance", guideFallback:"Pick a concrete micro-action within 24h and schedule it in 10 minutes.",
-       progressLead:(k)=>`Your visions often orbit “${k}”. See your destiny profile?`,
+       guide:"Quick guidance", guideFallback:"Pick one micro-action within 24h and put it on your calendar (10′).",
        copied:"Copied!", error:"[server error]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
@@ -318,73 +298,9 @@ const I18N = {
        chipsFav:"in favour", chipsCon:"against", chipsAst:"abstained",
        motFallback:"Reason: short-term, concrete benefits with manageable constraints.",
        credits:(n)=>`💰 Credits: ${n}`, noCredits:"You ran out of credits.",
-       storeTitle:"Credits", buy5:"Buy +5 credits (test)", buy10:"Buy +10 credits (test)", buy20:"Buy +20 credits (test)",
-       watchAd:"Watch ad (+1)", close:"Close",
+       storeTitle:"Credits", watchAd:"Watch ad (+1)", close:"Close",
        comingSoon:"Coming soon", buySoonNote:"Credit purchases not available yet.",
        toastPlus:(n)=>`+${n} credit`,  toastMinus:(n)=>`-${n} credit`
-  },
-  es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
-       sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
-       p:"Resultado y razones", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra",
-       save:"⭐ Guarda mis visiones", savedOk:"✅ Guardada",
-       guide:"Orientación rápida", guideFallback:"Elige una microacción concreta en 24h y agenda 10 minutos para ejecutarla.",
-       progressLead:(k)=>`Tus visiones giran a menudo en torno a “${k}”. ¿Ver perfil del destino?`,
-       copied:"¡Copiado!", error:"[error del servidor]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Estilo: What the F · 6–9 frases · un párrafo · tono seco · modo: ${p==='past'?'Pasado':'Futuro'}.`
-        : `Estilo: What if (60% análisis, 40% real) · 8–11 frases · un párrafo · modo: ${p==='past'?'Pasado':'Futuro'}.`,
-       pctLabel:"% probabilidad de que ocurra",
-       votersTitle:"Comité", seriousTitle:"Motivo", scientificTitle:"Motivo (científico)",
-       chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones",
-       motFallback:"Motivo: beneficios concretos a corto plazo con límites manejables.",
-       credits:(n)=>`💰 Créditos: ${n}`, noCredits:"Se te han acabado los créditos.",
-       storeTitle:"Créditos", buy5:"Comprar +5 créditos (test)", buy10:"Comprar +10 créditos (test)", buy20:"Comprar +20 créditos (test)",
-       watchAd:"Ver anuncio (+1)", close:"Cerrar",
-       comingSoon:"Próximamente", buySoonNote:"La compra de créditos aún no está disponible.",
-       toastPlus:(n)=>`+${n} crédito`,  toastMinus:(n)=>`-${n} crédito`
-  },
-  fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
-       sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
-       p:"Issue & motivations", share:"📤 Partager / Copier", again:"🔁 Poser une autre",
-       save:"⭐ Enregistrer mes visions", savedOk:"✅ Enregistrée",
-       guide:"Indication rapide", guideFallback:"Choisis une micro-action concrète sous 24h et planifie-la en 10 minutes.",
-       progressLead:(k)=>`Tes visions tournent souvent autour de « ${k} ». Voir le profil du destin ?`,
-       copied:"Copié !", error:"[erreur serveur]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Style : What the F · 6–9 phrases · un paragraphe · ton sec · mode : ${p==='past'?'Passé':'Futur'}.`
-        : `Style : What if (60 % analyse, 40 % réel) · 8–11 phrases · un paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`,
-       pctLabel:"% de probabilité que ça arrive",
-       votersTitle:"Comité", seriousTitle:"Motivation", scientificTitle:"Motivation (scientifique)",
-       chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions",
-       motFallback:"Raison : bénéfices concrets à court terme, contraintes gérables.",
-       credits:(n)=>`💰 Crédits : ${n}`, noCredits:"Crédits épuisés.",
-       storeTitle:"Crédits", buy5:"Acheter +5 crédits (test)", buy10:"Acheter +10 crédits (test)", buy20:"Acheter +20 crédits (test)",
-       watchAd:"Regarder une pub (+1)", close:"Fermer",
-       comingSoon:"Bientôt", buySoonNote:"Achat de crédits pas encore disponible.",
-       toastPlus:(n)=>`+${n} crédit`,  toastMinus:(n)=>`-${n} crédit`
-  },
-  de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
-       sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
-       p:"Ergebnis & Begründungen", share:"📤 Teilen / Kopieren", again:"🔁 Neue Frage",
-       save:"⭐ Meine Visionen speichern", savedOk:"✅ Gespeichert",
-       guide:"Schnelle Empfehlung", guideFallback:"Wähle eine konkrete Mikro-Aktion binnen 24 Std. und plane 10 Minuten dafür ein.",
-       progressLead:(k)=>`Deine Visionen kreisen oft um „${k}“. Willst du dein Schicksalsprofil sehen?`,
-       copied:"Kopiert!", error:"[Serverfehler]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Stil: What the F · 6–9 Sätze · ein Absatz · trockener Ton · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
-        : `Stil: What if (60 % Analyse, 40 % Praxis) · 8–11 Sätze · ein Absatz · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
-       pctLabel:"% Wahrscheinlichkeit",
-       votersTitle:"Gremium", seriousTitle:"Begründung", scientificTitle:"Begründung (wissenschaftlich)",
-       chipsFav:"dafür", chipsCon:"dagegen", chipsAst:"enthalten",
-       motFallback:"Grund: kurzfristiger, greifbarer Nutzen mit beherrschbaren Einschränkungen.",
-       credits:(n)=>`💰 Credits: ${n}`, noCredits:"Credits aufgebraucht.",
-       storeTitle:"Credits", buy5:"+5 Credits kaufen (Test)", buy10:"+10 Credits kaufen (Test)", buy20:"+20 Credits kaufen (Test)",
-       watchAd:"Werbung ansehen (+1)", close:"Schließen",
-       comingSoon:"Bald verfügbar", buySoonNote:"Kauf von Credits noch nicht verfügbar.",
-       toastPlus:(n)=>`+${n} Credit`,  toastMinus:(n)=>`-${n} Credit`
   }
 };
 const SUP_LANG=['it','en','es','fr','de'];
@@ -415,98 +331,10 @@ const t=()=>I18N[lang]||I18N.it;
 const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
 const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica…`;
 
-/* === ORACLE LINES (solo attesa, nessun lead statico) === */
+/* === ORACLE LINES === */
 const ORACLE_LINES = {
-  it: [
-    "Shh… le carte girano piano.",
-    "Aspetta: la risposta bussa sottovoce.",
-    "L’aria si fa chiara, sta arrivando.",
-    "Non correre: il disegno prende forma.",
-    "Occhio: il quadro si accende da solo.",
-    "Silenzio un attimo… qualcosa si allinea.",
-    "Senti? C’è un passo che torna nel ritmo.",
-    "Trattieni il fiato: la moneta è a mezz’aria.",
-    "Una piega nella notte, poi luce sottile.",
-    "Le luci interne si accendono una alla volta.",
-    "Ancora un respiro… il filo si tende.",
-    "Eccolo: l’indizio che mancava si mostra.",
-    "Un colpo di vento, poi tutto si ferma.",
-    "Scorri piano: la porta sta socchiudendosi.",
-    "Si sente un sì lontano, ma si avvicina.",
-    "L’oracolo gira la pagina… quasi."
-  ],
-  en: [
-    "Hush… the cards are turning.",
-    "Wait: the answer knocks softly.",
-    "Air clears; something is arriving.",
-    "Don’t rush—shape is forming.",
-    "Look: the outline lights itself.",
-    "Hold a breath… lines align.",
-    "Hear it? A step returns to rhythm.",
-    "Coin in mid-air; let it fall.",
-    "A fold in the dark, then a thin light.",
-    "Inner lights switch on, one by one.",
-    "Another breath… the wire tightens.",
-    "There it is: the missing hint.",
-    "A gust, then stillness.",
-    "Scroll slowly: a door is ajar.",
-    "A distant yes draws nearer.",
-    "The oracle turns the page… almost."
-  ],
-  es: [
-    "Shh… las cartas giran despacio.",
-    "Espera: la respuesta toca suave.",
-    "El aire se aclara; ya viene.",
-    "No corras: la forma aparece.",
-    "Mira: el contorno se enciende solo.",
-    "Guarda el aliento… todo se alinea.",
-    "¿Lo oyes? Vuelve el paso al ritmo.",
-    "Moneda en el aire; que caiga.",
-    "Un pliegue en la noche, luz fina.",
-    "Luces internas, una por una.",
-    "Otro respiro… el hilo se tensa.",
-    "Ahí está: la pista que faltaba.",
-    "Una ráfaga y luego quietud.",
-    "Desliza lento: se entorna la puerta.",
-    "Un sí lejano se acerca.",
-    "El oráculo pasa página… casi."
-  ],
-  fr: [
-    "Chut… les cartes tournent.",
-    "Attends : la réponse frappe doucement.",
-    "L’air s’éclaircit ; ça arrive.",
-    "Ne te presse pas : la forme vient.",
-    "Regarde : le contour s’allume seul.",
-    "Retiens ton souffle… tout s’aligne.",
-    "Tu entends ? Le pas reprend le tempo.",
-    "Pièce en suspens ; laisse-la tomber.",
-    "Un pli dans la nuit, puis une fine lumière.",
-    "Des lampes intérieures s’allument, une à une.",
-    "Encore un souffle… le fil se tend.",
-    "La voilà : l’indice manquant.",
-    "Un souffle, puis l’immobilité.",
-    "Fais défiler lentement : une porte s’entrouvre.",
-    "Un oui lointain se rapproche.",
-    "L’oracle tourne la page… presque."
-  ],
-  de: [
-    "Leise… die Karten wenden sich.",
-    "Warte: die Antwort klopft sanft.",
-    "Die Luft klärt sich; es kommt.",
-    "Nicht eilen: die Form entsteht.",
-    "Schau: die Kontur leuchtet selbst.",
-    "Atem halten… die Linien richten sich.",
-    "Hörst du’s? Der Schritt findet den Takt.",
-    "Münze in der Luft; lass sie fallen.",
-    "Ein Faltenwurf der Nacht, dann dünnes Licht.",
-    "Innere Lichter, eins nach dem andern.",
-    "Noch ein Atem… der Draht spannt sich.",
-    "Da ist es: der fehlende Hinweis.",
-    "Eine Böe, dann Stille.",
-    "Langsam scrollen: die Tür steht einen Spalt offen.",
-    "Ein fernes Ja kommt näher.",
-    "Das Orakel blättert um… fast."
-  ]
+  it: ["Shh… le carte girano piano.","Aspetta: la risposta bussa sottovoce.","L’aria si fa chiara, sta arrivando.","Non correre: il disegno prende forma.","Occhio: il quadro si accende da solo.","Silenzio un attimo… qualcosa si allinea.","Senti? C’è un passo che torna nel ritmo.","Trattieni il fiato: la moneta è a mezz’aria.","Una piega nella notte, poi luce sottile.","Le luci interne si accendono una alla volta.","Ancora un respiro… il filo si tende.","Eccolo: l’indizio che mancava si mostra."],
+  en: ["Hush… the cards are turning.","Wait: the answer knocks softly.","Air clears; something is arriving.","Don’t rush—shape is forming.","Look: the outline lights itself.","Hold a breath… lines align.","A gust, then stillness.","The oracle turns the page… almost."]
 };
 
 /* ==== UI refs ==== */
@@ -519,7 +347,6 @@ const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committ
 const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
 const motNote=qs('#motNote'), creditInfo=qs('#creditInfo'), toastEl=qs('#toast');
 const motOne=qs('#motOne'), guideNote=qs('#guideNote'), guideBox=qs('#guideBox'), guideSep=qs('#guideSep');
-const sigilTrail=qs('#sigilTrail'), progressHint=qs('#progressHint');
 
 /* ==== Toast ==== */
 function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
@@ -565,12 +392,11 @@ function addCredits(n){ n=Math.max(0,parseInt(n,10)||0); if(n<=0) return;
   else{ writeWallet({available:(w.available+n), used:Math.max(0,(w.used||0)-n), limit:(w.limit!=null?w.limit:legacyCap())}); }
 }
 
-/* 🎁 Sorprendimi tokens */
+/* 🎁 Sorprendimi */
 function readSurprise(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||"0",10)||0); }
 function writeSurprise(n){ n=Math.max(0, parseInt(n,10)||0); LS.setItem(SURPKEY,String(n)); updateCreditInfo(); LS.setItem("whatif_wallet_sync", String(Date.now())); }
 function addSurprise(n){ writeSurprise(readSurprise() + Math.max(0,parseInt(n,10)||0)); }
 function consumeSurpriseOne(){ const cur=readSurprise(); if(cur>0){ writeSurprise(cur-1); return true; } return false; }
-function computeSurpriseBonus(amount){ const a=parseInt(amount,10)||0; if(a>=20) return 3; if(a>=10) return 2; if(a>=5)  return 1; return 0; }
 
 function updateCreditInfo(n=getAvailable()){
   if(!creditInfo) return;
@@ -594,24 +420,61 @@ function applyUI(q){
   setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));
 }
 
-/* ==== Probability & motives ==== */
+/* ==== Probability ==== */
 function computeProbability(q){
-  const t=(q||'').toLowerCase(); let s=50;
-  if(/\b(7|14|21|30|60|90)\b/.test(t)) s+=12;
-  if(/\b\d+([.,]\d+)?\b/.test(t)) s+=8;
-  if(/budget|€|euro|spesa|max|under|sotto/.test(t)) s+=6;
-  if(/senza|solo|al massimo|minimo|entro|prima delle|ogni|per/.test(t)) s+=8;
-  if(/lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa/.test(t)) s+=6;
-  if(/forse|magari|maybe|quizás/.test(t)) s-=8;
-  if(!/\b\d/.test(t)) s-=6;
+  const tt=(q||'').toLowerCase(); let s=50;
+  if(/\b(7|14|21|30|60|90)\b/.test(tt)) s+=12;
+  if(/\b\d+([.,]\d+)?\b/.test(tt)) s+=8;
+  if(/budget|€|euro|spesa|max|under|sotto/.test(tt)) s+=6;
+  if(/senza|solo|al massimo|minimo|entro|prima delle|ogni|per/.test(tt)) s+=8;
+  if(/lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa/.test(tt)) s+=6;
+  if(/forse|magari|maybe|quizás/.test(tt)) s-=8;
+  if(!/\b\d/.test(tt)) s-=6;
   s += (style==='wtf' ? -4 : +2);
   return {pct: Math.max(25, Math.min(92, Math.round(s)))}
 }
-function shortMotivationFromAnswer(txt){
-  const T=t(); const a=String(txt||'').replace(/\s*\n+\s*/g,' ').trim();
-  const parts=a.split(/(?<=[.!?…])\s+/).filter(Boolean);
-  let s=parts.find(x=>/perché|porque|parce que|weil|so|thus|quindi|dunque|se\b|cuando|quand|wenn|when/i.test(x))||parts[0]||'';
-  s=s.replace(/\s{2,}/g,' ').trim(); if(!/[.!?…]$/.test(s)) s+='.'; if(s.length<24) s=T.motFallback; return s;
+
+/* === ORACLE helpers === */
+let oracleTimerId = null;
+function startOracleLoading(){
+  document.body.classList.add('loading');
+  const lineEl = document.getElementById('oracleLine');
+  const bank = ORACLE_LINES[lang] || ORACLE_LINES.it;
+  let i=0;
+  lineEl.textContent = bank[i%bank.length];
+  oracleTimerId = setInterval(()=>{
+    i++; lineEl.textContent = bank[i%bank.length];
+  }, 1600);
+}
+function stopOracleLoading(){
+  document.body.classList.remove('loading');
+  clearInterval(oracleTimerId); oracleTimerId=null;
+  const lineEl = document.getElementById('oracleLine');
+  setTimeout(()=>{ if(lineEl) lineEl.textContent = " "; }, 350);
+}
+function revealEffect(){
+  const wrap = document.querySelector('.oracle-wrap');
+  if(!wrap) return;
+  wrap.classList.add('reveal');
+  try{ document.getElementById('revealDing').play().catch(()=>{}); }catch{}
+  setTimeout(()=> wrap.classList.remove('reveal'), 900);
+}
+
+/* === Indicazione rapida (deriva dal testo domanda) === */
+function directTip(domanda=""){
+  const L = lang;
+  const q=(domanda||"").toLowerCase();
+  let topic="azione";
+  if(/tempo|scadenza|quando|settimana|mese|orari/.test(q)) topic=(L==='en')?'time':'tempo';
+  else if(/soldi|budget|euro|€|spesa|costo|prezzo/.test(q)) topic=(L==='en')?'budget':'budget';
+  else if(/lavor|job|colloquio|cv|impiego/.test(q)) topic=(L==='en')?'work':'lavoro';
+  else if(/amore|relaz|cuore|partner|fidanz|matrimonio/.test(q)) topic=(L==='en')?'love':'amore';
+  else if(/studio|esame|impara|corso|lezione/.test(q)) topic=(L==='en')?'study':'studio';
+  const map={
+    it:`🧭 ${I18N.it.guide}: blocca 10′ oggi su ${topic}: 1) primo passo adesso; 2) verifica tra 3 giorni.`,
+    en:`🧭 ${I18N.en.guide}: block 10′ today on ${topic}: 1) first step now; 2) check-in in 3 days.`
+  };
+  return map[L] || `${I18N.it.guide}: ${I18N.it.guideFallback}`;
 }
 
 /* ==== Overlay (store + rewarded) ==== */
@@ -656,39 +519,6 @@ h2{margin:4px 0 6px;font-size:18px}
 <\/script>
 </body></html>`;
 }
-function canWatchAd() {
-  const today = new Date().toISOString().slice(0,10);
-  const rec = JSON.parse(localStorage.getItem("ads_today") || "{}");
-  if (rec.date !== today) return true;
-  return (rec.count || 0) < 3;
-}
-function recordAdWatched() {
-  const today = new Date().toISOString().slice(0,10);
-  const rec = JSON.parse(localStorage.getItem("ads_today") || "{}");
-  if (rec.date !== today) {
-    localStorage.setItem("ads_today", JSON.stringify({ date: today, count: 1 }));
-  } else {
-    localStorage.setItem("ads_today", JSON.stringify({ date: today, count: (rec.count||0) + 1 }));
-  }
-}
-const _origStoreFallbackHTML = storeFallbackHTML;
-storeFallbackHTML = function(){
-  const html = _origStoreFallbackHTML();
-  if (!canWatchAd()) {
-    return html.replace(
-      '<button class="btn ghost" id="adBtn">',
-      '<button class="btn ghost" id="adBtn" disabled title="Limite giornaliero raggiunto">'
-    ).replace(
-      'id="msg">',
-      'id="msg">Hai già ottenuto i crediti gratuiti per oggi. Torna domani.<br><br>'
-    );
-  }
-  return html;
-};
-window.addEventListener("message",(ev)=>{
-  const d=ev.data||{};
-  if(d.type==="rewarded_completed"){ recordAdWatched(); }
-});
 function openOverlay(url){
   overlay.style.display='grid';
   overlay.setAttribute('aria-hidden','false');
@@ -702,20 +532,6 @@ function openOverlay(url){
   overlayFrame.src = finalUrl;
   try{ clearTimeout(overlayLoadTimer); }catch{}
   overlayLoadTimer=setTimeout(()=>{ try{ overlayFrame.setAttribute('srcdoc', storeFallbackHTML()); }catch{} },1500);
-  setTimeout(()=>{ try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang}, '*'); }catch{} }, 400);
-}
-function openStore(){ openOverlay("/store/credit-store.html"); }
-function openRewarded(){
-  rewardGranted=false;
-  openOverlay("/ads/rewarded.html");
-  clearTimeout(rewardTimer);
-  rewardTimer=setTimeout(()=>{
-    if(!rewardGranted){
-      addCredits(1); updateCreditInfo(); toast(t().toastPlus(1));
-      rewardGranted=true; closeOverlay();
-      location.replace('fourth.html');
-    }
-  },20000);
 }
 function closeOverlay(){
   overlay.style.display='none';
@@ -723,7 +539,6 @@ function closeOverlay(){
   overlayFrame.src='about:blank';
   overlayFrame.removeAttribute('srcdoc');
   try{ clearTimeout(overlayLoadTimer); }catch{}
-  try{ clearTimeout(rewardTimer); }catch{}
 }
 
 /* ==== Top init ==== */
@@ -732,7 +547,7 @@ function closeOverlay(){
   if(hasToken || prefs.pro===true){
     const el=qs('#proBadge'); el.style.display='inline-flex';
     el.textContent='🧪 TEST · ⭐ PRO';
-    el.title = {en:'Test mode active',es:'Modo de prueba activo',fr:'Mode test actif',de:'Testmodus aktiv'}[lang] || 'Modalità test attiva';
+    el.title = {en:'Test mode active'}[lang] || 'Modalità test attiva';
   }
   qs('#langSelect').value=lang;
 })();
@@ -749,132 +564,28 @@ function applyQuestion(){
   return {req, domanda, surprise};
 }
 
-/* === ORACLE helpers: mazzo senza ripetizioni + timing irregolare === */
-let oracleDeck = [];
-let oracleTimerId = null;
-function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
-function buildOracleDeck(){
-  const base = (ORACLE_LINES[lang] || ORACLE_LINES.it).slice();
-  const tails = ["", " …", " ⋯", " —", " ⸺", " …sssh."];
-  const deck = [];
-  for(const line of base){
-    const v = Math.random()<0.45 ? (line.replace(/\.$/,"") + tails[Math.floor(Math.random()*tails.length)]) : line;
-    deck.push(v);
-  }
-  return shuffle(deck);
-}
-function nextOracleLine(){
-  if(oracleDeck.length===0) oracleDeck = buildOracleDeck();
-  return oracleDeck.pop();
-}
-function startOracleLoading(){
-  document.body.classList.add('loading');
-  const lineEl = document.getElementById('oracleLine');
-  const tick = ()=>{
-    lineEl.textContent = nextOracleLine();
-    const jitter = 1200 + Math.floor(Math.random()*1000); // 1200–2200ms
-    oracleTimerId = setTimeout(tick, jitter);
-  };
-  tick();
-}
-function stopOracleLoading(){
-  document.body.classList.remove('loading');
-  clearTimeout(oracleTimerId); oracleTimerId=null;
-  const lineEl = document.getElementById('oracleLine');
-  setTimeout(()=>{ if(lineEl) lineEl.textContent = " "; }, 350);
-}
-function revealEffect(){
-  const wrap = document.querySelector('.oracle-wrap');
-  if(!wrap) return;
-  wrap.classList.add('reveal');
-  try{ document.getElementById('revealDing')?.play().catch(()=>{}); }catch{}
-  setTimeout(()=> wrap.classList.remove('reveal'), 900);
-}
-
-/* === Indicazione rapida (deriva dal contesto) === */
-function directTipFromContext(domanda="", answer=""){
-  const L = lang;
-  const lowerQ = (domanda||"").toLowerCase();
-  let key="azione";
-  if(/tempo|scadenza|quando|settimana|mese|orari/.test(lowerQ)) key = (L==='en')?'time':(L==='es')?'tiempo':(L==='fr')?'temps':(L==='de')?'Zeit':'tempo';
-  else if(/soldi|budget|euro|€|spesa|costo|prezzo/.test(lowerQ)) key = (L==='en')?'budget':(L==='es')?'presupuesto':(L==='fr')?'budget':(L==='de')?'Budget':'budget';
-  else if(/lavor|job|colloquio|cv|impiego/.test(lowerQ)) key = (L==='en')?'work':(L==='es')?'trabajo':(L==='fr')?'travail':(L==='de')?'Arbeit':'lavoro';
-  else if(/amore|relaz|cuore|partner|fidanz|matrimonio/.test(lowerQ)) key = (L==='en')?'love':(L==='es')?'amor':(L==='fr')?'amour':(L==='de')?'Liebe':'amore';
-  else if(/studio|esame|impara|corso|lezione/.test(lowerQ)) key = (L==='en')?'study':(L==='es')?'estudio':(L==='fr')?'étude':(L==='de')?'Studium':'studio';
-
-  const map={
-    it: `🧭 ${I18N.it.guide}: fissa una micro-azione su ${key} entro 24h (10′ in agenda). Esempio: “passo 1” oggi, “passo 2” tra 3 giorni.`,
-    en: `🧭 ${I18N.en.guide}: set one micro-action on ${key} within 24h (block 10'). Example: “step 1” today, “step 2” in 3 days.`,
-    es: `🧭 ${I18N.es.guide}: define una microacción sobre ${key} en 24h (bloquea 10'). Ejemplo: “paso 1” hoy, “paso 2” en 3 días.`,
-    fr: `🧭 ${I18N.fr.guide}: fixe une micro-action sur ${key} sous 24h (créneau de 10'). Exemple : “étape 1” aujourd’hui, “étape 2” dans 3 jours.`,
-    de: `🧭 ${I18N.de.guide}: setze innerhalb von 24 Std. eine Mikro-Aktion zu ${key} (10′ blocken). Beispiel: „Schritt 1“ heute, „Schritt 2“ in 3 Tagen.`
-  };
-  return map[L] || `${I18N.it.guide}: ${I18N.it.guideFallback}`;
-}
-
-/* === Sigils + progressione soft === */
-function renderSigilsAndProgress(){
-  if(!sigilTrail) return;
-  let hist=[]; try{ hist=JSON.parse(LS.getItem('cronologia')||'[]'); }catch{}
-  const n = Math.max(0, Array.isArray(hist)?hist.length:0);
-  sigilTrail.innerHTML = '';
-  const cap = Math.min(n, 14);
-  for(let i=0;i<cap;i++){
-    const s=document.createElement('span');
-    s.className='sigil'+( (i%5===4)?' big':'' );
-    sigilTrail.appendChild(s);
-  }
-  const bank = {
-    it: { cambiamento:/cambi|nuov|spostar|trasfer|rinnov/i, amore:/amor|relaz|cuore|partner/i, rischio:/risch|azzard|osa|paura/i, tempo:/tempo|settim|mese|scadenza/i, lavoro:/lavor|job|colloquio|cv|azienda/i, denaro:/soldi|budget|euro|€/i, studio:/studio|esame|impara|corso/i },
-    en: { change:/chang|move|shift|renew/i, love:/love|relat|heart|partner/i, risk:/risk|bold|fear/i, time:/time|deadl|week|month/i, work:/work|job|interview|cv|company/i, money:/money|budget|€|\$/i, study:/study|exam|learn|course/i }
-  };
-  const L = ['it','en'].includes(lang)?lang:'it';
-  const themes = bank[L];
-  const counts = {}; Object.keys(themes).forEach(k=>counts[k]=0);
-  hist.slice(-20).forEach(h=>{
-    const text = (h?.domanda||'') + ' ' + (h?.risposta||'');
-    Object.entries(themes).forEach(([k,rx])=>{ if(rx.test(text)) counts[k]++; });
-  });
-  let topK=null, topV=0;
-  Object.entries(counts).forEach(([k,v])=>{ if(v>topV){ topV=v; topK=k; }});
-  if(progressHint){
-    if(n>=3 && topK && topV>=2){
-      const keyMap = {it:{cambiamento:"cambiamento", amore:"amore", rischio:"rischio", tempo:"tempo", lavoro:"lavoro", denaro:"denaro", studio:"studio"},
-                      en:{change:"change", love:"love", risk:"risk", time:"time", work:"work", money:"money", study:"study"}};
-      const pretty = (keyMap[L]&&keyMap[L][topK]) || topK;
-      progressHint.textContent = t().progressLead(pretty);
-    } else {
-      progressHint.textContent = '';
-    }
-  }
-}
-
-/* ==== Riquadro: regole di visualizzazione ====
-   - surprise === true  -> mantiene riquadro ironico/committee + motNote (nessun guideBox)
-   - style === 'wtf'    -> riquadro motivazione classico (scientific/serio), niente guideBox
-   - style === 'whatif' -> NASCONDI motivazione classica, MOSTRA SOLO guideBox (parte diretta)
-*/
-function renderBlocksVisibility({surprise}){
+/* ==== Riquadri: visibilità ==== */
+function setBlocks({surprise}){
   if(surprise){
-    // Ironico: mostra motivazione/committee, nascondi guida
-    if(motOne) motOne.style.display='grid';
-    if(guideSep) guideSep.style.display='none';
-    if(guideBox) guideBox.style.display='none';
+    // Surprise -> ironico/committee, niente guida
+    motOne.style.display='grid';
+    guideSep.style.display='none';
+    guideBox.style.display='none';
     committeeTitle.textContent = t().votersTitle || 'Comitato';
     return;
   }
   if(style==='wtf'){
-    // Scientifico: mostra motivazione, nascondi guida
-    if(motOne) motOne.style.display='grid';
-    if(guideSep) guideSep.style.display='none';
-    if(guideBox) guideBox.style.display='none';
+    // What the F -> motivazione classica
+    motOne.style.display='grid';
+    guideSep.style.display='none';
+    guideBox.style.display='none';
     committeeTitle.textContent = t().scientificTitle;
     return;
   }
-  // WHAT IF: solo parte diretta
-  if(motOne) motOne.style.display='none';
-  if(guideSep) guideSep.style.display='';
-  if(guideBox) guideBox.style.display='grid';
+  // WHAT IF non-surprise -> SOLO indicazione rapida
+  motOne.style.display='none';
+  guideSep.style.display='';
+  guideBox.style.display='grid';
   committeeTitle.textContent = t().guide;
 }
 
@@ -885,40 +596,22 @@ async function startFlow(){
 
   startOracleLoading();
 
-  // Consumi crediti (come da tua logica)
-  if(!IS_ADMIN && !alreadyConsumed){
-    if(surprise){
-      const okSurp = consumeSurpriseOne();
-      if(okSurp){
-        alreadyConsumed = true;
-        updateCreditInfo();
-        toast('🎁 -1 Sorprendimi');
-      }
+  // Crediti (semplificato: usa legacy per compatibilità)
+  if(!IS_ADMIN){
+    const left=getAvailable();
+    if(!(left===Infinity) && left<=0){
+      stopOracleLoading();
+      answerEl.textContent=t().noCredits;
+      openOverlay("/store/credit-store.html");
+      return;
     }
-    if(!alreadyConsumed){
-      const left=getAvailable();
-      if(!(left===Infinity) && left<=0){
-        awaitingCredit=true;
-        stopOracleLoading();
-        answerEl.textContent=t().noCredits;
-        openStore();
-        return;
-      }
-      if(!consumeOne()){
-        awaitingCredit=true;
-        stopOracleLoading();
-        answerEl.textContent=t().noCredits;
-        openStore();
-        return;
-      }
-      alreadyConsumed=true;
-      updateCreditInfo();
-      toast(t().toastMinus(1));
-    }
+    consumeOne();
+    toast(t().toastMinus(1));
+    updateCreditInfo();
   }
 
-  // Decide subito cosa mostrare/nascondere
-  renderBlocksVisibility({surprise});
+  // Mostra/nascondi blocchi ora
+  setBlocks({surprise});
 
   try{
     const headers={"Content-Type":"application/json"};
@@ -950,62 +643,37 @@ async function startFlow(){
     topPct.textContent = pStr;
     bottomPct.textContent = pStr;
 
-    function scientificFallback(langCode){
-      return (langCode==='en')
-        ? "Scientific note: small, consistent steps beat sporadic big efforts (habits > willpower). Switching costs explain early friction; feedback loops and simple metrics sustain momentum."
-        : "Nota scientifica: i piccoli passi consistenti vincono sui grandi sforzi saltuari (abitudini > forza di volontà). I costi di switch spiegano l’attrito iniziale; cicli di feedback e metriche semplici sostengono lo slancio.";
-    }
-
-    let motivazioneUsata = "";
-    if (surprise) {
-      // Versione ironica/committee (invariata)
-      // Mostra chip + motNote ironico
-      if(motOne) motOne.style.display='grid';
-      if(guideSep) guideSep.style.display='none';
-      if(guideBox) guideBox.style.display='none';
-      // chips + nota già sotto:
+    if (surprise){
+      // Surprise -> committee playful text
       const rdm=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-      chipFav.textContent=`${t().chipsFav} ${rdm(120,1200)}`;
-      chipCon.textContent=`${t().chipsCon} ${rdm(0,900)}`;
-      chipAst.textContent=`${t().chipsAst} ${rdm(0,400)}`;
       motIco.style.display='';
       chipsWrap.style.display='flex';
       committeeTitle.textContent=t().votersTitle||'Comitato';
-      motNote.textContent=(lang==='en')?`Brief tussle at vote: ${rdm(1,5)} removed; ${rdm(0,3)} bruised.`:
-                       (lang==='es')?`Pequeño lío en la votación: ${rdm(1,5)} expulsados; ${rdm(0,3)} contusos.`:
-                       (lang==='fr')?`Petit grabuge au vote : ${rdm(1,5)} évacués ; ${rdm(0,3)} contusionnés.`:
-                       (lang==='de')?`Kurzes Gerangel bei der Abstimmung: ${rdm(1,5)} entfernt; ${rdm(0,3)} leicht verletzt.`:
-                                     `Breve parapiglia al voto: ${rdm(1,5)} allontanati; ${rdm(0,3)} contusi.`;
-      motivazioneUsata = motNote.textContent;
-    } else if (style === 'wtf') {
-      // Scientifico: motivazione classica
-      const sci = (data && data.scientific) ? String(data.scientific).trim() : scientificFallback(lang);
+      motNote.textContent=(lang==='en')?`Brief tussle at vote: ${rdm(1,5)} removed; ${rdm(0,3)} bruised.`
+                       :`Breve parapiglia al voto: ${rdm(1,5)} allontanati; ${rdm(0,3)} contusi.`;
+      chipFav.textContent=`${t().chipsFav} ${rdm(120,1200)}`;
+      chipCon.textContent=`${t().chipsCon} ${rdm(0,900)}`;
+      chipAst.textContent=`${t().chipsAst} ${rdm(0,400)}`;
+    } else if (style==='wtf'){
+      // WTF -> motivazione/scientifica
       motIco.style.display='none';
       chipsWrap.style.display='none';
       committeeTitle.textContent = t().scientificTitle;
-      motNote.textContent = sci;
-      if(motOne) motOne.style.display='grid';
-      if(guideSep) guideSep.style.display='none';
-      if(guideBox) guideBox.style.display='none';
-      motivazioneUsata = sci;
+      const sciText = (data && data.scientific) ? String(data.scientific).trim()
+                     : (lang==='en' ? "Scientific note: small, consistent steps beat sporadic big efforts."
+                                    : "Nota scientifica: i piccoli passi consistenti vincono sui grandi sforzi saltuari.");
+      motNote.textContent = sciText;
     } else {
-      // WHAT IF NON-SURPRISE: SOLO indicazione rapida (niente motivazione)
-      const direct = (data && data.guide) ? String(data.guide).trim() : directTipFromContext(domanda, answerText);
-      if(guideNote) guideNote.textContent = direct || (t().guide + ": " + (t().guideFallback||""));
-      if(motOne) motOne.style.display='none';
-      if(guideSep) guideSep.style.display='';
-      if(guideBox) guideBox.style.display='grid';
-      committeeTitle.textContent = t().guide;
-      motivazioneUsata = guideNote.textContent; // la trattiamo come “motivazione” salvata
+      // WHAT IF non-surprise -> indicazione rapida
+      const guideText = (data && data.guide) ? String(data.guide).trim() : directTip(domanda);
+      guideNote.textContent = guideText || (t().guide + ": " + t().guideFallback);
     }
 
-    // Cronologia
+    // Salva cronologia (manteniamo un unico campo 'motivazione' per compat)
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
+    const motivazioneUsata = (surprise||style==='wtf') ? (motNote.textContent||'') : (guideNote.textContent||'');
     hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:usedPct, motivazione:motivazioneUsata });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-
-    // Sigilli + progress
-    renderSigilsAndProgress();
 
   }catch(e){
     console.error(e);
@@ -1013,26 +681,6 @@ async function startFlow(){
     answerEl.textContent=t().error;
   }
 }
-
-/* ==== Messaggi dal modal ==== */
-window.addEventListener("message",(ev)=>{
-  const d=ev.data||{};
-  if(d.type==="purchase_completed"){ return; }
-  if(d.type==="open_rewarded"){ openRewarded(); return; }
-  if(d.type==="rewarded_completed"){
-    const amt=parseInt(d.amount,10)||1;
-    addCredits(amt); updateCreditInfo(); toast(t().toastPlus(amt));
-    rewardGranted=true; try{ clearTimeout(rewardTimer); }catch{}
-    closeOverlay();
-    location.replace('fourth.html');
-    return;
-  }
-  if(d.type==="close_overlay"){
-    closeOverlay();
-    if(getAvailable()>0){ location.replace('fourth.html'); }
-    return;
-  }
-});
 
 /* ==== Nav / lingua / share / save ==== */
 qs('#backBtn').onclick=()=> history.length > 1 ? history.back() : location.replace('index.html');
@@ -1045,7 +693,6 @@ qs('#langSelect').onchange=()=>{
   lang=v;
   applyUI(LS.getItem('domanda')||'');
   updateCreditInfo();
-  try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang:v}, '*'); }catch{}
 };
 qs('#shareBtn').onclick=async()=>{
   const T=t();
@@ -1059,7 +706,17 @@ qs('#shareBtn').onclick=async()=>{
   }catch{}
 };
 qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
-if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
+if(saveBtn){ saveBtn.onclick = function(){
+  const domanda = (LS.getItem('domanda') || '').trim();
+  if(!domanda) return;
+  let arr=[]; try{ arr = JSON.parse(LS.getItem('next_prompts')||'[]'); if(!Array.isArray(arr)) arr=[]; }catch{ arr=[]; }
+  if(arr[0] && (arr[0].q||'') === domanda){ toast(t().savedOk); return; }
+  arr.unshift({ q: domanda, ts: Date.now() });
+  if(arr.length>50) arr = arr.slice(0,50);
+  LS.setItem('next_prompts', JSON.stringify(arr));
+  LS.setItem('whatif_wallet_sync', String(Date.now()));
+  toast(t().savedOk);
+};}
 
 /* ==== Avvio ==== */
 startFlow();
