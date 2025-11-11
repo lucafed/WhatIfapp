@@ -38,7 +38,7 @@
     @media (prefers-reduced-motion:no-preference){ body{animation:bgShift 18s ease-in-out infinite alternate} }
     main{min-height:100%;display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px;gap:14px;padding-bottom:120px}
     .lang-fab{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);right:14px;z-index:50}
-    .lang-btn{appearance:none;border:1px solid var(--card-border);background:#141c22;color:var(--fg);padding:10px 12px;border-radius:999px;cursor:pointer}
+    .lang-btn{appearance:none;border:1px solid var(--card-border);background:#141c22;color:#var(--fg);padding:10px 12px;border-radius:999px;cursor:pointer}
     .lang-menu{position:absolute;top:46px;right:0;background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:8px;display:none;min-width:170px;box-shadow:0 12px 28px var(--shadow);backdrop-filter:blur(10px)}
     .lang-menu button{display:block;width:100%;text-align:left;background:transparent;border:none;color:#E6F2F5;padding:10px;border-radius:10px;cursor:pointer}
     .lang-menu button.active{background:rgba(255,255,255,.06)}
@@ -275,7 +275,7 @@
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-    // --- Config tua ---
+    // Config Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyASrGnHOnf_O-N0NuZDvqOGGfG8IoSWblc",
       authDomain: "whatif-oracolo.firebaseapp.com",
@@ -285,38 +285,37 @@
       appId: "1:602976466053:web:668d4a462286513d8b25ec"
     };
 
-    // --- App + servizi ---
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    // --- Chiavi localStorage compatibili con le pagine esistenti ---
+    // Chiavi localStorage usate dalle altre pagine
     const WKEY   = "whatif_wallet";
     const SURPKEY= "whatif_surprise";
 
-    // Utility
-    const today = () => new Date().toISOString().slice(0,10);
+    const todayISO = () => new Date().toISOString().slice(0,10);
+
     function mirrorToLocalStorage(available, surprise, limit=3){
       try{
-        const w = { available, used: 0, limit }; // "used" qui non lo tracciamo lato cloud: lasciamo 0 per compatibilità UI
+        const w = { available, used: 0, limit };
         localStorage.setItem(WKEY, JSON.stringify(w));
         localStorage.setItem(SURPKEY, String(Math.max(0, parseInt(surprise,10)||0)));
-        localStorage.setItem("whatif_wallet_sync", String(Date.now())); // evento per chi ascolta
+        localStorage.setItem("whatif_wallet_sync", String(Date.now()));
       }catch{}
     }
 
-    async function ensureDailyWallet(userId){
-      const ref = doc(db, "wallets", userId);
+    async function ensureDailyWallet(uid){
+      const ref = doc(db, "wallets", uid);
       const snap = await getDoc(ref);
-      const d = today();
+      const d = todayISO();
 
       if(!snap.exists()){
         const payload = {
           available: 3,
           surprise: 1,
           lastDaily: d,
-          adCount: 0,     // contatore pubblicità visti oggi
-          adDay: d,       // giorno del contatore
+          adCount: 0,
+          adDay: d,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         };
@@ -332,7 +331,7 @@
       let adCount = Number.isFinite(+data.adCount)? +data.adCount : 0;
       let adDay   = data.adDay || d;
 
-      // Reset giornaliero: 3 crediti + 1 sorprendi, azzera adCount
+      // Reset giornaliero
       if(lastDaily !== d){
         available = 3;
         surprise  = 1;
@@ -350,20 +349,16 @@
       return { available, surprise, lastDaily: d, adCount, adDay };
     }
 
-    // Espongo (opzionale) alcune API su window per debug/admin
+    // Espongo per eventuale debug
     window.whatifCloud = {
       get uid(){ return auth.currentUser?.uid || null; },
-      async refresh(){ 
-        if(!auth.currentUser) return null;
-        return ensureDailyWallet(auth.currentUser.uid);
-      }
+      async refresh(){ if(!auth.currentUser) return null; return ensureDailyWallet(auth.currentUser.uid); }
     };
 
-    // Login anonimo + inizializzazione wallet
+    // Auth anonima + init wallet
     try{
-      const existing = auth.currentUser;
-      if(existing){
-        await ensureDailyWallet(existing.uid);
+      if(auth.currentUser){
+        await ensureDailyWallet(auth.currentUser.uid);
       }else{
         await signInAnonymously(auth);
       }
@@ -373,11 +368,7 @@
 
     onAuthStateChanged(auth, async (user)=>{
       if(!user) return;
-      try{
-        await ensureDailyWallet(user.uid);
-      }catch(err){
-        console.error("Wallet init error:", err);
-      }
+      try{ await ensureDailyWallet(user.uid); }catch(err){ console.error("Wallet init error:", err); }
     });
   </script>
 </body>
