@@ -74,7 +74,6 @@
   </div>
 
   <main>
-    <!-- immagine subito visibile -->
     <img id="hero" class="hero-img" src="/public/home-hero.png" alt="Porta luminosa What?f" loading="eager" decoding="async" />
 
     <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
@@ -111,7 +110,7 @@
     </div>
   </footer>
 
-  <!-- Hero loader (cerca anche varianti) -->
+  <!-- Hero loader -->
   <script>
     (function loadHero(){
       const hero = document.getElementById('hero');
@@ -155,7 +154,7 @@
       fr:{title:"Découvrez votre What?f",lead:"Imaginez le choix que vous n’avez pas fait… et celui que vous pourriez encore faire. Choisissez de regarder vers le passé ou vers le futur. <strong>What if</strong> explore des scénarios réalistes et réfléchis basés sur des choix plausibles. <strong>What the F</strong> vous fait vivre des visions ironiques, créatives et imprévisibles.",past:"Passé", future:"Futur", whatif:"What if", wtf:"What the F", next:"Suivant", privacy:"Confidentialité", terms:"Conditions", info:"Info"},
       de:{title:"Entdecke dein What?f",lead:"Stell dir die Entscheidung vor, die du nicht getroffen hast… und die, die du noch treffen könntest. Wähle, ob du in die Vergangenheit oder in die Zukunft blickst. <strong>What if</strong> erkundet realistische, reflektierte Szenarien auf Basis plausibler Entscheidungen. <strong>What the F</strong> lässt dich ironische, kreative und unvorhersehbare Visionen erleben.",past:"Vergangenheit", future:"Zukunft", whatif:"What if", wtf:"What the F", next:"Weiter", privacy:"Datenschutz", terms:"Nutzungsbedingungen", info:"Info"}
     };
-    const LS = localStorage, $ = s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+    const LS=localStorage, $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
 
     function detectBrowserLang(){
       const n=(navigator.language||'it').toLowerCase();
@@ -211,7 +210,7 @@
     wireGroup(document.getElementById('styleGroup'));
   </script>
 
-  <!-- 🔐 Firebase: login Google obbligatorio + wallet giornaliero -->
+  <!-- 🔐 Firebase: login Google via redirect + wallet giornaliero -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
     import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithRedirect, getRedirectResult, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
@@ -278,7 +277,7 @@
     }
     window.updatePrimaryCta = updatePrimaryCta;
 
-    // Click CTA: login (redirect) oppure vai a second.html
+    // Click CTA: se non loggato -> redirect; se loggato -> vai avanti
     primaryCta.onclick = async ()=>{
       showErr("");
       const user = auth.currentUser;
@@ -299,7 +298,7 @@
 
     logoutBtn.onclick = async ()=>{ await signOut(auth); };
 
-    // Post-redirect Google
+    // Completa login dopo il redirect
     getRedirectResult(auth)
       .then(async res=>{
         if(res?.user){ await ensureDailyWallet(res.user.uid).catch(()=>{}); }
@@ -307,16 +306,14 @@
       .catch(e=> showErr("Post-login: "+(e.code||e.message)));
 
     onAuthStateChanged(auth, async (user)=>{
-      if(user){
-        await ensureDailyWallet(user.uid).catch(()=>{});
-      }
+      if(user){ await ensureDailyWallet(user.uid).catch(()=>{}); }
       updatePrimaryCta();
     });
 
     updatePrimaryCta();
   </script>
 
-  <!-- Easter egg admin + SW (invariati) -->
+  <!-- Easter egg admin + SW -->
   <script>
     (function(){
       const title = document.getElementById('appTitle'); const pastBtn = document.querySelector('button[data-val="past"]');
