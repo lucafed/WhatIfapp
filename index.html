@@ -178,23 +178,6 @@
     if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang());
     applyLang();
 
-    (function wireLangMenu(){
-      const btn=$('#langToggle'), menu=$('#langMenu');
-      btn.addEventListener('click', ()=>{
-        const open=menu.style.display==='block';
-        menu.style.display=open?'none':'block';
-        btn.setAttribute('aria-expanded', String(!open));
-      });
-      menu.addEventListener('click', e=>{
-        const b=e.target.closest('button[data-lang]'); if(!b) return;
-        setLang(b.dataset.lang);
-        menu.style.display='none';
-      });
-      document.addEventListener('click', e=>{
-        if(!menu.contains(e.target) && e.target!==btn) menu.style.display='none';
-      });
-    })();
-
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
     function wireGroup(g){
       g.addEventListener('click', e=>{
@@ -213,14 +196,21 @@
   <!-- 🔐 Firebase: login Google via redirect + wallet giornaliero -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithRedirect, getRedirectResult, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+    import { 
+      getAuth, GoogleAuthProvider, onAuthStateChanged, 
+      signInWithRedirect, getRedirectResult, signOut,
+      browserLocalPersistence, setPersistence
+    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import { 
+      getFirestore, doc, getDoc, setDoc, runTransaction, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
+    // ✅ Config corretta (bucket .appspot.com)
     const firebaseConfig = {
       apiKey: "AIzaSyASrGnHOnf_O-N0NuZDvqOGGfG8IoSWblc",
       authDomain: "whatif-oracolo.firebaseapp.com",
       projectId: "whatif-oracolo",
-      storageBucket: "whatif-oracolo.firebasestorage.app",
+      storageBucket: "whatif-oracolo.appspot.com",
       messagingSenderId: "602976466053",
       appId: "1:602976466053:web:668d4a462286513d8b25ec"
     };
@@ -228,12 +218,17 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
+
+    // ✅ Forza selezione account (evita riuso automatico)
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
+
+    // ✅ Mantieni l'utente loggato nella PWA
+    await setPersistence(auth, browserLocalPersistence);
 
     const primaryCta = document.getElementById("primaryCta");
     const logoutBtn  = document.getElementById("logoutBtn");
     const errBox     = document.getElementById("authError");
-
     const showErr = (m)=>{ errBox.textContent = m || ""; };
 
     const selectionsReady = ()=>{
@@ -246,7 +241,9 @@
     async function ensureDailyWallet(uid){
       const ref = doc(db, "wallets", uid);
       const snap = await getDoc(ref);
-      const today = new Date().toISOString().slice(0,10);
+      // Giorno "locale" utente in formato YYYY-MM-DD
+      const today = new Date(Date.now() - (new Date().getTimezoneOffset()*60000))
+        .toISOString().slice(0,10);
       if(!snap.exists()){
         await setDoc(ref,{
           available:3, surprise:1, lastDaily:today,
@@ -277,7 +274,7 @@
     }
     window.updatePrimaryCta = updatePrimaryCta;
 
-    // Click CTA: se non loggato -> redirect; se loggato -> vai avanti
+    // 🔘 Click CTA: se non loggato → redirect Google; se loggato → avanti
     primaryCta.onclick = async ()=>{
       showErr("");
       const user = auth.currentUser;
@@ -285,7 +282,11 @@
         try{
           await signInWithRedirect(auth, provider);
         }catch(e){
-          showErr("Errore login: "+(e.code||e.message));
+          const map = {
+            "auth/unauthorized-domain":"Dominio non autorizzato in Firebase (Authentication > Impostazioni > Domini autorizzati).",
+            "auth/network-request-failed":"Problema rete/HTTPS (o Service Worker in cache). Riprova con hard refresh."
+          };
+          showErr(map[e.code] || ("Errore login: " + (e.code || e.message)));
         }
         return;
       }
@@ -298,15 +299,18 @@
 
     logoutBtn.onclick = async ()=>{ await signOut(auth); };
 
+    // ✅ Evita doppie scritture dopo redirect
+    let didPostRedirectWallet = false;
+
     // Completa login dopo il redirect
     getRedirectResult(auth)
       .then(async res=>{
-        if(res?.user){ await ensureDailyWallet(res.user.uid).catch(()=>{}); }
+        if(res?.user){ await ensureDailyWallet(res.user.uid).catch(()=>{}); didPostRedirectWallet = true; }
       })
       .catch(e=> showErr("Post-login: "+(e.code||e.message)));
 
     onAuthStateChanged(auth, async (user)=>{
-      if(user){ await ensureDailyWallet(user.uid).catch(()=>{}); }
+      if(user && !didPostRedirectWallet){ await ensureDailyWallet(user.uid).catch(()=>{}); }
       updatePrimaryCta();
     });
 
@@ -326,8 +330,12 @@
       pastBtn.addEventListener('click', ()=>{ if(stage!==1) return; if(++tapPast>=5) success(); if(timer) clearTimeout(timer); timer=setTimeout(reset,2500); });
     })();
 
+    // ⚠️ Aggiorna la versione per bustare il SW se cambi il file
+    const SW_VERSION = "v7";
     if("serviceWorker" in navigator){
-      window.addEventListener("load", ()=>{ navigator.serviceWorker.register("/sw.js").catch(()=>{}); });
+      window.addEventListener("load", ()=>{ 
+        navigator.serviceWorker.register("/sw.js?"+SW_VERSION).catch(()=>{}); 
+      });
     }
   </script>
 </body>
