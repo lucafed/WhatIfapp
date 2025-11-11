@@ -133,6 +133,22 @@ h1{
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
 }
 
+/* === Repeat Nudge (eco dell’oracolo) === */
+.nudge {
+  margin: 8px 0 10px;
+  padding: 10px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  background: rgba(255,255,255,.04);
+  font-size: 14px;
+  line-height: 1.5;
+  opacity: .95;
+}
+.nudge strong { font-weight: 800; }
+.nudge .advice { display:block; margin-top:6px; opacity:.9; font-style:italic; }
+html[data-theme="wtf"] .nudge { background: rgba(90,140,117,.10); }
+html[data-theme="whatif"] .nudge { background: rgba(28,87,160,.10); }
+
 /* Mobile */
 @media (max-width:420px){
   .result-pct,.top-pct{font-size:15px;min-width:56px;padding:4px 8px}
@@ -203,6 +219,9 @@ h1{
     <!-- INTRO (solo prima volta per stile) -->
     <div id="introBox" class="intro-box" style="display:none"></div>
 
+    <!-- NUDGE (eco ripetizione) -->
+    <div id="repeatNudge" class="nudge" style="display:none"></div>
+
     <!-- SOLO Oracle (niente frasetta lead) -->
     <div class="oracle-wrap">
       <div class="orb" aria-hidden="true"></div>
@@ -257,11 +276,11 @@ h1{
 </audio>
 <!-- 🎵 SFX evocativo (what if) -->
 <audio id="sfxWhatIf" preload="auto">
-  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAABAAAA" type="audio/mpeg">
+  <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAABAAAA" type="audio/mpeg">
 </audio>
 <!-- 🥂 Clink (what the f) -->
 <audio id="sfxWtf" preload="auto">
-  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
+  <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
 </audio>
 
 <script>
@@ -393,7 +412,7 @@ const I18N = {
 };
 const SUP_LANG=['it','en','es','fr','de'];
 
-/* ======== LINGUA: segui la FOURTH (request.lang o LS.lang) ======== */
+/* ======== LINGUA ======== */
 const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
 const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
@@ -420,50 +439,25 @@ const t=()=>I18N[lang]||I18N.it;
 const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
 const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica…`;
 
-/* === ORACLE LINES (solo attesa, nessun lead statico) === */
+/* === ORACLE LINES (solo attesa) === */
 const ORACLE_LINES = {
-  it: [
-    "Shh… le carte girano piano.","Aspetta: la risposta bussa sottovoce.","L’aria si fa chiara, sta arrivando.",
-    "Non correre: il disegno prende forma.","Occhio: il quadro si accende da solo.","Silenzio un attimo… qualcosa si allinea.",
-    "Senti? C’è un passo che torna nel ritmo.","Trattieni il fiato: la moneta è a mezz’aria.","Una piega nella notte, poi luce sottile.",
-    "Le luci interne si accendono una alla volta.","Ancora un respiro… il filo si tende.","Eccolo: l’indizio che mancava si mostra.",
-    "Un colpo di vento, poi tutto si ferma.","Scorri piano: la porta sta socchiudendosi.","Si sente un sì lontano, ma si avvicina.",
-    "L’oracolo gira la pagina… quasi."
-  ],
-  en: [
-    "Hush… the cards are turning.","Wait: the answer knocks softly.","Air clears; something is arriving.",
-    "Don’t rush—shape is forming.","Look: the outline lights itself.","Hold a breath… lines align.",
-    "Hear it? A step returns to rhythm.","Coin in mid-air; let it fall.","A fold in the dark, then a thin light.",
-    "Inner lights switch on, one by one.","Another breath… the wire tightens.","There it is: the missing hint.",
-    "A gust, then stillness.","Scroll slowly: a door is ajar.","A distant yes draws nearer.","The oracle turns the page… almost."
-  ],
+  it: ["Shh… le carte girano piano.","Aspetta: la risposta bussa sottovoce.","L’aria si fa chiara, sta arrivando.","Non correre: il disegno prende forma.","Occhio: il quadro si accende da solo.","Silenzio un attimo… qualcosa si allinea.","Senti? C’è un passo che torna nel ritmo.","Trattieni il fiato: la moneta è a mezz’aria.","Una piega nella notte, poi luce sottile.","Le luci interne si accendono una alla volta.","Ancora un respiro… il filo si tende.","Eccolo: l’indizio che mancava si mostra.","Un colpo di vento, poi tutto si ferma.","Scorri piano: la porta sta socchiudendosi.","Si sente un sì lontano, ma si avvicina.","L’oracolo gira la pagina… quasi."],
+  en: ["Hush… the cards are turning.","Wait: the answer knocks softly.","Air clears; something is arriving.","Don’t rush—shape is forming.","Look: the outline lights itself.","Hold a breath… lines align.","Hear it? A step returns to rhythm.","Coin in mid-air; let it fall.","A fold in the dark, then a thin light.","Inner lights switch on, one by one.","Another breath… the wire tightens.","There it is: the missing hint.","A gust, then stillness.","Scroll slowly: a door is ajar.","A distant yes draws nearer.","The oracle turns the page… almost."],
   es: ["Shh… las cartas giran despacio.","Espera: la respuesta toca suave.","El aire se aclara; ya viene.","No corras: la forma aparece.","Mira: el contorno se enciende solo.","Guarda el aliento… todo se alinea.","¿Lo oyes? Vuelve el paso al ritmo.","Moneda en el aire; que caiga.","Un pliegue en la noche, luz fina.","Luces internas, una por una.","Otro respiro… el hilo se tensa.","Ahí está: la pista que faltaba.","Una ráfaga y luego quietud.","Desliza lento: se entorna la puerta.","Un sí lejano se acerca.","El oráculo pasa página… casi."],
   fr: ["Chut… les cartes tournent.","Attends : la réponse frappe doucement.","L’air s’éclaircit ; ça arrive.","Ne te presse pas : la forme vient.","Regarde : le contour s’allume seul.","Retiens ton souffle… tout s’aligne.","Tu entends ? Le pas reprend le tempo.","Pièce en suspens ; laisse-la tomber.","Un pli dans la nuit, puis une fine lumière.","Des lampes intérieures s’allument, une à une.","Encore un souffle… le fil se tend.","La voilà : l’indice manquant.","Un souffle, puis l’immobilité.","Fais défiler lentement : une porte s’entrouvre.","Un oui lointain se rapproche.","L’oracle tourne la page… presque."],
   de: ["Leise… die Karten wenden sich.","Warte: die Antwort klopft sanft.","Die Luft klärt sich; es kommt.","Nicht eilen: die Form entsteht.","Schau: die Kontur leuchtet selbst.","Atem halten… die Linien richten sich.","Hörst du’s? Der Schritt findet den Takt.","Münze in der Luft; lass sie fallen.","Ein Faltenwurf der Nacht, dann dünnes Licht.","Innere Lichter, eins nach dem andern.","Noch ein Atem… der Draht spannt sich.","Da ist es: der fehlende Hinweis.","Eine Böe, dann Stille.","Langsam scrollen: die Tür steht einen Spalt offen.","Ein fernes Ja kommt näher.","Das Orakel blättert um… fast."]
 };
 
-/* ==== INTRO (Zoltar-like) per stile & periodo, mostra solo prima volta ===== */
+/* ==== INTRO Zoltar-like (prima volta) ==== */
 const INTRO_KEY = 'whatif_intro_seen_v2';
 const INTRO = {
   whatif: {
-    it: {
-      future: "🜂 La lanterna si accende: chiedi con chiarezza e il futuro si mette in riga.",
-      past:   "🜂 La sabbia si posa: guarda il passato senza nebbia, prendi l’essenza e vai."
-    },
-    en: {
-      future: "🜂 The lamp glows: ask clearly and the future falls into line.",
-      past:   "🜂 The sand settles: read the past plainly, keep the essence, move."
-    }
+    it: {future:"🜂 La lanterna si accende: chiedi con chiarezza e il futuro si mette in riga.", past:"🜂 La sabbia si posa: guarda il passato senza nebbia, prendi l’essenza e vai."},
+    en: {future:"🜂 The lamp glows: ask clearly and the future falls into line.", past:"🜂 The sand settles: read the past plainly, keep the essence, move."}
   },
   wtf: {
-    it: {
-      future: "🥂 Dillo forte, fai spazio: il domani non aspetta i timidi.",
-      past:   "🥂 Chiudi il conto: il passato ha già pagato, tu ordina il prossimo giro."
-    },
-    en: {
-      future: "🥂 Say it loud, make room: tomorrow won’t wait for the shy.",
-      past:   "🥂 Tab’s closed: the past already paid—order the next round."
-    }
+    it: {future:"🥂 Dillo forte, fai spazio: il domani non aspetta i timidi.", past:"🥂 Chiudi il conto: il passato ha già pagato, tu ordina il prossimo giro."},
+    en: {future:"🥂 Say it loud, make room: tomorrow won’t wait for the shy.", past:"🥂 Tab’s closed: the past already paid—order the next round."}
   }
 };
 function showIntroOnce(){
@@ -476,12 +470,10 @@ function showIntroOnce(){
     const line = (periodo==='past') ? L.past : L.future;
     box.textContent = line;
     box.style.display = 'block';
-    // suono
     try{
       if(style==='wtf') document.getElementById('sfxWtf')?.play().catch(()=>{});
       else document.getElementById('sfxWhatIf')?.play().catch(()=>{});
     }catch{}
-    // segna come visto
     LS.setItem(INTRO_KEY,'1');
   }catch{}
 }
@@ -583,7 +575,7 @@ function computeProbability(q){
   return {pct: Math.max(25, Math.min(92, Math.round(s)))}
 }
 
-/* === ORACLE helpers: mazzo senza ripetizioni + timing irregolare === */
+/* === ORACLE helpers === */
 let oracleDeck = [];
 let oracleTimerId = null;
 function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
@@ -606,7 +598,7 @@ function startOracleLoading(){
   const lineEl = document.getElementById('oracleLine');
   const tick = ()=>{
     lineEl.textContent = nextOracleLine();
-    const jitter = 1200 + Math.floor(Math.random()*1000); // 1200–2200ms
+    const jitter = 1200 + Math.floor(Math.random()*1000);
     oracleTimerId = setTimeout(tick, jitter);
   };
   tick();
@@ -625,52 +617,160 @@ function revealEffect(){
   setTimeout(()=> wrap.classList.remove('reveal'), 900);
 }
 
-/* ===== WHAT IF (non-surprise): SOLO parte diretta (3 righe) ===== */
+/* ===== WHAT IF (manuale/spunti): indicazioni contestuali ===== */
+function isManualOrSpunti(req){
+  const src = (req?.micro?.source || "").toLowerCase();
+  return src === "manual" || src === "spunti" || src === "quick";
+}
+// Estrai indizi dalla domanda per contestualizzare consigli
+function extractContextParts(q){
+  const s = String(q||"").trim();
+  const lower = s.toLowerCase();
+  const when = (s.match(/\b(in|entro|tra|prossim[oi]|\bdomani\b|\boggi\b|\bstasera\b|\bsettimana\b|\bmese\b|\banno\b|\d{1,2}\s*(giorni|settimane|mesi))\b/i)||[])[0] || "";
+  const money = (s.match(/(\b€|\beuro|\bbudget|\bspesa|\bprezzo|\bcosto)\s*([0-9.,]+)/i)||[])[0] || (/\bunder\b/i.test(s)?"under":"");
+  const action = (s.match(/\b(lancia|apr[ie]|impara|scriv[ie]|chied[ie]|corr[ei]|studia|automatizz[ae]|testa|compra|vend[ei]|assumi|costruisc[ie]|crea|ottimizza|riduci|aumenta)\b/i)||[])[0] || "";
+  const obj = (lower.match(/\b(sito|progetto|app|campagna|cv|colloquio|piscina|dominio|startup|portafoglio|criptovalute?|azione|investimento|budget|esame)\b/i)||[])[0] || "";
+  const topic = obj || (/\b(amore|partner|relaz(ione|ioni)|matrimonio)\b/i.test(lower)?"relazioni":"");
+  return {when, money, action, topic};
+}
 function buildDirectPack(domanda, data){
   const T=t();
-  const quick = (data && (data.quick||data.guide||data.tip)) || null;
-  const advice = (data && (data.advice||data.suggestion)) || null;
-  const analysis = (data && (data.analysis||data.summary)) || null;
+  const quickAPI = (data && (data.quick||data.guide||data.tip)) || null;
+  const adviceAPI = (data && (data.advice||data.suggestion)) || null;
+  const analysisAPI = (data && (data.analysis||data.summary)) || null;
 
-  function inferTopic(q){
-    const s=(q||"").toLowerCase();
-    if(/tempo|scadenza|quando|settimana|mese|orari|time/.test(s)) return {it:"tempo",en:"time",es:"tiempo",fr:"temps",de:"Zeit"}[lang]||"tempo";
-    if(/soldi|budget|euro|€|spesa|costo|prezzo|budget/.test(s)) return "budget";
-    if(/lavor|job|colloquio|cv|impiego|work/.test(s)) return {it:"lavoro",en:"work",es:"trabajo",fr:"travail",de:"Arbeit"}[lang]||"lavoro";
-    if(/amore|relaz|partner|fidanz|matrimonio|love/.test(s)) return {it:"relazioni",en:"relationships",es:"relaciones",fr:"relations",de:"Beziehungen"}[lang]||"relazioni";
-    if(/studio|esame|impara|corso|lezione|study/.test(s)) return {it:"studio",en:"study",es:"estudio",fr:"étude",de:"Studium"}[lang]||"studio";
-    return {it:"azione",en:"action",es:"acción",fr:"action",de:"Aktion"}[lang]||"azione";
+  const ctx = extractContextParts(domanda);
+  const labelTopic = ctx.topic ? `**${ctx.topic}**` : T.guideAnalysis?T.guideAnalysis:"focus";
+
+  const quick = quickAPI || (
+    lang==='en'
+      ? `Block 10′ today on ${ctx.topic?`**${ctx.topic}**`:"this"}: start with ${ctx.action?ctx.action:"one concrete step"}${ctx.when?` ${ctx.when}`:""}.`
+      : `Blocca 10′ oggi su ${ctx.topic?`**${ctx.topic}**`:"questo"}: inizia con ${ctx.action||"un passo concreto"}${ctx.when?` ${ctx.when}`:""}.`
+  );
+
+  const advice = adviceAPI || (
+    lang==='en'
+      ? `Write a mini goal you can finish ${ctx.when||"within 72h"} and define success in one line.`
+      : `Scrivi un micro-obiettivo da chiudere ${ctx.when||"entro 72h"} e definisci il “fatto” in una riga.`
+  );
+
+  const analysis = analysisAPI || (
+    lang==='en'
+      ? `Reduce friction: one tool, one metric${ctx.money?`, mind budget (${ctx.money})`:""}; schedule a check-in in 3 days.`
+      : `Riduci l’attrito: uno strumento, una metrica${ctx.money?`, rispetta il budget (${ctx.money})`:""}; metti un check tra 3 giorni.`
+  );
+
+  return { quick, advice, analysis };
+}
+
+/* ==== Repeat Nudge (manuale/spunti; anche WTF con nota emotiva) ==== */
+function tokenizeTopic(s){
+  const stop = {
+    it: "di,del,della,delle,degli,dei,che,con,per,nel,nella,allo,alla,alle,agli,una,un,uno,il,lo,la,le,gli,e,o,ma,se,quando,dove,come,anche,non,più,meno".split(","),
+    en: "the,of,and,or,to,in,on,for,a,an,is,are,was,were,be,been,if,when,where,how,not,more,less,with,by".split(",")
+  }[lang] || [];
+  return new Set(
+    String(s||"")
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .replace(/[^\p{L}\p{N}\s]/gu," ")
+      .split(/\s+/)
+      .filter(w=>w && w.length>2 && !stop.includes(w))
+  );
+}
+function jaccard(a,b){ if(!a.size||!b.size) return 0; let inter=0; for(const x of a) if(b.has(x)) inter++; return inter/(a.size+b.size-inter); }
+function isSimilarToRecent(domanda, k=2, threshold=0.70){
+  const cur = tokenizeTopic(domanda);
+  let hist=[]; try{ hist = JSON.parse(localStorage.getItem('cronologia')||'[]'); }catch{}
+  const recent = hist.slice(-5).reverse().map(h=>h?.domanda||"").filter(Boolean);
+  let hits=0, seen=0;
+  for(const q of recent){
+    const sim = jaccard(cur, tokenizeTopic(q));
+    if(sim >= threshold) hits++;
+    seen++; if(seen>=k) break;
   }
-  const topic = inferTopic(domanda);
-
+  return hits >= k;
+}
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function getNudgeContent(style){
   const packs = {
-    it:{
-      quick: quick || `Blocca 10′ oggi su **${topic}**: primo passo ora, verifica tra 3 giorni.`,
-      advice: advice || `Metti in calendario un micro-obiettivo misurabile (MVP di 30′) entro 72h.`,
-      analysis: analysis || `Riduci attrito: una sola decisione, un solo strumento, feedback visibile in 24h.`
+    whatif: {
+      it: {
+        lines: [
+          "Sembri tornare qui: questo tema ti chiama ancora.",
+          "Rieccoci su questo pensiero: vuole essere ascoltato.",
+          "Ti ritrovo qui di nuovo: qualcosa dentro chiede spazio.",
+          "Questo nodo ritorna: non è un caso."
+        ],
+        advice: [
+          "Fermati un minuto e scrivi cosa temi davvero.",
+          "Concediti di non decidere oggi, ma ascolta bene.",
+          "Dillo ad alta voce come se consigliassi un amico.",
+          "Respira 4 volte: osserva, non giudicare."
+        ]
+      },
+      en: {
+        lines: [
+          "You’re circling back here: this theme still calls you.",
+          "Here we are again: this thought wants to be heard.",
+          "Back on this topic: something inside asks for room.",
+          "This knot returns—no coincidence."
+        ],
+        advice: [
+          "Pause one minute and write what you truly fear.",
+          "Allow no decision today—just listen well.",
+          "Say it aloud as if advising a friend.",
+          "Take four slow breaths: observe, don’t judge."
+        ]
+      }
     },
-    en:{
-      quick: quick || `Block 10′ today on **${topic}**: first step now, check-in in 3 days.`,
-      advice: advice || `Schedule a measurable micro-goal (30′ MVP) within 72h.`,
-      analysis: analysis || `Lower friction: one decision, one tool, visible feedback within 24h.`
-    },
-    es:{
-      quick: quick || `Reserva 10′ hoy para **${topic}**: primer paso ahora, revisión en 3 días.`,
-      advice: advice || `Agenda un micro-objetivo medible (MVP de 30′) en 72h.`,
-      analysis: analysis || `Reduce fricción: una decisión, una herramienta, feedback visible en 24h.`
-    },
-    fr:{
-      quick: quick || `Bloque 10′ aujourd’hui sur **${topic}** : premier pas maintenant, point dans 3 jours.`,
-      advice: advice || `Planifie un micro-objectif mesurable (MVP 30′) sous 72h.`,
-      analysis: analysis || `Réduis la friction : une décision, un outil, retour visible en 24h.`
-    },
-    de:{
-      quick: quick || `Blocke heute 10′ für **${topic}**: erster Schritt jetzt, Check-in in 3 Tagen.`,
-      advice: advice || `Plane ein messbares Mikro-Ziel (30′ MVP) in 72h.`,
-      analysis: analysis || `Reibung senken: eine Entscheidung, ein Tool, sichtbares Feedback in 24h.`
+    wtf: {
+      it: {
+        lines: [
+          "Ancora qui, eh? Questo tema ti tiene per la giacca.",
+          "Loop mode attivo: stesso film, scena nuova.",
+          "Torni sempre qui: forse ti serve una spinta, non un’altra domanda."
+        ],
+        advice: [
+          "Micro-passo adesso: 10′ timer e via.",
+          "Scegli una cosa sola da fare entro oggi.",
+          "Niente perfezione: 70% buono, poi si aggiusta."
+        ]
+      },
+      en: {
+        lines: [
+          "Back again, huh? This topic’s got you by the collar.",
+          "Loop mode on: same movie, new scene.",
+          "You keep coming here—maybe you need a shove, not another question."
+        ],
+        advice: [
+          "Tiny step now: 10′ timer, go.",
+          "Pick one thing to do today.",
+          "No perfection: 70% good is good enough."
+        ]
+      }
     }
   };
-  return packs[lang] || packs.it;
+  const bucket = (style==='wtf' ? packs.wtf : packs.whatif);
+  const L = bucket[lang] || bucket.en;
+  return { line: pick(L.lines), advice: pick(L.advice) };
+}
+function maybeShowRepeatNudge(req, domanda){
+  const wrap = document.getElementById('repeatNudge');
+  if(!wrap) return;
+  const surprise = (new URLSearchParams(location.search)).get('src')==='surprise'
+                   || req?.surprise===true || req?.micro?.surprise===true
+                   || localStorage.getItem('surprise_mode')==='1';
+  if(surprise){ wrap.style.display='none'; return; }
+  if(!isManualOrSpunti(req)) { wrap.style.display='none'; return; }
+  if(!isSimilarToRecent(domanda, 2, 0.70)) { wrap.style.display='none'; return; }
+  const { line, advice } = getNudgeContent(style);
+  const head = (style==='wtf')
+    ? (lang==='it' ? "<strong>Nota spietata:</strong> " : "<strong>Blunt note:</strong> ")
+    : (lang==='it' ? "<strong>Sussurro:</strong> " : "<strong>Whisper:</strong> ");
+  const advLabel = (lang==='it' ? "Consiglio:" : "Advice:");
+  wrap.innerHTML = `${head}${line}<span class="advice">• ${advLabel} ${advice}</span>`;
+  wrap.style.display='block';
 }
 
 /* ==== Overlay (store + rewarded) ==== */
@@ -700,7 +800,7 @@ h2{margin:4px 0 6px;font-size:18px}
   <p class="small" style="margin:6px 0 10px;opacity:.85">🛒 ${T.comingSoon} — ${T.buySoonNote}</p>
   <p class="small" id="msg">${T.noCredits}</p>
   <div class="row">
-    <button class="btn ghost" id="adBtn" disabled title="Disattivato"> ${T.watchAd}</button>
+    <button class="btn ghost" id="adBtn" disabled title="Disattivato">${T.watchAd}</button>
     <button class="btn ghost" onclick="parent.postMessage({type:'close_overlay'}, '*')">${T.close}</button>
   </div>
 </div></div>
@@ -787,8 +887,11 @@ async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
 
-  // Mostra intro Zoltar-like (prima volta)
+  // Intro Zoltar-like (prima volta)
   showIntroOnce();
+
+  // Nudge su ripetizione (solo manuale/spunti; anche WTF con nota emotiva)
+  maybeShowRepeatNudge(req, domanda);
 
   startOracleLoading();
 
@@ -806,7 +909,6 @@ async function startFlow(){
       if(!(left===Infinity) && left<=0){
         stopOracleLoading();
         answerEl.textContent=t().noCredits;
-        // Store disattivato: non aprire overlay
         return;
       }
       if(!consumeOne()){
@@ -876,7 +978,14 @@ async function startFlow(){
     } else {
       motIco.style.display='none'; chipsWrap.style.display='none';
       committeeTitle.textContent = t().guideTitle;
-      const pack = buildDirectPack(domanda, data||{});
+
+      // Contestualizza SOLO per manuale/spunti; altrimenti fallback pack standard
+      const contextual = isManualOrSpunti(req);
+      const pack = contextual ? buildDirectPack(domanda, data||{}) : (()=>{
+        const tmp = buildDirectPack("", data||{});
+        return tmp;
+      })();
+
       const labels = { quick:t().guideQuick, advice:t().guideAdvice, analysis:t().guideAnalysis };
       motNote.innerHTML =
         `<strong>${labels.quick}:</strong> ${pack.quick}<br>`+
@@ -906,7 +1015,7 @@ qs('#langSelect').onchange=()=>{
   lang=v;
   applyUI(LS.getItem('domanda')||'');
   updateCreditInfo();
-  try{ /* overlay potrebbe non essere attivo */ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang:v}, '*'); }catch{}
+  try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang:v}, '*'); }catch{}
 };
 qs('#shareBtn').onclick=async()=>{
   const T=t();
