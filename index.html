@@ -57,24 +57,6 @@
     footer .sep{opacity:.6;margin:0 6px}
     .foot-links{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:6px}
     .info-btn{background:#141c22;border:1px solid var(--card-border);color:#E6F2F5;border-radius:999px;padding:6px 10px;font-weight:700;text-decoration:none}
-
-    /* Login card */
-    .login-card{
-      display:none; max-width:560px; width:100%;
-      background:var(--card); border:1px solid var(--card-border);
-      border-radius:16px; padding:16px; backdrop-filter:blur(10px);
-      box-shadow:0 12px 28px var(--shadow);
-    }
-    .login-card.show{display:block}
-    .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-    .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
-    .btn.ghost{background:#141c22;border:1px solid var(--card-border);color:#fff}
-    .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink)}
-    .small{font-size:12px;color:#A0B2BA}
-
-    /* Credit pill bar */
-    .pillbar{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:6px;flex-wrap:wrap}
-    .pill{font-size:12px;font-weight:900;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
   </style>
 </head>
 <body>
@@ -91,7 +73,6 @@
   </div>
 
   <main>
-    <!-- immagine -->
     <img id="hero" class="hero-img" src="/public/home-hero.png" alt="Porta luminosa What?f" loading="eager" decoding="async" />
 
     <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
@@ -101,23 +82,6 @@
       <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili.
       <strong>What the F</strong> ti fa vivere visioni ironiche, creative e imprevedibili.
     </p>
-
-    <!-- Login obbligatorio -->
-    <div id="loginCard" class="login-card">
-      <div class="row">
-        <button id="googleLogin" class="btn primary">🔐 Accedi con Google</button>
-        <button id="logoutBtn" class="btn ghost" style="display:none">Esci</button>
-      </div>
-      <div class="pillbar">
-        <span class="pill" id="creditsPill">💰 Crediti: —</span>
-        <span class="pill" id="surprisePill">🎁 Sorprendimi: —</span>
-        <span class="pill" id="adsPill" title="Annunci usati oggi">📺 Annunci: —/5</span>
-      </div>
-      <div class="row" id="adsRow" style="margin-top:8px;display:none">
-        <button id="watchAdBtn" class="btn ghost">📺 Guarda annuncio (+1 credito)</button>
-      </div>
-      <p class="small" id="loginHint" style="text-align:center;margin:6px 0 0">Devi essere loggato per usare l’app.</p>
-    </div>
 
     <div class="group" id="periodGroup">
       <button class="chip" data-key="periodo" data-val="past"   data-i18n="past">Passato</button>
@@ -129,6 +93,8 @@
     </div>
 
     <button id="go" class="cta" disabled data-i18n="next">Avanti</button>
+
+    <!-- 👇 Bottone login/logout viene aggiunto a runtime -->
   </main>
 
   <footer>
@@ -142,7 +108,6 @@
     </div>
   </footer>
 
-  <!-- Hero loader -->
   <script>
     (function loadHero(){
       const hero = document.getElementById('hero');
@@ -180,78 +145,43 @@
     })();
 
     const DICT = {
-      it:{
-        title:"Scopri il tuo What?f",
-        lead:"Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro. <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili. <strong>What the F</strong> ti fa vivere visioni ironiche, creative e imprevedibili.",
-        past:"Passato", future:"Futuro", whatif:"What if", wtf:"What the F", next:"Avanti", privacy:"Privacy", terms:"Termini", info:"Info"
-      },
-      en:{
-        title:"Discover your What?f",
-        lead:"Imagine the choice you didn’t make… and the one you could make. Choose whether to look to the past or the future. <strong>What if</strong> explores realistic, reflective scenarios based on plausible choices. <strong>What the F</strong> lets you experience ironic, creative and unpredictable visions.",
-        past:"Past", future:"Future", whatif:"What if", wtf:"What the F", next:"Next", privacy:"Privacy", terms:"Terms", info:"Info"
-      },
-      es:{
-        title:"Descubre tu What?f",
-        lead:"Imagina la elección que no hiciste… y la que aún podrías hacer. Elige si mirar al pasado o al futuro. <strong>What if</strong> explora escenarios realistas y reflexivos basados en decisiones plausibles. <strong>What the F</strong> te hace vivir visiones irónicas, creativas e impredecibles.",
-        past:"Pasado", future:"Futuro", whatif:"What if", wtf:"What the F", next:"Siguiente", privacy:"Privacidad", terms:"Términos", info:"Info"
-      },
-      fr:{
-        title:"Découvrez votre What?f",
-        lead:"Imaginez le choix que vous n’avez pas fait… et celui que vous pourriez encore faire. Choisissez de regarder vers le passé ou vers le futur. <strong>What if</strong> explore des scénarios réalistes et réfléchis basés sur des choix plausibles. <strong>What the F</strong> vous fait vivre des visions ironiques, créatives et imprévisibles.",
-        past:"Passé", future:"Futur", whatif:"What if", wtf:"What the F", next:"Suivant", privacy:"Confidentialité", terms:"Conditions", info:"Info"
-      },
-      de:{
-        title:"Entdecke dein What?f",
-        lead:"Stell dir die Entscheidung vor, die du nicht getroffen hast… und die, die du noch treffen könntest. Wähle, ob du in die Vergangenheit oder in die Zukunft blickst. <strong>What if</strong> erkundet realistische, reflektierte Szenarien auf Basis plausibler Entscheidungen. <strong>What the F</strong> lässt dich ironische, kreative und unvorhersehbare Visionen erleben.",
-        past:"Vergangenheit", future:"Zukunft", whatif:"What if", wtf:"What the F", next:"Weiter", privacy:"Datenschutz", terms:"Nutzungsbedingungen", info:"Info"
-      }
+      it:{title:"Scopri il tuo What?f",lead:"Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro. <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili. <strong>What the F</strong> ti fa vivere visioni ironiche, creative e imprevedibili.",past:"Passato", future:"Futuro", whatif:"What if", wtf:"What the F", next:"Avanti", privacy:"Privacy", terms:"Termini", info:"Info"},
+      en:{title:"Discover your What?f",lead:"Imagine the choice you didn’t make… and the one you could make. Choose whether to look to the past or the future. <strong>What if</strong> explores realistic, reflective scenarios based on plausible choices. <strong>What the F</strong> lets you experience ironic, creative and unpredictable visions.",past:"Past", future:"Future", whatif:"What if", wtf:"What the F", next:"Next", privacy:"Privacy", terms:"Terms", info:"Info"},
+      es:{title:"Descubre tu What?f",lead:"Imagina la elección que no hiciste… y la que aún podrías hacer. Elige si mirar al pasado o al futuro. <strong>What if</strong> explora escenarios realistas y reflexivos basados en decisiones plausibles. <strong>What the F</strong> te hace vivir visiones irónicas, creativas e impredecibles.",past:"Pasado", future:"Futuro", whatif:"What if", wtf:"What the F", next:"Siguiente", privacy:"Privacidad", terms:"Términos", info:"Info"},
+      fr:{title:"Découvrez votre What?f",lead:"Imaginez le choix que vous n’avez pas fait… et celui que vous pourriez encore faire. Choisissez de regarder vers le passé ou vers le futur. <strong>What if</strong> explore des scénarios réalistes et réfléchis basés sur des choix plausibles. <strong>What the F</strong> vous fait vivre des visions ironiques, créatives et imprévisibles.",past:"Passé", future:"Futur", whatif:"What if", wtf:"What the F", next:"Suivant", privacy:"Confidentialité", terms:"Conditions", info:"Info"},
+      de:{title:"Entdecke dein What?f",lead:"Stell dir die Entscheidung vor, die du nicht getroffen hast… und die, die du noch treffen könntest. Wähle, ob du in die Vergangenheit oder in die Zukunft blickst. <strong>What if</strong> erkundet realistische, reflektierte Szenarien auf Basis plausibler Entscheidungen. <strong>What the F</strong> lässt dich ironische, kreative und unvorhersehbare Visionen erleben.",past:"Vergangenheit", future:"Zukunft", whatif:"What if", wtf:"What the F", next:"Weiter", privacy:"Datenschutz", terms:"Nutzungsbedingungen", info:"Info"}
     };
-
-    const LS = localStorage, $ = s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+    const LS=localStorage, $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
 
     function detectBrowserLang(){
       const n=(navigator.language||'it').toLowerCase();
-      if(n.startsWith('it')) return 'it';
-      if(n.startsWith('en')) return 'en';
-      if(n.startsWith('es')) return 'es';
-      if(n.startsWith('fr')) return 'fr';
-      if(n.startsWith('de')) return 'de';
+      if(n.startsWith('it')) return 'it'; if(n.startsWith('en')) return 'en'; if(n.startsWith('es')) return 'es'; if(n.startsWith('fr')) return 'fr'; if(n.startsWith('de')) return 'de';
       return 'it';
     }
     function getLang(){ return (LS.getItem('lang') || detectBrowserLang()).toLowerCase(); }
     function setLang(l){ LS.setItem('lang',l.toLowerCase()); applyLang(); }
     function applyLang(){
-      const L = getLang(), d = DICT[L] || DICT.it;
-      document.documentElement.lang = L;
-      $('#langCode').textContent = L.toUpperCase();
-      $$('[data-i18n]').forEach(el=>{
-        const k=el.getAttribute('data-i18n');
-        if(!k) return;
-        if(k==='lead'){ return; }
-        if(typeof d[k] === 'string'){ el.textContent = d[k]; }
-      });
-      $('#leadText').innerHTML = d.lead;
+      const L=getLang(), d=DICT[L]||DICT.it;
+      document.documentElement.lang=L; $('#langCode').textContent=L.toUpperCase();
+      $$('[data-i18n]').forEach(el=>{ const k=el.getAttribute('data-i18n'); if(k && k!=='lead' && typeof d[k]==='string') el.textContent=d[k]; });
+      $('#leadText').innerHTML=d.lead;
       document.querySelectorAll('#langMenu button').forEach(b=>b.classList.toggle('active', b.dataset.lang===L));
     }
+    if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang()); applyLang();
 
-    if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang());
-    applyLang();
+    (function wireLangMenu(){
+      const btn=$('#langToggle'), menu=$('#langMenu');
+      btn.addEventListener('click', ()=>{ const open=menu.style.display==='block'; menu.style.display=open?'none':'block'; btn.setAttribute('aria-expanded', String(!open)); });
+      menu.addEventListener('click', e=>{ const b=e.target.closest('button[data-lang]'); if(!b) return; setLang(b.dataset.lang); menu.style.display='none'; });
+      document.addEventListener('click', e=>{ if(!menu.contains(e.target) && e.target!==btn) menu.style.display='none'; });
+    })();
 
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
     const go = document.getElementById('go');
-
     function syncUI(){
-      if(state.periodo){
-        document.querySelectorAll('#periodGroup .chip').forEach(c=>c.classList.remove('selected'));
-        document.querySelector(`#periodGroup .chip[data-val="${state.periodo}"]`)?.classList.add('selected');
-      }
-      if(state.stile){
-        document.querySelectorAll('#styleGroup .chip').forEach(c=>c.classList.remove('selected'));
-        document.querySelector(`#styleGroup .chip[data-val="${state.stile}"]`)?.classList.add('selected');
-        document.documentElement.setAttribute('data-theme', state.stile==='wtf'?'wtf':'whatif');
-      }
-      // Abilito "Avanti" solo se loggato (impostato più sotto) + scelte fatte
-      go.disabled = !(window.__loggedIn === true && state.periodo && state.stile);
+      if(state.periodo){ document.querySelectorAll('#periodGroup .chip').forEach(c=>c.classList.remove('selected')); document.querySelector(`#periodGroup .chip[data-val="${state.periodo}"]`)?.classList.add('selected'); }
+      if(state.stile){ document.querySelectorAll('#styleGroup .chip').forEach(c=>c.classList.remove('selected')); document.querySelector(`#styleGroup .chip[data-val="${state.stile}"]`)?.classList.add('selected'); document.documentElement.setAttribute('data-theme', state.stile==='wtf'?'wtf':'whatif'); }
+      // NB: il bottone verrà abilitato SOLO se loggato (vedi blocco Auth)
     }
     function wireGroup(g){
       g.addEventListener('click', e=>{
@@ -260,45 +190,38 @@
         b.classList.add('selected'); state[b.dataset.key]=b.dataset.val;
         localStorage.setItem('whatif_prefs', JSON.stringify(state));
         if(b.dataset.key==='stile'){ document.documentElement.setAttribute('data-theme', b.dataset.val==='wtf'?'wtf':'whatif'); }
-        syncUI();
+        // go disabled handled by auth state
       });
     }
     wireGroup(document.getElementById('periodGroup'));
     wireGroup(document.getElementById('styleGroup'));
     syncUI();
 
-    go.addEventListener('click', ()=>{ if(!go.disabled) location.href='second.html'; });
+    document.getElementById('go').addEventListener('click', ()=>{ location.href='second.html'; });
 
-    // Easter egg admin (lasciato)
-    (function(){
+    // easter egg admin (lasciato com'era)
+    ;(function(){
       const title = document.getElementById('appTitle'); const pastBtn = document.querySelector('button[data-val="past"]');
       if(!title || !pastBtn) return;
       let tapTitle=0, tapPast=0, stage=0, timer=null;
       function reset(){ tapTitle=0; tapPast=0; stage=0; if(timer) clearTimeout(timer); timer=null; pastBtn.classList.remove("unlocking"); }
       function flash(){ const f=document.createElement("div"); f.style.position="fixed";f.style.inset="0";f.style.background="rgba(255,255,255,0.05)";f.style.backdropFilter="blur(2px)";f.style.transition="opacity .6s";f.style.opacity="1";f.style.zIndex="9999";document.body.appendChild(f);setTimeout(()=>f.style.opacity="0",150);setTimeout(()=>f.remove(),800); }
       function success(){ reset(); const pin=prompt("PIN amministratore:"); if(!pin) return; try{ sessionStorage.setItem("pending_admin_pin", pin);}catch{} location.href="admin.html"; }
-      title.addEventListener('click', ()=>{ if(++tapTitle>=3){ stage=1; tapTitle=0; flash(); pastBtn.classList.add("unlocking"); pastBtn.style.boxShadow="0 0 0 2px rgba(255,255,255,.15) inset, 0 0 22px rgba(255,255,255,.12)"; setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);} if(timer) clearTimeout(timer); timer=setTimeout(reset,2000); });
+      title.addEventListener('click', ()=>{ if(++tapTitle>=3){ stage=1; tapTitle=0; flash(); pastBtn.classList.add("unlocking"); setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);} if(timer) clearTimeout(timer); timer=setTimeout(reset,2000); });
       pastBtn.addEventListener('click', ()=>{ if(stage!==1) return; if(++tapPast>=5) success(); if(timer) clearTimeout(timer); timer=setTimeout(reset,2500); });
     })();
 
-    // Service Worker
     if("serviceWorker" in navigator){
       window.addEventListener("load", ()=>{ navigator.serviceWorker.register("/sw.js").catch(()=>{}); });
     }
   </script>
 
-  <!-- Firebase + Auth Google obbligatoria + Wallet giornaliero + Pubblicità (5/giorno) -->
+  <!-- 🔐 Firebase + Login OBBLIGATORIO + wallet giornaliero (3 crediti + 1 sorprendi) -->
   <script type="module">
-    // ===== Firebase SDK =====
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { 
-      getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut 
-    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import {
-      getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+    import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-    // --- Config ---
     const firebaseConfig = {
       apiKey: "AIzaSyASrGnHOnf_O-N0NuZDvqOGGfG8IoSWblc",
       authDomain: "whatif-oracolo.firebaseapp.com",
@@ -308,187 +231,81 @@
       appId: "1:602976466053:web:668d4a462286513d8b25ec"
     };
 
-    // --- App ---
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
     const provider = new GoogleAuthProvider();
 
-    // --- UI Refs ---
-    const loginCard  = document.getElementById('loginCard');
-    const loginBtn   = document.getElementById('googleLogin');
-    const logoutBtn  = document.getElementById('logoutBtn');
-    const goBtn      = document.getElementById('go');
-    const creditsPill = document.getElementById('creditsPill');
-    const surprisePill= document.getElementById('surprisePill');
-    const adsPill     = document.getElementById('adsPill');
-    const adsRow      = document.getElementById('adsRow');
-    const watchAdBtn  = document.getElementById('watchAdBtn');
+    // Bottoni login/logout (generati)
+    const goBtn = document.getElementById("go");
+    let loginBtn = document.getElementById("loginBtn");
+    let logoutBtn = document.getElementById("logoutBtn");
+    if(!loginBtn){
+      loginBtn = document.createElement("button");
+      loginBtn.id = "loginBtn";
+      loginBtn.className = "cta";
+      loginBtn.textContent = "Entra con Google";
+      loginBtn.style.marginTop = "8px";
+      document.querySelector("main").appendChild(loginBtn);
+    }
+    if(!logoutBtn){
+      logoutBtn = document.createElement("button");
+      logoutBtn.id = "logoutBtn";
+      logoutBtn.className = "chip";
+      logoutBtn.textContent = "Esci";
+      logoutBtn.style.display = "none";
+      document.querySelector("main").appendChild(logoutBtn);
+    }
 
-    // --- Impostazioni Pubblicità ---
-    const ADS_ENABLED = true;         // metti a false per spegnerle
-    const ADS_PER_DAY = 5;            // max annunci/giorno
-    const CREDIT_PER_AD = 1;          // crediti per annuncio
-
-    // --- Chiavi LocalStorage compatibili ---
-    const WKEY   = "whatif_wallet";
-    const SURPKEY= "whatif_surprise";
-
-    // --- Helpers ---
     const today = () => new Date().toISOString().slice(0,10);
-    function setLoggedIn(v){ window.__loggedIn = !!v; syncUI(); }
-    function mirrorToLocalStorage(available, surprise, limit=3){
-      try{
-        const w = { available:Number(available)||0, used:0, limit:Number(limit)||3 };
-        localStorage.setItem(WKEY, JSON.stringify(w));
-        localStorage.setItem(SURPKEY, String(Math.max(0, parseInt(surprise,10)||0)));
-        localStorage.setItem("whatif_wallet_sync", String(Date.now()));
-      }catch{}
-    }
-    function updatePills({available, surprise, adCount}){
-      creditsPill.textContent  = `💰 Crediti: ${available}`;
-      surprisePill.textContent = `🎁 Sorprendimi: ${surprise}`;
-      adsPill.textContent      = `📺 Annunci: ${adCount}/${ADS_PER_DAY}`;
-      adsRow.style.display = ADS_ENABLED ? "flex" : "none";
-      watchAdBtn.disabled = !(ADS_ENABLED && adCount < ADS_PER_DAY);
-    }
-
     async function ensureDailyWallet(uid){
       const ref = doc(db, "wallets", uid);
       const snap = await getDoc(ref);
       const d = today();
-
       if(!snap.exists()){
-        const payload = {
-          available: 3,
-          surprise: 1,
-          lastDaily: d,
-          adCount: 0,
-          adDay: d,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        };
-        await setDoc(ref, payload, { merge: true });
-        mirrorToLocalStorage(payload.available, payload.surprise);
-        updatePills(payload);
-        return payload;
-      }
-
-      const data = snap.data() || {};
-      let available = Number.isFinite(+data.available) ? +data.available : 0;
-      let surprise  = Number.isFinite(+data.surprise)  ? +data.surprise  : 0;
-      let adCount   = Number.isFinite(+data.adCount)   ? +data.adCount   : 0;
-      let adDay     = data.adDay || d;
-      const lastDaily = data.lastDaily || "";
-
-      // Reset giornaliero: 3 + 1, azzera adCount
-      if(lastDaily !== d){
-        available = 3;
-        surprise  = 1;
-        adCount   = 0;
-        adDay     = d;
-        await updateDoc(ref, {
-          available, surprise,
-          lastDaily: d,
-          adCount, adDay,
-          updatedAt: serverTimestamp()
-        });
-      }
-
-      mirrorToLocalStorage(available, surprise);
-      const out = { available, surprise, adCount, adDay, lastDaily:d };
-      updatePills(out);
-      return out;
-    }
-
-    async function incrementByAd(uid){
-      const ref = doc(db, "wallets", uid);
-      const snap = await getDoc(ref);
-      if(!snap.exists()) return ensureDailyWallet(uid);
-      const data = snap.data() || {};
-      const d = today();
-
-      let available = Number(data.available)||0;
-      let adCount = Number(data.adCount)||0;
-      let adDay = data.adDay || d;
-
-      if(adDay !== d){ adCount = 0; adDay = d; }
-
-      if(adCount >= ADS_PER_DAY) return { limited:true, ...data };
-
-      available += CREDIT_PER_AD;
-      adCount += 1;
-
-      await updateDoc(ref, {
-        available, adCount, adDay,
-        updatedAt: serverTimestamp()
-      });
-
-      mirrorToLocalStorage(available, Number(data.surprise)||0);
-      const out = { ...data, available, adCount, adDay };
-      updatePills({available, surprise:Number(data.surprise)||0, adCount});
-      return out;
-    }
-
-    // --- Login Flow (obbligatorio) ---
-    loginCard.classList.add('show');
-    loginBtn.addEventListener('click', async ()=>{
-      try{
-        await signInWithPopup(auth, provider);
-      }catch(e){
-        alert("Login annullato o fallito.");
-      }
-    });
-    logoutBtn.addEventListener('click', async ()=>{
-      try{
-        await signOut(auth);
-      }catch{}
-    });
-
-    watchAdBtn.addEventListener('click', async ()=>{
-      const u = auth.currentUser;
-      if(!u) return alert("Devi essere loggato.");
-      // MOCK annuncio: simula 3s "visione"
-      watchAdBtn.disabled = true;
-      watchAdBtn.textContent = "⏳ Annuncio in corso…";
-      setTimeout(async ()=>{
-        const res = await incrementByAd(u.uid);
-        if(res && res.limited) alert("Hai raggiunto il limite di annunci per oggi.");
-        watchAdBtn.textContent = "📺 Guarda annuncio (+1 credito)";
-        const snap = await getDoc(doc(db,"wallets",u.uid));
-        const d = snap.data()||{};
-        updatePills({available:Number(d.available)||0, surprise:Number(d.surprise)||0, adCount:Number(d.adCount)||0});
-        watchAdBtn.disabled = !(ADS_ENABLED && (Number(d.adCount)||0) < ADS_PER_DAY);
-      }, 3000);
-    });
-
-    onAuthStateChanged(auth, async (user)=>{
-      const logged = !!user;
-      setLoggedIn(logged);
-      if(!logged){
-        // Blocca CTA e mostra solo login
-        loginCard.classList.add('show');
-        document.getElementById('logoutBtn').style.display = "none";
-        goBtn.disabled = true;
-        creditsPill.textContent = "💰 Crediti: —";
-        surprisePill.textContent= "🎁 Sorprendimi: —";
-        adsPill.textContent     = `📺 Annunci: —/${ADS_PER_DAY}`;
+        await setDoc(ref,{
+          available:3, surprise:1, lastDaily:d,
+          adCount:0, adDay:d,
+          createdAt:serverTimestamp(), updatedAt:serverTimestamp()
+        },{merge:true});
         return;
       }
-      // Loggato
-      document.getElementById('logoutBtn').style.display = "inline-block";
-      loginCard.classList.add('show'); // rimane visibile come barra info
-      const w = await ensureDailyWallet(user.uid);
-      // CTA abilitata se scelte fatte
-      syncUI();
+      const data = snap.data()||{};
+      if((data.lastDaily||"")!==d){
+        await runTransaction(db, async tx=>{
+          tx.update(ref,{available:3, surprise:1, lastDaily:d, adCount:0, adDay:d, updatedAt:serverTimestamp()});
+        });
+      }
+    }
+
+    loginBtn.onclick = async ()=>{
+      try{ await signInWithPopup(auth, provider); }
+      catch{ /* chiuso */ }
+    };
+    logoutBtn.onclick = async ()=>{ await signOut(auth); };
+
+    function updateGoEnabled(){
+      const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+      goBtn.disabled = !(auth.currentUser && prefs.periodo && prefs.stile);
+    }
+
+    onAuthStateChanged(auth, async (user)=>{
+      if(user){
+        loginBtn.style.display="none";
+        logoutBtn.style.display="inline-block";
+        await ensureDailyWallet(user.uid).catch(()=>{});
+      }else{
+        logoutBtn.style.display="none";
+        loginBtn.style.display="inline-block";
+      }
+      updateGoEnabled();
     });
 
-    // Espongo utilità per debug
-    window.whatifCloud = {
-      get uid(){ return auth.currentUser?.uid || null; },
-      async forceRefresh(){ if(!auth.currentUser) return null; return ensureDailyWallet(auth.currentUser.uid); },
-      async addByAd(){ if(!auth.currentUser) return null; return incrementByAd(auth.currentUser.uid); }
-    };
+    document.getElementById('periodGroup').addEventListener('click', updateGoEnabled);
+    document.getElementById('styleGroup').addEventListener('click', updateGoEnabled);
+
+    // se arrivi con ?login=1 apri subito il popup
+    if(new URLSearchParams(location.search).get('login')==='1'){ loginBtn.click(); }
   </script>
 </body>
 </html>
