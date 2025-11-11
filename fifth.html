@@ -264,6 +264,99 @@ h1{
   <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
 </audio>
 
+<!-- 🔗 FIREBASE + SPESA CREDITI (cloud) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+  import { getFirestore, doc, runTransaction, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+
+  // Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyASrGnHOnf_O-N0NuZDvqOGGfG8IoSWblc",
+    authDomain: "whatif-oracolo.firebaseapp.com",
+    projectId: "whatif-oracolo",
+    storageBucket: "whatif-oracolo.firebasestorage.app",
+    messagingSenderId: "602976466053",
+    appId: "1:602976466053:web:668d4a462286513d8b25ec"
+  };
+
+  // Init
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  const WKEY="whatif_wallet";
+  const SURPKEY="whatif_surprise";
+  const LS = localStorage;
+
+  function mirrorToLocalStorage(available, surprise, limit=3){
+    try{
+      const w = { available, used:0, limit };
+      LS.setItem(WKEY, JSON.stringify(w));
+      LS.setItem(SURPKEY, String(Math.max(0, parseInt(surprise||0,10))));
+      LS.setItem("whatif_wallet_sync", String(Date.now()));
+    }catch{}
+  }
+
+  async function cloudSpendOne(){
+    const u = auth.currentUser;
+    if(!u) throw new Error("login_required");
+    const ref = doc(db, "wallets", u.uid);
+    const res = await runTransaction(db, async (tx)=>{
+      const snap = await tx.get(ref);
+      if(!snap.exists()) throw new Error("no_wallet");
+      const data = snap.data()||{};
+      const avail = Number(data.available)||0;
+      if(avail<=0) throw new Error("no_credits");
+      tx.update(ref, { available: avail-1, updatedAt: serverTimestamp() });
+      return {available: avail-1, surprise: Number(data.surprise)||0};
+    });
+    mirrorToLocalStorage(res.available, res.surprise);
+    return res.available;
+  }
+
+  async function cloudSpendSurpriseOne(){
+    const u = auth.currentUser;
+    if(!u) throw new Error("login_required");
+    const ref = doc(db, "wallets", u.uid);
+    const res = await runTransaction(db, async (tx)=>{
+      const snap = await tx.get(ref);
+      if(!snap.exists()) throw new Error("no_wallet");
+      const data = snap.data()||{};
+      const surprise = Number(data.surprise)||0;
+      if(surprise<=0) throw new Error("no_surprise");
+      tx.update(ref, { surprise: surprise-1, updatedAt: serverTimestamp() });
+      return {available: Number(data.available)||0, surprise: surprise-1};
+    });
+    mirrorToLocalStorage(res.available, res.surprise);
+    return res.surprise;
+  }
+
+  async function cloudEnsureWalletMirror(){
+    const u = auth.currentUser;
+    if(!u) return;
+    const ref = doc(db, "wallets", u.uid);
+    const snap = await getDoc(ref);
+    if(snap.exists()){
+      const d = snap.data()||{};
+      mirrorToLocalStorage(Number(d.available)||0, Number(d.surprise)||0);
+    }
+  }
+
+  // Richiede login: se non loggato, rimanda a index (dove fai login)
+  onAuthStateChanged(auth, (user)=>{
+    if(!user){
+      try{ mirrorToLocalStorage(0,0); }catch{}
+      location.replace("index.html?login=1");
+    }else{
+      cloudEnsureWalletMirror().catch(()=>{});
+    }
+  });
+
+  // Espone per lo script non-module sotto
+  window._cloudSpend = { cloudSpendOne, cloudSpendSurpriseOne };
+</script>
+
 <script>
 /* ==== Base & prefs ==== */
 const LS = localStorage;
@@ -469,7 +562,7 @@ const motNote=qs('#motNote'), creditInfo=qs('#creditInfo'), toastEl=qs('#toast')
 /* ==== Toast ==== */
 function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
 
-/* ==== Wallet + legacy + 🎁 Sorprendimi ==== */
+/* ==== Wallet + legacy + 🎁 Sorprendimi (UI mirror) ==== */
 const WKEY="whatif_wallet";
 const SURPKEY="whatif_surprise";
 function readWallet(){ try{ const w=JSON.parse(LS.getItem(WKEY)||"{}")||{}; return {available:Number.isFinite(+w.available)?+w.available:null, used:Number.isFinite(+w.used)?+w.used:null, limit:Number.isFinite(+w.limit)?+w.limit:null}; }catch{return{available:null,used:null,limit:null}}}
@@ -488,38 +581,15 @@ function legacyGetLeft(){
   try{ const c=JSON.parse(LS.getItem('whatif_credits')||'{}'); const today=new Date().toISOString().slice(0,10); const used=(c.date===today)?(+c.used||0):0; return Math.max(0, legacyCap()-used); }catch{}
   const raw=LS.getItem('crediti'); return raw==null? legacyCap() : Math.max(0, parseInt(raw,10)||0);
 }
-function legacyConsumeOne(){
+function legacyConsumeOne(){ // non più usata per crediti: tenuta per fallback UI
   try{ const w=readWallet(); if(w.available!=null){ if(w.available<=0) return false; writeWallet({available:w.available-1, used:Math.max(0,(w.used||0)+1), limit:(w.limit!=null?w.limit:legacyCap())}); return true; } }catch{}
   try{ const today=new Date().toISOString().slice(0,10); let c=JSON.parse(LS.getItem('whatif_credits')||'{}'); if(c.date!==today) c={date:today,used:0,limit:legacyCap()}; if((c.used||0)>= (c.limit||legacyCap())) return false; c.used=(c.used||0)+1; LS.setItem('whatif_credits', JSON.stringify(c)); return true; }catch{}
   let n=parseInt(LS.getItem('crediti')||'0',10)||0; if(n<=0) return false; LS.setItem('crediti', String(Math.max(0,n-1))); return true;
 }
 function getAvailable(){ if(IS_ADMIN) return Infinity; const w=readWallet(); return (w.available!=null)?w.available:legacyGetLeft() }
-function consumeOne(){
-  if(IS_ADMIN) return true;
-  const w=readWallet();
-  if(w.available!=null){
-    if(w.available<=0) return false;
-    writeWallet({available:w.available-1, used:Math.max(0,(w.used||0)+1), limit:(w.limit!=null?w.limit:legacyCap())});
-    return true;
-  }
-  return legacyConsumeOne();
-}
-function addCredits(n){ n=Math.max(0,parseInt(n,10)||0); if(n<=0) return;
-  const w=readWallet();
-  if(w.available==null){ const left=legacyGetLeft(); writeWallet({available:left+n, used:0, limit:legacyCap()}); }
-  else{ writeWallet({available:(w.available+n), used:Math.max(0,(w.used||0)-n), limit:(w.limit!=null?w.limit:legacyCap())}); }
-}
-
-/* 🎁 Sorprendimi tokens */
-function readSurprise(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||"0",10)||0); }
-function writeSurprise(n){ n=Math.max(0, parseInt(n,10)||0); LS.setItem(SURPKEY,String(n)); updateCreditInfo(); LS.setItem("whatif_wallet_sync", String(Date.now())); }
-function addSurprise(n){ writeSurprise(readSurprise() + Math.max(0,parseInt(n,10)||0)); }
-function consumeSurpriseOne(){ const cur=readSurprise(); if(cur>0){ writeSurprise(cur-1); return true; } return false; }
-function computeSurpriseBonus(amount){ const a=parseInt(amount,10)||0; if(a>=20) return 3; if(a>=10) return 2; if(a>=5)  return 1; return 0; }
-
 function updateCreditInfo(n=getAvailable()){
   if(!creditInfo) return;
-  const surprise = readSurprise();
+  const surprise = Math.max(0, parseInt(LS.getItem(SURPKEY)||"0",10)||0);
   creditInfo.textContent = `${t().credits(n===Infinity?'∞':n)} · 🎁 Sorprendimi: ${surprise}`;
 }
 window.addEventListener('storage',(e)=>{ if(['whatif_wallet','whatif_wallet_sync','whatif_credits','admin_token','lang','lang_manual',SURPKEY].includes(e.key)){ updateCreditInfo(); }});
@@ -613,14 +683,12 @@ function wtfMotivationDemenziale(langCode){
   if(langCode==='en'){
     return `Pseudo-science says small daily nudges beat grand plans (Law of Coffee + Inertia). The committee debated over drinks: ${shots} shots vanished, ${spill} glasses spilled, ${bruise} minor bruises; final verdict between hiccups: “do it, and don’t overthink”.`;
   }
-  // default IT
   return `Pseudoscienza spicciola: micro-passi battono i piani epici (Legge del Caffè + Inerzia). La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: “fai, e smettila di pensarci troppo”.`;
 }
 
 /* ===== Linee “What if” brevi, senza asterischi, contestuali ===== */
 function buildWhatIfGuidance(domanda, data){
   const ctx = extractContextParts(domanda);
-  // Se l’API fornisce suggerimenti già pronti, usali; altrimenti genera
   const g1 = (data && (data.quick||data.tip)) || null;
   const g2 = (data && (data.advice||data.suggestion)) || null;
   const g3 = (data && (data.analysis||data.summary)) || null;
@@ -631,7 +699,6 @@ function buildWhatIfGuidance(domanda, data){
     const l3 = g3 || `Use one tool only and track one metric${ctx.money?` (budget: ${ctx.money})`:""}; set a check-in in 3 days.`;
     return [l1,l2,l3];
   }
-  // IT default
   const l1 = g1 || `Blocca 10 minuti ${ctx.when||"oggi"} su ${ctx.topic||"il tema"} e chiudi il primo passo che stai rimandando.`;
   const l2 = g2 || `Scrivi un micro-obiettivo misurabile da chiudere entro ${ctx.when||"72 ore"} e mettilo in calendario.`;
   const l3 = g3 || `Usa uno strumento solo e una metrica${ctx.money?` (budget: ${ctx.money})`:""}; fai un check tra 3 giorni.`;
@@ -755,30 +822,40 @@ async function startFlow(){
 
   startOracleLoading();
 
+  // === ✅ NUOVA LOGICA DI SPESA CREDITI: Firestore (login richiesto)
   if(!IS_ADMIN && !alreadyConsumed){
-    if(surprise){
-      const okSurp = consumeSurpriseOne();
-      if(okSurp){
-        alreadyConsumed = true;
-        updateCreditInfo();
-        toast('🎁 -1 Sorprendimi');
+    try{
+      if(surprise){
+        // prova a scalare 1 "Sorprendimi" dal cloud
+        if(window._cloudSpend && window._cloudSpend.cloudSpendSurpriseOne){
+          await window._cloudSpend.cloudSpendSurpriseOne();
+          alreadyConsumed = true;
+          updateCreditInfo();
+          toast('🎁 -1 Sorprendimi');
+        }else{
+          throw new Error("cloud_mod_missing");
+        }
       }
-    }
-    if(!alreadyConsumed){
-      const left=getAvailable();
-      if(!(left===Infinity) && left<=0){
-        stopOracleLoading();
-        answerEl.textContent=t().noCredits;
-        return;
+      if(!alreadyConsumed){
+        // scala 1 credito normale dal cloud
+        if(window._cloudSpend && window._cloudSpend.cloudSpendOne){
+          await window._cloudSpend.cloudSpendOne();
+          alreadyConsumed = true;
+          updateCreditInfo();
+          toast(t().toastMinus(1));
+        }else{
+          throw new Error("cloud_mod_missing");
+        }
       }
-      if(!consumeOne()){
-        stopOracleLoading();
-        answerEl.textContent=t().noCredits;
-        return;
-      }
-      alreadyConsumed=true;
-      updateCreditInfo();
-      toast(t().toastMinus(1));
+    }catch(err){
+      stopOracleLoading();
+      // errori noti: login_required, no_wallet, no_surprise, no_credits
+      const msg = String(err && err.message || "");
+      if(/login_required/i.test(msg)){ answerEl.textContent = "Effettua l’accesso e riprova."; }
+      else if(/no_surprise/i.test(msg)){ answerEl.textContent = "Hai terminato i token Sorprendimi."; }
+      else if(/no_credits/i.test(msg)){ answerEl.textContent = t().noCredits; }
+      else { answerEl.textContent = t().error; }
+      return;
     }
   }
 
@@ -829,7 +906,7 @@ async function startFlow(){
       motivazioneUsata = motNote.textContent;
 
     } else if (style === 'wtf') {
-      // ✅ WTF: solo motivazione “scientifica” demenziale + zuffa/sbronza (nessun riassunto interno)
+      // ✅ WTF: motivazione scientifica demenziale (senza riassunto interno)
       motIco.style.display='none'; chipsWrap.style.display='none';
       committeeTitle.textContent = t().scientificTitle;
       const sci = wtfMotivationDemenziale(lang);
@@ -841,7 +918,6 @@ async function startFlow(){
       motIco.style.display='none'; chipsWrap.style.display='none';
       committeeTitle.textContent = t().guideTitle;
       const lines = buildWhatIfGuidance(domanda, data||{});
-      // Tre frasi pulite, senza label/bold
       motNote.innerHTML = `${lines[0]}<br>${lines[1]}<br>${lines[2]}`;
       motivazioneUsata = lines.join(" | ");
     }
