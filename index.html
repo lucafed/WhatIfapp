@@ -169,13 +169,6 @@
     }
     if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang()); applyLang();
 
-    (function wireLangMenu(){
-      const btn=$('#langToggle'), menu=$('#langMenu');
-      btn.addEventListener('click', ()=>{ const open=menu.style.display==='block'; menu.style.display=open?'none':'block'; btn.setAttribute('aria-expanded', String(!open)); });
-      menu.addEventListener('click', e=>{ const b=e.target.closest('button[data-lang]'); if(!b) return; setLang(b.dataset.lang); menu.style.display='none'; });
-      document.addEventListener('click', e=>{ if(!menu.contains(e.target) && e.target!==btn) menu.style.display='none'; });
-    })();
-
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
     function wireGroup(g){
       g.addEventListener('click', e=>{
@@ -191,10 +184,14 @@
     wireGroup(document.getElementById('styleGroup'));
   </script>
 
-  <!-- 🔐 Firebase: login Google obbligatorio -->
+  <!-- 🔐 Firebase: login Google obbligatorio (popup + fallback redirect) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import {
+      getAuth, GoogleAuthProvider, onAuthStateChanged,
+      signInWithPopup, signInWithRedirect, getRedirectResult,
+      setPersistence, browserLocalPersistence, browserPopupRedirectResolver, signOut
+    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -209,7 +206,11 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
+
+    await setPersistence(auth, browserLocalPersistence).catch(()=>{});
+
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
 
     const primaryCta = document.getElementById("primaryCta");
     const logoutBtn  = document.getElementById("logoutBtn");
@@ -257,32 +258,61 @@
       }
     }
 
-    // Azione del pulsante principale (login oppure avanti)
+    // Ambienti dove i popup sono bloccati → usa redirect
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                       || window.navigator.standalone === true;
+    const ua = navigator.userAgent || '';
+    const isInApp = /(FBAN|FBAV|Instagram|Line|WeChat|TikTok)/i.test(ua);
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+    const useRedirect = isStandalone || isInApp || isIOS;
+
+    // Recupera esito redirect (ignora errori “nessun redirect”)
+    getRedirectResult(auth).catch(()=>{});
+
+    // Pulsante principale: login o avanti
     primaryCta.onclick = async ()=>{
       const user = auth.currentUser;
       if(!user){
-        try{ await signInWithPopup(auth, provider); }catch{}
+        const orig = primaryCta.textContent;
+        primaryCta.textContent = "Accesso in corso…";
+        primaryCta.disabled = true;
+        try{
+          if(useRedirect){
+            await signInWithRedirect(auth, provider);
+            return;
+          }
+          await signInWithPopup(auth, provider, browserPopupRedirectResolver)
+            .catch(async e=>{
+              if(e?.code === "auth/popup-blocked" || e?.code === "auth/cancelled-popup-request"){
+                await signInWithRedirect(auth, provider);
+              } else { throw e; }
+            });
+        }catch{
+          primaryCta.textContent = orig;
+          primaryCta.disabled = false;
+          alert("Accesso non riuscito. Riprova.");
+        }
         return;
       }
       if(selectionsReady()){
         location.href = "second.html";
+      }else{
+        // piccolo feedback
+        primaryCta.classList.add('shake');
+        setTimeout(()=>primaryCta.classList.remove('shake'),400);
       }
     };
 
     logoutBtn.onclick = async ()=>{ await signOut(auth); };
 
     onAuthStateChanged(auth, async (user)=>{
-      if(user){
-        await ensureDailyWallet(user.uid).catch(()=>{});
-      }
+      if(user){ try{ await ensureDailyWallet(user.uid); }catch{} }
       updatePrimaryCta();
     });
 
-    // aggiorna CTA quando cliccano sulle chip
     document.getElementById('periodGroup').addEventListener('click', updatePrimaryCta);
     document.getElementById('styleGroup').addEventListener('click', updatePrimaryCta);
 
-    // opzionale: ?login=1 apre subito il popup
     if(new URLSearchParams(location.search).get('login')==='1'){ primaryCta.click(); }
     updatePrimaryCta();
   </script>
