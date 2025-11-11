@@ -94,7 +94,9 @@
 
     <button id="go" class="cta" disabled data-i18n="next">Avanti</button>
 
-    <!-- 👇 Bottone login/logout viene aggiunto a runtime -->
+    <!-- 👇 Bottoni login/logout inseriti STATICI così li vedi comunque -->
+    <button id="loginBtn" class="cta" style="margin-top:8px">Entra con Google</button>
+    <button id="logoutBtn" class="chip" style="display:none">Esci</button>
   </main>
 
   <footer>
@@ -135,7 +137,7 @@
     })();
   </script>
 
-  <!-- i18n + tema + selections + lingua -->
+  <!-- i18n + tema + selections + lingua (immutato) -->
   <script>
     (function initTheme(){
       try{
@@ -181,7 +183,7 @@
     function syncUI(){
       if(state.periodo){ document.querySelectorAll('#periodGroup .chip').forEach(c=>c.classList.remove('selected')); document.querySelector(`#periodGroup .chip[data-val="${state.periodo}"]`)?.classList.add('selected'); }
       if(state.stile){ document.querySelectorAll('#styleGroup .chip').forEach(c=>c.classList.remove('selected')); document.querySelector(`#styleGroup .chip[data-val="${state.stile}"]`)?.classList.add('selected'); document.documentElement.setAttribute('data-theme', state.stile==='wtf'?'wtf':'whatif'); }
-      // NB: il bottone verrà abilitato SOLO se loggato (vedi blocco Auth)
+      // go abilitato SOLO se loggato (vedi blocco Auth)
     }
     function wireGroup(g){
       g.addEventListener('click', e=>{
@@ -190,7 +192,6 @@
         b.classList.add('selected'); state[b.dataset.key]=b.dataset.val;
         localStorage.setItem('whatif_prefs', JSON.stringify(state));
         if(b.dataset.key==='stile'){ document.documentElement.setAttribute('data-theme', b.dataset.val==='wtf'?'wtf':'whatif'); }
-        // go disabled handled by auth state
       });
     }
     wireGroup(document.getElementById('periodGroup'));
@@ -199,7 +200,7 @@
 
     document.getElementById('go').addEventListener('click', ()=>{ location.href='second.html'; });
 
-    // easter egg admin (lasciato com'era)
+    // easter egg admin (identico)
     ;(function(){
       const title = document.getElementById('appTitle'); const pastBtn = document.querySelector('button[data-val="past"]');
       if(!title || !pastBtn) return;
@@ -236,28 +237,12 @@
     const db   = getFirestore(app);
     const provider = new GoogleAuthProvider();
 
-    // Bottoni login/logout (generati)
-    const goBtn = document.getElementById("go");
-    let loginBtn = document.getElementById("loginBtn");
-    let logoutBtn = document.getElementById("logoutBtn");
-    if(!loginBtn){
-      loginBtn = document.createElement("button");
-      loginBtn.id = "loginBtn";
-      loginBtn.className = "cta";
-      loginBtn.textContent = "Entra con Google";
-      loginBtn.style.marginTop = "8px";
-      document.querySelector("main").appendChild(loginBtn);
-    }
-    if(!logoutBtn){
-      logoutBtn = document.createElement("button");
-      logoutBtn.id = "logoutBtn";
-      logoutBtn.className = "chip";
-      logoutBtn.textContent = "Esci";
-      logoutBtn.style.display = "none";
-      document.querySelector("main").appendChild(logoutBtn);
-    }
+    const goBtn     = document.getElementById("go");
+    const loginBtn  = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
 
     const today = () => new Date().toISOString().slice(0,10);
+
     async function ensureDailyWallet(uid){
       const ref = doc(db, "wallets", uid);
       const snap = await getDoc(ref);
@@ -278,16 +263,16 @@
       }
     }
 
-    loginBtn.onclick = async ()=>{
-      try{ await signInWithPopup(auth, provider); }
-      catch{ /* chiuso */ }
-    };
-    logoutBtn.onclick = async ()=>{ await signOut(auth); };
-
     function updateGoEnabled(){
       const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
       goBtn.disabled = !(auth.currentUser && prefs.periodo && prefs.stile);
     }
+
+    loginBtn.onclick = async ()=>{
+      try{ await signInWithPopup(auth, provider); }
+      catch{ /* utente ha chiuso il popup */ }
+    };
+    logoutBtn.onclick = async ()=>{ await signOut(auth); };
 
     onAuthStateChanged(auth, async (user)=>{
       if(user){
@@ -304,7 +289,7 @@
     document.getElementById('periodGroup').addEventListener('click', updateGoEnabled);
     document.getElementById('styleGroup').addEventListener('click', updateGoEnabled);
 
-    // se arrivi con ?login=1 apri subito il popup
+    // opzionale: ?login=1 apre subito il popup
     if(new URLSearchParams(location.search).get('login')==='1'){ loginBtn.click(); }
   </script>
 </body>
