@@ -92,10 +92,8 @@
       <button class="chip" data-key="stile" data-val="wtf"    data-i18n="wtf">What the F</button>
     </div>
 
-    <button id="go" class="cta" disabled data-i18n="next">Avanti</button>
-
-    <!-- 👇 Bottoni login/logout inseriti STATICI così li vedi comunque -->
-    <button id="loginBtn" class="cta" style="margin-top:8px">Entra con Google</button>
+    <!-- 🔁 CTA unica: login o avanti -->
+    <button id="primaryCta" class="cta">Entra con Google</button>
     <button id="logoutBtn" class="chip" style="display:none">Esci</button>
   </main>
 
@@ -137,7 +135,7 @@
     })();
   </script>
 
-  <!-- i18n + tema + selections + lingua (immutato) -->
+  <!-- i18n + tema + selections + lingua -->
   <script>
     (function initTheme(){
       try{
@@ -179,12 +177,6 @@
     })();
 
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-    const go = document.getElementById('go');
-    function syncUI(){
-      if(state.periodo){ document.querySelectorAll('#periodGroup .chip').forEach(c=>c.classList.remove('selected')); document.querySelector(`#periodGroup .chip[data-val="${state.periodo}"]`)?.classList.add('selected'); }
-      if(state.stile){ document.querySelectorAll('#styleGroup .chip').forEach(c=>c.classList.remove('selected')); document.querySelector(`#styleGroup .chip[data-val="${state.stile}"]`)?.classList.add('selected'); document.documentElement.setAttribute('data-theme', state.stile==='wtf'?'wtf':'whatif'); }
-      // go abilitato SOLO se loggato (vedi blocco Auth)
-    }
     function wireGroup(g){
       g.addEventListener('click', e=>{
         const b=e.target.closest('.chip'); if(!b) return;
@@ -192,32 +184,14 @@
         b.classList.add('selected'); state[b.dataset.key]=b.dataset.val;
         localStorage.setItem('whatif_prefs', JSON.stringify(state));
         if(b.dataset.key==='stile'){ document.documentElement.setAttribute('data-theme', b.dataset.val==='wtf'?'wtf':'whatif'); }
+        updatePrimaryCta();
       });
     }
     wireGroup(document.getElementById('periodGroup'));
     wireGroup(document.getElementById('styleGroup'));
-    syncUI();
-
-    document.getElementById('go').addEventListener('click', ()=>{ location.href='second.html'; });
-
-    // easter egg admin (identico)
-    ;(function(){
-      const title = document.getElementById('appTitle'); const pastBtn = document.querySelector('button[data-val="past"]');
-      if(!title || !pastBtn) return;
-      let tapTitle=0, tapPast=0, stage=0, timer=null;
-      function reset(){ tapTitle=0; tapPast=0; stage=0; if(timer) clearTimeout(timer); timer=null; pastBtn.classList.remove("unlocking"); }
-      function flash(){ const f=document.createElement("div"); f.style.position="fixed";f.style.inset="0";f.style.background="rgba(255,255,255,0.05)";f.style.backdropFilter="blur(2px)";f.style.transition="opacity .6s";f.style.opacity="1";f.style.zIndex="9999";document.body.appendChild(f);setTimeout(()=>f.style.opacity="0",150);setTimeout(()=>f.remove(),800); }
-      function success(){ reset(); const pin=prompt("PIN amministratore:"); if(!pin) return; try{ sessionStorage.setItem("pending_admin_pin", pin);}catch{} location.href="admin.html"; }
-      title.addEventListener('click', ()=>{ if(++tapTitle>=3){ stage=1; tapTitle=0; flash(); pastBtn.classList.add("unlocking"); setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);} if(timer) clearTimeout(timer); timer=setTimeout(reset,2000); });
-      pastBtn.addEventListener('click', ()=>{ if(stage!==1) return; if(++tapPast>=5) success(); if(timer) clearTimeout(timer); timer=setTimeout(reset,2500); });
-    })();
-
-    if("serviceWorker" in navigator){
-      window.addEventListener("load", ()=>{ navigator.serviceWorker.register("/sw.js").catch(()=>{}); });
-    }
   </script>
 
-  <!-- 🔐 Firebase + Login OBBLIGATORIO + wallet giornaliero (3 crediti + 1 sorprendi) -->
+  <!-- 🔐 Firebase: login Google obbligatorio -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
     import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
@@ -237,9 +211,8 @@
     const db   = getFirestore(app);
     const provider = new GoogleAuthProvider();
 
-    const goBtn     = document.getElementById("go");
-    const loginBtn  = document.getElementById("loginBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
+    const primaryCta = document.getElementById("primaryCta");
+    const logoutBtn  = document.getElementById("logoutBtn");
 
     const today = () => new Date().toISOString().slice(0,10);
 
@@ -263,34 +236,73 @@
       }
     }
 
-    function updateGoEnabled(){
-      const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-      goBtn.disabled = !(auth.currentUser && prefs.periodo && prefs.stile);
+    function selectionsReady(){
+      try{
+        const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+        return !!(prefs.periodo && prefs.stile);
+      }catch{ return false; }
     }
 
-    loginBtn.onclick = async ()=>{
-      try{ await signInWithPopup(auth, provider); }
-      catch{ /* utente ha chiuso il popup */ }
+    function updatePrimaryCta(){
+      const user = auth.currentUser;
+      const ready = selectionsReady();
+      if(user){
+        primaryCta.textContent = ready ? "Avanti" : "Scegli prima sopra";
+        primaryCta.disabled = !ready;
+        logoutBtn.style.display = "inline-block";
+      }else{
+        primaryCta.textContent = "Entra con Google";
+        primaryCta.disabled = false;
+        logoutBtn.style.display = "none";
+      }
+    }
+
+    // Azione del pulsante principale (login oppure avanti)
+    primaryCta.onclick = async ()=>{
+      const user = auth.currentUser;
+      if(!user){
+        try{ await signInWithPopup(auth, provider); }catch{}
+        return;
+      }
+      if(selectionsReady()){
+        location.href = "second.html";
+      }
     };
+
     logoutBtn.onclick = async ()=>{ await signOut(auth); };
 
     onAuthStateChanged(auth, async (user)=>{
       if(user){
-        loginBtn.style.display="none";
-        logoutBtn.style.display="inline-block";
         await ensureDailyWallet(user.uid).catch(()=>{});
-      }else{
-        logoutBtn.style.display="none";
-        loginBtn.style.display="inline-block";
       }
-      updateGoEnabled();
+      updatePrimaryCta();
     });
 
-    document.getElementById('periodGroup').addEventListener('click', updateGoEnabled);
-    document.getElementById('styleGroup').addEventListener('click', updateGoEnabled);
+    // aggiorna CTA quando cliccano sulle chip
+    document.getElementById('periodGroup').addEventListener('click', updatePrimaryCta);
+    document.getElementById('styleGroup').addEventListener('click', updatePrimaryCta);
 
     // opzionale: ?login=1 apre subito il popup
-    if(new URLSearchParams(location.search).get('login')==='1'){ loginBtn.click(); }
+    if(new URLSearchParams(location.search).get('login')==='1'){ primaryCta.click(); }
+    updatePrimaryCta();
+  </script>
+
+  <script>
+    // Easter egg admin (invariato)
+    (function(){
+      const title = document.getElementById('appTitle'); const pastBtn = document.querySelector('button[data-val="past"]');
+      if(!title || !pastBtn) return;
+      let tapTitle=0, tapPast=0, stage=0, timer=null;
+      function reset(){ tapTitle=0; tapPast=0; stage=0; if(timer) clearTimeout(timer); timer=null; pastBtn.classList.remove("unlocking"); }
+      function flash(){ const f=document.createElement("div"); f.style.position="fixed";f.style.inset="0";f.style.background="rgba(255,255,255,0.05)";f.style.backdropFilter="blur(2px)";f.style.transition="opacity .6s";f.style.opacity="1";f.style.zIndex="9999";document.body.appendChild(f);setTimeout(()=>f.style.opacity="0",150);setTimeout(()=>f.remove(),800); }
+      function success(){ reset(); const pin=prompt("PIN amministratore:"); if(!pin) return; try{ sessionStorage.setItem("pending_admin_pin", pin);}catch{} location.href="admin.html"; }
+      title.addEventListener('click', ()=>{ if(++tapTitle>=3){ stage=1; tapTitle=0; flash(); pastBtn.classList.add("unlocking"); setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);} if(timer) clearTimeout(timer); timer=setTimeout(reset,2000); });
+      pastBtn.addEventListener('click', ()=>{ if(stage!==1) return; if(++tapPast>=5) success(); if(timer) clearTimeout(timer); timer=setTimeout(reset,2500); });
+    })();
+
+    if("serviceWorker" in navigator){
+      window.addEventListener("load", ()=>{ navigator.serviceWorker.register("/sw.js").catch(()=>{}); });
+    }
   </script>
 </body>
 </html>
