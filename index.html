@@ -273,5 +273,24 @@
       window.addEventListener("load", ()=>{ navigator.serviceWorker.register("/sw.js").catch(()=>{}); });
     }
   </script>
+  <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyASrGnHOnf_O-N0NuZDvqOGGfG8IoSWblc",
+    authDomain: "whatif-oracolo.firebaseapp.com",
+    projectId: "whatif-oracolo",
+    storageBucket: "whatif-oracolo.firebasestorage.app",
+    messagingSenderId: "602976466053",
+    appId: "1:602976466053:web:668d4a462286513d8b25ec"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  </script>
 </body>
 </html>
