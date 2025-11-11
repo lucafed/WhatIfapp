@@ -122,6 +122,21 @@ h1{
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;opacity:.9}
 .chip{font-size:11px;font-weight:900;padding:3px 7px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)}
 
+/* === Guidance (indicazione rapida) === */
+#guideBox .note{opacity:.95}
+#guideBox .ico{filter:drop-shadow(0 0 8px rgba(255,236,1,.18))}
+
+/* === Sigils (memoria simbolica) === */
+.sigils{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:8px 0 0}
+.sigil{
+  width:10px;height:10px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, rgba(255,236,1,.9), rgba(255,236,1,.12) 60%, rgba(255,236,1,.04) 80%);
+  box-shadow:0 0 8px rgba(255,236,1,.25), inset 0 0 0 1px rgba(255,255,255,.08);
+  animation:breath 2.6s ease-in-out infinite;
+}
+.sigil.big{width:12px;height:12px}
+@keyframes breath{0%{transform:scale(.96)}50%{transform:scale(1.04)}100%{transform:scale(.96)}}
+
 /* Mobile */
 @media (max-width:420px){
   .result-pct,.top-pct{font-size:15px;min-width:56px;padding:4px 8px}
@@ -206,6 +221,7 @@ h1{
         <span class="result-title" id="committeeTitle">—</span>
       </div>
 
+      <!-- Blocco motivazione “classico” (mostrato per WTF e per Surprise) -->
       <div class="mot" id="motOne">
         <div class="ico" id="motIco" aria-hidden="true">—</div>
         <div>
@@ -218,15 +234,27 @@ h1{
           <div class="note" id="motNote">—</div>
         </div>
       </div>
+
+      <div class="hr" id="guideSep" style="margin:12px 0;display:none"></div>
+
+      <!-- 🧭 Indicazione rapida (diretto) — mostrato SOLO per WHAT IF non-surprise -->
+      <div class="mot" id="guideBox" style="display:none">
+        <div class="ico" aria-hidden="true">🧭</div>
+        <div class="note" id="guideNote">—</div>
+      </div>
     </div>
 
     <div class="hr"></div>
     <div class="row">
       <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
-      <button class="btn ghost" id="saveBtn">⭐ Salva</button>
+      <button class="btn ghost" id="saveBtn">⭐ Salva le mie visioni</button>
       <button class="btn ghost" id="againBtn">🔁 Fai un’altra domanda</button>
     </div>
     <p class="small" id="metaInfo"></p>
+
+    <!-- Memoria simbolica + progressione -->
+    <div class="sigils" id="sigilTrail" aria-hidden="true"></div>
+    <p class="small" id="progressHint" style="text-align:center;margin-top:6px;opacity:.9"></p>
   </div>
 </main>
 
@@ -256,7 +284,9 @@ const I18N = {
   it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
        sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
        p:"Esito & motivazioni", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
-       save:"⭐ Salva", savedOk:"✅ Salvata",
+       save:"⭐ Salva le mie visioni", savedOk:"✅ Salvata",
+       guide:"Indicazione rapida", guideFallback:"Scegli una micro-azione concreta entro 24h e calendarizzala in 10 minuti.",
+       progressLead:(k)=>`Le tue visioni parlano spesso di “${k}”. Vuoi vedere il profilo del destino?`,
        copied:"Copiato!", error:"[errore server]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
@@ -275,7 +305,9 @@ const I18N = {
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
        p:"Outcome & rationales", share:"📤 Share / Copy", again:"🔁 Ask another",
-       save:"⭐ Save", savedOk:"✅ Saved",
+       save:"⭐ Save my visions", savedOk:"✅ Saved",
+       guide:"Quick guidance", guideFallback:"Pick a concrete micro-action within 24h and schedule it in 10 minutes.",
+       progressLead:(k)=>`Your visions often orbit “${k}”. See your destiny profile?`,
        copied:"Copied!", error:"[server error]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
@@ -294,7 +326,9 @@ const I18N = {
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
        sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
        p:"Resultado y razones", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra",
-       save:"⭐ Guardar", savedOk:"✅ Guardada",
+       save:"⭐ Guarda mis visiones", savedOk:"✅ Guardada",
+       guide:"Orientación rápida", guideFallback:"Elige una microacción concreta en 24h y agenda 10 minutos para ejecutarla.",
+       progressLead:(k)=>`Tus visiones giran a menudo en torno a “${k}”. ¿Ver perfil del destino?`,
        copied:"¡Copiado!", error:"[error del servidor]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
@@ -313,7 +347,9 @@ const I18N = {
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
        sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
        p:"Issue & motivations", share:"📤 Partager / Copier", again:"🔁 Poser une autre",
-       save:"⭐ Enregistrer", savedOk:"✅ Enregistrée",
+       save:"⭐ Enregistrer mes visions", savedOk:"✅ Enregistrée",
+       guide:"Indication rapide", guideFallback:"Choisis une micro-action concrète sous 24h et planifie-la en 10 minutes.",
+       progressLead:(k)=>`Tes visions tournent souvent autour de « ${k} ». Voir le profil du destin ?`,
        copied:"Copié !", error:"[erreur serveur]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
@@ -332,7 +368,9 @@ const I18N = {
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
        sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
        p:"Ergebnis & Begründungen", share:"📤 Teilen / Kopieren", again:"🔁 Neue Frage",
-       save:"⭐ Speichern", savedOk:"✅ Gespeichert",
+       save:"⭐ Meine Visionen speichern", savedOk:"✅ Gespeichert",
+       guide:"Schnelle Empfehlung", guideFallback:"Wähle eine konkrete Mikro-Aktion binnen 24 Std. und plane 10 Minuten dafür ein.",
+       progressLead:(k)=>`Deine Visionen kreisen oft um „${k}“. Willst du dein Schicksalsprofil sehen?`,
        copied:"Kopiert!", error:"[Serverfehler]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
@@ -480,6 +518,8 @@ const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct
 const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
 const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
 const motNote=qs('#motNote'), creditInfo=qs('#creditInfo'), toastEl=qs('#toast');
+const motOne=qs('#motOne'), guideNote=qs('#guideNote'), guideBox=qs('#guideBox'), guideSep=qs('#guideSep');
+const sigilTrail=qs('#sigilTrail'), progressHint=qs('#progressHint');
 
 /* ==== Toast ==== */
 function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
@@ -552,7 +592,6 @@ function applyUI(q){
   shareBtn.textContent=T.share; againBtn.textContent=T.again; if(saveBtn) saveBtn.textContent=T.save;
   styleBadge.textContent=(style==='wtf')?T.styleWTF:T.styleWHF;
   setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));
-  // Nessuna lead phrase qui.
 }
 
 /* ==== Probability & motives ==== */
@@ -573,18 +612,6 @@ function shortMotivationFromAnswer(txt){
   const parts=a.split(/(?<=[.!?…])\s+/).filter(Boolean);
   let s=parts.find(x=>/perché|porque|parce que|weil|so|thus|quindi|dunque|se\b|cuando|quand|wenn|when/i.test(x))||parts[0]||'';
   s=s.replace(/\s{2,}/g,' ').trim(); if(!/[.!?…]$/.test(s)) s+='.'; if(s.length<24) s=T.motFallback; return s;
-}
-function renderCommitteeLike(surprise){
-  const T=t();
-  if(surprise){
-    motIco.style.display=''; chipsWrap.style.display='flex'; committeeTitle.textContent=T.votersTitle||'Comitato';
-    const r=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-    chipFav.textContent=`${T.chipsFav} ${r(120,1200)}`; chipCon.textContent=`${T.chipsCon} ${r(0,900)}`; chipAst.textContent=`${T.chipsAst} ${r(0,400)}`;
-    motNote.textContent=(lang==='en')?`Brief tussle at vote: ${r(1,5)} removed; ${r(0,3)} bruised.`:(lang==='es')?`Pequeño lío en la votación: ${r(1,5)} expulsados; ${r(0,3)} contusos.`:(lang==='fr')?`Petit grabuge au vote : ${r(1,5)} évacués ; ${r(0,3)} contusionnés.`:(lang==='de')?`Kurzes Gerangel bei der Abstimmung: ${r(1,5)} entfernt; ${r(0,3)} leicht verletzt.`:`Breve parapiglia al voto: ${r(1,5)} allontanati; ${r(0,3)} contusi.`;
-  }else{
-    committeeTitle.textContent = (style==='wtf') ? (t().scientificTitle) : (t().seriousTitle);
-    motIco.style.display='none'; chipsWrap.style.display='none';
-  }
 }
 
 /* ==== Overlay (store + rewarded) ==== */
@@ -764,22 +791,91 @@ function revealEffect(){
   setTimeout(()=> wrap.classList.remove('reveal'), 900);
 }
 
-/* ==== Salvataggio domanda per fourth ====
-   Scrive su localStorage key: 'next_prompts'
-   Formato: [{ q:string, ts:number }, …] (max 50, unshift) */
-function saveCurrentQuestion(){
-  const domanda = (LS.getItem('domanda') || '').trim();
-  if(!domanda) return;
-  let arr=[];
-  try{ arr = JSON.parse(LS.getItem('next_prompts')||'[]'); if(!Array.isArray(arr)) arr=[]; }catch{ arr=[]; }
-  // Evita duplicati consecutivi identici
-  if(arr[0] && (arr[0].q||'') === domanda){ toast(t().savedOk); return; }
-  arr.unshift({ q: domanda, ts: Date.now() });
-  if(arr.length>50) arr = arr.slice(0,50);
-  LS.setItem('next_prompts', JSON.stringify(arr));
-  // segnale per altre tab
-  LS.setItem('whatif_wallet_sync', String(Date.now()));
-  toast(t().savedOk);
+/* === Indicazione rapida (deriva dal contesto) === */
+function directTipFromContext(domanda="", answer=""){
+  const L = lang;
+  const lowerQ = (domanda||"").toLowerCase();
+  let key="azione";
+  if(/tempo|scadenza|quando|settimana|mese|orari/.test(lowerQ)) key = (L==='en')?'time':(L==='es')?'tiempo':(L==='fr')?'temps':(L==='de')?'Zeit':'tempo';
+  else if(/soldi|budget|euro|€|spesa|costo|prezzo/.test(lowerQ)) key = (L==='en')?'budget':(L==='es')?'presupuesto':(L==='fr')?'budget':(L==='de')?'Budget':'budget';
+  else if(/lavor|job|colloquio|cv|impiego/.test(lowerQ)) key = (L==='en')?'work':(L==='es')?'trabajo':(L==='fr')?'travail':(L==='de')?'Arbeit':'lavoro';
+  else if(/amore|relaz|cuore|partner|fidanz|matrimonio/.test(lowerQ)) key = (L==='en')?'love':(L==='es')?'amor':(L==='fr')?'amour':(L==='de')?'Liebe':'amore';
+  else if(/studio|esame|impara|corso|lezione/.test(lowerQ)) key = (L==='en')?'study':(L==='es')?'estudio':(L==='fr')?'étude':(L==='de')?'Studium':'studio';
+
+  const map={
+    it: `🧭 ${I18N.it.guide}: fissa una micro-azione su ${key} entro 24h (10′ in agenda). Esempio: “passo 1” oggi, “passo 2” tra 3 giorni.`,
+    en: `🧭 ${I18N.en.guide}: set one micro-action on ${key} within 24h (block 10'). Example: “step 1” today, “step 2” in 3 days.`,
+    es: `🧭 ${I18N.es.guide}: define una microacción sobre ${key} en 24h (bloquea 10'). Ejemplo: “paso 1” hoy, “paso 2” en 3 días.`,
+    fr: `🧭 ${I18N.fr.guide}: fixe une micro-action sur ${key} sous 24h (créneau de 10'). Exemple : “étape 1” aujourd’hui, “étape 2” dans 3 jours.`,
+    de: `🧭 ${I18N.de.guide}: setze innerhalb von 24 Std. eine Mikro-Aktion zu ${key} (10′ blocken). Beispiel: „Schritt 1“ heute, „Schritt 2“ in 3 Tagen.`
+  };
+  return map[L] || `${I18N.it.guide}: ${I18N.it.guideFallback}`;
+}
+
+/* === Sigils + progressione soft === */
+function renderSigilsAndProgress(){
+  if(!sigilTrail) return;
+  let hist=[]; try{ hist=JSON.parse(LS.getItem('cronologia')||'[]'); }catch{}
+  const n = Math.max(0, Array.isArray(hist)?hist.length:0);
+  sigilTrail.innerHTML = '';
+  const cap = Math.min(n, 14);
+  for(let i=0;i<cap;i++){
+    const s=document.createElement('span');
+    s.className='sigil'+( (i%5===4)?' big':'' );
+    sigilTrail.appendChild(s);
+  }
+  const bank = {
+    it: { cambiamento:/cambi|nuov|spostar|trasfer|rinnov/i, amore:/amor|relaz|cuore|partner/i, rischio:/risch|azzard|osa|paura/i, tempo:/tempo|settim|mese|scadenza/i, lavoro:/lavor|job|colloquio|cv|azienda/i, denaro:/soldi|budget|euro|€/i, studio:/studio|esame|impara|corso/i },
+    en: { change:/chang|move|shift|renew/i, love:/love|relat|heart|partner/i, risk:/risk|bold|fear/i, time:/time|deadl|week|month/i, work:/work|job|interview|cv|company/i, money:/money|budget|€|\$/i, study:/study|exam|learn|course/i }
+  };
+  const L = ['it','en'].includes(lang)?lang:'it';
+  const themes = bank[L];
+  const counts = {}; Object.keys(themes).forEach(k=>counts[k]=0);
+  hist.slice(-20).forEach(h=>{
+    const text = (h?.domanda||'') + ' ' + (h?.risposta||'');
+    Object.entries(themes).forEach(([k,rx])=>{ if(rx.test(text)) counts[k]++; });
+  });
+  let topK=null, topV=0;
+  Object.entries(counts).forEach(([k,v])=>{ if(v>topV){ topV=v; topK=k; }});
+  if(progressHint){
+    if(n>=3 && topK && topV>=2){
+      const keyMap = {it:{cambiamento:"cambiamento", amore:"amore", rischio:"rischio", tempo:"tempo", lavoro:"lavoro", denaro:"denaro", studio:"studio"},
+                      en:{change:"change", love:"love", risk:"risk", time:"time", work:"work", money:"money", study:"study"}};
+      const pretty = (keyMap[L]&&keyMap[L][topK]) || topK;
+      progressHint.textContent = t().progressLead(pretty);
+    } else {
+      progressHint.textContent = '';
+    }
+  }
+}
+
+/* ==== Riquadro: regole di visualizzazione ====
+   - surprise === true  -> mantiene riquadro ironico/committee + motNote (nessun guideBox)
+   - style === 'wtf'    -> riquadro motivazione classico (scientific/serio), niente guideBox
+   - style === 'whatif' -> NASCONDI motivazione classica, MOSTRA SOLO guideBox (parte diretta)
+*/
+function renderBlocksVisibility({surprise}){
+  if(surprise){
+    // Ironico: mostra motivazione/committee, nascondi guida
+    if(motOne) motOne.style.display='grid';
+    if(guideSep) guideSep.style.display='none';
+    if(guideBox) guideBox.style.display='none';
+    committeeTitle.textContent = t().votersTitle || 'Comitato';
+    return;
+  }
+  if(style==='wtf'){
+    // Scientifico: mostra motivazione, nascondi guida
+    if(motOne) motOne.style.display='grid';
+    if(guideSep) guideSep.style.display='none';
+    if(guideBox) guideBox.style.display='none';
+    committeeTitle.textContent = t().scientificTitle;
+    return;
+  }
+  // WHAT IF: solo parte diretta
+  if(motOne) motOne.style.display='none';
+  if(guideSep) guideSep.style.display='';
+  if(guideBox) guideBox.style.display='grid';
+  committeeTitle.textContent = t().guide;
 }
 
 /* ==== Main flow ==== */
@@ -789,6 +885,7 @@ async function startFlow(){
 
   startOracleLoading();
 
+  // Consumi crediti (come da tua logica)
   if(!IS_ADMIN && !alreadyConsumed){
     if(surprise){
       const okSurp = consumeSurpriseOne();
@@ -819,6 +916,9 @@ async function startFlow(){
       toast(t().toastMinus(1));
     }
   }
+
+  // Decide subito cosa mostrare/nascondere
+  renderBlocksVisibility({surprise});
 
   try{
     const headers={"Content-Type":"application/json"};
@@ -858,25 +958,55 @@ async function startFlow(){
 
     let motivazioneUsata = "";
     if (surprise) {
-      renderCommitteeLike(true);
+      // Versione ironica/committee (invariata)
+      // Mostra chip + motNote ironico
+      if(motOne) motOne.style.display='grid';
+      if(guideSep) guideSep.style.display='none';
+      if(guideBox) guideBox.style.display='none';
+      // chips + nota già sotto:
+      const rdm=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+      chipFav.textContent=`${t().chipsFav} ${rdm(120,1200)}`;
+      chipCon.textContent=`${t().chipsCon} ${rdm(0,900)}`;
+      chipAst.textContent=`${t().chipsAst} ${rdm(0,400)}`;
+      motIco.style.display='';
+      chipsWrap.style.display='flex';
+      committeeTitle.textContent=t().votersTitle||'Comitato';
+      motNote.textContent=(lang==='en')?`Brief tussle at vote: ${rdm(1,5)} removed; ${rdm(0,3)} bruised.`:
+                       (lang==='es')?`Pequeño lío en la votación: ${rdm(1,5)} expulsados; ${rdm(0,3)} contusos.`:
+                       (lang==='fr')?`Petit grabuge au vote : ${rdm(1,5)} évacués ; ${rdm(0,3)} contusionnés.`:
+                       (lang==='de')?`Kurzes Gerangel bei der Abstimmung: ${rdm(1,5)} entfernt; ${rdm(0,3)} leicht verletzt.`:
+                                     `Breve parapiglia al voto: ${rdm(1,5)} allontanati; ${rdm(0,3)} contusi.`;
+      motivazioneUsata = motNote.textContent;
+    } else if (style === 'wtf') {
+      // Scientifico: motivazione classica
+      const sci = (data && data.scientific) ? String(data.scientific).trim() : scientificFallback(lang);
+      motIco.style.display='none';
+      chipsWrap.style.display='none';
+      committeeTitle.textContent = t().scientificTitle;
+      motNote.textContent = sci;
+      if(motOne) motOne.style.display='grid';
+      if(guideSep) guideSep.style.display='none';
+      if(guideBox) guideBox.style.display='none';
+      motivazioneUsata = sci;
     } else {
-      renderCommitteeLike(false);
-      if (style === 'whatif') {
-        const mot = (data && data.motivation) ? String(data.motivation).trim()
-                    : shortMotivationFromAnswer(answerText);
-        motNote.textContent = mot;
-        motivazioneUsata = mot;
-      } else {
-        const sci = (data && data.scientific) ? String(data.scientific).trim()
-                    : scientificFallback(lang);
-        motNote.textContent = sci;
-        motivazioneUsata = sci;
-      }
+      // WHAT IF NON-SURPRISE: SOLO indicazione rapida (niente motivazione)
+      const direct = (data && data.guide) ? String(data.guide).trim() : directTipFromContext(domanda, answerText);
+      if(guideNote) guideNote.textContent = direct || (t().guide + ": " + (t().guideFallback||""));
+      if(motOne) motOne.style.display='none';
+      if(guideSep) guideSep.style.display='';
+      if(guideBox) guideBox.style.display='grid';
+      committeeTitle.textContent = t().guide;
+      motivazioneUsata = guideNote.textContent; // la trattiamo come “motivazione” salvata
     }
 
+    // Cronologia
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
     hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:usedPct, motivazione:motivazioneUsata });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
+
+    // Sigilli + progress
+    renderSigilsAndProgress();
+
   }catch(e){
     console.error(e);
     stopOracleLoading();
