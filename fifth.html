@@ -1,110 +1,114 @@
-<!-- FILE: fifth.html (ritorno a fourth dopo ad/acquisto) -->  <!DOCTYPE html>  <html lang="it" data-theme="whatif">  
-<head>  
-<meta charset="UTF-8"/>  
-<meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<title>What?f — Risultato</title>  
-<meta name="theme-color" content="#0B0B0C"/>  
-<style>  
-:root{  
-  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;  
-  --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;  
-  --line: rgba(255,255,255,.12);  
-  --panel: rgba(20,28,34,.92);  
-  --glow: rgba(255,236,1,.22);  
-}  
-html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }  
-*{box-sizing:border-box}  
-html,body{  
-  margin:0;  
-  background:  
-    radial-gradient(900px 700px at 20% 18%, var(--bg2) 0%, var(--bg) 60%),  
-    radial-gradient(600px 480px at 80% 12%, rgba(255,236,1,.06), transparent 60%),  
-    radial-gradient(700px 560px at 50% 90%, rgba(28,87,160,.10), transparent 65%);  
-  color:var(--fg);  
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;  
-  -webkit-font-smoothing:antialiased;  
-}  
-main{max-width:860px;margin:auto;padding:22px}  
-h1{  
-  font-size:clamp(22px,5vw,30px);  
-  color:var(--acc2);  
-  text-align:center;  
-  margin:12px 0 6px;  
-  text-shadow: 0 0 18px var(--glow);  
-}  
-.sub{color:var(--muted);text-align:center;margin:0 0 8px}  
-.card{  
-  background:var(--panel);  
-  border:1px solid var(--line);  
-  border-radius:16px;  
-  padding:18px;  
-  backdrop-filter:blur(10px);  
-  margin-top:16px;  
-  box-shadow: 0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);  
-}  
-.label{color:var(--acc);font-weight:800;margin-bottom:8px}  
-.input{  
-  background:rgba(255,255,255,.06);  
-  border:1px solid var(--line);  
-  border-radius:12px;  
-  padding:10px;  
-}  
-.story{  
-  white-space:normal;  
-  line-height:1.68;  
-  font-size:18px;  
-  letter-spacing:.1px;  
-  text-wrap:pretty;  
-}  
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}  
-.btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}  
-.btn.primary{  
-  background:linear-gradient(180deg,var(--acc),var(--acc2));  
-  color:var(--ink);  
-  box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 28px var(--glow);  
-}  
-.btn.ghost{  
-  background:rgba(255,255,255,.06);  
-  border:1px solid var(--line);  
-  color:#fff  
-}  
-.small{font-size:12px;color:#A0B2BA}  
-.hr{height:1px;background:rgba(255,255,255,.10);margin:12px 0}  
-.badge{  
-  display:inline-flex;align-items:center;gap:8px;  
-  font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);  
-  border:1px solid var(--line);border-radius:999px;padding:6px 10px;  
-}  
-.fade-in{animation:fade .35s ease-out both}  
-@keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}  
-.embit{padding:0 .08em;box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset;text-shadow:0 0 12px rgba(255,255,255,.08);border-radius:4px}  
-.select{background:rgba(255,255,255,.06);border:1px solid var(--line);color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}  /* === PERCENT === */
+<!-- FILE: fifth.html (ritorno a fourth dopo ad/acquisto) -->
+<!DOCTYPE html>
+<html lang="it" data-theme="whatif">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>What?f — Risultato</title>
+<meta name="theme-color" content="#0B0B0C"/>
+<style>
+:root{
+  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
+  --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;
+  --line: rgba(255,255,255,.12);
+  --panel: rgba(20,28,34,.92);
+  --glow: rgba(255,236,1,.22);
+}
+html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  background:
+    radial-gradient(900px 700px at 20% 18%, var(--bg2) 0%, var(--bg) 60%),
+    radial-gradient(600px 480px at 80% 12%, rgba(255,236,1,.06), transparent 60%),
+    radial-gradient(700px 560px at 50% 90%, rgba(28,87,160,.10), transparent 65%);
+  color:var(--fg);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+main{max-width:860px;margin:auto;padding:22px}
+h1{
+  font-size:clamp(22px,5vw,30px);
+  color:var(--acc2);
+  text-align:center;
+  margin:12px 0 6px;
+  text-shadow: 0 0 18px var(--glow);
+}
+.sub{color:var(--muted);text-align:center;margin:0 0 8px}
+.card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:18px;
+  backdrop-filter:blur(10px);
+  margin-top:16px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
+}
+.label{color:var(--acc);font-weight:800;margin-bottom:8px}
+.input{
+  background:rgba(255,255,255,.06);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px;
+}
+.story{
+  white-space:normal;
+  line-height:1.68;
+  font-size:18px;
+  letter-spacing:.1px;
+  text-wrap:pretty;
+}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
+.btn.primary{
+  background:linear-gradient(180deg,var(--acc),var(--acc2));
+  color:var(--ink);
+  box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 28px var(--glow);
+}
+.btn.ghost{
+  background:rgba(255,255,255,.06);
+  border:1px solid var(--line);
+  color:#fff
+}
+.small{font-size:12px;color:#A0B2BA}
+.hr{height:1px;background:rgba(255,255,255,.10);margin:12px 0}
+.badge{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);
+  border:1px solid var(--line);border-radius:999px;padding:6px 10px;
+}
+.fade-in{animation:fade .35s ease-out both}
+@keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
+.embit{padding:0 .08em;box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset;text-shadow:0 0 12px rgba(255,255,255,.08);border-radius:4px}
+.select{background:rgba(255,255,255,.06);border:1px solid var(--line);color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
+
+/* === PERCENT === */
 .pct-row{display:flex;align-items:center;gap:10px;margin:2px 0 8px}
 .pct-label{font-size:13px;color:var(--muted)}
 .top-pct{
-  display:inline-flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:16px;
-  min-width:64px;
-  padding:5px 10px;
-  background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink);border-radius:12px;
-  box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:16px;
+  min-width:64px;
+  padding:5px 10px;
+  background:linear-gradient(180deg,var(--acc),var(--acc2));
+  color:var(--ink);border-radius:12px;
+  box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
 }
 
 /* === RESULT BOX === */
 .result-box{
-  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:16px 14px;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 22px rgba(0,0,0,.28);
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:16px 14px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 22px rgba(0,0,0,.28);
 }
 .result-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
 .result-pct{
-  display:inline-flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:16px;min-width:64px;padding:5px 10px;border-radius:12px;
-  background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);
-  box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:16px;min-width:64px;padding:5px 10px;border-radius:12px;
+  background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);
+  box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
 }
 .result-title{font-weight:900;font-size:15px;letter-spacing:.2px}
 
@@ -120,9 +124,9 @@ h1{
 
 /* Mobile */
 @media (max-width:420px){
-  .result-pct,.top-pct{font-size:15px;min-width:56px;padding:4px 8px}
-  .result-title{font-size:14px}
-  .mot .note{font-size:15.5px;line-height:1.65}
+  .result-pct,.top-pct{font-size:15px;min-width:56px;padding:4px 8px}
+  .result-title{font-size:14px}
+  .mot .note{font-size:15.5px;line-height:1.65}
 }
 
 /* === Overlay (store/rewarded) === */
@@ -136,779 +140,785 @@ h1{
 .oracle-wrap{position:relative;min-height:28px;margin:4px 0 8px}
 .oracle-line{font-size:14px;opacity:.86;color:#E7F2EE;transition:opacity .25s ease}
 .orb{
-  position:absolute; left:-10px; top:-8px; width:26px; height:26px;
-  border-radius:50%;
-  background:radial-gradient(circle at 30% 30%, rgba(255,236,1,.7), rgba(255,236,1,.0) 60%);
-  filter:blur(6px); opacity:.0; transform:scale(.7); pointer-events:none;
-  transition:opacity .35s ease, transform .35s ease;
+  position:absolute; left:-10px; top:-8px; width:26px; height:26px;
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, rgba(255,236,1,.7), rgba(255,236,1,.0) 60%);
+  filter:blur(6px); opacity:.0; transform:scale(.7); pointer-events:none;
+  transition:opacity .35s ease, transform .35s ease;
 }
 .reveal .orb{opacity:.8; transform:scale(1)}
 .reveal #answer{animation:fade .45s ease-out both}
 @keyframes shimmer{0%{opacity:.45}50%{opacity:.95}100%{opacity:.45}}
 .loading .oracle-line{animation:shimmer 1.8s ease-in-out infinite}
 </style>
+</head>
 
-</head>  <body>  
-<main>  
-  <div class="topbar">  
-    <div class="row">  
-      <button class="btn ghost" id="backBtn">←</button>  
-      <button class="btn ghost" id="homeBtn">🏠</button>  
-    </div>  
-    <div class="row" style="gap:8px">  
-      <span class="badge" id="styleBadge">🎭 —</span>  
-      <span class="badge" id="proBadge" title="" style="display:none">🧪 TEST · ⭐ PRO</span>  
-      <select id="langSelect" class="select" aria-label="Language">  
-        <option value="it">IT · Italiano</option>  
-        <option value="en">EN · English</option>  
-        <option value="es">ES · Español</option>  
-        <option value="fr">FR · Français</option>  
-        <option value="de">DE · Deutsch</option>  
-      </select>  
-    </div>  
-  </div>    <h1 id="title">Risultato</h1>
-  <p class="sub" id="subtitle">—</p>
+<body>
+<main>
+  <div class="topbar">
+    <div class="row">
+      <button class="btn ghost" id="backBtn">←</button>
+      <button class="btn ghost" id="homeBtn">🏠</button>
+    </div>
+    <div class="row" style="gap:8px">
+      <span class="badge" id="styleBadge">🎭 —</span>
+      <span class="badge" id="proBadge" title="" style="display:none">🧪 TEST · ⭐ PRO</span>
+      <select id="langSelect" class="select" aria-label="Language">
+        <option value="it">IT · Italiano</option>
+        <option value="en">EN · English</option>
+        <option value="es">ES · Español</option>
+        <option value="fr">FR · Français</option>
+        <option value="de">DE · Deutsch</option>
+      </select>
+    </div>
+  </div>
 
-  <div class="card">
-    <div class="label" id="lblQ">La tua domanda</div>
-    <div class="input" id="qView" style="min-height:46px"></div>
-  </div>
+  <h1 id="title">Risultato</h1>
+  <p class="sub" id="subtitle">—</p>
 
-  <div class="card">
-    <div class="label" id="lblA">Risposta</div>
+  <div class="card">
+    <div class="label" id="lblQ">La tua domanda</div>
+    <div class="input" id="qView" style="min-height:46px"></div>
+  </div>
 
-    <div class="pct-row">
-      <span class="pct-label" id="pctLabel">% probabilità che accada</span>
-      <div id="topPct" class="top-pct" aria-live="polite">—</div>
-    </div>
+  <div class="card">
+    <div class="label" id="lblA">Risposta</div>
 
-    <!-- SOLO Oracle (niente frasetta lead) -->
-    <div class="oracle-wrap">
-      <div class="orb" aria-hidden="true"></div>
-      <div id="oracleLine" class="oracle-line">—</div>
-    </div>
-    <div id="answer" class="story">⏳ …</div>
+    <div class="pct-row">
+      <span class="pct-label" id="pctLabel">% probabilità che accada</span>
+      <div id="topPct" class="top-pct" aria-live="polite">—</div>
+    </div>
 
-    <div class="hr"></div>
-    <div class="label" id="lblP">Esito & motivazioni</div>
+    <!-- SOLO Oracle (niente frasetta lead) -->
+    <div class="oracle-wrap">
+      <div class="orb" aria-hidden="true"></div>
+      <div id="oracleLine" class="oracle-line">—</div>
+    </div>
+    <div id="answer" class="story">⏳ …</div>
 
-    <div class="result-box" id="resultBox">
-      <div class="result-head">
-        <span class="pct-label" id="pctLabelBottom">% probabilità che accada</span>
-        <div id="bottomPct" class="result-pct">—</div>
-        <span class="result-title" id="committeeTitle">—</span>
-      </div>
+    <div class="hr"></div>
+    <div class="label" id="lblP">Esito & motivazioni</div>
 
-      <div class="mot" id="motOne">
-        <div class="ico" id="motIco" aria-hidden="true">—</div>
-        <div>
-          <div class="name" id="motName">—</div>
-          <div class="chips" id="chipsWrap">
-            <span class="chip" id="chipFav">—</span>
-            <span class="chip" id="chipCon">—</span>
-            <span class="chip" id="chipAst">—</span>
-          </div>
-          <div class="note" id="motNote">—</div>
-        </div>
-      </div>
-    </div>
+    <div class="result-box" id="resultBox">
+      <div class="result-head">
+        <span class="pct-label" id="pctLabelBottom">% probabilità che accada</span>
+        <div id="bottomPct" class="result-pct">—</div>
+        <span class="result-title" id="committeeTitle">—</span>
+      </div>
 
-    <div class="hr"></div>
-    <div class="row">
-      <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
-      <button class="btn ghost" id="saveBtn">⭐ Salva</button>
-      <button class="btn ghost" id="againBtn">🔁 Fai un’altra domanda</button>
-    </div>
-    <p class="small" id="metaInfo"></p>
-  </div>
+      <div class="mot" id="motOne">
+        <div class="ico" id="motIco" aria-hidden="true">—</div>
+        <div>
+          <div class="name" id="motName">—</div>
+          <div class="chips" id="chipsWrap">
+            <span class="chip" id="chipFav">—</span>
+            <span class="chip" id="chipCon">—</span>
+            <span class="chip" id="chipAst">—</span>
+          </div>
+          <div class="note" id="motNote">—</div>
+        </div>
+      </div>
+    </div>
 
-</main>  <div id="overlay" aria-hidden="true">  
-  <iframe id="overlay-frame" src="about:blank" title="modal"></iframe>  
-</div>  <p class="small" id="creditInfo" style="text-align:center;margin:10px 0 24px"></p>  
-<div class="toast" id="toast"></div>  <!-- 🔔 audio reveal -->  <audio id="revealDing" preload="auto">  
-  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAA" type="audio/mpeg">  
-</audio>  <script>  
-/* ==== Base & prefs ==== */  
-const LS = localStorage;  
-const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');  
-const style = prefs.stile || 'whatif';  
-const periodo = prefs.periodo || 'future';  
-const IS_ADMIN = !!LS.getItem('admin_token');  
-document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');  
-  
-/* ==== I18N ==== */  
-const I18N = {  
-  it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",  
-       sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",  
-       p:"Esito & motivazioni", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",  
-       save:"⭐ Salva", savedOk:"✅ Salvata",  
-       copied:"Copiato!", error:"[errore server]",  
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",  
-       meta:(st,p)=> st==='wtf'  
-        ? `Stile: What the F · 6–9 frasi · paragrafo unico · tono asciutto · modalità: ${p==='past'?'Passato':'Futuro'}.`  
-        : `Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`,  
-       pctLabel:"% probabilità che accada",  
-       votersTitle:"Comitato", seriousTitle:"Motivazione", scientificTitle:"Motivazione (scientifica)",  
-       chipsFav:"favorevoli", chipsCon:"contrari", chipsAst:"astenuti",  
-       motFallback:"Motivo: benefici concreti a breve, con vincoli gestibili.",  
-       credits:(n)=>`💰 Crediti: ${n}`, noCredits:"Hai terminato i crediti.",  
-       storeTitle:"Crediti", buy5:"Compra +5 crediti (test)", buy10:"Compra +10 crediti (test)", buy20:"Compra +20 crediti (test)",  
-       watchAd:"Guarda pubblicità (+1)", close:"Chiudi",  
-       comingSoon:"Prossimamente", buySoonNote:"Acquisto crediti non ancora disponibile.",  
-       toastPlus:(n)=>`+${n} credito`, toastMinus:(n)=>`-${n} credito`  
-  },  
-  en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",  
-       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",  
-       p:"Outcome & rationales", share:"📤 Share / Copy", again:"🔁 Ask another",  
-       save:"⭐ Save", savedOk:"✅ Saved",  
-       copied:"Copied!", error:"[server error]",  
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",  
-       meta:(st,p)=> st==='wtf'  
-        ? `Style: What the F · 6–9 sentences · single paragraph · dry tone · mode: ${p==='past'?'Past':'Future'}.`  
-        : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,  
-       pctLabel:"% probability it happens",  
-       votersTitle:"Committee", seriousTitle:"Rationale", scientificTitle:"Rationale (scientific)",  
-       chipsFav:"in favour", chipsCon:"against", chipsAst:"abstained",  
-       motFallback:"Reason: short-term, concrete benefits with manageable constraints.",  
-       credits:(n)=>`💰 Credits: ${n}`, noCredits:"You ran out of credits.",  
-       storeTitle:"Credits", buy5:"Buy +5 credits (test)", buy10:"Buy +10 credits (test)", buy20:"Buy +20 credits (test)",  
-       watchAd:"Watch ad (+1)", close:"Close",  
-       comingSoon:"Coming soon", buySoonNote:"Credit purchases not available yet.",  
-       toastPlus:(n)=>`+${n} credit`,  toastMinus:(n)=>`-${n} credit`  
-  },  
-  es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",  
-       sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",  
-       p:"Resultado y razones", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra",  
-       save:"⭐ Guardar", savedOk:"✅ Guardada",  
-       copied:"¡Copiado!", error:"[error del servidor]",  
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",  
-       meta:(st,p)=> st==='wtf'  
-        ? `Estilo: What the F · 6–9 frases · un párrafo · tono seco · modo: ${p==='past'?'Pasado':'Futuro'}.`  
-        : `Estilo: What if (60% análisis, 40% real) · 8–11 frases · un párrafo · modo: ${p==='past'?'Pasado':'Futuro'}.`,  
-       pctLabel:"% probabilidad de que ocurra",  
-       votersTitle:"Comité", seriousTitle:"Motivo", scientificTitle:"Motivo (científico)",  
-       chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones",  
-       motFallback:"Motivo: beneficios concretos a corto plazo con límites manejables.",  
-       credits:(n)=>`💰 Créditos: ${n}`, noCredits:"Se te han acabado los créditos.",  
-       storeTitle:"Créditos", buy5:"Comprar +5 créditos (test)", buy10:"Comprar +10 créditos (test)", buy20:"Comprar +20 créditos (test)",  
-       watchAd:"Ver anuncio (+1)", close:"Cerrar",  
-       comingSoon:"Próximamente", buySoonNote:"La compra de créditos aún no está disponible.",  
-       toastPlus:(n)=>`+${n} crédito`,  toastMinus:(n)=>`-${n} crédito`  
-  },  
-  fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",  
-       sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",  
-       p:"Issue & motivations", share:"📤 Partager / Copier", again:"🔁 Poser une autre",  
-       save:"⭐ Enregistrer", savedOk:"✅ Enregistrée",  
-       copied:"Copié !", error:"[erreur serveur]",  
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",  
-       meta:(st,p)=> st==='wtf'  
-        ? `Style : What the F · 6–9 phrases · un paragraphe · ton sec · mode : ${p==='past'?'Passé':'Futur'}.`  
-        : `Style : What if (60 % analyse, 40 % réel) · 8–11 phrases · un paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`,  
-       pctLabel:"% de probabilité que ça arrive",  
-       votersTitle:"Comité", seriousTitle:"Motivation", scientificTitle:"Motivation (scientifique)",  
-       chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions",  
-       motFallback:"Raison : bénéfices concrets à court terme, contraintes gérables.",  
-       credits:(n)=>`💰 Crédits : ${n}`, noCredits:"Crédits épuisés.",  
-       storeTitle:"Crédits", buy5:"Acheter +5 crédits (test)", buy10:"Acheter +10 crédits (test)", buy20:"Acheter +20 crédits (test)",  
-       watchAd:"Regarder une pub (+1)", close:"Fermer",  
-       comingSoon:"Bientôt", buySoonNote:"Achat de crédits pas encore disponible.",  
-       toastPlus:(n)=>`+${n} crédit`,  toastMinus:(n)=>`-${n} crédit`  
-  },  
-  de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",  
-       sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",  
-       p:"Ergebnis & Begründungen", share:"📤 Teilen / Kopieren", again:"🔁 Neue Frage",  
-       save:"⭐ Speichern", savedOk:"✅ Gespeichert",  
-       copied:"Kopiert!", error:"[Serverfehler]",  
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",  
-       meta:(st,p)=> st==='wtf'  
-        ? `Stil: What the F · 6–9 Sätze · ein Absatz · trockener Ton · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`  
-        : `Stil: What if (60 % Analyse, 40 % Praxis) · 8–11 Sätze · ein Absatz · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,  
-       pctLabel:"% Wahrscheinlichkeit",  
-       votersTitle:"Gremium", seriousTitle:"Begründung", scientificTitle:"Begründung (wissenschaftlich)",  
-       chipsFav:"dafür", chipsCon:"dagegen", chipsAst:"enthalten",  
-       motFallback:"Grund: kurzfristiger, greifbarer Nutzen mit beherrschbaren Einschränkungen.",  
-       credits:(n)=>`💰 Credits: ${n}`, noCredits:"Credits aufgebraucht.",  
-       storeTitle:"Credits", buy5:"+5 Credits kaufen (Test)", buy10:"+10 Credits kaufen (Test)", buy20:"+20 Credits kaufen (Test)",  
-       watchAd:"Werbung ansehen (+1)", close:"Schließen",  
-       comingSoon:"Bald verfügbar", buySoonNote:"Kauf von Credits noch nicht verfügbar.",  
-       toastPlus:(n)=>`+${n} Credit`,  toastMinus:(n)=>`-${n} Credit`  
-  }  
-};  
-const SUP_LANG=['it','en','es','fr','de'];  
-const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');  
-const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';  
-function detectLang(text=''){  
-  const t=(text||'').toLowerCase();  
-  if(/[¿¡]/.test(t)) return 'es';  
-  const bank={  
-    it:[" che "," perché"," se "," quando"," dove"," non "," sono "," vorrei"," posso"," e se"," una settimana"," come"],  
-    en:[" what "," if "," the "," and "," you "," are "," will "," would "," can "," should "," could "],  
-    es:[" qué"," si "," porque"," cuando"," dónde"," no "," soy "," puedo"," quiero","¿"," semana "],  
-    fr:[" quoi"," si "," pourquoi"," quand"," où"," pas "," je "," peux"," si je"," et si"],  
-    de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]  
-  };  
-  const score={}; for(const L of SUP_LANG){ score[L]=0; (bank[L]||[]).forEach(w=>{ if(t.includes(w)) score[L]++; }); }  
-  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }  
-  if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }  
-  return best;  
-}  
-const manualLang = LS.getItem('lang_manual')==='1';  
-let lang = manualLang ? (SUP_LANG.includes((LS.getItem('lang')||'').toLowerCase()) ? (LS.getItem('lang')||'it').toLowerCase() : 'it') : detectLang(domandaEarly);  
-if(!SUP_LANG.includes(lang)) lang='it';  
-document.documentElement.lang=lang;  
-const t=()=>I18N[lang]||I18N.it;  
-  
-/* ==== System prompts (solo UI) ==== */  
-const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;  
-const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica…`;  
-  
-/* === ORACLE LINES (solo attesa, nessun lead statico) === */  
-const ORACLE_LINES = {  
-  it: [  
-    "Shh… le carte girano piano.",  
-    "Aspetta: la risposta bussa sottovoce.",  
-    "L’aria si fa chiara, sta arrivando.",  
-    "Non correre: il disegno prende forma.",  
-    "Occhio: il quadro si accende da solo.",  
-    "Silenzio un attimo… qualcosa si allinea.",  
-    "Senti? C’è un passo che torna nel ritmo.",  
-    "Trattieni il fiato: la moneta è a mezz’aria.",  
-    "Una piega nella notte, poi luce sottile.",  
-    "Le luci interne si accendono una alla volta.",  
-    "Ancora un respiro… il filo si tende.",  
-    "Eccolo: l’indizio che mancava si mostra.",  
-    "Un colpo di vento, poi tutto si ferma.",  
-    "Scorri piano: la porta sta socchiudendosi.",  
-    "Si sente un sì lontano, ma si avvicina.",  
-    "L’oracolo gira la pagina… quasi."  
-  ],  
-  en: [  
-    "Hush… the cards are turning.",  
-    "Wait: the answer knocks softly.",  
-    "Air clears; something is arriving.",  
-    "Don’t rush—shape is forming.",  
-    "Look: the outline lights itself.",  
-    "Hold a breath… lines align.",  
-    "Hear it? A step returns to rhythm.",  
-    "Coin in mid-air; let it fall.",  
-    "A fold in the dark, then a thin light.",  
-    "Inner lights switch on, one by one.",  
-    "Another breath… the wire tightens.",  
-    "There it is: the missing hint.",  
-    "A gust, then stillness.",  
-    "Scroll slowly: a door is ajar.",  
-    "A distant yes draws nearer.",  
-    "The oracle turns the page… almost."  
-  ],  
-  es: [  
-    "Shh… las cartas giran despacio.",  
-    "Espera: la respuesta toca suave.",  
-    "El aire se aclara; ya viene.",  
-    "No corras: la forma aparece.",  
-    "Mira: el contorno se enciende solo.",  
-    "Guarda el aliento… todo se alinea.",  
-    "¿Lo oyes? Vuelve el paso al ritmo.",  
-    "Moneda en el aire; que caiga.",  
-    "Un pliegue en la noche, luz fina.",  
-    "Luces internas, una por una.",  
-    "Otro respiro… el hilo se tensa.",  
-    "Ahí está: la pista que faltaba.",  
-    "Una ráfaga y luego quietud.",  
-    "Desliza lento: se entorna la puerta.",  
-    "Un sí lejano se acerca.",  
-    "El oráculo pasa página… casi."  
-  ],  
-  fr: [  
-    "Chut… les cartes tournent.",  
-    "Attends : la réponse frappe doucement.",  
-    "L’air s’éclaircit ; ça arrive.",  
-    "Ne te presse pas : la forme vient.",  
-    "Regarde : le contour s’allume seul.",  
-    "Retiens ton souffle… tout s’aligne.",  
-    "Tu entends ? Le pas reprend le tempo.",  
-    "Pièce en suspens ; laisse-la tomber.",  
-    "Un pli dans la nuit, puis une fine lumière.",  
-    "Des lampes intérieures s’allument, une à une.",  
-    "Encore un souffle… le fil se tend.",  
-    "La voilà : l’indice manquant.",  
-    "Un souffle, puis l’immobilité.",  
-    "Fais défiler lentement : une porte s’entrouvre.",  
-    "Un oui lointain se rapproche.",  
-    "L’oracle tourne la page… presque."  
-  ],  
-  de: [  
-    "Leise… die Karten wenden sich.",  
-    "Warte: die Antwort klopft sanft.",  
-    "Die Luft klärt sich; es kommt.",  
-    "Nicht eilen: die Form entsteht.",  
-    "Schau: die Kontur leuchtet selbst.",  
-    "Atem halten… die Linien richten sich.",  
-    "Hörst du’s? Der Schritt findet den Takt.",  
-    "Münze in der Luft; lass sie fallen.",  
-    "Ein Faltenwurf der Nacht, dann dünnes Licht.",  
-    "Innere Lichter, eins nach dem andern.",  
-    "Noch ein Atem… der Draht spannt sich.",  
-    "Da ist es: der fehlende Hinweis.",  
-    "Eine Böe, dann Stille.",  
-    "Langsam scrollen: die Tür steht einen Spalt offen.",  
-    "Ein fernes Ja kommt näher.",  
-    "Das Orakel blättert um… fast."  
-  ]  
-};  
-  
-/* ==== UI refs ==== */  
-const qs=(s)=>document.querySelector(s);  
-const subtitle=qs('#subtitle'), lblQ=qs('#lblQ'), lblA=qs('#lblA'), qView=qs('#qView');  
-const answerEl=qs('#answer'), shareBtn=qs('#shareBtn'), againBtn=qs('#againBtn');  
-const saveBtn=qs('#saveBtn');  
-const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct'), bottomPct=qs('#bottomPct');  
-const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');  
-const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');  
-const motNote=qs('#motNote'), creditInfo=qs('#creditInfo'), toastEl=qs('#toast');  
-  
-/* ==== Toast ==== */  
-function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }  
-  
-/* ==== Wallet + legacy + 🎁 Sorprendimi ==== */  
-const WKEY="whatif_wallet";  
-const SURPKEY="whatif_surprise";  
-function readWallet(){ try{ const w=JSON.parse(LS.getItem(WKEY)||"{}")||{}; return {available:Number.isFinite(+w.available)?+w.available:null, used:Number.isFinite(+w.used)?+w.used:null, limit:Number.isFinite(+w.limit)?+w.limit:null}; }catch{return{available:null,used:null,limit:null}}}  
-function writeWallet(w){  
-  const cur=readWallet();  
-  const out={ available:(w.available!=null)?Math.max(0,+w.available):(cur.available??0),  
-              used:(w.used!=null)?Math.max(0,+w.used):(cur.used??0),  
-              limit:(w.limit!=null)?Math.max(0,+w.limit):(cur.limit??0) };  
-  LS.setItem(WKEY, JSON.stringify(out));  
-  LS.setItem("whatif_wallet_sync", String(Date.now()));  
-  updateCreditInfo();  
-}  
-function legacyCap(){ return (prefs.pro===true)?10:3 }  
-function legacyGetLeft(){  
-  const w=readWallet(); if(w.available!=null) return w.available;  
-  try{ const c=JSON.parse(LS.getItem('whatif_credits')||'{}'); const today=new Date().toISOString().slice(0,10); const used=(c.date===today)?(+c.used||0):0; return Math.max(0, legacyCap()-used); }catch{}  
-  const raw=LS.getItem('crediti'); return raw==null? legacyCap() : Math.max(0, parseInt(raw,10)||0);  
-}  
-function legacyConsumeOne(){  
-  try{ const w=readWallet(); if(w.available!=null){ if(w.available<=0) return false; writeWallet({available:w.available-1, used:Math.max(0,(w.used||0)+1), limit:(w.limit!=null?w.limit:legacyCap())}); return true; } }catch{}  
-  try{ const today=new Date().toISOString().slice(0,10); let c=JSON.parse(LS.getItem('whatif_credits')||'{}'); if(c.date!==today) c={date:today,used:0,limit:legacyCap()}; if((c.used||0)>= (c.limit||legacyCap())) return false; c.used=(c.used||0)+1; LS.setItem('whatif_credits', JSON.stringify(c)); return true; }catch{}  
-  let n=parseInt(LS.getItem('crediti')||'0',10)||0; if(n<=0) return false; LS.setItem('crediti', String(Math.max(0,n-1))); return true;  
-}  
-function getAvailable(){ if(IS_ADMIN) return Infinity; const w=readWallet(); return (w.available!=null)?w.available:legacyGetLeft() }  
-function consumeOne(){  
-  if(IS_ADMIN) return true;  
-  const w=readWallet();  
-  if(w.available!=null){  
-    if(w.available<=0) return false;  
-    writeWallet({available:w.available-1, used:Math.max(0,(w.used||0)+1), limit:(w.limit!=null?w.limit:legacyCap())});  
-    return true;  
-  }  
-  return legacyConsumeOne();  
-}  
-function addCredits(n){ n=Math.max(0,parseInt(n,10)||0); if(n<=0) return;  
-  const w=readWallet();  
-  if(w.available==null){ const left=legacyGetLeft(); writeWallet({available:left+n, used:0, limit:legacyCap()}); }  
-  else{ writeWallet({available:(w.available+n), used:Math.max(0,(w.used||0)-n), limit:(w.limit!=null?w.limit:legacyCap())}); }  
-}  
-  
-/* 🎁 Sorprendimi tokens */  
-function readSurprise(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||"0",10)||0); }  
-function writeSurprise(n){ n=Math.max(0, parseInt(n,10)||0); LS.setItem(SURPKEY,String(n)); updateCreditInfo(); LS.setItem("whatif_wallet_sync", String(Date.now())); }  
-function addSurprise(n){ writeSurprise(readSurprise() + Math.max(0,parseInt(n,10)||0)); }  
-function consumeSurpriseOne(){ const cur=readSurprise(); if(cur>0){ writeSurprise(cur-1); return true; } return false; }  
-function computeSurpriseBonus(amount){ const a=parseInt(amount,10)||0; if(a>=20) return 3; if(a>=10) return 2; if(a>=5)  return 1; return 0; }  
-  
-function updateCreditInfo(n=getAvailable()){  
-  if(!creditInfo) return;  
-  const surprise = readSurprise();  
-  creditInfo.textContent = `${t().credits(n===Infinity?'∞':n)} · 🎁 Sorprendimi: ${surprise}`;  
-}  
-window.addEventListener('storage',(e)=>{ if(['whatif_wallet','whatif_wallet_sync','whatif_credits','admin_token','lang','lang_manual',SURPKEY].includes(e.key)){ updateCreditInfo(); }});  
-  
-/* ==== Helpers testo ==== */  
-function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }  
-function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }  
-function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }  
-  
-/* ==== Titles/Text ==== */  
-function applyUI(q){  
-  const T=t();  
-  setText('#title', style==='wtf'?T.titleWTF:T.titleWHF);  
-  subtitle.textContent=T.sub(q||'—'); setText('#lblQ', T.q); setText('#lblA', T.a); setText('#lblP', T.p);  
-  shareBtn.textContent=T.share; againBtn.textContent=T.again; if(saveBtn) saveBtn.textContent=T.save;  
-  styleBadge.textContent=(style==='wtf')?T.styleWTF:T.styleWHF;  
-  setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));  
-  // Nessuna lead phrase qui.  
-}  
-  
-/* ==== Probability & motives ==== */  
-function computeProbability(q){  
-  const t=(q||'').toLowerCase(); let s=50;  
-  if(/\b(7|14|21|30|60|90)\b/.test(t)) s+=12;  
-  if(/\b\d+([.,]\d+)?\b/.test(t)) s+=8;  
-  if(/budget|€|euro|spesa|max|under|sotto/.test(t)) s+=6;  
-  if(/senza|solo|al massimo|minimo|entro|prima delle|ogni|per/.test(t)) s+=8;  
-  if(/lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa/.test(t)) s+=6;  
-  if(/forse|magari|maybe|quizás/.test(t)) s-=8;  
-  if(!/\b\d/.test(t)) s-=6;  
-  s += (style==='wtf' ? -4 : +2);  
-  return {pct: Math.max(25, Math.min(92, Math.round(s)))}  
-}  
-function shortMotivationFromAnswer(txt){  
-  const T=t(); const a=String(txt||'').replace(/\s*\n+\s*/g,' ').trim();  
-  const parts=a.split(/(?<=[.!?…])\s+/).filter(Boolean);  
-  let s=parts.find(x=>/perché|porque|parce que|weil|so|thus|quindi|dunque|se\b|cuando|quand|wenn|when/i.test(x))||parts[0]||'';  
-  s=s.replace(/\s{2,}/g,' ').trim(); if(!/[.!?…]$/.test(s)) s+='.'; if(s.length<24) s=T.motFallback; return s;  
-}  
-function renderCommitteeLike(surprise){  
-  const T=t();  
-  if(surprise){  
-    motIco.style.display=''; chipsWrap.style.display='flex'; committeeTitle.textContent=T.votersTitle||'Comitato';  
-    const r=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;  
-    chipFav.textContent=`${T.chipsFav} ${r(120,1200)}`; chipCon.textContent=`${T.chipsCon} ${r(0,900)}`; chipAst.textContent=`${T.chipsAst} ${r(0,400)}`;  
-    motNote.textContent=(lang==='en')?`Brief tussle at vote: ${r(1,5)} removed; ${r(0,3)} bruised.`:(lang==='es')?`Pequeño lío en la votación: ${r(1,5)} expulsados; ${r(0,3)} contusos.`:(lang==='fr')?`Petit grabuge au vote : ${r(1,5)} évacués ; ${r(0,3)} contusionnés.`:(lang==='de')?`Kurzes Gerangel bei der Abstimmung: ${r(1,5)} entfernt; ${r(0,3)} leicht verletzt.`:`Breve parapiglia al voto: ${r(1,5)} allontanati; ${r(0,3)} contusi.`;  
-  }else{  
-    committeeTitle.textContent = (style==='wtf') ? (t().scientificTitle) : (t().seriousTitle);  
-    motIco.style.display='none'; chipsWrap.style.display='none';  
-  }  
-}  
-  
-/* ==== Overlay (store + rewarded) ==== */  
-const overlay=qs('#overlay'), overlayFrame=qs('#overlay-frame');  
-let overlayLoadTimer=null, rewardTimer=null, rewardGranted=false, awaitingCredit=false, alreadyConsumed=false;  
-function storeFallbackHTML(){  
-  const T=t();  
-  return `  
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">  
-<style>  
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#0B0F14;color:#EAF3EE}  
-.wrap{max-width:520px;margin:auto;padding:16px}  
-.card{background:#141C22;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px;margin-top:10px}  
-h2{margin:4px 0 6px;font-size:18px}  
-.btn{display:inline-block;margin:6px 6px 0 0;padding:10px 12px;border-radius:10px;font-weight:800;border:0;cursor:pointer}  
-.ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}  
-.primary{background:linear-gradient(180deg,#1C57A0,#FFEC01);color:#0A0E12}  
-.small{color:#A0B2BA;font-size:12px;line-height:1.5}  
-.row{display:flex;flex-wrap:wrap;gap:8px}  
-</style></head><body>  <div class="wrap"><div class="card">  
-  <h2>${T.storeTitle}</h2>  
-  <p class="small" style="margin:6px 0 10px;opacity:.85">🛒 ${T.comingSoon} — ${T.buySoonNote}</p>  
-  <p class="small" id="msg">${T.noCredits}</p>  
-  <div class="row">  
-    <button class="btn ghost" id="adBtn">${T.watchAd}</button>  
-    <button class="btn ghost" onclick="parent.postMessage({type:'close_overlay'}, '*')">${T.close}</button>  
-  </div>  
-</div></div>  
-<script>  
-  const btn=document.getElementById('adBtn');  
-  let ticking=false, left=12, iv=0;  
-  btn.onclick=()=>{  
-    if(ticking) return;  
-    ticking=true; btn.disabled=true;  
-    const label=btn.textContent;  
-    iv=setInterval(()=>{  
-      left--; btn.textContent=label+' ('+left+'s)';  
-      if(left<=0){ clearInterval(iv); parent.postMessage({type:'rewarded_completed', amount:1}, '*'); }  
-    },1000);  
-  };  
-<\/script>  
-</body></html>`;  
-}  
-function canWatchAd() {  
-  const today = new Date().toISOString().slice(0,10);  
-  const rec = JSON.parse(localStorage.getItem("ads_today") || "{}");  
-  if (rec.date !== today) return true;  
-  return (rec.count || 0) < 3;  
-}  
-function recordAdWatched() {  
-  const today = new Date().toISOString().slice(0,10);  
-  const rec = JSON.parse(localStorage.getItem("ads_today") || "{}");  
-  if (rec.date !== today) {  
-    localStorage.setItem("ads_today", JSON.stringify({ date: today, count: 1 }));  
-  } else {  
-    localStorage.setItem("ads_today", JSON.stringify({ date: today, count: (rec.count||0) + 1 }));  
-  }  
-}  
-const _origStoreFallbackHTML = storeFallbackHTML;  
-storeFallbackHTML = function(){  
-  const html = _origStoreFallbackHTML();  
-  if (!canWatchAd()) {  
-    return html.replace(  
-      '<button class="btn ghost" id="adBtn">',  
-      '<button class="btn ghost" id="adBtn" disabled title="Limite giornaliero raggiunto">'  
-    ).replace(  
-      'id="msg">',  
-      'id="msg">Hai già ottenuto i crediti gratuiti per oggi. Torna domani.<br><br>'  
-    );  
-  }  
-  return html;  
-};  
-window.addEventListener("message",(ev)=>{  
-  const d=ev.data||{};  
-  if(d.type==="rewarded_completed"){ recordAdWatched(); }  
-});  
-function openOverlay(url){  
-  overlay.style.display='grid';  
-  overlay.setAttribute('aria-hidden','false');  
-  overlayFrame.removeAttribute('srcdoc');  
-  overlayFrame.src='about:blank';  
-  const sep = url.includes('?')?'&':'?';  
-  const finalUrl = `${url}${sep}lang=${encodeURIComponent(lang)}`;  
-  overlayFrame.onload = ()=>{ try{ clearTimeout(overlayLoadTimer); }catch{} };  
-  overlayFrame.onerror= ()=>{ try{ clearTimeout(overlayLoadTimer); }catch{} };  
-  overlayFrame.setAttribute('srcdoc', storeFallbackHTML());  
-  overlayFrame.src = finalUrl;  
-  try{ clearTimeout(overlayLoadTimer); }catch{}  
-  overlayLoadTimer=setTimeout(()=>{ try{ overlayFrame.setAttribute('srcdoc', storeFallbackHTML()); }catch{} },1500);  
-  setTimeout(()=>{ try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang}, '*'); }catch{} }, 400);  
-}  
-function openStore(){ openOverlay("/store/credit-store.html"); }  
-function openRewarded(){  
-  rewardGranted=false;  
-  openOverlay("/ads/rewarded.html");  
-  clearTimeout(rewardTimer);  
-  rewardTimer=setTimeout(()=>{  
-    if(!rewardGranted){  
-      addCredits(1); updateCreditInfo(); toast(t().toastPlus(1));  
-      rewardGranted=true; closeOverlay();  
-      location.replace('fourth.html');  
-    }  
-  },20000);  
-}  
-function closeOverlay(){  
-  overlay.style.display='none';  
-  overlay.setAttribute('aria-hidden','true');  
-  overlayFrame.src='about:blank';  
-  overlayFrame.removeAttribute('srcdoc');  
-  try{ clearTimeout(overlayLoadTimer); }catch{}  
-  try{ clearTimeout(rewardTimer); }catch{}  
-}  /* ==== Top init ==== */
+    <div class="hr"></div>
+    <div class="row">
+      <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
+      <button class="btn ghost" id="saveBtn">⭐ Salva</button>
+      <button class="btn ghost" id="againBtn">🔁 Fai un’altra domanda</button>
+    </div>
+    <p class="small" id="metaInfo"></p>
+  </div>
+</main>
+
+<div id="overlay" aria-hidden="true">
+  <iframe id="overlay-frame" src="about:blank" title="modal"></iframe>
+</div>
+
+<p class="small" id="creditInfo" style="text-align:center;margin:10px 0 24px"></p>
+<div class="toast" id="toast"></div>
+
+<!-- 🔔 audio reveal -->
+<audio id="revealDing" preload="auto">
+  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAA" type="audio/mpeg">
+</audio>
+
+<script>
+/* ==== Base & prefs ==== */
+const LS = localStorage;
+const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
+const style = prefs.stile || 'whatif';
+const periodo = prefs.periodo || 'future';
+const IS_ADMIN = !!LS.getItem('admin_token');
+document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
+
+/* ==== I18N ==== */
+const I18N = {
+  it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
+       sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
+       p:"Esito & motivazioni", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
+       save:"⭐ Salva", savedOk:"✅ Salvata",
+       copied:"Copiato!", error:"[errore server]",
+       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       meta:(st,p)=> st==='wtf'
+        ? `Stile: What the F · 6–9 frasi · paragrafo unico · tono asciutto · modalità: ${p==='past'?'Passato':'Futuro'}.`
+        : `Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`,
+       pctLabel:"% probabilità che accada",
+       votersTitle:"Comitato", seriousTitle:"Motivazione", scientificTitle:"Motivazione (scientifica)",
+       chipsFav:"favorevoli", chipsCon:"contrari", chipsAst:"astenuti",
+       motFallback:"Motivo: benefici concreti a breve, con vincoli gestibili.",
+       credits:(n)=>`💰 Crediti: ${n}`, noCredits:"Hai terminato i crediti.",
+       storeTitle:"Crediti", buy5:"Compra +5 crediti (test)", buy10:"Compra +10 crediti (test)", buy20:"Compra +20 crediti (test)",
+       watchAd:"Guarda pubblicità (+1)", close:"Chiudi",
+       comingSoon:"Prossimamente", buySoonNote:"Acquisto crediti non ancora disponibile.",
+       toastPlus:(n)=>`+${n} credito`, toastMinus:(n)=>`-${n} credito`,
+       guideTitle:"Indicazioni",
+       guideQuick:"Indicazioni rapide",
+       guideAdvice:"Consiglio",
+       guideAnalysis:"Analisi sintetica"
+  },
+  en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
+       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
+       p:"Outcome & rationales", share:"📤 Share / Copy", again:"🔁 Ask another",
+       save:"⭐ Save", savedOk:"✅ Saved",
+       copied:"Copied!", error:"[server error]",
+       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       meta:(st,p)=> st==='wtf'
+        ? `Style: What the F · 6–9 sentences · single paragraph · dry tone · mode: ${p==='past'?'Past':'Future'}.`
+        : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,
+       pctLabel:"% probability it happens",
+       votersTitle:"Committee", seriousTitle:"Rationale", scientificTitle:"Rationale (scientific)",
+       chipsFav:"in favour", chipsCon:"against", chipsAst:"abstained",
+       motFallback:"Reason: short-term, concrete benefits with manageable constraints.",
+       credits:(n)=>`💰 Credits: ${n}`, noCredits:"You ran out of credits.",
+       storeTitle:"Credits", buy5:"Buy +5 credits (test)", buy10:"Buy +10 credits (test)", buy20:"Buy +20 credits (test)",
+       watchAd:"Watch ad (+1)", close:"Close",
+       comingSoon:"Coming soon", buySoonNote:"Credit purchases not available yet.",
+       toastPlus:(n)=>`+${n} credit`,  toastMinus:(n)=>`-${n} credit`,
+       guideTitle:"Guidance",
+       guideQuick:"Quick tips",
+       guideAdvice:"Advice",
+       guideAnalysis:"Concise analysis"
+  },
+  es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
+       sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
+       p:"Resultado y razones", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra",
+       save:"⭐ Guardar", savedOk:"✅ Guardada",
+       copied:"¡Copiado!", error:"[error del servidor]",
+       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       meta:(st,p)=> st==='wtf'
+        ? `Estilo: What the F · 6–9 frases · un párrafo · tono seco · modo: ${p==='past'?'Pasado':'Futuro'}.`
+        : `Estilo: What if (60% análisis, 40% real) · 8–11 frases · un párrafo · modo: ${p==='past'?'Pasado':'Futuro'}.`,
+       pctLabel:"% probabilidad de que ocurra",
+       votersTitle:"Comité", seriousTitle:"Motivo", scientificTitle:"Motivo (científico)",
+       chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones",
+       motFallback:"Motivo: beneficios concretos a corto plazo con límites manejables.",
+       credits:(n)=>`💰 Créditos: ${n}`, noCredits:"Se te han acabado los créditos.",
+       storeTitle:"Créditos", buy5:"Comprar +5 créditos (test)", buy10:"Comprar +10 créditos (test)", buy20:"Comprar +20 créditos (test)",
+       watchAd:"Ver anuncio (+1)", close:"Cerrar",
+       comingSoon:"Próximamente", buySoonNote:"La compra de créditos aún no está disponible.",
+       toastPlus:(n)=>`+${n} crédito`,  toastMinus:(n)=>`-${n} crédito`,
+       guideTitle:"Guía",
+       guideQuick:"Indicaciones rápidas",
+       guideAdvice:"Consejo",
+       guideAnalysis:"Análisis sintético"
+  },
+  fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
+       sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
+       p:"Issue & motivations", share:"📤 Partager / Copier", again:"🔁 Poser une autre",
+       save:"⭐ Enregistrer", savedOk:"✅ Enregistrée",
+       copied:"Copié !", error:"[erreur serveur]",
+       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       meta:(st,p)=> st==='wtf'
+        ? `Style : What the F · 6–9 phrases · un paragraphe · ton sec · mode : ${p==='past'?'Passé':'Futur'}.`
+        : `Style : What if (60 % analyse, 40 % réel) · 8–11 phrases · un paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`,
+       pctLabel:"% de probabilité que ça arrive",
+       votersTitle:"Comité", seriousTitle:"Motivation", scientificTitle:"Motivation (scientifique)",
+       chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions",
+       motFallback:"Raison : bénéfices concrets à court terme, contraintes gérables.",
+       credits:(n)=>`💰 Crédits : ${n}`, noCredits:"Crédits épuisés.",
+       storeTitle:"Crédits", buy5:"Acheter +5 crédits (test)", buy10:"Acheter +10 crédits (test)", buy20:"Acheter +20 crédits (test)",
+       watchAd:"Regarder une pub (+1)", close:"Fermer",
+       comingSoon:"Bientôt", buySoonNote:"Achat de crédits pas encore disponible.",
+       toastPlus:(n)=>`+${n} crédit`,  toastMinus:(n)=>`-${n} crédit`,
+       guideTitle:"Conseils",
+       guideQuick:"Conseils rapides",
+       guideAdvice:"Suggestion",
+       guideAnalysis:"Analyse concise"
+  },
+  de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
+       sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
+       p:"Ergebnis & Begründungen", share:"📤 Teilen / Kopieren", again:"🔁 Neue Frage",
+       save:"⭐ Speichern", savedOk:"✅ Gespeichert",
+       copied:"Kopiert!", error:"[Serverfehler]",
+       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       meta:(st,p)=> st==='wtf'
+        ? `Stil: What the F · 6–9 Sätze · ein Absatz · trockener Ton · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
+        : `Stil: What if (60 % Analyse, 40 % Praxis) · 8–11 Sätze · ein Absatz · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
+       pctLabel:"% Wahrscheinlichkeit",
+       votersTitle:"Gremium", seriousTitle:"Begründung", scientificTitle:"Begründung (wissenschaftlich)",
+       chipsFav:"dafür", chipsCon:"dagegen", chipsAst:"enthalten",
+       motFallback:"Grund: kurzfristiger, greifbarer Nutzen mit beherrschbaren Einschränkungen.",
+       credits:(n)=>`💰 Credits: ${n}`, noCredits:"Credits aufgebraucht.",
+       storeTitle:"Credits", buy5:"+5 Credits kaufen (Test)", buy10:"+10 Credits kaufen (Test)", buy20:"+20 Credits kaufen (Test)",
+       watchAd:"Werbung ansehen (+1)", close:"Schließen",
+       comingSoon:"Bald verfügbar", buySoonNote:"Kauf von Credits noch nicht verfügbar.",
+       toastPlus:(n)=>`+${n} Credit`,  toastMinus:(n)=>`-${n} Credit`,
+       guideTitle:"Leitfaden",
+       guideQuick:"Schnelle Hinweise",
+       guideAdvice:"Rat",
+       guideAnalysis:"Kurzanalyse"
+  }
+};
+const SUP_LANG=['it','en','es','fr','de'];
+
+/* ======== LINGUA: segui la FOURTH (request.lang o LS.lang) ======== */
+const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
+const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
+const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
+function detectLang(text=''){
+  const t=(text||'').toLowerCase();
+  if(/[¿¡]/.test(t)) return 'es';
+  const bank={
+    it:[" che "," perché"," se "," quando"," dove"," non "," sono "," vorrei"," posso"," e se"," una settimana"," come"],
+    en:[" what "," if "," the "," and "," you "," are "," will "," would "," can "," should "," could "],
+    es:[" qué"," si "," porque"," cuando"," dónde"," no "," soy "," puedo"," quiero","¿"," semana "],
+    fr:[" quoi"," si "," pourquoi"," quand"," où"," pas "," je "," peux"," si je"," et si"],
+    de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
+  };
+  const score={}; for(const L of SUP_LANG){ score[L]=0; (bank[L]||[]).forEach(w=>{ if(t.includes(w)) score[L]++; }); }
+  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
+  if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
+  return best;
+}
+let lang = SUP_LANG.includes(langFromFourth) ? langFromFourth : detectLang(domandaEarly);
+document.documentElement.lang=lang;
+const t=()=>I18N[lang]||I18N.it;
+
+/* ==== System prompts (solo UI) ==== */
+const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
+const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica…`;
+
+/* === ORACLE LINES (solo attesa, nessun lead statico) === */
+const ORACLE_LINES = {
+  it: [
+    "Shh… le carte girano piano.","Aspetta: la risposta bussa sottovoce.","L’aria si fa chiara, sta arrivando.",
+    "Non correre: il disegno prende forma.","Occhio: il quadro si accende da solo.","Silenzio un attimo… qualcosa si allinea.",
+    "Senti? C’è un passo che torna nel ritmo.","Trattieni il fiato: la moneta è a mezz’aria.","Una piega nella notte, poi luce sottile.",
+    "Le luci interne si accendono una alla volta.","Ancora un respiro… il filo si tende.","Eccolo: l’indizio che mancava si mostra.",
+    "Un colpo di vento, poi tutto si ferma.","Scorri piano: la porta sta socchiudendosi.","Si sente un sì lontano, ma si avvicina.",
+    "L’oracolo gira la pagina… quasi."
+  ],
+  en: [
+    "Hush… the cards are turning.","Wait: the answer knocks softly.","Air clears; something is arriving.",
+    "Don’t rush—shape is forming.","Look: the outline lights itself.","Hold a breath… lines align.",
+    "Hear it? A step returns to rhythm.","Coin in mid-air; let it fall.","A fold in the dark, then a thin light.",
+    "Inner lights switch on, one by one.","Another breath… the wire tightens.","There it is: the missing hint.",
+    "A gust, then stillness.","Scroll slowly: a door is ajar.","A distant yes draws nearer.","The oracle turns the page… almost."
+  ],
+  es: [...I18N.es?["Shh… las cartas giran despacio.","Espera: la respuesta toca suave.","El aire se aclara; ya viene.","No corras: la forma aparece.","Mira: el contorno se enciende solo.","Guarda el aliento… todo se alinea.","¿Lo oyes? Vuelve el paso al ritmo.","Moneda en el aire; que caiga.","Un pliegue en la noche, luz fina.","Luces internas, una por una.","Otro respiro… el hilo se tensa.","Ahí está: la pista que faltaba.","Una ráfaga y luego quietud.","Desliza lento: se entorna la puerta.","Un sí lejano se acerca.","El oráculo pasa página… casi."] : []],
+  fr: [...I18N.fr?["Chut… les cartes tournent.","Attends : la réponse frappe doucement.","L’air s’éclaircit ; ça arrive.","Ne te presse pas : la forme vient.","Regarde : le contour s’allume seul.","Retiens ton souffle… tout s’aligne.","Tu entends ? Le pas reprend le tempo.","Pièce en suspens ; laisse-la tomber.","Un pli dans la nuit, puis une fine lumière.","Des lampes intérieures s’allument, une à une.","Encore un souffle… le fil se tend.","La voilà : l’indice manquant.","Un souffle, puis l’immobilité.","Fais défiler lentement : une porte s’entrouvre.","Un oui lointain se rapproche.","L’oracle tourne la page… presque."] : []],
+  de: [...I18N.de?["Leise… die Karten wenden sich.","Warte: die Antwort klopft sanft.","Die Luft klärt sich; es kommt.","Nicht eilen: die Form entsteht.","Schau: die Kontur leuchtet selbst.","Atem halten… die Linien richten sich.","Hörst du’s? Der Schritt findet den Takt.","Münze in der Luft; lass sie fallen.","Ein Faltenwurf der Nacht, dann dünnes Licht.","Innere Lichter, eins nach dem andern.","Noch ein Atem… der Draht spannt sich.","Da ist es: der fehlende Hinweis.","Eine Böe, dann Stille.","Langsam scrollen: die Tür steht einen Spalt offen.","Ein fernes Ja kommt näher.","Das Orakel blättert um… fast."] : []]
+};
+
+/* ==== UI refs ==== */
+const qs=(s)=>document.querySelector(s);
+const subtitle=qs('#subtitle'), lblQ=qs('#lblQ'), lblA=qs('#lblA'), qView=qs('#qView');
+const answerEl=qs('#answer'), shareBtn=qs('#shareBtn'), againBtn=qs('#againBtn');
+const saveBtn=qs('#saveBtn');
+const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct'), bottomPct=qs('#bottomPct');
+const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
+const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
+const motNote=qs('#motNote'), creditInfo=qs('#creditInfo'), toastEl=qs('#toast');
+
+/* ==== Toast ==== */
+function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
+
+/* ==== Wallet + legacy + 🎁 Sorprendimi ==== */
+const WKEY="whatif_wallet";
+const SURPKEY="whatif_surprise";
+function readWallet(){ try{ const w=JSON.parse(LS.getItem(WKEY)||"{}")||{}; return {available:Number.isFinite(+w.available)?+w.available:null, used:Number.isFinite(+w.used)?+w.used:null, limit:Number.isFinite(+w.limit)?+w.limit:null}; }catch{return{available:null,used:null,limit:null}}}
+function writeWallet(w){
+  const cur=readWallet();
+  const out={ available:(w.available!=null)?Math.max(0,+w.available):(cur.available??0),
+              used:(w.used!=null)?Math.max(0,+w.used):(cur.used??0),
+              limit:(w.limit!=null)?Math.max(0,+w.limit):(cur.limit??0) };
+  LS.setItem(WKEY, JSON.stringify(out));
+  LS.setItem("whatif_wallet_sync", String(Date.now()));
+  updateCreditInfo();
+}
+function legacyCap(){ return (prefs.pro===true)?10:3 }
+function legacyGetLeft(){
+  const w=readWallet(); if(w.available!=null) return w.available;
+  try{ const c=JSON.parse(LS.getItem('whatif_credits')||'{}'); const today=new Date().toISOString().slice(0,10); const used=(c.date===today)?(+c.used||0):0; return Math.max(0, legacyCap()-used); }catch{}
+  const raw=LS.getItem('crediti'); return raw==null? legacyCap() : Math.max(0, parseInt(raw,10)||0);
+}
+function legacyConsumeOne(){
+  try{ const w=readWallet(); if(w.available!=null){ if(w.available<=0) return false; writeWallet({available:w.available-1, used:Math.max(0,(w.used||0)+1), limit:(w.limit!=null?w.limit:legacyCap())}); return true; } }catch{}
+  try{ const today=new Date().toISOString().slice(0,10); let c=JSON.parse(LS.getItem('whatif_credits')||'{}'); if(c.date!==today) c={date:today,used:0,limit:legacyCap()}; if((c.used||0)>= (c.limit||legacyCap())) return false; c.used=(c.used||0)+1; LS.setItem('whatif_credits', JSON.stringify(c)); return true; }catch{}
+  let n=parseInt(LS.getItem('crediti')||'0',10)||0; if(n<=0) return false; LS.setItem('crediti', String(Math.max(0,n-1))); return true;
+}
+function getAvailable(){ if(IS_ADMIN) return Infinity; const w=readWallet(); return (w.available!=null)?w.available:legacyGetLeft() }
+function consumeOne(){
+  if(IS_ADMIN) return true;
+  const w=readWallet();
+  if(w.available!=null){
+    if(w.available<=0) return false;
+    writeWallet({available:w.available-1, used:Math.max(0,(w.used||0)+1), limit:(w.limit!=null?w.limit:legacyCap())});
+    return true;
+  }
+  return legacyConsumeOne();
+}
+function addCredits(n){ n=Math.max(0,parseInt(n,10)||0); if(n<=0) return;
+  const w=readWallet();
+  if(w.available==null){ const left=legacyGetLeft(); writeWallet({available:left+n, used:0, limit:legacyCap()}); }
+  else{ writeWallet({available:(w.available+n), used:Math.max(0,(w.used||0)-n), limit:(w.limit!=null?w.limit:legacyCap())}); }
+}
+
+/* 🎁 Sorprendimi tokens */
+function readSurprise(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||"0",10)||0); }
+function writeSurprise(n){ n=Math.max(0, parseInt(n,10)||0); LS.setItem(SURPKEY,String(n)); updateCreditInfo(); LS.setItem("whatif_wallet_sync", String(Date.now())); }
+function addSurprise(n){ writeSurprise(readSurprise() + Math.max(0,parseInt(n,10)||0)); }
+function consumeSurpriseOne(){ const cur=readSurprise(); if(cur>0){ writeSurprise(cur-1); return true; } return false; }
+function computeSurpriseBonus(amount){ const a=parseInt(amount,10)||0; if(a>=20) return 3; if(a>=10) return 2; if(a>=5)  return 1; return 0; }
+
+function updateCreditInfo(n=getAvailable()){
+  if(!creditInfo) return;
+  const surprise = readSurprise();
+  creditInfo.textContent = `${t().credits(n===Infinity?'∞':n)} · 🎁 Sorprendimi: ${surprise}`;
+}
+window.addEventListener('storage',(e)=>{ if(['whatif_wallet','whatif_wallet_sync','whatif_credits','admin_token','lang','lang_manual',SURPKEY].includes(e.key)){ updateCreditInfo(); }});
+
+/* ==== Helpers testo ==== */
+function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
+function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
+function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
+
+/* ==== Titles/Text ==== */
+function applyUI(q){
+  const T=t();
+  setText('#title', style==='wtf'?T.titleWTF:T.titleWHF);
+  subtitle.textContent=T.sub(q||'—'); setText('#lblQ', T.q); setText('#lblA', T.a); setText('#lblP', T.p);
+  shareBtn.textContent=T.share; againBtn.textContent=T.again; if(saveBtn) saveBtn.textContent=T.save;
+  styleBadge.textContent=(style==='wtf')?T.styleWTF:T.styleWHF;
+  setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));
+}
+
+/* ==== Probability & motives ==== */
+function computeProbability(q){
+  const t=(q||'').toLowerCase(); let s=50;
+  if(/\b(7|14|21|30|60|90)\b/.test(t)) s+=12;
+  if(/\b\d+([.,]\d+)?\b/.test(t)) s+=8;
+  if(/budget|€|euro|spesa|max|under|sotto/.test(t)) s+=6;
+  if(/senza|solo|al massimo|minimo|entro|prima delle|ogni|per/.test(t)) s+=8;
+  if(/lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa/.test(t)) s+=6;
+  if(/forse|magari|maybe|quizás/.test(t)) s-=8;
+  if(!/\b\d/.test(t)) s-=6;
+  s += (style==='wtf' ? -4 : +2);
+  return {pct: Math.max(25, Math.min(92, Math.round(s)))}
+}
+
+/* === ORACLE helpers: mazzo senza ripetizioni + timing irregolare === */
+let oracleDeck = [];
+let oracleTimerId = null;
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+function buildOracleDeck(){
+  const base = (ORACLE_LINES[lang] || ORACLE_LINES.it).slice();
+  const tails = ["", " …", " ⋯", " —", " ⸺", " …sssh."];
+  const deck = [];
+  for(const line of base){
+    const v = Math.random()<0.45 ? (line.replace(/\.$/,"") + tails[Math.floor(Math.random()*tails.length)]) : line;
+    deck.push(v);
+  }
+  return shuffle(deck);
+}
+function nextOracleLine(){
+  if(oracleDeck.length===0) oracleDeck = buildOracleDeck();
+  return oracleDeck.pop();
+}
+function startOracleLoading(){
+  document.body.classList.add('loading');
+  const lineEl = document.getElementById('oracleLine');
+  const tick = ()=>{
+    lineEl.textContent = nextOracleLine();
+    const jitter = 1200 + Math.floor(Math.random()*1000); // 1200–2200ms
+    oracleTimerId = setTimeout(tick, jitter);
+  };
+  tick();
+}
+function stopOracleLoading(){
+  document.body.classList.remove('loading');
+  clearTimeout(oracleTimerId); oracleTimerId=null;
+  const lineEl = document.getElementById('oracleLine');
+  setTimeout(()=>{ if(lineEl) lineEl.textContent = " "; }, 350);
+}
+function revealEffect(){
+  const wrap = document.querySelector('.oracle-wrap');
+  if(!wrap) return;
+  wrap.classList.add('reveal');
+  try{ document.getElementById('revealDing')?.play().catch(()=>{}); }catch{}
+  setTimeout(()=> wrap.classList.remove('reveal'), 900);
+}
+
+/* ===== WHAT IF (non-surprise): SOLO parte diretta (3 righe) ===== */
+function buildDirectPack(domanda, data){
+  const T=t();
+  // prova a usare i campi dell'API se presenti
+  const quick = (data && (data.quick||data.guide||data.tip)) || null;
+  const advice = (data && (data.advice||data.suggestion)) || null;
+  const analysis = (data && (data.analysis||data.summary)) || null;
+
+  // fallback semplici, concisi e localizzati
+  function inferTopic(q){
+    const s=(q||"").toLowerCase();
+    if(/tempo|scadenza|quando|settimana|mese|orari|time/.test(s)) return {it:"tempo",en:"time",es:"tiempo",fr:"temps",de:"Zeit"}[lang]||"tempo";
+    if(/soldi|budget|euro|€|spesa|costo|prezzo|budget/.test(s)) return "budget";
+    if(/lavor|job|colloquio|cv|impiego|work/.test(s)) return {it:"lavoro",en:"work",es:"trabajo",fr:"travail",de:"Arbeit"}[lang]||"lavoro";
+    if(/amore|relaz|partner|fidanz|matrimonio|love/.test(s)) return {it:"relazioni",en:"relationships",es:"relaciones",fr:"relations",de:"Beziehungen"}[lang]||"relazioni";
+    if(/studio|esame|impara|corso|lezione|study/.test(s)) return {it:"studio",en:"study",es:"estudio",fr:"étude",de:"Studium"}[lang]||"studio";
+    return {it:"azione",en:"action",es:"acción",fr:"action",de:"Aktion"}[lang]||"azione";
+  }
+  const topic = inferTopic(domanda);
+
+  const packs = {
+    it:{
+      quick: quick || `Blocca 10′ oggi su **${topic}**: primo passo ora, verifica tra 3 giorni.`,
+      advice: advice || `Metti in calendario un micro-obiettivo misurabile (MVP di 30′) entro 72h.`,
+      analysis: analysis || `Riduci attrito: una sola decisione, un solo strumento, feedback visibile in 24h.`
+    },
+    en:{
+      quick: quick || `Block 10′ today on **${topic}**: first step now, check-in in 3 days.`,
+      advice: advice || `Schedule a measurable micro-goal (30′ MVP) within 72h.`,
+      analysis: analysis || `Lower friction: one decision, one tool, visible feedback within 24h.`
+    },
+    es:{
+      quick: quick || `Reserva 10′ hoy para **${topic}**: primer paso ahora, revisión en 3 días.`,
+      advice: advice || `Agenda un micro-objetivo medible (MVP de 30′) en 72h.`,
+      analysis: analysis || `Reduce fricción: una decisión, una herramienta, feedback visible en 24h.`
+    },
+    fr:{
+      quick: quick || `Bloque 10′ aujourd’hui sur **${topic}** : premier pas maintenant, point dans 3 jours.`,
+      advice: advice || `Planifie un micro-objectif mesurable (MVP 30′) sous 72h.`,
+      analysis: analysis || `Réduis la friction : une décision, un outil, retour visible en 24h.`
+    },
+    de:{
+      quick: quick || `Blocke heute 10′ für **${topic}**: erster Schritt jetzt, Check-in in 3 Tagen.`,
+      advice: advice || `Plane ein messbares Mikro-Ziel (30′ MVP) in 72h.`,
+      analysis: analysis || `Reibung senken: eine Entscheidung, ein Tool, sichtbares Feedback in 24h.`
+    }
+  };
+  return packs[lang] || packs.it;
+}
+
+/* ==== Overlay (store + rewarded) ==== */
+/*  ———  Sezione pubblicità lasciata IDENTICA al tuo  ——— */
+const overlay=qs('#overlay'), overlayFrame=qs('#overlay-frame');
+let overlayLoadTimer=null, rewardTimer=null, rewardGranted=false, awaitingCredit=false, alreadyConsumed=false;
+function storeFallbackHTML(){
+  const T=t();
+  return `
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#0B0F14;color:#EAF3EE}
+.wrap{max-width:520px;margin:auto;padding:16px}
+.card{background:#141C22;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px;margin-top:10px}
+h2{margin:4px 0 6px;font-size:18px}
+.btn{display:inline-block;margin:6px 6px 0 0;padding:10px 12px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
+.ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
+.primary{background:linear-gradient(180deg,#1C57A0,#FFEC01);color:#0A0E12}
+.small{color:#A0B2BA;font-size:12px;line-height:1.5}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+</style></head><body>
+<div class="wrap"><div class="card">
+  <h2>${T.storeTitle}</h2>
+  <p class="small" style="margin:6px 0 10px;opacity:.85">🛒 ${T.comingSoon} — ${T.buySoonNote}</p>
+  <p class="small" id="msg">${T.noCredits}</p>
+  <div class="row">
+    <button class="btn ghost" id="adBtn">${T.watchAd}</button>
+    <button class="btn ghost" onclick="parent.postMessage({type:'close_overlay'}, '*')">${T.close}</button>
+  </div>
+</div></div>
+<script>
+  const btn=document.getElementById('adBtn');
+  let ticking=false, left=12, iv=0;
+  btn.onclick=()=>{
+    if(ticking) return;
+    ticking=true; btn.disabled=true;
+    const label=btn.textContent;
+    iv=setInterval(()=>{
+      left--; btn.textContent=label+' ('+left+'s)';
+      if(left<=0){ clearInterval(iv); parent.postMessage({type:'rewarded_completed', amount:1}, '*'); }
+    },1000);
+  };
+<\/script>
+</body></html>`;
+}
+function canWatchAd() {
+  const today = new Date().toISOString().slice(0,10);
+  const rec = JSON.parse(localStorage.getItem("ads_today") || "{}");
+  if (rec.date !== today) return true;
+  return (rec.count || 0) < 3;
+}
+function recordAdWatched() {
+  const today = new Date().toISOString().slice(0,10);
+  const rec = JSON.parse(localStorage.getItem("ads_today") || "{}");
+  if (rec.date !== today) {
+    localStorage.setItem("ads_today", JSON.stringify({ date: today, count: 1 }));
+  } else {
+    localStorage.setItem("ads_today", JSON.stringify({ date: today, count: (rec.count||0) + 1 }));
+  }
+}
+const _origStoreFallbackHTML = storeFallbackHTML;
+storeFallbackHTML = function(){
+  const html = _origStoreFallbackHTML();
+  if (!canWatchAd()) {
+    return html.replace(
+      '<button class="btn ghost" id="adBtn">',
+      '<button class="btn ghost" id="adBtn" disabled title="Limite giornaliero raggiunto">'
+    ).replace(
+      'id="msg">',
+      'id="msg">Hai già ottenuto i crediti gratuiti per oggi. Torna domani.<br><br>'
+    );
+  }
+  return html;
+};
+window.addEventListener("message",(ev)=>{
+  const d=ev.data||{};
+  if(d.type==="rewarded_completed"){ recordAdWatched(); }
+});
+function openOverlay(url){
+  overlay.style.display='grid';
+  overlay.setAttribute('aria-hidden','false');
+  overlayFrame.removeAttribute('srcdoc');
+  overlayFrame.src='about:blank';
+  const sep = url.includes('?')?'&':'?';
+  const finalUrl = `${url}${sep}lang=${encodeURIComponent(lang)}`;
+  overlayFrame.onload = ()=>{ try{ clearTimeout(overlayLoadTimer); }catch{} };
+  overlayFrame.onerror= ()=>{ try{ clearTimeout(overlayLoadTimer); }catch{} };
+  overlayFrame.setAttribute('srcdoc', storeFallbackHTML());
+  overlayFrame.src = finalUrl;
+  try{ clearTimeout(overlayLoadTimer); }catch{}
+  overlayLoadTimer=setTimeout(()=>{ try{ overlayFrame.setAttribute('srcdoc', storeFallbackHTML()); }catch{} },1500);
+  setTimeout(()=>{ try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang}, '*'); }catch{} }, 400);
+}
+function openStore(){ openOverlay("/store/credit-store.html"); }
+function openRewarded(){
+  rewardGranted=false;
+  openOverlay("/ads/rewarded.html");
+  clearTimeout(rewardTimer);
+  rewardTimer=setTimeout(()=>{
+    if(!rewardGranted){
+      addCredits(1); updateCreditInfo(); toast(t().toastPlus(1));
+      rewardGranted=true; closeOverlay();
+      location.replace('fourth.html');
+    }
+  },20000);
+}
+function closeOverlay(){
+  overlay.style.display='none';
+  overlay.setAttribute('aria-hidden','true');
+  overlayFrame.src='about:blank';
+  overlayFrame.removeAttribute('srcdoc');
+  try{ clearTimeout(overlayLoadTimer); }catch{}
+  try{ clearTimeout(rewardTimer); }catch{}
+}
+
+/* ==== Top init ==== */
 (function initTop(){
-  const hasToken=!!LS.getItem('admin_token');
-  if(hasToken || prefs.pro===true){
-    const el=qs('#proBadge'); el.style.display='inline-flex';
-    el.textContent='🧪 TEST · ⭐ PRO';
-    el.title = {en:'Test mode active',es:'Modo de prueba activo',fr:'Mode test actif',de:'Testmodus aktiv'}[lang] || 'Modalità test attiva';
-  }
-  qs('#langSelect').value=lang;
+  const hasToken=!!LS.getItem('admin_token');
+  if(hasToken || prefs.pro===true){
+    const el=qs('#proBadge'); el.style.display='inline-flex';
+    el.textContent='🧪 TEST · ⭐ PRO';
+    el.title = {en:'Test mode active',es:'Modo de prueba activo',fr:'Mode test actif',de:'Testmodus aktiv'}[lang] || 'Modalità test attiva';
+  }
+  qs('#langSelect').value=lang;
 })();
 
 /* ==== Question & UI load ==== */
 function applyQuestion(){
-  const req=JSON.parse(LS.getItem('whatif_request')||'{}');
-  const domanda=req.domanda || LS.getItem('domanda') || '';
-  applyUI(domanda);
-  qView.textContent = domanda || '—';
-  const surprise = (new URLSearchParams(location.search)).get('src')==='surprise'
-                   || req?.surprise===true || req?.micro?.surprise===true
-                   || LS.getItem('surprise_mode')==='1';
-  return {req, domanda, surprise};
+  const req=JSON.parse(LS.getItem('whatif_request')||'{}');
+  const domanda=req.domanda || LS.getItem('domanda') || '';
+  applyUI(domanda);
+  qView.textContent = domanda || '—';
+  const surprise = (new URLSearchParams(location.search)).get('src')==='surprise'
+                   || req?.surprise===true || req?.micro?.surprise===true
+                   || LS.getItem('surprise_mode')==='1';
+  return {req, domanda, surprise};
 }
 
-/* === ORACLE helpers: mazzo senza ripetizioni + timing irregolare === /
-let oracleDeck = [];
-let oracleTimerId = null;
-function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
-function buildOracleDeck(){
-  const base = (ORACLE_LINES[lang] || ORACLE_LINES.it).slice();
-  const tails = ["", " …", " ⋯", " —", " ⸺", " …sssh."];
-  const deck = [];
-  for(const line of base){
-    const v = Math.random()<0.45 ? (line.replace(/.$/,"") + tails[Math.floor(Math.random()*tails.length)]) : line;
-    deck.push(v);
-  }
-  return shuffle(deck);
-}
-function nextOracleLine(){
-  if(oracleDeck.length===0) oracleDeck = buildOracleDeck();
-  return oracleDeck.pop();
-}
-function startOracleLoading(){
-  document.body.classList.add('loading');
-  const lineEl = document.getElementById('oracleLine');
-  const tick = ()=>{
-    lineEl.textContent = nextOracleLine();
-    const jitter = 1200 + Math.floor(Math.random()*1000); // 1200–2200ms
-    oracleTimerId = setTimeout(tick, jitter);
-  };
-  tick();
-}
-function stopOracleLoading(){
-  document.body.classList.remove('loading');
-  clearTimeout(oracleTimerId); oracleTimerId=null;
-  const lineEl = document.getElementById('oracleLine');
-  setTimeout(()=>{ if(lineEl) lineEl.textContent = " "; }, 350);
-}
-function revealEffect(){
-  const wrap = document.querySelector('.oracle-wrap');
-  if(!wrap) return;
-  wrap.classList.add('reveal');
-  try{ document.getElementById('revealDing')?.play().catch(()=>{}); }catch{}
-  setTimeout(()=> wrap.classList.remove('reveal'), 900);
-}
-
-/* ==== Salvataggio domanda per fourth ====
-   Scrive su localStorage key: 'next_prompts'
-   Formato: [{ q:string, ts:number }, …] (max 50, unshift) */
+/* ==== Salvataggio domanda per fourth ==== */
 function saveCurrentQuestion(){
-  const domanda = (LS.getItem('domanda') || '').trim();
-  if(!domanda) return;
-  let arr=[];
-  try{ arr = JSON.parse(LS.getItem('next_prompts')||'[]'); if(!Array.isArray(arr)) arr=[]; }catch{ arr=[]; }
-  // Evita duplicati consecutivi identici
-  if(arr[0] && (arr[0].q||'') === domanda){ toast(t().savedOk); return; }
-  arr.unshift({ q: domanda, ts: Date.now() });
-  if(arr.length>50) arr = arr.slice(0,50);
-  LS.setItem('next_prompts', JSON.stringify(arr));
-  // segnale per altre tab
-  LS.setItem('whatif_wallet_sync', String(Date.now()));
-  toast(t().savedOk);
+  const domanda = (LS.getItem('domanda') || '').trim();
+  if(!domanda) return;
+  let arr=[];
+  try{ arr = JSON.parse(LS.getItem('next_prompts')||'[]'); if(!Array.isArray(arr)) arr=[]; }catch{ arr=[]; }
+  if(arr[0] && (arr[0].q||'') === domanda){ toast(t().savedOk); return; }
+  arr.unshift({ q: domanda, ts: Date.now() });
+  if(arr.length>50) arr = arr.slice(0,50);
+  LS.setItem('next_prompts', JSON.stringify(arr));
+  LS.setItem('whatif_wallet_sync', String(Date.now()));
+  toast(t().savedOk);
 }
 
 /* ==== Main flow ==== */
 async function startFlow(){
-  const {req, domanda, surprise} = applyQuestion();
-  updateCreditInfo();
+  const {req, domanda, surprise} = applyQuestion();
+  updateCreditInfo();
 
-  startOracleLoading();
+  startOracleLoading();
 
-  if(!IS_ADMIN && !alreadyConsumed){
-    if(surprise){
-      const okSurp = consumeSurpriseOne();
-      if(okSurp){
-        alreadyConsumed = true;
-        updateCreditInfo();
-        toast('🎁 -1 Sorprendimi');
-      }
-    }
-    if(!alreadyConsumed){
-      const left=getAvailable();
-      if(!(left===Infinity) && left<=0){
-        awaitingCredit=true;
-        stopOracleLoading();
-        answerEl.textContent=t().noCredits;
-        openStore();
-        return;
-      }
-      if(!consumeOne()){
-        awaitingCredit=true;
-        stopOracleLoading();
-        answerEl.textContent=t().noCredits;
-        openStore();
-        return;
-      }
-      alreadyConsumed=true;
-      updateCreditInfo();
-      toast(t().toastMinus(1));
-    }
-  }
+  if(!IS_ADMIN && !alreadyConsumed){
+    if(surprise){
+      const okSurp = consumeSurpriseOne();
+      if(okSurp){
+        alreadyConsumed = true;
+        updateCreditInfo();
+        toast('🎁 -1 Sorprendimi');
+      }
+    }
+    if(!alreadyConsumed){
+      const left=getAvailable();
+      if(!(left===Infinity) && left<=0){
+        awaitingCredit=true;
+        stopOracleLoading();
+        answerEl.textContent=t().noCredits;
+        openStore();
+        return;
+      }
+      if(!consumeOne()){
+        awaitingCredit=true;
+        stopOracleLoading();
+        answerEl.textContent=t().noCredits;
+        openStore();
+        return;
+      }
+      alreadyConsumed=true;
+      updateCreditInfo();
+      toast(t().toastMinus(1));
+    }
+  }
 
-  try{
-    const headers={"Content-Type":"application/json"};
-    if(prefs.pro===true) headers["x-pro"]="1";
-    const adminToken=LS.getItem("admin_token"); if(adminToken) headers["x-admin-token"]=adminToken;
+  try{
+    const headers={"Content-Type":"application/json"};
+    if(prefs.pro===true) headers["x-pro"]="1";
+    const adminToken=LS.getItem("admin_token"); if(adminToken) headers["x-admin-token"]=adminToken;
 
-    const r=await fetch("/api/ask",{
-      method:"POST",headers,
-      body:JSON.stringify({ domanda, lang, stile:style, periodo,
-        system:(style==='wtf'?SYSTEM_WTF:SYSTEM_WHIF), extra:"", micro:req.micro||{} })
-    });
-    const data=await r.json().catch(()=>null);
-    if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
+    const r=await fetch("/api/ask",{
+      method:"POST",headers,
+      body:JSON.stringify({ domanda, lang, stile:style, periodo,
+        system:(style==='wtf'?SYSTEM_WTF:SYSTEM_WHIF), extra:"", micro:req.micro||{} })
+    });
+    const data=await r.json().catch(()=>null);
+    if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
 
-    let answerText=normalizeOneParagraph((data.answer||"").trim());
-    const maxSent=(style==='wtf')?9:11;
-    let parts=answerText.split(/(?<=[.!?…])\s+/);
-    if(parts.length>maxSent) parts=parts.slice(0,maxSent);
-    answerText=parts.join(" ").trim();
-    if(!/[.!?…]$/.test(answerText)) answerText+='.';
-    answerEl.textContent=answerText; decorateEmBits(answerEl);
+    let answerText=normalizeOneParagraph((data.answer||"").trim());
+    const maxSent=(style==='wtf')?9:11;
+    let parts=answerText.split(/(?<=[.!?…])\s+/);
+    if(parts.length>maxSent) parts=parts.slice(0,maxSent);
+    answerText=parts.join(" ").trim();
+    if(!/[.!?…]$/.test(answerText)) answerText+='.';
+    answerEl.textContent=answerText; decorateEmBits(answerEl);
 
-    stopOracleLoading();
-    revealEffect();
+    stopOracleLoading();
+    revealEffect();
 
-    const apiPct = (data && Number.isFinite(+data.pct)) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : null;
-    const usedPct = (apiPct!=null) ? apiPct : computeProbability(domanda).pct;
-    const pStr = usedPct + "%";
-    topPct.textContent = pStr;
-    bottomPct.textContent = pStr;
+    const apiPct = (data && Number.isFinite(+data.pct)) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : null;
+    const usedPct = (apiPct!=null) ? apiPct : computeProbability(domanda).pct;
+    const pStr = usedPct + "%";
+    topPct.textContent = pStr;
+    bottomPct.textContent = pStr;
 
-    function scientificFallback(langCode){
-      return (langCode==='en')
-        ? "Scientific note: small, consistent steps beat sporadic big efforts (habits > willpower). Switching costs explain early friction; feedback loops and simple metrics sustain momentum."
-        : "Nota scientifica: i piccoli passi consistenti vincono sui grandi sforzi saltuari (abitudini > forza di volontà). I costi di switch spiegano l’attrito iniziale; cicli di feedback e metriche semplici sostengono lo slancio.";
-    }
+    function scientificFallback(langCode){
+      return (langCode==='en')
+        ? "Scientific note: small, consistent steps beat sporadic big efforts (habits > willpower). Switching costs explain early friction; feedback loops and simple metrics sustain momentum."
+        : "Nota scientifica: i piccoli passi consistenti vincono sui grandi sforzi saltuari (abitudini > forza di volontà). I costi di switch spiegano l’attrito iniziale; cicli di feedback e metriche semplici sostengono lo slancio.";
+    }
 
-    let motivazioneUsata = "";
-    if (surprise) {
-      renderCommitteeLike(true);
-    } else {
-      renderCommitteeLike(false);
-      if (style === 'whatif') {
-        const mot = (data && data.motivation) ? String(data.motivation).trim()
-                    : shortMotivationFromAnswer(answerText);
-        motNote.textContent = mot;
-        motivazioneUsata = mot;
-      } else {
-        const sci = (data && data.scientific) ? String(data.scientific).trim()
-                    : scientificFallback(lang);
-        motNote.textContent = sci;
-        motivazioneUsata = sci;
-      }
-    }
+    let motivazioneUsata = "";
+    if (surprise) {
+      // Surprise -> ironica/committee (invariata)
+      motIco.style.display=''; chipsWrap.style.display='flex';
+      committeeTitle.textContent=t().votersTitle||'Comitato';
+      const rdm=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+      chipFav.textContent=`${t().chipsFav} ${rdm(120,1200)}`; chipCon.textContent=`${t().chipsCon} ${rdm(0,900)}`; chipAst.textContent=`${t().chipsAst} ${rdm(0,400)}`;
+      motNote.textContent=(lang==='en')?`Brief tussle at vote: ${rdm(1,5)} removed; ${rdm(0,3)} bruised.`
+                       :(lang==='es')?`Pequeño lío en la votación: ${rdm(1,5)} expulsados; ${rdm(0,3)} contusos.`
+                       :(lang==='fr')?`Petit grabuge au vote : ${rdm(1,5)} évacués ; ${rdm(0,3)} contusionnés.`
+                       :(lang==='de')?`Kurzes Gerangel bei der Abstimmung: ${rdm(1,5)} entfernt; ${rdm(0,3)} leicht verletzt.`
+                       :`Breve parapiglia al voto: ${rdm(1,5)} allontanati; ${rdm(0,3)} contusi.`;
+      motivazioneUsata = motNote.textContent;
+    } else if (style === 'wtf') {
+      // What the F -> motivazione/scientifica (invariata)
+      motIco.style.display='none'; chipsWrap.style.display='none';
+      committeeTitle.textContent = t().scientificTitle;
+      const sci = (data && data.scientific) ? String(data.scientific).trim() : scientificFallback(lang);
+      motNote.textContent = sci; motivazioneUsata = sci;
+    } else {
+      // WHAT IF (non-surprise) -> SOLO parte diretta in 3 righe
+      motIco.style.display='none'; chipsWrap.style.display='none';
+      committeeTitle.textContent = t().guideTitle;
+      const pack = buildDirectPack(domanda, data||{});
+      // HTML compat nel medesimo DIV note
+      const labels = { quick:t().guideQuick, advice:t().guideAdvice, analysis:t().guideAnalysis };
+      motNote.innerHTML =
+        `<strong>${labels.quick}:</strong> ${pack.quick}<br>`+
+        `<strong>${labels.advice}:</strong> ${pack.advice}<br>`+
+        `<strong>${labels.analysis}:</strong> ${pack.analysis}`;
+      motivazioneUsata = `${labels.quick}: ${pack.quick} | ${labels.advice}: ${pack.advice} | ${labels.analysis}: ${pack.analysis}`;
+    }
 
-    const hist=JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:usedPct, motivazione:motivazioneUsata });
-    LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-  }catch(e){
-    console.error(e);
-    stopOracleLoading();
-    answerEl.textContent=t().error;
-  }
+    const hist=JSON.parse(LS.getItem('cronologia')||'[]');
+    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:usedPct, motivazione:motivazioneUsata });
+    LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
+  }catch(e){
+    console.error(e);
+    stopOracleLoading();
+    answerEl.textContent=t().error;
+  }
 }
 
 /* ==== Messaggi dal modal ==== */
 window.addEventListener("message",(ev)=>{
-  const d=ev.data||{};
-  if(d.type==="purchase_completed"){ return; }
-  if(d.type==="open_rewarded"){ openRewarded(); return; }
-  if(d.type==="rewarded_completed"){
-    const amt=parseInt(d.amount,10)||1;
-    addCredits(amt); updateCreditInfo(); toast(t().toastPlus(amt));
-    rewardGranted=true; try{ clearTimeout(rewardTimer); }catch{}
-    closeOverlay();
-    location.replace('fourth.html');
-    return;
-  }
-  if(d.type==="close_overlay"){
-    closeOverlay();
-    if(getAvailable()>0){ location.replace('fourth.html'); }
-    return;
-  }
+  const d=ev.data||{};
+  if(d.type==="purchase_completed"){ return; }
+  if(d.type==="open_rewarded"){ openRewarded(); return; }
+  if(d.type==="rewarded_completed"){
+    const amt=parseInt(d.amount,10)||1;
+    addCredits(amt); updateCreditInfo(); toast(t().toastPlus(amt));
+    rewardGranted=true; try{ clearTimeout(rewardTimer); }catch{}
+    closeOverlay();
+    location.replace('fourth.html');
+    return;
+  }
+  if(d.type==="close_overlay"){
+    closeOverlay();
+    if(getAvailable()>0){ location.replace('fourth.html'); }
+    return;
+  }
 });
 
-/* ==== Nav / lingua / share / save ==== /
+/* ==== Nav / lingua / share / save ==== */
 qs('#backBtn').onclick=()=> history.length > 1 ? history.back() : location.replace('index.html');
 qs('#homeBtn').onclick=()=> location.href='index.html';
 qs('#langSelect').onchange=()=>{
-  const v=qs('#langSelect').value;
-  LS.setItem('lang',v);
-  LS.setItem('lang_manual','1');
-  document.documentElement.lang=v;
-  lang=v;
-  applyUI(LS.getItem('domanda')||'');
-  updateCreditInfo();
-  try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang:v}, ''); }catch{}
+  const v=qs('#langSelect').value;
+  LS.setItem('lang',v);
+  LS.setItem('lang_manual','1');
+  document.documentElement.lang=v;
+  lang=v;
+  applyUI(LS.getItem('domanda')||'');
+  updateCreditInfo();
+  try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang:v}, '*'); }catch{}
 };
 qs('#shareBtn').onclick=async()=>{
-  const T=t();
-  const full=What?f — ${style==='wtf'?(T.styleWTF):(T.styleWHF)}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent};
-  try{
-    if(navigator.share){ await navigator.share({title:"What?f",text:full}); }
-    else{
-      await navigator.clipboard.writeText(full);
-      const b=qs('#shareBtn'); b.textContent=T.copied; setTimeout(()=>b.textContent=T.share,1200);
-    }
-  }catch{}
+  const T=t();
+  const full=`What?f — ${style==='wtf'?(T.styleWTF):(T.styleWHF)}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
+  try{
+    if(navigator.share){ await navigator.share({title:"What?f",text:full}); }
+    else{
+      await navigator.clipboard.writeText(full);
+      const b=qs('#shareBtn'); b.textContent=T.copied; setTimeout(()=>b.textContent=T.share,1200);
+    }
+  }catch{}
 };
 qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
 if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
@@ -916,6 +926,5 @@ if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
 /* ==== Avvio ==== */
 startFlow();
 </script>
-
-</body>  
+</body>
 </html>
