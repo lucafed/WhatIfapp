@@ -118,7 +118,7 @@ h1{
 .mot .name{display:none}
 .mot .note{font-size:15px;line-height:1.6;color:var(--fg);opacity:.92}
 
-/* Chips */
+/* Chips (usate solo per 'surprise') */
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;opacity:.9}
 .chip{font-size:11px;font-weight:900;padding:3px 7px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)}
 
@@ -153,7 +153,7 @@ h1{
 .orb{
   position:absolute; left:-10px; top:-8px; width:26px; height:26px;
   border-radius:50%;
-  background:radial-gradient(circle at 30% 30%, rgba(255,236,1,.7), rgba(255,236,1,.0) 60%);
+  background:radial-gradient(circle at 30% 30%, rgba(255,236,1,.7), rgba(255,255,1,.0) 60%);
   filter:blur(6px); opacity:.0; transform:scale(.7); pointer-events:none;
   transition:opacity .35s ease, transform .35s ease;
 }
@@ -257,11 +257,11 @@ h1{
 </audio>
 <!-- 🎵 SFX evocativo (what if) -->
 <audio id="sfxWhatIf" preload="auto">
-  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAABAAAA" type="audio/mpeg">
+  <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAABAAAA" type="audio/mpeg">
 </audio>
 <!-- 🥂 Clink (what the f) -->
 <audio id="sfxWtf" preload="auto">
-  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
+  <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
 </audio>
 
 <script>
@@ -393,7 +393,7 @@ const I18N = {
 };
 const SUP_LANG=['it','en','es','fr','de'];
 
-/* ======== LINGUA: segui la FOURTH (request.lang o LS.lang) ======== */
+/* ======== LINGUA: segui FOURTH (request.lang o LS.lang) ======== */
 const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
 const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
@@ -420,50 +420,25 @@ const t=()=>I18N[lang]||I18N.it;
 const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
 const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica…`;
 
-/* === ORACLE LINES (solo attesa, nessun lead statico) === */
+/* === ORACLE LINES (solo attesa) === */
 const ORACLE_LINES = {
-  it: [
-    "Shh… le carte girano piano.","Aspetta: la risposta bussa sottovoce.","L’aria si fa chiara, sta arrivando.",
-    "Non correre: il disegno prende forma.","Occhio: il quadro si accende da solo.","Silenzio un attimo… qualcosa si allinea.",
-    "Senti? C’è un passo che torna nel ritmo.","Trattieni il fiato: la moneta è a mezz’aria.","Una piega nella notte, poi luce sottile.",
-    "Le luci interne si accendono una alla volta.","Ancora un respiro… il filo si tende.","Eccolo: l’indizio che mancava si mostra.",
-    "Un colpo di vento, poi tutto si ferma.","Scorri piano: la porta sta socchiudendosi.","Si sente un sì lontano, ma si avvicina.",
-    "L’oracolo gira la pagina… quasi."
-  ],
-  en: [
-    "Hush… the cards are turning.","Wait: the answer knocks softly.","Air clears; something is arriving.",
-    "Don’t rush—shape is forming.","Look: the outline lights itself.","Hold a breath… lines align.",
-    "Hear it? A step returns to rhythm.","Coin in mid-air; let it fall.","A fold in the dark, then a thin light.",
-    "Inner lights switch on, one by one.","Another breath… the wire tightens.","There it is: the missing hint.",
-    "A gust, then stillness.","Scroll slowly: a door is ajar.","A distant yes draws nearer.","The oracle turns the page… almost."
-  ],
+  it: ["Shh… le carte girano piano.","Aspetta: la risposta bussa sottovoce.","L’aria si fa chiara, sta arrivando.","Non correre: il disegno prende forma.","Occhio: il quadro si accende da solo.","Silenzio un attimo… qualcosa si allinea.","Senti? C’è un passo che torna nel ritmo.","Trattieni il fiato: la moneta è a mezz’aria.","Una piega nella notte, poi luce sottile.","Le luci interne si accendono una alla volta.","Ancora un respiro… il filo si tende.","Eccolo: l’indizio che mancava si mostra.","Un colpo di vento, poi tutto si ferma.","Scorri piano: la porta sta socchiudendosi.","Si sente un sì lontano, ma si avvicina.","L’oracolo gira la pagina… quasi."],
+  en: ["Hush… the cards are turning.","Wait: the answer knocks softly.","Air clears; something is arriving.","Don’t rush—shape is forming.","Look: the outline lights itself.","Hold a breath… lines align.","Hear it? A step returns to rhythm.","Coin in mid-air; let it fall.","A fold in the dark, then a thin light.","Inner lights switch on, one by one.","Another breath… the wire tightens.","There it is: the missing hint.","A gust, then stillness.","Scroll slowly: a door is ajar.","A distant yes draws nearer.","The oracle turns the page… almost."],
   es: ["Shh… las cartas giran despacio.","Espera: la respuesta toca suave.","El aire se aclara; ya viene.","No corras: la forma aparece.","Mira: el contorno se enciende solo.","Guarda el aliento… todo se alinea.","¿Lo oyes? Vuelve el paso al ritmo.","Moneda en el aire; que caiga.","Un pliegue en la noche, luz fina.","Luces internas, una por una.","Otro respiro… el hilo se tensa.","Ahí está: la pista que faltaba.","Una ráfaga y luego quietud.","Desliza lento: se entorna la puerta.","Un sí lejano se acerca.","El oráculo pasa página… casi."],
   fr: ["Chut… les cartes tournent.","Attends : la réponse frappe doucement.","L’air s’éclaircit ; ça arrive.","Ne te presse pas : la forme vient.","Regarde : le contour s’allume seul.","Retiens ton souffle… tout s’aligne.","Tu entends ? Le pas reprend le tempo.","Pièce en suspens ; laisse-la tomber.","Un pli dans la nuit, puis une fine lumière.","Des lampes intérieures s’allument, une à une.","Encore un souffle… le fil se tend.","La voilà : l’indice manquant.","Un souffle, puis l’immobilité.","Fais défiler lentement : une porte s’entrouvre.","Un oui lointain se rapproche.","L’oracle tourne la page… presque."],
   de: ["Leise… die Karten wenden sich.","Warte: die Antwort klopft sanft.","Die Luft klärt sich; es kommt.","Nicht eilen: die Form entsteht.","Schau: die Kontur leuchtet selbst.","Atem halten… die Linien richten sich.","Hörst du’s? Der Schritt findet den Takt.","Münze in der Luft; lass sie fallen.","Ein Faltenwurf der Nacht, dann dünnes Licht.","Innere Lichter, eins nach dem andern.","Noch ein Atem… der Draht spannt sich.","Da ist es: der fehlende Hinweis.","Eine Böe, dann Stille.","Langsam scrollen: die Tür steht einen Spalt offen.","Ein fernes Ja kommt näher.","Das Orakel blättert um… fast."]
 };
 
-/* ==== INTRO (Zoltar-like) per stile & periodo, mostra solo prima volta ===== */
+/* ==== INTRO (Zoltar-like) prima volta ===== */
 const INTRO_KEY = 'whatif_intro_seen_v2';
 const INTRO = {
   whatif: {
-    it: {
-      future: "🜂 La lanterna si accende: chiedi con chiarezza e il futuro si mette in riga.",
-      past:   "🜂 La sabbia si posa: guarda il passato senza nebbia, prendi l’essenza e vai."
-    },
-    en: {
-      future: "🜂 The lamp glows: ask clearly and the future falls into line.",
-      past:   "🜂 The sand settles: read the past plainly, keep the essence, move."
-    }
+    it: {future:"🜂 La lanterna si accende: chiedi con chiarezza e il futuro si mette in riga.", past:"🜂 La sabbia si posa: guarda il passato senza nebbia, prendi l’essenza e vai."},
+    en: {future:"🜂 The lamp glows: ask clearly and the future falls into line.", past:"🜂 The sand settles: read the past plainly, keep the essence, move."}
   },
   wtf: {
-    it: {
-      future: "🥂 Dillo forte, fai spazio: il domani non aspetta i timidi.",
-      past:   "🥂 Chiudi il conto: il passato ha già pagato, tu ordina il prossimo giro."
-    },
-    en: {
-      future: "🥂 Say it loud, make room: tomorrow won’t wait for the shy.",
-      past:   "🥂 Tab’s closed: the past already paid—order the next round."
-    }
+    it: {future:"🥂 Dillo forte, fai spazio: il domani non aspetta i timidi.", past:"🥂 Chiudi il conto: il passato ha già pagato, tu ordina il prossimo giro."},
+    en: {future:"🥂 Say it loud, make room: tomorrow won’t wait for the shy.", past:"🥂 Tab’s closed: the past already paid—order the next round."}
   }
 };
 function showIntroOnce(){
@@ -476,12 +451,7 @@ function showIntroOnce(){
     const line = (periodo==='past') ? L.past : L.future;
     box.textContent = line;
     box.style.display = 'block';
-    // suono
-    try{
-      if(style==='wtf') document.getElementById('sfxWtf')?.play().catch(()=>{});
-      else document.getElementById('sfxWhatIf')?.play().catch(()=>{});
-    }catch{}
-    // segna come visto
+    try{ if(style==='wtf') document.getElementById('sfxWtf')?.play().catch(()=>{}); else document.getElementById('sfxWhatIf')?.play().catch(()=>{}); }catch{}
     LS.setItem(INTRO_KEY,'1');
   }catch{}
 }
@@ -569,7 +539,7 @@ function applyUI(q){
   setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));
 }
 
-/* ==== Probability & motives ==== */
+/* ==== Probability ==== */
 function computeProbability(q){
   const t=(q||'').toLowerCase(); let s=50;
   if(/\b(7|14|21|30|60|90)\b/.test(t)) s+=12;
@@ -583,7 +553,7 @@ function computeProbability(q){
   return {pct: Math.max(25, Math.min(92, Math.round(s)))}
 }
 
-/* === ORACLE helpers: mazzo senza ripetizioni + timing irregolare === */
+/* === ORACLE helpers === */
 let oracleDeck = [];
 let oracleTimerId = null;
 function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
@@ -606,7 +576,7 @@ function startOracleLoading(){
   const lineEl = document.getElementById('oracleLine');
   const tick = ()=>{
     lineEl.textContent = nextOracleLine();
-    const jitter = 1200 + Math.floor(Math.random()*1000); // 1200–2200ms
+    const jitter = 1200 + Math.floor(Math.random()*1000);
     oracleTimerId = setTimeout(tick, jitter);
   };
   tick();
@@ -625,58 +595,51 @@ function revealEffect(){
   setTimeout(()=> wrap.classList.remove('reveal'), 900);
 }
 
-/* ===== WHAT IF (non-surprise): SOLO parte diretta (3 righe) ===== */
-function buildDirectPack(domanda, data){
-  const T=t();
-  const quick = (data && (data.quick||data.guide||data.tip)) || null;
-  const advice = (data && (data.advice||data.suggestion)) || null;
-  const analysis = (data && (data.analysis||data.summary)) || null;
+/* ===== Helpers contestuali per “What if” breve ===== */
+function extractContextParts(q){
+  const s = String(q||"").toLowerCase();
+  const when = (s.match(/\b(in|entro|tra|domani|oggi|stasera|settimana|mese|anno|\d{1,2}\s*(giorni|settimane|mesi))\b/i)||[])[0] || "";
+  const money = (s.match(/(€|euro|budget|spesa|costo|prezzo)\s*([0-9.,]+)/i)||[])[0] || (/\bunder\b/i.test(s)?"under":"");
+  const action = (s.match(/\b(lancia|apri|impara|scrivi|chiedi|studia|automatizza|testa|compra|vendi|assumi|costruisci|crea|ottimizza|riduci|aumenta)\b/i)||[])[0] || "";
+  const topicMatch = s.match(/\b(sito|progetto|app|campagna|cv|colloquio|piscina|dominio|startup|portafoglio|criptovalute?|azione|investimento|esame)\b/i);
+  const topic = topicMatch ? topicMatch[0] : "";
+  return {when, money, action, topic};
+}
 
-  function inferTopic(q){
-    const s=(q||"").toLowerCase();
-    if(/tempo|scadenza|quando|settimana|mese|orari|time/.test(s)) return {it:"tempo",en:"time",es:"tiempo",fr:"temps",de:"Zeit"}[lang]||"tempo";
-    if(/soldi|budget|euro|€|spesa|costo|prezzo|budget/.test(s)) return "budget";
-    if(/lavor|job|colloquio|cv|impiego|work/.test(s)) return {it:"lavoro",en:"work",es:"trabajo",fr:"travail",de:"Arbeit"}[lang]||"lavoro";
-    if(/amore|relaz|partner|fidanz|matrimonio|love/.test(s)) return {it:"relazioni",en:"relationships",es:"relaciones",fr:"relations",de:"Beziehungen"}[lang]||"relazioni";
-    if(/studio|esame|impara|corso|lezione|study/.test(s)) return {it:"studio",en:"study",es:"estudio",fr:"étude",de:"Studium"}[lang]||"studio";
-    return {it:"azione",en:"action",es:"acción",fr:"action",de:"Aktion"}[lang]||"azione";
+/* ===== Motivazione demenziale per WTF (scientifica+zuffa) ===== */
+function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function wtfMotivationDemenziale(langCode){
+  const shots = rnd(1,3), spill = rnd(0,2), bruise = rnd(0,3);
+  if(langCode==='en'){
+    return `Pseudo-science says small daily nudges beat grand plans (Law of Coffee + Inertia). The committee debated over drinks: ${shots} shots vanished, ${spill} glasses spilled, ${bruise} minor bruises; final verdict between hiccups: “do it, and don’t overthink”.`;
   }
-  const topic = inferTopic(domanda);
+  // default IT
+  return `Pseudoscienza spicciola: micro-passi battono i piani epici (Legge del Caffè + Inerzia). La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: “fai, e smettila di pensarci troppo”.`;
+}
 
-  const packs = {
-    it:{
-      quick: quick || `Blocca 10′ oggi su **${topic}**: primo passo ora, verifica tra 3 giorni.`,
-      advice: advice || `Metti in calendario un micro-obiettivo misurabile (MVP di 30′) entro 72h.`,
-      analysis: analysis || `Riduci attrito: una sola decisione, un solo strumento, feedback visibile in 24h.`
-    },
-    en:{
-      quick: quick || `Block 10′ today on **${topic}**: first step now, check-in in 3 days.`,
-      advice: advice || `Schedule a measurable micro-goal (30′ MVP) within 72h.`,
-      analysis: analysis || `Lower friction: one decision, one tool, visible feedback within 24h.`
-    },
-    es:{
-      quick: quick || `Reserva 10′ hoy para **${topic}**: primer paso ahora, revisión en 3 días.`,
-      advice: advice || `Agenda un micro-objetivo medible (MVP de 30′) en 72h.`,
-      analysis: analysis || `Reduce fricción: una decisión, una herramienta, feedback visible en 24h.`
-    },
-    fr:{
-      quick: quick || `Bloque 10′ aujourd’hui sur **${topic}** : premier pas maintenant, point dans 3 jours.`,
-      advice: advice || `Planifie un micro-objectif mesurable (MVP 30′) sous 72h.`,
-      analysis: analysis || `Réduis la friction : une décision, un outil, retour visible en 24h.`
-    },
-    de:{
-      quick: quick || `Blocke heute 10′ für **${topic}**: erster Schritt jetzt, Check-in in 3 Tagen.`,
-      advice: advice || `Plane ein messbares Mikro-Ziel (30′ MVP) in 72h.`,
-      analysis: analysis || `Reibung senken: eine Entscheidung, ein Tool, sichtbares Feedback in 24h.`
-    }
-  };
-  return packs[lang] || packs.it;
+/* ===== Linee “What if” brevi, senza asterischi, contestuali ===== */
+function buildWhatIfGuidance(domanda, data){
+  const ctx = extractContextParts(domanda);
+  // Se l’API fornisce suggerimenti già pronti, usali; altrimenti genera
+  const g1 = (data && (data.quick||data.tip)) || null;
+  const g2 = (data && (data.advice||data.suggestion)) || null;
+  const g3 = (data && (data.analysis||data.summary)) || null;
+
+  if(lang==='en'){
+    const l1 = g1 || `Block 10 minutes ${ctx.when||"today"} for ${ctx.topic||"this"} and do the first step you’ve been avoiding.`;
+    const l2 = g2 || `Write one measurable micro-goal you can finish within ${ctx.when||"72h"} and put it on your calendar.`;
+    const l3 = g3 || `Use one tool only and track one metric${ctx.money?` (budget: ${ctx.money})`:""}; set a check-in in 3 days.`;
+    return [l1,l2,l3];
+  }
+  // IT default
+  const l1 = g1 || `Blocca 10 minuti ${ctx.when||"oggi"} su ${ctx.topic||"il tema"} e chiudi il primo passo che stai rimandando.`;
+  const l2 = g2 || `Scrivi un micro-obiettivo misurabile da chiudere entro ${ctx.when||"72 ore"} e mettilo in calendario.`;
+  const l3 = g3 || `Usa uno strumento solo e una metrica${ctx.money?` (budget: ${ctx.money})`:""}; fai un check tra 3 giorni.`;
+  return [l1,l2,l3];
 }
 
 /* ==== Overlay (store + rewarded) ==== */
-/* DISATTIVATO: banner/ads/store temporaneamente spento */
 const ADS_ENABLED = false;
-
 const overlay=qs('#overlay'), overlayFrame=qs('#overlay-frame');
 let overlayLoadTimer=null, rewardTimer=null, rewardGranted=false, awaitingCredit=false, alreadyConsumed=false;
 
@@ -787,7 +750,7 @@ async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
 
-  // Mostra intro Zoltar-like (prima volta)
+  // Intro Zoltar-like (prima volta)
   showIntroOnce();
 
   startOracleLoading();
@@ -806,7 +769,6 @@ async function startFlow(){
       if(!(left===Infinity) && left<=0){
         stopOracleLoading();
         answerEl.textContent=t().noCredits;
-        // Store disattivato: non aprire overlay
         return;
       }
       if(!consumeOne()){
@@ -850,44 +812,44 @@ async function startFlow(){
     topPct.textContent = pStr;
     bottomPct.textContent = pStr;
 
-    function scientificFallback(langCode){
-      return (langCode==='en')
-        ? "Scientific note: small, consistent steps beat sporadic big efforts (habits > willpower). Switching costs explain early friction; feedback loops and simple metrics sustain momentum."
-        : "Nota scientifica: i piccoli passi consistenti vincono sui grandi sforzi saltuari (abitudini > forza di volontà). I costi di switch spiegano l’attrito iniziale; cicli di feedback e metriche semplici sostengono lo slancio.";
-    }
-
     let motivazioneUsata = "";
     if (surprise) {
+      // Modalità “sorprendimi”: numeri del comitato
       motIco.style.display=''; chipsWrap.style.display='flex';
       committeeTitle.textContent=t().votersTitle||'Comitato';
       const rdm=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-      chipFav.textContent=`${t().chipsFav} ${rdm(120,1200)}`; chipCon.textContent=`${t().chipsCon} ${rdm(0,900)}`; chipAst.textContent=`${t().chipsAst} ${rdm(0,400)}`;
+      chipFav.textContent=`${t().chipsFav} ${rdm(120,1200)}`;
+      chipCon.textContent=`${t().chipsCon} ${rdm(0,900)}`;
+      chipAst.textContent=`${t().chipsAst} ${rdm(0,400)}`;
       motNote.textContent=(lang==='en')?`Brief tussle at vote: ${rdm(1,5)} removed; ${rdm(0,3)} bruised.`
                        :(lang==='es')?`Pequeño lío en la votación: ${rdm(1,5)} expulsados; ${rdm(0,3)} contusos.`
                        :(lang==='fr')?`Petit grabuge au vote : ${rdm(1,5)} évacués ; ${rdm(0,3)} contusionnés.`
                        :(lang==='de')?`Kurzes Gerangel bei der Abstimmung: ${rdm(1,5)} entfernt; ${rdm(0,3)} leicht verletzt.`
                        :`Breve parapiglia al voto: ${rdm(1,5)} allontanati; ${rdm(0,3)} contusi.`;
       motivazioneUsata = motNote.textContent;
+
     } else if (style === 'wtf') {
+      // ✅ WTF: solo motivazione “scientifica” demenziale + zuffa/sbronza (nessun riassunto interno)
       motIco.style.display='none'; chipsWrap.style.display='none';
       committeeTitle.textContent = t().scientificTitle;
-      const sci = (data && data.scientific) ? String(data.scientific).trim() : scientificFallback(lang);
-      motNote.textContent = sci; motivazioneUsata = sci;
+      const sci = wtfMotivationDemenziale(lang);
+      motNote.textContent = sci;
+      motivazioneUsata = sci;
+
     } else {
+      // ✅ WHAT IF: breve, senza asterischi, indicazioni reali e contestuali
       motIco.style.display='none'; chipsWrap.style.display='none';
       committeeTitle.textContent = t().guideTitle;
-      const pack = buildDirectPack(domanda, data||{});
-      const labels = { quick:t().guideQuick, advice:t().guideAdvice, analysis:t().guideAnalysis };
-      motNote.innerHTML =
-        `<strong>${labels.quick}:</strong> ${pack.quick}<br>`+
-        `<strong>${labels.advice}:</strong> ${pack.advice}<br>`+
-        `<strong>${labels.analysis}:</strong> ${pack.analysis}`;
-      motivazioneUsata = `${labels.quick}: ${pack.quick} | ${labels.advice}: ${pack.advice} | ${labels.analysis}: ${pack.analysis}`;
+      const lines = buildWhatIfGuidance(domanda, data||{});
+      // Tre frasi pulite, senza label/bold
+      motNote.innerHTML = `${lines[0]}<br>${lines[1]}<br>${lines[2]}`;
+      motivazioneUsata = lines.join(" | ");
     }
 
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
     hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:usedPct, motivazione:motivazioneUsata });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
+
   }catch(e){
     console.error(e);
     stopOracleLoading();
@@ -906,7 +868,7 @@ qs('#langSelect').onchange=()=>{
   lang=v;
   applyUI(LS.getItem('domanda')||'');
   updateCreditInfo();
-  try{ /* overlay potrebbe non essere attivo */ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang:v}, '*'); }catch{}
+  try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang:v}, '*'); }catch{}
 };
 qs('#shareBtn').onclick=async()=>{
   const T=t();
