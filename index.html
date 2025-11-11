@@ -5,207 +5,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>What?f — Home</title>
 
-  <!-- PWA -->
   <meta name="theme-color" content="#0B0B0C" />
   <link rel="manifest" href="/manifest.json" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/public/icon-192.png" />
+  <link rel="icon" type="image/png" href="/public/icon-192.png" />
   <link rel="apple-touch-icon" href="/public/icon-512.png" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
-  <!-- Hero -->
-  <link rel="preload" as="image" href="/public/home-hero.png" />
 
   <style>
-    :root{
-      --bg:#0C0F14; --bg2:#0E1724; --fg:#ffffff; --muted:#A0B2BA;
-      --card:rgba(14,19,28,.55); --card-border:rgba(255,255,255,.10);
-      --chip:#141C22; --accent:#1C57A0; --accent2:#FFEC01; --ink:#0A0E12; --shadow:rgba(0,0,0,.45);
+    body {
+      background: #0C0F14;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      margin: 0; padding: 20px;
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center;
     }
-    html[data-theme="whatif"]{ --bg:#0B1018; --bg2:#0E1724; --fg:#F4F7FB; --muted:#A7B3C2;
-      --card:rgba(14,20,28,.55); --card-border:rgba(255,255,255,.12); --chip:#121A26;
-      --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
+    .cta { background: linear-gradient(180deg,#1C57A0,#FFEC01); border:none; border-radius:24px;
+      padding:14px 22px; font-weight:700; cursor:pointer; margin-top:14px;
     }
-    html[data-theme="wtf"]{ --bg:#0B0B0C; --bg2:#101414; --fg:#EEF5F0; --muted:#A6B6AD;
-      --card:rgba(16,22,20,.55); --card-border:rgba(255,255,255,.10); --chip:#0F1714;
-      --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-      color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;overflow-x:hidden}
-    @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
-    @media (prefers-reduced-motion:no-preference){ body{animation:bgShift 18s ease-in-out infinite alternate} }
-    main{min-height:100%;display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px;gap:14px;padding-bottom:120px}
-    .lang-fab{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);right:14px;z-index:50}
-    .lang-btn{appearance:none;border:1px solid var(--card-border);background:#141c22;color:var(--fg);padding:10px 12px;border-radius:999px;cursor:pointer}
-    .lang-menu{position:absolute;top:46px;right:0;background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:8px;display:none;min-width:170px;box-shadow:0 12px 28px var(--shadow);backdrop-filter:blur(10px)}
-    .lang-menu button{display:block;width:100%;text-align:left;background:transparent;border:none;color:#E6F2F5;padding:10px;border-radius:10px;cursor:pointer}
-    .lang-menu button.active{background:rgba(255,255,255,.06)}
-    .hero-img{width:min(92vw,560px);height:auto;display:block;margin:0 auto 6px;filter:drop-shadow(0 10px 28px var(--shadow));border-radius:16px}
-    h1{margin:.25rem 0 0;font-size:clamp(28px,5.5vw,44px);line-height:1.1}
-    h1 span{color:var(--accent)}
-    .lead{max-width:720px;font-size:clamp(15px,4vw,18px);color:var(--muted);line-height:1.55;margin:4px auto 16px}
-    .group{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:6px}
-    .chip{appearance:none;border:1px solid var(--card-border);background:#141c22;color:#e8f2ec;padding:12px 16px;border-radius:16px;font-weight:700;cursor:pointer;transition:.16s;backdrop-filter:blur(6px)}
-    .chip:active{transform:translateY(1px)}
-    .chip.selected{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);box-shadow:0 0 0 1px rgba(255,255,255,.15) inset}
-    .cta{display:inline-block;background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800;border:none;border-radius:24px;padding:14px 20px;box-shadow:0 0 14px rgba(0,0,0,.35),0 0 28px rgba(0,0,0,.15);cursor:pointer;transition:.2s}
-    .cta[disabled]{opacity:.45;cursor:not-allowed}
-    footer{position:fixed;left:0;right:0;bottom:10px;text-align:center;color:var(--muted);font-size:12px;padding:0 14px}
-    footer a{color:var(--accent);text-decoration:none;font-weight:600}
-    footer .sep{opacity:.6;margin:0 6px}
-    .foot-links{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:6px}
-    .info-btn{background:#141c22;border:1px solid var(--card-border);color:#E6F2F5;border-radius:999px;padding:6px 10px;font-weight:700;text-decoration:none}
-    #authError{color:#ffb3b3;font-size:13px;min-height:18px}
+    .chip { border:1px solid rgba(255,255,255,.2); border-radius:16px; padding:10px 16px; margin:4px; background:#141c22; color:#fff; cursor:pointer; }
+    #authError { color:#ffb3b3; font-size:14px; margin-top:12px; min-height:20px; }
   </style>
 </head>
 <body>
-  <!-- Lingua -->
-  <div class="lang-fab" id="langFab">
-    <button class="lang-btn" id="langToggle" aria-haspopup="true" aria-expanded="false" aria-label="Change language">🌐 <span id="langCode">IT</span></button>
-    <div class="lang-menu" id="langMenu" role="menu" aria-label="language">
-      <button data-lang="it">Italiano</button>
-      <button data-lang="en">English</button>
-      <button data-lang="es">Español</button>
-      <button data-lang="fr">Français</button>
-      <button data-lang="de">Deutsch</button>
-    </div>
+
+  <h1>Scopri il tuo What?f</h1>
+  <p>Immagina la scelta che non hai fatto… e quella che potresti fare.</p>
+
+  <div>
+    <button class="chip" data-key="periodo" data-val="past">Passato</button>
+    <button class="chip" data-key="periodo" data-val="future">Futuro</button>
+  </div>
+  <div>
+    <button class="chip" data-key="stile" data-val="whatif">What if</button>
+    <button class="chip" data-key="stile" data-val="wtf">What the F</button>
   </div>
 
-  <main>
-    <img id="hero" class="hero-img" src="/public/home-hero.png" alt="Porta luminosa What?f" loading="eager" decoding="async" />
+  <button id="primaryCta" class="cta">Entra con Google</button>
+  <button id="logoutBtn" class="chip" style="display:none">Esci</button>
+  <p id="authError"></p>
 
-    <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
-
-    <p class="lead" id="leadText">
-      Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro.
-      <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili.
-      <strong>What the F</strong> ti fa vivere visioni ironiche, creative e imprevedibili.
-    </p>
-
-    <div class="group" id="periodGroup">
-      <button class="chip" data-key="periodo" data-val="past"   data-i18n="past">Passato</button>
-      <button class="chip" data-key="periodo" data-val="future" data-i18n="future">Futuro</button>
-    </div>
-    <div class="group" id="styleGroup">
-      <button class="chip" data-key="stile" data-val="whatif" data-i18n="whatif">What if</button>
-      <button class="chip" data-key="stile" data-val="wtf"    data-i18n="wtf">What the F</button>
-    </div>
-
-    <!-- CTA unica -->
-    <button id="primaryCta" class="cta">Entra con Google</button>
-    <button id="logoutBtn" class="chip" style="display:none">Esci</button>
-    <p id="authError"></p>
-  </main>
-
-  <footer>
-    © 2025 What?f
-    <div class="foot-links">
-      <a href="privacy.html" data-i18n="privacy">Privacy</a>
-      <span class="sep">·</span>
-      <a href="terms.html" data-i18n="terms">Termini</a>
-      <span class="sep">·</span>
-      <a class="info-btn" href="about.html" id="aboutLink"><span data-i18n="info">Info</span></a>
-    </div>
-  </footer>
-
-  <!-- Hero loader -->
+  <!-- 🔍 Overlay per vedere errori su mobile -->
   <script>
-    (function loadHero(){
-      const hero = document.getElementById('hero');
-      const DIRS  = ["/public", "", "/assets", "/img", "/images"];
-      const NAMES = ["home-hero.webp","home-hero.png","home_hero.webp","home_hero.png"];
-      const cacheBust = () => `?v=${Math.floor(Date.now()/60000)}`;
-      function trySrc(url){
-        return new Promise(resolve=>{
-          const img = new Image();
-          img.decoding = "async"; img.loading = "eager";
-          img.onload = ()=> resolve(url + cacheBust());
-          img.onerror = ()=> resolve(null);
-          img.src = url + cacheBust();
-        });
-      }
-      (async ()=>{
-        for (const dir of DIRS){
-          for (const name of NAMES){
-            const url = `${dir}/${name}`.replace(/\/{2,}/g,"/");
-            const ok  = await trySrc(url);
-            if (ok){ hero.src = ok; return; }
-          }
-        }
-      })();
+    (function(){
+      const box=document.createElement('pre');
+      box.id='mobileDebug';
+      box.style.cssText='position:fixed;left:8px;right:8px;bottom:8px;max-height:40vh;overflow:auto;background:rgba(0,0,0,.75);color:#0f0;padding:8px;border-radius:8px;font:12px monospace;z-index:9999;';
+      document.body.appendChild(box);
+      window.mlog=(...a)=>{ box.textContent+=a.map(x=>typeof x==='object'?JSON.stringify(x):x).join(' ')+'\n'; };
+      mlog('DEBUG overlay attivo 📲');
     })();
   </script>
 
-  <!-- i18n + tema + selections + lingua -->
-  <script>
-    (function initTheme(){
-      try{
-        const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-        document.documentElement.setAttribute('data-theme', prefs.stile==='wtf' ? 'wtf' : 'whatif');
-      }catch{ document.documentElement.setAttribute('data-theme','whatif'); }
-    })();
-
-    const DICT = {
-      it:{title:"Scopri il tuo What?f",lead:"Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro. <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili. <strong>What the F</strong> ti fa vivere visioni ironiche, creative e imprevedibili.",past:"Passato", future:"Futuro", whatif:"What if", wtf:"What the F", next:"Avanti", privacy:"Privacy", terms:"Termini", info:"Info"},
-      en:{title:"Discover your What?f",lead:"Imagine the choice you didn’t make… and the one you could make. Choose whether to look to the past or the future. <strong>What if</strong> explores realistic, reflective scenarios based on plausible choices. <strong>What the F</strong> lets you experience ironic, creative and unpredictable visions.",past:"Past", future:"Future", whatif:"What if", wtf:"What the F", next:"Next", privacy:"Privacy", terms:"Terms", info:"Info"},
-      es:{title:"Descubre tu What?f",lead:"Imagina la elección que no hiciste… y la que aún podrías hacer. Elige si mirar al pasado o al futuro. <strong>What if</strong> explora escenarios realistas y reflexivos basados en decisiones plausibles. <strong>What the F</strong> te hace vivir visiones irónicas, creativas e impredecibles.",past:"Pasado", future:"Futuro", whatif:"What if", wtf:"What the F", next:"Siguiente", privacy:"Privacidad", terms:"Términos", info:"Info"},
-      fr:{title:"Découvrez votre What?f",lead:"Imaginez le choix que vous n’avez pas fait… et celui que vous pourriez encore faire. Choisissez de regarder vers le passé ou vers le futur. <strong>What if</strong> explore des scénarios réalistes et réfléchis basés sur des choix plausibles. <strong>What the F</strong> vous fait vivre des visions ironiques, créatives et imprévisibles.",past:"Passé", future:"Futur", whatif:"What if", wtf:"What the F", next:"Suivant", privacy:"Confidentialité", terms:"Conditions", info:"Info"},
-      de:{title:"Entdecke dein What?f",lead:"Stell dir die Entscheidung vor, die du nicht getroffen hast… und die, die du noch treffen könntest. Wähle, ob du in die Vergangenheit oder in die Zukunft blickst. <strong>What if</strong> erkundet realistische, reflektierte Szenarien auf Basis plausibler Entscheidungen. <strong>What the F</strong> lässt dich ironische, kreative und unvorhersehbare Visionen erleben.",past:"Vergangenheit", future:"Zukunft", whatif:"What if", wtf:"What the F", next:"Weiter", privacy:"Datenschutz", terms:"Nutzungsbedingungen", info:"Info"}
-    };
-    const LS=localStorage, $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
-
-    function detectBrowserLang(){
-      const n=(navigator.language||'it').toLowerCase();
-      if(n.startsWith('it')) return 'it'; if(n.startsWith('en')) return 'en'; if(n.startsWith('es')) return 'es'; if(n.startsWith('fr')) return 'fr'; if(n.startsWith('de')) return 'de';
-      return 'it';
-    }
-    function getLang(){ return (LS.getItem('lang') || detectBrowserLang()).toLowerCase(); }
-    function setLang(l){ LS.setItem('lang',l.toLowerCase()); applyLang(); }
-    function applyLang(){
-      const L=getLang(), d=DICT[L]||DICT.it;
-      document.documentElement.lang=L; $('#langCode').textContent=L.toUpperCase();
-      $$('[data-i18n]').forEach(el=>{
-        const k=el.getAttribute('data-i18n');
-        if(!k) return;
-        if(k==='lead'){ return; }
-        if(typeof d[k] === 'string'){ el.textContent = d[k]; }
-      });
-      $('#leadText').innerHTML = d.lead;
-      document.querySelectorAll('#langMenu button').forEach(b=>b.classList.toggle('active', b.dataset.lang===L));
-    }
-    if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang());
-    applyLang();
-
-    const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-    function wireGroup(g){
-      g.addEventListener('click', e=>{
-        const b=e.target.closest('.chip'); if(!b) return;
-        g.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
-        b.classList.add('selected'); state[b.dataset.key]=b.dataset.val;
-        localStorage.setItem('whatif_prefs', JSON.stringify(state));
-        if(b.dataset.key==='stile'){ document.documentElement.setAttribute('data-theme', b.dataset.val==='wtf'?'wtf':'whatif'); }
-        try{ window.updatePrimaryCta && window.updatePrimaryCta(); }catch{}
-      });
-    }
-    wireGroup(document.getElementById('periodGroup'));
-    wireGroup(document.getElementById('styleGroup'));
-  </script>
-
-  <!-- 🔐 Firebase: login Google via redirect + wallet giornaliero -->
+  <!-- 🔐 Firebase Auth + Firestore -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { 
-      getAuth, GoogleAuthProvider, onAuthStateChanged, 
+    import {
+      getAuth, GoogleAuthProvider, onAuthStateChanged,
       signInWithRedirect, getRedirectResult, signOut,
       browserLocalPersistence, setPersistence
     } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { 
-      getFirestore, doc, getDoc, setDoc, runTransaction, serverTimestamp 
+    import {
+      getFirestore, doc, getDoc, setDoc, runTransaction, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-    // ✅ Config corretta (bucket .appspot.com)
     const firebaseConfig = {
       apiKey: "AIzaSyASrGnHOnf_O-N0NuZDvqOGGfG8IoSWblc",
       authDomain: "whatif-oracolo.firebaseapp.com",
@@ -217,126 +79,102 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db   = getFirestore(app);
+    const db = getFirestore(app);
+    await setPersistence(auth, browserLocalPersistence);
 
-    // ✅ Forza selezione account (evita riuso automatico)
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
 
-    // ✅ Mantieni l'utente loggato nella PWA
-    await setPersistence(auth, browserLocalPersistence);
-
     const primaryCta = document.getElementById("primaryCta");
-    const logoutBtn  = document.getElementById("logoutBtn");
-    const errBox     = document.getElementById("authError");
-    const showErr = (m)=>{ errBox.textContent = m || ""; };
+    const logoutBtn = document.getElementById("logoutBtn");
+    const errBox = document.getElementById("authError");
+
+    const showErr = (m)=>{ errBox.textContent=m||""; mlog("❌",m); };
 
     const selectionsReady = ()=>{
       try{
         const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
         return !!(prefs.periodo && prefs.stile);
-      }catch{ return false; }
+      }catch{return false;}
     };
+
+    function updatePrimaryCta(){
+      const user=auth.currentUser;
+      if(user){
+        primaryCta.textContent = selectionsReady() ? "Avanti" : "Scegli prima sopra";
+        logoutBtn.style.display="inline-block";
+      }else{
+        primaryCta.textContent="Entra con Google";
+        logoutBtn.style.display="none";
+      }
+    }
 
     async function ensureDailyWallet(uid){
       const ref = doc(db, "wallets", uid);
       const snap = await getDoc(ref);
-      // Giorno "locale" utente in formato YYYY-MM-DD
       const today = new Date(Date.now() - (new Date().getTimezoneOffset()*60000))
         .toISOString().slice(0,10);
       if(!snap.exists()){
+        mlog("💾 Creo nuovo wallet per",uid);
         await setDoc(ref,{
           available:3, surprise:1, lastDaily:today,
           adCount:0, adDay:today,
           createdAt:serverTimestamp(), updatedAt:serverTimestamp()
         },{merge:true});
       }else{
-        const data = snap.data()||{};
+        const data = snap.data();
         if((data.lastDaily||"")!==today){
+          mlog("🔁 Reset giornaliero wallet",uid);
           await runTransaction(db, async tx=>{
-            tx.update(ref,{available:3, surprise:1, lastDaily:today, adCount:0, adDay:today, updatedAt:serverTimestamp()});
+            tx.update(ref,{available:3,surprise:1,lastDaily:today,adCount:0,adDay:today,updatedAt:serverTimestamp()});
           });
+        }else{
+          mlog("✅ Wallet già aggiornato oggi");
         }
       }
     }
 
-    function updatePrimaryCta(){
-      const user = auth.currentUser;
-      if(user){
-        primaryCta.textContent = selectionsReady() ? "Avanti" : "Scegli prima sopra";
-        primaryCta.disabled = !selectionsReady();
-        logoutBtn.style.display = "inline-block";
-      }else{
-        primaryCta.textContent = "Entra con Google";
-        primaryCta.disabled = false;
-        logoutBtn.style.display = "none";
-      }
-    }
-    window.updatePrimaryCta = updatePrimaryCta;
-
-    // 🔘 Click CTA: se non loggato → redirect Google; se loggato → avanti
     primaryCta.onclick = async ()=>{
       showErr("");
       const user = auth.currentUser;
       if(!user){
         try{
+          mlog("➡️ Redirect Google...");
           await signInWithRedirect(auth, provider);
         }catch(e){
-          const map = {
-            "auth/unauthorized-domain":"Dominio non autorizzato in Firebase (Authentication > Impostazioni > Domini autorizzati).",
-            "auth/network-request-failed":"Problema rete/HTTPS (o Service Worker in cache). Riprova con hard refresh."
-          };
-          showErr(map[e.code] || ("Errore login: " + (e.code || e.message)));
+          showErr("Errore login: "+(e.code||e.message));
         }
         return;
       }
       if(selectionsReady()){
-        location.href = "second.html";
+        location.href="second.html";
       }else{
         showErr("Seleziona prima Passato/Futuro e What if/WTF");
       }
     };
 
-    logoutBtn.onclick = async ()=>{ await signOut(auth); };
+    logoutBtn.onclick = async ()=>{ await signOut(auth); updatePrimaryCta(); };
 
-    // ✅ Evita doppie scritture dopo redirect
-    let didPostRedirectWallet = false;
-
-    // Completa login dopo il redirect
+    let didPostRedirectWallet=false;
     getRedirectResult(auth)
       .then(async res=>{
-        if(res?.user){ await ensureDailyWallet(res.user.uid).catch(()=>{}); didPostRedirectWallet = true; }
+        if(res?.user){
+          mlog("🔐 Redirect OK",res.user.uid);
+          await ensureDailyWallet(res.user.uid);
+          didPostRedirectWallet=true;
+        }else{
+          mlog("No redirect result");
+        }
       })
-      .catch(e=> showErr("Post-login: "+(e.code||e.message)));
+      .catch(e=>showErr("Post-login: "+(e.code||e.message)));
 
     onAuthStateChanged(auth, async (user)=>{
-      if(user && !didPostRedirectWallet){ await ensureDailyWallet(user.uid).catch(()=>{}); }
+      mlog("👤 Stato login:",!!user,user?.uid);
+      if(user && !didPostRedirectWallet){ await ensureDailyWallet(user.uid).catch(e=>showErr("Wallet: "+e.code)); }
       updatePrimaryCta();
     });
 
     updatePrimaryCta();
-  </script>
-
-  <!-- Easter egg admin + SW -->
-  <script>
-    (function(){
-      const title = document.getElementById('appTitle'); const pastBtn = document.querySelector('button[data-val="past"]');
-      if(!title || !pastBtn) return;
-      let tapTitle=0, tapPast=0, stage=0, timer=null;
-      function reset(){ tapTitle=0; tapPast=0; stage=0; if(timer) clearTimeout(timer); timer=null; pastBtn.classList.remove("unlocking"); }
-      function flash(){ const f=document.createElement("div"); f.style.position="fixed";f.style.inset="0";f.style.background="rgba(255,255,255,0.05)";f.style.backdropFilter="blur(2px)";f.style.transition="opacity .6s";f.style.opacity="1";f.style.zIndex="9999";document.body.appendChild(f);setTimeout(()=>f.style.opacity="0",150);setTimeout(()=>f.remove(),800); }
-      function success(){ reset(); const pin=prompt("PIN amministratore:"); if(!pin) return; try{ sessionStorage.setItem("pending_admin_pin", pin);}catch{} location.href="admin.html"; }
-      title.addEventListener('click', ()=>{ if(++tapTitle>=3){ stage=1; tapTitle=0; flash(); pastBtn.classList.add("unlocking"); setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);} if(timer) clearTimeout(timer); timer=setTimeout(reset,2000); });
-      pastBtn.addEventListener('click', ()=>{ if(stage!==1) return; if(++tapPast>=5) success(); if(timer) clearTimeout(timer); timer=setTimeout(reset,2500); });
-    })();
-
-    // ⚠️ Aggiorna la versione per bustare il SW se cambi il file
-    const SW_VERSION = "v7";
-    if("serviceWorker" in navigator){
-      window.addEventListener("load", ()=>{ 
-        navigator.serviceWorker.register("/sw.js?"+SW_VERSION).catch(()=>{}); 
-      });
-    }
   </script>
 </body>
 </html>
