@@ -17,25 +17,6 @@
   <!-- Hero -->
   <link rel="preload" as="image" href="/public/home-hero.png" />
 
-  <!-- reCAPTCHA v3 (SITE KEY PUBBLICA) -->
-  <script src="https://www.google.com/recaptcha/api.js?render=6LeBWAksAAAAAAsD_MnuYkhITcWy0CBM1_qmIfv7"></script>
-  <script>
-    // Attiva reCAPTCHA v3 e genera un token (invisibile all’utente).
-    window.addEventListener('load', () => {
-      if (window.grecaptcha) {
-        grecaptcha.ready(() => {
-          grecaptcha.execute('6LeBWAksAAAAAAsD_MnuYkhITcWy0CBM1_qmIfv7', { action: 'homepage' })
-            .then(token => {
-              // Opzionale: salviamo il token per usi futuri (es. chiamate protette)
-              try { sessionStorage.setItem('recaptcha_token', token); } catch(e) {}
-              console.log('reCAPTCHA attivo, token generato');
-            })
-            .catch(() => {});
-        });
-      }
-    });
-  </script>
-
   <style>
     :root{
       --bg:#0C0F14; --bg2:#0E1724; --fg:#ffffff; --muted:#A0B2BA;
@@ -288,11 +269,13 @@
     }
   </script>
 
-  <!-- Firebase -->
+  <!-- Firebase + Crediti giornalieri (3 + 1 sorprendi) con sync a Firestore e localStorage -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-    // Config pubblica di Firebase (OK tenerla nel client)
+    // --- Config tua ---
     const firebaseConfig = {
       apiKey: "AIzaSyASrGnHOnf_O-N0NuZDvqOGGfG8IoSWblc",
       authDomain: "whatif-oracolo.firebaseapp.com",
@@ -302,7 +285,100 @@
       appId: "1:602976466053:web:668d4a462286513d8b25ec"
     };
 
+    // --- App + servizi ---
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    // --- Chiavi localStorage compatibili con le pagine esistenti ---
+    const WKEY   = "whatif_wallet";
+    const SURPKEY= "whatif_surprise";
+
+    // Utility
+    const today = () => new Date().toISOString().slice(0,10);
+    function mirrorToLocalStorage(available, surprise, limit=3){
+      try{
+        const w = { available, used: 0, limit }; // "used" qui non lo tracciamo lato cloud: lasciamo 0 per compatibilità UI
+        localStorage.setItem(WKEY, JSON.stringify(w));
+        localStorage.setItem(SURPKEY, String(Math.max(0, parseInt(surprise,10)||0)));
+        localStorage.setItem("whatif_wallet_sync", String(Date.now())); // evento per chi ascolta
+      }catch{}
+    }
+
+    async function ensureDailyWallet(userId){
+      const ref = doc(db, "wallets", userId);
+      const snap = await getDoc(ref);
+      const d = today();
+
+      if(!snap.exists()){
+        const payload = {
+          available: 3,
+          surprise: 1,
+          lastDaily: d,
+          adCount: 0,     // contatore pubblicità visti oggi
+          adDay: d,       // giorno del contatore
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+        await setDoc(ref, payload, { merge: true });
+        mirrorToLocalStorage(payload.available, payload.surprise);
+        return payload;
+      }
+
+      const data = snap.data() || {};
+      let available = Number.isFinite(+data.available) ? +data.available : 0;
+      let surprise  = Number.isFinite(+data.surprise)  ? +data.surprise  : 0;
+      const lastDaily = (data.lastDaily || "");
+      let adCount = Number.isFinite(+data.adCount)? +data.adCount : 0;
+      let adDay   = data.adDay || d;
+
+      // Reset giornaliero: 3 crediti + 1 sorprendi, azzera adCount
+      if(lastDaily !== d){
+        available = 3;
+        surprise  = 1;
+        adCount   = 0;
+        adDay     = d;
+        await updateDoc(ref, {
+          available, surprise,
+          lastDaily: d,
+          adCount, adDay,
+          updatedAt: serverTimestamp()
+        });
+      }
+
+      mirrorToLocalStorage(available, surprise);
+      return { available, surprise, lastDaily: d, adCount, adDay };
+    }
+
+    // Espongo (opzionale) alcune API su window per debug/admin
+    window.whatifCloud = {
+      get uid(){ return auth.currentUser?.uid || null; },
+      async refresh(){ 
+        if(!auth.currentUser) return null;
+        return ensureDailyWallet(auth.currentUser.uid);
+      }
+    };
+
+    // Login anonimo + inizializzazione wallet
+    try{
+      const existing = auth.currentUser;
+      if(existing){
+        await ensureDailyWallet(existing.uid);
+      }else{
+        await signInAnonymously(auth);
+      }
+    }catch(e){
+      console.warn("Anon auth failed:", e);
+    }
+
+    onAuthStateChanged(auth, async (user)=>{
+      if(!user) return;
+      try{
+        await ensureDailyWallet(user.uid);
+      }catch(err){
+        console.error("Wallet init error:", err);
+      }
+    });
   </script>
 </body>
 </html>
