@@ -75,9 +75,7 @@
 
   <main>
     <img id="hero" class="hero-img" src="/public/home-hero.png" alt="Porta luminosa What?f" loading="eager" decoding="async" />
-
     <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
-
     <p class="lead" id="leadText">
       Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro.
       <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili.
@@ -138,7 +136,7 @@
     })();
   </script>
 
-  <!-- i18n + tema + selections + lingua -->
+  <!-- i18n + tema + selections -->
   <script>
     (function initTheme(){
       try{
@@ -193,7 +191,7 @@
     wireGroup(document.getElementById('styleGroup'));
   </script>
 
-  <!-- 🔍 Overlay mobile per vedere log/errore -->
+  <!-- 🔍 Overlay mobile per debug -->
   <script>
     (function(){
       const box=document.createElement('pre');
@@ -205,8 +203,13 @@
     })();
   </script>
 
-  <!-- 🔐 Firebase: login Google via redirect + wallet + persistenza + debug -->
+  <!-- 🔐 Firebase: redirect Google + wallet + persistenza (NO top-level await) -->
   <script type="module">
+    const log  = (...a)=>{ window.mlog && mlog(...a); };
+    const errEl= document.getElementById('authError');
+    const showErr=(m)=>{ if(errEl) errEl.textContent=m||""; log('❌', m); };
+    window.addEventListener('error', (e)=> showErr('Init error: '+(e.error?.message||e.message)));
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
     import {
       getAuth, GoogleAuthProvider, onAuthStateChanged,
@@ -217,127 +220,115 @@
       getFirestore, doc, getDoc, setDoc, runTransaction, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyASrGnHOnf_O-N0NuZDvqOGGfG8IoSWblc",
-      authDomain: "whatif-oracolo.firebaseapp.com",
-      projectId: "whatif-oracolo",
-      storageBucket: "whatif-oracolo.appspot.com",
-      messagingSenderId: "602976466053",
-      appId: "1:602976466053:web:668d4a462286513d8b25ec"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db   = getFirestore(app);
-
-    // persistenza login
-    try { await setPersistence(auth, browserLocalPersistence); } catch(e){ mlog("setPersistence:", e.code||e.message); }
-
-    // provider Google con select account
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: "select_account" });
-
-    const primaryCta = document.getElementById("primaryCta");
-    const logoutBtn  = document.getElementById("logoutBtn");
-    const errBox     = document.getElementById("authError");
-    const showErr = (m)=>{ if(errBox) errBox.textContent=m||""; mlog("❌", m); };
-
-    const selectionsReady = ()=>{
+    (async function boot(){
       try{
-        const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-        return !!(prefs.periodo && prefs.stile);
-      }catch{ return false; }
-    };
+        const firebaseConfig = {
+          apiKey: "AIzaSyASrGnHOnf_O-N0NuZDvqOGGfG8IoSWblc",
+          authDomain: "whatif-oracolo.firebaseapp.com",
+          projectId: "whatif-oracolo",
+          storageBucket: "whatif-oracolo.appspot.com",
+          messagingSenderId: "602976466053",
+          appId: "1:602976466053:web:668d4a462286513d8b25ec"
+        };
 
-    function updatePrimaryCta(){
-      const user = auth.currentUser;
-      if(!primaryCta) return;
-      if(user){
-        primaryCta.textContent = selectionsReady() ? "Avanti" : "Scegli prima sopra";
-        if (logoutBtn) logoutBtn.style.display = "inline-block";
-      }else{
-        primaryCta.textContent = "Entra con Google";
-        if (logoutBtn) logoutBtn.style.display = "none";
-      }
-    }
-    window.updatePrimaryCta = updatePrimaryCta;
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db   = getFirestore(app);
 
-    async function ensureDailyWallet(uid){
-      const ref = doc(db, "wallets", uid);
-      const snap = await getDoc(ref);
-      const today = new Date(Date.now() - (new Date().getTimezoneOffset()*60000))
-        .toISOString().slice(0,10);
-      if(!snap.exists()){
-        mlog("💾 Creo wallet", uid);
-        await setDoc(ref,{
-          available:3, surprise:1, lastDaily:today,
-          adCount:0, adDay:today,
-          createdAt:serverTimestamp(), updatedAt:serverTimestamp()
-        },{merge:true});
-      }else{
-        const d = snap.data()||{};
-        if((d.lastDaily||"")!==today){
-          mlog("🔁 Reset giornaliero wallet");
-          await runTransaction(db, tx=>{
-            tx.update(ref,{available:3,surprise:1,lastDaily:today,adCount:0,adDay:today,updatedAt:serverTimestamp()});
-          });
-        }else{
-          mlog("✅ Wallet ok oggi");
+        try { await setPersistence(auth, browserLocalPersistence); }
+        catch(e){ log('setPersistence warn:', e.code||e.message); }
+
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: "select_account" });
+
+        const primaryCta = document.getElementById("primaryCta");
+        const logoutBtn  = document.getElementById("logoutBtn");
+
+        const selectionsReady = ()=>{
+          try{ const p=JSON.parse(localStorage.getItem('whatif_prefs')||'{}'); return !!(p.periodo && p.stile); }
+          catch{ return false; }
+        };
+
+        function updatePrimaryCta(){
+          const u=auth.currentUser;
+          if(!primaryCta) return;
+          if(u){
+            primaryCta.textContent = selectionsReady()? "Avanti":"Scegli prima sopra";
+            if (logoutBtn) logoutBtn.style.display="inline-block";
+          }else{
+            primaryCta.textContent = "Entra con Google";
+            if (logoutBtn) logoutBtn.style.display="none";
+          }
         }
-      }
-    }
+        window.updatePrimaryCta = updatePrimaryCta;
 
-    // CTA click
-    if (primaryCta) primaryCta.onclick = async ()=>{
-      showErr("");
-      const user = auth.currentUser;
-      if(!user){
-        try{
-          mlog("➡️ Redirect Google…");
-          await signInWithRedirect(auth, provider);
-        }catch(e){
-          const map = {
-            "auth/unauthorized-domain":"Dominio non autorizzato in Firebase (Authentication > Impostazioni > Domini autorizzati).",
-            "auth/network-request-failed":"Rete/HTTPS o Service Worker in cache. Hard refresh o aggiorna sw.js.",
-            "auth/operation-not-allowed":"Provider Google non abilitato (Authentication > Metodo di accesso)."
-          };
-          showErr(map[e.code] || ("Errore login: " + (e.code || e.message)));
+        async function ensureDailyWallet(uid){
+          const ref = doc(db, "wallets", uid);
+          const snap = await getDoc(ref);
+          const today = new Date(Date.now() - (new Date().getTimezoneOffset()*60000)).toISOString().slice(0,10);
+          if(!snap.exists()){
+            log("💾 Creo wallet", uid);
+            await setDoc(ref,{available:3,surprise:1,lastDaily:today,adCount:0,adDay:today,createdAt:serverTimestamp(),updatedAt:serverTimestamp()},{merge:true});
+          }else{
+            const d = snap.data()||{};
+            if((d.lastDaily||"")!==today){
+              log("🔁 Reset giornaliero");
+              await runTransaction(db, tx=>{ tx.update(ref,{available:3,surprise:1,lastDaily:today,adCount:0,adDay:today,updatedAt:serverTimestamp()}); });
+            }else{
+              log("✅ Wallet ok oggi");
+            }
+          }
         }
-        return;
+
+        // click CTA
+        if (primaryCta) primaryCta.onclick = async ()=>{
+          showErr("");
+          const u = auth.currentUser;
+          if(!u){
+            try{
+              log("➡️ Redirect Google…");
+              await signInWithRedirect(auth, provider);
+            }catch(e){
+              const map = {
+                "auth/unauthorized-domain":"Dominio non autorizzato (Authentication → Impostazioni → Domini autorizzati).",
+                "auth/network-request-failed":"Rete/HTTPS o Service Worker in cache. Hard refresh / aggiorna sw.js.",
+                "auth/operation-not-allowed":"Provider Google non abilitato (Authentication → Metodo di accesso)."
+              };
+              showErr(map[e.code] || ("Errore login: " + (e.code || e.message)));
+            }
+            return;
+          }
+          if(selectionsReady()) location.href="second.html";
+          else showErr("Seleziona prima Passato/Futuro e What if/WTF");
+        };
+
+        if (logoutBtn) logoutBtn.onclick = async ()=>{ await signOut(auth); updatePrimaryCta(); };
+
+        // post-redirect
+        let didPost=false;
+        getRedirectResult(auth)
+          .then(async res=>{
+            if(res?.user){ log("🔐 Redirect OK", res.user.uid); await ensureDailyWallet(res.user.uid).catch(e=>showErr("Wallet: "+(e.code||e.message))); didPost=true; }
+            else { log("No redirect result"); }
+          })
+          .catch(e=> showErr("Post-login: "+(e.code||e.message)));
+
+        // stato auth
+        onAuthStateChanged(auth, async (user)=>{
+          log("Auth state:", !!user, user?.uid);
+          if(user && !didPost){ await ensureDailyWallet(user.uid).catch(e=>showErr("Wallet: "+(e.code||e.message))); }
+          updatePrimaryCta();
+        });
+
+        updatePrimaryCta();
+        log("Boot OK.");
+      }catch(e){
+        showErr("Init error: " + (e.code || e.message));
       }
-      if(selectionsReady()) location.href = "second.html";
-      else showErr("Seleziona prima Passato/Futuro e What if/WTF");
-    };
-
-    if (logoutBtn) logoutBtn.onclick = async ()=>{ await signOut(auth); updatePrimaryCta(); };
-
-    // post-redirect
-    let didPostRedirectWallet = false;
-    getRedirectResult(auth)
-      .then(async res=>{
-        if(res?.user){
-          mlog("🔐 Redirect OK", res.user.uid);
-          await ensureDailyWallet(res.user.uid).catch(e=>showErr("Wallet: "+(e.code||e.message)));
-          didPostRedirectWallet = true;
-        }else{
-          mlog("No redirect result");
-        }
-      })
-      .catch(e=> showErr("Post-login: "+(e.code||e.message)));
-
-    // stato auth
-    onAuthStateChanged(auth, async (user)=>{
-      mlog("👤 Auth state:", !!user, user?.uid);
-      if(user && !didPostRedirectWallet){
-        await ensureDailyWallet(user.uid).catch(e=>showErr("Wallet: "+(e.code||e.message)));
-      }
-      updatePrimaryCta();
-    });
-
-    updatePrimaryCta();
+    })();
   </script>
 
-  <!-- Easter egg admin + Service Worker -->
+  <!-- Easter egg admin + Service Worker (bust cache) -->
   <script>
     (function(){
       const title = document.getElementById('appTitle'); const pastBtn = document.querySelector('button[data-val="past"]');
@@ -350,11 +341,10 @@
       pastBtn.addEventListener('click', ()=>{ if(stage!==1) return; if(++tapPast>=5) success(); if(timer) clearTimeout(timer); timer=setTimeout(reset,2500); });
     })();
 
-    // bump SW per bustare cache
-    const SW_VERSION = "v9";
+    const SW_VERSION = "v10";
     if("serviceWorker" in navigator){
       window.addEventListener("load", ()=>{ 
-        navigator.serviceWorker.register("/sw.js?"+SW_VERSION).catch(()=>{}); 
+        navigator.serviceWorker.register("/sw.js?"+SW_VERSION).catch(()=>{});
       });
     }
   </script>
