@@ -38,7 +38,7 @@
     @media (prefers-reduced-motion:no-preference){ body{animation:bgShift 18s ease-in-out infinite alternate} }
     main{min-height:100%;display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px;gap:14px;padding-bottom:120px}
     .lang-fab{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);right:14px;z-index:50}
-    .lang-btn{appearance:none;border:1px solid var(--card-border);background:#141c22;color:#var(--fg);padding:10px 12px;border-radius:999px;cursor:pointer}
+    .lang-btn{appearance:none;border:1px solid var(--card-border);background:#141c22;color:var(--fg);padding:10px 12px;border-radius:999px;cursor:pointer}
     .lang-menu{position:absolute;top:46px;right:0;background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:8px;display:none;min-width:170px;box-shadow:0 12px 28px var(--shadow);backdrop-filter:blur(10px)}
     .lang-menu button{display:block;width:100%;text-align:left;background:transparent;border:none;color:#E6F2F5;padding:10px;border-radius:10px;cursor:pointer}
     .lang-menu button.active{background:rgba(255,255,255,.06)}
@@ -57,6 +57,24 @@
     footer .sep{opacity:.6;margin:0 6px}
     .foot-links{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:6px}
     .info-btn{background:#141c22;border:1px solid var(--card-border);color:#E6F2F5;border-radius:999px;padding:6px 10px;font-weight:700;text-decoration:none}
+
+    /* Login card */
+    .login-card{
+      display:none; max-width:560px; width:100%;
+      background:var(--card); border:1px solid var(--card-border);
+      border-radius:16px; padding:16px; backdrop-filter:blur(10px);
+      box-shadow:0 12px 28px var(--shadow);
+    }
+    .login-card.show{display:block}
+    .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+    .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
+    .btn.ghost{background:#141c22;border:1px solid var(--card-border);color:#fff}
+    .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink)}
+    .small{font-size:12px;color:#A0B2BA}
+
+    /* Credit pill bar */
+    .pillbar{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:6px;flex-wrap:wrap}
+    .pill{font-size:12px;font-weight:900;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
   </style>
 </head>
 <body>
@@ -73,17 +91,33 @@
   </div>
 
   <main>
-    <!-- immagine subito visibile -->
+    <!-- immagine -->
     <img id="hero" class="hero-img" src="/public/home-hero.png" alt="Porta luminosa What?f" loading="eager" decoding="async" />
 
     <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
 
-    <!-- Fallback testo (poi sovrascritto da i18n) -->
     <p class="lead" id="leadText">
       Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro.
       <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili.
       <strong>What the F</strong> ti fa vivere visioni ironiche, creative e imprevedibili.
     </p>
+
+    <!-- Login obbligatorio -->
+    <div id="loginCard" class="login-card">
+      <div class="row">
+        <button id="googleLogin" class="btn primary">🔐 Accedi con Google</button>
+        <button id="logoutBtn" class="btn ghost" style="display:none">Esci</button>
+      </div>
+      <div class="pillbar">
+        <span class="pill" id="creditsPill">💰 Crediti: —</span>
+        <span class="pill" id="surprisePill">🎁 Sorprendimi: —</span>
+        <span class="pill" id="adsPill" title="Annunci usati oggi">📺 Annunci: —/5</span>
+      </div>
+      <div class="row" id="adsRow" style="margin-top:8px;display:none">
+        <button id="watchAdBtn" class="btn ghost">📺 Guarda annuncio (+1 credito)</button>
+      </div>
+      <p class="small" id="loginHint" style="text-align:center;margin:6px 0 0">Devi essere loggato per usare l’app.</p>
+    </div>
 
     <div class="group" id="periodGroup">
       <button class="chip" data-key="periodo" data-val="past"   data-i18n="past">Passato</button>
@@ -108,7 +142,7 @@
     </div>
   </footer>
 
-  <!-- Hero loader (cerca anche varianti) -->
+  <!-- Hero loader -->
   <script>
     (function loadHero(){
       const hero = document.getElementById('hero');
@@ -203,23 +237,6 @@
     if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang());
     applyLang();
 
-    (function wireLangMenu(){
-      const btn=$('#langToggle'), menu=$('#langMenu');
-      btn.addEventListener('click', ()=>{
-        const open=menu.style.display==='block';
-        menu.style.display=open?'none':'block';
-        btn.setAttribute('aria-expanded', String(!open));
-      });
-      menu.addEventListener('click', e=>{
-        const b=e.target.closest('button[data-lang]'); if(!b) return;
-        setLang(b.dataset.lang);
-        menu.style.display='none';
-      });
-      document.addEventListener('click', e=>{
-        if(!menu.contains(e.target) && e.target!==btn) menu.style.display='none';
-      });
-    })();
-
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
     const go = document.getElementById('go');
 
@@ -233,7 +250,8 @@
         document.querySelector(`#styleGroup .chip[data-val="${state.stile}"]`)?.classList.add('selected');
         document.documentElement.setAttribute('data-theme', state.stile==='wtf'?'wtf':'whatif');
       }
-      go.disabled = !(state.periodo && state.stile);
+      // Abilito "Avanti" solo se loggato (impostato più sotto) + scelte fatte
+      go.disabled = !(window.__loggedIn === true && state.periodo && state.stile);
     }
     function wireGroup(g){
       g.addEventListener('click', e=>{
@@ -242,7 +260,7 @@
         b.classList.add('selected'); state[b.dataset.key]=b.dataset.val;
         localStorage.setItem('whatif_prefs', JSON.stringify(state));
         if(b.dataset.key==='stile'){ document.documentElement.setAttribute('data-theme', b.dataset.val==='wtf'?'wtf':'whatif'); }
-        go.disabled = !(state.periodo && state.stile);
+        syncUI();
       });
     }
     wireGroup(document.getElementById('periodGroup'));
@@ -251,7 +269,7 @@
 
     go.addEventListener('click', ()=>{ if(!go.disabled) location.href='second.html'; });
 
-    // Easter egg admin
+    // Easter egg admin (lasciato)
     (function(){
       const title = document.getElementById('appTitle'); const pastBtn = document.querySelector('button[data-val="past"]');
       if(!title || !pastBtn) return;
@@ -269,13 +287,18 @@
     }
   </script>
 
-  <!-- Firebase + Crediti giornalieri (3 + 1 sorprendi) con sync a Firestore e localStorage -->
+  <!-- Firebase + Auth Google obbligatoria + Wallet giornaliero + Pubblicità (5/giorno) -->
   <script type="module">
+    // ===== Firebase SDK =====
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+    import { 
+      getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut 
+    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-    // Config Firebase
+    // --- Config ---
     const firebaseConfig = {
       apiKey: "AIzaSyASrGnHOnf_O-N0NuZDvqOGGfG8IoSWblc",
       authDomain: "whatif-oracolo.firebaseapp.com",
@@ -285,29 +308,55 @@
       appId: "1:602976466053:web:668d4a462286513d8b25ec"
     };
 
+    // --- App ---
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
+    const provider = new GoogleAuthProvider();
 
-    // Chiavi localStorage usate dalle altre pagine
+    // --- UI Refs ---
+    const loginCard  = document.getElementById('loginCard');
+    const loginBtn   = document.getElementById('googleLogin');
+    const logoutBtn  = document.getElementById('logoutBtn');
+    const goBtn      = document.getElementById('go');
+    const creditsPill = document.getElementById('creditsPill');
+    const surprisePill= document.getElementById('surprisePill');
+    const adsPill     = document.getElementById('adsPill');
+    const adsRow      = document.getElementById('adsRow');
+    const watchAdBtn  = document.getElementById('watchAdBtn');
+
+    // --- Impostazioni Pubblicità ---
+    const ADS_ENABLED = true;         // metti a false per spegnerle
+    const ADS_PER_DAY = 5;            // max annunci/giorno
+    const CREDIT_PER_AD = 1;          // crediti per annuncio
+
+    // --- Chiavi LocalStorage compatibili ---
     const WKEY   = "whatif_wallet";
     const SURPKEY= "whatif_surprise";
 
-    const todayISO = () => new Date().toISOString().slice(0,10);
-
+    // --- Helpers ---
+    const today = () => new Date().toISOString().slice(0,10);
+    function setLoggedIn(v){ window.__loggedIn = !!v; syncUI(); }
     function mirrorToLocalStorage(available, surprise, limit=3){
       try{
-        const w = { available, used: 0, limit };
+        const w = { available:Number(available)||0, used:0, limit:Number(limit)||3 };
         localStorage.setItem(WKEY, JSON.stringify(w));
         localStorage.setItem(SURPKEY, String(Math.max(0, parseInt(surprise,10)||0)));
         localStorage.setItem("whatif_wallet_sync", String(Date.now()));
       }catch{}
     }
+    function updatePills({available, surprise, adCount}){
+      creditsPill.textContent  = `💰 Crediti: ${available}`;
+      surprisePill.textContent = `🎁 Sorprendimi: ${surprise}`;
+      adsPill.textContent      = `📺 Annunci: ${adCount}/${ADS_PER_DAY}`;
+      adsRow.style.display = ADS_ENABLED ? "flex" : "none";
+      watchAdBtn.disabled = !(ADS_ENABLED && adCount < ADS_PER_DAY);
+    }
 
     async function ensureDailyWallet(uid){
       const ref = doc(db, "wallets", uid);
       const snap = await getDoc(ref);
-      const d = todayISO();
+      const d = today();
 
       if(!snap.exists()){
         const payload = {
@@ -321,17 +370,18 @@
         };
         await setDoc(ref, payload, { merge: true });
         mirrorToLocalStorage(payload.available, payload.surprise);
+        updatePills(payload);
         return payload;
       }
 
       const data = snap.data() || {};
       let available = Number.isFinite(+data.available) ? +data.available : 0;
       let surprise  = Number.isFinite(+data.surprise)  ? +data.surprise  : 0;
-      const lastDaily = (data.lastDaily || "");
-      let adCount = Number.isFinite(+data.adCount)? +data.adCount : 0;
-      let adDay   = data.adDay || d;
+      let adCount   = Number.isFinite(+data.adCount)   ? +data.adCount   : 0;
+      let adDay     = data.adDay || d;
+      const lastDaily = data.lastDaily || "";
 
-      // Reset giornaliero
+      // Reset giornaliero: 3 + 1, azzera adCount
       if(lastDaily !== d){
         available = 3;
         surprise  = 1;
@@ -346,30 +396,99 @@
       }
 
       mirrorToLocalStorage(available, surprise);
-      return { available, surprise, lastDaily: d, adCount, adDay };
+      const out = { available, surprise, adCount, adDay, lastDaily:d };
+      updatePills(out);
+      return out;
     }
 
-    // Espongo per eventuale debug
-    window.whatifCloud = {
-      get uid(){ return auth.currentUser?.uid || null; },
-      async refresh(){ if(!auth.currentUser) return null; return ensureDailyWallet(auth.currentUser.uid); }
-    };
+    async function incrementByAd(uid){
+      const ref = doc(db, "wallets", uid);
+      const snap = await getDoc(ref);
+      if(!snap.exists()) return ensureDailyWallet(uid);
+      const data = snap.data() || {};
+      const d = today();
 
-    // Auth anonima + init wallet
-    try{
-      if(auth.currentUser){
-        await ensureDailyWallet(auth.currentUser.uid);
-      }else{
-        await signInAnonymously(auth);
+      let available = Number(data.available)||0;
+      let adCount = Number(data.adCount)||0;
+      let adDay = data.adDay || d;
+
+      if(adDay !== d){ adCount = 0; adDay = d; }
+
+      if(adCount >= ADS_PER_DAY) return { limited:true, ...data };
+
+      available += CREDIT_PER_AD;
+      adCount += 1;
+
+      await updateDoc(ref, {
+        available, adCount, adDay,
+        updatedAt: serverTimestamp()
+      });
+
+      mirrorToLocalStorage(available, Number(data.surprise)||0);
+      const out = { ...data, available, adCount, adDay };
+      updatePills({available, surprise:Number(data.surprise)||0, adCount});
+      return out;
+    }
+
+    // --- Login Flow (obbligatorio) ---
+    loginCard.classList.add('show');
+    loginBtn.addEventListener('click', async ()=>{
+      try{
+        await signInWithPopup(auth, provider);
+      }catch(e){
+        alert("Login annullato o fallito.");
       }
-    }catch(e){
-      console.warn("Anon auth failed:", e);
-    }
+    });
+    logoutBtn.addEventListener('click', async ()=>{
+      try{
+        await signOut(auth);
+      }catch{}
+    });
+
+    watchAdBtn.addEventListener('click', async ()=>{
+      const u = auth.currentUser;
+      if(!u) return alert("Devi essere loggato.");
+      // MOCK annuncio: simula 3s "visione"
+      watchAdBtn.disabled = true;
+      watchAdBtn.textContent = "⏳ Annuncio in corso…";
+      setTimeout(async ()=>{
+        const res = await incrementByAd(u.uid);
+        if(res && res.limited) alert("Hai raggiunto il limite di annunci per oggi.");
+        watchAdBtn.textContent = "📺 Guarda annuncio (+1 credito)";
+        const snap = await getDoc(doc(db,"wallets",u.uid));
+        const d = snap.data()||{};
+        updatePills({available:Number(d.available)||0, surprise:Number(d.surprise)||0, adCount:Number(d.adCount)||0});
+        watchAdBtn.disabled = !(ADS_ENABLED && (Number(d.adCount)||0) < ADS_PER_DAY);
+      }, 3000);
+    });
 
     onAuthStateChanged(auth, async (user)=>{
-      if(!user) return;
-      try{ await ensureDailyWallet(user.uid); }catch(err){ console.error("Wallet init error:", err); }
+      const logged = !!user;
+      setLoggedIn(logged);
+      if(!logged){
+        // Blocca CTA e mostra solo login
+        loginCard.classList.add('show');
+        document.getElementById('logoutBtn').style.display = "none";
+        goBtn.disabled = true;
+        creditsPill.textContent = "💰 Crediti: —";
+        surprisePill.textContent= "🎁 Sorprendimi: —";
+        adsPill.textContent     = `📺 Annunci: —/${ADS_PER_DAY}`;
+        return;
+      }
+      // Loggato
+      document.getElementById('logoutBtn').style.display = "inline-block";
+      loginCard.classList.add('show'); // rimane visibile come barra info
+      const w = await ensureDailyWallet(user.uid);
+      // CTA abilitata se scelte fatte
+      syncUI();
     });
+
+    // Espongo utilità per debug
+    window.whatifCloud = {
+      get uid(){ return auth.currentUser?.uid || null; },
+      async forceRefresh(){ if(!auth.currentUser) return null; return ensureDailyWallet(auth.currentUser.uid); },
+      async addByAd(){ if(!auth.currentUser) return null; return incrementByAd(auth.currentUser.uid); }
+    };
   </script>
 </body>
 </html>
