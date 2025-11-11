@@ -1,0 +1,50 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Login Test</title></head><body style="font-family:system-ui;padding:20px">
+<h3>Firebase Google Login — TEST</h3>
+<button id="btn">Entra con Google (redirect)</button>
+<pre id="out" style="background:#111;color:#0f0;padding:10px;white-space:pre-wrap"></pre>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+import {
+  getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence,
+  signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyASrGnHOnf_O-N0NuZDvqOGGfG8IoSWblc",
+  authDomain: "whatif-oracolo.firebaseapp.com",
+  projectId: "whatif-oracolo",
+  storageBucket: "whatif-oracolo.firebasestorage.app",
+  messagingSenderId: "602976466053",
+  appId: "1:602976466053:web:668d4a462286513d8b25ec"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+await setPersistence(auth, browserLocalPersistence).catch(()=>{});
+
+const provider = new GoogleAuthProvider();
+provider.setCustomParameters({ prompt: "select_account" });
+
+const $ = (s)=>document.querySelector(s);
+const log = (m)=>{ $("#out").textContent += (typeof m==="string"?m:JSON.stringify(m,null,2))+"\n"; };
+
+$("#btn").onclick = ()=> signInWithRedirect(auth, provider);
+
+getRedirectResult(auth).then(res=>{
+  if(res?.user){ log("Redirect OK, utente:"); log({uid: res.user.uid, email: res.user.email}); }
+}).catch(e=>{ log("Redirect ERROR:"); log(e.message || e.code); });
+
+onAuthStateChanged(auth, (user)=>{
+  if(user){ log("AuthState: LOGGATO"); log({uid:user.uid, email:user.email}); }
+  else{ log("AuthState: non loggato"); }
+});
+
+// tap lungo per fare logout se vuoi riprovare
+document.body.addEventListener('contextmenu', async (e)=>{
+  e.preventDefault(); await signOut(auth); log("Logout fatto");
+});
+</script>
+</body></html>
