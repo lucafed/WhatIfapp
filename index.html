@@ -17,6 +17,25 @@
   <!-- Hero -->
   <link rel="preload" as="image" href="/public/home-hero.png" />
 
+  <!-- reCAPTCHA v3 (SITE KEY PUBBLICA) -->
+  <script src="https://www.google.com/recaptcha/api.js?render=6LeBWAksAAAAAAsD_MnuYkhITcWy0CBM1_qmIfv7"></script>
+  <script>
+    // Attiva reCAPTCHA v3 e genera un token (invisibile all’utente).
+    window.addEventListener('load', () => {
+      if (window.grecaptcha) {
+        grecaptcha.ready(() => {
+          grecaptcha.execute('6LeBWAksAAAAAAsD_MnuYkhITcWy0CBM1_qmIfv7', { action: 'homepage' })
+            .then(token => {
+              // Opzionale: salviamo il token per usi futuri (es. chiamate protette)
+              try { sessionStorage.setItem('recaptcha_token', token); } catch(e) {}
+              console.log('reCAPTCHA attivo, token generato');
+            })
+            .catch(() => {});
+        });
+      }
+    });
+  </script>
+
   <style>
     :root{
       --bg:#0C0F14; --bg2:#0E1724; --fg:#ffffff; --muted:#A0B2BA;
@@ -190,19 +209,14 @@
       const L = getLang(), d = DICT[L] || DICT.it;
       document.documentElement.lang = L;
       $('#langCode').textContent = L.toUpperCase();
-      // title + buttons
       $$('[data-i18n]').forEach(el=>{
         const k=el.getAttribute('data-i18n');
         if(!k) return;
-        if(k==='lead'){ return; } // lead handled below (innerHTML)
+        if(k==='lead'){ return; }
         if(typeof d[k] === 'string'){ el.textContent = d[k]; }
       });
-      // lead supports HTML (strong)
       $('#leadText').innerHTML = d.lead;
-      // highlight active item in menu
       document.querySelectorAll('#langMenu button').forEach(b=>b.classList.toggle('active', b.dataset.lang===L));
-      // keep CTA enabled state intact
-      // (no-op)
     }
 
     if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang());
@@ -273,24 +287,22 @@
       window.addEventListener("load", ()=>{ navigator.serviceWorker.register("/sw.js").catch(()=>{}); });
     }
   </script>
+
+  <!-- Firebase -->
   <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
 
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyASrGnHOnf_O-N0NuZDvqOGGfG8IoSWblc",
-    authDomain: "whatif-oracolo.firebaseapp.com",
-    projectId: "whatif-oracolo",
-    storageBucket: "whatif-oracolo.firebasestorage.app",
-    messagingSenderId: "602976466053",
-    appId: "1:602976466053:web:668d4a462286513d8b25ec"
-  };
+    // Config pubblica di Firebase (OK tenerla nel client)
+    const firebaseConfig = {
+      apiKey: "AIzaSyASrGnHOnf_O-N0NuZDvqOGGfG8IoSWblc",
+      authDomain: "whatif-oracolo.firebaseapp.com",
+      projectId: "whatif-oracolo",
+      storageBucket: "whatif-oracolo.firebasestorage.app",
+      messagingSenderId: "602976466053",
+      appId: "1:602976466053:web:668d4a462286513d8b25ec"
+    };
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
+    const app = initializeApp(firebaseConfig);
   </script>
 </body>
 </html>
