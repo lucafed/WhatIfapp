@@ -122,6 +122,17 @@ h1{
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;opacity:.9}
 .chip{font-size:11px;font-weight:900;padding:3px 7px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)}
 
+/* === INTRO (Zoltar-like) === */
+.intro-box{
+  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04));
+  border:1px dashed rgba(255,255,255,.18);
+  border-radius:14px;
+  padding:12px 14px;
+  margin:8px 0 10px;
+  font-size:14.5px; line-height:1.55; color:#E7F2EE;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
+}
+
 /* === Repeat Nudge (eco dell’oracolo) === */
 .nudge {
   margin: 8px 0 10px;
@@ -135,6 +146,7 @@ h1{
 }
 .nudge strong { font-weight: 800; }
 .nudge .advice { display:block; margin-top:6px; opacity:.9; font-style:italic; }
+.nudge .next { display:block; margin-top:6px; opacity:.95; }
 html[data-theme="wtf"] .nudge { background: rgba(90,140,117,.10); }
 html[data-theme="whatif"] .nudge { background: rgba(28,87,160,.10); }
 
@@ -205,10 +217,13 @@ html[data-theme="whatif"] .nudge { background: rgba(28,87,160,.10); }
       <div id="topPct" class="top-pct" aria-live="polite">—</div>
     </div>
 
+    <!-- INTRO (solo prima volta per stile) -->
+    <div id="introBox" class="intro-box" style="display:none"></div>
+
     <!-- NUDGE (eco ripetizione) -->
     <div id="repeatNudge" class="nudge" style="display:none"></div>
 
-    <!-- ORACLE (lead luminoso) -->
+    <!-- SOLO Oracle (niente frasetta lead) -->
     <div class="oracle-wrap">
       <div class="orb" aria-hidden="true"></div>
       <div id="oracleLine" class="oracle-line">—</div>
@@ -298,7 +313,14 @@ const I18N = {
        watchAd:"Guarda pubblicità (+1)", close:"Chiudi",
        comingSoon:"Prossimamente", buySoonNote:"Acquisto crediti non ancora disponibile.",
        toastPlus:(n)=>`+${n} credito`, toastMinus:(n)=>`-${n} credito`,
-       guideTitle:"Indicazioni", guideQuick:"Indicazioni rapide", guideAdvice:"Consiglio", guideAnalysis:"Analisi sintetica"
+       guideTitle:"Indicazioni",
+       guideQuick:"Indicazioni rapide",
+       guideAdvice:"Consiglio",
+       guideAnalysis:"Analisi sintetica",
+       nudgeHeadSoft:"Sussurro:",
+       nudgeHeadHard:"Nota spietata:",
+       nudgeAdvice:"Consiglio:",
+       nudgeNext:"Prova a chiedere:"
   },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
@@ -318,7 +340,14 @@ const I18N = {
        watchAd:"Watch ad (+1)", close:"Close",
        comingSoon:"Coming soon", buySoonNote:"Credit purchases not available yet.",
        toastPlus:(n)=>`+${n} credit`,  toastMinus:(n)=>`-${n} credit`,
-       guideTitle:"Guidance", guideQuick:"Quick tips", guideAdvice:"Advice", guideAnalysis:"Concise analysis"
+       guideTitle:"Guidance",
+       guideQuick:"Quick tips",
+       guideAdvice:"Advice",
+       guideAnalysis:"Concise analysis",
+       nudgeHeadSoft:"Whisper:",
+       nudgeHeadHard:"Blunt note:",
+       nudgeAdvice:"Advice:",
+       nudgeNext:"Try asking:"
   },
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
        sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
@@ -338,7 +367,14 @@ const I18N = {
        watchAd:"Ver anuncio (+1)", close:"Cerrar",
        comingSoon:"Próximamente", buySoonNote:"La compra de créditos aún no está disponible.",
        toastPlus:(n)=>`+${n} crédito`,  toastMinus:(n)=>`-${n} crédito`,
-       guideTitle:"Guía", guideQuick:"Indicaciones rápidas", guideAdvice:"Consejo", guideAnalysis:"Análisis sintético"
+       guideTitle:"Guía",
+       guideQuick:"Indicaciones rápidas",
+       guideAdvice:"Consejo",
+       guideAnalysis:"Análisis sintético",
+       nudgeHeadSoft:"Susurro:",
+       nudgeHeadHard:"Nota directa:",
+       nudgeAdvice:"Consejo:",
+       nudgeNext:"Prueba a preguntar:"
   },
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
        sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
@@ -358,7 +394,14 @@ const I18N = {
        watchAd:"Regarder une pub (+1)", close:"Fermer",
        comingSoon:"Bientôt", buySoonNote:"Achat de crédits pas encore disponible.",
        toastPlus:(n)=>`+${n} crédit`,  toastMinus:(n)=>`-${n} crédit`,
-       guideTitle:"Conseils", guideQuick:"Conseils rapides", guideAdvice:"Suggestion", guideAnalysis:"Analyse concise"
+       guideTitle:"Conseils",
+       guideQuick:"Conseils rapides",
+       guideAdvice:"Suggestion",
+       guideAnalysis:"Analyse concise",
+       nudgeHeadSoft:"Chuchotement :",
+       nudgeHeadHard:"Note cash :",
+       nudgeAdvice:"Conseil :",
+       nudgeNext:"Essaie de demander :"
   },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
        sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
@@ -378,7 +421,14 @@ const I18N = {
        watchAd:"Werbung ansehen (+1)", close:"Schließen",
        comingSoon:"Bald verfügbar", buySoonNote:"Kauf von Credits noch nicht verfügbar.",
        toastPlus:(n)=>`+${n} Credit`,  toastMinus:(n)=>`-${n} Credit`,
-       guideTitle:"Leitfaden", guideQuick:"Schnelle Hinweise", guideAdvice:"Rat", guideAnalysis:"Kurzanalyse"
+       guideTitle:"Leitfaden",
+       guideQuick:"Schnelle Hinweise",
+       guideAdvice:"Rat",
+       guideAnalysis:"Kurzanalyse",
+       nudgeHeadSoft:"Flüstern:",
+       nudgeHeadHard:"Klartext:",
+       nudgeAdvice:"Rat:",
+       nudgeNext:"Frag doch:"
   }
 };
 const SUP_LANG=['it','en','es','fr','de'];
@@ -410,7 +460,7 @@ const t=()=>I18N[lang]||I18N.it;
 const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
 const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica…`;
 
-/* === ORACLE LINES (lead luminoso) === */
+/* === ORACLE LINES (solo attesa) === */
 const ORACLE_LINES = {
   it: ["Shh… le carte girano piano.","Aspetta: la risposta bussa sottovoce.","L’aria si fa chiara, sta arrivando.","Non correre: il disegno prende forma.","Occhio: il quadro si accende da solo.","Silenzio un attimo… qualcosa si allinea.","Senti? C’è un passo che torna nel ritmo.","Trattieni il fiato: la moneta è a mezz’aria.","Una piega nella notte, poi luce sottile.","Le luci interne si accendono una alla volta.","Ancora un respiro… il filo si tende.","Eccolo: l’indizio che mancava si mostra.","Un colpo di vento, poi tutto si ferma.","Scorri piano: la porta sta socchiudendosi.","Si sente un sì lontano, ma si avvicina.","L’oracolo gira la pagina… quasi."],
   en: ["Hush… the cards are turning.","Wait: the answer knocks softly.","Air clears; something is arriving.","Don’t rush—shape is forming.","Look: the outline lights itself.","Hold a breath… lines align.","Hear it? A step returns to rhythm.","Coin in mid-air; let it fall.","A fold in the dark, then a thin light.","Inner lights switch on, one by one.","Another breath… the wire tightens.","There it is: the missing hint.","A gust, then stillness.","Scroll slowly: a door is ajar.","A distant yes draws nearer.","The oracle turns the page… almost."],
@@ -419,58 +469,155 @@ const ORACLE_LINES = {
   de: ["Leise… die Karten wenden sich.","Warte: die Antwort klopft sanft.","Die Luft klärt sich; es kommt.","Nicht eilen: die Form entsteht.","Schau: die Kontur leuchtet selbst.","Atem halten… die Linien richten sich.","Hörst du’s? Der Schritt findet den Takt.","Münze in der Luft; lass sie fallen.","Ein Faltenwurf der Nacht, dann dünnes Licht.","Innere Lichter, eins nach dem andern.","Noch ein Atem… der Draht spannt sich.","Da ist es: der fehlende Hinweis.","Eine Böe, dann Stille.","Langsam scrollen: die Tür steht einen Spalt offen.","Ein fernes Ja kommt näher.","Das Orakel blättert um… fast."]
 };
 
-/* ==== Benvenuto Zoltar come PRIMA riga dell’oracolo ==== */
-const WELCOME = {
-  whatif:{
-    it:{future:"🜂 La lanterna si accende: chiedi con chiarezza e il futuro si mette in riga.",
-        past:"🜂 La sabbia si posa: guarda il passato senza nebbia, prendi l’essenza e vai."},
-    en:{future:"🜂 The lamp glows: ask clearly and the future falls into line.",
-        past:"🜂 The sand settles: read the past plainly, keep the essence, move."}
+/* ==== INTRO Zoltar-like (prima volta o dopo reset) ==== */
+const INTRO_KEY = 'whatif_intro_seen_v2';
+const INTRO = {
+  whatif: {
+    it: {future:"🜂 La lanterna si accende: chiedi con chiarezza e il futuro si mette in riga.", past:"🜂 La sabbia si posa: guarda il passato senza nebbia, prendi l’essenza e vai."},
+    en: {future:"🜂 The lamp glows: ask clearly and the future falls into line.", past:"🜂 The sand settles: read the past plainly, keep the essence, move."}
   },
-  wtf:{
-    it:{future:"🥂 Dillo forte, fai spazio: il domani non aspetta i timidi.",
-        past:"🥂 Chiudi il conto: il passato ha già pagato, tu ordina il prossimo giro."},
-    en:{future:"🥂 Say it loud, make room: tomorrow won’t wait for the shy.",
-        past:"🥂 Tab’s closed: the past already paid—order the next round."}
+  wtf: {
+    it: {future:"🥂 Dillo forte, fai spazio: il domani non aspetta i timidi.", past:"🥂 Chiudi il conto: il passato ha già pagato, tu ordina il prossimo giro."},
+    en: {future:"🥂 Say it loud, make room: tomorrow won’t wait for the shy.", past:"🥂 Tab’s closed: the past already paid—order the next round."}
   }
 };
-function needWelcome(){
-  const resetFlag = LS.getItem('reset_all')==='1';
-  const seen = LS.getItem('intro_seen_v3')==='1';
-  if(resetFlag){ LS.removeItem('intro_seen_v3'); LS.removeItem('reset_all'); return true; }
-  return !seen;
-}
-function getWelcomeLine(){
-  const bucket = (WELCOME[style] && WELCOME[style][lang]) ? WELCOME[style][lang] : WELCOME['whatif']['en'];
-  const line = (periodo==='past') ? (bucket.past||bucket.future) : (bucket.future||bucket.past);
-  LS.setItem('intro_seen_v3','1');
-  return line || "";
+function showIntroOnce(){
+  try{
+    const seen = LS.getItem(INTRO_KEY)==='1';
+    const box = document.getElementById('introBox');
+    if(!box) return;
+    if(seen){ box.style.display='none'; return; }
+    const L = (INTRO[style] && INTRO[style][lang]) ? INTRO[style][lang] : INTRO['whatif']['it'];
+    const line = (periodo==='past') ? L.past : L.future;
+    box.textContent = line;
+    box.style.display = 'block';
+    try{
+      if(style==='wtf') document.getElementById('sfxWtf')?.play().catch(()=>{});
+      else document.getElementById('sfxWhatIf')?.play().catch(()=>{});
+    }catch{}
+    LS.setItem(INTRO_KEY,'1');
+  }catch{}
 }
 
-/* ==== ORACLE helpers ==== */
+/* ==== UI refs ==== */
+const qs=(s)=>document.querySelector(s);
+const subtitle=qs('#subtitle'), lblQ=qs('#lblQ'), lblA=qs('#lblA'), qView=qs('#qView');
+const answerEl=qs('#answer'), shareBtn=qs('#shareBtn'), againBtn=qs('#againBtn');
+const saveBtn=qs('#saveBtn');
+const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct'), bottomPct=qs('#bottomPct');
+const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
+const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
+const motNote=qs('#motNote'), creditInfo=qs('#creditInfo'), toastEl=qs('#toast');
+
+/* ==== Toast ==== */
+function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
+
+/* ==== Wallet + Sorprendimi (+ legacy compat) ==== */
+const WKEY="whatif_wallet";
+const SURPKEY="whatif_surprise";
+function readWallet(){ try{ const w=JSON.parse(LS.getItem(WKEY)||"{}")||{}; return {available:Number.isFinite(+w.available)?+w.available:null, used:Number.isFinite(+w.used)?+w.used:null, limit:Number.isFinite(+w.limit)?+w.limit:null}; }catch{return{available:null,used:null,limit:null}}}
+function writeWallet(w){
+  const cur=readWallet();
+  const out={ available:(w.available!=null)?Math.max(0,+w.available):(cur.available??0),
+              used:(w.used!=null)?Math.max(0,(w.used||0)+1):(cur.used??0),
+              limit:(w.limit!=null)?Math.max(0,+w.limit):(cur.limit??0) };
+  LS.setItem(WKEY, JSON.stringify(out));
+  LS.setItem("whatif_wallet_sync", String(Date.now()));
+  updateCreditInfo();
+}
+function legacyCap(){ return (prefs.pro===true)?10:3 }
+function legacyGetLeft(){
+  const w=readWallet(); if(w.available!=null) return w.available;
+  try{ const c=JSON.parse(LS.getItem('whatif_credits')||'{}'); const today=new Date().toISOString().slice(0,10); const used=(c.date===today)?(+c.used||0):0; return Math.max(0, legacyCap()-used); }catch{}
+  const raw=LS.getItem('crediti'); return raw==null? legacyCap() : Math.max(0, parseInt(raw,10)||0);
+}
+function legacyConsumeOne(){
+  try{ const w=readWallet(); if(w.available!=null){ if(w.available<=0) return false; writeWallet({available:w.available-1}); return true; } }catch{}
+  try{ const today=new Date().toISOString().slice(0,10); let c=JSON.parse(LS.getItem('whatif_credits')||'{}'); if(c.date!==today) c={date:today,used:0,limit:legacyCap()}; if((c.used||0)>= (c.limit||legacyCap())) return false; c.used=(c.used||0)+1; LS.setItem('whatif_credits', JSON.stringify(c)); return true; }catch{}
+  let n=parseInt(LS.getItem('crediti')||'0',10)||0; if(n<=0) return false; LS.setItem('crediti', String(Math.max(0,n-1))); return true;
+}
+function getAvailable(){ if(IS_ADMIN) return Infinity; const w=readWallet(); return (w.available!=null)?w.available:legacyGetLeft() }
+function consumeOne(){
+  if(IS_ADMIN) return true;
+  const w=readWallet();
+  if(w.available!=null){
+    if(w.available<=0) return false;
+    writeWallet({available:w.available-1});
+    return true;
+  }
+  return legacyConsumeOne();
+}
+function addCredits(n){ n=Math.max(0,parseInt(n,10)||0); if(n<=0) return;
+  const w=readWallet();
+  if(w.available==null){ const left=legacyGetLeft(); writeWallet({available:left+n, used:0, limit:legacyCap()}); }
+  else{ writeWallet({available:(w.available+n), used:Math.max(0,(w.used||0)-n), limit:(w.limit!=null?w.limit:legacyCap())}); }
+}
+
+/* 🎁 Surprise tokens */
+function readSurprise(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||"0",10)||0); }
+function writeSurprise(n){ n=Math.max(0, parseInt(n,10)||0); LS.setItem(SURPKEY,String(n)); updateCreditInfo(); LS.setItem("whatif_wallet_sync", String(Date.now())); }
+function addSurprise(n){ writeSurprise(readSurprise() + Math.max(0,parseInt(n,10)||0)); }
+function consumeSurpriseOne(){ const cur=readSurprise(); if(cur>0){ writeSurprise(cur-1); return true; } return false; }
+
+function updateCreditInfo(n=getAvailable()){
+  if(!creditInfo) return;
+  const surprise = readSurprise();
+  creditInfo.textContent = `${t().credits(n===Infinity?'∞':n)} · 🎁 Sorprendimi: ${surprise}`;
+}
+window.addEventListener('storage',(e)=>{ if(['whatif_wallet','whatif_wallet_sync','whatif_credits','admin_token','lang','lang_manual',SURPKEY].includes(e.key)){ updateCreditInfo(); }});
+
+/* ==== Helpers testo ==== */
+function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
+function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
+function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
+
+/* ==== Titles/Text ==== */
+function applyUI(q){
+  const T=t();
+  setText('#title', style==='wtf'?T.titleWTF:T.titleWHF);
+  subtitle.textContent=T.sub(q||'—'); setText('#lblQ', T.q); setText('#lblA', T.a); setText('#lblP', T.p);
+  shareBtn.textContent=T.share; againBtn.textContent=T.again; if(saveBtn) saveBtn.textContent=T.save;
+  styleBadge.textContent=(style==='wtf')?T.styleWTF:T.styleWHF;
+  setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));
+}
+
+/* ==== Probability & motives ==== */
+function computeProbability(q){
+  const t=(q||'').toLowerCase(); let s=50;
+  if(/\b(7|14|21|30|60|90)\b/.test(t)) s+=12;
+  if(/\b\d+([.,]\d+)?\b/.test(t)) s+=8;
+  if(/budget|€|euro|spesa|max|under|sotto/.test(t)) s+=6;
+  if(/senza|solo|al massimo|minimo|entro|prima delle|ogni|per/.test(t)) s+=8;
+  if(/lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa/.test(t)) s+=6;
+  if(/forse|magari|maybe|quizás/.test(t)) s-=8;
+  if(!/\b\d/.test(t)) s-=6;
+  s += (style==='wtf' ? -4 : +2);
+  return {pct: Math.max(25, Math.min(92, Math.round(s)))}
+}
+
+/* === ORACLE helpers === */
 let oracleDeck = [];
 let oracleTimerId = null;
 function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
 function buildOracleDeck(){
   const base = (ORACLE_LINES[lang] || ORACLE_LINES.it).slice();
-  return shuffle(base);
+  const tails = ["", " …", " ⋯", " —", " ⸺", " …sssh."];
+  const deck = [];
+  for(const line of base){
+    const v = Math.random()<0.45 ? (line.replace(/\.$/,"") + tails[Math.floor(Math.random()*tails.length)]) : line;
+    deck.push(v);
+  }
+  return shuffle(deck);
 }
 function nextOracleLine(){
   if(oracleDeck.length===0) oracleDeck = buildOracleDeck();
   return oracleDeck.pop();
 }
-function startOracleLoading(initialLine){
+function startOracleLoading(){
   document.body.classList.add('loading');
   const lineEl = document.getElementById('oracleLine');
-  let firstShown = false;
-
   const tick = ()=>{
-    if(!firstShown && initialLine){
-      lineEl.textContent = initialLine;
-      firstShown = true;
-    } else {
-      lineEl.textContent = nextOracleLine();
-    }
+    lineEl.textContent = nextOracleLine();
     const jitter = 1200 + Math.floor(Math.random()*1000);
     oracleTimerId = setTimeout(tick, jitter);
   };
@@ -495,6 +642,7 @@ function isManualOrSpunti(req){
   const src = (req?.micro?.source || "").toLowerCase();
   return src === "manual" || src === "spunti" || src === "quick";
 }
+// Estrai indizi dalla domanda per contestualizzare consigli
 function extractContextParts(q){
   const s = String(q||"").trim();
   const lower = s.toLowerCase();
@@ -506,22 +654,24 @@ function extractContextParts(q){
   return {when, money, action, topic};
 }
 function buildDirectPack(domanda, data){
-  const T=t();
   const quickAPI = (data && (data.quick||data.guide||data.tip)) || null;
   const adviceAPI = (data && (data.advice||data.suggestion)) || null;
   const analysisAPI = (data && (data.analysis||data.summary)) || null;
 
   const ctx = extractContextParts(domanda);
+
   const quick = quickAPI || (
     lang==='en'
       ? `Block 10′ today on ${ctx.topic?`**${ctx.topic}**`:"this"}: start with ${ctx.action?ctx.action:"one concrete step"}${ctx.when?` ${ctx.when}`:""}.`
       : `Blocca 10′ oggi su ${ctx.topic?`**${ctx.topic}**`:"questo"}: inizia con ${ctx.action||"un passo concreto"}${ctx.when?` ${ctx.when}`:""}.`
   );
+
   const advice = adviceAPI || (
     lang==='en'
       ? `Write a mini goal you can finish ${ctx.when||"within 72h"} and define success in one line.`
       : `Scrivi un micro-obiettivo da chiudere ${ctx.when||"entro 72h"} e definisci il “fatto” in una riga.`
   );
+
   const analysis = analysisAPI || (
     lang==='en'
       ? `Reduce friction: one tool, one metric${ctx.money?`, mind budget (${ctx.money})`:""}; schedule a check-in in 3 days.`
@@ -531,7 +681,7 @@ function buildDirectPack(domanda, data){
   return { quick, advice, analysis };
 }
 
-/* ==== Repeat Nudge (manuale/spunti; anche WTF con nota emotiva) ==== */
+/* ==== Repeat Nudge (manuale/spunti; anche WTF con nota emotiva + proposta nuova domanda) ==== */
 function tokenizeTopic(s){
   const stop = {
     it: "di,del,della,delle,degli,dei,che,con,per,nel,nella,allo,alla,alle,agli,una,un,uno,il,lo,la,le,gli,e,o,ma,se,quando,dove,come,anche,non,più,meno".split(","),
@@ -557,10 +707,10 @@ function isSimilarToRecent(domanda, k=2, threshold=0.70){
     if(sim >= threshold) hits++;
     seen++; if(seen>=k) break;
   }
-  return hits >= k; // ⇒ alla terza volta (due simili già in memoria)
+  return hits >= k;
 }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-function getNudgeContent(style){
+function getNudgeContent(style, domanda){
   const packs = {
     whatif: {
       it: {
@@ -621,7 +771,14 @@ function getNudgeContent(style){
   };
   const bucket = (style==='wtf' ? packs.wtf : packs.whatif);
   const L = bucket[lang] || bucket.en;
-  return { line: pick(L.lines), advice: pick(L.advice) };
+  // Bozza proposta prossima domanda
+  const ctx = extractContextParts(domanda);
+  const topic = ctx.topic || (lang==='en'?'this':'questo');
+  const when = ctx.when || (lang==='en'?'this week':'questa settimana');
+  const nextQ = (lang==='en')
+    ? `What’s the first concrete step for **${topic}** in **${when}**?`
+    : `Qual è il primo passo concreto per **${topic}** **${when}**?`;
+  return { line: pick(L.lines), advice: pick(L.advice), nextQ };
 }
 function maybeShowRepeatNudge(req, domanda){
   const wrap = document.getElementById('repeatNudge');
@@ -632,18 +789,16 @@ function maybeShowRepeatNudge(req, domanda){
   if(surprise){ wrap.style.display='none'; return; }
   if(!isManualOrSpunti(req)) { wrap.style.display='none'; return; }
   if(!isSimilarToRecent(domanda, 2, 0.70)) { wrap.style.display='none'; return; }
-  const { line, advice } = getNudgeContent(style);
-  const head = (style==='wtf')
-    ? (lang==='it' ? "<strong>Nota spietata:</strong> " : "<strong>Blunt note:</strong> ")
-    : (lang==='it' ? "<strong>Sussurro:</strong> " : "<strong>Whisper:</strong> ");
-  const advLabel = (lang==='it' ? "Consiglio:" : "Advice:");
-  wrap.innerHTML = `${head}${line}<span class="advice">• ${advLabel} ${advice}</span>`;
+
+  const { line, advice, nextQ } = getNudgeContent(style, domanda);
+  const head = (style==='wtf') ? `<strong>${t().nudgeHeadHard}</strong> ` : `<strong>${t().nudgeHeadSoft}</strong> `;
+  wrap.innerHTML = `${head}${line}<span class="advice">• ${t().nudgeAdvice} ${advice}</span><span class="next">• ${t().nudgeNext} “${nextQ}”</span>`;
   wrap.style.display='block';
 }
 
 /* ==== Overlay (store + rewarded) ==== */
 const ADS_ENABLED = false;
-const overlay=document.querySelector('#overlay'), overlayFrame=document.querySelector('#overlay-frame');
+const overlay=qs('#overlay'), overlayFrame=qs('#overlay-frame');
 let overlayLoadTimer=null, rewardTimer=null, rewardGranted=false, awaitingCredit=false, alreadyConsumed=false;
 
 function storeFallbackHTML(){
@@ -711,103 +866,6 @@ function closeOverlay(){
   try{ clearTimeout(rewardTimer); }catch{}
 }
 
-/* ==== UI refs ==== */
-const qs=(s)=>document.querySelector(s);
-const subtitle=qs('#subtitle'), lblQ=qs('#lblQ'), lblA=qs('#lblA'), qView=qs('#qView');
-const answerEl=qs('#answer'), shareBtn=qs('#shareBtn'), againBtn=qs('#againBtn');
-const saveBtn=qs('#saveBtn');
-const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct'), bottomPct=qs('#bottomPct');
-const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
-const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
-const motNote=qs('#motNote'), creditInfo=qs('#creditInfo'), toastEl=qs('#toast');
-
-/* ==== Toast ==== */
-function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
-
-/* ==== Wallet + legacy + 🎁 Sorprendimi ==== */
-const WKEY="whatif_wallet";
-const SURPKEY="whatif_surprise";
-function readWallet(){ try{ const w=JSON.parse(LS.getItem(WKEY)||"{}")||{}; return {available:Number.isFinite(+w.available)?+w.available:null, used:Number.isFinite(+w.used)?+w.used:null, limit:Number.isFinite(+w.limit)?+w.limit:null}; }catch{return{available:null,used:null,limit:null}}}
-function writeWallet(w){
-  const cur=readWallet();
-  const out={ available:(w.available!=null)?Math.max(0,+w.available):(cur.available??0),
-              used:(w.used!=null)?Math.max(0,+w.used):(cur.used??0),
-              limit:(w.limit!=null)?Math.max(0,+w.limit):(cur.limit??0) };
-  LS.setItem(WKEY, JSON.stringify(out));
-  LS.setItem("whatif_wallet_sync", String(Date.now()));
-  updateCreditInfo();
-}
-function legacyCap(){ return (prefs.pro===true)?10:3 }
-function legacyGetLeft(){
-  const w=readWallet(); if(w.available!=null) return w.available;
-  try{ const c=JSON.parse(LS.getItem('whatif_credits')||'{}'); const today=new Date().toISOString().slice(0,10); const used=(c.date===today)?(+c.used||0):0; return Math.max(0, legacyCap()-used); }catch{}
-  const raw=LS.getItem('crediti'); return raw==null? legacyCap() : Math.max(0, parseInt(raw,10)||0);
-}
-function legacyConsumeOne(){
-  try{ const w=readWallet(); if(w.available!=null){ if(w.available<=0) return false; writeWallet({available:w.available-1, used:Math.max(0,(w.used||0)+1), limit:(w.limit!=null?w.limit:legacyCap())}); return true; } }catch{}
-  try{ const today=new Date().toISOString().slice(0,10); let c=JSON.parse(LS.getItem('whatif_credits')||'{}'); if(c.date!==today) c={date:today,used:0,limit:legacyCap()}; if((c.used||0)>= (c.limit||legacyCap())) return false; c.used=(c.used||0)+1; LS.setItem('whatif_credits', JSON.stringify(c)); return true; }catch{}
-  let n=parseInt(LS.getItem('crediti')||'0',10)||0; if(n<=0) return false; LS.setItem('crediti', String(Math.max(0,n-1))); return true;
-}
-function getAvailable(){ if(IS_ADMIN) return Infinity; const w=readWallet(); return (w.available!=null)?w.available:legacyGetLeft() }
-function consumeOne(){
-  if(IS_ADMIN) return true;
-  const w=readWallet();
-  if(w.available!=null){
-    if(w.available<=0) return false;
-    writeWallet({available:w.available-1, used:Math.max(0,(w.used||0)+1), limit:(w.limit!=null?w.limit:legacyCap())});
-    return true;
-  }
-  return legacyConsumeOne();
-}
-function addCredits(n){ n=Math.max(0,parseInt(n,10)||0); if(n<=0) return;
-  const w=readWallet();
-  if(w.available==null){ const left=legacyGetLeft(); writeWallet({available:left+n, used:0, limit:legacyCap()}); }
-  else{ writeWallet({available:(w.available+n), used:Math.max(0,(w.used||0)-n), limit:(w.limit!=null?w.limit:legacyCap())}); }
-}
-
-/* 🎁 Sorprendimi tokens */
-function readSurprise(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||"0",10)||0); }
-function writeSurprise(n){ n=Math.max(0, parseInt(n,10)||0); LS.setItem(SURPKEY,String(n)); updateCreditInfo(); LS.setItem("whatif_wallet_sync", String(Date.now())); }
-function addSurprise(n){ writeSurprise(readSurprise() + Math.max(0,parseInt(n,10)||0)); }
-function consumeSurpriseOne(){ const cur=readSurprise(); if(cur>0){ writeSurprise(cur-1); return true; } return false; }
-function computeSurpriseBonus(amount){ const a=parseInt(amount,10)||0; if(a>=20) return 3; if(a>=10) return 2; if(a>=5)  return 1; return 0; }
-
-function updateCreditInfo(n=getAvailable()){
-  if(!creditInfo) return;
-  const surprise = readSurprise();
-  creditInfo.textContent = `${t().credits(n===Infinity?'∞':n)} · 🎁 Sorprendimi: ${surprise}`;
-}
-window.addEventListener('storage',(e)=>{ if(['whatif_wallet','whatif_wallet_sync','whatif_credits','admin_token','lang','lang_manual',SURPKEY].includes(e.key)){ updateCreditInfo(); }});
-
-/* ==== Helpers testo ==== */
-function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
-function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
-function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
-
-/* ==== Titles/Text ==== */
-function applyUI(q){
-  const T=t();
-  setText('#title', style==='wtf'?T.titleWTF:T.titleWHF);
-  subtitle.textContent=T.sub(q||'—'); setText('#lblQ', T.q); setText('#lblA', T.a); setText('#lblP', T.p);
-  shareBtn.textContent=T.share; againBtn.textContent=T.again; if(saveBtn) saveBtn.textContent=T.save;
-  styleBadge.textContent=(style==='wtf')?T.styleWTF:T.styleWHF;
-  setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));
-}
-
-/* ==== Probability & motives ==== */
-function computeProbability(q){
-  const t=(q||'').toLowerCase(); let s=50;
-  if(/\b(7|14|21|30|60|90)\b/.test(t)) s+=12;
-  if(/\b\d+([.,]\d+)?\b/.test(t)) s+=8;
-  if(/budget|€|euro|spesa|max|under|sotto/.test(t)) s+=6;
-  if(/senza|solo|al massimo|minimo|entro|prima delle|ogni|per/.test(t)) s+=8;
-  if(/lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa/.test(t)) s+=6;
-  if(/forse|magari|maybe|quizás/.test(t)) s-=8;
-  if(!/\b\d/.test(t)) s-=6;
-  s += (style==='wtf' ? -4 : +2);
-  return {pct: Math.max(25, Math.min(92, Math.round(s)))}
-}
-
 /* ==== Top init ==== */
 (function initTop(){
   const hasToken=!!LS.getItem('admin_token');
@@ -850,13 +908,13 @@ async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
 
-  // Nudge su ripetizione (solo manuale/spunti; anche WTF con nota emotiva)
+  // Intro Zoltar-like (prima volta o dopo reset: se fourth pulisce LS, si vede sempre)
+  showIntroOnce();
+
+  // Nudge su ripetizione (solo manuale/spunti; anche WTF con nota emotiva + next Q)
   maybeShowRepeatNudge(req, domanda);
 
-  // Oracolo: benvenuto Zoltar come prima riga (prima volta o dopo reset)
-  const initialOracle = needWelcome() ? getWelcomeLine() : "";
-
-  startOracleLoading(initialOracle);
+  startOracleLoading();
 
   if(!IS_ADMIN && !alreadyConsumed){
     if(surprise){
@@ -942,15 +1000,16 @@ async function startFlow(){
       motIco.style.display='none'; chipsWrap.style.display='none';
       committeeTitle.textContent = t().guideTitle;
 
+      // Contestualizza SOLO per manuale/spunti; altrimenti fallback pack standard
       const contextual = isManualOrSpunti(req);
       const pack = contextual ? buildDirectPack(domanda, data||{}) : buildDirectPack("", data||{});
 
       const labels = { quick:t().guideQuick, advice:t().guideAdvice, analysis:t().guideAnalysis };
       motNote.innerHTML =
-        `<strong>${labels.analysis}:</strong> ${pack.analysis}<br>`+
         `<strong>${labels.quick}:</strong> ${pack.quick}<br>`+
-        `<strong>${labels.advice}:</strong> ${pack.advice}`;
-      motivazioneUsata = `${labels.analysis}: ${pack.analysis} | ${labels.quick}: ${pack.quick} | ${labels.advice}: ${pack.advice}`;
+        `<strong>${labels.advice}:</strong> ${pack.advice}<br>`+
+        `<strong>${labels.analysis}:</strong> ${pack.analysis}`;
+      motivazioneUsata = `${labels.quick}: ${pack.quick} | ${labels.advice}: ${pack.advice} | ${labels.analysis}: ${pack.analysis}`;
     }
 
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
@@ -991,6 +1050,7 @@ qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
 if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
 
 /* ==== Avvio ==== */
+let alreadyConsumed=false;
 startFlow();
 </script>
 </body>
