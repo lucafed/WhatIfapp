@@ -1,17 +1,14 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>Firebase Google Login — TEST</title>
-<button id="btn" style="padding:10px 14px">Entra con Google</button>
+<title>Login Google — What?f</title>
+<button id="login" style="padding:10px 14px">Entra con Google</button>
 <pre id="out" style="margin-top:12px;padding:8px;border:1px solid #333;min-height:24px"></pre>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
-  const log = (m)=>{ document.getElementById('out').textContent = String(m||''); };
-
-  // 🔧 CONFIG del tuo progetto
-  const firebaseConfig = {
+  const cfg = {
     apiKey: "AIzaSyASrGnHOnf_O-N0NuZDvqOGGfG8IoSWblc",
     authDomain: "whatif-oracolo.firebaseapp.com",
     projectId: "whatif-oracolo",
@@ -19,44 +16,27 @@
     messagingSenderId: "602976466053",
     appId: "1:602976466053:web:668d4a462286513d8b25ec"
   };
-
-  const app = initializeApp(firebaseConfig);
+  const app = initializeApp(cfg);
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
+  const out = document.getElementById('out');
+  const show = (m)=>{ out.textContent = String(m||''); };
 
-  // Dopo il redirect, Firebase ritorna qui:
+  // Risultato dopo il redirect
   getRedirectResult(auth)
     .then(res=>{
       if(res?.user){
-        log("✅ Login OK: " + (res.user.email || res.user.uid));
+        show("✅ Login OK: " + (res.user.email || res.user.uid));
       }else{
-        log("Pronto. Clicca il bottone.");
+        show("Pronto. Clicca Entra con Google.");
       }
     })
-    .catch(e=> log("❌ Post-redirect: " + (e.code || e.message)));
+    .catch(e=> show("❌ Post-redirect: " + (e.code || e.message)));
 
-  document.getElementById('btn').onclick = async ()=>{
-    log("Apro login…");
-    try{
-      // Desktop spesso preferisce il popup, mobile il redirect:
-      const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
-      if(isMobile){
-        await signInWithRedirect(auth, provider);
-      }else{
-        // Prova popup; se bloccato, cade su redirect
-        try{
-          const r = await signInWithPopup(auth, provider);
-          log("✅ Login OK: " + (r.user?.email || r.user?.uid));
-        }catch(err){
-          if(String(err.code).includes("operation-not-supported")){
-            await signInWithRedirect(auth, provider);
-          }else{
-            log("❌ Popup: " + (err.code || err.message));
-          }
-        }
-      }
-    }catch(e){
-      log("❌ Click: " + (e.code || e.message));
-    }
+  document.getElementById('login').onclick = ()=>{
+    show("Vado al login…");
+    signInWithRedirect(auth, provider).catch(e=>{
+      show("❌ Click: " + (e.code || e.message));
+    });
   };
 </script>
