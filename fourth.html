@@ -679,5 +679,129 @@ $('surpriseBtn').onclick=slotSurprise;
       }
     });
   </script>
+  <!-- ==== SERVER CREDIT SYNC (Firestore) ==== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+  // 🔧 Usa la tua config (quella già usata altrove)
+  const firebaseConfig = {
+    apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
+    authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
+    projectId: "whatif-oracolo-bc15d",
+    storageBucket: "whatif-oracolo-bc15d.firebasestorage.app",
+    messagingSenderId: "857481137283",
+    appId: "1:857481137283:web:ff8f766d14392835cf5fb6"
+  };
+
+  // Evita doppia init se già inizializzato altrove
+  let app;
+  try { app = initializeApp(firebaseConfig); } catch(e){ /* già init */ }
+  const auth = getAuth();
+  const db = getFirestore();
+
+  const WKEY = 'whatif_wallet';
+  const SURPKEY = 'whatif_surprise';
+
+  const today = new Date().toISOString().slice(0,10);
+  const defaultDailyCap = (JSON.parse(localStorage.getItem('whatif_prefs')||'{}')?.pro===true) ? 10 : 3;
+
+  function writeWalletFromServer(available, used, cap){
+    const safe = {
+      available: (available===Infinity?Infinity:Math.max(0, Number(available)||0)),
+      used:      Math.max(0, Number(used)||0),
+      limit:     (cap===Infinity?Infinity:Math.max(0, Number(cap)||0))
+    };
+    localStorage.setItem(WKEY, JSON.stringify(safe));
+    localStorage.setItem('whatif_wallet_sync', String(Date.now()));
+  }
+
+  async function ensureUserDoc(uid){
+    const ref = doc(db, 'users', uid);
+    const snap = await getDoc(ref);
+    if(!snap.exists()){
+      // Prima inizializzazione server-side
+      await setDoc(ref, {
+        credits: { available: defaultDailyCap, used: 0, dailyCap: defaultDailyCap, lastReset: today },
+        surprise: { tokens: 1, lastReset: today }, // il tuo “+1 Sorprendimi” giornaliero
+        pro: JSON.parse(localStorage.getItem('whatif_prefs')||'{}')?.pro===true ? true : false,
+        createdAt: Date.now()
+      }, { merge: true });
+      return { available: defaultDailyCap, used: 0, dailyCap: defaultDailyCap, lastReset: today, surpriseTokens: 1 };
+    } else {
+      const data = snap.data()||{};
+      const credits = data.credits || {};
+      const surprise = data.surprise || {};
+      let { available=defaultDailyCap, used=0, dailyCap=defaultDailyCap, lastReset=today } = credits;
+      let tokens = Number(surprise.tokens||0);
+      let tokensLast = surprise.lastReset || today;
+
+      // Reset giornaliero (server persisted)
+      if(lastReset !== today){
+        available = dailyCap;
+        used = 0;
+        lastReset = today;
+      }
+      if(tokensLast !== today){
+        // ricarica giornaliera “Sorprendimi”: 1
+        tokens = Math.max(tokens, 1);
+        tokensLast = today;
+      }
+
+      // Scrivi eventuali reset nel doc
+      await setDoc(ref, {
+        credits: { available, used, dailyCap, lastReset },
+        surprise: { tokens, lastReset: tokensLast }
+      }, { merge: true });
+
+      return { available, used, dailyCap, lastReset, surpriseTokens: tokens };
+    }
+  }
+
+  async function syncCredits(uid){
+    const { available, used, dailyCap, surpriseTokens } = await ensureUserDoc(uid);
+    // Aggiorna cache locale così tutta la UI esistente continua a funzionare
+    writeWalletFromServer(available, used, dailyCap);
+    localStorage.setItem(SURPKEY, String(Math.max(0, parseInt(surpriseTokens)||0)));
+  }
+
+  // (Opzionale) Consumo 1 credito lato server – se in futuro vuoi usarlo anche da fourth
+  async function consumeOneServer(uid){
+    const ref = doc(db, 'users', uid);
+    await runTransaction(db, async (tx)=>{
+      const snap = await tx.get(ref);
+      if(!snap.exists()) throw new Error('no-user-doc');
+      const data = snap.data()||{};
+      const c = data.credits || {};
+      const today = new Date().toISOString().slice(0,10);
+      let { available=defaultDailyCap, used=0, dailyCap=defaultDailyCap, lastReset=today } = c;
+      if(lastReset !== today){ available = dailyCap; used = 0; lastReset = today; }
+      if(available <= 0) throw new Error('no-credits');
+      available -= 1; used += 1;
+      tx.set(ref, { credits: { available, used, dailyCap, lastReset } }, { merge: true });
+    });
+  }
+
+  // Aggancia al login
+  onAuthStateChanged(auth, async (user)=>{
+    if(!user) return; // non loggato -> lascia il fallback (mostrerà 3/10 finché non fai login)
+    try {
+      await syncCredits(user.uid);
+      // refresh badge locale in fourth (usa la tua funzione già presente)
+      if (typeof renderCredits === 'function') renderCredits();
+      if (typeof renderSpinButton === 'function') renderSpinButton();
+    } catch(e){
+      console.error('syncCredits error', e);
+    }
+  });
+
+  // Piccolo refresh quando rientri nella tab
+  document.addEventListener('visibilitychange', async ()=>{
+    if(document.hidden) return;
+    const u = auth.currentUser;
+    if(u){ try{ await syncCredits(u.uid); if (typeof renderCredits==='function') renderCredits(); }catch{} }
+  });
+</script>
 </body>
 </html>
