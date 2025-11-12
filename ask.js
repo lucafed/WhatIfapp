@@ -1,7 +1,7 @@
-// /api/ask.js — What?f Engine (Zingara-Realista WHATIF + Friendly-WTF narrativo-vivo)
+// /api/ask.js — What?f Engine (Zingara-Realista WHATIF + Friendly-WTF Demenziale)
 // - WHATIF: incipit "zingara realista" (sempre, variabile), 60% analisi / 40% immagini sobrie,
 //   chiusura con sensazione + gancio. Passato → controfattuale. Futuro → ipotesi vicina.
-// - WTF: vivo, caotico ma affettuoso, oggetti naturali (cucina/bar/casa), 1 sola imprecazione organica.
+// - WTF: come da tuoi esempi. Payload extra 'scientific' (non nella risposta).
 // - Un paragrafo, niente elenchi, niente eco della domanda. Maiuscole ripristinate post-process.
 
 import OpenAI from "openai";
@@ -78,33 +78,12 @@ function finalPunct(s=""){ return /[.!?…]$/.test(s)?s:s+"."; }
 function hashStr(str=""){ let h=2166136261>>>0; for(const ch of String(str)){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619)>>>0; } return h>>>0; }
 function pickDet(arr, seed){ return arr[ arr.length ? (seed % arr.length) : 0 ] || ""; }
 
-/* ========= WHAT IF – esempio di respiro (tono “mio”) ========= */
-const WHATIF_HYBRID_EX_IT =
-  `Piccolo avviso del cuore, poi il resto: conti alla mano e abitudini in chiaro. ` +
-  `Riduci rumore, allunghi fiato: meno frenesia, più spazio mentale. ` +
-  `Le giornate diventano più tue — strade note, tempi umani, persone che ti tengono. ` +
-  `Non è fuga né eroismo, è manutenzione di vita: sposti peso tra tempo, denaro e relazioni. ` +
-  `In cambio della vetrina ottieni consistenza. ` +
-  `A fine giornata non senti rimpianto bussare: senti il passo rientrare nel suo passo.`;
+/* ========= WHAT IF – esempio di respiro (non fisso) ========= */
+const WHATIF_HYBRID_EX_IT = `Piccolo avviso del cuore, poi il resto: conti alla mano e abitudini in chiaro. Riduci rumore, allunghi fiato: meno frenesia, più spazio mentale. Le giornate diventano più tue — strade note, tempi umani, persone che ti tengono. Non è fuga né eroismo, è manutenzione di vita: sposti peso tra tempo, denaro e relazioni. In cambio della vetrina ottieni consistenza. A fine giornata non senti rimpianto bussare: senti il passo rientrare nel suo passo.`;
 
-/* ======= WHAT IF RULES (tono “mio”) ======= */
-const WHATIF_RULE_FUT_IT =
-  `WHAT IF (italiano, FUTURO): apri SEMPRE con una riga breve da “zingara realista” (intuitiva, amichevole, 6–14 parole), ` +
-  `poi 60% analisi concreta (routine, tempo, costi/benefici, energia, relazioni) + 40% immagini sobrie della quotidianità. ` +
-  `Scrivi un futuro vicino che inizia ora: usa futuro/condizionale semplice (“potresti”, “inizierai”, “probabilmente”). ` +
-  `Niente certezze assolute, niente dati reali o nomi non forniti. ` +
-  `Chiudi con una frase che lasci una sensazione chiara e un piccolo gancio di curiosità. ` +
-  `8–10 frasi, seconda persona, un paragrafo, NON ripetere la domanda. ` +
-  `Linguaggio semplice, concreto, coinvolgente.`;
-
-const WHATIF_RULE_PAST_IT =
-  `WHAT IF (italiano, PASSATO CONTROFATTUALE): apri SEMPRE con una riga breve da “zingara realista”, ` +
-  `poi 60% analisi concreta + 40% immagini sobrie. ` +
-  `Chiave controfattuale: “se avessi…, avresti…”, “ti saresti trovato…”. ` +
-  `Usa condizionale composto, niente date/fatti non forniti. ` +
-  `Chiudi con sensazione + micro-gancio. ` +
-  `8–10 frasi, seconda persona, un paragrafo, NON ripetere la domanda. ` +
-  `Linguaggio semplice, concreto, coinvolgente.`;
+/* ======= WHAT IF RULES ======= */
+const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO): apri SEMPRE con una riga breve da “zingara realista” (intuitiva, amichevole, senza nomi, 6–14 parole), poi 60% analisi concreta (routine, tempo, costi/benefici, energia, relazioni) + 40% immagini sobrie della quotidianità. Scrivi un futuro vicino che inizia ora: usa futuro/condizionale semplice (“potresti”, “inizierai”, “probabilmente”). Niente certezze assolute, niente dati reali o nomi non forniti. Chiudi con una frase che lasci una sensazione chiara e un piccolo gancio di curiosità. 8–10 frasi, seconda persona, un paragrafo, NON ripetere la domanda. Linguaggio semplice, concreto, coinvolgente.`;
+const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE): apri SEMPRE con una riga breve da “zingara realista”, poi 60% analisi concreta + 40% immagini sobrie. Scrivi in chiave controfattuale: “se avessi…, avresti…”, “ti saresti trovato…”. Usa condizionale composto per l’esito alternativo, niente date/numeri o fatti reali non forniti. Chiudi con sensazione + micro-gancio. 8–10 frasi, seconda persona, un paragrafo, NON ripetere la domanda. Linguaggio semplice, concreto, coinvolgente.`;
 
 /* ========= Incipit dinamici — “ZINGARA REALISTA” ========= */
 const ZINGARA_INTROS = {
@@ -126,7 +105,7 @@ const ZINGARA_INTROS = {
   de: ["Warte kurz: das wird klar.","Leise, das Bild ist deutlich."],
 };
 
-/* ========= Finali “gancio” ========= */
+/* ========= Finali “gancio” — realistici e brevi ========= */
 const ZINGARA_ENDINGS = {
   it: {
     future: [
@@ -141,39 +120,51 @@ const ZINGARA_ENDINGS = {
       "Ti ritroveresti a pensare che alcune strade restano aperte, anche tardi.",
       "E capirai che quel rimpianto non morde: invita a provare meglio, adesso."
     ]
-  }
+  },
+  en: { future: ["And there you’ll notice you don’t need speed, just a good angle."], past: ["Maybe you’d feel it in your bones: it wasn’t fate, just timing."] },
+  es: { future: ["Y ahí notarás que no hace falta correr, solo elegir bien."], past: ["Y quizá hoy lo sentirías: no era destino, era ritmo."] },
+  fr: { future: ["Et là tu verras: pas besoin de courir, juste de choisir juste."], past: ["Et peut-être que tu le saurais: ce n’était pas le destin, mais le tempo."] },
+  de: { future: ["Und dort merkst du: Tempo ist egal, der Winkel zählt."], past: ["Vielleicht spürst du heute: kein Schicksal, nur Timing."] },
 };
-
 function ensureZingaraEnding({ text, lang, periodo, domanda }){
   let s = String(text||"").trim();
   const last = (s.match(/([^.!?…]+[.!?…])\s*$/)||[])[1] || s;
   const alreadyHasHook = /(ti accorgerai|capirai|ti verrà voglia|ti ritroverai|e lì|e proprio lì|da quel punto|forse oggi)/i.test(last);
   if(alreadyHasHook) return s;
   const L = normLang(lang);
-  const pool = (ZINGARA_ENDINGS[L] || ZINGARA_ENDINGS.it) || {};
-  const bag = String(periodo).toLowerCase() === "past" ? (pool.past || ZINGARA_ENDINGS.it.past) : (pool.future || ZINGARA_ENDINGS.it.future);
+  const pool = ((ZINGARA_ENDINGS[L]||ZINGARA_ENDINGS.it) || {});
+  const bag = String(periodo).toLowerCase()==="past" ? (pool.past||ZINGARA_ENDINGS.it.past) : (pool.future||ZINGARA_ENDINGS.it.future);
   const addon = pickDet(bag, hashStr((domanda||"")+s));
   if(!addon) return s;
   s = s.replace(/[.!?…]+$/,'');
   return `${s}. ${addon}`;
 }
 
-/* ========= WTF — NATURALE, OGGETTI VIVI ========= */
-const WTF_OBJECTS = [
-  "neon del bar che sfrigola",
-  "frigorifero che borbotta",
-  "moka che sbuffa",
-  "bicchiere che suda",
-  "sedia che scricchiola",
-  "telefono che vibra a vuoto",
-  "specchio che ti guarda di traverso",
-  "pioggia che picchietta sul vetro",
+/* ========= WTF — banche demenziali ========= */
+const WTF_IMPRE = [
+  "bestemmione corazzato",
+  "imprecazionona a detonazione",
+  "sacramentata a ciel sereno",
+  "vulcano d’anatemi",
+  "tromba d’aria di improperi",
 ];
-const WTF_DRINK_LINES = [
-  "ti versi un dito e rientri nei bordi",
-  "fai un sorso corto e respiri meglio",
-  "brindi a bassa voce e rimetti in fila i pensieri",
-  "tieni il bicchiere fermo e lasci passare l’onda",
+const WTF_REACT = [
+  "la moka ti fa una standing ovation e chiede l’autografo",
+  "il POS entra in modalità testimone di nozze e benedice la carta",
+  "la tapparella si abbassa per pudore e poi sbircia curiosa",
+  "la lampada lampeggia in Morse “ti capisco”",
+  "Alexa finge un aggiornamento e scappa in modalità monaco",
+  "il frigorifero sospira e decide di diventare minimalista",
+  "il campanello suona da solo per solidarietà e poi si pente",
+  "la pianta applaude con le foglie e ti chiede un drink",
+  "il ventilatore gira al contrario “per rispetto”",
+  "il citofono fa un trillo come un amen stonato",
+];
+const WTF_DRINK = [
+  "ti versi un amaro doppio e metti in riga i pensieri",
+  "fai un sorso corto e il mondo rientra nei bordi",
+  "alzi un bicchiere piccolo: brindisi di manutenzione",
+  "bevi un dito di coraggio e respiri più largo",
 ];
 
 /* ========= Prompt builder ========= */
@@ -183,45 +174,39 @@ function buildMessages({ domanda, lang, periodo, stile }){
     ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Second person only.`
     : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona.`;
 
-  const msgs = [ { role: "system", content: baseRules } ];
+  const msgs = [
+    { role: "system", content: baseRules },
+  ];
 
-  if(stile === "wtf"){
-    // seed deterministico (varia senza oscillare troppo)
+  if(stile==="wtf"){
+    // seed deterministico
     let seed=[...String(domanda)].reduce((a,c)=>a+c.charCodeAt(0),0);
     function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; }
-    const objCount = 2 + Math.floor(rnd()*2); // 2–3 oggetti
-    const objs = [...WTF_OBJECTS].sort(()=>rnd()-0.5).slice(0,objCount);
-    const drink = WTF_DRINK_LINES[Math.floor(rnd()*WTF_DRINK_LINES.length)];
+    const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
+    const shuffled=[...WTF_REACT].sort(()=>rnd()-0.5);
+    const react = shuffled.slice(0, 2 + Math.floor(rnd()*2));
+    const drink = WTF_DRINK[Math.floor(rnd()*WTF_DRINK.length)];
 
-    const WTF_RULE_IT =
-      `WHAT THE F (italiano): tono vivo, ironico, affettuoso. ` +
-      `Niente surrealismi gratuiti: oggetti quotidiani (cucina/bar/casa) che reagiscono in modo naturale e breve. ` +
-      `Una SOLA imprecazione breve e organica (interiezione, non offesa a persone; suona vera, quasi sussurrata). ` +
-      `Struttura libera ma ritmata: presa in giro affettuosa → piccoli imprevisti concreti → imprecazione naturale mentre due cose vanno storte ` +
-      `→ reazioni degli oggetti (${objs.join(", ")}) a ruota bassa → ${drink} → 1–2 frasi che rispondono davvero → chiusa calda e ironica. ` +
-      `6–8 frasi, registro parlato, niente epica.`;
-
-    const WTF_RULE_EN =
-      `WHAT THE F (English): lively, ironic, caring. No absurdist gadgets; use everyday objects reacting naturally. ` +
-      `ONE brief, organic expletive (interjection; never aimed at people). Free but tight rhythm: gentle tease → small concrete mishaps ` +
-      `→ natural expletive as two things clash → objects react (${objs.join(", ")}) → ${drink} → 1–2 lines that truly answer → warm, ironic close. 6–8 sentences.`;
+    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile). Struttura OBBLIGATORIA: presa in giro affettuosa (max 2 frasi) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”, narrato, mai insulto a persone) → SUBITO ${react.length} reazioni di oggetti esilaranti → drink (“${drink}”) → 1–2 frasi che rispondono davvero → morale calda e ironica. 6–8 frasi.`;
+    const WTF_RULE_EN = `WHAT THE F (friendly, absurd but helpful). STRICT sequence: playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical “${impre}” (narrated, never insulting people) → THEN ${react.length} absurd object reactions → drink (“${drink}”) → 1–2 lines that truly answer → warm ironic moral. 6–8 sentences.`;
 
     msgs.push(
       { role: "system", content: L==="en" ? WTF_RULE_EN : WTF_RULE_IT },
+      { role: "system", content: `IMPRECATION: ${impre}` },
+      { role: "system", content: `REACTIONS:\n- ${react.join("\n- ")}` },
+      { role: "system", content: `DRINK: ${drink}` },
       { role: "system", content:
-        `ESEMPI VINCOLANTI (tono/ritmo IT):\n` +
-        `- Oh santo cielo… di nuovo quella storia. Metti il telefono giù, provi a fare il duro, poi il neon sfrigola e il frigorifero borbotta: ` +
-        `ti parte un’imprecazione bassa, quasi per stanchezza. La moka sbuffa, il bicchiere suda, la sedia protesta. ` +
-        `Fai un sorso, rimetti in fila i pensieri: se ci torni, che sia per scrivere nuovo — non per riascoltare un disco graffiato.` },
-      { role: "system", content: `PALETTE OGGETTI: ${WTF_OBJECTS.join("; ")}` },
-      { role: "system", content: `DRINK LINE: ${drink}` }
+`ESEMPI VINCOLANTI (tono/ritmo IT):
+- Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora che al confessionale ti tengono in riserva. Ti versi un goccio di liquore, rimetti in riga il bancone e giuri che domani apri solo per matti. Alla chiusura, ti guardi intorno e sussurri che oggi hai bestemmiato più del prete quando finisce il vino — ma almeno hai servito verità calde.
+- Oh, eccoci, centauro dell’inferno. Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” così netto che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo ma quasi con affetto, come un rito che rimette a fuoco. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio con un sorrisetto complice. Torni a casa con l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie ben calibrate.
+- Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
     );
   } else {
-    // WHAT IF (tono “mio”)
-    const ruleIT = String(periodo).toLowerCase() === "past" ? WHATIF_RULE_PAST_IT : WHATIF_RULE_FUT_IT;
+    // WHAT IF dipendente dal tempo
+    const ruleIT = String(periodo).toLowerCase()==="past" ? WHATIF_RULE_PAST_IT : WHATIF_RULE_FUT_IT;
     msgs.push(
       { role: "system", content: ruleIT },
-      { role: "system", content: `ESEMPIO (respiro/tono):\n${WHATIF_HYBRID_EX_IT}` }
+      { role: "system", content: `ESEMPIO (respiro e tono, non vincolante nei contenuti):\n${WHATIF_HYBRID_EX_IT}` }
     );
   }
 
@@ -256,50 +241,58 @@ function computePct(domanda, stile){
   return pct;
 }
 
-/* ========= WHAT IF: motivazioni (solo quick/manual, MAI surprise) ========= */
-function buildWhatIfMotivation(domanda, lang="it", pct=60){
-  const L = (lang||"it").slice(0,2);
-  const t = String(domanda||"").toLowerCase();
-
-  const hasTime = /\b(7|14|21|30|60|90|giorn|settiman|mes|mesi|anni)\b/.test(t);
-  const hasBudget = /(budget|€|euro|spesa|costo|max|under|sotto|caparra)/.test(t);
-  const hasDeadline = /(entro|prima|scadenza|deadline)/.test(t);
-  const action = /(apri|lancia|impara|studia|scrivi|automatizza|testa|cambia|trova|assumi|costruisci|crea)/.test(t);
-  const riskHedging = /(senza|solo|al massimo|minimo|rischio)/.test(t);
-
-  const PFX = (L==="en") ? "Probability" : (L==="es") ? "Probabilidad" : (L==="fr") ? "Probabilité" : (L==="de") ? "Wahrscheinlichkeit" : "Probabilità";
-  const MAIN = (L==="en") ? "Main lever" : (L==="es") ? "Palanca principal" : (L==="fr") ? "Levier principal" : (L==="de") ? "Haupthebel" : "La leva principale";
-  const BOTTL = (L==="en") ? "Bottleneck" : (L==="es") ? "Cuello de botella" : (L==="fr") ? "Goulet d’étranglement" : (L==="de") ? "Engpass" : "Il collo di bottiglia";
-
-  const parts = [];
-  parts.push(`${PFX} ${pct}%:${L==="en"?"":" "}`);
-
-  if(hasTime) parts.push(L==="en" ? "timeline manageable if you distribute effort weekly" : "la timeline è gestibile se distribuisci lo sforzo su base settimanale");
-  else parts.push(L==="en" ? "feasible with steady daily cadence" : "fattibile con cadenza giornaliera costante");
-
-  if(hasBudget) parts.push(L==="en" ? "(costs controlled via deposits/small tools)" : "(costi sotto controllo con caparra/strumenti leggeri)");
-  if(hasDeadline) parts.push(L==="en" ? "locking the key decision early reduces friction" : "bloccare la decisione chiave in anticipo riduce l’attrito");
-  if(action) parts.push(L==="en" ? "focus on one concrete step per day" : "punta a un passo concreto al giorno");
-  if(riskHedging) parts.push(L==="en" ? "and cap risk with simple constraints" : "e metti un tetto al rischio con vincoli semplici");
-
-  const s1 = parts.join(" ").replace(/\s{2,}/g," ").trim();
-
-  let s2 = "";
-  if(hasBudget){
-    s2 = (L==="en")
-      ? `${MAIN}: upfront deposit & recurring small costs. ${BOTTL}: traffic/lead flow.`
-      : `${MAIN}: anticipo e micro-costi ricorrenti. ${BOTTL}: flusso di traffico/lead.`;
-  }else if(hasTime){
-    s2 = (L==="en")
-      ? `${MAIN}: weekly rhythm. ${BOTTL}: context switching.`
-      : `${MAIN}: ritmo settimanale. ${BOTTL}: cambi di contesto.`;
-  }else{
-    s2 = (L==="en")
-      ? `${MAIN}: consistent routine. ${BOTTL}: scope creep.`
-      : `${MAIN}: routine consistente. ${BOTTL}: allargamento dello scope.`;
+/* ========= WHAT IF: motivazioni “come negli esempi” ========= */
+function buildWhatIfMotivationLines(domanda, lang="it"){
+  const L = normLang(lang);
+  // Non servono grandi personalizzazioni: le linee sono fisse “di esempio”, localizzate.
+  if(L==="en"){
+    return [
+      "Block 10 minutes today on this and close the first step you’ve been avoiding.",
+      "Write one measurable micro-goal you can finish within 72 hours and put it on your calendar.",
+      "Use one tool and track one metric; set a check-in in 3 days."
+    ];
   }
-
-  return `${s1} ${s2}`.trim().replace(/\s{2,}/g," ");
+  if(L==="es"){
+    return [
+      "Bloquea 10 minutos hoy en esto y cierra el primer paso que llevas posponiendo.",
+      "Escribe un micro-objetivo medible para terminar en 72 horas y ponlo en el calendario.",
+      "Usa una sola herramienta y una métrica; haz una revisión en 3 días."
+    ];
+  }
+  if(L==="fr"){
+    return [
+      "Bloque 10 minutes aujourd’hui sur ce point et boucle la première étape que tu repousses.",
+      "Écris un micro-objectif mesurable à finir en 72 heures et mets-le au calendrier.",
+      "Utilise un seul outil et une métrique ; fais un point dans 3 jours."
+    ];
+  }
+  if(L==="de"){
+    return [
+      "Blocke heute 10 Minuten dafür und schließe den ersten Schritt ab, den du aufschiebst.",
+      "Schreibe ein messbares Mikro-Ziel für die nächsten 72 Stunden und setze es in den Kalender.",
+      "Nutze ein Tool und eine Kennzahl; in 3 Tagen kurz prüfen."
+    ];
+  }
+  // IT (default)
+  return [
+    "Blocca 10 minuti oggi su questo e chiudi il primo passo che stai rimandando.",
+    "Scrivi un micro-obiettivo misurabile da chiudere entro 72 ore e mettilo in calendario.",
+    "Usa uno strumento solo e una metrica; fai un check tra 3 giorni."
+  ];
+}
+function motivationTitle(lang="it"){
+  const L = normLang(lang);
+  return (L==="en") ? "Guidance"
+       : (L==="es") ? "Guía"
+       : (L==="fr") ? "Conseils"
+       : (L==="de") ? "Leitfaden"
+       : "Indicazioni";
+}
+function buildWhatIfMotivation(domanda, lang="it", pct=60){
+  // Mantengo anche la stringa unica per retro-compatibilità con front-end precedente
+  const lines = buildWhatIfMotivationLines(domanda, lang);
+  const joined = lines.join(" ");
+  return { motivation: joined, motivation_lines: lines, motivation_title: motivationTitle(lang) };
 }
 
 /* ========= WTF: rapporto scientifico demenziale ========= */
@@ -326,6 +319,7 @@ function scientificReportDemenziale(domanda, lang="it"){
     "imprecazione calibrata",
     "brindisi di manutenzione",
     "tapparelle giudicanti",
+    "POS in modalità benedizione",
     "ventilatore che gira al contrario “per rispetto”",
     "lampada che lampeggia “ti capisco” in Morse",
   ];
@@ -337,7 +331,7 @@ function scientificReportDemenziale(domanda, lang="it"){
   const m = pick(METRIC);
   const n = 30 + (seed % 70);
 
-  if((lang||"it").startsWith("en")){
+  if(normLang(lang)==="en"){
     return `Scientific-ish report: ${u} (n=${n}) found that a ${e} improves decision clarity (${m}). Peer-reviewed by ${j}, probably.`;
   }
   return `Rapporto scientifico (più o meno): ${u} (n=${n}) rileva che “${e}” migliora la chiarezza decisionale (${m}). Revisione a cura di ${j}, forse.`;
@@ -375,7 +369,7 @@ export default async function handler(req, res){
       model: MODEL,
       temperature: stile === "wtf" ? 0.98 : 0.82,
       top_p: 0.92,
-      max_tokens: 480,
+      max_tokens: 640, // un filo più ampio
       frequency_penalty: 0.1,
       presence_penalty: 0.0,
       messages,
@@ -387,7 +381,8 @@ export default async function handler(req, res){
     // ===== Post-process (ordine CORRETTO) =====
     answer = stripQuestionEcho(domanda, answer);
     answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);
-    answer = clampWords(answer, stile === "wtf" ? 170 : 165);
+    // ⬇️ più respiro: evitare risposte "tagliate"
+    answer = clampWords(answer, stile === "wtf" ? 190 : 210);
     answer = normalizeOneParagraph(answer);
 
     // 1) Incipit ZINGARA sempre (solo WHAT IF)
@@ -423,19 +418,17 @@ export default async function handler(req, res){
     const L = normLang(lang);
     const pct = computePct(domanda, stile);
 
-    // Sorgente richiesta (Spunti rapidi / Manuale / Sorprendimi)
-    const src = String(micro?.src || "").toLowerCase();
-    const isSurprise = (src === "surprise") || micro.surprise === true;
-    const isQuick = (src === "quick" || src === "spunti" || src === "hints" || micro.quick === true);
-    const isManual = (src === "manual") || (!src); // default manuale se non specificato
-
-    // Motivazioni SOLO per WHAT IF e SOLO in Spunti Rapidi o Manuale; MAI in Sorprendimi
-    const motivation = (stile === "whatif" && !isSurprise && (isQuick || isManual))
-      ? buildWhatIfMotivation(domanda, L, pct)
-      : undefined;
-
-    // Scientific per WTF (lasciato), escluso se sorpresa
-    const scientific = (stile === "wtf" && !isSurprise) ? scientificReportDemenziale(domanda, L) : undefined;
+    let motivation, motivation_lines, motivation_title, scientific;
+    if(stile==="whatif"){
+      const mot = buildWhatIfMotivation(domanda, L, pct);
+      motivation = mot.motivation;
+      motivation_lines = mot.motivation_lines;
+      motivation_title = mot.motivation_title;
+    }
+    const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
+    if(stile==="wtf" && !isSurprise){
+      scientific = scientificReportDemenziale(domanda, L);
+    }
 
     return res.status(200).json({
       answer,
@@ -444,8 +437,12 @@ export default async function handler(req, res){
       periodo,
       model: MODEL,
       pct,
-      motivation,   // presente solo se (whatif && !surprise && (quick||manual))
-      scientific,   // per wtf, non in “sorprendimi”
+      // Motivazioni “come negli esempi”, localizzate
+      motivation,              // stringa compatibile con front attuale
+      motivation_lines,        // array di 3 righe per riquadro
+      motivation_title,        // titolo localizzato del riquadro
+      // WTF extra
+      scientific
     });
   }catch(err){
     console.error("❌ [/api/ask] error:", err);
