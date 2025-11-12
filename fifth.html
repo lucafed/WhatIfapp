@@ -836,9 +836,9 @@ async function startFlow(){
       motNote.textContent = sci;
 
     } else if (showWhatIfMot){
-      // WHAT IF → motivazione sintetica del server
-      committeeTitle.textContent = t().guideTitle;
-      motNote.textContent = data.motivation.trim();
+  committeeTitle.textContent = t().guideTitle;
+  const lines = buildWhatIfGuidance(domanda, data);
+  motNote.innerHTML = lines.map(esc).join("<br>");
 
     } else {
       // Niente motivazioni (es. whatif senza quick/manual): nascondi sezione
