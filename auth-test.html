@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Auth Test</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#0b0f14;color:#eaf2f7;margin:0;padding:20px}
+    .card{background:#141c22;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px;max-width:800px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+    button{padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:#1a2532;color:#fff;cursor:pointer}
+    pre{background:#0f1823;border:1px solid rgba(255,255,255,.08);padding:10px;border-radius:8px;overflow:auto;max-height:320px}
+    code{white-space:pre-wrap;word-break:break-word}
+    .ok{color:#69f0ae}.err{color:#ff8a80}
+  </style>
+</head>
+<body>
+  <h1>Firebase Auth – Test</h1>
+  <div class="card">
+    <div class="row">
+      <button id="btnSignIn">Sign-in con Google (redirect)</button>
+      <button id="btnSignOut">Sign-out</button>
+      <button id="btnClear">Clear localStorage/sessionStorage</button>
+    </div>
+    <p><strong>Origin:</strong> <code id="origin"></code></p>
+    <p><strong>Dominio autorizzato?</strong> <span id="domainOk">–</span></p>
+    <p><strong>Utente:</strong> <span id="userShort">–</span></p>
+    <h3>Dettagli utente</h3>
+    <pre id="userBox">–</pre>
+    <h3>Log</h3>
+    <pre id="logBox"></pre>
+  </div>
+
+  <script type="module">
+    // ---- Firebase SDK (web v9+ moduli) ----
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      onAuthStateChanged,
+      signInWithRedirect,
+      getRedirectResult,
+      signOut,
+      setPersistence,
+      browserLocalPersistence
+    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+
+    // !! USA LA CONFIG CORRETTA DEL TUO PROGETTO (quella che hai creato per whatif-web) !!
+    const firebaseConfig = {
+      apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
+      authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
+      projectId: "whatif-oracolo-bc15d",
+      storageBucket: "whatif-oracolo-bc15d.firebasestorage.app",
+      messagingSenderId: "857481137283",
+      appId: "1:857481137283:web:ff8f766d14392835cf5fb6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    auth.languageCode = 'it';
+    await setPersistence(auth, browserLocalPersistence);
+
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    // ---- UI helpers ----
+    const $ = sel => document.querySelector(sel);
+    const log = (...a) => { console.log(...a); $("#logBox").textContent += a.join(" ")+"\n"; };
+    const showUser = (u) => {
+      if (!u) {
+        $("#userShort").textContent = "null";
+        $("#userBox").textContent = "–";
+      } else {
+        $("#userShort").textContent = `${u.uid} (${u.email||u.phoneNumber||u.displayName||"no-email"})`;
+        $("#userBox").textContent = JSON.stringify({
+          uid: u.uid,
+          email: u.email,
+          displayName: u.displayName,
+          providerData: u.providerData
+        }, null, 2);
+      }
+    };
+
+    // ---- Info dominio ----
+    $("#origin").textContent = location.origin;
+    const authorized = [
+      "http://localhost",
+      "https://whatif-oracolo-bc15d.firebaseapp.com",
+      "https://whatif-oracolo-bc15d.web.app",
+      "https://what-ifapp.vercel.app",
+      "https://www.what-ifapp.vercel.app",
+      "https://whatif-web.vercel.app",
+      "https://www.whatif-web.vercel.app"
+    ];
+    $("#domainOk").innerHTML = authorized.includes(location.origin)
+      ? "<span class='ok'>Sì</span>" : "<span class='err'>NO</span>";
+
+    // ---- Gestione redirect result (dopo login) ----
+    try {
+      const res = await getRedirectResult(auth);
+      if (res && res.user) {
+        log("✅ Redirect OK:", res.user.uid);
+      }
+    } catch (e) {
+      log("❌ getRedirectResult error:", e.code, e.message);
+    }
+
+    // ---- Osserva lo stato utente ----
+    onAuthStateChanged(auth, (user) => {
+      log("onAuthStateChanged:", !!user ? "logged-in" : "logged-out");
+      showUser(user);
+    });
+
+    // ---- Bottoni ----
+    $("#btnSignIn").onclick = async () => {
+      try {
+        log("→ signInWithRedirect...");
+        await signInWithRedirect(auth, provider);
+      } catch (e) {
+        log("❌ Sign-in error:", e.code, e.message);
+      }
+    };
+
+    $("#btnSignOut").onclick = async () => {
+      try {
+        await signOut(auth); log("→ signOut OK");
+      } catch (e) {
+        log("❌ Sign-out error:", e.code, e.message);
+      }
+    };
+
+    $("#btnClear").onclick = () => {
+      localStorage.clear(); sessionStorage.clear();
+      log("→ Cleared LS/SS");
+    };
+  </script>
+</body>
+</html>
