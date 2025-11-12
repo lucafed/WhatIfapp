@@ -14,7 +14,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-  <!-- Hero (preload) -->
+  <!-- Preload hero (se esiste questa variante) -->
   <link rel="preload" as="image" href="/public/home-hero.png" />
 
   <style>
@@ -23,17 +23,10 @@
       --card:rgba(14,19,28,.55); --card-border:rgba(255,255,255,.10);
       --chip:#141C22; --accent:#1C57A0; --accent2:#FFEC01; --ink:#0A0E12; --shadow:rgba(0,0,0,.45);
     }
-    html[data-theme="whatif"]{ --bg:#0B1018; --bg2:#0E1724; --fg:#F4F7FB; --muted:#A7B3C2;
-      --card:rgba(14,20,28,.55); --card-border:rgba(255,255,255,.12); --chip:#121A26;
-      --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
-    }
-    html[data-theme="wtf"]{ --bg:#0B0B0C; --bg2:#101414; --fg:#EEF5F0; --muted:#A6B6AD;
-      --card:rgba(16,22,20,.55); --card-border:rgba(255,255,255,.10); --chip:#0F1714;
-      --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;
-    }
+    html[data-theme="whatif"]{ --bg:#0B1018; --bg2:#0E1724; --fg:#F4F7FB; --muted:#A7B3C2; --card:rgba(14,20,28,.55); --card-border:rgba(255,255,255,.12); --chip:#121A26; --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A; }
+    html[data-theme="wtf"]{ --bg:#0B0B0C; --bg2:#101414; --fg:#EEF5F0; --muted:#A6B6AD; --card:rgba(16,22,20,.55); --card-border:rgba(255,255,255,.10); --chip:#0F1714; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; }
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-      color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;overflow-x:hidden}
+    html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%); color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;overflow-x:hidden}
     @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
     @media (prefers-reduced-motion:no-preference){ body{animation:bgShift 18s ease-in-out infinite alternate} }
     main{min-height:100%;display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px;gap:14px;padding-bottom:120px}
@@ -58,7 +51,9 @@
     .foot-links{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:6px}
     .info-btn{background:#141c22;border:1px solid var(--card-border);color:#E6F2F5;border-radius:999px;padding:6px 10px;font-weight:700;text-decoration:none}
     #authError{color:#ffb3b3;font-size:13px;min-height:18px}
-    #debug{position:fixed;left:12px;right:12px;bottom:12px;z-index:40;background:#0b0f14;border:1px solid #223;border-radius:10px;padding:8px 10px;font:12px/1.4 monospace;color:#a6f3a6;display:none;white-space:pre-wrap}
+
+    /* Debug overlay (attivo con ?debug=1) */
+    #debug{position:fixed;left:12px;right:12px;bottom:12px;z-index:40;background:#0b0f14;border:1px solid #223;border-radius:10px;padding:8px 10px;font:12px/1.4 monospace;color:#a6f3a6;display:none;max-width:680px;margin:0 auto;white-space:pre-wrap}
   </style>
 </head>
 <body>
@@ -75,6 +70,7 @@
   </div>
 
   <main>
+    <!-- Hero (loader trova anche varianti se il file non esiste) -->
     <img id="hero" class="hero-img" src="/public/home-hero.png" alt="Porta luminosa What?f" loading="eager" decoding="async" />
     <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
 
@@ -112,7 +108,7 @@
 
   <div id="debug"></div>
 
-  <!-- Hero loader -->
+  <!-- Hero loader: prova più percorsi/nomi -->
   <script>
     (function loadHero(){
       const hero = document.getElementById('hero');
@@ -188,45 +184,33 @@
         b.classList.add('selected'); state[b.dataset.key]=b.dataset.val;
         localStorage.setItem('whatif_prefs', JSON.stringify(state));
         if(b.dataset.key==='stile'){ document.documentElement.setAttribute('data-theme', b.dataset.val==='wtf'?'wtf':'whatif'); }
-        if (window.updatePrimaryCta) window.updatePrimaryCta();
+        if(window.updatePrimaryCta) window.updatePrimaryCta();
       });
     }
     wireGroup(document.getElementById('periodGroup'));
     wireGroup(document.getElementById('styleGroup'));
-
-    // lingua menu
-    (function wireLangMenu(){
-      const btn=$('#langToggle'), menu=$('#langMenu');
-      btn.addEventListener('click', ()=>{
-        const open=menu.style.display==='block';
-        menu.style.display=open?'none':'block';
-        btn.setAttribute('aria-expanded', String(!open));
-      });
-      menu.addEventListener('click', e=>{
-        const b=e.target.closest('button[data-lang]'); if(!b) return;
-        setLang(b.dataset.lang);
-        menu.style.display='none';
-      });
-      document.addEventListener('click', e=>{ if(!menu.contains(e.target) && e.target!==btn) menu.style.display='none'; });
-    })();
   </script>
 
-  <!-- 🔐 Firebase: login Google SOLO POPUP -->
+  <!-- 🔐 Firebase Auth -->
   <script type="module">
+    // Debug helper (?debug=1)
     const dbg = document.getElementById('debug');
-    const DO_DEBUG = true; // lascia true finché testiamo
-    const log = (...a)=>{ if(DO_DEBUG){ dbg.style.display='block'; dbg.textContent += a.join(' ') + '\n'; console.log('[AUTH]', ...a);} };
+    const DO_DEBUG = new URLSearchParams(location.search).get('debug') === '1';
+    const log = (...a)=>{ if(DO_DEBUG){ dbg.style.display='block'; dbg.textContent += a.join(' ') + '\n'; } };
+    const showErrText = (t)=>{ const el=document.getElementById('authError'); el.textContent=t||''; if(t) log('❌', t); };
 
+    // SDK (modulare, via CDN)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
     import {
-      getAuth, GoogleAuthProvider, onAuthStateChanged,
-      signInWithPopup, signOut, setPersistence, browserLocalPersistence
+      getAuth, GoogleAuthProvider,
+      onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult,
+      setPersistence, browserLocalPersistence, browserSessionPersistence, signOut
     } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
-    // ⚙️ CONFIG — authDomain allineato al dominio Vercel
+    // ✅ Config ufficiale del tuo progetto
     const firebaseConfig = {
       apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
-      authDomain: "what-ifapp.vercel.app",
+      authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
       projectId: "whatif-oracolo-bc15d",
       storageBucket: "whatif-oracolo-bc15d.firebasestorage.app",
       messagingSenderId: "857481137283",
@@ -236,16 +220,18 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
+
+    // Persistenza: prova LOCAL, altrimenti SESSION
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+      log('🔒 Persistenza: LOCAL');
+    } catch {
+      await setPersistence(auth, browserSessionPersistence);
+      log('🔒 Persistenza: SESSION');
+    }
 
     const primaryCta = document.getElementById("primaryCta");
     const logoutBtn  = document.getElementById("logoutBtn");
-    const errBox     = document.getElementById("authError");
-
-    const showErr = (m)=>{ errBox.textContent = m || ""; if(m) log('❌', m); };
-
-    // persistenza locale (riapri e resti loggato)
-    await setPersistence(auth, browserLocalPersistence).then(()=> log('🔒 Persistenza: LOCAL'));
 
     const selectionsReady = ()=>{
       try{
@@ -268,46 +254,87 @@
     }
     window.updatePrimaryCta = updatePrimaryCta;
 
+    const AUTH_FLAG = "whatif_auth_redirect";
+
+    // Completa eventuale redirect
+    try{
+      const res = await getRedirectResult(auth);
+      if(res?.user){
+        log("↩️ Redirect OK:", res.user.uid);
+        sessionStorage.removeItem(AUTH_FLAG);
+      }else{
+        log("↩️ Redirect senza user (ok se popup è riuscito)");
+      }
+    }catch(e){
+      // Messaggio classico quando lo state manca (storage/partitioned ecc.)
+      if ((e.message||'').toLowerCase().includes('missing initial state')) {
+        showErrText("Impossibile completare l’accesso (manca lo stato). Riprova o usa una finestra in incognito.");
+      } else {
+        showErrText("Post-login: " + (e.code || e.message));
+      }
+      sessionStorage.removeItem(AUTH_FLAG);
+    }
+
+    onAuthStateChanged(auth, (user)=>{
+      log("👤 onAuthStateChanged:", !!user);
+      updatePrimaryCta();
+    });
+
+    updatePrimaryCta();
+
+    // Click CTA
     primaryCta.onclick = async ()=>{
-      showErr("");
+      showErrText("");
       const user = auth.currentUser;
 
-      if(!user){
-        try{
-          log("🪟 Apro popup Google…");
-          await signInWithPopup(auth, provider);   // SOLO POPUP
-          log("✅ Popup OK");
-          if (selectionsReady()) location.href = "second.html";
-        }catch(e){
-          const map = {
-            "auth/popup-blocked":"Popup bloccato dal browser. Consenti popup per questo sito.",
-            "auth/cancelled-popup-request":"Richiesta popup annullata, riprova.",
-            "auth/popup-closed-by-user":"Popup chiuso senza completare l’accesso.",
-            "auth/unauthorized-domain":"Dominio non autorizzato (Firebase → Authentication → Domini autorizzati).",
-            "auth/operation-not-allowed":"Provider Google non abilitato (Authentication → Metodi di accesso).",
-            "auth/internal-error":"Errore interno di autenticazione. Riprova o usa finestra in incognito."
-          };
-          showErr(map[e.code] || (e.code || e.message));
+      // Se già loggato -> vai avanti
+      if(user){
+        if(selectionsReady()){
+          location.href = "second.html";
+        }else{
+          showErrText("Seleziona prima Passato/Futuro e What if/WTF");
         }
         return;
       }
 
-      // già loggato: prosegui
-      if(selectionsReady()){
-        location.href = "second.html";
-      }else{
-        showErr("Seleziona prima Passato/Futuro e What if/WTF");
+      // Prova POPUP, poi fallback REDIRECT
+      try{
+        log("🪟 Apro popup Google…");
+        await signInWithPopup(auth, provider);
+        log("✅ Popup OK");
+      }catch(e){
+        const code = e.code || '';
+        log("⚠️ Popup fallito:", code);
+
+        // errori tipici da popup -> fallback redirect
+        const needRedirect = [
+          'auth/popup-blocked',
+          'auth/popup-closed-by-user',
+          'auth/internal-error',
+          'auth/cancelled-popup-request'
+        ].some(x => code === x);
+
+        if(needRedirect){
+          try{
+            sessionStorage.setItem(AUTH_FLAG, '1');
+          }catch{}
+          log("➡️ Faccio redirect…");
+          await signInWithRedirect(auth, provider);
+          return; // la pagina cambia
+        }
+
+        // Altri errori: mostra
+        const map = {
+          "auth/unauthorized-domain":"Dominio non autorizzato (Console Firebase → Authentication → Impostazioni → Domini autorizzati).",
+          "auth/operation-not-allowed":"Provider Google non abilitato (Authentication → Metodi di accesso).",
+          "auth/network-request-failed":"Problema di rete o HTTPS."
+        };
+        showErrText(map[code] || (code || e.message));
       }
     };
 
     logoutBtn.onclick = async ()=>{ await signOut(auth); };
 
-    onAuthStateChanged(auth, (u)=>{
-      log("👤 onAuthStateChanged:", !!u);
-      updatePrimaryCta();
-    });
-
-    updatePrimaryCta();
   </script>
 
   <!-- Easter egg admin + SW -->
