@@ -7,7 +7,7 @@ import {
   getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-// --- Inizializzazione Firebase (usa la tua config; non duplica se già inizializzato)
+// --- Inizializzazione Firebase (non duplica se già inizializzato altrove)
 const firebaseConfig = {
   apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
   authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
