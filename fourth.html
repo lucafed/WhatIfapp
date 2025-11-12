@@ -250,19 +250,22 @@ const I18N={
 let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-/* ===== CREDITI (WALLET UNIFICATO + fallback legacy) ===== */
+/* ===== CREDITI (WALLET UNIFICATO + fallback legacy controllato) ===== */
 const WKEY = 'whatif_wallet';
 const SURPKEY = 'whatif_surprise'; // 🎁 token persistenti
+const isLoggedIn = () => !!(window.auth && window.auth.currentUser);
 function userIsAdmin(){ return !!localStorage.getItem('admin_token'); }
 function readWallet(){
   try { return JSON.parse(localStorage.getItem(WKEY)||'{}')||{}; }
   catch { return {}; }
 }
+/* ⚠️ Cambiato: se sei LOGGATO e non c'è wallet locale -> NON usare default 3/10, ma 0/0 finché syncCredits non aggiorna */
 function getWalletAvailable(){
   if (userIsAdmin()) return Infinity;
   const w = readWallet();
   if (w && w.available != null) return (w.available===Infinity?Infinity:Math.max(0,+w.available));
-  // Fallback legacy: whatif_credits (cap giornaliero) oppure "crediti"
+  if (isLoggedIn()) return 0; // <- blocco anti-reset: attende Firestore
+  // Utente anonimo (non loggato): resta il fallback legacy
   try{
     const c = JSON.parse(localStorage.getItem('whatif_credits')||'{}')||{};
     const today = new Date().toISOString().slice(0,10);
@@ -277,7 +280,8 @@ function getWalletCap(){
   if (userIsAdmin()) return Infinity;
   const w = readWallet();
   if (w && w.limit != null) return (w.limit===Infinity?Infinity:Math.max(0,+w.limit));
-  // Fallback legacy
+  if (isLoggedIn()) return 0; // <- finché non sincronizza Firestore
+  // Fallback legacy per anonimi
   try{
     const c = JSON.parse(localStorage.getItem('whatif_credits')||'{}')||{};
     const cap = (c.limit===Infinity)? Infinity : (Number.isFinite(+c.limit)? +c.limit : (prefs.pro?10:3));
@@ -304,7 +308,14 @@ window.addEventListener('storage', (e)=>{
     renderSpinButton(); /* <-- aggiorna anche il tasto “Sorprendimi” */
   }
 });
-document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ renderCredits(); renderSpinButton(); }});
+document.addEventListener('visibilitychange', async ()=>{
+  if(document.hidden) return;
+  // se loggato, resync da Firestore appena torni
+  if (window.onAuthStateChanged && window.auth && typeof window.syncCredits==='function' && window.auth.currentUser){
+    try{ await window.syncCredits(window.auth.currentUser); }catch(e){ console.error('sync on focus', e); }
+  }
+  renderCredits(); renderSpinButton();
+});
 window.addEventListener('pageshow', ()=>{ renderCredits(); renderSpinButton(); });
 window.addEventListener('focus',   ()=>{ renderCredits(); renderSpinButton(); });
 /* Polling leggero (2s) per stessa tab */
@@ -315,6 +326,19 @@ setInterval(()=>{
 }, 2000);
 /* Primo render */
 renderCredits();
+
+/* ===== Auth → sincronizza SOLO da Firestore (se disponibile) ===== */
+if (window.onAuthStateChanged && window.auth){
+  window.onAuthStateChanged(window.auth, async (user)=>{
+    if (!user) return;
+    if (typeof window.syncCredits === 'function'){
+      try{
+        await window.syncCredits(user); // <-- legge Firestore e aggiorna whatif_wallet
+      }catch(e){ console.error('syncCredits error', e); }
+    }
+    renderCredits(); renderSpinButton();
+  });
+}
 
 /* ===== BADGE STILE/PERIODO ===== */
 function renderBadges(){
@@ -517,29 +541,27 @@ function trySubmit(){
     extra:'',
     fantasy_mode:false,
     periodo:prefs.periodo,
-    absurd:isAbsurd,
-    surprise:isAbsurd,
-    source: isAbsurd ? 'surprise' : 'manual',
-    micro:{ surprise:isAbsurd, source:isAbsurd?'surprise':'manual' }
+    absurd:false,
+    surprise:false,
+    source:'manual',
+    micro:{ surprise:false, source:'manual' }
   };
   writeJSON('whatif_request',req);
   LS.setItem('domanda',domanda);
-  LS.setItem('absurd_prompt', isAbsurd ? '1' : '0');
-  LS.setItem('surprise_mode', isAbsurd ? '1' : '0');
+  LS.setItem('absurd_prompt','0');
+  LS.setItem('surprise_mode','0');
   addHistory(domanda, prefs.stile);
-  location.href = isAbsurd ? 'fifth.html?src=surprise' : 'fifth.html';
+  location.href = 'fifth.html';
 }
 $('goBtn').onclick=trySubmit;
 
 /* Input helpers */
 $('qInput').addEventListener('input', ()=>{
-  isAbsurd=false;
   LS.setItem('absurd_prompt','0');
   LS.setItem('surprise_mode','0');
 });
 $('clearBtn').onclick=()=>{
   $('qInput').value='';
-  isAbsurd=false;
   LS.setItem('absurd_prompt','0');
   LS.setItem('surprise_mode','0');
   $('qInput').focus();
@@ -547,6 +569,8 @@ $('clearBtn').onclick=()=>{
 $('qInput').addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
 /* ===== 🎲 SORPRENDIMI (solo assurde) ===== */
+/* (Se vuoi mantenere Sorprendimi qui, lascio invariata la logica,
+   ma NON tocca i crediti: il consumo avviene in fifth) */
 function absurdPool(){ return ABS[lang] && ABS[lang].length ? ABS[lang] : ABS.it; }
 function getRecentSet(){ return new Set(readJSON('surprise_recent',[])); }
 function rememberPrompt(p){ const arr=readJSON('surprise_recent',[]); arr.unshift(p); writeJSON('surprise_recent',arr.slice(0,60)); }
@@ -569,8 +593,10 @@ function ensureSpins(){
   if(s.date!==todayISO()){ s.date=todayISO(); s.used=0; }
   writeJSON('surprise_spins',s); return s;
 }
-function spinsLeft(){ const s=ensureSpins(); const cap=spinCap(); return cap===Infinity?Infinity:Math.max(0,cap-(s.used||0)); }
-
+function spinsLeft(){
+  const s=ensureSpins(); const cap=spinCap();
+  return cap===Infinity?Infinity:Math.max(0,cap-(s.used||0));
+}
 /* 🔄 Mostra sia tiri giornalieri che token 🎁 */
 function renderSpinButton(){
   const T=I18N[lang]||I18N.it;
@@ -582,226 +608,57 @@ function renderSpinButton(){
 }
 renderSpinButton();
 
-/* ✅ Consumo: prima un tiro; se 0 ma hai 🎁 token, lasciamo passare (il token verrà scalato in fifth) */
 function consumeOneSpinOrToken(){
   if(userIsAdmin()) return true;
   const s=ensureSpins(); const cap=spinCap(); const left=spinsLeft(); const tokens=readSurpriseTokens();
   if(cap!==Infinity && left<=0){
     if(tokens>0){
-      // Non tocchiamo s.used: il consumo del token avviene in fifth
+      // il token verrà consumato in fifth
       return true;
     }
     alert((I18N[lang]||I18N.it).noSpins); return false;
   }
-  // Consuma un tiro
   s.used=(s.used||0)+1; writeJSON('surprise_spins',s);
-  // segnala refresh ad altre tab/pagine
   LS.setItem('whatif_wallet_sync', String(Date.now()));
   renderSpinButton();
   return true;
 }
-
 function slotSurprise(){
   if(!consumeOneSpinOrToken()) return;
-
-  const rollingList = makeAbsurdList(14); // SOLO assurde
-
+  const rollingList = makeAbsurdList(14);
   const el=$('qInput'); el.classList.add('slotting');
   let i=0;
   const iv=setInterval(()=>{
     el.value = rollingList[i % rollingList.length];
-    // durante lo slot mescolo solo tema visivo
     const s = Math.random()<.5 ? 'whatif' : 'wtf';
     const p = Math.random()<.5 ? 'future' : 'past';
     prefs.stile=s; prefs.periodo=p; writeJSON('whatif_prefs',prefs);
     document.documentElement.setAttribute('data-theme', s==='wtf'?'wtf':'whatif');
     renderBadges(); i++;
   },90);
-
   setTimeout(()=>{
     clearInterval(iv); el.classList.remove('slotting');
     const finalList = makeAbsurdList(10);
     const finalPrompt = finalList[Math.floor(Math.random()*finalList.length)];
     $('qInput').value = finalPrompt;
     rememberPrompt(finalPrompt);
-
-    // flag "sorpresa"
-    isAbsurd=true;
+    // flag per fifth
     LS.setItem('absurd_prompt','1');
     LS.setItem('surprise_mode','1');
-
+    // invia subito
+    const req={
+      domanda:finalPrompt, stile:prefs.stile, lang, extra:'',
+      fantasy_mode:false, periodo:prefs.periodo,
+      absurd:true, surprise:true, source:'surprise',
+      micro:{surprise:true, source:'surprise'}
+    };
+    writeJSON('whatif_request',req);
+    LS.setItem('domanda',finalPrompt);
+    addHistory(finalPrompt, prefs.stile);
+    location.href='fifth.html?src=surprise';
   }, 1200 + Math.random()*600);
 }
 $('surpriseBtn').onclick=slotSurprise;
   </script>
-
-  <!-- ✅ AGGIUNTA MINIMA: crediti reali da Firestore, con redirect al login se non autenticato -->
-  <script type="module">
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { bootCredits, getBalance } from "./credits.js"; // usa ./ relativo
-
-    const LS = localStorage;
-    const T = (()=>{
-      const lang=(LS.getItem('lang')||'it').toLowerCase();
-      const I18NMap = {
-        it:"Crediti", en:"Credits", es:"Créditos", fr:"Crédits", de:"Credits"
-      };
-      return I18NMap[lang] || I18NMap.it;
-    })();
-
-    const auth = getAuth();
-    onAuthStateChanged(auth, async (user)=>{
-      if(!user){
-        // dopo clear cookie/dati → torna al login
-        location.href = "index.html?login=1";
-        return;
-      }
-      try{
-        await bootCredits();                 // garantisce il doc giornaliero
-        const n = await getBalance();        // saldo reale Firestore
-
-        // imposta anche il wallet locale così la renderizzazione esistente resta coerente
-        const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}') || {};
-        const isAdmin = !!LS.getItem('admin_token');
-        const limit = isAdmin ? Infinity : (prefs.pro ? 10 : 3);
-        LS.setItem('whatif_wallet', JSON.stringify({ available: isAdmin ? Infinity : Math.max(0, Number(n)||0), limit }));
-        LS.setItem('whatif_wallet_sync', String(Date.now()));
-
-        // aggiorna immediatamente il badge
-        const el = document.getElementById('freeBadge');
-        if(el){
-          el.textContent = (limit===Infinity) ? `${T}: ∞` : `${T}: ${n}/${limit}`;
-        }
-      }catch(e){
-        console.error("credits/firestore", e);
-        const el = document.getElementById('freeBadge');
-        if(el) el.textContent = `${T}: [errore]`;
-      }
-    });
-  </script>
-  <!-- ==== SERVER CREDIT SYNC (Firestore) ==== -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-
-  // 🔧 Usa la tua config (quella già usata altrove)
-  const firebaseConfig = {
-    apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
-    authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
-    projectId: "whatif-oracolo-bc15d",
-    storageBucket: "whatif-oracolo-bc15d.firebasestorage.app",
-    messagingSenderId: "857481137283",
-    appId: "1:857481137283:web:ff8f766d14392835cf5fb6"
-  };
-
-  // Evita doppia init se già inizializzato altrove
-  let app;
-  try { app = initializeApp(firebaseConfig); } catch(e){ /* già init */ }
-  const auth = getAuth();
-  const db = getFirestore();
-
-  const WKEY = 'whatif_wallet';
-  const SURPKEY = 'whatif_surprise';
-
-  const today = new Date().toISOString().slice(0,10);
-  const defaultDailyCap = (JSON.parse(localStorage.getItem('whatif_prefs')||'{}')?.pro===true) ? 10 : 3;
-
-  function writeWalletFromServer(available, used, cap){
-    const safe = {
-      available: (available===Infinity?Infinity:Math.max(0, Number(available)||0)),
-      used:      Math.max(0, Number(used)||0),
-      limit:     (cap===Infinity?Infinity:Math.max(0, Number(cap)||0))
-    };
-    localStorage.setItem(WKEY, JSON.stringify(safe));
-    localStorage.setItem('whatif_wallet_sync', String(Date.now()));
-  }
-
-  async function ensureUserDoc(uid){
-    const ref = doc(db, 'users', uid);
-    const snap = await getDoc(ref);
-    if(!snap.exists()){
-      // Prima inizializzazione server-side
-      await setDoc(ref, {
-        credits: { available: defaultDailyCap, used: 0, dailyCap: defaultDailyCap, lastReset: today },
-        surprise: { tokens: 1, lastReset: today }, // il tuo “+1 Sorprendimi” giornaliero
-        pro: JSON.parse(localStorage.getItem('whatif_prefs')||'{}')?.pro===true ? true : false,
-        createdAt: Date.now()
-      }, { merge: true });
-      return { available: defaultDailyCap, used: 0, dailyCap: defaultDailyCap, lastReset: today, surpriseTokens: 1 };
-    } else {
-      const data = snap.data()||{};
-      const credits = data.credits || {};
-      const surprise = data.surprise || {};
-      let { available=defaultDailyCap, used=0, dailyCap=defaultDailyCap, lastReset=today } = credits;
-      let tokens = Number(surprise.tokens||0);
-      let tokensLast = surprise.lastReset || today;
-
-      // Reset giornaliero (server persisted)
-      if(lastReset !== today){
-        available = dailyCap;
-        used = 0;
-        lastReset = today;
-      }
-      if(tokensLast !== today){
-        // ricarica giornaliera “Sorprendimi”: 1
-        tokens = Math.max(tokens, 1);
-        tokensLast = today;
-      }
-
-      // Scrivi eventuali reset nel doc
-      await setDoc(ref, {
-        credits: { available, used, dailyCap, lastReset },
-        surprise: { tokens, lastReset: tokensLast }
-      }, { merge: true });
-
-      return { available, used, dailyCap, lastReset, surpriseTokens: tokens };
-    }
-  }
-
-  async function syncCredits(uid){
-    const { available, used, dailyCap, surpriseTokens } = await ensureUserDoc(uid);
-    // Aggiorna cache locale così tutta la UI esistente continua a funzionare
-    writeWalletFromServer(available, used, dailyCap);
-    localStorage.setItem(SURPKEY, String(Math.max(0, parseInt(surpriseTokens)||0)));
-  }
-
-  // (Opzionale) Consumo 1 credito lato server – se in futuro vuoi usarlo anche da fourth
-  async function consumeOneServer(uid){
-    const ref = doc(db, 'users', uid);
-    await runTransaction(db, async (tx)=>{
-      const snap = await tx.get(ref);
-      if(!snap.exists()) throw new Error('no-user-doc');
-      const data = snap.data()||{};
-      const c = data.credits || {};
-      const today = new Date().toISOString().slice(0,10);
-      let { available=defaultDailyCap, used=0, dailyCap=defaultDailyCap, lastReset=today } = c;
-      if(lastReset !== today){ available = dailyCap; used = 0; lastReset = today; }
-      if(available <= 0) throw new Error('no-credits');
-      available -= 1; used += 1;
-      tx.set(ref, { credits: { available, used, dailyCap, lastReset } }, { merge: true });
-    });
-  }
-
-  // Aggancia al login
-  onAuthStateChanged(auth, async (user)=>{
-    if(!user) return; // non loggato -> lascia il fallback (mostrerà 3/10 finché non fai login)
-    try {
-      await syncCredits(user.uid);
-      // refresh badge locale in fourth (usa la tua funzione già presente)
-      if (typeof renderCredits === 'function') renderCredits();
-      if (typeof renderSpinButton === 'function') renderSpinButton();
-    } catch(e){
-      console.error('syncCredits error', e);
-    }
-  });
-
-  // Piccolo refresh quando rientri nella tab
-  document.addEventListener('visibilitychange', async ()=>{
-    if(document.hidden) return;
-    const u = auth.currentUser;
-    if(u){ try{ await syncCredits(u.uid); if (typeof renderCredits==='function') renderCredits(); }catch{} }
-  });
-</script>
 </body>
 </html>
