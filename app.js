@@ -2,7 +2,7 @@
 import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 import { bootCredits, getBalance, consumeCredit, addCredits, grantAdCredit } from "./store/credits.js";
 
-// persistenza login
+// persistenza login (resti loggato)
 const auth = getAuth();
 setPersistence(auth, browserLocalPersistence).catch(()=>{});
 
@@ -26,7 +26,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 
-// === IL TUO CODICE ESISTENTE (tenuto identico) ===
+// === IL TUO CODICE ESISTENTE ===
 (function () {
   // --- Simple pager state (0..2) ---
   let page = 0;
@@ -125,9 +125,9 @@ onAuthStateChanged(auth, async (user) => {
     });
   }
 })();
- 
 
-// === OVERLAY STORE: credit-store.html ===
+
+// === OVERLAY STORE: /store/credit-store.html ===
 let overlayFrame = null;
 function openCreditStore() {
   if (overlayFrame) return;
@@ -136,7 +136,7 @@ function openCreditStore() {
   back.addEventListener("click", close);
 
   overlayFrame = document.createElement("iframe");
-  overlayFrame.src = "/credit-store.html?lang=it";       // <-- percorso del tuo file store
+  overlayFrame.src = "/store/credit-store.html?lang=it";   // <-- percorso del tuo file store
   overlayFrame.style.cssText = "position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,92vw);height:360px;border:0;border-radius:16px;z-index:9999;box-shadow:0 20px 60px rgba(0,0,0,.6)";
 
   document.body.append(back, overlayFrame);
