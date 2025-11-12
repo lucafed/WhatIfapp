@@ -197,16 +197,16 @@
 
   <!-- 🔐 Firebase: login Google via redirect -->
   <script type="module">
-    // mini logger visivo (attivalo con ?debug=1 nell'URL)
+    // mini logger visivo (?debug=1 nell'URL)
     const dbg = document.getElementById('debug');
     const q = new URLSearchParams(location.search);
     const DO_DEBUG = q.get('debug') === '1';
     const log = (...a)=>{ if(DO_DEBUG){ dbg.style.display='block'; dbg.textContent += a.join(' ') + '\n'; } };
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithRedirect, getRedirectResult, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithRedirect, getRedirectResult, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
-    // 🔧 TUA CONFIG (già corretta dal progetto appena creato)
+    // Config del tuo progetto
     const firebaseConfig = {
       apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
       authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
@@ -218,7 +218,9 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    await setPersistence(auth, browserLocalPersistence);
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
 
     const primaryCta = document.getElementById("primaryCta");
     const logoutBtn  = document.getElementById("logoutBtn");
@@ -245,9 +247,9 @@
         logoutBtn.style.display = "none";
       }
     }
+    // rende disponibile alla parte i18n (che la invoca)
     window.updatePrimaryCta = updatePrimaryCta;
 
-    // Click CTA: se non loggato -> redirect; se loggato -> vai avanti
     primaryCta.onclick = async ()=>{
       showErr("");
       const user = auth.currentUser;
@@ -274,12 +276,12 @@
 
     logoutBtn.onclick = async ()=>{ await signOut(auth); };
 
-    // Completa login dopo il redirect
-    getRedirectResult(auth)
-      .then(res=>{
-        if(res?.user){ log("🔐 Redirect OK", res.user.uid); }
-      })
-      .catch(e=> showErr("Post-login: "+(e.code||e.message)));
+    try{
+      const res = await getRedirectResult(auth);
+      if(res?.user){ log("🔐 Redirect OK", res.user.uid); }
+    }catch(e){
+      showErr("Post-login: "+(e.code||e.message));
+    }
 
     onAuthStateChanged(auth, ()=>{
       log("👤 Stato auth:", !!auth.currentUser);
