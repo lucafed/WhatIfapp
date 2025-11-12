@@ -1,5 +1,5 @@
 // /store/credits.js
-// Gestione crediti su Firestore: ricarica giornaliera, consumo, reward da annuncio.
+// Gestione crediti su Firestore: boot, ricarica giornaliera sicura, consumo, reward e acquisti.
 
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
@@ -7,7 +7,7 @@ import {
   getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-// --- Inizializzazione Firebase (non duplica se già inizializzato altrove)
+// --- Inizializzazione Firebase (usa la tua config; non duplica se già inizializzato)
 const firebaseConfig = {
   apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
   authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
@@ -36,13 +36,13 @@ export async function getGlobalConfig() {
   return snap.data();
 }
 
-// --- Crea doc utente se non esiste
+// --- Crea doc utente se non esiste (non tocca la ricarica qui)
 export async function ensureUserDoc(uid) {
   const ref = doc(db, "users", uid);
   const snap = await getDoc(ref);
   if (!snap.exists()) {
     await setDoc(ref, {
-      credits: 3,
+      credits: 3,           // primo avvio: 3
       adsWatched: 0,
       premium: false,
       lastRechargeAt: serverTimestamp()
@@ -52,23 +52,56 @@ export async function ensureUserDoc(uid) {
   return snap.data();
 }
 
-// --- Ricarica giornaliera se serve
+/**
+ * --- Ricarica giornaliera SICURA / idempotente ---
+ * Regole:
+ *  - Se dailyRechargeEnabled = false -> non tocca nulla.
+ *  - Se non c'è lastRechargeAt -> NON cambia i crediti (evita azzeramenti), setta solo il marker del giorno.
+ *  - Se è già lo stesso giorno -> non fa niente.
+ *  - Se è giorno nuovo:
+ *      * calcola "daily" = dailyFreeCredits + dailyFreeSurprise
+ *      * se i crediti attuali sono >= daily -> NON abbassa (mantiene), azzera solo adsWatched e aggiorna marker.
+ *      * se i crediti sono < daily -> porta i crediti a "daily", azzera adsWatched e aggiorna marker.
+ */
 export async function rechargeIfNeeded(uid, cfg, userDoc) {
-  if (!cfg?.dailyRechargeEnabled) return userDoc;
-  if (sameDay(userDoc?.lastRechargeAt)) return userDoc;
+  if (!cfg?.dailyRechargeEnabled) return userDoc || {};
 
   const base   = Number(cfg?.dailyFreeCredits ?? 3);
   const bonus  = Number(cfg?.dailyFreeSurprise ?? 0);
-  const next   = base + bonus;
+  const daily  = base + bonus;
 
   const ref = doc(db, "users", uid);
+
+  const hasLast = !!userDoc?.lastRechargeAt?.seconds;
+  if (!hasLast) {
+    // Primo giro o doc “vecchio”: NON tocco i crediti, imposto solo il marker
+    await updateDoc(ref, { lastRechargeAt: serverTimestamp() }).catch(()=>{});
+    return userDoc || {};
+  }
+
+  // Stesso giorno => non ricaricare
+  if (sameDay(userDoc.lastRechargeAt)) return userDoc;
+
+  // Giorno nuovo: non abbassare chi ha già più del minimo
+  const cur = Number(userDoc.credits ?? 0);
+  if (cur >= daily) {
+    await updateDoc(ref, { lastRechargeAt: serverTimestamp(), adsWatched: 0 }).catch(()=>{});
+    return { ...userDoc, adsWatched: 0, lastRechargeAt: { seconds: Math.floor(Date.now()/1000) } };
+  }
+
+  // Se sotto la soglia -> porta al minimo giornaliero
   await updateDoc(ref, {
-    credits: next,
+    credits: daily,
     adsWatched: 0,
     lastRechargeAt: serverTimestamp()
   });
 
-  return { ...userDoc, credits: next, adsWatched: 0, lastRechargeAt: { seconds: Math.floor(Date.now()/1000) } };
+  return {
+    ...userDoc,
+    credits: daily,
+    adsWatched: 0,
+    lastRechargeAt: { seconds: Math.floor(Date.now()/1000) }
+  };
 }
 
 // --- Boot: crea doc e ricarica se è giorno nuovo (da chiamare DOPO login)
