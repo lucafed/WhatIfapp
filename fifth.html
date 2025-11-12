@@ -529,6 +529,8 @@ window.addEventListener('storage',(e)=>{ if(['whatif_wallet','whatif_wallet_sync
 function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
 function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
+/* escape HTML per le righe motivazione */
+function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
 /* ==== Titles/Text ==== */
 function applyUI(q){
@@ -606,11 +608,7 @@ function extractContextParts(q){
   const topic = topicMatch ? topicMatch[0] : "";
   return {when, money, action, topic};
 }
-function buildWhatIfGuidance(domanda, data){
-  // preferisci sempre la motivazione dell’API se presente
-  if(data && typeof data.motivation === 'string' && data.motivation.trim()){
-    return [data.motivation.trim()];
-  }
+function buildWhatIfGuidance(domanda){
   const ctx = extractContextParts(domanda);
   if(lang==='en'){
     return [
@@ -810,7 +808,7 @@ async function startFlow(){
     const src = String((req && req.micro && req.micro.src) || "").toLowerCase();
     const isQuick = ['quick','spunti','hints'].includes(src);
     const isManual = (src==='manual') || (!src);
-    const showWhatIfMot = (style==='whatif' && !surprise && (isQuick || isManual) && typeof data.motivation==='string' && data.motivation.trim());
+    const showWhatIfMot = (style==='whatif' && !surprise && (isQuick || isManual));
 
     // reset UI
     lblP.style.display='block'; resultBox.style.display='block'; chipsWrap.style.display='none'; motIco.style.display='none';
@@ -836,18 +834,19 @@ async function startFlow(){
       motNote.textContent = sci;
 
     } else if (showWhatIfMot){
-  committeeTitle.textContent = t().guideTitle;
-  const lines = buildWhatIfGuidance(domanda, data);
-  motNote.innerHTML = lines.map(esc).join("<br>");
+      // WHAT IF → 3 “Indicazioni” brevi (mai la stringa Probabilità…)
+      committeeTitle.textContent = t().guideTitle;
+      const lines = buildWhatIfGuidance(domanda);
+      motNote.innerHTML = lines.map(esc).join("<br>");
 
     } else {
-      // Niente motivazioni (es. whatif senza quick/manual): nascondi sezione
+      // Niente motivazioni: nascondi sezione
       lblP.style.display='none';
       resultBox.style.display='none';
     }
 
     // Cronologia
-    const motivazioneUsata = (resultBox.style.display!=='none') ? motNote.textContent : '';
+    const motivazioneUsata = (resultBox.style.display!=='none') ? (motNote.textContent || motNote.innerText || '') : '';
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
     hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:usedPct, motivazione:motivazioneUsata });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
