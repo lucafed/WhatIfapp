@@ -289,18 +289,15 @@ const I18N = {
        chipsFav:"favorevoli", chipsCon:"contrari", chipsAst:"astenuti",
        motFallback:"Motivo: benefici concreti a breve, con vincoli gestibili.",
        credits:(n)=>`💰 Crediti: ${n}`, noCredits:"Hai terminato i crediti.",
-       storeTitle:"Crediti", buy5:"Compra +5 crediti (test)", buy10:"Compra +10 crediti (test)", buy20:"Compra +20 crediti (test)",
-       watchAd:"Guarda pubblicità (+1)", close:"Chiudi",
+       storeTitle:"Crediti", watchAd:"Guarda pubblicità (+1)", close:"Chiudi",
        comingSoon:"Prossimamente", buySoonNote:"Acquisto crediti non ancora disponibile.",
        toastPlus:(n)=>`+${n} credito`, toastMinus:(n)=>`-${n} credito`,
-       guideTitle:"Indicazioni",
-       guideQuick:"Indicazioni rapide",
-       guideAdvice:"Consiglio",
-       guideAnalysis:"Analisi sintetica"
+       guideTitle:"Motivazioni",
+       pro:"Pro", con:"Contro",
   },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-       p:"Outcome & rationales", share:"📤 Share / Copy", again:"🔁 Ask another",
+       p:"Outcome & motivations", share:"📤 Share / Copy", again:"🔁 Ask another",
        save:"⭐ Save", savedOk:"✅ Saved",
        copied:"Copied!", error:"[server error]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
@@ -310,20 +307,17 @@ const I18N = {
        pctLabel:"% probability it happens",
        votersTitle:"Committee", seriousTitle:"Rationale", scientificTitle:"Rationale (scientific)",
        chipsFav:"in favour", chipsCon:"against", chipsAst:"abstained",
-       motFallback:"Reason: short-term, concrete benefits with manageable constraints.",
+       motFallback:"Reason: concrete short-term upsides with manageable constraints.",
        credits:(n)=>`💰 Credits: ${n}`, noCredits:"You ran out of credits.",
-       storeTitle:"Credits", buy5:"Buy +5 credits (test)", buy10:"Buy +10 credits (test)", buy20:"Buy +20 credits (test)",
-       watchAd:"Watch ad (+1)", close:"Close",
+       storeTitle:"Credits", watchAd:"Watch ad (+1)", close:"Close",
        comingSoon:"Coming soon", buySoonNote:"Credit purchases not available yet.",
-       toastPlus:(n)=>`+${n} credit`,  toastMinus:(n)=>`-${n} credit`,
-       guideTitle:"Guidance",
-       guideQuick:"Quick tips",
-       guideAdvice:"Advice",
-       guideAnalysis:"Concise analysis"
+       toastPlus:(n)=>`+${n} credit`, toastMinus:(n)=>`-${n} credit`,
+       guideTitle:"Motivations",
+       pro:"Pros", con:"Cons",
   },
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
        sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
-       p:"Resultado y razones", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra",
+       p:"Resultado y motivaciones", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra",
        save:"⭐ Guardar", savedOk:"✅ Guardada",
        copied:"¡Copiado!", error:"[error del servidor]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
@@ -333,16 +327,13 @@ const I18N = {
        pctLabel:"% probabilidad de que ocurra",
        votersTitle:"Comité", seriousTitle:"Motivo", scientificTitle:"Motivo (científico)",
        chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones",
-       motFallback:"Motivo: beneficios concretos a corto plazo con límites manejables.",
-       credits:(n)=>`💰 Créditos: ${n}`, noCredits:"Se te han acabado los créditos.",
-       storeTitle:"Créditos", buy5:"Comprar +5 créditos (test)", buy10:"Comprar +10 créditos (test)", buy20:"Comprar +20 créditos (test)",
-       watchAd:"Ver anuncio (+1)", close:"Cerrar",
-       comingSoon:"Próximamente", buySoonNote:"La compra de créditos aún no está disponible.",
-       toastPlus:(n)=>`+${n} crédito`,  toastMinus:(n)=>`-${n} crédito`,
-       guideTitle:"Guía",
-       guideQuick:"Indicaciones rápidas",
-       guideAdvice:"Consejo",
-       guideAnalysis:"Análisis sintético"
+       motFallback:"Motivo: beneficios cercanos y concretos con límites manejables.",
+       credits:(n)=>`💰 Créditos: ${n}`, noCredits:"Sin créditos.",
+       storeTitle:"Créditos", watchAd:"Ver anuncio (+1)", close:"Cerrar",
+       comingSoon:"Próximamente", buySoonNote:"Las compras aún no están disponibles.",
+       toastPlus:(n)=>`+${n} crédito`, toastMinus:(n)=>`-${n} crédito`,
+       guideTitle:"Motivaciones",
+       pro:"A favor", con:"En contra",
   },
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
        sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
@@ -353,19 +344,16 @@ const I18N = {
        meta:(st,p)=> st==='wtf'
         ? `Style : What the F · 6–9 phrases · un paragraphe · ton sec · mode : ${p==='past'?'Passé':'Futur'}.`
         : `Style : What if (60 % analyse, 40 % réel) · 8–11 phrases · un paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`,
-       pctLabel:"% de probabilité que ça arrive",
+       pctLabel:"% de probabilité",
        votersTitle:"Comité", seriousTitle:"Motivation", scientificTitle:"Motivation (scientifique)",
        chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions",
-       motFallback:"Raison : bénéfices concrets à court terme, contraintes gérables.",
+       motFallback:"Raison : gains concrets à court terme, contraintes gérables.",
        credits:(n)=>`💰 Crédits : ${n}`, noCredits:"Crédits épuisés.",
-       storeTitle:"Crédits", buy5:"Acheter +5 crédits (test)", buy10:"Acheter +10 crédits (test)", buy20:"Acheter +20 crédits (test)",
-       watchAd:"Regarder une pub (+1)", close:"Fermer",
-       comingSoon:"Bientôt", buySoonNote:"Achat de crédits pas encore disponible.",
-       toastPlus:(n)=>`+${n} crédit`,  toastMinus:(n)=>`-${n} crédit`,
-       guideTitle:"Conseils",
-       guideQuick:"Conseils rapides",
-       guideAdvice:"Suggestion",
-       guideAnalysis:"Analyse concise"
+       storeTitle:"Crédits", watchAd:"Regarder une pub (+1)", close:"Fermer",
+       comingSoon:"Bientôt", buySoonNote:"Achat non disponible.",
+       toastPlus:(n)=>`+${n} crédit`, toastMinus:(n)=>`-${n} crédit`,
+       guideTitle:"Motivations",
+       pro:"Atouts", con:"Risques",
   },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
        sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
@@ -379,16 +367,13 @@ const I18N = {
        pctLabel:"% Wahrscheinlichkeit",
        votersTitle:"Gremium", seriousTitle:"Begründung", scientificTitle:"Begründung (wissenschaftlich)",
        chipsFav:"dafür", chipsCon:"dagegen", chipsAst:"enthalten",
-       motFallback:"Grund: kurzfristiger, greifbarer Nutzen mit beherrschbaren Einschränkungen.",
-       credits:(n)=>`💰 Credits: ${n}`, noCredits:"Credits aufgebraucht.",
-       storeTitle:"Credits", buy5:"+5 Credits kaufen (Test)", buy10:"+10 Credits kaufen (Test)", buy20:"+20 Credits kaufen (Test)",
-       watchAd:"Werbung ansehen (+1)", close:"Schließen",
-       comingSoon:"Bald verfügbar", buySoonNote:"Kauf von Credits noch nicht verfügbar.",
-       toastPlus:(n)=>`+${n} Credit`,  toastMinus:(n)=>`-${n} Credit`,
-       guideTitle:"Leitfaden",
-       guideQuick:"Schnelle Hinweise",
-       guideAdvice:"Rat",
-       guideAnalysis:"Kurzanalyse"
+       motFallback:"Grund: kurzfristiger, greifbarer Nutzen bei überschaubaren Grenzen.",
+       credits:(n)=>`💰 Credits: ${n}`, noCredits:"Keine Credits mehr.",
+       storeTitle:"Credits", watchAd:"Werbung ansehen (+1)", close:"Schließen",
+       comingSoon:"Bald", buySoonNote:"Käufe noch nicht verfügbar.",
+       toastPlus:(n)=>`+${n} Credit`, toastMinus:(n)=>`-${n} Credit`,
+       guideTitle:"Begründungen",
+       pro:"Pro", con:"Kontra",
   }
 };
 const SUP_LANG=['it','en','es','fr','de'];
@@ -423,10 +408,7 @@ const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica�
 /* === ORACLE LINES (solo attesa) === */
 const ORACLE_LINES = {
   it: ["Shh… le carte girano piano.","Aspetta: la risposta bussa sottovoce.","L’aria si fa chiara, sta arrivando.","Non correre: il disegno prende forma.","Occhio: il quadro si accende da solo.","Silenzio un attimo… qualcosa si allinea.","Senti? C’è un passo che torna nel ritmo.","Trattieni il fiato: la moneta è a mezz’aria.","Una piega nella notte, poi luce sottile.","Le luci interne si accendono una alla volta.","Ancora un respiro… il filo si tende.","Eccolo: l’indizio che mancava si mostra.","Un colpo di vento, poi tutto si ferma.","Scorri piano: la porta sta socchiudendosi.","Si sente un sì lontano, ma si avvicina.","L’oracolo gira la pagina… quasi."],
-  en: ["Hush… the cards are turning.","Wait: the answer knocks softly.","Air clears; something is arriving.","Don’t rush—shape is forming.","Look: the outline lights itself.","Hold a breath… lines align.","Hear it? A step returns to rhythm.","Coin in mid-air; let it fall.","A fold in the dark, then a thin light.","Inner lights switch on, one by one.","Another breath… the wire tightens.","There it is: the missing hint.","A gust, then stillness.","Scroll slowly: a door is ajar.","A distant yes draws nearer.","The oracle turns the page… almost."],
-  es: ["Shh… las cartas giran despacio.","Espera: la respuesta toca suave.","El aire se aclara; ya viene.","No corras: la forma aparece.","Mira: el contorno se enciende solo.","Guarda el aliento… todo se alinea.","¿Lo oyes? Vuelve el paso al ritmo.","Moneda en el aire; que caiga.","Un pliegue en la noche, luz fina.","Luces internas, una por una.","Otro respiro… el hilo se tensa.","Ahí está: la pista que faltaba.","Una ráfaga y luego quietud.","Desliza lento: se entorna la puerta.","Un sí lejano se acerca.","El oráculo pasa página… casi."],
-  fr: ["Chut… les cartes tournent.","Attends : la réponse frappe doucement.","L’air s’éclaircit ; ça arrive.","Ne te presse pas : la forme vient.","Regarde : le contour s’allume seul.","Retiens ton souffle… tout s’aligne.","Tu entends ? Le pas reprend le tempo.","Pièce en suspens ; laisse-la tomber.","Un pli dans la nuit, puis une fine lumière.","Des lampes intérieures s’allument, une à une.","Encore un souffle… le fil se tend.","La voilà : l’indice manquant.","Un souffle, puis l’immobilité.","Fais défiler lentement : une porte s’entrouvre.","Un oui lointain se rapproche.","L’oracle tourne la page… presque."],
-  de: ["Leise… die Karten wenden sich.","Warte: die Antwort klopft sanft.","Die Luft klärt sich; es kommt.","Nicht eilen: die Form entsteht.","Schau: die Kontur leuchtet selbst.","Atem halten… die Linien richten sich.","Hörst du’s? Der Schritt findet den Takt.","Münze in der Luft; lass sie fallen.","Ein Faltenwurf der Nacht, dann dünnes Licht.","Innere Lichter, eins nach dem andern.","Noch ein Atem… der Draht spannt sich.","Da ist es: der fehlende Hinweis.","Eine Böe, dann Stille.","Langsam scrollen: die Tür steht einen Spalt offen.","Ein fernes Ja kommt näher.","Das Orakel blättert um… fast."]
+  en: ["Hush… the cards are turning.","Wait: the answer knocks softly.","Air clears; something is arriving.","Don’t rush—shape is forming.","Look: the outline lights itself.","Hold a breath… lines align.","Hear it? A step returns to rhythm.","Coin in mid-air; let it fall.","A fold in the dark, then a thin light.","Inner lights switch on, one by one.","Another breath… the wire tightens.","There it is: the missing hint.","A gust, then stillness.","Scroll slowly: a door is ajar.","A distant yes draws nearer.","The oracle turns the page… almost."]
 };
 
 /* ==== INTRO (Zoltar-like) prima volta ===== */
@@ -467,70 +449,11 @@ const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chip
 const motNote=qs('#motNote'), creditInfo=qs('#creditInfo'), toastEl=qs('#toast');
 const lblP=qs('#lblP'), resultBox=qs('#resultBox');
 
-/* ==== Toast ==== */
-function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
-
-/* ==== Wallet + legacy + 🎁 Sorprendimi ==== */
-const WKEY="whatif_wallet";
-const SURPKEY="whatif_surprise";
-function readWallet(){ try{ const w=JSON.parse(LS.getItem(WKEY)||"{}")||{}; return {available:Number.isFinite(+w.available)?+w.available:null, used:Number.isFinite(+w.used)?+w.used:null, limit:Number.isFinite(+w.limit)?+w.limit:null}; }catch{return{available:null,used:null,limit:null}}}
-function writeWallet(w){
-  const cur=readWallet();
-  const out={ available:(w.available!=null)?Math.max(0,+w.available):(cur.available??0),
-              used:(w.used!=null)?Math.max(0,(w.used||0)+1):(cur.used??0),
-              limit:(w.limit!=null)?Math.max(0,+w.limit):(cur.limit??0) };
-  LS.setItem(WKEY, JSON.stringify(out));
-  LS.setItem("whatif_wallet_sync", String(Date.now()));
-  updateCreditInfo();
-}
-function legacyCap(){ return (prefs.pro===true)?10:3 }
-function legacyGetLeft(){
-  const w=readWallet(); if(w.available!=null) return w.available;
-  try{ const c=JSON.parse(LS.getItem('whatif_credits')||'{}'); const today=new Date().toISOString().slice(0,10); const used=(c.date===today)?(+c.used||0):0; return Math.max(0, legacyCap()-used); }catch{}
-  const raw=LS.getItem('crediti'); return raw==null? legacyCap() : Math.max(0, parseInt(raw,10)||0);
-}
-function legacyConsumeOne(){
-  try{ const w=readWallet(); if(w.available!=null){ if(w.available<=0) return false; writeWallet({available:w.available-1, used:Math.max(0,(w.used||0)+1), limit:(w.limit!=null?w.limit:legacyCap())}); return true; } }catch{}
-  try{ const today=new Date().toISOString().slice(0,10); let c=JSON.parse(LS.getItem('whatif_credits')||'{}'); if(c.date!==today) c={date:today,used:0,limit:legacyCap()}; if((c.used||0)>= (c.limit||legacyCap())) return false; c.used=(c.used||0)+1; LS.setItem('whatif_credits', JSON.stringify(c)); return true; }catch{}
-  let n=parseInt(LS.getItem('crediti')||'0',10)||0; if(n<=0) return false; LS.setItem('crediti', String(Math.max(0,n-1))); return true;
-}
-function getAvailable(){ if(IS_ADMIN) return Infinity; const w=readWallet(); return (w.available!=null)?w.available:legacyGetLeft() }
-function consumeOne(){
-  if(IS_ADMIN) return true;
-  const w=readWallet();
-  if(w.available!=null){
-    if(w.available<=0) return false;
-    writeWallet({available:w.available-1, used:Math.max(0,(w.used||0)+1), limit:(w.limit!=null?w.limit:legacyCap())});
-    return true;
-  }
-  return legacyConsumeOne();
-}
-function addCredits(n){ n=Math.max(0,parseInt(n,10)||0); if(n<=0) return;
-  const w=readWallet();
-  if(w.available==null){ const left=legacyGetLeft(); writeWallet({available:left+n, used:0, limit:legacyCap()}); }
-  else{ writeWallet({available:(w.available+n), used:Math.max(0,(w.used||0)-n), limit:(w.limit!=null?w.limit:legacyCap())}); }
-}
-
-/* 🎁 Sorprendimi tokens */
-function readSurprise(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||"0",10)||0); }
-function writeSurprise(n){ n=Math.max(0, parseInt(n,10)||0); LS.setItem(SURPKEY,String(n)); updateCreditInfo(); LS.setItem("whatif_wallet_sync", String(Date.now())); }
-function addSurprise(n){ writeSurprise(readSurprise() + Math.max(0,parseInt(n,10)||0)); }
-function consumeSurpriseOne(){ const cur=readSurprise(); if(cur>0){ writeSurprise(cur-1); return true; } return false; }
-function computeSurpriseBonus(amount){ const a=parseInt(amount,10)||0; if(a>=20) return 3; if(a>=10) return 2; if(a>=5)  return 1; return 0; }
-
-function updateCreditInfo(n=getAvailable()){
-  if(!creditInfo) return;
-  const surprise = readSurprise();
-  creditInfo.textContent = `${t().credits(n===Infinity?'∞':n)} · 🎁 Sorprendimi: ${surprise}`;
-}
-window.addEventListener('storage',(e)=>{ if(['whatif_wallet','whatif_wallet_sync','whatif_credits','admin_token','lang','lang_manual',SURPKEY].includes(e.key)){ updateCreditInfo(); }});
-
 /* ==== Helpers testo ==== */
+function esc(s){ return String(s||"").replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
 function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
 function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
-/* escape HTML per le righe motivazione */
-function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
 /* ==== Titles/Text ==== */
 function applyUI(q){
@@ -542,7 +465,7 @@ function applyUI(q){
   setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));
 }
 
-/* ==== Probability ==== */
+/* ==== Probability (semplice) ==== */
 function computeProbability(q){
   const t=(q||'').toLowerCase(); let s=50;
   if(/\b(7|14|21|30|60|90)\b/.test(t)) s+=12;
@@ -598,30 +521,77 @@ function revealEffect(){
   setTimeout(()=> wrap.classList.remove('reveal'), 900);
 }
 
-/* ===== Helpers contestuali per “What if” breve (fallback UI) ===== */
-function extractContextParts(q){
-  const s = String(q||"").toLowerCase();
-  const when = (s.match(/\b(in|entro|tra|domani|oggi|stasera|settimana|mese|anno|\d{1,2}\s*(giorni|settimane|mesi))\b/i)||[])[0] || "";
-  const money = (s.match(/(€|euro|budget|spesa|costo|prezzo)\s*([0-9.,]+)/i)||[])[0] || (/\bunder\b/i.test(s)?"under":"");
-  const action = (s.match(/\b(lancia|apri|impara|scrivi|chiedi|studia|automatizza|testa|compra|vendi|assumi|costruisci|crea|ottimizza|riduci|aumenta)\b/i)||[])[0] || "";
-  const topicMatch = s.match(/\b(sito|progetto|app|campagna|cv|colloquio|piscina|dominio|startup|portafoglio|criptovalute?|azione|investimento|esame)\b/i);
-  const topic = topicMatch ? topicMatch[0] : "";
-  return {when, money, action, topic};
+/* ===== Motivazioni WHAT IF — stile esempi (Pro/Contro) ===== */
+function topicFromQuestion(q){
+  const s=String(q||"").toLowerCase();
+  if(/ex|ex-|ex\s|mio ex|mia ex|ritorn(a|o)\s+con.*ex|tornar(e|ci)\s+con.*ex/.test(s)) return 'ex';
+  if(/aquila|l'aquila|laquila|tornare.*aquila|trasfer(ir|isc).*|città|paese/.test(s)) return 'city';
+  if(/lavor|colloquio|cv|assum|progetto|startup|app|sito|dominio|campagna/.test(s)) return 'work';
+  if(/invest|azioni|etoro|revolut|crypto|portafoglio/.test(s)) return 'invest';
+  return 'generic';
 }
-function buildWhatIfGuidance(domanda){
-  const ctx = extractContextParts(domanda);
-  if(lang==='en'){
-    return [
-      `Block 10 minutes ${ctx.when||"today"} for ${ctx.topic||"this"} and do the first step you’ve been avoiding.`,
-      `Write one measurable micro-goal you can finish within ${ctx.when||"72h"} and put it on your calendar.`,
-      `Use one tool only and track one metric${ctx.money?` (budget: ${ctx.money})`:""}; set a check-in in 3 days.`
-    ];
-  }
-  return [
-    `Blocca 10 minuti ${ctx.when||"oggi"} su ${ctx.topic||"il tema"} e chiudi il primo passo che stai rimandando.`,
-    `Scrivi un micro-obiettivo misurabile da chiudere entro ${ctx.when||"72 ore"} e mettilo in calendario.`,
-    `Usa uno strumento solo e una metrica${ctx.money?` (budget: ${ctx.money})`:""}; fai un check tra 3 giorni.`
-  ];
+function prosConsByTopic(q, L){
+  const t = topicFromQuestion(q);
+  const pack = {
+    it:{
+      city:{
+        pro:"Ritmi più umani, costi prevedibili, rete di affetti che accorcia i tempi duri.",
+        con:"Opportunità più strette e rischio di idealizzare il passato: serve progettare tappe e confini."
+      },
+      ex:{
+        pro:"Conosci già linguaggi e limiti: se cambiano le regole, può esserci tregua e crescita.",
+        con:"Pattern che tornano, gelosie in saldo: senza accordi chiari, il déjà-vu diventa gabbia."
+      },
+      work:{
+        pro:"Focus su una cosa alla volta: risultati misurabili e margine sull’energia.",
+        con:"Scope creep e distrazioni: senza calendario e no-list, ti si allarga tutto."
+      },
+      invest:{
+        pro:"Piccoli importi, regole semplici, niente eroi: più probabilità di restare lucido.",
+        con:"Volatilità e bias: senza stop e revisione, confondi fortuna e strategia."
+      },
+      generic:{
+        pro:"Benefici vicini e concreti se riduci il rumore e proteggi la routine.",
+        con:"Sovraccarico e rimandi se non scegli un perimetro e una scadenza corta."
+      }
+    },
+    en:{
+      city:{ pro:"Slower pace, predictable costs, family safety net.", con:"Fewer opportunities and rose-tinted memory—plan milestones and guardrails." },
+      ex:{ pro:"Shared language and limits: with new rules, peace and growth are possible.", con:"Old patterns resurface: without clear agreements, déjà-vu becomes a cage." },
+      work:{ pro:"Single-focus yields measurable results and saves energy.", con:"Scope creep and distractions without calendar and a firm ‘no’-list." },
+      invest:{ pro:"Small bets, simple rules: better odds you stay rational.", con:"Volatility and bias: without stops and reviews, luck poses as strategy." },
+      generic:{ pro:"Near, concrete upsides if you cut noise and protect routine.", con:"Overload and procrastination without a small scope and short deadline." }
+    },
+    es:{
+      city:{ pro:"Ritmo humano, costes previsibles y red de afectos.", con:"Menos oportunidades y nostalgia: define hitos y límites." },
+      ex:{ pro:"Lenguaje compartido y límites claros: con nuevas reglas, puede haber paz.", con:"Patrones que vuelven: sin acuerdos, el déjà-vu se hace jaula." },
+      work:{ pro:"Un foco a la vez: resultados medibles y energía cuidada.", con:"Crecimiento del alcance y distracciones sin calendario y lista de ‘no’." },
+      invest:{ pro:"Apuestas pequeñas y reglas simples: más cordura.", con:"Volatilidad y sesgos: sin stops y revisión, la suerte parece estrategia." },
+      generic:{ pro:"Beneficios cercanos si reduces ruido y proteges la rutina.", con:"Sobrecarga y postergación sin perímetro y plazo corto." }
+    },
+    fr:{
+      city:{ pro:"Rythmes humains, coûts maîtrisables, filet d’affects.", con:"Moins d’opportunités et nostalgie: fixe des jalons et des garde-fous." },
+      ex:{ pro:"Langage commun et limites: avec de nouvelles règles, trêve possible.", con:"Anciens schémas: sans accords clairs, le déjà-vu devient cage." },
+      work:{ pro:"Un seul focus: résultats mesurables, énergie préservée.", con:"Dérive de périmètre et distractions sans agenda et no-list." },
+      invest:{ pro:"Petites mises, règles simples: plus de lucidité.", con:"Volatilité et biais: sans stops et revues, la chance imite la stratégie." },
+      generic:{ pro:"Gains proches si tu coupes le bruit et protèges la routine.", con:"Surcharge et report sans périmètre et échéance courte." }
+    },
+    de:{
+      city:{ pro:"Ruhiger Takt, kalkulierbare Kosten, familiäres Netz.", con:"Weniger Chancen, Verklärung: plane Etappen und Leitplanken." },
+      ex:{ pro:"Gemeinsame Sprache und Grenzen: mit neuen Regeln ist Wachstum möglich.", con:"Alte Muster kehren zurück: ohne klare Absprachen wird Déjà-vu zum Käfig." },
+      work:{ pro:"Ein Fokus → messbare Ergebnisse, Energie gespart.", con:"Scope Creep und Ablenkungen ohne Kalender und Nein-Liste." },
+      invest:{ pro:"Kleine Einsätze, einfache Regeln: mehr Nüchternheit.", con:"Volatilität & Bias: ohne Stops und Review tarnt sich Glück als Strategie." },
+      generic:{ pro:"Nahe, greifbare Vorteile bei weniger Lärm und fester Routine.", con:"Überlast & Aufschub ohne kleinen Rahmen und kurze Frist." }
+    }
+  };
+  const bank = (pack[L]||pack.it);
+  return bank[t]||bank.generic;
+}
+function buildWhatIfMotivations(q){
+  const {pro, con} = prosConsByTopic(q, lang);
+  const T=t();
+  // usa i trattini “—” per la resa con .embit
+  return `<span class="embit">${esc(T.pro)} — ${esc(pro)}</span><br><span class="embit">${esc(T.con)} — ${esc(con)}</span>`;
 }
 
 /* ===== Motivazione demenziale per WTF (fallback locale) ===== */
@@ -634,75 +604,32 @@ function wtfMotivationDemenziale(langCode){
   return `Pseudoscienza spicciola: micro-passi battono i piani epici (Legge del Caffè + Inerzia). La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: “fai, e smettila di pensarci troppo”.`;
 }
 
-/* ==== Overlay (store + rewarded) ==== */
+/* ==== Overlay/store placeholders ==== */
 const ADS_ENABLED = false;
 const overlay=qs('#overlay'), overlayFrame=qs('#overlay-frame');
 let overlayLoadTimer=null, rewardTimer=null, rewardGranted=false, awaitingCredit=false, alreadyConsumed=false;
 
-function storeFallbackHTML(){
-  const T=t();
-  return `
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#0B0F14;color:#EAF3EE}
-.wrap{max-width:520px;margin:auto;padding:16px}
-.card{background:#141C22;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px;margin-top:10px}
-h2{margin:4px 0 6px;font-size:18px}
-.btn{display:inline-block;margin:6px 6px 0 0;padding:10px 12px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
-.ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
-.primary{background:linear-gradient(180deg,#1C57A0,#FFEC01);color:#0A0E12}
-.small{color:#A0B2BA;font-size:12px;line-height:1.5}
-.row{display:flex;flex-wrap:wrap;gap:8px}
-</style></head><body>
-<div class="wrap"><div class="card">
-  <h2>${T.storeTitle}</h2>
-  <p class="small" style="margin:6px 0 10px;opacity:.85">🛒 ${T.comingSoon} — ${T.buySoonNote}</p>
-  <p class="small" id="msg">${T.noCredits}</p>
-  <div class="row">
-    <button class="btn ghost" id="adBtn" disabled title="Disattivato"> ${T.watchAd}</button>
-    <button class="btn ghost" onclick="parent.postMessage({type:'close_overlay'}, '*')">${T.close}</button>
-  </div>
-</div></div>
-</body></html>`;
+function updateCreditInfo(n=getAvailable()){
+  if(!creditInfo) return;
+  const surprise = readSurprise();
+  creditInfo.textContent = `${t().credits(n===Infinity?'∞':n)} · 🎁 Sorprendimi: ${surprise}`;
 }
-function openOverlay(url){
-  if(!ADS_ENABLED){ toast('🛒 Store disattivato per ora'); return; }
-  overlay.style.display='grid';
-  overlay.setAttribute('aria-hidden','false');
-  overlayFrame.removeAttribute('srcdoc');
-  overlayFrame.src='about:blank';
-  const sep = url.includes('?')?'&':'?';
-  const finalUrl = `${url}${sep}lang=${encodeURIComponent(lang)}`;
-  overlayFrame.onload = ()=>{ try{ clearTimeout(overlayLoadTimer); }catch{} };
-  overlayFrame.onerror= ()=>{ try{ clearTimeout(overlayLoadTimer); }catch{} };
-  overlayFrame.setAttribute('srcdoc', storeFallbackHTML());
-  overlayFrame.src = finalUrl;
-  try{ clearTimeout(overlayLoadTimer); }catch{}
-  overlayLoadTimer=setTimeout(()=>{ try{ overlayFrame.setAttribute('srcdoc', storeFallbackHTML()); }catch{} },1500);
-  setTimeout(()=>{ try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang}, '*'); }catch{} }, 400);
-}
-function openStore(){ if(!ADS_ENABLED){ toast('🛒 Store disattivato'); return; } openOverlay("/store/credit-store.html"); }
-function openRewarded(){
-  if(!ADS_ENABLED){ toast('🎬 Pubblicità disattivata'); return; }
-  rewardGranted=false;
-  openOverlay("/ads/rewarded.html");
-  clearTimeout(rewardTimer);
-  rewardTimer=setTimeout(()=>{
-    if(!rewardGranted){
-      addCredits(1); updateCreditInfo(); toast(t().toastPlus(1));
-      rewardGranted=true; closeOverlay();
-      location.replace('fourth.html');
-    }
-  },20000);
-}
-function closeOverlay(){
-  overlay.style.display='none';
-  overlay.setAttribute('aria-hidden','true');
-  overlayFrame.src='about:blank';
-  overlayFrame.removeAttribute('srcdoc');
-  try{ clearTimeout(overlayLoadTimer); }catch{}
-  try{ clearTimeout(rewardTimer); }catch{}
-}
+function openStore(){ /* disattivato */ }
+function openRewarded(){ /* disattivato */ }
+function closeOverlay(){ /* disattivato */ }
+
+/* ==== Wallet + Sorprendimi (ridotto) ==== */
+const WKEY="whatif_wallet"; const SURPKEY="whatif_surprise";
+function readWallet(){ try{ const w=JSON.parse(LS.getItem(WKEY)||"{}")||{}; return {available:Number.isFinite(+w.available)?+w.available:null, used:Number.isFinite(+w.used)?+w.used:null, limit:Number.isFinite(+w.limit)?+w.limit:null}; }catch{return{available:null,used:null,limit:null}}}
+function writeWallet(w){ const cur=readWallet(); const out={ available:(w.available!=null)?Math.max(0,+w.available):(cur.available??0), used:(w.used!=null)?Math.max(0,(w.used||0)+1):(cur.used??0), limit:(w.limit!=null)?Math.max(0,+w.limit):(cur.limit??0) }; LS.setItem(WKEY, JSON.stringify(out)); LS.setItem("whatif_wallet_sync", String(Date.now())); updateCreditInfo(); }
+function legacyCap(){ return (prefs.pro===true)?10:3 }
+function legacyGetLeft(){ const w=readWallet(); if(w.available!=null) return w.available; try{ const c=JSON.parse(LS.getItem('whatif_credits')||'{}'); const today=new Date().toISOString().slice(0,10); const used=(c.date===today)?(+c.used||0):0; return Math.max(0, legacyCap()-used); }catch{} const raw=LS.getItem('crediti'); return raw==null? legacyCap() : Math.max(0, parseInt(raw,10)||0); }
+function legacyConsumeOne(){ try{ const w=readWallet(); if(w.available!=null){ if(w.available<=0) return false; writeWallet({available:w.available-1, used:Math.max(0,(w.used||0)+1), limit:(w.limit!=null?w.limit:legacyCap())}); return true; } }catch{} try{ const today=new Date().toISOString().slice(0,10); let c=JSON.parse(LS.getItem('whatif_credits')||'{}'); if(c.date!==today) c={date:today,used:0,limit:legacyCap()}; if((c.used||0)>= (c.limit||legacyCap())) return false; c.used=(c.used||0)+1; LS.setItem('whatif_credits', JSON.stringify(c)); return true; }catch{} let n=parseInt(LS.getItem('crediti')||'0',10)||0; if(n<=0) return false; LS.setItem('crediti', String(Math.max(0,n-1))); return true; }
+function getAvailable(){ if(IS_ADMIN) return Infinity; const w=readWallet(); return (w.available!=null)?w.available:legacyGetLeft() }
+function consumeOne(){ if(IS_ADMIN) return true; const w=readWallet(); if(w.available!=null){ if(w.available<=0) return false; writeWallet({available:w.available-1, used:Math.max(0,(w.used||0)+1), limit:(w.limit!=null?w.limit:legacyCap())}); return true; } return legacyConsumeOne(); }
+function readSurprise(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||"0",10)||0); }
+function writeSurprise(n){ n=Math.max(0, parseInt(n,10)||0); LS.setItem(SURPKEY,String(n)); updateCreditInfo(); LS.setItem("whatif_wallet_sync", String(Date.now())); }
+function consumeSurpriseOne(){ const cur=readSurprise(); if(cur>0){ writeSurprise(cur-1); return true; } return false; }
 
 /* ==== Top init ==== */
 (function initTop(){
@@ -804,7 +731,7 @@ async function startFlow(){
     const usedPct = (apiPct!=null) ? apiPct : computeProbability(domanda).pct;
     const pStr = usedPct + "%"; topPct.textContent=pStr; bottomPct.textContent=pStr;
 
-    // ===== Motivazioni: regole aggiornate =====
+    // ===== Motivazioni visibilità =====
     const src = String((req && req.micro && req.micro.src) || "").toLowerCase();
     const isQuick = ['quick','spunti','hints'].includes(src);
     const isManual = (src==='manual') || (!src);
@@ -821,11 +748,7 @@ async function startFlow(){
       chipFav.textContent=`${t().chipsFav} ${rdm(120,1200)}`;
       chipCon.textContent=`${t().chipsCon} ${rdm(0,900)}`;
       chipAst.textContent=`${t().chipsAst} ${rdm(0,400)}`;
-      motNote.textContent=(lang==='en')?`Brief tussle at vote: ${rdm(1,5)} removed; ${rdm(0,3)} bruised.`
-                       :(lang==='es')?`Pequeño lío en la votación: ${rdm(1,5)} expulsados; ${rdm(0,3)} contusos.`
-                       :(lang==='fr')?`Petit grabuge au vote : ${rdm(1,5)} évacués ; ${rdm(0,3)} contusionnés.`
-                       :(lang==='de')?`Kurzes Gerangel bei der Abstimmung: ${rdm(1,5)} entfernt; ${rdm(0,3)} leicht verletzt.`
-                       :`Breve parapiglia al voto: ${rdm(1,5)} allontanati; ${rdm(0,3)} contusi.`;
+      motNote.textContent=(lang==='en')?`Brief tussle at vote: ${rdm(1,5)} removed; ${rdm(0,3)} bruised.`:`Breve parapiglia al voto: ${rdm(1,5)} allontanati; ${rdm(0,3)} contusi.`;
 
     } else if (style === 'wtf'){
       // WTF → motivazione scientifica (dal server; se manca, fallback locale)
@@ -834,19 +757,18 @@ async function startFlow(){
       motNote.textContent = sci;
 
     } else if (showWhatIfMot){
-      // WHAT IF → 3 “Indicazioni” brevi (mai la stringa Probabilità…)
+      // WHAT IF → pro/contro stile esempi, nella lingua della pagina
       committeeTitle.textContent = t().guideTitle;
-      const lines = buildWhatIfGuidance(domanda);
-      motNote.innerHTML = lines.map(esc).join("<br>");
+      motNote.innerHTML = buildWhatIfMotivations(domanda);
 
     } else {
-      // Niente motivazioni: nascondi sezione
+      // Niente motivazioni (es. whatif in “sorprendimi”): nascondi sezione
       lblP.style.display='none';
       resultBox.style.display='none';
     }
 
     // Cronologia
-    const motivazioneUsata = (resultBox.style.display!=='none') ? (motNote.textContent || motNote.innerText || '') : '';
+    const motivazioneUsata = (resultBox.style.display!=='none') ? motNote.textContent : '';
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
     hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:usedPct, motivazione:motivazioneUsata });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
@@ -869,7 +791,6 @@ qs('#langSelect').onchange=()=>{
   lang=v;
   applyUI(LS.getItem('domanda')||'');
   updateCreditInfo();
-  try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang:v}, '*'); }catch{}
 };
 qs('#shareBtn').onclick=async()=>{
   const T=t();
