@@ -181,12 +181,6 @@
     applyLang();
 
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-    function selectionsReady(){
-      try{
-        const s = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-        return !!(s.periodo && s.stile);
-      }catch{ return false; }
-    }
     function wireGroup(g){
       g.addEventListener('click', e=>{
         const b=e.target.closest('.chip'); if(!b) return;
@@ -194,25 +188,34 @@
         b.classList.add('selected'); state[b.dataset.key]=b.dataset.val;
         localStorage.setItem('whatif_prefs', JSON.stringify(state));
         if(b.dataset.key==='stile'){ document.documentElement.setAttribute('data-theme', b.dataset.val==='wtf'?'wtf':'whatif'); }
-        updatePrimaryCta();
+        // chiama l'aggiornamento CTA solo se già definito (evita ReferenceError)
+        if (window.updatePrimaryCta) window.updatePrimaryCta();
       });
     }
     wireGroup(document.getElementById('periodGroup'));
     wireGroup(document.getElementById('styleGroup'));
   </script>
 
-  <!-- 🔐 Firebase: login Google via redirect -->
+  <!-- 🔐 Firebase: login Google (popup-first + redirect fallback) -->
   <script type="module">
-    // mini logger visivo (attivalo con ?debug=1)
     const dbg = document.getElementById('debug');
-    const q = new URLSearchParams(location.search);
-    const DO_DEBUG = q.get('debug') === '1';
-    const log = (...a)=>{ if(DO_DEBUG){ dbg.style.display='block'; dbg.textContent += a.join(' ') + '\n'; } };
+    const DO_DEBUG = new URLSearchParams(location.search).get('debug') === '1';
+    const log = (...a)=>{ if(DO_DEBUG){ dbg.style.display='block'; dbg.textContent += a.join(' ') + '\n'; console.log(...a);} };
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithRedirect, getRedirectResult, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      onAuthStateChanged,
+      signInWithPopup,
+      signInWithRedirect,
+      getRedirectResult,
+      signOut,
+      setPersistence,
+      browserLocalPersistence
+    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
-    // 🔧 Firebase config del tuo progetto
+    // 🔧 Config Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
       authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
@@ -232,16 +235,19 @@
 
     const showErr = (m)=>{ errBox.textContent = m || ""; if(m) log('❌', m); };
 
+    const selectionsReady = ()=>{
+      try{
+        const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+        return !!(prefs.periodo && prefs.stile);
+      }catch{ return false; }
+    };
+
     function updatePrimaryCta(){
       const user = auth.currentUser;
+      log('👤 Stato auth:', !!user);
       if(user){
-        if(selectionsReady()){
-          primaryCta.textContent = "Avanti";
-          primaryCta.disabled = false;
-        }else{
-          primaryCta.textContent = "Scegli prima sopra";
-          primaryCta.disabled = true;
-        }
+        primaryCta.textContent = selectionsReady() ? "Avanti" : "Scegli prima sopra";
+        primaryCta.disabled = !selectionsReady();
         logoutBtn.style.display = "inline-block";
       }else{
         primaryCta.textContent = "Entra con Google";
@@ -251,25 +257,54 @@
     }
     window.updatePrimaryCta = updatePrimaryCta;
 
-    // CTA
+    // 👉 Persistance prima del login
+    await setPersistence(auth, browserLocalPersistence).catch(e=>{
+      log("⚠️ setPersistence:", e.code || e.message);
+    });
+
+    // Completa login dopo redirect (se c'è stato)
+    getRedirectResult(auth)
+      .then(res=>{
+        if(res?.user){ log("🔐 Redirect OK", res.user.uid); }
+      })
+      .catch(e=>{
+        log("❌ Post-login redirect:", e.code, e.message||'');
+        showErr("Post-login: " + (e.code || e.message));
+      });
+
+    // Click CTA: popup su desktop, fallback a redirect
     primaryCta.onclick = async ()=>{
       showErr("");
       const user = auth.currentUser;
+
       if(!user){
         try{
-          log("➡️ Redirect verso Google…");
-          await signInWithRedirect(auth, provider);
+          log("🪟 Provo popup…");
+          await signInWithPopup(auth, provider);
+          log("✅ Popup OK");
         }catch(e){
-          const map = {
-            "auth/unauthorized-domain":"Dominio non autorizzato (Authentication → Impostazioni → Domini autorizzati).",
-            "auth/operation-not-allowed":"Provider Google non abilitato (Authentication → Metodi di accesso).",
-            "auth/network-request-failed":"Problema rete/HTTPS. Riprova."
-          };
-          showErr(map[e.code] || (e.code||e.message));
+          log("⚠️ Popup fallito:", e.code);
+          if (
+            e.code === "auth/popup-blocked" ||
+            e.code === "auth/popup-closed-by-user" ||
+            e.code === "auth/operation-not-supported-in-this-environment"
+          ){
+            try{
+              log("➡️ Fallback redirect…");
+              await signInWithRedirect(auth, provider);
+              return;
+            }catch(er){
+              showErr(er.code || er.message);
+              return;
+            }
+          }else{
+            showErr(e.code || e.message);
+            return;
+          }
         }
-        return;
       }
-      // Utente già loggato
+
+      // Se siamo loggati
       if(selectionsReady()){
         location.href = "second.html";
       }else{
@@ -279,21 +314,8 @@
 
     logoutBtn.onclick = async ()=>{ await signOut(auth); };
 
-    // Completa login dopo redirect
-    getRedirectResult(auth)
-      .then(res=>{
-        if(res?.user){ log("🔐 Redirect OK", res.user.uid); }
-      })
-      .catch(e=> showErr("Post-login: "+(e.code||e.message)));
-
-    // Se l'utente è loggato, appena ci sono le scelte lo mandiamo a second.html
-    onAuthStateChanged(auth, (user)=>{
-      log("👤 Stato auth:", !!user);
-      if(user && selectionsReady()){
-        log("➡️ Auto-redirect a second.html");
-        location.href = "second.html";
-        return;
-      }
+    onAuthStateChanged(auth, (u)=>{
+      log("🔄 onAuthStateChanged:", !!u, u?.uid || '');
       updatePrimaryCta();
     });
 
