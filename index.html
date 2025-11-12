@@ -14,7 +14,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-  <!-- Hero -->
+  <!-- Hero (preload) -->
   <link rel="preload" as="image" href="/public/home-hero.png" />
 
   <style>
@@ -181,7 +181,6 @@
     applyLang();
 
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-    function updatePrimaryCta(){ /* definita nel blocco Firebase e resa globale */ }
     function wireGroup(g){
       g.addEventListener('click', e=>{
         const b=e.target.closest('.chip'); if(!b) return;
@@ -189,30 +188,45 @@
         b.classList.add('selected'); state[b.dataset.key]=b.dataset.val;
         localStorage.setItem('whatif_prefs', JSON.stringify(state));
         if(b.dataset.key==='stile'){ document.documentElement.setAttribute('data-theme', b.dataset.val==='wtf'?'wtf':'whatif'); }
-        if(window.updatePrimaryCta) window.updatePrimaryCta();
+        if (window.updatePrimaryCta) window.updatePrimaryCta();
       });
     }
     wireGroup(document.getElementById('periodGroup'));
     wireGroup(document.getElementById('styleGroup'));
+
+    // lingua menu
+    (function wireLangMenu(){
+      const btn=$('#langToggle'), menu=$('#langMenu');
+      btn.addEventListener('click', ()=>{
+        const open=menu.style.display==='block';
+        menu.style.display=open?'none':'block';
+        btn.setAttribute('aria-expanded', String(!open));
+      });
+      menu.addEventListener('click', e=>{
+        const b=e.target.closest('button[data-lang]'); if(!b) return;
+        setLang(b.dataset.lang);
+        menu.style.display='none';
+      });
+      document.addEventListener('click', e=>{ if(!menu.contains(e.target) && e.target!==btn) menu.style.display='none'; });
+    })();
   </script>
 
-  <!-- 🔐 Firebase auth (popup → redirect fallback) -->
+  <!-- 🔐 Firebase: login Google SOLO POPUP -->
   <script type="module">
     const dbg = document.getElementById('debug');
-    const DO_DEBUG = new URLSearchParams(location.search).get('debug') === '1';
-    const log = (...a)=>{ if(DO_DEBUG){ dbg.style.display='block'; dbg.textContent += a.join(' ') + '\n'; } };
-    const showErr = (m)=>{ const e=document.getElementById('authError'); e.textContent=m||''; if(m) log('❌', m); };
+    const DO_DEBUG = true; // lascia true finché testiamo
+    const log = (...a)=>{ if(DO_DEBUG){ dbg.style.display='block'; dbg.textContent += a.join(' ') + '\n'; console.log('[AUTH]', ...a);} };
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
     import {
       getAuth, GoogleAuthProvider, onAuthStateChanged,
-      signInWithPopup, signInWithRedirect, getRedirectResult,
-      setPersistence, browserLocalPersistence, browserSessionPersistence, signOut
+      signInWithPopup, signOut, setPersistence, browserLocalPersistence
     } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
+    // ⚙️ CONFIG — authDomain allineato al dominio Vercel
     const firebaseConfig = {
       apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
-      authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
+      authDomain: "what-ifapp.vercel.app",
       projectId: "whatif-oracolo-bc15d",
       storageBucket: "whatif-oracolo-bc15d.firebasestorage.app",
       messagingSenderId: "857481137283",
@@ -222,27 +236,31 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
 
-    // persistenza robusta
-    try { await setPersistence(auth, browserLocalPersistence); log('🔒 Persistence: LOCAL'); }
-    catch { await setPersistence(auth, browserSessionPersistence); log('🔒 Persistence: SESSION fallback'); }
+    const primaryCta = document.getElementById("primaryCta");
+    const logoutBtn  = document.getElementById("logoutBtn");
+    const errBox     = document.getElementById("authError");
 
-    const primaryCta = document.getElementById('primaryCta');
-    const logoutBtn  = document.getElementById('logoutBtn');
+    const showErr = (m)=>{ errBox.textContent = m || ""; if(m) log('❌', m); };
+
+    // persistenza locale (riapri e resti loggato)
+    await setPersistence(auth, browserLocalPersistence).then(()=> log('🔒 Persistenza: LOCAL'));
 
     const selectionsReady = ()=>{
-      try { const p = JSON.parse(localStorage.getItem('whatif_prefs')||'{}'); return !!(p.periodo && p.stile); }
-      catch { return false; }
+      try{
+        const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+        return !!(prefs.periodo && prefs.stile);
+      }catch{ return false; }
     };
 
     function updatePrimaryCta(){
-      const u = auth.currentUser;
-      log('👤 Stato auth:', !!u);
-      if(u){
+      const user = auth.currentUser;
+      if(user){
         primaryCta.textContent = selectionsReady() ? "Avanti" : "Scegli prima sopra";
         primaryCta.disabled = !selectionsReady();
         logoutBtn.style.display = "inline-block";
-      } else {
+      }else{
         primaryCta.textContent = "Entra con Google";
         primaryCta.disabled = false;
         logoutBtn.style.display = "none";
@@ -250,52 +268,49 @@
     }
     window.updatePrimaryCta = updatePrimaryCta;
 
-    async function doLogin(){
+    primaryCta.onclick = async ()=>{
       showErr("");
-      try {
-        log("🪟 Provo POPUP…");
-        await signInWithPopup(auth, provider);
-        log("✅ Popup OK");
-        afterLogin();
-      } catch (e) {
-        log("❌ Popup fallito:", e.code || e.message);
-        log("➡️ Fallback REDIRECT…");
-        try { await signInWithRedirect(auth, provider); }
-        catch (e2) { showErr("Login fallito: " + (e2.code || e2.message)); }
+      const user = auth.currentUser;
+
+      if(!user){
+        try{
+          log("🪟 Apro popup Google…");
+          await signInWithPopup(auth, provider);   // SOLO POPUP
+          log("✅ Popup OK");
+          if (selectionsReady()) location.href = "second.html";
+        }catch(e){
+          const map = {
+            "auth/popup-blocked":"Popup bloccato dal browser. Consenti popup per questo sito.",
+            "auth/cancelled-popup-request":"Richiesta popup annullata, riprova.",
+            "auth/popup-closed-by-user":"Popup chiuso senza completare l’accesso.",
+            "auth/unauthorized-domain":"Dominio non autorizzato (Firebase → Authentication → Domini autorizzati).",
+            "auth/operation-not-allowed":"Provider Google non abilitato (Authentication → Metodi di accesso).",
+            "auth/internal-error":"Errore interno di autenticazione. Riprova o usa finestra in incognito."
+          };
+          showErr(map[e.code] || (e.code || e.message));
+        }
+        return;
       }
-    }
 
-    getRedirectResult(auth)
-      .then(res=>{
-        if(res?.user){ log("🔐 Redirect OK:", res.user.uid); afterLogin(); }
-        else { log("↩️ Redirect senza user (ok se popup riuscito)"); }
-      })
-      .catch(e=> showErr("Post-login: " + (e.code || e.message)));
-
-    function afterLogin(){
-      const u = auth.currentUser;
-      if(!u){ log("⏳ User null, attendo onAuthStateChanged…"); return; }
+      // già loggato: prosegui
       if(selectionsReady()){
-        log("➡️ Vai a second.html");
         location.href = "second.html";
-      } else {
-        log("✅ Login ok, resta qui: serve scegliere le 2 opzioni");
-        updatePrimaryCta();
+      }else{
+        showErr("Seleziona prima Passato/Futuro e What if/WTF");
       }
-    }
-
-    primaryCta.onclick = ()=>{
-      const u = auth.currentUser;
-      if(!u) return doLogin();
-      if(selectionsReady()) location.href = "second.html";
     };
-    logoutBtn.onclick = async ()=>{ await signOut(auth); updatePrimaryCta(); };
 
-    onAuthStateChanged(auth, (u)=>{ log("📡 onAuthStateChanged:", !!u); updatePrimaryCta(); });
+    logoutBtn.onclick = async ()=>{ await signOut(auth); };
+
+    onAuthStateChanged(auth, (u)=>{
+      log("👤 onAuthStateChanged:", !!u);
+      updatePrimaryCta();
+    });
+
     updatePrimaryCta();
   </script>
 
-  <!-- Easter egg admin + (SW DISATTIVATO durante i test) -->
+  <!-- Easter egg admin + SW -->
   <script>
     (function(){
       const title = document.getElementById('appTitle'); const pastBtn = document.querySelector('button[data-val="past"]');
@@ -308,10 +323,9 @@
       pastBtn.addEventListener('click', ()=>{ if(stage!==1) return; if(++tapPast>=5) success(); if(timer) clearTimeout(timer); timer=setTimeout(reset,2500); });
     })();
 
-    // Durante i test tienilo commentato per evitare cache aggressive
-    // if("serviceWorker" in navigator){
-    //   window.addEventListener("load", ()=>{ navigator.serviceWorker.register("/sw.js").catch(()=>{}); });
-    // }
+    if("serviceWorker" in navigator){
+      window.addEventListener("load", ()=>{ navigator.serviceWorker.register("/sw.js").catch(()=>{}); });
+    }
   </script>
 </body>
 </html>
