@@ -58,7 +58,7 @@
     .foot-links{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:6px}
     .info-btn{background:#141c22;border:1px solid var(--card-border);color:#E6F2F5;border-radius:999px;padding:6px 10px;font-weight:700;text-decoration:none}
     #authError{color:#ffb3b3;font-size:13px;min-height:18px}
-    #debug{position:fixed;left:12px;right:12px;bottom:12px;z-index:40;background:#0b0f14;border:1px solid #223;border-radius:10px;padding:8px 10px;font:12px/1.4 monospace;color:#a6f3a6;display:none}
+    #debug{position:fixed;left:12px;right:12px;bottom:12px;z-index:40;background:#0b0f14;border:1px solid #223;border-radius:10px;padding:8px 10px;font:12px/1.4 monospace;color:#a6f3a6;display:none;white-space:pre-wrap}
   </style>
 </head>
 <body>
@@ -181,6 +181,12 @@
     applyLang();
 
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+    function selectionsReady(){
+      try{
+        const s = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+        return !!(s.periodo && s.stile);
+      }catch{ return false; }
+    }
     function wireGroup(g){
       g.addEventListener('click', e=>{
         const b=e.target.closest('.chip'); if(!b) return;
@@ -197,16 +203,16 @@
 
   <!-- 🔐 Firebase: login Google via redirect -->
   <script type="module">
-    // mini logger visivo (?debug=1 nell'URL)
+    // mini logger visivo (attivalo con ?debug=1)
     const dbg = document.getElementById('debug');
     const q = new URLSearchParams(location.search);
     const DO_DEBUG = q.get('debug') === '1';
     const log = (...a)=>{ if(DO_DEBUG){ dbg.style.display='block'; dbg.textContent += a.join(' ') + '\n'; } };
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithRedirect, getRedirectResult, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithRedirect, getRedirectResult, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
-    // Config del tuo progetto
+    // 🔧 Firebase config del tuo progetto
     const firebaseConfig = {
       apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
       authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
@@ -218,9 +224,7 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    await setPersistence(auth, browserLocalPersistence);
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
 
     const primaryCta = document.getElementById("primaryCta");
     const logoutBtn  = document.getElementById("logoutBtn");
@@ -228,18 +232,16 @@
 
     const showErr = (m)=>{ errBox.textContent = m || ""; if(m) log('❌', m); };
 
-    const selectionsReady = ()=>{
-      try{
-        const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-        return !!(prefs.periodo && prefs.stile);
-      }catch{ return false; }
-    };
-
     function updatePrimaryCta(){
       const user = auth.currentUser;
       if(user){
-        primaryCta.textContent = selectionsReady() ? "Avanti" : "Scegli prima sopra";
-        primaryCta.disabled = !selectionsReady();
+        if(selectionsReady()){
+          primaryCta.textContent = "Avanti";
+          primaryCta.disabled = false;
+        }else{
+          primaryCta.textContent = "Scegli prima sopra";
+          primaryCta.disabled = true;
+        }
         logoutBtn.style.display = "inline-block";
       }else{
         primaryCta.textContent = "Entra con Google";
@@ -247,9 +249,9 @@
         logoutBtn.style.display = "none";
       }
     }
-    // rende disponibile alla parte i18n (che la invoca)
     window.updatePrimaryCta = updatePrimaryCta;
 
+    // CTA
     primaryCta.onclick = async ()=>{
       showErr("");
       const user = auth.currentUser;
@@ -267,6 +269,7 @@
         }
         return;
       }
+      // Utente già loggato
       if(selectionsReady()){
         location.href = "second.html";
       }else{
@@ -276,15 +279,21 @@
 
     logoutBtn.onclick = async ()=>{ await signOut(auth); };
 
-    try{
-      const res = await getRedirectResult(auth);
-      if(res?.user){ log("🔐 Redirect OK", res.user.uid); }
-    }catch(e){
-      showErr("Post-login: "+(e.code||e.message));
-    }
+    // Completa login dopo redirect
+    getRedirectResult(auth)
+      .then(res=>{
+        if(res?.user){ log("🔐 Redirect OK", res.user.uid); }
+      })
+      .catch(e=> showErr("Post-login: "+(e.code||e.message)));
 
-    onAuthStateChanged(auth, ()=>{
-      log("👤 Stato auth:", !!auth.currentUser);
+    // Se l'utente è loggato, appena ci sono le scelte lo mandiamo a second.html
+    onAuthStateChanged(auth, (user)=>{
+      log("👤 Stato auth:", !!user);
+      if(user && selectionsReady()){
+        log("➡️ Auto-redirect a second.html");
+        location.href = "second.html";
+        return;
+      }
       updatePrimaryCta();
     });
 
