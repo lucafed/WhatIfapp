@@ -393,7 +393,7 @@ const I18N = {
 };
 const SUP_LANG=['it','en','es','fr','de'];
 
-/* ======== LINGUA: segui FOURTH (request.lang o LS.lang) ======== */
+/* ======== LINGUA ======== */
 const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
 const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
@@ -465,6 +465,7 @@ const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct
 const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
 const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
 const motNote=qs('#motNote'), creditInfo=qs('#creditInfo'), toastEl=qs('#toast');
+const lblP=qs('#lblP'), resultBox=qs('#resultBox');
 
 /* ==== Toast ==== */
 function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
@@ -476,7 +477,7 @@ function readWallet(){ try{ const w=JSON.parse(LS.getItem(WKEY)||"{}")||{}; retu
 function writeWallet(w){
   const cur=readWallet();
   const out={ available:(w.available!=null)?Math.max(0,+w.available):(cur.available??0),
-              used:(w.used!=null)?Math.max(0,+w.used):(cur.used??0),
+              used:(w.used!=null)?Math.max(0,(w.used||0)+1):(cur.used??0),
               limit:(w.limit!=null)?Math.max(0,+w.limit):(cur.limit??0) };
   LS.setItem(WKEY, JSON.stringify(out));
   LS.setItem("whatif_wallet_sync", String(Date.now()));
@@ -595,7 +596,7 @@ function revealEffect(){
   setTimeout(()=> wrap.classList.remove('reveal'), 900);
 }
 
-/* ===== Helpers contestuali per “What if” breve ===== */
+/* ===== Helpers contestuali per “What if” breve (fallback UI) ===== */
 function extractContextParts(q){
   const s = String(q||"").toLowerCase();
   const when = (s.match(/\b(in|entro|tra|domani|oggi|stasera|settimana|mese|anno|\d{1,2}\s*(giorni|settimane|mesi))\b/i)||[])[0] || "";
@@ -605,37 +606,34 @@ function extractContextParts(q){
   const topic = topicMatch ? topicMatch[0] : "";
   return {when, money, action, topic};
 }
+function buildWhatIfGuidance(domanda, data){
+  // preferisci sempre la motivazione dell’API se presente
+  if(data && typeof data.motivation === 'string' && data.motivation.trim()){
+    return [data.motivation.trim()];
+  }
+  const ctx = extractContextParts(domanda);
+  if(lang==='en'){
+    return [
+      `Block 10 minutes ${ctx.when||"today"} for ${ctx.topic||"this"} and do the first step you’ve been avoiding.`,
+      `Write one measurable micro-goal you can finish within ${ctx.when||"72h"} and put it on your calendar.`,
+      `Use one tool only and track one metric${ctx.money?` (budget: ${ctx.money})`:""}; set a check-in in 3 days.`
+    ];
+  }
+  return [
+    `Blocca 10 minuti ${ctx.when||"oggi"} su ${ctx.topic||"il tema"} e chiudi il primo passo che stai rimandando.`,
+    `Scrivi un micro-obiettivo misurabile da chiudere entro ${ctx.when||"72 ore"} e mettilo in calendario.`,
+    `Usa uno strumento solo e una metrica${ctx.money?` (budget: ${ctx.money})`:""}; fai un check tra 3 giorni.`
+  ];
+}
 
-/* ===== Motivazione demenziale per WTF (scientifica+zuffa) ===== */
+/* ===== Motivazione demenziale per WTF (fallback locale) ===== */
 function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
 function wtfMotivationDemenziale(langCode){
   const shots = rnd(1,3), spill = rnd(0,2), bruise = rnd(0,3);
   if(langCode==='en'){
     return `Pseudo-science says small daily nudges beat grand plans (Law of Coffee + Inertia). The committee debated over drinks: ${shots} shots vanished, ${spill} glasses spilled, ${bruise} minor bruises; final verdict between hiccups: “do it, and don’t overthink”.`;
   }
-  // default IT
   return `Pseudoscienza spicciola: micro-passi battono i piani epici (Legge del Caffè + Inerzia). La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: “fai, e smettila di pensarci troppo”.`;
-}
-
-/* ===== Linee “What if” brevi, senza asterischi, contestuali ===== */
-function buildWhatIfGuidance(domanda, data){
-  const ctx = extractContextParts(domanda);
-  // Se l’API fornisce suggerimenti già pronti, usali; altrimenti genera
-  const g1 = (data && (data.quick||data.tip)) || null;
-  const g2 = (data && (data.advice||data.suggestion)) || null;
-  const g3 = (data && (data.analysis||data.summary)) || null;
-
-  if(lang==='en'){
-    const l1 = g1 || `Block 10 minutes ${ctx.when||"today"} for ${ctx.topic||"this"} and do the first step you’ve been avoiding.`;
-    const l2 = g2 || `Write one measurable micro-goal you can finish within ${ctx.when||"72h"} and put it on your calendar.`;
-    const l3 = g3 || `Use one tool only and track one metric${ctx.money?` (budget: ${ctx.money})`:""}; set a check-in in 3 days.`;
-    return [l1,l2,l3];
-  }
-  // IT default
-  const l1 = g1 || `Blocca 10 minuti ${ctx.when||"oggi"} su ${ctx.topic||"il tema"} e chiudi il primo passo che stai rimandando.`;
-  const l2 = g2 || `Scrivi un micro-obiettivo misurabile da chiudere entro ${ctx.when||"72 ore"} e mettilo in calendario.`;
-  const l3 = g3 || `Usa uno strumento solo e una metrica${ctx.money?` (budget: ${ctx.money})`:""}; fai un check tra 3 giorni.`;
-  return [l1,l2,l3];
 }
 
 /* ==== Overlay (store + rewarded) ==== */
@@ -731,7 +729,7 @@ function applyQuestion(){
   return {req, domanda, surprise};
 }
 
-/* ==== Salvataggio domanda per fourth ==== */
+/* ==== Salvataggio ==== */
 function saveCurrentQuestion(){
   const domanda = (LS.getItem('domanda') || '').trim();
   if(!domanda) return;
@@ -749,10 +747,7 @@ function saveCurrentQuestion(){
 async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
-
-  // Intro Zoltar-like (prima volta)
   showIntroOnce();
-
   startOracleLoading();
 
   if(!IS_ADMIN && !alreadyConsumed){
@@ -795,6 +790,7 @@ async function startFlow(){
     const data=await r.json().catch(()=>null);
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
 
+    // Answer
     let answerText=normalizeOneParagraph((data.answer||"").trim());
     const maxSent=(style==='wtf')?9:11;
     let parts=answerText.split(/(?<=[.!?…])\s+/);
@@ -803,19 +799,25 @@ async function startFlow(){
     if(!/[.!?…]$/.test(answerText)) answerText+='.';
     answerEl.textContent=answerText; decorateEmBits(answerEl);
 
-    stopOracleLoading();
-    revealEffect();
+    stopOracleLoading(); revealEffect();
 
+    // PCT
     const apiPct = (data && Number.isFinite(+data.pct)) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : null;
     const usedPct = (apiPct!=null) ? apiPct : computeProbability(domanda).pct;
-    const pStr = usedPct + "%";
-    topPct.textContent = pStr;
-    bottomPct.textContent = pStr;
+    const pStr = usedPct + "%"; topPct.textContent=pStr; bottomPct.textContent=pStr;
 
-    let motivazioneUsata = "";
-    if (surprise) {
-      // Modalità “sorprendimi”: numeri del comitato
-      motIco.style.display=''; chipsWrap.style.display='flex';
+    // ===== Motivazioni: regole aggiornate =====
+    const src = String((req && req.micro && req.micro.src) || "").toLowerCase();
+    const isQuick = ['quick','spunti','hints'].includes(src);
+    const isManual = (src==='manual') || (!src);
+    const showWhatIfMot = (style==='whatif' && !surprise && (isQuick || isManual) && typeof data.motivation==='string' && data.motivation.trim());
+
+    // reset UI
+    lblP.style.display='block'; resultBox.style.display='block'; chipsWrap.style.display='none'; motIco.style.display='none';
+
+    if (surprise){
+      // Sorprendimi → solo “comitato”, niente motivazioni
+      chipsWrap.style.display='flex';
       committeeTitle.textContent=t().votersTitle||'Comitato';
       const rdm=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
       chipFav.textContent=`${t().chipsFav} ${rdm(120,1200)}`;
@@ -826,26 +828,26 @@ async function startFlow(){
                        :(lang==='fr')?`Petit grabuge au vote : ${rdm(1,5)} évacués ; ${rdm(0,3)} contusionnés.`
                        :(lang==='de')?`Kurzes Gerangel bei der Abstimmung: ${rdm(1,5)} entfernt; ${rdm(0,3)} leicht verletzt.`
                        :`Breve parapiglia al voto: ${rdm(1,5)} allontanati; ${rdm(0,3)} contusi.`;
-      motivazioneUsata = motNote.textContent;
 
-    } else if (style === 'wtf') {
-      // ✅ WTF: solo motivazione “scientifica” demenziale + zuffa/sbronza (nessun riassunto interno)
-      motIco.style.display='none'; chipsWrap.style.display='none';
+    } else if (style === 'wtf'){
+      // WTF → motivazione scientifica (dal server; se manca, fallback locale)
       committeeTitle.textContent = t().scientificTitle;
-      const sci = wtfMotivationDemenziale(lang);
+      const sci = (typeof data.scientific==='string' && data.scientific.trim()) ? data.scientific.trim() : wtfMotivationDemenziale(lang);
       motNote.textContent = sci;
-      motivazioneUsata = sci;
+
+    } else if (showWhatIfMot){
+      // WHAT IF → motivazione sintetica del server
+      committeeTitle.textContent = t().guideTitle;
+      motNote.textContent = data.motivation.trim();
 
     } else {
-      // ✅ WHAT IF: breve, senza asterischi, indicazioni reali e contestuali
-      motIco.style.display='none'; chipsWrap.style.display='none';
-      committeeTitle.textContent = t().guideTitle;
-      const lines = buildWhatIfGuidance(domanda, data||{});
-      // Tre frasi pulite, senza label/bold
-      motNote.innerHTML = `${lines[0]}<br>${lines[1]}<br>${lines[2]}`;
-      motivazioneUsata = lines.join(" | ");
+      // Niente motivazioni (es. whatif senza quick/manual): nascondi sezione
+      lblP.style.display='none';
+      resultBox.style.display='none';
     }
 
+    // Cronologia
+    const motivazioneUsata = (resultBox.style.display!=='none') ? motNote.textContent : '';
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
     hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:usedPct, motivazione:motivazioneUsata });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
