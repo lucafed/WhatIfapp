@@ -181,6 +181,7 @@
     applyLang();
 
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+    function updatePrimaryCta(){ /* definita nel blocco Firebase e resa globale */ }
     function wireGroup(g){
       g.addEventListener('click', e=>{
         const b=e.target.closest('.chip'); if(!b) return;
@@ -188,34 +189,27 @@
         b.classList.add('selected'); state[b.dataset.key]=b.dataset.val;
         localStorage.setItem('whatif_prefs', JSON.stringify(state));
         if(b.dataset.key==='stile'){ document.documentElement.setAttribute('data-theme', b.dataset.val==='wtf'?'wtf':'whatif'); }
-        // chiama l'aggiornamento CTA solo se già definito (evita ReferenceError)
-        if (window.updatePrimaryCta) window.updatePrimaryCta();
+        if(window.updatePrimaryCta) window.updatePrimaryCta();
       });
     }
     wireGroup(document.getElementById('periodGroup'));
     wireGroup(document.getElementById('styleGroup'));
   </script>
 
-  <!-- 🔐 Firebase: login Google (popup-first + redirect fallback) -->
+  <!-- 🔐 Firebase auth (popup → redirect fallback) -->
   <script type="module">
     const dbg = document.getElementById('debug');
     const DO_DEBUG = new URLSearchParams(location.search).get('debug') === '1';
-    const log = (...a)=>{ if(DO_DEBUG){ dbg.style.display='block'; dbg.textContent += a.join(' ') + '\n'; console.log(...a);} };
+    const log = (...a)=>{ if(DO_DEBUG){ dbg.style.display='block'; dbg.textContent += a.join(' ') + '\n'; } };
+    const showErr = (m)=>{ const e=document.getElementById('authError'); e.textContent=m||''; if(m) log('❌', m); };
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
     import {
-      getAuth,
-      GoogleAuthProvider,
-      onAuthStateChanged,
-      signInWithPopup,
-      signInWithRedirect,
-      getRedirectResult,
-      signOut,
-      setPersistence,
-      browserLocalPersistence
+      getAuth, GoogleAuthProvider, onAuthStateChanged,
+      signInWithPopup, signInWithRedirect, getRedirectResult,
+      setPersistence, browserLocalPersistence, browserSessionPersistence, signOut
     } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
-    // 🔧 Config Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
       authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
@@ -229,27 +223,26 @@
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    const primaryCta = document.getElementById("primaryCta");
-    const logoutBtn  = document.getElementById("logoutBtn");
-    const errBox     = document.getElementById("authError");
+    // persistenza robusta
+    try { await setPersistence(auth, browserLocalPersistence); log('🔒 Persistence: LOCAL'); }
+    catch { await setPersistence(auth, browserSessionPersistence); log('🔒 Persistence: SESSION fallback'); }
 
-    const showErr = (m)=>{ errBox.textContent = m || ""; if(m) log('❌', m); };
+    const primaryCta = document.getElementById('primaryCta');
+    const logoutBtn  = document.getElementById('logoutBtn');
 
     const selectionsReady = ()=>{
-      try{
-        const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-        return !!(prefs.periodo && prefs.stile);
-      }catch{ return false; }
+      try { const p = JSON.parse(localStorage.getItem('whatif_prefs')||'{}'); return !!(p.periodo && p.stile); }
+      catch { return false; }
     };
 
     function updatePrimaryCta(){
-      const user = auth.currentUser;
-      log('👤 Stato auth:', !!user);
-      if(user){
+      const u = auth.currentUser;
+      log('👤 Stato auth:', !!u);
+      if(u){
         primaryCta.textContent = selectionsReady() ? "Avanti" : "Scegli prima sopra";
         primaryCta.disabled = !selectionsReady();
         logoutBtn.style.display = "inline-block";
-      }else{
+      } else {
         primaryCta.textContent = "Entra con Google";
         primaryCta.disabled = false;
         logoutBtn.style.display = "none";
@@ -257,72 +250,52 @@
     }
     window.updatePrimaryCta = updatePrimaryCta;
 
-    // 👉 Persistance prima del login
-    await setPersistence(auth, browserLocalPersistence).catch(e=>{
-      log("⚠️ setPersistence:", e.code || e.message);
-    });
+    async function doLogin(){
+      showErr("");
+      try {
+        log("🪟 Provo POPUP…");
+        await signInWithPopup(auth, provider);
+        log("✅ Popup OK");
+        afterLogin();
+      } catch (e) {
+        log("❌ Popup fallito:", e.code || e.message);
+        log("➡️ Fallback REDIRECT…");
+        try { await signInWithRedirect(auth, provider); }
+        catch (e2) { showErr("Login fallito: " + (e2.code || e2.message)); }
+      }
+    }
 
-    // Completa login dopo redirect (se c'è stato)
     getRedirectResult(auth)
       .then(res=>{
-        if(res?.user){ log("🔐 Redirect OK", res.user.uid); }
+        if(res?.user){ log("🔐 Redirect OK:", res.user.uid); afterLogin(); }
+        else { log("↩️ Redirect senza user (ok se popup riuscito)"); }
       })
-      .catch(e=>{
-        log("❌ Post-login redirect:", e.code, e.message||'');
-        showErr("Post-login: " + (e.code || e.message));
-      });
+      .catch(e=> showErr("Post-login: " + (e.code || e.message)));
 
-    // Click CTA: popup su desktop, fallback a redirect
-    primaryCta.onclick = async ()=>{
-      showErr("");
-      const user = auth.currentUser;
-
-      if(!user){
-        try{
-          log("🪟 Provo popup…");
-          await signInWithPopup(auth, provider);
-          log("✅ Popup OK");
-        }catch(e){
-          log("⚠️ Popup fallito:", e.code);
-          if (
-            e.code === "auth/popup-blocked" ||
-            e.code === "auth/popup-closed-by-user" ||
-            e.code === "auth/operation-not-supported-in-this-environment"
-          ){
-            try{
-              log("➡️ Fallback redirect…");
-              await signInWithRedirect(auth, provider);
-              return;
-            }catch(er){
-              showErr(er.code || er.message);
-              return;
-            }
-          }else{
-            showErr(e.code || e.message);
-            return;
-          }
-        }
-      }
-
-      // Se siamo loggati
+    function afterLogin(){
+      const u = auth.currentUser;
+      if(!u){ log("⏳ User null, attendo onAuthStateChanged…"); return; }
       if(selectionsReady()){
+        log("➡️ Vai a second.html");
         location.href = "second.html";
-      }else{
-        showErr("Seleziona prima Passato/Futuro e What if/WTF");
+      } else {
+        log("✅ Login ok, resta qui: serve scegliere le 2 opzioni");
+        updatePrimaryCta();
       }
+    }
+
+    primaryCta.onclick = ()=>{
+      const u = auth.currentUser;
+      if(!u) return doLogin();
+      if(selectionsReady()) location.href = "second.html";
     };
+    logoutBtn.onclick = async ()=>{ await signOut(auth); updatePrimaryCta(); };
 
-    logoutBtn.onclick = async ()=>{ await signOut(auth); };
-
-    onAuthStateChanged(auth, (u)=>{
-      log("🔄 onAuthStateChanged:", !!u, u?.uid || '');
-      updatePrimaryCta();
-    });
-
+    onAuthStateChanged(auth, (u)=>{ log("📡 onAuthStateChanged:", !!u); updatePrimaryCta(); });
     updatePrimaryCta();
   </script>
 
-  <!-- Easter egg admin + SW -->
+  <!-- Easter egg admin + (SW DISATTIVATO durante i test) -->
   <script>
     (function(){
       const title = document.getElementById('appTitle'); const pastBtn = document.querySelector('button[data-val="past"]');
@@ -335,9 +308,10 @@
       pastBtn.addEventListener('click', ()=>{ if(stage!==1) return; if(++tapPast>=5) success(); if(timer) clearTimeout(timer); timer=setTimeout(reset,2500); });
     })();
 
-    if("serviceWorker" in navigator){
-      window.addEventListener("load", ()=>{ navigator.serviceWorker.register("/sw.js").catch(()=>{}); });
-    }
+    // Durante i test tienilo commentato per evitare cache aggressive
+    // if("serviceWorker" in navigator){
+    //   window.addEventListener("load", ()=>{ navigator.serviceWorker.register("/sw.js").catch(()=>{}); });
+    // }
   </script>
 </body>
 </html>
