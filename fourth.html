@@ -634,5 +634,50 @@ function slotSurprise(){
 }
 $('surpriseBtn').onclick=slotSurprise;
   </script>
+
+  <!-- ✅ AGGIUNTA MINIMA: crediti reali da Firestore, con redirect al login se non autenticato -->
+  <script type="module">
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import { bootCredits, getBalance } from "./credits.js"; // usa ./ relativo
+
+    const LS = localStorage;
+    const T = (()=>{
+      const lang=(LS.getItem('lang')||'it').toLowerCase();
+      const I18NMap = {
+        it:"Crediti", en:"Credits", es:"Créditos", fr:"Crédits", de:"Credits"
+      };
+      return I18NMap[lang] || I18NMap.it;
+    })();
+
+    const auth = getAuth();
+    onAuthStateChanged(auth, async (user)=>{
+      if(!user){
+        // dopo clear cookie/dati → torna al login
+        location.href = "index.html?login=1";
+        return;
+      }
+      try{
+        await bootCredits();                 // garantisce il doc giornaliero
+        const n = await getBalance();        // saldo reale Firestore
+
+        // imposta anche il wallet locale così la renderizzazione esistente resta coerente
+        const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}') || {};
+        const isAdmin = !!LS.getItem('admin_token');
+        const limit = isAdmin ? Infinity : (prefs.pro ? 10 : 3);
+        LS.setItem('whatif_wallet', JSON.stringify({ available: isAdmin ? Infinity : Math.max(0, Number(n)||0), limit }));
+        LS.setItem('whatif_wallet_sync', String(Date.now()));
+
+        // aggiorna immediatamente il badge
+        const el = document.getElementById('freeBadge');
+        if(el){
+          el.textContent = (limit===Infinity) ? `${T}: ∞` : `${T}: ${n}/${limit}`;
+        }
+      }catch(e){
+        console.error("credits/firestore", e);
+        const el = document.getElementById('freeBadge');
+        if(el) el.textContent = `${T}: [errore]`;
+      }
+    });
+  </script>
 </body>
 </html>
