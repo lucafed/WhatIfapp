@@ -45,10 +45,11 @@ function apply(){ const T=I18N[lang]||I18N.it;
   title.textContent=T.title; desc.textContent=T.desc; buy.textContent=T.buy; watch.textContent=T.watch; close.textContent=T.close;
 }
 apply();
-/* accetta set_lang dal parent */
-window.addEventListener('message',(ev)=>{ const d=ev.data||{}; if(d.type==='set_lang' && I18N[d.lang]){ lang=d.lang; apply(); }});
 
-/* Messaggi verso il parent */
+window.addEventListener('message',(ev)=>{
+  const d=ev.data||{};
+  if(d.type==='set_lang' && I18N[d.lang]){ lang=d.lang; apply(); }
+});
 buy.onclick  = ()=>{ try{ parent.postMessage({type:'purchase_completed', amount:5}, '*'); }catch{} };
 watch.onclick= ()=>{ try{ parent.postMessage({type:'open_rewarded'}, '*'); }catch{} };
 close.onclick= ()=>{ try{ parent.postMessage({type:'close_overlay'}, '*'); }catch{} };
