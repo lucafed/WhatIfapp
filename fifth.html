@@ -200,10 +200,10 @@ transition:opacity .35s ease, transform .35s ease;
       <div id="topPct" class="top-pct" aria-live="polite">—</div>
     </div>
 
-    <!-- INTRO (solo prima volta per stile) -->
+    <!-- INTRO (solo prima volta per stile; DISATTIVATO per WHAT IF) -->
     <div id="introBox" class="intro-box" style="display:none"></div>
 
-    <!-- SOLO Oracle (niente frasetta lead) -->
+    <!-- SOLO Oracle (niente lead custom) -->
     <div class="oracle-wrap">
       <div class="orb" aria-hidden="true"></div>
       <div id="oracleLine" class="oracle-line">—</div>
@@ -416,10 +416,6 @@ let lang = SUP_LANG.includes(langFromFourth) ? langFromFourth : detectLang(doman
 document.documentElement.lang=lang;
 const t=()=>I18N[lang]||I18N.it;
 
-/* ==== System prompts (solo UI) ==== */
-const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
-const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica…`;
-
 /* === ORACLE LINES (solo attesa) === */
 const ORACLE_LINES = {
   it: ["Shh… le carte girano piano.","Aspetta: la risposta bussa sottovoce.","L’aria si fa chiara, sta arrivando.","Non correre: il disegno prende forma.","Occhio: il quadro si accende da solo.","Silenzio un attimo… qualcosa si allinea.","Senti? C’è un passo che torna nel ritmo.","Trattieni il fiato: la moneta è a mezz’aria.","Una piega nella notte, poi luce sottile.","Le luci interne si accendono una alla volta.","Ancora un respiro… il filo si tende.","Eccolo: l’indizio che mancava si mostra.","Un colpo di vento, poi tutto si ferma.","Scorri piano: la porta sta socchiudendosi.","Si sente un sì lontano, ma si avvicina.","L’oracolo gira la pagina… quasi."],
@@ -429,29 +425,30 @@ const ORACLE_LINES = {
   de: ["Leise… die Karten wenden sich.","Warte: die Antwort klopft sanft.","Die Luft klärt sich; es kommt.","Nicht eilen: die Form entsteht.","Schau: die Kontur leuchtet selbst.","Atem halten… die Linien richten sich.","Hörst du’s? Der Schritt findet den Takt.","Münze in der Luft; lass sie fallen.","Ein Faltenwurf der Nacht, dann dünnes Licht.","Innere Lichter, eins nach dem andern.","Noch ein Atem… der Draht spannt sich.","Da ist es: der fehlende Hinweis.","Eine Böe, dann Stille.","Langsam scrollen: die Tür steht einen Spalt offen.","Ein fernes Ja kommt näher.","Das Orakel blättert um… fast."]
 };
 
-/* ==== INTRO (Zoltar-like) prima volta ===== */
-const INTRO_KEY = 'whatif_intro_seen_v2';
+/* ==== INTRO (solo WTF; disattivato per WHAT IF) ==== */
+const INTRO_KEY = 'whatif_intro_seen_v3';
 const INTRO = {
-  whatif: {
-    it: {future:"🜂 La lanterna si accende: chiedi con chiarezza e il futuro si mette in riga.", past:"🜂 La sabbia si posa: guarda il passato senza nebbia, prendi l’essenza e vai."},
-    en: {future:"🜂 The lamp glows: ask clearly and the future falls into line.", past:"🜂 The sand settles: read the past plainly, keep the essence, move."}
-  },
   wtf: {
     it: {future:"🥂 Dillo forte, fai spazio: il domani non aspetta i timidi.", past:"🥂 Chiudi il conto: il passato ha già pagato, tu ordina il prossimo giro."},
-    en: {future:"🥂 Say it loud, make room: tomorrow won’t wait for the shy.", past:"🥂 Tab’s closed: the past already paid—order the next round."}
+    en: {future:"🥂 Say it loud, make room: tomorrow won’t wait for the shy.", past:"🥂 Tab’s closed: the past already paid—order the next round."},
+    es: {future:"🥂 Dilo fuerte: el mañana no espera tímidos.", past:"🥂 Cuenta cerrada: pide la siguiente."},
+    fr: {future:"🥂 Dis-le fort : demain n’attend pas.", past:"🥂 L’addition est payée : enchaîne."},
+    de: {future:"🥂 Sag’s laut: Morgen wartet nicht.", past:"🥂 Rechnung zu: nächster Drink."}
   }
 };
 function showIntroOnce(){
   try{
-    const seen = LS.getItem(INTRO_KEY)==='1';
     const box = document.getElementById('introBox');
     if(!box) return;
+    // Solo per WTF
+    if(style!=='wtf'){ box.style.display='none'; return; }
+    const seen = LS.getItem(INTRO_KEY)==='1';
     if(seen){ box.style.display='none'; return; }
-    const L = (INTRO[style] && INTRO[style][lang]) ? INTRO[style][lang] : INTRO['whatif']['it'];
+    const L = (INTRO['wtf'][lang]) || INTRO['wtf']['it'];
     const line = (periodo==='past') ? L.past : L.future;
     box.textContent = line;
     box.style.display = 'block';
-    try{ if(style==='wtf') document.getElementById('sfxWtf')?.play().catch(()=>{}); else document.getElementById('sfxWhatIf')?.play().catch(()=>{}); }catch{}
+    try{ document.getElementById('sfxWtf')?.play().catch(()=>{}); }catch{}
     LS.setItem(INTRO_KEY,'1');
   }catch{}
 }
@@ -607,9 +604,9 @@ function extractContextParts(q){
   return {when, money, action, topic};
 }
 
-/* ===== Motivazione demenziale per WTF (scientifica+zuffa) ===== */
-function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+/* ===== Motivazioni LOCALIZZATE ===== */
 function wtfMotivationDemenziale(langCode){
+  const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
   const shots = rnd(1,3), spill = rnd(0,2), bruise = rnd(0,3);
   if(langCode==='en'){
     return `Pseudo-science says small daily nudges beat grand plans (Law of Coffee + Inertia). The committee debated over drinks: ${shots} shots vanished, ${spill} glasses spilled, ${bruise} minor bruises; final verdict between hiccups: “do it, and don’t overthink”.`;
@@ -618,25 +615,14 @@ function wtfMotivationDemenziale(langCode){
     return `Seudociencia: los micro-pasos superan los planes épicos (Ley del Café + Inercia). El comité debatió en la barra: ${shots} chupitos volaron, ${spill} copas volcadas, ${bruise} magullados; veredicto entre hipos: “hazlo y deja de pensarlo tanto”.`;
   }
   if(langCode==='fr'){
-    return `Pseudo-science: de micro-pas battent les grands plans (Loi du Café + Inertie). Le comité débat au comptoir: ${shots} shots envolés, ${spill} verres renversés, ${bruise} contusions; verdict en hoquetant : “fais-le, sans trop cogiter”.`;
+    return `Pseudo-science : des micro-pas battent les grands plans (Loi du Café + Inertie). Le comité a tranché au comptoir : ${shots} shots envolés, ${spill} verres renversés, ${bruise} contusions ; verdict entre hoquets : « fais-le, sans trop cogiter ».`;
   }
   if(langCode==='de'){
     return `Pseudo-Wissenschaft: Mikro-Schritte schlagen epische Pläne (Kaffee-Gesetz + Trägheit). Das Gremium stritt an der Theke: ${shots} Shots weg, ${spill} Gläser gekippt, ${bruise} kleine Blessuren; Fazit zwischen Schluckauf: „mach’s – nicht zerdenken“.`;
   }
-  // default IT
   return `Pseudoscienza spicciola: micro-passi battono i piani epici (Legge del Caffè + Inerzia). La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: “fai, e smettila di pensarci troppo”.`;
 }
-
-/* ===== Linee “What if” brevi ===== */
-function buildWhatIfGuidance(domanda, data){
-  // Se il server fornisce righe/titolo motivazioni localizzate, usale
-  if (data && Array.isArray(data.motivation_lines) && data.motivation_lines.length){
-    return data.motivation_lines.slice(0,3).map(String);
-  }
-  if (data && typeof data.motivation === 'string' && data.motivation.trim()){
-    return String(data.motivation).split(/[.;]\s+/).filter(Boolean).slice(0,3);
-  }
-  // Fallback locale coerente con lingua pagina
+function whatIfGuidanceLocal(domanda){
   const ctx = extractContextParts(domanda);
   if(lang==='en'){
     return [
@@ -666,7 +652,6 @@ function buildWhatIfGuidance(domanda, data){
       `Nutze ein Tool und eine Kennzahl${ctx.money?` (Budget: ${ctx.money})`:""}; Check in 3 Tagen.`
     ];
   }
-  // IT default
   return [
     `Blocca 10 minuti ${ctx.when||"oggi"} su ${ctx.topic||"il tema"} e chiudi il primo passo che stai rimandando.`,
     `Scrivi un micro-obiettivo misurabile da chiudere entro ${ctx.when||"72 ore"} e mettilo in calendario.`,
@@ -674,74 +659,10 @@ function buildWhatIfGuidance(domanda, data){
   ];
 }
 
-/* ==== Overlay (store + rewarded) ==== */
+/* ==== Overlay (disattivato) ==== */
 const ADS_ENABLED = false;
 const overlay=qs('#overlay'), overlayFrame=qs('#overlay-frame');
 let overlayLoadTimer=null, rewardTimer=null, rewardGranted=false, awaitingCredit=false, alreadyConsumed=false;
-
-function storeFallbackHTML(){
-  const T=t();
-  return `
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#0B0F14;color:#EAF3EE}
-.wrap{max-width:520px;margin:auto;padding:16px}
-.card{background:#141C22;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px;margin-top:10px}
-h2{margin:4px 0 6px;font-size:18px}
-.btn{display:inline-block;margin:6px 6px 0 0;padding:10px 12px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
-.ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}
-.primary{background:linear-gradient(180deg,#1C57A0,#FFEC01);color:#0A0E12}
-.small{color:#A0B2BA;font-size:12px;line-height:1.5}
-.row{display:flex;flex-wrap:wrap;gap:8px}
-</style></head><body><div class="wrap"><div class="card">
-  <h2>${T.storeTitle}</h2>
-  <p class="small" style="margin:6px 0 10px;opacity:.85">🛒 ${T.comingSoon} — ${T.buySoonNote}</p>
-  <p class="small" id="msg">${T.noCredits}</p>
-  <div class="row">
-    <button class="btn ghost" id="adBtn" disabled title="Disattivato"> ${T.watchAd}</button>
-    <button class="btn ghost" onclick="parent.postMessage({type:'close_overlay'}, '*')">${T.close}</button>
-  </div>
-</div></div>
-</body></html>`;
-}
-function openOverlay(url){
-  if(!ADS_ENABLED){ toast('🛒 Store disattivato per ora'); return; }
-  overlay.style.display='grid';
-  overlay.setAttribute('aria-hidden','false');
-  overlayFrame.removeAttribute('srcdoc');
-  overlayFrame.src='about:blank';
-  const sep = url.includes('?')?'&':'?';
-  const finalUrl = `${url}${sep}lang=${encodeURIComponent(lang)}`;
-  overlayFrame.onload = ()=>{ try{ clearTimeout(overlayLoadTimer); }catch{} };
-  overlayFrame.onerror= ()=>{ try{ clearTimeout(overlayLoadTimer); }catch{} };
-  overlayFrame.setAttribute('srcdoc', storeFallbackHTML());
-  overlayFrame.src = finalUrl;
-  try{ clearTimeout(overlayLoadTimer); }catch{}
-  overlayLoadTimer=setTimeout(()=>{ try{ overlayFrame.setAttribute('srcdoc', storeFallbackHTML()); }catch{} },1500);
-  setTimeout(()=>{ try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang}, '*'); }catch{} }, 400);
-}
-function openStore(){ if(!ADS_ENABLED){ toast('🛒 Store disattivato'); return; } openOverlay("/store/credit-store.html"); }
-function openRewarded(){
-  if(!ADS_ENABLED){ toast('🎬 Pubblicità disattivata'); return; }
-  rewardGranted=false;
-  openOverlay("/ads/rewarded.html");
-  clearTimeout(rewardTimer);
-  rewardTimer=setTimeout(()=>{
-    if(!rewardGranted){
-      addCredits(1); updateCreditInfo(); toast(t().toastPlus(1));
-      rewardGranted=true; closeOverlay();
-      location.replace('fourth.html');
-    }
-  },20000);
-}
-function closeOverlay(){
-  overlay.style.display='none';
-  overlay.setAttribute('aria-hidden','true');
-  overlayFrame.src='about:blank';
-  overlayFrame.removeAttribute('srcdoc');
-  try{ clearTimeout(overlayLoadTimer); }catch{}
-  try{ clearTimeout(rewardTimer); }catch{}
-}
 
 /* ==== Top init ==== */
 (function initTop(){
@@ -766,7 +687,7 @@ function applyQuestion(){
   return {req, domanda, surprise};
 }
 
-/* ==== Salvataggio domanda per fourth ==== */
+/* ==== Salvataggio domanda ==== */
 function saveCurrentQuestion(){
   const domanda = (LS.getItem('domanda') || '').trim();
   if(!domanda) return;
@@ -780,24 +701,56 @@ function saveCurrentQuestion(){
   toast(t().savedOk);
 }
 
+/* ==== Stato ultimo risultato per re-render lingua ==== */
+let lastData=null, lastDomanda='';
+
+/* ==== Render motivazioni localizzate ==== */
+function renderMotivations({surprise, stile}){
+  const T = t();
+  if (surprise){
+    motIco.style.display=''; chipsWrap.style.display='flex';
+    committeeTitle.textContent=T.votersTitle;
+    const r=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+    chipFav.textContent=`${T.chipsFav} ${r(120,1200)}`;
+    chipCon.textContent=`${T.chipsCon} ${r(0,900)}`;
+    chipAst.textContent=`${T.chipsAst} ${r(0,400)}`;
+    motNote.textContent=(lang==='en')?`Brief tussle at vote: ${r(1,5)} removed; ${r(0,3)} bruised.`
+                    :(lang==='es')?`Pequeño lío en la votación: ${r(1,5)} expulsados; ${r(0,3)} contusos.`
+                    :(lang==='fr')?`Petit grabuge au vote : ${r(1,5)} évacués ; ${r(0,3)} contusionnés.`
+                    :(lang==='de')?`Kurzes Gerangel bei der Abstimmung: ${r(1,5)} entfernt; ${r(0,3)} leicht verletzt.`
+                    :`Breve parapiglia al voto: ${r(1,5)} allontanati; ${r(0,3)} contusi.`;
+    return;
+  }
+  motIco.style.display='none'; chipsWrap.style.display='none';
+  if (stile==='wtf'){
+    committeeTitle.textContent = T.scientificTitle;
+    motNote.textContent = wtfMotivationDemenziale(lang);
+  } else {
+    committeeTitle.textContent = T.guideTitle;
+    const lines = whatIfGuidanceLocal(lastDomanda||LS.getItem('domanda')||'');
+    motNote.innerHTML = lines.map(esc).join('<br>');
+  }
+}
+
 /* ==== Main flow ==== */
 async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
+  lastDomanda = domanda;
 
-  // Intro Zoltar-like (prima volta)
+  // Intro solo su WTF
   showIntroOnce();
 
+  // Oracle loading
   startOracleLoading();
 
+  // Crediti
   if(!IS_ADMIN && !alreadyConsumed){
-    if(surprise){
-      const okSurp = consumeSurpriseOne();
-      if(okSurp){
-        alreadyConsumed = true;
-        updateCreditInfo();
-        toast('🎁 -1 Sorprendimi');
-      }
+    if(surprise && readSurprise()>0){
+      LS.setItem('whatif_wallet_sync', String(Date.now()));
+      writeSurprise(readSurprise()-1);
+      toast('🎁 -1 Sorprendimi');
+      alreadyConsumed = true;
     }
     if(!alreadyConsumed){
       const left=getAvailable();
@@ -825,12 +778,14 @@ async function startFlow(){
     const r=await fetch("/api/ask",{
       method:"POST",headers,
       body:JSON.stringify({ domanda, lang, stile:style, periodo,
-        system:(style==='wtf'?SYSTEM_WTF:SYSTEM_WHIF), extra:"", micro:req.micro||{} })
+        system:(style==='wtf'?"":""), extra:"", micro:req.micro||{} })
     });
     const data=await r.json().catch(()=>null);
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
 
+    // NON forzare incipit: prendo l'answer così com'è
     let answerText=normalizeOneParagraph((data.answer||"").trim());
+    // Taglio hard cap per pulizia ma senza cambiare apertura
     const maxSent=(style==='wtf')?9:11;
     let parts=answerText.split(/(?<=[.!?…])\s+/);
     if(parts.length>maxSent) parts=parts.slice(0,maxSent);
@@ -841,49 +796,20 @@ async function startFlow(){
     stopOracleLoading();
     revealEffect();
 
-    const apiPct = (data && Number.isFinite(+data.pct)) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : null;
-    const usedPct = (apiPct!=null) ? apiPct : computeProbability(domanda).pct;
+    // Percentuale
+    const usedPct = Number.isFinite(+data.pct) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : computeProbability(domanda).pct;
     const pStr = usedPct + "%";
     topPct.textContent = pStr;
     bottomPct.textContent = pStr;
 
-    let motivazioneUsata = "";
-    if (surprise) {
-      // Modalità “sorprendimi”: numeri del comitato
-      motIco.style.display=''; chipsWrap.style.display='flex';
-      committeeTitle.textContent=t().votersTitle||'Comitato';
-      const rdm=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-      chipFav.textContent=`${t().chipsFav} ${rdm(120,1200)}`;
-      chipCon.textContent=`${t().chipsCon} ${rdm(0,900)}`;
-      chipAst.textContent=`${t().chipsAst} ${rdm(0,400)}`;
-      motNote.textContent=(lang==='en')?`Brief tussle at vote: ${rdm(1,5)} removed; ${rdm(0,3)} bruised.`
-                      :(lang==='es')?`Pequeño lío en la votación: ${rdm(1,5)} expulsados; ${rdm(0,3)} contusos.`
-                      :(lang==='fr')?`Petit grabuge au vote : ${rdm(1,5)} évacués ; ${rdm(0,3)} contusionnés.`
-                      :(lang==='de')?`Kurzes Gerangel bei der Abstimmung: ${rdm(1,5)} entfernt; ${rdm(0,3)} leicht verletzt.`
-                      :`Breve parapiglia al voto: ${rdm(1,5)} allontanati; ${rdm(0,3)} contusi.`;
-      motivazioneUsata = motNote.textContent;
+    // Motivazioni SEMPRE localizzate
+    lastData = data;
+    renderMotivations({surprise, stile:style});
 
-    } else if (style === 'wtf') {
-      // WTF: motivazione “scientifica” demenziale (server o fallback), localizzata
-      motIco.style.display='none'; chipsWrap.style.display='none';
-      committeeTitle.textContent = t().scientificTitle;
-      const sci = (data && typeof data.scientific==='string' && data.scientific.trim())
-                    ? data.scientific
-                    : wtfMotivationDemenziale(lang);
-      motNote.textContent = sci;
-      motivazioneUsata = sci;
-
-    } else {
-      // WHAT IF: usa motivazioni server se presenti; altrimenti fallback locale nella lingua pagina
-      motIco.style.display='none'; chipsWrap.style.display='none';
-      committeeTitle.textContent = (data && data.motivation_title) ? data.motivation_title : t().guideTitle;
-      const lines = buildWhatIfGuidance(domanda, data||{});
-      motNote.innerHTML = lines.map(esc).join("<br>");
-      motivazioneUsata = lines.join(" | ");
-    }
-
+    // Cronologia
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:usedPct, motivazione:motivazioneUsata });
+    const motivTxt = (style==='wtf') ? motNote.textContent : motNote.textContent.replace(/\n/g,' | ');
+    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:usedPct, motivazione:motivTxt });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
 
   }catch(e){
@@ -897,7 +823,7 @@ async function startFlow(){
 qs('#backBtn').onclick=()=> history.length > 1 ? history.back() : location.replace('index.html');
 qs('#homeBtn').onclick=()=> location.href='index.html';
 
-// Cambio lingua: aggiorna LS, UI, etichette, e **resetta l'oracolo** per riflettere la lingua
+// Cambio lingua: aggiorna tutto, rigenera motivazioni e oracolo
 qs('#langSelect').onchange=()=>{
   const v=qs('#langSelect').value;
   LS.setItem('lang',v);
@@ -907,7 +833,7 @@ qs('#langSelect').onchange=()=>{
   applyUI(LS.getItem('domanda')||'');
   updateCreditInfo();
 
-  // Reset deck in nuova lingua e mostra subito una riga coerente
+  // Reset oracle deck e mostra subito la lingua nuova
   oracleDeck = [];
   if(oracleTimerId){ clearTimeout(oracleTimerId); oracleTimerId=null; }
   if(document.body.classList.contains('loading')){
@@ -915,6 +841,9 @@ qs('#langSelect').onchange=()=>{
   } else {
     oracleLineEl.textContent = nextOracleLine();
   }
+
+  // Re-render motivazioni localizzate
+  renderMotivations({surprise:false, stile:style});
 
   try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang:v}, ''); }catch{}
 };
@@ -924,7 +853,7 @@ qs('#shareBtn').onclick=async()=>{
   const full = `What?f — ${style==='wtf'?(T.styleWTF):(T.styleWHF)}
 (${periodo})
 
-Q: ${LS.getItem('domanda')}
+${T.q}: ${LS.getItem('domanda')}
 ${qs('#answer').textContent}`;
   try{
     if(navigator.share){ await navigator.share({title:"What?f",text:full}); }
