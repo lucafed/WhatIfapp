@@ -1,15 +1,13 @@
-// store/credits.js
+// /store/credits.js
 // Gestione crediti su Firestore: ricarica giornaliera, consumo, reward da annuncio.
 
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-import {
-  getAuth
-} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-// --- Inizializzazione Firebase (usa la tua config; non duplica se esiste già)
+// --- Inizializzazione Firebase (usa la tua config; non duplica se già inizializzato)
 const firebaseConfig = {
   apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
   authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
@@ -73,6 +71,16 @@ export async function rechargeIfNeeded(uid, cfg, userDoc) {
   return { ...userDoc, credits: next, adsWatched: 0, lastRechargeAt: { seconds: Math.floor(Date.now()/1000) } };
 }
 
+// --- Boot: crea doc e ricarica se è giorno nuovo (da chiamare DOPO login)
+export async function bootCredits() {
+  const u = auth.currentUser;
+  if (!u) return null;
+  const cfg = await getGlobalConfig();
+  let ud    = await ensureUserDoc(u.uid);
+  ud        = await rechargeIfNeeded(u.uid, cfg, ud);
+  return { cfg, ud };
+}
+
 // --- Lettura saldo
 export async function getBalance() {
   const u = auth.currentUser;
@@ -81,7 +89,7 @@ export async function getBalance() {
   return snap.exists() ? Number(snap.data().credits || 0) : 0;
 }
 
-// --- Consuma 1 credito (ritorna true se ok; false se finiti). Admin = ∞
+// --- Consuma 1 credito (true se ok; false se finiti). Admin = ∞
 export async function consumeCredit() {
   const u = auth.currentUser;
   if (!u) throw new Error("Non autenticato");
@@ -133,14 +141,4 @@ export async function grantAdCredit() {
     credits: Number(d.credits || 0) + reward
   });
   return { ok:true };
-}
-
-// --- Boot: crea doc e ricarica se è giorno nuovo (da chiamare DOPO login)
-export async function bootCredits() {
-  const u = auth.currentUser;
-  if (!u) return null;
-  const cfg = await getGlobalConfig();
-  let ud    = await ensureUserDoc(u.uid);
-  ud        = await rechargeIfNeeded(u.uid, cfg, ud);
-  return { cfg, ud };
 }
