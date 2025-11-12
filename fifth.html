@@ -224,16 +224,7 @@ h1{
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 import { bootCredits, getBalance, consumeCredit, grantAdCredit } from "/credits.js";
 
-/* ========= GUARD LOGIN ========= */
-const auth = getAuth();
-onAuthStateChanged(auth, async (user) => {
-  if (!user) { location.href = "index.html?login=1"; return; }
-  await bootCredits();      // crea doc + ricarica giornaliera sicura se serve
-  await updateCreditLine(); // mostra saldo reale
-  startFlow(user);          // avvia logica pagina
-});
-
-/* ========= PREFS / I18N BASE ========= */
+/* ========= PREFS / LANG ========= */
 const LS = localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
 const style = prefs.stile || 'whatif';
@@ -241,6 +232,7 @@ const periodo = prefs.periodo || 'future';
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 
 const SUP_LANG=['it','en','es','fr','de'];
+const domandaEarly = (JSON.parse(LS.getItem('whatif_request')||'{}').domanda) || LS.getItem('domanda') || '';
 function detectLang(text=''){
   const t=(text||'').toLowerCase();
   if(/[¿¡]/.test(t)) return 'es';
@@ -256,53 +248,48 @@ function detectLang(text=''){
   if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
   return best;
 }
-const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
-const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
 const manualLang = LS.getItem('lang_manual')==='1';
 let lang = manualLang ? (SUP_LANG.includes((LS.getItem('lang')||'').toLowerCase()) ? (LS.getItem('lang')||'it').toLowerCase() : 'it') : detectLang(domandaEarly);
 if(!SUP_LANG.includes(lang)) lang='it';
 document.documentElement.lang=lang;
 
+/* ========= I18N (ridotto, ma sufficiente) ========= */
 const I18N = {
   it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
        sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
        p:"Esito & motivazioni", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
-       copied:"Copiato!", error:"[errore server]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       copied:"Copiato!", error:"[errore server]", styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        pctLabel:"% probabilità che accada",
-       votersTitle:"Comitato", seriousTitle:"Motivazione", scientificTitle:"Motivazione (scientifica)",
        credits:(n)=>`💰 Crediti: ${n}`, noCredits:"Hai terminato i crediti.",
-       toastPlus:(n)=>`+${n} credito`, toastMinus:(n)=>`-${n} credito`
+       toastPlus:(n)=>`+${n} credito`, toastMinus:(n)=>`-${n} credito`,
+       scientific:"Motivazione (scientifica)", serious:"Motivazione"
   },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-       p:"Outcome & rationales", share:"📤 Share / Copy", again:"🔁 Ask another",
-       copied:"Copied!", error:"[server error]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       p:"Outcome & motivations", share:"📤 Share / Copy", again:"🔁 Ask another",
+       copied:"Copied!", error:"[server error]", styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        pctLabel:"% probability it happens",
        credits:(n)=>`💰 Credits: ${n}`, noCredits:"You ran out of credits.",
-       toastPlus:(n)=>`+${n} credit`, toastMinus:(n)=>`-${n} credit`
+       toastPlus:(n)=>`+${n} credit`, toastMinus:(n)=>`-${n} credit`,
+       scientific:"Rationale (scientific)", serious:"Rationale"
   }
 };
 const t = ()=> I18N[lang] || I18N.it;
 
 /* ========= UI refs ========= */
 const $ = s => document.querySelector(s);
-const subtitle=$('#subtitle'), lblQ=$('#lblQ'), lblA=$('#lblA'), qView=$('#qView');
+const subtitle=$('#subtitle'), qView=$('#qView');
 const leadNode=$('#lead'), answerEl=$('#answer'), shareBtn=$('#shareBtn'), againBtn=$('#againBtn');
-const metaInfo=$('#metaInfo'), styleBadge=$('#styleBadge'), topPct=$('#topPct'), bottomPct=$('#bottomPct');
-const pctLabelTop=$('#pctLabel'), pctLabelBottom=$('#pctLabelBottom'), committeeTitle=$('#committeeTitle');
-const motIco=$('#motIco'), chipFav=$('#chipFav'), chipCon=$('#chipCon'), chipAst=$('#chipAst'), chipsWrap=$('#chipsWrap');
+const styleBadge=$('#styleBadge'), topPct=$('#topPct'), bottomPct=$('#bottomPct');
+const pctLabelTop=$('#pctLabel'), pctLabelBottom=$('#pctLabelBottom');
 const motNote=$('#motNote'), creditInfo=$('#creditInfo'), toastEl=$('.toast');
+const overlay = $('#overlay'), overlayFrame = $('#overlay-frame');
 
 /* ========= Toast ========= */
 function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
 
-/* ========= Overlay (Store + Rewarded) ========= */
-const overlay = $('#overlay');
-const overlayFrame = $('#overlay-frame');
-let overlayTimer = null, rewardTimer = null, rewardGranted = false;
-
+/* ========= Overlay Store + Rewarded (con fallback) ========= */
+let overlayTimer=null, rewardTimer=null, rewardGranted=false;
 function storeFallbackHTML(){
   const msgNo = (t().noCredits || "Crediti terminati.");
   const label = (lang==='en') ? "Watch ad (+1)" : "Guarda pubblicità (+1)";
@@ -330,28 +317,24 @@ h2{margin:4px 0 6px;font-size:18px}
 </div></div>
 <script>
   document.getElementById('adBtn').onclick=()=>{
-    // countdown 12s e poi segnala completamento
-    const b=this, btn=document.getElementById('adBtn'); let s=12; const lab=btn.textContent;
+    let s=12; const btn=document.getElementById('adBtn'); const lab=btn.textContent;
     const iv=setInterval(()=>{ s--; btn.textContent=lab+' ('+s+'s)'; if(s<=0){ clearInterval(iv); parent.postMessage({type:'rewarded_completed', amount:1}, '*'); } },1000);
   };
-  document.getElementById('closeBtn').onclick=()=>{ parent.postMessage({type:'close_overlay'}, '*'); };
+  document.getElementById('closeBtn').onclick=()=> parent.postMessage({type:'close_overlay'}, '*');
 <\/script>
 </body></html>`;
 }
-
 function openOverlay(url){
   overlay.style.display='grid';
   overlay.setAttribute('aria-hidden','false');
   overlayFrame.removeAttribute('srcdoc');
   overlayFrame.src='about:blank';
-  // fallback tra 1.2s se la pagina non carica
   try{ clearTimeout(overlayTimer);}catch{}
   overlayTimer = setTimeout(()=>{ overlayFrame.setAttribute('srcdoc', storeFallbackHTML()); }, 1200);
   const sep = url.includes('?') ? '&' : '?';
   overlayFrame.onload = ()=>{ try{ clearTimeout(overlayTimer);}catch{} };
   overlayFrame.src = `${url}${sep}lang=${encodeURIComponent(lang)}`;
 }
-
 function closeOverlay(){
   overlay.style.display='none';
   overlay.setAttribute('aria-hidden','true');
@@ -360,25 +343,21 @@ function closeOverlay(){
   try{ clearTimeout(overlayTimer);}catch{}
   try{ clearTimeout(rewardTimer);}catch{}
 }
-
 function openStore(){ openOverlay("/store/credit-store.html"); }
-function openRewarded(){
-  rewardGranted = false;
+async function openRewarded(){
+  rewardGranted=false;
   openOverlay("/ads/rewarded.html");
   try{ clearTimeout(rewardTimer);}catch{}
-  // fallback: se entro 20s non arriva "rewarded_completed", accredita 1 e chiudi
-  rewardTimer = setTimeout(async ()=>{
+  // fallback se non arriva messaggio entro 20s
+  rewardTimer=setTimeout(async ()=>{
     if(!rewardGranted){
       await grantAdCredit().catch(()=>{});
       await updateCreditLine();
       toast(t().toastPlus ? t().toastPlus(1) : "+1 credito");
-      rewardGranted = true;
-      closeOverlay();
-      location.replace('fourth.html');
+      rewardGranted=true; closeOverlay(); location.replace('fourth.html');
     }
-  }, 20000);
+  },20000);
 }
-
 window.addEventListener("message", async (ev)=>{
   const d = ev.data || {};
   if(d.type === "open_rewarded"){ openRewarded(); return; }
@@ -392,17 +371,15 @@ window.addEventListener("message", async (ev)=>{
     location.replace('fourth.html');
     return;
   }
-  if(d.type === "close_overlay"){
-    closeOverlay();
-    return;
-  }
+  if(d.type === "close_overlay"){ closeOverlay(); return; }
 });
 
-/* ========= helpers ========= */
+/* ========= Helpers testo ========= */
 function setText(el,txt){ if(typeof el==="string") el=$(el); if(el) el.textContent=txt; }
 function oneSentence(s=""){ let t=String(s).trim(); const m=t.match(/^([\s\S]*?[.!?…])\s/); if(m) t=m[1]; if(!/[.!?…]$/.test(t)) t+='.'; return t; }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 
+/* ========= Lead copy ========= */
 const LEADS = {
   it:{ wtf:["Entri piano, il caos ti riconosce e oggi ti lascia passare.","Respiri e lasci che sia il destino a inciampare per primo."],
        whatif:["Metti giù le chiavi e lasci parlare il silenzio che non ti giudica.","La stanza è la stessa, lo sguardo no: è già un inizio."]},
@@ -410,28 +387,36 @@ const LEADS = {
        whatif:["Set the keys down and let the quiet that doesn’t judge go first.","Same room, different gaze — that’s already a start."]}
 };
 
+/* ========= Apply UI ========= */
 function applyUI(q){
   const T=t();
   setText('#title', style==='wtf'?T.titleWTF:T.titleWHF);
-  setText('#subtitle', T.sub(q||'—')); setText('#lblQ', T.q); setText('#lblA', T.a); setText('#lblP', (style==='wtf')?'Motivazione (scientifica)':'Motivazione');
+  setText('#subtitle', T.sub(q||'—'));
+  setText('#lblQ', T.q);
+  setText('#lblA', T.a);
+  setText('#lblP', style==='wtf' ? T.scientific : T.serious);
   $('#styleBadge').textContent=(style==='wtf')?T.styleWTF:T.styleWHF;
-  setText('#pctLabel', T.pctLabel); if($('#pctLabelBottom')) setText('#pctLabelBottom', T.pctLabel);
+  setText('#pctLabel', T.pctLabel);
+  if($('#pctLabelBottom')) setText('#pctLabelBottom', T.pctLabel);
   const bank=(LEADS[lang]&&LEADS[lang][style])?(LEADS[lang][style]):(LEADS.it[style]||LEADS.it.whatif);
   $('#lead').textContent = oneSentence(pick(bank)||'')||'—';
 }
 
-/* ========= credit line ========= */
+/* ========= Credits line ========= */
 async function updateCreditLine(){
   try{
     const n = await getBalance();
     setText('#creditInfo', (t().credits ? t().credits(n) : `Crediti: ${n}`));
-  }catch{
-    setText('#creditInfo', '');
-  }
+  }catch{ setText('#creditInfo', ''); }
 }
 
-/* ========= main flow ========= */
-async function startFlow(user){
+/* ========= Flow ========= */
+const auth = getAuth();
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.href = "index.html?login=1"; return; }
+  await bootCredits();               // crea doc se manca + reset giornaliero sicuro
+  await updateCreditLine();
+
   // lingua select
   $('#langSelect').value = lang;
   $('#langSelect').addEventListener('change', ()=>{
@@ -439,15 +424,15 @@ async function startFlow(user){
     LS.setItem('lang',v); LS.setItem('lang_manual','1'); location.reload();
   });
 
-  // mostra domanda e UI
+  // carica domanda da LS
   const req=JSON.parse(LS.getItem('whatif_request')||'{}');
   const domanda=req.domanda || LS.getItem('domanda') || '';
   applyUI(domanda);
   setText('#qView', domanda || '—');
 
-  // **CONSUMO CREDITI prima della chiamata**
+  // CONSUMO 1 CREDITO PRIMA DELL'API
   const hasCredit = await consumeCredit().catch(()=>false);
-  if (!hasCredit) {
+  if(!hasCredit){
     setText('#answer', t().noCredits);
     openStore();
     return;
@@ -455,25 +440,16 @@ async function startFlow(user){
   await updateCreditLine();
   toast(t().toastMinus ? t().toastMinus(1) : "-1 credito");
 
-  // chiama API con ID token
+  // chiama /api/ask con ID token
   const idToken = await user.getIdToken(true);
-  const headers = {
-    "content-type":"application/json",
-    "authorization": `Bearer ${idToken}`
-  };
-  // opzionale: mantieni compat con pro/admin dei tuoi header legacy
+  const headers = { "content-type":"application/json", "authorization": `Bearer ${idToken}` };
   const adminToken = LS.getItem("admin_token"); if(adminToken) headers["x-admin-token"]=adminToken;
   if(prefs.pro===true) headers["x-pro"]="1";
 
   try{
     const r = await fetch("/api/ask",{
-      method:"POST",
-      headers,
-      body: JSON.stringify({
-        domanda, lang, stile: style, periodo,
-        system: (style==='wtf' ? "WHAT_THE_F" : "WHAT_IF"),
-        extra:"", micro: (req && req.micro) || {}
-      })
+      method:"POST", headers,
+      body: JSON.stringify({ domanda, lang, stile: style, periodo, system:(style==='wtf'?"WHAT_THE_F":"WHAT_IF"), extra:"", micro:(req && req.micro)||{} })
     });
     const data = await r.json().catch(()=>null);
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
@@ -482,7 +458,7 @@ async function startFlow(user){
     setText('#answer', answerText);
 
     const apiPct = (data && Number.isFinite(+data.pct)) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : null;
-    const usedPct = (apiPct!=null) ? apiPct : 62;
+    const usedPct = (apiPct!=null) ? apiPct : 62; // fallback
     const pStr = usedPct + "%";
     setText('#topPct', pStr); setText('#bottomPct', pStr);
 
@@ -491,7 +467,7 @@ async function startFlow(user){
       : (data && data.motivation) || "Motivo: benefici concreti a breve, con vincoli gestibili.";
     setText('#motNote', mot);
 
-    // cronologia locale (non influisce sui crediti)
+    // cronologia locale
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
     hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), pct:usedPct });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
@@ -499,20 +475,21 @@ async function startFlow(user){
     console.error(e);
     setText('#answer', t().error);
   }
-}
+});
 
-/* ========= nav / share ========= */
+/* ========= Nav / Share ========= */
 $('#backBtn').onclick = ()=> history.length>1 ? history.back() : location.replace('index.html');
 $('#homeBtn').onclick = ()=> location.href='index.html';
 $('#shareBtn').onclick = async ()=>{
   const domanda = LS.getItem('domanda') || '';
-  const text = `What?f — ${style.toUpperCase()}\n(${periodo})\n\nQ: ${domanda}\n\n${$('#answer').textContent}`;
+  const text = `What?f — ${(style==='wtf'?'What the F':'What if')}\n(${periodo})\n\nQ: ${domanda}\n\n${$('#answer').textContent}`;
   try{
     if(navigator.share){ await navigator.share({title:"What?f", text}); }
     else{ await navigator.clipboard.writeText(text); const b=$('#shareBtn'); b.textContent=(t().copied||"Copiato!"); setTimeout(()=>b.textContent=t().share,1200); }
   }catch{}
 };
-$('#againBtn').onclick = ()=>{ location.href='fourth.html'; };
+
+// messaggi dal parent overlay (già gestiti sopra)
 </script>
 </body>
 </html>
