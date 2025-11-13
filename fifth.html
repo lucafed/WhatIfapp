@@ -283,9 +283,10 @@ const I18N = {
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Stile: What the F · 6–9 frasi · paragrafo unico · tono asciutto · modalità: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if (60% analisi, 40% immagini) · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`,
+        : `Stile: What if (60% analisi, 40% immagini sobrie) · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`,
        pctLabel:"% probabilità che accada",
-       votersTitle:"Comitato", seriousTitle:"Motivazione", scientificTitle:"Motivazione (scientifica)",
+       votersTitle:"Comitato", seriousTitle:"Motivazioni",
+       scientificTitle:"Motivazione (scientifica)",
        chipsFav:"favorevoli", chipsCon:"contrari", chipsAst:"astenuti",
        motFallback:"Motivo: benefici concreti a breve, con vincoli gestibili.",
        credits:(n)=>`💰 Crediti: ${n}`, noCredits:"Hai terminato i crediti.",
@@ -300,15 +301,15 @@ const I18N = {
   },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-       p:"Outcome & rationales", share:"📤 Share / Copy", again:"🔁 Ask another",
+       p:"Outcome & motivations", share:"📤 Share / Copy", again:"🔁 Ask another",
        save:"⭐ Save", savedOk:"✅ Saved",
        copied:"Copied!", error:"[server error]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Style: What the F · 6–9 sentences · single paragraph · dry tone · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if (60% analysis, 40% imagery) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,
+        : `Style: What if (60% analysis, 40% images) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,
        pctLabel:"% probability it happens",
-       votersTitle:"Committee", seriousTitle:"Rationale", scientificTitle:"Rationale (scientific)",
+       votersTitle:"Committee", seriousTitle:"Motivations", scientificTitle:"Rationale (scientific)",
        chipsFav:"in favour", chipsCon:"against", chipsAst:"abstained",
        motFallback:"Reason: short-term, concrete benefits with manageable constraints.",
        credits:(n)=>`💰 Credits: ${n}`, noCredits:"You ran out of credits.",
@@ -323,7 +324,7 @@ const I18N = {
   },
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
        sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
-       p:"Resultado y razones", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra",
+       p:"Resultado y motivaciones", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra",
        save:"⭐ Guardar", savedOk:"✅ Guardada",
        copied:"¡Copiado!", error:"[error del servidor]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
@@ -331,7 +332,7 @@ const I18N = {
         ? `Estilo: What the F · 6–9 frases · un párrafo · tono seco · modo: ${p==='past'?'Pasado':'Futuro'}.`
         : `Estilo: What if (60% análisis, 40% imágenes) · 8–11 frases · un párrafo · modo: ${p==='past'?'Pasado':'Futuro'}.`,
        pctLabel:"% probabilidad de que ocurra",
-       votersTitle:"Comité", seriousTitle:"Motivo", scientificTitle:"Motivo (científico)",
+       votersTitle:"Comité", seriousTitle:"Motivaciones", scientificTitle:"Motivo (científico)",
        chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones",
        motFallback:"Motivo: beneficios concretos a corto plazo con límites manejables.",
        credits:(n)=>`💰 Créditos: ${n}`, noCredits:"Se te han acabado los créditos.",
@@ -354,7 +355,7 @@ const I18N = {
         ? `Style : What the F · 6–9 phrases · un paragraphe · ton sec · mode : ${p==='past'?'Passé':'Futur'}.`
         : `Style : What if (60 % analyse, 40 % images) · 8–11 phrases · un paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`,
        pctLabel:"% de probabilité que ça arrive",
-       votersTitle:"Comité", seriousTitle:"Motivation", scientificTitle:"Motivation (scientifique)",
+       votersTitle:"Comité", seriousTitle:"Motivations", scientificTitle:"Motivation (scientifique)",
        chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions",
        motFallback:"Raison : bénéfices concrets à court terme, contraintes gérables.",
        credits:(n)=>`💰 Crédits : ${n}`, noCredits:"Crédits épuisés.",
@@ -369,7 +370,7 @@ const I18N = {
   },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
        sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
-       p:"Ergebnis & Begründungen", share:"📤 Teilen / Kopieren", again:"🔁 Neue Frage",
+       p:"Ergebnis & Motivationen", share:"📤 Teilen / Kopieren", again:"🔁 Neue Frage",
        save:"⭐ Speichern", savedOk:"✅ Gespeichert",
        copied:"Kopiert!", error:"[Serverfehler]",
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
@@ -377,7 +378,7 @@ const I18N = {
         ? `Stil: What the F · 6–9 Sätze · ein Absatz · trockener Ton · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
         : `Stil: What if (60 % Analyse, 40 % Bilder) · 8–11 Sätze · ein Absatz · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
        pctLabel:"% Wahrscheinlichkeit",
-       votersTitle:"Gremium", seriousTitle:"Begründung", scientificTitle:"Begründung (wissenschaftlich)",
+       votersTitle:"Gremium", seriousTitle:"Begründungen", scientificTitle:"Begründung (wissenschaftlich)",
        chipsFav:"dafür", chipsCon:"dagegen", chipsAst:"enthalten",
        motFallback:"Grund: kurzfristiger, greifbarer Nutzen mit beherrschbaren Einschränkungen.",
        credits:(n)=>`💰 Credits: ${n}`, noCredits:"Credits aufgebraucht.",
@@ -420,94 +421,25 @@ const t=()=>I18N[lang]||I18N.it;
 const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
 const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica…`;
 
-/* === ORACLE LINES (solo attesa, mistiche senza "shh") === */
+/* === ORACLE LINES (solo attesa) === */
 const ORACLE_LINES = {
-  it: [
-    "Le carte si stanno mettendo in fila.",
-    "La risposta si avvicina a piccoli passi.",
-    "Le immagini dentro di te si chiariscono.",
-    "Il quadro prende forma piano piano.",
-    "Il futuro si siede sul bordo del tavolo e ascolta.",
-    "La scena si illumina un pezzo alla volta.",
-    "Il filo degli eventi si tende senza strappi.",
-    "Le possibilità si stringono intorno a una scelta.",
-    "Il tuo ritmo interno si fa più netto.",
-    "Una versione di te fa un passo avanti.",
-    "Le strade possibili smettono di sovrapporsi.",
-    "Ciò che temi e ciò che desideri si guardano in faccia.",
-    "Il bivio davanti a te si mette a fuoco.",
-    "Le cose non urlano, ma dicono abbastanza.",
-    "La prossima mossa si prepara sotto la superficie.",
-    "Ancora un respiro e la figura diventa leggibile."
-  ],
-  en: [
-    "The pieces on your path are taking their places.",
-    "The answer is walking towards you, not correndo.",
-    "Pictures inside you are sharpening.",
-    "The scene comes into focus, one detail at a time.",
-    "The near future sits on the edge of the table and listens.",
-    "The line of events tightens without snapping.",
-    "Options gather around one main direction.",
-    "Your inner rhythm becomes easier to hear.",
-    "One version of you quietly steps forward.",
-    "The crossroads ahead stops looking like a blur.",
-    "What you fear and what you want stand face to face.",
-    "The next move is rising just under the surface."
-  ],
-  es: [
-    "Las piezas de tu camino se van colocando solas.",
-    "La respuesta se acerca a pasos pequeños.",
-    "Las imágenes dentro de ti se aclaran.",
-    "La escena entra en foco, detalle a detalle.",
-    "El futuro cercano se sienta en la mesa y escucha.",
-    "El hilo de los eventos se tensa sin romperse.",
-    "Las opciones se agrupan alrededor de una dirección.",
-    "Tu ritmo interno se vuelve más nítido.",
-    "Una versión de ti da un paso adelante.",
-    "La encrucijada deja de ser una mancha borrosa.",
-    "Lo que temes y lo que deseas se miran de frente.",
-    "La próxima jugada se prepara bajo la superficie."
-  ],
-  fr: [
-    "Les pièces de ton chemin prennent leur place.",
-    "La réponse s’avance à petits pas.",
-    "Les images en toi deviennent plus nettes.",
-    "La scène se met au point, détail après détail.",
-    "Le futur proche s’assoit au bord de la table et écoute.",
-    "Le fil des événements se tend sans se rompre.",
-    "Les options se resserrent autour d’une direction.",
-    "Ton rythme intérieur devient plus audible.",
-    "Une version de toi fait un pas en avant.",
-    "Le carrefour devant toi sort du flou.",
-    "Ce que tu crains et ce que tu veux se regardent en face.",
-    "Le prochain geste se forme juste sous la surface."
-  ],
-  de: [
-    "Die Teile auf deinem Weg rücken an ihren Platz.",
-    "Die Antwort kommt in kleinen Schritten näher.",
-    "Die Bilder in dir werden klarer.",
-    "Die Szene stellt sich scharf, Detail für Detail.",
-    "Die nahe Zukunft setzt sich an den Tisch und hört zu.",
-    "Der Faden der Ereignisse spannt sich, ohne zu reißen.",
-    "Die Möglichkeiten sammeln sich um eine Richtung.",
-    "Dein innerer Rhythmus wird deutlicher.",
-    "Eine Version von dir tritt einen Schritt vor.",
-    "Die Kreuzung vor dir verliert ihren Schleier.",
-    "Was du fürchtest und was du willst, steht sich gegenüber.",
-    "Der nächste Zug steigt unter der Oberfläche nach oben."
-  ]
+  it: ["Le carte si muovono piano.","La risposta sta cercando la tua attenzione.","L’aria cambia: qualcosa si avvicina.","Non correre: il disegno prende forma.","Occhio: il quadro si accende da solo.","Silenzio un attimo… qualcosa si allinea.","C’è un passo che torna al suo ritmo.","La moneta è a mezz’aria: sta scegliendo il lato.","Una piega nella notte, poi una luce sottile.","Le luci interne si accendono una alla volta.","Ancora un respiro… il filo si tende.","L’indizio che mancava si sta mostrando.","Un colpo di vento, poi tutto si ferma.","Scorri piano: la porta si sta socchiudendo.","Si sente un sì lontano, ma si avvicina.","L’oracolo gira la pagina… quasi."],
+  en: ["The cards are slowly turning.","The answer is looking for your attention.","Air shifts; something draws near.","Don’t rush—shape is forming.","Look: the outline lights itself.","Hold a breath… things align.","There’s a step finding its rhythm again.","A coin hangs mid-air, choosing its side.","A fold in the dark, then a thin light.","Inner lights switch on, one by one.","Another breath… the wire tightens.","The missing hint is stepping forward.","A gust, then stillness.","Scroll slowly: a door is opening a crack.","A distant yes moves closer.","The oracle turns the page… almost."],
+  es: ["Las cartas se mueven despacio.","La respuesta busca tu atención.","El aire cambia; algo se acerca.","No corras: la forma aparece.","Mira: el contorno se enciende solo.","Guarda el aliento… todo se alinea.","Hay un paso que recupera su ritmo.","Una moneda queda en el aire, eligiendo cara.","Un pliegue en la noche, luego una luz fina.","Luces internas, una por una.","Otro respiro… el hilo se tensa.","La pista que faltaba se asoma.","Una ráfaga y luego quietud.","Desliza despacio: la puerta se entorna.","Un sí lejano se acerca.","El oráculo pasa página… casi."],
+  fr: ["Les cartes tournent lentement.","La réponse cherche ton attention.","L’air change : quelque chose s’approche.","Ne te presse pas : la forme vient.","Regarde : le contour s’allume tout seul.","Retiens ton souffle… tout s’aligne.","Un pas retrouve son rythme.","Une pièce reste en suspens, choisissant sa face.","Un pli dans la nuit, puis une lumière fine.","Des lumières intérieures s’allument, une à une.","Encore un souffle… le fil se tend.","L’indice manquant s’avance.","Un souffle, puis l’immobilité.","Fais défiler doucement : une porte s’entrouvre.","Un oui lointain se rapproche.","L’oracle tourne la page… presque."],
+  de: ["Die Karten bewegen sich langsam.","Die Antwort sucht deine Aufmerksamkeit.","Die Luft verändert sich; etwas kommt näher.","Nicht eilen: die Form entsteht.","Schau: die Kontur leuchtet von allein.","Atem anhalten… die Dinge richten sich.","Ein Schritt findet wieder seinen Rhythmus.","Eine Münze hängt in der Luft und sucht ihre Seite.","Eine Falte in der Nacht, dann ein schmales Licht.","Innere Lichter gehen nacheinander an.","Noch ein Atemzug… der Draht spannt sich.","Der fehlende Hinweis tritt hervor.","Ein Windstoß, dann Stille.","Scroll langsam: eine Tür steht einen Spalt offen.","Ein fernes Ja kommt näher.","Das Orakel blättert um… fast."]
 };
 
 /* ==== INTRO (Zoltar-like) prima volta ===== */
 const INTRO_KEY = 'whatif_intro_seen_v2';
 const INTRO = {
   whatif: {
-    it: {future:"🜂 La lanterna si accende: chiedi con chiarezza e il futuro si mette in riga.", past:"🜂 La sabbia si posa: guarda il passato senza nebbia, prendi l’essenza e vai."},
-    en: {future:"🜂 The lamp glows: ask clearly and the future falls into line.", past:"🜂 The sand settles: read the past plainly, keep the essence, move."}
+    it: {future:"🜂 La lanterna si accende: fai la domanda e il futuro si mette in fila.", past:"🜂 La sabbia si posa: riguardi il passato senza nebbia e tieni solo ciò che serve."},
+    en: {future:"🜂 The lamp glows: ask clearly and the near future lines up.", past:"🜂 The sand settles: you look back without fog and keep only what matters."}
   },
   wtf: {
-    it: {future:"🥂 Dillo forte, fai spazio: il domani non aspetta i timidi.", past:"🥂 Chiudi il conto: il passato ha già pagato, tu ordina il prossimo giro."},
-    en: {future:"🥂 Say it loud, make room: tomorrow won’t wait for the shy.", past:"🥂 Tab’s closed: the past already paid—order the next round."}
+    it: {future:"🥂 Dillo forte: il domani non aspetta i timidi.", past:"🥂 Chiudi il conto: il passato ha già pagato, tu ordina il prossimo giro."},
+    en: {future:"🥂 Say it loud: tomorrow won’t wait for the shy.", past:"🥂 Tab’s closed: the past already paid—order the next round."}
   }
 };
 function showIntroOnce(){
@@ -584,6 +516,7 @@ function readSurprise(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||"0",10
 function writeSurprise(n){ n=Math.max(0, parseInt(n,10)||0); LS.setItem(SURPKEY,String(n)); updateCreditInfo(); LS.setItem("whatif_wallet_sync", String(Date.now())); }
 function addSurprise(n){ writeSurprise(readSurprise() + Math.max(0,parseInt(n,10)||0)); }
 function consumeSurpriseOne(){ const cur=readSurprise(); if(cur>0){ writeSurprise(cur-1); return true; } return false; }
+function computeSurpriseBonus(amount){ const a=parseInt(amount,10)||0; if(a>=20) return 3; if(a>=10) return 2; if(a>=5)  return 1; return 0; }
 
 function updateCreditInfo(n=getAvailable()){
   if(!creditInfo) return;
@@ -608,7 +541,7 @@ function applyUI(q){
   setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));
 }
 
-/* ==== Probability (fallback) ==== */
+/* ==== Probability ==== */
 function computeProbability(q){
   const t=(q||'').toLowerCase(); let s=50;
   if(/\b(7|14|21|30|60|90)\b/.test(t)) s+=12;
@@ -628,9 +561,11 @@ let oracleTimerId = null;
 function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
 function buildOracleDeck(){
   const base = (ORACLE_LINES[lang] || ORACLE_LINES.it).slice();
+  const tails = ["", " …", " ⋯", " —", " …"];
   const deck = [];
   for(const line of base){
-    deck.push(line);
+    const v = Math.random()<0.45 ? (line.replace(/\.$/,"") + tails[Math.floor(Math.random()*tails.length)]) : line;
+    deck.push(v);
   }
   return shuffle(deck);
 }
@@ -662,10 +597,143 @@ function revealEffect(){
   setTimeout(()=> wrap.classList.remove('reveal'), 900);
 }
 
+/* ===== Helpers contestuali per “What if” breve (già esistenti, se servono altrove) ===== */
+function extractContextParts(q){
+  const s = String(q||"").toLowerCase();
+  const when = (s.match(/\b(in|entro|tra|domani|oggi|stasera|settimana|mese|anno|\d{1,2}\s*(giorni|settimane|mesi))\b/i)||[])[0] || "";
+  const money = (s.match(/(€|euro|budget|spesa|costo|prezzo)\s*([0-9.,]+)/i)||[])[0] || (/\bunder\b/i.test(s)?"under":"");
+  const action = (s.match(/\b(lancia|apri|impara|scrivi|chiedi|studia|automatizza|testa|compra|vendi|assumi|costruisci|crea|ottimizza|riduci|aumenta)\b/i)||[])[0] || "";
+  const topicMatch = s.match(/\b(sito|progetto|app|campagna|cv|colloquio|piscina|dominio|startup|portafoglio|criptovalute?|azione|investimento|esame)\b/i);
+  const topic = topicMatch ? topicMatch[0] : "";
+  return {when, money, action, topic};
+}
+
+/* ===== Motivazione demenziale per WTF (scientifica+zuffa) ===== */
+function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function wtfMotivationDemenziale(langCode){
+  const shots = rnd(1,3), spill = rnd(0,2), bruise = rnd(0,3);
+  if(langCode==='en'){
+    return `Pseudo-science says small daily nudges beat grand plans. The committee argued at the bar: ${shots} shots gone, ${spill} glasses spilled, ${bruise} minor bruises; verdict between hiccups: do it, and stop overthinking.`;
+  } else if(langCode==='es'){
+    return `Pseudociencia de barra: los micro-pasos diarios ganan a los planes épicos. El comité debatió en la barra: ${shots} chupitos desaparecidos, ${spill} copas derramadas, ${bruise} pequeños moratones; veredicto entre hipos: hazlo y deja de sobrepensarlo.`;
+  } else if(langCode==='fr'){
+    return `Pseudoscience de comptoir : les micro-pas quotidiens battent les grands plans. Le comité a débattu au bar : ${shots} shots évaporés, ${spill} verres renversés, ${bruise} bleus légers ; verdict entre deux hoquets : fais-le, et arrête de trop réfléchir.`;
+  } else if(langCode==='de'){
+    return `Kneipen-Pseudowissenschaft: kleine tägliche Schritte schlagen große Pläne. Das Gremium tagte an der Theke: ${shots} Shots verschwunden, ${spill} Gläser verschüttet, ${bruise} leichte Blessuren; Urteil zwischen Schluckauf: mach’s, und hör auf, alles zu zerdenken.`;
+  }
+  // default IT
+  return `Pseudoscienza da bancone: i micro-passi battono i piani epici. La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: fai, e smettila di pensarci troppo.`;
+}
+
+/* ===== NUOVE MOTIVAZIONI WHAT IF (stile tuoi esempi) ===== */
+function buildWhatIfMotivationsPretty(domanda, pct){
+  const q = String(domanda||"").toLowerCase();
+  const L = lang;
+
+  const isLove =
+    /ex\b|relazione|fidanzat[oa]|partner|coppia|amore|relationship|breakup|ex novio|ex novia|ex marit|ex moglie/.test(q);
+  const isMove =
+    /trasferi|trasloc|città|citta|tornare a|tornassi a|se tornassi|se tornare|if i move|move to|go back to/.test(q);
+  const isJob =
+    /lavoro|job|carriera|colloquio|interview|assunzion|licenziament|azienda|company|ufficio/.test(q);
+
+  if(L === 'it'){
+    const baseProb = pct ? `Probabilità intorno al ${pct}%. Non è destino scritto, è uno scenario aperto.<br><br>` : "";
+    if(isLove){
+      return baseProb +
+        "Perché potrebbe funzionare:<br>" +
+        "• Riconnessione emotiva autentica: ritrovi parti di te che con altre persone fai fatica a vedere.<br>" +
+        "• Possibilità di crescita reciproca: se entrambi avete capito cosa non ha funzionato, potete riscrivere il patto in modo più onesto.<br>" +
+        "• Chiusura di un capitolo lasciato aperto: anche se non dura per sempre, può darti risposte che il silenzio non ha dato.<br><br>" +
+        "Cosa può complicarlo:<br>" +
+        "• Rischio di ripetere gli stessi schemi: senza cambi veri, tornate solo nello stesso copione con più stanchezza.<br>" +
+        "• Illusione del “come prima”: la memoria edulcora, ma le dinamiche profonde restano uguali se non vengono guardate in faccia.<br>" +
+        "• Fatica nel ricostruire fiducia: ci vuole tempo, coerenza quotidiana e confini chiari da entrambe le parti.";
+    }
+    if(isMove){
+      return baseProb +
+        "Perché potrebbe funzionare:<br>" +
+        "• Connessione emotiva: tornare in un luogo che conosci risveglia ricordi, identità e legami che ti fanno sentire meno disperso.<br>" +
+        "• Qualità della vita: ritmi più umani, facce conosciute, luoghi dove il corpo si rilassa da solo senza dover sempre “reggere la scena”.<br>" +
+        "• Rinascita simbolica: è come tornare dove qualcosa si è interrotto per riprenderlo con occhi diversi e più adulti.<br><br>" +
+        "Cosa può complicarlo:<br>" +
+        "• Sensazione di rallentare: se cerchi stimoli forti e crescita veloce, potresti vivere il ritorno come un passo indietro.<br>" +
+        "• Vecchie dinamiche: rivedi persone e luoghi che possono riattivare abitudini che avevi faticato a lasciare.<br>" +
+        "• Opportunità limitate: alcuni percorsi professionali o creativi potrebbero richiedere ancora spostamenti o compromessi.";
+    }
+    if(isJob){
+      return baseProb +
+        "Perché potrebbe funzionare:<br>" +
+        "• Direzione più chiara: scegliere una strada lavorativa definita ti permette di smettere di disperdere energia in mille tentativi.<br>" +
+        "• Crescita concreta: piccoli passi costanti sulla stessa traiettoria portano più risultati di salti continui da un’idea all’altra.<br>" +
+        "• Identità professionale: inizi a sentirti “qualcosa” e non solo “uno che prova di tutto”.<br><br>" +
+        "Cosa può complicarlo:<br>" +
+        "• Paura di sbagliare scelta: se vivi il lavoro come etichetta definitiva, ogni decisione pesa il triplo.<br>" +
+        "• Sovraccarico mentale: voler fare cambiamento, sicurezza economica e riconoscimento tutti insieme ti può bloccare.<br>" +
+        "• Ambiente non allineato: se i contesti che trovi non rispecchiano i tuoi valori, rischi di bruciarti in fretta.";
+    }
+    // default generico IT
+    return (pct ? `Probabilità intorno al ${pct}%. La strada non è chiusa, ma chiede scelta consapevole.<br><br>` : "") +
+      "Perché potrebbe funzionare:<br>" +
+      "• Ti avvicina a una versione di te più allineata a ciò che senti adesso, non solo a ciò che hai sempre fatto.<br>" +
+      "• Trasforma l’ansia in movimento: anche un passo piccolo rompe la sensazione di stare fermo ad aspettare che succeda qualcosa.<br>" +
+      "• Apre spazio a nuove connessioni, opportunità e routine più sane rispetto a quelle che oggi ti tengono in sospeso.<br><br>" +
+      "Cosa può complicarlo:<br>" +
+      "• Restare aggrappato all’idea di non sbagliare mai scelta ti fa rinviare ogni passo concreto.<br>" +
+      "• Abitudini vecchie che tirano indietro appena l’energia cala o qualcuno non capisce le tue mosse.<br>" +
+      "• Mancanza di confini: se cerchi di accontentare tutti, la tua decisione perde forza e torna il caos di prima.";
+  }
+
+  // Versioni semplici per altre lingue
+  if(L === 'en'){
+    return `Rough chance: around ${pct}% — not fixed fate, but an open path.<br><br>` +
+      "Why it could work:<br>" +
+      "• It moves you closer to a life that matches how you feel now, not just who you were before.<br>" +
+      "• Small consistent steps calm the noise and turn worry into movement.<br>" +
+      "• It can open space for healthier routines, people and opportunities.<br><br>" +
+      "What could make it hard:<br>" +
+      "• Fear of choosing “wrong” can freeze you before you even try.<br>" +
+      "• Old patterns and comfort zones may pull you back when energy drops.<br>" +
+      "• If you try to please everyone, your decision loses power and you end up stuck again.";
+  }
+  if(L === 'es'){
+    return `Probabilidad aproximada ${pct}% — no es destino fijo, es un camino abierto.<br><br>` +
+      "Por qué podría funcionar:<br>" +
+      "• Te acerca a una versión de ti más alineada con lo que sientes ahora.<br>" +
+      "• Los pasos pequeños y constantes transforman la ansiedad en movimiento real.<br>" +
+      "• Abre espacio a rutinas y relaciones más sanas que las que te dejan en pausa.<br><br>" +
+      "Qué puede frenarlo:<br>" +
+      "• El miedo a equivocarte de elección puede dejarte inmóvil.<br>" +
+      "• Viejos patrones y zonas de confort tiran de ti cuando baja la energía.<br>" +
+      "• Si intentas contentar a todo el mundo, tu decisión pierde fuerza.";
+  }
+  if(L === 'fr'){
+    return `Probabilité d’environ ${pct}% — ce n’est pas un destin figé, c’est un chemin ouvert.<br><br>` +
+      "Pourquoi ça pourrait marcher :<br>" +
+      "• Tu te rapproches d’une vie plus alignée avec ce que tu ressens aujourd’hui.<br>" +
+      "• De petits pas réguliers transforment l’angoisse en mouvement concret.<br>" +
+      "• Cela ouvre de la place pour des routines et des liens plus sains.<br><br>" +
+      "Ce qui peut compliquer :<br>" +
+      "• La peur de faire « le mauvais choix » peut te paralyser.<br>" +
+      "• Les anciens réflexes et zones de confort te tirent en arrière quand tu fatigues.<br>" +
+      "• Si tu veux rassurer tout le monde, ta décision perd sa force.";
+  }
+  // de
+  return `Wahrscheinlichkeit grob ${pct}% – kein festgeschriebenes Schicksal, sondern ein offener Weg.<br><br>` +
+    "Warum es klappen kann:<br>" +
+    "• Du bewegst dich auf ein Leben zu, das besser zu deinem heutigen Gefühl passt.<br>" +
+    "• Kleine, regelmäßige Schritte verwandeln Grübeln in tatsächliche Bewegung.<br>" +
+    "• Es schafft Raum für gesündere Routinen und Kontakte.<br><br>" +
+    "Was es schwer machen kann:<br>" +
+    "• Die Angst vor der „falschen Entscheidung“ kann dich einfrieren.<br>" +
+    "• Alte Muster und Komfortzonen ziehen dich zurück, wenn deine Energie sinkt.<br>" +
+    "• Wenn du alle zufriedenstellen willst, verliert deine Entscheidung an Kraft.";
+}
+
 /* ==== Overlay (store + rewarded) ==== */
 const ADS_ENABLED = false;
 const overlay=qs('#overlay'), overlayFrame=qs('#overlay-frame');
-let overlayLoadTimer=null, rewardTimer=null, rewardGranted=false, alreadyConsumed=false;
+let overlayLoadTimer=null, rewardTimer=null, rewardGranted=false, awaitingCredit=false, alreadyConsumed=false;
 
 function storeFallbackHTML(){
   const T=t();
@@ -708,6 +776,20 @@ function openOverlay(url){
   try{ clearTimeout(overlayLoadTimer); }catch{}
   overlayLoadTimer=setTimeout(()=>{ try{ overlayFrame.setAttribute('srcdoc', storeFallbackHTML()); }catch{} },1500);
   setTimeout(()=>{ try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang}, '*'); }catch{} }, 400);
+}
+function openStore(){ if(!ADS_ENABLED){ toast('🛒 Store disattivato'); return; } openOverlay("/store/credit-store.html"); }
+function openRewarded(){
+  if(!ADS_ENABLED){ toast('🎬 Pubblicità disattivata'); return; }
+  rewardGranted=false;
+  openOverlay("/ads/rewarded.html");
+  clearTimeout(rewardTimer);
+  rewardTimer=setTimeout(()=>{
+    if(!rewardGranted){
+      addCredits(1); updateCreditInfo(); toast(t().toastPlus(1));
+      rewardGranted=true; closeOverlay();
+      location.replace('fourth.html');
+    }
+  },20000);
 }
 function closeOverlay(){
   overlay.style.display='none';
@@ -753,22 +835,6 @@ function saveCurrentQuestion(){
   LS.setItem('next_prompts', JSON.stringify(arr));
   LS.setItem('whatif_wallet_sync', String(Date.now()));
   toast(t().savedOk);
-}
-
-/* ==== Motivazione demenziale WTF (fallback client) ==== */
-function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
-function wtfMotivationDemenziale(langCode){
-  const shots = rnd(1,3), spill = rnd(0,2), bruise = rnd(0,3);
-  if(langCode==='en'){
-    return `Pseudo-science says small daily nudges beat grand plans (Law of Coffee + Inertia). The committee debated over drinks: ${shots} shots vanished, ${spill} glasses spilled, ${bruise} minor bruises; final verdict between hiccups: “do it, and don’t overthink”.`;
-  } else if(langCode==='es'){
-    return `Seudociencia de barra: los micro-pasos diarios ganan a los planes épicos (Ley del Café + Inercia). El comité discutió en la barra: ${shots} chupitos desaparecidos, ${spill} copas derramadas, ${bruise} pequeños moratones; veredicto entre hipos: “hazlo y deja de sobrepensarlo”.`;
-  } else if(langCode==='fr'){
-    return `Pseudoscience de comptoir : les micro-pas quotidiens battent les grands plans (Loi du Café + Inertie). Le comité a débattu au bar : ${shots} shots évaporés, ${spill} verres renversés, ${bruise} bleus légers ; verdict entre deux hoquets : « fais-le, et arrête de trop réfléchir ».`;
-  } else if(langCode==='de'){
-    return `Kneipen-Pseudowissenschaft: kleine tägliche Schritte schlagen große Pläne (Gesetz von Kaffee + Trägheit). Das Gremium tagte an der Theke: ${shots} Shots verschwunden, ${spill} Gläser verschüttet, ${bruise} leichte Blessuren; Urteil zwischen Schluckauf: „mach’s, und hör auf, alles zu zerdenken“.`;
-  }
-  return `Pseudoscienza spicciola: micro-passi battono i piani epici (Legge del Caffè + Inerzia). La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: “fai, e smettila di pensarci troppo”.`;
 }
 
 /* ==== Main flow ==== */
@@ -841,7 +907,7 @@ async function startFlow(){
     let motivazioneUsata = "";
 
     if (surprise) {
-      // Modalità “sorprendimi”: numeri del comitato random
+      // Modalità “sorprendimi”: numeri del comitato
       motIco.style.display=''; chipsWrap.style.display='flex';
       committeeTitle.textContent=t().votersTitle||'Comitato';
       const rdm=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
@@ -856,23 +922,20 @@ async function startFlow(){
       motivazioneUsata = motNote.textContent;
 
     } else if (style === 'wtf') {
-      // WTF → motivazione scientifica demenziale dall'API, con fallback locale
+      // WTF → solo motivazione scientifica demenziale
       motIco.style.display='none'; chipsWrap.style.display='none';
       committeeTitle.textContent = t().scientificTitle;
-      const apiSci = data && typeof data.scientific === "string" ? data.scientific.trim() : "";
-      const sci = apiSci || wtfMotivationDemenziale(lang);
+      const sci = wtfMotivationDemenziale(lang);
       motNote.textContent = sci;
       motivazioneUsata = sci;
 
     } else {
-      // WHAT IF → usa le motivazioni calcolate dall’API (buildWhatIfMotivation), sempre nella lingua giusta
+      // WHAT IF → motivazioni stile “zingara realista” Pro/Contro
       motIco.style.display='none'; chipsWrap.style.display='none';
-      const T = t();
-      committeeTitle.textContent = T.seriousTitle || T.guideTitle;
-      const apiMot = data && typeof data.motivation === "string" ? data.motivation.trim() : "";
-      const fallback = T.motFallback || "";
-      motNote.textContent = apiMot || fallback;
-      motivazioneUsata = motNote.textContent;
+      committeeTitle.textContent = t().seriousTitle;
+      const html = buildWhatIfMotivationsPretty(domanda, usedPct);
+      motNote.innerHTML = html;
+      motivazioneUsata = html.replace(/<br\s*\/?>/gi," | ");
     }
 
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
@@ -897,7 +960,7 @@ qs('#langSelect').onchange=()=>{
   lang=v;
   applyUI(LS.getItem('domanda')||'');
   updateCreditInfo();
-  oracleDeck = []; // reset oracle deck per nuova lingua
+  oracleDeck = []; // aggiorna deck oracolo per nuova lingua
   try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang:v}, ''); }catch{}
 };
 qs('#shareBtn').onclick=async()=>{
