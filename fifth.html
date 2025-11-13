@@ -267,34 +267,6 @@ transition:opacity .35s ease, transform .35s ease;
 <script>
 /* ==== Base & prefs ==== */
 const LS = localStorage;
-  // 👉 Inizializza crediti per i nuovi utenti (prima apertura app)
-(function initFirstCredits(){
-  try {
-    const hasWallet   = !!LS.getItem('whatif_wallet');
-    const hasLegacy   = !!LS.getItem('whatif_credits');
-    const hasOldField = !!LS.getItem('crediti');
-
-    // Se non esiste NIENTE, lo considero "nuovo utente" → 3 crediti
-    if (!hasWallet && !hasLegacy && !hasOldField) {
-      const today = new Date().toISOString().slice(0,10);
-      // nuovo formato "wallet"
-      LS.setItem('whatif_wallet', JSON.stringify({
-        available: 3,
-        used: 0,
-        limit: 3,
-        updatedAt: today
-      }));
-      // vecchio formato (per compatibilità con funzioni legacy)
-      LS.setItem('whatif_credits', JSON.stringify({
-        date: today,
-        used: 0,
-        limit: 3
-      }));
-    }
-  } catch(e) {
-    console.error('initFirstCredits error', e);
-  }
-})();
 const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
 const style = prefs.stile || 'whatif';
 const periodo = prefs.periodo || 'future';
