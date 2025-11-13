@@ -32,6 +32,7 @@
     }
     .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);
       border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
+    .btn[disabled]{opacity:.4;cursor:not-allowed}
     .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35)}
     .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap}
     select{appearance:none;background:var(--chip);border:1px solid var(--line);color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:700;cursor:pointer}
@@ -182,7 +183,8 @@ const I18N={
     hintsTitle:"▶ Spunti rapidi “E se…”",
     hintsNote:"Spunti = idee realistiche (cambiano ogni giorno e si personalizzano col tuo uso). “Sorprendimi” propone solo idee assurde (stile & tempo casuali).",
     credits:"Crediti", emptyNext:"— Nessuna domanda salvata.", emptyHist:"— Nessuna storia.", use:"Usa",
-    save:"Salva", clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota"},
+    save:"Salva", clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota",
+    noCredits:"Hai finito i crediti. Accedi o ricarica per continuare."},
   en:{title:"Set your question", yourq:"What if…", ph:"What if…",
     help:"Write goal + context in one line. Add constraints or horizon (e.g. 30 days).",
     gen:"✨ Generate answer", clear:"Clear",
@@ -192,7 +194,8 @@ const I18N={
     hintsTitle:"▶ Quick “What if…”",
     hintsNote:"Hints = realistic ideas (refresh daily, personalized as you use it). “Surprise me” shows absurd ideas only (random style & time).",
     credits:"Credits", emptyNext:"— No saved questions.", emptyHist:"— No history.", use:"Use",
-    save:"Save", clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear"},
+    save:"Save", clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear",
+    noCredits:"You’ve run out of credits. Please log in or top up."},
   es:{title:"Configura tu pregunta", yourq:"¿Y si…?", ph:"¿Y si…?",
     help:"Escribe objetivo y contexto en una línea. Añade límites u horizonte (p. ej., 30 días).",
     gen:"✨ Generar respuesta", clear:"Limpiar",
@@ -202,7 +205,8 @@ const I18N={
     hintsTitle:"▶ Ideas rápidas «¿Y si…?»",
     hintsNote:"Ideas realistas (se actualizan a diario y se personalizan). «Sorpréndeme» muestra ideas absurdas.",
     credits:"Créditos", emptyNext:"— No hay preguntas guardadas.", emptyHist:"— Sin historial.", use:"Usar",
-    save:"Guardar", clearSaved:"🗑️ Vaciar", clearHist:"🗑️ Vaciar"},
+    save:"Guardar", clearSaved:"🗑️ Vaciar", clearHist:"🗑️ Vaciar",
+    noCredits:"Te has quedado sin créditos. Inicia sesión o recarga."},
   fr:{title:"Définis ta question", yourq:"Et si…", ph:"Et si…",
     help:"Écris objectif + contexte en une ligne. Ajoute contraintes ou horizon (ex. 30 jours).",
     gen:"✨ Générer la réponse", clear:"Effacer",
@@ -212,7 +216,8 @@ const I18N={
     hintsTitle:"▶ Idées rapides « Et si… »",
     hintsNote:"Idées réalistes (quotidiennes et personnalisées). « Surprends-moi » = idées absurdes.",
     credits:"Crédits", emptyNext:"— Aucune question enregistrée.", emptyHist:"— Aucun historique.", use:"Utiliser",
-    save:"Enregistrer", clearSaved:"🗑️ Vider", clearHist:"🗑️ Vider"},
+    save:"Enregistrer", clearSaved:"🗑️ Vider", clearHist:"🗑️ Vider",
+    noCredits:"Tu n’as plus de crédits. Connecte-toi ou recharge."},
   de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", ph:"Was wäre, wenn…",
     help:"Ziel + Kontext in einer Zeile. Füge Einschränkungen/Horizont hinzu (z. B. 30 Tage).",
     gen:"✨ Antwort erzeugen", clear:"Leeren",
@@ -222,7 +227,8 @@ const I18N={
     hintsTitle:"▶ Schnelle „Was wäre, wenn…“-Ideen",
     hintsNote:"Realistische Ideen (täglich, personalisiert). „Überrasche mich“ = absurde Ideen.",
     credits:"Credits", emptyNext:"— Keine gespeicherten Fragen.", emptyHist:"— Kein Verlauf.", use:"Verwenden",
-    save:"Speichern", clearSaved:"🗑️ Leeren", clearHist:"🗑️ Leeren"}
+    save:"Speichern", clearSaved:"🗑️ Leeren", clearHist:"🗑️ Leeren",
+    noCredits:"Du hast keine Credits mehr. Bitte einloggen oder aufladen."}
 };
 
 /* Apply texts */
@@ -263,7 +269,6 @@ function getWalletAvailable(){
   if (w && w.available != null && isFinite(+w.available)) {
     return Math.max(0, +w.available);
   }
-  // Nessun wallet locale → 0 crediti (blocca exploit cancellando cookie)
   return 0;
 }
 function getWalletCap(){
@@ -274,6 +279,10 @@ function getWalletCap(){
   }
   return 0;
 }
+function hasCredits(){
+  if (userIsAdmin()) return true;
+  return getWalletAvailable() > 0;
+}
 function renderCredits(){
   const T = I18N[lang] || I18N.it;
   const left = getWalletAvailable();
@@ -281,6 +290,11 @@ function renderCredits(){
   const txt  = (cap===Infinity) ? `${T.credits}: ∞` : `${T.credits}: ${left}/${cap}`;
   const el   = $('freeBadge');
   if (el && el.textContent !== txt) el.textContent = txt;
+
+  // abilita/disabilita pulsanti in base ai crediti
+  const canUse = hasCredits();
+  if ($('goBtn')) $('goBtn').disabled = !canUse;
+  if ($('surpriseBtn')) $('surpriseBtn').disabled = !canUse;
 }
 
 /* Aggiornamento badge al cambio storage/focus */
@@ -301,7 +315,7 @@ setInterval(()=>{
 }, 2000);
 renderCredits();
 
-/* Se esiste Firebase auth + syncCredits: allineiamo da Firestore quando cambia utente */
+/* Firebase auth sync (se esiste) */
 if (window.onAuthStateChanged && window.auth){
   window.onAuthStateChanged(window.auth, async (user)=>{
     if (!user) return;
@@ -500,8 +514,16 @@ $('clearSavedBtn').onclick=()=>{ LS.removeItem('next_prompts'); renderNext(); };
 $('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
 $('saveBtn').onclick=()=>{ const q=($('qInput').value||'').trim(); if(!q) return; addSaved(q); };
 
-/* ===== SUBMIT ===== */
+/* ===== SUBMIT (blocco se 0 crediti) ===== */
+function guardCredits(){
+  if (hasCredits()) return true;
+  const T=I18N[lang]||I18N.it;
+  alert(T.noCredits);
+  return false;
+}
+
 function trySubmit(){
+  if (!guardCredits()) return;
   const domanda=($('qInput').value||'').trim();
   if(!domanda) { $('qInput').focus(); return; }
   const req={
@@ -540,7 +562,7 @@ $('clearBtn').onclick=()=>{
 };
 $('qInput').addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
-/* ===== 🎲 SORPRENDIMI (solo assurde, NESSUN credito toccato qui) ===== */
+/* ===== 🎲 SORPRENDIMI (solo assurde, blocco se 0 crediti) ===== */
 function absurdPool(){ return ABS[lang] && ABS[lang].length ? ABS[lang] : ABS.it; }
 function getRecentSet(){ return new Set(readJSON('surprise_recent',[])); }
 function rememberPrompt(p){ const arr=readJSON('surprise_recent',[]); arr.unshift(p); writeJSON('surprise_recent',arr.slice(0,60)); }
@@ -558,6 +580,8 @@ function makeAbsurdList(n=14){
 }
 
 function slotSurprise(){
+  if (!guardCredits()) return;
+
   const rollingList = makeAbsurdList(14);
   const el=$('qInput'); el.classList.add('slotting');
   let i=0;
@@ -578,7 +602,7 @@ function slotSurprise(){
     isAbsurd=true;
     LS.setItem('absurd_prompt','1');
     LS.setItem('surprise_mode','1');
-    // invia subito la domanda assurda
+    // invio automatico verso fifth
     const req={
       domanda:finalPrompt, stile:prefs.stile, lang, extra:'',
       fantasy_mode:false, periodo:prefs.periodo,
