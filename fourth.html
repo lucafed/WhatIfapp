@@ -250,7 +250,7 @@ const I18N={
 let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-/* ===== CREDITI (WALLET UNIFICATO + fallback legacy controllato) ===== */
+/* ===== CREDITI (WALLET UNIFICATO, niente fallback legacy) ===== */
 const WKEY = 'whatif_wallet';
 const SURPKEY = 'whatif_surprise'; // 🎁 token persistenti
 const isLoggedIn = () => !!(window.auth && window.auth.currentUser);
@@ -259,35 +259,18 @@ function readWallet(){
   try { return JSON.parse(localStorage.getItem(WKEY)||'{}')||{}; }
   catch { return {}; }
 }
-/* ⚠️ Cambiato: se sei LOGGATO e non c'è wallet locale -> NON usare default 3/10, ma 0/0 finché syncCredits non aggiorna */
+/* 🔒 Nessun default a 3: se non c'è wallet → 0/0 (tranne admin) */
 function getWalletAvailable(){
   if (userIsAdmin()) return Infinity;
   const w = readWallet();
   if (w && w.available != null) return (w.available===Infinity?Infinity:Math.max(0,+w.available));
-  if (isLoggedIn()) return 0; // <- blocco anti-reset: attende Firestore
-  // Utente anonimo (non loggato): resta il fallback legacy
-  try{
-    const c = JSON.parse(localStorage.getItem('whatif_credits')||'{}')||{};
-    const today = new Date().toISOString().slice(0,10);
-    const used = (c.date===today)? (+c.used||0) : 0;
-    const cap  = (c.limit===Infinity)? Infinity : (Number.isFinite(+c.limit)? +c.limit : (prefs.pro?10:3));
-    return cap===Infinity? Infinity : Math.max(0, cap - used);
-  }catch{}
-  const raw = localStorage.getItem('crediti');
-  return raw==null ? (prefs.pro?10:3) : Math.max(0, parseInt(raw,10)||0);
+  return 0;
 }
 function getWalletCap(){
   if (userIsAdmin()) return Infinity;
   const w = readWallet();
   if (w && w.limit != null) return (w.limit===Infinity?Infinity:Math.max(0,+w.limit));
-  if (isLoggedIn()) return 0; // <- finché non sincronizza Firestore
-  // Fallback legacy per anonimi
-  try{
-    const c = JSON.parse(localStorage.getItem('whatif_credits')||'{}')||{};
-    const cap = (c.limit===Infinity)? Infinity : (Number.isFinite(+c.limit)? +c.limit : (prefs.pro?10:3));
-    return cap;
-  }catch{}
-  return (prefs.pro?10:3);
+  return 0;
 }
 function renderCredits(){
   const T = I18N[lang] || I18N.it;
@@ -297,6 +280,19 @@ function renderCredits(){
   const el   = document.getElementById('freeBadge');
   if (el && el.textContent !== txt) el.textContent = txt;
 }
+
+/* ===== Forza persistenza login LOCAL, se Firebase Auth presente ===== */
+(function ensureAuthPersistence(){
+  try{
+    if (window.auth && window.firebaseAuthSetPersistenceApplied !== true){
+      const exp = window.firebaseAuthExports || {};
+      if (exp.setPersistence && exp.browserLocalPersistence){
+        exp.setPersistence(window.auth, exp.browserLocalPersistence).catch(console.error);
+      }
+      window.firebaseAuthSetPersistenceApplied = true;
+    }
+  }catch(e){ console.warn('Auth persistence not applied', e); }
+})();
 
 /* ===== 🎁 TOKEN SORPRENDIMI ===== */
 function readSurpriseTokens(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||'0',10)||0); }
@@ -310,7 +306,6 @@ window.addEventListener('storage', (e)=>{
 });
 document.addEventListener('visibilitychange', async ()=>{
   if(document.hidden) return;
-  // se loggato, resync da Firestore appena torni
   if (window.onAuthStateChanged && window.auth && typeof window.syncCredits==='function' && window.auth.currentUser){
     try{ await window.syncCredits(window.auth.currentUser); }catch(e){ console.error('sync on focus', e); }
   }
@@ -330,10 +325,10 @@ renderCredits();
 /* ===== Auth → sincronizza SOLO da Firestore (se disponibile) ===== */
 if (window.onAuthStateChanged && window.auth){
   window.onAuthStateChanged(window.auth, async (user)=>{
-    if (!user) return;
+    if (!user) { renderCredits(); renderSpinButton(); return; }
     if (typeof window.syncCredits === 'function'){
       try{
-        await window.syncCredits(user); // <-- legge Firestore e aggiorna whatif_wallet
+        await window.syncCredits(user); // <-- aggiorna whatif_wallet da Firestore
       }catch(e){ console.error('syncCredits error', e); }
     }
     renderCredits(); renderSpinButton();
@@ -569,8 +564,6 @@ $('clearBtn').onclick=()=>{
 $('qInput').addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
 /* ===== 🎲 SORPRENDIMI (solo assurde) ===== */
-/* (Se vuoi mantenere Sorprendimi qui, lascio invariata la logica,
-   ma NON tocca i crediti: il consumo avviene in fifth) */
 function absurdPool(){ return ABS[lang] && ABS[lang].length ? ABS[lang] : ABS.it; }
 function getRecentSet(){ return new Set(readJSON('surprise_recent',[])); }
 function rememberPrompt(p){ const arr=readJSON('surprise_recent',[]); arr.unshift(p); writeJSON('surprise_recent',arr.slice(0,60)); }
@@ -586,8 +579,8 @@ function makeAbsurdList(n=14){
   if(!out.length) return absurdPool().slice(0,n);
   return out;
 }
-/* Spins */
-function spinCap(){ return userIsAdmin()?Infinity:(prefs.pro?5:1); }
+/* Spins: ora 0 per tutti tranne admin (niente ricariche automatiche) */
+function spinCap(){ return userIsAdmin()?Infinity:0; }
 function ensureSpins(){
   const s=readJSON('surprise_spins',{date:todayISO(),used:0});
   if(s.date!==todayISO()){ s.date=todayISO(); s.used=0; }
@@ -597,7 +590,7 @@ function spinsLeft(){
   const s=ensureSpins(); const cap=spinCap();
   return cap===Infinity?Infinity:Math.max(0,cap-(s.used||0));
 }
-/* 🔄 Mostra sia tiri giornalieri che token 🎁 */
+/* 🔄 Mostra sia tiri giornalieri (0) che token 🎁 */
 function renderSpinButton(){
   const T=I18N[lang]||I18N.it;
   const cap=spinCap(); const left=spinsLeft(); const tokens=readSurpriseTokens();
