@@ -191,8 +191,8 @@
     </div>
   </main>
 
+  <!-- Tema da prefs -->
   <script>
-    /* ===== Theme from prefs ===== */
     (function(){
       try{
         const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
@@ -206,7 +206,7 @@
     const I18N = {
       it:{ title:"Parlami di te",
            blurb:"Compila questi campi: serviranno all’AI per darti risposte davvero su misura.",
-           back:"Indietro", home:"Home", reset:"Reset",
+           back:"Indietro", home:"Home", reset:"Reset", reset_confirm:"Vuoi davvero resettare il profilo?",
            name_lbl:"Nome", city_lbl:"Città",
            name_ph:"Es. Marco", city_ph:"Es. Roma",
            gender_lbl:"Sesso", choose:"Seleziona…", gender_m:"Uomo", gender_f:"Donna", gender_o:"Altro", gender_n:"Preferisco non dirlo",
@@ -222,7 +222,7 @@
       },
       en:{ title:"Tell me about you",
            blurb:"Fill these fields so the AI can tailor answers to you.",
-           back:"Back", home:"Home", reset:"Reset",
+           back:"Back", home:"Home", reset:"Reset", reset_confirm:"Do you really want to reset your profile?",
            name_lbl:"Name", city_lbl:"City",
            name_ph:"e.g. Mark", city_ph:"e.g. Rome",
            gender_lbl:"Gender", choose:"Choose…", gender_m:"Male", gender_f:"Female", gender_o:"Other", gender_n:"Prefer not to say",
@@ -238,7 +238,7 @@
       },
       es:{ title:"Háblame de ti",
            blurb:"Completa estos campos para que la IA adapte las respuestas a ti.",
-           back:"Atrás", home:"Inicio", reset:"Reset",
+           back:"Atrás", home:"Inicio", reset:"Reset", reset_confirm:"¿Seguro que quieres restablecer el perfil?",
            name_lbl:"Nombre", city_lbl:"Ciudad",
            name_ph:"p. ej., Marco", city_ph:"p. ej., Roma",
            gender_lbl:"Sexo", choose:"Seleccionar…", gender_m:"Hombre", gender_f:"Mujer", gender_o:"Otro", gender_n:"Prefiero no decirlo",
@@ -254,7 +254,7 @@
       },
       fr:{ title:"Parle-moi de toi",
            blurb:"Renseigne ces champs pour que l’IA adapte vraiment ses réponses.",
-           back:"Retour", home:"Accueil", reset:"Reset",
+           back:"Retour", home:"Accueil", reset:"Reset", reset_confirm:"Voulez-vous vraiment réinitialiser le profil ?",
            name_lbl:"Prénom", city_lbl:"Ville",
            name_ph:"ex. Marc", city_ph:"ex. Rome",
            gender_lbl:"Sexe", choose:"Choisir…", gender_m:"Homme", gender_f:"Femme", gender_o:"Autre", gender_n:"Préférer ne pas dire",
@@ -270,7 +270,7 @@
       },
       de:{ title:"Erzähl mir von dir",
            blurb:"Fülle diese Felder aus, damit die KI Antworten auf dich zuschneidet.",
-           back:"Zurück", home:"Start", reset:"Reset",
+           back:"Zurück", home:"Start", reset:"Reset", reset_confirm:"Möchtest du dein Profil wirklich zurücksetzen?",
            name_lbl:"Name", city_lbl:"Stadt",
            name_ph:"z. B. Marco", city_ph:"z. B. Rom",
            gender_lbl:"Geschlecht", choose:"Auswählen…", gender_m:"Mann", gender_f:"Frau", gender_o:"Anderes", gender_n:"Möchte ich nicht sagen",
@@ -336,17 +336,16 @@
       $('#about_opt').textContent = d.about_opt;
       $('#about').placeholder = d.about_ph;
 
-      // CTA
+      // CTA in basso
       $('#nextBtn').textContent = d.next;
-      // **FIX**: bottone Indietro in basso tradotto
       $('#backBtn').textContent = '← ' + d.back;
 
-      // set selettore lingua
+      // Selettore lingua
       const sel = document.getElementById('langSelect');
       if (sel) sel.value = L;
     }
 
-    // init lang once
+    // inizializza lingua se manca
     if (!LS.getItem('lang')) LS.setItem('lang', getLang());
     applyI18N();
 
@@ -358,9 +357,20 @@
     document.getElementById('homeTop').addEventListener('click', ()=> location.href='index.html');
     document.getElementById('backBtn').addEventListener('click', ()=> history.back());
 
-    // reset profilo
+    // ===== Guard: se non hai scelto periodo/stile torno alla home =====
+    (function ensureSelections(){
+      try{
+        const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
+        if (!prefs.periodo || !prefs.stile) {
+          location.replace('index.html');
+        }
+      }catch{}
+    })();
+
+    // reset profilo (testo localizzato)
     document.getElementById('resetBtn').addEventListener('click', ()=>{
-      if(!confirm('Reset profilo?')) return;
+      const d = I18N[getLang()] || I18N.it;
+      if(!confirm(d.reset_confirm)) return;
       ['whatif_profile','whatif_onboarding_done','whatif_profile_date','whatif_last_update'].forEach(k=>{
         try{ localStorage.removeItem(k); sessionStorage.removeItem(k);}catch{}
       });
@@ -438,7 +448,7 @@
       const about = document.getElementById('about').value.trim(); // opzionale
 
       if(!name || !city || !gender || !age || !phase || !role || !goal){
-        errBox.textContent = form.dataset.err || d.err_required;
+        errBox.textContent = d.err_required;
         errBox.style.display = 'block';
         return;
       }
