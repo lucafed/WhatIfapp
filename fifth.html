@@ -283,7 +283,7 @@ const I18N = {
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Stile: What the F · 6–9 frasi · paragrafo unico · tono asciutto · modalità: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if (60% analisi, 40% reale) · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`,
+        : `Stile: What if (60% analisi, 40% immagini) · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`,
        pctLabel:"% probabilità che accada",
        votersTitle:"Comitato", seriousTitle:"Motivazione", scientificTitle:"Motivazione (scientifica)",
        chipsFav:"favorevoli", chipsCon:"contrari", chipsAst:"astenuti",
@@ -306,7 +306,7 @@ const I18N = {
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Style: What the F · 6–9 sentences · single paragraph · dry tone · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if (60% analysis, 40% real) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,
+        : `Style: What if (60% analysis, 40% imagery) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,
        pctLabel:"% probability it happens",
        votersTitle:"Committee", seriousTitle:"Rationale", scientificTitle:"Rationale (scientific)",
        chipsFav:"in favour", chipsCon:"against", chipsAst:"abstained",
@@ -329,7 +329,7 @@ const I18N = {
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Estilo: What the F · 6–9 frases · un párrafo · tono seco · modo: ${p==='past'?'Pasado':'Futuro'}.`
-        : `Estilo: What if (60% análisis, 40% real) · 8–11 frases · un párrafo · modo: ${p==='past'?'Pasado':'Futuro'}.`,
+        : `Estilo: What if (60% análisis, 40% imágenes) · 8–11 frases · un párrafo · modo: ${p==='past'?'Pasado':'Futuro'}.`,
        pctLabel:"% probabilidad de que ocurra",
        votersTitle:"Comité", seriousTitle:"Motivo", scientificTitle:"Motivo (científico)",
        chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones",
@@ -352,7 +352,7 @@ const I18N = {
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Style : What the F · 6–9 phrases · un paragraphe · ton sec · mode : ${p==='past'?'Passé':'Futur'}.`
-        : `Style : What if (60 % analyse, 40 % réel) · 8–11 phrases · un paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`,
+        : `Style : What if (60 % analyse, 40 % images) · 8–11 phrases · un paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`,
        pctLabel:"% de probabilité que ça arrive",
        votersTitle:"Comité", seriousTitle:"Motivation", scientificTitle:"Motivation (scientifique)",
        chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions",
@@ -375,7 +375,7 @@ const I18N = {
        styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
        meta:(st,p)=> st==='wtf'
         ? `Stil: What the F · 6–9 Sätze · ein Absatz · trockener Ton · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
-        : `Stil: What if (60 % Analyse, 40 % Praxis) · 8–11 Sätze · ein Absatz · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
+        : `Stil: What if (60 % Analyse, 40 % Bilder) · 8–11 Sätze · ein Absatz · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
        pctLabel:"% Wahrscheinlichkeit",
        votersTitle:"Gremium", seriousTitle:"Begründung", scientificTitle:"Begründung (wissenschaftlich)",
        chipsFav:"dafür", chipsCon:"dagegen", chipsAst:"enthalten",
@@ -420,13 +420,82 @@ const t=()=>I18N[lang]||I18N.it;
 const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
 const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica…`;
 
-/* === ORACLE LINES (solo attesa) === */
+/* === ORACLE LINES (solo attesa, mistiche senza "shh") === */
 const ORACLE_LINES = {
-  it: ["Shh… le carte girano piano.","Aspetta: la risposta bussa sottovoce.","L’aria si fa chiara, sta arrivando.","Non correre: il disegno prende forma.","Occhio: il quadro si accende da solo.","Silenzio un attimo… qualcosa si allinea.","Senti? C’è un passo che torna nel ritmo.","Trattieni il fiato: la moneta è a mezz’aria.","Una piega nella notte, poi luce sottile.","Le luci interne si accendono una alla volta.","Ancora un respiro… il filo si tende.","Eccolo: l’indizio che mancava si mostra.","Un colpo di vento, poi tutto si ferma.","Scorri piano: la porta sta socchiudendosi.","Si sente un sì lontano, ma si avvicina.","L’oracolo gira la pagina… quasi."],
-  en: ["Hush… the cards are turning.","Wait: the answer knocks softly.","Air clears; something is arriving.","Don’t rush—shape is forming.","Look: the outline lights itself.","Hold a breath… lines align.","Hear it? A step returns to rhythm.","Coin in mid-air; let it fall.","A fold in the dark, then a thin light.","Inner lights switch on, one by one.","Another breath… the wire tightens.","There it is: the missing hint.","A gust, then stillness.","Scroll slowly: a door is ajar.","A distant yes draws nearer.","The oracle turns the page… almost."],
-  es: ["Shh… las cartas giran despacio.","Espera: la respuesta toca suave.","El aire se aclara; ya viene.","No corras: la forma aparece.","Mira: el contorno se enciende solo.","Guarda el aliento… todo se alinea.","¿Lo oyes? Vuelve el paso al ritmo.","Moneda en el aire; que caiga.","Un pliegue en la noche, luz fina.","Luces internas, una por una.","Otro respiro… el hilo se tensa.","Ahí está: la pista que faltaba.","Una ráfaga y luego quietud.","Desliza lento: se entorna la puerta.","Un sí lejano se acerca.","El oráculo pasa página… casi."],
-  fr: ["Chut… les cartes tournent.","Attends : la réponse frappe doucement.","L’air s’éclaircit ; ça arrive.","Ne te presse pas : la forme vient.","Regarde : le contour s’allume seul.","Retiens ton souffle… tout s’aligne.","Tu entends ? Le pas reprend le tempo.","Pièce en suspens ; laisse-la tomber.","Un pli dans la nuit, puis une fine lumière.","Des lampes intérieures s’allument, une à une.","Encore un souffle… le fil se tend.","La voilà : l’indice manquant.","Un souffle, puis l’immobilité.","Fais défiler lentement : une porte s’entrouvre.","Un oui lointain se rapproche.","L’oracle tourne la page… presque."],
-  de: ["Leise… die Karten wenden sich.","Warte: die Antwort klopft sanft.","Die Luft klärt sich; es kommt.","Nicht eilen: die Form entsteht.","Schau: die Kontur leuchtet selbst.","Atem halten… die Linien richten sich.","Hörst du’s? Der Schritt findet den Takt.","Münze in der Luft; lass sie fallen.","Ein Faltenwurf der Nacht, dann dünnes Licht.","Innere Lichter, eins nach dem andern.","Noch ein Atem… der Draht spannt sich.","Da ist es: der fehlende Hinweis.","Eine Böe, dann Stille.","Langsam scrollen: die Tür steht einen Spalt offen.","Ein fernes Ja kommt näher.","Das Orakel blättert um… fast."]
+  it: [
+    "Le carte si stanno mettendo in fila.",
+    "La risposta si avvicina a piccoli passi.",
+    "Le immagini dentro di te si chiariscono.",
+    "Il quadro prende forma piano piano.",
+    "Il futuro si siede sul bordo del tavolo e ascolta.",
+    "La scena si illumina un pezzo alla volta.",
+    "Il filo degli eventi si tende senza strappi.",
+    "Le possibilità si stringono intorno a una scelta.",
+    "Il tuo ritmo interno si fa più netto.",
+    "Una versione di te fa un passo avanti.",
+    "Le strade possibili smettono di sovrapporsi.",
+    "Ciò che temi e ciò che desideri si guardano in faccia.",
+    "Il bivio davanti a te si mette a fuoco.",
+    "Le cose non urlano, ma dicono abbastanza.",
+    "La prossima mossa si prepara sotto la superficie.",
+    "Ancora un respiro e la figura diventa leggibile."
+  ],
+  en: [
+    "The pieces on your path are taking their places.",
+    "The answer is walking towards you, not correndo.",
+    "Pictures inside you are sharpening.",
+    "The scene comes into focus, one detail at a time.",
+    "The near future sits on the edge of the table and listens.",
+    "The line of events tightens without snapping.",
+    "Options gather around one main direction.",
+    "Your inner rhythm becomes easier to hear.",
+    "One version of you quietly steps forward.",
+    "The crossroads ahead stops looking like a blur.",
+    "What you fear and what you want stand face to face.",
+    "The next move is rising just under the surface."
+  ],
+  es: [
+    "Las piezas de tu camino se van colocando solas.",
+    "La respuesta se acerca a pasos pequeños.",
+    "Las imágenes dentro de ti se aclaran.",
+    "La escena entra en foco, detalle a detalle.",
+    "El futuro cercano se sienta en la mesa y escucha.",
+    "El hilo de los eventos se tensa sin romperse.",
+    "Las opciones se agrupan alrededor de una dirección.",
+    "Tu ritmo interno se vuelve más nítido.",
+    "Una versión de ti da un paso adelante.",
+    "La encrucijada deja de ser una mancha borrosa.",
+    "Lo que temes y lo que deseas se miran de frente.",
+    "La próxima jugada se prepara bajo la superficie."
+  ],
+  fr: [
+    "Les pièces de ton chemin prennent leur place.",
+    "La réponse s’avance à petits pas.",
+    "Les images en toi deviennent plus nettes.",
+    "La scène se met au point, détail après détail.",
+    "Le futur proche s’assoit au bord de la table et écoute.",
+    "Le fil des événements se tend sans se rompre.",
+    "Les options se resserrent autour d’une direction.",
+    "Ton rythme intérieur devient plus audible.",
+    "Une version de toi fait un pas en avant.",
+    "Le carrefour devant toi sort du flou.",
+    "Ce que tu crains et ce que tu veux se regardent en face.",
+    "Le prochain geste se forme juste sous la surface."
+  ],
+  de: [
+    "Die Teile auf deinem Weg rücken an ihren Platz.",
+    "Die Antwort kommt in kleinen Schritten näher.",
+    "Die Bilder in dir werden klarer.",
+    "Die Szene stellt sich scharf, Detail für Detail.",
+    "Die nahe Zukunft setzt sich an den Tisch und hört zu.",
+    "Der Faden der Ereignisse spannt sich, ohne zu reißen.",
+    "Die Möglichkeiten sammeln sich um eine Richtung.",
+    "Dein innerer Rhythmus wird deutlicher.",
+    "Eine Version von dir tritt einen Schritt vor.",
+    "Die Kreuzung vor dir verliert ihren Schleier.",
+    "Was du fürchtest und was du willst, steht sich gegenüber.",
+    "Der nächste Zug steigt unter der Oberfläche nach oben."
+  ]
 };
 
 /* ==== INTRO (Zoltar-like) prima volta ===== */
@@ -515,7 +584,6 @@ function readSurprise(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||"0",10
 function writeSurprise(n){ n=Math.max(0, parseInt(n,10)||0); LS.setItem(SURPKEY,String(n)); updateCreditInfo(); LS.setItem("whatif_wallet_sync", String(Date.now())); }
 function addSurprise(n){ writeSurprise(readSurprise() + Math.max(0,parseInt(n,10)||0)); }
 function consumeSurpriseOne(){ const cur=readSurprise(); if(cur>0){ writeSurprise(cur-1); return true; } return false; }
-function computeSurpriseBonus(amount){ const a=parseInt(amount,10)||0; if(a>=20) return 3; if(a>=10) return 2; if(a>=5)  return 1; return 0; }
 
 function updateCreditInfo(n=getAvailable()){
   if(!creditInfo) return;
@@ -540,7 +608,7 @@ function applyUI(q){
   setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));
 }
 
-/* ==== Probability ==== */
+/* ==== Probability (fallback) ==== */
 function computeProbability(q){
   const t=(q||'').toLowerCase(); let s=50;
   if(/\b(7|14|21|30|60|90)\b/.test(t)) s+=12;
@@ -560,11 +628,9 @@ let oracleTimerId = null;
 function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
 function buildOracleDeck(){
   const base = (ORACLE_LINES[lang] || ORACLE_LINES.it).slice();
-  const tails = ["", " …", " ⋯", " —", " ⸺", " …sssh."];
   const deck = [];
   for(const line of base){
-    const v = Math.random()<0.45 ? (line.replace(/\.$/,"") + tails[Math.floor(Math.random()*tails.length)]) : line;
-    deck.push(v);
+    deck.push(line);
   }
   return shuffle(deck);
 }
@@ -596,76 +662,10 @@ function revealEffect(){
   setTimeout(()=> wrap.classList.remove('reveal'), 900);
 }
 
-/* ===== Helpers contestuali per “What if” breve ===== */
-function extractContextParts(q){
-  const s = String(q||"").toLowerCase();
-  const when = (s.match(/\b(in|entro|tra|domani|oggi|stasera|settimana|mese|anno|\d{1,2}\s*(giorni|settimane|mesi))\b/i)||[])[0] || "";
-  const money = (s.match(/(€|euro|budget|spesa|costo|prezzo)\s*([0-9.,]+)/i)||[])[0] || (/\bunder\b/i.test(s)?"under":"");
-  const action = (s.match(/\b(lancia|apri|impara|scrivi|chiedi|studia|automatizza|testa|compra|vendi|assumi|costruisci|crea|ottimizza|riduci|aumenta)\b/i)||[])[0] || "";
-  const topicMatch = s.match(/\b(sito|progetto|app|campagna|cv|colloquio|piscina|dominio|startup|portafoglio|criptovalute?|azione|investimento|esame)\b/i);
-  const topic = topicMatch ? topicMatch[0] : "";
-  return {when, money, action, topic};
-}
-
-/* ===== Motivazione demenziale per WTF (scientifica+zuffa) ===== */
-function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
-function wtfMotivationDemenziale(langCode){
-  const shots = rnd(1,3), spill = rnd(0,2), bruise = rnd(0,3);
-  if(langCode==='en'){
-    return `Pseudo-science says small daily nudges beat grand plans (Law of Coffee + Inertia). The committee debated over drinks: ${shots} shots vanished, ${spill} glasses spilled, ${bruise} minor bruises; final verdict between hiccups: “do it, and don’t overthink”.`;
-  } else if(langCode==='es'){
-    return `Seudociencia de barra: los micro-pasos diarios ganan a los planes épicos (Ley del Café + Inercia). El comité discutió en la barra: ${shots} chupitos desaparecidos, ${spill} copas derramadas, ${bruise} pequeños moratones; veredicto entre hipos: “hazlo y deja de sobrepensarlo”.`;
-  } else if(langCode==='fr'){
-    return `Pseudoscience de comptoir : les micro-pas quotidiens battent les grands plans (Loi du Café + Inertie). Le comité a débattu au bar : ${shots} shots évaporés, ${spill} verres renversés, ${bruise} bleus légers ; verdict entre deux hoquets : « fais-le, et arrête de trop réfléchir ».`;
-  } else if(langCode==='de'){
-    return `Kneipen-Pseudowissenschaft: kleine tägliche Schritte schlagen große Pläne (Gesetz von Kaffee + Trägheit). Das Gremium tagte an der Theke: ${shots} Shots verschwunden, ${spill} Gläser verschüttet, ${bruise} leichte Blessuren; Urteil zwischen Schluckauf: „mach’s, und hör auf, alles zu zerdenken“.`;
-  }
-  // default IT
-  return `Pseudoscienza spicciola: micro-passi battono i piani epici (Legge del Caffè + Inerzia). La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: “fai, e smettila di pensarci troppo”.`;
-}
-
-/* ===== Linee “What if” brevi, localizzate ===== */
-function buildWhatIfGuidance(domanda, data){
-  const ctx = extractContextParts(domanda);
-  const w = ctx.when || "";
-  const money = ctx.money || "";
-  const L = lang;
-
-  if(L === 'en'){
-    const l1 = `Block 10 minutes ${w || "today"} on ${ctx.topic || "this topic"} and close the first step you’ve been avoiding.`;
-    const l2 = `Write one measurable micro-goal you can finish within ${w || "72h"} and put it in your calendar.`;
-    const l3 = `Use one tool only and track one metric${money?` (budget: ${money})`:""}; set a check-in in 3 days.`;
-    return [l1,l2,l3];
-  }
-  if(L === 'es'){
-    const l1 = `Bloquea 10 minutos ${w || "hoy"} en ${ctx.topic || "el tema"} y cierra el primer paso que llevas posponiendo.`;
-    const l2 = `Escribe un microobjetivo medible que puedas terminar en ${w || "72 horas"} y ponlo en el calendario.`;
-    const l3 = `Usa solo una herramienta y una métrica${money?` (presupuesto: ${money})`:""}; haz una revisión dentro de 3 días.`;
-    return [l1,l2,l3];
-  }
-  if(L === 'fr'){
-    const l1 = `Bloque 10 minutes ${w || "aujourd’hui"} sur ${ctx.topic || "le sujet"} et termine le premier pas que tu repousses.`;
-    const l2 = `Écris un micro-objectif mesurable à finir en ${w || "72 heures"} et mets-le dans ton agenda.`;
-    const l3 = `Utilise un seul outil et un seul indicateur${money?` (budget : ${money})`:""} ; fais un point dans 3 jours.`;
-    return [l1,l2,l3];
-  }
-  if(L === 'de'){
-    const l1 = `Blocke 10 Minuten ${w || "heute"} für ${ctx.topic || "das Thema"} und erledige den ersten Schritt, den du aufschiebst.`;
-    const l2 = `Schreibe ein messbares Mikro-Ziel auf, das du innerhalb von ${w || "72 Stunden"} schaffen kannst, und trag es in den Kalender ein.`;
-    const l3 = `Nutze genau ein Werkzeug und eine Kennzahl${money?` (Budget: ${money})`:""}; mach in 3 Tagen einen kurzen Check.`;
-    return [l1,l2,l3];
-  }
-  // IT default
-  const l1 = `Blocca 10 minuti ${w || "oggi"} su ${ctx.topic || "il tema"} e chiudi il primo passo che stai rimandando.`;
-  const l2 = `Scrivi un micro-obiettivo misurabile da chiudere entro ${w || "72 ore"} e mettilo in calendario.`;
-  const l3 = `Usa uno strumento solo e una metrica${money?` (budget: ${money})`:""}; fai un check tra 3 giorni.`;
-  return [l1,l2,l3];
-}
-
 /* ==== Overlay (store + rewarded) ==== */
 const ADS_ENABLED = false;
 const overlay=qs('#overlay'), overlayFrame=qs('#overlay-frame');
-let overlayLoadTimer=null, rewardTimer=null, rewardGranted=false, awaitingCredit=false, alreadyConsumed=false;
+let overlayLoadTimer=null, rewardTimer=null, rewardGranted=false, alreadyConsumed=false;
 
 function storeFallbackHTML(){
   const T=t();
@@ -708,20 +708,6 @@ function openOverlay(url){
   try{ clearTimeout(overlayLoadTimer); }catch{}
   overlayLoadTimer=setTimeout(()=>{ try{ overlayFrame.setAttribute('srcdoc', storeFallbackHTML()); }catch{} },1500);
   setTimeout(()=>{ try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang}, '*'); }catch{} }, 400);
-}
-function openStore(){ if(!ADS_ENABLED){ toast('🛒 Store disattivato'); return; } openOverlay("/store/credit-store.html"); }
-function openRewarded(){
-  if(!ADS_ENABLED){ toast('🎬 Pubblicità disattivata'); return; }
-  rewardGranted=false;
-  openOverlay("/ads/rewarded.html");
-  clearTimeout(rewardTimer);
-  rewardTimer=setTimeout(()=>{
-    if(!rewardGranted){
-      addCredits(1); updateCreditInfo(); toast(t().toastPlus(1));
-      rewardGranted=true; closeOverlay();
-      location.replace('fourth.html');
-    }
-  },20000);
 }
 function closeOverlay(){
   overlay.style.display='none';
@@ -767,6 +753,22 @@ function saveCurrentQuestion(){
   LS.setItem('next_prompts', JSON.stringify(arr));
   LS.setItem('whatif_wallet_sync', String(Date.now()));
   toast(t().savedOk);
+}
+
+/* ==== Motivazione demenziale WTF (fallback client) ==== */
+function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function wtfMotivationDemenziale(langCode){
+  const shots = rnd(1,3), spill = rnd(0,2), bruise = rnd(0,3);
+  if(langCode==='en'){
+    return `Pseudo-science says small daily nudges beat grand plans (Law of Coffee + Inertia). The committee debated over drinks: ${shots} shots vanished, ${spill} glasses spilled, ${bruise} minor bruises; final verdict between hiccups: “do it, and don’t overthink”.`;
+  } else if(langCode==='es'){
+    return `Seudociencia de barra: los micro-pasos diarios ganan a los planes épicos (Ley del Café + Inercia). El comité discutió en la barra: ${shots} chupitos desaparecidos, ${spill} copas derramadas, ${bruise} pequeños moratones; veredicto entre hipos: “hazlo y deja de sobrepensarlo”.`;
+  } else if(langCode==='fr'){
+    return `Pseudoscience de comptoir : les micro-pas quotidiens battent les grands plans (Loi du Café + Inertie). Le comité a débattu au bar : ${shots} shots évaporés, ${spill} verres renversés, ${bruise} bleus légers ; verdict entre deux hoquets : « fais-le, et arrête de trop réfléchir ».`;
+  } else if(langCode==='de'){
+    return `Kneipen-Pseudowissenschaft: kleine tägliche Schritte schlagen große Pläne (Gesetz von Kaffee + Trägheit). Das Gremium tagte an der Theke: ${shots} Shots verschwunden, ${spill} Gläser verschüttet, ${bruise} leichte Blessuren; Urteil zwischen Schluckauf: „mach’s, und hör auf, alles zu zerdenken“.`;
+  }
+  return `Pseudoscienza spicciola: micro-passi battono i piani epici (Legge del Caffè + Inerzia). La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: “fai, e smettila di pensarci troppo”.`;
 }
 
 /* ==== Main flow ==== */
@@ -839,7 +841,7 @@ async function startFlow(){
     let motivazioneUsata = "";
 
     if (surprise) {
-      // Modalità “sorprendimi”: numeri del comitato
+      // Modalità “sorprendimi”: numeri del comitato random
       motIco.style.display=''; chipsWrap.style.display='flex';
       committeeTitle.textContent=t().votersTitle||'Comitato';
       const rdm=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
@@ -854,24 +856,23 @@ async function startFlow(){
       motivazioneUsata = motNote.textContent;
 
     } else if (style === 'wtf') {
-      // WTF → solo motivazione scientifica demenziale
+      // WTF → motivazione scientifica demenziale dall'API, con fallback locale
       motIco.style.display='none'; chipsWrap.style.display='none';
       committeeTitle.textContent = t().scientificTitle;
-      const sci = wtfMotivationDemenziale(lang);
+      const apiSci = data && typeof data.scientific === "string" ? data.scientific.trim() : "";
+      const sci = apiSci || wtfMotivationDemenziale(lang);
       motNote.textContent = sci;
       motivazioneUsata = sci;
 
     } else {
-      // WHAT IF → guida breve a 3 righe, localizzata
+      // WHAT IF → usa le motivazioni calcolate dall’API (buildWhatIfMotivation), sempre nella lingua giusta
       motIco.style.display='none'; chipsWrap.style.display='none';
       const T = t();
-      committeeTitle.textContent = T.guideTitle;
-      const lines = buildWhatIfGuidance(domanda, data||{});
-      motNote.innerHTML =
-        `${esc(T.guideQuick)}: ${esc(lines[0]||"")}<br>`+
-        `${esc(T.guideAdvice)}: ${esc(lines[1]||"")}<br>`+
-        `${esc(T.guideAnalysis)}: ${esc(lines[2]||"")}`;
-      motivazioneUsata = lines.join(" | ");
+      committeeTitle.textContent = T.seriousTitle || T.guideTitle;
+      const apiMot = data && typeof data.motivation === "string" ? data.motivation.trim() : "";
+      const fallback = T.motFallback || "";
+      motNote.textContent = apiMot || fallback;
+      motivazioneUsata = motNote.textContent;
     }
 
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
@@ -896,7 +897,7 @@ qs('#langSelect').onchange=()=>{
   lang=v;
   applyUI(LS.getItem('domanda')||'');
   updateCreditInfo();
-  oracleDeck = []; // aggiorna deck oracolo per nuova lingua
+  oracleDeck = []; // reset oracle deck per nuova lingua
   try{ overlayFrame.contentWindow?.postMessage({type:'set_lang', lang:v}, ''); }catch{}
 };
 qs('#shareBtn').onclick=async()=>{
