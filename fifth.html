@@ -625,10 +625,11 @@ function wtfMotivationDemenziale(langCode){
   return `Pseudoscienza da bancone: i micro-passi battono i piani epici. La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: fai, e smettila di pensarci troppo.`;
 }
 
-/* ===== NUOVE MOTIVAZIONI WHAT IF (stile tuoi esempi) ===== */
+/* ===== NUOVE MOTIVAZIONI WHAT IF (passato/futuro, più sintetiche) ===== */
 function buildWhatIfMotivationsPretty(domanda, pct){
   const q = String(domanda||"").toLowerCase();
   const L = lang;
+  const isPast = (periodo === 'past');
 
   const isLove =
     /ex\b|relazione|fidanzat[oa]|partner|coppia|amore|relationship|breakup|ex novio|ex novia|ex marit|ex moglie/.test(q);
@@ -637,97 +638,178 @@ function buildWhatIfMotivationsPretty(domanda, pct){
   const isJob =
     /lavoro|job|carriera|colloquio|interview|assunzion|licenziament|azienda|company|ufficio/.test(q);
 
-  if(L === 'it'){
-    const baseProb = pct ? `Probabilità intorno al ${pct}%. Non è destino scritto, è uno scenario aperto.<br><br>` : "";
-    if(isLove){
+  if (L === 'it') {
+    const baseProb = pct
+      ? (isPast
+         ? `Probabilità intorno al ${pct}%. Non era scritto, ma qualche finestra aperta c’era.<br><br>`
+         : `Probabilità intorno al ${pct}%. Non è destino scritto, ma una pista possibile.<br><br>`)
+      : "";
+
+    if (isLove) {
+      if (isPast) {
+        return baseProb +
+          "Perché poteva funzionare:<br>" +
+          "• C’era una base emotiva reale: alcune parti di voi si capivano più di quanto ammettevate.<br>" +
+          "• C’erano margini per riscrivere il patto, se entrambi aveste nominato i problemi invece di girarci intorno.<br><br>" +
+          "Cosa lo ha reso complicato:<br>" +
+          "• Gli stessi schemi si sono ripetuti: orgoglio, silenzi, risposte lente quando servivano scelte chiare.<br>" +
+          "• La paura di farsi vedere davvero ha pesato più del desiderio di provarci fino in fondo.";
+      } else {
+        return baseProb +
+          "Perché potrebbe funzionare:<br>" +
+          "• C’è ancora una base emotiva reale: alcune parti di voi si riconoscono al volo, anche dopo il caos.<br>" +
+          "• Se i problemi vengono detti esplicitamente, potete riscrivere il patto invece di ricopiare il vecchio copione.<br><br>" +
+          "Cosa può complicarlo:<br>" +
+          "• Rischio replay: stessi silenzi, stessi non detti, solo con più stanchezza.<br>" +
+          "• La paura di esporsi può farti restare a metà: né davvero dentro, né davvero fuori.";
+      }
+    }
+
+    if (isMove) {
+      if (isPast) {
+        return baseProb +
+          "Perché poteva funzionare:<br>" +
+          "• Tornare in un luogo conosciuto ti avrebbe dato radici emotive quando ti sentivi sparpagliato.<br>" +
+          "• I ritmi più umani avrebbero potuto sostenere meglio la tua energia invece di bruciarla tutta fuori casa.<br><br>" +
+          "Cosa lo ha reso complicato:<br>" +
+          "• La paura di “fare un passo indietro” ha pesato più del bisogno di stabilità.<br>" +
+          "• Alcuni legami e abitudini del passato non erano abbastanza sani da reggere un ritorno sereno.";
+      } else {
+        return baseProb +
+          "Perché potrebbe funzionare:<br>" +
+          "• Un posto che conosci può ridarti radici quando ti senti sempre in modalità sopravvivenza.<br>" +
+          "• Ritmi più lenti e facce note possono aiutare il tuo cervello a smettere di sentirsi sempre ‘in prestazione’.<br><br>" +
+          "Cosa può complicarlo:<br>" +
+          "• Potresti leggerlo come “sto tornando indietro” invece che come cambio di ritmo.<br>" +
+          "• Alcune dinamiche del passato rischiano di riattivarsi se non metti confini chiari fin da subito.";
+      }
+    }
+
+    if (isJob) {
+      if (isPast) {
+        return baseProb +
+          "Perché poteva funzionare:<br>" +
+          "• Una direzione più chiara ti avrebbe evitato di disperdere energie in mille tentativi.\n<br>" +
+          "• Passi piccoli ma costanti sulla stessa strada avrebbero costruito più sicurezza interna.<br><br>" +
+          "Cosa lo ha reso complicato:<br>" +
+          "• Il bisogno di scegliere “il lavoro perfetto” ha rallentato ogni decisione concreta.<br>" +
+          "• Contesti non allineati ai tuoi valori ti hanno fatto dubitare di te più che del sistema in cui eri.";
+      } else {
+        return baseProb +
+          "Perché potrebbe funzionare:<br>" +
+          "• Scegliere una direzione ti permette di smettere di bruciare energie in esperimenti casuali.<br>" +
+          "• Passi piccoli ma regolari nella stessa direzione possono darti più sicurezza di qualsiasi “colpo di fortuna”.<br><br>" +
+          "Cosa può complicarlo:<br>" +
+          "• Il timore di incastrarti in una scelta ti può bloccare prima di iniziare.<br>" +
+          "• Se i contesti che trovi non rispecchiano i tuoi valori, rischi di sentirti sbagliato anche quando non lo sei.";
+      }
+    }
+
+    // Generico IT
+    if (isPast) {
+      return baseProb +
+        "Perché poteva andare diversamente:<br>" +
+        "• Un paio di decisioni più chiare e un po’ di gentilezza verso te stessə avrebbero cambiato l’andamento della storia.<br>" +
+        "• C’erano segnali che potevano essere ascoltati prima, invece di essere zittiti per non creare problemi.<br><br>" +
+        "Cosa l’ha reso difficile:<br>" +
+        "• Hai dovuto scegliere con le risorse e le informazioni che avevi, non con quelle che hai adesso.<br>" +
+        "• La paura di deludere qualcuno (te compresə) ha pesato sulle scelte più di quanto sembrasse in superficie.";
+    } else {
       return baseProb +
         "Perché potrebbe funzionare:<br>" +
-        "• Riconnessione emotiva autentica: ritrovi parti di te che con altre persone fai fatica a vedere.<br>" +
-        "• Possibilità di crescita reciproca: se entrambi avete capito cosa non ha funzionato, potete riscrivere il patto in modo più onesto.<br>" +
-        "• Chiusura di un capitolo lasciato aperto: anche se non dura per sempre, può darti risposte che il silenzio non ha dato.<br><br>" +
+        "• Ti sposta verso una versione di vita più allineata a come ti senti oggi, non a come “dovresti” essere.<br>" +
+        "• Piccoli passi chiari riducono il rumore mentale e ti fanno sentire meno in balia degli eventi.<br><br>" +
         "Cosa può complicarlo:<br>" +
-        "• Rischio di ripetere gli stessi schemi: senza cambi veri, tornate solo nello stesso copione con più stanchezza.<br>" +
-        "• Illusione del “come prima”: la memoria edulcora, ma le dinamiche profonde restano uguali se non vengono guardate in faccia.<br>" +
-        "• Fatica nel ricostruire fiducia: ci vuole tempo, coerenza quotidiana e confini chiari da entrambe le parti.";
+        "• Restare bloccato sull’idea della scelta perfetta ti fa rinviare quella buona abbastanza.<br>" +
+        "• Cercare di non scontentare nessuno rischia di farti scontentare proprio la persona che resta: tu.";
     }
-    if(isMove){
-      return baseProb +
-        "Perché potrebbe funzionare:<br>" +
-        "• Connessione emotiva: tornare in un luogo che conosci risveglia ricordi, identità e legami che ti fanno sentire meno disperso.<br>" +
-        "• Qualità della vita: ritmi più umani, facce conosciute, luoghi dove il corpo si rilassa da solo senza dover sempre “reggere la scena”.<br>" +
-        "• Rinascita simbolica: è come tornare dove qualcosa si è interrotto per riprenderlo con occhi diversi e più adulti.<br><br>" +
-        "Cosa può complicarlo:<br>" +
-        "• Sensazione di rallentare: se cerchi stimoli forti e crescita veloce, potresti vivere il ritorno come un passo indietro.<br>" +
-        "• Vecchie dinamiche: rivedi persone e luoghi che possono riattivare abitudini che avevi faticato a lasciare.<br>" +
-        "• Opportunità limitate: alcuni percorsi professionali o creativi potrebbero richiedere ancora spostamenti o compromessi.";
-    }
-    if(isJob){
-      return baseProb +
-        "Perché potrebbe funzionare:<br>" +
-        "• Direzione più chiara: scegliere una strada lavorativa definita ti permette di smettere di disperdere energia in mille tentativi.<br>" +
-        "• Crescita concreta: piccoli passi costanti sulla stessa traiettoria portano più risultati di salti continui da un’idea all’altra.<br>" +
-        "• Identità professionale: inizi a sentirti “qualcosa” e non solo “uno che prova di tutto”.<br><br>" +
-        "Cosa può complicarlo:<br>" +
-        "• Paura di sbagliare scelta: se vivi il lavoro come etichetta definitiva, ogni decisione pesa il triplo.<br>" +
-        "• Sovraccarico mentale: voler fare cambiamento, sicurezza economica e riconoscimento tutti insieme ti può bloccare.<br>" +
-        "• Ambiente non allineato: se i contesti che trovi non rispecchiano i tuoi valori, rischi di bruciarti in fretta.";
-    }
-    // default generico IT
-    return (pct ? `Probabilità intorno al ${pct}%. La strada non è chiusa, ma chiede scelta consapevole.<br><br>` : "") +
-      "Perché potrebbe funzionare:<br>" +
-      "• Ti avvicina a una versione di te più allineata a ciò che senti adesso, non solo a ciò che hai sempre fatto.<br>" +
-      "• Trasforma l’ansia in movimento: anche un passo piccolo rompe la sensazione di stare fermo ad aspettare che succeda qualcosa.<br>" +
-      "• Apre spazio a nuove connessioni, opportunità e routine più sane rispetto a quelle che oggi ti tengono in sospeso.<br><br>" +
-      "Cosa può complicarlo:<br>" +
-      "• Restare aggrappato all’idea di non sbagliare mai scelta ti fa rinviare ogni passo concreto.<br>" +
-      "• Abitudini vecchie che tirano indietro appena l’energia cala o qualcuno non capisce le tue mosse.<br>" +
-      "• Mancanza di confini: se cerchi di accontentare tutti, la tua decisione perde forza e torna il caos di prima.";
   }
 
-  // Versioni semplici per altre lingue
-  if(L === 'en'){
-    return `Rough chance: around ${pct}% — not fixed fate, but an open path.<br><br>` +
-      "Why it could work:<br>" +
-      "• It moves you closer to a life that matches how you feel now, not just who you were before.<br>" +
-      "• Small consistent steps calm the noise and turn worry into movement.<br>" +
-      "• It can open space for healthier routines, people and opportunities.<br><br>" +
-      "What could make it hard:<br>" +
-      "• Fear of choosing “wrong” can freeze you before you even try.<br>" +
-      "• Old patterns and comfort zones may pull you back when energy drops.<br>" +
-      "• If you try to please everyone, your decision loses power and you end up stuck again.";
+  // Altre lingue: versione compatta, con passato/futuro
+  const baseProbOther = pct
+    ? (isPast
+       ? `Approx. probability ${pct}% — it wasn’t fixed destiny, but the door wasn’t fully closed.<br><br>`
+       : `Approx. probability ${pct}% — not fixed fate, but a realistic option.<br><br>`)
+    : "";
+
+  if (L === 'en') {
+    if (isPast) {
+      return baseProbOther +
+        "Why it could have gone better:<br>" +
+        "• With a bit more clarity and timing, the situation had room to move in your favour.<br>" +
+        "• A couple of honest talks earlier might have changed how things unfolded.<br><br>" +
+        "What made it hard:<br>" +
+        "• You chose with the information and energy you had then, not with what you know now.<br>" +
+        "• Fear of messing up or disappointing people quietly pushed some options off the table.";
+    } else {
+      return baseProbOther +
+        "Why it could work:<br>" +
+        "• It nudges your life closer to what you actually want, not just what you’ve always done.<br>" +
+        "• Clear small steps turn overthinking into movement.<br><br>" +
+        "What could make it hard:<br>" +
+        "• Waiting for the “perfect” move can freeze you before you start.<br>" +
+        "• If you try to keep everyone happy, your decision loses power and you stay stuck.";
+    }
   }
-  if(L === 'es'){
-    return `Probabilidad aproximada ${pct}% — no es destino fijo, es un camino abierto.<br><br>` +
-      "Por qué podría funcionar:<br>" +
-      "• Te acerca a una versión de ti más alineada con lo que sientes ahora.<br>" +
-      "• Los pasos pequeños y constantes transforman la ansiedad en movimiento real.<br>" +
-      "• Abre espacio a rutinas y relaciones más sanas que las que te dejan en pausa.<br><br>" +
-      "Qué puede frenarlo:<br>" +
-      "• El miedo a equivocarte de elección puede dejarte inmóvil.<br>" +
-      "• Viejos patrones y zonas de confort tiran de ti cuando baja la energía.<br>" +
-      "• Si intentas contentar a todo el mundo, tu decisión pierde fuerza.";
+
+  if (L === 'es') {
+    if (isPast) {
+      return baseProbOther +
+        "Por qué podría haber salido distinto:<br>" +
+        "• Con un poco más de claridad y tiempo, la situación tenía margen para girar a tu favor.<br>" +
+        "• Un par de conversaciones honestas antes habrían cambiado el guion.<br><br>" +
+        "Qué lo hizo difícil:<br>" +
+        "• Elegiste con la energía y la información que tenías entonces, no con la de ahora.<br>" +
+        "• El miedo a equivocarte o decepcionar a alguien sacó opciones del mapa sin que te dieras cuenta.";
+    } else {
+      return baseProbOther +
+        "Por qué podría funcionar:<br>" +
+        "• Te acerca a una vida más alineada con lo que sientes hoy.<br>" +
+        "• Pasos pequeños y claros convierten el darle vueltas en movimiento real.<br><br>" +
+        "Qué puede complicarlo:<br>" +
+        "• Esperar la decisión perfecta puede dejarte inmóvil.<br>" +
+        "• Si intentas contentar a todo el mundo, tu decisión pierde fuerza.";
+    }
   }
-  if(L === 'fr'){
-    return `Probabilité d’environ ${pct}% — ce n’est pas un destin figé, c’est un chemin ouvert.<br><br>` +
-      "Pourquoi ça pourrait marcher :<br>" +
-      "• Tu te rapproches d’une vie plus alignée avec ce que tu ressens aujourd’hui.<br>" +
-      "• De petits pas réguliers transforment l’angoisse en mouvement concret.<br>" +
-      "• Cela ouvre de la place pour des routines et des liens plus sains.<br><br>" +
-      "Ce qui peut compliquer :<br>" +
-      "• La peur de faire « le mauvais choix » peut te paralyser.<br>" +
-      "• Les anciens réflexes et zones de confort te tirent en arrière quand tu fatigues.<br>" +
-      "• Si tu veux rassurer tout le monde, ta décision perd sa force.";
+
+  if (L === 'fr') {
+    if (isPast) {
+      return baseProbOther +
+        "Pourquoi ça aurait pu se passer autrement :<br>" +
+        "• Avec un peu plus de clarté et de timing, la situation avait de la marge pour tourner en ta faveur.<br>" +
+        "• Quelques discussions honnêtes plus tôt auraient pu changer la suite.<br><br>" +
+        "Ce qui a compliqué les choses :<br>" +
+        "• Tu as choisi avec les ressources et les infos de l’époque, pas avec celles d’aujourd’hui.<br>" +
+        "• La peur de te tromper ou de décevoir a fait disparaître certaines options du radar.";
+    } else {
+      return baseProbOther +
+        "Pourquoi ça pourrait marcher :<br>" +
+        "• Ça t’emmène vers une vie plus proche de ce que tu ressens vraiment.<br>" +
+        "• De petits pas clairs transforment le mental en mouvement concret.<br><br>" +
+        "Ce qui peut compliquer :<br>" +
+        "• Attendre le choix parfait peut t’empêcher d’avancer.<br>" +
+        "• Si tu veux rassurer tout le monde, ta décision perd en force.";
+    }
   }
+
   // de
-  return `Wahrscheinlichkeit grob ${pct}% – kein festgeschriebenes Schicksal, sondern ein offener Weg.<br><br>` +
-    "Warum es klappen kann:<br>" +
-    "• Du bewegst dich auf ein Leben zu, das besser zu deinem heutigen Gefühl passt.<br>" +
-    "• Kleine, regelmäßige Schritte verwandeln Grübeln in tatsächliche Bewegung.<br>" +
-    "• Es schafft Raum für gesündere Routinen und Kontakte.<br><br>" +
-    "Was es schwer machen kann:<br>" +
-    "• Die Angst vor der „falschen Entscheidung“ kann dich einfrieren.<br>" +
-    "• Alte Muster und Komfortzonen ziehen dich zurück, wenn deine Energie sinkt.<br>" +
-    "• Wenn du alle zufriedenstellen willst, verliert deine Entscheidung an Kraft.";
+  if (isPast) {
+    return baseProbOther +
+      "Warum es anders hätte laufen können:<br>" +
+      "• Mit etwas mehr Klarheit und Timing hätte sich die Situation eher zu deinen Gunsten verschoben.<br>" +
+      "• Ein, zwei offene Gespräche früher hätten den Verlauf deutlich verändern können.<br><br>" +
+      "Was es schwierig gemacht hat:<br>" +
+      "• Du hast mit den Infos und der Energie von damals entschieden, nicht mit dem Blick von heute.<br>" +
+      "• Die Angst vor Fehlern oder Enttäuschung hat leise einige Optionen gestrichen.";
+  } else {
+    return baseProbOther +
+      "Warum es klappen kann:<br>" +
+      "• Es bringt dich näher an ein Leben, das zu deinem jetzigen Gefühl passt.<br>" +
+      "• Kleine, klare Schritte verwandeln Grübeln in Bewegung.<br><br>" +
+      "Was es erschweren kann:<br>" +
+      "• Wenn du auf die perfekte Entscheidung wartest, kommst du nicht los.<br>" +
+      "• Versuchst du alle zufriedenzustellen, verliert deine Entscheidung an Kraft.";
+  }
 }
 
 /* ==== Overlay (store + rewarded) ==== */
@@ -930,7 +1012,7 @@ async function startFlow(){
       motivazioneUsata = sci;
 
     } else {
-      // WHAT IF → motivazioni stile “zingara realista” Pro/Contro
+      // WHAT IF → motivazioni passate/future
       motIco.style.display='none'; chipsWrap.style.display='none';
       committeeTitle.textContent = t().seriousTitle;
       const html = buildWhatIfMotivationsPretty(domanda, usedPct);
