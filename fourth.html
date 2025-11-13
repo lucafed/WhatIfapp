@@ -250,101 +250,65 @@ const I18N={
 let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
 document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-/* ===== CREDITI (WALLET UNIFICATO + fallback legacy controllato) ===== */
+/* ===== CREDITI (SOLO whatif_wallet, niente fallback) ===== */
 const WKEY = 'whatif_wallet';
-const SURPKEY = 'whatif_surprise'; // 🎁 token persistenti
-const isLoggedIn = () => !!(window.auth && window.auth.currentUser);
 function userIsAdmin(){ return !!localStorage.getItem('admin_token'); }
 function readWallet(){
   try { return JSON.parse(localStorage.getItem(WKEY)||'{}')||{}; }
   catch { return {}; }
 }
-/* ⚠️ Se sei LOGGATO e non c'è wallet locale -> 0/0 finché syncCredits non aggiorna */
 function getWalletAvailable(){
   if (userIsAdmin()) return Infinity;
   const w = readWallet();
-  if (w && w.available != null) return (w.available===Infinity?Infinity:Math.max(0,+w.available));
-  if (isLoggedIn()) return 0; // blocco anti-reset: attende Firestore
-  // Utente anonimo (non loggato): fallback legacy
-  try{
-    const c = JSON.parse(localStorage.getItem('whatif_credits')||'{}')||{};
-    const today = new Date().toISOString().slice(0,10);
-    const used = (c.date===today)? (+c.used||0) : 0;
-    const cap  = (c.limit===Infinity)? Infinity : (Number.isFinite(+c.limit)? +c.limit : (prefs.pro?10:3));
-    return cap===Infinity? Infinity : Math.max(0, cap - used);
-  }catch{}
-  const raw = localStorage.getItem('crediti');
-  return raw==null ? (prefs.pro?10:3) : Math.max(0, parseInt(raw,10)||0);
+  if (w && w.available != null && isFinite(+w.available)) {
+    return Math.max(0, +w.available);
+  }
+  // Nessun wallet locale → 0 crediti (blocca exploit cancellando cookie)
+  return 0;
 }
 function getWalletCap(){
   if (userIsAdmin()) return Infinity;
   const w = readWallet();
-  if (w && w.limit != null) return (w.limit===Infinity?Infinity:Math.max(0,+w.limit));
-  if (isLoggedIn()) return 0; // finché non sincronizza Firestore
-  // Fallback legacy per anonimi
-  try{
-    const c = JSON.parse(localStorage.getItem('whatif_credits')||'{}')||{};
-    const cap = (c.limit===Infinity)? Infinity : (Number.isFinite(+c.limit)? +c.limit : (prefs.pro?10:3));
-    return cap;
-  }catch{}
-  return (prefs.pro?10:3);
+  if (w && w.limit != null && isFinite(+w.limit)) {
+    return Math.max(0, +w.limit);
+  }
+  return 0;
 }
 function renderCredits(){
   const T = I18N[lang] || I18N.it;
   const left = getWalletAvailable();
   const cap  = getWalletCap();
   const txt  = (cap===Infinity) ? `${T.credits}: ∞` : `${T.credits}: ${left}/${cap}`;
-  const el   = document.getElementById('freeBadge');
+  const el   = $('freeBadge');
   if (el && el.textContent !== txt) el.textContent = txt;
 }
 
-/* ✅ FUNZIONE BLOCCO CREDITI (usata da Genera + Sorprendimi) */
-function hasEnoughCredits(){
-  if (userIsAdmin()) return true;
-  const left = getWalletAvailable();
-  if (left === Infinity) return true;
-  return typeof left === 'number' && left > 0;
-}
-
-/* ===== 🎁 TOKEN SORPRENDIMI ===== */
-function readSurpriseTokens(){ return Math.max(0, parseInt(LS.getItem(SURPKEY)||'0',10)||0); }
-
-/* Sync aggiornamento badge + surprise */
+/* Aggiornamento badge al cambio storage/focus */
 window.addEventListener('storage', (e)=>{
-  if (['whatif_wallet_sync', WKEY, 'whatif_sync', 'whatif_credits', 'surprise_spins', SURPKEY].includes(e.key)) {
+  if ([WKEY,'whatif_wallet_sync'].includes(e.key)) {
     renderCredits();
-    renderSpinButton(); /* <-- aggiorna anche il tasto “Sorprendimi” */
   }
 });
-document.addEventListener('visibilitychange', async ()=>{
-  if(document.hidden) return;
-  // se loggato, resync da Firestore appena torni
-  if (window.onAuthStateChanged && window.auth && typeof window.syncCredits==='function' && window.auth.currentUser){
-    try{ await window.syncCredits(window.auth.currentUser); }catch(e){ console.error('sync on focus', e); }
-  }
-  renderCredits(); renderSpinButton();
+document.addEventListener('visibilitychange', ()=>{
+  if (!document.hidden) renderCredits();
 });
-window.addEventListener('pageshow', ()=>{ renderCredits(); renderSpinButton(); });
-window.addEventListener('focus',   ()=>{ renderCredits(); renderSpinButton(); });
-/* Polling leggero (2s) per stessa tab */
+window.addEventListener('pageshow', ()=>{ renderCredits(); });
+window.addEventListener('focus',   ()=>{ renderCredits(); });
 let __lastSig = localStorage.getItem('whatif_wallet_sync')||'';
 setInterval(()=>{
   const cur = localStorage.getItem('whatif_wallet_sync')||'';
-  if (cur !== __lastSig){ __lastSig = cur; renderCredits(); renderSpinButton(); }
+  if (cur !== __lastSig){ __lastSig = cur; renderCredits(); }
 }, 2000);
-/* Primo render */
 renderCredits();
 
-/* ===== Auth → sincronizza SOLO da Firestore (se disponibile) ===== */
+/* Se esiste Firebase auth + syncCredits: allineiamo da Firestore quando cambia utente */
 if (window.onAuthStateChanged && window.auth){
   window.onAuthStateChanged(window.auth, async (user)=>{
     if (!user) return;
     if (typeof window.syncCredits === 'function'){
-      try{
-        await window.syncCredits(user); // <-- legge Firestore e aggiorna whatif_wallet
-      }catch(e){ console.error('syncCredits error', e); }
+      try{ await window.syncCredits(user); }catch(e){ console.error('syncCredits error', e); }
     }
-    renderCredits(); renderSpinButton();
+    renderCredits();
   });
 }
 
@@ -374,9 +338,9 @@ $('periodoChips').addEventListener('click',e=>{
 $('homeBtn').onclick=()=>location.href='index.html';
 $('backBtn').onclick=()=>{ if(history.length>1) history.back(); else location.href='index.html'; };
 
-/* ✅ RESET (preserva crediti/token/wallet e spins) */
+/* ✅ RESET (preserva SOLO wallet/lingua/admin) */
 $('resetBtn').onclick=()=>{
-  const PRESERVE = ['whatif_wallet','whatif_wallet_sync','whatif_credits','admin_token','lang','surprise_spins','whatif_surprise'];
+  const PRESERVE = ['whatif_wallet','whatif_wallet_sync','admin_token','lang'];
   const keep = Object.fromEntries(PRESERVE.map(k => [k, LS.getItem(k)]));
   [
     'whatif_prefs','next_prompts','cronologia','replay_story',
@@ -409,10 +373,8 @@ const HINTS = {
     "Was wäre, wenn ich den Job wechselte?","Was wäre, wenn ich in eine andere Stadt ziehe?","Was wäre, wenn ich wieder studiere?","Was wäre, wenn ich 30 Tage ohne Social Media lebe?","Was wäre, wenn ich um eine Gehaltserhöhung bitte?","Was wäre, wenn ich allein verreise?","Was wäre, wenn ich Englisch richtig beherrsche?","Was wäre, wenn ich einen kleinen Online-Shop eröffne?","Was wäre, wenn ich dreimal pro Woche laufe?","Was wäre, wenn ich 30 Tage zuhause koche?","Was wäre, wenn ich 12 Bücher in 12 Monaten lese?","Was wäre, wenn ich 30 Tage um 6 Uhr aufstehe?","Was wäre, wenn ich einen Monat lang Tagebuch schreibe?","Was wäre, wenn ich 30 Tage keinen Zucker esse?","Was wäre, wenn ich 10 Minuten täglich meditiere?","Was wäre, wenn ich meine Wohnung entrümple?","Was wäre, wenn ich kostenlos Programmieren lerne?","Was wäre, wenn ich das Handy nach 20 Uhr ausschalte?","Was wäre, wenn ich ein Instrument lerne?","Was wäre, wenn ich samstags ehrenamtlich arbeite?"
   ]
 };
-/* Fallback se la lingua non ha spunti */
 if (!HINTS[lang] || !HINTS[lang].length) HINTS[lang] = HINTS.it;
 
-/* Assurdi (solo per Sorprendimi) */
 const ABS={
   it:[
     "E se addestrassi un piccione per portarmi il caffè?","E se decidessi tutto a testa o croce per 24h?","E se parlassi in rima in riunione?","E se vendessi aria motivazionale in barattolo?","E se indossassi un mantello per una settimana?","E se fondassi il Ministero dell’Assurdo?","E se scrivessi il CV in geroglifici (ma perfetto)?","E se usassi il tapis roulant solo per ricaricare il telefono?","E se assumessi un cameraman invisibile per motivarmi?","E se organizzassi un brainstorming con bradipi consulenti?","E se aprissi un bar che vende solo ghiaccio con backstory?","E se lanciassi una startup che affitta scuse credibili?","E se insegnassi educazione sentimentale ai semafori?","E se partecipassi alle call da un green screen spaziale?","E se trasformassi il frigo in coach motivazionale?","E se facessi auditing alle tapparelle del condominio?","E se mettessi su un sindacato per piante d’appartamento?","E se brevettassi la tazza che applaude quando bevi?","E se dichiarassi il martedì festa nazionale della Pennetta USB?","E se assumessi un traduttore simultaneo per il gatto?"
@@ -538,18 +500,10 @@ $('clearSavedBtn').onclick=()=>{ LS.removeItem('next_prompts'); renderNext(); };
 $('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
 $('saveBtn').onclick=()=>{ const q=($('qInput').value||'').trim(); if(!q) return; addSaved(q); };
 
-/* ===== SUBMIT (ora BLOCCA se crediti = 0) ===== */
+/* ===== SUBMIT ===== */
 function trySubmit(){
   const domanda=($('qInput').value||'').trim();
   if(!domanda) { $('qInput').focus(); return; }
-
-  // 🔒 controllo crediti
-  if (!hasEnoughCredits()){
-    const T = I18N[lang] || I18N.it;
-    alert(T.credits + ": 0");
-    return;
-  }
-
   const req={
     domanda,
     stile:prefs.stile,
@@ -557,34 +511,36 @@ function trySubmit(){
     extra:'',
     fantasy_mode:false,
     periodo:prefs.periodo,
-    absurd:false,
-    surprise:false,
-    source:'manual',
-    micro:{ surprise:false, source:'manual' }
+    absurd:isAbsurd,
+    surprise:isAbsurd,
+    source: isAbsurd ? 'surprise' : 'manual',
+    micro:{ surprise:isAbsurd, source:isAbsurd?'surprise':'manual' }
   };
   writeJSON('whatif_request',req);
   LS.setItem('domanda',domanda);
-  LS.setItem('absurd_prompt','0');
-  LS.setItem('surprise_mode','0');
+  LS.setItem('absurd_prompt', isAbsurd ? '1' : '0');
+  LS.setItem('surprise_mode', isAbsurd ? '1' : '0');
   addHistory(domanda, prefs.stile);
-  location.href = 'fifth.html';
+  location.href = isAbsurd ? 'fifth.html?src=surprise' : 'fifth.html';
 }
 $('goBtn').onclick=trySubmit;
 
 /* Input helpers */
 $('qInput').addEventListener('input', ()=>{
+  isAbsurd=false;
   LS.setItem('absurd_prompt','0');
   LS.setItem('surprise_mode','0');
 });
 $('clearBtn').onclick=()=>{
   $('qInput').value='';
+  isAbsurd=false;
   LS.setItem('absurd_prompt','0');
   LS.setItem('surprise_mode','0');
   $('qInput').focus();
 };
 $('qInput').addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
-/* ===== 🎲 SORPRENDIMI (solo assurde, ora bloccato da crediti se niente token 🎁) ===== */
+/* ===== 🎲 SORPRENDIMI (solo assurde, NESSUN credito toccato qui) ===== */
 function absurdPool(){ return ABS[lang] && ABS[lang].length ? ABS[lang] : ABS.it; }
 function getRecentSet(){ return new Set(readJSON('surprise_recent',[])); }
 function rememberPrompt(p){ const arr=readJSON('surprise_recent',[]); arr.unshift(p); writeJSON('surprise_recent',arr.slice(0,60)); }
@@ -600,56 +556,8 @@ function makeAbsurdList(n=14){
   if(!out.length) return absurdPool().slice(0,n);
   return out;
 }
-/* Spins */
-function spinCap(){ return userIsAdmin()?Infinity:(prefs.pro?5:1); }
-function ensureSpins(){
-  const s=readJSON('surprise_spins',{date:todayISO(),used:0});
-  if(s.date!==todayISO()){ s.date=todayISO(); s.used=0; }
-  writeJSON('surprise_spins',s); return s;
-}
-function spinsLeft(){
-  const s=ensureSpins(); const cap=spinCap();
-  return cap===Infinity?Infinity:Math.max(0,cap-(s.used||0));
-}
-/* 🔄 Mostra sia tiri giornalieri che token 🎁 */
-function renderSpinButton(){
-  const T=I18N[lang]||I18N.it;
-  const cap=spinCap(); const left=spinsLeft(); const tokens=readSurpriseTokens();
-  const spinsTxt = (cap===Infinity)?'∞':`${left}/${cap}`;
-  const tokenTxt = tokens>0 ? ` · 🎁 ${tokens}` : '';
-  $('surpriseBtn').textContent='🎲 '+T.surprise + ` (${spinsTxt})` + tokenTxt;
-  $('surpriseBtn').title = `${T.spins}: ${spinsTxt}${tokens>0?` · Tokens: ${tokens}`:''}`;
-}
-renderSpinButton();
-
-function consumeOneSpinOrToken(){
-  if(userIsAdmin()) return true;
-  const s=ensureSpins(); const cap=spinCap(); const left=spinsLeft(); const tokens=readSurpriseTokens();
-  if(cap!==Infinity && left<=0){
-    if(tokens>0){
-      // il token verrà consumato in fifth
-      return true;
-    }
-    alert((I18N[lang]||I18N.it).noSpins); return false;
-  }
-  s.used=(s.used||0)+1; writeJSON('surprise_spins',s);
-  LS.setItem('whatif_wallet_sync', String(Date.now()));
-  renderSpinButton();
-  return true;
-}
 
 function slotSurprise(){
-  const tokens = readSurpriseTokens();
-
-  // 🔒 blocco: se non hai crediti e non hai token 🎁, niente Sorprendimi
-  if (!hasEnoughCredits() && tokens <= 0){
-    const T = I18N[lang] || I18N.it;
-    alert(T.credits + ": 0");
-    return;
-  }
-
-  if(!consumeOneSpinOrToken()) return;
-
   const rollingList = makeAbsurdList(14);
   const el=$('qInput'); el.classList.add('slotting');
   let i=0;
@@ -667,11 +575,10 @@ function slotSurprise(){
     const finalPrompt = finalList[Math.floor(Math.random()*finalList.length)];
     $('qInput').value = finalPrompt;
     rememberPrompt(finalPrompt);
-    // flag per fifth
+    isAbsurd=true;
     LS.setItem('absurd_prompt','1');
     LS.setItem('surprise_mode','1');
-    isAbsurd = true;
-    // invia subito
+    // invia subito la domanda assurda
     const req={
       domanda:finalPrompt, stile:prefs.stile, lang, extra:'',
       fantasy_mode:false, periodo:prefs.periodo,
