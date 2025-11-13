@@ -283,6 +283,45 @@ function hasCredits(){
   if (userIsAdmin()) return true;
   return getWalletAvailable() > 0;
 }
+    /* ===== DAILY RESET CREDITS (localStorage only) ===== */
+(function dailyWalletReset(){
+  if (userIsAdmin()) return;
+
+  const TODAY = todayISO();
+  let w = readWallet();
+
+  // Primo avvio → crea wallet
+  if (!w || typeof w !== 'object') w = {};
+
+  // Se manca la data → setta oggi e 3 crediti
+  if (!w.updatedAt) {
+    w.updatedAt = TODAY;
+    w.available = 3;
+    w.limit = 3;
+    writeJSON(WKEY, w);
+    localStorage.setItem('whatif_wallet_sync', String(Date.now()));
+    return;
+  }
+
+  // Se è un nuovo giorno → reset crediti
+  if (w.updatedAt !== TODAY) {
+    w.updatedAt = TODAY;
+    w.available = 3;
+    w.limit = 3;
+    writeJSON(WKEY, w);
+    localStorage.setItem('whatif_wallet_sync', String(Date.now()));
+    return;
+  }
+
+  // Se esiste ma senza campi → sistemalo
+  if (w.available == null || w.limit == null) {
+    w.available = 3;
+    w.limit = 3;
+    w.updatedAt = TODAY;
+    writeJSON(WKEY, w);
+    localStorage.setItem('whatif_wallet_sync', String(Date.now()));
+  }
+})();
 function renderCredits(){
   const T = I18N[lang] || I18N.it;
   const left = getWalletAvailable();
