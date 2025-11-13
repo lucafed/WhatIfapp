@@ -39,7 +39,7 @@
       background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
       color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      overflow-x:hidden
+      overflow-x:hidden;
     }
     @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
     @media (prefers-reduced-motion:no-preference){
@@ -47,96 +47,90 @@
     }
     main{
       min-height:100%;
-      display:flex;flex-direction:column;align-items:center;
-      text-align:center;
-      padding:20px;
-      gap:14px;
-      padding-bottom:120px
+      display:flex;flex-direction:column;align-items:center;text-align:center;
+      padding:20px;padding-bottom:120px;gap:14px;
     }
+
+    /* Lingua */
     .lang-fab{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);right:14px;z-index:50}
     .lang-btn{
       appearance:none;border:1px solid var(--card-border);
       background:#141c22;color:var(--fg);
-      padding:10px 12px;border-radius:999px;cursor:pointer
+      padding:10px 12px;border-radius:999px;cursor:pointer;
     }
     .lang-menu{
       position:absolute;top:46px;right:0;
-      background:var(--card);
-      border:1px solid var(--card-border);
-      border-radius:12px;padding:8px;display:none;
-      min-width:170px;
-      box-shadow:0 12px 28px var(--shadow);
-      backdrop-filter:blur(10px)
+      background:var(--card);border:1px solid var(--card-border);
+      border-radius:12px;padding:8px;display:none;min-width:170px;
+      box-shadow:0 12px 28px var(--shadow);backdrop-filter:blur(10px);
     }
     .lang-menu button{
       display:block;width:100%;text-align:left;
-      background:transparent;border:none;
-      color:#E6F2F5;padding:10px;border-radius:10px;cursor:pointer
+      background:transparent;border:none;color:#E6F2F5;
+      padding:10px;border-radius:10px;cursor:pointer;
     }
     .lang-menu button.active{background:rgba(255,255,255,.06)}
+
     .hero-img{
-      width:min(92vw,560px);height:auto;
-      display:block;margin:0 auto 6px;
-      filter:drop-shadow(0 10px 28px var(--shadow));
-      border-radius:16px
+      width:min(92vw,560px);height:auto;display:block;
+      margin:0 auto 6px;filter:drop-shadow(0 10px 28px var(--shadow));
+      border-radius:16px;
     }
     h1{margin:.25rem 0 0;font-size:clamp(28px,5.5vw,44px);line-height:1.1}
     h1 span{color:var(--accent)}
     .lead{
-      max-width:720px;
-      font-size:clamp(15px,4vw,18px);
-      color:var(--muted);
-      line-height:1.55;
-      margin:4px auto 16px
+      max-width:720px;font-size:clamp(15px,4vw,18px);
+      color:var(--muted);line-height:1.55;
+      margin:4px auto 16px;
     }
     .group{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:6px}
     .chip{
       appearance:none;border:1px solid var(--card-border);
       background:#141c22;color:#e8f2ec;
       padding:12px 16px;border-radius:16px;
-      font-weight:700;cursor:pointer;
-      transition:.16s;backdrop-filter:blur(6px)
+      font-weight:700;cursor:pointer;transition:.16s;
+      backdrop-filter:blur(6px);
     }
     .chip:active{transform:translateY(1px)}
     .chip.selected{
       background:linear-gradient(180deg,var(--accent),var(--accent2));
-      color:var(--ink);
-      box-shadow:0 0 0 1px rgba(255,255,255,.15) inset
+      color:var(--ink);box-shadow:0 0 0 1px rgba(255,255,255,.15) inset;
     }
     .cta{
       display:inline-block;
       background:linear-gradient(180deg,var(--accent),var(--accent2));
-      color:var(--ink);
-      font-weight:800;border:none;border-radius:24px;
+      color:var(--ink);font-weight:800;
+      border:none;border-radius:24px;
       padding:14px 20px;
       box-shadow:0 0 14px rgba(0,0,0,.35),0 0 28px rgba(0,0,0,.15);
-      cursor:pointer;transition:.2s
+      cursor:pointer;transition:.2s;
     }
     .cta[disabled]{opacity:.45;cursor:not-allowed}
+
     footer{
       position:fixed;left:0;right:0;bottom:10px;
       text-align:center;color:var(--muted);
-      font-size:12px;padding:0 14px
+      font-size:12px;padding:0 14px;
     }
     footer a{color:var(--accent);text-decoration:none;font-weight:600}
     footer .sep{opacity:.6;margin:0 6px}
     .foot-links{
       display:flex;align-items:center;justify-content:center;
-      gap:10px;flex-wrap:wrap;margin-top:6px
+      gap:10px;flex-wrap:wrap;margin-top:6px;
     }
     .info-btn{
       background:#141c22;border:1px solid var(--card-border);
       color:#E6F2F5;border-radius:999px;
-      padding:6px 10px;font-weight:700;text-decoration:none
+      padding:6px 10px;font-weight:700;text-decoration:none;
     }
     #authError{color:#ffb3b3;font-size:13px;min-height:18px}
 
-    /* Debug overlay (?debug=1) */
+    /* Debug: nascosto di default */
     #debug{
       position:fixed;left:12px;right:12px;bottom:12px;z-index:40;
       background:#0b0f14;border:1px solid #223;border-radius:10px;
-      padding:8px 10px;font:12px/1.4 monospace;
-      color:#a6f3a6;display:none;max-width:680px;margin:0 auto;white-space:pre-wrap
+      padding:8px 10px;font:12px/1.4 monospace;color:#a6f3a6;
+      display:none;max-width:680px;margin:0 auto;white-space:pre-wrap;
     }
   </style>
 </head>
@@ -157,8 +151,9 @@
 
   <main>
     <!-- Hero -->
-    <img id="hero" class="hero-img" src="/public/home-hero.png"
-         alt="Porta luminosa What?f" loading="eager" decoding="async" />
+    <img id="hero" class="hero-img" src="/public/home-hero.png" alt="Porta luminosa What?f"
+         loading="eager" decoding="async" />
+
     <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
 
     <p class="lead" id="leadText">
@@ -195,7 +190,7 @@
 
   <div id="debug"></div>
 
-  <!-- Hero loader -->
+  <!-- Hero loader: prova più percorsi/nomi -->
   <script>
     (function loadHero(){
       const hero = document.getElementById('hero');
@@ -223,15 +218,12 @@
     })();
   </script>
 
-  <!-- i18n + tema + selections + lingua -->
+  <!-- I18n + tema + selezioni + menu lingua -->
   <script>
     (function initTheme(){
       try{
         const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-        document.documentElement.setAttribute(
-          'data-theme',
-          prefs.stile==='wtf' ? 'wtf' : 'whatif'
-        );
+        document.documentElement.setAttribute('data-theme', prefs.stile==='wtf' ? 'wtf' : 'whatif');
       }catch{
         document.documentElement.setAttribute('data-theme','whatif');
       }
@@ -241,91 +233,51 @@
       it:{
         title:"Scopri il tuo What?f",
         lead:"Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro. <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili. <strong>What the F</strong> ti fa vivere visioni ironiche, creative e imprevedibili.",
-        past:"Passato",
-        future:"Futuro",
-        whatif:"What if",
-        wtf:"What the F",
-        next:"Avanti",
-        privacy:"Privacy",
-        terms:"Termini",
-        info:"Info",
-        login:"Entra con Google",
-        logout:"Esci",
-        chooseFirst:"Scegli prima sopra",
-        nextCta:"Avanti"
+        past:"Passato", future:"Futuro", whatif:"What if", wtf:"What the F",
+        login:"Entra con Google", next:"Avanti", needChoices:"Scegli prima sopra",
+        exit:"Esci",
+        privacy:"Privacy", terms:"Termini", info:"Info"
       },
       en:{
         title:"Discover your What?f",
         lead:"Imagine the choice you didn’t make… and the one you could make. Choose whether to look to the past or the future. <strong>What if</strong> explores realistic, reflective scenarios based on plausible choices. <strong>What the F</strong> lets you experience ironic, creative and unpredictable visions.",
-        past:"Past",
-        future:"Future",
-        whatif:"What if",
-        wtf:"What the F",
-        next:"Next",
-        privacy:"Privacy",
-        terms:"Terms",
-        info:"Info",
-        login:"Sign in with Google",
-        logout:"Sign out",
-        chooseFirst:"Choose above first",
-        nextCta:"Next"
+        past:"Past", future:"Future", whatif:"What if", wtf:"What the F",
+        login:"Sign in with Google", next:"Next", needChoices:"Choose above first",
+        exit:"Sign out",
+        privacy:"Privacy", terms:"Terms", info:"Info"
       },
       es:{
         title:"Descubre tu What?f",
         lead:"Imagina la elección que no hiciste… y la que aún podrías hacer. Elige si mirar al pasado o al futuro. <strong>What if</strong> explora escenarios realistas y reflexivos basados en decisiones plausibles. <strong>What the F</strong> te hace vivir visiones irónicas, creativas e impredecibles.",
-        past:"Pasado",
-        future:"Futuro",
-        whatif:"What if",
-        wtf:"What the F",
-        next:"Siguiente",
-        privacy:"Privacidad",
-        terms:"Términos",
-        info:"Info",
-        login:"Entrar con Google",
-        logout:"Cerrar sesión",
-        chooseFirst:"Elige arriba primero",
-        nextCta:"Siguiente"
+        past:"Pasado", future:"Futuro", whatif:"What if", wtf:"What the F",
+        login:"Entrar con Google", next:"Siguiente", needChoices:"Elige arriba primero",
+        exit:"Salir",
+        privacy:"Privacidad", terms:"Términos", info:"Info"
       },
       fr:{
         title:"Découvrez votre What?f",
         lead:"Imaginez le choix que vous n’avez pas fait… et celui que vous pourriez encore faire. Choisissez de regarder vers le passé ou vers le futur. <strong>What if</strong> explore des scénarios réalistes et réfléchis basés sur des choix plausibles. <strong>What the F</strong> vous fait vivre des visions ironiques, créatives et imprévisibles.",
-        past:"Passé",
-        future:"Futur",
-        whatif:"What if",
-        wtf:"What the F",
-        next:"Suivant",
-        privacy:"Confidentialité",
-        terms:"Conditions",
-        info:"Info",
-        login:"Se connecter avec Google",
-        logout:"Se déconnecter",
-        chooseFirst:"Choisissez d’abord ci-dessus",
-        nextCta:"Suivant"
+        past:"Passé", future:"Futur", whatif:"What if", wtf:"What the F",
+        login:"Se connecter avec Google", next:"Suivant", needChoices:"Choisissez d’abord ci-dessus",
+        exit:"Se déconnecter",
+        privacy:"Confidentialité", terms:"Conditions", info:"Info"
       },
       de:{
         title:"Entdecke dein What?f",
         lead:"Stell dir die Entscheidung vor, die du nicht getroffen hast… und die, die du noch treffen könntest. Wähle, ob du in die Vergangenheit oder in die Zukunft blickst. <strong>What if</strong> erkundet realistische, reflektierte Szenarien auf Basis plausibler Entscheidungen. <strong>What the F</strong> lässt dich ironische, kreative und unvorhersehbare Visionen erleben.",
-        past:"Vergangenheit",
-        future:"Zukunft",
-        whatif:"What if",
-        wtf:"What the F",
-        next:"Weiter",
-        privacy:"Datenschutz",
-        terms:"Nutzungsbedingungen",
-        info:"Info",
-        login:"Mit Google anmelden",
-        logout:"Abmelden",
-        chooseFirst:"Wähle zuerst oben",
-        nextCta:"Weiter"
+        past:"Vergangenheit", future:"Zukunft", whatif:"What if", wtf:"What the F",
+        login:"Mit Google anmelden", next:"Weiter", needChoices:"Wähle zuerst oben",
+        exit:"Abmelden",
+        privacy:"Datenschutz", terms:"Nutzungsbedingungen", info:"Info"
       }
     };
 
     const LS = localStorage;
-    const $  = (s)=>document.querySelector(s);
-    const $$ = (s)=>document.querySelectorAll(s);
+    const $  = s => document.querySelector(s);
+    const $$ = s => document.querySelectorAll(s);
 
     function detectBrowserLang(){
-      const n = (navigator.language||'it').toLowerCase();
+      const n = (navigator.language || 'it').toLowerCase();
       if(n.startsWith('it')) return 'it';
       if(n.startsWith('en')) return 'en';
       if(n.startsWith('es')) return 'es';
@@ -333,63 +285,65 @@
       if(n.startsWith('de')) return 'de';
       return 'it';
     }
-
     function getLang(){
       return (LS.getItem('lang') || detectBrowserLang()).toLowerCase();
     }
-
+    function setLang(l){
+      LS.setItem('lang', l.toLowerCase());
+      applyLang();
+    }
     function applyLang(){
       const L = getLang();
       const d = DICT[L] || DICT.it;
       document.documentElement.lang = L;
-      $('#langCode').textContent = L.toUpperCase();
+      const code = $('#langCode'); if(code) code.textContent = L.toUpperCase();
+
+      // testi base
+      const titleSpan = document.querySelector('[data-i18n="title"]');
+      if(titleSpan) titleSpan.textContent = d.title;
+      const lead = document.getElementById('leadText');
+      if(lead) lead.innerHTML = d.lead;
 
       $$('[data-i18n]').forEach(el=>{
         const k = el.getAttribute('data-i18n');
-        if(!k) return;
-        if(k === 'lead') return;
+        if(!k || k === 'title' || k === 'lead') return;
         if(typeof d[k] === 'string') el.textContent = d[k];
       });
-      $('#leadText').innerHTML = d.lead;
 
-      document.querySelectorAll('#langMenu button')
-        .forEach(b=>b.classList.toggle('active', b.dataset.lang===L));
-    }
-
-    function setLang(lang){
-      LS.setItem('lang', lang.toLowerCase());
-      applyLang();
-      // se lo script auth è già carico, aggiorna anche i bottoni
-      if(window.updatePrimaryCta){
-        window.updatePrimaryCta();
+      // CTA + logout se non gestiti ancora da auth
+      const primary = document.getElementById('primaryCta');
+      const logout  = document.getElementById('logoutBtn');
+      if(primary && !(primary.dataset.state === 'logged-in')){
+        primary.textContent = d.login;
       }
+      if(logout){
+        logout.textContent = d.exit;
+      }
+
+      // aggiorna stato menu
+      document.querySelectorAll('#langMenu button')
+        .forEach(b => b.classList.toggle('active', b.dataset.lang === L));
     }
 
     if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang());
     applyLang();
 
-    // Esponi helper globale per altri script (Firebase)
-    window.__WHATIF_I18N = {
-      getLang,
-      t(key){
-        const L = (getLang() || 'it').toLowerCase();
-        const d = DICT[L] || DICT.it;
-        return d[key] || DICT.it[key] || key;
-      }
-    };
+    // Esponi a Firebase script
+    window.I18N = DICT;
+    window.getCurrentLang = getLang;
 
-    // Salva/recupera scelte Passato/Futuro + stile
+    // Salva selezioni stile/periodo
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
-
     function wireGroup(g){
+      if(!g) return;
       g.addEventListener('click', e=>{
         const b = e.target.closest('.chip'); if(!b) return;
         g.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
         b.classList.add('selected');
         state[b.dataset.key] = b.dataset.val;
         localStorage.setItem('whatif_prefs', JSON.stringify(state));
-        if(b.dataset.key==='stile'){
-          document.documentElement.setAttribute('data-theme', b.dataset.val==='wtf'?'wtf':'whatif');
+        if(b.dataset.key === 'stile'){
+          document.documentElement.setAttribute('data-theme', b.dataset.val === 'wtf' ? 'wtf' : 'whatif');
         }
         if(window.updatePrimaryCta) window.updatePrimaryCta();
       });
@@ -397,63 +351,55 @@
     wireGroup(document.getElementById('periodGroup'));
     wireGroup(document.getElementById('styleGroup'));
 
-    // Ripristina selezioni salvate
-    (function restoreSelections(){
-      ['periodo','stile'].forEach(key=>{
-        const val = state[key];
-        if(!val) return;
-        document
-          .querySelectorAll('.chip[data-key="'+key+'"]')
-          .forEach(btn=>{
-            btn.classList.toggle('selected', btn.dataset.val===val);
-          });
-      });
-    })();
-
-    // Menu lingua: toggle + click
-    (function initLangMenu(){
+    // Menu lingua
+    (function(){
       const toggle = document.getElementById('langToggle');
       const menu   = document.getElementById('langMenu');
-
       if(!toggle || !menu) return;
 
+      const openMenu = ()=>{
+        menu.style.display = 'block';
+        toggle.setAttribute('aria-expanded','true');
+      };
+      const closeMenu = ()=>{
+        menu.style.display = 'none';
+        toggle.setAttribute('aria-expanded','false');
+      };
+
       toggle.addEventListener('click', ()=>{
-        const vis = menu.style.display === 'block';
-        menu.style.display = vis ? 'none' : 'block';
-        toggle.setAttribute('aria-expanded', vis ? 'false' : 'true');
+        const isOpen = menu.style.display === 'block';
+        if(isOpen) closeMenu(); else openMenu();
       });
 
-      menu.addEventListener('click', (e)=>{
+      menu.addEventListener('click', e=>{
         const btn = e.target.closest('button[data-lang]');
         if(!btn) return;
         setLang(btn.dataset.lang);
-        menu.style.display = 'none';
-        toggle.setAttribute('aria-expanded','false');
+        closeMenu();
       });
 
-      // chiudi se clicchi fuori
-      document.addEventListener('click', (e)=>{
+      document.addEventListener('click', e=>{
         if(!menu.contains(e.target) && !toggle.contains(e.target)){
-          menu.style.display = 'none';
-          toggle.setAttribute('aria-expanded','false');
+          closeMenu();
         }
+      });
+      document.addEventListener('keydown', e=>{
+        if(e.key === 'Escape') closeMenu();
       });
     })();
   </script>
 
   <!-- 🔐 Firebase Auth -->
   <script type="module">
-    // Debug helper (?debug=1)
     const dbg = document.getElementById('debug');
     const DO_DEBUG = new URLSearchParams(location.search).get('debug') === '1';
     const log = (...a)=>{ if(DO_DEBUG){ dbg.style.display='block'; dbg.textContent += a.join(' ') + '\n'; } };
-    const showErrText = (t)=>{ const el=document.getElementById('authError'); el.textContent=t||''; if(t) log('❌', t); };
+    const showErrText = (t)=>{
+      const el = document.getElementById('authError');
+      if(el) el.textContent = t || '';
+      if(t) log('❌', t);
+    };
 
-    // i18n helper (dal blocco sopra)
-    const I18N = window.__WHATIF_I18N || { t:(k)=>k };
-    const t = (key)=>I18N.t(key);
-
-    // SDK (modulare, via CDN)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
     import {
       getAuth, GoogleAuthProvider,
@@ -461,7 +407,6 @@
       setPersistence, browserLocalPersistence, browserSessionPersistence, signOut
     } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
-    // Config Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
       authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
@@ -471,15 +416,14 @@
       appId: "1:857481137283:web:ff8f766d14392835cf5fb6"
     };
 
-    const app = initializeApp(firebaseConfig);
+    const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    // Persistenza
-    try {
+    try{
       await setPersistence(auth, browserLocalPersistence);
       log('🔒 Persistenza: LOCAL');
-    } catch {
+    }catch{
       await setPersistence(auth, browserSessionPersistence);
       log('🔒 Persistenza: SESSION');
     }
@@ -494,15 +438,28 @@
       }catch{ return false; }
     };
 
+    function getDict(){
+      const L = (window.getCurrentLang && window.getCurrentLang()) || 'it';
+      const D = (window.I18N && window.I18N[L]) || (window.I18N && window.I18N.it) || {
+        login:"Entra con Google", next:"Avanti", needChoices:"Scegli prima sopra", exit:"Esci"
+      };
+      return D;
+    }
+
     function updatePrimaryCta(){
+      const d = getDict();
       const user = auth.currentUser;
+      if(!primaryCta || !logoutBtn) return;
+
       if(user){
-        primaryCta.textContent = selectionsReady() ? t('nextCta') : t('chooseFirst');
+        primaryCta.dataset.state = 'logged-in';
+        primaryCta.textContent = selectionsReady() ? d.next : d.needChoices;
         primaryCta.disabled = !selectionsReady();
         logoutBtn.style.display = "inline-block";
-        logoutBtn.textContent = t('logout');
+        logoutBtn.textContent = d.exit;
       }else{
-        primaryCta.textContent = t('login');
+        primaryCta.dataset.state = 'login';
+        primaryCta.textContent = d.login;
         primaryCta.disabled = false;
         logoutBtn.style.display = "none";
       }
@@ -511,7 +468,6 @@
 
     const AUTH_FLAG = "whatif_auth_redirect";
 
-    // Completa eventuale redirect
     try{
       const res = await getRedirectResult(auth);
       if(res?.user){
@@ -529,29 +485,27 @@
       sessionStorage.removeItem(AUTH_FLAG);
     }
 
-    onAuthStateChanged(auth, (user)=>{
-      log("👤 onAuthStateChanged:", !!user);
+    onAuthStateChanged(auth, ()=>{
+      log("👤 onAuthStateChanged");
       updatePrimaryCta();
     });
 
     updatePrimaryCta();
 
-    // Click CTA
     primaryCta.onclick = async ()=>{
       showErrText("");
       const user = auth.currentUser;
+      const d = getDict();
 
-      // Se già loggato -> vai alla seconda pagina
       if(user){
         if(selectionsReady()){
           location.href = "second.html";
         }else{
-          showErrText(t('chooseFirst'));
+          showErrText(d.needChoices);
         }
         return;
       }
 
-      // Prova POPUP, poi fallback REDIRECT
       try{
         log("🪟 Apro popup Google…");
         await signInWithPopup(auth, provider);
@@ -568,7 +522,7 @@
         ].some(x => code === x);
 
         if(needRedirect){
-          try{ sessionStorage.setItem(AUTH_FLAG, '1'); }catch{}
+          try{ sessionStorage.setItem(AUTH_FLAG,'1'); }catch{}
           log("➡️ Faccio redirect…");
           await signInWithRedirect(auth, provider);
           return;
@@ -600,12 +554,10 @@
       }
       function flash(){
         const f=document.createElement("div");
-        f.style.position="fixed";
-        f.style.inset="0";
+        f.style.position="fixed";f.style.inset="0";
         f.style.background="rgba(255,255,255,0.05)";
         f.style.backdropFilter="blur(2px)";
-        f.style.transition="opacity .6s";
-        f.style.opacity="1";
+        f.style.transition="opacity .6s";f.style.opacity="1";
         f.style.zIndex="9999";
         document.body.appendChild(f);
         setTimeout(()=>f.style.opacity="0",150);
@@ -622,9 +574,7 @@
         if(++tapTitle>=3){
           stage=1; tapTitle=0; flash();
           pastBtn.classList.add("unlocking");
-          setTimeout(()=>{
-            if(stage!==1) pastBtn.classList.remove("unlocking");
-          },2500);
+          setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);
         }
         if(timer) clearTimeout(timer);
         timer=setTimeout(reset,2000);
@@ -645,4 +595,3 @@
   </script>
 </body>
 </html>
-```0
