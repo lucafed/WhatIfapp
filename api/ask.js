@@ -1,5 +1,5 @@
 // /api/ask.js — What?f Engine (Zingara-Realista WHATIF + Friendly-WTF Demenziale)
-// - WHATIF: incipit "zingara realista" (sempre, variabile), 60% analisi / 40% immagini sobrie,
+// - WHATIF: tono “zingara mistica realista”, 60% analisi / 40% immagini sobrie,
 //   chiusura con sensazione + gancio. Passato → controfattuale. Futuro → ipotesi vicina.
 // - WTF: come da tuoi esempi. Payload extra 'scientific' (non nella risposta).
 // - Un paragrafo, niente elenchi, niente eco della domanda. Maiuscole ripristinate post-process.
@@ -55,21 +55,42 @@ function normLine(s=""){ return String(s).toLowerCase().replace(/[“”"']/g,""
 function tightenSentences(text, maxSentences){
   const parts=String(text||"").replace(/\n+/g," ").split(/(?<=[.!?…])\s+/).map(x=>x.trim()).filter(Boolean);
   const out=[], seen=new Set();
-  for(const p of parts){ const n=normLine(p); if(!n||seen.has(n)) continue; out.push(p); if(out.length>=maxSentences) break; }
-  let t=out.join(" "); if(!/[.!?…]$/.test(t)) t+="."; return t;
+  for(const p of parts){
+    const n=normLine(p);
+    if(!n||seen.has(n)) continue;
+    out.push(p);
+    if(out.length>=maxSentences) break;
+  }
+  let t=out.join(" ");
+  if(!/[.!?…]$/.test(t)) t+=".";
+  return t;
 }
 function clampWords(text, maxWords){
-  const w=String(text||"").split(/\s+/); if(w.length<=maxWords) return text;
-  const slice=w.slice(0,maxWords).join(" "); const m=slice.match(/([\s\S]*?[.!?…])(?![\s\S]*[.!?…])/);
+  const w=String(text||"").split(/\s+/);
+  if(w.length<=maxWords) return text;
+  const slice=w.slice(0,maxWords).join(" ");
+  const m=slice.match(/([\s\S]*?[.!?…])(?![\s\S]*[.!?…])/);
   return m?m[1]:slice+"…";
 }
-function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\.\.\.+/g,"…").replace(/\s+([.,;:!?])/g,"$1").trim(); }
+function normalizeOneParagraph(s=""){
+  return String(s)
+    .replace(/\s*\n+\s*/g," ")
+    .replace(/\s{2,}/g," ")
+    .replace(/\.\.\.+/g,"…")
+    .replace(/\s+([.,;:!?])/g,"$1")
+    .trim();
+}
 function stripQuestionEcho(domanda,text){
-  const d=String(domanda||"").replace(/[“”"']/g,"").trim().toLowerCase(); let t=String(text||"");
+  const d=String(domanda||"").replace(/[“”"']/g,"").trim().toLowerCase();
+  let t=String(text||"");
   const lead=t.slice(0,Math.min(t.length,d.length+12)).toLowerCase().replace(/[“”"']/g,"").trim();
   const rx=/^(?:e\s*se|what\s*if|domanda:|q:)[^.!?…]*[.!?…]\s+/i;
-  if(lead.startsWith(d)){ const cut=t.indexOf("."); if(cut>-1) t=t.slice(cut+1).trim(); }
-  t=t.replace(rx,""); return t;
+  if(lead.startsWith(d)){
+    const cut=t.indexOf(".");
+    if(cut>-1) t=t.slice(cut+1).trim();
+  }
+  t=t.replace(rx,"");
+  return t;
 }
 function sentenceCaseAll(s=""){
   return s.replace(/(^|[.!?…]\s+)([a-zà-ÿ])/g, (m,prefix,chr)=> prefix + chr.toUpperCase());
@@ -79,30 +100,60 @@ function hashStr(str=""){ let h=2166136261>>>0; for(const ch of String(str)){ h^
 function pickDet(arr, seed){ return arr[ arr.length ? (seed % arr.length) : 0 ] || ""; }
 
 /* ========= WHAT IF – esempio di respiro (non fisso) ========= */
-const WHATIF_HYBRID_EX_IT = `Piccolo avviso del cuore, poi il resto: conti alla mano e abitudini in chiaro. Riduci rumore, allunghi fiato: meno frenesia, più spazio mentale. Le giornate diventano più tue — strade note, tempi umani, persone che ti tengono. Non è fuga né eroismo, è manutenzione di vita: sposti peso tra tempo, denaro e relazioni. In cambio della vetrina ottieni consistenza. A fine giornata non senti rimpianto bussare: senti il passo rientrare nel suo passo.`;
+const WHATIF_HYBRID_EX_IT = `La linea del tuo destino qui si fa più spessa del resto. Vedi una scelta che alleggerisce le tue giornate: meno rumore, più tempo che torna davvero tuo. Senti le abitudini stringersi e poi allentarsi, finché trovi un ritmo più umano. Non è fuga né eroismo: è manutenzione di vita, dove sposti peso tra lavoro, relazioni ed energia. In fondo, non insegui più la vetrina: ti scegli una stanza in cui respirare meglio. E quando ti volterai, capirai che il rimpianto ha perso voce proprio dove hai iniziato a scegliere te.`;
 
-/* ======= WHAT IF RULES ======= */
-const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO): apri SEMPRE con una riga breve da “zingara realista” (intuitiva, amichevole, senza nomi, 6–14 parole), poi 60% analisi concreta (routine, tempo, costi/benefici, energia, relazioni) + 40% immagini sobrie della quotidianità. Scrivi un futuro vicino che inizia ora: usa futuro/condizionale semplice (“potresti”, “inizierai”, “probabilmente”). Niente certezze assolute, niente dati reali o nomi non forniti. Chiudi con una frase che lasci una sensazione chiara e un piccolo gancio di curiosità. 8–10 frasi, seconda persona, un paragrafo, NON ripetere la domanda. Linguaggio semplice, concreto, coinvolgente.`;
-const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE): apri SEMPRE con una riga breve da “zingara realista”, poi 60% analisi concreta + 40% immagini sobrie. Scrivi in chiave controfattuale: “se avessi…, avresti…”, “ti saresti trovato…”. Usa condizionale composto per l’esito alternativo, niente date/numeri o fatti reali non forniti. Chiudi con sensazione + micro-gancio. 8–10 frasi, seconda persona, un paragrafo, NON ripetere la domanda. Linguaggio semplice, concreto, coinvolgente.`;
+/* ======= WHAT IF RULES (IT) ======= */
+const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO):
+- Tono: veggente/zíngara realista, mistica ma concreta.
+- APRI con UNA sola riga breve e intensa, come se leggessi il destino: niente onomatopee tipo "shh", "mmm", niente ripetizione della domanda.
+- La SECONDA frase deve INIZIARE con una di queste parole, scegliendo quella più adatta alla domanda: "Vedo", "Sento", "Immagino", "Intuisco", "Si apre", "Si muove".
+- 60% analisi concreta (routine, tempo, costi/benefici, energia, relazioni) + 40% immagini sobrie della quotidianità.
+- Scrivi un futuro vicino che inizia adesso: usa futuro/condizionale semplice ("potresti", "inizierai", "probabilmente").
+- Mantieni la risposta aderente al tema della domanda (città, relazione, lavoro, ecc.), senza esempi generici fuori contesto.
+- Chiudi con una frase che lasci una sensazione chiara e un piccolo gancio di curiosità.
+- 8–10 frasi, seconda persona, un paragrafo unico, NON ripetere la domanda, niente elenchi, niente emoji. Linguaggio semplice, concreto, coinvolgente.`;
 
-/* ========= Incipit dinamici — “ZINGARA REALISTA” ========= */
+const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE):
+- Tono: veggente/zíngara che rilegge una vita alternativa, mistica ma concreta.
+- APRI con UNA riga breve e intensa, come se indicassi una vita che non è stata vissuta.
+- La SECONDA frase deve INIZIARE con "Vedo", "Sento", "Immagino", "Intuisco", "Si sarebbe aperto", "Si sarebbe mosso" (usa forma naturale).
+- Scrivi in chiave controfattuale: "se avessi…, avresti…", "ti saresti trovato…", "avresti sentito…".
+- Nessuna data o fatto reale non fornito; resta fedele al tema della domanda (relazione, scelta, città, lavoro, ecc.).
+- 60% analisi concreta + 40% immagini sobrie di quella vita alternativa.
+- Chiudi con sensazione + micro-gancio che riporti dolcemente al presente ("non sarebbe stato un errore, sarebbe stata un'altra versione di te", ecc.).
+- 8–10 frasi, seconda persona, un paragrafo unico, NON ripetere la domanda, niente elenchi, niente emoji. Linguaggio semplice, concreto, coinvolgente.`;
+
+/* ========= Incipit dinamici — “ZINGARA MISTICA” (non più forzati via post-process) ========= */
 const ZINGARA_INTROS = {
   it: [
-    "Aspetta, che qui il cuore parla chiaro.",
-    "Fermati un attimo: lo sento nelle dita.",
-    "Oh, questa la vedo nitida.",
-    "Piano, che qui c’è un segnale pulito.",
-    "Zitto un secondo: l’aria dice già tanto.",
-    "Non serve rumore: la risposta bussa piano.",
-    "Shh, questa scena arriva dritta.",
-    "Occhio: la strada si disegna da sola.",
-    "Senti? C’è un passo che torna al suo ritmo.",
-    "Eccola: la versione onesta di te."
+    "La linea del tuo destino si illumina proprio qui.",
+    "Le carte della tua strada si stanno girando adesso.",
+    "Una piega sottile nel tuo cammino chiede di essere guardata.",
+    "La notte ti restituisce un segnale più chiaro di quanto pensi.",
+    "Il filo della tua storia vibra mentre fai questa domanda.",
+    "C’è una porta socchiusa nel tuo percorso e questa domanda è la mano sulla maniglia.",
+    "Una parte di te ha già scelto: io vedo soltanto la traccia che lascia.",
+    "Il tuo cuore ha parlato prima delle parole, e si sente.",
+    "Il tempo fa un piccolo nodo intorno a questa scelta.",
+    "Qui il destino non urla: sussurra, ma con una precisione ostinata."
   ],
-  en: ["Hold on — your gut is loud here.","Wait: this comes in clear.","Hush, the picture is sharp."],
-  es: ["Espera: esto se ve claro.","Silencio un segundo: ya se siente."],
-  fr: ["Attends: ça arrive net.","Chut, ça parle tout seul."],
-  de: ["Warte kurz: das wird klar.","Leise, das Bild ist deutlich."],
+  en: [
+    "The line of your fate thickens right here.",
+    "The cards of your path are turning as you speak.",
+    "A thin fold in your story is asking to be read."
+  ],
+  es: [
+    "La línea de tu destino se marca justo aquí.",
+    "Las cartas de tu camino se están girando ahora."
+  ],
+  fr: [
+    "La ligne de ton destin se souligne précisément ici.",
+    "Les cartes de ta route sont en train de tourner."
+  ],
+  de: [
+    "Die Linie deines Weges wird genau hier deutlicher.",
+    "Die Karten deines Weges wenden sich in diesem Moment."
+  ],
 };
 
 /* ========= Finali “gancio” — realistici e brevi ========= */
@@ -121,19 +172,33 @@ const ZINGARA_ENDINGS = {
       "E capirai che quel rimpianto non morde: invita a provare meglio, adesso."
     ]
   },
-  en: { future: ["And there you’ll notice you don’t need speed, just a good angle."], past: ["Maybe you’d feel it in your bones: it wasn’t fate, just timing."] },
-  es: { future: ["Y ahí notarás que no hace falta correr, solo elegir bien."], past: ["Y quizá hoy lo sentirías: no era destino, era ritmo."] },
-  fr: { future: ["Et là tu verras: pas besoin de courir, juste de choisir juste."], past: ["Et peut-être que tu le saurais: ce n’était pas le destin, mais le tempo."] },
-  de: { future: ["Und dort merkst du: Tempo ist egal, der Winkel zählt."], past: ["Vielleicht spürst du heute: kein Schicksal, nur Timing."] },
+  en: {
+    future: ["And there you’ll notice you don’t need speed, just a good angle."],
+    past: ["Maybe you’d feel it in your bones: it wasn’t fate, just timing."]
+  },
+  es: {
+    future: ["Y ahí notarás que no hace falta correr, solo elegir bien."],
+    past: ["Y quizá hoy lo sentirías: no era destino, era ritmo."]
+  },
+  fr: {
+    future: ["Et là tu verras: pas besoin de courir, juste de choisir juste."],
+    past: ["Et peut-être que tu le saurais: ce n’était pas le destin, mais le tempo."]
+  },
+  de: {
+    future: ["Und dort merkst du: Tempo ist egal, der Winkel zählt."],
+    past: ["Vielleicht spürst du heute: kein Schicksal, nur Timing."]
+  },
 };
 function ensureZingaraEnding({ text, lang, periodo, domanda }){
   let s = String(text||"").trim();
   const last = (s.match(/([^.!?…]+[.!?…])\s*$/)||[])[1] || s;
-  const alreadyHasHook = /(ti accorgerai|capirai|ti verrà voglia|ti ritroverai|e lì|e proprio lì|da quel punto|forse oggi)/i.test(last);
+  const alreadyHasHook = /(ti accorgerai|capirai|ti verrà voglia|ti ritroverai|e lì|e proprio lì|da quel punto|forse oggi|maybe you’d feel|and there you’ll notice)/i.test(last);
   if(alreadyHasHook) return s;
   const L = normLang(lang);
   const pool = ((ZINGARA_ENDINGS[L]||ZINGARA_ENDINGS.it) || {});
-  const bag = String(periodo).toLowerCase()==="past" ? (pool.past||ZINGARA_ENDINGS.it.past) : (pool.future||ZINGARA_ENDINGS.it.future);
+  const bag = String(periodo).toLowerCase()==="past"
+    ? (pool.past||ZINGARA_ENDINGS.it.past)
+    : (pool.future||ZINGARA_ENDINGS.it.future);
   const addon = pickDet(bag, hashStr((domanda||"")+s));
   if(!addon) return s;
   s = s.replace(/[.!?…]+$/,'');
@@ -171,8 +236,8 @@ const WTF_DRINK = [
 function buildMessages({ domanda, lang, periodo, stile }){
   const L = normLang(lang);
   const baseRules = L==="en"
-    ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Second person only.`
-    : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona.`;
+    ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Second person only. Stay close to the topic of the question.`
+    : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona. Resta aderente al tema della domanda.`;
 
   const msgs = [
     { role: "system", content: baseRules },
@@ -202,12 +267,14 @@ function buildMessages({ domanda, lang, periodo, stile }){
 - Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
     );
   } else {
-    // WHAT IF dipendente dal tempo
-    const ruleIT = String(periodo).toLowerCase()==="past" ? WHATIF_RULE_PAST_IT : WHATIF_RULE_FUT_IT;
-    msgs.push(
-      { role: "system", content: ruleIT },
-      { role: "system", content: `ESEMPIO (respiro e tono, non vincolante nei contenuti):\n${WHATIF_HYBRID_EX_IT}` }
-    );
+    // WHAT IF dipendente dal tempo (IT ottimizzato, altre lingue usano solo baseRules)
+    if (L === "it") {
+      const ruleIT = String(periodo).toLowerCase()==="past" ? WHATIF_RULE_PAST_IT : WHATIF_RULE_FUT_IT;
+      msgs.push(
+        { role: "system", content: ruleIT },
+        { role: "system", content: `ESEMPIO (respiro e tono, non vincolante nei contenuti):\n${WHATIF_HYBRID_EX_IT}` }
+      );
+    }
   }
 
   // Utente finale
@@ -241,50 +308,214 @@ function computePct(domanda, stile){
   return pct;
 }
 
-/* ========= WHAT IF: motivazione sintetica ========= */
+/* ========= WHAT IF: motivazione sintetica (stile “motivazioni pro/contro”) ========= */
 function buildWhatIfMotivation(domanda, lang="it", pct=60){
   const L = (lang||"it").slice(0,2);
   const t = String(domanda||"").toLowerCase();
 
-  const hasTime = /\b(7|14|21|30|60|90|giorn|settiman|mes|mesi|anni)\b/.test(t);
-  const hasBudget = /(budget|€|euro|spesa|costo|max|under|sotto|caparra)/.test(t);
-  const hasDeadline = /(entro|prima|scadenza|deadline)/.test(t);
-  const action = /(apri|lancia|impara|studia|scrivi|automatizza|testa|cambia|trova|assumi|costruisci|crea)/.test(t);
-  const riskHedging = /(senza|solo|al massimo|minimo|rischio)/.test(t);
+  const hasTime = /\b(7|14|21|30|60|90|giorn|settiman|mes|mesi|anni|days?|weeks?|months?|years?)\b/.test(t);
+  const hasBudget = /(budget|€|euro|spesa|costo|prezzo|max|under|sotto|caparra|cost|money)/.test(t);
+  const hasDeadline = /(entro|prima|scadenza|deadline|by\s+\d|before\s+\d)/.test(t);
+  const action = /(apri|lancia|impara|studia|scrivi|automatizza|testa|cambia|trova|assumi|costruisci|crea|launch|start|learn|build|create)/.test(t);
+  const riskHedging = /(senza|solo|al massimo|minimo|rischio|risk|minimize|hedge)/.test(t);
 
-  const PFX = (L==="en") ? "Probability" : (L==="es") ? "Probabilidad" : (L==="fr") ? "Probabilité" : (L==="de") ? "Wahrscheinlichkeit" : "Probabilità";
-  const MAIN = (L==="en") ? "Main lever" : (L==="es") ? "Palanca principal" : (L==="fr") ? "Levier principal" : (L==="de") ? "Haupthebel" : "La leva principale";
-  const BOTTL = (L==="en") ? "Bottleneck" : (L==="es") ? "Cuello de botella" : (L==="fr") ? "Goulet d’étranglement" : (L==="de") ? "Engpass" : "Il collo di bottiglia";
+  // ITALIANO
+  if (L === "it") {
+    const pros = [];
+    const cons = [];
 
-  const parts = [];
-  parts.push(`${PFX} ${pct}%:${L==="en"?"":" "}`);
+    if(hasTime){
+      pros.push("la timeline è gestibile se spezzetti il percorso");
+      cons.push("se non proteggi il tempo, rischi di rimandare all’infinito");
+    }
+    if(hasBudget){
+      pros.push("puoi tenere i costi sotto controllo fissando un tetto chiaro");
+      cons.push("se sottostimi le spese, la pressione economica può frenarti");
+    }
+    if(hasDeadline){
+      pros.push("una scadenza esplicita ti aiuta a decidere prima, non meglio");
+      cons.push("se la scadenza è vaga, tenderai a spostarla sempre un po’ più avanti");
+    }
+    if(action){
+      pros.push("hai una leva concreta su cui agire ogni giorno");
+    }
+    if(riskHedging){
+      pros.push("puoi limitare il rischio con poche regole semplici");
+      cons.push("se cerchi rischio zero, potresti non muoverti mai davvero");
+    }
 
-  if(hasTime) parts.push(L==="en" ? "timeline manageable if you distribute effort weekly" : "la timeline è gestibile se distribuisci lo sforzo su base settimanale");
-  else parts.push(L==="en" ? "feasible with steady daily cadence" : "fattibile con cadenza giornaliera costante");
+    if(!pros.length){
+      pros.push("la vera leva è la routine: piccoli passi costanti battono le grandi intenzioni");
+    }
+    if(!cons.length){
+      cons.push("il collo di bottiglia è la tua energia: se allarghi troppo lo scope, ti blocchi");
+    }
 
-  if(hasBudget) parts.push(L==="en" ? "(costs controlled via deposits/small tools)" : "(costi sotto controllo con caparra/strumenti leggeri)");
-  if(hasDeadline) parts.push(L==="en" ? "locking the key decision early reduces friction" : "bloccare la decisione chiave in anticipo riduce l’attrito");
-  if(action) parts.push(L==="en" ? "focus on one concrete step per day" : "punta a un passo concreto al giorno");
-  if(riskHedging) parts.push(L==="en" ? "and cap risk with simple constraints" : "e metti un tetto al rischio con vincoli semplici");
+    const pSentence = `Probabilità circa ${pct}%.`;
+    const proSentence = `A favore: ${pros.slice(0,2).join(", ")}.`;
+    const conSentence = `Contro: ${cons.slice(0,2).join(", ")}.`;
 
-  const s1 = parts.join(" ").replace(/\s{2,}/g," ").trim();
-
-  let s2 = "";
-  if(hasBudget){
-    s2 = (L==="en")
-      ? `${MAIN}: upfront deposit & recurring small costs. ${BOTTL}: traffic/lead flow.`
-      : `${MAIN}: anticipo e micro-costi ricorrenti. ${BOTTL}: flusso di traffico/lead.`;
-  }else if(hasTime){
-    s2 = (L==="en")
-      ? `${MAIN}: weekly rhythm. ${BOTTL}: context switching.`
-      : `${MAIN}: ritmo settimanale. ${BOTTL}: cambi di contesto.`;
-  }else{
-    s2 = (L==="en")
-      ? `${MAIN}: consistent routine. ${BOTTL}: scope creep.`
-      : `${MAIN}: routine consistente. ${BOTTL}: allargamento dello scope.`;
+    return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
-  return `${s1} ${s2}`.trim().replace(/\s{2,}/g," ");
+  // ENGLISH
+  if (L === "en") {
+    const pros = [];
+    const cons = [];
+
+    if(hasTime){
+      pros.push("the timeline is realistic if you break it into small chunks");
+      cons.push("if you don’t protect time, you’ll quietly postpone it forever");
+    }
+    if(hasBudget){
+      pros.push("you can keep costs under control with a clear cap");
+      cons.push("underestimating expenses can add pressure and slow you down");
+    }
+    if(hasDeadline){
+      pros.push("an explicit deadline helps you decide sooner, not necessarily better");
+      cons.push("a fuzzy deadline tends to drift and weaken your commitment");
+    }
+    if(action){
+      pros.push("you have a concrete lever you can pull every day");
+    }
+    if(riskHedging){
+      pros.push("simple constraints can cap the downside");
+      cons.push("chasing zero risk can keep you stuck at the start line");
+    }
+
+    if(!pros.length){
+      pros.push("the real lever is routine: small consistent steps beat big intentions");
+    }
+    if(!cons.length){
+      cons.push("your main bottleneck is energy and focus, not luck");
+    }
+
+    const pSentence = `Estimated probability around ${pct}%.`;
+    const proSentence = `Pros: ${pros.slice(0,2).join(", ")}.`;
+    const conSentence = `Cons: ${cons.slice(0,2).join(", ")}.`;
+
+    return `${pSentence} ${proSentence} ${conSentence}`.trim();
+  }
+
+  // ESPAÑOL
+  if (L === "es") {
+    const pros = [];
+    const cons = [];
+
+    if(hasTime){
+      pros.push("el tiempo es manejable si divides el camino en pasos pequeños");
+      cons.push("si no proteges tu tiempo, acabarás posponiéndolo una y otra vez");
+    }
+    if(hasBudget){
+      pros.push("puedes mantener los costes bajo control con un límite claro");
+      cons.push("si infravaloras los gastos, la presión económica puede frenarte");
+    }
+    if(hasDeadline){
+      pros.push("un plazo definido empuja a decidir antes");
+      cons.push("si el plazo es difuso, se irá moviendo hacia adelante");
+    }
+    if(action){
+      pros.push("tienes una palanca concreta para avanzar cada día");
+    }
+    if(riskHedging){
+      pros.push("puedes limitar el riesgo con pocas reglas sencillas");
+      cons.push("buscar riesgo cero puede dejarte inmóvil");
+    }
+
+    if(!pros.length){
+      pros.push("la palanca real es la rutina: pequeños pasos constantes vencen a los grandes planes");
+    }
+    if(!cons.length){
+      cons.push("el cuello de botella es tu energía y foco, no la suerte");
+    }
+
+    const pSentence = `Probabilidad aproximada ${pct}%.`;
+    const proSentence = `A favor: ${pros.slice(0,2).join(", ")}.`;
+    const conSentence = `En contra: ${cons.slice(0,2).join(", ")}.`;
+
+    return `${pSentence} ${proSentence} ${conSentence}`.trim();
+  }
+
+  // FRANÇAIS
+  if (L === "fr") {
+    const pros = [];
+    const cons = [];
+
+    if(hasTime){
+      pros.push("le calendrier reste gérable si tu découpes en petites étapes");
+      cons.push("sans temps protégé, tu repousseras discrètement sans fin");
+    }
+    if(hasBudget){
+      pros.push("tu peux contenir les coûts avec un plafond clair");
+      cons.push("si tu sous-estimes les dépenses, la pression financière peut te freiner");
+    }
+    if(hasDeadline){
+      pros.push("une échéance claire aide à trancher plus vite");
+      cons.push("une date floue glisse facilement et affaiblit ton engagement");
+    }
+    if(action){
+      pros.push("tu as un levier concret à actionner chaque jour");
+    }
+    if(riskHedging){
+      pros.push("quelques règles simples peuvent limiter le risque");
+      cons.push("viser le risque zéro risque justement de t’immobiliser");
+    }
+
+    if(!pros.length){
+      pros.push("le vrai levier, c’est la routine: de petits pas réguliers dépassent les grandes intentions");
+    }
+    if(!cons.length){
+      cons.push("le principal goulot d’étranglement est ton énergie et ta clarté, pas la chance");
+    }
+
+    const pSentence = `Probabilité estimée autour de ${pct}%.`;
+    const proSentence = `Atouts: ${pros.slice(0,2).join(", ")}.`;
+    const conSentence = `Freins: ${cons.slice(0,2).join(", ")}.`;
+
+    return `${pSentence} ${proSentence} ${conSentence}`.trim();
+  }
+
+  // DEUTSCH
+  if (L === "de") {
+    const pros = [];
+    const cons = [];
+
+    if(hasTime){
+      pros.push("der Zeitplan ist machbar, wenn du ihn in kleine Schritte teilst");
+      cons.push("ohne geschützte Zeit wirst du es immer wieder verschieben");
+    }
+    if(hasBudget){
+      pros.push("mit einem klaren Kostenlimit bleibt das Budget unter Kontrolle");
+      cons.push("wenn du Ausgaben unterschätzt, entsteht Druck, der dich bremst");
+    }
+    if(hasDeadline){
+      pros.push("eine klare Deadline zwingt zu früheren Entscheidungen");
+      cons.push("eine vage Frist rutscht leicht nach hinten");
+    }
+    if(action){
+      pros.push("du hast einen konkreten Hebel, den du täglich bewegen kannst");
+    }
+    if(riskHedging){
+      pros.push("einfache Regeln können das Risiko begrenzen");
+      cons.push("wenn du null Risiko willst, kommst du vielleicht nie in Gang");
+    }
+
+    if(!pros.length){
+      pros.push("der wahre Hebel ist Routine: kleine, konstante Schritte schlagen große Vorsätze");
+    }
+    if(!cons.length){
+      cons.push("der Engpass ist deine Energie und Fokussierung, nicht das Schicksal");
+    }
+
+    const pSentence = `Geschätzte Wahrscheinlichkeit etwa ${pct}%.`;
+    const proSentence = `Dafür: ${pros.slice(0,2).join(", ")}.`;
+    const conSentence = `Dagegen: ${cons.slice(0,2).join(", ")}.`;
+
+    return `${pSentence} ${proSentence} ${conSentence}`.trim();
+  }
+
+  // fallback IT
+  return buildWhatIfMotivation(domanda, "it", pct);
 }
 
 /* ========= WTF: rapporto scientifico demenziale ========= */
@@ -376,33 +607,30 @@ export default async function handler(req, res){
     answer = clampWords(answer, stile === "wtf" ? 170 : 165);
     answer = normalizeOneParagraph(answer);
 
-    // 1) Incipit ZINGARA sempre (solo WHAT IF)
-    if (stile === "whatif") {
-      answer = addDynamicIntroIfWhatIf({ answer, stile, lang, domanda });
-    }
+    // (Niente più iniezione di incipit ZINGARA via funzione: ora è gestito dal modello nei system rules)
 
-    // 2) Moderazioni leggere IT (prima del ripristino maiuscole)
+    // Moderazioni leggere IT (prima del ripristino maiuscole)
     if(normLang(lang)==="it"){
       (function(){
         const d=String(domanda||"");
         const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
         const inQuestion=new Set((d.match(nameRx)||[]));
         answer=answer.replace(nameRx,(m)=>{
-          if (["Ah","Oh","Ehi","Sai","Shh","Occhio","Piano","Fermati","Aspetta"].includes(m)) return m;
+          if (["Ah","Oh","Ehi","Sai","Occhio","Piano","Fermati","Aspetta","La","Le","Una","Il","Qui"].includes(m)) return m;
           return inQuestion.has(m) ? m : m.toLowerCase();
         });
       })();
     }
 
-    // 3) Ripristina maiuscole
+    // Ripristina maiuscole frasi
     answer = sentenceCaseAll(answer);
 
-    // 4) Finale emozionale con gancio se manca (solo WHAT IF)
+    // Finale emozionale con gancio se manca (solo WHAT IF)
     if (stile === "whatif") {
       answer = ensureZingaraEnding({ text: answer, lang, periodo, domanda });
     }
 
-    // 5) Punteggiatura finale
+    // Punteggiatura finale
     answer = finalPunct(answer);
 
     // ===== Extra payload =====
@@ -429,16 +657,3 @@ export default async function handler(req, res){
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
 }
-
-/* ========= Incipit Zingara (aggiunta) ========= */
-function addDynamicIntroIfWhatIf({ answer, stile, lang, domanda }){
-  if(stile !== "whatif") return answer;
-  const L = normLang(lang);
-  const bank = ZINGARA_INTROS[L] || ZINGARA_INTROS.it;
-  const intro = pickDet(bank, hashStr(domanda || answer));
-  const a = String(answer||"").trim();
-  const first = (a.match(/^([\s\S]*?[.!?…])/)||[])[1] || a;
-  const already = bank.some(s => normLine(first).startsWith(normLine(s)));
-  if(already) return a;
-  return `${intro} ${a}`.trim();
-    }
