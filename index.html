@@ -125,7 +125,7 @@
     }
     #authError{color:#ffb3b3;font-size:13px;min-height:18px}
 
-    /* Debug: nascosto di default */
+    /* Debug (solo se ?debug=1) */
     #debug{
       position:fixed;left:12px;right:12px;bottom:12px;z-index:40;
       background:#0b0f14;border:1px solid #223;border-radius:10px;
@@ -151,8 +151,8 @@
 
   <main>
     <!-- Hero -->
-    <img id="hero" class="hero-img" src="/public/home-hero.png" alt="Porta luminosa What?f"
-         loading="eager" decoding="async" />
+    <img id="hero" class="hero-img" src="/public/home-hero.png"
+         alt="Porta luminosa What?f" loading="eager" decoding="async" />
 
     <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>
 
@@ -218,7 +218,7 @@
     })();
   </script>
 
-  <!-- I18n + tema + selezioni + menu lingua -->
+  <!-- i18n + tema + selezioni + lingua -->
   <script>
     (function initTheme(){
       try{
@@ -234,7 +234,8 @@
         title:"Scopri il tuo What?f",
         lead:"Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro. <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili. <strong>What the F</strong> ti fa vivere visioni ironiche, creative e imprevedibili.",
         past:"Passato", future:"Futuro", whatif:"What if", wtf:"What the F",
-        login:"Entra con Google", next:"Avanti", needChoices:"Scegli prima sopra",
+        login:"Entra con Google", next:"Avanti",
+        needChoices:"Seleziona prima Passato/Futuro e What if/WTF",
         exit:"Esci",
         privacy:"Privacy", terms:"Termini", info:"Info"
       },
@@ -242,7 +243,8 @@
         title:"Discover your What?f",
         lead:"Imagine the choice you didn’t make… and the one you could make. Choose whether to look to the past or the future. <strong>What if</strong> explores realistic, reflective scenarios based on plausible choices. <strong>What the F</strong> lets you experience ironic, creative and unpredictable visions.",
         past:"Past", future:"Future", whatif:"What if", wtf:"What the F",
-        login:"Sign in with Google", next:"Next", needChoices:"Choose above first",
+        login:"Sign in with Google", next:"Next",
+        needChoices:"Choose Past/Future and What if/WTF first",
         exit:"Sign out",
         privacy:"Privacy", terms:"Terms", info:"Info"
       },
@@ -250,7 +252,8 @@
         title:"Descubre tu What?f",
         lead:"Imagina la elección que no hiciste… y la que aún podrías hacer. Elige si mirar al pasado o al futuro. <strong>What if</strong> explora escenarios realistas y reflexivos basados en decisiones plausibles. <strong>What the F</strong> te hace vivir visiones irónicas, creativas e impredecibles.",
         past:"Pasado", future:"Futuro", whatif:"What if", wtf:"What the F",
-        login:"Entrar con Google", next:"Siguiente", needChoices:"Elige arriba primero",
+        login:"Entrar con Google", next:"Siguiente",
+        needChoices:"Primero elige Pasado/Futuro y What if/WTF",
         exit:"Salir",
         privacy:"Privacidad", terms:"Términos", info:"Info"
       },
@@ -258,7 +261,8 @@
         title:"Découvrez votre What?f",
         lead:"Imaginez le choix que vous n’avez pas fait… et celui que vous pourriez encore faire. Choisissez de regarder vers le passé ou vers le futur. <strong>What if</strong> explore des scénarios réalistes et réfléchis basés sur des choix plausibles. <strong>What the F</strong> vous fait vivre des visions ironiques, créatives et imprévisibles.",
         past:"Passé", future:"Futur", whatif:"What if", wtf:"What the F",
-        login:"Se connecter avec Google", next:"Suivant", needChoices:"Choisissez d’abord ci-dessus",
+        login:"Se connecter avec Google", next:"Suivant",
+        needChoices:"Choisissez d’abord Passé/Futur et What if/WTF",
         exit:"Se déconnecter",
         privacy:"Confidentialité", terms:"Conditions", info:"Info"
       },
@@ -266,7 +270,8 @@
         title:"Entdecke dein What?f",
         lead:"Stell dir die Entscheidung vor, die du nicht getroffen hast… und die, die du noch treffen könntest. Wähle, ob du in die Vergangenheit oder in die Zukunft blickst. <strong>What if</strong> erkundet realistische, reflektierte Szenarien auf Basis plausibler Entscheidungen. <strong>What the F</strong> lässt dich ironische, kreative und unvorhersehbare Visionen erleben.",
         past:"Vergangenheit", future:"Zukunft", whatif:"What if", wtf:"What the F",
-        login:"Mit Google anmelden", next:"Weiter", needChoices:"Wähle zuerst oben",
+        login:"Mit Google anmelden", next:"Weiter",
+        needChoices:"Wähle zuerst Vergangenheit/Zukunft und What if/WTF",
         exit:"Abmelden",
         privacy:"Datenschutz", terms:"Nutzungsbedingungen", info:"Info"
       }
@@ -277,7 +282,7 @@
     const $$ = s => document.querySelectorAll(s);
 
     function detectBrowserLang(){
-      const n = (navigator.language || 'it').toLowerCase();
+      const n=(navigator.language||'it').toLowerCase();
       if(n.startsWith('it')) return 'it';
       if(n.startsWith('en')) return 'en';
       if(n.startsWith('es')) return 'es';
@@ -292,13 +297,13 @@
       LS.setItem('lang', l.toLowerCase());
       applyLang();
     }
+
     function applyLang(){
       const L = getLang();
       const d = DICT[L] || DICT.it;
       document.documentElement.lang = L;
       const code = $('#langCode'); if(code) code.textContent = L.toUpperCase();
 
-      // testi base
       const titleSpan = document.querySelector('[data-i18n="title"]');
       if(titleSpan) titleSpan.textContent = d.title;
       const lead = document.getElementById('leadText');
@@ -306,33 +311,33 @@
 
       $$('[data-i18n]').forEach(el=>{
         const k = el.getAttribute('data-i18n');
-        if(!k || k === 'title' || k === 'lead') return;
+        if(!k || k==="title" || k==="lead") return;
         if(typeof d[k] === 'string') el.textContent = d[k];
       });
 
-      // CTA + logout se non gestiti ancora da auth
+      // footer / CTA testi base verranno poi ri-allineati da updatePrimaryCta
+      const logout = document.getElementById('logoutBtn');
+      if(logout) logout.textContent = d.exit;
       const primary = document.getElementById('primaryCta');
-      const logout  = document.getElementById('logoutBtn');
-      if(primary && !(primary.dataset.state === 'logged-in')){
+      if(primary && !primary.dataset.state){
         primary.textContent = d.login;
       }
-      if(logout){
-        logout.textContent = d.exit;
-      }
 
-      // aggiorna stato menu
+      // evidenzia lingua
       document.querySelectorAll('#langMenu button')
         .forEach(b => b.classList.toggle('active', b.dataset.lang === L));
+
+      if(window.updatePrimaryCta) window.updatePrimaryCta();
     }
 
     if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang());
     applyLang();
 
-    // Esponi a Firebase script
+    // esporta per script Firebase
     window.I18N = DICT;
     window.getCurrentLang = getLang;
 
-    // Salva selezioni stile/periodo
+    // gestisci chip selezioni
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
     function wireGroup(g){
       if(!g) return;
@@ -342,8 +347,8 @@
         b.classList.add('selected');
         state[b.dataset.key] = b.dataset.val;
         localStorage.setItem('whatif_prefs', JSON.stringify(state));
-        if(b.dataset.key === 'stile'){
-          document.documentElement.setAttribute('data-theme', b.dataset.val === 'wtf' ? 'wtf' : 'whatif');
+        if(b.dataset.key==='stile'){
+          document.documentElement.setAttribute('data-theme', b.dataset.val==='wtf' ? 'wtf' : 'whatif');
         }
         if(window.updatePrimaryCta) window.updatePrimaryCta();
       });
@@ -351,7 +356,7 @@
     wireGroup(document.getElementById('periodGroup'));
     wireGroup(document.getElementById('styleGroup'));
 
-    // Menu lingua
+    // menu lingua
     (function(){
       const toggle = document.getElementById('langToggle');
       const menu   = document.getElementById('langMenu');
@@ -395,8 +400,8 @@
     const DO_DEBUG = new URLSearchParams(location.search).get('debug') === '1';
     const log = (...a)=>{ if(DO_DEBUG){ dbg.style.display='block'; dbg.textContent += a.join(' ') + '\n'; } };
     const showErrText = (t)=>{
-      const el = document.getElementById('authError');
-      if(el) el.textContent = t || '';
+      const el=document.getElementById('authError');
+      if(el) el.textContent=t||'';
       if(t) log('❌', t);
     };
 
@@ -440,17 +445,19 @@
 
     function getDict(){
       const L = (window.getCurrentLang && window.getCurrentLang()) || 'it';
-      const D = (window.I18N && window.I18N[L]) || (window.I18N && window.I18N.it) || {
-        login:"Entra con Google", next:"Avanti", needChoices:"Scegli prima sopra", exit:"Esci"
+      const I = window.I18N || {};
+      return I[L] || I.it || {
+        login:"Entra con Google",
+        next:"Avanti",
+        needChoices:"Seleziona prima Passato/Futuro e What if/WTF",
+        exit:"Esci"
       };
-      return D;
     }
 
     function updatePrimaryCta(){
+      if(!primaryCta || !logoutBtn) return;
       const d = getDict();
       const user = auth.currentUser;
-      if(!primaryCta || !logoutBtn) return;
-
       if(user){
         primaryCta.dataset.state = 'logged-in';
         primaryCta.textContent = selectionsReady() ? d.next : d.needChoices;
@@ -477,9 +484,9 @@
         log("↩️ Redirect senza user (ok se popup è riuscito)");
       }
     }catch(e){
-      if ((e.message||'').toLowerCase().includes('missing initial state')) {
+      if((e.message||'').toLowerCase().includes('missing initial state')){
         showErrText("Impossibile completare l’accesso (manca lo stato). Riprova o usa una finestra in incognito.");
-      } else {
+      }else{
         showErrText("Post-login: " + (e.code || e.message));
       }
       sessionStorage.removeItem(AUTH_FLAG);
@@ -519,7 +526,7 @@
           'auth/popup-closed-by-user',
           'auth/internal-error',
           'auth/cancelled-popup-request'
-        ].some(x => code === x);
+        ].some(x => x === code);
 
         if(needRedirect){
           try{ sessionStorage.setItem(AUTH_FLAG,'1'); }catch{}
