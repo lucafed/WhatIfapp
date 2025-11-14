@@ -133,22 +133,22 @@
     </div>
   </div>
 
-  <!-- PRESET RAPIDI (SOLO CLIENT) -->
+  <!-- PRESET RAPIDI (SOLO CLIENT + ADMIN FIRESTORE) -->
   <div class="card">
-    <div class="label">Preset rapidi (piano, lato client)</div>
+    <div class="label">Preset rapidi (piano)</div>
     <div class="row" style="margin-bottom:6px">
       <button class="btn" id="btnPresetFree">FREE (3 crediti/giorno)</button>
-      <button class="btn" id="btnPresetPro">PRO (stile avanzato, limiti da wallet)</button>
+      <button class="btn" id="btnPresetPro">PRO (30 crediti/giorno)</button>
     </div>
     <div class="row" style="margin-bottom:4px">
       <span class="chip" id="chipPreset">Preset attuale: —</span>
       <span class="chip" id="chipPrefs">Prefs: —</span>
     </div>
     <div class="small">
-      Questi preset:
-      <br>• aggiornano <span class="mono">whatif_prefs</span> in localStorage (campo <span class="mono">pro: true/false</span>),
-      <br>• impostano anche un tiny “cap locale” (<span class="mono">wallet_daily_cap</span>) usato solo per la UI.
-      <br>Il consumo vero dei crediti resta comunque su Firestore (funzioni <span class="mono">bootCredits / consumeCredit</span>).
+      I preset:
+      <br>• aggiornano <span class="mono">whatif_prefs</span> in localStorage (<span class="mono">pro: true/false</span>),
+      <br>• aggiornano il wallet Firestore dell’utente corrente tramite <span class="mono">adminSetDailyLimit</span> / <span class="mono">adminResetToday</span>,
+      <br>• impostano anche un piccolo “cap locale” (<span class="mono">wallet_daily_cap</span>) usato solo per UI.
     </div>
   </div>
 
@@ -190,7 +190,12 @@
   import {
     bootCredits,
     getBalance,
-    consumeCredit    // lo uso solo per +5 crediti di test
+    consumeCredit,      // solo test UI
+    getWalletRaw,
+    adminSetDailyLimit,
+    adminAddCredits,
+    adminResetToday,
+    adminWipeWallet
   } from "./store/credits.js";
 
   const LS = localStorage;
@@ -223,17 +228,21 @@
   $('btnSimula').onclick = () => {
     LS.removeItem('admin_token');
     renderAdminBadge();
+    renderWalletUI();
     toast('Simulazione utente attiva (niente ∞).');
   };
   $('btnTornaAdmin').onclick = () => {
     LS.setItem('admin_token','1');
     renderAdminBadge();
+    renderWalletUI();
     toast('Admin locale attivo (∞ crediti lato client).');
   };
 
-  /* ========= UTENTE LOGGATO + WALLET FIRESTORE (SOLO LETTURA) ========= */
+  /* ========= UTENTE LOGGATO + WALLET FIRESTORE ========= */
   let currentUser = null;
   let currentBalance = 0;
+  let walUsedToday = 0;
+  let walDailyCap = 0;
 
   function renderUser(){
     const box = $('userInfo');
@@ -248,26 +257,48 @@
   }
 
   function renderWalletUI(){
-    $('walBalance').textContent = isAdminLocal() ? "∞ (admin)" : (Number.isFinite(currentBalance) ? currentBalance : "—");
+    $('walBalance').textContent = isAdminLocal()
+      ? "∞ (admin)"
+      : (Number.isFinite(currentBalance) ? currentBalance : "—");
+    $('walUsed').textContent = Number.isFinite(walUsedToday) ? walUsedToday : "—";
+    $('walCap').textContent  = Number.isFinite(walDailyCap)  ? walDailyCap  : "—";
   }
 
   async function syncWalletFromServer(showToast=false){
     if(!auth.currentUser){
-      // niente utente = niente chiamate Firestore
       currentBalance = 0;
+      walUsedToday = 0;
+      walDailyCap = 0;
       renderWalletUI();
       return;
     }
     try{
-      await bootCredits();              // crea doc + reset se serve
+      await bootCredits();              // crea/aggiorna doc se serve
+
+      // leggo il doc grezzo per usedToday + dailyLimit
+      const raw = await getWalletRaw();
+      const today = new Date().toISOString().slice(0,10);
+      if(raw){
+        const day = typeof raw.day === "string" ? raw.day : today;
+        walDailyCap = Number.isFinite(+raw.dailyLimit) ? +raw.dailyLimit : 0;
+        walUsedToday = Number.isFinite(+raw.usedToday) ? +raw.usedToday : 0;
+        if(day !== today) walUsedToday = 0;
+      }else{
+        walDailyCap = 0;
+        walUsedToday = 0;
+      }
+
+      // saldo calcolato (dailyLimit - usedToday)
       const bal = await getBalance();
       currentBalance = Number.isFinite(+bal) ? +bal : 0;
+
       renderWalletUI();
       if(showToast) toast('Wallet ricaricato da Firestore.');
     }catch(e){
       console.error("Wallet sync error:", e);
-      // nessun alert: solo console + UI con —
       currentBalance = 0;
+      walUsedToday = 0;
+      walDailyCap = 0;
       renderWalletUI();
       if(showToast) toast('Impossibile leggere il wallet (vedi console).');
     }
@@ -281,17 +312,16 @@
 
   $('btnReload').onclick = ()=> syncWalletFromServer(true);
 
-  // +5 crediti di test: usa consumeCredit al contrario (solo per vedere che Firestore risponde)
+  // +5 crediti di test: NON scrive su Firestore, solo per vedere che risponde
   $('btnTestCredit').onclick = async ()=>{
     if(!auth.currentUser){
       toast('Devi essere loggato per testare il wallet.');
       return;
     }
     try{
-      // trucchetto: faccio prima bootCredits, poi chiedo il balance e mostro +5 "finti" solo a schermo
       await bootCredits();
       const bal = await getBalance();
-      currentBalance = Number.isFinite(+bal) ? +bal + 5 : 5; // NON scrive su Firestore, è solo visual
+      currentBalance = Number.isFinite(+bal) ? +bal + 5 : 5; // solo visual
       renderWalletUI();
       toast('Test: +5 crediti (solo UI, non salvato).');
     }catch(e){
@@ -300,7 +330,7 @@
     }
   };
 
-  /* ========= PRESET FREE / PRO (SOLO CLIENT) ========= */
+  /* ========= PRESET FREE / PRO ========= */
   function readPrefs(){
     try{
       return JSON.parse(LS.getItem('whatif_prefs') || '{}') || {};
@@ -312,26 +342,63 @@
   function renderPresetInfo(){
     const prefs = readPrefs();
     const preset = prefs.pro ? 'PRO' : 'FREE';
+    const capLocal = LS.getItem('wallet_daily_cap') || '—';
     $('chipPreset').textContent = `Preset attuale: ${preset}`;
-    $('chipPrefs').textContent = `Prefs: pro=${!!prefs.pro}, stile=${prefs.stile || 'whatif'}, periodo=${prefs.periodo || 'future'}`;
+    $('chipPrefs').textContent = `Prefs: pro=${!!prefs.pro}, stile=${prefs.stile || 'whatif'}, periodo=${prefs.periodo || 'future'}, cap locale=${capLocal}`;
   }
 
-  $('btnPresetFree').onclick = ()=>{
+  $('btnPresetFree').onclick = async ()=>{
     const prefs = readPrefs();
-    prefs.pro = false;                 // stile “FREE”
+    prefs.pro = false;
     writePrefs(prefs);
-    LS.setItem('wallet_daily_cap','3'); // piccolo cap locale, se vuoi leggerlo da qualche parte
-    renderPresetInfo();
-    toast('Preset FREE applicato (pro=false, cap locale=3).');
+    LS.setItem('wallet_daily_cap','3');
+
+    if(!auth.currentUser){
+      renderPresetInfo();
+      toast('Preset FREE applicato lato client. Non sei loggato, il wallet Firestore resterà vuoto.');
+      return;
+    }
+
+    try{
+      await bootCredits();
+      await adminSetDailyLimit(3);
+      await adminResetToday();
+      await syncWalletFromServer(false);
+      renderPresetInfo();
+      toast('Preset FREE applicato: 3 crediti/giorno su Firestore.');
+    }catch(e){
+      console.error('Preset FREE error:', e);
+      renderPresetInfo();
+      toast('Errore nel preset FREE (vedi console).');
+    }
   };
 
-  $('btnPresetPro').onclick = ()=>{
+  $('btnPresetPro').onclick = async ()=>{
+    const PRO_LIMIT = 30; // se vuoi cambi il limite PRO qui
     const prefs = readPrefs();
     prefs.pro = true;
     writePrefs(prefs);
-    LS.setItem('wallet_daily_cap','9999');
-    renderPresetInfo();
-    toast('Preset PRO applicato (pro=true, cap locale alto).');
+
+    if(!auth.currentUser){
+      LS.setItem('wallet_daily_cap', String(PRO_LIMIT));
+      renderPresetInfo();
+      toast('Preset PRO applicato lato client. Non sei loggato, il wallet Firestore resterà vuoto.');
+      return;
+    }
+
+    try{
+      await bootCredits();
+      await adminSetDailyLimit(PRO_LIMIT);
+      await adminResetToday();
+      LS.setItem('wallet_daily_cap', String(PRO_LIMIT));
+      await syncWalletFromServer(false);
+      renderPresetInfo();
+      toast(`Preset PRO applicato: ${PRO_LIMIT} crediti/giorno su Firestore.`);
+    }catch(e){
+      console.error('Preset PRO error:', e);
+      renderPresetInfo();
+      toast('Errore nel preset PRO (vedi console).');
+    }
   };
 
   renderPresetInfo();
