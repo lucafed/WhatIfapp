@@ -1,42 +1,70 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Admin</title>
-<meta name="theme-color" content="#0B0B0C"/>
-<style>
-  :root{
-    --bg:#0B0B0C;--panel:#141C22;--line:rgba(255,255,255,.12);
-    --fg:#EAF2EE;--mut:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01;--ink:#0A0E12
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0;background:#0B0B0C;color:var(--fg);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif
-  }
-  main{max-width:980px;margin:auto;padding:18px}
-  h1{margin:6px 0 14px;font-size:26px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px}
-  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .k{color:var(--mut)}
-  input,select{
-    background:rgba(255,255,255,.06);border:1px solid var(--line);color:#fff;border-radius:12px;padding:10px
-  }
-  button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
-  .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink)}
-  .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid var(--line)}
-  .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.06);font-size:13px}
-  .big{font-size:28px;font-weight:900}
-  .mut{color:var(--mut)}
-  .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;margin-top:10px}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  thead th{position:sticky;top:0;background:rgba(255,255,255,.06);text-align:left;padding:8px;border-bottom:1px solid var(--line)}
-  tbody td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top}
-  .stat{background:rgba(255,255,255,.06);border:1px solid var(--line);padding:10px 12px;border-radius:12px;font-weight:800;font-size:13px}
-  .grow{flex:1 1 auto}
-  .warn{font-size:13px;color:#ffbfbf;margin-top:6px}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>What?f — Admin</title>
+  <meta name="theme-color" content="#0B0B0C"/>
+  <style>
+    :root{
+      --bg:#0B0B0C;--panel:#141C22;--line:rgba(255,255,255,.12);
+      --fg:#EAF2EE;--mut:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01;--ink:#0A0E12
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;background:#0B0B0C;color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif
+    }
+    main{max-width:980px;margin:auto;padding:18px}
+    h1{margin:6px 0 14px;font-size:26px}
+    .card{
+      background:var(--panel);border:1px solid var(--line);
+      border-radius:16px;padding:14px;margin-top:12px
+    }
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .k{color:var(--mut)}
+    input,select{
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--line);color:#fff;
+      border-radius:12px;padding:10px
+    }
+    button{
+      border:none;border-radius:12px;
+      padding:10px 14px;font-weight:800;cursor:pointer
+    }
+    .primary{
+      background:linear-gradient(180deg,var(--acc),var(--acc2));
+      color:var(--ink)
+    }
+    .ghost{
+      background:rgba(255,255,255,.06);color:#fff;
+      border:1px solid var(--line)
+    }
+    .pill{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:6px 10px;border:1px solid var(--line);
+      border-radius:999px;background:rgba(255,255,255,.06);
+      font-size:13px
+    }
+    .big{font-size:28px;font-weight:900}
+    .mut{color:var(--mut)}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;margin-top:10px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    thead th{
+      position:sticky;top:0;background:rgba(255,255,255,.06);
+      text-align:left;padding:8px;border-bottom:1px solid var(--line)
+    }
+    tbody td{
+      padding:8px;border-bottom:1px solid rgba(255,255,255,.08);
+      vertical-align:top
+    }
+    .stat{
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--line);padding:10px 12px;
+      border-radius:12px;font-weight:800;font-size:13px
+    }
+    .grow{flex:1 1 auto}
+  </style>
 </head>
 <body>
 <main>
@@ -45,29 +73,20 @@
   <!-- STATO -->
   <div class="card" id="boxState">
     <div class="row">
-      <span class="k">Admin backend:</span> <span id="adminFlag" class="pill">no</span>
+      <span class="k">Admin:</span> <span id="adminFlag" class="pill">no</span>
+    </div>
+    <div class="row" style="margin-top:6px">
       <span class="k">Token:</span> <span id="tok" class="pill">—</span>
-    </div>
-
-    <div class="row" style="margin-top:6px">
-      <span class="k">Firebase:</span> <span id="fbStatus" class="pill">non loggato</span>
-      <span class="k">UID:</span> <span id="fbUid" class="pill">—</span>
-      <span class="k">Email:</span> <span id="fbEmail" class="pill">—</span>
-    </div>
-
-    <div class="row" style="margin-top:6px">
       <span class="k">Crediti oggi:</span> <span id="walletAvail" class="pill">—</span>
       <span class="k">Usati oggi:</span> <span id="walletUsed" class="pill">—</span>
       <span class="k">Limite giorno:</span> <span id="walletCap" class="pill">—</span>
       <span class="k">Giorno doc:</span> <span id="walletDay" class="pill">—</span>
     </div>
-
     <div class="row" style="margin-top:10px">
       <input id="pin" type="password" placeholder="PIN admin" style="min-width:200px"/>
       <button id="enter" class="primary">Entra admin</button>
       <button id="revoke" class="ghost">Revoca token</button>
     </div>
-
     <div class="row" style="margin-top:8px">
       <button id="simUser" class="ghost">🔄 Simula utente (disattiva flag admin)</button>
       <button id="restoreAdmin" class="ghost">🛡️ Torna admin</button>
@@ -75,13 +94,10 @@
       <button id="openFourth" class="ghost">➡️ Vai a fourth.html</button>
       <button id="openFifth"  class="ghost">➡️ Vai a fifth.html</button>
     </div>
-
-    <p class="warn" id="fbWarn" style="display:none">
-      Nessun utente Firebase loggato. Apri <b>fourth.html</b>, fai login, poi torna qui.
-    </p>
+    <p id="fbWarn" class="mut" style="margin-top:8px;"></p>
   </div>
 
-  <!-- CREDITI (FIRESTORE) -->
+  <!-- CREDITI -->
   <div class="card">
     <div class="row">
       <button id="presetFree" class="primary">FREE (3/giorno)</button>
@@ -95,8 +111,8 @@
     <p class="mut" style="margin:10px 0 0">
       Sorgente unica: <code>Firestore → wallets/{uid}</code> con campi
       <code>day, dailyLimit, usedToday, totalUsed</code>.<br/>
-      Con token admin attivo, fourth/fifth mostrano <span class="big">∞</span> (logica server).
-      Usa “Simula utente” per testare consumo/ricarica reale via Firestore.
+      Con token admin attivo, fourth/fifth mostrano <span class="big">∞</span> e NON consumano crediti
+      (logica lato server). Usa “Simula utente” per testare consumo/ricarica reale via Firestore.
     </p>
   </div>
 
@@ -163,375 +179,363 @@
   </div>
 </main>
 
+<!-- ================== SCRIPT ADMIN FIREBASE + LOGICA ================== -->
 <script type="module">
-/* ===== Import Firebase init + Firestore helpers ===== */
-import { auth, db } from "./firebase.init.js";
-import {
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-import {
-  doc,
-  getDoc,
-  setDoc,
-  runTransaction,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+  // ---- Import Firebase condiviso ----
+  import { auth, db } from "./firebase.init.js";
 
-/* ===== Chiavi ===== */
-const LS = localStorage;
-const TKEY="admin_token";
-const BKEY="admin_token_backup";
+  import {
+    onAuthStateChanged,
+  } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
-/* ===== Utils dom ===== */
-const $ = id => document.getElementById(id);
-const setTok = t => $("tok").textContent = t ? t.slice(0,6)+"…"+t.slice(-4) : "—";
-const todayISO = () => new Date().toISOString().slice(0,10);
+  import {
+    doc,
+    getDoc,
+    setDoc,
+    serverTimestamp,
+  } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-/* ===== Firebase user + wallet ===== */
-let currentUser = null;
-let currentWallet = null;
+  // ---- Costanti base ----
+  const LS   = localStorage;
+  const TKEY = "admin_token";
+  const BKEY = "admin_token_backup";
+  const $    = (id)=>document.getElementById(id);
+  const DEFAULT_LIMIT = 3;
+  const todayISO = () => new Date().toISOString().slice(0,10);
 
-function renderFirebaseState() {
-  const fbStatus = $("fbStatus");
-  const fbUid = $("fbUid");
-  const fbEmail = $("fbEmail");
-  const fbWarn = $("fbWarn");
-
-  if (!currentUser) {
-    fbStatus.textContent = "non loggato";
-    fbUid.textContent = "—";
-    fbEmail.textContent = "—";
-    fbWarn.style.display = "block";
-  } else {
-    fbStatus.textContent = "loggato";
-    fbUid.textContent = currentUser.uid;
-    fbEmail.textContent = currentUser.email || "(no email)";
-    fbWarn.style.display = "none";
+  // ================== FIRESTORE WALLET ==================
+  function walletRef(uid){
+    return doc(db,"wallets",uid);
   }
-}
 
-function renderWallet() {
-  const w = currentWallet;
-  if (!w) {
-    $("walletAvail").textContent = "—";
-    $("walletUsed").textContent = "—";
-    $("walletCap").textContent  = "—";
-    $("walletDay").textContent  = "—";
-    return;
+  async function ensureWallet(uid){
+    const ref  = walletRef(uid);
+    const snap = await getDoc(ref);
+    if(!snap.exists()){
+      await setDoc(ref,{
+        day: todayISO(),
+        dailyLimit: DEFAULT_LIMIT,
+        usedToday: 0,
+        totalUsed: 0,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    }
   }
-  const today = todayISO();
-  const day = typeof w.day === "string" ? w.day : today;
-  const dailyLimit = Number.isFinite(+w.dailyLimit) ? +w.dailyLimit : 3;
-  let usedToday = Number.isFinite(+w.usedToday) ? +w.usedToday : 0;
 
-  // se il doc è di un altro giorno, per l'oggi i consumi sono 0
-  const effectiveUsed = (day === today) ? usedToday : 0;
-  const avail = Math.max(0, dailyLimit - effectiveUsed);
-
-  $("walletAvail").textContent = String(avail);
-  $("walletUsed").textContent  = String(effectiveUsed);
-  $("walletCap").textContent   = String(dailyLimit);
-  $("walletDay").textContent   = day;
-}
-
-async function ensureUserOrAlert() {
-  if (!currentUser) {
-    alert("Nessun utente Firebase loggato. Apri fourth.html, fai login, poi torna qui.");
-    throw new Error("no_user");
+  async function readWalletFromFirestore(uid){
+    const ref  = walletRef(uid);
+    const snap = await getDoc(ref);
+    if(!snap.exists()) return null;
+    const data = snap.data() || {};
+    const day  = typeof data.day === "string" ? data.day : todayISO();
+    const dailyLimit = Number.isFinite(+data.dailyLimit) ? +data.dailyLimit : DEFAULT_LIMIT;
+    const usedToday  = Number.isFinite(+data.usedToday)  ? +data.usedToday  : 0;
+    const balance    = Math.max(0, dailyLimit - usedToday);
+    return { day, dailyLimit, usedToday, balance, raw:data };
   }
-  return currentUser;
-}
 
-async function loadWallet() {
-  if (!currentUser) {
-    currentWallet = null;
-    renderWallet();
-    return;
+  async function drawWallet(){
+    const u = auth.currentUser;
+    if(!u){
+      $("walletAvail").textContent = "—";
+      $("walletUsed").textContent  = "—";
+      $("walletCap").textContent   = "—";
+      $("walletDay").textContent   = "—";
+      $("fbWarn").textContent = "Nessun utente Firebase loggato. Vai in home (index), fai login con Google, poi torna qui.";
+      return;
+    }
+    $("fbWarn").textContent = "";
+
+    await ensureWallet(u.uid);
+    const w = await readWalletFromFirestore(u.uid);
+    if(!w){
+      $("walletAvail").textContent = "—";
+      $("walletUsed").textContent  = "—";
+      $("walletCap").textContent   = "—";
+      $("walletDay").textContent   = "—";
+      return;
+    }
+    $("walletAvail").textContent = w.balance;
+    $("walletUsed").textContent  = w.usedToday ?? 0;
+    $("walletCap").textContent   = w.dailyLimit;
+    $("walletDay").textContent   = w.day || "—";
   }
-  const ref = doc(db, "wallets", currentUser.uid);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) {
-    const base = {
+
+  function requireUser(){
+    const u = auth.currentUser;
+    if(!u){
+      alert("Nessun utente Firebase loggato.\nVai in index.html, premi «Entra con Google», poi riapri questa pagina.");
+      throw new Error("no_user");
+    }
+    return u;
+  }
+
+  // ---- Azioni sui crediti ----
+  async function setPreset(limit){
+    const u   = requireUser();
+    const ref = walletRef(u.uid);
+    await setDoc(ref,{
       day: todayISO(),
-      dailyLimit: 3,
+      dailyLimit: limit,
+      usedToday: 0,
+      updatedAt: serverTimestamp()
+    },{merge:true});
+    await drawWallet();
+  }
+
+  async function addToLimit(delta){
+    const u   = requireUser();
+    const ref = walletRef(u.uid);
+    const snap= await getDoc(ref);
+    const data= snap.exists()? (snap.data()||{}) : {};
+    let dailyLimit = Number.isFinite(+data.dailyLimit)? +data.dailyLimit : DEFAULT_LIMIT;
+    dailyLimit = Math.max(0, dailyLimit + delta);
+    await setDoc(ref,{
+      day: todayISO(),
+      dailyLimit,
+      updatedAt: serverTimestamp()
+    },{merge:true});
+    await drawWallet();
+  }
+
+  async function zeroUsedToday(){
+    const u   = requireUser();
+    const ref = walletRef(u.uid);
+    await setDoc(ref,{
+      day: todayISO(),
+      usedToday: 0,
+      updatedAt: serverTimestamp()
+    },{merge:true});
+    await drawWallet();
+  }
+
+  async function wipeAllWallet(){
+    const u   = requireUser();
+    const ref = walletRef(u.uid);
+    await setDoc(ref,{
+      day: todayISO(),
+      dailyLimit: DEFAULT_LIMIT,
       usedToday: 0,
       totalUsed: 0,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
-    };
-    await setDoc(ref, base);
-    currentWallet = base;
-  } else {
-    currentWallet = snap.data() || {};
+    },{merge:false});
+    await drawWallet();
+    alert("Wallet resettato in Firestore.");
   }
-  renderWallet();
-}
 
-async function mutateWallet(mutator) {
-  await ensureUserOrAlert();
-  const uid = currentUser.uid;
-  const ref = doc(db, "wallets", uid);
-  await runTransaction(db, async tx => {
-    const snap = await tx.get(ref);
-    let data;
-    const today = todayISO();
-    if (!snap.exists()) {
-      data = {
-        day: today,
-        dailyLimit: 3,
-        usedToday: 0,
-        totalUsed: 0,
-        createdAt: serverTimestamp()
-      };
-    } else {
-      data = snap.data() || {};
-    }
-    data = mutator({ ...data });
-    data.updatedAt = serverTimestamp();
-    tx.set(ref, data, { merge: false });
-  });
-  await loadWallet();
-}
+  // ================== ADMIN TOKEN ==================
+  const setTok = t => $("tok").textContent = t ? t.slice(0,6)+"…"+t.slice(-4) : "—";
 
-/* ===== Admin token (backend) ===== */
-async function adminCheck(){
-  let isAdmin = !!LS.getItem(TKEY);
-  try{
-    const r = await fetch("/api/admin-token",{
-      headers:{"x-admin-token":LS.getItem(TKEY)||""}
-    });
-    if(r.ok){
-      const d = await r.json().catch(()=>({}));
-      isAdmin = !!(d?.admin || d?.ok);
-    }
-  }catch{}
-  $("adminFlag").textContent = isAdmin ? "yes" : "no";
-  setTok(LS.getItem(TKEY)||"");
-  return isAdmin;
-}
-
-/* ===== Cronologia / preferenze (stessa logica di prima) ===== */
-function formatDate(ts){ try{ return new Date(ts).toLocaleString(); }catch{return '—'} }
-function readHistory(){ try{ return JSON.parse(LS.getItem('cronologia')||'[]')||[]; }catch{return []} }
-function writeHistory(list){ LS.setItem('cronologia', JSON.stringify(Array.isArray(list)?list:[])); }
-
-function readPrefs(){
-  let prefs={}; try{ prefs=JSON.parse(LS.getItem('whatif_prefs')||'{}')||{}; }catch{}
-  const langManual=LS.getItem('lang_manual')==='1';
-  const lang= (langManual ? (LS.getItem('lang')||'it') : (navigator.language||'it')).slice(0,2).toLowerCase();
-  return {
-    stile: prefs.stile || 'whatif',
-    periodo: prefs.periodo || 'future',
-    lang
-  };
-}
-function applyPrefsUI(){
-  const p=readPrefs();
-  $("statLang").textContent   = `Lingua: ${p.lang.toUpperCase()}`;
-  $("statStyle").textContent  = `Stile: ${p.stile}`;
-  $("statPeriodo").textContent= `Periodo: ${p.periodo}`;
-}
-function forcePrefs({lang,stile,periodo}){
-  const cur=readPrefs();
-  const next={...cur};
-  if(stile)  next.stile=stile;
-  if(periodo)next.periodo=periodo;
-  LS.setItem('whatif_prefs', JSON.stringify({stile:next.stile, periodo:next.periodo}));
-  if(lang){
-    LS.setItem('lang', lang);
-    LS.setItem('lang_manual','1');
-  }
-  applyPrefsUI();
-  alert('Preferenze applicate.');
-}
-
-function renderHistory(filter=''){
-  const rows=$("rows");
-  const hist=readHistory();
-  const q = filter.trim().toLowerCase();
-
-  const filtered = q ? hist.filter(x=>{
-    const d=(x.domanda||'').toLowerCase();
-    const s=(x.stile||'').toLowerCase();
-    const p=(x.periodo||'').toLowerCase();
-    return d.includes(q)||s.includes(q)||p.includes(q)||(String(x.pct||'').includes(q));
-  }) : hist;
-
-  $("statTot").textContent = `Totale domande: ${hist.length}`;
-  const byStyle = hist.reduce((a,x)=> (a[x.stile||'—']=(a[x.stile||'—']||0)+1, a), {});
-  const byPer   = hist.reduce((a,x)=> (a[x.periodo||'—']=(a[x.periodo||'—']||0)+1, a), {});
-  $("statByStyle").textContent  = 'Per stile: ' + (Object.entries(byStyle).map(([k,v])=>`${k}:${v}`).join(' · ') || '—');
-  $("statByPeriodo").textContent= 'Per periodo: ' + (Object.entries(byPer).map(([k,v])=>`${k}:${v}`).join(' · ') || '—');
-
-  rows.innerHTML='';
-  if(filtered.length===0){
-    rows.innerHTML='<tr><td colspan="6">Nessun elemento.</td></tr>';
-    return;
-  }
-  filtered.forEach((x,i)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML = `
-      <td>${i+1}</td>
-      <td>${formatDate(x.ts)}</td>
-      <td>${(x.domanda||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</td>
-      <td>${x.stile||'—'}</td>
-      <td>${x.periodo||'—'}</td>
-      <td>${x.pct!=null?x.pct:'—'}</td>
-    `;
-    rows.appendChild(tr);
-  });
-}
-
-function exportCSV(){
-  const hist=readHistory();
-  const header=['N','Data','Domanda','Stile','Periodo','Percentuale','Surprise','Motivazione'];
-  const rows=hist.map((x,i)=>[
-    i+1,
-    new Date(x.ts).toISOString().replace('T',' ').slice(0,19),
-    (x.domanda||'').replaceAll('"','""'),
-    x.stile||'',
-    x.periodo||'',
-    (x.pct!=null?x.pct:''),
-    (x.surprise?1:0),
-    (x.motivazione||'').replaceAll('"','""')
-  ]);
-  const csv=[header.join(','), ...rows.map(r=> r.map((v,j)=> (j===2||j===7) ? `"${v}"` : `${v}`).join(','))].join('\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download='whatif_cronologia.csv'; a.click();
-  setTimeout(()=>URL.revokeObjectURL(url),500);
-}
-
-/* ===== Pulsanti backend/admin ===== */
-$("enter").onclick = async()=>{
-  const pin=$("pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
-  const r=await fetch("/api/admin-token",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({pin})
-  });
-  const d=await r.json().catch(()=>({}));
-  if(r.ok && (d.token||d.ok)){
-    if(d.token) LS.setItem(TKEY,d.token);
-    $("pin").value="";
+  async function adminCheck(){
+    let isAdmin = !!LS.getItem(TKEY);
+    try{
+      const r = await fetch("/api/admin-token",{
+        headers:{"x-admin-token":LS.getItem(TKEY)||""}
+      });
+      if(r.ok){
+        const d = await r.json().catch(()=>({}));
+        isAdmin = !!(d?.admin || d?.ok);
+      }
+    }catch{}
+    $("adminFlag").textContent = isAdmin ? "yes" : "no";
     setTok(LS.getItem(TKEY)||"");
-    await adminCheck();
-    alert("Admin attivo.");
-  } else {
-    alert("PIN errato o server non disponibile.");
+    return isAdmin;
   }
-};
-$("revoke").onclick=async()=>{
-  try{
-    await fetch("/api/admin-token?action=revoke",{
-      method:"POST",
-      headers:{"x-admin-token":LS.getItem(TKEY)||""}
-    });
-  }catch{}
-  LS.removeItem(TKEY);
-  setTok("");
-  await adminCheck();
-  alert("Token revocato.");
-};
-$("simUser").onclick=()=>{
-  const t=LS.getItem(TKEY);
-  if(!t){alert("Non sei in admin.");return;}
-  LS.setItem(BKEY,t);
-  LS.removeItem(TKEY);
-  setTok("");
-  adminCheck();
-  alert("Modalità utente attiva.");
-};
-$("restoreAdmin").onclick=()=>{
-  const t=LS.getItem(BKEY)||"";
-  if(!t){alert("Nessun token salvato.");return;}
-  LS.setItem(TKEY,t);
-  LS.removeItem(BKEY);
-  setTok(t);
-  adminCheck();
-  alert("Admin ripristinato.");
-};
-$("openFourth").onclick=()=> location.href='fourth.html';
-$("openFifth").onclick =()=> location.href='fifth.html';
 
-/* ===== Pulsanti wallet Firestore ===== */
-$("presetFree").onclick = ()=> mutateWallet(data=>{
-  const today = todayISO();
-  return {...data, day:today, dailyLimit:3, usedToday:0};
-});
-$("presetPro").onclick  = ()=> mutateWallet(data=>{
-  const today = todayISO();
-  return {...data, day:today, dailyLimit:10, usedToday:0};
-});
-$("presetDev").onclick  = ()=> mutateWallet(data=>{
-  const today = todayISO();
-  return {...data, day:today, dailyLimit:9999, usedToday:0};
-});
-$("addOne").onclick     = ()=> mutateWallet(data=>{
-  const today = todayISO();
-  const day   = typeof data.day==="string"?data.day:today;
-  const limit = Number.isFinite(+data.dailyLimit)?+data.dailyLimit:3;
-  return {...data, day:today, dailyLimit: limit+1};
-});
-$("addFive").onclick    = ()=> mutateWallet(data=>{
-  const today = todayISO();
-  const day   = typeof data.day==="string"?data.day:today;
-  const limit = Number.isFinite(+data.dailyLimit)?+data.dailyLimit:3;
-  return {...data, day:today, dailyLimit: limit+5};
-});
-$("zeroUsed").onclick   = ()=> mutateWallet(data=>{
-  const today = todayISO();
-  return {...data, day:today, usedToday:0};
-});
-$("wipeAll").onclick    = ()=>{
-  if(!confirm("Reset totale del wallet per l’utente loggato?")) return;
-  mutateWallet(_=>{
-    const today = todayISO();
+  // ================== CRONOLOGIA / PREFERENZE ==================
+  function formatDate(ts){
+    try{ return new Date(ts).toLocaleString(); }catch{ return "—"; }
+  }
+  function readHistory(){
+    try{ return JSON.parse(LS.getItem("cronologia")||"[]")||[]; }catch{ return []; }
+  }
+  function writeHistory(list){
+    LS.setItem("cronologia", JSON.stringify(Array.isArray(list)?list:[]));
+  }
+  function readPrefs(){
+    let prefs={}; try{ prefs=JSON.parse(LS.getItem("whatif_prefs")||"{}")||{}; }catch{}
+    const langManual = LS.getItem("lang_manual")==="1";
+    const lang = (langManual ? (LS.getItem("lang")||"it") : (navigator.language||"it"))
+      .slice(0,2).toLowerCase();
     return {
-      day:today,
-      dailyLimit:3,
-      usedToday:0,
-      totalUsed:0,
-      createdAt:serverTimestamp()
+      stile:   prefs.stile   || "whatif",
+      periodo: prefs.periodo || "future",
+      lang
     };
-  });
-};
-
-/* ===== Preferenze & cronologia ===== */
-$("applyPrefs").onclick=()=>{
-  const lang = $("forceLang").value || null;
-  const stile= $("forceStyle").value || null;
-  const per  = $("forcePeriodo").value || null;
-  forcePrefs({lang,stile,periodo:per});
-};
-$("search").addEventListener('input', (e)=> renderHistory(e.target.value||''));
-$("exportCSV").onclick=exportCSV;
-$("clearHistory").onclick=()=>{
-  if(confirm("Sicuro di svuotare la cronologia locale?")){
-    writeHistory([]);
-    renderHistory('');
   }
-};
-
-/* ===== Sync multi-tab (solo prefs + history) ===== */
-window.addEventListener('storage', (e)=>{
-  if(['admin_token','lang','lang_manual','whatif_prefs','cronologia'].includes(e.key||'')){
+  function applyPrefsUI(){
+    const p = readPrefs();
+    $("statLang").textContent    = `Lingua: ${p.lang.toUpperCase()}`;
+    $("statStyle").textContent   = `Stile: ${p.stile}`;
+    $("statPeriodo").textContent = `Periodo: ${p.periodo}`;
+  }
+  function forcePrefs({lang,stile,periodo}){
+    const cur  = readPrefs();
+    const next = {...cur};
+    if(stile)   next.stile   = stile;
+    if(periodo) next.periodo = periodo;
+    LS.setItem("whatif_prefs", JSON.stringify({stile:next.stile, periodo:next.periodo}));
+    if(lang){
+      LS.setItem("lang", lang);
+      LS.setItem("lang_manual","1");
+    }
     applyPrefsUI();
-    renderHistory($("search").value||'');
+    alert("Preferenze applicate.");
   }
-});
+  function renderHistory(filter=""){
+    const rows = $("rows");
+    const hist = readHistory();
+    const q    = filter.trim().toLowerCase();
 
-/* ===== Init ===== */
-onAuthStateChanged(auth, async (user)=>{
-  currentUser = user;
-  renderFirebaseState();
-  await loadWallet();
-});
+    const filtered = q ? hist.filter(x=>{
+      const d=(x.domanda||"").toLowerCase();
+      const s=(x.stile||"").toLowerCase();
+      const p=(x.periodo||"").toLowerCase();
+      return d.includes(q)||s.includes(q)||p.includes(q)||(String(x.pct||"").includes(q));
+    }) : hist;
 
-adminCheck();
-applyPrefsUI();
-renderHistory('');
+    $("statTot").textContent = `Totale domande: ${hist.length}`;
+    const byStyle = hist.reduce((a,x)=> (a[x.stile||"—"]=(a[x.stile||"—"]||0)+1, a),{});
+    const byPer   = hist.reduce((a,x)=> (a[x.periodo||"—"]=(a[x.periodo||"—"]||0)+1, a),{});
+    $("statByStyle").textContent  = "Per stile: " + (Object.entries(byStyle).map(([k,v])=>`${k}:${v}`).join(" · ") || "—");
+    $("statByPeriodo").textContent= "Per periodo: " + (Object.entries(byPer).map(([k,v])=>`${k}:${v}`).join(" · ") || "—");
+
+    rows.innerHTML="";
+    if(filtered.length===0){
+      rows.innerHTML='<tr><td colspan="6">Nessun elemento.</td></tr>';
+      return;
+    }
+
+    filtered.forEach((x,i)=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML = `
+        <td>${i+1}</td>
+        <td>${formatDate(x.ts)}</td>
+        <td>${(x.domanda||"").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</td>
+        <td>${x.stile||"—"}</td>
+        <td>${x.periodo||"—"}</td>
+        <td>${x.pct!=null?x.pct:"—"}</td>
+      `;
+      rows.appendChild(tr);
+    });
+  }
+  function exportCSV(){
+    const hist  = readHistory();
+    const header= ["N","Data","Domanda","Stile","Periodo","Percentuale","Surprise","Motivazione"];
+    const rows  = hist.map((x,i)=>[
+      i+1,
+      new Date(x.ts).toISOString().replace("T"," ").slice(0,19),
+      (x.domanda||"").replaceAll('"','""'),
+      x.stile||"",
+      x.periodo||"",
+      x.pct!=null?x.pct:"",
+      x.surprise?1:0,
+      (x.motivazione||"").replaceAll('"','""')
+    ]);
+    const csv=[header.join(","), ...rows.map(r=> r.map((v,j)=> (j===2||j===7)?`"${v}"`:`${v}`).join(","))].join("\n");
+    const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+    const url =URL.createObjectURL(blob);
+    const a   =document.createElement("a");
+    a.href=url; a.download="whatif_cronologia.csv"; a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),500);
+  }
+
+  // ================== WIRING PULSANTI ==================
+  $("enter").onclick = async ()=>{
+    const pin=$("pin").value.trim();
+    if(!pin) return alert("Inserisci il PIN");
+    const r=await fetch("/api/admin-token",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({pin})
+    });
+    const d=await r.json().catch(()=>({}));
+    if(r.ok && (d.token||d.ok)){
+      if(d.token) LS.setItem(TKEY,d.token);
+      $("pin").value="";
+      setTok(LS.getItem(TKEY)||"");
+      await adminCheck();
+      alert("Admin attivo.");
+    }else{
+      alert("PIN errato o server non disponibile.");
+    }
+  };
+
+  $("revoke").onclick = async ()=>{
+    try{
+      await fetch("/api/admin-token?action=revoke",{
+        method:"POST",
+        headers:{"x-admin-token":LS.getItem(TKEY)||""}
+      });
+    }catch{}
+    LS.removeItem(TKEY);
+    setTok("");
+    await adminCheck();
+    alert("Token revocato.");
+  };
+
+  $("simUser").onclick = ()=>{
+    const t=LS.getItem(TKEY);
+    if(!t){alert("Non sei in admin.");return;}
+    LS.setItem(BKEY,t);
+    LS.removeItem(TKEY);
+    setTok("");
+    adminCheck();
+    alert("Modalità utente attiva.");
+  };
+
+  $("restoreAdmin").onclick = ()=>{
+    const t=LS.getItem(BKEY)||"";
+    if(!t){alert("Nessun token salvato.");return;}
+    LS.setItem(TKEY,t);
+    LS.removeItem(BKEY);
+    setTok(t);
+    adminCheck();
+    alert("Admin ripristinato.");
+  };
+
+  $("openFourth").onclick = ()=> location.href="fourth.html";
+  $("openFifth").onclick  = ()=> location.href="fifth.html";
+
+  // Crediti
+  $("presetFree").onclick = ()=> setPreset(3);
+  $("presetPro").onclick  = ()=> setPreset(10);
+  $("presetDev").onclick  = ()=> setPreset(9999);
+  $("addOne").onclick     = ()=> addToLimit(1);
+  $("addFive").onclick    = ()=> addToLimit(5);
+  $("zeroUsed").onclick   = ()=> zeroUsedToday();
+  $("wipeAll").onclick    = ()=> wipeAllWallet();
+
+  // Preferenze
+  $("applyPrefs").onclick = ()=>{
+    const lang = $("forceLang").value || null;
+    const stile= $("forceStyle").value || null;
+    const per  = $("forcePeriodo").value || null;
+    forcePrefs({lang,stile,periodo:per});
+  };
+
+  // Cronologia
+  $("search").addEventListener("input", e=> renderHistory(e.target.value||""));
+  $("exportCSV").onclick = exportCSV;
+  $("clearHistory").onclick = ()=>{
+    if(confirm("Sicuro di svuotare la cronologia locale?")){
+      writeHistory([]);
+      renderHistory("");
+    }
+  };
+
+  // Init
+  window.addEventListener("load", ()=>{
+    adminCheck();
+    applyPrefsUI();
+    renderHistory("");
+  });
+
+  onAuthStateChanged(auth, ()=>{
+    drawWallet();
+  });
 </script>
 </body>
 </html>
