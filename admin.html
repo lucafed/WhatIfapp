@@ -5,440 +5,410 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>What?f — Admin crediti</title>
   <meta name="theme-color" content="#0A0F14"/>
-
   <style>
     :root{
-      --bg:#06090f; --bg2:#0d1622; --card:#101821;
-      --fg:#f4f7fb; --muted:#9fb0bd;
-      --acc:#1c57a0; --acc2:#ffec01;
-      --ink:#050608; --chip:#131c26; --line:#1f2a36;
-      --danger:#ff4b5c; --ok:#48c774;
+      --bg:#05070B; --bg2:#0C1220; --card:#111821;
+      --fg:#F4F7FB; --muted:#A0B2BA;
+      --accent:#1C57A0; --accent2:#FFEC01;
+      --chip:#121b24; --line:#1b2834; --bad:#ff5858;
     }
-    *{box-sizing:border-box}
     html,body{
-      margin:0;min-height:100%;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      margin:0;
       background:
-        radial-gradient(900px 700px at 12% 18%, var(--bg2) 0%, var(--bg) 60%),
-        radial-gradient(600px 480px at 85% 12%, rgba(255,236,1,.08), transparent 60%);
+        radial-gradient(800px 600px at 18% 14%, var(--bg2) 0%, var(--bg) 60%),
+        radial-gradient(700px 520px at 80% 80%, rgba(255,236,1,.06), transparent 65%);
       color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       -webkit-font-smoothing:antialiased;
     }
-    main{max-width:960px;margin:0 auto;padding:14px 12px 32px}
-    h1{margin:6px 0 4px;font-size:clamp(22px,4vw,30px);color:var(--acc2)}
-    .sub{margin:0 0 12px;color:var(--muted);font-size:13px}
+    main{max-width:960px;margin:0 auto;padding:18px 14px 40px}
+    h1{margin:4px 0 4px;font-size:clamp(22px,5vw,30px);color:var(--accent2);text-shadow:0 0 18px rgba(255,236,1,.22)}
+    .sub{margin:0 0 14px;color:var(--muted);font-size:13px}
     .card{
-      background:var(--card);
-      border-radius:18px;
-      border:1px solid var(--line);
-      padding:14px 14px 16px;
-      margin:10px 0;
-      backdrop-filter:blur(12px);
-      box-shadow:0 14px 32px rgba(0,0,0,.55);
+      background:var(--card);border-radius:16px;border:1px solid var(--line);
+      padding:14px 14px 16px;margin-top:12px;box-shadow:0 8px 28px rgba(0,0,0,.45);
     }
+    .label{font-size:13px;font-weight:800;color:var(--accent2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
     .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .col{display:flex;flex-direction:column;gap:6px}
-    .label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-    .pill{padding:4px 9px;border-radius:999px;background:rgba(0,0,0,.35);font-size:12px}
-    .pill.ok{background:rgba(72,199,116,.12);color:#b9f5cb}
-    .pill.warn{background:rgba(255,75,92,.12);color:#ffd0d4}
-    .pill.admin{background:rgba(255,236,1,.11);color:#fff6b0}
-
+    .grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+    .chip{padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--chip);font-size:12px;color:#d7e8ec}
+    .chip.warn{border-color:var(--bad);color:#ffd4d4}
     .btn{
-      appearance:none;border-radius:999px;
-      border:1px solid var(--line);
-      background:var(--chip);
-      color:var(--fg);
-      padding:8px 14px;
-      font-weight:700;
-      font-size:13px;
-      cursor:pointer;
-      display:inline-flex;align-items:center;gap:6px;
+      appearance:none;border-radius:12px;border:1px solid var(--line);
+      padding:8px 12px;font-weight:700;background:var(--chip);color:var(--fg);cursor:pointer;
     }
     .btn.primary{
       border:none;
-      background:linear-gradient(180deg,var(--acc),var(--acc2));
-      color:var(--ink);
-      box-shadow:0 10px 26px rgba(0,0,0,.5);
+      background:linear-gradient(180deg,var(--accent),var(--accent2));
+      color:#061017;box-shadow:0 8px 24px rgba(0,0,0,.5);
     }
-    .btn.danger{border-color:rgba(255,75,92,.6);color:#ffd0d4}
-    .btn.small{padding:6px 10px;font-size:12px}
+    .btn.danger{border-color:var(--bad);color:#ffd4d4}
     .btn[disabled]{opacity:.4;cursor:not-allowed}
     input{
-      background:rgba(255,255,255,.05);
-      border-radius:10px;
-      border:1px solid var(--line);
-      padding:7px 10px;
-      color:var(--fg);
-      font-size:14px;
-      min-width:0;
+      background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--line);
+      padding:8px 10px;color:var(--fg);min-width:0;font-size:14px;
     }
-    input:focus{outline:1px solid var(--acc2);outline-offset:1px}
-    .num{width:80px;text-align:center}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:6px}
-    .small{font-size:12px;color:var(--muted)}
+    .value{font-weight:800}
+    .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+    .small{font-size:11px;color:var(--muted);margin-top:4px}
     .hr{height:1px;background:rgba(255,255,255,.08);margin:10px 0}
-    .mono{font-family:Menlo,Consolas,monospace;font-size:12px}
-
-    @media (max-width:600px){
-      .grid{grid-template-columns:1fr}
+    .badge{border-radius:999px;padding:4px 9px;font-size:11px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+    .badge.admin{background:rgba(255,236,1,.09);border-color:rgba(255,236,1,.5);color:#fff}
+    .badge.off{opacity:.6}
+    .toast{
+      position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
+      background:rgba(10,15,20,.96);border-radius:12px;border:1px solid var(--line);
+      padding:8px 14px;font-size:13px;font-weight:700;z-index:9999;
+      opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;
     }
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+    /* Cronologia */
+    .story-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+    .story{
+      border-radius:12px;border:1px solid var(--line);padding:8px 10px;
+      background:rgba(255,255,255,.02);font-size:13px;
+    }
+    .story-q{font-weight:600;margin-bottom:3px}
+    .story-meta{font-size:11px;color:var(--muted)}
+    details summary{cursor:pointer;list-style:none}
+    details summary::-webkit-details-marker{display:none}
+    details summary::after{content:"▶";margin-left:6px;font-size:10px;opacity:.7}
+    details[open] summary::after{content:"▼"}
+    @media (max-width:580px){.grid-2{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
-  <main>
-    <h1>What?f — Admin crediti</h1>
-    <p class="sub">
-      Gestione wallet Firestore per l’utente loggato.  
-      Fourth/fifth leggono solo da <span class="mono">wallets/{uid}</span> tramite <code>bootCredits</code> / <code>getBalance</code>.
-    </p>
+<main>
+  <h1>What?f — Admin crediti</h1>
+  <p class="sub">
+    Gestione wallet Firestore per l’utente loggato. Fourth/fifth leggono solo da
+    <span class="mono">wallets/{uid}</span> tramite <span class="mono">bootCredits</span> / <span class="mono">getBalance</span>.
+    Qui puoi anche forzare FREE/PRO lato client e vedere la cronologia locale delle domande.
+  </p>
 
-    <!-- INFO UTENTE -->
-    <div class="card" id="userCard">
-      <div class="row" style="justify-content:space-between">
-        <div class="col">
-          <div class="label">Utente loggato</div>
-          <div id="userInfo">—</div>
+  <!-- UTENTE / ADMIN -->
+  <div class="card">
+    <div class="grid-2">
+      <div>
+        <div class="label">Utente loggato</div>
+        <div id="userInfo" class="small">—</div>
+      </div>
+      <div>
+        <div class="label">Stato admin locale</div>
+        <div class="row" style="margin-bottom:4px">
+          <span id="adminBadge" class="badge off">Admin locale: OFF</span>
+          <button class="btn" id="btnSimula">Simula utente (disattiva ∞)</button>
+          <button class="btn" id="btnTornaAdmin">Torna admin (∞)</button>
         </div>
-        <div class="col">
-          <div class="label">Stato admin locale</div>
-          <div class="row">
-            <span id="adminStatus" class="pill">—</span>
-            <button class="btn small" id="btnSimulaUser">Simula utente (disattiva ∞)</button>
-            <button class="btn small" id="btnTornaAdmin">Torna admin</button>
-          </div>
+        <div class="small">
+          Admin locale = usa <span class="mono">admin_token</span> in localStorage e mostra ∞ crediti
+          su fourth/fifth. “Simula utente” rimuove il token e fa usare il wallet reale.
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- LOGIN ADMIN -->
-    <div class="card">
-      <div class="label">PIN admin (solo client, nessun backend)</div>
-      <div class="row" style="margin-top:6px">
-        <input id="pinInput" placeholder="PIN admin" inputmode="numeric" style="max-width:130px"/>
-        <button class="btn primary" id="btnEnterAdmin">Entra admin</button>
-        <button class="btn" id="btnRevokeToken">Revoca token</button>
-        <span class="small">PIN demo standard: <span class="mono">4242</span> (puoi cambiarlo nel file).</span>
+  <!-- WALLET FIRESTORE (SOLO LETTURA + TEST) -->
+  <div class="card">
+    <div class="label">Wallet corrente (Firestore)</div>
+    <div class="grid-2">
+      <div>
+        <div class="row">
+          <span class="chip">Crediti disponibili: <span id="walBalance" class="value">—</span></span>
+          <span class="chip">Usati oggi: <span id="walUsed" class="value">—</span></span>
+          <span class="chip">Cap giornaliero: <span id="walCap" class="value">—</span></span>
+        </div>
+        <div class="small">Valori letti da Firestore se sei loggato. Se c’è un problema di regole, vedrai solo “—”.</div>
       </div>
-    </div>
-
-    <!-- WALLET -->
-    <div class="card">
-      <div class="row" style="justify-content:space-between;align-items:flex-start">
-        <div class="col">
-          <div class="label">Wallet corrente (Firestore)</div>
-          <div class="grid">
-            <div>
-              <div class="small">Crediti disponibili (getBalance)</div>
-              <div class="row">
-                <span id="balance" class="pill ok">—</span>
-              </div>
-            </div>
-            <div>
-              <div class="small">Usati oggi</div>
-              <div class="row">
-                <input id="usedToday" class="num" type="number" min="0"/>
-                <button class="btn small" id="btnZeroUsed">Azzera usati oggi</button>
-              </div>
-            </div>
-            <div>
-              <div class="small">Cap giornaliero</div>
-              <div class="row">
-                <input id="dailyLimit" class="num" type="number" min="0"/>
-                <button class="btn small" id="btnSaveManual">Salva cap</button>
-              </div>
-            </div>
-            <div>
-              <div class="small">Ultimo reset (info)</div>
-              <div id="lastReset" class="mono">—</div>
-            </div>
-          </div>
+      <div>
+        <div class="row">
+          <button class="btn" id="btnReload">🔄 Ricarica da Firestore</button>
+          <button class="btn" id="btnTestCredit">+5 crediti (solo test)</button>
+        </div>
+        <div class="small">
+          Questi bottoni provano a usare le funzioni di <span class="mono">store/credits.js</span>.
+          Se Firestore non è configurato, il fallimento viene solo loggato in console (niente alert).
         </div>
       </div>
+    </div>
+  </div>
 
+  <!-- PRESET RAPIDI (SOLO CLIENT) -->
+  <div class="card">
+    <div class="label">Preset rapidi (piano, lato client)</div>
+    <div class="row" style="margin-bottom:6px">
+      <button class="btn" id="btnPresetFree">FREE (3 crediti/giorno)</button>
+      <button class="btn" id="btnPresetPro">PRO (stile avanzato, limiti da wallet)</button>
+    </div>
+    <div class="row" style="margin-bottom:4px">
+      <span class="chip" id="chipPreset">Preset attuale: —</span>
+      <span class="chip" id="chipPrefs">Prefs: —</span>
+    </div>
+    <div class="small">
+      Questi preset:
+      <br>• aggiornano <span class="mono">whatif_prefs</span> in localStorage (campo <span class="mono">pro: true/false</span>),
+      <br>• impostano anche un tiny “cap locale” (<span class="mono">wallet_daily_cap</span>) usato solo per la UI.
+      <br>Il consumo vero dei crediti resta comunque su Firestore (funzioni <span class="mono">bootCredits / consumeCredit</span>).
+    </div>
+  </div>
+
+  <!-- CRONOLOGIA LOCALE -->
+  <div class="card">
+    <details open>
+      <summary class="label">Cronologia domande (locale)</summary>
+      <div class="story-list" id="histList"></div>
       <div class="hr"></div>
-
-      <!-- PRESET -->
-      <div class="label">Preset rapidi</div>
-      <div class="row" style="margin-top:6px;flex-wrap:wrap">
-        <button class="btn small" id="btnPresetFree">FREE · 3 crediti/giorno</button>
-        <button class="btn small" id="btnPresetPro">PRO · 40 crediti/giorno</button>
-        <button class="btn small" id="btnAdd5">+5 crediti oggi</button>
-        <button class="btn small danger" id="btnResetWallet">Reset totale wallet</button>
+      <div class="row">
+        <button class="btn danger" id="btnClearHist">Svuota cronologia</button>
+        <span class="small">Legge da <span class="mono">cronologia</span> in localStorage (massimo 50 voci).</span>
       </div>
+    </details>
+  </div>
 
-      <p class="small" style="margin-top:10px">
-        Schema usato: <span class="mono">{ dailyLimit, usedToday, lastReset }</span>.  
-        <code>getBalance()</code> calcola i crediti come <span class="mono">max(dailyLimit - usedToday, 0)</span> dopo il reset giornaliero.
-      </p>
-    </div>
+  <!-- PROSSIME DOMANDE SALVATE -->
+  <div class="card">
+    <details>
+      <summary class="label">Domande salvate / Next prompts</summary>
+      <div class="story-list" id="nextList"></div>
+      <div class="hr"></div>
+      <div class="row">
+        <button class="btn danger" id="btnClearNext">Svuota salvate</button>
+        <span class="small">Usa la stessa lista “Domande salvate” che vedi in fourth.</span>
+      </div>
+    </details>
+  </div>
 
-    <p class="small">
-      Nota: con <span class="mono">admin_token</span> presente, fourth/fifth mostrano ∞ e non consumano crediti.  
-      Usa “Simula utente” per verificare il consumo reale.
-    </p>
-  </main>
+  <div id="toast" class="toast"></div>
+</main>
 
-  <script type="module">
-    import { auth, db } from "./firebase.init.js";
-    import {
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+<script type="module">
+  import { auth } from "./firebase.init.js";
+  import {
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
-    import {
-      doc,
-      getDoc,
-      setDoc,
-      updateDoc
-    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+  import {
+    bootCredits,
+    getBalance,
+    consumeCredit    // lo uso solo per +5 crediti di test
+  } from "./store/credits.js";
 
-    import {
-      bootCredits,
-      getBalance
-    } from "./store/credits.js";
+  const LS = localStorage;
+  const $ = id => document.getElementById(id);
 
-    const LS = localStorage;
-    const $ = id => document.getElementById(id);
+  /* ========= TOAST ========= */
+  function toast(msg){
+    const t = $('toast'); if(!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),1500);
+  }
 
-    /* === ADMIN TOKEN (solo client, per ∞ crediti su fourth/fifth) === */
-    const ADMIN_TOKEN_KEY = "admin_token";
-    const ADMIN_PIN = "4242";           // 🔐 CAMBIA QUI IL PIN SE VUOI
-
-    function hasAdminToken(){ return !!LS.getItem(ADMIN_TOKEN_KEY); }
-    function setAdminToken(){ LS.setItem(ADMIN_TOKEN_KEY, "whatif_admin_ok"); renderAdminStatus(); }
-    function clearAdminToken(){ LS.removeItem(ADMIN_TOKEN_KEY); renderAdminStatus(); }
-
-    function renderAdminStatus(){
-      const pill = $("adminStatus");
-      if(!pill) return;
-      if(hasAdminToken()){
-        pill.textContent = "ADMIN attivo (∞ crediti lato client)";
-        pill.className = "pill admin";
-      }else{
-        pill.textContent = "Modalità utente (limite Firestore)";
-        pill.className = "pill ok";
-      }
+  /* ========= ADMIN LOCALE (∞) ========= */
+  function isAdminLocal(){ return !!LS.getItem('admin_token'); }
+  function renderAdminBadge(){
+    const badge = $('adminBadge');
+    if(isAdminLocal()){
+      badge.textContent = "Admin locale: ON (∞ crediti lato client)";
+      badge.classList.add('admin');
+      badge.classList.remove('off');
+    }else{
+      badge.textContent = "Admin locale: OFF (usa wallet reale)";
+      badge.classList.remove('admin');
+      badge.classList.add('off');
     }
+  }
+  renderAdminBadge();
 
-    $("btnEnterAdmin").onclick = ()=>{
-      const pin = ($("pinInput").value || "").trim();
-      if(pin === ADMIN_PIN){
-        setAdminToken();
-        alert("Token admin attivato. Fourth/fifth useranno ∞ crediti finché non lo revochi.");
-      }else{
-        alert("PIN errato.");
-      }
-    };
-    $("btnRevokeToken").onclick = ()=>{
-      clearAdminToken();
-      alert("Token admin revocato.");
-    };
-    $("btnSimulaUser").onclick = ()=>{
-      clearAdminToken();
-      alert("Simulazione utente: admin_token rimosso. Riapri fourth/fifth per vedere il limite reale.");
-    };
-    $("btnTornaAdmin").onclick = ()=>{
-      setAdminToken();
-      alert("Modalità admin riattivata sul client.");
-    };
+  $('btnSimula').onclick = () => {
+    LS.removeItem('admin_token');
+    renderAdminBadge();
+    toast('Simulazione utente attiva (niente ∞).');
+  };
+  $('btnTornaAdmin').onclick = () => {
+    LS.setItem('admin_token','1');
+    renderAdminBadge();
+    toast('Admin locale attivo (∞ crediti lato client).');
+  };
 
-    renderAdminStatus();
+  /* ========= UTENTE LOGGATO + WALLET FIRESTORE (SOLO LETTURA) ========= */
+  let currentUser = null;
+  let currentBalance = 0;
 
-    /* === STATO WALLET === */
-    let currentUid = null;
-    let walletDocRef = null;
-    let state = {
-      dailyLimit: 0,
-      usedToday: 0,
-      lastReset: null,
-      balance: 0
-    };
-
-    function todayISO(){ return new Date().toISOString().slice(0,10); }
-
-    function applyStateToUI(){
-      $("dailyLimit").value = state.dailyLimit ?? 0;
-      $("usedToday").value = state.usedToday ?? 0;
-      $("lastReset").textContent = state.lastReset || "—";
-
-      const balEl = $("balance");
-      if(hasAdminToken()){
-        balEl.textContent = "∞ (admin)";
-        balEl.className = "pill admin";
-      }else{
-        balEl.textContent = String(state.balance);
-        balEl.className = state.balance > 0 ? "pill ok" : "pill warn";
-      }
+  function renderUser(){
+    const box = $('userInfo');
+    if(!currentUser){
+      box.textContent = "Nessun utente loggato. I preset FREE/PRO funzionano comunque lato client; il wallet Firestore resta inattivo.";
+    }else{
+      box.innerHTML = `
+        <div><span class="value">${currentUser.email || currentUser.uid}</span></div>
+        <div class="small mono">uid: ${currentUser.uid}</div>
+      `;
     }
+  }
 
-    async function loadWallet(){
-      if(!currentUid){
-        state = {dailyLimit:0,usedToday:0,lastReset:null,balance:0};
-        applyStateToUI();
-        return;
-      }
+  function renderWalletUI(){
+    $('walBalance').textContent = isAdminLocal() ? "∞ (admin)" : (Number.isFinite(currentBalance) ? currentBalance : "—");
+  }
 
-      walletDocRef = doc(db, "wallets", currentUid);
+  async function syncWalletFromServer(showToast=false){
+    if(!auth.currentUser){
+      // niente utente = niente chiamate Firestore
+      currentBalance = 0;
+      renderWalletUI();
+      return;
+    }
+    try{
+      await bootCredits();              // crea doc + reset se serve
+      const bal = await getBalance();
+      currentBalance = Number.isFinite(+bal) ? +bal : 0;
+      renderWalletUI();
+      if(showToast) toast('Wallet ricaricato da Firestore.');
+    }catch(e){
+      console.error("Wallet sync error:", e);
+      // nessun alert: solo console + UI con —
+      currentBalance = 0;
+      renderWalletUI();
+      if(showToast) toast('Impossibile leggere il wallet (vedi console).');
+    }
+  }
 
-      // assicura doc + reset giornaliero usando la stessa logica di fourth/fifth
+  onAuthStateChanged(auth, async (user)=>{
+    currentUser = user;
+    renderUser();
+    await syncWalletFromServer(false);
+  });
+
+  $('btnReload').onclick = ()=> syncWalletFromServer(true);
+
+  // +5 crediti di test: usa consumeCredit al contrario (solo per vedere che Firestore risponde)
+  $('btnTestCredit').onclick = async ()=>{
+    if(!auth.currentUser){
+      toast('Devi essere loggato per testare il wallet.');
+      return;
+    }
+    try{
+      // trucchetto: faccio prima bootCredits, poi chiedo il balance e mostro +5 "finti" solo a schermo
       await bootCredits();
-      const snap = await getDoc(walletDocRef);
-
-      if(snap.exists()){
-        const data = snap.data() || {};
-        state.dailyLimit = Number.isFinite(+data.dailyLimit) ? +data.dailyLimit : 0;
-        state.usedToday = Number.isFinite(+data.usedToday) ? +data.usedToday : 0;
-        state.lastReset = data.lastReset || null;
-      }else{
-        // se per qualche motivo non esiste ancora, crealo
-        await setDoc(walletDocRef,{
-          dailyLimit:0,
-          usedToday:0,
-          lastReset: todayISO()
-        });
-        state.dailyLimit = 0;
-        state.usedToday = 0;
-        state.lastReset = todayISO();
-      }
-
-      // usa la stessa funzione di front-end per il saldo
-      try{
-        state.balance = await getBalance();
-      }catch{
-        state.balance = Math.max(state.dailyLimit - state.usedToday, 0);
-      }
-      applyStateToUI();
+      const bal = await getBalance();
+      currentBalance = Number.isFinite(+bal) ? +bal + 5 : 5; // NON scrive su Firestore, è solo visual
+      renderWalletUI();
+      toast('Test: +5 crediti (solo UI, non salvato).');
+    }catch(e){
+      console.error("Test credit error:", e);
+      toast('Errore nel test dei crediti (vedi console).');
     }
+  };
 
-    async function requireUidOrAlert(){
-      if(!currentUid){
-        alert("Nessun utente loggato. Fai login prima di usare l’admin crediti.");
-        throw new Error("no_user");
-      }
+  /* ========= PRESET FREE / PRO (SOLO CLIENT) ========= */
+  function readPrefs(){
+    try{
+      return JSON.parse(LS.getItem('whatif_prefs') || '{}') || {};
+    }catch{ return {}; }
+  }
+  function writePrefs(p){
+    LS.setItem('whatif_prefs', JSON.stringify(p));
+  }
+  function renderPresetInfo(){
+    const prefs = readPrefs();
+    const preset = prefs.pro ? 'PRO' : 'FREE';
+    $('chipPreset').textContent = `Preset attuale: ${preset}`;
+    $('chipPrefs').textContent = `Prefs: pro=${!!prefs.pro}, stile=${prefs.stile || 'whatif'}, periodo=${prefs.periodo || 'future'}`;
+  }
+
+  $('btnPresetFree').onclick = ()=>{
+    const prefs = readPrefs();
+    prefs.pro = false;                 // stile “FREE”
+    writePrefs(prefs);
+    LS.setItem('wallet_daily_cap','3'); // piccolo cap locale, se vuoi leggerlo da qualche parte
+    renderPresetInfo();
+    toast('Preset FREE applicato (pro=false, cap locale=3).');
+  };
+
+  $('btnPresetPro').onclick = ()=>{
+    const prefs = readPrefs();
+    prefs.pro = true;
+    writePrefs(prefs);
+    LS.setItem('wallet_daily_cap','9999');
+    renderPresetInfo();
+    toast('Preset PRO applicato (pro=true, cap locale alto).');
+  };
+
+  renderPresetInfo();
+
+  /* ========= CRONOLOGIA LOCALE ========= */
+  function fmt(ts){
+    try{
+      return new Date(ts).toLocaleString('it-IT',{hour12:false});
+    }catch{return '—'}
+  }
+
+  function renderHistory(){
+    const box = $('histList');
+    box.innerHTML = '';
+    let arr=[];
+    try{ arr = JSON.parse(LS.getItem('cronologia') || '[]'); if(!Array.isArray(arr)) arr=[]; }catch{arr=[];}
+    if(!arr.length){
+      const div=document.createElement('div');
+      div.className='small';
+      div.textContent='— Nessuna cronologia trovata.';
+      box.appendChild(div);
+      return;
     }
-
-    /* === LISTEN AUTH === */
-    onAuthStateChanged(auth, async user=>{
-      if(!user){
-        currentUid = null;
-        $("userInfo").textContent = "Nessun utente loggato.";
-        state = {dailyLimit:0,usedToday:0,lastReset:null,balance:0};
-        applyStateToUI();
-        return;
-      }
-      currentUid = user.uid;
-      $("userInfo").textContent = user.email || ("UID: "+user.uid);
-      try{
-        await loadWallet();
-      }catch(e){
-        console.error("Errore loadWallet", e);
-        alert("Errore nel caricamento del wallet da Firestore.");
-      }
+    arr.slice(-50).reverse().forEach(item=>{
+      const d=document.createElement('div');
+      d.className='story';
+      d.innerHTML = `
+        <div class="story-q">${(item.domanda || '—')
+          .replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        <div class="story-meta">
+          ${fmt(item.ts)} · stile: ${item.stile || 'whatif'} · periodo: ${item.periodo || 'future'}
+          ${item.surprise ? ' · surprise' : ''}
+        </div>
+      `;
+      box.appendChild(d);
     });
+  }
 
-    /* === AZIONI WALLET === */
+  function renderNext(){
+    const box = $('nextList');
+    box.innerHTML='';
+    let arr=[];
+    try{ arr = JSON.parse(LS.getItem('next_prompts') || '[]'); if(!Array.isArray(arr)) arr=[]; }catch{arr=[];}
+    if(!arr.length){
+      const div=document.createElement('div');
+      div.className='small';
+      div.textContent='— Nessuna domanda salvata.';
+      box.appendChild(div);
+      return;
+    }
+    arr.slice(0,50).forEach(item=>{
+      const d=document.createElement('div');
+      d.className='story';
+      d.innerHTML = `
+        <div class="story-q">${(item.q || '—')
+          .replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        <div class="story-meta">${fmt(item.ts)}</div>
+      `;
+      box.appendChild(d);
+    });
+  }
 
-    // Salvataggio manuale cap
-    $("btnSaveManual").onclick = async ()=>{
-      try{
-        await requireUidOrAlert();
-        const dl = Number($("dailyLimit").value || "0");
-        if(!Number.isFinite(dl) || dl < 0) throw new Error("valore non valido");
-        await updateDoc(walletDocRef,{
-          dailyLimit: dl
-        });
-        await loadWallet();
-        alert("Cap giornaliero aggiornato.");
-      }catch(e){
-        console.error("saveManual error", e);
-        if(e.message !== "no_user") alert("Errore nel salvataggio del cap.");
-      }
-    };
+  $('btnClearHist').onclick = ()=>{
+    if(!confirm('Sicuro di voler svuotare tutta la cronologia locale?')) return;
+    LS.removeItem('cronologia');
+    renderHistory();
+    toast('Cronologia svuotata.');
+  };
+  $('btnClearNext').onclick = ()=>{
+    if(!confirm('Sicuro di voler svuotare tutte le domande salvate?')) return;
+    LS.removeItem('next_prompts');
+    renderNext();
+    toast('Domande salvate svuotate.');
+  };
 
-    // Azzera usati oggi
-    $("btnZeroUsed").onclick = async ()=>{
-      try{
-        await requireUidOrAlert();
-        await updateDoc(walletDocRef,{
-          usedToday: 0
-        });
-        await loadWallet();
-        alert("Usati oggi azzerati.");
-      }catch(e){
-        console.error("zeroUsed error", e);
-        if(e.message!=="no_user") alert("Errore nell’azzeramento di usati oggi.");
-      }
-    };
-
-    // +5 crediti per oggi (riduce usedToday di 5, minimo 0)
-    $("btnAdd5").onclick = async ()=>{
-      try{
-        await requireUidOrAlert();
-        const snap = await getDoc(walletDocRef);
-        const data = snap.exists()?snap.data():{};
-        const used = Number.isFinite(+data.usedToday)?+data.usedToday:0;
-        const newUsed = Math.max(0, used - 5);
-        await updateDoc(walletDocRef,{ usedToday:newUsed });
-        await loadWallet();
-        alert("+5 crediti per oggi (usedToday ridotto).");
-      }catch(e){
-        console.error("add5 error", e);
-        if(e.message!=="no_user") alert("Errore nel bonus +5 crediti.");
-      }
-    };
-
-    // PRESET FREE (3/die)
-    $("btnPresetFree").onclick = async ()=>{
-      try{
-        await requireUidOrAlert();
-        await setDoc(walletDocRef,{
-          dailyLimit: 3,
-          usedToday: 0,
-          lastReset: todayISO()
-        },{merge:true});
-        await loadWallet();
-        alert("Preset FREE applicato: 3 crediti/giorno.");
-      }catch(e){
-        console.error("preset FREE error", e);
-        if(e.message!=="no_user") alert("Errore nel preset FREE (controlla console).");
-      }
-    };
-
-    // PRESET PRO (40/die)
-    $("btnPresetPro").onclick = async ()=>{
-      try{
-        await requireUidOrAlert();
-        await setDoc(walletDocRef,{
-          dailyLimit: 40,
-          usedToday: 0,
-          lastReset: todayISO()
-        },{merge:true});
-        await loadWallet();
-        alert("Preset PRO applicato: 40 crediti/giorno.");
-      }catch(e){
-        console.error("preset PRO error", e);
-        if(e.message!=="no_user") alert("Errore nel preset PRO (controlla console).");
-      }
-    };
-
-    // RESET TOTALE
-    $("btnResetWallet").onclick = async ()=>{
-      if(!confirm("Sei sicuro di voler azzerare completamente il wallet (cap + usati)?")) return;
-      try{
-        await requireUidOrAlert();
-        await setDoc(walletDocRef,{
-          dailyLimit: 0,
-          usedToday: 0,
-          lastReset: todayISO()
-        },{merge:true});
-        await loadWallet();
-        alert("Wallet resettato.");
-      }catch(e){
-        console.error("resetWallet error", e);
-        if(e.message!=="no_user") alert("Errore nel reset totale wallet.");
-      }
-    };
-
-  </script>
+  renderHistory();
+  renderNext();
+</script>
 </body>
 </html>
