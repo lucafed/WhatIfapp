@@ -2,18 +2,17 @@
 // Gestione crediti giornalieri via Firestore
 // Usato da fourth.html, fifth.html e admin.html
 
-// 👇 IMPORTA Firebase inizializzato
-import { auth, db } from "../firebase.init.js";
-
+// 👇 IMPORTA TUTTO da firebase.init.js (UNA SOLA FIRESTORE)
 import {
+  auth,
+  db,
   doc,
   getDoc,
   setDoc,
   runTransaction,
   serverTimestamp,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-//                    ^^^^^^  <-- allineato alla stessa versione di firebase.init.js
+  updateDoc,
+} from "../firebase.init.js";
 
 // 🔢 limite base (se il doc non esiste o è invalido)
 const DEFAULT_DAILY_LIMIT = 3;
@@ -70,7 +69,7 @@ export async function bootCredits() {
       usedToday: 0,
       totalUsed: 0,
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     });
     return;
   }
@@ -99,9 +98,9 @@ export async function bootCredits() {
       day: today,
       dailyLimit,
       usedToday,
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     },
-    { merge: true }
+    { merge: true },
   );
 }
 
@@ -137,7 +136,7 @@ export async function getBalance() {
         usedToday: 0,
         totalUsed: 0,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       });
       return DEFAULT_DAILY_LIMIT;
     }
@@ -158,7 +157,7 @@ export async function getBalance() {
       await setDoc(
         ref,
         { day, usedToday, dailyLimit, updatedAt: serverTimestamp() },
-        { merge: true }
+        { merge: true },
       );
     }
 
@@ -203,7 +202,7 @@ export async function consumeCredit() {
           usedToday: 1,
           totalUsed: 1,
           createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
         };
         tx.set(ref, base);
         return true;
@@ -241,9 +240,9 @@ export async function consumeCredit() {
           dailyLimit,
           usedToday,
           totalUsed,
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
         },
-        { merge: true }
+        { merge: true },
       );
 
       return true;
@@ -258,19 +257,12 @@ export async function consumeCredit() {
 
 // ==== FUNZIONI ADMIN (per admin.html) ==== //
 
-/**
- * getWalletRaw()
- * - ritorna l’intero documento wallet dell’utente corrente
- *   (day, dailyLimit, usedToday, totalUsed, ecc.)
- *   se non esiste ancora → lo crea con il default
- */
 export async function getWalletRaw() {
   const user = getUserOrThrow();
   const ref = walletRef(user.uid);
   let snap = await getDoc(ref);
 
   if (!snap.exists()) {
-    // inizializza come FREE e rilegge
     await bootCredits();
     snap = await getDoc(ref);
     if (!snap.exists()) return null;
@@ -279,15 +271,10 @@ export async function getWalletRaw() {
   return {
     uid: user.uid,
     email: user.email || null,
-    ...snap.data()
+    ...snap.data(),
   };
 }
 
-/**
- * adminSetDailyLimit(limit)
- * - imposta dailyLimit per l’utente corrente
- * - se usedToday > limit, lo tronca a limit
- */
 export async function adminSetDailyLimit(limit) {
   const user = getUserOrThrow();
   const ref = walletRef(user.uid);
@@ -303,7 +290,7 @@ export async function adminSetDailyLimit(limit) {
         usedToday: 0,
         totalUsed: 0,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       });
       return;
     }
@@ -317,17 +304,13 @@ export async function adminSetDailyLimit(limit) {
         day: today,
         dailyLimit: lim,
         usedToday,
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       },
-      { merge: true }
+      { merge: true },
     );
   });
 }
 
-/**
- * adminAddCredits(delta)
- * - aumenta il dailyLimit di delta (per “ricaricare” oggi)
- */
 export async function adminAddCredits(delta) {
   const user = getUserOrThrow();
   const ref = walletRef(user.uid);
@@ -344,7 +327,7 @@ export async function adminAddCredits(delta) {
         usedToday: 0,
         totalUsed: 0,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       });
       return;
     }
@@ -359,17 +342,13 @@ export async function adminAddCredits(delta) {
         ...data,
         day: today,
         dailyLimit: newLimit,
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       },
-      { merge: true }
+      { merge: true },
     );
   });
 }
 
-/**
- * adminResetToday()
- * - azzera usedToday (solo per oggi), non tocca dailyLimit
- */
 export async function adminResetToday() {
   const user = getUserOrThrow();
   const ref = walletRef(user.uid);
@@ -377,7 +356,7 @@ export async function adminResetToday() {
   await updateDoc(ref, {
     day: today,
     usedToday: 0,
-    updatedAt: serverTimestamp()
+    updatedAt: serverTimestamp(),
   }).catch(async (e) => {
     if (e.code === "not-found") {
       await setDoc(ref, {
@@ -386,7 +365,7 @@ export async function adminResetToday() {
         usedToday: 0,
         totalUsed: 0,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       });
     } else {
       throw e;
@@ -394,10 +373,6 @@ export async function adminResetToday() {
   });
 }
 
-/**
- * adminWipeWallet()
- * - reset totale doc (torni al DEFAULT_DAILY_LIMIT e zero usati)
- */
 export async function adminWipeWallet() {
   const user = getUserOrThrow();
   const ref = walletRef(user.uid);
@@ -408,6 +383,6 @@ export async function adminWipeWallet() {
     usedToday: 0,
     totalUsed: 0,
     createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
+    updatedAt: serverTimestamp(),
   });
 }
