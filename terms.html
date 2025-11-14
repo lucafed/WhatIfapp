@@ -6,36 +6,78 @@
 <title>What?f — Termini d’uso</title>
 <meta name="theme-color" content="#0A0F14"/>
 <style>
-  :root{--bg:#0A0F14;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF}
+  :root{--bg:#05070B;--fg:#E6F2F5;--muted:#A0B2BA;--accent:#00E0FF;--accent2:#1AFFD5}
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  header{display:flex;align-items:center;gap:12px;padding:14px 16px}
-  header a{color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:8px}
-  main{max-width:980px;margin:0 auto;padding:8px 16px 36px;line-height:1.65}
-  h1{font-size:clamp(22px,5vw,30px);margin:6px 0 10px}
+  html,body{
+    height:100%;margin:0;
+    background:
+      radial-gradient(900px 700px at 5% 0%, #141f2a 0%, var(--bg) 55%),
+      radial-gradient(800px 600px at 90% 120%, rgba(0,224,255,.06), transparent 70%);
+    color:var(--fg);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  }
+  header{
+    display:flex;align-items:center;gap:12px;
+    padding:14px 16px;
+  }
+  header a{
+    color:var(--muted);text-decoration:none;
+    display:inline-flex;align-items:center;gap:8px;
+    background:rgba(8,14,22,.96);
+    border-radius:999px;border:1px solid #1d2b34;
+    padding:8px 12px;font-size:14px;
+  }
+  header .pill{
+    margin-left:auto;
+    display:inline-flex;align-items:center;gap:6px;
+    padding:4px 10px;border-radius:999px;
+    background:rgba(0,224,255,.08);border:1px solid rgba(0,224,255,.32);
+    font-size:11px;color:#cfefff;text-transform:uppercase;letter-spacing:.06em;
+  }
+  main{max-width:980px;margin:0 auto;padding:8px 16px 50px;line-height:1.7}
+  h1{font-size:clamp(22px,5vw,30px);margin:6px 0 4px}
+  h1 span.hl{color:var(--accent)}
   h2{font-size:clamp(18px,4vw,22px);margin:18px 0 8px;color:var(--accent)}
   p,li{color:#d7e6ea}
-  ul{padding-left:18px}
+  ul{padding-left:18px;margin:6px 0}
   a{color:var(--accent)}
   small{color:var(--muted)}
-  .box{border:1px solid #1d2b34;background:#0f1820;border-radius:12px;padding:12px 14px;margin:10px 0}
+  .box{
+    border:1px solid #1d2b34;
+    background:rgba(8,14,22,.96);
+    border-radius:14px;
+    padding:12px 14px;
+    margin:12px 0;
+  }
+  .badge{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:3px 9px;border-radius:999px;
+    background:#0f1820;border:1px solid #22323f;
+    font-size:11px;color:var(--muted);
+  }
 </style>
 </head>
 <body>
 <header>
   <a href="index.html" id="backLink">← <span data-i="back">Indietro</span></a>
-  <div style="flex:1"></div>
+  <div class="pill">
+    <span data-i="pill_store">Versione adatta per pubblicazione su store</span>
+  </div>
 </header>
 
 <main>
-  <h1 data-i="title">Termini d’uso</h1>
-  <p data-i="lastupd"><small>Ultimo aggiornamento: 10 novembre 2025</small></p>
+  <h1><span class="hl">What?f</span> — <span data-i="title">Termini d’uso</span></h1>
+  <p data-i="lastupd"><small>Ultimo aggiornamento: 14 novembre 2025</small></p>
 
-  <p data-i="intro">Usando What?f accetti integralmente i presenti Termini. Se non li accetti, non utilizzare l’applicazione.</p>
+  <p data-i="intro">
+    Usando What?f accetti integralmente i presenti Termini. Se non li accetti, non utilizzare l’applicazione.
+  </p>
 
   <div class="box">
     <strong data-i="ai_box_h">Avvertenza AI</strong>
-    <p data-i="ai_box_b">Le risposte sono generate automaticamente da sistemi di intelligenza artificiale. <em>What if</em> fornisce scenari plausibili e riflessivi, basati su ipotesi realistiche. <em>What the F</em> propone visioni ironiche, creative e imprevedibili. I contenuti non costituiscono consulenza professionale (medica, legale, finanziaria o di altro tipo).</p>
+    <p data-i="ai_box_b">
+      Le risposte sono generate automaticamente da sistemi di intelligenza artificiale. <em>What if</em> fornisce scenari plausibili e riflessivi, basati su ipotesi realistiche. <em>What the F</em> propone visioni ironiche, creative e imprevedibili. I contenuti non costituiscono consulenza professionale (medica, legale, finanziaria o di altro tipo) e non sostituiscono il giudizio di un esperto umano.
+    </p>
   </div>
 
   <h2 data-i="elig_h">Idoneità</h2>
@@ -53,51 +95,91 @@
   </ul>
 
   <h2 data-i="abuse_h">Uso improprio, automatismi e frodi</h2>
-  <p data-i="abuse_b">È vietato aggirare limiti tecnici, automatizzare richieste (bot/scraping), manipolare crediti, simulare identità o porre in essere comportamenti ingannevoli o fraudolenti. In tali casi possiamo limitare, sospendere o cessare l’accesso senza preavviso e azzerare crediti ottenuti indebitamente, fermo restando ogni rimedio legale.</p>
+  <p data-i="abuse_b">
+    È vietato aggirare limiti tecnici, automatizzare richieste (bot/scraping), manipolare l’assegnazione dei crediti (inclusi quelli derivanti da annunci), simulare identità o porre in essere comportamenti ingannevoli o fraudolenti. In tali casi possiamo limitare, sospendere o cessare l’accesso senza preavviso e azzerare crediti ottenuti indebitamente, fermo restando ogni rimedio legale.
+  </p>
 
   <h2 data-i="ugc_h">Contenuti dell’utente (UGC)</h2>
-  <p data-i="ugc_b">Rimani titolare dei tuoi contenuti. Concedi a What?f una licenza non esclusiva, mondiale, gratuita e revocabile per usare, riprodurre e visualizzare tali contenuti all’interno del servizio nella misura necessaria al funzionamento delle funzioni. Potrai richiedere la rimozione, fatti salvi obblighi di legge.</p>
+  <p data-i="ugc_b">
+    Rimani titolare dei tuoi contenuti. Concedi a What?f una licenza non esclusiva, mondiale, gratuita e revocabile per usare, riprodurre e visualizzare tali contenuti all’interno del servizio nella misura necessaria al funzionamento delle funzioni (ad es. generazione di scenari, cronologia locale, suggerimenti). Potrai richiedere la rimozione, fatti salvi obblighi di legge.
+  </p>
 
   <h2 data-i="ip_h">Proprietà intellettuale</h2>
-  <p data-i="ip_b">Marchi, loghi, design, codice e contenuti proprietari di What?f sono protetti. È vietata ogni riproduzione non autorizzata, nonché il reverse engineering in violazione della legge o dei presenti Termini.</p>
+  <p data-i="ip_b">
+    Marchi, loghi, design, codice e contenuti proprietari di What?f sono protetti da diritti di proprietà intellettuale. È vietata ogni riproduzione non autorizzata, così come il reverse engineering in violazione della legge o dei presenti Termini.
+  </p>
 
   <h2 data-i="naming_h">Denominazioni simili e non-affiliazione</h2>
-  <p data-i="naming_b">“What?f” è la denominazione e il marchio del nostro servizio. Qualsiasi app, sito o progetto con nomi simili (ad es. “What If”, “WhatIf”) non è affiliato, approvato o sponsorizzato da noi, salvo esplicita indicazione scritta.</p>
+  <p data-i="naming_b">
+    “What?f” è la denominazione e il marchio del nostro servizio. Qualsiasi app, sito o progetto con nomi simili (ad es. “What If”, “WhatIf”) non è affiliato, approvato o sponsorizzato da noi, salvo esplicita indicazione scritta.
+  </p>
 
-  <h2 data-i="notice_h">Segnalazioni di violazione (notice & takedown)</h2>
-  <p data-i="notice_b">Se ritieni che contenuti nell’app violino diritti d’autore o altri diritti, scrivi a <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a> con: (i) identificazione del contenuto; (ii) prova del diritto; (iii) recapiti; (iv) dichiarazione di buona fede. Valuteremo e, se fondato, rimuoveremo o limiteremo il contenuto.</p>
+  <h2 data-i="notice_h">Segnalazioni di violazione (notice &amp; takedown)</h2>
+  <p data-i="notice_b">
+    Se ritieni che contenuti nell’app violino diritti d’autore o altri diritti, scrivi a
+    <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a> con: (i) identificazione del contenuto; (ii) prova del diritto; (iii) recapiti; (iv) dichiarazione di buona fede. Valuteremo e, se fondato, rimuoveremo o limiteremo il contenuto.
+  </p>
 
-  <h2 data-i="fees_h">Piani, pubblicità e acquisti</h2>
+  <h2 data-i="fees_h">Crediti, pubblicità e acquisti</h2>
   <ul>
-    <li data-i="fees_1">Alcune funzioni possono essere offerte in modalità freemium o a pagamento; prezzi, limiti e condizioni sono indicati in app.</li>
-    <li data-i="fees_2">L’app può mostrare pubblicità. Le funzioni di acquisto crediti sono attualmente disattivate.</li>
-    <li data-i="fees_3">Salvo diversa indicazione, i pagamenti non sono rimborsabili per periodi già fruiti; imposte a carico dell’utente.</li>
-    <li data-i="fees_4">Salvo diversa indicazione, il piano FREE consente fino a 3 richieste/giorno, il piano PRO fino a 10 richieste/giorno.</li>
+    <li data-i="fees_1">
+      <strong>Uso gratuito con crediti giornalieri</strong> — L’app offre un accesso gratuito con un numero limitato di richieste al giorno (di norma 3 crediti/giorno per utente registrato), gestite tramite il wallet crediti associato al tuo account.
+    </li>
+    <li data-i="fees_2">
+      <strong>Pacchetti di crediti</strong> — Puoi acquistare pacchetti di crediti aggiuntivi (ad es. 5, 15 o 30 crediti) attraverso acquisti in-app gestiti dallo store (es. Google Play) o da eventuali provider di pagamento terzi. I dettagli su prezzi, quantità e condizioni sono indicati in app e possono variare nel tempo.
+    </li>
+    <li data-i="fees_3">
+      <strong>Annunci con ricompensa</strong> — In alcune sezioni possono essere mostrati annunci che, se visualizzati completamente, possono sbloccare 1 credito extra fino a un numero massimo di annunci al giorno. La disponibilità di tali annunci, il numero massimo giornaliero e le condizioni per ottenere il credito sono indicati in app e possono essere modificati.
+    </li>
+    <li data-i="fees_4">
+      <strong>Natura dei crediti</strong> — I crediti sono elementi digitali consumabili interni all’app, non costituiscono denaro, non generano interessi e non danno diritto a rimborso in valuta. Salvo diversa indicazione di legge, i crediti non sono trasferibili tra account.
+    </li>
+    <li data-i="fees_5">
+      <strong>Pagamenti e rimborsi</strong> — Salvo diversa indicazione, i pagamenti relativi ai pacchetti di crediti non sono rimborsabili una volta completata la transazione e/o utilizzati i crediti, fatti salvi eventuali diritti inderogabili previsti dalla normativa applicabile (ad es. tutele dei consumatori). Eventuali tasse, commissioni o imposte sono a carico dell’utente.
+    </li>
   </ul>
 
+  <h2 data-i="firebase_h">Login, crediti e infrastruttura</h2>
+  <p data-i="firebase_b">
+    What?f utilizza servizi come Firebase Authentication e Firestore per gestire l’accesso (ad es. “Accedi con Google”) e il wallet crediti collegato al tuo account. L’uso dell’app richiede il rispetto anche dei termini e delle policy dei fornitori coinvolti (ad es. Google, store di distribuzione, fornitori di AI e pubblicità).
+  </p>
+
   <h2 data-i="warranty_h">Esclusione di garanzie</h2>
-  <p data-i="warranty_b">Il servizio è fornito “così com’è” e “come disponibile”. I contenuti generati non costituiscono consulenza professionale; usali a tuo esclusivo rischio e responsabilità.</p>
+  <p data-i="warranty_b">
+    Il servizio è fornito “così com’è” e “come disponibile”. Non garantiamo che le risposte siano accurate, aggiornate o adatte a uno scopo specifico. I contenuti generati non costituiscono consulenza professionale; usali a tuo esclusivo rischio e responsabilità.
+  </p>
 
   <h2 data-i="liab_h">Limitazione di responsabilità</h2>
-  <p data-i="liab_b">Nei limiti consentiti, What?f e i suoi gestori non sono responsabili per danni indiretti, speciali, consequenziali, perdita di profitti o dati, interruzioni di servizio o altre perdite non direttamente imputabili a dolo o colpa grave.</p>
+  <p data-i="liab_b">
+    Nei limiti consentiti dalla legge, What?f e i suoi gestori non sono responsabili per danni indiretti, speciali, consequenziali, perdita di profitti o dati, interruzioni di servizio o altre perdite non direttamente imputabili a dolo o colpa grave. Nulla in questi Termini esclude o limita responsabilità che non possono essere escluse per legge.
+  </p>
 
   <h2 data-i="moder_h">Moderazione e segnalazioni</h2>
-  <p data-i="moder_b">Puoi segnalare contenuti o comportamenti inappropriati a <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>. Potremo rimuovere contenuti o limitare accessi per tutelare utenti, piattaforma e terzi.</p>
+  <p data-i="moder_b">
+    Puoi segnalare contenuti o comportamenti inappropriati a
+    <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>. Potremo rimuovere contenuti o limitare accessi per tutelare utenti, piattaforma e terzi.
+  </p>
 
   <h2 data-i="term_h">Durata e cessazione</h2>
   <ul>
-    <li data-i="term_1">Puoi smettere di usare il servizio in qualsiasi momento.</li>
-    <li data-i="term_2">Possiamo sospendere o cessare l’accesso in caso di violazioni, rischi per la sicurezza o esigenze tecniche/legali.</li>
+    <li data-i="term_1">Puoi smettere di usare il servizio in qualsiasi momento, ad esempio disinstallando l’app o cessando di accedervi.</li>
+    <li data-i="term_2">Possiamo sospendere o cessare l’accesso in caso di violazioni dei Termini, rischi per la sicurezza, richiesta delle autorità o modifiche sostanziali al servizio.</li>
   </ul>
 
   <h2 data-i="law_h">Legge applicabile e foro</h2>
-  <p data-i="law_b">Legge italiana. Foro esclusivo competente: Roma, fatte salve le tutele inderogabili dei consumatori UE/SEE.</p>
+  <p data-i="law_b">
+    I presenti Termini sono regolati dalla legge italiana. Per ogni controversia è competente in via esclusiva il foro di Roma, fatte salve le tutele inderogabili previste a favore dei consumatori dell’Unione Europea/SEE.
+  </p>
 
   <h2 data-i="changes_h">Modifiche ai Termini</h2>
-  <p data-i="changes_b">Potremo aggiornare i presenti Termini. Le modifiche saranno pubblicate in questa pagina con la data di efficacia.</p>
+  <p data-i="changes_b">
+    Potremo aggiornare i presenti Termini. Le modifiche saranno pubblicate in questa pagina con la data di efficacia. L’uso continuato dell’app dopo le modifiche costituisce accettazione dei Termini aggiornati.
+  </p>
 
   <h2 data-i="contact_h">Contatti</h2>
-  <p data-i="contact_b">Per richieste legali: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a></p>
+  <p data-i="contact_b">
+    Per richieste legali o relative ai Termini: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>
+  </p>
 
   <p><small data-i="note">Questi Termini hanno finalità informative e non costituiscono consulenza legale.</small></p>
 </main>
@@ -106,122 +188,269 @@
   try{ localStorage.setItem('forceSkipIntro','1'); }catch(e){}
   const DICT = {
     it: {
-      back:"Indietro", title:"Termini d’uso", lastupd:"Ultimo aggiornamento: 10 novembre 2025",
+      back:"Indietro",
+      pill_store:"Versione adatta per pubblicazione su store",
+      title:"Termini d’uso",
+      lastupd:"Ultimo aggiornamento: 14 novembre 2025",
       intro:"Usando What?f accetti integralmente i presenti Termini. Se non li accetti, non utilizzare l’applicazione.",
       ai_box_h:"Avvertenza AI",
-      ai_box_b:"Le risposte sono generate automaticamente da sistemi di intelligenza artificiale. What if fornisce scenari plausibili e riflessivi... (vedi sopra).",
-      elig_h:"Idoneità", elig_1:"Devi avere almeno 16 anni...", elig_2:"Dichiari capacità di accettare Termini e Privacy.",
-      use_h:"Uso del servizio", use_1:"Sei responsabile dei contenuti.", use_2:"Vietati contenuti illegali/illeciti.", use_3:"Possiamo limitare o sospendere.", use_4:"Possibili limiti di fair use.",
-      abuse_h:"Uso improprio, automatismi e frodi", abuse_b:"Divieto di bypass limiti, bot/scraping, manipolazione crediti, impersonificazione. Possiamo sospendere e azzerare crediti indebitamente ottenuti.",
-      ugc_h:"Contenuti dell’utente (UGC)", ugc_b:"Rimani titolare; licenza revocabile per l’erogazione del servizio.",
-      ip_h:"Proprietà intellettuale", ip_b:"Marchi, loghi, design, codice protetti; vietata riproduzione non autorizzata.",
-      naming_h:"Denominazioni simili e non-affiliazione", naming_b:"Nomi simili non implicano affiliazione.",
-      notice_h:"Segnalazioni di violazione (notice & takedown)", notice_b:'Scrivi a <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a> con dettagli; se fondato, rimuoviamo/limitiamo.',
-      fees_h:"Piani, pubblicità e acquisti", fees_1:"Freemium o a pagamento; info in app.", fees_2:"Possibili annunci; acquisti crediti disattivati.", fees_3:"Pagamenti non rimborsabili salvo diversa indicazione; tasse a carico utente.", fees_4:"FREE: 3/giorno, PRO: 10/giorno.",
-      warranty_h:"Esclusione di garanzie", warranty_b:"Servizio 'as is'; nessuna consulenza professionale.",
-      liab_h:"Limitazione di responsabilità", liab_b:"Niente responsabilità per danni indiretti ecc., salvo dolo/colpa grave.",
-      moder_h:"Moderazione e segnalazioni", moder_b:'Segnala a <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.',
-      term_h:"Durata e cessazione", term_1:"Puoi smettere in ogni momento.", term_2:"Possiamo sospendere o cessare accesso.",
-      law_h:"Legge applicabile e foro", law_b:"Italia, foro Roma; fatte salve tutele consumatori UE/SEE.",
-      changes_h:"Modifiche ai Termini", changes_b:"Pubblicheremo gli aggiornamenti qui.",
-      contact_h:"Contatti", contact_b:'Per richieste: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
-      note:"Questi Termini non sono consulenza legale."
+      ai_box_b:"Le risposte sono generate automaticamente da sistemi di intelligenza artificiale. What if fornisce scenari plausibili e riflessivi; What the F propone visioni ironiche e imprevedibili. I contenuti non sono consulenza professionale.",
+      elig_h:"Idoneità",
+      elig_1:"Per utilizzare il servizio devi avere almeno 16 anni o l’età di maggiore età richiesta dalla tua giurisdizione, se superiore.",
+      elig_2:"Usando l’app dichiari di avere la capacità giuridica per accettare Termini e Privacy.",
+      use_h:"Uso del servizio",
+      use_1:"Sei responsabile dei contenuti che inserisci e delle azioni nell’app.",
+      use_2:"È vietato inviare contenuti illegali, offensivi, diffamatori, discriminatori o contrari alla legge.",
+      use_3:"Possiamo limitare o sospendere l’accesso in caso di abusi o rischi.",
+      use_4:"Possiamo introdurre limiti di fair use (numero di richieste, ecc.).",
+      abuse_h:"Uso improprio, automatismi e frodi",
+      abuse_b:"È vietato bypassare limiti, usare bot/scraping, manipolare crediti (anche da annunci) o simulare identità. Possiamo sospendere l’accesso e azzerare crediti ottenuti in modo indebito.",
+      ugc_h:"Contenuti dell’utente (UGC)",
+      ugc_b:"Rimani titolare dei tuoi contenuti; concedi una licenza revocabile per l’uso interno necessario a erogare il servizio.",
+      ip_h:"Proprietà intellettuale",
+      ip_b:"Marchi, loghi, design e codice sono protetti; vietata la riproduzione non autorizzata e il reverse engineering illecito.",
+      naming_h:"Denominazioni simili e non-affiliazione",
+      naming_b:"Nomi simili non implicano in alcun modo affiliazione, approvazione o sponsorizzazione.",
+      notice_h:"Segnalazioni di violazione (notice & takedown)",
+      notice_b:'Scrivi a <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a> con i dettagli; se fondato, potremo rimuovere o limitare i contenuti.',
+      fees_h:"Crediti, pubblicità e acquisti",
+      fees_1:"Uso gratuito con crediti giornalieri: di norma 3 crediti/giorno per utente registrato, gestiti tramite wallet.",
+      fees_2:"Pacchetti di crediti: puoi comprare pacchetti (es. 5, 15, 30 crediti) via acquisti in-app; prezzi e condizioni sono indicati in app.",
+      fees_3:"Annunci con ricompensa: alcuni annunci possono sbloccare 1 credito extra per visualizzazione completa, fino a un massimo giornaliero.",
+      fees_4:"Natura dei crediti: elementi digitali consumabili, non denaro, non rimborsabili salvo norme inderogabili.",
+      fees_5:"Pagamenti e rimborsi: salvo diversa indicazione, i pagamenti non sono rimborsabili per periodi o crediti già fruiti; tasse e commissioni sono a carico dell’utente.",
+      firebase_h:"Login, crediti e infrastruttura",
+      firebase_b:"L’app usa servizi come Firebase Auth e Firestore per login e gestione del wallet. L’uso implica anche il rispetto dei termini dei relativi fornitori (Google, store, AI, AdTech).",
+      warranty_h:"Esclusione di garanzie",
+      warranty_b:"Il servizio è fornito 'così com’è'; non garantiamo accuratezza, disponibilità continua o idoneità a uno scopo specifico.",
+      liab_h:"Limitazione di responsabilità",
+      liab_b:"Nei limiti di legge, non siamo responsabili per danni indiretti o consequenziali; nulla esclude responsabilità non escludibili per legge.",
+      moder_h:"Moderazione e segnalazioni",
+      moder_b:'Puoi scriverci a <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a> per segnalazioni; potremo intervenire su contenuti e accessi.',
+      term_h:"Durata e cessazione",
+      term_1:"Puoi interrompere l’uso del servizio in qualsiasi momento.",
+      term_2:"Possiamo sospendere o terminare l’accesso in caso di violazioni, rischi o motivi tecnici/legali.",
+      law_h:"Legge applicabile e foro",
+      law_b:"Legge italiana; foro Roma, con salvezza delle tutele inderogabili dei consumatori UE/SEE.",
+      changes_h:"Modifiche ai Termini",
+      changes_b:"Potremo aggiornare i Termini e pubblicheremo le modifiche in questa pagina.",
+      contact_h:"Contatti",
+      contact_b:'Per richieste legali: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
+      note:"Questi Termini non sostituiscono consulenza legale."
     },
     en: {
-      back:"Back", title:"Terms of Service", lastupd:"Last updated: Nov 10, 2025",
+      back:"Back",
+      pill_store:"Store-ready version",
+      title:"Terms of Service",
+      lastupd:"Last updated: 14 November 2025",
       intro:"By using What?f you fully agree to these Terms. If you do not agree, do not use the app.",
       ai_box_h:"AI notice",
-      ai_box_b:"AI-generated content... not professional advice.",
-      elig_h:"Eligibility", elig_1:"You must be 16+...", elig_2:"You have legal capacity to accept Terms and Privacy.",
-      use_h:"Use of the service", use_1:"You are responsible for your content.", use_2:"No illegal/abusive content.", use_3:"We may limit or suspend.", use_4:"Fair-use limits may apply.",
-      abuse_h:"Misuse, automation and fraud", abuse_b:"No limit bypassing, bots/scraping, credit tampering, impersonation. We may suspend and void improperly obtained credits.",
-      ugc_h:"User-generated content (UGC)", ugc_b:"You retain ownership; revocable license to operate features.",
-      ip_h:"Intellectual property", ip_b:"Trademarks, design, code protected; no unauthorized use.",
-      naming_h:"Similar names & non-affiliation", naming_b:"Similar names do not imply affiliation.",
-      notice_h:"Infringement notices (notice & takedown)", notice_b:'Email <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a> with details; if warranted, we remove/restrict.',
-      fees_h:"Plans, ads and purchases", fees_1:"Freemium/paid; see in-app.", fees_2:"App may show ads; credit purchases currently disabled.", fees_3:"Payments non-refundable unless stated; taxes by user.", fees_4:"FREE: up to 3/day, PRO: up to 10/day.",
-      warranty_h:"Warranty disclaimer", warranty_b:"Service 'as is'; not professional advice.",
-      liab_h:"Limitation of liability", liab_b:"No liability for indirect/special/consequential damages, etc.",
-      moder_h:"Moderation & reporting", moder_b:'Report to <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.',
-      term_h:"Term & termination", term_1:"Stop using anytime.", term_2:"We may suspend/terminate access.",
-      law_h:"Governing law & venue", law_b:"Italian law; Rome venue; consumer protections preserved.",
-      changes_h:"Changes to the Terms", changes_b:"Updates will be posted here.",
-      contact_h:"Contact", contact_b:'Legal requests: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
+      ai_box_b:"Answers are generated by AI systems. “What if” offers plausible scenarios; “What the F” produces humorous and chaotic views. Content is not professional advice.",
+      elig_h:"Eligibility",
+      elig_1:"You must be at least 16 or of legal age in your jurisdiction.",
+      elig_2:"By using the app you confirm you can accept these Terms and our Privacy Policy.",
+      use_h:"Use of the service",
+      use_1:"You are responsible for your content and actions.",
+      use_2:"Illegal, abusive, hateful or infringing content is forbidden.",
+      use_3:"We may limit or suspend access in case of abuse or risks.",
+      use_4:"We may apply fair-use limits (e.g. daily requests).",
+      abuse_h:"Misuse, automation and fraud",
+      abuse_b:"Do not bypass limits, use bots/scraping, tamper with credits (including rewarded ads) or impersonate others. We may suspend access and void improperly obtained credits.",
+      ugc_h:"User-generated content",
+      ugc_b:"You retain ownership of your content and grant a revocable license to operate app features.",
+      ip_h:"Intellectual property",
+      ip_b:"Trademarks, design and code are protected; unauthorized use and illegal reverse-engineering are forbidden.",
+      naming_h:"Similar names & non-affiliation",
+      naming_b:"Similar names (e.g. “WhatIf”) do not imply affiliation or endorsement.",
+      notice_h:"Infringement notices",
+      notice_b:'Email <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a> with details; we may remove or restrict content if warranted.',
+      fees_h:"Credits, ads and purchases",
+      fees_1:"Free usage with daily credits (typically 3/day per registered user).",
+      fees_2:"Credit packs (e.g. 5, 15, 30 credits) via in-app purchases; prices and conditions are shown in-app.",
+      fees_3:"Rewarded ads may grant 1 extra credit per completed view, up to a daily cap.",
+      fees_4:"Credits are consumable digital items, not money and generally non-refundable.",
+      fees_5:"Payments are usually non-refundable once completed, subject to mandatory consumer law.",
+      firebase_h:"Login, credits and infrastructure",
+      firebase_b:"We use Firebase Auth and Firestore to manage login and your credit wallet. Use of the app also implies acceptance of the providers’ terms (Google, app stores, AI, AdTech).",
+      warranty_h:"Disclaimer of warranties",
+      warranty_b:"Service is provided “as is” without guarantees of accuracy, availability or fitness for a particular purpose.",
+      liab_h:"Limitation of liability",
+      liab_b:"To the extent permitted by law we are not liable for indirect or consequential damages; nothing excludes mandatory liabilities.",
+      moder_h:"Moderation and reporting",
+      moder_b:'You can report issues at <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.',
+      term_h:"Term and termination",
+      term_1:"You may stop using the service at any time.",
+      term_2:"We may suspend or terminate access for violations, risks or legal/technical reasons.",
+      law_h:"Governing law and venue",
+      law_b:"Italian law; courts of Rome, without prejudice to mandatory consumer rights.",
+      changes_h:"Changes to the Terms",
+      changes_b:"We may update these Terms and will post changes here.",
+      contact_h:"Contact",
+      contact_b:'Legal requests: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
       note:"These Terms are not legal advice."
     },
     es: {
-      back:"Atrás", title:"Términos de servicio", lastupd:"Última actualización: 10 nov 2025",
+      back:"Atrás",
+      pill_store:"Versión apta para la tienda",
+      title:"Términos de servicio",
+      lastupd:"Última actualización: 14 noviembre 2025",
       intro:"Al usar What?f aceptas íntegramente estos Términos.",
       ai_box_h:"Aviso de IA",
-      ai_box_b:"El contenido generado por IA no constituye asesoramiento profesional.",
-      elig_h:"Idoneidad", elig_1:"Debes tener 16+.", elig_2:"Tienes capacidad legal para aceptar.",
-      use_h:"Uso del servicio", use_1:"Eres responsable de tu contenido.", use_2:"Prohibido contenido ilegal/abusivo.", use_3:"Podemos limitar o suspender.", use_4:"Puede haber límites de uso justo.",
-      abuse_h:"Uso indebido, automatización y fraude", abuse_b:"Prohibido eludir límites, bots/scraping, manipular créditos, suplantación. Podemos suspender y anular créditos indebidos.",
-      ugc_h:"Contenido del usuario", ugc_b:"Conservas la titularidad; licencia revocable para operar funciones.",
-      ip_h:"Propiedad intelectual", ip_b:"Marcas, diseño y código protegidos.",
-      naming_h:"Nombres similares y no afiliación", naming_b:"Los nombres similares no implican afiliación.",
-      notice_h:"Notificaciones de infracción", notice_b:'Escribe a <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>; si procede, retiramos/restringimos.',
-      fees_h:"Planes, anuncios y compras", fees_1:"Freemium/de pago (ver en la app).", fees_2:"La app puede mostrar anuncios; compras de créditos desactivadas.", fees_3:"Pagos no reembolsables salvo indicación.", fees_4:"FREE: hasta 3/día; PRO: hasta 10/día.",
-      warranty_h:"Exención de garantías", warranty_b:"Servicio 'tal cual'; no asesoramiento profesional.",
-      liab_h:"Limitación de responsabilidad", liab_b:"Sin responsabilidad por daños indirectos, etc.",
-      moder_h:"Moderación y reportes", moder_b:'Reporta a <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.',
-      term_h:"Duración y finalización", term_1:"Puedes dejar de usarlo en cualquier momento.", term_2:"Podemos suspender/terminar acceso.",
-      law_h:"Ley aplicable y jurisdicción", law_b:"Ley italiana; Roma; protecciones al consumidor preservadas.",
-      changes_h:"Cambios", changes_b:"Publicaremos las actualizaciones aquí.",
-      contact_h:"Contacto", contact_b:'Legal: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
+      ai_box_b:"El contenido generado por IA no es asesoramiento profesional.",
+      elig_h:"Idoneidad",
+      elig_1:"Debes tener al menos 16 años o la mayoría de edad.",
+      elig_2:"Declaras poder aceptar estos Términos y la Política de privacidad.",
+      use_h:"Uso del servicio",
+      use_1:"Eres responsable de tu contenido.",
+      use_2:"Prohibido contenido ilegal o abusivo.",
+      use_3:"Podemos limitar o suspender el acceso.",
+      use_4:"Podemos aplicar límites de uso justo.",
+      abuse_h:"Uso indebido, automatización y fraude",
+      abuse_b:"Prohibido eludir límites, usar bots, manipular créditos o suplantar identidades.",
+      ugc_h:"Contenido del usuario",
+      ugc_b:"Sigues siendo titular de tu contenido; licencia revocable para operar las funciones.",
+      ip_h:"Propiedad intelectual",
+      ip_b:"Marcas, diseño y código protegidos.",
+      naming_h:"Nombres similares y no afiliación",
+      naming_b:"Nombres parecidos no implican afiliación.",
+      notice_h:"Notificaciones de infracción",
+      notice_b:'Contacta en <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a> con los detalles.',
+      fees_h:"Créditos, anuncios y compras",
+      fees_1:"Uso gratuito con 3 créditos/día (salvo cambios indicados).",
+      fees_2:"Packs de 5, 15, 30 créditos mediante compras in-app.",
+      fees_3:"Anuncios recompensados con 1 crédito extra hasta un máximo diario.",
+      fees_4:"Créditos = elementos digitales, no dinero.",
+      fees_5:"Pagos normalmente no reembolsables, salvo derechos legales.",
+      firebase_h:"Login, créditos e infraestructura",
+      firebase_b:"Usamos Firebase Auth y Firestore para cuentas y créditos.",
+      warranty_h:"Exención de garantías",
+      warranty_b:"Servicio 'tal cual'; sin garantía de exactitud o idoneidad.",
+      liab_h:"Limitación de responsabilidad",
+      liab_b:"No respondemos por daños indirectos en la medida permitida por la ley.",
+      moder_h:"Moderación y reportes",
+      moder_b:'Puedes escribir a <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.',
+      term_h:"Duración y finalización",
+      term_1:"Puedes dejar de usar el servicio en cualquier momento.",
+      term_2:"Podemos suspender o terminar el acceso por incumplimientos.",
+      law_h:"Ley aplicable y jurisdicción",
+      law_b:"Ley italiana; tribunales de Roma; derechos de consumidores preservados.",
+      changes_h:"Cambios",
+      changes_b:"Publicaremos las actualizaciones aquí.",
+      contact_h:"Contacto",
+      contact_b:'Legal: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
       note:"Estos Términos no son asesoramiento legal."
     },
     fr: {
-      back:"Retour", title:"Conditions d’utilisation", lastupd:"Dernière mise à jour : 10 nov. 2025",
+      back:"Retour",
+      pill_store:"Version prête pour le store",
+      title:"Conditions d’utilisation",
+      lastupd:"Dernière mise à jour : 14 novembre 2025",
       intro:"En utilisant What?f, vous acceptez pleinement ces Conditions.",
       ai_box_h:"Avis IA",
-      ai_box_b:"Contenu généré par IA, pas un conseil professionnel.",
-      elig_h:"Éligibilité", elig_1:"16+ requis.", elig_2:"Capacité juridique requise.",
-      use_h:"Utilisation du service", use_1:"Vous êtes responsable de votre contenu.", use_2:"Contenu illégal/abusif interdit.", use_3:"Nous pouvons limiter/suspendre.", use_4:"Limites d’usage équitable possibles.",
-      abuse_h:"Abus, automatisation et fraude", abuse_b:"Interdit de contourner les limites, bots/scraping, manipuler des crédits, usurpation. Nous pouvons suspendre et annuler les crédits obtenus indûment.",
-      ugc_h:"Contenu utilisateur", ugc_b:"Vous restez propriétaire; licence révocable pour faire fonctionner les fonctionnalités.",
-      ip_h:"Propriété intellectuelle", ip_b:"Marques, design, code protégés.",
-      naming_h:"Noms similaires et non-affiliation", naming_b:"Les noms similaires n’impliquent pas d’affiliation.",
-      notice_h:"Notifications d’atteinte", notice_b:'Écrivez à <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>; retrait si justifié.',
-      fees_h:"Offres, publicités et achats", fees_1:"Freemium/payant (voir dans l’app).", fees_2:"L’app peut afficher des pubs; achats de crédits désactivés.", fees_3:"Paiements non remboursables sauf indication.", fees_4:"FREE : jusqu’à 3/jour ; PRO : jusqu’à 10/jour.",
-      warranty_h:"Exclusion de garanties", warranty_b:"Service « en l’état » ; pas de conseil professionnel.",
-      liab_h:"Limitation de responsabilité", liab_b:"Aucune responsabilité pour dommages indirects, etc.",
-      moder_h:"Modération et signalements", moder_b:'Signalez à <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.',
-      term_h:"Durée et résiliation", term_1:"Vous pouvez arrêter à tout moment.", term_2:"Nous pouvons suspendre/résilier.",
-      law_h:"Droit applicable et juridiction", law_b:"Droit italien ; Rome ; protections consommateurs préservées.",
-      changes_h:"Modifications", changes_b:"Mises à jour publiées ici.",
-      contact_h:"Contact", contact_b:'Juridique : <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
-      note:"Ces Conditions ne constituent pas un conseil juridique."
+      ai_box_b:"Le contenu généré par IA ne constitue pas un conseil professionnel.",
+      elig_h:"Éligibilité",
+      elig_1:"Vous devez avoir au moins 16 ans.",
+      elig_2:"Vous déclarez pouvoir accepter les Conditions et la Politique de confidentialité.",
+      use_h:"Utilisation du service",
+      use_1:"Vous êtes responsable de votre contenu.",
+      use_2:"Contenu illégal ou haineux interdit.",
+      use_3:"Nous pouvons limiter ou suspendre l’accès.",
+      use_4:"Des limites d’usage équitable peuvent s’appliquer.",
+      abuse_h:"Abus, automatisation et fraude",
+      abuse_b:"Interdit de contourner les limites, utiliser des bots ou manipuler les crédits.",
+      ugc_h:"Contenu utilisateur",
+      ugc_b:"Vous gardez la propriété; licence révocable pour les fonctionnalités.",
+      ip_h:"Propriété intellectuelle",
+      ip_b:"Marques, design et code protégés.",
+      naming_h:"Noms similaires et non-affiliation",
+      naming_b:"Les noms similaires n’impliquent pas d’affiliation.",
+      notice_h:"Notifications d’atteinte",
+      notice_b:'Contactez <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a> avec les détails.',
+      fees_h:"Crédits, publicité et achats",
+      fees_1:"Usage gratuit avec 3 crédits/jour (sauf modification).",
+      fees_2:"Packs de 5, 15, 30 crédits via achats in-app.",
+      fees_3:"Publicités récompensées avec 1 crédit, dans la limite quotidienne.",
+      fees_4:"Crédits = éléments numériques consommables, pas de monnaie.",
+      fees_5:"Paiements en principe non remboursables sous réserve du droit applicable.",
+      firebase_h:"Login, crédits et infrastructure",
+      firebase_b:"Nous utilisons Firebase Auth et Firestore pour les comptes et crédits.",
+      warranty_h:"Exclusion de garanties",
+      warranty_b:"Service fourni 'en l’état', sans garantie d’exactitude.",
+      liab_h:"Limitation de responsabilité",
+      liab_b:"Pas de responsabilité pour dommages indirects, dans la limite de la loi.",
+      moder_h:"Modération et signalements",
+      moder_b:'Signalez à <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.',
+      term_h:"Durée et résiliation",
+      term_1:"Vous pouvez arrêter d’utiliser le service à tout moment.",
+      term_2:"Nous pouvons suspendre ou résilier l’accès en cas de violation.",
+      law_h:"Droit applicable et juridiction",
+      law_b:"Droit italien; tribunaux de Rome; protections consommateurs préservées.",
+      changes_h:"Modifications",
+      changes_b:"Mises à jour publiées ici.",
+      contact_h:"Contact",
+      contact_b:'Demandes juridiques : <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
+      note:"Ces Conditions ne sont pas un avis juridique."
     },
     de: {
-      back:"Zurück", title:"Nutzungsbedingungen", lastupd:"Letzte Aktualisierung: 10. Nov. 2025",
-      intro:"Durch die Nutzung von What?f akzeptierst du diese Bedingungen vollständig.",
+      back:"Zurück",
+      pill_store:"Store-geeignete Version",
+      title:"Nutzungsbedingungen",
+      lastupd:"Letzte Aktualisierung: 14. November 2025",
+      intro:"Durch die Nutzung von What?f akzeptierst du diese Bedingungen.",
       ai_box_h:"KI-Hinweis",
-      ai_box_b:"KI-generierte Inhalte sind keine professionelle Beratung.",
-      elig_h:"Zulässigkeit", elig_1:"Mindestens 16 Jahre.", elig_2:"Rechtsfähigkeit erforderlich.",
-      use_h:"Nutzung des Dienstes", use_1:"Du bist für deine Inhalte verantwortlich.", use_2:"Illegale/beleidigende Inhalte verboten.", use_3:"Wir können einschränken/aussetzen.", use_4:"Fair-Use-Limits möglich.",
-      abuse_h:"Missbrauch, Automatisierung und Betrug", abuse_b:"Kein Umgehen von Limits, keine Bots/Scraping, keine Kreditmanipulation oder Identitätsvortäuschung. Wir können sperren und unrechtmäßig erhaltene Credits entwerten.",
-      ugc_h:"Nutzerinhalte", ugc_b:"Du behältst das Eigentum; widerrufliche Lizenz zur Funktionsbereitstellung.",
-      ip_h:"Geistiges Eigentum", ip_b:"Marken, Design, Code geschützt.",
-      naming_h:"Ähnliche Namen & keine Zugehörigkeit", naming_b:"Ähnliche Namen bedeuten keine Zugehörigkeit.",
-      notice_h:"Meldungen bei Rechtsverletzung", notice_b:'Schreibe an <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>; wir entfernen/limitieren bei Berechtigung.',
-      fees_h:"Pläne, Werbung und Käufe", fees_1:"Freemium/bezahlt (in-App).", fees_2:"App kann Werbung anzeigen; Kreditkäufe derzeit deaktiviert.", fees_3:"Zahlungen nicht erstattungsfähig, sofern nicht anders angegeben.", fees_4:"FREE: bis zu 3/Tag, PRO: bis zu 10/Tag.",
-      warranty_h:"Gewährleistungsausschluss", warranty_b:"Dienst 'wie besehen'; keine professionelle Beratung.",
-      liab_h:"Haftungsbeschränkung", liab_b:"Keine Haftung für indirekte/sonder-/Folgeschäden usw.",
-      moder_h:"Moderation & Meldungen", moder_b:'Melde an <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.',
-      term_h:"Laufzeit & Beendigung", term_1:"Du kannst jederzeit aufhören.", term_2:"Wir können Zugriff sperren/beenden.",
-      law_h:"Anwendbares Recht & Gerichtsstand", law_b:"Italienisches Recht; Rom; Verbraucherschutz bleibt unberührt.",
-      changes_h:"Änderungen", changes_b:"Aktualisierungen werden hier veröffentlicht.",
-      contact_h:"Kontakt", contact_b:'Rechtliches: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
+      ai_box_b:"KI-Inhalte sind keine professionelle Beratung.",
+      elig_h:"Zulässigkeit",
+      elig_1:"Du musst mindestens 16 Jahre alt sein.",
+      elig_2:"Du erklärst, diese Bedingungen und die Datenschutzerklärung akzeptieren zu können.",
+      use_h:"Nutzung des Dienstes",
+      use_1:"Du bist für deine Inhalte verantwortlich.",
+      use_2:"Illegale oder beleidigende Inhalte sind verboten.",
+      use_3:"Wir können den Zugang einschränken oder sperren.",
+      use_4:"Fair-Use-Limits können gelten.",
+      abuse_h:"Missbrauch, Automatisierung und Betrug",
+      abuse_b:"Es ist verboten, Limits zu umgehen, Bots zu nutzen oder Credits zu manipulieren.",
+      ugc_h:"Nutzerinhalte",
+      ugc_b:"Du behältst das Eigentum; widerrufliche Lizenz für die Bereitstellung der Funktionen.",
+      ip_h:"Geistiges Eigentum",
+      ip_b:"Marken, Design und Code sind geschützt.",
+      naming_h:"Ähnliche Namen & keine Zugehörigkeit",
+      naming_b:"Ähnliche Namen bedeuten keine Zugehörigkeit.",
+      notice_h:"Meldungen bei Rechtsverletzung",
+      notice_b:'Melde an <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.',
+      fees_h:"Credits, Werbung und Käufe",
+      fees_1:"Kostenlose Nutzung mit 3 Credits/Tag (sofern nicht geändert).",
+      fees_2:"Credit-Pakete (5, 15, 30) als In-App-Käufe.",
+      fees_3:"Belohnungsanzeigen mit 1 Extra-Credit bis zum Tageslimit.",
+      fees_4:"Credits sind digitale Verbrauchsgüter, kein Geld.",
+      fees_5:"Zahlungen in der Regel nicht erstattungsfähig, vorbehaltlich gesetzlicher Rechte.",
+      firebase_h:"Login, Credits & Infrastruktur",
+      firebase_b:"Wir verwenden Firebase Auth und Firestore für Konten und Credits.",
+      warranty_h:"Gewährleistungsausschluss",
+      warranty_b:"Dienst 'wie besehen'; keine Garantie für Genauigkeit.",
+      liab_h:"Haftungsbeschränkung",
+      liab_b:"Keine Haftung für indirekte Schäden soweit gesetzlich zulässig.",
+      moder_h:"Moderation & Meldungen",
+      moder_b:'Melde an <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.',
+      term_h:"Laufzeit & Beendigung",
+      term_1:"Du kannst die Nutzung jederzeit beenden.",
+      term_2:"Wir können den Zugang bei Verstößen sperren.",
+      law_h:"Anwendbares Recht & Gerichtsstand",
+      law_b:"Italienisches Recht; Gerichte in Rom; Verbraucherschutz bleibt unberührt.",
+      changes_h:"Änderungen",
+      changes_b:"Aktualisierungen werden hier veröffentlicht.",
+      contact_h:"Kontakt",
+      contact_b:'Rechtliches: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
       note:"Diese Bedingungen sind keine Rechtsberatung."
     }
   };
 
   const L = (localStorage.getItem('lang') || 'it').toLowerCase();
-  document.documentElement.lang = ['it','en','es','fr','de'].includes(L)?L:'it';
-  const dict = DICT[document.documentElement.lang];
+  const lang = ['it','en','es','fr','de'].includes(L)?L:'it';
+  document.documentElement.lang = lang;
+  const dict = DICT[lang];
   document.querySelectorAll('[data-i]').forEach(el=>{
-    const k = el.getAttribute('data-i'); if (dict[k]) el.innerHTML = dict[k];
+    const k = el.getAttribute('data-i');
+    if (dict[k]) el.innerHTML = dict[k];
   });
 </script>
 </body>
