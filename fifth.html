@@ -473,16 +473,51 @@ function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.class
 /* ==== Wallet + legacy + 🎁 Sorprendimi ==== */
 const WKEY="whatif_wallet";
 const SURPKEY="whatif_surprise";
-function readWallet(){ try{ const w=JSON.parse(LS.getItem(WKEY)||"{}")||{}; return {available:Number.isFinite(+w.available)?+w.available:null, used:Number.isFinite(+w.used)?+w.used:null, limit:Number.isFinite(+w.limit)?+w.limit:null}; }catch{return{available:null,used:null,limit:null}}}
+
+/* 🔧 FIX: manteniamo anche updatedAt così fourth non resetta sempre a 3 */
+function readWallet(){
+  try{
+    const w = JSON.parse(LS.getItem(WKEY) || "{}") || {};
+    return {
+      available: Number.isFinite(+w.available) ? +w.available : null,
+      used:      Number.isFinite(+w.used)      ? +w.used      : null,
+      limit:     Number.isFinite(+w.limit)     ? +w.limit     : null,
+      updatedAt: w.updatedAt || null
+    };
+  }catch{
+    return {available:null, used:null, limit:null, updatedAt:null};
+  }
+}
+
 function writeWallet(w){
-  const cur=readWallet();
-  const out={ available:(w.available!=null)?Math.max(0,+w.available):(cur.available??0),
-              used:(w.used!=null)?Math.max(0,+w.used):(cur.used??0),
-              limit:(w.limit!=null)?Math.max(0,+w.limit):(cur.limit??0) };
+  const cur = readWallet();
+
+  const out = {
+    available: (w.available != null)
+      ? Math.max(0, +w.available)
+      : (cur.available ?? 0),
+
+    used: (w.used != null)
+      ? Math.max(0, +w.used)
+      : (cur.used ?? 0),
+
+    limit: (w.limit != null)
+      ? Math.max(0, +w.limit)
+      : (cur.limit ?? 3),
+
+    // se non viene passato niente, teniamo quella esistente
+    // o, in ultima istanza, mettiamo oggi (così il formato è sempre YYYY-MM-DD)
+    updatedAt: (w.updatedAt != null)
+      ? w.updatedAt
+      : (cur.updatedAt || new Date().toISOString().slice(0,10))
+  };
+
   LS.setItem(WKEY, JSON.stringify(out));
   LS.setItem("whatif_wallet_sync", String(Date.now()));
   updateCreditInfo();
 }
+
+/* === resto del blocco invariato === */
 function legacyCap(){ return (prefs.pro===true)?10:3 }
 function legacyGetLeft(){
   const w=readWallet(); if(w.available!=null) return w.available;
@@ -1065,3 +1100,4 @@ startFlow();
 
 </body>
 </html>
+```0
