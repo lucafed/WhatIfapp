@@ -266,11 +266,9 @@ transition:opacity .35s ease, transform .35s ease;
 
 <script type="module">
 /* ==== Firebase Auth + Firestore credits (solo lettura) ==== */
+import { auth } from "./firebase.init.js";
 import {
-  getAuth,
-  onAuthStateChanged,
-  setPersistence,
-  browserLocalPersistence
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
 import {
@@ -431,26 +429,32 @@ document.documentElement.lang=lang;
 const t = ()=>I18N[lang]||I18N.it;
 
 /* ==== Firebase credits (solo lettura su fifth) ==== */
-const auth = getAuth();
-setPersistence(auth, browserLocalPersistence).catch(()=>{});
-
 let currentUser = null;
 let currentBalance = 0;
 
 function updateCreditInfo(){
   const creditInfo = document.getElementById('creditInfo');
   if(!creditInfo) return;
+
+  if (IS_ADMIN) {
+    creditInfo.textContent = "💰 Crediti: ∞ (admin)";
+    return;
+  }
+
   const val = currentUser ? currentBalance : 0;
   creditInfo.textContent = t().credits(val);
 }
 
 onAuthStateChanged(auth, async (user)=>{
   currentUser = user;
-  if(!user){
+
+  if (!user || IS_ADMIN) {
+    // utente non loggato oppure admin_token: niente chiamate a Firestore
     currentBalance = 0;
     updateCreditInfo();
     return;
   }
+
   try{
     await bootCredits();                         // crea doc + reset giornaliero se serve
     const bal = await getBalance();
