@@ -159,16 +159,15 @@
     </div>
   </main>
 
-  <!-- 🔥 JS CON FIREBASE CREDITI 🔥 -->
+  <!-- 🔥 JS CON FIRESTORE CREDITI 🔥 -->
   <script type="module">
-    // === IMPORT FIREBASE AUTH + CREDITI FIRESTORE ===
+    // === IMPORT FIREBASE (init centralizzato) + AUTH EVENTS ===
+    import { auth } from "./firebase.init.js";
     import {
-      getAuth,
-      onAuthStateChanged,
-      setPersistence,
-      browserLocalPersistence
+      onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
+    // === IMPORT WALLET FIRESTORE ===
     import {
       bootCredits,
       getBalance,
@@ -180,8 +179,6 @@
     const readJSON = (k, def) => { try { return JSON.parse(LS.getItem(k) || JSON.stringify(def)); } catch { return def; } };
     const writeJSON = (k, v) => LS.setItem(k, JSON.stringify(v));
     const todayISO = () => new Date().toISOString().slice(0,10);
-
-    const IS_ADMIN = !!LS.getItem("admin_token");
 
     /* ===== LANG ===== */
     const SUPPORTED_LANGS=["it","en","es","fr","de"];
@@ -274,47 +271,48 @@
     document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
     /* ===== FIREBASE AUTH + CREDITI (FIRESTORE) ===== */
-    const auth = getAuth();
-    setPersistence(auth, browserLocalPersistence).catch(()=>{});
-
     let currentUser = null;
-    let currentBalance = null; // null = non ancora caricato
+    let currentBalance = 0;
 
     function renderCredits(){
       const T = I18N[lang] || I18N.it;
       const el = $('freeBadge');
-      if (!el) return;
-      const n = (currentBalance == null) ? "…" : currentBalance;
-      el.textContent = `${T.credits}: ${n}`;
+      const txt = `${T.credits}: ${currentBalance}`;
+      if (el && el.textContent !== txt) el.textContent = txt;
+
+      const canUse = currentBalance > 0;
+      const goBtn = $('goBtn');
+      const surpriseBtn = $('surpriseBtn');
+      if (goBtn) goBtn.disabled = !canUse;
+      if (surpriseBtn) surpriseBtn.disabled = !canUse;
     }
 
     async function syncCreditsFromServer(){
-      if (IS_ADMIN) {
-        currentBalance = "∞";
-        renderCredits();
-        return;
-      }
       if (!auth.currentUser) {
-        currentUser = null;
         currentBalance = 0;
         renderCredits();
         return;
       }
       try {
-        await bootCredits();            // crea doc + reset giornaliero
-        currentBalance = await getBalance(); // numero di crediti disponibili
+        await bootCredits();              // crea doc + reset se nuovo giorno
+        currentBalance = await getBalance();
       } catch (e) {
         console.error("syncCredits error:", e);
-        if (currentBalance == null) currentBalance = 0;
       }
       renderCredits();
     }
 
     onAuthStateChanged(auth, async (user)=>{
       currentUser = user;
+      if (!user) {
+        currentBalance = 0;
+        renderCredits();
+        return;
+      }
       await syncCreditsFromServer();
     });
 
+    // refresh leggero quando torni sulla pagina
     window.addEventListener('focus', ()=>{ syncCreditsFromServer(); });
     window.addEventListener('pageshow', ()=>{ syncCreditsFromServer(); });
 
@@ -344,9 +342,9 @@
     $('homeBtn').onclick=()=>location.href='index.html';
     $('backBtn').onclick=()=>{ if(history.length>1) history.back(); else location.href='index.html'; };
 
-    /* ✅ RESET (preserva lingua/admin) */
+    /* ✅ RESET (preserva solo poche chiavi legacy) */
     $('resetBtn').onclick=()=>{
-      const PRESERVE = ['admin_token','lang'];
+      const PRESERVE = ['whatif_wallet','whatif_wallet_sync','admin_token','lang'];
       const keep = Object.fromEntries(PRESERVE.map(k => [k, LS.getItem(k)]));
       [
         'whatif_prefs','next_prompts','cronologia','replay_story',
@@ -506,18 +504,14 @@
     $('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
     $('saveBtn').onclick=()=>{ const q=($('qInput').value||'').trim(); if(!q) return; addSaved(q); };
 
-    /* ===== SUBMIT (usa solo Firebase / credits.js) ===== */
+    /* ===== SUBMIT (blocca se non loggato / 0 crediti) ===== */
     async function guardCredits(){
       const T=I18N[lang]||I18N.it;
-      if (IS_ADMIN) return true;
-
       if (!auth.currentUser) {
         alert("Per usare i crediti devi essere loggato.");
         return false;
       }
-      // refresh rapido prima di controllare
-      await syncCreditsFromServer();
-      if (!currentBalance || Number(currentBalance) <= 0) {
+      if (currentBalance <= 0) {
         alert(T.noCredits);
         return false;
       }
@@ -528,22 +522,22 @@
       const okGuard = await guardCredits();
       if (!okGuard) return;
 
-      const T=I18N[lang]||I18N.it;
-
-      if (!IS_ADMIN) {
-        try{
-          const ok = await consumeCredit();
-          if (!ok){
-            alert(T.noCredits);
-            await syncCreditsFromServer();
-            return;
-          }
+      // consuma 1 credito dal Firestore wallet
+      try{
+        const ok = await consumeCredit();
+        if (!ok){
+          const T=I18N[lang]||I18N.it;
+          alert(T.noCredits);
           await syncCreditsFromServer();
-        }catch(err){
-          console.error("consumeCredit error:", err);
-          alert("Errore nell'utilizzo dei crediti. Riprova.");
           return;
         }
+        // refresh saldo
+        currentBalance = await getBalance().catch(()=>currentBalance);
+        renderCredits();
+      }catch(err){
+        console.error("consumeCredit error:", err);
+        alert("Errore nell'utilizzo dei crediti. Riprova.");
+        return;
       }
 
       const domanda=($('qInput').value||'').trim();
@@ -584,7 +578,7 @@
     };
     $('qInput').addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
-    /* ===== 🎲 SORPRENDIMI (assurda, con consumo credito Firebase) ===== */
+    /* ===== 🎲 SORPRENDIMI (solo assurde, con consumo crediti Firestore) ===== */
     function absurdPool(){ return ABS[lang] && ABS[lang].length ? ABS[lang] : ABS.it; }
     function getRecentSet(){ return new Set(readJSON('surprise_recent',[])); }
     function rememberPrompt(p){ const arr=readJSON('surprise_recent',[]); arr.unshift(p); writeJSON('surprise_recent',arr.slice(0,60)); }
@@ -605,22 +599,20 @@
       const okGuard = await guardCredits();
       if (!okGuard) return;
 
-      const T=I18N[lang]||I18N.it;
-
-      if (!IS_ADMIN) {
-        try{
-          const ok = await consumeCredit();
-          if (!ok){
-            alert(T.noCredits);
-            await syncCreditsFromServer();
-            return;
-          }
+      try{
+        const ok = await consumeCredit();
+        if (!ok){
+          const T=I18N[lang]||I18N.it;
+          alert(T.noCredits);
           await syncCreditsFromServer();
-        }catch(err){
-          console.error("consumeCredit error:", err);
-          alert("Errore nell'utilizzo dei crediti. Riprova.");
           return;
         }
+        currentBalance = await getBalance().catch(()=>currentBalance);
+        renderCredits();
+      }catch(err){
+        console.error("consumeCredit error:", err);
+        alert("Errore nell'utilizzo dei crediti. Riprova.");
+        return;
       }
 
       const rollingList = makeAbsurdList(14);
@@ -643,6 +635,7 @@
         isAbsurd=true;
         LS.setItem('absurd_prompt','1');
         LS.setItem('surprise_mode','1');
+        // invio automatico verso fifth
         const req={
           domanda:finalPrompt, stile:prefs.stile, lang, extra:'',
           fantasy_mode:false, periodo:prefs.periodo,
@@ -657,9 +650,8 @@
     }
     $('surpriseBtn').onclick=()=>{ slotSurprise(); };
 
-    // prima render (nel caso l'onAuthStateChanged scatti dopo)
+    // prima render (in attesa di onAuthStateChanged)
     renderCredits();
-    syncCreditsFromServer();
   </script>
 </body>
 </html>
