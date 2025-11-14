@@ -1,37 +1,39 @@
 // FILE: firebase.init.js
-// Inizializzazione unica di Firebase (Auth + Firestore)
+// Inizializzazione unica di Firebase (Auth + Firestore) via CDN
 
-// IMPORT SDK MODULARI
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+// Import SDK modulari
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import {
   getAuth,
   setPersistence,
-  browserLocalPersistence
-} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+  browserLocalPersistence,
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 import {
   getFirestore
-} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-// ⚠️ CONFIGURAZIONE DEL TUO PROGETTO (copiata dal tuo screenshot)
+// ⚡ CONFIG COPIATA ESATTAMENTE DAL TUO TAB CDN
 const firebaseConfig = {
-  apiKey: "AIzaSyAeWhmo9BtwUWVVeB8xwJKUgLODMQDNUZTE",
+  apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
   authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
   projectId: "whatif-oracolo-bc15d",
-  storageBucket: "whatif-oracolo-bc15d.appspot.com",
+  storageBucket: "whatif-oracolo-bc15d.firebasestorage.app",
   messagingSenderId: "857481137283",
-  appId: "1:857481137283:web:ff8f766d14392835cff5b6"
+  appId: "1:857481137283:web:ff8f766d14392835cf5fb6",
 };
 
-// 🔥 INITIALIZE FIREBASE UNA SOLA VOLTA
+// 🚀 Inizializza Firebase UNA VOLTA
 const app = initializeApp(firebaseConfig);
 
-// 🔥 AUTH + PERSISTENZA LOCALE (rimane loggato tra i refresh)
+// 🔐 AUTH con persistenza locale
 const auth = getAuth(app);
-setPersistence(auth, browserLocalPersistence).catch(() => {});
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+  console.warn("Persistenza non settata:", err);
+});
 
 // 🔥 FIRESTORE DB
 const db = getFirestore(app);
 
-// 🔥 ESPORTA PER TUTTO IL PROGETTO
+// Esporta per tutto il progetto
 export { app, auth, db };
