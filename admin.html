@@ -1,510 +1,444 @@
-<!doctype html>
-<html lang="it">
+<!DOCTYPE html>
+<html lang="it" data-theme="whatif">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Admin</title>
-<meta name="theme-color" content="#0B0B0C"/>
-<style>
-  :root{
-    --bg:#0B0B0C;--panel:#141C22;--line:rgba(255,255,255,.12);
-    --fg:#EAF2EE;--mut:#A0B2BA;--acc:#1C57A0;--acc2:#FFEC01;--ink:#0A0E12
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:#0B0B0C;color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  main{max-width:980px;margin:auto;padding:18px}
-  h1{margin:6px 0 14px;font-size:26px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px}
-  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .k{color:var(--mut)}
-  input,select{
-    background:rgba(255,255,255,.06);border:1px solid var(--line);color:#fff;border-radius:12px;padding:10px
-  }
-  button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
-  .primary{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink)}
-  .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid var(--line)}
-  .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.06);font-size:13px}
-  .big{font-size:28px;font-weight:900}
-  .mut{color:var(--mut)}
-  .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;margin-top:10px}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  thead th{position:sticky;top:0;background:rgba(255,255,255,.06);text-align:left;padding:8px;border-bottom:1px solid var(--line)}
-  tbody td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top}
-  .stat{background:rgba(255,255,255,.06);border:1px solid var(--line);padding:10px 12px;border-radius:12px;font-weight:800;font-size:13px}
-  .grow{flex:1 1 auto}
-</style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>What?f — Admin crediti</title>
+  <meta name="theme-color" content="#0A0F14"/>
+
+  <style>
+    :root{
+      --bg:#06090f; --bg2:#0d1622; --card:#101821;
+      --fg:#f4f7fb; --muted:#9fb0bd;
+      --acc:#1c57a0; --acc2:#ffec01;
+      --ink:#050608; --chip:#131c26; --line:#1f2a36;
+      --danger:#ff4b5c; --ok:#48c774;
+    }
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;min-height:100%;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:
+        radial-gradient(900px 700px at 12% 18%, var(--bg2) 0%, var(--bg) 60%),
+        radial-gradient(600px 480px at 85% 12%, rgba(255,236,1,.08), transparent 60%);
+      color:var(--fg);
+      -webkit-font-smoothing:antialiased;
+    }
+    main{max-width:960px;margin:0 auto;padding:14px 12px 32px}
+    h1{margin:6px 0 4px;font-size:clamp(22px,4vw,30px);color:var(--acc2)}
+    .sub{margin:0 0 12px;color:var(--muted);font-size:13px}
+    .card{
+      background:var(--card);
+      border-radius:18px;
+      border:1px solid var(--line);
+      padding:14px 14px 16px;
+      margin:10px 0;
+      backdrop-filter:blur(12px);
+      box-shadow:0 14px 32px rgba(0,0,0,.55);
+    }
+    .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .col{display:flex;flex-direction:column;gap:6px}
+    .label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+    .pill{padding:4px 9px;border-radius:999px;background:rgba(0,0,0,.35);font-size:12px}
+    .pill.ok{background:rgba(72,199,116,.12);color:#b9f5cb}
+    .pill.warn{background:rgba(255,75,92,.12);color:#ffd0d4}
+    .pill.admin{background:rgba(255,236,1,.11);color:#fff6b0}
+
+    .btn{
+      appearance:none;border-radius:999px;
+      border:1px solid var(--line);
+      background:var(--chip);
+      color:var(--fg);
+      padding:8px 14px;
+      font-weight:700;
+      font-size:13px;
+      cursor:pointer;
+      display:inline-flex;align-items:center;gap:6px;
+    }
+    .btn.primary{
+      border:none;
+      background:linear-gradient(180deg,var(--acc),var(--acc2));
+      color:var(--ink);
+      box-shadow:0 10px 26px rgba(0,0,0,.5);
+    }
+    .btn.danger{border-color:rgba(255,75,92,.6);color:#ffd0d4}
+    .btn.small{padding:6px 10px;font-size:12px}
+    .btn[disabled]{opacity:.4;cursor:not-allowed}
+    input{
+      background:rgba(255,255,255,.05);
+      border-radius:10px;
+      border:1px solid var(--line);
+      padding:7px 10px;
+      color:var(--fg);
+      font-size:14px;
+      min-width:0;
+    }
+    input:focus{outline:1px solid var(--acc2);outline-offset:1px}
+    .num{width:80px;text-align:center}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:6px}
+    .small{font-size:12px;color:var(--muted)}
+    .hr{height:1px;background:rgba(255,255,255,.08);margin:10px 0}
+    .mono{font-family:Menlo,Consolas,monospace;font-size:12px}
+
+    @media (max-width:600px){
+      .grid{grid-template-columns:1fr}
+    }
+  </style>
 </head>
 <body>
-<main>
-  <h1>What?f — <span class="mut">Admin</span></h1>
-
-  <!-- STATO -->
-  <div class="card" id="boxState">
-    <div class="row"><span class="k">Admin:</span> <span id="adminFlag" class="pill">no</span></div>
-    <div class="row" style="margin-top:6px">
-      <span class="k">Token:</span> <span id="tok" class="pill">—</span>
-      <span class="k">Crediti disponibili:</span> <span id="walletAvail" class="pill">—</span>
-      <span class="k">Usati oggi:</span> <span id="walletUsed" class="pill">—</span>
-      <span class="k">Cap giornaliero:</span> <span id="walletCap" class="pill">—</span>
-    </div>
-    <div class="row" style="margin-top:10px">
-      <input id="pin" type="password" placeholder="PIN admin" style="min-width:200px"/>
-      <button id="enter" class="primary">Entra admin</button>
-      <button id="revoke" class="ghost">Revoca token</button>
-    </div>
-    <div class="row" style="margin-top:8px">
-      <button id="simUser" class="ghost">🔄 Simula utente (disattiva ∞)</button>
-      <button id="restoreAdmin" class="ghost">🛡️ Torna admin</button>
-      <span class="grow"></span>
-      <button id="openFourth" class="ghost">➡️ Vai a fourth.html</button>
-      <button id="openFifth"  class="ghost">➡️ Vai a fifth.html</button>
-    </div>
-  </div>
-
-  <!-- CREDITI -->
-  <div class="card">
-    <div class="row">
-      <button id="presetFree" class="primary">FREE (3/giorno)</button>
-      <button id="presetPro"  class="primary">PRO (10/giorno)</button>
-      <button id="presetDev"  class="ghost">DEV (9999/giorno)</button>
-      <button id="addOne"     class="ghost">+1 credito</button>
-      <button id="addFive"    class="ghost">+5 crediti</button>
-      <button id="zeroUsed"   class="ghost">Azzera usati oggi</button>
-      <button id="wipeAll"    class="ghost">Reset totale wallet</button>
-    </div>
-    <p class="mut" style="margin:10px 0 0">
-      Sorgente unica: wallet Firestore <code>wallets/{uid}</code> (<code>dailyLimit</code>, <code>usedToday</code>).<br/>
-      Con token admin attivo, fourth/fifth mostrano <span class="big">∞</span> e NON consumano crediti.
-      Usa “Simula utente” per testare consumo/ricarica reale.
+  <main>
+    <h1>What?f — Admin crediti</h1>
+    <p class="sub">
+      Gestione wallet Firestore per l’utente loggato.  
+      Fourth/fifth leggono solo da <span class="mono">wallets/{uid}</span> tramite <code>bootCredits</code> / <code>getBalance</code>.
     </p>
-  </div>
 
-  <!-- STATO PREFERENZE + STATISTICHE RAPIDE -->
-  <div class="card">
-    <div class="row" style="margin-bottom:8px">
-      <span class="stat" id="statLang">Lingua: —</span>
-      <span class="stat" id="statStyle">Stile: —</span>
-      <span class="stat" id="statPeriodo">Periodo: —</span>
-      <span class="stat" id="statTot">Totale domande: —</span>
+    <!-- INFO UTENTE -->
+    <div class="card" id="userCard">
+      <div class="row" style="justify-content:space-between">
+        <div class="col">
+          <div class="label">Utente loggato</div>
+          <div id="userInfo">—</div>
+        </div>
+        <div class="col">
+          <div class="label">Stato admin locale</div>
+          <div class="row">
+            <span id="adminStatus" class="pill">—</span>
+            <button class="btn small" id="btnSimulaUser">Simula utente (disattiva ∞)</button>
+            <button class="btn small" id="btnTornaAdmin">Torna admin</button>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="row" style="margin-bottom:6px">
-      <span class="stat" id="statByStyle">Per stile: —</span>
-      <span class="stat" id="statByPeriodo">Per periodo: —</span>
+
+    <!-- LOGIN ADMIN -->
+    <div class="card">
+      <div class="label">PIN admin (solo client, nessun backend)</div>
+      <div class="row" style="margin-top:6px">
+        <input id="pinInput" placeholder="PIN admin" inputmode="numeric" style="max-width:130px"/>
+        <button class="btn primary" id="btnEnterAdmin">Entra admin</button>
+        <button class="btn" id="btnRevokeToken">Revoca token</button>
+        <span class="small">PIN demo standard: <span class="mono">4242</span> (puoi cambiarlo nel file).</span>
+      </div>
     </div>
-    <div class="row">
-      <select id="forceLang">
-        <option value="">— Forza lingua —</option>
-        <option value="it">it · Italiano</option>
-        <option value="en">en · English</option>
-        <option value="es">es · Español</option>
-        <option value="fr">fr · Français</option>
-        <option value="de">de · Deutsch</option>
-      </select>
-      <select id="forceStyle">
-        <option value="">— Forza stile —</option>
-        <option value="whatif">whatif</option>
-        <option value="wtf">wtf</option>
-      </select>
-      <select id="forcePeriodo">
-        <option value="">— Forza periodo —</option>
-        <option value="future">future</option>
-        <option value="past">past</option>
-      </select>
-      <button id="applyPrefs" class="ghost">Applica preferenze</button>
-      <span class="mut"> (scrive in <code>whatif_prefs</code> e “lang/lang_manual”)</span>
+
+    <!-- WALLET -->
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:flex-start">
+        <div class="col">
+          <div class="label">Wallet corrente (Firestore)</div>
+          <div class="grid">
+            <div>
+              <div class="small">Crediti disponibili (getBalance)</div>
+              <div class="row">
+                <span id="balance" class="pill ok">—</span>
+              </div>
+            </div>
+            <div>
+              <div class="small">Usati oggi</div>
+              <div class="row">
+                <input id="usedToday" class="num" type="number" min="0"/>
+                <button class="btn small" id="btnZeroUsed">Azzera usati oggi</button>
+              </div>
+            </div>
+            <div>
+              <div class="small">Cap giornaliero</div>
+              <div class="row">
+                <input id="dailyLimit" class="num" type="number" min="0"/>
+                <button class="btn small" id="btnSaveManual">Salva cap</button>
+              </div>
+            </div>
+            <div>
+              <div class="small">Ultimo reset (info)</div>
+              <div id="lastReset" class="mono">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <!-- PRESET -->
+      <div class="label">Preset rapidi</div>
+      <div class="row" style="margin-top:6px;flex-wrap:wrap">
+        <button class="btn small" id="btnPresetFree">FREE · 3 crediti/giorno</button>
+        <button class="btn small" id="btnPresetPro">PRO · 40 crediti/giorno</button>
+        <button class="btn small" id="btnAdd5">+5 crediti oggi</button>
+        <button class="btn small danger" id="btnResetWallet">Reset totale wallet</button>
+      </div>
+
+      <p class="small" style="margin-top:10px">
+        Schema usato: <span class="mono">{ dailyLimit, usedToday, lastReset }</span>.  
+        <code>getBalance()</code> calcola i crediti come <span class="mono">max(dailyLimit - usedToday, 0)</span> dopo il reset giornaliero.
+      </p>
     </div>
-  </div>
 
-  <!-- CRONOLOGIA DOMANDE -->
-  <div class="card">
-    <div class="row">
-      <div class="k">Cronologia locale (<code>cronologia</code>)</div>
-      <span class="grow"></span>
-      <input id="search" placeholder="Cerca testo / stile / periodo…" />
-      <button id="exportCSV" class="ghost">⬇️ Esporta CSV</button>
-      <button id="clearHistory" class="ghost">🧹 Svuota cronologia</button>
-    </div>
-    <div class="table-wrap" style="margin-top:10px">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Data</th>
-            <th>Domanda</th>
-            <th>Stile</th>
-            <th>Periodo</th>
-            <th>%</th>
-          </tr>
-        </thead>
-        <tbody id="rows"><tr><td colspan="6">—</td></tr></tbody>
-      </table>
-    </div>
-  </div>
-</main>
+    <p class="small">
+      Nota: con <span class="mono">admin_token</span> presente, fourth/fifth mostrano ∞ e non consumano crediti.  
+      Usa “Simula utente” per verificare il consumo reale.
+    </p>
+  </main>
 
-<script type="module">
-/* ===== IMPORT FIREBASE + CREDITI FIRESTORE ===== */
-import { auth } from "./firebase.init.js";
-import {
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+  <script type="module">
+    import { auth, db } from "./firebase.init.js";
+    import {
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
-import {
-  getWalletRaw,
-  adminSetDailyLimit,
-  adminAddCredits,
-  adminResetToday,
-  adminWipeWallet
-} from "./store/credits.js";
+    import {
+      doc,
+      getDoc,
+      setDoc,
+      updateDoc
+    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-/* ===== Chiavi ===== */
-const LS   = localStorage;
-const TKEY = "admin_token";
-const BKEY = "admin_token_backup";
+    import {
+      bootCredits,
+      getBalance
+    } from "./store/credits.js";
 
-/* ===== Utils ===== */
-const $ = id => document.getElementById(id);
-const setTok = t => $("tok").textContent = t ? t.slice(0,6) + "…" + t.slice(-4) : "—";
+    const LS = localStorage;
+    const $ = id => document.getElementById(id);
 
-function formatDate(ts){
-  try{ return new Date(ts).toLocaleString(); }catch{return '—'}
-}
+    /* === ADMIN TOKEN (solo client, per ∞ crediti su fourth/fifth) === */
+    const ADMIN_TOKEN_KEY = "admin_token";
+    const ADMIN_PIN = "4242";           // 🔐 CAMBIA QUI IL PIN SE VUOI
 
-/* ===== Cronologia ===== */
-function readHistory(){
-  try{ return JSON.parse(LS.getItem('cronologia')||'[]')||[]; }catch{return []}
-}
-function writeHistory(list){
-  LS.setItem('cronologia', JSON.stringify(Array.isArray(list)?list:[]));
-}
+    function hasAdminToken(){ return !!LS.getItem(ADMIN_TOKEN_KEY); }
+    function setAdminToken(){ LS.setItem(ADMIN_TOKEN_KEY, "whatif_admin_ok"); renderAdminStatus(); }
+    function clearAdminToken(){ LS.removeItem(ADMIN_TOKEN_KEY); renderAdminStatus(); }
 
-/* ===== Preferenze ===== */
-function readPrefs(){
-  let prefs={};
-  try{ prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}')||{}; }catch{}
-  const langManual = LS.getItem('lang_manual')==='1';
-  const lang = (langManual ? (LS.getItem('lang')||'it') : (navigator.language||'it'))
-    .slice(0,2).toLowerCase();
-  return {
-    stile: prefs.stile || 'whatif',
-    periodo: prefs.periodo || 'future',
-    lang
-  };
-}
-function applyPrefsUI(){
-  const p = readPrefs();
-  $("statLang").textContent    = `Lingua: ${p.lang.toUpperCase()}`;
-  $("statStyle").textContent   = `Stile: ${p.stile}`;
-  $("statPeriodo").textContent = `Periodo: ${p.periodo}`;
-}
-function forcePrefs({lang,stile,periodo}){
-  const cur  = readPrefs();
-  const next = {...cur};
-  if(stile)   next.stile   = stile;
-  if(periodo) next.periodo = periodo;
-  LS.setItem('whatif_prefs', JSON.stringify({stile:next.stile, periodo:next.periodo}));
-  if(lang){
-    LS.setItem('lang', lang);
-    LS.setItem('lang_manual','1');
-  }
-  applyPrefsUI();
-  alert('Preferenze applicate.');
-}
-
-/* ===== Render cronologia + stats ===== */
-function renderHistory(filter=''){
-  const rows = $("rows");
-  const hist = readHistory();
-  const q    = (filter||'').trim().toLowerCase();
-
-  const filtered = q
-    ? hist.filter(x=>{
-        const d = (x.domanda||'').toLowerCase();
-        const s = (x.stile||'').toLowerCase();
-        const p = (x.periodo||'').toLowerCase();
-        return d.includes(q)||s.includes(q)||p.includes(q)||(String(x.pct||'').includes(q));
-      })
-    : hist;
-
-  $("statTot").textContent = `Totale domande: ${hist.length}`;
-  const byStyle = hist.reduce((a,x)=> (a[x.stile||'—']=(a[x.stile||'—']||0)+1, a), {});
-  const byPer   = hist.reduce((a,x)=> (a[x.periodo||'—']=(a[x.periodo||'—']||0)+1, a), {});
-  $("statByStyle").textContent  = 'Per stile: ' + (Object.entries(byStyle).map(([k,v])=>`${k}:${v}`).join(' · ') || '—');
-  $("statByPeriodo").textContent= 'Per periodo: ' + (Object.entries(byPer).map(([k,v])=>`${k}:${v}`).join(' · ') || '—');
-
-  rows.innerHTML='';
-  if(filtered.length===0){
-    rows.innerHTML='<tr><td colspan="6">Nessun elemento.</td></tr>';
-    return;
-  }
-
-  filtered.forEach((x,i)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML = `
-      <td>${i+1}</td>
-      <td>${formatDate(x.ts)}</td>
-      <td>${(x.domanda||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</td>
-      <td>${x.stile||'—'}</td>
-      <td>${x.periodo||'—'}</td>
-      <td>${x.pct!=null?x.pct:'—'}</td>
-    `;
-    rows.appendChild(tr);
-  });
-}
-
-/* ===== Export CSV ===== */
-function exportCSV(){
-  const hist   = readHistory();
-  const header = ['N','Data','Domanda','Stile','Periodo','Percentuale','Surprise','Motivazione'];
-  const rows   = hist.map((x,i)=>[
-    i+1,
-    new Date(x.ts).toISOString().replace('T',' ').slice(0,19),
-    (x.domanda||'').replaceAll('"','""'),
-    x.stile||'',
-    x.periodo||'',
-    (x.pct!=null?x.pct:''),
-    (x.surprise?1:0),
-    (x.motivazione||'').replaceAll('"','""')
-  ]);
-  const csv = [
-    header.join(','),
-    ...rows.map(r=> r.map((v,j)=> (j===2||j===7) ? `"${v}"` : `${v}`).join(','))
-  ].join('\n');
-  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href=url; a.download='whatif_cronologia.csv'; a.click();
-  setTimeout(()=>URL.revokeObjectURL(url),500);
-}
-
-/* ===== Admin token (backend /api/admin-token) ===== */
-async function adminCheck(){
-  let isAdmin = !!LS.getItem(TKEY);
-  try{
-    const r = await fetch("/api/admin-token",{
-      headers:{"x-admin-token":LS.getItem(TKEY)||""}
-    });
-    if(r.ok){
-      const d = await r.json().catch(()=>({}));
-      isAdmin = !!(d?.admin || d?.ok);
+    function renderAdminStatus(){
+      const pill = $("adminStatus");
+      if(!pill) return;
+      if(hasAdminToken()){
+        pill.textContent = "ADMIN attivo (∞ crediti lato client)";
+        pill.className = "pill admin";
+      }else{
+        pill.textContent = "Modalità utente (limite Firestore)";
+        pill.className = "pill ok";
+      }
     }
-  }catch{}
 
-  $("adminFlag").textContent = isAdmin ? "yes" : "no";
-  setTok(LS.getItem(TKEY)||"");
-  return isAdmin;
-}
+    $("btnEnterAdmin").onclick = ()=>{
+      const pin = ($("pinInput").value || "").trim();
+      if(pin === ADMIN_PIN){
+        setAdminToken();
+        alert("Token admin attivato. Fourth/fifth useranno ∞ crediti finché non lo revochi.");
+      }else{
+        alert("PIN errato.");
+      }
+    };
+    $("btnRevokeToken").onclick = ()=>{
+      clearAdminToken();
+      alert("Token admin revocato.");
+    };
+    $("btnSimulaUser").onclick = ()=>{
+      clearAdminToken();
+      alert("Simulazione utente: admin_token rimosso. Riapri fourth/fifth per vedere il limite reale.");
+    };
+    $("btnTornaAdmin").onclick = ()=>{
+      setAdminToken();
+      alert("Modalità admin riattivata sul client.");
+    };
 
-/* ===== Firestore wallet UI ===== */
+    renderAdminStatus();
 
-async function refreshWalletUI(){
-  const elAvail = $("walletAvail");
-  const elUsed  = $("walletUsed");
-  const elCap   = $("walletCap");
+    /* === STATO WALLET === */
+    let currentUid = null;
+    let walletDocRef = null;
+    let state = {
+      dailyLimit: 0,
+      usedToday: 0,
+      lastReset: null,
+      balance: 0
+    };
 
-  // se non loggato → 0
-  if(!auth.currentUser){
-    elAvail.textContent = "0";
-    elUsed.textContent  = "0";
-    elCap.textContent   = "0";
-    return;
-  }
+    function todayISO(){ return new Date().toISOString().slice(0,10); }
 
-  try{
-    const raw = await getWalletRaw();
-    if(!raw){
-      elAvail.textContent = "0";
-      elUsed.textContent  = "0";
-      elCap.textContent   = "0";
-      return;
+    function applyStateToUI(){
+      $("dailyLimit").value = state.dailyLimit ?? 0;
+      $("usedToday").value = state.usedToday ?? 0;
+      $("lastReset").textContent = state.lastReset || "—";
+
+      const balEl = $("balance");
+      if(hasAdminToken()){
+        balEl.textContent = "∞ (admin)";
+        balEl.className = "pill admin";
+      }else{
+        balEl.textContent = String(state.balance);
+        balEl.className = state.balance > 0 ? "pill ok" : "pill warn";
+      }
     }
-    const dailyLimit = Number.isFinite(+raw.dailyLimit) ? +raw.dailyLimit : 0;
-    const usedToday  = Number.isFinite(+raw.usedToday)  ? +raw.usedToday  : 0;
-    const avail      = Math.max(0, dailyLimit - usedToday);
 
-    elAvail.textContent = String(avail);
-    elUsed.textContent  = String(usedToday);
-    elCap.textContent   = String(dailyLimit);
-  }catch(e){
-    console.error("refreshWalletUI error:", e);
-    elAvail.textContent = "0";
-    elUsed.textContent  = "0";
-    elCap.textContent   = "0";
-  }
-}
+    async function loadWallet(){
+      if(!currentUid){
+        state = {dailyLimit:0,usedToday:0,lastReset:null,balance:0};
+        applyStateToUI();
+        return;
+      }
 
-/* ===== Pulsanti admin token ===== */
-$("enter").onclick = async()=>{
-  const pin = $("pin").value.trim();
-  if(!pin) return alert("Inserisci il PIN");
-  const r = await fetch("/api/admin-token",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({pin})
-  });
-  const d = await r.json().catch(()=>({}));
-  if(r.ok && (d.token || d.ok)){
-    if(d.token) LS.setItem(TKEY, d.token);
-    $("pin").value = "";
-    setTok(LS.getItem(TKEY)||"");
-    await adminCheck();
-    alert("Admin attivo.");
-  }else{
-    alert("PIN errato o server non disponibile.");
-  }
-};
+      walletDocRef = doc(db, "wallets", currentUid);
 
-$("revoke").onclick = async()=>{
-  try{
-    await fetch("/api/admin-token?action=revoke",{
-      method:"POST",
-      headers:{"x-admin-token":LS.getItem(TKEY)||""}
+      // assicura doc + reset giornaliero usando la stessa logica di fourth/fifth
+      await bootCredits();
+      const snap = await getDoc(walletDocRef);
+
+      if(snap.exists()){
+        const data = snap.data() || {};
+        state.dailyLimit = Number.isFinite(+data.dailyLimit) ? +data.dailyLimit : 0;
+        state.usedToday = Number.isFinite(+data.usedToday) ? +data.usedToday : 0;
+        state.lastReset = data.lastReset || null;
+      }else{
+        // se per qualche motivo non esiste ancora, crealo
+        await setDoc(walletDocRef,{
+          dailyLimit:0,
+          usedToday:0,
+          lastReset: todayISO()
+        });
+        state.dailyLimit = 0;
+        state.usedToday = 0;
+        state.lastReset = todayISO();
+      }
+
+      // usa la stessa funzione di front-end per il saldo
+      try{
+        state.balance = await getBalance();
+      }catch{
+        state.balance = Math.max(state.dailyLimit - state.usedToday, 0);
+      }
+      applyStateToUI();
+    }
+
+    async function requireUidOrAlert(){
+      if(!currentUid){
+        alert("Nessun utente loggato. Fai login prima di usare l’admin crediti.");
+        throw new Error("no_user");
+      }
+    }
+
+    /* === LISTEN AUTH === */
+    onAuthStateChanged(auth, async user=>{
+      if(!user){
+        currentUid = null;
+        $("userInfo").textContent = "Nessun utente loggato.";
+        state = {dailyLimit:0,usedToday:0,lastReset:null,balance:0};
+        applyStateToUI();
+        return;
+      }
+      currentUid = user.uid;
+      $("userInfo").textContent = user.email || ("UID: "+user.uid);
+      try{
+        await loadWallet();
+      }catch(e){
+        console.error("Errore loadWallet", e);
+        alert("Errore nel caricamento del wallet da Firestore.");
+      }
     });
-  }catch{}
-  LS.removeItem(TKEY);
-  setTok("");
-  await adminCheck();
-  alert("Token revocato.");
-};
 
-$("simUser").onclick = ()=>{
-  const t = LS.getItem(TKEY);
-  if(!t){ alert("Non sei in admin."); return; }
-  LS.setItem(BKEY, t);
-  LS.removeItem(TKEY);
-  setTok("");
-  adminCheck();
-  alert("Modalità utente attiva (niente ∞ crediti).");
-};
+    /* === AZIONI WALLET === */
 
-$("restoreAdmin").onclick = ()=>{
-  const t = LS.getItem(BKEY)||"";
-  if(!t){ alert("Nessun token salvato."); return; }
-  LS.setItem(TKEY, t);
-  LS.removeItem(BKEY);
-  setTok(t);
-  adminCheck();
-  alert("Admin ripristinato.");
-};
+    // Salvataggio manuale cap
+    $("btnSaveManual").onclick = async ()=>{
+      try{
+        await requireUidOrAlert();
+        const dl = Number($("dailyLimit").value || "0");
+        if(!Number.isFinite(dl) || dl < 0) throw new Error("valore non valido");
+        await updateDoc(walletDocRef,{
+          dailyLimit: dl
+        });
+        await loadWallet();
+        alert("Cap giornaliero aggiornato.");
+      }catch(e){
+        console.error("saveManual error", e);
+        if(e.message !== "no_user") alert("Errore nel salvataggio del cap.");
+      }
+    };
 
-$("openFourth").onclick = ()=> location.href='fourth.html';
-$("openFifth").onclick  = ()=> location.href='fifth.html';
+    // Azzera usati oggi
+    $("btnZeroUsed").onclick = async ()=>{
+      try{
+        await requireUidOrAlert();
+        await updateDoc(walletDocRef,{
+          usedToday: 0
+        });
+        await loadWallet();
+        alert("Usati oggi azzerati.");
+      }catch(e){
+        console.error("zeroUsed error", e);
+        if(e.message!=="no_user") alert("Errore nell’azzeramento di usati oggi.");
+      }
+    };
 
-/* ===== Bottoni crediti (Firestore) ===== */
+    // +5 crediti per oggi (riduce usedToday di 5, minimo 0)
+    $("btnAdd5").onclick = async ()=>{
+      try{
+        await requireUidOrAlert();
+        const snap = await getDoc(walletDocRef);
+        const data = snap.exists()?snap.data():{};
+        const used = Number.isFinite(+data.usedToday)?+data.usedToday:0;
+        const newUsed = Math.max(0, used - 5);
+        await updateDoc(walletDocRef,{ usedToday:newUsed });
+        await loadWallet();
+        alert("+5 crediti per oggi (usedToday ridotto).");
+      }catch(e){
+        console.error("add5 error", e);
+        if(e.message!=="no_user") alert("Errore nel bonus +5 crediti.");
+      }
+    };
 
-$("presetFree").onclick = async()=>{
-  try{
-    await adminSetDailyLimit(3);
-    await adminResetToday();
-    await refreshWalletUI();
-  }catch(e){
-    console.error(e);
-    alert("Errore nel preset FREE.");
-  }
-};
+    // PRESET FREE (3/die)
+    $("btnPresetFree").onclick = async ()=>{
+      try{
+        await requireUidOrAlert();
+        await setDoc(walletDocRef,{
+          dailyLimit: 3,
+          usedToday: 0,
+          lastReset: todayISO()
+        },{merge:true});
+        await loadWallet();
+        alert("Preset FREE applicato: 3 crediti/giorno.");
+      }catch(e){
+        console.error("preset FREE error", e);
+        if(e.message!=="no_user") alert("Errore nel preset FREE (controlla console).");
+      }
+    };
 
-$("presetPro").onclick = async()=>{
-  try{
-    await adminSetDailyLimit(10);
-    await adminResetToday();
-    await refreshWalletUI();
-  }catch(e){
-    console.error(e);
-    alert("Errore nel preset PRO.");
-  }
-};
+    // PRESET PRO (40/die)
+    $("btnPresetPro").onclick = async ()=>{
+      try{
+        await requireUidOrAlert();
+        await setDoc(walletDocRef,{
+          dailyLimit: 40,
+          usedToday: 0,
+          lastReset: todayISO()
+        },{merge:true});
+        await loadWallet();
+        alert("Preset PRO applicato: 40 crediti/giorno.");
+      }catch(e){
+        console.error("preset PRO error", e);
+        if(e.message!=="no_user") alert("Errore nel preset PRO (controlla console).");
+      }
+    };
 
-$("presetDev").onclick = async()=>{
-  try{
-    await adminSetDailyLimit(9999);
-    await adminResetToday();
-    await refreshWalletUI();
-  }catch(e){
-    console.error(e);
-    alert("Errore nel preset DEV.");
-  }
-};
+    // RESET TOTALE
+    $("btnResetWallet").onclick = async ()=>{
+      if(!confirm("Sei sicuro di voler azzerare completamente il wallet (cap + usati)?")) return;
+      try{
+        await requireUidOrAlert();
+        await setDoc(walletDocRef,{
+          dailyLimit: 0,
+          usedToday: 0,
+          lastReset: todayISO()
+        },{merge:true});
+        await loadWallet();
+        alert("Wallet resettato.");
+      }catch(e){
+        console.error("resetWallet error", e);
+        if(e.message!=="no_user") alert("Errore nel reset totale wallet.");
+      }
+    };
 
-$("addOne").onclick = async()=>{
-  try{
-    await adminAddCredits(1);
-    await refreshWalletUI();
-  }catch(e){
-    console.error(e);
-    alert("Errore nell'aggiungere crediti.");
-  }
-};
-
-$("addFive").onclick = async()=>{
-  try{
-    await adminAddCredits(5);
-    await refreshWalletUI();
-  }catch(e){
-    console.error(e);
-    alert("Errore nell'aggiungere crediti.");
-  }
-};
-
-$("zeroUsed").onclick = async()=>{
-  try{
-    await adminResetToday();
-    await refreshWalletUI();
-  }catch(e){
-    console.error(e);
-    alert("Errore nell'azzerare gli usati di oggi.");
-  }
-};
-
-$("wipeAll").onclick = async()=>{
-  if(!confirm("Reset totale del wallet Firestore (dailyLimit, usedToday, totalUsed). Procedere?")) return;
-  try{
-    await adminWipeWallet();
-    await refreshWalletUI();
-    alert("Wallet Firestore resettato.");
-  }catch(e){
-    console.error(e);
-    alert("Errore nel reset totale.");
-  }
-};
-
-/* ===== Preferenze – forza/applica ===== */
-$("applyPrefs").onclick = ()=>{
-  const lang = $("forceLang").value || null;
-  const stile= $("forceStyle").value || null;
-  const per  = $("forcePeriodo").value || null;
-  forcePrefs({lang,stile,periodo:per});
-};
-
-/* Ricerca cronologia */
-$("search").addEventListener('input', (e)=> renderHistory(e.target.value||''));
-
-/* Esporta / Svuota cronologia */
-$("exportCSV").onclick = exportCSV;
-$("clearHistory").onclick = ()=>{
-  if(confirm("Sicuro di svuotare la cronologia locale?")){
-    writeHistory([]);
-    renderHistory('');
-  }
-};
-
-/* Sync multi-tab (solo prefs / cronologia) */
-window.addEventListener('storage', (e)=>{
-  if(['whatif_prefs','cronologia','lang','lang_manual'].includes(e.key||'')){
-    applyPrefsUI();
-    renderHistory($("search").value||'');
-  }
-});
-
-/* ===== INIT ===== */
-onAuthStateChanged(auth, () => {
-  refreshWalletUI();
-});
-
-adminCheck().then(()=>{
-  applyPrefsUI();
-  renderHistory('');
-  refreshWalletUI();
-});
-</script>
+  </script>
 </body>
 </html>
