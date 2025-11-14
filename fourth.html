@@ -199,7 +199,8 @@
         hintsNote:"Spunti = idee realistiche (cambiano ogni giorno e si personalizzano col tuo uso). “Sorprendimi” propone solo idee assurde (stile & tempo casuali).",
         credits:"Crediti", emptyNext:"— Nessuna domanda salvata.", emptyHist:"— Nessuna storia.", use:"Usa",
         save:"Salva", clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota",
-        noCredits:"Hai finito i crediti per oggi."},
+        noCredits:"Hai finito i crediti. Accedi o ricarica per continuare.",
+        loginReq:"Per usare What?f devi essere loggato."},
       en:{title:"Set your question", yourq:"What if…", ph:"What if…",
         help:"Write goal + context in one line. Add constraints or horizon (e.g. 30 days).",
         gen:"✨ Generate answer", clear:"Clear",
@@ -210,7 +211,8 @@
         hintsNote:"Hints = realistic ideas (refresh daily, personalized as you use it). “Surprise me” shows absurd ideas only (random style & time).",
         credits:"Credits", emptyNext:"— No saved questions.", emptyHist:"— No history.", use:"Use",
         save:"Save", clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear",
-        noCredits:"You’ve run out of credits for today."},
+        noCredits:"You’ve run out of credits. Please log in or top up.",
+        loginReq:"You need to sign in to use What?f."},
       es:{title:"Configura tu pregunta", yourq:"¿Y si…?", ph:"¿Y si…?",
         help:"Escribe objetivo y contexto en una línea. Añade límites u horizonte (p. ej., 30 días).",
         gen:"✨ Generar respuesta", clear:"Limpiar",
@@ -221,7 +223,8 @@
         hintsNote:"Ideas realistas (se actualizan a diario y se personalizan). «Sorpréndeme» muestra ideas absurdas.",
         credits:"Créditos", emptyNext:"— No hay preguntas guardadas.", emptyHist:"— Sin historial.", use:"Usar",
         save:"Guardar", clearSaved:"🗑️ Vaciar", clearHist:"🗑️ Vaciar",
-        noCredits:"Te has quedado sin créditos por hoy."},
+        noCredits:"Te has quedado sin créditos. Inicia sesión o recarga.",
+        loginReq:"Debes iniciar sesión para usar What?f."},
       fr:{title:"Définis ta question", yourq:"Et si…", ph:"Et si…",
         help:"Écris objectif + contexte en une ligne. Ajoute contraintes ou horizon (ex. 30 jours).",
         gen:"✨ Générer la réponse", clear:"Effacer",
@@ -232,7 +235,8 @@
         hintsNote:"Idées réalistes (quotidiennes et personnalisées). « Surprends-moi » = idées absurdes.",
         credits:"Crédits", emptyNext:"— Aucune question enregistrée.", emptyHist:"— Aucun historique.", use:"Utiliser",
         save:"Enregistrer", clearSaved:"🗑️ Vider", clearHist:"🗑️ Vider",
-        noCredits:"Tu n’as plus de crédits pour aujourd’hui."},
+        noCredits:"Tu n’as plus de crédits. Connecte-toi ou recharge.",
+        loginReq:"Tu dois te connecter pour utiliser What?f."},
       de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", ph:"Was wäre, wenn…",
         help:"Ziel + Kontext in einer Zeile. Füge Einschränkungen/Horizont hinzu (z. B. 30 Tage).",
         gen:"✨ Antwort erzeugen", clear:"Leeren",
@@ -243,7 +247,8 @@
         hintsNote:"Realistische Ideen (täglich, personalisiert). „Überrasche mich“ = absurde Ideen.",
         credits:"Credits", emptyNext:"— Keine gespeicherten Fragen.", emptyHist:"— Kein Verlauf.", use:"Verwenden",
         save:"Speichern", clearSaved:"🗑️ Leeren", clearHist:"🗑️ Leeren",
-        noCredits:"Du hast für heute keine Credits mehr."}
+        noCredits:"Du hast keine Credits mehr. Bitte einloggen oder aufladen.",
+        loginReq:"Du musst dich anmelden, um What?f zu nutzen."}
     };
 
     /* Apply texts */
@@ -281,10 +286,10 @@
     function renderCredits(){
       const T = I18N[lang] || I18N.it;
       const el = $('freeBadge');
-      const txt = `${T.credits}: ${currentBalance}`;
+      const txt = `${T.credits}: ${currentUser ? currentBalance : 0}`;
       if (el && el.textContent !== txt) el.textContent = txt;
 
-      const canUse = currentBalance > 0;
+      const canUse = !!currentUser && currentBalance > 0;
       const goBtn = $('goBtn');
       const surpriseBtn = $('surpriseBtn');
       if (goBtn) goBtn.disabled = !canUse;
@@ -293,26 +298,24 @@
 
     async function syncCreditsFromServer(){
       if (!auth.currentUser) {
+        currentUser = null;
         currentBalance = 0;
         renderCredits();
         return;
       }
       try {
-        await bootCredits();              // crea/reset se serve
-        currentBalance = await getBalance(); // saldo dal server
+        await bootCredits();                 // crea doc + reset giornaliero
+        const bal = await getBalance();
+        currentBalance = Number.isFinite(+bal) ? +bal : 0;
       } catch (e) {
         console.error("syncCredits error:", e);
+        currentBalance = 0;
       }
       renderCredits();
     }
 
     onAuthStateChanged(auth, async (user)=>{
       currentUser = user;
-      if (!user) {
-        currentBalance = 0;
-        renderCredits();
-        return;
-      }
       await syncCreditsFromServer();
     });
 
@@ -345,9 +348,9 @@
     $('homeBtn').onclick=()=>location.href='index.html';
     $('backBtn').onclick=()=>{ if(history.length>1) history.back(); else location.href='index.html'; };
 
-    /* ✅ RESET (preserva SOLO wallet/lingua/admin — lasciato per compat) */
+    /* ✅ RESET (preserva SOLO lingua + admin_token) */
     $('resetBtn').onclick=()=>{
-      const PRESERVE = ['whatif_wallet','whatif_wallet_sync','admin_token','lang'];
+      const PRESERVE = ['lang','admin_token'];
       const keep = Object.fromEntries(PRESERVE.map(k => [k, LS.getItem(k)]));
       [
         'whatif_prefs','next_prompts','cronologia','replay_story',
@@ -404,6 +407,7 @@
     function rng(seedStr){ let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
     function daily(pool,n=8){ const rnd=rng(todayISO()); const seen=new Set(), out=[]; while(out.length<n && seen.size<pool.length){ const i=Math.floor(rnd()*pool.length); if(seen.has(i)) continue; seen.add(i); out.push(pool[i]); } return out; }
 
+    /* Personalizzazione spunti realistici */
     const GEN_REAL={ it:{
       lavoro:["chiedessi un aumento","cambiassi lavoro","sistemassi LinkedIn","provassi 30 giorni di lavoro remoto","lanciassi un side-project"],
       studio:["riprendessi l’università","studiassi inglese 20 min/die","scrivessi 1 pagina di tesi al giorno","facessi un corso gratuito di IA"],
@@ -510,10 +514,9 @@
     async function guardCredits(){
       const T=I18N[lang]||I18N.it;
       if (!auth.currentUser) {
-        alert("Per usare i crediti devi essere loggato.");
+        alert(T.loginReq);
         return false;
       }
-      await syncCreditsFromServer();         // rilegge da Firestore OGNI VOLTA
       if (currentBalance <= 0) {
         alert(T.noCredits);
         return false;
@@ -580,7 +583,7 @@
     };
     $('qInput').addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
-    /* ===== 🎲 SORPRENDIMI (solo assurde, con consumo crediti Firestore) ===== */
+    /* ===== 🎲 SORPRENDIMI (con consumo crediti Firestore) ===== */
     function absurdPool(){ return ABS[lang] && ABS[lang].length ? ABS[lang] : ABS.it; }
     function getRecentSet(){ return new Set(readJSON('surprise_recent',[])); }
     function rememberPrompt(p){ const arr=readJSON('surprise_recent',[]); arr.unshift(p); writeJSON('surprise_recent',arr.slice(0,60)); }
@@ -651,7 +654,7 @@
     }
     $('surpriseBtn').onclick=()=>{ slotSurprise(); };
 
-    // prima render (nel caso l'onAuthStateChanged scatti dopo)
+    // prima render
     renderCredits();
   </script>
 </body>
