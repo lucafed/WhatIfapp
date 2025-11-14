@@ -159,7 +159,7 @@
     </div>
   </main>
 
-  <!-- 🔥 JS CON FIRESTORE CREDITI 🔥 -->
+  <!-- 🔥 JS CON FIREBASE CREDITI 🔥 -->
   <script type="module">
     // === IMPORT FIREBASE AUTH + CREDITI FIRESTORE ===
     import {
@@ -181,6 +181,8 @@
     const writeJSON = (k, v) => LS.setItem(k, JSON.stringify(v));
     const todayISO = () => new Date().toISOString().slice(0,10);
 
+    const IS_ADMIN = !!LS.getItem("admin_token");
+
     /* ===== LANG ===== */
     const SUPPORTED_LANGS=["it","en","es","fr","de"];
     let lang=(LS.getItem('lang')||'it').toLowerCase();
@@ -199,8 +201,7 @@
         hintsNote:"Spunti = idee realistiche (cambiano ogni giorno e si personalizzano col tuo uso). “Sorprendimi” propone solo idee assurde (stile & tempo casuali).",
         credits:"Crediti", emptyNext:"— Nessuna domanda salvata.", emptyHist:"— Nessuna storia.", use:"Usa",
         save:"Salva", clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota",
-        noCredits:"Hai finito i crediti. Accedi o ricarica per continuare.",
-        loginReq:"Per usare What?f devi essere loggato."},
+        noCredits:"Hai finito i crediti. Accedi o ricarica per continuare."},
       en:{title:"Set your question", yourq:"What if…", ph:"What if…",
         help:"Write goal + context in one line. Add constraints or horizon (e.g. 30 days).",
         gen:"✨ Generate answer", clear:"Clear",
@@ -211,8 +212,7 @@
         hintsNote:"Hints = realistic ideas (refresh daily, personalized as you use it). “Surprise me” shows absurd ideas only (random style & time).",
         credits:"Credits", emptyNext:"— No saved questions.", emptyHist:"— No history.", use:"Use",
         save:"Save", clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear",
-        noCredits:"You’ve run out of credits. Please log in or top up.",
-        loginReq:"You need to sign in to use What?f."},
+        noCredits:"You’ve run out of credits. Please log in or top up."},
       es:{title:"Configura tu pregunta", yourq:"¿Y si…?", ph:"¿Y si…?",
         help:"Escribe objetivo y contexto en una línea. Añade límites u horizonte (p. ej., 30 días).",
         gen:"✨ Generar respuesta", clear:"Limpiar",
@@ -223,8 +223,7 @@
         hintsNote:"Ideas realistas (se actualizan a diario y se personalizan). «Sorpréndeme» muestra ideas absurdas.",
         credits:"Créditos", emptyNext:"— No hay preguntas guardadas.", emptyHist:"— Sin historial.", use:"Usar",
         save:"Guardar", clearSaved:"🗑️ Vaciar", clearHist:"🗑️ Vaciar",
-        noCredits:"Te has quedado sin créditos. Inicia sesión o recarga.",
-        loginReq:"Debes iniciar sesión para usar What?f."},
+        noCredits:"Te has quedado sin créditos. Inicia sesión o recarga."},
       fr:{title:"Définis ta question", yourq:"Et si…", ph:"Et si…",
         help:"Écris objectif + contexte en une ligne. Ajoute contraintes ou horizon (ex. 30 jours).",
         gen:"✨ Générer la réponse", clear:"Effacer",
@@ -235,8 +234,7 @@
         hintsNote:"Idées réalistes (quotidiennes et personnalisées). « Surprends-moi » = idées absurdes.",
         credits:"Crédits", emptyNext:"— Aucune question enregistrée.", emptyHist:"— Aucun historique.", use:"Utiliser",
         save:"Enregistrer", clearSaved:"🗑️ Vider", clearHist:"🗑️ Vider",
-        noCredits:"Tu n’as plus de crédits. Connecte-toi ou recharge.",
-        loginReq:"Tu dois te connecter pour utiliser What?f."},
+        noCredits:"Tu n’as plus de crédits. Connecte-toi ou recharge."},
       de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", ph:"Was wäre, wenn…",
         help:"Ziel + Kontext in einer Zeile. Füge Einschränkungen/Horizont hinzu (z. B. 30 Tage).",
         gen:"✨ Antwort erzeugen", clear:"Leeren",
@@ -247,8 +245,7 @@
         hintsNote:"Realistische Ideen (täglich, personalisiert). „Überrasche mich“ = absurde Ideen.",
         credits:"Credits", emptyNext:"— Keine gespeicherten Fragen.", emptyHist:"— Kein Verlauf.", use:"Verwenden",
         save:"Speichern", clearSaved:"🗑️ Leeren", clearHist:"🗑️ Leeren",
-        noCredits:"Du hast keine Credits mehr. Bitte einloggen oder aufladen.",
-        loginReq:"Du musst dich anmelden, um What?f zu nutzen."}
+        noCredits:"Du hast keine Credits mehr. Bitte einloggen oder aufladen."}
     };
 
     /* Apply texts */
@@ -281,22 +278,22 @@
     setPersistence(auth, browserLocalPersistence).catch(()=>{});
 
     let currentUser = null;
-    let currentBalance = 0;
+    let currentBalance = null; // null = non ancora caricato
 
     function renderCredits(){
       const T = I18N[lang] || I18N.it;
       const el = $('freeBadge');
-      const txt = `${T.credits}: ${currentUser ? currentBalance : 0}`;
-      if (el && el.textContent !== txt) el.textContent = txt;
-
-      const canUse = !!currentUser && currentBalance > 0;
-      const goBtn = $('goBtn');
-      const surpriseBtn = $('surpriseBtn');
-      if (goBtn) goBtn.disabled = !canUse;
-      if (surpriseBtn) surpriseBtn.disabled = !canUse;
+      if (!el) return;
+      const n = (currentBalance == null) ? "…" : currentBalance;
+      el.textContent = `${T.credits}: ${n}`;
     }
 
     async function syncCreditsFromServer(){
+      if (IS_ADMIN) {
+        currentBalance = "∞";
+        renderCredits();
+        return;
+      }
       if (!auth.currentUser) {
         currentUser = null;
         currentBalance = 0;
@@ -304,12 +301,11 @@
         return;
       }
       try {
-        await bootCredits();                 // crea doc + reset giornaliero
-        const bal = await getBalance();
-        currentBalance = Number.isFinite(+bal) ? +bal : 0;
+        await bootCredits();            // crea doc + reset giornaliero
+        currentBalance = await getBalance(); // numero di crediti disponibili
       } catch (e) {
         console.error("syncCredits error:", e);
-        currentBalance = 0;
+        if (currentBalance == null) currentBalance = 0;
       }
       renderCredits();
     }
@@ -348,9 +344,9 @@
     $('homeBtn').onclick=()=>location.href='index.html';
     $('backBtn').onclick=()=>{ if(history.length>1) history.back(); else location.href='index.html'; };
 
-    /* ✅ RESET (preserva SOLO lingua + admin_token) */
+    /* ✅ RESET (preserva lingua/admin) */
     $('resetBtn').onclick=()=>{
-      const PRESERVE = ['lang','admin_token'];
+      const PRESERVE = ['admin_token','lang'];
       const keep = Object.fromEntries(PRESERVE.map(k => [k, LS.getItem(k)]));
       [
         'whatif_prefs','next_prompts','cronologia','replay_story',
@@ -510,14 +506,18 @@
     $('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
     $('saveBtn').onclick=()=>{ const q=($('qInput').value||'').trim(); if(!q) return; addSaved(q); };
 
-    /* ===== SUBMIT (blocca se non loggato / 0 crediti) ===== */
+    /* ===== SUBMIT (usa solo Firebase / credits.js) ===== */
     async function guardCredits(){
       const T=I18N[lang]||I18N.it;
+      if (IS_ADMIN) return true;
+
       if (!auth.currentUser) {
-        alert(T.loginReq);
+        alert("Per usare i crediti devi essere loggato.");
         return false;
       }
-      if (currentBalance <= 0) {
+      // refresh rapido prima di controllare
+      await syncCreditsFromServer();
+      if (!currentBalance || Number(currentBalance) <= 0) {
         alert(T.noCredits);
         return false;
       }
@@ -528,21 +528,22 @@
       const okGuard = await guardCredits();
       if (!okGuard) return;
 
-      // consuma 1 credito dal Firestore wallet
-      try{
-        const ok = await consumeCredit();
-        if (!ok){
-          const T=I18N[lang]||I18N.it;
-          alert(T.noCredits);
+      const T=I18N[lang]||I18N.it;
+
+      if (!IS_ADMIN) {
+        try{
+          const ok = await consumeCredit();
+          if (!ok){
+            alert(T.noCredits);
+            await syncCreditsFromServer();
+            return;
+          }
           await syncCreditsFromServer();
+        }catch(err){
+          console.error("consumeCredit error:", err);
+          alert("Errore nell'utilizzo dei crediti. Riprova.");
           return;
         }
-        currentBalance = await getBalance().catch(()=>currentBalance);
-        renderCredits();
-      }catch(err){
-        console.error("consumeCredit error:", err);
-        alert("Errore nell'utilizzo dei crediti. Riprova.");
-        return;
       }
 
       const domanda=($('qInput').value||'').trim();
@@ -583,7 +584,7 @@
     };
     $('qInput').addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
 
-    /* ===== 🎲 SORPRENDIMI (con consumo crediti Firestore) ===== */
+    /* ===== 🎲 SORPRENDIMI (assurda, con consumo credito Firebase) ===== */
     function absurdPool(){ return ABS[lang] && ABS[lang].length ? ABS[lang] : ABS.it; }
     function getRecentSet(){ return new Set(readJSON('surprise_recent',[])); }
     function rememberPrompt(p){ const arr=readJSON('surprise_recent',[]); arr.unshift(p); writeJSON('surprise_recent',arr.slice(0,60)); }
@@ -604,20 +605,22 @@
       const okGuard = await guardCredits();
       if (!okGuard) return;
 
-      try{
-        const ok = await consumeCredit();
-        if (!ok){
-          const T=I18N[lang]||I18N.it;
-          alert(T.noCredits);
+      const T=I18N[lang]||I18N.it;
+
+      if (!IS_ADMIN) {
+        try{
+          const ok = await consumeCredit();
+          if (!ok){
+            alert(T.noCredits);
+            await syncCreditsFromServer();
+            return;
+          }
           await syncCreditsFromServer();
+        }catch(err){
+          console.error("consumeCredit error:", err);
+          alert("Errore nell'utilizzo dei crediti. Riprova.");
           return;
         }
-        currentBalance = await getBalance().catch(()=>currentBalance);
-        renderCredits();
-      }catch(err){
-        console.error("consumeCredit error:", err);
-        alert("Errore nell'utilizzo dei crediti. Riprova.");
-        return;
       }
 
       const rollingList = makeAbsurdList(14);
@@ -654,8 +657,9 @@
     }
     $('surpriseBtn').onclick=()=>{ slotSurprise(); };
 
-    // prima render
+    // prima render (nel caso l'onAuthStateChanged scatti dopo)
     renderCredits();
+    syncCreditsFromServer();
   </script>
 </body>
 </html>
