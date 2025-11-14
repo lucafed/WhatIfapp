@@ -190,7 +190,7 @@
 
   <div id="debug"></div>
 
-  <!-- Hero loader: prova più percorsi/nomi -->
+  <!-- Hero loader -->
   <script>
     (function loadHero(){
       const hero = document.getElementById('hero');
@@ -315,7 +315,6 @@
         if(typeof d[k] === 'string') el.textContent = d[k];
       });
 
-      // footer / CTA testi base verranno poi ri-allineati da updatePrimaryCta
       const logout = document.getElementById('logoutBtn');
       if(logout) logout.textContent = d.exit;
       const primary = document.getElementById('primaryCta');
@@ -323,7 +322,6 @@
         primary.textContent = d.login;
       }
 
-      // evidenzia lingua
       document.querySelectorAll('#langMenu button')
         .forEach(b => b.classList.toggle('active', b.dataset.lang === L));
 
@@ -394,7 +392,7 @@
     })();
   </script>
 
-  <!-- 🔐 Firebase Auth -->
+  <!-- 🔐 Firebase Auth: usa firebase.init.js condiviso -->
   <script type="module">
     const dbg = document.getElementById('debug');
     const DO_DEBUG = new URLSearchParams(location.search).get('debug') === '1';
@@ -405,24 +403,21 @@
       if(t) log('❌', t);
     };
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    /* 👉 Importa l'app già inizializzata (stessa di fourth/fifth/admin) */
+    import { auth } from "./firebase.init.js";
+
     import {
-      getAuth, GoogleAuthProvider,
-      onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult,
-      setPersistence, browserLocalPersistence, browserSessionPersistence, signOut
+      GoogleAuthProvider,
+      onAuthStateChanged,
+      signInWithPopup,
+      signInWithRedirect,
+      getRedirectResult,
+      setPersistence,
+      browserLocalPersistence,
+      browserSessionPersistence,
+      signOut
     } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
-      authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
-      projectId: "whatif-oracolo-bc15d",
-      storageBucket: "whatif-oracolo-bc15d.firebasestorage.app",
-      messagingSenderId: "857481137283",
-      appId: "1:857481137283:web:ff8f766d14392835cf5fb6"
-    };
-
-    const app  = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
     try{
