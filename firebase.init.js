@@ -3,6 +3,7 @@
 
 // Import SDK modulari
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+
 import {
   getAuth,
   setPersistence,
@@ -10,7 +11,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 import {
-  getFirestore
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  runTransaction,
+  serverTimestamp,
+  updateDoc,
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
 // ⚡ CONFIG COPIATA ESATTAMENTE DAL TUO TAB CDN
@@ -32,8 +39,18 @@ setPersistence(auth, browserLocalPersistence).catch((err) => {
   console.warn("Persistenza non settata:", err);
 });
 
-// 🔥 FIRESTORE DB
+// 🔥 FIRESTORE DB (unica istanza)
 const db = getFirestore(app);
 
-// Esporta per tutto il progetto
-export { app, auth, db };
+// Esporta TUTTO da qui, così gli altri file non importano più Firestore direttamente
+export {
+  app,
+  auth,
+  db,
+  doc,
+  getDoc,
+  setDoc,
+  runTransaction,
+  serverTimestamp,
+  updateDoc,
+};
