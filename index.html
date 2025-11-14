@@ -190,34 +190,6 @@
 
   <div id="debug"></div>
 
-  <!-- Hero loader -->
-  <script>
-    (function loadHero(){
-      const hero = document.getElementById('hero');
-      const DIRS  = ["/public", "", "/assets", "/img", "/images"];
-      const NAMES = ["home-hero.webp","home-hero.png","home_hero.webp","home_hero.png"];
-      const cacheBust = () => `?v=${Math.floor(Date.now()/60000)}`;
-      function trySrc(url){
-        return new Promise(resolve=>{
-          const img = new Image();
-          img.decoding = "async"; img.loading = "eager";
-          img.onload = ()=> resolve(url + cacheBust());
-          img.onerror = ()=> resolve(null);
-          img.src = url + cacheBust();
-        });
-      }
-      (async ()=>{
-        for (const dir of DIRS){
-          for (const name of NAMES){
-            const url = `${dir}/${name}`.replace(/\/{2,}/g,"/");
-            const ok  = await trySrc(url);
-            if (ok){ hero.src = ok; return; }
-          }
-        }
-      })();
-    })();
-  </script>
-
   <!-- i18n + tema + selezioni + lingua -->
   <script>
     (function initTheme(){
