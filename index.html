@@ -218,7 +218,7 @@
     })();
   </script>
 
-  <!-- i18n + tema + selezioni -->
+  <!-- i18n + tema + selezioni + lingua -->
   <script>
     (function initTheme(){
       try{
@@ -331,10 +331,11 @@
     if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang());
     applyLang();
 
+    // esporta per script Firebase
     window.I18N = DICT;
     window.getCurrentLang = getLang;
 
-    // chip selezioni
+    // gestisci chip selezioni
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
     function wireGroup(g){
       if(!g) return;
@@ -391,7 +392,7 @@
     })();
   </script>
 
-  <!-- 🔐 Firebase Auth: USA firebase.init.js -->
+  <!-- 🔐 Firebase Auth: usa firebase.init.js -->
   <script type="module">
     const dbg = document.getElementById('debug');
     const DO_DEBUG = new URLSearchParams(location.search).get('debug') === '1';
@@ -402,7 +403,7 @@
       if(t) log('❌', t);
     };
 
-    // 👉 usa SEMPRE la stessa app/config
+    // Usa l'app già inizializzata
     import { auth } from "./firebase.init.js";
 
     import {
@@ -412,7 +413,7 @@
       signInWithRedirect,
       getRedirectResult,
       signOut
-    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
     const provider = new GoogleAuthProvider();
 
@@ -489,6 +490,7 @@
 
       if(user){
         if(selectionsReady()){
+          // qui prosegui verso la tua app
           location.href = "second.html";
         }else{
           showErrText(d.needChoices);
@@ -519,7 +521,7 @@
         }
 
         const map = {
-          "auth/unauthorized-domain":"Dominio non autorizzato (Authentication → Impostazioni → Domini autorizzati).",
+          "auth/unauthorized-domain":"Dominio non autorizzato (Console Firebase → Authentication → Impostazioni → Domini autorizzati).",
           "auth/operation-not-allowed":"Provider Google non abilitato (Authentication → Metodi di accesso).",
           "auth/network-request-failed":"Problema di rete o HTTPS."
         };
@@ -530,7 +532,7 @@
     logoutBtn.onclick = async ()=>{ await signOut(auth); };
   </script>
 
-  <!-- Easter egg admin + SW -->
+  <!-- Easter egg admin + SW (invariato) -->
   <script>
     (function(){
       const title  = document.getElementById('appTitle');
