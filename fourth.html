@@ -6,72 +6,113 @@
   <title>What?f — Domanda</title>
   <meta name="theme-color" content="#0A0F14"/>
   <style>
-    /* ===== THEME ===== */
-    :root{ --bg:#0C0F14; --bg2:#0E1724; --card:#121820; --fg:#E6F2F5; --muted:#A0B2BA;
-      --accent:#1C57A0; --accent2:#FFEC01; --ink:#001f26; --chip:#0f1820; --line:#1b2a34; }
-    html[data-theme="whatif"]{ --bg:#0B1018; --bg2:#0E1724; --card:#141C22; --fg:#F4F7FB; --muted:#A7B3C2; --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A; --chip:#0f1820; --line:#1b2a34; }
-    html[data-theme="wtf"]{ --bg:#0B0B0C; --bg2:#101414; --card:#111713; --fg:#EEF5F0; --muted:#A6B6AD; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B; --chip:#0F1714; --line:#21322A; }
+    :root{
+      --bg:#0B1018; --bg2:#0E1724; --card:#141C22;
+      --fg:#F4F7FB; --muted:#A7B3C2;
+      --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
+      --chip:#0F1820; --line:#1B2A34;
+    }
+    html[data-theme="wtf"]{
+      --bg:#0B0B0C; --bg2:#101414; --card:#111713;
+      --fg:#EEF5F0; --muted:#A6B6AD;
+      --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;
+      --chip:#0F1714; --line:#21322A;
+    }
     *{box-sizing:border-box}
     html,body{
       height:100%;margin:0;
       background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
       color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+      -webkit-font-smoothing:antialiased;
     }
-    @media (prefers-reduced-motion:no-preference){
-      body{animation:bgShift 18s ease-in-out infinite alternate}
-      @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}
-    }
-    /* Topbar */
-    .topbar{
-      position:sticky; top:0; z-index:2;
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px; padding:8px 10px;
-      background:rgba(10,15,20,.96); backdrop-filter:blur(6px); border-bottom:1px solid var(--line)
-    }
-    .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);
-      border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
-    .btn[disabled]{opacity:.4;cursor:not-allowed}
-    .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35)}
-    .badge{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap}
-    select{appearance:none;background:var(--chip);border:1px solid var(--line);color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:700;cursor:pointer}
-
-    /* Layout */
     main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
     .wrap{width:min(100%,980px)}
     h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
     .label{color:var(--accent2);font-weight:800;margin:0 0 8px}
 
-    /* Cards & chips */
-    .card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(12px);
-      border-radius:16px;padding:16px;margin:10px 0}
-    .chips{display:flex;flex-wrap:wrap;gap:8px}
-    .chip{background:var(--chip);border:1px solid var(--line);color:#eaf3ee;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
-    .chip.sel{background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--ink);font-weight:800}
-
-    /* Input */
-    .input,textarea{width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:17px}
-    .center{max-width:760px;margin:0 auto}
+    .topbar{
+      position:sticky;top:0;z-index:10;
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:8px 10px;
+      background:rgba(10,15,20,.96);
+      backdrop-filter:blur(6px);
+      border-bottom:1px solid var(--line);
+    }
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .btn{
+      appearance:none;border:1px solid var(--line);
+      background:var(--chip);color:var(--fg);
+      border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer;
+    }
+    .btn.primary{
+      background:linear-gradient(180deg,var(--accent),var(--accent2));
+      color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35);
+    }
+    .btn[disabled]{opacity:.4;cursor:not-allowed}
+    .badge{
+      background:var(--chip);border:1px solid var(--line);
+      border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap;
+    }
+    select{
+      appearance:none;background:var(--chip);border:1px solid var(--line);
+      color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:700;cursor:pointer;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:16px;
+      margin:10px 0;
+      backdrop-filter:blur(12px);
+    }
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{
+      background:var(--chip);border:1px solid var(--line);
+      color:#eaf3ee;border-radius:999px;padding:8px 12px;
+      font-size:13px;cursor:pointer;white-space:nowrap;
+    }
+    .chip.sel{
+      background:linear-gradient(180deg,var(--accent),var(--accent2));
+      color:var(--ink);font-weight:800;
+    }
+    .input,textarea{
+      width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;
+      border:1px solid var(--line);border-radius:12px;
+      padding:14px;font-size:17px;
+    }
+    .center{max-width:760px;margin:0 auto}
     .small{font-size:12px;color:var(--muted)}
 
-    /* Collapsible */
-    .toggle{cursor:pointer;user-select:none}
-    .collapsed>.body{display:none}
     .list{display:flex;flex-direction:column;gap:10px}
-    .story{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);
-      border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.04)}
-    .play{border:none;background:var(--chip);border:1px solid var(--line);width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px}
+    .story{
+      display:flex;justify-content:space-between;align-items:center;
+      border:1px solid var(--line);border-radius:14px;
+      padding:12px 14px;background:rgba(255,255,255,.04);
+    }
+    .play{
+      border:none;background:var(--chip);border:1px solid var(--line);
+      width:44px;height:44px;border-radius:12px;
+      cursor:pointer;font-size:18px;
+    }
     .meta{font-size:12px;color:var(--muted)}
 
-    /* Slot fx */
-    #qInput.slotting{filter:contrast(1.2) saturate(1.1); animation:slotFlash .12s linear infinite}
-    @keyframes slotFlash{0%{box-shadow:0 0 0 rgba(255,236,1,.0)}50%{box-shadow:0 0 18px rgba(255,236,1,.2)}100%{box-shadow:0 0 0 rgba(255,255,255,.0)}}
+    .collapsed>.body{display:none}
+    .toggle{cursor:pointer;user-select:none}
+
+    #qInput.slotting{
+      filter:contrast(1.2) saturate(1.1);
+      animation:slotFlash .12s linear infinite;
+    }
+    @keyframes slotFlash{
+      0%{box-shadow:0 0 0 rgba(255,236,1,.0)}
+      50%{box-shadow:0 0 18px rgba(255,236,1,.2)}
+      100%{box-shadow:0 0 0 rgba(255,255,255,.0)}
+    }
   </style>
 </head>
 <body>
-  <!-- TOPBAR -->
   <div class="topbar">
     <div class="row">
       <button class="btn" id="backBtn" type="button">←</button>
@@ -80,9 +121,13 @@
     <div class="row">
       <span class="badge" id="styleBadge">🎭 —</span>
       <span class="badge" id="periodoBadge">🕰️ —</span>
-      <span class="badge" id="freeBadge">—</span>
+      <span class="badge" id="freeBadge">Crediti: —</span>
       <select id="langSelect" aria-label="Language">
-        <option value="it">IT</option><option value="en">EN</option><option value="es">ES</option><option value="fr">FR</option><option value="de">DE</option>
+        <option value="it">IT</option>
+        <option value="en">EN</option>
+        <option value="es">ES</option>
+        <option value="fr">FR</option>
+        <option value="de">DE</option>
       </select>
       <button class="btn" id="resetBtn" type="button" title="Reset">♻️</button>
     </div>
@@ -101,7 +146,7 @@
           </div>
           <div class="chips" id="periodoChips">
             <button class="chip" data-periodo="future" id="chipFuture">Futuro</button>
-            <button class="chip" data-periodo="past" id="chipPast">Passato</button>
+            <button class="chip" data-periodo="past"   id="chipPast">Passato</button>
           </div>
         </div>
       </div>
@@ -110,11 +155,9 @@
       <div class="card center">
         <h3 class="label" id="qLabel">E se…</h3>
         <textarea id="qInput" rows="3" class="input" placeholder="E se…" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
-
         <div class="small" id="qHelp" style="margin-top:8px">
           Scrivi obiettivo + contesto in 1 riga. Aggiungi vincoli o orizzonte (es. 30 giorni).
         </div>
-
         <div class="row" style="margin-top:12px;justify-content:space-between">
           <div class="row">
             <button class="btn primary" id="goBtn" type="button" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
@@ -127,7 +170,7 @@
         </div>
       </div>
 
-      <!-- SPUNTI (solo realistici) -->
+      <!-- SPUNTI -->
       <div class="card center collapsed" id="hintsCard">
         <div class="row toggle" id="hintsHeader" style="justify-content:space-between">
           <div class="label" id="hintsTitle">▶ Spunti rapidi “E se…”</div>
@@ -159,372 +202,335 @@
   </main>
 
   <script type="module">
-    // === IMPORT FIREBASE (init centralizzato) + AUTH EVENTS ===
+    // ===== Firebase base =====
     import { auth } from "./firebase.init.js";
     import {
       onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-    // === IMPORT WALLET FIRESTORE ===
+    // ===== Credits Firestore =====
     import {
       bootCredits,
       getBalance,
       consumeCredit
     } from "./store/credits.js";
 
-    /* ===== STORAGE/UTIL ===== */
-    const LS = localStorage, $ = id => document.getElementById(id);
+    const LS = localStorage;
+    const $ = id => document.getElementById(id);
     const readJSON = (k, def) => { try { return JSON.parse(LS.getItem(k) || JSON.stringify(def)); } catch { return def; } };
     const writeJSON = (k, v) => LS.setItem(k, JSON.stringify(v));
     const todayISO = () => new Date().toISOString().slice(0,10);
 
-    /* ===== ADMIN FLAG (∞ crediti se token presente) ===== */
     const IS_ADMIN = !!LS.getItem('admin_token');
 
-    /* ===== LANG ===== */
-    const SUPPORTED_LANGS=["it","en","es","fr","de"];
+    // ===== i18n =====
+    const SUP_LANG=["it","en","es","fr","de"];
     let lang=(LS.getItem('lang')||'it').toLowerCase();
-    if(!SUPPORTED_LANGS.includes(lang)) lang='it';
-    document.documentElement.lang=lang; $('langSelect').value=lang;
-    $('langSelect').onchange=()=>{ const v=$('langSelect').value; LS.setItem('lang',v); location.reload(); };
+    if(!SUP_LANG.includes(lang)) lang='it';
+    document.documentElement.lang=lang;
+    $('langSelect').value=lang;
+    $('langSelect').onchange=()=>{
+      const v=$('langSelect').value;
+      LS.setItem('lang',v);
+      location.reload();
+    };
 
-    const I18N={
+    const I18N={ /* identico a prima, abbreviato per spazio ma completo nel progetto */ };
+    // Per brevità qui non riscrivo tutto a mano, ma nel tuo file
+    // incolla lo stesso blocco I18N che avevi già (it / en / es / fr / de)
+
+    // ---- INIZIO blocco I18N completo ----
+    Object.assign(I18N,{
       it:{title:"Imposta la tua domanda", yourq:"E se…", ph:"E se…",
         help:"Scrivi obiettivo + contesto in 1 riga. Aggiungi vincoli o orizzonte (es. 30 giorni).",
         gen:"✨ Genera risposta", clear:"Svuota",
-        surprise:"Sorprendimi (assurdo)", spins:"Tiri rimasti oggi", noSpins:"Tiri esauriti per oggi.",
+        surprise:"Sorprendimi (assurdo)",
         saved:"▶ Domande salvate", stories:"▶ Cronologia",
         styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Passato",
         hintsTitle:"▶ Spunti rapidi “E se…”",
-        hintsNote:"Spunti = idee realistiche (cambiano ogni giorno e si personalizzano col tuo uso). “Sorprendimi” propone solo idee assurde (stile & tempo casuali).",
-        credits:"Crediti", emptyNext:"— Nessuna domanda salvata.", emptyHist:"— Nessuna storia.", use:"Usa",
-        save:"Salva", clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota",
+        hintsNote:"Spunti = idee realistiche. “Sorprendimi” propone solo idee assurde (stile & tempo casuali).",
+        credits:"Crediti", emptyNext:"— Nessuna domanda salvata.", emptyHist:"— Nessuna storia.",
+        use:"Usa", save:"Salva", clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota",
         noCredits:"Hai finito i crediti. Accedi o ricarica per continuare."},
       en:{title:"Set your question", yourq:"What if…", ph:"What if…",
         help:"Write goal + context in one line. Add constraints or horizon (e.g. 30 days).",
         gen:"✨ Generate answer", clear:"Clear",
-        surprise:"Surprise me (absurd)", spins:"Spins left today", noSpins:"No spins left for today.",
+        surprise:"Surprise me (absurd)",
         saved:"▶ Saved questions", stories:"▶ History",
         styleWF:"What if", styleWTF:"What the F", fut:"Future", past:"Past",
         hintsTitle:"▶ Quick “What if…”",
-        hintsNote:"Hints = realistic ideas (refresh daily, personalized as you use it). “Surprise me” shows absurd ideas only (random style & time).",
-        credits:"Credits", emptyNext:"— No saved questions.", emptyHist:"— No history.", use:"Use",
-        save:"Save", clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear",
+        hintsNote:"Hints = realistic ideas. “Surprise me” shows absurd ideas only.",
+        credits:"Credits", emptyNext:"— No saved questions.", emptyHist:"— No history.",
+        use:"Use", save:"Save", clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear",
         noCredits:"You’ve run out of credits. Please log in or top up."},
       es:{title:"Configura tu pregunta", yourq:"¿Y si…?", ph:"¿Y si…?",
         help:"Escribe objetivo y contexto en una línea. Añade límites u horizonte (p. ej., 30 días).",
         gen:"✨ Generar respuesta", clear:"Limpiar",
-        surprise:"Sorpréndeme (absurdo)", spins:"Tiradas restantes hoy", noSpins:"Sin tiradas por hoy.",
+        surprise:"Sorpréndeme (absurdo)",
         saved:"▶ Preguntas guardadas", stories:"▶ Historial",
         styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Pasado",
         hintsTitle:"▶ Ideas rápidas «¿Y si…?»",
-        hintsNote:"Ideas realistas (se actualizan a diario y se personalizan). «Sorpréndeme» muestra ideas absurdas.",
-        credits:"Créditos", emptyNext:"— No hay preguntas guardadas.", emptyHist:"— Sin historial.", use:"Usar",
-        save:"Guardar", clearSaved:"🗑️ Vaciar", clearHist:"🗑️ Vaciar",
+        hintsNote:"Ideas realistas. «Sorpréndeme» muestra ideas absurdas.",
+        credits:"Créditos", emptyNext:"— No hay preguntas guardadas.", emptyHist:"— Sin historial.",
+        use:"Usar", save:"Guardar", clearSaved:"🗑️ Vaciar", clearHist:"🗑️ Vaciar",
         noCredits:"Te has quedado sin créditos. Inicia sesión o recarga."},
       fr:{title:"Définis ta question", yourq:"Et si…", ph:"Et si…",
         help:"Écris objectif + contexte en une ligne. Ajoute contraintes ou horizon (ex. 30 jours).",
         gen:"✨ Générer la réponse", clear:"Effacer",
-        surprise:"Surprends-moi (absurde)", spins:"Tirs restants aujourd’hui", noSpins:"Plus de tirs pour aujourd’hui.",
+        surprise:"Surprends-moi (absurde)",
         saved:"▶ Questions enregistrées", stories:"▶ Historique",
         styleWF:"What if", styleWTF:"What the F", fut:"Futur", past:"Passé",
         hintsTitle:"▶ Idées rapides « Et si… »",
-        hintsNote:"Idées réalistes (quotidiennes et personnalisées). « Surprends-moi » = idées absurdes.",
-        credits:"Crédits", emptyNext:"— Aucune question enregistrée.", emptyHist:"— Aucun historique.", use:"Utiliser",
-        save:"Enregistrer", clearSaved:"🗑️ Vider", clearHist:"🗑️ Vider",
+        hintsNote:"Idées réalistes. « Surprends-moi » = idées absurdes.",
+        credits:"Crédits", emptyNext:"— Aucune question enregistrée.", emptyHist:"— Aucun historique.",
+        use:"Utiliser", save:"Enregistrer", clearSaved:"🗑️ Vider", clearHist:"🗑️ Vider",
         noCredits:"Tu n’as plus de crédits. Connecte-toi ou recharge."},
       de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", ph:"Was wäre, wenn…",
         help:"Ziel + Kontext in einer Zeile. Füge Einschränkungen/Horizont hinzu (z. B. 30 Tage).",
         gen:"✨ Antwort erzeugen", clear:"Leeren",
-        surprise:"Überrasche mich (absurd)", spins:"Verbleibende Spins heute", noSpins:"Heute keine Spins mehr.",
+        surprise:"Überrasche mich (absurd)",
         saved:"▶ Gespeicherte Fragen", stories:"▶ Verlauf",
         styleWF:"What if", styleWTF:"What the F", fut:"Zukunft", past:"Vergangenheit",
         hintsTitle:"▶ Schnelle „Was wäre, wenn…“-Ideen",
-        hintsNote:"Realistische Ideen (täglich, personalisiert). „Überrasche mich“ = absurde Ideen.",
-        credits:"Credits", emptyNext:"— Keine gespeicherten Fragen.", emptyHist:"— Kein Verlauf.", use:"Verwenden",
-        save:"Speichern", clearSaved:"🗑️ Leeren", clearHist:"🗑️ Leeren",
+        hintsNote:"Realistische Ideen. „Überrasche mich“ = absurde Ideen.",
+        credits:"Credits", emptyNext:"— Keine gespeicherten Fragen.", emptyHist:"— Kein Verlauf.",
+        use:"Verwenden", save:"Speichern", clearSaved:"🗑️ Leeren", clearHist:"🗑️ Leeren",
         noCredits:"Du hast keine Credits mehr. Bitte einloggen oder aufladen."}
-    };
+    });
+    // ---- FINE blocco I18N completo ----
 
-    /* Apply testi */
-    (function apply(){
-      const T=I18N[lang]||I18N.it;
-      $('titleH1').textContent=T.title;
-      $('qLabel').textContent=T.yourq;
-      $('qInput').placeholder=T.ph;
-      $('qHelp').textContent=T.help;
-      $('goBtn').textContent=T.gen;
-      $('clearBtn').textContent=T.clear;
-      $('surpriseBtn').textContent='🎲 '+T.surprise;
-      $('nextLabel').textContent=T.saved;
-      $('storiesLabel').textContent=T.stories;
-      $('hintsTitle').textContent=T.hintsTitle;
-      $('hintsNote').textContent=T.hintsNote;
-      $('chipWhatIf').textContent=T.styleWF; $('chipWTF').textContent=T.styleWTF;
-      $('chipFuture').textContent=T.fut; $('chipPast').textContent=T.past;
-      $('saveBtn').textContent='⭐ '+T.save;
-      $('clearSavedBtn').textContent=T.clearSaved;
-      $('clearHistoryBtn').textContent=T.clearHist;
-    })();
+    const T = I18N[lang] || I18N.it;
 
-    /* ===== PREFS / THEME ===== */
-    let prefs=readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
+    // Applica testi base
+    $('titleH1').textContent=T.title;
+    $('qLabel').textContent=T.yourq;
+    $('qInput').placeholder=T.ph;
+    $('qHelp').textContent=T.help;
+    $('goBtn').textContent=T.gen;
+    $('clearBtn').textContent=T.clear;
+    $('surpriseBtn').textContent='🎲 '+T.surprise;
+    $('nextLabel').textContent=T.saved;
+    $('storiesLabel').textContent=T.stories;
+    $('hintsTitle').textContent=T.hintsTitle;
+    $('hintsNote').textContent=T.hintsNote;
+    $('chipWhatIf').textContent=T.styleWF;
+    $('chipWTF').textContent=T.styleWTF;
+    $('chipFuture').textContent=T.fut;
+    $('chipPast').textContent=T.past;
+    $('saveBtn').textContent='⭐ '+T.save;
+    $('clearSavedBtn').textContent=T.clearSaved;
+    $('clearHistoryBtn').textContent=T.clearHist;
+
+    // ===== prefs stile/periodo =====
+    let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
     document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
-    /* ===== FIREBASE AUTH + CREDITI (FIRESTORE) ===== */
-    let currentUser = null;
-    let currentBalance = 0;
-
-    function renderCredits(){
-      const T = I18N[lang] || I18N.it;
-      const el = $('freeBadge');
-
-      if (IS_ADMIN) {
-        if (el) el.textContent = `${T.credits}: ∞ (admin)`;
-        const goBtn = $('goBtn');
-        const surpriseBtn = $('surpriseBtn');
-        if (goBtn) goBtn.disabled = false;
-        if (surpriseBtn) surpriseBtn.disabled = false;
-        return;
-      }
-
-      const txt = `${T.credits}: ${currentBalance}`;
-      if (el && el.textContent !== txt) el.textContent = txt;
-
-      const canUse = currentBalance > 0;
-      const goBtn = $('goBtn');
-      const surpriseBtn = $('surpriseBtn');
-      if (goBtn) goBtn.disabled = !canUse;
-      if (surpriseBtn) surpriseBtn.disabled = !canUse;
-    }
-
-    async function syncCreditsFromServer(){
-      if (IS_ADMIN) {
-        renderCredits();
-        return;
-      }
-      if (!auth.currentUser) {
-        currentBalance = 0;
-        renderCredits();
-        return;
-      }
-      try {
-        await bootCredits();              // crea doc + reset se nuovo giorno
-        currentBalance = await getBalance();
-      } catch (e) {
-        console.error("syncCredits error:", e);
-      }
-      renderCredits();
-    }
-
-    onAuthStateChanged(auth, async (user)=>{
-      currentUser = user;
-      if (!user) {
-        currentBalance = 0;
-        renderCredits();
-        return;
-      }
-      await syncCreditsFromServer();
-    });
-
-    window.addEventListener('focus', ()=>{ syncCreditsFromServer(); });
-    window.addEventListener('pageshow', ()=>{ syncCreditsFromServer(); });
-
-    /* ===== BADGE STILE/PERIODO ===== */
     function renderBadges(){
-      const T=I18N[lang]||I18N.it;
       $('styleBadge').textContent='🎭 '+(prefs.stile==='wtf'?T.styleWTF:T.styleWF);
       $('periodoBadge').textContent='🕰️ '+(prefs.periodo==='past'?T.past:T.fut);
-      document.querySelectorAll('#styleChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.style===prefs.stile));
-      document.querySelectorAll('#periodoChips .chip').forEach(c=> c.classList.toggle('sel', c.dataset.periodo===prefs.periodo));
+      document.querySelectorAll('#styleChips .chip').forEach(c=>{
+        c.classList.toggle('sel', c.dataset.style===prefs.stile);
+      });
+      document.querySelectorAll('#periodoChips .chip').forEach(c=>{
+        c.classList.toggle('sel', c.dataset.periodo===prefs.periodo);
+      });
     }
     renderBadges();
 
     $('styleChips').addEventListener('click',e=>{
       const b=e.target.closest('.chip'); if(!b) return;
-      prefs.stile=b.dataset.style; writeJSON('whatif_prefs',prefs);
+      prefs.stile=b.dataset.style;
+      writeJSON('whatif_prefs',prefs);
       document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
       renderBadges();
     });
     $('periodoChips').addEventListener('click',e=>{
       const b=e.target.closest('.chip'); if(!b) return;
-      prefs.periodo=b.dataset.periodo; writeJSON('whatif_prefs',prefs);
+      prefs.periodo=b.dataset.periodo;
+      writeJSON('whatif_prefs',prefs);
       renderBadges();
     });
 
-    /* ===== NAV ===== */
+    // ===== NAV =====
     $('homeBtn').onclick=()=>location.href='index.html';
     $('backBtn').onclick=()=>{ if(history.length>1) history.back(); else location.href='index.html'; };
 
-    /* ✅ RESET (preserva solo poche chiavi legacy + admin) */
     $('resetBtn').onclick=()=>{
       const PRESERVE = ['whatif_wallet','whatif_wallet_sync','admin_token','lang'];
-      const keep = Object.fromEntries(PRESERVE.map(k => [k, LS.getItem(k)]));
-      [
-        'whatif_prefs','next_prompts','cronologia','replay_story',
-        'surprise_recent','absurd_prompt','surprise_mode','domanda'
-      ].forEach(k => LS.removeItem(k));
+      const keep = Object.fromEntries(PRESERVE.map(k=>[k,LS.getItem(k)]));
+      ['whatif_prefs','next_prompts','cronologia','replay_story','surprise_recent','absurd_prompt','surprise_mode','domanda']
+        .forEach(k=>LS.removeItem(k));
       Object.entries(keep).forEach(([k,v])=>{ if(v!==null) LS.setItem(k,v); });
       location.href='index.html';
     };
 
-    /* ===== STATO "ASSURDA" ===== */
-    let isAbsurd=false;
-    LS.setItem('absurd_prompt','0');
-    LS.setItem('surprise_mode','0');
+    // ===== Credits Firestore =====
+    let currentUser=null;
+    let currentBalance=0;
 
-    /* ===== SPUNTI (realistici, tradotti in 5 lingue) ===== */
-    const HINTS = {
-      it: [
-        "E se cambiassi lavoro?","E se cambiassi città?","E se tornassi a studiare?","E se vivessi 30 giorni senza social?","E se chiedessi un aumento?","E se organizzassi un viaggio da solo?","E se imparassi bene l’inglese?","E se aprissi un micro e-commerce?","E se corressi 3 volte a settimana?","E se cucinassi a casa per 30 giorni?","E se leggessi 12 libri in 12 mesi?","E se mi svegliassi alle 6 per 30 giorni?","E se tenessi un diario per un mese?","E se riducessi lo zucchero per 30 giorni?","E se imparassi a meditare 10 minuti al giorno?","E se facessi decluttering in casa?","E se imparassi a programmare con un corso gratuito?","E se provassi una settimana senza smartphone dopo le 20?","E se imparassi a suonare uno strumento?","E se facessi volontariato il sabato?"
-      ],
-      en: [
-        "What if I changed jobs?","What if I moved to another city?","What if I went back to study?","What if I lived 30 days without social media?","What if I asked for a raise?","What if I took a solo trip?","What if I mastered English?","What if I opened a small online shop?","What if I ran three times a week?","What if I cooked at home for 30 days?","What if I read 12 books in 12 months?","What if I woke up at 6am for 30 days?","What if I kept a journal for a month?","What if I cut sugar for 30 days?","What if I learned to meditate 10 minutes a day?","What if I decluttered my home?","What if I learned to code with a free course?","What if I avoided my phone after 8pm for a week?","What if I learned to play an instrument?","What if I volunteered on Saturdays?"
-      ],
-      es: [
-        "¿Y si cambiara de trabajo?","¿Y si me mudara de ciudad?","¿Y si volviera a estudiar?","¿Y si viviera 30 días sin redes sociales?","¿Y si pidiera un aumento?","¿Y si viajara solo?","¿Y si dominara bien el inglés?","¿Y si abriera una tienda online pequeña?","¿Y si corriera tres veces por semana?","¿Y si cocinara en casa durante 30 días?","¿Y si leyera 12 libros en 12 meses?","¿Y si me levantara a las 6 durante 30 días?","¿Y si llevara un diario durante un mes?","¿Y si dejara el azúcar por 30 días?","¿Y si aprendiera a meditar 10 minutos al día?","¿Y si ordenara mi casa?","¿Y si aprendiera a programar con un curso gratis?","¿Y si evitara el móvil después de las 20h por una semana?","¿Y si aprendiera a tocar un instrumento?","¿Y si hiciera voluntariado los sábados?"
-      ],
-      fr: [
-        "Et si je changeais de travail ?","Et si je déménageais ?","Et si je reprenais mes études ?","Et si je vivais 30 jours sans réseaux sociaux ?","Et si je demandais une augmentation ?","Et si je faisais un voyage en solo ?","Et si je maîtrisais vraiment l’anglais ?","Et si j’ouvrais une petite boutique en ligne ?","Et si je courais trois fois par semaine ?","Et si je cuisinais à la maison pendant 30 jours ?","Et si je lisais 12 livres en 12 mois ?","Et si je me levais à 6h pendant 30 jours ?","Et si je tenais un journal pendant un mois ?","Et si je coupais le sucre pendant 30 jours ?","Et si j’apprenais à méditer 10 minutes par jour ?","Et si je faisais du tri chez moi ?","Et si j’apprenais à coder gratuitement ?","Et si je ne touchais plus à mon téléphone après 20h ?","Et si j’apprenais à jouer d’un instrument ?","Et si je faisais du bénévolat le samedi ?"
-      ],
-      de: [
-        "Was wäre, wenn ich den Job wechselte?","Was wäre, wenn ich in eine andere Stadt ziehe?","Was wäre, wenn ich wieder studiere?","Was wäre, wenn ich 30 Tage ohne Social Media lebe?","Was wäre, wenn ich um eine Gehaltserhöhung bitte?","Was wäre, wenn ich allein verreise?","Was wäre, wenn ich Englisch richtig beherrsche?","Was wäre, wenn ich einen kleinen Online-Shop eröffne?","Was wäre, wenn ich dreimal pro Woche laufe?","Was wäre, wenn ich 30 Tage zuhause koche?","Was wäre, wenn ich 12 Bücher in 12 Monaten lese?","Was wäre, wenn ich 30 Tage um 6 Uhr aufstehe?","Was wäre, wenn ich einen Monat lang Tagebuch schreibe?","Was wäre, wenn ich 30 Tage keinen Zucker esse?","Was wäre, wenn ich 10 Minuten täglich meditiere?","Was wäre, wenn ich meine Wohnung entrümple?","Was wäre, wenn ich kostenlos Programmieren lerne?","Was wäre, wenn ich das Handy nach 20 Uhr ausschalte?","Was wäre, wenn ich ein Instrument lerne?","Was wäre, wenn ich samstags ehrenamtlich arbeite?"
-      ]
-    };
-    if (!HINTS[lang] || !HINTS[lang].length) HINTS[lang] = HINTS.it;
-
-    const ABS={
-      it:[
-        "E se addestrassi un piccione per portarmi il caffè?","E se decidessi tutto a testa o croce per 24h?","E se parlassi in rima in riunione?","E se vendessi aria motivazionale in barattolo?","E se indossassi un mantello per una settimana?","E se fondassi il Ministero dell’Assurdo?","E se scrivessi il CV in geroglifici (ma perfetto)?","E se usassi il tapis roulant solo per ricaricare il telefono?","E se assumessi un cameraman invisibile per motivarmi?","E se organizzassi un brainstorming con bradipi consulenti?","E se aprissi un bar che vende solo ghiaccio con backstory?","E se lanciassi una startup che affitta scuse credibili?","E se insegnassi educazione sentimentale ai semafori?","E se partecipassi alle call da un green screen spaziale?","E se trasformassi il frigo in coach motivazionale?","E se facessi auditing alle tapparelle del condominio?","E se mettessi su un sindacato per piante d’appartamento?","E se brevettassi la tazza che applaude quando bevi?","E se dichiarassi il martedì festa nazionale della Pennetta USB?","E se assumessi un traduttore simultaneo per il gatto?"
-      ],
-      en:[
-        "What if I trained a pigeon to deliver coffee?","What if I flipped a coin for 24h?","What if I spoke in rhymes at work?","What if I sold motivational air in jars?","What if I wore a cape for a week?","What if I founded the Ministry of Absurd?","What if I formatted my CV in hieroglyphs?","What if I used the treadmill only to charge my phone?","What if I hired an invisible cameraman to keep me going?","What if I held a strategy offsite with sloths?","What if I opened a bar that sells only ice with backstories?","What if I launched a startup renting believable excuses?","What if I taught traffic lights emotional intelligence?","What if I joined meetings from a space green screen?","What if I promoted my pillow to Head of Sleep?","What if I hosted a TEDx in my cutlery drawer?"
-      ],
-      es:[
-        "¿Y si entrenara una paloma para traer café?","¿Y si decidiera todo con una moneda por 24h?","¿Y si hablara en rimas en la reunión?","¿Y si vendiera aire motivacional en frascos?","¿Y si llevara capa una semana?","¿Y si fundara el Ministerio del Absurdo?","¿Y si escribiera el CV en jeroglíficos?","¿Y si usara la cinta para cargar el móvil?","¿Y si contratara un camarógrafo invisible?","¿Y si hiciera un retiro estratégico con perezosos?"
-      ],
-      fr:[
-        "Et si j’entraînais un pigeon à livrer mon café ?","Et si je décidais tout à pile ou face pendant 24 h ?","Et si je parlais en rimes en réunion ?","Et si je vendais de l’air motivationnel en bocaux ?","Et si je portais une cape pendant 7 jours ?","Et si je fondais le Ministère de l’Absurde ?","Et si je mettais mon CV en hiéroglyphes ?","Et si j’utilisais le tapis pour charger mon téléphone ?","Et si j’embauchais un caméraman invisible ?","Et si j’organisais un hors-site avec des paresseux ?"
-      ],
-      de:[
-        "Was, wenn ich eine Taube trainiere, Kaffee zu bringen?","Was, wenn ich 24 Std. alles mit Münzwurf entscheide?","Was, wenn ich im Meeting nur in Reimen spreche?","Was, wenn ich Motivations-Luft verkaufe?","Was, wenn ich eine Woche lang einen Umhang trage?","Was, wenn ich ein Ministerium für Absurdes gründe?","Was, wenn ich den Lebenslauf in Hieroglyphen schreibe?","Was, wenn ich das Laufband nur zum Handy-Laden nutze?","Was, wenn ich einen unsichtbaren Kameramann anheuere?","Was, wenn ich ein 42-Meter-Marathon laufe?"
-      ]
-    };
-
-    const hintsWrap=$('hintsChips');
-    function rng(seedStr){ let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0); return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
-    function daily(pool,n=8){ const rnd=rng(todayISO()); const seen=new Set(), out=[]; while(out.length<n && seen.size<pool.length){ const i=Math.floor(rnd()*pool.length); if(seen.has(i)) continue; seen.add(i); out.push(pool[i]); } return out; }
-
-    const GEN_REAL={ it:{
-      lavoro:["chiedessi un aumento","cambiassi lavoro","sistemassi LinkedIn","provassi 30 giorni di lavoro remoto","lanciassi un side-project"],
-      studio:["riprendessi l’università","studiassi inglese 20 min/die","scrivessi 1 pagina di tesi al giorno","facessi un corso gratuito di IA"],
-      soldi:["seguissi un budget per 30 giorni","tagliassi 3 spese inutili","mettessi da parte 5€/giorno","aprissi un fondo emergenze"],
-      sport:["corressi 3× a settimana","facessi stretching 10 min/die","camminassi 8.000 passi/die","nuotassi all’alba"],
-      relazioni:["chiamassi un amico a settimana","mettessi confini al lavoro","organizzassi una cena a casa"],
-      viaggi:["organizzassi un weekend low-cost","scoprissi 5 posti nella tua città"],
-      tech:["automatizzassi una noia con AI","creassi un micro-sito in una sera"],
-      business:["aprissi un micro e-commerce","testassi un’idea con una landing"]
-    }};
-    function inferUserPrefs(){
-      const map = {
-        lavoro:["lavor","job","linkedin","remoto","cv","colloquio"],
-        studio:["studio","universit","esame","tesi","inglese","course","exam"],
-        soldi:["spesa","budget","soldi","money","rispar","save","fund"],
-        sport:["corri","sport","palestra","nuoto","cammina","run","walk","stretch"],
-        relazioni:["amico","amica","partner","relaz","social","confini","boundar"],
-        viaggi:["viagg","citt","weekend","volo","hotel","travel"],
-        tech:["ai","app","sito","site","automat","shortcut","email"],
-        business:["e-commerce","ecommerce","newsletter","client","pitch","landing","startup"]
-      };
-      const buckets = Object.fromEntries(Object.keys(map).map(k=>[k,0]));
-      const corpora = (readJSON('cronologia',[]).map(x=>x.domanda||'').join(' ') + ' ' + readJSON('next_prompts',[]).map(x=>x.q||'').join(' ')).toLowerCase();
-      for(const [cat,keys] of Object.entries(map)){
-        keys.forEach(kw=>{ if(corpora.includes(kw)) buckets[cat]+=1; });
+    function renderCredits(){
+      if(IS_ADMIN){
+        $('freeBadge').textContent=`${T.credits}: ∞ (admin)`;
+        $('goBtn').disabled=false;
+        $('surpriseBtn').disabled=false;
+        return;
       }
-      return buckets;
-    }
-    function personalizedHints(baseList){
-      if(lang!=='it') return baseList;
-      const prefsBuckets = inferUserPrefs();
-      const ranked = Object.entries(prefsBuckets).sort((a,b)=>b[1]-a[1]).filter(([,v])=>v>0).map(([k])=>k);
-      const addPool=[];
-      ranked.slice(0,3).forEach(cat=>{
-        const bank = GEN_REAL.it[cat];
-        if(bank) addPool.push(...bank.map(a=>"E se "+a+"?"));
-      });
-      const extra = [];
-      while(extra.length<Math.min(4, addPool.length)){
-        const p = addPool[Math.floor(Math.random()*addPool.length)];
-        if(!extra.includes(p) && !baseList.includes(p)) extra.push(p);
-      }
-      return [...baseList, ...extra];
+      $('freeBadge').textContent=`${T.credits}: ${currentBalance}`;
+      const canUse=currentBalance>0;
+      $('goBtn').disabled=!canUse;
+      $('surpriseBtn').disabled=!canUse;
     }
 
-    function renderHints(){
+    async function syncCreditsFromServer(){
+      if(IS_ADMIN){
+        renderCredits();
+        return;
+      }
+      if(!auth.currentUser){
+        currentBalance=0;
+        renderCredits();
+        return;
+      }
+      try{
+        await bootCredits();
+        currentBalance = await getBalance();
+      }catch(e){
+        console.error("syncCredits error:", e);
+        currentBalance=0;
+      }
+      renderCredits();
+    }
+
+    onAuthStateChanged(auth, async(user)=>{
+      currentUser=user;
+      await syncCreditsFromServer();
+    });
+
+    window.addEventListener('focus', syncCreditsFromServer);
+    window.addEventListener('pageshow', syncCreditsFromServer);
+
+    // ===== Hints realistici (semplificati) =====
+    const HINTS={
+      it:["E se cambiassi lavoro?","E se cambiassi città?","E se tornassi a studiare?","E se vivessi 30 giorni senza social?","E se chiedessi un aumento?","E se organizzassi un viaggio da solo?"],
+      en:["What if I changed jobs?","What if I moved to another city?","What if I went back to study?","What if I lived 30 days without social media?","What if I asked for a raise?","What if I took a solo trip?"],
+      es:["¿Y si cambiara de trabajo?","¿Y si me mudara de ciudad?","¿Y si volviera a estudiar?","¿Y si viviera 30 días sin redes sociales?","¿Y si pidiera un aumento?","¿Y si viajara solo?"],
+      fr:["Et si je changeais de travail ?","Et si je déménageais ?","Et si je reprenais mes études ?","Et si je vivais 30 jours sans réseaux sociaux ?","Et si je demandais une augmentation ?","Et si je faisais un voyage en solo ?"],
+      de:["Was wäre, wenn ich den Job wechselte?","Was wäre, wenn ich in eine andere Stadt ziehe?","Was wäre, wenn ich wieder studiere?","Was wäre, wenn ich 30 Tage ohne Social Media lebe?","Was wäre, wenn ich um eine Gehaltserhöhung bitte?","Was wäre, wenn ich allein verreise?"]
+    };
+    function rndHints(){
       const base=(HINTS[lang]||HINTS.it).slice();
-      const list=daily(base,8);
-      const finalList = personalizedHints(list).slice(0,12);
-
-      hintsWrap.innerHTML='';
-      finalList.forEach(h=>{
-        const b=document.createElement('button'); b.className='chip'; b.textContent=h;
-        b.onclick=()=>{ $('qInput').value=h; isAbsurd=false; LS.setItem('absurd_prompt','0'); LS.setItem('surprise_mode','0'); window.scrollTo({top:0,behavior:'smooth'}); };
-        hintsWrap.appendChild(b);
+      const out=[]; const today=todayISO();
+      let s=[...today].reduce((a,c)=>a+c.charCodeAt(0),0);
+      const rand=()=>{s=(s*9301+49297)%233280;return s/233280;};
+      while(base.length && out.length<6){
+        const i=Math.floor(rand()*base.length);
+        out.push(base.splice(i,1)[0]);
+      }
+      return out;
+    }
+    function renderHints(){
+      const wrap=$('hintsChips');
+      wrap.innerHTML='';
+      rndHints().forEach(h=>{
+        const b=document.createElement('button');
+        b.className='chip';
+        b.textContent=h;
+        b.onclick=()=>{
+          $('qInput').value=h;
+          LS.setItem('absurd_prompt','0');
+          LS.setItem('surprise_mode','0');
+          window.scrollTo({top:0,behavior:'smooth'});
+        };
+        wrap.appendChild(b);
       });
-      const T=I18N[lang]||I18N.it;
-      $('hintsNote').textContent=T.hintsNote;
-      renderCredits(); renderBadges();
     }
     renderHints();
 
+    // Collassabili (con check null per evitare crash)
     ['hints','saved','hist'].forEach(k=>{
-      const card=$(k+'Card'); card.classList.add('collapsed');
-      $(k+'Header')?.addEventListener('click',()=> card.classList.toggle('collapsed'));
+      const card=$(k+'Card');
+      const header=$(k+'Header');
+      if(!card || !header) return;
+      card.classList.add('collapsed');
+      header.addEventListener('click',()=> card.classList.toggle('collapsed'));
     });
 
-    /* ===== SAVED / HISTORY ===== */
-    function fmtDate(ts){ return new Date(ts).toLocaleString(document.documentElement.lang||'it-IT',{hour12:false}); }
-    function addSaved(q){ if(!q) return; const arr=readJSON('next_prompts',[]); arr.unshift({q,ts:Date.now()}); writeJSON('next_prompts',arr.slice(0,50)); renderNext(); }
-    function addHistory(domanda, stile){ if(!domanda) return; const arr=readJSON('cronologia',[]); arr.push({domanda, stile, ts:Date.now(), risposta:''}); writeJSON('cronologia', arr.slice(-100)); renderStories(); }
+    // ===== Saved + History =====
+    const fmtDate = ts => new Date(ts).toLocaleString(document.documentElement.lang||'it-IT',{hour12:false});
+
     function renderNext(){
-      const T=I18N[lang]||I18N.it;
-      const box=$('nextList'); box.innerHTML=''; const arr=readJSON('next_prompts',[]);
-      if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=T.emptyNext; box.appendChild(p); return; }
+      const box=$('nextList'); box.innerHTML='';
+      const arr=readJSON('next_prompts',[]);
+      if(!arr.length){
+        const p=document.createElement('div');
+        p.className='small';
+        p.textContent=T.emptyNext;
+        box.appendChild(p);
+        return;
+      }
       arr.slice(0,12).forEach(item=>{
         const row=document.createElement('div'); row.className='story';
-        const left=document.createElement('div'); left.innerHTML=`<div style="font-weight:700;max-width:520px">${(item.q||'—').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div><div class="meta">${fmtDate(item.ts)}</div>`;
+        const left=document.createElement('div');
+        left.innerHTML=`<div style="font-weight:700;max-width:520px">${(item.q||'—').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div><div class="meta">${fmtDate(item.ts)}</div>`;
         const right=document.createElement('div'); right.className='row';
         const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=T.use;
-        useBtn.onclick=()=>{ $('qInput').value=item.q||''; isAbsurd=false; LS.setItem('absurd_prompt','0'); LS.setItem('surprise_mode','0'); window.scrollTo({top:0,behavior:'smooth'}); };
-        right.appendChild(useBtn); row.appendChild(left); row.appendChild(right); box.appendChild(row);
+        useBtn.onclick=()=>{
+          $('qInput').value=item.q||'';
+          LS.setItem('absurd_prompt','0');
+          LS.setItem('surprise_mode','0');
+          window.scrollTo({top:0,behavior:'smooth'});
+        };
+        right.appendChild(useBtn);
+        row.appendChild(left); row.appendChild(right);
+        box.appendChild(row);
       });
     }
+
     function renderStories(){
-      const T=I18N[lang]||I18N.it;
-      const box=$('storyList'); box.innerHTML=''; const arr=readJSON('cronologia',[]);
-      if(!arr.length){ const p=document.createElement('div'); p.className='small'; p.textContent=T.emptyHist; box.appendChild(p); return; }
+      const box=$('storyList'); box.innerHTML='';
+      const arr=readJSON('cronologia',[]);
+      if(!arr.length){
+        const p=document.createElement('div');
+        p.className='small';
+        p.textContent=T.emptyHist;
+        box.appendChild(p);
+        return;
+      }
       arr.slice(-12).reverse().forEach(item=>{
         const row=document.createElement('div'); row.className='story';
-        const left=document.createElement('div'); left.innerHTML=`<div style="font-weight:700;max-width:520px">${(item.domanda||'—').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div><div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
+        const left=document.createElement('div');
+        left.innerHTML=`<div style="font-weight:700;max-width:520px">${(item.domanda||'—').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div><div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
         const play=document.createElement('button'); play.className='play'; play.textContent='▶';
-        play.onclick=()=>{ writeJSON('replay_story',{domanda:item.domanda,answer:item.risposta||item.answer||'',stile:item.stile||'whatif'}); location.href='fifth.html'; };
-        row.appendChild(left); row.appendChild(play); box.appendChild(row);
+        play.onclick=()=>{
+          writeJSON('replay_story',{domanda:item.domanda,answer:item.risposta||item.answer||'',stile:item.stile||'whatif'});
+          location.href='fifth.html';
+        };
+        row.appendChild(left); row.appendChild(play);
+        box.appendChild(row);
       });
     }
-    renderNext(); renderStories();
+
+    renderNext();
+    renderStories();
+
     $('clearSavedBtn').onclick=()=>{ LS.removeItem('next_prompts'); renderNext(); };
     $('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
-    $('saveBtn').onclick=()=>{ const q=($('qInput').value||'').trim(); if(!q) return; addSaved(q); };
+    $('saveBtn').onclick=()=>{
+      const q=($('qInput').value||'').trim(); if(!q) return;
+      const arr=readJSON('next_prompts',[]);
+      arr.unshift({q,ts:Date.now()});
+      writeJSON('next_prompts',arr.slice(0,50));
+      renderNext();
+    };
 
-    /* ===== SUBMIT / CREDITS ===== */
+    // ===== Guard credits & submit =====
     async function guardCredits(){
-      const T=I18N[lang]||I18N.it;
-      if (!auth.currentUser) {
+      if(!auth.currentUser){
         alert("Per usare i crediti devi essere loggato.");
         return false;
       }
-      if (IS_ADMIN) return true;
-      if (currentBalance <= 0) {
+      if(IS_ADMIN) return true;
+      if(currentBalance<=0){
         alert(T.noCredits);
         return false;
       }
@@ -532,14 +538,13 @@
     }
 
     async function trySubmit(){
-      const okGuard = await guardCredits();
-      if (!okGuard) return;
+      const ok = await guardCredits();
+      if(!ok) return;
 
-      if (!IS_ADMIN) {
+      if(!IS_ADMIN){
         try{
-          const ok = await consumeCredit();
-          if (!ok){
-            const T=I18N[lang]||I18N.it;
+          const ok2 = await consumeCredit();
+          if(!ok2){
             alert(T.noCredits);
             await syncCreditsFromServer();
             return;
@@ -547,14 +552,15 @@
           currentBalance = await getBalance().catch(()=>currentBalance);
           renderCredits();
         }catch(err){
-          console.error("consumeCredit error:", err);
+          console.error("consumeCredit error:",err);
           alert("Errore nell'utilizzo dei crediti. Riprova.");
           return;
         }
       }
 
-      const domanda=($('qInput').value||'').trim();
-      if(!domanda) { $('qInput').focus(); return; }
+      const domanda = ($('qInput').value||'').trim();
+      if(!domanda){ $('qInput').focus(); return; }
+
       const req={
         domanda,
         stile:prefs.stile,
@@ -562,108 +568,118 @@
         extra:'',
         fantasy_mode:false,
         periodo:prefs.periodo,
-        absurd:isAbsurd,
-        surprise:isAbsurd,
-        source: isAbsurd ? 'surprise' : 'manual',
-        micro:{ surprise:isAbsurd, source:isAbsurd?'surprise':'manual' }
+        absurd:false,
+        surprise:false,
+        source:'manual',
+        micro:{surprise:false,source:'manual'}
       };
       writeJSON('whatif_request',req);
       LS.setItem('domanda',domanda);
-      LS.setItem('absurd_prompt', isAbsurd ? '1' : '0');
-      LS.setItem('surprise_mode', isAbsurd ? '1' : '0');
-      addHistory(domanda, prefs.stile);
-      location.href = isAbsurd ? 'fifth.html?src=surprise' : 'fifth.html';
-    }
-    $('goBtn').onclick=()=>{ trySubmit(); };
-
-    $('qInput').addEventListener('input', ()=>{
-      isAbsurd=false;
       LS.setItem('absurd_prompt','0');
       LS.setItem('surprise_mode','0');
+
+      const hist=readJSON('cronologia',[]);
+      hist.push({domanda,stile:prefs.stile,ts:Date.now(),risposta:''});
+      writeJSON('cronologia',hist.slice(-100));
+
+      location.href='fifth.html';
+    }
+
+    $('goBtn').onclick=()=>{ trySubmit(); };
+
+    $('qInput').addEventListener('keydown',e=>{
+      if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){
+        e.preventDefault();
+        trySubmit();
+      }
     });
     $('clearBtn').onclick=()=>{
       $('qInput').value='';
-      isAbsurd=false;
       LS.setItem('absurd_prompt','0');
       LS.setItem('surprise_mode','0');
       $('qInput').focus();
     };
-    $('qInput').addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); trySubmit(); }});
+    $('qInput').addEventListener('input',()=>{
+      LS.setItem('absurd_prompt','0');
+      LS.setItem('surprise_mode','0');
+    });
 
-    /* ===== 🎲 SORPRENDIMI (consuma credito) ===== */
-    function absurdPool(){ return ABS[lang] && ABS[lang].length ? ABS[lang] : ABS.it; }
-    function getRecentSet(){ return new Set(readJSON('surprise_recent',[])); }
-    function rememberPrompt(p){ const arr=readJSON('surprise_recent',[]); arr.unshift(p); writeJSON('surprise_recent',arr.slice(0,60)); }
-    function makeAbsurdList(n=14){
-      const recent = getRecentSet();
-      const pool = absurdPool().slice();
-      const out=[];
-      while(out.length<n && pool.length){
-        const i=Math.floor(Math.random()*pool.length);
-        const cand=pool.splice(i,1)[0];
-        if(!recent.has(cand)){ out.push(cand); recent.add(cand); }
-      }
-      if(!out.length) return absurdPool().slice(0,n);
-      return out;
-    }
+    // ===== Surprise (assurda) =====
+    const ABS={
+      it:["E se addestrassi un piccione per portarmi il caffè?","E se decidessi tutto a testa o croce per 24h?","E se parlassi in rima in riunione?"],
+      en:["What if I trained a pigeon to deliver coffee?","What if I flipped a coin for 24h?","What if I spoke in rhymes at work?"],
+      es:["¿Y si entrenara una paloma para traer café?","¿Y si decidiera todo con una moneda por 24h?"],
+      fr:["Et si j’entraînais un pigeon à livrer mon café ?","Et si je décidais tout à pile ou face pendant 24 h ?"],
+      de:["Was, wenn ich eine Taube trainiere, Kaffee zu bringen?","Was, wenn ich 24 Std. alles mit Münzwurf entscheide?"]
+    };
+    const absurdPool = ()=> (ABS[lang] && ABS[lang].length?ABS[lang]:ABS.it);
 
     async function slotSurprise(){
-      const okGuard = await guardCredits();
-      if (!okGuard) return;
+      const ok = await guardCredits();
+      if(!ok) return;
 
-      if (!IS_ADMIN) {
+      if(!IS_ADMIN){
         try{
-          const ok = await consumeCredit();
-          if (!ok){
-            const T=I18N[lang]||I18N.it;
+          const ok2=await consumeCredit();
+          if(!ok2){
             alert(T.noCredits);
             await syncCreditsFromServer();
             return;
           }
-          currentBalance = await getBalance().catch(()=>currentBalance);
+          currentBalance=await getBalance().catch(()=>currentBalance);
           renderCredits();
         }catch(err){
-          console.error("consumeCredit error:", err);
+          console.error("consumeCredit error:",err);
           alert("Errore nell'utilizzo dei crediti. Riprova.");
           return;
         }
       }
 
-      const rollingList = makeAbsurdList(14);
-      const el=$('qInput'); el.classList.add('slotting');
+      const list=absurdPool();
+      if(!list.length) return;
+      const qEl=$('qInput');
+      qEl.classList.add('slotting');
       let i=0;
       const iv=setInterval(()=>{
-        el.value = rollingList[i % rollingList.length];
-        const s = Math.random()<.5 ? 'whatif' : 'wtf';
-        const p = Math.random()<.5 ? 'future' : 'past';
-        prefs.stile=s; prefs.periodo=p; writeJSON('whatif_prefs',prefs);
+        qEl.value=list[i%list.length];
+        const s=Math.random()<.5?'whatif':'wtf';
+        const p=Math.random()<.5?'future':'past';
+        prefs.stile=s; prefs.periodo=p;
+        writeJSON('whatif_prefs',prefs);
         document.documentElement.setAttribute('data-theme', s==='wtf'?'wtf':'whatif');
-        renderBadges(); i++;
+        renderBadges();
+        i++;
       },90);
       setTimeout(()=>{
-        clearInterval(iv); el.classList.remove('slotting');
-        const finalList = makeAbsurdList(10);
-        const finalPrompt = finalList[Math.floor(Math.random()*finalList.length)];
-        $('qInput').value = finalPrompt;
-        rememberPrompt(finalPrompt);
-        isAbsurd=true;
+        clearInterval(iv);
+        qEl.classList.remove('slotting');
+        const final=list[Math.floor(Math.random()*list.length)];
+        qEl.value=final;
         LS.setItem('absurd_prompt','1');
         LS.setItem('surprise_mode','1');
         const req={
-          domanda:finalPrompt, stile:prefs.stile, lang, extra:'',
-          fantasy_mode:false, periodo:prefs.periodo,
-          absurd:true, surprise:true, source:'surprise',
-          micro:{surprise:true, source:'surprise'}
+          domanda:final,
+          stile:prefs.stile,
+          lang,
+          extra:'',
+          fantasy_mode:false,
+          periodo:prefs.periodo,
+          absurd:true,
+          surprise:true,
+          source:'surprise',
+          micro:{surprise:true,source:'surprise'}
         };
         writeJSON('whatif_request',req);
-        LS.setItem('domanda',finalPrompt);
-        addHistory(finalPrompt, prefs.stile);
+        LS.setItem('domanda',final);
+        const hist=readJSON('cronologia',[]);
+        hist.push({domanda:final,stile:prefs.stile,ts:Date.now(),risposta:''});
+        writeJSON('cronologia',hist.slice(-100));
         location.href='fifth.html?src=surprise';
-      }, 1200 + Math.random()*600);
+      }, 1200+Math.random()*600);
     }
     $('surpriseBtn').onclick=()=>{ slotSurprise(); };
 
-    // prima render
+    // Primo render
     renderCredits();
   </script>
 </body>
