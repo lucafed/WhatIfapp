@@ -218,7 +218,7 @@
     })();
   </script>
 
-  <!-- i18n + tema + selezioni + lingua -->
+  <!-- i18n + tema + selezioni -->
   <script>
     (function initTheme(){
       try{
@@ -331,11 +331,10 @@
     if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang());
     applyLang();
 
-    // esporta per script Firebase
     window.I18N = DICT;
     window.getCurrentLang = getLang;
 
-    // gestisci chip selezioni
+    // chip selezioni
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');
     function wireGroup(g){
       if(!g) return;
@@ -392,7 +391,7 @@
     })();
   </script>
 
-  <!-- 🔐 Firebase Auth: usa firebase.init.js condiviso -->
+  <!-- 🔐 Firebase Auth: USA firebase.init.js -->
   <script type="module">
     const dbg = document.getElementById('debug');
     const DO_DEBUG = new URLSearchParams(location.search).get('debug') === '1';
@@ -403,7 +402,7 @@
       if(t) log('❌', t);
     };
 
-    /* 👉 Importa l'app già inizializzata (stessa di fourth/fifth/admin) */
+    // 👉 usa SEMPRE la stessa app/config
     import { auth } from "./firebase.init.js";
 
     import {
@@ -412,21 +411,10 @@
       signInWithPopup,
       signInWithRedirect,
       getRedirectResult,
-      setPersistence,
-      browserLocalPersistence,
-      browserSessionPersistence,
       signOut
     } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
     const provider = new GoogleAuthProvider();
-
-    try{
-      await setPersistence(auth, browserLocalPersistence);
-      log('🔒 Persistenza: LOCAL');
-    }catch{
-      await setPersistence(auth, browserSessionPersistence);
-      log('🔒 Persistenza: SESSION');
-    }
 
     const primaryCta = document.getElementById("primaryCta");
     const logoutBtn  = document.getElementById("logoutBtn");
@@ -531,7 +519,7 @@
         }
 
         const map = {
-          "auth/unauthorized-domain":"Dominio non autorizzato (Console Firebase → Authentication → Impostazioni → Domini autorizzati).",
+          "auth/unauthorized-domain":"Dominio non autorizzato (Authentication → Impostazioni → Domini autorizzati).",
           "auth/operation-not-allowed":"Provider Google non abilitato (Authentication → Metodi di accesso).",
           "auth/network-request-failed":"Problema di rete o HTTPS."
         };
