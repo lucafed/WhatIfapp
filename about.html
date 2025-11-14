@@ -57,23 +57,29 @@
       </ul>
     </div>
 
-    <h2 data-i="premiumTitle">Piani e limiti</h2>
-    <p class="card" data-i="premium">
-      La versione <strong>FREE</strong> offre <strong>3</strong> esplorazioni al giorno.<br/>
-      La versione <strong>PRO</strong> sblocca fino a <strong>10</strong> esplorazioni al giorno.<br/>
-      I limiti servono a garantire qualità e disponibilità del servizio.
-    </p>
+    <h2 data-i="creditTitle">Crediti, limiti e pubblicità</h2>
+    <div class="card" data-i="creditText">
+      Ogni utente dispone di <strong>3 crediti gratuiti al giorno</strong>, che si ricaricano automaticamente ogni 24 ore.<br/><br/>
+      Hai bisogno di più scenari?<br/>
+      Puoi:
+      <ul>
+        <li><strong>Acquistare pacchetti</strong> da 5, 15 o 30 crediti (prossimamente).</li>
+        <li><strong>Guardare fino a 5 annunci al giorno</strong>, ottenendo <strong>+1 credito</strong> per ciascun annuncio.</li>
+      </ul>
+      I crediti sono gestiti in tempo reale tramite <strong>Firebase</strong> e collegamento con il tuo account Google.
+    </div>
 
     <h2 data-i="techTitle">Tecnologia</h2>
     <p class="card" data-i="tech">
-      Alimentata da <strong>OpenAI GPT-4o-mini</strong>, What?f crea testi personalizzati con un design minimale e immersivo.
-      L’app è ospitata su <strong>GitHub + Vercel</strong>. La condivisione dati per l’addestramento dei modelli è disattivata a livello di piattaforma.
+      What?f utilizza <strong>OpenAI GPT-4o-mini</strong> per generare scenari personalizzati.  
+      I login, i crediti e le preferenze sono gestiti tramite <strong>Firebase Auth</strong> e <strong>Firestore</strong>.  
+      L’app è ospitata su <strong>GitHub + Vercel</strong> con un design minimale, veloce e sicuro.
     </p>
 
     <h2 data-i="linksTitle">Privacy, Termini e contatti</h2>
     <p class="card" data-i="links">
       Leggi la <a href="privacy.html">Privacy</a> e i <a href="terms.html">Termini</a>.<br/>
-      Per supporto o segnalazioni: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.
+      Supporto: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.
     </p>
 
     <p class="footer">
@@ -96,95 +102,98 @@
           how1:"Scegli se esplorare il Passato o il Futuro.",
           how2:"Seleziona lo stile: What if (riflessivo e realistico) o What the F (ironico e creativo).",
           how3:"L’AI genera per te scenari personali in un unico paragrafo, senza elenchi né domande.",
-          premiumTitle:"Piani e limiti",
-          premium:"La versione <strong>FREE</strong> offre <strong>3</strong> esplorazioni al giorno.<br/>La versione <strong>PRO</strong> sblocca fino a <strong>10</strong> esplorazioni al giorno.<br/>I limiti servono a garantire qualità e disponibilità del servizio.",
+          creditTitle:"Crediti, limiti e pubblicità",
+          creditText:"Ogni utente dispone di <strong>3 crediti gratuiti al giorno</strong>, che si ricaricano automaticamente ogni 24 ore.<br/><br/>Hai bisogno di più scenari?<br/>Puoi:<ul><li><strong>Acquistare pacchetti</strong> da 5, 15 o 30 crediti (prossimamente).</li><li><strong>Guardare fino a 5 annunci al giorno</strong>, ottenendo <strong>+1 credito</strong> per ciascun annuncio.</li></ul>I crediti sono gestiti in tempo reale tramite <strong>Firebase</strong> e collegamento con il tuo account Google.",
           techTitle:"Tecnologia",
-          tech:"Alimentata da <strong>OpenAI GPT-4o-mini</strong>, What?f crea testi personalizzati con un design minimale e immersivo. L’app è ospitata su <strong>GitHub + Vercel</strong>. La condivisione dati per l’addestramento dei modelli è disattivata a livello di piattaforma.",
+          tech:"What?f utilizza <strong>OpenAI GPT-4o-mini</strong> per generare scenari personalizzati. I login, i crediti e le preferenze sono gestiti tramite <strong>Firebase Auth</strong> e <strong>Firestore</strong>. L’app è ospitata su <strong>GitHub + Vercel</strong>.",
           linksTitle:"Privacy, Termini e contatti",
-          links:'Leggi la <a href="privacy.html">Privacy</a> e i <a href="terms.html">Termini</a>.<br/>Per supporto o segnalazioni: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.'
+          links:'Leggi la <a href="privacy.html">Privacy</a> e i <a href="terms.html">Termini</a>.<br/>Supporto: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.'
         },
+
+        /* --- LINGUE STRANIERE (aggiornate allo stesso modo) --- */
+
         en: {
           back:"Back",
           title:"What?f",
           updated:"Last updated:",
-          desc:"What?f lets you explore the choices you didn’t make — and the ones you still can. A journey between past and future where AI builds realistic, caring or surreal scenarios based on your mood.",
+          desc:"What?f lets you explore the choices you didn’t make — and the ones you can make next. AI generates realistic, caring or surreal scenarios based on your mood.",
           howTitle:"How it works",
           how1:"Choose whether to explore the Past or the Future.",
-          how2:"Pick a style: What if (reflective and realistic) or What the F (ironic and creative).",
-          how3:"AI generates a single-paragraph, personal scenario with no lists or questions.",
-          premiumTitle:"Plans & limits",
-          premium:"The <strong>FREE</strong> plan offers <strong>3</strong> explorations/day.<br/>The <strong>PRO</strong> plan unlocks up to <strong>10</strong>/day.<br/>Limits help ensure quality and availability.",
+          how2:"Pick a style: What if (reflective & realistic) or What the F (ironic & creative).",
+          how3:"AI generates a single-paragraph personal scenario.",
+          creditTitle:"Credits, limits & ads",
+          creditText:"Each user receives <strong>3 free credits per day</strong>, automatically refilled every 24 hours.<br/><br/>Need more scenarios?<br/>You can:<ul><li><strong>Buy credit packs</strong> (5, 15, 30 credits – coming soon).</li><li><strong>Watch up to 5 ads/day</strong> to earn <strong>+1 credit</strong> each.</li></ul>Credits are synced in real time through <strong>Firebase</strong> with your Google account.",
           techTitle:"Technology",
-          tech:"Powered by <strong>OpenAI GPT-4o-mini</strong>, What?f crafts personal text with a minimal, immersive design. Hosted on <strong>GitHub + Vercel</strong>. Training data sharing is disabled at platform level.",
-          linksTitle:"Privacy, Terms & contact",
+          tech:"Powered by OpenAI GPT-4o-mini. Login, credits and preferences use Firebase Auth + Firestore.",
+          linksTitle:"Privacy, Terms & Contact",
           links:'Read our <a href="privacy.html">Privacy</a> and <a href="terms.html">Terms</a>.<br/>Support: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.'
         },
+
         es: {
           back:"Atrás",
           title:"What?f",
           updated:"Última actualización:",
-          desc:"What?f te permite explorar las decisiones que no tomaste — y las que aún puedes tomar. Un viaje entre pasado y futuro donde la IA crea escenarios realistas, afectuosos o surrealistas según tu estado de ánimo.",
+          desc:"What?f te permite explorar las decisiones que no tomaste — y las que aún puedes tomar.",
           howTitle:"Cómo funciona",
-          how1:"Elige si explorar el Pasado o el Futuro.",
-          how2:"Selecciona el estilo: What if (reflexivo y realista) o What the F (irónico y creativo).",
-          how3:"La IA genera un escenario personal en un único párrafo, sin listas ni preguntas.",
-          premiumTitle:"Planes y límites",
-          premium:"El plan <strong>FREE</strong> ofrece <strong>3</strong> exploraciones/día.<br/>El plan <strong>PRO</strong> desbloquea hasta <strong>10</strong>/día.<br/>Los límites garantizan calidad y disponibilidad.",
+          how1:"Elige Pasado o Futuro.",
+          how2:"Selecciona estilo: What if / What the F.",
+          how3:"La IA genera un párrafo personalizado.",
+          creditTitle:"Créditos, límites y anuncios",
+          creditText:"Cada usuario recibe <strong>3 créditos gratis al día</strong>. Puedes ver <strong>hasta 5 anuncios</strong> para obtener créditos o comprar paquetes.",
           techTitle:"Tecnología",
-          tech:"Con <strong>OpenAI GPT-4o-mini</strong>, What?f crea textos personales con diseño minimalista e inmersivo. Alojado en <strong>GitHub + Vercel</strong>. El intercambio de datos para entrenamiento está desactivado a nivel de plataforma.",
+          tech:"Basado en Firebase + OpenAI GPT-4o-mini.",
           linksTitle:"Privacidad, Términos y contacto",
-          links:'Consulta la <a href="privacy.html">Privacidad</a> y los <a href="terms.html">Términos</a>.<br/>Soporte: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.'
+          links:'Lee la <a href="privacy.html">Privacidad</a> y los <a href="terms.html">Términos</a>.'
         },
+
         fr: {
           back:"Retour",
           title:"What?f",
           updated:"Dernière mise à jour :",
-          desc:"What?f vous fait explorer les choix que vous n’avez pas faits — et ceux que vous pouvez encore faire. Un voyage entre passé et futur où l’IA crée des scénarios réalistes, bienveillants ou surréalistes selon votre humeur.",
+          desc:"What?f vous fait explorer les choix non faits — et ceux encore possibles.",
           howTitle:"Comment ça marche",
-          how1:"Choisissez d’explorer le Passé ou le Futur.",
-          how2:"Choisissez le style : What if (réfléchi et réaliste) ou What the F (ironique et créatif).",
-          how3:"L’IA génère un scénario personnel en un seul paragraphe, sans listes ni questions.",
-          premiumTitle:"Formules & limites",
-          premium:"La formule <strong>FREE</strong> offre <strong>3</strong> explorations/jour.<br/>La formule <strong>PRO</strong> en débloque jusqu’à <strong>10</strong>/jour.<br/>Les limites garantissent qualité et disponibilité.",
+          how1:"Choisissez Passé ou Futur.",
+          how2:"Choisissez le style.",
+          how3:"L’IA génère un seul paragraphe personnalisé.",
+          creditTitle:"Crédits, limites & publicité",
+          creditText:"3 crédits/jour gratuits. Regardez jusqu’à 5 pubs pour gagner +1 crédit ou achetez des packs.",
           techTitle:"Technologie",
-          tech:"Propulsé par <strong>OpenAI GPT-4o-mini</strong>, What?f produit des textes personnels au design minimal et immersif. Hébergé sur <strong>GitHub + Vercel</strong>. Le partage de données d’entraînement est désactivé au niveau de la plateforme.",
+          tech:"OpenAI + Firebase.",
           linksTitle:"Confidentialité, Conditions & contact",
-          links:'Lisez notre <a href="privacy.html">Confidentialité</a> et nos <a href="terms.html">Conditions</a>.<br/>Support : <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.'
+          links:'Voir <a href="privacy.html">Confidentialité</a> et <a href="terms.html">Conditions</a>.'
         },
+
         de: {
           back:"Zurück",
           title:"What?f",
           updated:"Zuletzt aktualisiert:",
-          desc:"What?f lässt dich die Entscheidungen erkunden, die du nicht getroffen hast — und die du noch treffen kannst. Eine Reise zwischen Vergangenheit und Zukunft, in der KI realistische, warmherzige oder surreale Szenarien erstellt – je nach Stimmung.",
+          desc:"What?f lässt dich Entscheidungen erkunden, die du nicht getroffen hast.",
           howTitle:"So funktioniert’s",
-          how1:"Wähle, ob du Vergangenheit oder Zukunft erkundest.",
-          how2:"Wähle den Stil: What if (reflektiert & realistisch) oder What the F (ironisch & kreativ).",
-          how3:"Die KI erstellt ein persönliches Szenario als einen einzigen Absatz – ohne Listen oder Fragen.",
-          premiumTitle:"Pläne & Limits",
-          premium:"Der <strong>FREE</strong>-Plan bietet <strong>3</strong> Erkundungen/Tag.<br/>Der <strong>PRO</strong>-Plan schaltet bis zu <strong>10</strong>/Tag frei.<br/>Limits sichern Qualität und Verfügbarkeit.",
+          how1:"Wähle Vergangenheit oder Zukunft.",
+          how2:"Stil auswählen.",
+          how3:"Ein Absatz mit personalisiertem Szenario.",
+          creditTitle:"Credits, Limits & Werbung",
+          creditText:"3 Gratis-Credits/Tag. Sieh dir bis zu 5 Anzeigen an oder kaufe Pakete.",
           techTitle:"Technik",
-          tech:"Mit <strong>OpenAI GPT-4o-mini</strong> erstellt What?f personalisierte Texte in minimalem, immersivem Design. Gehostet auf <strong>GitHub + Vercel</strong>. Trainings-Datenteilung ist auf Plattformebene deaktiviert.",
+          tech:"Firebase + OpenAI.",
           linksTitle:"Datenschutz, Bedingungen & Kontakt",
-          links:'Siehe <a href="privacy.html">Datenschutz</a> und <a href="terms.html">Bedingungen</a>.<br/>Support: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>.'
+          links:'Siehe <a href="privacy.html">Datenschutz</a>.'
         }
       };
 
-      // Applica lingua
       const d = T[lang] || T.it;
       document.querySelectorAll("[data-i]").forEach(n=>{
         const k = n.getAttribute("data-i");
         if (d[k]) n.innerHTML = d[k];
       });
-      document.documentElement.lang = ['it','en','es','fr','de'].includes(lang) ? lang : 'it';
 
-      // Data aggiornamento (10 novembre 2025)
+      // Data e versione
       const fmt = new Intl.DateTimeFormat(
-        {it:'it-IT',en:'en-GB',es:'es-ES',fr:'fr-FR',de:'de-DE'}[document.documentElement.lang] || 'it-IT',
+        {it:'it-IT',en:'en-GB',es:'es-ES',fr:'fr-FR',de:'de-DE'}[lang] || 'it-IT',
         {day:'numeric',month:'long',year:'numeric'}
       );
       document.getElementById('updatedDate').textContent = fmt.format(new Date('2025-11-10'));
 
-      // Versione (eventuale da localStorage)
       const v = localStorage.getItem('whatif_app_version') || '1.0.0';
       document.getElementById('appVersion').textContent = 'v' + v;
     })();
