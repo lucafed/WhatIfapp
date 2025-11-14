@@ -2,12 +2,10 @@
 // Gestione crediti giornalieri via Firestore
 // Usato da fourth.html e fifth.html
 
-import {
-  getAuth
-} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+// ✅ Usa l'app già inizializzata in firebase.init.js
+import { auth, db } from "../firebase.init.js";
 
 import {
-  getFirestore,
   doc,
   getDoc,
   setDoc,
@@ -15,13 +13,10 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-const auth = getAuth();
-const db   = getFirestore();
-
 // 🔢 limite giornaliero (puoi cambiarlo qui)
 const DAILY_LIMIT = 3;
 
-// YYYY-MM-DD in locale (come usato in fourth/fifth)
+// YYYY-MM-DD
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
 function getUser() {
@@ -38,7 +33,6 @@ function walletRef(uid) {
  * Crea/normalizza il documento wallet:
  * - se non esiste → lo crea con DAILY_LIMIT / usedToday = 0
  * - se il giorno è cambiato → resetta usedToday = 0 e aggiorna day
- * - altrimenti non tocca il saldo
  */
 export async function bootCredits() {
   const user = getUser();
@@ -62,7 +56,7 @@ export async function bootCredits() {
   const data = snap.data() || {};
   const day  = typeof data.day === "string" ? data.day : today;
 
-  // se è un altro giorno → reset consumo
+  // nuovo giorno → reset
   if (day !== today) {
     const dailyLimit = Number.isFinite(+data.dailyLimit)
       ? +data.dailyLimit
@@ -93,9 +87,9 @@ export async function getBalance() {
   const snap = await getDoc(ref);
 
   if (!snap.exists()) {
-    // se manca il doc → lo inizializziamo e ritorniamo DAILY_LIMIT
+    const today = todayISO();
     await setDoc(ref, {
-      day: todayISO(),
+      day: today,
       dailyLimit: DAILY_LIMIT,
       usedToday: 0,
       totalUsed: 0,
@@ -106,7 +100,8 @@ export async function getBalance() {
   }
 
   const data = snap.data() || {};
-  const day  = typeof data.day === "string" ? data.day : todayISO();
+  const today = todayISO();
+  const day  = typeof data.day === "string" ? data.day : today;
 
   const dailyLimit = Number.isFinite(+data.dailyLimit)
     ? +data.dailyLimit
@@ -116,8 +111,7 @@ export async function getBalance() {
     ? +data.usedToday
     : 0;
 
-  // se per qualche motivo il giorno è vecchio ma bootCredits non è stato chiamato prima
-  if (day !== todayISO()) {
+  if (day !== today) {
     usedToday = 0;
   }
 
@@ -127,9 +121,8 @@ export async function getBalance() {
 
 /**
  * Consuma 1 credito se disponibile.
- * Ritorna:
- *  - true  → credito scalato
- *  - false → saldo finito
+ * true  → credito scalato
+ * false → saldo finito
  */
 export async function consumeCredit() {
   let user;
@@ -147,7 +140,6 @@ export async function consumeCredit() {
       const snap = await tx.get(ref);
 
       if (!snap.exists()) {
-        // primo uso: creiamo doc e consumiamo 1
         const base = {
           day: today,
           dailyLimit: DAILY_LIMIT,
@@ -171,15 +163,12 @@ export async function consumeCredit() {
         ? +data.usedToday
         : 0;
 
-      // nuovo giorno → reset consumo
       if (day !== today) {
         usedToday = 0;
       }
 
       const balance = dailyLimit - usedToday;
-
       if (balance <= 0) {
-        // niente crediti
         return false;
       }
 
