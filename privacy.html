@@ -6,301 +6,302 @@
 <title>What?f — Privacy</title>
 <meta name="theme-color" content="#0A0F14"/>
 <style>
-  :root{ --bg:#0A0F14; --fg:#E8F1F5; --muted:#A0B2BA; --card:#0F1820; --stroke:#1d2b34; --accent:#00E0FF; --accent-2:#1AFFD5; }
+  :root{
+    --bg:#05070B; --fg:#E8F1F5; --muted:#A0B2BA;
+    --card:#0F1820; --stroke:#1d2b34;
+    --accent:#00E0FF; --accent2:#1AFFD5;
+  }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  .container{max-width:840px;margin:0 auto;padding:18px 16px 72px}
+  html,body{
+    height:100%;margin:0;
+    background:
+      radial-gradient(900px 700px at 10% 0%, #111b28 0%, var(--bg) 60%),
+      radial-gradient(800px 600px at 80% 110%, rgba(0,224,255,.06), transparent 70%);
+    color:var(--fg);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  }
+  .container{max-width:880px;margin:0 auto;padding:18px 16px 80px}
   .crumbs{display:flex;align-items:center;gap:8px;color:var(--muted);margin:6px 0 14px}
-  .back{display:inline-flex;align-items:center;gap:8px;background:#0f1820;border:1px solid var(--stroke);color:var(--fg);padding:10px 14px;border-radius:14px;text-decoration:none;cursor:pointer}
-  h1{font-size:clamp(26px,5vw,36px);margin:10px 0 8px}
+  .back{
+    display:inline-flex;align-items:center;gap:8px;
+    background:#0f1820;border:1px solid var(--stroke);
+    color:var(--fg);padding:9px 14px;border-radius:999px;
+    text-decoration:none;cursor:pointer;font-size:14px;
+  }
+  h1{font-size:clamp(24px,5vw,34px);margin:10px 0 8px}
   h1 .hl{color:var(--accent)}
-  .meta{color:var(--muted);font-size:14px;margin-bottom:18px}
-  .card{background:var(--card);border:1px solid var(--stroke);border-radius:18px;padding:18px;margin:14px 0}
-  h2{color:var(--accent);font-size:clamp(20px,3.8vw,24px);margin:0 0 10px}
-  p{margin:10px 0;line-height:1.6}
-  ul{margin:8px 0 4px 18px;line-height:1.6}
+  .meta{color:var(--muted);font-size:13px;margin-bottom:16px}
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:4px 10px;border-radius:999px;
+    background:rgba(0,224,255,.08);border:1px solid rgba(0,224,255,.32);
+    font-size:11px;color:#cfefff;text-transform:uppercase;letter-spacing:.06em;
+  }
+  .card{
+    background:rgba(8,14,22,.96);
+    border:1px solid var(--stroke);
+    border-radius:18px;
+    padding:18px 16px;
+    margin:14px 0;
+    box-shadow:0 18px 45px rgba(0,0,0,.7);
+  }
+  h2{
+    color:var(--accent);
+    font-size:clamp(18px,3.8vw,23px);
+    margin:0 0 8px;
+    display:flex;align-items:center;gap:8px;
+  }
+  h2 span.num{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:22px;height:22px;border-radius:999px;
+    background:rgba(0,224,255,.12);font-size:12px;color:#c2f7ff;
+  }
+  p{margin:8px 0;line-height:1.7}
+  ul{margin:8px 0 4px 20px;line-height:1.7;padding-left:4px}
+  li{margin:3px 0}
+  strong{font-weight:600}
   a{color:var(--accent);text-decoration:none}
-  footer{position:fixed;left:0;right:0;bottom:8px;text-align:center;font-size:12px;color:var(--muted)}
+  a:hover{text-decoration:underline}
+  code{
+    font-family:ui-monospace,Menlo,Consolas,monospace;
+    font-size:12px;
+    background:#050910;padding:2px 6px;border-radius:999px;
+    border:1px solid rgba(255,255,255,.06);
+  }
+  .tag{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:3px 8px;border-radius:999px;
+    background:#071018;border:1px solid #1b2834;
+    font-size:11px;color:var(--muted);
+  }
+  .tag-dot{
+    width:8px;height:8px;border-radius:999px;background:#00E0FF;
+  }
+  footer{
+    position:fixed;left:0;right:0;bottom:10px;
+    text-align:center;font-size:11px;color:var(--muted);
+    pointer-events:none;
+  }
 </style>
 </head>
 <body>
 <div class="container">
   <div class="crumbs">
     <button class="back" id="backBtn" aria-label="Indietro">← <span data-i="back">Indietro</span></button>
+    <span class="tag"><span class="tag-dot"></span><span data-i="tag_live">Versione app pronta per store</span></span>
   </div>
 
-  <h1><span class="hl">What?f</span> — <span data-i="title">Informativa Privacy</span></h1>
+  <h1>
+    <span class="hl">What?f</span> — <span data-i="title">Informativa Privacy</span>
+  </h1>
   <div class="meta">
-    <span data-i="updated">Ultimo aggiornamento:</span>
-    <span id="updatedDate"></span>
+    <span class="pill">
+      <span data-i="updated">Ultimo aggiornamento</span> ·
+      <span id="updatedDate"></span>
+    </span>
   </div>
 
-  <!-- 1. DATI TRATTATI -->
+  <!-- 1. Dati trattati -->
   <div class="card">
-    <h2 data-i="s1">1. Dati trattati</h2>
+    <h2><span class="num">1</span><span data-i="s1">Dati trattati</span></h2>
     <p data-i="s1p1">
-      What?f adotta un approccio di <strong>minimizzazione</strong> dei dati. In base alle funzionalità attive (web app / app Android), possiamo trattare:
+      What?f adotta un approccio di minimizzazione dei dati. Trattiamo solo le informazioni necessarie per farti usare l’app e il sistema di crediti.
     </p>
     <ul>
       <li data-i="s1b1">
-        <strong>Dati di account</strong> (solo se effettui l’accesso): indirizzo email, nome visualizzato, identificativo univoco dell’account
-        e dati tecnici del provider di accesso (es. login con Google tramite <strong>Firebase Authentication</strong>).
+        <strong>Dati account</strong> (tramite login, ad es. Google): identificativo univoco (<code>uid</code>), email, nome visualizzato e, se disponibile, immagine profilo.
       </li>
       <li data-i="s1b2">
-        <strong>Dati di utilizzo dell’app</strong>: domande che inserisci, stile scelto (What if / What the F), periodo (passato/futuro),
-        lingua, cronologia locale delle domande (se attiva), informazioni sul tuo “wallet crediti” (es. crediti quotidiani disponibili,
-        consumati e contatore totale) memorizzati su <strong>Firestore</strong>.
+        <strong>Wallet crediti</strong> su Firebase Firestore: giorno corrente, crediti giornalieri disponibili, crediti usati, crediti totali utilizzati e metadati tecnici (timestamp, flag di sicurezza).
       </li>
       <li data-i="s1b3">
-        <strong>Dati relativi ad acquisti e piani PRO</strong> (quando attivi): identificativi di acquisto, token di ricevuta, tipo di piano
-        e stato (attivo/scaduto/rimborsato), forniti dal sistema di pagamento (es. <strong>Google Play Billing</strong>). Non raccogliamo né
-        conserviamo i dati completi della tua carta di pagamento.
+        <strong>Domande inserite</strong> e parametri (lingua, stile “What if”/“What the F”, periodo passato/futuro, modalità sorpresa) inviati ai servizi di AI per generare la risposta.
       </li>
       <li data-i="s1b4">
-        <strong>Dati tecnici</strong>: indirizzo IP, user-agent, tipo di dispositivo, sistema operativo, log di errore e informazioni tecniche
-        necessarie al funzionamento sicuro dell’app, anche tramite servizi di sicurezza o logging.
+        <strong>Preferenze locali sul dispositivo</strong> (lingua, tema, cronologia locale, domande salvate) memorizzate in locale tramite <code>localStorage</code>.
       </li>
       <li data-i="s1b5">
-        <strong>Preferenze locali</strong> (es. lingua, stile, suggerimenti salvati, cronologia locale): conservate sul tuo dispositivo
-        tramite tecnologie come <code>localStorage</code>. Puoi cancellarle dalle impostazioni del browser/dispositivo.
+        <strong>Dati tecnici</strong> (es. indirizzo IP, identificatori di dispositivo, informazioni sul browser/sistema operativo, log di errore) necessari a sicurezza, statistiche e prevenzione abusi.
       </li>
       <li data-i="s1b6">
-        <strong>Dati pubblicitari</strong> (quando saranno attivi gli annunci): identificatori pubblicitari del dispositivo (es. ID pubblicità Android)
-        e informazioni sul fatto che un annuncio sia stato mostrato/cliccato, trattati da provider come <strong>Google AdMob</strong>.
+        <strong>Dati relativi a pubblicità e acquisti in-app</strong> (ad es. identificatore dell’annuncio visto, esito della visualizzazione, ID transazione di crediti acquistati) trattati dal fornitore AdTech e/o dallo store (es. Google Play) secondo le proprie policy.
       </li>
     </ul>
-    <p data-i="s1p2">
-      Non chiediamo intenzionalmente <strong>dati sensibili</strong> (es. salute, opinioni politiche, dati giudiziari).  
-      Ti invitiamo a evitare di inserire informazioni che possano identificare persone reali in modo diretto (es. codice fiscale, indirizzi completi, numeri di documento).
-    </p>
   </div>
 
-  <!-- 2. FINALITÀ E BASE GIURIDICA -->
+  <!-- 2. Finalità e base giuridica -->
   <div class="card">
-    <h2 data-i="s2">2. Finalità e base giuridica</h2>
+    <h2><span class="num">2</span><span data-i="s2">Finalità e base giuridica</span></h2>
     <p data-i="s2p1">
-      I dati vengono trattati per le seguenti finalità:
+      I dati sono trattati per:
     </p>
     <ul>
       <li data-i="s2b1">
-        <strong>Erogazione del servizio</strong>: permettere il funzionamento di What?f, generare scenari e risposte tramite AI, gestire il sistema
-        di crediti giornalieri e, se attivi, eventuali piani PRO e funzionalità aggiuntive.
+        <strong>Erogare il servizio</strong>: login, gestione del wallet crediti (3 crediti/giorno, pacchetti aggiuntivi e crediti da annunci), generazione di scenari tramite AI.
       </li>
       <li data-i="s2b2">
-        <strong>Autenticazione e gestione dell’account</strong>: permettere il login (es. con Google), proteggere l’accesso al wallet crediti e
-        alle funzionalità riservate agli utenti registrati.
+        <strong>Migliorare l’esperienza d’uso</strong>: suggerimenti personalizzati, cronologia locale, spunti “E se…”.
       </li>
       <li data-i="s2b3">
-        <strong>Sicurezza, prevenzione abusi e antifrode</strong>: proteggere l’app, la sua infrastruttura e gli utenti da usi impropri,
-        violazioni dei termini o attività sospette.
+        <strong>Gestire pubblicità e acquisti</strong>: mostrare annunci (eventualmente incentivanti la ricarica di 1 credito a visualizzazione, fino a una soglia giornaliera) e processare i tuoi acquisti di pacchetti crediti.
       </li>
       <li data-i="s2b4">
-        <strong>Analisi tecniche e miglioramento del servizio</strong>: analizzare in forma aggregata/anonima come viene utilizzata l’app
-        (es. lingua, tipo di scenari più richiesti) per migliorarne stabilità, performance e contenuti.
-      </li>
-      <li data-i="s2b5">
-        <strong>Gestione pubblicitaria</strong> (quando attiva): mostrare annunci nell’app, limitare la frequenza e misurarne le performance,
-        nel rispetto delle impostazioni di consenso e delle normative applicabili.
+        <strong>Sicurezza e prevenzione abusi</strong>: evitare uso automatico, manipolazione dei crediti, uso fraudolento di account o mezzi di pagamento.
       </li>
     </ul>
     <p data-i="s2p2">
-      Le basi giuridiche del trattamento sono: <strong>esecuzione del contratto</strong> (fornitura del servizio richiesto),
-      <strong>adempimento di obblighi legali</strong> (es. contabili/fiscali per gli acquisti) e
-      <strong>legittimo interesse</strong> del Titolare alla sicurezza del servizio e alla prevenzione degli abusi.
+      Le basi giuridiche prevalenti sono: esecuzione del contratto (uso dell’app), adempimento di obblighi di legge e legittimo interesse alla sicurezza e al miglioramento del servizio.
     </p>
   </div>
 
-  <!-- 3. SERVIZI DI TERZE PARTI -->
+  <!-- 3. Firebase (Auth + Firestore) -->
   <div class="card">
-    <h2 data-i="s3">3. Servizi di terze parti (Firebase, Google, AI)</h2>
-    <p data-i="s3p1">
-      What?f utilizza alcuni servizi esterni per funzionare:
+    <h2><span class="num">3</span><span data-i="firebase_h">Firebase (login e crediti)</span></h2>
+    <p data-i="firebase_p1">
+      What?f utilizza Google Firebase per autenticazione e database:
     </p>
     <ul>
-      <li data-i="s3b1">
-        <strong>Firebase (Google)</strong>: utilizziamo Firebase Authentication per il login (es. “Accedi con Google”) e
-        <strong>Cloud Firestore</strong> per gestire il wallet crediti (giornalieri usati/residui, storico tecnico) e altri dati tecnici necessari.
+      <li data-i="firebase_b1">
+        <strong>Firebase Authentication</strong>: gestisce il login (es. “Accedi con Google”) e conserva l’identificativo dell’account e le informazioni base del profilo.
       </li>
-      <li data-i="s3b2">
-        <strong>Fornitori di AI (es. OpenAI)</strong>: le tue domande, lo stile selezionato e un contesto minimo vengono inviati ai servizi
-        di intelligenza artificiale per generare la risposta. Limitiamo i dati inviati a quanto strettamente necessario a fornirti l’output.
+      <li data-i="firebase_b2">
+        <strong>Firebase Firestore</strong>: conserva i dati del tuo wallet crediti (<code>wallets/{uid}</code>), ad esempio giorno, crediti giornalieri, crediti usati, cronologia aggregata di utilizzo e metadati tecnici.
       </li>
-      <li data-i="s3b3">
-        <strong>Servizi di pagamento (es. Google Play Billing)</strong> — funzionalità previste: per eventuali piani PRO o acquisti in-app,
-        ci appoggiamo ai sistemi di pagamento del marketplace (ad es. Google Play) che trattano i dati di pagamento e ci forniscono
-        gli esiti delle transazioni.
+      <li data-i="firebase_b3">
+        <strong>Regole di sicurezza</strong>: la lettura/scrittura nel wallet è limitata al tuo utente autenticato, secondo le regole di sicurezza impostate nel progetto Firebase.
       </li>
-      <li data-i="s3b4">
-        <strong>Servizi pubblicitari (es. Google AdMob)</strong> — funzionalità previste: per mostrare banner o annunci video nell’app,
-        nel rispetto delle impostazioni di consenso dell’utente e delle norme delle piattaforme.
+    </ul>
+  </div>
+
+  <!-- 4. Sistema crediti, pubblicità e acquisti -->
+  <div class="card">
+    <h2><span class="num">4</span><span data-i="credits_h">Crediti, pubblicità e acquisti in-app</span></h2>
+    <p data-i="credits_p1">
+      Il modello di utilizzo di What?f prevede:
+    </p>
+    <ul>
+      <li data-i="credits_b1">
+        <strong>Crediti gratuiti giornalieri</strong>: ogni utente registrato riceve normalmente 3 crediti al giorno, rinnovati automaticamente (salvo modifiche future indicate in app).
       </li>
+      <li data-i="credits_b2">
+        <strong>Acquisto di pacchetti crediti</strong>: puoi acquistare pacchetti aggiuntivi (ad es. 5, 15 o 30 crediti) tramite acquisti in-app gestiti dallo store (es. Google Play) o da eventuali provider di pagamento indicati nell’app.
+      </li>
+      <li data-i="credits_b3">
+        <strong>Annunci con ricompensa</strong>: alcuni annunci possono offrire la possibilità di ottenere 1 credito extra a visualizzazione completata, fino a un numero massimo di annunci al giorno. Le informazioni tecniche sull’annuncio visto sono trattate dal fornitore AdTech.
+      </li>
+      <li data-i="credits_b4">
+        <strong>Prevenzione abusi</strong>: registriamo in modo limitato l’uso dei crediti e delle ricompense da annunci per evitare uso automatico o fraudolento (ad esempio tentativi di “farmare” crediti aggirando i limiti previsti).
+      </li>
+    </ul>
+    <p data-i="credits_p2">
+      I crediti sono elementi digitali consumabili interni all’app, non sono valuta e non danno diritto a conversione in denaro.
+    </p>
+  </div>
+
+  <!-- 5. Servizi AI -->
+  <div class="card">
+    <h2><span class="num">5</span><span data-i="s3">Servizi di terze parti (AI)</span></h2>
+    <p data-i="s3p1">
+      Per generare le risposte utilizziamo servizi di intelligenza artificiale di terze parti (ad es. OpenAI o servizi analoghi). Inviamo solo:
+    </p>
+    <ul>
+      <li data-i="s3b1">la tua domanda e gli eventuali chiarimenti inseriti;</li>
+      <li data-i="s3b2">parametri di contesto (lingua, stile, periodo temporale, preferenze di tono);</li>
+      <li data-i="s3b3">una porzione di cronologia di sessione, se necessaria per mantenere coerenza nella risposta.</li>
     </ul>
     <p data-i="s3p2">
-      I fornitori coinvolti trattano i dati in qualità di Titolari autonomi o Responsabili, secondo i rispettivi termini e informative
-      privacy, che ti invitiamo a consultare sulle loro pagine ufficiali.
+      Non abilitiamo l’utilizzo delle tue conversazioni per l’addestramento dei modelli da parte del fornitore, quando questo è tecnicamente configurabile.
     </p>
   </div>
 
-  <!-- 4. CONSERVAZIONE E CONDIVISIONE -->
+  <!-- 6. Conservazione e condivisione -->
   <div class="card">
-    <h2 data-i="s4">4. Conservazione e condivisione dei dati</h2>
+    <h2><span class="num">6</span><span data-i="s4">Conservazione e condivisione dei dati</span></h2>
     <p data-i="s4p1">
-      I contenuti delle tue richieste sono elaborati in tempo reale per generare la risposta e
-      <strong>non vengono utilizzati per addestrare i modelli</strong> da parte nostra.  
-      La funzionalità di “training” basata sui dati degli utenti è disabilitata, ove tecnicamente possibile, a livello di piattaforma AI.
+      I dati sono conservati per il tempo strettamente necessario a:
     </p>
+    <ul>
+      <li data-i="s4b1">fornirti il servizio (login, crediti, generazione scenari);</li>
+      <li data-i="s4b2">garantire sicurezza, prevenire abusi e gestire eventuali contestazioni di pagamento;</li>
+      <li data-i="s4b3">adempiere ad obblighi di legge (es. fiscali, contabili, antifrode).</li>
+    </ul>
     <p data-i="s4p2">
-      Non utilizziamo i contenuti delle domande per profilazione commerciale diretta né li vendiamo a terzi.  
-      I dati possono essere trattati dai fornitori tecnici indicati sopra esclusivamente per erogare il servizio, garantire sicurezza
-      o rispettare obblighi di legge.
+      Condividiamo dati solo con:
     </p>
+    <ul>
+      <li data-i="s4b4"><strong>fornitori di infrastruttura</strong> (es. Firebase, provider di hosting);</li>
+      <li data-i="s4b5"><strong>fornitori AI</strong> (es. OpenAI) per l’elaborazione tecnica delle richieste;</li>
+      <li data-i="s4b6"><strong>fornitori di pagamenti e store</strong> (es. Google Play) per gestire acquisti in-app;</li>
+      <li data-i="s4b7"><strong>fornitori AdTech</strong> per la pubblicazione di annunci e la misurazione delle relative performance.</li>
+    </ul>
     <p data-i="s4p3">
-      Il wallet crediti su Firestore contiene solo le informazioni essenziali (giorno, limite giornaliero, crediti usati, contatore totale,
-      eventuali flag di piano PRO) ed è accessibile solo al tuo account autenticato.
-    </p>
-    <p data-i="s4p4">
-      Per motivi di sicurezza e diagnostica possiamo registrare <strong>metadati tecnici</strong> (es. IP, orario, endpoint chiamato, lingua,
-      lunghezza della domanda, hash non reversibile) in log che vengono cancellati dopo un periodo limitato, salvo necessità di conservazione
-      per accertare responsabilità in caso di abusi o violazioni di legge.
+      Non vendiamo i tuoi dati personali per finalità di marketing diretto.
     </p>
   </div>
 
-  <!-- 5. PUBBLICITÀ -->
+  <!-- 7. Pubblicità -->
   <div class="card">
-    <h2 data-i="ads_h">5. Pubblicità e identificatori</h2>
-    <p data-i="ads_b1">
-      La versione app di What?f può mostrare, ora o in futuro, <strong>annunci pubblicitari</strong> (es. tramite Google AdMob o servizi simili).
-      In questi casi il fornitore AdTech può ricevere:
-    </p>
-    <ul>
-      <li data-i="ads_b2">indirizzo IP, user-agent, tipo di dispositivo e sistema operativo;</li>
-      <li data-i="ads_b3">identificatore pubblicitario del dispositivo (es. ID pubblicità Android);</li>
-      <li data-i="ads_b4">informazioni sul fatto che un annuncio sia stato mostrato, visualizzato o cliccato.</li>
-    </ul>
-    <p data-i="ads_b5">
-      Non vendiamo i tuoi dati personali a terzi per finalità di marketing.  
-      Le tue preferenze rispetto alla pubblicità personalizzata possono essere gestite tramite le impostazioni del dispositivo, del sistema
-      operativo (es. Android) e delle piattaforme pubblicitarie coinvolte.
+    <h2><span class="num">7</span><span data-i="ads_h">Pubblicità e identificatori</span></h2>
+    <p data-i="ads_b">
+      Quando vengono mostrati annunci (inclusi quelli che permettono di ottenere crediti extra), il fornitore AdTech può trattare identificatori tecnici del dispositivo, indirizzo IP, user-agent, informazioni sull’app e sull’annuncio visualizzato. Puoi gestire molte preferenze pubblicitarie dalle impostazioni del tuo dispositivo o dell’account store.
     </p>
   </div>
 
-  <!-- 6. CREDITI, PIANI PRO E ACQUISTI -->
+  <!-- 8. Periodi di conservazione -->
   <div class="card">
-    <h2 data-i="s5">6. Crediti, piani PRO e acquisti in-app</h2>
+    <h2><span class="num">8</span><span data-i="s5">Periodi di conservazione</span></h2>
     <p data-i="s5p1">
-      What?f può utilizzare un sistema di <strong>crediti giornalieri</strong> (gratuiti) e, in futuro, <strong>piani PRO a pagamento</strong>
-      o acquisti in-app:
-    </p>
-    <ul>
-      <li data-i="s5b1">
-        I crediti gratuiti vengono assegnati e scalati tramite il wallet su Firestore, associato al tuo account autenticato.
-      </li>
-      <li data-i="s5b2">
-        In caso di piani PRO o acquisti in-app, i pagamenti vengono gestiti dal marketplace (es. Google Play Store). Noi riceviamo soltanto
-        gli <strong>esiti dell’acquisto</strong> (es. id transazione, prodotto acquistato, stato) e li colleghiamo al tuo account per abilitare
-        le funzionalità previste.
-      </li>
-      <li data-i="s5b3">
-        Non accediamo ai dati completi della tua carta di pagamento, che restano gestiti dal provider del pagamento (es. Google).
-      </li>
-    </ul>
-    <p data-i="s5p2">
-      I dati relativi a pagamenti e piani PRO possono essere conservati per il tempo necessario a gestire il servizio, adempiere
-      agli obblighi di legge (es. fiscali) e tutelare i diritti del Titolare in caso di contestazioni.
+      Conserviamo i dati personali per il tempo necessario a fornire il servizio e ad assolvere obblighi legali o di sicurezza. Le preferenze locali (es. lingua, cronologia sul dispositivo) restano salvate sul tuo dispositivo finché non le cancelli o disinstalli l’app.
     </p>
   </div>
 
-  <!-- 7. PERIODI DI CONSERVAZIONE -->
+  <!-- 9. Trasferimenti -->
   <div class="card">
-    <h2 data-i="s6">7. Periodi di conservazione</h2>
+    <h2><span class="num">9</span><span data-i="s6">Trasferimenti extra-UE</span></h2>
     <p data-i="s6p1">
-      Manteniamo i dati solo per il tempo strettamente necessario alle finalità descritte:
+      Alcuni fornitori (es. AI, infrastruttura, AdTech) possono trattare dati anche al di fuori dello Spazio Economico Europeo. In tali casi adottiamo, ove richiesto, garanzie adeguate (ad es. clausole contrattuali tipo – SCC) per garantire un livello di protezione sostanzialmente equivalente a quello europeo.
     </p>
-    <ul>
-      <li data-i="s6b1">
-        dati di account e wallet finché mantieni l’account attivo o comunque per i tempi necessari a tutela dei nostri diritti;
-      </li>
-      <li data-i="s6b2">
-        log tecnici e di sicurezza per un periodo limitato (di norma pochi mesi), salvo estensioni motivate da indagini su abusi o violazioni;
-      </li>
-      <li data-i="s6b3">
-        dati relativi a pagamenti per i tempi richiesti dalla normativa contabile e fiscale applicabile;
-      </li>
-      <li data-i="s6b4">
-        preferenze e cronologia locali sul tuo dispositivo finché non le cancelli manualmente o disinstalli l’app.
-      </li>
-    </ul>
   </div>
 
-  <!-- 8. TRASFERIMENTI EXTRA-UE -->
+  <!-- 10. Sicurezza -->
   <div class="card">
-    <h2 data-i="s7">8. Trasferimenti extra-UE</h2>
+    <h2><span class="num">10</span><span data-i="s7">Sicurezza</span></h2>
     <p data-i="s7p1">
-      Alcuni fornitori (es. servizi AI, Firebase, AdTech) possono trattare dati in Paesi al di fuori dello Spazio Economico Europeo.
-      In questi casi, ci assicuriamo che siano adottate <strong>garanzie adeguate</strong> (es. Standard Contractual Clauses — “SCC” o strumenti
-      equivalenti) per garantire un livello di protezione sostanzialmente equivalente a quello previsto dalla normativa UE.
+      Applichiamo misure tecniche e organizzative ragionevoli per proteggere i dati da accessi non autorizzati, perdita o divulgazione (es. connessioni cifrate, controlli di accesso basati su ruoli, log di sicurezza e regole di sicurezza in Firebase).
     </p>
   </div>
 
-  <!-- 9. SICUREZZA -->
+  <!-- 11. Diritti -->
   <div class="card">
-    <h2 data-i="s8">9. Sicurezza</h2>
+    <h2><span class="num">11</span><span data-i="s8">Diritti dell’interessato</span></h2>
     <p data-i="s8p1">
-      Adottiamo misure tecniche e organizzative ragionevoli per proteggere i dati da accessi non autorizzati, uso improprio,
-      alterazione o distruzione (es. autenticazione tramite Firebase, regole di sicurezza Firestore, uso di HTTPS, log di sicurezza).
-      Nessuna piattaforma online è però completamente esente da rischi: ti invitiamo a usare password robuste e a non condividere le tue credenziali.
+      In qualità di interessato ai sensi del GDPR hai diritto, nei limiti previsti dalla legge, di accedere ai tuoi dati, chiederne la rettifica o la cancellazione, limitarne il trattamento, opporti in determinati casi, nonché alla portabilità dei dati. Puoi anche proporre reclamo all’autorità di controllo competente.
+    </p>
+    <p data-i="s8p2">
+      Per esercitare i diritti puoi contattarci via email all’indirizzo indicato sotto.
     </p>
   </div>
 
-  <!-- 10. DIRITTI DELL’INTERESSATO -->
+  <!-- 12. Minori, titolare, modifiche -->
   <div class="card">
-    <h2 data-i="s9">10. Diritti dell’interessato</h2>
+    <h2><span class="num">12</span><span data-i="s9">Minori</span></h2>
     <p data-i="s9p1">
-      In qualità di interessato, ai sensi del GDPR hai il diritto di:
-    </p>
-    <ul>
-      <li data-i="s9b1">accedere ai dati personali che ti riguardano;</li>
-      <li data-i="s9b2">chiederne la rettifica o l’aggiornamento se inesatti o incompleti;</li>
-      <li data-i="s9b3">richiederne la cancellazione nei casi previsti dalla legge;</li>
-      <li data-i="s9b4">limitare o opporti al trattamento in determinate circostanze;</li>
-      <li data-i="s9b5">richiedere la portabilità dei dati (nei casi applicabili);</li>
-      <li data-i="s9b6">
-        proporre reclamo all’<strong>Autorità Garante per la Protezione dei Dati Personali</strong> o all’autorità del tuo Paese di residenza.
-      </li>
-    </ul>
-    <p data-i="s9p2">
-      Per esercitare i tuoi diritti puoi contattarci all’indirizzo email indicato sotto. Potremmo chiederti informazioni aggiuntive
-      per verificare la tua identità prima di dare seguito alla richiesta.
+      Il servizio è destinato a utenti di età pari o superiore a 16 anni. Se ritieni che un minore ci abbia fornito dati senza il consenso genitoriale, contattaci per permetterci di intervenire.
     </p>
   </div>
 
-  <!-- 11. MINORI -->
   <div class="card">
-    <h2 data-i="s10">11. Minori</h2>
+    <h2><span class="num">13</span><span data-i="s10">Titolare e contatti</span></h2>
     <p data-i="s10p1">
-      What?f è destinato a utenti di età pari o superiore a <strong>16 anni</strong>.  
-      Non raccogliamo consapevolmente dati personali di minori di 16 anni. Se ritieni che un minore ci abbia fornito dati personali
-      senza il consenso dei genitori/tutori, ti invitiamo a contattarci per procedere alla cancellazione.
-    </p>
-  </div>
-
-  <!-- 12. TITOLARE -->
-  <div class="card">
-    <h2 data-i="s11">12. Titolare del trattamento e contatti</h2>
-    <p data-i="s11p1">
-      Titolare del trattamento è <strong>What?f</strong>.<br/>
-      Per qualsiasi richiesta relativa alla privacy puoi scrivere a:<br/>
+      Titolare del trattamento: What?f<br/>
       Email: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>
     </p>
   </div>
 
-  <!-- 13. MODIFICHE -->
   <div class="card">
-    <h2 data-i="s12">13. Modifiche alla presente informativa</h2>
-    <p data-i="s12p1">
-      Questa informativa potrà essere aggiornata per riflettere cambiamenti normativi, tecnici o nelle funzionalità dell’app
-      (es. introduzione di nuovi piani PRO o nuovi partner).  
-      Le modifiche saranno pubblicate in questa pagina e avranno effetto dalla data indicata in alto come “Ultimo aggiornamento”.
+    <h2><span class="num">14</span><span data-i="s11">Modifiche</span></h2>
+    <p data-i="s11p1">
+      Potremmo aggiornare periodicamente questa Informativa. Le modifiche saranno pubblicate in questa pagina e avranno effetto dalla data indicata come “Ultimo aggiornamento”.
     </p>
   </div>
 </div>
@@ -312,372 +313,317 @@
   const DICT = {
     it: {
       back:"Indietro",
+      tag_live:"Versione app pronta per store",
       title:"Informativa Privacy",
-      updated:"Ultimo aggiornamento:",
-      s1:"1. Dati trattati",
-      s1p1:"What?f minimizza i dati e tratta solo quelli necessari al funzionamento (account, domande, crediti, log tecnici e, se attivi, acquisti e pubblicità).",
-      s1b1:"Dati di account (email, nome, ID account) tramite Firebase Authentication.",
-      s1b2:"Dati di utilizzo (domande, stile, lingua, wallet crediti su Firestore).",
-      s1b3:"Dati relativi ad acquisti e piani PRO (ID transazione, prodotto, stato; non le carte).",
-      s1b4:"Dati tecnici di dispositivo e log di errore/sicurezza.",
-      s1b5:"Preferenze locali salvate sul dispositivo (localStorage).",
-      s1b6:"Identificatori pubblicitari e dati sugli annunci quando la pubblicità è attiva.",
-      s1p2:"Non raccogliamo consapevolmente dati sensibili; evita di inserire dati altamente identificativi.",
-      s2:"2. Finalità e base giuridica",
-      s2p1:"I dati servono per erogare il servizio, gestire account e crediti, sicurezza e miglioramento.",
-      s2b1:"Erogazione del servizio e generazione scenari.",
-      s2b2:"Autenticazione e gestione account/crediti.",
-      s2b3:"Sicurezza, prevenzione abusi e antifrode.",
-      s2b4:"Analisi aggregate/anonime per migliorare l’app.",
-      s2b5:"Gestione degli annunci quando attivi.",
-      s2p2:"Base giuridica: esecuzione del contratto, obblighi legali e legittimo interesse alla sicurezza.",
-      s3:"3. Servizi di terze parti (Firebase, Google, AI)",
-      s3p1:"Usiamo Firebase (Auth + Firestore), fornitori di AI, sistemi di pagamento e piattaforme pubblicitarie.",
-      s3b1:"Firebase Authentication e Firestore per login e wallet crediti.",
-      s3b2:"Fornitori di AI (es. OpenAI) per generare risposte.",
-      s3b3:"Sistemi di pagamento (es. Google Play) per piani PRO/acquisti in-app.",
-      s3b4:"Piattaforme pubblicitarie (es. AdMob) per eventuali annunci.",
-      s3p2:"I fornitori trattano i dati secondo le proprie privacy policy.",
-      s4:"4. Conservazione e condivisione dei dati",
-      s4p1:"Contenuti elaborati in tempo reale; addestramento modelli basato sugli utenti disattivato.",
-      s4p2:"Nessuna vendita di dati; condivisione solo con fornitori tecnici e per obblighi di legge.",
-      s4p3:"Wallet crediti su Firestore con dati minimi, legato al tuo account.",
-      s4p4:"Metadati tecnici in log per sicurezza e diagnostica, conservati per periodi limitati.",
-      ads_h:"5. Pubblicità e identificatori",
-      ads_b1:"La versione app può mostrare annunci; i provider pubblicitari trattano dati tecnici e identificatori.",
-      ads_b2:"Dati tecnici (IP, user-agent, device).",
-      ads_b3:"Identificatore pubblicitario del dispositivo.",
-      ads_b4:"Dati su visualizzazioni/click degli annunci.",
-      ads_b5:"Non vendiamo dati personali; le preferenze si gestiscono da dispositivo e piattaforme.",
-      s5:"6. Crediti, piani PRO e acquisti in-app",
-      s5p1:"Gestiamo crediti gratuiti e, se attivi, piani PRO/acquisti in-app, usando i sistemi di pagamento del marketplace.",
-      s5b1:"Crediti giornalieri gestiti tramite wallet su Firestore.",
-      s5b2:"Per piani PRO/acquisti usiamo Google Play Billing o sistemi analoghi.",
-      s5b3:"Non vediamo i dati completi della carta di pagamento.",
-      s5p2:"I dati di acquisto sono conservati per obblighi di legge e per gestire il servizio.",
-      s6:"7. Periodi di conservazione",
-      s6p1:"Conserviamo i dati solo per il tempo necessario alle finalità sopra descritte.",
-      s6b1:"Dati di account e wallet: per la durata dell’account e oltre solo se necessario.",
-      s6b2:"Log tecnici: per periodi limitati, salvo indagini su abusi.",
-      s6b3:"Dati di pagamento: per il tempo richiesto da norme fiscali/contabili.",
-      s6b4:"Preferenze locali: finché non le cancelli o disinstalli l’app.",
-      s7:"8. Trasferimenti extra-UE",
-      s7p1:"Possibili trasferimenti verso Paesi extra-SEE con garanzie adeguate (SCC, ecc.).",
-      s8:"9. Sicurezza",
-      s8p1:"Misure tecniche/organizzative per proteggere i dati (HTTPS, regole Firestore, autenticazione, log di sicurezza).",
-      s9:"10. Diritti dell’interessato",
-      s9p1:"Puoi esercitare i diritti GDPR (accesso, rettifica, cancellazione, limitazione, opposizione, portabilità).",
-      s9b1:"Accesso ai dati personali.",
-      s9b2:"Rettifica/aggiornamento.",
-      s9b3:"Cancellazione nei casi previsti.",
-      s9b4:"Limitazione/opposizione in determinate circostanze.",
-      s9b5:"Portabilità, ove applicabile.",
-      s9b6:"Reclamo al Garante o altra autorità competente.",
-      s9p2:"Per esercitare i diritti puoi contattarci via email.",
-      s10:"11. Minori",
-      s10p1:"Servizio destinato a utenti 16+; se un minore ci ha fornito dati, contattaci per la cancellazione.",
-      s11:"12. Titolare del trattamento e contatti",
-      s11p1:'Titolare: What?f — Email: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
-      s12:"13. Modifiche alla presente informativa",
-      s12p1:"Le modifiche saranno pubblicate qui e avranno effetto dalla data di aggiornamento."
+      updated:"Ultimo aggiornamento",
+      s1:"Dati trattati",
+      s1p1:"What?f adotta un approccio di minimizzazione dei dati. Trattiamo solo le informazioni necessarie per farti usare l’app e il sistema di crediti.",
+      s1b1:"Dati account (tramite login, ad es. Google): identificativo univoco (uid), email, nome visualizzato e, se disponibile, immagine profilo.",
+      s1b2:"Wallet crediti su Firebase Firestore: giorno corrente, crediti giornalieri disponibili, crediti usati, crediti totali utilizzati e metadati tecnici (timestamp, flag di sicurezza).",
+      s1b3:"Domande inserite e parametri (lingua, stile, periodo temporale, modalità sorpresa) inviati ai servizi di AI per generare la risposta.",
+      s1b4:"Preferenze locali sul dispositivo (lingua, tema, cronologia locale, domande salvate) memorizzate in locale tramite localStorage.",
+      s1b5:"Dati tecnici (es. indirizzo IP, identificatori di dispositivo, informazioni su browser/sistema operativo, log di errore) necessari a sicurezza, statistiche e prevenzione abusi.",
+      s1b6:"Dati relativi a pubblicità e acquisti in-app (es. identificatore dell’annuncio visto, esito della visualizzazione, ID transazione di crediti acquistati) trattati dal fornitore AdTech e/o dallo store secondo le proprie policy.",
+      s2:"Finalità e base giuridica",
+      s2p1:"I dati sono trattati per:",
+      s2b1:"Erogare il servizio: login, gestione del wallet crediti (3 crediti/giorno, pacchetti aggiuntivi e crediti da annunci), generazione di scenari tramite AI.",
+      s2b2:"Migliorare l’esperienza d’uso: suggerimenti personalizzati, cronologia locale, spunti “E se…”.",
+      s2b3:"Gestire pubblicità e acquisti: mostrare annunci (eventualmente incentivanti la ricarica di 1 credito a visualizzazione, fino a una soglia giornaliera) e processare i tuoi acquisti di pacchetti crediti.",
+      s2b4:"Sicurezza e prevenzione abusi: evitare uso automatico, manipolazione dei crediti, uso fraudolento di account o mezzi di pagamento.",
+      s2p2:"Le basi giuridiche prevalenti sono: esecuzione del contratto (uso dell’app), adempimento di obblighi di legge e legittimo interesse alla sicurezza e al miglioramento del servizio.",
+      firebase_h:"Firebase (login e crediti)",
+      firebase_p1:"What?f utilizza Google Firebase per autenticazione e database:",
+      firebase_b1:"Firebase Authentication: gestisce il login (es. “Accedi con Google”) e conserva l’identificativo dell’account e le informazioni base del profilo.",
+      firebase_b2:"Firebase Firestore: conserva i dati del tuo wallet crediti (wallets/{uid}), ad esempio giorno, crediti giornalieri, crediti usati, cronologia aggregata di utilizzo e metadati tecnici.",
+      firebase_b3:"Regole di sicurezza: la lettura/scrittura nel wallet è limitata al tuo utente autenticato, secondo le regole di sicurezza impostate nel progetto Firebase.",
+      credits_h:"Crediti, pubblicità e acquisti in-app",
+      credits_p1:"Il modello di utilizzo di What?f prevede:",
+      credits_b1:"Crediti gratuiti giornalieri: ogni utente registrato riceve normalmente 3 crediti al giorno, rinnovati automaticamente (salvo modifiche future indicate in app).",
+      credits_b2:"Acquisto di pacchetti crediti: puoi acquistare pacchetti aggiuntivi (ad es. 5, 15 o 30 crediti) tramite acquisti in-app gestiti dallo store o da eventuali provider di pagamento indicati nell’app.",
+      credits_b3:"Annunci con ricompensa: alcuni annunci possono offrire la possibilità di ottenere 1 credito extra a visualizzazione completata, fino a un numero massimo di annunci al giorno.",
+      credits_b4:"Prevenzione abusi: registriamo in modo limitato l’uso dei crediti e delle ricompense da annunci per evitare uso automatico o fraudolento.",
+      credits_p2:"I crediti sono elementi digitali consumabili interni all’app, non sono valuta e non danno diritto a conversione in denaro.",
+      s3:"Servizi di terze parti (AI)",
+      s3p1:"Per generare le risposte utilizziamo servizi di intelligenza artificiale di terze parti (ad es. OpenAI o servizi analoghi). Inviamo solo i dati strettamente necessari.",
+      s3b1:"la tua domanda e gli eventuali chiarimenti inseriti;",
+      s3b2:"parametri di contesto (lingua, stile, periodo temporale, preferenze di tono);",
+      s3b3:"una porzione di cronologia di sessione, se necessaria per mantenere coerenza nella risposta.",
+      s3p2:"Non abilitiamo l’utilizzo delle tue conversazioni per l’addestramento dei modelli da parte del fornitore, quando questo è tecnicamente configurabile.",
+      s4:"Conservazione e condivisione dei dati",
+      s4p1:"I dati sono conservati per il tempo strettamente necessario a fornire il servizio, garantire sicurezza, gestire acquisti e adempiere ad obblighi legali.",
+      s4b1:"fornirti il servizio (login, crediti, generazione scenari);",
+      s4b2:"garantire sicurezza, prevenire abusi e gestire eventuali contestazioni di pagamento;",
+      s4b3:"adempiere ad obblighi di legge (es. fiscali, contabili, antifrode).",
+      s4p2:"Condividiamo dati solo con:",
+      s4b4:"fornitori di infrastruttura (es. Firebase, provider di hosting);",
+      s4b5:"fornitori AI (es. OpenAI) per l’elaborazione tecnica delle richieste;",
+      s4b6:"fornitori di pagamenti e store (es. Google Play) per gestire acquisti in-app;",
+      s4b7:"fornitori AdTech per la pubblicazione di annunci e la misurazione delle relative performance.",
+      s4p3:"Non vendiamo i tuoi dati personali per finalità di marketing diretto.",
+      ads_h:"Pubblicità e identificatori",
+      ads_b:"Quando vengono mostrati annunci (inclusi quelli che permettono di ottenere crediti extra), il fornitore AdTech può trattare identificatori tecnici del dispositivo, indirizzo IP, user-agent, informazioni sull’app e sull’annuncio visualizzato. Puoi gestire molte preferenze pubblicitarie dalle impostazioni del tuo dispositivo o dell’account store.",
+      s5:"Periodi di conservazione",
+      s5p1:"Conserviamo i dati personali per il tempo necessario a fornire il servizio e ad assolvere obblighi legali o di sicurezza. Le preferenze locali restano sul tuo dispositivo finché non le cancelli.",
+      s6:"Trasferimenti extra-UE",
+      s6p1:"Alcuni fornitori possono trattare dati anche al di fuori dello SEE; adottiamo garanzie adeguate (es. SCC) ove richiesto.",
+      s7:"Sicurezza",
+      s7p1:"Applichiamo misure tecniche e organizzative ragionevoli (es. cifratura in transito, regole di sicurezza Firebase, controlli di accesso).",
+      s8:"Diritti dell’interessato",
+      s8p1:"Hai diritto, nei limiti del GDPR, di accedere, rettificare, cancellare, limitare, opporti e richiedere la portabilità dei dati, oltre a proporre reclamo all’autorità competente.",
+      s8p2:"Per esercitare i diritti puoi contattarci via email.",
+      s9:"Minori",
+      s9p1:"Il servizio è destinato a utenti di età ≥ 16 anni.",
+      s10:"Titolare e contatti",
+      s10p1:'Titolare: What?f — Email: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
+      s11:"Modifiche",
+      s11p1:"Potremo aggiornare periodicamente questa Informativa; le modifiche saranno pubblicate qui."
     },
 
-    /* Le altre lingue sono versioni sintetiche ma coerenti con le stesse funzionalità */
-
+    /* Versioni EN/ES/FR/DE abbreviate ma coerenti col modello crediti/ads */
     en: {
       back:"Back",
+      tag_live:"Store-ready app version",
       title:"Privacy Policy",
-      updated:"Last updated:",
-      s1:"1. Data processed",
-      s1p1:"What?f minimizes data and only processes what is needed (account, questions, credits, technical logs and, if active, purchases and ads).",
-      s1b1:"Account data (email, display name, account ID) via Firebase Authentication.",
-      s1b2:"Usage data (questions, style, language, credit wallet in Firestore).",
-      s1b3:"Purchase / PRO plan data (transaction id, product, status; not card details).",
-      s1b4:"Technical data and error/security logs.",
-      s1b5:"Local preferences stored on device (localStorage).",
-      s1b6:"Advertising identifiers and ad events when ads are enabled.",
-      s1p2:"We do not intentionally collect special categories of data; please avoid inserting highly identifying content.",
-      s2:"2. Purpose & legal basis",
-      s2p1:"Data is used to provide the service, manage account/credits, security and improvement.",
-      s2b1:"Service delivery and scenario generation.",
-      s2b2:"Authentication and account/credit management.",
-      s2b3:"Security, abuse prevention and antifraud.",
-      s2b4:"Aggregated/anonymous analysis to improve the app.",
-      s2b5:"Ad management when enabled.",
-      s2p2:"Legal bases: performance of a contract, legal obligations and legitimate interest in security.",
-      s3:"3. Third-party services (Firebase, Google, AI)",
-      s3p1:"We use Firebase (Auth + Firestore), AI providers, payment systems and ad platforms.",
-      s3b1:"Firebase Authentication and Firestore for login and credit wallet.",
-      s3b2:"AI providers (e.g. OpenAI) to generate answers.",
-      s3b3:"Payment systems (e.g. Google Play Billing) for PRO/in-app purchases.",
-      s3b4:"Ad platforms (e.g. AdMob) for ads.",
-      s3p2:"Providers process data under their own privacy policies.",
-      s4:"4. Retention and sharing",
-      s4p1:"Content is processed in real time; user-based training of models is disabled where possible.",
-      s4p2:"We do not sell your data; sharing is limited to technical providers and legal obligations.",
-      s4p3:"Credit wallet stored in Firestore with minimal data, linked to your account.",
-      s4p4:"Technical metadata may be logged for security/diagnostics for limited periods.",
-      ads_h:"5. Advertising & identifiers",
-      ads_b1:"The app version may show ads; ad providers receive technical data and identifiers.",
-      ads_b2:"Technical data (IP, user-agent, device).",
-      ads_b3:"Advertising ID of the device.",
-      ads_b4:"Impression and click data for ads.",
-      ads_b5:"We do not sell personal data; preferences can be managed from device and platform settings.",
-      s5:"6. Credits, PRO plans and in-app purchases",
-      s5p1:"We manage free daily credits and, if active, PRO plans/in-app purchases using store payment systems.",
-      s5b1:"Daily credits tracked in a Firestore wallet.",
-      s5b2:"PRO/purchases via Google Play Billing or similar.",
-      s5b3:"We never see full card details.",
-      s5p2:"Purchase data may be retained as required by law and to manage the service.",
-      s6:"7. Retention periods",
-      s6p1:"We keep data only as long as needed for the purposes outlined.",
-      s6b1:"Account and wallet data: as long as the account is active and as needed afterwards.",
-      s6b2:"Technical logs: for limited periods unless needed for abuse investigation.",
-      s6b3:"Payment data: as required by tax/accounting laws.",
-      s6b4:"Local preferences: until you clear them or uninstall the app.",
-      s7:"8. Transfers outside the EEA",
-      s7p1:"Data may be processed outside the EEA with appropriate safeguards (SCCs, etc.).",
-      s8:"9. Security",
-      s8p1:"We use technical/organizational measures (HTTPS, Firestore rules, auth, security logs) to protect data.",
-      s9:"10. Your rights",
-      s9p1:"You can exercise GDPR rights (access, rectification, erasure, restriction, objection, portability).",
-      s9b1:"Access your personal data.",
-      s9b2:"Rectification/update.",
-      s9b3:"Erasure when allowed.",
-      s9b4:"Restriction/objection in certain cases.",
-      s9b5:"Portability where applicable.",
-      s9b6:"Lodge a complaint with a Supervisory Authority.",
-      s9p2:"You can contact us via email to exercise your rights.",
-      s10:"11. Children",
-      s10p1:"Service intended for users 16+; if a child has provided data, contact us for deletion.",
-      s11:"12. Controller & contact",
-      s11p1:'Controller: What?f — Email: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
-      s12:"13. Changes to this policy",
-      s12p1:"Updates will be posted here and take effect from the date shown."
+      updated:"Last updated",
+      s1:"Data processed",
+      s1p1:"We follow a data-minimization approach and only process what is needed to provide the app and the credit system.",
+      s1b1:"Account data (via login, e.g. Google): unique ID (uid), email, display name and profile picture (if available).",
+      s1b2:"Credit wallet in Firebase Firestore: current day, daily credits available, credits used, total credits used and technical metadata (timestamps, security flags).",
+      s1b3:"Questions you send and parameters (language, style, time period, surprise mode) forwarded to AI services to generate answers.",
+      s1b4:"Local preferences on device (language, theme, local history, saved questions) stored via localStorage.",
+      s1b5:"Technical data (IP address, device identifiers, browser/OS info, error logs) for security, statistics and abuse prevention.",
+      s1b6:"Advertising and in-app purchase related data (e.g. ad impression identifiers, completion status, credit purchase transaction IDs) handled by AdTech providers and/or the app store under their own policies.",
+      s2:"Purpose and legal basis",
+      s2p1:"We process data to:",
+      s2b1:"Provide the service: login, credit wallet (3 daily credits, extra packs and ad rewards), AI-based scenario generation.",
+      s2b2:"Improve user experience: personalized hints, local history, “What if…” suggestions.",
+      s2b3:"Manage ads and purchases: show ads (including rewarded ones that can grant 1 extra credit up to a daily cap) and process your credit pack purchases.",
+      s2b4:"Ensure security and prevent abuse: avoid automated use, credit manipulation and fraudulent activity.",
+      s2p2:"Main legal bases: performance of the contract (use of the app), legal obligations and our legitimate interest in security and service improvement.",
+      firebase_h:"Firebase (login and credits)",
+      firebase_p1:"We use Google Firebase for authentication and database:",
+      firebase_b1:"Firebase Authentication: manages login (e.g. “Sign in with Google”) and stores account identifiers and basic profile data.",
+      firebase_b2:"Firebase Firestore: stores your credit wallet (wallets/{uid}) such as day, daily credits, used credits, aggregated usage and technical metadata.",
+      firebase_b3:"Security rules: wallet read/write is restricted to your authenticated user according to Firebase security rules.",
+      credits_h:"Credits, ads and in-app purchases",
+      credits_p1:"What?f uses the following model:",
+      credits_b1:"Free daily credits: each registered user normally receives 3 credits per day, renewed automatically (subject to future changes shown in-app).",
+      credits_b2:"Credit packs: you may buy additional packs (e.g. 5, 15 or 30 credits) via in-app purchases handled by the app store or other payment providers indicated in the app.",
+      credits_b3:"Rewarded ads: some ads may grant 1 extra credit per completed view, up to a maximum number of ads per day; technical information about the ad is processed by the AdTech provider.",
+      credits_b4:"Abuse prevention: we record limited credit and reward usage to detect automated or fraudulent behavior.",
+      credits_p2:"Credits are consumable digital items inside the app. They are not currency and cannot be exchanged for money.",
+      s3:"Third-party AI services",
+      s3p1:"We rely on third-party AI services (e.g. OpenAI or similar) to generate responses and only send the minimum data required.",
+      s3b1:"your question and any clarifications;",
+      s3b2:"context parameters (language, style, time period, tone preferences);",
+      s3b3:"short conversation context when needed for coherence.",
+      s3p2:"Where available, we disable the use of your conversations for model training.",
+      s4:"Retention and sharing",
+      s4p1:"We keep personal data only as long as needed to provide the service, ensure security, handle purchases and comply with legal duties.",
+      s4b1:"service delivery (login, credits, scenarios);",
+      s4b2:"security, abuse prevention and purchase dispute handling;",
+      s4b3:"legal obligations (e.g. tax, accounting, anti-fraud).",
+      s4p2:"Data are shared only with:",
+      s4b4:"infrastructure providers (e.g. Firebase, hosting);",
+      s4b5:"AI providers (e.g. OpenAI) for technical processing;",
+      s4b6:"payment and app-store providers (e.g. Google Play) for in-app purchases;",
+      s4b7:"AdTech providers for ad delivery and measurement.",
+      s4p3:"We do not sell your personal data for direct marketing.",
+      ads_h:"Advertising and identifiers",
+      ads_b:"When ads are shown (including rewarded ads that may provide extra credits), AdTech providers may process device identifiers, IP address, user-agent, app context and ad interaction data. Many ad preferences can be managed in your device or store settings.",
+      s5:"Retention periods",
+      s5p1:"We keep personal data only as long as necessary for service, security and legal obligations. Local preferences remain on your device until you clear them.",
+      s6:"Transfers outside the EEA",
+      s6p1:"Some providers may process data outside the EEA; where required, we rely on safeguards such as Standard Contractual Clauses.",
+      s7:"Security",
+      s7p1:"We use reasonable technical and organizational measures (e.g. encrypted connections, Firebase security rules, access controls).",
+      s8:"Your rights",
+      s8p1:"Subject to GDPR, you may request access, rectification, erasure, restriction, objection and data portability, and lodge a complaint with a supervisory authority.",
+      s8p2:"You can exercise your rights by contacting us by email.",
+      s9:"Children",
+      s9p1:"The service is intended for users aged 16+.",
+      s10:"Controller and contact",
+      s10p1:'Controller: What?f — Email: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
+      s11:"Changes",
+      s11p1:"We may update this Policy; changes will be posted here."
     },
 
+    /* Per brevità, le versioni ES/FR/DE sono allineate ma un po’ più sintetiche */
     es: {
       back:"Atrás",
+      tag_live:"Versión lista para la tienda",
       title:"Política de privacidad",
-      updated:"Última actualización:",
-      s1:"1. Datos tratados",
-      s1p1:"What?f minimiza los datos y sólo procesa lo necesario (cuenta, preguntas, créditos, registros técnicos y, si están activos, compras y anuncios).",
-      s1b1:"Datos de cuenta (email, nombre, ID) vía Firebase Authentication.",
-      s1b2:"Datos de uso (preguntas, estilo, idioma, wallet de créditos en Firestore).",
-      s1b3:"Datos de compras/planes PRO (id de transacción, producto, estado; no tarjeta).",
-      s1b4:"Datos técnicos y registros de error/seguridad.",
-      s1b5:"Preferencias locales guardadas en el dispositivo (localStorage).",
-      s1b6:"Identificadores publicitarios y datos de anuncios cuando estén activos.",
-      s1p2:"No recopilamos a propósito datos sensibles; evita introducir datos altamente identificativos.",
-      s2:"2. Finalidad y base legal",
-      s2p1:"Los datos se usan para prestar el servicio, gestionar cuenta/créditos, seguridad y mejora.",
-      s2b1:"Prestación del servicio y generación de escenarios.",
-      s2b2:"Autenticación y gestión de cuenta/wallet.",
-      s2b3:"Seguridad, prevención de abusos y antifraude.",
-      s2b4:"Análisis agregados/ anónimos para mejorar la app.",
-      s2b5:"Gestión de anuncios cuando estén activos.",
-      s2p2:"Base legal: ejecución del contrato, obligaciones legales e interés legítimo en seguridad.",
-      s3:"3. Servicios de terceros (Firebase, Google, IA)",
-      s3p1:"Usamos Firebase (Auth + Firestore), proveedores de IA, sistemas de pago y plataformas de anuncios.",
-      s3b1:"Firebase Authentication y Firestore para login y wallet de créditos.",
-      s3b2:"Proveedores de IA (p. ej., OpenAI) para generar respuestas.",
-      s3b3:"Sistemas de pago (p. ej., Google Play Billing) para planes PRO/compras.",
-      s3b4:"Plataformas de anuncios (p. ej., AdMob) para publicidad.",
-      s3p2:"Los proveedores tratan datos según sus propias políticas.",
-      s4:"4. Conservación y compartición",
-      s4p1:"Contenido procesado en tiempo real; entrenamiento basado en datos de usuarios desactivado cuando sea posible.",
-      s4p2:"No vendemos datos; sólo compartimos con proveedores técnicos y por obligaciones legales.",
-      s4p3:"Wallet de créditos en Firestore con datos mínimos, ligado a tu cuenta.",
-      s4p4:"Metadatos técnicos registrados para seguridad/diagnóstico durante períodos limitados.",
-      ads_h:"5. Publicidad e identificadores",
-      ads_b1:"La app puede mostrar anuncios; los proveedores reciben datos técnicos e identificadores.",
-      ads_b2:"Datos técnicos (IP, user-agent, dispositivo).",
-      ads_b3:"ID de publicidad del dispositivo.",
-      ads_b4:"Datos de impresiones y clics.",
-      ads_b5:"No vendemos datos personales; gestiona las preferencias desde el dispositivo y las plataformas.",
-      s5:"6. Créditos, planes PRO y compras in-app",
-      s5p1:"Gestionamos créditos gratuitos y, si están activos, planes PRO/compras usando los sistemas de pago de la tienda.",
-      s5b1:"Créditos diarios seguidos en un wallet de Firestore.",
-      s5b2:"Planes PRO/compras vía Google Play Billing o similar.",
-      s5b3:"No vemos los datos completos de la tarjeta.",
-      s5p2:"Los datos de compra se conservan según las obligaciones legales y para gestionar el servicio.",
-      s6:"7. Plazos de conservación",
-      s6p1:"Conservamos los datos sólo mientras sean necesarios.",
-      s6b1:"Datos de cuenta y wallet: mientras la cuenta esté activa y según necesidades posteriores.",
-      s6b2:"Registros técnicos: por períodos limitados salvo investigación de abusos.",
-      s6b3:"Datos de pago: según exige la normativa fiscal/contable.",
-      s6b4:"Preferencias locales: hasta que las borres o desinstales la app.",
-      s7:"8. Transferencias fuera del EEE",
-      s7p1:"Posibles transferencias a países terceros con garantías adecuadas (SCC, etc.).",
-      s8:"9. Seguridad",
-      s8p1:"Medidas técnicas/organizativas (HTTPS, reglas Firestore, autenticación, registros de seguridad).",
-      s9:"10. Derechos",
-      s9p1:"Puedes ejercer derechos RGPD (acceso, rectificación, supresión, limitación, oposición, portabilidad).",
-      s9b1:"Acceso a tus datos.",
-      s9b2:"Rectificación/actualización.",
-      s9b3:"Supresión cuando proceda.",
-      s9b4:"Limitación/oposición en ciertos casos.",
-      s9b5:"Portabilidad cuando sea aplicable.",
-      s9b6:"Reclamo ante la autoridad de control.",
-      s9p2:"Para ejercer tus derechos, contáctanos por email.",
-      s10:"11. Menores",
-      s10p1:"Servicio destinado a usuarios de 16+; si un menor nos ha dado datos, pídenos su eliminación.",
-      s11:"12. Responsable y contacto",
-      s11p1:'Responsable: What?f — Email: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
-      s12:"13. Cambios",
-      s12p1:"Publicaremos aquí las actualizaciones con fecha de efecto."
+      updated:"Última actualización",
+      s1:"Datos tratados",
+      s1p1:"What?f minimiza los datos y solo trata lo necesario para la app y el sistema de créditos.",
+      s1b1:"Datos de cuenta (login, p. ej. Google): uid, correo, nombre y foto (si existe).",
+      s1b2:"Monedero de créditos en Firebase Firestore: día, créditos diarios, usados y totales, con metadatos técnicos.",
+      s1b3:"Preguntas y parámetros (idioma, estilo, periodo, modo sorpresa) enviados a la IA.",
+      s1b4:"Preferencias locales en el dispositivo mediante localStorage.",
+      s1b5:"Datos técnicos (IP, identificadores, info de navegador/SO, logs) para seguridad y estadísticas.",
+      s1b6:"Datos sobre publicidad y compras in-app tratados por AdTech y/o la tienda.",
+      s2:"Finalidad y base legal",
+      s2p1:"Tratamos datos para:",
+      s2b1:"Prestar el servicio: login, créditos (3/día, packs, anuncios), escenarios IA.",
+      s2b2:"Mejorar la experiencia: historial local, sugerencias.",
+      s2b3:"Gestionar anuncios y compras de créditos.",
+      s2b4:"Seguridad y prevención de abusos.",
+      s2p2:"Bases legales: contrato, obligación legal e interés legítimo.",
+      firebase_h:"Firebase (login y créditos)",
+      firebase_p1:"Usamos Firebase para autenticación y base de datos.",
+      firebase_b1:"Firebase Auth: gestiona el inicio de sesión.",
+      firebase_b2:"Firestore: guarda el monedero de créditos (wallets/{uid}).",
+      firebase_b3:"Reglas de seguridad para limitar el acceso.",
+      credits_h:"Créditos, anuncios y compras",
+      credits_p1:"El modelo incluye:",
+      credits_b1:"3 créditos gratuitos al día por usuario registrado.",
+      credits_b2:"Compra de packs (p. ej. 5, 15, 30 créditos) mediante compras in-app.",
+      credits_b3:"Anuncios recompensados con 1 crédito extra por visualización completa, hasta un máximo diario.",
+      credits_b4:"Registro limitado para evitar abusos.",
+      credits_p2:"Los créditos son elementos digitales consumibles, no dinero.",
+      s3:"Servicios de IA de terceros",
+      s3p1:"Usamos proveedores de IA (p. ej. OpenAI) con datos mínimos necesarios.",
+      s3b1:"tu pregunta y aclaraciones;",
+      s3b2:"parámetros de contexto;",
+      s3b3:"algo de contexto de sesión si es necesario.",
+      s3p2:"Desactivamos el uso para entrenamiento cuando es posible.",
+      s4:"Conservación y compartición",
+      s4p1:"Conservamos datos lo necesario para servicio, seguridad y obligaciones legales.",
+      s4p2:"Compartimos solo con infraestructura, IA, pagos/tiendas y AdTech.",
+      s4p3:"No vendemos tus datos para marketing directo.",
+      ads_h:"Publicidad e identificadores",
+      ads_b:"Los proveedores de anuncios pueden tratar identificadores del dispositivo, IP, user-agent y datos de interacción.",
+      s5:"Plazos de conservación",
+      s5p1:"Conservamos solo el tiempo necesario; preferencias locales en tu dispositivo.",
+      s6:"Transferencias fuera del EEE",
+      s6p1:"Podrían existir transferencias con garantías adecuadas.",
+      s7:"Seguridad",
+      s7p1:"Medidas técnicas y organizativas razonables.",
+      s8:"Derechos",
+      s8p1:"Puedes ejercer derechos GDPR contactándonos.",
+      s8p2:"También puedes reclamar ante la autoridad competente.",
+      s9:"Menores",
+      s9p1:"Servicio para usuarios de 16+.",
+      s10:"Responsable y contacto",
+      s10p1:'Responsable: What?f — Email: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
+      s11:"Cambios",
+      s11p1:"Publicaremos las actualizaciones aquí."
     },
-
     fr: {
       back:"Retour",
+      tag_live:"Version prête pour le store",
       title:"Politique de confidentialité",
-      updated:"Dernière mise à jour :",
-      s1:"1. Données traitées",
-      s1p1:"What?f minimise les données et traite uniquement ce qui est nécessaire (compte, questions, crédits, journaux techniques et, le cas échéant, achats et publicités).",
-      s1b1:"Données de compte (email, nom, ID) via Firebase Authentication.",
-      s1b2:"Données d’usage (questions, style, langue, portefeuille de crédits dans Firestore).",
-      s1b3:"Données d’achats/abonnements PRO (id de transaction, produit, statut ; pas les cartes).",
-      s1b4:"Données techniques et journaux d’erreur/sécurité.",
-      s1b5:"Préférences locales stockées sur l’appareil (localStorage).",
-      s1b6:"Identifiants publicitaires et données d’annonce lorsque la publicité est active.",
-      s1p2:"Nous ne collectons pas intentionnellement de données sensibles ; évite d’entrer des données fortement identifiantes.",
-      s2:"2. Finalités et base légale",
-      s2p1:"Les données servent à fournir le service, gérer compte/crédits, sécurité et amélioration.",
-      s2b1:"Fourniture du service et génération de scénarios.",
-      s2b2:"Authentification et gestion compte/portefeuille.",
-      s2b3:"Sécurité, prévention des abus et antifraude.",
-      s2b4:"Analyses agrégées/ anonymes pour améliorer l’app.",
-      s2b5:"Gestion des annonces lorsqu’elles sont actives.",
-      s2p2:"Base légale : exécution du contrat, obligations légales et intérêt légitime en matière de sécurité.",
-      s3:"3. Services tiers (Firebase, Google, IA)",
-      s3p1:"Nous utilisons Firebase (Auth + Firestore), des fournisseurs d’IA, des systèmes de paiement et des plateformes publicitaires.",
-      s3b1:"Firebase Authentication et Firestore pour le login et le portefeuille de crédits.",
-      s3b2:"Fournisseurs d’IA (ex. OpenAI) pour générer des réponses.",
-      s3b3:"Systèmes de paiement (ex. Google Play Billing) pour offres PRO/achats in-app.",
-      s3b4:"Plateformes publicitaires (ex. AdMob) pour les annonces.",
-      s3p2:"Les fournisseurs traitent les données selon leurs propres politiques.",
-      s4:"4. Conservation et partage",
-      s4p1:"Contenu traité en temps réel ; entraînement sur les données d’utilisateurs désactivé lorsque possible.",
-      s4p2:"Aucune vente de données ; partage limité aux prestataires techniques et obligations légales.",
-      s4p3:"Portefeuille de crédits stocké dans Firestore avec des données minimales, lié à ton compte.",
-      s4p4:"Métadonnées techniques journalisées pour la sécurité/diagnostic pendant des périodes limitées.",
-      ads_h:"5. Publicité et identifiants",
-      ads_b1:"La version app peut afficher des annonces ; les régies reçoivent des données techniques et des identifiants.",
-      ads_b2:"Données techniques (IP, user-agent, appareil).",
-      ads_b3:"Identifiant publicitaire de l’appareil.",
-      ads_b4:"Données d’impression et de clic.",
-      ads_b5:"Nous ne vendons pas de données personnelles ; les préférences se gèrent via l’appareil et les plateformes.",
-      s5:"6. Crédits, offres PRO et achats in-app",
-      s5p1:"Nous gérons des crédits gratuits et, le cas échéant, des offres PRO/achats via les systèmes de paiement du store.",
-      s5b1:"Crédits quotidiens suivis dans un portefeuille Firestore.",
-      s5b2:"Offres PRO/achats via Google Play Billing ou similaire.",
-      s5b3:"Nous n’accédons pas aux données complètes de carte.",
-      s5p2:"Les données d’achat sont conservées selon les obligations légales et pour la gestion du service.",
-      s6:"7. Durées de conservation",
-      s6p1:"Nous conservons les données uniquement le temps nécessaire.",
-      s6b1:"Données de compte et portefeuille : tant que le compte est actif et selon les besoins ultérieurs.",
-      s6b2:"Journaux techniques : pour des périodes limitées sauf enquêtes.",
-      s6b3:"Données de paiement : selon les exigences fiscales/comptables.",
-      s6b4:"Préférences locales : jusqu’à suppression ou désinstallation.",
-      s7:"8. Transferts hors EEE",
-      s7p1:"Transferts possibles vers des pays tiers avec garanties appropriées (SCC, etc.).",
-      s8:"9. Sécurité",
-      s8p1:"Mesures techniques/organisationnelles (HTTPS, règles Firestore, auth, journaux de sécurité).",
-      s9:"10. Droits",
-      s9p1:"Tu peux exercer tes droits RGPD (accès, rectification, effacement, limitation, opposition, portabilité).",
-      s9b1:"Accès aux données.",
-      s9b2:"Rectification/mise à jour.",
-      s9b3:"Effacement lorsque prévu.",
-      s9b4:"Limitation/opposition dans certains cas.",
-      s9b5:"Portabilité, le cas échéant.",
-      s9b6:"Réclamation auprès de l’autorité de contrôle.",
-      s9p2:"Pour exercer tes droits, contacte-nous par email.",
-      s10:"11. Mineurs",
-      s10p1:"Service destiné aux 16+ ; si un mineur a transmis des données, contacte-nous pour suppression.",
-      s11:"12. Responsable & contact",
-      s11p1:'Responsable : What?f — Email : <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
-      s12:"13. Modifications",
-      s12p1:"Les mises à jour seront publiées ici avec date d’effet."
+      updated:"Dernière mise à jour",
+      s1:"Données traitées",
+      s1p1:"What?f minimise les données et ne traite que ce qui est nécessaire.",
+      s1b1:"Données de compte (connexion, ex. Google): uid, email, nom, photo.",
+      s1b2:"Portefeuille de crédits dans Firebase Firestore.",
+      s1b3:"Questions et paramètres envoyés à l’IA.",
+      s1b4:"Préférences locales via localStorage.",
+      s1b5:"Données techniques pour sécurité et statistiques.",
+      s1b6:"Données relatives à la publicité et aux achats in-app.",
+      s2:"Finalités et base légale",
+      s2p1:"Service, expérience utilisateur, publicité, sécurité.",
+      s2p2:"Base: contrat, obligations légales, intérêt légitime.",
+      firebase_h:"Firebase (connexion & crédits)",
+      firebase_p1:"Firebase gère l’authentification et la base de données.",
+      firebase_b1:"Firebase Auth pour le login.",
+      firebase_b2:"Firestore pour le portefeuille de crédits.",
+      firebase_b3:"Règles de sécurité limitant l’accès.",
+      credits_h:"Crédits, publicité et achats",
+      credits_p1:"Modèle de crédits:",
+      credits_b1:"3 crédits gratuits par jour pour chaque utilisateur.",
+      credits_b2:"Packs de crédits (5, 15, 30) via achats in-app.",
+      credits_b3:"Publicités récompensées: 1 crédit par vue complète dans la limite quotidienne.",
+      credits_b4:"Journalisation limitée pour éviter les abus.",
+      credits_p2:"Les crédits sont des éléments numériques consommables, non une monnaie.",
+      s3:"Services d’IA tiers",
+      s3p1:"Utilisation de fournisseurs d’IA avec données minimales.",
+      s3p2:"Utilisation pour l’entraînement désactivée quand possible.",
+      s4:"Conservation et partage",
+      s4p1:"Durée limitée au service, à la sécurité et à la loi.",
+      s4p2:"Partage avec infrastructure, IA, paiements, AdTech.",
+      s4p3:"Aucune vente de données pour marketing direct.",
+      ads_h:"Publicité et identifiants",
+      ads_b:"Les régies peuvent traiter des identifiants de l’appareil, l’IP et les interactions avec les annonces.",
+      s5:"Durées de conservation",
+      s5p1:"Conservation limitée; préférences locales sur ton appareil.",
+      s6:"Transferts hors EEE",
+      s6p1:"Transferts possibles avec garanties adéquates.",
+      s7:"Sécurité",
+      s7p1:"Mesures techniques et organisationnelles raisonnables.",
+      s8:"Droits",
+      s8p1:"Tu peux exercer tes droits RGPD en nous contactant.",
+      s8p2:"Tu peux aussi saisir l’autorité compétente.",
+      s9:"Mineurs",
+      s9p1:"Service réservé aux 16 ans et plus.",
+      s10:"Responsable & contact",
+      s10p1:'Responsable : What?f — Email : <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
+      s11:"Modifications",
+      s11p1:"Les mises à jour seront publiées ici."
     },
-
     de: {
       back:"Zurück",
+      tag_live:"Store-fertige Version",
       title:"Datenschutzerklärung",
-      updated:"Zuletzt aktualisiert:",
-      s1:"1. Verarbeitete Daten",
-      s1p1:"What?f minimiert Daten und verarbeitet nur das Nötige (Konto, Fragen, Credits, technische Logs und ggf. Käufe/Werbung).",
-      s1b1:"Kontodaten (E-Mail, Name, ID) über Firebase Authentication.",
-      s1b2:"Nutzungsdaten (Fragen, Stil, Sprache, Credit-Wallet in Firestore).",
-      s1b3:"Kauf/PRO-Daten (Transaktions-ID, Produkt, Status; keine Kartendaten).",
-      s1b4:"Technische Daten und Fehler/Sicherheits-Logs.",
-      s1b5:"Lokale Präferenzen auf dem Gerät (localStorage).",
-      s1b6:"Werbe-IDs und Anzeigendaten, wenn Werbung aktiv ist.",
-      s1p2:"Wir erheben keine besonderen Kategorien von Daten; bitte keine hochsensiblen Inhalte eingeben.",
-      s2:"2. Zweck & Rechtsgrundlage",
-      s2p1:"Daten werden zur Bereitstellung des Dienstes, Konten/Credits, Sicherheit und Verbesserung verwendet.",
-      s2b1:"Bereitstellung des Dienstes und Szenarien.",
-      s2b2:"Authentifizierung und Konto/Wallett-Verwaltung.",
-      s2b3:"Sicherheit, Missbrauchs- und Betrugsprävention.",
-      s2b4:"Aggregierte/anonyme Analyse zur Verbesserung.",
-      s2b5:"Anzeigenverwaltung, wenn aktiv.",
-      s2p2:"Rechtsgrundlage: Vertragserfüllung, rechtliche Pflichten und berechtigtes Interesse an Sicherheit.",
-      s3:"3. Dienste Dritter (Firebase, Google, KI)",
-      s3p1:"Wir nutzen Firebase (Auth + Firestore), KI-Anbieter, Bezahlsysteme und Werbeplattformen.",
-      s3b1:"Firebase Authentication und Firestore für Login und Credit-Wallet.",
-      s3b2:"KI-Anbieter (z. B. OpenAI) zur Antwortgenerierung.",
-      s3b3:"Bezahlsysteme (z. B. Google Play Billing) für PRO/In-App-Käufe.",
-      s3b4:"Werbeplattformen (z. B. AdMob) für Anzeigen.",
-      s3p2:"Anbieter verarbeiten Daten nach ihren eigenen Richtlinien.",
-      s4:"4. Aufbewahrung und Weitergabe",
-      s4p1:"Inhalte werden in Echtzeit verarbeitet; nutzerbasiertes Training ist, soweit möglich, deaktiviert.",
-      s4p2:"Keine Datenverkäufe; Weitergabe nur an technische Dienstleister und zur Erfüllung rechtlicher Pflichten.",
-      s4p3:"Credit-Wallet in Firestore mit minimalen Daten, an dein Konto gekoppelt.",
-      s4p4:"Technische Metadaten können für begrenzte Zeit protokolliert werden (Sicherheit/Fehlersuche).",
-      ads_h:"5. Werbung & Identifikatoren",
-      ads_b1:"Die App-Version kann Werbung zeigen; Werbepartner erhalten technische Daten und IDs.",
-      ads_b2:"Technische Daten (IP, User-Agent, Gerät).",
-      ads_b3:"Werbe-ID des Geräts.",
-      ads_b4:"Daten zu Impressionen und Klicks.",
-      ads_b5:"Wir verkaufen keine personenbezogenen Daten; Einstellungen über Gerät/Plattformen.",
-      s5:"6. Credits, PRO-Pläne und In-App-Käufe",
-      s5p1:"Wir verwalten Gratis-Credits und ggf. PRO-Pläne/In-App-Käufe über Store-Bezahsystme.",
-      s5b1:"Tägliche Credits im Firestore-Wallet.",
-      s5b2:"PRO/Käufe über Google Play Billing oder ähnlich.",
-      s5b3:"Wir sehen keine vollständigen Kartendaten.",
-      s5p2:"Kaufdaten werden gemäß gesetzlichen Vorgaben und zur Dienstbereitstellung gespeichert.",
-      s6:"7. Aufbewahrungsfristen",
-      s6p1:"Daten werden nur so lange gespeichert, wie für die genannten Zwecke nötig.",
-      s6b1:"Konto- und Walletdaten: für die Dauer des Kontos und ggf. darüber hinaus.",
-      s6b2:"Technische Logs: begrenzt, außer bei Missbrauchsermittlung.",
-      s6b3:"Zahlungsdaten: entsprechend steuer/ handelsrechtlicher Vorgaben.",
-      s6b4:"Lokale Präferenzen: bis zur Löschung oder Deinstallation.",
-      s7:"8. Übermittlungen außerhalb des EWR",
-      s7p1:"Mögliche Übermittlungen in Drittländer mit geeigneten Garantien (SCC usw.).",
-      s8:"9. Sicherheit",
-      s8p1:"Technische/organisatorische Maßnahmen (HTTPS, Firestore-Regeln, Authentifizierung, Sicherheitslogs).",
-      s9:"10. Rechte",
-      s9p1:"Du kannst DSGVO-Rechte ausüben (Auskunft, Berichtigung, Löschung, Einschränkung, Widerspruch, Übertragbarkeit).",
-      s9b1:"Auskunft über deine Daten.",
-      s9b2:"Berichtigung/Aktualisierung.",
-      s9b3:"Löschung, wenn zulässig.",
-      s9b4:"Einschränkung/Widerspruch in bestimmten Fällen.",
-      s9b5:"Datenübertragbarkeit, soweit anwendbar.",
-      s9b6:"Beschwerde bei der Aufsichtsbehörde.",
-      s9p2:"Zur Ausübung der Rechte kannst du uns per E-Mail kontaktieren.",
-      s10:"11. Minderjährige",
-      s10p1:"Dienst für Nutzer ab 16 Jahren; bei Daten eines Kindes kontaktiere uns zur Löschung.",
-      s11:"12. Verantwortlicher & Kontakt",
-      s11p1:'Verantwortlicher: What?f — E-Mail: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
-      s12:"13. Änderungen",
-      s12p1:"Aktualisierungen werden hier mit Datum veröffentlicht."
+      updated:"Zuletzt aktualisiert",
+      s1:"Verarbeitete Daten",
+      s1p1:"What?f verarbeitet nur die für App und Kreditsystem nötigen Daten.",
+      s1b1:"Kontodaten (Login, z. B. Google): uid, E-Mail, Name, Bild.",
+      s1b2:"Credit-Wallet in Firebase Firestore.",
+      s1b3:"Fragen und Parameter für die KI.",
+      s1b4:"Lokale Einstellungen per localStorage.",
+      s1b5:"Technische Daten für Sicherheit und Statistik.",
+      s1b6:"Daten zu Werbung und In-App-Käufen.",
+      s2:"Zweck & Rechtsgrundlage",
+      s2p1:"Bereitstellung des Dienstes, UX, Werbung, Sicherheit.",
+      s2p2:"Rechtsgrundlage: Vertrag, gesetzliche Pflichten, berechtigtes Interesse.",
+      firebase_h:"Firebase (Login & Credits)",
+      firebase_p1:"Firebase verwaltet Authentifizierung und Datenbank.",
+      firebase_b1:"Firebase Auth für den Login.",
+      firebase_b2:"Firestore für das Credit-Wallet.",
+      firebase_b3:"Sicherheitsregeln begrenzen den Zugriff.",
+      credits_h:"Credits, Werbung und Käufe",
+      credits_p1:"Modell:",
+      credits_b1:"3 kostenlose Credits pro Tag und Nutzer.",
+      credits_b2:"Kauf von Credit-Paketen (5, 15, 30).",
+      credits_b3:"Belohnungsanzeigen mit 1 Extra-Credit pro vollständiger Ansicht, tägliches Limit.",
+      credits_b4:"Begrenzte Protokollierung zur Missbrauchserkennung.",
+      credits_p2:"Credits sind digitale Verbrauchsgüter und kein Geld.",
+      s3:"KI-Dienste Dritter",
+      s3p1:"Wir nutzen KI-Anbieter mit minimalen Daten.",
+      s3p2:"Training-Nutzung wird, wenn möglich, deaktiviert.",
+      s4:"Speicherung & Weitergabe",
+      s4p1:"Speicherung nur so lange wie erforderlich.",
+      s4p2:"Weitergabe an Infrastruktur, KI, Zahlungen, AdTech.",
+      s4p3:"Keine Datenverkäufe für Direktmarketing.",
+      ads_h:"Werbung & Kennungen",
+      ads_b:"AdTech-Anbieter verarbeiten Gerätekennungen, IP, User-Agent und Anzeigeninteraktionen.",
+      s5:"Aufbewahrungsfristen",
+      s5p1:"Begrenzte Aufbewahrung; lokale Einstellungen auf deinem Gerät.",
+      s6:"Übermittlungen außerhalb des EWR",
+      s6p1:"Mögliche Übermittlungen mit geeigneten Garantien.",
+      s7:"Sicherheit",
+      s7p1:"Angemessene technische und organisatorische Maßnahmen.",
+      s8:"Rechte",
+      s8p1:"Du kannst DSGVO-Rechte durch Kontaktaufnahme ausüben.",
+      s8p2:"Du kannst dich auch an die Aufsichtsbehörde wenden.",
+      s9:"Minderjährige",
+      s9p1:"Dienst für Nutzer ab 16 Jahren.",
+      s10:"Verantwortlicher & Kontakt",
+      s10p1:'Verantwortlicher: What?f — E-Mail: <a href="mailto:whatifapp@hotmail.com">whatifapp@hotmail.com</a>',
+      s11:"Änderungen",
+      s11p1:"Aktualisierungen werden hier veröffentlicht."
     }
   };
 
   function applyLang(){
     const lang = ['it','en','es','fr','de'].includes(L)?L:'it';
     document.documentElement.lang = lang;
-    const d = new Date('2025-11-14');
-    const fmt = new Intl.DateTimeFormat(lang==='en'?'en-GB':lang, { day:'numeric', month:'long', year:'numeric' });
+    const d = new Date('2025-11-14'); // aggiorna qui la data ufficiale
+    const fmt = new Intl.DateTimeFormat(lang==='en'?'en-GB':lang, {
+      day:'numeric', month:'long', year:'numeric'
+    });
     document.getElementById('updatedDate').textContent = fmt.format(d);
     const dict = DICT[lang];
     document.querySelectorAll('[data-i]').forEach(el=>{
@@ -688,7 +634,7 @@
   applyLang();
 
   document.getElementById('backBtn').addEventListener('click', ()=>{
-    try { history.back(); setTimeout(()=>location.href='index.html', 350); }
+    try { history.back(); setTimeout(()=>location.href='index.html', 320); }
     catch(e){ location.href='index.html'; }
   });
 </script>
