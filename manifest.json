@@ -1,9 +1,9 @@
 {
-  "id": "/?source=pwa",
+  "id": "/",
   "name": "What?f",
   "short_name": "What?f",
   "description": "Scopri il tuo What?f — immagina la scelta che non hai fatto e quella che potresti fare.",
-  "start_url": "/",
+  "start_url": "/index.html?source=pwa",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "fullscreen"],
