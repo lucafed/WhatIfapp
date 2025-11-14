@@ -3,7 +3,6 @@
 
 // Import SDK modulari
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-
 import {
   getAuth,
   setPersistence,
@@ -39,14 +38,15 @@ setPersistence(auth, browserLocalPersistence).catch((err) => {
   console.warn("Persistenza non settata:", err);
 });
 
-// 🔥 FIRESTORE DB (unica istanza)
+// 🔥 FIRESTORE DB
 const db = getFirestore(app);
 
-// Esporta TUTTO da qui, così gli altri file non importano più Firestore direttamente
+// Esporta TUTTO quello che usi altrove
 export {
   app,
   auth,
   db,
+  // helpers Firestore usati in /store/credits.js
   doc,
   getDoc,
   setDoc,
