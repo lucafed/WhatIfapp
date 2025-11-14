@@ -12,7 +12,8 @@ import {
   runTransaction,
   serverTimestamp,
   updateDoc
-} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+//                    ^^^^^^  <-- allineato alla stessa versione di firebase.init.js
 
 // 🔢 limite base (se il doc non esiste o è invalido)
 const DEFAULT_DAILY_LIMIT = 3;
