@@ -1,211 +1,208 @@
-// /store/credits.js
-// Gestione crediti su Firestore: boot, ricarica giornaliera sicura, consumo, reward e acquisti.
+// FILE: /store/credits.js
+// Gestione crediti giornalieri via Firestore
+// Usato da fourth.html e fifth.html
 
-import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+  getAuth
+} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
-// --- Inizializzazione Firebase (usa la tua config; non duplica se già inizializzato)
-const firebaseConfig = {
-  apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
-  authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
-  projectId: "whatif-oracolo-bc15d",
-  storageBucket: "whatif-oracolo-bc15d.firebasestorage.app",
-  messagingSenderId: "857481137283",
-  appId: "1:857481137283:web:ff8f766d14392835cf5fb6"
-};
-if (!getApps().length) initializeApp(firebaseConfig);
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  runTransaction,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
 const auth = getAuth();
 const db   = getFirestore();
 
-// --- Helper: stringa giorno "YYYY-MM-DD"
-function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+// 🔢 limite giornaliero (puoi cambiarlo qui)
+const DAILY_LIMIT = 3;
+
+// YYYY-MM-DD in locale (come usato in fourth/fifth)
+const todayISO = () => new Date().toISOString().slice(0, 10);
+
+function getUser() {
+  const u = auth.currentUser;
+  if (!u) throw new Error("no_user");
+  return u;
 }
 
-// --- Helper: stesso giorno da Timestamp Firestore?
-function sameDay(ts) {
-  if (!ts) return false;
-  const d = new Date((ts.seconds ?? 0) * 1000);
-  const now = new Date();
-  return d.toDateString() === now.toDateString();
-}
-
-// --- Config globale (config/global)
-export async function getGlobalConfig() {
-  const snap = await getDoc(doc(db, "config", "global"));
-  if (!snap.exists()) throw new Error("Config globale mancante");
-  return snap.data();
-}
-
-// --- Crea doc utente se non esiste (primo avvio = 3 crediti)
-export async function ensureUserDoc(uid) {
-  const ref = doc(db, "users", uid);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) {
-    const today = todayStr();
-    await setDoc(ref, {
-      credits: 3,           // primo avvio: 3 crediti
-      adsWatched: 0,
-      premium: false,
-      lastRechargeAt: serverTimestamp(),
-      lastRechargeDate: today    // marcatore testuale del giorno
-    });
-    return (await getDoc(ref)).data();
-  }
-  return snap.data();
+function walletRef(uid) {
+  return doc(db, "wallets", uid);
 }
 
 /**
- * --- Ricarica giornaliera SICURA / idempotente ---
- * Regole:
- *  - Se dailyRechargeEnabled = false -> NON tocca i crediti (aggiorna solo il marker del giorno se serve).
- *  - Usa lastRechargeDate come riferimento principale (stringa "YYYY-MM-DD").
- *  - Se lastRechargeDate === oggi -> NON ricarica (anche se fai logout/login mille volte).
- *  - Se è giorno nuovo:
- *      * daily = dailyFreeCredits + dailyFreeSurprise
- *      * se credits >= daily -> NON abbassa, azzera solo adsWatched + aggiorna marker.
- *      * se credits <  daily -> porta credits a daily, azzera adsWatched + aggiorna marker.
+ * Crea/normalizza il documento wallet:
+ * - se non esiste → lo crea con DAILY_LIMIT / usedToday = 0
+ * - se il giorno è cambiato → resetta usedToday = 0 e aggiorna day
+ * - altrimenti non tocca il saldo
  */
-export async function rechargeIfNeeded(uid, cfg, userDoc) {
-  const ref   = doc(db, "users", uid);
-  const today = todayStr();
-
-  const currentDoc = userDoc || (await getDoc(ref)).data() || {};
-  const lastDate   = currentDoc.lastRechargeDate || null;
-
-  // Se la ricarica giornaliera è disattivata, non toccare i crediti.
-  if (!cfg?.dailyRechargeEnabled) {
-    // opzionale: aggiorna solo il marker del giorno la prima volta
-    if (lastDate !== today) {
-      await updateDoc(ref, {
-        lastRechargeDate: today,
-        lastRechargeAt: serverTimestamp()
-      }).catch(() => {});
-      return {
-        ...currentDoc,
-        lastRechargeDate: today,
-        lastRechargeAt: { seconds: Math.floor(Date.now() / 1000) }
-      };
-    }
-    return currentDoc;
-  }
-
-  // Se abbiamo già ricaricato oggi -> NON rifare nulla
-  if (lastDate === today) {
-    return currentDoc;
-  }
-
-  // Config minimi giornalieri
-  const base   = Number(cfg?.dailyFreeCredits ?? 3);
-  const bonus  = Number(cfg?.dailyFreeSurprise ?? 0);
-  const daily  = base + bonus;
-
-  const curCredits = Number(currentDoc.credits ?? 0);
-
-  // Se i crediti attuali sono >= daily -> non abbassare
-  if (curCredits >= daily) {
-    await updateDoc(ref, {
-      lastRechargeDate: today,
-      lastRechargeAt: serverTimestamp(),
-      adsWatched: 0
-    }).catch(() => {});
-    return {
-      ...currentDoc,
-      adsWatched: 0,
-      lastRechargeDate: today,
-      lastRechargeAt: { seconds: Math.floor(Date.now() / 1000) }
-    };
-  }
-
-  // Se sotto soglia -> porta ai minimi giornalieri
-  await updateDoc(ref, {
-    credits: daily,
-    adsWatched: 0,
-    lastRechargeDate: today,
-    lastRechargeAt: serverTimestamp()
-  }).catch(() => {});
-
-  return {
-    ...currentDoc,
-    credits: daily,
-    adsWatched: 0,
-    lastRechargeDate: today,
-    lastRechargeAt: { seconds: Math.floor(Date.now() / 1000) }
-  };
-}
-
-// --- Boot: crea doc e ricarica se è giorno nuovo (da chiamare DOPO login)
 export async function bootCredits() {
-  const u = auth.currentUser;
-  if (!u) return null;
-  const cfg = await getGlobalConfig();
-  let ud    = await ensureUserDoc(u.uid);
-  ud        = await rechargeIfNeeded(u.uid, cfg, ud);
-  return { cfg, ud };
+  const user = getUser();
+  const ref  = walletRef(user.uid);
+  const today = todayISO();
+
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    await setDoc(ref, {
+      day: today,
+      dailyLimit: DAILY_LIMIT,
+      usedToday: 0,
+      totalUsed: 0,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    return;
+  }
+
+  const data = snap.data() || {};
+  const day  = typeof data.day === "string" ? data.day : today;
+
+  // se è un altro giorno → reset consumo
+  if (day !== today) {
+    const dailyLimit = Number.isFinite(+data.dailyLimit)
+      ? +data.dailyLimit
+      : DAILY_LIMIT;
+
+    await setDoc(ref, {
+      ...data,
+      day: today,
+      dailyLimit,
+      usedToday: 0,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  }
 }
 
-// --- Lettura saldo
+/**
+ * Ritorna il saldo disponibile per oggi
+ */
 export async function getBalance() {
-  const u = auth.currentUser;
-  if (!u) throw new Error("Non autenticato");
-  const snap = await getDoc(doc(db, "users", u.uid));
-  return snap.exists() ? Number(snap.data().credits || 0) : 0;
+  let user;
+  try {
+    user = getUser();
+  } catch {
+    return 0;
+  }
+
+  const ref = walletRef(user.uid);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    // se manca il doc → lo inizializziamo e ritorniamo DAILY_LIMIT
+    await setDoc(ref, {
+      day: todayISO(),
+      dailyLimit: DAILY_LIMIT,
+      usedToday: 0,
+      totalUsed: 0,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    return DAILY_LIMIT;
+  }
+
+  const data = snap.data() || {};
+  const day  = typeof data.day === "string" ? data.day : todayISO();
+
+  const dailyLimit = Number.isFinite(+data.dailyLimit)
+    ? +data.dailyLimit
+    : DAILY_LIMIT;
+
+  let usedToday = Number.isFinite(+data.usedToday)
+    ? +data.usedToday
+    : 0;
+
+  // se per qualche motivo il giorno è vecchio ma bootCredits non è stato chiamato prima
+  if (day !== todayISO()) {
+    usedToday = 0;
+  }
+
+  const balance = Math.max(0, dailyLimit - usedToday);
+  return balance;
 }
 
-// --- Consuma 1 credito (true se ok; false se finiti). Admin = ∞
+/**
+ * Consuma 1 credito se disponibile.
+ * Ritorna:
+ *  - true  → credito scalato
+ *  - false → saldo finito
+ */
 export async function consumeCredit() {
-  const u = auth.currentUser;
-  if (!u) throw new Error("Non autenticato");
-  const cfg = await getGlobalConfig();
-  const isAdmin = Array.isArray(cfg?.admins) && cfg.admins.includes(u.uid);
-  if (isAdmin) return true;
+  let user;
+  try {
+    user = getUser();
+  } catch {
+    return false;
+  }
 
-  const ref  = doc(db, "users", u.uid);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) throw new Error("User doc assente");
-  const d = snap.data();
-  const cur = Number(d.credits || 0);
-  if (cur <= 0) return false;
-  await updateDoc(ref, { credits: cur - 1 });
-  return true;
-}
+  const ref = walletRef(user.uid);
+  const today = todayISO();
 
-// --- Aggiunge crediti (per acquisto/test/bonus)
-export async function addCredits(n = 1) {
-  const u = auth.currentUser;
-  if (!u) throw new Error("Non autenticato");
-  const ref  = doc(db, "users", u.uid);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) throw new Error("User doc assente");
-  const cur = Number(snap.data().credits || 0);
-  await updateDoc(ref, { credits: cur + Number(n) });
-  return cur + Number(n);
-}
+  try {
+    const result = await runTransaction(db, async (tx) => {
+      const snap = await tx.get(ref);
 
-// --- Reward da annuncio (rispetta cap giornaliero)
-export async function grantAdCredit() {
-  const u = auth.currentUser;
-  if (!u) throw new Error("Non autenticato");
+      if (!snap.exists()) {
+        // primo uso: creiamo doc e consumiamo 1
+        const base = {
+          day: today,
+          dailyLimit: DAILY_LIMIT,
+          usedToday: 1,
+          totalUsed: 1,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+        tx.set(ref, base);
+        return true;
+      }
 
-  const cfg    = await getGlobalConfig();
-  const cap    = Number(cfg?.dailyAdCap ?? 5);
-  const reward = Number(cfg?.adReward ?? 1);
+      const data = snap.data() || {};
+      const day  = typeof data.day === "string" ? data.day : today;
 
-  const ref  = doc(db, "users", u.uid);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) throw new Error("User doc assente");
-  const d = snap.data();
+      const dailyLimit = Number.isFinite(+data.dailyLimit)
+        ? +data.dailyLimit
+        : DAILY_LIMIT;
 
-  const watched = Number(d.adsWatched || 0);
-  if (watched >= cap) return { ok:false, reason:"cap_reached" };
+      let usedToday = Number.isFinite(+data.usedToday)
+        ? +data.usedToday
+        : 0;
 
-  await updateDoc(ref, {
-    adsWatched: watched + 1,
-    credits: Number(d.credits || 0) + reward
-  }).catch(() => {});
-  return { ok:true };
+      // nuovo giorno → reset consumo
+      if (day !== today) {
+        usedToday = 0;
+      }
+
+      const balance = dailyLimit - usedToday;
+
+      if (balance <= 0) {
+        // niente crediti
+        return false;
+      }
+
+      usedToday += 1;
+      const totalUsed = Number.isFinite(+data.totalUsed)
+        ? (+data.totalUsed + 1)
+        : 1;
+
+      tx.set(ref, {
+        ...data,
+        day: today,
+        dailyLimit,
+        usedToday,
+        totalUsed,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+
+      return true;
+    });
+
+    return result === true;
+  } catch (err) {
+    console.error("consumeCredit Firestore error:", err);
+    return false;
+  }
 }
