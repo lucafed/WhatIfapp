@@ -2,6 +2,7 @@
 // Inizializzazione unica di Firebase (Auth + Firestore) via CDN
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+
 import {
   getAuth,
   setPersistence,
@@ -18,7 +19,7 @@ import {
   updateDoc,
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-// ⚡ CONFIG
+// ⚡ CONFIG COPIATA DALLA TUA CONSOLE
 const firebaseConfig = {
   apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
   authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
@@ -40,12 +41,11 @@ setPersistence(auth, browserLocalPersistence).catch((err) => {
 // 🔥 FIRESTORE DB
 const db = getFirestore(app);
 
-// Esporta per tutto il progetto
+// Esporta TUTTO quello che serve al resto del progetto
 export {
   app,
   auth,
   db,
-  // helpers Firestore usati in /store/credits.js
   doc,
   getDoc,
   setDoc,
