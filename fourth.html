@@ -180,6 +180,9 @@
     const writeJSON = (k, v) => LS.setItem(k, JSON.stringify(v));
     const todayISO = () => new Date().toISOString().slice(0,10);
 
+    /* ===== ADMIN FLAG (∞ crediti se token presente) ===== */
+    const IS_ADMIN = !!LS.getItem('admin_token');
+
     /* ===== LANG ===== */
     const SUPPORTED_LANGS=["it","en","es","fr","de"];
     let lang=(LS.getItem('lang')||'it').toLowerCase();
@@ -277,6 +280,17 @@
     function renderCredits(){
       const T = I18N[lang] || I18N.it;
       const el = $('freeBadge');
+
+      if (IS_ADMIN) {
+        // Admin: ∞ crediti, pulsanti sempre abilitati
+        if (el) el.textContent = `${T.credits}: ∞ (admin)`;
+        const goBtn = $('goBtn');
+        const surpriseBtn = $('surpriseBtn');
+        if (goBtn) goBtn.disabled = false;
+        if (surpriseBtn) surpriseBtn.disabled = false;
+        return;
+      }
+
       const txt = `${T.credits}: ${currentBalance}`;
       if (el && el.textContent !== txt) el.textContent = txt;
 
@@ -288,6 +302,11 @@
     }
 
     async function syncCreditsFromServer(){
+      if (IS_ADMIN) {
+        // in admin mode non serve leggere Firestore, ma teniamo badge aggiornato
+        renderCredits();
+        return;
+      }
       if (!auth.currentUser) {
         currentBalance = 0;
         renderCredits();
@@ -342,7 +361,7 @@
     $('homeBtn').onclick=()=>location.href='index.html';
     $('backBtn').onclick=()=>{ if(history.length>1) history.back(); else location.href='index.html'; };
 
-    /* ✅ RESET (preserva solo poche chiavi legacy) */
+    /* ✅ RESET (preserva solo poche chiavi legacy + admin) */
     $('resetBtn').onclick=()=>{
       const PRESERVE = ['whatif_wallet','whatif_wallet_sync','admin_token','lang'];
       const keep = Object.fromEntries(PRESERVE.map(k => [k, LS.getItem(k)]));
@@ -504,12 +523,16 @@
     $('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
     $('saveBtn').onclick=()=>{ const q=($('qInput').value||'').trim(); if(!q) return; addSaved(q); };
 
-    /* ===== SUBMIT (blocca se non loggato / 0 crediti) ===== */
+    /* ===== SUBMIT (blocca se non loggato / 0 crediti, tranne admin) ===== */
     async function guardCredits(){
       const T=I18N[lang]||I18N.it;
       if (!auth.currentUser) {
         alert("Per usare i crediti devi essere loggato.");
         return false;
+      }
+      if (IS_ADMIN) {
+        // admin: niente check di saldo
+        return true;
       }
       if (currentBalance <= 0) {
         alert(T.noCredits);
@@ -522,22 +545,24 @@
       const okGuard = await guardCredits();
       if (!okGuard) return;
 
-      // consuma 1 credito dal Firestore wallet
-      try{
-        const ok = await consumeCredit();
-        if (!ok){
-          const T=I18N[lang]||I18N.it;
-          alert(T.noCredits);
-          await syncCreditsFromServer();
+      // consuma 1 credito dal Firestore wallet (solo utente normale)
+      if (!IS_ADMIN) {
+        try{
+          const ok = await consumeCredit();
+          if (!ok){
+            const T=I18N[lang]||I18N.it;
+            alert(T.noCredits);
+            await syncCreditsFromServer();
+            return;
+          }
+          // refresh saldo
+          currentBalance = await getBalance().catch(()=>currentBalance);
+          renderCredits();
+        }catch(err){
+          console.error("consumeCredit error:", err);
+          alert("Errore nell'utilizzo dei crediti. Riprova.");
           return;
         }
-        // refresh saldo
-        currentBalance = await getBalance().catch(()=>currentBalance);
-        renderCredits();
-      }catch(err){
-        console.error("consumeCredit error:", err);
-        alert("Errore nell'utilizzo dei crediti. Riprova.");
-        return;
       }
 
       const domanda=($('qInput').value||'').trim();
@@ -599,20 +624,22 @@
       const okGuard = await guardCredits();
       if (!okGuard) return;
 
-      try{
-        const ok = await consumeCredit();
-        if (!ok){
-          const T=I18N[lang]||I18N.it;
-          alert(T.noCredits);
-          await syncCreditsFromServer();
+      if (!IS_ADMIN) {
+        try{
+          const ok = await consumeCredit();
+          if (!ok){
+            const T=I18N[lang]||I18N.it;
+            alert(T.noCredits);
+            await syncCreditsFromServer();
+            return;
+          }
+          currentBalance = await getBalance().catch(()=>currentBalance);
+          renderCredits();
+        }catch(err){
+          console.error("consumeCredit error:", err);
+          alert("Errore nell'utilizzo dei crediti. Riprova.");
           return;
         }
-        currentBalance = await getBalance().catch(()=>currentBalance);
-        renderCredits();
-      }catch(err){
-        console.error("consumeCredit error:", err);
-        alert("Errore nell'utilizzo dei crediti. Riprova.");
-        return;
       }
 
       const rollingList = makeAbsurdList(14);
