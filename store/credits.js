@@ -11,11 +11,10 @@ import {
   setDoc,
   runTransaction,
   serverTimestamp,
-  updateDoc,
-  deleteDoc
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-// 🔢 limite base (se il doc non esiste)
+// 🔢 limite base (se il doc non esiste o è invalido)
 const DEFAULT_DAILY_LIMIT = 3;
 
 // YYYY-MM-DD
@@ -48,10 +47,11 @@ function walletRef(uid) {
  * bootCredits()
  * - crea il doc se non esiste
  * - se è cambiato il giorno → resetta usedToday = 0 (ma lascia dailyLimit)
+ * - se dailyLimit è nullo/0 → lo porta a DEFAULT_DAILY_LIMIT
  */
 export async function bootCredits() {
   if (isAdminMode()) {
-    // in modalità admin non ci serve toccare nulla
+    // in modalità admin non ci serve toccare nulla (fourth/fifth usano ∞)
     return;
   }
 
@@ -62,6 +62,7 @@ export async function bootCredits() {
   const snap = await getDoc(ref);
 
   if (!snap.exists()) {
+    // Primo accesso: wallet FREE di default
     await setDoc(ref, {
       day: today,
       dailyLimit: DEFAULT_DAILY_LIMIT,
@@ -74,31 +75,40 @@ export async function bootCredits() {
   }
 
   const data = snap.data() || {};
-  const day = typeof data.day === "string" ? data.day : today;
+  const prevDay = typeof data.day === "string" ? data.day : today;
 
-  if (day !== today) {
-    const dailyLimit = Number.isFinite(+data.dailyLimit)
-      ? +data.dailyLimit
-      : DEFAULT_DAILY_LIMIT;
+  let dailyLimit = Number.isFinite(+data.dailyLimit)
+    ? +data.dailyLimit
+    : DEFAULT_DAILY_LIMIT;
+  // 🛠 se qualcuno ha scritto 0 o valore non valido, torna al default
+  if (dailyLimit <= 0) dailyLimit = DEFAULT_DAILY_LIMIT;
 
-    await setDoc(
-      ref,
-      {
-        ...data,
-        day: today,
-        dailyLimit,
-        usedToday: 0,
-        updatedAt: serverTimestamp()
-      },
-      { merge: true }
-    );
+  let usedToday = Number.isFinite(+data.usedToday) ? +data.usedToday : 0;
+
+  const isNewDay = prevDay !== today;
+  if (isNewDay) {
+    usedToday = 0;
   }
+
+  // Aggiorna solo se serve
+  await setDoc(
+    ref,
+    {
+      ...data,
+      day: today,
+      dailyLimit,
+      usedToday,
+      updatedAt: serverTimestamp()
+    },
+    { merge: true }
+  );
 }
 
 /**
  * getBalance()
  * - se admin_token → ∞
  * - altrimenti: dailyLimit - usedToday (mai < 0)
+ *   se il doc non esiste o è rotto → lo inizializza come FREE (3 crediti)
  */
 export async function getBalance() {
   if (isAdminMode()) {
@@ -113,35 +123,50 @@ export async function getBalance() {
   }
 
   const ref = walletRef(user.uid);
-  const snap = await getDoc(ref);
+  const today = todayISO();
 
-  if (!snap.exists()) {
-    await setDoc(ref, {
-      day: todayISO(),
-      dailyLimit: DEFAULT_DAILY_LIMIT,
-      usedToday: 0,
-      totalUsed: 0,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
-    return DEFAULT_DAILY_LIMIT;
+  try {
+    let snap = await getDoc(ref);
+
+    if (!snap.exists()) {
+      // se non esiste, inizializza il wallet e ritorna il default
+      await setDoc(ref, {
+        day: today,
+        dailyLimit: DEFAULT_DAILY_LIMIT,
+        usedToday: 0,
+        totalUsed: 0,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      return DEFAULT_DAILY_LIMIT;
+    }
+
+    const data = snap.data() || {};
+    let day = typeof data.day === "string" ? data.day : today;
+
+    let dailyLimit = Number.isFinite(+data.dailyLimit)
+      ? +data.dailyLimit
+      : DEFAULT_DAILY_LIMIT;
+    if (dailyLimit <= 0) dailyLimit = DEFAULT_DAILY_LIMIT;
+
+    let usedToday = Number.isFinite(+data.usedToday) ? +data.usedToday : 0;
+    if (day !== today) {
+      usedToday = 0;
+      day = today;
+      // piccolo fix: sincronizza anche su Firestore
+      await setDoc(
+        ref,
+        { day, usedToday, dailyLimit, updatedAt: serverTimestamp() },
+        { merge: true }
+      );
+    }
+
+    const balance = Math.max(0, dailyLimit - usedToday);
+    return balance;
+  } catch (e) {
+    console.error("getBalance error:", e);
+    return 0;
   }
-
-  const data = snap.data() || {};
-  const day = typeof data.day === "string" ? data.day : todayISO();
-
-  const dailyLimit = Number.isFinite(+data.dailyLimit)
-    ? +data.dailyLimit
-    : DEFAULT_DAILY_LIMIT;
-
-  let usedToday = Number.isFinite(+data.usedToday) ? +data.usedToday : 0;
-
-  if (day !== todayISO()) {
-    usedToday = 0;
-  }
-
-  const balance = Math.max(0, dailyLimit - usedToday);
-  return balance;
 }
 
 /**
@@ -170,6 +195,7 @@ export async function consumeCredit() {
       const snap = await tx.get(ref);
 
       if (!snap.exists()) {
+        // se non esiste, parte dal default FREE e consuma il primo credito
         const base = {
           day: today,
           dailyLimit: DEFAULT_DAILY_LIMIT,
@@ -183,20 +209,20 @@ export async function consumeCredit() {
       }
 
       const data = snap.data() || {};
-      const day = typeof data.day === "string" ? data.day : today;
+      const prevDay = typeof data.day === "string" ? data.day : today;
 
-      const dailyLimit = Number.isFinite(+data.dailyLimit)
+      let dailyLimit = Number.isFinite(+data.dailyLimit)
         ? +data.dailyLimit
         : DEFAULT_DAILY_LIMIT;
+      if (dailyLimit <= 0) dailyLimit = DEFAULT_DAILY_LIMIT;
 
       let usedToday = Number.isFinite(+data.usedToday) ? +data.usedToday : 0;
 
-      if (day !== today) {
+      if (prevDay !== today) {
         usedToday = 0;
       }
 
       const balance = dailyLimit - usedToday;
-
       if (balance <= 0) {
         return false;
       }
@@ -235,12 +261,20 @@ export async function consumeCredit() {
  * getWalletRaw()
  * - ritorna l’intero documento wallet dell’utente corrente
  *   (day, dailyLimit, usedToday, totalUsed, ecc.)
+ *   se non esiste ancora → lo crea con il default
  */
 export async function getWalletRaw() {
   const user = getUserOrThrow();
   const ref = walletRef(user.uid);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return null;
+  let snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    // inizializza come FREE e rilegge
+    await bootCredits();
+    snap = await getDoc(ref);
+    if (!snap.exists()) return null;
+  }
+
   return {
     uid: user.uid,
     email: user.email || null,
@@ -317,7 +351,7 @@ export async function adminAddCredits(delta) {
     const oldLimit = Number.isFinite(+data.dailyLimit)
       ? +data.dailyLimit
       : DEFAULT_DAILY_LIMIT;
-    const newLimit = oldLimit + d;
+    const newLimit = Math.max(0, oldLimit + d);
     tx.set(
       ref,
       {
@@ -338,14 +372,15 @@ export async function adminAddCredits(delta) {
 export async function adminResetToday() {
   const user = getUserOrThrow();
   const ref = walletRef(user.uid);
+  const today = todayISO();
   await updateDoc(ref, {
-    day: todayISO(),
+    day: today,
     usedToday: 0,
     updatedAt: serverTimestamp()
   }).catch(async (e) => {
     if (e.code === "not-found") {
       await setDoc(ref, {
-        day: todayISO(),
+        day: today,
         dailyLimit: DEFAULT_DAILY_LIMIT,
         usedToday: 0,
         totalUsed: 0,
@@ -365,8 +400,9 @@ export async function adminResetToday() {
 export async function adminWipeWallet() {
   const user = getUserOrThrow();
   const ref = walletRef(user.uid);
+  const today = todayISO();
   await setDoc(ref, {
-    day: todayISO(),
+    day: today,
     dailyLimit: DEFAULT_DAILY_LIMIT,
     usedToday: 0,
     totalUsed: 0,
