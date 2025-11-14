@@ -40,20 +40,24 @@
 
   <!-- STATO -->
   <div class="card" id="boxState">
-    <div class="row"><span class="k">Admin:</span> <span id="adminFlag" class="pill">no</span></div>
+    <div class="row">
+      <span class="k">Admin:</span> <span id="adminFlag" class="pill">no</span>
+      <span class="k">Firebase user:</span> <span id="userInfo" class="pill">non loggato</span>
+    </div>
     <div class="row" style="margin-top:6px">
-      <span class="k">Token:</span> <span id="tok" class="pill">—</span>
-      <span class="k">Crediti disponibili:</span> <span id="walletAvail" class="pill">—</span>
-      <span class="k">Usati:</span> <span id="walletUsed" class="pill">—</span>
-      <span class="k">Cap:</span> <span id="walletCap" class="pill">—</span>
+      <span class="k">Token:</span>      <span id="tok"          class="pill">—</span>
+      <span class="k">Crediti oggi:</span> <span id="walletAvail" class="pill">—</span>
+      <span class="k">Usati oggi:</span>   <span id="walletUsed"  class="pill">—</span>
+      <span class="k">Limite giorno:</span><span id="walletCap"   class="pill">—</span>
+      <span class="k">Giorno doc:</span>   <span id="walletDay"   class="pill">—</span>
     </div>
     <div class="row" style="margin-top:10px">
       <input id="pin" type="password" placeholder="PIN admin" style="min-width:200px"/>
-      <button id="enter" class="primary">Entra admin</button>
+      <button id="enter"  class="primary">Entra admin</button>
       <button id="revoke" class="ghost">Revoca token</button>
     </div>
     <div class="row" style="margin-top:8px">
-      <button id="simUser" class="ghost">🔄 Simula utente (disattiva ∞)</button>
+      <button id="simUser"      class="ghost">🔄 Simula utente (disattiva flag admin)</button>
       <button id="restoreAdmin" class="ghost">🛡️ Torna admin</button>
       <span class="grow"></span>
       <button id="openFourth" class="ghost">➡️ Vai a fourth.html</button>
@@ -61,21 +65,20 @@
     </div>
   </div>
 
-  <!-- CREDITI -->
+  <!-- CREDITI (FIREBASE) -->
   <div class="card">
     <div class="row">
-      <button id="presetFree" class="primary">FREE (3)</button>
-      <button id="presetPro"  class="primary">PRO (10)</button>
-      <button id="presetDev"  class="ghost">DEV (9999)</button>
-      <button id="addOne"     class="ghost">+1</button>
-      <button id="addFive"    class="ghost">+5</button>
-      <button id="zeroUsed"   class="ghost">Azzera usati</button>
-      <button id="wipeAll"    class="ghost">Reset totale (solo wallet)</button>
+      <button id="presetFree" class="primary">FREE (3/giorno)</button>
+      <button id="presetPro"  class="primary">PRO (10/giorno)</button>
+      <button id="presetDev"  class="ghost">DEV (9999/giorno)</button>
+      <button id="addOne"     class="ghost">+1 credito oggi</button>
+      <button id="addFive"    class="ghost">+5 crediti oggi</button>
+      <button id="zeroUsed"   class="ghost">Azzera usati oggi</button>
+      <button id="wipeAll"    class="ghost">Reset totale wallet</button>
     </div>
     <p class="mut" style="margin:10px 0 0">
-      Sorgente unica: <code>whatif_wallet = {available, used, limit}</code>.<br/>
-      Con token admin attivo, fourth/fifth mostrano <span class="big">∞</span> e NON consumano crediti.
-      Usa “Simula utente” per testare consumo/ricarica.
+      Sorgente unica: <code>Firestore → wallets/{uid}</code> (<code>day, dailyLimit, usedToday, totalUsed</code>).<br/>
+      Questo pannello modifica <strong>solo il wallet dell’utente Firebase attualmente loggato</strong> (lo stesso che usa fourth/fifth).
     </p>
   </div>
 
@@ -111,7 +114,7 @@
         <option value="past">past</option>
       </select>
       <button id="applyPrefs" class="ghost">Applica preferenze</button>
-      <span class="mut"> (scrive in <code>whatif_prefs</code> e “lang/lang_manual”)</span>
+      <span class="mut"> (scrive in <code>whatif_prefs</code> e <code>lang/lang_manual</code>)</span>
     </div>
   </div>
 
@@ -121,7 +124,7 @@
       <div class="k">Cronologia locale (<code>cronologia</code>)</div>
       <span class="grow"></span>
       <input id="search" placeholder="Cerca testo / stile / periodo…" />
-      <button id="exportCSV" class="ghost">⬇️ Esporta CSV</button>
+      <button id="exportCSV"   class="ghost">⬇️ Esporta CSV</button>
       <button id="clearHistory" class="ghost">🧹 Svuota cronologia</button>
     </div>
     <div class="table-wrap" style="margin-top:10px">
@@ -142,47 +145,52 @@
   </div>
 </main>
 
-<script>
-/* ===== Chiavi ===== */
-const LS=localStorage;
-const WKEY="whatif_wallet";
-const TKEY="admin_token";
-const BKEY="admin_token_backup";
+<script type="module">
+/* ===== Firebase imports ===== */
+import "./firebase.init.js";
 
-/* ===== Utils ===== */
-const $=id=>document.getElementById(id);
-const setTok=t=>$("tok").textContent=t? t.slice(0,6)+"…"+t.slice(-4) : "—";
-function readWallet(){ try{ return JSON.parse(LS.getItem(WKEY)||"{}")||{}; }catch{ return {}; } }
-function writeWallet(obj){
-  const cur=readWallet();
-  const out={
-    available: (obj.available!=null)? Math.max(0, +obj.available) : (cur.available??0),
-    used:      (obj.used!=null)?      Math.max(0, +obj.used)      : (cur.used??0),
-    limit:     (obj.limit!=null)?     (+obj.limit===Infinity?Infinity:Math.max(0, +obj.limit)) : (cur.limit??3),
-  };
-  LS.setItem(WKEY, JSON.stringify(out));
-  LS.setItem("whatif_wallet_sync", String(Date.now()));
-  drawWallet();
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  serverTimestamp,
+  increment
+} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+
+import {
+  bootCredits,
+  getBalance
+} from "./store/credits.js";
+
+/* ===== Chiavi LocalStorage (token, prefs, cronologia) ===== */
+const LS   = localStorage;
+const TKEY = "admin_token";
+const BKEY = "admin_token_backup";
+
+/* ===== Firebase setup ===== */
+const auth = getAuth();
+const db   = getFirestore();
+
+const $ = id => document.getElementById(id);
+const setTok = t => $("tok").textContent = t ? t.slice(0,6)+"…"+t.slice(-4) : "—";
+const todayISO = () => new Date().toISOString().slice(0,10);
+
+function walletRef(uid){
+  return doc(db, "wallets", uid);
 }
-function migrateLegacyOnce(){
-  try{
-    const leg = JSON.parse(LS.getItem("whatif_credits")||"{}");
-    if(leg && typeof leg.used==="number" && leg.limit!=null){
-      const lim = (leg.limit===Infinity)?Infinity:Math.max(0, leg.limit|0);
-      const usd = Math.max(0, leg.used|0);
-      const avail = (lim===Infinity)?Infinity:Math.max(0, lim-usd);
-      const w = readWallet();
-      if(w.available==null){ writeWallet({available:avail, used:usd, limit:lim}); }
-    }
-  }catch{}
-}
+
+/* ---------- CRONOLOGIA / PREFS (come prima) ---------- */
 function formatDate(ts){ try{ return new Date(ts).toLocaleString(); }catch{return '—'} }
-
-/* ===== Cronologia ===== */
 function readHistory(){ try{ return JSON.parse(LS.getItem('cronologia')||'[]')||[]; }catch{return []} }
 function writeHistory(list){ LS.setItem('cronologia', JSON.stringify(Array.isArray(list)?list:[])); }
 
-/* ===== Preferenze ===== */
 function readPrefs(){
   let prefs={}; try{ prefs=JSON.parse(LS.getItem('whatif_prefs')||'{}')||{}; }catch{}
   const langManual=LS.getItem('lang_manual')==='1';
@@ -213,7 +221,6 @@ function forcePrefs({lang,stile,periodo}){
   alert('Preferenze applicate.');
 }
 
-/* ===== Render cronologia + stats ===== */
 function renderHistory(filter=''){
   const rows=$("rows");
   const hist=readHistory();
@@ -226,12 +233,11 @@ function renderHistory(filter=''){
     return d.includes(q)||s.includes(q)||p.includes(q)||(String(x.pct||'').includes(q));
   }) : hist;
 
-  // Stats
   $("statTot").textContent = `Totale domande: ${hist.length}`;
   const byStyle = hist.reduce((a,x)=> (a[x.stile||'—']=(a[x.stile||'—']||0)+1, a), {});
   const byPer   = hist.reduce((a,x)=> (a[x.periodo||'—']=(a[x.periodo||'—']||0)+1, a), {});
-  $("statByStyle").textContent  = 'Per stile: ' + Object.entries(byStyle).map(([k,v])=>`${k}:${v}`).join(' · ') || '—';
-  $("statByPeriodo").textContent= 'Per periodo: ' + Object.entries(byPer).map(([k,v])=>`${k}:${v}`).join(' · ') || '—';
+  $("statByStyle").textContent  = 'Per stile: ' + (Object.entries(byStyle).map(([k,v])=>`${k}:${v}`).join(' · ') || '—');
+  $("statByPeriodo").textContent= 'Per periodo: ' + (Object.entries(byPer).map(([k,v])=>`${k}:${v}`).join(' · ') || '—');
 
   rows.innerHTML='';
   if(filtered.length===0){ rows.innerHTML='<tr><td colspan="6">Nessun elemento.</td></tr>'; return; }
@@ -250,7 +256,6 @@ function renderHistory(filter=''){
   });
 }
 
-/* ===== Export CSV ===== */
 function exportCSV(){
   const hist=readHistory();
   const header=['N','Data','Domanda','Stile','Periodo','Percentuale','Surprise','Motivazione'];
@@ -272,59 +277,188 @@ function exportCSV(){
   setTimeout(()=>URL.revokeObjectURL(url),500);
 }
 
-/* ===== Admin token ===== */
+/* ---------- ADMIN TOKEN (come prima) ---------- */
 async function adminCheck(){
   let isAdmin=!!LS.getItem(TKEY);
   try{
     const r=await fetch("/api/admin-token",{headers:{"x-admin-token":LS.getItem(TKEY)||""}});
-    if(r.ok){ const d=await r.json().catch(()=>({})); isAdmin=!!(d?.admin||d?.ok); }
+    if(r.ok){
+      const d=await r.json().catch(()=>({}));
+      isAdmin=!!(d?.admin||d?.ok);
+    }
   }catch{}
   $("adminFlag").textContent=isAdmin?"yes":"no";
   setTok(LS.getItem(TKEY)||"");
   return isAdmin;
 }
 
-/* ===== Wallet draw ===== */
-function drawWallet(){
-  const w=readWallet();
-  $("walletAvail").textContent = (w.available===Infinity?"∞":(w.available??0));
-  $("walletUsed").textContent  = (w.used??0);
-  $("walletCap").textContent   = (w.limit===Infinity?"∞":(w.limit??3));
+/* ---------- FIRESTORE WALLET (NUOVO) ---------- */
+
+async function readFirestoreWallet(){
+  const user = auth.currentUser;
+  if(!user){
+    $("userInfo").textContent = "non loggato";
+    $("walletAvail").textContent = "—";
+    $("walletUsed").textContent  = "—";
+    $("walletCap").textContent   = "—";
+    $("walletDay").textContent   = "—";
+    return null;
+  }
+
+  $("userInfo").textContent = user.email || user.uid;
+
+  // assicuriamo che il doc esista e sia aggiornato al giorno
+  await bootCredits();
+
+  const ref  = walletRef(user.uid);
+  const snap = await getDoc(ref);
+
+  if(!snap.exists()){
+    $("walletAvail").textContent = "—";
+    $("walletUsed").textContent  = "—";
+    $("walletCap").textContent   = "—";
+    $("walletDay").textContent   = "—";
+    return null;
+  }
+
+  const data = snap.data() || {};
+  const day  = typeof data.day === "string" ? data.day : todayISO();
+  const dailyLimit = Number.isFinite(+data.dailyLimit) ? +data.dailyLimit : 3;
+  const usedRaw    = Number.isFinite(+data.usedToday)  ? +data.usedToday  : 0;
+
+  // se il giorno nel doc è vecchio, oggi si riparte da zero
+  const isToday = (day === todayISO());
+  const usedToday = isToday ? usedRaw : 0;
+  const balance = Math.max(0, dailyLimit - usedToday);
+
+  $("walletAvail").textContent = String(balance);
+  $("walletUsed").textContent  = String(usedToday);
+  $("walletCap").textContent   = String(dailyLimit);
+  $("walletDay").textContent   = day;
+
+  return {day, dailyLimit, usedToday, balance, totalUsed: data.totalUsed || 0};
 }
 
-/* ===== Pulsanti ===== */
+async function ensureUserWallet(){
+  const user = auth.currentUser;
+  if(!user){
+    alert("Nessun utente Firebase loggato. Apri fourth.html, fai login, poi torna qui.");
+    return null;
+  }
+  await bootCredits();
+  return walletRef(user.uid);
+}
+
+/* ---------- HANDLER BOTTONI WALLET (Firestore) ---------- */
+
+async function setPresetLimit(limit){
+  const ref = await ensureUserWallet();
+  if(!ref) return;
+  const today = todayISO();
+  await setDoc(ref, {
+    day: today,
+    dailyLimit: limit,
+    usedToday: 0,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+  await readFirestoreWallet();
+}
+
+async function addExtraCredits(n){
+  const ref = await ensureUserWallet();
+  if(!ref) return;
+  await updateDoc(ref, {
+    dailyLimit: increment(n),
+    updatedAt: serverTimestamp()
+  });
+  await readFirestoreWallet();
+}
+
+async function zeroUsedToday(){
+  const ref = await ensureUserWallet();
+  if(!ref) return;
+  await updateDoc(ref, {
+    usedToday: 0,
+    updatedAt: serverTimestamp()
+  });
+  await readFirestoreWallet();
+}
+
+async function resetWalletHard(){
+  const ref = await ensureUserWallet();
+  if(!ref) return;
+  const today = todayISO();
+  await setDoc(ref, {
+    day: today,
+    dailyLimit: 3,
+    usedToday: 0,
+    totalUsed: 0,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+  await readFirestoreWallet();
+  alert("Wallet Firestore resettato per l’utente loggato.");
+}
+
+/* ---------- WIRING UI ---------- */
+
+// Admin token
 $("enter").onclick = async()=>{
   const pin=$("pin").value.trim(); if(!pin) return alert("Inserisci il PIN");
   const r=await fetch("/api/admin-token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pin})});
   const d=await r.json().catch(()=>({}));
-  if(r.ok && (d.token||d.ok)){ if(d.token) LS.setItem(TKEY,d.token); $("pin").value=""; setTok(LS.getItem(TKEY)||""); await adminCheck(); alert("Admin attivo."); }
-  else alert("PIN errato o server non disponibile.");
+  if(r.ok && (d.token||d.ok)){
+    if(d.token) LS.setItem(TKEY,d.token);
+    $("pin").value="";
+    setTok(LS.getItem(TKEY)||"");
+    await adminCheck();
+    alert("Admin attivo.");
+  } else {
+    alert("PIN errato o server non disponibile.");
+  }
 };
-$("revoke").onclick=async()=>{
-  try{await fetch("/api/admin-token?action=revoke",{method:"POST",headers:{"x-admin-token":LS.getItem(TKEY)||""}});}catch{}
-  LS.removeItem(TKEY); setTok(""); await adminCheck(); alert("Token revocato.");
+
+$("revoke").onclick = async()=>{
+  try{
+    await fetch("/api/admin-token?action=revoke",{method:"POST",headers:{"x-admin-token":LS.getItem(TKEY)||""}});
+  }catch{}
+  LS.removeItem(TKEY);
+  setTok("");
+  await adminCheck();
+  alert("Token revocato.");
 };
+
 $("simUser").onclick=()=>{
   const t=LS.getItem(TKEY); if(!t){alert("Non sei in admin.");return;}
-  LS.setItem(BKEY,t); LS.removeItem(TKEY); setTok(""); adminCheck(); alert("Modalità utente attiva.");
+  LS.setItem(BKEY,t);
+  LS.removeItem(TKEY);
+  setTok("");
+  adminCheck();
+  alert("Modalità utente attiva (flag admin off).");
 };
+
 $("restoreAdmin").onclick=()=>{
   const t=LS.getItem(BKEY)||""; if(!t){alert("Nessun token salvato.");return;}
-  LS.setItem(TKEY,t); LS.removeItem(BKEY); setTok(t); adminCheck(); alert("Admin ripristinato.");
+  LS.setItem(TKEY,t);
+  LS.removeItem(BKEY);
+  setTok(t);
+  adminCheck();
+  alert("Admin ripristinato.");
 };
-$("openFourth").onclick=()=> location.href='fourth.html';
-$("openFifth").onclick =()=> location.href='fifth.html';
 
-/* Preset crediti */
-$("presetFree").onclick = ()=> writeWallet({available:3, used:0, limit:3});
-$("presetPro").onclick  = ()=> writeWallet({available:10, used:0, limit:10});
-$("presetDev").onclick  = ()=> writeWallet({available:9999, used:0, limit:9999});
-$("addOne").onclick     = ()=>{ const w=readWallet(); writeWallet({available:(w.available===Infinity?Infinity:(w.available||0)+1)}); };
-$("addFive").onclick    = ()=>{ const w=readWallet(); writeWallet({available:(w.available===Infinity?Infinity:(w.available||0)+5)}); };
-$("zeroUsed").onclick   = ()=>{ const w=readWallet(); writeWallet({used:0}); };
-$("wipeAll").onclick    = ()=>{ LS.removeItem(WKEY); LS.setItem("whatif_wallet_sync", String(Date.now())); drawWallet(); alert("Wallet azzerato."); };
+$("openFourth").onclick = ()=> location.href='fourth.html';
+$("openFifth").onclick  = ()=> location.href='fifth.html';
 
-/* Preferenze – forza/applica */
+// Bottoni crediti Firestore
+$("presetFree").onclick = ()=> setPresetLimit(3);
+$("presetPro").onclick  = ()=> setPresetLimit(10);
+$("presetDev").onclick  = ()=> setPresetLimit(9999);
+$("addOne").onclick     = ()=> addExtraCredits(1);
+$("addFive").onclick    = ()=> addExtraCredits(5);
+$("zeroUsed").onclick   = ()=> zeroUsedToday();
+$("wipeAll").onclick    = ()=> resetWalletHard();
+
+// Preferenze
 $("applyPrefs").onclick=()=>{
   const lang = $("forceLang").value || null;
   const stile= $("forceStyle").value || null;
@@ -332,11 +466,9 @@ $("applyPrefs").onclick=()=>{
   forcePrefs({lang,stile,periodo:per});
 };
 
-/* Ricerca cronologia */
+// Cronologia
 $("search").addEventListener('input', (e)=> renderHistory(e.target.value||''));
-
-/* Esporta / Svuota */
-$("exportCSV").onclick=exportCSV;
+$("exportCSV").onclick  = exportCSV;
 $("clearHistory").onclick=()=>{
   if(confirm("Sicuro di svuotare la cronologia locale?")){
     writeHistory([]);
@@ -344,18 +476,34 @@ $("clearHistory").onclick=()=>{
   }
 };
 
-/* Sync multi-tab */
+// Sync LS per prefs/cronologia (non per wallet: quello ora è su Firestore)
 window.addEventListener('storage', (e)=>{
-  if(['whatif_wallet','whatif_wallet_sync','whatif_credits','admin_token','lang','lang_manual','whatif_prefs','cronologia'].includes(e.key||'')){
-    drawWallet();
+  if(['admin_token','lang','lang_manual','whatif_prefs','cronologia'].includes(e.key||'')){
     applyPrefsUI();
     renderHistory($("search").value||'');
   }
 });
 
-/* Init */
-migrateLegacyOnce();
-adminCheck().then(()=>{ drawWallet(); applyPrefsUI(); renderHistory(''); });
+/* ---------- INIT ---------- */
+adminCheck();
+applyPrefsUI();
+renderHistory('');
+
+// ascolta login/logout Firebase
+onAuthStateChanged(auth, async (user)=>{
+  if(!user){
+    $("userInfo").textContent = "non loggato";
+    $("walletAvail").textContent = "—";
+    $("walletUsed").textContent  = "—";
+    $("walletCap").textContent   = "—";
+    $("walletDay").textContent   = "—";
+    return;
+  }
+  await readFirestoreWallet();
+});
+
+// refresh manuale quando rientri sulla tab
+window.addEventListener('focus', ()=>{ readFirestoreWallet(); });
 </script>
 </body>
 </html>
