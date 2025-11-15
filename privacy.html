@@ -174,6 +174,9 @@
         <strong>Regole di sicurezza</strong>: la lettura/scrittura nel wallet è limitata al tuo utente autenticato, secondo le regole di sicurezza impostate nel progetto Firebase.
       </li>
     </ul>
+    <p data-i="firebase_p2">
+      L’email utilizzata per accedere è gestita da Firebase Authentication e dall’eventuale provider (ad es. Google). What?f non mantiene un proprio elenco separato di indirizzi email degli utenti e non utilizza l’email per inviare comunicazioni o per finalità di marketing; la gestione dei dati di autenticazione avviene all’interno di Firebase secondo le sue policy.
+    </p>
   </div>
 
   <!-- 4. Sistema crediti, pubblicità e acquisti -->
@@ -403,6 +406,7 @@
       firebase_b1:"Firebase Authentication: gestisce il login (es. “Accedi con Google”) e conserva l’identificativo dell’account e le informazioni base del profilo.",
       firebase_b2:"Firebase Firestore: conserva i dati del tuo wallet crediti (wallets/{uid}), ad esempio giorno, crediti giornalieri, crediti usati, cronologia aggregata di utilizzo e metadati tecnici.",
       firebase_b3:"Regole di sicurezza: la lettura/scrittura nel wallet è limitata al tuo utente autenticato, secondo le regole di sicurezza impostate nel progetto Firebase.",
+      firebase_p2:"L’email utilizzata per accedere è gestita da Firebase Authentication e dall’eventuale provider (ad es. Google). What?f non mantiene un proprio elenco separato di indirizzi email degli utenti e non utilizza l’email per inviare comunicazioni o per finalità di marketing; la gestione dei dati di autenticazione avviene all’interno di Firebase secondo le sue policy.",
       credits_h:"Crediti, pubblicità e acquisti in-app",
       credits_p1:"Il modello di utilizzo di What?f prevede:",
       credits_b1:"Crediti gratuiti giornalieri: ogni utente registrato riceve normalmente 3 crediti al giorno, rinnovati automaticamente (salvo modifiche future indicate in app).",
@@ -461,7 +465,6 @@
       consent_p2:"Quando usiamo il legittimo interesse (per sicurezza o miglioramento), puoi opporti nei casi previsti dalla legge contattandoci."
     },
 
-    /* Le altre lingue sono allineate in modo sintetico per le nuove sezioni */
     en: {
       back:"Back",
       tag_live:"Store-ready app version",
@@ -485,9 +488,10 @@
       s2p2:"Main legal bases: performance of the contract, legal obligations, our legitimate interest in security and service improvement, and—where required—your consent.",
       firebase_h:"Firebase (login and credits)",
       firebase_p1:"We use Google Firebase for authentication and database:",
-      firebase_b1:"Firebase Authentication: manages login and stores account identifiers and basic profile data.",
-      firebase_b2:"Firebase Firestore: stores your credit wallet (wallets/{uid}) such as day, daily credits, used credits, aggregated usage and technical metadata.",
+      firebase_b1:"Firebase Authentication: manages login (e.g. “Sign in with Google”) and stores account identifiers and basic profile data.",
+      firebase_b2:"Firebase Firestore: stores your credit wallet (wallets/{uid}), such as day, daily credits, used credits, aggregated usage and technical metadata.",
       firebase_b3:"Security rules: wallet read/write is restricted to your authenticated user according to Firebase security rules.",
+      firebase_p2:"The email used for sign-in is handled by Firebase Authentication and the identity provider (e.g. Google). What?f does not keep a separate list of user email addresses and does not use your email to send messages or for marketing purposes; authentication data are managed inside Firebase according to its own policies.",
       credits_h:"Credits, ads and in-app purchases",
       credits_p1:"What?f uses the following model:",
       credits_b1:"Free daily credits: each registered user normally receives 3 credits per day, renewed automatically.",
@@ -568,10 +572,11 @@
       s2b4:"Seguridad y prevención de abusos.",
       s2p2:"Bases legales: contrato, obligación legal e interés legítimo, y en su caso tu consentimiento.",
       firebase_h:"Firebase (login y créditos)",
-      firebase_p1:"Usamos Firebase para autenticación y base de datos.",
-      firebase_b1:"Firebase Auth: gestiona el inicio de sesión.",
+      firebase_p1:"Usamos Firebase para autenticación y base de datos:",
+      firebase_b1:"Firebase Auth: gestiona el inicio de sesión y mantiene los datos básicos del perfil.",
       firebase_b2:"Firestore: guarda el monedero de créditos (wallets/{uid}).",
-      firebase_b3:"Reglas de seguridad para limitar el acceso.",
+      firebase_b3:"Reglas de seguridad para limitar el acceso al usuario autenticado.",
+      firebase_p2:"El correo utilizado para iniciar sesión es gestionado por Firebase Authentication y el proveedor de identidad (por ejemplo, Google). What?f no mantiene una lista separada de correos de usuarios ni utiliza el correo para enviar comunicaciones o marketing; los datos de autenticación se gestionan dentro de Firebase según sus políticas.",
       credits_h:"Créditos, anuncios y compras",
       credits_p1:"El modelo incluye:",
       credits_b1:"3 créditos gratuitos al día por usuario registrado.",
@@ -641,12 +646,13 @@
       s2p1:"Service, expérience utilisateur, publicité, sécurité.",
       s2p2:"Base: contrat, obligations légales, intérêt légitime et, le cas échéant, ton consentement.",
       firebase_h:"Firebase (connexion & crédits)",
-      firebase_p1:"Firebase gère l’authentification et la base de données.",
-      firebase_b1:"Firebase Auth pour le login.",
-      firebase_b2:"Firestore pour le portefeuille de crédits.",
-      firebase_b3:"Règles de sécurité limitant l’accès.",
+      firebase_p1:"Firebase gère l’authentification et la base de données :",
+      firebase_b1:"Firebase Auth gère la connexion et conserve l’identifiant et les informations de base du profil.",
+      firebase_b2:"Firestore enregistre le portefeuille de crédits (wallets/{uid}).",
+      firebase_b3:"Des règles de sécurité limitent l’accès à l’utilisateur authentifié.",
+      firebase_p2:"L’adresse email utilisée pour la connexion est gérée par Firebase Authentication et, le cas échéant, par le fournisseur d’identité (ex. Google). What?f ne maintient pas de liste séparée d’adresses email et n’utilise pas ton email pour envoyer des communications ou du marketing ; les données d’authentification sont gérées dans Firebase selon ses propres politiques.",
       credits_h:"Crédits, publicité et achats",
-      credits_p1:"Modèle de crédits:",
+      credits_p1:"Modèle de crédits :",
       credits_b1:"3 crédits gratuits par jour pour chaque utilisateur.",
       credits_b2:"Packs de crédits (5, 15, 30) via achats in-app.",
       credits_b3:"Publicités récompensées: 1 crédit par vue complète dans la limite quotidienne.",
@@ -711,10 +717,11 @@
       s2p1:"Bereitstellung des Dienstes, UX, Werbung, Sicherheit.",
       s2p2:"Rechtsgrundlage: Vertrag, gesetzliche Pflichten, berechtigtes Interesse und ggf. deine Einwilligung.",
       firebase_h:"Firebase (Login & Credits)",
-      firebase_p1:"Firebase verwaltet Authentifizierung und Datenbank.",
-      firebase_b1:"Firebase Auth für den Login.",
-      firebase_b2:"Firestore für das Credit-Wallet.",
-      firebase_b3:"Sicherheitsregeln begrenzen den Zugriff.",
+      firebase_p1:"Firebase verwaltet Authentifizierung und Datenbank:",
+      firebase_b1:"Firebase Auth verwaltet den Login und speichert grundlegende Profildaten.",
+      firebase_b2:"Firestore speichert das Credit-Wallet (wallets/{uid}).",
+      firebase_b3:"Sicherheitsregeln begrenzen den Zugriff auf den angemeldeten Nutzer.",
+      firebase_p2:"Die zum Login verwendete E-Mail-Adresse wird von Firebase Authentication und dem Identitätsanbieter (z. B. Google) verarbeitet. What?f führt keine eigene separate Liste von Nutzer-E-Mails und verwendet die E-Mail nicht für Nachrichtenversand oder Marketing; Authentifizierungsdaten werden innerhalb von Firebase gemäß dessen Richtlinien verarbeitet.",
       credits_h:"Credits, Werbung und Käufe",
       credits_p1:"Modell:",
       credits_b1:"3 kostenlose Credits pro Tag und Nutzer.",
