@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eliminazione Account – What?f</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, sans-serif;
+      background: #0A0F14;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .card {
+      background: #141C22;
+      padding: 2rem;
+      border-radius: 16px;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    }
+
+    h1 {
+      margin-top: 0;
+      color: #00E0FF;
+      font-size: 1.6rem;
+      text-align: center;
+    }
+
+    .question {
+      margin-bottom: 1.5rem;
+    }
+
+    select, textarea {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      margin-top: 8px;
+      background: #0A0F14;
+      color: white;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 20px;
+      background: #00E0FF;
+      border: none;
+      color: black;
+      border-radius: 12px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn:hover {
+      background: #1AFFD5;
+    }
+
+    p.small {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #A0B2BA;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>Richiesta di Eliminazione Account</h1>
+
+    <p>Compila i campi qui sotto per richiedere la cancellazione del tuo account e dei dati associati.</p>
+
+    <div class="question">
+      <label>Perché vuoi eliminare l’account?</label>
+      <select id="reason">
+        <option value="Non mi serve più">Non mi serve più</option>
+        <option value="Ho avuto problemi tecnici">Ho avuto problemi tecnici</option>
+        <option value="Preferisco altre app">Preferisco altre app</option>
+        <option value="Altro">Altro</option>
+      </select>
+    </div>
+
+    <div class="question">
+      <label>Note aggiuntive (opzionale)</label>
+      <textarea id="notes" rows="4" placeholder="Scrivi qui se vuoi darci più dettagli..."></textarea>
+    </div>
+
+    <button class="btn" onclick="sendEmail()">Invia richiesta</button>
+
+    <p class="small">
+      Dopo l’invio, la tua richiesta verrà elaborata entro 7 giorni lavorativi.
+    </p>
+  </div>
+
+  <script>
+    function sendEmail() {
+      const reason = document.getElementById('reason').value;
+      const notes = document.getElementById('notes').value;
+
+      const body = encodeURIComponent(
+        "Richiesta ufficiale di eliminazione account\n\n" +
+        "Motivo: " + reason + "\n\n" +
+        "Note aggiuntive:\n" + notes + "\n\n" +
+        "Richiedo la cancellazione di tutti i miei dati."
+      );
+
+      const mailto = "mailto:whatifapp.contact@gmail.com?subject=Richiesta eliminazione account&body=" + body;
+      window.location.href = mailto;
+    }
+  </script>
+</body>
+</html>
