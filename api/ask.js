@@ -205,31 +205,182 @@ function ensureZingaraEnding({ text, lang, periodo, domanda }){
   return `${s}. ${addon}`;
 }
 
-/* ========= WTF — banche demenziali ========= */
+/* ========= WTF: contesti, oggetti, bevute, personalità ========= */
+
+function detectWtfContext(domanda = "") {
+  const t = String(domanda || "").toLowerCase();
+
+  if (/(moto|motocicletta|casco|cilindrata|enduro|naked|scooter|pista)/.test(t)) return "moto";
+  if (/(ufficio|collega|capo|meeting|riunion|scrivania|badge|excel|pc|computer|azienda|contratto|stipendio)/.test(t)) return "ufficio";
+  if (/(casa|divano|cucina|salotto|camera|stanza|appartamento|mutuo|affitto|letto)/.test(t)) return "casa";
+  if (/(l'aquila|laquila|aquila|trasferirmi|trasferimento|città|citta|quartiere|paese|lugano)/.test(t)) return "città";
+  if (/(ex|relazione|fidanzat|ragazza|ragazzo|moglie|marito|matrimonio|lasciare|tornare insieme|storia)/.test(t)) return "relazione";
+  if (/(soldi|budget|stipendio|busta paga|debito|conto|prestito|mutuo|invest|risparmi|tasse)/.test(t)) return "soldi";
+
+  return "generico";
+}
+
+const WTF_OBJECTS_BY_CONTEXT = {
+  moto: [
+    "il casco appoggiato male sul sellino",
+    "il cavalletto che scricchiola",
+    "gli specchietti che vibrano per niente",
+    "il contachilometri che ti fissa",
+    "il venditore appoggiato al bancone",
+    "la saracinesca del garage a metà"
+  ],
+  ufficio: [
+    "il monitor che lampeggia a caso",
+    "la stampante in errore cronico",
+    "la sedia girevole che cigola giudicante",
+    "il neon tremolante sopra la testa",
+    "il badge che non legge al primo colpo",
+    "la tastiera piena di briciole"
+  ],
+  casa: [
+    "la tapparella che si blocca a metà",
+    "il frigorifero che borbotta",
+    "il divano sfondato che ti trattiene",
+    "la lampada che sfarfalla",
+    "la porta che sbatte da sola",
+    "la lavatrice in centrifuga esistenziale"
+  ],
+  città: [
+    "la valigia aperta sul letto",
+    "la finestra che dà sulla strada",
+    "il portone che conosci a memoria",
+    "il bar sotto casa con il solito bancone",
+    "la panchina dove ti sei seduto mille volte",
+    "la salita che ti guarda di traverso"
+  ],
+  relazione: [
+    "il telefono che vibra senza notifiche nuove",
+    "la chat aperta da mesi",
+    "il letto sfatto a metà",
+    "il cuscino che sa troppi segreti",
+    "il gatto che ti guarda giudicante",
+    "lo specchio che eviti di guardare"
+  ],
+  soldi: [
+    "l’estratto conto aperto sullo schermo",
+    "la calcolatrice del telefono in mano",
+    "il portafoglio piegato male",
+    "gli scontrini sparsi sul tavolo",
+    "la busta paga stropicciata",
+    "le monete mollate sulla mensola"
+  ],
+  generico: [
+    "la stanza che ti guarda in silenzio",
+    "le scarpe lasciate in mezzo",
+    "la giacca buttata sulla sedia",
+    "il tavolo con troppe cose sopra",
+    "la finestra socchiusa",
+    "il telefono messo a faccia in giù"
+  ]
+};
+
+const WTF_DRINKS_BY_CONTEXT = {
+  moto: [
+    "un bicchiere grande al bancone del bar accanto al concessionario",
+    "una birra media bevuta in piedi fuori dal locale",
+    "un caffè lungo al bancone, bevuto in tre sorsi molto decisi"
+  ],
+  ufficio: [
+    "un bicchiere di plastica pieno fino all’orlo di caffè della macchinetta",
+    "una tazza gigante di caffè annacquato nella cucina aziendale",
+    "un bicchierone d’acqua al distributore, buttato giù come fosse superalcolico"
+  ],
+  casa: [
+    "un bicchiere grande riempito fino al bordo in cucina",
+    "un mezzo calice traboccante bevuto appoggiato al lavandino",
+    "un bicchiere pieno bevuto in piedi davanti al frigorifero aperto"
+  ],
+  città: [
+    "un bicchiere pesante al bancone del bar sotto casa",
+    "un calice pieno bevuto lentamente al tavolino del corso",
+    "un bicchiere colmo preso nel solito locale dove ti conoscono per nome"
+  ],
+  relazione: [
+    "un calice pieno fino all’orlo bevuto seduto sul bordo del letto",
+    "un bicchiere esagerato bevuto sulla soglia del balcone",
+    "un bicchiere serio bevuto in cucina, con il telefono a faccia in giù sul tavolo"
+  ],
+  soldi: [
+    "un bicchiere colmo bevuto guardando il saldo sullo schermo",
+    "un sorso lungo e pesante da un bicchiere grande vicino ai conti",
+    "un bicchiere pieno bevuto davanti a una pila di scontrini"
+  ],
+  generico: [
+    "un bicchiere grande riempito più del necessario",
+    "un calice traboccante bevuto in un’unica tirata",
+    "un bicchiere colmo svuotato senza togliere gli occhi da quello che ti preoccupa"
+  ]
+};
+
+/* Personalità di What the F (stesso personaggio, energie diverse) */
+const WTF_PERSONAS = [
+  {
+    id: "classico",
+    desc: "barista amico, affettuosamente sarcastico, ritmo medio, prese in giro morbide ma precise."
+  },
+  {
+    id: "sbronzo_filosofico",
+    desc: "stesso barista, ma un filo più brillo: metafore assurde, piccole derive filosofiche, sempre tornando al punto."
+  },
+  {
+    id: "stanco_secco",
+    desc: "sarcasmo asciutto, meno fronzoli, frasi un po’ più secche, ma comunque caldo sotto."
+  },
+  {
+    id: "teatrale",
+    desc: "versione più esagerata: immagini forti, mini-scene quasi da film, ritmo un po’ più alto."
+  },
+  {
+    id: "confidente",
+    desc: "più vicino emotivamente, come se parlasse a un amico stretto; resta comico ma un filo più dolce sul finale."
+  }
+];
+
+function pickPersonaForQuestion(domanda = "") {
+  const t = String(domanda || "").toLowerCase();
+
+  if (/(lasciare|mollare|ex|relazione|storia|cuore|fidanzat|matrimonio|divorzio)/.test(t)) {
+    return "confidente";
+  }
+  if (/(lavoro|ufficio|stipendio|collega|capo|azienda|contratto)/.test(t)) {
+    return "stanco_secco";
+  }
+  if (/(moto|macchina|auto|pista|viaggio|trasferirmi|trasferimento|città|citta|lugano|l'aquila|laquila|spostarmi)/.test(t)) {
+    return "teatrale";
+  }
+  if (/(soldi|debito|conto|mutuo|tasse|invest|risparmi|budget)/.test(t)) {
+    return "sbronzo_filosofico";
+  }
+
+  // default: classico
+  return "classico";
+}
+
+/* Imprecazioni “emotive”, non letterali, variabili */
 const WTF_IMPRE = [
-  "bestemmione corazzato",
-  "imprecazionona a detonazione",
-  "sacramentata a ciel sereno",
-  "vulcano d’anatemi",
-  "tromba d’aria di improperi",
+  "una raffica di imprecazioni creative che bucano il soffitto",
+  "un tuono di parolacce eleganti ma molto convinte",
+  "una liturgia storta di santi e pianeti allineati male",
+  "un coro di bestemmie trattenute che si sente fino al pianerottolo",
+  "un’esplosione di santi in sciopero emotivo",
+  "una scarica di invocazioni sgangherate che manco allo stadio",
+  "una benedizione rovesciata detta coi denti stretti",
+  "un rosario di parole storte ma sincere",
+  "una tempesta di improperi detti a bassa voce",
+  "un lampo di bestemmie interiori che nessuno sente ma tutti intuirebbero"
 ];
-const WTF_REACT = [
-  "la moka ti fa una standing ovation e chiede l’autografo",
-  "il POS entra in modalità testimone di nozze e benedice la carta",
-  "la tapparella si abbassa per pudore e poi sbircia curiosa",
-  "la lampada lampeggia in Morse “ti capisco”",
-  "Alexa finge un aggiornamento e scappa in modalità monaco",
-  "il frigorifero sospira e decide di diventare minimalista",
-  "il campanello suona da solo per solidarietà e poi si pente",
-  "la pianta applaude con le foglie e ti chiede un drink",
-  "il ventilatore gira al contrario “per rispetto”",
-  "il citofono fa un trillo come un amen stonato",
-];
-const WTF_DRINK = [
-  "ti versi un amaro doppio e metti in riga i pensieri",
-  "fai un sorso corto e il mondo rientra nei bordi",
-  "alzi un bicchiere piccolo: brindisi di manutenzione",
-  "bevi un dito di coraggio e respiri più largo",
+
+const WTF_MODES = [
+  "storia da bancone, con lui protagonista e il barista che commenta",
+  "telecronaca esagerata di quello che gli passa nella testa",
+  "sfogo teatrale breve e poi consiglio secco da barista",
+  "mini monologo comico che parte in quarta e atterra morbido",
+  "pseudo-analisi psicologica da bar con troppo caffè"
 ];
 
 /* ========= Prompt builder ========= */
@@ -244,28 +395,82 @@ function buildMessages({ domanda, lang, periodo, stile }){
   ];
 
   if(stile==="wtf"){
-    // seed deterministico
-    let seed=[...String(domanda)].reduce((a,c)=>a+c.charCodeAt(0),0);
+    // seed deterministico per varietà stabile per stessa domanda
+    let seed=[...String(domanda||"")].reduce((a,c)=>a+c.charCodeAt(0),0);
     function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; }
-    const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
-    const shuffled=[...WTF_REACT].sort(()=>rnd()-0.5);
-    const react = shuffled.slice(0, 2 + Math.floor(rnd()*2));
-    const drink = WTF_DRINK[Math.floor(rnd()*WTF_DRINK.length)];
 
-    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile). Struttura OBBLIGATORIA: presa in giro affettuosa (max 2 frasi) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”, narrato, mai insulto a persone) → SUBITO ${react.length} reazioni di oggetti esilaranti → drink (“${drink}”) → 1–2 frasi che rispondono davvero → morale calda e ironica. 6–8 frasi.`;
-    const WTF_RULE_EN = `WHAT THE F (friendly, absurd but helpful). STRICT sequence: playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical “${impre}” (narrated, never insulting people) → THEN ${react.length} absurd object reactions → drink (“${drink}”) → 1–2 lines that truly answer → warm ironic moral. 6–8 sentences.`;
+    const ctx = detectWtfContext(domanda);
+    const persona = pickPersonaForQuestion(domanda);
+    const objPool = WTF_OBJECTS_BY_CONTEXT[ctx] || WTF_OBJECTS_BY_CONTEXT.generico;
+    const drinkPool = WTF_DRINKS_BY_CONTEXT[ctx] || WTF_DRINKS_BY_CONTEXT.generico;
+
+    const shuffledObjs = [...objPool].sort(()=>rnd()-0.5);
+    const sceneObjects = shuffledObjs.slice(0,3);
+    const drinkIdea = drinkPool[Math.floor(rnd()*drinkPool.length)];
+    const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
+    const mode = WTF_MODES[Math.floor(rnd()*WTF_MODES.length)];
+
+    const personaLineIT =
+      persona === "classico"
+        ? "Tono: barista amico, affettuosamente sarcastico, vicino ma pungente."
+        : persona === "sbronzo_filosofico"
+        ? "Tono: barista leggermente sbronzo, metafore assurde, filosofia spiccia ma concreta."
+        : persona === "stanco_secco"
+        ? "Tono: barista stanco, sarcasmo secco, frasi più asciutte ma comunque calde."
+        : persona === "teatrale"
+        ? "Tono: barista teatrale, immagini forti, ritmo un po’ più alto, ma sempre ancorato alla realtà della domanda."
+        : "Tono: barista confidente, più vicino emotivamente, come se parlasse a un amico, sempre con ironia.";
+
+    const WTF_RULE_IT = `
+WHAT THE F (voce comica, barista amico, demenziale ma utile).
+${personaLineIT}
+Mantieni SEMPRE la personalità che hai negli esempi: parli direttamente alla persona, la prendi in giro, ma fai chiaramente il tifo per lei.
+
+REGOLE DI CONTENUTO:
+- Parti dalla situazione reale implicita nella domanda e resta sempre attaccato a quella (contesto: ${ctx}).
+- La scena si muove mentre RISPONDI alla domanda: la presa in giro, la micro-sfiga, l’incazzatura e la bevuta devono nascere da ciò che potrebbe succedere davvero se lui/lei facesse quella scelta.
+- L'incazzatura nasce da un evento coerente con la scena (conti, burocrazia, ricordi, imbarazzo, costi, difficoltà pratiche, ecc.), non dal nulla.
+- Usa imprecazioni creative e teatrali in forma narrativa (es: "ti parte ${impre}"), senza insultare direttamente persone reali; prendi in giro la situazione, non l’utente.
+- Puoi usare oggetti di scena come: ${sceneObjects.join(", ")} — ma solo se hanno senso nella scena.
+- Se ha senso, inserisci UNA bevuta coerente con il contesto (idea: ${drinkIdea}), spiegando come ci arriva (esce al bar, va in cucina, va in sala pausa, ecc.): niente bicchieri che appaiono dal nulla.
+- Dopo la parte teatrale, DEVI rispondere chiaramente alla domanda: se ha senso farlo, quando, con quali condizioni minime (soldi, tempo, testa, sicurezza, ecc.).
+- Chiudi con una mini morale calda e ironica che riassume in modo semplice cosa sarebbe sensato fare adesso.
+
+REGOLE DI STILE:
+- Mantieni lo stesso stile degli esempi che conosci già: incipit diretti, tono da bar, sarcasmo affettuoso.
+- 6–9 frasi, un solo paragrafo, niente elenchi, niente emoji.
+- Varia gli inizi: non iniziare sempre con la stessa parola o esclamazione; cambia ritmo, non copiare strutture identiche.
+- Non copiare mai alla lettera gli esempi che hai visto: prendi il ritmo, non il testo.`;
+
+    const WTF_RULE_EN = `
+WHAT THE F (comic voice, friendly bartender, absurd but helpful).
+Persona tone: ${persona}.
+Keep the same personality as in the examples you’ve seen: direct, teasing, warm, but actually helpful.
+
+CONTENT RULES:
+- Start from the real situation implied by the question and stay anchored to it (context: ${ctx}).
+- The scene must move WHILE you answer the question: the tease, the small mishap, the anger and the drink all come from what could realistically happen if they made that choice.
+- Anger comes from a coherent event in the scene (money, logistics, memories, embarrassment, bureaucracy…), never from nowhere.
+- Use creative, theatrical exclamations in narrative form (e.g. "a burst like ${impre}"), never direct insults to real people; mock the situation, not the user.
+- You may use scene objects such as: ${sceneObjects.join(", ")}, but only if they make sense.
+- If it fits, include ONE contextual drink (idea: ${drinkIdea}), and explain how they get it (bar, kitchen, office break room, etc.): no drinks spawning from nowhere.
+- After the comic/chaotic part, you MUST give a clear answer to the question: say if it makes sense, when, and under which basic conditions.
+- End with a short warm, ironic moral that summarizes what would realistically make sense to do now.
+
+STYLE:
+- Same voice as your known examples: bar tone, direct address, teasing but on their side.
+- 6–9 sentences, single paragraph, no bullets, no emojis.
+- Vary openings; don’t always start the same way.
+- Never copy example texts verbatim; imitate only the rhythm.`;
 
     msgs.push(
       { role: "system", content: L==="en" ? WTF_RULE_EN : WTF_RULE_IT },
-      { role: "system", content: `IMPRECATION: ${impre}` },
-      { role: "system", content: `REACTIONS:\n- ${react.join("\n- ")}` },
-      { role: "system", content: `DRINK: ${drink}` },
-      { role: "system", content:
-`ESEMPI VINCOLANTI (tono/ritmo IT):
-- Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora che al confessionale ti tengono in riserva. Ti versi un goccio di liquore, rimetti in riga il bancone e giuri che domani apri solo per matti. Alla chiusura, ti guardi intorno e sussurri che oggi hai bestemmiato più del prete quando finisce il vino — ma almeno hai servito verità calde.
-- Oh, eccoci, centauro dell’inferno. Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” così netto che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo ma quasi con affetto, come un rito che rimette a fuoco. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio con un sorrisetto complice. Torni a casa con l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie ben calibrate.
-- Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
+      { role: "system", content: `MODALITÀ NARRATIVA PER QUESTA RISPOSTA: ${mode}. Interpreta questa modalità nel tono WHAT THE F, restando sempre aderente alla domanda e portando a una risposta chiara.` },
+      { role: "system", content: `CONTESTO RILEVATO: ${ctx}. OGGETTI DI SCENA POSSIBILI (idee, non obbligatori): ${sceneObjects.join(", ")}.` },
+      { role: "system", content: `IMPRECATION ENERGETICA (NON da copiare letteralmente, solo come intensità): ${impre}.` },
+      { role: "system", content: `IDEA DI BEVUTA CONTESTUALE (NON obbligatoria): ${drinkIdea}.` }
     );
+
   } else {
     // WHAT IF dipendente dal tempo (IT ottimizzato, altre lingue usano solo baseRules)
     if (L === "it") {
