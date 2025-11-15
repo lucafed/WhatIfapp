@@ -1,122 +1,268 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Eliminazione Account – What?f</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What?f — Elimina account</title>
 
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, sans-serif;
-      background: #0A0F14;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+    :root{
+      --bg:#0C0F14;
+      --fg:#FFFFFF;
+      --muted:#A0B2BA;
+      --card:#141C22;
+      --accent:#FF4D4D;
+      --accent-soft:rgba(255,77,77,0.12);
     }
-
-    .card {
-      background: #141C22;
-      padding: 2rem;
-      border-radius: 16px;
-      max-width: 480px;
-      width: 90%;
-      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{
+      height:100%;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:radial-gradient(900px 700px at 25% 20%, #0E1724 0%, var(--bg) 60%);
+      color:var(--fg);
     }
-
-    h1 {
-      margin-top: 0;
-      color: #00E0FF;
-      font-size: 1.6rem;
-      text-align: center;
+    main{
+      min-height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
     }
-
-    .question {
-      margin-bottom: 1.5rem;
+    .card{
+      width:100%;
+      max-width:520px;
+      background:var(--card);
+      border-radius:18px;
+      padding:22px 20px 20px;
+      box-shadow:0 18px 40px rgba(0,0,0,.6);
+      border:1px solid rgba(255,255,255,0.08);
     }
-
-    select, textarea {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: none;
-      margin-top: 8px;
-      background: #0A0F14;
-      color: white;
+    h1{
+      font-size:22px;
+      margin-bottom:6px;
     }
-
-    .btn {
-      width: 100%;
-      padding: 14px;
-      margin-top: 20px;
-      background: #00E0FF;
-      border: none;
-      color: black;
-      border-radius: 12px;
-      font-size: 1rem;
-      cursor: pointer;
-      font-weight: bold;
+    p.desc{
+      font-size:14px;
+      color:var(--muted);
+      margin-bottom:18px;
+      line-height:1.5;
     }
-
-    .btn:hover {
-      background: #1AFFD5;
+    .reasons{
+      margin-bottom:18px;
+      padding:10px 12px;
+      border-radius:12px;
+      background:rgba(0,0,0,0.18);
     }
+    .reasons legend{
+      font-size:14px;
+      margin-bottom:8px;
+    }
+    .reason{
+      display:flex;
+      align-items:flex-start;
+      gap:8px;
+      margin:4px 0;
+      font-size:14px;
+    }
+    .reason input[type="radio"]{
+      margin-top:3px;
+    }
+    textarea{
+      width:100%;
+      margin-top:8px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(0,0,0,0.25);
+      color:var(--fg);
+      padding:8px 10px;
+      font-family:inherit;
+      font-size:13px;
+      resize:vertical;
+      min-height:60px;
+    }
+    .warning{
+      font-size:13px;
+      padding:8px 10px;
+      border-radius:10px;
+      background:var(--accent-soft);
+      border:1px solid rgba(255,77,77,0.4);
+      margin-bottom:14px;
+    }
+    .actions{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-top:6px;
+    }
+    .link{
+      font-size:13px;
+      color:var(--muted);
+      text-decoration:none;
+    }
+    .link:hover{ text-decoration:underline; }
+    button{
+      border:none;
+      border-radius:999px;
+      padding:10px 18px;
+      font-weight:700;
+      cursor:pointer;
+      font-size:14px;
+    }
+    #deleteBtn{
+      background:var(--accent);
+      color:#fff;
+      box-shadow:0 0 18px rgba(0,0,0,0.5);
+    }
+    #deleteBtn[disabled]{
+      opacity:.6;
+      cursor:not-allowed;
+      box-shadow:none;
+    }
+    #status{
+      margin-top:10px;
+      font-size:13px;
+      min-height:18px;
+      color:var(--muted);
+    }
+    #status.error{ color:#ffb3b3; }
+    #status.success{ color:#7CFFB3; }
 
-    p.small {
-      text-align: center;
-      font-size: 0.8rem;
-      color: #A0B2BA;
-      margin-top: 1rem;
+    @media (max-width:480px){
+      .actions{
+        flex-direction:column-reverse;
+        align-items:stretch;
+      }
+      .actions a{
+        text-align:center;
+      }
+      #deleteBtn{width:100%;}
     }
   </style>
 </head>
-
 <body>
-  <div class="card">
-    <h1>Richiesta di Eliminazione Account</h1>
+  <main>
+    <section class="card">
+      <h1>Elimina il tuo account</h1>
+      <p class="desc">
+        L’eliminazione è <strong>immediata e permanente</strong>.
+        Per motivi di sicurezza devi essere connesso con il tuo account Google.
+      </p>
 
-    <p>Compila i campi qui sotto per richiedere la cancellazione del tuo account e dei dati associati.</p>
+      <form id="deleteForm">
+        <fieldset class="reasons">
+          <legend>Perché vuoi eliminare il tuo account?</legend>
 
-    <div class="question">
-      <label>Perché vuoi eliminare l’account?</label>
-      <select id="reason">
-        <option value="Non mi serve più">Non mi serve più</option>
-        <option value="Ho avuto problemi tecnici">Ho avuto problemi tecnici</option>
-        <option value="Preferisco altre app">Preferisco altre app</option>
-        <option value="Altro">Altro</option>
-      </select>
-    </div>
+          <label class="reason">
+            <input type="radio" name="reason" value="privacy" required />
+            <span>Preoccupazioni sulla privacy o sui dati.</span>
+          </label>
 
-    <div class="question">
-      <label>Note aggiuntive (opzionale)</label>
-      <textarea id="notes" rows="4" placeholder="Scrivi qui se vuoi darci più dettagli..."></textarea>
-    </div>
+          <label class="reason">
+            <input type="radio" name="reason" value="not-useful" />
+            <span>L’app non mi è utile / non la uso più.</span>
+          </label>
 
-    <button class="btn" onclick="sendEmail()">Invia richiesta</button>
+          <label class="reason">
+            <input type="radio" name="reason" value="other" />
+            <span>Altro (opzionale):</span>
+          </label>
 
-    <p class="small">
-      Dopo l’invio, la tua richiesta verrà elaborata entro 7 giorni lavorativi.
-    </p>
-  </div>
+          <textarea id="otherReason" placeholder="Puoi dirci qualcosa in più (facoltativo)"></textarea>
+        </fieldset>
 
-  <script>
-    function sendEmail() {
-      const reason = document.getElementById('reason').value;
-      const notes = document.getElementById('notes').value;
+        <div class="warning">
+          Dopo aver premuto <strong>“Elimina il mio account”</strong>:
+          <ul style="margin:6px 0 0 18px;padding:0;">
+            <li>non potrai più accedere con questo account;</li>
+            <li>eventuali dati collegati all’account verranno rimossi dall’app.</li>
+          </ul>
+        </div>
 
-      const body = encodeURIComponent(
-        "Richiesta ufficiale di eliminazione account\n\n" +
-        "Motivo: " + reason + "\n\n" +
-        "Note aggiuntive:\n" + notes + "\n\n" +
-        "Richiedo la cancellazione di tutti i miei dati."
-      );
+        <div class="actions">
+          <a href="index.html" class="link">⬅ Torna indietro</a>
+          <button id="deleteBtn" type="submit">Elimina il mio account</button>
+        </div>
 
-      const mailto = "mailto:whatifapp.contact@gmail.com?subject=Richiesta eliminazione account&body=" + body;
-      window.location.href = mailto;
+        <p id="status"></p>
+      </form>
+    </section>
+  </main>
+
+  <script type="module">
+    import { auth } from "./firebase.init.js";
+    import {
+      onAuthStateChanged,
+      deleteUser,
+      GoogleAuthProvider,
+      reauthenticateWithPopup
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
+    const form      = document.getElementById("deleteForm");
+    const deleteBtn = document.getElementById("deleteBtn");
+    const statusEl  = document.getElementById("status");
+    const otherEl   = document.getElementById("otherReason");
+
+    let currentUser = null;
+
+    function setStatus(msg, type = ""){
+      statusEl.textContent = msg || "";
+      statusEl.className = type ? type : "";
     }
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      if (!user) {
+        deleteBtn.disabled = true;
+        setStatus("Devi essere connesso per eliminare il tuo account. Torna alla home, accedi e riprova.", "error");
+      } else {
+        deleteBtn.disabled = false;
+        setStatus("");
+      }
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser) {
+        setStatus("Nessun utente connesso.", "error");
+        return;
+      }
+
+      const reason = form.reason.value;
+      const other  = (otherEl.value || "").trim();
+
+      // TODO: qui potresti inviare reason/other al tuo backend o a Firestore
+      console.log("Motivo eliminazione:", reason, other);
+
+      deleteBtn.disabled = true;
+      deleteBtn.textContent = "Eliminazione in corso…";
+      setStatus("");
+
+      try {
+        // Primo tentativo di eliminazione
+        await deleteUser(currentUser);
+        setStatus("Il tuo account è stato eliminato correttamente.", "success");
+      } catch (err) {
+        console.error(err);
+        if (err.code === "auth/requires-recent-login") {
+          // Serve una ri-autenticazione
+          try {
+            const provider = new GoogleAuthProvider();
+            await reauthenticateWithPopup(currentUser, provider);
+            await deleteUser(currentUser);
+            setStatus("Il tuo account è stato eliminato correttamente.", "success");
+          } catch (err2) {
+            console.error(err2);
+            setStatus("Non è stato possibile completare l’eliminazione: " + (err2.code || err2.message), "error");
+          }
+        } else {
+          setStatus("Errore durante l’eliminazione: " + (err.code || err.message), "error");
+        }
+      } finally {
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = "Elimina il mio account";
+      }
+    });
   </script>
 </body>
 </html>
