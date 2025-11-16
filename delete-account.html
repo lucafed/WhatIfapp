@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="it">
+<html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What?f — Elimina account</title>
+  <title>What?f — Delete account</title>
 
   <style>
     :root{
@@ -52,6 +52,7 @@
       padding:10px 12px;
       border-radius:12px;
       background:rgba(0,0,0,0.18);
+      border:none;
     }
     .reasons legend{
       font-size:14px;
@@ -87,6 +88,11 @@
       background:var(--accent-soft);
       border:1px solid rgba(255,77,77,0.4);
       margin-bottom:14px;
+    }
+    .warning ul{
+      margin:6px 0 0 18px;
+      padding:0;
+      line-height:1.4;
     }
     .actions{
       display:flex;
@@ -143,47 +149,51 @@
 <body>
   <main>
     <section class="card">
-      <h1 id="t-title">Elimina il tuo account</h1>
-      <p class="desc" id="t-desc">
+      <h1 data-i="title">Elimina il tuo account</h1>
+      <p class="desc" data-i="desc">
         L’eliminazione è <strong>immediata e permanente</strong>.
         Per motivi di sicurezza devi essere connesso con il tuo account Google.
       </p>
 
       <form id="deleteForm">
         <fieldset class="reasons">
-          <legend id="t-legend">Perché vuoi eliminare il tuo account?</legend>
+          <legend data-i="legend">Perché vuoi eliminare il tuo account?</legend>
 
           <label class="reason">
             <input type="radio" name="reason" value="privacy" required />
-            <span id="t-r1">Preoccupazioni sulla privacy o sui dati.</span>
+            <span data-i="reason_privacy">Preoccupazioni sulla privacy o sui dati.</span>
           </label>
 
           <label class="reason">
             <input type="radio" name="reason" value="not-useful" />
-            <span id="t-r2">L’app non mi è utile / non la uso più.</span>
+            <span data-i="reason_not_useful">L’app non mi è utile / non la uso più.</span>
           </label>
 
           <label class="reason">
             <input type="radio" name="reason" value="other" />
-            <span id="t-r3">Altro (opzionale):</span>
+            <span data-i="reason_other">Altro (opzionale):</span>
           </label>
 
-          <textarea id="otherReason" placeholder="Puoi dirci qualcosa in più (facoltativo)"></textarea>
+          <textarea id="otherReason"
+            data-i-placeholder="other_placeholder"
+            placeholder="Puoi dirci qualcosa in più (facoltativo)"></textarea>
         </fieldset>
 
         <div class="warning">
-          <p id="t-warning">
+          <span data-i="warning_intro">
             Dopo aver premuto <strong>“Elimina il mio account”</strong>:
-          </p>
-          <ul style="margin:6px 0 0 18px;padding:0;">
-            <li id="t-w1">non potrai più accedere con questo account;</li>
-            <li id="t-w2">eventuali dati collegati all’account verranno rimossi dall’app.</li>
+          </span>
+          <ul>
+            <li data-i="warning_li1">non potrai più accedere con questo account;</li>
+            <li data-i="warning_li2">eventuali dati collegati all’account verranno rimossi dall’app.</li>
           </ul>
         </div>
 
         <div class="actions">
-          <a href="index.html" class="link" id="backLink">⬅ Torna indietro</a>
-          <button id="deleteBtn" type="submit">Elimina il mio account</button>
+          <a href="index.html" class="link" data-i="back">⬅ Torna indietro</a>
+          <button id="deleteBtn" type="submit" data-i="deleteBtn">
+            Elimina il mio account
+          </button>
         </div>
 
         <p id="status"></p>
@@ -192,6 +202,157 @@
   </main>
 
   <script type="module">
+    // ------------------------
+    // 🌍 Multi-lingua
+    // ------------------------
+    const translations = {
+      it: {
+        pageTitle: "What?f — Elimina account",
+        title: "Elimina il tuo account",
+        desc: "L’eliminazione è <strong>immediata e permanente</strong>. Per motivi di sicurezza devi essere connesso con il tuo account Google.",
+        legend: "Perché vuoi eliminare il tuo account?",
+        reason_privacy: "Preoccupazioni sulla privacy o sui dati.",
+        reason_not_useful: "L’app non mi è utile / non la uso più.",
+        reason_other: "Altro (opzionale):",
+        other_placeholder: "Puoi dirci qualcosa in più (facoltativo)",
+        warning_intro: "Dopo aver premuto <strong>“Elimina il mio account”</strong>:",
+        warning_li1: "non potrai più accedere con questo account;",
+        warning_li2: "eventuali dati collegati all’account verranno rimossi dall’app.",
+        back: "⬅ Torna indietro",
+        deleteBtn: "Elimina il mio account",
+        must_login: "Devi essere connesso per eliminare il tuo account. Torna alla home, accedi e riprova.",
+        no_user: "Nessun utente connesso.",
+        deleting: "Eliminazione in corso…",
+        deleted_ok: "Il tuo account è stato eliminato correttamente.",
+        reauth_error: "Non è stato possibile completare l’eliminazione: ",
+        delete_error_prefix: "Errore durante l’eliminazione: "
+      },
+      en: {
+        pageTitle: "What?f — Delete account",
+        title: "Delete your account",
+        desc: "Deletion is <strong>immediate and permanent</strong>. For security reasons, you must be signed in with your Google account.",
+        legend: "Why do you want to delete your account?",
+        reason_privacy: "Privacy or data concerns.",
+        reason_not_useful: "The app is not useful for me / I don’t use it anymore.",
+        reason_other: "Other (optional):",
+        other_placeholder: "You can tell us more (optional)",
+        warning_intro: "After you press <strong>“Delete my account”</strong>:",
+        warning_li1: "you will no longer be able to sign in with this account;",
+        warning_li2: "any data linked to this account will be removed from the app.",
+        back: "⬅ Go back",
+        deleteBtn: "Delete my account",
+        must_login: "You must be signed in to delete your account. Go back to home, log in and try again.",
+        no_user: "No user is currently signed in.",
+        deleting: "Deleting your account…",
+        deleted_ok: "Your account has been deleted successfully.",
+        reauth_error: "We couldn’t complete deletion: ",
+        delete_error_prefix: "Error while deleting your account: "
+      },
+      es: {
+        pageTitle: "What?f — Eliminar cuenta",
+        title: "Eliminar tu cuenta",
+        desc: "La eliminación es <strong>inmediata y permanente</strong>. Por seguridad, debes estar conectado con tu cuenta de Google.",
+        legend: "¿Por qué quieres eliminar tu cuenta?",
+        reason_privacy: "Preocupaciones sobre privacidad o datos.",
+        reason_not_useful: "La app no me resulta útil / ya no la uso.",
+        reason_other: "Otro (opcional):",
+        other_placeholder: "Puedes contarnos algo más (opcional)",
+        warning_intro: "Después de pulsar <strong>“Eliminar mi cuenta”</strong>:",
+        warning_li1: "no podrás volver a acceder con esta cuenta;",
+        warning_li2: "los datos vinculados a la cuenta se eliminarán de la app.",
+        back: "⬅ Volver atrás",
+        deleteBtn: "Eliminar mi cuenta",
+        must_login: "Debes iniciar sesión para eliminar tu cuenta. Vuelve al inicio, accede y prueba de nuevo.",
+        no_user: "No hay ningún usuario conectado.",
+        deleting: "Eliminando tu cuenta…",
+        deleted_ok: "Tu cuenta se ha eliminado correctamente.",
+        reauth_error: "No se ha podido completar la eliminación: ",
+        delete_error_prefix: "Error al eliminar la cuenta: "
+      },
+      fr: {
+        pageTitle: "What?f — Supprimer le compte",
+        title: "Supprimer ton compte",
+        desc: "La suppression est <strong>immédiate et définitive</strong>. Pour des raisons de sécurité, tu dois être connecté avec ton compte Google.",
+        legend: "Pourquoi veux-tu supprimer ton compte ?",
+        reason_privacy: "Préoccupations liées à la confidentialité ou aux données.",
+        reason_not_useful: "L’app ne m’est plus utile / je ne l’utilise plus.",
+        reason_other: "Autre (optionnel) :",
+        other_placeholder: "Tu peux nous en dire plus (optionnel)",
+        warning_intro: "Après avoir cliqué sur <strong>« Supprimer mon compte »</strong> :",
+        warning_li1: "tu ne pourras plus te connecter avec ce compte ;",
+        warning_li2: "les données liées à ce compte seront supprimées de l’app.",
+        back: "⬅ Retour",
+        deleteBtn: "Supprimer mon compte",
+        must_login: "Tu dois être connecté pour supprimer ton compte. Retourne à l’accueil, connecte-toi et réessaie.",
+        no_user: "Aucun utilisateur connecté.",
+        deleting: "Suppression du compte…",
+        deleted_ok: "Ton compte a été supprimé avec succès.",
+        reauth_error: "Impossible de terminer la suppression : ",
+        delete_error_prefix: "Erreur lors de la suppression du compte : "
+      },
+      de: {
+        pageTitle: "What?f — Konto löschen",
+        title: "Dein Konto löschen",
+        desc: "Das Löschen ist <strong>sofort und dauerhaft</strong>. Aus Sicherheitsgründen musst du mit deinem Google-Konto angemeldet sein.",
+        legend: "Warum möchtest du dein Konto löschen?",
+        reason_privacy: "Bedenken wegen Datenschutz oder Datenspeicherung.",
+        reason_not_useful: "Die App ist für mich nicht hilfreich / ich nutze sie nicht mehr.",
+        reason_other: "Sonstiges (optional):",
+        other_placeholder: "Du kannst uns mehr dazu schreiben (optional)",
+        warning_intro: "Nachdem du auf <strong>„Mein Konto löschen“</strong> geklickt hast:",
+        warning_li1: "kannst du dich mit diesem Konto nicht mehr anmelden;",
+        warning_li2: "Daten, die mit dem Konto verknüpft sind, werden aus der App entfernt.",
+        back: "⬅ Zurück",
+        deleteBtn: "Mein Konto löschen",
+        must_login: "Du musst angemeldet sein, um dein Konto zu löschen. Geh zurück zur Startseite, melde dich an und versuche es erneut.",
+        no_user: "Kein Benutzer angemeldet.",
+        deleting: "Konto wird gelöscht…",
+        deleted_ok: "Dein Konto wurde erfolgreich gelöscht.",
+        reauth_error: "Löschen konnte nicht abgeschlossen werden: ",
+        delete_error_prefix: "Fehler beim Löschen des Kontos: "
+      }
+    };
+
+    function detectLang(){
+      try{
+        const stored = localStorage.getItem('lang');
+        if(stored){
+          return stored.toLowerCase().split('-')[0];
+        }
+      }catch(e){}
+      const nav = (navigator.language || 'it').toLowerCase();
+      if(nav.startsWith('en')) return 'en';
+      if(nav.startsWith('es')) return 'es';
+      if(nav.startsWith('fr')) return 'fr';
+      if(nav.startsWith('de')) return 'de';
+      if(nav.startsWith('it')) return 'it';
+      return 'it';
+    }
+
+    const lang = detectLang();
+    const t = translations[lang] || translations.it;
+
+    // aggiorna <html lang="..."> e <title>
+    document.documentElement.lang = lang;
+    document.title = t.pageTitle;
+
+    // applica traduzioni ai testi
+    document.querySelectorAll('[data-i]').forEach(el=>{
+      const key = el.getAttribute('data-i');
+      if(t[key]){
+        el.innerHTML = t[key];
+      }
+    });
+
+    // placeholder del textarea
+    const otherText = document.querySelector('[data-i-placeholder="other_placeholder"]');
+    if(otherText && t.other_placeholder){
+      otherText.placeholder = t.other_placeholder;
+    }
+
+    // ------------------------
+    // 🔐 Firebase: elimina account
+    // ------------------------
     import { auth } from "./firebase.init.js";
     import {
       onAuthStateChanged,
@@ -200,213 +361,71 @@
       reauthenticateWithPopup
     } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-    /* -------------------------------
-       MULTILINGUA (IT / EN / DE / ES / FR)
-    -------------------------------- */
-    const translations = {
-      it: {
-        title: "Elimina il tuo account",
-        desc: 'L’eliminazione è <strong>immediata e permanente</strong>.<br/>Per motivi di sicurezza devi essere connesso con il tuo account Google.',
-        legend: "Perché vuoi eliminare il tuo account?",
-        r1: "Preoccupazioni sulla privacy o sui dati.",
-        r2: "L’app non mi è utile / non la uso più.",
-        r3: "Altro (opzionale):",
-        placeholder: "Puoi dirci qualcosa in più (facoltativo)",
-        warning: 'Dopo aver premuto <strong>“Elimina il mio account”</strong>:',
-        w1: "non potrai più accedere con questo account;",
-        w2: "eventuali dati collegati all’account verranno rimossi dall’app.",
-        back: "⬅ Torna indietro",
-        delBtn: "Elimina il mio account",
-        deleting: "Eliminazione in corso…",
-        needLogin: "Devi essere connesso per eliminare il tuo account. Torna alla home, accedi e riprova.",
-        deleted: "Il tuo account è stato eliminato correttamente.",
-        error: "Errore durante l’eliminazione: "
-      },
-
-      en: {
-        title: "Delete your account",
-        desc: 'Deletion is <strong>immediate and permanent</strong>.<br/>For security reasons, you must be logged in with your Google account.',
-        legend: "Why do you want to delete your account?",
-        r1: "Privacy or data concerns.",
-        r2: "The app is not useful to me / I don’t use it anymore.",
-        r3: "Other (optional):",
-        placeholder: "Tell us more (optional)",
-        warning: 'After pressing <strong>“Delete my account”</strong>:',
-        w1: "you will no longer be able to log in with this account;",
-        w2: "any data linked to the account will be removed from the app.",
-        back: "⬅ Go back",
-        delBtn: "Delete my account",
-        deleting: "Deleting…",
-        needLogin: "You must be logged in to delete your account. Go back to the home page, sign in and try again.",
-        deleted: "Your account has been successfully deleted.",
-        error: "Deletion error: "
-      },
-
-      de: {
-        title: "Lösche dein Konto",
-        desc: 'Das Löschen ist <strong>sofort und dauerhaft</strong>.<br/>Aus Sicherheitsgründen musst du mit deinem Google-Konto angemeldet sein.',
-        legend: "Warum möchtest du dein Konto löschen?",
-        r1: "Bedenken wegen Datenschutz oder Daten.",
-        r2: "Die App ist nicht nützlich / ich nutze sie nicht mehr.",
-        r3: "Anderes (optional):",
-        placeholder: "Du kannst uns mehr erzählen (optional)",
-        warning: 'Nachdem du <strong>„Mein Konto löschen“</strong> gedrückt hast:',
-        w1: "kannst du dich mit diesem Konto nicht mehr anmelden;",
-        w2: "verknüpfte Daten werden aus der App entfernt.",
-        back: "⬅ Zurück",
-        delBtn: "Mein Konto löschen",
-        deleting: "Löschen läuft…",
-        needLogin: "Du musst angemeldet sein, um dein Konto zu löschen. Gehe zurück zur Startseite, melde dich an und versuche es erneut.",
-        deleted: "Dein Konto wurde erfolgreich gelöscht.",
-        error: "Fehler beim Löschen: "
-      },
-
-      es: {
-        title: "Eliminar tu cuenta",
-        desc: 'La eliminación es <strong>inmediata y permanente</strong>.<br/>Por seguridad, debes iniciar sesión con tu cuenta de Google.',
-        legend: "¿Por qué quieres eliminar tu cuenta?",
-        r1: "Preocupaciones sobre privacidad o datos.",
-        r2: "La app no me resulta útil / ya no la uso.",
-        r3: "Otro (opcional):",
-        placeholder: "Cuéntanos algo más (opcional)",
-        warning: 'Después de pulsar <strong>«Eliminar mi cuenta»</strong>:',
-        w1: "no podrás volver a iniciar sesión con esta cuenta;",
-        w2: "los datos vinculados a la cuenta se eliminarán de la app.",
-        back: "⬅ Volver",
-        delBtn: "Eliminar mi cuenta",
-        deleting: "Eliminando…",
-        needLogin: "Debes estar conectado para eliminar tu cuenta. Vuelve a la pantalla principal, inicia sesión e inténtalo de nuevo.",
-        deleted: "Tu cuenta se ha eliminado correctamente.",
-        error: "Error al eliminar: "
-      },
-
-      fr: {
-        title: "Supprimer ton compte",
-        desc: 'La suppression est <strong>immédiate et définitive</strong>.<br/>Pour des raisons de sécurité, tu dois être connecté avec ton compte Google.',
-        legend: "Pourquoi veux-tu supprimer ton compte ?",
-        r1: "Problèmes de confidentialité ou de données.",
-        r2: "L’appli ne m’est pas utile / je ne l’utilise plus.",
-        r3: "Autre (optionnel) :",
-        placeholder: "Tu peux nous en dire plus (optionnel)",
-        warning: 'Après avoir cliqué sur <strong>« Supprimer mon compte »</strong> :',
-        w1: "tu ne pourras plus te connecter avec ce compte ;",
-        w2: "tes données associées seront supprimées de l’appli.",
-        back: "⬅ Retour",
-        delBtn: "Supprimer mon compte",
-        deleting: "Suppression en cours…",
-        needLogin: "Tu dois être connecté pour supprimer ton compte. Retourne à l’accueil, connecte-toi et réessaie.",
-        deleted: "Ton compte a bien été supprimé.",
-        error: "Erreur lors de la suppression : "
-      }
-    };
-
-    // Prende la lingua dalla pagina, es. "it", "en-US" → "en"
-    const rawLang = (document.documentElement.lang || "en").toLowerCase();
-    const baseLang = rawLang.split("-")[0];
-    const t = translations[baseLang] || translations.en;
-
-    // Applica i testi alla UI
-    const titleEl     = document.getElementById("t-title");
-    const descEl      = document.getElementById("t-desc");
-    const legendEl    = document.getElementById("t-legend");
-    const r1El        = document.getElementById("t-r1");
-    const r2El        = document.getElementById("t-r2");
-    const r3El        = document.getElementById("t-r3");
-    const otherEl     = document.getElementById("otherReason");
-    const warningEl   = document.getElementById("t-warning");
-    const w1El        = document.getElementById("t-w1");
-    const w2El        = document.getElementById("t-w2");
-    const backLink    = document.getElementById("backLink");
-    const deleteBtn   = document.getElementById("deleteBtn");
-
-    if (titleEl)   titleEl.textContent = t.title;
-    if (descEl)    descEl.innerHTML   = t.desc;
-    if (legendEl)  legendEl.textContent = t.legend;
-    if (r1El)      r1El.textContent   = t.r1;
-    if (r2El)      r2El.textContent   = t.r2;
-    if (r3El)      r3El.textContent   = t.r3;
-    if (otherEl)   otherEl.placeholder = t.placeholder;
-    if (warningEl) warningEl.innerHTML = t.warning;
-    if (w1El)      w1El.textContent   = t.w1;
-    if (w2El)      w2El.textContent   = t.w2;
-    if (backLink)  backLink.textContent = t.back;
-    if (deleteBtn) deleteBtn.textContent = t.delBtn;
-
-    // Firebase nella stessa lingua della pagina
-    auth.languageCode = baseLang;
-
-    /* -----------------------------------------
-       LOGICA FIREBASE: ELIMINAZIONE ACCOUNT
-    ----------------------------------------- */
     const form      = document.getElementById("deleteForm");
+    const deleteBtn = document.getElementById("deleteBtn");
     const statusEl  = document.getElementById("status");
+    const otherEl   = document.getElementById("otherReason");
+
     let currentUser = null;
 
     function setStatus(msg, type = ""){
-      if (!statusEl) return;
       statusEl.textContent = msg || "";
-      statusEl.className = type || "";
+      statusEl.className = type ? type : "";
     }
 
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
       if (!user) {
-        if (deleteBtn) deleteBtn.disabled = true;
-        setStatus(t.needLogin, "error");
+        deleteBtn.disabled = true;
+        setStatus(t.must_login, "error");
       } else {
-        if (deleteBtn) deleteBtn.disabled = false;
+        deleteBtn.disabled = false;
         setStatus("");
       }
     });
 
-    if (form) {
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        if (!currentUser) {
-          setStatus(t.needLogin, "error");
-          return;
-        }
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser) {
+        setStatus(t.no_user, "error");
+        return;
+      }
 
-        const reason = form.reason.value;
-        const other  = (otherEl?.value || "").trim();
+      const reason = form.reason.value;
+      const other  = (otherEl.value || "").trim();
 
-        // TODO: qui potresti inviare reason/other al tuo backend o a Firestore
-        console.log("Motivo eliminazione:", reason, other);
+      // Qui potresti salvare reason/other su Firestore o su un backend
+      console.log("Motivo eliminazione:", reason, other);
 
-        if (deleteBtn) {
-          deleteBtn.disabled = true;
-          deleteBtn.textContent = t.deleting;
-        }
-        setStatus("");
+      deleteBtn.disabled = true;
+      deleteBtn.textContent = t.deleting;
+      setStatus("");
 
-        try {
-          // Primo tentativo di eliminazione
-          await deleteUser(currentUser);
-          setStatus(t.deleted, "success");
-        } catch (err) {
-          console.error(err);
-          if (err.code === "auth/requires-recent-login") {
-            // Serve una ri-autenticazione
-            try {
-              const provider = new GoogleAuthProvider();
-              await reauthenticateWithPopup(currentUser, provider);
-              await deleteUser(currentUser);
-              setStatus(t.deleted, "success");
-            } catch (err2) {
-              console.error(err2);
-              setStatus(t.error + (err2.code || err2.message), "error");
-            }
-          } else {
-            setStatus(t.error + (err.code || err.message), "error");
+      try {
+        // Primo tentativo di eliminazione
+        await deleteUser(currentUser);
+        setStatus(t.deleted_ok, "success");
+      } catch (err) {
+        console.error(err);
+        if (err.code === "auth/requires-recent-login") {
+          // Serve una ri-autenticazione
+          try {
+            const provider = new GoogleAuthProvider();
+            await reauthenticateWithPopup(currentUser, provider);
+            await deleteUser(currentUser);
+            setStatus(t.deleted_ok, "success");
+          } catch (err2) {
+            console.error(err2);
+            setStatus(t.reauth_error + (err2.code || err2.message), "error");
           }
-        } finally {
-          if (deleteBtn) {
-            deleteBtn.disabled = false;
-            deleteBtn.textContent = t.delBtn;
-          }
+        } else {
+          setStatus(t.delete_error_prefix + (err.code || err.message), "error");
         }
-      });
-    }
+      } finally {
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = t.deleteBtn;
+      }
+    });
   </script>
 </body>
 </html>
