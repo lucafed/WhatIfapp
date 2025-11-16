@@ -383,6 +383,48 @@ const WTF_MODES = [
   "pseudo-analisi psicologica da bar con troppo caffè"
 ];
 
+/* ========= WTF: rapporto scientifico demenziale ========= */
+function scientificReportDemenziale(domanda, lang="it"){
+  function h(s=""){ let x=0; for(const c of s) x=(x*131 + c.charCodeAt(0))>>>0; return x>>>0; }
+  const seed = h(domanda||"");
+  const pick = (arr)=> arr[ seed % arr.length ];
+
+  const UNI = [
+    "Dipartimento di Metafisica Applicata – Università di Busto Arsizio Est",
+    "Politecnico delle Scuse Creative",
+    "Istituto Europeo di Scienze Baristiche",
+    "Laboratorio di Statistiche Improbabili",
+    "Centro Studi di Fisica dell’Umore",
+    "Accademia Transalpina delle Decisioni Avventate",
+  ];
+  const JOUR = [
+    "Rivista di Fisica dell’Umore",
+    "Giornale Internazionale di Scuse Quantistiche",
+    "Annali di Metodologie Poco Replicabili",
+    "Quaderni di Ergonomia dell’Anima",
+  ];
+  const EFFECT = [
+    "imprecazione calibrata",
+    "brindisi di manutenzione",
+    "tapparelle giudicanti",
+    "POS in modalità benedizione",
+    "ventilatore che gira al contrario “per rispetto”",
+    "lampada che lampeggia “ti capisco” in Morse",
+  ];
+  const METRIC = ["r=0.82","p=0.047","η²=0.31","β=0.67","AUC=0.73","OR=2.1"];
+
+  const u = pick(UNI);
+  const j = pick(JOUR);
+  const e = pick(EFFECT);
+  const m = pick(METRIC);
+  const n = 30 + (seed % 70);
+
+  if((lang||"it").startsWith("en")){
+    return `Scientific-ish report: ${u} (n=${n}) found that a ${e} improves decision clarity (${m}). Peer-reviewed by ${j}, probably.`;
+  }
+  return `Rapporto scientifico (più o meno): ${u} (n=${n}) rileva che “${e}” migliora la chiarezza decisionale (${m}). Revisione a cura di ${j}, forse.`;
+}
+
 /* ========= Prompt builder ========= */
 function buildMessages({ domanda, lang, periodo, stile }){
   const L = normLang(lang);
@@ -395,7 +437,7 @@ function buildMessages({ domanda, lang, periodo, stile }){
   ];
 
   if(stile==="wtf"){
-    // seed deterministico per varietà stabile per stessa domanda
+    // seed deterministico
     let seed=[...String(domanda||"")].reduce((a,c)=>a+c.charCodeAt(0),0);
     function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; }
 
@@ -429,11 +471,11 @@ Mantieni SEMPRE la personalità che hai negli esempi: parli direttamente alla pe
 REGOLE DI CONTENUTO:
 - Parti dalla situazione reale implicita nella domanda e resta sempre attaccato a quella (contesto: ${ctx}).
 - La scena si muove mentre RISPONDI alla domanda: la presa in giro, la micro-sfiga, l’incazzatura e la bevuta devono nascere da ciò che potrebbe succedere davvero se lui/lei facesse quella scelta.
-- L'incazzatura nasce da un evento coerente con la scena (conti, burocrazia, ricordi, imbarazzo, costi, difficoltà pratiche, ecc.), non dal nulla.
+- L'incazzatura nasce da un evento coerente con la scena (conti, burocrazia, ricordi, imbarazzo, difficoltà pratiche, ecc.), non dal nulla.
 - Usa imprecazioni creative e teatrali in forma narrativa (es: "ti parte ${impre}"), senza insultare direttamente persone reali; prendi in giro la situazione, non l’utente.
 - Puoi usare oggetti di scena come: ${sceneObjects.join(", ")} — ma solo se hanno senso nella scena.
 - Se ha senso, inserisci UNA bevuta coerente con il contesto (idea: ${drinkIdea}), spiegando come ci arriva (esce al bar, va in cucina, va in sala pausa, ecc.): niente bicchieri che appaiono dal nulla.
-- Dopo la parte teatrale, DEVI rispondere chiaramente alla domanda: se ha senso farlo, quando, con quali condizioni minime (soldi, tempo, testa, sicurezza, ecc.).
+- Dopo la parte teatrale, DEVI rispondere chiaramente alla domanda: se ha senso farlo, quando, con quali condizioni minime (tempo, energia, testa, sicurezza, ecc.).
 - Chiudi con una mini morale calda e ironica che riassume in modo semplice cosa sarebbe sensato fare adesso.
 
 REGOLE DI STILE:
@@ -450,7 +492,7 @@ Keep the same personality as in the examples you’ve seen: direct, teasing, war
 CONTENT RULES:
 - Start from the real situation implied by the question and stay anchored to it (context: ${ctx}).
 - The scene must move WHILE you answer the question: the tease, the small mishap, the anger and the drink all come from what could realistically happen if they made that choice.
-- Anger comes from a coherent event in the scene (money, logistics, memories, embarrassment, bureaucracy…), never from nowhere.
+- Anger comes from a coherent event in the scene (logistics, memories, embarrassment, bureaucracy, practical difficulties…), never from nowhere.
 - Use creative, theatrical exclamations in narrative form (e.g. "a burst like ${impre}"), never direct insults to real people; mock the situation, not the user.
 - You may use scene objects such as: ${sceneObjects.join(", ")}, but only if they make sense.
 - If it fits, include ONE contextual drink (idea: ${drinkIdea}), and explain how they get it (bar, kitchen, office break room, etc.): no drinks spawning from nowhere.
@@ -723,48 +765,6 @@ function buildWhatIfMotivation(domanda, lang="it", pct=60){
   return buildWhatIfMotivation(domanda, "it", pct);
 }
 
-/* ========= WTF: rapporto scientifico demenziale ========= */
-function scientificReportDemenziale(domanda, lang="it"){
-  function h(s=""){ let x=0; for(const c of s) x=(x*131 + c.charCodeAt(0))>>>0; return x>>>0; }
-  const seed = h(domanda||"");
-  const pick = (arr)=> arr[ seed % arr.length ];
-
-  const UNI = [
-    "Dipartimento di Metafisica Applicata – Università di Busto Arsizio Est",
-    "Politecnico delle Scuse Creative",
-    "Istituto Europeo di Scienze Baristiche",
-    "Laboratorio di Statistiche Improbabili",
-    "Centro Studi di Fisica dell’Umore",
-    "Accademia Transalpina delle Decisioni Avventate",
-  ];
-  const JOUR = [
-    "Rivista di Fisica dell’Umore",
-    "Giornale Internazionale di Scuse Quantistiche",
-    "Annali di Metodologie Poco Replicabili",
-    "Quaderni di Ergonomia dell’Anima",
-  ];
-  const EFFECT = [
-    "imprecazione calibrata",
-    "brindisi di manutenzione",
-    "tapparelle giudicanti",
-    "POS in modalità benedizione",
-    "ventilatore che gira al contrario “per rispetto”",
-    "lampada che lampeggia “ti capisco” in Morse",
-  ];
-  const METRIC = ["r=0.82","p=0.047","η²=0.31","β=0.67","AUC=0.73","OR=2.1"];
-
-  const u = pick(UNI);
-  const j = pick(JOUR);
-  const e = pick(EFFECT);
-  const m = pick(METRIC);
-  const n = 30 + (seed % 70);
-
-  if((lang||"it").startsWith("en")){
-    return `Scientific-ish report: ${u} (n=${n}) found that a ${e} improves decision clarity (${m}). Peer-reviewed by ${j}, probably.`;
-  }
-  return `Rapporto scientifico (più o meno): ${u} (n=${n}) rileva che “${e}” migliora la chiarezza decisionale (${m}). Revisione a cura di ${j}, forse.`;
-}
-
 /* ========= HANDLER ========= */
 export default async function handler(req, res){
   cors(req, res);
@@ -811,8 +811,6 @@ export default async function handler(req, res){
     answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);
     answer = clampWords(answer, stile === "wtf" ? 170 : 165);
     answer = normalizeOneParagraph(answer);
-
-    // (Niente più iniezione di incipit ZINGARA via funzione: ora è gestito dal modello nei system rules)
 
     // Moderazioni leggere IT (prima del ripristino maiuscole)
     if(normLang(lang)==="it"){
@@ -861,4 +859,4 @@ export default async function handler(req, res){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
-}
+                                 }
