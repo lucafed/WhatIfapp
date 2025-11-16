@@ -1,8 +1,4 @@
 // /api/ask.js — What?f Engine (Zingara-Realista WHATIF + Friendly-WTF Demenziale)
-// - WHATIF: tono “zingara mistica realista”, 60% analisi / 40% immagini sobrie,
-//   chiusura con sensazione + gancio. Passato → controfattuale. Futuro → ipotesi vicina.
-// - WTF: come da tuoi esempi. Payload extra 'scientific' (non nella risposta).
-// - Un paragrafo, niente elenchi, niente eco della domanda. Maiuscole ripristinate post-process.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -12,31 +8,34 @@ import { Ratelimit } from "@upstash/ratelimit";
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
-/* ========= Redis & Rate ========= */
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL || "",
-  token: process.env.UPSTASH_REDIS_REST_TOKEN || "",
-});
-
-const rl = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(10, "1 m"),
-});
-
-// Wrapper tollerante: se Upstash non è configurato/non risponde, non bloccare
+/* ========= Redis & Rate (opzionale) ========= */
 let rateOk = async () => true;
-try {
-  rateOk = async (key) => {
-    try {
-      const { success } = await rl.limit(key);
-      return !!success;
-    } catch {
-      return true;
-    }
-  };
-} catch {
-  /* noop */
-}
+
+(() => {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return; // niente rate limit se non configurato
+
+  try {
+    const redis = new Redis({ url, token });
+    const rl = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(10, "1 m"),
+    });
+
+    rateOk = async (key) => {
+      try {
+        const { success } = await rl.limit(key);
+        return !!success;
+      } catch {
+        return true; // se Upstash dà errore, non bloccare
+      }
+    };
+  } catch {
+    // se anche solo creare Redis fallisce, ignora rate limit
+    rateOk = async () => true;
+  }
+})();
 
 /* ========= CORS ========= */
 const ALLOWED_ORIGINS = [
@@ -160,7 +159,7 @@ function pickDet(arr, seed) {
   return arr[seed % arr.length] || "";
 }
 
-/* ========= WHAT IF – esempio di respiro (non fisso) ========= */
+/* ========= WHAT IF – esempio di respiro ========= */
 const WHATIF_HYBRID_EX_IT = `La linea del tuo destino qui si fa più spessa del resto. Vedi una scelta che alleggerisce le tue giornate: meno rumore, più tempo che torna davvero tuo. Senti le abitudini stringersi e poi allentarsi, finché trovi un ritmo più umano. Non è fuga né eroismo: è manutenzione di vita, dove sposti peso tra lavoro, relazioni ed energia. In fondo, non insegui più la vetrina: ti scegli una stanza in cui respirare meglio. E quando ti volterai, capirai che il rimpianto ha perso voce proprio dove hai iniziato a scegliere te.`;
 
 /* ======= WHAT IF RULES (IT) ======= */
@@ -200,7 +199,7 @@ Chiudi con sensazione + micro-gancio che riporti dolcemente al presente ("non sa
 
 8–10 frasi, seconda persona, un paragrafo unico, NON ripetere la domanda, niente elenchi, niente emoji. Linguaggio semplice, concreto, coinvolgente.`;
 
-/* ========= Incipit dinamici — “ZINGARA MISTICA” (non più forzati via post-process) ========= */
+/* ========= Incipit dinamici ========= */
 const ZINGARA_INTROS = {
   it: [
     "La linea del tuo destino si illumina proprio qui.",
@@ -233,7 +232,7 @@ const ZINGARA_INTROS = {
   ],
 };
 
-/* ========= Finali “gancio” — realistici e brevi ========= */
+/* ========= Finali “gancio” ========= */
 const ZINGARA_ENDINGS = {
   it: {
     future: [
@@ -259,9 +258,7 @@ const ZINGARA_ENDINGS = {
     future: [
       "Y ahí notarás que no hace falta correr, solo elegir bien.",
     ],
-    past: [
-      "Y quizá hoy lo sentirías: no era destino, era ritmo.",
-    ],
+    past: ["Y quizá hoy lo sentirías: no era destino, era ritmo."],
   },
   fr: {
     future: [
@@ -275,9 +272,7 @@ const ZINGARA_ENDINGS = {
     future: [
       "Und dort merkst du: Tempo ist egal, der Winkel zählt.",
     ],
-    past: [
-      "Vielleicht spürst du heute: kein Schicksal, nur Timing.",
-    ],
+    past: ["Vielleicht spürst du heute: kein Schicksal, nur Timing."],
   },
 };
 
@@ -303,7 +298,7 @@ function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   return `${s}. ${addon}`;
 }
 
-/* ========= WTF — banche demenziali ========= */
+/* ========= WTF ========= */
 const WTF_IMPRE = [
   "bestemmione corazzato",
   "imprecazionona a detonazione",
@@ -344,11 +339,7 @@ function buildMessages({ domanda, lang, periodo, stile }) {
   const msgs = [{ role: "system", content: baseRules }];
 
   if (stile === "wtf") {
-    // seed deterministico
-    let seed = [...String(domanda)].reduce(
-      (a, c) => a + c.charCodeAt(0),
-      0
-    );
+    let seed = [...String(domanda)].reduce((a, c) => a + c.charCodeAt(0), 0);
     function rnd() {
       seed = (seed * 1664525 + 1013904223) >>> 0;
       return seed / 2 ** 32;
@@ -367,10 +358,7 @@ function buildMessages({ domanda, lang, periodo, stile }) {
     msgs.push(
       { role: "system", content: L === "en" ? WTF_RULE_EN : WTF_RULE_IT },
       { role: "system", content: `IMPRECATION: ${impre}` },
-      {
-        role: "system",
-        content: `REACTIONS:\n- ${react.join("\n- ")}`,
-      },
+      { role: "system", content: `REACTIONS:\n- ${react.join("\n- ")}` },
       { role: "system", content: `DRINK: ${drink}` },
       {
         role: "system",
@@ -384,7 +372,6 @@ Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lame
       }
     );
   } else {
-    // WHAT IF dipendente dal tempo (IT ottimizzato, altre lingue usano solo baseRules)
     if (L === "it") {
       const ruleIT =
         String(periodo).toLowerCase() === "past"
@@ -400,7 +387,6 @@ Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lame
     }
   }
 
-  // Utente finale
   let ask;
   if (L === "en") {
     ask = `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`;
@@ -411,12 +397,10 @@ Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lame
   } else if (L === "fr") {
     ask = `Question (ne la répète pas) : « ${domanda} ». Donne UNE réponse en FRANÇAIS, un seul paragraphe.`;
   } else {
-    // de
     ask = `Frage (nicht wiederholen): „${domanda}“. Gib EINE Antwort auf DEUTSCH, ein einziger Absatz.`;
   }
 
   msgs.push({ role: "user", content: ask });
-
   return msgs;
 }
 
@@ -440,7 +424,7 @@ function computePct(domanda, stile) {
   return pct;
 }
 
-/* ========= WHAT IF: motivazione sintetica (stile “motivazioni pro/contro”) ========= */
+/* ========= WHAT IF: motivazione sintetica ========= */
 function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
   const L = (lang || "it").slice(0, 2).toLowerCase();
   const t = String(domanda || "").toLowerCase();
@@ -461,7 +445,6 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     t
   );
 
-  // ITALIANO
   if (L === "it") {
     const pros = [];
     const cons = [];
@@ -514,7 +497,6 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
-  // ENGLISH
   if (L === "en") {
     const pros = [];
     const cons = [];
@@ -567,7 +549,6 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
-  // ESPAÑOL
   if (L === "es") {
     const pros = [];
     const cons = [];
@@ -577,7 +558,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
         "el tiempo es manejable si divides el camino en pasos pequeños"
       );
       cons.push(
-        "si no proteges tu tiempo, acabarás posponiéndolo una y otra vez"
+        "si non proteges tu tiempo, acabarás posponiéndolo una y otra vez"
       );
     }
     if (hasBudget) {
@@ -593,17 +574,11 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
       cons.push("si el plazo es difuso, se irá moviendo hacia adelante");
     }
     if (action) {
-      pros.push(
-        "tienes una palanca concreta para avanzar cada día"
-      );
+      pros.push("tienes una palanca concreta para avanzar cada día");
     }
     if (riskHedging) {
-      pros.push(
-        "puedes limitar el riesgo con pocas reglas sencillas"
-      );
-      cons.push(
-        "buscar riesgo cero puede dejarte inmóvil"
-      );
+      pros.push("puedes limitar el riesgo con pocas reglas sencillas");
+      cons.push("buscar riesgo cero puede dejarte inmóvil");
     }
 
     if (!pros.length) {
@@ -624,7 +599,6 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
-  // FRANÇAIS
   if (L === "fr") {
     const pros = [];
     const cons = [];
@@ -646,20 +620,16 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
       );
     }
     if (hasDeadline) {
-      pros.push("une échéance claire aide à trancher plus vite");
+      pros.push("une échéance claire aide à trancher più vite");
       cons.push(
         "une date floue glisse facilement et affaiblit ton engagement"
       );
     }
     if (action) {
-      pros.push(
-        "tu as un levier concret à actionner chaque jour"
-      );
+      pros.push("tu as un levier concret à actionner chaque jour");
     }
     if (riskHedging) {
-      pros.push(
-        "quelques règles simples peuvent limiter le risque"
-      );
+      pros.push("quelques règles simples peuvent limiter le risque");
       cons.push(
         "viser le risque zéro risque justement de t’immobiliser"
       );
@@ -683,7 +653,6 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
-  // DEUTSCH
   if (L === "de") {
     const pros = [];
     const cons = [];
@@ -716,9 +685,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
       );
     }
     if (riskHedging) {
-      pros.push(
-        "einfache Regeln können das Risiko begrenzen"
-      );
+      pros.push("einfache Regeln können das Risiko begrenzen");
       cons.push(
         "wenn du null Risiko willst, kommst du vielleicht nie in Gang"
       );
@@ -750,9 +717,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
 function scientificReportDemenziale(domanda, lang = "it") {
   function h(s = "") {
     let x = 0;
-    for (const c of s) {
-      x = (x * 131 + c.charCodeAt(0)) >>> 0;
-    }
+    for (const c of s) x = (x * 131 + c.charCodeAt(0)) >>> 0;
     return x >>> 0;
   }
 
@@ -807,26 +772,25 @@ export default async function handler(req, res) {
     if (!process.env.OPENAI_API_KEY)
       return res.status(500).json({ error: "missing_api_key" });
 
-    const ip = (
-      req.headers["x-forwarded-for"] ||
-      req.socket?.remoteAddress ||
-      "unknown"
-    )
-      .toString()
-      .split(",")[0]
-      .trim();
+    const ipHeader = req.headers["x-forwarded-for"];
+    const ip = Array.isArray(ipHeader)
+      ? ipHeader[0]
+      : (ipHeader || "unknown").toString().split(",")[0].trim();
 
     const ok = await rateOk(`ask:${ip}`);
     if (!ok)
       return res.status(429).json({ error: "rate_limited_minute" });
 
-    const bodyRaw =
-      typeof req.body === "string" ? req.body : JSON.stringify(req.body || {});
-    const body = bodyRaw
-      ? typeof req.body === "string"
-        ? JSON.parse(bodyRaw)
-        : req.body || {}
-      : {};
+    let body = req.body || {};
+    if (typeof body === "string") {
+      try {
+        body = JSON.parse(body || "{}");
+      } catch {
+        return res
+          .status(400)
+          .json({ error: "bad_request", detail: "invalid_json" });
+      }
+    }
 
     const {
       domanda = "",
@@ -834,7 +798,7 @@ export default async function handler(req, res) {
       lang = "it",
       periodo = "future", // "future" | "past"
       micro = {},
-    } = body;
+    } = body || {};
 
     if (!domanda || typeof domanda !== "string") {
       return res
@@ -842,7 +806,7 @@ export default async function handler(req, res) {
         .json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    const messages = buildMessages({ domanda, lang, periodo, stile, micro });
+    const messages = buildMessages({ domanda, lang, periodo, stile });
 
     const completion = await client.chat.completions.create({
       model: MODEL,
@@ -858,13 +822,12 @@ export default async function handler(req, res) {
       completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // ===== Post-process (ordine CORRETTO) =====
+    // Post-process
     answer = stripQuestionEcho(domanda, answer);
     answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);
     answer = clampWords(answer, stile === "wtf" ? 170 : 165);
     answer = normalizeOneParagraph(answer);
 
-    // Moderazioni leggere IT (prima del ripristino maiuscole)
     if (normLang(lang) === "it") {
       (function () {
         const d = String(domanda || "");
@@ -894,21 +857,14 @@ export default async function handler(req, res) {
       })();
     }
 
-    // Ripristina maiuscole frasi
     answer = sentenceCaseAll(answer);
-
-    // Finale emozionale con gancio se manca (solo WHAT IF)
     if (stile === "whatif") {
       answer = ensureZingaraEnding({ text: answer, lang, periodo, domanda });
     }
-
-    // Punteggiatura finale
     answer = finalPunct(answer);
 
-    // ===== Extra payload =====
     const L = normLang(lang);
     const pct = computePct(domanda, stile);
-
     const motivation =
       stile === "whatif"
         ? buildWhatIfMotivation(domanda, L, pct)
@@ -938,4 +894,4 @@ export default async function handler(req, res) {
       detail: String(err?.message || err),
     });
   }
-  }
+                              }
