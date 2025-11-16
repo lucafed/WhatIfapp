@@ -701,7 +701,7 @@ function buildWhatIfMotivationsPretty(domanda, pct){
       return baseProb +
         "Perché poteva andare diversamente:<br>" +
         "• Un paio di decisioni più chiare e un po’ di gentilezza verso te stessə avrebbero cambiato l’andamento della storia.<br>" +
-        "• C’erano segnali che potevano essere ascoltati prima, invece di essere zittiti per non creare problemi.<br><br>" +
+        "• C’erano segnali che potevano essere ascoltati prima, invece di essere zittiti per non creare problemi.<br><br]" +
         "Cosa l’ha reso difficile:<br>" +
         "• Hai dovuto scegliere con le risorse e le informazioni che avevi, non con quelle che hai adesso.<br>" +
         "• La paura di deludere qualcuno (te compresə) ha pesato sulle scelte più di quanto sembrasse in superficie.";
@@ -801,6 +801,84 @@ function buildWhatIfMotivationsPretty(domanda, pct){
   }
 }
 
+/* ==== CACHE RISULTATO (per bloccare doppie risposte) ==== */
+const RESULT_CACHE_KEY = 'whatif_result_cache_v2';
+
+function saveResultToCache(obj){
+  try{
+    LS.setItem(RESULT_CACHE_KEY, JSON.stringify(obj));
+  }catch(e){
+    console.warn('cache save error', e);
+  }
+}
+
+function loadResultFromCache(domanda){
+  try{
+    const raw = LS.getItem(RESULT_CACHE_KEY);
+    if(!raw) return null;
+    const obj = JSON.parse(raw);
+    if(!obj || typeof obj !== 'object') return null;
+    if((obj.domanda||'').trim() !== String(domanda||'').trim()) return null;
+    if(obj.style !== style) return null;
+    if(obj.periodo !== periodo) return null;
+    if(obj.lang !== lang) return null;
+    return obj;
+  }catch(e){
+    console.warn('cache load error', e);
+    return null;
+  }
+}
+
+function applyResultToUI(result){
+  const domanda = result.domanda || LS.getItem('domanda') || '';
+  applyUI(domanda);
+  qView.textContent = domanda || '—';
+
+  // risposta
+  answerEl.textContent = result.answer || '—';
+  decorateEmBits(answerEl);
+
+  // percentuale
+  const usedPct = (typeof result.pct === 'number' && isFinite(result.pct))
+    ? Math.max(0, Math.min(100, Math.round(result.pct)))
+    : computeProbability(domanda).pct;
+  const pStr = usedPct + "%";
+  topPct.textContent = pStr;
+  bottomPct.textContent = pStr;
+
+  // motivazioni
+  const mode = result.motivationMode || (style === 'wtf' ? 'wtf' : 'whatif');
+
+  if (mode === 'surprise') {
+    motIco.style.display='';
+    chipsWrap.style.display='flex';
+    committeeTitle.textContent = t().votersTitle || 'Comitato';
+
+    const fav = result.chipsFav ?? 0;
+    const con = result.chipsCon ?? 0;
+    const ast = result.chipsAst ?? 0;
+
+    chipFav.textContent = `${t().chipsFav} ${fav}`;
+    chipCon.textContent = `${t().chipsCon} ${con}`;
+    chipAst.textContent = `${t().chipsAst} ${ast}`;
+    motNote.textContent = result.motivationText || '';
+
+  } else if (mode === 'wtf') {
+    motIco.style.display='none';
+    chipsWrap.style.display='none';
+    committeeTitle.textContent = t().scientificTitle;
+    motNote.textContent = result.motivationText || '';
+
+  } else {
+    motIco.style.display='none';
+    chipsWrap.style.display='none';
+    committeeTitle.textContent = t().seriousTitle;
+    motNote.innerHTML = result.motivationText || '';
+  }
+
+  revealEffect();
+}
+
 /* ==== Top init ==== */
 (function initTop(){
   const hasToken=!!LS.getItem('admin_token');
@@ -843,6 +921,15 @@ async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
 
+  // 1) Prova a usare il risultato in cache (stessa domanda/stile/lang/periodo)
+  const cached = loadResultFromCache(domanda);
+  if (cached) {
+    showIntroOnce();
+    applyResultToUI(cached);
+    return;
+  }
+
+  // 2) Nessun cache valido → genera nuova risposta
   showIntroOnce();
   startOracleLoading();
 
@@ -877,20 +964,32 @@ async function startFlow(){
     bottomPct.textContent = pStr;
 
     let motivazioneUsata = "";
+    let motivationMode = (style === 'wtf') ? 'wtf' : 'whatif';
+    let motivationTextForCache = "";
+    let chipsFavNum, chipsConNum, chipsAstNum;
 
     if (surprise) {
       motIco.style.display=''; chipsWrap.style.display='flex';
       committeeTitle.textContent=t().votersTitle||'Comitato';
       const rdm=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-      chipFav.textContent=`${t().chipsFav} ${rdm(120,1200)}`;
-      chipCon.textContent=`${t().chipsCon} ${rdm(0,900)}`;
-      chipAst.textContent=`${t().chipsAst} ${rdm(0,400)}`;
-      motNote.textContent=(lang==='en')?`Brief tussle at vote: ${rdm(1,5)} removed; ${rdm(0,3)} bruised.`
-                       :(lang==='es')?`Pequeño lío en la votación: ${rdm(1,5)} expulsados; ${rdm(0,3)} contusos.`
-                       :(lang==='fr')?`Petit grabuge au vote : ${rdm(1,5)} évacués ; ${rdm(0,3)} contusionnés.`
-                       :(lang==='de')?`Kurzes Gerangel bei der Abstimmung: ${rdm(1,5)} entfernt; ${rdm(0,3)} leicht verletzt.`
-                       :`Breve parapiglia al voto: ${rdm(1,5)} allontanati; ${rdm(0,3)} contusi.`;
-      motivazioneUsata = motNote.textContent;
+      chipsFavNum = rdm(120,1200);
+      chipsConNum = rdm(0,900);
+      chipsAstNum = rdm(0,400);
+      chipFav.textContent=`${t().chipsFav} ${chipsFavNum}`;
+      chipCon.textContent=`${t().chipsCon} ${chipsConNum}`;
+      chipAst.textContent=`${t().chipsAst} ${chipsAstNum}`;
+      const removed = rdm(1,5);
+      const bruised = rdm(0,3);
+      const note =
+        (lang==='en')?`Brief tussle at vote: ${removed} removed; ${bruised} bruised.`
+       :(lang==='es')?`Pequeño lío en la votación: ${removed} expulsados; ${bruised} contusos.`
+       :(lang==='fr')?`Petit grabuge au vote : ${removed} évacués ; ${bruised} contusionnés.`
+       :(lang==='de')?`Kurzes Gerangel bei der Abstimmung: ${removed} entfernt; ${bruised} leicht verletzt.`
+       :`Breve parapiglia al voto: ${removed} allontanati; ${bruised} contusi.`;
+      motNote.textContent = note;
+      motivazioneUsata = note;
+      motivationMode = 'surprise';
+      motivationTextForCache = note;
 
     } else if (style === 'wtf') {
       motIco.style.display='none'; chipsWrap.style.display='none';
@@ -898,6 +997,8 @@ async function startFlow(){
       const sci = wtfMotivationDemenziale(lang);
       motNote.textContent = sci;
       motivazioneUsata = sci;
+      motivationMode = 'wtf';
+      motivationTextForCache = sci;
 
     } else {
       motIco.style.display='none'; chipsWrap.style.display='none';
@@ -905,11 +1006,31 @@ async function startFlow(){
       const html = buildWhatIfMotivationsPretty(domanda, usedPct);
       motNote.innerHTML = html;
       motivazioneUsata = html.replace(/<br\s*\/?>/gi," | ");
+      motivationMode = 'whatif';
+      motivationTextForCache = html;
     }
 
+    // Salva in cronologia (come prima)
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
     hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:usedPct, motivazione:motivazioneUsata });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
+
+    // Salva in cache per reload futuri (nessuna nuova chiamata API / nessun credito in più)
+    const resultForCache = {
+      domanda,
+      style,
+      periodo,
+      lang,
+      surprise,
+      answer: answerText,
+      pct: usedPct,
+      motivationMode,
+      motivationText: motivationTextForCache,
+      chipsFav: (motivationMode === 'surprise') ? chipsFavNum : undefined,
+      chipsCon: (motivationMode === 'surprise') ? chipsConNum : undefined,
+      chipsAst: (motivationMode === 'surprise') ? chipsAstNum : undefined
+    };
+    saveResultToCache(resultForCache);
 
   }catch(e){
     console.error(e);
