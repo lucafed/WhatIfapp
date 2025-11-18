@@ -272,12 +272,10 @@ h1{
       <div id="videoWrap" style="display:none;">
         <video id="videoPreview" controls></video>
         <div class="row" style="margin-top:8px;justify-content:space-between;">
-          <a id="videoDownload" class="btn primary" download="whatf-clip.webm">⬇️ Scarica / Condividi</a>
+          <a id="videoDownload" class="btn primary" download="whatf-clip.mp4">⬇️ Scarica / Condividi</a>
           <span class="small" id="videoNote"></span>
         </div>
       </div>
-      <!-- canvas nascosto per generare il video in browser -->
-      <canvas id="videoCanvas" width="1080" height="1920" style="display:none;"></canvas>
     </div>
 
     <div class="hr"></div>
@@ -309,6 +307,9 @@ h1{
 <audio id="sfxWtf" preload="auto">
   <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
 </audio>
+
+<!-- ⚙️ FFmpeg in browser (global FFmpeg) -->
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js"></script>
 
 <script type="module">
 /* ==== Firebase Auth + Firestore credits (solo lettura) ==== */
@@ -359,9 +360,9 @@ const I18N = {
        videoTitle:"Video condivisibile",
        videoHelp:"Crea un breve video con domanda e risposta, pronto da condividere sui social.",
        videoBtn:"🎬 Crea video",
-       videoReadyNote:"Video pronto: puoi scaricarlo e caricarlo su TikTok, Reels o dove vuoi (formato .webm).",
+       videoReadyNote:"Video pronto: puoi scaricarlo e caricarlo su TikTok, Reels o dove vuoi.",
        videoPreparing:"Generazione video in corso…",
-       videoError:"Impossibile generare il video su questo dispositivo.",
+       videoError:"Impossibile generare il video. Riprova.",
        videoNoData:"Non c’è ancora una risposta da trasformare in video."
   },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
@@ -390,9 +391,9 @@ const I18N = {
        videoTitle:"Shareable video",
        videoHelp:"Create a short video with your question and answer, ready to share on social media.",
        videoBtn:"🎬 Create video",
-       videoReadyNote:"Video ready: you can download it and upload it to TikTok, Reels or anywhere you like (webm format).",
+       videoReadyNote:"Video ready: you can download it and upload it to TikTok, Reels or anywhere you like.",
        videoPreparing:"Generating video…",
-       videoError:"Unable to generate the video on this device.",
+       videoError:"Could not generate the video. Please try again.",
        videoNoData:"There is no answer yet to turn into a video."
   },
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
@@ -408,7 +409,7 @@ const I18N = {
        votersTitle:"Comité", seriousTitle:"Motivaciones", scientificTitle:"Motivo (científico)",
        chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones",
        motFallback:"Motivo: beneficios concretos a corto plazo con límites manejables.",
-       credits:(n)=>`💰 Créditos: ${n}`, noCredits:"Se te han acabado los créditos.",
+       credits:(n)=>`💰 Créditos : ${n}`, noCredits:"Se te han acabado los créditos.",
        storeTitle:"Créditos", buy5:"Comprar +5 créditos (test)", buy10:"Comprar +10 créditos (test)", buy20:"Comprar +20 créditos (test)",
        watchAd:"Ver anuncio (+1)", close:"Cerrar",
        comingSoon:"Próximamente", buySoonNote:"La compra de créditos aún no está disponible.",
@@ -421,9 +422,9 @@ const I18N = {
        videoTitle:"Vídeo compartible",
        videoHelp:"Crea un vídeo corto con tu pregunta y respuesta, listo para compartir en redes.",
        videoBtn:"🎬 Crear vídeo",
-       videoReadyNote:"Vídeo listo: puedes descargarlo y subirlo a TikTok, Reels o donde quieras (formato webm).",
+       videoReadyNote:"Vídeo listo: puedes descargarlo y subirlo a TikTok, Reels o donde quieras.",
        videoPreparing:"Generando vídeo…",
-       videoError:"No se ha podido generar el vídeo en este dispositivo.",
+       videoError:"No se ha podido generar el vídeo. Inténtalo de nuevo.",
        videoNoData:"Todavía no hay una respuesta para convertir en vídeo."
   },
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
@@ -452,9 +453,9 @@ const I18N = {
        videoTitle:"Vidéo partageable",
        videoHelp:"Crée une courte vidéo avec ta question et la réponse, prête à être partagée sur les réseaux.",
        videoBtn:"🎬 Créer la vidéo",
-       videoReadyNote:"Vidéo prête : tu peux la télécharger et la mettre sur TikTok, Reels ou ailleurs (format webm).",
+       videoReadyNote:"Vidéo prête : tu peux la télécharger et la mettre sur TikTok, Reels ou ailleurs.",
        videoPreparing:"Génération de la vidéo…",
-       videoError:"Impossible de générer la vidéo sur cet appareil.",
+       videoError:"Impossible de générer la vidéo. Réessaie.",
        videoNoData:"Il n’y a pas encore de réponse à transformer en vidéo."
   },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
@@ -483,15 +484,15 @@ const I18N = {
        videoTitle:"Teilbares Video",
        videoHelp:"Erstelle ein kurzes Video mit deiner Frage und Antwort, bereit zum Teilen in Social Media.",
        videoBtn:"🎬 Video erstellen",
-       videoReadyNote:"Video fertig: Du kannst es herunterladen und auf TikTok, Reels oder wo du willst hochladen (webm).",
+       videoReadyNote:"Video fertig: Du kannst es herunterladen und auf TikTok, Reels oder wo du willst hochladen.",
        videoPreparing:"Video wird erzeugt…",
-       videoError:"Video kann auf diesem Gerät nicht erzeugt werden.",
+       videoError:"Video konnte nicht erzeugt werden. Bitte versuche es erneut.",
        videoNoData:"Es gibt noch keine Antwort, die in ein Video umgewandelt werden kann."
   }
 };
 const SUP_LANG=['it','en','es','fr','de'];
 
-/* ======== LINGUA: segui FOURTH ======== */
+/* ======== LINGUA: segui FOURTH (request.lang o LS.lang) ======== */
 const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
 const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
@@ -607,7 +608,6 @@ const videoPreview = qs('#videoPreview');
 const videoDownload = qs('#videoDownload');
 const videoLoadingEl = qs('#videoLoading');
 const videoNoteEl = qs('#videoNote');
-const videoCanvas = qs('#videoCanvas');
 
 /* ==== Toast ==== */
 function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
@@ -616,6 +616,15 @@ function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.class
 function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
 function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
+function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function sanitizeForDrawtext(t){
+  return String(t)
+    .replace(/:/g,"\\:")
+    .replace(/'/g,"\\'")
+    .replace(/"/g,'\\"')
+    .replace(/\n/g,"\\n")
+    .replace(/\r/g,"");
+}
 
 /* ==== Titles/Text ==== */
 function applyUI(q){
@@ -899,7 +908,7 @@ function buildWhatIfMotivationsPretty(domanda, pct){
   }
 }
 
-/* ==== CACHE RISULTATO ==== */
+/* ==== CACHE RISULTATO (per bloccare doppie risposte) ==== */
 const RESULT_CACHE_KEY = 'whatif_result_cache_v2';
 
 function saveResultToCache(obj){
@@ -932,11 +941,9 @@ function applyResultToUI(result){
   applyUI(domanda);
   qView.textContent = domanda || '—';
 
-  // risposta
   answerEl.textContent = result.answer || '—';
   decorateEmBits(answerEl);
 
-  // percentuale
   const usedPct = (typeof result.pct === 'number' && isFinite(result.pct))
     ? Math.max(0, Math.min(100, Math.round(result.pct)))
     : computeProbability(domanda).pct;
@@ -944,7 +951,6 @@ function applyResultToUI(result){
   topPct.textContent = pStr;
   bottomPct.textContent = pStr;
 
-  // motivazioni
   const mode = result.motivationMode || (style === 'wtf' ? 'wtf' : 'whatif');
 
   if (mode === 'surprise') {
@@ -1000,7 +1006,7 @@ function applyQuestion(){
   return {req, domanda, surprise};
 }
 
-/* ==== Salvataggio domanda ==== */
+/* ==== Salvataggio domanda per fourth ==== */
 function saveCurrentQuestion(){
   const domanda = (LS.getItem('domanda') || '').trim();
   if(!domanda) return;
@@ -1014,7 +1020,7 @@ function saveCurrentQuestion(){
   toast(t().savedOk);
 }
 
-/* ==== Main flow ==== */
+/* ==== Main flow (NESSUN CONSUMO CREDITI QUI) ==== */
 async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
@@ -1088,7 +1094,8 @@ async function startFlow(){
       motivationTextForCache = note;
 
     } else if (style === 'wtf') {
-      motIco.style.display='none'; chipsWrap.style.display='none';
+      motIco.style.display='none';
+      chipsWrap.style.display='none';
       committeeTitle.textContent = t().scientificTitle;
       const sci = wtfMotivationDemenziale(lang);
       motNote.textContent = sci;
@@ -1097,7 +1104,8 @@ async function startFlow(){
       motivationTextForCache = sci;
 
     } else {
-      motIco.style.display='none'; chipsWrap.style.display='none';
+      motIco.style.display='none';
+      chipsWrap.style.display='none';
       committeeTitle.textContent = t().seriousTitle;
       const html = buildWhatIfMotivationsPretty(domanda, usedPct);
       motNote.innerHTML = html;
@@ -1133,40 +1141,11 @@ async function startFlow(){
   }
 }
 
-/* ================= VIDEO CLIENT-SIDE (canvas + MediaRecorder) ================= */
+/* ==== FFmpeg client-side ==== */
+const { createFFmpeg, fetchFile } = window.FFmpeg || {};
+const ffmpeg = createFFmpeg ? createFFmpeg({ log: false }) : null;
 
-function pickMediaType(){
-  if(!('MediaRecorder' in window)) return null;
-  const types = [
-    'video/webm;codecs=vp9',
-    'video/webm;codecs=vp8',
-    'video/webm'
-  ];
-  for(const type of types){
-    if(MediaRecorder.isTypeSupported(type)) return type;
-  }
-  return null;
-}
-
-function wrapText(ctx, text, x, y, maxWidth, lineHeight){
-  const words = text.split(/\s+/);
-  let line = '';
-  for(let n=0; n<words.length; n++){
-    const testLine = line + words[n] + ' ';
-    const metrics = ctx.measureText(testLine);
-    const testWidth = metrics.width;
-    if (testWidth > maxWidth && n > 0){
-      ctx.fillText(line, x, y);
-      line = words[n] + ' ';
-      y += lineHeight;
-    } else {
-      line = testLine;
-    }
-  }
-  ctx.fillText(line, x, y);
-  return y;
-}
-
+/* ==== VIDEO: generazione locale (nessuna API) ==== */
 async function generateVideoClip(){
   if(!videoBtn) return;
   const T = t();
@@ -1179,98 +1158,51 @@ async function generateVideoClip(){
     return;
   }
 
-  const mimeType = pickMediaType();
-  if(!mimeType || !videoCanvas){
-    toast(T.videoError || "Impossibile generare il video su questo dispositivo.");
+  if(!ffmpeg){
+    toast("Video non disponibile su questo dispositivo.");
     return;
   }
 
-  const canvas = videoCanvas;
-  const ctx = canvas.getContext('2d');
-
-  const durationMs = 7000;
-  const fps = 30;
-  const start = performance.now();
-
-  const stream = canvas.captureStream(fps);
-  const recorder = new MediaRecorder(stream, { mimeType });
-
-  const chunks = [];
-  recorder.ondataavailable = e => { if(e.data && e.data.size > 0) chunks.push(e.data); };
-
-  videoBtn.disabled = true;
-  if(videoLoadingEl){
-    videoLoadingEl.textContent = T.videoPreparing || "Generazione video…";
-    videoLoadingEl.style.display = 'inline';
-  }
-  if(videoWrap) videoWrap.style.display = 'none';
-  if(videoNoteEl) videoNoteEl.textContent = '';
-
-  const isWtf = (style === 'wtf');
-
-  function drawFrame(timestamp){
-    const tNorm = Math.min(1, (timestamp - start) / durationMs);
-    const w = canvas.width;
-    const h = canvas.height;
-
-    const shift = tNorm * 200;
-    const grad = ctx.createLinearGradient(0, 0 + shift, w, h - shift);
-    if(isWtf){
-      grad.addColorStop(0, '#101414');
-      grad.addColorStop(0.5, '#3A6B56');
-      grad.addColorStop(1, '#00E0FF');
-    }else{
-      grad.addColorStop(0, '#0A0F14');
-      grad.addColorStop(0.5, '#1C57A0');
-      grad.addColorStop(1, '#00E0FF');
-    }
-
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
-
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    ctx.fillRect(60, 120, w-120, 260);
-    ctx.fillRect(60, 460, w-120, h-560);
-
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 60px system-ui, -apple-system, Segoe UI, sans-serif';
-    const qMaxWidth = w - 160;
-    let y = 140;
-    y = wrapText(ctx, domanda, w/2, y, qMaxWidth, 68);
-
-    ctx.fillStyle = '#DDE8F0';
-    ctx.font = '500 48px system-ui, -apple-system, Segoe UI, sans-serif';
-    const aMaxWidth = w - 160;
-    const centerY = 500;
-    wrapText(ctx, answerText, w/2, centerY, aMaxWidth, 58);
-
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.font = '500 32px system-ui, -apple-system, Segoe UI, sans-serif';
-    ctx.fillText('What?f · what-if app', w/2, h - 120);
-
-    if(timestamp - start < durationMs){
-      requestAnimationFrame(drawFrame);
-    }else{
-      recorder.stop();
-    }
-  }
-
-  const recordingPromise = new Promise((resolve,reject)=>{
-    recorder.onstop = ()=>{
-      const blob = new Blob(chunks, { type: mimeType });
-      resolve(blob);
-    };
-    recorder.onerror = (e)=> reject(e.error || e.name || e);
-  });
-
-  recorder.start();
-  requestAnimationFrame(drawFrame);
-
   try{
-    const blob = await recordingPromise;
+    videoBtn.disabled = true;
+    if(videoLoadingEl){
+      videoLoadingEl.textContent = T.videoPreparing || "Generazione video…";
+      videoLoadingEl.style.display = 'inline';
+    }
+    if(videoWrap) videoWrap.style.display = 'none';
+    if(videoNoteEl) videoNoteEl.textContent = '';
+
+    if(!ffmpeg.isLoaded()){
+      await ffmpeg.load();
+    }
+
+    const bgColor = style === 'wtf' ? '0x101414' : '0x0A0F14';
+    const duration = 8;
+    const width = 1080;
+    const height = 1920;
+
+    let aShort = answerText.length > 240 ? answerText.slice(0,240) + "…" : answerText;
+    const sDomanda = sanitizeForDrawtext(domanda);
+    const sAnswer = sanitizeForDrawtext(aShort);
+
+    const drawFilter = [
+      `drawtext=text='${sDomanda}':fontcolor=white:fontsize=44:box=1:boxcolor=0x00000066:boxborderw=16:x=(w-text_w)/2:y=200`,
+      `drawtext=text='${sAnswer}':fontcolor=0xA0B2BA:fontsize=34:box=1:boxcolor=0x00000066:boxborderw=16:x=(w-text_w)/2:y=(h-text_h)/2+80`
+    ].join(",");
+
+    await ffmpeg.run(
+      "-f","lavfi",
+      "-i",`color=c=${bgColor}:s=${width}x${height}:d=${duration}`,
+      "-vf", drawFilter,
+      "-c:v","libx264",
+      "-preset","veryfast",
+      "-pix_fmt","yuv420p",
+      "-movflags","+faststart",
+      "out.mp4"
+    );
+
+    const data = ffmpeg.FS("readFile","out.mp4");
+    const blob = new Blob([data.buffer], { type: "video/mp4" });
     const url = URL.createObjectURL(blob);
 
     if(videoPreview){
@@ -1278,6 +1210,7 @@ async function generateVideoClip(){
     }
     if(videoDownload){
       videoDownload.href = url;
+      videoDownload.download = "whatf-clip.mp4";
     }
     if(videoWrap){
       videoWrap.style.display = 'block';
