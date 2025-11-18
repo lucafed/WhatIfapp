@@ -110,6 +110,7 @@ const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO):
 - 60% analisi concreta (routine, tempo, costi/benefici, energia, relazioni) + 40% immagini sobrie della quotidianità.
 - Scrivi un futuro vicino che inizia adesso: usa futuro/condizionale semplice ("potresti", "inizierai", "probabilmente").
 - Mantieni la risposta aderente al tema della domanda (città, relazione, lavoro, ecc.), senza esempi generici fuori contesto.
+- Linguaggio: italiano naturale, frasi grammaticalmente corrette, vocabolario vario (evita ripetizioni evidenti di verbi o immagini).
 - Chiudi con una frase che lasci una sensazione chiara e un piccolo gancio di curiosità.
 - 8–10 frasi, seconda persona, un paragrafo unico, NON ripetere la domanda, niente elenchi, niente emoji. Linguaggio semplice, concreto, coinvolgente.`;
 
@@ -120,6 +121,7 @@ const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE):
 - Scrivi in chiave controfattuale: "se avessi…, avresti…", "ti saresti trovato…", "avresti sentito…".
 - Nessuna data o fatto reale non fornito; resta fedele al tema della domanda (relazione, scelta, città, lavoro, ecc.).
 - 60% analisi concreta + 40% immagini sobrie di quella vita alternativa.
+- Linguaggio: italiano naturale, frasi grammaticalmente corrette, vocabolario ricco e non ripetitivo.
 - Chiudi con sensazione + micro-gancio che riporti dolcemente al presente ("non sarebbe stato un errore, sarebbe stata un'altra versione di te", ecc.).
 - 8–10 frasi, seconda persona, un paragrafo unico, NON ripetere la domanda, niente elenchi, niente emoji. Linguaggio semplice, concreto, coinvolgente.`;
 
@@ -316,8 +318,8 @@ const WTF_DRINKS_BY_CONTEXT = {
     "appoggi il bicchiere pieno accanto alla calcolatrice e fai un sorso ogni cifra che non ti torna"
   ],
   generico: [
-    "ti versi un bicchiere grande riempito più del necessario e lo butti giù in due colpi",
-    "prendi un calice traboccante e lo svuoti in un’unica tirata un po’ teatrale",
+    "ti versi un bicchiere grande riempito più del necessario e lo butti giù in due colpi teatrali",
+    "prendi un calice traboccante e lo svuoti in un’unica tirata un po’ esagerata",
     "riempi un bicchiere colmo e lo finisci senza staccare gli occhi da quello che ti preoccupa"
   ]
 };
@@ -368,8 +370,8 @@ function scientificReportDemenziale(domanda, lang="it"){
 function buildMessages({ domanda, lang, periodo, stile }){
   const L = normLang(lang);
   const baseRules = L==="en"
-    ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Second person only. Stay close to the topic of the question.`
-    : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona. Resta aderente al tema della domanda.`;
+    ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Second person only. Stay close to the topic of the question. Use a rich, varied vocabulary, and keep grammar and punctuation clean. Avoid repeating the same words and images too often.`
+    : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona. Resta aderente al tema della domanda. Usa un vocabolario ricco e vario, italiano corretto, senza errori di grammatica e con punteggiatura curata. Evita ripetizioni evidenti di parole e immagini.`;
 
   const msgs = [
     { role: "system", content: baseRules },
@@ -390,19 +392,61 @@ function buildMessages({ domanda, lang, periodo, stile }){
     const drinkPool = WTF_DRINKS_BY_CONTEXT[ctx] || WTF_DRINKS_BY_CONTEXT.generico;
     const drink = drinkPool[Math.floor(rnd()*drinkPool.length)];
 
-    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile). Struttura OBBLIGATORIA: presa in giro affettuosa (max 2 frasi) → 2–3 micro-imprevisti → UNO sfogo teatrale (“${impre}”, narrato, mai insulto a persone) → SUBITO ${react.length} reazioni di oggetti esilaranti coerenti col contesto (${ctx}) → drink (“${drink}”, descritto in modo che nasca dalla scena, mai dal nulla) → 1–2 frasi che rispondono davvero alla domanda → morale calda e ironica. Tutto deve restare coerente con la situazione implicita nella domanda: l’incazzatura nasce da qualcosa che succede lì (conti, burocrazia, ricordi, imbarazzo, difficoltà pratiche, ecc.), non dal nulla. 6–8 frasi.`;
-    const WTF_RULE_EN = `WHAT THE F (friendly, absurd but helpful). STRICT sequence: playful tease (≤2) → 2–3 tiny mishaps → ONE theatrical “${impre}” (narrated, never insulting people) → THEN ${react.length} absurd object reactions consistent with the context (${ctx}) → drink (“${drink}”, described as coming naturally from the scene, never out of nowhere) → 1–2 lines that truly answer the question → warm ironic moral. Everything must stay coherent with the situation implied by the question: frustration comes from something that actually happens in the scene, not from nowhere. 6–8 sentences.`;
+    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile).
+
+Struttura OBBLIGATORIA:
+1) Presa in giro affettuosa verso la SITUAZIONE (massimo 2 frasi), mai offensiva verso la persona.
+2) 2–3 micro-imprevisti comici legati al tema concreto della domanda (lavoro, amore, soldi, traffico, ecc.).
+3) UNO sfogo teatrale: usa la formula "${impre}" dentro una frase narrativa (mai come insulto diretto a persone reali).
+4) SUBITO DOPO, inserisci ${react.length} reazioni di OGGETTI o DETTAGLI della SCENA, coerenti con il contesto (${ctx}):
+   - prendi solo ispirazione dalle idee seguenti, ma NON copiare le frasi letteralmente;
+   - ogni volta inventa oggetti e reazioni leggermente diversi, come se avessi un vocabolario infinito.
+5) MOMENTO DRINK:
+   - Inserisci UNA sola frase in cui il personaggio beve qualcosa (amaro, vino, gin, birra, caffè strafatto, ecc.).
+   - Usa questa idea di drink come spunto: "${drink}", ma NON scriverla mai identica.
+   - Riscrivi sempre con parole diverse, più colorite e un po' sbronze, restando comunque leggere e non autodistruttive.
+6) 1–2 frasi che rispondono davvero alla domanda in modo concreto, pratico e utile.
+7) Chiusura con morale calda e ironica (supportiva, non giudicante).
+
+LINGUAGGIO:
+- Italiano parlato bene, frasi grammaticalmente corrette, nessun errore di ortografia.
+- Usa un vocabolario ricco: varia i verbi, i nomi e le immagini, NON ripetere sempre le stesse parole.
+- Tieni tutto dentro 6–8 frasi, in UN SOLO paragrafo. Nessun elenco visibile nell'output, nessuna emoji.`;
+
+    const WTF_RULE_EN = `WHAT THE F (friendly, absurd but helpful).
+
+STRICT SEQUENCE:
+1) Playful tease about the SITUATION (max 2 sentences), never attacking the person.
+2) 2–3 tiny mishaps tied to the concrete theme (job, love, money, traffic, etc.).
+3) ONE theatrical outburst: use "${impre}" inside a narrated line (never as a direct insult).
+4) RIGHT AFTER, add ${react.length} reactions from OBJECTS that BELONG TO THE SCENE (context: ${ctx}):
+   - use the ideas below only as inspiration, do NOT copy the sentences word for word;
+   - each time invent slightly different objects and reactions, as if you had endless vocabulary.
+5) DRINK MOMENT:
+   - Add ONE sentence where the character drinks something (bitter, wine, gin, beer, strong coffee, etc.).
+   - Use this drink idea as inspiration: "${drink}", but NEVER repeat this exact sentence.
+   - Always rephrase it with new words, slightly tipsy and funny, but still light and not self-destructive.
+6) 1–2 lines that genuinely answer the question in a practical way.
+7) Warm, ironic closing moral (supportive, not harsh).
+
+LANGUAGE:
+- Natural, spoken-style language with correct grammar and punctuation.
+- Use a wide, varied vocabulary: change verbs, nouns and images, avoid repeating the same wording.
+- Total: 6–8 sentences, single paragraph. No bullet lists in the OUTPUT, no emojis.`;
 
     msgs.push(
       { role: "system", content: L==="en" ? WTF_RULE_EN : WTF_RULE_IT },
       { role: "system", content: `IMPRECATION: ${impre}` },
-      { role: "system", content: `REACTIONS (idee, non tutte obbligatorie):\n- ${react.join("\n- ")}` },
-      { role: "system", content: `DRINK (idea, da integrare nella scena): ${drink}` },
+      { role: "system", content: `REACTIONS (idee di scena, NON copiare il testo, inventa ogni volta variazioni nuove):\n- ${react.join("\n- ")}` },
+      { role: "system", content: `DRINK (solo idea da trasformare, NON usare la frase letterale): ${drink}` },
       { role: "system", content:
-`ESEMPI VINCOLANTI (tono/ritmo IT):
-- Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora che al confessionale ti tengono in riserva. Ti versi un goccio di liquore, rimetti in riga il bancone e giuri che domani apri solo per matti. Alla chiusura, ti guardi intorno e sussurri che oggi hai bestemmiato più del prete quando finisce il vino — ma almeno hai servito verità calde.
-- Oh, eccoci, centauro dell’inferno. Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” così netto che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo ma quasi con affetto, come un rito che rimette a fuoco. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio con un sorrisetto complice. Torni a casa con l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie ben calibrate.
-- Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
+`ESEMPI DI TONO/RITMO (NON copiare il testo, NON riutilizzare i nomi, servono solo come modello di stile):
+
+Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora che al confessionale ti tengono in riserva. Ti versi un goccio di liquore, rimetti in riga il bancone e giuri che domani apri solo per matti. Alla chiusura, ti guardi intorno e sussurri che oggi hai bestemmiato più del prete quando finisce il vino — ma almeno hai servito verità calde.
+
+Oh, eccoci, centauro dell’inferno. Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” così netto che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo ma quasi con affetto, come un rito che rimette a fuoco. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio con un sorrisetto complice. Torni a casa con l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie ben calibrate.
+
+Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
     );
   } else {
     // WHAT IF dipendente dal tempo (IT ottimizzato, altre lingue usano solo baseRules)
@@ -419,7 +463,7 @@ function buildMessages({ domanda, lang, periodo, stile }){
   const ask = (L==="en")
     ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`
     : (L==="it")
-    ? `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO. Paragrafo unico.`
+    ? `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO. Paragrafo unico, grammatica corretta, tono naturale.`
     : (L==="es")
     ? `Pregunta (no la repitas): "${domanda}". Escribe UNA respuesta en ESPAÑOL, un solo párrafo.`
     : (L==="fr")
@@ -495,8 +539,6 @@ function buildWhatIfMotivation(domanda, lang="it", pct=60){
 
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
-
-  // (le altre lingue restano identiche al tuo file originale: le lascio invariate per brevità)
 
   // ENGLISH
   if (L === "en") {
@@ -752,4 +794,4 @@ export default async function handler(req, res){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
-    }
+}
