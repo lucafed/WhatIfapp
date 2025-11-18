@@ -1,89 +1,59 @@
-import ffmpegPath from "ffmpeg-static";
-import { spawn } from "child_process";
+import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
+
+export const config = {
+  maxDuration: 50
+};
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
-    res.statusCode = 405;
-    res.end(JSON.stringify({ error: "Method not allowed" }));
-    return;
-  }
-
-  if (!ffmpegPath) {
-    res.statusCode = 500;
-    res.end(JSON.stringify({ error: "ffmpeg-static non disponibile" }));
-    return;
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    let rawBody = "";
-    await new Promise((resolve, reject) => {
-      req.on("data", chunk => rawBody += chunk);
-      req.on("end", resolve);
-      req.on("error", reject);
+    // Leggi body
+    const { domanda, answer, style } = req.body || {};
+    if (!domanda || !answer) {
+      return res.status(400).json({ error: "Missing domanda or answer" });
+    }
+
+    // Prepara testo
+    const aShort = answer.length > 220 ? answer.slice(0, 220) + "…" : answer;
+    const bgColor = style === "wtf" ? "0x101414" : "0x0A0F14";
+
+    // Carica FFmpeg (WASM)
+    const ffmpeg = createFFmpeg({
+      log: false,
+      corePath: "https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js"
     });
 
-    let data = {};
-    try {
-      data = rawBody ? JSON.parse(rawBody) : {};
-    } catch {
-      res.statusCode = 400;
-      res.end(JSON.stringify({ error: "JSON non valido" }));
-      return;
+    if (!ffmpeg.isLoaded()) {
+      await ffmpeg.load();
     }
 
-    const { domanda, answer, style } = data;
-    if (!domanda || !answer) {
-      res.statusCode = 400;
-      res.end(JSON.stringify({ error: "domanda e answer sono obbligatorie" }));
-      return;
-    }
+    // Genera video
+    const filter = `
+      drawtext=text='${sanitize(domanda)}':fontcolor=white:fontsize=44:x=(w-text_w)/2:y=200,
+      drawtext=text='${sanitize(aShort)}':fontcolor=0xA0B2BA:fontsize=34:x=(w-text_w)/2:y=(h-text_h)/2+80
+    `.replace(/\s+/g, " ");
 
-    let aShort = answer.length > 240 ? answer.slice(0, 240) + "…" : answer;
-
-    const bgColor = style === "wtf" ? "0x101414" : "0x0A0F14";
-    const duration = 8;
-
-    const sDomanda = sanitize(domanda);
-    const sAnswer = sanitize(aShort);
-
-    const drawFilter = [
-      `drawtext=text='${sDomanda}':fontcolor=white:fontsize=44:box=1:boxcolor=0x00000066:boxborderw=16:x=(w-text_w)/2:y=200`,
-      `drawtext=text='${sAnswer}':fontcolor=0xA0B2BA:fontsize=34:box=1:boxcolor=0x00000066:boxborderw=16:x=(w-text_w)/2:y=(h-text_h)/2+80`
-    ].join(",");
-
-    const args = [
+    await ffmpeg.run(
       "-f", "lavfi",
-      "-i", `color=c=${bgColor}:s=1080x1920:d=${duration}`,
-      "-vf", drawFilter,
+      "-i", `color=c=${bgColor}:s=1080x1920:d=8`,
+      "-vf", filter,
       "-c:v", "libx264",
-      "-preset", "veryfast",
       "-pix_fmt", "yuv420p",
-      "-movflags", "+faststart",
-      "-f", "mp4",
-      "pipe:1"
-    ];
+      "out.mp4"
+    );
 
-    const ff = spawn(ffmpegPath, args);
+    const data = ffmpeg.FS("readFile", "out.mp4");
 
     res.setHeader("Content-Type", "video/mp4");
     res.setHeader("Cache-Control", "no-store");
 
-    ff.stdout.pipe(res);
-    ff.stderr.on("data", () => {});
-    ff.on("error", () => {
-      if (!res.headersSent) {
-        res.statusCode = 500;
-        res.end(JSON.stringify({ error: "Errore ffmpeg" }));
-      }
-    });
-
+    return res.end(Buffer.from(data));
   } catch (err) {
     console.error(err);
-    if (!res.headersSent) {
-      res.statusCode = 500;
-      res.end(JSON.stringify({ error: "Errore interno" }));
-    }
+    return res.status(500).json({ error: "Internal error", details: err.message });
   }
 }
 
@@ -92,6 +62,6 @@ function sanitize(t) {
     .replace(/:/g, "\\:")
     .replace(/'/g, "\\'")
     .replace(/"/g, '\\"')
-    .replace(/\n/g, "\\n")
+    .replace(/\n/g, " ")
     .replace(/\r/g, "");
 }
