@@ -207,7 +207,7 @@ function ensureZingaraEnding({ text, lang, periodo, domanda }){
   return `${s}. ${addon}`;
 }
 
-/* ========= WTF — logica contestuale, stile ORIGINALE ========= */
+/* ========= WTF — logica contestuale ========= */
 
 /* Riconosci il contesto dalla domanda */
 function detectWtfContext(domanda = "") {
@@ -223,13 +223,15 @@ function detectWtfContext(domanda = "") {
   return "generico";
 }
 
-/* Imprecazioni teatrali — le tue originali */
+/* Imprecazioni teatrali — versione più demenziale */
 const WTF_IMPRE = [
-  "bestemmione corazzato",
-  "imprecazionona a detonazione",
-  "sacramentata a ciel sereno",
-  "vulcano d’anatemi",
-  "tromba d’aria di improperi",
+  "bestemmione corazzato a lunga gittata",
+  "imprecazionona nucleare che fa vibrare i vetri",
+  "sacramentata epica registrabile in Dolby Surround",
+  "vulcano d’anatemi degno di una finale di Champions",
+  "tromba d’aria di improperi classificata come evento meteo estremo",
+  "raffica di parolacce con valore sismico",
+  "rosario di imprecazioni sgranato alla velocità della luce",
 ];
 
 /* Reazioni degli oggetti, ma contestuali */
@@ -392,47 +394,46 @@ function buildMessages({ domanda, lang, periodo, stile }){
     const drinkPool = WTF_DRINKS_BY_CONTEXT[ctx] || WTF_DRINKS_BY_CONTEXT.generico;
     const drink = drinkPool[Math.floor(rnd()*drinkPool.length)];
 
-    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile).
+    const WTF_RULE_IT = `WHAT THE F (demenziale, sarcastico, affettuosamente cattivo).
 
-Struttura OBBLIGATORIA:
-1) Presa in giro affettuosa verso la SITUAZIONE (massimo 2 frasi), mai offensiva verso la persona.
-2) 2–3 micro-imprevisti comici legati al tema concreto della domanda (lavoro, amore, soldi, traffico, ecc.).
-3) UNO sfogo teatrale: usa la formula "${impre}" dentro una frase narrativa (mai come insulto diretto a persone reali).
-4) SUBITO DOPO, inserisci ${react.length} reazioni di OGGETTI o DETTAGLI della SCENA, coerenti con il contesto (${ctx}):
-   - prendi solo ispirazione dalle idee seguenti, ma NON copiare le frasi letteralmente;
-   - ogni volta inventa oggetti e reazioni leggermente diversi, come se avessi un vocabolario infinito.
-5) MOMENTO DRINK:
-   - Inserisci UNA sola frase in cui il personaggio beve qualcosa (amaro, vino, gin, birra, caffè strafatto, ecc.).
-   - Usa questa idea di drink come spunto: "${drink}", ma NON scriverla mai identica.
-   - Riscrivi sempre con parole diverse, più colorite e un po' sbronze, restando comunque leggere e non autodistruttive.
-6) 1–2 frasi che rispondono davvero alla domanda in modo concreto, pratico e utile.
-7) Chiusura con morale calda e ironica (supportiva, non giudicante).
+Struttura OBBLIGATORIA (ITALIANO):
+1) Apertura: prendi in giro la SITUAZIONE in modo esplicito (massimo 2 frasi), come nei seguenti esempi: \"Ah ma guarda te…\", \"Oh, eccoci…\", \"Ah, [nome]… ci risiamo\". Prendi in giro il casino, non la persona: usa etichette tipo \"quello che crede che\", \"centauro dell’inferno\", \"direttore creativo del casino\".
+2) Descrivi 2–3 immagini concrete e quotidiane legate al tema (bar, moto, chat, lavoro, ecc.) con ritmo narrativo veloce e ironico.
+3) Inserisci UNO sfogo teatrale usando la formula \"${impre}\" dentro una frase narrativa esagerata (mai come insulto diretto a persone reali).
+4) SUBITO DOPO, aggiungi ${react.length} reazioni di OGGETTI DELLA SCENA che sembrano giudicarti o partecipare al dramma (lampada, bicchiere, gatto, macchina del caffè, telefono, ecc.). Ispirati alle idee fornite ma NON copiare le frasi letteralmente: inventa ogni volta oggetti e reazioni nuove, surreali ma credibili.
+5) MOMENTO DRINK (ANCORATO ALLA SCENA, MAI DAL NIENTE):
+   - Il drink non appare dal nulla: prima mostra un gesto concreto coerente col contesto (${ctx}), ad esempio andare in cucina, entrare al bar, aprire l’armadietto buono, appoggiare le chiavi sul bancone.
+   - SOLO DOPO descrivi il bicchiere riempito e bevuto in modo plateale e comico (es: lo fai riempire fino all’orlo e lo svuoti in due sorsi troppo convinti).
+   - Usa la frase di drink proposta come SPUNTO MENTALE (\"${drink}\"), ma NON ripeterla mai alla lettera.
+   - Il bere è una gag teatrale, non deve risultare autolesionista.
+6) Chiudi con 1–2 frasi che contengono una risposta pratica e una mini-morale ironica ma calda, nello stile \"sì, puoi farlo, ma sappi che…\", \"non ti salva la vita, ma almeno sai in che casino ti infili\".
+7) Mantieni sempre lo stesso respiro dei seguenti ESEMPI VINCOLANTI di tono/ritmo: frasi piene, immagini vivide, oggetti che reagiscono, una bestemmia teatrale, un drink di scena e una chiusura che fa sorridere amaro.
 
 LINGUAGGIO:
-- Italiano parlato bene, frasi grammaticalmente corrette, nessun errore di ortografia.
-- Usa un vocabolario ricco: varia i verbi, i nomi e le immagini, NON ripetere sempre le stesse parole.
-- Tieni tutto dentro 6–8 frasi, in UN SOLO paragrafo. Nessun elenco visibile nell'output, nessuna emoji.`;
+- Italiano parlato, diretto, pieno di immagini surreali; concessa volgarità leggera (es: \"cazzata\", \"casino\"), ma niente odio verso categorie o persone reali.
+- Frasi grammaticalmente corrette, ritmo alto, punteggiatura curata.
+- Vocabolario ricco: varia verbi, nomi e immagini, evita ripetizioni evidenti.
+- Lunghezza: 6–8 frasi, UN SOLO paragrafo, niente elenchi visibili nell’output, nessuna emoji.`;
 
-    const WTF_RULE_EN = `WHAT THE F (friendly, absurd but helpful).
+    const WTF_RULE_EN = `WHAT THE F (absurd, sarcastic, playfully cruel but helpful).
 
-STRICT SEQUENCE:
-1) Playful tease about the SITUATION (max 2 sentences), never attacking the person.
-2) 2–3 tiny mishaps tied to the concrete theme (job, love, money, traffic, etc.).
-3) ONE theatrical outburst: use "${impre}" inside a narrated line (never as a direct insult).
-4) RIGHT AFTER, add ${react.length} reactions from OBJECTS that BELONG TO THE SCENE (context: ${ctx}):
-   - use the ideas below only as inspiration, do NOT copy the sentences word for word;
-   - each time invent slightly different objects and reactions, as if you had endless vocabulary.
-5) DRINK MOMENT:
-   - Add ONE sentence where the character drinks something (bitter, wine, gin, beer, strong coffee, etc.).
-   - Use this drink idea as inspiration: "${drink}", but NEVER repeat this exact sentence.
-   - Always rephrase it with new words, slightly tipsy and funny, but still light and not self-destructive.
-6) 1–2 lines that genuinely answer the question in a practical way.
-7) Warm, ironic closing moral (supportive, not harsh).
+STRICT SEQUENCE (ENGLISH):
+1) Open by teasing the SITUATION (max 2 sentences), as in: \"Oh, here we go again\", \"Look at you, genius of chaos\". Mock the mess, not the person.
+2) Add 2–3 concrete, vivid images tied to the topic (office, love, money, city, etc.) with fast, cinematic rhythm.
+3) Include ONE theatrical outburst using \"${impre}\" inside an exaggerated narrative sentence (never as a direct insult to real people).
+4) RIGHT AFTER, add ${react.length} reactions from OBJECTS in the scene that seem to judge or participate in the drama (lamp, glass, cat, screen, phone, etc.). Use the provided ideas only as inspiration, invent fresh, slightly surreal reactions every time.
+5) DRINK MOMENT (GROUNDED IN THE SCENE):
+   - The drink never appears from nowhere: first show a concrete gesture consistent with the context (${ctx}), like walking to the kitchen, stepping into a bar, opening a cupboard, placing keys on the counter.
+   - ONLY THEN describe the glass being filled and drunk in a theatrical, funny way.
+   - Use \"${drink}\" only as mental inspiration, NEVER copy it literally.
+   - Drinking is a comic gag, never self-destructive.
+6) End with 1–2 lines that genuinely answer the question in a practical way plus a small, ironic moral.
+7) Keep the same breath and rhythm as the ITALIAN EXAMPLES provided: full sentences, vivid images, reacting objects, one theatrical \"imprecation\", one scene-anchored drink, and a bittersweet, funny closing line.
 
 LANGUAGE:
-- Natural, spoken-style language with correct grammar and punctuation.
-- Use a wide, varied vocabulary: change verbs, nouns and images, avoid repeating the same wording.
-- Total: 6–8 sentences, single paragraph. No bullet lists in the OUTPUT, no emojis.`;
+- Natural spoken language with correct grammar and punctuation.
+- Rich, varied vocabulary: change verbs, nouns and imagery, avoid heavy repetition.
+- Total: 6–8 sentences, single paragraph, no bullet points in the OUTPUT, no emojis.`;
 
     msgs.push(
       { role: "system", content: L==="en" ? WTF_RULE_EN : WTF_RULE_IT },
@@ -440,13 +441,13 @@ LANGUAGE:
       { role: "system", content: `REACTIONS (idee di scena, NON copiare il testo, inventa ogni volta variazioni nuove):\n- ${react.join("\n- ")}` },
       { role: "system", content: `DRINK (solo idea da trasformare, NON usare la frase letterale): ${drink}` },
       { role: "system", content:
-`ESEMPI DI TONO/RITMO (NON copiare il testo, NON riutilizzare i nomi, servono solo come modello di stile):
+`ESEMPI VINCOLANTI (tono/ritmo IT, NON copiare il testo, NON riutilizzare i nomi; servono solo come modello di stile, voce e ritmo):
 
-Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora che al confessionale ti tengono in riserva. Ti versi un goccio di liquore, rimetti in riga il bancone e giuri che domani apri solo per matti. Alla chiusura, ti guardi intorno e sussurri che oggi hai bestemmiato più del prete quando finisce il vino — ma almeno hai servito verità calde.
+- Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora che al confessionale ti tengono in riserva. Ti versi un goccio di liquore, rimetti in riga il bancone e giuri che domani apri solo per matti. Alla chiusura, ti guardi intorno e sussurri che oggi hai bestemmiato più del prete quando finisce il vino — ma almeno hai servito verità calde.
 
-Oh, eccoci, centauro dell’inferno. Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” così netto che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo ma quasi con affetto, come un rito che rimette a fuoco. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio con un sorrisetto complice. Torni a casa con l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie ben calibrate.
+- Oh, eccoci, centauro dell’inferno. Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” così netto che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo ma quasi con affetto, come un rito che rimette a fuoco. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio con un sorrisetto complice. Torni a casa con l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie ben calibrate.
 
-Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
+- Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
     );
   } else {
     // WHAT IF dipendente dal tempo (IT ottimizzato, altre lingue usano solo baseRules)
@@ -794,4 +795,4 @@ export default async function handler(req, res){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
-}
+          }
