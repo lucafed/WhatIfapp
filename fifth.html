@@ -1137,65 +1137,51 @@ async function startFlow(){
   }
 }
 
-/* ==== VIDEO: chiamata /api/generate-clip ==== */
+/* ==== VIDEO: chiamata /api/generate-clip (stub JSON) ==== */
 async function generateVideoClip(){
-  if(!videoBtn) return;
+  if (!videoBtn) return;
   const T = t();
 
   const domanda = (LS.getItem('domanda') || qView.textContent || '').trim();
   const answerText = (answerEl.textContent || '').trim();
 
-  if(!domanda || !answerText){
+  if (!domanda || !answerText) {
     toast(T.videoNoData || "Nessuna risposta da trasformare in video.");
     return;
   }
 
-  try{
+  try {
     videoBtn.disabled = true;
-    if(videoLoadingEl){
+    if (videoLoadingEl) {
       videoLoadingEl.textContent = T.videoPreparing || "Generazione video…";
       videoLoadingEl.style.display = 'inline';
     }
-    if(videoWrap) videoWrap.style.display = 'none';
-    if(videoNoteEl) videoNoteEl.textContent = '';
+    if (videoWrap) videoWrap.style.display = 'none';
+    if (videoNoteEl) videoNoteEl.textContent = '';
 
-    const res = await fetch('/api/generate-clip',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        domanda,
-        answer: answerText,
-        style,
-        periodo,
-        lang
-      })
+    const res = await fetch('/api/generate-clip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domanda, answer: answerText, style, periodo, lang })
     });
 
-    if(!res.ok){
-      throw new Error('bad_status_'+res.status);
+    let msg = T.comingSoon || "Funzione in arrivo.";
+    if (res.ok) {
+      const data = await res.json().catch(() => null);
+      if (data && typeof data.message === 'string') {
+        msg = data.message;
+      }
+    } else {
+      msg = T.videoError || "Errore nella generazione del video.";
     }
 
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+    toast(msg);
 
-    if(videoPreview){
-      videoPreview.src = url;
-    }
-    if(videoDownload){
-      videoDownload.href = url;
-    }
-    if(videoWrap){
-      videoWrap.style.display = 'block';
-    }
-    if(videoNoteEl){
-      videoNoteEl.textContent = T.videoReadyNote || '';
-    }
-
-  }catch(err){
+  } catch (err) {
     console.error('generateVideoClip error:', err);
     toast(T.videoError || "Errore nella generazione del video.");
-  }finally{
-    if(videoLoadingEl) videoLoadingEl.style.display = 'none';
+  } finally {
+    if (videoLoadingEl) videoLoadingEl.style.display = 'none';
     videoBtn.disabled = false;
   }
 }
