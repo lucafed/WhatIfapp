@@ -1,7 +1,7 @@
 // /api/ask.js — What?f Engine (Zingara-Realista WHATIF + Friendly-WTF Demenziale)
 // - WHATIF: tono “zingara mistica realista”, 60% analisi / 40% immagini sobrie,
 //   chiusura con sensazione + gancio. Passato → controfattuale. Futuro → ipotesi vicina.
-// - WTF: zingaro preveggente sbronzo, ironico, demenziale ma utile.
+// - WTF: come da tuoi esempi. Payload extra 'scientific' (non nella risposta).
 // - Un paragrafo, niente elenchi, niente eco della domanda. Maiuscole ripristinate post-process.
 
 import OpenAI from "openai";
@@ -17,12 +17,13 @@ const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL || "",
   token: process.env.UPSTASH_REDIS_REST_TOKEN || "",
 });
+
 const rl = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(10, "1 m"),
 });
 
-// Wrapper tollerante: se Upstash non è configurato/non risponde, non bloccare
+// Wrapper tollerante: se Upstash non è configurato/non risponde, non blocca
 let rateOk = async () => true;
 try {
   rateOk = async (key) => {
@@ -43,6 +44,7 @@ const ALLOWED_ORIGINS = [
   "http://localhost:3000",
   "http://127.0.0.1:5500",
 ];
+
 function cors(req, res) {
   const origin = String(req.headers.origin || "");
   const allow = ALLOWED_ORIGINS.includes(origin)
@@ -50,6 +52,7 @@ function cors(req, res) {
     : process.env.NODE_ENV !== "production"
     ? origin
     : "";
+
   if (allow) res.setHeader("Access-Control-Allow-Origin", allow);
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -61,26 +64,31 @@ function cors(req, res) {
 
 /* ========= Helpers ========= */
 const SUP_LANGS = ["it", "en", "es", "fr", "de"];
+
 function normLang(l = "it") {
   const s = String(l || "it").toLowerCase().slice(0, 2);
   return SUP_LANGS.includes(s) ? s : "it";
 }
+
 function normLine(s = "") {
   return String(s)
     .toLowerCase()
     .replace(/[“”"']/g, "")
     .replace(/\s+/g, " ")
-    .replace(/[.,;:!?()[\]\-—]+$/g, "")
+    .replace(/[.,;:!?()-—]+$/g, "")
     .trim();
 }
+
 function tightenSentences(text, maxSentences) {
   const parts = String(text || "")
     .replace(/\n+/g, " ")
     .split(/(?<=[.!?…])\s+/)
     .map((x) => x.trim())
     .filter(Boolean);
+
   const out = [];
   const seen = new Set();
+
   for (const p of parts) {
     const n = normLine(p);
     if (!n || seen.has(n)) continue;
@@ -88,25 +96,30 @@ function tightenSentences(text, maxSentences) {
     out.push(p);
     if (out.length >= maxSentences) break;
   }
+
   let t = out.join(" ");
   if (!/[.!?…]$/.test(t)) t += ".";
   return t;
 }
+
 function clampWords(text, maxWords) {
-  const w = String(text || "").split(/\s+/);
-  if (w.length <= maxWords) return text;
-  const slice = w.slice(0, maxWords).join(" ");
-  const m = slice.match(/([\s\S]*?[.!?…])(?![\s\S]*[.!?…])/);
+  const words = String(text || "").split(/\s+/).filter(Boolean);
+  if (words.length <= maxWords) return text;
+
+  const slice = words.slice(0, maxWords).join(" ");
+  const m = slice.match(/([\s\S]*?[.!?…])(?!.*[.!?…])/);
   return m ? m[1] : slice + "…";
 }
+
 function normalizeOneParagraph(s = "") {
   return String(s)
     .replace(/\s*\n+\s*/g, " ")
     .replace(/\s{2,}/g, " ")
-    .replace(/\.\.\.+/g, "…")
-    .replace(/\s+([.,;:!?])/g, "$1")
+    .replace(/\.{3,}/g, "…")
+    .replace(/\s+([.,;:!?…])/g, "$1")
     .trim();
 }
+
 function stripQuestionEcho(domanda, text) {
   const d = String(domanda || "")
     .replace(/[“”"']/g, "")
@@ -118,23 +131,29 @@ function stripQuestionEcho(domanda, text) {
     .toLowerCase()
     .replace(/[“”"']/g, "")
     .trim();
-  const rx = /^(?:e\s*se|what\s*if|domanda:|q:)[^.!?…]*[.!?…]\s+/i;
-  if (lead.startsWith(d)) {
+
+  // Caso: il modello inizia ripetendo quasi letteralmente la domanda
+  if (d && lead.startsWith(d)) {
     const cut = t.indexOf(".");
     if (cut > -1) t = t.slice(cut + 1).trim();
   }
+
+  // Rimuovi incipit tipo "E se...", "What if...", "Domanda:", ecc.
+  const rx = /^(?:e\sse|what\sif|domanda:|q:)[^.!?…]*[.!?…]\s+/i;
   t = t.replace(rx, "");
-  return t;
+  return t.trim();
 }
+
 function sentenceCaseAll(s = "") {
-  return s.replace(
-    /(^|[.!?…]\s+)([a-zà-ÿ])/g,
-    (m, prefix, chr) => prefix + chr.toUpperCase()
-  );
+  return s.replace(/(^|[.!?…]\s+)([a-zà-ÿ])/g, (m, prefix, chr) => {
+    return prefix + chr.toUpperCase();
+  });
 }
+
 function finalPunct(s = "") {
   return /[.!?…]$/.test(s) ? s : s + ".";
 }
+
 function hashStr(str = "") {
   let h = 2166136261 >>> 0;
   for (const ch of String(str)) {
@@ -143,35 +162,57 @@ function hashStr(str = "") {
   }
   return h >>> 0;
 }
+
 function pickDet(arr, seed) {
-  return arr[arr.length ? seed % arr.length : 0] || "";
+  if (!arr || !arr.length) return "";
+  return arr[seed % arr.length];
 }
 
-/* ========= WHAT IF – esempio di respiro ========= */
+/* ========= WHAT IF – esempio di respiro (solo come esempio nel prompt) ========= */
 const WHATIF_HYBRID_EX_IT = `La linea del tuo destino qui si fa più spessa del resto. Vedi una scelta che alleggerisce le tue giornate: meno rumore, più tempo che torna davvero tuo. Senti le abitudini stringersi e poi allentarsi, finché trovi un ritmo più umano. Non è fuga né eroismo: è manutenzione di vita, dove sposti peso tra lavoro, relazioni ed energia. In fondo, non insegui più la vetrina: ti scegli una stanza in cui respirare meglio. E quando ti volterai, capirai che il rimpianto ha perso voce proprio dove hai iniziato a scegliere te.`;
 
 /* ======= WHAT IF RULES (IT) ======= */
 const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO):
-- Tono: veggente/zíngara realista, mistica ma concreta.
-- APRI con UNA sola riga breve e intensa, come se leggessi il destino: niente onomatopee tipo "shh", "mmm", niente ripetizione della domanda.
-- La SECONDA frase deve INIZIARE con una di queste parole, scegliendo quella più adatta alla domanda: "Vedo", "Sento", "Immagino", "Intuisco", "Si apre", "Si muove".
-- 60% analisi concreta (routine, tempo, costi/benefici, energia, relazioni) + 40% immagini sobrie della quotidianità.
-- Scrivi un futuro vicino che inizia adesso: usa futuro/condizionale semplice ("potresti", "inizierai", "probabilmente").
-- Mantieni la risposta aderente al tema della domanda (città, relazione, lavoro, ecc.), senza esempi generici fuori contesto.
-- Chiudi con una frase che lasci una sensazione chiara e un piccolo gancio di curiosità.
-- 8–10 frasi, seconda persona, un paragrafo unico, NON ripetere la domanda, niente elenchi, niente emoji. Linguaggio semplice, concreto, coinvolgente.`;
+
+Tono: veggente/zíngara realista, mistica ma concreta.
+
+APRI con UNA sola riga breve e intensa, come se leggessi il destino: niente onomatopee tipo "shh", "mmm", niente ripetizione della domanda.
+
+La SECONDA frase deve INIZIARE con una di queste parole, scegliendo quella più adatta alla domanda: "Vedo", "Sento", "Immagino", "Intuisco", "Si apre", "Si muove".
+
+60% analisi concreta (routine, tempo, costi/benefici, energia, relazioni) + 40% immagini sobrie della quotidianità.
+
+Scrivi un futuro vicino che inizia adesso: usa futuro/condizionale semplice ("potresti", "inizierai", "probabilmente").
+
+Mantieni la risposta aderente al tema della domanda (città, relazione, lavoro, ecc.), senza esempi generici fuori contesto.
+
+La grammatica e la sintassi devono essere corrette e naturali in italiano: niente errori di concordanza, niente tempi verbali confusi.
+
+Chiudi con una frase che lasci una sensazione chiara e un piccolo gancio di curiosità.
+
+8–10 frasi, seconda persona, un paragrafo unico, NON ripetere la domanda, niente elenchi, niente emoji. Linguaggio semplice, concreto, coinvolgente.`;
 
 const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE):
-- Tono: veggente/zíngara che rilegge una vita alternativa, mistica ma concreta.
-- APRI con UNA riga breve e intensa, come se indicassi una vita che non è stata vissuta.
-- La SECONDA frase deve INIZIARE con "Vedo", "Sento", "Immagino", "Intuisco", "Si sarebbe aperto", "Si sarebbe mosso" (usa forma naturale).
-- Scrivi in chiave controfattuale: "se avessi…, avresti…", "ti saresti trovato…", "avresti sentito…".
-- Nessuna data o fatto reale non fornito; resta fedele al tema della domanda (relazione, scelta, città, lavoro, ecc.).
-- 60% analisi concreta + 40% immagini sobrie di quella vita alternativa.
-- Chiudi con sensazione + micro-gancio che riporti dolcemente al presente.
-- 8–10 frasi, seconda persona, un paragrafo unico, NON ripetere la domanda, niente elenchi, niente emoji. Linguaggio semplice, concreto, coinvolgente.`;
 
-/* ========= Incipit dinamici — “ZINGARA MISTICA” ========= */
+Tono: veggente/zíngara che rilegge una vita alternativa, mistica ma concreta.
+
+APRI con UNA riga breve e intensa, come se indicassi una vita che non è stata vissuta.
+
+La SECONDA frase deve INIZIARE con "Vedo", "Sento", "Immagino", "Intuisco", "Si sarebbe aperto", "Si sarebbe mosso" (usa la forma più naturale).
+
+Scrivi in chiave controfattuale: "se avessi…, avresti…", "ti saresti trovato…", "avresti sentito…".
+
+Nessuna data o fatto reale non fornito; resta fedele al tema della domanda (relazione, scelta, città, lavoro, ecc.).
+
+60% analisi concreta + 40% immagini sobrie di quella vita alternativa.
+
+La grammatica e la sintassi devono essere corrette e naturali in italiano: niente errori di concordanza, niente tempi verbali confusi.
+
+Chiudi con sensazione + micro-gancio che riporti dolcemente al presente ("non sarebbe stato un errore, sarebbe stata un'altra versione di te", ecc.).
+
+8–10 frasi, seconda persona, un paragrafo unico, NON ripetere la domanda, niente elenchi, niente emoji. Linguaggio semplice, concreto, coinvolgente.`;
+
+/* ========= Incipit dinamici — “ZINGARA MISTICA” (non più forzati via post-process) ========= */
 const ZINGARA_INTROS = {
   it: [
     "La linea del tuo destino si illumina proprio qui.",
@@ -204,7 +245,7 @@ const ZINGARA_INTROS = {
   ],
 };
 
-/* ========= Finali “gancio” ========= */
+/* ========= Finali “gancio” — realistici e brevi ========= */
 const ZINGARA_ENDINGS = {
   it: {
     future: [
@@ -224,11 +265,17 @@ const ZINGARA_ENDINGS = {
     future: [
       "And there you’ll notice you don’t need speed, just a good angle.",
     ],
-    past: ["Maybe you’d feel it in your bones: it wasn’t fate, just timing."],
+    past: [
+      "Maybe you’d feel it in your bones: it wasn’t fate, just timing.",
+    ],
   },
   es: {
-    future: ["Y ahí notarás que no hace falta correr, solo elegir bien."],
-    past: ["Y quizá hoy lo sentirías: no era destino, era ritmo."],
+    future: [
+      "Y ahí notarás que no hace falta correr, solo elegir bien.",
+    ],
+    past: [
+      "Y quizá hoy lo sentirías: no era destino, era ritmo.",
+    ],
   },
   fr: {
     future: [
@@ -239,26 +286,38 @@ const ZINGARA_ENDINGS = {
     ],
   },
   de: {
-    future: ["Und dort merkst du: Tempo ist egal, der Winkel zählt."],
-    past: ["Vielleicht spürst du heute: kein Schicksal, nur Timing."],
+    future: [
+      "Und dort merkst du: Tempo ist egal, der Winkel zählt.",
+    ],
+    past: [
+      "Vielleicht spürst du heute: kein Schicksal, nur Timing.",
+    ],
   },
 };
+
 function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   let s = String(text || "").trim();
-  const last = (s.match(/([^.!?…]+[.!?…])\s*$/) || [])[1] || s;
-  const alreadyHasHook = /(ti accorgerai|capirai|ti verrà voglia|ti ritroverai|e lì|e proprio lì|da quel punto|forse oggi|maybe you’d feel|and there you’ll notice)/i.test(
+  if (!s) return s;
+
+  const lastMatch = s.match(/([^.!?…]+[.!?…])\s*$/);
+  const last = (lastMatch && lastMatch[1]) || s;
+
+  const alreadyHasHook = /(ti accorgerai|capirai|ti verrà voglia|ti ritroverai|e lì|e proprio lì|da quel punto|forse oggi|maybe you’d feel|and there you’ll notice|quizá hoy|peut-être que|vielleicht spürst du)/i.test(
     last
   );
   if (alreadyHasHook) return s;
+
   const L = normLang(lang);
-  const pool = (ZINGARA_ENDINGS[L] || ZINGARA_ENDINGS.it) || {};
+  const pool = ZINGARA_ENDINGS[L] || ZINGARA_ENDINGS.it;
   const bag =
     String(periodo).toLowerCase() === "past"
       ? pool.past || ZINGARA_ENDINGS.it.past
       : pool.future || ZINGARA_ENDINGS.it.future;
+
   const addon = pickDet(bag, hashStr((domanda || "") + s));
   if (!addon) return s;
-  s = s.replace(/[.!?…]+$/, "");
+
+  s = s.replace(/[.!?…]+$/g, "");
   return `${s}. ${addon}`;
 }
 
@@ -270,6 +329,7 @@ const WTF_IMPRE = [
   "vulcano d’anatemi",
   "tromba d’aria di improperi",
 ];
+
 const WTF_REACT = [
   "la moka ti fa una standing ovation e chiede l’autografo",
   "il POS entra in modalità testimone di nozze e benedice la carta",
@@ -282,26 +342,69 @@ const WTF_REACT = [
   "il ventilatore gira al contrario “per rispetto”",
   "il citofono fa un trillo come un amen stonato",
 ];
+
 const WTF_DRINK = [
   "ti versi un amaro doppio e metti in riga i pensieri",
   "fai un sorso corto e il mondo rientra nei bordi",
-  "alzi un bicchiere pieno: brindisi di manutenzione",
+  "alzi un bicchiere piccolo: brindisi di manutenzione",
   "bevi un dito di coraggio e respiri più largo",
 ];
 
 /* ========= Prompt builder ========= */
 function buildMessages({ domanda, lang, periodo, stile }) {
   const L = normLang(lang);
+
   const baseRules =
     L === "en"
-      ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Second person only. Stay close to the topic of the question.`
-      : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona. Resta aderente al tema della domanda.`;
+      ? `RULES (GLOBAL):
+
+- Produce exactly ONE answer in ENGLISH.
+- Single paragraph, no bullet points, no lists, no emojis.
+- Do NOT restate or quote the question.
+- Use ONLY second person ("you").
+- Stay close to the topic of the question (city, relationship, job, project, money, etc.).
+- Grammar and syntax must be correct and natural in English: no weird tenses, no broken sentences, no random code-switching.`
+      : L === "es"
+      ? `REGLAS (GLOBAL):
+
+- Da exactamente UNA respuesta en ESPAÑOL.
+- Un solo párrafo, sin viñetas, sin listas, sin emojis.
+- No repitas ni cites la pregunta.
+- Usa SOLO segunda persona ("tú").
+- Mantente pegado al tema de la pregunta (ciudad, relación, trabajo, proyecto, dinero, etc.).
+- La gramática y la sintaxis deben ser correctas y naturales en español.`
+      : L === "fr"
+      ? `RÈGLES (GLOBAL):
+
+- Donne exactement UNE réponse en FRANÇAIS.
+- Un seul paragraphe, pas de puces, pas de listes, pas d’emojis.
+- Ne répète pas la question.
+- Utilise UNIQUEMENT la deuxième personne ("tu").
+- Reste proche du sujet de la question (ville, relation, travail, projet, argent, etc.).
+- La grammaire et la syntaxe doivent être correctes et naturelles en français.`
+      : L === "de"
+      ? `REGELN (GLOBAL):
+
+- Gib genau EINE Antwort auf DEUTSCH.
+- Ein einziger Absatz, keine Aufzählungen, keine Listen, keine Emojis.
+- Wiederhole oder zitiere die Frage nicht.
+- Benutze NUR die zweite Person ("du").
+- Bleib nah am Thema der Frage (Stadt, Beziehung, Job, Projekt, Geld, etc.).
+- Grammatik und Syntax müssen korrekt und natürlich im Deutschen sein.`
+      : `REGOLE (GLOBALI):
+
+- Genera esattamente UNA risposta in ITALIANO.
+- Un solo paragrafo, niente elenchi puntati, niente liste, niente emoji.
+- NON ripetere né citare la domanda.
+- Usa SOLO la seconda persona ("tu").
+- Resta aderente al tema della domanda (città, relazione, lavoro, progetto, soldi, ecc.).
+- La grammatica e la sintassi devono essere corrette e naturali in italiano: niente errori di concordanza, niente tempi verbali storti.`;
 
   const msgs = [{ role: "system", content: baseRules }];
 
   if (stile === "wtf") {
-    // seed deterministico
-    let seed = [...String(domanda || "")].reduce(
+    // WHAT THE F – struttura demenziale ma con grammatica corretta
+    let seed = [...String(domanda)].reduce(
       (a, c) => a + c.charCodeAt(0),
       0
     );
@@ -309,81 +412,117 @@ function buildMessages({ domanda, lang, periodo, stile }) {
       seed = (seed * 1664525 + 1013904223) >>> 0;
       return seed / 2 ** 32;
     }
+
     const impre = WTF_IMPRE[Math.floor(rnd() * WTF_IMPRE.length)];
     const shuffled = [...WTF_REACT].sort(() => rnd() - 0.5);
-    const react = shuffled.slice(0, 2 + Math.floor(rnd() * 2));
+    const reactCount = 2 + Math.floor(rnd() * 2);
+    const react = shuffled.slice(0, reactCount);
     const drink = WTF_DRINK[Math.floor(rnd() * WTF_DRINK.length)];
 
-    const WTF_RULE_IT = `
-Sei la voce "What the F": uno zingaro preveggente, fumatore e bevitore cronico, sarcastico ma affettuoso, un po' scemo e un po' filosofo. Parli come se stessi ridendo sotto i baffi, ma dici la verità senza trucchi.
+    const WTF_RULE_IT = `WHAT THE F (amichevole, demenziale ma utile).
 
-REGOLE:
-- Dai del "tu" all'utente e parla direttamente con lui, come se foste al tavolo di un bar sgangherato.
-- Apri quasi sempre prendendo bonariamente in giro la sua domanda o il suo modo di pensarla.
-- Usa immagini comiche e un po' assurde, ma legate al contesto della domanda (città, relazione, lavoro, soldi, ecc.).
-- Inserisci UNA imprecazione teatrale e colorita, tipo "${impre}", ma raccontata in modo narrativo e mai come insulto diretto a qualcuno.
-- Aggiungi 1–3 micro-reazioni esagerate di oggetti o persone nella scena (tazzina, sedia, pc, lampione, telefono, ecc.), sempre coerenti con il luogo della scena.
-- Puoi accennare al fatto che "tu certe cose le senti prima", come un veggente sbronzo, ma NON ripetere continuamente frasi tipo "vedo il futuro".
-- Rispondi DAVVERO alla domanda: mostra cosa potrebbe succedere, cosa rischia e cosa può guadagnare, infilando tutto dentro ironia e paradossi.
-- Chiudi con una riga un po' filosofica e sarcastica, più da vecchio zingaro lucido che da motivatore.
-- Un solo paragrafo, 7–10 frasi, niente emoji, niente elenchi, niente ripetizione letterale della domanda.`;
+Struttura OBBLIGATORIA:
+1) presa in giro affettuosa verso la situazione (massimo 2 frasi, mai offensiva verso la persona),
+2) 2–3 micro-imprevisti comici collegati al tema,
+3) UNO sfogo teatrale: usa la formula "${impre}" dentro una frase narrativa (mai insulto diretto a persone reali),
+4) SUBITO DOPO, inserisci esattamente ${react.length} reazioni di oggetti esilaranti, usando queste immagini: 
+- ${react.join("\n- ")}
+5) momento drink: inserisci una frase che includa la formula "${drink}",
+6) 1–2 frasi che rispondono davvero alla domanda, in modo chiaro e utile,
+7) chiusura con morale calda e ironica (leggera, non giudicante).
 
-    const WTF_RULE_EN = `
-You are the "What the F" voice: a drunk fortune-teller, chain smoker, sarcastic but oddly kind, half clown and half philosopher. You tease the user but tell the truth.
+Scrivi SEMPRE frasi grammaticalmente corrette in italiano, anche se il tono è scemo.
+Totale: 6–8 frasi, un solo paragrafo. Nessuna lista esplicita.`;
 
-RULES:
-- Always talk directly to "you", like you're sitting together in a messy bar.
-- Usually open by gently mocking the question or how the user is thinking about it.
-- Use funny, slightly absurd images, but consistent with the context (city, work, relationships, money, etc.).
-- Include ONE theatrical, colorful exclamation like "${impre}", only as a narrated outburst, never as an insult to a person or group.
-- Add 1–3 exaggerated reactions from objects or people in the scene (cup, chair, laptop, streetlight, phone, etc.), always coherent with the place.
-- You may hint that you “sense” things or glimpse the future like a drunk seer, but do NOT keep repeating the same phrase.
-- Truly answer the question: show what might happen, risks and upsides, wrapped in irony and paradox.
-- End with a slightly philosophical, sarcastic line, more like a tired wise clown than a coach.
-- Single paragraph, 7–10 sentences, no emojis, no bullet points, do NOT restate the question.`;
+    const WTF_RULE_EN = `WHAT THE F (friendly, absurd but helpful).
 
-    msgs.push(
-      { role: "system", content: L === "en" ? WTF_RULE_EN : WTF_RULE_IT },
-      { role: "system", content: `IMPRECATION: ${impre}` },
-      { role: "system", content: `REACTIONS:\n- ${react.join("\n- ")}` },
-      { role: "system", content: `DRINK: ${drink}` },
-      {
-        role: "system",
-        content: `ESEMPIO DI TONO (non copiare il contenuto, solo ritmo e voce):
+STRICT SEQUENCE:
+1) playful tease about the situation (max 2 sentences, never insulting the person),
+2) 2–3 tiny comic mishaps connected to the theme,
+3) ONE theatrical outburst: use the expression "${impre}" inside a narrated sentence (never as a direct insult),
+4) RIGHT AFTER, use exactly ${react.length} absurd object reactions, using these images:
+- ${react.join("\n- ")}
+5) drink moment: include one sentence that uses "${drink}",
+6) 1–2 lines that genuinely answer the question, concretely,
+7) warm, ironic closing moral (supportive, not harsh).
 
-"Ah, eccoti, profeta del “questa volta sarà diverso”. Lo sento da come fai la domanda che hai già fatto finta di decidere e poi ti sei nascosto dietro al meteo. Ti ci vedo: entri nel bar, ti siedi, alzi gli occhi e il bicchiere vibra come se sapesse già che stai per dire una mezza follia. Ti scappa una ${impre} a bassa voce, la tazzina di caffè protesta sul piattino e il bancone scricchiola stanco come a dire che ha già visto questo film. Bevi ${drink} e per un attimo ti sembra di avere tutto chiaro, poi ti rendi conto che il problema non è il posto dove vai, ma la versione di te che ti porti dietro. E lì capisci che il futuro non lo leggo io nelle carte: lo stai scrivendo tu ogni volta che decidi se restare fermo o spostare davvero il culo."`,
-      }
-    );
+Sentences must be grammatically correct and natural in English.
+Total: 6–8 sentences, single paragraph. No explicit lists in the output.`;
+
+    msgs.push({
+      role: "system",
+      content: L === "en" ? WTF_RULE_EN : WTF_RULE_IT,
+    });
+
+    msgs.push({
+      role: "system",
+      content: `IMPRECATION: ${impre}`,
+    });
+
+    msgs.push({
+      role: "system",
+      content: `REACTIONS:\n- ${react.join("\n- ")}`,
+    });
+
+    msgs.push({
+      role: "system",
+      content: `DRINK: ${drink}`,
+    });
+
+    // Esempi solo per tono/ritmo, non da copiare parola per parola
+    msgs.push({
+      role: "system",
+      content: `ESEMPI VINCOLANTI SOLO PER TONO E RITMO (NON copiare il testo, non riusare i nomi):
+
+Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora che al confessionale ti tengono in riserva. Ti versi un goccio di liquore, rimetti in riga il bancone e giuri che domani apri solo per matti. Alla chiusura, ti guardi intorno e sussurri che oggi hai bestemmiato più del prete quando finisce il vino — ma almeno hai servito verità calde.
+
+Oh, eccoci, centauro dell’inferno. Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” così netto che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo ma quasi con affetto, come un rito che rimette a fuoco. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio con un sorrisetto complice. Torni a casa con l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie ben calibrate.
+
+Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.`,
+    });
   } else {
-    // WHAT IF (IT ottimizzato, altre lingue usano solo baseRules)
+    // WHAT IF – regole extra solo per IT, per le altre lingue basta il baseRules
     if (L === "it") {
       const ruleIT =
         String(periodo).toLowerCase() === "past"
           ? WHATIF_RULE_PAST_IT
           : WHATIF_RULE_FUT_IT;
-      msgs.push(
-        { role: "system", content: ruleIT },
-        {
-          role: "system",
-          content: `ESEMPIO (respiro e tono, non vincolante nei contenuti):\n${WHATIF_HYBRID_EX_IT}`,
-        }
-      );
+
+      msgs.push({
+        role: "system",
+        content: ruleIT,
+      });
+
+      msgs.push({
+        role: "system",
+        content: `ESEMPIO DI RESPIRO E TONO (non copiare il contenuto, solo il mood):
+
+${WHATIF_HYBRID_EX_IT}`,
+      });
+
+      // opzionale: suggerisci di usare un incipit zingara
+      msgs.push({
+        role: "system",
+        content: `Se ti è utile, puoi iniziare con una delle seguenti righe (non obbligatorio, ma consigliato):\n- ${ZINGARA_INTROS.it.join(
+          "\n- "
+        )}`,
+      });
     }
   }
 
   // Utente finale
-  const ask =
+  const askText =
     L === "en"
       ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`
-      : L === "it"
-      ? `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO. Paragrafo unico.`
       : L === "es"
       ? `Pregunta (no la repitas): "${domanda}". Escribe UNA respuesta en ESPAÑOL, un solo párrafo.`
       : L === "fr"
       ? `Question (ne la répète pas) : « ${domanda} ». Donne UNE réponse en FRANÇAIS, un seul paragraphe.`
-      : `Frage (nicht wiederholen): „${domanda}“. Gib EINE Antwort auf DEUTSCH, ein einziger Absatz.`;
+      : L === "de"
+      ? `Frage (nicht wiederholen): „${domanda}“. Gib EINE Antwort auf DEUTSCH, ein einziger Absatz.`
+      : `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO, paragrafo unico.`;
 
-  msgs.push({ role: "user", content: ask });
+  msgs.push({ role: "user", content: askText });
 
   return msgs;
 }
@@ -392,6 +531,7 @@ RULES:
 function computePct(domanda, stile) {
   const t = String(domanda || "").toLowerCase();
   let s = 50;
+
   if (/\b(7|14|21|30|60|90)\b/.test(t)) s += 12;
   if (/\b\d+([.,]\d+)?\b/.test(t)) s += 8;
   if (/budget|€|euro|spesa|max|under|sotto/.test(t)) s += 6;
@@ -400,26 +540,28 @@ function computePct(domanda, stile) {
     s += 6;
   if (/forse|magari|maybe|quizás/.test(t)) s -= 8;
   if (!/\b\d/.test(t)) s -= 6;
+
   s += stile === "wtf" ? -4 : 2;
+
   const pct = Math.max(25, Math.min(92, Math.round(s)));
   return pct;
 }
 
 /* ========= WHAT IF: motivazione sintetica ========= */
 function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
-  const L = (lang || "it").slice(0, 2);
+  const L = normLang(lang);
   const t = String(domanda || "").toLowerCase();
 
-  const hasTime =
-    /\b(7|14|21|30|60|90|giorn|settiman|mes|mesi|anni|days?|weeks?|months?|years?)\b/.test(
-      t
-    );
+  const hasTime = /\b(7|14|21|30|60|90|giorn|settiman|mes|mesi|anni|days?|weeks?|months?|years?)\b/.test(
+    t
+  );
   const hasBudget =
     /(budget|€|euro|spesa|costo|prezzo|max|under|sotto|caparra|cost|money)/.test(
       t
     );
-  const hasDeadline =
-    /(entro|prima|scadenza|deadline|by\s+\d|before\s+\d)/.test(t);
+  const hasDeadline = /(entro|prima|scadenza|deadline|by\s+\d|before\s+\d)/.test(
+    t
+  );
   const action =
     /(apri|lancia|impara|studia|scrivi|automatizza|testa|cambia|trova|assumi|costruisci|crea|launch|start|learn|build|create)/.test(
       t
@@ -427,11 +569,10 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
   const riskHedging =
     /(senza|solo|al massimo|minimo|rischio|risk|minimize|hedge)/.test(t);
 
-  // IT
-  if (L === "it") {
-    const pros = [];
-    const cons = [];
+  let pros = [];
+  let cons = [];
 
+  if (L === "it") {
     if (hasTime) {
       pros.push("la timeline è gestibile se spezzetti il percorso");
       cons.push("se non proteggi il tempo, rischi di rimandare all’infinito");
@@ -443,7 +584,9 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
       );
     }
     if (hasDeadline) {
-      pros.push("una scadenza esplicita ti aiuta a decidere prima, non meglio");
+      pros.push(
+        "una scadenza esplicita ti aiuta a decidere prima, non necessariamente meglio"
+      );
       cons.push(
         "se la scadenza è vaga, tenderai a spostarla sempre un po’ più avanti"
       );
@@ -474,31 +617,37 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
-  // EN
   if (L === "en") {
-    const pros = [];
-    const cons = [];
-
     if (hasTime) {
-      pros.push("the timeline is realistic if you break it into small chunks");
+      pros.push(
+        "the timeline is realistic if you break it into small chunks"
+      );
       cons.push(
         "if you don’t protect time, you’ll quietly postpone it forever"
       );
     }
     if (hasBudget) {
       pros.push("you can keep costs under control with a clear cap");
-      cons.push("underestimating expenses can add pressure and slow you down");
+      cons.push(
+        "underestimating expenses can add pressure and slow you down"
+      );
     }
     if (hasDeadline) {
-      pros.push("an explicit deadline helps you decide sooner, not better");
-      cons.push("a fuzzy deadline tends to drift and weaken your commitment");
+      pros.push(
+        "an explicit deadline helps you decide sooner, not necessarily better"
+      );
+      cons.push(
+        "a fuzzy deadline tends to drift and weaken your commitment"
+      );
     }
     if (action) {
       pros.push("you have a concrete lever you can pull every day");
     }
     if (riskHedging) {
       pros.push("simple constraints can cap the downside");
-      cons.push("chasing zero risk can keep you stuck at the start line");
+      cons.push(
+        "chasing zero risk can keep you stuck at the start line"
+      );
     }
 
     if (!pros.length) {
@@ -507,7 +656,9 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
       );
     }
     if (!cons.length) {
-      cons.push("your main bottleneck is energy and focus, not luck");
+      cons.push(
+        "your main bottleneck is energy and focus, not luck"
+      );
     }
 
     const pSentence = `Estimated probability around ${pct}%.`;
@@ -517,11 +668,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
-  // ES
   if (L === "es") {
-    const pros = [];
-    const cons = [];
-
     if (hasTime) {
       pros.push(
         "el tiempo es manejable si divides el camino en pasos pequeños"
@@ -554,7 +701,9 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
       );
     }
     if (!cons.length) {
-      cons.push("el cuello de botella es tu energía y foco, no la suerte");
+      cons.push(
+        "el cuello de botella es tu energía y foco, no la suerte"
+      );
     }
 
     const pSentence = `Probabilidad aproximada ${pct}%.`;
@@ -564,11 +713,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
-  // FR
   if (L === "fr") {
-    const pros = [];
-    const cons = [];
-
     if (hasTime) {
       pros.push(
         "le calendrier reste gérable si tu découpes en petites étapes"
@@ -592,10 +737,14 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
       );
     }
     if (action) {
-      pros.push("tu as un levier concret à actionner chaque jour");
+      pros.push(
+        "tu as un levier concret à actionner chaque jour"
+      );
     }
     if (riskHedging) {
-      pros.push("quelques règles simples peuvent limiter le risque");
+      pros.push(
+        "quelques règles simples peuvent limiter le risque"
+      );
       cons.push(
         "viser le risque zéro risque justement de t’immobiliser"
       );
@@ -619,11 +768,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
-  // DE
   if (L === "de") {
-    const pros = [];
-    const cons = [];
-
     if (hasTime) {
       pros.push(
         "der Zeitplan ist machbar, wenn du ihn in kleine Schritte teilst"
@@ -641,8 +786,12 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
       );
     }
     if (hasDeadline) {
-      pros.push("eine klare Deadline zwingt zu früheren Entscheidungen");
-      cons.push("eine vage Frist rutscht leicht nach hinten");
+      pros.push(
+        "eine klare Deadline zwingt zu früheren Entscheidungen"
+      );
+      cons.push(
+        "eine vage Frist rutscht leicht nach hinten"
+      );
     }
     if (action) {
       pros.push(
@@ -650,7 +799,9 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
       );
     }
     if (riskHedging) {
-      pros.push("einfache Regeln können das Risiko begrenzen");
+      pros.push(
+        "einfache Regeln können das Risiko begrenzen"
+      );
       cons.push(
         "wenn du null Risiko willst, kommst du vielleicht nie in Gang"
       );
@@ -674,7 +825,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
-  // fallback IT
+  // fallback: riusa la versione italiana
   return buildWhatIfMotivation(domanda, "it", pct);
 }
 
@@ -682,9 +833,12 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
 function scientificReportDemenziale(domanda, lang = "it") {
   function h(s = "") {
     let x = 0;
-    for (const c of s) x = (x * 131 + c.charCodeAt(0)) >>> 0;
+    for (const c of s) {
+      x = (x * 131 + c.charCodeAt(0)) >>> 0;
+    }
     return x >>> 0;
   }
+
   const seed = h(domanda || "");
   const pick = (arr) => arr[seed % arr.length];
 
@@ -718,9 +872,10 @@ function scientificReportDemenziale(domanda, lang = "it") {
   const m = pick(METRIC);
   const n = 30 + (seed % 70);
 
-  if ((lang || "it").startsWith("en")) {
-    return `Scientific-ish report: ${u} (n=${n}) found that a ${e} improves decision clarity (${m}). Peer-reviewed by ${j}, probably.`;
+  if (normLang(lang) === "en") {
+    return `Scientific-ish report: ${u} (n=${n}) found that a “${e}” improves decision clarity (${m}). Peer-reviewed by ${j}, probably.`;
   }
+
   return `Rapporto scientifico (più o meno): ${u} (n=${n}) rileva che “${e}” migliora la chiarezza decisionale (${m}). Revisione a cura di ${j}, forse.`;
 }
 
@@ -732,25 +887,25 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "method_not_allowed" });
 
   try {
-    if (!process.env.OPENAI_API_KEY)
+    if (!process.env.OPENAI_API_KEY) {
       return res.status(500).json({ error: "missing_api_key" });
+    }
 
-    const ip = (
-      req.headers["x-forwarded-for"] ||
+    const ip = (req.headers["x-forwarded-for"] ||
       req.socket?.remoteAddress ||
-      "unknown"
-    )
+      "unknown")
       .toString()
       .split(",")[0]
       .trim();
+
     const ok = await rateOk(`ask:${ip}`);
     if (!ok) return res.status(429).json({ error: "rate_limited_minute" });
 
     const bodyRaw =
       typeof req.body === "string" ? req.body : JSON.stringify(req.body || {});
     const body =
-      bodyRaw && typeof req.body === "string"
-        ? JSON.parse(bodyRaw)
+      typeof req.body === "string"
+        ? JSON.parse(bodyRaw || "{}")
         : req.body || {};
 
     const {
@@ -779,13 +934,14 @@ export default async function handler(req, res) {
       messages,
     });
 
-    let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
+    let answer =
+      completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // ===== Post-process =====
+    // ===== Post-process (ordine CORRETTO) =====
     answer = stripQuestionEcho(domanda, answer);
-    answer = tightenSentences(answer, stile === "wtf" ? 10 : 10);
-    answer = clampWords(answer, stile === "wtf" ? 190 : 180);
+    answer = tightenSentences(answer, stile === "wtf" ? 8 : 10);
+    answer = clampWords(answer, stile === "wtf" ? 170 : 165);
     answer = normalizeOneParagraph(answer);
 
     // Moderazioni leggere IT (prima del ripristino maiuscole)
@@ -832,11 +988,14 @@ export default async function handler(req, res) {
     // ===== Extra payload =====
     const L = normLang(lang);
     const pct = computePct(domanda, stile);
+
     const motivation =
-      stile === "whatif" ? buildWhatIfMotivation(domanda, L, pct) : undefined;
+      stile === "whatif"
+        ? buildWhatIfMotivation(domanda, L, pct)
+        : undefined;
 
     const isSurprise =
-      !!micro && (micro.surprise === true || micro.src === "surprise");
+      !!(micro && (micro.surprise === true || micro.src === "surprise"));
     const scientific =
       stile === "wtf" && !isSurprise
         ? scientificReportDemenziale(domanda, L)
@@ -854,8 +1013,9 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
-    return res
-      .status(500)
-      .json({ error: "server_error", detail: String(err?.message || err) });
+    return res.status(500).json({
+      error: "server_error",
+      detail: String(err?.message || err),
+    });
   }
-}
+        }
