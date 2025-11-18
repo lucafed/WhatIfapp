@@ -86,29 +86,29 @@ h1{
 .pct-row{display:flex;align-items:center;gap:10px;margin:2px 0 8px}
 .pct-label{font-size:13px;color:var(--muted)}
 .top-pct{
-display:inline-flex;align-items:center;justify-content:center;
-font-weight:900;font-size:16px;
-min-width:64px;
-padding:5px 10px;
-background:linear-gradient(180deg,var(--acc),var(--acc2));
-color:var(--ink);border-radius:12px;
-box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:16px;
+  min-width:64px;
+  padding:5px 10px;
+  background:linear-gradient(180deg,var(--acc),var(--acc2));
+  color:var(--ink);border-radius:12px;
+  box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
 }
 
 /* === RESULT BOX === */
 .result-box{
-background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-border:1px solid var(--line);
-border-radius:16px;
-padding:16px 14px;
-box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 22px rgba(0,0,0,.28);
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:16px 14px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 22px rgba(0,0,0,.28);
 }
 .result-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
 .result-pct{
-display:inline-flex;align-items:center;justify-content:center;
-font-weight:900;font-size:16px;min-width:64px;padding:5px 10px;border-radius:12px;
-background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);
-box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:16px;min-width:64px;padding:5px 10px;border-radius:12px;
+  background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);
+  box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
 }
 .result-title{font-weight:900;font-size:15px;letter-spacing:.2px}
 
@@ -124,20 +124,44 @@ box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
 
 /* === INTRO (Zoltar-like) === */
 .intro-box{
-background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04));
-border:1px dashed rgba(255,255,255,.18);
-border-radius:14px;
-padding:12px 14px;
-margin:8px 0 10px;
-font-size:14.5px; line-height:1.55; color:#E7F2EE;
-box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
+  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04));
+  border:1px dashed rgba(255,255,255,.18);
+  border-radius:14px;
+  padding:12px 14px;
+  margin:8px 0 10px;
+  font-size:14.5px; line-height:1.55; color:#E7F2EE;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
+}
+
+/* === VIDEO SECTION === */
+#videoBox{
+  margin-top:10px;
+}
+#videoPreview{
+  width:100%;
+  max-height:420px;
+  border-radius:12px;
+  display:block;
+}
+#videoLoading{
+  font-size:12px;
+  color:var(--muted);
+}
+#videoWrap{
+  margin-top:10px;
+}
+#videoDownload{
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
 }
 
 /* Mobile */
 @media (max-width:420px){
-.result-pct,.top-pct{font-size:15px;min-width:56px;padding:4px 8px}
-.result-title{font-size:14px}
-.mot .note{font-size:15.5px;line-height:1.65}
+  .result-pct,.top-pct{font-size:15px;min-width:56px;padding:4px 8px}
+  .result-title{font-size:14px}
+  .mot .note{font-size:15.5px;line-height:1.65}
 }
 
 /* === Overlay (store/rewarded) === */
@@ -151,11 +175,11 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
 .oracle-wrap{position:relative;min-height:28px;margin:4px 0 8px}
 .oracle-line{font-size:14px;opacity:.86;color:#E7F2EE;transition:opacity .25s ease}
 .orb{
-position:absolute; left:-10px; top:-8px; width:26px; height:26px;
-border-radius:50%;
-background:radial-gradient(circle at 30% 30%, rgba(255,236,1,.7), rgba(255,255,1,.0) 60%);
-filter:blur(6px); opacity:.0; transform:scale(.7); pointer-events:none;
-transition:opacity .35s ease, transform .35s ease;
+  position:absolute; left:-10px; top:-8px; width:26px; height:26px;
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, rgba(255,236,1,.7), rgba(255,255,1,.0) 60%);
+  filter:blur(6px); opacity:.0; transform:scale(.7); pointer-events:none;
+  transition:opacity .35s ease, transform .35s ease;
 }
 .reveal .orb{opacity:.8; transform:scale(1)}
 .reveal #answer{animation:fade .45s ease-out both}
@@ -234,6 +258,26 @@ transition:opacity .35s ease, transform .35s ease;
       </div>
     </div>
 
+    <!-- SEZIONE VIDEO CONDIVISIBILE -->
+    <div class="hr"></div>
+    <div class="label" id="lblVideo">Video condivisibile</div>
+    <div class="result-box" id="videoBox">
+      <p class="small" id="videoHelp">
+        Crea un breve video con domanda e risposta, pronto da condividere sui social.
+      </p>
+      <div class="row" style="margin-top:6px;">
+        <button class="btn ghost" id="videoBtn">🎬 Crea video</button>
+        <span class="small" id="videoLoading" style="display:none;">Generazione video in corso…</span>
+      </div>
+      <div id="videoWrap" style="display:none;">
+        <video id="videoPreview" controls></video>
+        <div class="row" style="margin-top:8px;justify-content:space-between;">
+          <a id="videoDownload" class="btn primary" download="whatf-clip.mp4">⬇️ Scarica / Condividi</a>
+          <span class="small" id="videoNote"></span>
+        </div>
+      </div>
+    </div>
+
     <div class="hr"></div>
     <div class="row">
       <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
@@ -308,7 +352,15 @@ const I18N = {
        guideTitle:"Indicazioni",
        guideQuick:"Indicazioni rapide",
        guideAdvice:"Consiglio",
-       guideAnalysis:"Analisi sintetica"
+       guideAnalysis:"Analisi sintetica",
+       /* VIDEO */
+       videoTitle:"Video condivisibile",
+       videoHelp:"Crea un breve video con domanda e risposta, pronto da condividere sui social.",
+       videoBtn:"🎬 Crea video",
+       videoReadyNote:"Video pronto: puoi scaricarlo e caricarlo su TikTok, Reels o dove vuoi.",
+       videoPreparing:"Generazione video in corso…",
+       videoError:"Impossibile generare il video. Riprova.",
+       videoNoData:"Non c’è ancora una risposta da trasformare in video."
   },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
@@ -331,7 +383,15 @@ const I18N = {
        guideTitle:"Guidance",
        guideQuick:"Quick tips",
        guideAdvice:"Advice",
-       guideAnalysis:"Concise analysis"
+       guideAnalysis:"Concise analysis",
+       /* VIDEO */
+       videoTitle:"Shareable video",
+       videoHelp:"Create a short video with your question and answer, ready to share on social media.",
+       videoBtn:"🎬 Create video",
+       videoReadyNote:"Video ready: you can download it and upload it to TikTok, Reels or anywhere you like.",
+       videoPreparing:"Generating video…",
+       videoError:"Could not generate the video. Please try again.",
+       videoNoData:"There is no answer yet to turn into a video."
   },
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
        sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
@@ -354,7 +414,15 @@ const I18N = {
        guideTitle:"Guía",
        guideQuick:"Indicaciones rápidas",
        guideAdvice:"Consejo",
-       guideAnalysis:"Análisis sintético"
+       guideAnalysis:"Análisis sintético",
+       /* VIDEO */
+       videoTitle:"Vídeo compartible",
+       videoHelp:"Crea un vídeo corto con tu pregunta y respuesta, listo para compartir en redes.",
+       videoBtn:"🎬 Crear vídeo",
+       videoReadyNote:"Vídeo listo: puedes descargarlo y subirlo a TikTok, Reels o donde quieras.",
+       videoPreparing:"Generando vídeo…",
+       videoError:"No se ha podido generar el vídeo. Inténtalo de nuevo.",
+       videoNoData:"Todavía no hay una respuesta para convertir en vídeo."
   },
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
        sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
@@ -377,7 +445,15 @@ const I18N = {
        guideTitle:"Conseils",
        guideQuick:"Conseils rapides",
        guideAdvice:"Suggestion",
-       guideAnalysis:"Analyse concise"
+       guideAnalysis:"Analyse concise",
+       /* VIDEO */
+       videoTitle:"Vidéo partageable",
+       videoHelp:"Crée une courte vidéo avec ta question et la réponse, prête à être partagée sur les réseaux.",
+       videoBtn:"🎬 Créer la vidéo",
+       videoReadyNote:"Vidéo prête : tu peux la télécharger et la mettre sur TikTok, Reels ou ailleurs.",
+       videoPreparing:"Génération de la vidéo…",
+       videoError:"Impossible de générer la vidéo. Réessaie.",
+       videoNoData:"Il n’y a pas encore de réponse à transformer en vidéo."
   },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
        sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
@@ -400,7 +476,15 @@ const I18N = {
        guideTitle:"Leitfaden",
        guideQuick:"Schnelle Hinweise",
        guideAdvice:"Rat",
-       guideAnalysis:"Kurzanalyse"
+       guideAnalysis:"Kurzanalyse",
+       /* VIDEO */
+       videoTitle:"Teilbares Video",
+       videoHelp:"Erstelle ein kurzes Video mit deiner Frage und Antwort, bereit zum Teilen in Social Media.",
+       videoBtn:"🎬 Video erstellen",
+       videoReadyNote:"Video fertig: Du kannst es herunterladen und auf TikTok, Reels oder wo du willst hochladen.",
+       videoPreparing:"Video wird erzeugt…",
+       videoError:"Video konnte nicht erzeugt werden. Bitte versuche es erneut.",
+       videoNoData:"Es gibt noch keine Antwort, die in ein Video umgewandelt werden kann."
   }
 };
 const SUP_LANG=['it','en','es','fr','de'];
@@ -515,6 +599,14 @@ const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committ
 const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
 const motNote=qs('#motNote'), toastEl=qs('#toast');
 
+/* ==== VIDEO refs ==== */
+const videoBtn = qs('#videoBtn');
+const videoWrap = qs('#videoWrap');
+const videoPreview = qs('#videoPreview');
+const videoDownload = qs('#videoDownload');
+const videoLoadingEl = qs('#videoLoading');
+const videoNoteEl = qs('#videoNote');
+
 /* ==== Toast ==== */
 function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
 
@@ -532,6 +624,12 @@ function applyUI(q){
   shareBtn.textContent=T.share; againBtn.textContent=T.again; if(saveBtn) saveBtn.textContent=T.save;
   styleBadge.textContent=(style==='wtf')?T.styleWTF:T.styleWHF;
   setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));
+
+  // Video section texts
+  setText('#lblVideo', T.videoTitle || 'Video');
+  const vh = qs('#videoHelp'); if(vh) vh.textContent = T.videoHelp || '';
+  if(videoBtn) videoBtn.textContent = T.videoBtn || '🎬 Crea video';
+  if(videoNoteEl) videoNoteEl.textContent = '';
 }
 
 /* ==== Probability ==== */
@@ -701,7 +799,7 @@ function buildWhatIfMotivationsPretty(domanda, pct){
       return baseProb +
         "Perché poteva andare diversamente:<br>" +
         "• Un paio di decisioni più chiare e un po’ di gentilezza verso te stessə avrebbero cambiato l’andamento della storia.<br>" +
-        "• C’erano segnali che potevano essere ascoltati prima, invece di essere zittiti per non creare problemi.<br><br]" +
+        "• C’erano segnali che potevano essere ascoltati prima, invece di essere zittiti per non creare problemi.<br><br>" +
         "Cosa l’ha reso difficile:<br>" +
         "• Hai dovuto scegliere con le risorse e le informazioni che avevi, non con quelle che hai adesso.<br>" +
         "• La paura di deludere qualcuno (te compresə) ha pesato sulle scelte più di quanto sembrasse in superficie.";
@@ -1039,6 +1137,69 @@ async function startFlow(){
   }
 }
 
+/* ==== VIDEO: chiamata /api/generate-clip ==== */
+async function generateVideoClip(){
+  if(!videoBtn) return;
+  const T = t();
+
+  const domanda = (LS.getItem('domanda') || qView.textContent || '').trim();
+  const answerText = (answerEl.textContent || '').trim();
+
+  if(!domanda || !answerText){
+    toast(T.videoNoData || "Nessuna risposta da trasformare in video.");
+    return;
+  }
+
+  try{
+    videoBtn.disabled = true;
+    if(videoLoadingEl){
+      videoLoadingEl.textContent = T.videoPreparing || "Generazione video…";
+      videoLoadingEl.style.display = 'inline';
+    }
+    if(videoWrap) videoWrap.style.display = 'none';
+    if(videoNoteEl) videoNoteEl.textContent = '';
+
+    const res = await fetch('/api/generate-clip',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        domanda,
+        answer: answerText,
+        style,
+        periodo,
+        lang
+      })
+    });
+
+    if(!res.ok){
+      throw new Error('bad_status_'+res.status);
+    }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    if(videoPreview){
+      videoPreview.src = url;
+    }
+    if(videoDownload){
+      videoDownload.href = url;
+    }
+    if(videoWrap){
+      videoWrap.style.display = 'block';
+    }
+    if(videoNoteEl){
+      videoNoteEl.textContent = T.videoReadyNote || '';
+    }
+
+  }catch(err){
+    console.error('generateVideoClip error:', err);
+    toast(T.videoError || "Errore nella generazione del video.");
+  }finally{
+    if(videoLoadingEl) videoLoadingEl.style.display = 'none';
+    videoBtn.disabled = false;
+  }
+}
+
 /* ==== Nav / lingua / share / save ==== */
 qs('#backBtn').onclick=()=> history.length > 1 ? history.back() : location.replace('index.html');
 qs('#homeBtn').onclick=()=> location.href='index.html';
@@ -1065,6 +1226,7 @@ qs('#shareBtn').onclick=async()=>{
 };
 qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
 if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
+if(videoBtn){ videoBtn.onclick = generateVideoClip; }
 
 /* ==== Avvio ==== */
 startFlow();
