@@ -5,20 +5,8 @@
       "source": "/(.*)",
       "headers": [
         {
-          "key": "Cross-Origin-Embedder-Policy",
-          "value": "require-corp"
-        },
-        {
-          "key": "Cross-Origin-Opener-Policy",
-          "value": "same-origin"
-        },
-        {
-          "key": "Cross-Origin-Resource-Policy",
-          "value": "cross-origin"
-        },
-        {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self' blob: data: https://files.catbox.moe; script-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob: data:; connect-src 'self' https://files.catbox.moe https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firebasestorage.googleapis.com https://www.googleapis.com;"
+          "value": "default-src 'self'; connect-src 'self' https://apis.google.com https://www.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.gstatic.com https://firebase.googleapis.com https://firebasestorage.googleapis.com https://firebasedatabase.app https://cdn.jsdelivr.net https://unpkg.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' blob: data:; worker-src 'self' blob:; frame-src 'self' https://*.firebaseapp.com https://apis.google.com;"
         }
       ]
     }
