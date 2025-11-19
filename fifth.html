@@ -1129,62 +1129,174 @@ async function startFlow(){
   }
 }
 
-/* ==== VIDEO via API (server-side) ==== */
-async function generateVideoClipViaApi() {
-  const T = t();
+/* ==== VIDEO: generazione client-side con Canvas + MediaRecorder (effetto scrittura) ==== */
 
-  const domanda = (LS.getItem('domanda') || qView.textContent || '').trim();
+function videoNotAvailable(msg){
+  const T = t();
+  const text = msg || (T.videoError || "Video non disponibile su questo dispositivo.");
+  toast(text);
+}
+
+function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
+  const words = String(text || "").split(/\s+/);
+  let line = "";
+  let y = startY;
+  for(const w of words){
+    const test = line ? (line + " " + w) : w;
+    if(ctx.measureText(test).width > maxWidth && line){
+      ctx.fillText(line, x, y);
+      y += lineHeight;
+      line = w;
+    }else{
+      line = test;
+    }
+  }
+  if(line){
+    ctx.fillText(line, x, y);
+    y += lineHeight;
+  }
+  return y;
+}
+
+async function generateVideoClip(){
+  const T = t();
+  const domanda = (localStorage.getItem('domanda') || qView.textContent || '').trim();
   const answerText = (answerEl.textContent || '').trim();
 
-  if (!domanda || !answerText || answerText === '⏳ …') {
-    toast(T.videoNoData || "Non c’è ancora una risposta da trasformare in video.");
+  if (!domanda || !answerText) {
+    videoNotAvailable(T.videoNoData || "Non c’è ancora una risposta da trasformare in video.");
     return;
   }
 
-  try {
-    if (videoBtn) videoBtn.disabled = true;
-    if (videoLoadingEl) {
-      videoLoadingEl.textContent = T.videoPreparing || "Generazione video…";
-      videoLoadingEl.style.display = 'inline';
-    }
-    if (videoWrap) videoWrap.style.display = 'none';
-    if (videoNoteEl) videoNoteEl.textContent = '';
-
-    const res = await fetch('/api/video', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        domanda,
-        answer: answerText,
-        style,
-        lang
-      })
-    });
-
-    if (!res.ok) {
-      console.error('API /api/video error status:', res.status);
-      throw new Error('video-api-failed');
-    }
-
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-
-    if (videoPreview) videoPreview.src = url;
-    if (videoDownload) {
-      videoDownload.href = url;
-      videoDownload.download = 'whatf-clip.mp4';
-    }
-    if (videoWrap) videoWrap.style.display = 'block';
-    if (videoNoteEl) videoNoteEl.textContent = T.videoReadyNote || '';
-
-  } catch (err) {
-    console.error('generateVideoClipViaApi error:', err);
-    toast(T.videoError || "Impossibile generare il video. Riprova.");
-  } finally {
-    if (videoLoadingEl) videoLoadingEl.style.display = 'none';
-    if (videoBtn) videoBtn.disabled = false;
+  if (typeof HTMLCanvasElement === "undefined" ||
+      !HTMLCanvasElement.prototype.captureStream ||
+      typeof MediaRecorder === "undefined") {
+    videoNotAvailable();
+    return;
   }
+
+  // UI loading
+  videoBtn.disabled = true;
+  if (videoLoadingEl) {
+    videoLoadingEl.textContent = T.videoPreparing || "Generazione video…";
+    videoLoadingEl.style.display = "inline";
+  }
+  if (videoWrap) videoWrap.style.display = "none";
+  if (videoNoteEl) videoNoteEl.textContent = "";
+
+  // Canvas
+  const canvas = document.createElement("canvas");
+  const width = 720;
+  const height = 1280;
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+
+  const stream = canvas.captureStream(25);
+
+  const candidates = [
+    "video/mp4;codecs=h264",
+    "video/webm;codecs=vp9",
+    "video/webm;codecs=vp8",
+    "video/webm"
+  ];
+  let mimeType = null;
+  for(const m of candidates){
+    if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) {
+      mimeType = m;
+      break;
+    }
+  }
+  if (!mimeType) {
+    videoNotAvailable();
+    videoBtn.disabled = false;
+    if (videoLoadingEl) videoLoadingEl.style.display = "none";
+    return;
+  }
+
+  const chunks = [];
+  let recorder;
+  try{
+    recorder = new MediaRecorder(stream, { mimeType });
+  }catch(e){
+    console.error(e);
+    videoNotAvailable();
+    videoBtn.disabled = false;
+    if (videoLoadingEl) videoLoadingEl.style.display = "none";
+    return;
+  }
+
+  recorder.ondataavailable = (ev)=>{
+    if (ev.data && ev.data.size > 0) chunks.push(ev.data);
+  };
+
+  recorder.onstop = ()=>{
+    try{
+      const blob = new Blob(chunks, { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      if (videoPreview) videoPreview.src = url;
+      if (videoDownload) {
+        const ext = mimeType.includes("mp4") ? "mp4" : "webm";
+        videoDownload.href = url;
+        videoDownload.download = `whatf-video.${ext}`;
+      }
+      if (videoWrap) videoWrap.style.display = "block";
+      if (videoNoteEl) videoNoteEl.textContent = T.videoReadyNote || "";
+    }catch(e){
+      console.error(e);
+      videoNotAvailable();
+    }finally{
+      videoBtn.disabled = false;
+      if (videoLoadingEl) videoLoadingEl.style.display = "none";
+    }
+  };
+
+  // Effetto scrittura
+  const fullAnswer = answerText.length > 550 ? (answerText.slice(0, 550) + "…") : answerText;
+  const totalDurationMs = 7000;
+  const extraStillMs = 800;
+  const start = performance.now();
+  const marginX = 50;
+  const maxWidth = width - marginX * 2;
+
+  function drawFrame(progress){
+    ctx.fillStyle = (style === "wtf") ? "#101414" : "#0A0F14";
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "left";
+    ctx.font = "bold 34px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    let y = 150;
+    y = wrapAndDraw(ctx, domanda, marginX, y, maxWidth, 42);
+
+    const chars = Math.max(1, Math.floor(fullAnswer.length * progress));
+    const partial = fullAnswer.slice(0, chars);
+
+    y += 40;
+    ctx.fillStyle = "#A0B2BA";
+    ctx.font = "28px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    wrapAndDraw(ctx, partial, marginX, y, maxWidth, 36);
+  }
+
+  function loop(ts){
+    const elapsed = ts - start;
+    const progress = Math.min(1, elapsed / totalDurationMs);
+    drawFrame(progress);
+
+    if (elapsed < totalDurationMs + extraStillMs) {
+      requestAnimationFrame(loop);
+    } else {
+      recorder.stop();
+    }
+  }
+
+  recorder.start();
+  requestAnimationFrame(loop);
 }
+
+if (videoBtn) {
+  videoBtn.onclick = generateVideoClip;
+                       }
 
 /* ==== Nav / lingua / share / save ==== */
 qs('#backBtn').onclick=()=> history.length > 1 ? history.back() : location.replace('index.html');
