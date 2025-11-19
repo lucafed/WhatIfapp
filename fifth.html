@@ -134,15 +134,22 @@ h1{
 }
 
 /* === VIDEO SECTION === */
-#videoBox{ margin-top:10px; }
+#videoBox{
+  margin-top:10px;
+}
 #videoPreview{
   width:100%;
   max-height:420px;
   border-radius:12px;
   display:block;
 }
-#videoLoading{ font-size:12px; color:var(--muted); }
-#videoWrap{ margin-top:10px; }
+#videoLoading{
+  font-size:12px;
+  color:var(--muted);
+}
+#videoWrap{
+  margin-top:10px;
+}
 #videoDownload{
   text-decoration:none;
   display:inline-flex;
@@ -270,9 +277,6 @@ h1{
         </div>
       </div>
     </div>
-
-    <!-- DEBUG FFmpeg (visibile anche da mobile) -->
-    <p class="small" id="ffmpegDebug" style="text-align:center;margin-top:6px;"></p>
 
     <div class="hr"></div>
     <div class="row">
@@ -485,11 +489,10 @@ const I18N = {
 };
 const SUP_LANG=['it','en','es','fr','de'];
 
-/* ======== LINGUA: segui FOURTH ======== */
+/* ======== LINGUA: segui FOURTH (request.lang o LS.lang) ======== */
 const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
 const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
-
 function detectLang(text=''){
   const t=(text||'').toLowerCase();
   if(/[¿¡]/.test(t)) return 'es';
@@ -500,27 +503,16 @@ function detectLang(text=''){
     fr:[" quoi"," si "," pourquoi"," quand"," où"," pas "," je "," peux"," si je"," et si"],
     de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
   };
-  const score={};
-  for(const L of SUP_LANG){
-    score[L]=0;
-    (bank[L]||[]).forEach(w=>{ if(t.includes(w)) score[L]++; });
-  }
-  let best='it', max=-1;
-  for(const L of SUP_LANG){
-    if(score[L]>max){ max=score[L]; best=L; }
-  }
-  if(max<=0){
-    const nav=(navigator.language||'it').slice(0,2).toLowerCase();
-    if(SUP_LANG.includes(nav)) return nav;
-  }
+  const score={}; for(const L of SUP_LANG){ score[L]=0; (bank[L]||[]).forEach(w=>{ if(t.includes(w)) score[L]++; }); }
+  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
+  if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
   return best;
 }
-
 let lang = SUP_LANG.includes(langFromFourth) ? langFromFourth : detectLang(domandaEarly);
 document.documentElement.lang=lang;
 const t = ()=>I18N[lang]||I18N.it;
 
-/* ==== Firebase credits ==== */
+/* ==== Firebase credits (solo lettura su fifth) ==== */
 let currentUser = null;
 let currentBalance = 0;
 
@@ -557,7 +549,7 @@ onAuthStateChanged(auth, async (user)=>{
   updateCreditInfo();
 });
 
-/* ==== System prompts (placeholder per /api/ask) ==== */
+/* ==== System prompts (solo UI, placeholder) ==== */
 const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
 const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica…`;
 
@@ -591,10 +583,7 @@ function showIntroOnce(){
     const L = (INTRO[style] && INTRO[style][lang]) ? INTRO[style][lang] : INTRO['whatif']['it'];
     const line = (periodo==='past') ? L.past : L.future;
     box.textContent = line;
-    try{
-      if(style==='wtf') document.getElementById('sfxWtf')?.play().catch(()=>{});
-      else document.getElementById('sfxWhatIf')?.play().catch(()=>{});
-    }catch{}
+    try{ if(style==='wtf') document.getElementById('sfxWtf')?.play().catch(()=>{}); else document.getElementById('sfxWhatIf')?.play().catch(()=>{}); }catch{}
     LS.setItem(INTRO_KEY,'1');
   }catch{}
 }
@@ -617,79 +606,32 @@ const videoDownload = qs('#videoDownload');
 const videoLoadingEl = qs('#videoLoading');
 const videoNoteEl = qs('#videoNote');
 
-/* ==== DEBUG FFmpeg ==== */
-const ffmpegDebugEl = qs('#ffmpegDebug');
-function showFfmpegDebug(msg){
-  if(ffmpegDebugEl){
-    ffmpegDebugEl.textContent = msg || '';
-  }
-}
-
 /* ==== Toast ==== */
-function toast(msg){
-  if(!toastEl) return;
-  toastEl.textContent=msg;
-  toastEl.classList.add('show');
-  setTimeout(()=>toastEl.classList.remove('show'),1500);
-}
+function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
 
 /* ==== Helpers testo ==== */
-function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt; }
-function normalizeOneParagraph(s=""){
-  return String(s)
-    .replace(/\s*\n+\s*/g," ")
-    .replace(/\s{2,}/g," ")
-    .replace(/\s+([.,;:!?])/g,"$1")
-    .trim();
-}
-function decorateEmBits(el){
-  const raw=el.textContent;
-  if(!raw||!raw.includes("—")) return;
-  const parts=raw.split("—");
-  let html="";
-  for(let i=0;i<parts.length;i++){
-    const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;");
-    html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`));
-  }
-  el.innerHTML=html;
-}
-function sanitizeForDrawtext(t){
-  return String(t || "")
-    .replace(/\\/g,"\\\\")
-    .replace(/:/g,"\\:")
-    .replace(/'/g,"\\'")
-    .replace(/"/g,'\\"')
-    .replace(/\n/g,"\\n")
-    .replace(/\r/g,"");
-}
+function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
+function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
+function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
 
 /* ==== Titles/Text ==== */
 function applyUI(q){
   const T=t();
   setText('#title', style==='wtf'?T.titleWTF:T.titleWHF);
-  subtitle.textContent=T.sub(q||'—');
-  setText('#lblQ', T.q);
-  setText('#lblA', T.a);
-  setText('#lblP', T.p);
-  shareBtn.textContent=T.share;
-  againBtn.textContent=T.again;
-  if(saveBtn) saveBtn.textContent=T.save;
+  subtitle.textContent=T.sub(q||'—'); setText('#lblQ', T.q); setText('#lblA', T.a); setText('#lblP', T.p);
+  shareBtn.textContent=T.share; againBtn.textContent=T.again; if(saveBtn) saveBtn.textContent=T.save;
   styleBadge.textContent=(style==='wtf')?T.styleWTF:T.styleWHF;
-  setText('#pctLabel', T.pctLabel);
-  if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel;
-  setText('#metaInfo', T.meta(style,periodo));
+  setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));
 
   setText('#lblVideo', T.videoTitle || 'Video');
-  const vh = qs('#videoHelp');
-  if(vh) vh.textContent = T.videoHelp || '';
+  const vh = qs('#videoHelp'); if(vh) vh.textContent = T.videoHelp || '';
   if(videoBtn) videoBtn.textContent = T.videoBtn || '🎬 Crea video';
   if(videoNoteEl) videoNoteEl.textContent = '';
 }
 
 /* ==== Probability ==== */
 function computeProbability(q){
-  const t=(q||'').toLowerCase();
-  let s=50;
+  const t=(q||'').toLowerCase(); let s=50;
   if(/\b(7|14|21|30|60|90)\b/.test(t)) s+=12;
   if(/\b\d+([.,]\d+)?\b/.test(t)) s+=8;
   if(/budget|€|euro|spesa|max|under|sotto/.test(t)) s+=6;
@@ -698,27 +640,19 @@ function computeProbability(q){
   if(/forse|magari|maybe|quizás/.test(t)) s-=8;
   if(!/\b\d/.test(t)) s-=6;
   s += (style==='wtf' ? -4 : +2);
-  return {pct: Math.max(25, Math.min(92, Math.round(s)))};
+  return {pct: Math.max(25, Math.min(92, Math.round(s)))}
 }
 
 /* === ORACLE helpers === */
 let oracleDeck = [];
 let oracleTimerId = null;
-function shuffle(arr){
-  for(let i=arr.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [arr[i],arr[j]]=[arr[j],arr[i]];
-  }
-  return arr;
-}
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
 function buildOracleDeck(){
   const base = (ORACLE_LINES[lang] || ORACLE_LINES.it).slice();
   const tails = ["", " …", " ⋯", " —", " …"];
   const deck = [];
   for(const line of base){
-    const v = Math.random()<0.45
-      ? (line.replace(/\.$/,"") + tails[Math.floor(Math.random()*tails.length)])
-      : line;
+    const v = Math.random()<0.45 ? (line.replace(/\.$/,"") + tails[Math.floor(Math.random()*tails.length)]) : line;
     deck.push(v);
   }
   return shuffle(deck);
@@ -739,8 +673,7 @@ function startOracleLoading(){
 }
 function stopOracleLoading(){
   document.body.classList.remove('loading');
-  clearTimeout(oracleTimerId);
-  oracleTimerId=null;
+  clearTimeout(oracleTimerId); oracleTimerId=null;
   const lineEl = document.getElementById('oracleLine');
   setTimeout(()=>{ if(lineEl) lineEl.textContent = " "; }, 350);
 }
@@ -752,9 +685,19 @@ function revealEffect(){
   setTimeout(()=> wrap.classList.remove('reveal'), 900);
 }
 
-/* ===== Motivazioni ===== */
-function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+/* ===== Helpers contestuali per “What if” breve ===== */
+function extractContextParts(q){
+  const s = String(q||"").toLowerCase();
+  const when = (s.match(/\b(in|entro|tra|domani|oggi|stasera|settimana|mese|anno|\d{1,2}\s*(giorni|settimane|mesi))\b/i)||[])[0] || "";
+  const money = (s.match(/(€|euro|budget|spesa|costo|prezzo)\s*([0-9.,]+)/i)||[])[0] || (/\bunder\b/i.test(s)?"under":"");
+  const action = (s.match(/\b(lancia|apri|impara|scrivi|chiedi|studia|automatizza|testa|compra|vendi|assumi|costruisci|crea|ottimizza|riduci|aumenta)\b/i)||[])[0] || "";
+  const topicMatch = s.match(/\b(sito|progetto|app|campagna|cv|colloquio|piscina|dominio|startup|portafoglio|criptovalute?|azione|investimento|esame)\b/i);
+  const topic = topicMatch ? topicMatch[0] : "";
+  return {when, money, action, topic};
+}
 
+/* ===== Motivazione demenziale per WTF ===== */
+function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
 function wtfMotivationDemenziale(langCode){
   const shots = rnd(1,3), spill = rnd(0,2), bruise = rnd(0,3);
   if(langCode==='en'){
@@ -769,6 +712,7 @@ function wtfMotivationDemenziale(langCode){
   return `Pseudoscienza da bancone: i micro-passi battono i piani epici. La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: fai, e smettila di pensarci troppo.`;
 }
 
+/* ===== NUOVE MOTIVAZIONI WHAT IF ===== */
 function buildWhatIfMotivationsPretty(domanda, pct){
   const q = String(domanda||"").toLowerCase();
   const L = lang;
@@ -832,7 +776,7 @@ function buildWhatIfMotivationsPretty(domanda, pct){
       if (isPast) {
         return baseProb +
           "Perché poteva funzionare:<br>" +
-          "• Una direzione più chiara ti avrebbe evitato di disperdere energie in mille tentativi.<br>" +
+          "• Una direzione più chiara ti avrebbe evitato di disperdere energie in mille tentativi.\n<br>" +
           "• Passi piccoli ma costanti sulla stessa strada avrebbero costruito più sicurezza interna.<br><br>" +
           "Cosa lo ha reso complicato:<br>" +
           "• Il bisogno di scegliere “il lavoro perfetto” ha rallentato ogni decisione concreta.<br>" +
@@ -952,7 +896,7 @@ function buildWhatIfMotivationsPretty(domanda, pct){
   }
 }
 
-/* ==== CACHE RISULTATO ==== */
+/* ==== CACHE RISULTATO (per bloccare doppie risposte) ==== */
 const RESULT_CACHE_KEY = 'whatif_result_cache_v2';
 
 function saveResultToCache(obj){
@@ -962,6 +906,7 @@ function saveResultToCache(obj){
     console.warn('cache save error', e);
   }
 }
+
 function loadResultFromCache(domanda){
   try{
     const raw = LS.getItem(RESULT_CACHE_KEY);
@@ -1026,19 +971,13 @@ function applyResultToUI(result){
   revealEffect();
 }
 
-/* ==== Init PRO badge ==== */
+/* ==== Top init ==== */
 (function initTop(){
   const hasToken=!!LS.getItem('admin_token');
   if(hasToken || prefs.pro===true){
-    const el=qs('#proBadge');
-    el.style.display='inline-flex';
+    const el=qs('#proBadge'); el.style.display='inline-flex';
     el.textContent='🧪 TEST · ⭐ PRO';
-    el.title = {
-      en:'Test mode active',
-      es:'Modo de prueba activo',
-      fr:'Mode test actif',
-      de:'Testmodus aktiv'
-    }[lang] || 'Modalità test attiva';
+    el.title = {en:'Test mode active',es:'Modo de prueba activo',fr:'Mode test actif',de:'Testmodus aktiv'}[lang] || 'Modalità test attiva';
   }
   qs('#langSelect').value=lang;
 })();
@@ -1055,19 +994,13 @@ function applyQuestion(){
   return {req, domanda, surprise};
 }
 
-/* ==== Salvataggio domanda ==== */
+/* ==== Salvataggio domanda per fourth ==== */
 function saveCurrentQuestion(){
   const domanda = (LS.getItem('domanda') || '').trim();
   if(!domanda) return;
   let arr=[];
-  try{
-    arr = JSON.parse(LS.getItem('next_prompts')||'[]');
-    if(!Array.isArray(arr)) arr=[];
-  }catch{ arr=[]; }
-  if(arr[0] && (arr[0].q||'') === domanda){
-    toast(t().savedOk);
-    return;
-  }
+  try{ arr = JSON.parse(LS.getItem('next_prompts')||'[]'); if(!Array.isArray(arr)) arr=[]; }catch{ arr=[]; }
+  if(arr[0] && (arr[0].q||'') === domanda){ toast(t().savedOk); return; }
   arr.unshift({ q: domanda, ts: Date.now() });
   if(arr.length>50) arr = arr.slice(0,50);
   LS.setItem('next_prompts', JSON.stringify(arr));
@@ -1075,7 +1008,7 @@ function saveCurrentQuestion(){
   toast(t().savedOk);
 }
 
-/* ==== Main flow ==== */
+/* ==== Main flow (NESSUN CONSUMO CREDITI QUI) ==== */
 async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
@@ -1093,20 +1026,12 @@ async function startFlow(){
   try{
     const headers={"Content-Type":"application/json"};
     if(prefs.pro===true) headers["x-pro"]="1";
-    const adminToken=LS.getItem("admin_token");
-    if(adminToken) headers["x-admin-token"]=adminToken;
+    const adminToken=LS.getItem("admin_token"); if(adminToken) headers["x-admin-token"]=adminToken;
 
     const r=await fetch("/api/ask",{
       method:"POST",headers,
-      body:JSON.stringify({
-        domanda,
-        lang,
-        stile:style,
-        periodo,
-        system:(style==='wtf'?SYSTEM_WTF:SYSTEM_WHIF),
-        extra:"",
-        micro:req.micro||{}
-      })
+      body:JSON.stringify({ domanda, lang, stile:style, periodo,
+        system:(style==='wtf'?SYSTEM_WTF:SYSTEM_WHIF), extra:"", micro:req.micro||{} })
     });
     const data=await r.json().catch(()=>null);
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
@@ -1117,38 +1042,32 @@ async function startFlow(){
     if(parts.length>maxSent) parts=parts.slice(0,maxSent);
     answerText=parts.join(" ").trim();
     if(!/[.!?…]$/.test(answerText)) answerText+='.';
-    answerEl.textContent=answerText;
-    decorateEmBits(answerEl);
+    answerEl.textContent=answerText; decorateEmBits(answerEl);
 
     stopOracleLoading();
     revealEffect();
 
-    const apiPct = (data && Number.isFinite(+data.pct))
-      ? Math.max(0, Math.min(100, Math.round(+data.pct)))
-      : null;
+    const apiPct = (data && Number.isFinite(+data.pct)) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : null;
     const usedPct = (apiPct!=null) ? apiPct : computeProbability(domanda).pct;
     const pStr = usedPct + "%";
     topPct.textContent = pStr;
     bottomPct.textContent = pStr;
 
+    let motivazioneUsata = "";
     let motivationMode = (style === 'wtf') ? 'wtf' : 'whatif';
     let motivationTextForCache = "";
     let chipsFavNum, chipsConNum, chipsAstNum;
 
     if (surprise) {
-      motIco.style.display='';
-      chipsWrap.style.display='flex';
+      motIco.style.display=''; chipsWrap.style.display='flex';
       committeeTitle.textContent=t().votersTitle||'Comitato';
-
       const rdm=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
       chipsFavNum = rdm(120,1200);
       chipsConNum = rdm(0,900);
       chipsAstNum = rdm(0,400);
-
       chipFav.textContent=`${t().chipsFav} ${chipsFavNum}`;
       chipCon.textContent=`${t().chipsCon} ${chipsConNum}`;
       chipAst.textContent=`${t().chipsAst} ${chipsAstNum}`;
-
       const removed = rdm(1,5);
       const bruised = rdm(0,3);
       const note =
@@ -1157,8 +1076,8 @@ async function startFlow(){
        :(lang==='fr')?`Petit grabuge au vote : ${removed} évacués ; ${bruised} contusionnés.`
        :(lang==='de')?`Kurzes Gerangel bei der Abstimmung: ${removed} entfernt; ${bruised} leicht verletzt.`
        :`Breve parapiglia al voto: ${removed} allontanati; ${bruised} contusi.`;
-
       motNote.textContent = note;
+      motivazioneUsata = note;
       motivationMode = 'surprise';
       motivationTextForCache = note;
 
@@ -1168,6 +1087,7 @@ async function startFlow(){
       committeeTitle.textContent = t().scientificTitle;
       const sci = wtfMotivationDemenziale(lang);
       motNote.textContent = sci;
+      motivazioneUsata = sci;
       motivationMode = 'wtf';
       motivationTextForCache = sci;
 
@@ -1177,21 +1097,13 @@ async function startFlow(){
       committeeTitle.textContent = t().seriousTitle;
       const html = buildWhatIfMotivationsPretty(domanda, usedPct);
       motNote.innerHTML = html;
+      motivazioneUsata = html.replace(/<br\s*\/?>/gi," | ");
       motivationMode = 'whatif';
       motivationTextForCache = html;
     }
 
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({
-      domanda,
-      risposta:answerText,
-      stile:style,
-      periodo,
-      ts:Date.now(),
-      surprise,
-      pct:usedPct,
-      motivazione:motivationTextForCache
-    });
+    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:usedPct, motivazione:motivazioneUsata });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
 
     const resultForCache = {
@@ -1217,100 +1129,20 @@ async function startFlow(){
   }
 }
 
-/* ==== FFmpeg client-side via CDN (compatibile con createFFmpeg) ==== */
-let ffmpegInstance = null;
-
-function loadFFmpegScript(){
-  return new Promise((resolve, reject) => {
-    if (window.FFmpeg && window.FFmpeg.createFFmpeg) {
-      showFfmpegDebug("FFmpeg già presente in pagina.");
-      resolve();
-      return;
-    }
-
-    const existing = document.querySelector('script[data-ffmpeg=\"1\"]');
-    if (existing) {
-      existing.addEventListener("load", () => {
-        showFfmpegDebug("FFmpeg script caricato (existing).");
-        resolve();
-      }, { once: true });
-      existing.addEventListener("error", () => {
-        const err = "Errore caricamento script FFmpeg (existing).";
-        showFfmpegDebug(err);
-        reject(new Error("ffmpeg-script-load"));
-      }, { once: true });
-      return;
-    }
-
-    const s = document.createElement("script");
-    // Versione 0.10.0: API createFFmpeg / ffmpeg.run / ffmpeg.FS
-    s.src = "https://unpkg.com/@ffmpeg/ffmpeg@0.10.0/dist/ffmpeg.min.js";
-    s.async = true;
-    s.dataset.ffmpeg = "1";
-    s.onload = () => {
-      showFfmpegDebug("FFmpeg script caricato da CDN.");
-      resolve();
-    };
-    s.onerror = () => {
-      const err = "Errore caricamento script FFmpeg da CDN.";
-      showFfmpegDebug(err);
-      reject(new Error("ffmpeg-script-load"));
-    };
-    document.head.appendChild(s);
-  });
-}
-
-async function getFFmpegInstance(){
-  if (ffmpegInstance) return ffmpegInstance;
-
-  await loadFFmpegScript();
-
-  const hasFF = !!window.FFmpeg;
-  const hasCreate = hasFF && !!window.FFmpeg.createFFmpeg;
-
-  if (!hasFF || !hasCreate) {
-    const info = `FFmpeg non disponibile. hasFFmpeg=${hasFF}, hasCreateFFmpeg=${hasCreate}`;
-    showFfmpegDebug(info);
-    throw new Error(info);
-  }
-
-  const { createFFmpeg } = window.FFmpeg;
-  ffmpegInstance = createFFmpeg({
-    log: false,
-    corePath: "https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js"
-  });
-
-  showFfmpegDebug("Istanza FFmpeg creata. In attesa di load()…");
-  return ffmpegInstance;
-}
-
-/* ==== VIDEO: generazione locale ==== */
-async function generateVideoClip(){
-  if (!videoBtn) return;
+/* ==== VIDEO via API (server-side) ==== */
+async function generateVideoClipViaApi() {
   const T = t();
 
   const domanda = (LS.getItem('domanda') || qView.textContent || '').trim();
   const answerText = (answerEl.textContent || '').trim();
 
   if (!domanda || !answerText || answerText === '⏳ …') {
-    toast(T.videoNoData || "Nessuna risposta da trasformare in video.");
-    showFfmpegDebug(T.videoNoData || "Nessuna risposta da trasformare in video.");
-    return;
-  }
-
-  let ffmpeg;
-  try {
-    ffmpeg = await getFFmpegInstance();
-  } catch (e) {
-    console.error('FFmpeg non disponibile:', e);
-    const msg = "Video non disponibile su questo dispositivo. Dettaglio: " + (e && e.message ? e.message : e);
-    toast("Video non disponibile su questo dispositivo.");
-    showFfmpegDebug(msg);
+    toast(T.videoNoData || "Non c’è ancora una risposta da trasformare in video.");
     return;
   }
 
   try {
-    videoBtn.disabled = true;
+    if (videoBtn) videoBtn.disabled = true;
     if (videoLoadingEl) {
       videoLoadingEl.textContent = T.videoPreparing || "Generazione video…";
       videoLoadingEl.style.display = 'inline';
@@ -1318,69 +1150,39 @@ async function generateVideoClip(){
     if (videoWrap) videoWrap.style.display = 'none';
     if (videoNoteEl) videoNoteEl.textContent = '';
 
-    if (!ffmpeg.isLoaded()) {
-      await ffmpeg.load();
-      showFfmpegDebug("FFmpeg caricato (ffmpeg.load() completato).");
+    const res = await fetch('/api/video', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        domanda,
+        answer: answerText,
+        style,
+        lang
+      })
+    });
+
+    if (!res.ok) {
+      console.error('API /api/video error status:', res.status);
+      throw new Error('video-api-failed');
     }
 
-    const bgColor = style === 'wtf' ? '0x101414' : '0x0A0F14';
-    const duration = 8;
-    const width = 1080;
-    const height = 1920;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
 
-    let aShort = answerText.length > 240 ? answerText.slice(0, 240) + "…" : answerText;
-    const sDomanda = sanitizeForDrawtext(domanda);
-    const sAnswer  = sanitizeForDrawtext(aShort);
-
-    const drawFilter = [
-      `drawtext=text='${sDomanda}':fontcolor=white:fontsize=44:box=1:boxcolor=0x00000066:boxborderw=16:x=(w-text_w)/2:y=200`,
-      `drawtext=text='${sAnswer}':fontcolor=0xA0B2BA:fontsize=34:box=1:boxcolor=0x00000066:boxborderw=16:x=(w-text_w)/2:y=(h-text_h)/2+80`
-    ].join(",");
-
-    showFfmpegDebug("Avvio ffmpeg.run()…");
-
-    await ffmpeg.run(
-      "-f","lavfi",
-      "-i",`color=c=${bgColor}:s=${width}x${height}:d=${duration}`,
-      "-vf", drawFilter,
-      "-c:v","libx264",
-      "-preset","veryfast",
-      "-pix_fmt","yuv420p",
-      "-movflags","+faststart",
-      "out.mp4"
-    );
-
-    showFfmpegDebug("ffmpeg.run() completata, lettura file…");
-
-    const data = ffmpeg.FS("readFile","out.mp4");
-    const blob = new Blob([data.buffer], { type:"video/mp4" });
-    const url  = URL.createObjectURL(blob);
-
-    if (videoPreview) {
-      videoPreview.src = url;
-    }
+    if (videoPreview) videoPreview.src = url;
     if (videoDownload) {
       videoDownload.href = url;
-      videoDownload.download = "whatf-clip.mp4";
+      videoDownload.download = 'whatf-clip.mp4';
     }
-    if (videoWrap) {
-      videoWrap.style.display = 'block';
-    }
-    if (videoNoteEl) {
-      videoNoteEl.textContent = T.videoReadyNote || '';
-    }
-
-    showFfmpegDebug("Video generato con successo.");
+    if (videoWrap) videoWrap.style.display = 'block';
+    if (videoNoteEl) videoNoteEl.textContent = T.videoReadyNote || '';
 
   } catch (err) {
-    console.error('generateVideoClip error:', err);
-    const msg = (T.videoError || "Errore nella generazione del video.") +
-                " Dettaglio: " + (err && err.message ? err.message : err);
-    toast(T.videoError || "Errore nella generazione del video.");
-    showFfmpegDebug(msg);
+    console.error('generateVideoClipViaApi error:', err);
+    toast(T.videoError || "Impossibile generare il video. Riprova.");
   } finally {
     if (videoLoadingEl) videoLoadingEl.style.display = 'none';
-    videoBtn.disabled = false;
+    if (videoBtn) videoBtn.disabled = false;
   }
 }
 
@@ -1401,19 +1203,16 @@ qs('#shareBtn').onclick=async()=>{
   const T=t();
   const full=`What?f — ${style==='wtf'?(T.styleWTF):(T.styleWHF)}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
   try{
-    if(navigator.share){
-      await navigator.share({title:"What?f",text:full});
-    } else {
+    if(navigator.share){ await navigator.share({title:"What?f",text:full}); }
+    else{
       await navigator.clipboard.writeText(full);
-      const b=qs('#shareBtn');
-      b.textContent=T.copied;
-      setTimeout(()=>b.textContent=T.share,1200);
+      const b=qs('#shareBtn'); b.textContent=T.copied; setTimeout(()=>b.textContent=T.share,1200);
     }
   }catch{}
 };
 qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
 if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
-if(videoBtn){ videoBtn.onclick = generateVideoClip; }
+if(videoBtn){ videoBtn.onclick = generateVideoClipViaApi; }
 
 /* ==== Avvio ==== */
 startFlow();
