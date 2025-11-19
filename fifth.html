@@ -270,7 +270,7 @@ h1{
         <span class="small" id="videoLoading" style="display:none;">Generazione video in corso…</span>
       </div>
       <div id="videoWrap" style="display:none;">
-        <video id="videoPreview" controls playsinline></video>
+        <video id="videoPreview" controls></video>
         <div class="row" style="margin-top:8px;justify-content:space-between;">
           <a id="videoDownload" class="btn primary" download="whatf-clip.mp4">⬇️ Scarica / Condividi</a>
           <span class="small" id="videoNote"></span>
@@ -307,8 +307,6 @@ h1{
 <audio id="sfxWtf" preload="auto">
   <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
 </audio>
-
-<!-- ⚠️ NIENTE script FFmpeg qui: lo carichiamo in modo dinamico sotto -->
 
 <script type="module">
 /* ==== Firebase Auth + Firestore credits (solo lettura) ==== */
@@ -454,7 +452,7 @@ const I18N = {
        videoBtn:"🎬 Créer la vidéo",
        videoReadyNote:"Vidéo prête : tu peux la télécharger et la mettre sur TikTok, Reels ou ailleurs.",
        videoPreparing:"Génération de la vidéo…",
-       videoError:"Impossible de générer le vidéo. Réessaie.",
+       videoError:"Impossible de générer la vidéo. Réessaie.",
        videoNoData:"Il n’y a pas encore de réponse à transformer en vidéo."
   },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
@@ -597,7 +595,7 @@ const answerEl=qs('#answer'), shareBtn=qs('#shareBtn'), againBtn=qs('#againBtn')
 const saveBtn=qs('#saveBtn');
 const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct'), bottomPct=qs('#bottomPct');
 const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
-const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
+const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap'];
 const motNote=qs('#motNote'), toastEl=qs('#toast');
 
 /* ==== VIDEO refs ==== */
@@ -1159,7 +1157,7 @@ function loadFFmpegScript(){
     }
 
     const s = document.createElement('script');
-    s.src = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js";
+    s.src = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js";
     s.async = true;
     s.dataset.ffmpeg = "1";
     s.onload = () => resolve();
@@ -1183,41 +1181,7 @@ async function getFFmpegInstance(){
   return ffmpegInstance;
 }
 
-/* === helper: segmentare la risposta per effetto "scrittura" === */
-function buildTypingSegments(answerText, maxSegments = 3){
-  let base = String(answerText || "").trim();
-  if (!base) return [];
-
-  // limita un po' la lunghezza totale
-  if (base.length > 280) base = base.slice(0, 280) + "…";
-
-  const sentences = base.split(/(?<=[.!?…])\s+/);
-  const segments = [];
-
-  if (sentences.length === 1) {
-    // un'unica frase: spezzala in 2–3 chunk di testo
-    const len = base.length;
-    const chunkSize = Math.ceil(len / maxSegments);
-    for (let i = 1; i <= maxSegments; i++) {
-      const slice = base.slice(0, i * chunkSize);
-      if (!slice) break;
-      segments.push(slice.trim());
-      if (i * chunkSize >= len) break;
-    }
-  } else {
-    // costruisci frasi cumulative
-    let acc = "";
-    for (let i = 0; i < sentences.length && segments.length < maxSegments; i++) {
-      acc = acc ? (acc + " " + sentences[i]) : sentences[i];
-      segments.push(acc.trim());
-    }
-  }
-
-  if (segments.length === 0) segments.push(base);
-  return segments;
-}
-
-/* ==== VIDEO: generazione locale con animazione testo ==== */
+/* ==== VIDEO: generazione locale (nessuna API) ==== */
 async function generateVideoClip(){
   if (!videoBtn) return;
   const T = t();
@@ -1253,36 +1217,18 @@ async function generateVideoClip(){
     }
 
     const bgColor = style === 'wtf' ? '0x101414' : '0x0A0F14';
-    const duration = 9;          // durata clip
-    const width    = 1080;
-    const height   = 1920;
+    const duration = 8;
+    const width = 1080;
+    const height = 1920;
 
+    let aShort = answerText.length > 240 ? answerText.slice(0, 240) + "…" : answerText;
     const sDomanda = sanitizeForDrawtext(domanda);
-    const segments = buildTypingSegments(answerText, 3);  // testo cumulativo in 3 step
+    const sAnswer  = sanitizeForDrawtext(aShort);
 
-    // tempi di comparsa dei blocchi di testo
-    const n = segments.length;
-    const baseStep = duration / (n + 1); // primo segmento dopo 1 step, poi 2 step, ecc.
-
-    const filters = [];
-
-    // DOMANDA fissa in alto
-    filters.push(
-      `drawtext=text='${sDomanda}':fontcolor=white:fontsize=44:box=1:boxcolor=0x00000066:boxborderw=16:x=(w-text_w)/2:y=200`
-    );
-
-    // RISPOSTA che si "scrive" a blocchi
-    for (let i = 0; i < n; i++) {
-      const visibleText = sanitizeForDrawtext(segments[i]);
-      const start = (i + 1) * baseStep;
-      const end   = (i === n - 1) ? duration : (i + 2) * baseStep;
-
-      filters.push(
-        `drawtext=text='${visibleText}':fontcolor=0xA0B2BA:fontsize=34:box=1:boxcolor=0x00000066:boxborderw=16:x=(w-text_w)/2:y=(h-text_h)/2+80:enable='between(t,${start.toFixed(2)},${end.toFixed(2)})'`
-      );
-    }
-
-    const drawFilter = filters.join(",");
+    const drawFilter = [
+      `drawtext=text='${sDomanda}':fontcolor=white:fontsize=44:box=1:boxcolor=0x00000066:boxborderw=16:x=(w-text_w)/2:y=200`,
+      `drawtext=text='${sAnswer}':fontcolor=0xA0B2BA:fontsize=34:box=1:boxcolor=0x00000066:boxborderw=16:x=(w-text_w)/2:y=(h-text_h)/2+80`
+    ].join(",");
 
     await ffmpeg.run(
       "-f","lavfi",
@@ -1301,7 +1247,6 @@ async function generateVideoClip(){
 
     if (videoPreview) {
       videoPreview.src = url;
-      videoPreview.load();
     }
     if (videoDownload) {
       videoDownload.href = url;
