@@ -1138,12 +1138,11 @@ async function startFlow(){
   }
 }
 
-/* ==== FFmpeg client-side (caricamento dinamico, robusto) ==== */
-/* ==== FFmpeg client-side (caricamento dinamico, robusto) ==== */
+/* ==== FFmpeg client-side (caricamento dinamico, robusto, con Catbox) ==== */
 // Una sola istanza condivisa
 let ffmpegInstance = null;
 
-// Carica lo script FFmpeg solo la prima volta
+// Carica lo script FFmpeg solo la prima volta (DA /public/ffmpeg)
 function loadFFmpegScript() {
   return new Promise((resolve, reject) => {
     // Se è già stato caricato, basta così
@@ -1164,10 +1163,9 @@ function loadFFmpegScript() {
       return;
     }
 
-    // Carica la libreria da jsDelivr (per Vercel va bene)
+    // Carica la libreria locale dal tuo progetto: /public/ffmpeg/ffmpeg.min.js
     const s = document.createElement("script");
-    s.src =
-      "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js";
+    s.src = "/ffmpeg/ffmpeg.min.js";
     s.async = true;
     s.dataset.ffmpeg = "1";
     s.onload = () => resolve();
@@ -1189,11 +1187,11 @@ async function getFFmpegInstance() {
 
   const { createFFmpeg } = window.FFmpeg;
 
-  // Indichiamo dove si trova il core (JS + WASM)
+  // Usa il core JS locale e il WASM ospitato su Catbox
   ffmpegInstance = createFFmpeg({
     log: false,
-    corePath:
-      "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js",
+    corePath: "/ffmpeg/ffmpeg-core.js",                 // file che hai in /public/ffmpeg
+    wasmPath: "https://files.catbox.moe/hqfek6.wasm",   // WASM su Catbox
   });
 
   return ffmpegInstance;
