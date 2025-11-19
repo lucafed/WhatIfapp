@@ -1139,52 +1139,64 @@ async function startFlow(){
 }
 
 /* ==== FFmpeg client-side (caricamento dinamico, robusto) ==== */
+/* ==== FFmpeg client-side (caricamento dinamico, robusto) ==== */
+// Una sola istanza condivisa
 let ffmpegInstance = null;
 
-// Carica lo script FFmpeg se non è ancora disponibile
-function loadFFmpegScript(){
-  return new Promise((resolve, reject)=>{
+// Carica lo script FFmpeg solo la prima volta
+function loadFFmpegScript() {
+  return new Promise((resolve, reject) => {
+    // Se è già stato caricato, basta così
     if (window.FFmpeg && window.FFmpeg.createFFmpeg) {
       resolve();
       return;
     }
 
+    // Se abbiamo già un <script data-ffmpeg="1"> ri-usa quello
     const existing = document.querySelector('script[data-ffmpeg="1"]');
     if (existing) {
-      existing.addEventListener('load', () => resolve(), { once:true });
-      existing.addEventListener('error', () => reject(new Error('ffmpeg-script-load')), { once:true });
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener(
+        "error",
+        () => reject(new Error("ffmpeg-script-load")),
+        { once: true }
+      );
       return;
     }
 
-    const s = document.createElement('script');
-    s.src = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js";
+    // Carica la libreria da jsDelivr (per Vercel va bene)
+    const s = document.createElement("script");
+    s.src =
+      "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js";
     s.async = true;
     s.dataset.ffmpeg = "1";
     s.onload = () => resolve();
-    s.onerror = () => reject(new Error('ffmpeg-script-load'));
+    s.onerror = () => reject(new Error("ffmpeg-script-load"));
     document.head.appendChild(s);
   });
 }
 
-/* ==== FFmpeg client-side (caricamento dal CDN corretto) ==== */
-let ffmpegInstance = null;
-
+// Ritorna (creandola se serve) l’istanza di FFmpeg
 async function getFFmpegInstance() {
-    if (ffmpegInstance) return ffmpegInstance;
+  if (ffmpegInstance) return ffmpegInstance;
 
-    if (!window.FFmpeg || !window.FFmpeg.createFFmpeg) {
-        throw new Error("ffmpeg-not-available");
-    }
+  // assicuriamoci che lo script sia carico
+  await loadFFmpegScript();
 
-    const { createFFmpeg } = window.FFmpeg;
+  if (!window.FFmpeg || !window.FFmpeg.createFFmpeg) {
+    throw new Error("ffmpeg-not-available");
+  }
 
-    ffmpegInstance = createFFmpeg({
-        log: false,
-        corePath: "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js",
-        wasmPath: "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm"
-    });
+  const { createFFmpeg } = window.FFmpeg;
 
-    return ffmpegInstance;
+  // Indichiamo dove si trova il core (JS + WASM)
+  ffmpegInstance = createFFmpeg({
+    log: false,
+    corePath:
+      "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js",
+  });
+
+  return ffmpegInstance;
 }
 
 
