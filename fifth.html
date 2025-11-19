@@ -1166,25 +1166,19 @@ function loadFFmpegScript(){
   });
 }
 
-/* ==== FFmpeg client-side (caricamento dal CDN corretto) ==== */
-let ffmpegInstance = null;
+// Ritorna (creandola se serve) l’istanza di FFmpeg
+async function getFFmpegInstance(){
+  if (ffmpegInstance) return ffmpegInstance;
 
-async function getFFmpegInstance() {
-    if (ffmpegInstance) return ffmpegInstance;
+  await loadFFmpegScript();
 
-    if (!window.FFmpeg || !window.FFmpeg.createFFmpeg) {
-        throw new Error("ffmpeg-not-available");
-    }
+  if (!window.FFmpeg || !window.FFmpeg.createFFmpeg) {
+    throw new Error('ffmpeg-not-available');
+  }
 
-    const { createFFmpeg } = window.FFmpeg;
-
-    ffmpegInstance = createFFmpeg({
-        log: false,
-        corePath: "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js",
-        wasmPath: "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm"
-    });
-
-    return ffmpegInstance;
+  const { createFFmpeg } = window.FFmpeg;
+  ffmpegInstance = createFFmpeg({ log:false });
+  return ffmpegInstance;
 }
 
 /* ==== VIDEO: generazione locale (nessuna API) ==== */
