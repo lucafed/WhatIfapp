@@ -445,7 +445,7 @@ const I18N = {
        videoBtn:"🎬 Créer la vidéo",
        videoReadyNote:"Vidéo prête : tu peux la télécharger et la mettre sur TikTok, Reels ou ailleurs.",
        videoPreparing:"Génération de la vidéo…",
-       videoError:"Impossible de générer la vidéo. Réessaie.",
+       videoError:"Impossible de générer le vidéo. Réessaie.",
        videoNoData:"Il n’y a pas encore de réponse à transformer en vidéo."
   },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
@@ -517,7 +517,7 @@ let lang = SUP_LANG.includes(langFromFourth) ? langFromFourth : detectLang(doman
 document.documentElement.lang=lang;
 const t = ()=>I18N[lang]||I18N.it;
 
-/* ==== Firebase credits (solo lettura su fifth) ==== */
+/* ==== Firebase credits ==== */
 let currentUser = null;
 let currentBalance = 0;
 
@@ -1064,7 +1064,7 @@ function saveCurrentQuestion(){
   toast(t().savedOk);
 }
 
-/* ==== Main flow (nessun consumo crediti qui) ==== */
+/* ==== Main flow ==== */
 async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
@@ -1206,7 +1206,7 @@ async function startFlow(){
   }
 }
 
-/* ==== FFmpeg client-side via CDN (nessun file grosso nel repo) ==== */
+/* ==== FFmpeg client-side via CDN (compatibile con createFFmpeg) ==== */
 let ffmpegInstance = null;
 
 function loadFFmpegScript(){
@@ -1224,7 +1224,8 @@ function loadFFmpegScript(){
     }
 
     const s = document.createElement("script");
-    s.src = "https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js";
+    // Versione 0.10.0: API createFFmpeg / ffmpeg.run / ffmpeg.FS
+    s.src = "https://unpkg.com/@ffmpeg/ffmpeg@0.10.0/dist/ffmpeg.min.js";
     s.async = true;
     s.dataset.ffmpeg = "1";
     s.onload = () => resolve();
@@ -1244,7 +1245,7 @@ async function getFFmpegInstance(){
   const { createFFmpeg } = window.FFmpeg;
   ffmpegInstance = createFFmpeg({
     log: false,
-    corePath: "https://unpkg.com/@ffmpeg/core@0.12.10/dist/ffmpeg-core.js"
+    corePath: "https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js"
   });
 
   return ffmpegInstance;
