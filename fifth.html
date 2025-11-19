@@ -272,7 +272,7 @@ h1{
       <div id="videoWrap" style="display:none;">
         <video id="videoPreview" controls></video>
         <div class="row" style="margin-top:8px;justify-content:space-between;">
-          <a id="videoDownload" class="btn primary" download="whatf-clip.mp4">⬇️ Scarica / Condividi</a>
+          <a id="videoDownload" class="btn primary" download="whatf-clip.webm">⬇️ Scarica / Condividi</a>
           <span class="small" id="videoNote"></span>
         </div>
       </div>
@@ -308,8 +308,7 @@ h1{
   <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
 </audio>
 
-<!-- ⚙️ FFmpeg in browser (global FFmpeg) -->
-<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js"></script>
+<!-- ⚠️ NESSUN FFmpeg qui, tutto lato client con canvas+MediaRecorder -->
 
 <script type="module">
 /* ==== Firebase Auth + Firestore credits (solo lettura) ==== */
@@ -417,7 +416,7 @@ const I18N = {
        guideTitle:"Guía",
        guideQuick:"Indicaciones rápidas",
        guideAdvice:"Consejo",
-       guideAnalysis:"Análisis sintético",
+       guideAnalysis:"Analisis sintético",
        /* VIDEO */
        videoTitle:"Vídeo compartible",
        videoHelp:"Crea un vídeo corto con tu pregunta y respuesta, listo para compartir en redes.",
@@ -617,14 +616,6 @@ function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
 function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
 function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-function sanitizeForDrawtext(t){
-  return String(t)
-    .replace(/:/g,"\\:")
-    .replace(/'/g,"\\'")
-    .replace(/"/g,'\\"')
-    .replace(/\n/g,"\\n")
-    .replace(/\r/g,"");
-}
 
 /* ==== Titles/Text ==== */
 function applyUI(q){
@@ -695,17 +686,6 @@ function revealEffect(){
   wrap.classList.add('reveal');
   try{ document.getElementById('revealDing')?.play().catch(()=>{}); }catch{}
   setTimeout(()=> wrap.classList.remove('reveal'), 900);
-}
-
-/* ===== Helpers contestuali per “What if” breve ===== */
-function extractContextParts(q){
-  const s = String(q||"").toLowerCase();
-  const when = (s.match(/\b(in|entro|tra|domani|oggi|stasera|settimana|mese|anno|\d{1,2}\s*(giorni|settimane|mesi))\b/i)||[])[0] || "";
-  const money = (s.match(/(€|euro|budget|spesa|costo|prezzo)\s*([0-9.,]+)/i)||[])[0] || (/\bunder\b/i.test(s)?"under":"");
-  const action = (s.match(/\b(lancia|apri|impara|scrivi|chiedi|studia|automatizza|testa|compra|vendi|assumi|costruisci|crea|ottimizza|riduci|aumenta)\b/i)||[])[0] || "";
-  const topicMatch = s.match(/\b(sito|progetto|app|campagna|cv|colloquio|piscina|dominio|startup|portafoglio|criptovalute?|azione|investimento|esame)\b/i);
-  const topic = topicMatch ? topicMatch[0] : "";
-  return {when, money, action, topic};
 }
 
 /* ===== Motivazione demenziale per WTF ===== */
@@ -1141,67 +1121,62 @@ async function startFlow(){
   }
 }
 
-/* ==== FFmpeg client-side (caricamento dinamico, robusto) ==== */
-let ffmpegInstance = null;
+/* ==== VIDEO: generazione locale con canvas + MediaRecorder (no ffmpeg) ==== */
 
-// Carica lo script FFmpeg se non è ancora disponibile
-function loadFFmpegScript(){
-  return new Promise((resolve, reject)=>{
-    if (window.FFmpeg && window.FFmpeg.createFFmpeg) {
-      resolve();
-      return;
+// semplice word-wrap per scrivere nel canvas
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = String(text || "").split(/\s+/);
+  let line = "";
+  for (const word of words) {
+    const testLine = line ? line + " " + word : word;
+    const { width } = ctx.measureText(testLine);
+    if (width > maxWidth && line) {
+      ctx.fillText(line, x, y);
+      y += lineHeight;
+      line = word;
+    } else {
+      line = testLine;
     }
-
-    const existing = document.querySelector('script[data-ffmpeg="1"]');
-    if (existing) {
-      existing.addEventListener('load', () => resolve(), { once:true });
-      existing.addEventListener('error', () => reject(new Error('ffmpeg-script-load')), { once:true });
-      return;
-    }
-
-    const s = document.createElement('script');
-    s.src = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js";
-    s.async = true;
-    s.dataset.ffmpeg = "1";
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error('ffmpeg-script-load'));
-    document.head.appendChild(s);
-  });
-}
-
-// Ritorna (creandola se serve) l’istanza di FFmpeg
-async function getFFmpegInstance(){
-  if (ffmpegInstance) return ffmpegInstance;
-
-  await loadFFmpegScript();
-
-  if (!window.FFmpeg || !window.FFmpeg.createFFmpeg) {
-    throw new Error('ffmpeg-not-available');
   }
-
-  const { createFFmpeg } = window.FFmpeg;
-  ffmpegInstance = createFFmpeg({ log:false });
-  return ffmpegInstance;
+  if (line) {
+    ctx.fillText(line, x, y);
+    y += lineHeight;
+  }
+  return y;
 }
 
-/* ==== VIDEO: generazione locale (nessuna API) ==== */
-async function generateVideoClip(){
+async function generateVideoClip() {
   if (!videoBtn) return;
   const T = t();
 
-  const domanda = (LS.getItem('domanda') || qView.textContent || '').trim();
-  const answerText = (answerEl.textContent || '').trim();
+  const domanda = (LS.getItem("domanda") || qView.textContent || "").trim();
+  const answerText = (answerEl.textContent || "").trim();
 
   if (!domanda || !answerText) {
-    toast(T.videoNoData || "Nessuna risposta da trasformare in video.");
+    toast(T.videoNoData || "Non c’è ancora una risposta da trasformare in video.");
     return;
   }
 
-  let ffmpeg;
-  try {
-    ffmpeg = await getFFmpegInstance();
-  } catch (e) {
-    console.error('FFmpeg non disponibile:', e);
+  // Supporto base
+  if (typeof MediaRecorder === "undefined" || !HTMLCanvasElement.prototype.captureStream) {
+    toast("Video non disponibile su questo dispositivo.");
+    return;
+  }
+
+  // MIME supportato
+  let mimeType = "";
+  const candidates = [
+    "video/webm;codecs=vp9",
+    "video/webm;codecs=vp8",
+    "video/webm"
+  ];
+  for (const c of candidates) {
+    if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(c)) {
+      mimeType = c;
+      break;
+    }
+  }
+  if (!mimeType) {
     toast("Video non disponibile su questo dispositivo.");
     return;
   }
@@ -1209,67 +1184,119 @@ async function generateVideoClip(){
   try {
     videoBtn.disabled = true;
     if (videoLoadingEl) {
-      videoLoadingEl.textContent = T.videoPreparing || "Generazione video…";
-      videoLoadingEl.style.display = 'inline';
+      videoLoadingEl.textContent = T.videoPreparing || "Generazione video in corso…";
+      videoLoadingEl.style.display = "inline";
     }
-    if (videoWrap) videoWrap.style.display = 'none';
-    if (videoNoteEl) videoNoteEl.textContent = '';
+    if (videoWrap) videoWrap.style.display = "none";
+    if (videoNoteEl) videoNoteEl.textContent = "";
 
-    if (!ffmpeg.isLoaded()) {
-      await ffmpeg.load();
-    }
-
-    const bgColor = style === 'wtf' ? '0x101414' : '0x0A0F14';
-    const duration = 8;
+    // Canvas "virtuale"
     const width = 1080;
     const height = 1920;
+    const durationMs = 8000; // 8 secondi
 
-    let aShort = answerText.length > 240 ? answerText.slice(0, 240) + "…" : answerText;
-    const sDomanda = sanitizeForDrawtext(domanda);
-    const sAnswer  = sanitizeForDrawtext(aShort);
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
 
-    const drawFilter = [
-      `drawtext=text='${sDomanda}':fontcolor=white:fontsize=44:box=1:boxcolor=0x00000066:boxborderw=16:x=(w-text_w)/2:y=200`,
-      `drawtext=text='${sAnswer}':fontcolor=0xA0B2BA:fontsize=34:box=1:boxcolor=0x00000066:boxborderw=16:x=(w-text_w)/2:y=(h-text_h)/2+80`
-    ].join(",");
+    // Sfondo
+    const bgTop = style === "wtf" ? "#101414" : "#0A0F14";
+    const bgBottom = "#000000";
+    const grad = ctx.createLinearGradient(0, 0, 0, height);
+    grad.addColorStop(0, bgTop);
+    grad.addColorStop(1, bgBottom);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, width, height);
 
-    await ffmpeg.run(
-      "-f","lavfi",
-      "-i",`color=c=${bgColor}:s=${width}x${height}:d=${duration}`,
-      "-vf", drawFilter,
-      "-c:v","libx264",
-      "-preset","veryfast",
-      "-pix_fmt","yuv420p",
-      "-movflags","+faststart",
-      "out.mp4"
+    // Titolo alto
+    ctx.fillStyle = "#FFEC01";
+    ctx.font = "bold 40px system-ui, -apple-system, Segoe UI, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("What?f", width / 2, 90);
+
+    // Domanda
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 44px system-ui, -apple-system, Segoe UI, sans-serif";
+    ctx.textAlign = "center";
+    const qMaxWidth = width * 0.78;
+    let y = 220;
+    y = wrapText(ctx, domanda, width / 2, y, qMaxWidth, 54);
+
+    // Separatore
+    y += 40;
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(width * 0.15, y);
+    ctx.lineTo(width * 0.85, y);
+    ctx.stroke();
+    y += 70;
+
+    // Risposta
+    ctx.fillStyle = "#A0B2BA";
+    ctx.font = "32px system-ui, -apple-system, Segoe UI, sans-serif";
+    const aMaxWidth = width * 0.78;
+    wrapText(ctx, answerText, width / 2, y, aMaxWidth, 44);
+
+    // Badge in basso
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "24px system-ui, -apple-system, Segoe UI, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(
+      style === "wtf" ? "Stile: What the F" : "Stile: What if",
+      width / 2,
+      height - 120
     );
 
-    const data = ffmpeg.FS("readFile","out.mp4");
-    const blob = new Blob([data.buffer], { type:"video/mp4" });
-    const url  = URL.createObjectURL(blob);
+    // Registrazione del canvas
+    const stream = canvas.captureStream(30); // 30 fps
+    const recorder = new MediaRecorder(stream, { mimeType });
+    const chunks = [];
+
+    recorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) chunks.push(e.data);
+    };
+
+    const videoBlobPromise = new Promise((resolve) => {
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: mimeType });
+        resolve(blob);
+        stream.getTracks().forEach((tr) => tr.stop());
+      };
+    });
+
+    recorder.start();
+    setTimeout(() => {
+      if (recorder.state === "recording") recorder.stop();
+    }, durationMs);
+
+    const blob = await videoBlobPromise;
+    const url = URL.createObjectURL(blob);
 
     if (videoPreview) {
       videoPreview.src = url;
     }
     if (videoDownload) {
       videoDownload.href = url;
-      videoDownload.download = "whatf-clip.mp4";
+      videoDownload.download = "whatf-clip.webm";
     }
     if (videoWrap) {
-      videoWrap.style.display = 'block';
+      videoWrap.style.display = "block";
     }
     if (videoNoteEl) {
-      videoNoteEl.textContent = T.videoReadyNote || '';
+      videoNoteEl.textContent =
+        T.videoReadyNote ||
+        "Video pronto: puoi scaricarlo e caricarlo su TikTok, Reels o dove vuoi (formato .webm).";
     }
-
   } catch (err) {
-    console.error('generateVideoClip error:', err);
+    console.error("generateVideoClip error:", err);
     toast(T.videoError || "Errore nella generazione del video.");
   } finally {
-    if (videoLoadingEl) videoLoadingEl.style.display = 'none';
-    videoBtn.disabled = false;
+    if (videoLoadingEl) videoLoadingEl.style.display = "none";
+    if (videoBtn) videoBtn.disabled = false;
   }
-                      }
+}
 
 /* ==== Nav / lingua / share / save ==== */
 qs('#backBtn').onclick=()=> history.length > 1 ? history.back() : location.replace('index.html');
