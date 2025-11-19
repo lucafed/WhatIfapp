@@ -5,128 +5,88 @@ import { spawn } from "child_process";
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.statusCode = 405;
-    res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify({ error: "Method not allowed" }));
-    return;
+    return res.end(JSON.stringify({ error: "Method not allowed" }));
   }
 
   let body = "";
-  for await (const chunk of req) {
-    body += chunk.toString();
-  }
+  for await (const c of req) body += c.toString();
 
   let payload;
   try {
     payload = JSON.parse(body || "{}");
-  } catch (e) {
+  } catch {
     res.statusCode = 400;
-    res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify({ error: "Invalid JSON" }));
-    return;
+    return res.end(JSON.stringify({ error: "Invalid JSON" }));
   }
 
-  const domanda = (payload.domanda || "").toString().trim();
-  const answer = (payload.answer || "").toString().trim();
-  const style = (payload.style || "whatif").toString().trim();
+  const domanda = (payload.domanda || "").trim();
+  const answer = (payload.answer || "").trim();
+  const style = (payload.style || "whatif").trim();
 
   if (!domanda || !answer) {
     res.statusCode = 400;
-    res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify({ error: "Missing domanda or answer" }));
-    return;
+    return res.end(JSON.stringify({ error: "Missing domanda or answer" }));
   }
 
   if (!ffmpegPath) {
-    console.error("ffmpeg-static path is null");
     res.statusCode = 500;
-    res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify({ error: "ffmpeg-not-found" }));
-    return;
+    return res.end(JSON.stringify({ error: "ffmpeg not available" }));
   }
 
-  const q = domanda.slice(0, 140);
-  const a = answer.slice(0, 320);
+  const q = domanda.slice(0, 140).replace(/\n/g, "\\N");
+  const a = answer.slice(0, 500).replace(/\n/g, "\\N");
+
+  // ASS subtitle script (nessun font necessario)
+  const ass = `
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 720
+PlayResY: 1280
+
+[V4+ Styles]
+Style: qStyle,Arial,36,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,2,2,10,10,10,1
+Style: aStyle,Arial,30,&H00A0B2BA,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,2,2,10,10,10,1
+
+[Events]
+Dialogue: 0,0:00:00.00,0:00:08.00,qStyle,,0,0,0,,${q}
+Dialogue: 0,0:00:02.00,0:00:08.00,aStyle,,0,0,0,,${a}
+`;
 
   const width = 720;
   const height = 1280;
   const duration = 8;
-  const bgColor = style === "wtf" ? "101414" : "0A0F14";
-
-  const esc = (s) =>
-    String(s)
-      .replace(/\\/g, "\\\\")
-      .replace(/:/g, "\\:")
-      .replace(/'/g, "\\'")
-      .replace(/"/g, '\\"')
-      .replace(/\n/g, "\\n")
-      .replace(/\r/g, "");
-
-  const drawQuestion = `drawtext=text='${esc(
-    q
-  )}':fontcolor=white:fontsize=32:box=1:boxcolor=0x00000066:boxborderw=12:x=(w-text_w)/2:y=120`;
-
-  const drawAnswer = `drawtext=text='${esc(
-    a
-  )}':fontcolor=0xA0B2BA:fontsize=26:box=1:boxcolor=0x00000066:boxborderw=12:x=(w-text_w)/2:y=(h-text_h)/2+40`;
-
-  const vfFilter = `${drawQuestion},${drawAnswer}`;
+  const bg = style === "wtf" ? "101414" : "0A0F14";
 
   const args = [
-    "-f",
-    "lavfi",
-    "-i",
-    `color=c=#${bgColor}:s=${width}x${height}:d=${duration}`,
-    "-vf",
-    vfFilter,
-    "-c:v",
-    "libx264",
-    "-preset",
-    "veryfast",
-    "-pix_fmt",
-    "yuv420p",
-    "-movflags",
-    "+faststart",
-    "-f",
-    "mp4",
+    "-f", "lavfi",
+    "-i", `color=c=#${bg}:s=${width}x${height}:d=${duration}`,
+    "-f", "ass",
+    "-i", "pipe:0",
+    "-filter_complex", "[0:v][1:s]overlay",
+    "-c:v", "libx264",
+    "-preset", "veryfast",
+    "-pix_fmt", "yuv420p",
+    "-movflags", "+faststart",
+    "-f", "mp4",
     "pipe:1"
   ];
 
   res.statusCode = 200;
   res.setHeader("Content-Type", "video/mp4");
-  res.setHeader(
-    "Content-Disposition",
-    'attachment; filename="whatf-clip.mp4"'
-  );
+  res.setHeader("Content-Disposition", 'attachment; filename="whatf-clip.mp4"');
 
-  try {
-    const ff = spawn(ffmpegPath, args);
+  const ff = spawn(ffmpegPath, args);
 
-    ff.stdout.on("data", (chunk) => {
-      res.write(chunk);
-    });
+  ff.stdin.write(ass);
+  ff.stdin.end();
 
-    let stderr = "";
-    ff.stderr.on("data", (chunk) => {
-      stderr += chunk.toString();
-    });
+  ff.stdout.on("data", (chunk) => res.write(chunk));
 
-    ff.on("error", (err) => {
-      console.error("ffmpeg spawn error:", err);
-      try { res.end(); } catch {}
-    });
+  let err = "";
+  ff.stderr.on("data", (c) => (err += c.toString()));
 
-    ff.on("close", (code) => {
-      if (code !== 0) {
-        console.error("ffmpeg exit code", code, stderr);
-      }
-      try { res.end(); } catch {}
-    });
-  } catch (err) {
-    console.error("api/video runtime error:", err);
-    if (!res.headersSent) {
-      res.statusCode = 500;
-      res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({ error: "server-error" }));
-    }
-  }
+  ff.on("close", (code) => {
+    if (code !== 0) console.error("FFmpeg exit:", code, err);
+    res.end();
+  });
 }
