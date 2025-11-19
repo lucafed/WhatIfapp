@@ -1141,38 +1141,81 @@ async function startFlow(){
   }
 }
 
-/* ==== FFmpeg client-side ==== */
-const { createFFmpeg, fetchFile } = window.FFmpeg || {};
-const ffmpeg = createFFmpeg ? createFFmpeg({ log: false }) : null;
+/* ==== FFmpeg client-side (caricamento dinamico, robusto) ==== */
+let ffmpegInstance = null;
+
+// Carica lo script FFmpeg se non è ancora disponibile
+function loadFFmpegScript(){
+  return new Promise((resolve, reject)=>{
+    if (window.FFmpeg && window.FFmpeg.createFFmpeg) {
+      resolve();
+      return;
+    }
+
+    const existing = document.querySelector('script[data-ffmpeg="1"]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(), { once:true });
+      existing.addEventListener('error', () => reject(new Error('ffmpeg-script-load')), { once:true });
+      return;
+    }
+
+    const s = document.createElement('script');
+    s.src = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js";
+    s.async = true;
+    s.dataset.ffmpeg = "1";
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('ffmpeg-script-load'));
+    document.head.appendChild(s);
+  });
+}
+
+// Ritorna (creandola se serve) l’istanza di FFmpeg
+async function getFFmpegInstance(){
+  if (ffmpegInstance) return ffmpegInstance;
+
+  await loadFFmpegScript();
+
+  if (!window.FFmpeg || !window.FFmpeg.createFFmpeg) {
+    throw new Error('ffmpeg-not-available');
+  }
+
+  const { createFFmpeg } = window.FFmpeg;
+  ffmpegInstance = createFFmpeg({ log:false });
+  return ffmpegInstance;
+}
 
 /* ==== VIDEO: generazione locale (nessuna API) ==== */
 async function generateVideoClip(){
-  if(!videoBtn) return;
+  if (!videoBtn) return;
   const T = t();
 
   const domanda = (LS.getItem('domanda') || qView.textContent || '').trim();
   const answerText = (answerEl.textContent || '').trim();
 
-  if(!domanda || !answerText){
+  if (!domanda || !answerText) {
     toast(T.videoNoData || "Nessuna risposta da trasformare in video.");
     return;
   }
 
-  if(!ffmpeg){
+  let ffmpeg;
+  try {
+    ffmpeg = await getFFmpegInstance();
+  } catch (e) {
+    console.error('FFmpeg non disponibile:', e);
     toast("Video non disponibile su questo dispositivo.");
     return;
   }
 
-  try{
+  try {
     videoBtn.disabled = true;
-    if(videoLoadingEl){
+    if (videoLoadingEl) {
       videoLoadingEl.textContent = T.videoPreparing || "Generazione video…";
       videoLoadingEl.style.display = 'inline';
     }
-    if(videoWrap) videoWrap.style.display = 'none';
-    if(videoNoteEl) videoNoteEl.textContent = '';
+    if (videoWrap) videoWrap.style.display = 'none';
+    if (videoNoteEl) videoNoteEl.textContent = '';
 
-    if(!ffmpeg.isLoaded()){
+    if (!ffmpeg.isLoaded()) {
       await ffmpeg.load();
     }
 
@@ -1181,9 +1224,9 @@ async function generateVideoClip(){
     const width = 1080;
     const height = 1920;
 
-    let aShort = answerText.length > 240 ? answerText.slice(0,240) + "…" : answerText;
+    let aShort = answerText.length > 240 ? answerText.slice(0, 240) + "…" : answerText;
     const sDomanda = sanitizeForDrawtext(domanda);
-    const sAnswer = sanitizeForDrawtext(aShort);
+    const sAnswer  = sanitizeForDrawtext(aShort);
 
     const drawFilter = [
       `drawtext=text='${sDomanda}':fontcolor=white:fontsize=44:box=1:boxcolor=0x00000066:boxborderw=16:x=(w-text_w)/2:y=200`,
@@ -1202,31 +1245,31 @@ async function generateVideoClip(){
     );
 
     const data = ffmpeg.FS("readFile","out.mp4");
-    const blob = new Blob([data.buffer], { type: "video/mp4" });
-    const url = URL.createObjectURL(blob);
+    const blob = new Blob([data.buffer], { type:"video/mp4" });
+    const url  = URL.createObjectURL(blob);
 
-    if(videoPreview){
+    if (videoPreview) {
       videoPreview.src = url;
     }
-    if(videoDownload){
+    if (videoDownload) {
       videoDownload.href = url;
       videoDownload.download = "whatf-clip.mp4";
     }
-    if(videoWrap){
+    if (videoWrap) {
       videoWrap.style.display = 'block';
     }
-    if(videoNoteEl){
+    if (videoNoteEl) {
       videoNoteEl.textContent = T.videoReadyNote || '';
     }
 
-  }catch(err){
+  } catch (err) {
     console.error('generateVideoClip error:', err);
     toast(T.videoError || "Errore nella generazione del video.");
-  }finally{
-    if(videoLoadingEl) videoLoadingEl.style.display = 'none';
+  } finally {
+    if (videoLoadingEl) videoLoadingEl.style.display = 'none';
     videoBtn.disabled = false;
   }
-}
+                      }
 
 /* ==== Nav / lingua / share / save ==== */
 qs('#backBtn').onclick=()=> history.length > 1 ? history.back() : location.replace('index.html');
