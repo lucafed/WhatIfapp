@@ -187,9 +187,6 @@ h1{
 .loading .oracle-line{animation:shimmer 1.8s ease-in-out infinite}
 </style>
 
-<!-- ⚙️ FFmpeg in browser (global FFmpeg) -->
-<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js"></script>
-
 </head>
 <body>
 <main>
@@ -273,7 +270,7 @@ h1{
         <span class="small" id="videoLoading" style="display:none;">Generazione video in corso…</span>
       </div>
       <div id="videoWrap" style="display:none;">
-        <video id="videoPreview" controls></video>
+        <video id="videoPreview" controls playsinline></video>
         <div class="row" style="margin-top:8px;justify-content:space-between;">
           <a id="videoDownload" class="btn primary" download="whatf-clip.mp4">⬇️ Scarica / Condividi</a>
           <span class="small" id="videoNote"></span>
@@ -310,6 +307,8 @@ h1{
 <audio id="sfxWtf" preload="auto">
   <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
 </audio>
+
+<!-- ⚠️ NIENTE script FFmpeg qui: lo carichiamo in modo dinamico sotto -->
 
 <script type="module">
 /* ==== Firebase Auth + Firestore credits (solo lettura) ==== */
@@ -417,7 +416,7 @@ const I18N = {
        guideTitle:"Guía",
        guideQuick:"Indicaciones rápidas",
        guideAdvice:"Consejo",
-       guideAnalysis:"Analisis sintético",
+       guideAnalysis:"Análisis sintético",
        /* VIDEO */
        videoTitle:"Vídeo compartible",
        videoHelp:"Crea un vídeo corto con tu pregunta y respuesta, listo para compartir en redes.",
@@ -455,7 +454,7 @@ const I18N = {
        videoBtn:"🎬 Créer la vidéo",
        videoReadyNote:"Vidéo prête : tu peux la télécharger et la mettre sur TikTok, Reels ou ailleurs.",
        videoPreparing:"Génération de la vidéo…",
-       videoError:"Impossible de générer le video. Réessaie.",
+       videoError:"Impossible de générer le vidéo. Réessaie.",
        videoNoData:"Il n’y a pas encore de réponse à transformer en vidéo."
   },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
@@ -598,7 +597,7 @@ const answerEl=qs('#answer'), shareBtn=qs('#shareBtn'), againBtn=qs('#againBtn')
 const saveBtn=qs('#saveBtn');
 const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct'), bottomPct=qs('#bottomPct');
 const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
-const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap'];
+const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
 const motNote=qs('#motNote'), toastEl=qs('#toast');
 
 /* ==== VIDEO refs ==== */
@@ -619,7 +618,6 @@ function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("�
 function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 function sanitizeForDrawtext(t){
   return String(t)
-    .replace(/%/g,"\\%")   // importantissimo per FFmpeg
     .replace(/:/g,"\\:")
     .replace(/'/g,"\\'")
     .replace(/"/g,'\\"')
@@ -698,7 +696,218 @@ function revealEffect(){
   setTimeout(()=> wrap.classList.remove('reveal'), 900);
 }
 
-/* ==== CACHE RISULTATO ==== */
+/* ===== Helpers contestuali per “What if” breve ===== */
+function extractContextParts(q){
+  const s = String(q||"").toLowerCase();
+  const when = (s.match(/\b(in|entro|tra|domani|oggi|stasera|settimana|mese|anno|\d{1,2}\s*(giorni|settimane|mesi))\b/i)||[])[0] || "";
+  const money = (s.match(/(€|euro|budget|spesa|costo|prezzo)\s*([0-9.,]+)/i)||[])[0] || (/\bunder\b/i.test(s)?"under":"");
+  const action = (s.match(/\b(lancia|apri|impara|scrivi|chiedi|studia|automatizza|testa|compra|vendi|assumi|costruisci|crea|ottimizza|riduci|aumenta)\b/i)||[])[0] || "";
+  const topicMatch = s.match(/\b(sito|progetto|app|campagna|cv|colloquio|piscina|dominio|startup|portafoglio|criptovalute?|azione|investimento|esame)\b/i);
+  const topic = topicMatch ? topicMatch[0] : "";
+  return {when, money, action, topic};
+}
+
+/* ===== Motivazione demenziale per WTF ===== */
+function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function wtfMotivationDemenziale(langCode){
+  const shots = rnd(1,3), spill = rnd(0,2), bruise = rnd(0,3);
+  if(langCode==='en'){
+    return `Pseudo-science says small daily nudges beat grand plans. The committee argued at the bar: ${shots} shots gone, ${spill} glasses spilled, ${bruise} minor bruises; verdict between hiccups: do it, and stop overthinking.`;
+  } else if(langCode==='es'){
+    return `Pseudociencia de barra: los micro-pasos diarios ganan a los planes épicos. El comité debatió en la barra: ${shots} chupitos desaparecidos, ${spill} copas derramadas, ${bruise} pequeños moratones; veredicto entre hipos: hazlo y deja de sobrepensarlo.`;
+  } else if(langCode==='fr'){
+    return `Pseudoscience de comptoir : les micro-pas quotidiens battent les grands plans. Le comité a débattu au bar : ${shots} shots évaporés, ${spill} verres renversés, ${bruise} bleus légers ; verdict entre deux hoquets : fais-le, et arrête de trop réfléchir.`;
+  } else if(langCode==='de'){
+    return `Kneipen-Pseudowissenschaft: kleine tägliche Schritte schlagen große Pläne. Das Gremium tagte an der Theke: ${shots} Shots verschwunden, ${spill} Gläser verschüttet, ${bruise} leichte Blessuren; Urteil zwischen Schluckauf: mach’s, und hör auf, alles zu zerdenken.`;
+  }
+  return `Pseudoscienza da bancone: i micro-passi battono i piani epici. La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: fai, e smettila di pensarci troppo.`;
+}
+
+/* ===== NUOVE MOTIVAZIONI WHAT IF ===== */
+function buildWhatIfMotivationsPretty(domanda, pct){
+  const q = String(domanda||"").toLowerCase();
+  const L = lang;
+  const isPast = (periodo === 'past');
+
+  const isLove =
+    /ex\b|relazione|fidanzat[oa]|partner|coppia|amore|relationship|breakup|ex novio|ex novia|ex marit|ex moglie/.test(q);
+  const isMove =
+    /trasferi|trasloc|città|citta|tornare a|tornassi a|se tornassi|se tornare|if i move|move to|go back to/.test(q);
+  const isJob =
+    /lavoro|job|carriera|colloquio|interview|assunzion|licenziament|azienda|company|ufficio/.test(q);
+
+  if (L === 'it') {
+    const baseProb = pct
+      ? (isPast
+         ? `Probabilità intorno al ${pct}%. Non era scritto, ma qualche finestra aperta c’era.<br><br>`
+         : `Probabilità intorno al ${pct}%. Non è destino scritto, ma una pista possibile.<br><br>`)
+      : "";
+
+    if (isLove) {
+      if (isPast) {
+        return baseProb +
+          "Perché poteva funzionare:<br>" +
+          "• C’era una base emotiva reale: alcune parti di voi si capivano più di quanto ammettevate.<br>" +
+          "• C’erano margini per riscrivere il patto, se entrambi aveste nominato i problemi invece di girarci intorno.<br><br>" +
+          "Cosa lo ha reso complicato:<br>" +
+          "• Gli stessi schemi si sono ripetuti: orgoglio, silenzi, risposte lente quando servivano scelte chiare.<br>" +
+          "• La paura di farsi vedere davvero ha pesato più del desiderio di provarci fino in fondo.";
+      } else {
+        return baseProb +
+          "Perché potrebbe funzionare:<br>" +
+          "• C’è ancora una base emotiva reale: alcune parti di voi si riconoscono al volo, anche dopo il caos.<br>" +
+          "• Se i problemi vengono detti esplicitamente, potete riscrivere il patto invece di ricopiare il vecchio copione.<br><br>" +
+          "Cosa può complicarlo:<br>" +
+          "• Rischio replay: stessi silenzi, stessi non detti, solo con più stanchezza.<br>" +
+          "• La paura di esporsi può farti restare a metà: né davvero dentro, né davvero fuori.";
+      }
+    }
+
+    if (isMove) {
+      if (isPast) {
+        return baseProb +
+          "Perché poteva funzionare:<br>" +
+          "• Tornare in un luogo conosciuto ti avrebbe dato radici emotive quando ti sentivi sparpagliato.<br>" +
+          "• I ritmi più umani avrebbero potuto sostenere meglio la tua energia invece di bruciarla tutta fuori casa.<br><br>" +
+          "Cosa lo ha reso complicato:<br>" +
+          "• La paura di “fare un passo indietro” ha pesato più del bisogno di stabilità.<br>" +
+          "• Alcuni legami e abitudini del passato non erano abbastanza sani da reggere un ritorno sereno.";
+      } else {
+        return baseProb +
+          "Perché potrebbe funzionare:<br>" +
+          "• Un posto che conosci può ridarti radici quando ti senti sempre in modalità sopravvivenza.<br>" +
+          "• Ritmi più lenti e facce note possono aiutare il tuo cervello a smettere di sentirsi sempre ‘in prestazione’.<br><br>" +
+          "Cosa può complicarlo:<br>" +
+          "• Potresti leggerlo come “sto tornando indietro” invece che come cambio di ritmo.<br>" +
+          "• Alcune dinamiche del passato rischiano di riattivarsi se non metti confini chiari fin da subito.";
+      }
+    }
+
+    if (isJob) {
+      if (isPast) {
+        return baseProb +
+          "Perché poteva funzionare:<br>" +
+          "• Una direzione più chiara ti avrebbe evitato di disperdere energie in mille tentativi.\n<br>" +
+          "• Passi piccoli ma costanti sulla stessa strada avrebbero costruito più sicurezza interna.<br><br>" +
+          "Cosa lo ha reso complicato:<br>" +
+          "• Il bisogno di scegliere “il lavoro perfetto” ha rallentato ogni decisione concreta.<br>" +
+          "• Contesti non allineati ai tuoi valori ti hanno fatto dubitare di te più che del sistema in cui eri.";
+      } else {
+        return baseProb +
+          "Perché potrebbe funzionare:<br>" +
+          "• Scegliere una direzione ti permette di smettere di bruciare energie in esperimenti casuali.<br>" +
+          "• Passi piccoli ma regolari nella stessa direzione possono darti più sicurezza di qualsiasi “colpo di fortuna”.<br><br>" +
+          "Cosa può complicarlo:<br>" +
+          "• Il timore di incastrarti in una scelta ti può bloccare prima di iniziare.<br>" +
+          "• Se i contesti che trovi non rispecchiano i tuoi valori, rischi di sentirti sbagliato anche quando non lo sei.";
+      }
+    }
+
+    if (isPast) {
+      return baseProb +
+        "Perché poteva andare diversamente:<br>" +
+        "• Un paio di decisioni più chiare e un po’ di gentilezza verso te stessə avrebbero cambiato l’andamento della storia.<br>" +
+        "• C’erano segnali che potevano essere ascoltati prima, invece di essere zittiti per non creare problemi.<br><br>" +
+        "Cosa l’ha reso difficile:<br>" +
+        "• Hai dovuto scegliere con le risorse e le informazioni che avevi, non con quelle che hai adesso.<br>" +
+        "• La paura di deludere qualcuno (te compresə) ha pesato sulle scelte più di quanto sembrasse in superficie.";
+    } else {
+      return baseProb +
+        "Perché potrebbe funzionare:<br>" +
+        "• Ti sposta verso una versione di vita più allineata a come ti senti oggi, non a come “dovresti” essere.<br>" +
+        "• Piccoli passi chiari riducono il rumore mentale e ti fanno sentire meno in balia degli eventi.<br><br>" +
+        "Cosa può complicarlo:<br>" +
+        "• Restare bloccato sull’idea della scelta perfetta ti fa rinviare quella buona abbastanza.<br>" +
+        "• Cercare di non scontentare nessuno rischia di farti scontentare proprio la persona che resta: tu.";
+    }
+  }
+
+  const baseProbOther = pct
+    ? (isPast
+       ? `Approx. probability ${pct}% — it wasn’t fixed destiny, but the door wasn’t fully closed.<br><br>`
+       : `Approx. probability ${pct}% — not fixed fate, but a realistic option.<br><br>`)
+    : "";
+
+  if (L === 'en') {
+    if (isPast) {
+      return baseProbOther +
+        "Why it could have gone better:<br>" +
+        "• With a bit more clarity and timing, the situation had room to move in your favour.<br>" +
+        "• A couple of honest talks earlier might have changed how things unfolded.<br><br>" +
+        "What made it hard:<br>" +
+        "• You chose with the information and energy you had then, not with what you know now.<br>" +
+        "• Fear of messing up or disappointing people quietly pushed some options off the table.";
+    } else {
+      return baseProbOther +
+        "Why it could work:<br>" +
+        "• It nudges your life closer to what you actually want, not just what you’ve always done.<br>" +
+        "• Clear small steps turn overthinking into movement.<br><br>" +
+        "What could make it hard:<br>" +
+        "• Waiting for the “perfect” move can freeze you before you start.<br>" +
+        "• If you try to keep everyone happy, your decision loses power and you stay stuck.";
+    }
+  }
+
+  if (L === 'es') {
+    if (isPast) {
+      return baseProbOther +
+        "Por qué podría haber salido distinto:<br>" +
+        "• Con un poco más de claridad y tiempo, la situación tenía margen para girar a tu favor.<br>" +
+        "• Un par de conversaciones honestas antes habrían cambiado el guion.<br><br>" +
+        "Qué lo hizo difícil:<br>" +
+        "• Elegiste con la energía y la información que tenías entonces, no con la de ahora.<br>" +
+        "• El miedo a equivocarte o decepcionar a alguien sacó opciones del mapa sin que te dieras cuenta.";
+    } else {
+      return baseProbOther +
+        "Por qué podría funcionar:<br>" +
+        "• Te acerca a una vida más alineada con lo que sientes hoy.<br>" +
+        "• Pasos pequeños y claros convierten el darle vueltas en movimiento real.<br><br>" +
+        "Qué puede complicarlo:<br>" +
+        "• Esperar la decisión perfecta puede dejarte inmóvil.<br>" +
+        "• Si intentas contentar a todo el mundo, tu decisión pierde fuerza.";
+    }
+  }
+
+  if (L === 'fr') {
+    if (isPast) {
+      return baseProbOther +
+        "Pourquoi ça aurait pu se passer autrement :<br>" +
+        "• Avec un peu plus de clarté et de timing, la situation avait de la marge pour tourner en ta faveur.<br>" +
+        "• Quelques discussions honnêtes plus tôt auraient pu changer la suite.<br><br>" +
+        "Ce qui a compliqué les choses :<br>" +
+        "• Tu as choisi avec les ressources et les infos de l’époque, pas avec celles d’aujourd’hui.<br>" +
+        "• La peur de te tromper ou de décevoir a fait disparaître certaines options du radar.";
+    } else {
+      return baseProbOther +
+        "Pourquoi ça pourrait marcher :<br>" +
+        "• Ça t’emmène vers une vie plus proche de ce que tu ressens vraiment.<br>" +
+        "• De petits pas clairs transforment le mental en mouvement concret.<br><br>" +
+        "Ce qui peut compliquer :<br>" +
+        "• Attendre le choix parfait peut t’empêcher d’avancer.<br>" +
+        "• Si tu veux rassurer tout le monde, ta décision perd en force.";
+    }
+  }
+
+  if (isPast) {
+    return baseProbOther +
+      "Warum es anders hätte laufen können:<br>" +
+      "• Mit etwas mehr Klarheit und Timing hätte sich die Situation eher zu deinen Gunsten verschoben.<br>" +
+      "• Ein, zwei offene Gespräche früher hätten den Verlauf deutlich verändern können.<br><br>" +
+      "Was es schwierig gemacht hat:<br>" +
+      "• Du hast mit den Infos und der Energie von damals entschieden, nicht mit dem Blick von heute.<br>" +
+      "• Die Angst vor Fehlern oder Enttäuschung hat leise einige Optionen gestrichen.";
+  } else {
+    return baseProbOther +
+      "Warum es klappen kann:<br>" +
+      "• Es bringt dich näher an ein Leben, das zu deinem jetzigen Gefühl passt.<br>" +
+      "• Kleine, klare Schritte verwandeln Grübeln in Bewegung.<br><br>" +
+      "Was es erschweren kann:<br>" +
+      "• Wenn du auf die perfekte Entscheidung wartest, kommst du nicht los.<br>" +
+      "• Versuchst du alle zufriedenzustellen, verliert deine Entscheidung an Kraft.";
+  }
+}
+
+/* ==== CACHE RISULTATO (per bloccare doppie risposte) ==== */
 const RESULT_CACHE_KEY = 'whatif_result_cache_v2';
 
 function saveResultToCache(obj){
@@ -810,7 +1019,7 @@ function saveCurrentQuestion(){
   toast(t().savedOk);
 }
 
-/* ==== Main flow ==== */
+/* ==== Main flow (NESSUN CONSUMO CREDITI QUI) ==== */
 async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
@@ -931,26 +1140,84 @@ async function startFlow(){
   }
 }
 
-/* ==== FFmpeg client-side (semplice, usa lo script globale) ==== */
+/* ==== FFmpeg client-side (caricamento dinamico, robusto) ==== */
 let ffmpegInstance = null;
 
+// Carica lo script FFmpeg se non è ancora disponibile
+function loadFFmpegScript(){
+  return new Promise((resolve, reject)=>{
+    if (window.FFmpeg && window.FFmpeg.createFFmpeg) {
+      resolve();
+      return;
+    }
+
+    const existing = document.querySelector('script[data-ffmpeg="1"]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(), { once:true });
+      existing.addEventListener('error', () => reject(new Error('ffmpeg-script-load')), { once:true });
+      return;
+    }
+
+    const s = document.createElement('script');
+    s.src = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js";
+    s.async = true;
+    s.dataset.ffmpeg = "1";
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('ffmpeg-script-load'));
+    document.head.appendChild(s);
+  });
+}
+
+// Ritorna (creandola se serve) l’istanza di FFmpeg
 async function getFFmpegInstance(){
   if (ffmpegInstance) return ffmpegInstance;
 
+  await loadFFmpegScript();
+
   if (!window.FFmpeg || !window.FFmpeg.createFFmpeg) {
-    console.error('FFmpeg globale non trovato su window.FFmpeg');
-    throw new Error('ffmpeg-global-missing');
+    throw new Error('ffmpeg-not-available');
   }
 
   const { createFFmpeg } = window.FFmpeg;
-  const instance = createFFmpeg({ log:false });
-
-  await instance.load();
-  ffmpegInstance = instance;
-  return instance;
+  ffmpegInstance = createFFmpeg({ log:false });
+  return ffmpegInstance;
 }
 
-/* ==== VIDEO: generazione locale (nessuna API) ==== */
+/* === helper: segmentare la risposta per effetto "scrittura" === */
+function buildTypingSegments(answerText, maxSegments = 3){
+  let base = String(answerText || "").trim();
+  if (!base) return [];
+
+  // limita un po' la lunghezza totale
+  if (base.length > 280) base = base.slice(0, 280) + "…";
+
+  const sentences = base.split(/(?<=[.!?…])\s+/);
+  const segments = [];
+
+  if (sentences.length === 1) {
+    // un'unica frase: spezzala in 2–3 chunk di testo
+    const len = base.length;
+    const chunkSize = Math.ceil(len / maxSegments);
+    for (let i = 1; i <= maxSegments; i++) {
+      const slice = base.slice(0, i * chunkSize);
+      if (!slice) break;
+      segments.push(slice.trim());
+      if (i * chunkSize >= len) break;
+    }
+  } else {
+    // costruisci frasi cumulative
+    let acc = "";
+    for (let i = 0; i < sentences.length && segments.length < maxSegments; i++) {
+      acc = acc ? (acc + " " + sentences[i]) : sentences[i];
+      segments.push(acc.trim());
+    }
+  }
+
+  if (segments.length === 0) segments.push(base);
+  return segments;
+}
+
+/* ==== VIDEO: generazione locale con animazione testo ==== */
 async function generateVideoClip(){
   if (!videoBtn) return;
   const T = t();
@@ -981,19 +1248,41 @@ async function generateVideoClip(){
     if (videoWrap) videoWrap.style.display = 'none';
     if (videoNoteEl) videoNoteEl.textContent = '';
 
+    if (!ffmpeg.isLoaded()) {
+      await ffmpeg.load();
+    }
+
     const bgColor = style === 'wtf' ? '0x101414' : '0x0A0F14';
-    const duration = 8;
-    const width = 1080;
-    const height = 1920;
+    const duration = 9;          // durata clip
+    const width    = 1080;
+    const height   = 1920;
 
-    let aShort = answerText.length > 240 ? answerText.slice(0, 240) + "…" : answerText;
     const sDomanda = sanitizeForDrawtext(domanda);
-    const sAnswer  = sanitizeForDrawtext(aShort);
+    const segments = buildTypingSegments(answerText, 3);  // testo cumulativo in 3 step
 
-    const drawFilter = [
-      `drawtext=text='${sDomanda}':fontcolor=white:fontsize=44:box=1:boxcolor=0x00000066:boxborderw=16:x=(w-text_w)/2:y=200`,
-      `drawtext=text='${sAnswer}':fontcolor=0xA0B2BA:fontsize=34:box=1:boxcolor=0x00000066:boxborderw=16:x=(w-text_w)/2:y=(h-text_h)/2+80`
-    ].join(",");
+    // tempi di comparsa dei blocchi di testo
+    const n = segments.length;
+    const baseStep = duration / (n + 1); // primo segmento dopo 1 step, poi 2 step, ecc.
+
+    const filters = [];
+
+    // DOMANDA fissa in alto
+    filters.push(
+      `drawtext=text='${sDomanda}':fontcolor=white:fontsize=44:box=1:boxcolor=0x00000066:boxborderw=16:x=(w-text_w)/2:y=200`
+    );
+
+    // RISPOSTA che si "scrive" a blocchi
+    for (let i = 0; i < n; i++) {
+      const visibleText = sanitizeForDrawtext(segments[i]);
+      const start = (i + 1) * baseStep;
+      const end   = (i === n - 1) ? duration : (i + 2) * baseStep;
+
+      filters.push(
+        `drawtext=text='${visibleText}':fontcolor=0xA0B2BA:fontsize=34:box=1:boxcolor=0x00000066:boxborderw=16:x=(w-text_w)/2:y=(h-text_h)/2+80:enable='between(t,${start.toFixed(2)},${end.toFixed(2)})'`
+      );
+    }
+
+    const drawFilter = filters.join(",");
 
     await ffmpeg.run(
       "-f","lavfi",
@@ -1012,6 +1301,7 @@ async function generateVideoClip(){
 
     if (videoPreview) {
       videoPreview.src = url;
+      videoPreview.load();
     }
     if (videoDownload) {
       videoDownload.href = url;
