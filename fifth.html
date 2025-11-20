@@ -136,16 +136,13 @@ h1{
 /* === VIDEO SECTION === */
 #videoBox{
   margin-top:10px;
-  border:1px solid rgba(255,236,1,.4);
-  box-shadow:0 0 18px rgba(255,236,1,.25), 0 10px 26px rgba(0,0,0,.55);
-  background:radial-gradient(circle at top, rgba(255,236,1,.08), rgba(10,15,20,.95));
 }
 #videoPreview{
   width:100%;
   max-height:420px;
   border-radius:18px;
   display:block;
-  box-shadow:0 0 20px rgba(0,0,0,.65);
+  box-shadow:0 14px 40px rgba(0,0,0,.6);
 }
 #videoLoading{
   font-size:12px;
@@ -274,18 +271,17 @@ h1{
         <span class="small" id="videoLoading" style="display:none;">Generazione video in corso…</span>
       </div>
       <div id="videoWrap" style="display:none;">
-        <video id="videoPreview" playsinline controls></video>
-        <div class="row" style="margin-top:8px;justify-content:space-between;flex-wrap:wrap;">
+        <video id="videoPreview" controls></video>
+        <div class="row" style="margin-top:8px;justify-content:space-between;">
           <a id="videoDownload" class="btn primary" download="whatf-clip.mp4">⬇️ Scarica</a>
-          <button class="btn ghost" id="videoShareBtn">📤 Condividi video</button>
-          <span class="small" id="videoNote"></span>
+          <button id="videoShareBtn" class="btn ghost">📤 Condividi video</button>
         </div>
+        <span class="small" id="videoNote"></span>
       </div>
     </div>
 
     <div class="hr"></div>
     <div class="row">
-      <!-- ⚠️ NON TOCCATO: condivisione TESTO -->
       <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
       <button class="btn ghost" id="saveBtn">⭐ Salva</button>
       <button class="btn ghost" id="againBtn">🔁 Fai un’altra domanda</button>
@@ -313,8 +309,8 @@ h1{
 <audio id="sfxWtf" preload="auto">
   <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
 </audio>
-<!-- ⌨️ SFX scrittura per il VIDEO (carica typing-sfx.mp3 nella stessa cartella) -->
-<audio id="typingSfx" preload="auto" loop>
+<!-- ⌨️ typing SFX (metti typing-sfx.mp3 nella stessa cartella di questo file) -->
+<audio id="typingSfx" preload="auto">
   <source src="typing-sfx.mp3" type="audio/mpeg">
 </audio>
 
@@ -367,11 +363,12 @@ const I18N = {
        videoTitle:"Video condivisibile",
        videoHelp:"Crea un breve video con domanda e risposta, pronto da condividere sui social.",
        videoBtn:"🎬 Crea video",
-       videoReadyNote:"Video pronto: caricalo su TikTok, Reels o dove vuoi.",
+       videoReadyNote:"Video pronto: puoi scaricarlo e caricarlo su TikTok, Reels o dove vuoi.",
        videoPreparing:"Generazione video in corso…",
        videoError:"Impossibile generare il video. Riprova.",
        videoNoData:"Non c’è ancora una risposta da trasformare in video.",
-       videoShareNotSupported:"Il tuo browser non supporta la condivisione diretta del file. Scarica il video e caricalo dal social."
+       videoShareNotSupported:"Il tuo browser non supporta la condivisione diretta del file. Scarica il video e caricalo dal social.",
+       videoShareCancelled:"Condivisione annullata."
   },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
@@ -399,11 +396,12 @@ const I18N = {
        videoTitle:"Shareable video",
        videoHelp:"Create a short video with your question and answer, ready to share on social media.",
        videoBtn:"🎬 Create video",
-       videoReadyNote:"Video ready: upload it to TikTok, Reels or anywhere you like.",
+       videoReadyNote:"Video ready: you can download it and upload it to TikTok, Reels or anywhere you like.",
        videoPreparing:"Generating video…",
        videoError:"Could not generate the video. Please try again.",
        videoNoData:"There is no answer yet to turn into a video.",
-       videoShareNotSupported:"Your browser cannot share the file directly. Download the video and upload it from the social app."
+       videoShareNotSupported:"Your browser cannot share this file directly. Download the video and upload it to social.",
+       videoShareCancelled:"Share cancelled."
   },
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
        sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
@@ -431,11 +429,12 @@ const I18N = {
        videoTitle:"Vídeo compartible",
        videoHelp:"Crea un vídeo corto con tu pregunta y respuesta, listo para compartir en redes.",
        videoBtn:"🎬 Crear vídeo",
-       videoReadyNote:"Vídeo listo: súbelo a TikTok, Reels o donde quieras.",
+       videoReadyNote:"Vídeo listo: puedes descargarlo y subirlo a TikTok, Reels o donde quieras.",
        videoPreparing:"Generando vídeo…",
        videoError:"No se ha podido generar el vídeo. Inténtalo de nuevo.",
        videoNoData:"Todavía no hay una respuesta para convertir en vídeo.",
-       videoShareNotSupported:"Tu navegador no permite compartir el archivo directamente. Descarga el vídeo y súbelo desde la app."
+       videoShareNotSupported:"Tu navegador no puede compartir este archivo directamente. Descarga el vídeo y súbelo a la red social.",
+       videoShareCancelled:"Compartición cancelada."
   },
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
        sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
@@ -463,11 +462,12 @@ const I18N = {
        videoTitle:"Vidéo partageable",
        videoHelp:"Crée une courte vidéo avec ta question et la réponse, prête à être partagée sur les réseaux.",
        videoBtn:"🎬 Créer la vidéo",
-       videoReadyNote:"Vidéo prête : mets-la sur TikTok, Reels ou ailleurs.",
+       videoReadyNote:"Vidéo prête : tu peux la télécharger et la mettre sur TikTok, Reels ou ailleurs.",
        videoPreparing:"Génération de la vidéo…",
-       videoError:"Impossible de générer le vidéo. Réessaie.",
+       videoError:"Impossible de générer la vidéo. Réessaie.",
        videoNoData:"Il n’y a pas encore de réponse à transformer en vidéo.",
-       videoShareNotSupported:"Ton navigateur ne permet pas de partager directement le fichier. Télécharge la vidéo et mets-la depuis l’app."
+       videoShareNotSupported:"Ton navigateur ne peut pas partager directement ce fichier. Télécharge la vidéo et publie-la sur le réseau social.",
+       videoShareCancelled:"Partage annulé."
   },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
        sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
@@ -495,16 +495,17 @@ const I18N = {
        videoTitle:"Teilbares Video",
        videoHelp:"Erstelle ein kurzes Video mit deiner Frage und Antwort, bereit zum Teilen in Social Media.",
        videoBtn:"🎬 Video erstellen",
-       videoReadyNote:"Video fertig: Lade es auf TikTok, Reels oder wo du willst hoch.",
+       videoReadyNote:"Video fertig: Du kannst es herunterladen und auf TikTok, Reels oder wo du willst hochladen.",
        videoPreparing:"Video wird erzeugt…",
        videoError:"Video konnte nicht erzeugt werden. Bitte versuche es erneut.",
        videoNoData:"Es gibt noch keine Antwort, die in ein Video umgewandelt werden kann.",
-       videoShareNotSupported:"Dein Browser kann die Datei nicht direkt teilen. Lade das Video herunter und lade es aus der App hoch."
+       videoShareNotSupported:"Dein Browser kann diese Datei nicht direkt teilen. Lade das Video herunter und lade es im sozialen Netzwerk hoch.",
+       videoShareCancelled:"Teilen abgebrochen."
   }
 };
 const SUP_LANG=['it','en','es','fr','de'];
 
-/* ======== LINGUA: segui FOURTH (request.lang o LS.lang) ======== */
+/* ======== LINGUA ======== */
 const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
 const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
@@ -527,7 +528,7 @@ let lang = SUP_LANG.includes(langFromFourth) ? langFromFourth : detectLang(doman
 document.documentElement.lang=lang;
 const t = ()=>I18N[lang]||I18N.it;
 
-/* ==== Firebase credits (solo lettura su fifth) ==== */
+/* ==== Firebase credits (solo lettura) ==== */
 let currentUser = null;
 let currentBalance = 0;
 
@@ -621,14 +622,28 @@ const videoDownload = qs('#videoDownload');
 const videoShareBtn = qs('#videoShareBtn');
 const videoLoadingEl = qs('#videoLoading');
 const videoNoteEl = qs('#videoNote');
-const typingSfx = document.getElementById('typingSfx');
 
-let lastVideoBlob = null;
-let lastVideoMime = null;
-let lastVideoUrl = null;
+/* ==== Audio typing ==== */
+const typingSfx = document.getElementById('typingSfx');
+let typingTimeoutId = null;
+function playTypingShort(ms=2200){
+  if(!typingSfx) return;
+  try{
+    typingSfx.loop = false;
+    typingSfx.currentTime = 0;
+    typingSfx.play().catch(()=>{});
+  }catch{}
+  if(typingTimeoutId) clearTimeout(typingTimeoutId);
+  typingTimeoutId = setTimeout(()=>{
+    try{
+      typingSfx.pause();
+      typingSfx.currentTime = 0;
+    }catch{}
+  }, ms);
+}
 
 /* ==== Toast ==== */
-function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
+function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1800); }
 
 /* ==== Helpers testo ==== */
 function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
@@ -706,17 +721,6 @@ function revealEffect(){
   setTimeout(()=> wrap.classList.remove('reveal'), 900);
 }
 
-/* ===== Helpers contestuali per “What if” breve ===== */
-function extractContextParts(q){
-  const s = String(q||"").toLowerCase();
-  const when = (s.match(/\b(in|entro|tra|domani|oggi|stasera|settimana|mese|anno|\d{1,2}\s*(giorni|settimane|mesi))\b/i)||[])[0] || "";
-  const money = (s.match(/(€|euro|budget|spesa|costo|prezzo)\s*([0-9.,]+)/i)||[])[0] || (/\bunder\b/i.test(s)?"under":"");
-  const action = (s.match(/\b(lancia|apri|impara|scrivi|chiedi|studia|automatizza|testa|compra|vendi|assumi|costruisci|crea|ottimizza|riduci|aumenta)\b/i)||[])[0] || "";
-  const topicMatch = s.match(/\b(sito|progetto|app|campagna|cv|colloquio|piscina|dominio|startup|portafoglio|criptovalute?|azione|investimento|esame)\b/i);
-  const topic = topicMatch ? topicMatch[0] : "";
-  return {when, money, action, topic};
-}
-
 /* ===== Motivazione demenziale per WTF ===== */
 function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
 function wtfMotivationDemenziale(langCode){
@@ -734,6 +738,7 @@ function wtfMotivationDemenziale(langCode){
 }
 
 /* ===== NUOVE MOTIVAZIONI WHAT IF ===== */
+/* (tua funzione invariata, la lascio uguale) */
 function buildWhatIfMotivationsPretty(domanda, pct){
   const q = String(domanda||"").toLowerCase();
   const L = lang;
@@ -917,7 +922,7 @@ function buildWhatIfMotivationsPretty(domanda, pct){
   }
 }
 
-/* ==== CACHE RISULTATO (per bloccare doppie risposte) ==== */
+/* ==== CACHE RISULTATO ==== */
 const RESULT_CACHE_KEY = 'whatif_result_cache_v2';
 
 function saveResultToCache(obj){
@@ -990,6 +995,7 @@ function applyResultToUI(result){
   }
 
   revealEffect();
+  playTypingShort(2400);
 }
 
 /* ==== Top init ==== */
@@ -1015,7 +1021,7 @@ function applyQuestion(){
   return {req, domanda, surprise};
 }
 
-/* ==== Salvataggio domanda per fourth ==== */
+/* ==== Salvataggio domanda ==== */
 function saveCurrentQuestion(){
   const domanda = (LS.getItem('domanda') || '').trim();
   if(!domanda) return;
@@ -1029,7 +1035,7 @@ function saveCurrentQuestion(){
   toast(t().savedOk);
 }
 
-/* ==== Main flow (NESSUN CONSUMO CREDITI QUI) ==== */
+/* ==== Main flow ==== */
 async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
@@ -1067,6 +1073,7 @@ async function startFlow(){
 
     stopOracleLoading();
     revealEffect();
+    playTypingShort(2600);
 
     const apiPct = (data && Number.isFinite(+data.pct)) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : null;
     const usedPct = (apiPct!=null) ? apiPct : computeProbability(domanda).pct;
@@ -1150,7 +1157,7 @@ async function startFlow(){
   }
 }
 
-/* ==== VIDEO: generazione client-side con Canvas + MediaRecorder (effetto scrittura) ==== */
+/* ==== VIDEO: Canvas + MediaRecorder ==== */
 
 function videoNotAvailable(msg){
   const T = t();
@@ -1158,6 +1165,7 @@ function videoNotAvailable(msg){
   toast(text);
 }
 
+/* disegna testo a capo */
 function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
   const words = String(text || "").split(/\s+/);
   let line = "";
@@ -1178,6 +1186,10 @@ function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
   }
   return y;
 }
+
+/* stato ultimo video per condivisione */
+let lastVideoBlob = null;
+let lastVideoMime = null;
 
 async function generateVideoClip(){
   const T = t();
@@ -1254,11 +1266,9 @@ async function generateVideoClip(){
   recorder.onstop = ()=>{
     try{
       const blob = new Blob(chunks, { type: mimeType });
-      const url = URL.createObjectURL(blob);
       lastVideoBlob = blob;
       lastVideoMime = mimeType;
-      lastVideoUrl = url;
-
+      const url = URL.createObjectURL(blob);
       if (videoPreview) videoPreview.src = url;
       if (videoDownload) {
         const ext = mimeType.includes("mp4") ? "mp4" : "webm";
@@ -1274,110 +1284,118 @@ async function generateVideoClip(){
       videoBtn.disabled = false;
       if (videoLoadingEl) videoLoadingEl.style.display = "none";
       if (typingSfx){
-        try{ typingSfx.pause(); typingSfx.currentTime = 0; }catch{}
+        try{
+          typingSfx.pause();
+          typingSfx.currentTime = 0;
+          typingSfx.loop = false;
+        }catch{}
       }
     }
   };
 
-  // Effetto scrittura: usa TUTTA la risposta
+  // Effetto scrittura: usa tutta la risposta
   const fullAnswer = answerText;
-  const charsCount = fullAnswer.length || 1;
-  // Velocità: ~35 caratteri al secondo, min 8s, max 24s
-  const cps = 35;
-  const totalDurationMs = Math.min(24000, Math.max(8000, (charsCount / cps) * 1000));
-  const extraStillMs = 1500;
+  const answerLen = fullAnswer.length;
+  const charsPerSecond = 30; // più lento del precedente
+  let totalDurationMs = Math.round((answerLen / charsPerSecond) * 1000);
+  totalDurationMs = Math.max(12000, Math.min(totalDurationMs, 28000)); // min 12s, max ~28s
+  const extraStillMs = 2000;
   const start = performance.now();
   const marginX = 60;
   const maxWidth = width - marginX * 2;
 
-  // Font dinamico in base alla lunghezza (per evitare testo fuori dallo schermo)
-  let questionFont = 40;
-  let questionLH = 46;
-  let answerFont = 32;
-  let answerLH = 40;
-  if (charsCount > 600){
-    answerFont = 28;
-    answerLH = 36;
+  // typing audio in loop
+  if(typingTimeoutId){ clearTimeout(typingTimeoutId); typingTimeoutId=null; }
+  if(typingSfx){
+    try{
+      typingSfx.loop = true;
+      typingSfx.currentTime = 0;
+      typingSfx.play().catch(()=>{});
+    }catch{}
   }
-  if (charsCount > 900){
-    answerFont = 26;
-    answerLH = 34;
-  }
+
+  const LABEL_Q = {it:"Q:",en:"Q:",es:"P:",fr:"Q :",de:"F:"}[lang] || "Q:";
+  const LABEL_A = {it:"A:",en:"A:",es:"R:",fr:"R :",de:"A:"}[lang] || "A:";
+  const titleText = "What?f";
+  const subText = style==='wtf' ? "⚡ What the F — Oracolo" : "💡 What if — Oracolo";
 
   function drawFrame(progress){
-    // Sfondo virale stile What?f
-    const grad = ctx.createLinearGradient(0,0,width,height);
-    grad.addColorStop(0, style === "wtf" ? "#182824" : "#08121C");
-    grad.addColorStop(0.5, "#0B0B0C");
-    grad.addColorStop(1, "#151515");
+    // sfondo virale
+    const grad = ctx.createLinearGradient(0,0,0,height);
+    grad.addColorStop(0,"#04070b");
+    grad.addColorStop(0.5, style==='wtf' ? "#122018" : "#101822");
+    grad.addColorStop(1,"#04070b");
     ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(0,0,width,height);
 
-    // Glow centrale
-    const radial = ctx.createRadialGradient(width/2, 260, 60, width/2, 260, 360);
-    radial.addColorStop(0, "rgba(255,236,1,0.35)");
-    radial.addColorStop(0.4, "rgba(255,236,1,0.08)");
-    radial.addColorStop(1, "rgba(0,0,0,0)");
+    // alone giallo centrale
+    const radial = ctx.createRadialGradient(width/2, height*0.42, 80, width/2, height*0.42, 420);
+    radial.addColorStop(0,"rgba(255,236,1,.35)");
+    radial.addColorStop(1,"rgba(0,0,0,0)");
     ctx.fillStyle = radial;
     ctx.fillRect(0,0,width,height);
 
-    // Header What?f
+    // titolo
     ctx.textAlign = "center";
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 42px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillText("What?f", width/2, 80);
-    ctx.font = "600 20px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillStyle = "#FFEC01";
-    ctx.fillText(style === "wtf" ? "⚡ What the F — Oracolo" : "💡 What if — Oracolo", width/2, 110);
+    ctx.font = "bold 44px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillText(titleText, width/2, 90);
 
-    // Box domanda
-    const boxY = 130;
-    const boxH = 180;
-    ctx.fillStyle = "rgba(0,0,0,0.55)";
-    ctx.roundRect = ctx.roundRect || function(x,y,w,h,r){this.beginPath();this.moveTo(x+r,y);this.arcTo(x+w,y,x+w,y+h,r);this.arcTo(x+w,y+h,x,y+h,r);this.arcTo(x,y+h,x,y,r);this.arcTo(x,y,x+w,y,r);this.closePath();};
-    ctx.roundRect(30, boxY, width-60, boxH, 22);
-    ctx.strokeStyle = "rgba(255,236,1,0.45)";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.fillStyle = "rgba(5,10,16,0.92)";
+    ctx.fillStyle = "#FFEC01";
+    ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillText(subText, width/2, 125);
+
+    // card domanda
+    const cardX = 40;
+    const cardY = 150;
+    const cardW = width - 80;
+    const cardH = 230;
+
+    ctx.save();
+    ctx.beginPath();
+    if (ctx.roundRect){
+      ctx.roundRect(cardX, cardY, cardW, cardH, 26);
+    } else {
+      ctx.rect(cardX, cardY, cardW, cardH);
+    }
+    ctx.fillStyle = "rgba(3,8,14,.92)";
     ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(255,236,1,.85)";
+    ctx.stroke();
+    ctx.restore();
 
+    // testo domanda dentro la card
     ctx.textAlign = "left";
-    ctx.font = "600 20px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.fillStyle = "#FFEC01";
-    ctx.fillText("Q:", marginX, boxY + 34);
-    ctx.font = "bold "+questionFont+"px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillStyle = "#FFFFFF";
-    let y = boxY + 80;
-    y = wrapAndDraw(ctx, domanda, marginX, y, maxWidth, questionLH);
+    ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillText(LABEL_Q, cardX + 26, cardY + 54);
 
-    // Testo risposta con effetto scrittura
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 34px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    let y = cardY + 96;
+    y = wrapAndDraw(ctx, domanda, cardX + 26, y, cardW - 52, 40);
+
+    // label A
+    y = cardY + cardH + 40;
+    ctx.fillStyle = "#FFEC01";
+    ctx.font = "600 24px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillText(LABEL_A, marginX, y);
+    y += 38;
+
+    // risposta scritta
     const chars = Math.max(1, Math.floor(fullAnswer.length * progress));
     const partial = fullAnswer.slice(0, chars);
 
-    y += 40;
-    ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillStyle = "#FFEC01";
-    ctx.fillText("A:", marginX, y);
-    y += 28;
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "30px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    wrapAndDraw(ctx, partial, marginX, y, maxWidth, 38);
 
-    ctx.font = "normal "+answerFont+"px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillStyle = "#E5EEF8";
-    wrapAndDraw(ctx, partial, marginX, y, maxWidth, answerLH);
-
-    // Footer virale
-    ctx.textAlign = "center";
+    // footer mini-hashtag
     ctx.font = "600 18px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillStyle = "#A0B2BA";
-    ctx.fillText("✨ Screenshotta o condividi — #whatf", width/2, height - 60);
-    ctx.font = "500 15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillStyle = "#5ADFFF";
-    ctx.fillText("Domanda in " + lang.toUpperCase() + " · Clip verticale 9:16", width/2, height - 32);
-  }
-
-  // Avvia audio di scrittura
-  if (typingSfx){
-    try{ typingSfx.currentTime = 0; typingSfx.play().catch(()=>{}); }catch{}
+    ctx.fillStyle = "rgba(255,255,255,.82)";
+    ctx.textAlign = "center";
+    ctx.fillText("#whatf  ·  screenshotta o condividi", width/2, height - 70);
   }
 
   function loop(ts){
@@ -1410,7 +1428,6 @@ qs('#langSelect').onchange=()=>{
   oracleDeck = [];
 };
 
-/* ⚠️ NON TOCCATO: condivisione TESTO */
 qs('#shareBtn').onclick=async()=>{
   const T=t();
   const full=`What?f — ${style==='wtf'?(T.styleWTF):(T.styleWHF)}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
@@ -1422,26 +1439,20 @@ qs('#shareBtn').onclick=async()=>{
     }
   }catch{}
 };
-
 qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
 if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
-
-/* 🎬 Bottone Crea video */
 if(videoBtn){ videoBtn.onclick = generateVideoClip; }
 
-/* ⬇️ Bottone SCARICA video → SOLO download (nessuna share qui) */
-/* Lasciamo il comportamento nativo dell'anchor (href + download). */
-
-/* 📤 Bottone CONDIVIDI video → prova share file, poi share URL, altrimenti messaggio */
-if (videoShareBtn) {
-  videoShareBtn.addEventListener('click', async ()=>{
+/* bottone Condividi video: prova share file, altrimenti solo toast */
+if(videoShareBtn){
+  videoShareBtn.addEventListener('click', async (e)=>{
+    e.preventDefault();
     const T = t();
-    if (!lastVideoBlob || !lastVideoMime || !lastVideoUrl) {
-      toast(T.videoNoData || "Non c’è ancora una risposta da trasformare in video.");
+    if (!lastVideoBlob){
+      toast(T.videoNoData || "Non c’è ancora un video da condividere.");
       return;
     }
-
-    const ext = lastVideoMime.includes("mp4") ? "mp4" : "webm";
+    const ext = (lastVideoMime && lastVideoMime.includes("mp4")) ? "mp4" : "webm";
     const file = new File(
       [lastVideoBlob],
       `whatf-video.${ext}`,
@@ -1456,27 +1467,22 @@ if (videoShareBtn) {
           files: [file]
         });
         return;
-      }
-    }catch(err){
-      console.warn("share file failed", err);
-    }
-
-    // fallback: share solo con URL (molti Android lo accettano)
-    try{
-      if (navigator.share) {
+      } else if (navigator.share) {
+        // share solo testo
         await navigator.share({
           title: "What?f",
-          text: "Guarda il mio oracolo What?f ✨",
-          url: lastVideoUrl
+          text: "Ho generato questo oracolo con What?f. Scarica il video dalla pagina e caricalo sul social. ✨"
         });
+        toast(T.videoShareNotSupported);
         return;
       }
     }catch(err){
-      console.warn("share url failed", err);
+      console.warn("share video failed", err);
+      toast(T.videoShareCancelled || "Condivisione annullata.");
+      return;
     }
-
-    // Nessuna opzione disponibile
-    toast(T.videoShareNotSupported || "Il tuo browser non supporta la condivisione diretta del file. Scarica il video e caricalo dal social.");
+    // nessun supporto
+    toast(T.videoShareNotSupported);
   });
 }
 
