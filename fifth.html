@@ -150,12 +150,6 @@ h1{
 #videoWrap{
   margin-top:10px;
 }
-#videoDownload{
-  text-decoration:none;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-}
 
 /* Mobile */
 @media (max-width:420px){
@@ -169,7 +163,6 @@ h1{
 #overlay-frame{width:100%;max-width:520px;height:78vh;border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(20,28,34,.95);border:1px solid var(--line);padding:10px 14px;border-radius:12px;font-weight:700;z-index:10000;opacity:0;transition:opacity .2s,transform .2s}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
 
 /* === ORACLE LOADING + REVEAL === */
 .oracle-wrap{position:relative;min-height:28px;margin:4px 0 8px}
@@ -270,18 +263,14 @@ h1{
         <span class="small" id="videoLoading" style="display:none;">Generazione video in corso…</span>
       </div>
       <div id="videoWrap" style="display:none;">
-        <video id="videoPreview" controls></video>
+        <video id="videoPreview" controls playsinline></video>
         <div class="row" style="margin-top:8px;justify-content:space-between;">
-  <!-- bottone principale: apre share sheet o download -->
-  <button id="videoShareBtn" class="btn primary">⬇️ Scarica / Condividi</button>
-  <span class="small" id="videoNote"></span>
-</div>
-
-<!-- anchor nascosto solo per il fallback download -->
-<a id="videoDownload" style="display:none" download="whatf-video.webm"></a>
-
+          <button id="videoShareBtn" class="btn primary">⬇️ Scarica / Condividi</button>
+          <span class="small" id="videoNote"></span>
         </div>
       </div>
+      <!-- link nascosto per fallback download -->
+      <a id="videoDownload" style="display:none" download="whatf-video.webm"></a>
     </div>
 
     <div class="hr"></div>
@@ -313,6 +302,8 @@ h1{
 <audio id="sfxWtf" preload="auto">
   <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
 </audio>
+<!-- ⌨️ Suono di tastiera per il video (metti typing.mp3 in /public o stessa cartella) -->
+<audio id="typingSfx" preload="auto" src="typing.mp3"></audio>
 
 <script type="module">
 /* ==== Firebase Auth + Firestore credits (solo lettura) ==== */
@@ -510,7 +501,7 @@ function detectLang(text=''){
     de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
   };
   const score={}; for(const L of SUP_LANG){ score[L]=0; (bank[L]||[]).forEach(w=>{ if(t.includes(w)) score[L]++; }); }
-  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; } }
+  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
   if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
   return best;
 }
@@ -611,6 +602,13 @@ const videoPreview = qs('#videoPreview');
 const videoDownload = qs('#videoDownload');
 const videoLoadingEl = qs('#videoLoading');
 const videoNoteEl = qs('#videoNote');
+const videoShareBtn = qs('#videoShareBtn');
+const typingAudioEl = document.getElementById('typingSfx');
+
+// stato ultimo video generato (per share)
+let lastVideoBlob = null;
+let lastVideoMime = null;
+let lastVideoUrl = null;
 
 /* ==== Toast ==== */
 function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
@@ -719,6 +717,8 @@ function wtfMotivationDemenziale(langCode){
 }
 
 /* ===== NUOVE MOTIVAZIONI WHAT IF ===== */
+// (resto identico alla tua versione, ometto per brevità ma qui ci va tutto il buildWhatIfMotivationsPretty)
+// ↓↓↓ COPIA qui la tua funzione buildWhatIfMotivationsPretty COMPLETA ↓↓↓
 function buildWhatIfMotivationsPretty(domanda, pct){
   const q = String(domanda||"").toLowerCase();
   const L = lang;
@@ -902,7 +902,7 @@ function buildWhatIfMotivationsPretty(domanda, pct){
   }
 }
 
-/* ==== CACHE RISULTATO (per bloccare doppie risposte) ==== */
+/* ==== CACHE RISULTATO ==== */
 const RESULT_CACHE_KEY = 'whatif_result_cache_v2';
 
 function saveResultToCache(obj){
@@ -1000,7 +1000,7 @@ function applyQuestion(){
   return {req, domanda, surprise};
 }
 
-/* ==== Salvataggio domanda per fourth ==== */
+/* ==== Salvataggio domanda ==== */
 function saveCurrentQuestion(){
   const domanda = (LS.getItem('domanda') || '').trim();
   if(!domanda) return;
@@ -1135,7 +1135,7 @@ async function startFlow(){
   }
 }
 
-/* ==== VIDEO: generazione client-side con Canvas + MediaRecorder (effetto scrittura social) ==== */
+/* ==== VIDEO: generazione con Canvas + MediaRecorder + suono tastiera ==== */
 
 function videoNotAvailable(msg){
   const T = t();
@@ -1143,45 +1143,27 @@ function videoNotAvailable(msg){
   toast(text);
 }
 
-// helper: testo a capo
 function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
   const words = String(text || "").split(/\s+/);
   let line = "";
   let y = startY;
-  for(const w of words){
+  for (const w of words){
     const test = line ? (line + " " + w) : w;
-    if(ctx.measureText(test).width > maxWidth && line){
+    if (ctx.measureText(test).width > maxWidth && line){
       ctx.fillText(line, x, y);
       y += lineHeight;
       line = w;
-    }else{
+    } else {
       line = test;
     }
   }
-  if(line){
+  if (line){
     ctx.fillText(line, x, y);
     y += lineHeight;
   }
   return y;
 }
 
-// helper: rettangolo arrotondato
-function roundRect(ctx, x, y, w, h, r){
-  const radius = Math.min(r, w/2, h/2);
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.lineTo(x + w - radius, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
-  ctx.lineTo(x + w, y + h - radius);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
-  ctx.lineTo(x + radius, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
-  ctx.lineTo(x, y + radius);
-  ctx.quadraticCurveTo(x, y, x + radius, y);
-  ctx.closePath();
-}
-
-// === VIDEO: versione social con layout brand + scrittura lenta ===
 async function generateVideoClip(){
   const T = t();
   const domanda = (localStorage.getItem('domanda') || qView.textContent || '').trim();
@@ -1192,7 +1174,6 @@ async function generateVideoClip(){
     return;
   }
 
-  // Controllo supporto
   if (typeof HTMLCanvasElement === "undefined" ||
       !HTMLCanvasElement.prototype.captureStream ||
       typeof MediaRecorder === "undefined") {
@@ -1200,8 +1181,7 @@ async function generateVideoClip(){
     return;
   }
 
-  // UI loading
-  videoBtn.disabled = true;
+  if (videoBtn) videoBtn.disabled = true;
   if (videoLoadingEl) {
     videoLoadingEl.textContent = T.videoPreparing || "Generazione video…";
     videoLoadingEl.style.display = "inline";
@@ -1209,32 +1189,41 @@ async function generateVideoClip(){
   if (videoWrap) videoWrap.style.display = "none";
   if (videoNoteEl) videoNoteEl.textContent = "";
 
-  // Canvas in formato verticale social
   const canvas = document.createElement("canvas");
-  const width = 1080;
-  const height = 1920;
+  const width = 720;
+  const height = 1280;
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext("2d");
 
-  // Helper per rettangolo arrotondato
-  function roundRect(ctx, x, y, w, h, r){
-    const radius = typeof r === "number" ? {tl:r,tr:r,br:r,bl:r} : r;
-    ctx.beginPath();
-    ctx.moveTo(x + radius.tl, y);
-    ctx.lineTo(x + w - radius.tr, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + radius.tr);
-    ctx.lineTo(x + w, y + h - radius.br);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - radius.br, y + h);
-    ctx.lineTo(x + radius.bl, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - radius.bl);
-    ctx.lineTo(x, y + radius.tl);
-    ctx.quadraticCurveTo(x, y, x + radius.tl, y);
-    ctx.closePath();
+  const canvasStream = canvas.captureStream(25);
+  let finalStream = canvasStream;
+  let usingAudio = false;
+  let audioTrack = null;
+
+  // Proviamo ad aggiungere l'audio di tastiera dentro al video
+  if (typingAudioEl && typeof typingAudioEl.captureStream === "function") {
+    try{
+      const audioStream = typingAudioEl.captureStream();
+      const audioTracks = audioStream.getAudioTracks();
+      if (audioTracks.length > 0) {
+        const combined = new MediaStream();
+        canvasStream.getVideoTracks().forEach(tr=>combined.addTrack(tr));
+        combined.addTrack(audioTracks[0]);
+        finalStream = combined;
+        usingAudio = true;
+        audioTrack = audioTracks[0];
+        typingAudioEl.currentTime = 0;
+        typingAudioEl.loop = true;
+        typingAudioEl.play().catch(()=>{});
+      }
+    }catch(e){
+      console.warn("audio captureStream non disponibile", e);
+    }
   }
 
-  // Stream & MediaRecorder
-  const stream = canvas.captureStream(25);
+  const stream = finalStream;
+
   const candidates = [
     "video/mp4;codecs=h264",
     "video/webm;codecs=vp9",
@@ -1250,8 +1239,10 @@ async function generateVideoClip(){
   }
   if (!mimeType) {
     videoNotAvailable();
-    videoBtn.disabled = false;
+    if (videoBtn) videoBtn.disabled = false;
     if (videoLoadingEl) videoLoadingEl.style.display = "none";
+    try{ typingAudioEl?.pause(); }catch{}
+    if (audioTrack) audioTrack.stop();
     return;
   }
 
@@ -1262,8 +1253,10 @@ async function generateVideoClip(){
   }catch(e){
     console.error(e);
     videoNotAvailable();
-    videoBtn.disabled = false;
+    if (videoBtn) videoBtn.disabled = false;
     if (videoLoadingEl) videoLoadingEl.style.display = "none";
+    try{ typingAudioEl?.pause(); }catch{}
+    if (audioTrack) audioTrack.stop();
     return;
   }
 
@@ -1275,134 +1268,94 @@ async function generateVideoClip(){
     try{
       const blob = new Blob(chunks, { type: mimeType });
       const url = URL.createObjectURL(blob);
+
+      lastVideoBlob = blob;
+      lastVideoMime = mimeType;
+      if (lastVideoUrl) URL.revokeObjectURL(lastVideoUrl);
+      lastVideoUrl = url;
+
       if (videoPreview) videoPreview.src = url;
+
       if (videoDownload) {
         const ext = mimeType.includes("mp4") ? "mp4" : "webm";
         videoDownload.href = url;
         videoDownload.download = `whatf-video.${ext}`;
       }
+
       if (videoWrap) videoWrap.style.display = "block";
       if (videoNoteEl) videoNoteEl.textContent = T.videoReadyNote || "";
     }catch(e){
       console.error(e);
       videoNotAvailable();
     }finally{
-      videoBtn.disabled = false;
+      if (videoBtn) videoBtn.disabled = false;
       if (videoLoadingEl) videoLoadingEl.style.display = "none";
+      try{ typingAudioEl?.pause(); }catch{}
+      if (audioTrack) audioTrack.stop();
     }
   };
 
-  // TESTO + tempo più lento (effetto scrittura)
-  const fullAnswerRaw = answerText.length > 800 ? (answerText.slice(0, 800) + "…") : answerText;
-  const fullAnswer = fullAnswerRaw;
-
-  const typingDurationMs = 11000;   // ~11 secondi di scrittura
-  const extraStillMs     = 2500;    // ~2.5 secondi di fermo alla fine
-  const totalDurationMs  = typingDurationMs + extraStillMs;
+  const fullAnswer = answerText.length > 550 ? (answerText.slice(0, 550) + "…") : answerText;
+  const totalDurationMs = 12000;
+  const extraStillMs = 1500;
 
   const start = performance.now();
-  const marginX = 80;
-  const maxWidth = width - marginX * 2;
+  const cardX = 30;
+  const cardY = 180;
+  const cardW = width - cardX*2;
+  const cardH = height - cardY - 200;
 
-  // Easing per scrittura più naturale (lenta all’inizio e alla fine)
-  function easeInOutCubic(x){
-    return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
-  }
-
-  function drawFrame(now){
-    const elapsed = now - start;
-
-    // Sfondo con gradienti morbidi
-    const g = ctx.createLinearGradient(0, 0, 0, height);
-    g.addColorStop(0, "#05080C");
-    g.addColorStop(0.45, style === "wtf" ? "#101414" : "#0A0F14");
-    g.addColorStop(1, "#05080C");
-    ctx.fillStyle = g;
+  function drawFrame(progress){
+    ctx.fillStyle = (style === "wtf") ? "#101414" : "#0A0F14";
     ctx.fillRect(0, 0, width, height);
 
-    // Alone centrale
-    const rad = ctx.createRadialGradient(
-      width/2, height*0.25, 100,
-      width/2, height*0.25, 700
-    );
-    rad.addColorStop(0, "rgba(0,224,255,0.18)");
-    rad.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = rad;
-    ctx.fillRect(0, 0, width, height);
-
-    // Card principale
-    const cardW = width - 160;
-    const cardH = height * 0.55;
-    const cardX = (width - cardW) / 2;
-    const cardY = height * 0.22;
-
-    ctx.save();
-    roundRect(ctx, cardX, cardY, cardW, cardH, 40);
-    ctx.clip();
-    const cg = ctx.createLinearGradient(cardX, cardY, cardX, cardY + cardH);
-    cg.addColorStop(0, "rgba(20,28,34,0.96)");
-    cg.addColorStop(1, "rgba(8,12,16,0.98)");
-    ctx.fillStyle = cg;
+    // card centrale
+    ctx.fillStyle = "rgba(10,14,18,0.96)";
     ctx.fillRect(cardX, cardY, cardW, cardH);
-    ctx.restore();
+    ctx.strokeStyle = "rgba(255,255,255,0.08)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(cardX, cardY, cardW, cardH);
 
-    // Bordo card
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "rgba(255,255,255,0.12)";
-    roundRect(ctx, cardX, cardY, cardW, cardH, 40);
-    ctx.stroke();
-
-    // Brand in alto
+    // titolo app
+    ctx.fillStyle = "#48C08A";
+    ctx.font = "bold 32px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.textAlign = "center";
-    ctx.fillStyle = "#00E0FF";
-    ctx.font = "600 46px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillText("What?f", width/2, cardY - 40);
+    ctx.fillText("What?f", width/2, 140);
 
-    // Sottolineatura animata sotto il brand
-    const underlineWidth = cardW * Math.min(1, elapsed / 1500); // si completa in 1.5s
-    ctx.strokeStyle = "rgba(0,224,255,0.85)";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(width/2 - underlineWidth/2, cardY - 32);
-    ctx.lineTo(width/2 + underlineWidth/2, cardY - 32);
-    ctx.stroke();
-
-    // Titolo (domanda)
+    // domanda
     ctx.textAlign = "left";
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "700 50px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    let y = cardY + 70;
-    y = wrapAndDraw(ctx, domanda, cardX + 40, y, cardW - 80, 58);
+    ctx.font = "bold 34px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    let y = cardY + 60;
+    y = wrapAndDraw(ctx, domanda, cardX + 20, y, cardW - 40, 40);
 
-    // Corpo risposta – effetto scrittura
-    const tProg = Math.min(1, Math.max(0, elapsed / typingDurationMs));
-    const eased = easeInOutCubic(tProg);
-    const charsToShow = Math.max(1, Math.floor(fullAnswer.length * eased));
-    const partial = fullAnswer.slice(0, charsToShow);
+    // risposta con effetto scrittura
+    const eased = Math.pow(progress, 0.9);
+    const chars = Math.max(1, Math.floor(fullAnswer.length * eased));
+    const partial = fullAnswer.slice(0, chars);
 
-    y += 40;
-    ctx.fillStyle = "#D2DEE5";
-    ctx.font = "400 34px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    wrapAndDraw(ctx, partial, cardX + 40, y, cardW - 80, 44);
+    y += 28;
+    ctx.fillStyle = "#A0B2BA";
+    ctx.font = "28px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    wrapAndDraw(ctx, partial, cardX + 20, y, cardW - 40, 36);
 
-    // Watermark in basso
+    // firma in basso
     ctx.textAlign = "center";
+    ctx.font = "20px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.fillStyle = "rgba(255,255,255,0.75)";
-    ctx.font = "500 36px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillText("What?f · AI Oracle", width/2, height - 80);
+    ctx.fillText("What?f · AI Oracle", width/2, height - 60);
 
-    // Piccolo glow sotto al watermark
-    ctx.beginPath();
-    ctx.ellipse(width/2, height - 70, 220, 18, 0, 0, Math.PI*2);
-    ctx.fillStyle = "rgba(0,224,255,0.22)";
-    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.06)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, 0, width, height);
   }
 
-  function loop(now){
-    const elapsed = now - start;
-    drawFrame(now);
+  function loop(ts){
+    const elapsed = ts - start;
+    const progress = Math.min(1, elapsed / totalDurationMs);
+    drawFrame(progress);
 
-    if (elapsed < totalDurationMs) {
+    if (elapsed < totalDurationMs + extraStillMs) {
       requestAnimationFrame(loop);
     } else {
       recorder.stop();
@@ -1413,7 +1366,56 @@ async function generateVideoClip(){
   requestAnimationFrame(loop);
 }
 
+/* ==== SHARE VIDEO ==== */
+async function handleVideoShare(ev){
+  ev.preventDefault();
+  const T = t();
 
+  if (!lastVideoBlob || !lastVideoUrl) {
+    videoNotAvailable(T.videoNoData || "Prima genera il video.");
+    return;
+  }
+
+  const mime = lastVideoMime || "video/webm";
+  const fileName = mime.includes("mp4") ? "whatf-video.mp4" : "whatf-video.webm";
+  const file = new File([lastVideoBlob], fileName, { type: mime });
+
+  try{
+    if (navigator.canShare && navigator.canShare({ files:[file] })) {
+      await navigator.share({
+        title: "What?f",
+        text: "Clip generata con What?f — AI Oracle.",
+        files: [file]
+      });
+      return;
+    }
+
+    if (navigator.share) {
+      await navigator.share({
+        title: "What?f",
+        text: "Clip generata con What?f — AI Oracle.",
+        url: lastVideoUrl
+      });
+      return;
+    }
+
+    if (videoDownload && lastVideoUrl) {
+      videoDownload.href = lastVideoUrl;
+      videoDownload.download = fileName;
+      videoDownload.click();
+      toast(T.videoReadyNote || "Video scaricato: ora puoi condividerlo dai tuoi file.");
+    } else {
+      window.location.href = lastVideoUrl;
+    }
+  }catch(e){
+    console.error("share error", e);
+    if (videoDownload && lastVideoUrl) {
+      videoDownload.href = lastVideoUrl;
+      videoDownload.download = fileName;
+      videoDownload.click();
+    }
+  }
+}
 
 /* ==== Nav / lingua / share / save ==== */
 qs('#backBtn').onclick=()=> history.length > 1 ? history.back() : location.replace('index.html');
@@ -1442,6 +1444,7 @@ qs('#shareBtn').onclick=async()=>{
 qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
 if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
 if(videoBtn){ videoBtn.onclick = generateVideoClip; }
+if(videoShareBtn){ videoShareBtn.onclick = handleVideoShare; }
 
 /* ==== Avvio ==== */
 startFlow();
