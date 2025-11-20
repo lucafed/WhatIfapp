@@ -1493,6 +1493,37 @@ qs('#shareBtn').onclick = async ()=>{
 qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
 if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
 if(videoBtn){ videoBtn.onclick = generateVideoClip; }
+  // Condivisione diretta dal bottone "⬇️ Scarica / Condividi"
+if (videoDownload) {
+  videoDownload.addEventListener('click', async (e)=>{
+    // Se ho un video pronto e il browser supporta navigator.share → provo a condividere il file
+    if (lastVideoBlob && navigator.share) {
+      e.preventDefault(); // blocco il download automatico
+
+      const ext = (lastVideoMime && lastVideoMime.includes("mp4")) ? "mp4" : "webm";
+      const file = new File(
+        [lastVideoBlob],
+        `whatf-video.${ext}`,
+        { type: lastVideoMime || "video/webm" }
+      );
+
+      try {
+        await navigator.share({
+          title: "What?f",
+          text: "Guarda il mio oracolo What?f ✨",
+          files: [file]
+        });
+        // se va bene, esco qui
+        return;
+      } catch(err) {
+        console.warn("share from videoDownload failed, fallback to normal download", err);
+        // se l’utente annulla o fallisce, alla prossima pressione tornerà a scaricare
+      }
+    }
+    // se non ho videoBlob o navigator.share non esiste → va avanti il download normale
+  });
+}
+
 
 /* ==== Avvio ==== */
 startFlow();
