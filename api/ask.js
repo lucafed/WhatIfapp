@@ -209,8 +209,6 @@ function ensureZingaraEnding({ text, lang, periodo, domanda }){
 }
 
 /* ========= WTF — logica contestuale ========= */
-
-/* Riconosci il contesto dalla domanda */
 function detectWtfContext(domanda = "") {
   const t = String(domanda || "").toLowerCase();
 
@@ -399,7 +397,6 @@ function buildMessages({ domanda, lang, periodo, stile }){
   ];
 
   if(stile==="wtf"){
-    // seed deterministico
     let seed=[...String(domanda||"")].reduce((a,c)=>a+c.charCodeAt(0),0);
     function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; }
 
@@ -419,30 +416,29 @@ Struttura OBBLIGATORIA (ITALIANO):
 2) Descrivi 2–3 immagini concrete e quotidiane legate al tema (bar, moto, chat, lavoro, soldi, casa, relazione, ecc.) con ritmo veloce e ironico. Devono sembrare scene di vita vera leggermente esagerate, NON un discorso poetico o profondo.
 3) IMPRECAZIONE TEATRALE:
    - Inserisci UNA sola imprecazione teatrale, lunga e descrittiva (almeno 6–7 parole), esagerata e comica.
-   - Usa esempi come: "${impreSample}" SOLO come ispirazione di tono: NON copiarla, NON ripetere "bestemmione corazzato a lunga gittata" né varianti già viste, inventa OGNI VOLTA una nuova metafora (siluro verbale, esplosione liturgica, anatema supersonico, ecc.).
-   - NON usare come unica imprecazione frasi generiche tipo "porca miseria", "madonna che complicazione", "che cifra", "accidenti", "cavolo": se compaiono, devono essere dentro una imprecazione più lunga e creativa.
+   - Usa esempi come: "${impreSample}" SOLO come ispirazione di tono: NON copiarla, NON ripetere formule già viste (es. "bestemmione corazzato a lunga gittata"). Ogni volta inventa una nuova metafora (siluro verbale, esplosione liturgica, anatema supersonico, ecc.).
+   - NON usare come unica imprecazione frasi generiche tipo "porca miseria", "madonna che confusione", "che cifra", "accidenti", "cavolo": se compaiono, devono essere dentro una imprecazione più lunga e creativa.
 4) OGGETTI CHE REAGISCONO:
    - Subito dopo lo sfogo, fai reagire ${react.length} oggetti della scena (lampada, bicchiere, casco, moto, telefono, gatto, televisore, sedia, ecc.).
-   - Usa le idee fornite solo come spunto: inventa ogni volta reazioni nuove, surreali ma credibili, che facciano ridere (es: bicchiere che sembra applaudire, lampada che illumina accusatoria, gatto che se ne va offeso).
+   - Usa le idee fornite solo come spunto: inventa ogni volta reazioni nuove, surreali ma credibili, che facciano ridere (es. bicchiere che sembra applaudire, lampada che illumina accusatoria, gatto che se ne va offeso).
 5) MOMENTO DRINK (ANCORATO ALLA SCENA):
    - Il drink non arriva dal nulla: prima mostra un gesto concreto coerente col contesto (${ctx}): entrare al bar, andare in cucina, appoggiare le chiavi sul bancone, aprire l’armadietto buono, ecc.
-   - Ispirati a idee come: ${drinkSample}, ma varia SEMPRE il modo in cui bevi: a piccoli sorsi nervosi, in un unico sorso troppo lungo, metà ora e metà dopo, lo guardi prima e poi lo finisci, ecc.
-   - Vietato riusare la formula "due sorsi troppo convinti" o qualcosa di troppo simile: ogni volta devi descrivere la bevuta in modo diverso e concreto.
+   - Ispirati a idee come: ${drinkSample}, ma varia SEMPRE il modo in cui bevi: a piccoli sorsi nervosi, in un unico sorso lungo, metà ora e metà dopo, lo guardi prima e poi lo finisci, ecc.
+   - Vietato riusare la formula "due sorsi troppo convinti" o qualcosa di troppo simile: ogni volta descrivi la bevuta in modo diverso e concreto.
    - Il bere è una gag teatrale e simbolica, NON deve sembrare autolesionista.
 6) SUONI / ONOMATOPEE:
-   - Usa OBBLIGATORIAMENTE da 1 a 3 suoni comici ("BWOOOM", "tlin", "plof", "clac", ecc.) integrati NELLE frasi, mai su righe separate.
+   - Usa da 1 a 3 suoni comici ("BWOOOM", "tlin", "plof", "clac", ecc.) integrati NELLE frasi, mai su righe separate.
    - I suoni devono sottolineare momenti chiave (imprecazione, oggetto che reagisce, piccola figuraccia). Niente suoni buttati a caso.
 7) CHIUSURA:
    - Chiudi SEMPRE con 1–2 frasi che contengano sia una risposta pratica ("sì, puoi farlo ma…", "non ti salva la vita, però…") sia una mini-morale ironica e un po’ tenera, nello stile "non ti sistema l’esistenza, però almeno sai in che casino ti infili".
 8) TONO E DIVIETI:
-   - Vietato lo stile "zingara mistica" e vietato lo stile troppo poetico: NON parlare sul serio di "libertà a due ruote", "sogno di libertà", "gioielli in un negozio di lusso", "viaggio verso la realtà", "casino del tuo cuore", "magiche strade asfaltate", ecc.
+   - Vietato lo stile "zingara mistica" e vietato lo stile troppo poetico: NON parlare sul serio di "libertà a due ruote", "sogno di libertà", "eroe mitologico", "vento tra i capelli", "viaggio verso la realtà", "casino del tuo cuore", ecc.
    - Se compaiono parole come "libertà", "sogno", "cuore", "realtà", "destino", usale solo in modo ironico e concreto, non come frasi profonde.
    - Linguaggio: italiano parlato, diretto, pieno di immagini un po’ sceme ma comprensibili; volgarità leggera concessa ("casino", "cazzata"), ma niente odio verso persone o gruppi reali.
 9) STILE:
    - Frasi grammaticalmente corrette, ritmo alto, massimo 2–3 proposizioni per frase.
    - 6–8 frasi, UN SOLO paragrafo, niente elenchi visibili nell’output, nessuna emoji.
    - Deve sembrare il monologo di un amico al bancone di un bar che ti prende in giro, ti fa ridere e alla fine ti dice la verità in faccia.`;
-
 
     const WTF_RULE_EN = `WHAT THE F (absurd, sarcastic, playfully cruel but helpful).
 
@@ -484,7 +480,6 @@ STRICT SEQUENCE (ENGLISH):
 - Ah ma guarda te, quello che dopo tre reel su TikTok si sente già centauro del caos. Entri in concessionaria con la sicurezza di uno che ha visto due tutorial e pensa di poter domare il mondo, tocchi la moto e nella tua testa parte un “BWOOOM” teatrale che manco il trailer di un film girato male. Appena il venditore ti dice il prezzo, ti scappa un “bestemmione bardato” talmente potente che un poster sul muro si stacca di mezzo centimetro e un casco fa “tlin” come se stesse giudicando il tuo conto in banca. Tu fai finta di niente, esci tranquillo, entri nel bar accanto, appoggi le chiavi sul bancone come se fossero di una supermoto e ti fai riempire un bicchiere serio che sistematicamente ti ricorda che la rata non si paga da sola.` }
     );
   } else {
-    // WHAT IF dipendente dal tempo (IT ottimizzato, altre lingue usano solo baseRules)
     if (L === "it") {
       const ruleIT = String(periodo).toLowerCase()==="past" ? WHATIF_RULE_PAST_IT : WHATIF_RULE_FUT_IT;
       msgs.push(
@@ -494,7 +489,6 @@ STRICT SEQUENCE (ENGLISH):
     }
   }
 
-  // Utente finale
   const ask = (L==="en")
     ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`
     : (L==="it")
@@ -536,7 +530,6 @@ function buildWhatIfMotivation(domanda, lang="it", pct=60){
   const action = /(apri|lancia|impara|studia|scrivi|automatizza|testa|cambia|trova|assumi|costruisci|crea|launch|start|learn|build|create)/.test(t);
   const riskHedging = /(senza|solo|al massimo|minimo|rischio|risk|minimize|hedge)/.test(t);
 
-  // ITALIANO
   if (L === "it") {
     const pros = [];
     const cons = [];
@@ -575,7 +568,6 @@ function buildWhatIfMotivation(domanda, lang="it", pct=60){
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
-  // ENGLISH
   if (L === "en") {
     const pros = [];
     const cons = [];
@@ -614,7 +606,6 @@ function buildWhatIfMotivation(domanda, lang="it", pct=60){
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
-  // ESPAÑOL
   if (L === "es") {
     const pros = [];
     const cons = [];
@@ -653,7 +644,6 @@ function buildWhatIfMotivation(domanda, lang="it", pct=60){
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
-  // FRANÇAIS
   if (L === "fr") {
     const pros = [];
     const cons = [];
@@ -692,7 +682,6 @@ function buildWhatIfMotivation(domanda, lang="it", pct=60){
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
-  // DEUTSCH
   if (L === "de") {
     const pros = [];
     const cons = [];
@@ -731,7 +720,6 @@ function buildWhatIfMotivation(domanda, lang="it", pct=60){
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
-  // fallback IT
   return buildWhatIfMotivation(domanda, "it", pct);
 }
 
@@ -776,22 +764,17 @@ export default async function handler(req, res){
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if(!answer) throw new Error("empty_model_response");
 
-    // ===== Post-process (ordine CORRETTO) =====
     answer = stripQuestionEcho(domanda, answer);
 
     if (stile === "wtf") {
-      // Per il WTF NON stringiamo a numero fisso di frasi per non tagliare drink o morale.
-      // Limitiamo solo il numero di parole e normalizziamo.
       answer = clampWords(answer, 230);
       answer = normalizeOneParagraph(answer);
     } else {
-      // WHATIF e altri stili più compatti/letterari.
       answer = tightenSentences(answer, 10);
       answer = clampWords(answer, 165);
       answer = normalizeOneParagraph(answer);
     }
 
-    // Moderazioni leggere IT (prima del ripristino maiuscole)
     if(normLang(lang)==="it"){
       (function(){
         const d=String(domanda||"");
@@ -804,18 +787,14 @@ export default async function handler(req, res){
       })();
     }
 
-    // Ripristina maiuscole frasi
     answer = sentenceCaseAll(answer);
 
-    // Finale emozionale con gancio se manca (solo WHAT IF)
     if (stile === "whatif") {
       answer = ensureZingaraEnding({ text: answer, lang, periodo, domanda });
     }
 
-    // Punteggiatura finale
     answer = finalPunct(answer);
 
-    // ===== Extra payload =====
     const L = normLang(lang);
     const pct = computePct(domanda, stile);
 
