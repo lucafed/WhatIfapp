@@ -150,6 +150,12 @@ h1{
 #videoWrap{
   margin-top:10px;
 }
+#videoDownload{
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
 
 /* Mobile */
 @media (max-width:420px){
@@ -163,6 +169,7 @@ h1{
 #overlay-frame{width:100%;max-width:520px;height:78vh;border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(20,28,34,.95);border:1px solid var(--line);padding:10px 14px;border-radius:12px;font-weight:700;z-index:10000;opacity:0;transition:opacity .2s,transform .2s}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
 
 /* === ORACLE LOADING + REVEAL === */
 .oracle-wrap{position:relative;min-height:28px;margin:4px 0 8px}
@@ -263,14 +270,12 @@ h1{
         <span class="small" id="videoLoading" style="display:none;">Generazione video in corso…</span>
       </div>
       <div id="videoWrap" style="display:none;">
-        <video id="videoPreview" controls playsinline></video>
+        <video id="videoPreview" controls></video>
         <div class="row" style="margin-top:8px;justify-content:space-between;">
-          <button id="videoShareBtn" class="btn primary">⬇️ Scarica / Condividi</button>
+          <a id="videoDownload" class="btn primary" download="whatf-clip.mp4">⬇️ Scarica / Condividi</a>
           <span class="small" id="videoNote"></span>
         </div>
       </div>
-      <!-- link nascosto per fallback download -->
-      <a id="videoDownload" style="display:none" download="whatf-video.webm"></a>
     </div>
 
     <div class="hr"></div>
@@ -302,8 +307,11 @@ h1{
 <audio id="sfxWtf" preload="auto">
   <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
 </audio>
-<!-- ⌨️ Suono di tastiera per il video (metti typing.mp3 in /public o stessa cartella) -->
-<audio id="typingSfx" preload="auto" src="typing.mp3"></audio>
+<!-- ⌨️ SFX scrittura per il video -->
+<audio id="typeSfx" preload="auto" loop>
+  <!-- placeholder: puoi sostituire il base64 con un vero suono di typing -->
+  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAADAAAA" type="audio/mpeg">
+</audio>
 
 <script type="module">
 /* ==== Firebase Auth + Firestore credits (solo lettura) ==== */
@@ -501,7 +509,7 @@ function detectLang(text=''){
     de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
   };
   const score={}; for(const L of SUP_LANG){ score[L]=0; (bank[L]||[]).forEach(w=>{ if(t.includes(w)) score[L]++; }); }
-  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
+  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; } }
   if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
   return best;
 }
@@ -602,13 +610,10 @@ const videoPreview = qs('#videoPreview');
 const videoDownload = qs('#videoDownload');
 const videoLoadingEl = qs('#videoLoading');
 const videoNoteEl = qs('#videoNote');
-const videoShareBtn = qs('#videoShareBtn');
-const typingAudioEl = document.getElementById('typingSfx');
 
-// stato ultimo video generato (per share)
+/* buffer ultimo video (per condivisione social) */
 let lastVideoBlob = null;
 let lastVideoMime = null;
-let lastVideoUrl = null;
 
 /* ==== Toast ==== */
 function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
@@ -622,7 +627,8 @@ function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("�
 function applyUI(q){
   const T=t();
   setText('#title', style==='wtf'?T.titleWTF:T.titleWHF);
-  subtitle.textContent=T.sub(q||'—'); setText('#lblQ', T.q); setText('#lblA', T.a); setText('#lblP', T.p);
+  subtitle.textContent=T.sub(q||'—'); setText('#lblQ', T.q); setText('#lblA', T.a);
+  setText('#lblP', T.p);
   shareBtn.textContent=T.share; againBtn.textContent=T.again; if(saveBtn) saveBtn.textContent=T.save;
   styleBadge.textContent=(style==='wtf')?T.styleWTF:T.styleWHF;
   setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));
@@ -717,8 +723,6 @@ function wtfMotivationDemenziale(langCode){
 }
 
 /* ===== NUOVE MOTIVAZIONI WHAT IF ===== */
-// (resto identico alla tua versione, ometto per brevità ma qui ci va tutto il buildWhatIfMotivationsPretty)
-// ↓↓↓ COPIA qui la tua funzione buildWhatIfMotivationsPretty COMPLETA ↓↓↓
 function buildWhatIfMotivationsPretty(domanda, pct){
   const q = String(domanda||"").toLowerCase();
   const L = lang;
@@ -902,7 +906,7 @@ function buildWhatIfMotivationsPretty(domanda, pct){
   }
 }
 
-/* ==== CACHE RISULTATO ==== */
+/* ==== CACHE RISULTATO (per bloccare doppie risposte) ==== */
 const RESULT_CACHE_KEY = 'whatif_result_cache_v2';
 
 function saveResultToCache(obj){
@@ -1000,7 +1004,7 @@ function applyQuestion(){
   return {req, domanda, surprise};
 }
 
-/* ==== Salvataggio domanda ==== */
+/* ==== Salvataggio domanda per fourth ==== */
 function saveCurrentQuestion(){
   const domanda = (LS.getItem('domanda') || '').trim();
   if(!domanda) return;
@@ -1135,7 +1139,7 @@ async function startFlow(){
   }
 }
 
-/* ==== VIDEO: generazione con Canvas + MediaRecorder + suono tastiera ==== */
+/* ==== VIDEO: generazione client-side con Canvas + MediaRecorder (effetto scrittura + audio) ==== */
 
 function videoNotAvailable(msg){
   const T = t();
@@ -1147,17 +1151,17 @@ function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
   const words = String(text || "").split(/\s+/);
   let line = "";
   let y = startY;
-  for (const w of words){
+  for(const w of words){
     const test = line ? (line + " " + w) : w;
-    if (ctx.measureText(test).width > maxWidth && line){
+    if(ctx.measureText(test).width > maxWidth && line){
       ctx.fillText(line, x, y);
       y += lineHeight;
       line = w;
-    } else {
+    }else{
       line = test;
     }
   }
-  if (line){
+  if(line){
     ctx.fillText(line, x, y);
     y += lineHeight;
   }
@@ -1181,7 +1185,8 @@ async function generateVideoClip(){
     return;
   }
 
-  if (videoBtn) videoBtn.disabled = true;
+  // UI loading
+  videoBtn.disabled = true;
   if (videoLoadingEl) {
     videoLoadingEl.textContent = T.videoPreparing || "Generazione video…";
     videoLoadingEl.style.display = "inline";
@@ -1189,6 +1194,7 @@ async function generateVideoClip(){
   if (videoWrap) videoWrap.style.display = "none";
   if (videoNoteEl) videoNoteEl.textContent = "";
 
+  // Canvas verticale stile Reels/TikTok
   const canvas = document.createElement("canvas");
   const width = 720;
   const height = 1280;
@@ -1196,34 +1202,28 @@ async function generateVideoClip(){
   canvas.height = height;
   const ctx = canvas.getContext("2d");
 
-  const canvasStream = canvas.captureStream(25);
-  let finalStream = canvasStream;
-  let usingAudio = false;
-  let audioTrack = null;
+  // Stream video dal canvas
+  const videoStream = canvas.captureStream(25);
 
-  // Proviamo ad aggiungere l'audio di tastiera dentro al video
-  if (typingAudioEl && typeof typingAudioEl.captureStream === "function") {
-    try{
-      const audioStream = typingAudioEl.captureStream();
-      const audioTracks = audioStream.getAudioTracks();
-      if (audioTracks.length > 0) {
-        const combined = new MediaStream();
-        canvasStream.getVideoTracks().forEach(tr=>combined.addTrack(tr));
-        combined.addTrack(audioTracks[0]);
-        finalStream = combined;
-        usingAudio = true;
-        audioTrack = audioTracks[0];
-        typingAudioEl.currentTime = 0;
-        typingAudioEl.loop = true;
-        typingAudioEl.play().catch(()=>{});
-      }
-    }catch(e){
-      console.warn("audio captureStream non disponibile", e);
+  // Stream audio dalla traccia di scrittura
+  const typeAudioEl = document.getElementById("typeSfx");
+  let combinedStream = videoStream;
+  let hasAudio = false;
+
+  if (typeAudioEl && typeAudioEl.captureStream) {
+    try {
+      const audioStream = typeAudioEl.captureStream();
+      combinedStream = new MediaStream([
+        ...videoStream.getVideoTracks(),
+        ...audioStream.getAudioTracks()
+      ]);
+      hasAudio = true;
+    } catch(e){
+      console.warn("audio stream error", e);
     }
   }
 
-  const stream = finalStream;
-
+  // MIME compatibile
   const candidates = [
     "video/mp4;codecs=h264",
     "video/webm;codecs=vp9",
@@ -1231,7 +1231,7 @@ async function generateVideoClip(){
     "video/webm"
   ];
   let mimeType = null;
-  for (const m of candidates){
+  for(const m of candidates){
     if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) {
       mimeType = m;
       break;
@@ -1239,24 +1239,20 @@ async function generateVideoClip(){
   }
   if (!mimeType) {
     videoNotAvailable();
-    if (videoBtn) videoBtn.disabled = false;
+    videoBtn.disabled = false;
     if (videoLoadingEl) videoLoadingEl.style.display = "none";
-    try{ typingAudioEl?.pause(); }catch{}
-    if (audioTrack) audioTrack.stop();
     return;
   }
 
   const chunks = [];
   let recorder;
   try{
-    recorder = new MediaRecorder(stream, { mimeType });
+    recorder = new MediaRecorder(combinedStream, { mimeType });
   }catch(e){
     console.error(e);
     videoNotAvailable();
-    if (videoBtn) videoBtn.disabled = false;
+    videoBtn.disabled = false;
     if (videoLoadingEl) videoLoadingEl.style.display = "none";
-    try{ typingAudioEl?.pause(); }catch{}
-    if (audioTrack) audioTrack.stop();
     return;
   }
 
@@ -1267,89 +1263,141 @@ async function generateVideoClip(){
   recorder.onstop = ()=>{
     try{
       const blob = new Blob(chunks, { type: mimeType });
-      const url = URL.createObjectURL(blob);
-
       lastVideoBlob = blob;
       lastVideoMime = mimeType;
-      if (lastVideoUrl) URL.revokeObjectURL(lastVideoUrl);
-      lastVideoUrl = url;
 
+      const url = URL.createObjectURL(blob);
       if (videoPreview) videoPreview.src = url;
-
       if (videoDownload) {
         const ext = mimeType.includes("mp4") ? "mp4" : "webm";
         videoDownload.href = url;
-        videoDownload.download = `whatf-video.${ext}`;
+        videoDownload.download = `whatf-clip.${ext}`;
       }
-
       if (videoWrap) videoWrap.style.display = "block";
       if (videoNoteEl) videoNoteEl.textContent = T.videoReadyNote || "";
     }catch(e){
       console.error(e);
       videoNotAvailable();
     }finally{
-      if (videoBtn) videoBtn.disabled = false;
+      videoBtn.disabled = false;
       if (videoLoadingEl) videoLoadingEl.style.display = "none";
-      try{ typingAudioEl?.pause(); }catch{}
-      if (audioTrack) audioTrack.stop();
+      // stop audio
+      if (typeAudioEl && hasAudio) {
+        try{
+          typeAudioEl.pause();
+          typeAudioEl.currentTime = 0;
+        }catch{}
+      }
     }
   };
 
+  // Testo risposta: taglio per non farlo infinito
   const fullAnswer = answerText.length > 550 ? (answerText.slice(0, 550) + "…") : answerText;
-  const totalDurationMs = 12000;
-  const extraStillMs = 1500;
 
+  // Durata e “scrittura lenta”
+  const totalDurationMs = 9000;   // 9s scrittura
+  const extraStillMs = 1000;      // 1s fermo a fine testo
   const start = performance.now();
-  const cardX = 30;
-  const cardY = 180;
-  const cardW = width - cardX*2;
-  const cardH = height - cardY - 200;
+
+  const marginX = 60;
+  const maxWidth = width - marginX * 2;
+
+  // percentuale dal risultato già calcolato
+  const pctStr = (topPct && topPct.textContent || "").trim();
+  const hasPct = /\d+%/.test(pctStr);
+  const pctValue = hasPct ? pctStr : "";
 
   function drawFrame(progress){
-    ctx.fillStyle = (style === "wtf") ? "#101414" : "#0A0F14";
+    // BG stile social (gradient + bagliore)
+    const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+    if (style === "wtf") {
+      bgGrad.addColorStop(0, "#0f172a");
+      bgGrad.addColorStop(0.5, "#1e293b");
+    } else {
+      bgGrad.addColorStop(0, "#020617");
+      bgGrad.addColorStop(0.5, "#0b1120");
+    }
+    bgGrad.addColorStop(1, "#000000");
+    ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
-    // card centrale
-    ctx.fillStyle = "rgba(10,14,18,0.96)";
-    ctx.fillRect(cardX, cardY, cardW, cardH);
-    ctx.strokeStyle = "rgba(255,255,255,0.08)";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(cardX, cardY, cardW, cardH);
+    // Alone soft al centro (leggibilità)
+    const rad = ctx.createRadialGradient(
+      width/2, height/4, 50,
+      width/2, height/4, 420
+    );
+    rad.addColorStop(0, "rgba(255,255,255,0.08)");
+    rad.addColorStop(1, "rgba(0,0,0,0.9)");
+    ctx.fillStyle = rad;
+    ctx.fillRect(0, 0, width, height);
 
-    // titolo app
-    ctx.fillStyle = "#48C08A";
-    ctx.font = "bold 32px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    // Header "What?f"
     ctx.textAlign = "center";
-    ctx.fillText("What?f", width/2, 140);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 40px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillText("What?f", width/2, 80);
 
-    // domanda
+    ctx.font = "20px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillStyle = "#A0B2BA";
+    const styleLabel = (style === "wtf") ? "What the F" : "What if";
+    ctx.fillText(styleLabel, width/2, 110);
+
+    // Box percentuale in alto a destra
+    if (pctValue) {
+      ctx.textAlign = "right";
+      ctx.font = "bold 26px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+      const boxW = 140;
+      const boxH = 56;
+      const bx = width - 40 - boxW;
+      const by = 140 - boxH/2;
+      const boxGrad = ctx.createLinearGradient(bx, by, bx + boxW, by + boxH);
+      boxGrad.addColorStop(0, "#22c55e");
+      boxGrad.addColorStop(1, "#eab308");
+      ctx.fillStyle = boxGrad;
+      ctx.beginPath();
+      const r = 18;
+      ctx.moveTo(bx + r, by);
+      ctx.lineTo(bx + boxW - r, by);
+      ctx.quadraticCurveTo(bx + boxW, by, bx + boxW, by + r);
+      ctx.lineTo(bx + boxW, by + boxH - r);
+      ctx.quadraticCurveTo(bx + boxW, by + boxH, bx + boxW - r, by + boxH);
+      ctx.lineTo(bx + r, by + boxH);
+      ctx.quadraticCurveTo(bx, by + boxH, bx, by + boxH - r);
+      ctx.lineTo(bx, by + r);
+      ctx.quadraticCurveTo(bx, by, bx + r, by);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#020617";
+      ctx.fillText(pctValue, bx + boxW - 14, by + boxH/2 + 8);
+    }
+
+    // Testo domanda (in alto)
     ctx.textAlign = "left";
     ctx.fillStyle = "#FFFFFF";
     ctx.font = "bold 34px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    let y = cardY + 60;
-    y = wrapAndDraw(ctx, domanda, cardX + 20, y, cardW - 40, 40);
+    let y = 190;
+    y = wrapAndDraw(ctx, domanda, marginX, y, maxWidth, 42);
 
-    // risposta con effetto scrittura
-    const eased = Math.pow(progress, 0.9);
+    // Effetto scrittura: easing
+    const eased = Math.pow(progress, 0.85); // esce più “dolce”
     const chars = Math.max(1, Math.floor(fullAnswer.length * eased));
     const partial = fullAnswer.slice(0, chars);
 
-    y += 28;
-    ctx.fillStyle = "#A0B2BA";
+    // Risposta (typing)
+    y += 40;
+    ctx.fillStyle = "#E5E7EB";
     ctx.font = "28px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    wrapAndDraw(ctx, partial, cardX + 20, y, cardW - 40, 36);
+    wrapAndDraw(ctx, partial, marginX, y, maxWidth, 36);
 
-    // firma in basso
+    // Footer tipo “handle”
     ctx.textAlign = "center";
-    ctx.font = "20px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillStyle = "rgba(255,255,255,0.75)";
-    ctx.fillText("What?f · AI Oracle", width/2, height - 60);
-
-    ctx.strokeStyle = "rgba(255,255,255,0.06)";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(0, 0, width, height);
+    ctx.font = "18px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillStyle = "#9CA3AF";
+    ctx.fillText("@whatf.app • generato con What?f", width/2, height - 60);
   }
 
+  // Loop di animazione
   function loop(ts){
     const elapsed = ts - start;
     const progress = Math.min(1, elapsed / totalDurationMs);
@@ -1362,59 +1410,18 @@ async function generateVideoClip(){
     }
   }
 
+  // Avvio registrazione
   recorder.start();
+
+  // Partenza audio di scrittura
+  if (typeAudioEl && hasAudio) {
+    try{
+      typeAudioEl.currentTime = 0;
+      typeAudioEl.play().catch(()=>{});
+    }catch{}
+  }
+
   requestAnimationFrame(loop);
-}
-
-/* ==== SHARE VIDEO ==== */
-async function handleVideoShare(ev){
-  ev.preventDefault();
-  const T = t();
-
-  if (!lastVideoBlob || !lastVideoUrl) {
-    videoNotAvailable(T.videoNoData || "Prima genera il video.");
-    return;
-  }
-
-  const mime = lastVideoMime || "video/webm";
-  const fileName = mime.includes("mp4") ? "whatf-video.mp4" : "whatf-video.webm";
-  const file = new File([lastVideoBlob], fileName, { type: mime });
-
-  try{
-    if (navigator.canShare && navigator.canShare({ files:[file] })) {
-      await navigator.share({
-        title: "What?f",
-        text: "Clip generata con What?f — AI Oracle.",
-        files: [file]
-      });
-      return;
-    }
-
-    if (navigator.share) {
-      await navigator.share({
-        title: "What?f",
-        text: "Clip generata con What?f — AI Oracle.",
-        url: lastVideoUrl
-      });
-      return;
-    }
-
-    if (videoDownload && lastVideoUrl) {
-      videoDownload.href = lastVideoUrl;
-      videoDownload.download = fileName;
-      videoDownload.click();
-      toast(T.videoReadyNote || "Video scaricato: ora puoi condividerlo dai tuoi file.");
-    } else {
-      window.location.href = lastVideoUrl;
-    }
-  }catch(e){
-    console.error("share error", e);
-    if (videoDownload && lastVideoUrl) {
-      videoDownload.href = lastVideoUrl;
-      videoDownload.download = fileName;
-      videoDownload.click();
-    }
-  }
 }
 
 /* ==== Nav / lingua / share / save ==== */
@@ -1430,21 +1437,54 @@ qs('#langSelect').onchange=()=>{
   updateCreditInfo();
   oracleDeck = [];
 };
-qs('#shareBtn').onclick=async()=>{
-  const T=t();
-  const full=`What?f — ${style==='wtf'?(T.styleWTF):(T.styleWHF)}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
+
+/* 🔗 Condivisione: prima prova a condividere il VIDEO, poi fallback testo/copia */
+qs('#shareBtn').onclick = async ()=>{
+  const T = t();
+  const domanda = LS.getItem('domanda') || '';
+  const answerText = (qs('#answer')?.textContent || '').trim();
+
   try{
-    if(navigator.share){ await navigator.share({title:"What?f",text:full}); }
-    else{
-      await navigator.clipboard.writeText(full);
-      const b=qs('#shareBtn'); b.textContent=T.copied; setTimeout(()=>b.textContent=T.share,1200);
+    // Se ho un video generato e il device supporta Web Share con file
+    if (lastVideoBlob && navigator.share && navigator.canShare) {
+      const ext = (lastVideoMime && lastVideoMime.includes("mp4")) ? "mp4" : "webm";
+      const file = new File(
+        [lastVideoBlob],
+        `whatf-video.${ext}`,
+        { type: lastVideoMime || "video/webm" }
+      );
+
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: "What?f",
+          text: "Guarda il mio oracolo What?f ✨",
+          files: [file]
+        });
+        return; // condiviso il video direttamente sui social
+      }
     }
-  }catch{}
+
+    // Fallback: condivido testo / copio
+    const full =
+      `What?f — ${style==='wtf' ? (T.styleWTF) : (T.styleWHF)}\n(${periodo})\n\n` +
+      `Q: ${domanda}\n\n${answerText}`;
+
+    if (navigator.share) {
+      await navigator.share({ title:"What?f", text: full });
+    } else {
+      await navigator.clipboard.writeText(full);
+      const b = qs('#shareBtn');
+      b.textContent = T.copied;
+      setTimeout(()=> b.textContent = T.share, 1200);
+    }
+  }catch(e){
+    console.error(e);
+  }
 };
+
 qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
 if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
 if(videoBtn){ videoBtn.onclick = generateVideoClip; }
-if(videoShareBtn){ videoShareBtn.onclick = handleVideoShare; }
 
 /* ==== Avvio ==== */
 startFlow();
