@@ -213,10 +213,10 @@ function detectWtfContext(domanda = "") {
   const t = String(domanda || "").toLowerCase();
 
   if (/(moto|motocicletta|casco|cilindrata|enduro|naked|scooter|pista)/.test(t)) return "moto";
-  if (/(ufficio|collega|capo|meeting|riunion|scrivania|badge|excel|pc|computer|azienda|contratto|stipendio)/.test(t)) return "ufficio";
+  if (/(ufficio|collega|capo|meeting|riunion|scrivania|badge|excel|pc|computer|azienda|contratto|stipendio|licenziarmi|licenziassi)/.test(t)) return "ufficio";
   if (/(casa|divano|cucina|salotto|camera|stanza|appartamento|mutuo|affitto|letto)/.test(t)) return "casa";
   if (/(l'aquila|laquila|aquila|trasferirmi|trasferimento|città|citta|quartiere|paese|lugano)/.test(t)) return "città";
-  if (/(ex|relazione|fidanzat|ragazza|ragazzo|moglie|marito|matrimonio|lasciare|tornare insieme|storia)/.test(t)) return "relazione";
+  if (/(ex|relazione|fidanzat|ragazza|ragazzo|moglie|marito|matrimonio|lasciare|mollare|tornare insieme|storia)/.test(t)) return "relazione";
   if (/(soldi|budget|stipendio|busta paga|debito|conto|prestito|mutuo|invest|risparmi|tasse)/.test(t)) return "soldi";
 
   return "generico";
@@ -431,9 +431,10 @@ Struttura OBBLIGATORIA (ITALIANO):
    - I suoni devono sottolineare momenti chiave (imprecazione, oggetto che reagisce, piccola figuraccia). Niente suoni buttati a caso.
 7) CHIUSURA:
    - Chiudi SEMPRE con 1–2 frasi che contengano sia una risposta pratica ("sì, puoi farlo ma…", "non ti salva la vita, però…") sia una mini-morale ironica e un po’ tenera, nello stile "non ti sistema l’esistenza, però almeno sai in che casino ti infili".
-8) TONO E DIVIETI:
-   - Vietato lo stile "zingara mistica" e vietato lo stile troppo poetico: NON parlare sul serio di "libertà a due ruote", "sogno di libertà", "eroe mitologico", "vento tra i capelli", "viaggio verso la realtà", "casino del tuo cuore", ecc.
-   - Se compaiono parole come "libertà", "sogno", "cuore", "realtà", "destino", usale solo in modo ironico e concreto, non come frasi profonde.
+8) TONO E DIVIETI (IMPORTANTISSIMO):
+   - Vietato lo stile "zingara mistica" e vietato lo stile troppo poetico.
+   - Vietate frasi epiche o da spot tipo: "chiave per la libertà", "superpoteri", "nuova avventura", "eroe del tuo destino", "vittoria olimpica della vita", "nuovo capitolo della tua storia", "film di fantascienza", "vento tra i capelli", "viaggio verso la realtà", "sogno che si realizza", "cuore in festa o in miseria".
+   - Se compaiono parole come "libertà", "sogno", "cuore", "realtà", "destino", "avventura", "eroe", "superpoteri", usale solo in modo ironico, concreto e ridimensionato, mai in frasi romantiche o motivazionali. Se una frase sembra lo slogan di uno spot, riscrivila in versione scema e quotidiana.
    - Linguaggio: italiano parlato, diretto, pieno di immagini un po’ sceme ma comprensibili; volgarità leggera concessa ("casino", "cazzata"), ma niente odio verso persone o gruppi reali.
 9) STILE:
    - Frasi grammaticalmente corrette, ritmo alto, massimo 2–3 proposizioni per frase.
@@ -474,8 +475,6 @@ STRICT SEQUENCE (ENGLISH):
 `ESEMPI VINCOLANTI (tono/ritmo IT, NON copiare il testo, NON riutilizzare i nomi; servono solo come modello di stile, voce e ritmo):
 
 - Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora che al confessionale ti tengono in riserva. Ti versi un goccio di liquore, rimetti in riga il bancone e giuri che domani apri solo per matti. Alla chiusura, ti guardi intorno e sussurri che oggi hai bestemmiato più del prete quando finisce il vino — ma almeno hai servito verità calde.
-
-- Oh, eccoci, centauro dell’inferno. Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” così netto che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo ma quasi con affetto, come un rito che rimette a fuoco. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio con un sorrisetto complice. Torni a casa con l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie ben calibrate.
 
 - Ah ma guarda te, quello che dopo tre reel su TikTok si sente già centauro del caos. Entri in concessionaria con la sicurezza di uno che ha visto due tutorial e pensa di poter domare il mondo, tocchi la moto e nella tua testa parte un “BWOOOM” teatrale che manco il trailer di un film girato male. Appena il venditore ti dice il prezzo, ti scappa un “bestemmione bardato” talmente potente che un poster sul muro si stacca di mezzo centimetro e un casco fa “tlin” come se stesse giudicando il tuo conto in banca. Tu fai finta di niente, esci tranquillo, entri nel bar accanto, appoggi le chiavi sul bancone come se fossero di una supermoto e ti fai riempire un bicchiere serio che sistematicamente ti ricorda che la rata non si paga da sola.` }
     );
@@ -764,8 +763,10 @@ export default async function handler(req, res){
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if(!answer) throw new Error("empty_model_response");
 
+    // Rimuovi eco della domanda
     answer = stripQuestionEcho(domanda, answer);
 
+    // Post-process diverso per whatif vs wtf
     if (stile === "wtf") {
       answer = clampWords(answer, 230);
       answer = normalizeOneParagraph(answer);
@@ -775,6 +776,7 @@ export default async function handler(req, res){
       answer = normalizeOneParagraph(answer);
     }
 
+    // Normalizzazione nomi in IT
     if(normLang(lang)==="it"){
       (function(){
         const d=String(domanda||"");
@@ -787,8 +789,10 @@ export default async function handler(req, res){
       })();
     }
 
+    // Ripristina maiuscole
     answer = sentenceCaseAll(answer);
 
+    // Finale emozionale solo per WHATIF
     if (stile === "whatif") {
       answer = ensureZingaraEnding({ text: answer, lang, periodo, domanda });
     }
@@ -817,4 +821,4 @@ export default async function handler(req, res){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
-}
+        }
