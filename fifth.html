@@ -301,17 +301,14 @@ h1{
 </audio>
 <!-- 🎵 SFX evocativo (what if) -->
 <audio id="sfxWhatIf" preload="auto">
-  <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAABAAAA" type="audio/mpeg">
+  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAABAAAA" type="audio/mpeg">
 </audio>
 <!-- 🥂 Clink (what the f) -->
 <audio id="sfxWtf" preload="auto">
   <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
 </audio>
-<!-- ⌨️ SFX scrittura per il video -->
-<audio id="typeSfx" preload="auto" loop>
-  <!-- placeholder: puoi sostituire il base64 con un vero suono di typing -->
-  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAADAAAA" type="audio/mpeg">
-</audio>
+<!-- ⌨️ SFX scrittura per il video (METTI QUI UN MP3 VERO) -->
+<audio id="typeSfx" src="/sounds/typewriter.mp3" preload="auto" loop></audio>
 
 <script type="module">
 /* ==== Firebase Auth + Firestore credits (solo lettura) ==== */
@@ -1139,7 +1136,7 @@ async function startFlow(){
   }
 }
 
-/* ==== VIDEO: generazione client-side con Canvas + MediaRecorder (effetto scrittura + audio) ==== */
+/* ==== VIDEO: generazione client-side con Canvas + MediaRecorder ==== */
 
 function videoNotAvailable(msg){
   const T = t();
@@ -1291,12 +1288,15 @@ async function generateVideoClip(){
     }
   };
 
-  // Testo risposta: taglio per non farlo infinito
-  const fullAnswer = answerText.length > 550 ? (answerText.slice(0, 550) + "…") : answerText;
+  // Testo risposta: usa TUTTA la risposta
+  const fullAnswer = answerText;
 
-  // Durata e “scrittura lenta”
-  const totalDurationMs = 9000;   // 9s scrittura
-  const extraStillMs = 1000;      // 1s fermo a fine testo
+  // Durata dinamica in base alla lunghezza, per scrivere tutto
+  const charCount = fullAnswer.length || 1;
+  const msPerChar = 45; // regola se lo vuoi più lento/veloce
+  const totalDurationMs = Math.min(16000, Math.max(5000, charCount * msPerChar));
+  const extraStillMs = 1000; // 1s fermo a fine testo
+
   const start = performance.now();
 
   const marginX = 60;
@@ -1379,9 +1379,8 @@ async function generateVideoClip(){
     let y = 190;
     y = wrapAndDraw(ctx, domanda, marginX, y, maxWidth, 42);
 
-    // Effetto scrittura: easing
-    const eased = Math.pow(progress, 0.85); // esce più “dolce”
-    const chars = Math.max(1, Math.floor(fullAnswer.length * eased));
+    // Effetto scrittura: lineare per arrivare in fondo
+    const chars = Math.max(1, Math.floor(fullAnswer.length * progress));
     const partial = fullAnswer.slice(0, chars);
 
     // Risposta (typing)
@@ -1438,15 +1437,21 @@ qs('#langSelect').onchange=()=>{
   oracleDeck = [];
 };
 
-/* 🔗 Condivisione: prima prova a condividere il VIDEO, poi fallback testo/copia */
+/* 🔗 Condivisione: prima il VIDEO, poi fallback testo/copia */
 qs('#shareBtn').onclick = async ()=>{
   const T = t();
   const domanda = LS.getItem('domanda') || '';
   const answerText = (qs('#answer')?.textContent || '').trim();
 
+  // Se non c'è un video, invito a crearlo
+  if (!lastVideoBlob) {
+    toast("Prima crea il video con 🎬 Crea video");
+    return;
+  }
+
   try{
-    // Se ho un video generato e il device supporta Web Share con file
-    if (lastVideoBlob && navigator.share && navigator.canShare) {
+    // 1️⃣ Provo a condividere SEMPRE il FILE video
+    if (navigator.share) {
       const ext = (lastVideoMime && lastVideoMime.includes("mp4")) ? "mp4" : "webm";
       const file = new File(
         [lastVideoBlob],
@@ -1454,17 +1459,20 @@ qs('#shareBtn').onclick = async ()=>{
         { type: lastVideoMime || "video/webm" }
       );
 
-      if (navigator.canShare({ files: [file] })) {
+      try {
         await navigator.share({
           title: "What?f",
           text: "Guarda il mio oracolo What?f ✨",
           files: [file]
         });
-        return; // condiviso il video direttamente sui social
+        return; // condiviso correttamente il video
+      } catch(e) {
+        console.warn("share video failed, fallback to text/copy", e);
+        // se l'utente annulla o il device non supporta file → passo al fallback
       }
     }
 
-    // Fallback: condivido testo / copio
+    // 2️⃣ Fallback: condivido solo testo o copio
     const full =
       `What?f — ${style==='wtf' ? (T.styleWTF) : (T.styleWHF)}\n(${periodo})\n\n` +
       `Q: ${domanda}\n\n${answerText}`;
