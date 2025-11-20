@@ -272,8 +272,14 @@ h1{
       <div id="videoWrap" style="display:none;">
         <video id="videoPreview" controls></video>
         <div class="row" style="margin-top:8px;justify-content:space-between;">
-          <a id="videoDownload" class="btn primary" download="whatf-clip.mp4">⬇️ Scarica / Condividi</a>
-          <span class="small" id="videoNote"></span>
+  <!-- bottone principale: apre share sheet o download -->
+  <button id="videoShareBtn" class="btn primary">⬇️ Scarica / Condividi</button>
+  <span class="small" id="videoNote"></span>
+</div>
+
+<!-- anchor nascosto solo per il fallback download -->
+<a id="videoDownload" style="display:none" download="whatf-video.webm"></a>
+
         </div>
       </div>
     </div>
