@@ -1129,7 +1129,7 @@ async function startFlow(){
   }
 }
 
-/* ==== VIDEO: generazione client-side con Canvas + MediaRecorder (effetto scrittura) ==== */
+/* ==== VIDEO: generazione client-side con Canvas + MediaRecorder (effetto scrittura social) ==== */
 
 function videoNotAvailable(msg){
   const T = t();
@@ -1137,6 +1137,7 @@ function videoNotAvailable(msg){
   toast(text);
 }
 
+// helper: testo a capo
 function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
   const words = String(text || "").split(/\s+/);
   let line = "";
@@ -1158,6 +1159,22 @@ function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
   return y;
 }
 
+// helper: rettangolo arrotondato
+function roundRect(ctx, x, y, w, h, r){
+  const radius = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + w - radius, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+  ctx.lineTo(x + w, y + h - radius);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+  ctx.lineTo(x + radius, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
 async function generateVideoClip(){
   const T = t();
   const domanda = (localStorage.getItem('domanda') || qView.textContent || '').trim();
@@ -1168,6 +1185,7 @@ async function generateVideoClip(){
     return;
   }
 
+  // check support
   if (typeof HTMLCanvasElement === "undefined" ||
       !HTMLCanvasElement.prototype.captureStream ||
       typeof MediaRecorder === "undefined") {
@@ -1176,7 +1194,7 @@ async function generateVideoClip(){
   }
 
   // UI loading
-  videoBtn.disabled = true;
+  if (videoBtn) videoBtn.disabled = true;
   if (videoLoadingEl) {
     videoLoadingEl.textContent = T.videoPreparing || "Generazione video…";
     videoLoadingEl.style.display = "inline";
@@ -1184,7 +1202,7 @@ async function generateVideoClip(){
   if (videoWrap) videoWrap.style.display = "none";
   if (videoNoteEl) videoNoteEl.textContent = "";
 
-  // Canvas
+  // canvas verticale 9:16
   const canvas = document.createElement("canvas");
   const width = 720;
   const height = 1280;
@@ -1194,6 +1212,7 @@ async function generateVideoClip(){
 
   const stream = canvas.captureStream(25);
 
+  // scegli formato supportato
   const candidates = [
     "video/mp4;codecs=h264",
     "video/webm;codecs=vp9",
@@ -1201,7 +1220,7 @@ async function generateVideoClip(){
     "video/webm"
   ];
   let mimeType = null;
-  for(const m of candidates){
+  for (const m of candidates){
     if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) {
       mimeType = m;
       break;
@@ -1209,7 +1228,7 @@ async function generateVideoClip(){
   }
   if (!mimeType) {
     videoNotAvailable();
-    videoBtn.disabled = false;
+    if (videoBtn) videoBtn.disabled = false;
     if (videoLoadingEl) videoLoadingEl.style.display = "none";
     return;
   }
@@ -1221,7 +1240,7 @@ async function generateVideoClip(){
   }catch(e){
     console.error(e);
     videoNotAvailable();
-    videoBtn.disabled = false;
+    if (videoBtn) videoBtn.disabled = false;
     if (videoLoadingEl) videoLoadingEl.style.display = "none";
     return;
   }
@@ -1246,43 +1265,109 @@ async function generateVideoClip(){
       console.error(e);
       videoNotAvailable();
     }finally{
-      videoBtn.disabled = false;
+      if (videoBtn) videoBtn.disabled = false;
       if (videoLoadingEl) videoLoadingEl.style.display = "none";
     }
   };
 
-  // Effetto scrittura
-  const fullAnswer = answerText.length > 550 ? (answerText.slice(0, 550) + "…") : answerText;
-  const totalDurationMs = 7000;
-  const extraStillMs = 800;
+  // testo, accorciato se troppo lungo
+  const fullAnswer = answerText.length > 650 ? (answerText.slice(0, 650) + "…") : answerText;
+
+  // timing: prima solo domanda, poi scrittura risposta
+  const totalDurationMs = 9000;       // totale ~9s
+  const questionOnlyMs   = 1500;      // solo domanda nei primi 1.5s
+  const extraStillMs     = 1200;      // pausa finale con testo completo
+
   const start = performance.now();
-  const marginX = 50;
+
+  // layout
+  const marginX = 70;
+  const panelTop = 260;
+  const panelBottom = height - 230;
+  const panelHeight = panelBottom - panelTop;
   const maxWidth = width - marginX * 2;
 
-  function drawFrame(progress){
-    ctx.fillStyle = (style === "wtf") ? "#101414" : "#0A0F14";
+  // colori stile social
+  const isWtf = (style === "wtf");
+  const accent = isWtf ? "#5A8C75" : "#00E0FF";
+
+  function drawFrame(now){
+    const elapsed = now - start;
+    const clamped = Math.min(elapsed, totalDurationMs + extraStillMs);
+
+    // BG: gradiente + alone centrale
+    const g = ctx.createLinearGradient(0, 0, 0, height);
+    g.addColorStop(0, isWtf ? "#101716" : "#050811");
+    g.addColorStop(1, isWtf ? "#0A1410" : "#050A10");
+    ctx.fillStyle = g;
     ctx.fillRect(0, 0, width, height);
 
-    ctx.fillStyle = "#FFFFFF";
-    ctx.textAlign = "left";
-    ctx.font = "bold 34px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    let y = 150;
-    y = wrapAndDraw(ctx, domanda, marginX, y, maxWidth, 42);
+    const rg = ctx.createRadialGradient(
+      width/2, panelTop + panelHeight/3, 80,
+      width/2, panelTop + panelHeight/3, 520
+    );
+    rg.addColorStop(0, "rgba(255,255,255,0.06)");
+    rg.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = rg;
+    ctx.fillRect(0, 0, width, height);
 
-    const chars = Math.max(1, Math.floor(fullAnswer.length * progress));
+    // card centrale
+    roundRect(ctx, marginX - 20, panelTop - 40, width - (marginX - 20)*2, panelHeight + 80, 32);
+    ctx.fillStyle = "rgba(9,15,18,0.92)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.09)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // titolo "What?f"
+    ctx.textAlign = "center";
+    ctx.fillStyle = accent;
+    ctx.font = "700 34px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillText("What?f", width/2, panelTop - 70);
+
+    // piccola barra sopra la domanda
+    ctx.fillStyle = accent;
+    ctx.fillRect(width/2 - 60, panelTop - 52, 120, 3);
+
+    // DOMANDA (ferma, in alto)
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "700 38px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    let y = panelTop;
+    y = wrapAndDraw(ctx, domanda, marginX, y, maxWidth, 46);
+
+    // progress scrittura risposta
+    let answerProgress = 0;
+    if (clamped > questionOnlyMs) {
+      const dyn = totalDurationMs - questionOnlyMs;
+      answerProgress = Math.min(1, (clamped - questionOnlyMs) / dyn);
+    }
+
+    // RISPOSTA (typewriter)
+    const chars = Math.max(1, Math.floor(fullAnswer.length * answerProgress));
     const partial = fullAnswer.slice(0, chars);
 
-    y += 40;
+    y += 28;
     ctx.fillStyle = "#A0B2BA";
-    ctx.font = "28px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    wrapAndDraw(ctx, partial, marginX, y, maxWidth, 36);
+    ctx.font = "400 30px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    wrapAndDraw(ctx, partial, marginX, y, maxWidth, 38);
+
+    // watermark / brand in basso
+    ctx.textAlign = "center";
+    ctx.font = "500 24px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,0.75)";
+    ctx.fillText("What?f · AI Oracle", width/2, height - 80);
+
+    // piccolo bordo alto/basso per safe area
+    ctx.fillStyle = "rgba(255,255,255,0.06)";
+    ctx.fillRect(0, 0, width, 2);
+    ctx.fillRect(0, height - 2, width, 2);
+
+    return elapsed;
   }
 
   function loop(ts){
-    const elapsed = ts - start;
-    const progress = Math.min(1, elapsed / totalDurationMs);
-    drawFrame(progress);
-
+    const elapsed = drawFrame(ts);
     if (elapsed < totalDurationMs + extraStillMs) {
       requestAnimationFrame(loop);
     } else {
@@ -1293,6 +1378,12 @@ async function generateVideoClip(){
   recorder.start();
   requestAnimationFrame(loop);
 }
+
+// bind bottone video
+if (videoBtn) {
+  videoBtn.onclick = generateVideoClip;
+}
+
 
 /* ==== Nav / lingua / share / save ==== */
 qs('#backBtn').onclick=()=> history.length > 1 ? history.back() : location.replace('index.html');
