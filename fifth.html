@@ -133,22 +133,19 @@ h1{
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
 }
 
-/* === VIDEO SECTION (più virale) === */
+/* === VIDEO SECTION === */
 #videoBox{
   margin-top:10px;
-  border-radius:18px;
-  background:radial-gradient(circle at 10% 0%, rgba(250,250,250,0.12), transparent 55%),
-             radial-gradient(circle at 90% 0%, rgba(250,250,200,0.18), transparent 55%),
-             rgba(15,23,42,0.9);
-  box-shadow:0 16px 40px rgba(0,0,0,.6), 0 0 0 1px rgba(148,163,184,0.25);
+  border:1px solid rgba(255,236,1,.4);
+  box-shadow:0 0 18px rgba(255,236,1,.25), 0 10px 26px rgba(0,0,0,.55);
+  background:radial-gradient(circle at top, rgba(255,236,1,.08), rgba(10,15,20,.95));
 }
 #videoPreview{
   width:100%;
   max-height:420px;
-  border-radius:14px;
+  border-radius:18px;
   display:block;
-  box-shadow:0 16px 40px rgba(0,0,0,.7);
-  border:1px solid rgba(248,250,252,0.16);
+  box-shadow:0 0 20px rgba(0,0,0,.65);
 }
 #videoLoading{
   font-size:12px;
@@ -270,27 +267,25 @@ h1{
     <div class="label" id="lblVideo">Video condivisibile</div>
     <div class="result-box" id="videoBox">
       <p class="small" id="videoHelp">
-        🎥 Trasforma questa risposta in un video verticale pronto per TikTok, Reels & co.
+        Crea un breve video con domanda e risposta, pronto da condividere sui social.
       </p>
       <div class="row" style="margin-top:6px;">
         <button class="btn ghost" id="videoBtn">🎬 Crea video</button>
         <span class="small" id="videoLoading" style="display:none;">Generazione video in corso…</span>
       </div>
       <div id="videoWrap" style="display:none;">
-        <video id="videoPreview" controls></video>
-        <div class="row" style="margin-top:8px;justify-content:space-between;">
-          <!-- LASCIO <a> per compatibilità ma lo gestiamo via JS -->
-          <a id="videoDownload" class="btn primary">📤 Scarica / Condividi</a>
+        <video id="videoPreview" playsinline controls></video>
+        <div class="row" style="margin-top:8px;justify-content:space-between;flex-wrap:wrap;">
+          <a id="videoDownload" class="btn primary" download="whatf-clip.mp4">⬇️ Scarica</a>
+          <button class="btn ghost" id="videoShareBtn">📤 Condividi video</button>
           <span class="small" id="videoNote"></span>
         </div>
-        <p class="small" style="margin-top:4px;">
-          Suggerimento: condividilo come <b>storia</b> o <b>post</b> e tagga chi deve sentirsi chiamato in causa 👀
-        </p>
       </div>
     </div>
 
     <div class="hr"></div>
     <div class="row">
+      <!-- ⚠️ NON TOCCATO: condivisione TESTO -->
       <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
       <button class="btn ghost" id="saveBtn">⭐ Salva</button>
       <button class="btn ghost" id="againBtn">🔁 Fai un’altra domanda</button>
@@ -312,16 +307,16 @@ h1{
 </audio>
 <!-- 🎵 SFX evocativo (what if) -->
 <audio id="sfxWhatIf" preload="auto">
-  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAABAAAA" type="audio/mpeg">
+  <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAABAAAA" type="audio/mpeg">
 </audio>
 <!-- 🥂 Clink (what the f) -->
 <audio id="sfxWtf" preload="auto">
   <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
 </audio>
-
-<!-- 🎵 AUDIO DI SOTTOFONDO PER IL VIDEO (METTI QUI IL TUO FILE) -->
-<!-- Sostituisci src con il percorso del tuo mp3, es: /audio/whatf-bgm.mp3 -->
-<audio id="videoBgm" preload="auto" src="/audio/whatf-bgm.mp3"></audio>
+<!-- ⌨️ SFX scrittura per il VIDEO (carica typing-sfx.mp3 nella stessa cartella) -->
+<audio id="typingSfx" preload="auto" loop>
+  <source src="typing-sfx.mp3" type="audio/mpeg">
+</audio>
 
 <script type="module">
 /* ==== Firebase Auth + Firestore credits (solo lettura) ==== */
@@ -372,10 +367,11 @@ const I18N = {
        videoTitle:"Video condivisibile",
        videoHelp:"Crea un breve video con domanda e risposta, pronto da condividere sui social.",
        videoBtn:"🎬 Crea video",
-       videoReadyNote:"Video pronto: puoi scaricarlo o condividerlo direttamente sulle app social.",
+       videoReadyNote:"Video pronto: caricalo su TikTok, Reels o dove vuoi.",
        videoPreparing:"Generazione video in corso…",
        videoError:"Impossibile generare il video. Riprova.",
-       videoNoData:"Non c’è ancora una risposta da trasformare in video."
+       videoNoData:"Non c’è ancora una risposta da trasformare in video.",
+       videoShareNotSupported:"Il tuo browser non supporta la condivisione diretta del file. Scarica il video e caricalo dal social."
   },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
@@ -403,10 +399,11 @@ const I18N = {
        videoTitle:"Shareable video",
        videoHelp:"Create a short video with your question and answer, ready to share on social media.",
        videoBtn:"🎬 Create video",
-       videoReadyNote:"Video ready: you can download it or share it directly to your social apps.",
+       videoReadyNote:"Video ready: upload it to TikTok, Reels or anywhere you like.",
        videoPreparing:"Generating video…",
        videoError:"Could not generate the video. Please try again.",
-       videoNoData:"There is no answer yet to turn into a video."
+       videoNoData:"There is no answer yet to turn into a video.",
+       videoShareNotSupported:"Your browser cannot share the file directly. Download the video and upload it from the social app."
   },
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
        sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
@@ -434,10 +431,11 @@ const I18N = {
        videoTitle:"Vídeo compartible",
        videoHelp:"Crea un vídeo corto con tu pregunta y respuesta, listo para compartir en redes.",
        videoBtn:"🎬 Crear vídeo",
-       videoReadyNote:"Vídeo listo: puedes descargarlo o compartirlo directamente en tus apps sociales.",
+       videoReadyNote:"Vídeo listo: súbelo a TikTok, Reels o donde quieras.",
        videoPreparing:"Generando vídeo…",
        videoError:"No se ha podido generar el vídeo. Inténtalo de nuevo.",
-       videoNoData:"Todavía no hay una respuesta para convertir en vídeo."
+       videoNoData:"Todavía no hay una respuesta para convertir en vídeo.",
+       videoShareNotSupported:"Tu navegador no permite compartir el archivo directamente. Descarga el vídeo y súbelo desde la app."
   },
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
        sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
@@ -465,10 +463,11 @@ const I18N = {
        videoTitle:"Vidéo partageable",
        videoHelp:"Crée une courte vidéo avec ta question et la réponse, prête à être partagée sur les réseaux.",
        videoBtn:"🎬 Créer la vidéo",
-       videoReadyNote:"Vidéo prête : tu peux la télécharger ou la partager directement depuis tes apps sociales.",
+       videoReadyNote:"Vidéo prête : mets-la sur TikTok, Reels ou ailleurs.",
        videoPreparing:"Génération de la vidéo…",
        videoError:"Impossible de générer le vidéo. Réessaie.",
-       videoNoData:"Il n’y a pas encore de réponse à transformer en vidéo."
+       videoNoData:"Il n’y a pas encore de réponse à transformer en vidéo.",
+       videoShareNotSupported:"Ton navigateur ne permet pas de partager directement le fichier. Télécharge la vidéo et mets-la depuis l’app."
   },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
        sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
@@ -496,10 +495,11 @@ const I18N = {
        videoTitle:"Teilbares Video",
        videoHelp:"Erstelle ein kurzes Video mit deiner Frage und Antwort, bereit zum Teilen in Social Media.",
        videoBtn:"🎬 Video erstellen",
-       videoReadyNote:"Video fertig: Du kannst es herunterladen oder direkt in deinen Social Apps teilen.",
+       videoReadyNote:"Video fertig: Lade es auf TikTok, Reels oder wo du willst hoch.",
        videoPreparing:"Video wird erzeugt…",
        videoError:"Video konnte nicht erzeugt werden. Bitte versuche es erneut.",
-       videoNoData:"Es gibt noch keine Antwort, die in ein Video umgewandelt werden kann."
+       videoNoData:"Es gibt noch keine Antwort, die in ein Video umgewandelt werden kann.",
+       videoShareNotSupported:"Dein Browser kann die Datei nicht direkt teilen. Lade das Video herunter und lade es aus der App hoch."
   }
 };
 const SUP_LANG=['it','en','es','fr','de'];
@@ -519,7 +519,7 @@ function detectLang(text=''){
     de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
   };
   const score={}; for(const L of SUP_LANG){ score[L]=0; (bank[L]||[]).forEach(w=>{ if(t.includes(w)) score[L]++; }); }
-  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; /* best=L; */ } }
+  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; } }
   if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
   return best;
 }
@@ -618,11 +618,11 @@ const videoBtn = qs('#videoBtn');
 const videoWrap = qs('#videoWrap');
 const videoPreview = qs('#videoPreview');
 const videoDownload = qs('#videoDownload');
+const videoShareBtn = qs('#videoShareBtn');
 const videoLoadingEl = qs('#videoLoading');
 const videoNoteEl = qs('#videoNote');
-const videoBgm = qs('#videoBgm');
+const typingSfx = document.getElementById('typingSfx');
 
-/* buffer per ultima clip (per condivisione file) */
 let lastVideoBlob = null;
 let lastVideoMime = null;
 let lastVideoUrl = null;
@@ -706,18 +706,16 @@ function revealEffect(){
   setTimeout(()=> wrap.classList.remove('reveal'), 900);
 }
 
-/* ===== Motivazioni ecc. (come nel tuo file) ===== */
-/* ... (tutta la parte buildWhatIfMotivationsPretty, wtfMotivationDemenziale, cache, startFlow
-        È IDENTICA alla versione che ti stava già funzionando.
-   Per non esplodere di testo, la lascio invariata — l’unica cosa che abbiamo cambiato
-   è la parte VIDEO e il bottone di download/condivisione.
-   Mantieni il tuo blocco originale da qui fino a prima della sezione VIDEO se preferisci.
-*/
-
-/* Per brevità, da qui in giù è identico al tuo file precedente
-   tranne la SEZIONE VIDEO e il listener del bottone videoDownload.
-   Se hai dubbi, puoi semplicemente usare tutto questo file così com’è.
-*/
+/* ===== Helpers contestuali per “What if” breve ===== */
+function extractContextParts(q){
+  const s = String(q||"").toLowerCase();
+  const when = (s.match(/\b(in|entro|tra|domani|oggi|stasera|settimana|mese|anno|\d{1,2}\s*(giorni|settimane|mesi))\b/i)||[])[0] || "";
+  const money = (s.match(/(€|euro|budget|spesa|costo|prezzo)\s*([0-9.,]+)/i)||[])[0] || (/\bunder\b/i.test(s)?"under":"");
+  const action = (s.match(/\b(lancia|apri|impara|scrivi|chiedi|studia|automatizza|testa|compra|vendi|assumi|costruisci|crea|ottimizza|riduci|aumenta)\b/i)||[])[0] || "";
+  const topicMatch = s.match(/\b(sito|progetto|app|campagna|cv|colloquio|piscina|dominio|startup|portafoglio|criptovalute?|azione|investimento|esame)\b/i);
+  const topic = topicMatch ? topicMatch[0] : "";
+  return {when, money, action, topic};
+}
 
 /* ===== Motivazione demenziale per WTF ===== */
 function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
@@ -735,11 +733,201 @@ function wtfMotivationDemenziale(langCode){
   return `Pseudoscienza da bancone: i micro-passi battono i piani epici. La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: fai, e smettila di pensarci troppo.`;
 }
 
-/* (segue buildWhatIfMotivationsPretty, cache, applyResultToUI, initTop, applyQuestion, saveCurrentQuestion, startFlow – invariati, li puoi riusare dal tuo file precedente) */
+/* ===== NUOVE MOTIVAZIONI WHAT IF ===== */
+function buildWhatIfMotivationsPretty(domanda, pct){
+  const q = String(domanda||"").toLowerCase();
+  const L = lang;
+  const isPast = (periodo === 'past');
+
+  const isLove =
+    /ex\b|relazione|fidanzat[oa]|partner|coppia|amore|relationship|breakup|ex novio|ex novia|ex marit|ex moglie/.test(q);
+  const isMove =
+    /trasferi|trasloc|città|citta|tornare a|tornassi a|se tornassi|se tornare|if i move|move to|go back to/.test(q);
+  const isJob =
+    /lavoro|job|carriera|colloquio|interview|assunzion|licenziament|azienda|company|ufficio/.test(q);
+
+  if (L === 'it') {
+    const baseProb = pct
+      ? (isPast
+         ? `Probabilità intorno al ${pct}%. Non era scritto, ma qualche finestra aperta c’era.<br><br>`
+         : `Probabilità intorno al ${pct}%. Non è destino scritto, ma una pista possibile.<br><br>`)
+      : "";
+
+    if (isLove) {
+      if (isPast) {
+        return baseProb +
+          "Perché poteva funzionare:<br>" +
+          "• C’era una base emotiva reale: alcune parti di voi si capivano più di quanto ammettevate.<br>" +
+          "• C’erano margini per riscrivere il patto, se entrambi aveste nominato i problemi invece di girarci intorno.<br><br>" +
+          "Cosa lo ha reso complicato:<br>" +
+          "• Gli stessi schemi si sono ripetuti: orgoglio, silenzi, risposte lente quando servivano scelte chiare.<br>" +
+          "• La paura di farsi vedere davvero ha pesato più del desiderio di provarci fino in fondo.";
+      } else {
+        return baseProb +
+          "Perché potrebbe funzionare:<br>" +
+          "• C’è ancora una base emotiva reale: alcune parti di voi si riconoscono al volo, anche dopo il caos.<br>" +
+          "• Se i problemi vengono detti esplicitamente, potete riscrivere il patto invece di ricopiare il vecchio copione.<br><br>" +
+          "Cosa può complicarlo:<br>" +
+          "• Rischio replay: stessi silenzi, stessi non detti, solo con più stanchezza.<br>" +
+          "• La paura di esporsi può farti restare a metà: né davvero dentro, né davvero fuori.";
+      }
+    }
+
+    if (isMove) {
+      if (isPast) {
+        return baseProb +
+          "Perché poteva funzionare:<br>" +
+          "• Tornare in un luogo conosciuto ti avrebbe dato radici emotive quando ti sentivi sparpagliato.<br>" +
+          "• I ritmi più umani avrebbero potuto sostenere meglio la tua energia invece di bruciarla tutta fuori casa.<br><br>" +
+          "Cosa lo ha reso complicato:<br>" +
+          "• La paura di “fare un passo indietro” ha pesato più del bisogno di stabilità.<br>" +
+          "• Alcuni legami e abitudini del passato non erano abbastanza sani da reggere un ritorno sereno.";
+      } else {
+        return baseProb +
+          "Perché potrebbe funzionare:<br>" +
+          "• Un posto che conosci può ridarti radici quando ti senti sempre in modalità sopravvivenza.<br>" +
+          "• Ritmi più lenti e facce note possono aiutare il tuo cervello a smettere di sentirsi sempre ‘in prestazione’.<br><br>" +
+          "Cosa può complicarlo:<br>" +
+          "• Potresti leggerlo come “sto tornando indietro” invece che come cambio di ritmo.<br>" +
+          "• Alcune dinamiche del passato rischiano di riattivarsi se non metti confini chiari fin da subito.";
+      }
+    }
+
+    if (isJob) {
+      if (isPast) {
+        return baseProb +
+          "Perché poteva funzionare:<br>" +
+          "• Una direzione più chiara ti avrebbe evitato di disperdere energie in mille tentativi.\n<br>" +
+          "• Passi piccoli ma costanti sulla stessa strada avrebbero costruito più sicurezza interna.<br><br>" +
+          "Cosa lo ha reso complicato:<br>" +
+          "• Il bisogno di scegliere “il lavoro perfetto” ha rallentato ogni decisione concreta.<br>" +
+          "• Contesti non allineati ai tuoi valori ti hanno fatto dubitare di te più che del sistema in cui eri.";
+      } else {
+        return baseProb +
+          "Perché potrebbe funzionare:<br>" +
+          "• Scegliere una direzione ti permette di smettere di bruciare energie in esperimenti casuali.<br>" +
+          "• Passi piccoli ma regolari nella stessa direzione possono darti più sicurezza di qualsiasi “colpo di fortuna”.<br><br>" +
+          "Cosa può complicarlo:<br>" +
+          "• Il timore di incastrarti in una scelta ti può bloccare prima di iniziare.<br>" +
+          "• Se i contesti che trovi non rispecchiano i tuoi valori, rischi di sentirti sbagliato anche quando non lo sei.";
+      }
+    }
+
+    if (isPast) {
+      return baseProb +
+        "Perché poteva andare diversamente:<br>" +
+        "• Un paio di decisioni più chiare e un po’ di gentilezza verso te stessə avrebbero cambiato l’andamento della storia.<br>" +
+        "• C’erano segnali che potevano essere ascoltati prima, invece di essere zittiti per non creare problemi.<br><br>" +
+        "Cosa l’ha reso difficile:<br>" +
+        "• Hai dovuto scegliere con le risorse e le informazioni che avevi, non con quelle che hai adesso.<br>" +
+        "• La paura di deludere qualcuno (te compresə) ha pesato sulle scelte più di quanto sembrasse in superficie.";
+    } else {
+      return baseProb +
+        "Perché potrebbe funzionare:<br>" +
+        "• Ti sposta verso una versione di vita più allineata a come ti senti oggi, non a come “dovresti” essere.<br>" +
+        "• Piccoli passi chiari riducono il rumore mentale e ti fanno sentire meno in balia degli eventi.<br><br>" +
+        "Cosa può complicarlo:<br>" +
+        "• Restare bloccato sull’idea della scelta perfetta ti fa rinviare quella buona abbastanza.<br>" +
+        "• Cercare di non scontentare nessuno rischia di farti scontentare proprio la persona che resta: tu.";
+    }
+  }
+
+  const baseProbOther = pct
+    ? (isPast
+       ? `Approx. probability ${pct}% — it wasn’t fixed destiny, but the door wasn’t fully closed.<br><br>`
+       : `Approx. probability ${pct}% — not fixed fate, but a realistic option.<br><br>`)
+    : "";
+
+  if (L === 'en') {
+    if (isPast) {
+      return baseProbOther +
+        "Why it could have gone better:<br>" +
+        "• With a bit more clarity and timing, the situation had room to move in your favour.<br>" +
+        "• A couple of honest talks earlier might have changed how things unfolded.<br><br>" +
+        "What made it hard:<br>" +
+        "• You chose with the information and energy you had then, not with what you know now.<br>" +
+        "• Fear of messing up or disappointing people quietly pushed some options off the table.";
+    } else {
+      return baseProbOther +
+        "Why it could work:<br>" +
+        "• It nudges your life closer to what you actually want, not just what you’ve always done.<br>" +
+        "• Clear small steps turn overthinking into movement.<br><br>" +
+        "What could make it hard:<br>" +
+        "• Waiting for the “perfect” move can freeze you before you start.<br>" +
+        "• If you try to keep everyone happy, your decision loses power and you stay stuck.";
+    }
+  }
+
+  if (L === 'es') {
+    if (isPast) {
+      return baseProbOther +
+        "Por qué podría haber salido distinto:<br>" +
+        "• Con un poco más de claridad y tiempo, la situación tenía margen para girar a tu favor.<br>" +
+        "• Un par de conversaciones honestas antes habrían cambiado el guion.<br><br>" +
+        "Qué lo hizo difícil:<br>" +
+        "• Elegiste con la energía y la información que tenías entonces, no con la de ahora.<br>" +
+        "• El miedo a equivocarte o decepcionar a alguien sacó opciones del mapa sin que te dieras cuenta.";
+    } else {
+      return baseProbOther +
+        "Por qué podría funcionar:<br>" +
+        "• Te acerca a una vida más alineada con lo que sientes hoy.<br>" +
+        "• Pasos pequeños y claros convierten el darle vueltas en movimiento real.<br><br>" +
+        "Qué puede complicarlo:<br>" +
+        "• Esperar la decisión perfecta puede dejarte inmóvil.<br>" +
+        "• Si intentas contentar a todo el mundo, tu decisión pierde fuerza.";
+    }
+  }
+
+  if (L === 'fr') {
+    if (isPast) {
+      return baseProbOther +
+        "Pourquoi ça aurait pu se passer autrement :<br>" +
+        "• Avec un peu plus de clarté et de timing, la situation avait de la marge pour tourner en ta faveur.<br>" +
+        "• Quelques discussions honnêtes plus tôt auraient pu changer la suite.<br><br>" +
+        "Ce qui a compliqué les choses :<br>" +
+        "• Tu as choisi avec les ressources et les infos de l’époque, pas avec celles d’aujourd’hui.<br>" +
+        "• La peur de te tromper ou de décevoir a fait disparaître certaines options du radar.";
+    } else {
+      return baseProbOther +
+        "Pourquoi ça pourrait marcher :<br>" +
+        "• Ça t’emmène vers une vie plus proche de ce que tu ressens vraiment.<br>" +
+        "• De petits pas clairs transforment le mental en mouvement concret.<br><br>" +
+        "Ce qui peut compliquer :<br>" +
+        "• Attendre le choix parfait peut t’empêcher d’avancer.<br>" +
+        "• Si tu veux rassurer tout le monde, ta décision perd en force.";
+    }
+  }
+
+  if (isPast) {
+    return baseProbOther +
+      "Warum es anders hätte laufen können:<br>" +
+      "• Mit etwas mehr Klarheit und Timing hätte sich die Situation eher zu deinen Gunsten verschoben.<br>" +
+      "• Ein, zwei offene Gespräche früher hätten den Verlauf deutlich verändern können.<br><br>" +
+      "Was es schwierig gemacht hat:<br>" +
+      "• Du hast mit den Infos und der Energie von damals entschieden, nicht mit dem Blick von heute.<br>" +
+      "• Die Angst vor Fehlern oder Enttäuschung hat leise einige Optionen gestrichen.";
+  } else {
+    return baseProbOther +
+      "Warum es klappen kann:<br>" +
+      "• Es bringt dich näher an ein Leben, das zu deinem jetzigen Gefühl passt.<br>" +
+      "• Kleine, klare Schritte verwandeln Grübeln in Bewegung.<br><br>" +
+      "Was es erschweren kann:<br>" +
+      "• Wenn du auf die perfekte Entscheidung wartest, kommst du nicht los.<br>" +
+      "• Versuchst du alle zufriedenzustellen, verliert deine Entscheidung an Kraft.";
+  }
+}
 
 /* ==== CACHE RISULTATO (per bloccare doppie risposte) ==== */
 const RESULT_CACHE_KEY = 'whatif_result_cache_v2';
-function saveResultToCache(obj){ try{ LS.setItem(RESULT_CACHE_KEY, JSON.stringify(obj)); }catch(e){ console.warn('cache save error', e); } }
+
+function saveResultToCache(obj){
+  try{
+    LS.setItem(RESULT_CACHE_KEY, JSON.stringify(obj));
+  }catch(e){
+    console.warn('cache save error', e);
+  }
+}
+
 function loadResultFromCache(domanda){
   try{
     const raw = LS.getItem(RESULT_CACHE_KEY);
@@ -757,7 +945,53 @@ function loadResultFromCache(domanda){
   }
 }
 
-/* (per brevità, qui incollerei esattamente il blocco startFlow che avevi già: è lo stesso) */
+function applyResultToUI(result){
+  const domanda = result.domanda || LS.getItem('domanda') || '';
+  applyUI(domanda);
+  qView.textContent = domanda || '—';
+
+  answerEl.textContent = result.answer || '—';
+  decorateEmBits(answerEl);
+
+  const usedPct = (typeof result.pct === 'number' && isFinite(result.pct))
+    ? Math.max(0, Math.min(100, Math.round(result.pct)))
+    : computeProbability(domanda).pct;
+  const pStr = usedPct + "%";
+  topPct.textContent = pStr;
+  bottomPct.textContent = pStr;
+
+  const mode = result.motivationMode || (style === 'wtf' ? 'wtf' : 'whatif');
+
+  if (mode === 'surprise') {
+    motIco.style.display='';
+    chipsWrap.style.display='flex';
+    committeeTitle.textContent = t().votersTitle || 'Comitato';
+
+    const fav = result.chipsFav ?? 0;
+    const con = result.chipsCon ?? 0;
+    const ast = result.chipsAst ?? 0;
+
+    chipFav.textContent = `${t().chipsFav} ${fav}`;
+    chipCon.textContent = `${t().chipsCon} ${con}`;
+    chipAst.textContent = `${t().chipsAst} ${ast}`;
+    motNote.textContent = result.motivationText || '';
+
+  } else if (mode === 'wtf') {
+    motIco.style.display='none';
+    chipsWrap.style.display='none';
+    committeeTitle.textContent = t().scientificTitle;
+    motNote.textContent = result.motivationText || '';
+
+  } else {
+    motIco.style.display='none';
+    chipsWrap.style.display='none';
+    committeeTitle.textContent = t().seriousTitle;
+    motNote.innerHTML = result.motivationText || '';
+  }
+
+  revealEffect();
+}
+
 /* ==== Top init ==== */
 (function initTop(){
   const hasToken=!!LS.getItem('admin_token');
@@ -795,7 +1029,7 @@ function saveCurrentQuestion(){
   toast(t().savedOk);
 }
 
-/* ==== Main flow (come prima, senza toccare la logica dei crediti) ==== */
+/* ==== Main flow (NESSUN CONSUMO CREDITI QUI) ==== */
 async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
@@ -840,8 +1074,75 @@ async function startFlow(){
     topPct.textContent = pStr;
     bottomPct.textContent = pStr;
 
-    // (qui tutta la parte delle motivazioni come nel tuo file, invariata)
-    // ...
+    let motivazioneUsata = "";
+    let motivationMode = (style === 'wtf') ? 'wtf' : 'whatif';
+    let motivationTextForCache = "";
+    let chipsFavNum, chipsConNum, chipsAstNum;
+
+    if (surprise) {
+      motIco.style.display=''; chipsWrap.style.display='flex';
+      committeeTitle.textContent=t().votersTitle||'Comitato';
+      const rdm=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+      chipsFavNum = rdm(120,1200);
+      chipsConNum = rdm(0,900);
+      chipsAstNum = rdm(0,400);
+      chipFav.textContent=`${t().chipsFav} ${chipsFavNum}`;
+      chipCon.textContent=`${t().chipsCon} ${chipsConNum}`;
+      chipAst.textContent=`${t().chipsAst} ${chipsAstNum}`;
+      const removed = rdm(1,5);
+      const bruised = rdm(0,3);
+      const note =
+        (lang==='en')?`Brief tussle at vote: ${removed} removed; ${bruised} bruised.`
+       :(lang==='es')?`Pequeño lío en la votación: ${removed} expulsados; ${bruised} contusos.`
+       :(lang==='fr')?`Petit grabuge au vote : ${removed} évacués ; ${bruised} contusionnés.`
+       :(lang==='de')?`Kurzes Gerangel bei der Abstimmung: ${removed} entfernt; ${bruised} leicht verletzt.`
+       :`Breve parapiglia al voto: ${removed} allontanati; ${bruised} contusi.`;
+      motNote.textContent = note;
+      motivazioneUsata = note;
+      motivationMode = 'surprise';
+      motivationTextForCache = note;
+
+    } else if (style === 'wtf') {
+      motIco.style.display='none';
+      chipsWrap.style.display='none';
+      committeeTitle.textContent = t().scientificTitle;
+      const sci = wtfMotivationDemenziale(lang);
+      motNote.textContent = sci;
+      motivazioneUsata = sci;
+      motivationMode = 'wtf';
+      motivationTextForCache = sci;
+
+    } else {
+      motIco.style.display='none';
+      chipsWrap.style.display='none';
+      committeeTitle.textContent = t().seriousTitle;
+      const html = buildWhatIfMotivationsPretty(domanda, usedPct);
+      motNote.innerHTML = html;
+      motivazioneUsata = html.replace(/<br\s*\/?>/gi," | ");
+      motivationMode = 'whatif';
+      motivationTextForCache = html;
+    }
+
+    const hist=JSON.parse(LS.getItem('cronologia')||'[]');
+    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:usedPct, motivazione:motivazioneUsata });
+    LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
+
+    const resultForCache = {
+      domanda,
+      style,
+      periodo,
+      lang,
+      surprise,
+      answer: answerText,
+      pct: usedPct,
+      motivationMode,
+      motivationText: motivationTextForCache,
+      chipsFav: (motivationMode === 'surprise') ? chipsFavNum : undefined,
+      chipsCon: (motivationMode === 'surprise') ? chipsConNum : undefined,
+      chipsAst: (motivationMode === 'surprise') ? chipsAstNum : undefined
+    };
+    saveResultToCache(resultForCache);
+
   }catch(e){
     console.error(e);
     stopOracleLoading();
@@ -849,11 +1150,7 @@ async function startFlow(){
   }
 }
 
-/* ==== VIDEO: generazione client-side con Canvas + MediaRecorder
-        - TESTO PIÙ LENTO
-        - FONT PIÙ GRANDI
-        - EMOJI
-        - AUDIO DI SOTTOFONDO NEL VIDEO (se videoBgm disponibile) ==== */
+/* ==== VIDEO: generazione client-side con Canvas + MediaRecorder (effetto scrittura) ==== */
 
 function videoNotAvailable(msg){
   const T = t();
@@ -916,29 +1213,8 @@ async function generateVideoClip(){
   canvas.height = height;
   const ctx = canvas.getContext("2d");
 
-  // Stream video
-  const canvasStream = canvas.captureStream(25);
+  const stream = canvas.captureStream(25);
 
-  // Combina audio di sottofondo se disponibile
-  let mixedStream = canvasStream;
-  if (videoBgm && videoBgm.captureStream) {
-    try{
-      const audioStream = videoBgm.captureStream();
-      const audioTracks = audioStream.getAudioTracks();
-      if (audioTracks && audioTracks.length){
-        mixedStream = new MediaStream([
-          ...canvasStream.getVideoTracks(),
-          ...audioTracks
-        ]);
-      }
-      videoBgm.currentTime = 0;
-      videoBgm.play().catch(()=>{});
-    }catch(e){
-      console.warn("audio bgm non disponibile per il video:", e);
-    }
-  }
-
-  // MIME type
   const candidates = [
     "video/mp4;codecs=h264",
     "video/webm;codecs=vp9",
@@ -962,7 +1238,7 @@ async function generateVideoClip(){
   const chunks = [];
   let recorder;
   try{
-    recorder = new MediaRecorder(mixedStream, { mimeType });
+    recorder = new MediaRecorder(stream, { mimeType });
   }catch(e){
     console.error(e);
     videoNotAvailable();
@@ -978,11 +1254,17 @@ async function generateVideoClip(){
   recorder.onstop = ()=>{
     try{
       const blob = new Blob(chunks, { type: mimeType });
+      const url = URL.createObjectURL(blob);
       lastVideoBlob = blob;
       lastVideoMime = mimeType;
-      lastVideoUrl = URL.createObjectURL(blob);
+      lastVideoUrl = url;
 
-      if (videoPreview) videoPreview.src = lastVideoUrl;
+      if (videoPreview) videoPreview.src = url;
+      if (videoDownload) {
+        const ext = mimeType.includes("mp4") ? "mp4" : "webm";
+        videoDownload.href = url;
+        videoDownload.download = `whatf-video.${ext}`;
+      }
       if (videoWrap) videoWrap.style.display = "block";
       if (videoNoteEl) videoNoteEl.textContent = T.videoReadyNote || "";
     }catch(e){
@@ -991,146 +1273,111 @@ async function generateVideoClip(){
     }finally{
       videoBtn.disabled = false;
       if (videoLoadingEl) videoLoadingEl.style.display = "none";
-      if (videoBgm) { try{ videoBgm.pause(); }catch{} }
+      if (typingSfx){
+        try{ typingSfx.pause(); typingSfx.currentTime = 0; }catch{}
+      }
     }
   };
 
-  // Effetto scrittura: TUTTA la risposta, ma LENTA
+  // Effetto scrittura: usa TUTTA la risposta
   const fullAnswer = answerText;
-
-  // Durata dinamica (più lenta)
-  const charCount = fullAnswer.length || 1;
-  const msPerChar = 90;          // più alto = più lento
-  const minDur = 9000;           // minimo 9s
-  const maxDur = 28000;          // massimo 28s
-  const totalDurationMs = Math.min(maxDur, Math.max(minDur, charCount * msPerChar));
-  const extraStillMs = 1800;     // un po' di pausa a fine testo
+  const charsCount = fullAnswer.length || 1;
+  // Velocità: ~35 caratteri al secondo, min 8s, max 24s
+  const cps = 35;
+  const totalDurationMs = Math.min(24000, Math.max(8000, (charsCount / cps) * 1000));
+  const extraStillMs = 1500;
   const start = performance.now();
+  const marginX = 60;
+  const maxWidth = width - marginX * 2;
+
+  // Font dinamico in base alla lunghezza (per evitare testo fuori dallo schermo)
+  let questionFont = 40;
+  let questionLH = 46;
+  let answerFont = 32;
+  let answerLH = 40;
+  if (charsCount > 600){
+    answerFont = 28;
+    answerLH = 36;
+  }
+  if (charsCount > 900){
+    answerFont = 26;
+    answerLH = 34;
+  }
 
   function drawFrame(progress){
-    // sfondo virale: gradient + glow
-    const grad = ctx.createLinearGradient(0,0,0,height);
-    grad.addColorStop(0, "#020617");
-    grad.addColorStop(0.35, style === "wtf" ? "#111827" : "#020617");
-    grad.addColorStop(1, "#020617");
+    // Sfondo virale stile What?f
+    const grad = ctx.createLinearGradient(0,0,width,height);
+    grad.addColorStop(0, style === "wtf" ? "#182824" : "#08121C");
+    grad.addColorStop(0.5, "#0B0B0C");
+    grad.addColorStop(1, "#151515");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, width, height);
 
-    // glow circolare dietro al testo
-    ctx.save();
-    ctx.globalAlpha = 0.35;
-    ctx.fillStyle = style === "wtf" ? "#22c55e" : "#38bdf8";
-    ctx.beginPath();
-    ctx.arc(width/2, 260, 220, 0, Math.PI*2);
-    ctx.fill();
-    ctx.restore();
+    // Glow centrale
+    const radial = ctx.createRadialGradient(width/2, 260, 60, width/2, 260, 360);
+    radial.addColorStop(0, "rgba(255,236,1,0.35)");
+    radial.addColorStop(0.4, "rgba(255,236,1,0.08)");
+    radial.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = radial;
+    ctx.fillRect(0,0,width,height);
 
-    // titolo brand
+    // Header What?f
     ctx.textAlign = "center";
-    ctx.fillStyle = "#e5e7eb";
-    ctx.font = "bold 44px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillText("WHAT?F", width/2, 88);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 42px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillText("What?f", width/2, 80);
+    ctx.font = "600 20px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillStyle = "#FFEC01";
+    ctx.fillText(style === "wtf" ? "⚡ What the F — Oracolo" : "💡 What if — Oracolo", width/2, 110);
 
-    // sottotitolo stile
-    ctx.font = "21px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    const styleLabel = style === "wtf" ? "What the F" : "What if";
-    ctx.fillStyle = "rgba(248,250,252,0.9)";
-    ctx.fillText("✨ " + styleLabel.toUpperCase(), width/2, 118);
-
-    // badge percentuale in alto a destra
-    const pctText = (document.getElementById('topPct')?.textContent || "").trim();
-    const pillX = width - 40;
-    const pillY = 62;
-    ctx.textAlign = "right";
-    ctx.font = "14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillStyle = "#e5e7eb";
-    const pctLabel =
-      lang === "it" ? "% probabilità" :
-      lang === "es" ? "% probabilidad" :
-      lang === "fr" ? "% probabilité" :
-      lang === "de" ? "% Wahrscheinlichkeit" :
-      "% chance";
-    ctx.fillText("🎯 " + pctLabel, pillX, pillY - 10);
-    ctx.font = "bold 24px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillStyle = "#fefce8";
-    ctx.fillText(pctText || "", pillX, pillY + 8);
-
-    // pannello di testo centrale
-    const panelX = 40;
-    const panelY = 150;
-    const panelW = width - 80;
-    const panelH = height - 260;
-    const r = 24;
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(panelX+r, panelY);
-    ctx.lineTo(panelX+panelW-r, panelY);
-    ctx.quadraticCurveTo(panelX+panelW, panelY, panelX+panelW, panelY+r);
-    ctx.lineTo(panelX+panelW, panelY+panelH-r);
-    ctx.quadraticCurveTo(panelX+panelW, panelY+panelH, panelX+panelW-r, panelY+panelH);
-    ctx.lineTo(panelX+r, panelY+panelH);
-    ctx.quadraticCurveTo(panelX, panelY+panelH, panelX, panelY+panelH-r);
-    ctx.lineTo(panelX, panelY+r);
-    ctx.quadraticCurveTo(panelX, panelY, panelX+r, panelY);
-    ctx.closePath();
-    ctx.fillStyle = "rgba(15,23,42,0.94)";
-    ctx.fill();
-    ctx.strokeStyle = "rgba(148,163,184,0.5)";
+    // Box domanda
+    const boxY = 130;
+    const boxH = 180;
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.roundRect = ctx.roundRect || function(x,y,w,h,r){this.beginPath();this.moveTo(x+r,y);this.arcTo(x+w,y,x+w,y+h,r);this.arcTo(x+w,y+h,x,y+h,r);this.arcTo(x,y+h,x,y,r);this.arcTo(x,y,x+w,y,r);this.closePath();};
+    ctx.roundRect(30, boxY, width-60, boxH, 22);
+    ctx.strokeStyle = "rgba(255,236,1,0.45)";
+    ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.restore();
+    ctx.fillStyle = "rgba(5,10,16,0.92)";
+    ctx.fill();
 
-    const innerX = panelX + 26;
-    const innerMax = panelW - 52;
-    let y = panelY + 56;
-
-    // domanda (più grande, con emoji)
     ctx.textAlign = "left";
-    ctx.fillStyle = "#e5e7eb";
-    ctx.font = "bold 30px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    y = wrapAndDraw(ctx, "❓ " + domanda, innerX, y, innerMax, 38);
+    ctx.font = "600 20px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillStyle = "#FFEC01";
+    ctx.fillText("Q:", marginX, boxY + 34);
+    ctx.font = "bold "+questionFont+"px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillStyle = "#FFFFFF";
+    let y = boxY + 80;
+    y = wrapAndDraw(ctx, domanda, marginX, y, maxWidth, questionLH);
 
-    // label risposta
-    y += 26;
-    ctx.font = "17px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillStyle = "#9ca3af";
-    const labelAns =
-      lang === "it" ? "🔮 Risposta" :
-      lang === "es" ? "🔮 Respuesta" :
-      lang === "fr" ? "🔮 Réponse" :
-      lang === "de" ? "🔮 Antwort" :
-      "🔮 Answer";
-    ctx.fillText(labelAns, innerX, y);
-    y += 20;
-
-    // testo risposta con effetto scrittura (più grande)
+    // Testo risposta con effetto scrittura
     const chars = Math.max(1, Math.floor(fullAnswer.length * progress));
     const partial = fullAnswer.slice(0, chars);
 
-    y += 8;
-    ctx.font = "26px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillStyle = "#e5e7eb";
-    wrapAndDraw(ctx, partial, innerX, y, innerMax, 32);
+    y += 40;
+    ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillStyle = "#FFEC01";
+    ctx.fillText("A:", marginX, y);
+    y += 28;
 
-    // progress bar in basso
-    const barW = width - 120;
-    const barX = (width - barW)/2;
-    const barY = height - 80;
-    ctx.fillStyle = "rgba(148,163,184,0.35)";
-    ctx.fillRect(barX, barY, barW, 4);
-    ctx.fillStyle = style === "wtf" ? "#22c55e" : "#facc15";
-    ctx.fillRect(barX, barY, barW * progress, 4);
+    ctx.font = "normal "+answerFont+"px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillStyle = "#E5EEF8";
+    wrapAndDraw(ctx, partial, marginX, y, maxWidth, answerLH);
 
-    // tagline in basso
+    // Footer virale
     ctx.textAlign = "center";
-    ctx.font = "16px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillStyle = "rgba(148,163,184,0.9)";
-    const tagline =
-      lang === "it" ? "✨ Screenshotta, condividi, tagga chi deve vedere questo." :
-      lang === "es" ? "✨ Haz captura, comparte y etiqueta a quien deba verlo." :
-      lang === "fr" ? "✨ Capture l’écran, partage et tague la bonne personne." :
-      lang === "de" ? "✨ Screenshot, teilen und die richtige Person markieren." :
-      "✨ Screenshot, share and tag who needs this.";
-    ctx.fillText(tagline, width/2, height - 48);
+    ctx.font = "600 18px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillStyle = "#A0B2BA";
+    ctx.fillText("✨ Screenshotta o condividi — #whatf", width/2, height - 60);
+    ctx.font = "500 15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillStyle = "#5ADFFF";
+    ctx.fillText("Domanda in " + lang.toUpperCase() + " · Clip verticale 9:16", width/2, height - 32);
+  }
+
+  // Avvia audio di scrittura
+  if (typingSfx){
+    try{ typingSfx.currentTime = 0; typingSfx.play().catch(()=>{}); }catch{}
   }
 
   function loop(ts){
@@ -1163,7 +1410,7 @@ qs('#langSelect').onchange=()=>{
   oracleDeck = [];
 };
 
-/* 🔗 Condivisione TESTO – lasciata IDENTICA */
+/* ⚠️ NON TOCCATO: condivisione TESTO */
 qs('#shareBtn').onclick=async()=>{
   const T=t();
   const full=`What?f — ${style==='wtf'?(T.styleWTF):(T.styleWHF)}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
@@ -1175,17 +1422,22 @@ qs('#shareBtn').onclick=async()=>{
     }
   }catch{}
 };
+
 qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
 if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
+
+/* 🎬 Bottone Crea video */
 if(videoBtn){ videoBtn.onclick = generateVideoClip; }
 
-/* ⬇️ Bottone "Scarica / Condividi" → prima PROVA a CONDIVIDERE il FILE, poi eventualmente scarica */
-if (videoDownload) {
-  videoDownload.addEventListener('click', async (e)=>{
-    e.preventDefault();
+/* ⬇️ Bottone SCARICA video → SOLO download (nessuna share qui) */
+/* Lasciamo il comportamento nativo dell'anchor (href + download). */
 
-    if (!lastVideoBlob || !lastVideoMime) {
-      toast("Prima genera il video 🎬");
+/* 📤 Bottone CONDIVIDI video → prova share file, poi share URL, altrimenti messaggio */
+if (videoShareBtn) {
+  videoShareBtn.addEventListener('click', async ()=>{
+    const T = t();
+    if (!lastVideoBlob || !lastVideoMime || !lastVideoUrl) {
+      toast(T.videoNoData || "Non c’è ancora una risposta da trasformare in video.");
       return;
     }
 
@@ -1196,34 +1448,35 @@ if (videoDownload) {
       { type: lastVideoMime || "video/webm" }
     );
 
-    // Se il device supporta condivisione diretta dei FILE (Android / Chrome moderni)
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try{
+    try{
+      if (navigator.canShare && navigator.canShare({ files:[file] })) {
         await navigator.share({
           title: "What?f",
           text: "Guarda il mio oracolo What?f ✨",
           files: [file]
         });
         return;
-      }catch(err){
-        console.warn("share da videoDownload annullata / fallita, fallback download", err);
-        // se l'utente annulla, andiamo comunque al download sotto
       }
+    }catch(err){
+      console.warn("share file failed", err);
     }
 
-    // Fallback: DOWNLOAD manuale del file
+    // fallback: share solo con URL (molti Android lo accettano)
     try{
-      const url = lastVideoUrl || URL.createObjectURL(lastVideoBlob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `whatf-video.${ext}`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      if (navigator.share) {
+        await navigator.share({
+          title: "What?f",
+          text: "Guarda il mio oracolo What?f ✨",
+          url: lastVideoUrl
+        });
+        return;
+      }
     }catch(err){
-      console.error("download fallback error:", err);
-      toast("Non riesco a scaricare il video.");
+      console.warn("share url failed", err);
     }
+
+    // Nessuna opzione disponibile
+    toast(T.videoShareNotSupported || "Il tuo browser non supporta la condivisione diretta del file. Scarica il video e caricalo dal social.");
   });
 }
 
