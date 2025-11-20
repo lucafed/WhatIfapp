@@ -28,16 +28,10 @@ const rl = new Ratelimit({
 let rateOk = async () => true;
 try {
   rateOk = async (key) => {
-    try {
-      const { success } = await rl.limit(key);
-      return !!success;
-    } catch {
-      return true;
-    }
+    try { const { success } = await rl.limit(key); return !!success; }
+    catch { return true; }
   };
-} catch {
-  /* noop */
-}
+} catch { /* noop */ }
 
 /* ========= CORS ========= */
 const ALLOWED_ORIGINS = [
@@ -53,94 +47,102 @@ function cors(req, res) {
   if (allow) res.setHeader("Access-Control-Allow-Origin", allow);
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, x-admin-token, x-pro"
-  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token, x-pro");
 }
 
 /* ========= Helpers ========= */
-const SUP_LANGS = ["it", "en", "es", "fr", "de"];
-function normLang(l = "it") {
-  const s = String(l || "it").toLowerCase().slice(0, 2);
-  return SUP_LANGS.includes(s) ? s : "it";
-}
-function normLine(s = "") {
-  return String(s)
-    .toLowerCase()
-    .replace(/[“”"']/g, "")
-    .replace(/\s+/g, " ")
-    .replace(/[.,;:!?()\[\]\-—]+$/g, "")
-    .trim();
-}
-function tightenSentences(text, maxSentences) {
-  const parts = String(text || "")
-    .replace(/\n+/g, " ")
-    .split(/(?<=[.!?…])\s+/)
-    .map((x) => x.trim())
-    .filter(Boolean);
-  const out = [];
-  const seen = new Set();
-  for (const p of parts) {
-    const n = normLine(p);
-    if (!n || seen.has(n)) continue;
+const SUP_LANGS = ["it","en","es","fr","de"];
+function normLang(l="it"){ const s=String(l||"it").toLowerCase().slice(0,2); return SUP_LANGS.includes(s)?s:"it"; }
+function normLine(s=""){ return String(s).toLowerCase().replace(/[“”"']/g,"").replace(/\s+/g," ").replace(/[.,;:!?()\[\]\-—]+$/g,"").trim(); }
+function tightenSentences(text, maxSentences){
+  const parts=String(text||"").replace(/\n+/g," ").split(/(?<=[.!?…])\s+/).map(x=>x.trim()).filter(Boolean);
+  const out=[], seen=new Set();
+  for(const p of parts){
+    const n=normLine(p);
+    if(!n||seen.has(n)) continue;
     out.push(p);
-    if (out.length >= maxSentences) break;
+    if(out.length>=maxSentences) break;
   }
-  let t = out.join(" ");
-  if (!/[.!?…]$/.test(t)) t += ".";
+  let t=out.join(" ");
+  if(!/[.!?…]$/.test(t)) t+=".";
   return t;
 }
-function clampWords(text, maxWords) {
-  const w = String(text || "").split(/\s+/);
-  if (w.length <= maxWords) return text;
-  const slice = w.slice(0, maxWords).join(" ");
-  const m = slice.match(/([\s\S]*?[.!?…])(?![\s\S]*[.!?…])/);
-  return m ? m[1] : slice + "…";
+function clampWords(text, maxWords){
+  const w=String(text||"").split(/\s+/);
+  if(w.length<=maxWords) return text;
+  const slice=w.slice(0,maxWords).join(" ");
+  const m=slice.match(/([\s\S]*?[.!?…])(?![\s\S]*[.!?…])/);
+  return m?m[1]:slice+"…";
 }
-function normalizeOneParagraph(s = "") {
+function normalizeOneParagraph(s=""){
   return String(s)
-    .replace(/\s*\n+\s*/g, " ")
-    .replace(/\s{2,}/g, " ")
-    .replace(/\.\.\.+/g, "…")
-    .replace(/\s+([.,;:!?])/g, "$1")
+    .replace(/\s*\n+\s*/g," ")
+    .replace(/\s{2,}/g," ")
+    .replace(/\.\.\.+/g,"…")
+    .replace(/\s+([.,;:!?])/g,"$1")
     .trim();
 }
-function stripQuestionEcho(domanda, text) {
-  const d = String(domanda || "")
-    .replace(/[“”"']/g, "")
-    .trim()
-    .toLowerCase();
-  let t = String(text || "");
-  const lead = t
-    .slice(0, Math.min(t.length, d.length + 12))
-    .toLowerCase()
-    .replace(/[“”"']/g, "")
-    .trim();
-  const rx = /^(?:e\s*se|what\s*if|domanda:|q:)[^.!?…]*[.!?…]\s+/i;
-  if (lead.startsWith(d)) {
-    const cut = t.indexOf(".");
-    if (cut > -1) t = t.slice(cut + 1).trim();
+function stripQuestionEcho(domanda,text){
+  const d=String(domanda||"").replace(/[“”"']/g,"").trim().toLowerCase();
+  let t=String(text||"");
+  const lead=t.slice(0,Math.min(t.length,d.length+12)).toLowerCase().replace(/[“”"']/g,"").trim();
+  const rx=/^(?:e\s*se|what\s*if|domanda:|q:)[^.!?…]*[.!?…]\s+/i;
+  if(lead.startsWith(d)){
+    const cut=t.indexOf(".");
+    if(cut>-1) t=t.slice(cut+1).trim();
   }
-  t = t.replace(rx, "");
+  t=t.replace(rx,"");
   return t;
 }
-function sentenceCaseAll(s = "") {
-  return s.replace(/(^|[.!?…]\s+)([a-zà-ÿ])/g, (m, prefix, chr) => prefix + chr.toUpperCase());
+function sentenceCaseAll(s=""){
+  return s.replace(/(^|[.!?…]\s+)([a-zà-ÿ])/g, (m,prefix,chr)=> prefix + chr.toUpperCase());
 }
-function finalPunct(s = "") {
-  return /[.!?…]$/.test(s) ? s : s + ".";
-}
-function hashStr(str = "") {
-  let h = (2166136261 >>> 0);
-  for (const ch of String(str)) {
-    h ^= ch.charCodeAt(0);
-    h = Math.imul(h, 16777619) >>> 0;
+function finalPunct(s=""){ return /[.!?…]$/.test(s)?s:s+"."; }
+function hashStr(str=""){ let h=2166136261>>>0; for(const ch of String(str)){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619)>>>0; } return h>>>0; }
+function pickDet(arr, seed){ return arr[ arr.length ? (seed % arr.length) : 0 ] || ""; }
+
+/* ===== POV FIX per WTF IT: forza la seconda persona ===== */
+function fixItalianWtfPOV(text=""){
+  let s = String(text);
+
+  // Pronome "io" -> "tu"
+  s = s.replace(/\b[Ii]o\b/g, "tu");
+
+  // "noi" narratore -> "voi" o "tu" (meglio "tu" per il monologo diretto)
+  s = s.replace(/\b[Nn]oi\b/g, "tu");
+
+  // Pronome "mi" usato come soggetto narratore -> "ti"
+  // (lo accettiamo anche dove suona un po' strano: ci sta la grammatica sballata)
+  s = s.replace(/\b[Mm]i\b/g, (m)=> m[0]==="M" ? "Ti" : "ti");
+
+  // Verbi molto tipici in prima persona → seconda persona
+  const verbMap = [
+    ["entro","entri"],
+    ["Entro","Entri"],
+    ["scappo","scappi"],
+    ["Scappo","Scappi"],
+    ["tocco","tocchi"],
+    ["Tocco","Tocchi"],
+    ["immagino","immagini"],
+    ["Immagino","Immagini"],
+    ["penso","pensi"],
+    ["Penso","Pensi"],
+    ["guardo","guardi"],
+    ["Guardo","Guardi"],
+    ["ordino","ordini"],
+    ["Ordino","Ordini"],
+    ["riempio","riempi"],
+    ["Riempio","Riempi"],
+    ["sorseggio","sorseggi"],
+    ["Sorseggio","Sorseggi"],
+    ["sorseggiandolo","sorseggiandolo"], // già ok, lasciamo
+  ];
+  for(const [from,to] of verbMap){
+    const rx = new RegExp("\\b"+from+"\\b","g");
+    s = s.replace(rx,to);
   }
-  return h >>> 0;
-}
-function pickDet(arr, seed) {
-  return arr[arr.length ? seed % arr.length : 0] || "";
+
+  return s;
 }
 
 /* ========= WHAT IF – esempio di respiro (non fisso) ========= */
@@ -181,24 +183,24 @@ const ZINGARA_INTROS = {
     "Una parte di te ha già scelto: io vedo soltanto la traccia che lascia.",
     "Il tuo cuore ha parlato prima delle parole, e si sente.",
     "Il tempo fa un piccolo nodo intorno a questa scelta.",
-    "Qui il destino non urla: sussurra, ma con una precisione ostinata.",
+    "Qui il destino non urla: sussurra, ma con una precisione ostinata."
   ],
   en: [
     "The line of your fate thickens right here.",
     "The cards of your path are turning as you speak.",
-    "A thin fold in your story is asking to be read.",
+    "A thin fold in your story is asking to be read."
   ],
   es: [
     "La línea de tu destino se marca justo aquí.",
-    "Las cartas de tu camino se están girando ahora.",
+    "Las cartas de tu camino se están girando ahora."
   ],
   fr: [
     "La ligne de ton destin se souligne précisément ici.",
-    "Les cartes de ta route sont en train de tourner.",
+    "Les cartes de ta route sont en train de tourner."
   ],
   de: [
     "Die Linie deines Weges wird genau hier deutlicher.",
-    "Die Karten deines Weges wenden sich in diesem Moment.",
+    "Die Karten deines Weges wenden sich in diesem Moment."
   ],
 };
 
@@ -209,65 +211,58 @@ const ZINGARA_ENDINGS = {
       "E lì ti accorgerai che non serve correre: basta scegliere bene.",
       "E proprio lì capirai che la calma non è rinuncia, è margine.",
       "Da quel punto sentirai la vita rispondere semplice: poco, ma tuo.",
-      "E quando ti volterai, vedrai che la fatica stava solo aprendo spazio.",
+      "E quando ti volterai, vedrai che la fatica stava solo aprendo spazio."
     ],
     past: [
       "Forse oggi lo sentiresti nelle ossa: non era destino, era ritmo.",
       "E ti verrebbe voglia di chiederti un’altra volta: e se lo facessi adesso?",
       "Ti ritroveresti a pensare che alcune strade restano aperte, anche tardi.",
-      "E capirai che quel rimpianto non morde: invita a provare meglio, adesso.",
-    ],
+      "E capirai che quel rimpianto non morde: invita a provare meglio, adesso."
+    ]
   },
   en: {
     future: ["And there you’ll notice you don’t need speed, just a good angle."],
-    past: ["Maybe you’d feel it in your bones: it wasn’t fate, just timing."],
+    past: ["Maybe you’d feel it in your bones: it wasn’t fate, just timing."]
   },
   es: {
     future: ["Y ahí notarás que no hace falta correr, solo elegir bien."],
-    past: ["Y quizá hoy lo sentirías: no era destino, era ritmo."],
+    past: ["Y quizá hoy lo sentirías: no era destino, era ritmo."]
   },
   fr: {
     future: ["Et là tu verras: pas besoin de courir, juste de choisir juste."],
-    past: ["Et peut-être que tu le saurais: ce n’était pas le destin, mais le tempo."],
+    past: ["Et peut-être que tu le saurais: ce n’était pas le destin, mais le tempo."]
   },
   de: {
     future: ["Und dort merkst du: Tempo ist egal, der Winkel zählt."],
-    past: ["Vielleicht spürst du heute: kein Schicksal, nur Timing."],
+    past: ["Vielleicht spürst du heute: kein Schicksal, nur Timing."]
   },
 };
-function ensureZingaraEnding({ text, lang, periodo, domanda }) {
-  let s = String(text || "").trim();
-  const last = (s.match(/([^.!?…]+[.!?…])\s*$/) || [])[1] || s;
-  const alreadyHasHook =
-    /(ti accorgerai|capirai|ti verrà voglia|ti ritroverai|e lì|e proprio lì|da quel punto|forse oggi|maybe you’d feel|and there you’ll notice)/i.test(
-      last
-    );
-  if (alreadyHasHook) return s;
+function ensureZingaraEnding({ text, lang, periodo, domanda }){
+  let s = String(text||"").trim();
+  const last = (s.match(/([^.!?…]+[.!?…])\s*$/)||[])[1] || s;
+  const alreadyHasHook = /(ti accorgerai|capirai|ti verrà voglia|ti ritroverai|e lì|e proprio lì|da quel punto|forse oggi|maybe you’d feel|and there you’ll notice)/i.test(last);
+  if(alreadyHasHook) return s;
   const L = normLang(lang);
-  const pool = (ZINGARA_ENDINGS[L] || ZINGARA_ENDINGS.it) || {};
-  const bag =
-    String(periodo).toLowerCase() === "past"
-      ? pool.past || ZINGARA_ENDINGS.it.past
-      : pool.future || ZINGARA_ENDINGS.it.future;
-  const addon = pickDet(bag, hashStr((domanda || "") + s));
-  if (!addon) return s;
-  s = s.replace(/[.!?…]+$/, "");
+  const pool = ((ZINGARA_ENDINGS[L]||ZINGARA_ENDINGS.it) || {});
+  const bag = String(periodo).toLowerCase()==="past"
+    ? (pool.past||ZINGARA_ENDINGS.it.past)
+    : (pool.future||ZINGARA_ENDINGS.it.future);
+  const addon = pickDet(bag, hashStr((domanda||"")+s));
+  if(!addon) return s;
+  s = s.replace(/[.!?…]+$/,'');
   return `${s}. ${addon}`;
 }
 
 /* ========= WTF — logica contestuale ========= */
 
-/* Riconosci il contesto dalla domanda */
 function detectWtfContext(domanda = "") {
   const t = String(domanda || "").toLowerCase();
 
   if (/(moto|motocicletta|casco|cilindrata|enduro|naked|scooter|pista)/.test(t)) return "moto";
-  if (/(ufficio|collega|capo|meeting|riunion|scrivania|badge|excel|pc|computer|azienda|contratto|stipendio)/.test(t))
-    return "ufficio";
+  if (/(ufficio|collega|capo|meeting|riunion|scrivania|badge|excel|pc|computer|azienda|contratto|stipendio)/.test(t)) return "ufficio";
   if (/(casa|divano|cucina|salotto|camera|stanza|appartamento|mutuo|affitto|letto)/.test(t)) return "casa";
   if (/(l'aquila|laquila|aquila|trasferirmi|trasferimento|città|citta|quartiere|paese|lugano)/.test(t)) return "città";
-  if (/(ex|relazione|fidanzat|ragazza|ragazzo|moglie|marito|matrimonio|lasciare|tornare insieme|storia)/.test(t))
-    return "relazione";
+  if (/(ex|relazione|fidanzat|ragazza|ragazzo|moglie|marito|matrimonio|lasciare|tornare insieme|storia)/.test(t)) return "relazione";
   if (/(soldi|budget|stipendio|busta paga|debito|conto|prestito|mutuo|invest|risparmi|tasse)/.test(t)) return "soldi";
 
   return "generico";
@@ -304,60 +299,60 @@ const WTF_IMPRE_POOL = [
   "starnuto spirituale caricato di ogni nervoso accumulato",
   "lancio orbitale di improperi che gira tre volte il lampadario",
   "carica cavalleresca di insulti eleganti ma devastanti",
-  "scarica elettrica di parole storte che manda in tilt il karma",
+  "scarica elettrica di parole storte che manda in tilt il karma"
 ];
 
 /* Reazioni degli oggetti, contestuali */
 const WTF_REACT_BY_CONTEXT = {
   moto: [
-    "il semaforo passa al rosso per rispetto e ti guarda in silenzio",
-    "un cane cambia marciapiede da solo come se avesse capito tutto",
-    "il casco sul sellino oscilla giudicante come un pendolo del destino",
-    "la saracinesca del garage sbatte come un applauso offeso",
-    "il contachilometri ti fissa come a dire che conosce già il finale",
+    "il semaforo all’uscita ti guarda fisso come se sapesse già il finale",
+    "un casco appeso oscilla piano come un giudice annoiato",
+    "la saracinesca del garage vibra come se avesse sentito tutto",
+    "il cartellino del prezzo sembra piegarsi per la vergogna",
+    "il contachilometri di una moto esposta pare fissarti come per dire che non sei pronto"
   ],
   ufficio: [
     "il monitor decide di aggiornarsi proprio ora e ti pianta in asso",
     "la stampante entra in errore mistico e sputa un foglio mezzo bianco",
     "la sedia girevole cigola come una nonna che ti giudica",
     "il neon sopra la testa sfarfalla come se facesse il tifo ma a metà",
-    "il badge non legge al primo colpo e ti respinge come se sapesse già",
+    "il badge non legge al primo colpo e ti respinge come se sapesse già"
   ],
   casa: [
     "la tapparella si blocca a metà e finge di non conoscerti",
     "il frigorifero sospira e decide di sembrare più vuoto del necessario",
     "il divano ti risucchia come se volesse firmarti il contratto a vita",
     "la lampada sfarfalla due volte come un “sei sicuro?” luminoso",
-    "la lavatrice parte in centrifuga esistenziale proprio mentre pensi di cambiare vita",
+    "la lavatrice parte in centrifuga esistenziale proprio mentre pensi di cambiare vita"
   ],
   città: [
     "la valigia sul letto si apre da sola e rovescia mezza vita sul pavimento",
     "il portone di casa tua cigola come un vecchio amico che ti chiede spiegazioni",
     "il bar sotto casa ti vede dalla vetrina e sembra alzare un sopracciglio",
     "la panchina dove ti sedevi sempre è occupata da un altro e ti fa strano",
-    "la salita davanti a te sembra allungarsi di un piano ogni volta che ci pensi",
+    "la salita davanti a te sembra allungarsi di un piano ogni volta che ci pensi"
   ],
   relazione: [
     "il telefono vibra a vuoto e ti fa credere che sia un suo messaggio",
     "la chat con lei rimane lì in cima come una spia luminosa",
     "il letto sfatto a metà sembra chiederti da che parte vuoi stare",
     "il cuscino affonda come se stesse conservando ancora la sua forma",
-    "il gatto ti guarda con quell’aria da psicologo non pagato",
+    "il gatto ti guarda con quell’aria da psicologo non pagato"
   ],
   soldi: [
     "l’estratto conto sullo schermo si aggiorna con un sospiro",
     "il portafoglio si piega da solo come per proteggersi",
     "gli scontrini sul tavolo si aprono a ventaglio come un processo",
     "la calcolatrice del telefono comincia a riempirsi di cifre senza che tu capisca come",
-    "la busta paga stropicciata ti fissa da un angolo come una minaccia passiva",
+    "la busta paga stropicciata ti fissa da un angolo come una minaccia passiva"
   ],
   generico: [
     "la stanza trattiene il fiato insieme a te per un secondo buono",
     "le scarpe in mezzo al corridoio ti guardano come pronte a scappare",
     "la giacca buttata sulla sedia sembra alzare le spalle",
     "la finestra socchiusa lascia entrare un’aria che sembra un commento",
-    "il telefono a faccia in giù vibra proprio quando non vorresti sentirlo",
-  ],
+    "il telefono a faccia in giù vibra proprio quando non vorresti sentirlo"
+  ]
 };
 
 /* Bevute teatrali – usate come ESEMPI, ma il modello deve variare sempre */
@@ -391,18 +386,14 @@ const WTF_DRINK_POOL = [
   "lo tieni stretto con due mani, fai una pausa da film drammatico e poi lo bevi tutto insieme",
   "riempi metà bicchiere, ti siedi sul bordo del tavolo e lo svuoti guardando il vuoto",
   "prendi la tazza sbagliata, ci versi dentro e la bevi come se fosse il contenitore più normale del mondo",
-  "lasci il bicchiere sul tavolo, ci fai un mezzo giro intorno, poi torni e lo bevi come se niente fosse",
+  "lasci il bicchiere sul tavolo, ci fai un mezzo giro intorno, poi torni e lo bevi come se niente fosse"
 ];
 
 /* ========= WTF: rapporto scientifico demenziale ========= */
-function scientificReportDemenziale(domanda, lang = "it") {
-  function h(s = "") {
-    let x = 0;
-    for (const c of s) x = (x * 131 + c.charCodeAt(0)) >>> 0;
-    return x >>> 0;
-  }
-  const seed = h(domanda || "");
-  const pick = (arr) => arr[seed % arr.length];
+function scientificReportDemenziale(domanda, lang="it"){
+  function h(s=""){ let x=0; for(const c of s) x=(x*131 + c.charCodeAt(0))>>>0; return x>>>0; }
+  const seed = h(domanda||"");
+  const pick = (arr)=> arr[ seed % arr.length ];
 
   const UNI = [
     "Dipartimento di Metafisica Applicata – Università di Busto Arsizio Est",
@@ -426,7 +417,7 @@ function scientificReportDemenziale(domanda, lang = "it") {
     "ventilatore che gira al contrario “per rispetto”",
     "lampada che lampeggia “ti capisco” in Morse",
   ];
-  const METRIC = ["r=0.82", "p=0.047", "η²=0.31", "β=0.67", "AUC=0.73", "OR=2.1"];
+  const METRIC = ["r=0.82","p=0.047","η²=0.31","β=0.67","AUC=0.73","OR=2.1"];
 
   const u = pick(UNI);
   const j = pick(JOUR);
@@ -434,51 +425,51 @@ function scientificReportDemenziale(domanda, lang = "it") {
   const m = pick(METRIC);
   const n = 30 + (seed % 70);
 
-  if ((lang || "it").startsWith("en")) {
+  if((lang||"it").startsWith("en")){
     return `Scientific-ish report: ${u} (n=${n}) found that a ${e} improves decision clarity (${m}). Peer-reviewed by ${j}, probably.`;
   }
   return `Rapporto scientifico (più o meno): ${u} (n=${n}) rileva che “${e}” migliora la chiarezza decisionale (${m}). Revisione a cura di ${j}, forse.`;
 }
 
 /* ========= Prompt builder ========= */
-function buildMessages({ domanda, lang, periodo, stile }) {
+function buildMessages({ domanda, lang, periodo, stile }){
   const L = normLang(lang);
-  const baseRules =
-    L === "en"
-      ? `RULES:
+  const baseRules = L==="en"
+    ? `RULES:
 - Single paragraph, no bullets, no emojis.
 - Do NOT restate the question.
 - Second person only for the scene ("you", "your"); do NOT describe actions in first person ("I enter", "I go", "we do").
+- If you accidentally start a sentence in first person, you MUST rewrite the whole sentence in second person before finishing the answer.
 - Stay close to the topic of the question.
 - Use a rich, varied vocabulary.
 - Keep grammar and punctuation clean.
 - Avoid repeating the same words and images too often.`
-      : `REGOLE:
+    : `REGOLE:
 - Un solo paragrafo, niente elenchi, niente emoji.
 - NON ripetere la domanda.
-- Usa SEMPRE la seconda persona per descrivere la scena ("tu entri", "ti siedi") e NON usare mai la prima persona singolare per le azioni ("io entro", "io faccio", "noi andiamo").
+- Usa SEMPRE la seconda persona per descrivere la scena ("tu entri", "ti siedi") e NON usare mai la prima persona singolare o plurale per le azioni ("io entro", "io faccio", "noi andiamo").
+- Se ti accorgi che una frase è in prima persona, riscrivila in seconda persona PRIMA di chiudere la risposta.
 - Resta aderente al tema della domanda.
-- Usa un vocabolario ricco e vario, italiano corretto, senza errori di grammatica, con punteggiatura curata.
+- Usa un vocabolario ricco e vario, italiano corretto, con punteggiatura curata.
 - Evita ripetizioni evidenti di parole e immagini.`;
 
-  const msgs = [{ role: "system", content: baseRules }];
+  const msgs = [
+    { role: "system", content: baseRules },
+  ];
 
-  if (stile === "wtf") {
+  if(stile==="wtf"){
     // seed deterministico
-    let seed = [...String(domanda || "")].reduce((a, c) => a + c.charCodeAt(0), 0);
-    function rnd() {
-      seed = (seed * 1664525 + 1013904223) >>> 0;
-      return seed / 2 ** 32;
-    }
+    let seed=[...String(domanda||"")].reduce((a,c)=>a+c.charCodeAt(0),0);
+    function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; }
 
     const ctx = detectWtfContext(domanda);
-    const impreSample = WTF_IMPRE_POOL[Math.floor(rnd() * WTF_IMPRE_POOL.length)];
+    const impreSample = WTF_IMPRE_POOL[Math.floor(rnd()*WTF_IMPRE_POOL.length)];
 
     const reactPool = WTF_REACT_BY_CONTEXT[ctx] || WTF_REACT_BY_CONTEXT.generico;
-    const shuffled = [...reactPool].sort(() => rnd() - 0.5);
-    const react = shuffled.slice(0, 2 + Math.floor(rnd() * 2));
+    const shuffled=[...reactPool].sort(()=>rnd()-0.5);
+    const react = shuffled.slice(0, 2 + Math.floor(rnd()*2));
 
-    const drinkSample = WTF_DRINK_POOL[Math.floor(rnd() * WTF_DRINK_POOL.length)];
+    const drinkSample = WTF_DRINK_POOL[Math.floor(rnd()*WTF_DRINK_POOL.length)];
 
     const WTF_RULE_IT = `WHAT THE F (demenziale, sarcastico, affettuosamente cattivo).
 
@@ -508,7 +499,7 @@ Struttura OBBLIGATORIA (ITALIANO):
 7) PUNTO DI VISTA:
    - Scrivi SEMPRE in seconda persona singolare: "tu", "ti", "te". Descrivi la scena con frasi come "entri in concessionaria", "ti siedi al bancone", "ti scappa un’imprecazione".
    - NON usare la prima persona per descrivere la scena: vietato "entro in concessionaria", "mi verso da bere", "penso che", "io faccio". Non usare "noi" come narratore ("andiamo", "facciamo").
-   - Non raccontare cosa prova l’assistente: niente "io penso", "io vedo", "io ti dico".
+   - Prima di chiudere la risposta rileggi mentalmente il testo: se trovi "io" o verbi che suonano in prima persona, riscrivi quella frase in seconda persona.
 8) NIENTE POESIA / NIENTE ZINGARA:
    - Vietato lo stile "zingara mistica" e lo stile troppo poetico: non parlare seriamente di "destino", "linea della vita", "poeta incompreso", "avventura epica", "vento che ti fa compagnia", "foglie in autunno", "come in un vecchio film".
    - Se ti viene una frase romantica o da film d’autore, trasformala subito in qualcosa di più scemo e concreto (buca sull’asfalto, cassonetto storto, citofono che gracchia, vicino impiccione, lampione che lampeggia, ecc.).
@@ -550,279 +541,262 @@ STRICT SEQUENCE (ENGLISH):
    - Length: 6–8 sentences, SINGLE paragraph, no visible bullet points in the OUTPUT, no emojis.`;
 
     msgs.push(
-      { role: "system", content: L === "en" ? WTF_RULE_EN : WTF_RULE_IT },
-      {
-        role: "system",
-        content: `ESEMPI DI IMPRECAZIONE TEATRALE (non copiare mai alla lettera, servono solo come ispirazione di tono):\n- ${impreSample}`,
-      },
-      {
-        role: "system",
-        content: `OGGETTI CHE REAGISCONO (idee di scena, NON copiare il testo, inventa variazioni nuove ogni volta, coerenti col contesto "${ctx}"):\n- ${react.join(
-          "\n- "
-        )}`,
-      },
-      {
-        role: "system",
-        content: `IDEA DI BEVUTA TEATRALE (solo spunto, NON copiare la frase, varia sempre il modo di bere):\n- ${drinkSample}`,
-      },
-      {
-        role: "system",
-        content: `ESEMPI VINCOLANTI (tono/ritmo IT, NON copiare il testo, NON riutilizzare i nomi; servono solo come modello di stile, voce e ritmo):
+      { role: "system", content: L==="en" ? WTF_RULE_EN : WTF_RULE_IT },
+      { role: "system", content: `ESEMPI DI IMPRECAZIONE TEATRALE (non copiare mai alla lettera, servono solo come ispirazione di tono):\n- ${impreSample}` },
+      { role: "system", content: `OGGETTI CHE REAGISCONO (idee di scena, NON copiare il testo, inventa variazioni nuove ogni volta, coerenti col contesto "${ctx}"):\n- ${react.join("\n- ")}` },
+      { role: "system", content: `IDEA DI BEVUTA TEATRALE (solo spunto, NON copiare la frase, varia sempre il modo di bere):\n- ${drinkSample}` },
+      { role: "system", content:
+`ESEMPI VINCOLANTI (tono/ritmo IT, NON copiare il testo, NON riutilizzare i nomi; servono solo come modello di stile, voce e ritmo):
 
-- Ah ma guarda te… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte una imprecazione teatrale che sembra un piccolo terremoto spirituale e fa tintinnare i bicchieri. La macchina del caffè tossisce, il frigorifero fa un rumore strano, e una vecchietta in fila scuote la testa come se sapesse già tutto di te. Ti versi un goccio di liquore nel bicchiere, lo fai girare e lo bevi in un sorso più lungo del dovuto, come se stessi firmando un accordo segreto con la giornata. Alla fine del turno, ti guardi intorno e capisci che hai bestemmiato più del prete quando finisce il vino, ma almeno hai servito verità calde.
+- Ah ma guarda te, quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte una imprecazione teatrale che sembra un piccolo terremoto spirituale e fa tintinnare i bicchieri. La macchina del caffè tossisce, il frigorifero fa un rumore strano, e una vecchietta in fila scuote la testa come se sapesse già tutto di te. Ti versi un goccio di liquore nel bicchiere, lo fai girare e lo bevi in un sorso più lungo del dovuto, come se stessi firmando un accordo segreto con la giornata. Alla fine del turno, ti guardi intorno e capisci che hai bestemmiato più del prete quando finisce il vino, ma almeno hai servito verità calde.
 
 - Oh, eccoci, centauro dell’inferno in prova gratuita. Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, e per un attimo la strada ti sembra una pista tutta tua, finché una buca nascosta ti riporta alla fisica di colpo. Ti scappa un urlo colorito che taglia l’aria, abbastanza forte da far vibrare lo specchietto e far girare il lampione come se volesse guardare da un’altra parte. Ti fermi al bar, appoggi le chiavi sul bancone come se fossero la chiave dell’apocalisse, ti versi da bere con una calma finta e lo bevi in due sorsi irregolari, uno per il coraggio e uno per la paura. Torni a casa con il rumore del motore e delle tue imprecazioni che si mescolano, e capisci che non ti salverà la vita, ma almeno sai perché il casco è obbligatorio.
 
-- Ah ma guarda te, quello che dopo tre reel si sente già centauro del caos. Entri in concessionaria con la sicurezza di uno che ha visto due tutorial e pensa di poter domare il mondo, tocchi la moto e nella tua testa parte un “BWOOOM” esagerato degno di un trailer di serie B. Appena il venditore ti dice il prezzo, ti scappa una scarica di parolacce ben confezionata che fa vibrare un poster e fa fare “tlin” a un casco appeso. Esci facendo finta di niente, entri nel bar di fianco, appoggi le chiavi sul bancone come se fossero di una supermoto e ti fai riempire un bicchiere serio che svuoti in modo troppo deciso per essere solo sete. Non ti sistema l’esistenza, ma almeno capisci che la libertà su due ruote ha una rata mensile molto poco mistica.`,
-      }
+- Ah ma guarda te, quello che dopo tre reel si sente già centauro del caos. Entri in concessionaria con la sicurezza di uno che ha visto due tutorial e pensa di poter domare il mondo, tocchi la moto e nella tua testa parte un “BWOOOM” esagerato degno di un trailer di serie B. Appena il venditore ti dice il prezzo, ti scappa una scarica di parolacce ben confezionata che fa vibrare un poster e fa fare “tlin” a un casco appeso. Esci facendo finta di niente, entri nel bar di fianco, appoggi le chiavi sul bancone come se fossero di una supermoto e ti fai riempire un bicchiere serio che svuoti in modo troppo deciso per essere solo sete. Non ti sistema l’esistenza, ma almeno capisci che la libertà su due ruote ha una rata mensile molto poco mistica.` }
     );
   } else {
-    // WHAT IF dipendente dal tempo (IT ottimizzato, altre lingue usano solo baseRules)
+    // WHAT IF
     if (L === "it") {
-      const ruleIT = String(periodo).toLowerCase() === "past" ? WHATIF_RULE_PAST_IT : WHATIF_RULE_FUT_IT;
+      const ruleIT = String(periodo).toLowerCase()==="past" ? WHATIF_RULE_PAST_IT : WHATIF_RULE_FUT_IT;
       msgs.push(
         { role: "system", content: ruleIT },
-        {
-          role: "system",
-          content: `ESEMPIO (respiro e tono, non vincolante nei contenuti):\n${WHATIF_HYBRID_EX_IT}`,
-        }
+        { role: "system", content: `ESEMPIO (respiro e tono, non vincolante nei contenuti):\n${WHATIF_HYBRID_EX_IT}` }
       );
     }
   }
 
   // Utente finale
-  const ask =
-    L === "en"
-      ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`
-      : L === "it"
-      ? `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO. Paragrafo unico, grammatica corretta, tono naturale.`
-      : L === "es"
-      ? `Pregunta (no la repitas): "${domanda}". Escribe UNA respuesta en ESPAÑOL, un solo párrafo.`
-      : L === "fr"
-      ? `Question (ne la répète pas) : « ${domanda} ». Donne UNE réponse en FRANÇAIS, un seul paragraphe.`
-      : `Frage (nicht wiederholen): „${domanda}“. Gib EINE Antwort auf DEUTSCH, ein einziger Absatz.`;
+  const ask = (L==="en")
+    ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`
+    : (L==="it")
+    ? `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO. Paragrafo unico, grammatica anche un po’ sballata va bene, ma POV SEMPRE in seconda persona.`
+    : (L==="es")
+    ? `Pregunta (no la repitas): "${domanda}". Escribe UNA respuesta en ESPAÑOL, un solo párrafo.`
+    : (L==="fr")
+    ? `Question (ne la répète pas) : « ${domanda} ». Donne UNE réponse en FRANÇAIS, un seul paragraphe.`
+    : `Frage (nicht wiederholen): „${domanda}“. Gib EINE Antwort auf DEUTSCH, ein einziger Absatz.`;
   msgs.push({ role: "user", content: ask });
 
   return msgs;
 }
 
 /* ========= Server-side PCT ========= */
-function computePct(domanda, stile) {
-  const t = String(domanda || "").toLowerCase();
-  let s = 50;
-  if (/\b(7|14|21|30|60|90)\b/.test(t)) s += 12;
-  if (/\b\d+([.,]\d+)?\b/.test(t)) s += 8;
-  if (/budget|€|euro|spesa|max|under|sotto/.test(t)) s += 6;
-  if (/senza|solo|al massimo|minimo|entro|prima delle|ogni|per/.test(t)) s += 8;
-  if (/lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa/.test(t)) s += 6;
-  if (/forse|magari|maybe|quizás/.test(t)) s -= 8;
-  if (!/\b\d/.test(t)) s -= 6;
-  s += stile === "wtf" ? -4 : +2;
+function computePct(domanda, stile){
+  const t=String(domanda||"").toLowerCase();
+  let s=50;
+  if(/\b(7|14|21|30|60|90)\b/.test(t)) s+=12;
+  if(/\b\d+([.,]\d+)?\b/.test(t)) s+=8;
+  if(/budget|€|euro|spesa|max|under|sotto/.test(t)) s+=6;
+  if(/senza|solo|al massimo|minimo|entro|prima delle|ogni|per/.test(t)) s+=8;
+  if(/lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa/.test(t)) s+=6;
+  if(/forse|magari|maybe|quizás/.test(t)) s-=8;
+  if(!/\b\d/.test(t)) s-=6;
+  s += (stile==='wtf' ? -4 : +2);
   const pct = Math.max(25, Math.min(92, Math.round(s)));
   return pct;
 }
 
 /* ========= WHAT IF: motivazione sintetica ========= */
-function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
-  const L = (lang || "it").slice(0, 2);
-  const t = String(domanda || "").toLowerCase();
+function buildWhatIfMotivation(domanda, lang="it", pct=60){
+  const L = (lang||"it").slice(0,2);
+  const t = String(domanda||"").toLowerCase();
 
-  const hasTime =
-    /\b(7|14|21|30|60|90|giorn|settiman|mes|mesi|anni|days?|weeks?|months?|years?)\b/.test(t);
+  const hasTime = /\b(7|14|21|30|60|90|giorn|settiman|mes|mesi|anni|days?|weeks?|months?|years?)\b/.test(t);
   const hasBudget = /(budget|€|euro|spesa|costo|prezzo|max|under|sotto|caparra|cost|money)/.test(t);
   const hasDeadline = /(entro|prima|scadenza|deadline|by\s+\d|before\s+\d)/.test(t);
-  const action =
-    /(apri|lancia|impara|studia|scrivi|automatizza|testa|cambia|trova|assumi|costruisci|crea|launch|start|learn|build|create)/.test(
-      t
-    );
+  const action = /(apri|lancia|impara|studia|scrivi|automatizza|testa|cambia|trova|assumi|costruisci|crea|launch|start|learn|build|create)/.test(t);
   const riskHedging = /(senza|solo|al massimo|minimo|rischio|risk|minimize|hedge)/.test(t);
 
   if (L === "it") {
     const pros = [];
     const cons = [];
 
-    if (hasTime) {
+    if(hasTime){
       pros.push("la timeline è gestibile se spezzetti il percorso");
       cons.push("se non proteggi il tempo, rischi di rimandare all’infinito");
     }
-    if (hasBudget) {
+    if(hasBudget){
       pros.push("puoi tenere i costi sotto controllo fissando un tetto chiaro");
       cons.push("se sottostimi le spese, la pressione economica può frenarti");
     }
-    if (hasDeadline) {
+    if(hasDeadline){
       pros.push("una scadenza esplicita ti aiuta a decidere prima, non meglio");
       cons.push("se la scadenza è vaga, tenderai a spostarla sempre un po’ più avanti");
     }
-    if (action) {
+    if(action){
       pros.push("hai una leva concreta su cui agire ogni giorno");
     }
-    if (riskHedging) {
+    if(riskHedging){
       pros.push("puoi limitare il rischio con poche regole semplici");
       cons.push("se cerchi rischio zero, potresti non muoverti mai davvero");
     }
 
-    if (!pros.length) {
+    if(!pros.length){
       pros.push("la vera leva è la routine: piccoli passi costanti battono le grandi intenzioni");
     }
-    if (!cons.length) {
+    if(!cons.length){
       cons.push("il collo di bottiglia è la tua energia: se allarghi troppo lo scope, ti blocchi");
     }
 
     const pSentence = `Probabilità circa ${pct}%.`;
-    const proSentence = `A favore: ${pros.slice(0, 2).join(", ")}.`;
-    const conSentence = `Contro: ${cons.slice(0, 2).join(", ")}.`;
+    const proSentence = `A favore: ${pros.slice(0,2).join(", ")}.`;
+    const conSentence = `Contro: ${cons.slice(0,2).join(", ")}.`;
 
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
+  // EN
   if (L === "en") {
     const pros = [];
     const cons = [];
 
-    if (hasTime) {
+    if(hasTime){
       pros.push("the timeline is realistic if you break it into small chunks");
       cons.push("if you don’t protect time, you’ll quietly postpone it forever");
     }
-    if (hasBudget) {
+    if(hasBudget){
       pros.push("you can keep costs under control with a clear cap");
       cons.push("underestimating expenses can add pressure and slow you down");
     }
-    if (hasDeadline) {
+    if(hasDeadline){
       pros.push("an explicit deadline helps you decide sooner, not necessarily better");
       cons.push("a fuzzy deadline tends to drift and weaken your commitment");
     }
-    if (action) {
+    if(action){
       pros.push("you have a concrete lever you can pull every day");
     }
-    if (riskHedging) {
+    if(riskHedging){
       pros.push("simple constraints can cap the downside");
       cons.push("chasing zero risk can keep you stuck at the start line");
     }
 
-    if (!pros.length) {
+    if(!pros.length){
       pros.push("the real lever is routine: small consistent steps beat big intentions");
     }
-    if (!cons.length) {
+    if(!cons.length){
       cons.push("your main bottleneck is energy and focus, not luck");
     }
 
     const pSentence = `Estimated probability around ${pct}%.`;
-    const proSentence = `Pros: ${pros.slice(0, 2).join(", ")}.`;
-    const conSentence = `Cons: ${cons.slice(0, 2).join(", ")}.`;
+    const proSentence = `Pros: ${pros.slice(0,2).join(", ")}.`;
+    const conSentence = `Cons: ${cons.slice(0,2).join(", ")}.`;
 
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
+  // ES
   if (L === "es") {
     const pros = [];
     const cons = [];
 
-    if (hasTime) {
+    if(hasTime){
       pros.push("el tiempo es manejable si divides el camino en pasos pequeños");
       cons.push("si no proteges tu tiempo, acabarás posponiéndolo una y otra vez");
     }
-    if (hasBudget) {
+    if(hasBudget){
       pros.push("puedes mantener los costes bajo control con un límite claro");
       cons.push("si infravaloras los gastos, la presión económica puede frenarte");
     }
-    if (hasDeadline) {
+    if(hasDeadline){
       pros.push("un plazo definido empuja a decidir antes");
       cons.push("si el plazo es difuso, se irá moviendo hacia adelante");
     }
-    if (action) {
-      pros.push("tienes una palanca concreta para avanzar cada día");
+    if(action){
+      pros.push("tienes una palanca concreta para avanzar cada dia");
     }
-    if (riskHedging) {
+    if(riskHedging){
       pros.push("puedes limitar el riesgo con pocas reglas sencillas");
       cons.push("buscar riesgo cero puede dejarte inmóvil");
     }
 
-    if (!pros.length) {
+    if(!pros.length){
       pros.push("la palanca real es la rutina: pequeños pasos constantes vencen a los grandes planes");
     }
-    if (!cons.length) {
+    if(!cons.length){
       cons.push("el cuello de botella es tu energía y foco, no la suerte");
     }
 
     const pSentence = `Probabilidad aproximada ${pct}%.`;
-    const proSentence = `A favor: ${pros.slice(0, 2).join(", ")}.`;
-    const conSentence = `En contra: ${cons.slice(0, 2).join(", ")}.`;
+    const proSentence = `A favor: ${pros.slice(0,2).join(", ")}.`;
+    const conSentence = `En contra: ${cons.slice(0,2).join(", ")}.`;
 
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
+  // FR
   if (L === "fr") {
     const pros = [];
     const cons = [];
 
-    if (hasTime) {
+    if(hasTime){
       pros.push("le calendrier reste gérable si tu découpes en petites étapes");
       cons.push("sans temps protégé, tu repousseras discrètement sans fin");
     }
-    if (hasBudget) {
+    if(hasBudget){
       pros.push("tu peux contenir les coûts avec un plafond clair");
       cons.push("si tu sous-estimes les dépenses, la pression financière peut te freiner");
     }
-    if (hasDeadline) {
+    if(hasDeadline){
       pros.push("une échéance claire aide à trancher plus vite");
       cons.push("une date floue glisse facilement et affaiblit ton engagement");
     }
-    if (action) {
+    if(action){
       pros.push("tu as un levier concret à actionner chaque jour");
     }
-    if (riskHedging) {
+    if(riskHedging){
       pros.push("quelques règles simples peuvent limiter le risque");
       cons.push("viser le risque zéro risque justement de t’immobiliser");
     }
 
-    if (!pros.length) {
+    if(!pros.length){
       pros.push("le vrai levier, c’est la routine: de petits pas réguliers dépassent les grandes intentions");
     }
-    if (!cons.length) {
+    if(!cons.length){
       cons.push("le principal goulot d’étranglement est ton énergie et ta clarté, pas la chance");
     }
 
     const pSentence = `Probabilité estimée autour de ${pct}%.`;
-    const proSentence = `Atouts: ${pros.slice(0, 2).join(", ")}.`;
-    const conSentence = `Freins: ${cons.slice(0, 2).join(", ")}.`;
+    const proSentence = `Atouts: ${pros.slice(0,2).join(", ")}.`;
+    const conSentence = `Freins: ${cons.slice(0,2).join(", ")}.`;
 
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
 
+  // DE
   if (L === "de") {
     const pros = [];
     const cons = [];
 
-    if (hasTime) {
+    if(hasTime){
       pros.push("der Zeitplan ist machbar, wenn du ihn in kleine Schritte teilst");
       cons.push("ohne geschützte Zeit wirst du es immer wieder verschieben");
     }
-    if (hasBudget) {
+    if(hasBudget){
       pros.push("mit einem klaren Kostenlimit bleibt das Budget unter Kontrolle");
       cons.push("wenn du Ausgaben unterschätzt, entsteht Druck, der dich bremst");
     }
-    if (hasDeadline) {
+    if(hasDeadline){
       pros.push("eine klare Deadline zwingt zu früheren Entscheidungen");
       cons.push("eine vage Frist rutscht leicht nach hinten");
     }
-    if (action) {
+    if(action){
       pros.push("du hast einen konkreten Hebel, den du täglich bewegen kannst");
     }
-    if (riskHedging) {
+    if(riskHedging){
       pros.push("einfache Regeln können das Risiko begrenzen");
       cons.push("wenn du null Risiko willst, kommst du vielleicht nie in Gang");
     }
 
-    if (!pros.length) {
+    if(!pros.length){
       pros.push("der wahre Hebel ist Routine: kleine, konstante Schritte schlagen große Vorsätze");
     }
-    if (!cons.length) {
+    if(!cons.length){
       cons.push("der Engpass ist deine Energie und Fokussierung, nicht das Schicksal");
     }
 
     const pSentence = `Geschätzte Wahrscheinlichkeit etwa ${pct}%.`;
-    const proSentence = `Dafür: ${pros.slice(0, 2).join(", ")}.`;
-    const conSentence = `Dagegen: ${cons.slice(0, 2).join(", ")}.`;
+    const proSentence = `Dafür: ${pros.slice(0,2).join(", ")}.`;
+    const conSentence = `Dagegen: ${cons.slice(0,2).join(", ")}.`;
 
     return `${pSentence} ${proSentence} ${conSentence}`.trim();
   }
@@ -831,49 +805,36 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
 }
 
 /* ========= HANDLER ========= */
-export default async function handler(req, res) {
+export default async function handler(req, res){
   cors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
-  try {
-    if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: "missing_api_key" });
+  try{
+    if(!process.env.OPENAI_API_KEY) return res.status(500).json({ error:"missing_api_key" });
 
-    const ip = (
-      req.headers["x-forwarded-for"] ||
-      req.socket?.remoteAddress ||
-      "unknown"
-    )
-      .toString()
-      .split(",")[0]
-      .trim();
+    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").toString().split(",")[0].trim();
     const ok = await rateOk(`ask:${ip}`);
-    if (!ok) return res.status(429).json({ error: "rate_limited_minute" });
+    if(!ok) return res.status(429).json({ error:"rate_limited_minute" });
 
-    const bodyRaw = typeof req.body === "string" ? req.body : JSON.stringify(req.body || {});
-    const body = bodyRaw
-      ? typeof req.body === "string"
-        ? JSON.parse(bodyRaw)
-        : req.body || {}
-      : {};
-
+    const bodyRaw = typeof req.body === "string" ? req.body : JSON.stringify(req.body||{});
+    const body = bodyRaw ? (typeof req.body === "string" ? JSON.parse(bodyRaw) : (req.body||{})) : {};
     const {
       domanda = "",
-      stile = "whatif", // "whatif" | "wtf"
-      lang = "it",
+      stile = "whatif",   // "whatif" | "wtf"
+      lang  = "it",
       periodo = "future", // "future" | "past"
       micro = {},
     } = body;
 
-    if (!domanda || typeof domanda !== "string") {
-      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
-    }
+    if(!domanda || typeof domanda !== "string")
+      return res.status(400).json({ error:"bad_request", detail:"domanda_required" });
 
     const messages = buildMessages({ domanda, lang, periodo, stile, micro });
 
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.8 : 0.82, // WTF leggermente più stabile
+      temperature: stile === "wtf" ? 0.8 : 0.82,
       top_p: 0.9,
       max_tokens: 480,
       frequency_penalty: 0.1,
@@ -882,48 +843,32 @@ export default async function handler(req, res) {
     });
 
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
-    if (!answer) throw new Error("empty_model_response");
+    if(!answer) throw new Error("empty_model_response");
 
-    // ===== Post-process (ordine CORRETTO) =====
+    // ===== Post-process =====
     answer = stripQuestionEcho(domanda, answer);
 
     if (stile === "wtf") {
-      // Per il WTF NON stringiamo a numero fisso di frasi per non tagliare drink o morale.
-      // Limitiamo solo il numero di parole e normalizziamo.
+      // Forza POV in seconda persona per IT
+      if (normLang(lang)==="it") {
+        answer = fixItalianWtfPOV(answer);
+      }
       answer = clampWords(answer, 230);
       answer = normalizeOneParagraph(answer);
     } else {
-      // WHATIF e altri stili più compatti/letterari.
       answer = tightenSentences(answer, 10);
       answer = clampWords(answer, 165);
       answer = normalizeOneParagraph(answer);
     }
 
     // Moderazioni leggere IT (prima del ripristino maiuscole)
-    if (normLang(lang) === "it") {
-      (function () {
-        const d = String(domanda || "");
-        const nameRx = /\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
-        const inQuestion = new Set(d.match(nameRx) || []);
-        answer = answer.replace(nameRx, (m) => {
-          if (
-            [
-              "Ah",
-              "Oh",
-              "Ehi",
-              "Sai",
-              "Occhio",
-              "Piano",
-              "Fermati",
-              "Aspetta",
-              "La",
-              "Le",
-              "Una",
-              "Il",
-              "Qui",
-            ].includes(m)
-          )
-            return m;
+    if(normLang(lang)==="it"){
+      (function(){
+        const d=String(domanda||"");
+        const nameRx=/\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
+        const inQuestion=new Set((d.match(nameRx)||[]));
+        answer=answer.replace(nameRx,(m)=>{
+          if (["Ah","Oh","Ehi","Sai","Occhio","Piano","Fermati","Aspetta","La","Le","Una","Il","Qui"].includes(m)) return m;
           return inQuestion.has(m) ? m : m.toLowerCase();
         });
       })();
@@ -944,10 +889,10 @@ export default async function handler(req, res) {
     const L = normLang(lang);
     const pct = computePct(domanda, stile);
 
-    const motivation = stile === "whatif" ? buildWhatIfMotivation(domanda, L, pct) : undefined;
+    const motivation = (stile==="whatif") ? buildWhatIfMotivation(domanda, L, pct) : undefined;
 
     const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
-    const scientific = stile === "wtf" && !isSurprise ? scientificReportDemenziale(domanda, L) : undefined;
+    const scientific = (stile==="wtf" && !isSurprise) ? scientificReportDemenziale(domanda, L) : undefined;
 
     return res.status(200).json({
       answer,
@@ -959,8 +904,8 @@ export default async function handler(req, res) {
       motivation,
       scientific,
     });
-  } catch (err) {
+  }catch(err){
     console.error("❌ [/api/ask] error:", err);
-    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
+    return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
-                                 }
+      }
