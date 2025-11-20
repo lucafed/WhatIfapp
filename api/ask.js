@@ -100,29 +100,51 @@ function finalPunct(s=""){ return /[.!?…]$/.test(s)?s:s+"."; }
 function hashStr(str=""){ let h=2166136261>>>0; for(const ch of String(str)){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619)>>>0; } return h>>>0; }
 function pickDet(arr, seed){ return arr[ arr.length ? (seed % arr.length) : 0 ] || ""; }
 
-/* 🔒 NO PRIMA PERSONA NEL WTF */
+/* 🔒 NO PRIMA PERSONA NEL WTF (anche implicita) */
 function stripFirstPerson(answer = "", lang = "it", stile = "whatif") {
   if (stile !== "wtf") return answer;
 
   const L = normLang(lang);
 
   if (L === "it") {
-    // "Io ..." → "Tu ..."
-    answer = answer.replace(/^(io|Io)\s+/g, "Tu ");
-    answer = answer.replace(/([.!?…]\s+)(io|Io)\s+/g, (m, sep) => `${sep}Tu `);
-
-    // "io penso che" → "ti sembra che", "io credo che" → "ti pare che"
+    // pattern discorsivi tipici
     answer = answer.replace(/\bio penso che\b/gi, "ti sembra che");
     answer = answer.replace(/\bio credo che\b/gi, "ti pare che");
-
-    // eventuali "secondo me" → "a occhio sembra"
     answer = answer.replace(/\bsecondo me\b/gi, "a occhio sembra");
-  } else if (L === "en") {
-    // "I ..." → "You ..."
-    answer = answer.replace(/^(i|I)\s+/g, "You ");
-    answer = answer.replace(/([.!?…]\s+)(i|I)\s+/g, (m, sep) => `${sep}You `);
 
-    // "I think" / "I guess" → forme in seconda persona
+    // espressioni con "mi ..." → "ti ..."
+    answer = answer.replace(/\b[Mm]i immagino\b/g, "ti immagini");
+    answer = answer.replace(/\b[Mm]i vedo\b/g, "ti vedi");
+    answer = answer.replace(/\b[Mm]i sembra\b/g, "ti sembra");
+    answer = answer.replace(/\b[Mm]i chiedo\b/g, "ti chiedi");
+    answer = answer.replace(/\b[Mm]i viene\b/g, "ti viene");
+    answer = answer.replace(/\b[Mm]i parte\b/g, "ti parte");
+
+    // fallback generico: "mi <verbo/sentimento>" → "ti <verbo/sentimento>"
+    answer = answer.replace(/\b[Mm]i\s+([a-zà-ÿ]{3,})/g, (m, w) => `ti ${w}`);
+
+    // Verbi in prima persona singolare all'inizio di frase → seconda persona
+    const VERBS_1P_IT = new Set([
+      "entro","vado","penso","credo","tocco","sento","vedo","guardo","accendo","parto",
+      "apro","chiudo","torno","esco","arrivo","ordino","prendo","cammino","corro",
+      "spengo","bevo","sospiro","respiro","mi","cerco","provo","chiedo","dico"
+    ]);
+
+    answer = answer.replace(/(^|[.!?…]\s+)([A-ZÀ-Ý][a-zà-ÿ]+o)\s+/g, (match, sep, word) => {
+      const lower = word.toLowerCase();
+      if (!VERBS_1P_IT.has(lower)) return match;
+      const base = lower.slice(0, -1); // togli la -o
+      const second = base + "i";       // forma molto grezza, ma ok per verbi tipici
+      const fixed = second.charAt(0).toUpperCase() + second.slice(1);
+      return `${sep}${fixed} `;
+    });
+
+    // "Io ..." esplicito → "Tu ..."
+    answer = answer.replace(/^(io|Io)\s+/g, "Tu ");
+    answer = answer.replace(/([.!?…]\s+)(io|Io)\s+/g, (m, sep) => `${sep}Tu `);
+  } else if (L === "en") {
+    // Vietiamo "I ..." in apertura frase
+    answer = answer.replace(/(^|[.!?…]\s+)I\s+([a-z])/g, (m, sep, c) => `${sep}You ${c}`);
     answer = answer.replace(/\bI think\b/g, "you feel like");
     answer = answer.replace(/\bI guess\b/g, "you kinda guess");
     answer = answer.replace(/\bin my opinion\b/gi, "from where you stand");
@@ -447,7 +469,7 @@ function buildMessages({ domanda, lang, periodo, stile }){
 
 Struttura OBBLIGATORIA (ITALIANO):
 1) Apertura: prendi in giro la SITUAZIONE in modo esplicito (massimo 2 frasi), come nei seguenti esempi: "Ah ma guarda te…", "Oh, eccoci…", "Ah, ci risiamo". Prendi in giro il casino, non la persona: usa etichette tipo "quello che crede che", "centauro del caos", "direttore creativo del casino".
-2) Punto di vista: NON parlare MAI in prima persona singolare. Vietato usare "io", "mi", "me", "penso", "credo", "secondo me" o frasi tipo "io ti dico", "io vedo". Parla SEMPRE a "tu", come voce esterna che commenta la scena.
+2) Punto di vista: NON parlare MAI in prima persona singolare. Vietato usare "io", "mi", "me", "penso", "credo", "secondo me" o verbi in prima persona anche sottintesi (niente frasi che iniziano con "entro", "penso", "tocco", "vado" se il soggetto implicito sei tu). Sei SEMPRE una voce esterna che parla a "tu".
 3) Descrivi 2–3 immagini concrete e quotidiane legate al tema (bar, moto, chat, lavoro, soldi, casa, città, relazione) con ritmo narrativo veloce e ironico. Devono sembrare scene di un mini-video, non una profezia mistica né un testo poetico.
 4) IMPRECAZIONE TEATRALE:
    - Inserisci UNA sola imprecazione teatrale, esagerata e comica.
@@ -833,7 +855,7 @@ export default async function handler(req, res){
     // Ripristina maiuscole frasi
     answer = sentenceCaseAll(answer);
 
-    // Niente prima persona nel WTF (correzione di sicurezza)
+    // Niente prima persona nel WTF (correzione di sicurezza finale)
     answer = stripFirstPerson(answer, lang, stile);
 
     // Finale emozionale con gancio se manca (solo WHAT IF)
@@ -867,4 +889,4 @@ export default async function handler(req, res){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
-}
+        }
