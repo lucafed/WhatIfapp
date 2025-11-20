@@ -301,14 +301,14 @@ h1{
 </audio>
 <!-- 🎵 SFX evocativo (what if) -->
 <audio id="sfxWhatIf" preload="auto">
-  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAABAAAA" type="audio/mpeg">
+  <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAABAAAA" type="audio/mpeg">
 </audio>
 <!-- 🥂 Clink (what the f) -->
 <audio id="sfxWtf" preload="auto">
   <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
 </audio>
-<!-- ⌨️ SFX scrittura per il video (METTI QUI UN MP3 VERO) -->
-<audio id="typeSfx" src="/sounds/typewriter.mp3" preload="auto" loop></audio>
+<!-- ⌨️ SFX scrittura per il video (METTI QUI IL TUO MP3) -->
+<audio id="typeSfx" src="sounds/typewriter.mp3" preload="auto" loop></audio>
 
 <script type="module">
 /* ==== Firebase Auth + Firestore credits (solo lettura) ==== */
@@ -491,7 +491,7 @@ const I18N = {
 };
 const SUP_LANG=['it','en','es','fr','de'];
 
-/* ======== LINGUA: segui FOURTH (request.lang o LS.lang) ======== */
+/* ======== LINGUA ======== */
 const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
 const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
@@ -506,7 +506,7 @@ function detectLang(text=''){
     de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
   };
   const score={}; for(const L of SUP_LANG){ score[L]=0; (bank[L]||[]).forEach(w=>{ if(t.includes(w)) score[L]++; }); }
-  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; } }
+  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
   if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
   return best;
 }
@@ -1259,16 +1259,15 @@ async function generateVideoClip(){
 
   recorder.onstop = ()=>{
     try{
-      const blob = new Blob(chunks, { type: mimeType });
-      lastVideoBlob = blob;
+      lastVideoBlob = new Blob(chunks, { type: mimeType });
       lastVideoMime = mimeType;
 
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(lastVideoBlob);
       if (videoPreview) videoPreview.src = url;
       if (videoDownload) {
         const ext = mimeType.includes("mp4") ? "mp4" : "webm";
         videoDownload.href = url;
-        videoDownload.download = `whatf-clip.${ext}`;
+        videoDownload.download = `whatf-video.${ext}`;
       }
       if (videoWrap) videoWrap.style.display = "block";
       if (videoNoteEl) videoNoteEl.textContent = T.videoReadyNote || "";
@@ -1278,7 +1277,6 @@ async function generateVideoClip(){
     }finally{
       videoBtn.disabled = false;
       if (videoLoadingEl) videoLoadingEl.style.display = "none";
-      // stop audio
       if (typeAudioEl && hasAudio) {
         try{
           typeAudioEl.pause();
@@ -1302,7 +1300,6 @@ async function generateVideoClip(){
   const marginX = 60;
   const maxWidth = width - marginX * 2;
 
-  // percentuale dal risultato già calcolato
   const pctStr = (topPct && topPct.textContent || "").trim();
   const hasPct = /\d+%/.test(pctStr);
   const pctValue = hasPct ? pctStr : "";
@@ -1372,7 +1369,7 @@ async function generateVideoClip(){
       ctx.fillText(pctValue, bx + boxW - 14, by + boxH/2 + 8);
     }
 
-    // Testo domanda (in alto)
+    // Testo domanda
     ctx.textAlign = "left";
     ctx.fillStyle = "#FFFFFF";
     ctx.font = "bold 34px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
@@ -1389,14 +1386,13 @@ async function generateVideoClip(){
     ctx.font = "28px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     wrapAndDraw(ctx, partial, marginX, y, maxWidth, 36);
 
-    // Footer tipo “handle”
+    // Footer
     ctx.textAlign = "center";
     ctx.font = "18px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.fillStyle = "#9CA3AF";
     ctx.fillText("@whatf.app • generato con What?f", width/2, height - 60);
   }
 
-  // Loop di animazione
   function loop(ts){
     const elapsed = ts - start;
     const progress = Math.min(1, elapsed / totalDurationMs);
@@ -1409,10 +1405,8 @@ async function generateVideoClip(){
     }
   }
 
-  // Avvio registrazione
   recorder.start();
 
-  // Partenza audio di scrittura
   if (typeAudioEl && hasAudio) {
     try{
       typeAudioEl.currentTime = 0;
@@ -1423,7 +1417,7 @@ async function generateVideoClip(){
   requestAnimationFrame(loop);
 }
 
-/* ==== Nav / lingua / share / save ==== */
+/* ==== Nav / lingua ==== */
 qs('#backBtn').onclick=()=> history.length > 1 ? history.back() : location.replace('index.html');
 qs('#homeBtn').onclick=()=> location.href='index.html';
 qs('#langSelect').onchange=()=>{
@@ -1437,93 +1431,88 @@ qs('#langSelect').onchange=()=>{
   oracleDeck = [];
 };
 
-/* 🔗 Condivisione: prima il VIDEO, poi fallback testo/copia */
+/* 🔗 Condivisione principale: prima VIDEO, poi fallback testo/copia */
 qs('#shareBtn').onclick = async ()=>{
   const T = t();
   const domanda = LS.getItem('domanda') || '';
   const answerText = (qs('#answer')?.textContent || '').trim();
 
-  // Se non c'è un video, invito a crearlo
+  // se non c'è video generato → invito a creare il video
   if (!lastVideoBlob) {
     toast("Prima crea il video con 🎬 Crea video");
     return;
   }
 
   try{
-    // 1️⃣ Provo a condividere SEMPRE il FILE video
-    if (navigator.share) {
-      const ext = (lastVideoMime && lastVideoMime.includes("mp4")) ? "mp4" : "webm";
-      const file = new File(
-        [lastVideoBlob],
-        `whatf-video.${ext}`,
-        { type: lastVideoMime || "video/webm" }
-      );
+    const ext = (lastVideoMime && lastVideoMime.includes("mp4")) ? "mp4" : "webm";
+    const file = new File(
+      [lastVideoBlob],
+      `whatf-video.${ext}`,
+      { type: lastVideoMime || "video/webm" }
+    );
 
-      try {
-        await navigator.share({
-          title: "What?f",
-          text: "Guarda il mio oracolo What?f ✨",
-          files: [file]
-        });
-        return; // condiviso correttamente il video
-      } catch(e) {
-        console.warn("share video failed, fallback to text/copy", e);
-        // se l'utente annulla o il device non supporta file → passo al fallback
-      }
+    // 1️⃣ Prova a condividere il FILE video se possibile
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: "What?f",
+        text: "Guarda il mio oracolo What?f ✨",
+        files: [file]
+      });
+      return;
     }
 
-    // 2️⃣ Fallback: condivido solo testo o copio
+    // 2️⃣ Fallback: testo
     const full =
       `What?f — ${style==='wtf' ? (T.styleWTF) : (T.styleWHF)}\n(${periodo})\n\n` +
       `Q: ${domanda}\n\n${answerText}`;
 
     if (navigator.share) {
       await navigator.share({ title:"What?f", text: full });
-    } else {
+    } else if (navigator.clipboard) {
       await navigator.clipboard.writeText(full);
       const b = qs('#shareBtn');
       b.textContent = T.copied;
       setTimeout(()=> b.textContent = T.share, 1200);
+    } else {
+      toast(T.copied || "Copiato");
     }
   }catch(e){
     console.error(e);
   }
 };
 
-qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
-if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
-if(videoBtn){ videoBtn.onclick = generateVideoClip; }
-  // Condivisione diretta dal bottone "⬇️ Scarica / Condividi"
+/* 🔁 Altra domanda / Salva / Crea video */
+qs('#againBtn').onclick = ()=>{ location.href='fourth.html'; };
+if (saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
+if (videoBtn){ videoBtn.onclick = generateVideoClip; }
+
+/* ⬇️ Bottone "Scarica / Condividi" → prova a condividere il FILE, altrimenti scarica */
 if (videoDownload) {
   videoDownload.addEventListener('click', async (e)=>{
-    // Se ho un video pronto e il browser supporta navigator.share → provo a condividere il file
-    if (lastVideoBlob && navigator.share) {
-      e.preventDefault(); // blocco il download automatico
+    if (!lastVideoBlob) return; // niente video → normale download
+    const ext = (lastVideoMime && lastVideoMime.includes("mp4")) ? "mp4" : "webm";
+    const file = new File(
+      [lastVideoBlob],
+      `whatf-video.${ext}`,
+      { type: lastVideoMime || "video/webm" }
+    );
 
-      const ext = (lastVideoMime && lastVideoMime.includes("mp4")) ? "mp4" : "webm";
-      const file = new File(
-        [lastVideoBlob],
-        `whatf-video.${ext}`,
-        { type: lastVideoMime || "video/webm" }
-      );
-
-      try {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      e.preventDefault();
+      try{
         await navigator.share({
           title: "What?f",
           text: "Guarda il mio oracolo What?f ✨",
           files: [file]
         });
-        // se va bene, esco qui
         return;
-      } catch(err) {
-        console.warn("share from videoDownload failed, fallback to normal download", err);
-        // se l’utente annulla o fallisce, alla prossima pressione tornerà a scaricare
+      }catch(err){
+        console.warn("share from videoDownload failed, fallback to download", err);
       }
     }
-    // se non ho videoBlob o navigator.share non esiste → va avanti il download normale
+    // fallback: lascia andare il download normale
   });
 }
-
 
 /* ==== Avvio ==== */
 startFlow();
