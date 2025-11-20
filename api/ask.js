@@ -2,7 +2,7 @@
 // - WHATIF: tono “zingara mistica realista”, 60% analisi / 40% immagini sobrie,
 //   chiusura con sensazione + gancio. Passato → controfattuale. Futuro → ipotesi vicina.
 // - WTF: demenziale, sarcastico, da barista affettuoso. Niente poesia, niente elenchi.
-//   Imprecazione e bevuta: SEMPRE variabili, mai uguali parola per parola.
+//   Imprecazione e bevuta: SEMPRE variabili, mai uguali parola per parola, SEMPRE contestuali alla scena.
 // - Un paragrafo, niente elenchi, niente eco della domanda. Maiuscole ripristinate post-process.
 
 import OpenAI from "openai";
@@ -99,59 +99,6 @@ function sentenceCaseAll(s=""){
 function finalPunct(s=""){ return /[.!?…]$/.test(s)?s:s+"."; }
 function hashStr(str=""){ let h=2166136261>>>0; for(const ch of String(str)){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619)>>>0; } return h>>>0; }
 function pickDet(arr, seed){ return arr[ arr.length ? (seed % arr.length) : 0 ] || ""; }
-
-/* 🔒 NO PRIMA PERSONA NEL WTF (anche implicita) */
-function stripFirstPerson(answer = "", lang = "it", stile = "whatif") {
-  if (stile !== "wtf") return answer;
-
-  const L = normLang(lang);
-
-  if (L === "it") {
-    // pattern discorsivi tipici
-    answer = answer.replace(/\bio penso che\b/gi, "ti sembra che");
-    answer = answer.replace(/\bio credo che\b/gi, "ti pare che");
-    answer = answer.replace(/\bsecondo me\b/gi, "a occhio sembra");
-
-    // espressioni con "mi ..." → "ti ..."
-    answer = answer.replace(/\b[Mm]i immagino\b/g, "ti immagini");
-    answer = answer.replace(/\b[Mm]i vedo\b/g, "ti vedi");
-    answer = answer.replace(/\b[Mm]i sembra\b/g, "ti sembra");
-    answer = answer.replace(/\b[Mm]i chiedo\b/g, "ti chiedi");
-    answer = answer.replace(/\b[Mm]i viene\b/g, "ti viene");
-    answer = answer.replace(/\b[Mm]i parte\b/g, "ti parte");
-
-    // fallback generico: "mi <verbo/sentimento>" → "ti <verbo/sentimento>"
-    answer = answer.replace(/\b[Mm]i\s+([a-zà-ÿ]{3,})/g, (m, w) => `ti ${w}`);
-
-    // Verbi in prima persona singolare all'inizio di frase → seconda persona
-    const VERBS_1P_IT = new Set([
-      "entro","vado","penso","credo","tocco","sento","vedo","guardo","accendo","parto",
-      "apro","chiudo","torno","esco","arrivo","ordino","prendo","cammino","corro",
-      "spengo","bevo","sospiro","respiro","mi","cerco","provo","chiedo","dico"
-    ]);
-
-    answer = answer.replace(/(^|[.!?…]\s+)([A-ZÀ-Ý][a-zà-ÿ]+o)\s+/g, (match, sep, word) => {
-      const lower = word.toLowerCase();
-      if (!VERBS_1P_IT.has(lower)) return match;
-      const base = lower.slice(0, -1); // togli la -o
-      const second = base + "i";       // forma molto grezza, ma ok per verbi tipici
-      const fixed = second.charAt(0).toUpperCase() + second.slice(1);
-      return `${sep}${fixed} `;
-    });
-
-    // "Io ..." esplicito → "Tu ..."
-    answer = answer.replace(/^(io|Io)\s+/g, "Tu ");
-    answer = answer.replace(/([.!?…]\s+)(io|Io)\s+/g, (m, sep) => `${sep}Tu `);
-  } else if (L === "en") {
-    // Vietiamo "I ..." in apertura frase
-    answer = answer.replace(/(^|[.!?…]\s+)I\s+([a-z])/g, (m, sep, c) => `${sep}You ${c}`);
-    answer = answer.replace(/\bI think\b/g, "you feel like");
-    answer = answer.replace(/\bI guess\b/g, "you kinda guess");
-    answer = answer.replace(/\bin my opinion\b/gi, "from where you stand");
-  }
-
-  return answer;
-}
 
 /* ========= WHAT IF – esempio di respiro (non fisso) ========= */
 const WHATIF_HYBRID_EX_IT = `La linea del tuo destino qui si fa più spessa del resto. Vedi una scelta che alleggerisce le tue giornate: meno rumore, più tempo che torna davvero tuo. Senti le abitudini stringersi e poi allentarsi, finché trovi un ritmo più umano. Non è fuga né eroismo: è manutenzione di vita, dove sposti peso tra lavoro, relazioni ed energia. In fondo, non insegui più la vetrina: ti scegli una stanza in cui respirare meglio. E quando ti volterai, capirai che il rimpianto ha perso voce proprio dove hai iniziato a scegliere te.`;
@@ -444,8 +391,8 @@ function scientificReportDemenziale(domanda, lang="it"){
 function buildMessages({ domanda, lang, periodo, stile }){
   const L = normLang(lang);
   const baseRules = L==="en"
-    ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Second person only. Stay close to the topic of the question. Use a rich, varied vocabulary, and keep grammar and punctuation clean. Avoid repeating the same words and images too often.`
-    : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona. Resta aderente al tema della domanda. Usa un vocabolario ricco e vario, italiano corretto, senza errori di grammatica e con punteggiatura curata. Evita ripetizioni evidenti di parole e immagini.`;
+    ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Second person only ("you"), never use "I" or "we". Stay close to the topic of the question. Use a rich, varied vocabulary, and keep grammar and punctuation clean. Avoid random objects that do not logically belong to the scene. Avoid mixing verb tenses without sense.`
+    : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Usa SOLO la seconda persona ("tu"), NON usare mai la prima persona singolare o plurale ("io", "noi"). Resta aderente al tema della domanda. Usa un vocabolario ricco e vario, italiano corretto, senza errori di grammatica e con punteggiatura curata. Evita oggetti buttati a caso che non c’entrano con la scena. Evita salti di tempo verbale senza senso.`;
 
   const msgs = [
     { role: "system", content: baseRules },
@@ -468,68 +415,74 @@ function buildMessages({ domanda, lang, periodo, stile }){
     const WTF_RULE_IT = `WHAT THE F (demenziale, sarcastico, affettuosamente cattivo).
 
 Struttura OBBLIGATORIA (ITALIANO):
-1) Apertura: prendi in giro la SITUAZIONE in modo esplicito (massimo 2 frasi), come nei seguenti esempi: "Ah ma guarda te…", "Oh, eccoci…", "Ah, ci risiamo". Prendi in giro il casino, non la persona: usa etichette tipo "quello che crede che", "centauro del caos", "direttore creativo del casino".
-2) Punto di vista: NON parlare MAI in prima persona singolare. Vietato usare "io", "mi", "me", "penso", "credo", "secondo me" o verbi in prima persona anche sottintesi (niente frasi che iniziano con "entro", "penso", "tocco", "vado" se il soggetto implicito sei tu). Sei SEMPRE una voce esterna che parla a "tu".
-3) Descrivi 2–3 immagini concrete e quotidiane legate al tema (bar, moto, chat, lavoro, soldi, casa, città, relazione) con ritmo narrativo veloce e ironico. Devono sembrare scene di un mini-video, non una profezia mistica né un testo poetico.
-4) IMPRECAZIONE TEATRALE:
+1) Apertura: prendi in giro la SITUAZIONE in modo esplicito (massimo 2 frasi), come nei seguenti esempi: "Ah ma guarda te…", "Oh, eccoci…", "Ah, ci risiamo". Prendi in giro il casino, non la persona: usa etichette tipo "quello che crede che", "centauro del caos", "direttore creativo del casino". Usa sempre la SECONDA persona ("tu", "ti"), mai "io", mai "noi".
+2) Descrivi 2–3 immagini concrete e quotidiane legate al tema (bar, moto, chat, lavoro, soldi, casa, città, relazione) con ritmo narrativo veloce e ironico. Devono sembrare scene di un mini-video, non una profezia mistica né un testo poetico. Gli oggetti e i luoghi che citi devono avere senso per la scena (es: moto → concessionaria, casco, semaforo; ufficio → pc, stampante, badge), non oggetti a caso.
+3) IMPRECAZIONE TEATRALE:
    - Inserisci UNA sola imprecazione teatrale, esagerata e comica.
    - Ispirati a esempi come: "${impreSample}", ma NON copiare mai letteralmente quella frase: inventa OGNI VOLTA una nuova variante (cambia metafore, aggettivi, struttura).
+   - L’imprecazione deve nascere da un momento preciso della scena (es. quando senti il prezzo, quando arriva una mail, quando succede un piccolo disastro), non comparire a caso.
    - L’imprecazione non è un insulto a persone reali: è uno sfogo grottesco sulla situazione.
-5) OGGETTI CHE REAGISCONO:
-   - Subito dopo lo sfogo, fai reagire ${react.length} oggetti della scena (lampada, bicchiere, casco, moto, telefono, gatto, televisore, sedia, ecc.).
+4) OGGETTI CHE REAGISCONO:
+   - Subito dopo lo sfogo, fai reagire ${react.length} oggetti della scena (lampada del concessionario, casco, poster, bicchiere, sedia, monitor, telefono, gatto, ecc.).
+   - Gli oggetti che reagiscono devono essere COERENTI con il luogo e con quello che hai già nominato (se sei in concessionaria, niente tribunali o oggetti assurdi che non esistono lì).
    - Usa le idee fornite come ispirazione ma NON copiarle: ogni volta inventa reazioni nuove, surreali ma credibili, più comiche che "sagge".
-6) MOMENTO DRINK (ANCORATO ALLA SCENA, MAI DAL NIENTE):
-   - Il drink non appare dal nulla: prima mostra un gesto concreto coerente col contesto (${ctx}), ad esempio entrare al bar, andare in cucina, appoggiare le chiavi sul bancone, aprire l’armadietto buono.
+5) MOMENTO DRINK (ANCORATO ALLA SCENA, MAI DAL NIENTE):
+   - Il drink non appare dal nulla: prima mostra un gesto concreto coerente col contesto (${ctx}), ad esempio entri davvero al bar accanto, vai in cucina, ti appoggi al bancone di casa, apri l’armadietto delle cose buone.
    - Ispirati a idee come: ${drinkSample}, ma varia SEMPRE la descrizione: il modo in cui ti versi da bere e lo bevi deve cambiare ogni volta (sorsi veloci, un solo sorso lungo, metà ora metà dopo, ecc.).
-   - NON usare mai l’espressione "due sorsi troppo convinti" né ripetere identica una bevuta già descritta: ogni risposta deve inventare una nuova micro-scena di bevuta.
+   - NON usare mai l’espressione "due sorsi troppo convinti" né formule riciclate: ogni risposta deve inventare una nuova micro-scena di bevuta.
+   - NON parlare di "bicchiere che avevi appoggiato" se non l’hai introdotto prima: la scena deve essere coerente, come in un mini-video continuo.
    - Il bere è una gag teatrale e simbolica, non un invito ad abusare di alcol o a farsi del male.
-7) SUONI / ONOMATOPEE:
+6) SUONI / ONOMATOPEE:
    - Usa 1 o al massimo 3 suoni comici (tipo "BWOOOM", "tlin", "plof") integrati NELLE frasi, mai come righe separate.
    - I suoni servono solo a sottolineare momenti chiave (imprecazione, imbarazzo, micro-disastro), non devono riempire il testo.
-8) Chiusura: chiudi SEMPRE con 1–2 frasi che contengano sia una risposta pratica ("sì, puoi farlo ma…", "non ti salva la vita, ma…") sia una mini-morale ironica e un po’ tenera, nello stile "non ti sistema l’esistenza, però almeno sai in che casino ti infili".
-9) Vietato lo stile "zingara mistica" e vietato lo stile troppo poetico: non parlare seriamente di "destino", "linea della vita", "avventura epica", "vento che ti accarezza", "sogno ad alta cilindrata". Se ti viene una frase romantica, trasformala in qualcosa di più scemo e concreto.
-10) Linguaggio: italiano parlato, diretto, pieno di immagini surreali e un po’ sceme; concessa volgarità leggera (es: "cazzata", "casino"), ma niente odio verso categorie o persone reali. Frasi grammaticalmente corrette, ritmo alto, punteggiatura curata. Evita frasi eccessivamente lunghe: massimo 2–3 proposizioni per frase.
-11) Lunghezza: 6–8 frasi, UN SOLO paragrafo, niente elenchi visibili nell’output, nessuna emoji. Il tono deve sembrare il monologo di un amico al bancone, abbastanza demenziale da poter essere condiviso in un video corto.`;
+7) Chiusura: chiudi SEMPRE con 1–2 frasi che contengano sia una risposta pratica ("sì, puoi farlo ma…", "non ti salva la vita, ma…") sia una mini-morale ironica e un po’ tenera, nello stile "non ti sistema l’esistenza, però almeno sai in che casino ti infili".
+8) Vietato lo stile "zingara mistica" e vietato lo stile troppo poetico: non parlare seriamente di "destino", "linea della vita", "poeta incompreso", "avventura epica", "vento che ti accarezza", "sogno ad alta cilindrata". Se ti viene una frase romantica, trasformala in qualcosa di più scemo e concreto.
+9) Linguaggio: italiano parlato, diretto, pieno di immagini surreali e un po’ sceme; concessa volgarità leggera (es: "cazzata", "casino"), ma niente odio verso categorie o persone reali. Frasi grammaticalmente corrette, senza errori evidenti, con tempi verbali coerenti. Ritmo alto, punteggiatura curata. Evita frasi eccessivamente lunghe: massimo 2–3 proposizioni per frase.
+10) Lunghezza: 6–8 frasi, UN SOLO paragrafo, niente elenchi visibili nell’output, nessuna emoji. Il tono deve sembrare il monologo di un amico al bancone, abbastanza demenziale da poter essere condiviso in un video corto.
+11) Divieto assoluto di prima persona: NON usare mai "io", "noi", "mi immagino", "entro", "penso". Parla sempre come se stessi commentando la vita di "tu", dall’esterno.`;
 
     const WTF_RULE_EN = `WHAT THE F (absurd, sarcastic, playfully cruel but helpful).
 
 STRICT SEQUENCE (ENGLISH):
-1) Open by teasing the SITUATION (max 2 sentences), as in: "Oh, here we go again", "Look at you, genius of chaos". Mock the mess, not the person.
-2) Point of view: NEVER speak in first person singular. Do NOT use "I", "me", "my", "I think", "I feel", "in my opinion". You are always an external voice talking directly to "you".
-3) Add 2–3 concrete, vivid images tied to the topic (office, love, money, city, house, bike, etc.) with fast, cinematic rhythm. It should feel like a short video scene, not a mystical prophecy or a poem.
-4) THEATRICAL OUTBURST:
+1) Open by teasing the SITUATION (max 2 sentences), as in: "Oh, here we go again", "Look at you, genius of chaos". Mock the mess, not the person. Always speak in SECOND person ("you"), never "I", never "we".
+2) Add 2–3 concrete, vivid images tied to the topic (office, love, money, city, house, bike, etc.) with a fast, cinematic rhythm. It should feel like a short video scene, not a mystical prophecy or a poem. Objects and places must make sense for the scene (bike → dealership, helmet, traffic light; office → desk, monitor, badge).
+3) THEATRICAL OUTBURST:
    - Include exactly ONE theatrical outburst: exaggerated, funny, frustrated.
    - Use examples like "${impreSample}" only as inspiration: NEVER copy them literally. Always invent a fresh variant with new metaphors and wording.
+   - The outburst must come from a specific moment in the scene (hearing the price, reading a message, facing a small disaster), not appear out of nowhere.
    - The outburst is aimed at the situation, not at real people or groups.
-5) REACTING OBJECTS:
-   - Right after the outburst, make ${react.length} objects in the scene react (lamp, glass, helmet, bike, phone, cat, TV, chair, etc.).
+4) REACTING OBJECTS:
+   - Right after the outburst, make ${react.length} objects in the scene react (lamp, glass, helmet, poster, chair, phone, cat, TV, etc.).
+   - These objects must logically exist in that place and fit what you already described (if you're at the office, no random courtroom; if you're at a bar, no printer suddenly appears).
    - Use the provided ideas only as inspiration; always invent new, slightly surreal reactions that feel funny and grounded.
-6) DRINK MOMENT (GROUNDED IN THE SCENE):
-   - The drink never appears from nowhere: first show a concrete gesture consistent with the context (${ctx}), like walking into a bar, stepping into the kitchen, putting keys on the counter, opening a cupboard.
-   - Use ideas like: ${drinkSample} as inspiration, but ALWAYS change how the drink is poured and consumed: every answer must describe a different little drinking scene (single long sip, multiple tiny gulps, half now half later, etc.).
-   - NEVER reuse the exact wording of any previous drink description and NEVER use the phrase "due sorsi troppo convinti".
-   - Drinking is a symbolic theatrical gag, not encouragement for self-harm or abuse.
-7) SOUNDS / ONOMATOPOEIA:
+5) DRINK MOMENT (GROUNDED IN THE SCENE):
+   - The drink never appears from nowhere: first show a concrete gesture consistent with the context (${ctx}), like walking into a bar next door, stepping into the kitchen, leaning on the home counter, opening a cupboard.
+   - Use ideas like: ${drinkSample} as inspiration, but ALWAYS vary how the drink is poured and consumed: every answer must describe a different little drinking scene (single long sip, many tiny gulps, half now half later, etc.).
+   - NEVER reuse the exact wording of any previous drink description and NEVER use the phrase "due sorsi troppo convinti" or its literal translations.
+   - Do not mention "a glass you had left there" if you never introduced it before: the micro-scene must be coherent, like a continuous short video.
+   - Drinking is a symbolic theatrical gag, not an encouragement for self-harm or abuse.
+6) SOUNDS / ONOMATOPOEIA:
    - Use 1 to 3 funny sounds ("BWOOOM", "tlin", "plof") embedded INSIDE sentences, never on their own line.
-   - They only highlight key beats (outburst, awkwardness, tiny disaster), they must not dominate the text.
-8) Ending: ALWAYS close with 1–2 lines that contain both a practical answer ("yes, you can do it but…", "it won’t fix your life, but…") and a small, ironic, slightly tender moral.
-9) Forbidden style: no fortune-teller mysticism and no serious poetic tone about fate, destiny, or epic journeys. If a romantic or heroic sentence appears, twist it into something sillier and more concrete.
-10) Language: casual spoken English, vivid and slightly surreal; light profanity allowed ("mess", "crap", etc.) but no hate towards real groups or people. Grammar and punctuation must stay clean, sentences energetic, not overly long.
-11) Length: 6–8 sentences, SINGLE paragraph, no bullet points in the OUTPUT, no emojis. It should read like a short, chaotic monologue that could fit into a viral short video.`;
+   - They only highlight key beats (outburst, awkwardness, tiny disaster); they must not dominate the text.
+7) Ending: ALWAYS close with 1–2 lines that contain both a practical answer ("yes, you can do it but…", "it won’t fix your life, but…") and a small, ironic, slightly tender moral.
+8) Forbidden style: no fortune-teller mysticism and no serious poetic tone about fate, destiny, or epic journeys. If a romantic or heroic sentence appears, twist it into something sillier and more concrete.
+9) Language: casual spoken English, vivid and slightly surreal; light profanity allowed ("mess", "crap", etc.) but no hate towards real groups or people. Grammar and punctuation must stay clean, with consistent tenses; sentences energetic, not overly long.
+10) Length: 6–8 sentences, SINGLE paragraph, no bullet points in the OUTPUT, no emojis. It should read like a short, chaotic monologue that could fit into a viral short video.
+11) Absolute ban on first person: NEVER use "I", "we", "I imagine", "I walk in". Always talk as if you were commenting on "you" from the outside.`;
 
     msgs.push(
       { role: "system", content: L==="en" ? WTF_RULE_EN : WTF_RULE_IT },
       { role: "system", content: `ESEMPI DI IMPRECAZIONE TEATRALE (non copiare mai alla lettera, servono solo come ispirazione di tono):\n- ${impreSample}` },
-      { role: "system", content: `OGGETTI CHE REAGISCONO (idee di scena, NON copiare il testo, inventa variazioni nuove ogni volta):\n- ${react.join("\n- ")}` },
-      { role: "system", content: `IDEA DI BEVUTA TEATRALE (solo spunto, NON copiare la frase, varia sempre il modo di bere):\n- ${drinkSample}` },
+      { role: "system", content: `OGGETTI CHE REAGISCONO (idee di scena, NON copiare il testo, inventa variazioni nuove ogni volta, coerenti con il luogo):\n- ${react.join("\n- ")}` },
+      { role: "system", content: `IDEA DI BEVUTA TEATRALE (solo spunto, NON copiare la frase, varia sempre il modo di bere e assicurati che sia coerente con la scena):\n- ${drinkSample}` },
       { role: "system", content:
 `ESEMPI VINCOLANTI (tono/ritmo IT, NON copiare il testo, NON riutilizzare i nomi; servono solo come modello di stile, voce e ritmo):
 
-- Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte un “porca di quella bestemmia santa del vapore infame!” che fa tremare i bicchieri come in un terremoto spirituale. La macchina del caffè sputa vendetta, il frigorifero tossisce e una vecchietta in fila mormora che al confessionale ti tengono in riserva. Ti versi un goccio di liquore, rimetti in riga il bancone e giuri che domani apri solo per matti. Alla chiusura, ti guardi intorno e sussurri che oggi hai bestemmiato più del prete quando finisce il vino — ma almeno hai servito verità calde.
+- Ah ma guarda te, Luca… quello che crede che la moka porti la pace nel mondo. Ti svegli col grembiule stirato e il sorriso da imprenditore, poi arriva il primo cliente e ti chiede un “latte tiepido con schiuma che non sa di latte”. Ti parte uno sbotto liturgico così calibrato che i cucchiaini vibrano dentro il portabicchieri. La macchina del caffè sbuffa come se avesse un’opinione, il frigorifero tossisce e una vecchietta in fila mormora che al confessionale ti tengono in panchina. Ti versi un goccio di qualcosa nel bicchierino di servizio, lo fai sparire in un gesto solo e giuri che domani apri solo per matti. Alla chiusura, ti guardi intorno e pensi che oggi hai bestemmiato più del prete quando finisce il vino — ma almeno hai servito verità calde.
 
-- Oh, eccoci, centauro dell’inferno. Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” così netto che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo ma quasi con affetto, come un rito che rimette a fuoco. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio con un sorrisetto complice. Torni a casa con l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie ben calibrate.
+- Oh, eccoci, centauro dell’inferno. Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa una raffica di improperi compressi che fa quasi vibrare gli specchietti. Il semaforo sembra allungare il rosso per rifletterci su, un’auto parcheggiata abbassa lo specchietto come per non guardare e il casco, appeso al braccio, dondola giudicante. Al bar ti appoggi al bancone, versi un dito abbondante nel primo bicchiere libero e lo fai svanire in un mezzo respiro, come se stessi staccando la spina al cervello. Torni a casa con l’eco del motore e della tua voce fuse in una sinfonia di libertà e scelte discutibili.
 
-- Ah ma guarda te, quello che dopo tre reel su TikTok si sente già centauro del caos. Entri in concessionaria con la sicurezza di uno che ha visto due tutorial e pensa di poter domare il mondo, tocchi la moto e nella tua testa parte un “BWOOOM” teatrale che manco il trailer di un film girato male. Appena il venditore ti dice il prezzo, ti scappa un “bestemmione bardato” talmente potente che un poster sul muro si stacca di mezzo centimetro e un casco fa “tlin” come se stesse giudicando il tuo conto in banca. Tu fai finta di niente, esci tranquillo, entri nel bar accanto, appoggi le chiavi sul bancone come se fossero di una supermoto e ti fai riempire un bicchiere serio che sistematicamente ti ricorda che la rata non si paga da sola.` }
+- Ah ma guarda te, quello che dopo tre reel di moto si sente già centauro del caos. Entri in concessionaria con la sicurezza di uno che ha visto due tutorial e pensa di poter domare il mondo, sfiori il serbatoio e nella tua testa parte un BWOOOM da trailer di film girato male. Appena il venditore ti dice il prezzo, ti esce uno sbotto spirituale corazzato che fa vibrare il poster sul muro e un casco fa “tlin” come se stesse giudicando il tuo conto in banca. Tu fingi di nulla, scivoli fuori, entri nel bar accanto, appoggi le chiavi sul bancone come se fossero di un’astronave e ti versi un bicchiere fino all’orlo che poi svuoti in un sorso troppo lungo anche per la tua pazienza. Non ti sistema l’esistenza, ma almeno sai esattamente quanto costa giocare a fare il libero sull’asfalto.` }
     );
   } else {
     // WHAT IF dipendente dal tempo (IT ottimizzato, altre lingue usano solo baseRules)
@@ -546,7 +499,7 @@ STRICT SEQUENCE (ENGLISH):
   const ask = (L==="en")
     ? `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`
     : (L==="it")
-    ? `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO. Paragrafo unico, grammatica corretta, tono naturale.`
+    ? `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO. Paragrafo unico, grammatica corretta, tono naturale e coerente.`
     : (L==="es")
     ? `Pregunta (no la repitas): "${domanda}". Escribe UNA respuesta en ESPAÑOL, un solo párrafo.`
     : (L==="fr")
@@ -855,9 +808,6 @@ export default async function handler(req, res){
     // Ripristina maiuscole frasi
     answer = sentenceCaseAll(answer);
 
-    // Niente prima persona nel WTF (correzione di sicurezza finale)
-    answer = stripFirstPerson(answer, lang, stile);
-
     // Finale emozionale con gancio se manca (solo WHAT IF)
     if (stile === "whatif") {
       answer = ensureZingaraEnding({ text: answer, lang, periodo, domanda });
@@ -889,4 +839,4 @@ export default async function handler(req, res){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
-        }
+  }
