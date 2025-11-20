@@ -1431,55 +1431,35 @@ qs('#langSelect').onchange=()=>{
   oracleDeck = [];
 };
 
-/* 🔗 Condivisione principale: prima VIDEO, poi fallback testo/copia */
+/* 🔗 Condivisione principale: TESTO (funziona anche senza video) */
 qs('#shareBtn').onclick = async ()=>{
   const T = t();
   const domanda = LS.getItem('domanda') || '';
   const answerText = (qs('#answer')?.textContent || '').trim();
 
-  // se non c'è video generato → invito a creare il video
-  if (!lastVideoBlob) {
-    toast("Prima crea il video con 🎬 Crea video");
-    return;
-  }
+  const full =
+    `What?f — ${style==='wtf' ? (T.styleWTF) : (T.styleWHF)}\n(${periodo})\n\n` +
+    `Q: ${domanda}\n\n${answerText}`;
 
-  try{
-    const ext = (lastVideoMime && lastVideoMime.includes("mp4")) ? "mp4" : "webm";
-    const file = new File(
-      [lastVideoBlob],
-      `whatf-video.${ext}`,
-      { type: lastVideoMime || "video/webm" }
-    );
-
-    // 1️⃣ Prova a condividere il FILE video se possibile
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        title: "What?f",
-        text: "Guarda il mio oracolo What?f ✨",
-        files: [file]
-      });
-      return;
-    }
-
-    // 2️⃣ Fallback: testo
-    const full =
-      `What?f — ${style==='wtf' ? (T.styleWTF) : (T.styleWHF)}\n(${periodo})\n\n` +
-      `Q: ${domanda}\n\n${answerText}`;
-
+  try {
     if (navigator.share) {
+      // Android / iOS: apre direttamente la share verso social / chat
       await navigator.share({ title:"What?f", text: full });
-    } else if (navigator.clipboard) {
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+      // Desktop senza Web Share → copia negli appunti
       await navigator.clipboard.writeText(full);
       const b = qs('#shareBtn');
       b.textContent = T.copied;
       setTimeout(()=> b.textContent = T.share, 1200);
     } else {
+      // Super fallback
       toast(T.copied || "Copiato");
     }
-  }catch(e){
+  } catch(e) {
     console.error(e);
   }
 };
+
 
 /* 🔁 Altra domanda / Salva / Crea video */
 qs('#againBtn').onclick = ()=>{ location.href='fourth.html'; };
