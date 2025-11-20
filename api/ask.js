@@ -1,7 +1,8 @@
 // /api/ask.js — What?f Engine (Zingara-Realista WHATIF + Friendly-WTF Demenziale)
 // - WHATIF: tono “zingara mistica realista”, 60% analisi / 40% immagini sobrie,
 //   chiusura con sensazione + gancio. Passato → controfattuale. Futuro → ipotesi vicina.
-// - WTF: come da tuoi esempi. Payload extra 'scientific' (non nella risposta).
+// - WTF: demenziale, sarcastico, da barista affettuoso. Niente poesia, niente elenchi.
+//   Imprecazione e bevuta: SEMPRE variabili, mai uguali parola per parola.
 // - Un paragrafo, niente elenchi, niente eco della domanda. Maiuscole ripristinate post-process.
 
 import OpenAI from "openai";
@@ -223,25 +224,48 @@ function detectWtfContext(domanda = "") {
   return "generico";
 }
 
-/* Imprecazioni teatrali — versione più demenziale */
-const WTF_IMPRE = [
+/* Pool di IMPRECAZIONI teatrali — usate come ESEMPI, non da copiare letteralmente */
+const WTF_IMPRE_POOL = [
   "bestemmione corazzato a lunga gittata",
-  "imprecazionona nucleare che fa vibrare i vetri",
-  "sacramentata epica registrabile in Dolby Surround",
-  "vulcano d’anatemi degno di una finale di Champions",
-  "tromba d’aria di improperi classificata come evento meteo estremo",
-  "raffica di parolacce con valore sismico",
-  "rosario di imprecazioni sgranato alla velocità della luce",
+  "imprecazione turboguidata che sfiora il soffitto",
+  "anatema blindato a tre stadi che sposta l’aria di un metro",
+  "sacramentata supersonica degna di una finale di Champions",
+  "raffica di parolacce pressurizzate con effetto sismico leggero",
+  "vulcano d’anatemi in eruzione controllata ma non troppo",
+  "scarica liturgica a combustione interna che mette a vibrare i vetri",
+  "uragano di improperi classificato come evento meteo estremo",
+  "rosario storto di imprecazioni recitato alla velocità della luce",
+  "esplosione di bestemmie bardate che fanno tremare il telecomando",
+  "detonazione verbale a onda d’urto emotiva",
+  "fuoco d’artificio di parolacce con scia luminosa di rimorso",
+  "bordata mistica di insulti tecnici non certificati dal catechismo",
+  "scoppio corazzato di frasi non omologate dall’ONU",
+  "raffica controllata di anatemi con rinculo emotivo incluso",
+  "siluro verbale a lunga gittata che buca il silenzio del salotto",
+  "supernova di imprecazioni compressa in un secondo netto",
+  "botta sacrale storta che fa finta di essere spirituale",
+  "esplosione di protesta spirituale con eco in corridoio",
+  "pallottola verbale rimbalzante che colpisce tre mobili su quattro",
+  "cannonata di sbotti coloriti che mette in fuga un soprammobile",
+  "tsunami di bestemmie sussurrate ma comunque percepibili da Marte",
+  "tuono liturgico fuori stagione che scuote il gatto sul divano",
+  "miccia corta di anatemi che parte senza preavviso",
+  "frana verbale di parolacce creative a caduta libera",
+  "colpo secco di imprecazione bardata che spegne l’atmosfera zen",
+  "starnuto spirituale caricato di ogni nervoso accumulato",
+  "lancio orbitale di improperi che gira tre volte il lampadario",
+  "carica cavalleresca di insulti eleganti ma devastanti",
+  "scarica elettrica di parole storte che manda in tilt il karma"
 ];
 
-/* Reazioni degli oggetti, ma contestuali */
+/* Reazioni degli oggetti, contestuali */
 const WTF_REACT_BY_CONTEXT = {
   moto: [
     "il semaforo passa al rosso per rispetto e ti guarda in silenzio",
     "un cane cambia marciapiede da solo come se avesse capito tutto",
     "il casco sul sellino oscilla giudicante come un pendolo del destino",
     "la saracinesca del garage sbatte come un applauso offeso",
-    "il contachilometri ti fissa come a dire “davvero vuoi farlo?”"
+    "il contachilometri ti fissa come a dire che conosce già il finale"
   ],
   ufficio: [
     "il monitor decide di aggiornarsi proprio ora e ti pianta in asso",
@@ -287,44 +311,39 @@ const WTF_REACT_BY_CONTEXT = {
   ]
 };
 
-/* Bevute, ma legate al posto in cui si trova */
-const WTF_DRINKS_BY_CONTEXT = {
-  moto: [
-    "vai al bar vicino al concessionario e ti fai riempire un bicchiere serio al bancone",
-    "ti fermi al primo bar sulla strada e ti scolpisci una birra media in piedi fuori",
-    "entri nel locale dell’angolo e ti spari un caffè lungo, bevuto in tre sorsi cattivi"
-  ],
-  ufficio: [
-    "ti trascini in sala pausa e riempi fino all’orlo un bicchiere di plastica di caffè della macchinetta",
-    "nella cucina aziendale ti versi una tazza gigante di caffè annacquato e la butti giù come fosse liquore",
-    "al distributore prendi un bicchierone d’acqua e lo bevi come se fosse superalcolico da after"
-  ],
-  casa: [
-    "vai in cucina, apri l’armadietto buono e riempi un bicchiere grande fino al bordo",
-    "ti appoggi al lavandino con un mezzo calice traboccante e lo svuoti in una tirata",
-    "apri il frigorifero, prendi la prima cosa seria che trovi e la versi in un bicchiere pieno"
-  ],
-  città: [
-    "svolti l’angolo, entri al bar sotto casa e ti fai versare un bicchiere pesante, pieno fino all’orlo",
-    "ti siedi al tavolino del corso con un calice pieno e lo guardi come se avesse le risposte",
-    "vai nel solito locale dove ti conoscono per nome e ti fai riempire il bicchiere senza nemmeno parlare"
-  ],
-  relazione: [
-    "ti siedi sul bordo del letto con un calice pieno fino all’orlo e lo bevi guardando il telefono a faccia in giù",
-    "ti sposti sulla soglia del balcone con un bicchiere esagerato e lo svuoti guardando il vuoto",
-    "resti in cucina con un bicchiere serio, appoggiato al tavolo, facendo finta di pensare e invece senti"
-  ],
-  soldi: [
-    "resti davanti allo schermo con un bicchiere colmo e lo bevi fissando il saldo",
-    "ti sposti al tavolo dei conti e ti versi un bicchiere grande che accompagna gli scontrini",
-    "appoggi il bicchiere pieno accanto alla calcolatrice e fai un sorso ogni cifra che non ti torna"
-  ],
-  generico: [
-    "ti versi un bicchiere grande riempito più del necessario e lo butti giù in due colpi teatrali",
-    "prendi un calice traboccante e lo svuoti in un’unica tirata un po’ esagerata",
-    "riempi un bicchiere colmo e lo finisci senza staccare gli occhi da quello che ti preoccupa"
-  ]
-};
+/* Bevute teatrali – usate come ESEMPI, ma il modello deve variare sempre */
+const WTF_DRINK_POOL = [
+  "riempi un bicchiere pesante fino al bordo e lo svuoti in un sorso lunghissimo come se stessi spegnendo un incendio interiore",
+  "versi da bere con troppa convinzione, poi lo mandi giù a colpi nervosi che sembrano un codice Morse",
+  "prendi il bicchiere più grande che trovi, lo carichi oltre il buon senso e lo fai sparire in un attimo",
+  "ti versi poco, poi torni a riempirlo come se la misura non fosse mai abbastanza, e lo sorseggi con finta calma",
+  "riempi il bicchiere, lo guardi tre secondi di troppo e alla fine lo bevi tutto d’un fiato come se firmassi un contratto",
+  "appoggi il bicchiere sul tavolo, fai scena, poi lo sollevi e lo fai evaporare senza respirare",
+  "ti versi qualcosa e ne bevi metà, lasciando l’altra metà lì come se dovesse risponderti a una domanda esistenziale",
+  "metti troppo ghiaccio, troppo tutto, e poi bevi come se dovessi giustificare quella scelta",
+  "ti versi da bere appoggiato al lavandino e lo butti giù guardando il pavimento, come se ci fosse scritto il finale",
+  "riempi un bicchiere medio, lo giri in mano e poi fai un sorso lungo che sembra una trattativa con il destino",
+  "versi fino a creare il menisco perfetto e lo rompi bevendo senza pensarci due volte",
+  "bevi a piccoli colpi rapidi, come se ogni sorso fosse un tentativo di rimandare la decisione",
+  "appoggi la schiena al frigo, alzi il bicchiere e lo svuoti come se stessi facendo un brindisi muto con te stesso",
+  "lo tieni in mano troppo a lungo, poi in un gesto secco bevi quasi tutto e il resto lo lasci lì a giudicarti",
+  "riempi il bicchiere, sospiri, e lo bevi in silenzio guardando un punto a caso del muro",
+  "ti versi qualcosa, ti siedi, e lo bevi piano piano mentre la testa corre molto più veloce",
+  "alzi il bicchiere al cielo come se stessi ringraziando qualcuno e poi lo svuoti come se lo stessi punendo",
+  "prendi un bicchiere piccolo, lo colmi oltre ogni logica e lo butti giù come se stessi saltando da un trampolino",
+  "bevi in due fasi: una metà per il coraggio, una metà per la rassegnazione",
+  "ti versi da bere, lo assaggi appena, poi ti arrendi e lo finisci senza pensarci",
+  "lo tieni appoggiato sul bancone, parli da solo, e tra una frase e l’altra lo svuoti senza nemmeno accorgertene",
+  "riempi il bicchiere con troppa decisione, lo scruti e poi bevi come se dovessi staccare la spina al cervello",
+  "fai un brindisi muto con il riflesso nella finestra e poi bevi come se non volessi più vederti",
+  "bevi a sorsi lenti ma profondi, come se stessi scorrendo una lista di errori nella mente",
+  "ti versi un dito, poi ci ripensi e aggiungi il resto, e lo bevi come se stessi correggendo un compito in classe",
+  "agiti il bicchiere per finta eleganza e poi lo svuoti in modo assolutamente poco elegante",
+  "lo tieni stretto con due mani, fai una pausa da film drammatico e poi lo bevi tutto insieme",
+  "riempi metà bicchiere, ti siedi sul bordo del tavolo e lo svuoti guardando il vuoto",
+  "prendi la tazza sbagliata, ci versi dentro e la bevi come se fosse il contenitore più normale del mondo",
+  "lasci il bicchiere sul tavolo, ci fai un mezzo giro intorno, poi torni e lo bevi come se niente fosse"
+];
 
 /* ========= WTF: rapporto scientifico demenziale ========= */
 function scientificReportDemenziale(domanda, lang="it"){
@@ -385,58 +404,69 @@ function buildMessages({ domanda, lang, periodo, stile }){
     function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/2**32; }
 
     const ctx = detectWtfContext(domanda);
-    const impre = WTF_IMPRE[Math.floor(rnd()*WTF_IMPRE.length)];
+    const impreSample = WTF_IMPRE_POOL[Math.floor(rnd()*WTF_IMPRE_POOL.length)];
 
     const reactPool = WTF_REACT_BY_CONTEXT[ctx] || WTF_REACT_BY_CONTEXT.generico;
     const shuffled=[...reactPool].sort(()=>rnd()-0.5);
     const react = shuffled.slice(0, 2 + Math.floor(rnd()*2));
 
-    const drinkPool = WTF_DRINKS_BY_CONTEXT[ctx] || WTF_DRINKS_BY_CONTEXT.generico;
-    const drink = drinkPool[Math.floor(rnd()*drinkPool.length)];
+    const drinkSample = WTF_DRINK_POOL[Math.floor(rnd()*WTF_DRINK_POOL.length)];
 
     const WTF_RULE_IT = `WHAT THE F (demenziale, sarcastico, affettuosamente cattivo).
 
 Struttura OBBLIGATORIA (ITALIANO):
 1) Apertura: prendi in giro la SITUAZIONE in modo esplicito (massimo 2 frasi), come nei seguenti esempi: "Ah ma guarda te…", "Oh, eccoci…", "Ah, ci risiamo". Prendi in giro il casino, non la persona: usa etichette tipo "quello che crede che", "centauro del caos", "direttore creativo del casino".
-2) Descrivi 2–3 immagini concrete e quotidiane legate al tema (bar, moto, chat, lavoro, soldi, casa, città) con ritmo narrativo veloce e ironico. Devono sembrare scene di un mini-video, non una profezia mistica.
-3) Inserisci UNO sfogo teatrale usando la formula "${impre}" dentro una frase narrativa esagerata (mai come insulto diretto a persone reali). Lo sfogo è comico e liberatorio, non violento.
-4) SUBITO DOPO, aggiungi ${react.length} reazioni di OGGETTI DELLA SCENA che sembrano giudicarti o partecipare al dramma (lampada, bicchiere, casco, moto, telefono, gatto, computer, ecc.). Ispirati alle idee fornite ma NON copiare le frasi letteralmente: inventa ogni volta oggetti e reazioni nuove, surreali ma credibili.
+2) Descrivi 2–3 immagini concrete e quotidiane legate al tema (bar, moto, chat, lavoro, soldi, casa, città, relazione) con ritmo narrativo veloce e ironico. Devono sembrare scene di un mini-video, non una profezia mistica né un testo poetico.
+3) IMPRECAZIONE TEATRALE:
+   - Inserisci UNA sola imprecazione teatrale, esagerata e comica.
+   - Ispirati a esempi come: "${impreSample}", ma NON copiare mai letteralmente quella frase: inventa OGNI VOLTA una nuova variante (cambia metafore, aggettivi, struttura).
+   - L’imprecazione non è un insulto a persone reali: è uno sfogo grottesco sulla situazione.
+4) OGGETTI CHE REAGISCONO:
+   - Subito dopo lo sfogo, fai reagire ${react.length} oggetti della scena (lampada, bicchiere, casco, moto, telefono, gatto, televisore, sedia, ecc.).
+   - Usa le idee fornite come ispirazione ma NON copiarle: ogni volta inventa reazioni nuove, surreali ma credibili, più comiche che "sagge".
 5) MOMENTO DRINK (ANCORATO ALLA SCENA, MAI DAL NIENTE):
-   - Il drink non appare dal nulla: prima mostra un gesto concreto coerente col contesto (${ctx}), ad esempio entrare al bar, andare in cucina, appoggiare le chiavi sul bancone, affacciarsi al balcone.
-   - SOLO DOPO descrivi il bicchiere riempito e bevuto in modo plateale e comico (es: lo fai riempire fino all’orlo e lo svuoti in due sorsi troppo convinti).
+   - Il drink non appare dal nulla: prima mostra un gesto concreto coerente col contesto (${ctx}), ad esempio entrare al bar, andare in cucina, appoggiare le chiavi sul bancone, aprire l’armadietto buono.
+   - Ispirati a idee come: ${drinkSample}, ma varia SEMPRE la descrizione: il modo in cui ti versi da bere e lo bevi deve cambiare ogni volta (sorsi veloci, un solo sorso lungo, metà ora metà dopo, ecc.).
+   - NON usare mai l’espressione "due sorsi troppo convinti" né ripetere identica una bevuta già descritta: ogni risposta deve inventare una nuova micro-scena di bevuta.
    - Il bere è una gag teatrale e simbolica, non un invito ad abusare di alcol o a farsi del male.
 6) SUONI / ONOMATOPEE:
-   - Puoi usare al massimo 2–3 suoni comici (tipo "BWOOOM", "tlin", "plof") integrati NELLE frasi, mai come righe separate.
-   - I suoni servono solo a sottolineare i momenti chiave (imprecazione, imbarazzo, micro-disastro), non devono riempire tutto il testo.
+   - Usa 1 o al massimo 3 suoni comici (tipo "BWOOOM", "tlin", "plof") integrati NELLE frasi, mai come righe separate.
+   - I suoni servono solo a sottolineare momenti chiave (imprecazione, imbarazzo, micro-disastro), non devono riempire il testo.
 7) Chiusura: chiudi SEMPRE con 1–2 frasi che contengano sia una risposta pratica ("sì, puoi farlo ma…", "non ti salva la vita, ma…") sia una mini-morale ironica e un po’ tenera, nello stile "non ti sistema l’esistenza, però almeno sai in che casino ti infili".
-8) Vietato lo stile "zingara mistica": non parlare di "destino", "linea della vita", "le carte dicono", "vedo il futuro", "la linea del tuo cammino", "il filo della tua storia" ecc. Sei un barista / amico cinico ma affettuoso, non una veggente.
-9) Linguaggio: italiano parlato, diretto, pieno di immagini surreali; concessa volgarità leggera (es: "cazzata", "casino"), ma niente odio verso categorie o persone reali. Frasi grammaticalmente corrette, ritmo alto, punteggiatura curata. Evita frasi eccessivamente lunghe: massimo 2–3 proposizioni per frase.
+8) Vietato lo stile "zingara mistica" e vietato lo stile troppo poetico: non parlare seriamente di "destino", "linea della vita", "poeta incompreso", "avventura epica", "vento che ti accarezza", "sogno ad alta cilindrata". Se ti viene una frase romantica, trasformala in qualcosa di più scemo e concreto.
+9) Linguaggio: italiano parlato, diretto, pieno di immagini surreali e un po’ sceme; concessa volgarità leggera (es: "cazzata", "casino"), ma niente odio verso categorie o persone reali. Frasi grammaticalmente corrette, ritmo alto, punteggiatura curata. Evita frasi eccessivamente lunghe: massimo 2–3 proposizioni per frase.
 10) Lunghezza: 6–8 frasi, UN SOLO paragrafo, niente elenchi visibili nell’output, nessuna emoji. Il tono deve sembrare il monologo di un amico al bancone, abbastanza demenziale da poter essere condiviso in un video corto.`;
 
     const WTF_RULE_EN = `WHAT THE F (absurd, sarcastic, playfully cruel but helpful).
 
 STRICT SEQUENCE (ENGLISH):
 1) Open by teasing the SITUATION (max 2 sentences), as in: "Oh, here we go again", "Look at you, genius of chaos". Mock the mess, not the person.
-2) Add 2–3 concrete, vivid images tied to the topic (office, love, money, city, house, bike, etc.) with fast, cinematic rhythm. It should feel like a short video scene, not a mystical prophecy.
-3) Include ONE theatrical outburst using "${impre}" inside an exaggerated narrative sentence (never as a direct insult to real people). The outburst is comic and cathartic, not violent.
-4) RIGHT AFTER, add ${react.length} reactions from OBJECTS in the scene that seem to judge or participate in the drama (lamp, glass, helmet, bike, phone, cat, computer, etc.). Use the provided ideas only as inspiration, invent fresh, slightly surreal reactions every time.
+2) Add 2–3 concrete, vivid images tied to the topic (office, love, money, city, house, bike, etc.) with fast, cinematic rhythm. It should feel like a short video scene, not a mystical prophecy or a poem.
+3) THEATRICAL OUTBURST:
+   - Include exactly ONE theatrical outburst: exaggerated, funny, frustrated.
+   - Use examples like "${impreSample}" only as inspiration: NEVER copy them literally. Always invent a fresh variant with new metaphors and wording.
+   - The outburst is aimed at the situation, not at real people or groups.
+4) REACTING OBJECTS:
+   - Right after the outburst, make ${react.length} objects in the scene react (lamp, glass, helmet, bike, phone, cat, TV, chair, etc.).
+   - Use the provided ideas only as inspiration; always invent new, slightly surreal reactions that feel funny and grounded.
 5) DRINK MOMENT (GROUNDED IN THE SCENE):
-   - The drink never appears from nowhere: first show a concrete gesture consistent with the context (${ctx}), like walking into a bar, stepping into the kitchen, placing keys on the counter, leaning on a balcony.
-   - ONLY THEN describe the glass being filled and drunk in a theatrical, funny way.
-   - Drinking is a symbolic gag, not an encouragement to self-harm or abuse alcohol.
+   - The drink never appears from nowhere: first show a concrete gesture consistent with the context (${ctx}), like walking into a bar, stepping into the kitchen, putting keys on the counter, opening a cupboard.
+   - Use ideas like: ${drinkSample} as inspiration, but ALWAYS change how the drink is poured and consumed: every answer must describe a different little drinking scene (single long sip, multiple tiny gulps, half now half later, etc.).
+   - NEVER reuse the exact wording of any previous drink description and NEVER use the phrase "due sorsi troppo convinti".
+   - Drinking is a symbolic theatrical gag, not encouragement for self-harm or abuse.
 6) SOUNDS / ONOMATOPOEIA:
-   - You may use at most 2–3 funny sounds (like "BWOOOM", "tlin", "plof") embedded INSIDE sentences, never as separate lines.
-   - Sounds only highlight key moments (outburst, embarrassment, tiny disaster), they must not dominate the text.
+   - Use 1 to 3 funny sounds ("BWOOOM", "tlin", "plof") embedded INSIDE sentences, never on their own line.
+   - They only highlight key beats (outburst, awkwardness, tiny disaster), they must not dominate the text.
 7) Ending: ALWAYS close with 1–2 lines that contain both a practical answer ("yes, you can do it but…", "it won’t fix your life, but…") and a small, ironic, slightly tender moral.
-8) Forbidden style: no fortune-teller mysticism. Do NOT talk about "destiny", "fate lines", "the cards say", "I see your future", "the thread of your story". You are a sarcastic bartender/friend, not a seer.
+8) Forbidden style: no fortune-teller mysticism and no serious poetic tone about fate, destiny, or epic journeys. If a romantic or heroic sentence appears, twist it into something sillier and more concrete.
 9) Language: casual spoken English, vivid and slightly surreal; light profanity allowed ("mess", "crap", etc.) but no hate towards real groups or people. Grammar and punctuation must stay clean, sentences energetic, not overly long.
 10) Length: 6–8 sentences, SINGLE paragraph, no bullet points in the OUTPUT, no emojis. It should read like a short, chaotic monologue that could fit into a viral short video.`;
 
     msgs.push(
       { role: "system", content: L==="en" ? WTF_RULE_EN : WTF_RULE_IT },
-      { role: "system", content: `IMPRECATION: ${impre}` },
-      { role: "system", content: `REACTIONS (idee di scena, NON copiare il testo, inventa ogni volta variazioni nuove):\n- ${react.join("\n- ")}` },
-      { role: "system", content: `DRINK (solo idea da trasformare, NON usare la frase letterale): ${drink}` },
+      { role: "system", content: `ESEMPI DI IMPRECAZIONE TEATRALE (non copiare mai alla lettera, servono solo come ispirazione di tono):\n- ${impreSample}` },
+      { role: "system", content: `OGGETTI CHE REAGISCONO (idee di scena, NON copiare il testo, inventa variazioni nuove ogni volta):\n- ${react.join("\n- ")}` },
+      { role: "system", content: `IDEA DI BEVUTA TEATRALE (solo spunto, NON copiare la frase, varia sempre il modo di bere):\n- ${drinkSample}` },
       { role: "system", content:
 `ESEMPI VINCOLANTI (tono/ritmo IT, NON copiare il testo, NON riutilizzare i nomi; servono solo come modello di stile, voce e ritmo):
 
@@ -444,7 +474,7 @@ STRICT SEQUENCE (ENGLISH):
 
 - Oh, eccoci, centauro dell’inferno. Casco lucido, cuore impavido, orgoglio pronto all’incidente. Accendi, parti, la libertà ti accarezza… poi un’ape decide che il tuo collo è il suo destino. Ti scappa un “bestemmione che spacca l’aria!” così netto che il semaforo passa al rosso per rispetto e un cane cambia marciapiede da solo. Ti fermi, respiri, bestemmi di nuovo ma quasi con affetto, come un rito che rimette a fuoco. Al bar ordini da bere “per lavare via la bestemmia” e il barista ti serve doppio con un sorrisetto complice. Torni a casa con l’eco del motore e della tua voce, fuse in una sinfonia di libertà e bestemmie ben calibrate.
 
-- Ah, Luisa… ci risiamo. Ti butti nel cuore come in un pozzo vuoto e poi ti lamenti dell’eco. Lui ti visualizza, poi sparisce, e la pressione ti sale come se stessi pagando interessi sull’illusione. Ti parte una “bestemmia della miseria impestata” talmente sincera che la lampada sfarfalla e il bicchiere applaude da solo. Il gatto scappa, Alexa finge un aggiornamento, tu respiri e lasci cadere un’altra imprecazione a mezza voce, quasi fosse una preghiera storta. Bevi un sorso di rosso e ammetti che ogni storia finisce con una bestemmia e un brindisi — ma almeno bevi meglio di come ami. Fuori, la luna pare annuire.` }
+- Ah ma guarda te, quello che dopo tre reel su TikTok si sente già centauro del caos. Entri in concessionaria con la sicurezza di uno che ha visto due tutorial e pensa di poter domare il mondo, tocchi la moto e nella tua testa parte un “BWOOOM” teatrale che manco il trailer di un film girato male. Appena il venditore ti dice il prezzo, ti scappa un “bestemmione bardato” talmente potente che un poster sul muro si stacca di mezzo centimetro e un casco fa “tlin” come se stesse giudicando il tuo conto in banca. Tu fai finta di niente, esci tranquillo, entri nel bar accanto, appoggi le chiavi sul bancone come se fossero di una supermoto e ti fai riempire un bicchiere serio che sistematicamente ti ricorda che la rata non si paga da sola.` }
     );
   } else {
     // WHAT IF dipendente dal tempo (IT ottimizzato, altre lingue usano solo baseRules)
@@ -743,12 +773,12 @@ export default async function handler(req, res){
     answer = stripQuestionEcho(domanda, answer);
 
     if (stile === "wtf") {
-      // Per il WTF non accorciamo il numero di frasi per non tagliare drink, oggetti o morale.
-      // Limitiamo solo le parole se diventa davvero troppo lungo.
+      // Per il WTF NON stringiamo a numero fisso di frasi per non tagliare drink o morale.
+      // Limitiamo solo il numero di parole e normalizziamo.
       answer = clampWords(answer, 230);
       answer = normalizeOneParagraph(answer);
     } else {
-      // WHATIF e altri stili restano più compatti e "letterari".
+      // WHATIF e altri stili più compatti/letterari.
       answer = tightenSentences(answer, 10);
       answer = clampWords(answer, 165);
       answer = normalizeOneParagraph(answer);
@@ -801,4 +831,4 @@ export default async function handler(req, res){
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error:"server_error", detail:String(err?.message||err) });
   }
-                  }
+}
