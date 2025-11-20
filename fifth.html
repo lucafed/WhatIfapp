@@ -504,7 +504,7 @@ function detectLang(text=''){
     de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
   };
   const score={}; for(const L of SUP_LANG){ score[L]=0; (bank[L]||[]).forEach(w=>{ if(t.includes(w)) score[L]++; }); }
-  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
+  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; } }
   if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
   return best;
 }
@@ -1294,10 +1294,6 @@ async function generateVideoClip(){
   requestAnimationFrame(loop);
 }
 
-if (videoBtn) {
-  videoBtn.onclick = generateVideoClip;
-                       }
-
 /* ==== Nav / lingua / share / save ==== */
 qs('#backBtn').onclick=()=> history.length > 1 ? history.back() : location.replace('index.html');
 qs('#homeBtn').onclick=()=> location.href='index.html';
@@ -1324,7 +1320,7 @@ qs('#shareBtn').onclick=async()=>{
 };
 qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
 if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
-if(videoBtn){ videoBtn.onclick = generateVideoClipViaApi; }
+if(videoBtn){ videoBtn.onclick = generateVideoClip; }
 
 /* ==== Avvio ==== */
 startFlow();
