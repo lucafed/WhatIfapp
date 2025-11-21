@@ -628,7 +628,7 @@ const typingSfx = document.getElementById('typingSfx');
 let typingTimeoutId = null;
 let typingAnswerTimer = null;
 
-/* suono breve (non più usato per la risposta principale, lo teniamo se servirà altrove) */
+/* suono breve (se serve altrove) */
 function playTypingShort(ms=2200){
   if(!typingSfx) return;
   try{
@@ -645,7 +645,7 @@ function playTypingShort(ms=2200){
   }, ms);
 }
 
-/* effetto macchina da scrivere per la risposta in pagina */
+/* effetto macchina da scrivere per la risposta in pagina (PIÙ LENTO) */
 function showAnswerWithTyping(text){
   const full = String(text || "");
   if(!answerEl) return;
@@ -661,8 +661,8 @@ function showAnswerWithTyping(text){
 
   answerEl.textContent = "";
   let idx = 0;
-  const stepChars = 2;
-  const stepMs = 35;
+  const stepChars = 1;   // più lento: 1 char per step
+  const stepMs = 50;     // 50ms per step
 
   if(typingSfx){
     try{
@@ -1132,7 +1132,7 @@ async function startFlow(){
     bottomPct.textContent = pStr;
 
     let motivazioneUsata = "";
-    let motivationMode = (style === 'wtf') ? 'wtf' : 'whatif';
+    let motivationMode = (style === 'wtf' ? 'wtf' : 'whatif');
     let motivationTextForCache = "";
     let chipsFavNum, chipsConNum, chipsAstNum;
 
@@ -1276,26 +1276,8 @@ async function generateVideoClip(){
   canvas.height = height;
   const ctx = canvas.getContext("2d");
 
-  // stream video dal canvas
-  const canvasStream = canvas.captureStream(25);
-  let stream = canvasStream;
-
-  // aggiungo audio del typing dentro al video, se supportato
-  if (typingSfx && typeof typingSfx.captureStream === "function") {
-    try{
-      const audioStream = typingSfx.captureStream();
-      const tracks = [
-        ...canvasStream.getVideoTracks(),
-        ...audioStream.getAudioTracks()
-      ];
-      if(tracks.length){
-        stream = new MediaStream(tracks);
-      }
-    }catch(e){
-      console.warn("audio captureStream failed", e);
-      stream = canvasStream;
-    }
-  }
+  // solo video (no audio dentro al file)
+  const stream = canvas.captureStream(25);
 
   const candidates = [
     "video/mp4;codecs=h264",
@@ -1339,7 +1321,29 @@ async function generateVideoClip(){
       lastVideoBlob = blob;
       lastVideoMime = mimeType;
       const url = URL.createObjectURL(blob);
-      if (videoPreview) videoPreview.src = url;
+      if (videoPreview) {
+        videoPreview.src = url;
+
+        // suono di tastiera SOLO quando parte il video
+        if (typingSfx){
+          videoPreview.onplay = ()=>{
+            try{
+              typingSfx.currentTime = 0;
+              typingSfx.loop = true;
+              typingSfx.play().catch(()=>{});
+            }catch{}
+          };
+          const stopTyping = ()=>{
+            try{
+              typingSfx.loop = false;
+              typingSfx.pause();
+              typingSfx.currentTime = 0;
+            }catch{}
+          };
+          videoPreview.onpause = stopTyping;
+          videoPreview.onended = stopTyping;
+        }
+      }
       if (videoDownload) {
         const ext = mimeType.includes("mp4") ? "mp4" : "webm";
         videoDownload.href = url;
@@ -1353,17 +1357,10 @@ async function generateVideoClip(){
     }finally{
       videoBtn.disabled = false;
       if (videoLoadingEl) videoLoadingEl.style.display = "none";
-      if (typingSfx){
-        try{
-          typingSfx.pause();
-          typingSfx.currentTime = 0;
-          typingSfx.loop = false;
-        }catch{}
-      }
     }
   };
 
-  // Effetto scrittura: risposta + motivazioni
+  // Effetto scrittura: risposta + motivazioni (riassunte)
   const fullAnswer = answerText;
   const motivationsCleanBase = motivationsRaw || (t().motFallback || "");
   let motivationText = motivationsCleanBase.replace(/<br\s*\/?>/gi," ").replace(/\s+/g," ").trim();
@@ -1373,7 +1370,7 @@ async function generateVideoClip(){
   }
 
   const answerLen = fullAnswer.length;
-  const charsPerSecond = 30;
+  const charsPerSecond = 22; // più lento di prima
   let totalDurationMs = Math.round((answerLen / charsPerSecond) * 1000);
   totalDurationMs = Math.max(12000, Math.min(totalDurationMs, 28000));
   const extraStillMs = 2000;
@@ -1381,49 +1378,43 @@ async function generateVideoClip(){
   const marginX = 60;
   const maxWidth = width - marginX * 2;
 
-  // typing audio in loop durante il video
-  if(typingTimeoutId){ clearTimeout(typingTimeoutId); typingTimeoutId=null; }
-  if(typingAnswerTimer){ clearInterval(typingAnswerTimer); typingAnswerTimer=null; }
-  if(typingSfx){
-    try{
-      typingSfx.loop = true;
-      typingSfx.currentTime = 0;
-      typingSfx.play().catch(()=>{});
-    }catch{}
-  }
-
-  // etichette localizzate per il video
+  // etichette localizzate per il video + emoji
   const VIDEO_TEXT = {
     it:{ title:"What?f",
          subWtf:"⚡ What the F — Oracolo",
          subWhif:"💡 What if — Oracolo",
-         q:"Q:", a:"A:",
-         mot:"Esito & motivazioni",
-         footer:"#whatf  ·  screenshotta o condividi" },
+         q:"❓ Q:",
+         a:"✨ A:",
+         mot:"🧠 Esito & motivazioni",
+         footer:"✨ #whatf  ·  screenshotta o condividi" },
     en:{ title:"What?f",
          subWtf:"⚡ What the F — Oracle",
          subWhif:"💡 What if — Oracle",
-         q:"Q:", a:"A:",
-         mot:"Outcome & motivations",
-         footer:"#whatf  ·  screenshot or share" },
+         q:"❓ Q:",
+         a:"✨ A:",
+         mot:"🧠 Outcome & motivations",
+         footer:"✨ #whatf  ·  screenshot or share" },
     es:{ title:"What?f",
          subWtf:"⚡ What the F — Oráculo",
          subWhif:"💡 What if — Oráculo",
-         q:"P:", a:"R:",
-         mot:"Resultado y motivaciones",
-         footer:"#whatf  ·  captura o comparte" },
+         q:"❓ P:",
+         a:"✨ R:",
+         mot:"🧠 Resultado y motivaciones",
+         footer:"✨ #whatf  ·  captura o comparte" },
     fr:{ title:"What?f",
          subWtf:"⚡ What the F — Oracle",
          subWhif:"💡 What if — Oracle",
-         q:"Q :", a:"R :",
-         mot:"Issue & motivations",
-         footer:"#whatf  ·  capture ou partage" },
+         q:"❓ Q :",
+         a:"✨ R :",
+         mot:"🧠 Issue & motivations",
+         footer:"✨ #whatf  ·  capture ou partage" },
     de:{ title:"What?f",
          subWtf:"⚡ What the F — Orakel",
          subWhif:"💡 What if — Orakel",
-         q:"F:", a:"A:",
-         mot:"Ergebnis & Begründung",
-         footer:"#whatf  ·  Screenshot oder teilen" }
+         q:"❓ F:",
+         a:"✨ A:",
+         mot:"🧠 Ergebnis & Begründung",
+         footer:"✨ #whatf  ·  Screenshot oder teilen" }
   };
   const vt = VIDEO_TEXT[lang] || VIDEO_TEXT.it;
 
@@ -1462,8 +1453,8 @@ async function generateVideoClip(){
     ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.fillText(subText, width/2, 125);
 
-    // scroll dolce verso l'alto per far vedere le motivazioni
-    const maxScroll = 120;
+    // scroll più veloce verso l'alto
+    const maxScroll = 260;
     const scrollOffset = progress * maxScroll;
     ctx.save();
     ctx.translate(0, -scrollOffset);
@@ -1507,7 +1498,8 @@ async function generateVideoClip(){
     y += 34;
 
     // risposta progressiva
-    const chars = Math.max(1, Math.floor(fullAnswer.length * Math.min(1, progress / MOT_START_PROGRESS)));
+    const progressAnswer = Math.min(1, progress / MOT_START_PROGRESS);
+    const chars = Math.max(1, Math.floor(fullAnswer.length * progressAnswer));
     const partial = fullAnswer.slice(0, chars);
 
     ctx.fillStyle = "#FFFFFF";
@@ -1536,13 +1528,13 @@ async function generateVideoClip(){
       }
     }
 
-    // footer (anche lui soggetto a leggero scroll)
+    // footer: resta leggibile, non sovrapposto
+    ctx.restore();
+    const footerExtra = Math.min(scrollOffset * 0.15, 40);
     ctx.font = "600 18px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.fillStyle = "rgba(255,255,255,.82)";
     ctx.textAlign = "center";
-    ctx.fillText(footerText, width/2, height - 70 + scrollOffset * 0.3);
-
-    ctx.restore();
+    ctx.fillText(footerText, width/2, height - 70 + footerExtra);
   }
 
   function loop(ts){
