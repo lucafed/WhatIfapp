@@ -464,7 +464,7 @@ const I18N = {
        videoBtn:"🎬 Créer la vidéo",
        videoReadyNote:"Vidéo prête : tu peux la télécharger et la mettre sur TikTok, Reels ou ailleurs.",
        videoPreparing:"Génération de la vidéo…",
-       videoError:"Impossible de générer la vidéo. Réessaie.",
+       videoError:"Impossible de générer le vidéo. Réessaie.",
        videoNoData:"Il n’y a pas encore de réponse à transformer en vidéo.",
        videoShareNotSupported:"Ton navigateur ne peut pas partager directement ce fichier. Télécharge la vidéo et publie-la sur le réseau social.",
        videoShareCancelled:"Partage annulé."
@@ -645,11 +645,12 @@ function playTypingShort(ms=2200){
   }, ms);
 }
 
-/* effetto macchina da scrivere per la risposta in pagina (PIÙ LENTO) */
+/* effetto macchina da scrivere per la risposta in pagina (PIÙ LENTO, SENZA SALTELLARE) */
 function showAnswerWithTyping(text){
   const full = String(text || "");
   if(!answerEl) return;
 
+  // reset eventuali timer/suoni precedenti
   if(typingAnswerTimer){
     clearInterval(typingAnswerTimer);
     typingAnswerTimer = null;
@@ -659,10 +660,25 @@ function showAnswerWithTyping(text){
     typingTimeoutId = null;
   }
 
+  // 1) misuro l'altezza finale, così il box non si muove
+  answerEl.style.minHeight = "";
+  const prevVisibility = answerEl.style.visibility;
+  const prevContent = answerEl.textContent;
+
+  answerEl.style.visibility = "hidden";
+  answerEl.textContent = full;
+  const rect = answerEl.getBoundingClientRect();
+  const finalHeight = rect.height || 0;
+
+  // ripristino visibilità e svuoto per l'animazione
+  answerEl.style.minHeight = finalHeight ? (finalHeight + "px") : "";
   answerEl.textContent = "";
+  answerEl.style.visibility = prevVisibility || "visible";
+
+  // 2) typing vero e proprio (solo contenuto, layout fisso)
   let idx = 0;
-  const stepChars = 1;   // più lento: 1 char per step
-  const stepMs = 50;     // 50ms per step
+  const stepChars = 1;
+  const stepMs = 50;
 
   if(typingSfx){
     try{
