@@ -1215,7 +1215,7 @@ function videoNotAvailable(msg){
   toast(text);
 }
 
-/* disegna testo a capo */
+/* disegna testo a capo (usato per DOMANDA ecc.) */
 function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
   const words = String(text || "").split(/\s+/);
   let line = "";
@@ -1237,6 +1237,24 @@ function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
   return y;
 }
 
+/* pre-calcola le righe della RISPOSTA per evitare i saltelli */
+function preWrapLines(ctx, text, maxWidth){
+  const words = String(text || "").split(/\s+/);
+  const lines = [];
+  let line = "";
+  for(const w of words){
+    const test = line ? (line + " " + w) : w;
+    if(ctx.measureText(test).width > maxWidth && line){
+      lines.push(line);
+      line = w;
+    }else{
+      line = test;
+    }
+  }
+  if(line) lines.push(line);
+  return lines;
+}
+
 /* stato ultimo video per condivisione */
 let lastVideoBlob = null;
 let lastVideoMime = null;
@@ -1245,7 +1263,6 @@ async function generateVideoClip(){
   const T = t();
   const domanda = (localStorage.getItem('domanda') || qView.textContent || '').trim();
   const answerText = (answerEl.textContent || '').trim();
-  const motivationsRaw = (motNote?.innerText || motNote?.textContent || '').trim();
 
   if (!domanda || !answerText) {
     videoNotAvailable(T.videoNoData || "Non c’è ancora una risposta da trasformare in video.");
@@ -1276,7 +1293,6 @@ async function generateVideoClip(){
   canvas.height = height;
   const ctx = canvas.getContext("2d");
 
-  // solo video (no audio dentro al file)
   const stream = canvas.captureStream(25);
 
   const candidates = [
@@ -1321,29 +1337,7 @@ async function generateVideoClip(){
       lastVideoBlob = blob;
       lastVideoMime = mimeType;
       const url = URL.createObjectURL(blob);
-      if (videoPreview) {
-        videoPreview.src = url;
-
-        // suono di tastiera SOLO quando parte il video
-        if (typingSfx){
-          videoPreview.onplay = ()=>{
-            try{
-              typingSfx.currentTime = 0;
-              typingSfx.loop = true;
-              typingSfx.play().catch(()=>{});
-            }catch{}
-          };
-          const stopTyping = ()=>{
-            try{
-              typingSfx.loop = false;
-              typingSfx.pause();
-              typingSfx.currentTime = 0;
-            }catch{}
-          };
-          videoPreview.onpause = stopTyping;
-          videoPreview.onended = stopTyping;
-        }
-      }
+      if (videoPreview) videoPreview.src = url;
       if (videoDownload) {
         const ext = mimeType.includes("mp4") ? "mp4" : "webm";
         videoDownload.href = url;
@@ -1357,78 +1351,53 @@ async function generateVideoClip(){
     }finally{
       videoBtn.disabled = false;
       if (videoLoadingEl) videoLoadingEl.style.display = "none";
+      if (typingSfx){
+        try{
+          typingSfx.pause();
+          typingSfx.currentTime = 0;
+          typingSfx.loop = false;
+        }catch{}
+      }
     }
   };
 
-  // Effetto scrittura: risposta + motivazioni (riassunte)
-  const fullAnswer = answerText;
-  const motivationsCleanBase = motivationsRaw || (t().motFallback || "");
-  let motivationText = motivationsCleanBase.replace(/<br\s*\/?>/gi," ").replace(/\s+/g," ").trim();
-  const MAX_MOT_CHARS = 420;
-  if(motivationText.length > MAX_MOT_CHARS){
-    motivationText = motivationText.slice(0, MAX_MOT_CHARS).trim() + "…";
-  }
-
-  const answerLen = fullAnswer.length;
-  const charsPerSecond = 22; // più lento di prima
-  let totalDurationMs = Math.round((answerLen / charsPerSecond) * 1000);
-  totalDurationMs = Math.max(12000, Math.min(totalDurationMs, 28000));
-  const extraStillMs = 2000;
-  const start = performance.now();
+  // LAYOUT comune
   const marginX = 60;
   const maxWidth = width - marginX * 2;
 
-  // etichette localizzate per il video + emoji
-  const VIDEO_TEXT = {
-    it:{ title:"What?f",
-         subWtf:"⚡ What the F — Oracolo",
-         subWhif:"💡 What if — Oracolo",
-         q:"❓ Q:",
-         a:"✨ A:",
-         mot:"🧠 Esito & motivazioni",
-         footer:"✨ #whatf  ·  screenshotta o condividi" },
-    en:{ title:"What?f",
-         subWtf:"⚡ What the F — Oracle",
-         subWhif:"💡 What if — Oracle",
-         q:"❓ Q:",
-         a:"✨ A:",
-         mot:"🧠 Outcome & motivations",
-         footer:"✨ #whatf  ·  screenshot or share" },
-    es:{ title:"What?f",
-         subWtf:"⚡ What the F — Oráculo",
-         subWhif:"💡 What if — Oráculo",
-         q:"❓ P:",
-         a:"✨ R:",
-         mot:"🧠 Resultado y motivaciones",
-         footer:"✨ #whatf  ·  captura o comparte" },
-    fr:{ title:"What?f",
-         subWtf:"⚡ What the F — Oracle",
-         subWhif:"💡 What if — Oracle",
-         q:"❓ Q :",
-         a:"✨ R :",
-         mot:"🧠 Issue & motivations",
-         footer:"✨ #whatf  ·  capture ou partage" },
-    de:{ title:"What?f",
-         subWtf:"⚡ What the F — Orakel",
-         subWhif:"💡 What if — Orakel",
-         q:"❓ F:",
-         a:"✨ A:",
-         mot:"🧠 Ergebnis & Begründung",
-         footer:"✨ #whatf  ·  Screenshot oder teilen" }
-  };
-  const vt = VIDEO_TEXT[lang] || VIDEO_TEXT.it;
+  // risposta: pre-wrapping UNA SOLA VOLTA → niente saltelli
+  const fullAnswer = answerText;
+  const answerFont = "30px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+  ctx.font = answerFont;
+  const answerLines = preWrapLines(ctx, fullAnswer, maxWidth);
+  let totalChars = answerLines.reduce((sum, line) => sum + line.length, 0);
+  if (!totalChars) totalChars = fullAnswer.length || 1;
 
-  const LABEL_Q = vt.q;
-  const LABEL_A = vt.a;
-  const LABEL_M = vt.mot;
-  const titleText = vt.title;
-  const subText = style==='wtf' ? vt.subWtf : vt.subWhif;
-  const footerText = vt.footer;
+  // velocità più lenta e fluida
+  const answerLen = totalChars;
+  const charsPerSecond = 24; // un po’ più lento
+  let totalDurationMs = Math.round((answerLen / charsPerSecond) * 1000);
+  totalDurationMs = Math.max(13000, Math.min(totalDurationMs, 28000)); // min 13s
+  const extraStillMs = 2000;
+  const start = performance.now();
 
-  const MOT_START_PROGRESS = 0.55; // da qui partono le motivazioni
+  // typing audio SOLO dentro il video
+  if(typingTimeoutId){ clearTimeout(typingTimeoutId); typingTimeoutId=null; }
+  if(typingSfx){
+    try{
+      typingSfx.loop = true;
+      typingSfx.currentTime = 0;
+      typingSfx.play().catch(()=>{});
+    }catch{}
+  }
+
+  const LABEL_Q = {it:"Q:",en:"Q:",es:"P:",fr:"Q :",de:"F:"}[lang] || "Q:";
+  const LABEL_A = {it:"A:",en:"A:",es:"R:",fr:"R :",de:"A:"}[lang] || "A:";
+  const titleText = "What?f";
+  const subText = style==='wtf' ? "⚡ What the F — Oracolo" : "💡 What if — Oracolo";
 
   function drawFrame(progress){
-    // sfondo fisso
+    // sfondo
     const grad = ctx.createLinearGradient(0,0,0,height);
     grad.addColorStop(0,"#04070b");
     grad.addColorStop(0.5, style==='wtf' ? "#122018" : "#101822");
@@ -1436,14 +1405,13 @@ async function generateVideoClip(){
     ctx.fillStyle = grad;
     ctx.fillRect(0,0,width,height);
 
-    // alone centrale
     const radial = ctx.createRadialGradient(width/2, height*0.42, 80, width/2, height*0.42, 420);
     radial.addColorStop(0,"rgba(255,236,1,.35)");
     radial.addColorStop(1,"rgba(0,0,0,0)");
     ctx.fillStyle = radial;
     ctx.fillRect(0,0,width,height);
 
-    // titolo e sottotitolo fissi
+    // header
     ctx.textAlign = "center";
     ctx.fillStyle = "#FFFFFF";
     ctx.font = "bold 44px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
@@ -1452,12 +1420,6 @@ async function generateVideoClip(){
     ctx.fillStyle = "#FFEC01";
     ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.fillText(subText, width/2, 125);
-
-    // scroll più veloce verso l'alto
-    const maxScroll = 260;
-    const scrollOffset = progress * maxScroll;
-    ctx.save();
-    ctx.translate(0, -scrollOffset);
 
     // card domanda
     const cardX = 40;
@@ -1479,62 +1441,51 @@ async function generateVideoClip(){
     ctx.stroke();
     ctx.restore();
 
-    // testo domanda
+    // testo domanda nella card
     ctx.textAlign = "left";
     ctx.fillStyle = "#FFEC01";
     ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.fillText(LABEL_Q, cardX + 26, cardY + 54);
 
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 32px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.font = "bold 34px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     let y = cardY + 96;
-    y = wrapAndDraw(ctx, domanda, cardX + 26, y, cardW - 52, 38);
+    y = wrapAndDraw(ctx, domanda, cardX + 26, y, cardW - 52, 40);
 
     // label A
     y = cardY + cardH + 40;
     ctx.fillStyle = "#FFEC01";
     ctx.font = "600 24px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.fillText(LABEL_A, marginX, y);
-    y += 34;
+    y += 38;
 
-    // risposta progressiva
-    const progressAnswer = Math.min(1, progress / MOT_START_PROGRESS);
-    const chars = Math.max(1, Math.floor(fullAnswer.length * progressAnswer));
-    const partial = fullAnswer.slice(0, chars);
-
+    // risposta: linee già calcolate → niente saltelli
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "28px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    const afterAnswerY = wrapAndDraw(ctx, partial, marginX, y, maxWidth, 36);
+    ctx.font = answerFont;
 
-    // motivazioni nella seconda parte
-    if (motivationText) {
-      let motProgress = 0;
-      if (progress > MOT_START_PROGRESS) {
-        motProgress = (progress - MOT_START_PROGRESS) / (1 - MOT_START_PROGRESS);
-        if (motProgress > 1) motProgress = 1;
+    let visible = Math.floor(totalChars * progress);
+    let yAns = y;
+    for(let i=0; i<answerLines.length; i++){
+      if (visible <= 0) break;
+      const line = answerLines[i];
+      const len = line.length;
+      let toDraw;
+      if (visible >= len) {
+        toDraw = line;
+        visible -= len;
+      } else {
+        toDraw = line.slice(0, visible);
+        visible = 0;
       }
-      if (motProgress > 0) {
-        let my = afterAnswerY + 30;
-        ctx.fillStyle = "#FFEC01";
-        ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-        ctx.fillText(LABEL_M, marginX, my);
-        my += 30;
-
-        const motChars = Math.max(1, Math.floor(motivationText.length * motProgress));
-        const motPartial = motivationText.slice(0, motChars);
-        ctx.fillStyle = "#FFFFFF";
-        ctx.font = "20px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-        wrapAndDraw(ctx, motPartial, marginX, my, maxWidth, 28);
-      }
+      ctx.fillText(toDraw, marginX, yAns);
+      yAns += 38;
     }
 
-    // footer: resta leggibile, non sovrapposto
-    ctx.restore();
-    const footerExtra = Math.min(scrollOffset * 0.15, 40);
+    // footer hashtag
     ctx.font = "600 18px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.fillStyle = "rgba(255,255,255,.82)";
     ctx.textAlign = "center";
-    ctx.fillText(footerText, width/2, height - 70 + footerExtra);
+    ctx.fillText("#whatf  ·  screenshotta o condividi ✨", width/2, height - 70);
   }
 
   function loop(ts){
