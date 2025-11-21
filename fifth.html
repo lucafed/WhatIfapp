@@ -1,192 +1,120 @@
-<!-- FILE: fifth.html (risultato, SOLO LETTURA crediti da Firestore) -->
 <!DOCTYPE html>
-<html lang="it" data-theme="whatif">
+<html lang="it">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Risultato</title>
-<meta name="theme-color" content="#0B0B0C"/>
-<style>
-:root{
-  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
-  --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;
-  --line: rgba(255,255,255,.12);
-  --panel: rgba(20,28,34,.92);
-  --glow: rgba(255,236,1,.22);
-}
-html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
-*{box-sizing:border-box}
-html,body{
-  margin:0;
-  background:
-    radial-gradient(900px 700px at 20% 18%, var(--bg2) 0%, var(--bg) 60%),
-    radial-gradient(600px 480px at 80% 12%, rgba(255,236,1,.06), transparent 60%),
-    radial-gradient(700px 560px at 50% 90%, rgba(28,87,160,.10), transparent 65%);
-  color:var(--fg);
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  -webkit-font-smoothing:antialiased;
-}
-main{max-width:860px;margin:auto;padding:22px}
-h1{
-  font-size:clamp(22px,5vw,30px);
-  color:var(--acc2);
-  text-align:center;
-  margin:12px 0 6px;
-  text-shadow: 0 0 18px var(--glow);
-}
-.sub{color:var(--muted);text-align:center;margin:0 0 8px}
-.card{
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:18px;
-  backdrop-filter:blur(10px);
-  margin-top:16px;
-  box-shadow: 0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
-}
-.label{color:var(--acc);font-weight:800;margin-bottom:8px}
-.input{
-  background:rgba(255,255,255,.06);
-  border:1px solid var(--line);
-  border-radius:12px;
-  padding:10px;
-}
-.story{
-  white-space:normal;
-  line-height:1.68;
-  font-size:18px;
-  letter-spacing:.1px;
-  text-wrap:pretty;
-}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
-.btn.primary{
-  background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink);
-  box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 28px var(--glow);
-}
-.btn.ghost{
-  background:rgba(255,255,255,.06);
-  border:1px solid var(--line);
-  color:#fff
-}
-.small{font-size:12px;color:#A0B2BA}
-.hr{height:1px;background:rgba(255,255,255,.10);margin:12px 0}
-.badge{
-  display:inline-flex;align-items:center;gap:8px;
-  font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);
-  border:1px solid var(--line);border-radius:999px;padding:6px 10px;
-}
-.fade-in{animation:fade .35s ease-out both}
-@keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
-.embit{padding:0 .08em;box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset;text-shadow:0 0 12px rgba(255,255,255,.08);border-radius:4px}
-.select{background:rgba(255,255,255,.06);border:1px solid var(--line);color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
-
-/* === PERCENT === */
-.pct-row{display:flex;align-items:center;gap:10px;margin:2px 0 8px}
-.pct-label{font-size:13px;color:var(--muted)}
-.top-pct{
-  display:inline-flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:16px;
-  min-width:64px;
-  padding:5px 10px;
-  background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink);border-radius:12px;
-  box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
-}
-
-/* === RESULT BOX === */
-.result-box{
-  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:16px 14px;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 22px rgba(0,0,0,.28);
-}
-.result-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
-.result-pct{
-  display:inline-flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:16px;min-width:64px;padding:5px 10px;border-radius:12px;
-  background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);
-  box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
-}
-.result-title{font-weight:900;font-size:15px;letter-spacing:.2px}
-
-/* === MOTIVO / NOTE === */
-.mot{display:grid;grid-template-columns:auto 1fr;gap:10px;margin-top:10px}
-.mot .ico{font-size:18px;line-height:1.2}
-.mot .name{display:none}
-.mot .note{font-size:15px;line-height:1.6;color:var(--fg);opacity:.92}
-
-/* Chips (usate solo per 'surprise') */
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;opacity:.9}
-.chip{font-size:11px;font-weight:900;padding:3px 7px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)}
-
-/* === INTRO (Zoltar-like) === */
-.intro-box{
-  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04));
-  border:1px dashed rgba(255,255,255,.18);
-  border-radius:14px;
-  padding:12px 14px;
-  margin:8px 0 10px;
-  font-size:14.5px; line-height:1.55; color:#E7F2EE;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
-}
-
-/* === VIDEO SECTION === */
-#videoBox{
-  margin-top:10px;
-}
-#videoPreview{
-  width:100%;
-  max-height:420px;
-  border-radius:16px;
-  display:block;
-}
-#videoLoading{
-  font-size:12px;
-  color:var(--muted);
-}
-#videoWrap{
-  margin-top:10px;
-}
-#videoDownload{
-  text-decoration:none;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-}
-
-/* Mobile */
-@media (max-width:420px){
-  .result-pct,.top-pct{font-size:15px;min-width:56px;padding:4px 8px}
-  .result-title{font-size:14px}
-  .mot .note{font-size:15.5px;line-height:1.65}
-}
-
-/* === Overlay (store/rewarded) === */
-#overlay{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);z-index:9999}
-#overlay-frame{width:100%;max-width:520px;height:78vh;border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(20,28,34,.95);border:1px solid var(--line);padding:10px 14px;border-radius:12px;font-weight:700;z-index:10000;opacity:0;transition:opacity .2s,transform .2s}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
-
-/* === ORACLE LOADING + REVEAL === */
-.oracle-wrap{position:relative;min-height:28px;margin:4px 0 8px}
-.oracle-line{font-size:14px;opacity:.86;color:#E7F2EE;transition:opacity .25s ease}
-.orb{
-  position:absolute; left:-10px; top:-8px; width:26px; height:26px;
-  border-radius:50%;
-  background:radial-gradient(circle at 30% 30%, rgba(255,236,1,.7), rgba(255,255,1,.0) 60%);
-  filter:blur(6px); opacity:.0; transform:scale(.7); pointer-events:none;
-  transition:opacity .35s ease, transform .35s ease;
-}
-.reveal .orb{opacity:.8; transform:scale(1)}
-.reveal #answer{animation:fade .45s ease-out both}
-@keyframes shimmer{0%{opacity:.45}50%{opacity:.95}100%{opacity:.45}}
-.loading .oracle-line{animation:shimmer 1.8s ease-in-out infinite}
-</style>
-
+  <meta charset="UTF-8">
+  <title>What?f — Risultato</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root{
+      --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
+      --acc:#1C57A0; --acc2:#FFEC01;
+      --line:rgba(255,255,255,.12);
+      --panel:rgba(20,28,34,.92);
+      --glow:rgba(255,236,1,.22);
+    }
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;
+      background:
+        radial-gradient(900px 700px at 20% 18%, var(--bg2) 0%, var(--bg) 60%),
+        radial-gradient(600px 480px at 80% 12%, rgba(255,236,1,.06), transparent 60%),
+        radial-gradient(700px 560px at 50% 90%, rgba(28,87,160,.10), transparent 65%);
+      color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;
+    }
+    main{max-width:860px;margin:auto;padding:18px}
+    h1{
+      font-size:clamp(22px,5vw,30px);
+      color:var(--acc2);
+      text-align:center;
+      margin:8px 0 4px;
+      text-shadow:0 0 18px var(--glow);
+    }
+    .sub{text-align:center;color:var(--muted);margin:0 0 10px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap}
+    .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .pill{
+      padding:8px 12px;border-radius:14px;border:1px solid var(--line);
+      background:rgba(0,0,0,.5);color:#fff;font-size:14px
+    }
+    .card{
+      background:var(--panel);
+      border-radius:16px;
+      border:1px solid var(--line);
+      padding:16px;
+      margin-top:12px;
+      box-shadow:0 8px 25px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.05);
+    }
+    .label{color:var(--acc);font-weight:800;margin-bottom:6px}
+    .input{
+      background:rgba(255,255,255,.04);
+      border-radius:12px;
+      border:1px solid var(--line);
+      padding:10px;
+      min-height:38px;
+    }
+    .story{
+      line-height:1.68;
+      font-size:18px;
+    }
+    .btn{
+      border:none;border-radius:12px;padding:9px 13px;font-weight:800;
+      cursor:pointer;font-size:14px
+    }
+    .btn.primary{
+      background:linear-gradient(180deg,var(--acc),var(--acc2));
+      color:#05070b;
+      box-shadow:0 6px 18px rgba(0,0,0,.35),0 0 28px var(--glow);
+    }
+    .btn.ghost{
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line);
+      color:#fff;
+    }
+    .select{
+      background:rgba(255,255,255,.06);
+      border-radius:12px;
+      border:1px solid var(--line);
+      padding:8px 12px;
+      color:#fff;
+      font-weight:700;
+    }
+    .pct-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+    .pct-label{font-size:13px;color:var(--muted)}
+    .pct-chip{
+      min-width:60px;padding:4px 10px;border-radius:12px;
+      background:linear-gradient(180deg,var(--acc),var(--acc2));
+      color:#05070b;font-weight:900;font-size:16px;
+      text-align:center;
+      box-shadow:0 6px 16px rgba(0,0,0,.28),0 0 18px rgba(255,255,1,.18);
+    }
+    .hr{height:1px;background:rgba(255,255,255,.1);margin:10px 0}
+    .result-box{
+      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.03));
+      border-radius:16px;
+      border:1px solid var(--line);
+      padding:14px;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .result-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+    .result-title{font-weight:900;font-size:15px}
+    .mot-note{font-size:15px;line-height:1.6}
+    .small{font-size:12px;color:var(--muted)}
+    #videoPreview{width:100%;max-height:420px;border-radius:16px;margin-top:8px;background:#000}
+    .toast{
+      position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
+      background:rgba(20,28,34,.95);border:1px solid var(--line);
+      padding:8px 12px;border-radius:12px;font-size:13px;font-weight:700;
+      opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+      z-index:9999;
+    }
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+    @media(max-width:480px){
+      .story{font-size:17px}
+      .mot-note{font-size:15.5px}
+    }
+  </style>
 </head>
 <body>
 <main>
@@ -195,10 +123,9 @@ h1{
       <button class="btn ghost" id="backBtn">←</button>
       <button class="btn ghost" id="homeBtn">🏠</button>
     </div>
-    <div class="row" style="gap:8px">
-      <span class="badge" id="styleBadge">🎭 —</span>
-      <span class="badge" id="proBadge" title="" style="display:none">🧪 TEST · ⭐ PRO</span>
-      <select id="langSelect" class="select" aria-label="Language">
+    <div class="row">
+      <div class="pill" id="styleBadge">🎭 —</div>
+      <select id="langSelect" class="select">
         <option value="it">IT · Italiano</option>
         <option value="en">EN · English</option>
         <option value="es">ES · Español</option>
@@ -213,1375 +140,669 @@ h1{
 
   <div class="card">
     <div class="label" id="lblQ">La tua domanda</div>
-    <div class="input" id="qView" style="min-height:46px"></div>
+    <div class="input" id="qView"></div>
   </div>
 
   <div class="card">
     <div class="label" id="lblA">Risposta</div>
 
     <div class="pct-row">
-      <span class="pct-label" id="pctLabel">% probabilità che accada</span>
-      <div id="topPct" class="top-pct" aria-live="polite">—</div>
+      <span class="pct-label" id="pctLabelTop">% probabilità che accada</span>
+      <div class="pct-chip" id="topPct">—</div>
     </div>
 
-    <!-- INTRO (solo prima volta per stile) -->
-    <div id="introBox" class="intro-box" style="display:none"></div>
-
-    <!-- SOLO Oracle (niente frasetta lead) -->
-    <div class="oracle-wrap">
-      <div class="orb" aria-hidden="true"></div>
-      <div id="oracleLine" class="oracle-line">—</div>
-    </div>
-    <div id="answer" class="story">⏳ …</div>
+    <p class="small" id="oracleLine">⏳ …</p>
+    <div class="story" id="answer">—</div>
 
     <div class="hr"></div>
-    <div class="label" id="lblP">Esito & motivazioni</div>
 
-    <div class="result-box" id="resultBox">
+    <div class="label" id="lblP">Esito & motivazioni</div>
+    <div class="result-box">
       <div class="result-head">
         <span class="pct-label" id="pctLabelBottom">% probabilità che accada</span>
-        <div id="bottomPct" class="result-pct">—</div>
-        <span class="result-title" id="committeeTitle">—</span>
+        <div class="pct-chip" id="bottomPct">—</div>
+        <span class="result-title" id="motTitle">Motivazioni</span>
       </div>
-
-      <div class="mot" id="motOne">
-        <div class="ico" id="motIco" aria-hidden="true">—</div>
-        <div>
-          <div class="name" id="motName">—</div>
-          <div class="chips" id="chipsWrap">
-            <span class="chip" id="chipFav">—</span>
-            <span class="chip" id="chipCon">—</span>
-            <span class="chip" id="chipAst">—</span>
-          </div>
-          <div class="note" id="motNote">—</div>
-        </div>
-      </div>
+      <div class="mot-note" id="motNote">—</div>
     </div>
 
-    <!-- SEZIONE VIDEO CONDIVISIBILE -->
     <div class="hr"></div>
+
     <div class="label" id="lblVideo">Video condivisibile</div>
-    <div class="result-box" id="videoBox">
+    <div class="result-box">
       <p class="small" id="videoHelp">
         Crea un breve video con domanda, risposta e motivazioni, pronto da condividere sui social.
       </p>
-      <div class="row" style="margin-top:6px;">
-        <button class="btn ghost" id="videoBtn">🎬 Crea video</button>
-        <span class="small" id="videoLoading" style="display:none;">Generazione video in corso…</span>
-      </div>
-      <div id="videoWrap" style="display:none;">
-        <video id="videoPreview" controls playsinline></video>
-        <div class="row" style="margin-top:8px;justify-content:space-between;">
-          <a id="videoDownload" class="btn primary" download="whatf-video.mp4">⬇️ Scarica / Condividi</a>
-          <span class="small" id="videoNote"></span>
-        </div>
+      <button class="btn ghost" id="videoBtn">🎬 Crea video</button>
+      <p class="small" id="videoLoading" style="display:none;margin-top:6px">Generazione video…</p>
+      <video id="videoPreview" controls playsinline style="display:none"></video>
+      <div class="row" style="margin-top:8px;justify-content:space-between;">
+        <a class="btn primary" id="videoDownload" href="#" download="whatf-video.mp4" style="display:none">
+          ⬇️ Scarica / Condividi
+        </a>
+        <span class="small" id="videoNote"></span>
       </div>
     </div>
 
     <div class="hr"></div>
     <div class="row">
       <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
-      <button class="btn ghost" id="saveBtn">⭐ Salva</button>
       <button class="btn ghost" id="againBtn">🔁 Fai un’altra domanda</button>
     </div>
-    <p class="small" id="metaInfo"></p>
-
   </div>
 </main>
 
-<div id="overlay" aria-hidden="true">
-  <iframe id="overlay-frame" src="about:blank" title="modal"></iframe>
-</div>
-<p class="small" id="creditInfo" style="text-align:center;margin:10px 0 24px"></p>
 <div class="toast" id="toast"></div>
 
-<!-- 🔔 audio reveal -->
-<audio id="revealDing" preload="auto">
-  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAA" type="audio/mpeg">
-</audio>
-<!-- 🎵 SFX evocativo (what if) -->
-<audio id="sfxWhatIf" preload="auto">
-  <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAABAAAA" type="audio/mpeg">
-</audio>
-<!-- 🥂 Clink (what the f) -->
-<audio id="sfxWtf" preload="auto">
-  <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
-</audio>
-<!-- ⌨️ Suono tastiera (testo + video) -->
+<!-- audio tastiera -->
 <audio id="typingSfx" preload="auto">
   <source src="./audio/typing.mp3" type="audio/mpeg">
 </audio>
 
-<script type="module">
-/* ==== Firebase Auth + Firestore credits (solo lettura) ==== */
-import { auth } from "./firebase.init.js";
-import {
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-
-import {
-  bootCredits,
-  getBalance
-} from "./store/credits.js";
-
-/* ==== Base & prefs ==== */
-const LS = localStorage;
-const prefs = JSON.parse(LS.getItem('whatif_prefs') || '{}');
-const style = prefs.stile || 'whatif';
-const periodo = prefs.periodo || 'future';
-const IS_ADMIN = !!LS.getItem('admin_token');
-document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
-
-/* ==== I18N ==== */
+<script>
+/* ========= I18N ========= */
 const I18N = {
-  it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
-       sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
-       p:"Esito & motivazioni", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
-       save:"⭐ Salva", savedOk:"✅ Salvata",
-       copied:"Copiato!", error:"[errore server]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Stile: What the F · 6–9 frasi · paragrafo unico · tono asciutto · modalità: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if (60% analisi, 40% immagini sobrie) · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`,
-       pctLabel:"% probabilità che accada",
-       votersTitle:"Comitato", seriousTitle:"Motivazioni",
-       scientificTitle:"Motivazione (scientifica)",
-       chipsFav:"favorevoli", chipsCon:"contrari", chipsAst:"astenuti",
-       motFallback:"Motivo: benefici concreti a breve, con vincoli gestibili.",
-       credits:(n)=>`💰 Crediti: ${n}`, noCredits:"Hai terminato i crediti.",
-       storeTitle:"Crediti", buy5:"Compra +5 crediti (test)", buy10:"Compra +10 crediti (test)", buy20:"Compra +20 crediti (test)",
-       watchAd:"Guarda pubblicità (+1)", close:"Chiudi",
-       comingSoon:"Prossimamente", buySoonNote:"Acquisto crediti non ancora disponibile.",
-       toastPlus:(n)=>`+${n} credito`, toastMinus:(n)=>`-${n} credito`,
-       guideTitle:"Indicazioni",
-       guideQuick:"Indicazioni rapide",
-       guideAdvice:"Consiglio",
-       guideAnalysis:"Analisi sintetica",
-       /* VIDEO */
-       videoTitle:"Video condivisibile",
-       videoHelp:"Crea un breve video con domanda, risposta e motivazioni, pronto da condividere sui social.",
-       videoBtn:"🎬 Crea video",
-       videoReadyNote:"Video pronto: puoi scaricarlo o condividerlo su TikTok, Reels o dove vuoi.",
-       videoPreparing:"Generazione video in corso…",
-       videoError:"Impossibile generare il video. Riprova.",
-       videoNoData:"Non c’è ancora una risposta da trasformare in video.",
-       videoLabelQuestion:"DOMANDA",
-       videoLabelAnswer:"RISPOSTA",
-       videoLabelMotiv:"MOTIVAZIONI"
+  it:{
+    titleWTF:"⚡ What the F — Risultato",
+    titleWHF:"💡 What if — Risultato",
+    sub:q=>`Domanda: “${q}”`,
+    q:"La tua domanda",
+    a:"Risposta",
+    p:"Esito & motivazioni",
+    pct:"% probabilità che accada",
+    motTitle:"Motivazioni",
+    copied:"Copiato!",
+    share:"📤 Condividi / Copia",
+    again:"🔁 Fai un’altra domanda",
+    styleWTF:"🎭 What the F",
+    styleWHF:"🎭 What if",
+    videoTitle:"Video condivisibile",
+    videoHelp:"Crea un breve video con domanda, risposta e motivazioni, pronto da condividere sui social.",
+    videoBtn:"🎬 Crea video",
+    videoPreparing:"Generazione video…",
+    videoReady:"Video pronto: scaricalo o condividilo su TikTok, Reels, ecc.",
+    videoNoData:"Non c’è ancora una risposta da trasformare in video.",
+    videoError:"Impossibile generare il video.",
+    videoLabelQ:"DOMANDA",
+    videoLabelA:"RISPOSTA & MOTIVAZIONI"
   },
-  en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
-       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-       p:"Outcome & motivations", share:"📤 Share / Copy", again:"🔁 Ask another",
-       save:"⭐ Save", savedOk:"✅ Saved",
-       copied:"Copied!", error:"[server error]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Style: What the F · 6–9 sentences · single paragraph · dry tone · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if (60% analysis, 40% images) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,
-       pctLabel:"% probability it happens",
-       votersTitle:"Committee", seriousTitle:"Motivations", scientificTitle:"Rationale (scientific)",
-       chipsFav:"in favour", chipsCon:"against", chipsAst:"abstained",
-       motFallback:"Reason: short-term, concrete benefits with manageable constraints.",
-       credits:(n)=>`💰 Credits: ${n}`, noCredits:"You ran out of credits.",
-       storeTitle:"Credits", buy5:"Buy +5 credits (test)", buy10:"Buy +10 credits (test)", buy20:"Buy +20 credits (test)",
-       watchAd:"Watch ad (+1)", close:"Close",
-       comingSoon:"Coming soon", buySoonNote:"Credit purchases not available yet.",
-       toastPlus:(n)=>`+${n} credit`,  toastMinus:(n)=>`-${n} credit`,
-       guideTitle:"Guidance",
-       guideQuick:"Quick tips",
-       guideAdvice:"Advice",
-       guideAnalysis:"Concise analysis",
-       /* VIDEO */
-       videoTitle:"Shareable video",
-       videoHelp:"Create a short video with your question, answer and motivations, ready to share on social media.",
-       videoBtn:"🎬 Create video",
-       videoReadyNote:"Video ready: you can download it or share it on TikTok, Reels or anywhere you like.",
-       videoPreparing:"Generating video…",
-       videoError:"Could not generate the video. Please try again.",
-       videoNoData:"There is no answer yet to turn into a video.",
-       videoLabelQuestion:"QUESTION",
-       videoLabelAnswer:"ANSWER",
-       videoLabelMotiv:"MOTIVATIONS"
+  en:{
+    titleWTF:"⚡ What the F — Result",
+    titleWHF:"💡 What if — Result",
+    sub:q=>`Question: “${q}”`,
+    q:"Your question",
+    a:"Answer",
+    p:"Outcome & motivations",
+    pct:"% probability",
+    motTitle:"Motivations",
+    copied:"Copied!",
+    share:"📤 Share / Copy",
+    again:"🔁 Ask another",
+    styleWTF:"🎭 What the F",
+    styleWHF:"🎭 What if",
+    videoTitle:"Shareable video",
+    videoHelp:"Create a short video with question, answer and motivations, ready for social media.",
+    videoBtn:"🎬 Create video",
+    videoPreparing:"Generating video…",
+    videoReady:"Video ready: download or share it.",
+    videoNoData:"No answer yet to turn into a video.",
+    videoError:"Could not generate video.",
+    videoLabelQ:"QUESTION",
+    videoLabelA:"ANSWER & MOTIVATIONS"
   },
-  es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
-       sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
-       p:"Resultado y motivaciones", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra",
-       save:"⭐ Guardar", savedOk:"✅ Guardada",
-       copied:"¡Copiado!", error:"[error del servidor]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Estilo: What the F · 6–9 frases · un párrafo · tono seco · modo: ${p==='past'?'Pasado':'Futuro'}.`
-        : `Estilo: What if (60% análisis, 40% imágenes) · 8–11 frases · un párrafo · modo: ${p==='past'?'Pasado':'Futuro'}.`,
-       pctLabel:"% probabilidad de que ocurra",
-       votersTitle:"Comité", seriousTitle:"Motivaciones", scientificTitle:"Motivo (científico)",
-       chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones",
-       motFallback:"Motivo: beneficios concretos a corto plazo con límites manejables.",
-       credits:(n)=>`💰 Créditos : ${n}`, noCredits:"Se te han acabado los créditos.",
-       storeTitle:"Créditos", buy5:"Comprar +5 créditos (test)", buy10:"Comprar +10 créditos (test)", buy20:"Comprar +20 créditos (test)",
-       watchAd:"Ver anuncio (+1)", close:"Cerrar",
-       comingSoon:"Próximamente", buySoonNote:"La compra de créditos aún no está disponible.",
-       toastPlus:(n)=>`+${n} crédito`,  toastMinus:(n)=>`-${n} crédito`,
-       guideTitle:"Guía",
-       guideQuick:"Indicaciones rápidas",
-       guideAdvice:"Consejo",
-       guideAnalysis:"Análisis sintético",
-       /* VIDEO */
-       videoTitle:"Vídeo compartible",
-       videoHelp:"Crea un vídeo corto con tu pregunta, respuesta y motivaciones, listo para compartir en redes.",
-       videoBtn:"🎬 Crear vídeo",
-       videoReadyNote:"Vídeo listo: puedes descargarlo o compartirlo en TikTok, Reels o donde quieras.",
-       videoPreparing:"Generando vídeo…",
-       videoError:"No se ha podido generar el vídeo. Inténtalo de nuevo.",
-       videoNoData:"Todavía no hay una respuesta para convertir en vídeo.",
-       videoLabelQuestion:"PREGUNTA",
-       videoLabelAnswer:"RESPUESTA",
-       videoLabelMotiv:"MOTIVACIONES"
+  es:{
+    titleWTF:"⚡ What the F — Resultado",
+    titleWHF:"💡 What if — Resultado",
+    sub:q=>`Pregunta: “${q}”`,
+    q:"Tu pregunta", a:"Respuesta",
+    p:"Resultado y motivaciones",
+    pct:"% probabilidad",
+    motTitle:"Motivaciones",
+    copied:"¡Copiado!",
+    share:"📤 Compartir / Copiar",
+    again:"🔁 Hacer otra",
+    styleWTF:"🎭 What the F",
+    styleWHF:"🎭 What if",
+    videoTitle:"Vídeo compartible",
+    videoHelp:"Crea un vídeo corto con pregunta, respuesta y motivaciones, listo para redes.",
+    videoBtn:"🎬 Crear vídeo",
+    videoPreparing:"Generando vídeo…",
+    videoReady:"Vídeo listo: descárgalo o compártelo.",
+    videoNoData:"Todavía no hay respuesta para convertir en vídeo.",
+    videoError:"No se ha podido generar el vídeo.",
+    videoLabelQ:"PREGUNTA",
+    videoLabelA:"RESPUESTA Y MOTIVACIONES"
   },
-  fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
-       sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
-       p:"Issue & motivations", share:"📤 Partager / Copier", again:"🔁 Poser une autre",
-       save:"⭐ Enregistrer", savedOk:"✅ Enregistrée",
-       copied:"Copié !", error:"[erreur serveur]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Style : What the F · 6–9 phrases · un paragraphe · ton sec · mode : ${p==='past'?'Passé':'Futur'}.`
-        : `Style : What if (60 % analyse, 40 % images) · 8–11 phrases · un paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`,
-       pctLabel:"% de probabilité que ça arrive",
-       votersTitle:"Comité", seriousTitle:"Motivations", scientificTitle:"Motivation (scientifique)",
-       chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions",
-       motFallback:"Raison : bénéfices concrets à court terme, contraintes gérables.",
-       credits:(n)=>`💰 Crédits : ${n}`, noCredits:"Crédits épuisés.",
-       storeTitle:"Crédits", buy5:"Acheter +5 crédits (test)", buy10:"Acheter +10 crédits (test)", buy20:"Acheter +20 crédits (test)",
-       watchAd:"Regarder une pub (+1)", close:"Fermer",
-       comingSoon:"Bientôt", buySoonNote:"Achat de crédits pas encore disponible.",
-       toastPlus:(n)=>`+${n} crédit`,  toastMinus:(n)=>`-${n} crédit`,
-       guideTitle:"Conseils",
-       guideQuick:"Conseils rapides",
-       guideAdvice:"Suggestion",
-       guideAnalysis:"Analyse concise",
-       /* VIDEO */
-       videoTitle:"Vidéo partageable",
-       videoHelp:"Crée une courte vidéo avec ta question, ta réponse et les motivations, prête à être partagée sur les réseaux.",
-       videoBtn:"🎬 Créer la vidéo",
-       videoReadyNote:"Vidéo prête : tu peux la télécharger ou la partager sur TikTok, Reels ou ailleurs.",
-       videoPreparing:"Génération de la vidéo…",
-       videoError:"Impossible de générer la vidéo. Réessaie.",
-       videoNoData:"Il n’y a pas encore de réponse à transformer en vidéo.",
-       videoLabelQuestion:"QUESTION",
-       videoLabelAnswer:"RÉPONSE",
-       videoLabelMotiv:"MOTIVATIONS"
+  fr:{
+    titleWTF:"⚡ What the F — Résultat",
+    titleWHF:"💡 What if — Résultat",
+    sub:q=>`Question : « ${q} »`,
+    q:"Ta question", a:"Réponse",
+    p:"Issue & motivations",
+    pct:"% de probabilité",
+    motTitle:"Motivations",
+    copied:"Copié !",
+    share:"📤 Partager / Copier",
+    again:"🔁 Poser une autre",
+    styleWTF:"🎭 What the F",
+    styleWHF:"🎭 What if",
+    videoTitle:"Vidéo partageable",
+    videoHelp:"Crée une courte vidéo avec question, réponse et motivations, prête pour les réseaux.",
+    videoBtn:"🎬 Créer la vidéo",
+    videoPreparing:"Génération de la vidéo…",
+    videoReady:"Vidéo prête : télécharge-la ou partage-la.",
+    videoNoData:"Pas encore de réponse à transformer en vidéo.",
+    videoError:"Impossible de générer la vidéo.",
+    videoLabelQ:"QUESTION",
+    videoLabelA:"RÉPONSE & MOTIVATIONS"
   },
-  de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
-       sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
-       p:"Ergebnis & Motivationen", share:"📤 Teilen / Kopieren", again:"🔁 Neue Frage",
-       save:"⭐ Speichern", savedOk:"✅ Gespeichert",
-       copied:"Kopiert!", error:"[Serverfehler]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Stil: What the F · 6–9 Sätze · ein Absatz · trockener Ton · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
-        : `Stil: What if (60 % Analyse, 40 % Bilder) · 8–11 Sätze · ein Absatz · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
-       pctLabel:"% Wahrscheinlichkeit",
-       votersTitle:"Gremium", seriousTitle:"Begründungen", scientificTitle:"Begründung (wissenschaftlich)",
-       chipsFav:"dafür", chipsCon:"dagegen", chipsAst:"enthalten",
-       motFallback:"Grund: kurzfristiger, greifbarer Nutzen mit beherrschbaren Einschränkungen.",
-       credits:(n)=>`💰 Credits: ${n}`, noCredits:"Credits aufgebraucht.",
-       storeTitle:"Credits", buy5:"+5 Credits kaufen (Test)", buy10:"+10 Credits kaufen (Test)", buy20:"+20 Credits kaufen (Test)",
-       watchAd:"Werbung ansehen (+1)", close:"Schließen",
-       comingSoon:"Bald verfügbar", buySoonNote:"Kauf von Credits noch nicht verfügbar.",
-       toastPlus:(n)=>`+${n} Credit`,  toastMinus:(n)=>`-${n} Credit`,
-       guideTitle:"Leitfaden",
-       guideQuick:"Schnelle Hinweise",
-       guideAdvice:"Rat",
-       guideAnalysis:"Kurzanalyse",
-       /* VIDEO */
-       videoTitle:"Teilbares Video",
-       videoHelp:"Erstelle ein kurzes Video mit deiner Frage, Antwort und Begründungen – bereit zum Teilen in Social Media.",
-       videoBtn:"🎬 Video erstellen",
-       videoReadyNote:"Video fertig: Du kannst es herunterladen oder auf TikTok, Reels usw. teilen.",
-       videoPreparing:"Video wird erzeugt…",
-       videoError:"Video konnte nicht erzeugt werden. Bitte versuche es erneut.",
-       videoNoData:"Es gibt noch keine Antwort, die in ein Video umgewandelt werden kann.",
-       videoLabelQuestion:"FRAGE",
-       videoLabelAnswer:"ANTWORT",
-       videoLabelMotiv:"MOTIVE"
+  de:{
+    titleWTF:"⚡ What the F — Ergebnis",
+    titleWHF:"💡 What if — Ergebnis",
+    sub:q=>`Frage: „${q}“`,
+    q:"Deine Frage", a:"Antwort",
+    p:"Ergebnis & Begründungen",
+    pct:"% Wahrscheinlichkeit",
+    motTitle:"Begründungen",
+    copied:"Kopiert!",
+    share:"📤 Teilen / Kopieren",
+    again:"🔁 Neue Frage",
+    styleWTF:"🎭 What the F",
+    styleWHF:"🎭 What if",
+    videoTitle:"Teilbares Video",
+    videoHelp:"Erstelle ein kurzes Video mit Frage, Antwort und Begründungen.",
+    videoBtn:"🎬 Video erstellen",
+    videoPreparing:"Video wird erzeugt…",
+    videoReady:"Video fertig: herunterladen oder teilen.",
+    videoNoData:"Noch keine Antwort für ein Video.",
+    videoError:"Video konnte nicht erzeugt werden.",
+    videoLabelQ:"FRAGE",
+    videoLabelA:"ANTWORT & MOTIVE"
   }
 };
-const SUP_LANG=['it','en','es','fr','de'];
+const SUP_LANG = ["it","en","es","fr","de"];
 
-/* ======== LINGUA: segui FOURTH (request.lang o LS.lang) ======== */
-const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
-const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
-const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
-function detectLang(text=''){
-  const t=(text||'').toLowerCase();
-  if(/[¿¡]/.test(t)) return 'es';
-  const bank={
-    it:[" che "," perché"," se "," quando"," dove"," non "," sono "," vorrei"," posso"," e se"," una settimana"," come"],
-    en:[" what "," if "," the "," and "," you "," are "," will "," would "," can "," should "," could "],
-    es:[" qué"," si "," porque"," cuando"," dónde"," no "," soy "," puedo"," quiero","¿"," semana "],
-    fr:[" quoi"," si "," pourquoi"," quand"," où"," pas "," je "," peux"," si je"," et si"],
-    de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
-  };
-  const score={}; for(const L of SUP_LANG){ score[L]=0; (bank[L]||[]).forEach(w=>{ if(t.includes(w)) score[L]++; }); }
-  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
-  if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
-  return best;
-}
-let lang = SUP_LANG.includes(langFromFourth) ? langFromFourth : detectLang(domandaEarly);
-document.documentElement.lang=lang;
-const t = ()=>I18N[lang]||I18N.it;
-
-/* ==== Firebase credits (solo lettura su fifth) ==== */
-let currentUser = null;
-let currentBalance = 0;
-
-function updateCreditInfo(){
-  const creditInfo = document.getElementById('creditInfo');
-  if(!creditInfo) return;
-
-  if (IS_ADMIN) {
-    creditInfo.textContent = "💰 Crediti: ∞ (admin)";
-    return;
-  }
-
-  const val = currentUser ? currentBalance : 0;
-  creditInfo.textContent = t().credits(val);
+function detectLang(text){
+  const t = (text||"").toLowerCase();
+  if(/[¿¡]/.test(t)) return "es";
+  if(/\b(was|wenn|warum|wann|wo)\b/.test(t)) return "de";
+  if(/\b(quoi|pourquoi|quand|où)\b/.test(t)) return "fr";
+  if(/\b(que|porque|cuando|donde)\b/.test(t)) return "es";
+  if(/\b(what|why|when|where|would|should|could)\b/.test(t)) return "en";
+  return "it";
 }
 
-onAuthStateChanged(auth, async (user)=>{
-  currentUser = user;
+/* ========= DOM ========= */
+const $ = s=>document.querySelector(s);
+const titleEl=$("#title"), subtitleEl=$("#subtitle"), qView=$("#qView");
+const lblQ=$("#lblQ"), lblA=$("#lblA"), lblP=$("#lblP");
+const pctTop=$("#topPct"), pctBottom=$("#bottomPct");
+const pctLabelTop=$("#pctLabelTop"), pctLabelBottom=$("#pctLabelBottom");
+const answerEl=$("#answer"), motNote=$("#motNote"), motTitle=$("#motTitle");
+const styleBadge=$("#styleBadge");
+const langSelect=$("#langSelect");
+const shareBtn=$("#shareBtn"), againBtn=$("#againBtn");
+const videoBtn=$("#videoBtn"), videoLoading=$("#videoLoading"), videoPreview=$("#videoPreview");
+const videoDownload=$("#videoDownload"), videoNote=$("#videoNote"), videoHelp=$("#videoHelp"), lblVideo=$("#lblVideo");
+const toastEl=$("#toast");
+const typingSfx=$("#typingSfx");
 
-  if (!user || IS_ADMIN) {
-    currentBalance = 0;
-    updateCreditInfo();
-    return;
-  }
+/* ========= stato base ========= */
+const prefs = JSON.parse(localStorage.getItem("whatif_prefs") || "{}");
+const style = prefs.stile || "whatif"; // "wtf" o "whatif"
+const periodo = prefs.periodo || "future";
 
-  try{
-    await bootCredits();
-    const bal = await getBalance();
-    currentBalance = Number.isFinite(+bal) ? +bal : 0;
-  }catch(e){
-    console.error("credits sync error:", e);
-    currentBalance = 0;
-  }
-  updateCreditInfo();
-});
+const req = JSON.parse(localStorage.getItem("whatif_request") || "{}");
+const domanda = req.domanda || localStorage.getItem("domanda") || "";
+let lang = (req.lang || localStorage.getItem("lang") || "").slice(0,2).toLowerCase();
+if(!SUP_LANG.includes(lang)) lang = detectLang(domanda);
+document.documentElement.lang = lang;
+langSelect.value = lang;
 
-/* ==== System prompts (solo UI, placeholder) ==== */
-const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
-const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica…`;
+function t(){ return I18N[lang] || I18N.it; }
 
-/* === ORACLE LINES (solo attesa) === */
-const ORACLE_LINES = {
-  it: ["Le carte si muovono piano.","La risposta sta cercando la tua attenzione.","L’aria cambia: qualcosa si avvicina.","Non correre: il disegno prende forma.","Occhio: il quadro si accende da solo.","Silenzio un attimo… qualcosa si allinea.","C’è un passo che torna al suo ritmo.","La moneta è a mezz’aria: sta scegliendo il lato.","Una piega nella notte, poi una luce sottile.","Le luci interne si accendono una alla volta.","Ancora un respiro… il filo si tende.","L’indizio che mancava si sta mostrando.","Un colpo di vento, poi tutto si ferma.","Scorri piano: la porta si sta socchiudendo.","Si sente un sì lontano, ma si avvicina.","L’oracolo gira la pagina… quasi."],
-  en: ["The cards are slowly turning.","The answer is looking for your attention.","Air shifts; something draws near.","Don’t rush—shape is forming.","Look: the outline lights itself.","Hold a breath… things align.","There’s a step finding its rhythm again.","A coin hangs mid-air, choosing its side.","A fold in the dark, then a thin light.","Inner lights switch on, one by one.","Another breath… the wire tightens.","The missing hint is stepping forward.","A gust, then stillness.","Scroll slowly: a door is opening a crack.","A distant yes moves closer.","The oracle turns the page… almost."],
-  es: ["Las cartas se mueven despacio.","La respuesta busca tu atención.","El aire cambia; algo se acerca.","No corras: la forma aparece.","Mira: el contorno se enciende solo.","Guarda el aliento… todo se alinea.","Hay un paso que recupera su ritmo.","Una moneda queda en el aire, eligiendo cara.","Un pliegue en la noche, luego una luz fina.","Luces internas, una por una.","Otro respiro… el hilo se tensa.","La pista que faltaba se asoma.","Una ráfaga y luego quietud.","Desliza despacio: la puerta se entorna.","Un sí lejano se acerca.","El oráculo pasa página… casi."],
-  fr: ["Les cartes tournent lentement.","La réponse cherche ton attention.","L’air change : quelque chose s’approche.","Ne te presse pas : la forme vient.","Regarde : le contour s’allume tout seul.","Retiens ton souffle… tout s’aligne.","Un pas retrouve son rythme.","Une pièce reste en suspens, choisissant sa face.","Un pli dans la nuit, puis une lumière fine.","Des lumières intérieures s’allument, une à une.","Encore un souffle… le fil se tend.","L’indice manquant s’avance.","Un souffle, puis l’immobilité.","Fais défiler doucement : une porte s’entrouvre.","Un oui lointain se rapproche.","L’oracle tourne la page… presque."],
-  de: ["Die Karten bewegen sich langsam.","Die Antwort sucht deine Aufmerksamkeit.","Die Luft verändert sich; etwas kommt näher.","Nicht eilen: die Form entsteht.","Schau: die Kontur leuchtet von allein.","Atem anhalten… die Dinge richten sich.","Ein Schritt findet wieder seinen Rhythmus.","Eine Münze hängt in der Luft und sucht ihre Seite.","Eine Falte in der Nacht, dann ein schmales Licht.","Innere Lichter gehen nacheinander an.","Noch ein Atemzug… der Draht spannt sich.","Der fehlende Hinweis tritt hervor.","Ein Windstoß, dann Stille.","Scroll langsam: eine Tür steht einen Spalt offen.","Ein fernes Ja kommt näher.","Das Orakel blättert um… fast."]
-};
+/* ========= UI base ========= */
+function applyUI(){
+  const T = t();
+  titleEl.textContent = (style==="wtf") ? T.titleWTF : T.titleWHF;
+  subtitleEl.textContent = T.sub(domanda || "—");
+  lblQ.textContent = T.q;
+  lblA.textContent = T.a;
+  lblP.textContent = T.p;
+  lblVideo.textContent = T.videoTitle;
+  videoHelp.textContent = T.videoHelp;
+  pctLabelTop.textContent = T.pct;
+  pctLabelBottom.textContent = T.pct;
+  shareBtn.textContent = T.share;
+  againBtn.textContent = T.again;
+  styleBadge.textContent = (style==="wtf") ? T.styleWTF : T.styleWHF;
+}
+applyUI();
+qView.textContent = domanda || "—";
 
-/* ==== INTRO (Zoltar-like) prima volta ===== */
-const INTRO_KEY = 'whatif_intro_seen_v2';
-const INTRO = {
-  whatif: {
-    it: {future:"🜂 La lanterna si accende: fai la domanda e il futuro si mette in fila.", past:"🜂 La sabbia si posa: riguardi il passato senza nebbia e tieni solo ciò che serve."},
-    en: {future:"🜂 The lamp glows: ask clearly and the near future lines up.", past:"🜂 The sand settles: you look back without fog and keep only what matters."}
-  },
-  wtf: {
-    it: {future:"🥂 Dillo forte: il domani non aspetta i timidi.", past:"🥂 Chiudi il conto: il passato ha già pagato, tu ordina il prossimo giro."},
-    en: {future:"🥂 Say it loud: tomorrow won’t wait for the shy.", past:"🥂 Tab’s closed: the past already paid—order the next round."}
-  }
-};
-function showIntroOnce(){
-  try{
-    const seen = LS.getItem(INTRO_KEY)==='1';
-    const box = document.getElementById('introBox');
-    if(!box) return;
-    if(seen){ box.style.display='none'; return; }
-    const L = (INTRO[style] && INTRO[style][lang]) ? INTRO[style][lang] : INTRO['whatif']['it'];
-    const line = (periodo==='past') ? L.past : L.future;
-    box.textContent = line;
-    try{ if(style==='wtf') document.getElementById('sfxWtf')?.play().catch(()=>{}); else document.getElementById('sfxWhatIf')?.play().catch(()=>{}); }catch{}
-    LS.setItem(INTRO_KEY,'1');
-  }catch{}
+/* ========= Toast ========= */
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  setTimeout(()=>toastEl.classList.remove("show"),1500);
 }
 
-/* ==== UI refs ==== */
-const qs=(s)=>document.querySelector(s);
-const subtitle=qs('#subtitle'), lblQ=qs('#lblQ'), lblA=qs('#lblA'), qView=qs('#qView');
-const answerEl=qs('#answer'), shareBtn=qs('#shareBtn'), againBtn=qs('#againBtn');
-const saveBtn=qs('#saveBtn');
-const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct'), bottomPct=qs('#bottomPct');
-const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
-const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
-const motNote=qs('#motNote'), toastEl=qs('#toast');
-const typingSfx = document.getElementById('typingSfx');
+/* ========= typewriter + audio ========= */
+let typeTimer = null;
+function typewriter(el, text){
+  if(typeTimer) clearInterval(typeTimer);
+  el.textContent = "";
+  const full = String(text||"").trim();
+  if(!full){ el.textContent="—"; return; }
+  let i=0;
+  const cps = 25; // caratteri al secondo
+  const step = 1000/cps;
 
-/* ==== VIDEO refs ==== */
-const videoBtn = qs('#videoBtn');
-const videoWrap = qs('#videoWrap');
-const videoPreview = qs('#videoPreview');
-const videoDownload = qs('#videoDownload');
-const videoLoadingEl = qs('#videoLoading');
-const videoNoteEl = qs('#videoNote');
-
-/* ==== Toast ==== */
-function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
-
-/* ==== Helpers testo ==== */
-function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
-function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
-function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
-
-/* === effetto macchina da scrivere per la risposta principale === */
-let typewriterTimerId = null;
-function typewriterAnswer(el, text){
-  if (!el) return;
-  const full = String(text || '').trim();
-  if (!full){
-    el.textContent = '—';
-    return;
-  }
-  if (typewriterTimerId){
-    clearInterval(typewriterTimerId);
-    typewriterTimerId = null;
-  }
-  el.textContent = '';
-
-  const charsPerSecond = 25;           // più basso = più lento
-  const stepMs = 1000 / charsPerSecond;
-  let i = 0;
-
-  if (typingSfx){
+  if(typingSfx){
     try{
-      typingSfx.loop = true;
       typingSfx.currentTime = 0;
+      typingSfx.loop = true;
       typingSfx.play().catch(()=>{});
-    }catch{}
+    }catch(e){}
   }
 
-  typewriterTimerId = setInterval(()=>{
+  typeTimer = setInterval(()=>{
     i++;
-    el.textContent = full.slice(0, i);
-    if (i >= full.length){
-      clearInterval(typewriterTimerId);
-      typewriterTimerId = null;
-      if (typingSfx){
+    el.textContent = full.slice(0,i);
+    if(i>=full.length){
+      clearInterval(typeTimer);
+      if(typingSfx){
         try{
-          typingSfx.loop = false;
+          typingSfx.loop=false;
           typingSfx.pause();
-          typingSfx.currentTime = 0;
-        }catch{}
+          typingSfx.currentTime=0;
+        }catch(e){}
       }
-      decorateEmBits(el);
     }
-  }, stepMs);
+  }, step);
 }
 
-/* ==== Titles/Text ==== */
-function applyUI(q){
-  const T=t();
-  setText('#title', style==='wtf'?T.titleWTF:T.titleWHF);
-  subtitle.textContent=T.sub(q||'—'); setText('#lblQ', T.q); setText('#lblA', T.a); setText('#lblP', T.p);
-  shareBtn.textContent=T.share; againBtn.textContent=T.again; if(saveBtn) saveBtn.textContent=T.save;
-  styleBadge.textContent=(style==='wtf')?T.styleWTF:T.styleWHF;
-  setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));
-
-  setText('#lblVideo', T.videoTitle || 'Video');
-  const vh = qs('#videoHelp'); if(vh) vh.textContent = T.videoHelp || '';
-  if(videoBtn) videoBtn.textContent = T.videoBtn || '🎬 Crea video';
-  if(videoNoteEl) videoNoteEl.textContent = '';
-}
-
-/* ==== Probability ==== */
-function computeProbability(q){
-  const t=(q||'').toLowerCase(); let s=50;
-  if(/\b(7|14|21|30|60|90)\b/.test(t)) s+=12;
-  if(/\b\d+([.,]\d+)?\b/.test(t)) s+=8;
-  if(/budget|€|euro|spesa|max|under|sotto/.test(t)) s+=6;
-  if(/senza|solo|al massimo|minimo|entro|prima delle|ogni|per/.test(t)) s+=8;
-  if(/lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa/.test(t)) s+=6;
-  if(/forse|magari|maybe|quizás/.test(t)) s-=8;
-  if(!/\b\d/.test(t)) s-=6;
-  s += (style==='wtf' ? -4 : +2);
-  return {pct: Math.max(25, Math.min(92, Math.round(s)))}
-}
-
-/* === ORACLE helpers === */
-let oracleDeck = [];
-let oracleTimerId = null;
-function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
-function buildOracleDeck(){
-  const base = (ORACLE_LINES[lang] || ORACLE_LINES.it).slice();
-  const tails = ["", " …", " ⋯", " —", " …"];
-  const deck = [];
-  for(const line of base){
-    const v = Math.random()<0.45 ? (line.replace(/\.$/,"") + tails[Math.floor(Math.random()*tails.length)]) : line;
-    deck.push(v);
-  }
-  return shuffle(deck);
-}
-function nextOracleLine(){
-  if(oracleDeck.length===0) oracleDeck = buildOracleDeck();
-  return oracleDeck.pop();
-}
-function startOracleLoading(){
-  document.body.classList.add('loading');
-  const lineEl = document.getElementById('oracleLine');
-  const tick = ()=>{
-    lineEl.textContent = nextOracleLine();
-    const jitter = 1200 + Math.floor(Math.random()*1000);
-    oracleTimerId = setTimeout(tick, jitter);
-  };
-  tick();
-}
-function stopOracleLoading(){
-  document.body.classList.remove('loading');
-  clearTimeout(oracleTimerId); oracleTimerId=null;
-  const lineEl = document.getElementById('oracleLine');
-  setTimeout(()=>{ if(lineEl) lineEl.textContent = " "; }, 350);
-}
-function revealEffect(){
-  const wrap = document.querySelector('.oracle-wrap');
-  if(!wrap) return;
-  wrap.classList.add('reveal');
-  try{ document.getElementById('revealDing')?.play().catch(()=>{}); }catch{}
-  setTimeout(()=> wrap.classList.remove('reveal'), 900);
-}
-
-/* ===== Motivazione demenziale per WTF ===== */
-function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
-function wtfMotivationDemenziale(langCode){
-  const shots = rnd(1,3), spill = rnd(0,2), bruise = rnd(0,3);
-  if(langCode==='en'){
-    return `Pseudo-science says small daily nudges beat grand plans. The committee argued at the bar: ${shots} shots gone, ${spill} glasses spilled, ${bruise} minor bruises; verdict between hiccups: do it, and stop overthinking.`;
-  } else if(langCode==='es'){
-    return `Pseudociencia de barra: los micro-pasos diarios ganan a los planes épicos. El comité debatió en la barra: ${shots} chupitos desaparecidos, ${spill} copas derramadas, ${bruise} pequeños moratones; veredicto entre hipos: hazlo y deja de sobrepensarlo.`;
-  } else if(langCode==='fr'){
-    return `Pseudoscience de comptoir : les micro-pas quotidiens battent les grands plans. Le comité a débattu au bar : ${shots} shots évaporés, ${spill} verres renversés, ${bruise} bleus légers ; verdict entre deux hoquets : fais-le, et arrête de trop réfléchir.`;
-  } else if(langCode==='de'){
-    return `Kneipen-Pseudowissenschaft: kleine tägliche Schritte schlagen große Pläne. Das Gremium tagte an der Theke: ${shots} Shots verschwunden, ${spill} Gläser verschüttet, ${bruise} leichte Blessuren; Urteil zwischen Schluckauf: mach’s, und hör auf, alles zu zerdenken.`;
-  }
-  return `Pseudoscienza da bancone: i micro-passi battono i piani epici. La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: fai, e smettila di pensarci troppo.`;
-}
-
-/* ===== NUOVE MOTIVAZIONI WHAT IF ===== */
-function buildWhatIfMotivationsPretty(domanda, pct){
-  const q = String(domanda||"").toLowerCase();
+/* ========= motivazioni ========= */
+function buildMotivation(pct){
   const L = lang;
-  const isPast = (periodo === 'past');
+  const isPast = (periodo==="past");
+  const base = pct ? (L==="it"
+    ? `Probabilità intorno al ${pct}%. `
+    : L==="en" ? `Approx. probability ${pct}%. `
+    : L==="es" ? `Probabilidad aproximada ${pct}%. `
+    : L==="fr" ? `Probabilité autour de ${pct} %. `
+    : `Wahrscheinlichkeit etwa ${pct} %. `) : "";
 
-  const isLove =
-    /ex\b|relazione|fidanzat[oa]|partner|coppia|amore|relationship|breakup|ex novio|ex novia|ex marit|ex moglie/.test(q);
-  const isMove =
-    /trasferi|trasloc|città|citta|tornare a|tornassi a|se tornassi|se tornare|if i move|move to|go back to/.test(q);
-  const isJob =
-    /lavoro|job|carriera|colloquio|interview|assunzion|licenziament|azienda|company|ufficio/.test(q);
-
-  if (L === 'it') {
-    const baseProb = pct
-      ? (isPast
-         ? `Probabilità intorno al ${pct}%. Non era scritto, ma qualche finestra aperta c’era.<br><br>`
-         : `Probabilità intorno al ${pct}%. Non è destino scritto, ma una pista possibile.<br><br>`)
-      : "";
-
-    if (isLove) {
-      if (isPast) {
-        return baseProb +
-          "Perché poteva funzionare:<br>" +
-          "• C’era una base emotiva reale: alcune parti di voi si capivano più di quanto ammettevate.<br>" +
-          "• C’erano margini per riscrivere il patto, se entrambi aveste nominato i problemi invece di girarci intorno.<br><br>" +
-          "Cosa lo ha reso complicato:<br>" +
-          "• Gli stessi schemi si sono ripetuti: orgoglio, silenzi, risposte lente quando servivano scelte chiare.<br>" +
-          "• La paura di farsi vedere davvero ha pesato più del desiderio di provarci fino in fondo.";
-      } else {
-        return baseProb +
-          "Perché potrebbe funzionare:<br>" +
-          "• C’è ancora una base emotiva reale: alcune parti di voi si riconoscono al volo, anche dopo il caos.<br>" +
-          "• Se i problemi vengono detti esplicitamente, potete riscrivere il patto invece di ricopiare il vecchio copione.<br><br>" +
-          "Cosa può complicarlo:<br>" +
-          "• Rischio replay: stessi silenzi, stessi non detti, solo con più stanchezza.<br>" +
-          "• La paura di esporsi può farti restare a metà: né davvero dentro, né davvero fuori.";
-      }
-    }
-
-    if (isMove) {
-      if (isPast) {
-        return baseProb +
-          "Perché poteva funzionare:<br>" +
-          "• Tornare in un luogo conosciuto ti avrebbe dato radici emotive quando ti sentivi sparpagliato.<br>" +
-          "• I ritmi più umani avrebbero potuto sostenere meglio la tua energia invece di bruciarla tutta fuori casa.<br><br>" +
-          "Cosa lo ha reso complicato:<br>" +
-          "• La paura di “fare un passo indietro” ha pesato più del bisogno di stabilità.<br>" +
-          "• Alcuni legami e abitudini del passato non erano abbastanza sani da reggere un ritorno sereno.";
-      } else {
-        return baseProb +
-          "Perché potrebbe funzionare:<br>" +
-          "• Un posto che conosci può ridarti radici quando ti senti sempre in modalità sopravvivenza.<br>" +
-          "• Ritmi più lenti e facce note possono aiutare il tuo cervello a smettere di sentirsi sempre ‘in prestazione’.<br><br>" +
-          "Cosa può complicarlo:<br>" +
-          "• Potresti leggerlo come “sto tornando indietro” invece che come cambio di ritmo.<br>" +
-          "• Alcune dinamiche del passato rischiano di riattivarsi se non metti confini chiari fin da subito.";
-      }
-    }
-
-    if (isJob) {
-      if (isPast) {
-        return baseProb +
-          "Perché poteva funzionare:<br>" +
-          "• Una direzione più chiara ti avrebbe evitato di disperdere energie in mille tentativi.\n<br>" +
-          "• Passi piccoli ma costanti sulla stessa strada avrebbero costruito più sicurezza interna.<br><br>" +
-          "Cosa lo ha reso complicato:<br>" +
-          "• Il bisogno di scegliere “il lavoro perfetto” ha rallentato ogni decisione concreta.<br>" +
-          "• Contesti non allineati ai tuoi valori ti hanno fatto dubitare di te più che del sistema in cui eri.";
-      } else {
-        return baseProb +
-          "Perché potrebbe funzionare:<br>" +
-          "• Scegliere una direzione ti permette di smettere di bruciare energie in esperimenti casuali.<br>" +
-          "• Passi piccoli ma regolari nella stessa direzione possono darti più sicurezza di qualsiasi “colpo di fortuna”.<br><br>" +
-          "Cosa può complicarlo:<br>" +
-          "• Il timore di incastrarti in una scelta ti può bloccare prima di iniziare.<br>" +
-          "• Se i contesti che trovi non rispecchiano i tuoi valori, rischi di sentirti sbagliato anche quando non lo sei.";
-      }
-    }
-
-    if (isPast) {
-      return baseProb +
-        "Perché poteva andare diversamente:<br>" +
-        "• Un paio di decisioni più chiare e un po’ di gentilezza verso te stessə avrebbero cambiato l’andamento della storia.<br>" +
-        "• C’erano segnali che potevano essere ascoltati prima, invece di essere zittiti per non creare problemi.<br><br>" +
-        "Cosa l’ha reso difficile:<br>" +
-        "• Hai dovuto scegliere con le risorse e le informazioni che avevi, non con quelle che hai adesso.<br>" +
-        "• La paura di deludere qualcuno (te compresə) ha pesato sulle scelte più di quanto sembrasse in superficie.";
-    } else {
-      return baseProb +
-        "Perché potrebbe funzionare:<br>" +
-        "• Ti sposta verso una versione di vita più allineata a come ti senti oggi, non a come “dovresti” essere.<br>" +
-        "• Piccoli passi chiari riducono il rumore mentale e ti fanno sentire meno in balia degli eventi.<br><br>" +
-        "Cosa può complicarlo:<br>" +
-        "• Restare bloccato sull’idea della scelta perfetta ti fa rinviare quella buona abbastanza.<br>" +
-        "• Cercare di non scontentare nessuno rischia di farti scontentare proprio la persona che resta: tu.";
+  if(L==="it"){
+    if(isPast){
+      return base +
+        "Con le informazioni che avevi allora non era impossibile farla andare diversamente, " +
+        "ma mancavano qualche confine chiaro e due conversazioni dette prima.";
+    }else{
+      return base +
+        "Se traduci questa idea in passi piccoli e concreti, ha spazio per funzionare; " +
+        "se aspetti il momento perfetto rischia di restare sempre nel cassetto.";
     }
   }
-
-  const baseProbOther = pct
-    ? (isPast
-       ? `Approx. probability ${pct}% — it wasn’t fixed destiny, but the door wasn’t fully closed.<br><br>`
-       : `Approx. probability ${pct}% — not fixed fate, but a realistic option.<br><br>`)
-    : "";
-
-  if (L === 'en') {
-    if (isPast) {
-      return baseProbOther +
-        "Why it could have gone better:<br>" +
-        "• With a bit more clarity and timing, the situation had room to move in your favour.<br>" +
-        "• A couple of honest talks earlier might have changed how things unfolded.<br><br>" +
-        "What made it hard:<br>" +
-        "• You chose with the information and energy you had then, not with what you know now.<br>" +
-        "• Fear of messing up or disappointing people quietly pushed some options off the table.";
-    } else {
-      return baseProbOther +
-        "Why it could work:<br>" +
-        "• It nudges your life closer to what you actually want, not just what you’ve always done.<br>" +
-        "• Clear small steps turn overthinking into movement.<br><br>" +
-        "What could make it hard:<br>" +
-        "• Waiting for the “perfect” move can freeze you before you start.<br>" +
-        "• If you try to keep everyone happy, your decision loses power and you stay stuck.";
+  if(L==="en"){
+    if(isPast){
+      return base +
+        "With the context you had back then, a different outcome was possible, " +
+        "but you were missing clear boundaries and a couple of honest talks sooner.";
+    }else{
+      return base +
+        "If you turn this into small clear steps, it can work; " +
+        "if you wait for the perfect moment, it will probably stay in your head only.";
     }
   }
-
-  if (L === 'es') {
-    if (isPast) {
-      return baseProbOther +
-        "Por qué podría haber salido distinto:<br>" +
-        "• Con un poco más de claridad y tiempo, la situación tenía margen para girar a tu favor.<br>" +
-        "• Un par de conversaciones honestas antes habrían cambiado el guion.<br><br>" +
-        "Qué lo hizo difícil:<br>" +
-        "• Elegiste con la energía y la información que tenías entonces, no con la de ahora.<br>" +
-        "• El miedo a equivocarte o decepcionar a alguien sacó opciones del mapa sin que te dieras cuenta.";
-    } else {
-      return baseProbOther +
-        "Por qué podría funcionar:<br>" +
-        "• Te acerca a una vida más alineada con lo que sientes hoy.<br>" +
-        "• Pasos pequeños y claros convierten el darle vueltas en movimiento real.<br><br>" +
-        "Qué puede complicarlo:<br>" +
-        "• Esperar la decisión perfecta puede dejarte inmóvil.<br>" +
-        "• Si intentas contentar a todo el mundo, tu decisión pierde fuerza.";
+  if(L==="es"){
+    if(isPast){
+      return base +
+        "Con lo que sabías en ese momento, podía salir distinto, " +
+        "pero faltaron límites claros y un par de conversaciones honestas un poco antes.";
+    }else{
+      return base +
+        "Si lo bajas a pasos pequeños y concretos, tiene espacio para funcionar; " +
+        "si esperas el momento perfecto, se quedará en idea para siempre.";
     }
   }
-
-  if (L === 'fr') {
-    if (isPast) {
-      return baseProbOther +
-        "Pourquoi ça aurait pu se passer autrement :<br>" +
-        "• Avec un peu plus de clarté et de timing, la situation avait de la marge pour tourner en ta faveur.<br>" +
-        "• Quelques discussions honnêtes plus tôt auraient pu changer la suite.<br><br>" +
-        "Ce qui a compliqué les choses :<br>" +
-        "• Tu as choisi avec les ressources et les infos de l’époque, pas avec celles d’aujourd’hui.<br>" +
-        "• La peur de te tromper ou de décevoir a fait disparaître certaines options du radar.";
-    } else {
-      return baseProbOther +
-        "Pourquoi ça pourrait marcher :<br>" +
-        "• Ça t’emmène vers une vie plus proche de ce que tu ressens vraiment.<br>" +
-        "• De petits pas clairs transforment le mental en mouvement concret.<br><br>" +
-        "Ce qui peut compliquer :<br>" +
-        "• Attendre le choix parfait peut t’empêcher d’avancer.<br>" +
-        "• Si tu veux rassurer tout le monde, ta décision perd en force.";
+  if(L==="fr"){
+    if(isPast){
+      return base +
+        "Avec les infos de l’époque, un autre scénario était possible, " +
+        "mais il manquait des limites claires et quelques discussions franches plus tôt.";
+    }else{
+      return base +
+        "Si tu le transformes en petits pas concrets, ça peut marcher; " +
+        "si tu attends le moment parfait, ça risque de rester un projet dans ta tête.";
     }
   }
-
-  if (isPast) {
-    return baseProbOther +
-      "Warum es anders hätte laufen können:<br>" +
-      "• Mit etwas mehr Klarheit und Timing hätte sich die Situation eher zu deinen Gunsten verschoben.<br>" +
-      "• Ein, zwei offene Gespräche früher hätten den Verlauf deutlich verändern können.<br><br>" +
-      "Was es schwierig gemacht hat:<br>" +
-      "• Du hast mit den Infos und der Energie von damals entschieden, nicht mit dem Blick von heute.<br>" +
-      "• Die Angst vor Fehlern oder Enttäuschung hat leise einige Optionen gestrichen.";
-  } else {
-    return baseProbOther +
-      "Warum es klappen kann:<br>" +
-      "• Es bringt dich näher an ein Leben, das zu deinem jetzigen Gefühl passt.<br>" +
-      "• Kleine, klare Schritte verwandeln Grübeln in Bewegung.<br><br>" +
-      "Was es erschweren kann:<br>" +
-      "• Wenn du auf die perfekte Entscheidung wartest, kommst du nicht los.<br>" +
-      "• Versuchst du alle zufriedenzustellen, verliert deine Entscheidung an Kraft.";
+  // de
+  if(isPast){
+    return base +
+      "Mit dem Wissen von damals war ein anderes Ergebnis möglich, " +
+      "aber klare Grenzen und ein, zwei offene Gespräche haben gefehlt.";
+  }else{
+    return base +
+      "Wenn du das in kleine, konkrete Schritte übersetzt, kann es funktionieren; " +
+      "wartest du auf den perfekten Moment, bleibt es wahrscheinlich nur ein Gedanke.";
   }
 }
 
-/* ==== CACHE RISULTATO (per bloccare doppie risposte) ==== */
-const RESULT_CACHE_KEY = 'whatif_result_cache_v2';
-
-function saveResultToCache(obj){
-  try{
-    LS.setItem(RESULT_CACHE_KEY, JSON.stringify(obj));
-  }catch(e){
-    console.warn('cache save error', e);
-  }
+/* ========= probabilità di fallback ========= */
+function fallbackPct(text){
+  let s = 50;
+  const t = (text||"").toLowerCase();
+  if(/\b(7|14|21|30|60|90)\b/.test(t)) s+=10;
+  if(/\b\d+([.,]\d+)?\b/.test(t)) s+=6;
+  if(/senza|solo|al massimo|minimo|entro|before|entro|fino a/.test(t)) s+=6;
+  if(/forse|maybe|magari|quizás/.test(t)) s-=8;
+  return Math.max(25,Math.min(90,Math.round(s)));
 }
 
-function loadResultFromCache(domanda){
-  try{
-    const raw = LS.getItem(RESULT_CACHE_KEY);
-    if(!raw) return null;
-    const obj = JSON.parse(raw);
-    if(!obj || typeof obj !== 'object') return null;
-    if((obj.domanda||'').trim() !== String(domanda||'').trim()) return null;
-    if(obj.style !== style) return null;
-    if(obj.periodo !== periodo) return null;
-    if(obj.lang !== lang) return null;
-    return obj;
-  }catch(e){
-    console.warn('cache load error', e);
-    return null;
-  }
-}
-
-function applyResultToUI(result){
-  const domanda = result.domanda || LS.getItem('domanda') || '';
-  applyUI(domanda);
-  qView.textContent = domanda || '—';
-
-  typewriterAnswer(answerEl, result.answer || '—');
-
-  const usedPct = (typeof result.pct === 'number' && isFinite(result.pct))
-    ? Math.max(0, Math.min(100, Math.round(result.pct)))
-    : computeProbability(domanda).pct;
-  const pStr = usedPct + "%";
-  topPct.textContent = pStr;
-  bottomPct.textContent = pStr;
-
-  const mode = result.motivationMode || (style === 'wtf' ? 'wtf' : 'whatif');
-
-  if (mode === 'surprise') {
-    motIco.style.display='';
-    chipsWrap.style.display='flex';
-    committeeTitle.textContent = t().votersTitle || 'Comitato';
-
-    const fav = result.chipsFav ?? 0;
-    const con = result.chipsCon ?? 0;
-    const ast = result.chipsAst ?? 0;
-
-    chipFav.textContent = `${t().chipsFav} ${fav}`;
-    chipCon.textContent = `${t().chipsCon} ${con}`;
-    chipAst.textContent = `${t().chipsAst} ${ast}`;
-    motNote.textContent = result.motivationText || '';
-
-  } else if (mode === 'wtf') {
-    motIco.style.display='none';
-    chipsWrap.style.display='none';
-    committeeTitle.textContent = t().scientificTitle;
-    motNote.textContent = result.motivationText || '';
-
-  } else {
-    motIco.style.display='none';
-    chipsWrap.style.display='none';
-    committeeTitle.textContent = t().seriousTitle;
-    motNote.innerHTML = result.motivationText || '';
-  }
-
-  revealEffect();
-}
-
-/* ==== Top init ==== */
-(function initTop(){
-  const hasToken=!!LS.getItem('admin_token');
-  if(hasToken || prefs.pro===true){
-    const el=qs('#proBadge'); el.style.display='inline-flex';
-    el.textContent='🧪 TEST · ⭐ PRO';
-    el.title = {en:'Test mode active',es:'Modo de prueba activo',fr:'Mode test actif',de:'Testmodus aktiv'}[lang] || 'Modalità test attiva';
-  }
-  qs('#langSelect').value=lang;
-})();
-
-/* ==== Question & UI load ==== */
-function applyQuestion(){
-  const req=JSON.parse(LS.getItem('whatif_request')||'{}');
-  const domanda=req.domanda || LS.getItem('domanda') || '';
-  applyUI(domanda);
-  qView.textContent = domanda || '—';
-  const surprise = (new URLSearchParams(location.search)).get('src')==='surprise'
-    || req?.surprise===true || req?.micro?.surprise===true
-    || LS.getItem('surprise_mode')==='1';
-  return {req, domanda, surprise};
-}
-
-/* ==== Salvataggio domanda per fourth ==== */
-function saveCurrentQuestion(){
-  const domanda = (LS.getItem('domanda') || '').trim();
-  if(!domanda) return;
-  let arr=[];
-  try{ arr = JSON.parse(LS.getItem('next_prompts')||'[]'); if(!Array.isArray(arr)) arr=[]; }catch{ arr=[]; }
-  if(arr[0] && (arr[0].q||'') === domanda){ toast(t().savedOk); return; }
-  arr.unshift({ q: domanda, ts: Date.now() });
-  if(arr.length>50) arr = arr.slice(0,50);
-  LS.setItem('next_prompts', JSON.stringify(arr));
-  LS.setItem('whatif_wallet_sync', String(Date.now()));
-  toast(t().savedOk);
-}
-
-/* ==== Main flow (NESSUN CONSUMO CREDITI QUI) ==== */
-async function startFlow(){
-  const {req, domanda, surprise} = applyQuestion();
-  updateCreditInfo();
-
-  const cached = loadResultFromCache(domanda);
-  if (cached) {
-    showIntroOnce();
-    applyResultToUI(cached);
+/* ========= chiamata API ========= */
+async function loadAnswer(){
+  if(!domanda){
+    answerEl.textContent = "—";
     return;
   }
-
-  showIntroOnce();
-  startOracleLoading();
-
   try{
-    const headers={"Content-Type":"application/json"};
-    if(prefs.pro===true) headers["x-pro"]="1";
-    const adminToken=LS.getItem("admin_token"); if(adminToken) headers["x-admin-token"]=adminToken;
-
-    const r=await fetch("/api/ask",{
-      method:"POST",headers,
-      body:JSON.stringify({ domanda, lang, stile:style, periodo,
-        system:(style==='wtf'?SYSTEM_WTF:SYSTEM_WHIF), extra:"", micro:req.micro||{} })
+    const res = await fetch("/api/ask",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        domanda,
+        lang,
+        stile:style,
+        periodo
+      })
     });
-    const data=await r.json().catch(()=>null);
-    if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
+    const data = await res.json();
+    let text = (data && data.answer) ? String(data.answer).replace(/\s+/g," ").trim() : "";
+    if(!text) text = "[errore server]";
 
-    let answerText=normalizeOneParagraph((data.answer||"").trim());
-    const maxSent=(style==='wtf')?9:11;
-    let parts=answerText.split(/(?<=[.!?…])\s+/);
-    if(parts.length>maxSent) parts=parts.slice(0,maxSent);
-    answerText=parts.join(" ").trim();
-    if(!/[.!?…]$/.test(answerText)) answerText+='.';
+    const apiPct = (data && typeof data.pct==="number" && isFinite(data.pct)) ? Math.round(data.pct) : null;
+    const pct = apiPct!=null ? apiPct : fallbackPct(domanda);
+    pctTop.textContent = pct + "%";
+    pctBottom.textContent = pct + "%";
 
-    stopOracleLoading();
-    revealEffect();
-    typewriterAnswer(answerEl, answerText);
-
-    const apiPct = (data && Number.isFinite(+data.pct)) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : null;
-    const usedPct = (apiPct!=null) ? apiPct : computeProbability(domanda).pct;
-    const pStr = usedPct + "%";
-    topPct.textContent = pStr;
-    bottomPct.textContent = pStr;
-
-    let motivazioneUsata = "";
-    let motivationMode = (style === 'wtf') ? 'wtf' : 'whatif';
-    let motivationTextForCache = "";
-    let chipsFavNum, chipsConNum, chipsAstNum;
-
-    if (surprise) {
-      motIco.style.display=''; chipsWrap.style.display='flex';
-      committeeTitle.textContent=t().votersTitle||'Comitato';
-      const rdm=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-      chipsFavNum = rdm(120,1200);
-      chipsConNum = rdm(0,900);
-      chipsAstNum = rdm(0,400);
-      chipFav.textContent=`${t().chipsFav} ${chipsFavNum}`;
-      chipCon.textContent=`${t().chipsCon} ${chipsConNum}`;
-      chipAst.textContent=`${t().chipsAst} ${chipsAstNum}`;
-      const removed = rdm(1,5);
-      const bruised = rdm(0,3);
-      const note =
-        (lang==='en')?`Brief tussle at vote: ${removed} removed; ${bruised} bruised.`
-       :(lang==='es')?`Pequeño lío en la votación: ${removed} expulsados; ${bruised} contusos.`
-       :(lang==='fr')?`Petit grabuge au vote : ${removed} évacués ; ${bruised} contusionnés.`
-       :(lang==='de')?`Kurzes Gerangel bei der Abstimmung: ${removed} entfernt; ${bruised} leicht verletzt.`
-       :`Breve parapiglia al voto: ${removed} allontanati; ${bruised} contusi.`;
-      motNote.textContent = note;
-      motivazioneUsata = note;
-      motivationMode = 'surprise';
-      motivationTextForCache = note;
-
-    } else if (style === 'wtf') {
-      motIco.style.display='none';
-      chipsWrap.style.display='none';
-      committeeTitle.textContent = t().scientificTitle;
-      const sci = wtfMotivationDemenziale(lang);
-      motNote.textContent = sci;
-      motivazioneUsata = sci;
-      motivationMode = 'wtf';
-      motivationTextForCache = sci;
-
-    } else {
-      motIco.style.display='none';
-      chipsWrap.style.display='none';
-      committeeTitle.textContent = t().seriousTitle;
-      const html = buildWhatIfMotivationsPretty(domanda, usedPct);
-      motNote.innerHTML = html;
-      motivazioneUsata = html.replace(/<br\s*\/?>/gi," | ");
-      motivationMode = 'whatif';
-      motivationTextForCache = html;
-    }
-
-    const hist=JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:usedPct, motivazione:motivazioneUsata });
-    LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-
-    const resultForCache = {
-      domanda,
-      style,
-      periodo,
-      lang,
-      surprise,
-      answer: answerText,
-      pct: usedPct,
-      motivationMode,
-      motivationText: motivationTextForCache,
-      chipsFav: (motivationMode === 'surprise') ? chipsFavNum : undefined,
-      chipsCon: (motivationMode === 'surprise') ? chipsConNum : undefined,
-      chipsAst: (motivationMode === 'surprise') ? chipsAstNum : undefined
-    };
-    saveResultToCache(resultForCache);
-
+    typewriter(answerEl, text);
+    motNote.textContent = buildMotivation(pct);
   }catch(e){
     console.error(e);
-    stopOracleLoading();
-    answerEl.textContent=t().error;
+    answerEl.textContent = "[errore server]";
   }
 }
+loadAnswer();
 
-/* ==== VIDEO: generazione client-side con Canvas + MediaRecorder (effetto scrittura + motivazioni) ==== */
+/* ========= NAV / lingua / share ========= */
+document.getElementById("backBtn").onclick = ()=>history.length>1?history.back():location.href="index.html";
+document.getElementById("homeBtn").onclick = ()=>location.href="index.html";
 
-function videoNotAvailable(msg){
+langSelect.onchange = ()=>{
+  lang = langSelect.value;
+  localStorage.setItem("lang", lang);
+  document.documentElement.lang = lang;
+  applyUI();
+  motTitle.textContent = t().motTitle;
+};
+
+shareBtn.onclick = async ()=>{
   const T = t();
-  const text = msg || (T.videoError || "Video non disponibile su questo dispositivo.");
-  toast(text);
-}
+  const text = `What?f\n\nQ: ${domanda}\n\n${answerEl.textContent}`;
+  try{
+    if(navigator.share){
+      await navigator.share({title:"What?f",text});
+    }else if(navigator.clipboard){
+      await navigator.clipboard.writeText(text);
+      toast(T.copied);
+    }else{
+      toast(T.copied);
+    }
+  }catch(e){}
+};
+againBtn.onclick = ()=>{ location.href="fourth.html"; };
 
-function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
-  const words = String(text || "").split(/\s+/);
+/* ========= VIDEO ========= */
+let lastVideoBlob = null;
+let lastMime = null;
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight){
+  const words = String(text||"").split(/\s+/);
   let line = "";
-  let y = startY;
-  for(const w of words){
-    const test = line ? (line + " " + w) : w;
+  for(let w of words){
+    const test = line ? line + " " + w : w;
     if(ctx.measureText(test).width > maxWidth && line){
       ctx.fillText(line, x, y);
-      y += lineHeight;
       line = w;
+      y += lineHeight;
     }else{
       line = test;
     }
   }
-  if(line){
-    ctx.fillText(line, x, y);
-    y += lineHeight;
-  }
+  if(line){ ctx.fillText(line, x, y); y += lineHeight; }
   return y;
 }
 
-let lastVideoBlob = null;
-let lastVideoMime = null;
-
-async function generateVideoClip(){
+async function createVideo(){
   const T = t();
-  const domanda = (localStorage.getItem('domanda') || qView.textContent || '').trim();
-  const answerText = (answerEl.textContent || '').trim();
-  const motivation = (motNote.innerText || motNote.textContent || '').trim();
-
-  if (!domanda || !answerText) {
-    videoNotAvailable(T.videoNoData || "Non c’è ancora una risposta da trasformare in video.");
+  if(!domanda || !answerEl.textContent){
+    toast(T.videoNoData);
+    return;
+  }
+  if(typeof HTMLCanvasElement==="undefined" || !HTMLCanvasElement.prototype.captureStream || typeof MediaRecorder==="undefined"){
+    toast(T.videoError);
     return;
   }
 
-  if (typeof HTMLCanvasElement === "undefined" ||
-      !HTMLCanvasElement.prototype.captureStream ||
-      typeof MediaRecorder === "undefined") {
-    videoNotAvailable();
-    return;
-  }
-
-  // UI loading
   videoBtn.disabled = true;
-  if (videoLoadingEl) {
-    videoLoadingEl.textContent = T.videoPreparing || "Generazione video…";
-    videoLoadingEl.style.display = "inline";
-  }
-  if (videoWrap) videoWrap.style.display = "none";
-  if (videoNoteEl) videoNoteEl.textContent = "";
+  videoLoading.style.display = "block";
+  videoLoading.textContent = T.videoPreparing;
+  videoPreview.style.display = "none";
+  videoDownload.style.display = "none";
+  videoNote.textContent = "";
 
   const canvas = document.createElement("canvas");
-  const width = 720;
-  const height = 1280;
-  canvas.width = width;
-  canvas.height = height;
+  const w = 720, h = 1280;
+  canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext("2d");
+  const stream = canvas.captureStream(25);
 
-  const baseStream = canvas.captureStream(25);
-
-  const candidates = [
-    "video/mp4;codecs=h264",
+  let mime = null;
+  const cand = [
     "video/webm;codecs=vp9",
     "video/webm;codecs=vp8",
     "video/webm"
   ];
-  let mimeType = null;
-  for(const m of candidates){
-    if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) {
-      mimeType = m;
-      break;
-    }
+  for(const m of cand){
+    if(MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)){ mime = m; break; }
   }
-  if (!mimeType) {
-    videoNotAvailable();
-    videoBtn.disabled = false;
-    if (videoLoadingEl) videoLoadingEl.style.display = "none";
+  if(!mime){
+    toast(T.videoError);
+    videoBtn.disabled=false;
+    videoLoading.style.display="none";
     return;
   }
 
-  // Proviamo a mixare audio tastiera dentro il video
-  let mixedStream = baseStream;
-  let audioCtx = null;
-  if (typingSfx && typeof typingSfx.captureStream === "function") {
-    try{
-      const audioStream = typingSfx.captureStream();
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const audioSource = audioCtx.createMediaStreamSource(audioStream);
-      const dest = audioCtx.createMediaStreamDestination();
-      audioSource.connect(dest);
-      mixedStream = new MediaStream([
-        ...baseStream.getVideoTracks(),
-        ...dest.stream.getAudioTracks()
-      ]);
-    }catch(e){
-      console.warn("audio mixing failed, fallback to video only", e);
-      mixedStream = baseStream;
-      if (audioCtx){
-        try{ audioCtx.close(); }catch{}
-      }
-      audioCtx = null;
-    }
-  }
-
+  const rec = new MediaRecorder(stream,{mimeType:mime});
   const chunks = [];
-  let recorder;
-  try{
-    recorder = new MediaRecorder(mixedStream, { mimeType });
-  }catch(e){
-    console.error(e);
-    videoNotAvailable();
+  rec.ondataavailable = e=>{ if(e.data && e.data.size>0) chunks.push(e.data); };
+  rec.onstop = ()=>{
+    lastVideoBlob = new Blob(chunks,{type:mime});
+    lastMime = mime;
+    const url = URL.createObjectURL(lastVideoBlob);
+    videoPreview.src = url;
+    videoPreview.style.display = "block";
+    videoDownload.href = url;
+    const ext = mime.indexOf("webm")>-1 ? "webm" : "mp4";
+    videoDownload.download = "whatf-video."+ext;
+    videoDownload.style.display = "inline-flex";
+    videoNote.textContent = T.videoReady;
     videoBtn.disabled = false;
-    if (videoLoadingEl) videoLoadingEl.style.display = "none";
-    return;
-  }
-
-  recorder.ondataavailable = (ev)=>{
-    if (ev.data && ev.data.size > 0) chunks.push(ev.data);
+    videoLoading.style.display = "none";
   };
 
-  recorder.onstop = ()=>{
-    try{
-      const blob = new Blob(chunks, { type: mimeType });
-      lastVideoBlob = blob;
-      lastVideoMime = mimeType;
-      const url = URL.createObjectURL(blob);
-      if (videoPreview) videoPreview.src = url;
-      if (videoDownload) {
-        const ext = mimeType.includes("mp4") ? "mp4" : "webm";
-        videoDownload.href = url;
-        videoDownload.download = `whatf-video.${ext}`;
-      }
-      if (videoWrap) videoWrap.style.display = "block";
-      if (videoNoteEl) videoNoteEl.textContent = T.videoReadyNote || "";
-    }catch(e){
-      console.error(e);
-      videoNotAvailable();
-    }finally{
-      videoBtn.disabled = false;
-      if (videoLoadingEl) videoLoadingEl.style.display = "none";
-      if (typingSfx){
-        try{
-          typingSfx.loop = false;
-          typingSfx.pause();
-          typingSfx.currentTime = 0;
-        }catch{}
-      }
-      if (audioCtx){
-        try{ audioCtx.close(); }catch{}
-      }
-    }
-  };
-
-  // Testo animato: risposta + motivazioni, tutte
-  const animatedText = answerText + (motivation ? ("\n\n" + motivation) : "");
-  const totalChars = animatedText.length;
-  const charsPerSecond = 28; // leggermente più veloce, ma comunque leggibile
-  const totalDurationMs = Math.max(8000, Math.round((totalChars / charsPerSecond) * 1000));
-  const extraStillMs = 1200;
+  const fullText = (answerEl.textContent || "") + (motNote.textContent ? ("\n\n" + motNote.textContent) : "");
+  const totalChars = fullText.length;
+  const charsPerSec = 28;
+  const duration = Math.max(8000, Math.round(totalChars/charsPerSec*1000));
+  const extra = 1200;
   const start = performance.now();
-  const marginX = 52;
-  const maxWidth = width - marginX * 2;
-
-  const videoQLabel = T.videoLabelQuestion || T.q || "DOMANDA";
-  const videoALabel = T.videoLabelAnswer || T.a || "RISPOSTA";
-  const videoMLabel = T.videoLabelMotiv || T.guideTitle || "Motivazioni";
-  const brand = "What?f";
-
-  // start audio tastiera dentro il video
-  if (typingSfx){
-    try{
-      typingSfx.currentTime = 0;
-      typingSfx.loop = true;
-      typingSfx.play().catch(()=>{});
-    }catch{}
-  }
 
   function drawFrame(progress){
-    // sfondo virale full-screen
-    const grad = ctx.createLinearGradient(0,0,0,height);
-    grad.addColorStop(0, style==="wtf" ? "#152218" : "#05070C");
-    grad.addColorStop(0.45, style==="wtf" ? "#101a13" : "#08101B");
-    grad.addColorStop(1, "#000000");
+    // sfondo
+    const grad = ctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0,"#05070C");
+    grad.addColorStop(0.4,"#08101B");
+    grad.addColorStop(1,"#000000");
     ctx.fillStyle = grad;
-    ctx.fillRect(0,0,width,height);
+    ctx.fillRect(0,0,w,h);
 
-    // glow circolare centrale
-    const radGrad = ctx.createRadialGradient(
-      width/2, height*0.18, 40,
-      width/2, height*0.18, 420
-    );
-    radGrad.addColorStop(0, "rgba(255,236,1,0.35)");
-    radGrad.addColorStop(0.4, "rgba(28,87,160,0.25)");
-    radGrad.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = radGrad;
-    ctx.fillRect(0,0,width,height);
+    // glow
+    const rg = ctx.createRadialGradient(w/2,h*0.18,40,w/2,h*0.18,420);
+    rg.addColorStop(0,"rgba(255,236,1,0.35)");
+    rg.addColorStop(0.5,"rgba(28,87,160,0.25)");
+    rg.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle = rg;
+    ctx.fillRect(0,0,w,h);
 
-    // pillola brand in alto
+    // pillola brand
     ctx.save();
-    ctx.translate(width/2, 70);
+    ctx.translate(w/2,70);
     ctx.fillStyle = "rgba(0,0,0,0.65)";
     ctx.beginPath();
-    ctx.roundRect(-150, -26, 300, 52, 26);
+    ctx.roundRect(-150,-26,300,52,26);
     ctx.fill();
-    ctx.lineWidth = 1.2;
     ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.lineWidth = 1.2;
     ctx.stroke();
-
-    ctx.font = "bold 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.textAlign = "center";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(brand + " ✨", 0, -2);
-
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillText("What?f ✨",0,-2);
     ctx.font = "12px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.fillStyle = "rgba(224,232,240,0.82)";
-    const styleLabel = (style==="wtf")
-      ? (lang==="it"?"What the F · bar oracle":"What the F · bar oracle")
-      : (lang==="it"?"What if · soft oracle":"What if · soft oracle");
-    ctx.fillText(styleLabel, 0, 16);
+    const styleLabel = (style==="wtf") ? "What the F · bar oracle" : "What if · soft oracle";
+    ctx.fillText(styleLabel,0,16);
     ctx.restore();
 
-    // card DOMANDA
-    ctx.save();
+    const marginX = 52;
     const cardX = marginX;
     const cardY = 130;
-    const cardW = width - marginX*2;
+    const cardW = w - marginX*2;
     const cardH = 180;
+
+    // card domanda
+    ctx.save();
     ctx.fillStyle = "rgba(0,0,0,0.55)";
     ctx.beginPath();
-    ctx.roundRect(cardX, cardY, cardW, cardH, 22);
+    ctx.roundRect(cardX,cardY,cardW,cardH,22);
     ctx.fill();
     ctx.strokeStyle = "rgba(255,255,255,0.20)";
     ctx.lineWidth = 1.2;
     ctx.stroke();
-
-    ctx.font = "bold 14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.textAlign = "left";
     ctx.fillStyle = "rgba(255,255,255,0.72)";
-    ctx.fillText(videoQLabel + " · 🎯", cardX+16, cardY+28);
-
-    ctx.font = "bold 26px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.font = "bold 14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillText(T.videoLabelQ + " · 🎯", cardX+16, cardY+28);
     ctx.fillStyle = "#FFFFFF";
-    wrapAndDraw(ctx, domanda, cardX+16, cardY+60, cardW-32, 32);
+    ctx.font = "bold 26px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    wrapText(ctx, domanda, cardX+16, cardY+60, cardW-32, 30);
     ctx.restore();
 
     // percentuale chip
-    const pctStr = topPct.textContent || bottomPct.textContent || "";
-    if (pctStr){
-      ctx.save();
+    const pctStr = pctTop.textContent || "";
+    if(pctStr){
+      const chipW = 140, chipH = 40;
+      const chipX = w - marginX - chipW;
       const chipY = cardY + cardH + 20;
-      ctx.font = "bold 18px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-      const chipW = 140;
-      const chipH = 40;
-      const chipX = width - marginX - chipW;
-      const gradChip = ctx.createLinearGradient(chipX, chipY, chipX, chipY+chipH);
-      gradChip.addColorStop(0, "#1C57A0");
-      gradChip.addColorStop(1, "#FFEC01");
-      ctx.fillStyle = gradChip;
+      const gc = ctx.createLinearGradient(chipX,chipY,chipX,chipY+chipH);
+      gc.addColorStop(0,"#1C57A0");
+      gc.addColorStop(1,"#FFEC01");
+      ctx.fillStyle = gc;
       ctx.beginPath();
-      ctx.roundRect(chipX, chipY, chipW, chipH, 20);
+      ctx.roundRect(chipX,chipY,chipW,chipH,20);
       ctx.fill();
-      ctx.fillStyle = "#0A0E12";
+      ctx.fillStyle = "#05070b";
       ctx.textAlign = "center";
-      ctx.fillText(pctStr, chipX + chipW/2, chipY + 26);
-      ctx.restore();
+      ctx.font = "bold 18px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+      ctx.fillText(pctStr, chipX+chipW/2, chipY+26);
     }
 
-    // testo animato: risposta + motivazioni in card full-screen
-    ctx.save();
+    // box risposta+motivazioni
     const blockX = marginX;
     const blockY = 330;
-    const blockW = width - marginX*2;
-    const blockH = height - blockY - 80;
-
+    const blockW = w - marginX*2;
+    const blockH = h - blockY - 80;
+    ctx.save();
     ctx.fillStyle = "rgba(0,0,0,0.58)";
     ctx.beginPath();
-    ctx.roundRect(blockX, blockY, blockW, blockH, 28);
+    ctx.roundRect(blockX,blockY,blockW,blockH,26);
     ctx.fill();
     ctx.strokeStyle = "rgba(255,255,255,0.16)";
     ctx.lineWidth = 1.2;
     ctx.stroke();
-
-    // Etichetta RISPOSTA / MOTIVAZIONI in alto
-    ctx.font = "bold 14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.textAlign = "left";
     ctx.fillStyle = "rgba(255,255,255,0.72)";
-    ctx.fillText(videoALabel + " · " + videoMLabel + " ✍️", blockX+18, blockY+28);
+    ctx.font = "bold 14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillText(T.videoLabelA + " ✍️", blockX+18, blockY+28);
 
-    // testo animato
     const charsVisible = Math.max(1, Math.floor(totalChars * progress));
-    const partial = animatedText.slice(0, charsVisible);
-
-    let y = blockY + 60;
-    ctx.font = "20px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    const partial = fullText.slice(0, charsVisible);
     ctx.fillStyle = "#FFFFFF";
-    y = wrapAndDraw(ctx, partial, blockX+18, y, blockW-32, 28);
-
+    ctx.font = "19px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    wrapText(ctx, partial, blockX+18, blockY+58, blockW-32, 26);
     ctx.restore();
 
-    // micro call-to-action in basso
+    // micro CTA in basso
     ctx.save();
+    ctx.textAlign = "center";
     ctx.font = "12px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.fillStyle = "rgba(255,255,255,0.55)";
-    ctx.textAlign = "center";
     const cta = (lang==="it")
-      ? "Condividi e tagga @whatforacle se ti riconosci in questa lettura."
+      ? "Condividi e tagga @whatforacle se ti ci ritrovi."
       : (lang==="en")
-        ? "Share and tag @whatforacle if this reading hits you."
+        ? "Share & tag @whatforacle if this hits you."
         : "";
-    if (cta){
-      ctx.fillText(cta, width/2, height-30);
-    }
+    if(cta) ctx.fillText(cta, w/2, h-30);
     ctx.restore();
   }
 
   const start = performance.now();
-
-  function loop(ts){
+  rec.start();
+  function step(ts){
     const elapsed = ts - start;
-    const progress = Math.min(1, elapsed / totalDurationMs);
+    const progress = Math.min(1, elapsed / duration);
     drawFrame(progress);
-
-    if (elapsed < totalDurationMs + extraStillMs) {
-      requestAnimationFrame(loop);
-    } else {
-      recorder.stop();
+    if(elapsed < duration + extra){
+      requestAnimationFrame(step);
+    }else{
+      rec.stop();
     }
   }
-
-  recorder.start();
-  requestAnimationFrame(loop);
+  requestAnimationFrame(step);
 }
 
-/* ⬇️ Bottone "Scarica / Condividi" → prova a condividere il FILE, altrimenti scarica */
-if (videoDownload) {
-  videoDownload.addEventListener('click', async (e)=>{
-    if (!lastVideoBlob) return; // niente video → normale download
-    const ext = (lastVideoMime && lastVideoMime.includes("mp4")) ? "mp4" : "webm";
-    const file = new File(
-      [lastVideoBlob],
-      `whatf-video.${ext}`,
-      { type: lastVideoMime || "video/webm" }
-    );
+videoBtn.onclick = ()=>createVideo();
 
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      e.preventDefault();
-      try{
-        await navigator.share({
-          title: "What?f",
-          text: "Guarda il mio oracolo What?f ✨",
-          files: [file]
-        });
-        return;
-      }catch(err){
-        console.warn("share from videoDownload failed, fallback to download", err);
-      }
+videoDownload.addEventListener("click", async (e)=>{
+  if(!lastVideoBlob){ return; }
+  const T = t();
+  const ext = (lastMime && lastMime.indexOf("webm")>-1) ? "webm" : "mp4";
+  const file = new File([lastVideoBlob], "whatf-video."+ext,{type:lastMime||"video/webm"});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    e.preventDefault();
+    try{
+      await navigator.share({
+        title:"What?f",
+        text:"Guarda il mio oracolo What?f ✨",
+        files:[file]
+      });
+    }catch(err){
+      console.warn("share failed",err);
     }
-    // fallback: lascia andare il download normale
-  });
-}
-
-/* ==== Nav / lingua / share / save ==== */
-qs('#backBtn').onclick=()=> history.length > 1 ? history.back() : location.replace('index.html');
-qs('#homeBtn').onclick=()=> location.href='index.html';
-qs('#langSelect').onchange=()=>{
-  const v=qs('#langSelect').value;
-  LS.setItem('lang',v);
-  LS.setItem('lang_manual','1');
-  document.documentElement.lang=v;
-  lang=v;
-  applyUI(LS.getItem('domanda')||'');
-  updateCreditInfo();
-  oracleDeck = [];
-};
-qs('#shareBtn').onclick=async()=>{
-  const T=t();
-  const full=`What?f — ${style==='wtf'?(T.styleWTF):(T.styleWHF)}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
-  try{
-    if(navigator.share){ await navigator.share({title:"What?f",text:full}); }
-    else{
-      await navigator.clipboard.writeText(full);
-      const b=qs('#shareBtn'); b.textContent=T.copied; setTimeout(()=>b.textContent=T.share,1200);
-    }
-  }catch{}
-};
-qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
-if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
-if(videoBtn){ videoBtn.onclick = generateVideoClip; }
-
-/* ==== Avvio ==== */
-startFlow();
+  }
+});
 </script>
-
 </body>
 </html>
