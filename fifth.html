@@ -140,9 +140,8 @@ h1{
 #videoPreview{
   width:100%;
   max-height:420px;
-  border-radius:18px;
+  border-radius:16px;
   display:block;
-  box-shadow:0 14px 40px rgba(0,0,0,.6);
 }
 #videoLoading{
   font-size:12px;
@@ -264,19 +263,18 @@ h1{
     <div class="label" id="lblVideo">Video condivisibile</div>
     <div class="result-box" id="videoBox">
       <p class="small" id="videoHelp">
-        Crea un breve video con domanda e risposta, pronto da condividere sui social.
+        Crea un breve video con domanda, risposta e motivazioni, pronto da condividere sui social.
       </p>
       <div class="row" style="margin-top:6px;">
         <button class="btn ghost" id="videoBtn">🎬 Crea video</button>
         <span class="small" id="videoLoading" style="display:none;">Generazione video in corso…</span>
       </div>
       <div id="videoWrap" style="display:none;">
-        <video id="videoPreview" controls></video>
+        <video id="videoPreview" controls playsinline></video>
         <div class="row" style="margin-top:8px;justify-content:space-between;">
-          <a id="videoDownload" class="btn primary" download="whatf-clip.mp4">⬇️ Scarica</a>
-          <button id="videoShareBtn" class="btn ghost">📤 Condividi video</button>
+          <a id="videoDownload" class="btn primary" download="whatf-video.mp4">⬇️ Scarica / Condividi</a>
+          <span class="small" id="videoNote"></span>
         </div>
-        <span class="small" id="videoNote"></span>
       </div>
     </div>
 
@@ -309,9 +307,9 @@ h1{
 <audio id="sfxWtf" preload="auto">
   <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
 </audio>
-<!-- ⌨️ typing SFX (metti typing-sfx.mp3 nella stessa cartella di questo file) -->
+<!-- ⌨️ Suono tastiera (testo + video) -->
 <audio id="typingSfx" preload="auto">
-  <source src="typing-sfx.mp3" type="audio/mpeg">
+  <source src="./audio/typing.mp3" type="audio/mpeg">
 </audio>
 
 <script type="module">
@@ -361,14 +359,15 @@ const I18N = {
        guideAnalysis:"Analisi sintetica",
        /* VIDEO */
        videoTitle:"Video condivisibile",
-       videoHelp:"Crea un breve video con domanda e risposta, pronto da condividere sui social.",
+       videoHelp:"Crea un breve video con domanda, risposta e motivazioni, pronto da condividere sui social.",
        videoBtn:"🎬 Crea video",
-       videoReadyNote:"Video pronto: puoi scaricarlo e caricarlo su TikTok, Reels o dove vuoi.",
+       videoReadyNote:"Video pronto: puoi scaricarlo o condividerlo su TikTok, Reels o dove vuoi.",
        videoPreparing:"Generazione video in corso…",
        videoError:"Impossibile generare il video. Riprova.",
        videoNoData:"Non c’è ancora una risposta da trasformare in video.",
-       videoShareNotSupported:"Il tuo browser non supporta la condivisione diretta del file. Scarica il video e caricalo dal social.",
-       videoShareCancelled:"Condivisione annullata."
+       videoLabelQuestion:"DOMANDA",
+       videoLabelAnswer:"RISPOSTA",
+       videoLabelMotiv:"MOTIVAZIONI"
   },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
@@ -394,14 +393,15 @@ const I18N = {
        guideAnalysis:"Concise analysis",
        /* VIDEO */
        videoTitle:"Shareable video",
-       videoHelp:"Create a short video with your question and answer, ready to share on social media.",
+       videoHelp:"Create a short video with your question, answer and motivations, ready to share on social media.",
        videoBtn:"🎬 Create video",
-       videoReadyNote:"Video ready: you can download it and upload it to TikTok, Reels or anywhere you like.",
+       videoReadyNote:"Video ready: you can download it or share it on TikTok, Reels or anywhere you like.",
        videoPreparing:"Generating video…",
        videoError:"Could not generate the video. Please try again.",
        videoNoData:"There is no answer yet to turn into a video.",
-       videoShareNotSupported:"Your browser cannot share this file directly. Download the video and upload it to social.",
-       videoShareCancelled:"Share cancelled."
+       videoLabelQuestion:"QUESTION",
+       videoLabelAnswer:"ANSWER",
+       videoLabelMotiv:"MOTIVATIONS"
   },
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
        sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
@@ -427,14 +427,15 @@ const I18N = {
        guideAnalysis:"Análisis sintético",
        /* VIDEO */
        videoTitle:"Vídeo compartible",
-       videoHelp:"Crea un vídeo corto con tu pregunta y respuesta, listo para compartir en redes.",
+       videoHelp:"Crea un vídeo corto con tu pregunta, respuesta y motivaciones, listo para compartir en redes.",
        videoBtn:"🎬 Crear vídeo",
-       videoReadyNote:"Vídeo listo: puedes descargarlo y subirlo a TikTok, Reels o donde quieras.",
+       videoReadyNote:"Vídeo listo: puedes descargarlo o compartirlo en TikTok, Reels o donde quieras.",
        videoPreparing:"Generando vídeo…",
        videoError:"No se ha podido generar el vídeo. Inténtalo de nuevo.",
        videoNoData:"Todavía no hay una respuesta para convertir en vídeo.",
-       videoShareNotSupported:"Tu navegador no puede compartir este archivo directamente. Descarga el vídeo y súbelo a la red social.",
-       videoShareCancelled:"Compartición cancelada."
+       videoLabelQuestion:"PREGUNTA",
+       videoLabelAnswer:"RESPUESTA",
+       videoLabelMotiv:"MOTIVACIONES"
   },
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
        sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
@@ -460,14 +461,15 @@ const I18N = {
        guideAnalysis:"Analyse concise",
        /* VIDEO */
        videoTitle:"Vidéo partageable",
-       videoHelp:"Crée une courte vidéo avec ta question et la réponse, prête à être partagée sur les réseaux.",
+       videoHelp:"Crée une courte vidéo avec ta question, ta réponse et les motivations, prête à être partagée sur les réseaux.",
        videoBtn:"🎬 Créer la vidéo",
-       videoReadyNote:"Vidéo prête : tu peux la télécharger et la mettre sur TikTok, Reels ou ailleurs.",
+       videoReadyNote:"Vidéo prête : tu peux la télécharger ou la partager sur TikTok, Reels ou ailleurs.",
        videoPreparing:"Génération de la vidéo…",
        videoError:"Impossible de générer la vidéo. Réessaie.",
        videoNoData:"Il n’y a pas encore de réponse à transformer en vidéo.",
-       videoShareNotSupported:"Ton navigateur ne peut pas partager directement ce fichier. Télécharge la vidéo et publie-la sur le réseau social.",
-       videoShareCancelled:"Partage annulé."
+       videoLabelQuestion:"QUESTION",
+       videoLabelAnswer:"RÉPONSE",
+       videoLabelMotiv:"MOTIVATIONS"
   },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
        sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
@@ -493,19 +495,20 @@ const I18N = {
        guideAnalysis:"Kurzanalyse",
        /* VIDEO */
        videoTitle:"Teilbares Video",
-       videoHelp:"Erstelle ein kurzes Video mit deiner Frage und Antwort, bereit zum Teilen in Social Media.",
+       videoHelp:"Erstelle ein kurzes Video mit deiner Frage, Antwort und Begründungen – bereit zum Teilen in Social Media.",
        videoBtn:"🎬 Video erstellen",
-       videoReadyNote:"Video fertig: Du kannst es herunterladen und auf TikTok, Reels oder wo du willst hochladen.",
+       videoReadyNote:"Video fertig: Du kannst es herunterladen oder auf TikTok, Reels usw. teilen.",
        videoPreparing:"Video wird erzeugt…",
        videoError:"Video konnte nicht erzeugt werden. Bitte versuche es erneut.",
        videoNoData:"Es gibt noch keine Antwort, die in ein Video umgewandelt werden kann.",
-       videoShareNotSupported:"Dein Browser kann diese Datei nicht direkt teilen. Lade das Video herunter und lade es im sozialen Netzwerk hoch.",
-       videoShareCancelled:"Teilen abgebrochen."
+       videoLabelQuestion:"FRAGE",
+       videoLabelAnswer:"ANTWORT",
+       videoLabelMotiv:"MOTIVE"
   }
 };
 const SUP_LANG=['it','en','es','fr','de'];
 
-/* ======== LINGUA ======== */
+/* ======== LINGUA: segui FOURTH (request.lang o LS.lang) ======== */
 const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
 const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
@@ -520,7 +523,7 @@ function detectLang(text=''){
     de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
   };
   const score={}; for(const L of SUP_LANG){ score[L]=0; (bank[L]||[]).forEach(w=>{ if(t.includes(w)) score[L]++; }); }
-  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; } }
+  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
   if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
   return best;
 }
@@ -528,7 +531,7 @@ let lang = SUP_LANG.includes(langFromFourth) ? langFromFourth : detectLang(doman
 document.documentElement.lang=lang;
 const t = ()=>I18N[lang]||I18N.it;
 
-/* ==== Firebase credits (solo lettura) ==== */
+/* ==== Firebase credits (solo lettura su fifth) ==== */
 let currentUser = null;
 let currentBalance = 0;
 
@@ -613,42 +616,68 @@ const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct
 const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
 const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
 const motNote=qs('#motNote'), toastEl=qs('#toast');
+const typingSfx = document.getElementById('typingSfx');
 
 /* ==== VIDEO refs ==== */
 const videoBtn = qs('#videoBtn');
 const videoWrap = qs('#videoWrap');
 const videoPreview = qs('#videoPreview');
 const videoDownload = qs('#videoDownload');
-const videoShareBtn = qs('#videoShareBtn');
 const videoLoadingEl = qs('#videoLoading');
 const videoNoteEl = qs('#videoNote');
 
-/* ==== Audio typing ==== */
-const typingSfx = document.getElementById('typingSfx');
-let typingTimeoutId = null;
-function playTypingShort(ms=2200){
-  if(!typingSfx) return;
-  try{
-    typingSfx.loop = false;
-    typingSfx.currentTime = 0;
-    typingSfx.play().catch(()=>{});
-  }catch{}
-  if(typingTimeoutId) clearTimeout(typingTimeoutId);
-  typingTimeoutId = setTimeout(()=>{
-    try{
-      typingSfx.pause();
-      typingSfx.currentTime = 0;
-    }catch{}
-  }, ms);
-}
-
 /* ==== Toast ==== */
-function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1800); }
+function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1500); }
 
 /* ==== Helpers testo ==== */
 function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
 function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
+
+/* === effetto macchina da scrivere per la risposta principale === */
+let typewriterTimerId = null;
+function typewriterAnswer(el, text){
+  if (!el) return;
+  const full = String(text || '').trim();
+  if (!full){
+    el.textContent = '—';
+    return;
+  }
+  if (typewriterTimerId){
+    clearInterval(typewriterTimerId);
+    typewriterTimerId = null;
+  }
+  el.textContent = '';
+
+  const charsPerSecond = 25;           // più basso = più lento
+  const stepMs = 1000 / charsPerSecond;
+  let i = 0;
+
+  if (typingSfx){
+    try{
+      typingSfx.loop = true;
+      typingSfx.currentTime = 0;
+      typingSfx.play().catch(()=>{});
+    }catch{}
+  }
+
+  typewriterTimerId = setInterval(()=>{
+    i++;
+    el.textContent = full.slice(0, i);
+    if (i >= full.length){
+      clearInterval(typewriterTimerId);
+      typewriterTimerId = null;
+      if (typingSfx){
+        try{
+          typingSfx.loop = false;
+          typingSfx.pause();
+          typingSfx.currentTime = 0;
+        }catch{}
+      }
+      decorateEmBits(el);
+    }
+  }, stepMs);
+}
 
 /* ==== Titles/Text ==== */
 function applyUI(q){
@@ -738,7 +767,6 @@ function wtfMotivationDemenziale(langCode){
 }
 
 /* ===== NUOVE MOTIVAZIONI WHAT IF ===== */
-/* (tua funzione invariata, la lascio uguale) */
 function buildWhatIfMotivationsPretty(domanda, pct){
   const q = String(domanda||"").toLowerCase();
   const L = lang;
@@ -922,7 +950,7 @@ function buildWhatIfMotivationsPretty(domanda, pct){
   }
 }
 
-/* ==== CACHE RISULTATO ==== */
+/* ==== CACHE RISULTATO (per bloccare doppie risposte) ==== */
 const RESULT_CACHE_KEY = 'whatif_result_cache_v2';
 
 function saveResultToCache(obj){
@@ -955,8 +983,7 @@ function applyResultToUI(result){
   applyUI(domanda);
   qView.textContent = domanda || '—';
 
-  answerEl.textContent = result.answer || '—';
-  decorateEmBits(answerEl);
+  typewriterAnswer(answerEl, result.answer || '—');
 
   const usedPct = (typeof result.pct === 'number' && isFinite(result.pct))
     ? Math.max(0, Math.min(100, Math.round(result.pct)))
@@ -995,7 +1022,6 @@ function applyResultToUI(result){
   }
 
   revealEffect();
-  playTypingShort(2400);
 }
 
 /* ==== Top init ==== */
@@ -1021,7 +1047,7 @@ function applyQuestion(){
   return {req, domanda, surprise};
 }
 
-/* ==== Salvataggio domanda ==== */
+/* ==== Salvataggio domanda per fourth ==== */
 function saveCurrentQuestion(){
   const domanda = (LS.getItem('domanda') || '').trim();
   if(!domanda) return;
@@ -1035,7 +1061,7 @@ function saveCurrentQuestion(){
   toast(t().savedOk);
 }
 
-/* ==== Main flow ==== */
+/* ==== Main flow (NESSUN CONSUMO CREDITI QUI) ==== */
 async function startFlow(){
   const {req, domanda, surprise} = applyQuestion();
   updateCreditInfo();
@@ -1069,11 +1095,10 @@ async function startFlow(){
     if(parts.length>maxSent) parts=parts.slice(0,maxSent);
     answerText=parts.join(" ").trim();
     if(!/[.!?…]$/.test(answerText)) answerText+='.';
-    answerEl.textContent=answerText; decorateEmBits(answerEl);
 
     stopOracleLoading();
     revealEffect();
-    playTypingShort(2600);
+    typewriterAnswer(answerEl, answerText);
 
     const apiPct = (data && Number.isFinite(+data.pct)) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : null;
     const usedPct = (apiPct!=null) ? apiPct : computeProbability(domanda).pct;
@@ -1157,7 +1182,7 @@ async function startFlow(){
   }
 }
 
-/* ==== VIDEO: Canvas + MediaRecorder ==== */
+/* ==== VIDEO: generazione client-side con Canvas + MediaRecorder (effetto scrittura + motivazioni) ==== */
 
 function videoNotAvailable(msg){
   const T = t();
@@ -1165,7 +1190,6 @@ function videoNotAvailable(msg){
   toast(text);
 }
 
-/* disegna testo a capo */
 function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
   const words = String(text || "").split(/\s+/);
   let line = "";
@@ -1187,7 +1211,6 @@ function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
   return y;
 }
 
-/* stato ultimo video per condivisione */
 let lastVideoBlob = null;
 let lastVideoMime = null;
 
@@ -1195,6 +1218,7 @@ async function generateVideoClip(){
   const T = t();
   const domanda = (localStorage.getItem('domanda') || qView.textContent || '').trim();
   const answerText = (answerEl.textContent || '').trim();
+  const motivation = (motNote.innerText || motNote.textContent || '').trim();
 
   if (!domanda || !answerText) {
     videoNotAvailable(T.videoNoData || "Non c’è ancora una risposta da trasformare in video.");
@@ -1217,7 +1241,6 @@ async function generateVideoClip(){
   if (videoWrap) videoWrap.style.display = "none";
   if (videoNoteEl) videoNoteEl.textContent = "";
 
-  // Canvas
   const canvas = document.createElement("canvas");
   const width = 720;
   const height = 1280;
@@ -1225,7 +1248,7 @@ async function generateVideoClip(){
   canvas.height = height;
   const ctx = canvas.getContext("2d");
 
-  const stream = canvas.captureStream(25);
+  const baseStream = canvas.captureStream(25);
 
   const candidates = [
     "video/mp4;codecs=h264",
@@ -1247,10 +1270,34 @@ async function generateVideoClip(){
     return;
   }
 
+  // Proviamo a mixare audio tastiera dentro il video
+  let mixedStream = baseStream;
+  let audioCtx = null;
+  if (typingSfx && typeof typingSfx.captureStream === "function") {
+    try{
+      const audioStream = typingSfx.captureStream();
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const audioSource = audioCtx.createMediaStreamSource(audioStream);
+      const dest = audioCtx.createMediaStreamDestination();
+      audioSource.connect(dest);
+      mixedStream = new MediaStream([
+        ...baseStream.getVideoTracks(),
+        ...dest.stream.getAudioTracks()
+      ]);
+    }catch(e){
+      console.warn("audio mixing failed, fallback to video only", e);
+      mixedStream = baseStream;
+      if (audioCtx){
+        try{ audioCtx.close(); }catch{}
+      }
+      audioCtx = null;
+    }
+  }
+
   const chunks = [];
   let recorder;
   try{
-    recorder = new MediaRecorder(stream, { mimeType });
+    recorder = new MediaRecorder(mixedStream, { mimeType });
   }catch(e){
     console.error(e);
     videoNotAvailable();
@@ -1285,118 +1332,180 @@ async function generateVideoClip(){
       if (videoLoadingEl) videoLoadingEl.style.display = "none";
       if (typingSfx){
         try{
+          typingSfx.loop = false;
           typingSfx.pause();
           typingSfx.currentTime = 0;
-          typingSfx.loop = false;
         }catch{}
+      }
+      if (audioCtx){
+        try{ audioCtx.close(); }catch{}
       }
     }
   };
 
-  // Effetto scrittura: usa tutta la risposta
-  const fullAnswer = answerText;
-  const answerLen = fullAnswer.length;
-  const charsPerSecond = 30; // più lento del precedente
-  let totalDurationMs = Math.round((answerLen / charsPerSecond) * 1000);
-  totalDurationMs = Math.max(12000, Math.min(totalDurationMs, 28000)); // min 12s, max ~28s
-  const extraStillMs = 2000;
+  // Testo animato: risposta + motivazioni, tutte
+  const animatedText = answerText + (motivation ? ("\n\n" + motivation) : "");
+  const totalChars = animatedText.length;
+  const charsPerSecond = 28; // leggermente più veloce, ma comunque leggibile
+  const totalDurationMs = Math.max(8000, Math.round((totalChars / charsPerSecond) * 1000));
+  const extraStillMs = 1200;
   const start = performance.now();
-  const marginX = 60;
+  const marginX = 52;
   const maxWidth = width - marginX * 2;
 
-  // typing audio in loop
-  if(typingTimeoutId){ clearTimeout(typingTimeoutId); typingTimeoutId=null; }
-  if(typingSfx){
+  const videoQLabel = T.videoLabelQuestion || T.q || "DOMANDA";
+  const videoALabel = T.videoLabelAnswer || T.a || "RISPOSTA";
+  const videoMLabel = T.videoLabelMotiv || T.guideTitle || "Motivazioni";
+  const brand = "What?f";
+
+  // start audio tastiera dentro il video
+  if (typingSfx){
     try{
-      typingSfx.loop = true;
       typingSfx.currentTime = 0;
+      typingSfx.loop = true;
       typingSfx.play().catch(()=>{});
     }catch{}
   }
 
-  const LABEL_Q = {it:"Q:",en:"Q:",es:"P:",fr:"Q :",de:"F:"}[lang] || "Q:";
-  const LABEL_A = {it:"A:",en:"A:",es:"R:",fr:"R :",de:"A:"}[lang] || "A:";
-  const titleText = "What?f";
-  const subText = style==='wtf' ? "⚡ What the F — Oracolo" : "💡 What if — Oracolo";
-
   function drawFrame(progress){
-    // sfondo virale
+    // sfondo virale full-screen
     const grad = ctx.createLinearGradient(0,0,0,height);
-    grad.addColorStop(0,"#04070b");
-    grad.addColorStop(0.5, style==='wtf' ? "#122018" : "#101822");
-    grad.addColorStop(1,"#04070b");
+    grad.addColorStop(0, style==="wtf" ? "#152218" : "#05070C");
+    grad.addColorStop(0.45, style==="wtf" ? "#101a13" : "#08101B");
+    grad.addColorStop(1, "#000000");
     ctx.fillStyle = grad;
     ctx.fillRect(0,0,width,height);
 
-    // alone giallo centrale
-    const radial = ctx.createRadialGradient(width/2, height*0.42, 80, width/2, height*0.42, 420);
-    radial.addColorStop(0,"rgba(255,236,1,.35)");
-    radial.addColorStop(1,"rgba(0,0,0,0)");
-    ctx.fillStyle = radial;
+    // glow circolare centrale
+    const radGrad = ctx.createRadialGradient(
+      width/2, height*0.18, 40,
+      width/2, height*0.18, 420
+    );
+    radGrad.addColorStop(0, "rgba(255,236,1,0.35)");
+    radGrad.addColorStop(0.4, "rgba(28,87,160,0.25)");
+    radGrad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = radGrad;
     ctx.fillRect(0,0,width,height);
 
-    // titolo
+    // pillola brand in alto
+    ctx.save();
+    ctx.translate(width/2, 70);
+    ctx.fillStyle = "rgba(0,0,0,0.65)";
+    ctx.beginPath();
+    ctx.roundRect(-150, -26, 300, 52, 26);
+    ctx.fill();
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.stroke();
+
+    ctx.font = "bold 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.textAlign = "center";
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 44px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillText(titleText, width/2, 90);
+    ctx.fillText(brand + " ✨", 0, -2);
 
-    ctx.fillStyle = "#FFEC01";
-    ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillText(subText, width/2, 125);
-
-    // card domanda
-    const cardX = 40;
-    const cardY = 150;
-    const cardW = width - 80;
-    const cardH = 230;
-
-    ctx.save();
-    ctx.beginPath();
-    if (ctx.roundRect){
-      ctx.roundRect(cardX, cardY, cardW, cardH, 26);
-    } else {
-      ctx.rect(cardX, cardY, cardW, cardH);
-    }
-    ctx.fillStyle = "rgba(3,8,14,.92)";
-    ctx.fill();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "rgba(255,236,1,.85)";
-    ctx.stroke();
+    ctx.font = "12px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillStyle = "rgba(224,232,240,0.82)";
+    const styleLabel = (style==="wtf")
+      ? (lang==="it"?"What the F · bar oracle":"What the F · bar oracle")
+      : (lang==="it"?"What if · soft oracle":"What if · soft oracle");
+    ctx.fillText(styleLabel, 0, 16);
     ctx.restore();
 
-    // testo domanda dentro la card
+    // card DOMANDA
+    ctx.save();
+    const cardX = marginX;
+    const cardY = 130;
+    const cardW = width - marginX*2;
+    const cardH = 180;
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.beginPath();
+    ctx.roundRect(cardX, cardY, cardW, cardH, 22);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.20)";
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.font = "bold 14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.textAlign = "left";
-    ctx.fillStyle = "#FFEC01";
-    ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillText(LABEL_Q, cardX + 26, cardY + 54);
+    ctx.fillStyle = "rgba(255,255,255,0.72)";
+    ctx.fillText(videoQLabel + " · 🎯", cardX+16, cardY+28);
 
+    ctx.font = "bold 26px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 34px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    let y = cardY + 96;
-    y = wrapAndDraw(ctx, domanda, cardX + 26, y, cardW - 52, 40);
+    wrapAndDraw(ctx, domanda, cardX+16, cardY+60, cardW-32, 32);
+    ctx.restore();
 
-    // label A
-    y = cardY + cardH + 40;
-    ctx.fillStyle = "#FFEC01";
-    ctx.font = "600 24px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillText(LABEL_A, marginX, y);
-    y += 38;
+    // percentuale chip
+    const pctStr = topPct.textContent || bottomPct.textContent || "";
+    if (pctStr){
+      ctx.save();
+      const chipY = cardY + cardH + 20;
+      ctx.font = "bold 18px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+      const chipW = 140;
+      const chipH = 40;
+      const chipX = width - marginX - chipW;
+      const gradChip = ctx.createLinearGradient(chipX, chipY, chipX, chipY+chipH);
+      gradChip.addColorStop(0, "#1C57A0");
+      gradChip.addColorStop(1, "#FFEC01");
+      ctx.fillStyle = gradChip;
+      ctx.beginPath();
+      ctx.roundRect(chipX, chipY, chipW, chipH, 20);
+      ctx.fill();
+      ctx.fillStyle = "#0A0E12";
+      ctx.textAlign = "center";
+      ctx.fillText(pctStr, chipX + chipW/2, chipY + 26);
+      ctx.restore();
+    }
 
-    // risposta scritta
-    const chars = Math.max(1, Math.floor(fullAnswer.length * progress));
-    const partial = fullAnswer.slice(0, chars);
+    // testo animato: risposta + motivazioni in card full-screen
+    ctx.save();
+    const blockX = marginX;
+    const blockY = 330;
+    const blockW = width - marginX*2;
+    const blockH = height - blockY - 80;
 
+    ctx.fillStyle = "rgba(0,0,0,0.58)";
+    ctx.beginPath();
+    ctx.roundRect(blockX, blockY, blockW, blockH, 28);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.16)";
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // Etichetta RISPOSTA / MOTIVAZIONI in alto
+    ctx.font = "bold 14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillStyle = "rgba(255,255,255,0.72)";
+    ctx.fillText(videoALabel + " · " + videoMLabel + " ✍️", blockX+18, blockY+28);
+
+    // testo animato
+    const charsVisible = Math.max(1, Math.floor(totalChars * progress));
+    const partial = animatedText.slice(0, charsVisible);
+
+    let y = blockY + 60;
+    ctx.font = "20px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "30px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    wrapAndDraw(ctx, partial, marginX, y, maxWidth, 38);
+    y = wrapAndDraw(ctx, partial, blockX+18, y, blockW-32, 28);
 
-    // footer mini-hashtag
-    ctx.font = "600 18px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillStyle = "rgba(255,255,255,.82)";
+    ctx.restore();
+
+    // micro call-to-action in basso
+    ctx.save();
+    ctx.font = "12px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,0.55)";
     ctx.textAlign = "center";
-    ctx.fillText("#whatf  ·  screenshotta o condividi", width/2, height - 70);
+    const cta = (lang==="it")
+      ? "Condividi e tagga @whatforacle se ti riconosci in questa lettura."
+      : (lang==="en")
+        ? "Share and tag @whatforacle if this reading hits you."
+        : "";
+    if (cta){
+      ctx.fillText(cta, width/2, height-30);
+    }
+    ctx.restore();
   }
+
+  const start = performance.now();
 
   function loop(ts){
     const elapsed = ts - start;
@@ -1414,6 +1523,34 @@ async function generateVideoClip(){
   requestAnimationFrame(loop);
 }
 
+/* ⬇️ Bottone "Scarica / Condividi" → prova a condividere il FILE, altrimenti scarica */
+if (videoDownload) {
+  videoDownload.addEventListener('click', async (e)=>{
+    if (!lastVideoBlob) return; // niente video → normale download
+    const ext = (lastVideoMime && lastVideoMime.includes("mp4")) ? "mp4" : "webm";
+    const file = new File(
+      [lastVideoBlob],
+      `whatf-video.${ext}`,
+      { type: lastVideoMime || "video/webm" }
+    );
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      e.preventDefault();
+      try{
+        await navigator.share({
+          title: "What?f",
+          text: "Guarda il mio oracolo What?f ✨",
+          files: [file]
+        });
+        return;
+      }catch(err){
+        console.warn("share from videoDownload failed, fallback to download", err);
+      }
+    }
+    // fallback: lascia andare il download normale
+  });
+}
+
 /* ==== Nav / lingua / share / save ==== */
 qs('#backBtn').onclick=()=> history.length > 1 ? history.back() : location.replace('index.html');
 qs('#homeBtn').onclick=()=> location.href='index.html';
@@ -1427,7 +1564,6 @@ qs('#langSelect').onchange=()=>{
   updateCreditInfo();
   oracleDeck = [];
 };
-
 qs('#shareBtn').onclick=async()=>{
   const T=t();
   const full=`What?f — ${style==='wtf'?(T.styleWTF):(T.styleWHF)}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
@@ -1442,49 +1578,6 @@ qs('#shareBtn').onclick=async()=>{
 qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
 if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
 if(videoBtn){ videoBtn.onclick = generateVideoClip; }
-
-/* bottone Condividi video: prova share file, altrimenti solo toast */
-if(videoShareBtn){
-  videoShareBtn.addEventListener('click', async (e)=>{
-    e.preventDefault();
-    const T = t();
-    if (!lastVideoBlob){
-      toast(T.videoNoData || "Non c’è ancora un video da condividere.");
-      return;
-    }
-    const ext = (lastVideoMime && lastVideoMime.includes("mp4")) ? "mp4" : "webm";
-    const file = new File(
-      [lastVideoBlob],
-      `whatf-video.${ext}`,
-      { type: lastVideoMime || "video/webm" }
-    );
-
-    try{
-      if (navigator.canShare && navigator.canShare({ files:[file] })) {
-        await navigator.share({
-          title: "What?f",
-          text: "Guarda il mio oracolo What?f ✨",
-          files: [file]
-        });
-        return;
-      } else if (navigator.share) {
-        // share solo testo
-        await navigator.share({
-          title: "What?f",
-          text: "Ho generato questo oracolo con What?f. Scarica il video dalla pagina e caricalo sul social. ✨"
-        });
-        toast(T.videoShareNotSupported);
-        return;
-      }
-    }catch(err){
-      console.warn("share video failed", err);
-      toast(T.videoShareCancelled || "Condivisione annullata.");
-      return;
-    }
-    // nessun supporto
-    toast(T.videoShareNotSupported);
-  });
-}
 
 /* ==== Avvio ==== */
 startFlow();
