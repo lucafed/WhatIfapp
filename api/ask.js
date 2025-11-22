@@ -1,9 +1,10 @@
-// /api/ask.js — What?f Engine (nuova logica: clarify + answer)
+// /api/ask.js — What?f Engine (nuova logica: clarify + answer, VERSIONE COMPATTA)
 // - WHATIF: meno poetico, più pratico. Tono “zingara realista” ma concreto:
 //   ~70% analisi / 30% immagini sobrie, risposta chiara alla domanda.
+//   5–7 frasi, massimo ~120 parole.
 // - WTF: ultra demenziale, sarcastico, da barista affettuoso:
-//   seconda persona SEMPRE, ma evita di iniziare ogni frase con "tu".
-//   Niente poesia, niente elenchi. Monologo da video virale.
+//   seconda persona SEMPRE, niente poesia, niente tono “zingara”. Monologo da video virale.
+//   6–8 frasi, massimo ~160 parole.
 //
 // - Un paragrafo, niente elenchi, niente eco della domanda. Maiuscole ripristinate post-process.
 
@@ -146,7 +147,7 @@ function pickDet(arr, seed) {
 /* ========= WHAT IF – esempio (più sobrio) ========= */
 const WHATIF_HYBRID_EX_IT = `Qui la tua scelta sposta davvero il peso delle giornate. Tagli rumore, recuperi pezzi di tempo che avevi sparso in giro senza accorgertene e inizi a usare meglio le energie. Cambiano le abitudini che tieni e quelle che lasci, e ti ritrovi con una routine meno scenografica ma più vivibile. Ti accorgi di quali persone reggono la nuova versione di te e di quali restano solo sulle vecchie abitudini. Non è una rivoluzione da film: è manutenzione di vita, una manopola alla volta. E quando ti guardi indietro, il rimpianto fa meno rumore proprio nel punto in cui hai iniziato a scegliere in modo più onesto.`;
 
-const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO PRATICO):
+const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO PRATICO COMPATTO):
 - Tono: “zingara realista” ma concreta. Pochissima poesia, zero frasi fumose.
 - Devi risparmiare parole e dare una risposta chiara alla domanda: cosa succede se lo fai? cosa cambia davvero?
 - Priorità: 70% analisi concreta (routine, tempo, soldi, energia, relazioni, rischi) + massimo 30% immagini sobrie della quotidianità.
@@ -157,9 +158,9 @@ const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO PRATICO):
 - Rispondi sempre al punto centrale della domanda (spostamento, lavoro, relazione, soldi, scelta personale): niente derive generiche.
 - Linguaggio: italiano naturale, pulito, leggermente colloquiale ma non infantile.
 - Chiudi con una frase che riassume il senso della scelta: cosa ci guadagni, cosa rischi, che tipo di storia diventa la tua.
-- 8–10 frasi, seconda persona, un solo paragrafo, niente elenchi, niente emoji, niente giri mistici inutili.`;
+- 5–7 frasi, seconda persona, un solo paragrafo, niente elenchi, niente emoji, niente giri mistici inutili.`;
 
-const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE PRATICO):
+const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE PRATICO COMPATTO):
 - Tono: leggi una vita alternativa, ma resti lucido. Pochissima poesia, tanta realtà.
 - Scopo: mostrare cosa sarebbe cambiato davvero se quella scelta passata fosse andata diversamente.
 - Usa struttura controfattuale: "se avessi…, ti saresti trovato…, avresti vissuto…, avresti pagato…".
@@ -169,9 +170,9 @@ const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE PRATICO):
 - Se esiste un dettaglio aggiuntivo dall’utente, trattalo come vincolo principale e richiamalo in modo esplicito almeno una volta.
 - Nessuna data inventata: resta sul tipo di esperienza (non su fatti storici specifici).
 - Chiudi riportando dolcemente al presente: cosa impari da quell’ipotesi e cosa puoi ancora fare ora.
-- 8–10 frasi, seconda persona, un solo paragrafo, niente elenchi, niente emoji. Risposta chiara, poco fumo, molta sostanza.`;
+- 5–7 frasi, seconda persona, un solo paragrafo, niente elenchi, niente emoji. Risposta chiara, poco fumo, molta sostanza.`;
 
-/* ========= Finali “gancio” WHAT IF ========= */
+/* ========= Finali “gancio” ========= */
 const ZINGARA_ENDINGS = {
   it: {
     future: [
@@ -196,7 +197,7 @@ const ZINGARA_ENDINGS = {
     past: ["Y quizá hoy lo sentirías: no era destino, era otra forma de escribir tu historia."],
   },
   fr: {
-    future: ["Et là tu verras qu’il ne faut pas tout casser, juste choisir più giusto."],
+    future: ["Et là tu verras qu’il ne faut pas tout casser, juste choisir plus juste."],
     past: ["Et tu comprendras que ce n’était pas le destin, juste un autre scénario possible."],
   },
   de: {
@@ -218,47 +219,6 @@ function ensureZingaraEnding({ text, lang, periodo, domanda }) {
       ? pool.past || ZINGARA_ENDINGS.it.past
       : pool.future || ZINGARA_ENDINGS.it.future;
   const addon = pickDet(bag, hashStr((domanda || "") + s));
-  if (!addon) return s;
-  s = s.replace(/[.!?…]+$/, "");
-  return `${s}. ${addon}`;
-}
-
-/* ========= WHAT THE F – finali obbligatori ========= */
-const WTF_ENDINGS = {
-  it: [
-    "In pratica non ti salva la vita, ma ti regala almeno una storia decente da raccontare al prossimo aperitivo.",
-    "In pratica ti complichi un po’ l’esistenza, ma almeno smetti di chiederti per anni come sarebbe andata.",
-    "Morale spiccia: non è la scelta perfetta, è solo quella che ti fa smettere di restare fermo al bancone.",
-    "Riassunto da barista: ti fai male il giusto, ti diverti abbastanza e almeno capisci di che pasta sei fatto.",
-  ],
-  en: [
-    "Basically it doesn’t fix your life, but it gives you at least one good story for the next night out.",
-    "Bottom line: you make things messier, but you stop wondering forever what would have happened.",
-  ],
-  es: [
-    "En resumen: no te arregla la vida, pero te regala una historia bastante decente para la próxima cerveza.",
-  ],
-  fr: [
-    "En gros, ça ne sauve pas ta vie, mais ça te donne au moins une histoire potable à raconter au prochain verre.",
-  ],
-  de: [
-    "Unterm Strich löst es nicht dein Leben, aber gibt dir wenigstens eine brauchbare Story für den nächsten Abend am Tresen.",
-  ],
-};
-function ensureWtfEnding({ text, lang, domanda }) {
-  let s = String(text || "").trim();
-  if (!s) return s;
-  const last = (s.match(/([^.!?…]+[.!?…])\s*$/) || [])[1] || s;
-
-  // se l’ultima frase ha già una mini-morale, lasciala
-  const hasMoral = /(in pratica|morale|riassunto|alla fine|bottom line|in the end|en resumen|en gros|unterm strich)/i.test(
-    last
-  );
-  if (hasMoral) return s;
-
-  const L = normLang(lang);
-  const pool = WTF_ENDINGS[L] || WTF_ENDINGS.it;
-  const addon = pickDet(pool, hashStr((domanda || "") + s));
   if (!addon) return s;
   s = s.replace(/[.!?…]+$/, "");
   return `${s}. ${addon}`;
@@ -371,7 +331,8 @@ const WTF_REACT_BY_CONTEXT = {
 const WTF_DRINK_POOL = [
   "riempi un bicchiere pesante fino al bordo e lo svuoti in un sorso lunghissimo come se stessi spegnendo un incendio interiore",
   "versi da bere con troppa convinzione, poi lo mandi giù a colpi nervosi che sembrano un codice Morse",
-  "prendi il bicchiere più grande che trovi, lo carichi oltre il buon senso e lo fai sparire in un attimo",
+  "prendi il bicchiere più grande che trovi, lo carichi oltre il buon senso
+  e lo fai sparire in un attimo",
   "ti versi poco, poi torni a riempirlo come se la misura non fosse mai abbastanza, e lo sorseggi con finta calma",
   "riempi il bicchiere, lo guardi tre secondi di troppo e alla fine lo bevi tutto d’un fiato come se firmassi un contratto",
   "appoggi il bicchiere sul tavolo, fai scena, poi lo sollevi e lo fai evaporare senza respirare",
@@ -530,41 +491,10 @@ COMPITO:
 /* ========= Prompt builder per la RISPOSTA ========= */
 function buildMessages({ domanda, clarification, lang, periodo, stile }) {
   const L = normLang(lang);
-
-  // Regole base SEPARATE per WHAT IF vs WTF, così non si contaminano
-  let baseRules;
-  if (stile === "wtf") {
-    baseRules =
-      L === "en"
-        ? `You are “WHAT THE F”: absurd, sarcastic and weirdly caring, like a bartender who has seen too much life.
-You ALWAYS speak in SECOND PERSON (“you / your”) when you talk about the user.
-You NEVER use first person (“I, me, we, us”) and NEVER talk about the user in third person (“he, she, this guy, this person”).
-STYLE:
-- Single paragraph, no bullets, no emojis, no headings.
-- Tone: loud, comic, chaotic, but emotionally lucid. No mystical nonsense, no coaching, no “probability” talk, no step-by-step advice.
-- Do NOT sound like a fortune teller, therapist, guru or project manager.
-- Avoid sentences like “you could”, “you should probably”, “the scenario is”: speak as if you’re roasting the situation in real time.
-- Every sentence should carry an image, a small twist or a joke, like a viral reel voice-over.
-- Never restate or rephrase the question. Just dive into the scene and the rant.
-- Length: 7–9 sentences, one paragraph, punchy but not endless.`
-        : `Sei “WHAT THE F”: voce demenziale, sarcastica e affettuosa, come un barista che ha visto troppa vita.
-Parli SEMPRE e SOLO in seconda persona (“tu / ti / te / tuo”) quando ti riferisci a chi fa la domanda.
-È vietato usare la prima persona (“io, noi, me, ci, mi, nostro, nostra, miei, nostre”) e parlare dell’utente in terza persona (“lui, lei, questo tizio, questa persona”).
-
-REGOLE DI STILE:
-- Un solo paragrafo, niente elenchi visibili, niente emoji, niente titoletti.
-- Tono: da bar, comico, un po’ cattivo ma affettuoso. NIENTE mistiche, niente frasi da coach, niente “probabilità” o “scenari”.
-- Non sembrare una zingara realista né un consulente: niente “secondo me”, niente “potresti impostare”, niente piano in punti.
-- Evita parole tipo “probabilità, scenario, percentuale, strategia, obiettivo SMART, futuro pratico”.
-- Ogni frase deve avere un’immagine concreta o una piccola battuta, come la voce fuori campo di un reel virale.
-- NON ripetere la domanda, non riassumerla, non fare analisi serie: racconta la scena come se la stessi commentando dal bancone.
-- Lunghezza: 7–9 frasi, un solo blocco compatto.`;
-  } else {
-    baseRules =
-      L === "en"
-        ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. SECOND PERSON ONLY (“you / your”) when you talk about the user. Never talk about the user in third person (“he, she, this guy, this person”). Do NOT use first person (“I, me, we, us”). Stay close to the topic of the question and answer its core point clearly. Use a rich, varied vocabulary, and keep grammar and punctuation clean. Avoid repeating the same words and images too often.`
-        : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona (tu / ti / te / tuo) quando parli dell’utente. Vietato usare la prima persona singolare o plurale (“io, noi, me, ci, mi, nostro, nostra, miei, nostre”) e vietato parlare dell’utente in terza persona (“lui, lei, questo tizio, questa persona”). Resta aderente al tema della domanda e rispondi in modo chiaro al punto centrale. Usa un vocabolario ricco e vario, italiano corretto, senza errori di grammatica e con punteggiatura curata. Evita ripetizioni evidenti di parole e immagini.`;
-  }
+  const baseRules =
+    L === "en"
+      ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. SECOND PERSON ONLY (“you / your”) when you talk about the user. Never talk about the user in third person (“he, she, this guy, this person”). Do NOT use first person (“I, me, we, us”). Stay close to the topic of the question and answer its core point clearly. Use a rich, varied vocabulary, and keep grammar and punctuation clean. Avoid repeating the same words and images too often.`
+      : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona (tu / ti / te / tuo) quando parli dell’utente. Vietato usare la prima persona singolare o plurale (“io, noi, me, ci, mi, nostro, nostra, miei, nostre”) e vietato parlare dell’utente in terza persona (“lui, lei, questo tizio, questa persona”). Resta aderente al tema della domanda e rispondi in modo chiaro al punto centrale. Usa un vocabolario ricco e vario, italiano corretto, senza errori di grammatica e con punteggiatura curata. Evita ripetizioni evidenti di parole e immagini.`;
 
   const msgs = [{ role: "system", content: baseRules }];
 
@@ -593,18 +523,17 @@ Parli SEMPRE E SOLO in seconda persona (“tu / ti / te / tuo”) quando ti rife
 È VIETATO parlare dell’utente in terza persona (“lui, lei, questo tizio, questo sognatore, questo qui”) se lo stai descrivendo: devi sempre tirarlo in mezzo direttamente.
 Vietato usare qualunque prima persona (“io, noi, me, ci, mi, nostro, nostra, miei, nostre”).
 
-IMPORTANTISSIMO:
-- Evita di iniziare più di DUE frasi con la parola “tu”.
-- Evita parole e toni da WHAT IF: niente “probabilità”, “scenario”, “potresti”, “inizieresti”, “ti ritroveresti con una routine”, “futuro pratico”, “scelta più allineata”.
-- Evita frasi da guru o da psicologo: niente “ti accorgerai che”, “imparerai che”, “la versione migliore di te”.
+IMPORTANTISSIMO: evita di iniziare più di DUE frasi con la parola “tu”. Usa spesso la forma implicita o riflessiva: “entri”, “arrivi”, “ti siedi”, “ti incastri”, “ti ritrovi”.
 
-SE C’È UN DETTAGLIO AGGIUNTIVO DALL’UTENTE (risposta in fourth):
+ZERO TONO ZINGARA: niente intuizioni mistiche, niente “vedo energie”, niente lezioncine spirituali. Sei solo un barista che commenta la scena con sarcasmo e affetto.
+
+SE C’È UN DETTAGLIO AGGIUNTIVO DALL’UTENTE:
 - Trattalo come il centro del delirio: la scena, le battute e la morale devono appoggiarsi fortissimo proprio su quel dettaglio.
-- Fai sentire che ti stai agganciando esattamente a quello che ti ha scritto nella risposta.
+- Fai sentire all’utente che ti stai agganciando esattamente a quello che ti ha scritto nella risposta in fourth.
 
 OBIETTIVO: far ridere forte e dare una risposta CHIARA alla domanda, con un monologo che sembra un video virale da mandare al gruppo WhatsApp.
 
-STRUTTURA OBBLIGATORIA (ITALIANO):
+STRUTTURA OBBLIGATORIA (ITALIANO, COMPATTA):
 1) Apertura (1–2 frasi):
    - Prendi in giro la SITUAZIONE, non la persona: tratta l’utente come “campione olimpico delle scelte discutibili”, “direttore creativo del casino”, “eroe dell’indecisione organizzata”.
    - Rivolgiti DIRETTAMENTE a lui: “entri”, “arrivi”, “ti presenti”, “ti convinci che…”, NON “lui entra”.
@@ -613,7 +542,7 @@ STRUTTURA OBBLIGATORIA (ITALIANO):
 2) Scena concreta:
    - Descrivi cosa succede nel mondo reale legato al contesto (“${ctx}”): entri in concessionaria, rientri all’Aquila, riapri la chat, ti siedi in ufficio, guardi il conto.
    - La scena deve sembrare un mini-video: movimenti, oggetti, sguardi, silenzi.
-   - Se hai un dettaglio aggiuntivo (budget, tempi, vincoli) dalla risposta in fourth, infilalo dentro la scena come se fosse il vero problema.
+   - Se hai un dettaglio aggiuntivo (budget, tempi, vincoli), infilalo dentro la scena come se fosse il vero problema.
 
 3) IMPRECAZIONE TEATRALE (esattamente UNA):
    - Esagerata e comica, mai identica agli esempi.
@@ -635,9 +564,9 @@ ${react.map((r) => `     - ${r}`).join("\n")}
    - Ispirati a: “${drinkSample}” ma inventa SEMPRE una scena di bevuta nuova.
    - Il bicchiere/tazza può reagire: tremare, giudicare, tintinnare.
 
-7) CHIUSURA OBBLIGATORIA:
-   - Chiudi con 1–2 frasi che rispondono in modo chiaro alla domanda (“in pratica, ti conviene”, “in pratica ti complichi la vita ma almeno sai perché”, “non ti salva, ma ti regala una storia decente”).
-   - La chiusura DEVE contenere una mini-morale ironica, non motivazionale, che sintetizza pro e contro in modo spiccio.
+7) Chiusura:
+   - Chiudi con 1–2 frasi che rispondono in modo chiaro alla domanda dell’utente (“in pratica, ti conviene”, “in pratica ti complichi la vita ma almeno sai perché”, “non ti salva, ma ti regala una storia decente”).
+   - Mini-morale ironica da video virale, possibilmente legata anche al dettaglio aggiuntivo dell’utente.
 
 8) Stile:
    - Italiano parlato, diretto, pieno di immagini sceme ma chiare.
@@ -646,25 +575,24 @@ ${react.map((r) => `     - ${r}`).join("\n")}
    - Frasi relativamente brevi, ritmo alto.
 
 9) Lunghezza:
-   - 7–9 frasi, UN solo paragrafo.
-   - Nessun elenco visibile, nessuna emoji, nessuna ripetizione della domanda.`;
+   - 6–8 frasi, UN solo paragrafo, massimo circa 160 parole.
+   - Nessun elenco visibile, nessuna emoji, nessuna ripetizione della domanda.
+
+Ricorda: devi sembrare la voce fuori campo perfetta per un reel virale: cattiva ma affettuosa, scema ma molto precisa sul succo della risposta.`;
 
     const WTF_RULE_EN = `You are “WHAT THE F”: absurd, sarcastic and weirdly caring, like a bartender who has seen too much life.
 You ALWAYS speak in SECOND PERSON (“you / your”) when you talk about the user.
 You NEVER talk about the user in third person (“he, she, this guy, that person”) and you NEVER use first person (“I, me, we, us”).
 Avoid starting more than TWO sentences with “you”: use implicit forms like “walk in”, “sit down”, “stare at”, skipping “you” when obvious.
 
-HARD LIMITS:
-- Do NOT sound like a fortune teller, therapist, coach or project manager.
-- No “probabilities”, no “scenarios”, no “future self”, no “you could maybe”, no numbered advice.
-- Single paragraph, no bullets, no emojis, no headings.
+NO MYSTICAL VIBES: no energies, no spiritual lessons, no wise fortune-teller tone. Just a sarcastic bartender narrating the scene.
 
-IF THERE IS EXTRA DETAIL FROM THE USER (fourth-page answer):
+IF THERE IS EXTRA DETAIL FROM THE USER:
 - Treat it as the core constraint of the rant: scene, jokes and conclusion must lean hard on that detail.
 
 GOAL: short, viral-style rant that is funny but still gives a clear answer to the question.
 
-STRUCTURE:
+STRUCTURE (COMPACT):
 - Opening: roast the situation, give ridiculous heroic titles (“hero of chaos”, “CEO of bad decisions”), talking directly to the user.
 - Concrete scene: show what happens in real life (office, bar, shop, city, money, bike…), and weave the extra detail into the scene.
 - ONE theatrical outburst aimed at the situation (never at real groups).
@@ -672,7 +600,7 @@ STRUCTURE:
 - Tiny slapstick disaster (trip, drop, door stuck, card declined dramatically).
 - Drink scene: funny, visual, no self-harm.
 - Ending: clear yes/no/but answer + tiny ironic moral, also linked to the user’s extra detail.
-- 7–9 sentences, single paragraph, no bullets, no emojis, no restating the question.
+- 6–8 sentences, single paragraph, max ~160 words, no bullets, no emojis, no restating the question.
 - Every sentence should carry at least one comic image or punchline, keep the pace high.`;
 
     msgs.push(
@@ -690,12 +618,6 @@ STRUCTURE:
       {
         role: "system",
         content: `IDEA DI BEVUTA TEATRALE (solo spunto, NON copiare la frase, varia sempre il modo di bere):\n- ${drinkSample}`,
-      },
-      {
-        role: "system",
-        content: `ESEMPIO DI TONO (NON copiare il testo, NON usare i nomi, NON usare la prima persona; serve solo come modello di stile, voce e ritmo):
-
-"Ah ma fantastico, ecco l’eroe dell’asfalto che dopo due video su TikTok si sente pronto per la MotoGP nel parcheggio del supermercato. Entri in concessionaria con l’aria di chi sta per firmare un trattato di pace con l’universo, tocchi la moto e nella testa parte un “BWOOOM” che farebbe tremare anche i carrelli. Appena il venditore pronuncia il prezzo, parte una turbo-bestemmia aerodinamica di terzo livello che fa vibrare la vetrina mezzo secondo in ritardo. Un casco appeso ruota piano come un giudice stanco, il poster della moto piega un angolo come per darti una pacca sulla spalla e il POS emette un bip lungo tipo richiesta di soccorso all’ONU. Fai mezzo passo indietro, inciampi in un tappetino che non c’era un secondo fa e improvvisi una coreografia imbarazzata degna di una gif infinita. Due minuti dopo sei al bar accanto, appoggi le chiavi sul bancone con la solennità di un re decaduto, versi da bere con troppa convinzione e mandi giù un sorso esagerato che fa tintinnare il bicchiere da solo. Non sistema la vita, ma è esattamente il genere di casino su due ruote che merita almeno un video, tre commenti indignati e un amico che scrive «io ti avevo avvisato»."`,
       }
     );
   } else {
@@ -718,13 +640,13 @@ STRUCTURE:
       msgs.push({
         role: "system",
         content:
-          "Il dettaglio aggiuntivo fornito dall’utente (risposta in fourth) va trattato come parte centrale della risposta: usalo per contestualizzare la scena, i consigli e la chiusura, e richiamalo almeno una volta in modo chiaro.",
+          "Il dettaglio aggiuntivo fornito dall’utente va trattato come parte centrale della risposta: usalo per contestualizzare la scena, i consigli e la chiusura, e richiamalo almeno una volta in modo chiaro.",
       });
     } else if (L === "en") {
       msgs.push({
         role: "system",
         content:
-          "The extra detail from the user (fourth-page answer) is central: use it to anchor the scene, the reasoning and the conclusion, and refer to it explicitly at least once.",
+          "The extra detail from the user is central: use it to anchor the scene, the reasoning and the conclusion, and refer to it explicitly at least once.",
       });
     } else {
       msgs.push({
@@ -744,7 +666,7 @@ STRUCTURE:
     }
     if (L === "it") {
       return hasClar
-        ? `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo fornito dall’utente (risposta in fourth): "${c}". Genera UNA risposta in ITALIANO, molto concreta, che tenga conto di entrambi. Paragrafo unico.`
+        ? `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo fornito dall’utente (risposta in fourth): "${c}". Genera UNA risposta in ITALIANO, molto concreta, che tenga conto di entrambi. Paragrafo unico, massimo circa 120 parole se stile WHAT IF, massimo circa 160 parole se stile WHAT THE F.`
         : `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO. Paragrafo unico, grammatica corretta, tono naturale.`;
     }
     if (L === "es") {
@@ -784,7 +706,7 @@ function computePct(domanda, stile) {
   return pct;
 }
 
-/* ========= WHAT IF: motivazione sintetica ========= */
+/* ========= WHAT IF: motivazione sintetica (2 frasi) ========= */
 function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
   const L = (lang || "it").slice(0, 2);
   const t = String(domanda || "").toLowerCase();
@@ -830,10 +752,9 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     }
 
     const pSentence = `Probabilità circa ${pct}%.`;
-    const proSentence = `A favore: ${pros.slice(0, 2).join(", ")}.`;
-    const conSentence = `Contro: ${cons.slice(0, 2).join(", ")}.`;
+    const proConSentence = `A favore: ${pros[0]}. Contro: ${cons[0]}.`;
 
-    return `${pSentence} ${proSentence} ${conSentence}`.trim();
+    return `${pSentence} ${proConSentence}`.trim();
   }
 
   if (L === "en") {
@@ -868,10 +789,9 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     }
 
     const pSentence = `Estimated probability around ${pct}%.`;
-    const proSentence = `Pros: ${pros.slice(0, 2).join(", ")}.`;
-    const conSentence = `Cons: ${cons.slice(0, 2).join(", ")}.`;
+    const proConSentence = `Pros: ${pros[0]}. Cons: ${cons[0]}.`;
 
-    return `${pSentence} ${proSentence} ${conSentence}`.trim();
+    return `${pSentence} ${proConSentence}`.trim();
   }
 
   if (L === "es") {
@@ -906,10 +826,9 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     }
 
     const pSentence = `Probabilidad aproximada ${pct}%.`;
-    const proSentence = `A favor: ${pros.slice(0, 2).join(", ")}.`;
-    const conSentence = `En contra: ${cons.slice(0, 2).join(", ")}.`;
+    const proConSentence = `A favor: ${pros[0]}. En contra: ${cons[0]}.`;
 
-    return `${pSentence} ${proSentence} ${conSentence}`.trim();
+    return `${pSentence} ${proConSentence}`.trim();
   }
 
   if (L === "fr") {
@@ -944,10 +863,9 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     }
 
     const pSentence = `Probabilité estimée autour de ${pct}%.`;
-    const proSentence = `Atouts: ${pros.slice(0, 2).join(", ")}.`;
-    const conSentence = `Freins: ${cons.slice(0, 2).join(", ")}.`;
+    const proConSentence = `Atouts: ${pros[0]}. Freins: ${cons[0]}.`;
 
-    return `${pSentence} ${proSentence} ${conSentence}`.trim();
+    return `${pSentence} ${proConSentence}`.trim();
   }
 
   if (L === "de") {
@@ -982,10 +900,9 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     }
 
     const pSentence = `Geschätzte Wahrscheinlichkeit etwa ${pct}%.`;
-    const proSentence = `Dafür: ${pros.slice(0, 2).join(", ")}.`;
-    const conSentence = `Dagegen: ${cons.slice(0, 2).join(", ")}.`;
+    const proConSentence = `Dafür: ${pros[0]}. Dagegen: ${cons[0]}.`;
 
-    return `${pSentence} ${proSentence} ${conSentence}`.trim();
+    return `${pSentence} ${proConSentence}`.trim();
   }
 
   return buildWhatIfMotivation(domanda, "it", pct);
@@ -1054,13 +971,13 @@ export default async function handler(req, res) {
     }
 
     /* ====== STAGE: ANSWER (default) ====== */
-    const messages = buildMessages({ domanda, clarification, lang: L, periodo, stile });
+    const messages = buildMessages({ domanda, clarification, lang: L, periodo, stile, micro });
 
     const completion = await client.chat.completions.create({
       model: MODEL,
       temperature: stile === "wtf" ? 0.99 : 0.8,
       top_p: stile === "wtf" ? 0.95 : 0.92,
-      max_tokens: 480,
+      max_tokens: 380,
       frequency_penalty: stile === "wtf" ? 0.25 : 0.1,
       presence_penalty: stile === "wtf" ? 0.35 : 0.0,
       messages,
@@ -1073,14 +990,13 @@ export default async function handler(req, res) {
     answer = stripQuestionEcho(domanda, answer);
 
     if (stile === "wtf") {
-      // monologo WTF, compatto ma con chiusura garantita
-      answer = clampWords(answer, 230);
+      // compatto ma denso
+      answer = clampWords(answer, 160);
       answer = normalizeOneParagraph(answer);
-      answer = ensureWtfEnding({ text: answer, lang: L, domanda });
     } else {
-      // WHAT IF
-      answer = tightenSentences(answer, 10);
-      answer = clampWords(answer, 180);
+      // WHAT IF: 5–7 frasi, ~120 parole
+      answer = tightenSentences(answer, 7);
+      answer = clampWords(answer, 120);
       answer = normalizeOneParagraph(answer);
     }
 
