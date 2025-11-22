@@ -716,6 +716,16 @@ function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
 function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
 
+/* motivazioni più corte: usiamo il testo AI ma accorciato */
+function shortenMotivation(raw, maxChars=480){
+  if(!raw) return "";
+  let txt = normalizeOneParagraph(String(raw));
+  if(txt.length <= maxChars) return txt;
+  let cut = txt.lastIndexOf(" ", maxChars);
+  if(cut < maxChars * 0.6) cut = maxChars;
+  return txt.slice(0, cut).replace(/[.,;:!?…]*$/,"") + "…";
+}
+
 /* ==== Titles/Text ==== */
 function applyUI(q){
   const T=t();
@@ -785,206 +795,6 @@ function revealEffect(){
   wrap.classList.add('reveal');
   try{ document.getElementById('revealDing')?.play().catch(()=>{}); }catch{}
   setTimeout(()=> wrap.classList.remove('reveal'), 900);
-}
-
-/* ===== Motivazione demenziale per WTF ===== */
-function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
-function wtfMotivationDemenziale(langCode){
-  const shots = rnd(1,3), spill = rnd(0,2), bruise = rnd(0,3);
-  if(langCode==='en'){
-    return `Pseudo-science says small daily nudges beat grand plans. The committee argued at the bar: ${shots} shots gone, ${spill} glasses spilled, ${bruise} minor bruises; verdict between hiccups: do it, and stop overthinking.`;
-  } else if(langCode==='es'){
-    return `Pseudociencia de barra: los micro-pasos diarios ganan a los planes épicos. El comité debatió en la barra: ${shots} chupitos desaparecidos, ${spill} copas derramadas, ${bruise} pequeños moratones; veredicto entre hipos: hazlo y deja de sobrepensarlo.`;
-  } else if(langCode==='fr'){
-    return `Pseudoscience de comptoir : les micro-pas quotidiens battent les grands plans. Le comité a débattu au bar : ${shots} shots évaporés, ${spill} verres renversés, ${bruise} bleus légers ; verdict entre deux hoquets : fais-le, et arrête de trop réfléchir.`;
-  } else if(langCode==='de'){
-    return `Kneipen-Pseudowissenschaft: kleine tägliche Schritte schlagen große Pläne. Das Gremium tagte an der Theke: ${shots} Shots verschwunden, ${spill} Gläser verschüttet, ${bruise} leichte Blessuren; Urteil zwischen Schluckauf: mach’s, und hör auf, alles zu zerdenken.`;
-  }
-  return `Pseudoscienza da bancone: i micro-passi battono i piani epici. La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: fai, e smettila di pensarci troppo.`;
-}
-
-/* ===== NUOVE MOTIVAZIONI WHAT IF ===== */
-function buildWhatIfMotivationsPretty(domanda, pct){
-  const q = String(domanda||"").toLowerCase();
-  const L = lang;
-  const isPast = (periodo === 'past');
-
-  const isLove =
-    /ex\b|relazione|fidanzat[oa]|partner|coppia|amore|relationship|breakup|ex novio|ex novia|ex marit|ex moglie/.test(q);
-  const isMove =
-    /trasferi|trasloc|città|citta|tornare a|tornassi a|se tornassi|se tornare|if i move|move to|go back to/.test(q);
-  const isJob =
-    /lavoro|job|carriera|colloquio|interview|assunzion|licenziament|azienda|company|ufficio/.test(q);
-
-  if (L === 'it') {
-    const baseProb = pct
-      ? (isPast
-         ? `Probabilità intorno al ${pct}%. Non era scritto, ma qualche finestra aperta c’era.<br><br>`
-         : `Probabilità intorno al ${pct}%. Non è destino scritto, ma una pista possibile.<br><br>`)
-      : "";
-
-    if (isLove) {
-      if (isPast) {
-        return baseProb +
-          "Perché poteva funzionare:<br>" +
-          "• C’era una base emotiva reale: alcune parti di voi si capivano più di quanto ammettevate.<br>" +
-          "• C’erano margini per riscrivere il patto, se entrambi aveste nominato i problemi invece di girarci intorno.<br><br>" +
-          "Cosa lo ha reso complicato:<br>" +
-          "• Gli stessi schemi si sono ripetuti: orgoglio, silenzi, risposte lente quando servivano scelte chiare.<br>" +
-          "• La paura di farsi vedere davvero ha pesato più del desiderio di provarci fino in fondo.";
-      } else {
-        return baseProb +
-          "Perché potrebbe funzionare:<br>" +
-          "• C’è ancora una base emotiva reale: alcune parti di voi si riconoscono al volo, anche dopo il caos.<br>" +
-          "• Se i problemi vengono detti esplicitamente, potete riscrivere il patto invece di ricopiare il vecchio copione.<br><br>" +
-          "Cosa può complicarlo:<br>" +
-          "• Rischio replay: stessi silenzi, stessi non detti, solo con più stanchezza.<br>" +
-          "• La paura di esporsi può farti restare a metà: né davvero dentro, né davvero fuori.";
-      }
-    }
-
-    if (isMove) {
-      if (isPast) {
-        return baseProb +
-          "Perché poteva funzionare:<br>" +
-          "• Tornare in un luogo conosciuto ti avrebbe dato radici emotive quando ti sentivi sparpagliato.<br>" +
-          "• I ritmi più umani avrebbero potuto sostenere meglio la tua energia invece di bruciarla tutta fuori casa.<br><br>" +
-          "Cosa lo ha reso complicato:<br>" +
-          "• La paura di “fare un passo indietro” ha pesato più del bisogno di stabilità.<br>" +
-          "• Alcuni legami e abitudini del passato non erano abbastanza sani da reggere un ritorno sereno.";
-      } else {
-        return baseProb +
-          "Perché potrebbe funzionare:<br>" +
-          "• Un posto che conosci può ridarti radici quando ti senti sempre in modalità sopravvivenza.<br>" +
-          "• Ritmi più lenti e facce note possono aiutare il tuo cervello a smettere di sentirsi sempre ‘in prestazione’.<br><br>" +
-          "Cosa può complicarlo:<br>" +
-          "• Potresti leggerlo come “sto tornando indietro” invece che come cambio di ritmo.<br>" +
-          "• Alcune dinamiche del passato rischiano di riattivarsi se non metti confini chiari fin da subito.";
-      }
-    }
-
-    if (isJob) {
-      if (isPast) {
-        return baseProb +
-          "Perché poteva funzionare:<br>" +
-          "• Una direzione più chiara ti avrebbe evitato di disperdere energie in mille tentativi.\n<br>" +
-          "• Passi piccoli ma costanti sulla stessa strada avrebbero costruito più sicurezza interna.<br><br>" +
-          "Cosa lo ha reso complicato:<br>" +
-          "• Il bisogno di scegliere “il lavoro perfetto” ha rallentato ogni decisione concreta.<br>" +
-          "• Contesti non allineati ai tuoi valori ti hanno fatto dubitare di te più che del sistema in cui eri.";
-      } else {
-        return baseProb +
-          "Perché potrebbe funzionare:<br>" +
-          "• Scegliere una direzione ti permette di smettere di bruciare energie in esperimenti casuali.<br>" +
-          "• Passi piccoli ma regolari nella stessa direzione possono darti più sicurezza di qualsiasi “colpo di fortuna”.<br><br>" +
-          "Cosa può complicarlo:<br>" +
-          "• Il timore di incastrarti in una scelta ti può bloccare prima di iniziare.<br>" +
-          "• Se i contesti che trovi non rispecchiano i tuoi valori, rischi di sentirti sbagliato anche quando non lo sei.";
-      }
-    }
-
-    if (isPast) {
-      return baseProb +
-        "Perché poteva andare diversamente:<br>" +
-        "• Un paio di decisioni più chiare e un po’ di gentilezza verso te stessə avrebbero cambiato l’andamento della storia.<br>" +
-        "• C’erano segnali che potevano essere ascoltati prima, invece di essere zittiti per non creare problemi.<br><br>" +
-        "Cosa l’ha reso difficile:<br>" +
-        "• Hai dovuto scegliere con le risorse e le informazioni che avevi, non con quelle che hai adesso.<br>" +
-        "• La paura di deludere qualcuno (te compresə) ha pesato sulle scelte più di quanto sembrasse in superficie.";
-    } else {
-      return baseProb +
-        "Perché potrebbe funzionare:<br>" +
-        "• Ti sposta verso una versione di vita più allineata a come ti senti oggi, non a come “dovresti” essere.<br>" +
-        "• Piccoli passi chiari riducono il rumore mentale e ti fanno sentire meno in balia degli eventi.<br><br>" +
-        "Cosa può complicarlo:<br>" +
-        "• Restare bloccato sull’idea della scelta perfetta ti fa rinviare quella buona abbastanza.<br>" +
-        "• Cercare di non scontentare nessuno rischia di farti scontentare proprio la persona che resta: tu.";
-    }
-  }
-
-  const baseProbOther = pct
-    ? (isPast
-       ? `Approx. probability ${pct}% — it wasn’t fixed destiny, but the door wasn’t fully closed.<br><br>`
-       : `Approx. probability ${pct}% — not fixed fate, but a realistic option.<br><br>`)
-    : "";
-
-  if (L === 'en') {
-    if (isPast) {
-      return baseProbOther +
-        "Why it could have gone better:<br>" +
-        "• With a bit more clarity and timing, the situation had room to move in your favour.<br>" +
-        "• A couple of honest talks earlier might have changed how things unfolded.<br><br>" +
-        "What made it hard:<br>" +
-        "• You chose with the information and energy you had then, not with what you know now.<br>" +
-        "• Fear of messing up or disappointing people quietly pushed some options off the table.";
-    } else {
-      return baseProbOther +
-        "Why it could work:<br>" +
-        "• It nudges your life closer to what you actually want, not just what you’ve always done.<br>" +
-        "• Clear small steps turn overthinking into movement.<br><br>" +
-        "What could make it hard:<br>" +
-        "• Waiting for the “perfect” move can freeze you before you start.<br>" +
-        "• If you try to keep everyone happy, your decision loses power and you stay stuck.";
-    }
-  }
-
-  if (L === 'es') {
-    if (isPast) {
-      return baseProbOther +
-        "Por qué podría haber salido distinto:<br>" +
-        "• Con un poco más de claridad y tiempo, la situación tenía margen para girar a tu favor.<br>" +
-        "• Un par de conversaciones honestas antes habrían cambiado el guion.<br><br>" +
-        "Qué lo hizo difícil:<br>" +
-        "• Elegiste con la energía y la información que tenías entonces, no con la de ahora.<br>" +
-        "• El miedo a equivocarte o decepcionar a alguien sacó opciones del mapa sin que te dieras cuenta.";
-    } else {
-      return baseProbOther +
-        "Por qué podría funcionar:<br>" +
-        "• Te acerca a una vida más alineada con lo que sientes hoy.<br>" +
-        "• Pasos pequeños y claros convierten el darle vueltas en movimiento real.<br><br>" +
-        "Qué puede complicarlo:<br>" +
-        "• Esperar la decisión perfecta puede dejarte inmóvil.<br>" +
-        "• Si intentas contentar a todo el mundo, tu decisión pierde fuerza.";
-    }
-  }
-
-  if (L === 'fr') {
-    if (isPast) {
-      return baseProbOther +
-        "Pourquoi ça aurait pu se passer autrement :<br>" +
-        "• Avec un peu plus de clarté et de timing, la situation avait de la marge pour tourner en ta faveur.<br>" +
-        "• Quelques discussions honnêtes plus tôt auraient pu changer la suite.<br><br>" +
-        "Ce qui a compliqué les choses :<br>" +
-        "• Tu as choisi avec les ressources et les infos de l’époque, pas avec celles d’aujourd’hui.<br>" +
-        "• La peur de te tromper ou de décevoir a fait disparaître certaines options du radar.";
-    } else {
-      return baseProbOther +
-        "Pourquoi ça pourrait marcher :<br>" +
-        "• Ça t’emmène vers une vie plus proche de ce que tu ressens vraiment.<br>" +
-        "• De petits pas clairs transforment le mental en mouvement concret.<br><br>" +
-        "Ce qui peut compliquer :<br>" +
-        "• Attendre le choix parfait peut t’empêcher d’avancer.<br>" +
-        "• Si tu veux rassurer tout le monde, ta décision perd en force.";
-    }
-  }
-
-  if (isPast) {
-    return baseProbOther +
-      "Warum es anders hätte laufen können:<br>" +
-      "• Mit etwas mehr Klarheit und Timing hätte sich die Situation eher zu deinen Gunsten verschoben.<br>" +
-      "• Ein, zwei offene Gespräche früher hätten den Verlauf deutlich verändern können.<br><br>" +
-      "Was es schwierig gemacht hat:<br>" +
-      "• Du hast mit den Infos und der Energie von damals entschieden, nicht mit dem Blick von heute.<br>" +
-      "• Die Angst vor Fehlern oder Enttäuschung hat leise einige Optionen gestrichen.";
-  } else {
-    return baseProbOther +
-      "Warum es klappen kann:<br>" +
-      "• Es bringt dich näher an ein Leben, das zu deinem jetzigen Gefühl passt.<br>" +
-      "• Kleine, klare Schritte verwandeln Grübeln in Bewegung.<br><br>" +
-      "Was es erschweren kann:<br>" +
-      "• Wenn du auf die perfekte Entscheidung wartest, kommst du nicht los.<br>" +
-      "• Versuchst du alle zufriedenzustellen, verliert deine Entscheidung an Kraft.";
-  }
 }
 
 /* ==== CACHE RISULTATO ==== */
@@ -1057,7 +867,7 @@ function applyResultToUI(result){
     motIco.style.display='none';
     chipsWrap.style.display='none';
     committeeTitle.textContent = t().seriousTitle;
-    motNote.innerHTML = result.motivationText || '';
+    motNote.textContent = result.motivationText || '';
   }
 
   revealEffect();
@@ -1136,6 +946,7 @@ async function startFlow(){
     const data=await r.json().catch(()=>null);
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
 
+    // RISPOSTA: usiamo quella AI, ma accorciamo a max frasi
     let answerText=normalizeOneParagraph((data.answer||"").trim());
     const maxSent=(style==='wtf')?9:11;
     let parts=answerText.split(/(?<=[.!?…])\s+/);
@@ -1161,7 +972,9 @@ async function startFlow(){
     const surpriseMode = surprise || (req?.micro && req.micro.surprise);
 
     if (surpriseMode) {
-      motIco.style.display=''; chipsWrap.style.display='flex';
+      // modalità slot assurdo: motivazione demenziale autonoma
+      motIco.style.display='';
+      chipsWrap.style.display='flex';
       committeeTitle.textContent=t().votersTitle||'Comitato';
       const rdm=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
       chipsFavNum = rdm(120,1200);
@@ -1184,28 +997,33 @@ async function startFlow(){
       motivationTextForCache = note;
 
     } else if (style === 'wtf') {
+      // WHAT THE F: motivazione AI (scientific/motivation) accorciata, niente testo nostro
       motIco.style.display='none';
       chipsWrap.style.display='none';
       committeeTitle.textContent = t().scientificTitle;
-      const sci = (data.scientific && String(data.scientific).trim())
-        ? data.scientific
-        : wtfMotivationDemenziale(lang);
-      motNote.textContent = sci;
-      motivazioneUsata = sci;
+      const sciSource =
+        (data.motivation && String(data.motivation).trim()) ||
+        (data.scientific && String(data.scientific).trim()) ||
+        "";
+      const sciShort = shortenMotivation(sciSource, 420);
+      const finalSci = sciShort || t().motFallback;
+      motNote.textContent = finalSci;
+      motivazioneUsata = finalSci;
       motivationMode = 'wtf';
-      motivationTextForCache = sci;
+      motivationTextForCache = finalSci;
 
     } else {
+      // WHAT IF: motivazione AI accorciata, nessuna frase generata dal front-end
       motIco.style.display='none';
       chipsWrap.style.display='none';
       committeeTitle.textContent = t().seriousTitle;
-      const html = (data.motivation && String(data.motivation).trim())
-        ? buildWhatIfMotivationsPretty(domanda, usedPct)
-        : buildWhatIfMotivationsPretty(domanda, usedPct);
-      motNote.innerHTML = html;
-      motivazioneUsata = html.replace(/<br\s*\/?>/gi," | ");
+      const motSource = (data.motivation && String(data.motivation).trim()) || "";
+      const motShort = shortenMotivation(motSource, 480);
+      const finalMot = motShort || t().motFallback;
+      motNote.textContent = finalMot;
+      motivazioneUsata = finalMot;
       motivationMode = 'whatif';
-      motivationTextForCache = html;
+      motivationTextForCache = finalMot;
     }
 
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
@@ -1276,7 +1094,7 @@ async function generateVideoClip(){
   const answerText = (answerEl.textContent || '').trim();
   const motivationsRaw = (motNote?.innerText || motNote?.textContent || '').trim();
 
-  if (!domanda || !answerText) {
+  If (!domanda || !answerText) {
     videoNotAvailable(T.videoNoData || "Non c’è ancora una risposta da trasformare in video.");
     return;
   }
@@ -1479,7 +1297,7 @@ async function generateVideoClip(){
     ctx.fillText(subText, width/2, 125);
 
     // SCROLL VERSO L'ALTO MENTRE SCRIVE: ampiezza aumentata
-    const maxScroll = height * 0.38; // ~500px: testo che sale di più
+    const maxScroll = height * 0.38;
     const scrollOffset = progress * maxScroll;
     ctx.save();
     ctx.translate(0, -scrollOffset);
