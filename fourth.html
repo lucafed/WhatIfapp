@@ -1,981 +1,846 @@
+<!-- FILE: fourth.html (domanda + step di chiarimento) -->
 <!DOCTYPE html>
 <html lang="it" data-theme="whatif">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>What?f — Domanda</title>
-  <meta name="theme-color" content="#0A0F14"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>What?f — Fai la domanda</title>
+  <meta name="theme-color" content="#0B0B0C" />
   <style>
     :root{
-      --bg:#0B1018; --bg2:#0E1724; --card:#141C22;
-      --fg:#F4F7FB; --muted:#A7B3C2;
-      --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
-      --chip:#0F1820; --line:#1B2A34;
+      --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
+      --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;
+      --line: rgba(255,255,255,.12);
+      --panel: rgba(20,28,34,.92);
+      --glow: rgba(255,236,1,.22);
     }
-    html[data-theme="wtf"]{
-      --bg:#0B0B0C; --bg2:#101414; --card:#111713;
-      --fg:#EEF5F0; --muted:#A6B6AD;
-      --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;
-      --chip:#0F1714; --line:#21322A;
-    }
+    html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
+
     *{box-sizing:border-box}
     html,body{
-      height:100%;margin:0;
-      background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+      margin:0;
+      background:
+        radial-gradient(900px 700px at 20% 18%, var(--bg2) 0%, var(--bg) 60%),
+        radial-gradient(600px 480px at 80% 12%, rgba(255,236,1,.06), transparent 60%),
+        radial-gradient(700px 560px at 50% 90%, rgba(28,87,160,.10), transparent 65%);
       color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       -webkit-font-smoothing:antialiased;
     }
-    main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
-    .wrap{width:min(100%,980px)}
-    h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
-    .label{color:var(--accent2);font-weight:800;margin:0 0 8px}
-
+    main{max-width:860px;margin:auto;padding:22px}
+    h1{
+      font-size:clamp(22px,5vw,30px);
+      color:var(--acc2);
+      text-align:center;
+      margin:12px 0 6px;
+      text-shadow: 0 0 18px var(--glow);
+    }
+    .sub{color:var(--muted);text-align:center;margin:0 0 12px;font-size:14px}
     .topbar{
-      position:sticky;top:0;z-index:10;
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      padding:8px 10px;
-      background:rgba(10,15,20,.96);
-      backdrop-filter:blur(6px);
-      border-bottom:1px solid var(--line);
+      display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;
     }
-    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .btn{
-      appearance:none;border:1px solid var(--line);
-      background:var(--chip);color:var(--fg);
-      border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer;
+      padding:8px 12px;border-radius:12px;border:1px solid transparent;
+      cursor:pointer;font-weight:700;background:rgba(255,255,255,.06);color:#fff;
     }
+    .btn.icon{padding:6px 9px;min-width:38px;justify-content:center}
     .btn.primary{
-      background:linear-gradient(180deg,var(--accent),var(--accent2));
-      color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35);
+      background:linear-gradient(180deg,var(--acc),var(--acc2));
+      color:var(--ink);
+      box-shadow: 0 6px 18px rgba(0,0,0,.35),0 0 28px var(--glow);
+      border-color:rgba(0,0,0,.4);
     }
-    .btn[disabled]{opacity:.4;cursor:not-allowed}
+    .btn.ghost{
+      background:rgba(255,255,255,.04);
+      border-color:var(--line);
+    }
+    .btn-pill{
+      border-radius:999px;
+      padding:6px 14px;
+      font-size:13px;
+    }
+    .btn-toggle{
+      border-radius:999px;
+      padding:6px 14px;
+      font-size:13px;
+      background:rgba(255,255,255,.02);
+      border:1px solid rgba(255,255,255,.14);
+      color:var(--muted);
+    }
+    .btn-toggle.active{
+      background:linear-gradient(180deg,var(--acc),var(--acc2));
+      color:var(--ink);
+      box-shadow:0 0 18px var(--glow);
+      border-color:transparent;
+    }
     .badge{
-      background:var(--chip);border:1px solid var(--line);
-      border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap;
+      display:inline-flex;align-items:center;gap:6px;
+      font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);
+      border:1px solid var(--line);border-radius:999px;padding:4px 10px;
     }
-    select{
-      appearance:none;background:var(--chip);border:1px solid var(--line);
-      color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:700;cursor:pointer;
-    }
-
     .card{
-      background:var(--card);
+      background:var(--panel);
       border:1px solid var(--line);
       border-radius:16px;
       padding:16px;
-      margin:10px 0;
-      backdrop-filter:blur(12px);
+      backdrop-filter:blur(10px);
+      margin-top:12px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
     }
-    .chips{display:flex;flex-wrap:wrap;gap:8px}
-    .chip{
-      background:var(--chip);border:1px solid var(--line);
-      color:#eaf3ee;border-radius:999px;padding:8px 12px;
-      font-size:13px;cursor:pointer;
-      max-width:100%;
-      white-space:normal;
-      word-break:break-word;
-      line-height:1.3;
+    .label{
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      color:var(--muted);
+      margin-bottom:6px;
     }
-    .chip.sel{
-      background:linear-gradient(180deg,var(--accent),var(--accent2));
-      color:var(--ink);font-weight:800;
+    textarea{
+      width:100%;
+      min-height:120px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      padding:10px 12px;
+      resize:vertical;
+      font-family:inherit;
+      font-size:15px;
     }
-    .input,textarea{
-      width:100%;background:rgba(255,255,255,.06);color:#EAF3EE;
-      border:1px solid var(--line);border-radius:12px;
-      padding:14px;font-size:17px;
-    }
-    .center{max-width:760px;margin:0 auto}
+    textarea::placeholder{color:rgba(160,178,186,.8);}
+    .hint{font-size:12px;color:var(--muted);margin-top:4px}
+    .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+    .chip{font-size:11px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);color:var(--muted)}
     .small{font-size:12px;color:var(--muted)}
-
-    .list{display:flex;flex-direction:column;gap:10px}
-    .story{
-      display:flex;justify-content:space-between;align-items:center;
-      border:1px solid var(--line);border-radius:14px;
-      padding:12px 14px;background:rgba(255,255,255,.04);
+    .select{
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      color:#fff;border-radius:12px;padding:6px 10px;font-size:13px;font-weight:600;cursor:pointer;
     }
-    .play{
-      border:none;background:var(--chip);border:1px solid var(--line);
-      width:44px;height:44px;border-radius:12px;
-      cursor:pointer;font-size:18px;
+    .clarify-box{
+      margin-top:10px;
+      padding:12px 12px 10px;
+      border-radius:14px;
+      border:1px dashed rgba(255,255,255,.22);
+      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+      font-size:14px;
+      color:#E7F2EE;
     }
-    .meta{font-size:12px;color:var(--muted)}
-
-    .collapsed>.body{display:none}
-    .toggle{cursor:pointer;user-select:none}
-
-    #qInput.slotting{
-      filter:contrast(1.2) saturate(1.1);
-      animation:slotFlash .12s linear infinite;
+    .clarify-q{
+      font-weight:600;
+      margin-bottom:6px;
     }
-    @keyframes slotFlash{
-      0%{box-shadow:0 0 0 rgba(255,236,1,.0)}
-      50%{box-shadow:0 0 18px rgba(255,236,1,.2)}
-      100%{box-shadow:0 0 0 rgba(255,255,255,.0)}
+    .clarify-answer{
+      margin-top:8px;
+    }
+    .clarify-answer textarea{
+      min-height:70px;
+      font-size:14px;
+    }
+    .pill-switch{
+      display:inline-flex;
+      align-items:center;
+      padding:3px;
+      border-radius:999px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.16);
+    }
+    .pill-switch button{
+      border:none;background:transparent;color:var(--muted);
+      font-size:11px;padding:4px 9px;border-radius:999px;cursor:pointer;
+    }
+    .pill-switch button.active{
+      background:rgba(255,255,255,.14);
+      color:#fff;
+    }
+    .footer{
+      margin-top:16px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      align-items:stretch;
+    }
+    .footer .row{justify-content:space-between}
+    .error{
+      color:#ff9f9f;
+      font-size:12px;
+      margin-top:4px;
+    }
+    .toast{
+      position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
+      background:rgba(20,28,34,.95);
+      border:1px solid var(--line);
+      padding:9px 13px;
+      border-radius:12px;
+      font-size:13px;
+      font-weight:600;
+      z-index:10000;
+      opacity:0;
+      transition:opacity .2s,transform .2s;
+      pointer-events:none;
+    }
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+    .loading-dots::after{
+      content:" ·";
+      animation:ldots 1.2s infinite steps(4,end);
+    }
+    @keyframes ldots{
+      0%{content:"";}25%{content:" ·";}50%{content:" ··";}75%{content:" ···";}100%{content:"";}
+    }
+    @media(max-width:480px){
+      .row.wrap-mobile{flex-direction:column;align-items:flex-start}
+      .footer .row{flex-direction:column;align-items:stretch}
     }
   </style>
 </head>
 <body>
+<main>
   <div class="topbar">
     <div class="row">
-      <button class="btn" id="backBtn" type="button">←</button>
-      <button class="btn" id="homeBtn" type="button">🏠</button>
+      <button class="btn ghost icon" id="backBtn" aria-label="Indietro">←</button>
+      <button class="btn ghost icon" id="homeBtn" aria-label="Home">🏠</button>
     </div>
     <div class="row">
-      <span class="badge" id="styleBadge">🎭 —</span>
-      <span class="badge" id="periodoBadge">🕰️ —</span>
-      <span class="badge" id="freeBadge">Crediti: —</span>
-      <select id="langSelect" aria-label="Language">
-        <option value="it">IT</option>
-        <option value="en">EN</option>
-        <option value="es">ES</option>
-        <option value="fr">FR</option>
-        <option value="de">DE</option>
+      <span class="badge" id="proBadge" style="display:none;">🧪 TEST · ⭐ PRO</span>
+      <select id="langSelect" class="select" aria-label="Language">
+        <option value="it">IT · Italiano</option>
+        <option value="en">EN · English</option>
+        <option value="es">ES · Español</option>
+        <option value="fr">FR · Français</option>
+        <option value="de">DE · Deutsch</option>
       </select>
-      <button class="btn" id="resetBtn" type="button" title="Reset">♻️</button>
     </div>
   </div>
 
-  <main>
-    <div class="wrap">
-      <h1 id="titleH1">Imposta la tua domanda</h1>
+  <h1 id="title">What?f — Fai la tua domanda</h1>
+  <p class="sub" id="subtitle">Scrivi cosa ti frulla in testa, poi l’Oracolo ti farà una domanda al volo per mettere a fuoco.</p>
 
-      <!-- STILE + PERIODO -->
-      <div class="card">
-        <div class="row" style="justify-content:space-between;align-items:center;gap:8px">
-          <div class="chips" id="styleChips">
-            <button class="chip" data-style="whatif" id="chipWhatIf">What if</button>
-            <button class="chip" data-style="wtf" id="chipWTF">What the F</button>
-          </div>
-          <div class="chips" id="periodoChips">
-            <button class="chip" data-periodo="future" id="chipFuture">Futuro</button>
-            <button class="chip" data-periodo="past"   id="chipPast">Passato</button>
-          </div>
+  <!-- STILE + TEMPO -->
+  <div class="card">
+    <div class="label" id="lblVoice">Voce & tempo</div>
+    <div class="row wrap-mobile" style="justify-content:space-between;align-items:flex-start;">
+      <div>
+        <div class="small" id="styleHint">Scegli come vuoi sentirti parlare:</div>
+        <div class="row" style="margin-top:6px;">
+          <button class="btn-toggle active" id="btnWhatIf">💡 What if</button>
+          <button class="btn-toggle" id="btnWtf">⚡ What the F</button>
         </div>
       </div>
-
-      <!-- DOMANDA -->
-      <div class="card center">
-        <h3 class="label" id="qLabel">E se…</h3>
-        <textarea id="qInput" rows="3" class="input" placeholder="E se…" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
-        <div class="small" id="qHelp" style="margin-top:8px">
-          Scrivi obiettivo + contesto in 1 riga. Aggiungi vincoli o orizzonte (es. 30 giorni).
+      <div>
+        <div class="small" id="timeHint">Su cosa vuoi che guardi?</div>
+        <div class="pill-switch" style="margin-top:6px;">
+          <button id="btnFuture" class="active">FUTURO</button>
+          <button id="btnPast">PASSATO</button>
         </div>
-        <div class="row" style="margin-top:12px;justify-content:space-between">
-          <div class="row">
-            <button class="btn primary" id="goBtn" type="button" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
-            <button class="btn" id="surpriseBtn" type="button" title="Slot assurdo">🎲 Sorprendimi</button>
-          </div>
-          <div class="row">
-            <button class="btn" id="saveBtn" type="button">⭐ Salva</button>
-            <button class="btn" id="clearBtn" type="button">Svuota</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- SPUNTI -->
-      <div class="card center collapsed" id="hintsCard">
-        <div class="row toggle" id="hintsHeader" style="justify-content:space-between">
-          <div class="label" id="hintsTitle">▶ Spunti rapidi “E se…”</div>
-        </div>
-        <div class="body" id="hintsBody" style="margin-top:8px">
-          <div class="chips" id="hintsChips"></div>
-          <div class="small" id="hintsNote" style="margin-top:8px"></div>
-        </div>
-      </div>
-
-      <!-- SALVATI -->
-      <div class="card center collapsed" id="savedCard">
-        <div class="row toggle" id="savedHeader" style="justify-content:space-between">
-          <div class="label" id="nextLabel">▶ Domande salvate</div>
-          <button class="btn" id="clearSavedBtn" type="button">🗑️ Svuota</button>
-        </div>
-        <div class="body" id="savedBody"><div id="nextList" class="list"></div></div>
-      </div>
-
-      <!-- CRONOLOGIA -->
-      <div class="card center collapsed" id="histCard">
-        <div class="row toggle" id="histHeader" style="justify-content:space-between">
-          <div class="label" id="storiesLabel">▶ Cronologia</div>
-          <button class="btn" id="clearHistoryBtn" type="button">🗑️ Svuota</button>
-        </div>
-        <div class="body"><div id="storyList" class="list"></div></div>
       </div>
     </div>
-  </main>
+    <p class="hint" id="styleDesc">
+      💡 What if: tono “zingara realista”, empatico + pragmatico. Futuro = cosa succede se ora cambi; Passato = come sarebbe andata in un’altra linea temporale.
+    </p>
+  </div>
 
-  <script type="module">
-    // ===== Firebase base =====
-    import { auth } from "./firebase.init.js";
-    import {
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+  <!-- DOMANDA -->
+  <div class="card">
+    <div class="label" id="lblQ">La tua domanda</div>
+    <textarea id="questionInput" placeholder="E se mi trasferissi a ..., se tornassi con ..., se cambiassi lavoro, se ricominciassi da zero in un’altra città…"></textarea>
+    <div class="hint" id="qHint">
+      Scrivila come la diresti a un’amica: niente elenco puntato, una sola domanda chiara.
+    </div>
+    <div class="chips" id="chipsExamples">
+      <span class="chip">“Se tornassi a vivere all’Aquila tra un anno me ne pentirei?”</span>
+      <span class="chip">“Se lasciassi questo lavoro per uno meno stressante starei meglio?”</span>
+      <span class="chip">“Se riprovassi con la mia ex cambierebbe davvero qualcosa?”</span>
+    </div>
+    <p class="error" id="errorMsg" style="display:none;"></p>
+  </div>
 
-    // ===== Credits Firestore =====
-    import {
-      bootCredits,
-      getBalance,
-      consumeCredit
-    } from "./store/credits.js";
+  <!-- STEP CHIARIMENTO -->
+  <div class="card" id="clarifyCard" style="display:none;">
+    <div class="label" id="lblClarify">Domanda al volo dell’Oracolo</div>
+    <div class="clarify-box">
+      <div class="clarify-q" id="clarifyText">…</div>
+      <div class="clarify-answer">
+        <div class="small" id="clarifyHint">
+          Rispondi in una frase: serve solo per far puntare meglio la risposta finale su di te.
+        </div>
+        <textarea id="clarifyInput" placeholder="Es. In realtà mi spaventa più perdere la stabilità che la città in sé."></textarea>
+        <div class="hint" id="clarifyNote">
+          Puoi sempre rispondere in modo semplice: quello che ti viene prima in mente.
+        </div>
+      </div>
+    </div>
+  </div>
 
-    const LS = localStorage;
-    const $ = id => document.getElementById(id);
-    const readJSON = (k, def) => { try { return JSON.parse(LS.getItem(k) || JSON.stringify(def)); } catch { return def; } };
-    const writeJSON = (k, v) => LS.setItem(k, JSON.stringify(v));
-    const todayISO = () => new Date().toISOString().slice(0,10);
+  <!-- FOOTER AZIONI -->
+  <div class="footer">
+    <button class="btn primary" id="askBtn">
+      🔮 Chiedi all’Oracolo
+    </button>
+    <div class="row">
+      <span class="small" id="stepInfo">
+        Step 1 · Fai la tua domanda. Poi l’Oracolo ti chiede una cosa al volo, e infine vedi il risultato nella pagina dopo.
+      </span>
+      <span class="small" id="creditInfo"></span>
+    </div>
+  </div>
 
-    const IS_ADMIN = !!LS.getItem('admin_token');
+</main>
 
-    // ===== i18n =====
-    const SUP_LANG=["it","en","es","fr","de"];
-    let lang=(LS.getItem('lang')||'it').toLowerCase();
-    if(!SUP_LANG.includes(lang)) lang='it';
-    document.documentElement.lang=lang;
-    $('langSelect').value=lang;
-    $('langSelect').onchange=()=>{
-      const v=$('langSelect').value;
-      LS.setItem('lang',v);
-      location.reload();
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  /* ====== LocalStorage & base ====== */
+  const LS = localStorage;
+  const SUP_LANG = ["it","en","es","fr","de"];
+
+  const prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}");
+  let style = prefs.stile || "whatif";        // "whatif" | "wtf"
+  let periodo = prefs.periodo || "future";    // "future" | "past"
+  let langSaved = (LS.getItem("lang") || "it").slice(0,2).toLowerCase();
+  if(!SUP_LANG.includes(langSaved)) langSaved = "it";
+  let langManual = LS.getItem("lang_manual") === "1";
+  let lang = langSaved;
+
+  document.documentElement.setAttribute("data-theme", style === "wtf" ? "wtf" : "whatif");
+  document.documentElement.lang = lang;
+
+  const IS_ADMIN = !!LS.getItem("admin_token");
+
+  /* ====== I18N (essenziale per questa pagina) ====== */
+  const I18N = {
+    it:{
+      title:"What?f — Fai la tua domanda",
+      subtitle:"Scrivi cosa ti frulla in testa, poi l’Oracolo ti farà una domanda al volo per mettere a fuoco.",
+      lblVoice:"Voce & tempo",
+      styleHint:"Scegli come vuoi sentirti parlare:",
+      timeHint:"Su cosa vuoi che guardi?",
+      styleDescWHF:"💡 What if: tono “zingara realista”, empatico + pragmatico. Futuro = cosa succede se ora cambi; Passato = come sarebbe andata in un’altra linea temporale.",
+      styleDescWTF:"⚡ What the F: barista cinico ma affettuoso, demenziale e diretto. Futuro = che casino ti stai per iscrivere; Passato = da che casino ti sei salvato (o no).",
+      future:"FUTURO",
+      past:"PASSATO",
+      lblQ:"La tua domanda",
+      qPlaceholder:"E se mi trasferissi a ..., se tornassi con ..., se cambiassi lavoro, se ricominciassi da zero in un’altra città…",
+      qHint:"Scrivila come la diresti a un’amica: niente elenco puntato, una sola domanda chiara.",
+      examples:[
+        "“Se tornassi a vivere all’Aquila tra un anno me ne pentirei?”",
+        "“Se lasciassi questo lavoro per uno meno stressante starei meglio?”",
+        "“Se riprovassi con la mia ex cambierebbe davvero qualcosa?”"
+      ],
+      errEmpty:"Scrivi almeno una domanda chiara prima di continuare.",
+      errTooShort:"Aggiungi qualche dettaglio in più, così l’Oracolo sa dove guardare.",
+      errTooLong:"Rendi la domanda più corta e precisa: una sola domanda, niente romanzi.",
+      lblClarify:"Domanda al volo dell’Oracolo",
+      clarifyHint:"Rispondi in una frase: serve solo per far puntare meglio la risposta finale su di te.",
+      clarifyNote:"Puoi sempre rispondere in modo semplice: quello che ti viene prima in mente.",
+      askFirst:"🔮 Chiedi all’Oracolo",
+      askLoading:"🔮 L’Oracolo ti fa una domanda",
+      askFinal:"✨ Vai alla risposta",
+      stepInfo1:"Step 1 · Fai la tua domanda. Poi l’Oracolo ti chiede una cosa al volo, e infine vedi il risultato nella pagina dopo.",
+      stepInfo2:"Step 2 · Rispondi al volo e passa alla pagina del risultato.",
+      toastClarifyReady:"Ok, ora rispondi a questa e poi ti porto al risultato.",
+      toastClarifyMissing:"Scrivi almeno una frase di risposta, anche semplice.",
+      credits:(n)=>`💰 Crediti: ${n}`,
+      noCredits:"Crediti non disponibili.",
+      proTitle:"Modalità test attiva"
+    },
+    en:{
+      title:"What?f — Ask your question",
+      subtitle:"Write what’s on your mind, then the Oracle will throw one quick follow-up to focus the answer.",
+      lblVoice:"Voice & timeframe",
+      styleHint:"Choose how you want to be spoken to:",
+      timeHint:"What should it look at?",
+      styleDescWHF:"💡 What if: realistic fortune-teller, 60% analysis / 40% images. Future = what happens if you move now; Past = the alternate timeline.",
+      styleDescWTF:"⚡ What the F: sarcastic but caring bartender. Future = which mess you’re signing up for; Past = what kind of mess you dodged (or not).",
+      future:"FUTURE",
+      past:"PAST",
+      lblQ:"Your question",
+      qPlaceholder:"What if I moved to..., what if I got back with..., what if I changed jobs, what if I started from scratch somewhere else…",
+      qHint:"Write it like you’d tell a friend: one clear question, no bullet list.",
+      examples:[
+        "“If I moved back to my hometown next year, would I regret it?”",
+        "“If I quit this job for a less stressful one, would I feel better?”",
+        "“If I tried again with my ex, would anything really change?”"
+      ],
+      errEmpty:"Write at least one clear question before continuing.",
+      errTooShort:"Add a bit more detail so the Oracle knows where to look.",
+      errTooLong:"Shorten it and make it precise: one question, no novel.",
+      lblClarify:"Oracle’s quick follow-up",
+      clarifyHint:"Answer in one sentence: it just helps the answer fit you better.",
+      clarifyNote:"Keep it simple: whatever comes to mind first is enough.",
+      askFirst:"🔮 Ask the Oracle",
+      askLoading:"🔮 Oracle is sharpening the question",
+      askFinal:"✨ Go to the answer",
+      stepInfo1:"Step 1 · Ask your question. Then the Oracle throws a quick follow-up, and the full answer is on the next page.",
+      stepInfo2:"Step 2 · Answer quickly and jump to the result page.",
+      toastClarifyReady:"Nice, now answer this one and we’ll go to the result.",
+      toastClarifyMissing:"Write at least one sentence, even a simple one.",
+      credits:(n)=>`💰 Credits: ${n}`,
+      noCredits:"Credits not available.",
+      proTitle:"Test mode active"
+    },
+    es:{
+      title:"What?f — Haz tu pregunta",
+      subtitle:"Escribe lo que te ronda la cabeza y luego el Oráculo te hará una pregunta rápida para enfocar la respuesta.",
+      lblVoice:"Voz y tiempo",
+      styleHint:"Elige cómo quieres que te hable:",
+      timeHint:"¿Sobre qué quieres que mire?",
+      styleDescWHF:"💡 What if: pitonisa realista, 60% análisis / 40% imágenes. Futuro = qué pasa si cambias ahora; Pasado = cómo habría sido en otra línea temporal.",
+      styleDescWTF:"⚡ What the F: camarero sarcástico pero cariñoso. Futuro = en qué lío te apuntas; Pasado = de qué lío te salvaste (o no).",
+      future:"FUTURO",
+      past:"PASADO",
+      lblQ:"Tu pregunta",
+      qPlaceholder:"Y si me mudara a..., si volviera con..., si cambiara de trabajo, si empezara de cero en otro sitio…",
+      qHint:"Escríbela como se la contarías a un amigo: una sola pregunta clara.",
+      examples:[
+        "“Si volviera a mi ciudad dentro de un año, ¿me arrepentiría?”",
+        "“Si dejara este trabajo por uno menos estresante, ¿estaría mejor?”",
+        "“Si lo intentara de nuevo con mi ex, ¿cambiaría algo de verdad?”"
+      ],
+      errEmpty:"Escribe al menos una pregunta clara antes de continuar.",
+      errTooShort:"Añade algún detalle más para que el Oráculo sepa dónde mirar.",
+      errTooLong:"Haz la pregunta más corta y precisa: una sola pregunta.",
+      lblClarify:"Pregunta rápida del Oráculo",
+      clarifyHint:"Responde en una frase: solo sirve para ajustar mejor la respuesta a ti.",
+      clarifyNote:"Puedes contestar de forma sencilla: lo primero que se te ocurra.",
+      askFirst:"🔮 Preguntar al Oráculo",
+      askLoading:"🔮 El Oráculo afina la pregunta",
+      askFinal:"✨ Ir a la respuesta",
+      stepInfo1:"Paso 1 · Haz tu pregunta. Luego el Oráculo te lanza una rápida y la respuesta sale en la siguiente página.",
+      stepInfo2:"Paso 2 · Responde rápido y pasa a la página de resultado.",
+      toastClarifyReady:"Bien, ahora responde a esta y vamos al resultado.",
+      toastClarifyMissing:"Escribe al menos una frase, aunque sea simple.",
+      credits:(n)=>`💰 Créditos: ${n}`,
+      noCredits:"Créditos no disponibles.",
+      proTitle:"Modo test activo"
+    },
+    fr:{
+      title:"What?f — Pose ta question",
+      subtitle:"Écris ce qui te trotte en tête, puis l’Oracle te posera une petite question pour affiner la réponse.",
+      lblVoice:"Voix & temporalité",
+      styleHint:"Choisis comment tu veux qu’on te parle :",
+      timeHint:"Sur quoi tu veux qu’il veille ?",
+      styleDescWHF:"💡 What if : voyante réaliste, 60 % analyse / 40 % images. Futur = ce qui se passe si tu changes maintenant ; Passé = la ligne temporelle alternative.",
+      styleDescWTF:"⚡ What the F : barman sarcastique mais bienveillant. Futur = dans quel bazar tu t’inscris ; Passé = de quel bazar tu t’es sorti (ou pas).",
+      future:"FUTUR",
+      past:"PASSÉ",
+      lblQ:"Ta question",
+      qPlaceholder:"Et si je déménageais à…, si je retournais avec…, si je changeais de travail, si je repartais de zéro ailleurs…",
+      qHint:"Écris-la comme tu la dirais à un ami : une seule question claire.",
+      examples:[
+        "« Si je retournais vivre dans ma ville dans un an, je le regretterais ? »",
+        "« Si je quittais ce boulot pour un moins stressant, j’irais mieux ? »",
+        "« Si je réessayais avec mon ex, ça changerait vraiment quelque chose ? »"
+      ],
+      errEmpty:"Écris au moins une question claire avant de continuer.",
+      errTooShort:"Ajoute un peu de détail pour que l’Oracle sache où regarder.",
+      errTooLong:"Rends la question plus courte et précise : une seule question.",
+      lblClarify:"Question éclair de l’Oracle",
+      clarifyHint:"Réponds en une phrase : c’est juste pour ajuster la réponse à toi.",
+      clarifyNote:"Tu peux répondre simplement : ce qui te vient en premier.",
+      askFirst:"🔮 Demander à l’Oracle",
+      askLoading:"🔮 L’Oracle affûte la question",
+      askFinal:"✨ Voir la réponse",
+      stepInfo1:"Étape 1 · Pose ta question. Puis l’Oracle t’en pose une rapide, et la réponse arrive sur la page suivante.",
+      stepInfo2:"Étape 2 · Réponds vite et passe à la page du résultat.",
+      toastClarifyReady:"Parfait, réponds à celle-ci et on passe au résultat.",
+      toastClarifyMissing:"Écris au moins une phrase, même simple.",
+      credits:(n)=>`💰 Crédits : ${n}`,
+      noCredits:"Crédits non disponibles.",
+      proTitle:"Mode test actif"
+    },
+    de:{
+      title:"What?f — Stell deine Frage",
+      subtitle:"Schreib, was dir im Kopf herumspukt, dann stellt das Orakel dir eine schnelle Zusatzfrage, um die Antwort zu schärfen.",
+      lblVoice:"Stimme & Zeit",
+      styleHint:"Wähle, wie du angesprochen werden willst:",
+      timeHint:"Worauf soll es schauen?",
+      styleDescWHF:"💡 What if: realistische Wahrsagerin, 60 % Analyse / 40 % Bilder. Zukunft = was passiert, wenn du jetzt etwas änderst; Vergangenheit = die alternative Zeitlinie.",
+      styleDescWTF:"⚡ What the F: sarkastischer, aber wohlwollender Barkeeper. Zukunft = in welchen Chaos du dich einschreibst; Vergangenheit = aus welchem Chaos du raus bist (oder nicht).",
+      future:"ZUKUNFT",
+      past:"VERGANGENHEIT",
+      lblQ:"Deine Frage",
+      qPlaceholder:"Was, wenn ich nach … ziehe, wenn ich zu … zurückgehe, wenn ich den Job wechsle, wenn ich irgendwo neu anfange…",
+      qHint:"Schreib sie so, wie du sie einem Freund erzählen würdest: eine klare Frage.",
+      examples:[
+        "„Wenn ich nächstes Jahr zurück in meine Heimatstadt ziehe – bereue ich das?“",
+        "„Wenn ich diesen Job gegen einen weniger stressigen tausche – geht es mir besser?“",
+        "„Wenn ich es noch mal mit meiner Ex versuche – ändert sich wirklich etwas?“"
+      ],
+      errEmpty:"Schreib mindestens eine klare Frage, bevor du weitergehst.",
+      errTooShort:"Gib etwas mehr Kontext, damit das Orakel weiß, wohin schauen.",
+      errTooLong:"Mach die Frage kürzer und präziser: eine Frage, kein Roman.",
+      lblClarify:"Schnelle Orakel-Frage",
+      clarifyHint:"Antworte in einem Satz: das hilft nur, die Antwort besser auf dich zu zuschneiden.",
+      clarifyNote:"Antwort einfach: das Erste, was dir einfällt, reicht.",
+      askFirst:"🔮 Orakel fragen",
+      askLoading:"🔮 Orakel schärft die Frage",
+      askFinal:"✨ Zur Antwort",
+      stepInfo1:"Schritt 1 · Stell deine Frage. Dann kommt eine kurze Rückfrage, die Antwort ist auf der nächsten Seite.",
+      stepInfo2:"Schritt 2 · Kurz antworten und zur Ergebnisseite springen.",
+      toastClarifyReady:"Gut, jetzt diese Frage beantworten und wir gehen zum Ergebnis.",
+      toastClarifyMissing:"Schreib mindestens einen einfachen Satz.",
+      credits:(n)=>`💰 Credits: ${n}`,
+      noCredits:"Credits nicht verfügbar.",
+      proTitle:"Testmodus aktiv"
+    }
+  };
+  const t = () => I18N[lang] || I18N.it;
+
+  /* ====== UI refs ====== */
+  const qs = (s)=>document.querySelector(s);
+  const titleEl = qs("#title");
+  const subtitleEl = qs("#subtitle");
+  const lblVoiceEl = qs("#lblVoice");
+  const styleHintEl = qs("#styleHint");
+  const timeHintEl = qs("#timeHint");
+  const styleDescEl = qs("#styleDesc");
+  const lblQEl = qs("#lblQ");
+  const qInput = qs("#questionInput");
+  const qHintEl = qs("#qHint");
+  const chipsWrap = qs("#chipsExamples");
+  const errMsg = qs("#errorMsg");
+  const clarifyCard = qs("#clarifyCard");
+  const lblClarifyEl = qs("#lblClarify");
+  const clarifyTextEl = qs("#clarifyText");
+  const clarifyHintEl = qs("#clarifyHint");
+  const clarifyNoteEl = qs("#clarifyNote");
+  const clarifyInput = qs("#clarifyInput");
+  const askBtn = qs("#askBtn");
+  const stepInfo = qs("#stepInfo");
+  const proBadge = qs("#proBadge");
+  const langSelect = qs("#langSelect");
+  const creditInfo = qs("#creditInfo");
+  const toastEl = qs("#toast");
+
+  const btnWhatIf = qs("#btnWhatIf");
+  const btnWtf = qs("#btnWtf");
+  const btnFuture = qs("#btnFuture");
+  const btnPast = qs("#btnPast");
+
+  /* ====== Toast ====== */
+  function toast(msg){
+    if(!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    setTimeout(()=>toastEl.classList.remove("show"),1700);
+  }
+
+  /* ====== Lang detection ====== */
+  function detectLang(text=""){
+    const ttext = (text||"").toLowerCase();
+    if(/[¿¡]/.test(ttext)) return "es";
+    const bank={
+      it:[" che "," perché"," perche"," se "," quando"," dove"," non "," sono "," vorrei"," posso"," e se"," una settimana"," come"],
+      en:[" what "," if "," the "," and "," you "," are "," will "," would "," can "," should "," could "],
+      es:[" qué"," que "," si "," porque"," cuando"," dónde"," donde"," no "," soy "," puedo"," quiero","¿"," semana "],
+      fr:[" quoi"," si "," pourquoi"," quand"," où"," ou "," pas "," je "," peux"," si je"," et si"],
+      de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
+    };
+    const score={}; for(const L of SUP_LANG){ score[L]=0; (bank[L]||[]).forEach(w=>{ if(ttext.includes(w)) score[L]++; }); }
+    let best="it", max=-1;
+    for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
+    if(max<=0){
+      const nav=(navigator.language||"it").slice(0,2).toLowerCase();
+      if(SUP_LANG.includes(nav)) return nav;
+    }
+    return best;
+  }
+
+  /* ====== Credits (solo UI, lettura da fifth via LS sync) ====== */
+  function updateCreditInfo(){
+    if(!creditInfo) return;
+    if(IS_ADMIN){
+      creditInfo.textContent = "💰 Crediti: ∞ (admin)";
+      return;
+    }
+    // qui non sappiamo il saldo reale lato server: lasciamo neutro
+    const stored = Number.parseInt(LS.getItem("credits_cached") || "0", 10);
+    creditInfo.textContent = stored > 0 ? t().credits(stored) : t().noCredits;
+  }
+
+  /* ====== Apply I18N ====== */
+  function applyI18N(){
+    document.documentElement.lang = lang;
+    if(langSelect) langSelect.value = lang;
+
+    titleEl.textContent = t().title;
+    subtitleEl.textContent = t().subtitle;
+    lblVoiceEl.textContent = t().lblVoice;
+    styleHintEl.textContent = t().styleHint;
+    timeHintEl.textContent = t().timeHint;
+    lblQEl.textContent = t().lblQ;
+    qInput.placeholder = t().qPlaceholder;
+    qHintEl.textContent = t().qHint;
+    lblClarifyEl.textContent = t().lblClarify;
+    clarifyHintEl.textContent = t().clarifyHint;
+    clarifyNoteEl.textContent = t().clarifyNote;
+    btnFuture.textContent = t().future;
+    btnPast.textContent = t().past;
+
+    styleDescEl.textContent = style === "wtf" ? t().styleDescWTF : t().styleDescWHF;
+
+    // esempi
+    chipsWrap.innerHTML = "";
+    (t().examples || []).forEach(ex=>{
+      const span=document.createElement("span");
+      span.className="chip";
+      span.textContent=ex;
+      span.addEventListener("click", ()=>{
+        qInput.value = ex.replace(/^["“]|["”]$/g,"");
+        errMsg.style.display="none";
+      });
+      chipsWrap.appendChild(span);
+    });
+
+    if(stepState==="ask"){
+      askBtn.textContent = t().askFirst;
+      stepInfo.textContent = t().stepInfo1;
+    }else if(stepState==="clarify"){
+      askBtn.textContent = t().askFinal;
+      stepInfo.textContent = t().stepInfo2;
+    }
+    updateCreditInfo();
+  }
+
+  /* ====== Style & periodo switch UI ====== */
+  function applyStyleButtons(){
+    if(style==="whatif"){
+      btnWhatIf.classList.add("active");
+      btnWtf.classList.remove("active");
+    }else{
+      btnWtf.classList.add("active");
+      btnWhatIf.classList.remove("active");
+    }
+    document.documentElement.setAttribute("data-theme", style==="wtf" ? "wtf" : "whatif");
+    styleDescEl.textContent = style === "wtf" ? t().styleDescWTF : t().styleDescWHF;
+  }
+  function applyPeriodButtons(){
+    if(periodo==="future"){
+      btnFuture.classList.add("active");
+      btnPast.classList.remove("active");
+    }else{
+      btnPast.classList.add("active");
+      btnFuture.classList.remove("active");
+    }
+  }
+
+  /* ====== Pro badge ====== */
+  (function initTop(){
+    if(prefs.pro === true || IS_ADMIN){
+      proBadge.style.display = "inline-flex";
+      proBadge.title = t().proTitle;
+    }
+    if(langSelect) langSelect.value = lang;
+  })();
+
+  /* ====== Restore last question ====== */
+  (function restoreQuestion(){
+    const prevReq = JSON.parse(LS.getItem("whatif_request") || "{}");
+    const lastQ = prevReq.domanda || LS.getItem("domanda") || "";
+    if(lastQ) qInput.value = lastQ;
+  })();
+
+  /* ====== Step state ====== */
+  let stepState = "ask"; // "ask" | "clarify"
+  let clarifyQuestion = "";
+
+  /* ====== INIT UI ====== */
+  applyStyleButtons();
+  applyPeriodButtons();
+  applyI18N();
+
+  /* ====== Events: nav ====== */
+  qs("#backBtn").onclick = ()=> history.length > 1 ? history.back() : location.replace("index.html");
+  qs("#homeBtn").onclick = ()=> location.href="index.html";
+
+  /* ====== Events: lang ====== */
+  if(langSelect){
+    langSelect.addEventListener("change", ()=>{
+      lang = langSelect.value;
+      if(!SUP_LANG.includes(lang)) lang="it";
+      langManual = true;
+      LS.setItem("lang", lang);
+      LS.setItem("lang_manual","1");
+      applyI18N();
+    });
+  }
+
+  /* ====== Events: style & periodo ====== */
+  btnWhatIf.addEventListener("click", ()=>{
+    style="whatif";
+    prefs.stile=style;
+    LS.setItem("whatif_prefs", JSON.stringify(prefs));
+    applyStyleButtons();
+    applyI18N();
+  });
+  btnWtf.addEventListener("click", ()=>{
+    style="wtf";
+    prefs.stile=style;
+    LS.setItem("whatif_prefs", JSON.stringify(prefs));
+    applyStyleButtons();
+    applyI18N();
+  });
+  btnFuture.addEventListener("click", ()=>{
+    periodo="future";
+    prefs.periodo=periodo;
+    LS.setItem("whatif_prefs", JSON.stringify(prefs));
+    applyPeriodButtons();
+    applyI18N();
+  });
+  btnPast.addEventListener("click", ()=>{
+    periodo="past";
+    prefs.periodo=periodo;
+    LS.setItem("whatif_prefs", JSON.stringify(prefs));
+    applyPeriodButtons();
+    applyI18N();
+  });
+
+  /* ====== Validation domanda ====== */
+  function validateQuestion(raw){
+    const s = String(raw||"").trim();
+    if(!s){ return { ok:false, type:"empty" }; }
+    const len = s.length;
+    if(len < 12){ return { ok:false, type:"short" }; }
+    if(len > 500){ return { ok:false, type:"long" }; }
+    return { ok:true };
+  }
+
+  function showError(type){
+    if(!errMsg) return;
+    errMsg.style.display="block";
+    if(type==="empty") errMsg.textContent = t().errEmpty;
+    else if(type==="short") errMsg.textContent = t().errTooShort;
+    else if(type==="long") errMsg.textContent = t().errTooLong;
+    else errMsg.textContent = "";
+  }
+
+  /* ====== Save base request for fifth.html ====== */
+  function saveRequestToLS(domanda, microExtra){
+    const req = {
+      domanda,
+      stile: style,
+      periodo,
+      lang,
+      micro: microExtra || {}
+    };
+    LS.setItem("whatif_request", JSON.stringify(req));
+    LS.setItem("domanda", domanda);
+  }
+
+  /* ====== Clarify CALL ====== */
+  async function fetchClarify(domanda){
+    // se l'utente non ha scelto la lingua a mano, rilevala dalla domanda
+    if(!langManual){
+      lang = detectLang(domanda);
+      if(!SUP_LANG.includes(lang)) lang="it";
+      LS.setItem("lang", lang);
+      applyI18N();
+    }
+
+    const body = {
+      domanda,
+      stile: style,
+      lang,
+      periodo,
+      micro: { phase:"clarify" }   // usato dalla nuova logica server-side
     };
 
-    const I18N={};
-    Object.assign(I18N,{
-      it:{title:"Imposta la tua domanda", yourq:"E se…", ph:"E se…",
-        help:"Scrivi obiettivo + contesto in 1 riga. Aggiungi vincoli o orizzonte (es. 30 giorni).",
-        gen:"✨ Genera risposta", clear:"Svuota",
-        surprise:"Sorprendimi (assurdo)",
-        saved:"▶ Domande salvate", stories:"▶ Cronologia",
-        styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Passato",
-        hintsTitle:"▶ Spunti rapidi “E se…”",
-        hintsNote:"Spunti = idee realistiche (sia sul passato che sul futuro). “Sorprendimi” propone solo idee assurde (stile & tempo casuali).",
-        credits:"Crediti", emptyNext:"— Nessuna domanda salvata.", emptyHist:"— Nessuna storia.",
-        use:"Usa", save:"Salva", clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota",
-        noCredits:"Hai finito i crediti. Accedi o ricarica per continuare."},
-      en:{title:"Set your question", yourq:"What if…", ph:"What if…",
-        help:"Write goal + context in one line. Add constraints or horizon (e.g. 30 days).",
-        gen:"✨ Generate answer", clear:"Clear",
-        surprise:"Surprise me (absurd)",
-        saved:"▶ Saved questions", stories:"▶ History",
-        styleWF:"What if", styleWTF:"What the F", fut:"Future", past:"Past",
-        hintsTitle:"▶ Quick “What if…”",
-        hintsNote:"Hints = realistic ideas (about past or future). “Surprise me” shows absurd ideas only.",
-        credits:"Credits", emptyNext:"— No saved questions.", emptyHist:"— No history.",
-        use:"Use", save:"Save", clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear",
-        noCredits:"You’ve run out of credits. Please log in or top up."},
-      es:{title:"Configura tu pregunta", yourq:"¿Y si…?", ph:"¿Y si…?",
-        help:"Escribe objetivo y contexto en una línea. Añade límites u horizonte (p. ej., 30 días).",
-        gen:"✨ Generar respuesta", clear:"Limpiar",
-        surprise:"Sorpréndeme (absurdo)",
-        saved:"▶ Preguntas guardadas", stories:"▶ Historial",
-        styleWF:"What if", styleWTF:"What the F", fut:"Futuro", past:"Pasado",
-        hintsTitle:"▶ Ideas rápidas «¿Y si…?»",
-        hintsNote:"Ideas realistas (sobre pasado o futuro). «Sorpréndeme» muestra ideas absurdas.",
-        credits:"Créditos", emptyNext:"— No hay preguntas guardadas.", emptyHist:"— Sin historial.",
-        use:"Usar", save:"Guardar", clearSaved:"🗑️ Vaciar", clearHist:"🗑️ Vaciar",
-        noCredits:"Te has quedado sin créditos. Inicia sesión o recarga."},
-      fr:{title:"Définis ta question", yourq:"Et si…", ph:"Et si…",
-        help:"Écris objectif + contexte en une ligne. Ajoute contraintes ou horizon (ex. 30 jours).",
-        gen:"✨ Générer la réponse", clear:"Effacer",
-        surprise:"Surprends-moi (absurde)",
-        saved:"▶ Questions enregistrées", stories:"▶ Historique",
-        styleWF:"What if", styleWTF:"What the F", fut:"Futur", past:"Passé",
-        hintsTitle:"▶ Idées rapides « Et si… »",
-        hintsNote:"Idées réalistes (passé/futur). « Surprends-moi » = idées absurdes.",
-        credits:"Crédits", emptyNext:"— Aucune question enregistrée.", emptyHist:"— Aucun historique.",
-        use:"Utiliser", save:"Enregistrer", clearSaved:"🗑️ Vider", clearHist:"🗑️ Vider",
-        noCredits:"Tu n’as plus de crédits. Connecte-toi ou recharge."},
-      de:{title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", ph:"Was wäre, wenn…",
-        help:"Ziel + Kontext in einer Zeile. Füge Einschränkungen/Horizont hinzu (z. B. 30 Tage).",
-        gen:"✨ Antwort erzeugen", clear:"Leeren",
-        surprise:"Überrasche mich (absurd)",
-        saved:"▶ Gespeicherte Fragen", stories:"▶ Verlauf",
-        styleWF:"What if", styleWTF:"What the F", fut:"Zukunft", past:"Vergangenheit",
-        hintsTitle:"▶ Schnelle „Was wäre, wenn…“-Ideen",
-        hintsNote:"Realistische Ideen (Vergangenheit/Zukunft). „Überrasche mich“ = absurde Ideen.",
-        credits:"Credits", emptyNext:"— Keine gespeicherten Fragen.", emptyHist:"— Kein Verlauf.",
-        use:"Verwenden", save:"Speichern", clearSaved:"🗑️ Leeren", clearHist:"🗑️ Leeren",
-        noCredits:"Du hast keine Credits mehr. Bitte einloggen oder aufladen."}
+    const headers = { "Content-Type":"application/json" };
+    if(prefs.pro === true) headers["x-pro"] = "1";
+    const adminToken = LS.getItem("admin_token");
+    if(adminToken) headers["x-admin-token"] = adminToken;
+
+    const res = await fetch("/api/ask",{
+      method:"POST",
+      headers,
+      body:JSON.stringify(body)
     });
-
-    const T = I18N[lang] || I18N.it;
-
-    // Applica testi base
-    $('titleH1').textContent=T.title;
-    $('qLabel').textContent=T.yourq;
-    $('qInput').placeholder=T.ph;
-    $('qHelp').textContent=T.help;
-    $('goBtn').textContent=T.gen;
-    $('clearBtn').textContent=T.clear;
-    $('surpriseBtn').textContent='🎲 '+T.surprise;
-    $('nextLabel').textContent=T.saved;
-    $('storiesLabel').textContent=T.stories;
-    $('hintsTitle').textContent=T.hintsTitle;
-    $('hintsNote').textContent=T.hintsNote;
-    $('chipWhatIf').textContent=T.styleWF;
-    $('chipWTF').textContent=T.styleWTF;
-    $('chipFuture').textContent=T.fut;
-    $('chipPast').textContent=T.past;
-    $('saveBtn').textContent='⭐ '+T.save;
-    $('clearSavedBtn').textContent=T.clearSaved;
-    $('clearHistoryBtn').textContent=T.clearHist;
-
-    // ===== prefs stile/periodo =====
-    let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
-    document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-
-    function renderBadges(){
-      $('styleBadge').textContent='🎭 '+(prefs.stile==='wtf'?T.styleWTF:T.styleWF);
-      $('periodoBadge').textContent='🕰️ '+(prefs.periodo==='past'?T.past:T.fut);
-      document.querySelectorAll('#styleChips .chip').forEach(c=>{
-        c.classList.toggle('sel', c.dataset.style===prefs.stile);
-      });
-      document.querySelectorAll('#periodoChips .chip').forEach(c=>{
-        c.classList.toggle('sel', c.dataset.periodo===prefs.periodo);
-      });
+    const data = await res.json().catch(()=>null);
+    if(!res.ok || !data || !data.answer){
+      throw new Error(data?.detail || "bad_response");
     }
-    renderBadges();
+    return data.answer.trim();
+  }
 
-    $('styleChips').addEventListener('click',e=>{
-      const b=e.target.closest('.chip'); if(!b) return;
-      prefs.stile=b.dataset.style;
-      writeJSON('whatif_prefs',prefs);
-      document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
-      renderBadges();
-    });
-    $('periodoChips').addEventListener('click',e=>{
-      const b=e.target.closest('.chip'); if(!b) return;
-      prefs.periodo=b.dataset.periodo;
-      writeJSON('whatif_prefs',prefs);
-      renderBadges();
-      renderHints(); // aggiorna spunti quando cambi Futuro/Passato
-    });
+  /* ====== Main button logic ====== */
+  let isBusy = false;
 
-    // ===== NAV =====
-    $('homeBtn').onclick=()=>location.href='index.html';
-    $('backBtn').onclick=()=>{ if(history.length>1) history.back(); else location.href='index.html'; };
-
-    $('resetBtn').onclick=()=>{
-      const PRESERVE = ['whatif_wallet','whatif_wallet_sync','admin_token','lang'];
-      const keep = Object.fromEntries(PRESERVE.map(k=>[k,LS.getItem(k)]));
-      ['whatif_prefs','next_prompts','cronologia','replay_story','surprise_recent','absurd_prompt','surprise_mode','domanda']
-        .forEach(k=>LS.removeItem(k));
-      Object.entries(keep).forEach(([k,v])=>{ if(v!==null) LS.setItem(k,v); });
-      location.href='index.html';
-    };
-
-    // ===== Credits Firestore =====
-    let currentUser=null;
-    let currentBalance=0;
-
-    function renderCredits(){
-      if(IS_ADMIN){
-        $('freeBadge').textContent=`${T.credits}: ∞ (admin)`;
-        $('goBtn').disabled=false;
-        $('surpriseBtn').disabled=false;
-        return;
-      }
-      $('freeBadge').textContent=`${T.credits}: ${currentBalance}`;
-      const canUse=currentBalance>0;
-      $('goBtn').disabled=!canUse;
-      $('surpriseBtn').disabled=!canUse;
+  askBtn.addEventListener("click", async ()=>{
+    if(isBusy) return;
+    const domanda = qInput.value || "";
+    const val = validateQuestion(domanda);
+    if(!val.ok){
+      showError(val.type);
+      return;
     }
+    errMsg.style.display="none";
 
-    async function syncCreditsFromServer(){
-      if(IS_ADMIN){
-        renderCredits();
-        return;
-      }
-      if(!auth.currentUser){
-        currentBalance=0;
-        renderCredits();
-        return;
-      }
+    if(stepState === "ask"){
+      // STEP 1: generiamo domanda di chiarimento
+      isBusy = true;
+      askBtn.disabled = true;
+      askBtn.textContent = t().askLoading;
+      askBtn.classList.add("loading-dots");
+
       try{
-        await bootCredits();
-        currentBalance = await getBalance();
+        const clarify = await fetchClarify(domanda);
+        clarifyQuestion = clarify;
+        clarifyTextEl.textContent = clarify || "Domanda rapida: cosa pesa di più in tutto questo?";
+
+        clarifyCard.style.display="block";
+        stepState = "clarify";
+        askBtn.textContent = t().askFinal;
+        askBtn.classList.remove("loading-dots");
+        stepInfo.textContent = t().stepInfo2;
+
+        // Salviamo già la domanda base per la pagina dopo (micro verrà aggiornato)
+        saveRequestToLS(domanda, { phase:"clarify", clarifyQuestion:clarify });
+
+        toast(t().toastClarifyReady);
       }catch(e){
-        console.error("syncCredits error:", e);
-        currentBalance=0;
-      }
-      renderCredits();
-    }
-
-    onAuthStateChanged(auth, async(user)=>{
-      currentUser=user;
-      await syncCreditsFromServer();
-    });
-
-    window.addEventListener('focus', syncCreditsFromServer);
-    window.addEventListener('pageshow', syncCreditsFromServer);
-
-    // ===== Hints realistici (Future + Past, diversi ogni giorno) =====
-    const HINTS={
-      it:{
-        future:[
-          "E se cambiassi lavoro entro 6 mesi?",
-          "E se cambiassi città tra un anno?",
-          "E se tornassi a studiare part-time?",
-          "E se vivessi 30 giorni senza social?",
-          "E se chiedessi un aumento questo trimestre?",
-          "E se organizzassi un viaggio da solo nei prossimi 3 mesi?",
-          "E se mi prendessi un mese sabbatico il prossimo anno?",
-          "E se provassi a lavorare da remoto per 3 mesi?",
-          "E se aprissi una piccola attività parallela nel weekend?",
-          "E se facessi ordine radicale in casa questo mese?",
-          "E se dicessi di no a tutto per una settimana?",
-          "E se iniziassi terapia da questo mese?",
-          "E se fissassi un obiettivo fisico per i prossimi 90 giorni?",
-          "E se dedicassi un’ora al giorno a scrivere per 30 giorni?",
-          "E se cambiassi totalmente routine mattutina da lunedì?",
-          "E se spegnessi il telefono tutte le sere alle 21 per un mese?",
-          "E se programmassi un trasferimento tra 12 mesi?",
-          "E se chiedessi feedback onesto a 3 persone su di me?",
-          "E se facessi un progetto creativo con un amico entro quest’anno?",
-          "E se mi iscrivessi a un corso che mi spaventa?",
-          "E se dedicassi i weekend a un unico progetto personale?",
-          "E se riducessi il lavoro a 4 giorni a settimana?",
-          "E se cambiassi radicalmente la gestione dei soldi da oggi?",
-          "E se provassi un esperimento di minimalismo per 30 giorni?"
-        ],
-        past:[
-          "E se avessi cambiato lavoro un anno fa?",
-          "E se non avessi lasciato quella città?",
-          "E se avessi continuato l’università?",
-          "E se non avessi mai aperto i social?",
-          "E se avessi chiesto un aumento prima?",
-          "E se avessi accettato quell’offerta all’estero?",
-          "E se fossi rimasto in quella relazione?",
-          "E se non avessi mollato quel progetto creativo?",
-          "E se avessi iniziato terapia prima?",
-          "E se avessi detto di no a quel lavoro tossico?",
-          "E se fossi stato più onesto con me stesso nel 2020?",
-          "E se non avessi ascoltato quel consiglio?",
-          "E se avessi risparmiato invece di spendere tutto?",
-          "E se avessi seguito l’istinto invece della paura?",
-          "E se avessi protetto di più il mio tempo?",
-          "E se avessi parlato apertamente di quello che provavo?",
-          "E se avessi dato un’altra possibilità a quella persona?",
-          "E se non avessi interrotto quell’amicizia?",
-          "E se mi fossi fermato un anno prima di bruciarmi?",
-          "E se avessi avuto il coraggio di cambiare prima?"
-        ]
-      },
-      en:{
-        future:[
-          "What if I changed jobs in the next 6 months?",
-          "What if I moved to another city within a year?",
-          "What if I went back to study part-time?",
-          "What if I lived 30 days without social media?",
-          "What if I asked for a raise this quarter?",
-          "What if I took a solo trip in the next 3 months?",
-          "What if I took a one-month sabbatical next year?",
-          "What if I tried working fully remote for 3 months?",
-          "What if I started a tiny side business on weekends?",
-          "What if I radically decluttered my home this month?",
-          "What if I said no to everything for a week?",
-          "What if I started therapy this month?",
-          "What if I committed to a 90-day fitness goal?",
-          "What if I wrote for one hour a day for 30 days?",
-          "What if I fully changed my morning routine from Monday?",
-          "What if I turned my phone off every night at 9 pm for a month?",
-          "What if I planned a relocation within 12 months?",
-          "What if I asked 3 people for brutally honest feedback?",
-          "What if I started a creative project with a friend this year?",
-          "What if I enrolled in a course that scares me?",
-          "What if I dedicated weekends to a single personal project?",
-          "What if I moved to a four-day workweek?",
-          "What if I reset how I manage money starting today?",
-          "What if I tried minimalism for 30 days?"
-        ],
-        past:[
-          "What if I had changed jobs a year ago?",
-          "What if I had never left that city?",
-          "What if I had finished my degree?",
-          "What if I had never downloaded social media?",
-          "What if I had asked for a raise earlier?",
-          "What if I had accepted that offer abroad?",
-          "What if I had stayed in that relationship?",
-          "What if I hadn’t dropped that creative project?",
-          "What if I had started therapy sooner?",
-          "What if I had said no to that toxic job?",
-          "What if I had been honest with myself in 2020?",
-          "What if I hadn’t listened to that advice?",
-          "What if I had saved instead of spending it all?",
-          "What if I had followed my gut instead of fear?",
-          "What if I had protected my time better?",
-          "What if I had spoken openly about how I felt?",
-          "What if I had given that person another chance?",
-          "What if I hadn’t ended that friendship?",
-          "What if I had stopped a year earlier before burning out?",
-          "What if I had dared to change sooner?"
-        ]
-      },
-      es:{
-        future:[
-          "¿Y si cambiara de trabajo en los próximos 6 meses?",
-          "¿Y si me mudara de ciudad antes de un año?",
-          "¿Y si volviera a estudiar a tiempo parcial?",
-          "¿Y si viviera 30 días sin redes sociales?",
-          "¿Y si pidiera un aumento este trimestre?",
-          "¿Y si viajara solo en los próximos 3 meses?",
-          "¿Y si tomara un mes sabático el próximo año?",
-          "¿Y si probara a trabajar en remoto durante 3 meses?",
-          "¿Y si montara un pequeño side business los fines de semana?",
-          "¿Y si hiciera una limpieza radical en casa este mes?",
-          "¿Y si dijera que no a todo durante una semana?",
-          "¿Y si empezara terapia este mes?",
-          "¿Y si fijara un objetivo físico de 90 días?",
-          "¿Y si escribiera una hora al día durante 30 días?",
-          "¿Y si cambiara por completo mi rutina de mañana desde el lunes?",
-          "¿Y si apagara el móvil todas las noches a las 21 durante un mes?",
-          "¿Y si planeara mudarme en 12 meses?",
-          "¿Y si pidiera feedback honesto a 3 personas?",
-          "¿Y si lanzara un proyecto creativo con un amigo este año?",
-          "¿Y si me apuntara a un curso que me da miedo?",
-          "¿Y si dedicara los fines de semana a un solo proyecto?",
-          "¿Y si intentara trabajar solo 4 días a la semana?",
-          "¿Y si reorganizara desde cero mis finanzas?",
-          "¿Y si probara el minimalismo durante 30 días?"
-        ],
-        past:[
-          "¿Y si hubiera cambiado de trabajo hace un año?",
-          "¿Y si no me hubiera ido de aquella ciudad?",
-          "¿Y si hubiera terminado la carrera?",
-          "¿Y si nunca hubiera abierto redes sociales?",
-          "¿Y si hubiera pedido un aumento antes?",
-          "¿Y si hubiera aceptado aquella oferta en el extranjero?",
-          "¿Y si me hubiera quedado en aquella relación?",
-          "¿Y si no hubiera abandonado ese proyecto creativo?",
-          "¿Y si hubiera empezado terapia antes?",
-          "¿Y si hubiera dicho que no a ese trabajo tóxico?",
-          "¿Y si hubiera sido más honesto conmigo en 2020?",
-          "¿Y si no hubiera seguido aquel consejo?",
-          "¿Y si hubiera ahorrado en vez de gastarlo todo?",
-          "¿Y si hubiera seguido mi intuición y no el miedo?",
-          "¿Y si hubiera protegido más mi tiempo?",
-          "¿Y si hubiera hablado de cómo me sentía?",
-          "¿Y si le hubiera dado otra oportunidad a esa persona?",
-          "¿Y si no hubiera roto aquella amistad?",
-          "¿Y si me hubiera frenado un año antes de quemarme?",
-          "¿Y si hubiera tenido el valor de cambiar antes?"
-        ]
-      },
-      fr:{
-        future:[
-          "Et si je changeais de travail dans les 6 prochains mois ?",
-          "Et si je déménageais d’ici un an ?",
-          "Et si je reprenais mes études à temps partiel ?",
-          "Et si je vivais 30 jours sans réseaux sociaux ?",
-          "Et si je demandais une augmentation ce trimestre ?",
-          "Et si je partais en voyage en solo dans les 3 mois ?",
-          "Et si je prenais un mois sabbatique l’année prochaine ?",
-          "Et si j’essayais de travailler 100 % à distance pendant 3 mois ?",
-          "Et si je lançais un petit side project le week-end ?",
-          "Et si je faisais un grand tri chez moi ce mois-ci ?",
-          "Et si je disais non à tout pendant une semaine ?",
-          "Et si je commençais une thérapie ce mois-ci ?",
-          "Et si je me fixais un objectif sportif sur 90 jours ?",
-          "Et si j’écrivais une heure par jour pendant 30 jours ?",
-          "Et si je changeais totalement ma routine du matin dès lundi ?",
-          "Et si j’éteignais mon téléphone tous les soirs à 21 h pendant un mois ?",
-          "Et si je préparais un déménagement d’ici 12 mois ?",
-          "Et si je demandais un feedback honnête à 3 proches ?",
-          "Et si je lançais un projet créatif avec un ami cette année ?",
-          "Et si je m’inscrivais à une formation qui me fait peur ?",
-          "Et si je réservais mes week-ends à un seul projet perso ?",
-          "Et si je passais à une semaine de 4 jours ?",
-          "Et si je repartais de zéro sur ma gestion d’argent dès aujourd’hui ?",
-          "Et si je testais le minimalisme pendant 30 jours ?"
-        ],
-        past:[
-          "Et si j’avais changé de travail il y a un an ?",
-          "Et si je n’avais jamais quitté cette ville ?",
-          "Et si j’avais terminé mes études ?",
-          "Et si je n’avais jamais ouvert de compte sur les réseaux sociaux ?",
-          "Et si j’avais demandé une augmentation plus tôt ?",
-          "Et si j’avais accepté cette offre à l’étranger ?",
-          "Et si j’étais resté dans cette relation ?",
-          "Et si je n’avais pas abandonné ce projet créatif ?",
-          "Et si j’avais commencé une thérapie plus tôt ?",
-          "Et si j’avais dit non à ce job toxique ?",
-          "Et si j’avais été honnête avec moi-même en 2020 ?",
-          "Et si je n’avais pas suivi ce conseil ?",
-          "Et si j’avais économisé au lieu de tout dépenser ?",
-          "Et si j’avais suivi mon intuition au lieu de la peur ?",
-          "Et si j’avais mieux protégé mon temps ?",
-          "Et si j’avais parlé franchement de ce que je ressentais ?",
-          "Et si j’avais donné une deuxième chance à cette personne ?",
-          "Et si je n’avais pas coupé ce lien d’amitié ?",
-          "Et si je m’étais arrêté un an plus tôt avant le burn-out ?",
-          "Et si j’avais osé changer plus tôt ?"
-        ]
-      },
-      de:{
-        future:[
-          "Was wäre, wenn ich in den nächsten 6 Monaten den Job wechselte?",
-          "Was wäre, wenn ich innerhalb eines Jahres in eine andere Stadt ziehe?",
-          "Was wäre, wenn ich wieder nebenbei studiere?",
-          "Was wäre, wenn ich 30 Tage ohne Social Media lebe?",
-          "Was wäre, wenn ich dieses Quartal eine Gehaltserhöhung fordere?",
-          "Was wäre, wenn ich in den nächsten 3 Monaten alleine verreise?",
-          "Was wäre, wenn ich nächstes Jahr einen Monat Sabbat nehme?",
-          "Was wäre, wenn ich 3 Monate komplett remote arbeite?",
-          "Was wäre, wenn ich am Wochenende ein kleines Nebenprojekt starte?",
-          "Was wäre, wenn ich meine Wohnung diesen Monat radikal entrümple?",
-          "Was wäre, wenn ich eine Woche lang zu allem Nein sage?",
-          "Was wäre, wenn ich diesen Monat mit Therapie beginne?",
-          "Was wäre, wenn ich mir ein 90-Tage-Fitnessziel setze?",
-          "Was wäre, wenn ich 30 Tage lang jeden Tag eine Stunde schreibe?",
-          "Was wäre, wenn ich ab Montag meine Morgenroutine komplett ändere?",
-          "Was wäre, wenn ich das Handy einen Monat lang jeden Abend um 21 Uhr ausschalte?",
-          "Was wäre, wenn ich einen Umzug in den nächsten 12 Monaten plane?",
-          "Was wäre, wenn ich 3 Leute um brutales Feedback bitte?",
-          "Was wäre, wenn ich dieses Jahr ein kreatives Projekt mit einem Freund starte?",
-          "Was wäre, wenn ich einen Kurs buche, der mir Angst macht?",
-          "Was wäre, wenn ich meine Wochenenden nur einem Projekt widme?",
-          "Was wäre, wenn ich nur noch vier Tage pro Woche arbeite?",
-          "Was wäre, wenn ich meine Finanzen ab heute komplett neu aufsetze?",
-          "Was wäre, wenn ich Minimalismus 30 Tage teste?"
-        ],
-        past:[
-          "Was wäre, wenn ich vor einem Jahr den Job gewechselt hätte?",
-          "Was wäre, wenn ich nie aus dieser Stadt weggezogen wäre?",
-          "Was wäre, wenn ich mein Studium beendet hätte?",
-          "Was wäre, wenn ich nie Social Media installiert hätte?",
-          "Was wäre, wenn ich früher nach einer Gehaltserhöhung gefragt hätte?",
-          "Was wäre, wenn ich das Angebot im Ausland angenommen hätte?",
-          "Was wäre, wenn ich in dieser Beziehung geblieben wäre?",
-          "Was wäre, wenn ich dieses kreative Projekt nicht aufgegeben hätte?",
-          "Was wäre, wenn ich früher mit Therapie begonnen hätte?",
-          "Was wäre, wenn ich diesen toxischen Job abgelehnt hätte?",
-          "Was wäre, wenn ich 2020 ehrlicher zu mir gewesen wäre?",
-          "Was wäre, wenn ich diesen Rat nicht befolgt hätte?",
-          "Was wäre, wenn ich gespart statt alles ausgegeben hätte?",
-          "Was wäre, wenn ich meiner Intuition statt der Angst gefolgt wäre?",
-          "Was wäre, wenn ich meine Zeit besser geschützt hätte?",
-          "Was wäre, wenn ich offener über meine Gefühle gesprochen hätte?",
-          "Was wäre, wenn ich dieser Person noch eine Chance gegeben hätte?",
-          "Was wäre, wenn ich diese Freundschaft nicht beendet hätte?",
-          "Was wäre, wenn ich ein Jahr früher gestoppt hätte, bevor ich ausbrannte?",
-          "Was wäre, wenn ich mich früher getraut hätte zu verändern?"
-        ]
-      }
-    };
-
-    function rndHints(){
-      const langHints = HINTS[lang] || HINTS.it;
-      const periodKey = (prefs.periodo === 'past' ? 'past' : 'future');
-      const all = (langHints[periodKey] || langHints.future || HINTS.it.future).slice();
-      const today = todayISO();
-      const storageKey = 'hints_prev_'+lang+'_'+periodKey;
-
-      // Se abbiamo già generato per oggi (lingua+periodo), riusiamo la stessa selezione
-      const prev = readJSON(storageKey,null);
-      if(prev && prev.day===today && Array.isArray(prev.items) && prev.items.length){
-        return prev.items;
+        console.error(e);
+        askBtn.textContent = t().askFirst;
+        askBtn.classList.remove("loading-dots");
+        toast("Errore di connessione all’Oracolo, riprova tra poco.");
+      }finally{
+        askBtn.disabled = false;
+        isBusy = false;
       }
 
-      const pickSet = (attempt=0)=>{
-        const base=all.slice();
-        const out=[];
-        let seedStr=today+'#'+periodKey+'#'+attempt;
-        let s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0);
-        const rand=()=>{s=(s*9301+49297)%233280;return s/233280;};
-        while(base.length && out.length<6){
-          const i=Math.floor(rand()*base.length);
-          out.push(base.splice(i,1)[0]);
-        }
-        return out;
-      };
-
-      let selection=pickSet(0);
-
-      // Evita che il set di oggi sia identico a quello di ieri (stessa lingua+periodo)
-      if(prev && prev.day!==today && Array.isArray(prev.items)){
-        let attempts=1;
-        const prevSig=prev.items.join('||');
-        let sig=selection.join('||');
-        while(sig===prevSig && attempts<5){
-          selection=pickSet(attempts++);
-          sig=selection.join('||');
-        }
-      }
-
-      writeJSON(storageKey,{day:today,items:selection});
-      return selection;
-    }
-
-    function renderHints(){
-      const wrap=$('hintsChips');
-      wrap.innerHTML='';
-      rndHints().forEach(h=>{
-        const b=document.createElement('button');
-        b.className='chip';
-        b.textContent=h;
-        b.onclick=()=>{
-          $('qInput').value=h;
-          LS.setItem('absurd_prompt','0');
-          LS.setItem('surprise_mode','0');
-          window.scrollTo({top:0,behavior:'smooth'});
-        };
-        wrap.appendChild(b);
-      });
-    }
-    renderHints();
-
-    // Collassabili
-    ['hints','saved','hist'].forEach(k=>{
-      const card=$(k+'Card');
-      const header=$(k+'Header');
-      if(!card || !header) return;
-      card.classList.add('collapsed');
-      header.addEventListener('click',()=> card.classList.toggle('collapsed'));
-    });
-
-    // ===== Saved + History =====
-    const fmtDate = ts => new Date(ts).toLocaleString(document.documentElement.lang||'it-IT',{hour12:false});
-
-    function renderNext(){
-      const box=$('nextList'); box.innerHTML='';
-      const arr=readJSON('next_prompts',[]);
-      if(!arr.length){
-        const p=document.createElement('div');
-        p.className='small';
-        p.textContent=T.emptyNext;
-        box.appendChild(p);
+    } else {
+      // STEP 2: utente deve aver risposto alla domanda di chiarimento
+      const extra = (clarifyInput.value || "").trim();
+      if(extra.length < 4){
+        toast(t().toastClarifyMissing);
+        clarifyInput.focus();
         return;
       }
-      arr.slice(0,12).forEach(item=>{
-        const row=document.createElement('div'); row.className='story';
-        const left=document.createElement('div');
-        left.innerHTML=`<div style="font-weight:700;max-width:520px">${(item.q||'—').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div><div class="meta">${fmtDate(item.ts)}</div>`;
-        const right=document.createElement('div'); right.className='row';
-        const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=T.use;
-        useBtn.onclick=()=>{
-          $('qInput').value=item.q||'';
-          LS.setItem('absurd_prompt','0');
-          LS.setItem('surprise_mode','0');
-          window.scrollTo({top:0,behavior:'smooth'});
-        };
-        right.appendChild(useBtn);
-        row.appendChild(left); row.appendChild(right);
-        box.appendChild(row);
-      });
-    }
 
-    function renderStories(){
-      const box=$('storyList'); box.innerHTML='';
-      const arr=readJSON('cronologia',[]);
-      if(!arr.length){
-        const p=document.createElement('div');
-        p.className='small';
-        p.textContent=T.emptyHist;
-        box.appendChild(p);
-        return;
-      }
-      arr.slice(-12).reverse().forEach(item=>{
-        const row=document.createElement('div'); row.className='story';
-        const left=document.createElement('div');
-        left.innerHTML=`<div style="font-weight:700;max-width:520px">${(item.domanda||'—').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div><div class="meta">${fmtDate(item.ts)} · ${(item.stile==='wtf'?'What the F':'What if')}</div>`;
-        const play=document.createElement('button'); play.className='play'; play.textContent='▶';
-        play.onclick=()=>{
-          writeJSON('replay_story',{domanda:item.domanda,answer:item.risposta||item.answer||'',stile:item.stile||'whatif'});
-          location.href='fifth.html';
-        };
-        row.appendChild(left); row.appendChild(play);
-        box.appendChild(row);
-      });
-    }
-
-    renderNext();
-    renderStories();
-
-    $('clearSavedBtn').onclick=()=>{ LS.removeItem('next_prompts'); renderNext(); };
-    $('clearHistoryBtn').onclick=()=>{ LS.removeItem('cronologia'); renderStories(); };
-    $('saveBtn').onclick=()=>{
-      const q=($('qInput').value||'').trim(); if(!q) return;
-      const arr=readJSON('next_prompts',[]);
-      arr.unshift({q,ts:Date.now()});
-      writeJSON('next_prompts',arr.slice(0,50));
-      renderNext();
-    };
-
-    // ===== Guard credits & submit =====
-    async function guardCredits(){
-      if(!auth.currentUser){
-        alert("Per usare i crediti devi essere loggato.");
-        return false;
-      }
-      if(IS_ADMIN) return true;
-      if(currentBalance<=0){
-        alert(T.noCredits);
-        return false;
-      }
-      return true;
-    }
-
-    async function trySubmit(){
-      const ok = await guardCredits();
-      if(!ok) return;
-
-      if(!IS_ADMIN){
-        try{
-          const ok2 = await consumeCredit();
-          if(!ok2){
-            alert(T.noCredits);
-            await syncCreditsFromServer();
-            return;
-          }
-          currentBalance = await getBalance().catch(()=>currentBalance);
-          renderCredits();
-        }catch(err){
-          console.error("consumeCredit error:",err);
-          alert("Errore nell'utilizzo dei crediti. Riprova.");
-          return;
-        }
-      }
-
-      const domanda = ($('qInput').value||'').trim();
-      if(!domanda){ $('qInput').focus(); return; }
-
-      const req={
-        domanda,
-        stile:prefs.stile,
-        lang,
-        extra:'',
-        fantasy_mode:false,
-        periodo:prefs.periodo,
-        absurd:false,
-        surprise:false,
-        source:'manual',
-        micro:{surprise:false,source:'manual'}
+      // Micro pacchetto che la quinta pagina passerà all’API per la risposta finale
+      const micro = {
+        phase:"final",
+        clarifyQuestion: clarifyQuestion,
+        clarifyAnswer: extra
       };
-      writeJSON('whatif_request',req);
-      LS.setItem('domanda',domanda);
-      LS.setItem('absurd_prompt','0');
-      LS.setItem('surprise_mode','0');
+      saveRequestToLS(domanda, micro);
 
-      const hist=readJSON('cronologia',[]);
-      hist.push({domanda,stile:prefs.stile,ts:Date.now(),risposta:''});
-      writeJSON('cronologia',hist.slice(-100));
-
-      location.href='fifth.html';
+      // redir alla pagina risultato (che farà la chiamata finale a /api/ask)
+      location.href = "fifth.html";
     }
+  });
 
-    $('goBtn').onclick=()=>{ trySubmit(); };
-
-    $('qInput').addEventListener('keydown',e=>{
-      if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){
-        e.preventDefault();
-        trySubmit();
-      }
-    });
-    $('clearBtn').onclick=()=>{
-      $('qInput').value='';
-      LS.setItem('absurd_prompt','0');
-      LS.setItem('surprise_mode','0');
-      $('qInput').focus();
-    };
-    $('qInput').addEventListener('input',()=>{
-      LS.setItem('absurd_prompt','0');
-      LS.setItem('surprise_mode','0');
-    });
-
-    // ===== Surprise (assurda) =====
-    const ABS={
-      it:[
-        "E se addestrassi un piccione per portarmi il caffè?",
-        "E se decidessi tutto a testa o croce per 24h?",
-        "E se parlassi in rima in riunione?"
-      ],
-      en:[
-        "What if I trained a pigeon to deliver coffee?",
-        "What if I flipped a coin for 24h?",
-        "What if I spoke in rhymes at work?"
-      ],
-      es:[
-        "¿Y si entrenara una paloma para traer café?",
-        "¿Y si decidiera todo con una moneda por 24h?"
-      ],
-      fr:[
-        "Et si j’entraînais un pigeon à livrer mon café ?",
-        "Et si je décidais tout à pile ou face pendant 24 h ?"
-      ],
-      de:[
-        "Was, wenn ich eine Taube trainiere, Kaffee zu bringen?",
-        "Was, wenn ich 24 Std. alles mit Münzwurf entscheide?"
-      ]
-    };
-    const absurdPool = ()=> (ABS[lang] && ABS[lang].length?ABS[lang]:ABS.it);
-
-    async function slotSurprise(){
-      const ok = await guardCredits();
-      if(!ok) return;
-
-      if(!IS_ADMIN){
-        try{
-          const ok2=await consumeCredit();
-          if(!ok2){
-            alert(T.noCredits);
-            await syncCreditsFromServer();
-            return;
-          }
-          currentBalance=await getBalance().catch(()=>currentBalance);
-          renderCredits();
-        }catch(err){
-          console.error("consumeCredit error:",err);
-          alert("Errore nell'utilizzo dei crediti. Riprova.");
-          return;
-        }
-      }
-
-      const list=absurdPool();
-      if(!list.length) return;
-      const qEl=$('qInput');
-      qEl.classList.add('slotting');
-      let i=0;
-      const iv=setInterval(()=>{
-        qEl.value=list[i%list.length];
-        const s=Math.random()<.5?'whatif':'wtf';
-        const p=Math.random()<.5?'future':'past';
-        prefs.stile=s; prefs.periodo=p;
-        writeJSON('whatif_prefs',prefs);
-        document.documentElement.setAttribute('data-theme', s==='wtf'?'wtf':'whatif');
-        renderBadges();
-        i++;
-      },90);
-      setTimeout(()=>{
-        clearInterval(iv);
-        qEl.classList.remove('slotting');
-        const final=list[Math.floor(Math.random()*list.length)];
-        qEl.value=final;
-        LS.setItem('absurd_prompt','1');
-        LS.setItem('surprise_mode','1');
-        const req={
-          domanda:final,
-          stile:prefs.stile,
-          lang,
-          extra:'',
-          fantasy_mode:false,
-          periodo:prefs.periodo,
-          absurd:true,
-          surprise:true,
-          source:'surprise',
-          micro:{surprise:true,source:'surprise'}
-        };
-        writeJSON('whatif_request',req);
-        LS.setItem('domanda',final);
-        const hist=readJSON('cronologia',[]);
-        hist.push({domanda:final,stile:prefs.stile,ts:Date.now(),risposta:''});
-        writeJSON('cronologia',hist.slice(-100));
-        location.href='fifth.html?src=surprise';
-      }, 1200+Math.random()*600);
+  /* ====== On input, hide error ====== */
+  qInput.addEventListener("input", ()=>{
+    if(errMsg && errMsg.style.display==="block"){
+      errMsg.style.display="none";
     }
-    $('surpriseBtn').onclick=()=>{ slotSurprise(); };
+  });
 
-    // Primo render
-    renderCredits();
-  </script>
+  /* ====== Credits UI update ====== */
+  updateCreditInfo();
+  applyI18N();
+</script>
 </body>
 </html>
+```0
