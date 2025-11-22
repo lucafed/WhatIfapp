@@ -1,11 +1,11 @@
 // /api/ask.js — What?f Engine (nuova logica: clarify + answer, VERSIONE COMPATTA + MOTIVAZIONE LLM)
 // - WHATIF: meno poetico, più pratico. Tono “zingara realista” ma concreto, da consigliere di fiducia:
 //   ~70% analisi / 30% immagini sobrie, risposta chiara alla domanda, più punti di vista.
-//   4–5 frasi, massimo ~90 parole.
+//   5–6 frasi, massimo ~110 parole.
 // - WTF: ultra demenziale, sarcastico, da barista affettuoso (esattamente come i demo):
 //   seconda persona SEMPRE, niente poesia, niente tono “zingara”. Monologo da video virale.
-//   Ogni frase deve contenere almeno una battuta o immagine comica forte.
-//   5–6 frasi, massimo ~130 parole.
+//   Ogni frase deve contenere almeno una battuta o immagine demenziale forte.
+//   4–5 frasi, massimo ~130 parole.
 //
 // - Un paragrafo, niente elenchi, niente eco della domanda. Maiuscole ripristinate post-process.
 
@@ -165,7 +165,7 @@ const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO PRATICO COMPATTO):
 - Alla fine prendi posizione: suggerisci se ha senso provarci, con quali condizioni minime o accortezze, come fare un check finale con un amico sincero.
 - Linguaggio: italiano naturale, pulito, colloquiale ma non infantile, tono caldo da amico che ti dice la verità in faccia.
 - Chiudi con una frase che riassume il senso della scelta: cosa ci guadagni, cosa rischi, che tipo di storia diventa la tua.
-- 4–5 frasi, seconda persona, un solo paragrafo, frasi brevi (massimo ~20 parole), niente elenchi, niente emoji.`;
+- 5–6 frasi, seconda persona, un solo paragrafo, frasi brevi (massimo ~20 parole), niente elenchi, niente emoji.`;
 
 const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE PRATICO COMPATTO):
 - Tono: leggi una vita alternativa con lucidità, come un amico molto sincero che ti fa vedere il quadro intero senza schiacciarti di sensi di colpa.
@@ -179,7 +179,7 @@ const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE PRATICO C
 - Nessuna data inventata: resta sul tipo di esperienza (non su fatti storici specifici).
 - Alla fine riportalo dolcemente al presente: cosa impari da quell’ipotesi, cosa puoi ancora fare ora, quale scelta più onesta puoi fare oggi.
 - Linguaggio: italiano naturale, diretto, empatico ma fermo, da consigliere che ti aiuta a smettere di frullare nella testa.
-- 4–5 frasi, seconda persona, un solo paragrafo, frasi brevi (massimo ~20 parole), niente elenchi, niente emoji. Risposta chiara, poco fumo, molta sostanza.`;
+- 5–6 frasi, seconda persona, un solo paragrafo, frasi brevi (massimo ~20 parole), niente elenchi, niente emoji. Risposta chiara, poco fumo, molta sostanza.`;
 
 /* ========= Finali “gancio” WHAT IF ========= */
 const ZINGARA_ENDINGS = {
@@ -421,18 +421,18 @@ function buildClarifyMessages({ domanda, stile, lang, periodo }) {
 
   let sys;
   if (stile === "wtf") {
-    // WHAT THE F — chiarimento demenziale
+    // WHAT THE F — chiarimento demenziale, più ironico/presa per il culo
     if (L === "en") {
-      sys = `You are “WHAT THE F”: absurd, sarcastic and weirdly caring, like a bartender who has seen too much life.
+      sys = `You are “WHAT THE F”: absurd, sarcastic and weirdly caring, like a bartender who has seen way too much life.
 You ALWAYS speak in SECOND PERSON (“you / your”) when you talk about the user.
 You NEVER talk about the user in third person (“he, she, this guy, that person”) and you NEVER use first person (“I, me, we, us”).
 
 TASK:
 - Ask EXACTLY ONE clarifying question in ENGLISH.
-- The question must sound like a chaotic, funny bartender trying to understand what the user really wants.
+- The question must sound like a chaotic, dumb-funny bartender roasting the situation, not the person.
+- Add at least ONE silly or exaggerated image (e.g. comparing their plan to a wobbly IKEA table).
 - You MAY pack 2–3 micro-points in the same sentence (time, money, limits), separated by commas.
 - Be short and sharp: 1 sentence, max 20–22 words.
-- Roast the SITUATION a bit, not the person.
 - No emojis, no lists, no explanations, just the question.`;
     } else {
       const LANG_LABEL =
@@ -444,16 +444,17 @@ Parli SEMPRE e SOLO in seconda persona (“tu / ti / te / tuo”) quando ti rife
 
 COMPITO:
 - Fai ESATTAMENTE UNA domanda di chiarimento in ${LANG_LABEL}.
+- La domanda deve essere ironica e demenziale: prendi in giro la SITUAZIONE come se stessi commentando un disastro organizzato da lui.
+- Inserisci almeno UNA immagine comica assurda (tipo confronto con tavolo Ikea traballante, armadio esploso, Excel in lacrime).
 - Puoi infilare 2–3 dettagli nella stessa frase (tempo, soldi, vincoli), separati da virgole, ma resta chiarissimo.
-- La domanda deve suonare come una battuta da barista: un po’ sarcastica, ma utile per capire cosa vuole davvero.
 - Prendi in giro la SITUAZIONE, non la persona.
 - Una sola frase, massimo 20–22 parole.
 - Niente emoji, niente elenco, niente spiegazioni: restituisci solo la domanda.`;
     }
   } else {
-    // WHAT IF — chiarimento “zingara realista” ma pratico
+    // WHAT IF — chiarimento “zingara realista” ma pratico, consigliere
     if (L === "en") {
-      sys = `You are “WHAT IF”: practical, slightly mystical but very concrete, like a fortune teller who cares about real life details.
+      sys = `You are “WHAT IF”: practical, slightly mystical but very concrete, like a trusted advisor who cares about real life details.
 You speak to the user in SECOND PERSON (“you / your”), never in third person, and you do NOT use first person (“I, me, we, us”).
 
 TASK:
@@ -533,7 +534,8 @@ Vietato usare qualunque prima persona (“io, noi, me, ci, mi, nostro, nostra, m
 IMPORTANTISSIMO:
 - Evita di iniziare più di DUE frasi con la parola “tu”.
 - Ogni singola frase deve contenere almeno UNA battuta o immagine talmente demenziale da poter stare in un reel virale.
-- Il tono, il ritmo e la struttura devono restare sempre quelli dei tuoi esempi interni di WHAT THE F: monologo breve, tagliente, da mandare al gruppo WhatsApp.
+- Devi prendere per il culo la SITUAZIONE dall’inizio alla fine, come se commentassi un incidente rallentato di buon senso.
+- Non diventare mai cattivo con la persona: sei feroce con il casino, affettuoso con chi lo vive.
 
 ZERO TONO ZINGARA e ZERO SPIRITUALITÀ:
 - niente intuizioni mistiche, niente “energie”, niente “universo che manda segnali”, niente frasi motivazionali generiche.
@@ -578,7 +580,7 @@ ${react.map((r) => `     - ${r}`).join("\n")}
 STILE:
 - Italiano parlato, diretto, pieno di immagini sceme ma concrete.
 - Ogni singola frase deve contenere almeno UNA immagine comica forte o un colpo di battuta chiaro.
-- 5–6 frasi, UN solo paragrafo, massimo circa 130 parole.
+- 4–5 frasi, UN solo paragrafo, massimo circa 130 parole.
 - Nessun elenco visibile, nessuna emoji, nessuna ripetizione della domanda.`;
 
     const WTF_RULE_EN = `You are “WHAT THE F”: absurd, sarcastic and weirdly caring, like a bartender who has seen way too much life.
@@ -588,7 +590,8 @@ You NEVER talk about the user in third person (“he, she, this guy, that person
 CRUCIAL:
 - Avoid starting more than TWO sentences with “you”.
 - Every single sentence must carry at least ONE ridiculous, over-the-top comic image or punchline, reel-level dumb and funny.
-- Keep the same voice, rhythm and structure as your internal WHAT THE F examples: short, sharp, viral-style rant.
+- Roast the SITUATION from start to finish, as if you were commenting a slow-motion crash of common sense.
+- Never be cruel to the person: harsh with the chaos, soft with the human.
 
 STRICTLY NO MYSTICAL OR SPIRITUAL VIBES:
 - No energies, no universe sending signs, no spiritual lessons, no generic motivational fluff.
@@ -611,7 +614,7 @@ STRUCTURE (COMPACT, DO NOT SKIP STEPS):
 
 STYLE:
 - Spoken, direct, packed with concrete, silly images in EVERY sentence.
-- 5–6 sentences, single paragraph, max ~130 words, no bullets, no emojis, no restating the question.`;
+- 4–5 sentences, single paragraph, max ~130 words, no bullets, no emojis, no restating the question.`;
 
     msgs.push(
       { role: "system", content: L === "en" ? WTF_RULE_EN : WTF_RULE_IT },
@@ -671,12 +674,12 @@ STYLE:
   const ask = (function () {
     if (L === "en") {
       return hasClar
-        ? `Original question (do not repeat it): "${domanda}". Extra detail from the user (FOURTH PAGE ANSWER): "${c}". Produce ONE answer in ENGLISH, single paragraph, very clear and concrete. For WHAT IF use 4–5 short sentences, show multiple angles and then take a clear position. For WHAT THE F use 5–6 short sentences.`
+        ? `Original question (do not repeat it): "${domanda}". Extra detail from the user (FOURTH PAGE ANSWER): "${c}". Produce ONE answer in ENGLISH, single paragraph, very clear and concrete. For WHAT IF use 5–6 short sentences, show multiple angles and then take a clear position. For WHAT THE F use 4–5 short sentences.`
         : `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`;
     }
     if (L === "it") {
       return hasClar
-        ? `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo fornito dall’utente (risposta in fourth): "${c}". Genera UNA risposta in ITALIANO, molto concreta, che tenga conto di entrambi. Paragrafo unico. Se stile WHAT IF: 4–5 frasi corte, mostra più punti di vista e poi dai una presa di posizione chiara, da consigliere di fiducia. Se stile WHAT THE F: 5–6 frasi corte, monologo demenziale come nei tuoi esempi.`
+        ? `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo fornito dall’utente (risposta in fourth): "${c}". Genera UNA risposta in ITALIANO, molto concreta, che tenga conto di entrambi. Paragrafo unico. Se stile WHAT IF: 5–6 frasi corte, mostra più punti di vista e poi dai una presa di posizione chiara, da consigliere di fiducia. Se stile WHAT THE F: 4–5 frasi corte, monologo demenziale come nei tuoi esempi.`
         : `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO. Paragrafo unico, grammatica corretta, tono naturale. Se WHAT IF: aiuta davvero a decidere, mostrando più angoli e chiudendo con un consiglio secco.`;
     }
     if (L === "es") {
@@ -1078,14 +1081,14 @@ export default async function handler(req, res) {
     answer = stripQuestionEcho(domanda, answer);
 
     if (stile === "wtf") {
-      // WTF compatto: massimo 6 frasi, massimo ~130 parole, paragrafo unico
-      answer = tightenSentences(answer, 6);
+      // WTF compatto: massimo 5 frasi, massimo ~130 parole, paragrafo unico
+      answer = tightenSentences(answer, 5);
       answer = clampWords(answer, 130);
       answer = normalizeOneParagraph(answer);
     } else {
-      // WHAT IF: 4–5 frasi, ~90 parole
-      answer = tightenSentences(answer, 5);
-      answer = clampWords(answer, 90);
+      // WHAT IF: 5–6 frasi, ~110 parole
+      answer = tightenSentences(answer, 6);
+      answer = clampWords(answer, 110);
       answer = normalizeOneParagraph(answer);
     }
 
@@ -1169,4 +1172,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-      }
+  }
