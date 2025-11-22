@@ -113,15 +113,15 @@
         100%{box-shadow:0 0 0 rgba(255,255,255,.0)}
       }
 
-      /* ===== Sezione chiarimento AI ===== */
+      /* Box evidenziato per la domanda di chiarimento AI */
       .clar-box{
-        background:rgba(255,255,255,.05);
+        background:rgba(255,255,255,.04);
         border:1px solid var(--accent2);
-        border-radius:12px;
+        border-radius:10px;
         padding:10px 12px;
-        margin:6px 0 10px;
         font-size:15px;
         line-height:1.4;
+        color:var(--fg);
       }
     </style>
   </head>
@@ -163,7 +163,7 @@
           </div>
         </div>
 
-        <!-- DOMANDA PRINCIPALE -->
+        <!-- DOMANDA -->
         <div class="card center">
           <h3 class="label" id="qLabel">E se…</h3>
           <textarea id="qInput" rows="3" class="input" placeholder="E se…" autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
@@ -182,14 +182,18 @@
           </div>
         </div>
 
-        <!-- SEZIONE CHIARIMENTO AI -->
+        <!-- SEZIONE CHIARIMENTO (con box evidenziato) -->
         <div class="card center" id="clarifySection" style="display:none;">
           <h3 class="label" id="clarifyLabel">Un'ultima cosa prima di risponderti</h3>
-          <div class="small" id="clarifyStatus"></div>
-          <div class="clar-box" id="clarifyQuestion">
-            <!-- Domanda di chiarimento -->
+          <div class="small" style="margin-bottom:6px;">
+            La voce che hai scelto ti fa una domanda al volo per poterti rispondere meglio:
           </div>
-          <textarea id="clarifyInput" rows="3" class="input" placeholder="Scrivi qui la tua risposta..." autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
+          <div class="clar-box" id="clarifyQuestion">
+            <!-- Domanda di chiarimento generata dalla AI -->
+          </div>
+          <textarea id="clarifyInput" rows="3" class="input" style="margin-top:10px;"
+            placeholder="Scrivi qui la tua risposta..." autocomplete="off"
+            autocapitalize="sentences" spellcheck="false"></textarea>
           <div class="small" id="clarifyHelp" style="margin-top:8px">
             Rispondi in modo breve e concreto. Questo aiuta la AI a darti una risposta molto più precisa.
           </div>
@@ -236,16 +240,22 @@
     <script type="module">
       // ===== Firebase base =====
       import { auth } from "./firebase.init.js";
-      import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+      import {
+        onAuthStateChanged
+      } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
       // ===== Credits Firestore =====
-      import { bootCredits, getBalance, consumeCredit } from "./store/credits.js";
+      import {
+        bootCredits,
+        getBalance,
+        consumeCredit
+      } from "./store/credits.js";
 
       const LS = localStorage;
-      const $  = id => document.getElementById(id);
-      const readJSON  = (k, def) => { try { return JSON.parse(LS.getItem(k) || JSON.stringify(def)); } catch { return def; } };
+      const $ = id => document.getElementById(id);
+      const readJSON = (k, def) => { try { return JSON.parse(LS.getItem(k) || JSON.stringify(def)); } catch { return def; } };
       const writeJSON = (k, v) => LS.setItem(k, JSON.stringify(v));
-      const todayISO  = () => new Date().toISOString().slice(0,10);
+      const todayISO = () => new Date().toISOString().slice(0,10);
 
       const IS_ADMIN = !!LS.getItem('admin_token');
 
@@ -275,12 +285,12 @@
           credits:"Crediti", emptyNext:"— Nessuna domanda salvata.", emptyHist:"— Nessuna storia.",
           use:"Usa", save:"Salva", clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota",
           noCredits:"Hai finito i crediti. Accedi o ricarica per continuare.",
+          // Nuova parte chiarimento
           clarifyLabel:"Un'ultima cosa prima di risponderti",
           clarifyHelp:"Rispondi in modo breve e concreto. Questo aiuta la AI a darti una risposta molto più precisa.",
           clarifyPlaceholder:"Scrivi qui la tua risposta...",
           clarifyBtn:"👉 Vai alla risposta",
           clarifyError:"Errore nel generare la domanda di chiarimento. Riprova.",
-          clarifyLoading:"La AI sta preparando un'ultima domanda per risponderti meglio…",
           answerError:"Errore nel generare la risposta. Riprova tra qualche secondo."
         },
         en:{
@@ -300,7 +310,6 @@
           clarifyPlaceholder:"Write your answer here...",
           clarifyBtn:"👉 Go to the answer",
           clarifyError:"Error while generating the follow-up question. Please try again.",
-          clarifyLoading:"The AI is asking one last thing to answer you better…",
           answerError:"Error while generating the answer. Please try again in a moment."
         },
         es:{
@@ -315,12 +324,11 @@
           credits:"Créditos", emptyNext:"— No hay preguntas guardadas.", emptyHist:"— Sin historial.",
           use:"Usar", save:"Guardar", clearSaved:"🗑️ Vaciar", clearHist:"🗑️ Vaciar",
           noCredits:"Te has quedado sin créditos. Inicia sesión o recarga.",
-          clarifyLabel:"Una cosa más antes de responderte",
+          clarifyLabel:"Una cosa más antes de responder",
           clarifyHelp:"Responde de forma breve y concreta. Esto ayuda a la IA a darte una respuesta mucho más precisa.",
           clarifyPlaceholder:"Escribe aquí tu respuesta...",
           clarifyBtn:"👉 Ir a la respuesta",
           clarifyError:"Error al generar la pregunta de aclaración. Vuelve a intentarlo.",
-          clarifyLoading:"La IA prepara una última pregunta para responderte mejor…",
           answerError:"Error al generar la respuesta. Vuelve a intentarlo en unos segundos."
         },
         fr:{
@@ -335,12 +343,11 @@
           credits:"Crédits", emptyNext:"— Aucune question enregistrée.", emptyHist:"— Aucun historique.",
           use:"Utiliser", save:"Enregistrer", clearSaved:"🗑️ Vider", clearHist:"🗑️ Vider",
           noCredits:"Tu n’as plus de crédits. Connecte-toi ou recharge.",
-          clarifyLabel:"Une dernière chose avant de te répondre",
-          clarifyHelp:"Réponds de manière brève et concrète. Ça aide l’IA à te donner une réponse plus précise.",
+          clarifyLabel:"Une dernière chose avant de répondre",
+          clarifyHelp:"Réponds de manière brève et concrète. Cela aide l’IA à te donner une réponse plus précise.",
           clarifyPlaceholder:"Écris ta réponse ici...",
           clarifyBtn:"👉 Voir la réponse",
           clarifyError:"Erreur lors de la génération de la question de clarification. Réessaie.",
-          clarifyLoading:"L’IA prépare une dernière question pour mieux te répondre…",
           answerError:"Erreur lors de la génération de la réponse. Réessaie dans un instant."
         },
         de:{
@@ -355,19 +362,18 @@
           credits:"Credits", emptyNext:"— Keine gespeicherten Fragen.", emptyHist:"— Kein Verlauf.",
           use:"Verwenden", save:"Speichern", clearSaved:"🗑️ Leeren", clearHist:"🗑️ Leeren",
           noCredits:"Du hast keine Credits mehr. Bitte einloggen oder aufladen.",
-          clarifyLabel:"Noch eine Sache, bevor du die Antwort bekommst",
-          clarifyHelp:"Antworte kurz und konkret. So kann die KI dir eine deutlich präzisere Antwort geben.",
+          clarifyLabel:"Noch eine Sache, bevor ich antworte",
+          clarifyHelp:"Antworte kurz und konkret. So kann die KI dir eine viel präzisere Antwort geben.",
           clarifyPlaceholder:"Schreib deine Antwort hier...",
           clarifyBtn:"👉 Zur Antwort",
           clarifyError:"Fehler beim Erzeugen der Rückfrage. Bitte versuch es noch einmal.",
-          clarifyLoading:"Die KI stellt dir noch eine letzte Frage, um besser zu antworten…",
           answerError:"Fehler beim Erzeugen der Antwort. Bitte versuch es gleich noch einmal."
         }
       });
 
       const T = I18N[lang] || I18N.it;
 
-      // Testi base
+      // Applica testi base
       $('titleH1').textContent=T.title;
       $('qLabel').textContent=T.yourq;
       $('qInput').placeholder=T.ph;
@@ -387,12 +393,11 @@
       $('clearSavedBtn').textContent=T.clearSaved;
       $('clearHistoryBtn').textContent=T.clearHist;
 
-      // Sezione chiarimento
-      $('clarifyLabel').textContent      = T.clarifyLabel;
-      $('clarifyHelp').textContent       = T.clarifyHelp;
-      $('clarifyInput').placeholder      = T.clarifyPlaceholder;
-      $('clarifySubmitBtn').textContent  = T.clarifyBtn;
-      $('clarifyStatus').textContent     = '';
+      // Testi sezione chiarimento
+      $('clarifyLabel').textContent = T.clarifyLabel;
+      $('clarifyHelp').textContent = T.clarifyHelp;
+      $('clarifyInput').placeholder = T.clarifyPlaceholder;
+      $('clarifySubmitBtn').textContent = T.clarifyBtn;
 
       // ===== prefs stile/periodo =====
       let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
@@ -422,7 +427,7 @@
         prefs.periodo=b.dataset.periodo;
         writeJSON('whatif_prefs',prefs);
         renderBadges();
-        renderHints();
+        renderHints(); // aggiorna spunti quando cambi Futuro/Passato
       });
 
       // ===== NAV =====
@@ -484,9 +489,258 @@
       window.addEventListener('pageshow', syncCreditsFromServer);
 
       // ===== Hints realistici =====
-      const HINTS={ /* (identico al tuo, non modificato) */ };
-      // <-- per brevità ho omesso qui il corpo di HINTS;
-      // incolla lo stesso blocco HINTS che hai già ora (future/past per tutte le lingue)
+      const HINTS={
+        it:{
+          future:[
+            "E se cambiassi lavoro entro 6 mesi?",
+            "E se cambiassi città tra un anno?",
+            "E se tornassi a studiare part-time?",
+            "E se vivessi 30 giorni senza social?",
+            "E se chiedessi un aumento questo trimestre?",
+            "E se organizzassi un viaggio da solo nei prossimi 3 mesi?",
+            "E se mi prendessi un mese sabbatico il prossimo anno?",
+            "E se provassi a lavorare da remoto per 3 mesi?",
+            "E se aprissi una piccola attività parallela nel weekend?",
+            "E se facessi ordine radicale in casa questo mese?",
+            "E se dicessi di no a tutto per una settimana?",
+            "E se iniziassi terapia da questo mese?",
+            "E se fissassi un obiettivo fisico per i prossimi 90 giorni?",
+            "E se dedicassi un’ora al giorno a scrivere per 30 giorni?",
+            "E se cambiassi totalmente routine mattutina da lunedì?",
+            "E se spegnessi il telefono tutte le sere alle 21 per un mese?",
+            "E se programmassi un trasferimento tra 12 mesi?",
+            "E se chiedessi feedback onesto a 3 persone su di me?",
+            "E se facessi un progetto creativo con un amico entro quest’anno?",
+            "E se mi iscrivessi a un corso che mi spaventa?",
+            "E se dedicassi i weekend a un unico progetto personale?",
+            "E se riducessi il lavoro a 4 giorni a settimana?",
+            "E se cambiassi radicalmente la gestione dei soldi da oggi?",
+            "E se provassi un esperimento di minimalismo per 30 giorni?"
+          ],
+          past:[
+            "E se avessi cambiato lavoro un anno fa?",
+            "E se non avessi lasciato quella città?",
+            "E se avessi continuato l’università?",
+            "E se non avessi mai aperto i social?",
+            "E se avessi chiesto un aumento prima?",
+            "E se avessi accettato quell’offerta all’estero?",
+            "E se fossi rimasto in quella relazione?",
+            "E se non avessi mollato quel progetto creativo?",
+            "E se avessi iniziato terapia prima?",
+            "E se avessi detto di no a quel lavoro tossico?",
+            "E se fossi stato più onesto con me stesso nel 2020?",
+            "E se non avessi ascoltato quel consiglio?",
+            "E se avessi risparmiato invece di spendere tutto?",
+            "E se avessi seguito l’istinto invece della paura?",
+            "E se avessi protetto di più il mio tempo?",
+            "E se avessi parlato apertamente di quello che provavo?",
+            "E se avessi dato un’altra possibilità a quella persona?",
+            "E se non avessi interrotto quell’amicizia?",
+            "E se mi fossi fermato un anno prima di bruciarmi?",
+            "E se avessi avuto il coraggio di cambiare prima?"
+          ]
+        },
+        en:{
+          future:[
+            "What if I changed jobs in the next 6 months?",
+            "What if I moved to another city within a year?",
+            "What if I went back to study part-time?",
+            "What if I lived 30 days without social media?",
+            "What if I asked for a raise this quarter?",
+            "What if I took a solo trip in the next 3 months?",
+            "What if I took a one-month sabbatical next year?",
+            "What if I tried working fully remote for 3 months?",
+            "What if I started a tiny side business on weekends?",
+            "What if I radically decluttered my home this month?",
+            "What if I said no to everything for a week?",
+            "What if I started therapy this month?",
+            "What if I committed to a 90-day fitness goal?",
+            "What if I wrote for one hour a day for 30 days?",
+            "What if I fully changed my morning routine from Monday?",
+            "What if I turned my phone off every night at 9 pm for a month?",
+            "What if I planned a relocation within 12 months?",
+            "What if I asked 3 people for brutally honest feedback?",
+            "What if I started a creative project with a friend this year?",
+            "What if I enrolled in a course that scares me?",
+            "What if I dedicated weekends to a single personal project?",
+            "What if I moved to a four-day workweek?",
+            "What if I reset how I manage money starting today?",
+            "What if I tried minimalism for 30 days?"
+          ],
+          past:[
+            "What if I had changed jobs a year ago?",
+            "What if I had never left that city?",
+            "What if I had finished my degree?",
+            "What if I had never downloaded social media?",
+            "What if I had asked for a raise earlier?",
+            "What if I had accepted that offer abroad?",
+            "What if I had stayed in that relationship?",
+            "What if I hadn’t dropped that creative project?",
+            "What if I had started therapy sooner?",
+            "What if I had said no to that toxic job?",
+            "What if I had been honest with myself in 2020?",
+            "What if I hadn’t listened to that advice?",
+            "What if I had saved instead of spending it all?",
+            "What if I had followed my gut instead of fear?",
+            "What if I had protected my time better?",
+            "What if I had spoken openly about how I felt?",
+            "What if I had given that person another chance?",
+            "What if I hadn’t ended that friendship?",
+            "What if I had stopped a year earlier before burning out?",
+            "What if I had dared to change sooner?"
+          ]
+        },
+        es:{
+          future:[
+            "¿Y si cambiara de trabajo en los próximos 6 meses?",
+            "¿Y si me mudara de ciudad antes de un año?",
+            "¿Y si volviera a estudiar a tiempo parcial?",
+            "¿Y si viviera 30 días sin redes sociales?",
+            "¿Y si pidiera un aumento este trimestre?",
+            "¿Y si viajara solo en los próximos 3 meses?",
+            "¿Y si tomara un mes sabático el próximo año?",
+            "¿Y si probara a trabajar en remoto durante 3 meses?",
+            "¿Y si montara un pequeño side business los fines de semana?",
+            "¿Y si hiciera una limpieza radical en casa este mes?",
+            "¿Y si dijera que no a todo durante una semana?",
+            "¿Y si empezara terapia este mes?",
+            "¿Y si fijara un objetivo físico de 90 días?",
+            "¿Y si escribiera una hora al día durante 30 días?",
+            "¿Y si cambiara por completo mi rutina de mañana desde el lunes?",
+            "¿Y si apagara el móvil todas las noches a las 21 durante un mes?",
+            "¿Y si planeara mudarme en 12 meses?",
+            "¿Y si pidiera feedback honesto a 3 personas?",
+            "¿Y si lanzara un proyecto creativo con un amigo este año?",
+            "¿Y si me apuntara a un curso que me da miedo?",
+            "¿Y si dedicara los fines de semana a un solo proyecto?",
+            "¿Y si intentara trabajar solo 4 días a la semana?",
+            "¿Y si reorganizara desde cero mis finanzas?",
+            "¿Y si probara el minimalismo durante 30 días?"
+          ],
+          past:[
+            "¿Y si hubiera cambiado de trabajo hace un año?",
+            "¿Y si no me hubiera ido de aquella ciudad?",
+            "¿Y si hubiera terminado la carrera?",
+            "¿Y si nunca hubiera abierto redes sociales?",
+            "¿Y si hubiera pedido un aumento antes?",
+            "¿Y si hubiera aceptado aquella oferta en el extranjero?",
+            "¿Y si me hubiera quedado en aquella relación?",
+            "¿Y si no hubiera abandonado ese proyecto creativo?",
+            "¿Y si hubiera empezado terapia antes?",
+            "¿Y si hubiera dicho que no a ese trabajo tóxico?",
+            "¿Y si hubiera sido más honesto conmigo en 2020?",
+            "¿Y si no hubiera seguido aquel consejo?",
+            "¿Y si hubiera ahorrado en vez de gastarlo todo?",
+            "¿Y si hubiera seguido mi intuición y no el miedo?",
+            "¿Y si hubiera protegido más mi tiempo?",
+            "¿Y si hubiera hablado de cómo me sentía?",
+            "¿Y si le hubiera dado otra oportunidad a esa persona?",
+            "¿Y si no hubiera roto aquella amistad?",
+            "¿Y si me hubiera frenado un año antes de quemarme?",
+            "¿Y si hubiera tenido el valor de cambiar antes?"
+          ]
+        },
+        fr:{
+          future:[
+            "Et si je changeais de travail dans les 6 prochains mois ?",
+            "Et si je déménageais d’ici un an ?",
+            "Et si je reprenais mes études à temps partiel ?",
+            "Et si je vivais 30 jours sans réseaux sociaux ?",
+            "Et si je demandais une augmentation ce trimestre ?",
+            "Et si je partais en voyage en solo dans les 3 mois ?",
+            "Et si je prenais un mois sabbatique l’année prochaine ?",
+            "Et si j’essayais de travailler 100 % à distance pendant 3 mois ?",
+            "Et si je lançais un petit side project le week-end ?",
+            "Et si je faisais un grand tri chez moi ce mois-ci ?",
+            "Et si je disais non à tout pendant une semaine ?",
+            "Et si je commençais une thérapie ce mois-ci ?",
+            "Et si je me fixais un objectif sportif sur 90 jours ?",
+            "Et si j’écrivais une heure par jour pendant 30 jours ?",
+            "Et si je changeais totalement ma routine du matin dès lundi ?",
+            "Et si j’éteignais mon téléphone tous les soirs à 21 h pendant un mois ?",
+            "Et si je préparais un déménagement d’ici 12 mois ?",
+            "Et si je demandais un feedback honnête à 3 proches ?",
+            "Et si je lançais un projet créatif avec un ami cette année ?",
+            "Et si je m’inscrivais à une formation qui me fait peur ?",
+            "Et si je réservais mes week-ends à un seul projet perso ?",
+            "Et si je passais à une semaine de 4 jours ?",
+            "Et si je repartais de zéro sur ma gestion d’argent dès aujourd’hui ?",
+            "Et si je testais le minimalisme pendant 30 jours ?"
+          ],
+          past:[
+            "Et si j’avais changé de travail il y a un an ?",
+            "Et si je n’avais jamais quitté cette ville ?",
+            "Et si j’avais terminé mes études ?",
+            "Et si je n’avais jamais ouvert de compte sur les réseaux sociaux ?",
+            "Et si j’avais demandé une augmentation plus tôt ?",
+            "Et si j’avais accepté cette offre à l’étranger ?",
+            "Et si j’étais resté dans cette relation ?",
+            "Et si je n’avais pas abandonné ce projet créatif ?",
+            "Et si j’avais commencé une thérapie plus tôt ?",
+            "Et si j’avais dit non à ce job toxique ?",
+            "Et si j’avais été honnête avec moi-même en 2020 ?",
+            "Et si je n’avais pas suivi ce conseil ?",
+            "Et si j’avais économisé au lieu de tout dépenser ?",
+            "Et si j’avais suivi mon intuition au lieu de la peur ?",
+            "Et si j’avais mieux protégé mon temps ?",
+            "Et si j’avais parlé franchement de ce que je ressentais ?",
+            "Et si j’avais donné une deuxième chance à cette personne ?",
+            "Et si je n’avais pas coupé ce lien d’amitié ?",
+            "Et si je m’étais arrêté un an plus tôt avant le burn-out ?",
+            "Et si j’avais osé changer plus tôt ?"
+          ]
+        },
+        de:{
+          future:[
+            "Was wäre, wenn ich in den nächsten 6 Monaten den Job wechselte?",
+            "Was wäre, wenn ich innerhalb eines Jahres in eine andere Stadt ziehe?",
+            "Was wäre, wenn ich wieder nebenbei studiere?",
+            "Was wäre, wenn ich 30 Tage ohne Social Media lebe?",
+            "Was wäre, wenn ich dieses Quartal eine Gehaltserhöhung fordere?",
+            "Was wäre, wenn ich in den nächsten 3 Monaten alleine verreise?",
+            "Was wäre, wenn ich nächstes Jahr einen Monat Sabbat nehme?",
+            "Was wäre, wenn ich 3 Monate komplett remote arbeite?",
+            "Was wäre, wenn ich am Wochenende ein kleines Nebenprojekt starte?",
+            "Was wäre, wenn ich meine Wohnung diesen Monat radikal entrümple?",
+            "Was wäre, wenn ich eine Woche lang zu allem Nein sage?",
+            "Was wäre, wenn ich diesen Monat mit Therapie beginne?",
+            "Was wäre, wenn ich mir ein 90-Tage-Fitnessziel setze?",
+            "Was wäre, wenn ich 30 Tage lang jeden Tag eine Stunde schreibe?",
+            "Was wäre, wenn ich ab Montag meine Morgenroutine komplett ändere?",
+            "Was wäre, wenn ich das Handy einen Monat lang jeden Abend um 21 Uhr ausschalte?",
+            "Was wäre, wenn ich einen Umzug in den nächsten 12 Monaten plane?",
+            "Was wäre, wenn ich 3 Leute um brutales Feedback bitte?",
+            "Was wäre, wenn ich dieses Jahr ein kreatives Projekt mit einem Freund starte?",
+            "Was wäre, wenn ich einen Kurs buche, der mir Angst macht?",
+            "Was wäre, wenn ich meine Wochenenden nur einem Projekt widme?",
+            "Was wäre, wenn ich nur noch vier Tage pro Woche arbeite?",
+            "Was wäre, wenn ich meine Finanzen ab heute komplett neu aufsetze?",
+            "Was wäre, wenn ich Minimalismus 30 Tage teste?"
+          ],
+          past:[
+            "Was wäre, wenn ich vor einem Jahr den Job gewechselt hätte?",
+            "Was wäre, wenn ich nie aus dieser Stadt weggezogen wäre?",
+            "Was wäre, wenn ich mein Studium beendet hätte?",
+            "Was wäre, wenn ich nie Social Media installiert hätte?",
+            "Was wäre, wenn ich früher nach einer Gehaltserhöhung gefragt hätte?",
+            "Was wäre, wenn ich das Angebot im Ausland angenommen hätte?",
+            "Was wäre, wenn ich in dieser Beziehung geblieben wäre?",
+            "Was wäre, wenn ich dieses kreative Projekt nicht aufgegeben hätte?",
+            "Was wäre, wenn ich früher mit Therapie begonnen hätte?",
+            "Was wäre, wenn ich diesen toxischen Job abgelehnt hätte?",
+            "Was wäre, wenn ich 2020 ehrlicher zu mir gewesen wäre?",
+            "Was wäre, wenn ich diesen Rat nicht befolgt hätte?",
+            "Was wäre, wenn ich gespart statt alles ausgegeben hätte?",
+            "Was wäre, wenn ich meiner Intuition statt der Angst gefolgt wäre?",
+            "Was wäre, wenn ich meine Zeit besser geschützt hätte?",
+            "Was wäre, wenn ich offener über meine Gefühle gesprochen hätte?",
+            "Was wäre, wenn ich dieser Person noch eine Chance gegeben hätte?",
+            "Was wäre, wenn ich diese Freundschaft nicht beendet hätte?",
+            "Was wäre, wenn ich ein Jahr früher gestoppt hätte, bevor ich ausbrannte?",
+            "Was wäre, wenn ich mich früher getraut hätte zu verändern?"
+          ]
+        }
+      };
 
       function rndHints(){
         const langHints = HINTS[lang] || HINTS.it;
@@ -624,7 +878,7 @@
         renderNext();
       };
 
-      // ===== Guard credits =====
+      // ===== Guard credits (solo per la risposta finale) =====
       async function guardCredits(){
         if(!auth.currentUser){
           alert("Per usare i crediti devi essere loggato.");
@@ -638,14 +892,12 @@
         return true;
       }
 
-      // ===== Nuovo flusso domanda -> chiarimento -> risposta =====
+      // ===== Nuovo flusso: domanda -> chiarimento -> risposta finale =====
       let currentQuestion = '';
       let currentClarifyQuestion = '';
 
+      // 1) Prima chiamata: genera la domanda di chiarimento (nessun credito)
       async function startClarifyFlow(){
-        const ok = await guardCredits();
-        if(!ok) return;
-
         const domanda = ($('qInput').value||'').trim();
         if(!domanda){
           $('qInput').focus();
@@ -676,11 +928,6 @@
         goBtn.disabled = true;
         goBtn.textContent = '⏳...';
 
-        $('clarifySection').style.display='block';
-        $('clarifyStatus').textContent = T.clarifyLoading;
-        $('clarifyQuestion').textContent = '';
-        $('clarifyInput').value = '';
-
         try{
           const res = await fetch('/api/ask', {
             method: 'POST',
@@ -698,24 +945,25 @@
           currentClarifyQuestion = (data.clarifyingQuestion || data.question || '').trim();
 
           if(!currentClarifyQuestion){
+            // fallback generico
             currentClarifyQuestion = (lang === 'en')
-              ? "What specific details about time, constraints or feelings matter most here?"
-              : "Quali dettagli su periodo, vincoli o sensazioni contano di più in questa situazione?";
+              ? "What is the most important detail I should know to answer you better?"
+              : "Qual è il dettaglio più importante che dovrei sapere per risponderti meglio?";
           }
 
-          $('clarifyStatus').textContent = '';
           $('clarifyQuestion').textContent = currentClarifyQuestion;
+          $('clarifySection').style.display = 'block';
           $('clarifyInput').focus();
         }catch(err){
           console.error("clarify error:", err);
-          alert(T.clarifyError);
-          $('clarifySection').style.display='none';
+          alert(T.clarifyError || "Errore nel generare la domanda di chiarimento. Riprova.");
         }finally{
-          goBtn.disabled = (!IS_ADMIN && currentBalance<=0);
+          goBtn.disabled = ( !IS_ADMIN && currentBalance<=0 );
           goBtn.textContent = originalLabel;
         }
       }
 
+      // 2) Seconda chiamata: invia la tua risposta + domanda e consuma 1 credito
       async function submitClarification(){
         const clarification = ($('clarifyInput').value||'').trim();
         if(!clarification){
@@ -779,7 +1027,7 @@
           });
           writeJSON('cronologia', hist.slice(-100));
 
-          // salva per fifth.html
+          // salva per la fifth come "replay_story"
           writeJSON('replay_story',{
             domanda: currentQuestion,
             answer,
@@ -793,7 +1041,7 @@
           location.href='fifth.html';
         }catch(err){
           console.error("answer error:", err);
-          alert(T.answerError);
+          alert(T.answerError || "Errore nel generare la risposta. Riprova tra qualche secondo.");
         }finally{
           btn.disabled = false;
           btn.textContent = original;
@@ -809,6 +1057,7 @@
           startClarifyFlow();
         }
       });
+
       $('clarifyInput').addEventListener('keydown',e=>{
         if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){
           e.preventDefault();
@@ -822,8 +1071,6 @@
         LS.setItem('surprise_mode','0');
         $('clarifySection').style.display = 'none';
         $('clarifyInput').value = '';
-        $('clarifyQuestion').textContent = '';
-        $('clarifyStatus').textContent = '';
         $('qInput').focus();
       };
       $('qInput').addEventListener('input',()=>{
@@ -832,9 +1079,30 @@
       });
 
       // ===== Surprise (assurda) =====
-      const ABS={ /* identico al tuo blocco ABS */ };
-      // incolla qui il tuo oggetto ABS completo
-
+      const ABS={
+        it:[
+          "E se addestrassi un piccione per portarmi il caffè?",
+          "E se decidessi tutto a testa o croce per 24h?",
+          "E se parlassi in rima in riunione?"
+        ],
+        en:[
+          "What if I trained a pigeon to deliver coffee?",
+          "What if I flipped a coin for 24h?",
+          "What if I spoke in rhymes at work?"
+        ],
+        es:[
+          "¿Y si entrenara una paloma para traer café?",
+          "¿Y si decidiera todo con una moneda por 24h?"
+        ],
+        fr:[
+          "Et si j’entraînais un pigeon à livrer mon café ?",
+          "Et si je décidais tout à pile ou face pendant 24 h ?"
+        ],
+        de:[
+          "Was, wenn ich eine Taube trainiere, Kaffee zu bringen?",
+          "Was, wenn ich 24 Std. alles mit Münzwurf entscheide?"
+        ]
+      };
       const absurdPool = ()=> (ABS[lang] && ABS[lang].length?ABS[lang]:ABS.it);
 
       async function slotSurprise(){
