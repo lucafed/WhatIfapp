@@ -783,6 +783,18 @@
         return selection;
       }
 
+      // ===== stato chiarimento (sempre resettabile) =====
+      let currentQuestion = '';
+      let currentClarifyQuestion = '';
+
+      function resetClarifyUI(){
+        currentQuestion = '';
+        currentClarifyQuestion = '';
+        $('clarifySection').style.display = 'none';
+        $('clarifyInput').value = '';
+        $('clarifyQuestion').textContent = '';
+      }
+
       function renderHints(){
         const wrap=$('hintsChips');
         wrap.innerHTML='';
@@ -791,6 +803,8 @@
           b.className='chip';
           b.textContent=h;
           b.onclick=()=>{
+            // ogni volta che cambio domanda da uno spunto, azzero il chiarimento
+            resetClarifyUI();
             $('qInput').value=h;
             LS.setItem('absurd_prompt','0');
             LS.setItem('surprise_mode','0');
@@ -830,6 +844,8 @@
           const right=document.createElement('div'); right.className='row';
           const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=T.use;
           useBtn.onclick=()=>{
+            // cambio domanda da "salvate" -> reset chiarimento
+            resetClarifyUI();
             $('qInput').value=item.q||'';
             LS.setItem('absurd_prompt','0');
             LS.setItem('surprise_mode','0');
@@ -893,11 +909,12 @@
       }
 
       // ===== Nuovo flusso: domanda -> chiarimento -> risposta finale =====
-      let currentQuestion = '';
-      let currentClarifyQuestion = '';
 
       // 1) Prima chiamata: genera la domanda di chiarimento (nessun credito)
       async function startClarifyFlow(){
+        // ogni nuovo giro di "Genera risposta" riparte pulito
+        resetClarifyUI();
+
         const domanda = ($('qInput').value||'').trim();
         if(!domanda){
           $('qInput').focus();
@@ -1107,13 +1124,16 @@
         $('qInput').value='';
         LS.setItem('absurd_prompt','0');
         LS.setItem('surprise_mode','0');
-        $('clarifySection').style.display = 'none';
-        $('clarifyInput').value = '';
+        // svuota sempre anche la sezione chiarimento
+        resetClarifyUI();
         $('qInput').focus();
       };
+
       $('qInput').addEventListener('input',()=>{
         LS.setItem('absurd_prompt','0');
         LS.setItem('surprise_mode','0');
+        // se inizi a riscrivere la domanda, cancella qualsiasi chiarimento vecchio
+        resetClarifyUI();
       });
 
       // ===== Surprise (assurda) =====
@@ -1146,6 +1166,9 @@
       async function slotSurprise(){
         const ok = await guardCredits();
         if(!ok) return;
+
+        // ogni volta che entro in modalità "sorprendimi", pulisco il chiarimento precedente
+        resetClarifyUI();
 
         if(!IS_ADMIN){
           try{
