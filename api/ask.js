@@ -932,7 +932,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
 
     if (hasTime) {
       pros.push("el tiempo es manejable si divides el camino en pasos pequeños");
-      cons.push("si no proteges tu tiempo, acabarás posponiéndolo una y otra vez");
+      cons.push("si non proteges tu tiempo, acabarás posponiéndolo una y otra vez");
     }
     if (hasBudget) {
       pros.push("puedes mantener los costes bajo control con un límite claro");
@@ -1200,9 +1200,9 @@ export default async function handler(req, res) {
     answer = stripQuestionEcho(domanda, answer);
 
     if (stile === "wtf") {
-      // WHAT THE F: 5–6 frasi, ~130 parole
-      answer = tightenSentences(answer, 6);
-      answer = clampWords(answer, 130);
+      // WHAT THE F: tieni fino a 7 frasi per non mozzare il finale, poi limita un po’ le parole
+      answer = tightenSentences(answer, 7);
+      answer = clampWords(answer, 150);
       answer = normalizeOneParagraph(answer);
     } else {
       // WHAT IF: 5–6 frasi, ~110 parole
@@ -1245,8 +1245,8 @@ export default async function handler(req, res) {
     // Ripristina maiuscole frasi
     answer = sentenceCaseAll(answer);
 
-    // Finale emozionale con gancio se manca (solo WHAT IF)
-    if (stile === "whatif") {
+    // Finale emozionale con gancio solo per lingue diverse dall’italiano
+    if (stile === "whatif" && L !== "it") {
       answer = ensureZingaraEnding({ text: answer, lang: L, periodo, domanda });
     }
 
