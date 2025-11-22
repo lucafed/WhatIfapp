@@ -1,10 +1,10 @@
-// /api/ask.js — What?f Engine (nuova logica: clarify + answer, VERSIONE COMPATTA)
+// /api/ask.js — What?f Engine (nuova logica: clarify + answer, VERSIONE COMPATTA + MOTIVAZIONE LLM)
 // - WHATIF: meno poetico, più pratico. Tono “zingara realista” ma concreto:
 //   ~70% analisi / 30% immagini sobrie, risposta chiara alla domanda.
-//   5–7 frasi, massimo ~120 parole.
+//   4–5 frasi, massimo ~90 parole.
 // - WTF: ultra demenziale, sarcastico, da barista affettuoso:
 //   seconda persona SEMPRE, niente poesia, niente tono “zingara”. Monologo da video virale.
-//   6–8 frasi, massimo ~160 parole.
+//   5–6 frasi, massimo ~130 parole.
 //
 // - Un paragrafo, niente elenchi, niente eco della domanda. Maiuscole ripristinate post-process.
 
@@ -158,7 +158,7 @@ const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO PRATICO COMPATTO):
 - Rispondi sempre al punto centrale della domanda (spostamento, lavoro, relazione, soldi, scelta personale): niente derive generiche.
 - Linguaggio: italiano naturale, pulito, leggermente colloquiale ma non infantile.
 - Chiudi con una frase che riassume il senso della scelta: cosa ci guadagni, cosa rischi, che tipo di storia diventa la tua.
-- 5–7 frasi, seconda persona, un solo paragrafo, niente elenchi, niente emoji, niente giri mistici inutili.`;
+- 4–5 frasi, seconda persona, un solo paragrafo, frasi brevi (massimo ~20 parole), niente elenchi, niente emoji.`;
 
 const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE PRATICO COMPATTO):
 - Tono: leggi una vita alternativa, ma resti lucido. Pochissima poesia, tanta realtà.
@@ -170,9 +170,9 @@ const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE PRATICO C
 - Se esiste un dettaglio aggiuntivo dall’utente, trattalo come vincolo principale e richiamalo in modo esplicito almeno una volta.
 - Nessuna data inventata: resta sul tipo di esperienza (non su fatti storici specifici).
 - Chiudi riportando dolcemente al presente: cosa impari da quell’ipotesi e cosa puoi ancora fare ora.
-- 5–7 frasi, seconda persona, un solo paragrafo, niente elenchi, niente emoji. Risposta chiara, poco fumo, molta sostanza.`;
+- 4–5 frasi, seconda persona, un solo paragrafo, frasi brevi (massimo ~20 parole), niente elenchi, niente emoji. Risposta chiara, poco fumo, molta sostanza.`;
 
-/* ========= Finali “gancio” ========= */
+/* ========= Finali “gancio” WHAT IF ========= */
 const ZINGARA_ENDINGS = {
   it: {
     future: [
@@ -406,7 +406,7 @@ function scientificReportDemenziale(domanda, lang = "it") {
   return `Rapporto scientifico (più o meno): ${u} (n=${n}) rileva che “${e}” migliora la chiarezza decisionale (${m}). Revisione a cura di ${j}, forse.`;
 }
 
-/* ========= MESSAGGI: CLARIFY (stile coerente con WHATIF / WTF) ========= */
+/* ========= MESSAGGI: CLARIFY ========= */
 function buildClarifyMessages({ domanda, stile, lang, periodo }) {
   const L = normLang(lang);
 
@@ -422,7 +422,7 @@ TASK:
 - Ask EXACTLY ONE clarifying question in ENGLISH.
 - The question must sound like a chaotic, funny bartender trying to understand what the user really wants.
 - You MAY pack 2–3 micro-points in the same sentence (time, money, limits), separated by commas.
-- Be short and sharp: 1 sentence, max 25 words.
+- Be short and sharp: 1 sentence, max 20–22 words.
 - Roast the SITUATION a bit, not the person.
 - No emojis, no lists, no explanations, just the question.`;
     } else {
@@ -438,7 +438,7 @@ COMPITO:
 - Puoi infilare 2–3 dettagli nella stessa frase (tempo, soldi, vincoli), separati da virgole, ma resta chiarissimo.
 - La domanda deve suonare come una battuta da barista: un po’ sarcastica, ma utile per capire cosa vuole davvero.
 - Prendi in giro la SITUAZIONE, non la persona.
-- Una sola frase, massimo 25 parole.
+- Una sola frase, massimo 20–22 parole.
 - Niente emoji, niente elenco, niente spiegazioni: restituisci solo la domanda.`;
     }
   } else {
@@ -449,9 +449,9 @@ You speak to the user in SECOND PERSON (“you / your”), never in third person
 
 TASK:
 - Ask EXACTLY ONE clarifying question in ENGLISH.
-- Focus on 1–3 key missing details that would change the answer the most: time horizon, constraints, main goal, or practical context.
+- Focus on 1–2 key missing details that would change the answer the most.
 - Tone: calm, grounded, a bit intuitive but not poetic.
-- One sentence, max 25 words.
+- One sentence, max 20–22 words.
 - No emojis, no bullet points, no explanations: return ONLY the question.`;
     } else {
       const LANG_LABEL =
@@ -462,10 +462,9 @@ Parli in seconda persona (“tu / ti / te / tuo”), non usi la prima persona (�
 
 COMPITO:
 - Fai ESATTAMENTE UNA domanda di chiarimento in ${LANG_LABEL}.
-- Puoi includere fino a 3 aspetti nella stessa frase (tempo, vincoli, obiettivo, contesto pratico), purché la domanda resti leggibile.
-- Punta sul dettaglio che cambia davvero la risposta: orizzonte di tempo, vincoli principali, obiettivo preciso o contesto pratico.
-- Tono: calmo, lucido, leggermente intuitivo ma non poetico, niente frasi fumose.
-- Una sola frase, massimo 25 parole.
+- Punta su 1–2 dettagli che cambiano davvero la risposta (tempo, vincoli principali, obiettivo).
+- Tono: calmo, lucido, leggermente intuitivo ma non poetico.
+- Una sola frase, massimo 20–22 parole.
 - Niente emoji, niente elenco, niente spiegazioni: restituisci SOLO la domanda.`;
     }
   }
@@ -492,8 +491,8 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
   const L = normLang(lang);
   const baseRules =
     L === "en"
-      ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. SECOND PERSON ONLY (“you / your”) when you talk about the user. Never talk about the user in third person (“he, she, this guy, this person”). Do NOT use first person (“I, me, we, us”). Stay close to the topic of the question and answer its core point clearly. Use a rich, varied vocabulary, and keep grammar and punctuation clean. Avoid repeating the same words and images too often.`
-      : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona (tu / ti / te / tuo) quando parli dell’utente. Vietato usare la prima persona singolare o plurale (“io, noi, me, ci, mi, nostro, nostra, miei, nostre”) e vietato parlare dell’utente in terza persona (“lui, lei, questo tizio, questa persona”). Resta aderente al tema della domanda e rispondi in modo chiaro al punto centrale. Usa un vocabolario ricco e vario, italiano corretto, senza errori di grammatica e con punteggiatura curata. Evita ripetizioni evidenti di parole e immagini.`;
+      ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. SECOND PERSON ONLY (“you / your”) when you talk about the user. Never talk about the user in third person (“he, she, this guy, this person”). Do NOT use first person (“I, me, we, us”). Stay close to the topic of the question and answer its core point clearly. Use a rich, varied vocabulary, and keep grammar and punctuation clean. Avoid repeating the same words and images too often. Prefer short sentences (max ~20 words).`
+      : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona (tu / ti / te / tuo) quando parli dell’utente. Vietato usare la prima persona singolare o plurale (“io, noi, me, ci, mi, nostro, nostra, miei, nostre”) e vietato parlare dell’utente in terza persona (“lui, lei, questo tizio, questa persona”). Resta aderente al tema della domanda e rispondi in modo chiaro al punto centrale. Usa un vocabolario ricco e vario, italiano corretto, senza errori di grammatica e con punteggiatura curata. Evita ripetizioni evidenti di parole e immagini. Preferisci frasi brevi (massimo ~20 parole).`;
 
   const msgs = [{ role: "system", content: baseRules }];
 
@@ -513,7 +512,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
 
     const reactPool = WTF_REACT_BY_CONTEXT[ctx] || WTF_REACT_BY_CONTEXT.generico;
     const shuffled = [...reactPool].sort(() => rnd() - 0.5);
-    const react = shuffled.slice(0, 2 + Math.floor(rnd() * 2));
+    const react = shuffled.slice(0, 2 + Math.floor(rnd() * 1)); // 2–3 reazioni
 
     const drinkSample = WTF_DRINK_POOL[Math.floor(rnd() * WTF_DRINK_POOL.length)];
 
@@ -528,19 +527,17 @@ ZERO TONO ZINGARA: niente intuizioni mistiche, niente “vedo energie”, niente
 
 SE C’È UN DETTAGLIO AGGIUNTIVO DALL’UTENTE:
 - Trattalo come il centro del delirio: la scena, le battute e la morale devono appoggiarsi fortissimo proprio su quel dettaglio.
-- Fai sentire all’utente che ti stai agganciando esattamente a quello che ti ha scritto nella risposta in fourth.
+- Fai sentire che ti stai agganciando esattamente a quello che ti ha scritto nella risposta in fourth.
 
 OBIETTIVO: far ridere forte e dare una risposta CHIARA alla domanda, con un monologo che sembra un video virale da mandare al gruppo WhatsApp.
 
 STRUTTURA OBBLIGATORIA (ITALIANO, COMPATTA):
-1) Apertura (1–2 frasi):
-   - Prendi in giro la SITUAZIONE, non la persona: tratta l’utente come “campione olimpico delle scelte discutibili”, “direttore creativo del casino”, “eroe dell’indecisione organizzata”.
-   - Rivolgiti DIRETTAMENTE a lui: “entri”, “arrivi”, “ti presenti”, “ti convinci che…”, NON “lui entra”.
-   - Tono immediato da bar, zero mistica, zero poesia.
+1) Apertura (1 frase):
+   - Prendi in giro la SITUAZIONE, non la persona: “campione olimpico delle scelte discutibili”, “direttore creativo del casino”, “eroe dell’indecisione organizzata”.
+   - Rivolgiti DIRETTAMENTE a lui.
 
 2) Scena concreta:
-   - Descrivi cosa succede nel mondo reale legato al contesto (“${ctx}”): entri in concessionaria, rientri all’Aquila, riapri la chat, ti siedi in ufficio, guardi il conto.
-   - La scena deve sembrare un mini-video: movimenti, oggetti, sguardi, silenzi.
+   - Cosa succede nel mondo reale legato al contesto (“${ctx}”): rientri all’Aquila, riapri la chat, ti siedi in ufficio, guardi il conto.
    - Se hai un dettaglio aggiuntivo (budget, tempi, vincoli), infilalo dentro la scena come se fosse il vero problema.
 
 3) IMPRECAZIONE TEATRALE (esattamente UNA):
@@ -549,35 +546,28 @@ STRUTTURA OBBLIGATORIA (ITALIANO, COMPATTA):
    - L’imprecazione è contro la SITUAZIONE (prezzo, burocrazia, caos, traffico, affitto, ex, città), non contro categorie reali.
 
 4) OGGETTI CHE REAGISCONO (almeno ${react.length} reazioni):
-   - Subito dopo l’imprecazione fai reagire gli oggetti della scena: casco, poster, POS, tappetino, sedia, bicchiere, lampada, gatti, telefono, fermata bus…
+   - Subito dopo l’imprecazione fai reagire gli oggetti della scena.
    - Usa idee ispirate a queste, ma crea SEMPRE frasi nuove:
 ${react.map((r) => `     - ${r}`).join("\n")}
-   - Reazioni comiche e un po’ surreali, ma visive.
 
 5) MICRO-DISASTRO SLAPSTICK:
-   - Qualcosa va storto in modo buffo: inciampi, ti cade qualcosa, la porta non si apre, il POS fa scena, il sampietrino ti stacca la caviglia morale.
-   - Deve far sorridere, non essere tragico.
+   - Qualcosa va storto in modo buffo: inciampi, ti cade qualcosa, la porta non si apre, il POS fa scena.
 
 6) MOMENTO DRINK (SEMPRE):
    - Il drink nasce dalla scena: bar, cucina di casa, frigo, bancone.
    - Ispirati a: “${drinkSample}” ma inventa SEMPRE una scena di bevuta nuova.
-   - Il bicchiere/tazza può reagire: tremare, giudicare, tintinnare.
 
 7) Chiusura:
-   - Chiudi con 1–2 frasi che rispondono in modo chiaro alla domanda dell’utente (“in pratica, ti conviene”, “in pratica ti complichi la vita ma almeno sai perché”, “non ti salva, ma ti regala una storia decente”).
-   - Mini-morale ironica da video virale, possibilmente legata anche al dettaglio aggiuntivo dell’utente.
+   - 1 frase che risponde in modo chiarissimo alla domanda (“in pratica, ti conviene”, “ti complichi la vita ma almeno sai perché”, “non ti salva ma ti regala una storia decente”).
 
 8) Stile:
    - Italiano parlato, diretto, pieno di immagini sceme ma chiare.
    - NESSUN tono mistico, niente guru, niente frasi motivazionali vuote.
-   - Ogni frase deve avere almeno un’immagine comica, una micro-battuta o un ribaltamento di aspettativa.
-   - Frasi relativamente brevi, ritmo alto.
+   - Frasi brevi, ritmo alto.
 
 9) Lunghezza:
-   - 6–8 frasi, UN solo paragrafo, massimo circa 160 parole.
-   - Nessun elenco visibile, nessuna emoji, nessuna ripetizione della domanda.
-
-Ricorda: devi sembrare la voce fuori campo perfetta per un reel virale: cattiva ma affettuosa, scema ma molto precisa sul succo della risposta.`;
+   - 5–6 frasi, UN solo paragrafo, massimo circa 130 parole.
+   - Nessun elenco visibile, nessuna emoji, nessuna ripetizione della domanda.`;
 
     const WTF_RULE_EN = `You are “WHAT THE F”: absurd, sarcastic and weirdly caring, like a bartender who has seen too much life.
 You ALWAYS speak in SECOND PERSON (“you / your”) when you talk about the user.
@@ -592,14 +582,14 @@ IF THERE IS EXTRA DETAIL FROM THE USER:
 GOAL: short, viral-style rant that is funny but still gives a clear answer to the question.
 
 STRUCTURE (COMPACT):
-- Opening: roast the situation, give ridiculous heroic titles (“hero of chaos”, “CEO of bad decisions”), talking directly to the user.
-- Concrete scene: show what happens in real life (office, bar, shop, city, money, bike…), and weave the extra detail into the scene.
+- 1 opening sentence roasting the situation with a ridiculous heroic title (“hero of chaos”, “CEO of bad decisions”), talking directly to the user.
+- Concrete scene: what happens in real life (office, bar, shop, city, money, bike…), weaving the extra detail into the scene.
 - ONE theatrical outburst aimed at the situation (never at real groups).
-- 2–4 reacting objects (helmet, poster, POS, chair, glass, cat, phone, door, bus stop…).
+- 2–3 reacting objects (helmet, poster, POS, chair, glass, cat, phone, door, bus stop…).
 - Tiny slapstick disaster (trip, drop, door stuck, card declined dramatically).
 - Drink scene: funny, visual, no self-harm.
-- Ending: clear yes/no/but answer + tiny ironic moral, also linked to the user’s extra detail.
-- 6–8 sentences, single paragraph, max ~160 words, no bullets, no emojis, no restating the question.
+- Final sentence: clear yes/no/but answer + tiny ironic moral, also linked to the user’s extra detail.
+- 5–6 sentences, single paragraph, max ~130 words, no bullets, no emojis, no restating the question.
 - Every sentence should carry at least one comic image or punchline, keep the pace high.`;
 
     msgs.push(
@@ -660,12 +650,12 @@ STRUCTURE (COMPACT):
   const ask = (function () {
     if (L === "en") {
       return hasClar
-        ? `Original question (do not repeat it): "${domanda}". Extra detail from the user (FOURTH PAGE ANSWER): "${c}". Produce ONE answer in ENGLISH, single paragraph, very clear and concrete.`
+        ? `Original question (do not repeat it): "${domanda}". Extra detail from the user (FOURTH PAGE ANSWER): "${c}". Produce ONE answer in ENGLISH, single paragraph, very clear and concrete. For WHAT IF use 4–5 short sentences, for WHAT THE F use 5–6 short sentences.`
         : `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`;
     }
     if (L === "it") {
       return hasClar
-        ? `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo fornito dall’utente (risposta in fourth): "${c}". Genera UNA risposta in ITALIANO, molto concreta, che tenga conto di entrambi. Paragrafo unico, massimo circa 120 parole se stile WHAT IF, massimo circa 160 parole se stile WHAT THE F.`
+        ? `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo fornito dall’utente (risposta in fourth): "${c}". Genera UNA risposta in ITALIANO, molto concreta, che tenga conto di entrambi. Paragrafo unico. Se stile WHAT IF: 4–5 frasi corte. Se stile WHAT THE F: 5–6 frasi corte.`
         : `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO. Paragrafo unico, grammatica corretta, tono naturale.`;
     }
     if (L === "es") {
@@ -705,7 +695,7 @@ function computePct(domanda, stile) {
   return pct;
 }
 
-/* ========= WHAT IF: motivazione sintetica (2 frasi) ========= */
+/* ========= WHAT IF: motivazione fallback (heuristica, compatta) ========= */
 function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
   const L = (lang || "it").slice(0, 2);
   const t = String(domanda || "").toLowerCase();
@@ -732,22 +722,22 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
       cons.push("se sottostimi le spese, la pressione economica può frenarti");
     }
     if (hasDeadline) {
-      pros.push("una scadenza esplicita ti aiuta a decidere prima, non meglio");
-      cons.push("se la scadenza è vaga, tenderai a spostarla sempre un po’ più avanti");
+      pros.push("una scadenza esplicita ti aiuta a decidere prima");
+      cons.push("se la scadenza è vaga tenderai a spostarla sempre un po’ più avanti");
     }
     if (action) {
       pros.push("hai una leva concreta su cui agire ogni giorno");
     }
     if (riskHedging) {
       pros.push("puoi limitare il rischio con poche regole semplici");
-      cons.push("se cerchi rischio zero, potresti non muoverti mai davvero");
+      cons.push("se cerchi rischio zero potresti non muoverti mai davvero");
     }
 
     if (!pros.length) {
       pros.push("la vera leva è la routine: piccoli passi costanti battono le grandi intenzioni");
     }
     if (!cons.length) {
-      cons.push("il collo di bottiglia è la tua energia: se allarghi troppo lo scope, ti blocchi");
+      cons.push("il collo di bottiglia è la tua energia più che la fortuna");
     }
 
     const pSentence = `Probabilità circa ${pct}%.`;
@@ -769,7 +759,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
       cons.push("underestimating expenses can add pressure and slow you down");
     }
     if (hasDeadline) {
-      pros.push("an explicit deadline helps you decide sooner, not necessarily better");
+      pros.push("an explicit deadline helps you decide sooner");
       cons.push("a fuzzy deadline tends to drift and weaken your commitment");
     }
     if (action) {
@@ -907,6 +897,84 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
   return buildWhatIfMotivation(domanda, "it", pct);
 }
 
+/* ========= MOTIVAZIONE LLM (coerente con la risposta) ========= */
+async function generateMotivationLLM({ domanda, clarification, answer, lang, pct }) {
+  const L = normLang(lang);
+
+  let sys;
+  if (L === "en") {
+    sys = `You are the MOTIVATION MODULE of “WHAT IF”.
+Your job is to write ONE short sentence that explains, in a very practical way, WHY the probability is around ${pct}% for this scenario.
+The sentence must be CONSISTENT with the main answer given above (same logic, same mood), not random.
+Do NOT repeat the whole answer or question, focus on what helps and what makes it harder.
+No emojis, no lists, no bullet points. ONE sentence, max 25 words.`;
+  } else if (L === "it") {
+    sys = `Sei il MODULO MOTIVAZIONE di “WHAT IF”.
+Devi scrivere UNA sola frase che spiega in modo pratico perché la probabilità è circa ${pct}% in questo scenario.
+La frase deve essere COERENTE con la risposta principale qui sopra (stessa logica, stessa atmosfera), non generica.
+Non ripetere tutta la risposta o la domanda: metti a fuoco cosa aiuta e cosa ostacola.
+Niente emoji, niente elenco, UNA frase sola, massimo 25 parole.`;
+  } else if (L === "es") {
+    sys = `Eres el MÓDULO DE MOTIVACIÓN de “WHAT IF”.
+Escribe UNA sola frase que explique de forma práctica por qué la probabilidad es aproximadamente ${pct}% en este escenario.
+Debe ser coherente con la respuesta principal, sin repetirla entera. Una frase, máximo 25 palabras, sin emojis ni listas.`;
+  } else if (L === "fr") {
+    sys = `Tu es le MODULE MOTIVATION de “WHAT IF”.
+Écris UNE seule phrase qui explique de manière concrète pourquoi la probabilité est d’environ ${pct}% dans ce scénario.
+Elle doit rester cohérente avec la réponse principale. Une seule phrase, max 25 mots, sans emoji ni liste.`;
+  } else {
+    sys = `Du bist das MOTIVATIONSMODUL von „WHAT IF“.
+Schreibe EINEN kurzen Satz, der praktisch erklärt, warum die Wahrscheinlichkeit hier etwa ${pct}% ist.
+Satz muss zum Haupttext passen. 1 Satz, max. 25 Wörter, keine Emojis.`;
+  }
+
+  const userContent =
+    L === "en"
+      ? `User question: "${domanda}".
+Extra detail (if any): "${clarification || ""}".
+Main answer (keep the same logic and mood): "${answer}".
+Now write ONE motivation sentence in ENGLISH.`
+      : L === "it"
+      ? `Domanda dell’utente: "${domanda}".
+Dettaglio aggiuntivo (se presente): "${clarification || ""}".
+Risposta principale (mantieni la stessa logica e atmosfera): "${answer}".
+Ora scrivi UNA frase di motivazione in ITALIANO.`
+      : L === "es"
+      ? `Pregunta del usuario: "${domanda}".
+Detalle adicional (si existe): "${clarification || ""}".
+Respuesta principal: "${answer}".
+Ahora escribe UNA frase de motivación en ESPAÑOL.`
+      : L === "fr"
+      ? `Question de l’utilisateur : « ${domanda} ».
+Détail complémentaire (s’il existe) : « ${clarification || ""} ».
+Réponse principale : « ${answer} ».
+Écris maintenant UNE phrase de motivation en FRANÇAIS.`
+      : `Frage des Nutzers: „${domanda}“.
+Zusatzdetail (falls vorhanden): „${clarification || ""}“.
+Hauptantwort: „${answer}“.
+Schreibe jetzt EINEN Motivationssatz auf DEUTSCH.`;
+
+  const completion = await client.chat.completions.create({
+    model: MODEL,
+    temperature: 0.6,
+    top_p: 0.9,
+    max_tokens: 60,
+    messages: [
+      { role: "system", content: sys },
+      { role: "user", content: userContent },
+    ],
+  });
+
+  let m = completion?.choices?.[0]?.message?.content?.trim() || "";
+  m = normalizeOneParagraph(m);
+  m = sentenceCaseAll(m);
+  m = finalPunct(m);
+
+  // sicurezza: se l’LLM ha generato più frasi, tieni solo la prima
+  const first = m.split(/(?<=[.!?…])\s+/)[0] || m;
+  return first.trim();
+}
+
 /* ========= HANDLER ========= */
 export default async function handler(req, res) {
   cors(req, res);
@@ -976,7 +1044,7 @@ export default async function handler(req, res) {
       model: MODEL,
       temperature: stile === "wtf" ? 0.99 : 0.8,
       top_p: stile === "wtf" ? 0.95 : 0.92,
-      max_tokens: 380,
+      max_tokens: 260,
       frequency_penalty: stile === "wtf" ? 0.25 : 0.1,
       presence_penalty: stile === "wtf" ? 0.35 : 0.0,
       messages,
@@ -989,13 +1057,13 @@ export default async function handler(req, res) {
     answer = stripQuestionEcho(domanda, answer);
 
     if (stile === "wtf") {
-      // compatto ma denso
-      answer = clampWords(answer, 160);
+      // WTF compatto
+      answer = clampWords(answer, 130);
       answer = normalizeOneParagraph(answer);
     } else {
-      // WHAT IF: 5–7 frasi, ~120 parole
-      answer = tightenSentences(answer, 7);
-      answer = clampWords(answer, 120);
+      // WHAT IF: 4–5 frasi, ~90 parole
+      answer = tightenSentences(answer, 5);
+      answer = clampWords(answer, 90);
       answer = normalizeOneParagraph(answer);
     }
 
@@ -1043,7 +1111,22 @@ export default async function handler(req, res) {
 
     // ===== Extra payload =====
     const pct = computePct(domanda, stile);
-    const motivation = stile === "whatif" ? buildWhatIfMotivation(domanda, L, pct) : undefined;
+
+    let motivation;
+    if (stile === "whatif") {
+      try {
+        motivation = await generateMotivationLLM({
+          domanda,
+          clarification,
+          answer,
+          lang: L,
+          pct,
+        });
+      } catch (e) {
+        // fallback se LLM motivazione faila
+        motivation = buildWhatIfMotivation(domanda, L, pct);
+      }
+    }
 
     const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
     const scientific = stile === "wtf" && !isSurprise ? scientificReportDemenziale(domanda, L) : undefined;
@@ -1064,4 +1147,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-        }
+    }
