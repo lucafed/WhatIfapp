@@ -909,13 +909,21 @@
         LS.setItem('absurd_prompt','0');
         LS.setItem('surprise_mode','0');
 
+        // Primo snapshot meta (senza chiarimento / answer)
         const reqMeta={
+          stage:'clarify',
           domanda,
           stile:prefs.stile,
           lang,
+          periodo:prefs.periodo,
+          clarification:'',
+          clarifyingQuestion:'',
+          answer:'',
+          pct:null,
+          motivation:null,
+          scientific:null,
           extra:'',
           fantasy_mode:false,
-          periodo:prefs.periodo,
           absurd:false,
           surprise:false,
           source:'manual',
@@ -954,6 +962,13 @@
           $('clarifyQuestion').textContent = currentClarifyQuestion;
           $('clarifySection').style.display = 'block';
           $('clarifyInput').focus();
+
+          // aggiorna meta con la domanda di chiarimento
+          const metaAfter = readJSON('whatif_request',reqMeta);
+          metaAfter.stage = 'clarify';
+          metaAfter.clarifyingQuestion = currentClarifyQuestion;
+          writeJSON('whatif_request',metaAfter);
+
         }catch(err){
           console.error("clarify error:", err);
           alert(T.clarifyError || "Errore nel generare la domanda di chiarimento. Riprova.");
@@ -1027,7 +1042,7 @@
           });
           writeJSON('cronologia', hist.slice(-100));
 
-          // salva per la fifth come "replay_story"
+          // salva per la fifth come "replay_story" (usato per rivedere scena)
           writeJSON('replay_story',{
             domanda: currentQuestion,
             answer,
@@ -1038,6 +1053,29 @@
             clarification
           });
 
+          // 🔗 SALVATAGGIO COMPLETO: whatif_request con chiarimento + meta risposta
+          const fullReq = {
+            stage: 'answer',
+            domanda: currentQuestion,
+            stile: prefs.stile,
+            lang,
+            periodo: prefs.periodo,
+            clarification,
+            clarifyingQuestion: currentClarifyQuestion,
+            answer,
+            pct: data.pct ?? null,
+            motivation: data.motivation ?? null,
+            scientific: data.scientific ?? null,
+            extra: '',
+            fantasy_mode: false,
+            absurd: !!(data.micro && data.micro.surprise),
+            surprise: !!(data.micro && data.micro.surprise),
+            source: (data.micro && data.micro.src) || 'manual',
+            micro: data.micro || {surprise:false,src:'manual'}
+          };
+          writeJSON('whatif_request', fullReq);
+
+          // vai alla pagina risposta
           location.href='fifth.html';
         }catch(err){
           console.error("answer error:", err);
@@ -1149,6 +1187,7 @@
           LS.setItem('absurd_prompt','1');
           LS.setItem('surprise_mode','1');
           const req={
+            stage:'answer',
             domanda:final,
             stile:prefs.stile,
             lang,
