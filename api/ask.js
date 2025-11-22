@@ -4,8 +4,8 @@
 //   5–6 frasi, massimo ~110 parole.
 // - WTF: ultra demenziale, sarcastico, da barista affettuoso (esattamente come i demo):
 //   seconda persona SEMPRE, niente poesia, niente tono “zingara”. Monologo da video virale.
-//   Ogni frase deve contenere almeno una battuta o immagine demenziale forte.
-//   4–5 frasi, massimo ~130 parole.
+//   Ogni frase deve contenere almeno una battuta da morire dal ridere, demenziale al massimo.
+//   5–6 frasi, massimo ~130 parole.
 //
 // - Un paragrafo, niente elenchi, niente eco della domanda. Maiuscole ripristinate post-process.
 
@@ -431,6 +431,7 @@ You NEVER talk about the user in third person (“he, she, this guy, that person
 TASK:
 - Ask EXACTLY ONE clarifying question in ENGLISH.
 - The question must sound like a chaotic, dumb-funny bartender roasting the situation, not the person.
+- Always anchor the question to the user’s specific mess: mention in 2–3 words the choice or scenario they described (e.g. “when you stayed there”, “when you skipped that move”).
 - Add at least ONE silly or exaggerated image (e.g. comparing their plan to a wobbly IKEA table).
 - You MAY pack 2–3 micro-points in the same sentence (time, money, limits), separated by commas.
 - Be short and sharp: 1 sentence, max 20–22 words.
@@ -439,7 +440,8 @@ TASK:
         sys += `
 PAST MODE:
 - The user is talking about a past choice or a “what if” in the past.
-- Phrase your question in the PAST, like you’re rewinding that scene (“back then, what was really blocking you?”, “when you stayed, what was the plan?”).`;
+- Phrase your question in the PAST or COUNTERFACTUAL PAST, like you’re rewinding that scene (“back then, what was really blocking you?”, “when you stayed, what was the plan?”, “if you had moved, what would you have left behind?”).
+- Make it explicit you’re talking about THAT chapter, not a generic future (“at that time”, “in that period”).`;
       }
     } else {
       const LANG_LABEL =
@@ -452,6 +454,7 @@ Parli SEMPRE e SOLO in seconda persona (“tu / ti / te / tuo”) quando ti rife
 COMPITO:
 - Fai ESATTAMENTE UNA domanda di chiarimento in ${LANG_LABEL}.
 - La domanda deve essere ironica e demenziale: prendi in giro la SITUAZIONE come se stessi commentando un disastro organizzato da lui.
+- COLLEGALA SEMPRE alla scena che ha descritto: nomina in 2–3 parole la scelta o il casino (“quando sei rimasto lì”, “quando non ti sei mosso”, “quando hai tenuto quel lavoro”).
 - Inserisci almeno UNA immagine comica assurda (tipo confronto con tavolo Ikea traballante, armadio esploso, Excel in lacrime).
 - Puoi infilare 2–3 dettagli nella stessa frase (tempo, soldi, vincoli), separati da virgole, ma resta chiarissimo.
 - Prendi in giro la SITUAZIONE, non la persona.
@@ -461,7 +464,8 @@ COMPITO:
         sys += `
 MODALITÀ PASSATO:
 - La domanda dell’utente riguarda qualcosa che È GIÀ SUCCESSO o che NON HAI FATTO.
-- Formula la tua domanda al passato, come se stessi riavvolgendo quella scena (“quando hai scelto di restare, cosa ti frenava davvero?”, “in quel periodo, quanto eri libero di cambiare?”).`;
+- Formula la tua domanda al passato o in chiave controfattuale: usa espressioni come “all’epoca”, “in quel periodo”, “quando hai scelto di restare”, “se ti fossi mosso allora”.
+- Deve essere chiaro che stai riaprendo QUEL capitolo preciso, non chiedendo una cosa generica sul futuro.`;
       }
     }
   } else {
@@ -472,7 +476,8 @@ You speak to the user in SECOND PERSON (“you / your”), never in third person
 
 TASK:
 - Ask EXACTLY ONE clarifying question in ENGLISH.
-- Focus on 1–2 key missing details that would change the answer the most.
+- Focus on 1–2 key missing details that would change the answer the most (main constraint, real goal, time frame).
+- Explicitly anchor the question to what the user wrote: mention the key choice in 2–3 words (“when you stayed there”, “with that job”, “with that city”).
 - Tone: calm, grounded, a bit intuitive but not poetic.
 - One sentence, max 20–22 words.
 - No emojis, no bullet points, no explanations: return ONLY the question.`;
@@ -480,7 +485,8 @@ TASK:
         sys += `
 PAST MODE:
 - The question is about a past choice or missed path.
-- Phrase your clarifying question in the PAST, like you’re rereading that chapter (“back then, what did you want most?”, “at that time, what was the real constraint?”).`;
+- Phrase your clarifying question in the PAST or COUNTERFACTUAL PAST: use expressions like “back then”, “at that time”, “when you decided to stay”, “if you had left”.
+- Make clear you are re-opening THAT chapter, not talking in general about the future.`;
       }
     } else {
       const LANG_LABEL =
@@ -491,7 +497,8 @@ Parli in seconda persona (“tu / ti / te / tuo”), non usi la prima persona (�
 
 COMPITO:
 - Fai ESATTAMENTE UNA domanda di chiarimento in ${LANG_LABEL}.
-- Punta su 1–2 dettagli che cambiano davvero la risposta (tempo, vincoli principali, obiettivo).
+- Punta su 1–2 dettagli che cambiano davvero la risposta (tempo, vincoli principali, obiettivo reale).
+- AGGANCIATI ESPRESSAMENTE a quello che ha scritto l’utente: cita in 2–3 parole la scelta o la situazione (“quando sei rimasto in quella città”, “con quel lavoro”, “con quella relazione”).
 - Tono: calmo, lucido, leggermente intuitivo ma non poetico.
 - Una sola frase, massimo 20–22 parole.
 - Niente emoji, niente elenco, niente spiegazioni: restituisci SOLO la domanda.`;
@@ -499,7 +506,8 @@ COMPITO:
         sys += `
 MODALITÀ PASSATO:
 - La domanda riguarda una scelta passata o una strada non presa.
-- Formula la tua domanda al passato, come se stessi riaprendo quel capitolo (“all’epoca cosa volevi davvero ottenere?”, “in quel momento cosa ti teneva bloccato?”).`;
+- Formula la tua domanda al passato o in chiave controfattuale: usa “all’epoca”, “in quel momento”, “quando hai scelto di…”, “se allora ti fossi mosso”.
+- Deve essere evidente che stai parlando di QUEL capitolo specifico della sua storia, non di un generico “prima o poi”.`;
       }
     }
   }
@@ -568,13 +576,13 @@ STRUTTURA OBBLIGATORIA (ITALIANO, FUTURO/SCELTA DA FARE):
    - Inventati SEMPRE una scena di bevuta nuova, concreta e visiva, con una micro-battuta.
 
 7) Chiusura:
-   - 1 frase che risponde in modo chiarissimo alla domanda sul FUTURO (“in pratica ti conviene”, “ti complichi la vita ma almeno sai perché”, “non ti salva ma ti regala una storia decente”).
-   - La chiusura deve avere una battuta finale secca e una micro-morale cinica o affettuosa.
+   - Le ULTIME DUE FRASI devono rispondere in modo chiarissimo al PUNTO CENTRALE della domanda: cosa succede se lo fai, cosa succede se non lo fai.
+   - La chiusura deve avere una battuta finale secca e una micro-morale cinica o affettuosa, collegata al casino descritto dall’utente.
 
 STILE:
 - Italiano parlato, diretto, pieno di immagini sceme ma concrete.
 - Ogni singola frase deve contenere almeno UNA immagine comica forte o un colpo di battuta chiaro.
-- 4–5 frasi, UN solo paragrafo, massimo circa 130 parole.
+- 5–6 frasi, UN solo paragrafo, massimo circa 130 parole.
 - Nessun elenco visibile, nessuna emoji, nessuna ripetizione della domanda.`;
 
 const WTF_RULE_IT_PAST = `Sei “WHAT THE F”, ma in modalità FLASHBACK: voce demenziale, cinica e affettuosamente cattiva che commenta una scelta passata come il replay di una figuraccia.
@@ -611,9 +619,10 @@ STRUTTURA OBBLIGATORIA (ITALIANO, PASSATO CONTROFATTUALE):
    - Bevi guardando quella timeline parallela come se stessi rivedendo la puntata persa di una serie, con una battuta secca.
 
 7) Chiusura:
-   - 1 frase che ti dice chiaramente cosa TI SARESTI PORTATO DIETRO da quella scelta e cosa forse ti sei evitato, con una morale cinico-affettuosa.
+   - Le ULTIME DUE FRASI devono dire chiaramente cosa TI SARESTI PORTATO DIETRO da quella scelta e quale casino probabilmente ti sei evitato restando dov’eri.
+   - Sempre con una morale cinico-affettuosa, legata al cuore della domanda.
 
-Stile: 4–5 frasi, un solo paragrafo, massimo ~130 parole, ultra visivo, solo passato/controfattuale, niente domanda ripetuta, niente emoji.`;
+Stile: 5–6 frasi, un solo paragrafo, massimo ~130 parole, ultra visivo, solo passato/controfattuale, niente domanda ripetuta, niente emoji.`;
 
 const WTF_RULE_EN_FUT = `You are “WHAT THE F”: absurd, sarcastic and weirdly caring, like a bartender who has seen way too much life.
 You ALWAYS speak in SECOND PERSON (“you / your”) when you talk about the user.
@@ -642,11 +651,11 @@ STRUCTURE (FUTURE CHOICE):
 - 2–3 reacting objects (helmet, poster, POS, chair, glass, cat, phone, door, bus stop…), each with a clear, absurd, funny image.
 - Tiny slapstick disaster (trip, drop, door stuck, card declined dramatically, chair squeak).
 - Drink scene: visual, ridiculous and harmless, with a tiny punchline.
-- Final sentence: clear yes/no/but answer about the FUTURE + a small, sharp moral, connected to the user’s extra detail.
+- Final TWO sentences: they must explicitly answer the CORE of the question – what happens if you do it and what happens if you don’t – with a sharp, funny moral tied to the user’s detail.
 
 STYLE:
 - Spoken, direct, packed with concrete, silly images in EVERY sentence.
-- 4–5 sentences, single paragraph, max ~130 words, no bullets, no emojis, no restating the question.`;
+- 5–6 sentences, single paragraph, max ~130 words, no bullets, no emojis, no restating the question.`;
 
 const WTF_RULE_EN_PAST = `You are “WHAT THE F” in FLASHBACK MODE: same chaotic bartender, but now you roast an ALTERNATE PAST TIMELINE.
 You ALWAYS speak in SECOND PERSON and describe what WOULD HAVE HAPPENED if you had actually taken that road.
@@ -668,9 +677,9 @@ STRUCTURE (PAST COUNTERFACTUAL):
 - 2–3 reacting objects in that timeline (chair, phone, door, fridge, cat…) doing something stupid and visual.
 - Tiny slapstick disaster in the alternate reality (trip, spill, door stuck, papers exploding).
 - Drink scene: you drink while staring at that imaginary timeline, with a sharp joke.
-- Final sentence: clear statement of what you WOULD HAVE CARRIED from that choice and what disaster you probably dodged, with a cynical-hug vibe.
+- Final TWO sentences: clearly state what you WOULD HAVE CARRIED from that choice and what disaster you probably dodged, with a cynical-hug vibe, directly answering the core of the past question.
 
-Style: 4–5 sentences, single paragraph, max ~130 words, fully counterfactual, no question echo, no emojis.`;
+Style: 5–6 sentences, single paragraph, max ~130 words, fully counterfactual, no question echo, no emojis.`;
 
 /* ========= MESSAGGI RISPOSTA ========= */
 function buildMessages({ domanda, clarification, lang, periodo, stile }) {
@@ -771,9 +780,9 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
     if (L === "en") {
       if (hasClar) {
         if (isPast) {
-          return `Original question about the PAST (do not repeat it): "${domanda}". Extra detail from the user (FOURTH PAGE ANSWER): "${c}". Produce ONE COUNTERFACTUAL answer in ENGLISH, single paragraph, very clear and concrete. For WHAT IF show an alternate past timeline (5–6 short sentences) and then give a clear takeaway for the present. For WHAT THE F use 4–5 short, absurd sentences in full counterfactual style.`;
+          return `Original question about the PAST (do not repeat it): "${domanda}". Extra detail from the user (FOURTH PAGE ANSWER): "${c}". Produce ONE COUNTERFACTUAL answer in ENGLISH, single paragraph, very clear and concrete. For WHAT IF show an alternate past timeline (5–6 short sentences) and then give a clear takeaway for the present. For WHAT THE F use 5–6 short, absurd sentences in full counterfactual style, and make sure the last two sentences clearly answer the core of the past question.`;
         }
-        return `Original question (do not repeat it): "${domanda}". Extra detail from the user (FOURTH PAGE ANSWER): "${c}". Produce ONE answer in ENGLISH, single paragraph, very clear and concrete. For WHAT IF use 5–6 short sentences, show multiple angles and then take a clear position. For WHAT THE F use 4–5 short sentences.`;
+        return `Original question (do not repeat it): "${domanda}". Extra detail from the user (FOURTH PAGE ANSWER): "${c}". Produce ONE answer in ENGLISH, single paragraph, very clear and concrete. For WHAT IF use 5–6 short sentences, show multiple angles and then take a clear position. For WHAT THE F use 5–6 short sentences that stay glued to the core of the question, not just the vibe.`;
       }
       if (isPast) {
         return `Question about the PAST (do not repeat it): "${domanda}". Produce ONE COUNTERFACTUAL answer in ENGLISH: describe the alternate timeline as if it had really happened, then extract what matters now. Single paragraph.`;
@@ -783,9 +792,9 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
     if (L === "it") {
       if (hasClar) {
         if (isPast) {
-          return `Domanda originale sul PASSATO (non ripeterla): "${domanda}". Dettaglio aggiuntivo fornito dall’utente (risposta in fourth): "${c}". Genera UNA risposta CONTROFATTUALE in ITALIANO: descrivi la vita alternativa come se fosse successa davvero e poi collega tutto a quello che puoi fare oggi. Paragrafo unico. Se stile WHAT IF: 5–6 frasi corte, mostra più punti di vista del “come sarebbe andata” e chiudi con una presa di posizione chiara, da consigliere di fiducia. Se stile WHAT THE F: 4–5 frasi corte, monologo demenziale controfattuale come nei tuoi esempi.`;
+          return `Domanda originale sul PASSATO (non ripeterla): "${domanda}". Dettaglio aggiuntivo fornito dall’utente (risposta in fourth): "${c}". Genera UNA risposta CONTROFATTUALE in ITALIANO: descrivi la vita alternativa come se fosse successa davvero e poi collega tutto a quello che puoi fare oggi. Paragrafo unico. Se stile WHAT IF: 5–6 frasi corte, mostra più punti di vista del “come sarebbe andata” e chiudi con una presa di posizione chiara, da consigliere di fiducia. Se stile WHAT THE F: 5–6 frasi corte, monologo demenziale controfattuale come nei tuoi esempi, e le ultime due frasi devono rispondere in modo esplicito al cuore della domanda sul passato.`;
         }
-        return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo fornito dall’utente (risposta in fourth): "${c}". Genera UNA risposta in ITALIANO, molto concreta, che tenga conto di entrambi. Paragrafo unico. Se stile WHAT IF: 5–6 frasi corte, mostra più punti di vista e poi dai una presa di posizione chiara, da consigliere di fiducia. Se stile WHAT THE F: 4–5 frasi corte, monologo demenziale come nei tuoi esempi.`;
+        return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo fornito dall’utente (risposta in fourth): "${c}". Genera UNA risposta in ITALIANO, molto concreta, che tenga conto di entrambi. Paragrafo unico. Se stile WHAT IF: 5–6 frasi corte, mostra più punti di vista e poi dai una presa di posizione chiara, da consigliere di fiducia. Se stile WHAT THE F: 5–6 frasi corte, monologo demenziale come nei tuoi esempi, ma sempre centrato sul punto della domanda (non solo sulla scenetta).`;
       }
       if (isPast) {
         return `Domanda sul PASSATO (non ripeterla): "${domanda}". Genera UNA risposta CONTROFATTUALE in ITALIANO: racconta cosa sarebbe successo se quella scelta fosse andata davvero così, e chiudi riportando l’attenzione su cosa puoi fare adesso. Paragrafo unico, tono naturale.`;
@@ -923,7 +932,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
 
     if (hasTime) {
       pros.push("el tiempo es manejable si divides el camino en pasos pequeños");
-      cons.push("si non proteges tu tiempo, acabarás posponiéndolo una y otra vez");
+      cons.push("si no proteges tu tiempo, acabarás posponiéndolo una y otra vez");
     }
     if (hasBudget) {
       pros.push("puedes mantener los costes bajo control con un límite claro");
@@ -1050,7 +1059,7 @@ Non ripetere tutta la risposta o la domanda: metti a fuoco cosa aiuta e cosa ost
 Niente emoji, niente elenco, UNA frase sola, massimo 25 parole.`;
   } else if (L === "es") {
     sys = `Eres el MÓDULO DE MOTIVACIÓN de “WHAT IF”.
-Escribe UNA sola frase que explique de forma práctica por qué la probabilidad es aproximadamente ${pct}% en este escenario.
+Escribe UNA sola frase che explique de forma práctica por qué la probabilidad es aproximadamente ${pct}% en este escenario.
 Debe ser coherente con la respuesta principal, sin repetirla entera. Una frase, máximo 25 palabras, sin emojis ni listas.`;
   } else if (L === "fr") {
     sys = `Tu es le MODULE MOTIVATION de “WHAT IF”.
@@ -1191,8 +1200,8 @@ export default async function handler(req, res) {
     answer = stripQuestionEcho(domanda, answer);
 
     if (stile === "wtf") {
-      // WTF compatto: massimo 5 frasi, massimo ~130 parole, paragrafo unico
-      answer = tightenSentences(answer, 5);
+      // WHAT THE F: 5–6 frasi, ~130 parole
+      answer = tightenSentences(answer, 6);
       answer = clampWords(answer, 130);
       answer = normalizeOneParagraph(answer);
     } else {
@@ -1282,4 +1291,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-        }
+  }
