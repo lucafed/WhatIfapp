@@ -56,10 +56,7 @@ function cors(req, res) {
   if (allow) res.setHeader("Access-Control-Allow-Origin", allow);
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, x-admin-token, x-pro"
-  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token, x-pro");
 }
 
 /* ========= Helpers ========= */
@@ -160,7 +157,7 @@ const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO PRATICO):
 - Rispondi sempre al punto centrale della domanda (spostamento, lavoro, relazione, soldi, scelta personale): niente derive generiche.
 - Linguaggio: italiano naturale, pulito, leggermente colloquiale ma non infantile.
 - Chiudi con una frase che riassume il senso della scelta: cosa ci guadagni, cosa rischi, che tipo di storia diventa la tua.
-- 5–7 frasi, seconda persona, un solo paragrafo, niente elenchi, niente emoji, niente giri mistici inutili.`;
+- 8–10 frasi, seconda persona, un solo paragrafo, niente elenchi, niente emoji, niente giri mistici inutili.`;
 
 const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE PRATICO):
 - Tono: leggi una vita alternativa, ma resti lucido. Pochissima poesia, tanta realtà.
@@ -172,9 +169,9 @@ const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE PRATICO):
 - Se esiste un dettaglio aggiuntivo dall’utente, trattalo come vincolo principale e richiamalo in modo esplicito almeno una volta.
 - Nessuna data inventata: resta sul tipo di esperienza (non su fatti storici specifici).
 - Chiudi riportando dolcemente al presente: cosa impari da quell’ipotesi e cosa puoi ancora fare ora.
-- 5–7 frasi, seconda persona, un solo paragrafo, niente elenchi, niente emoji. Risposta chiara, poco fumo, molta sostanza.`;
+- 8–10 frasi, seconda persona, un solo paragrafo, niente elenchi, niente emoji. Risposta chiara, poco fumo, molta sostanza.`;
 
-/* ========= Finali “gancio” ========= */
+/* ========= Finali “gancio” WHAT IF ========= */
 const ZINGARA_ENDINGS = {
   it: {
     future: [
@@ -199,7 +196,7 @@ const ZINGARA_ENDINGS = {
     past: ["Y quizá hoy lo sentirías: no era destino, era otra forma de escribir tu historia."],
   },
   fr: {
-    future: ["Et là tu verras qu’il ne faut pas tout casser, juste choisir plus juste."],
+    future: ["Et là tu verras qu’il ne faut pas tout casser, juste choisir più giusto."],
     past: ["Et tu comprendras que ce n’était pas le destin, juste un autre scénario possible."],
   },
   de: {
@@ -210,18 +207,58 @@ const ZINGARA_ENDINGS = {
 function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   let s = String(text || "").trim();
   const last = (s.match(/([^.!?…]+[.!?…])\s*$/) || [])[1] || s;
-  const alreadyHasHook =
-    /(ti accorgerai|capirai|ti verrà voglia|ti ritroverai|e lì|e proprio lì|da quel punto|forse oggi|maybe you’d feel|and there you’d notice|you’d probably feel)/i.test(
-      last
-    );
+  const alreadyHasHook = /(ti accorgerai|capirai|ti verrà voglia|ti ritroverai|e lì|e proprio lì|da quel punto|forse oggi|maybe you’d feel|and there you’d notice|you’d probably feel)/i.test(
+    last
+  );
   if (alreadyHasHook) return s;
   const L = normLang(lang);
-  const pool = ZINGARA_ENDINGS[L] || ZINGARA_ENDINGS.it || {};
+  const pool = (ZINGARA_ENDINGS[L] || ZINGARA_ENDINGS.it) || {};
   const bag =
     String(periodo).toLowerCase() === "past"
       ? pool.past || ZINGARA_ENDINGS.it.past
       : pool.future || ZINGARA_ENDINGS.it.future;
   const addon = pickDet(bag, hashStr((domanda || "") + s));
+  if (!addon) return s;
+  s = s.replace(/[.!?…]+$/, "");
+  return `${s}. ${addon}`;
+}
+
+/* ========= WHAT THE F – finali obbligatori ========= */
+const WTF_ENDINGS = {
+  it: [
+    "In pratica non ti salva la vita, ma ti regala almeno una storia decente da raccontare al prossimo aperitivo.",
+    "In pratica ti complichi un po’ l’esistenza, ma almeno smetti di chiederti per anni come sarebbe andata.",
+    "Morale spiccia: non è la scelta perfetta, è solo quella che ti fa smettere di restare fermo al bancone.",
+    "Riassunto da barista: ti fai male il giusto, ti diverti abbastanza e almeno capisci di che pasta sei fatto.",
+  ],
+  en: [
+    "Basically it doesn’t fix your life, but it gives you at least one good story for the next night out.",
+    "Bottom line: you make things messier, but you stop wondering forever what would have happened.",
+  ],
+  es: [
+    "En resumen: no te arregla la vida, pero te regala una historia bastante decente para la próxima cerveza.",
+  ],
+  fr: [
+    "En gros, ça ne sauve pas ta vie, mais ça te donne au moins une histoire potable à raconter au prochain verre.",
+  ],
+  de: [
+    "Unterm Strich löst es nicht dein Leben, aber gibt dir wenigstens eine brauchbare Story für den nächsten Abend am Tresen.",
+  ],
+};
+function ensureWtfEnding({ text, lang, domanda }) {
+  let s = String(text || "").trim();
+  if (!s) return s;
+  const last = (s.match(/([^.!?…]+[.!?…])\s*$/) || [])[1] || s;
+
+  // se l’ultima frase ha già una mini-morale, lasciala
+  const hasMoral = /(in pratica|morale|riassunto|alla fine|bottom line|in the end|en resumen|en gros|unterm strich)/i.test(
+    last
+  );
+  if (hasMoral) return s;
+
+  const L = normLang(lang);
+  const pool = WTF_ENDINGS[L] || WTF_ENDINGS.it;
+  const addon = pickDet(pool, hashStr((domanda || "") + s));
   if (!addon) return s;
   s = s.replace(/[.!?…]+$/, "");
   return `${s}. ${addon}`;
@@ -425,7 +462,7 @@ TASK:
 - Ask EXACTLY ONE clarifying question in ENGLISH.
 - The question must sound like a chaotic, funny bartender trying to understand what the user really wants.
 - You MAY pack 2–3 micro-points in the same sentence (time, money, limits), separated by commas.
-- Be short and sharp: 1 sentence, max 20 words.
+- Be short and sharp: 1 sentence, max 25 words.
 - Roast the SITUATION a bit, not the person.
 - No emojis, no lists, no explanations, just the question.`;
     } else {
@@ -441,7 +478,7 @@ COMPITO:
 - Puoi infilare 2–3 dettagli nella stessa frase (tempo, soldi, vincoli), separati da virgole, ma resta chiarissimo.
 - La domanda deve suonare come una battuta da barista: un po’ sarcastica, ma utile per capire cosa vuole davvero.
 - Prendi in giro la SITUAZIONE, non la persona.
-- Una sola frase, massimo 20 parole.
+- Una sola frase, massimo 25 parole.
 - Niente emoji, niente elenco, niente spiegazioni: restituisci solo la domanda.`;
     }
   } else {
@@ -452,9 +489,9 @@ You speak to the user in SECOND PERSON (“you / your”), never in third person
 
 TASK:
 - Ask EXACTLY ONE clarifying question in ENGLISH.
-- Focus on 1–2 key missing details that would change the answer the most: time horizon, constraints, main goal, or practical context.
+- Focus on 1–3 key missing details that would change the answer the most: time horizon, constraints, main goal, or practical context.
 - Tone: calm, grounded, a bit intuitive but not poetic.
-- One sentence, max 20 words.
+- One sentence, max 25 words.
 - No emojis, no bullet points, no explanations: return ONLY the question.`;
     } else {
       const LANG_LABEL =
@@ -465,10 +502,10 @@ Parli in seconda persona (“tu / ti / te / tuo”), non usi la prima persona (�
 
 COMPITO:
 - Fai ESATTAMENTE UNA domanda di chiarimento in ${LANG_LABEL}.
-- Puoi includere fino a 2 aspetti nella stessa frase (tempo, vincoli, obiettivo o contesto pratico), purché la domanda resti leggibile.
+- Puoi includere fino a 3 aspetti nella stessa frase (tempo, vincoli, obiettivo, contesto pratico), purché la domanda resti leggibile.
 - Punta sul dettaglio che cambia davvero la risposta: orizzonte di tempo, vincoli principali, obiettivo preciso o contesto pratico.
 - Tono: calmo, lucido, leggermente intuitivo ma non poetico, niente frasi fumose.
-- Una sola frase, massimo 20 parole.
+- Una sola frase, massimo 25 parole.
 - Niente emoji, niente elenco, niente spiegazioni: restituisci SOLO la domanda.`;
     }
   }
@@ -493,10 +530,41 @@ COMPITO:
 /* ========= Prompt builder per la RISPOSTA ========= */
 function buildMessages({ domanda, clarification, lang, periodo, stile }) {
   const L = normLang(lang);
-  const baseRules =
-    L === "en"
-      ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. SECOND PERSON ONLY (“you / your”) when you talk about the user. Never talk about the user in third person (“he, she, this guy, this person”). Do NOT use first person (“I, me, we, us”). Stay close to the topic of the question and answer its core point clearly. Use a rich, varied vocabulary, and keep grammar and punctuation clean. Avoid repeating the same words and images too often. Keep it short: about 5–7 sentences, not more.`
-      : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona (tu / ti / te / tuo) quando parli dell’utente. Vietato usare la prima persona singolare o plurale (“io, noi, me, ci, mi, nostro, nostra, miei, nostre”) e vietato parlare dell’utente in terza persona (“lui, lei, questo tizio, questa persona”). Resta aderente al tema della domanda e rispondi in modo chiaro al punto centrale. Usa un vocabolario ricco e vario, italiano corretto, senza errori di grammatica e con punteggiatura curata. Evita ripetizioni evidenti di parole e immagini. Tieni la risposta corta: circa 5–7 frasi, non di più.`;
+
+  // Regole base SEPARATE per WHAT IF vs WTF, così non si contaminano
+  let baseRules;
+  if (stile === "wtf") {
+    baseRules =
+      L === "en"
+        ? `You are “WHAT THE F”: absurd, sarcastic and weirdly caring, like a bartender who has seen too much life.
+You ALWAYS speak in SECOND PERSON (“you / your”) when you talk about the user.
+You NEVER use first person (“I, me, we, us”) and NEVER talk about the user in third person (“he, she, this guy, this person”).
+STYLE:
+- Single paragraph, no bullets, no emojis, no headings.
+- Tone: loud, comic, chaotic, but emotionally lucid. No mystical nonsense, no coaching, no “probability” talk, no step-by-step advice.
+- Do NOT sound like a fortune teller, therapist, guru or project manager.
+- Avoid sentences like “you could”, “you should probably”, “the scenario is”: speak as if you’re roasting the situation in real time.
+- Every sentence should carry an image, a small twist or a joke, like a viral reel voice-over.
+- Never restate or rephrase the question. Just dive into the scene and the rant.
+- Length: 7–9 sentences, one paragraph, punchy but not endless.`
+        : `Sei “WHAT THE F”: voce demenziale, sarcastica e affettuosa, come un barista che ha visto troppa vita.
+Parli SEMPRE e SOLO in seconda persona (“tu / ti / te / tuo”) quando ti riferisci a chi fa la domanda.
+È vietato usare la prima persona (“io, noi, me, ci, mi, nostro, nostra, miei, nostre”) e parlare dell’utente in terza persona (“lui, lei, questo tizio, questa persona”).
+
+REGOLE DI STILE:
+- Un solo paragrafo, niente elenchi visibili, niente emoji, niente titoletti.
+- Tono: da bar, comico, un po’ cattivo ma affettuoso. NIENTE mistiche, niente frasi da coach, niente “probabilità” o “scenari”.
+- Non sembrare una zingara realista né un consulente: niente “secondo me”, niente “potresti impostare”, niente piano in punti.
+- Evita parole tipo “probabilità, scenario, percentuale, strategia, obiettivo SMART, futuro pratico”.
+- Ogni frase deve avere un’immagine concreta o una piccola battuta, come la voce fuori campo di un reel virale.
+- NON ripetere la domanda, non riassumerla, non fare analisi serie: racconta la scena come se la stessi commentando dal bancone.
+- Lunghezza: 7–9 frasi, un solo blocco compatto.`;
+  } else {
+    baseRules =
+      L === "en"
+        ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. SECOND PERSON ONLY (“you / your”) when you talk about the user. Never talk about the user in third person (“he, she, this guy, this person”). Do NOT use first person (“I, me, we, us”). Stay close to the topic of the question and answer its core point clearly. Use a rich, varied vocabulary, and keep grammar and punctuation clean. Avoid repeating the same words and images too often.`
+        : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona (tu / ti / te / tuo) quando parli dell’utente. Vietato usare la prima persona singolare o plurale (“io, noi, me, ci, mi, nostro, nostra, miei, nostre”) e vietato parlare dell’utente in terza persona (“lui, lei, questo tizio, questa persona”). Resta aderente al tema della domanda e rispondi in modo chiaro al punto centrale. Usa un vocabolario ricco e vario, italiano corretto, senza errori di grammatica e con punteggiatura curata. Evita ripetizioni evidenti di parole e immagini.`;
+  }
 
   const msgs = [{ role: "system", content: baseRules }];
 
@@ -525,11 +593,14 @@ Parli SEMPRE E SOLO in seconda persona (“tu / ti / te / tuo”) quando ti rife
 È VIETATO parlare dell’utente in terza persona (“lui, lei, questo tizio, questo sognatore, questo qui”) se lo stai descrivendo: devi sempre tirarlo in mezzo direttamente.
 Vietato usare qualunque prima persona (“io, noi, me, ci, mi, nostro, nostra, miei, nostre”).
 
-IMPORTANTISSIMO: evita di iniziare più di DUE frasi con la parola “tu”. Usa spesso la forma implicita o riflessiva: “entri”, “arrivi”, “ti siedi”, “ti incastri”, “ti ritrovi”.
+IMPORTANTISSIMO:
+- Evita di iniziare più di DUE frasi con la parola “tu”.
+- Evita parole e toni da WHAT IF: niente “probabilità”, “scenario”, “potresti”, “inizieresti”, “ti ritroveresti con una routine”, “futuro pratico”, “scelta più allineata”.
+- Evita frasi da guru o da psicologo: niente “ti accorgerai che”, “imparerai che”, “la versione migliore di te”.
 
-SE C’È UN DETTAGLIO AGGIUNTIVO DALL’UTENTE (RISPOSTA IN FOURTH):
+SE C’È UN DETTAGLIO AGGIUNTIVO DALL’UTENTE (risposta in fourth):
 - Trattalo come il centro del delirio: la scena, le battute e la morale devono appoggiarsi fortissimo proprio su quel dettaglio.
-- Fai sentire chiaramente che ti stai agganciando a quello che ha scritto l’utente in quella risposta.
+- Fai sentire che ti stai agganciando esattamente a quello che ti ha scritto nella risposta.
 
 OBIETTIVO: far ridere forte e dare una risposta CHIARA alla domanda, con un monologo che sembra un video virale da mandare al gruppo WhatsApp.
 
@@ -542,7 +613,7 @@ STRUTTURA OBBLIGATORIA (ITALIANO):
 2) Scena concreta:
    - Descrivi cosa succede nel mondo reale legato al contesto (“${ctx}”): entri in concessionaria, rientri all’Aquila, riapri la chat, ti siedi in ufficio, guardi il conto.
    - La scena deve sembrare un mini-video: movimenti, oggetti, sguardi, silenzi.
-   - Se hai un dettaglio aggiuntivo (budget, tempi, vincoli), infilalo dentro la scena come se fosse il vero problema.
+   - Se hai un dettaglio aggiuntivo (budget, tempi, vincoli) dalla risposta in fourth, infilalo dentro la scena come se fosse il vero problema.
 
 3) IMPRECAZIONE TEATRALE (esattamente UNA):
    - Esagerata e comica, mai identica agli esempi.
@@ -564,9 +635,9 @@ ${react.map((r) => `     - ${r}`).join("\n")}
    - Ispirati a: “${drinkSample}” ma inventa SEMPRE una scena di bevuta nuova.
    - Il bicchiere/tazza può reagire: tremare, giudicare, tintinnare.
 
-7) Chiusura:
-   - Chiudi con 1–2 frasi che rispondono in modo chiaro alla domanda dell’utente (“in pratica, ti conviene”, “in pratica ti complichi la vita ma almeno sai perché”, “non ti salva, ma ti regala una storia decente”).
-   - Mini-morale ironica da video virale, possibilmente legata anche al dettaglio aggiuntivo dell’utente.
+7) CHIUSURA OBBLIGATORIA:
+   - Chiudi con 1–2 frasi che rispondono in modo chiaro alla domanda (“in pratica, ti conviene”, “in pratica ti complichi la vita ma almeno sai perché”, “non ti salva, ma ti regala una storia decente”).
+   - La chiusura DEVE contenere una mini-morale ironica, non motivazionale, che sintetizza pro e contro in modo spiccio.
 
 8) Stile:
    - Italiano parlato, diretto, pieno di immagini sceme ma chiare.
@@ -575,19 +646,21 @@ ${react.map((r) => `     - ${r}`).join("\n")}
    - Frasi relativamente brevi, ritmo alto.
 
 9) Lunghezza:
-   - 5–7 frasi, UN solo paragrafo.
-   - Nessun elenco visibile, nessuna emoji, nessuna ripetizione della domanda.
-
-Ricorda: devi sembrare la voce fuori campo perfetta per un reel virale: cattiva ma affettuosa, scema ma molto precisa sul succo della risposta.`;
+   - 7–9 frasi, UN solo paragrafo.
+   - Nessun elenco visibile, nessuna emoji, nessuna ripetizione della domanda.`;
 
     const WTF_RULE_EN = `You are “WHAT THE F”: absurd, sarcastic and weirdly caring, like a bartender who has seen too much life.
 You ALWAYS speak in SECOND PERSON (“you / your”) when you talk about the user.
 You NEVER talk about the user in third person (“he, she, this guy, that person”) and you NEVER use first person (“I, me, we, us”).
 Avoid starting more than TWO sentences with “you”: use implicit forms like “walk in”, “sit down”, “stare at”, skipping “you” when obvious.
 
-IF THERE IS EXTRA DETAIL FROM THE USER (FOURTH PAGE ANSWER):
+HARD LIMITS:
+- Do NOT sound like a fortune teller, therapist, coach or project manager.
+- No “probabilities”, no “scenarios”, no “future self”, no “you could maybe”, no numbered advice.
+- Single paragraph, no bullets, no emojis, no headings.
+
+IF THERE IS EXTRA DETAIL FROM THE USER (fourth-page answer):
 - Treat it as the core constraint of the rant: scene, jokes and conclusion must lean hard on that detail.
-- Make it obvious that you understood and used that extra detail.
 
 GOAL: short, viral-style rant that is funny but still gives a clear answer to the question.
 
@@ -599,7 +672,7 @@ STRUCTURE:
 - Tiny slapstick disaster (trip, drop, door stuck, card declined dramatically).
 - Drink scene: funny, visual, no self-harm.
 - Ending: clear yes/no/but answer + tiny ironic moral, also linked to the user’s extra detail.
-- 5–7 sentences, single paragraph, no bullets, no emojis, no restating the question.
+- 7–9 sentences, single paragraph, no bullets, no emojis, no restating the question.
 - Every sentence should carry at least one comic image or punchline, keep the pace high.`;
 
     msgs.push(
@@ -645,13 +718,13 @@ STRUCTURE:
       msgs.push({
         role: "system",
         content:
-          "Il dettaglio aggiuntivo fornito dall’utente (risposta in fourth) va trattato come parte centrale della risposta: usalo per contestualizzare scena, ragionamento e chiusura, e richiamalo in modo esplicito almeno una volta.",
+          "Il dettaglio aggiuntivo fornito dall’utente (risposta in fourth) va trattato come parte centrale della risposta: usalo per contestualizzare la scena, i consigli e la chiusura, e richiamalo almeno una volta in modo chiaro.",
       });
     } else if (L === "en") {
       msgs.push({
         role: "system",
         content:
-          "The extra detail from the user (fourth-page answer) is central: use it to anchor scene, reasoning and conclusion, and refer to it explicitly at least once.",
+          "The extra detail from the user (fourth-page answer) is central: use it to anchor the scene, the reasoning and the conclusion, and refer to it explicitly at least once.",
       });
     } else {
       msgs.push({
@@ -666,28 +739,28 @@ STRUCTURE:
   const ask = (function () {
     if (L === "en") {
       return hasClar
-        ? `Original question (do not repeat it): "${domanda}". Extra detail from the user (FOURTH PAGE ANSWER): "${c}". Produce ONE short answer in ENGLISH, single paragraph (about 5–7 sentences), very clear and concrete, that uses BOTH the question and this extra detail.`
-        : `Question (do not repeat it): "${domanda}". Produce ONE short answer in ENGLISH, single paragraph (about 5–7 sentences).`;
+        ? `Original question (do not repeat it): "${domanda}". Extra detail from the user (FOURTH PAGE ANSWER): "${c}". Produce ONE answer in ENGLISH, single paragraph, very clear and concrete.`
+        : `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`;
     }
     if (L === "it") {
       return hasClar
-        ? `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo fornito dall’utente (risposta in fourth): "${c}". Genera UNA risposta in ITALIANO, molto concreta e abbastanza corta (circa 5–7 frasi), che tenga conto di entrambi. Paragrafo unico.`
-        : `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO, corta e diretta (circa 5–7 frasi). Paragrafo unico, grammatica corretta, tono naturale.`;
+        ? `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo fornito dall’utente (risposta in fourth): "${c}". Genera UNA risposta in ITALIANO, molto concreta, che tenga conto di entrambi. Paragrafo unico.`
+        : `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO. Paragrafo unico, grammatica corretta, tono naturale.`;
     }
     if (L === "es") {
       return hasClar
-        ? `Pregunta original (no la repitas): "${domanda}". Detalle adicional del usuario: "${c}". Escribe UNA respuesta en ESPAÑOL, clara, concreta y corta (5–7 frases), en un solo párrafo, usando ambas cosas.`
-        : `Pregunta (no la repitas): "${domanda}". Escribe UNA respuesta en ESPAÑOL, breve (5–7 frases), en un solo párrafo.`;
+        ? `Pregunta original (no la repitas): "${domanda}". Detalle adicional del usuario: "${c}". Escribe UNA respuesta en ESPAÑOL, clara y concreta, en un solo párrafo.`
+        : `Pregunta (no la repitas): "${domanda}". Escribe UNA respuesta en ESPAÑOL, un solo párrafo.`;
     }
     if (L === "fr") {
       return hasClar
-        ? `Question originale (ne la répète pas) : « ${domanda} ». Détail supplémentaire donné par l’utilisateur : « ${c} ». Donne UNE réponse en FRANÇAIS, claire, concrète et plutôt courte (5–7 phrases), en un seul paragraphe, en utilisant les deux.`
-        : `Question (ne la répète pas) : « ${domanda} ». Donne UNE réponse en FRANÇAIS, brève (5–7 phrases), en un seul paragraphe.`;
+        ? `Question originale (ne la répète pas) : « ${domanda} ». Détail supplémentaire donné par l’utilisateur : « ${c} ». Donne UNE réponse en FRANÇAIS, claire et concrète, en un seul paragraphe.`
+        : `Question (ne la répète pas) : « ${domanda} ». Donne UNE réponse en FRANÇAIS, un seul paragraphe.`;
     }
     // de
     return hasClar
-      ? `Ursprüngliche Frage (nicht wiederholen): „${domanda}“. Zusatzdetail vom Nutzer: „${c}“. Gib EINE klare, konkrete und eher kurze Antwort auf DEUTSCH (5–7 Sätze), ein einziger Absatz, die beides berücksichtigt.`
-      : `Frage (nicht wiederholen): „${domanda}“. Gib EINE Antwort auf DEUTSCH, kurz (5–7 Sätze), ein einziger Absatz.`;
+      ? `Ursprüngliche Frage (nicht wiederholen): „${domanda}“. Zusatzdetail vom Nutzer: „${c}“. Gib EINE klare, konkrete Antwort auf DEUTSCH, ein einziger Absatz.`
+      : `Frage (nicht wiederholen): „${domanda}“. Gib EINE Antwort auf DEUTSCH, ein einziger Absatz.`;
   })();
 
   msgs.push({ role: "user", content: ask });
@@ -922,36 +995,26 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
 export default async function handler(req, res) {
   cors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "method_not_allowed" });
+  if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
   try {
-    if (!process.env.OPENAI_API_KEY)
-      return res.status(500).json({ error: "missing_api_key" });
+    if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: "missing_api_key" });
 
-    const ip = (
-      req.headers["x-forwarded-for"] ||
-      req.socket?.remoteAddress ||
-      "unknown"
-    )
+    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
       .toString()
       .split(",")[0]
       .trim();
     const ok = await rateOk(`ask:${ip}`);
     if (!ok) return res.status(429).json({ error: "rate_limited_minute" });
 
-    const bodyRaw =
-      typeof req.body === "string" ? req.body : JSON.stringify(req.body || {});
+    const bodyRaw = typeof req.body === "string" ? req.body : JSON.stringify(req.body || {});
     const body =
-      bodyRaw && typeof req.body === "string"
-        ? JSON.parse(bodyRaw)
-        : req.body || {};
+      bodyRaw && typeof req.body === "string" ? JSON.parse(bodyRaw) : req.body || {};
 
     const {
       stage = "answer", // "clarify" | "answer"
       domanda = "",
       clarification = "",
-      extra = "",       // 👈 alias per la risposta in fourth
       stile = "whatif", // "whatif" | "wtf"
       lang = "it",
       periodo = "future", // "future" | "past"
@@ -959,17 +1022,9 @@ export default async function handler(req, res) {
     } = body || {};
 
     if (!domanda || typeof domanda !== "string")
-      return res
-        .status(400)
-        .json({ error: "bad_request", detail: "domanda_required" });
+      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
 
     const L = normLang(lang);
-
-    // Unifichiamo clarification + extra (risposta utente in fourth)
-    let clar = "";
-    if (typeof clarification === "string") clar = clarification.trim();
-    const extraStr = typeof extra === "string" ? extra.trim() : "";
-    if (!clar && extraStr) clar = extraStr;
 
     /* ====== STAGE: CLARIFY ====== */
     if (stage === "clarify") {
@@ -999,20 +1054,13 @@ export default async function handler(req, res) {
     }
 
     /* ====== STAGE: ANSWER (default) ====== */
-    const messages = buildMessages({
-      domanda,
-      clarification: clar,
-      lang: L,
-      periodo,
-      stile,
-      micro,
-    });
+    const messages = buildMessages({ domanda, clarification, lang: L, periodo, stile });
 
     const completion = await client.chat.completions.create({
       model: MODEL,
       temperature: stile === "wtf" ? 0.99 : 0.8,
       top_p: stile === "wtf" ? 0.95 : 0.92,
-      max_tokens: 320, // 👈 abbassato per risposte più corte
+      max_tokens: 480,
       frequency_penalty: stile === "wtf" ? 0.25 : 0.1,
       presence_penalty: stile === "wtf" ? 0.35 : 0.0,
       messages,
@@ -1025,14 +1073,14 @@ export default async function handler(req, res) {
     answer = stripQuestionEcho(domanda, answer);
 
     if (stile === "wtf") {
-      // 5–7 frasi, ~120 parole max
-      answer = tightenSentences(answer, 7);
-      answer = clampWords(answer, 130);
+      // monologo WTF, compatto ma con chiusura garantita
+      answer = clampWords(answer, 230);
       answer = normalizeOneParagraph(answer);
+      answer = ensureWtfEnding({ text: answer, lang: L, domanda });
     } else {
-      // WHAT IF: 5–7 frasi, ~120 parole max
-      answer = tightenSentences(answer, 6);
-      answer = clampWords(answer, 120);
+      // WHAT IF
+      answer = tightenSentences(answer, 10);
+      answer = clampWords(answer, 180);
       answer = normalizeOneParagraph(answer);
     }
 
@@ -1080,15 +1128,10 @@ export default async function handler(req, res) {
 
     // ===== Extra payload =====
     const pct = computePct(domanda, stile);
-    const motivation =
-      stile === "whatif" ? buildWhatIfMotivation(domanda, L, pct) : undefined;
+    const motivation = stile === "whatif" ? buildWhatIfMotivation(domanda, L, pct) : undefined;
 
-    const isSurprise =
-      !!(micro && (micro.surprise === true || micro.src === "surprise"));
-    const scientific =
-      stile === "wtf" && !isSurprise
-        ? scientificReportDemenziale(domanda, L)
-        : undefined;
+    const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
+    const scientific = stile === "wtf" && !isSurprise ? scientificReportDemenziale(domanda, L) : undefined;
 
     return res.status(200).json({
       mode: "answer",
@@ -1100,12 +1143,10 @@ export default async function handler(req, res) {
       pct,
       motivation,
       scientific,
-      usedClarification: !!clar,
+      usedClarification: !!clarification,
     });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
-    return res
-      .status(500)
-      .json({ error: "server_error", detail: String(err?.message || err) });
+    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-          }
+}
