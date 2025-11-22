@@ -520,7 +520,7 @@ function detectLang(text=''){
     de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
   };
   const score={}; for(const L of SUP_LANG){ score[L]=0; (bank[L]||[]).forEach(w=>{ if(t.includes(w)) score[L]++; }); }
-  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; } }
+  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
   if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
   return best;
 }
@@ -645,12 +645,11 @@ function playTypingShort(ms=2200){
   }, ms);
 }
 
-/* effetto macchina da scrivere per la risposta in pagina (PIÙ LENTO, SENZA SALTELLARE) */
+/* effetto macchina da scrivere per la risposta in pagina FLUIDO (box fisso, niente saltelli) */
 function showAnswerWithTyping(text){
   const full = String(text || "");
   if(!answerEl) return;
 
-  // reset eventuali timer/suoni precedenti
   if(typingAnswerTimer){
     clearInterval(typingAnswerTimer);
     typingAnswerTimer = null;
@@ -660,7 +659,7 @@ function showAnswerWithTyping(text){
     typingTimeoutId = null;
   }
 
-  // 1) misuro l'altezza finale, così il box non si muove
+  // Misuro l'altezza finale una volta sola -> box fisso
   answerEl.style.minHeight = "";
   const prevVisibility = answerEl.style.visibility;
   const prevContent = answerEl.textContent;
@@ -670,15 +669,13 @@ function showAnswerWithTyping(text){
   const rect = answerEl.getBoundingClientRect();
   const finalHeight = rect.height || 0;
 
-  // ripristino visibilità e svuoto per l'animazione
   answerEl.style.minHeight = finalHeight ? (finalHeight + "px") : "";
   answerEl.textContent = "";
   answerEl.style.visibility = prevVisibility || "visible";
 
-  // 2) typing vero e proprio (solo contenuto, layout fisso)
   let idx = 0;
   const stepChars = 1;
-  const stepMs = 50;
+  const stepMs = 40; // un filo più fluido
 
   if(typingSfx){
     try{
@@ -1001,13 +998,14 @@ function saveResultToCache(obj){
   }
 }
 
-function loadResultFromCache(domanda){
+function loadResultFromCache(domanda, clarification){
   try{
     const raw = LS.getItem(RESULT_CACHE_KEY);
     if(!raw) return null;
     const obj = JSON.parse(raw);
     if(!obj || typeof obj !== 'object') return null;
     if((obj.domanda||'').trim() !== String(domanda||'').trim()) return null;
+    if((obj.clarification||'').trim() !== String(clarification||'').trim()) return null;
     if(obj.style !== style) return null;
     if(obj.periodo !== periodo) return null;
     if(obj.lang !== lang) return null;
@@ -1080,12 +1078,13 @@ function applyResultToUI(result){
 function applyQuestion(){
   const req=JSON.parse(LS.getItem('whatif_request')||'{}');
   const domanda=req.domanda || LS.getItem('domanda') || '';
+  const clarification = req.clarification || req.answer || '';
   applyUI(domanda);
   qView.textContent = domanda || '—';
   const surprise = (new URLSearchParams(location.search)).get('src')==='surprise'
     || req?.surprise===true || req?.micro?.surprise===true
     || LS.getItem('surprise_mode')==='1';
-  return {req, domanda, surprise};
+  return {req, domanda, clarification, surprise};
 }
 
 /* ==== Salvataggio domanda ==== */
@@ -1104,10 +1103,10 @@ function saveCurrentQuestion(){
 
 /* ==== Main flow ==== */
 async function startFlow(){
-  const {req, domanda, surprise} = applyQuestion();
+  const {req, domanda, clarification, surprise} = applyQuestion();
   updateCreditInfo();
 
-  const cached = loadResultFromCache(domanda);
+  const cached = loadResultFromCache(domanda, clarification);
   if (cached) {
     showIntroOnce();
     applyResultToUI(cached);
@@ -1124,8 +1123,15 @@ async function startFlow(){
 
     const r=await fetch("/api/ask",{
       method:"POST",headers,
-      body:JSON.stringify({ domanda, lang, stile:style, periodo,
-        system:(style==='wtf'?SYSTEM_WTF:SYSTEM_WHIF), extra:"", micro:req.micro||{} })
+      body:JSON.stringify({
+        stage:"answer",
+        domanda,
+        clarification: clarification || "",
+        lang,
+        stile: style,
+        periodo,
+        micro:req.micro||{}
+      })
     });
     const data=await r.json().catch(()=>null);
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
@@ -1152,7 +1158,9 @@ async function startFlow(){
     let motivationTextForCache = "";
     let chipsFavNum, chipsConNum, chipsAstNum;
 
-    if (surprise) {
+    const surpriseMode = surprise || (req?.micro && req.micro.surprise);
+
+    if (surpriseMode) {
       motIco.style.display=''; chipsWrap.style.display='flex';
       committeeTitle.textContent=t().votersTitle||'Comitato';
       const rdm=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
@@ -1179,7 +1187,9 @@ async function startFlow(){
       motIco.style.display='none';
       chipsWrap.style.display='none';
       committeeTitle.textContent = t().scientificTitle;
-      const sci = wtfMotivationDemenziale(lang);
+      const sci = (data.scientific && String(data.scientific).trim())
+        ? data.scientific
+        : wtfMotivationDemenziale(lang);
       motNote.textContent = sci;
       motivazioneUsata = sci;
       motivationMode = 'wtf';
@@ -1189,7 +1199,9 @@ async function startFlow(){
       motIco.style.display='none';
       chipsWrap.style.display='none';
       committeeTitle.textContent = t().seriousTitle;
-      const html = buildWhatIfMotivationsPretty(domanda, usedPct);
+      const html = (data.motivation && String(data.motivation).trim())
+        ? buildWhatIfMotivationsPretty(domanda, usedPct)
+        : buildWhatIfMotivationsPretty(domanda, usedPct);
       motNote.innerHTML = html;
       motivazioneUsata = html.replace(/<br\s*\/?>/gi," | ");
       motivationMode = 'whatif';
@@ -1197,15 +1209,16 @@ async function startFlow(){
     }
 
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise, pct:usedPct, motivazione:motivazioneUsata });
+    hist.push({ domanda, clarification, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise:surpriseMode, pct:usedPct, motivazione:motivazioneUsata });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
 
     const resultForCache = {
       domanda,
+      clarification: clarification || "",
       style,
       periodo,
       lang,
-      surprise,
+      surprise: !!surpriseMode,
       answer: answerText,
       pct: usedPct,
       motivationMode,
@@ -1376,7 +1389,6 @@ async function generateVideoClip(){
     }
   };
 
-  // Effetto scrittura: risposta + motivazioni (riassunte)
   const fullAnswer = answerText;
   const motivationsCleanBase = motivationsRaw || (t().motFallback || "");
   let motivationText = motivationsCleanBase.replace(/<br\s*\/?>/gi," ").replace(/\s+/g," ").trim();
@@ -1386,7 +1398,7 @@ async function generateVideoClip(){
   }
 
   const answerLen = fullAnswer.length;
-  const charsPerSecond = 22; // più lento di prima
+  const charsPerSecond = 22;
   let totalDurationMs = Math.round((answerLen / charsPerSecond) * 1000);
   totalDurationMs = Math.max(12000, Math.min(totalDurationMs, 28000));
   const extraStillMs = 2000;
@@ -1394,7 +1406,6 @@ async function generateVideoClip(){
   const marginX = 60;
   const maxWidth = width - marginX * 2;
 
-  // etichette localizzate per il video + emoji
   const VIDEO_TEXT = {
     it:{ title:"What?f",
          subWtf:"⚡ What the F — Oracolo",
@@ -1441,10 +1452,10 @@ async function generateVideoClip(){
   const subText = style==='wtf' ? vt.subWtf : vt.subWhif;
   const footerText = vt.footer;
 
-  const MOT_START_PROGRESS = 0.55; // da qui partono le motivazioni
+  const MOT_START_PROGRESS = 0.55;
 
   function drawFrame(progress){
-    // sfondo fisso
+    // sfondo
     const grad = ctx.createLinearGradient(0,0,0,height);
     grad.addColorStop(0,"#04070b");
     grad.addColorStop(0.5, style==='wtf' ? "#122018" : "#101822");
@@ -1452,14 +1463,12 @@ async function generateVideoClip(){
     ctx.fillStyle = grad;
     ctx.fillRect(0,0,width,height);
 
-    // alone centrale
     const radial = ctx.createRadialGradient(width/2, height*0.42, 80, width/2, height*0.42, 420);
     radial.addColorStop(0,"rgba(255,236,1,.35)");
     radial.addColorStop(1,"rgba(0,0,0,0)");
     ctx.fillStyle = radial;
     ctx.fillRect(0,0,width,height);
 
-    // titolo e sottotitolo fissi
     ctx.textAlign = "center";
     ctx.fillStyle = "#FFFFFF";
     ctx.font = "bold 44px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
@@ -1469,13 +1478,12 @@ async function generateVideoClip(){
     ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.fillText(subText, width/2, 125);
 
-    // scroll più veloce verso l'alto
-    const maxScroll = 260;
+    // SCROLL VERSO L'ALTO MENTRE SCRIVE: ampiezza aumentata
+    const maxScroll = height * 0.38; // ~500px: testo che sale di più
     const scrollOffset = progress * maxScroll;
     ctx.save();
     ctx.translate(0, -scrollOffset);
 
-    // card domanda
     const cardX = 40;
     const cardY = 150;
     const cardW = width - 80;
@@ -1495,7 +1503,6 @@ async function generateVideoClip(){
     ctx.stroke();
     ctx.restore();
 
-    // testo domanda
     ctx.textAlign = "left";
     ctx.fillStyle = "#FFEC01";
     ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
@@ -1506,23 +1513,20 @@ async function generateVideoClip(){
     let y = cardY + 96;
     y = wrapAndDraw(ctx, domanda, cardX + 26, y, cardW - 52, 38);
 
-    // label A
     y = cardY + cardH + 40;
     ctx.fillStyle = "#FFEC01";
     ctx.font = "600 24px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.fillText(LABEL_A, marginX, y);
     y += 34;
 
-    // risposta progressiva
     const progressAnswer = Math.min(1, progress / MOT_START_PROGRESS);
     const chars = Math.max(1, Math.floor(fullAnswer.length * progressAnswer));
     const partial = fullAnswer.slice(0, chars);
 
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "28px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    const afterAnswerY = wrapAndDraw(ctx, partial, marginX, y, maxWidth, 36);
+    ctx.font = "26px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    const afterAnswerY = wrapAndDraw(ctx, partial, marginX, y, maxWidth, 34);
 
-    // motivazioni nella seconda parte
     if (motivationText) {
       let motProgress = 0;
       if (progress > MOT_START_PROGRESS) {
@@ -1544,28 +1548,25 @@ async function generateVideoClip(){
       }
     }
 
-    // footer: resta leggibile, non sovrapposto
     ctx.restore();
-    const footerExtra = Math.min(scrollOffset * 0.15, 40);
+    const footerExtra = Math.min(scrollOffset * 0.20, 50);
     ctx.font = "600 18px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
     ctx.fillStyle = "rgba(255,255,255,.82)";
     ctx.textAlign = "center";
     ctx.fillText(footerText, width/2, height - 70 + footerExtra);
   }
 
+  recorder.start();
   function loop(ts){
     const elapsed = ts - start;
     const progress = Math.min(1, elapsed / totalDurationMs);
     drawFrame(progress);
-
     if (elapsed < totalDurationMs + extraStillMs) {
       requestAnimationFrame(loop);
     } else {
       recorder.stop();
     }
   }
-
-  recorder.start();
   requestAnimationFrame(loop);
 }
 
@@ -1598,7 +1599,6 @@ qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
 if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
 if(videoBtn){ videoBtn.onclick = generateVideoClip; }
 
-/* bottone Condividi video */
 if(videoShareBtn){
   videoShareBtn.addEventListener('click', async (e)=>{
     e.preventDefault();
