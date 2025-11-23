@@ -226,7 +226,7 @@ const ZINGARA_ENDINGS = {
     past: ["Y quizá hoy lo sentirías: no era destino, era otra forma de escribir tu historia."],
   },
   fr: {
-    future: ["Et là tu verras qu’il ne faut pas tout casser, juste choisir più juste."],
+    future: ["Et là tu verras qu’il ne faut pas tout casser, juste choisir plus juste."],
     past: ["Et tu comprendras que ce n’était pas le destin, juste un autre scénario possible."],
   },
   de: {
@@ -957,7 +957,7 @@ Niente emoji, niente elenco, UNA frase sola, massimo 25 parole.`;
   } else if (L === "es") {
     sys = `Eres el MÓDULO DE MOTIVACIÓN de “WHAT IF”.
 Escribe UNA sola frase que explique de forma práctica por qué la probabilidad es aproximadamente ${pct}% en este escenario.
-Debe ser coherente con la respuesta principal, sin repetirla entera. Una frase, máximo 25 palabras, sin emojis ni listas.`;
+Debe ser coherente con la respuesta principale, sin repetirla entera. Una frase, máximo 25 palabras, sin emojis ni listas.`;
   } else if (L === "fr") {
     sys = `Tu es le MODULE MOTIVATION de “WHAT IF”.
 Écris UNE seule phrase qui explique de manière concrète pourquoi la probabilité est d’environ ${pct}% dans ce scénario.
@@ -1192,4 +1192,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-                }
+}
