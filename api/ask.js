@@ -254,7 +254,7 @@ function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   return `${s}. ${addon}`;
 }
 
-/* ========= WTF — contesto leggero (lo teniamo come spunto interno) ========= */
+/* ========= WTF — contesto leggero ========= */
 function detectWtfContext(domanda = "") {
   const t = String(domanda || "").toLowerCase();
 
@@ -270,7 +270,7 @@ function detectWtfContext(domanda = "") {
   return "generico";
 }
 
-/* Pool di IMPRECAZIONI teatrali — solo spunto interno, mai da copiare letteralmente */
+/* Pool di IMPRECAZIONI teatrali — solo spunto interno */
 const WTF_IMPRE_POOL = [
   "imprecazione turboguidata che sfiora il soffitto",
   "anatema blindato a tre stadi che sposta l’aria di un metro",
@@ -382,7 +382,7 @@ function buildClarifyMessages({ domanda, stile, lang, periodo }) {
 
   let sys;
   if (stile === "wtf") {
-    // WHAT THE F — chiarimento demenziale, niente IKEA fisso
+    // WHAT THE F — chiarimento demenziale
     if (L === "en") {
       sys = `You are “WHAT THE F”: absurd, sarcastic and weirdly caring, like a slightly drunk bartender who has seen way too much life.
 You ALWAYS speak in SECOND PERSON (“you / your”) when you refer to the user.
@@ -428,7 +428,7 @@ MODALITÀ PASSATO:
       }
     }
   } else {
-    // WHAT IF — chiarimento “zingara realista” ma pratico, consigliere
+    // WHAT IF — chiarimento “zingara realista”
     if (L === "en") {
       sys = `You are “WHAT IF”: practical, slightly mystical but very concrete, like a trusted advisor who cares about real-life details.
 You speak to the user in SECOND PERSON (“you / your”), never in third person, and you do NOT use first person (“I, me, we, us”).
@@ -490,7 +490,7 @@ MODALITÀ PASSATO:
   ];
 }
 
-/* ========= WTF RULES (nuovo stile super demenziale + consigli) ========= */
+/* ========= WTF RULES ========= */
 const WTF_RULE_IT_FUT = `Sei “WHAT THE F”: voce demenziale, sboccata e affettuosa, come un barista mezzo ubriaco che commenta le scelte della vita appoggiato al bancone.
 Parli SEMPRE E SOLO in seconda persona (“tu / ti / te / tuo”) quando ti riferisci a chi fa la domanda.
 È VIETATO usare qualunque prima persona (“io, me, mi, noi, ci, nostro, nostra, nostri, nostre”) e VIETATO parlare dell’utente in terza persona (“lui, lei, questo tizio, questa persona”).
@@ -517,15 +517,16 @@ FORMATO:
 - 5–7 frasi, un solo paragrafo, massimo ~140 parole.
 - Niente eco della domanda, niente emoji. Solo seconda persona.`;
 
-const WTF_RULE_IT_PAST = `Sei “WHAT THE F” in modalità FLASHBACK: STESSA VOCE, STESSO RITMO del barista ubriaco del futuro, ma ora commenti la PUNTATA PERDUTA della sua vita, quella dove hai fatto un’altra scelta.
+const WTF_RULE_IT_PAST = `Sei “WHAT THE F” in modalità FLASHBACK: STESSA VOCE, STESSO RITMO del barista ubriaco del futuro, ma ora commenti la PUNTATA PERDUTA della tua vita, quella dove avresti fatto un’altra scelta.
 Parli SEMPRE in seconda persona (“tu / ti / te / tuo”) e racconti una timeline alternativa usando il PASSATO CONTROFATTUALE:
 - “se ti fossi mosso”, “ti saresti ritrovato”, “avresti combinato”, “saresti diventato direttore generale del casino”.
 
 REGOLE:
-- niente prima persona (“io, me, mi, noi, ci, nostro…”), niente terza persona sull’utente;
-- ogni frase deve contenere almeno una immagine demenziale o una battuta forte, proprio come nel futuro;
+- niente prima persona (“io, me, mi, noi, ci, nostro…”), niente terza persona su di te;
+- ogni frase deve contenere almeno una immagine demenziale o una battuta forte, con la stessa energia del futuro;
 - prendi in giro la versione alternativa di te, ma resti affettuoso con chi legge;
-- usa quasi sempre condizionale passato e trapassato (“ti saresti ritrovato”, “ti sarebbe esploso”, “avresti finito per”), evitando futuro e presente quando descrivi quella timeline; puoi tornare al presente solo nella frase finale quando parli di cosa impari adesso.
+- usa quasi sempre condizionale passato e trapassato (“ti saresti ritrovato”, “ti sarebbe esploso”, “avresti finito per”), evitando futuro e presente quando descrivi quella timeline; puoi tornare al presente solo nella frase finale quando parli di cosa impari adesso;
+- non usare forme come “ti succede”, “finisci”, “andrai” per descrivere la timeline alternativa: trasformale sempre in “ti sarebbe successo”, “saresti finito”, “saresti andato”.
 
 COMPITO (PASSATO):
 - Racconti cosa SAREBBE successo davvero in quella timeline alternativa, come se stessi commentando una puntata di serie TV vista al bar.
@@ -564,7 +565,7 @@ FORMAT:
 - 5–7 sentences, single paragraph, max ~140 words.
 - No echo of the question, no emojis. SECOND PERSON ONLY.`;
 
-const WTF_RULE_EN_PAST = `You are “WHAT THE F” in FLASHBACK MODE: SAME VOICE, SAME RHYTHM as in the future, but now you comment on the LOST EPISODE of their life, where they made the other choice.
+const WTF_RULE_EN_PAST = `You are “WHAT THE F” in FLASHBACK MODE: SAME VOICE, SAME RHYTHM as in the future, but now you comment on the LOST EPISODE of their life, where they would have made the other choice.
 You ALWAYS speak in SECOND PERSON and describe an ALTERNATE TIMELINE using COUNTERFACTUAL PAST:
 - “if you had moved”, “you would have ended up”, “you would have turned into regional manager of chaos”.
 
@@ -572,7 +573,8 @@ RULES:
 - no first person (“I, me, we, us”), no third person about the user;
 - every sentence must contain at least one loud, absurd comic image or punchline, same energy as future mode;
 - you roast the alternate version of them, but you stay kind to the actual user;
-- keep the alternate timeline strictly in counterfactual past (“would have…”, “had … you would have …”), and switch back to the present only in the final takeaway sentence.
+- keep the alternate timeline strictly in counterfactual past (“would have…”, “had … you would have …”), and switch back to the present only in the final takeaway sentence;
+- avoid present or future forms (“you go”, “you will end up”) when describing that alternate past; always rewrite as “you would have gone”, “you would have ended up”.
 
 TASK (PAST):
 - Describe what WOULD HAVE unfolded in that alternate timeline, like you’re recapping a lost TV episode over drinks.
@@ -588,16 +590,25 @@ FORMAT:
 /* ========= MESSAGGI RISPOSTA ========= */
 function buildMessages({ domanda, clarification, lang, periodo, stile }) {
   const L = normLang(lang);
-  const baseRules =
-    L === "en"
-      ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. SECOND PERSON ONLY (“you / your”) when you talk about the user. Never talk about the user in third person (“he, she, this guy, this person”). Do NOT use first person (“I, me, we, us”). Stay close to the topic of the question and answer its core point clearly. Use a rich, varied vocabulary, and keep grammar and punctuation clean. Avoid repeating the same words and images too often. Prefer short sentences (max ~20 words).`
-      : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona (tu / ti / te / tuo) quando parli dell’utente. Vietato usare la prima persona singolare o plurale (“io, noi, me, ci, mi, nostro, nostra, miei, nostre”) e vietato parlare dell’utente in terza persona (“lui, lei, questo tizio, questa persona”). Resta aderente al tema della domanda e rispondi in modo chiaro al punto centrale. Usa un vocabolario ricco e vario, lingua corretta, senza errori di grammatica e con punteggiatura curata. Evita ripetizioni evidenti di parole e immagini. Preferisci frasi brevi (massimo ~20 parole).`;
+  const isPast = String(periodo).toLowerCase() === "past";
+
+  let baseRules;
+  if (L === "en") {
+    baseRules = `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. SECOND PERSON ONLY (“you / your”) when you talk about the user. Never talk about the user in third person (“he, she, this guy, this person”). Do NOT use first person (“I, me, we, us”). Stay close to the topic of the question and answer its core point clearly. Use a rich, varied vocabulary, and keep grammar and punctuation clean. Avoid repeating the same words and images too often. Prefer short sentences (max ~20 words).`;
+    if (isPast) {
+      baseRules += ` When you describe alternate past timelines, keep verbs in clear counterfactual past (“would have…”, “if you had… you would have…”), and only return to the present in the very last sentence.`;
+    }
+  } else {
+    baseRules = `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Solo seconda persona (tu / ti / te / tuo) quando parli dell’utente. Vietato usare la prima persona singolare o plurale (“io, noi, me, ci, mi, nostro, nostra, miei, nostre”) e vietato parlare dell’utente in terza persona (“lui, lei, questo tizio, questa persona”). Resta aderente al tema della domanda e rispondi in modo chiaro al punto centrale. Usa un vocabolario ricco e vario, lingua corretta, senza errori di grammatica e con punteggiatura curata. Evita ripetizioni evidenti di parole e immagini. Preferisci frasi brevi (massimo ~20 parole).`;
+    if (L === "it" && isPast) {
+      baseRules += ` Quando descrivi scenari alternativi già passati, usa soprattutto condizionale passato e trapassato (“ti saresti trovato”, “avresti perso”), ed evita di scivolare nel presente o nel futuro per quella timeline; puoi tornare all’oggi solo nell’ultima frase.`;
+    }
+  }
 
   const msgs = [{ role: "system", content: baseRules }];
 
   const hasClar = clarification && String(clarification).trim().length > 0;
   const c = hasClar ? String(clarification).trim() : "";
-  const isPast = String(periodo).toLowerCase() === "past";
 
   if (stile === "wtf") {
     // seed deterministico per spunti di scena
@@ -633,7 +644,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
       }
     );
   } else {
-    // WHATIF più pratico, consigliere di fiducia
+    // WHAT IF – consigliere di fiducia
     if (L === "it") {
       const ruleIT = isPast ? WHATIF_RULE_PAST_IT : WHATIF_RULE_FUT_IT;
       msgs.push(
@@ -647,36 +658,83 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
   }
 
   if (hasClar) {
-    // Messaggio extra esplicito su uso del chiarimento
-    if (L === "it") {
-      msgs.push({
-        role: "system",
-        content:
-          "Il dettaglio aggiuntivo fornito dall’utente va trattato come parte centrale della risposta: usalo per contestualizzare la scena, i diversi punti di vista e la chiusura, e richiamalo almeno una volta in modo chiaro.",
-      });
-    } else if (L === "en") {
-      msgs.push({
-        role: "system",
-        content:
-          "The extra detail from the user is central: use it to anchor the scene, the different angles and the conclusion, and refer to it explicitly at least once.",
-      });
+    // Messaggi extra su uso del chiarimento: NON ripeterlo alla lettera
+    if (L === "en") {
+      msgs.push(
+        {
+          role: "system",
+          content:
+            "The extra detail from the user is central: use it to anchor the scene, the different angles and the conclusion, and refer to it implicitly, WITHOUT copying it verbatim.",
+        },
+        {
+          role: "system",
+          content:
+            `EXTRA DETAIL FROM THE USER, from a previous screen (do NOT quote or repeat these words literally, just use them as hidden context):\n<<<${c}>>>`,
+        }
+      );
+    } else if (L === "it") {
+      msgs.push(
+        {
+          role: "system",
+          content:
+            "Il dettaglio aggiuntivo fornito dall’utente va trattato come parte centrale della risposta: usalo per contestualizzare scena, ragionamento e chiusura, ma NON copiarlo mai parola per parola.",
+        },
+        {
+          role: "system",
+          content:
+            `Dettaglio aggiuntivo ricevuto in una schermata precedente (NON ripeterlo mai alla lettera, usalo solo come contesto implicito):\n<<<${c}>>>`,
+        }
+      );
+    } else if (L === "es") {
+      msgs.push(
+        {
+          role: "system",
+          content:
+            "El detalle adicional del usuario es central: úsalo como contexto, pero NO lo repitas palabra por palabra en la respuesta.",
+        },
+        {
+          role: "system",
+          content:
+            `Detalle adicional del usuario en una pantalla anterior (NO lo repitas literalmente, úsalo solo como contexto implícito):\n<<<${c}>>>`,
+        }
+      );
+    } else if (L === "fr") {
+      msgs.push(
+        {
+          role: "system",
+          content:
+            "Le détail supplémentaire donné par l’utilisateur est central: utilise-le comme contexte, mais ne le copie jamais mot à mot dans la réponse.",
+        },
+        {
+          role: "system",
+          content:
+            `Détail supplémentaire provenant d’un écran précédent (NE LE RÉPÈTE PAS littéralement, utilise-le seulement comme contexte implicite):\n<<<${c}>>>`,
+        }
+      );
     } else {
-      msgs.push({
-        role: "system",
-        content:
-          "Il dettaglio aggiuntivo dell’utente è centrale: usalo per ancorare scena, ragionamento e chiusura, e citalo esplicitamente almeno una volta.",
-      });
+      msgs.push(
+        {
+          role: "system",
+          content:
+            "Das Zusatzdetail des Nutzers ist wichtig: nutze es als Kontext, aber zitiere es NICHT wörtlich in deiner Antwort.",
+        },
+        {
+          role: "system",
+          content:
+            `Zusatzdetail aus einem vorherigen Schritt (NICHT wortwörtlich wiederholen, nur als impliziten Kontext benutzen):\n<<<${c}>>>`,
+        }
+      );
     }
   }
 
-  // Utente finale
+  // Prompt utente finale: NON include più il testo c, solo il riferimento generico
   const ask = (function () {
     if (L === "en") {
       if (hasClar) {
         if (isPast) {
-          return `Original question about the PAST (do not repeat it): "${domanda}". Extra detail from the user (FOURTH PAGE ANSWER): "${c}". Produce ONE COUNTERFACTUAL answer in ENGLISH, single paragraph, very clear, very funny and concrete. For WHAT IF show an alternate past timeline using counterfactual past (“if you had…, you would have…”, 5–6 short sentences) and then give a clear takeaway for the present. For WHAT THE F use 5–7 short, absurd sentences in full counterfactual style (“you would have ended up…”, “you would have become…”), and make sure the last two sentences clearly answer the core of the past question with a warm-but-roasting tone.`;
+          return `Original question about the PAST (do not repeat it): "${domanda}". Take into account the extra detail already provided in a previous step (do not quote it). Produce ONE COUNTERFACTUAL answer in ENGLISH, single paragraph, very clear, very funny and concrete. For WHAT IF show an alternate past timeline using counterfactual past (“if you had…, you would have…”, 5–6 short sentences) and then give a clear takeaway for the present. For WHAT THE F use 5–7 short, absurd sentences in full counterfactual style (“you would have ended up…”, “you would have become…”), and make sure the last two sentences clearly answer the core of the past question with a warm-but-roasting tone.`;
         }
-        return `Original question (do not repeat it): "${domanda}". Extra detail from the user (FOURTH PAGE ANSWER): "${c}". Produce ONE answer in ENGLISH, single paragraph, very clear and concrete. For WHAT IF use 5–6 short sentences, show multiple angles and then take a clear position. For WHAT THE F use 5–7 short sentences that stay glued to the core of the question, making the user laugh in every sentence while you still give real advice.`;
+        return `Original question (do not repeat it): "${domanda}". Take into account the extra detail already provided in a previous step (do not quote it). Produce ONE answer in ENGLISH, single paragraph, very clear and concrete. For WHAT IF use 5–6 short sentences, show multiple angles and then take a clear position. For WHAT THE F use 5–7 short sentences that stay glued to the core of the question, making the user laugh in every sentence while you still give real advice.`;
       }
       if (isPast) {
         return `Question about the PAST (do not repeat it): "${domanda}". Produce ONE COUNTERFACTUAL answer in ENGLISH: describe the alternate timeline as if it had really happened, using counterfactual past (“if you had…, you would have…”), then extract what matters now. Single paragraph.`;
@@ -686,9 +744,9 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
     if (L === "it") {
       if (hasClar) {
         if (isPast) {
-          return `Domanda originale sul PASSATO (non ripeterla): "${domanda}". Dettaglio aggiuntivo fornito dall’utente (risposta in fourth): "${c}". Genera UNA risposta CONTROFATTUALE in ITALIANO: descrivi la vita alternativa come se fosse successa davvero usando forme tipo “se avessi…, ti saresti trovato…, avresti…” e poi collega tutto a quello che puoi fare oggi. Paragrafo unico. Se stile WHAT IF: 5–6 frasi corte, mostra più punti di vista del “come sarebbe andata” e chiudi con una presa di posizione chiara, da consigliere di fiducia, con lo stesso tono del futuro. Se stile WHAT THE F: 5–7 frasi corte, monologo demenziale controfattuale, ogni frase deve far ridere e le ultime due devono rispondere in modo esplicito al cuore della domanda sul passato con una morale storta ma buona.`;
+          return `Domanda originale sul PASSATO (non ripeterla): "${domanda}". Tieni conto anche del dettaglio aggiuntivo già fornito in uno step precedente (non citarlo alla lettera). Genera UNA risposta CONTROFATTUALE in ITALIANO: descrivi la vita alternativa come se fosse successa davvero usando forme tipo “se avessi…, ti saresti trovato…, avresti…” e poi collega tutto a quello che puoi fare oggi. Paragrafo unico. Se stile WHAT IF: 5–6 frasi corte, mostra più punti di vista del “come sarebbe andata” e chiudi con una presa di posizione chiara, da consigliere di fiducia, con lo stesso tono del futuro. Se stile WHAT THE F: 5–7 frasi corte, monologo demenziale controfattuale, ogni frase deve far ridere e le ultime due devono rispondere in modo esplicito al cuore della domanda sul passato con una morale storta ma buona.`;
         }
-        return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo fornito dall’utente (risposta in fourth): "${c}". Genera UNA risposta in ITALIANO, molto concreta, che tenga conto di entrambi. Paragrafo unico. Se stile WHAT IF: 5–6 frasi corte, mostra più punti di vista e poi dai una presa di posizione chiara, da consigliere di fiducia. Se stile WHAT THE F: 5–7 frasi corte, monologo demenziale come un barista ubriaco affettuoso, ogni frase deve essere comica ma anche collegata alla scelta che sta facendo.`;
+        return `Domanda originale (non ripeterla): "${domanda}". Tieni conto anche del dettaglio aggiuntivo fornito in uno step precedente (non citarlo alla lettera). Genera UNA risposta in ITALIANO, molto concreta, che tenga conto di entrambi. Paragrafo unico. Se stile WHAT IF: 5–6 frasi corte, mostra più punti di vista e poi dai una presa di posizione chiara, da consigliere di fiducia. Se stile WHAT THE F: 5–7 frasi corte, monologo demenziale come un barista ubriaco affettuoso, ogni frase deve essere comica ma anche collegata alla scelta che sta facendo.`;
       }
       if (isPast) {
         return `Domanda sul PASSATO (non ripeterla): "${domanda}". Genera UNA risposta CONTROFATTUALE in ITALIANO: racconta cosa sarebbe successo se quella scelta fosse andata davvero così, usando forme controfattuali (“se avessi…, ti saresti trovato…, avresti…”) e chiudi riportando l’attenzione su cosa puoi fare adesso. Il tono e la voce devono rimanere identici alla versione sul futuro. Paragrafo unico, tono naturale.`;
@@ -697,17 +755,17 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
     }
     if (L === "es") {
       return hasClar
-        ? `Pregunta original (no la repitas): "${domanda}". Detalle adicional del usuario: "${c}". Escribe UNA respuesta en ESPAÑOL, clara y concreta, en un solo párrafo.`
+        ? `Pregunta original (no la repitas): "${domanda}". Ten en cuenta también el detalle adicional dado antes (sin citarlo literal). Escribe UNA respuesta en ESPAÑOL, clara y concreta, en un solo párrafo.`
         : `Pregunta (no la repitas): "${domanda}". Escribe UNA respuesta en ESPAÑOL, un solo párrafo.`;
     }
     if (L === "fr") {
       return hasClar
-        ? `Question originale (ne la répète pas) : « ${domanda} ». Détail supplémentaire donné par l’utilisateur : « ${c} ». Donne UNE réponse en FRANÇAIS, claire et concrète, en un seul paragraphe.`
+        ? `Question originale (ne la répète pas) : « ${domanda} ». Tiens compte aussi du détail supplémentaire déjà donné (ne le cite pas mot à mot). Donne UNE réponse en FRANÇAIS, claire et concrète, en un seul paragraphe.`
         : `Question (ne la répète pas) : « ${domanda} ». Donne UNE réponse en FRANÇAIS, un seul paragraphe.`;
     }
     // de
     return hasClar
-      ? `Ursprüngliche Frage (nicht wiederholen): „${domanda}“. Zusatzdetail vom Nutzer: „${c}“. Gib EINE klare, konkrete Antwort auf DEUTSCH, ein einziger Absatz.`
+      ? `Ursprüngliche Frage (nicht wiederholen): „${domanda}“. Berücksichtige auch das zuvor gegebene Zusatzdetail (nicht wörtlich zitieren). Gib EINE klare, konkrete Antwort auf DEUTSCH, ein einziger Absatz.`
       : `Frage (nicht wiederholen): „${domanda}“. Gib EINE Antwort auf DEUTSCH, ein einziger Absatz.`;
   })();
 
@@ -731,7 +789,6 @@ function computePct(domanda, stile) {
 
   s += stile === "wtf" ? -3 : +3;
 
-  // jitter pseudo-random per non avere sempre la stessa fascia
   const h = hashStr(String(domanda || "") + "|" + String(stile || ""));
   const jitter = (h % 31) - 15; // -15..+15
   s += jitter;
@@ -740,7 +797,7 @@ function computePct(domanda, stile) {
   return pct;
 }
 
-/* ========= WHAT IF: motivazione fallback (heuristica, compatta) ========= */
+/* ========= WHAT IF: motivazione fallback ========= */
 function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
   const L = (lang || "it").slice(0, 2);
   const t = String(domanda || "").toLowerCase();
@@ -942,7 +999,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
   return buildWhatIfMotivation(domanda, "it", pct);
 }
 
-/* ========= MOTIVAZIONE LLM (coerente con la risposta) ========= */
+/* ========= MOTIVAZIONE LLM ========= */
 async function generateMotivationLLM({ domanda, clarification, answer, lang, pct }) {
   const L = normLang(lang);
 
@@ -966,7 +1023,7 @@ Debe ser coherente con la respuesta principal, sin repetirla entera. Una frase, 
   } else if (L === "fr") {
     sys = `Tu es le MODULE MOTIVATION de “WHAT IF”.
 Écris UNE seule phrase qui explique de manière concrète pourquoi la probabilité est d’environ ${pct}% dans ce scénario.
-Elle doit rester cohérente avec la réponse principale. Une seule frase, max 25 mots, sans emoji ni liste.`;
+Elle doit rester cohérente avec la réponse principale. Une seule phrase, max 25 mots, sans emoji ni liste.`;
   } else {
     sys = `Du bist das MOTIVATIONSMODUL von „WHAT IF“.
 Schreibe EINEN kurzen Satz, der praktisch erklärt, warum die Wahrscheinlichkeit hier etwa ${pct}% ist.
@@ -1015,7 +1072,6 @@ Schreibe jetzt EINEN Motivationssatz auf DEUTSCH.`;
   m = sentenceCaseAll(m);
   m = finalPunct(m);
 
-  // sicurezza: se l’LLM ha generato più frasi, tieni solo la prima
   const first = m.split(/(?<=[.!?…])\s+/)[0] || m;
   return first.trim();
 }
@@ -1083,7 +1139,7 @@ export default async function handler(req, res) {
       });
     }
 
-    /* ====== STAGE: ANSWER (default) ====== */
+    /* ====== STAGE: ANSWER ====== */
     const messages = buildMessages({ domanda, clarification, lang: L, periodo, stile, micro });
 
     const completion = await client.chat.completions.create({
@@ -1099,22 +1155,19 @@ export default async function handler(req, res) {
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // ===== Post-process (ordine CORRETTO) =====
+    // Post-process
     answer = stripQuestionEcho(domanda, answer);
 
     if (stile === "wtf") {
-      // WHAT THE F: 5–7 frasi, max ~140 parole
       answer = tightenSentences(answer, 7);
       answer = clampWords(answer, 140);
       answer = normalizeOneParagraph(answer);
     } else {
-      // WHAT IF: 5–6 frasi, ~110 parole
       answer = tightenSentences(answer, 6);
       answer = clampWords(answer, 110);
       answer = normalizeOneParagraph(answer);
     }
 
-    // Moderazioni leggere IT (prima del ripristino maiuscole)
     if (normLang(lang) === "it") {
       (function () {
         const d = String(domanda || "");
@@ -1145,21 +1198,15 @@ export default async function handler(req, res) {
       })();
     }
 
-    // Ripristina maiuscole frasi
     answer = sentenceCaseAll(answer);
-
-    // Strip di sicurezza della prima persona
     answer = stripFirstPerson(answer, L);
 
-    // Finale emozionale con gancio WHAT IF (sia futuro che passato, tutte le lingue)
     if (stile === "whatif") {
       answer = ensureZingaraEnding({ text: answer, lang: L, periodo, domanda });
     }
 
-    // Punteggiatura finale
     answer = finalPunct(answer);
 
-    // ===== Extra payload =====
     const pct = computePct(domanda, stile);
 
     let motivation;
@@ -1173,7 +1220,6 @@ export default async function handler(req, res) {
           pct,
         });
       } catch (e) {
-        // fallback se LLM motivazione faila
         motivation = buildWhatIfMotivation(domanda, L, pct);
       }
     }
@@ -1197,4 +1243,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-          }
+    }
