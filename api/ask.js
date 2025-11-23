@@ -153,10 +153,7 @@ function stripFirstPerson(text = "", lang = "it") {
   let out = String(text || "");
   const L = normLang(lang);
   if (L === "it") {
-    out = out.replace(
-      /\b(io|me|mi|noi|ci)\b/gi,
-      "tu"
-    );
+    out = out.replace(/\b(io|me|mi|noi|ci)\b/gi, "tu");
     out = out.replace(/\bnostro\b/gi, "tuo");
     out = out.replace(/\bnostra\b/gi, "tua");
     out = out.replace(/\bnostri\b/gi, "tuoi");
@@ -190,9 +187,11 @@ const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO PRATICO COMPATTO):
 - 5–6 frasi, seconda persona, un solo paragrafo, frasi brevi (massimo ~20 parole), niente elenchi, niente emoji.`;
 
 const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE PRATICO COMPATTO):
+- La VOCE è la stessa del WHAT IF sul futuro: diretta, pratica, calda, solo spostata su una vita alternativa che non hai vissuto.
 - Tono: leggi una vita alternativa con lucidità, come un amico molto sincero che ti fa vedere il quadro intero senza schiacciarti di sensi di colpa.
-- Scopo: mostrare cosa sarebbe cambiato davvero se quella scelta passata fosse andata diversamente, senza dramatizzare né minimizzare.
-- Usa struttura controfattuale: "se avessi…, ti saresti trovato…, avresti vissuto…, avresti pagato…".
+- Scopo: mostrare cosa sarebbe cambiato davvero se quella scelta passata fosse andata diversamente, senza drammatizzare né minimizzare.
+- Usa struttura controfattuale: "se avessi…, ti saresti trovato…, avresti vissuto…, ti sarebbe costato…, avresti pagato…".
+- Usa quasi solo tempi controfattuali: condizionale passato e trapassato ("ti saresti ritrovato", "ti sarebbe rimasto addosso", "avresti perso"); evita presente e futuro quando descrivi la vita alternativa. Puoi tornare all’oggi solo nell’ultima frase.
 - 70% analisi concreta (tempo, soldi, relazioni, identità, stress) + 30% immagini sobrie di quella vita alternativa.
 - APRI con UNA frase che fa capire che stai parlando di una versione parallela di te, senza giudizio.
 - Seconda frase con "Vedo", "Sento", "Immagino", "Intuisco", "Si sarebbe aperto", "Si sarebbe mosso".
@@ -400,7 +399,8 @@ TASK:
         sys += `
 PAST MODE:
 - The user is talking about a past choice or a missed path.
-- Phrase your question in COUNTERFACTUAL PAST: “back then”, “in that period”, “when you stayed”, “if you had moved”.
+- Phrase your question strictly in COUNTERFACTUAL PAST: “back then”, “in that period”, “when you stayed”, “if you had moved”.
+- Use clear counterfactual verbs like “if you had…, would you have…”, avoid future tense.
 - It must be obvious that you are rewinding THAT chapter, not talking about a generic future.`;
       }
     } else {
@@ -423,6 +423,7 @@ COMPITO:
 MODALITÀ PASSATO:
 - La domanda dell’utente riguarda qualcosa che È GIÀ SUCCESSO o che non hai fatto.
 - Formula la tua domanda al passato o in chiave controfattuale: “all’epoca”, “in quel periodo”, “quando hai scelto di restare”, “se ti fossi mosso allora”.
+- Usa verbi controfattuali chiari, tipo “se ti fossi mosso…, ti saresti trovato…”, ed evita il futuro quando descrivi quel capitolo.
 - Deve essere chiaro che stai riaprendo QUEL capitolo preciso, non chiedendo una cosa generica sul futuro.`;
       }
     }
@@ -444,6 +445,7 @@ TASK:
 PAST MODE:
 - The question is about a past choice or missed path.
 - Phrase your clarifying question in the PAST or COUNTERFACTUAL PAST: “back then”, “at that time”, “when you decided to stay”, “if you had left”.
+- Use clear counterfactual grammar (“if you had…, would you have…”) instead of future forms.
 - Make clear you are re-opening THAT chapter, not talking in general about the future.`;
       }
     } else {
@@ -465,6 +467,7 @@ COMPITO:
 MODALITÀ PASSATO:
 - La domanda riguarda una scelta passata o una strada non presa.
 - Formula la tua domanda al passato o in chiave controfattuale: “all’epoca”, “in quel momento”, “quando hai scelto di…”, “se allora ti fossi mosso”.
+- Usa verbi controfattuali chiari, tipo “se avessi fatto…, come ti saresti sentito…?”, evitando il futuro per quella vita alternativa.
 - Deve essere evidente che stai parlando di QUEL capitolo specifico della sua storia, non di un generico “prima o poi”.`;
       }
     }
@@ -478,7 +481,7 @@ MODALITÀ PASSATO:
       : L === "es"
       ? `Pregunta "¿y si...?" del usuario:\n"${domanda}"\nHaz UNA sola pregunta de aclaración en ESPAÑOL, con el estilo indicado arriba.`
       : L === "fr"
-      ? `Question "et si..." de l’utilisateur :\n"${domanda}"\nPose UNE seule question de clarification en FRANÇAIS, selon les règles de style ci-dessus.`
+      ? `Question "et si..." de l’utilisateur :\n"${domanda}"\nPose UNE seule question de clarification en FRANÇAIS, selon les règles de stile ci-dessus.`
       : `„Was wäre, wenn…“-Frage des Nutzers:\n"${domanda}"\nStelle EINE kurze Rückfrage auf DEUTSCH im oben beschriebenen Stil.`;
 
   return [
@@ -514,25 +517,26 @@ FORMATO:
 - 5–7 frasi, un solo paragrafo, massimo ~140 parole.
 - Niente eco della domanda, niente emoji. Solo seconda persona.`;
 
-const WTF_RULE_IT_PAST = `Sei “WHAT THE F” in modalità FLASHBACK: stesso barista ubriaco affettuoso, ma ora stai commentando la PUNTATA PERDUTA della sua vita, quella dove ha fatto un’altra scelta.
+const WTF_RULE_IT_PAST = `Sei “WHAT THE F” in modalità FLASHBACK: STESSA VOCE, STESSO RITMO del barista ubriaco del futuro, ma ora commenti la PUNTATA PERDUTA della sua vita, quella dove hai fatto un’altra scelta.
 Parli SEMPRE in seconda persona (“tu / ti / te / tuo”) e racconti una timeline alternativa usando il PASSATO CONTROFATTUALE:
 - “se ti fossi mosso”, “ti saresti ritrovato”, “avresti combinato”, “saresti diventato direttore generale del casino”.
 
 REGOLE:
 - niente prima persona (“io, me, mi, noi, ci, nostro…”), niente terza persona sull’utente;
-- ogni frase deve contenere almeno una immagine demenziale o una battuta forte;
-- prendi in giro la versione alternativa di te, ma resti affettuoso con chi legge.
+- ogni frase deve contenere almeno una immagine demenziale o una battuta forte, proprio come nel futuro;
+- prendi in giro la versione alternativa di te, ma resti affettuoso con chi legge;
+- usa quasi sempre condizionale passato e trapassato (“ti saresti ritrovato”, “ti sarebbe esploso”, “avresti finito per”), evitando futuro e presente quando descrivi quella timeline; puoi tornare al presente solo nella frase finale quando parli di cosa impari adesso.
 
 COMPITO (PASSATO):
-- Racconti cosa SAREBBE successa davvero in quella timeline alternativa, come se stessi commentando una puntata di serie TV vista al bar.
+- Racconti cosa SAREBBE successo davvero in quella timeline alternativa, come se stessi commentando una puntata di serie TV vista al bar.
 - La scena deve rispondere alla domanda: cosa ti saresti portato dietro di buono, e quale casino ti sei probabilmente evitato.
-- Usa dettagli concreti (bollette, affitto, chat, ex, traffico, ufficio, ecc.) ma sempre in chiave comica.
+- Usa dettagli concreti (bollette, affitto, chat, ex, traffico, ufficio, ecc.) ma sempre in chiave comica, con la stessa cattiveria buona del futuro.
 
 CHIUSURA:
 - Le ultime DUE frasi dicono chiaramente cosa ti avrebbe incasinato di più e cosa puoi imparare ORA da quella versione mancata, con una battuta che abbraccia e prende in giro insieme.
 
 FORMATO:
-- 5–7 frasi, un paragrafo unico, massimo ~140 parole, solo linguaggio al passato/controfattuale, niente eco della domanda, niente emoji.`;
+- 5–7 frasi, un paragrafo unico, massimo ~140 parole, solo linguaggio al passato/controfattuale per la timeline alternativa, niente eco della domanda, niente emoji.`;
 
 const WTF_RULE_EN_FUT = `You are “WHAT THE F”: absurd, foul-mouthed and secretly kind, like a tipsy bartender who comments on life choices from behind a sticky counter.
 You ALWAYS speak in SECOND PERSON (“you / your”) when you refer to the user.
@@ -560,14 +564,15 @@ FORMAT:
 - 5–7 sentences, single paragraph, max ~140 words.
 - No echo of the question, no emojis. SECOND PERSON ONLY.`;
 
-const WTF_RULE_EN_PAST = `You are “WHAT THE F” in FLASHBACK MODE: same drunk bartender energy, but now you comment on the LOST EPISODE of their life, where they made the other choice.
+const WTF_RULE_EN_PAST = `You are “WHAT THE F” in FLASHBACK MODE: SAME VOICE, SAME RHYTHM as in the future, but now you comment on the LOST EPISODE of their life, where they made the other choice.
 You ALWAYS speak in SECOND PERSON and describe an ALTERNATE TIMELINE using COUNTERFACTUAL PAST:
-- “if you had moved”, “you would have ended up”, “you’d have turned into regional manager of chaos”.
+- “if you had moved”, “you would have ended up”, “you would have turned into regional manager of chaos”.
 
 RULES:
 - no first person (“I, me, we, us”), no third person about the user;
-- every sentence must contain at least one loud, absurd comic image or punchline;
-- you roast the alternate version of them, but you stay kind to the actual user.
+- every sentence must contain at least one loud, absurd comic image or punchline, same energy as future mode;
+- you roast the alternate version of them, but you stay kind to the actual user;
+- keep the alternate timeline strictly in counterfactual past (“would have…”, “had … you would have …”), and switch back to the present only in the final takeaway sentence.
 
 TASK (PAST):
 - Describe what WOULD HAVE unfolded in that alternate timeline, like you’re recapping a lost TV episode over drinks.
@@ -578,7 +583,7 @@ ENDING:
 - The last TWO sentences clearly say what extra chaos that path would have brought, and what they can learn NOW, with a hug-disguised-as-insult tone.
 
 FORMAT:
-- 5–7 sentences, single paragraph, max ~140 words, fully counterfactual, no echo of the question, no emojis.`;
+- 5–7 sentences, single paragraph, max ~140 words, fully counterfactual for the alternate storyline, no echo of the question, no emojis.`;
 
 /* ========= MESSAGGI RISPOSTA ========= */
 function buildMessages({ domanda, clarification, lang, periodo, stile }) {
@@ -669,24 +674,24 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
     if (L === "en") {
       if (hasClar) {
         if (isPast) {
-          return `Original question about the PAST (do not repeat it): "${domanda}". Extra detail from the user (FOURTH PAGE ANSWER): "${c}". Produce ONE COUNTERFACTUAL answer in ENGLISH, single paragraph, very clear, very funny and concrete. For WHAT IF show an alternate past timeline (5–6 short sentences) and then give a clear takeaway for the present. For WHAT THE F use 5–7 short, absurd sentences in full counterfactual style, and make sure the last two sentences clearly answer the core of the past question with a warm-but-roasting tone.`;
+          return `Original question about the PAST (do not repeat it): "${domanda}". Extra detail from the user (FOURTH PAGE ANSWER): "${c}". Produce ONE COUNTERFACTUAL answer in ENGLISH, single paragraph, very clear, very funny and concrete. For WHAT IF show an alternate past timeline using counterfactual past (“if you had…, you would have…”, 5–6 short sentences) and then give a clear takeaway for the present. For WHAT THE F use 5–7 short, absurd sentences in full counterfactual style (“you would have ended up…”, “you would have become…”), and make sure the last two sentences clearly answer the core of the past question with a warm-but-roasting tone.`;
         }
         return `Original question (do not repeat it): "${domanda}". Extra detail from the user (FOURTH PAGE ANSWER): "${c}". Produce ONE answer in ENGLISH, single paragraph, very clear and concrete. For WHAT IF use 5–6 short sentences, show multiple angles and then take a clear position. For WHAT THE F use 5–7 short sentences that stay glued to the core of the question, making the user laugh in every sentence while you still give real advice.`;
       }
       if (isPast) {
-        return `Question about the PAST (do not repeat it): "${domanda}". Produce ONE COUNTERFACTUAL answer in ENGLISH: describe the alternate timeline as if it had really happened, then extract what matters now. Single paragraph.`;
+        return `Question about the PAST (do not repeat it): "${domanda}". Produce ONE COUNTERFACTUAL answer in ENGLISH: describe the alternate timeline as if it had really happened, using counterfactual past (“if you had…, you would have…”), then extract what matters now. Single paragraph.`;
       }
       return `Question (do not repeat it): "${domanda}". Produce ONE answer in ENGLISH. Single paragraph.`;
     }
     if (L === "it") {
       if (hasClar) {
         if (isPast) {
-          return `Domanda originale sul PASSATO (non ripeterla): "${domanda}". Dettaglio aggiuntivo fornito dall’utente (risposta in fourth): "${c}". Genera UNA risposta CONTROFATTUALE in ITALIANO: descrivi la vita alternativa come se fosse successa davvero e poi collega tutto a quello che puoi fare oggi. Paragrafo unico. Se stile WHAT IF: 5–6 frasi corte, mostra più punti di vista del “come sarebbe andata” e chiudi con una presa di posizione chiara, da consigliere di fiducia. Se stile WHAT THE F: 5–7 frasi corte, monologo demenziale controfattuale, ogni frase deve far ridere e le ultime due devono rispondere in modo esplicito al cuore della domanda sul passato con una morale storta ma buona.`;
+          return `Domanda originale sul PASSATO (non ripeterla): "${domanda}". Dettaglio aggiuntivo fornito dall’utente (risposta in fourth): "${c}". Genera UNA risposta CONTROFATTUALE in ITALIANO: descrivi la vita alternativa come se fosse successa davvero usando forme tipo “se avessi…, ti saresti trovato…, avresti…” e poi collega tutto a quello che puoi fare oggi. Paragrafo unico. Se stile WHAT IF: 5–6 frasi corte, mostra più punti di vista del “come sarebbe andata” e chiudi con una presa di posizione chiara, da consigliere di fiducia, con lo stesso tono del futuro. Se stile WHAT THE F: 5–7 frasi corte, monologo demenziale controfattuale, ogni frase deve far ridere e le ultime due devono rispondere in modo esplicito al cuore della domanda sul passato con una morale storta ma buona.`;
         }
         return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo fornito dall’utente (risposta in fourth): "${c}". Genera UNA risposta in ITALIANO, molto concreta, che tenga conto di entrambi. Paragrafo unico. Se stile WHAT IF: 5–6 frasi corte, mostra più punti di vista e poi dai una presa di posizione chiara, da consigliere di fiducia. Se stile WHAT THE F: 5–7 frasi corte, monologo demenziale come un barista ubriaco affettuoso, ogni frase deve essere comica ma anche collegata alla scelta che sta facendo.`;
       }
       if (isPast) {
-        return `Domanda sul PASSATO (non ripeterla): "${domanda}". Genera UNA risposta CONTROFATTUALE in ITALIANO: racconta cosa sarebbe successo se quella scelta fosse andata davvero così, e chiudi riportando l’attenzione su cosa puoi fare adesso. Paragrafo unico, tono naturale.`;
+        return `Domanda sul PASSATO (non ripeterla): "${domanda}". Genera UNA risposta CONTROFATTUALE in ITALIANO: racconta cosa sarebbe successo se quella scelta fosse andata davvero così, usando forme controfattuali (“se avessi…, ti saresti trovato…, avresti…”) e chiudi riportando l’attenzione su cosa puoi fare adesso. Il tono e la voce devono rimanere identici alla versione sul futuro. Paragrafo unico, tono naturale.`;
       }
       return `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO. Paragrafo unico, grammatica corretta, tono naturale. Se WHAT IF: aiuta davvero a decidere, mostrando più angoli e chiudendo con un consiglio secco. Se WHAT THE F: fai ridere forte a ogni frase ma rispondi comunque alla domanda.`;
     }
@@ -961,7 +966,7 @@ Debe ser coherente con la respuesta principal, sin repetirla entera. Una frase, 
   } else if (L === "fr") {
     sys = `Tu es le MODULE MOTIVATION de “WHAT IF”.
 Écris UNE seule phrase qui explique de manière concrète pourquoi la probabilité est d’environ ${pct}% dans ce scénario.
-Elle doit rester cohérente avec la réponse principale. Une seule phrase, max 25 mots, sans emoji ni liste.`;
+Elle doit rester cohérente avec la réponse principale. Une seule frase, max 25 mots, sans emoji ni liste.`;
   } else {
     sys = `Du bist das MOTIVATIONSMODUL von „WHAT IF“.
 Schreibe EINEN kurzen Satz, der praktisch erklärt, warum die Wahrscheinlichkeit hier etwa ${pct}% ist.
@@ -1146,8 +1151,8 @@ export default async function handler(req, res) {
     // Strip di sicurezza della prima persona
     answer = stripFirstPerson(answer, L);
 
-    // Finale emozionale con gancio solo per lingue diverse dall’italiano (WHAT IF)
-    if (stile === "whatif" && L !== "it") {
+    // Finale emozionale con gancio WHAT IF (sia futuro che passato, tutte le lingue)
+    if (stile === "whatif") {
       answer = ensureZingaraEnding({ text: answer, lang: L, periodo, domanda });
     }
 
@@ -1192,4 +1197,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-                   }
+          }
