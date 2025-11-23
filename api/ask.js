@@ -206,7 +206,7 @@ const ZINGARA_ENDINGS = {
     past: ["Y quizá hoy lo sentirías: no era destino, era otra forma de escribir tu historia."],
   },
   fr: {
-    future: ["Et là tu verras qu’il ne faut pas tout casser, juste choisir plus juste."],
+    future: ["Et là tu verras qu’il ne faut pas tout casser, juste choisir più juste."],
     past: ["Et tu comprendras que ce n’était pas le destin, juste un autre scénario possible."],
   },
   de: {
@@ -822,19 +822,42 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
   return msgs;
 }
 
-/* ========= Server-side PCT ========= */
-function computePct(domanda, stile) {
-  const t = String(domanda || "").toLowerCase();
-  let s = 50;
-  if (/\b(7|14|21|30|60|90)\b/.test(t)) s += 12;
-  if (/\b\d+([.,]\d+)?\b/.test(t)) s += 8;
-  if (/budget|€|euro|spesa|max|under|sotto/.test(t)) s += 6;
-  if (/senza|solo|al massimo|minimo|entro|prima delle|ogni|per/.test(t)) s += 8;
-  if (/lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa/.test(t)) s += 6;
-  if (/forse|magari|maybe|quizás/.test(t)) s -= 8;
-  if (!/\b\d/.test(t)) s -= 6;
-  s += stile === "wtf" ? -4 : +2;
-  const pct = Math.max(25, Math.min(92, Math.round(s)));
+/* ========= Server-side PCT – VERSIONE 2 (più variabile) ========= */
+function computePct(domanda, stile, periodo = "future", clarification = "") {
+  const text = (String(domanda || "") + " " + String(clarification || "")).toLowerCase();
+
+  // Base “razionale”
+  let s = 52;
+
+  // Segnali di struttura / concretezza
+  if (/\b(7|14|21|30|60|90)\b/.test(text)) s += 10; // tempi precisi
+  if (/\b\d+([.,]\d+)?\b/.test(text)) s += 6; // numeri in generale
+  if (/(budget|€|euro|spesa|costo|prezzo|max|under|sotto|caparra|cost|money)/.test(text)) s += 6;
+  if (/(entro|prima delle|prima di|scadenza|deadline|by\s+\d|before\s+\d)/.test(text)) s += 8;
+  if (/(giorn|settiman|mes|mesi|anni|days?|weeks?|months?|years?)/.test(text)) s += 5;
+  if (/(lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa|cambia|trova|assumi|costruisci|crea|launch|start|learn|build|create)/.test(text)) s += 6;
+  if (/(senza|solo|al massimo|minimo|rischio|minimize|hedge)/.test(text)) s += 4;
+
+  // Segnali di incertezza
+  if (/(forse|magari|maybe|quizás|peut[- ]être|vielleicht)/.test(text)) s -= 8;
+  if (!/\b\d/.test(text)) s -= 4;
+
+  // Piccolo effetto di stile
+  s += stile === "wtf" ? -3 : +2;
+
+  // Effetto periodo: sul passato rientri un po’ verso il 50 per non andare troppo agli estremi
+  if (String(periodo).toLowerCase() === "past") {
+    s = 50 + (s - 50) * 0.65;
+  }
+
+  // Jitter deterministico per far cambiare le percentuali a parità di "qualità"
+  const seed = hashStr(text + "|" + stile + "|" + periodo);
+  const jitterSmall = (seed % 9) - 4; // -4..+4
+  const jitterBig = ((seed >>> 4) % 13) - 6; // -6..+6
+  s += jitterSmall + jitterBig;
+
+  // Clamp finale più largo, ma senza estremi 0–100
+  const pct = Math.max(10, Math.min(92, Math.round(s)));
   return pct;
 }
 
@@ -1254,7 +1277,7 @@ export default async function handler(req, res) {
     answer = finalPunct(answer);
 
     // ===== Extra payload =====
-    const pct = computePct(domanda, stile);
+    const pct = computePct(domanda, stile, periodo, clarification);
 
     let motivation;
     if (stile === "whatif") {
@@ -1291,4 +1314,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-  }
+}
