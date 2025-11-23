@@ -148,55 +148,6 @@ function pickDet(arr, seed) {
   return arr[arr.length ? seed % arr.length : 0] || "";
 }
 
-/* ========= NO-FIRST-PERSON FILTER ========= */
-function scrubFirstPerson(text = "", lang = "it") {
-  const L = normLang(lang);
-  let t = String(text || "");
-
-  function apply(patterns) {
-    patterns.forEach((rx) => {
-      t = t.replace(rx, " ");
-    });
-    t = t.replace(/\s{2,}/g, " ").trim();
-  }
-
-  if (L === "it") {
-    apply([
-      /\b(io)\b/gi,
-      /\b(noi)\b/gi,
-      /\b(me)\b/gi,
-      /\b(ci)\b/gi,
-      /\b(mi)\b/gi,
-      /\b(nostro[aei]?|nostri|nostre)\b/gi,
-      /\b(mio|mia|miei|mie)\b/gi,
-      /\b(siamo|abbiamo|facciamo|pensiamo)\b/gi,
-    ]);
-  } else if (L === "en") {
-    apply([
-      /\b(i|me|we|us|our|ours)\b/gi,
-      /\b(i'm|i’d|i've|i’ll)\b/gi,
-      /\b(we're|we’ve|we’d|we’ll)\b/gi,
-    ]);
-  } else if (L === "es") {
-    apply([
-      /\b(yo)\b/gi,
-      /\b(nosotros|nosotras|nos)\b/gi,
-      /\b(nuestro[as]?|nuestros|nuestras)\b/gi,
-    ]);
-  } else if (L === "fr") {
-    apply([
-      /\b(je|nous|me|moi)\b/gi,
-      /\b(notre|nos|mes|mon|ma)\b/gi,
-    ]);
-  } else if (L === "de") {
-    apply([
-      /\b(ich|wir|uns)\b/gi,
-      /\b(mein|meine|unser|unsere)\b/gi,
-    ]);
-  }
-  return t;
-}
-
 /* ========= WHAT IF – esempio (più sobrio) ========= */
 const WHATIF_HYBRID_EX_IT = `Qui la tua scelta sposta davvero il peso delle giornate. Tagli rumore, recuperi pezzi di tempo che avevi sparso in giro senza accorgertene e inizi a usare meglio le energie. Cambiano le abitudini che tieni e quelle che lasci, e ti ritrovi con una routine meno scenografica ma più vivibile. Ti accorgi di quali persone reggono la nuova versione di te e di quali restano solo sulle vecchie abitudini. Non è una rivoluzione da film: è manutenzione di vita, una manopola alla volta. E quando ti guardi indietro, il rimpianto fa meno rumore proprio nel punto in cui hai iniziato a scegliere in modo più onesto.`;
 
@@ -255,7 +206,7 @@ const ZINGARA_ENDINGS = {
     past: ["Y quizá hoy lo sentirías: no era destino, era otra forma de escribir tu historia."],
   },
   fr: {
-    future: ["Et là tu verras qu’il ne faut pas tout casser, juste choisir plus juste."],
+    future: ["Et là tu verras qu’il ne faut pas tout casser, juste choisir più juste."],
     past: ["Et tu comprendras que ce n’était pas le destin, juste un autre scénario possible."],
   },
   de: {
@@ -481,8 +432,7 @@ TASK:
 - Ask EXACTLY ONE clarifying question in ENGLISH.
 - The question must sound like a chaotic, dumb-funny bartender roasting the situation, not the person.
 - Always anchor the question to the user’s specific mess: mention in 2–3 words the choice or scenario they described (e.g. “when you stayed there”, “when you skipped that move”).
-- Add at least ONE silly or exaggerated image (e.g. plan wobbling like a drunk elevator, spreadsheet crying in the corner, landlord breathing down your neck).
-- NEVER mention Ikea, Ikea furniture or similar brands: invent fresh images every time.
+- Add at least ONE silly or exaggerated image (e.g. comparing their plan to a wobbly IKEA table).
 - You MAY pack 2–3 micro-points in the same sentence (time, money, limits), separated by commas.
 - Be short and sharp: 1 sentence, max 20–22 words.
 - No emojis, no lists, no explanations, just the question.`;
@@ -505,8 +455,7 @@ COMPITO:
 - Fai ESATTAMENTE UNA domanda di chiarimento in ${LANG_LABEL}.
 - La domanda deve essere ironica e demenziale: prendi in giro la SITUAZIONE come se stessi commentando un disastro organizzato da lui.
 - COLLEGALA SEMPRE alla scena che ha descritto: nomina in 2–3 parole la scelta o il casino (“quando sei rimasto lì”, “quando non ti sei mosso”, “quando hai tenuto quel lavoro”).
-- Inserisci almeno UNA immagine comica assurda (lavatrice che trema, ascensore indeciso, autobus che frena solo per giudicarti, Excel in lacrime).
-- NON nominare mai Ikea, mobili Ikea o brand simili: usa SEMPRE immagini diverse e fresche.
+- Inserisci almeno UNA immagine comica assurda (tipo confronto con tavolo Ikea traballante, armadio esploso, Excel in lacrime).
 - Puoi infilare 2–3 dettagli nella stessa frase (tempo, soldi, vincoli), separati da virgole, ma resta chiarissimo.
 - Prendi in giro la SITUAZIONE, non la persona.
 - Una sola frase, massimo 20–22 parole.
@@ -588,10 +537,9 @@ Vietato usare qualunque prima persona (“io, noi, me, ci, mi, nostro, nostra, m
 
 IMPORTANTISSIMO:
 - Evita di iniziare più di DUE frasi con la parola “tu”.
-- Ogni singola frase deve contenere almeno UNA immagine o battuta talmente demenziale da poter stare in un reel virale, meglio se sono due.
+- Ogni singola frase deve contenere almeno UNA battuta o immagine talmente demenziale da poter stare in un reel virale.
 - Devi prendere per il culo la SITUAZIONE dall’inizio alla fine, come se commentassi un incidente rallentato di buon senso.
 - Non diventare mai cattivo con la persona: sei feroce con il casino, affettuoso con chi lo vive.
-- NON nominare mai Ikea, tavoli Ikea o mobili Ikea: usa ogni volta oggetti e scene diverse (frigo, ascensore, autobus, divano, cassonetto, ecc.).
 
 ZERO TONO ZINGARA e ZERO SPIRITUALITÀ:
 - niente intuizioni mistiche, niente “energie”, niente “universo che manda segnali”, niente frasi motivazionali generiche.
@@ -646,10 +594,9 @@ REGOLA CHIAVE:
 
 Restano valide tutte le altre regole:
 - Evita di iniziare più di DUE frasi con “tu”.
-- Ogni frase contiene almeno UNA immagine demenziale forte o battuta da reel, meglio se doppia.
+- Ogni frase contiene almeno UNA immagine demenziale forte o battuta da reel.
 - Prendi per il culo la SITUAZIONE e la versione alternativa di te, ma resti affettuoso con chi legge.
 - Zero energia “zingara”, zero spiritualità, zero frasi motivazionali generiche.
-- NON nominare mai Ikea, mobili Ikea o brand simili: quella timeline alternativa usa altri oggetti (frigo, porte, bus, divani, ecc.).
 
 STRUTTURA OBBLIGATORIA (ITALIANO, PASSATO CONTROFATTUALE):
 1) Apertura:
@@ -683,10 +630,9 @@ You NEVER talk about the user in third person (“he, she, this guy, that person
 
 CRUCIAL:
 - Avoid starting more than TWO sentences with “you”.
-- Every single sentence must carry at least ONE ridiculous, over-the-top comic image or punchline, ideally two, reel-level dumb and funny.
+- Every single sentence must carry at least ONE ridiculous, over-the-top comic image or punchline, reel-level dumb and funny.
 - Roast the SITUATION from start to finish, as if you were commenting a slow-motion crash of common sense.
 - Never be cruel to the person: harsh with the chaos, soft with the human.
-- NEVER mention Ikea or Ikea furniture; always use different objects (fridge, bus, elevator, sofa, trash bin, etc.).
 
 STRICTLY NO MYSTICAL OR SPIRITUAL VIBES:
 - No energies, no universe sending signs, no spiritual lessons, no generic motivational fluff.
@@ -720,10 +666,9 @@ KEY:
 
 Keep all the usual rules:
 - No more than TWO sentences starting with “you”.
-- Every sentence must carry at least one loud, absurd, comic image or punchline, ideally two.
+- Every sentence must carry at least one loud, absurd, comic image or punchline.
 - Roast the situation and that alternate version of you, stay kind to the person holding the phone.
 - No mystical lessons, no spiritual nonsense, no generic “the universe wanted this”.
-- NEVER mention Ikea or Ikea furniture; use other objects and scenes instead.
 
 STRUCTURE (PAST COUNTERFACTUAL):
 - Opening: label that alternate-you with a ridiculous title (“world champion of almost-moving”, “CFO of missed chances”).
@@ -1188,7 +1133,6 @@ Schreibe jetzt EINEN Motivationssatz auf DEUTSCH.`;
 
   let m = completion?.choices?.[0]?.message?.content?.trim() || "";
   m = normalizeOneParagraph(m);
-  m = scrubFirstPerson(m, lang);
   m = sentenceCaseAll(m);
   m = finalPunct(m);
 
@@ -1246,7 +1190,6 @@ export default async function handler(req, res) {
 
       let clarQ = completion?.choices?.[0]?.message?.content?.trim() || "";
       clarQ = normalizeOneParagraph(clarQ);
-      clarQ = scrubFirstPerson(clarQ, L);
       clarQ = sentenceCaseAll(clarQ);
       clarQ = finalPunct(clarQ);
 
@@ -1322,9 +1265,6 @@ export default async function handler(req, res) {
       })();
     }
 
-    // Niente prima persona
-    answer = scrubFirstPerson(answer, lang);
-
     // Ripristina maiuscole frasi
     answer = sentenceCaseAll(answer);
 
@@ -1374,4 +1314,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-        }
+      }
