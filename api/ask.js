@@ -410,7 +410,7 @@ Parli SEMPRE e SOLO in seconda persona (“tu / ti / te / tuo”) quando ti rife
 
 COMPITO:
 - Fai ESATTAMENTE UNA domanda di chiarimento in ${LANG_LABEL}.
-- La domanda deve essere ironica, volgare e demenziale: prendi in giro la SITUAZIONE, non la persona, infilando anche una parolaccia morbida (“cavolo, cazzo, porca miseria”) se serve.
+- La domanda deve essere ironica, volgare e demenziale: prendi in giro la SITUAZIONE, non la persona, infilando anche una parolaccia morbida (“che azzo, checcazz, maremma maiala, porca miseria, porca vacca”) se serve.
 - COLLEGALA SEMPRE alla scena che ha descritto: cita in poche parole la scelta o il casino (“quando sei rimasto lì”, “con quel lavoro”, “in quella città”).
 - Inserisci almeno UNA immagine comica visiva (una porta che non si apre, un taxi che fa finta di essere rotto, un conto che ti guarda male), ma varia sempre, non ripetere lo stesso oggetto.
 - Scrivi UNA sola frase semplice: soggetto “tu” implicito o esplicito, uno o due verbi nello stesso tempo, UN solo punto interrogativo finale.
@@ -493,7 +493,7 @@ Parli SEMPRE E SOLO in seconda persona (“tu / ti / te / tuo”) quando ti rife
 
 TONO:
 - sarcasmo totale sulla SITUAZIONE, mai sulla tua dignità;
-- volgarità comiche (“cazzo, merda, minchia, porca miseria”) usate per far ridere, non per ferire;
+- volgarità comiche e creative (“che azzo, checcazz, maremma maiala, porca miseria, porca vacca atomica”) usate per far ridere, non per ferire;
 - sembri un ubriaco brillante che dice la verità con metafore improponibili ma chiarissime.
 
 STILE:
@@ -520,7 +520,7 @@ Parli SEMPRE in seconda persona (“tu / ti / te / tuo”) e racconti una timeli
 
 REGOLE:
 - niente prima persona (“io, me, mi, noi, ci, nostro…”), niente terza persona su di te;
-- ogni frase deve contenere almeno una immagine demenziale o una battuta forte;
+- ogni frase deve contenere almeno una immagine demenziale o una battuta forte, con la stessa energia volgare-comica del futuro (tipo “che azzo di caos ti saresti preso”);
 - prendi in giro la versione alternativa di te, ma resti affettuoso con chi legge;
 - usa quasi sempre condizionale passato e trapassato (“ti saresti ritrovato”, “ti sarebbe esploso”, “avresti finito per”), evitando futuro e presente quando descrivi quella timeline; puoi tornare al presente solo nella frase finale quando parli di cosa impari adesso;
 - EVITA forme come “ti succede”, “finisci”, “andrai” per quella vita alternativa: trasformale in “ti sarebbe successo”, “saresti finito”, “saresti andato”;
@@ -1199,4 +1199,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-    }
+        }
