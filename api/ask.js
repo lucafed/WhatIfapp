@@ -167,10 +167,10 @@ function stripFirstPerson(text = "", lang = "it") {
   return out;
 }
 
-/* ========= WHAT IF – esempio (più sobrio) ========= */
+/* ========= WHAT IF – esempio ========= */
 const WHATIF_HYBRID_EX_IT = `Qui la tua scelta sposta davvero il peso delle giornate. Tagli rumore, recuperi pezzi di tempo che avevi sparso in giro senza accorgertene e inizi a usare meglio le energie. Cambiano le abitudini che tieni e quelle che lasci, e ti ritrovi con una routine meno scenografica ma più vivibile. Ti accorgi di quali persone reggono la nuova versione di te e di quali restano solo sulle vecchie abitudini. Non è una rivoluzione da film: è manutenzione di vita, una manopola alla volta. E quando ti guardi indietro, il rimpianto fa meno rumore proprio nel punto in cui hai iniziato a scegliere in modo più onesto.`;
 
-/* ========= WHAT IF – REGOLE (future/past) ========= */
+/* ========= WHAT IF – REGOLE ========= */
 const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO PRATICO COMPATTO):
 - Tono: “zingara realista” ma concreta, come un consigliere di fiducia che ti vuole bene e non ti asseconda.
 - Devi dare una risposta chiarissima alla domanda: cosa succede se lo fai, cosa succede se NON lo fai, cosa succede se resti fermo.
@@ -200,6 +200,7 @@ const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE PRATICO C
 - Nessuna data inventata: resta sul tipo di esperienza (non su fatti storici specifici).
 - Alla fine riportalo dolcemente al presente: cosa impari da quell’ipotesi, cosa puoi ancora fare ora, quale scelta più onesta puoi fare oggi.
 - Linguaggio: italiano naturale, diretto, empatico ma fermo, da consigliere che ti aiuta a smettere di frullare nella testa.
+- Grammatica: frasi semplici soggetto-verbo-complemento, se una frase “suona storta” riscrivila in forma più corta e lineare.
 - 5–6 frasi, seconda persona, un solo paragrafo, frasi brevi (massimo ~20 parole), niente elenchi, niente emoji. Risposta chiara, poco fumo, molta sostanza.`;
 
 /* ========= Finali “gancio” WHAT IF ========= */
@@ -254,7 +255,7 @@ function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   return `${s}. ${addon}`;
 }
 
-/* ========= WTF — contesto leggero ========= */
+/* ========= WTF — contesto ========= */
 function detectWtfContext(domanda = "") {
   const t = String(domanda || "").toLowerCase();
 
@@ -270,7 +271,7 @@ function detectWtfContext(domanda = "") {
   return "generico";
 }
 
-/* Pool di IMPRECAZIONI teatrali — solo spunto interno */
+/* Pool di IMPRECAZIONI teatrali */
 const WTF_IMPRE_POOL = [
   "imprecazione turboguidata che sfiora il soffitto",
   "anatema blindato a tre stadi che sposta l’aria di un metro",
@@ -282,7 +283,7 @@ const WTF_IMPRE_POOL = [
   "supernova di imprecazioni compressa in un secondo netto",
 ];
 
-/* Reazioni degli oggetti — spunto interno */
+/* Reazioni degli oggetti */
 const WTF_REACT_BY_CONTEXT = {
   moto: [
     "il casco in esposizione ruota piano come se volesse vedere meglio il disastro",
@@ -321,7 +322,7 @@ const WTF_REACT_BY_CONTEXT = {
   ],
 };
 
-/* Bevute teatrali – solo spunto interno */
+/* Bevute teatrali */
 const WTF_DRINK_POOL = [
   "riempi un bicchiere fino al bordo e lo svuoti come se stessi spegnendo un incendio nel cervello",
   "versi da bere con troppa convinzione e lo butti giù a colpi nervosi che sembrano codice Morse",
@@ -509,6 +510,7 @@ COMPITO (FUTURO):
 - Devi rispondere DAVVERO alla domanda: fin dall’inizio si deve capire cosa succede se lo fai e cosa succede se non lo fai.
 - Mentre descrivi la scena, infila consigli storti ma utili, da filosofo alcolico (“se devi sbagliare, sbaglia con stile”, “fai casino ma almeno scegli tu il casino”).
 - L’utente deve sentirsi dentro la scena, come protagonista sfigato ma amatissimo: usa dettagli concreti (luoghi, oggetti, chat, soldi, orari) senza diventare tecnico.
+- Grammatica: frasi brevi e pulite, con verbi coniugati in modo semplice e corretto; se una frase ti suona strana, riscrivila più corta.
 
 CHIUSURA:
 - Le ultime DUE frasi devono essere una mini-morale cinica ma buona: spieghi in modo chiaro cosa rischi se resti fermo e cosa guadagni se ti muovi, con una battuta finale tenera e storta.
@@ -527,6 +529,7 @@ REGOLE:
 - prendi in giro la versione alternativa di te, ma resti affettuoso con chi legge;
 - usa quasi sempre condizionale passato e trapassato (“ti saresti ritrovato”, “ti sarebbe esploso”, “avresti finito per”), evitando futuro e presente quando descrivi quella timeline; puoi tornare al presente solo nella frase finale quando parli di cosa impari adesso;
 - non usare forme come “ti succede”, “finisci”, “andrai” per descrivere la timeline alternativa: trasformale sempre in “ti sarebbe successo”, “saresti finito”, “saresti andato”.
+- Grammatica: tieni le frasi semplici, soggetto-verbo-complemento; se una frase sembra sbilenca, riscrivila in modo più corto e diretto.
 
 COMPITO (PASSATO):
 - Racconti cosa SAREBBE successo davvero in quella timeline alternativa, come se stessi commentando una puntata di serie TV vista al bar.
@@ -557,6 +560,7 @@ TASK (FUTURE):
 - You must clearly answer the question: from the start it should be obvious what happens if they do it and if they don’t.
 - While describing the scene, inject crooked but useful advice, like a drunk sage (“if you’re going to mess up, at least pick the mess yourself”).
 - The user has to feel inside the scene as a slightly tragic but loved main character: use concrete details (places, money, chat, schedules) without being technical.
+- Grammar: prefer short, clean sentences; if one sentence feels messy, rewrite it in a simpler, clearer way.
 
 ENDING:
 - The last TWO sentences must state clearly what they risk by staying stuck and what they gain by moving, with a funny but warm punchline.
@@ -575,6 +579,7 @@ RULES:
 - you roast the alternate version of them, but you stay kind to the actual user;
 - keep the alternate timeline strictly in counterfactual past (“would have…”, “had … you would have …”), and switch back to the present only in the final takeaway sentence;
 - avoid present or future forms (“you go”, “you will end up”) when describing that alternate past; always rewrite as “you would have gone”, “you would have ended up”.
+- Grammar: use clear, simple clauses; if a sentence feels tangled, shorten it and keep the verb forms consistent.
 
 TASK (PAST):
 - Describe what WOULD HAVE unfolded in that alternate timeline, like you’re recapping a lost TV episode over drinks.
@@ -636,6 +641,11 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
 
     msgs.push(
       { role: "system", content: wtfRule },
+      {
+        role: "system",
+        content:
+          "Per TUTTO il testo mantieni esattamente la stessa VOCE, ritmo e tono del WHAT THE F sul futuro: cambia solo il tempo dei verbi quando parli della timeline alternativa, non il carattere del personaggio.",
+      },
       {
         role: "system",
         content: `ESEMPI DI TONO (non copiare mai letteralmente, sono solo spunti):\n- imprecazione teatrale: ${impreSample}\n- oggetti che reagiscono: ${react.join(
@@ -727,7 +737,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
     }
   }
 
-  // Prompt utente finale: NON include più il testo c, solo il riferimento generico
+  // Prompt utente finale
   const ask = (function () {
     if (L === "en") {
       if (hasClar) {
@@ -749,7 +759,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
         return `Domanda originale (non ripeterla): "${domanda}". Tieni conto anche del dettaglio aggiuntivo fornito in uno step precedente (non citarlo alla lettera). Genera UNA risposta in ITALIANO, molto concreta, che tenga conto di entrambi. Paragrafo unico. Se stile WHAT IF: 5–6 frasi corte, mostra più punti di vista e poi dai una presa di posizione chiara, da consigliere di fiducia. Se stile WHAT THE F: 5–7 frasi corte, monologo demenziale come un barista ubriaco affettuoso, ogni frase deve essere comica ma anche collegata alla scelta che sta facendo.`;
       }
       if (isPast) {
-        return `Domanda sul PASSATO (non ripeterla): "${domanda}". Genera UNA risposta CONTROFATTUALE in ITALIANO: racconta cosa sarebbe successo se quella scelta fosse andata davvero così, usando forme controfattuali (“se avessi…, ti saresti trovato…, avresti…”) e chiudi riportando l’attenzione su cosa puoi fare adesso. Il tono e la voce devono rimanere identici alla versione sul futuro. Paragrafo unico, tono naturale.`;
+        return `Domanda sul PASSATO (non ripeterla): "${domanda}". Genera UNA risposta CONTROFATTUALE in ITALIANO: racconta cosa sarebbe successo se quella scelta fosse andata davvero così, usando forme controfattuali (“se avessi…, ti saresti trovato…, avresti…”) e chiudi riportando l’attenzione su cosa puoi fare adesso. Il tono e la VOCE devono rimanere identici alla versione sul futuro. Paragrafo unico, tono naturale.`;
       }
       return `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO. Paragrafo unico, grammatica corretta, tono naturale. Se WHAT IF: aiuta davvero a decidere, mostrando più angoli e chiudendo con un consiglio secco. Se WHAT THE F: fai ridere forte a ogni frase ma rispondi comunque alla domanda.`;
     }
@@ -1117,7 +1127,7 @@ export default async function handler(req, res) {
 
       const completion = await client.chat.completions.create({
         model: MODEL,
-        temperature: stile === "wtf" ? 0.9 : 0.7,
+        temperature: stile === "wtf" ? 0.8 : 0.7,  // leggermente abbassato per WTF
         top_p: 0.9,
         max_tokens: 80,
         messages,
@@ -1144,11 +1154,11 @@ export default async function handler(req, res) {
 
     const completion = await client.chat.completions.create({
       model: MODEL,
-      temperature: stile === "wtf" ? 0.99 : 0.8,
-      top_p: stile === "wtf" ? 0.95 : 0.92,
+      temperature: stile === "wtf" ? 0.8 : 0.8,        // WTF meno caotico
+      top_p: stile === "wtf" ? 0.9 : 0.92,
       max_tokens: 260,
-      frequency_penalty: stile === "wtf" ? 0.25 : 0.1,
-      presence_penalty: stile === "wtf" ? 0.35 : 0.0,
+      frequency_penalty: stile === "wtf" ? 0.2 : 0.1,
+      presence_penalty: stile === "wtf" ? 0.25 : 0.0,
       messages,
     });
 
@@ -1243,4 +1253,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-    }
+        }
