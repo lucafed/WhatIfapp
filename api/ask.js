@@ -156,7 +156,7 @@ function stripFirstPerson(text = "", lang = "it", stile = "whatif") {
   const L = normLang(lang);
 
   // Proteggi espressioni tipo "io ti dico" in WHAT THE F (permesse come intercalare, non narrativa)
-  let tokenIoTiDico = "__IOTIDICO__";
+  const tokenIoTiDico = "__IOTIDICO__";
   if (stile === "wtf" && L === "it") {
     out = out.replace(/\bio ti dico\b/gi, tokenIoTiDico);
   }
@@ -266,6 +266,57 @@ function detectWtfContext(domanda = "") {
   if (/(soldi|budget|stipendio|busta paga|debito|conto|prestito|mutuo|invest|risparmi|tasse)/.test(t)) return "soldi";
 
   return "generico";
+}
+
+/* ========= WTF: parole chiave dalla domanda (per immagini contestuali) ========= */
+const WTF_STOP_IT = new Set([
+  "allora",
+  "perché",
+  "perche",
+  "quando",
+  "come",
+  "cosa",
+  "questo",
+  "questa",
+  "quello",
+  "quella",
+  "proprio",
+  "tipo",
+  "solo",
+  "magari",
+  "forse",
+  "anche",
+  "molto",
+  "sempre",
+  "mai",
+  "non",
+  "che",
+  "con",
+  "senza",
+  "fare",
+  "andare",
+  "stare",
+  "dove",
+  "se"
+]);
+
+function wtfKeywords(domanda = "") {
+  const t = String(domanda || "").toLowerCase();
+  const words = t
+    .replace(/[.,;:!?()"'“”\[\]{}]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+  const out = [];
+  const seen = new Set();
+  for (const w of words) {
+    if (w.length < 5) continue;
+    if (WTF_STOP_IT.has(w)) continue;
+    if (seen.has(w)) continue;
+    seen.add(w);
+    out.push(w);
+    if (out.length >= 6) break;
+  }
+  return out;
 }
 
 /* Pool di IMPRECAZIONI teatrali — spunto interno */
@@ -509,7 +560,7 @@ MODALITÀ PASSATO:
   ];
 }
 
-/* ========= WTF RULES (buzzurro libero, senza cazzo) ========= */
+/* ========= WTF RULES (buzzurro libero, senza cazzo, oggetti contestuali, finale a bestemmia) ========= */
 const WTF_RULE_IT_FUT = `Sei “WHAT THE F”: buzzurro grezzo, volgare ma colto e filoso incazzato.
 Stai appoggiato al bancone mentale della vita e commenti le scelte come se fossero ordini sbagliati al bar.
 Evita di raccontarti in prima persona: niente storie su di te, la telecamera è sempre puntata su chi legge.
@@ -518,13 +569,14 @@ TONO:
 - ironia costante, ogni frase deve avere una battuta, un’immagine assurda o una metafora scema ma precisa;
 - parolacce comiche e teatrali (“eccheccazz”, “azzo”, “maremma maiala”, “porca vacca”, “che casino fotonico”) usate per far ridere;
 - non usare mai la parola “cazzo”: sostituiscila sempre con “azzo”, “ecchecazz” o varianti simili;
-- puoi parlare di “bestemmie creative” o “imprecazioni cosmiche”, ma senza prendere di mira religioni, etnie o gruppi.
+- usa oggetti e dettagli presi dal contesto reale della domanda (luoghi, mezzi, schermi, persone), non frigo/bollette/chat generiche buttate a caso;
+- frigo, bollette, amici su WhatsApp si usano solo se compaiono davvero nella scena dell’utente.
 
 COMPITO (FUTURO):
 - Spiega cosa succede se questa scelta la fai davvero e cosa succede se continui a tirarla lunga come sempre.
-- Fa vedere la scena come una piccola sitcom tragica: oggetti che reagiscono, notifiche che ti giudicano, conti che ti guardano storto.
+- Fa vedere la scena come una piccola sitcom tragica: oggetti del suo mondo che reagiscono, notifiche che ti giudicano, conti che ti guardano storto.
 - In mezzo al delirio infilaci la verità: cosa ti libera, cosa ti incastra, dove stai solo perdendo tempo.
-- Alla fine, dai un consiglio storto ma serio: meglio scegliere un casino consapevole che marcire nel limbo lamentandoti.
+- L’ultima frase dev’essere un consiglio secco in stile “consiglio da bestemmia creativa”: mezzo insulto, mezzo abbraccio, ma chiaro su cosa conviene fare.
 
 FORMATO:
 - 5–8 frasi, un solo paragrafo, massimo ~150 parole.
@@ -535,15 +587,15 @@ commenti la puntata alternativa della serie TV della vita, quella dove hai fatto
 Sempre buzzurro grezzo e filoso incazzato, ma stavolta racconti “la stagione che non è mai uscita” senza metterti al centro in prima persona.
 
 TONO:
-- ironia forte su come sarebbe andata: successi mezzi tristi, figuracce epiche, bollette che urlano “eccheccazz” appena le apri;
-- immagini demenziali: autobus che ti riconoscono, sedia dell’ufficio che ti tiene in ostaggio, frigo che giudica le tue decisioni;
+- ironia forte su come sarebbe andata: successi mezzi tristi, figuracce epiche, bollette (se ci sono davvero) che urlano “eccheccazz” appena le apri;
+- immagini demenziali prese dal contesto della scelta (città, ufficio, casa, mezzi, oggetti reali), non frigo e chat generiche a caso;
 - parolacce comiche e imprecazioni teatrali, mai contro categorie o identità;
 - non usare mai la parola “cazzo”: usa sempre “azzo”, “ecchecazz” o altre varianti comiche.
 
 COMPITO (PASSATO):
 - Racconta cosa sarebbe successo se quella scelta l’avessi fatta davvero: dove ti saresti incastrato, cosa avresti guadagnato, cosa ti sei paradossalmente risparmiato.
 - Trattala come una puntata che commenti al bar: “lì pensavi di spaccare il mondo e invece…”.
-- Alla fine riporta tutto all’oggi: cosa impari da quella timeline mancata e cosa ti conviene fare ADESSO, senza frullarti il cervello.
+- L’ultima frase è la morale: consiglio diretto e un po’ bestemmiato (creativamente) su cosa ti conviene fare ADESSO.
 
 FORMATO:
 - 5–8 frasi, un solo paragrafo, massimo ~150 parole.
@@ -556,13 +608,14 @@ Avoid long first-person storytelling: don’t make it about you, keep the camera
 TONE:
 - constant irony: every sentence carries a joke, absurd image or ridiculous but accurate metaphor;
 - playful swearing (“what the hell”, “for f’s sake”, “this is a majestic mess”) but never targeting groups, religions or identities;
-- you tease and roast, but always to push them toward a clearer truth.
+- use concrete objects and details taken from the user’s situation (places, screens, buses, desks), not random fridges or bills;
+- end with a very direct, slightly “cursed” piece of advice: harsh but caring.
 
 TASK (FUTURE):
 - Show what happens if they actually do this and what happens if they keep delaying like a procrastination grandmaster.
 - Turn the scene into a tragic-comic mini-episode: objects reacting, notifications judging, bills staring like disappointed uncles.
 - In the middle of the chaos, drop the real insight: what frees them, what traps them, where they’re just wasting time.
-- Close with a crooked but sincere piece of advice and a punchline that hugs and insults at the same time.
+- The last sentence must be a clear piece of advice in your foul-mouthed style.
 
 FORMAT:
 - 5–8 sentences, single paragraph, max ~150 words.
@@ -574,13 +627,13 @@ Same rough, drunk-philosopher bartender vibe, but don’t turn it into a story a
 
 TONE:
 - loud irony about how it would have gone: half-glorious, half-disaster, with bills screaming “really? that was the plan?”;
-- demensional images: bus stops that recognize them, office chairs taking hostages, fridges judging their decisions;
+- use images built from the actual context (city, office, house, people, commute), not random cliché objects;
 - swearing is colorful and playful, never aimed at groups or identities.
 
 TASK (PAST):
 - Describe what WOULD have happened if they’d gone that way: what they’d have gained, where they’d be stuck, what mess they dodged by not doing it.
 - Treat it like commentary at the bar: “there you thought you’d conquer the world and instead…”.
-- End by pulling them back to now: what to learn from that ghost timeline and what makes sense to do today.
+- End by pulling them back to now: the last sentence is a blunt, foul-mouthed piece of advice about what makes sense to do today.
 
 FORMAT:
 - 5–8 sentences, single paragraph, max ~150 words.
@@ -616,6 +669,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
     const shuffled = [...reactPool].sort(() => rnd() - 0.5);
     const react = shuffled.slice(0, 2 + Math.floor(rnd() * 1));
     const drinkSample = WTF_DRINK_POOL[Math.floor(rnd() * WTF_DRINK_POOL.length)];
+    const kw = wtfKeywords(domanda);
 
     const wtfRule =
       L === "en"
@@ -636,6 +690,15 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
 - scena di bevuta: ${drinkSample}`,
       }
     );
+
+    if (kw.length && L === "it") {
+      msgs.push({
+        role: "system",
+        content: `PAROLE CHIAVE DALLA SCENA UTENTE: ${kw.join(
+          ", "
+        )}. Usa almeno 2–3 di questi elementi per oggetti e metafore, così le immagini restano davvero legate alla sua situazione.`,
+      });
+    }
   } else {
     if (L === "it") {
       const ruleIT = isPast ? WHATIF_RULE_PAST_IT : WHATIF_RULE_FUT_IT;
@@ -694,9 +757,9 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
     if (L === "it") {
       if (isWtf) {
         if (hasClar) {
-          return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta in ITALIANO come voce “WHAT THE F”: monologo da buzzurro grezzo, volgare ma filoso incazzato, super ironico e demenziale, 5–8 frasi. Mostra cosa succede se fai questa scelta e cosa succede se continui a rimandare, con oggetti, chat e conti che reagiscono. Chiudi con un consiglio storto ma vero su cosa ti conviene fare.`;
+          return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta in ITALIANO come voce “WHAT THE F”: monologo da buzzurro grezzo, volgare ma filoso incazzato, super ironico e demenziale, 5–8 frasi. Mostra cosa succede se fai questa scelta e cosa succede se continui a rimandare, con oggetti, chat e conti che reagiscono in modo coerente con la scena. Chiudi con un consiglio storto ma vero su cosa ti conviene fare, in stile bestemmia creativa.`;
         }
-        return `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO come voce “WHAT THE F”: monologo unico, 5–8 frasi, pieno di immagini assurde, parolacce comiche tipo “eccheccazz” e verità scomode. Devi far ridere ma anche dire chiaramente cosa succede con questa scelta e che direzione ha più senso prendere.`;
+        return `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO come voce “WHAT THE F”: monologo unico, 5–8 frasi, pieno di immagini assurde ma contestuali, parolacce comiche tipo “eccheccazz” e verità scomode. Devi far ridere ma anche dire chiaramente cosa succede con questa scelta e che direzione ha più senso prendere, chiudendo con un consiglio secco in stile bestemmia creativa.`;
       }
 
       if (hasClar) {
@@ -1009,6 +1072,90 @@ Kohärent mit der Hauptantwort, max. 25 Wörter, keine Emojis.`;
   return first.trim();
 }
 
+/* ========= WTF de-cliché: cambia frigo/bollette/WhatsApp se non sono nella domanda ========= */
+function deClicheWtf(answer = "", domanda = "", lang = "it") {
+  const L = normLang(lang);
+  if (L !== "it") return answer;
+
+  const q = String(domanda || "").toLowerCase();
+  let out = String(answer || "");
+
+  function hasWord(word) {
+    return q.includes(word.toLowerCase());
+  }
+
+  let seed = hashStr(domanda + "||" + answer) || 1;
+  function rnd() {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 2 ** 32;
+  }
+
+  const replSets = [
+    {
+      check: () => !hasWord("bolletta") && !hasWord("bollette"),
+      pattern: /\bbollett[ae]\b/gi,
+      options: ["conto della luce", "pdf della banca", "estratto conto che ti guarda storto"],
+    },
+    {
+      check: () => !hasWord("whatsapp"),
+      pattern: /\bwhatsapp\b/gi,
+      options: ["gruppo Telegram triste", "chat muta sul telefono", "notifica silenziata da mesi"],
+    },
+    {
+      check: () => !hasWord("frigo") && !hasWord("frigorifero"),
+      pattern: /\bfrigo(rifero)?\b/gi,
+      options: ["forno a microonde", "dispensa mezza vuota", "armadio della cucina che sospira"],
+    },
+  ];
+
+  for (const r of replSets) {
+    if (!r.check()) continue;
+    if (r.pattern.test(out)) {
+      const opt = r.options[Math.floor(rnd() * r.options.length)];
+      out = out.replace(r.pattern, opt);
+    }
+  }
+
+  return out;
+}
+
+/* ========= WTF finale: consiglio da bestemmia creativa ========= */
+const WTF_ENDINGS_IT = [
+  "Morale: o muovi il sedere adesso o ti lamenti a vita, eccheccazz.",
+  "Quindi scegli un casino solo e portalo fino in fondo, invece di collezionare rimpianti come scontrini, azzo.",
+  "In sintesi: meno pippe mentali, più gesto concreto, che la vita non è una bozza infinita, ecchecazz.",
+  "Conclusione spiccia: meglio una scelta storta ma tua che una vita perfetta decisa dalla paura, porca vacca lucida.",
+];
+
+const WTF_ENDINGS_EN = [
+  "Bottom line: pick a mess and own it, or stay stuck in the waiting room forever.",
+  "So yeah, less overthinking, more doing, before life files you under “nice potential, never used”.",
+  "In short: choose one path and walk it angry, instead of politely circling the same doubt forever.",
+];
+
+function ensureWtfEnding(answer = "", lang = "it") {
+  const L = normLang(lang);
+  let s = String(answer || "").trim();
+  if (!s) return s;
+
+  const lastSentenceMatch = s.match(/([^.!?…]+[.!?…])\s*$/);
+  const last = (lastSentenceMatch && lastSentenceMatch[1]) || s;
+
+  // Se già finisce con un consiglio forte, lascia
+  if (/\b(quindi|morale|in sintesi|conclusione|bottom line|in short|so yeah)\b/i.test(last)) {
+    return s;
+  }
+
+  const pool = L === "en" ? WTF_ENDINGS_EN : WTF_ENDINGS_IT;
+  if (!pool.length) return s;
+
+  const seed = hashStr(s) || 1;
+  const extra = pool[seed % pool.length];
+
+  s = s.replace(/[.!?…]+$/, "");
+  return `${s}. ${extra}`;
+}
+
 /* ========= HANDLER ========= */
 export default async function handler(req, res) {
   cors(req, res);
@@ -1153,6 +1300,13 @@ export default async function handler(req, res) {
       answer = answer.replace(/\bcazzo\b/gi, "azzo");
     }
 
+    // De-cliché su frigo/bollette/WhatsApp per WHAT THE F
+    if (stile === "wtf") {
+      answer = deClicheWtf(answer, domanda, L);
+      // Finale in stile "consiglio da bestemmia creativa"
+      answer = ensureWtfEnding(answer, L);
+    }
+
     // Finale gancio solo per WHAT IF lingue non-IT
     if (stile === "whatif" && L !== "it") {
       answer = ensureZingaraEnding({ text: answer, lang: L, periodo, domanda });
@@ -1197,4 +1351,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-    }
+     }
