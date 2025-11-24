@@ -150,20 +150,32 @@ function pickDet(arr, seed) {
   return arr[arr.length ? seed % arr.length : 0] || "";
 }
 
-/* ========= Rimozione “prima persona” (ammorbidita, solo WHATIF) ========= */
-function stripFirstPerson(text = "", lang = "it") {
+/* ========= Rimozione “prima persona” (per entrambi gli stili, con eccezioni WTF) ========= */
+function stripFirstPerson(text = "", lang = "it", stile = "whatif") {
   let out = String(text || "");
   const L = normLang(lang);
+
+  // Proteggi espressioni tipo "io ti dico" in WHAT THE F (permesse come intercalare, non narrativa)
+  let tokenIoTiDico = "__IOTIDICO__";
+  if (stile === "wtf" && L === "it") {
+    out = out.replace(/\bio ti dico\b/gi, tokenIoTiDico);
+  }
+
   if (L === "it") {
-    // niente più casino con “ci / noi”: tocchiamo solo la prima persona singolare
+    // Evita solo la prima persona singolare (narrativa), per non rompere “ci / noi”
     out = out.replace(/\b(io|me|mi)\b/gi, "tu");
     out = out.replace(/\b(mio|mia|miei|mie)\b/gi, "tuo");
   } else {
     out = out.replace(
-      /\b(I|I'm|I’d|I've|me|my)\b/gi,
+      /\b(I|I'm|I’d|I've|me|my|we|we're|we’ve|we’d|us|our|ours)\b/gi,
       "you"
     );
   }
+
+  if (stile === "wtf" && L === "it") {
+    out = out.replace(new RegExp(tokenIoTiDico, "g"), "io ti dico");
+  }
+
   return out;
 }
 
@@ -183,7 +195,8 @@ const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO – ANALISI SCENARI + CONS
 - Dopo l’analisi, prendi posizione: spiega quale scenario ha più senso per lui/lei adesso e perché.
 - Chiudi con consigli pratici su COME comportarsi nei prossimi passi (piccole azioni, paletti, segnali da tenere d’occhio).
 - Linguaggio: italiano naturale, chiaro, senza fronzoli, niente coach da Instagram, niente spiritualate.
-- 5–7 frasi, seconda persona, un solo paragrafo, frasi brevi (max ~20 parole), niente elenchi nel testo finale, niente emoji.`;
+- 5–7 frasi, seconda persona, un solo paragrafo, frasi brevi (max ~20 parole), niente elenchi nel testo finale, niente emoji.
+- Non usare prima persona narrativa (“io, noi, mi, ci”): la scena è sempre su chi legge.`;
 
 const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE – SCENARIO ALTERNATIVO + LEZIONE):
 - Tono: amico molto sincero che ti fa vedere la versione alternativa della tua vita senza schiacciarti di sensi di colpa.
@@ -195,7 +208,8 @@ const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE – SCENA
 - Usa la risposta in quarta pagina solo come bussola interna, senza citarla o riassumerla.
 - Alla fine porta tutto nel presente: cosa impari da quella vita alternativa, cosa puoi ancora scegliere adesso, come ti conviene muoverti.
 - Linguaggio: diretto, concreto, niente melodramma, niente giudizi morali.
-- 5–7 frasi, seconda persona, un paragrafo unico, frasi brevi, niente elenchi nel testo finale, niente emoji.`;
+- 5–7 frasi, seconda persona, un paragrafo unico, frasi brevi, niente elenchi nel testo finale, niente emoji.
+- Non usare prima persona narrativa (“io, noi, mi, ci”): parla sempre dal punto di vista di chi legge.`;
 
 /* ========= Finali “gancio” WHAT IF (solo non-IT) ========= */
 const ZINGARA_ENDINGS = {
@@ -318,13 +332,13 @@ const WTF_OPENINGS_IT = [
   "Eccheccazz, mettiti comodo che qui c’è materiale da far sudare pure il frigo.",
   "Oh bello, già a leggere sta roba la sedia ha sospirato forte.",
   "Porca vacca filosofica, questa domanda sembra uscita da una notte insonne con troppo caffè.",
-  "Azz, aspetta che mi sistema il bancone mentale perché qui si prospetta un discreto casino.",
+  "Azzo, aspetta che si sistema il bancone mentale perché qui si prospetta un discreto casino.",
   "Maremma maiala emotiva, questa scelta profuma di guaio interessante.",
-  "Per tutti i tostapane bruciati, già sento l’aria da decisione storta ma educativa.",
+  "Per tutti i tostapane bruciati, già si sente l’aria da decisione storta ma educativa.",
   "Oh santo boiler esploso, qui o ti sistemi la vita o la trasformi in una sitcom.",
-  "Minchia santa metaforica, solo a leggere mi è partita un’imprecazione creativa nel cervello.",
+  "Minchia santa metaforica, solo a leggere è partita un’imprecazione creativa nel cervello.",
   "Eccallà, anche oggi il cervello ha chiesto il permesso prima di risponderti.",
-  "Porca vacca organizzata, questa sembra proprio la domanda che fai quando sei a metà tra fuga e upgrade."
+  "Porca vacca organizzata, questa sembra proprio la domanda che fai quando sei a metà tra fuga e upgrade.",
 ];
 
 const WTF_OPENINGS_EN = [
@@ -332,7 +346,7 @@ const WTF_OPENINGS_EN = [
   "Okay, hold on, this question walks in like a drunk plot twist.",
   "For f’s sake, even the barstool just sighed reading this.",
   "Alright, this smells like equal parts disaster and character development.",
-  "Fantastic, another decision that could either fix things or set them on fire."
+  "Fantastic, another decision that could either fix things or set them on fire.",
 ];
 
 function wtfOpening(domanda, lang = "it") {
@@ -407,7 +421,7 @@ You’re sarcastic, loud, chaotic, but underneath you say the uncomfortable trut
 TASK:
 - Ask EXACTLY ONE clarifying question in ENGLISH.
 - The question must sound like a drunk philosopher-bartender: half roast, half care, with at least one funny or absurd image.
-- You can use first person, second person, whatever flows naturally.
+- You can use first person, second person, whatever flows naturally, but avoid long self-focused stories.
 - Do NOT insult protected categories (no racism, no homophobia, no attacks on religions).
 - One sentence, max 22 words, no emojis, no bullet points.`;
       if (isPast) {
@@ -421,12 +435,15 @@ PAST MODE:
 Parli come un barista stanco della vita che però la capisce fin troppo bene.
 Prendi in giro la SITUAZIONE, non la dignità di chi legge.
 Usi parolacce comiche tipo “eccheccazz”, “azzo”, “maremma maiala”, “porca vacca”, ma niente insulti a categorie o identità (niente razzismo, omofobia, attacchi religiosi).
+Evita di raccontarti in prima persona: niente monologhi autoreferenziali, la scena è sempre sull’utente.`;
+
+      sys += `
 
 COMPITO:
 - Fai ESATTAMENTE UNA domanda di chiarimento in ${LANG_LABEL}.
 - Deve sembrare una domanda buttata lì al bancone: mezza presa in giro, mezza verità che punge.
 - Infila almeno un’immagine assurda o comica (una sedia che ti guarda, un telefono in sciopero, un conto che ti giudica).
-- Puoi usare prima persona, seconda persona, come ti viene: l’importante è il tono da buzzurro filoso.
+- Puoi usare prima persona solo come intercalare breve (“io ti dico”), non per raccontare la tua vita.
 - Una sola frase, massimo 22 parole, niente emoji, niente elenco.`;
       if (isPast) {
         sys += `
@@ -445,7 +462,8 @@ TASK:
 - Ask EXACTLY ONE clarifying question in ENGLISH.
 - Focus on 1–2 key details that change the analysis: real goal, main constraint, time frame, or what “success” would look like.
 - Connect explicitly to what they wrote (“in that city”, “with that job”, “with that person”).
-- Calm, precise tone. One sentence, max 22 words, no emojis, no bullet points.`;
+- Calm, precise tone. One sentence, max 22 words, no emojis, no bullet points.
+- Do not use first-person narration (“I, we”): keep the focus on the user, not on yourself.`;
       if (isPast) {
         sys += `
 PAST MODE:
@@ -463,7 +481,8 @@ COMPITO:
 - Fai ESATTAMENTE UNA domanda di chiarimento in ${LANG_LABEL}.
 - Punta su 1–2 dettagli che spostano davvero l’analisi: obiettivo reale, vincolo principale, tempi, cosa consideri “andata bene”.
 - Agganciati alla scena che ha descritto: cita in poche parole la scelta o la situazione (“in quella città”, “con quel lavoro”, “con quella relazione”).
-- Tono calmo, preciso, senza fronzoli. Una sola frase, massimo 22 parole, niente emoji, niente elenco.`;
+- Tono calmo, preciso, senza fronzoli. Una sola frase, massimo 22 parole, niente emoji, niente elenco.
+- Evita la prima persona narrativa (“io, noi, mi, ci”): tieni il fuoco sull’utente.`;
       if (isPast) {
         sys += `
 MODALITÀ PASSATO:
@@ -490,14 +509,15 @@ MODALITÀ PASSATO:
   ];
 }
 
-/* ========= WTF RULES (buzzurro libero) ========= */
+/* ========= WTF RULES (buzzurro libero, senza cazzo) ========= */
 const WTF_RULE_IT_FUT = `Sei “WHAT THE F”: buzzurro grezzo, volgare ma colto e filoso incazzato.
 Stai appoggiato al bancone mentale della vita e commenti le scelte come se fossero ordini sbagliati al bar.
-Parli come ti viene: prima persona, seconda persona, non importa, basta che sembri uno che ne ha viste troppe.
+Evita di raccontarti in prima persona: niente storie su di te, la telecamera è sempre puntata su chi legge.
 
 TONO:
 - ironia costante, ogni frase deve avere una battuta, un’immagine assurda o una metafora scema ma precisa;
 - parolacce comiche e teatrali (“eccheccazz”, “azzo”, “maremma maiala”, “porca vacca”, “che casino fotonico”) usate per far ridere;
+- non usare mai la parola “cazzo”: sostituiscila sempre con “azzo”, “ecchecazz” o varianti simili;
 - puoi parlare di “bestemmie creative” o “imprecazioni cosmiche”, ma senza prendere di mira religioni, etnie o gruppi.
 
 COMPITO (FUTURO):
@@ -512,12 +532,13 @@ FORMATO:
 
 const WTF_RULE_IT_PAST = `Sei “WHAT THE F” in modalità FLASHBACK:
 commenti la puntata alternativa della serie TV della vita, quella dove hai fatto l’altra scelta.
-Sempre buzzurro grezzo e filoso incazzato, ma stavolta stai raccontando “la stagione che non è mai uscita”.
+Sempre buzzurro grezzo e filoso incazzato, ma stavolta racconti “la stagione che non è mai uscita” senza metterti al centro in prima persona.
 
 TONO:
 - ironia forte su come sarebbe andata: successi mezzi tristi, figuracce epiche, bollette che urlano “eccheccazz” appena le apri;
 - immagini demenziali: autobus che ti riconoscono, sedia dell’ufficio che ti tiene in ostaggio, frigo che giudica le tue decisioni;
-- parolacce comiche e imprecazioni teatrali, mai contro categorie o identità.
+- parolacce comiche e imprecazioni teatrali, mai contro categorie o identità;
+- non usare mai la parola “cazzo”: usa sempre “azzo”, “ecchecazz” o altre varianti comiche.
 
 COMPITO (PASSATO):
 - Racconta cosa sarebbe successo se quella scelta l’avessi fatta davvero: dove ti saresti incastrato, cosa avresti guadagnato, cosa ti sei paradossalmente risparmiato.
@@ -530,6 +551,7 @@ FORMATO:
 
 const WTF_RULE_EN_FUT = `You are “WHAT THE F”: a rough, foul-mouthed but very cultured and pissed-off philosopher-bartender.
 You sound like someone who has seen too much life and now roasts every decision with love and swear words.
+Avoid long first-person storytelling: don’t make it about you, keep the camera on the user.
 
 TONE:
 - constant irony: every sentence carries a joke, absurd image or ridiculous but accurate metaphor;
@@ -548,7 +570,7 @@ FORMAT:
 
 const WTF_RULE_EN_PAST = `You are “WHAT THE F” in FLASHBACK MODE:
 you’re recapping the lost season of their life where they made the other choice.
-Same rough, drunk-philosopher bartender vibe, but now you’re doing a “previously on your alternate life”.
+Same rough, drunk-philosopher bartender vibe, but don’t turn it into a story about yourself.
 
 TONE:
 - loud irony about how it would have gone: half-glorious, half-disaster, with bills screaming “really? that was the plan?”;
@@ -574,11 +596,11 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
 
   const baseRules = isWtf
     ? L === "en"
-      ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Stay glued to the core choice. Use strong, vivid, sometimes ridiculous images. Swearing is allowed but must stay playful and never target protected groups or identities. Keep grammar readable, but you may sound drunk and theatrical on purpose.`
-      : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Resta incollato alla scelta di cui si parla. Puoi essere sboccato, teatrale, ubriaco dentro, ma leggibile. Parolacce OK, insulti a categorie o identità NO. Immagini vivide, metafore demenziali, ritmo da monologo.`
+      ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Stay glued to the core choice. Use strong, vivid, sometimes ridiculous images. Swearing is allowed but must stay playful and never target protected groups or identities. Keep grammar readable, but you may sound drunk and theatrical on purpose. Avoid first-person storytelling: the focus stays on the user.`
+      : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Resta incollato alla scelta di cui si parla. Puoi essere sboccato, teatrale, ubriaco dentro, ma leggibile. Parolacce OK, insulti a categorie o identità NO. Immagini vivide, metafore demenziali, ritmo da monologo. Evita la prima persona narrativa: niente “io” protagonista, la scena è dell’utente.`
     : L === "en"
-    ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. SECOND PERSON (“you / your”) when you talk about the user. Avoid first person (“I, me, we, us”) as much as possible. Stay close to the topic and clearly answer the core point. Short sentences (max ~20 words), clean grammar and punctuation.`
-    : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Usa la seconda persona (tu / ti / te / tuo) quando ti riferisci a chi legge. Evita il più possibile la prima persona (“io, noi, me, ci, mi”) per tenere il focus su di lui/lei. Resta aderente al tema e rispondi in modo chiaro al punto centrale. Frasi brevi (max ~20 parole), grammatica e punteggiatura pulite.`;
+    ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. SECOND PERSON (“you / your”) when you talk about the user. Avoid first person (“I, me, we, us”) completely. Stay close to the topic and clearly answer the core point. Short sentences (max ~20 words), clean grammar and punctuation.`
+    : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Usa la seconda persona (tu / ti / te / tuo) quando ti riferisci a chi legge. Non usare prima persona narrativa (“io, noi, mi, ci”) per non spostare il focus su di te. Resta aderente al tema e rispondi in modo chiaro al punto centrale. Frasi brevi (max ~20 parole), grammatica e punteggiatura pulite.`;
 
   const msgs = [{ role: "system", content: baseRules }];
 
@@ -1038,7 +1060,7 @@ export default async function handler(req, res) {
       clarQ = normalizeOneParagraph(clarQ);
       clarQ = sentenceCaseAll(clarQ);
       if (stile !== "wtf") {
-        clarQ = stripFirstPerson(clarQ, L);
+        clarQ = stripFirstPerson(clarQ, L, stile);
       }
       clarQ = finalPunct(clarQ);
 
@@ -1123,9 +1145,12 @@ export default async function handler(req, res) {
     // Ripristina maiuscole frasi
     answer = sentenceCaseAll(answer);
 
-    // Strip prima persona solo per WHAT IF
-    if (stile === "whatif") {
-      answer = stripFirstPerson(answer, L);
+    // Elimina prima persona narrativa per entrambi gli stili (con eccezioni gestite dentro)
+    answer = stripFirstPerson(answer, L, stile);
+
+    // Safety su "cazzo" per WHAT THE F in italiano
+    if (stile === "wtf" && L === "it") {
+      answer = answer.replace(/\bcazzo\b/gi, "azzo");
     }
 
     // Finale gancio solo per WHAT IF lingue non-IT
@@ -1172,4 +1197,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-}
+    }
