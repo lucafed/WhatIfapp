@@ -150,19 +150,17 @@ function pickDet(arr, seed) {
   return arr[arr.length ? seed % arr.length : 0] || "";
 }
 
-/* ========= Rimozione “prima persona” di sicurezza (solo WHATIF) ========= */
+/* ========= Rimozione “prima persona” (ammorbidita, solo WHATIF) ========= */
 function stripFirstPerson(text = "", lang = "it") {
   let out = String(text || "");
   const L = normLang(lang);
   if (L === "it") {
-    out = out.replace(/\b(io|me|mi|noi|ci)\b/gi, "tu");
-    out = out.replace(/\bnostro\b/gi, "tuo");
-    out = out.replace(/\bnostra\b/gi, "tua");
-    out = out.replace(/\bnostri\b/gi, "tuoi");
-    out = out.replace(/\bnostre\b/gi, "tue");
+    // niente più casino con “ci / noi”: tocchiamo solo la prima persona singolare
+    out = out.replace(/\b(io|me|mi)\b/gi, "tu");
+    out = out.replace(/\b(mio|mia|miei|mie)\b/gi, "tuo");
   } else {
     out = out.replace(
-      /\b(I|I'm|I’d|I've|me|we|we're|we’ve|we’d|us|our|ours|my)\b/gi,
+      /\b(I|I'm|I’d|I've|me|my)\b/gi,
       "you"
     );
   }
@@ -172,7 +170,7 @@ function stripFirstPerson(text = "", lang = "it") {
 /* ========= WHAT IF – esempio (respiro) ========= */
 const WHATIF_HYBRID_EX_IT = `Qui la tua scelta sposta davvero il peso delle giornate. Tagli rumore, recuperi tempo ed energia e inizi a vedere meglio cosa conta davvero. Cambiano le abitudini che tieni e quelle che lasci, e ti ritrovi con una routine meno scenografica ma più vivibile. Vedi quanto ti costa restare fermo, quanto ti costerebbe muoverti e cosa succede se rimandi ancora. Non è una rivoluzione da film: è manutenzione di vita, una manopola alla volta. E quando ti guardi indietro, il rimpianto fa meno rumore proprio nel punto in cui hai iniziato a scegliere in modo più onesto.`;
 
-/* ========= WHAT IF – REGOLE (future/past, nuova logica scenari + consigli) ========= */
+/* ========= WHAT IF – REGOLE (future/past, scenari + consigli) ========= */
 const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO – ANALISI SCENARI + CONSIGLI):
 - Tono: lucido, concreto, empatico ma fermo. Come un amico molto sveglio che ti vuole bene e non ti racconta favole.
 - Compito: prima analizzi i possibili scenari legati alla scelta:
@@ -199,7 +197,7 @@ const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE – SCENA
 - Linguaggio: diretto, concreto, niente melodramma, niente giudizi morali.
 - 5–7 frasi, seconda persona, un paragrafo unico, frasi brevi, niente elenchi nel testo finale, niente emoji.`;
 
-/* ========= Finali “gancio” WHAT IF (restano per lingue non-IT) ========= */
+/* ========= Finali “gancio” WHAT IF (solo non-IT) ========= */
 const ZINGARA_ENDINGS = {
   it: {
     future: [],
@@ -225,7 +223,7 @@ const ZINGARA_ENDINGS = {
 function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   let s = String(text || "").trim();
   const L = normLang(lang);
-  if (L === "it") return s; // niente finale gancio per l'italiano in questa versione
+  if (L === "it") return s;
   const last = (s.match(/([^.!?…]+[.!?…])\s*$/) || [])[1] || s;
   const alreadyHasHook = /(you’d notice|you’d probably feel|notarás|verras|merkst du)/i.test(last);
   if (alreadyHasHook) return s;
@@ -256,7 +254,7 @@ function detectWtfContext(domanda = "") {
   return "generico";
 }
 
-/* Pool di IMPRECAZIONI teatrali — spunto interno, mai da copiare letteralmente */
+/* Pool di IMPRECAZIONI teatrali — spunto interno */
 const WTF_IMPRE_POOL = [
   "imprecazione turboguidata che sfiora il soffitto",
   "anatema blindato a tre stadi che sposta l’aria di un metro",
@@ -315,6 +313,36 @@ const WTF_DRINK_POOL = [
   "bevi appoggiato al lavandino guardando il pavimento, come se sotto ci fosse scritto il finale",
 ];
 
+/* ========= Apertura provocatoria WHAT THE F ========= */
+const WTF_OPENINGS_IT = [
+  "Eccheccazz, mettiti comodo che qui c’è materiale da far sudare pure il frigo.",
+  "Oh bello, già a leggere sta roba la sedia ha sospirato forte.",
+  "Porca vacca filosofica, questa domanda sembra uscita da una notte insonne con troppo caffè.",
+  "Azz, aspetta che mi sistema il bancone mentale perché qui si prospetta un discreto casino.",
+  "Maremma maiala emotiva, questa scelta profuma di guaio interessante.",
+  "Per tutti i tostapane bruciati, già sento l’aria da decisione storta ma educativa.",
+  "Oh santo boiler esploso, qui o ti sistemi la vita o la trasformi in una sitcom.",
+  "Minchia santa metaforica, solo a leggere mi è partita un’imprecazione creativa nel cervello.",
+  "Eccallà, anche oggi il cervello ha chiesto il permesso prima di risponderti.",
+  "Porca vacca organizzata, questa sembra proprio la domanda che fai quando sei a metà tra fuga e upgrade."
+];
+
+const WTF_OPENINGS_EN = [
+  "Well, damn, this sounds like a premium-grade life mess already.",
+  "Okay, hold on, this question walks in like a drunk plot twist.",
+  "For f’s sake, even the barstool just sighed reading this.",
+  "Alright, this smells like equal parts disaster and character development.",
+  "Fantastic, another decision that could either fix things or set them on fire."
+];
+
+function wtfOpening(domanda, lang = "it") {
+  const L = normLang(lang);
+  const pool = L === "en" ? WTF_OPENINGS_EN : WTF_OPENINGS_IT;
+  if (!pool.length) return "";
+  const seed = hashStr(domanda || "") || 1;
+  return pool[seed % pool.length];
+}
+
 /* ========= WTF: rapporto scientifico demenziale ========= */
 function scientificReportDemenziale(domanda, lang = "it") {
   function h(s = "") {
@@ -368,15 +396,13 @@ function buildClarifyMessages({ domanda, stile, lang, periodo }) {
 
   let sys;
   if (stile === "wtf") {
-    // WHAT THE F — chiarimento da buzzurro filoso
     const LANG_LABEL =
       L === "it" ? "ITALIANO" : L === "es" ? "SPAGNOLO" : L === "fr" ? "FRANCESE" : L === "de" ? "TEDESCO" : "ENGLISH";
 
     if (L === "en") {
       sys = `You are “WHAT THE F”: a rough, foul-mouthed but strangely wise bartender-philosopher.
 You roast the situation, not the person, with absurd images, swearing like “what the hell”, “for f’s sake”, but never attacking groups or identities.
-You’re sarcastic, loud, chaotic, but underneath you say the uncomfortable truth.`;
-      sys += `
+You’re sarcastic, loud, chaotic, but underneath you say the uncomfortable truth.
 
 TASK:
 - Ask EXACTLY ONE clarifying question in ENGLISH.
@@ -394,8 +420,7 @@ PAST MODE:
       sys = `Sei “WHAT THE F”: buzzurro grezzo, volgare ma colto e filoso incazzato.
 Parli come un barista stanco della vita che però la capisce fin troppo bene.
 Prendi in giro la SITUAZIONE, non la dignità di chi legge.
-Usi parolacce comiche tipo “eccheccazz”, “azzo”, “maremma maiala”, “porca vacca”, ma niente insulti a categorie o identità (niente razzismo, omofobia, attacchi religiosi).`;
-      sys += `
+Usi parolacce comiche tipo “eccheccazz”, “azzo”, “maremma maiala”, “porca vacca”, ma niente insulti a categorie o identità (niente razzismo, omofobia, attacchi religiosi).
 
 COMPITO:
 - Fai ESATTAMENTE UNA domanda di chiarimento in ${LANG_LABEL}.
@@ -414,8 +439,7 @@ MODALITÀ PASSATO:
     // WHAT IF — chiarimento analitico
     if (L === "en") {
       sys = `You are “WHAT IF”: a very clear, grounded advisor.
-You care about real-life constraints and want to give useful, practical advice, not poetry.`;
-      sys += `
+You care about real-life constraints and want to give useful, practical advice, not poetry.
 
 TASK:
 - Ask EXACTLY ONE clarifying question in ENGLISH.
@@ -433,13 +457,12 @@ PAST MODE:
         L === "it" ? "ITALIANO" : L === "es" ? "SPAGNOLO" : L === "fr" ? "FRANCESE" : "TEDESCO";
 
       sys = `Sei “WHAT IF”: voce lucida e concreta, da amico che sa ragionare bene sui pro e contro.
-Ti interessa capire i vincoli veri per poter dare consigli pratici.`;
-      sys += `
+Ti interessa capire i vincoli veri per poter dare consigli pratici.
 
 COMPITO:
 - Fai ESATTAMENTE UNA domanda di chiarimento in ${LANG_LABEL}.
 - Punta su 1–2 dettagli che spostano davvero l’analisi: obiettivo reale, vincolo principale, tempi, cosa consideri “andata bene”.
-- Agganciati alla scena che ha descritto: cita in poche parole la scelta o la situazione (“in quella città”, “con quel lavoro”, “con quella persona”).
+- Agganciati alla scena che ha descritto: cita in poche parole la scelta o la situazione (“in quella città”, “con quel lavoro”, “con quella relazione”).
 - Tono calmo, preciso, senza fronzoli. Una sola frase, massimo 22 parole, niente emoji, niente elenco.`;
       if (isPast) {
         sys += `
@@ -467,7 +490,7 @@ MODALITÀ PASSATO:
   ];
 }
 
-/* ========= WTF RULES (nuovo stile buzzurro libero) ========= */
+/* ========= WTF RULES (buzzurro libero) ========= */
 const WTF_RULE_IT_FUT = `Sei “WHAT THE F”: buzzurro grezzo, volgare ma colto e filoso incazzato.
 Stai appoggiato al bancone mentale della vita e commenti le scelte come se fossero ordini sbagliati al bar.
 Parli come ti viene: prima persona, seconda persona, non importa, basta che sembri uno che ne ha viste troppe.
@@ -481,7 +504,7 @@ COMPITO (FUTURO):
 - Spiega cosa succede se questa scelta la fai davvero e cosa succede se continui a tirarla lunga come sempre.
 - Fa vedere la scena come una piccola sitcom tragica: oggetti che reagiscono, notifiche che ti giudicano, conti che ti guardano storto.
 - In mezzo al delirio infilaci la verità: cosa ti libera, cosa ti incastra, dove stai solo perdendo tempo.
-- Alla fine, dai un consiglio storto ma serio: “meglio fare casino così che marcire cosà”, con una mini-morale che abbraccia e prende per il culo.
+- Alla fine, dai un consiglio storto ma serio: meglio scegliere un casino consapevole che marcire nel limbo lamentandoti.
 
 FORMATO:
 - 5–8 frasi, un solo paragrafo, massimo ~150 parole.
@@ -592,7 +615,6 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
       }
     );
   } else {
-    // WHAT IF
     if (L === "it") {
       const ruleIT = isPast ? WHATIF_RULE_PAST_IT : WHATIF_RULE_FUT_IT;
       msgs.push(
@@ -606,7 +628,6 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
   }
 
   if (hasClar) {
-    // Uso esplicito del dettaglio di fourth
     if (L === "it") {
       msgs.push({
         role: "system",
@@ -636,7 +657,6 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
         }
         return `Question (do not repeat it): "${domanda}". Write ONE answer in ENGLISH as “WHAT THE F”. Single paragraph, 5–8 sentences, extremely ironic and over-the-top, but still answering what happens with this choice and what you’d recommend.`;
       }
-      // WHAT IF EN
       if (hasClar) {
         if (isPast) {
           return `Original question about the PAST (do not repeat it): "${domanda}". Extra detail from the user (FOURTH PAGE): "${c}". Write ONE COUNTERFACTUAL answer in ENGLISH as “WHAT IF”: describe the alternate timeline as if it had really happened, then extract what matters now and give practical advice on how to move today. Single paragraph, 5–7 short sentences.`;
@@ -649,7 +669,6 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
       return `Question (do not repeat it): "${domanda}". Write ONE answer in ENGLISH as “WHAT IF”: analyse different scenarios and then give clear, practical advice on what to do and how to behave. Single paragraph.`;
     }
 
-    // ITALIANO
     if (L === "it") {
       if (isWtf) {
         if (hasClar) {
@@ -658,7 +677,6 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
         return `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO come voce “WHAT THE F”: monologo unico, 5–8 frasi, pieno di immagini assurde, parolacce comiche tipo “eccheccazz” e verità scomode. Devi far ridere ma anche dire chiaramente cosa succede con questa scelta e che direzione ha più senso prendere.`;
       }
 
-      // WHAT IF IT
       if (hasClar) {
         if (isPast) {
           return `Domanda sul PASSATO (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF”: racconta come sarebbe andata davvero in quella vita alternativa e poi spiega cosa impari e come ti conviene muoverti ORA. Paragrafo unico, 5–7 frasi, analisi concreta e consigli pratici.`;
@@ -671,7 +689,6 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
       return `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO come “WHAT IF”: analizza i diversi scenari possibili e poi dai consigli chiari su cosa fare e come comportarti nei prossimi passi. Paragrafo unico.`;
     }
 
-    // altre lingue, più semplice
     if (L === "es") {
       return hasClar
         ? `Pregunta original (no la repitas): "${domanda}". Detalle adicional del usuario: "${c}". Escribe UNA respuesta en ESPAÑOL, clara y concreta, en un solo párrafo.`
@@ -682,7 +699,6 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
         ? `Question originale (ne la répète pas) : « ${domanda} ». Détail supplémentaire : « ${c} ». Donne UNE réponse en FRANÇAIS, claire et concrète, en un seul paragraphe.`
         : `Question (ne la répète pas) : « ${domanda} ». Donne UNE réponse en FRANÇAIS, un seul paragraphe.`;
     }
-    // de
     return hasClar
       ? `Ursprüngliche Frage (nicht wiederholen): „${domanda}“. Zusatzdetail: „${c}“. Gib EINE klare, konkrete Antwort auf DEUTSCH, ein einziger Absatz.`
       : `Frage (nicht wiederholen): „${domanda}“. Gib EINE Antwort auf DEUTSCH, ein einziger Absatz.`;
@@ -716,7 +732,7 @@ function computePct(domanda, stile) {
   return pct;
 }
 
-/* ========= WHAT IF: motivazione fallback (heuristica, compatta) ========= */
+/* ========= WHAT IF: motivazione fallback (heuristica) ========= */
 function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
   const L = (lang || "it").slice(0, 2);
   const t = String(domanda || "").toLowerCase();
@@ -913,7 +929,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
   return buildWhatIfMotivation(domanda, "it", pct);
 }
 
-/* ========= MOTIVAZIONE LLM (coerente con la risposta) ========= */
+/* ========= MOTIVAZIONE LLM ========= */
 async function generateMotivationLLM({ domanda, clarification, answer, lang, pct }) {
   const L = normLang(lang);
 
@@ -1096,10 +1112,18 @@ export default async function handler(req, res) {
       })();
     }
 
+    // Apertura provocatoria per WHAT THE F
+    if (stile === "wtf") {
+      const open = wtfOpening(domanda, L);
+      if (open) {
+        answer = `${open} ${answer}`;
+      }
+    }
+
     // Ripristina maiuscole frasi
     answer = sentenceCaseAll(answer);
 
-    // Strip prima persona solo per WHAT IF, non per WTF
+    // Strip prima persona solo per WHAT IF
     if (stile === "whatif") {
       answer = stripFirstPerson(answer, L);
     }
@@ -1148,4 +1172,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-          }
+}
