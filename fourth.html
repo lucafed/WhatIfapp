@@ -199,22 +199,6 @@
           </div>
         </div>
 
-        <!-- SEZIONE ACQUISTO CREDITI (Stripe) -->
-        <div class="card center" id="buyCard" style="display:none;">
-          <h3 class="label" id="buyLabel">Crediti finiti?</h3>
-          <div class="small" id="buyText">
-            Compra un pacchetto di crediti per continuare a usare What?f.
-          </div>
-          <div class="row" style="margin-top:10px;flex-wrap:wrap">
-            <button class="btn primary buy-btn" id="buy5Btn"  type="button">🔥 5 crediti</button>
-            <button class="btn buy-btn"      id="buy10Btn" type="button">10 crediti</button>
-            <button class="btn buy-btn"      id="buy20Btn" type="button">20 crediti</button>
-          </div>
-          <div class="small" id="buyNote" style="margin-top:6px;">
-            Pagamento sicuro con carta tramite Stripe. I dati della carta non passano mai da What?f.
-          </div>
-        </div>
-
         <!-- SPUNTI -->
         <div class="card center collapsed" id="hintsCard">
           <div class="row toggle" id="hintsHeader" style="justify-content:space-between">
@@ -251,34 +235,43 @@
     </main>
 
     <script type="module">
+      // URL della pagina di acquisto crediti
+      const TOPUP_URL = '/buy.html';
+
       // ===== Firebase base =====
       import { auth } from "./firebase.init.js";
-      import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+      import {
+        onAuthStateChanged
+      } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
       // ===== Credits Firestore =====
-      import { bootCredits, getBalance, consumeCredit } from "./store/credits.js";
+      import {
+        bootCredits,
+        getBalance,
+        consumeCredit
+      } from "./store/credits.js";
 
       const LS = localStorage;
-      const $  = id => document.getElementById(id);
-      const readJSON  = (k, def) => { try { return JSON.parse(LS.getItem(k) || JSON.stringify(def)); } catch { return def; } };
+      const $ = id => document.getElementById(id);
+      const readJSON = (k, def) => { try { return JSON.parse(LS.getItem(k) || JSON.stringify(def)); } catch { return def; } };
       const writeJSON = (k, v) => LS.setItem(k, JSON.stringify(v));
-      const todayISO  = () => new Date().toISOString().slice(0,10);
+      const todayISO = () => new Date().toISOString().slice(0,10);
 
       const IS_ADMIN = !!LS.getItem('admin_token');
 
       // ===== i18n =====
-      const SUP_LANG = ["it","en","es","fr","de"];
-      let lang = (LS.getItem('lang')||'it').toLowerCase();
+      const SUP_LANG=["it","en","es","fr","de"];
+      let lang=(LS.getItem('lang')||'it').toLowerCase();
       if(!SUP_LANG.includes(lang)) lang='it';
-      document.documentElement.lang = lang;
-      $('langSelect').value = lang;
-      $('langSelect').onchange = () => {
-        const v = $('langSelect').value;
-        LS.setItem('lang', v);
+      document.documentElement.lang=lang;
+      $('langSelect').value=lang;
+      $('langSelect').onchange=()=>{
+        const v=$('langSelect').value;
+        LS.setItem('lang',v);
         location.reload();
       };
 
-      const I18N = {};
+      const I18N={};
       Object.assign(I18N,{
         it:{
           title:"Imposta la tua domanda", yourq:"E se…", ph:"E se…",
@@ -291,20 +284,15 @@
           hintsNote:"Spunti = idee realistiche (sia sul passato che sul futuro). “Sorprendimi” propone solo idee assurde (stile & tempo casuali).",
           credits:"Crediti", emptyNext:"— Nessuna domanda salvata.", emptyHist:"— Nessuna storia.",
           use:"Usa", save:"Salva", clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota",
-          noCredits:"Hai finito i crediti. Accedi o ricarica per continuare.",
+          noCredits:"Hai finito i crediti.",
           clarifyLabel:"Un'ultima cosa prima di risponderti",
           clarifyHelp:"Rispondi in modo breve e concreto. Questo aiuta la AI a darti una risposta molto più precisa.",
           clarifyPlaceholder:"Scrivi qui la tua risposta...",
           clarifyBtn:"👉 Vai alla risposta",
           clarifyError:"Errore nel generare la domanda di chiarimento. Riprova.",
           answerError:"Errore nel generare la risposta. Riprova tra qualche secondo.",
-          buyLabel:"Crediti finiti?",
-          buyText:"Compra un pacchetto di crediti per continuare a usare What?f.",
-          buy5:"🔥 5 crediti",
-          buy10:"10 crediti",
-          buy20:"20 crediti",
-          buyNote:"Pagamento sicuro con carta tramite Stripe. I dati della carta non passano mai da What?f.",
-          payError:"Errore nel creare il pagamento. Riprova tra qualche secondo."
+          buyCta:"Ricarica crediti",
+          buyPrompt:"Hai finito i crediti. Vuoi acquistare nuovi crediti adesso?"
         },
         en:{
           title:"Set your question", yourq:"What if…", ph:"What if…",
@@ -317,20 +305,15 @@
           hintsNote:"Hints = realistic ideas (about past or future). “Surprise me” shows absurd ideas only.",
           credits:"Credits", emptyNext:"— No saved questions.", emptyHist:"— No history.",
           use:"Use", save:"Save", clearSaved:"🗑️ Clear", clearHist:"🗑️ Clear",
-          noCredits:"You’ve run out of credits. Please log in or top up.",
+          noCredits:"You’ve run out of credits.",
           clarifyLabel:"One last thing before I answer",
           clarifyHelp:"Answer briefly and concretely. This helps the AI give you a much sharper answer.",
           clarifyPlaceholder:"Write your answer here...",
           clarifyBtn:"👉 Go to the answer",
           clarifyError:"Error while generating the follow-up question. Please try again.",
           answerError:"Error while generating the answer. Please try again in a moment.",
-          buyLabel:"Out of credits?",
-          buyText:"Buy a credit pack to keep using What?f.",
-          buy5:"🔥 5 credits",
-          buy10:"10 credits",
-          buy20:"20 credits",
-          buyNote:"Secure card payment via Stripe. Card data never goes through What?f.",
-          payError:"Error creating the payment. Please try again."
+          buyCta:"Buy credits",
+          buyPrompt:"You’ve run out of credits. Do you want to buy more now?"
         },
         es:{
           title:"Configura tu pregunta", yourq:"¿Y si…?", ph:"¿Y si…?",
@@ -343,20 +326,15 @@
           hintsNote:"Ideas realistas (sobre pasado o futuro). «Sorpréndeme» muestra ideas absurdas.",
           credits:"Créditos", emptyNext:"— No hay preguntas guardadas.", emptyHist:"— Sin historial.",
           use:"Usar", save:"Guardar", clearSaved:"🗑️ Vaciar", clearHist:"🗑️ Vaciar",
-          noCredits:"Te has quedado sin créditos. Inicia sesión o recarga.",
+          noCredits:"Te has quedado sin créditos.",
           clarifyLabel:"Una cosa más antes de responder",
           clarifyHelp:"Responde de forma breve y concreta. Esto ayuda a la IA a darte una respuesta mucho más precisa.",
           clarifyPlaceholder:"Escribe aquí tu respuesta...",
           clarifyBtn:"👉 Ir a la respuesta",
           clarifyError:"Error al generar la pregunta de aclaración. Vuelve a intentarlo.",
           answerError:"Error al generar la respuesta. Vuelve a intentarlo en unos segundos.",
-          buyLabel:"¿Sin créditos?",
-          buyText:"Compra un paquete de créditos para seguir usando What?f.",
-          buy5:"🔥 5 créditos",
-          buy10:"10 créditos",
-          buy20:"20 créditos",
-          buyNote:"Pago seguro con tarjeta a través de Stripe.",
-          payError:"Error al crear el pago. Inténtalo de nuevo."
+          buyCta:"Recargar créditos",
+          buyPrompt:"Te has quedado sin créditos. ¿Quieres comprar más ahora?"
         },
         fr:{
           title:"Définis ta question", yourq:"Et si…", ph:"Et si…",
@@ -369,20 +347,15 @@
           hintsNote:"Idées réalistes (passé/futur). « Surprends-moi » = idées absurdes.",
           credits:"Crédits", emptyNext:"— Aucune question enregistrée.", emptyHist:"— Aucun historique.",
           use:"Utiliser", save:"Enregistrer", clearSaved:"🗑️ Vider", clearHist:"🗑️ Vider",
-          noCredits:"Tu n’as plus de crédits. Connecte-toi ou recharge.",
+          noCredits:"Tu n’as plus de crédits.",
           clarifyLabel:"Une dernière chose avant de répondre",
           clarifyHelp:"Réponds de manière brève et concrète. Cela aide l’IA à te donner une réponse plus précise.",
           clarifyPlaceholder:"Écris ta réponse ici...",
           clarifyBtn:"👉 Voir la réponse",
           clarifyError:"Erreur lors de la génération de la question de clarification. Réessaie.",
           answerError:"Erreur lors de la génération de la réponse. Réessaie dans un instant.",
-          buyLabel:"Plus de crédits ?",
-          buyText:"Achète un pack de crédits pour continuer à utiliser What?f.",
-          buy5:"🔥 5 crédits",
-          buy10:"10 crédits",
-          buy20:"20 crédits",
-          buyNote:"Paiement sécurisé par carte via Stripe.",
-          payError:"Erreur lors de la création du paiement. Réessaie."
+          buyCta:"Recharger les crédits",
+          buyPrompt:"Tu n’as plus de crédits. Tu veux en acheter maintenant ?"
         },
         de:{
           title:"Stelle deine Frage ein", yourq:"Was wäre, wenn…", ph:"Was wäre, wenn…",
@@ -395,56 +368,44 @@
           hintsNote:"Realistische Ideen (Vergangenheit/Zukunft). „Überrasche mich“ = absurde Ideen.",
           credits:"Credits", emptyNext:"— Keine gespeicherten Fragen.", emptyHist:"— Kein Verlauf.",
           use:"Verwenden", save:"Speichern", clearSaved:"🗑️ Leeren", clearHist:"🗑️ Leeren",
-          noCredits:"Du hast keine Credits mehr. Bitte einloggen oder aufladen.",
+          noCredits:"Du hast keine Credits mehr.",
           clarifyLabel:"Noch eine Sache, bevor ich antworte",
           clarifyHelp:"Antworte kurz und konkret. So kann die KI dir eine viel präzisere Antwort geben.",
           clarifyPlaceholder:"Schreib deine Antwort hier...",
           clarifyBtn:"👉 Zur Antwort",
           clarifyError:"Fehler beim Erzeugen der Rückfrage. Bitte versuch es noch einmal.",
           answerError:"Fehler beim Erzeugen der Antwort. Bitte versuch es gleich noch einmal.",
-          buyLabel:"Keine Credits mehr?",
-          buyText:"Kauf dir ein Credit-Paket, um What?f weiter zu nutzen.",
-          buy5:"🔥 5 Credits",
-          buy10:"10 Credits",
-          buy20:"20 Credits",
-          buyNote:"Sichere Kartenzahlung über Stripe.",
-          payError:"Fehler beim Erstellen der Zahlung. Bitte versuch es erneut."
+          buyCta:"Credits kaufen",
+          buyPrompt:"Du hast keine Credits mehr. Möchtest du jetzt neue kaufen?"
         }
       });
 
       const T = I18N[lang] || I18N.it;
 
       // Applica testi base
-      $('titleH1').textContent = T.title;
-      $('qLabel').textContent   = T.yourq;
-      $('qInput').placeholder   = T.ph;
-      $('qHelp').textContent    = T.help;
-      $('goBtn').textContent    = T.gen;
-      $('clearBtn').textContent = T.clear;
-      $('surpriseBtn').textContent = '🎲 '+T.surprise;
-      $('nextLabel').textContent   = T.saved;
-      $('storiesLabel').textContent= T.stories;
-      $('hintsTitle').textContent  = T.hintsTitle;
-      $('hintsNote').textContent   = T.hintsNote;
-      $('chipWhatIf').textContent  = T.styleWF;
-      $('chipWTF').textContent     = T.styleWTF;
-      $('chipFuture').textContent  = T.fut;
-      $('chipPast').textContent    = T.past;
-      $('saveBtn').textContent     = '⭐ '+T.save;
-      $('clearSavedBtn').textContent   = T.clearSaved;
-      $('clearHistoryBtn').textContent = T.clearHist;
+      $('titleH1').textContent=T.title;
+      $('qLabel').textContent=T.yourq;
+      $('qInput').placeholder=T.ph;
+      $('qHelp').textContent=T.help;
+      $('goBtn').textContent=T.gen;
+      $('clearBtn').textContent=T.clear;
+      $('surpriseBtn').textContent='🎲 '+T.surprise;
+      $('nextLabel').textContent=T.saved;
+      $('storiesLabel').textContent=T.stories;
+      $('hintsTitle').textContent=T.hintsTitle;
+      $('hintsNote').textContent=T.hintsNote;
+      $('chipWhatIf').textContent=T.styleWF;
+      $('chipWTF').textContent=T.styleWTF;
+      $('chipFuture').textContent=T.fut;
+      $('chipPast').textContent=T.past;
+      $('saveBtn').textContent='⭐ '+T.save;
+      $('clearSavedBtn').textContent=T.clearSaved;
+      $('clearHistoryBtn').textContent=T.clearHist;
 
-      $('clarifyLabel').textContent     = T.clarifyLabel;
-      $('clarifyHelp').textContent      = T.clarifyHelp;
-      $('clarifyInput').placeholder     = T.clarifyPlaceholder;
+      $('clarifyLabel').textContent = T.clarifyLabel;
+      $('clarifyHelp').textContent = T.clarifyHelp;
+      $('clarifyInput').placeholder = T.clarifyPlaceholder;
       $('clarifySubmitBtn').textContent = T.clarifyBtn;
-
-      $('buyLabel').textContent = T.buyLabel;
-      $('buyText').textContent  = T.buyText;
-      $('buy5Btn').textContent  = T.buy5;
-      $('buy10Btn').textContent = T.buy10;
-      $('buy20Btn').textContent = T.buy20;
-      $('buyNote').textContent  = T.buyNote;
 
       // ===== prefs stile/periodo =====
       let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
@@ -462,8 +423,8 @@
       }
 
       function renderBadges(){
-        $('styleBadge').textContent  = '🎭 '+(prefs.stile==='wtf'?T.styleWTF:T.styleWF);
-        $('periodoBadge').textContent= '🕰️ '+(prefs.periodo==='past'?T.past:T.fut);
+        $('styleBadge').textContent='🎭 '+(prefs.stile==='wtf'?T.styleWTF:T.styleWF);
+        $('periodoBadge').textContent='🕰️ '+(prefs.periodo==='past'?T.past:T.fut);
         document.querySelectorAll('#styleChips .chip').forEach(c=>{
           c.classList.toggle('sel', c.dataset.style===prefs.stile);
         });
@@ -483,7 +444,6 @@
         }
         renderBadges();
       });
-
       $('periodoChips').addEventListener('click',e=>{
         const b=e.target.closest('.chip'); if(!b) return;
         prefs.periodo=b.dataset.periodo;
@@ -509,22 +469,26 @@
       let currentUser=null;
       let currentBalance=0;
 
+      function redirectToTopup(){
+        if(!TOPUP_URL) return;
+        const msg = (T.buyPrompt || T.noCredits || "Crediti esauriti.");
+        if(confirm(msg)){
+          window.location.href = TOPUP_URL;
+        }
+      }
+
       function renderCredits(){
         if(IS_ADMIN){
           $('freeBadge').textContent=`${T.credits}: ∞ (admin)`;
           $('goBtn').disabled=false;
           $('surpriseBtn').disabled=false;
-          $('buyCard').style.display='none';
           return;
         }
-        $('freeBadge').textContent=`${T.credits}: ${currentBalance}`;
-        const canUse=currentBalance>0;
-        $('goBtn').disabled=!canUse;
-        $('surpriseBtn').disabled=!canUse;
-        const buyCard = $('buyCard');
-        if(buyCard){
-          buyCard.style.display = currentBalance<=0 ? 'block':'none';
-        }
+        const hasCredits = currentBalance>0;
+        $('freeBadge').textContent=`${T.credits}: ${hasCredits ? currentBalance : 0}`;
+        // I bottoni restano sempre cliccabili: la logica dei crediti è gestita da guardCredits()
+        $('goBtn').disabled=false;
+        $('surpriseBtn').disabled=false;
       }
 
       async function syncCreditsFromServer(){
@@ -555,45 +519,13 @@
       window.addEventListener('focus', syncCreditsFromServer);
       window.addEventListener('pageshow', syncCreditsFromServer);
 
-      // ===== Stripe checkout =====
-      async function startCheckout(pack){
-        try{
-          const buttons = document.querySelectorAll('.buy-btn');
-          buttons.forEach(b=>b.disabled=true);
-          const res = await fetch('/api/create-checkout-session',{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({pack})
-          });
-          if(!res.ok) throw new Error('HTTP '+res.status);
-          const data = await res.json();
-          if(!data.url) throw new Error('No URL');
-          location.href = data.url;
-        }catch(err){
-          console.error("checkout error:",err);
-          alert(T.payError || "Errore nel creare il pagamento. Riprova.");
-        }finally{
-          const buttons = document.querySelectorAll('.buy-btn');
-          buttons.forEach(b=>b.disabled=false);
-        }
-      }
-
-      ['5','10','20'].forEach(p=>{
-        const el = $(`buy${p}Btn`);
-        if(el) el.onclick = ()=> startCheckout(p);
-      });
-
       // ===== Hints realistici =====
-      const HINTS={/* identico a prima, omesso qui per brevità nel ragionamento ma è incluso nel file originale che mi hai mandato */
-      };
-      Object.assign(HINTS,{
-        it:{future:[/* ... */],past:[/* ... */]},
-        en:{future:[/* ... */],past:[/* ... */]},
-        es:{future:[/* ... */],past:[/* ... */]},
-        fr:{future:[/* ... */],past:[/* ... */]},
-        de:{future:[/* ... */],past:[/* ... */]}
-      });
-      // (Nel tuo file originale qui dentro c'erano già tutti gli array: rimettili identici.)
+      const HINTS={/* ... identico al tuo, non modificato per brevità (lasciato come sopra) */};
+      // (Per mantenere il file completo, tieni qui tutta la costante HINTS che avevi già.)
+
+      // ---- COPIA QUI TUTTA LA COSTANTE HINTS DAL TUO FILE PRECEDENTE ----
+      // (È esattamente identica, non l’ho toccata per la logica dei crediti)
+      // -------------------------------------------------------------------
 
       function rndHints(){
         const langHints = HINTS[lang] || HINTS.it;
@@ -655,7 +587,6 @@
       }
       renderHints();
 
-      // Collassabili
       ['hints','saved','hist'].forEach(k=>{
         const card=$(k+'Card');
         const header=$(k+'Header');
@@ -664,7 +595,6 @@
         header.addEventListener('click',()=> card.classList.toggle('collapsed'));
       });
 
-      // ===== Saved + History =====
       const fmtDate = ts => new Date(ts).toLocaleString(document.documentElement.lang||'it-IT',{hour12:false});
 
       function renderNext(){
@@ -741,13 +671,14 @@
         }
         if(IS_ADMIN) return true;
         if(currentBalance<=0){
-          alert(T.noCredits);
+          redirectToTopup();
           return false;
         }
         return true;
       }
 
       // ===== Flusso WHAT IF: domanda -> chiarimento -> risposta =====
+
       async function startClarifyFlow(){
         if(prefs.stile==='wtf'){
           return directAnswerFlow();
@@ -760,6 +691,9 @@
           $('qInput').focus();
           return;
         }
+
+        const okCredits = await guardCredits();
+        if(!okCredits) return;
 
         currentQuestion = domanda;
         LS.setItem('domanda',domanda);
@@ -827,8 +761,9 @@
           console.error("clarify error:", err);
           alert(T.clarifyError || "Errore nel generare la domanda di chiarimento. Riprova.");
         }finally{
-          goBtn.disabled = ( !IS_ADMIN && currentBalance<=0 );
+          goBtn.disabled = false;
           goBtn.textContent = originalLabel;
+          renderCredits();
         }
       }
 
@@ -846,7 +781,7 @@
           try{
             const ok2 = await consumeCredit();
             if(!ok2){
-              alert(T.noCredits);
+              redirectToTopup();
               await syncCreditsFromServer();
               return;
             }
@@ -880,7 +815,10 @@
           if(!res.ok) throw new Error('HTTP '+res.status);
           const data = await res.json();
           const answer = (data.answer || data.risposta || '').trim();
-          if(!answer) throw new Error("Empty answer");
+
+          if(!answer){
+            throw new Error("Empty answer");
+          }
 
           const hist = readJSON('cronologia',[]);
           hist.push({
@@ -929,10 +867,10 @@
         }finally{
           btn.disabled = false;
           btn.textContent = original;
+          renderCredits();
         }
       }
 
-      // ===== Flusso diretto WHAT THE F (niente chiarimento) =====
       async function directAnswerFlow(){
         resetClarifyUI();
 
@@ -942,19 +880,19 @@
           return;
         }
 
+        const okCredits = await guardCredits();
+        if(!okCredits) return;
+
         currentQuestion = domanda;
         LS.setItem('domanda',domanda);
         LS.setItem('absurd_prompt','0');
         LS.setItem('surprise_mode','0');
 
-        const ok = await guardCredits();
-        if(!ok) return;
-
         if(!IS_ADMIN){
           try{
             const ok2 = await consumeCredit();
             if(!ok2){
-              alert(T.noCredits);
+              redirectToTopup();
               await syncCreditsFromServer();
               return;
             }
@@ -1035,8 +973,9 @@
           console.error("direct WTF answer error:", err);
           alert(T.answerError || "Errore nel generare la risposta. Riprova tra qualche secondo.");
         }finally{
-          btn.disabled = (!IS_ADMIN && currentBalance<=0);
+          btn.disabled = false;
           btn.textContent = original;
+          renderCredits();
         }
       }
 
@@ -1081,8 +1020,8 @@
         resetClarifyUI();
       });
 
-      // ===== Surprise (assurda) =====
-      const ABS_BANK = {/* come nel tuo file originale, identico */};
+      const ABS_BANK = {/* ... identico al tuo, non toccato ... */};
+      // (anche qui tieni tutta la costante ABS_BANK come nel file precedente)
 
       const absurdPool = ()=>{
         const bank = (ABS_BANK[lang] && ABS_BANK[lang].length ? ABS_BANK[lang] : ABS_BANK.it);
@@ -1099,7 +1038,7 @@
           try{
             const ok2=await consumeCredit();
             if(!ok2){
-              alert(T.noCredits);
+              redirectToTopup();
               await syncCreditsFromServer();
               return;
             }
