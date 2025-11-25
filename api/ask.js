@@ -390,6 +390,8 @@ const WTF_OPENINGS_IT = [
   "Minchia santa metaforica, solo a leggere è partita un’imprecazione creativa nel cervello.",
   "Eccallà, anche oggi il cervello ha chiesto il permesso prima di risponderti.",
   "Porca vacca organizzata, questa sembra proprio la domanda che fai quando sei a metà tra fuga e upgrade.",
+  "Per l’amor delle checklist fallite, questa storia già profuma di svolta rimandata.",
+  "Giuro, sembra il trailer della terza stagione di una decisione che non esce mai.",
 ];
 
 const WTF_OPENINGS_EN = [
@@ -398,14 +400,15 @@ const WTF_OPENINGS_EN = [
   "For f’s sake, even the barstool just sighed reading this.",
   "Alright, this smells like equal parts disaster and character development.",
   "Fantastic, another decision that could either fix things or set them on fire.",
+  "Glorious, this reads like a mid-season crisis nobody ordered but everyone got.",
 ];
 
 function wtfOpening(domanda, lang = "it") {
   const L = normLang(lang);
   const pool = L === "en" ? WTF_OPENINGS_EN : WTF_OPENINGS_IT;
   if (!pool.length) return "";
-  const seed = hashStr(domanda || "") || 1;
-  return pool[seed % pool.length];
+  const idx = Math.floor(Math.random() * pool.length);
+  return pool[idx];
 }
 
 /* ========= WTF: rapporto scientifico demenziale ========= */
@@ -455,9 +458,10 @@ function scientificReportDemenziale(domanda, lang = "it") {
 }
 
 /* ========= MESSAGGI: CLARIFY ========= */
-function buildClarifyMessages({ domanda, stile, lang, periodo }) {
+function buildClarifyMessages({ domanda, stile, lang, periodo, micro = {} }) {
   const L = normLang(lang);
   const isPast = String(periodo).toLowerCase() === "past";
+  const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
 
   let sys;
   if (stile === "wtf") {
@@ -481,6 +485,13 @@ PAST MODE:
 - The question is about a past choice or missed path.
 - Explicitly point to "back then", "in that chapter", "when you stayed / didn’t move".`;
       }
+      if (isSurprise) {
+        sys += `
+SURPRISE MODE:
+- Look at the situation from an unexpected angle, almost sideways.
+- No repeated bar-counter scenes, no fridge, no bills, no generic chats unless they exist in the user’s scene.
+- Vary the image type each time: sometimes a gesture, sometimes a place, sometimes an object, never a prefab mini-sketch.`;
+      }
     } else {
       sys = `Sei “WHAT THE F”: buzzurro grezzo, volgare ma colto e filoso incazzato.
 Parli come un barista stanco della vita che però la capisce fin troppo bene.
@@ -502,6 +513,13 @@ MODALITÀ PASSATO:
 - La domanda riguarda una scelta passata o una strada non presa.
 - Fai capire che stai tornando “a quel periodo”, “a quel capitolo”, “quando sei rimasto lì invece di muoverti”.`;
       }
+      if (isSurprise) {
+        sys += `
+MODALITÀ SORPRENDIMI:
+- Guarda la scena da un angolo laterale e inaspettato, non dalla solita prospettiva.
+- Niente bancone del bar, frigo, bollette o chat generiche se non esistono davvero nella scena dell’utente.
+- Cambia tipo di immagine: a volte un gesto, a volte un luogo, a volte un oggetto diverso, evitando scenette prefabbricate.`;
+      }
     }
   } else {
     // WHAT IF — chiarimento analitico
@@ -521,6 +539,12 @@ PAST MODE:
 - Question is about a past choice or missed path.
 - Make it clear you refer to that chapter (“back then”, “when you stayed”, “if you had moved”).`;
       }
+      if (isSurprise) {
+        sys += `
+SURPRISE MODE:
+- Ask from an unusual angle that still helps the decision (e.g. energy, identity, or hidden cost).
+- Avoid generic “what is really important?” patterns, be concrete and fresh.`;
+      }
     } else {
       const LANG_LABEL =
         L === "it" ? "ITALIANO" : L === "es" ? "SPAGNOLO" : L === "fr" ? "FRANCESE" : "TEDESCO";
@@ -539,6 +563,12 @@ COMPITO:
 MODALITÀ PASSATO:
 - La domanda riguarda una scelta passata o una strada non presa.
 - Fai capire che ti riferisci a “quel periodo”, “quel capitolo”, “quando hai deciso di restare / non farlo”.`;
+      }
+      if (isSurprise) {
+        sys += `
+MODALITÀ SORPRENDIMI:
+- Punta su un dettaglio inaspettato ma utile (energia, identità, costo nascosto, limite non detto).
+- Evita formule generiche tipo “dimmi la cosa più importante”, fai una domanda concreta ma con angolo nuovo.`;
       }
     }
   }
@@ -570,12 +600,14 @@ TONO:
 - parolacce comiche e teatrali (“eccheccazz”, “azzo”, “maremma maiala”, “porca vacca”, “che casino fotonico”) usate per far ridere;
 - non usare mai la parola “cazzo”: sostituiscila sempre con “azzo”, “ecchecazz” o varianti simili;
 - usa oggetti e dettagli presi dal contesto reale della domanda (luoghi, mezzi, schermi, persone), non frigo/bollette/chat generiche buttate a caso;
-- frigo, bollette, amici su WhatsApp si usano solo se compaiono davvero nella scena dell’utente.
+- frigo, bollette, amici su WhatsApp si usano solo se compaiono davvero nella scena dell’utente;
+- evita di riciclare sempre le stesse scenette: niente copia-incolla di bar, bancone, frigo che sospira o amici su WhatsApp che giudicano.
 
 COMPITO (FUTURO):
 - Spiega cosa succede se questa scelta la fai davvero e cosa succede se continui a tirarla lunga come sempre.
 - Fa vedere la scena come una piccola sitcom tragica: oggetti del suo mondo che reagiscono, notifiche che ti giudicano, conti che ti guardano storto.
 - In mezzo al delirio infilaci la verità: cosa ti libera, cosa ti incastra, dove stai solo perdendo tempo.
+- Le immagini devono sembrare inventate sul momento, non un copione ripetuto.
 - L’ultima frase dev’essere un consiglio secco in stile “consiglio da bestemmia creativa”: mezzo insulto, mezzo abbraccio, ma chiaro su cosa conviene fare.
 
 FORMATO:
@@ -590,7 +622,8 @@ TONO:
 - ironia forte su come sarebbe andata: successi mezzi tristi, figuracce epiche, bollette (se ci sono davvero) che urlano “eccheccazz” appena le apri;
 - immagini demenziali prese dal contesto della scelta (città, ufficio, casa, mezzi, oggetti reali), non frigo e chat generiche a caso;
 - parolacce comiche e imprecazioni teatrali, mai contro categorie o identità;
-- non usare mai la parola “cazzo”: usa sempre “azzo”, “ecchecazz” o altre varianti comiche.
+- non usare mai la parola “cazzo”: usa sempre “azzo”, “ecchecazz” o altre varianti comiche;
+- evita di riciclare le stesse scenette: niente copia-incolla di bar, bancone, frigo che sospira o chat tristi se non stanno davvero nella storia.
 
 COMPITO (PASSATO):
 - Racconta cosa sarebbe successo se quella scelta l’avessi fatta davvero: dove ti saresti incastrato, cosa avresti guadagnato, cosa ti sei paradossalmente risparmiato.
@@ -609,6 +642,7 @@ TONE:
 - constant irony: every sentence carries a joke, absurd image or ridiculous but accurate metaphor;
 - playful swearing (“what the hell”, “for f’s sake”, “this is a majestic mess”) but never targeting groups, religions or identities;
 - use concrete objects and details taken from the user’s situation (places, screens, buses, desks), not random fridges or bills;
+- avoid repeating the same little sketches: no copy-paste bar counter, sighing fridge or sad group chats unless they really exist in the scene;
 - end with a very direct, slightly “cursed” piece of advice: harsh but caring.
 
 TASK (FUTURE):
@@ -627,7 +661,7 @@ Same rough, drunk-philosopher bartender vibe, but don’t turn it into a story a
 
 TONE:
 - loud irony about how it would have gone: half-glorious, half-disaster, with bills screaming “really? that was the plan?”;
-- use images built from the actual context (city, office, house, people, commute), not random cliché objects;
+- use images built from the actual context (city, office, house, people, commute), not random cliché objects or always the same bar scene;
 - swearing is colorful and playful, never aimed at groups or identities.
 
 TASK (PAST):
@@ -649,8 +683,8 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
 
   const baseRules = isWtf
     ? L === "en"
-      ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Stay glued to the core choice. Use strong, vivid, sometimes ridiculous images. Swearing is allowed but must stay playful and never target protected groups or identities. Keep grammar readable, but you may sound drunk and theatrical on purpose. Avoid first-person storytelling: the focus stays on the user.`
-      : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Resta incollato alla scelta di cui si parla. Puoi essere sboccato, teatrale, ubriaco dentro, ma leggibile. Parolacce OK, insulti a categorie o identità NO. Immagini vivide, metafore demenziali, ritmo da monologo. Evita la prima persona narrativa: niente “io” protagonista, la scena è dell’utente.`
+      ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. Stay glued to the core choice. Use strong, vivid, sometimes ridiculous images. Swearing is allowed but must stay playful and never target protected groups or identities. Keep grammar readable, but you may sound drunk and theatrical on purpose. Avoid first-person storytelling: the focus stays on the user. Avoid prefab scenes and repeated props: no copy-paste bar counter, fridge sighing or sad chats unless they are really in the user’s world.`
+      : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Resta incollato alla scelta di cui si parla. Puoi essere sboccato, teatrale, ubriaco dentro, ma leggibile. Parolacce OK, insulti a categorie o identità NO. Immagini vivide, metafore demenziali, ritmo da monologo. Evita la prima persona narrativa: niente “io” protagonista, la scena è dell’utente. Evita scenette prefabbricate e ripetitive: niente stessa sedia che sospira, stesso frigo depresso o stesse chat giudicanti se non nascono davvero dalla scena.`
     : L === "en"
     ? `RULES: single paragraph, no bullets, no emojis. Do NOT restate the question. SECOND PERSON (“you / your”) when you talk about the user. Avoid first person (“I, me, we, us”) completely. Stay close to the topic and clearly answer the core point. Short sentences (max ~20 words), clean grammar and punctuation.`
     : `REGOLE: un solo paragrafo, niente elenchi, niente emoji. NON ripetere la domanda. Usa la seconda persona (tu / ti / te / tuo) quando ti riferisci a chi legge. Non usare prima persona narrativa (“io, noi, mi, ci”) per non spostare il focus su di te. Resta aderente al tema e rispondi in modo chiaro al punto centrale. Frasi brevi (max ~20 parole), grammatica e punteggiatura pulite.`;
@@ -746,9 +780,9 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
     if (L === "it") {
       if (isWtf) {
         if (hasClar) {
-          return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta in ITALIANO come voce “WHAT THE F”: monologo da buzzurro grezzo, volgare ma filoso incazzato, super ironico e demenziale, 5–8 frasi. Mostra cosa succede se fai questa scelta e cosa succede se continui a rimandare, con oggetti, chat e conti che reagiscono in modo coerente con la scena. Chiudi con un consiglio storto ma vero su cosa ti conviene fare, in stile bestemmia creativa.`;
+          return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta in ITALIANO come voce “WHAT THE F”: monologo da buzzurro grezzo, volgare ma filoso incazzato, super ironico e demenziale, 5–8 frasi. Mostra cosa succede se fai questa scelta e cosa succede se continui a rimandare, con oggetti, chat e conti che reagiscono in modo coerente con la scena. Le immagini devono essere ogni volta diverse, mai la stessa scenetta riciclata. Chiudi con un consiglio storto ma vero su cosa ti conviene fare, in stile bestemmia creativa.`;
         }
-        return `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO come voce “WHAT THE F”: monologo unico, 5–8 frasi, pieno di immagini assurde ma contestuali, parolacce comiche tipo “eccheccazz” e verità scomode. Devi far ridere ma anche dire chiaramente cosa succede con questa scelta e che direzione ha più senso prendere, chiudendo con un consiglio secco in stile bestemmia creativa.`;
+        return `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO come voce “WHAT THE F”: monologo unico, 5–8 frasi, pieno di immagini assurde ma contestuali, parolacce comiche tipo “eccheccazz” e verità scomode. Evita scenette prefabbricate sempre uguali: niente frigo depresso, niente solita sedia che ti guarda, niente bancone ripetuto. Devi far ridere ma anche dire chiaramente cosa succede con questa scelta e che direzione ha più senso prendere, chiudendo con un consiglio secco in stile bestemmia creativa.`;
       }
 
       if (hasClar) {
@@ -1061,7 +1095,7 @@ Kohärent mit der Hauptantwort, max. 25 Wörter, keine Emojis.`;
   return first.trim();
 }
 
-/* ========= WTF de-cliché: cambia frigo/bollette/WhatsApp se non sono nella domanda ========= */
+/* ========= WTF de-cliché: cambia frigo/bollette/WhatsApp/sedia/bancone se non sono nella domanda ========= */
 function deClicheWtf(answer = "", domanda = "", lang = "it") {
   const L = normLang(lang);
   if (L !== "it") return answer;
@@ -1094,6 +1128,21 @@ function deClicheWtf(answer = "", domanda = "", lang = "it") {
       check: () => !hasWord("frigo") && !hasWord("frigorifero"),
       pattern: /\bfrigo(rifero)?\b/gi,
       options: ["forno a microonde", "dispensa mezza vuota", "armadio della cucina che sospira"],
+    },
+    {
+      check: () => !hasWord("divano"),
+      pattern: /\bdivano\b/gi,
+      options: ["sedia pieghevole", "pouf stanco vicino alla porta", "materasso appoggiato al muro come un testimone"],
+    },
+    {
+      check: () => !hasWord("bancone") && !hasWord("bar"),
+      pattern: /\bbancone\b|\bbancone del bar\b|\bbar\b/gi,
+      options: ["piano della cucina", "tavolo traballante", "scrivania piena di cose che non c’entrano niente"],
+    },
+    {
+      check: () => !hasWord("sedia") && !hasWord("sedie"),
+      pattern: /\bsedia\b|\bsedie\b/gi,
+      options: ["sgabello che protesta", "cassapanca improvvisata", "valigia lasciata lì come posto a sedere"],
     },
   ];
 
@@ -1188,6 +1237,10 @@ const WTF_ENDINGS_IT = [
   "Quindi scegli un casino solo e portalo fino in fondo, invece di collezionare rimpianti come scontrini, azzo.",
   "In sintesi: meno pippe mentali, più gesto concreto, che la vita non è una bozza infinita, ecchecazz.",
   "Conclusione spiccia: meglio una scelta storta ma tua che una vita perfetta decisa dalla paura, porca vacca lucida.",
+  "Riassunto: o fai una mossa ora o resti parcheggiato in doppia fila emotiva a tempo indeterminato, maremma maiala organizzata.",
+  "Tradotto: scegli una direzione e smetti di trattare la vita come una bozza salvata in bozze, ecchecazz.",
+  "Insomma: meno scenette mentali e più calendario serio, che il tempo non ti aspetta certo col tappeto rosso.",
+  "Morale spiccia: sistema due cose concrete e poi lamentati meno, che qui le scuse hanno fatto il loro tempo, porca vacca.",
 ];
 
 const WTF_ENDINGS_EN = [
@@ -1205,7 +1258,7 @@ function ensureWtfEnding(answer = "", lang = "it") {
   const last = (lastSentenceMatch && lastSentenceMatch[1]) || s;
 
   // Se già finisce con un consiglio forte, lascia
-  if (/\b(quindi|morale|in sintesi|conclusione|bottom line|in short|so yeah)\b/i.test(last)) {
+  if (/\b(quindi|morale|in sintesi|conclusione|bottom line|in short|so yeah|riassunto|insomma|tradotto)\b/i.test(last)) {
     return s;
   }
 
@@ -1256,11 +1309,16 @@ export default async function handler(req, res) {
 
     /* ====== STAGE: CLARIFY ====== */
     if (stage === "clarify") {
-      const messages = buildClarifyMessages({ domanda, stile, lang: L, periodo });
+      const messages = buildClarifyMessages({ domanda, stile, lang: L, periodo, micro });
+
+      let temperature = stile === "wtf" ? 0.9 : 0.7;
+      if (micro && (micro.surprise === true || micro.src === "surprise")) {
+        temperature = Math.min(temperature + 0.2, 1.2);
+      }
 
       const completion = await client.chat.completions.create({
         model: MODEL,
-        temperature: stile === "wtf" ? 0.9 : 0.7,
+        temperature,
         top_p: 0.9,
         max_tokens: 80,
         messages,
@@ -1418,4 +1476,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-               }
+    }
