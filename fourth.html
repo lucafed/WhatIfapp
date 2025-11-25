@@ -456,18 +456,23 @@
   let currentUser=null;  
   let currentBalance=0;  
 
-  function renderCredits(){  
-    if(IS_ADMIN){  
-      $('freeBadge').textContent=`${T.credits}: ∞ (admin)`;  
-      $('goBtn').disabled=false;  
-      $('surpriseBtn').disabled=false;  
-      return;  
-    }  
-    $('freeBadge').textContent=`${T.credits}: ${currentBalance}`;  
-    const canUse=currentBalance>0;  
-    $('goBtn').disabled=!canUse;  
-    $('surpriseBtn').disabled=!canUse;  
-  }  
+function renderCredits(){
+  const goBtn = $('goBtn');
+  const surpriseBtn = $('surpriseBtn');
+
+  if (IS_ADMIN) {
+    $('freeBadge').textContent = `${T.credits}: ∞ (admin)`;
+    if (goBtn) goBtn.disabled = false;
+    if (surpriseBtn) surpriseBtn.disabled = false;
+    return;
+  }
+
+  $('freeBadge').textContent = `${T.credits}: ${currentBalance}`;
+
+  // ❗ IMPORTANTE: i bottoni NON devono essere disattivati
+  if (goBtn) goBtn.disabled = false;
+  if (surpriseBtn) surpriseBtn.disabled = false;
+}
 
   async function syncCreditsFromServer(){  
     if(IS_ADMIN){  
