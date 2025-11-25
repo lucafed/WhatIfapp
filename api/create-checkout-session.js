@@ -11,22 +11,30 @@ export default async function handler(req, res) {
 
   try {
     const { pack } = req.body || {};
-    // pack = "5", "10", "20", ecc.
+    // pack può essere: "5", "15", "30"
 
+    // ✅ QUI decidiamo quanti crediti e quanto costa
+    //    (puoi cambiare gli importi come vuoi)
     let credits = 5;
     let amount = 199; // in centesimi -> 1,99 €
 
-    if (pack === "10") {
-      credits = 10;
-      amount = 299;   // 2,99 €
-    } else if (pack === "20") {
-      credits = 20;
-      amount = 499;   // 4,99 €
+    if (pack === "15") {
+      credits = 15;
+      amount = 399; // 3,99 €
+    } else if (pack === "30") {
+      credits = 30;
+      amount = 699; // 6,99 €
+    } else if (pack === "5") {
+      credits = 5;
+      amount = 199; // 1,99 €
     }
 
-    // Prende il dominio AUTOMATICAMENTE
-    // 1) prima prova con req.headers.origin
-    // 2) se manca, usa https:// + req.headers.host
+    // Se arriva un valore strano, fallback a 5 crediti
+    if (!["5", "15", "30"].includes(String(pack))) {
+      credits = 5;
+      amount = 199;
+    }
+
     const origin =
       req.headers.origin ||
       (req.headers.host ? `https://${req.headers.host}` : "https://example.com");
@@ -48,6 +56,7 @@ export default async function handler(req, res) {
       ],
       metadata: {
         credits: String(credits),
+        pack: String(pack || credits),
       },
       success_url: `${origin}/fourth.html?payment=ok&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/fourth.html?payment=ko`,
