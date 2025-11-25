@@ -6,7 +6,8 @@
 <title>Store</title>
 <style>
   :root{--bg:#0B0F14;--card:#141C22;--line:rgba(255,255,255,.12);--fg:#EAF3EE}
-  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
   .wrap{max-width:520px;margin:auto;padding:16px}
   .card{background:#141C22;border:1px solid var(--line);border-radius:14px;padding:16px}
   h2{margin:2px 0 8px;font-size:18px}
@@ -21,7 +22,12 @@
   <div class="card">
     <h2 id="title">Crediti</h2>
     <p class="small" id="desc">Hai terminato i crediti.</p>
-    <button class="btn primary" id="buy">Compra +5 crediti (test)</button>
+
+    <!-- 🔹 I NOSTRI 3 PACCHETTI -->
+    <button class="btn primary buy-pack" data-pack="5">Compra 5 crediti</button>
+    <button class="btn ghost buy-pack" data-pack="15">Compra 15 crediti</button>
+    <button class="btn ghost buy-pack" data-pack="30">Compra 30 crediti</button>
+
     <button class="btn ghost" id="watch">Guarda pubblicità (+1)</button>
     <button class="btn ghost" id="close">Chiudi</button>
   </div>
@@ -29,30 +35,129 @@
 
 <script>
 const I18N={
-  it:{title:"Crediti", desc:"Hai terminato i crediti.", buy:"Compra +5 crediti (test)", watch:"Guarda pubblicità (+1)", close:"Chiudi"},
-  en:{title:"Credits", desc:"You ran out of credits.", buy:"Buy +5 credits (test)", watch:"Watch ad (+1)", close:"Close"},
-  es:{title:"Créditos", desc:"Se te han acabado los créditos.", buy:"Comprar +5 créditos (test)", watch:"Ver anuncio (+1)", close:"Cerrar"},
-  fr:{title:"Crédits", desc:"Crédits épuisés.", buy:"Acheter +5 crédits (test)", watch:"Regarder une pub (+1)", close:"Fermer"},
-  de:{title:"Credits", desc:"Credits aufgebraucht.", buy:"+5 Credits kaufen (Test)", watch:"Werbung ansehen (+1)", close:"Schließen"}
+  it:{
+    title:"Crediti",
+    desc:"Hai terminato i crediti.",
+    buy5:"Compra 5 crediti",
+    buy15:"Compra 15 crediti",
+    buy30:"Compra 30 crediti",
+    watch:"Guarda pubblicità (+1)",
+    close:"Chiudi"
+  },
+  en:{
+    title:"Credits",
+    desc:"You ran out of credits.",
+    buy5:"Buy 5 credits",
+    buy15:"Buy 15 credits",
+    buy30:"Buy 30 credits",
+    watch:"Watch ad (+1)",
+    close:"Close"
+  },
+  es:{
+    title:"Créditos",
+    desc:"Se te han acabado los créditos.",
+    buy5:"Comprar 5 créditos",
+    buy15:"Comprar 15 créditos",
+    buy30:"Comprar 30 créditos",
+    watch:"Ver anuncio (+1)",
+    close:"Cerrar"
+  },
+  fr:{
+    title:"Crédits",
+    desc:"Crédits épuisés.",
+    buy5:"Acheter 5 crédits",
+    buy15:"Acheter 15 crédits",
+    buy30:"Acheter 30 crédits",
+    watch:"Regarder une pub (+1)",
+    close:"Fermer"
+  },
+  de:{
+    title:"Credits",
+    desc:"Credits aufgebraucht.",
+    buy5:"5 Credits kaufen",
+    buy15:"15 Credits kaufen",
+    buy30:"30 Credits kaufen",
+    watch:"Werbung ansehen (+1)",
+    close:"Schließen"
+  }
 };
+
 function getLang(){
-  const u=new URL(location.href); const q=(u.searchParams.get('lang')||'it').toLowerCase();
+  const u=new URL(location.href);
+  const q=(u.searchParams.get('lang')||'it').toLowerCase();
   return I18N[q]?q:'it';
 }
+
 let lang=getLang();
-function apply(){ const T=I18N[lang]||I18N.it;
+
+function apply(){
+  const T=I18N[lang]||I18N.it;
   document.documentElement.lang=lang;
-  title.textContent=T.title; desc.textContent=T.desc; buy.textContent=T.buy; watch.textContent=T.watch; close.textContent=T.close;
+  const titleEl = document.getElementById("title");
+  const descEl = document.getElementById("desc");
+  if (titleEl) titleEl.textContent = T.title;
+  if (descEl) descEl.textContent = T.desc;
+
+  const btn5 = document.querySelector('button.buy-pack[data-pack="5"]');
+  const btn15 = document.querySelector('button.buy-pack[data-pack="15"]');
+  const btn30 = document.querySelector('button.buy-pack[data-pack="30"]');
+  if (btn5) btn5.textContent = T.buy5;
+  if (btn15) btn15.textContent = T.buy15;
+  if (btn30) btn30.textContent = T.buy30;
+
+  const watch = document.getElementById("watch");
+  const close = document.getElementById("close");
+  if (watch) watch.textContent = T.watch;
+  if (close) close.textContent = T.close;
 }
+
 apply();
 
 window.addEventListener('message',(ev)=>{
   const d=ev.data||{};
   if(d.type==='set_lang' && I18N[d.lang]){ lang=d.lang; apply(); }
 });
-buy.onclick  = ()=>{ try{ parent.postMessage({type:'purchase_completed', amount:5}, '*'); }catch{} };
-watch.onclick= ()=>{ try{ parent.postMessage({type:'open_rewarded'}, '*'); }catch{} };
-close.onclick= ()=>{ try{ parent.postMessage({type:'close_overlay'}, '*'); }catch{} };
+
+// 🔹 QUI facciamo partire Stripe, a seconda del pacchetto scelto
+async function startCheckout(pack){
+  try {
+    const res = await fetch("/api/create-checkout-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pack })
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.url) {
+      window.location.href = data.url; // vai a Stripe
+    } else {
+      alert("Impossibile avviare il pagamento. Riprova tra poco.");
+      console.error("Stripe response error:", data);
+    }
+  } catch (err) {
+    console.error("Network or Stripe error:", err);
+    alert("Errore di rete durante il pagamento. Controlla la connessione e riprova.");
+  }
+}
+
+// Attacca il click ai 3 bottoni
+document.querySelectorAll(".buy-pack").forEach(btn=>{
+  btn.addEventListener("click", () => {
+    const pack = btn.getAttribute("data-pack") || "5";
+    startCheckout(pack);
+  });
+});
+
+const watch = document.getElementById("watch");
+const closeBtn = document.getElementById("close");
+
+if (watch) {
+  watch.onclick= ()=>{ try{ parent.postMessage({type:'open_rewarded'}, '*'); }catch{} };
+}
+if (closeBtn) {
+  closeBtn.onclick= ()=>{ try{ parent.postMessage({type:'close_overlay'}, '*'); }catch{} };
+}
 </script>
 </body>
 </html>
