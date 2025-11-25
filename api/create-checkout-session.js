@@ -13,32 +13,33 @@ export default async function handler(req, res) {
     const { pack } = req.body || {};
     // pack può essere: "5", "15", "30"
 
-    // ✅ QUI decidiamo quanti crediti e quanto costa
-    //    (puoi cambiare gli importi come vuoi)
+    // ===== Calcolo crediti e prezzo =====
     let credits = 5;
-    let amount = 199; // in centesimi -> 1,99 €
+    let amount = 199; // €1,99
 
     if (pack === "15") {
       credits = 15;
-      amount = 399; // 3,99 €
+      amount = 399; // €3,99
     } else if (pack === "30") {
       credits = 30;
-      amount = 699; // 6,99 €
+      amount = 699; // €6,99
     } else if (pack === "5") {
       credits = 5;
-      amount = 199; // 1,99 €
+      amount = 199; // €1,99
     }
 
-    // Se arriva un valore strano, fallback a 5 crediti
+    // Fallback di sicurezza
     if (!["5", "15", "30"].includes(String(pack))) {
       credits = 5;
       amount = 199;
     }
 
+    // ===== Rileva dominio automaticamente =====
     const origin =
       req.headers.origin ||
       (req.headers.host ? `https://${req.headers.host}` : "https://example.com");
 
+    // ===== Crea sessione Stripe Checkout =====
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -49,7 +50,7 @@ export default async function handler(req, res) {
             product_data: {
               name: `What?f — Pacchetto ${credits} crediti`,
             },
-            unit_amount: amount, // in centesimi
+            unit_amount: amount,
           },
           quantity: 1,
         },
@@ -58,7 +59,9 @@ export default async function handler(req, res) {
         credits: String(credits),
         pack: String(pack || credits),
       },
-      success_url: `${origin}/fourth.html?payment=ok&session_id={CHECKOUT_SESSION_ID}`,
+
+      // ⭐️⭐️⭐️ IMPORTANTE: includo &pack nella URL
+      success_url: `${origin}/fourth.html?payment=ok&pack=${credits}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/fourth.html?payment=ko`,
     });
 
