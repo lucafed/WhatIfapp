@@ -182,14 +182,13 @@
           </div>
         </div>
 
-        <!-- SEZIONE CHIARIMENTO (con box evidenziato) -->
+        <!-- SEZIONE CHIARIMENTO (solo What if) -->
         <div class="card center" id="clarifySection" style="display:none;">
           <h3 class="label" id="clarifyLabel">Un'ultima cosa prima di risponderti</h3>
           <div class="small" style="margin-bottom:6px;">
             La voce che hai scelto ti fa una domanda al volo per poterti rispondere meglio:
           </div>
           <div class="clar-box" id="clarifyQuestion">
-            <!-- Domanda di chiarimento generata dalla AI -->
           </div>
           <textarea id="clarifyInput" rows="3" class="input" style="margin-top:10px;"
             placeholder="Scrivi qui la tua risposta..." autocomplete="off"
@@ -285,7 +284,6 @@
           credits:"Crediti", emptyNext:"— Nessuna domanda salvata.", emptyHist:"— Nessuna storia.",
           use:"Usa", save:"Salva", clearSaved:"🗑️ Svuota", clearHist:"🗑️ Svuota",
           noCredits:"Hai finito i crediti. Accedi o ricarica per continuare.",
-          // Nuova parte chiarimento
           clarifyLabel:"Un'ultima cosa prima di risponderti",
           clarifyHelp:"Rispondi in modo breve e concreto. Questo aiuta la AI a darti una risposta molto più precisa.",
           clarifyPlaceholder:"Scrivi qui la tua risposta...",
@@ -403,6 +401,17 @@
       let prefs = readJSON('whatif_prefs',{stile:'whatif',periodo:'future',pro:false});
       document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
 
+      let currentQuestion = '';
+      let currentClarifyQuestion = '';
+
+      function resetClarifyUI(){
+        currentQuestion = '';
+        currentClarifyQuestion = '';
+        $('clarifySection').style.display = 'none';
+        $('clarifyInput').value = '';
+        $('clarifyQuestion').textContent = '';
+      }
+
       function renderBadges(){
         $('styleBadge').textContent='🎭 '+(prefs.stile==='wtf'?T.styleWTF:T.styleWF);
         $('periodoBadge').textContent='🕰️ '+(prefs.periodo==='past'?T.past:T.fut);
@@ -420,6 +429,10 @@
         prefs.stile=b.dataset.style;
         writeJSON('whatif_prefs',prefs);
         document.documentElement.setAttribute('data-theme', prefs.stile==='wtf'?'wtf':'whatif');
+        // se passi a WHAT THE F, nessuna domanda di chiarimento
+        if(prefs.stile==='wtf'){
+          resetClarifyUI();
+        }
         renderBadges();
       });
       $('periodoChips').addEventListener('click',e=>{
@@ -427,7 +440,7 @@
         prefs.periodo=b.dataset.periodo;
         writeJSON('whatif_prefs',prefs);
         renderBadges();
-        renderHints(); // aggiorna spunti quando cambi Futuro/Passato
+        renderHints();
       });
 
       // ===== NAV =====
@@ -677,7 +690,7 @@
             "Et si j’étais resté dans cette relation ?",
             "Et si je n’avais pas abandonné ce projet créatif ?",
             "Et si j’avais commencé une thérapie plus tôt ?",
-            "Et si j’avais dit non à ce job toxique ?",
+            "Et si j’avais dit no à ce job toxique ?",
             "Et si j’avais été honnête avec moi-même en 2020 ?",
             "Et si je n’avais pas suivi ce conseil ?",
             "Et si j’avais économisé au lieu de tout dépenser ?",
@@ -783,18 +796,6 @@
         return selection;
       }
 
-      // ===== stato chiarimento (sempre resettabile) =====
-      let currentQuestion = '';
-      let currentClarifyQuestion = '';
-
-      function resetClarifyUI(){
-        currentQuestion = '';
-        currentClarifyQuestion = '';
-        $('clarifySection').style.display = 'none';
-        $('clarifyInput').value = '';
-        $('clarifyQuestion').textContent = '';
-      }
-
       function renderHints(){
         const wrap=$('hintsChips');
         wrap.innerHTML='';
@@ -803,7 +804,6 @@
           b.className='chip';
           b.textContent=h;
           b.onclick=()=>{
-            // ogni volta che cambio domanda da uno spunto, azzero il chiarimento
             resetClarifyUI();
             $('qInput').value=h;
             LS.setItem('absurd_prompt','0');
@@ -844,7 +844,6 @@
           const right=document.createElement('div'); right.className='row';
           const useBtn=document.createElement('button'); useBtn.className='btn'; useBtn.textContent=T.use;
           useBtn.onclick=()=>{
-            // cambio domanda da "salvate" -> reset chiarimento
             resetClarifyUI();
             $('qInput').value=item.q||'';
             LS.setItem('absurd_prompt','0');
@@ -894,7 +893,7 @@
         renderNext();
       };
 
-      // ===== Guard credits (solo per la risposta finale) =====
+      // ===== Guard credits =====
       async function guardCredits(){
         if(!auth.currentUser){
           alert("Per usare i crediti devi essere loggato.");
@@ -908,11 +907,14 @@
         return true;
       }
 
-      // ===== Nuovo flusso: domanda -> chiarimento -> risposta finale =====
+      // ===== Flusso WHAT IF: domanda -> chiarimento -> risposta =====
 
-      // 1) Prima chiamata: genera la domanda di chiarimento (nessun credito)
       async function startClarifyFlow(){
-        // ogni nuovo giro di "Genera risposta" riparte pulito
+        // Se lo stile è WHAT THE F, niente chiarimento: vai diretto alla risposta
+        if(prefs.stile==='wtf'){
+          return directAnswerFlow();
+        }
+
         resetClarifyUI();
 
         const domanda = ($('qInput').value||'').trim();
@@ -926,7 +928,6 @@
         LS.setItem('absurd_prompt','0');
         LS.setItem('surprise_mode','0');
 
-        // Primo snapshot meta (senza chiarimento / answer)
         const reqMeta={
           stage:'clarify',
           domanda,
@@ -970,7 +971,6 @@
           currentClarifyQuestion = (data.clarifyingQuestion || data.question || '').trim();
 
           if(!currentClarifyQuestion){
-            // fallback generico
             currentClarifyQuestion = (lang === 'en')
               ? "What is the most important detail I should know to answer you better?"
               : "Qual è il dettaglio più importante che dovrei sapere per risponderti meglio?";
@@ -980,7 +980,6 @@
           $('clarifySection').style.display = 'block';
           $('clarifyInput').focus();
 
-          // aggiorna meta con la domanda di chiarimento
           const metaAfter = readJSON('whatif_request',reqMeta);
           metaAfter.stage = 'clarify';
           metaAfter.clarifyingQuestion = currentClarifyQuestion;
@@ -995,7 +994,6 @@
         }
       }
 
-      // 2) Seconda chiamata: invia la tua risposta + domanda e consuma 1 credito
       async function submitClarification(){
         const clarification = ($('clarifyInput').value||'').trim();
         if(!clarification){
@@ -1049,7 +1047,6 @@
             throw new Error("Empty answer");
           }
 
-          // aggiorna cronologia
           const hist = readJSON('cronologia',[]);
           hist.push({
             domanda: currentQuestion,
@@ -1059,7 +1056,6 @@
           });
           writeJSON('cronologia', hist.slice(-100));
 
-          // salva per la fifth come "replay_story" (usato per rivedere scena)
           writeJSON('replay_story',{
             domanda: currentQuestion,
             answer,
@@ -1070,7 +1066,6 @@
             clarification
           });
 
-          // 🔗 SALVATAGGIO COMPLETO: whatif_request con chiarimento + meta risposta
           const fullReq = {
             stage: 'answer',
             domanda: currentQuestion,
@@ -1092,7 +1087,6 @@
           };
           writeJSON('whatif_request', fullReq);
 
-          // vai alla pagina risposta
           location.href='fifth.html';
         }catch(err){
           console.error("answer error:", err);
@@ -1103,13 +1097,131 @@
         }
       }
 
-      $('goBtn').onclick = ()=>{ startClarifyFlow(); };
+      // ===== Flusso diretto WHAT THE F (niente chiarimento) =====
+      async function directAnswerFlow(){
+        resetClarifyUI();
+
+        const domanda = ($('qInput').value||'').trim();
+        if(!domanda){
+          $('qInput').focus();
+          return;
+        }
+
+        currentQuestion = domanda;
+        LS.setItem('domanda',domanda);
+        LS.setItem('absurd_prompt','0');
+        LS.setItem('surprise_mode','0');
+
+        const ok = await guardCredits();
+        if(!ok) return;
+
+        if(!IS_ADMIN){
+          try{
+            const ok2 = await consumeCredit();
+            if(!ok2){
+              alert(T.noCredits);
+              await syncCreditsFromServer();
+              return;
+            }
+            currentBalance = await getBalance().catch(()=>currentBalance);
+            renderCredits();
+          }catch(err){
+            console.error("consumeCredit error:",err);
+            alert("Errore nell'utilizzo dei crediti. Riprova.");
+            return;
+          }
+        }
+
+        const btn = $('goBtn');
+        const original = T.gen;
+        btn.disabled = true;
+        btn.textContent = '⏳...';
+
+        try{
+          const res = await fetch('/api/ask', {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({
+              stage: 'answer',
+              domanda,
+              clarification: '',
+              stile: prefs.stile,
+              lang,
+              periodo: prefs.periodo
+            })
+          });
+          if(!res.ok) throw new Error('HTTP '+res.status);
+          const data = await res.json();
+          const answer = (data.answer || data.risposta || '').trim();
+          if(!answer) throw new Error("Empty answer");
+
+          const hist = readJSON('cronologia',[]);
+          hist.push({
+            domanda,
+            stile: prefs.stile,
+            ts: Date.now(),
+            risposta: answer
+          });
+          writeJSON('cronologia', hist.slice(-100));
+
+          writeJSON('replay_story',{
+            domanda,
+            answer,
+            stile: prefs.stile,
+            periodo: prefs.periodo,
+            lang,
+            clarifyingQuestion: '',
+            clarification: ''
+          });
+
+          const fullReq = {
+            stage: 'answer',
+            domanda,
+            stile: prefs.stile,
+            lang,
+            periodo: prefs.periodo,
+            clarification: '',
+            clarifyingQuestion: '',
+            answer,
+            pct: data.pct ?? null,
+            motivation: data.motivation ?? null,
+            scientific: data.scientific ?? null,
+            extra: '',
+            fantasy_mode: false,
+            absurd: !!(data.micro && data.micro.surprise),
+            surprise: !!(data.micro && data.micro.surprise),
+            source: (data.micro && data.micro.src) || 'manual',
+            micro: data.micro || {surprise:false,src:'manual'}
+          };
+          writeJSON('whatif_request', fullReq);
+
+          location.href='fifth.html';
+        }catch(err){
+          console.error("direct WTF answer error:", err);
+          alert(T.answerError || "Errore nel generare la risposta. Riprova tra qualche secondo.");
+        }finally{
+          btn.disabled = (!IS_ADMIN && currentBalance<=0);
+          btn.textContent = original;
+        }
+      }
+
+      $('goBtn').onclick = ()=>{
+        if(prefs.stile==='wtf'){
+          directAnswerFlow();
+        }else{
+          startClarifyFlow();
+        }
+      };
       $('clarifySubmitBtn').onclick = ()=>{ submitClarification(); };
 
       $('qInput').addEventListener('keydown',e=>{
         if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){
           e.preventDefault();
-          startClarifyFlow();
+          if(prefs.stile==='wtf'){
+            directAnswerFlow();
+          }else{
+            startClarifyFlow();
+          }
         }
       });
 
@@ -1124,7 +1236,6 @@
         $('qInput').value='';
         LS.setItem('absurd_prompt','0');
         LS.setItem('surprise_mode','0');
-        // svuota sempre anche la sezione chiarimento
         resetClarifyUI();
         $('qInput').focus();
       };
@@ -1132,42 +1243,77 @@
       $('qInput').addEventListener('input',()=>{
         LS.setItem('absurd_prompt','0');
         LS.setItem('surprise_mode','0');
-        // se inizi a riscrivere la domanda, cancella qualsiasi chiarimento vecchio
         resetClarifyUI();
       });
 
-      // ===== Surprise (assurda) =====
-      const ABS={
+      // ===== Surprise (assurda) — nuovo generatore senza frasi fisse ripetute =====
+      const ABS_BANK = {
         it:[
-          "E se addestrassi un piccione per portarmi il caffè?",
-          "E se decidessi tutto a testa o croce per 24h?",
-          "E se parlassi in rima in riunione?"
+          "E se per 24 ore dicessi sì a tutto quello che ti viene proposto (tranne cose illegali o pericolose)?",
+          "E se scrivessi una lettera al tuo io tra 10 anni e poi vivessi un giorno come se l’avessi già letta?",
+          "E se cambiassi posto a tutti gli oggetti di casa e guardassi quali abitudini saltano fuori?",
+          "E se per una settimana decidessi tutto in base alla prima canzone che esce in shuffle?",
+          "E se raccontassi la tua giornata come se fossi il protagonista di un documentario trash?",
+          "E se ti presentassi a una riunione vestito esattamente come ti vesti in casa quando nessuno ti vede?",
+          "E se per 48 ore rispondessi solo con domande (educate) a chiunque ti parli?",
+          "E se scegliessi un colore e per un giorno dicessi di sì solo a ciò che lo contiene?",
+          "E se facessi finta che una telecamera stia riprendendo ogni tua scelta per un giorno?",
+          "E se per una settimana ti comportassi come se fossi già la versione che vorresti essere tra un anno?",
+          "E se per 24 ore non potessi lamentarti di nulla e dovessi solo descrivere le cose in modo neutro?",
+          "E se ti svegliassi domani e nessuno ti conoscesse: cosa faresti nelle prime 3 ore?",
+          "E se trasformassi ogni notifica in un segnale per fare un respiro profondo invece che per reagire?",
+          "E se per un mese trattassi il tempo libero come un progetto serio da pianificare?",
+          "E se per 7 giorni ti vietassi di dare consigli a chiunque e ascoltassi soltanto?",
+          "E se domani dovessi trasferirti di colpo in un’altra città: quale e perché proprio quella?",
+          "E se per 30 giorni tenessi un diario solo delle decisioni minuscole che prendi?",
+          "E se per una settimana ti presentassi a te stesso con un nome diverso e un ruolo diverso?",
+          "E se vivessi un giorno come se tutto quello che ti succede fosse stato scritto da uno sceneggiatore comico?",
+          "E se ogni volta che hai un pensiero catastrofico dovessi rispondere con la versione più assurda e positiva della stessa scena?"
         ],
         en:[
-          "What if I trained a pigeon to deliver coffee?",
-          "What if I flipped a coin for 24h?",
-          "What if I spoke in rhymes at work?"
+          "What if for 24 hours you said yes to everything (except illegal or dangerous stuff)?",
+          "What if you wrote a letter to your future self and then lived a day as if you’d already read it?",
+          "What if you rearranged your whole room and watched which habits broke first?",
+          "What if every decision for one day had to follow the mood of the next song on shuffle?",
+          "What if you narrated your day out loud like a low-budget documentary?",
+          "What if tomorrow you woke up in a city where nobody knows you: what would you do first?",
+          "What if for a week you treated free time like your most important meeting?",
+          "What if every notification meant “take one deep breath” instead of “answer now”?",
+          "What if for 48 hours you could only answer people with questions?",
+          "What if you acted for one week as if you were already the person you want to become in a year?"
         ],
         es:[
-          "¿Y si entrenara una paloma para traer café?",
-          "¿Y si decidiera todo con una moneda por 24h?"
+          "¿Y si durante 24 horas dijeras que sí a todo (menos cosas ilegales o peligrosas)?",
+          "¿Y si escribieras una carta a tu yo de dentro de 10 años y vivieras un día como si ya la hubieras leído?",
+          "¿Y si reorganizaras toda tu casa y miraras qué hábitos se rompen primero?",
+          "¿Y si narraras tu día como si fueras el protagonista de un documental barato?",
+          "¿Y si mañana despertaras en una ciudad donde nadie te conoce: qué harías primero?"
         ],
         fr:[
-          "Et si j’entraînais un pigeon à livrer mon café ?",
-          "Et si je décidais tout à pile ou face pendant 24 h ?"
+          "Et si pendant 24 heures tu disais oui à tout (sauf au dangereux et à l’illégal) ?",
+          "Et si tu écrivais une lettre à ton toi dans 10 ans puis vivais une journée comme si tu l’avais lue ?",
+          "Et si tu réorganisais tout ton appart pour voir quelles habitudes explosent en premier ?",
+          "Et si tu racontais ta journée comme un faux documentaire sur ta vie ?",
+          "Et si demain tu te réveillais dans une ville où personne ne te connaît : que ferais-tu en premier ?"
         ],
         de:[
-          "Was, wenn ich eine Taube trainiere, Kaffee zu bringen?",
-          "Was, wenn ich 24 Std. alles mit Münzwurf entscheide?"
+          "Was wäre, wenn du 24 Stunden lang zu allem Ja sagst (außer zu gefährlichem oder illegalem Zeug)?",
+          "Was wäre, wenn du deinem Ich in 10 Jahren einen Brief schreibst und einen Tag lebst, als hättest du ihn schon gelesen?",
+          "Was wäre, wenn du deine Wohnung komplett umräumst und schaust, welche Gewohnheiten zuerst brechen?",
+          "Was wäre, wenn du deinen Tag laut kommentierst wie in einer schrägen Doku?",
+          "Was wäre, wenn du morgen in einer Stadt aufwachst, in der dich niemand kennt: Was tust du zuerst?"
         ]
       };
-      const absurdPool = ()=> (ABS[lang] && ABS[lang].length?ABS[lang]:ABS.it);
+
+      const absurdPool = ()=>{
+        const bank = (ABS_BANK[lang] && ABS_BANK[lang].length ? ABS_BANK[lang] : ABS_BANK.it);
+        return bank.slice();
+      };
 
       async function slotSurprise(){
         const ok = await guardCredits();
         if(!ok) return;
 
-        // ogni volta che entro in modalità "sorprendimi", pulisco il chiarimento precedente
         resetClarifyUI();
 
         if(!IS_ADMIN){
@@ -1189,6 +1335,7 @@
 
         const list=absurdPool();
         if(!list.length) return;
+
         const qEl=$('qInput');
         qEl.classList.add('slotting');
         let i=0;
@@ -1202,11 +1349,23 @@
           renderBadges();
           i++;
         },90);
+
         setTimeout(()=>{
           clearInterval(iv);
           qEl.classList.remove('slotting');
-          const final=list[Math.floor(Math.random()*list.length)];
+
+          const prev = LS.getItem('surprise_recent') || '';
+          let final;
+          if(list.length===1){
+            final = list[0];
+          }else{
+            do{
+              final = list[Math.floor(Math.random()*list.length)];
+            }while(final===prev);
+          }
           qEl.value=final;
+          LS.setItem('surprise_recent', final);
+
           LS.setItem('absurd_prompt','1');
           LS.setItem('surprise_mode','1');
           const req={
