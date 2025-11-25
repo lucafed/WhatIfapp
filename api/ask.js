@@ -319,7 +319,7 @@ function wtfKeywords(domanda = "") {
   return out;
 }
 
-/* Pool di IMPRECAZIONI teatrali — spunto interno */
+/* Pool di IMPRECAZIONI teatrali — spunto interno (non più iniettate come frasi fisse) */
 const WTF_IMPRE_POOL = [
   "imprecazione turboguidata che sfiora il soffitto",
   "anatema blindato a tre stadi che sposta l’aria di un metro",
@@ -331,7 +331,7 @@ const WTF_IMPRE_POOL = [
   "supernova di imprecazioni compressa in un secondo netto",
 ];
 
-/* Reazioni degli oggetti — spunto interno */
+/* Reazioni degli oggetti — spunto interno (non più iniettate come frasi fisse) */
 const WTF_REACT_BY_CONTEXT = {
   moto: [
     "il casco in esposizione ruota piano come se volesse vedere meglio il disastro",
@@ -370,7 +370,7 @@ const WTF_REACT_BY_CONTEXT = {
   ],
 };
 
-/* Bevute teatrali – spunto interno */
+/* Bevute teatrali – spunto interno (non più iniettate come frasi fisse) */
 const WTF_DRINK_POOL = [
   "riempi un bicchiere fino al bordo e lo svuoti come se stessi spegnendo un incendio nel cervello",
   "versi da bere con troppa convinzione e lo butti giù a colpi nervosi che sembrano codice Morse",
@@ -493,7 +493,7 @@ Evita di raccontarti in prima persona: niente monologhi autoreferenziali, la sce
 COMPITO:
 - Fai ESATTAMENTE UNA domanda di chiarimento in ${LANG_LABEL}.
 - Deve sembrare una domanda buttata lì al bancone: mezza presa in giro, mezza verità che punge.
-- Infila almeno un’immagine assurda o comica (una sedia che ti guarda, un telefono in sciopero, un conto che ti giudica).
+- Infila almeno un’immagine assurda o comica (un oggetto della scena che ti guarda storto, una notifica in sciopero, un conto che ti giudica).
 - Puoi usare prima persona solo come intercalare breve (“io ti dico”), non per raccontare la tua vita.
 - Una sola frase, massimo 22 parole, niente emoji, niente elenco.`;
       if (isPast) {
@@ -658,17 +658,6 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
   const msgs = [{ role: "system", content: baseRules }];
 
   if (isWtf) {
-    const ctx = detectWtfContext(domanda);
-    let seed = [...String(domanda || "")].reduce((a, ch) => a + ch.charCodeAt(0), 0);
-    function rnd() {
-      seed = (seed * 1664525 + 1013904223) >>> 0;
-      return seed / 2 ** 32;
-    }
-    const impreSample = WTF_IMPRE_POOL[Math.floor(rnd() * WTF_IMPRE_POOL.length)];
-    const reactPool = WTF_REACT_BY_CONTEXT[ctx] || WTF_REACT_BY_CONTEXT.generico;
-    const shuffled = [...reactPool].sort(() => rnd() - 0.5);
-    const react = shuffled.slice(0, 2 + Math.floor(rnd() * 1));
-    const drinkSample = WTF_DRINK_POOL[Math.floor(rnd() * WTF_DRINK_POOL.length)];
     const kw = wtfKeywords(domanda);
 
     const wtfRule =
@@ -684,10 +673,10 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
       { role: "system", content: wtfRule },
       {
         role: "system",
-        content: `ESEMPI DI TONO (non copiare mai alla lettera, solo spunto):
-- imprecazione teatrale: ${impreSample}
-- oggetti che reagiscono: ${react.join(" · ")}
-- scena di bevuta: ${drinkSample}`,
+        content: `LINEE GUIDA TONO (non esempi fissi da copiare):
+- imprecazioni teatrali e creative
+- oggetti della scena che reagiscono in modo esagerato, sempre diversi (non usare sempre la stessa sedia o lo stesso frigo)
+- un gesto fisico o una bevuta che amplifica il momento comico`,
       }
     );
 
@@ -909,7 +898,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
 
     if (hasTime) {
       pros.push("el tiempo es manejable si divides el camino en pasos pequeños");
-      cons.push("si no proteges tu tiempo, acabarás posponiéndolo una y otra vez");
+      cons.push("si non proteges tu tiempo, acabarás posponiéndolo una y otra vez");
     }
     if (hasBudget) {
       pros.push("puedes mantener los costes bajo control con un límite claro");
@@ -1119,6 +1108,80 @@ function deClicheWtf(answer = "", domanda = "", lang = "it") {
   return out;
 }
 
+/* ========= WTF remix oggetti sovra-usati (sedie -> oggetti diversi ogni volta) ========= */
+function remixOverusedProps(text = "", domanda = "", lang = "it") {
+  const L = normLang(lang);
+  if (L !== "it") return text;
+
+  let out = String(text || "");
+  const ctx = detectWtfContext(domanda);
+
+  const poolsByCtx = {
+    moto: [
+      "casco appeso vicino alla porta",
+      "giubbotto pieno di moscerini parcheggiato sulla sedia",
+      "tuta buttata sul pavimento come un passeggero in sciopero",
+      "cavalletto rimasto aperto come una domanda",
+    ],
+    ufficio: [
+      "poltrona girevole che scricchiola in protesta",
+      "tastiera piena di briciole che ti giudica",
+      "mug con la scritta motivazionale ormai sbiadita",
+      "monitor che riflette la tua faccia più del file",
+    ],
+    casa: [
+      "divano che ti risucchia come sabbie mobili emotive",
+      "tavolino traballante che non decide da che parte stare",
+      "lampada che fa luce solo dove non ti serve",
+      "ciabatte lasciate in mezzo come segnali stradali passivi-aggressivi",
+    ],
+    città: [
+      "lampione all’angolo che ti guarda ogni sera",
+      "panchina sbeccata che sa tutti i tuoi ripensamenti",
+      "vetrina vuota che riflette le tue facce stanche",
+      "cartello stradale storto che indica ovunque e da nessuna parte",
+    ],
+    relazione: [
+      "coperta sul letto arrotolata come un punto interrogativo",
+      "tazza dimenticata sul comodino da troppi giorni",
+      "foto mezza storta sul muro che fa finta di niente",
+      "specchio dell’ingresso che ti squadra quando esci",
+    ],
+    soldi: [
+      "portafoglio che si chiude da solo per difesa",
+      "salvadanaio che suona vuoto come una battuta brutta",
+      "POS che lampeggia più del tuo entusiasmo",
+      "tabella Excel aperta a caso come un oracolo cinico",
+    ],
+    generico: [
+      "sgabello che cigola come se protestasse",
+      "bancone improvvisato di cose accatastate",
+      "zaino buttato in un angolo come se fosse in ferie",
+      "cappotto appeso che sembra sempre pronto a scappare",
+      "tappeto che fa le onde ogni volta che passi",
+      "mensola storta che minaccia di crollare da anni",
+    ],
+  };
+
+  const pool = poolsByCtx[ctx] || poolsByCtx.generico;
+  if (!pool || !pool.length) return out;
+
+  function pickRand() {
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  if (/\bsedie\b/i.test(out)) {
+    const repl = pickRand();
+    out = out.replace(/\bsedie\b/gi, repl);
+  }
+  if (/\bsedia\b/i.test(out)) {
+    const repl = pickRand();
+    out = out.replace(/\bsedia\b/gi, repl);
+  }
+
+  return out;
+}
+
 /* ========= WTF finale: consiglio da bestemmia creativa ========= */
 const WTF_ENDINGS_IT = [
   "Morale: o muovi il sedere adesso o ti lamenti a vita, eccheccazz.",
@@ -1208,6 +1271,9 @@ export default async function handler(req, res) {
       clarQ = sentenceCaseAll(clarQ);
       if (stile !== "wtf") {
         clarQ = stripFirstPerson(clarQ, L, stile);
+      }
+      if (stile === "wtf") {
+        clarQ = remixOverusedProps(clarQ, domanda, L);
       }
       clarQ = finalPunct(clarQ);
 
@@ -1300,9 +1366,10 @@ export default async function handler(req, res) {
       answer = answer.replace(/\bcazzo\b/gi, "azzo");
     }
 
-    // De-cliché su frigo/bollette/WhatsApp per WHAT THE F
+    // De-cliché e remix oggetti per WHAT THE F
     if (stile === "wtf") {
       answer = deClicheWtf(answer, domanda, L);
+      answer = remixOverusedProps(answer, domanda, L);
       // Finale in stile "consiglio da bestemmia creativa"
       answer = ensureWtfEnding(answer, L);
     }
@@ -1351,4 +1418,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-}
+               }
