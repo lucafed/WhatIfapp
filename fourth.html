@@ -889,19 +889,28 @@
     renderNext();  
   };  
 
-  // ===== Guard credits =====  
-  async function guardCredits(){  
-    if(!auth.currentUser){  
-      alert("Per usare i crediti devi essere loggato.");  
-      return false;  
-    }  
-    if(IS_ADMIN) return true;  
-    if(currentBalance<=0){  
-      alert(T.noCredits);  
-      return false;  
-    }  
-    return true;  
+// ===== Guard credits =====  
+async function guardCredits(){  
+  if(!auth.currentUser){  
+    alert("Per usare i crediti devi essere loggato.");  
+    return false;  
   }  
+
+  if(IS_ADMIN) return true;  
+
+  if(currentBalance <= 0){  
+    // Messaggio in lingua
+    alert(T.noCredits);
+
+    // Porta l'utente alla pagina dello store crediti
+    const langParam = encodeURIComponent(lang || 'it');
+    window.location.href = `store/credit-store.html?lang=${langParam}`;
+
+    return false;  
+  }  
+
+  return true;  
+}
 
   // ===== Flusso WHAT IF: domanda -> chiarimento -> risposta =====  
 
