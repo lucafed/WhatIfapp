@@ -209,7 +209,7 @@ const ZINGARA_ENDINGS = {
     past: ["You’d probably feel it in your bones: it wasn’t fate, just a different script."],
   },
   es: {
-    future: ["Y ahí notarás que no hace falta un giro épico, solo una decisión più onesta."],
+    future: ["Y ahí notarás que no hace falta un giro épico, solo una decisión más honesta."],
     past: ["Y quizá hoy lo sentirías: no era destino, era otra forma de escribir tu historia."],
   },
   fr: {
@@ -300,6 +300,8 @@ const WTF_OPENINGS_IT = [
   "Per tutti i neuroni in ferie, qui o cambi traccia o resti in loop.",
   "Oh santo neurone in sciopero, sembra la versione remix dei tuoi pensieri.",
   "Ma guarda te, sembri una notifica che non smette mai di lampeggiare.",
+  "Oh, eccoci, centauro dell’inferno col casco mentale allacciato male.",
+  "Oh, eccoci, turista del destino che non sa mai se prendere il treno o il divano.",
 ];
 
 const WTF_OPENINGS_EN = [
@@ -439,7 +441,7 @@ MODALITÀ SORPRENDIMI:
 - Evita formule standard da self-help.
 - Concentrati su UNA leva (tempo, soldi, energia, identità, relazioni, rischio).
 - Tono calmo, preciso, una sola frase, massimo 22 parole, niente emoji, niente elenco.
-- Evita la prima persona narrativa (“io, noi, mi, ci”).`;
+- Niente prima persona narrativa (“io, noi, mi, ci”).`;
         if (isPast) {
           sys += `
 MODALITÀ PASSATO:
@@ -547,42 +549,46 @@ MODALITÀ PASSATO:
 }
 
 /* ========= WTF RULES (risposte, non Sorprendimi) ========= */
-const WTF_RULE_IT_FUT = `Sei “WHAT THE F”: barista filoso mezzo ubriaco, volgare ma affettuoso, appoggiato al bancone.
-Stile: diretto, comico, un po’ demenziale ma chiarissimo.
+/* === QUI: stile WHAT THE F come i tuoi esempi (centauro, Luisa, Aquila) === */
 
-TONO:
-- Frasi orali, semplici, ritmo da chiacchiera al bar.
-- Sarcasmo forte ma affettuoso, prendi in giro la situazione, non la persona.
-- Usa al massimo 2 immagini o oggetti che reagiscono in tutta la risposta (es. moto, casco, divano, citofono). Evita di usare sempre lo stesso oggetto (niente fissazione sui lampioni).
-- Non usare la parola “madò”.
-- Puoi nominare la parola “bestemmia” in modo narrato (“ti parte una bestemmia a razzo”), ma NON scrivere bestemmie vere.
+const WTF_RULE_IT_FUT = `Sei “WHAT THE F”: barista filoso mezzo ubriaco, volgare ma affettuoso, appoggiato al bancone.
+Parli come nei seguenti esempi ideali:
+“Oh, eccoci, centauro dell’inferno. Casco lucido, petto in fuori e cervello rimasto indietro di due curve. Parti, il vento ti fa sentire un dio… poi un’ape ti punta il collo come se avessi firmato un contratto. Ti scappa un ‘bestemmione a motore caldo!’ così forte che il semaforo si mette al rosso da solo e un cane attraversa la strada cambiando idea sulla sua vita. Ti fermi, respiri, e ne lasci andare un’altra più piccola, quasi affettuosa, tipo rito di purificazione. Al bar ordini ‘qualcosa per sciacquare la bestemmia’ e il barista annuisce come uno che ha visto troppo. Torni a casa col ronzio del motore e delle tue imprecazioni che si mixano come un DJ impazzito con talento.”
+“Ah, Luisa… eccoci di nuovo, come una ferita che ha nostalgia del coltello. Ci ricaschi: ti lanci nel suo buco nero emotivo e poi ti spaventi dell’eco. Lei ti visualizza, poi sparisce, e ti sale la pressione come una pentola con il coperchio che urla. Ti parte una ‘bestemmia della miseria incrociata’ talmente sincera che la lampada sfarfalla e il bicchiere applaude. Il gatto scappa, Alexa finge un aggiornamento, e tu lasci cadere un’altra imprecazione che sembra una preghiera marcia. Bevi un sorso di rosso e riconosci che ogni storia finisce così: una bestemmia e un brindisi storto — ma almeno il vino lo scegli tu.”
+
+TONO (FUTURO):
+- Prima prendi in giro affettuosamente chi legge con un nomignolo (“turista del destino”, “centauro dell’inferno”, “eroe del divano”).
+- Poi mostri 1–2 micro-scene molto concrete dove la vita reagisce: un oggetto, un animale, una stanza che “ti guarda” (lampada, bicchiere, cane, Alexa, piazza, divano, letto, moto, citofono).
+- Dentro una di queste scene, nominare UNA sola “bestemmia” narrata (es. “bestemmione a motore caldo”, “bestemmia di benvenuto”, “bestemmia della miseria incrociata”), mai bestemmie reali.
+- Non usare la parola “madò”. Non elencare 10 metafore: massimo 2–3 immagini forti, collegate alla scelta vera.
 
 COMPITO (FUTURO):
-- Spiega in modo semplice cosa succede se fai questa scelta e cosa succede se continui a rimandare.
-- Una sola “bestemmia metaforica” nella risposta.
-- L’ULTIMA frase è una riga di chiusura chiara, che finisce SEMPRE con “ecchecazz!!!” (scritto così, tutto attaccato, tre punti esclamativi).
+- Spiega cosa succede se fai davvero questa scelta e cosa succede se continui a rimandare o a nasconderti.
+- Verso la fine fai passare la verità: cosa paghi, cosa guadagni, cosa NON cambia se resti fermo.
+- L’ULTIMA frase è una chiusura secca che suona come una morale sporca da bar; NON scrivere tu “ecchecazz!!!”, lo aggiunge il sistema.
 
 FORMATO:
 - 3–6 frasi, un solo paragrafo, massimo ~110 parole.
-- Lingua: italiano parlato, leggibile.
-- Niente elenco puntato, niente emoji, niente poesia.`;
+- Italiano parlato, leggibile, niente elenco puntato, niente emoji.`;
 
-const WTF_RULE_IT_PAST = `Sei “WHAT THE F” in modalità FLASHBACK:
-commenti la stagione alternativa della vita, quella in cui avevi fatto l’altra scelta, come al bar a fine serata.
+const WTF_RULE_IT_PAST = `Sei “WHAT THE F” in modalità FLASHBACK: commenti la stagione alternativa della vita, quella in cui avevi fatto l’altra scelta, come al bancone a fine serata.
+Il tono resta quello degli esempi:
+“Ah, Luisa… eccoci di nuovo, come una ferita che ha nostalgia del coltello…” ecc.
 
-TONO:
-- Ironia forte su come sarebbe andata davvero: un po’ meglio, un po’ peggio, sempre con sarcasmo demenziale.
-- Usa al massimo 2 immagini o oggetti (casa, scrivania, sedile, citofono, pianta grassa). Evita di ripetere sempre “lampione”, “tostapane” ecc.
-- Non usare la parola “madò”.
-- Puoi nominare “bestemmia” in modo narrato, mai bestemmie reali.
+TONO (PASSATO):
+- Parli come se stessi raccontando la “serie tv alternativa” della vita di chi legge: quella in cui la scelta l’aveva fatta davvero.
+- Usi 1–2 immagini concrete: una casa diversa, una città, una scrivania, un letto, un bar. Gli oggetti reagiscono: la lampada sfarfalla, il bicchiere applaude, il gatto scappa, la sedia scricchiola.
+- Dentro la scena puoi nominare UNA sola “bestemmia” narrata (“bestemmia di mezzanotte”, “bestemmia della domenica storta”), ma mai bestemmie vere e niente insulti a categorie o identità.
+- Non usare la parola “madò”. Evita metafore a caso: tutto deve sembrare collegato alla scelta di cui si parla.
 
 COMPITO (PASSATO):
-- Racconta in modo semplice cosa sarebbe successo se quella scelta l’avessi fatta davvero: dove ti saresti incastrato, cosa avresti guadagnato, cosa ti sei pure risparmiato.
-- L’ultima frase è una chiusura secca che finisce con “ecchecazz!!!”.
+- Mostra cosa sarebbe successo davvero se quella scelta l’avessi fatta: cosa avresti guadagnato, dove ti saresti incastrato, cosa ti sei persino risparmiato.
+- Poi riporta tutto all’oggi con una frase di verità ruvida: cosa ti conviene imparare e come ti conviene muoverti adesso.
+- L’ultima frase è una chiusura secca nello stile “morale storta da bar”: il sistema ci attacca dopo “ecchecazz!!!”, quindi tu NON scriverlo.
 
 FORMATO:
 - 3–6 frasi, un solo paragrafo, massimo ~110 parole.
-- Nessun elenco, nessuna emoji, niente prima persona protagonista: scena sempre sull’utente.`;
+- Nessun elenco, nessuna emoji, niente prima persona protagonista: la scena è sempre sull’utente.`;
 
 const WTF_RULE_EN_FUT = `You are “WHAT THE F”: a rough, foul-mouthed but very cultured and pissed-off philosopher-bartender.
 You roast every decision with love and swear words, but never attack identities or groups.
@@ -655,7 +661,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
         role: "system",
         content: `PAROLE CHIAVE DALLA SCENA UTENTE: ${kw.join(
           ", "
-        )}. Usa 1–2 di questi elementi per immagini e metafore. Evita di riciclare sempre “lampioni” o “tostapane”: varia gli oggetti.`,
+        )}. Usa 1–2 di questi elementi per immagini e micro-scene. Evita di riciclare sempre gli stessi oggetti: varia tra divano, letto, moto, bar, casa, citofono, ecc.`,
       });
     }
   } else {
@@ -719,19 +725,19 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
           return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}".
 Genera UNA risposta in ITALIANO come voce “WHAT THE F”:
 - monologo unico, 3–6 frasi, stile barista sarcastico, demenziale ma chiaro;
-- usa al massimo 2 oggetti/immagini (moto, casco, divano, citofono, ecc.), senza ripetere sempre gli stessi;
-- inserisci UNA sola “bestemmia” come parola narrata (es. “ti parte una bestemmia a razzo”), senza bestemmie vere;
+- usa massimo 2 oggetti/immagini collegati alla scena reale (città, casa, letto, divano, lavoro, amici, bar, moto, citofono);
+- inserisci UNA sola “bestemmia” come parola narrata (es. “bestemmione a motore caldo”, “bestemmia di benvenuto”), senza bestemmie vere;
 - mostra cosa succede se fai questa scelta e cosa succede se continui a rimandare;
-- non chiudere tu la frase finale: ci pensa il sistema a mettere la chiusura con “ecchecazz!!!”.
+- non chiudere tu con “ecchecazz!!!”: il sistema aggiunge la frase finale con quella parola.
 Paragrafo unico, niente emoji.`;
         }
         return `Domanda (non ripeterla): "${domanda}".
 Genera UNA risposta in ITALIANO come voce “WHAT THE F”:
 - monologo unico, 3–6 frasi, stile barista al bancone, comico e un po’ psichedelico ma semplice;
-- al massimo 2 oggetti/immagini nella risposta, niente catalogo infinito di metafore;
+- massimo 2 oggetti/immagini nella risposta, sempre collegati alla vita reale (stanza, letto, città, bar, moto, telefono, ecc.);
 - puoi parlare di “bestemmia” in modo narrato, mai bestemmie vere;
 - rispondi in modo chiaro a cosa succede se lo fai e se continui a rimandare;
-- non aggiungere tu una chiusura lunga: il sistema completerà il finale con “ecchecazz!!!”.
+- non aggiungere tu il finale con “ecchecazz!!!”: il sistema completerà la chiusura.
 Paragrafo unico, niente emoji.`;
       }
 
@@ -776,7 +782,7 @@ function computePct(domanda, stile) {
   if (/\b\d+([.,]\d+)?\b/.test(t)) s += 6;
   if (/budget|€|euro|spesa|max|under|sotto|prezzo|costo/.test(t)) s += 6;
   if (/senza|solo|al massimo|minimo|entro|prima delle|ogni|per/.test(t)) s += 8;
-  if (/lancia|apri|impara|studia|scrivi|automatizza|testa|cambia|trasferisc/i.test(t)) s += 6;
+  if (/lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa|cambia|trasferisc/i.test(t)) s += 6;
   if (/forse|magari|maybe|quizás|chissà/.test(t)) s -= 8;
   if (!/\b\d/.test(t)) s -= 4;
 
@@ -829,7 +835,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     }
 
     if (!pros.length) {
-      pros.push("la vera leva è la routine: piccoli passi costanti battono le grandi intenzioni");
+      pros.push("la vera leva è la routine: i piccoli passi costanti battono le grandi intenzioni");
     }
     if (!cons.length) {
       cons.push("il collo di bottiglia è la tua energia più che la fortuna");
@@ -925,7 +931,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
       cons.push("si tu sous-estimes les dépenses, la pression financière peut te freiner");
     }
     if (hasDeadline) {
-      pros.push("une échéance claire aide à trancher più vite");
+      pros.push("une échéance claire aide à trancher plus vite");
       cons.push("une date floue glisse facilement et affaiblit ton engagement");
     }
     if (action) {
@@ -1117,7 +1123,7 @@ function ensureWtfEcchecazzEnding(text = "", lang = "it") {
   let s = String(text || "").trim();
   if (!s) return s;
 
-  // togli eventuali ecchecazz già messi dal modello
+  // Togli qualsiasi finale già sporco con ecchecazz
   s = s.replace(/[,.\s]*(e\s+che\s+\w+)?\s*ecchecazz!+$/i, "");
   s = s.replace(/ecchecazz!+$/i, "");
   s = s.replace(/[\s.!?…]+$/g, "").trim();
@@ -1159,7 +1165,7 @@ export default async function handler(req, res) {
       micro = {},
     } = body || {};
 
-    if (!domanda || typeof domanda !== "string") {
+    if (!domанда || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
@@ -1247,7 +1253,7 @@ export default async function handler(req, res) {
     // Safety nomi propri IT
     if (normLang(lang) === "it") {
       (function () {
-        const d = String(domanda || "");
+        const d = String(domанда || "");
         const nameRx = /\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
         const inQuestion = new Set(d.match(nameRx) || []);
         answer = answer.replace(nameRx, (m) => {
@@ -1294,7 +1300,7 @@ export default async function handler(req, res) {
       answer = answer.replace(/\bcazzo\b/gi, "azzo");
     }
 
-    // Evita fissazione sui “lampioni”
+    // Evita fissazione sui “lampioni”: se li ripete, cambio il secondo in “semaforo”
     if (stile === "wtf" && L === "it") {
       let count = 0;
       answer = answer.replace(/\blampion[ei]\b/gi, (m) => {
@@ -1332,7 +1338,7 @@ export default async function handler(req, res) {
           pct,
         });
       } catch (e) {
-        motivation = buildWhatIfMotivation(domanda, L, pct);
+        motivation = buildWhatIfMotivation(domанда, L, pct);
       }
     }
 
@@ -1355,4 +1361,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-  }
+      }
