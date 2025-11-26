@@ -1,6 +1,6 @@
 // /api/ask.js — What?f Engine (clarify + answer + polish)
 // - WHATIF: analisi scenari + consigli pratici.
-// - WTF: narratore/barista filoso incazzato, stile esempi (Motociclista, Luisa, Aquila).
+// - WTF: narratore/barista filoso incazzato, stile esempi (Motociclista, Luisa, Aquila, Pellegrino del forse).
 // - SORPRENDIMI: domande assurde “assurdo intelligente”, varie, non ripetute.
 
 import OpenAI from "openai";
@@ -87,7 +87,7 @@ function tightenSentences(text, maxSentences) {
     if (out.length >= maxSentences) break;
   }
   let t = out.join(" ");
-  if (!/[.!?…]$/.test(t)) t += ".";
+  if (!/[.!?…]$/.test(t) && t) t += ".";
   return t;
 }
 function clampWords(text, maxWords) {
@@ -144,7 +144,7 @@ function pickDet(arr, seed) {
 
 /* ========= Rimozione “prima persona” (solo WHAT IF) ========= */
 function stripFirstPerson(text = "", lang = "it", stile = "whatif") {
-  if (stile === "wtf") return text; // per WTF lasciamo la voce libera (ma gli esempi non usano “io”)
+  if (stile === "wtf") return text; // per WTF lasciamo la voce libera (ma gli esempi in pratica non usano “io”)
   let out = String(text || "");
   const L = normLang(lang);
 
@@ -238,8 +238,8 @@ const WTF_STYLE_EXAMPLES_IT = `Esempio 1:
 Esempio 2:
 "Ah, Luisa… eccoci di nuovo, come una ferita che ha nostalgia del coltello. Ci ricaschi: ti lanci nel suo buco nero emotivo e poi ti spaventi dell’eco. Lei ti visualizza, poi sparisce, e ti sale la pressione come una pentola con il coperchio che urla. Ti parte una “bestemmia della miseria incrociata” talmente sincera che la lampada sfarfalla e il bicchiere applaude. Il gatto scappa, Alexa finge un aggiornamento, e tu lasci cadere un’altra imprecazione che sembra una preghiera marcia. Bevi un sorso di rosso e riconosci che ogni storia finisce così: una bestemmia e un brindisi storto — ma almeno il vino lo scegli tu, ecchecazz!!!"
 
-Esempio 3:
-"Oh, eccoci, turista del destino. Solo a pensarci ti si inceppa il cervello come una serratura bagnata. Torni all’Aquila e il primo soffio d’aria ti tira una “bestemmia di benvenuto” che senti pure nei lacci delle scarpe. La piazza ti guarda come una vecchia zia che sa troppo, e un piccione cambia marciapiede perché non regge la tua aura di indecisione. Se resti dov’è, marcisci di nostalgia come un panino dimenticato nel microonde. Se torni, almeno ti riprendi la pelle. Morale storta: o ti muovi o continui a fare l’ospite nella tua stessa vita, ecchecazz!!!"`;
+Esempio 3 (breve, modello):
+"Oh, eccoci, pellegrino del forse, che ti incastri tra il divano e il destino come un telecomando scarico. Torni all’Aquila e ti parte una “bestemmia di ritorno” così piena che perfino il semaforo decide di mettersi al rosso per rispetto. Se fai il salto, i vicoli ti abbracciano storti e il barista ti versa il vino come a dire “era ora”; se rimandi, resti fermo come un citofono rotto che nessuno ascolta più. Ogni giorno che perdi è ruggine sui sogni che fingono di aspettarti. Morale breve: o ti muovi o diventi il rumore di fondo della tua stessa vita, ecchecazz!!!"`;
 
 /* ========= WTF: stop words & keyword helper ========= */
 const WTF_STOP_IT = new Set([
@@ -457,7 +457,7 @@ PAST MODE:
 - The question is about a past choice or missed path.`;
         }
       } else {
-        sys = `Sei “WHAT THE F”: narratore filoso incazzato nello stesso tono degli esempi (Motociclista, Luisa, Aquila).
+        sys = `Sei “WHAT THE F”: narratore filoso incazzato nello stesso tono degli esempi (Motociclista, Luisa, Aquila, Pellegrino del forse).
 Parli come se stessi raccontando la scena della vita di chi legge, con immagini esagerate e oggetti che reagiscono.
 Prendi in giro la SITUAZIONE, non la dignità di chi legge.
 Puoi citare la parola “bestemmia” in modo narrato (“ti parte una bestemmia cosmica”), ma NON scrivere bestemmie reali o riferimenti religiosi.
@@ -537,45 +537,47 @@ MODALITÀ PASSATO:
 
 /* ========= WTF RULES (risposte, non Sorprendimi) ========= */
 
-const WTF_RULE_IT_FUT = `Sei “WHAT THE F”: narratore/barista filoso incazzato che parla ESATTAMENTE con il respiro degli esempi seguenti (non copiare frasi, imita ritmo, voce, struttura):
+const WTF_RULE_IT_FUT = `Sei “WHAT THE F”: narratore/barista filoso incazzato che parla ESATTAMENTE con il respiro degli esempi seguenti (non copiare frasi, imita ritmo, voce, struttura, lunghezza):
 
 ${WTF_STYLE_EXAMPLES_IT}
 
 TONO:
 - Apertura teatrale che chiama in causa (“Oh, eccoci…”, “Ah, …eccoci di nuovo…”).
-- Seconda persona: “ti scappa”, “ti parte”, “ti ritrovi”, “torni a casa”, “marcisci di nostalgia”.
-- Oggetti e ambiente reagiscono (semaforo, bicchiere, lampada, cane, Alexa, barista, citofono, piazza, piccione…), massimo 3–4 elementi per risposta.
-- Una sola “bestemmia” narrata, creativa e tra virgolette (“bestemmione a motore caldo”, “bestemmia della miseria incrociata”, “bestemmia di benvenuto”), MAI bestemmie reali.
+- Seconda persona: “ti scappa”, “ti parte”, “ti ritrovi”, “resti fermo”, “ogni giorno che perdi…”.
+- Oggetti e ambiente reagiscono (semaforo, bicchiere, lampada, cane, Alexa, barista, citofono, piazza, piccione…), massimo 3 elementi per risposta.
+- Una sola “bestemmia” narrata, creativa e tra virgolette (“bestemmia di ritorno”, “bestemmia della miseria incrociata”), MAI bestemmie reali.
 - Nessun riferimento religioso diretto (niente dio, santi, madonne, cristi, ecc.).
-- NON racchiudere l’intera risposta fra virgolette: usa le virgolette solo intorno alla bestemmia narrata o a frasi citate.
+- NON racchiudere l’intera risposta fra virgolette: usa le virgolette solo intorno alla bestemmia narrata o a battute/frasette citate.
 - Evita parole zuccherose o da coach tipo “abbraccio dell’universo”, “coccola inaspettata”, “gocce di libertà”, “anima che si apre”.
-- Non usare “procrastinazione”, “ciclo del magari domani” o frasi tipo “vivere vuol dire / significa che…”.
+- Evita termini teorici come “procrastinazione”, “mindset”, “accettazione radicale”.
 - Sarcasmo affettuoso: prendi a schiaffi la SITUAZIONE, non la dignità di chi legge.
 - Zero insulti a categorie o identità, zero odio, niente “madò”.
+- Non inventare parole senza senso: se usi termini strani, devono essere comprensibili dal contesto (es. “bestemmia di ritorno”).
 
 COMPITO (FUTURO):
 - Metti in scena cosa succede se fai DAVVERO questa scelta: il film della vita che riparte.
-- Metti in scena cosa succede se continui a rimandare: la versione stantia, marcia, ripetuta.
-- La tensione tra le due versioni è raccontata con immagini fisiche (piazza, casa, bar, divano, citofono, calle, ecc.).
-- La morale finale resta dentro la scena (ospite nella tua vita, panino nel microonde, doppia fila emotiva), non in teoria.
+- Metti in scena cosa succede se continui a rimandare: la versione stantia, bloccata, ripetuta.
+- Usa immagini fisiche (piazza, casa, bar, divano, citofono, vicoli, autobus, corridoi) per rendere la differenza tra muoverti e restare fermo.
+- La morale finale resta dentro la scena (rumore di fondo, doppia fila emotiva, ospite nella tua vita), non in teoria astratta.
 
 FORMATO:
-- 4–8 frasi, un solo paragrafo, circa 90–150 parole.
+- 3–5 frasi, un solo paragrafo, circa 70–120 parole.
 - Italiano parlato ma corretto, niente elenchi, niente emoji.
 - L’ULTIMA frase chiude con una mini-morale cinica ma concreta legata a un gesto/oggetto e termina con “ecchecazz!!!” (tutto attaccato, tre punti esclamativi).`;
 
-const WTF_RULE_IT_PAST = `Sei “WHAT THE F” in modalità FLASHBACK, stessa voce degli esempi (Motociclista, Luisa, Aquila), ma applicata alla vita alternativa in cui avevi fatto l’altra scelta.
+const WTF_RULE_IT_PAST = `Sei “WHAT THE F” in modalità FLASHBACK, stessa voce degli esempi (Motociclista, Luisa, Pellegrino del forse), ma applicata alla vita alternativa in cui avevi fatto l’altra scelta.
 
 TONO:
 - Racconti quella stagione come una serie già uscita: mezzo epica, mezzo disastro.
 - Seconda persona: “ti saresti ritrovato”, “ti sarebbero esplose in faccia”, “avresti passato le sere…”.
 - Oggetti e ambiente fanno coro (scrivania, divano, bicchiere, telefono, pianta grassa, citofono, semaforo, barista…).
-- 1–2 “bestemmie” solo narrate, con aggettivi strani (“bestemmia nostalgica”, “bestemmia di bilancio”), mai reali.
+- 1 “bestemmia” solo narrata, con aggettivi strani (“bestemmia nostalgica”, “bestemmia di bilancio”), mai reale.
 - NESSUN riferimento religioso diretto.
 - Virgolette solo intorno alla bestemmia narrata o battute, mai intorno a tutto il testo.
 - Evita frasi zuccherose o spiritualone.
 - Niente “procrastinazione”, niente definizioni astratte del tipo “vivere vuol dire… / significa che…”.
 - Sarcasmo forte ma non spietato: si ride del casino, non della persona.
+- Non inventare parole a caso: se crei espressioni, devono avere senso (es. “bestemmia di bilancio”).
 
 COMPITO (PASSATO):
 - Descrivi come sarebbe andata se quella scelta l’avessi fatta: cosa avresti guadagnato, dove ti saresti incastrato, cosa ti sei pure risparmiato.
@@ -583,7 +585,7 @@ COMPITO (PASSATO):
 - L’ULTIMA frase chiude con consapevolezza appoggiata a una scena concreta e finisce con “ecchecazz!!!”.
 
 FORMATO:
-- 4–8 frasi, un solo paragrafo, circa 90–150 parole.
+- 3–5 frasi, un solo paragrafo, circa 70–120 parole.
 - Nessun elenco, nessuna emoji.`;
 
 const WTF_RULE_EN_FUT = `You are “WHAT THE F”: a rough, foul-mouthed but very cultured and pissed-off narrator.
@@ -595,7 +597,7 @@ TASK (FUTURE):
 - Last sentence: blunt, foul-mouthed, like a crooked summary.
 
 FORMAT:
-- 3–6 sentences, one paragraph, max ~130 words.
+- 3–5 sentences, one paragraph, max ~120 words.
 - No echo of the question, no emojis.`;
 
 const WTF_RULE_EN_PAST = `You are “WHAT THE F” in FLASHBACK MODE:
@@ -606,7 +608,7 @@ TASK (PAST):
 - End with a blunt, foul-mouthed line about what makes sense today.
 
 FORMAT:
-- 3–6 sentences, one paragraph, max ~130 words.
+- 3–5 sentences, one paragraph, max ~120 words.
 - No echo of the question, no emojis.`;
 
 /* ========= MESSAGGI RISPOSTA ========= */
@@ -632,8 +634,9 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
 - Puoi usare parolacce generiche, ma MAI bestemmie reali: solo la parola “bestemmia” con aggettivi creativi, come negli esempi.
 - Nessun insulto a categorie o identità, zero odio.
 - Evita parole zuccherose (“coccola”, “gocce di libertà”, “abbraccio dell’universo”, “anima che si apre”).
-- Non usare termini come “procrastinazione” o frasi teoriche tipo “vivere vuol dire / significa che…”.
-- Non racchiudere l’intero testo tra virgolette: usa le virgolette solo su bestemmie narrate o frasi riportate.`
+- Evita termini come “procrastinazione”, “mindset”, “accettazione radicale”.
+- Non racchiudere l’intero testo tra virgolette: usa le virgolette solo su bestemmie narrate o frasi riportate.
+- Non inventare parole senza senso (niente “toenassi”): qualsiasi espressione strana deve essere chiara dal contesto (es. “bestemmia di ritorno”).`
     : L === "en"
     ? `RULES WHAT IF:
 - Single paragraph, no bullets, no emojis.
@@ -669,7 +672,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
         role: "system",
         content: `PAROLE CHIAVE DALLA SCENA UTENTE: ${kw.join(
           ", "
-        )}. Usa 1–2 di questi elementi per immagini e metafore, nello stile degli esempi (Motociclista, Luisa, Aquila). Evita di fissarti sempre sugli stessi oggetti.`,
+        )}. Usa 1–2 di questi elementi per immagini e metafore, nello stile degli esempi (Motociclista, Luisa, Pellegrino del forse). Evita di fissarti sempre sugli stessi oggetti.`,
       });
     }
   } else {
@@ -711,9 +714,9 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
     if (L === "en") {
       if (isWtf) {
         if (hasClar) {
-          return `Original question (do not repeat it): "${domanda}". Extra detail: "${c}". Write ONE absurd, brutally honest answer in ENGLISH as “WHAT THE F”. Single paragraph, 3–6 sentences, loud, sarcastic, messy but secretly wise. Show what happens if they do it and if they keep dodging it, then close with a crooked but clear piece of advice.`;
+          return `Original question (do not repeat it): "${domanda}". Extra detail: "${c}". Write ONE absurd, brutally honest answer in ENGLISH as “WHAT THE F”. Single paragraph, 3–5 sentences, loud, sarcastic, messy but secretly wise. Show what happens if they do it and if they keep dodging it, then close with a crooked but clear piece of advice.`;
         }
-        return `Question (do not repeat it): "${domanda}". Write ONE answer in ENGLISH as “WHAT THE F”. Single paragraph, 3–6 sentences, extremely ironic and over-the-top, but still answering what happens with this choice and what you’d recommend.`;
+        return `Question (do not repeat it): "${domanda}". Write ONE answer in ENGLISH as “WHAT THE F”. Single paragraph, 3–5 sentences, extremely ironic and over-the-top, but still answering what happens with this choice and what you’d recommend.`;
       }
       if (hasClar) {
         if (isPast) {
@@ -731,24 +734,26 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
       if (isWtf) {
         if (hasClar) {
           return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}".
-Genera UNA risposta in ITALIANO come voce “WHAT THE F”, nello stesso stile degli esempi (Motociclista, Luisa, Aquila):
-- monologo unico, 4–8 frasi, circa 90–150 parole;
+Genera UNA risposta in ITALIANO come voce “WHAT THE F”, nello stesso stile degli esempi (Motociclista, Luisa, Pellegrino del forse):
+- monologo unico, 3–5 frasi, circa 70–120 parole;
 - apertura teatrale che chiama in causa chi legge;
 - metti in scena cosa succede se fai davvero questa scelta e cosa succede se continui a rimandare;
-- usa 2–4 oggetti/elementi dell’ambiente che reagiscono (bicchiere, lampada, cane, Alexa, semaforo, barista, piazza, citofono, divano…);
+- usa 2–3 oggetti/elementi dell’ambiente che reagiscono (bicchiere, lampada, cane, Alexa, semaforo, barista, piazza, citofono, divano…);
 - inserisci UNA sola “bestemmia” narrata, creativa e tra virgolette, senza riferimenti religiosi reali;
 - niente parole zuccherose né frasi teoriche tipo “vivere vuol dire / significa che…”;
+- niente parole inventate senza senso;
 - l’ULTIMA frase chiude con una mini-morale concreta legata a una scena e termina con “ecchecazz!!!”.
 Paragrafo unico, niente emoji.`;
         }
         return `Domanda (non ripeterla): "${domanda}".
-Genera UNA risposta in ITALIANO come voce “WHAT THE F”, identica come tono agli esempi (Motociclista, Luisa, Aquila):
-- monologo unico, 4–8 frasi, circa 90–150 parole;
+Genera UNA risposta in ITALIANO come voce “WHAT THE F”, identica come tono agli esempi (Motociclista, Luisa, Pellegrino del forse):
+- monologo unico, 3–5 frasi, circa 70–120 parole;
 - tu sei il narratore che racconta la vita di chi legge in seconda persona;
 - fai vedere il film di cosa succede se lo fai e il film di cosa succede se continui a tirarla lunga;
 - usa pochi oggetti ma molto vivi che reagiscono (lampada, bicchiere, cane, Alexa, citofono, piazza, barista…);
 - inserisci UNA sola “bestemmia” narrata, mai reale, senza religione;
 - niente motivazionalese, niente “procrastinazione”, niente “vivere vuol dire…”;
+- nessuna parola inventata senza senso;
 - l’ULTIMA frase chiude la scena con una riga secca e finisce con “ecchecazz!!!”.
 Paragrafo unico, niente emoji.`;
       }
@@ -1074,13 +1079,14 @@ async function polishAnswer({ text, lang, stile }) {
   if (L === "it") {
     sys =
       stile === "wtf"
-        ? `Sei un correttore di bozze per un monologo colorito nello stile degli esempi (Motociclista, Luisa, Aquila).
+        ? `Sei un correttore di bozze per un monologo colorito nello stile degli esempi (Motociclista, Luisa, Pellegrino del forse).
 Prendi il testo seguente e:
 - mantieni intatto il tono da narratore filoso incazzato, le parolacce e le immagini;
 - correggi solo errori grammaticali evidenti, concordanze, doppioni di parole, ripetizioni troppo ravvicinate;
 - NON aggiungere nuove metafore;
 - mantieni lunghezza simile e un unico paragrafo;
-- NON trasformare “bestemmia” in bestemmie reali o riferimenti religiosi.`
+- NON trasformare “bestemmia” in bestemmie reali o riferimenti religiosi;
+- non racchiudere tutto il testo tra virgolette.`
         : `Sei un correttore di bozze.
 Prendi il testo seguente e:
 - mantieni intatto senso e tono;
@@ -1115,15 +1121,21 @@ Keep it one paragraph and roughly the same length.`;
   return out;
 }
 
-/* ========= Finale WTF con ecchecazz!!! ========= */
+/* ========= Finale WTF con ecchecazz!!! + pulizia virgolette ========= */
 function ensureWtfEcchecazzEnding(text = "", lang = "it") {
   let s = String(text || "").trim();
   if (!s) return "ecchecazz!!!";
+
+  // togli virgolette all'inizio/fine del blocco
+  s = s.replace(/^["“”']+/, "").replace(/["“”']+$/, "").trim();
+
   // togli eventuali ecchecazz duplicati
   s = s.replace(/\s*ecchecazz!+$/i, "");
-  // togli punti finali
+
+  // togli punti finali, spazi
   s = s.replace(/[\s.!?…]+$/g, "").trim();
   if (!s) return "ecchecazz!!!";
+
   return `${s}, ecchecazz!!!`;
 }
 
@@ -1225,8 +1237,8 @@ export default async function handler(req, res) {
 
     // Limita frasi e parole, normalizza
     if (stile === "wtf") {
-      answer = tightenSentences(answer, 8);
-      answer = clampWords(answer, 160);
+      answer = tightenSentences(answer, 5); // massimo 5 frasi
+      answer = clampWords(answer, 120); // più corto
       answer = normalizeOneParagraph(answer);
     } else {
       answer = tightenSentences(answer, 7);
@@ -1265,9 +1277,6 @@ export default async function handler(req, res) {
       })();
     }
 
-    // Nessuna apertura random aggiunta lato backend per WTF:
-    // l’apertura (“Oh, eccoci…”) la scrive già il modello seguendo gli esempi.
-
     // Ripristina maiuscole frasi
     answer = sentenceCaseAll(answer);
 
@@ -1280,6 +1289,8 @@ export default async function handler(req, res) {
       answer = answer.replace(/\bvivere vuol dire[^.?!]*[.?!]/gi, "");
       answer = answer.replace(/\bvuol dire che[^.?!]*[.?!]/gi, "");
       answer = answer.replace(/\bsignifica che[^.?!]*[.?!]/gi, "");
+      // pulizia parole troppo sbagliate tipo "toenassi"
+      answer = answer.replace(/\btoenassi\b/gi, "tornassi");
     }
 
     // Strip prima persona per WHAT IF
@@ -1353,4 +1364,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-        }
+      }
