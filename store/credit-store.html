@@ -1,163 +1,252 @@
-<!doctype html>
-<html lang="it">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Store</title>
-<style>
-  :root{--bg:#0B0F14;--card:#141C22;--line:rgba(255,255,255,.12);--fg:#EAF3EE}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  .wrap{max-width:520px;margin:auto;padding:16px}
-  .card{background:#141C22;border:1px solid var(--line);border-radius:14px;padding:16px}
-  h2{margin:2px 0 8px;font-size:18px}
-  .btn{display:inline-block;margin:6px 6px 0 0;padding:10px 12px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
-  .primary{background:linear-gradient(180deg,#1C57A0,#FFEC01);color:#0A0E12}
-  .ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid var(--line)}
-  .small{font-size:12px;opacity:.85}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="card">
-    <h2 id="title">Crediti</h2>
-    <p class="small" id="desc">Hai terminato i crediti.</p>
+<!DOCTYPE html>
+<html lang="it" data-theme="whatif">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>What?f — Crediti</title>
+    <meta name="theme-color" content="#0A0F14" />
+    <style>
+      :root{
+        --bg:#05080D;
+        --card:#101720;
+        --fg:#F4F7FB;
+        --muted:#9CA7B7;
+        --line:#1E2936;
+        --chip:#121C27;
+        --accent1:#1E78FF;
+        --accent2:#FFE600;
+        --danger:#ff4b5c;
+      }
+      *{box-sizing:border-box;margin:0;padding:0}
+      html,body{
+        height:100%;
+        background:radial-gradient(900px 700px at 25% 20%, #0E1724 0%, #05080D 60%);
+        color:var(--fg);
+        font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+        -webkit-font-smoothing:antialiased;
+      }
+      body{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:20px 12px;
+      }
+      .panel{
+        width:min(100%,420px);
+        background:var(--card);
+        border-radius:22px;
+        border:1px solid var(--line);
+        box-shadow:0 22px 60px rgba(0,0,0,.55);
+        padding:20px 18px 18px;
+      }
+      .panel h1{
+        font-size:22px;
+        margin-bottom:4px;
+      }
+      .panel p{
+        font-size:14px;
+        color:var(--muted);
+        margin-bottom:12px;
+      }
+      .row{
+        display:flex;
+        flex-wrap:wrap;
+        gap:10px;
+        margin-top:12px;
+      }
+      .btn{
+        appearance:none;
+        border-radius:14px;
+        padding:10px 14px;
+        border:1px solid var(--line);
+        background:var(--chip);
+        color:var(--fg);
+        font-weight:700;
+        font-size:14px;
+        cursor:pointer;
+        flex:1;
+        text-align:center;
+      }
+      .btn.primary{
+        background:linear-gradient(180deg,var(--accent1),var(--accent2));
+        color:#05070A;
+        border:none;
+        box-shadow:0 12px 30px rgba(0,0,0,.55);
+      }
+      .btn.secondary{
+        flex:1;
+      }
+      .btn[disabled]{
+        opacity:.45;
+        cursor:not-allowed;
+        box-shadow:none;
+      }
+      .note-small{
+        font-size:11px;
+        color:var(--muted);
+        margin-top:12px;
+        line-height:1.4;
+      }
+      .pill{
+        display:inline-flex;
+        align-items:center;
+        gap:6px;
+        font-size:11px;
+        padding:4px 8px;
+        border-radius:999px;
+        background:rgba(15,24,36,.9);
+        border:1px solid var(--line);
+        margin-bottom:8px;
+      }
+      .pill span{
+        opacity:.9;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="panel">
+      <div class="pill">
+        <span>🔋</span><span id="subtitle">Crediti esauriti</span>
+      </div>
+      <h1 id="title">Crediti</h1>
+      <p id="description">
+        Hai terminato i crediti. Scegli un pacchetto per continuare a usare What?f.
+      </p>
 
-    <!-- 🔹 I NOSTRI 3 PACCHETTI -->
-    <button class="btn primary buy-pack" data-pack="5">Compra 5 crediti</button>
-    <button class="btn ghost buy-pack" data-pack="15">Compra 15 crediti</button>
-    <button class="btn ghost buy-pack" data-pack="30">Compra 30 crediti</button>
+      <div class="row">
+        <button class="btn primary" id="buy5">Compra 5 crediti</button>
+      </div>
+      <div class="row">
+        <button class="btn secondary" id="buy15">Compra 15 crediti</button>
+        <button class="btn secondary" id="buy30">Compra 30 crediti</button>
+      </div>
 
-    <button class="btn ghost" id="watch">Guarda pubblicità (+1)</button>
-    <button class="btn ghost" id="close">Chiudi</button>
-  </div>
-</div>
+      <div class="row" style="margin-top:16px;">
+        <button class="btn" id="closeBtn">Chiudi</button>
+      </div>
 
-<script>
-const I18N={
-  it:{
-    title:"Crediti",
-    desc:"Hai terminato i crediti.",
-    buy5:"Compra 5 crediti",
-    buy15:"Compra 15 crediti",
-    buy30:"Compra 30 crediti",
-    watch:"Guarda pubblicità (+1)",
-    close:"Chiudi"
-  },
-  en:{
-    title:"Credits",
-    desc:"You ran out of credits.",
-    buy5:"Buy 5 credits",
-    buy15:"Buy 15 credits",
-    buy30:"Buy 30 credits",
-    watch:"Watch ad (+1)",
-    close:"Close"
-  },
-  es:{
-    title:"Créditos",
-    desc:"Se te han acabado los créditos.",
-    buy5:"Comprar 5 créditos",
-    buy15:"Comprar 15 créditos",
-    buy30:"Comprar 30 créditos",
-    watch:"Ver anuncio (+1)",
-    close:"Cerrar"
-  },
-  fr:{
-    title:"Crédits",
-    desc:"Crédits épuisés.",
-    buy5:"Acheter 5 crédits",
-    buy15:"Acheter 15 crédits",
-    buy30:"Acheter 30 crédits",
-    watch:"Regarder une pub (+1)",
-    close:"Fermer"
-  },
-  de:{
-    title:"Credits",
-    desc:"Credits aufgebraucht.",
-    buy5:"5 Credits kaufen",
-    buy15:"15 Credits kaufen",
-    buy30:"30 Credits kaufen",
-    watch:"Werbung ansehen (+1)",
-    close:"Schließen"
-  }
-};
+      <div class="note-small" id="smallNote">
+        Il pagamento è gestito in modo sicuro da Stripe. Dopo il pagamento i crediti
+        vengono aggiunti automaticamente al tuo profilo collegato a Google.
+      </div>
+    </div>
 
-function getLang(){
-  const u=new URL(location.href);
-  const q=(u.searchParams.get('lang')||'it').toLowerCase();
-  return I18N[q]?q:'it';
-}
+    <script type="module">
+      const $ = id => document.getElementById(id);
 
-let lang=getLang();
+      // ========== i18n basic ==========
+      const I18N = {
+        it:{
+          subtitle:"Crediti esauriti",
+          title:"Crediti",
+          desc:"Hai terminato i crediti. Scegli un pacchetto per continuare a usare What?f.",
+          buy5:"Compra 5 crediti",
+          buy15:"Compra 15 crediti",
+          buy30:"Compra 30 crediti",
+          close:"Chiudi",
+          note:"Il pagamento è gestito in modo sicuro da Stripe. Dopo il pagamento i crediti vengono aggiunti automaticamente al tuo profilo collegato a Google.",
+          error:"Errore nel creare il pagamento. Riprova tra poco."
+        },
+        en:{
+          subtitle:"Out of credits",
+          title:"Credits",
+          desc:"You’ve run out of credits. Pick a pack to keep using What?f.",
+          buy5:"Buy 5 credits",
+          buy15:"Buy 15 credits",
+          buy30:"Buy 30 credits",
+          close:"Close",
+          note:"Payments are securely handled by Stripe. After checkout, credits are added automatically to your Google-linked profile.",
+          error:"Error creating the payment. Please try again."
+        },
+        es:{
+          subtitle:"Créditos agotados",
+          title:"Créditos",
+          desc:"Has agotado tus créditos. Elige un paquete para seguir usando What?f.",
+          buy5:"Comprar 5 créditos",
+          buy15:"Comprar 15 créditos",
+          buy30:"Comprar 30 créditos",
+          close:"Cerrar",
+          note:"El pago se gestiona de forma segura con Stripe. Tras el pago, los créditos se añaden automáticamente a tu perfil vinculado a Google.",
+          error:"Error al crear el pago. Inténtalo de nuevo."
+        },
+        fr:{
+          subtitle:"Crédits épuisés",
+          title:"Crédits",
+          desc:"Tu n’as plus de crédits. Choisis un pack pour continuer à utiliser What?f.",
+          buy5:"Acheter 5 crédits",
+          buy15:"Acheter 15 crédits",
+          buy30:"Acheter 30 crédits",
+          close:"Fermer",
+          note:"Le paiement est géré en toute sécurité par Stripe. Après le paiement, les crédits sont ajoutés automatiquement à ton profil lié à Google.",
+          error:"Erreur lors de la création du paiement. Réessaie."
+        },
+        de:{
+          subtitle:"Guthaben aufgebraucht",
+          title:"Credits",
+          desc:"Du hast keine Credits mehr. Wähle ein Paket, um What?f weiter zu nutzen.",
+          buy5:"5 Credits kaufen",
+          buy15:"15 Credits kaufen",
+          buy30:"30 Credits kaufen",
+          close:"Schließen",
+          note:"Die Zahlung wird sicher von Stripe abgewickelt. Nach der Zahlung werden die Credits automatisch deinem mit Google verknüpften Profil gutgeschrieben.",
+          error:"Fehler beim Erstellen der Zahlung. Bitte versuch es erneut."
+        }
+      };
 
-function apply(){
-  const T=I18N[lang]||I18N.it;
-  document.documentElement.lang=lang;
-  const titleEl = document.getElementById("title");
-  const descEl = document.getElementById("desc");
-  if (titleEl) titleEl.textContent = T.title;
-  if (descEl) descEl.textContent = T.desc;
+      function getLang(){
+        const params = new URLSearchParams(location.search);
+        const fromUrl = (params.get("lang") || "").toLowerCase();
+        const fromLS = (localStorage.getItem("lang") || "").toLowerCase();
+        const cand = fromUrl || fromLS || "it";
+        return ["it","en","es","fr","de"].includes(cand) ? cand : "it";
+      }
 
-  const btn5 = document.querySelector('button.buy-pack[data-pack="5"]');
-  const btn15 = document.querySelector('button.buy-pack[data-pack="15"]');
-  const btn30 = document.querySelector('button.buy-pack[data-pack="30"]');
-  if (btn5) btn5.textContent = T.buy5;
-  if (btn15) btn15.textContent = T.buy15;
-  if (btn30) btn30.textContent = T.buy30;
+      const lang = getLang();
+      const T = I18N[lang] || I18N.it;
 
-  const watch = document.getElementById("watch");
-  const close = document.getElementById("close");
-  if (watch) watch.textContent = T.watch;
-  if (close) close.textContent = T.close;
-}
+      $('subtitle').textContent = T.subtitle;
+      $('title').textContent = T.title;
+      $('description').textContent = T.desc;
+      $('buy5').textContent = T.buy5;
+      $('buy15').textContent = T.buy15;
+      $('buy30').textContent = T.buy30;
+      $('closeBtn').textContent = T.close;
+      $('smallNote').textContent = T.note;
 
-apply();
+      // ========== Stripe checkout ==========
+      async function startCheckout(pack){
+        const btns = ['buy5','buy15','buy30'].map($);
+        try{
+          btns.forEach(b => b.disabled = true);
+          const res = await fetch('/api/create-checkout-session',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ pack: String(pack) })
+          });
+          const data = await res.json().catch(()=>({}));
+          if(!res.ok || !data.url){
+            throw new Error('no url');
+          }
+          window.location.href = data.url;
+        }catch(err){
+          console.error('checkout error', err);
+          alert(T.error);
+          btns.forEach(b => b.disabled = false);
+        }
+      }
 
-window.addEventListener('message',(ev)=>{
-  const d=ev.data||{};
-  if(d.type==='set_lang' && I18N[d.lang]){ lang=d.lang; apply(); }
-});
+      $('buy5').onclick  = () => startCheckout("5");
+      $('buy15').onclick = () => startCheckout("15");
+      $('buy30').onclick = () => startCheckout("30");
 
-// 🔹 QUI facciamo partire Stripe, a seconda del pacchetto scelto
-async function startCheckout(pack){
-  try {
-    const res = await fetch("/api/create-checkout-session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pack })
-    });
-
-    const data = await res.json();
-
-    if (res.ok && data.url) {
-      window.location.href = data.url; // vai a Stripe
-    } else {
-      alert("Impossibile avviare il pagamento. Riprova tra poco.");
-      console.error("Stripe response error:", data);
-    }
-  } catch (err) {
-    console.error("Network or Stripe error:", err);
-    alert("Errore di rete durante il pagamento. Controlla la connessione e riprova.");
-  }
-}
-
-// Attacca il click ai 3 bottoni
-document.querySelectorAll(".buy-pack").forEach(btn=>{
-  btn.addEventListener("click", () => {
-    const pack = btn.getAttribute("data-pack") || "5";
-    startCheckout(pack);
-  });
-});
-
-const watch = document.getElementById("watch");
-const closeBtn = document.getElementById("close");
-
-if (watch) {
-  watch.onclick= ()=>{ try{ parent.postMessage({type:'open_rewarded'}, '*'); }catch{} };
-}
-if (closeBtn) {
-  closeBtn.onclick= ()=>{ try{ parent.postMessage({type:'close_overlay'}, '*'); }catch{} };
-}
-</script>
-</body>
+      // ========== Chiudi ==========
+      $('closeBtn').onclick = () => {
+        if (document.referrer) {
+          history.back();
+        } else {
+          window.location.href = '/fourth.html';
+        }
+      };
+    </script>
+  </body>
 </html>
