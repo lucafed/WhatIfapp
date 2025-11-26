@@ -1176,7 +1176,7 @@ export default async function handler(req, res) {
       micro = {},
     } = body || {};
 
-    if (!domанда || typeof domanda !== "string") {
+    if (!domаnda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
