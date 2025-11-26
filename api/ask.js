@@ -44,11 +44,11 @@ const ALLOWED_ORIGINS = [
 ];
 function cors(req, res) {
   const origin = String(req.headers.origin || "");
-  const allow = ALLOWED_ORIGINS.includes(origin)
-    ? origin
-    : process.env.NODE_ENV !== "production"
-    ? origin
-    : "";
+  const allow =
+    ALLOWED_ORIGINS.includes(origin) ||
+    process.env.NODE_ENV !== "production"
+      ? origin
+      : "";
   if (allow) res.setHeader("Access-Control-Allow-Origin", allow);
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -290,7 +290,7 @@ function wtfKeywords(domanda = "") {
   return out;
 }
 
-/* ========= WTF — aperture provocatorie, variate ========= */
+/* ========= WTF — aperture provocatorie ========= */
 const WTF_OPENINGS_IT = [
   "Ah ecco, ci risiamo, sembri il reboot dei tuoi dubbi preferiti.",
   "Oh bello, di nuovo qui con la stessa testa incrociata.",
@@ -454,9 +454,6 @@ MODALITÀ PASSATO:
 
   if (!isSurprise) {
     if (stile === "wtf") {
-      const LANG_LABEL =
-        L === "it" ? "ITALIANO" : L === "es" ? "SPAGNOLO" : L === "fr" ? "FRANCESE" : L === "de" ? "TEDESCO" : "ENGLISH";
-
       if (L === "en") {
         sys = `You are “WHAT THE F”: a rough, foul-mouthed but strangely wise bartender-philosopher.
 You roast the situation, not the person, with absurd images and playful swearing, but never attack groups or identities.
@@ -475,6 +472,9 @@ PAST MODE:
 - Explicitly point to "back then", "in that chapter", "when you stayed / didn’t move".`;
         }
       } else {
+        const LANG_LABEL =
+          L === "it" ? "ITALIANO" : L === "es" ? "SPAGNOLO" : L === "fr" ? "FRANCESE" : "TEDESCO";
+
         sys = `Sei “WHAT THE F”: buzzurro grezzo, volgare ma colto e filoso incazzato.
 Parli come un barista stanco della vita che però la capisce fin troppo bene.
 Prendi in giro la SITUAZIONE, non la dignità di chi legge.
@@ -549,7 +549,7 @@ MODALITÀ PASSATO:
 }
 
 /* ========= WTF RULES (risposte, non Sorprendimi) ========= */
-/* === QUI: stile WHAT THE F come i tuoi esempi (centauro, Luisa, Aquila) === */
+/* === WHAT THE F in stile “centauro / Luisa / Aquila” === */
 
 const WTF_RULE_IT_FUT = `Sei “WHAT THE F”: barista filoso mezzo ubriaco, volgare ma affettuoso, appoggiato al bancone.
 Parli come nei seguenti esempi ideali:
@@ -572,8 +572,7 @@ FORMATO:
 - Italiano parlato, leggibile, niente elenco puntato, niente emoji.`;
 
 const WTF_RULE_IT_PAST = `Sei “WHAT THE F” in modalità FLASHBACK: commenti la stagione alternativa della vita, quella in cui avevi fatto l’altra scelta, come al bancone a fine serata.
-Il tono resta quello degli esempi:
-“Ah, Luisa… eccoci di nuovo, come una ferita che ha nostalgia del coltello…” ecc.
+Il tono resta quello degli esempi: ruvido, affettuoso, pieno di immagini concrete.
 
 TONO (PASSATO):
 - Parli come se stessi raccontando la “serie tv alternativa” della vita di chi legge: quella in cui la scelta l’aveva fatta davvero.
@@ -661,7 +660,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
         role: "system",
         content: `PAROLE CHIAVE DALLA SCENA UTENTE: ${kw.join(
           ", "
-        )}. Usa 1–2 di questi elementi per immagini e micro-scene. Evita di riciclare sempre gli stessi oggetti: varia tra divano, letto, moto, bar, casa, citofono, ecc.`,
+        )}. Usa 1–2 di questi elementi per immagini e micro-scene, legate a città, casa, letto, lavoro, amici, bar, moto, telefono, ecc. Evita di riciclare sempre gli stessi oggetti.`,
       });
     }
   } else {
@@ -1103,7 +1102,7 @@ Keep it one paragraph and roughly the same length.`;
   return out;
 }
 
-/* ========= Finale WTF con ecchecazz!!!, variato ========= */
+/* ========= Finale WTF con ecchecazz!!! ========= */
 
 const WTF_ENDINGS_IT = [
   "Riassunto: o fai una mossa ora o resti parcheggiato in doppia fila emotiva a tempo indeterminato, ecchecazz!!!",
@@ -1123,7 +1122,6 @@ function ensureWtfEcchecazzEnding(text = "", lang = "it") {
   let s = String(text || "").trim();
   if (!s) return s;
 
-  // Togli qualsiasi finale già sporco con ecchecazz
   s = s.replace(/[,.\s]*(e\s+che\s+\w+)?\s*ecchecazz!+$/i, "");
   s = s.replace(/ecchecazz!+$/i, "");
   s = s.replace(/[\s.!?…]+$/g, "").trim();
@@ -1140,20 +1138,26 @@ function ensureWtfEcchecazzEnding(text = "", lang = "it") {
 export default async function handler(req, res) {
   cors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
+  if (req.method !== "POST")
+    return res.status(405).json({ error: "method_not_allowed" });
 
   try {
-    if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: "missing_api_key" });
+    if (!process.env.OPENAI_API_KEY)
+      return res.status(500).json({ error: "missing_api_key" });
 
-    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
+    const ip = (req.headers["x-forwarded-for"] ||
+      req.socket?.remoteAddress ||
+      "unknown")
       .toString()
       .split(",")[0]
       .trim();
     const ok = await rateOk(`ask:${ip}`);
     if (!ok) return res.status(429).json({ error: "rate_limited_minute" });
 
-    const bodyRaw = typeof req.body === "string" ? req.body : JSON.stringify(req.body || {});
-    const body = bodyRaw && typeof req.body === "string" ? JSON.parse(bodyRaw) : req.body || {};
+    const body =
+      typeof req.body === "string"
+        ? JSON.parse(req.body || "{}")
+        : req.body || {};
 
     const {
       stage = "answer", // "clarify" | "answer"
@@ -1165,8 +1169,10 @@ export default async function handler(req, res) {
       micro = {},
     } = body || {};
 
-    if (!domанда || typeof domanda !== "string") {
-      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
+    if (!domanda || typeof domanda !== "string") {
+      return res
+        .status(400)
+        .json({ error: "bad_request", detail: "domanda_required" });
     }
 
     const L = normLang(lang);
@@ -1253,7 +1259,7 @@ export default async function handler(req, res) {
     // Safety nomi propri IT
     if (normLang(lang) === "it") {
       (function () {
-        const d = String(domанда || "");
+        const d = String(domanda || "");
         const nameRx = /\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
         const inQuestion = new Set(d.match(nameRx) || []);
         answer = answer.replace(nameRx, (m) => {
@@ -1300,16 +1306,14 @@ export default async function handler(req, res) {
       answer = answer.replace(/\bcazzo\b/gi, "azzo");
     }
 
-    // Evita fissazione sui “lampioni”: se li ripete, cambio il secondo in “semaforo”
+    // Evita fissazione sui “lampioni”
     if (stile === "wtf" && L === "it") {
       let count = 0;
       answer = answer.replace(/\blampion[ei]\b/gi, (m) => {
         count += 1;
         return count > 1 ? "semaforo" : m;
       });
-      // evita “spippolata”
       answer = answer.replace(/\bspippolat\w*/gi, "rimuginata");
-      // evita "madò"
       answer = answer.replace(/\bmadò\b/gi, "");
     }
 
@@ -1338,12 +1342,13 @@ export default async function handler(req, res) {
           pct,
         });
       } catch (e) {
-        motivation = buildWhatIfMotivation(domанда, L, pct);
+        motivation = buildWhatIfMotivation(domanda, L, pct);
       }
     }
 
     const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
-    const scientific = stile === "wtf" && !isSurprise ? scientificReportDemenziale(domanda, L) : undefined;
+    const scientific =
+      stile === "wtf" && !isSurprise ? scientificReportDemenziale(domanda, L) : undefined;
 
     return res.status(200).json({
       mode: "answer",
@@ -1359,6 +1364,8 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
-    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
+    return res
+      .status(500)
+      .json({ error: "server_error", detail: String(err?.message || err) });
   }
-  }
+      }
