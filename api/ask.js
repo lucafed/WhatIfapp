@@ -1,5 +1,5 @@
 // /api/ask.js — What?f Engine (clarify + answer + polish)
-// - WHATIF: analisi scenari + consigli pratici (veggente zingaro di strada).
+// - WHATIF: veggente zingaro di strada, analisi scenari + consigli pratici.
 // - WTF: narratore/barista filoso incazzato, stile esempi (Motociclista, Luisa, Turista del destino).
 // - SORPRENDIMI: domande assurde “intelligenti”, varie, non ripetute.
 
@@ -16,12 +16,13 @@ const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL || "",
   token: process.env.UPSTASH_REDIS_REST_TOKEN || "",
 });
+
 const rl = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(10, "1 m"),
 });
 
-// Wrapper tollerante: se Upstash non è configurato/non risponde, non bloccare
+// wrapper: se Redis non va, non bloccare
 let rateOk = async () => true;
 try {
   rateOk = async (key) => {
@@ -33,7 +34,7 @@ try {
     }
   };
 } catch {
-  /* noop */
+  // noop
 }
 
 /* ========= CORS ========= */
@@ -42,6 +43,7 @@ const ALLOWED_ORIGINS = [
   "http://localhost:3000",
   "http://127.0.0.1:5500",
 ];
+
 function cors(req, res) {
   const origin = String(req.headers.origin || "");
   const allow = ALLOWED_ORIGINS.includes(origin)
@@ -59,11 +61,14 @@ function cors(req, res) {
 }
 
 /* ========= Helpers ========= */
+
 const SUP_LANGS = ["it", "en", "es", "fr", "de"];
+
 function normLang(l = "it") {
   const s = String(l || "it").toLowerCase().slice(0, 2);
   return SUP_LANGS.includes(s) ? s : "it";
 }
+
 function normLine(s = "") {
   return String(s)
     .toLowerCase()
@@ -72,24 +77,30 @@ function normLine(s = "") {
     .replace(/[.,;:!?()\[\]\-—]+$/g, "")
     .trim();
 }
+
 function tightenSentences(text, maxSentences) {
   const parts = String(text || "")
     .replace(/\n+/g, " ")
     .split(/(?<=[.!?…])\s+/)
     .map((x) => x.trim())
     .filter(Boolean);
+
   const out = [];
   const seen = new Set();
+
   for (const p of parts) {
     const n = normLine(p);
     if (!n || seen.has(n)) continue;
     out.push(p);
+    seen.add(n);
     if (out.length >= maxSentences) break;
   }
+
   let t = out.join(" ");
-  if (!/[.!?…]$/.test(t) && t) t += ".";
+  if (t && !/[.!?…]$/.test(t)) t += ".";
   return t;
 }
+
 function clampWords(text, maxWords) {
   const w = String(text || "").split(/\s+/);
   if (w.length <= maxWords) return text;
@@ -97,6 +108,7 @@ function clampWords(text, maxWords) {
   const m = slice.match(/([\s\S]*?[.!?…])(?![\s\S]*[.!?…])/);
   return m ? m[1] : slice + "…";
 }
+
 function normalizeOneParagraph(s = "") {
   return String(s)
     .replace(/\s*\n+\s*/g, " ")
@@ -105,6 +117,7 @@ function normalizeOneParagraph(s = "") {
     .replace(/\s+([.,;:!?])/g, "$1")
     .trim();
 }
+
 function stripQuestionEcho(domanda, text) {
   const d = String(domanda || "")
     .replace(/[“”"']/g, "")
@@ -116,7 +129,9 @@ function stripQuestionEcho(domanda, text) {
     .toLowerCase()
     .replace(/[“”"']/g, "")
     .trim();
+
   const rx = /^(?:e\s*se|what\s*if|domanda:|q:)[^.!?…]*[.!?…]\s+/i;
+
   if (lead.startsWith(d)) {
     const cut = t.indexOf(".");
     if (cut > -1) t = t.slice(cut + 1).trim();
@@ -124,12 +139,19 @@ function stripQuestionEcho(domanda, text) {
   t = t.replace(rx, "");
   return t;
 }
+
 function sentenceCaseAll(s = "") {
-  return s.replace(/(^|[.!?…]\s+)([a-zà-ÿ])/g, (m, prefix, chr) => prefix + chr.toUpperCase());
+  return s.replace(
+    /(^|[.!?…]\s+)([a-zà-ÿ])/g,
+    (m, prefix, chr) => prefix + chr.toUpperCase()
+  );
 }
+
 function finalPunct(s = "") {
-  return /[.!?…]$/.test(s) ? s : s + ".";
+  const t = String(s || "").trim();
+  return /[.!?…]$/.test(t) ? t : t + ".";
 }
+
 function hashStr(str = "") {
   let h = 2166136261 >>> 0;
   for (const ch of String(str)) {
@@ -138,11 +160,14 @@ function hashStr(str = "") {
   }
   return h >>> 0;
 }
+
 function pickDet(arr, seed) {
-  return arr[arr.length ? seed % arr.length : 0] || "";
+  if (!arr || !arr.length) return "";
+  return arr[seed % arr.length] || arr[0];
 }
 
 /* ========= Rimozione “prima persona” (solo WHAT IF) ========= */
+
 function stripFirstPerson(text = "", lang = "it", stile = "whatif") {
   if (stile === "wtf") return text;
   let out = String(text || "");
@@ -150,7 +175,10 @@ function stripFirstPerson(text = "", lang = "it", stile = "whatif") {
 
   if (L === "it") {
     out = out.replace(/\b(io|me|mi|noi|ci)\b/gi, "tu");
-    out = out.replace(/\b(mio|mia|miei|mie|nostro|nostra|nostri|nostre)\b/gi, "tuo");
+    out = out.replace(
+      /\b(mio|mia|miei|mie|nostro|nostra|nostri|nostre)\b/gi,
+      "tuo"
+    );
   } else {
     out = out.replace(
       /\b(I|I'm|I’d|I've|me|my|we|we're|we’ve|we’d|us|our|ours)\b/gi,
@@ -161,11 +189,13 @@ function stripFirstPerson(text = "", lang = "it", stile = "whatif") {
   return out;
 }
 
-/* ========= WHAT IF – esempio (veggente zingaro di strada) ========= */
+/* ========= WHAT IF – esempio (veggente zingaro) ========= */
+
 const WHATIF_HYBRID_EX_IT = `Da come si muove questa scelta si sente che non è solo un capriccio di giornata. Se ti ci buttassi davvero, la routine cambierebbe ritmo, taglieresti rumore e ti accorgeresti di quanta energia stavi sprecando a tenerla in sospeso. Se invece la lasciassi lì a galleggiare, resterebbe come una sedia vuota in mezzo alla stanza: non rovina tutto, ma ti intralcia ogni passo. Alla fine la vista è semplice: meno scenografia, più vita gestibile, e una versione di te che fa meno finta di niente.`;
 
-/* ========= WHAT IF – REGOLE (veggente zingaro) ========= */
-const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO – VEGGENTE ZINGARO DI STRADA: SCENARI + CONSIGLI):
+/* ========= WHAT IF – REGOLE (veggente zingaro di strada) ========= */
+
+const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO – VEGGENTE ZINGARO DI STRADA: SCENARI + CONSIGLI)
 - Tono: veggente zingaro di strada, diretto e concreto, con una sensibilità che “vede dietro” le situazioni ma resta coi piedi per terra.
 - Apertura: le prime parole commentano ciò che percepisci dalla domanda o dall’aria della situazione (“Da come la racconti si sente che…”, “Qui si vede subito che…”). Varia sempre la formula, non usare frasi fisse.
 - Compito: prima analizzi gli scenari:
@@ -180,7 +210,7 @@ const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO – VEGGENTE ZINGARO DI ST
 - 5–7 frasi, un paragrafo, frasi brevi (~20 parole max), niente elenchi, niente emoji.
 - Niente prima persona narrativa (“io, noi, mi, ci”).`;
 
-const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE – VEGGENTE ZINGARO: SCENARIO ALTERNATIVO + LEZIONE):
+const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE – VEGGENTE ZINGARO: SCENARIO ALTERNATIVO + LEZIONE)
 - Tono: veggente zingaro di strada che ti fa vedere il film alternativo senza schiacciarti di sensi di colpa.
 - Apertura: parti da quello che percepisci dalla storia (“Raccontata così, quella scelta avrebbe cambiato parecchio l’aria intorno a te…”), in modo naturale.
 - Compito: descrivi come sarebbe andata se quella scelta l’avessi fatta davvero:
@@ -194,39 +224,63 @@ const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE – VEGGE
 - Niente prima persona narrativa (“io, noi, mi, ci”).`;
 
 /* ========= Finali “gancio” WHAT IF (solo non-IT) ========= */
+
 const ZINGARA_ENDINGS = {
   it: { future: [], past: [] },
   en: {
-    future: ["And there you’d notice you don’t need drama, just a cleaner choice."],
-    past: ["You’d probably feel it in your bones: it wasn’t fate, just a different script."],
+    future: [
+      "And there you’d notice you don’t need drama, just a cleaner choice."
+    ],
+    past: [
+      "You’d probably feel it in your bones: it wasn’t fate, just a different script."
+    ]
   },
   es: {
-    future: ["Y ahí notarás que no hace falta un giro épico, solo una decisión más honesta."],
-    past: ["Y quizá hoy lo sentirías: no era destino, era otra forma de escribir tu historia."],
+    future: [
+      "Y ahí notarás que no hace falta un giro épico, solo una decisión más honesta."
+    ],
+    past: [
+      "Y quizá hoy lo sentirías: no era destino, era otra forma de escribir tu historia."
+    ]
   },
   fr: {
-    future: ["Et là tu verras qu’il ne faut pas tout casser, juste choisir plus juste."],
-    past: ["Et tu comprendras que ce n’était pas le destin, juste un autre scénario possible."],
+    future: [
+      "Et là tu verras qu’il ne faut pas tout casser, juste choisir plus juste."
+    ],
+    past: [
+      "Et tu comprendras que ce n’était pas le destin, juste un autre scénario possible."
+    ]
   },
   de: {
-    future: ["Und dort merkst du, dass du kein Drama brauchst, nur eine klarere Entscheidung."],
-    past: ["Vielleicht spürst du dann, dass es kein Schicksal war, sondern nur ein anderes Drehbuch."],
-  },
+    future: [
+      "Und dort merkst du, dass du kein Drama brauchst, nur eine klarere Entscheidung."
+    ],
+    past: [
+      "Vielleicht spürst du dann, dass es kein Schicksal war, sondern nur ein anderes Drehbuch."
+    ]
+  }
 };
+
 function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   let s = String(text || "").trim();
   const L = normLang(lang);
   if (L === "it") return s;
+
   const last = (s.match(/([^.!?…]+[.!?…])\s*$/) || [])[1] || s;
-  const alreadyHasHook = /(you’d notice|you’d probably feel|notarás|verras|merkst du)/i.test(last);
+  const alreadyHasHook = /(you’d notice|you’d probably feel|notarás|verras|merkst du)/i.test(
+    last
+  );
   if (alreadyHasHook) return s;
+
   const pool = ZINGARA_ENDINGS[L] || ZINGARA_ENDINGS.en;
   const bag =
     String(periodo).toLowerCase() === "past"
       ? pool.past || ZINGARA_ENDINGS.en.past
       : pool.future || ZINGARA_ENDINGS.en.future;
+
   const addon = pickDet(bag, hashStr((domanda || "") + s));
   if (!addon) return s;
+
   s = s.replace(/[.!?…]+$/, "");
   return `${s}. ${addon}`;
 }
@@ -242,7 +296,8 @@ Esempio 2:
 Esempio 3:
 "Oh, eccoti, turista del destino con la valigia piena di ‘poi vediamo’. Torni a casa e ti parte una “bestemmia di ritorno” così rotonda che il piccione sul cornicione smette di giudicarti. Il barista ti serve il bicchiere come se timbrasse il cartellino del tuo rientro nella vita vera. Se fai il passo i vicoli ti si appiccicano addosso; se resti dov’eri, passi le sere a fissare il muro mentre il citofono tace apposta. O rientri nel film o resti la comparsa dei tuoi stessi pensieri, ecchecazz!!!"`;
 
-/* ========= WTF: stop words & keyword helper ========= */
+/* ========= WTF: parole chiave ========= */
+
 const WTF_STOP_IT = new Set([
   "allora",
   "perché",
@@ -271,16 +326,19 @@ const WTF_STOP_IT = new Set([
   "andare",
   "stare",
   "dove",
-  "se",
+  "se"
 ]);
+
 function wtfKeywords(domanda = "") {
   const t = String(domanda || "").toLowerCase();
   const words = t
     .replace(/[.,;:!?()"'“”\[\]{}]/g, " ")
     .split(/\s+/)
     .filter(Boolean);
+
   const out = [];
   const seen = new Set();
+
   for (const w of words) {
     if (w.length < 4) continue;
     if (WTF_STOP_IT.has(w)) continue;
@@ -293,6 +351,7 @@ function wtfKeywords(domanda = "") {
 }
 
 /* ========= WTF: rapporto scientifico demenziale ========= */
+
 function scientificReportDemenziale(domanda, lang = "it") {
   function h(s = "") {
     let x = 0;
@@ -308,13 +367,13 @@ function scientificReportDemenziale(domanda, lang = "it") {
     "Istituto Europeo di Scienze Baristiche",
     "Laboratorio di Statistiche Improbabili",
     "Centro Studi di Fisica dell’Umore",
-    "Accademia Transalpina delle Decisioni Avventate",
+    "Accademia Transalpina delle Decisioni Avventate"
   ];
   const JOUR = [
     "Rivista di Fisica dell’Umore",
     "Giornale Internazionale di Scuse Quantistiche",
     "Annali di Metodologie Poco Replicabili",
-    "Quaderni di Ergonomia dell’Anima",
+    "Quaderni di Ergonomia dell’Anima"
   ];
   const EFFECT = [
     "imprecazione calibrata",
@@ -322,7 +381,7 @@ function scientificReportDemenziale(domanda, lang = "it") {
     "tapparelle giudicanti",
     "POS in modalità benedizione",
     "ventilatore che gira al contrario “per rispetto”",
-    "lampada che lampeggia “ti capisco” in Morse",
+    "lampada che lampeggia “ti capisco” in Morse"
   ];
   const METRIC = ["r=0.82", "p=0.047", "η²=0.31", "β=0.67", "AUC=0.73", "OR=2.1"];
 
@@ -338,14 +397,17 @@ function scientificReportDemenziale(domanda, lang = "it") {
   return `Rapporto scientifico (più o meno): ${u} (n=${n}) rileva che una “${e}” migliora la chiarezza decisionale (${m}). Revisione a cura di ${j}, forse.`;
 }
 
-/* ========= SORPRENDIMI – messaggi: CLARIFY ========= */
+/* ========= SORPRENDIMI – CLARIFY ========= */
+
 function buildClarifyMessages({ domanda, stile, lang, periodo, micro = {} }) {
   const L = normLang(lang);
   const isPast = String(periodo).toLowerCase() === "past";
-  const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
+  const isSurprise =
+    !!(micro && (micro.surprise === true || micro.src === "surprise"));
 
   let sys;
 
+  /* ---- Modalità SORPRENDIMI ---- */
   if (isSurprise) {
     if (stile === "wtf") {
       if (L === "en") {
@@ -396,7 +458,7 @@ MODALITÀ PASSATO:
     } else {
       // WHAT IF – Sorprendimi
       if (L === "en") {
-        sys = `You are “WHAT IF”: a very clear, grounded advisor.
+        sys = `You are “WHAT IF”: a very clear, grounded advisor with a street–seer vibe.
 You care about real-life constraints and practical advice, not poetry.
 
 SURPRISE MODE:
@@ -421,7 +483,7 @@ PAST MODE:
             ? "FRANCESE"
             : "TEDESCO";
 
-        sys = `Sei “WHAT IF”: veggente zingaro di strada, diretto ma concreto. Vedi dietro le scelte, ma ti interessano i vincoli veri e i consigli pratici.
+        sys = `Sei “WHAT IF”: veggente zingaro di strada, diretto ma concreto. Vedi cosa c’è dietro le scelte, ma ti interessano vincoli veri e consigli pratici.
 
 MODALITÀ SORPRENDIMI:
 - Fai ESATTAMENTE UNA domanda di chiarimento in ${LANG_LABEL}.
@@ -439,6 +501,7 @@ MODALITÀ PASSATO:
     }
   }
 
+  /* ---- Modalità CLARIFY normale ---- */
   if (!isSurprise) {
     if (stile === "wtf") {
       if (L === "en") {
@@ -476,12 +539,12 @@ MODALITÀ PASSATO:
     } else {
       // WHAT IF normale
       if (L === "en") {
-        sys = `You are “WHAT IF”: a very clear, grounded advisor.
-You care about real-life constraints and want to give useful, practical advice, not poetry.
+        sys = `You are “WHAT IF”: a clear, grounded street–seer.
+You look at trade–offs and give practical advice, not vague inspiration.
 
 TASK:
 - Ask EXACTLY ONE clarifying question in ENGLISH.
-- Focus on 1–2 key details that change the analysis.
+- Focus on 1–2 key details that really change the analysis.
 - Calm, precise tone. One sentence, max 22 words, no emojis, no bullets.
 - Do not use first-person narration (“I, we”).`;
         if (isPast) {
@@ -530,11 +593,11 @@ MODALITÀ PASSATO:
 
   return [
     { role: "system", content: sys },
-    { role: "user", content: userMsg },
+    { role: "user", content: userMsg }
   ];
 }
 
-/* ========= WTF RULES (risposte, non Sorprendimi) ========= */
+/* ========= WTF RULES (risposte) ========= */
 
 const WTF_RULE_IT_FUT = `Sei “WHAT THE F”: narratore/barista filoso incazzato che parla ESATTAMENTE con il respiro degli esempi seguenti (non copiare frasi, imita ritmo, voce, struttura):
 
@@ -615,7 +678,8 @@ FORMAT:
 - 3–5 sentences, one paragraph, max ~120 words.
 - No echo of the question, no emojis.`;
 
-/* ========= MESSAGGI RISPOSTA ========= */
+/* ========= BUILD MESSAGES (risposta) ========= */
+
 function buildMessages({ domanda, clarification, lang, periodo, stile }) {
   const L = normLang(lang);
   const isWtf = stile === "wtf";
@@ -641,7 +705,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
 - Evita termini come “procrastinazione”, “mindset”, “accettazione radicale”.
 - Non usare “rimando" come sostantivo.
 - Non racchiudere l’intero testo tra virgolette: usa le virgolette solo su bestemmie narrate o frasi riportate.
-- Non inventare parole senza senso (niente “toenassi”): qualsiasi espressione strana deve essere chiara dal contesto (es. “bestemmia di ritorno”).`
+- Non inventare parole senza senso: qualsiasi espressione strana deve essere chiara dal contesto (es. “bestemmia di ritorno”).`
     : L === "en"
     ? `RULES WHAT IF:
 - Single paragraph, no bullets, no emojis.
@@ -660,7 +724,6 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
 
   if (isWtf) {
     const kw = wtfKeywords(domanda);
-
     const wtfRule =
       L === "en"
         ? isPast
@@ -677,7 +740,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
         role: "system",
         content: `PAROLE CHIAVE DALLA SCENA UTENTE: ${kw.join(
           ", "
-        )}. Usa 1–2 di questi elementi per immagini e metafore, nello stile degli esempi (Motociclista, Luisa, Turista del destino). Evita di fissarti sempre sugli stessi oggetti.`,
+        )}. Usa 1–2 di questi elementi per immagini e metafore, nello stile degli esempi. Evita di fissarti sempre sugli stessi oggetti.`
       });
     }
   } else {
@@ -687,7 +750,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
         { role: "system", content: ruleIT },
         {
           role: "system",
-          content: `ESEMPIO DI RESPIRO (non copiare i contenuti, solo il tono):\n${WHATIF_HYBRID_EX_IT}`,
+          content: `ESEMPIO DI RESPIRO (non copiare i contenuti, solo il tono):\n${WHATIF_HYBRID_EX_IT}`
         }
       );
     }
@@ -698,19 +761,19 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
       msgs.push({
         role: "system",
         content:
-          "La risposta di quarta pagina è contesto centrale: usala per capire obiettivi e vincoli, ma NON citarla né riassumerla.",
+          "La risposta extra dell’utente è contesto centrale: usala per capire obiettivi e vincoli, ma NON citarla né riassumerla."
       });
     } else if (L === "en") {
       msgs.push({
         role: "system",
         content:
-          "The fourth-page answer is central context: use it to understand goals and constraints, but do NOT quote or summarize it.",
+          "The extra user answer is central context: use it to understand goals and constraints, but do NOT quote or summarize it."
       });
     } else {
       msgs.push({
         role: "system",
         content:
-          "La risposta extra dell’utente è contesto importante: usala per orientare l’analisi, senza citarla o riassumerla in modo diretto.",
+          "La risposta extra dell’utente è contesto importante: usala per orientare l’analisi, senza citarla o riassumerla in modo diretto."
       });
     }
   }
@@ -738,36 +801,31 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
     if (L === "it") {
       if (isWtf) {
         if (hasClar) {
-          return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}".
-Genera UNA risposta in ITALIANO come voce “WHAT THE F”, nello stesso stile degli esempi (Motociclista, Luisa, Turista del destino):
+          return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo: "${c}".
+Genera UNA risposta in ITALIANO come voce “WHAT THE F”, nello stesso stile degli esempi:
 - monologo unico, 3–4 frasi, circa 70–95 parole;
 - apertura teatrale che chiama in causa chi legge;
 - DEVI mostrare due film distinti: uno in cui fai davvero questa scelta, uno in cui resti fermo e continui a tirarla lunga;
-- usa 2–3 oggetti/elementi dell’ambiente che reagiscono (bicchiere, lampada, cane, Alexa, semaforo, barista, piazza, citofono, divano…);
+- usa 2–3 oggetti/elementi dell’ambiente che reagiscono;
 - inserisci UNA sola “bestemmia” narrata, creativa e tra virgolette, senza riferimenti religiosi reali;
-- niente parole zuccherose né frasi teoriche tipo “vivere vuol dire / significa che…”;
-- niente parole inventate senza senso, niente “rimando” come sostantivo;
 - l’ULTIMA frase chiude con una mini-morale concreta legata a una scena e termina con “ecchecazz!!!”.
 Paragrafo unico, niente emoji.`;
         }
         return `Domanda (non ripeterla): "${domanda}".
-Genera UNA risposta in ITALIANO come voce “WHAT THE F”, identica come tono agli esempi (Motociclista, Luisa, Turista del destino):
+Genera UNA risposta in ITALIANO come voce “WHAT THE F”, identica come tono agli esempi:
 - monologo unico, 3–4 frasi, circa 70–95 parole;
 - tu sei il narratore che racconta la vita di chi legge in seconda persona;
 - DEVI far vedere il film di cosa succede se lo fai e il film di cosa succede se continui a tirarla lunga;
-- usa pochi oggetti ma molto vivi che reagiscono (lampada, bicchiere, cane, Alexa, citofono, piazza, barista…);
-- inserisci UNA sola “bestemmia” narrata, mai reale, senza religione;
-- niente motivazionalese, niente “procrastinazione”, niente “rimando” come sostantivo, niente “vivere vuol dire…”;
-- nessuna parola inventata senza senso;
+- una sola “bestemmia” narrata, mai reale;
 - l’ULTIMA frase chiude la scena con una riga secca e finisce con “ecchecazz!!!”.
 Paragrafo unico, niente emoji.`;
       }
 
       if (hasClar) {
         if (isPast) {
-          return `Domanda sul PASSATO (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF” (veggente zingaro di strada): racconta come sarebbe andata davvero in quella vita alternativa e poi spiega cosa impari e come ti conviene muoverti ORA. Paragrafo unico, 5–7 frasi, analisi concreta e consigli pratici.`;
+          return `Domanda sul PASSATO (non ripeterla): "${domanda}". Dettaglio aggiuntivo: "${c}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF” (veggente zingaro di strada): racconta come sarebbe andata davvero in quella vita alternativa e poi spiega cosa impari e come ti conviene muoverti ORA. Paragrafo unico, 5–7 frasi, analisi concreta e consigli pratici.`;
         }
-        return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta in ITALIANO come “WHAT IF” (veggente zingaro di strada): prima analizzi i possibili scenari (se lo fai, se non lo fai, se lo rimandi, se lo fai in modo diverso), poi prendi posizione su cosa ha più senso e dai consigli pratici su come comportarti. Paragrafo unico, 5–7 frasi, tono diretto ma con una sensibilità che “vede dietro” le cose.`;
+        return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo: "${c}". Genera UNA risposta in ITALIANO come “WHAT IF” (veggente zingaro di strada): prima analizzi i possibili scenari (se lo fai, se non lo fai, se lo rimandi, se lo fai in modo diverso), poi prendi posizione su cosa ha più senso e dai consigli pratici su come comportarti. Paragrafo unico, 5–7 frasi, tono diretto ma con una sensibilità che “vede dietro” le cose.`;
       }
       if (isPast) {
         return `Domanda sul PASSATO (non ripeterla): "${domanda}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF” (veggente zingaro di strada): descrivi come sarebbe andata quella scelta e chiudi spiegando cosa puoi farci oggi, in modo concreto. Paragrafo unico.`;
@@ -775,6 +833,7 @@ Paragrafo unico, niente emoji.`;
       return `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO come “WHAT IF” (veggente zingaro di strada): analizza i diversi scenari possibili e poi dai consigli chiari su cosa fare e come comportarti nei prossimi passi. Paragrafo unico.`;
     }
 
+    // altre lingue: versione semplice
     if (L === "es") {
       return hasClar
         ? `Pregunta original (no la repitas): "${domanda}". Detalle adicional del usuario: "${c}". Escribe UNA respuesta en ESPAÑOL, clara y concreta, en un solo párrafo.`
@@ -795,7 +854,8 @@ Paragrafo unico, niente emoji.`;
   return msgs;
 }
 
-/* ========= Server-side PCT ========= */
+/* ========= PCT (probabilità) ========= */
+
 function computePct(domanda, stile) {
   const t = String(domanda || "").toLowerCase();
   let s = 55;
@@ -804,7 +864,8 @@ function computePct(domanda, stile) {
   if (/\b\d+([.,]\d+)?\b/.test(t)) s += 6;
   if (/budget|€|euro|spesa|max|under|sotto|prezzo|costo/.test(t)) s += 6;
   if (/senza|solo|al massimo|minimo|entro|prima delle|ogni|per/.test(t)) s += 8;
-  if (/lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa|cambia|trasferisc/i.test(t)) s += 6;
+  if (/lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa|cambia|trasferisc/i.test(t))
+    s += 6;
   if (/forse|magari|maybe|quizás|chissà/.test(t)) s -= 8;
   if (!/\b\d/.test(t)) s -= 4;
 
@@ -819,12 +880,17 @@ function computePct(domanda, stile) {
 }
 
 /* ========= WHAT IF: motivazione fallback ========= */
+
 function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
   const L = (lang || "it").slice(0, 2);
   const t = String(domanda || "").toLowerCase();
 
-  const hasTime = /\b(7|14|21|30|60|90|giorn|settiman|mes|mesi|anni|days?|weeks?|months?|years?)\b/.test(t);
-  const hasBudget = /(budget|€|euro|spesa|costo|prezzo|max|under|sotto|caparra|cost|money)/.test(t);
+  const hasTime = /\b(7|14|21|30|60|90|giorn|settiman|mes|mesi|anni|days?|weeks?|months?|years?)\b/.test(
+    t
+  );
+  const hasBudget = /(budget|€|euro|spesa|costo|prezzo|max|under|sotto|caparra|cost|money)/.test(
+    t
+  );
   const hasDeadline = /(entro|prima|scadenza|deadline|by\s+\d|before\s+\d)/.test(t);
   const action =
     /(apri|lancia|impara|studia|scrivi|automatizza|testa|cambia|trova|assumi|costruisci|crea|launch|start|learn|build|create)/.test(
@@ -857,7 +923,9 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     }
 
     if (!pros.length) {
-      pros.push("la vera leva è la routine: piccoli passi costanti battono le grandi intenzioni");
+      pros.push(
+        "la vera leva è la routine: piccoli passi costanti battono le grandi intenzioni"
+      );
     }
     if (!cons.length) {
       cons.push("il collo di bottiglia è la tua energia più che la fortuna");
@@ -868,6 +936,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     return `${pSentence} ${proConSentence}`.trim();
   }
 
+  // versioni altre lingue (stesso schema, accorciato)
   if (L === "en") {
     const pros = [];
     const cons = [];
@@ -893,7 +962,9 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     }
 
     if (!pros.length) {
-      pros.push("the real lever is routine: small consistent steps beat big intentions");
+      pros.push(
+        "the real lever is routine: small consistent steps beat big intentions"
+      );
     }
     if (!cons.length) {
       cons.push("your main bottleneck is energy and focus, not luck");
@@ -904,119 +975,18 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     return `${pSentence} ${proConSentence}`.trim();
   }
 
-  if (L === "es") {
-    const pros = [];
-    const cons = [];
-
-    if (hasTime) {
-      pros.push("el tiempo es manejable si divides el camino en pasos pequeños");
-      cons.push("si no proteges tu tiempo, acabarás posponiéndolo una y otra vez");
-    }
-    if (hasBudget) {
-      pros.push("puedes mantener los costes bajo control con un límite claro");
-      cons.push("si infravaloras los gastos, la presión económica puede frenarte");
-    }
-    if (hasDeadline) {
-      pros.push("un plazo definido empuja a decidir antes");
-      cons.push("si el plazo es difuso, se irá moviendo hacia adelante");
-    }
-    if (action) {
-      pros.push("tienes una palanca concreta para avanzar cada día");
-    }
-    if (riskHedging) {
-      pros.push("puedes limitar el riesgo con pocas reglas sencillas");
-      cons.push("buscar riesgo cero puede dejarte inmóvil");
-    }
-
-    if (!pros.length) {
-      pros.push("la palanca real es la rutina: pequeños pasos constantes vencen a los grandes planes");
-    }
-    if (!cons.length) {
-      cons.push("el cuello de botella es tu energía y foco, no la suerte");
-    }
-
-    const pSentence = `Probabilidad aproximada ${pct}%.`;
-    const proConSentence = `A favor: ${pros[0]}. En contra: ${cons[0]}.`;
-    return `${pSentence} ${proConSentence}`.trim();
-  }
-
-  if (L === "fr") {
-    const pros = [];
-    const cons = [];
-
-    if (hasTime) {
-      pros.push("le calendrier reste gérable si tu découpes en petites étapes");
-      cons.push("sans temps protégé, tu repousseras discrètement sans fin");
-    }
-    if (hasBudget) {
-      pros.push("tu peux contenir les coûts avec un plafond clair");
-      cons.push("si tu sous-estimes les dépenses, la pression financière peut te freiner");
-    }
-    if (hasDeadline) {
-      pros.push("une échéance claire aide à trancher plus vite");
-      cons.push("une date floue glisse facilement et affaiblit ton engagement");
-    }
-    if (action) {
-      pros.push("tu as un levier concret à actionner chaque jour");
-    }
-    if (riskHedging) {
-      pros.push("quelques règles simples peuvent limiter le risque");
-      cons.push("viser le risque zéro risque justement de t’immobiliser");
-    }
-
-    if (!pros.length) {
-      pros.push("le vrai levier, c’est la routine: de petits pas réguliers dépassent les grandes intentions");
-    }
-    if (!cons.length) {
-      cons.push("le principal goulot d’étranglement est ton énergie et ta clarté, pas la chance");
-    }
-
-    const pSentence = `Probabilité estimée autour de ${pct}%.`;
-    const proConSentence = `Atouts: ${pros[0]}. Freins: ${cons[0]}.`;
-    return `${pSentence} ${proConSentence}`.trim();
-  }
-
-  if (L === "de") {
-    const pros = [];
-    const cons = [];
-
-    if (hasTime) {
-      pros.push("der Zeitplan ist machbar, wenn du ihn in kleine Schritte teilst");
-      cons.push("ohne geschützte Zeit wirst du es immer wieder verschieben");
-    }
-    if (hasBudget) {
-      pros.push("mit einem klaren Kostenlimit bleibt das Budget unter Kontrolle");
-      cons.push("wenn du Ausgaben unterschätzt, entsteht Druck, der dich bremst");
-    }
-    if (hasDeadline) {
-      pros.push("eine klare Deadline zwingt zu früheren Entscheidungen");
-      cons.push("eine vage Frist rutscht leicht nach hinten");
-    }
-    if (action) {
-      pros.push("du hast einen konkreten Hebel, den du täglich bewegen kannst");
-    }
-    if (riskHedging) {
-      pros.push("einfache Regeln können das Risiko begrenzen");
-      cons.push("wenn du null Risiko willst, kommst du vielleicht nie in Gang");
-    }
-
-    if (!pros.length) {
-      pros.push("der wahre Hebel ist Routine: kleine, konstante Schritte schlagen große Vorsätze");
-    }
-    if (!cons.length) {
-      cons.push("der Engpass ist deine Energie und Fokussierung, nicht das Schicksal");
-    }
-
-    const pSentence = `Geschätzte Wahrscheinlichkeit etwa ${pct}%.`;
-    const proConSentence = `Dafür: ${pros[0]}. Dagegen: ${cons[0]}.`;
-    return `${pSentence} ${proConSentence}`.trim();
-  }
-
   return buildWhatIfMotivation(domanda, "it", pct);
 }
 
 /* ========= MOTIVAZIONE LLM ========= */
-async function generateMotivationLLM({ domanda, clarification, answer, lang, pct }) {
+
+async function generateMotivationLLM({
+  domanda,
+  clarification,
+  answer,
+  lang,
+  pct
+}) {
   const L = normLang(lang);
 
   let sys;
@@ -1028,18 +998,9 @@ Be consistent with the main answer. No emojis, no lists. Max 25 words.`;
     sys = `Sei il MODULO MOTIVAZIONE di “WHAT IF”.
 Scrivi UNA sola frase che spiega in modo pratico perché la probabilità è circa ${pct}% in questo scenario.
 Deve essere coerente con la risposta principale. Niente emoji, niente elenco. Massimo 25 parole.`;
-  } else if (L === "es") {
-    sys = `Eres el MÓDULO DE MOTIVACIÓN de “WHAT IF”.
-Escribe UNA sola frase que explique por qué la probabilidad es aproximadamente ${pct}% en este escenario.
-Coherente con la respuesta principal, máximo 25 palabras, sin emojis.`;
-  } else if (L === "fr") {
-    sys = `Tu es le MODULE MOTIVATION de “WHAT IF”.
-Écris UNE phrase qui explique pourquoi la probabilité est d’environ ${pct}% dans ce scénario.
-Reste cohérent avec la réponse principale, max 25 mots, sans emoji.`;
   } else {
-    sys = `Du bist das MOTIVATIONSMODUL von „WHAT IF“.
-Schreibe EINEN Satz, der erklärt, warum die Wahrscheinlichkeit hier etwa ${pct}% ist.
-Kohärent mit der Hauptantwort, max. 25 Wörter, keine Emojis.`;
+    sys = `You are the MOTIVATION MODULE of “WHAT IF”.
+Write ONE sentence explaining why the probability is about ${pct}% in this scenario. Coherent with the main answer, max 25 words, no emojis.`;
   }
 
   const userContent =
@@ -1047,11 +1008,7 @@ Kohärent mit der Hauptantwort, max. 25 Wörter, keine Emojis.`;
       ? `User question: "${domanda}". Extra detail: "${clarification || ""}". Main answer: "${answer}". Now write ONE motivation sentence in ENGLISH.`
       : L === "it"
       ? `Domanda: "${domanda}". Dettaglio extra: "${clarification || ""}". Risposta principale: "${answer}". Ora scrivi UNA frase di motivazione in ITALIANO.`
-      : L === "es"
-      ? `Pregunta: "${domanda}". Detalle extra: "${clarification || ""}". Respuesta principal: "${answer}". Escribe UNA frase de motivación en ESPAÑOL.`
-      : L === "fr"
-      ? `Question: « ${domanda} ». Détail extra: « ${clarification || ""} ». Réponse principale: « ${answer} ». Écris UNE phrase de motivation en FRANÇAIS.`
-      : `Frage: „${domanda}“. Zusatzdetail: „${clarification || ""}“. Hauptantwort: „${answer}“. Schreibe EINEN Motivationssatz auf DEUTSCH.`;
+      : `Question: "${domanda}". Extra: "${clarification || ""}". Main answer: "${answer}". Write ONE motivation sentence.`;
 
   const completion = await client.chat.completions.create({
     model: MODEL,
@@ -1060,8 +1017,8 @@ Kohärent mit der Hauptantwort, max. 25 Wörter, keine Emojis.`;
     max_tokens: 60,
     messages: [
       { role: "system", content: sys },
-      { role: "user", content: userContent },
-    ],
+      { role: "user", content: userContent }
+    ]
   });
 
   let m = completion?.choices?.[0]?.message?.content?.trim() || "";
@@ -1074,6 +1031,7 @@ Kohärent mit der Hauptantwort, max. 25 Wörter, keine Emojis.`;
 }
 
 /* ========= POLISH ========= */
+
 async function polishAnswer({ text, lang, stile }) {
   let s = String(text || "").trim();
   if (!s) return s;
@@ -1117,8 +1075,8 @@ Keep it one paragraph and roughly the same length.`;
     max_tokens: s.split(/\s+/).length + 80,
     messages: [
       { role: "system", content: sys },
-      { role: "user", content: s },
-    ],
+      { role: "user", content: s }
+    ]
   });
 
   let out = completion?.choices?.[0]?.message?.content?.trim() || s;
@@ -1126,21 +1084,22 @@ Keep it one paragraph and roughly the same length.`;
   return out;
 }
 
-/* ========= Finale WTF con ecchecazz!!! + pulizia virgolette ========= */
-function ensureWtfEcchecazzEnding(text = "", lang = "it") {
+/* ========= Finale WTF con ecchecazz!!! ========= */
+
+function ensureWtfEcchecazzEnding(text = "") {
   let s = String(text || "").trim();
   if (!s) return "ecchecazz!!!";
 
-  // togli virgolette all'inizio/fine del blocco
+  // togli virgolette testa/coda
   s = s.replace(/^["“”']+/, "").replace(/["“”']+$/, "").trim();
 
-  // togli eventuali ecchecazz duplicati già presenti
+  // togli eventuali ecchecazz duplicati
   s = s.replace(/\s*ecchecazz!+$/gi, "");
 
-  // togli eventuali "ecc" / "ecc." finali tipo "ecc," "ecc."
+  // togli "ecc." finali
   s = s.replace(/\s*ecc[.,!?…]*$/gi, "");
 
-  // togli punti finali, spazi e segni vari
+  // togli punteggio in eccesso
   s = s.replace(/[\s.!?…]+$/g, "").trim();
   if (!s) return "ecchecazz!!!";
 
@@ -1148,23 +1107,37 @@ function ensureWtfEcchecazzEnding(text = "", lang = "it") {
 }
 
 /* ========= HANDLER ========= */
+
 export default async function handler(req, res) {
   cors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
+  if (req.method !== "POST")
+    return res.status(405).json({ error: "method_not_allowed" });
 
   try {
-    if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: "missing_api_key" });
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: "missing_api_key" });
+    }
 
-    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
+    const ip = (req.headers["x-forwarded-for"] ||
+      req.socket?.remoteAddress ||
+      "unknown")
       .toString()
       .split(",")[0]
       .trim();
     const ok = await rateOk(`ask:${ip}`);
-    if (!ok) return res.status(429).json({ error: "rate_limited_minute" });
+    if (!ok) {
+      return res.status(429).json({ error: "rate_limited_minute" });
+    }
 
-    const bodyRaw = typeof req.body === "string" ? req.body : JSON.stringify(req.body || {});
-    const body = bodyRaw && typeof req.body === "string" ? JSON.parse(bodyRaw) : req.body || {};
+    const bodyRaw =
+      typeof req.body === "string"
+        ? req.body
+        : JSON.stringify(req.body || {});
+    const body =
+      bodyRaw && typeof req.body === "string"
+        ? JSON.parse(bodyRaw)
+        : req.body || {};
 
     const {
       stage = "answer", // "clarify" | "answer"
@@ -1173,25 +1146,34 @@ export default async function handler(req, res) {
       stile = "whatif", // "whatif" | "wtf"
       lang = "it",
       periodo = "future", // "future" | "past"
-      micro = {},
+      micro = {}
     } = body || {};
 
-    if (!domаnda || typeof domanda !== "string") {
-      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
+    if (!domanda || typeof domanda !== "string") {
+      return res
+        .status(400)
+        .json({ error: "bad_request", detail: "domanda_required" });
     }
 
     const L = normLang(lang);
 
     /* ====== STAGE: CLARIFY ====== */
     if (stage === "clarify") {
-      const messages = buildClarifyMessages({ domanda, stile, lang: L, periodo, micro });
+      const messages = buildClarifyMessages({
+        domanda,
+        stile,
+        lang: L,
+        periodo,
+        micro
+      });
 
-      const isSurprise = micro && (micro.surprise === true || micro.src === "surprise");
+      const isSurprise =
+        micro && (micro.surprise === true || micro.src === "surprise");
 
-      let temperature = stile === "wtf" ? 1.0 : 0.7;
-      let top_p = 0.96;
-      let frequency_penalty = stile === "wtf" ? 0.8 : 0.2;
-      let presence_penalty = stile === "wtf" ? 0.7 : 0.1;
+      const temperature = stile === "wtf" ? 1.0 : 0.7;
+      const top_p = 0.96;
+      const frequency_penalty = stile === "wtf" ? 0.8 : 0.2;
+      const presence_penalty = stile === "wtf" ? 0.7 : 0.1;
 
       const completion = await client.chat.completions.create({
         model: MODEL,
@@ -1200,7 +1182,7 @@ export default async function handler(req, res) {
         max_tokens: 80,
         frequency_penalty,
         presence_penalty,
-        messages,
+        messages
       });
 
       let clarQ = completion?.choices?.[0]?.message?.content?.trim() || "";
@@ -1218,11 +1200,19 @@ export default async function handler(req, res) {
         lang: L,
         periodo,
         model: MODEL,
+        surprise: !!isSurprise
       });
     }
 
     /* ====== STAGE: ANSWER ====== */
-    const messages = buildMessages({ domanda, clarification, lang: L, periodo, stile });
+
+    const messages = buildMessages({
+      domanda,
+      clarification,
+      lang: L,
+      periodo,
+      stile
+    });
 
     const completion = await client.chat.completions.create({
       model: MODEL,
@@ -1231,30 +1221,29 @@ export default async function handler(req, res) {
       max_tokens: 260,
       frequency_penalty: stile === "wtf" ? 0.6 : 0.2,
       presence_penalty: stile === "wtf" ? 0.4 : 0.1,
-      messages,
+      messages
     });
 
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // Rimuovi eco domanda
+    // niente eco della domanda
     answer = stripQuestionEcho(domanda, answer);
 
-    // Polish grammaticale
+    // polish
     answer = await polishAnswer({ text: answer, lang: L, stile });
 
-    // Limita frasi e parole, normalizza
+    // limiti frasi/parole
     if (stile === "wtf") {
-      answer = tightenSentences(answer, 4); // massimo 4 frasi
+      answer = tightenSentences(answer, 4);
       answer = clampWords(answer, 95);
-      answer = normalizeOneParagraph(answer);
     } else {
       answer = tightenSentences(answer, 7);
       answer = clampWords(answer, 130);
-      answer = normalizeOneParagraph(answer);
     }
+    answer = normalizeOneParagraph(answer);
 
-    // Safety nomi propri IT
+    // safety nomi propri IT
     if (L === "it") {
       (function () {
         const d = String(domanda || "");
@@ -1276,7 +1265,7 @@ export default async function handler(req, res) {
               "Una",
               "Il",
               "Qui",
-              "Tu",
+              "Tu"
             ].includes(m)
           )
             return m;
@@ -1285,81 +1274,50 @@ export default async function handler(req, res) {
       })();
     }
 
-    // Ripristina maiuscole frasi
+    // maiuscole
     answer = sentenceCaseAll(answer);
 
-    // Filtro anti-coach + anti-italiano rotto per WTF IT
+    // filtro anti-coach per WTF IT
     if (stile === "wtf" && L === "it") {
-      // meno zucchero, più botte
       answer = answer.replace(/\bcoccol\w*/gi, "botta");
       answer = answer.replace(/\bprocrastinazion\w*/gi, "tirarla lunga");
       answer = answer.replace(/\bmagari domani\b/gi, "poi, poi, poi");
 
-      // togli frasi teoriche tipo "vivere vuol dire..."
       answer = answer.replace(/\bvivere vuol dire[^.?!]*[.?!]/gi, "");
       answer = answer.replace(/\bvuol dire che[^.?!]*[.?!]/gi, "");
       answer = answer.replace(/\bsignifica che[^.?!]*[.?!]/gi, "");
 
-      // pulizia parole sbagliate tipo "toenassi"
       answer = answer.replace(/\btoenassi\b/gi, "tornassi");
-
-      // vieta "rimando" come sostantivo
       answer = answer.replace(/\brimando\b/gi, "tirarla lunga");
-
-      // fix “che aspettati?”
       answer = answer.replace(/\bche aspettati\?/gi, "che aspetti?");
 
-      // frasi troppo liriche standard
       answer = answer.replace(
         /come se stesse versando la vita dentro il tuo bicchiere/gi,
         "come se ti tirasse addosso una sveglia liquida"
       );
 
-      // fix eventuali mostri tipo "di si appiccicano addosso"
-      answer = answer.replace(/\bdi si appiccicano addosso\b/gi, "di qualcosa che ti si attacca addosso");
-
-      // evita frasi troppo poetiche/generiche
       answer = answer.replace(/\bviaggiatore della nostalgia\b/gi, "turista del destino");
-      answer = answer.replace(/\bnomade dell'aquila\b/gi, "turista del destino");
-      answer = answer.replace(/\bscossa di energia\b/gi, "botta sul casco");
-      answer = answer.replace(/\bti ricorda chi eri\b/gi, "ti ricorda che sei ancora vivo");
-      answer = answer.replace(/\brincorsa contro il tempo\b/gi, "giro dell’oca sempre uguale");
-      answer = answer.replace(/\bsegreti dimenticati\b/gi, "occasioni lasciate lì a marcire");
-      answer = answer.replace(/\bmemoria distorta\b/gi, "testa che si racconta storie a caso");
-
-      // evita "allegria nel cuore"
       answer = answer.replace(/\ballegria nel cuore\b/gi, "la voglia storta di rimetterti in gioco");
+      answer = answer.replace(/\bmadò\b/gi, "");
+      answer = answer.replace(/\bspippolat\w*/gi, "rimuginata");
     }
 
-    // Strip prima persona per WHAT IF
+    // niente prima persona WHAT IF
     if (stile !== "wtf") {
       answer = stripFirstPerson(answer, L, stile);
     }
 
-    // Sostituisci “cazzo” con “azzo”
+    // sostituisci “cazzo” con “azzo”
     if (stile === "wtf" && L === "it") {
       answer = answer.replace(/\bcazzo\b/gi, "azzo");
     }
 
-    // Evita fissazione sui “lampioni”
-    if (stile === "wtf" && L === "it") {
-      let count = 0;
-      answer = answer.replace(/\blampion[ei]\b/gi, (m) => {
-        count += 1;
-        return count > 1 ? "semaforo" : m;
-      });
-      // evita “spippolata”
-      answer = answer.replace(/\bspippolat\w*/gi, "rimuginata");
-      // evita "madò"
-      answer = answer.replace(/\bmadò\b/gi, "");
-    }
-
-    // Finale “ecchecazz!!!” per WTF
+    // ecchecazz finale per WTF
     if (stile === "wtf") {
-      answer = ensureWtfEcchecazzEnding(answer, L);
+      answer = ensureWtfEcchecazzEnding(answer);
     }
 
-    // Finale “gancio” per WHAT IF non-IT
+    // gancio veggente per WHAT IF non-IT
     if (stile === "whatif" && L !== "it") {
       answer = ensureZingaraEnding({ text: answer, lang: L, periodo, domanda });
     }
@@ -1376,15 +1334,19 @@ export default async function handler(req, res) {
           clarification,
           answer,
           lang: L,
-          pct,
+          pct
         });
       } catch (e) {
         motivation = buildWhatIfMotivation(domanda, L, pct);
       }
     }
 
-    const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
-    const scientific = stile === "wtf" && !isSurprise ? scientificReportDemenziale(domanda, L) : undefined;
+    const isSurprise =
+      micro && (micro.surprise === true || micro.src === "surprise");
+    const scientific =
+      stile === "wtf" && !isSurprise
+        ? scientificReportDemenziale(domanda, L)
+        : undefined;
 
     return res.status(200).json({
       mode: "answer",
@@ -1396,10 +1358,12 @@ export default async function handler(req, res) {
       pct,
       motivation,
       scientific,
-      usedClarification: !!clarification,
+      usedClarification: !!clarification
     });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
-    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
+    return res
+      .status(500)
+      .json({ error: "server_error", detail: String(err?.message || err) });
   }
-          }
+                              }
