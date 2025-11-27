@@ -162,22 +162,18 @@ function stripFirstPerson(text = "", lang = "it", stile = "whatif") {
 }
 
 /* ========= WHAT IF – esempio ========= */
-const WHATIF_HYBRID_EX_IT = `Qui la tua scelta sposta davvero il peso delle giornate. Tagli rumore, recuperi tempo ed energia e inizi a vedere meglio cosa conta davvero. Cambiano le abitudini che tieni e quelle che lasci, e ti ritrovi con una routine meno scenografica ma più vivibile. Vedi quanto ti costa restare fermo, quanto ti costerebbe muoverti e cosa succede se rimandi ancora. Non è una rivoluzione da film: è manutenzione di vita, una manopola alla volta. E quando ti guardi indietro, il rimpianto fa meno rumore proprio nel punto in cui hai iniziato a scegliere in modo più onesto.`;
+const WHATIF_HYBRID_EX_IT = `Qui non esplode niente, ma una linea del tuo futuro inizia a tirarsi dritta, quasi in silenzio. Vedo le tue giornate che si sgrumano piano: togli rumore, recuperi un po di margine e ti accorgi di dove finiscono davvero le tue energie. Immagino piccole scelte ripetute, meno scenografiche ma più vivibili, che spostano il peso dalle promesse alle abitudini. Intuisco che restare fermo ti costerebbe soprattutto in pensieri riciclati e sonno leggero, mentre muoverti avrebbe il prezzo di qualche paura in faccia. Si muove una routine nuova, meno brillante da raccontare ma più onesta da vivere, proprio nel punto in cui smetti di raccontartela e inizi a scegliere.`;
 
-/* ========= WHAT IF – regole ========= */
-const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO – ANALISI SCENARI + CONSIGLI):
-- Tono: lucido, concreto, empatico ma fermo.
-- Compito: prima analizzi gli scenari:
-  • cosa succede se lo fai;
-  • cosa succede se NON lo fai;
-  • cosa succede se lo rimandi ancora;
-  • eventuale scenario “via di mezzo”.
-- Usa la risposta in quarta pagina come contesto, ma NON citarla né riassumerla.
-- Guarda tempo, energie, soldi, relazioni, identità, rischi concreti.
-- Poi prendi posizione: spiega quale scenario ha più senso adesso e perché.
-- Chiudi con consigli pratici su come muoverti nei prossimi passi.
-- Linguaggio: italiano naturale, zero spiritualate, zero motivazionalese.
-- 5–7 frasi, un paragrafo, frasi brevi (~20 parole max), niente elenchi, niente emoji.
+/* ======= WHAT IF RULES (IT) ======= */
+const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO):
+- Tono: veggente/zíngara realista, mistica ma concreta.
+- APRI con UNA sola riga breve e intensa, come se leggessi il destino: niente onomatopee tipo "shh", "mmm", niente ripetizione della domanda.
+- La SECONDA frase deve INIZIARE con una di queste parole, scegliendo quella più adatta alla domanda: "Vedo", "Sento", "Immagino", "Intuisco", "Si apre", "Si muove".
+- 60% analisi concreta (routine, tempo, costi/benefici, energia, relazioni) + 40% immagini sobrie della quotidianità.
+- Scrivi un futuro vicino che inizia adesso: usa futuro/condizionale semplice ("potresti", "inizierai", "probabilmente").
+- Mantieni la risposta aderente al tema della domanda (città, relazione, lavoro, ecc.), senza esempi generici fuori contesto.
+- Linguaggio: italiano naturale, frasi grammaticalmente corrette, vocabolario vario (evita ripetizioni evidenti di verbi o immagini).
+- 5–7 frasi, un solo paragrafo, niente elenchi, niente emoji.
 - Niente prima persona narrativa (“io, noi, mi, ci”).`;
 
 const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE – SCENARIO ALTERNATIVO + LEZIONE):
@@ -1385,4 +1381,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-  }
+        }
