@@ -78,7 +78,10 @@ h1{
   border:1px solid var(--line);border-radius:999px;padding:6px 10px;
 }
 .fade-in{animation:fade .35s ease-out both}
-@keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
+@keyframes fade{
+  from{opacity:0}
+  to{opacity:1}
+}
 .embit{padding:0 .08em;box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset;text-shadow:0 0 12px rgba(255,255,255,.08);border-radius:4px}
 .select{background:rgba(255,255,255,.06);border:1px solid var(--line);color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
 
@@ -189,7 +192,8 @@ filter:blur(6px); opacity:.0; transform:scale(.7); pointer-events:none;
 transition:opacity .35s ease, transform .35s ease;
 }
 .reveal .orb{opacity:.8; transform:scale(1)}
-.reveal #answer{animation:fade .45s ease-out both}
+/* niente animazione di spostamento sulla risposta → niente "saltelli" */
+.reveal #answer{animation:none}
 @keyframes shimmer{0%{opacity:.45}50%{opacity:.95}100%{opacity:.45}}
 .loading .oracle-line{animation:shimmer 1.8s ease-in-out infinite}
 </style>
@@ -284,7 +288,6 @@ transition:opacity .35s ease, transform .35s ease;
         <div class="social-buttons-row">
           <button id="openTikTokBtn" class="btn ghost small-social">📱 Apri TikTok</button>
           <button id="openInstaBtn" class="btn ghost small-social">📸 Apri Instagram</button>
-          <button id="openWABtn" class="btn ghost small-social">💬 Apri WhatsApp</button>
         </div>
         <span class="small" id="videoNote"></span>
       </div>
@@ -632,7 +635,6 @@ const videoLoadingEl = qs('#videoLoading');
 const videoNoteEl = qs('#videoNote');
 const openTikTokBtn = qs('#openTikTokBtn');
 const openInstaBtn = qs('#openInstaBtn');
-const openWABtn = qs('#openWABtn');
 
 /* ==== Audio typing ==== */
 const typingSfx = document.getElementById('typingSfx');
@@ -656,32 +658,12 @@ function playTypingShort(ms=2200){
   }, ms);
 }
 
-/* misura altezza finale risposta con un elemento nascosto (così il box non salta) */
-function measureFinalAnswerHeight(fullText){
-  if (!answerEl || !fullText) return 0;
-  const probe = document.createElement('div');
-  probe.className = answerEl.className;
-  probe.style.position = 'absolute';
-  probe.style.visibility = 'hidden';
-  probe.style.pointerEvents = 'none';
-  probe.style.left = '-9999px';
-  probe.style.top = '0';
-  probe.style.width = answerEl.offsetWidth ? (answerEl.offsetWidth + 'px') : '100%';
-  probe.textContent = fullText;
-  answerEl.parentNode.appendChild(probe);
-  const rect = probe.getBoundingClientRect();
-  const h = rect.height || 0;
-  probe.remove();
-  return h;
-}
-
-/* effetto macchina da scrivere per la risposta
-   con altezza pre-calcolata (niente “saltelli” su e giù) */
+/* effetto macchina da scrivere per la risposta in pagina
+   con box a altezza fissa mentre scrive (niente saltelli) */
 function showAnswerWithTyping(text){
   const full = String(text || "");
   if(!answerEl) return;
 
-  // stop eventuale animazione precedente
   if(typingAnswerTimer){
     clearInterval(typingAnswerTimer);
     typingAnswerTimer = null;
@@ -691,20 +673,27 @@ function showAnswerWithTyping(text){
     typingTimeoutId = null;
   }
 
-  // reset base
+  // reset stile risposta
   answerEl.style.minHeight = "";
   answerEl.style.height = "";
   answerEl.style.overflow = "visible";
 
-  // misuro altezza finale con un clone nascosto
-  const finalHeight = measureFinalAnswerHeight(full);
+  // misuro l'altezza finale UNA volta
+  const prevVisibility = answerEl.style.visibility;
+  answerEl.style.visibility = "hidden";
+  answerEl.textContent = full;
+  const rect = answerEl.getBoundingClientRect();
+  const finalHeight = rect.height || 0;
+
+  // fisso altezza per tutta la durata della digitazione e ANCHE dopo
   if(finalHeight){
-    // riservo da subito lo spazio massimo → il layout non si muove
-    answerEl.style.minHeight = finalHeight + "px";
+    answerEl.style.height = finalHeight + "px";
+    answerEl.style.overflow = "hidden";
   }
 
-  // pulisco il contenuto per far partire la digitazione
+  // svuoto per cominciare a scrivere
   answerEl.textContent = "";
+  answerEl.style.visibility = prevVisibility || "visible";
 
   let idx = 0;
   const stepChars = 1;
@@ -737,7 +726,7 @@ function showAnswerWithTyping(text){
         }
       }catch{}
 
-      // a fine digitazione lascio il min-height (così il blocco non si “accorcia” e non si muove)
+      // NON tolgo più l'altezza fissa → nessun micro saltello finale
       decorateEmBits(answerEl);
     }
   }, stepMs);
@@ -882,7 +871,7 @@ function buildWhatIfMotivationsPretty(domanda, pct, rawFromAI){
     } else if (L === "es") {
       body = isPast
         ? "Elegiste con la energía y la información de entonces; ahora puedes usar lo aprendido para los próximos pasos."
-        : "Da pocos passos claros que encajen con cómo te sientes hoy, no con lo que “deberías” ser.";
+        : "Da pocos pasos claros que encajen con cómo te sientes hoy, no con lo que “deberías” ser.";
     } else if (L === "fr") {
       body = isPast
         ? "Tu as choisi avec les ressources d’alors; maintenant tu peux utiliser ce que tu as appris pour la suite."
@@ -1537,15 +1526,6 @@ if(openInstaBtn){
     openIntent(
       "intent://instagram#Intent;scheme=instagram;package=com.instagram.android;end",
       "https://www.instagram.com"
-    );
-  };
-}
-if(openWABtn){
-  openWABtn.onclick = ()=>{
-    // apre WhatsApp generico su Android, fallback web
-    openIntent(
-      "intent://send/#Intent;scheme=smsto;package=com.whatsapp;end",
-      "https://wa.me"
     );
   };
 }
