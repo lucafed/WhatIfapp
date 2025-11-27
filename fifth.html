@@ -641,7 +641,7 @@ const typingSfx = document.getElementById('typingSfx');
 let typingTimeoutId = null;
 let typingAnswerTimer = null;
 
-/* suono breve (se serve altrove) */
+/* suono breve */
 function playTypingShort(ms=2200){
   if(!typingSfx) return;
   try{
@@ -658,8 +658,7 @@ function playTypingShort(ms=2200){
   }, ms);
 }
 
-/* effetto macchina da scrivere per la risposta in pagina
-   con box a altezza fissa mentre scrive (niente saltelli) */
+/* risposta: NIENTE macchina da scrivere → testo intero + fade-in, nessun saltello */
 function showAnswerWithTyping(text){
   const full = String(text || "");
   if(!answerEl) return;
@@ -673,63 +672,24 @@ function showAnswerWithTyping(text){
     typingTimeoutId = null;
   }
 
-  // reset stile risposta
-  answerEl.style.minHeight = "";
+  // eventualmente solo un suono breve all'inizio
+  playTypingShort(1800);
+
+  // reset stile e applico fade-in
+  answerEl.style.transition = "none";
+  answerEl.style.opacity = 0;
   answerEl.style.height = "";
   answerEl.style.overflow = "visible";
 
-  // misuro l'altezza finale UNA volta
-  const prevVisibility = answerEl.style.visibility;
-  answerEl.style.visibility = "hidden";
   answerEl.textContent = full;
-  const rect = answerEl.getBoundingClientRect();
-  const finalHeight = rect.height || 0;
 
-  // fisso altezza per tutta la durata della digitazione e ANCHE dopo
-  if(finalHeight){
-    answerEl.style.height = finalHeight + "px";
-    answerEl.style.overflow = "hidden";
-  }
+  // piccolo delay per permettere al browser di applicare lo stile
+  requestAnimationFrame(()=>{
+    answerEl.style.transition = "opacity .35s ease-out";
+    answerEl.style.opacity = 1;
+  });
 
-  // svuoto per cominciare a scrivere
-  answerEl.textContent = "";
-  answerEl.style.visibility = prevVisibility || "visible";
-
-  let idx = 0;
-  const stepChars = 1;
-  const stepMs = 40;
-
-  if(typingSfx){
-    try{
-      typingSfx.loop = true;
-      typingSfx.currentTime = 0;
-      typingSfx.play().catch(()=>{});
-    }catch{}
-  }
-
-  typingAnswerTimer = setInterval(()=>{
-    idx += stepChars;
-    if(idx >= full.length){
-      idx = full.length;
-    }
-    const partial = full.slice(0, idx);
-    answerEl.textContent = partial;
-
-    if(idx >= full.length){
-      clearInterval(typingAnswerTimer);
-      typingAnswerTimer = null;
-      try{
-        if(typingSfx){
-          typingSfx.loop = false;
-          typingSfx.pause();
-          typingSfx.currentTime = 0;
-        }
-      }catch{}
-
-      // NON tolgo più l'altezza fissa → nessun micro saltello finale
-      decorateEmBits(answerEl);
-    }
-  }, stepMs);
+  decorateEmBits(answerEl);
 }
 
 /* ==== Toast ==== */
