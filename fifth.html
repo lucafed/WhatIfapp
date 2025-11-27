@@ -682,18 +682,87 @@ function measureAnswerHeight(fullText){
 /* effetto macchina da scrivere per la risposta
    - usa un solo TextNode
    - blocco con altezza fissa mentre scrive → niente “saltelli” */
+/* effetto macchina da scrivere per la risposta
+   - misura l'altezza finale sul vero elemento (con la larghezza giusta)
+   - blocco con altezza fissa mentre scrive → niente “saltelli”
+*/
 function showAnswerWithTyping(text){
   const full = String(text || "");
-  if(!answerEl) return;
+  if (!answerEl) return;
 
-  if(typingAnswerTimer){
+  // stop eventuali animazioni precedenti
+  if (typingAnswerTimer){
     clearInterval(typingAnswerTimer);
     typingAnswerTimer = null;
   }
-  if(typingTimeoutId){
+  if (typingTimeoutId){
     clearTimeout(typingTimeoutId);
     typingTimeoutId = null;
   }
+
+  // 1) misuro l'altezza finale SUL VERO ELEMENTO, con la sua larghezza reale
+  const prevVis = answerEl.style.visibility;
+  const prevContent = answerEl.textContent;
+
+  answerEl.style.visibility = "hidden";
+  answerEl.style.height = "auto";
+  answerEl.style.overflow = "visible";
+  answerEl.textContent = full;
+
+  const rect = answerEl.getBoundingClientRect();
+  const finalHeight = rect.height || answerEl.offsetHeight || 0;
+
+  // ripristino e preparo per la digitazione
+  answerEl.textContent = "";
+  answerEl.style.visibility = prevVis || "visible";
+
+  if (finalHeight){
+    answerEl.style.height = finalHeight + "px";
+    answerEl.style.overflow = "hidden";
+  }
+
+  // 2) uso un solo TextNode che aggiorno man mano
+  const textNode = document.createTextNode("");
+  answerEl.textContent = "";
+  answerEl.appendChild(textNode);
+
+  let idx = 0;
+  const stepChars = 1;
+  const stepMs = 40;
+
+  // audio typing continuo durante l’animazione
+  if (typingSfx){
+    try{
+      typingSfx.loop = true;
+      typingSfx.currentTime = 0;
+      typingSfx.play().catch(()=>{});
+    }catch{}
+  }
+
+  typingAnswerTimer = setInterval(()=>{
+    idx += stepChars;
+    if (idx >= full.length){
+      idx = full.length;
+    }
+    textNode.data = full.slice(0, idx);
+
+    if (idx >= full.length){
+      clearInterval(typingAnswerTimer);
+      typingAnswerTimer = null;
+
+      try{
+        if (typingSfx){
+          typingSfx.loop = false;
+          typingSfx.pause();
+          typingSfx.currentTime = 0;
+        }
+      }catch{}
+
+      // a digitazione finita, faccio solo la decorazione (niente più animazione)
+      decorateEmBits(answerEl);
+    }
+  }, stepMs);
+    }
 
   // misura altezza finale e fissala
   const finalHeight = measureAnswerHeight(full);
