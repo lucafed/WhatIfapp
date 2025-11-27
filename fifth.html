@@ -51,15 +51,12 @@ h1{
   border-radius:12px;
   padding:10px;
 }
-/* BLOCCO RISPOSTA: macchina da scrivere senza saltelli */
 .story{
-  white-space:pre-wrap;       /* mantieni gli \n ma niente giustificato strano */
-  text-align:left;            /* niente justify mentre scrive */
+  white-space:normal;
   line-height:1.68;
   font-size:18px;
   letter-spacing:.1px;
-  text-wrap:normal;           /* niente text-wrap: pretty che rimpagina continuamente */
-  transition:none;            /* nessuna transizione sul blocco di testo */
+  text-wrap:pretty;
 }
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
@@ -307,7 +304,7 @@ transition:opacity .35s ease, transform .35s ease;
   </div>
 </main>
 <div id="overlay" aria-hidden="true">
-  <iframe id="overlay-frame" src="about:blank"	title="modal"></iframe>
+  <iframe id="overlay-frame" src="about:blank" title="modal"></iframe>
 </div>
 <p class="small" id="creditInfo" style="text-align:center;margin:10px 0 24px"></p>
 <div class="toast" id="toast"></div>
@@ -661,31 +658,9 @@ function playTypingShort(ms=2200){
   }, ms);
 }
 
-/* utility: misura altezza finale risposta con un clone nascosto */
-function measureAnswerHeight(fullText){
-  if(!answerEl) return 0;
-  const clone = answerEl.cloneNode(false);
-  clone.style.visibility = "hidden";
-  clone.style.position = "absolute";
-  clone.style.left = "-9999px";
-  clone.style.top = "0";
-  clone.style.height = "auto";
-  clone.style.whiteSpace = "pre-wrap";
-  clone.textContent = String(fullText || "");
-  document.body.appendChild(clone);
-  const rect = clone.getBoundingClientRect();
-  const h = rect.height || 0;
-  document.body.removeChild(clone);
-  return h;
-}
-
-/* effetto macchina da scrivere per la risposta
-   - usa un solo TextNode
-   - blocco con altezza fissa mentre scrive → niente “saltelli” */
 /* effetto macchina da scrivere per la risposta
    - misura l'altezza finale sul vero elemento (con la larghezza giusta)
-   - blocco con altezza fissa mentre scrive → niente “saltelli”
-*/
+   - blocco con altezza fissa mentre scrive → niente “saltelli” */
 function showAnswerWithTyping(text){
   const full = String(text || "");
   if (!answerEl) return;
@@ -759,54 +734,6 @@ function showAnswerWithTyping(text){
       }catch{}
 
       // a digitazione finita, faccio solo la decorazione (niente più animazione)
-      decorateEmBits(answerEl);
-    }
-  }, stepMs);
-    }
-
-  // misura altezza finale e fissala
-  const finalHeight = measureAnswerHeight(full);
-  if(finalHeight){
-    answerEl.style.height = finalHeight + "px";
-    answerEl.style.overflow = "hidden";
-  }
-
-  // prepara un singolo TextNode
-  answerEl.textContent = "";
-  const textNode = document.createTextNode("");
-  answerEl.appendChild(textNode);
-
-  let idx = 0;
-  const stepChars = 1;
-  const stepMs = 40;
-
-  if(typingSfx){
-    try{
-      typingSfx.loop = true;
-      typingSfx.currentTime = 0;
-      typingSfx.play().catch(()=>{});
-    }catch{}
-  }
-
-  typingAnswerTimer = setInterval(()=>{
-    idx += stepChars;
-    if(idx >= full.length){
-      idx = full.length;
-    }
-    textNode.data = full.slice(0, idx);
-
-    if(idx >= full.length){
-      clearInterval(typingAnswerTimer);
-      typingAnswerTimer = null;
-      try{
-        if(typingSfx){
-          typingSfx.loop = false;
-          typingSfx.pause();
-          typingSfx.currentTime = 0;
-        }
-      }catch{}
-
-      // una volta finito, possiamo decorare gli "—" senza streaming
       decorateEmBits(answerEl);
     }
   }, stepMs);
