@@ -1,5 +1,5 @@
 // /api/ask.js — What?f Engine (clarify + answer + polish)
-// - WHATIF: analisi scenari + consigli pratici.
+// - WHATIF: zingaro veggente realistico, analisi scenari + consigli pratici.
 // - WTF: narratore/comico da pub, volgare ma affettuoso, stile “turista del destino”.
 // - SORPRENDIMI: domande assurde “intelligenti”, varie, non ripetute.
 
@@ -161,34 +161,35 @@ function stripFirstPerson(text = "", lang = "it", stile = "whatif") {
   return out;
 }
 
-/* ========= WHAT IF – esempio ========= */
-const WHATIF_HYBRID_EX_IT = `Qui la tua scelta sposta davvero il peso delle giornate. Tagli rumore, recuperi tempo ed energia e inizi a vedere meglio cosa conta davvero. Cambiano le abitudini che tieni e quelle che lasci, e ti ritrovi con una routine meno scenografica ma più vivibile. Vedi quanto ti costa restare fermo, quanto ti costerebbe muoverti e cosa succede se rimandi ancora. Non è una rivoluzione da film: è manutenzione di vita, una manopola alla volta. E quando ti guardi indietro, il rimpianto fa meno rumore proprio nel punto in cui hai iniziato a scegliere in modo più onesto.`;
+/* ========= WHAT IF – esempio (Zingaro veggente realistico) ========= */
+const WHATIF_HYBRID_EX_IT = `Qui si vede una scelta che ti sposta proprio il modo in cui ti alzi la mattina. Se la fai, ti ritrovi con giornate più ordinate, meno rumore inutile e più spazio per le cose che contano davvero; paghi in fatica all’inizio, ma poi il peso si distribuisce meglio. Se non la fai, continui a funzionare, sì, ma sempre con quella sensazione di vivere in provvisorio. Ti conviene guardare dove sprechi energia adesso e decidere se vuoi continuare così o cambiare ritmo con un passo alla volta.`;
 
-/* ========= WHAT IF – regole ========= */
-const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO – ANALISI SCENARI + CONSIGLI):
-- Tono: lucido, concreto, empatico ma fermo.
-- Compito: prima analizzi gli scenari:
+/* ========= WHAT IF – regole (aggiornate stile Zingaro veggente) ========= */
+const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO – ZINGARO VEGGENTE REALISTICO):
+- Tono: come un veggente di terra, che vede le scene ma parla semplice e concreto, senza frasi mistiche vuote.
+- Non inizi con “ah / oh / ehi”: entri diretto in quello che si vede nella vita dell’utente.
+- Compito: prima descrivi gli scenari in modo chiaro e concreto:
   • cosa succede se lo fai;
   • cosa succede se NON lo fai;
   • cosa succede se lo rimandi ancora;
-  • eventuale scenario “via di mezzo”.
-- Usa la risposta in quarta pagina come contesto, ma NON citarla né riassumerla.
-- Guarda tempo, energie, soldi, relazioni, identità, rischi concreti.
-- Poi prendi posizione: spiega quale scenario ha più senso adesso e perché.
-- Chiudi con consigli pratici su come muoverti nei prossimi passi.
-- Linguaggio: italiano naturale, zero spiritualate, zero motivazionalese.
+  • se serve, uno scenario “via di mezzo” (es. provi per un periodo, fai test, vai e torni).
+- Guardi cose reali: tempo, soldi, energia, relazioni, identità, rischi concreti, non filosofia astratta.
+- Poi prendi posizione: spiega quale scenario regge meglio alla prova della vita di tutti i giorni e perché.
+- Chiudi con 1–2 consigli pratici, quasi da padre / amico adulto: cosa fare nei prossimi passi, in modo semplice e fattibile.
+- Puoi usare formule come “quello che si vede è che…”, “qui ti ritrovi…”, “da fuori si capisce che…”, ma non sempre le stesse.
+- Linguaggio: italiano naturale, terra-terra, niente spiritualate, niente motivazionalese.
 - 5–7 frasi, un paragrafo, frasi brevi (~20 parole max), niente elenchi, niente emoji.
 - Niente prima persona narrativa (“io, noi, mi, ci”).`;
 
-const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE – SCENARIO ALTERNATIVO + LEZIONE):
-- Tono: amico sincero che ti fa vedere la versione alternativa senza schiacciarti di sensi di colpa.
+const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE – ZINGARO VEGGENTE REALISTICO):
+- Tono: voce che ti vuole bene, ti mostra la vita alternativa senza schiacciarti; diretto ma non melodrammatico.
 - Compito: descrivi come sarebbe andata se quella scelta l’avessi fatta davvero:
-  • in cosa ti saresti trovato meglio;
-  • quali pesi nuovi ti saresti messo addosso;
-  • cosa avresti perso rispetto a oggi.
-- Usa struttura controfattuale (“se avessi…, ti saresti trovato…, avresti pagato…”).
-- Poi porta tutto nel presente: cosa impari, cosa puoi ancora scegliere, come ti conviene muoverti.
-- Linguaggio: diretto, concreto, niente melodramma, niente giudizi morali.
+  • in cosa ti saresti trovato meglio nella vita di tutti i giorni;
+  • quali pesi nuovi ti saresti messo addosso (routine, soldi, responsabilità, energia);
+  • cosa avresti perso rispetto a oggi (spazio, libertà, relazioni, possibilità).
+- Usa struttura controfattuale: “se avessi…, ti saresti trovato…, avresti pagato…, ti saresti perso…”.
+- Poi porta tutto nel presente: cosa impari guardando quella versione alternativa, cosa puoi ancora scegliere ora, quale direzione conviene tenere.
+- Linguaggio: diretto, concreto, centrato su scene reali (giornate, abitudini, sensazioni nel corpo), niente frasi vaghe su “destino” o “universo”.
 - 5–7 frasi, un paragrafo, frasi brevi, niente elenchi, niente emoji.
 - Niente prima persona narrativa (“io, noi, mi, ci”).`;
 
@@ -545,12 +546,12 @@ TONO:
 - Puoi usare parolacce leggere da bar (merda, culo, chiappe, figura di merda, incasinato, ecc.), MAI parole d’odio, MAI insulti a gruppi o identità.
 - Una sola “bestemmia” narrata, creativa e tra virgolette (“bestemmia di ritorno”, “bestemmia mal calibrata”), MAI bestemmie reali, nessun riferimento a dio/santi.
 - Oggetti e ambiente reagiscono (divano, citofono, barista, finestra, trolley, lampada, piccione…), massimo 3–4 elementi.
-- Il cuore comico sono i tuoi pro e contro: devono sembrare scemi, da bar, ma con un fondo di verità (es. pro = ti sente di nuovo vivo, contro = ti incasini con la logistica come sempre).
+- Il cuore comico sono i tuoi pro e contro: devono sembrare scemi, da bar, ma con un fondo di verità (es. pro = ti senti di nuovo vivo, contro = ti incasini con la logistica come sempre).
 - Nessun motivazionalese zuccheroso, niente frasi tipo “la vita ti chiama”, niente teoria astratta (“vivere vuol dire…”).
 
 COMPITO (FUTURO):
 - Devi mostrare DUE film:
-  • film A: cosa succede se lo fai DAVVERO (torni, cambi, ti butti);
+  • film A: cosa succede se fai DAVVERO questa scelta (torni, cambi, ti butti);
   • film B: cosa succede se resti fermo e continui a tirarla lunga.
 - Nei film il “pro” e il “contro” sono dentro la scena, NON come elenco: sensazioni, figure di merda, piccoli sollievi.
 - La voce è convinta di quello che dice: parla come uno che ti conosce da anni e sa già dove ti incarti.
@@ -751,14 +752,14 @@ Paragrafo unico, niente emoji.`;
 
       if (hasClar) {
         if (isPast) {
-          return `Domanda sul PASSATO (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF”: racconta come sarebbe andata davvero in quella vita alternativa e poi spiega cosa impari e come ti conviene muoverti ORA. Paragrafo unico, 5–7 frasi, analisi concreta e consigli pratici.`;
+          return `Domanda sul PASSATO (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF” in versione zingaro veggente realistico: racconta come sarebbe andata davvero in quella vita alternativa (giornate, abitudini, soldi, relazioni), poi spiega cosa impari guardandola da oggi e come ti conviene muoverti ORA. Paragrafo unico, 5–7 frasi, analisi concreta e consigli pratici.`;
         }
-        return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta in ITALIANO come “WHAT IF”: prima analizzi i possibili scenari (se lo fai, se non lo fai, se lo rimandi, se lo fai in modo diverso), poi prendi posizione su cosa ha più senso e dai consigli pratici su come comportarti. Paragrafo unico, 5–7 frasi, tono lucido ma caldo.`;
+        return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta in ITALIANO come “WHAT IF” in versione zingaro veggente realistico: prima descrivi gli scenari (se lo fai, se non lo fai, se lo rimandi, eventuale via di mezzo), poi prendi posizione su cosa regge meglio nella vita reale e dai consigli pratici su come comportarti. Paragrafo unico, 5–7 frasi, tono lucido ma umano.`;
       }
       if (isPast) {
-        return `Domanda sul PASSATO (non ripeterla): "${domanda}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF”: descrivi come sarebbe andata quella scelta e chiudi spiegando cosa puoi farci oggi, in modo concreto. Paragrafo unico.`;
+        return `Domanda sul PASSATO (non ripeterla): "${domanda}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF” zingaro veggente: descrivi come sarebbe andata quella scelta nella vita di tutti i giorni (pro e costi reali), poi chiudi spiegando cosa puoi farci oggi, in modo concreto. Paragrafo unico, 5–7 frasi.`;
       }
-      return `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO come “WHAT IF”: analizza i diversi scenari possibili e poi dai consigli chiari su cosa fare e come comportarti nei prossimi passi. Paragrafo unico.`;
+      return `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO come “WHAT IF” zingaro veggente realistico: analizza i diversi scenari possibili e poi dai consigli chiari su cosa fare e come comportarti nei prossimi passi. Paragrafo unico, 5–7 frasi.`;
     }
 
     if (L === "es") {
@@ -823,30 +824,30 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
     const cons = [];
 
     if (hasTime) {
-      pros.push("la timeline è gestibile se spezzetti il percorso");
-      cons.push("se non proteggi il tempo, rischi di tirarla lunga all’infinito");
+      pros.push("i tempi sono gestibili se li spezzetti in passi piccoli e protetti");
+      cons.push("se non difendi il tuo tempo, finisci per tirarla lunga senza accorgertene");
     }
     if (hasBudget) {
-      pros.push("puoi tenere i costi sotto controllo fissando un tetto chiaro");
-      cons.push("se sottostimi le spese, la pressione economica può frenarti");
+      pros.push("puoi tenere i costi sotto controllo fissando un tetto chiaro e realistico");
+      cons.push("se sottostimi le spese, prima o poi la pressione economica ti frena");
     }
     if (hasDeadline) {
-      pros.push("una scadenza esplicita ti aiuta a decidere prima");
-      cons.push("se la scadenza è vaga tenderai a spostarla sempre più avanti");
+      pros.push("una scadenza esplicita ti spinge a decidere invece di restare in mezzo");
+      cons.push("una scadenza vaga tende a slittare finché non perdi slancio");
     }
     if (action) {
-      pros.push("hai una leva concreta su cui agire ogni giorno");
+      pros.push("hai una leva concreta su cui agire ogni giorno, non solo un’idea in testa");
     }
     if (riskHedging) {
-      pros.push("puoi limitare il rischio con poche regole semplici");
-      cons.push("se cerchi rischio zero potresti non muoverti mai davvero");
+      pros.push("puoi limitare il rischio con poche regole semplici, senza bloccare tutto");
+      cons.push("se cerchi rischio zero, ti blocchi prima di partire davvero");
     }
 
     if (!pros.length) {
-      pros.push("la vera leva è la routine: piccoli passi costanti battono le grandi intenzioni");
+      pros.push("la vera leva è la routine: piccoli passi costanti contano più delle intenzioni grandi");
     }
     if (!cons.length) {
-      cons.push("il collo di bottiglia è la tua energia più che la fortuna");
+      cons.push("il collo di bottiglia è più la tua energia che la fortuna o il destino");
     }
 
     const pSentence = `Probabilità circa ${pct}%.`;
@@ -1011,8 +1012,9 @@ async function generateMotivationLLM({ domanda, clarification, answer, lang, pct
 Write ONE short sentence that explains, in a practical way, WHY the probability is around ${pct}% for this scenario.
 Be consistent with the main answer. No emojis, no lists. Max 25 words.`;
   } else if (L === "it") {
-    sys = `Sei il MODULO MOTIVAZIONE di “WHAT IF”.
+    sys = `Sei il MODULO MOTIVAZIONE di “WHAT IF” in versione zingaro veggente realistico.
 Scrivi UNA sola frase che spiega in modo pratico perché la probabilità è circa ${pct}% in questo scenario.
+Tono: concreto, un filo fatalista ma razionale (“qui si vede che…”, “ha senso perché…”), niente spiritualate, niente frasi generiche sul destino.
 Deve essere coerente con la risposta principale. Niente emoji, niente elenco. Massimo 25 parole.`;
   } else if (L === "es") {
     sys = `Eres el MÓDULO DE MOTIVACIÓN de “WHAT IF”.
@@ -1372,4 +1374,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-          }
+                                      }
