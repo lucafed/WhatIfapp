@@ -78,7 +78,11 @@ h1{
   border:1px solid var(--line);border-radius:999px;padding:6px 10px;
 }
 .fade-in{animation:fade .35s ease-out both}
-@keyframes fade{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
+/* niente più translateY che fa saltare il testo */
+@keyframes fade{
+  from{opacity:0;}
+  to{opacity:1;}
+}
 .embit{padding:0 .08em;box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset;text-shadow:0 0 12px rgba(255,255,255,.08);border-radius:4px}
 .select{background:rgba(255,255,255,.06);border:1px solid var(--line);color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
 
@@ -644,7 +648,8 @@ function playTypingShort(ms=2200){
   }, ms);
 }
 
-/* effetto macchina da scrivere per la risposta in pagina FLUIDO (box fisso, niente saltelli) */
+/* effetto macchina da scrivere per la risposta in pagina
+   SENZA SALTELLII: misuro con un clone invisibile fuori layout */
 function showAnswerWithTyping(text){
   const full = String(text || "");
   if(!answerEl) return;
@@ -658,23 +663,36 @@ function showAnswerWithTyping(text){
     typingTimeoutId = null;
   }
 
-  // Misuro l'altezza finale una volta sola -> box fisso
-  answerEl.style.minHeight = "";
-  const prevVisibility = answerEl.style.visibility;
-  const prevContent = answerEl.textContent;
+  // calcolo altezza finale con un clone invisibile, fuori dal flusso
+  let finalHeight = 0;
+  try{
+    const clone = answerEl.cloneNode();
+    clone.style.position = "absolute";
+    clone.style.visibility = "hidden";
+    clone.style.pointerEvents = "none";
+    clone.style.height = "auto";
+    clone.style.minHeight = "0";
+    clone.style.maxHeight = "none";
+    clone.style.whiteSpace = window.getComputedStyle(answerEl).whiteSpace;
+    clone.style.width = answerEl.offsetWidth ? (answerEl.offsetWidth + "px") : "100%";
+    clone.textContent = full;
+    answerEl.parentNode.appendChild(clone);
+    const rect = clone.getBoundingClientRect();
+    finalHeight = rect.height || 0;
+    clone.remove();
+  }catch(e){
+    finalHeight = 0;
+  }
 
-  answerEl.style.visibility = "hidden";
-  answerEl.textContent = full;
-  const rect = answerEl.getBoundingClientRect();
-  const finalHeight = rect.height || 0;
+  if(finalHeight){
+    answerEl.style.minHeight = finalHeight + "px";
+  }
 
-  answerEl.style.minHeight = finalHeight ? (finalHeight + "px") : "";
   answerEl.textContent = "";
-  answerEl.style.visibility = prevVisibility || "visible";
 
   let idx = 0;
   const stepChars = 1;
-  const stepMs = 40; // un filo più fluido
+  const stepMs = 40;
 
   if(typingSfx){
     try{
