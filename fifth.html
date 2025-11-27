@@ -57,6 +57,10 @@ h1{
   font-size:18px;
   letter-spacing:.1px;
   text-wrap:pretty;
+  font-kerning:none;
+  text-rendering:optimizeLegibility;
+  will-change:contents;
+  display:block;
 }
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
@@ -365,7 +369,7 @@ const I18N = {
        credits:(n)=>`💰 Crediti: ${n}`, noCredits:"Hai terminato i crediti.",
        storeTitle:"Crediti", buy5:"Compra +5 crediti (test)", buy10:"Compra +10 crediti (test)", buy20:"Compra +20 crediti (test)",
        watchAd:"Guarda pubblicità (+1)", close:"Chiudi",
-       comingSoon:"Prossimamente", buySoonNote:"Acquisto crediti non ancora disponibile.",
+       comingSoon:"Prossimamente", buySoonNote:"Acquisto crediti non ancora disponibile。",
        toastPlus:(n)=>`+${n} credito`, toastMinus:(n)=>`-${n} credito`,
        guideTitle:"Indicazioni",
        guideQuick:"Indicazioni rapide",
@@ -623,7 +627,7 @@ const answerEl=qs('#answer'), shareBtn=qs('#shareBtn'), againBtn=qs('#againBtn')
 const saveBtn=qs('#saveBtn');
 const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct'), bottomPct=qs('#bottomPct');
 const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
-const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
+const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap'];
 const motNote=qs('#motNote'), toastEl=qs('#toast');
 
 /* ==== VIDEO refs ==== */
@@ -658,9 +662,7 @@ function playTypingShort(ms=2200){
   }, ms);
 }
 
-/* effetto macchina da scrivere per la risposta
-   - misura l'altezza finale sul vero elemento (con la larghezza giusta)
-   - blocco con altezza fissa mentre scrive → niente “saltelli” */
+/* effetto macchina da scrivere STABILE (niente saltelli) */
 function showAnswerWithTyping(text){
   const full = String(text || "");
   if (!answerEl) return;
@@ -675,37 +677,33 @@ function showAnswerWithTyping(text){
     typingTimeoutId = null;
   }
 
-  // 1) misuro l'altezza finale SUL VERO ELEMENTO, con la sua larghezza reale
-  const prevVis = answerEl.style.visibility;
-  const prevContent = answerEl.textContent;
-
-  answerEl.style.visibility = "hidden";
-  answerEl.style.height = "auto";
-  answerEl.style.overflow = "visible";
-  answerEl.textContent = full;
-
-  const rect = answerEl.getBoundingClientRect();
-  const finalHeight = rect.height || answerEl.offsetHeight || 0;
-
-  // ripristino e preparo per la digitazione
-  answerEl.textContent = "";
-  answerEl.style.visibility = prevVis || "visible";
+  // 1) misuro altezza finale su un CLONE offscreen (nessun flicker)
+  let finalHeight = 0;
+  try{
+    const clone = answerEl.cloneNode(false);
+    clone.style.position = "absolute";
+    clone.style.visibility = "hidden";
+    clone.style.pointerEvents = "none";
+    clone.style.height = "auto";
+    clone.style.whiteSpace = "normal";
+    clone.textContent = full;
+    answerEl.parentNode.appendChild(clone);
+    finalHeight = clone.offsetHeight || clone.getBoundingClientRect().height || 0;
+    clone.remove();
+  }catch(e){}
 
   if (finalHeight){
-    answerEl.style.height = finalHeight + "px";
-    answerEl.style.overflow = "hidden";
+    answerEl.style.minHeight = finalHeight + "px";
   }
 
-  // 2) uso un solo TextNode che aggiorno man mano
-  const textNode = document.createTextNode("");
+  // 2) uso un solo TextNode che cresce → nessun reflow sugli altri elementi
   answerEl.textContent = "";
+  const textNode = document.createTextNode("");
   answerEl.appendChild(textNode);
 
   let idx = 0;
-  const stepChars = 1;
   const stepMs = 40;
 
-  // audio typing continuo durante l’animazione
   if (typingSfx){
     try{
       typingSfx.loop = true;
@@ -715,10 +713,8 @@ function showAnswerWithTyping(text){
   }
 
   typingAnswerTimer = setInterval(()=>{
-    idx += stepChars;
-    if (idx >= full.length){
-      idx = full.length;
-    }
+    idx++;
+    if (idx > full.length) idx = full.length;
     textNode.data = full.slice(0, idx);
 
     if (idx >= full.length){
@@ -732,9 +728,7 @@ function showAnswerWithTyping(text){
           typingSfx.currentTime = 0;
         }
       }catch{}
-
-      // a digitazione finita, faccio solo la decorazione (niente più animazione)
-      decorateEmBits(answerEl);
+      // niente ulteriori modifiche al DOM → altezza stabile, zero saltelli
     }
   }, stepMs);
 }
@@ -745,7 +739,20 @@ function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.class
 /* ==== Helpers testo ==== */
 function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
-function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
+
+/* decorateEmBits NON più usata nel typing, così non cambia altezza alla fine
+   (la lascio definita in caso ti serva altrove) */
+function decorateEmBits(el){
+  const raw=el.textContent;
+  if(!raw||!raw.includes("—")) return;
+  const parts=raw.split("—");
+  let html="";
+  for(let i=0;i<parts.length;i++){
+    const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`));
+  }
+  el.innerHTML=html;
+}
 
 /* ==== Titles/Text ==== */
 function applyUI(q){
