@@ -543,9 +543,9 @@ TONO:
 - Apertura che prende in giro (“Oh, eccoci…”, “Ah, guarda chi si rivede…”).
 - Seconda persona: “ti scappa”, “ti ritrovi”, “ti parte”, “resti lì come un cretino simpatico”.
 - Puoi usare parolacce leggere da bar (merda, culo, chiappe, figura di merda, incasinato, ecc.), MAI parole d’odio, MAI insulti a gruppi o identità.
-- Una sola “bestemmia” narrata, creativa e tra virgolette (“bestemmia di ritorno”, “bestemmia mal calibrata”), MAI bestemmie reali, nessun riferimento a dio/santi.
-- Oggetti e ambiente reagiscono (divano, citofono, barista, finestra, trolley, lampada, piccione…), massimo 3–4 elementi.
-- Il cuore comico sono i tuoi pro e contro: devono sembrare scemi, da bar, ma con un fondo di verità (es. pro = ti sente di nuovo vivo, contro = ti incasini con la logistica come sempre).
+- Una sola “bestemmia” narrata, creativa e tra virgolette (“bestemmia di ritorno”, “bestemmia mal calibrata”, ecc.) e falla uscire SEMPRE con formule vive tipo “ti parte una…”, “ti scappa una…”, “ti esce una…”, variando ogni volta.
+- Oggetti e ambiente reagiscono (divano, citofono, barista, finestra, trolley, lampada, piccione, tazzina, porta, sedia, specchio, ascensore…), massimo 3–5 elementi, e CAMBIALI spesso: non usare sempre gli stessi, gioca ogni volta con cose diverse della scena.
+- Il cuore comico sono i tuoi pro e contro: devono sembrare scemi, da bar, ma con un fondo di verità (es. pro = ti senti di nuovo vivo, contro = ti incasini con la logistica come sempre).
 - Nessun motivazionalese zuccheroso, niente frasi tipo “la vita ti chiama”, niente teoria astratta (“vivere vuol dire…”).
 
 COMPITO (FUTURO):
@@ -566,8 +566,8 @@ TONO:
 - Racconti quella stagione come una serie che è già andata in onda: mezzo epica, mezzo disastro, molto umana.
 - Seconda persona: “ti saresti ritrovato”, “ti sarebbero esplose in faccia”, “avresti passato le sere…”.
 - Puoi usare parolacce leggere da bar (merda, culo, chiappe, figura di merda, incasinato, ecc.), MAI parole d’odio, MAI insulti a gruppi o identità.
-- Una “bestemmia” solo narrata, con aggettivi strani (“bestemmia nostalgica”, “bestemmia di bilancio”), mai reale.
-- Oggetti e ambiente commentano: divano, pc, bicchiere, barista, finestra, citofono.
+- Una “bestemmia” solo narrata, con aggettivi strani (“bestemmia nostalgica”, “bestemmia di bilancio”, ecc.) e falla uscire con formule tipo “ti sarebbe partita una…”, “ti sarebbe scappata una…”, “ti sarebbe uscita una…”, sempre diverse ma comprensibili.
+- Oggetti e ambiente commentano: divano, pc, bicchiere, barista, finestra, citofono, porta, tazzina, sedie, corridoio, tapparelle, tv che borbotta.
 
 COMPITO (PASSATO):
 - Descrivi come sarebbe andata se quella scelta l’avessi fatta: quali pro scemi ma veri avresti avuto, quali contro altrettanto scemi ma pesanti (routine, chiappe incollate, drammi da salotto).
@@ -623,7 +623,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
 - NON ripetere la domanda.
 - Seconda persona protagonista (“ti scappa”, “ti parte”, “ti ritrovi…”).
 - Puoi usare parolacce leggere da bar (merda, culo, chiappe, figura di merda, incasinato, ecc.), ma MAI bestemmie reali, MAI insulti a categorie o identità.
-- La parola “bestemmia” va usata solo in modo narrato con aggettivi creativi, come negli esempi.
+- La parola “bestemmia” va usata solo in modo narrato con aggettivi creativi, come negli esempi, facendo uscire la scena con formule vive tipo “ti parte una…”, “ti scappa una…”, sempre diverse.
 - Evita parole zuccherose (“abbraccio dell’universo”, “gocce di libertà”, “anima che si apre”, ecc.).
 - Evita termini teorici come “procrastinazione”, “mindset”, “accettazione radicale”.
 - Non usare “rimando” come sostantivo.
@@ -664,7 +664,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
         role: "system",
         content: `PAROLE CHIAVE DALLA SCENA UTENTE: ${kw.join(
           ", "
-        )}. Usa 1–2 di questi elementi per immagini e metafore, nello stile degli esempi (Motociclista, Luisa, Turista del destino). Evita di fissarti sempre sugli stessi oggetti.`,
+        )}. Usa 1–2 di questi elementi per immagini e metafore, nello stile degli esempi (Motociclista, Luisa, Turista del destino). Evita di fissarti sempre sugli stessi oggetti, varia spesso le cose che reagiscono nella scena (tazzina, porta, tapparelle, corridoio, bicchiere, divano, ecc.).`,
       });
     }
   } else {
@@ -731,8 +731,8 @@ Genera UNA risposta in ITALIANO come voce “WHAT THE F”, nello stesso stile d
 - apertura che ti prende per il culo;
 - mostra DUE film: se fai davvero questa scelta e se resti fermo a tirarla lunga;
 - i pro e i contro devono essere dentro le scene, scemi e demenziali ma con un fondo di verità (routine, chiappe, ansia, piccole libertà);
-- usa 2–4 oggetti che reagiscono (bicchiere, divano, citofono, finestra, trolley, barista, piccione);
-- inserisci UNA sola “bestemmia” narrata, creativa e tra virgolette, senza riferimenti religiosi;
+- usa 2–4 oggetti che reagiscono (bicchiere, divano, citofono, finestra, trolley, barista, piccione, porta, tazzina, tapparelle…), cambiandoli spesso;
+- inserisci UNA sola “bestemmia” narrata, creativa e tra virgolette, che esce con formule tipo “ti parte una…”, “ti scappa una…”, “ti esce una…”, sempre diverse e senza riferimenti religiosi;
 - niente motivazionalese, niente “vivere vuol dire…”, niente poesia romantica;
 - finale cazzaro ma centrato, che chiude con “ecchecazz!!!”.
 Paragrafo unico, niente emoji.`;
@@ -742,8 +742,8 @@ Genera UNA risposta in ITALIANO come voce “WHAT THE F”, identica come respir
 - monologo unico, 3–5 frasi, circa 90–130 parole;
 - apertura da presa in giro;
 - fai vedere cosa succede se lo fai davvero e cosa succede se resti a tirarla lunga (pro e contro dentro le scenette, stupidi ma veri);
-- pochi oggetti ma molto vivi che reagiscono (lampada, bicchiere, citofono, barista, divano, finestra…);
-- UNA sola “bestemmia” narrata, mai reale, senza religione;
+- pochi oggetti ma molto vivi che reagiscono (lampada, bicchiere, citofono, barista, divano, finestra, porta, sedia, specchio, tazzina…), e non sempre gli stessi;
+- UNA sola “bestemmia” narrata, mai reale, che esce con formule tipo “ti parte una…”, “ti scappa una…”, sempre diversa e senza religione;
 - linguaggio da bar, anche volgare ma non gratuito, niente teoria astratta;
 - l’ULTIMA frase chiude la scena con un colpo secco e finisce con “ecchecazz!!!”.
 Paragrafo unico, niente emoji.`;
@@ -1372,4 +1372,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-        }
+}
