@@ -1119,7 +1119,7 @@
         return true;
       }
 
-      // ===== Flusso WHAT IF: domanda -> chiarimento -> risposta =====
+      // ===== Flusso WHAT IF: domanda -> chiarimento -> risposta (risposta calcolata in quinta pagina) =====
       async function startClarifyFlow() {
         if (prefs.stile === "wtf") {
           return directAnswerFlow();
@@ -1207,6 +1207,7 @@
         }
       }
 
+      // ✅ NUOVA VERSIONE: niente chiamata all'AI qui, solo salvataggio + redirect
       async function submitClarification() {
         const clarification = ($("clarifyInput").value || "").trim();
         if (!clarification) {
@@ -1240,23 +1241,9 @@
         btn.textContent = "⏳...";
 
         try {
-          const res = await fetch("/api/ask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              stage: "answer",
-              domanda: currentQuestion,
-              clarification,
-              stile: prefs.stile,
-              lang,
-              periodo: prefs.periodo
-            })
-          });
-          if (!res.ok) throw new Error("HTTP " + res.status);
-          const data = await res.json();
-          const answer = (data.answer || data.risposta || "").trim();
-          if (!answer) throw new Error("Empty answer");
+          const answer = ""; // verrà calcolata in quinta pagina
 
+          // Aggiorna cronologia con placeholder
           const hist = readJSON("cronologia", []);
           hist.push({
             domanda: currentQuestion,
@@ -1266,6 +1253,7 @@
           });
           writeJSON("cronologia", hist.slice(-100));
 
+          // Replay story base
           writeJSON("replay_story", {
             domanda: currentQuestion,
             answer,
@@ -1276,6 +1264,7 @@
             clarification
           });
 
+          // Richiesta completa che la quinta pagina userà per chiamare /api/ask
           const fullReq = {
             stage: "answer",
             domanda: currentQuestion,
@@ -1285,32 +1274,29 @@
             clarification,
             clarifyingQuestion: currentClarifyQuestion,
             answer,
-            pct: data.pct ?? null,
-            motivation: data.motivation ?? null,
-            scientific: data.scientific ?? null,
+            pct: null,
+            motivation: null,
+            scientific: null,
             extra: "",
             fantasy_mode: false,
-            absurd: !!(data.micro && data.micro.surprise),
-            surprise: !!(data.micro && data.micro.surprise),
-            source: (data.micro && data.micro.src) || "manual",
-            micro: data.micro || { surprise: false, src: "manual" }
+            absurd: false,
+            surprise: false,
+            source: "manual",
+            micro: { surprise: false, source: "manual" }
           };
           writeJSON("whatif_request", fullReq);
 
+          // 🔁 Vai subito alla pagina di risposta
           location.href = "fifth.html";
-        } catch (err) {
-          console.error("answer error:", err);
-          alert(
-            T.answerError ||
-              "Errore nel generare la risposta. Riprova tra qualche secondo."
-          );
         } finally {
+          // In pratica la redirect interrompe qui, ma è safe averlo
           btn.disabled = false;
           btn.textContent = original;
         }
       }
 
       // ===== Flusso diretto WHAT THE F =====
+      // ✅ NUOVA VERSIONE: nessuna chiamata all'AI qui, solo setup + redirect
       async function directAnswerFlow() {
         resetClarifyUI();
 
@@ -1351,23 +1337,9 @@
         btn.textContent = "⏳...";
 
         try {
-          const res = await fetch("/api/ask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              stage: "answer",
-              domanda,
-              clarification: "",
-              stile: prefs.stile,
-              lang,
-              periodo: prefs.periodo
-            })
-          });
-          if (!res.ok) throw new Error("HTTP " + res.status);
-          const data = await res.json();
-          const answer = (data.answer || data.risposta || "").trim();
-          if (!answer) throw new Error("Empty answer");
+          const answer = ""; // la quinta pagina genererà la risposta
 
+          // Cronologia placeholder
           const hist = readJSON("cronologia", []);
           hist.push({
             domanda,
@@ -1377,6 +1349,7 @@
           });
           writeJSON("cronologia", hist.slice(-100));
 
+          // Replay base
           writeJSON("replay_story", {
             domanda,
             answer,
@@ -1387,6 +1360,7 @@
             clarification: ""
           });
 
+          // Richiesta completa per la quinta pagina
           const fullReq = {
             stage: "answer",
             domanda,
@@ -1396,25 +1370,20 @@
             clarification: "",
             clarifyingQuestion: "",
             answer,
-            pct: data.pct ?? null,
-            motivation: data.motivation ?? null,
-            scientific: data.scientific ?? null,
+            pct: null,
+            motivation: null,
+            scientific: null,
             extra: "",
             fantasy_mode: false,
-            absurd: !!(data.micro && data.micro.surprise),
-            surprise: !!(data.micro && data.micro.surprise),
-            source: (data.micro && data.micro.src) || "manual",
-            micro: data.micro || { surprise: false, src: "manual" }
+            absurd: false,
+            surprise: false,
+            source: "manual",
+            micro: { surprise: false, source: "manual" }
           };
           writeJSON("whatif_request", fullReq);
 
+          // 🔁 Redirect immediato alla pagina di risposta
           location.href = "fifth.html";
-        } catch (err) {
-          console.error("direct WTF answer error:", err);
-          alert(
-            T.answerError ||
-              "Errore nel generare la risposta. Riprova tra qualche secondo."
-          );
         } finally {
           btn.disabled = false;
           btn.textContent = original;
