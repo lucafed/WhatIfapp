@@ -433,7 +433,7 @@ const I18N = {
        guideTitle:"Guía",
        guideQuick:"Indicaciones rápidas",
        guideAdvice:"Consejo",
-       guideAnalysis:"Análisis sintético",
+       guideAnalysis:"Analisis sintético",
        /* VIDEO */
        videoTitle:"Vídeo compartible",
        videoHelp:"Crea un vídeo corto con tu pregunta y respuesta, listo para compartir en redes.",
@@ -656,8 +656,27 @@ function playTypingShort(ms=2200){
   }, ms);
 }
 
-/* effetto macchina da scrivere per la risposta in pagina
-   con box a altezza fissa mentre scrive (niente saltelli) */
+/* misura altezza finale risposta con un elemento nascosto (così il box non salta) */
+function measureFinalAnswerHeight(fullText){
+  if (!answerEl || !fullText) return 0;
+  const probe = document.createElement('div');
+  probe.className = answerEl.className;
+  probe.style.position = 'absolute';
+  probe.style.visibility = 'hidden';
+  probe.style.pointerEvents = 'none';
+  probe.style.left = '-9999px';
+  probe.style.top = '0';
+  probe.style.width = answerEl.offsetWidth ? (answerEl.offsetWidth + 'px') : '100%';
+  probe.textContent = fullText;
+  answerEl.parentNode.appendChild(probe);
+  const rect = probe.getBoundingClientRect();
+  const h = rect.height || 0;
+  probe.remove();
+  return h;
+}
+
+/* effetto macchina da scrivere per la risposta
+   con altezza pre-calcolata (niente “saltelli” su e giù) */
 function showAnswerWithTyping(text){
   const full = String(text || "");
   if(!answerEl) return;
@@ -672,29 +691,20 @@ function showAnswerWithTyping(text){
     typingTimeoutId = null;
   }
 
-  // pulizia stile
+  // reset base
   answerEl.style.minHeight = "";
   answerEl.style.height = "";
   answerEl.style.overflow = "visible";
 
-  // misuro altezza finale UNA volta (box nascosto ma in flow)
-  const prevVisibility = answerEl.style.visibility;
-  const prevContent = answerEl.textContent;
-
-  answerEl.style.visibility = "hidden";
-  answerEl.textContent = full;
-  const rect = answerEl.getBoundingClientRect();
-  const finalHeight = rect.height || 0;
-
-  // fisso altezza durante la digitazione → niente movimenti su/giù
+  // misuro altezza finale con un clone nascosto
+  const finalHeight = measureFinalAnswerHeight(full);
   if(finalHeight){
-    answerEl.style.height = finalHeight + "px";
-    answerEl.style.overflow = "hidden";
+    // riservo da subito lo spazio massimo → il layout non si muove
+    answerEl.style.minHeight = finalHeight + "px";
   }
 
-  // reset contenuto per l'animazione
+  // pulisco il contenuto per far partire la digitazione
   answerEl.textContent = "";
-  answerEl.style.visibility = prevVisibility || "visible";
 
   let idx = 0;
   const stepChars = 1;
@@ -727,10 +737,7 @@ function showAnswerWithTyping(text){
         }
       }catch{}
 
-      // a fine digitazione rimetto altezza automatica (senza più animazione)
-      answerEl.style.height = "";
-      answerEl.style.overflow = "visible";
-
+      // a fine digitazione lascio il min-height (così il blocco non si “accorcia” e non si muove)
       decorateEmBits(answerEl);
     }
   }, stepMs);
@@ -875,7 +882,7 @@ function buildWhatIfMotivationsPretty(domanda, pct, rawFromAI){
     } else if (L === "es") {
       body = isPast
         ? "Elegiste con la energía y la información de entonces; ahora puedes usar lo aprendido para los próximos pasos."
-        : "Da pocos pasos claros que encajen con cómo te sientes hoy, no con lo que “deberías” ser.";
+        : "Da pocos passos claros que encajen con cómo te sientes hoy, no con lo que “deberías” ser.";
     } else if (L === "fr") {
       body = isPast
         ? "Tu as choisi avec les ressources d’alors; maintenant tu peux utiliser ce que tu as appris pour la suite."
@@ -1535,8 +1542,9 @@ if(openInstaBtn){
 }
 if(openWABtn){
   openWABtn.onclick = ()=>{
+    // apre WhatsApp generico su Android, fallback web
     openIntent(
-      "intent://send/#Intent;scheme=whatsapp;package=com.whatsapp;end",
+      "intent://send/#Intent;scheme=smsto;package=com.whatsapp;end",
       "https://wa.me"
     );
   };
