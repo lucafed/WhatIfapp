@@ -58,6 +58,24 @@ h1{
   letter-spacing:.1px;
   text-wrap:pretty;
 }
+  /* blocco anti-saltello definitivo */
+#answer {
+  display: block;
+  line-height: 1.55;
+  will-change: auto;
+  transform: translateZ(0);
+}
+
+.typing-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  white-space: inherit;
+  line-height: inherit;
+  font: inherit;
+  color: inherit;
+  transform: translateZ(0); /* layer GPU → elimina micro-saltelli */
+}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
 .btn.primary{
