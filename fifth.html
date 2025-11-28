@@ -58,22 +58,6 @@ h1{
   letter-spacing:.1px;
   text-wrap:pretty;
 }
-
-/* ==== NO-SALTELLO RISPOSTA ==== */
-.answer-wrapper{
-  position:relative;
-  min-height:80px;
-}
-#answer{
-  display:block;
-  white-space:pre-wrap;
-}
-.typing-stabilizer{
-  visibility:hidden;
-  white-space:pre-wrap;
-  pointer-events:none;
-}
-
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
 .btn.primary{
@@ -259,12 +243,7 @@ transition:opacity .35s ease, transform .35s ease;
       <div class="orb" aria-hidden="true"></div>
       <div id="oracleLine" class="oracle-line">—</div>
     </div>
-
-    <!-- wrapper risposta con ghost per altezza stabile -->
-    <div class="answer-wrapper">
-      <div id="answer" class="story">⏳ …</div>
-      <div id="typing-stabilizer" class="story typing-stabilizer"></div>
-    </div>
+    <div id="answer" class="story">⏳ …</div>
 
     <div class="hr"></div>
     <div class="label" id="lblP">Esito & motivazioni</div>
@@ -498,7 +477,7 @@ const I18N = {
        videoReadyNote:"Vidéo prête : télécharge-la et mets-la sur TikTok, Instagram ou ailleurs.",
        videoPreparing:"Génération de la vidéo…",
        videoError:"Impossible de générer le vidéo. Réessaie.",
-       videoNoData:"Il n’y a pas encore une réponse à transformer en vidéo.",
+       videoNoData:"Il n’y a pas encore de réponse à transformer en vidéo.",
        videoShareNotSupported:"Ton navigateur ne peut pas partager directement ce fichier.",
        videoShareCancelled:"Partage annulé."
   },
@@ -662,7 +641,7 @@ const typingSfx = document.getElementById('typingSfx');
 let typingTimeoutId = null;
 let typingAnswerTimer = null;
 
-/* suono breve (se serve altrove) */
+/* suono breve */
 function playTypingShort(ms=2200){
   if(!typingSfx) return;
   try{
@@ -679,62 +658,38 @@ function playTypingShort(ms=2200){
   }, ms);
 }
 
-/* effetto macchina da scrivere STABILE, no-saltello */
+/* risposta: NIENTE macchina da scrivere → testo intero + fade-in, nessun saltello */
 function showAnswerWithTyping(text){
-  const answerEl = document.getElementById("answer");
-  const ghostEl  = document.getElementById("typing-stabilizer");
   const full = String(text || "");
+  if(!answerEl) return;
 
-  if (!answerEl || !ghostEl) return;
-
-  if (typingAnswerTimer){
+  if(typingAnswerTimer){
     clearInterval(typingAnswerTimer);
     typingAnswerTimer = null;
   }
-  if (typingTimeoutId){
+  if(typingTimeoutId){
     clearTimeout(typingTimeoutId);
     typingTimeoutId = null;
   }
 
-  ghostEl.textContent = full;
-  answerEl.textContent = "";
-  answerEl.style.height = ghostEl.offsetHeight + "px";
+  // eventualmente solo un suono breve all'inizio
+  playTypingShort(1800);
 
-  let idx = 0;
-  const stepMs = 40;
-  const stepChars = 1;
+  // reset stile e applico fade-in
+  answerEl.style.transition = "none";
+  answerEl.style.opacity = 0;
+  answerEl.style.height = "";
+  answerEl.style.overflow = "visible";
 
-  if (typingSfx){
-    try{
-      typingSfx.loop = true;
-      typingSfx.currentTime = 0;
-      typingSfx.play().catch(()=>{});
-    }catch{}
-  }
+  answerEl.textContent = full;
 
-  typingAnswerTimer = setInterval(()=>{
-    idx += stepChars;
-    if (idx > full.length) idx = full.length;
+  // piccolo delay per permettere al browser di applicare lo stile
+  requestAnimationFrame(()=>{
+    answerEl.style.transition = "opacity .35s ease-out";
+    answerEl.style.opacity = 1;
+  });
 
-    answerEl.textContent = full.slice(0, idx);
-    answerEl.style.height = ghostEl.offsetHeight + "px";
-
-    if (idx >= full.length){
-      clearInterval(typingAnswerTimer);
-      typingAnswerTimer = null;
-
-      if (typingSfx){
-        try{
-          typingSfx.loop = false;
-          typingSfx.pause();
-          typingSfx.currentTime = 0;
-        }catch{}
-      }
-
-      answerEl.style.height = "auto";
-      decorateEmBits(answerEl);
-    }
-  }, stepMs);
+  decorateEmBits(answerEl);
 }
 
 /* ==== Toast ==== */
@@ -1141,7 +1096,7 @@ async function startFlow(){
   }catch(e){
     console.error(e);
     stopOracleLoading();
-    if (answerEl) answerEl.textContent=t().error;
+    answerEl.textContent=t().error;
   }
 }
 
@@ -1182,7 +1137,7 @@ let lastVideoMime = null;
 async function generateVideoClip(){
   const T = t();
   const domanda = (localStorage.getItem('domanda') || qView.textContent || '').trim();
-  const answerText = (answerEl && answerEl.textContent || '').trim();
+  const answerText = (answerEl.textContent || '').trim();
   const motivationsRaw = (motNote?.innerText || motNote?.textContent || '').trim();
 
   if (!domanda || !answerText) {
