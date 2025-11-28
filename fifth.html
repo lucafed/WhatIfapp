@@ -58,24 +58,22 @@ h1{
   letter-spacing:.1px;
   text-wrap:pretty;
 }
-  /* blocco anti-saltello definitivo */
-#answer {
-  display: block;
-  line-height: 1.55;
-  will-change: auto;
-  transform: translateZ(0);
+
+/* ==== NO-SALTELLO RISPOSTA ==== */
+.answer-wrapper{
+  position:relative;
+  min-height:80px;
+}
+#answer{
+  display:block;
+  white-space:pre-wrap;
+}
+.typing-stabilizer{
+  visibility:hidden;
+  white-space:pre-wrap;
+  pointer-events:none;
 }
 
-.typing-overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  white-space: inherit;
-  line-height: inherit;
-  font: inherit;
-  color: inherit;
-  transform: translateZ(0); /* layer GPU → elimina micro-saltelli */
-}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
 .btn.primary{
@@ -261,7 +259,12 @@ transition:opacity .35s ease, transform .35s ease;
       <div class="orb" aria-hidden="true"></div>
       <div id="oracleLine" class="oracle-line">—</div>
     </div>
-    <div id="answer" class="story">⏳ …</div>
+
+    <!-- wrapper risposta con ghost per altezza stabile -->
+    <div class="answer-wrapper">
+      <div id="answer" class="story">⏳ …</div>
+      <div id="typing-stabilizer" class="story typing-stabilizer"></div>
+    </div>
 
     <div class="hr"></div>
     <div class="label" id="lblP">Esito & motivazioni</div>
@@ -495,7 +498,7 @@ const I18N = {
        videoReadyNote:"Vidéo prête : télécharge-la et mets-la sur TikTok, Instagram ou ailleurs.",
        videoPreparing:"Génération de la vidéo…",
        videoError:"Impossible de générer le vidéo. Réessaie.",
-       videoNoData:"Il n’y a pas encore de réponse à transformer en vidéo.",
+       videoNoData:"Il n’y a pas encore une réponse à transformer en vidéo.",
        videoShareNotSupported:"Ton navigateur ne peut pas partager directement ce fichier.",
        videoShareCancelled:"Partage annulé."
   },
@@ -676,12 +679,14 @@ function playTypingShort(ms=2200){
   }, ms);
 }
 
-/* effetto macchina da scrivere STABILE: niente saltelli */
+/* effetto macchina da scrivere STABILE, no-saltello */
 function showAnswerWithTyping(text){
+  const answerEl = document.getElementById("answer");
+  const ghostEl  = document.getElementById("typing-stabilizer");
   const full = String(text || "");
-  if (!answerEl) return;
 
-  // stop eventuali animazioni precedenti
+  if (!answerEl || !ghostEl) return;
+
   if (typingAnswerTimer){
     clearInterval(typingAnswerTimer);
     typingAnswerTimer = null;
@@ -691,33 +696,13 @@ function showAnswerWithTyping(text){
     typingTimeoutId = null;
   }
 
-  // 1) misuro l'altezza finale su un clone offscreen con stessa larghezza
-  let finalHeight = 0;
-  try{
-    const clone = answerEl.cloneNode(false);
-    clone.style.position = "absolute";
-    clone.style.visibility = "hidden";
-    clone.style.pointerEvents = "none";
-    clone.style.height = "auto";
-    clone.style.whiteSpace = "normal";
-    clone.textContent = full;
-    answerEl.parentNode.appendChild(clone);
-    finalHeight = clone.offsetHeight || clone.getBoundingClientRect().height || 0;
-    clone.remove();
-  }catch(e){}
-
-  if (finalHeight){
-    // uso min-height così la card non salta durante la digitazione
-    answerEl.style.minHeight = finalHeight + "px";
-  }
-
-  // 2) un solo TextNode che cresce → niente reflow strani
+  ghostEl.textContent = full;
   answerEl.textContent = "";
-  const textNode = document.createTextNode("");
-  answerEl.appendChild(textNode);
+  answerEl.style.height = ghostEl.offsetHeight + "px";
 
   let idx = 0;
   const stepMs = 40;
+  const stepChars = 1;
 
   if (typingSfx){
     try{
@@ -728,23 +713,26 @@ function showAnswerWithTyping(text){
   }
 
   typingAnswerTimer = setInterval(()=>{
-    idx++;
+    idx += stepChars;
     if (idx > full.length) idx = full.length;
-    textNode.data = full.slice(0, idx);
+
+    answerEl.textContent = full.slice(0, idx);
+    answerEl.style.height = ghostEl.offsetHeight + "px";
 
     if (idx >= full.length){
       clearInterval(typingAnswerTimer);
       typingAnswerTimer = null;
 
-      try{
-        if (typingSfx){
+      if (typingSfx){
+        try{
           typingSfx.loop = false;
           typingSfx.pause();
           typingSfx.currentTime = 0;
-        }
-      }catch{}
+        }catch{}
+      }
 
-      // niente decorateEmBits qui → non tocchiamo più il layout a fine animazione
+      answerEl.style.height = "auto";
+      decorateEmBits(answerEl);
     }
   }, stepMs);
 }
@@ -1153,7 +1141,7 @@ async function startFlow(){
   }catch(e){
     console.error(e);
     stopOracleLoading();
-    answerEl.textContent=t().error;
+    if (answerEl) answerEl.textContent=t().error;
   }
 }
 
@@ -1194,7 +1182,7 @@ let lastVideoMime = null;
 async function generateVideoClip(){
   const T = t();
   const domanda = (localStorage.getItem('domanda') || qView.textContent || '').trim();
-  const answerText = (answerEl.textContent || '').trim();
+  const answerText = (answerEl && answerEl.textContent || '').trim();
   const motivationsRaw = (motNote?.innerText || motNote?.textContent || '').trim();
 
   if (!domanda || !answerText) {
