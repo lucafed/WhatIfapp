@@ -658,10 +658,7 @@ function playTypingShort(ms=2200){
   }, ms);
 }
 
-/* effetto macchina da scrivere *zero saltelli*
-   - il testo finale è già tutto invisibile (color: transparent)
-   - sopra c'è un overlay assoluto che scrive lettera per lettera
-   - l'altezza è quella del testo finale fin dal primo frame */
+/* effetto macchina da scrivere STABILE: niente saltelli */
 function showAnswerWithTyping(text){
   const full = String(text || "");
   if (!answerEl) return;
@@ -676,52 +673,34 @@ function showAnswerWithTyping(text){
     typingTimeoutId = null;
   }
 
-  // rimuovo eventuale overlay vecchio
-  const oldOverlay = answerEl.querySelector('.typing-overlay');
-  if (oldOverlay) oldOverlay.remove();
+  // 1) misuro l'altezza finale su un clone offscreen con stessa larghezza
+  let finalHeight = 0;
+  try{
+    const clone = answerEl.cloneNode(false);
+    clone.style.position = "absolute";
+    clone.style.visibility = "hidden";
+    clone.style.pointerEvents = "none";
+    clone.style.height = "auto";
+    clone.style.whiteSpace = "normal";
+    clone.textContent = full;
+    answerEl.parentNode.appendChild(clone);
+    finalHeight = clone.offsetHeight || clone.getBoundingClientRect().height || 0;
+    clone.remove();
+  }catch(e){}
 
-  // salvo il colore originale una volta sola
-  let origColor = answerEl.getAttribute('data-orig-color');
-  if (!origColor){
-    try{
-      origColor = getComputedStyle(answerEl).color || '#FFFFFF';
-    }catch{
-      origColor = '#FFFFFF';
-    }
-    answerEl.setAttribute('data-orig-color', origColor);
+  if (finalHeight){
+    // uso min-height così la card non salta durante la digitazione
+    answerEl.style.minHeight = finalHeight + "px";
   }
 
-  // assicuro posizione relativa per poter mettere overlay assoluto
-  const currentPos = getComputedStyle(answerEl).position;
-  if (currentPos === 'static' || !currentPos){
-    answerEl.style.position = 'relative';
-  }
-
-  // testo completo invisibile → fissa altezza da subito
-  answerEl.style.color = 'transparent';
-  answerEl.textContent = full;
-
-  // overlay per il testo "digitato"
-  const overlay = document.createElement('div');
-  overlay.className = 'typing-overlay';
-  overlay.style.position = 'absolute';
-  overlay.style.inset = '0';
-  overlay.style.pointerEvents = 'none';
-  overlay.style.whiteSpace = 'inherit';
-  overlay.style.lineHeight = 'inherit';
-  overlay.style.font = 'inherit';
-  overlay.style.overflow = 'hidden';
-  // 👇 QUI LA PATCH: il testo visibile usa il colore originale
-  overlay.style.color = origColor;
-
+  // 2) un solo TextNode che cresce → niente reflow strani
+  answerEl.textContent = "";
   const textNode = document.createTextNode("");
-  overlay.appendChild(textNode);
-  answerEl.appendChild(overlay);
+  answerEl.appendChild(textNode);
 
   let idx = 0;
   const stepMs = 40;
 
-  // audio typing continuo durante animazione
   if (typingSfx){
     try{
       typingSfx.loop = true;
@@ -739,7 +718,6 @@ function showAnswerWithTyping(text){
       clearInterval(typingAnswerTimer);
       typingAnswerTimer = null;
 
-      // stop audio
       try{
         if (typingSfx){
           typingSfx.loop = false;
@@ -748,13 +726,11 @@ function showAnswerWithTyping(text){
         }
       }catch{}
 
-      // a fine animazione → mostro testo reale e rimuovo overlay
-      answerEl.style.color = origColor;
-      overlay.remove();
+      // niente decorateEmBits qui → non tocchiamo più il layout a fine animazione
     }
   }, stepMs);
-    }
 }
+
 /* ==== Toast ==== */
 function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1800); }
 
