@@ -57,10 +57,6 @@ h1{
   font-size:18px;
   letter-spacing:.1px;
   text-wrap:pretty;
-  font-kerning:none;
-  text-rendering:optimizeLegibility;
-  will-change:contents;
-  display:block;
 }
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
@@ -369,7 +365,7 @@ const I18N = {
        credits:(n)=>`💰 Crediti: ${n}`, noCredits:"Hai terminato i crediti.",
        storeTitle:"Crediti", buy5:"Compra +5 crediti (test)", buy10:"Compra +10 crediti (test)", buy20:"Compra +20 crediti (test)",
        watchAd:"Guarda pubblicità (+1)", close:"Chiudi",
-       comingSoon:"Prossimamente", buySoonNote:"Acquisto crediti non ancora disponibile。",
+       comingSoon:"Prossimamente", buySoonNote:"Acquisto crediti non ancora disponibile.",
        toastPlus:(n)=>`+${n} credito`, toastMinus:(n)=>`-${n} credito`,
        guideTitle:"Indicazioni",
        guideQuick:"Indicazioni rapide",
@@ -627,7 +623,7 @@ const answerEl=qs('#answer'), shareBtn=qs('#shareBtn'), againBtn=qs('#againBtn')
 const saveBtn=qs('#saveBtn');
 const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct'), bottomPct=qs('#bottomPct');
 const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
-const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap'];
+const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
 const motNote=qs('#motNote'), toastEl=qs('#toast');
 
 /* ==== VIDEO refs ==== */
@@ -662,7 +658,7 @@ function playTypingShort(ms=2200){
   }, ms);
 }
 
-/* effetto macchina da scrivere STABILE (niente saltelli) */
+/* effetto macchina da scrivere STABILE: niente saltelli */
 function showAnswerWithTyping(text){
   const full = String(text || "");
   if (!answerEl) return;
@@ -677,7 +673,7 @@ function showAnswerWithTyping(text){
     typingTimeoutId = null;
   }
 
-  // 1) misuro altezza finale su un CLONE offscreen (nessun flicker)
+  // 1) misuro l'altezza finale su un clone offscreen con stessa larghezza
   let finalHeight = 0;
   try{
     const clone = answerEl.cloneNode(false);
@@ -693,10 +689,11 @@ function showAnswerWithTyping(text){
   }catch(e){}
 
   if (finalHeight){
+    // uso min-height così la card non salta durante la digitazione
     answerEl.style.minHeight = finalHeight + "px";
   }
 
-  // 2) uso un solo TextNode che cresce → nessun reflow sugli altri elementi
+  // 2) un solo TextNode che cresce → niente reflow strani
   answerEl.textContent = "";
   const textNode = document.createTextNode("");
   answerEl.appendChild(textNode);
@@ -728,7 +725,8 @@ function showAnswerWithTyping(text){
           typingSfx.currentTime = 0;
         }
       }catch{}
-      // niente ulteriori modifiche al DOM → altezza stabile, zero saltelli
+
+      // niente decorateEmBits qui → non tocchiamo più il layout a fine animazione
     }
   }, stepMs);
 }
@@ -739,20 +737,7 @@ function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.class
 /* ==== Helpers testo ==== */
 function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
-
-/* decorateEmBits NON più usata nel typing, così non cambia altezza alla fine
-   (la lascio definita in caso ti serva altrove) */
-function decorateEmBits(el){
-  const raw=el.textContent;
-  if(!raw||!raw.includes("—")) return;
-  const parts=raw.split("—");
-  let html="";
-  for(let i=0;i<parts.length;i++){
-    const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;");
-    html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`));
-  }
-  el.innerHTML=html;
-}
+function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
 
 /* ==== Titles/Text ==== */
 function applyUI(q){
