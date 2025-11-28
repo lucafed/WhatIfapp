@@ -658,7 +658,6 @@ function playTypingShort(ms=2200){
   }, ms);
 }
 
-/* effetto macchina da scrivere STABILE: niente saltelli */
 /* effetto macchina da scrivere *zero saltelli*
    - il testo finale è già tutto invisibile (color: transparent)
    - sopra c'è un overlay assoluto che scrive lettera per lettera
@@ -712,6 +711,8 @@ function showAnswerWithTyping(text){
   overlay.style.lineHeight = 'inherit';
   overlay.style.font = 'inherit';
   overlay.style.overflow = 'hidden';
+  // 👇 QUI LA PATCH: il testo visibile usa il colore originale
+  overlay.style.color = origColor;
 
   const textNode = document.createTextNode("");
   overlay.appendChild(textNode);
@@ -752,6 +753,7 @@ function showAnswerWithTyping(text){
       overlay.remove();
     }
   }, stepMs);
+    }
 }
 /* ==== Toast ==== */
 function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1800); }
