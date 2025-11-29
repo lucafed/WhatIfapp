@@ -149,8 +149,19 @@ function stripFirstPerson(text = "", lang = "it", stile = "whatif") {
   const L = normLang(lang);
 
   if (L === "it") {
-    out = out.replace(/\b(io|me|mi|noi|ci)\b/gi, "tu");
-    out = out.replace(/\b(mio|mia|miei|mie|nostro|nostra|nostri|nostre)\b/gi, "tuo");
+    // niente più casino con "ci" e possessivi sbagliati
+    out = out.replace(/\b(io|me|mi)\b/gi, "tu");
+    out = out.replace(/\bnoi\b/gi, "tu");
+    // lasciamo "ci" perché spesso è riflessivo/locativo (ci sono, ci sta, ci si)
+    out = out
+      .replace(/\bmio\b/gi, "tuo")
+      .replace(/\bmia\b/gi, "tua")
+      .replace(/\bmiei\b/gi, "tuoi")
+      .replace(/\bmie\b/gi, "tue")
+      .replace(/\bnostro\b/gi, "tuo")
+      .replace(/\bnostra\b/gi, "tua")
+      .replace(/\bnostri\b/gi, "tuoi")
+      .replace(/\bnostre\b/gi, "tue");
   } else {
     out = out.replace(
       /\b(I|I'm|I’d|I've|me|my|we|we're|we’ve|we’d|us|our|ours)\b/gi,
@@ -188,9 +199,20 @@ const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE – SCENA
 - 5–7 frasi, un paragrafo, frasi brevi, niente elenchi, niente emoji.
 - Niente prima persona narrativa (“io, noi, mi, ci”).`;
 
-/* ========= Finali “gancio” WHAT IF (non-IT) ========= */
+/* ========= Finali “gancio” WHAT IF (anche IT) ========= */
 const ZINGARA_ENDINGS = {
-  it: { future: [], past: [] },
+  it: {
+    future: [
+      "E proprio lì ti accorgi che non è magia ma la somma dei piccoli passi che inizi a fare adesso.",
+      "E lì vedi che il destino non ti sceglie: sei tu che decidi dove appoggiarti ogni giorno.",
+      "E a un certo punto capisci che non serve un segno enorme, basta una decisione che ti somigli davvero."
+    ],
+    past: [
+      "Guardando quella versione di te capisci che non era destino sbagliato, era solo un capitolo che poteva scriversi diverso.",
+      "Da fuori vedi che non hai perso un treno: hai solo cambiato binario con un po’ di ritardo.",
+      "E lì realizzi che il rimpianto pesa finché non lo usi per scegliere meglio la prossima volta."
+    ],
+  },
   en: {
     future: ["And there you’d notice you don’t need drama, just a cleaner choice."],
     past: ["You’d probably feel it in your bones: it wasn’t fate, just a different script."],
@@ -211,10 +233,15 @@ const ZINGARA_ENDINGS = {
 function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   let s = String(text || "").trim();
   const L = normLang(lang);
-  if (L === "it") return s;
+
+  if (!s) return s;
+
   const last = (s.match(/([^.!?…]+[.!?…])\s*$/) || [])[1] || s;
-  const alreadyHasHook = /(you’d notice|you’d probably feel|notarás|verras|merkst du)/i.test(last);
+  const alreadyHasHook = /(non è magia|non ti sceglie|non serve un segno|you’d notice|you’d probably feel|notarás|verras|merkst du)/i.test(
+    last
+  );
   if (alreadyHasHook) return s;
+
   const pool = ZINGARA_ENDINGS[L] || ZINGARA_ENDINGS.en;
   const bag =
     String(periodo).toLowerCase() === "past"
@@ -222,6 +249,7 @@ function ensureZingaraEnding({ text, lang, periodo, domanda }) {
       : pool.future || ZINGARA_ENDINGS.en.future;
   const addon = pickDet(bag, hashStr((domanda || "") + s));
   if (!addon) return s;
+
   s = s.replace(/[.!?…]+$/, "");
   return `${s}. ${addon}`;
 }
@@ -1338,8 +1366,8 @@ export default async function handler(req, res) {
       answer = ensureWtfEcchecazzEnding(answer, L);
     }
 
-    // Finale “gancio” per WHAT IF non-IT
-    if (stile === "whatif" && L !== "it") {
+    // Finale “gancio zíngara” per WHAT IF (tutte le lingue, incluso IT)
+    if (stile === "whatif") {
       answer = ensureZingaraEnding({ text: answer, lang: L, periodo, domanda });
     }
 
@@ -1381,4 +1409,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-        }
+    }
